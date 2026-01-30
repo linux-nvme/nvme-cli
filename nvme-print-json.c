@@ -1560,8 +1560,8 @@ static void json_add_bitmap(int i, __u8 seb, struct json_object *r)
 	}
 }
 
-static void json_pevent_log_head(struct nvme_persistent_event_log *pevent_log_head,
-				 struct json_object *r)
+void nvme_json_pevent_log_head(struct nvme_persistent_event_log *pevent_log_head,
+			       struct json_object *r)
 {
 	int i;
 	char sn[sizeof(pevent_log_head->sn) + 1];
@@ -1596,8 +1596,8 @@ static void json_pevent_log_head(struct nvme_persistent_event_log *pevent_log_he
 	}
 }
 
-static void json_pel_smart_health(void *pevent_log_info, __u32 offset,
-				  struct json_object *valid_attrs)
+void nvme_json_pel_smart_health(void *pevent_log_info, __u32 offset,
+				struct json_object *valid_attrs)
 {
 	char key[128];
 	struct nvme_smart_log *smart_event = pevent_log_info + offset;
@@ -1654,7 +1654,8 @@ static void json_pel_smart_health(void *pevent_log_info, __u32 offset,
 		     le32_to_cpu(smart_event->thm_temp2_total_time));
 }
 
-static void json_pel_fw_commit(void *pevent_log_info, __u32 offset, struct json_object *valid_attrs)
+void nvme_json_pel_fw_commit(void *pevent_log_info, __u32 offset,
+			     struct json_object *valid_attrs)
 {
 	char fw_str[50];
 	struct nvme_fw_commit_event *fw_commit_event = pevent_log_info + offset;
@@ -1673,7 +1674,8 @@ static void json_pel_fw_commit(void *pevent_log_info, __u32 offset, struct json_
 		     le16_to_cpu(fw_commit_event->vndr_assign_fw_commit_rc));
 }
 
-static void json_pel_timestamp(void *pevent_log_info, __u32 offset, struct json_object *valid_attrs)
+void nvme_json_pel_timestamp(void *pevent_log_info, __u32 offset,
+			     struct json_object *valid_attrs)
 {
 	struct nvme_time_stamp_change_event *ts_change_event = pevent_log_info + offset;
 
@@ -1682,8 +1684,9 @@ static void json_pel_timestamp(void *pevent_log_info, __u32 offset, struct json_
 		       le64_to_cpu(ts_change_event->ml_secs_since_reset));
 }
 
-static void json_pel_power_on_reset(void *pevent_log_info, __u32 offset,
-				    struct json_object *valid_attrs, __le16 vsil, __le16 el)
+void nvme_json_pel_power_on_reset(void *pevent_log_info, __u32 offset,
+				  struct json_object *valid_attrs,
+				  __le16 vsil, __le16 el)
 {
 	__u64 *fw_rev;
 	char fw_str[50];
@@ -1711,8 +1714,8 @@ static void json_pel_power_on_reset(void *pevent_log_info, __u32 offset,
 	}
 }
 
-static void json_pel_nss_hw_error(void *pevent_log_info, __u32 offset,
-				  struct json_object *valid_attrs)
+void nvme_json_pel_nss_hw_error(void *pevent_log_info, __u32 offset,
+				struct json_object *valid_attrs)
 {
 	struct nvme_nss_hw_err_event *nss_hw_err_event = pevent_log_info + offset;
 
@@ -1720,7 +1723,8 @@ static void json_pel_nss_hw_error(void *pevent_log_info, __u32 offset,
 		     le16_to_cpu(nss_hw_err_event->nss_hw_err_event_code));
 }
 
-static void json_pel_change_ns(void *pevent_log_info, __u32 offset, struct json_object *valid_attrs)
+void nvme_json_pel_change_ns(void *pevent_log_info, __u32 offset,
+			     struct json_object *valid_attrs)
 {
 	struct nvme_change_ns_event *ns_event = pevent_log_info + offset;
 
@@ -1735,8 +1739,8 @@ static void json_pel_change_ns(void *pevent_log_info, __u32 offset, struct json_
 	obj_add_uint(valid_attrs, "nsid", le32_to_cpu(ns_event->nsid));
 }
 
-static void json_pel_format_start(void *pevent_log_info, __u32 offset,
-				  struct json_object *valid_attrs)
+void nvme_json_pel_format_start(void *pevent_log_info, __u32 offset,
+				struct json_object *valid_attrs)
 {
 	struct nvme_format_nvm_start_event *format_start_event = pevent_log_info + offset;
 
@@ -1746,8 +1750,8 @@ static void json_pel_format_start(void *pevent_log_info, __u32 offset,
 		     le32_to_cpu(format_start_event->format_nvm_cdw10));
 }
 
-static void json_pel_format_completion(void *pevent_log_info, __u32 offset,
-				       struct json_object *valid_attrs)
+void nvme_json_pel_format_completion(void *pevent_log_info, __u32 offset,
+				     struct json_object *valid_attrs)
 {
 	struct nvme_format_nvm_compln_event *format_cmpln_event = pevent_log_info + offset;
 
@@ -1757,8 +1761,8 @@ static void json_pel_format_completion(void *pevent_log_info, __u32 offset,
 	obj_add_uint(valid_attrs, "compln_info", le16_to_cpu(format_cmpln_event->compln_info));
 	obj_add_uint(valid_attrs, "status_field", le32_to_cpu(format_cmpln_event->status_field));
 }
-static void json_pel_sanitize_start(void *pevent_log_info, __u32 offset,
-				    struct json_object *valid_attrs)
+void nvme_json_pel_sanitize_start(void *pevent_log_info, __u32 offset,
+				  struct json_object *valid_attrs)
 {
 	struct nvme_sanitize_start_event *sanitize_start_event = pevent_log_info + offset;
 
@@ -1767,8 +1771,8 @@ static void json_pel_sanitize_start(void *pevent_log_info, __u32 offset,
 	obj_add_uint(valid_attrs, "sani_cdw11", le32_to_cpu(sanitize_start_event->sani_cdw11));
 }
 
-static void json_pel_sanitize_completion(void *pevent_log_info, __u32 offset,
-					 struct json_object *valid_attrs)
+void nvme_json_pel_sanitize_completion(void *pevent_log_info, __u32 offset,
+				       struct json_object *valid_attrs)
 {
 	struct nvme_sanitize_compln_event *sanitize_cmpln_event = pevent_log_info + offset;
 
@@ -1777,8 +1781,8 @@ static void json_pel_sanitize_completion(void *pevent_log_info, __u32 offset,
 	obj_add_uint(valid_attrs, "cmpln_info", le16_to_cpu(sanitize_cmpln_event->cmpln_info));
 }
 
-static void json_pel_set_feature(void *pevent_log_info, __u32 offset,
-				 struct json_object *valid_attrs)
+void nvme_json_pel_set_feature(void *pevent_log_info, __u32 offset,
+			       struct json_object *valid_attrs)
 {
 	struct nvme_set_feature_event *set_feat_event = pevent_log_info + offset;
 	int fid = NVME_GET(le32_to_cpu(set_feat_event->cdw_mem[0]), SET_FEATURES_CDW10_FID);
@@ -1796,14 +1800,14 @@ static void json_pel_set_feature(void *pevent_log_info, __u32 offset,
 	}
 }
 
-static void json_pel_telemetry_crt(void *pevent_log_info, __u32 offset,
-				   struct json_object *valid_attrs)
+void nvme_json_pel_telemetry_crt(void *pevent_log_info, __u32 offset,
+				 struct json_object *valid_attrs)
 {
 	obj_d(valid_attrs, "create", pevent_log_info + offset, 512, 16, 1);
 }
 
-static void json_pel_thermal_excursion(void *pevent_log_info, __u32 offset,
-				       struct json_object *valid_attrs)
+void nvme_json_pel_thermal_excursion(void *pevent_log_info, __u32 offset,
+				     struct json_object *valid_attrs)
 {
 	struct nvme_thermal_exc_event *thermal_exc_event = pevent_log_info + offset;
 
@@ -1850,8 +1854,9 @@ static void json_pel_vs_event_data(struct json_object *valid_attrs, void *vsed,
 	obj_add_obj(valid_attrs, "vs_event_data", vs_data);
 }
 
-static void json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
-					   __u32 event_data_len, struct json_object *valid_attrs)
+void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
+					 __u32 event_data_len,
+					 struct json_object *valid_attrs)
 {
 	__u32 progress = 0;
 	__u16 vsedl;
@@ -1925,48 +1930,49 @@ static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, co
 
 		switch (pevent_entry_head->etype) {
 		case NVME_PEL_SMART_HEALTH_EVENT:
-			json_pel_smart_health(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_smart_health(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_FW_COMMIT_EVENT:
-			json_pel_fw_commit(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_fw_commit(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_TIMESTAMP_EVENT:
-			json_pel_timestamp(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_timestamp(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_POWER_ON_RESET_EVENT:
-			json_pel_power_on_reset(pevent_log_info, offset, valid_attrs,
-						pevent_entry_head->vsil, pevent_entry_head->el);
+			nvme_json_pel_power_on_reset(pevent_log_info, offset, valid_attrs,
+						     pevent_entry_head->vsil,
+						     pevent_entry_head->el);
 			break;
 		case NVME_PEL_NSS_HW_ERROR_EVENT:
-			json_pel_nss_hw_error(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_nss_hw_error(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_CHANGE_NS_EVENT:
-			json_pel_change_ns(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_change_ns(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_FORMAT_START_EVENT:
-			json_pel_format_start(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_format_start(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_FORMAT_COMPLETION_EVENT:
-			json_pel_format_completion(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_format_completion(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_SANITIZE_START_EVENT:
-			json_pel_sanitize_start(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_sanitize_start(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
-			json_pel_sanitize_completion(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_sanitize_completion(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_SET_FEATURE_EVENT:
-			json_pel_set_feature(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_set_feature(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_TELEMETRY_CRT:
-			json_pel_telemetry_crt(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_telemetry_crt(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_THERMAL_EXCURSION_EVENT:
-			json_pel_thermal_excursion(pevent_log_info, offset, valid_attrs);
+			nvme_json_pel_thermal_excursion(pevent_log_info, offset, valid_attrs);
 			break;
 		case NVME_PEL_VENDOR_SPECIFIC_EVENT:
-			json_pel_vendor_specific_event(pevent_log_info, offset, el - vsil,
-						       valid_attrs);
+			nvme_json_pel_vendor_specific_event(pevent_log_info, offset, el - vsil,
+							    valid_attrs);
 			break;
 		default:
 			break;
@@ -1985,7 +1991,7 @@ static void json_persistent_event_log(void *pevent_log_info, __u8 action,
 	__u32 offset = sizeof(struct nvme_persistent_event_log);
 
 	if (size >= offset) {
-		json_pevent_log_head(pevent_log_info, r);
+		nvme_json_pevent_log_head(pevent_log_info, r);
 		json_pevent_entry(pevent_log_info, action, size, devname, offset, valid);
 		obj_add_array(r, "list_of_event_entries", valid);
 	} else {
