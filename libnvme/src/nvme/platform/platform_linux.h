@@ -32,7 +32,6 @@
 #include <linux/types.h>
 #include <endian.h>
 #include <net/if.h>
-#include "cleanup.h"
 
 /* Linux cleanup attribute */
 #define __nvme_cleanup(fn) __attribute__((__cleanup__(fn)))
@@ -43,7 +42,7 @@
 /* Platform-specific UUID generation using /dev/urandom */
 static inline int random_uuid(unsigned char *uuid, size_t len)
 {
-	_cleanup_fd_ int f = -1;
+	int f, ret = 0;
 	ssize_t n;
 
 	f = open("/dev/urandom", O_RDONLY);
@@ -52,11 +51,12 @@ static inline int random_uuid(unsigned char *uuid, size_t len)
 
 	n = read(f, uuid, len);
 	if (n < 0)
-		return -errno;
+		ret = -errno;
 	else if ((size_t)n != len)
-		return -EIO;
+		ret = -EIO;
 
-	return 0;
+	close(f);
+	return ret;
 }
 
 #endif /* _LIBNVME_PLATFORM_LINUX_H */
