@@ -263,6 +263,9 @@ argconfig_match_val(struct argconfig_opt_val *v, const char *str)
 		if (strncasecmp(str, v->str, len))
 			continue;
 
+		if (len == strlen(v->str))
+			return v;
+
 		if (match)
 			return NULL; /* multiple matches; input is ambiguous */
 
