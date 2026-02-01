@@ -5323,10 +5323,19 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 		nvme_show_error("invalid slot:%d", cfg.slot);
 		return -EINVAL;
 	}
-	if (cfg.action > 7 || cfg.action == 4 || cfg.action == 5) {
+
+	switch (cfg.action) {
+	case NVME_FW_COMMIT_CA_REPLACE:
+	case NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE:
+	case NVME_FW_COMMIT_CA_SET_ACTIVE:
+	case NVME_FW_COMMIT_CA_REPLACE_BOOT_PARTITION:
+	case NVME_FW_COMMIT_CA_ACTIVATE_BOOT_PARTITION:
+		break;
+	default:
 		nvme_show_error("invalid action:%d", cfg.action);
 		return -EINVAL;
 	}
+
 	if (cfg.bpid > 1) {
 		nvme_show_error("invalid boot partition id:%d", cfg.bpid);
 		return -EINVAL;
