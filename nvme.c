@@ -5293,9 +5293,23 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 		.bpid	= 0,
 	};
 
+	OPT_VALS(ca) = {
+		VAL_BYTE("replace", NVME_FW_COMMIT_CA_REPLACE),
+		VAL_BYTE("replace-and-activate",
+			 NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE),
+		VAL_BYTE("set-active", NVME_FW_COMMIT_CA_SET_ACTIVE),
+		VAL_BYTE("replace-and-activate-immediate",
+			 NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE_IMMEDIATE),
+		VAL_BYTE("replace-boot-partition",
+			 NVME_FW_COMMIT_CA_REPLACE_BOOT_PARTITION),
+		VAL_BYTE("activate-boot-partition",
+			 NVME_FW_COMMIT_CA_ACTIVATE_BOOT_PARTITION),
+		VAL_END()
+	};
+
 	NVME_ARGS(opts,
 		  OPT_BYTE("slot",   's', &cfg.slot,   slot),
-		  OPT_BYTE("action", 'a', &cfg.action, action),
+		  OPT_BYTE("action", 'a', &cfg.action, action, ca),
 		  OPT_BYTE("bpid",   'b', &cfg.bpid,   bpid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
