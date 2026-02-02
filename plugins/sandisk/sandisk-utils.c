@@ -24,6 +24,12 @@ static const __u8 WDC_UUID[NVME_UUID_LEN] = {
 	0xab, 0xe6, 0x33, 0x29, 0x9a, 0x70, 0xdf, 0xd0
 };
 
+/* WDC_UUID value for SN640_3 devices and SN655 devices */
+static const __u8 WDC_UUID_SN640_3[NVME_UUID_LEN] = {
+       0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11,
+       0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22
+};
+
 /*  Sandisk UUID value */
 static const __u8 SNDK_UUID[NVME_UUID_LEN] = {
 	0xde, 0x87, 0xd1, 0xeb, 0x72, 0xc5, 0x58, 0x0b,
@@ -334,6 +340,9 @@ bool sndk_get_dev_mgment_data(struct nvme_global_ctx *ctx, struct nvme_transport
 			 * check for the WDC UUID second.
 			 */
 			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+			if (uuid_index < 0)
+				/* Check for the UUID used on SN640 and SN655 drives */
+				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
 		}
 
 		if (uuid_index >= 0)
@@ -671,11 +680,15 @@ __u64 sndk_get_enc_drive_capabilities(struct nvme_global_ctx *ctx,
 			/* check for the Sandisk UUID first  */
 			uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
 
-			if (uuid_index < 0)
+			if (uuid_index < 0) {
 				/* The Sandisk UUID is not found;
 				 * check for the WDC UUID second.
 				 */
 				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+				if (uuid_index < 0)
+					/* Check for the UUID used on SN640 and SN655 drives */
+					uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
+			}
 		} else {
 			/* UUID Lists not supported, Use default uuid index - 0 */
 			fprintf(stderr, "INFO: SNDK: %s:  UUID Lists not supported\n",
@@ -718,6 +731,11 @@ __u64 sndk_get_enc_drive_capabilities(struct nvme_global_ctx *ctx,
 				(void *)&drive_form_factor))
 			fprintf(stderr, "ERROR: SNDK: Getting Form Factor Failed\n");
 
+		/* verify the 0xC0 log page is supported */
+		if (run_wdc_nvme_check_supported_log_page(ctx, hdl,
+				SNDK_NVME_GET_SMART_CLOUD_ATTR_LOG_ID, 0))
+			capabilities |= SNDK_DRIVE_CAP_C0_LOG_PAGE;
+
 		/* verify the 0xC3 log page is supported */
 		if (run_wdc_nvme_check_supported_log_page(ctx, hdl,
 			SNDK_LATENCY_MON_LOG_ID, 0))
@@ -752,11 +770,6 @@ __u64 sndk_get_enc_drive_capabilities(struct nvme_global_ctx *ctx,
 			capabilities |= (SNDK_DRIVE_CAP_FW_ACTIVATE_HISTORY_C2 |
 					SNDK_DRIVE_CAP_VU_FID_CLEAR_FW_ACT_HISTORY |
 					SNDK_DRIVE_CAP_VU_FID_CLEAR_PCIE);
-
-			/* verify the 0xC0 log page is supported */
-			if (run_wdc_nvme_check_supported_log_page(ctx, hdl,
-				SNDK_LATENCY_MON_LOG_ID, 0))
-				capabilities |= SNDK_DRIVE_CAP_C0_LOG_PAGE;
 
 			if ((drive_form_factor == SNDK_C2_FORM_FACTOR_SFF_U2) ||
 				(drive_form_factor == SNDK_C2_FORM_FACTOR_EDSFF_E3S))
