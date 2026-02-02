@@ -1,5 +1,12 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 LIBNVME_UNRELEASED {
+	global:
+		# Windows POSIX compatibility functions
+		getline;
+		reallocarray;
+		readlink;
+		open_memstream;
+		strsep;
 };
 
 LIBNVME_2_0 {

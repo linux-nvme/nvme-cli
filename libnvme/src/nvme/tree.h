@@ -13,7 +13,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "platform/platform_includes.h"  /* Platform abstraction */
+#include "platform/includes.h"  /* Platform abstraction */
 
 #include <nvme/ioctl.h>
 #include <nvme/util.h>

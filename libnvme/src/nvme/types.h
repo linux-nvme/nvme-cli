@@ -14,7 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "platform/platform_includes.h"  /* Platform abstraction - includes type definitions */
+#include "platform/includes.h"  /* Platform abstraction - includes type definitions */
 
 struct nvme_global_ctx;
 struct nvme_transport_handle;

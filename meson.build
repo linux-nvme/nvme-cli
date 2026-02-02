@@ -511,17 +511,24 @@ if want_nvme
     subdir('util')      # declares: util_sources
 
     sources = [
-        'fabrics.c',
         'nvme.c',
         'nvme-models.c',
         'nvme-print.c',
         'nvme-print-stdout.c',
         'nvme-print-binary.c',
-        'nvme-rpmb.c',
         'plugin.c',
         'libnvme-wrap.c',
         'logging.c',
     ]
+    # fabrics.c and nvme-rpmb.c use Linux-specific libnvme functionality
+    if not is_windows
+        sources += ['fabrics.c', 'nvme-rpmb.c']
+    endif
+    if is_windows
+        sources += [
+            'windows-stubs.c',
+        ]
+    endif
     if json_c_dep.found()
         sources += [
             'nvme-print-json.c',
@@ -530,16 +537,25 @@ if want_nvme
     sources += plugin_sources
     sources += util_sources
 
+    link_args_list = []
+    link_deps = [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+        json_c_dep,
+    ]
+    
+    if not is_windows
+        link_args_list = ['-ldl']
+    else
+        link_deps += [ws2_32_dep, wsock32_dep, kernel32_dep, iphlpapi_dep]
+    endif
+
     executable(
         'nvme',
         sources,
-        dependencies: [
-            config_dep,
-            ccan_dep,
-            libnvme_dep,
-            json_c_dep,
-        ],
-        link_args: '-ldl',
+        dependencies: link_deps,
+        link_args: link_args_list,
         install: true,
         install_dir: sbindir,
     )

@@ -20,11 +20,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "platform/types.h"
+
 /* Platform-specific includes */
 #ifdef _WIN32
-    #include "platform_windows.h"
+    #include "platform/windows.h"
 #else
-    #include "platform_linux.h"
+    #include "platform/linux.h"
 #endif
 
 #endif /* _LIBNVME_PLATFORM_INCLUDES_H */

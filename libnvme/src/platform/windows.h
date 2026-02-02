@@ -37,32 +37,6 @@
 #undef max
 #endif
 
-/* Windows type definitions to replace linux/types.h */
-typedef uint8_t  __u8;
-typedef uint16_t __u16;
-typedef uint32_t __u32;
-typedef uint64_t __u64;
-typedef int8_t   __s8;
-typedef int16_t  __s16;
-typedef int32_t  __s32;
-typedef int64_t  __s64;
-
-/* Little-endian types (Windows is little-endian) */
-typedef __u16    __le16;
-typedef __u32    __le32;
-typedef __u64    __le64;
-typedef __s16    __le16s;
-typedef __s32    __le32s;
-typedef __s64    __le64s;
-
-/* Big-endian types for completeness */
-typedef __u16    __be16;
-typedef __u32    __be32;
-typedef __u64    __be64;
-typedef __s16    __be16s;
-typedef __s32    __be32s;
-typedef __s64    __be64s;
-
 /* Windows cleanup - no-op since Windows doesn't have cleanup attribute */
 #define __nvme_cleanup(fn) /* No cleanup attribute on Windows */
 
@@ -117,6 +91,14 @@ static inline void closelog(void) { }
 /* sys/ioctl.h stubs */
 #define IOCTL_STORAGE_QUERY_PROPERTY CTL_CODE(IOCTL_STORAGE_BASE, 0x0500, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+/* Linux ioctl constants - stubs for block device operations */
+#ifndef BLKBSZSET
+#define BLKBSZSET 0x40081271
+#endif
+#ifndef BLKRRPART
+#define BLKRRPART 0x125F
+#endif
+
 /* Windows ioctl stub functions */
 static inline int ioctl(int fd, unsigned long request, ...) {
     (void)fd; (void)request;
@@ -153,9 +135,18 @@ static inline int ioctl(int fd, unsigned long request, ...) {
 #ifndef ENOTBLK
 #define ENOTBLK 15
 #endif
+#ifndef ENAVAIL
+#define ENAVAIL 119
+#endif
 
 /* Windows missing socket types */
 typedef unsigned long nfds_t;
+
+/* Windows missing mode_t */
+#ifndef _MODE_T_
+#define _MODE_T_
+typedef unsigned int mode_t;
+#endif
 
 /* Windows missing socket structures */
 struct msghdr {
@@ -266,6 +257,196 @@ static inline int random_uuid(unsigned char *uuid, size_t len)
 		return -EIO;
 
 	return 0;
+}
+
+/* ========== POSIX Compatibility Layer ========== */
+
+/* dirent.h emulation for Windows - only if not provided by compiler */
+#if !defined(_DIRENT_H_) && !defined(_DIRENT_H)
+#include <dirent.h>
+#endif
+
+/* If dirent.h is not available, we would define our own, but MinGW provides it */
+
+/* stdio.h POSIX extensions */
+ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+FILE *open_memstream(char **ptr, size_t *sizeloc);
+
+/* string.h POSIX extensions */
+char *strsep(char **stringp, const char *delim);
+void *reallocarray(void *ptr, size_t nmemb, size_t size);
+
+/* unistd.h POSIX functions */
+int readlink(const char *path, char *buf, size_t bufsiz);
+
+/* unistd.h additions */
+#ifndef fsync
+#define fsync _commit
+#endif
+int readlink(const char *path, char *buf, size_t bufsiz);
+
+/* time.h POSIX compatibility */
+static inline struct tm *gmtime_r(const time_t *timep, struct tm *result) {
+	if (gmtime_s(result, timep) == 0)
+		return result;
+	return NULL;
+}
+
+/* signal.h POSIX compatibility - Windows doesn't have sigaction */
+#ifndef _SIGACTION_DEFINED
+#define _SIGACTION_DEFINED
+#include <signal.h>
+
+struct sigaction {
+	void (*sa_handler)(int);
+	int sa_flags;
+	int sa_mask;  /* simplified - normally sigset_t */
+};
+
+#define SA_RESTART 0x10000000
+
+static inline int sigemptyset(int *set) {
+	*set = 0;
+	return 0;
+}
+
+static inline int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact) {
+	(void)oldact; /* ignore old action for simplicity */
+	if (act && act->sa_handler) {
+		signal(signum, act->sa_handler);
+		return 0;
+	}
+	return -1;
+}
+
+#endif /* _SIGACTION_DEFINED */
+
+/* fnmatch.h POSIX compatibility */
+#define FNM_NOMATCH 1
+#define FNM_PATHNAME 0x01
+
+/* Basic fnmatch implementation for Windows:
+ * - Supports '*' (match any sequence, including empty) and
+ *   '?' (match any single character).
+ * - Ignores flags for now; they are accepted for compatibility.
+ * Returns 0 on match, FNM_NOMATCH on mismatch.
+ */
+static inline int fnmatch(const char *pattern, const char *string, int flags)
+{
+	(void)flags; /* flags currently unused */
+
+	while (*pattern) {
+		if (*pattern == '*') {
+			/* Skip consecutive '*' characters */
+			while (*pattern == '*')
+				pattern++;
+
+			if (!*pattern)
+				/* Trailing '*' matches the rest of the string */
+				return 0;
+
+			/* Try to match the remainder of the pattern at each suffix of string */
+			while (*string) {
+				if (!fnmatch(pattern, string, flags))
+					return 0;
+				string++;
+			}
+			/* No match found for pattern suffix after '*' */
+			return FNM_NOMATCH;
+		} else if (*pattern == '?') {
+			/* '?' matches any single character, if present */
+			if (!*string)
+				return FNM_NOMATCH;
+			pattern++;
+			string++;
+		} else {
+			/* Literal character match */
+			if (*pattern != *string)
+				return FNM_NOMATCH;
+			pattern++;
+			string++;
+		}
+	}
+
+	/* At end of pattern: match only if we're also at end of string */
+	return *string ? FNM_NOMATCH : 0;
+}
+
+/* limits.h additions */
+#ifndef NAME_MAX
+#define NAME_MAX 260
+#endif
+
+/* sys/stat.h compatibility */
+#ifndef S_ISBLK
+#define S_ISBLK(m) (0)
+#endif
+
+/* mkdir compatibility - Windows _mkdir doesn't take mode parameter */
+#ifndef mkdir
+#define mkdir(path, mode) _mkdir(path)
+#endif
+
+/* Memory mapping stubs - not fully supported on Windows */
+#define PROT_READ  0x1
+#define PROT_WRITE 0x2
+#define MAP_SHARED 0x01
+#define MAP_PRIVATE 0x02
+#define MAP_ANONYMOUS 0x20
+#define MAP_HUGETLB 0x40000
+#define MAP_FAILED ((void *) -1)
+#define MADV_HUGEPAGE 14
+
+static inline void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset) {
+	(void)addr; (void)length; (void)prot; (void)flags; (void)fd; (void)offset;
+	errno = ENOSYS;
+	return MAP_FAILED;
+}
+
+static inline int munmap(void *addr, size_t length) {
+	(void)addr; (void)length;
+	errno = ENOSYS;
+	return -1;
+}
+
+static inline int madvise(void *addr, size_t length, int advice) {
+	(void)addr; (void)length; (void)advice;
+	errno = ENOSYS;
+	return -1;
+}
+
+/* DLL loading compatibility */
+#define RTLD_LAZY 0
+static inline void *dlopen(const char *filename, int flag) {
+	(void)flag;
+	return (void *)LoadLibraryA(filename);
+}
+
+static inline void *dlsym(void *handle, const char *symbol) {
+	return (void *)GetProcAddress((HMODULE)handle, symbol);
+}
+
+static inline int dlclose(void *handle) {
+	return FreeLibrary((HMODULE)handle) ? 0 : -1;
+}
+
+static inline char *dlerror(void) {
+	static char buf[256];
+	DWORD err = GetLastError();
+	snprintf(buf, sizeof(buf), "Error %lu", err);
+	return buf;
+}
+
+/* Socket compatibility */
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
+/* sendfile stub */
+static inline ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count) {
+	(void)out_fd; (void)in_fd; (void)offset; (void)count;
+	errno = ENOSYS;
+	return -1;
 }
 
 #endif /* _LIBNVME_PLATFORM_WINDOWS_H */

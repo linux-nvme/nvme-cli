@@ -10,7 +10,7 @@
 #define _LIBNVME_PRIVATE_H
 
 #include <ccan/list/list.h>
-#include "platform/platform_includes.h"  /* Platform abstraction - includes all needed headers */
+#include "platform/includes.h"  /* Platform abstraction - includes all needed headers */
 
 #include <nvme/fabrics.h>
 #include <nvme/mi.h>

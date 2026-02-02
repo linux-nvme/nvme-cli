@@ -7,8 +7,10 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#endif
 #include <ccan/strset/strset.h>
 #include <ccan/htable/htable_type.h>
 #include <ccan/htable/htable.h>
@@ -1555,9 +1557,15 @@ static void stdout_registers_pmrmscu(uint32_t pmrmscu)
 static void stdout_ctrl_register_human(int offset, uint64_t value, bool support)
 {
 	switch (offset) {
-	case NVME_REG_CAP:
-		stdout_registers_cap((struct nvme_bar_cap *)&value);
+	case NVME_REG_CAP: {
+		union {
+			uint64_t raw;
+			struct nvme_bar_cap cap;
+		} u = {};
+		u.raw = value;
+		stdout_registers_cap(&u.cap);
 		break;
+	}
 	case NVME_REG_VS:
 		stdout_registers_version(value);
 		break;

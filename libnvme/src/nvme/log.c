@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include "platform/platform_includes.h"  /* Platform abstraction - includes syslog */
+#include "platform/includes.h"  /* Platform abstraction - includes syslog */
 #include <time.h>
 #define LOG_FUNCNAME 1
 #include "private.h"

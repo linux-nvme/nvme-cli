@@ -674,10 +674,11 @@ int nvme_dump_tree(struct nvme_global_ctx *ctx)
 	return -1;
 }
 
-int nvme_dump_config(struct nvme_global_ctx *ctx)
+int nvme_dump_config(struct nvme_global_ctx *ctx, const char *config_file)
 {
 	stub_log(__func__);
 	(void)ctx;
+	(void)config_file;
 	errno = ENOTSUP;
 	return -1;
 }
@@ -1008,4 +1009,305 @@ const char *nvme_mi_status_to_string(int status)
 	stub_log(__func__);
 	(void)status;
 	return "MI not supported on Windows";
+}
+
+/*
+ * Linux keyring and TLS key management stubs (linux.c)
+ * These are used by nvme-cli security commands
+ */
+int nvme_read_key(long keyring_id, long key_id, int *key_len, unsigned char **key_data)
+{
+	stub_log(__func__);
+	(void)keyring_id;
+	(void)key_id;
+	(void)key_len;
+	(void)key_data;
+	errno = ENOTSUP;
+	return -1;
+}
+
+int nvme_lookup_keyring(const char *keyring, long *kr_id)
+{
+	stub_log(__func__);
+	(void)keyring;
+	(void)kr_id;
+	errno = ENOTSUP;
+	return -1;
+}
+
+int nvme_update_key(long keyring_id, long key_id, const unsigned char *key_data, int key_len)
+{
+	stub_log(__func__);
+	(void)keyring_id;
+	(void)key_id;
+	(void)key_data;
+	(void)key_len;
+	errno = ENOTSUP;
+	return -1;
+}
+
+int nvme_revoke_tls_key(const char *keyring, const char *key_type, const char *identity)
+{
+	stub_log(__func__);
+	(void)keyring;
+	(void)key_type;
+	(void)identity;
+	errno = ENOTSUP;
+	return -1;
+}
+
+int nvme_scan_tls_keys(const char *keyring)
+{
+	stub_log(__func__);
+	(void)keyring;
+	errno = ENOTSUP;
+	return -1;
+}
+
+int nvme_describe_key_serial(long key_id)
+{
+	stub_log(__func__);
+	(void)key_id;
+	errno = ENOTSUP;
+	return -1;
+}
+
+int nvme_insert_tls_key_versioned(const char *keyring, const char *key_type, const char *hostnqn,
+				 const char *subsysnqn, int version, int hmac,
+				 unsigned char *configured_key, int key_len)
+{
+	stub_log(__func__);
+	(void)keyring;
+	(void)key_type;
+	(void)hostnqn;
+	(void)subsysnqn;
+	(void)version;
+	(void)hmac;
+	(void)configured_key;
+	(void)key_len;
+	errno = ENOTSUP;
+	return -1;
+}
+
+char *nvme_generate_tls_key_identity_compat(const char *hostnqn, const char *subsysnqn,
+					   int version, int hmac,
+					   unsigned char *configured_key, int key_len)
+{
+	stub_log(__func__);
+	(void)hostnqn;
+	(void)subsysnqn;
+	(void)version;
+	(void)hmac;
+	(void)configured_key;
+	(void)key_len;
+	return NULL;
+}
+
+int nvme_insert_tls_key_compat(const char *keyring, const char *key_type, const char *identity,
+			       unsigned char *key_data, int key_len)
+{
+	stub_log(__func__);
+	(void)keyring;
+	(void)key_type;
+	(void)identity;
+	(void)key_data;
+	(void)key_len;
+	errno = ENOTSUP;
+	return -1;
+}
+
+char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
+				    int version, int hmac,
+				    unsigned char *configured_key, int key_len)
+{
+	stub_log(__func__);
+	(void)hostnqn;
+	(void)subsysnqn;
+	(void)version;
+	(void)hmac;
+	(void)configured_key;
+	(void)key_len;
+	return NULL;
+}
+
+char *nvmf_hostnqn_from_file(void)
+{
+	stub_log(__func__);
+	/* No /etc/nvme/hostnqn equivalent on Windows */
+	return NULL;
+}
+
+int nvme_gen_dhchap_key(char *hostnqn, unsigned int hmac, unsigned int key_len,
+		       unsigned char *secret, unsigned char *key)
+{
+	stub_log(__func__);
+	(void)hostnqn;
+	(void)hmac;
+	(void)key_len;
+	(void)secret;
+	(void)key;
+	errno = ENOTSUP;
+	return -1;
+}
+
+/* Hostnqn generation (fabrics.c) */
+char *nvmf_hostnqn_generate(void)
+{
+	stub_log(__func__);
+	/* Could implement UUID-based generation, but for now just fail */
+	return NULL;
+}
+
+char *nvmf_hostnqn_generate_from_hostid(char *hostid)
+{
+	stub_log(__func__);
+	(void)hostid;
+	return NULL;
+}
+
+/* Dry run and other global state functions (linux.c) */
+void nvme_set_dry_run(void *ctx, int enable)
+{
+	stub_log(__func__);
+	(void)ctx;
+	(void)enable;
+}
+
+/* Extended Telemetry (linux.c) */
+int nvme_set_etdas(void *hdl, int *changed)
+{
+	stub_log(__func__);
+	(void)hdl;
+	(void)changed;
+	errno = ENOTSUP;
+	return -1;
+}
+
+int nvme_clear_etdas(void *hdl, int *changed)
+{
+	stub_log(__func__);
+	(void)hdl;
+	(void)changed;
+	errno = ENOTSUP;
+	return -1;
+}
+
+/* Transport handle callbacks (linux.c) */
+void nvme_transport_handle_set_submit_entry(void *hdl, void *fn)
+{
+	stub_log(__func__);
+	(void)hdl;
+	(void)fn;
+}
+
+void nvme_transport_handle_set_submit_exit(void *hdl, void *fn)
+{
+	stub_log(__func__);
+	(void)hdl;
+	(void)fn;
+}
+
+void nvme_transport_handle_set_decide_retry(void *hdl, void *fn)
+{
+	stub_log(__func__);
+	(void)hdl;
+	(void)fn;
+}
+
+/* Path property getters (tree.c) */
+const char *nvme_path_get_numa_nodes(struct nvme_path *p)
+{
+	stub_log(__func__);
+	(void)p;
+	return "";
+}
+
+int nvme_path_get_queue_depth(struct nvme_path *p)
+{
+	stub_log(__func__);
+	(void)p;
+	return 0;
+}
+
+/* Fabrics string conversion functions (fabrics.c) */
+const char *nvmf_trtype_str(__u8 trtype)
+{
+	stub_log(__func__);
+	(void)trtype;
+	return "unknown";
+}
+
+const char *nvmf_eflags_str(__u16 eflags)
+{
+	stub_log(__func__);
+	(void)eflags;
+	return "unknown";
+}
+
+const char *nvmf_sectype_str(__u8 sectype)
+{
+	stub_log(__func__);
+	(void)sectype;
+	return "unknown";
+}
+
+const char *nvmf_cms_str(__u8 cms)
+{
+	stub_log(__func__);
+	(void)cms;
+	return "unknown";
+}
+
+const char *nvmf_qptype_str(__u8 qptype)
+{
+	stub_log(__func__);
+	(void)qptype;
+	return "unknown";
+}
+
+const char *nvmf_prtype_str(__u8 prtype)
+{
+	stub_log(__func__);
+	(void)prtype;
+	return "unknown";
+}
+
+const char *nvmf_adrfam_str(__u8 adrfam)
+{
+	stub_log(__func__);
+	(void)adrfam;
+	return "unknown";
+}
+
+const char *nvmf_subtype_str(__u8 subtype)
+{
+	stub_log(__func__);
+	(void)subtype;
+	return "unknown";
+}
+
+const char *nvmf_treq_str(__u8 treq)
+{
+	stub_log(__func__);
+	(void)treq;
+	return "unknown";
+}
+
+/* NBFT functions (nbft.c) */
+int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
+			  struct nbft_file_entry **nbft_list)
+{
+	stub_log(__func__);
+	(void)ctx;
+	(void)path;
+	(void)nbft_list;
+	errno = ENOTSUP;
+	return -1;
+}
+
+void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
+{
+	stub_log(__func__);
+	(void)ctx;
+	(void)head;
 }

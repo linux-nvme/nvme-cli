@@ -3,7 +3,7 @@
 #ifndef _MI_MCTP_COMPAT_H
 #define _MI_MCTP_COMPAT_H
 
-#include <linux/types.h>
+#include <platform/types.h>
 
 /* As of kernel v5.15, these AF_MCTP-related definitions are provided by
  * linux/mctp.h. However, we provide a set here while that header percolates

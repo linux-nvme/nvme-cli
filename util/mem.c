@@ -3,7 +3,11 @@
 #include <unistd.h>
 #include <malloc.h>
 #include <string.h>
+#ifndef _WIN32
 #include <sys/mman.h>
+#endif
+
+#include "platform/includes.h"
 
 #include "mem.h"
 

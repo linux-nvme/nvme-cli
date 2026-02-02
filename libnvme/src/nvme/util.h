@@ -9,7 +9,7 @@
 #ifndef _LIBNVME_UTIL_H
 #define _LIBNVME_UTIL_H
 
-#include "platform/platform_includes.h"  /* Platform abstraction */
+#include "platform/includes.h"  /* Platform abstraction */
 
 #include <nvme/types.h>
 

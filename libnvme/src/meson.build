@@ -19,6 +19,7 @@ if is_windows
     # Windows-specific sources (exclude Linux networking, fabrics, and filesystem code)
     sources += [
         'nvme/windows-stubs.c',  # Stubs for excluded functions
+        'platform/windows.c',  # POSIX compatibility implementations
     ]
 else
     # Linux-specific sources (include networking and fabrics support)
@@ -148,10 +149,11 @@ install_headers(
 
 # Install platform abstraction headers
 install_headers([
-        'nvme/platform/platform_includes.h',
-        'nvme/platform/platform_linux.h',
-        'nvme/platform/platform_windows.h',
+        'platform/includes.h',
+        'platform/linux.h',
+        'platform/windows.h',
+        'platform/types.h'
     ],
-    subdir: 'nvme/platform',
+    subdir: 'platform',
     install_mode: mode,
 )

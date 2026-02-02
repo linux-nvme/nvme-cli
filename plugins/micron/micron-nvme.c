@@ -26,7 +26,7 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include <limits.h>
-#include "linux/types.h"
+#include "platform/types.h"
 #include "nvme-print.h"
 #include "util/cleanup.h"
 #include "util/utils.h"
@@ -57,7 +57,9 @@
 #define C6_log_size 512
 #define C5_MicronWorkLoad_log_size 256
 
+#ifndef min
 #define min(x, y) ((x) > (y) ? (y) : (x))
+#endif
 #define SensorCount 8
 
 /* Plugin version major_number.minor_number.patch */
@@ -232,7 +234,7 @@ static enum eDriveModel GetDriveModel(int idx)
 static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 {
 	int  err = 0;
-	char strBuffer[PATH_MAX];
+	char strBuffer[4096];
 	int  nRet;
 	bool is_tgz = false;
 	struct stat sb;
@@ -251,14 +253,14 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 	/* check if log file is created, if not print error message */
 	if (nRet < 0 || (stat(strFileName, &sb) == -1)) {
 		if (is_tgz)
-			sprintf(strBuffer, "check if tar and gzip commands are installed");
+			snprintf(strBuffer, sizeof(strBuffer), "check if tar and gzip commands are installed");
 		else
-			sprintf(strBuffer, "check if zip command is installed");
+			snprintf(strBuffer, sizeof(strBuffer), "check if zip command is installed");
 
 		fprintf(stderr, "Failed to create log data package, %s!\n", strBuffer);
 	}
 
-	sprintf(strBuffer, "rm -f -R \"%s\" >temp.txt 2>&1", strDirName);
+	snprintf(strBuffer, sizeof(strBuffer), "rm -f -R \"%s\" >temp.txt 2>&1", strDirName);
 	nRet = system(strBuffer);
 	if (nRet < 0)
 		printf("Failed to remove temporary files!\n");
@@ -2166,7 +2168,7 @@ static void GetTimestampInfo(const char *strOSDirName)
 		return;
 
 	num = strftime((char *)outstr, sizeof(outstr),
-				   "Timestamp (UTC): %a, %d %b %Y %T %z", tmp);
+				   "Timestamp (UTC): %a, %d %b %Y %H:%M:%S %z", tmp);
 	num += sprintf((char *)(outstr + num), "\nPackage Version: 1.4");
 	if (num) {
 		strPDir = strdup(strOSDirName);
@@ -2273,7 +2275,7 @@ static void GetOSConfig(const char *strOSDirName)
 {
 	FILE *fpOSConfig = NULL;
 	char strBuffer[1024];
-	char strFileName[PATH_MAX];
+	char strFileName[4096];
 	int i;
 
 	struct {

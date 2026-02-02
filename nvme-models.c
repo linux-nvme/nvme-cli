@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include "nvme-models.h"
+#include "platform/includes.h"
 
 static char *_fmt1 = "/sys/class/nvme/nvme%d/device/subsystem_vendor";
 static char *_fmt2 = "/sys/class/nvme/nvme%d/device/subsystem_device";

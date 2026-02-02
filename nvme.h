@@ -16,12 +16,14 @@
 #ifndef _NVME_H
 #define _NVME_H
 
-#include <dirent.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#ifndef _WIN32
+#include <dirent.h>
 #include <endian.h>
 #include <sys/time.h>
+#endif
 #include <sys/stat.h>
 
 #include <libnvme-mi.h>
