@@ -232,7 +232,7 @@
 #define SNDK_TELEMETRY_TYPE_NONE            0x0
 #define SNDK_TELEMETRY_TYPE_HOST            0x1
 #define SNDK_TELEMETRY_TYPE_CONTROLLER      0x2
-
+#define SNDK_TELEMETRY_TYPE_BOTH            0x3
 /* Misc */
 #define SNDK_MAX_PATH_LEN                   256
 #define SNDK_GUID_LENGTH                    16
