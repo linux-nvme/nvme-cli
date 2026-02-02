@@ -18,6 +18,7 @@
 #define ARBITRATION_DESC "Get and set arbitration feature"
 #define VOLATILE_WC_DESC "Get and set volatile write cache feature"
 #define POWER_LIMIT_DESC "Get and set power limit feature"
+#define POWER_THRESH_DESC "Get and set power threshold feature"
 
 #define FEAT_ARGS(n, ...)                                              \
 	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
@@ -33,6 +34,7 @@ PLUGIN(NAME("feat", "NVMe feature extensions", FEAT_PLUGIN_VERSION),
 		ENTRY("arbitration", ARBITRATION_DESC, feat_arbitration)
 		ENTRY("volatile-wc", VOLATILE_WC_DESC, feat_volatile_wc)
 		ENTRY("power-limit", POWER_LIMIT_DESC, feat_power_limit)
+		ENTRY("power-thresh", POWER_THRESH_DESC, feat_power_thresh)
 	)
 );
 #endif /* !FEAT_NVME || CMD_HEADER_MULTI_READ */

@@ -1099,6 +1099,22 @@ enum nvme_psd_ps {
 };
 
 /**
+ * enum nvme_power_measurement_type - Power measurement types.
+ * @NVME_PMT_NSS_TOTAL_POWER: NVM subsystem total power
+ * @NVME_PMT_RSVD_MIN:	      Reserved minimum value
+ * @NVME_PMT_RSVD_MAX:	      Reserved maximum value
+ * @NVME_PMT_VS_MIN:	      Vendor Specific minimum value
+ * @NVME_PMT_VS_MAX:	      Vendor Specific maximum value
+ */
+enum nvme_power_measurement_type {
+	NVME_PMT_NSS_TOTAL_POWER = 0x0,
+	NVME_PMT_RSVD_MIN	 = 0x1,
+	NVME_PMT_RSVD_MAX	 = 0xb,
+	NVME_PMT_VS_MIN		 = 0xc,
+	NVME_PMT_VS_MAX		 = 0xf,
+};
+
+/**
  * nvme_psd_power_scale() - power scale occupies the upper 3 bits
  * @ps: power scale value
  *
@@ -9063,6 +9079,14 @@ enum nvme_features_id {
  * @NVME_FEAT_POWER_LIMIT_PLV_MASK:
  * @NVME_FEAT_POWER_LIMIT_PLS_SHIFT:
  * @NVME_FEAT_POWER_LIMIT_PLS_MASK:
+ * @NVME_FEAT_POWER_THRESH_PTV_SHIFT:
+ * @NVME_FEAT_POWER_THRESH_PTV_MASK:
+ * @NVME_FEAT_POWER_THRESH_PTS_SHIFT:
+ * @NVME_FEAT_POWER_THRESH_PTS_MASK:
+ * @NVME_FEAT_POWER_THRESH_PMTS_SHIFT:
+ * @NVME_FEAT_POWER_THRESH_PMTS_MASK:
+ * @NVME_FEAT_POWER_THRESH_EPT_SHIFT:
+ * @NVME_FEAT_POWER_THRESH_EPT_MASK:
  **/
 enum nvme_feat {
 	NVME_FEAT_ARBITRATION_BURST_SHIFT	= 0,
@@ -9221,6 +9245,14 @@ enum nvme_feat {
 	NVME_FEAT_POWER_LIMIT_PLV_MASK	= 0xffff,
 	NVME_FEAT_POWER_LIMIT_PLS_SHIFT	= 16,
 	NVME_FEAT_POWER_LIMIT_PLS_MASK	= 0x3,
+	NVME_FEAT_POWER_THRESH_PTV_SHIFT = 0,
+	NVME_FEAT_POWER_THRESH_PTV_MASK	= 0xffff,
+	NVME_FEAT_POWER_THRESH_PTS_SHIFT = 16,
+	NVME_FEAT_POWER_THRESH_PTS_MASK	= 0x3,
+	NVME_FEAT_POWER_THRESH_PMTS_SHIFT = 20,
+	NVME_FEAT_POWER_THRESH_PMTS_MASK = 0xf,
+	NVME_FEAT_POWER_THRESH_EPT_SHIFT = 31,
+	NVME_FEAT_POWER_THRESH_EPT_MASK	= 0x1,
 };
 
 /**
