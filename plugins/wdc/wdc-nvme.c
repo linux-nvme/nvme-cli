@@ -1962,6 +1962,7 @@ static __u64 wdc_get_drive_capabilities(struct nvme_global_ctx *ctx, struct nvme
 					WDC_DRIVE_CAP_OCP_C5_LOG_PAGE |
 					WDC_DRIVE_CAP_UDUI |
 					WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
+					WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_CLOUD_SSD_VERSION |
 					WDC_DRIVE_CAP_LOG_PAGE_DIR |
 					WDC_DRIVE_CAP_DRIVE_STATUS |
