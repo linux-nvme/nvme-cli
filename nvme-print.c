@@ -1511,6 +1511,20 @@ const char *nvme_feature_power_limit_scale_to_string(__u8 pls)
 	return "Reserved";
 }
 
+const char *nvme_power_measurement_type_to_string(__u8 pmt)
+{
+	switch (pmt) {
+	case NVME_PMT_NSS_TOTAL_POWER:
+		return "NVM subsystem total power";
+	case NVME_PMT_VS_MIN ... NVME_PMT_VS_MAX:
+		return "Vendor Specific";
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	nvme_print(show_feature, NORMAL, fid, sel, result);

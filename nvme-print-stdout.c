@@ -5335,6 +5335,23 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		print_power_and_scale(NVME_FEAT_POWER_LIMIT_PLV(result), field);
 		printf("\n");
 		break;
+	case NVME_FEAT_FID_POWER_THRESH:
+		field = NVME_FEAT_POWER_THRESH_EPT(result);
+		printf("\tEnable Power Threshold (EPT): %u - %s\n",
+		       field, field ? "Enabled" : "Disabled");
+		field = NVME_FEAT_POWER_THRESH_PMTS(result);
+		printf("\tPower Measurement Type Select (PMTS): %u - %s\n",
+		       field, nvme_power_measurement_type_to_string(field));
+		field = NVME_FEAT_POWER_THRESH_PTS(result);
+		printf("\tPower Threshold Scale (PTS): %u - %s\n", field,
+		       nvme_feature_power_limit_scale_to_string(field));
+		printf("\tPower Threshold Value (PTV): %u\n",
+		       NVME_FEAT_POWER_THRESH_PTV(result));
+		printf("\tPower Threshold: ");
+		print_power_and_scale(NVME_FEAT_POWER_THRESH_PTV(result),
+				      field);
+		printf("\n");
+		break;
 	default:
 		break;
 	}
