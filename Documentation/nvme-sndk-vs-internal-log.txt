@@ -40,12 +40,25 @@ OPTIONS
 -d <DATA AREA>::
 --data-area=<DATA AREA>::
 	Data area to retrieve. For capture with a --type value that includes
-	telemetry (CONTROLLER or HOST), this specifies the NVMe telemetry data
-	area to capture, containing data from areas 1 to <DATA AREA>. For
-	capture without such a --type value, this specifies the amount of
-	vendor defined debug data to capture, and this is only supported on the
-	SN340, SN350, SN530, SN570, SN730, SN740, SN840, SN850X, SN5000,
-	SN5100S, SN7000S, SN7100, and SN7150 devices.
+	telemetry (CONTROLLER, HOST, or BOTH), this specifies the NVMe
+	telemetry data area to capture, containing data from areas 1 to
+	<DATA AREA>. For capture without such a --type value, this specifies
+	the amount of vendor defined debug data to capture, and this is only
+	supported on the SN340, SN350, SN530, SN570, SN730, SN740, SN840,
+	SN850X, SN5000, SN5100S, SN7000S, SN7100, and SN7150 devices.
+
+-t <TYPE>::
+--type=<TYPE>::
+	Specifies the telemetry type - NONE, HOST, CONTROLLER, or BOTH. This
+	parameter is used to get either the host-initiated or controller-
+	initiated telemetry log page. If BOTH is specified, both host and
+	controller telemetry are captured and packaged into a tar archive.
+	If not specified or if <TYPE> is NONE, the command will return vendor
+	defined debug data.
+
+-v <VERBOSE>::
+--verbose=<VERBOSE>::
+	Provides additional debug messages for certain drives.
 
 -f <FILE SIZE>::
 --file-size=<FILE SIZE>::
@@ -63,17 +76,6 @@ OPTIONS
 	supported on the devices mentioned in the documentation of the
 	--data-area parameter, and only for capture with --type=NONE or --type
 	not specified.
-
--t <TYPE>::
---type=<TYPE>::
-	Specifies the telemetry type - NONE, HOST, or CONTROLLER. This parameter
-	is used to get either the host-initiated or controller-initiated
-	telemetry log page. If not specified or if <TYPE> is NONE, the command
-	will return vendor defined debug data.
-
--v <VERBOSE>::
---verbose=<VERBOSE>::
-	Provides additional debug messages for certain drives.
 
 EXAMPLES
 --------
@@ -118,6 +120,11 @@ EXAMPLES
 +
 ------------
 # nvme sndk vs-internal-log /dev/nvme1 -t controller -o ctlr-telem-log-da3.bin -d 3
+------------
+* Gets both host and controller telemetry log pages to data area 3 from the device and packages them in a tar file:
++
+------------
+# nvme sndk vs-internal-log /dev/nvme1 -t both -o both-telem-log-da3.tar -d 3
 ------------
 
 NVME
