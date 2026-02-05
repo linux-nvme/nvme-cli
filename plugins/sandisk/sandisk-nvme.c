@@ -310,12 +310,16 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	const char *file = "Output file pathname.";
 	const char *size = "Data retrieval transfer size.";
 	const char *data_area =
-		"Data area to retrieve up to. Currently only supported on the SN340, SN640, SN730, and SN840 devices.";
-	const char *file_size = "Output file size. Currently only supported on the SN340 device.";
+		"Data area to retrieve up to. Supported for telemetry, see man page for other use cases.";
+	const char *file_size =
+		"Output file size. Deprecated, see man page for supported devices.";
 	const char *offset =
-		"Output file data offset. Currently only supported on the SN340 device.";
+		"Output file data offset. Deprecated, see man page for supported devices.";
 	const char *type =
-		"Telemetry type - NONE, HOST, or CONTROLLER Currently only supported on the SN530, SN640, SN730, SN740, SN810, SN840 and ZN350 devices.";
+		"Telemetry type - NONE, HOST, or CONTROLLER:\n" \
+		"  NONE - Default, capture without using NVMe telemetry.\n" \
+		"  HOST - Host-initiated telemetry.\n" \
+		"  CONTROLLER - Controller-initiated telemetry.";
 	const char *verbose = "Display more debug messages.";
 	char f[PATH_MAX] = {0};
 	char fileSuffix[PATH_MAX] = {0};
