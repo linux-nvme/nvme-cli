@@ -284,17 +284,18 @@ void *nvme_next_ctrl(void *s, void *c)
 	return NULL;
 }
 
-nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport, const char *traddr,
-		       const char *trsvcid, const char *subsysnqn,
-		       const char *host_traddr, nvme_ctrl_t p)
+nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
+			     const char *traddr, const char *host_traddr,
+			     const char *host_iface, const char *trsvcid,
+			     nvme_ctrl_t p)
 {
 	stub_log(__func__);
 	(void)s;
 	(void)transport;
 	(void)traddr;
-	(void)trsvcid;
-	(void)subsysnqn;
 	(void)host_traddr;
+	(void)host_iface;
+	(void)trsvcid;
 	(void)p;
 	return NULL;
 }
@@ -735,18 +736,19 @@ int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan)
 	return -1;
 }
 
-void *nvme_mi_first_ctrl(void *ep)
+struct nvme_transport_handle *nvme_mi_first_transport_handle(nvme_mi_ep_t ep)
 {
 	stub_log(__func__);
 	(void)ep;
 	return NULL;
 }
 
-void *nvme_mi_next_ctrl(void *ep, void *c)
+struct nvme_transport_handle *nvme_mi_next_transport_handle(nvme_mi_ep_t ep,
+	struct nvme_transport_handle *hdl)
 {
 	stub_log(__func__);
 	(void)ep;
-	(void)c;
+	(void)hdl;
 	return NULL;
 }
 
@@ -769,53 +771,61 @@ int nvme_linux_status_to_errno(int status)
 /*
  * TLS/PSK key management stubs (linux.c functions)
  */
-int nvme_export_tls_key_versioned(unsigned char version, unsigned char hmac,
+int nvme_export_tls_key_versioned(struct nvme_global_ctx *ctx,
+				  unsigned char version, unsigned char hmac,
 				  const unsigned char *key_data,
-				  size_t key_len, char **encoded_keyp)
+				  size_t key_len, char **identity)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)version;
 	(void)hmac;
 	(void)key_data;
 	(void)key_len;
-	(void)encoded_keyp;
+	(void)identity;
 	errno = ENOTSUP;
 	return -1;
 }
 
-int nvme_export_tls_key(const unsigned char *key_data, int key_len, char **key)
+int nvme_export_tls_key(struct nvme_global_ctx *ctx,
+	const unsigned char *key_data, int key_len, char **identity)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)key_data;
+	(void)key_len;
+	(void)identity;
+	errno = ENOTSUP;
+	return -1;
+}
+
+int nvme_import_tls_key_versioned(struct nvme_global_ctx *ctx,
+				  const char *encoded_key,
+				  unsigned char *version,
+				  unsigned char *hmac,
+				  size_t *key_len,
+				  unsigned char **key)
+{
+	stub_log(__func__);
+	(void)ctx;
+	(void)encoded_key;
+	(void)version;
+	(void)hmac;
 	(void)key_len;
 	(void)key;
 	errno = ENOTSUP;
 	return -1;
 }
 
-int nvme_import_tls_key_versioned(const char *encoded_key,
-				  unsigned char *version,
-				  unsigned char *hmac,
-				  size_t *key_len,
-				  unsigned char **keyp)
+int nvme_import_tls_key(struct nvme_global_ctx *ctx, const char *encoded_key,
+			int *key_len, unsigned int *hmac, unsigned char **key)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)encoded_key;
-	(void)version;
+	(void)key_len;
 	(void)hmac;
-	(void)key_len;
-	(void)keyp;
-	errno = ENOTSUP;
-	return -1;
-}
-
-int nvme_import_tls_key(const char *encoded_key, int *key_len,
-			unsigned char **keyp)
-{
-	stub_log(__func__);
-	(void)encoded_key;
-	(void)key_len;
-	(void)keyp;
+	(void)key;
 	errno = ENOTSUP;
 	return -1;
 }
@@ -856,25 +866,25 @@ const char *nvme_transport_handle_get_name(void *hdl)
 	return "";
 }
 
-int nvme_transport_handle_is_blkdev(void *hdl)
+bool nvme_transport_handle_is_blkdev(struct nvme_transport_handle *hdl)
 {
 	stub_log(__func__);
 	(void)hdl;
-	return 0;
+	return false;
 }
 
-int nvme_transport_handle_is_chardev(void *hdl)
+bool nvme_transport_handle_is_chardev(struct nvme_transport_handle *hdl)
 {
 	stub_log(__func__);
 	(void)hdl;
-	return 0;
+	return false;
 }
 
-int nvme_transport_handle_is_direct(void *hdl)
+bool nvme_transport_handle_is_direct(struct nvme_transport_handle *hdl)
 {
 	stub_log(__func__);
 	(void)hdl;
-	return 0;
+	return false;
 }
 
 /* Controller property getters (tree.c) */
@@ -995,7 +1005,8 @@ nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p)
 }
 
 /* ANA log utilities (linux.c) */
-unsigned long nvme_get_ana_log_len_from_id_ctrl(const void *id_ctrl, int rgo)
+size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
+	bool rgo)
 {
 	stub_log(__func__);
 	(void)id_ctrl;
