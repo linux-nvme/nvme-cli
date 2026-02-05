@@ -1,0 +1,52 @@
+name: Micron - Merge master to mingw
+
+on:
+  push:
+    branches:
+      # Trigger merge when master is synced to upstream.
+      - master
+  schedule:
+    # Backup: Run at 4:30 AM UTC (1 hour after sync completes)
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git identity
+        run: |
+          set -euo pipefail
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Fetch branches
+        run: |
+          set -euo pipefail
+          git fetch origin master
+          git fetch origin mingw
+      
+      - name: Merge master into mingw
+        run: |
+          set -euo pipefail
+          git checkout mingw
+          git merge origin/master -m "Auto-merge master into mingw"
+      
+      - name: Push changes
+        run: |
+          set -euo pipefail
+          git push origin mingw
+      
+      - name: Notify on merge conflict
+        if: failure()
+        run: |
+          set -euo pipefail
+          echo "::error::Failed to merge master into mingw. Manual intervention required."
+          exit 1
