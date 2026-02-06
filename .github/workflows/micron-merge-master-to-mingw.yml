@@ -25,25 +25,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: mingw
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Configure Git identity
         run: |
           set -euo pipefail
-          git config --global user.name  "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Fetch branches
-        run: |
-          set -euo pipefail
-          git fetch origin master
-          git fetch origin mingw
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Merge master into mingw
         run: |
           set -euo pipefail
-          git checkout mingw
+          git fetch origin master
           git merge origin/master -m "Auto-merge master into mingw"
 
       - name: Push changes
