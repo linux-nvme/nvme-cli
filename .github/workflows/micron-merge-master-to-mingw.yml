@@ -15,11 +15,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.TACT_SYNC_APP_ID }}
+          private-key: ${{ secrets.TACT_SYNC_APP_PRIVATE_KEY }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.JLMUNN_PAT }}
+          token: ${{ steps.generate-token.outputs.token }}
 
       - name: Configure Git identity
         run: |
