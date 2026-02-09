@@ -852,14 +852,13 @@ void nvme_close(struct nvme_transport_handle *hdl)
 	(void)hdl;
 }
 
-int nvme_transport_handle_get_fd(void *hdl)
+nvme_fd_t nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
 {
-	stub_log(__func__);
-	(void)hdl;
-	return -1;
+	// TODO: identical to linux.c, need to refactor.
+	return hdl->fd;
 }
 
-const char *nvme_transport_handle_get_name(void *hdl)
+const char *nvme_transport_handle_get_name(struct nvme_transport_handle *hdl)
 {
 	stub_log(__func__);
 	(void)hdl;
@@ -1321,4 +1320,65 @@ void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
 	stub_log(__func__);
 	(void)ctx;
 	(void)head;
+}
+
+/* Platform-specific fstat wrapper for nvme_fd_t */
+int nvme_fstat(nvme_fd_t fd, struct stat *buf)
+{
+	BY_HANDLE_FILE_INFORMATION file_info;
+	ULARGE_INTEGER ull;
+
+	if (!buf) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* Check for invalid handle */
+	if (fd == INVALID_HANDLE_VALUE || fd == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	/* Get file information from Windows handle */
+	if (!GetFileInformationByHandle(fd, &file_info)) {
+		errno = EBADF;
+		return -1;
+	}
+
+	/* Fill in the stat structure */
+	memset(buf, 0, sizeof(*buf));
+
+	/* Convert Windows file attributes to stat mode */
+	if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)
+		/* Windows device files should be marked as block devices */
+		/* This is used by nvme_verify_chr to check device type */
+		buf->st_mode = S_IFBLK | 0600;
+	else if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		buf->st_mode = S_IFDIR | 0755;
+	else
+		buf->st_mode = S_IFREG | 0644;
+
+	/* File size */
+	buf->st_size = (((off_t)file_info.nFileSizeHigh << 32)
+					| file_info.nFileSizeLow);
+
+	/* Number of hard links */
+	buf->st_nlink = file_info.nNumberOfLinks;
+
+	/* Convert FILETIME to time_t for timestamps */
+	/* Windows FILETIME is 100-nanosecond intervals since Jan 1, 1601 */
+	/* Unix time_t is seconds since Jan 1, 1970 */
+	ull.LowPart = file_info.ftLastWriteTime.dwLowDateTime;
+	ull.HighPart = file_info.ftLastWriteTime.dwHighDateTime;
+	buf->st_mtime = (time_t)((ull.QuadPart / 10000000ULL) - 11644473600ULL);
+
+	ull.LowPart = file_info.ftLastAccessTime.dwLowDateTime;
+	ull.HighPart = file_info.ftLastAccessTime.dwHighDateTime;
+	buf->st_atime = (time_t)((ull.QuadPart / 10000000ULL) - 11644473600ULL);
+
+	ull.LowPart = file_info.ftCreationTime.dwLowDateTime;
+	ull.HighPart = file_info.ftCreationTime.dwHighDateTime;
+	buf->st_ctime = (time_t)((ull.QuadPart / 10000000ULL) - 11644473600ULL);
+
+	return 0;
 }

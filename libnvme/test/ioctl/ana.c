@@ -14,7 +14,6 @@
 #include "nvme/types.h"
 #include "util.h"
 
-#define TEST_FD 0xFD
 #define PDU_SIZE NVME_LOG_PAGE_PDU_SIZE
 
 static struct nvme_transport_handle *test_hdl;

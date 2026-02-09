@@ -9,7 +9,6 @@
 #include <string.h>
 #include <inttypes.h>
 
-#define TEST_FD 0xFD
 #define TEST_NSID 0x12345678
 #define TEST_CSI NVME_CSI_KV
 

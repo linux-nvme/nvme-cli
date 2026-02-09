@@ -39,6 +39,16 @@
 /* Extract IPv4 from IPv6 mapped address */
 #define ipv4_from_in6_addr(addr) &(addr.s6_addr32[3])
 
+typedef int nvme_fd_t;
+#define TEST_FD 0xFD
+#define INIT_FD -1
+
+/* Platform-specific fstat wrapper for nvme_fd_t */
+static inline int nvme_fstat(nvme_fd_t fd, struct stat *buf)
+{
+	return fstat(fd, buf);
+}
+
 /* Platform-specific UUID generation using /dev/urandom */
 static inline int random_uuid(unsigned char *uuid, size_t len)
 {

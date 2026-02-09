@@ -27,7 +27,7 @@
 static int nvme_verify_chr(struct nvme_transport_handle *hdl)
 {
 	static struct stat nvme_stat;
-	int err = fstat(hdl->fd, &nvme_stat);
+	int err = nvme_fstat(hdl->fd, &nvme_stat);
 
 	if (err < 0)
 		return -errno;
@@ -298,7 +298,7 @@ static bool nvme_uring_is_usable(struct nvme_transport_handle *hdl)
 
 	if (io_uring_kernel_support != IO_URING_AVAILABLE ||
 	    hdl->type != NVME_TRANSPORT_HANDLE_TYPE_DIRECT ||
-	    fstat(hdl->fd, &st) || !S_ISCHR(st.st_mode))
+	    nvme_fstat(hdl->fd, &st) || !S_ISCHR(st.st_mode))
 		return false;
 
 	return true;

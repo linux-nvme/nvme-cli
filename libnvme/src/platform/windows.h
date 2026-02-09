@@ -99,8 +99,16 @@ static inline void closelog(void) { }
 #define BLKRRPART 0x125F
 #endif
 
+typedef HANDLE nvme_fd_t;
+#define TEST_FD INVALID_HANDLE_VALUE
+#define INIT_FD nullptr
+
+/* Platform-specific fstat wrapper for nvme_fd_t */
+int nvme_fstat(nvme_fd_t fd, struct stat *buf);
+
 /* Windows ioctl stub functions */
-static inline int ioctl(int fd, unsigned long request, ...) {
+static inline int ioctl(nvme_fd_t fd, unsigned long request, ...)
+{
     (void)fd; (void)request;
     errno = ENOSYS;
     return -1;

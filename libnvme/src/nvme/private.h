@@ -97,7 +97,7 @@ struct nvme_transport_handle {
 			struct nvme_passthru_cmd *cmd, int err);
 
 	/* direct */
-	int fd;
+	nvme_fd_t fd;
 	struct stat stat;
 	bool ioctl64;
 

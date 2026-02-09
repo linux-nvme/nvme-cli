@@ -13,7 +13,6 @@
 #include "mock.h"
 #include "util.h"
 
-#define TEST_FD 0xFD
 #define HEADER_LEN 20
 
 static struct nvme_transport_handle *test_hdl;

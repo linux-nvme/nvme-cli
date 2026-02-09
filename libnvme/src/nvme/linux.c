@@ -94,7 +94,7 @@ static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl
 	if (hdl->fd < 0)
 		return -errno;
 
-	ret = fstat(hdl->fd, &hdl->stat);
+	ret = nvme_fstat(hdl->fd, &hdl->stat);
 	if (ret < 0)
 		return -errno;
 
@@ -152,7 +152,7 @@ int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 
 	if (!strncmp(name, "NVME_TEST_FD", 12)) {
 		hdl->type = NVME_TRANSPORT_HANDLE_TYPE_DIRECT;
-		hdl->fd = 0xFD;
+		hdl->fd = TEST_FD;
 
 		if (!strcmp(name, "NVME_TEST_FD64"))
 			hdl->ioctl64 = true;
@@ -196,7 +196,7 @@ void nvme_close(struct nvme_transport_handle *hdl)
 	}
 }
 
-int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
+nvme_fd_t nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
 {
 	return hdl->fd;
 }
