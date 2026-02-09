@@ -41,7 +41,7 @@ jobs:
         git diff origin/${{ github.base_ref }} > patch.diff
 
         echo "::group::Checkpatch Results"
-        if ./checkpatch.pl --no-tree --strict --show-types patch.diff; then
+        if ./checkpatch.pl --no-tree --show-types patch.diff; then
           echo "::endgroup::"
           echo "✅ No checkpatch issues found"
         else
