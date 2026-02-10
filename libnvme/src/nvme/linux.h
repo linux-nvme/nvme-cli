@@ -24,6 +24,7 @@
 /**
  * nvme_fw_download_seq() - Firmware download sequence
  * @hdl:	Transport handle
+ * @ish:	Ignore Shutdown (for NVMe-MI command)
  * @size:	Total size of the firmware image to transfer
  * @xfer:	Maximum size to send with each partial transfer
  * @offset:	Starting offset to send with this firmware download
@@ -32,8 +33,8 @@
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size, __u32 xfer, __u32 offset,
-			 void *buf);
+int nvme_fw_download_seq(struct nvme_transport_handle *hdl, bool ish,
+			__u32 size, __u32 xfer, __u32 offset, void *buf);
 
 /**
  * nvme_set_etdas() - Set the Extended Telemetry Data Area 4 Supported bit
@@ -193,6 +194,7 @@ int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae, struct 
 /**
  * nvme_namespace_attach_ctrls() - Attach namespace to controller(s)
  * @hdl:	Transport handle
+ * @ish:	Ignore Shutdown (for NVMe-MI command)
  * @nsid:	Namespace ID to attach
  * @num_ctrls:	Number of controllers in ctrlist
  * @ctrlist:	List of controller IDs to perform the attach action
@@ -200,11 +202,13 @@ int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae, struct 
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
+int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, bool ish,
+				__u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
 
 /**
  * nvme_namespace_detach_ctrls() - Detach namespace from controller(s)
  * @hdl:	Transport handle
+ * @ish:	Ignore Shutdown (for NVMe-MI command)
  * @nsid:	Namespace ID to detach
  * @num_ctrls:	Number of controllers in ctrlist
  * @ctrlist:	List of controller IDs to perform the detach action
@@ -212,7 +216,8 @@ int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, _
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
+int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, bool ish,
+			__u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
 
 /**
  * nvme_open() - Open an nvme controller or namespace device
