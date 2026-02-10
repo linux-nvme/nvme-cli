@@ -51,18 +51,20 @@ OPTIONS
 []
 |=================
 |Value|Definition
-|0|Downloaded image replaces the image indicated by the Firmware Slot
-field. This image is not activated.
-|1|Downloaded image replaces the image indicated by the Firmware Slot
-field. This image is activated at the next reset.
-|2|The image indicated by the Firmware Slot field is activated at the
+|0 \| 'replace'| Downloaded image replaces the image indicated by the
+Firmware Slot field. This image is not activated.
+|1 \| 'replace-and-activate'| Downloaded image replaces the image
+indicated by the Firmware Slot field. This image is activated at the
 next reset.
-|3|The image specified by the Firmware Slot field is requested to be
-activated immediately without reset.
-|6|Downloaded image replaces the Boot Partition specified by the Boot Partition
-ID field.
-|7|Mark the Boot Partition specified in the BPID field as active and update
-BPINFO.ABPID.
+|2 \| 'set-active'| The image indicated by the Firmware Slot field is
+activated at the next reset.
+|3 \| 'replace-and-activate-immediate'| The image specified by the
+Firmware Slot field is requested to be activated immediately without
+reset.
+|6 \| 'replace-boot-partition'| Downloaded image replaces the Boot
+Partition specified by the Boot Partition ID field.
+|7 \| 'activate-boot-partition'| Mark the Boot Partition specified in
+the BPID field as active and update BPINFO.ABPID.
 |=================
 
 -s <slot>::
