@@ -5272,7 +5272,11 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 		"with an 'echo 1 > /sys/class/nvme/nvmeX/reset_controller'. "
 		"Ensure nvmeX is the device you just activated before reset.";
 	const char *slot = "[0-7]: firmware slot for commit action";
-	const char *action = "[0-7]: commit action";
+	const char *action = "[0-7]: commit action: 0 = replace, "
+				"1 = replace and activate, 2 = set active, "
+				"3 = replace and activate immediate, "
+				"6 = replace boot partition, "
+				"7 = activate boot partition";
 	const char *bpid = "[0,1]: boot partition identifier, if applicable (default: 0)";
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
