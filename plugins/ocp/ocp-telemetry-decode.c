@@ -1225,6 +1225,9 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				(le16_to_cpu((unsigned int)pStaticSnapshotEvent->stat_data_size) *
 					SIZE_OF_DWORD);
 
+			struct json_object *pstats_array =
+				((pevent_fifos_object != NULL) ? json_create_array() : NULL);
+
 			if (pStaticSnapshotEvent != NULL &&
 				pStaticSnapshotEvent->stat_data_size > 0) {
 				__u8 *pstatistic_entry =
@@ -1234,7 +1237,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 				parse_statistic(
 					(struct nvme_ocp_telemetry_statistic_descriptor *)
 						pstatistic_entry,
-					pevent_descriptor_obj,
+					pstats_array,
 					fp);
 			}
 		} else {

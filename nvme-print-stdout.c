@@ -314,6 +314,8 @@ void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head, int
 static void pel_event_header(int i, struct nvme_persistent_event_entry *pevent_entry_head,
 			     int human)
 {
+	__u16 vsil = le16_to_cpu(pevent_entry_head->vsil);
+
 	printf("Event Number: %u\n", i);
 	printf("Event Type: %s\n", nvme_pel_event_to_string(pevent_entry_head->etype));
 	printf("Event Type Revision: %u\n", pevent_entry_head->etype_rev);
@@ -326,8 +328,13 @@ static void pel_event_header(int i, struct nvme_persistent_event_entry *pevent_e
 	printf("Controller Identifier: %u\n", le16_to_cpu(pevent_entry_head->cntlid));
 	printf("Event Timestamp: %"PRIu64"\n", le64_to_cpu(pevent_entry_head->ets));
 	printf("Port Identifier: %u\n", le16_to_cpu(pevent_entry_head->pelpid));
-	printf("Vendor Specific Information Length: %u\n", le16_to_cpu(pevent_entry_head->vsil));
+	printf("Vendor Specific Information Length: %u\n", vsil);
 	printf("Event Length: %u\n", le16_to_cpu(pevent_entry_head->el));
+
+	if (vsil) {
+		printf("Vendor Specific Information:\n");
+		d((void *)pevent_entry_head + 1, vsil, 16, 1);
+	}
 }
 
 static void pel_smart_health_event(void *pevent_log_info, __u32 offset, const char *devname)
@@ -495,11 +502,62 @@ static void pel_thermal_excursion_event(void *pevent_log_info, __u32 offset)
 	printf("Threshold: %u\n", thermal_exc_event->threshold);
 }
 
+static void pel_vs_event_data(void *vsed, __u8 vsedt, __u16 vsedl)
+{
+	printf("Vendor Specific Event Data:\n");
+	switch (vsedt) {
+	case NVME_PEL_VSEDT_EVENT_NAME:
+		printf("Event Name for Vendor Specific Event Code:\n");
+		printf("%.*s\n", vsedl, (char *)vsed);
+		break;
+	case NVME_PEL_VSEDT_ASCII_STRING:
+		printf("ASCII String Data:\n");
+		printf("%.*s\n", vsedl, (char *)vsed);
+		break;
+	case NVME_PEL_VSEDT_BINARY:
+		printf("Binary Data:\n");
+		d(vsed, vsedl, 16, 1);
+		break;
+	case NVME_PEL_VSEDT_SIGNED_INT:
+		printf("Signed Integer Data: %" PRId64 "\n", (int64_t)vsedt);
+		break;
+	default:
+		printf("Reserved data type. As Binary:\n");
+		d(vsed, vsedl, 16, 1);
+	}
+}
+
+static void pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
+				      __u32 event_data_len)
+{
+	__u32 progress = 0;
+	__u16 vsedl;
+	int i;
+	struct nvme_vs_event_desc *vs_desc;
+
+	printf("Vendor Specific Event Entry:\n");
+	for (i = 0; progress < event_data_len; i++) {
+		vs_desc = pevent_log_info + offset + progress;
+		vsedl = le16_to_cpu(vs_desc->vsedl);
+
+		printf("Vendor Specific Event Descriptor %u:\n", i);
+		printf("Vendor Specific Event Code: %u\n", le16_to_cpu(vs_desc->vsec));
+		printf("Vendor Specific Event Data Type: %u\n", vs_desc->vsedt);
+		printf("Vendor Specific Event UIndex: %u\n", vs_desc->uidx);
+		printf("Vendor Specific Event Data Length: %u\n", vsedl);
+		if (vsedl)
+			pel_vs_event_data(vs_desc + 1, vs_desc->vsedt,
+					  vsedl);
+		progress += sizeof(*vs_desc) + vsedl;
+	}
+}
+
 static void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u32 size,
 					const char *devname)
 {
 	struct nvme_persistent_event_log *pevent_log_head;
 	__u32 offset = sizeof(*pevent_log_head);
+	__u16 vsil, el;
 	struct nvme_persistent_event_entry *pevent_entry_head;
 	int human = stdout_print_ops.flags & VERBOSE;
 
@@ -524,14 +582,15 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u3
 			break;
 
 		pevent_entry_head = pevent_log_info + offset;
+		vsil = le16_to_cpu(pevent_entry_head->vsil);
+		el = le16_to_cpu(pevent_entry_head->el);
 
-		if ((offset + pevent_entry_head->ehl + 3 +
-			le16_to_cpu(pevent_entry_head->el)) >= size)
+		if ((offset + pevent_entry_head->ehl + 3 + el) >= size)
 			break;
 
 		pel_event_header(i, pevent_entry_head, human);
 
-		offset += pevent_entry_head->ehl + 3;
+		offset += pevent_entry_head->ehl + vsil + 3;
 
 		switch (pevent_entry_head->etype) {
 		case NVME_PEL_SMART_HEALTH_EVENT:
@@ -576,11 +635,14 @@ static void stdout_persistent_event_log(void *pevent_log_info, __u8 action, __u3
 		case NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT:
 			printf("Sanitize Media Verification Event\n");
 			break;
+		case NVME_PEL_VENDOR_SPECIFIC_EVENT:
+			pel_vendor_specific_event(pevent_log_info, offset, el - vsil);
+			break;
 		default:
 			printf("Reserved Event\n\n");
 			break;
 		}
-		offset += le16_to_cpu(pevent_entry_head->el);
+		offset += el;
 		printf("\n");
 	}
 }
@@ -4691,7 +4753,7 @@ static void stdout_sanitize_log(struct nvme_sanitize_log_page *sanitize,
 	printf("Sanitize Progress                      (SPROG) :  %u",
 	       le16_to_cpu(sanitize->sprog));
 
-	if (human && status == NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS)
+	if (human && status == NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS)
 		stdout_sanitize_log_sprog(le16_to_cpu(sanitize->sprog));
 	else
 		printf("\n");

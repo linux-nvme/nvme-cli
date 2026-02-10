@@ -33,7 +33,7 @@ static int nvme_verify_chr(struct nvme_transport_handle *hdl)
 		return -errno;
 
 	if (!S_ISCHR(nvme_stat.st_mode))
-		return -ENOTBLK;
+		return -EINVAL;
 	return 0;
 }
 
