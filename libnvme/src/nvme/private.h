@@ -13,6 +13,8 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <ifaddrs.h>
 
 #include <nvme/fabrics.h>
 #include <nvme/mi.h>
@@ -273,6 +275,7 @@ struct nvme_global_ctx {
 	bool create_only;
 	bool dry_run;
 	struct nvme_fabric_options *options;
+	struct ifaddrs *ifaddrs_cache; /* init with nvme_getifaddrs() */
 };
 
 struct nvmf_discovery_ctx {
@@ -551,5 +554,19 @@ static inline char *xstrdup(const char *s)
 		return NULL;
 	return strdup(s);
 }
+
+/**
+ * nvme_getifaddrs - Cached wrapper around getifaddrs()
+ * @ctx: pointer to the global context
+ *
+ * On the first call, this function invokes the POSIX getifaddrs()
+ * and caches the result in the global context. Subsequent calls
+ * return the cached data. The caller must NOT call freeifaddrs()
+ * on the returned data. The cache will be freed when the global
+ * context is freed.
+ *
+ * Return: Pointer to I/F data, NULL on error (with errno set).
+ */
+const struct ifaddrs *nvme_getifaddrs(struct nvme_global_ctx *ctx);
 
 #endif /* _LIBNVME_PRIVATE_H */

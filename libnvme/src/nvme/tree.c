@@ -55,7 +55,7 @@ struct candidate_args {
 	const char *subsysnqn;
 	const char *host_traddr;
 	const char *host_iface;
-	struct ifaddrs *iface_list;
+	const struct ifaddrs *iface_list;
 	bool (*addreq)(const char *, const char *);
 	bool well_known_nqn;
 };
@@ -524,6 +524,9 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx)
 
 	if (!ctx)
 		return;
+
+	freeifaddrs(ctx->ifaddrs_cache); /* NULL-safe */
+	ctx->ifaddrs_cache = NULL;
 
 	free(ctx->options);
 	nvme_for_each_host_safe(ctx, h, _h)
@@ -1756,7 +1759,8 @@ static bool _match_ctrl(struct nvme_ctrl *c, struct candidate_args *candidate)
  * Return: The matching function to use when comparing an existing
  * controller to the candidate controller.
  */
-static ctrl_match_t _candidate_init(struct candidate_args *candidate,
+static ctrl_match_t _candidate_init(struct nvme_global_ctx *ctx,
+				    struct candidate_args *candidate,
 				    const char *transport,
 				    const char *traddr,
 				    const char *trsvcid,
@@ -1786,12 +1790,7 @@ static ctrl_match_t _candidate_init(struct candidate_args *candidate,
 	}
 
 	if (streq0(transport, "tcp")) {
-		/* For TCP we may need to access the interface map.
-		 * Let's retrieve and cache the map.
-		 */
-		if (getifaddrs(&candidate->iface_list) == -1)
-			candidate->iface_list = NULL;
-
+		candidate->iface_list = nvme_getifaddrs(ctx); /* TCP only */
 		candidate->addreq = nvme_ipaddrs_eq;
 		return _tcp_match_ctrl;
 	}
@@ -1806,30 +1805,19 @@ static ctrl_match_t _candidate_init(struct candidate_args *candidate,
 	return _match_ctrl;
 }
 
-/**
- * _candidate_free() - Release resources allocated by _candidate_init()
- *
- * @candidate:	data to free.
- */
-static void _candidate_free(struct candidate_args *candidate)
-{
-	freeifaddrs(candidate->iface_list); /* This is NULL-safe */
-}
-
-#define _cleanup_candidate_ __cleanup__(_candidate_free)
-
 nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			       const char *traddr, const char *host_traddr,
 			       const char *host_iface, const char *trsvcid,
 			       const char *subsysnqn, nvme_ctrl_t p)
 {
-	_cleanup_candidate_ struct candidate_args candidate = {};
+	struct candidate_args candidate = {};
 	struct nvme_ctrl *c, *matching_c = NULL;
 	ctrl_match_t ctrl_match;
 
 	/* Init candidate and get the matching function to use */
-	ctrl_match = _candidate_init(&candidate, transport, traddr, trsvcid,
-				     subsysnqn, host_traddr, host_iface);
+	ctrl_match = _candidate_init(s->h->ctx, &candidate, transport, traddr,
+				     trsvcid, subsysnqn, host_traddr,
+				     host_iface);
 
 	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
 	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
@@ -1847,12 +1835,13 @@ bool nvme_ctrl_config_match(struct nvme_ctrl *c, const char *transport,
 			    const char *subsysnqn, const char *host_traddr,
 			    const char *host_iface)
 {
-	_cleanup_candidate_ struct candidate_args candidate = {};
+	struct candidate_args candidate = {};
 	ctrl_match_t ctrl_match;
 
 	/* Init candidate and get the matching function to use */
-	ctrl_match = _candidate_init(&candidate, transport, traddr, trsvcid,
-				     subsysnqn, host_traddr, host_iface);
+	ctrl_match = _candidate_init(c->ctx, &candidate, transport, traddr,
+				     trsvcid, subsysnqn, host_traddr,
+				     host_iface);
 
 	return ctrl_match(c, &candidate);
 }
