@@ -231,6 +231,13 @@ nvme_list_opts () {
 			;;
 		"fw-commit")
 		opts+=" --slot= -s --action= -a --bpid= -b --timeout= -t"
+		case $opt in
+			--action|-a)
+			vals+=" replace replace-and-activate set-active \
+				replace-and-activate-immediate
+				replace-boot-partition activate-boot-partition"
+				;;
+		esac
 			;;
 		"fw-download")
 		opts+=" --fw= -f --xfer= -x --offset= -O --timeout= -t"

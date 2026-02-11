@@ -48,9 +48,11 @@ static const char *timestamp_feat = "timestamp feature";
 static const char *temp_thresh_feat = "temperature threshold feature";
 static const char *arbitration_feat = "arbitration feature";
 static const char *volatile_wc_feat = "volatile write cache feature";
+static const char *power_limit_feat = "power limit feature";
+static const char *power_thresh_feat = "power threshold feature";
 
 static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
-		    __u32 cdw11, __u8 sel, const char *feat)
+		    __u32 cdw11, __u8 sel, __u8 uidx, const char *feat)
 {
 	__u64 result;
 	int err;
@@ -142,9 +144,10 @@ static int feat_power_mgmt(int argc, char **argv, struct command *acmd, struct p
 		return err;
 
 	if (argconfig_parse_seen(opts, "ps"))
-		err = power_mgmt_set(hdl, fid, cfg.ps, cfg.wh, argconfig_parse_seen(opts, "save"));
+		err = power_mgmt_set(hdl, fid, cfg.ps, cfg.wh,
+				     argconfig_parse_seen(opts, "save"));
 	else
-		err = feat_get(hdl, fid, 0, cfg.sel, power_mgmt_feat);
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, power_mgmt_feat);
 
 	return err;
 }
@@ -240,11 +243,13 @@ static int feat_perfc(int argc, char **argv, struct command *acmd, struct plugin
 
 	cdw11 = NVME_SET(cfg.attri, FEAT_PERFC_ATTRI) | NVME_SET(cfg.rvspa, FEAT_PERFC_RVSPA);
 
-	if (argconfig_parse_seen(opts, "rvspa") || argconfig_parse_seen(opts, "r4karl") ||
+	if (argconfig_parse_seen(opts, "rvspa") ||
+	    argconfig_parse_seen(opts, "r4karl") ||
 	    argconfig_parse_seen(opts, "paid"))
-		err = perfc_set(hdl, fid, cdw11, &cfg, argconfig_parse_seen(opts, "save"));
+		err = perfc_set(hdl, fid, cdw11, &cfg,
+				argconfig_parse_seen(opts, "save"));
 	else
-		err = feat_get(hdl, fid, cdw11, cfg.sel, perfc_feat);
+		err = feat_get(hdl, fid, cdw11, cfg.sel, 0, perfc_feat);
 
 	return err;
 }
@@ -301,10 +306,12 @@ static int feat_hctm(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "tmt1") || argconfig_parse_seen(opts, "tmt2"))
-		err = hctm_set(hdl, fid, cfg.tmt1, cfg.tmt2, argconfig_parse_seen(opts, "save"));
+	if (argconfig_parse_seen(opts, "tmt1") ||
+	    argconfig_parse_seen(opts, "tmt2"))
+		err = hctm_set(hdl, fid, cfg.tmt1, cfg.tmt2,
+			       argconfig_parse_seen(opts, "save"));
 	else
-		err = feat_get(hdl, fid, 0, cfg.sel, hctm_feat);
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, hctm_feat);
 
 	return err;
 }
@@ -361,9 +368,10 @@ static int feat_timestamp(int argc, char **argv, struct command *acmd, struct pl
 		return err;
 
 	if (argconfig_parse_seen(opts, "tstmp"))
-		err = timestamp_set(hdl, fid, cfg.tstmp, argconfig_parse_seen(opts, "save"));
+		err = timestamp_set(hdl, fid, cfg.tstmp,
+				    argconfig_parse_seen(opts, "save"));
 	else
-		err = feat_get(hdl, fid, 0, cfg.sel, timestamp_feat);
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, timestamp_feat);
 
 	return err;
 }
@@ -443,11 +451,13 @@ static int feat_temp_thresh(int argc, char **argv, struct command *acmd, struct 
 	if (err)
 		return err;
 
-	if (argconfig_parse_seen(opts, "tmpth") || argconfig_parse_seen(opts, "tmpthh"))
+	if (argconfig_parse_seen(opts, "tmpth") ||
+	    argconfig_parse_seen(opts, "tmpthh"))
 		err = temp_thresh_set(hdl, fid, opts, &cfg);
 	else
 		err = feat_get(hdl, fid, NVME_SET(cfg.tmpsel, FEAT_TT_TMPSEL) |
-			       NVME_SET(cfg.thsel, FEAT_TT_THSEL), cfg.sel, temp_thresh_feat);
+			       NVME_SET(cfg.thsel, FEAT_TT_THSEL), cfg.sel, 0,
+			       temp_thresh_feat);
 
 	return err;
 }
@@ -529,7 +539,7 @@ static int feat_arbitration(int argc, char **argv, struct command *acmd, struct 
 		return err;
 
 	if (argc == 2 || argconfig_parse_seen(opts, "sel"))
-		return feat_get(hdl, fid, 0, cfg.sel, "arbitration feature");
+		return feat_get(hdl, fid, 0, cfg.sel, 0, "arbitration feature");
 
 	return arbitration_set(hdl, fid, opts, &cfg);
 }
@@ -584,9 +594,160 @@ static int feat_volatile_wc(int argc, char **argv, struct command *acmd, struct 
 		return err;
 
 	if (argconfig_parse_seen(opts, "wce"))
-		err = volatile_wc_set(hdl, fid, cfg.wce, argconfig_parse_seen(opts, "save"));
+		err = volatile_wc_set(hdl, fid, cfg.wce,
+				      argconfig_parse_seen(opts, "save"));
 	else
-		err = feat_get(hdl, fid, 0, cfg.sel, volatile_wc_feat);
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, volatile_wc_feat);
+
+	return err;
+}
+
+static int power_limit_set(struct nvme_transport_handle *hdl, const __u8 fid,
+			   __u8 plv, __u8 pls, __u8 uidx, bool sv)
+{
+	__u32 cdw13 = NVME_SET(plv, FEAT_POWER_LIMIT_PLV) |
+		      NVME_SET(pls, FEAT_POWER_LIMIT_PLS);
+	__u64 result;
+	int err;
+
+	err = nvme_set_features(hdl, 0, fid, sv, 0, 0, cdw13, uidx, 0, NULL, 0,
+				&result);
+
+	nvme_show_init();
+
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set %s", power_limit_feat);
+	} else {
+		nvme_show_result("Set %s: 0x%04x (%s)", power_limit_feat, cdw13,
+				 sv ? "Save" : "Not save");
+		nvme_feature_show_fields(fid, cdw13, NULL);
+	}
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_power_limit(int argc, char **argv, struct command *acmd,
+			    struct plugin *plugin)
+{
+	const char *plv = "power limit value";
+	const char *pls = "power limit scale";
+	const __u8 fid = NVME_FEAT_FID_POWER_LIMIT;
+
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl =
+	    NULL;
+	int err;
+
+	struct config {
+		__u8 plv;
+		__u8 pls;
+		__u8 uidx;
+		__u8 sel;
+	};
+
+	struct config cfg = { 0 };
+
+	FEAT_ARGS(opts,
+		  OPT_BYTE("plv", 'p', &cfg.plv, plv),
+		  OPT_BYTE("pls", 'l', &cfg.pls, pls),
+		  OPT_BYTE("uuid-index", 'u', &cfg.uidx, uuid_index));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, POWER_LIMIT_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "plv"))
+		err = power_limit_set(hdl, fid, cfg.plv, cfg.pls, cfg.uidx,
+				      argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(hdl, fid, 0, cfg.sel, cfg.uidx,
+			       power_limit_feat);
+
+	return err;
+}
+
+static int power_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
+			    __u8 ptv, __u8 pts, __u8 pmts, __u8 ept, __u8 uidx,
+			    bool sv)
+{
+	__u32 cdw11 = NVME_SET(ptv, FEAT_POWER_THRESH_PTV) |
+		      NVME_SET(pmts, FEAT_POWER_THRESH_PMTS) |
+		      NVME_SET(pts, FEAT_POWER_THRESH_PTS) |
+		      NVME_SET(ept, FEAT_POWER_THRESH_EPT);
+	__u64 result;
+	int err;
+
+	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, uidx, 0, NULL, 0,
+				&result);
+
+	nvme_show_init();
+
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set %s", power_thresh_feat);
+	} else {
+		nvme_show_result("Set %s: 0x%04x (%s)", power_thresh_feat,
+				 cdw11, sv ? "Save" : "Not save");
+		nvme_feature_show_fields(fid, cdw11, NULL);
+	}
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_power_thresh(int argc, char **argv, struct command *acmd,
+			     struct plugin *plugin)
+{
+	const char *ptv = "power threshold value";
+	const char *pts = "power threshold scale";
+	const char *pmts = "power measurement type select";
+	const char *ept = "enable power threshold";
+	const __u8 fid = NVME_FEAT_FID_POWER_THRESH;
+
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl =
+	    NULL;
+	int err;
+
+	struct config {
+		__u8 ptv;
+		__u8 pts;
+		__u8 pmts;
+		__u8 ept;
+		__u8 uidx;
+		__u8 sel;
+	};
+
+	struct config cfg = { 0 };
+
+	FEAT_ARGS(opts,
+		  OPT_BYTE("ptv", 'p', &cfg.ptv, ptv),
+		  OPT_BYTE("pts", 't', &cfg.pts, pts),
+		  OPT_BYTE("pmts", 'm', &cfg.pmts, pmts),
+		  OPT_BYTE("ept", 'e', &cfg.ept, ept),
+		  OPT_BYTE("uuid-index", 'u', &cfg.uidx, uuid_index));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, POWER_LIMIT_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "ptv") ||
+	    argconfig_parse_seen(opts, "pmts") ||
+	    argconfig_parse_seen(opts, "ept"))
+		err = power_thresh_set(hdl, fid, cfg.ptv, cfg.pts, cfg.pmts,
+				       cfg.ept, cfg.uidx,
+				       argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(hdl, fid, 0, cfg.sel, cfg.uidx,
+			       power_thresh_feat);
 
 	return err;
 }

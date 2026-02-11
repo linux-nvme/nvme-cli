@@ -23,6 +23,7 @@ headers_to_scan = [
 generate_accessors = executable(
     'generate-accessors',
     'generate-accessors.c',
+    c_args: ['-D_GNU_SOURCE'],
     dependencies: [
         config_dep,
     ],

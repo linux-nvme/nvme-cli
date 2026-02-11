@@ -111,6 +111,7 @@ extern const char *output_format;
 extern const char *timeout;
 extern const char *verbose;
 extern const char *dry_run;
+extern const char *uuid_index;
 extern struct nvme_config nvme_cfg;
 
 int validate_output_format(const char *format, nvme_print_flags_t *flags);

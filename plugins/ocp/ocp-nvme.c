@@ -195,6 +195,7 @@ static const char *type = "Error injection type";
 static const char *nrtdp = "Number of reads to trigger device panic";
 static const char *save = "Specifies that the controller shall save the attribute";
 static const char *enable_ieee1667_silo = "enable IEEE1667 silo";
+static const char *raw_use = "use binary output";
 
 static int get_c3_log_page(struct nvme_transport_handle *hdl, char *format)
 {
@@ -2973,4 +2974,126 @@ static int set_enable_ieee1667_silo(int argc, char **argv, struct command *acmd,
 static int hwcomp_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	return ocp_hwcomp_log(argc, argv, acmd, plugin);
+}
+
+static int ocp_get_persistent_event_log(int argc, char **argv,
+		struct command *command, struct plugin *plugin)
+{
+	const char *desc = "Retrieve Persistent Event log info for the given " \
+		"device in either decoded format(default), json or binary.";
+	const char *action = "action the controller shall take during " \
+		"processing this persistent log page command.";
+	const char *log_len = "number of bytes to retrieve";
+
+	_cleanup_free_ struct nvme_persistent_event_log *pevent = NULL;
+	struct nvme_persistent_event_log *pevent_collected = NULL;
+	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+
+	nvme_print_flags_t flags;
+	void *pevent_log_info;
+	int err;
+
+	struct config {
+		__u8	action;
+		__u32	log_len;
+		bool	raw_binary;
+	};
+
+	struct config cfg = {
+		.action		= 0xff,
+		.log_len	= 0,
+		.raw_binary	= false,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_BYTE("action",       'a', &cfg.action,        action),
+		  OPT_UINT("log_len",      'l', &cfg.log_len,       log_len),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_cfg.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	pevent = nvme_alloc(sizeof(*pevent));
+	if (!pevent)
+		return -ENOMEM;
+
+	err = nvme_get_log_persistent_event(hdl, cfg.action,
+					    pevent, sizeof(*pevent));
+	if (err < 0) {
+		nvme_show_error("persistent event log: %s", nvme_strerror(err));
+		return err;
+	} else if (err) {
+		nvme_show_status(err);
+		return err;
+	}
+
+	if (cfg.action == NVME_PEVENT_LOG_RELEASE_CTX) {
+		printf("Releasing Persistent Event Log Context\n");
+		return 0;
+	}
+
+	if (!cfg.log_len && cfg.action != NVME_PEVENT_LOG_EST_CTX_AND_READ) {
+		cfg.log_len = le64_to_cpu(pevent->tll);
+	} else if (!cfg.log_len && cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ) {
+		printf("Establishing Persistent Event Log Context\n");
+		return 0;
+	}
+
+	/*
+	 * if header already read with context establish action 0x1,
+	 * action shall not be 0x1 again in the subsequent request,
+	 * until the current context is released by issuing action
+	 * with 0x2, otherwise throws command sequence error, make
+	 * it as zero to read the log page
+	 */
+	if (cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ)
+		cfg.action = NVME_PEVENT_LOG_READ;
+
+	pevent_log_info = nvme_alloc_huge(cfg.log_len, &mh);
+	if (!pevent_log_info) {
+		nvme_show_error("failed to allocate huge memory");
+		return -ENOMEM;
+	}
+
+	err = nvme_get_log_persistent_event(hdl, cfg.action,
+					    pevent_log_info, cfg.log_len);
+	if (!err) {
+		err = nvme_get_log_persistent_event(hdl, cfg.action,
+							pevent,
+							sizeof(*pevent));
+		if (err < 0) {
+			nvme_show_error("persistent event log: %s", nvme_strerror(err));
+			return err;
+		} else if (err) {
+			nvme_show_status(err);
+			return err;
+		}
+		pevent_collected = pevent_log_info;
+		if (pevent_collected->gen_number != pevent->gen_number) {
+			printf("Collected Persistent Event Log may be invalid,\n"
+			       "Re-read the log is required\n");
+			return -EINVAL;
+		}
+
+		ocp_show_persistent_event_log(pevent_log_info, cfg.action,
+			cfg.log_len, nvme_transport_handle_get_name(hdl), flags);
+	} else if (err > 0) {
+		nvme_show_status(err);
+	} else {
+		nvme_show_error("persistent event log: %s", nvme_strerror(err));
+	}
+
+	return err;
 }

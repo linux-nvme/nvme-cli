@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "util/json.h"
 #include "util/types.h"
 #include "common.h"
 #include "nvme-print.h"
@@ -8,6 +9,71 @@
 #include "ocp-smart-extended-log.h"
 #include "ocp-telemetry-decode.h"
 #include "ocp-nvme.h"
+#include "ocp-utils.h"
+
+#define array_add_obj json_array_add_value_object
+#define array_add_str json_array_add_value_string
+
+#define obj_add_array json_object_add_value_array
+#define obj_add_int json_object_add_value_int
+#define obj_add_obj json_object_add_value_object
+#define obj_add_uint json_object_add_value_uint
+#define obj_add_uint128 json_object_add_value_uint128
+#define obj_add_uint64 json_object_add_value_uint64
+#define obj_add_str json_object_add_value_string
+#define obj_add_uint_02x json_object_add_uint_02x
+#define obj_add_uint_0x json_object_add_uint_0x
+#define obj_add_byte_array json_object_add_byte_array
+#define obj_add_nprix64 json_object_add_nprix64
+#define obj_add_uint_0nx json_object_add_uint_0nx
+#define obj_add_0nprix64 json_object_add_0nprix64
+#define obj_add_string json_object_add_string
+
+static void d_json(unsigned char *buf, int len, int width, int group, struct json_object *array)
+{
+	int i;
+	char ascii[32 + 1] = { 0 };
+
+	assert(width < sizeof(ascii));
+
+	for (i = 0; i < len; i++) {
+		ascii[i % width] = (buf[i] >= '!' && buf[i] <= '~') ? buf[i] : '.';
+		if (!((i + 1) % width)) {
+			array_add_str(array, ascii);
+			memset(ascii, 0, sizeof(ascii));
+		}
+	}
+
+	if (strlen(ascii)) {
+		ascii[i % width + 1] = '\0';
+		array_add_str(array, ascii);
+	}
+}
+
+static void obj_d(struct json_object *o, const char *k, unsigned char *buf, int len, int width,
+		  int group)
+{
+	struct json_object *data = json_create_array();
+
+	d_json(buf, len, width, group, data);
+	obj_add_array(o, k, data);
+}
+
+static void obj_add_result(struct json_object *o, const char *v, ...)
+{
+	va_list ap;
+
+	_cleanup_free_ char *value = NULL;
+
+	va_start(ap, v);
+
+	if (vasprintf(&value, v, ap) < 0)
+		value = alloc_error;
+
+	obj_add_str(o, "Result", value);
+
+	va_end(ap);
+}
 
 static void print_hwcomp_desc_json(struct hwcomp_desc_entry *e, struct json_object *r)
 {
@@ -1119,9 +1185,185 @@ static void json_c7_log(struct nvme_transport_handle *hdl, struct tcg_configurat
 	json_free_object(root);
 }
 
+static void pel_tcg_activity_event(void *pevent_log_info, __u32 offset,
+				   struct json_object *valid_attrs)
+{
+	__u16 vsedl;
+	struct nvme_vs_event_desc *vs_desc;
+	struct tcg_activity_event_data *tcg_event_data;
+	struct json_object *tcg_event_obj = json_create_object();
+
+	vs_desc = pevent_log_info + offset;
+	tcg_event_data = (struct tcg_activity_event_data *)(vs_desc + 1);
+	vsedl = le16_to_cpu(vs_desc->vsedl);
+
+	/* Only one descriptor (0) defined for the TCG Activity Event */
+	json_object_add_value_uint(tcg_event_obj, "vendor_specific_event_descriptor",
+				   0);
+	json_object_add_value_uint(tcg_event_obj, "vendor_specific_event_code",
+				   le16_to_cpu(vs_desc->vsec));
+	json_object_add_value_uint(tcg_event_obj, "vendor_specific_event_data_type",
+				   vs_desc->vsedt);
+	json_object_add_value_uint(tcg_event_obj, "vendor_specific_event_uindex",
+				   vs_desc->uidx);
+	json_object_add_value_uint(tcg_event_obj, "vendor_specific_event_data_length",
+				   vsedl);
+	json_object_add_value_uint(tcg_event_obj, "tcg_command_count",
+				   le32_to_cpu(tcg_event_data->tcg_command_count));
+	json_object_add_value_uint64(tcg_event_obj, "invoking_id",
+				     le64_to_cpu(tcg_event_data->invoking_id));
+	json_object_add_value_uint64(tcg_event_obj, "method_id",
+				     le64_to_cpu(tcg_event_data->method_id));
+	json_object_add_value_uint(tcg_event_obj, "com_id",
+				   le16_to_cpu(tcg_event_data->com_id));
+	json_object_add_value_uint(tcg_event_obj, "protocol_id",
+				   tcg_event_data->protocol_id);
+	json_object_add_value_uint(tcg_event_obj, "status",
+				   tcg_event_data->status);
+	json_object_add_value_uint(tcg_event_obj, "process_time",
+				   le16_to_cpu(tcg_event_data->process_time));
+	obj_d(tcg_event_obj, "tcg_activity_specific_context",
+	      (void *)tcg_event_data->tcg_activity_specific_context, 10, 16, 1);
+
+	json_object_add_value_object(valid_attrs, "tcg_activity_event_data",
+				     tcg_event_obj);
+}
+
+static void json_pevent_entry(void *pevent_log_info, __u8 action, __u32 size, const char *devname,
+			      __u32 offset, struct json_object *valid)
+{
+	int i;
+	__u16 vsil, el;
+	struct nvme_persistent_event_log *pevent_log_head = pevent_log_info;
+	struct nvme_persistent_event_entry *pevent_entry_head;
+	struct json_object *valid_attrs;
+
+	for (i = 0; i < le32_to_cpu(pevent_log_head->tnev); i++) {
+		if (offset + sizeof(*pevent_entry_head) >= size)
+			break;
+
+		pevent_entry_head = pevent_log_info + offset;
+		vsil = le16_to_cpu(pevent_entry_head->vsil);
+		el = le16_to_cpu(pevent_entry_head->el);
+
+		if (offset + pevent_entry_head->ehl + 3 + el >=
+		    size)
+			break;
+
+		valid_attrs = json_create_object();
+
+		obj_add_uint(valid_attrs, "event_number", i);
+		obj_add_str(valid_attrs, "event_type",
+			    nvme_pel_event_to_string(pevent_entry_head->etype));
+		obj_add_uint(valid_attrs, "event_type_rev", pevent_entry_head->etype_rev);
+		obj_add_uint(valid_attrs, "event_header_len", pevent_entry_head->ehl);
+		obj_add_uint(valid_attrs, "event_header_additional_info", pevent_entry_head->ehai);
+		obj_add_uint(valid_attrs, "ctrl_id", le16_to_cpu(pevent_entry_head->cntlid));
+		obj_add_uint64(valid_attrs, "event_time_stamp",
+			       le64_to_cpu(pevent_entry_head->ets));
+		obj_add_uint(valid_attrs, "port_id", le16_to_cpu(pevent_entry_head->pelpid));
+		obj_add_uint(valid_attrs, "vu_info_len", vsil);
+		obj_add_uint(valid_attrs, "event_len", el);
+
+		if (vsil)
+			obj_d(valid_attrs, "vs_info_bin",
+			      (void *)pevent_entry_head + 1, vsil, 16, 1);
+
+		offset += pevent_entry_head->ehl + vsil + 3;
+
+		switch (pevent_entry_head->etype) {
+		case NVME_PEL_SMART_HEALTH_EVENT:
+			nvme_json_pel_smart_health(pevent_log_info, offset,
+						   valid_attrs);
+			break;
+		case NVME_PEL_FW_COMMIT_EVENT:
+			nvme_json_pel_fw_commit(pevent_log_info, offset,
+						valid_attrs);
+			break;
+		case NVME_PEL_TIMESTAMP_EVENT:
+			nvme_json_pel_timestamp(pevent_log_info, offset,
+						valid_attrs);
+			break;
+		case NVME_PEL_POWER_ON_RESET_EVENT:
+			nvme_json_pel_power_on_reset(pevent_log_info, offset,
+						     valid_attrs,
+						     pevent_entry_head->vsil,
+						     pevent_entry_head->el);
+			break;
+		case NVME_PEL_NSS_HW_ERROR_EVENT:
+			nvme_json_pel_nss_hw_error(pevent_log_info, offset,
+						   valid_attrs);
+			break;
+		case NVME_PEL_CHANGE_NS_EVENT:
+			nvme_json_pel_change_ns(pevent_log_info, offset, valid_attrs);
+			break;
+		case NVME_PEL_FORMAT_START_EVENT:
+			nvme_json_pel_format_start(pevent_log_info, offset, valid_attrs);
+			break;
+		case NVME_PEL_FORMAT_COMPLETION_EVENT:
+			nvme_json_pel_format_completion(pevent_log_info,
+							offset, valid_attrs);
+			break;
+		case NVME_PEL_SANITIZE_START_EVENT:
+			nvme_json_pel_sanitize_start(pevent_log_info, offset, valid_attrs);
+			break;
+		case NVME_PEL_SANITIZE_COMPLETION_EVENT:
+			nvme_json_pel_sanitize_completion(pevent_log_info,
+							  offset, valid_attrs);
+			break;
+		case NVME_PEL_SET_FEATURE_EVENT:
+			nvme_json_pel_set_feature(pevent_log_info, offset, valid_attrs);
+			break;
+		case NVME_PEL_TELEMETRY_CRT:
+			nvme_json_pel_telemetry_crt(pevent_log_info, offset, valid_attrs);
+			break;
+		case NVME_PEL_THERMAL_EXCURSION_EVENT:
+			nvme_json_pel_thermal_excursion(pevent_log_info,
+							offset, valid_attrs);
+			break;
+		case NVME_PEL_VENDOR_SPECIFIC_EVENT:
+			if (ocp_is_tcg_activity_event(pevent_entry_head, el,
+						      vsil))
+				pel_tcg_activity_event(pevent_log_info, offset,
+						       valid_attrs);
+			else
+				nvme_json_pel_vendor_specific_event(pevent_log_info,
+							    offset, el - vsil,
+							    valid_attrs);
+			break;
+		default:
+			break;
+		}
+
+		array_add_obj(valid, valid_attrs);
+		offset += le16_to_cpu(pevent_entry_head->el);
+	}
+}
+
+static void json_persistent_event_log(void *pevent_log_info, __u8 action,
+				      __u32 size, const char *devname)
+{
+	struct json_object *r = json_create_object();
+	struct json_object *valid = json_create_array();
+	__u32 offset = sizeof(struct nvme_persistent_event_log);
+
+	if (size >= offset) {
+		nvme_json_pevent_log_head(pevent_log_info, r);
+		json_pevent_entry(pevent_log_info, action, size, devname, offset, valid);
+		obj_add_array(r, "list_of_event_entries", valid);
+	} else {
+		obj_add_result(r, "No log data can be shown with this log len at least " \
+			       "512 bytes is required or can be 0 to read the complete " \
+			       "log page after context established");
+	}
+
+	json_print(r);
+}
+
 static struct ocp_print_ops json_print_ops = {
 	.hwcomp_log = json_hwcomp_log,
 	.fw_act_history = json_fw_activation_history,
+	.persistent_event_log = json_persistent_event_log,
 	.smart_extended_log = json_smart_extended_log,
 	.telemetry_log = json_telemetry_log,
 	.c3_log = json_c3_log,

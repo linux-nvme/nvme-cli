@@ -732,6 +732,16 @@ _nvme () {
                                 ;;
 			esac
 			;;
+		(fw-commit)
+			case ${words[CURRENT-1]} in
+			(--action=|-a)
+				_values '' 'replace' 'replace-and-activate' 'set-active' 'replace-and-activate-immediate' 'replace-boot-partition' 'activate-boot-partition'
+				;;
+			(*)
+				_files
+				;;
+			esac
+			;;
 		(*)
 			_files
 			;;
