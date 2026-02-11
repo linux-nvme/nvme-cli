@@ -18,6 +18,7 @@ sources = [
 if is_windows
     # Windows-specific sources (exclude Linux networking, fabrics, and filesystem code)
     sources += [
+        'nvme/ioctl-windows.c',  # Windows stubs for Linux-specific ioctl functions
         'nvme/windows-stubs.c',  # Stubs for excluded functions
         'platform/windows.c',  # POSIX compatibility implementations
     ]

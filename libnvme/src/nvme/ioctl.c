@@ -24,6 +24,7 @@
 #include "ioctl.h"
 #include "private.h"
 
+#ifndef _WIN32
 static int nvme_verify_chr(struct nvme_transport_handle *hdl)
 {
 	static struct stat nvme_stat;
@@ -91,6 +92,7 @@ int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
 	*nsid = tmp;
 	return 0;
 }
+#endif
 
 void *__nvme_submit_entry(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd)
@@ -109,6 +111,7 @@ bool __nvme_decide_retry(struct nvme_transport_handle *hdl,
 	return false;
 }
 
+#ifndef _WIN32
 /*
  * The 64 bit version is the preferred version to use, but for backwards
  * compatibility keep a 32 version.
@@ -198,6 +201,7 @@ int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
 
 	return -ENOTSUP;
 }
+#endif
 
 static bool force_4k;
 
