@@ -3039,3 +3039,74 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 
 	return err;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+/// Idle Wake Up Time Configuration (Feature Identifier CAh) Get Feature
+static int ocp_get_idle_wakeup_time_config_feature(int argc, char **argv,
+						    struct command *acmd,
+						    struct plugin *plugin)
+{
+	const char *desc = "Define Issue Get Feature cmd (FID: 0xCA) IWUT";
+	const char *sel = "[0-3]: current/default/saved/supported/";
+	const char *nsid = "Byte[04-07]: NSID Valid/Invalid/Inactive";
+
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+
+
+	__u64 result;
+	int err;
+	bool uuid;
+	__u8 uuid_index = 0;
+
+	struct config {
+		__u8 sel;
+		__u32 nsid;
+	};
+
+	struct config cfg = {
+		.sel = 0,
+		.nsid = 0,
+	};
+
+	NVME_ARGS(opts,
+		OPT_BYTE("sel", 's', &cfg.sel, sel),
+		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid),
+		OPT_FLAG("no-uuid", 'u', NULL, no_uuid));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	uuid = !argconfig_parse_seen(opts, "no-uuid");
+
+	if (uuid) {
+		/* OCP 2.0 requires UUID index support */
+		err = ocp_get_uuid_index(hdl, &uuid_index);
+		if (err || !uuid_index) {
+			nvme_show_error("ERROR: No OCP UUID index found");
+			return err;
+		}
+	}
+
+	err = nvme_get_features(hdl, cfg.nsid, OCP_FID_IWTC, cfg.sel, 0,
+			uuid_index, NULL, 0, &result);
+	if (!err) {
+		if (result == 0) {
+			printf("get-feature:CAh,SEL=%s,IWUT Disabled: %#016"PRIx64"\n",
+			nvme_select_to_string(cfg.sel), (uint64_t)result);
+		} else {
+			printf("get-feature:CAh SEL=%s,IWUT is: %#016"PRIx64"\n",
+			nvme_select_to_string(cfg.sel), (uint64_t)result);
+		}
+		if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
+			nvme_show_select_result(0xCA, result);
+	} else {
+		nvme_show_error("Could not get feature: 0xCA");
+	}
+
+	return err;
+}
