@@ -345,7 +345,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 		ret = nvme_open(ctx, path, &hdl);
 		if (ret) {
 			fprintf(stderr, "Cannot open device %s: %s\n",
-				path, strerror(-ret));
+				path, nvme_strerror(-ret));
 			continue;
 		}
 		ret = huawei_get_nvme_info(hdl, &list_items[huawei_num], path);

@@ -175,13 +175,13 @@ static int perfc_set(struct nvme_transport_handle *hdl, __u8 fid, __u32 cdw11,
 			ffd = open(cfg->vs_data, O_RDONLY);
 			if (ffd < 0) {
 				nvme_show_error("Failed to open file %s: %s", cfg->vs_data,
-						strerror(errno));
+						nvme_strerror(errno));
 				return -EINVAL;
 			}
 			err = read(ffd, data.vs_perf->vs, data.vs_perf->attrl);
 			if (err < 0) {
 				nvme_show_error("failed to read data buffer from input file: %s",
-						strerror(errno));
+						nvme_strerror(errno));
 				return -errno;
 			}
 		}

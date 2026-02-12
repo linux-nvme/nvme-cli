@@ -243,7 +243,7 @@ int json_read_config(struct nvme_global_ctx *ctx, const char *config_file)
 	fd = open(config_file, O_RDONLY);
 	if (fd < 0) {
 		nvme_msg(ctx, LOG_DEBUG, "Error opening %s, %s\n",
-			 config_file, strerror(errno));
+			 config_file, nvme_strerror(errno));
 		return fd;
 	}
 	json_root = parse_json(ctx, fd);

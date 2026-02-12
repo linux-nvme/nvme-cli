@@ -44,7 +44,7 @@ static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
 
 	data = malloc(sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);

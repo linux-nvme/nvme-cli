@@ -764,7 +764,7 @@ static int netapp_smdevices_get_info(struct nvme_transport_handle *hdl,
 	if (err) {
 		fprintf(stderr,
 			"Identify Controller failed to %s (%s)\n", dev,
-			err < 0 ? strerror(-err) :
+			err < 0 ? nvme_strerror(-err) :
 			nvme_status_to_string(err, false));
 		return 0;
 	}
@@ -780,7 +780,7 @@ static int netapp_smdevices_get_info(struct nvme_transport_handle *hdl,
 	if (err) {
 		fprintf(stderr,
 			"Unable to identify namespace for %s (%s)\n",
-			dev, err < 0 ? strerror(-err) :
+			dev, err < 0 ? nvme_strerror(-err) :
 			nvme_status_to_string(err, false));
 		return 0;
 	}
@@ -799,7 +799,7 @@ static int netapp_ontapdevices_get_info(struct nvme_transport_handle *hdl,
 	err = nvme_identify_ctrl(hdl, &item->ctrl);
 	if (err) {
 		fprintf(stderr, "Identify Controller failed to %s (%s)\n",
-			dev, err < 0 ? strerror(-err) :
+			dev, err < 0 ? nvme_strerror(-err) :
 			nvme_status_to_string(err, false));
 		return 0;
 	}
@@ -813,7 +813,7 @@ static int netapp_ontapdevices_get_info(struct nvme_transport_handle *hdl,
 	err = nvme_identify_ns(hdl, item->nsid, &item->ns);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace for %s (%s)\n",
-			dev, err < 0 ? strerror(-err) :
+			dev, err < 0 ? nvme_strerror(-err) :
 			nvme_status_to_string(err, false));
 		return 0;
 	}
@@ -828,7 +828,7 @@ static int netapp_ontapdevices_get_info(struct nvme_transport_handle *hdl,
 	err = nvme_identify_ns_descs_list(hdl, item->nsid, nsdescs);
 	if (err) {
 		fprintf(stderr, "Unable to identify namespace descriptor for %s (%s)\n",
-			dev, err < 0 ? strerror(-err) :
+			dev, err < 0 ? nvme_strerror(-err) :
 			nvme_status_to_string(err, false));
 		free(nsdescs);
 		return 0;
@@ -840,7 +840,7 @@ static int netapp_ontapdevices_get_info(struct nvme_transport_handle *hdl,
 	err = nvme_get_ontap_c2_log(hdl, item->nsid, item->log_data, ONTAP_C2_LOG_SIZE);
 	if (err) {
 		fprintf(stderr, "Unable to get log page data for %s (%s)\n",
-			dev, err < 0 ? strerror(-err) :
+			dev, err < 0 ? nvme_strerror(-err) :
 			nvme_status_to_string(err, false));
 		return 0;
 	}
@@ -967,7 +967,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 		ret = nvme_open(ctx, path, &hdl);
 		if (ret) {
 			fprintf(stderr, "Unable to open %s: %s\n", path,
-				strerror(-ret));
+				nvme_strerror(-ret));
 			continue;
 		}
 
@@ -1078,7 +1078,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 		ret = nvme_open(ctx, path, &hdl);
 		if (ret) {
 			fprintf(stderr, "Unable to open %s: %s\n", path,
-					strerror(-ret));
+					nvme_strerror(-ret));
 			continue;
 		}
 

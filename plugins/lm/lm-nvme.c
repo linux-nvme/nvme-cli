@@ -102,7 +102,7 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 	queue = nvme_alloc_huge(cfg.sz << 2, &mh);
 	if (!queue) {
 		nvme_show_error("ERROR: nvme_alloc of size %dB failed %s", cfg.sz << 2,
-				strerror(errno));
+				nvme_strerror(errno));
 		return -ENOMEM;
 	}
 
@@ -235,7 +235,7 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 	nvme_init_lm_track_send(&cmd, cfg.sel, cfg.mos, cfg.cdqid);
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err < 0)
-		nvme_show_error("ERROR: nvme_lm_track_send() failed %s", strerror(errno));
+		nvme_show_error("ERROR: nvme_lm_track_send() failed %s", nvme_strerror(errno));
 	else if (err)
 		nvme_show_status(err);
 	else
@@ -372,7 +372,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 		fclose(file);
 
 		if (n_data != (size_t)(cfg.numd << 2)) {
-			nvme_show_error("failed to read controller state data %s", strerror(errno));
+			nvme_show_error("failed to read controller state data %s", nvme_strerror(errno));
 			return -errno;
 		}
 	}
@@ -384,7 +384,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 				    (cfg.numd << 2));
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err < 0)
-		nvme_show_error("ERROR: nvme_lm_migration_send() failed %s", strerror(errno));
+		nvme_show_error("ERROR: nvme_lm_migration_send() failed %s", nvme_strerror(errno));
 	else if (err > 0)
 		nvme_show_status(err);
 	else
@@ -498,7 +498,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 				    (cfg.numd + 1) << 2);
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err < 0)
-		nvme_show_error("ERROR: nvme_lm_migration_recv() failed %s", strerror(errno));
+		nvme_show_error("ERROR: nvme_lm_migration_recv() failed %s", nvme_strerror(errno));
 	else if (err)
 		nvme_show_status(err);
 	else if (cfg.sel == NVME_LM_SEL_GET_CONTROLLER_STATE) {
@@ -511,7 +511,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		if (cfg.output && strlen(cfg.output)) {
 			if (fwrite(data, 1, cfg.numd << 2, fd) != (cfg.numd << 2)) {
 				nvme_show_error("ERROR: %s: failed to write buffer to output file",
-						strerror(errno));
+						nvme_strerror(errno));
 				err = -errno;
 			}
 		} else {

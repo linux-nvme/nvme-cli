@@ -5344,7 +5344,7 @@ static void json_output_perror(const char *msg, va_list ap)
 	if (vasprintf(&error, msg, ap) < 0)
 		error = alloc_error;
 
-	obj_add_key(r, "error", "%s: %s", error, strerror(errno));
+	obj_add_key(r, "error", "%s: %s", error, nvme_strerror(errno));
 
 	json_output_object(r);
 }

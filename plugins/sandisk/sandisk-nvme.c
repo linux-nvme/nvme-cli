@@ -104,7 +104,7 @@ static int sndk_do_cap_telemetry_log(struct nvme_global_ctx *ctx,
 	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
-				__func__, file, strerror(errno));
+				__func__, file, nvme_strerror(errno));
 		return output;
 	}
 
@@ -154,7 +154,7 @@ static int sndk_do_cap_telemetry_log(struct nvme_global_ctx *ctx,
 	}
 
 	if (fsync(output) < 0) {
-		fprintf(stderr, "ERROR: %s: fsync: %s\n", __func__, strerror(errno));
+		fprintf(stderr, "ERROR: %s: fsync: %s\n", __func__, nvme_strerror(errno));
 		err = -1;
 	}
 
@@ -211,7 +211,7 @@ static int sndk_do_cap_udui(struct nvme_transport_handle *hdl, char *file,
 	if (!log) {
 		fprintf(stderr,
 			"%s: ERROR: log header malloc failed : status %s, size 0x%x\n",
-			__func__, strerror(errno), udui_log_hdr_size);
+			__func__, nvme_strerror(errno), udui_log_hdr_size);
 		return -1;
 	}
 	memset(log, 0, udui_log_hdr_size);
@@ -239,7 +239,7 @@ static int sndk_do_cap_udui(struct nvme_transport_handle *hdl, char *file,
 	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "%s: Failed to open output file %s: %s!\n", __func__, file,
-			strerror(errno));
+			nvme_strerror(errno));
 		goto out;
 	}
 
@@ -387,7 +387,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		/* verify file name and path is valid before getting dump data */
 		verify_file = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (verify_file < 0) {
-			fprintf(stderr, "ERROR: SNDK: open: %s\n", strerror(errno));
+			fprintf(stderr, "ERROR: SNDK: open: %s\n", nvme_strerror(errno));
 			goto out;
 		}
 		close(verify_file);
@@ -854,7 +854,7 @@ static int sndk_get_fw_act_history_C2(struct nvme_global_ctx *ctx, struct nvme_t
 
 	data = (__u8 *)malloc(sizeof(__u8) * SNDK_FW_ACT_HISTORY_C2_LOG_BUF_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR: SNDK: malloc: %s\n", strerror(errno));
+		fprintf(stderr, "ERROR: SNDK: malloc: %s\n", nvme_strerror(errno));
 		return -1;
 	}
 

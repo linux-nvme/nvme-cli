@@ -213,7 +213,7 @@ static int get_c3_log_page(struct nvme_transport_handle *hdl, char *format)
 
 	data = malloc(sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
@@ -1201,7 +1201,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 	telemetry_log = malloc(bs);
 	if (!hdr || !telemetry_log) {
 		fprintf(stderr, "Failed to allocate %zu bytes for log: %s\n",
-			bs, strerror(errno));
+			bs, nvme_strerror(errno));
 		err = -ENOMEM;
 		goto exit_status;
 	}
@@ -1210,7 +1210,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 	fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (fd < 0) {
 		fprintf(stderr, "Failed to open output file %s: %s!\n",
-				output_file, strerror(errno));
+				output_file, nvme_strerror(errno));
 		err = fd;
 		goto exit_status;
 	}
@@ -1299,7 +1299,7 @@ static int get_c9_log_page_data(struct nvme_transport_handle *hdl,
 
 	header_data = (__u8 *)malloc(sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
 	if (!header_data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
 		return -1;
 	}
 	memset(header_data, 0, sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
@@ -1341,7 +1341,7 @@ static int get_c9_log_page_data(struct nvme_transport_handle *hdl,
 
 		pC9_string_buffer = (__u8 *)malloc(sizeof(__u8) * total_log_page_sz);
 		if (!pC9_string_buffer) {
-			fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+			fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
 			return -1;
 		}
 		memset(pC9_string_buffer, 0, sizeof(__u8) * total_log_page_sz);
@@ -1355,7 +1355,7 @@ static int get_c9_log_page_data(struct nvme_transport_handle *hdl,
 		fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd < 0) {
 			fprintf(stderr, "Failed to open output file %s: %s!\n", output_file,
-				strerror(errno));
+				nvme_strerror(errno));
 			return fd;
 		}
 
@@ -1654,7 +1654,7 @@ static int get_c5_log_page(struct nvme_transport_handle *hdl, char *format)
 
 	data = (__u8 *)malloc(sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
@@ -1758,7 +1758,7 @@ static int get_c1_log_page(struct nvme_transport_handle *hdl, char *format)
 
 	data = (__u8 *)malloc(sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
@@ -1861,7 +1861,7 @@ static int get_c4_log_page(struct nvme_transport_handle *hdl, char *format)
 
 	data = (__u8 *)malloc(sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
@@ -2565,7 +2565,7 @@ static int get_c7_log_page(struct nvme_transport_handle *hdl, char *format)
 
 	data = (__u8 *)malloc(sizeof(__u8) * C7_TCG_CONFIGURATION_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C7_TCG_CONFIGURATION_LEN);
@@ -2695,7 +2695,7 @@ static int error_injection_get(struct nvme_transport_handle *hdl, const __u8 sel
 
 	entry = nvme_alloc(data_len);
 	if (!entry) {
-		nvme_show_error("malloc: %s", strerror(errno));
+		nvme_show_error("malloc: %s", nvme_strerror(errno));
 		return -ENOMEM;
 	}
 
@@ -2776,20 +2776,20 @@ static int error_injection_set(struct nvme_transport_handle *hdl, struct erri_co
 	data_len = cfg->number * sizeof(struct erri_entry);
 	entry = nvme_alloc(data_len);
 	if (!entry) {
-		nvme_show_error("malloc: %s", strerror(errno));
+		nvme_show_error("malloc: %s", nvme_strerror(errno));
 		return -ENOMEM;
 	}
 
 	if (cfg->file && strlen(cfg->file)) {
 		ffd = open(cfg->file, O_RDONLY);
 		if (ffd < 0) {
-			nvme_show_error("Failed to open file %s: %s", cfg->file, strerror(errno));
+			nvme_show_error("Failed to open file %s: %s", cfg->file, nvme_strerror(errno));
 			return -EINVAL;
 		}
 		err = read(ffd, entry, data_len);
 		if (err < 0) {
 			nvme_show_error("failed to read data buffer from input file: %s",
-					strerror(errno));
+					nvme_strerror(errno));
 			return -errno;
 		}
 	} else {
