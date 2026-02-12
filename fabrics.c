@@ -111,7 +111,7 @@ struct nvmf_args {
 };
 
 #define NVMF_ARGS(n, f, c, ...)                                                                  \
-	struct argconfig_commandline_options n[] = {                                             \
+	NVME_ARGS(n,                                                                              \
 		OPT_STRING("transport",       't', "STR", &f.transport,     nvmf_tport),         \
 		OPT_STRING("nqn",             'n', "STR", &f.subsysnqn,     nvmf_nqn),           \
 		OPT_STRING("traddr",          'a', "STR", &f.traddr,        nvmf_traddr),        \
@@ -141,9 +141,9 @@ struct nvmf_args {
 		OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest),     \
 		OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls),             \
 		OPT_FLAG("concat",              0, &c.concat,             nvmf_concat),          \
-		__VA_ARGS__,                                                                     \
-		OPT_END()                                                                        \
-	}
+		##__VA_ARGS__                                                                    \
+	)
+
 
 static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 {
@@ -476,9 +476,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	nvme_print_flags_t flags;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ struct nvmf_context *fctx = NULL;
-	unsigned int verbose = 0;
 	int ret;
-	char *format = "normal";
 	struct nvme_fabrics_config cfg;
 	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
 	char *device = NULL;
@@ -489,12 +487,10 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 	NVMF_ARGS(opts, fa, cfg,
 		  OPT_STRING("device",     'd', "DEV", &device,       "use existing discovery controller device"),
-		  OPT_FMT("output-format", 'o', &format,              output_format),
 		  OPT_FILE("raw",          'r', &raw,                 "save raw output to file"),
 		  OPT_FLAG("persistent",   'p', &persistent,          "persistent discovery connection"),
 		  OPT_FLAG("quiet",          0, &quiet,               "suppress already connected errors"),
 		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
-		  OPT_INCR("verbose",      'v', &verbose,             "Increase logging verbosity"),
 		  OPT_FLAG("dump-config",  'O', &dump_config,         "Dump configuration file to stdout"),
 		  OPT_FLAG("force",          0, &force,               "Force persistent discovery controller creation"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
@@ -508,7 +504,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	if (ret)
 		return ret;
 
-	ret = validate_output_format(format, &flags);
+	ret = validate_output_format(nvme_args.output_format, &flags);
 	if (ret < 0) {
 		nvme_show_error("Invalid output format");
 		return ret;
@@ -517,7 +513,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
-	log_level = map_log_level(verbose, quiet);
+	log_level = map_log_level(nvme_args.verbose, quiet);
 
 	ctx = nvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
@@ -590,7 +586,6 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	_cleanup_free_ char *hid = NULL;
 	char *config_file = NULL;
 	char *context = NULL;
-	unsigned int verbose = 0;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_free_ struct nvmf_context *fctx = NULL;
 	_cleanup_nvme_ctrl_ nvme_ctrl_t c = NULL;
@@ -598,13 +593,10 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	nvme_print_flags_t flags;
 	struct nvme_fabrics_config cfg = { 0 };
 	struct nvmf_args fa = { 0 };
-	char *format = "normal";
 
 	NVMF_ARGS(opts, fa, cfg,
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
-		  OPT_INCR("verbose",              'v', &verbose,             "Increase logging verbosity"),
 		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"),
-		  OPT_FMT("output-format",         'o', &format,       "Output format: normal|json"),
 		  OPT_STRING("context",              0, "STR", &context,  nvmf_context));
 
 	nvmf_default_config(&cfg);
@@ -613,7 +605,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
-	ret = validate_output_format(format, &flags);
+	ret = validate_output_format(nvme_args.output_format, &flags);
 	if (ret < 0) {
 		nvme_show_error("Invalid output format");
 		return ret;
@@ -644,7 +636,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	}
 
 do_connect:
-	log_level = map_log_level(verbose, quiet);
+	log_level = map_log_level(nvme_args.verbose, quiet);
 
 	ctx = nvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
@@ -746,17 +738,13 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 	struct config {
 		char *nqn;
 		char *device;
-		unsigned int verbose;
 	};
 
 	struct config cfg = { 0 };
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_STRING("nqn",        'n', "NAME", &cfg.nqn,    nvmf_nqn),
-		OPT_STRING("device",     'd', "DEV",  &cfg.device, device),
-		OPT_INCR("verbose",      'v', &cfg.verbose, "Increase logging verbosity"),
-		OPT_END()
-	};
+		OPT_STRING("device",     'd', "DEV",  &cfg.device, device));
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -773,7 +761,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 		return -EINVAL;
 	}
 
-	log_level = map_log_level(cfg.verbose, false);
+	log_level = map_log_level(nvme_args.verbose, false);
 
 	ctx = nvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
@@ -834,22 +822,18 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 
 	struct config {
 		char *transport;
-		unsigned int verbose;
 	};
 
 	struct config cfg = { 0 };
 
-	OPT_ARGS(opts) = {
-		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport),
-		OPT_INCR("verbose",  'v', &cfg.verbose, "Increase logging verbosity"),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport));
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
-	log_level = map_log_level(cfg.verbose, false);
+	log_level = map_log_level(nvme_args.verbose, false);
 
 	ctx = nvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
@@ -901,12 +885,10 @@ int fabrics_config(const char *desc, int argc, char **argv)
 	char *config_file = PATH_NVMF_CONFIG;
 	struct nvme_fabrics_config cfg;
 	struct nvmf_args fa = { };
-	unsigned int verbose = 0;
 	int ret;
 
 	NVMF_ARGS(opts, fa, cfg,
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
-		  OPT_INCR("verbose",              'v', &verbose,             "Increase logging verbosity"),
 		  OPT_FLAG("scan",                 'R', &scan_tree,           "Scan current NVMeoF topology"),
 		  OPT_FLAG("modify",               'M', &modify_config,       "Modify JSON configuration file"),
 		  OPT_FLAG("dump",                 'O', &dump_config,         "Dump JSON configuration to stdout"),
@@ -921,7 +903,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
-	log_level = map_log_level(verbose, quiet);
+	log_level = map_log_level(nvme_args.verbose, quiet);
 
 	ctx = nvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
@@ -1015,16 +997,12 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		char *nqn;
 		char *device;
 		char *tas;
-		unsigned int verbose;
 	} cfg = { 0 };
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_STRING("nqn",    'n', "NAME", &cfg.nqn,    "Comma-separated list of DC nqn"),
 		OPT_STRING("device", 'd', "DEV",  &cfg.device, "Comma-separated list of DC nvme device handle."),
-		OPT_STRING("task",   't', "TASK", &cfg.tas,    "[register|deregister]"),
-		OPT_INCR("verbose",  'v', &cfg.verbose, "Increase logging verbosity"),
-		OPT_END()
-	};
+		OPT_STRING("task",   't', "TASK", &cfg.tas,    "[register|deregister]"));
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -1052,7 +1030,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		return -EINVAL;
 	}
 
-	log_level = map_log_level(cfg.verbose, false);
+	log_level = map_log_level(nvme_args.verbose, false);
 
 	ctx = nvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
