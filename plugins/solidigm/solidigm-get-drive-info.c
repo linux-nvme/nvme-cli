@@ -13,7 +13,6 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 {
 	const char *desc = "Get drive HW information";
 	const char *FTL_unit_size_str = "FTL_unit_size";
-	char *output_format = "normal";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -25,16 +24,13 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 	__u16 ftl_unit_size;
 	int err;
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &output_format, "normal|json"),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = validate_output_format(output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if ((err < 0) || !(flags == NORMAL || flags == JSON)) {
 		nvme_show_error("Invalid output format");
 		return err;

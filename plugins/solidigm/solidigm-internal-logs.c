@@ -846,19 +846,15 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	const char *desc = "Get Debug Firmware Logs and save them.";
 	const char *type = "Log type; Defaults to ALL.";
 	const char *out_dir = "Output directory; defaults to current working directory.";
-	const char *verbose = "To print out verbose info.";
 
 	struct config cfg = {
 		.out_dir = ".",
 		.type = type_ALL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_STRING("type", 't', "ALL|CIT|HIT|NLOG|ASSERT|EVENT|EXTENDED", &cfg.type, type),
-		OPT_STRING("dir-name", 'd', "DIRECTORY", &cfg.out_dir, out_dir),
-		OPT_FLAG("verbose", 'v', &cfg.verbose,      verbose),
-		OPT_END()
-	};
+		OPT_STRING("dir-name", 'd', "DIRECTORY", &cfg.out_dir, out_dir));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -969,7 +965,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	if (ilog.count > 0) {
 		int ret_cmd;
 		_cleanup_free_ char *cmd = NULL;
-		char *quiet = cfg.verbose ? "" : " -q";
+		char *quiet = nvme_args.verbose ? "" : " -q";
 
 		if (asprintf(&zip_name, "%s.zip", unique_folder) < 0)
 			return -errno;

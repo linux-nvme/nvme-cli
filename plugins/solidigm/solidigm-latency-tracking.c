@@ -38,7 +38,6 @@ struct config {
 	bool read;
 	bool write;
 	unsigned char type;
-	char *output_format;
 };
 
 struct latency_tracker {
@@ -355,23 +354,17 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acm
 
 	struct latency_tracker lt = {
 		.uuid_index = 0,
-		.cfg = {
-			.output_format	= "normal",
-		},
 		.base_range_bits = BASE_RANGE_BITS_4_1,
 		.bucket_list_size = BUCKET_LIST_SIZE_4_1,
 		.has_average_latency_field = false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FLAG("enable", 'e', &lt.cfg.enable, "Enable Latency Tracking"),
 		OPT_FLAG("disable", 'd', &lt.cfg.disable, "Disable Latency Tracking"),
 		OPT_FLAG("read", 'r', &lt.cfg.read, "Get read statistics"),
 		OPT_FLAG("write", 'w', &lt.cfg.write, "Get write statistics"),
-		OPT_BYTE("type", 't', &lt.cfg.type, "Log type to get"),
-		OPT_FMT("output-format", 'o', &lt.cfg.output_format, output_format),
-		OPT_END()
-	};
+		OPT_BYTE("type", 't', &lt.cfg.type, "Log type to get"));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -379,9 +372,10 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acm
 
 	lt.hdl = hdl;
 
-	err = validate_output_format(lt.cfg.output_format, &lt.print_flags);
+	err = validate_output_format(nvme_args.output_format, &lt.print_flags);
 	if (err < 0) {
-		fprintf(stderr, "Invalid output format '%s'\n", lt.cfg.output_format);
+		fprintf(stderr, "Invalid output format '%s'\n",
+			nvme_args.output_format);
 		return -EINVAL;
 	}
 

@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "common.h"
+#include "nvme.h"
 #include "nvme-print.h"
 #include "plugin.h"
 
@@ -236,10 +237,8 @@ static int get_ibm_addi_smart_log(int argc, char **argv, struct command *cmd, st
 		.raw_binary = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -368,10 +367,8 @@ static int get_ibm_vpd_log(int argc, char **argv, struct command *cmd, struct pl
 		.raw_binary = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err < 0)
@@ -549,13 +546,10 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_BYTE("action",       'a', &cfg.action,        action),
 		OPT_UINT("log_len",	 'l', &cfg.log_len,	  log_len),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

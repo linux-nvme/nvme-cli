@@ -336,6 +336,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 #endif /* CONFIG_JSONC */
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	nvme_print_flags_t flags;
 	struct config {
 		__u32 namespace_id;
 		bool  raw_binary;
@@ -347,21 +348,25 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 		.namespace_id = NVME_NSID_ALL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
 		OPT_FLAG("raw-binary",	 'b', &cfg.raw_binary,	 raw),
-		OPT_FLAG_JSON("json",	 'j', &cfg.json,	 json),
-		OPT_END()
-	};
+		OPT_FLAG_JSON("json",	 'j', &cfg.json,	 json));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
 	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, 0xca,
 				(void *)&smart_log, sizeof(smart_log));
 	if (!err) {
-		if (cfg.json)
+		if (flags & JSON || cfg.json)
 			show_sfx_smart_log_jsn(&smart_log, cfg.namespace_id,
 					       nvme_transport_handle_get_name(hdl));
 		else if (!cfg.raw_binary)
@@ -513,11 +518,9 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 	struct config cfg = {
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FLAG("write",	   'w', &cfg.write,		 write),
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -654,9 +657,7 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *acmd, struct
 
 	char *desc = "Get bad block table of sfx block device.";
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -710,10 +711,8 @@ static int query_cap_info(int argc, char **argv, struct command *acmd, struct pl
 	struct config cfg;
 	int err = 0;
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -840,12 +839,10 @@ static int change_cap(int argc, char **argv, struct command *acmd, struct plugin
 	.force = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("cap",			'c',	&cfg.capacity_in_gb,	cap_gb),
 		OPT_SUFFIX("cap-byte",	'z',	&cfg.cap_in_byte,		cap_byte),
-		OPT_FLAG("force",		'f',	&cfg.force,				force),
-		OPT_END()
-	};
+		OPT_FLAG("force",		'f',	&cfg.force,				force));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -952,13 +949,11 @@ static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct p
 		.force = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",		'n',	&cfg.namespace_id,		namespace_id),
 		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id),
 		OPT_UINT("value",			'v',	&cfg.value,			value),
-		OPT_FLAG("force",			's',	&cfg.force,			force),
-		OPT_END()
-	};
+		OPT_FLAG("force",			's',	&cfg.force,			force));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1046,11 +1041,9 @@ static int sfx_get_feature(int argc, char **argv, struct command *acmd, struct p
 		.feature_id = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",		'n',	&cfg.namespace_id,		namespace_id),
-		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id),
-		OPT_END()
-	};
+		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1379,14 +1372,12 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *acmd, struct p
 		.output = NULL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FILE("file",		    'f',	&cfg.file,		file),
 		OPT_UINT("namespace_id",	    'n',	&cfg.namespace_id,	namespace_id),
 		OPT_UINT("storage_medium",	    's',	&cfg.storage_medium,    storage_medium),
 		OPT_FLAG("parse",	            'p',	&cfg.parse,             parse),
-		OPT_FILE("output",                  'o',        &cfg.output,            output),
-		OPT_END()
-	};
+		OPT_FILE("output",                  'o',        &cfg.output,            output));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1502,14 +1493,12 @@ static int sfx_expand_cap(int argc, char **argv, struct command *acmd, struct pl
 		.units = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace_id",	    'n',	&cfg.namespace_id,	namespace_id),
 		OPT_LONG("namespace_size",	    's',	&cfg.namespace_size,    namespace_size),
 		OPT_LONG("namespace_cap",	    'c',	&cfg.namespace_cap,     namespace_cap),
 		OPT_UINT("lbaf",	            'l',	&cfg.lbaf,              lbaf),
-		OPT_UINT("units",	            'u',	&cfg.units,             units),
-		OPT_END()
-	};
+		OPT_UINT("units",	            'u',	&cfg.units,             units));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1562,6 +1551,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	char path[512], numa_node[5], vendor[10], form_factor[15], temperature[10], io_speed[15];
 	char chr_dev[8], serial_number[21], model_number[41], firmware_revision[9], pcie_status[9];
 	struct json_object *root, *dev_stats, *link_stats, *crit_stats;
+	nvme_print_flags_t flags;
 	__u64 get_feat_result;
 	double write_amp;
 
@@ -1572,14 +1562,18 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		.json = false
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("json-print",	    'j',	&cfg.json,	json_desc),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("json-print",	    'j',	&cfg.json,	json_desc));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
 
 	//Calculate formatted capacity, not concerned with errors, we may have a char device
 	memset(&path, 0, 512);
@@ -1905,7 +1899,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		return err;
 	}
 
-	if (cfg.json) {
+	if (flags & JSON || cfg.json) {
 		root = json_create_object();
 		json_object_add_value_string(root, "ScaleFlux Status", nvme_transport_handle_get_name(hdl));
 

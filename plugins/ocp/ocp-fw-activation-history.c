@@ -29,12 +29,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Retrieves the OCP firmware activation history log.";
 
-	char *format = "normal";
-
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &format, "output format : normal | json"),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
@@ -74,7 +69,8 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 	if (!err) {
 		nvme_print_flags_t print_flag;
 
-		err = validate_output_format(format, &print_flag);
+		err = validate_output_format(nvme_args.output_format,
+			&print_flag);
 		if (err < 0) {
 			fprintf(stderr, "Error: Invalid output format.\n");
 			return err;

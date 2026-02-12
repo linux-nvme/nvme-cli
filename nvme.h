@@ -62,17 +62,27 @@ struct nvme_args {
 	unsigned int output_format_ver;
 };
 
+#ifdef CONFIG_JSONC
+#define DESC_OUTPUT_FORMAT "Output format: normal|json|binary|tabular"
+#else /* CONFIG_JSONC */
+#define DESC_OUTPUT_FORMAT "Output format: normal|binary|tabular"
+#endif /* CONFIG_JSONC */
+
 /*
  * the ordering of the arguments matters, as the argument parser uses the first match, thus any
  * command which defines -t shorthand will match first.
  */
 #define NVME_ARGS(n, ...)                                                              \
 	struct argconfig_commandline_options n[] = {                                   \
-		OPT_INCR("verbose",      'v', &nvme_args.verbose,       verbose),      \
-		OPT_FMT("output-format", 'o', &nvme_args.output_format, output_format), \
+		OPT_INCR("verbose",      'v', &nvme_args.verbose,                      \
+                         "Increase output verbosity"),                                 \
+		OPT_FMT("output-format", 'o', &nvme_args.output_format,                \
+                         DESC_OUTPUT_FORMAT),                                          \
 		##__VA_ARGS__,                                                         \
-		OPT_UINT("timeout",      't', &nvme_args.timeout,       timeout),      \
-		OPT_FLAG("dry-run",        0, &nvme_args.dry_run,       dry_run),      \
+		OPT_UINT("timeout",      't', &nvme_args.timeout,                      \
+                         "timeout value, in milliseconds"),                            \
+		OPT_FLAG("dry-run",        0, &nvme_args.dry_run,                      \
+                         "show command instead of executing"),                         \
 		OPT_FLAG("no-retries",     0, &nvme_args.no_retries,                   \
 			 "disable retry logic on errors"),                             \
 		OPT_FLAG("no-ioctl-probing", 0, &nvme_args.no_ioctl_probing,           \
@@ -108,10 +118,6 @@ static inline DEFINE_CLEANUP_FUNC(
 	cleanup_nvme_transport_handle, struct nvme_transport_handle *, nvme_close)
 #define _cleanup_nvme_transport_handle_ __cleanup__(cleanup_nvme_transport_handle)
 
-extern const char *output_format;
-extern const char *timeout;
-extern const char *verbose;
-extern const char *dry_run;
 extern const char *uuid_index;
 extern struct nvme_args nvme_args;
 

@@ -183,14 +183,6 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
-#ifdef CONFIG_JSONC
-const char *output_format = "Output format: normal|json|binary";
-#else /* CONFIG_JSONC */
-const char *output_format = "Output format: normal|binary";
-#endif /* CONFIG_JSONC */
-const char *timeout = "timeout value, in milliseconds";
-const char *verbose = "Increase output verbosity";
-const char *dry_run = "show command instead of sending";
 const char *uuid_index = "UUID index";
 
 static const char *app_tag = "app tag for end-to-end PI";
@@ -8434,7 +8426,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		  OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
 		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
 		  OPT_FLAG("show-command",      'V', &cfg.show,              show),
-		  OPT_FLAG("dry-run",           'w', &nvme_args.dry_run,      dry_run),
 		  OPT_FLAG("latency",           't', &cfg.latency,           latency),
 		  OPT_FLAG("force",               0, &cfg.force,             force));
 
@@ -9351,7 +9342,6 @@ static int passthru(int argc, char **argv, bool admin,
 		  OPT_FILE("metadata",     'M', &cfg.metadata,     metadata),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump),
 		  OPT_FLAG("show-command", 's', &cfg.show_command, show),
-		  OPT_FLAG("dry-run",      'd', &nvme_args.dry_run, dry_run),
 		  OPT_FLAG("read",         'r', &cfg.read,         re),
 		  OPT_FLAG("write",        'w', &cfg.write,        wr),
 		  OPT_FLAG("latency",      'T', &cfg.latency,      latency));
@@ -10352,7 +10342,6 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Show the topology\n";
-	const char *output_format = "Output format: normal|json|binary|tabular";
 	const char *ranking = "Ranking order: namespace|ctrl|multipath";
 	nvme_print_flags_t flags;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
