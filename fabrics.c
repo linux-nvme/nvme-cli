@@ -94,7 +94,7 @@ static const char *nvmf_concat		= "enable secure concatenation";
 static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
 static const char *nvmf_context		= "execution context identification string";
 
-struct fabric_args {
+struct nvmf_args {
 	const char *subsysnqn;
 	const char *transport;
 	const char *traddr;
@@ -169,7 +169,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 }
 
 static int setup_common_context(struct nvmf_context *fctx,
-		struct fabric_args *fa);
+		struct nvmf_args *fa);
 
 struct cb_fabrics_data {
 	struct nvme_fabrics_config *cfg;
@@ -272,7 +272,7 @@ static int cb_parser_next_line(struct nvmf_context *fctx, void *user_data)
 {
 	struct cb_fabrics_data *cfd = user_data;
 	struct nvme_fabrics_config cfg;
-	struct fabric_args fa = {};
+	struct nvmf_args fa = {};
 	char *ptr, *p, line[4096];
 	int argc, ret = 0;
 	bool force = false;
@@ -317,7 +317,7 @@ next:
 }
 
 static int setup_common_context(struct nvmf_context *fctx,
-		struct fabric_args *fa)
+		struct nvmf_args *fa)
 {
 	int err;
 
@@ -344,7 +344,7 @@ static int setup_common_context(struct nvmf_context *fctx,
 }
 
 static int create_common_context(struct nvme_global_ctx *ctx,
-		bool persistent, struct fabric_args *fa,
+		bool persistent, struct nvmf_args *fa,
 		struct nvme_fabrics_config *cfg,
 		void *user_data, struct nvmf_context **fctxp)
 {
@@ -390,7 +390,7 @@ err:
 
 static int create_discovery_context(struct nvme_global_ctx *ctx,
 		bool persistent, const char *device,
-		struct fabric_args *fa,
+		struct nvmf_args *fa,
 		struct nvme_fabrics_config *cfg,
 		void *user_data, struct nvmf_context **fctxp)
 {
@@ -480,7 +480,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	int ret;
 	char *format = "normal";
 	struct nvme_fabrics_config cfg;
-	struct fabric_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
+	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
 	char *device = NULL;
 	bool force = false;
 	bool json_config = false;
@@ -597,7 +597,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	int ret;
 	nvme_print_flags_t flags;
 	struct nvme_fabrics_config cfg = { 0 };
-	struct fabric_args fa = { 0 };
+	struct nvmf_args fa = { 0 };
 	char *format = "normal";
 
 	NVMF_ARGS(opts, fa, cfg,
@@ -900,7 +900,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	struct nvme_fabrics_config cfg;
-	struct fabric_args fa = { };
+	struct nvmf_args fa = { };
 	unsigned int verbose = 0;
 	int ret;
 
