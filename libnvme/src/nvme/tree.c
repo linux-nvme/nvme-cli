@@ -335,7 +335,7 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 	int fd;
 
 	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) 
+	if (!ctx)
 		return NULL;
 
 	if (fp) {
@@ -352,6 +352,8 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 
 	list_head_init(&ctx->hosts);
 	list_head_init(&ctx->endpoints);
+
+	ctx->ioctl_probing = true;
 
 	return ctx;
 }

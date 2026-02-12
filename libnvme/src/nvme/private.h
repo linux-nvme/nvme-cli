@@ -272,6 +272,7 @@ struct nvme_global_ctx {
 	struct list_head hosts;
 	struct nvme_log log;
 	bool mi_probe_enabled;
+	bool ioctl_probing;
 	bool create_only;
 	bool dry_run;
 	struct nvme_fabric_options *options;

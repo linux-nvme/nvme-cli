@@ -46,6 +46,11 @@ void nvme_set_dry_run(struct nvme_global_ctx *ctx, bool enable)
 	ctx->dry_run = enable;
 }
 
+void nvme_set_ioctl_probing(struct nvme_global_ctx *ctx, bool enable)
+{
+	ctx->ioctl_probing = enable;
+}
+
 void nvme_transport_handle_set_submit_entry(struct nvme_transport_handle *hdl,
 		void *(*submit_entry)(struct nvme_transport_handle *hdl,
 				struct nvme_passthru_cmd *cmd))
@@ -108,9 +113,11 @@ static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl
 		return -EINVAL;
 	}
 
-	ret = ioctl(hdl->fd, NVME_IOCTL_ADMIN64_CMD, &dummy);
-	if (ret > 0)
-		hdl->ioctl64 = true;
+	if (hdl->ctx->ioctl_probing) {
+		ret = ioctl(hdl->fd, NVME_IOCTL_ADMIN64_CMD, &dummy);
+		if (ret > 0)
+			hdl->ioctl64 = true;
+	}
 
 	return 0;
 }

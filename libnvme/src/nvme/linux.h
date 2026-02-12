@@ -742,4 +742,16 @@ int nvme_import_tls_key_versioned(struct nvme_global_ctx *ctx,
  */
 void nvme_set_dry_run(struct nvme_global_ctx *ctx, bool enable);
 
+/**
+ * nvme_set_ioctl_probing() - Enable/disable 64-bit IOCTL probing
+ * @ctx:	struct nvme_global_ctx object
+ * @enable:	Enable/disable 64-bit IOCTL probing
+ *
+ * When IOCTL probing is enabled, a 64-bit IOCTL command is issued to
+ * figure out if the passthru interface supports it.
+ *
+ * IOCTL probing is enabled per default.
+ */
+void nvme_set_ioctl_probing(struct nvme_global_ctx *ctx, bool enable);
+
 #endif /* _LIBNVME_LINUX_H */
