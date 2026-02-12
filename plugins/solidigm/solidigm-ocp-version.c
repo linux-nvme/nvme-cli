@@ -12,9 +12,7 @@ int sldgm_ocp_version(int argc, char **argv, struct command *acmd, struct plugin
 {
 	const char *desc = "Prints OCP extensions version of Solidigm plugin";
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	int err = argconfig_parse(argc, argv, desc, opts);
 

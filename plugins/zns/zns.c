@@ -136,24 +136,13 @@ static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *p
 	nvme_print_flags_t flags;
 	int err = -1;
 
-	struct config {
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return errno;
 
-	err = validate_output_format(cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0)
 		return err;
 
@@ -185,29 +174,23 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	int err = -1;
 
 	struct config {
-		char *output_format;
 		__u32 namespace_id;
 		bool human_readable;
 		bool vendor_specific;
 	};
 
-	struct config cfg = {
-		.output_format = "normal",
-	};
+	struct config cfg = { };
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
-		OPT_END()
-	};
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return errno;
 
-	err = validate_output_format(cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0)
 		return err;
 	if (cfg.vendor_specific)
@@ -245,7 +228,6 @@ static int zns_mgmt_send(int argc, char **argv, struct command *acmd, struct plu
 {
 	const char *zslba = "starting LBA of the zone for this command";
 	const char *select_all = "send command to all zones";
-	const char *timeout = "timeout value, in milliseconds";
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -256,18 +238,14 @@ static int zns_mgmt_send(int argc, char **argv, struct command *acmd, struct plu
 		__u64	zslba;
 		__u32	namespace_id;
 		bool	select_all;
-		__u32	timeout;
 	};
 
 	struct config cfg = {};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
-		OPT_FLAG("select-all",   'a', &cfg.select_all,    select_all),
-		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
-		OPT_END()
-	};
+		OPT_FLAG("select-all",   'a', &cfg.select_all,    select_all));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -344,7 +322,6 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 	const char *zsa = "zone send action";
 	const char *data_len = "buffer length if data required";
 	const char *data = "optional file for data (default stdin)";
-	const char *timeout = "timeout value, in milliseconds";
 
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -360,22 +337,18 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 		__u8	zsa;
 		int	data_len;
 		char	*file;
-		__u32	timeout;
 	};
 
 	struct config cfg = {};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
 		OPT_FLAG("zsaso",        'o', &cfg.zsaso,         zsaso),
 		OPT_FLAG("select-all",   'a', &cfg.select_all,    select_all),
 		OPT_BYTE("zsa",          'z', &cfg.zsa,           zsa),
 		OPT_UINT("data-len",     'l', &cfg.data_len,      data_len),
-		OPT_FILE("data",         'd', &cfg.file,          data),
-		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
-		OPT_END()
-	};
+		OPT_FILE("data",         'd', &cfg.file,          data));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -473,7 +446,6 @@ static int open_zone(int argc, char **argv, struct command *acmd, struct plugin 
 	const char *zslba = "starting LBA of the zone for this command";
 	const char *zrwaa = "Allocate Zone Random Write Area to zone";
 	const char *select_all = "send command to all zones";
-	const char *timeout = "timeout value, in milliseconds";
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -484,20 +456,16 @@ static int open_zone(int argc, char **argv, struct command *acmd, struct plugin 
 		__u32	namespace_id;
 		bool	zrwaa;
 		bool	select_all;
-		__u32	timeout;
 	};
 
 	struct config cfg = {
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
 		OPT_FLAG("zrwaa",         'r', &cfg.zrwaa,          zrwaa),
-		OPT_FLAG("select-all",   'a', &cfg.select_all,    select_all),
-		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
-		OPT_END()
-	};
+		OPT_FLAG("select-all",   'a', &cfg.select_all,    select_all));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -546,7 +514,6 @@ static int set_zone_desc(int argc, char **argv, struct command *acmd, struct plu
 	const char *zslba = "starting LBA of the zone for this command";
 	const char *zrwaa = "Allocate Zone Random Write Area to zone";
 	const char *data = "optional file for zone extension data (default stdin)";
-	const char *timeout = "timeout value, in milliseconds";
 
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -560,19 +527,15 @@ static int set_zone_desc(int argc, char **argv, struct command *acmd, struct plu
 		bool	zrwaa;
 		__u32	namespace_id;
 		char   *file;
-		__u32	timeout;
 	};
 
 	struct config cfg = {};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
 		OPT_FLAG("zrwaa",        'r', &cfg.zrwaa,         zrwaa),
-		OPT_FILE("data",         'd', &cfg.file,          data),
-		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
-		OPT_END()
-	};
+		OPT_FILE("data",         'd', &cfg.file,          data));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -640,7 +603,6 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *acmd, struct p
 {
 	const char *desc = "Flush Explicit ZRWA Range";
 	const char *slba = "LBA to flush up to";
-	const char *timeout = "timeout value, in milliseconds";
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -649,17 +611,13 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *acmd, struct p
 	struct config {
 		__u64	lba;
 		__u32	namespace_id;
-		__u32	timeout;
 	};
 
 	struct config cfg = {};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-		OPT_SUFFIX("lba",        'l', &cfg.lba,           slba),
-		OPT_UINT("timeout",      't', &cfg.timeout,       timeout),
-		OPT_END()
-	};
+		OPT_SUFFIX("lba",        'l', &cfg.lba,           slba));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -704,7 +662,6 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *acmd, struct pl
 	int err = -1;
 
 	struct config {
-		char *output_format;
 		__u64  zslba;
 		__u32  namespace_id;
 		__u8   zra;
@@ -713,26 +670,21 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *acmd, struct pl
 		__u32  data_len;
 	};
 
-	struct config cfg = {
-		.output_format = "normal",
-	};
+	struct config cfg = { };
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
 		OPT_SUFFIX("start-lba",   's', &cfg.zslba,          zslba),
 		OPT_BYTE("zra",           'z', &cfg.zra,            zra),
 		OPT_BYTE("zrasf",         'S', &cfg.zrasf,          zrasf),
 		OPT_FLAG("partial",       'p', &cfg.partial,        partial),
-		OPT_UINT("data-len",      'l', &cfg.data_len,       data_len),
-		OPT_END()
-	};
+		OPT_UINT("data-len",      'l', &cfg.data_len,       data_len));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return errno;
 
-	err = validate_output_format(cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0)
 		return err;
 
@@ -804,7 +756,6 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 	struct json_object *zone_list = NULL;
 
 	struct config {
-		char *output_format;
 		__u64 zslba;
 		__u32 namespace_id;
 		int   num_descs;
@@ -815,27 +766,23 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	struct config cfg = {
-		.output_format = "normal",
 		.num_descs = -1,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",  'n', &cfg.namespace_id,   namespace_id),
 		OPT_SUFFIX("start-lba",   's', &cfg.zslba,          zslba),
 		OPT_UINT("descs",         'd', &cfg.num_descs,      num_descs),
 		OPT_UINT("state",         'S', &cfg.state,          state),
-		OPT_FMT("output-format",  'o', &cfg.output_format,  output_format),
 		OPT_FLAG("verbose",       'v', &cfg.verbose,        verbose),
 		OPT_FLAG("extended",      'e', &cfg.extended,       ext),
-		OPT_FLAG("partial",       'p', &cfg.partial,        part),
-		OPT_END()
-	};
+		OPT_FLAG("partial",       'p', &cfg.partial,        part));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return errno;
 
-	err = validate_output_format(cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0)
 		return err;
 	if (cfg.verbose)
@@ -992,7 +939,7 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 
 	struct config cfg = {};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("zslba",           's', &cfg.zslba,         zslba),
 		OPT_SUFFIX("data-size",       'z', &cfg.data_size,     data_size),
@@ -1003,9 +950,7 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 		OPT_FLAG("force-unit-access", 'f', &cfg.fua,           fua),
 		OPT_BYTE("prinfo",            'p', &cfg.prinfo,        prinfo),
 		OPT_FLAG("piremap",           'P', &cfg.piremap,       piremap),
-		OPT_FLAG("latency",           't', &cfg.latency,       latency),
-		OPT_END()
-	};
+		OPT_FLAG("latency",           't', &cfg.latency,       latency));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1152,27 +1097,21 @@ static int changed_zone_list(int argc, char **argv, struct command *acmd, struct
 	int err = -1;
 
 	struct config {
-		char *output_format;
 		__u32 namespace_id;
 		bool  rae;
 	};
 
-	struct config cfg = {
-		.output_format = "normal",
-	};
+	struct config cfg = { };
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		OPT_END()
-	};
+		OPT_FLAG("rae",          'r', &cfg.rae,           rae));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return errno;
 
-	err = validate_output_format(cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0)
 		return err;
 

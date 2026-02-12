@@ -89,16 +89,13 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		.ctrl_init  = false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
 		OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
 		OPT_BYTE("data-area",       'd', &cfg.data_area, dgen),
 		OPT_FILE("config-file",     'j', &cfg.cfg_file, cfile),
 		OPT_FILE("source-file",     's', &cfg.binary_file, sfile),
-		OPT_STR("jq-filter",        'q', &cfg.jq_filter, jqfilt),
-		OPT_INCR("verbose",         'v', &nvme_args.verbose, verbose),
-		OPT_END()
-	};
+		OPT_STR("jq-filter",        'q', &cfg.jq_filter, jqfilt));
 
 	int err = argconfig_parse(argc, argv, desc, opts);
 

@@ -344,6 +344,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	struct nvme_additional_smart_log smart_log;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	nvme_print_flags_t flags;
 	int err;
 
 	struct config {
@@ -356,20 +357,24 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 		.namespace_id = NVME_NSID_ALL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_FLAG_JSON("json",    'j', &cfg.json,         json),
-		OPT_END()
-	};
+		OPT_FLAG_JSON("json",    'j', &cfg.json,         json));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
 	err = nvme_get_log_simple(hdl, 0xca, &smart_log, sizeof(smart_log));
 	if (!err) {
-		if (cfg.json)
+		if (flags & JSON || cfg.json)
 			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id,
 						 nvme_transport_handle_get_name(hdl));
 		else if (!cfg.raw_binary)
@@ -399,10 +404,8 @@ static int get_market_log(int argc, char **argv, struct command *acmd, struct pl
 	struct config cfg = {
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -461,10 +464,8 @@ static int get_temp_stats_log(int argc, char **argv, struct command *acmd, struc
 	struct config cfg = {
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1030,6 +1031,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 	__u8 data[NAND_LAT_STATS_LEN];
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	nvme_print_flags_t flags;
 	int err;
 
 	const char *desc = "Get Intel Latency Statistics log and show it.";
@@ -1048,16 +1050,20 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 	struct config cfg = {
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FLAG("write",	'w', &cfg.write,	write),
 		OPT_FLAG("raw-binary",	'b', &cfg.raw_binary,	raw),
-		OPT_FLAG_JSON("json",	'j', &cfg.json,		json),
-		OPT_END()
-	};
+		OPT_FLAG_JSON("json",	'j', &cfg.json,		json));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
 
 	/* For optate, latency stats are deleted every time their LID is pulled.
 	 * Therefore, we query the longest lat_stats log page first.
@@ -1105,7 +1111,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 		       sizeof(struct intel_lat_stats));
 	}
 
-	if (cfg.json)
+	if (flags & JSON || cfg.json)
 		json_lat_stats(cfg.write);
 	else if (!cfg.raw_binary)
 		show_lat_stats(cfg.write);
@@ -1367,15 +1373,13 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 		.core = -1
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("log",          'l', &cfg.log,          log),
 		OPT_INT("region",        'r', &cfg.core,         core),
 		OPT_INT("nlognum",       'm', &cfg.lnum,         nlognum),
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
 		OPT_FILE("output-file",  'o', &cfg.file,         file),
-		OPT_FLAG("verbose-nlog", 'v', &cfg.verbose,      verbose),
-		OPT_END()
-	};
+		OPT_FLAG("verbose-nlog", 'v', &cfg.verbose,      verbose));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -1633,12 +1637,10 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 		.bucket_thresholds = "",
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FLAG("write",      'w', &cfg.write, write),
 		OPT_LIST("bucket-thresholds", 't', &cfg.bucket_thresholds,
-			 bucket_thresholds),
-		OPT_END()
-	};
+			 bucket_thresholds));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 

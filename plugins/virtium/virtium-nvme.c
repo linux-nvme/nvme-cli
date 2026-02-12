@@ -957,13 +957,11 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 		.test_name = NULL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_DOUBLE("run-time",  'r', &cfg.run_time_hrs,             run_time),
 		OPT_DOUBLE("freq",      'f', &cfg.log_record_frequency_hrs, freq),
 		OPT_FILE("output-file", 'o', &cfg.output_file,              output_file),
-		OPT_STRING("test-name", 'n', "NAME", &cfg.test_name,        test_name),
-		OPT_END()
-	};
+		OPT_STRING("test-name", 'n', "NAME", &cfg.test_name,        test_name));
 
 	vt_generate_vtview_log_file_name(vt_default_log_file_name);
 
@@ -1031,9 +1029,7 @@ static int vt_show_identify(int argc, char **argv, struct command *acmd, struct 
 	struct nvme_id_ctrl ctrl;
 	int ret, err = 0;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
