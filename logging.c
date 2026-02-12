@@ -103,7 +103,7 @@ static void nvme_log_retry(int errnum)
 	if (log_level < LOG_DEBUG)
 		return;
 
-	printf("passthru command returned '%s'\n", strerror(errnum));
+	printf("passthru command returned '%s'\n", nvme_strerror(errnum));
 }
 
 void *nvme_submit_entry(struct nvme_transport_handle *hdl,

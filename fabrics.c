@@ -152,7 +152,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 
 	fd = open(raw, O_CREAT | O_RDWR | O_TRUNC, 0600);
 	if (fd < 0) {
-		fprintf(stderr, "failed to open %s: %s\n", raw, strerror(errno));
+		fprintf(stderr, "failed to open %s: %s\n", raw, nvme_strerror(errno));
 		return;
 	}
 
@@ -161,7 +161,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 	ret = write(fd, log, len);
 	if (ret < 0)
 		fprintf(stderr, "failed to write to %s: %s\n",
-			raw, strerror(errno));
+			raw, nvme_strerror(errno));
 	else
 		printf("Discovery log is saved to %s\n", raw);
 
@@ -183,7 +183,7 @@ static bool cb_decide_retry(struct nvmf_context *fctx, int err,
 		void *user_data)
 {
 	if (err == -EAGAIN || (err == -EINTR && !nvme_sigint_received)) {
-		print_debug("nvmf_add_ctrl returned '%s'\n", strerror(-err));
+		print_debug("nvmf_add_ctrl returned '%s'\n", nvme_strerror(-err));
 		return true;
 	}
 

@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include "nvme-models.h"
+#include "nvme.h"
 
 static char *_fmt1 = "/sys/class/nvme/nvme%d/device/subsystem_vendor";
 static char *_fmt2 = "/sys/class/nvme/nvme%d/device/subsystem_device";
@@ -244,7 +245,7 @@ static int read_sys_node(char *where, char *save, size_t savesz)
 	fd = open(where, O_RDONLY);
 	if (fd < 0) {
 		fprintf(stderr, "Failed to open %s with errno %s\n",
-			where, strerror(errno));
+			where, nvme_strerror(errno));
 		return 1;
 	}
 	/* -1 so we can safely use strstr below */
@@ -327,7 +328,7 @@ char *nvme_product_name(int id)
 
 	line = malloc(1024);
 	if (!line) {
-		fprintf(stderr, "malloc: %s\n", strerror(errno));
+		fprintf(stderr, "malloc: %s\n", nvme_strerror(errno));
 		goto error0;
 	}
 
