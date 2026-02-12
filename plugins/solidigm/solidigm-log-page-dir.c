@@ -185,9 +185,9 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *a
 	const char *description = "Retrieves list of supported log pages for each UUID index.";
 
 	OPT_ARGS(options) = {
-		OPT_FMT("output-format", 'o', &nvme_cfg.output_format,
+		OPT_FMT("output-format", 'o', &nvme_args.output_format,
 			"output format : normal | json"),
-		OPT_INCR("verbose", 'v', &nvme_cfg.verbose, verbose),
+		OPT_INCR("verbose", 'v', &nvme_args.verbose, verbose),
 		OPT_END()
 	};
 
@@ -241,10 +241,10 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *a
 	if (!err) {
 		nvme_print_flags_t print_flag;
 
-		err = validate_output_format(nvme_cfg.output_format, &print_flag);
+		err = validate_output_format(nvme_args.output_format, &print_flag);
 		if (err) {
 			nvme_show_error("Error: Invalid output format specified: %s.\n",
-					nvme_cfg.output_format);
+					nvme_args.output_format);
 			return err;
 		}
 

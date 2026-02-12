@@ -38,7 +38,7 @@ int sldgm_get_market_log(int argc, char **argv, struct command *acmd,
 
 	OPT_ARGS(opts) = {
 		OPT_FLAG("raw-binary", 'b', &raw_binary, raw),
-		OPT_INCR("verbose", 'v', &nvme_cfg.verbose, verbose),
+		OPT_INCR("verbose", 'v', &nvme_args.verbose, verbose),
 		OPT_END()
 	};
 

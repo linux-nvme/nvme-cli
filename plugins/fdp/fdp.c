@@ -541,7 +541,7 @@ static int fdp_feature(int argc, char **argv, struct command *acmd, struct plugi
 		OPT_SHRT("endgrp-id", 'e', &cfg.endgid, endurance_group),
 		OPT_BYTE("enable-conf-idx", 'c', &cfg.fdpcidx, enable_conf_idx),
 		OPT_FLAG("disable", 'd', &cfg.disable, disable),
-		OPT_INCR("verbose",      'v', &nvme_cfg.verbose, verbose),
+		OPT_INCR("verbose",      'v', &nvme_args.verbose, verbose),
 		OPT_END()
 	};
 

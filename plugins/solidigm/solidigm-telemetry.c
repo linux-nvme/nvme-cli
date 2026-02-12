@@ -96,7 +96,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		OPT_FILE("config-file",     'j', &cfg.cfg_file, cfile),
 		OPT_FILE("source-file",     's', &cfg.binary_file, sfile),
 		OPT_STR("jq-filter",        'q', &cfg.jq_filter, jqfilt),
-		OPT_INCR("verbose",         'v', &nvme_cfg.verbose, verbose),
+		OPT_INCR("verbose",         'v', &nvme_args.verbose, verbose),
 		OPT_END()
 	};
 

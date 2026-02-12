@@ -52,7 +52,7 @@ enum nvme_cli_topo_ranking {
 
 #define SYS_NVME "/sys/class/nvme"
 
-struct nvme_config {
+struct nvme_args {
 	char *output_format;
 	int verbose;
 	__u32 timeout;
@@ -68,16 +68,16 @@ struct nvme_config {
  */
 #define NVME_ARGS(n, ...)                                                              \
 	struct argconfig_commandline_options n[] = {                                   \
-		OPT_INCR("verbose",      'v', &nvme_cfg.verbose,       verbose),       \
-		OPT_FMT("output-format", 'o', &nvme_cfg.output_format, output_format), \
+		OPT_INCR("verbose",      'v', &nvme_args.verbose,       verbose),      \
+		OPT_FMT("output-format", 'o', &nvme_args.output_format, output_format), \
 		##__VA_ARGS__,                                                         \
-		OPT_UINT("timeout",      't', &nvme_cfg.timeout,       timeout),       \
-		OPT_FLAG("dry-run",        0, &nvme_cfg.dry_run,       dry_run),       \
-		OPT_FLAG("no-retries",     0, &nvme_cfg.no_retries,                    \
+		OPT_UINT("timeout",      't', &nvme_args.timeout,       timeout),      \
+		OPT_FLAG("dry-run",        0, &nvme_args.dry_run,       dry_run),      \
+		OPT_FLAG("no-retries",     0, &nvme_args.no_retries,                   \
 			 "disable retry logic on errors"),                             \
-		OPT_FLAG("no-ioctl-probing", 0, &nvme_cfg.no_ioctl_probing,            \
+		OPT_FLAG("no-ioctl-probing", 0, &nvme_args.no_ioctl_probing,           \
 			 "disable 64-bit IOCTL support probing"),                      \
-		OPT_UINT("output-format-version", 0, &nvme_cfg.output_format_ver,      \
+		OPT_UINT("output-format-version", 0, &nvme_args.output_format_ver,     \
 			 "output format version: 1|2"),                                \
 		OPT_END()                                                              \
 	}
@@ -113,7 +113,7 @@ extern const char *timeout;
 extern const char *verbose;
 extern const char *dry_run;
 extern const char *uuid_index;
-extern struct nvme_config nvme_cfg;
+extern struct nvme_args nvme_args;
 
 int validate_output_format(const char *format, nvme_print_flags_t *flags);
 bool nvme_is_output_format_json(void);

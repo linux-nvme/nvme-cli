@@ -248,7 +248,7 @@ static int get_hwcomp_log(struct nvme_transport_handle *hdl, __u32 id, bool list
 		.desc = NULL,
 	};
 
-	ret = validate_output_format(nvme_cfg.output_format, &fmt);
+	ret = validate_output_format(nvme_args.output_format, &fmt);
 	if (ret < 0) {
 		fprintf(stderr, "error: ocp: invalid output format\n");
 		return ret;
