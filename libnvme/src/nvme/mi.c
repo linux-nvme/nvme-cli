@@ -896,6 +896,7 @@ int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
 	}
 
 	nvme_mi_admin_init_req(hdl->ep, &req, &req_hdr, hdl->id, cmd->opcode);
+	req_hdr.flags = cmd->flags;
 	req_hdr.cdw1 = cpu_to_le32(cmd->nsid);
 	req_hdr.cdw2 = cpu_to_le32(cmd->cdw2);
 	req_hdr.cdw3 = cpu_to_le32(cmd->cdw3);
@@ -909,7 +910,7 @@ int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
 	if (cmd->data_len != 0) {
 		req_hdr.dlen = cpu_to_le32(cmd->data_len);
 		/* Bit 0 set to 1 means DLEN contains a value */
-		req_hdr.flags = 0x1;
+		req_hdr.flags |= 0x1;
 	}
 
 	if (has_write_data) {

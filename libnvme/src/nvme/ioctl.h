@@ -51,7 +51,7 @@
 /**
  * struct nvme_passthru_cmd - nvme passthrough command structure
  * @opcode:	Operation code, see &enum nvme_io_opcodes and &enum nvme_admin_opcodes
- * @flags:	Not supported: intended for command flags (eg: SGL, FUSE)
+ * @flags:	Supported only for NVMe-MI
  * @rsvd1:	Reserved for future use
  * @nsid:	Namespace Identifier, or Fabrics type
  * @cdw2:	Command Dword 2 (no spec defined use)
@@ -439,6 +439,8 @@ enum nvme_cmd_dword_fields {
 	NVME_COPY_CDW15_LBAT_MASK				= 0xffff,
 	NVME_COPY_CDW15_LBATM_SHIFT				= 16,
 	NVME_COPY_CDW15_LBATM_MASK				= 0xffff,
+	NVME_MI_ADMIN_CFLAGS_ISH_SHIFT				= 2,
+	NVME_MI_ADMIN_CFLAGS_ISH_MASK				= 0x1,
 };
 
 #define NVME_FIELD_ENCODE(value, shift, mask) \
@@ -7081,4 +7083,20 @@ nvme_get_features_simple(struct nvme_transport_handle *hdl, __u8 fid,
 		*result = cmd.result;
 	return err;
 }
+
+/**
+ * nvme_init_mi_cmd_flags() - Initialize command flags for NVMe-MI
+ * @cmd:	Passthru command to use
+ * @ish:	Ignore Shutdown (for NVMe-MI command)
+ *
+ * Initializes the passthru command flags
+ */
+static inline void
+nvme_init_mi_cmd_flags(struct nvme_passthru_cmd *cmd, bool ish)
+{
+	cmd->flags = NVME_FIELD_ENCODE(ish,
+			NVME_MI_ADMIN_CFLAGS_ISH_SHIFT,
+			NVME_MI_ADMIN_CFLAGS_ISH_MASK);
+}
+
 #endif /* _LIBNVME_IOCTL_H */

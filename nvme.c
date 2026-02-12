@@ -264,6 +264,7 @@ static const char *nssd = "NSSD=0x64 register offset";
 static const char *pmrctl = "PMRCTL=0xe04 register offset";
 static const char *pmrmscl = "PMRMSCL=0xe14 register offset";
 static const char *pmrmscu = "PMRMSCU=0xe18 register offset";
+static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
 
 struct nvme_config nvme_cfg = {
 	.output_format = "normal",
@@ -2311,6 +2312,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 	nvme_print_flags_t flags;
 
 	struct config {
+		bool	ish;
 		__u32	namespace_id;
 		__u8	log_id;
 		__u32	log_len;
@@ -2327,6 +2329,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.namespace_id	= NVME_NSID_ALL,
 		.log_id		= 0xff,
 		.log_len	= 0,
@@ -2389,6 +2392,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_BYTE("log-id",       'i', &cfg.log_id,       log_id, log_name),
 		  OPT_UINT("log-len",      'l', &cfg.log_len,      log_len),
@@ -2458,6 +2462,12 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 	};
 	nvme_init_get_log(&cmd, cfg.namespace_id, cfg.log_id,
 			  cfg.csi, log, cfg.log_len);
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	cmd.cdw10 |= NVME_FIELD_ENCODE(cfg.lsp,
 			NVME_LOG_CDW10_LSP_SHIFT,
 			NVME_LOG_CDW10_LSP_MASK);
@@ -2951,14 +2961,17 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	int err;
 
 	struct config {
+		bool	ish;
 		__u32	namespace_id;
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.namespace_id	= 0,
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -2980,6 +2993,12 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	}
 
 	nvme_init_ns_mgmt_delete(&cmd, cfg.namespace_id);
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	ns_mgmt_show_status(hdl, err, acmd->name, cfg.namespace_id);
 
@@ -3001,18 +3020,21 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	const char *cont = "optional comma-sep controller id list";
 
 	struct config {
+		bool	ish;
 		__u32	nsid;
 		char	*cntlist;
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.nsid		= 0,
 		.cntlist	= "",
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.nsid,		namespace_id),
-		  OPT_LIST("controllers",  'c', &cfg.cntlist,	cont));
+		  OPT_FLAG("ish",          'I', &cfg.ish,     ish),
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,    namespace_id),
+		  OPT_LIST("controllers",  'c', &cfg.cntlist, cont));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -3065,6 +3087,12 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	else
 		nvme_init_ns_detach_ctrls(&cmd, cfg.nsid, cntlist);
 
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	ns_mgmt_show_status(hdl, err, acmd->name, cfg.nsid);
 
@@ -3216,6 +3244,7 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	__u32 nsid;
 
 	struct config {
+		bool	ish;
 		__u64	nsze;
 		__u64	ncap;
 		__u8	flbas;
@@ -3238,6 +3267,7 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.nsze		= 0,
 		.ncap		= 0,
 		.flbas		= 0xff,
@@ -3260,6 +3290,7 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",          'I', &cfg.ish,      ish),
 		  OPT_SUFFIX("nsze",       's', &cfg.nsze,     nsze),
 		  OPT_SUFFIX("ncap",       'c', &cfg.ncap,     ncap),
 		  OPT_BYTE("flbas",        'f', &cfg.flbas,    flbas),
@@ -3423,6 +3454,12 @@ parse_lba:
 		data->phndl[i] = cpu_to_le16(phndl[i]);
 
 	nvme_init_ns_mgmt_create(&cmd, cfg.csi, data);
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	nsid = cmd.result;
 	ns_mgmt_show_status(hdl, err, acmd->name, nsid);
@@ -4587,12 +4624,19 @@ static int wait_self_test(struct nvme_transport_handle *hdl)
 	return 0;
 }
 
-static void abort_self_test(struct nvme_transport_handle *hdl, __u32 nsid)
+static void abort_self_test(struct nvme_transport_handle *hdl, bool ish,
+			__u32 nsid)
 {
 	struct nvme_passthru_cmd cmd;
 	int err;
 
 	nvme_init_dev_self_test(&cmd, nsid, NVME_DST_STC_ABORT);
+	if (ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err("Device self-test", err);
@@ -4625,18 +4669,21 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 	int err;
 
 	struct config {
+		bool	ish;
 		__u32	namespace_id;
 		__u8	stc;
 		bool	wait;
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.namespace_id	= NVME_NSID_ALL,
 		.stc		= NVME_ST_CODE_RESERVED,
 		.wait		= false,
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",            'I', &cfg.ish,          ish),
 		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
 		  OPT_BYTE("self-test-code", 's', &cfg.stc,          self_test_code),
 		  OPT_FLAG("wait",           'w', &cfg.wait,         wait));
@@ -4677,6 +4724,12 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 	}
 
 	nvme_init_dev_self_test(&cmd, cfg.namespace_id, cfg.stc);
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err("Device self-test", err);
@@ -4697,7 +4750,7 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 
 check_abort:
 	if (err == -EINTR)
-		abort_self_test(hdl, cfg.namespace_id);
+		abort_self_test(hdl, cfg.ish, cfg.namespace_id);
 
 	return err;
 }
@@ -4984,7 +5037,7 @@ static int get_feature(int argc, char **argv, struct command *acmd,
  * be aborted.
  */
 static int fw_download_single(struct nvme_transport_handle *hdl, void *fw_buf,
-			      unsigned int fw_len, uint32_t offset,
+			      bool ish, unsigned int fw_len, uint32_t offset,
 			      uint32_t len, bool progress, bool ignore_ovr)
 {
 	const unsigned int max_retries = 3;
@@ -4996,6 +5049,9 @@ static int fw_download_single(struct nvme_transport_handle *hdl, void *fw_buf,
 		printf("Firmware download: transferring 0x%08x/0x%08x bytes: %03d%%\r",
 		       offset, fw_len, (int)(100 * offset / fw_len));
 	}
+
+	if (nvme_transport_handle_is_mi(hdl))
+		nvme_init_mi_cmd_flags(&cmd, ish);
 
 	for (try = 0; try < max_retries; try++) {
 		if (try > 0) {
@@ -5096,6 +5152,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 
 	struct config {
 		char	*fw;
+		bool	ish;
 		__u32	xfer;
 		__u32	offset;
 		bool	progress;
@@ -5104,6 +5161,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 
 	struct config cfg = {
 		.fw         = "",
+		.ish        = false,
 		.xfer       = 0,
 		.offset     = 0,
 		.progress   = false,
@@ -5112,6 +5170,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 
 	NVME_ARGS(opts,
 		  OPT_FILE("fw",         'f', &cfg.fw,         fw),
+		  OPT_FLAG("ish",        'I', &cfg.ish,        ish),
 		  OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
 		  OPT_UINT("offset",     'O', &cfg.offset,     offset),
 		  OPT_FLAG("progress",   'p', &cfg.progress,   progress),
@@ -5175,10 +5234,14 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		return err;
 	}
 
+	if (cfg.ish && !nvme_transport_handle_is_mi(hdl)) {
+		printf("ISH is supported only for NVMe-MI\n");
+	}
+
 	for (pos = 0; pos < fw_size; pos += cfg.xfer) {
 		cfg.xfer = min(cfg.xfer, fw_size - pos);
 
-		err = fw_download_single(hdl, fw_buf + pos, fw_size,
+		err = fw_download_single(hdl, fw_buf + pos, cfg.ish, fw_size,
 					 cfg.offset + pos, cfg.xfer,
 					 cfg.progress, cfg.ignore_ovr);
 		if (err)
@@ -5292,12 +5355,14 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	nvme_print_flags_t flags;
 
 	struct config {
+		bool	ish;
 		__u8	slot;
 		__u8	action;
 		__u8	bpid;
 	};
 
 	struct config cfg = {
+		.ish	= false,
 		.slot	= 0,
 		.action	= 0,
 		.bpid	= 0,
@@ -5318,6 +5383,7 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",    'I', &cfg.ish,    ish),
 		  OPT_BYTE("slot",   's', &cfg.slot,   slot),
 		  OPT_BYTE("action", 'a', &cfg.action, action, ca),
 		  OPT_BYTE("bpid",   'b', &cfg.bpid,   bpid));
@@ -5355,6 +5421,12 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	}
 
 	nvme_init_fw_commit(&cmd, cfg.slot, cfg.action, cfg.bpid);
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		fw_commit_err(err, cfg.action, cfg.slot, cfg.bpid);
@@ -5484,6 +5556,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	int err;
 
 	struct config {
+		bool	ish;
 		bool	no_dealloc;
 		bool	oipbp;
 		__u8	owpass;
@@ -5494,6 +5567,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.no_dealloc	= false,
 		.oipbp		= false,
 		.owpass		= 0,
@@ -5513,6 +5587,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",        'I', &cfg.ish,        ish),
 		  OPT_FLAG("no-dealloc", 'd', &cfg.no_dealloc, no_dealloc_desc),
 		  OPT_FLAG("oipbp",      'i', &cfg.oipbp,      oipbp_desc),
 		  OPT_BYTE("owpass",     'n', &cfg.owpass,     owpass_desc),
@@ -5566,7 +5641,13 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	}
 
 	nvme_init_sanitize_nvm(&cmd, cfg.sanact, cfg.ause, cfg.owpass,
-			       cfg.oipbp, cfg.no_dealloc, cfg.emvs, cfg.ovrpat);
+		cfg.oipbp, cfg.no_dealloc, cfg.emvs, cfg.ovrpat);
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err("sanitize", err);
@@ -5595,12 +5676,14 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	int err;
 
 	struct config {
+		bool	ish;
 		bool	ause;
 		__u8	sanact;
 		bool	emvs;
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.ause		= false,
 		.sanact		= 0,
 		.emvs		= false,
@@ -5616,6 +5699,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",    'I', &cfg.ish,    ish),
 		  OPT_FLAG("ause",   'u', &cfg.ause,   ause_desc),
 		  OPT_BYTE("sanact", 'a', &cfg.sanact, sanact_desc, sanact),
 		  OPT_FLAG("emvs",   'e', &cfg.emvs,   emvs_desc));
@@ -5653,6 +5737,12 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	}
 
 	nvme_init_sanitize_ns(&cmd, cfg.sanact, cfg.ause, cfg.emvs);
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_admin_cmd_err("sanitize ns", &cmd, err);
@@ -6529,6 +6619,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	int err, i;
 
 	struct config {
+		bool	ish;
 		__u32	namespace_id;
 		__u8	lbaf;
 		__u8	ses;
@@ -6541,6 +6632,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.namespace_id	= 0,
 		.lbaf		= 0xff,
 		.ses		= 0,
@@ -6556,6 +6648,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		timeout_ms = nvme_cfg.timeout;
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",         'I', &cfg.ish,          ish),
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
 		  OPT_BYTE("lbaf",         'l', &cfg.lbaf,         lbaf),
 		  OPT_BYTE("ses",          's', &cfg.ses,          ses),
@@ -6711,6 +6804,12 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	nvme_init_format_nvm(&cmd, cfg.namespace_id, cfg.lbaf, cfg.mset,
 		cfg.pi, cfg.pil, cfg.ses);
 	cmd.timeout_ms = timeout_ms;
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err("format", err);
@@ -6932,6 +7031,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	nvme_print_flags_t flags;
 
 	struct config {
+		bool	ish;
 		__u32	namespace_id;
 		char	*file;
 		__u8	nssf;
@@ -6941,6 +7041,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.namespace_id	= 0,
 		.file		= "",
 		.nssf		= 0,
@@ -6950,6 +7051,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_FILE("file",         'f', &cfg.file,         file),
 		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
@@ -7006,7 +7108,13 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	}
 
 	nvme_init_security_send(&cmd, cfg.namespace_id, cfg.nssf, cfg.spsp,
-				cfg.secp, cfg.tl, sec_buf, cfg.tl);
+		cfg.secp, cfg.tl, sec_buf, cfg.tl);
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err("security-send", err);
@@ -8697,6 +8805,7 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 	int err;
 
 	struct config {
+		bool	ish;
 		__u32	namespace_id;
 		__u32	size;
 		__u8	nssf;
@@ -8707,6 +8816,7 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.namespace_id	= 0,
 		.size		= 0,
 		.nssf		= 0,
@@ -8717,6 +8827,7 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
 		  OPT_UINT("size",         'x', &cfg.size,         size),
 		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
@@ -8739,6 +8850,13 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 		sec_buf = nvme_alloc(cfg.size);
 		if (!sec_buf)
 			return -ENOMEM;
+	}
+
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
 	}
 
 	nvme_init_security_receive(&cmd, cfg.namespace_id, cfg.nssf, cfg.spsp,
@@ -8780,6 +8898,7 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 	int err;
 
 	struct config {
+		bool	ish;
 		__u32	namespace_id;
 		__u64	slba;
 		__u32	mndw;
@@ -8788,6 +8907,7 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.namespace_id	= 0,
 		.slba		= 0,
 		.mndw		= 0,
@@ -8796,6 +8916,7 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",          'I', &cfg.ish,           ish),
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_desired),
 		  OPT_SUFFIX("start-lba",  's', &cfg.slba,          slba),
 		  OPT_UINT("max-dw",       'm', &cfg.mndw,          mndw),
@@ -8824,6 +8945,12 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 
 	nvme_init_get_lba_status(&cmd, cfg.namespace_id, cfg.slba, cfg.mndw,
 				 cfg.atype, cfg.rl, buf);
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err("get lba status", err);
@@ -8855,6 +8982,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 	nvme_print_flags_t flags;
 
 	struct config {
+		bool	ish;
 		__u8	operation;
 		__u16	element_id;
 		__u32	dw11;
@@ -8862,6 +8990,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	struct config cfg = {
+		.ish		= false,
 		.operation	= 0xff,
 		.element_id	= 0xffff,
 		.dw11		= 0,
@@ -8869,6 +8998,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
+		  OPT_FLAG("ish",         'I', &cfg.ish,          ish),
 		  OPT_BYTE("operation",   'O', &cfg.operation,    operation),
 		  OPT_SHRT("element-id",  'i', &cfg.element_id,   element_id),
 		  OPT_UINT("cap-lower",   'l', &cfg.dw11,         cap_lower),
@@ -8892,6 +9022,12 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 
 	nvme_init_capacity_mgmt(&cmd, cfg.operation, cfg.element_id,
 		(__u64)cfg.dw12 << 32 | cfg.dw11);
+	if (cfg.ish) {
+		if (nvme_transport_handle_is_mi(hdl))
+			nvme_init_mi_cmd_flags(&cmd, ish);
+		else
+			printf("ISH is supported only for NVMe-MI\n");
+	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err("capacity management", err);

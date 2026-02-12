@@ -226,12 +226,16 @@ bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl)
 	return hdl->type == NVME_TRANSPORT_HANDLE_TYPE_MI;
 }
 
-int nvme_fw_download_seq(struct nvme_transport_handle *hdl, __u32 size,
-		__u32 xfer, __u32 offset, void *buf)
+int nvme_fw_download_seq(struct nvme_transport_handle *hdl, bool ish,
+		__u32 size, __u32 xfer, __u32 offset, void *buf)
 {
 	struct nvme_passthru_cmd cmd;
 	void *data = buf;
 	int err = 0;
+
+	if (ish && nvme_transport_handle_is_mi(hdl)) {
+		nvme_init_mi_cmd_flags(&cmd, ish);
+	}
 
 	while (size > 0) {
 		err = nvme_init_fw_download(&cmd, data, MIN(xfer, size), offset);
@@ -522,13 +526,16 @@ int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae, struct 
 	return 0;
 }
 
-static int nvme_ns_attachment(struct nvme_transport_handle *hdl, __u32 nsid,
-		__u16 num_ctrls, __u16 *ctrlist, bool attach)
+static int nvme_ns_attachment(struct nvme_transport_handle *hdl, bool ish,
+		__u32 nsid, __u16 num_ctrls, __u16 *ctrlist, bool attach)
 {
 	struct nvme_ctrl_list cntlist = { 0 };
 	struct nvme_passthru_cmd cmd;
 
 	nvme_init_ctrl_list(&cntlist, num_ctrls, ctrlist);
+	if (ish && nvme_transport_handle_is_mi(hdl))
+		nvme_init_mi_cmd_flags(&cmd, ish);
+
 	if (attach)
 		nvme_init_ns_attach_ctrls(&cmd, nsid, &cntlist);
 	else
@@ -537,16 +544,16 @@ static int nvme_ns_attachment(struct nvme_transport_handle *hdl, __u32 nsid,
 	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
-int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid,
-		__u16 num_ctrls, __u16 *ctrlist)
+int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, bool ish,
+		__u32 nsid, __u16 num_ctrls, __u16 *ctrlist)
 {
-	return nvme_ns_attachment(hdl, nsid, num_ctrls, ctrlist, true);
+	return nvme_ns_attachment(hdl, ish, nsid, num_ctrls, ctrlist, true);
 }
 
-int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, __u32 nsid,
-		__u16 num_ctrls, __u16 *ctrlist)
+int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, bool ish,
+		__u32 nsid, __u16 num_ctrls, __u16 *ctrlist)
 {
-	return nvme_ns_attachment(hdl, nsid, num_ctrls, ctrlist, false);
+	return nvme_ns_attachment(hdl, ish, nsid, num_ctrls, ctrlist, false);
 }
 
 size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
