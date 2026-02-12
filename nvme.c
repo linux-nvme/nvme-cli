@@ -396,6 +396,9 @@ int parse_and_open(struct nvme_global_ctx **ctx,
 	if (!ctx_new)
 		return -ENOMEM;
 
+	nvme_set_ioctl_probing(ctx_new,
+		!argconfig_parse_seen(opts, "no-ioctl-probing"));
+
 	ret = get_transport_handle(ctx_new, argc, argv, O_RDONLY, &hdl_new);
 	if (ret) {
 		nvme_free_global_ctx(ctx_new);

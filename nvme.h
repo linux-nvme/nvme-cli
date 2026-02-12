@@ -58,6 +58,7 @@ struct nvme_config {
 	__u32 timeout;
 	bool dry_run;
 	bool no_retries;
+	bool no_ioctl_probing;
 	unsigned int output_format_ver;
 };
 
@@ -73,7 +74,9 @@ struct nvme_config {
 		OPT_UINT("timeout",      't', &nvme_cfg.timeout,       timeout),       \
 		OPT_FLAG("dry-run",        0, &nvme_cfg.dry_run,       dry_run),       \
 		OPT_FLAG("no-retries",     0, &nvme_cfg.no_retries,                    \
-			 "disable retry logic on errors\n"),                           \
+			 "disable retry logic on errors"),                             \
+		OPT_FLAG("no-ioctl-probing", 0, &nvme_cfg.no_ioctl_probing,            \
+			 "disable 64-bit IOCTL support probing"),                      \
 		OPT_UINT("output-format-version", 0, &nvme_cfg.output_format_ver,      \
 			 "output format version: 1|2"),                                \
 		OPT_END()                                                              \
