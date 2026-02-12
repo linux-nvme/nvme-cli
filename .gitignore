@@ -17,7 +17,9 @@ tests/*.pyc
 
 .build
 .build-ci
+.build-tools
 .cache
+_codeql_detected_source_root
 
 # Ignore PyPI build artifacts
 dist/
