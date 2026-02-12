@@ -67,7 +67,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: enable foreign arch
-        uses: dbhi/qus/action@main
+        uses: docker/setup-qemu-action@v3
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
