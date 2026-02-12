@@ -173,7 +173,7 @@ static int nvme_submit_storage_protocol_command(
 	protocol_command->CommandLength = STORAGE_PROTOCOL_COMMAND_LENGTH_NVME;
 	protocol_command->ErrorInfoLength = 0;
 	protocol_command->TimeOutValue = (cmd->timeout_ms > 0) ?
-		((cmd->timeout_ms + 999) / 1000) : 10; // Round up to seconds
+		((cmd->timeout_ms + 999) / 1000) : 10; /* Round up to seconds */
 
 	protocol_command->CommandSpecific =
 		STORAGE_PROTOCOL_SPECIFIC_NVME_ADMIN_COMMAND;
@@ -410,8 +410,10 @@ static int nvme_submit_admin_identify(struct nvme_transport_handle *hdl,
 	query = (PSTORAGE_PROPERTY_QUERY)buffer;
 	protocol_data = (PSTORAGE_PROTOCOL_SPECIFIC_DATA)query->AdditionalParameters;
 
-	// NOTE: If testing fails with Identify Specific Namespace, try
-	// StorageDeviceProtocolSpecificProperty for that cns.
+	/*
+	 * NOTE: If testing fails with Identify Specific Namespace, try
+	 * StorageDeviceProtocolSpecificProperty for that cns.
+	 */
 	query->PropertyId = StorageAdapterProtocolSpecificProperty;
 
 	protocol_data->ProtocolType = ProtocolTypeNvme;
@@ -810,33 +812,28 @@ static int nvme_submit_admin_fw_download(struct nvme_transport_handle *hdl,
 	firmware_download = (PSTORAGE_HW_FIRMWARE_DOWNLOAD)buffer;
 	firmware_download->Version = sizeof(STORAGE_HW_FIRMWARE_DOWNLOAD);
 	firmware_download->Size = buffer_len;
+
 	/*
-	 * TODO: Determine whether DWORD alignment or byte alignment is required.
-	 * Windows comments for BufferSize and Offset in winioctl.h
-	 * state that they should be aligned to the "ImagePayloadAlignment"
-	 * value from STORAGE_FIRMWARE_INFO.
-	 * Do we need to issue an IOCTL_STORAGE_FIRMWARE_GET_INFO to get
-	 * the alignment, or will it always be the same for NVMe devices?
-	 * NOTE: swworkbench uses byte alignment for Buffer size and CDW11
-	 * for offset, which should be DWORD aligned. That doesn't seem correct.
-	 * For now, we assume DWORD alignment since that is what is set in
-	 * CDW10 and CDW11 (see ioctl.h/nvme_init_fw_download).
+	 * The NVMe command uses DWORD counts for size and offset.
+	 * The Windows API uses byte counts, so convert accordingly.
+	 * See ioctl.h/nvme_init_fw_download for encoding details.
 	 */
-	firmware_download->BufferSize = cmd->cdw10;	/* Length in DWORDS */
-	firmware_download->Offset = cmd->cdw11;		/* Offset in DWORDS */
+	firmware_download->BufferSize = (DWORDLONG)(cmd->cdw10 + 1) << 2;
+	firmware_download->Offset = (DWORDLONG)cmd->cdw11 << 2;
+
 	/*
 	 * Assuming we need the CONTROLLER flag.
-	 * TODO: Do we need to set the
-	 * STORAGE_HW_FIRMWARE_REQUEST_FLAG_LAST_SEGMENT flag?
+	 * TODO: Do we need to use the LAST_SEGMENT flag?
 	 * If so, we will need a way to communicate in the cmd struct
 	 * whether this is the last segment.
 	 */
 	firmware_download->Flags = STORAGE_HW_FIRMWARE_REQUEST_FLAG_CONTROLLER;
+
 	/*
 	 * Assuming that slot is not used for NVMe devices since it is not
 	 * part of the NVMe FW Download command. Setting to 0.
-	 * If needed, we will need a way to communicate it in the cmd struct.
-	 * If not needed, just remove this setting completely.
+	 * TODO: If needed, we will need a way to communicate it in the
+	 * cmd struct. If not needed, just remove this setting completely.
 	 */
 	firmware_download->Slot = 0;
 
