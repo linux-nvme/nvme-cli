@@ -353,16 +353,14 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		.verbose = false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FILE("output-file",   'o', &cfg.file,      file),
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
 		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
 		OPT_LONG("offset",        'e', &cfg.offset,    offset),
 		OPT_FILE("type",          't', &cfg.type,      type),
-		OPT_FLAG("verbose",       'v', &cfg.verbose,   verbose),
-		OPT_END()
-	};
+		OPT_FLAG("verbose",       'v', &cfg.verbose,   verbose));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -569,10 +567,8 @@ static int sndk_drive_resize(int argc, char **argv,
 		.size = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("size", 's', &cfg.size, size),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_UINT("size", 's', &cfg.size, size));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -920,10 +916,7 @@ static int sndk_vs_fw_activate_history(int argc, char **argv,
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -971,9 +964,7 @@ static int sndk_clear_fw_activate_history(int argc, char **argv,
 	__u64 capabilities = 0;
 	int ret;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -1043,9 +1034,7 @@ static int sndk_capabilities(int argc, char **argv,
 	uint64_t capabilities = 0;
 	int ret;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)

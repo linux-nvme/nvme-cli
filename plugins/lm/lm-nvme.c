@@ -80,13 +80,11 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 		.file = NULL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("size",	's', &cfg.sz,		sz),
 		OPT_SHRT("cntlid",	'c', &cfg.cntlid,	cntlid),
 		OPT_BYTE("queue-type",	'q', &cfg.qt,		qt),
-		OPT_FLAG("consent",	  0, &cfg.consent,	consent),
-		OPT_END()
-	};
+		OPT_FLAG("consent",	  0, &cfg.consent,	consent));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -138,10 +136,8 @@ static int lm_delete_cdq(int argc, char **argv, struct command *acmd, struct plu
 		.cdqid = 0
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_SHRT("cdqid", 'C', &cfg.cdqid, cdqid),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_SHRT("cdqid", 'C', &cfg.cdqid, cdqid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -198,14 +194,12 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 		.stop = false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_BYTE("sel",		's', &cfg.sel,   sel),
 		OPT_BYTE("mos",		'm', &cfg.mos,   mos),
 		OPT_SHRT("cdqid",	'C', &cfg.cdqid, cdqid),
 		OPT_FLAG("start",	  0, &cfg.start, start),
-		OPT_FLAG("stop",	  0, &cfg.stop,  stop),
-		OPT_END()
-	};
+		OPT_FLAG("stop",	  0, &cfg.stop,  stop));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -313,7 +307,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 		.dudmq = false
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_BYTE("sel",		's', &cfg.sel, sel),
 		OPT_SHRT("cntlid",	'c', &cfg.cntlid, cntlid),
 		OPT_BYTE("stype",	't', &cfg.stype, stype),
@@ -324,9 +318,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 		OPT_BYTE("uidx",	'u', &cfg.uidx, uidx),
 		OPT_LONG("offset",	'o', &cfg.offset, offset),
 		OPT_UINT("numd",	'n', &cfg.numd, numd),
-		OPT_FILE("input-file",	'f', &cfg.input, input),
-		OPT_END()
-	};
+		OPT_FILE("input-file",	'f', &cfg.input, input));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -448,7 +440,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		.human_readable = false
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_BYTE("sel",			's', &cfg.sel, sel),
 		OPT_SHRT("cntlid",		'c', &cfg.cntlid, cntlid),
 		OPT_BYTE("csuuidi",		'U', &cfg.csuuidi, csuuidi),
@@ -457,10 +449,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		OPT_LONG("offset",		'o', &cfg.offset, offset),
 		OPT_UINT("numd",		'n', &cfg.numd, numd),
 		OPT_FILE("output-file",		'f', &cfg.output, output),
-		OPT_FMT("output-format",	  0,   &cfg.output_format, output_format),
-		OPT_FLAG("human-readable",	'H', &cfg.human_readable, human_readable_info),
-		OPT_END()
-	};
+		OPT_FLAG("human-readable",	'H', &cfg.human_readable, human_readable_info));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -552,12 +541,10 @@ static int lm_set_cdq(int argc, char **argv, struct command *acmd, struct plugin
 		.tpt = -1,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_SHRT("cdqid",	'C', &cfg.cdqid, cdqid),
 		OPT_UINT("hp",		'H', &cfg.hp, hp),
-		OPT_UINT("tpt",		'T', &cfg.tpt, tpt),
-		OPT_END()
-	};
+		OPT_UINT("tpt",		'T', &cfg.tpt, tpt));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -597,11 +584,8 @@ static int lm_get_cdq(int argc, char **argv, struct command *acmd, struct plugin
 		.output_format  = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_SHRT("cdqid",	 'C', &cfg.cdqid,	  cdqid),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_SHRT("cdqid",	 'C', &cfg.cdqid,	  cdqid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

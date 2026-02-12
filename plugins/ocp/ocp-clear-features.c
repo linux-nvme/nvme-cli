@@ -22,11 +22,9 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 	bool uuid = true;
 	int err;
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FLAG("no-uuid", 'n', NULL,
-			 "Skip UUID index search (UUID index not required for OCP 1.0)"),
-		OPT_END()
-	};
+			 "Skip UUID index search (UUID index not required for OCP 1.0)"));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -82,12 +80,10 @@ int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 		.nsid = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_BYTE("sel", 's', &cfg.sel, sel),
 		OPT_UINT("namespace-id", 'n', &cfg.nsid, nsid),
-		OPT_FLAG("no-uuid", 'u', NULL, no_uuid),
-		OPT_END()
-	};
+		OPT_FLAG("no-uuid", 'u', NULL, no_uuid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

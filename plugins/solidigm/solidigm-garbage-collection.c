@@ -83,10 +83,7 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *a
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

@@ -853,12 +853,10 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 		.type = type_ALL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_STRING("type", 't', "ALL|CIT|HIT|NLOG|ASSERT|EVENT|EXTENDED", &cfg.type, type),
 		OPT_STRING("dir-name", 'd', "DIRECTORY", &cfg.out_dir, out_dir),
-		OPT_FLAG("verbose", 'v', &cfg.verbose,      verbose),
-		OPT_END()
-	};
+		OPT_FLAG("verbose", 'v', &cfg.verbose,      verbose));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

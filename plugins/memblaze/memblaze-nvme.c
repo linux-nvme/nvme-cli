@@ -432,11 +432,9 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *ac
 		.namespace_id = NVME_NSID_ALL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace),
-		OPT_FLAG("raw-binary",	 'b', &cfg.raw_binary,	  raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",	 'b', &cfg.raw_binary,	  raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -482,9 +480,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *acm
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	int err;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -525,11 +521,9 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *acm
 		.save		  = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("value",		 'v', &cfg.value,		 value),
-		OPT_FLAG("save",		 's', &cfg.save,		 save),
-		OPT_END()
-	};
+		OPT_FLAG("save",		 's', &cfg.save,		 save));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -578,10 +572,8 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *acmd,
 		.value = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_LIST("param", 'p', &cfg.param, param),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_LIST("param", 'p', &cfg.param, param));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -708,9 +700,7 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *acmd
 	FILE *fdi = NULL;
 	int err;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -780,11 +770,9 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 		.select = "\0",
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_STRING("fw", 'f', "FILE", &cfg.fw, fw),
-		OPT_STRING("select", 's', "flag", &cfg.select, select),
-		OPT_END()
-	};
+		OPT_STRING("select", 's', "flag", &cfg.select, select));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -984,10 +972,8 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *acmd, s
 		.write = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("write", 'w', &cfg.write, write),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("write", 'w', &cfg.write, write));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1027,9 +1013,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *acmd,
 		.save		= 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1563,9 +1547,8 @@ static int mb_get_smart_log_add(int argc, char **argv, struct command *acmd, str
 
 	struct config cfg = {0};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, "dump the whole log buffer in binary format"),
-		OPT_END()};
+	NVME_ARGS(opts,
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, "dump the whole log buffer in binary format"));
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
@@ -1710,7 +1693,7 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *acmd, s
 
 	struct config cfg = {0};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("sel-perf-log", 's', &cfg.perf_monitor,
 			 "Select features to turn on, default: Disable\n"
 			 "    bit 0: latency statistics\n"
@@ -1726,8 +1709,7 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *acmd, s
 		OPT_UINT("set-write-threshold", 'w', &cfg.write_threshold,
 		  "set write high latency log threshold, it's a 0-based value and unit is 10ms"),
 		OPT_UINT("set-trim-threshold", 't', &cfg.de_allocate_trim_threshold,
-		  "set trim high latency log threshold, it's a 0-based value and unit is 10ms"),
-		OPT_END()};
+		  "set trim high latency log threshold, it's a 0-based value and unit is 10ms"));
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
@@ -1766,8 +1748,7 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, s
 
 	// Get the configuration
 
-	OPT_ARGS(opts) = {
-		OPT_END()};
+	NVME_ARGS(opts);
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
@@ -1914,12 +1895,11 @@ static int mb_get_latency_stats(int argc, char **argv, struct command *acmd, str
 
 	struct config cfg = {0};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FLAG("raw-binary",
 			'b',
 			&cfg.raw_binary,
-			"dump the whole log buffer in binary format"),
-		OPT_END()};
+			"dump the whole log buffer in binary format"));
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
@@ -2020,12 +2000,11 @@ static int mb_get_high_latency_log(int argc, char **argv, struct command *acmd,
 
 	struct config cfg = {0};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FLAG("raw-binary",
 			'b',
 			&cfg.raw_binary,
-			"dump the whole log buffer in binary format"),
-		OPT_END()};
+			"dump the whole log buffer in binary format"));
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
@@ -2263,7 +2242,7 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *acmd,
 
 	struct config cfg = {.duration = 1, .raw_binary = false};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("duration",
 			'd',
 			&cfg.duration,
@@ -2271,8 +2250,7 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *acmd,
 		OPT_FLAG("raw-binary",
 			'b',
 			&cfg.raw_binary,
-			"dump the whole log buffer in binary format"),
-		OPT_END()};
+			"dump the whole log buffer in binary format"));
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;

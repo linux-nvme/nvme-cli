@@ -163,10 +163,7 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -909,10 +906,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -1091,10 +1085,7 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -1265,10 +1256,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -1411,10 +1399,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err < 0) {
@@ -1465,10 +1450,8 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 		.save         = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("save", 's', &cfg.save, save),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("save", 's', &cfg.save, save));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err < 0) {
@@ -1525,10 +1508,8 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 		.save         = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("save", 's', &cfg.save, save),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("save", 's', &cfg.save, save));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -1593,12 +1574,10 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 		.log_id       = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
 		OPT_UINT("log_specific", 'i', &cfg.log_id,       log_specific),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1703,11 +1682,9 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 		.namespace_id = 0xffffffff,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1821,11 +1798,9 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 		.file         = "",
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_FILE("dump-file",    'f', &cfg.file,         file),
-		OPT_END()
-	};
+		OPT_FILE("dump-file",    'f', &cfg.file,         file));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

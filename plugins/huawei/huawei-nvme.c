@@ -311,10 +311,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json"),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	if (!ctx)
 		return -ENOMEM;

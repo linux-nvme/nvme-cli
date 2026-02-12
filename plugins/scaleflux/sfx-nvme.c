@@ -347,12 +347,10 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 		.namespace_id = NVME_NSID_ALL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
 		OPT_FLAG("raw-binary",	 'b', &cfg.raw_binary,	 raw),
-		OPT_FLAG_JSON("json",	 'j', &cfg.json,	 json),
-		OPT_END()
-	};
+		OPT_FLAG_JSON("json",	 'j', &cfg.json,	 json));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -513,11 +511,9 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 	struct config cfg = {
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FLAG("write",	   'w', &cfg.write,		 write),
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -654,9 +650,7 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *acmd, struct
 
 	char *desc = "Get bad block table of sfx block device.";
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -710,10 +704,8 @@ static int query_cap_info(int argc, char **argv, struct command *acmd, struct pl
 	struct config cfg;
 	int err = 0;
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -840,12 +832,10 @@ static int change_cap(int argc, char **argv, struct command *acmd, struct plugin
 	.force = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("cap",			'c',	&cfg.capacity_in_gb,	cap_gb),
 		OPT_SUFFIX("cap-byte",	'z',	&cfg.cap_in_byte,		cap_byte),
-		OPT_FLAG("force",		'f',	&cfg.force,				force),
-		OPT_END()
-	};
+		OPT_FLAG("force",		'f',	&cfg.force,				force));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -952,13 +942,11 @@ static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct p
 		.force = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",		'n',	&cfg.namespace_id,		namespace_id),
 		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id),
 		OPT_UINT("value",			'v',	&cfg.value,			value),
-		OPT_FLAG("force",			's',	&cfg.force,			force),
-		OPT_END()
-	};
+		OPT_FLAG("force",			's',	&cfg.force,			force));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1046,11 +1034,9 @@ static int sfx_get_feature(int argc, char **argv, struct command *acmd, struct p
 		.feature_id = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",		'n',	&cfg.namespace_id,		namespace_id),
-		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id),
-		OPT_END()
-	};
+		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1379,14 +1365,12 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *acmd, struct p
 		.output = NULL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FILE("file",		    'f',	&cfg.file,		file),
 		OPT_UINT("namespace_id",	    'n',	&cfg.namespace_id,	namespace_id),
 		OPT_UINT("storage_medium",	    's',	&cfg.storage_medium,    storage_medium),
 		OPT_FLAG("parse",	            'p',	&cfg.parse,             parse),
-		OPT_FILE("output",                  'o',        &cfg.output,            output),
-		OPT_END()
-	};
+		OPT_FILE("output",                  'o',        &cfg.output,            output));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1502,14 +1486,12 @@ static int sfx_expand_cap(int argc, char **argv, struct command *acmd, struct pl
 		.units = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace_id",	    'n',	&cfg.namespace_id,	namespace_id),
 		OPT_LONG("namespace_size",	    's',	&cfg.namespace_size,    namespace_size),
 		OPT_LONG("namespace_cap",	    'c',	&cfg.namespace_cap,     namespace_cap),
 		OPT_UINT("lbaf",	            'l',	&cfg.lbaf,              lbaf),
-		OPT_UINT("units",	            'u',	&cfg.units,             units),
-		OPT_END()
-	};
+		OPT_UINT("units",	            'u',	&cfg.units,             units));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1572,10 +1554,8 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		.json = false
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("json-print",	    'j',	&cfg.json,	json_desc),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("json-print",	    'j',	&cfg.json,	json_desc));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

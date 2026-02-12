@@ -436,12 +436,10 @@ static int vendor_log(int argc, char **argv, struct command *acmd, struct plugin
 		.log = 0xca
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
 		OPT_FILE("output-file",  'o', &cfg.output_file,  output_file),
-		OPT_UINT("log",          'l', &cfg.log,          log),
-		OPT_END()
-	};
+		OPT_UINT("log",          'l', &cfg.log,          log));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -485,11 +483,9 @@ static int internal_log(int argc, char **argv, struct command *acmd, struct plug
 		.prev_log = false
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_FILE("output-file", 'o', &cfg.output_file, output_file),
-		OPT_FLAG("prev-log", 'p', &cfg.prev_log, prev_log),
-		OPT_END()
-	};
+		OPT_FLAG("prev-log", 'p', &cfg.prev_log, prev_log));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -526,9 +522,7 @@ static int clear_correctable_errors(int argc, char **argv, struct command *acmd,
 	__u64 result;
 	int err;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {

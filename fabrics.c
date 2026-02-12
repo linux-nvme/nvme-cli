@@ -751,12 +751,9 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 	struct config cfg = { 0 };
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_STRING("nqn",        'n', "NAME", &cfg.nqn,    nvmf_nqn),
-		OPT_STRING("device",     'd', "DEV",  &cfg.device, device),
-		OPT_INCR("verbose",      'v', &cfg.verbose, "Increase logging verbosity"),
-		OPT_END()
-	};
+		OPT_STRING("device",     'd', "DEV",  &cfg.device, device));
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -839,11 +836,8 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 
 	struct config cfg = { 0 };
 
-	OPT_ARGS(opts) = {
-		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport),
-		OPT_INCR("verbose",  'v', &cfg.verbose, "Increase logging verbosity"),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport));
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -1018,13 +1012,10 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		unsigned int verbose;
 	} cfg = { 0 };
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_STRING("nqn",    'n', "NAME", &cfg.nqn,    "Comma-separated list of DC nqn"),
 		OPT_STRING("device", 'd', "DEV",  &cfg.device, "Comma-separated list of DC nvme device handle."),
-		OPT_STRING("task",   't', "TASK", &cfg.tas,    "[register|deregister]"),
-		OPT_INCR("verbose",  'v', &cfg.verbose, "Increase logging verbosity"),
-		OPT_END()
-	};
+		OPT_STRING("task",   't', "TASK", &cfg.tas,    "[register|deregister]"));
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)

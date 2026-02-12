@@ -25,10 +25,7 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 	__u16 ftl_unit_size;
 	int err;
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &output_format, "normal|json"),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

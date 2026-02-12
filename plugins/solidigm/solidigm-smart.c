@@ -249,12 +249,8 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *acm
 		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   "(optional) desired namespace"),
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_INCR("verbose",        'v', &nvme_cfg.verbose, verbose),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   "(optional) desired namespace"));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

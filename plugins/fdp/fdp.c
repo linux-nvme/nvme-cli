@@ -45,13 +45,10 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("endgrp-id",      'e', &cfg.egid,           egid),
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
 		OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
-		OPT_END()
-	};
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -120,12 +117,9 @@ static int fdp_usage(int argc, char **argv, struct command *acmd, struct plugin 
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("endgrp-id",    'e', &cfg.egid,          egid),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -186,12 +180,9 @@ static int fdp_stats(int argc, char **argv, struct command *acmd, struct plugin 
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("endgrp-id",    'e', &cfg.egid,          egid),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -249,13 +240,10 @@ static int fdp_events(int argc, char **argv, struct command *acmd, struct plugin
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("endgrp-id",    'e', &cfg.egid,          egid),
 		OPT_FLAG("host-events",  'E', &cfg.host_events,   host_events),
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -313,12 +301,9 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 		.raw_binary	= false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.nsid,			namespace_id),
-		OPT_FMT("output-format", 'o', &cfg.output_format,	output_format),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,		raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,		raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -388,11 +373,9 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 		.pids = "",
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",  'n', &cfg.nsid,	namespace_id),
-		OPT_LIST("pids",          'p', &cfg.pids,	_pids),
-		OPT_END()
-	};
+		OPT_LIST("pids",          'p', &cfg.pids,	_pids));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -459,14 +442,12 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 		.sv	= false,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",     'n', &cfg.nsid,         nsid),
 		OPT_SHRT("placement-handle", 'p', &cfg.ph,           ph),
 		OPT_FLAG("enable",           'e', &cfg.enable,       enable),
 		OPT_FLAG("save",             's', &cfg.sv,		     sv),
-		OPT_LIST("event-types",      't', &cfg.event_types,  event_types),
-		OPT_END()
-	};
+		OPT_LIST("event-types",      't', &cfg.event_types,  event_types));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -537,13 +518,10 @@ static int fdp_feature(int argc, char **argv, struct command *acmd, struct plugi
 		.endgid = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_SHRT("endgrp-id", 'e', &cfg.endgid, endurance_group),
 		OPT_BYTE("enable-conf-idx", 'c', &cfg.fdpcidx, enable_conf_idx),
-		OPT_FLAG("disable", 'd', &cfg.disable, disable),
-		OPT_INCR("verbose",      'v', &nvme_cfg.verbose, verbose),
-		OPT_END()
-	};
+		OPT_FLAG("disable", 'd', &cfg.disable, disable));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

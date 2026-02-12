@@ -525,7 +525,7 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 	join_options(type_options, trk_types, ARRAY_SIZE(trk_types));
 	join_options(sample_options, samplet, ARRAY_SIZE(samplet));
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_BYTE("uuid-index",   'U', &wlt.uuid_index, "specify uuid index"),
 		OPT_FLAG("enable", 'e', &cfg.enable, "tracker enable"),
 		OPT_FLAG("disable", 'd', &cfg.disable, "tracker disable"),
@@ -541,10 +541,7 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		OPT_FLAG("trigger-on-delta", 'D', &cfg.trigger_on_delta,
 			 "Trigger on delta to stop sampling"),
 		OPT_FLAG("trigger-on-latency", 'L', &cfg.trigger_on_latency,
-			 "Use latency tracker to trigger stop sampling"),
-		OPT_INCR("verbose", 'v', &nvme_cfg.verbose, "Increase logging verbosity"),
-		OPT_END()
-	};
+			 "Use latency tracker to trigger stop sampling"));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

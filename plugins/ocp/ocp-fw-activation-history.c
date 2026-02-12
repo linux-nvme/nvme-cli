@@ -31,10 +31,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 
 	char *format = "normal";
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &format, "output format : normal | json"),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;

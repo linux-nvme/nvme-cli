@@ -113,11 +113,8 @@ int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 		.output_format_version = 1,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, "output Format: normal|json"),
-		OPT_UINT("output-format-version", 0, &cfg.output_format_version, "output Format version: 1|2"),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_UINT("output-format-version", 0, &cfg.output_format_version, "output Format version: 1|2"));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)

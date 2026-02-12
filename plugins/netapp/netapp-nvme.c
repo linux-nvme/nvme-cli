@@ -910,11 +910,8 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("verbose", 'v', &cfg.verbose, "Increase output verbosity"),
-		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json|column"),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("verbose", 'v', &cfg.verbose, "Increase output verbosity"));
 
 	if (!ctx)
 		return -ENOMEM;
@@ -1021,11 +1018,8 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("verbose", 'v', &cfg.verbose, "Increase output verbosity"),
-		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json|column"),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("verbose", 'v', &cfg.verbose, "Increase output verbosity"));
 
 	if (!ctx)
 		return -ENOMEM;
