@@ -202,7 +202,7 @@ static void json_id_iocs_iocsc(struct json_object *obj_iocsc, __u64 iocsc)
 
 static bool verbose_mode(void)
 {
-	return json_print_ops.flags & VERBOSE || nvme_cfg.output_format_ver == 2;
+	return json_print_ops.flags & VERBOSE || nvme_args.output_format_ver == 2;
 }
 
 static void json_id_iocs(struct nvme_id_iocs *iocs)
@@ -4893,7 +4893,7 @@ static void json_list_item(nvme_ns_t n, struct table *t)
 static void json_print_list_items(struct nvme_global_ctx *ctx)
 {
 	if (json_print_ops.flags & VERBOSE) {
-		if (nvme_cfg.output_format_ver == 2)
+		if (nvme_args.output_format_ver == 2)
 			json_detail_list_v2(ctx);
 		else
 			json_detail_list(ctx);
