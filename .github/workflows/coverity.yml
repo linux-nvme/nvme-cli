@@ -18,7 +18,7 @@ jobs:
     name: coverity scan
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/linux-nvme/debian:latest
+      image: ghcr.io/linux-nvme/debian.python:latest
     steps:
       - uses: actions/checkout@v5
         with:
@@ -38,9 +38,10 @@ jobs:
 
       - name: Download Coverity Build Tool
         run: |
-          wget -q https://scan.coverity.com/download/linux64 \
-            --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=linux-nvme%2Fnvme-cli" \
-            -O coverity_tool.tgz
+          curl -o coverity_tool.tgz \
+            --form token=${{ secrets.COVERITY_SCAN_TOKEN }} \
+            --form project=linux-nvme/nvme-cli \
+            https://scan.coverity.com/download/linux64
           mkdir coverity-tools
           tar xzf coverity_tool.tgz --strip 1 -C coverity-tools
 
