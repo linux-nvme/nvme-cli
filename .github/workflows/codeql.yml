@@ -39,7 +39,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Mark repo as safe for git
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
