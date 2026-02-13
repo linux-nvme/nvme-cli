@@ -1,0 +1,76 @@
+---
+name: coverity
+
+on:
+  schedule:
+    # Run weekly on Mondays at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag, or ref to check out (leave empty for default branch)'
+        required: false
+        default: ''
+
+jobs:
+  coverity-scan:
+    if: github.repository == 'linux-nvme/nvme-cli'
+    name: coverity scan
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Get version info
+        id: version
+        run: |
+          VERSION="$(git describe --always --abbrev=12 --dirty)"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Building version: ${VERSION}"
+          echo "Current SHA: $(git rev-parse HEAD)"
+
+      - name: Download Coverity Build Tool
+        run: |
+          wget -q https://scan.coverity.com/download/linux64 \
+            --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=linux-nvme%2Fnvme-cli" \
+            -O coverity_tool.tgz
+          mkdir coverity-tools
+          tar xzf coverity_tool.tgz --strip 1 -C coverity-tools
+
+      - name: Configure build
+        run: |
+          meson setup .build
+
+      - name: Build with Coverity
+        run: |
+          export PATH="$PWD/coverity-tools/bin:$PATH"
+          cov-build --dir cov-int ninja -C .build
+
+      - name: Create Coverity tarball
+        run: |
+          tar czvf nvme-cli-coverity.tgz cov-int
+
+      - name: Upload to Coverity Scan
+        run: |
+          curl --form token=${{ secrets.COVERITY_SCAN_TOKEN }} \
+            --form email=${{ secrets.COVERITY_SCAN_EMAIL }} \
+            --form file=@nvme-cli-coverity.tgz \
+            --form version="${{ steps.version.outputs.version }}" \
+            --form description="Automated Coverity Scan from ${{ github.event_name }}" \
+            https://scan.coverity.com/builds?project=linux-nvme%2Fnvme-cli
+
+      - uses: actions/upload-artifact@v5
+        name: upload coverity artifacts
+        if: failure()
+        with:
+          name: coverity-results
+          path: |
+            cov-int/
+            nvme-cli-coverity.tgz
