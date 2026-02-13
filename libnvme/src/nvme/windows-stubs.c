@@ -886,6 +886,13 @@ bool nvme_transport_handle_is_direct(struct nvme_transport_handle *hdl)
 	return false;
 }
 
+bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl)
+{
+	stub_log(__func__);
+	(void)hdl;
+	return false;
+}
+
 /* Controller property getters (tree.c) */
 const char *nvme_ctrl_get_cntlid(nvme_ctrl_t c)
 {
