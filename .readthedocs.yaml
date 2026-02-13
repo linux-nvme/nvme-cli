@@ -18,8 +18,8 @@ build:
   commands:
     - pip install lxml
     - scripts/build.sh docs
-    - cp .build-ci/Documentation/nvme.html .build-ci/Documentation/index.html
-
-  output: .build-ci/Documentation
+    - mkdir -p $READTHEDOCS_OUTPUT/html/
+    - cp .build-ci/*.html > $READTHEDOCS_OUTPUT/html/
+    - mv $READTHEDOCS_OUTPUT/html/nvme.html $READTHEDOCS_OUTPUT/html/index.html
 
 formats: []
