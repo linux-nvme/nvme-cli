@@ -1159,6 +1159,7 @@ void *__nvme_realloc(void *p, size_t len)
 	return result;
 }
 
+#ifndef _WIN32
 const struct ifaddrs *nvme_getifaddrs(struct nvme_global_ctx *ctx)
 {
 	if (!ctx->ifaddrs_cache) {
@@ -1170,3 +1171,4 @@ const struct ifaddrs *nvme_getifaddrs(struct nvme_global_ctx *ctx)
 
 	return ctx->ifaddrs_cache;
 }
+#endif /* _WIN32 */
