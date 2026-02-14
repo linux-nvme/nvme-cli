@@ -750,14 +750,14 @@ int nvme_nbft_read(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
 	raw_nbft_fp = fopen(filename, "rb");
 	if (raw_nbft_fp == NULL) {
 		nvme_msg(ctx, LOG_ERR, "Failed to open %s: %s\n",
-			 filename, strerror(errno));
+			 filename, nvme_strerror(errno));
 		return -EINVAL;
 	}
 
 	i = fseek(raw_nbft_fp, 0L, SEEK_END);
 	if (i) {
 		nvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
-			 filename, strerror(errno));
+			 filename, nvme_strerror(errno));
 		fclose(raw_nbft_fp);
 		return -EINVAL;
 	}
@@ -776,7 +776,7 @@ int nvme_nbft_read(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
 	i = fread(raw_nbft, sizeof(*raw_nbft), raw_nbft_size, raw_nbft_fp);
 	if (i != raw_nbft_size) {
 		nvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
-			 filename, strerror(errno));
+			 filename, nvme_strerror(errno));
 		fclose(raw_nbft_fp);
 		free(raw_nbft);
 		return -EINVAL;

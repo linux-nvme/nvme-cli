@@ -930,7 +930,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!",
-				cfg.file_name, strerror(errno));
+				cfg.file_name, nvme_strerror(errno));
 		return output;
 	}
 
@@ -965,7 +965,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		if (data_written < 0) {
 			err = -errno;
 			nvme_show_error("ERROR: %s: : write failed with error : %s",
-					__func__, strerror(errno));
+					__func__, nvme_strerror(errno));
 			break;
 		} else if (data_written <= data_remaining) {
 			data_remaining -= data_written;
@@ -980,7 +980,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 	}
 
 	if (fsync(output) < 0) {
-		nvme_show_error("ERROR : %s: : fsync : %s", __func__, strerror(errno));
+		nvme_show_error("ERROR : %s: : fsync : %s", __func__, nvme_strerror(errno));
 		return -1;
 	}
 
@@ -1890,7 +1890,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!",
-				cfg.file_name, strerror(errno));
+				cfg.file_name, nvme_strerror(errno));
 		return output;
 	}
 
@@ -5178,7 +5178,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 	fw_fd = open(cfg.fw, O_RDONLY);
 	cfg.offset <<= 2;
 	if (fw_fd < 0) {
-		nvme_show_error("Failed to open firmware file %s: %s", cfg.fw, strerror(errno));
+		nvme_show_error("Failed to open firmware file %s: %s", cfg.fw, nvme_strerror(errno));
 		return -EINVAL;
 	}
 
@@ -5219,7 +5219,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 
 	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
 		err = -errno;
-		nvme_show_error("read :%s :%s", cfg.fw, strerror(errno));
+		nvme_show_error("read :%s :%s", cfg.fw, nvme_strerror(errno));
 		return err;
 	}
 
@@ -5824,7 +5824,7 @@ static void *mmap_registers(struct nvme_transport_handle *hdl, bool writable)
 	if (fd < 0) {
 		if (log_level >= LOG_INFO)
 			nvme_show_error("%s did not find a pci resource, open failed %s",
-					nvme_transport_handle_get_name(hdl), strerror(errno));
+					nvme_transport_handle_get_name(hdl), nvme_strerror(errno));
 		return NULL;
 	}
 
@@ -6963,14 +6963,14 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 
 			if (ffd < 0) {
 				nvme_show_error("Failed to open file %s: %s",
-						cfg.file, strerror(errno));
+						cfg.file, nvme_strerror(errno));
 				return -EINVAL;
 			}
 
 			err = read(ffd, buf, cfg.data_len);
 			if (err < 0) {
 				nvme_show_error("failed to read data buffer from input file: %s",
-						strerror(errno));
+						nvme_strerror(errno));
 				return -errno;
 			}
 		}
@@ -7072,7 +7072,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	} else {
 		sec_fd = open(cfg.file, O_RDONLY);
 		if (sec_fd < 0) {
-			nvme_show_error("Failed to open %s: %s", cfg.file, strerror(errno));
+			nvme_show_error("Failed to open %s: %s", cfg.file, nvme_strerror(errno));
 			return -EINVAL;
 		}
 
@@ -7092,7 +7092,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	err = read(sec_fd, sec_buf, sec_size);
 	if (err < 0) {
 		nvme_show_error("Failed to read data from security file %s with %s", cfg.file,
-				strerror(errno));
+				nvme_strerror(errno));
 		return -errno;
 	}
 
@@ -7213,7 +7213,7 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 			ffd = open(cfg.file, O_RDONLY);
 			if (ffd <= 0) {
 				nvme_show_error("Failed to open file %s: %s",
-						cfg.file, strerror(errno));
+						cfg.file, nvme_strerror(errno));
 				return -EINVAL;
 			}
 		}
@@ -7221,7 +7221,7 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 		if (err < 0) {
 			nvme_show_error(
 			    "failed to read data buffer from input file %s",
-			    strerror(errno));
+			    nvme_strerror(errno));
 			return -errno;
 		}
 	}
@@ -8566,7 +8566,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		err = read(dfd, (void *)buffer, cfg.data_size);
 		if (err < 0) {
 			err = -errno;
-			nvme_show_error("failed to read data buffer from input file %s", strerror(errno));
+			nvme_show_error("failed to read data buffer from input file %s", nvme_strerror(errno));
 			return err;
 		}
 	}
@@ -8575,7 +8575,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		err = read(mfd, (void *)mbuffer, mbuffer_size);
 		if (err < 0) {
 			err = -errno;
-			nvme_show_error("failed to read meta-data buffer from input file %s", strerror(errno));
+			nvme_show_error("failed to read meta-data buffer from input file %s", nvme_strerror(errno));
 			return err;
 		}
 	}
@@ -8634,13 +8634,13 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (!(opcode & 1) && write(dfd, (void *)buffer, buffer_size) < 0) {
 		nvme_show_error(
 		    "write: %s: failed to write buffer to output file",
-		    strerror(errno));
+		    nvme_strerror(errno));
 		err = -EINVAL;
 	} else if (!(opcode & 1) && cfg.metadata_size &&
 		   write(mfd, (void *)mbuffer, mbuffer_size) < 0) {
 		nvme_show_error(
 		    "write: %s: failed to write meta-data buffer to output file",
-		    strerror(errno));
+		    nvme_strerror(errno));
 		err = -EINVAL;
 	} else {
 		fprintf(stderr, "%s: Success\n", command);
@@ -9419,7 +9419,7 @@ static int passthru(int argc, char **argv, bool admin,
 		} else if (cfg.write) {
 			if (read(dfd, data, cfg.data_len) < 0) {
 				err = -errno;
-				nvme_show_error("failed to read write buffer %s", strerror(errno));
+				nvme_show_error("failed to read write buffer %s", nvme_strerror(errno));
 				return err;
 			}
 		}
@@ -9788,7 +9788,7 @@ static int append_keyfile(struct nvme_global_ctx *ctx, const char *keyring,
 	err = nvme_lookup_keyring(ctx, keyring, &kr_id);
 	if (err) {
 		nvme_show_error("Failed to lookup keyring '%s', %s",
-				keyring, strerror(-err));
+				keyring, nvme_strerror(-err));
 		return err;
 	}
 
@@ -9806,7 +9806,7 @@ static int append_keyfile(struct nvme_global_ctx *ctx, const char *keyring,
 	err = nvme_read_key(ctx, kr_id, id, &key_len, &key_data);
 	if (err) {
 		nvme_show_error("Failed to read back derive TLS PSK, %s",
-			strerror(-err));
+			nvme_strerror(-err));
 		return err;
 	}
 
@@ -9814,7 +9814,7 @@ static int append_keyfile(struct nvme_global_ctx *ctx, const char *keyring,
 					    key_len, &exported_key);
 	if (err) {
 		nvme_show_error("Failed to export key, %s",
-			strerror(-err));
+			nvme_strerror(-err));
 		return err;
 	}
 
@@ -9823,7 +9823,7 @@ static int append_keyfile(struct nvme_global_ctx *ctx, const char *keyring,
 	fd = fopen(keyfile, "a");
 	if (!fd) {
 		nvme_show_error("Failed to open '%s', %s",
-				keyfile, strerror(errno));
+				keyfile, nvme_strerror(errno));
 		err = -errno;
 		goto out;
 	}
@@ -9831,7 +9831,7 @@ static int append_keyfile(struct nvme_global_ctx *ctx, const char *keyring,
 	err = fprintf(fd, "%s %s\n", identity, exported_key);
 	if (err < 0) {
 		nvme_show_error("Failed to append key to '%', %s",
-				keyfile, strerror(errno));
+				keyfile, nvme_strerror(errno));
 		err = -errno;
 	} else {
 		err = 0;
@@ -9968,7 +9968,7 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 
 	err = nvme_export_tls_key(ctx, raw_secret, key_len, &encoded_key);
 	if (err) {
-		nvme_show_error("Failed to export key, %s", strerror(-err));
+		nvme_show_error("Failed to export key, %s", nvme_strerror(-err));
 		return err;
 	}
 	printf("%s\n", encoded_key);
@@ -10555,7 +10555,7 @@ static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 		if (send) {
 			if (read(fd, data, cfg.data_len) < 0) {
 				err = -errno;
-				nvme_show_error("failed to read write buffer %s", strerror(errno));
+				nvme_show_error("failed to read write buffer %s", nvme_strerror(errno));
 				return err;
 			}
 		}
