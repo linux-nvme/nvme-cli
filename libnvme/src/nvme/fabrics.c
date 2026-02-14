@@ -2376,8 +2376,9 @@ static int nvmf_create_discovery_ctrl(struct nvme_global_ctx *ctx,
 	/* Find out the name of discovery controller */
 	ret = nvme_ctrl_identify(c, id);
 	if (ret)  {
-		fprintf(stderr,	"failed to identify controller, error %s\n",
-			nvme_strerror(-ret));
+		nvme_msg(ctx, LOG_ERR,
+			 "failed to identify controller, error %s\n",
+			 nvme_strerror(-ret));
 		nvme_disconnect_ctrl(c);
 		nvme_free_ctrl(c);
 		return ret;
@@ -2431,7 +2432,7 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 	/* ignore if no host_traddr for fc */
 	if (!strcmp(transport, "fc")) {
 		if (!host_traddr) {
-			fprintf(stderr, "host_traddr required for fc\n");
+			nvme_msg(ctx, LOG_ERR, "host_traddr required for fc\n");
 			return 0;
 		}
 	}
@@ -2439,8 +2440,8 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 	/* ignore if host_iface set for any transport other than tcp */
 	if (!strcmp(transport, "rdma") || !strcmp(transport, "fc")) {
 		if (host_iface) {
-			fprintf(stderr,
-				"host_iface not permitted for rdma or fc\n");
+			nvme_msg(ctx, LOG_ERR,
+				 "host_iface not permitted for rdma or fc\n");
 			return 0;
 		}
 	}
@@ -2580,11 +2581,11 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 					if (err == -ENVME_CONNECT_ALREADY)
 						continue;
 
-					fprintf(stderr,
-						"failed to connect to hostnqn=%s,nqn=%s,%s\n",
-						nvme_host_get_hostnqn(h),
-						nvme_subsystem_get_name(s),
-						nvme_ctrl_get_address(c));
+					nvme_msg(ctx, LOG_ERR,
+						 "failed to connect to hostnqn=%s,nqn=%s,%s\n",
+						 nvme_host_get_hostnqn(h),
+						 nvme_subsystem_get_name(s),
+						 nvme_ctrl_get_address(c));
 
 					if (!ret)
 						ret = err;
@@ -3233,8 +3234,9 @@ static int nvmf_create_discover_ctrl(struct nvme_global_ctx *ctx,
 	/* Find out the name of discovery controller */
 	ret = nvme_ctrl_identify(c, id);
 	if (ret) {
-		fprintf(stderr, "failed to identify controller, error %s\n",
-			nvme_strerror(-ret));
+		nvme_msg(ctx, LOG_ERR,
+			 "failed to identify controller, error %s\n",
+			 nvme_strerror(-ret));
 		nvme_disconnect_ctrl(c);
 		nvme_free_ctrl(c);
 		return ret;
