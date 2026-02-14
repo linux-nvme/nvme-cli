@@ -627,7 +627,7 @@ static int inet6_pton(struct nvme_global_ctx *ctx, const char *src, uint16_t por
 
 /**
  * inet_pton_with_scope - convert an IPv4/IPv6 to socket address
- * @r: nvme_root_t object
+ * @ctx: Global context
  * @af: address family, AF_INET, AF_INET6 or AF_UNSPEC for either
  * @src: the start of the address string
  * @trsvcid: transport service identifier
