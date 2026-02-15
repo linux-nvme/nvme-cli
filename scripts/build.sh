@@ -24,6 +24,7 @@ usage() {
     echo "  coverage            build coverage report"
     echo "  distro              build libnvme and nvme-cli separately"
     echo "  docs                build all documentation"
+    echo "  html_docs           build html documentation only"
     echo "  rst_docs            build rst documentation only"
     echo "  static              build a static binary"
     echo "  libnvme             build only libnvme"
@@ -127,6 +128,16 @@ config_meson_docs() {
         -Dnvme=disabled                         \
         -Dlibnvme=disabled                      \
         -Ddocs=all                              \
+        -Ddocs-build=true                       \
+        --prefix=/tmp/usr                       \
+        "${BUILDDIR}"
+}
+
+config_meson_html_docs() {
+    CC="${CC}" "${MESON}" setup                 \
+        -Dnvme=disabled                         \
+        -Dlibnvme=disabled                      \
+        -Ddocs=html                             \
         -Ddocs-build=true                       \
         --prefix=/tmp/usr                       \
         "${BUILDDIR}"
