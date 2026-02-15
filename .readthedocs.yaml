@@ -15,7 +15,7 @@ build:
   jobs:
     build:
       html:
-        - scripts/build.sh docs
+        - scripts/build.sh html_docs
         - mkdir -p $READTHEDOCS_OUTPUT/html/
         - cp .build-ci/*.html $READTHEDOCS_OUTPUT/html/
         - mv $READTHEDOCS_OUTPUT/html/nvme.html $READTHEDOCS_OUTPUT/html/index.html
