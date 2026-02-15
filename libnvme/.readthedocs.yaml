@@ -2,7 +2,7 @@
 version: 2
 
 build:
-  os: debian
+  os: ubuntu-lts-latest
   image: ghcr.io/linux-nvme/debian:latest
   tools:
     python: "3.11"
