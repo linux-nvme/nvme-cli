@@ -1,21 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
-
 version: 2
 
 build:
-  os: ubuntu-24.04
+  os: debian
+  image: ghcr.io/linux-nvme/debian:latest
   tools:
     python: "3.11"
 
-  apt_packages:
-    - meson
-    - python3-lxml
-    - docbook-xsl
-    - xsltproc
-    - pandoc
-
   commands:
-    - pip install lxml
     - scripts/build.sh rst_docs
 
 sphinx:
