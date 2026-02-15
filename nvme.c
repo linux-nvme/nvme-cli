@@ -64,6 +64,7 @@
 #include "util/suffix.h"
 #include "logging.h"
 #include "util/sighdl.h"
+#include "util/delay.h"
 #include "fabrics.h"
 #define CREATE_CMD
 #include "nvme-builtin.h"
@@ -184,6 +185,7 @@ static struct program nvme = {
 };
 
 const char *uuid_index = "UUID index";
+const char *delay = "iterative delay as SECS [.TENTHS]";
 
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
@@ -256,6 +258,7 @@ struct nvme_args nvme_args = {
 	.output_format = "normal",
 	.output_format_ver = 1,
 	.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+	.delay = 0,
 };
 
 static void *mmap_registers(struct nvme_transport_handle *hdl, bool writable);
@@ -369,7 +372,10 @@ static int parse_args(int argc, char *argv[], const char *desc,
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	return 0;
+	if (nvme_args.delay)
+		ret = delay_set_stdout_file();
+
+	return ret;
 }
 
 int parse_and_open(struct nvme_global_ctx **ctx,
@@ -534,6 +540,7 @@ static int get_smart_log(int argc, char **argv, struct command *acmd, struct plu
 	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_output),
+		  OPT_DOUBLE("delay",        'd', &nvme_args.delay,    delay),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -2518,7 +2525,8 @@ static int sanitize_log(int argc, char **argv, struct command *acmd, struct plug
 	NVME_ARGS(opts,
 		  OPT_FLAG("rae",            'r', &cfg.rae,            rae),
 		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log));
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
+		  OPT_DOUBLE("delay",        'd', &nvme_args.delay,    delay));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -11289,9 +11297,15 @@ int main(int argc, char **argv)
 	if (err)
 		return err;
 
-	err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
-	if (err == -ENOTTY)
-		general_help(&builtin, NULL);
+	err = delay_remove_file();
+	if (err)
+		return err;
+
+	do {
+		err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
+		if (err == -ENOTTY)
+			general_help(&builtin, NULL);
+	} while (!err && nvme_args.delay && delay_handle());
 
 	return err ? 1 : 0;
 }
