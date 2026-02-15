@@ -12,6 +12,7 @@ build:
     - xsltproc
     - pandoc
     - asciidoc
+    - python3-sphinx
   jobs:
     build:
       html:
