@@ -60,6 +60,7 @@ struct nvme_args {
 	bool no_retries;
 	bool no_ioctl_probing;
 	unsigned int output_format_ver;
+	double delay;
 };
 
 #ifdef CONFIG_JSONC
@@ -119,6 +120,7 @@ static inline DEFINE_CLEANUP_FUNC(
 #define _cleanup_nvme_transport_handle_ __cleanup__(cleanup_nvme_transport_handle)
 
 extern const char *uuid_index;
+extern const char *delay;
 extern struct nvme_args nvme_args;
 
 int validate_output_format(const char *format, nvme_print_flags_t *flags);
