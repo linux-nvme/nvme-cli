@@ -7,12 +7,11 @@ build:
     python: "3.14"
   apt_packages:
     - meson
-    - python3-lxml
-    - docbook-xsl
-    - xsltproc
-    - pandoc
-    - asciidoc
-    - python3-sphinx
+  python:
+    install:
+      - pip:
+          - asciidoc
+          - sphinx
   jobs:
     build:
       html:
