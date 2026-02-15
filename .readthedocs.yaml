@@ -19,4 +19,4 @@ build:
         - cp .build-ci/*.html $READTHEDOCS_OUTPUT/html/
         - mv $READTHEDOCS_OUTPUT/html/nvme.html $READTHEDOCS_OUTPUT/html/index.html
 
-formats: [html]
+formats: []
