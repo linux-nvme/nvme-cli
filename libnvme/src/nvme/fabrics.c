@@ -2765,25 +2765,26 @@ void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
 	}
 }
 
-static bool validate_uri(struct nbft_info_discovery *dd,
+static bool validate_uri(struct nvme_global_ctx *ctx,
+			 struct nbft_info_discovery *dd,
 			 struct nvme_fabrics_uri *uri)
 {
 	if (!uri) {
-		fprintf(stderr,
-			"Discovery Descriptor %d: failed to parse URI %s\n",
-			dd->index, dd->uri);
+		nvme_msg(ctx, LOG_ERR,
+			 "Discovery Descriptor %d: failed to parse URI %s\n",
+			 dd->index, dd->uri);
 		return false;
 	}
 	if (strcmp(uri->scheme, "nvme") != 0) {
-		fprintf(stderr,
-			"Discovery Descriptor %d: unsupported scheme '%s'\n",
-			dd->index, uri->scheme);
+		nvme_msg(ctx, LOG_ERR,
+			 "Discovery Descriptor %d: unsupported scheme '%s'\n",
+			 dd->index, uri->scheme);
 		return false;
 	}
 	if (!uri->protocol || strcmp(uri->protocol, "tcp") != 0) {
-		fprintf(stderr,
-			"Discovery Descriptor %d: unsupported transport '%s'\n",
-			dd->index, uri->protocol);
+		nvme_msg(ctx, LOG_ERR,
+			 "Discovery Descriptor %d: unsupported transport '%s'\n",
+			 dd->index, uri->protocol);
 		return false;
 	}
 
@@ -3110,7 +3111,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 			ret = nvme_parse_uri((*dd)->uri, &uri);
 			if (ret)
 				continue;
-			if (!validate_uri(*dd, uri))
+			if (!validate_uri(ctx, *dd, uri))
 				continue;
 
 			host_traddr = NULL;

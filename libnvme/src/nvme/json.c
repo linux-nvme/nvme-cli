@@ -436,11 +436,12 @@ int json_update_config(struct nvme_global_ctx *ctx, const char *config_file)
 		ret = json_object_to_fd(1, json_root,
 					JSON_C_TO_STRING_PRETTY |
 					JSON_C_TO_STRING_NOSLASHESCAPE);
-		printf("\n");
-	} else
+		dprintf(1, "\n");
+	} else {
 		ret = json_object_to_file_ext(config_file, json_root,
 					      JSON_C_TO_STRING_PRETTY |
 					      JSON_C_TO_STRING_NOSLASHESCAPE);
+	}
 	if (ret < 0) {
 		nvme_msg(ctx, LOG_ERR, "Failed to write to %s, %s\n",
 			 config_file ? "stdout" : config_file,
