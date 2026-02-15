@@ -7,12 +7,9 @@ build:
     python: "3.14"
   apt_packages:
     - meson
-  python:
-    install:
-      - pip:
-          - asciidoc
-          - sphinx
   jobs:
+    install:
+      - pip install asciidoc sphinx
     build:
       html:
         - scripts/build.sh html_docs
