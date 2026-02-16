@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <errno.h>
 
 #include <libnvme.h>
@@ -69,7 +70,7 @@ static bool psk_json_test(char *file)
 				if (!import_export_key(ctx, c))
 					goto out;
 
-	err = nvme_dump_config(ctx, NULL);
+	err = nvme_dump_config(ctx, STDOUT_FILENO);
 	if (err)
 		goto out;
 

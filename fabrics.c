@@ -575,7 +575,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 out_free:
 	if (dump_config)
-		nvme_dump_config(ctx, NULL);
+		nvme_dump_config(ctx, STDOUT_FILENO);
 
 	return ret;
 }
@@ -678,7 +678,7 @@ do_connect:
 	}
 
 	if (dump_config)
-		nvme_dump_config(ctx, NULL);
+		nvme_dump_config(ctx, STDERR_FILENO);
 
 	return 0;
 }
@@ -951,11 +951,16 @@ int fabrics_config(const char *desc, int argc, char **argv)
 		}
 	}
 
-	if (update_config)
-		nvme_dump_config(ctx, config_file);
+	if (update_config) {
+		_cleanup_fd_ int fd = -1;
+
+		fd = open(config_file, O_RDONLY, 0);
+		if (fd != -1)
+			nvme_dump_config(ctx, fd);
+	}
 
 	if (dump_config)
-		nvme_dump_config(ctx, NULL);
+		nvme_dump_config(ctx, STDOUT_FILENO);
 
 	return 0;
 }

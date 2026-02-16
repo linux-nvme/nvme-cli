@@ -406,9 +406,9 @@ err:
 	return ret;
 }
 
-int nvme_dump_config(struct nvme_global_ctx *ctx, const char *config_file)
+int nvme_dump_config(struct nvme_global_ctx *ctx, int fd)
 {
-	return json_update_config(ctx, config_file);
+	return json_update_config(ctx, fd);
 }
 
 int nvme_dump_tree(struct nvme_global_ctx *ctx)
