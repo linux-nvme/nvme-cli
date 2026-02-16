@@ -391,7 +391,7 @@ int nvme_set_attr(const char *dir, const char *attr, const char *value);
 
 int json_read_config(struct nvme_global_ctx *ctx, const char *config_file);
 
-int json_update_config(struct nvme_global_ctx *ctx, const char *config_file);
+int json_update_config(struct nvme_global_ctx *ctx, int fd);
 
 int json_dump_tree(struct nvme_global_ctx *ctx);
 

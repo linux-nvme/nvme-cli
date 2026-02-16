@@ -1398,15 +1398,14 @@ void nvme_refresh_topology(struct nvme_global_ctx *ctx);
 /**
  * nvme_dump_config() - Print the JSON configuration
  * @ctx:		&struct nvme_global_ctx object
- * @config_file:	JSON configuration file.
+ * @fd:			File descriptor to write the JSON configuration.
  *
- * Prints the current contents of the JSON configuration
- * file to the config_file. If connfig_file is not provided it prints
- * to stdout.
+ * Writes the current contents of the JSON configuration
+ * to the file descriptor fd.
  *
  * Return: 0 on success, or negative error code otherwise.
  */
-int nvme_dump_config(struct nvme_global_ctx *ctx, const char *config_file);
+int nvme_dump_config(struct nvme_global_ctx *ctx, int fd);
 
 /**
  * nvme_dump_tree() - Dump internal object tree
