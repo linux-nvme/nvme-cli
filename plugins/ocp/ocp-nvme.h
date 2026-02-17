@@ -50,6 +50,8 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 		      ocp_get_telemetry_profile_feature)
 		ENTRY("persistent-event-log", "Retrieve Persistent Event Log with OCP events",
 		      ocp_get_persistent_event_log)
+		ENTRY("get-idle-wakeup-time", "Get Idle Wake Up Time Config",
+		      ocp_get_idle_wakeup_time_config_feature)
 	)
 );
 
@@ -281,6 +283,7 @@ enum ocp_dssd_feature_id {
 	OCP_FID_DSSDPS, /* DSSD Power State */
 	OCP_FID_TEL_CFG, /* Telemetry Profile */
 	OCP_FID_DAEC, /* DSSD Asynchronous Event Configuration */
+	OCP_FID_IWTC, /* Idle Wake Up Time Configuration */
 };
 
 /*

@@ -150,30 +150,26 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 	__u32 i = 0;
 	log_page_map logPageMap;
 	const char *desc = "Retrieve Seagate Supported Log-Page information for the given device ";
-	const char *output_format = "output in binary format";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	nvme_print_flags_t flags;
 	int fmt;
 
-	struct config {
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
 	err = nvme_get_log_simple(hdl, 0xc5, &logPageMap, sizeof(logPageMap));
 	if (!err) {
-		if (strcmp(cfg.output_format, "json")) {
+		if (flags & NORMAL) {
 			printf("Seagate Supported Log-pages count :%d\n",
 				le32_to_cpu(logPageMap.NumLogPages));
 			printf("%-15s %-30s\n", "LogPage-Id", "LogPage-Name");
@@ -181,11 +177,11 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 			for (fmt = 0; fmt < 45; fmt++)
 				printf("-");
 			printf("\n");
-		} else
+		} else if (flags & JSON)
 			json_log_pages_supp(&logPageMap);
 
 		for (i = 0; i < le32_to_cpu(logPageMap.NumLogPages); i++) {
-			if (strcmp(cfg.output_format, "json")) {
+			if (flags & NORMAL) {
 				printf("0x%-15X",
 					   le32_to_cpu(logPageMap.LogPageEntry[i].LogPageID));
 				printf("%-30s\n",
@@ -897,22 +893,12 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	struct json_object *lbafs_ExtSmart, *lbafs_DramSmart;
 
 	const char *desc = "Retrieve the Firmware Activation History for Seagate NVMe drives";
-	const char *output_format = "output in binary format";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	nvme_print_flags_t flags;
 	int err, index = 0;
-	struct config {
-		char *output_format;
-	};
 
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -920,7 +906,13 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 		return -1;
 	}
 
-	if (strcmp(cfg.output_format, "json"))
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (flags & JSON)
 		printf("Seagate Extended SMART Information :\n");
 
 
@@ -941,7 +933,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	if (!stx_is_jag_pan(modelNo)) {
 		err = nvme_get_log_simple(hdl, 0xC4, &ExtdSMARTInfo, sizeof(ExtdSMARTInfo));
 		if (!err) {
-			if (strcmp(cfg.output_format, "json")) {
+			if (flags & NORMAL) {
 				printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
 				for (index = 0; index < 80; index++)
 					printf("-");
@@ -949,7 +941,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 				for (index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++)
 					print_smart_log(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index], index == (NUMBER_EXTENDED_SMART_ATTRIBUTES - 1));
 
-			} else {
+			} else if (flags & JSON){
 				lbafs_ExtSmart = json_create_object();
 				json_print_smart_log(lbafs_ExtSmart, &ExtdSMARTInfo);
 
@@ -963,15 +955,15 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 
 			err = nvme_get_log_simple(hdl, 0xCF, &logPageCF, sizeof(logPageCF));
 			if (!err) {
-				if (strcmp(cfg.output_format, "json")) {
+				if (flags & NORMAL) {
 					print_smart_log_CF(&logPageCF);
-				} else {
+				} else if (flags & JSON) {
 					lbafs_DramSmart = json_create_object();
 					json_print_smart_log_CF(lbafs_DramSmart, &logPageCF);
 					json_array_add_value_object(lbafs, lbafs_DramSmart);
 					json_print_object(root, NULL);
 				}
-			} else if (!strcmp(cfg.output_format, "json")) {
+			} else if (flags & JSON) {
 				json_print_object(root, NULL);
 				json_free_object(root);
 			}
@@ -982,9 +974,9 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 		err = nvme_get_log_simple(hdl, 0xC0, &ehExtSmart, sizeof(ehExtSmart));
 
 		if (!err) {
-			if (strcmp(cfg.output_format, "json")) {
+			if (flags & NORMAL) {
 				print_stx_smart_log_C0(&ehExtSmart);
-			} else {
+			} else if (flags & JSON){
 				lbafs_ExtSmart = json_create_object();
 				json_print_stx_smart_log_C0(lbafs_ExtSmart, &ehExtSmart);
 
@@ -1003,7 +995,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	err = nvme_get_log_simple(hdl, 0xC4,
 				  &ExtdSMARTInfo, sizeof(ExtdSMARTInfo));
 	if (!err) {
-		if (strcmp(cfg.output_format, "json")) {
+		if (flags & NORMAL) {
 			printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
 			for (index = 0; index < 80; index++)
 				printf("-");
@@ -1011,7 +1003,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 			for (index = 0; index < NUMBER_EXTENDED_SMART_ATTRIBUTES; index++)
 				print_smart_log(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index], index == (NUMBER_EXTENDED_SMART_ATTRIBUTES - 1));
 
-		} else {
+		} else if (flags & JSON) {
 			lbafs_ExtSmart = json_create_object();
 			json_print_smart_log(lbafs_ExtSmart, &ExtdSMARTInfo);
 
@@ -1026,15 +1018,15 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 		err = nvme_get_log_simple(hdl, 0xCF,
 					  &logPageCF, sizeof(logPageCF));
 		if (!err) {
-			if (strcmp(cfg.output_format, "json")) {
+			if (flags & NORMAL) {
 				print_smart_log_CF(&logPageCF);
-			} else {
+			} else if (flags & JSON) {
 				lbafs_DramSmart = json_create_object();
 				json_print_smart_log_CF(lbafs_DramSmart, &logPageCF);
 				json_array_add_value_object(lbafs, lbafs_DramSmart);
 				json_print_object(root, NULL);
 			}
-		} else if (!strcmp(cfg.output_format, "json")) {
+		} else if (flags & JSON) {
 			json_print_object(root, NULL);
 		}
 	} else if (err > 0) {
@@ -1077,24 +1069,13 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 	int err, cf_err;
 	int index;
 	const char *desc = "Retrieve Seagate Temperature Stats information for the given device ";
-	const char *output_format = "output in binary format";
 	nvme_print_flags_t flags;
 	unsigned int temperature = 0, PcbTemp = 0, SocTemp = 0, scCurrentTemp = 0, scMaxTemp = 0;
 	unsigned long long maxTemperature = 0, MaxSocTemp = 0;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	struct config {
-		char *output_format;
-	};
 
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -1102,7 +1083,7 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 		return -1;
 	}
 
-	err = validate_output_format(cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1254,21 +1235,10 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
 	const char *desc = "Retrieve Seagate PCIe error counters for the given device ";
-	const char *output_format = "output in binary format";
 	int err;
 	nvme_print_flags_t flags;
-	struct config {
-		char *output_format;
-	};
 
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -1276,7 +1246,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 		return -1;
 	}
 
-	err = validate_output_format(cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1400,21 +1370,10 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
 	const char *desc = "Retrieve FW Activate History for Seagate device ";
-	const char *output_format = "output in binary format";
 	int err;
 	nvme_print_flags_t flags;
-	struct config {
-		char *output_format;
-	};
 
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err < 0) {
@@ -1422,7 +1381,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 		return -1;
 	}
 
-	err = validate_output_format(cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1465,10 +1424,8 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 		.save         = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("save", 's', &cfg.save, save),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("save", 's', &cfg.save, save));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err < 0) {
@@ -1525,10 +1482,8 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 		.save         = 0,
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FLAG("save", 's', &cfg.save, save),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_FLAG("save", 's', &cfg.save, save));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
@@ -1593,12 +1548,10 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 		.log_id       = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
 		OPT_UINT("log_specific", 'i', &cfg.log_id,       log_specific),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1703,11 +1656,9 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 		.namespace_id = 0xffffffff,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1821,11 +1772,9 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 		.file         = "",
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_FILE("dump-file",    'f', &cfg.file,         file),
-		OPT_END()
-	};
+		OPT_FILE("dump-file",    'f', &cfg.file,         file));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

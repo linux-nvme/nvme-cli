@@ -855,7 +855,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *acmd, struct plugin *
 		.target  = 0,
 	};
 	
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_STRING("cmd",     'c', "command", &cfg.cmd,     opt),
 		OPT_STRING("msgfile", 'f', "FILE",    &cfg.msgfile, mfile),
 		OPT_STRING("keyfile", 'g', "FILE",    &cfg.keyfile, kfile),
@@ -863,9 +863,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *acmd, struct plugin *
 		OPT_STRING("msg",     'd', "data",    &cfg.msg,     msg),
 		OPT_UINT("address",   'o', &cfg.address,  address),
 		OPT_UINT("blocks",    'b', &cfg.blocks,   blocks),
-		OPT_UINT("target",    't', &cfg.target,   target),
-		OPT_END()
-	};
+		OPT_UINT("target",    't', &cfg.target,   target));
 	
 	_cleanup_free_ unsigned char *key_buf = NULL;
 	_cleanup_free_ unsigned char *msg_buf = NULL;

@@ -241,28 +241,24 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *acm
 
 	struct config {
 		__u32	namespace_id;
-		char	*output_format;
 	};
 
 	struct config cfg = {
 		.namespace_id	= NVME_NSID_ALL,
-		.output_format	= "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   "(optional) desired namespace"),
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_INCR("verbose",        'v', &nvme_cfg.verbose, verbose),
-		OPT_END()
-	};
+	NVME_ARGS(opts,
+		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,
+			 "(optional) desired namespace"));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = validate_output_format(cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
-		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
+		fprintf(stderr, "Invalid output format '%s'\n",
+			nvme_args.output_format);
 		return err;
 	}
 

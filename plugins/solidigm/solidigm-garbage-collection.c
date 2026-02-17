@@ -75,26 +75,16 @@ int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *a
 	int err;
 	__u8 uuid_index;
 
-	struct config {
-		char	*output_format;
-	};
-
-	struct config cfg = {
-		.output_format	= "normal",
-	};
-
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format",   'o', &cfg.output_format,  output_format),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = validate_output_format(cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err) {
-		fprintf(stderr, "Invalid output format '%s'\n", cfg.output_format);
+		fprintf(stderr, "Invalid output format '%s'\n",
+			nvme_args.output_format);
 		return -EINVAL;
 	}
 

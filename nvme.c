@@ -189,14 +189,6 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
-#ifdef CONFIG_JSONC
-const char *output_format = "Output format: normal|json|binary";
-#else /* CONFIG_JSONC */
-const char *output_format = "Output format: normal|binary";
-#endif /* CONFIG_JSONC */
-const char *timeout = "timeout value, in milliseconds";
-const char *verbose = "Increase output verbosity";
-const char *dry_run = "show command instead of sending";
 const char *uuid_index = "UUID index";
 
 static const char *app_tag = "app tag for end-to-end PI";
@@ -266,7 +258,7 @@ static const char *pmrmscl = "PMRMSCL=0xe14 register offset";
 static const char *pmrmscu = "PMRMSCU=0xe18 register offset";
 static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
 
-struct nvme_config nvme_cfg = {
+struct nvme_args nvme_args = {
 	.output_format = "normal",
 	.output_format_ver = 1,
 	.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
@@ -381,7 +373,7 @@ static int parse_args(int argc, char *argv[], const char *desc,
 	if (ret)
 		return ret;
 
-	log_level = map_log_level(nvme_cfg.verbose, false);
+	log_level = map_log_level(nvme_args.verbose, false);
 
 	return 0;
 }
@@ -401,6 +393,9 @@ int parse_and_open(struct nvme_global_ctx **ctx,
 	ctx_new = nvme_create_global_ctx(stdout, log_level);
 	if (!ctx_new)
 		return -ENOMEM;
+
+	nvme_set_ioctl_probing(ctx_new,
+		!argconfig_parse_seen(opts, "no-ioctl-probing"));
 
 	ret = get_transport_handle(ctx_new, argc, argv, O_RDONLY, &hdl_new);
 	if (ret) {
@@ -511,7 +506,7 @@ bool nvme_is_output_format_json(void)
 {
 	nvme_print_flags_t flags;
 
-	if (validate_output_format(nvme_cfg.output_format, &flags))
+	if (validate_output_format(nvme_args.output_format, &flags))
 		return false;
 
 	return flags == JSON;
@@ -551,7 +546,7 @@ static int get_smart_log(int argc, char **argv, struct command *acmd, struct plu
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -611,7 +606,7 @@ static int get_ana_log(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -891,7 +886,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1034,7 +1029,7 @@ static int get_endurance_log(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1114,7 +1109,7 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1189,7 +1184,7 @@ static int get_supported_log_pages(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1247,7 +1242,7 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1313,7 +1308,7 @@ static int get_fw_log(int argc, char **argv, struct command *acmd, struct plugin
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1366,7 +1361,7 @@ static int get_changed_ns_list_log(int argc, char **argv, bool alloc)
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1442,7 +1437,7 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1505,7 +1500,7 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1589,7 +1584,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1701,7 +1696,7 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1777,7 +1772,7 @@ static int get_lba_status_log(int argc, char **argv,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1825,7 +1820,7 @@ static int get_resv_notif_log(int argc, char **argv,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1882,7 +1877,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1972,7 +1967,7 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2057,7 +2052,7 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2110,7 +2105,7 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2411,7 +2406,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2535,7 +2530,7 @@ static int sanitize_log(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2589,7 +2584,7 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *ac
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2641,7 +2636,7 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2697,7 +2692,7 @@ static int list_ctrl(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0 || (flags != JSON && flags != NORMAL)) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2760,7 +2755,7 @@ static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0 || (flags != JSON && flags != NORMAL)) {
 		nvme_show_error("Invalid output format");
 		return -EINVAL;
@@ -2829,7 +2824,7 @@ static int id_ns_lba_format(int argc, char **argv, struct command *acmd, struct 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -2884,7 +2879,7 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0 || (flags != JSON && flags != NORMAL)) {
 		nvme_show_error("invalid output format");
 		return -EINVAL;
@@ -2978,7 +2973,7 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3040,7 +3035,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3315,7 +3310,7 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3514,7 +3509,7 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 	if (optind < argc)
 		devname = basename(argv[optind++]);
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0 || (flags != JSON && flags != NORMAL)) {
 		nvme_show_error("Invalid output format");
 		return -EINVAL;
@@ -3566,7 +3561,7 @@ static int list(int argc, char **argv, struct command *acmd, struct plugin *plug
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0 || (flags != JSON && flags != NORMAL)) {
 		nvme_show_error("Invalid output format");
 		return -EINVAL;
@@ -3628,7 +3623,7 @@ int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3683,7 +3678,7 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3740,7 +3735,7 @@ static int nvm_id_ns(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3814,7 +3809,7 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *acmd, str
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3882,7 +3877,7 @@ static int ns_descs(int argc, char **argv, struct command *acmd, struct plugin *
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -3960,7 +3955,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4039,7 +4034,7 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *acmd
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4095,7 +4090,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4146,7 +4141,7 @@ static int id_nvmset(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4201,7 +4196,7 @@ static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4257,7 +4252,7 @@ static int id_iocs(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4312,7 +4307,7 @@ static int id_domain(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4352,7 +4347,7 @@ static int get_ns_id(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4461,7 +4456,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4519,7 +4514,7 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *acmd, stru
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4692,7 +4687,7 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4783,7 +4778,7 @@ static int self_test_log(int argc, char **argv, struct command *acmd, struct plu
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -4851,7 +4846,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u64 result,
 			nvme_feature_show(cfg.feature_id, cfg.sel, result);
 			if (NVME_CHECK(cfg.sel, GET_FEATURES_SEL, SUPPORTED))
 				nvme_show_select_result(cfg.feature_id, result);
-			else if (verbose || !strcmp(nvme_cfg.output_format, "json"))
+			else if (verbose || !strcmp(nvme_args.output_format, "json"))
 				nvme_feature_show_fields(cfg.feature_id, result, buf);
 			else if (buf)
 				d(buf, cfg.data_len, 16, 1);
@@ -4992,7 +4987,7 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -5180,7 +5175,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -5392,7 +5387,7 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -5522,7 +5517,7 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 		return -EINVAL;
 	}
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -5600,7 +5595,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -5708,7 +5703,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -5885,7 +5880,7 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 		return -EINVAL;
 	}
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -6162,7 +6157,7 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 		return -EINVAL;
 	}
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -6508,7 +6503,7 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -6554,7 +6549,7 @@ static int set_property(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -6644,8 +6639,8 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		.bs		= 0,
 	};
 
-	if (nvme_cfg.timeout != NVME_DEFAULT_IOCTL_TIMEOUT)
-		timeout_ms = nvme_cfg.timeout;
+	if (nvme_args.timeout != NVME_DEFAULT_IOCTL_TIMEOUT)
+		timeout_ms = nvme_args.timeout;
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("ish",         'I', &cfg.ish,          ish),
@@ -6676,7 +6671,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		return err;
 	}
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -6920,7 +6915,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -7063,7 +7058,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -7672,7 +7667,7 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -8037,7 +8032,7 @@ static int resv_acquire(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -8113,7 +8108,7 @@ static int resv_register(int argc, char **argv, struct command *acmd, struct plu
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -8196,7 +8191,7 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -8268,7 +8263,7 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -8437,7 +8432,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		  OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
 		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
 		  OPT_FLAG("show-command",      'V', &cfg.show,              show),
-		  OPT_FLAG("dry-run",           'w', &nvme_cfg.dry_run,      dry_run),
 		  OPT_FLAG("latency",           't', &cfg.latency,           latency),
 		  OPT_FLAG("force",               0, &cfg.force,             force));
 
@@ -8592,7 +8586,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		}
 	}
 
-	if (cfg.show || nvme_cfg.dry_run) {
+	if (cfg.show || nvme_args.dry_run) {
 		printf("opcode       : %02x\n", opcode);
 		printf("nsid         : %02x\n", cfg.nsid);
 		printf("flags        : %02x\n", 0);
@@ -8610,7 +8604,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		printf("pif             : %02x\n", pif);
 		printf("sts             : %02x\n", sts);
 	}
-	if (nvme_cfg.dry_run)
+	if (nvme_args.dry_run)
 		return 0;
 
 	nvme_init_io(&cmd, opcode, cfg.nsid, cfg.start_block, buffer,
@@ -8840,7 +8834,7 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -8927,7 +8921,7 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -9009,7 +9003,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -9354,7 +9348,6 @@ static int passthru(int argc, char **argv, bool admin,
 		  OPT_FILE("metadata",     'M', &cfg.metadata,     metadata),
 		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump),
 		  OPT_FLAG("show-command", 's', &cfg.show_command, show),
-		  OPT_FLAG("dry-run",      'd', &nvme_cfg.dry_run, dry_run),
 		  OPT_FLAG("read",         'r', &cfg.read,         re),
 		  OPT_FLAG("write",        'w', &cfg.write,        wr),
 		  OPT_FLAG("latency",      'T', &cfg.latency,      latency));
@@ -9363,7 +9356,7 @@ static int passthru(int argc, char **argv, bool admin,
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags_t);
+	err = validate_output_format(nvme_args.output_format, &flags_t);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -9438,7 +9431,7 @@ static int passthru(int argc, char **argv, bool admin,
 		}
 	}
 
-	if (cfg.show_command || nvme_cfg.dry_run) {
+	if (cfg.show_command || nvme_args.dry_run) {
 		printf("opcode       : %02x\n", cfg.opcode);
 		printf("flags        : %02x\n", cfg.flags);
 		printf("rsvd1        : %04x\n", cfg.rsvd);
@@ -9455,9 +9448,9 @@ static int passthru(int argc, char **argv, bool admin,
 		printf("cdw13        : %08x\n", cfg.cdw13);
 		printf("cdw14        : %08x\n", cfg.cdw14);
 		printf("cdw15        : %08x\n", cfg.cdw15);
-		printf("timeout_ms   : %08x\n", nvme_cfg.timeout);
+		printf("timeout_ms   : %08x\n", nvme_args.timeout);
 	}
-	if (nvme_cfg.dry_run)
+	if (nvme_args.dry_run)
 		return 0;
 
 	gettimeofday(&start_time, NULL);
@@ -9478,7 +9471,7 @@ static int passthru(int argc, char **argv, bool admin,
 		.cdw13		= cfg.cdw13,
 		.cdw14		= cfg.cdw14,
 		.cdw15		= cfg.cdw15,
-		.timeout_ms 	= nvme_cfg.timeout,
+		.timeout_ms 	= nvme_args.timeout,
 	};
 	if (admin)
 		err = nvme_submit_admin_passthru(hdl, &cmd);
@@ -10355,7 +10348,6 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Show the topology\n";
-	const char *output_format = "Output format: normal|json|binary|tabular";
 	const char *ranking = "Ranking order: namespace|ctrl|multipath";
 	nvme_print_flags_t flags;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -10379,7 +10371,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -10640,7 +10632,7 @@ static int get_mgmt_addr_list_log(int argc, char **argv, struct command *acmd, s
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -10687,7 +10679,7 @@ static int get_rotational_media_info_log(int argc, char **argv, struct command *
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -10773,7 +10765,7 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -10922,7 +10914,7 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *ac
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -11033,7 +11025,7 @@ static int get_reachability_associations_log(int argc, char **argv, struct comma
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -11114,7 +11106,7 @@ static int get_host_discovery_log(int argc, char **argv, struct command *acmd, s
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -11188,7 +11180,7 @@ static int get_ave_discovery_log(int argc, char **argv, struct command *acmd, st
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -11264,7 +11256,7 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acm
 	if (err)
 		return err;
 
-	err = validate_output_format(nvme_cfg.output_format, &flags);
+	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;

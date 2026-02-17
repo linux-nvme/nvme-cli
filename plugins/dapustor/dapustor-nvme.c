@@ -513,6 +513,7 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 	struct nvme_extended_additional_smart_log ext_smart_log;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct nvme_additional_smart_log smart_log;
+	nvme_print_flags_t flags;
 	bool has_ext = false;
 	int err;
 
@@ -526,21 +527,25 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 		.namespace_id = NVME_NSID_ALL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
 		OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		OPT_FLAG_JSON("json",    'j', &cfg.json,         json),
-		OPT_END()
-	};
+		OPT_FLAG_JSON("json",    'j', &cfg.json,         json));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
 	err = dapustor_additional_smart_log_data(hdl, &smart_log,
 						 &ext_smart_log, &has_ext);
 	if (!err) {
-		if (cfg.json)
+		if (flags & JSON || cfg.json)
 			show_dapustor_smart_log_jsn(&smart_log, &ext_smart_log,
 						    cfg.namespace_id,
 						    nvme_transport_handle_get_name(hdl),

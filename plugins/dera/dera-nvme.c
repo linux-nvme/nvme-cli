@@ -123,9 +123,7 @@ static int get_status(int argc, char **argv, struct command *acmd, struct plugin
 	struct nvme_dera_smart_info_log log;
 	int err;
 
-	OPT_ARGS(opts) = {
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

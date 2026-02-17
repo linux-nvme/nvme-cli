@@ -103,28 +103,14 @@ int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
-	struct config {
-		char *output_format;
-		unsigned int output_format_version;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-		.output_format_version = 1,
-	};
-
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format, "output Format: normal|json"),
-		OPT_UINT("output-format-version", 0, &cfg.output_format_version, "output Format version: 1|2"),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
-	ret = get_c0_log_page(hdl, cfg.output_format,
-			      cfg.output_format_version);
+	ret = get_c0_log_page(hdl, nvme_args.output_format,
+			      nvme_args.output_format_ver);
 	if (ret)
 		fprintf(stderr, "ERROR : OCP : Failure reading the C0 Log Page, ret = %d\n",
 			ret);

@@ -386,7 +386,7 @@ static void json_update_subsys(struct json_object *subsys_array,
 	}
 }
 
-int json_update_config(struct nvme_global_ctx *ctx, const char *config_file)
+int json_update_config(struct nvme_global_ctx *ctx, int fd)
 {
 	nvme_host_t h;
 	struct json_object *json_root, *host_obj;
@@ -432,18 +432,12 @@ int json_update_config(struct nvme_global_ctx *ctx, const char *config_file)
 			json_object_put(host_obj);
 		}
 	}
-	if (!config_file) {
-		ret = json_object_to_fd(1, json_root,
-					JSON_C_TO_STRING_PRETTY |
-					JSON_C_TO_STRING_NOSLASHESCAPE);
-		printf("\n");
-	} else
-		ret = json_object_to_file_ext(config_file, json_root,
-					      JSON_C_TO_STRING_PRETTY |
-					      JSON_C_TO_STRING_NOSLASHESCAPE);
+	ret = json_object_to_fd(fd, json_root,
+				JSON_C_TO_STRING_PRETTY |
+				JSON_C_TO_STRING_NOSLASHESCAPE);
+	write(fd, "\n", 1);
 	if (ret < 0) {
-		nvme_msg(ctx, LOG_ERR, "Failed to write to %s, %s\n",
-			 config_file ? "stdout" : config_file,
+		nvme_msg(ctx, LOG_ERR, "Failed to write JSON config file: %s\n",
 			 json_util_get_last_err());
 		ret = -EIO;
 	}
