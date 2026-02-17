@@ -435,10 +435,9 @@ int json_update_config(struct nvme_global_ctx *ctx, int fd)
 	ret = json_object_to_fd(fd, json_root,
 				JSON_C_TO_STRING_PRETTY |
 				JSON_C_TO_STRING_NOSLASHESCAPE);
-	write(fd, "\n", 1);
-	if (ret < 0) {
+	if (ret < 0 || write(fd, "\n", 1) < 0) {
 		nvme_msg(ctx, LOG_ERR, "Failed to write JSON config file: %s\n",
-			 json_util_get_last_err());
+			 ret ? json_util_get_last_err() : strerror(errno));
 		ret = -EIO;
 	}
 	json_object_put(json_root);
