@@ -675,11 +675,11 @@ int nvme_dump_tree(struct nvme_global_ctx *ctx)
 	return -1;
 }
 
-int nvme_dump_config(struct nvme_global_ctx *ctx, const char *config_file)
+int nvme_dump_config(struct nvme_global_ctx *ctx, int fd)
 {
 	stub_log(__func__);
 	(void)ctx;
-	(void)config_file;
+	(void)fd;
 	errno = ENOTSUP;
 	return -1;
 }

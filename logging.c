@@ -32,7 +32,7 @@ static struct submit_data sb;
 bool is_printable_at_level(int level)
 {
 	return ((log_level >= level) &&
-		(strcmp(nvme_cfg.output_format, "normal") == 0));
+		(strcmp(nvme_args.output_format, "normal") == 0));
 }
 
 int map_log_level(int verbose, bool quiet)
@@ -134,7 +134,7 @@ void nvme_submit_exit(struct nvme_transport_handle *hdl,
 bool nvme_decide_retry(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd, int err)
 {
-	if (!nvme_cfg.no_retries)
+	if (!nvme_args.no_retries)
 		return false;
 
 	if (err != -EAGAIN ||

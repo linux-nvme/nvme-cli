@@ -485,11 +485,8 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 		.output_format = "normal",
 	};
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &cfg.output_format,
-			"Output Format: normal|json"),
-		OPT_FLAG("details", 'd', &detail, "Detail IO histogram of each block size ranges"),
-		OPT_END()};
+	NVME_ARGS(opts,
+		OPT_FLAG("details", 'd', &detail, "Detail IO histogram of each block size ranges"));
 
 	rc = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (rc)

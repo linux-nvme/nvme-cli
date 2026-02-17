@@ -901,20 +901,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 	int num_smdevices = 0;
 	struct nvme_transport_handle *hdl;
 
-	struct config {
-		bool verbose;
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
-	OPT_ARGS(opts) = {
-		OPT_FLAG("verbose", 'v', &cfg.verbose, "Increase output verbosity"),
-		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json|column"),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	if (!ctx)
 		return -ENOMEM;
@@ -923,9 +910,10 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 	if (ret < 0)
 		return ret;
 
-	fmt = netapp_output_format(cfg.output_format);
+	fmt = netapp_output_format(nvme_args.output_format);
 	if (fmt != NNORMAL && fmt != NCOLUMN && fmt != NJSON) {
-		fprintf(stderr, "Unrecognized output format: %s\n", cfg.output_format);
+		fprintf(stderr, "Unrecognized output format: %s\n",
+			nvme_args.output_format);
 		return -EINVAL;
 	}
 
@@ -1012,20 +1000,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 	int num_ontapdevices = 0;
 	struct nvme_transport_handle *hdl;
 
-	struct config {
-		bool verbose;
-		char *output_format;
-	};
-
-	struct config cfg = {
-		.output_format = "normal",
-	};
-
-	OPT_ARGS(opts) = {
-		OPT_FLAG("verbose", 'v', &cfg.verbose, "Increase output verbosity"),
-		OPT_FMT("output-format", 'o', &cfg.output_format, "Output Format: normal|json|column"),
-		OPT_END()
-	};
+	NVME_ARGS(opts);
 
 	if (!ctx)
 		return -ENOMEM;
@@ -1034,9 +1009,10 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 	if (ret < 0)
 		return ret;
 
-	fmt = netapp_output_format(cfg.output_format);
+	fmt = netapp_output_format(nvme_args.output_format);
 	if (fmt != NNORMAL && fmt != NCOLUMN && fmt != NJSON) {
-		fprintf(stderr, "Unrecognized output format: %s\n", cfg.output_format);
+		fprintf(stderr, "Unrecognized output format: %s\n",
+			nvme_args.output_format);
 		return -EINVAL;
 	}
 

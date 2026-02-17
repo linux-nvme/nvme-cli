@@ -622,7 +622,7 @@ static int inet6_pton(struct nvme_global_ctx *ctx, const char *src, uint16_t por
 
 /**
  * inet_pton_with_scope - convert an IPv4/IPv6 to socket address
- * @r: nvme_root_t object
+ * @ctx: Global context
  * @af: address family, AF_INET, AF_INET6 or AF_UNSPEC for either
  * @src: the start of the address string
  * @trsvcid: transport service identifier
@@ -2371,8 +2371,9 @@ static int nvmf_create_discovery_ctrl(struct nvme_global_ctx *ctx,
 	/* Find out the name of discovery controller */
 	ret = nvme_ctrl_identify(c, id);
 	if (ret)  {
-		fprintf(stderr,	"failed to identify controller, error %s\n",
-			nvme_strerror(-ret));
+		nvme_msg(ctx, LOG_ERR,
+			 "failed to identify controller, error %s\n",
+			 nvme_strerror(-ret));
 		nvme_disconnect_ctrl(c);
 		nvme_free_ctrl(c);
 		return ret;
@@ -2426,7 +2427,7 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 	/* ignore if no host_traddr for fc */
 	if (!strcmp(transport, "fc")) {
 		if (!host_traddr) {
-			fprintf(stderr, "host_traddr required for fc\n");
+			nvme_msg(ctx, LOG_ERR, "host_traddr required for fc\n");
 			return 0;
 		}
 	}
@@ -2434,8 +2435,8 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 	/* ignore if host_iface set for any transport other than tcp */
 	if (!strcmp(transport, "rdma") || !strcmp(transport, "fc")) {
 		if (host_iface) {
-			fprintf(stderr,
-				"host_iface not permitted for rdma or fc\n");
+			nvme_msg(ctx, LOG_ERR,
+				 "host_iface not permitted for rdma or fc\n");
 			return 0;
 		}
 	}
@@ -2575,11 +2576,11 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 					if (err == -ENVME_CONNECT_ALREADY)
 						continue;
 
-					fprintf(stderr,
-						"failed to connect to hostnqn=%s,nqn=%s,%s\n",
-						nvme_host_get_hostnqn(h),
-						nvme_subsystem_get_name(s),
-						nvme_ctrl_get_address(c));
+					nvme_msg(ctx, LOG_ERR,
+						 "failed to connect to hostnqn=%s,nqn=%s,%s\n",
+						 nvme_host_get_hostnqn(h),
+						 nvme_subsystem_get_name(s),
+						 nvme_ctrl_get_address(c));
 
 					if (!ret)
 						ret = err;
@@ -2759,25 +2760,26 @@ void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
 	}
 }
 
-static bool validate_uri(struct nbft_info_discovery *dd,
+static bool validate_uri(struct nvme_global_ctx *ctx,
+			 struct nbft_info_discovery *dd,
 			 struct nvme_fabrics_uri *uri)
 {
 	if (!uri) {
-		fprintf(stderr,
-			"Discovery Descriptor %d: failed to parse URI %s\n",
-			dd->index, dd->uri);
+		nvme_msg(ctx, LOG_ERR,
+			 "Discovery Descriptor %d: failed to parse URI %s\n",
+			 dd->index, dd->uri);
 		return false;
 	}
 	if (strcmp(uri->scheme, "nvme") != 0) {
-		fprintf(stderr,
-			"Discovery Descriptor %d: unsupported scheme '%s'\n",
-			dd->index, uri->scheme);
+		nvme_msg(ctx, LOG_ERR,
+			 "Discovery Descriptor %d: unsupported scheme '%s'\n",
+			 dd->index, uri->scheme);
 		return false;
 	}
 	if (!uri->protocol || strcmp(uri->protocol, "tcp") != 0) {
-		fprintf(stderr,
-			"Discovery Descriptor %d: unsupported transport '%s'\n",
-			dd->index, uri->protocol);
+		nvme_msg(ctx, LOG_ERR,
+			 "Discovery Descriptor %d: unsupported transport '%s'\n",
+			 dd->index, uri->protocol);
 		return false;
 	}
 
@@ -3104,7 +3106,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 			ret = nvme_parse_uri((*dd)->uri, &uri);
 			if (ret)
 				continue;
-			if (!validate_uri(*dd, uri))
+			if (!validate_uri(ctx, *dd, uri))
 				continue;
 
 			host_traddr = NULL;
@@ -3228,8 +3230,9 @@ static int nvmf_create_discover_ctrl(struct nvme_global_ctx *ctx,
 	/* Find out the name of discovery controller */
 	ret = nvme_ctrl_identify(c, id);
 	if (ret) {
-		fprintf(stderr, "failed to identify controller, error %s\n",
-			nvme_strerror(-ret));
+		nvme_msg(ctx, LOG_ERR,
+			 "failed to identify controller, error %s\n",
+			 nvme_strerror(-ret));
 		nvme_disconnect_ctrl(c);
 		nvme_free_ctrl(c);
 		return ret;

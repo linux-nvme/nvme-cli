@@ -529,7 +529,7 @@ struct nvme_ns {
 		nvme_refresh_topology($self);
 	}
 	void dump_config() {
-		nvme_dump_config($self, NULL);
+		nvme_dump_config($self, STDERR_FILENO);
 	}
 }
 

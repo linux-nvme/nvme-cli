@@ -132,11 +132,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 		.namespace_id = NVME_NSID_ALL,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace),
-		OPT_FLAG("raw-binary",	 'b', &cfg.raw_binary,	  raw),
-		OPT_END()
-	};
+		OPT_FLAG("raw-binary",	 'b', &cfg.raw_binary,	  raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -201,16 +199,14 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 		.data_len	  = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",   'n', &cfg.namespace_id,	namespace_id),
 		OPT_UINT("feature-id",	   'f', &cfg.feature_id,	feature_id),
 		OPT_BYTE("sel",		   's', &cfg.sel,		sel),
 		OPT_UINT("data-len",	   'l', &cfg.data_len,		data_len),
 		OPT_FLAG("raw-binary",	   'b', &cfg.raw_binary,	raw),
 		OPT_UINT("cdw11",	   'c', &cfg.cdw11,		cdw11),
-		OPT_FLAG("human-readable", 'H', &cfg.human_readable,	human_readable),
-		OPT_END()
-	};
+		OPT_FLAG("human-readable", 'H', &cfg.human_readable,	human_readable));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -282,15 +278,13 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 		.save	      = 0,
 	};
 
-	OPT_ARGS(opts) = {
+	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
 		OPT_UINT("feature-id",	 'f', &cfg.feature_id,	 feature_id),
 		OPT_UINT("value",	 'v', &cfg.value,	 value),
 		OPT_UINT("data-len",	 'l', &cfg.data_len,	 data_len),
 		OPT_FILE("data",	 'd', &cfg.file,	 data),
-		OPT_FLAG("save",	 's', &cfg.save,	 save),
-		OPT_END()
-	};
+		OPT_FLAG("save",	 's', &cfg.save,	 save));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

@@ -330,7 +330,7 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 	int fd;
 
 	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) 
+	if (!ctx)
 		return NULL;
 
 	if (fp) {
@@ -347,6 +347,8 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 
 	list_head_init(&ctx->hosts);
 	list_head_init(&ctx->endpoints);
+
+	ctx->ioctl_probing = true;
 
 	return ctx;
 }
@@ -399,9 +401,9 @@ err:
 	return ret;
 }
 
-int nvme_dump_config(struct nvme_global_ctx *ctx, const char *config_file)
+int nvme_dump_config(struct nvme_global_ctx *ctx, int fd)
 {
-	return json_update_config(ctx, config_file);
+	return json_update_config(ctx, fd);
 }
 
 int nvme_dump_tree(struct nvme_global_ctx *ctx)
@@ -630,11 +632,18 @@ nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p)
 
 static void __nvme_free_ns(struct nvme_ns *n)
 {
+	struct nvme_path *p, *_p;
+
 	list_del_init(&n->entry);
 	nvme_ns_release_transport_handle(n);
 	free(n->generic_name);
 	free(n->name);
 	free(n->sysfs_dir);
+	nvme_namespace_for_each_path_safe(n, p, _p) {
+		list_del_init(&p->nentry);
+		p->n = NULL;
+	}
+	list_head_init(&n->head->paths);
 	free(n->head->sysfs_dir);
 	free(n->head);
 	free(n);
@@ -2985,16 +2994,8 @@ static int nvme_subsystem_scan_namespace(struct nvme_global_ctx *ctx, nvme_subsy
 		return ret;
 	}
 	nvme_subsystem_for_each_ns_safe(s, _n, __n) {
-		struct nvme_path *p, *_p;
-
 		if (strcmp(n->name, _n->name))
 			continue;
-		/* Detach paths */
-		nvme_namespace_for_each_path_safe(_n, p, _p) {
-			list_del_init(&p->nentry);
-			p->n = NULL;
-		}
-		list_head_init(&_n->head->paths);
 		__nvme_free_ns(_n);
 	}
 	n->s = s;

@@ -540,29 +540,23 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct nbft_file_entry *head = NULL;
 	struct list_head nbft_list;
-	char *format = "normal";
 	char *nbft_path = NBFT_SYSFS_PATH;
 	nvme_print_flags_t flags;
 	int ret;
-	unsigned int verbose = 0;
 
-	OPT_ARGS(opts) = {
-		OPT_FMT("output-format", 'o', &format, "Output format: normal|json"),
+	NVME_ARGS(opts,
 		OPT_FLAG("subsystem", 's', &show_subsys, "show NBFT subsystems"),
 		OPT_FLAG("hfi", 'H', &show_hfi, "show NBFT HFIs"),
 		OPT_FLAG("discovery", 'd', &show_discovery, "show NBFT discovery controllers"),
-		OPT_STRING("nbft-path", 0, "STR", &nbft_path, "user-defined path for NBFT tables"),
-		OPT_INCR("verbose", 'v', &verbose, "Increase logging verbosity"),
-		OPT_END()
-	};
+		OPT_STRING("nbft-path", 0, "STR", &nbft_path, "user-defined path for NBFT tables"));
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
-	log_level = map_log_level(verbose, false /* quiet */);
+	log_level = map_log_level(nvme_args.verbose, false /* quiet */);
 
-	ret = validate_output_format(format, &flags);
+	ret = validate_output_format(nvme_args.output_format, &flags);
 	if (ret < 0)
 		return ret;
 

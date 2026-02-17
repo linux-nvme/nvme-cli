@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <errno.h>
 
 #include <libnvme.h>
@@ -29,7 +30,7 @@ static bool config_dump(const char *file)
 	if (err)
 		goto out;
 
-	err = nvme_dump_config(ctx, NULL);
+	err = nvme_dump_config(ctx, STDOUT_FILENO);
 	if (err)
 		goto out;
 

@@ -237,6 +237,7 @@ LIBNVME_2_0 {
 		nvme_set_application;
 		nvme_set_dry_run;
 		nvme_set_etdas;
+		nvme_set_ioctl_probing;
 		nvme_set_keyring;
 		nvme_set_property;
 		nvme_set_root;
