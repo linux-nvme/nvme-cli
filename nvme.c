@@ -9837,7 +9837,7 @@ static int append_keyfile(struct nvme_global_ctx *ctx, const char *keyring,
 
 	err = fprintf(fd, "%s %s\n", identity, exported_key);
 	if (err < 0) {
-		nvme_show_error("Failed to append key to '%', %s",
+		nvme_show_error("Failed to append key to '%s', %s",
 				keyfile, nvme_strerror(errno));
 		err = -errno;
 	} else {
