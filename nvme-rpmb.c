@@ -168,7 +168,7 @@ static int read_file(const char *file, unsigned char **data, unsigned int *len)
 	if (file == NULL) return err;
 
 	if ((fd = open(file, O_RDONLY)) < 0) {
-		fprintf(stderr, "Failed to open %s: %s\n", file, strerror(errno));
+		fprintf(stderr, "Failed to open %s: %s\n", file, nvme_strerror(errno));
 		return fd;
 	}
 
@@ -189,7 +189,7 @@ static int read_file(const char *file, unsigned char **data, unsigned int *len)
 	if (err < 0) {
 		err = -errno;
 		fprintf(stderr, "Failed to read data from file"
-				" %s with %s\n", file, strerror(errno));
+				" %s with %s\n", file, nvme_strerror(errno));
 		free(buf);
 		goto out;
 	}

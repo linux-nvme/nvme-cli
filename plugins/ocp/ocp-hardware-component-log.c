@@ -217,7 +217,7 @@ static int get_hwcomp_log_data(struct nvme_transport_handle *hdl, struct hwcomp_
 
 	log->desc = calloc(1, len);
 	if (!log->desc) {
-		fprintf(stderr, "error: ocp: calloc: %s\n", strerror(errno));
+		fprintf(stderr, "error: ocp: calloc: %s\n", nvme_strerror(errno));
 		return -errno;
 	}
 

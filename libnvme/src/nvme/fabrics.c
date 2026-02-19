@@ -841,7 +841,7 @@ static int __nvmf_supported_options(struct nvme_global_ctx *ctx)
 	fd = open(nvmf_dev, O_RDONLY);
 	if (fd < 0) {
 		nvme_msg(ctx, LOG_ERR, "Failed to open %s: %s\n",
-			 nvmf_dev, strerror(errno));
+			 nvmf_dev, nvme_strerror(errno));
 		return -ENVME_CONNECT_OPEN;
 	}
 
@@ -861,7 +861,7 @@ static int __nvmf_supported_options(struct nvme_global_ctx *ctx)
 		}
 
 		nvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
-			 nvmf_dev, strerror(errno));
+			 nvmf_dev, nvme_strerror(errno));
 		return -ENVME_CONNECT_READ;
 	}
 
@@ -922,7 +922,7 @@ static int __nvmf_add_ctrl(struct nvme_global_ctx *ctx, const char *argstr)
 	fd = open(nvmf_dev, O_RDWR);
 	if (fd < 0) {
 		nvme_msg(ctx, LOG_ERR, "Failed to open %s: %s\n",
-			 nvmf_dev, strerror(errno));
+			 nvmf_dev, nvme_strerror(errno));
 		return -ENVME_CONNECT_OPEN;
 	}
 
@@ -931,7 +931,7 @@ static int __nvmf_add_ctrl(struct nvme_global_ctx *ctx, const char *argstr)
 	ret = write(fd, argstr, len);
 	if (ret != len) {
 		nvme_msg(ctx, LOG_INFO, "Failed to write to %s: %s\n",
-			 nvmf_dev, strerror(errno));
+			 nvmf_dev, nvme_strerror(errno));
 		switch (errno) {
 		case EALREADY:
 			return -ENVME_CONNECT_ALREADY;
@@ -958,7 +958,7 @@ static int __nvmf_add_ctrl(struct nvme_global_ctx *ctx, const char *argstr)
 	len = read(fd, buf, sizeof(buf) - 1);
 	if (len < 0) {
 		nvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
-			 nvmf_dev, strerror(errno));
+			 nvmf_dev, nvme_strerror(errno));
 		return -ENVME_CONNECT_READ;
 	}
 	nvme_msg(ctx, LOG_DEBUG, "connect ctrl, response '%.*s'\n",
@@ -1788,9 +1788,12 @@ static int nvmf_dim(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 	       MIN(sizeof(dim->eid), strlen(c->s->h->hostnqn)));
 
 	ret = get_entity_name(dim->ename, sizeof(dim->ename));
-	if (ret <= 0)
+	if (ret < 0)
 		nvme_msg(ctx, LOG_INFO, "%s: Failed to retrieve ENAME. %s.\n",
-			 c->name, strerror(ret));
+			 c->name, nvme_strerror(-ret));
+	else if (ret == 0)
+		nvme_msg(ctx, LOG_INFO, "%s: Failed to retrieve ENAME.\n",
+			 c->name);
 
 	ret = get_entity_version(dim->ever, sizeof(dim->ever));
 	if (ret <= 0)

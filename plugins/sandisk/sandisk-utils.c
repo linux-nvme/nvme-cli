@@ -439,7 +439,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 
 	data = (__u8 *)malloc(sizeof(__u8) * SNDK_DEV_MGMNT_LOG_PAGE_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR: SNDK: malloc: %s\n", strerror(errno));
+		fprintf(stderr, "ERROR: SNDK: malloc: %s\n", nvme_strerror(errno));
 		return false;
 	}
 
@@ -468,7 +468,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 		free(data);
 		data = calloc(length, sizeof(__u8));
 		if (!data) {
-			fprintf(stderr, "ERROR: SNDK: malloc: %s\n", strerror(errno));
+			fprintf(stderr, "ERROR: SNDK: malloc: %s\n", nvme_strerror(errno));
 			goto end;
 		}
 
@@ -493,7 +493,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 		/* Ensure size of log data matches length in log header */
 		*log_data = calloc(length, sizeof(__u8));
 		if (!*log_data) {
-			fprintf(stderr, "ERROR: SNDK: calloc: %s\n", strerror(errno));
+			fprintf(stderr, "ERROR: SNDK: calloc: %s\n", nvme_strerror(errno));
 			valid = false;
 			goto end;
 		}

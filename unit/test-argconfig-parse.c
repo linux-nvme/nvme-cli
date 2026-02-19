@@ -11,6 +11,8 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
+const char *nvme_strerror(int errnum);
+
 static int test_rc;
 
 union val {
@@ -219,7 +221,7 @@ int main(void)
 	setlocale(LC_NUMERIC, "C");
 	f = freopen("/dev/null", "w", stderr);
 	if (!f)
-		printf("ERROR: reopening stderr failed: %s\n", strerror(errno));
+		printf("ERROR: reopening stderr failed: %s\n", nvme_strerror(errno));
 
 	for (i = 0; i < ARRAY_SIZE(toval_tests); i++)
 		toval_test(&toval_tests[i]);

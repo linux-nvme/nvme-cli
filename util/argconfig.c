@@ -44,6 +44,8 @@
 #include <stdbool.h>
 #include <locale.h>
 
+const char *nvme_strerror(int errnum);
+
 static bool is_null_or_empty(const char *s)
 {
 	return !s || !*s;
@@ -315,7 +317,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	short_opts = calloc(options_count * 3 + 3, sizeof(*short_opts));
 
 	if (!long_opts || !short_opts) {
-		fprintf(stderr, "failed to allocate memory for opts: %s\n", strerror(errno));
+		fprintf(stderr, "failed to allocate memory for opts: %s\n", nvme_strerror(errno));
 		return -errno;
 	}
 

@@ -284,7 +284,7 @@ int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *
 	ctrls.num = nvme_scan_ctrls(&ctrls.ents);
 	if (ctrls.num < 0) {
 		nvme_msg(ctx, LOG_DEBUG, "failed to scan ctrls: %s\n",
-			 strerror(-ctrls.num));
+			 nvme_strerror(-ctrls.num));
 		return ctrls.num;
 	}
 
@@ -292,9 +292,9 @@ int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *
 		nvme_ctrl_t c;
 
 		ret = nvme_scan_ctrl(ctx, ctrls.ents[i]->d_name, &c);
-		if (!ret) {
+		if (ret < 0) {
 			nvme_msg(ctx, LOG_DEBUG, "failed to scan ctrl %s: %s\n",
-				 ctrls.ents[i]->d_name, strerror(ret));
+				 ctrls.ents[i]->d_name, nvme_strerror(-ret));
 			continue;
 		}
 	}
@@ -302,7 +302,7 @@ int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *
 	subsys.num = nvme_scan_subsystems(&subsys.ents);
 	if (subsys.num < 0) {
 		nvme_msg(ctx, LOG_DEBUG, "failed to scan subsystems: %s\n",
-			 strerror(-subsys.num));
+			 nvme_strerror(-subsys.num));
 		return subsys.num;
 	}
 
@@ -311,7 +311,7 @@ int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *
 		if (ret < 0) {
 			nvme_msg(ctx, LOG_DEBUG,
 				 "failed to scan subsystem %s: %s\n",
-				 subsys.ents[i]->d_name, strerror(-ret));
+				 subsys.ents[i]->d_name, nvme_strerror(-ret));
 		}
 	}
 
@@ -847,7 +847,7 @@ static int nvme_subsystem_scan_namespaces(struct nvme_global_ctx *ctx, nvme_subs
 	if (namespaces.num < 0) {
 		nvme_msg(ctx, LOG_DEBUG,
 			 "failed to scan namespaces for subsys %s: %s\n",
-			 s->subsysnqn, strerror(-namespaces.num));
+			 s->subsysnqn, nvme_strerror(-namespaces.num));
 		return namespaces.num;
 	}
 
@@ -857,7 +857,7 @@ static int nvme_subsystem_scan_namespaces(struct nvme_global_ctx *ctx, nvme_subs
 		if (ret < 0)
 			nvme_msg(ctx, LOG_DEBUG,
 				 "failed to scan namespace %s: %s\n",
-				 namespaces.ents[i]->d_name, strerror(-ret));
+				 namespaces.ents[i]->d_name, nvme_strerror(-ret));
 	}
 
 	return 0;
