@@ -9,6 +9,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <nvme/linux.h>
 #include <nvme/types.h>
 #include "private.h"
 
@@ -181,15 +182,6 @@ int nvme_scan(const char *config_file, struct nvme_global_ctx **ctx)
 	/* Scanning not supported on Windows */
 	errno = ENOTSUP;
 	return -1;
-}
-
-struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
-{
-	stub_log(__func__);
-	(void)fp;
-	(void)log_level;
-	/* Return NULL - global context not supported on Windows */
-	return NULL;
 }
 
 int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name, nvme_ctrl_t *c)
@@ -833,66 +825,6 @@ int nvme_import_tls_key(struct nvme_global_ctx *ctx, const char *encoded_key,
 /*
  * Additional stubs for nvme-cli linking
  */
-
-/* Transport handle operations (linux.c) */
-int nvme_open(struct nvme_global_ctx *ctx, const char *name,
-	      struct nvme_transport_handle **hdlp)
-{
-	stub_log(__func__);
-	(void)ctx;
-	(void)name;
-	(void)hdlp;
-	errno = ENOTSUP;
-	return -1;
-}
-
-void nvme_close(struct nvme_transport_handle *hdl)
-{
-	stub_log(__func__);
-	(void)hdl;
-}
-
-nvme_fd_t nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
-{
-	// TODO: identical to linux.c, need to refactor.
-	return hdl->fd;
-}
-
-const char *nvme_transport_handle_get_name(struct nvme_transport_handle *hdl)
-{
-	stub_log(__func__);
-	(void)hdl;
-	return "";
-}
-
-bool nvme_transport_handle_is_blkdev(struct nvme_transport_handle *hdl)
-{
-	stub_log(__func__);
-	(void)hdl;
-	return false;
-}
-
-bool nvme_transport_handle_is_chardev(struct nvme_transport_handle *hdl)
-{
-	stub_log(__func__);
-	(void)hdl;
-	return false;
-}
-
-bool nvme_transport_handle_is_direct(struct nvme_transport_handle *hdl)
-{
-	stub_log(__func__);
-	(void)hdl;
-	return false;
-}
-
-bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl)
-{
-	stub_log(__func__);
-	(void)hdl;
-	return false;
-}
-
 /* Controller property getters (tree.c) */
 const char *nvme_ctrl_get_cntlid(nvme_ctrl_t c)
 {
@@ -1032,40 +964,51 @@ const char *nvme_mi_status_to_string(int status)
  * Linux keyring and TLS key management stubs (linux.c)
  * These are used by nvme-cli security commands
  */
-int nvme_read_key(long keyring_id, long key_id, int *key_len, unsigned char **key_data)
+int nvme_read_key(struct nvme_global_ctx *ctx, long keyring_id,
+		long key_id, int *len, unsigned char **key)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)keyring_id;
 	(void)key_id;
-	(void)key_len;
-	(void)key_data;
+	(void)len;
+	(void)key;
 	errno = ENOTSUP;
 	return -1;
 }
 
-int nvme_lookup_keyring(const char *keyring, long *kr_id)
+int nvme_lookup_keyring(struct nvme_global_ctx *ctx,
+		const char *keyring, long *key)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)keyring;
-	(void)kr_id;
+	(void)key;
 	errno = ENOTSUP;
 	return -1;
 }
 
-int nvme_update_key(long keyring_id, long key_id, const unsigned char *key_data, int key_len)
+int nvme_update_key(struct nvme_global_ctx *ctx, long keyring_id,
+		const char *key_type, const char *identity,
+		unsigned char *key_data, int key_len, long *key)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)keyring_id;
-	(void)key_id;
+	(void)key_type;
+	(void)identity;
 	(void)key_data;
 	(void)key_len;
+	(void)key;
 	errno = ENOTSUP;
 	return -1;
 }
 
-int nvme_revoke_tls_key(const char *keyring, const char *key_type, const char *identity)
+int nvme_revoke_tls_key(struct nvme_global_ctx *ctx, const char *keyring,
+		const char *key_type, const char *identity)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)keyring;
 	(void)key_type;
 	(void)identity;
@@ -1073,78 +1016,106 @@ int nvme_revoke_tls_key(const char *keyring, const char *key_type, const char *i
 	return -1;
 }
 
-int nvme_scan_tls_keys(const char *keyring)
+int nvme_scan_tls_keys(struct nvme_global_ctx *ctx, const char *keyring,
+		nvme_scan_tls_keys_cb_t cb, void *data)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)keyring;
+	(void)cb;
+	(void)data;
 	errno = ENOTSUP;
 	return -1;
 }
 
-int nvme_describe_key_serial(long key_id)
+char *nvme_describe_key_serial(struct nvme_global_ctx *ctx,
+		long key_id)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)key_id;
-	errno = ENOTSUP;
-	return -1;
-}
-
-int nvme_insert_tls_key_versioned(const char *keyring, const char *key_type, const char *hostnqn,
-				 const char *subsysnqn, int version, int hmac,
-				 unsigned char *configured_key, int key_len)
-{
-	stub_log(__func__);
-	(void)keyring;
-	(void)key_type;
-	(void)hostnqn;
-	(void)subsysnqn;
-	(void)version;
-	(void)hmac;
-	(void)configured_key;
-	(void)key_len;
-	errno = ENOTSUP;
-	return -1;
-}
-
-char *nvme_generate_tls_key_identity_compat(const char *hostnqn, const char *subsysnqn,
-					   int version, int hmac,
-					   unsigned char *configured_key, int key_len)
-{
-	stub_log(__func__);
-	(void)hostnqn;
-	(void)subsysnqn;
-	(void)version;
-	(void)hmac;
-	(void)configured_key;
-	(void)key_len;
 	return NULL;
 }
 
-int nvme_insert_tls_key_compat(const char *keyring, const char *key_type, const char *identity,
-			       unsigned char *key_data, int key_len)
+int nvme_insert_tls_key_versioned(struct nvme_global_ctx *ctx,
+		const char *keyring, const char *key_type,
+		const char *hostnqn, const char *subsysnqn,
+		int version, int hmac,
+		unsigned char *configured_key, int key_len,
+		long *key)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)keyring;
 	(void)key_type;
+	(void)hostnqn;
+	(void)subsysnqn;
+	(void)version;
+	(void)hmac;
+	(void)configured_key;
+	(void)key_len;
+	(void)key;
+	errno = ENOTSUP;
+	return -1;
+}
+
+int nvme_generate_tls_key_identity_compat(struct nvme_global_ctx *ctx,
+		const char *hostnqn, const char *subsysnqn,
+		int version, int hmac, unsigned char *configured_key,
+		int key_len, char **identity)
+{
+	stub_log(__func__);
+	(void)ctx;
+	(void)hostnqn;
+	(void)subsysnqn;
+	(void)version;
+	(void)hmac;
+	(void)configured_key;
+	(void)key_len;
 	(void)identity;
-	(void)key_data;
-	(void)key_len;
 	errno = ENOTSUP;
 	return -1;
 }
 
-char *nvme_generate_tls_key_identity(const char *hostnqn, const char *subsysnqn,
-				    int version, int hmac,
-				    unsigned char *configured_key, int key_len)
+int nvme_insert_tls_key_compat(struct nvme_global_ctx *ctx,
+		const char *keyring, const char *key_type,
+		const char *hostnqn, const char *subsysnqn,
+		int version, int hmac,
+		unsigned char *configured_key, int key_len,
+		long *key)
 {
 	stub_log(__func__);
+	(void)ctx;
+	(void)keyring;
+	(void)key_type;
 	(void)hostnqn;
 	(void)subsysnqn;
 	(void)version;
 	(void)hmac;
 	(void)configured_key;
 	(void)key_len;
-	return NULL;
+	(void)key;
+	errno = ENOTSUP;
+	return -1;
+}
+
+int nvme_generate_tls_key_identity(struct nvme_global_ctx *ctx,
+		const char *hostnqn, const char *subsysnqn,
+		int version, int hmac,
+		unsigned char *configured_key, int key_len,
+		char **identity)
+{
+	stub_log(__func__);
+	(void)ctx;
+	(void)hostnqn;
+	(void)subsysnqn;
+	(void)version;
+	(void)hmac;
+	(void)configured_key;
+	(void)key_len;
+	(void)identity;
+	errno = ENOTSUP;
+	return -1;
 }
 
 char *nvmf_hostnqn_from_file(void)
@@ -1154,10 +1125,13 @@ char *nvmf_hostnqn_from_file(void)
 	return NULL;
 }
 
-int nvme_gen_dhchap_key(char *hostnqn, unsigned int hmac, unsigned int key_len,
-		       unsigned char *secret, unsigned char *key)
+int nvme_gen_dhchap_key(struct nvme_global_ctx *ctx,
+		char *hostnqn, enum nvme_hmac_alg hmac,
+		unsigned int key_len, unsigned char *secret,
+		unsigned char *key)
 {
 	stub_log(__func__);
+	(void)ctx;
 	(void)hostnqn;
 	(void)hmac;
 	(void)key_len;
@@ -1182,16 +1156,8 @@ char *nvmf_hostnqn_generate_from_hostid(char *hostid)
 	return NULL;
 }
 
-/* Dry run and other global state functions (linux.c) */
-void nvme_set_dry_run(void *ctx, int enable)
-{
-	stub_log(__func__);
-	(void)ctx;
-	(void)enable;
-}
-
 /* Extended Telemetry (linux.c) */
-int nvme_set_etdas(void *hdl, int *changed)
+int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
 {
 	stub_log(__func__);
 	(void)hdl;
@@ -1200,35 +1166,13 @@ int nvme_set_etdas(void *hdl, int *changed)
 	return -1;
 }
 
-int nvme_clear_etdas(void *hdl, int *changed)
+int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed)
 {
 	stub_log(__func__);
 	(void)hdl;
 	(void)changed;
 	errno = ENOTSUP;
 	return -1;
-}
-
-/* Transport handle callbacks (linux.c) */
-void nvme_transport_handle_set_submit_entry(void *hdl, void *fn)
-{
-	stub_log(__func__);
-	(void)hdl;
-	(void)fn;
-}
-
-void nvme_transport_handle_set_submit_exit(void *hdl, void *fn)
-{
-	stub_log(__func__);
-	(void)hdl;
-	(void)fn;
-}
-
-void nvme_transport_handle_set_decide_retry(void *hdl, void *fn)
-{
-	stub_log(__func__);
-	(void)hdl;
-	(void)fn;
 }
 
 /* Path property getters (tree.c) */
@@ -1327,65 +1271,4 @@ void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
 	stub_log(__func__);
 	(void)ctx;
 	(void)head;
-}
-
-/* Platform-specific fstat wrapper for nvme_fd_t */
-int nvme_fstat(nvme_fd_t fd, struct stat *buf)
-{
-	BY_HANDLE_FILE_INFORMATION file_info;
-	ULARGE_INTEGER ull;
-
-	if (!buf) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	/* Check for invalid handle */
-	if (fd == INVALID_HANDLE_VALUE || fd == NULL) {
-		errno = EBADF;
-		return -1;
-	}
-
-	/* Get file information from Windows handle */
-	if (!GetFileInformationByHandle(fd, &file_info)) {
-		errno = EBADF;
-		return -1;
-	}
-
-	/* Fill in the stat structure */
-	memset(buf, 0, sizeof(*buf));
-
-	/* Convert Windows file attributes to stat mode */
-	if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)
-		/* Windows device files should be marked as block devices */
-		/* This is used by nvme_verify_chr to check device type */
-		buf->st_mode = S_IFBLK | 0600;
-	else if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		buf->st_mode = S_IFDIR | 0755;
-	else
-		buf->st_mode = S_IFREG | 0644;
-
-	/* File size */
-	buf->st_size = (((off_t)file_info.nFileSizeHigh << 32)
-					| file_info.nFileSizeLow);
-
-	/* Number of hard links */
-	buf->st_nlink = file_info.nNumberOfLinks;
-
-	/* Convert FILETIME to time_t for timestamps */
-	/* Windows FILETIME is 100-nanosecond intervals since Jan 1, 1601 */
-	/* Unix time_t is seconds since Jan 1, 1970 */
-	ull.LowPart = file_info.ftLastWriteTime.dwLowDateTime;
-	ull.HighPart = file_info.ftLastWriteTime.dwHighDateTime;
-	buf->st_mtime = (time_t)((ull.QuadPart / 10000000ULL) - 11644473600ULL);
-
-	ull.LowPart = file_info.ftLastAccessTime.dwLowDateTime;
-	ull.HighPart = file_info.ftLastAccessTime.dwHighDateTime;
-	buf->st_atime = (time_t)((ull.QuadPart / 10000000ULL) - 11644473600ULL);
-
-	ull.LowPart = file_info.ftCreationTime.dwLowDateTime;
-	ull.HighPart = file_info.ftCreationTime.dwHighDateTime;
-	buf->st_ctime = (time_t)((ull.QuadPart / 10000000ULL) - 11644473600ULL);
-
-	return 0;
 }

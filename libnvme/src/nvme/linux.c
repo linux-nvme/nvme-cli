@@ -76,6 +76,7 @@ void nvme_transport_handle_set_decide_retry(struct nvme_transport_handle *hdl,
 		hdl->decide_retry = __nvme_decide_retry;
 }
 
+#ifndef _WIN32
 static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl, const char *devname)
 {
 	struct nvme_passthru_cmd dummy = { 0 };
@@ -124,6 +125,7 @@ void __nvme_transport_handle_close_direct(struct nvme_transport_handle *hdl)
 	close(hdl->fd);
 	free(hdl);
 }
+#endif /* !_WIN32 */
 
 struct nvme_transport_handle *__nvme_create_transport_handle(struct nvme_global_ctx *ctx)
 {
@@ -141,6 +143,7 @@ struct nvme_transport_handle *__nvme_create_transport_handle(struct nvme_global_
 	return hdl;
 }
 
+#ifndef _WIN32
 int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 	      struct nvme_transport_handle **hdlp)
 {
@@ -202,6 +205,7 @@ void nvme_close(struct nvme_transport_handle *hdl)
 		break;
 	}
 }
+#endif /* !_WIN32 */
 
 nvme_fd_t nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
 {
@@ -233,6 +237,7 @@ bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl)
 	return hdl->type == NVME_TRANSPORT_HANDLE_TYPE_MI;
 }
 
+#ifndef _WIN32
 int nvme_fw_download_seq(struct nvme_transport_handle *hdl, bool ish,
 		__u32 size, __u32 xfer, __u32 offset, void *buf)
 {
@@ -377,7 +382,7 @@ int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create, bool 
 	static const __u32 xfer = NVME_LOG_TELEM_BLOCK_SIZE;
 	struct nvme_telemetry_log *telem;
 	struct nvme_passthru_cmd cmd;
-	_cleanup_free_ void *log = NULL;
+	_cleanup_nvme_free_ void *log = NULL;
 	void *tmp;
 	int err;
 	size_t dalb;
@@ -576,7 +581,7 @@ size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
 
 int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen)
 {
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = NULL;
 	struct nvme_passthru_cmd cmd;
 	int ret;
 
@@ -595,7 +600,7 @@ int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen)
 
 int nvme_get_logical_block_size(struct nvme_transport_handle *hdl, __u32 nsid, int *blksize)
 {
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	struct nvme_passthru_cmd cmd;
 	__u8 flbas;
 	int ret;
@@ -2128,3 +2133,4 @@ int nvme_import_tls_key(struct nvme_global_ctx *ctx, const char *encoded_key,
 	*keyp = psk;
 	return 0;
 }
+#endif /* !_WIN32 */

@@ -350,6 +350,7 @@ LIBNVME_2_0 {
 		nvmf_treq_str;
 		nvmf_trtype_str;
 		nvmf_update_config;
+		platform_aligned_free;
 	local:
 		*;
 };

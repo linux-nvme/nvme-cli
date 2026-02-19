@@ -413,6 +413,8 @@ void *__nvme_alloc(size_t len);
 
 void *__nvme_realloc(void *p, size_t len);
 
+void __nvme_free(void *p);
+
 nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 			     const char *hostid);
 nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,

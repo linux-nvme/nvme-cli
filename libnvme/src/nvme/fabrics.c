@@ -1283,7 +1283,7 @@ static int nvme_discovery_log(const struct nvme_get_discovery_args *args,
 		if (numrec == 0)
 			break;
 
-		free(log);
+		__nvme_free(log);
 		entries_size = sizeof(*log->entries) * numrec;
 		log = __nvme_alloc(sizeof(*log) + entries_size);
 		if (!log) {
@@ -1340,7 +1340,7 @@ static int nvme_discovery_log(const struct nvme_get_discovery_args *args,
 	}
 
 out_free_log:
-	free(log);
+	__nvme_free(log);
 	return err;
 }
 
@@ -1857,7 +1857,7 @@ static const char *dctype_str[] = {
  */
 static int nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
 {
-	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *id = NULL;
 	int ret;
 
 	id = __nvme_alloc(sizeof(*id));
@@ -2346,7 +2346,7 @@ static int nvmf_create_discovery_ctrl(struct nvme_global_ctx *ctx,
 		struct fabric_args *trcfg,
 		struct nvme_ctrl **ctrl)
 {
-	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *id = NULL;
 	struct nvme_ctrl *c;
 	int ret;
 
@@ -3211,7 +3211,7 @@ static int nvmf_create_discover_ctrl(struct nvme_global_ctx *ctx,
 		struct nvme_host *h, struct nvme_fabrics_config *cfg,
 		struct fabric_args *trcfg, struct nvme_ctrl **ctrl)
 {
-	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *id = NULL;
 	struct nvme_ctrl *c;
 	int ret;
 

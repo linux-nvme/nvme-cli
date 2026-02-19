@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
+#include <libgen.h>
 
 /* Prevent conflicts with Windows min/max macros */
 #ifdef min
@@ -187,7 +188,8 @@ struct ifaddrs {
 #define ipv4_from_in6_addr(addr) &(addr.u.Byte[12])
 
 /* Windows missing POSIX functions */
-static inline int dprintf(int fd, const char *format, ...) {
+static inline int dprintf(int fd, const char *format, ...)
+{
     va_list args;
     char buffer[4096];
     int result;
@@ -202,19 +204,32 @@ static inline int dprintf(int fd, const char *format, ...) {
     return result;
 }
 
-static inline int getpagesize(void) {
+static inline DWORD getpagesize(void)
+{
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     return si.dwPageSize;
 }
 
-static inline int posix_memalign(void **memptr, size_t alignment, size_t size) {
+/* Aligned memory allocation function, use platform_aligned_free to free. */
+static inline int posix_memalign(void **memptr, size_t alignment, size_t size)
+{
     *memptr = _aligned_malloc(size, alignment);
     return (*memptr == NULL) ? ENOMEM : 0;
 }
 
-static inline size_t malloc_usable_size(void *ptr) {
+static inline size_t malloc_usable_size(void *ptr)
+{
     return _msize(ptr);
+}
+
+/*
+ * Platform-specific free for aligned memory allocations.
+ * Use when posix_memalign is used to allocate memory.
+ */
+static inline void platform_aligned_free(void *p)
+{
+	_aligned_free(p);
 }
 
 /* Windows ioctl macros - only define if not already defined by winsock */

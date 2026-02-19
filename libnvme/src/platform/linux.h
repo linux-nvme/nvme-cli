@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/mman.h>
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/uio.h>
@@ -67,6 +68,15 @@ static inline int random_uuid(unsigned char *uuid, size_t len)
 
 	close(f);
 	return ret;
+}
+
+/*
+ * Platform-specific free for aligned memory allocations.
+ * Use when posix_memalign is used to allocate memory.
+ */
+static inline void platform_aligned_free(void *p)
+{
+	free(p);
 }
 
 #endif /* _LIBNVME_PLATFORM_LINUX_H */

@@ -1153,10 +1153,15 @@ void *__nvme_realloc(void *p, size_t len)
 
 	if (p && result) {
 		memcpy(result, p, min(old_len, len));
-		free(p);
+		__nvme_free(p);
 	}
 
 	return result;
+}
+
+void __nvme_free(void *p)
+{
+	platform_aligned_free(p);
 }
 
 #ifndef _WIN32

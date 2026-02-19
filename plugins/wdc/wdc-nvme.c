@@ -2871,7 +2871,7 @@ static bool wdc_nvme_check_supported_log_page(struct nvme_global_ctx *ctx,
 	int err = -1;
 	struct wdc_c2_cbs_data *cbs_data = NULL;
 
-	_cleanup_free_ struct nvme_supported_log_pages *supports = NULL;
+	_cleanup_nvme_free_ struct nvme_supported_log_pages *supports = NULL;
 
 	/* Check log page id 0 (supported log pages) first */
 	supports = nvme_alloc(sizeof(*supports));

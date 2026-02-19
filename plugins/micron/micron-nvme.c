@@ -682,7 +682,7 @@ static int micron_selective_download(int argc, char **argv,
 	}
 
 out_free:
-	free(fw_buf);
+	platform_aligned_free(fw_buf);
 out:
 	close(fw_fd);
 	return err;
