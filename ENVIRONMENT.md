@@ -9,7 +9,7 @@ This guide covers how to set up your development environment for building nvme-c
 **Both Platforms:**
 - Meson >= 0.62.0 (build system)
 - Ninja (build backend) or Samurai (minimal alternative)
-- C compiler (GCC or Clang on Linux, MSVC or MinGW on Windows)
+- C compiler (GCC or Clang on Linux, MinGW with GCC on Windows)
 
 ### Platform-Specific Dependencies
 
@@ -38,17 +38,10 @@ This guide covers how to set up your development environment for building nvme-c
 #### Windows Dependencies
 
 **Required:**
-- MSVC (Visual Studio 2019 or later) OR MinGW-w64 (installed via WinGet)
+- MinGW-w64
 - Meson
 - Ninja
 - Python 3.8+
-- Windows SDK (for Visual Studio builds)
-
-**System Libraries (automatically linked):**
-- ws2_32.lib (Windows Sockets 2)
-- wsock32.lib (Windows Sockets)
-- kernel32.lib (Windows Kernel)
-- iphlpapi.lib (IP Helper API)
 
 **Optional:**
 - OpenSSL >= 3.0.0 (for security features)
@@ -303,7 +296,3 @@ ninja --version
 ```
 
 If any command fails, review the PATH setup instructions above.
-
-## Next Steps
-
-Once your environment is set up, proceed to [BUILD.md](BUILD.md) for instructions on configuring and building nvme-cli and libnvme.
