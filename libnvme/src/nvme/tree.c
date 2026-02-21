@@ -920,7 +920,7 @@ static int nvme_scan_subsystem(struct nvme_global_ctx *ctx, const char *name)
 				continue;
 			if (strcmp(_s->name, name))
 				continue;
-			if (!nvme_subsystem_scan_namespaces(ctx, _s))
+			if (nvme_subsystem_scan_namespaces(ctx, _s))
 				return -EINVAL;
 			s = _s;
 		}
@@ -939,7 +939,7 @@ static int nvme_scan_subsystem(struct nvme_global_ctx *ctx, const char *name)
 		s = nvme_alloc_subsystem(h, name, subsysnqn);
 		if (!s)
 			return -ENOMEM;
-		if (!nvme_subsystem_scan_namespaces(ctx, s))
+		if (nvme_subsystem_scan_namespaces(ctx, s))
 			return -EINVAL;
 	} else if (strcmp(s->subsysnqn, subsysnqn)) {
 		nvme_msg(ctx, LOG_DEBUG, "NQN mismatch for subsystem '%s'\n",
