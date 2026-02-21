@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "platform/includes.h"
+
 #include "mem.h"
 #include "common.h"
 

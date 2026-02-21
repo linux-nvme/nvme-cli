@@ -7,9 +7,9 @@
  * Provides POSIX-compatible functions for Windows.
  */
 
-#ifdef _WIN32
-
 #include "platform/includes.h"
+#include <stdlib.h>
+#include <string.h>
 
 /* getline implementation for Windows */
 ssize_t getline(char **lineptr, size_t *n, FILE *stream) {
@@ -114,5 +114,3 @@ FILE *open_memstream(char **ptr, size_t *sizeloc) {
 	if (sizeloc) *sizeloc = 0;
 	return f;
 }
-
-#endif /* _WIN32 */

@@ -5,12 +5,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
-#ifndef _WIN32
-#include <sys/ioctl.h>
-#include <sys/syslog.h>
-#include <sys/time.h>
-#include <platform/types.h>
-#endif
+
+#include "platform/includes.h"
 
 #include <libnvme.h>
 #include <libnvme-mi.h>

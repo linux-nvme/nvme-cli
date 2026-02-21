@@ -21,7 +21,7 @@
 #include <dirent.h>
 #include <inttypes.h>
 
-#include "platform/includes.h"  /* Platform abstraction - includes all needed headers */
+#include "platform/includes.h"
 
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>

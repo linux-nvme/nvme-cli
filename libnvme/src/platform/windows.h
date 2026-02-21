@@ -4,7 +4,6 @@
  * Copyright (c) 2025 Micron Technology, Inc.
  *
  * Windows platform-specific definitions and includes.
- * Complete replacement for Windows portions of legacy platform.h
  */
 
 #ifndef _LIBNVME_PLATFORM_WINDOWS_H
@@ -19,6 +18,7 @@
 #include <winioctl.h>
 #include <ntddstor.h>
 #include <bcrypt.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <errno.h>

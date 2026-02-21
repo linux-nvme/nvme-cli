@@ -4,13 +4,13 @@
  * Copyright (c) 2025 Micron Technology, Inc.
  *
  * Linux platform-specific definitions and includes.
- * Complete replacement for Linux portions of legacy platform.h
  */
 
 #ifndef _LIBNVME_PLATFORM_LINUX_H
 #define _LIBNVME_PLATFORM_LINUX_H
 
-/* Linux standard includes */
+/* Linux includes */
+#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -28,9 +28,7 @@
 #include <ifaddrs.h>
 #include <poll.h>
 #include <syslog.h>
-
-/* Linux-specific includes */
-#include <linux/types.h>
+#include <dirent.h>
 #include <endian.h>
 #include <net/if.h>
 

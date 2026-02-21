@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "platform/includes.h"  /* Platform abstraction - includes all needed headers */
+#include "platform/includes.h"
 
 #include "fabrics.h"
 #include "private.h"

@@ -7,14 +7,12 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#ifndef _WIN32
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#endif
 #include <ccan/strset/strset.h>
 #include <ccan/htable/htable_type.h>
 #include <ccan/htable/htable.h>
 #include <ccan/hash/hash.h>
+
+#include "platform/includes.h"
 
 #include "nvme.h"
 #include "libnvme.h"

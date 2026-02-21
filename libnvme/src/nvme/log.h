@@ -6,7 +6,7 @@
 #define _LOG_H
 
 #include <stdbool.h>
-#include "platform/includes.h"  /* Platform abstraction - includes syslog */
+#include "platform/includes.h"
 
 /* for nvme_root_t */
 #include <nvme/tree.h>

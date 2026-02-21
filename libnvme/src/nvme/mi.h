@@ -84,8 +84,9 @@
 #ifndef _LIBNVME_MI_MI_H
 #define _LIBNVME_MI_MI_H
 
-#include "platform/includes.h"  /* Platform abstraction */
 #include <stdint.h>
+
+#include "platform/includes.h"
 
 #include <nvme/types.h>
 #include <nvme/tree.h>

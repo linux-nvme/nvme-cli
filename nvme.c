@@ -38,9 +38,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
-#ifndef _WIN32
-#include <dirent.h>
-#endif
 #include <libgen.h>
 #include <signal.h>
 
@@ -48,9 +45,6 @@
 #include <linux/fs.h>
 #endif
 
-#ifndef _WIN32
-#include <sys/mman.h>
-#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 

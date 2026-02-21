@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "platform/includes.h"  /* Platform abstraction - includes all needed headers */
 #include <ccan/endian/endian.h>
+#include "platform/includes.h"
 
 #include "private.h"
 #include "nbft.h"
