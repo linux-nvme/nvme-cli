@@ -85,14 +85,15 @@ static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl
 	_cleanup_free_ char *path = NULL;
 	char *name = basename(devname);
 	int ret, id, ns;
-	bool c;
+	bool c = true;
 
 	hdl->type = NVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 
 	ret = sscanf(name, "nvme%dn%d", &id, &ns);
-	if (ret != 1 && ret != 2)
+	if (ret == 2)
+		c = false;
+	else if (ret != 1 && sscanf(name, "ng%dn%d", &id, &ns) != 2)
 		return -EINVAL;
-	c = ret == 1;
 
 	ret = asprintf(&path, "%s/%s", "/dev", name);
 	if (ret < 0)
