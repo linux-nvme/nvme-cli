@@ -4,3 +4,11 @@ ignore:
   - 'ccan'
   - 'tests'
   - 'unit'
+  - 'libnvme/test'
+  - 'libnvme/libnvme/tests'
+  - 'libnvme/examples'
+
+coverage:
+  status:
+    project: off
+    patch: off
