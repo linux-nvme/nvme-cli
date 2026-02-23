@@ -58,7 +58,7 @@ static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
 	int err;
 	__u32 len = 0;
 
-	_cleanup_free_ void *buf = NULL;
+	_cleanup_nvme_free_ void *buf = NULL;
 
 	if (!NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
 		nvme_get_feature_length(fid, cdw11, NVME_DATA_TFR_CTRL_TO_HOST, &len);

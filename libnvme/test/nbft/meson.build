@@ -41,6 +41,8 @@ nbft_dump = executable(
     ],
 )
 
+# Shell-based diff tests only work on Linux/Unix systems
+if not is_windows
 
 helper_data = configuration_data()
 helper_data.set('NBFT_DUMP_PATH', nbft_dump.full_path())
@@ -94,3 +96,5 @@ foreach table: tables_bad
         should_fail: true,
     )
 endforeach
+
+endif # Unix-only shell script tests

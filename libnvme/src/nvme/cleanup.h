@@ -5,12 +5,11 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+
+#include "platform/includes.h"
 
 #include "fabrics.h"
+#include "private.h"
 
 #define __cleanup__(fn) __attribute__((cleanup(fn)))
 
@@ -29,6 +28,12 @@ static inline void freep(void *p)
 	free(*(void **)p);
 }
 #define _cleanup_free_ __cleanup__(freep)
+
+static inline void nvme_freep(void *p)
+{
+	__nvme_free(*(void **)p);
+}
+#define _cleanup_nvme_free_ __cleanup__(nvme_freep)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
 #define _cleanup_file_ __cleanup__(cleanup_file)

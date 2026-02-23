@@ -61,7 +61,7 @@ struct mock_cmd {
  * set_mock_fd() - sets the expected file descriptor for NVMe passthru ioctls()
  * @fd: file descriptor expected to be passed to ioctl()
  */
-void set_mock_fd(int fd);
+void set_mock_fd(nvme_fd_t fd);
 
 /**
  * set_mock_admin_cmds() - mocks NVMe admin passthru ioctl() invocations

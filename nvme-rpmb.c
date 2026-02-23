@@ -190,7 +190,7 @@ static int read_file(const char *file, unsigned char **data, unsigned int *len)
 		err = -errno;
 		fprintf(stderr, "Failed to read data from file"
 				" %s with %s\n", file, nvme_strerror(errno));
-		free(buf);
+		platform_aligned_free(buf);
 		goto out;
 	}
 	*data = buf; 

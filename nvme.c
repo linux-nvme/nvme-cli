@@ -38,13 +38,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
-#include <dirent.h>
 #include <libgen.h>
 #include <signal.h>
 
+#ifndef _WIN32
 #include <linux/fs.h>
+#endif
 
-#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -512,7 +512,7 @@ static int get_smart_log(int argc, char **argv, struct command *acmd, struct plu
 		"(or optionally a namespace) in either decoded format "
 		"(default) or binary.";
 
-	_cleanup_free_ struct nvme_smart_log *smart_log = NULL;
+	_cleanup_nvme_free_ struct nvme_smart_log *smart_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	const char *namespace = "(optional) desired namespace";
@@ -577,8 +577,8 @@ static int get_ana_log(int argc, char **argv, struct command *acmd,
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
-	_cleanup_free_ struct nvme_ana_log *ana_log = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = NULL;
+	_cleanup_nvme_free_ struct nvme_ana_log *ana_log = NULL;
 	size_t max_ana_log_len;
 	__u32 ana_log_len;
 	nvme_print_flags_t flags;
@@ -701,7 +701,7 @@ static int get_log_telemetry_ctrl(struct nvme_transport_handle *hdl, bool rae, s
 
 	err = nvme_get_log_telemetry_ctrl(hdl, rae, 0, log, size);
 	if (err) {
-		free(log);
+		nvme_free(log);
 		return err;
 	}
 
@@ -721,7 +721,7 @@ static int get_log_telemetry_host(struct nvme_transport_handle *hdl, size_t size
 
 	err = nvme_get_log_telemetry_host(hdl, 0, log, size);
 	if (err) {
-		free(log);
+		nvme_free(log);
 		return err;
 	}
 
@@ -735,7 +735,7 @@ static int __create_telemetry_log_host(struct nvme_transport_handle *hdl,
 				       struct nvme_telemetry_log **buf,
 				       bool da4_support)
 {
-	_cleanup_free_ struct nvme_telemetry_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_telemetry_log *log = NULL;
 	int err;
 
 	log = nvme_alloc(sizeof(*log));
@@ -797,7 +797,7 @@ static int __get_telemetry_log_ctrl(struct nvme_transport_handle *hdl,
 	return get_log_telemetry_ctrl(hdl, rae, *size, buf);
 
 free:
-	free(log);
+	nvme_free(log);
 	return err;
 }
 
@@ -807,7 +807,7 @@ static int __get_telemetry_log_host(struct nvme_transport_handle *hdl,
 				    struct nvme_telemetry_log **buf,
 				    bool da4_support)
 {
-	_cleanup_free_ struct nvme_telemetry_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_telemetry_log *log = NULL;
 	int err;
 
 	log = nvme_alloc(sizeof(*log));
@@ -837,8 +837,8 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 	const char *mcda = "Host-init Maximum Created Data Area. Valid options are 0 ~ 4 "
 		"If given, This option will override dgen. 0 : controller determines data area";
 
-	_cleanup_free_ struct nvme_telemetry_log *log = NULL;
-	_cleanup_free_ struct nvme_id_ctrl *id_ctrl = NULL;
+	_cleanup_nvme_free_ struct nvme_telemetry_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *id_ctrl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_fd_ int output = -1;
@@ -1001,7 +1001,7 @@ static int get_endurance_log(int argc, char **argv, struct command *acmd, struct
 	const char *desc = "Retrieves endurance groups log page and prints the log.";
 	const char *group_id = "The endurance group identifier";
 
-	_cleanup_free_ struct nvme_endurance_group_log *endurance_log = NULL;
+	_cleanup_nvme_free_ struct nvme_endurance_group_log *endurance_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -1059,7 +1059,7 @@ static int collect_effects_log(struct nvme_transport_handle *hdl, enum nvme_csi 
 
 	err = nvme_get_log_cmd_effects(hdl, csi, &node->effects);
 	if (err) {
-		free(node);
+		nvme_free(node);
 		return err;
 	}
 	list_add(list, &node->node);
@@ -1166,7 +1166,7 @@ static int get_supported_log_pages(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Retrieve supported logs and print the table.";
 
-	_cleanup_free_ struct nvme_supported_log_pages *supports = NULL;
+	_cleanup_nvme_free_ struct nvme_supported_log_pages *supports = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -1211,7 +1211,7 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 	const char *log_entries = "number of entries to retrieve";
 	const char *raw = "dump in binary format";
 
-	_cleanup_free_ struct nvme_error_log_page *err_log = NULL;
+	_cleanup_nvme_free_ struct nvme_error_log_page *err_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl ctrl = { 0 };
@@ -1281,7 +1281,7 @@ static int get_fw_log(int argc, char **argv, struct command *acmd, struct plugin
 	const char *desc = "Retrieve the firmware log for the "
 		"specified device in either decoded format (default) or binary.";
 
-	_cleanup_free_ struct nvme_firmware_slot *fw_log = NULL;
+	_cleanup_nvme_free_ struct nvme_firmware_slot *fw_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -1329,7 +1329,7 @@ static int get_fw_log(int argc, char **argv, struct command *acmd, struct plugin
 static int get_changed_ns_list_log(int argc, char **argv, bool alloc)
 {
 	_cleanup_free_ char *desc = NULL;
-	_cleanup_free_ struct nvme_ns_list *changed_ns_list_log = NULL;
+	_cleanup_nvme_free_ struct nvme_ns_list *changed_ns_list_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -1407,7 +1407,7 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 		"format(default),json or binary.";
 	const char *nvmset_id = "NVM Set Identifier";
 
-	_cleanup_free_ struct nvme_nvmset_predictable_lat_log *plpns_log = NULL;
+	_cleanup_nvme_free_ struct nvme_nvmset_predictable_lat_log *plpns_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -1467,8 +1467,8 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
-	_cleanup_free_ void *pea_log = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = NULL;
+	_cleanup_nvme_free_ void *pea_log = NULL;
 	nvme_print_flags_t flags;
 	__u32 log_size;
 	int err;
@@ -1548,7 +1548,7 @@ static int get_persistent_event_log(int argc, char **argv,
 		"processing this persistent log page command.";
 	const char *log_len = "number of bytes to retrieve";
 
-	_cleanup_free_ struct nvme_persistent_event_log *pevent = NULL;
+	_cleanup_nvme_free_ struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -1663,8 +1663,8 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
-	_cleanup_free_ void *endurance_log = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = NULL;
+	_cleanup_nvme_free_ void *endurance_log = NULL;
 	nvme_print_flags_t flags;
 	__u32 log_size;
 	int err;
@@ -1746,7 +1746,7 @@ static int get_lba_status_log(int argc, char **argv,
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ void *lba_status = NULL;
+	_cleanup_nvme_free_ void *lba_status = NULL;
 	nvme_print_flags_t flags;
 	__u32 lslplen;
 	int err;
@@ -1802,7 +1802,7 @@ static int get_resv_notif_log(int argc, char **argv,
 		"log page and prints it, for the given "
 		"device in either decoded format(default), json or binary.";
 
-	_cleanup_free_ struct nvme_resv_notification_log *resv = NULL;
+	_cleanup_nvme_free_ struct nvme_resv_notification_log *resv = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -1846,8 +1846,8 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_boot_partition *boot = NULL;
-	_cleanup_free_ __u8 *bp_log = NULL;
+	_cleanup_nvme_free_ struct nvme_boot_partition *boot = NULL;
+	_cleanup_nvme_free_ __u8 *bp_log = NULL;
 	nvme_print_flags_t flags;
 	int err = -1;
 	_cleanup_fd_ int output = -1;
@@ -1935,7 +1935,7 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *acmd,
 		"Measurement log for the given device in decoded format "
 		"(default), json or binary.";
 	const char *controller = "Target Controller ID.";
-	_cleanup_free_ struct nvme_phy_rx_eom_log *phy_rx_eom_log = NULL;
+	_cleanup_nvme_free_ struct nvme_phy_rx_eom_log *phy_rx_eom_log = NULL;
 	size_t phy_rx_eom_log_len;
 	nvme_print_flags_t flags;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
@@ -2022,7 +2022,7 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Retrieve the configuration and wear of media units and print it";
 
-	_cleanup_free_ struct nvme_media_unit_stat_log *mus = NULL;
+	_cleanup_nvme_free_ struct nvme_media_unit_stat_log *mus = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -2075,7 +2075,7 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Retrieve the list of Supported Capacity Configuration Descriptors";
 
-	_cleanup_free_ struct nvme_supported_cap_config_list_log *cap_log = NULL;
+	_cleanup_nvme_free_ struct nvme_supported_cap_config_list_log *cap_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -2132,7 +2132,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_fd_ int dfd = STDIN_FILENO;
-	_cleanup_free_ void *buf = NULL;
+	_cleanup_nvme_free_ void *buf = NULL;
 	struct nvme_passthru_cmd cmd;
 	int err = -1;
 
@@ -2207,7 +2207,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_free_ void *buf = NULL;
+	_cleanup_nvme_free_ void *buf = NULL;
 	struct nvme_passthru_cmd cmd;
 	_cleanup_fd_ int dfd = -1;
 	int err = -1;
@@ -2295,7 +2295,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ unsigned char *log = NULL;
+	_cleanup_nvme_free_ unsigned char *log = NULL;
 	struct nvme_passthru_cmd cmd;
 	int err;
 	nvme_print_flags_t flags;
@@ -2497,7 +2497,7 @@ static int sanitize_log(int argc, char **argv, struct command *acmd, struct plug
 {
 	const char *desc = "Retrieve sanitize log and show it.";
 
-	_cleanup_free_ struct nvme_sanitize_log_page *sanitize_log = NULL;
+	_cleanup_nvme_free_ struct nvme_sanitize_log_page *sanitize_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -2557,7 +2557,7 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *ac
 {
 	const char *desc = "Retrieve FID Support and Effects log and show it.";
 
-	_cleanup_free_ struct nvme_fid_supported_effects_log *fid_support_log = NULL;
+	_cleanup_nvme_free_ struct nvme_fid_supported_effects_log *fid_support_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -2609,7 +2609,7 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 {
 	const char *desc = "Retrieve NVMe-MI Command Support and Effects log and show it.";
 
-	_cleanup_free_ struct nvme_mi_cmd_supported_effects_log *mi_cmd_support_log = NULL;
+	_cleanup_nvme_free_ struct nvme_mi_cmd_supported_effects_log *mi_cmd_support_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -2661,7 +2661,7 @@ static int list_ctrl(int argc, char **argv, struct command *acmd, struct plugin 
 		"given device is part of, or optionally controllers attached to a specific namespace.";
 	const char *controller = "controller to display";
 
-	_cleanup_free_ struct nvme_ctrl_list *cntlist = NULL;
+	_cleanup_nvme_free_ struct nvme_ctrl_list *cntlist = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -2721,7 +2721,7 @@ static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *p
 	const char *csi = "I/O command set identifier";
 	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
 
-	_cleanup_free_ struct nvme_ns_list *ns_list = NULL;
+	_cleanup_nvme_free_ struct nvme_ns_list *ns_list = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	enum nvme_identify_cns cns;
@@ -2796,7 +2796,7 @@ static int id_ns_lba_format(int argc, char **argv, struct command *acmd, struct 
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	nvme_print_flags_t flags;
 	int err = -1;
 
@@ -2851,7 +2851,7 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *acmd,
 	const char *desc = "Show endurance group list information for the given endurance group id";
 	const char *endurance_grp_id = "Endurance Group ID";
 
-	_cleanup_free_ struct nvme_id_endurance_group_list *endgrp_list = NULL;
+	_cleanup_nvme_free_ struct nvme_id_endurance_group_list *endgrp_list = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -2900,7 +2900,7 @@ static bool is_ns_mgmt_support(struct nvme_transport_handle *hdl)
 {
 	int err;
 
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = nvme_alloc(sizeof(*ctrl));
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = nvme_alloc(sizeof(*ctrl));
 
 	if (ctrl)
 		return false;
@@ -2999,7 +2999,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 
-	_cleanup_free_ struct nvme_ctrl_list *cntlist = NULL;
+	_cleanup_nvme_free_ struct nvme_ctrl_list *cntlist = NULL;
 	__u16 list[NVME_ID_CTRL_LIST_MAX];
 	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
@@ -3112,9 +3112,9 @@ static int detach_ns(int argc, char **argv, struct command *acmd, struct plugin 
 static int parse_lba_num_si(struct nvme_transport_handle *hdl, const char *opt,
 			    const char *val, __u8 flbas, __u64 *num, __u64 align)
 {
-	_cleanup_free_ struct nvme_ns_list *ns_list = NULL;
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_ns_list *ns_list = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	__u32 nsid = 1;
 	__u8 lbaf;
 	unsigned int remainder;
@@ -3218,11 +3218,11 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	const char *phndls = "Comma separated list of Placement Handle Associated RUH";
 
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_ns_mgmt_host_sw_specified *data = NULL;
-	_cleanup_free_ struct nvme_id_ns_granularity_list *gr_list = NULL;
+	_cleanup_nvme_free_ struct nvme_ns_mgmt_host_sw_specified *data = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns_granularity_list *gr_list = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *id = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	__u64 align_nsze = 1 << 20; /* Default 1 MiB */
 	__u64 align_ncap = align_nsze;
 	struct nvme_passthru_cmd cmd;
@@ -3590,7 +3590,7 @@ int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		"controller attributes in hex-dump if requested.";
 	const char *vendor_specific = "dump binary vendor field";
 
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -3659,7 +3659,7 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *acmd,
 		"command to the given device and report information about "
 		"the specified controller in various formats.";
 
-	_cleanup_free_ struct nvme_id_ctrl_nvm *ctrl_nvm = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl_nvm *ctrl_nvm = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -3704,8 +3704,8 @@ static int nvm_id_ns(int argc, char **argv, struct command *acmd,
 		"command to the given device and report information about "
 		"the specified namespace in various formats.";
 
-	_cleanup_free_ struct nvme_nvm_id_ns *id_ns = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_nvm_id_ns *id_ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -3778,8 +3778,8 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *acmd, str
 		"command to the given device, returns capability field properties of "
 		"the specified LBA Format index in the specified namespace in various formats.";
 
-	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -3849,7 +3849,7 @@ static int ns_descs(int argc, char **argv, struct command *acmd, struct plugin *
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ void *nsdescs = NULL;
+	_cleanup_nvme_free_ void *nsdescs = NULL;
 	nvme_print_flags_t flags;
 	int err;
 
@@ -3917,7 +3917,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;
@@ -4000,7 +4000,7 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *acmd
 		"Namespace command to the given device, returns properties of the "
 		"specified namespace in human-readable or binary or json format.";
 
-	_cleanup_free_ struct nvme_id_independent_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_independent_id_ns *ns = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -4072,7 +4072,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *acmd, struct
 		"given device, returns namespace granularity list "
 		"in either human-readable or binary format.";
 
-	_cleanup_free_ struct nvme_id_ns_granularity_list *granularity_list = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns_granularity_list *granularity_list = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -4113,7 +4113,7 @@ static int id_nvmset(int argc, char **argv, struct command *acmd, struct plugin 
 		"in either binary format or json format";
 	const char *nvmset_id = "NVM Set Identify value";
 
-	_cleanup_free_ struct nvme_id_nvmset_list *nvmset = NULL;
+	_cleanup_nvme_free_ struct nvme_id_nvmset_list *nvmset = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -4166,7 +4166,7 @@ static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *p
 	const char *raw = "show uuid in binary format";
 	const char *human_readable = "show uuid in readable format";
 
-	_cleanup_free_ struct nvme_id_uuid_list *uuid_list = NULL;
+	_cleanup_nvme_free_ struct nvme_id_uuid_list *uuid_list = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -4224,7 +4224,7 @@ static int id_iocs(int argc, char **argv, struct command *acmd, struct plugin *p
 		"in either human-readable or binary format.";
 	const char *controller_id = "identifier of desired controller";
 
-	_cleanup_free_ struct nvme_id_iocs *iocs = NULL;
+	_cleanup_nvme_free_ struct nvme_id_iocs *iocs = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -4279,7 +4279,7 @@ static int id_domain(int argc, char **argv, struct command *acmd, struct plugin 
 		"in either normal|json|binary format.";
 	const char *domain_id = "identifier of desired domain";
 
-	_cleanup_free_ struct nvme_id_domain_list *id_domain = NULL;
+	_cleanup_nvme_free_ struct nvme_id_domain_list *id_domain = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -4425,7 +4425,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *acmd, struct
 		"command to the given device and report the information in a "
 		"decoded format (default), json or binary.";
 
-	_cleanup_free_ struct nvme_primary_ctrl_cap *caps = NULL;
+	_cleanup_nvme_free_ struct nvme_primary_ctrl_cap *caps = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -4483,7 +4483,7 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *acmd, stru
 	const char *controller = "lowest controller identifier to display";
 	const char *num_entries = "number of entries to retrieve";
 
-	_cleanup_free_ struct nvme_secondary_ctrl_list *sc_list = NULL;
+	_cleanup_nvme_free_ struct nvme_secondary_ctrl_list *sc_list = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -4552,8 +4552,8 @@ static int sleep_self_test(unsigned int seconds)
 static int wait_self_test(struct nvme_transport_handle *hdl)
 {
 	static const char spin[] = {'-', '\\', '|', '/' };
-	_cleanup_free_ struct nvme_self_test_log *log = NULL;
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
+	_cleanup_nvme_free_ struct nvme_self_test_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = NULL;
 	int err, i = 0, p = 0, cnt = 0;
 	int wthr;
 
@@ -4688,7 +4688,7 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 	}
 
 	if (cfg.stc == NVME_ST_CODE_RESERVED) {
-		_cleanup_free_ struct nvme_self_test_log *log = NULL;
+		_cleanup_nvme_free_ struct nvme_self_test_log *log = NULL;
 
 		log = nvme_alloc(sizeof(*log));
 		if (!log)
@@ -4751,7 +4751,7 @@ static int self_test_log(int argc, char **argv, struct command *acmd, struct plu
 	const char *dst_entries = "Indicate how many DST log entries to be retrieved, "
 		"by default all the 20 entries will be retrieved";
 
-	_cleanup_free_ struct nvme_self_test_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_self_test_log *log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -4871,8 +4871,8 @@ static bool is_get_feature_result_set(enum nvme_features_id feature_id)
 static int get_feature_id_changed(struct nvme_transport_handle *hdl, struct feat_cfg cfg,
 		nvme_print_flags_t flags)
 {
-	_cleanup_free_ void *buf_def = NULL;
-	_cleanup_free_ void *buf = NULL;
+	_cleanup_nvme_free_ void *buf_def = NULL;
+	_cleanup_nvme_free_ void *buf = NULL;
 	__u64 result_def = 0;
 	__u64 result;
 	int err_def = 0;
@@ -5263,7 +5263,7 @@ static char *nvme_fw_status_reset_type(__u16 status)
 
 static bool fw_commit_support_mud(struct nvme_transport_handle *hdl)
 {
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = NULL;
 	int err;
 
 	ctrl = nvme_alloc(sizeof(*ctrl));
@@ -6598,8 +6598,8 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	nvme_print_flags_t flags = NORMAL;
 	struct nvme_passthru_cmd cmd;
 	__u32 timeout_ms = 600000;
@@ -6868,7 +6868,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ void *buf = NULL;
+	_cleanup_nvme_free_ void *buf = NULL;
 	_cleanup_fd_ int ffd = STDIN_FILENO;
 	int err;
 	__u64 result;
@@ -7013,7 +7013,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
-	_cleanup_free_ void *sec_buf = NULL;
+	_cleanup_nvme_free_ void *sec_buf = NULL;
 	_cleanup_fd_ int sec_fd = -1;
 	unsigned int sec_size;
 	int err;
@@ -7124,7 +7124,7 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ void *buf = NULL;
+	_cleanup_nvme_free_ void *buf = NULL;
 	struct nvme_passthru_cmd cmd;
 	__u32 dw12 = 0;
 	_cleanup_fd_ int ffd = STDIN_FILENO;
@@ -7365,8 +7365,8 @@ static int get_pi_info(struct nvme_transport_handle *hdl,
 		__u32 nsid, __u8 prinfo, __u64 ilbrt, __u64 lbst,
 		unsigned int *logical_block_size, __u16 *metadata_size)
 {
-	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	__u8 sts = 0, pif = 0;
 	unsigned int lbs = 0;
 	__u8 lba_index;
@@ -7428,8 +7428,8 @@ static int init_pi_tags(struct nvme_transport_handle *hdl,
 	struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 ilbrt, __u64 lbst,
 	__u16 lbat, __u16 lbatm)
 {
-	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	__u8 sts = 0, pif = 0;
 	int err = 0;
 
@@ -7612,7 +7612,7 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_dsm_range *dsm = NULL;
+	_cleanup_nvme_free_ struct nvme_dsm_range *dsm = NULL;
 	struct nvme_passthru_cmd cmd;
 	__u32 ctx_attrs[256] = {0,};
 	__u32 nlbs[256] = {0,};
@@ -7753,7 +7753,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	__u32 elbatms[256] = { 0 };
 	__u32 elbats[256] = { 0 };
 
-	_cleanup_free_ union {
+	_cleanup_nvme_free_ union {
 		struct nvme_copy_range f0[256];
 		struct nvme_copy_range_f1 f1[256];
 		struct nvme_copy_range_f2 f2[256];
@@ -8227,8 +8227,8 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_free_ struct nvme_resv_status *status = NULL;
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
+	_cleanup_nvme_free_ struct nvme_resv_status *status = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ctrl *ctrl = NULL;
 	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err, size;
@@ -8323,9 +8323,9 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	unsigned long long buffer_size = 0, mbuffer_size = 0;
-	_cleanup_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
+	_cleanup_nvme_free_ struct nvme_nvm_id_ns *nvm_ns = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	_cleanup_nvme_free_ struct nvme_id_ns *ns = NULL;
 	unsigned int logical_block_size = 0;
 	struct timeval start_time, end_time;
 	_cleanup_free_ void *mbuffer = NULL;
@@ -8787,7 +8787,7 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_free_ void *sec_buf = NULL;
+	_cleanup_nvme_free_ void *sec_buf = NULL;
 	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;
@@ -8880,7 +8880,7 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	struct nvme_passthru_cmd cmd;
-	_cleanup_free_ void *buf = NULL;
+	_cleanup_nvme_free_ void *buf = NULL;
 	nvme_print_flags_t flags;
 	unsigned long buf_len;
 	int err;
@@ -9043,7 +9043,7 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 	nvme_print_flags_t flags = NORMAL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ void *buf = NULL;
+	_cleanup_nvme_free_ void *buf = NULL;
 	struct nvme_passthru_cmd cmd;
 	__u32 dw12 = 0;
 	int err;
@@ -10616,7 +10616,7 @@ static int get_mgmt_addr_list_log(int argc, char **argv, struct command *acmd, s
 	nvme_print_flags_t flags;
 	int err = -1;
 
-	_cleanup_free_ struct nvme_mgmt_addr_list_log *ma_log = NULL;
+	_cleanup_nvme_free_ struct nvme_mgmt_addr_list_log *ma_log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
@@ -10654,7 +10654,7 @@ static int get_rotational_media_info_log(int argc, char **argv, struct command *
 	nvme_print_flags_t flags;
 	int err = -1;
 
-	_cleanup_free_ struct nvme_rotational_media_info_log *info = NULL;
+	_cleanup_nvme_free_ struct nvme_rotational_media_info_log *info = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
@@ -10730,7 +10730,7 @@ static int get_dispersed_ns_psub(struct nvme_transport_handle *hdl, __u32 nsid,
 	return 0;
 
 err_free:
-	free(log);
+	nvme_free(log);
 	return err;
 }
 
@@ -10743,7 +10743,7 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_dispersed_ns_participating_nss_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_dispersed_ns_participating_nss_log *log = NULL;
 
 	struct config {
 		__u32 namespace_id;
@@ -10838,7 +10838,7 @@ static int get_reachability_group_desc(struct nvme_transport_handle *hdl, struct
 	return 0;
 
 err_free:
-	free(log);
+	nvme_free(log);
 	*logp = NULL;
 	return err;
 }
@@ -10874,7 +10874,7 @@ static int get_reachability_groups(struct nvme_transport_handle *hdl, bool rgo, 
 	return 0;
 
 err_free:
-	free(log);
+	nvme_free(log);
 	return err;
 }
 
@@ -10886,7 +10886,7 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *ac
 	nvme_print_flags_t flags;
 	int err;
 	__u64 len = 0;
-	_cleanup_free_ struct nvme_reachability_groups_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_reachability_groups_log *log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
@@ -10949,7 +10949,7 @@ static int get_reachability_association_desc(struct nvme_transport_handle *hdl, 
 	return 0;
 
 err_free:
-	free(log);
+	nvme_free(log);
 	*logp = NULL;
 	return err;
 }
@@ -10985,7 +10985,7 @@ static int get_reachability_associations(struct nvme_transport_handle *hdl, bool
 	return 0;
 
 err_free:
-	free(log);
+	nvme_free(log);
 	return err;
 }
 
@@ -10997,7 +10997,7 @@ static int get_reachability_associations_log(int argc, char **argv, struct comma
 	nvme_print_flags_t flags;
 	int err;
 	__u64 len = 0;
-	_cleanup_free_ struct nvme_reachability_associations_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_reachability_associations_log *log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
@@ -11067,7 +11067,7 @@ static int get_host_discovery(struct nvme_transport_handle *hdl, bool allhoste, 
 	return 0;
 
 err_free:
-	free(log);
+	nvme_free(log);
 	return err;
 }
 
@@ -11077,7 +11077,7 @@ static int get_host_discovery_log(int argc, char **argv, struct command *acmd, s
 	const char *allhoste = "All Host Entries";
 	nvme_print_flags_t flags;
 	int err;
-	_cleanup_free_ struct nvme_host_discover_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_host_discover_log *log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
@@ -11146,7 +11146,7 @@ static int get_ave_discovery(struct nvme_transport_handle *hdl, bool rae, struct
 	return 0;
 
 err_free:
-	free(log);
+	nvme_free(log);
 	return err;
 }
 
@@ -11156,7 +11156,7 @@ static int get_ave_discovery_log(int argc, char **argv, struct command *acmd, st
 	nvme_print_flags_t flags;
 	int err;
 
-	_cleanup_free_ struct nvme_ave_discover_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_ave_discover_log *log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 
@@ -11221,7 +11221,7 @@ static int get_pull_model_ddc_req(struct nvme_transport_handle *hdl,
 	return 0;
 
 err_free:
-	free(log);
+	nvme_free(log);
 	return err;
 }
 
@@ -11232,7 +11232,7 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acm
 	nvme_print_flags_t flags;
 	int err;
 
-	_cleanup_free_ struct nvme_pull_model_ddc_req_log *log = NULL;
+	_cleanup_nvme_free_ struct nvme_pull_model_ddc_req_log *log = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 

@@ -8,18 +8,33 @@
 sources = [
     'nvme/base64.c',
     'nvme/crc32.c',
-    'nvme/fabrics.c',
-    'nvme/filters.c',
     'nvme/ioctl.c',
     'nvme/linux.c',
     'nvme/log.c',
-    'nvme/mi-mctp.c',
-    'nvme/mi.c',
     'nvme/nbft.c',
-    'nvme/sysfs.c',
     'nvme/tree.c',
     'nvme/util.c',
 ]
+
+# Platform-specific sources
+if is_windows
+    # Windows-specific sources (exclude Linux networking, fabrics, and filesystem code)
+    sources += [
+        'nvme/ioctl-windows.c',  # Windows stubs for Linux-specific ioctl functions
+        'nvme/windows.c',  # Windows implementations of linux.h functions
+        'nvme/windows-stubs.c',  # Stubs for excluded functions
+        'platform/windows.c',  # POSIX compatibility implementations
+    ]
+else
+    # Linux-specific sources (include networking and fabrics support)
+    sources += [
+        'nvme/fabrics.c',
+        'nvme/filters.c',
+        'nvme/mi-mctp.c',
+        'nvme/mi.c',
+        'nvme/sysfs.c',
+    ]
+endif
 
 if json_c_dep.found()
     sources += 'nvme/json.c'
@@ -38,19 +53,42 @@ deps = [
     libdbus_dep,
     liburing_dep,
     openssl_dep,
-    accessors_dep,
 ]
 
+# Skipping accessor generation for now on Windows. Needs to be ported.
+if not is_windows
+    deps += [
+        accessors_dep,
+    ]
+endif
+
+# Add Windows-specific networking libraries
+if is_windows
+    deps += [
+        cc.find_library('ws2_32'),
+        cc.find_library('wsock32'),
+        cc.find_library('iphlpapi'),
+        cc.find_library('bcrypt'),  # For BCryptGenRandom in nvme_uuid_random
+    ]
+endif
+
 ldfile = 'libnvme.ld'
+
+libnvme_link_args = [
+    '-Wl,--version-script=@0@'.format(meson.current_source_dir() / ldfile),
+]
+# Skipping accessor generation for now on Windows. Needs to be ported.
+if not is_windows
+    libnvme_link_args += [
+        '-Wl,--version-script=@0@'.format(accessors_ld_full_path),
+    ]
+endif
 
 libnvme = library(
     'nvme', # produces libnvme.so
     sources,
     version: libnvme_so_version,
-    link_args: [
-        '-Wl,--version-script=@0@'.format(meson.current_source_dir() / ldfile),
-        '-Wl,--version-script=@0@'.format(accessors_ld_full_path),
-    ],
+    link_args: libnvme_link_args,
     dependencies: deps,
     install: true,
 )
@@ -108,5 +146,16 @@ install_headers(
         'nvme/mi.h',
     ],
     subdir: 'nvme',
+    install_mode: mode,
+)
+
+# Install platform abstraction headers
+install_headers([
+        'platform/includes.h',
+        'platform/linux.h',
+        'platform/windows.h',
+        'platform/types.h'
+    ],
+    subdir: 'platform',
     install_mode: mode,
 )
