@@ -2253,7 +2253,7 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 			if (discover)
 				_nvmf_discovery(ctx, fctx, true, child);
 
-			if (disconnect) {
+			if (child && disconnect) {
 				nvme_disconnect_ctrl(child);
 				nvme_free_ctrl(child);
 			}
