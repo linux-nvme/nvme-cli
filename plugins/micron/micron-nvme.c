@@ -13,6 +13,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -30,6 +31,7 @@
 #include "nvme-print.h"
 #include "util/cleanup.h"
 #include "util/utils.h"
+#include "util/types.h"
 
 #define CREATE_CMD
 #include "micron-nvme.h"
@@ -4177,4 +4179,328 @@ out:
 	if (err > 0)
 		nvme_show_status(err);
 	return err;
+}
+
+/* Extended SMART log structure with Micron-specific fields in reserved area */
+struct micron_smart_log_ext {
+	struct nvme_smart_log base;
+	/* Access vendor-specific fields via rsvd232 overlay */
+};
+
+/*
+ * OLEC: bytes 232-239 (rsvd232[0:7])
+ * IPM:  bytes 240-243 (rsvd232[8:11])
+ */
+#define SMART_OLEC_OFFSET 0
+#define SMART_IPM_OFFSET  8
+
+static inline __u64 get_smart_olec(struct nvme_smart_log *smart)
+{
+	return le64_to_cpu(*(__le64 *)&smart->rsvd232[SMART_OLEC_OFFSET]);
+}
+
+static inline __u32 get_smart_ipm(struct nvme_smart_log *smart)
+{
+	return le32_to_cpu(*(__le32 *)&smart->rsvd232[SMART_IPM_OFFSET]);
+}
+
+static void print_micron_health_log_normal(struct nvme_smart_log *smart,
+					   const char *devname)
+{
+	__u16 temp = smart->temperature[1] << 8 | smart->temperature[0];
+	__u64 olec = get_smart_olec(smart);
+	__u32 ipm = get_smart_ipm(smart);
+	int i;
+
+	printf("SMART/Health Information Log for %s\n", devname);
+	printf("========================================\n");
+
+	printf("Critical Warning             : 0x%02x\n",
+	       smart->critical_warning);
+	if (smart->critical_warning) {
+		if (smart->critical_warning & 0x01)
+			printf("  - Available spare below threshold\n");
+		if (smart->critical_warning & 0x02)
+			printf("  - Temperature threshold exceeded\n");
+		if (smart->critical_warning & 0x04)
+			printf("  - NVM subsystem reliability degraded\n");
+		if (smart->critical_warning & 0x08)
+			printf("  - Media placed in read-only mode\n");
+		if (smart->critical_warning & 0x10)
+			printf("  - Volatile memory backup failed\n");
+		if (smart->critical_warning & 0x20)
+			printf("  - PMR read-only or unreliable\n");
+	}
+
+	printf("Composite Temperature        : %u K (%d C)\n",
+	       temp, temp ? temp - 273 : 0);
+	printf("Available Spare              : %u%%\n", smart->avail_spare);
+	printf("Available Spare Threshold    : %u%%\n", smart->spare_thresh);
+	printf("Percentage Used              : %u%%\n", smart->percent_used);
+	printf("Endurance Grp Critical Warn  : 0x%02x\n",
+	       smart->endu_grp_crit_warn_sumry);
+
+	printf("Data Units Read              : %s\n",
+	       uint128_t_to_string(le128_to_cpu(smart->data_units_read)));
+	printf("Data Units Written           : %s\n",
+	       uint128_t_to_string(le128_to_cpu(smart->data_units_written)));
+	printf("Host Read Commands           : %s\n",
+	       uint128_t_to_string(le128_to_cpu(smart->host_reads)));
+	printf("Host Write Commands          : %s\n",
+	       uint128_t_to_string(le128_to_cpu(smart->host_writes)));
+	printf("Controller Busy Time         : %s min\n",
+	       uint128_t_to_string(le128_to_cpu(smart->ctrl_busy_time)));
+	printf("Power Cycles                 : %s\n",
+	       uint128_t_to_string(le128_to_cpu(smart->power_cycles)));
+	printf("Power On Hours               : %s\n",
+	       uint128_t_to_string(le128_to_cpu(smart->power_on_hours)));
+	printf("Unsafe Shutdowns             : %s\n",
+	       uint128_t_to_string(le128_to_cpu(smart->unsafe_shutdowns)));
+	printf("Media Errors                 : %s\n",
+	       uint128_t_to_string(le128_to_cpu(smart->media_errors)));
+	printf("Num Error Log Entries        : %s\n",
+	       uint128_t_to_string(le128_to_cpu(smart->num_err_log_entries)));
+
+	printf("Warning Comp Temp Time       : %u min\n",
+	       le32_to_cpu(smart->warning_temp_time));
+	printf("Critical Comp Temp Time      : %u min\n",
+	       le32_to_cpu(smart->critical_comp_time));
+
+	for (i = 0; i < 8; i++) {
+		__u16 ts = le16_to_cpu(smart->temp_sensor[i]);
+
+		if (ts)
+			printf("Temperature Sensor %d         : %u K (%d C)\n",
+			       i + 1, ts, ts - 273);
+	}
+
+	printf("Thm Temp 1 Trans Count       : %u\n",
+	       le32_to_cpu(smart->thm_temp1_trans_count));
+	printf("Thm Temp 2 Trans Count       : %u\n",
+	       le32_to_cpu(smart->thm_temp2_trans_count));
+	printf("Thm Temp 1 Total Time        : %u sec\n",
+	       le32_to_cpu(smart->thm_temp1_total_time));
+	printf("Thm Temp 2 Total Time        : %u sec\n",
+	       le32_to_cpu(smart->thm_temp2_total_time));
+
+	/* Micron-specific extended fields */
+	printf("OLEC (Energy)                : %llu\n",
+	       (unsigned long long)olec);
+	printf("Interval Power Measurement   : %u\n", ipm);
+}
+
+static void print_micron_health_log_json(struct nvme_smart_log *smart,
+					 const char *devname)
+{
+	__u16 temp = smart->temperature[1] << 8 | smart->temperature[0];
+	__u64 olec = get_smart_olec(smart);
+	__u32 ipm = get_smart_ipm(smart);
+	struct json_object *root;
+	int i;
+
+	root = json_create_object();
+
+	json_object_add_value_string(root, "device", devname);
+	json_object_add_value_int(root, "critical_warning",
+				  smart->critical_warning);
+	json_object_add_value_int(root, "temperature_kelvin", temp);
+	json_object_add_value_int(root, "temperature_celsius",
+				  temp ? temp - 273 : 0);
+	json_object_add_value_int(root, "avail_spare", smart->avail_spare);
+	json_object_add_value_int(root, "spare_thresh", smart->spare_thresh);
+	json_object_add_value_int(root, "percent_used", smart->percent_used);
+	json_object_add_value_int(root, "endurance_grp_crit_warn",
+				  smart->endu_grp_crit_warn_sumry);
+
+	json_object_add_value_string(root, "data_units_read",
+		uint128_t_to_string(le128_to_cpu(smart->data_units_read)));
+	json_object_add_value_string(root, "data_units_written",
+		uint128_t_to_string(le128_to_cpu(smart->data_units_written)));
+	json_object_add_value_string(root, "host_reads",
+		uint128_t_to_string(le128_to_cpu(smart->host_reads)));
+	json_object_add_value_string(root, "host_writes",
+		uint128_t_to_string(le128_to_cpu(smart->host_writes)));
+	json_object_add_value_string(root, "ctrl_busy_time",
+		uint128_t_to_string(le128_to_cpu(smart->ctrl_busy_time)));
+	json_object_add_value_string(root, "power_cycles",
+		uint128_t_to_string(le128_to_cpu(smart->power_cycles)));
+	json_object_add_value_string(root, "power_on_hours",
+		uint128_t_to_string(le128_to_cpu(smart->power_on_hours)));
+	json_object_add_value_string(root, "unsafe_shutdowns",
+		uint128_t_to_string(le128_to_cpu(smart->unsafe_shutdowns)));
+	json_object_add_value_string(root, "media_errors",
+		uint128_t_to_string(le128_to_cpu(smart->media_errors)));
+	json_object_add_value_string(root, "num_err_log_entries",
+		uint128_t_to_string(le128_to_cpu(smart->num_err_log_entries)));
+
+	json_object_add_value_uint(root, "warning_temp_time",
+				   le32_to_cpu(smart->warning_temp_time));
+	json_object_add_value_uint(root, "critical_comp_time",
+				   le32_to_cpu(smart->critical_comp_time));
+
+	for (i = 0; i < 8; i++) {
+		__u16 ts = le16_to_cpu(smart->temp_sensor[i]);
+		char key[32];
+
+		if (ts) {
+			sprintf(key, "temp_sensor_%d", i + 1);
+			json_object_add_value_int(root, key, ts - 273);
+		}
+	}
+
+	json_object_add_value_uint(root, "thm_temp1_trans_count",
+				   le32_to_cpu(smart->thm_temp1_trans_count));
+	json_object_add_value_uint(root, "thm_temp2_trans_count",
+				   le32_to_cpu(smart->thm_temp2_trans_count));
+	json_object_add_value_uint(root, "thm_temp1_total_time",
+				   le32_to_cpu(smart->thm_temp1_total_time));
+	json_object_add_value_uint(root, "thm_temp2_total_time",
+				   le32_to_cpu(smart->thm_temp2_total_time));
+
+	/* Micron-specific extended fields */
+	json_object_add_value_uint64(root, "olec", olec);
+	json_object_add_value_uint(root, "ipm", ipm);
+
+	json_print_object(root, NULL);
+	printf("\n");
+	json_free_object(root);
+}
+
+static int micron_health_info(int argc, char **argv, struct command *acmd,
+			      struct plugin *plugin)
+{
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	const char *desc = "Retrieve SMART/Health log for Micron drives";
+	const char *fmt = "output format normal|json";
+	enum eDriveModel eModel = UNKNOWN_MODEL;
+	struct nvme_smart_log smart_log = { 0 };
+	bool is_json = false;
+	int err = 0;
+	struct format {
+		char *fmt;
+	};
+	struct format cfg = {
+		.fmt = "normal",
+	};
+
+	NVME_ARGS(opts,
+		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+
+	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
+	if (err < 0)
+		return err;
+
+	if (eModel == UNKNOWN_MODEL)
+		fprintf(stderr, "WARNING: Unknown drive model\n");
+
+	if (!strcmp(cfg.fmt, "json"))
+		is_json = true;
+
+	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
+	if (err) {
+		fprintf(stderr, "Failed to get SMART log: %s\n",
+			nvme_strerror(err));
+		return err;
+	}
+
+	if (is_json)
+		print_micron_health_log_json(&smart_log, argv[optind]);
+	else
+		print_micron_health_log_normal(&smart_log, argv[optind]);
+
+	return 0;
+}
+
+/*
+ * Identify Controller field offsets for Micron-specific fields
+ * IPMSR: Interval Power Measurement Sample Rate (2 bytes)
+ * MSMT:  Maximum Stop Measurement Time (2 bytes)
+ * PMS:   Power Measurement Support - bit 21 of CTRATT
+ */
+#define ID_CTRL_RSVD388_OFFSET   388
+#define ID_CTRL_IPMSR_OFFSET     392
+#define ID_CTRL_MSMT_OFFSET      394
+#define CTRATT_PMS_BIT           21
+
+static inline __u16 get_id_ctrl_ipmsr(struct nvme_id_ctrl *ctrl)
+{
+	__u8 *p = &ctrl->rsvd388[ID_CTRL_IPMSR_OFFSET - ID_CTRL_RSVD388_OFFSET];
+
+	return le16_to_cpu(*(__le16 *)p);
+}
+
+static inline __u16 get_id_ctrl_msmt(struct nvme_id_ctrl *ctrl)
+{
+	__u8 *p = &ctrl->rsvd388[ID_CTRL_MSMT_OFFSET - ID_CTRL_RSVD388_OFFSET];
+
+	return le16_to_cpu(*(__le16 *)p);
+}
+
+static inline bool get_id_ctrl_pms(struct nvme_id_ctrl *ctrl)
+{
+	return (le32_to_cpu(ctrl->ctratt) >> CTRATT_PMS_BIT) & 0x1;
+}
+
+/* Micron vendor-specific id-ctrl fields display */
+static void micron_id_ctrl_vs(__u8 *vs, struct json_object *root)
+{
+	/* Cast back to get full ctrl structure for our extended fields */
+	struct nvme_id_ctrl *ctrl =
+		(struct nvme_id_ctrl *)(vs - offsetof(struct nvme_id_ctrl, vs));
+	__u16 ipmsr = get_id_ctrl_ipmsr(ctrl);
+	__u16 msmt = get_id_ctrl_msmt(ctrl);
+	bool pms = get_id_ctrl_pms(ctrl);
+
+	if (root) {
+		/* JSON output */
+		json_object_add_value_int(root, "pms", pms ? 1 : 0);
+		json_object_add_value_uint(root, "ipmsr", ipmsr);
+		json_object_add_value_uint(root, "msmt", msmt);
+	} else {
+		/* Normal output */
+		printf("pms       : %u\n", pms ? 1 : 0);
+		printf("ipmsr     : %u\n", ipmsr);
+		printf("msmt      : %u\n", msmt);
+	}
+}
+
+static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
+			  struct plugin *plugin)
+{
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	const char *desc = "Identify Controller with Micron vendor fields";
+	enum eDriveModel eModel = UNKNOWN_MODEL;
+	struct nvme_id_ctrl ctrl = { 0 };
+	nvme_print_flags_t flags;
+	int err = 0;
+
+	NVME_ARGS(opts);
+
+	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
+	if (err < 0)
+		return err;
+
+	if (eModel == UNKNOWN_MODEL) {
+		fprintf(stderr,
+			"WARNING: Drive not recognized as Micron, proceeding anyway\n");
+	}
+
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		fprintf(stderr, "Invalid output format\n");
+		return err;
+	}
+
+	err = nvme_identify_ctrl(hdl, &ctrl);
+	if (err) {
+		fprintf(stderr, "identify controller failed: %s\n",
+			nvme_strerror(err));
+		return err;
+	}
+
+	nvme_show_id_ctrl(&ctrl, flags, micron_id_ctrl_vs);
+
+	return 0;
 }
