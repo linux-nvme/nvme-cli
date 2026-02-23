@@ -2972,6 +2972,8 @@ _nvme () {
 			clear-fw-activate-history':Clear FW activation history'
 			vs-smbus-option':Enable/Disable SMBUS on the drive'
 			ocp-telemetry-log-parse':Parse OCP Telemetry DA1 and DA2 logs'
+			smart-log':Retrieve SMART/Health log with Micron vendor-specific fields'
+			id-ctrl':Identify Controller with Micron vendor-specific fields'
 			help':Display this help'
 			)
 			_arguments '*:: :->subcmds'
