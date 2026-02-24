@@ -156,8 +156,11 @@ int ioctl(int fd, int request, ...)
 		real_ioctl = dlsym(RTLD_NEXT, "ioctl");
 		if (!real_ioctl)
 			fail("Error: dlsym failed to find original ioctl\n");
-#else
+#elif defined(HAVE_GLIBC_IOCTL) && HAVE_GLIBC_IOCTL == 1
 		fprintf(stderr, "Warning: unhandled ioctl %lx\n", request);
+		return -ENOTTY;
+#else
+		fprintf(stderr, "Warning: unhandled ioctl %x\n", request);
 		return -ENOTTY;
 #endif
 	}
