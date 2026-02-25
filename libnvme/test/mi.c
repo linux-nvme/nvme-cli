@@ -13,11 +13,11 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 
-/* we define a custom transport, so need the internal headers */
-#include "nvme/linux.h"
-#include "nvme/private.h"
+#include <libnvme.h>
+#include <libnvme-mi.h>
 
-#include "libnvme-mi.h"
+/* we define a custom transport, so need the internal headers */
+#include "nvme/private.h"
 
 #include "utils.h"
 
