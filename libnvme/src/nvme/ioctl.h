@@ -6970,8 +6970,8 @@ nvme_set_features(struct nvme_transport_handle *hdl, __u32 nsid, __u8 fid,
 	cmd.cdw12 = cdw12;
 	cmd.cdw13 = cdw13;
 	cmd.cdw14 = NVME_FIELD_ENCODE(uidx,
-				      NVME_IDENTIFY_CDW14_UUID_SHIFT,
-				      NVME_IDENTIFY_CDW14_UUID_MASK);
+				      NVME_SET_FEATURES_CDW14_UUID_SHIFT,
+				      NVME_SET_FEATURES_CDW14_UUID_MASK);
 	cmd.cdw15 = cdw15;
 	cmd.data_len = len;
 	cmd.addr = (__u64)(uintptr_t)data;
