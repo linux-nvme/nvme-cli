@@ -25,10 +25,11 @@
 #include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
 
+#include <libnvme.h>
+
 #include "cleanup.h"
 #include "private.h"
 #include "util.h"
-#include "log.h"
 
 /* The bionic libc implementation doesn't define LINE_MAX */
 #ifndef LINE_MAX

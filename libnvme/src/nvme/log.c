@@ -15,10 +15,12 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <time.h>
+
+#include <libnvme.h>
+
+#include "cleanup.h"
 #define LOG_FUNCNAME 1
 #include "private.h"
-#include "log.h"
-#include "cleanup.h"
 
 #ifndef LOG_CLOCK
 #define LOG_CLOCK CLOCK_MONOTONIC

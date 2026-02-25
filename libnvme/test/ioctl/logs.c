@@ -4,8 +4,6 @@
 
 #include "mock.h"
 #include "util.h"
-#include <nvme/ioctl.h>
-#include <nvme/types.h>
 
 #define TEST_FD 0xFD
 #define TEST_NSID 0x12345678
