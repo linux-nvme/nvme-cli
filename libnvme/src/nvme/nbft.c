@@ -13,9 +13,9 @@
 #include <arpa/inet.h>
 #include <ccan/endian/endian.h>
 
+#include <libnvme.h>
+
 #include "private.h"
-#include "nbft.h"
-#include "log.h"
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 

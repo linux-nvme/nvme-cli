@@ -10,7 +10,8 @@
 #include <string.h>
 #include <dirent.h>
 
-#include "filters.h"
+#include <libnvme.h>
+
 #include "private.h"
 
 int nvme_namespace_filter(const struct dirent *d)

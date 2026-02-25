@@ -15,8 +15,8 @@
  * program exists successfully; an ungraceful exit means a bug exists
  * somewhere.
  */
-#include "nvme/ioctl.h"
-#include "nvme/tree.h"
+#include <libnvme.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -28,13 +28,8 @@
 %{
 	#include <ccan/list/list.h>
 	#include <ccan/endian/endian.h>
-	#include "nvme/tree.h"
-	#include "nvme/fabrics.h"
+	#include <libnvme.h>
 	#include "nvme/private.h"
-	#include "nvme/log.h"
-	#include "nvme/ioctl.h"
-	#include "nvme/types.h"
-	#include "nvme/nbft.h"
 
 	static int connect_err = 0;
 	static int discover_err = 0;

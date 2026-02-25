@@ -7,8 +7,9 @@
 #include <sys/ioctl.h>
 #include <dlfcn.h>
 
-#include <nvme/ioctl.h>
-#include <nvme/private.h>
+#include <libnvme.h>
+
+#include "nvme/private.h"
 
 #include "mock.h"
 #include "util.h"
