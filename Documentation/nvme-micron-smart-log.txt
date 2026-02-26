@@ -1,0 +1,54 @@
+nvme-micron-smart-log(1)
+========================
+
+NAME
+----
+nvme-micron-smart-log - Retrieve SMART/Health log with Micron vendor-specific fields
+
+SYNOPSIS
+--------
+[verse]
+'nvme micron smart-log' <device> [--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, retrieves the SMART/Health Information log page
+and displays it with Micron vendor-specific fields decoded.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This command extends the standard SMART log with Micron-specific fields:
+
+OLEC (Operational Lifetime Energy Consumed)::
+	Located at bytes 232-239 in the SMART log reserved area.
+	Reports cumulative energy consumed by the device.
+
+IPM (Interval Power Measurement)::
+	Located at bytes 240-243 in the SMART log reserved area.
+	Reports power measurement over sampling interval.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal' or 'json'.
+	Default is 'normal'.
+
+EXAMPLES
+--------
+* Display SMART log in human-readable format:
++
+------------
+# nvme micron smart-log /dev/nvme0
+------------
+
+* Display SMART log in JSON format:
++
+------------
+# nvme micron smart-log /dev/nvme0 -o json
+------------
+
+NVME
+----
+Part of the nvme-user suite

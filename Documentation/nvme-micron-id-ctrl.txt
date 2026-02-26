@@ -1,0 +1,59 @@
+nvme-micron-id-ctrl(1)
+======================
+
+NAME
+----
+nvme-micron-id-ctrl - Send NVMe Identify Controller with Micron vendor-specific fields
+
+SYNOPSIS
+--------
+[verse]
+'nvme micron id-ctrl' <device> [--output-format=<fmt> | -o <fmt>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends an identify controller command and
+provides the result with Micron vendor-specific fields decoded.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This command extends the standard Identify Controller output with
+Micron-specific fields:
+
+PMS (Power Measurement Support)::
+	Bit 21 of CTRATT (Controller Attributes).
+	Indicates whether the controller supports power measurement.
+
+IPMSR (Interval Power Measurement Sample Rate)::
+	Located at bytes 392-393 in the Identify Controller reserved area.
+	Specifies the sample rate for interval power measurement.
+
+MSMT (Maximum Stop Measurement Time)::
+	Located at bytes 394-395 in the Identify Controller reserved area.
+	Specifies the maximum time to stop power measurement.
+
+OPTIONS
+-------
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal' or 'json'.
+	Default is 'normal'.
+
+EXAMPLES
+--------
+* Display Identify Controller in human-readable format:
++
+------------
+# nvme micron id-ctrl /dev/nvme0
+------------
+
+* Display Identify Controller in JSON format:
++
+------------
+# nvme micron id-ctrl /dev/nvme0 -o json
+------------
+
+NVME
+----
+Part of the nvme-user suite

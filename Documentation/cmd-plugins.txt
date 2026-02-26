@@ -46,6 +46,12 @@ linknvme:nvme-micron-smart-add-log[1]::
 linknvme:nvme-micron-temperature-stats[1]::
 	Retrieves temperature information of given micron device
 
+linknvme:nvme-micron-smart-log[1]::
+	Retrieve SMART/Health log with Micron vendor-specific fields
+
+linknvme:nvme-micron-id-ctrl[1]::
+	Send NVMe Identify Controller with Micron vendor-specific fields
+
 linknvme:nvme-ocp-internal-log[1]::
 	Retrieves and parses OCP Telemetry DA1 and DA2 logs.
 

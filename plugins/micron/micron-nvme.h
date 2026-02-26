@@ -46,6 +46,9 @@ PLUGIN(NAME("micron", "Micron vendor specific extensions", NVME_VERSION),
 		ENTRY("vs-work-load-log", "Retrieve Workload logs", micron_work_load_log)
 		ENTRY("vs-vendor-telemetry-log",
 			"Retrieve Vendor Telemetry logs", micron_vendor_telemetry_log)
+		ENTRY("smart-log", "Retrieve SMART/Health Log",
+		      micron_health_info)
+		ENTRY("id-ctrl", "Identify Controller", micron_id_ctrl)
 	)
 );
 
