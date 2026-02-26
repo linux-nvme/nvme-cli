@@ -6,7 +6,7 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 
-# Skip examples on Windows for now due to missing err.h and other incompatibilities
+# Skip examples on Windows for now.
 if not is_windows
 
 executable(
@@ -93,4 +93,4 @@ if libdbus_dep.found()
     )
 endif
 
-endif # Windows exclusion
+endif # not is_windows

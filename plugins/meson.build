@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-# Plugins that work on all platforms
 plugin_sources = [
     'plugins/amzn/amzn-nvme.c',
     'plugins/dapustor/dapustor-nvme.c',
@@ -23,7 +22,6 @@ plugin_sources = [
     'plugins/virtium/virtium-nvme.c',
 ]
 
-# Plugins with Linux-specific dependencies - exclude on Windows
 if not is_windows
     plugin_sources += [
         'plugins/huawei/huawei-nvme.c',

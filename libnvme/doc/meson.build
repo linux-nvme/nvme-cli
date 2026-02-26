@@ -60,6 +60,7 @@ if is_windows
     endif
 else
     kernel_doc_check = find_program(top_source_dir +'scripts/kernel-doc-check')
+
     test('libnvme - kdoc', kernel_doc_check, args: api_paths)
 endif
 

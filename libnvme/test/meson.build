@@ -45,18 +45,6 @@ if cxx_available
 
 endif
 
-uuid = executable(
-    'test-uuid',
-    ['uuid.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-)
-
-test('libnvme - uuid', uuid)
-
 if not is_windows
     register = executable(
         'test-register',
@@ -101,7 +89,21 @@ if not is_windows
     )
 
     test('libnvme - mi-mctp', mi_mctp)
+endif # not is_windows
 
+uuid = executable(
+    'test-uuid',
+    ['uuid.c'],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+    ],
+)
+
+test('libnvme - uuid', uuid)
+
+if not is_windows
     uriparser = executable(
         'test-uriparser',
         ['uriparser.c'],
@@ -177,4 +179,5 @@ if not is_windows
             dependencies: openssl_dep,
         )
     endif
+
 endif # not is_windows

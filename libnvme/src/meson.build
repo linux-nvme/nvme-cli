@@ -16,9 +16,7 @@ sources = [
     'nvme/util.c',
 ]
 
-# Platform-specific sources
 if is_windows
-    # Windows-specific sources (exclude Linux networking, fabrics, and filesystem code)
     sources += [
         'nvme/ioctl-windows.c',  # Windows stubs for Linux-specific ioctl functions
         'nvme/windows.c',  # Windows implementations of linux.h functions
@@ -26,7 +24,6 @@ if is_windows
         'platform/windows.c',  # POSIX compatibility implementations
     ]
 else
-    # Linux-specific sources (include networking and fabrics support)
     sources += [
         'nvme/fabrics.c',
         'nvme/filters.c',
@@ -50,25 +47,19 @@ deps = [
     ccan_dep,
     json_c_dep,
     keyutils_dep,
-    libdbus_dep,
-    liburing_dep,
     openssl_dep,
+    accessors_dep,
 ]
-
-# Skipping accessor generation for now on Windows. Needs to be ported.
-if not is_windows
-    deps += [
-        accessors_dep,
-    ]
-endif
-
-# Add Windows-specific networking libraries
 if is_windows
     deps += [
-        cc.find_library('ws2_32'),
-        cc.find_library('wsock32'),
-        cc.find_library('iphlpapi'),
-        cc.find_library('bcrypt'),  # For BCryptGenRandom in nvme_uuid_random
+        ws2_32_dep,
+        kernel32_dep,
+        bcrypt_dep,
+    ]
+else
+    deps += [
+        libdbus_dep,
+        liburing_dep,
     ]
 endif
 
