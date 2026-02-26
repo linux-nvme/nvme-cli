@@ -8,7 +8,6 @@
 #include "mock.h"
 #include "util.h"
 
-#define TEST_FD 0xFD
 #define TEST_TIMEOUT 1234
 #define TEST_NSID 0x89ABCDEF
 #define TEST_CDW11 0x11111111

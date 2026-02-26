@@ -14,7 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <linux/types.h>
+#include "platform/includes.h"
 
 struct nvme_global_ctx;
 struct nvme_transport_handle;

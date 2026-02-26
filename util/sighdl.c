@@ -5,6 +5,8 @@
 
 #include "sighdl.h"
 
+#include "platform/includes.h"
+
 bool nvme_sigint_received;
 
 static void nvme_sigint_handler(int signum)

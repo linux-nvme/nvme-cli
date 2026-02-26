@@ -12,8 +12,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <syslog.h>
-#include <unistd.h>
+#include "platform/includes.h"
 #include <time.h>
 #define LOG_FUNCNAME 1
 #include "private.h"

@@ -28,7 +28,7 @@
 #include "nvme-print.h"
 #include "libnvme.h"
 #include "plugin.h"
-#include "linux/types.h"
+#include "platform/types.h"
 #include "util/cleanup.h"
 
 #define CREATE_CMD

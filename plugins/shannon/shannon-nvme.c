@@ -10,7 +10,7 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
-#include "linux/types.h"
+#include "platform/types.h"
 #include "nvme-print.h"
 
 #define CREATE_CMD
@@ -230,7 +230,7 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 			cfg.cdw11, 0, buf, cfg.data_len, &result);
 	if (err > 0)
 		nvme_show_status(err);
-	free(buf);
+	platform_aligned_free(buf);
 	return err;
 }
 
@@ -255,7 +255,7 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 	const char *save = "specifies that the controller shall save the attribute";
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_free_ void *buf = NULL;
+	_cleanup_nvme_free_ void *buf = NULL;
 	int ffd = STDIN_FILENO;
 	__u64 result;
 	int err;

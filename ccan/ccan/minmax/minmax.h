@@ -21,6 +21,10 @@
 	do { } while (0)
 #endif
 
+/* Undefine any existing min/max macros. */
+#undef min
+#undef max
+
 #define min(a, b) \
 	({ \
 		typeof(a) _a = (a); \

@@ -11,7 +11,7 @@
 #include "common.h"
 #include "libnvme.h"
 #include "plugin.h"
-#include "linux/types.h"
+#include "platform/types.h"
 #include "nvme-print.h"
 
 #define CREATE_CMD
@@ -860,7 +860,7 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 	}
 
 out_free:
-	free(fw_buf);
+	platform_aligned_free(fw_buf);
 out_close:
 	close(fw_fd);
 out:
