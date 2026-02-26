@@ -21,7 +21,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Allow workspace
         run: |
@@ -35,7 +35,7 @@ jobs:
         run: |
           pipx run twine check dist/*.tar.gz
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           path: dist/*.tar.gz
           retention-days: 5
@@ -49,7 +49,7 @@ jobs:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
       - name: Check out repository (with tags)
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0  # Required for `git describe`
 
@@ -93,7 +93,7 @@ jobs:
         run: |
           pipx run twine check dist/*.tar.gz
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: test_pypi
           path: dist/*.tar.gz
@@ -109,13 +109,13 @@ jobs:
       id-token: write
     if: github.repository == 'linux-nvme/nvme-cli'
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: test_pypi
           path: dist
 
       - name: Publish package to TestPyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
         with:
           repository-url: https://test.pypi.org/legacy/
 
@@ -137,12 +137,12 @@ jobs:
            fi
 
       - name: Download artifiact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         if: steps.check-tag.outputs.match == 'true'
         with:
           name: artifact
           path: dist
 
       - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
         if: steps.check-tag.outputs.match == 'true'

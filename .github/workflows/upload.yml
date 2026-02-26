@@ -15,7 +15,7 @@ jobs:
     outputs:
       VERSION: ${{ steps.build.outputs.VERSION }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
@@ -37,7 +37,7 @@ jobs:
             cp .build-ci/nvme "upload/nvme-cli-${VERSION}-x86_64"
           fi
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         name: upload artifacts to github
         with:
           name: nvme-cli
@@ -49,13 +49,13 @@ jobs:
     needs: build-static
     if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: nvme-cli
           path: upload
 
       - name: FTP Deployer
-        uses: sand4rt/ftp-deployer@v1.8
+        uses: sand4rt/ftp-deployer@518beaad91d1b18fd55a69321de7ed89080d2ae3 # v1.8
         with:
           sftp: true
           host: ${{ secrets.SFTP_SERVER }}
@@ -76,12 +76,12 @@ jobs:
       VERSION: ${{ needs.build-static.outputs.VERSION }}
     if: ${{ github.event_name == 'release' }}
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: nvme-cli
           path: upload
       - name: upload versioned binary
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: upload/nvme-cli-${{ env.VERSION }}-x86_64
