@@ -139,6 +139,19 @@ jobs:
         run: |
           make static
 
+  build-musl:
+    name: build with musl standard C library
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: build
+        run: |
+          CC=musl-gcc scripts/build.sh musl
+
   build-distro:
     name: build libnvme and nvme-cli separately
     runs-on: ubuntu-latest
