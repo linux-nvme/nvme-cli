@@ -1,6 +1,0 @@
----
-ignore:
-  - 'subprojects'
-  - 'ccan'
-  - 'test'
-  - 'examples'
