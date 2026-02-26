@@ -20,7 +20,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian.python:latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.event.inputs.ref || github.ref }}
           fetch-depth: 0
@@ -67,7 +67,7 @@ jobs:
             --form description="Automated Coverity Scan from ${{ github.event_name }}" \
             https://scan.coverity.com/builds?project=linux-nvme%2Fnvme-cli
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         name: upload coverity artifacts
         if: failure()
         with:
