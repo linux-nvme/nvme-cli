@@ -11,12 +11,14 @@
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <dirent.h>
 #include <time.h>
 
+#include <libnvme.h>
+
 #include "common.h"
 #include "nvme.h"
-#include "libnvme.h"
 #include "plugin.h"
 #include "linux/types.h"
 #include "nvme-print.h"

@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <sys/ioctl.h>
+
 #ifdef CONFIG_OPENSSL
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
@@ -33,13 +35,12 @@
 
 #include <ccan/endian/endian.h>
 
-#include "cleanup.h"
-#include "linux.h"
-#include "tree.h"
-#include "log.h"
-#include "private.h"
-#include "base64.h"
+#include <libnvme.h>
+
 #include "crc32.h"
+#include "base64.h"
+#include "cleanup.h"
+#include "private.h"
 
 void nvme_set_dry_run(struct nvme_global_ctx *ctx, bool enable)
 {

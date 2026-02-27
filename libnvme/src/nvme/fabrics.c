@@ -7,7 +7,6 @@
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
-#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -33,15 +32,12 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/str/str.h>
 
+#include <libnvme.h>
+
 #include "cleanup.h"
-#include "fabrics.h"
-#include "linux.h"
-#include "ioctl.h"
-#include "nbft.h"
-#include "nvme/tree.h"
-#include "util.h"
 #include "log.h"
 #include "private.h"
+#include "util.h"
 
 #define NVMF_HOSTID_SIZE	37
 

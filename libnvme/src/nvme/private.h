@@ -69,10 +69,21 @@ struct linux_passthru_cmd64 {
 	__u64   result;
 };
 
+#define NVME_IOCTL_ID		_IO('N', 0x40)
+#define NVME_IOCTL_RESET	_IO('N', 0x44)
+#define NVME_IOCTL_SUBSYS_RESET	_IO('N', 0x45)
+#define NVME_IOCTL_RESCAN	_IO('N', 0x46)
+
 #define NVME_IOCTL_ADMIN_CMD	_IOWR('N', 0x41, struct linux_passthru_cmd32)
 #define NVME_IOCTL_IO_CMD	_IOWR('N', 0x43, struct linux_passthru_cmd32)
 #define NVME_IOCTL_ADMIN64_CMD  _IOWR('N', 0x47, struct linux_passthru_cmd64)
 #define NVME_IOCTL_IO64_CMD     _IOWR('N', 0x48, struct linux_passthru_cmd64)
+
+/* io_uring async commands: */
+#define NVME_URING_CMD_IO	_IOWR('N', 0x80, struct nvme_uring_cmd)
+#define NVME_URING_CMD_IO_VEC	_IOWR('N', 0x81, struct nvme_uring_cmd)
+#define NVME_URING_CMD_ADMIN	_IOWR('N', 0x82, struct nvme_uring_cmd)
+#define NVME_URING_CMD_ADMIN_VEC _IOWR('N', 0x83, struct nvme_uring_cmd)
 
 struct nvme_log {
 	int fd;

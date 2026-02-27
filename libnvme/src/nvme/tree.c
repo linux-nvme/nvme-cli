@@ -25,16 +25,11 @@
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 
+#include <libnvme.h>
+
 #include "cleanup.h"
-#include "ioctl.h"
-#include "linux.h"
-#include "filters.h"
-#include "tree.h"
-#include "filters.h"
-#include "util.h"
-#include "fabrics.h"
-#include "log.h"
 #include "private.h"
+#include "util.h"
 
 /**
  * struct candidate_args - Used to look for a controller matching these parameters

@@ -6,7 +6,7 @@
  * Authors: Daniel Wagner <dwagner@suse.de>
  */
 
-#include "tree.h"
+#include <libnvme.h>
 
 #include <errno.h>
 

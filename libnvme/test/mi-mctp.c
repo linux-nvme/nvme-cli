@@ -13,14 +13,16 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
-
+#include <sys/ioctl.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 
-#include "libnvme-mi.h"
-#include "nvme/linux.h"
+#include <libnvme.h>
+#include <libnvme-mi.h>
+
 #include "nvme/private.h"
+
 #include "utils.h"
 
 #if HAVE_LINUX_MCTP_H

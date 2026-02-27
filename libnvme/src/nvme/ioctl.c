@@ -12,7 +12,6 @@
 #include <liburing.h>
 #endif
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -26,7 +25,8 @@
 #include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
 
-#include "ioctl.h"
+#include <libnvme.h>
+
 #include "private.h"
 
 static int nvme_verify_chr(struct nvme_transport_handle *hdl)

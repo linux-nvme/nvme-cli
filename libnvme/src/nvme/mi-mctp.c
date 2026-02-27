@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <sys/ioctl.h>
 
 #if HAVE_LINUX_MCTP_H
 #include <linux/mctp.h>
@@ -34,9 +35,10 @@
 #define MCTP_DBUS_IFACE_ENDPOINT "xyz.openbmc_project.MCTP.Endpoint"
 #endif
 
+#include <libnvme.h>
+#include <libnvme-mi.h>
+
 #include "private.h"
-#include "log.h"
-#include "mi.h"
 
 
 #if !defined(AF_MCTP)

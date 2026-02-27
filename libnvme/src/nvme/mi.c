@@ -17,9 +17,9 @@
 #include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
 
-#include "log.h"
-#include "mi.h"
-#include "linux.h"
+#include <libnvme.h>
+#include <libnvme-mi.h>
+
 #include "private.h"
 
 #define NUM_ENABLES    (256u)

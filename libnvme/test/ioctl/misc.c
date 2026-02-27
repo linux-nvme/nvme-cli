@@ -4,8 +4,7 @@
 
 #include "mock.h"
 #include "util.h"
-#include <nvme/ioctl.h>
-#include <nvme/types.h>
+
 #include <string.h>
 #include <inttypes.h>
 

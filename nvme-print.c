@@ -8,8 +8,9 @@
 #include <sys/stat.h>
 #include <locale.h>
 
+#include <libnvme.h>
+
 #include "nvme.h"
-#include "libnvme.h"
 #include "nvme-print.h"
 #include "nvme-models.h"
 #include "util/suffix.h"

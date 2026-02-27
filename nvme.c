@@ -47,6 +47,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 
 #if HAVE_SYS_RANDOM
 	#include <sys/random.h>
@@ -6808,8 +6809,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	printf("Success formatting namespace:%x\n", cfg.namespace_id);
 	if (nvme_transport_handle_is_direct(hdl) && cfg.lbaf != prev_lbaf) {
 		if (nvme_transport_handle_is_chardev(hdl)) {
-			if (ioctl(nvme_transport_handle_get_fd(hdl),
-				  NVME_IOCTL_RESCAN) < 0) {
+			if (nvme_ns_rescan(hdl) < 0) {
 				nvme_show_error("failed to rescan namespaces");
 				return -errno;
 			}
