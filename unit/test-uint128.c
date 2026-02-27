@@ -49,16 +49,30 @@ static struct tostr_test tostr_tests[] = {
 void tostr_test(struct tostr_test *test)
 {
 	char *str;
+	const char *exp = test->exp;
 
 	if (!setlocale(LC_NUMERIC, test->locale))
 		return;
 
-	if (test->locale)
-		str = uint128_t_to_l10n_string(test->val);
-	else
-		str = uint128_t_to_string(test->val);
+	if (test->locale) {
+		/* For locale tests, adapt to what the system provides.
+		 * musl libc may not support thousands_sep for all locales. */
+		struct lconv *lc = localeconv();
+		const char *sep = lc->thousands_sep;
 
-	check_str(test->val, test->exp, str);
+		if (!sep || !*sep) {
+			/* No separator available, skip test */
+			fprintf(stderr, "WARNING: thousands_sep is empty for"
+				"this system's %s locale! Skipping test...\n",
+				test->locale);
+			return;
+		}
+		str = uint128_t_to_l10n_string(test->val);
+	} else {
+		str = uint128_t_to_string(test->val);
+	}
+
+	check_str(test->val, exp, str);
 }
 
 int main(void)

@@ -12,6 +12,10 @@
 #include <string.h>
 #include <errno.h>
 
+#ifndef _GNU_SOURCE
+#include <libgen.h>
+#endif
+
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -83,7 +87,7 @@ static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl
 {
 	struct nvme_passthru_cmd dummy = { 0 };
 	_cleanup_free_ char *path = NULL;
-	char *name = basename(devname);
+	const char *name = nvme_basename(devname);
 	int ret, id, ns;
 	bool c = true;
 

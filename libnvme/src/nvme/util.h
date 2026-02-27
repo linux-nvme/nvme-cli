@@ -785,4 +785,12 @@ const char *nvme_iface_matching_addr(const struct ifaddrs *iface_list, const cha
  */
 bool nvme_iface_primary_addr_matches(const struct ifaddrs *iface_list, const char *iface, const char *addr);
 
+/**
+ * nvme_basename - Return the final path component (the one after the last '/')
+ * @path: A string containing a filesystem path
+ *
+ * Return: A pointer into the original null-terminated path string.
+ */
+char *nvme_basename(const char *path);
+
 #endif /* _LIBNVME_UTIL_H */

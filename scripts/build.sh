@@ -82,6 +82,23 @@ config_meson_default() {
         "${BUILDDIR}"
 }
 
+config_meson_musl() {
+    local c_args="-U_GNU_SOURCE \
+-idirafter /usr/include -idirafter \
+/usr/include/x86_64-linux-gnu"
+
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        -Dc_args="${c_args}"                    \
+        -Ddefault_library=static                \
+        -Djson-c=disabled                       \
+        -Dopenssl=disabled                      \
+        -Dkeyutils=disabled                     \
+        -Dpython=disabled                       \
+        "${BUILDDIR}"
+}
+
 config_meson_libdbus() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
