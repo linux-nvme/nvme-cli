@@ -14,8 +14,9 @@
 #include <ccan/htable/htable.h>
 #include <ccan/hash/hash.h>
 
+#include <libnvme.h>
+
 #include "nvme.h"
-#include "libnvme.h"
 #include "nvme-print.h"
 #include "nvme-models.h"
 #include "util/suffix.h"

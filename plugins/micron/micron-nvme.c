@@ -23,9 +23,11 @@
 #include <stddef.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#include <libnvme.h>
+
 #include "common.h"
 #include "nvme.h"
-#include "libnvme.h"
 #include <limits.h>
 #include "linux/types.h"
 #include "nvme-print.h"

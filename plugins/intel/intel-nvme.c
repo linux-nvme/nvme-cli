@@ -6,9 +6,10 @@
 #include <unistd.h>
 #include <inttypes.h>
 
+#include <libnvme.h>
+
 #include "common.h"
 #include "nvme.h"
-#include "libnvme.h"
 #include "plugin.h"
 #include "linux/types.h"
 #include "nvme-print.h"
