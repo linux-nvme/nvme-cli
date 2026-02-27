@@ -14,6 +14,7 @@ extern "C" {
 #endif
 
 #include <nvme/types.h>
+#include <nvme/cmds.h>
 #include <nvme/mi.h>
 #include <nvme/log.h>
 
