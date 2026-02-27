@@ -103,6 +103,7 @@ sysconfdir     = join_paths(prefixdir, get_option('sysconfdir'))
 udevrulesdir   = join_paths(prefixdir, get_option('udevrulesdir'))
 dracutrulesdir = join_paths(prefixdir, get_option('dracutrulesdir'))
 systemddir     = join_paths(prefixdir, get_option('systemddir'))
+nmdispatchdir  = join_paths(prefixdir, get_option('nmdispatchdir'))
 rundir         = join_paths(prefixdir, get_option('rundir'))
 
 std_prefix = prefixdir == '/usr' or prefixdir == '/usr/local'
@@ -571,6 +572,21 @@ if want_nvme
         )
     endforeach
 
+    nm_dispatcher_files = [
+        '80-nvmf-connect-nbft.sh'
+    ]
+
+    foreach file : nm_dispatcher_files
+        configure_file(
+            input: 'nvmf-autoconnect/nm-dispatcher/' + file + '.in',
+            output: file,
+            configuration: substs,
+            install: true,
+            install_mode: 'rwxr-xr-x',
+            install_dir: nmdispatchdir
+        )
+    endforeach
+
     install_data(
         'completions/bash-nvme-completion.sh',
         rename: 'nvme',
@@ -596,6 +612,7 @@ path_dict = {
     'dracutrulesdir':   dracutrulesdir,
     'rundir':           rundir,
     'systemddir':       systemddir,
+    'nmdispatchdir':    nmdispatchdir,
     'build location':   meson.current_build_dir(),
 }
 summary(path_dict, section: 'Paths')
