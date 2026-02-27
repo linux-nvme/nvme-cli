@@ -1,0 +1,27 @@
+#! /bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# If an interface is brought up that is configured in the NVMeoF
+# Boot Firmware Table (NBFT), try to establish possibly missing
+# NVMe connections from the NBFT.
+# This can happen if an interface couldn't be brought up during
+# initramfs processing, but is activated later on.
+
+start_nvmf=
+
+if [ "$2" = up ]; then
+    case $1 in
+	nbft*)
+	    start_nvmf=yes
+	    ;;
+    esac
+    case $CONNECTION_ID in
+        "NBFT connection HFI"*)
+	    start_nvmf=yes
+            ;;
+    esac
+fi
+
+if [ "$start_nvmf" ]; then
+    @SYSTEMCTL@ --no-block start nvmf-connect-nbft.service || true
+fi
