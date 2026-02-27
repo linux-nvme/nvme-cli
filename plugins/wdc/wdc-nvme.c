@@ -1962,6 +1962,7 @@ static __u64 wdc_get_drive_capabilities(struct nvme_global_ctx *ctx, struct nvme
 					WDC_DRIVE_CAP_OCP_C5_LOG_PAGE |
 					WDC_DRIVE_CAP_UDUI |
 					WDC_DRIVE_CAP_VU_FID_CLEAR_PCIE |
+					WDC_DRIVE_CAP_CLEAR_ASSERT |
 					WDC_DRIVE_CAP_CLOUD_SSD_VERSION |
 					WDC_DRIVE_CAP_LOG_PAGE_DIR |
 					WDC_DRIVE_CAP_DRIVE_STATUS |
@@ -3396,6 +3397,13 @@ static int wdc_do_cap_diag(struct nvme_global_ctx *ctx, struct nvme_transport_ha
 	memset(log_hdr, 0, e6_log_hdr_size);
 
 	if (type == WDC_TELEMETRY_TYPE_NONE) {
+		if (data_area) {
+			fprintf(stderr,
+				"%s: ERROR: Data area parameter is not supported when type is NONE\n",
+				__func__);
+			ret = -1;
+			goto out;
+		}
 		ret = wdc_dump_length_e6(hdl,
 							WDC_NVME_CAP_DIAG_OPCODE,
 							WDC_NVME_CAP_DIAG_HEADER_TOC_SIZE>>2,
@@ -4295,15 +4303,16 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 	const char *size = "Data retrieval transfer size.";
 	const char *data_area =
 		"Data area to retrieve up to. Supported for telemetry, see man page for other use cases.";
-	const char *file_size =
-		"Output file size. See man page for supported devices.";
-	const char *offset =
-		"Output file data offset. See man page for supported devices.";
 	const char *type =
 		"Telemetry type - NONE, HOST, or CONTROLLER:\n" \
 		"  NONE - Default, capture without using NVMe telemetry.\n" \
 		"  HOST - Host-initiated telemetry.\n" \
 		"  CONTROLLER - Controller-initiated telemetry.";
+	const char *verbose = "Display more debug messages.";
+	const char *file_size =
+		"Output file size. Deprecated, see man page for supported devices.";
+	const char *offset =
+		"Output file data offset. Deprecated, see man page for supported devices.";
 	char f[PATH_MAX] = {0};
 	char fb[PATH_MAX/2] = {0};
 	char fileSuffix[PATH_MAX] = {0};
@@ -4326,6 +4335,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 		__u64 file_size;
 		__u64 offset;
 		char *type;
+		bool verbose;
 	};
 
 	struct config cfg = {
@@ -4335,15 +4345,18 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 		.file_size = 0,
 		.offset = 0,
 		.type = NULL,
+		.verbose = false,
 	};
 
 	NVME_ARGS(opts,
 		OPT_FILE("output-file",   'o', &cfg.file,      file),
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
+		OPT_FILE("type",          't', &cfg.type,      type),
+		OPT_FLAG("verbose",       'v', &cfg.verbose,   verbose),
 		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
 		OPT_LONG("offset",        'e', &cfg.offset,    offset),
-		OPT_FILE("type",          't', &cfg.type,      type));
+		OPT_END());
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -4468,7 +4481,8 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
 		if (!wdc_is_sn861(device_id)) {
-			if (wdc_get_default_telemetry_da(hdl, &telemetry_data_area)) {
+			if (telemetry_type != WDC_TELEMETRY_TYPE_NONE &&
+			    wdc_get_default_telemetry_da(hdl, &telemetry_data_area)) {
 				fprintf(stderr, "%s: Error determining default telemetry data area\n",
 					__func__);
 				return -EINVAL;

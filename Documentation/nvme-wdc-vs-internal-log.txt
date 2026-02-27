@@ -47,23 +47,6 @@ OPTIONS
 	SN340, SN350, SN530, SN570, SN730, SN740, SN840, SN850X, SN5000,
 	SN5100S, SN7000S, SN7100, and SN7150 devices.
 
--f <FILE SIZE>::
---file-size=<FILE SIZE>::
-	Specifies the desired size of the data file starting at the passed in
-	offset. This allows the user to retrieve the data in several smaller
-	files of the passed in size. This parameter is only supported on the
-	devices mentioned in the documentation of the --data-area parameter,
-	and only for capture with --type=NONE or --type not specified.
-
--e <OFFSET>::
---offset=<OFFSET>::
-	Specifies the data offset at which to start retrieving the data. This
-	parameter is used in combination with the file size parameter to
-	retrieve the data in several smaller files. This parameter is only
-	supported on the devices mentioned in the documentation of the
-	--data-area parameter, and only for capture with --type=NONE or --type
-	not specified.
-
 -t <TYPE>::
 --type=<TYPE>::
 	Specifies the telemetry type - NONE, HOST, or CONTROLLER. This parameter
@@ -74,6 +57,23 @@ OPTIONS
 -v <VERBOSE>::
 --verbose=<VERBOSE>::
 	Provides additional debug messages for certain drives.
+
+-f <FILE SIZE>::
+--file-size=<FILE SIZE>::
+	Deprecated. Specifies the desired size of the data file starting at the
+	passed in offset. This allows the user to retrieve the data in several
+	smaller files of the passed in size. This parameter is only supported on
+	the devices mentioned in the documentation of the --data-area parameter,
+	and only for capture with --type=NONE or --type not specified.
+
+-e <OFFSET>::
+--offset=<OFFSET>::
+	Deprecated. Specifies the data offset at which to start retrieving the
+	data. This parameter is used in combination with the file size parameter
+	to retrieve the data in several smaller files. This parameter is only
+	supported on the devices mentioned in the documentation of the
+	--data-area parameter, and only for capture with --type=NONE or --type
+	not specified.
 
 EXAMPLES
 --------

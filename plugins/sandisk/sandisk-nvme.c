@@ -91,6 +91,11 @@ static int sndk_do_cap_telemetry_log(struct nvme_global_ctx *ctx,
 		}
 		host_gen = 0;
 		ctrl_init = 1;
+	} else if (type == SNDK_TELEMETRY_TYPE_BOTH) {
+		fprintf(stderr,
+			"%s: BOTH type should be handled by sndk_do_cap_both_telemetry_log\n",
+			__func__);
+		return -EINVAL;
 	} else {
 		fprintf(stderr, "%s: Invalid type parameter; type = %d\n", __func__, type);
 		return -EINVAL;
@@ -173,6 +178,80 @@ close_output:
 	return err;
 }
 
+static int sndk_do_cap_both_telemetry_log(struct nvme_global_ctx *ctx,
+					  struct nvme_transport_handle *hdl,
+					  const char *tar_file, __u32 bs,
+					  int data_area)
+{
+	char host_file[PATH_MAX] = {0};
+	char controller_file[PATH_MAX] = {0};
+	char tar_cmd[PATH_MAX * 3] = {0};
+	char *base_name;
+	int ret = 0;
+
+	base_name = strdup(tar_file);
+	if (!base_name) {
+		fprintf(stderr, "%s: Memory allocation failed\n", __func__);
+		return -ENOMEM;
+	}
+	
+	/* Remove .tar extension if present */
+	char *tar_ext = strstr(base_name, ".tar");
+	if (tar_ext)
+		*tar_ext = '\0';
+	
+	/* Create temporary files for host and controller telemetry */
+	snprintf(host_file, PATH_MAX, "%s_host_telemetry.bin", base_name);
+	snprintf(controller_file, PATH_MAX, "%s_controller_telemetry.bin",
+		 base_name);
+	
+	fprintf(stderr, "%s: Capturing HOST telemetry to %s\n", __func__,
+		host_file);
+	ret = sndk_do_cap_telemetry_log(ctx, hdl, host_file, bs,
+					SNDK_TELEMETRY_TYPE_HOST, data_area);
+	if (ret) {
+		fprintf(stderr, "%s: Failed to capture HOST telemetry: %d\n",
+			__func__, ret);
+		goto cleanup;
+	}
+	
+	fprintf(stderr, "%s: Capturing CONTROLLER telemetry to %s\n", __func__,
+		controller_file);
+	ret = sndk_do_cap_telemetry_log(ctx, hdl, controller_file, bs,
+					SNDK_TELEMETRY_TYPE_CONTROLLER,
+					data_area);
+	if (ret) {
+		fprintf(stderr,
+			"%s: Failed to capture CONTROLLER telemetry: %d\n",
+			__func__, ret);
+		goto cleanup_host;
+	}
+	
+	/* Create tar file containing both telemetry files */
+	fprintf(stderr, "%s: Creating tar file %s\n", __func__, tar_file);
+	snprintf(tar_cmd, sizeof(tar_cmd), "tar -cf \"%s\" \"%s\" \"%s\"",
+		 tar_file, host_file, controller_file);
+	
+	ret = system(tar_cmd);
+	if (ret) {
+		fprintf(stderr, "%s: Failed to create tar file: %s\n",
+			__func__, tar_file);
+		ret = -1;
+	} else {
+		fprintf(stderr, "%s: Successfully created tar file: %s\n",
+			__func__, tar_file);
+		ret = 0;
+	}
+	
+	/* Clean up temporary files */
+	unlink(controller_file);
+cleanup_host:
+	unlink(host_file);
+cleanup:
+	free(base_name);
+	return ret;
+}
+
 static __u32 sndk_dump_udui_data(struct nvme_transport_handle *hdl,
 				 __u32 dataLen, __u32 offset, __u8 *dump_data)
 {
@@ -196,8 +275,7 @@ static __u32 sndk_dump_udui_data(struct nvme_transport_handle *hdl,
 }
 
 static int sndk_do_cap_udui(struct nvme_transport_handle *hdl, char *file,
-			    __u32 xfer_size, int verbose, __u64 file_size,
-			    __u64 offset)
+			    __u32 xfer_size, int verbose)
 {
 	int ret = 0;
 	int output;
@@ -206,6 +284,7 @@ static int sndk_do_cap_udui(struct nvme_transport_handle *hdl, char *file,
 	__u32 udui_log_hdr_size = sizeof(struct nvme_telemetry_log);
 	__u32 chunk_size = xfer_size;
 	__u64 total_size;
+	__u64 offset = 0;
 
 	log = (struct nvme_telemetry_log *)malloc(udui_log_hdr_size);
 	if (!log) {
@@ -225,14 +304,6 @@ static int sndk_do_cap_udui(struct nvme_transport_handle *hdl, char *file,
 	}
 
 	total_size = (le32_to_cpu(log->dalb4) + 1) * 512;
-	if (offset > total_size) {
-		fprintf(stderr, "%s: ERROR: SNDK: offset larger than log length = 0x%"PRIx64"\n",
-			__func__, (uint64_t)total_size);
-		goto out;
-	}
-
-	if (file_size && (total_size - offset) > file_size)
-		total_size = offset + file_size;
 
 	log = (struct nvme_telemetry_log *)realloc(log, chunk_size);
 
@@ -311,15 +382,17 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	const char *size = "Data retrieval transfer size.";
 	const char *data_area =
 		"Data area to retrieve up to. Supported for telemetry, see man page for other use cases.";
+	const char *type =
+		"Telemetry type - NONE, HOST, CONTROLLER, or BOTH:\n" \
+		"  NONE - Default, capture without using NVMe telemetry.\n" \
+		"  HOST - Host-initiated telemetry.\n" \
+		"  CONTROLLER - Controller-initiated telemetry.\n" \
+		"  BOTH - Both HOST and CONTROLLER telemetry packaged in tar file.";
+	const char *verbose = "Display more debug messages.";
 	const char *file_size =
 		"Output file size. Deprecated, see man page for supported devices.";
 	const char *offset =
 		"Output file data offset. Deprecated, see man page for supported devices.";
-	const char *type =
-		"Telemetry type - NONE, HOST, or CONTROLLER:\n" \
-		"  NONE - Default, capture without using NVMe telemetry.\n" \
-		"  HOST - Host-initiated telemetry.\n" \
-		"  CONTROLLER - Controller-initiated telemetry.";
 	char f[PATH_MAX] = {0};
 	char fileSuffix[PATH_MAX] = {0};
 	__u32 xfer_size = 0;
@@ -339,6 +412,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		__u64 file_size;
 		__u64 offset;
 		char *type;
+		bool verbose;
 	};
 
 	struct config cfg = {
@@ -348,15 +422,18 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		.file_size = 0,
 		.offset = 0,
 		.type = NULL,
+		.verbose = false,
 	};
 
 	NVME_ARGS(opts,
 		OPT_FILE("output-file",   'o', &cfg.file,      file),
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
+		OPT_FILE("type",          't', &cfg.type,      type),
+		OPT_FLAG("verbose",       'v', &cfg.verbose,   verbose),
 		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
 		OPT_LONG("offset",        'e', &cfg.offset,    offset),
-		OPT_FILE("type",          't', &cfg.type,      type));
+		OPT_END());
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -385,6 +462,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 			goto out;
 		}
 		close(verify_file);
+		remove(cfg.file);
 		strncpy(f, cfg.file, PATH_MAX - 1);
 	} else {
 		sndk_UtilsGetTime(&timeInfo);
@@ -423,54 +501,67 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 
 	if (!cfg.type || !strcmp(cfg.type, "NONE") || !strcmp(cfg.type, "none")) {
 		telemetry_type = SNDK_TELEMETRY_TYPE_NONE;
-		data_area = 0;
+		telemetry_data_area = 0;
 	} else if (!strcmp(cfg.type, "HOST") || !strcmp(cfg.type, "host")) {
 		telemetry_type = SNDK_TELEMETRY_TYPE_HOST;
 		telemetry_data_area = cfg.data_area;
 	} else if (!strcmp(cfg.type, "CONTROLLER") || !strcmp(cfg.type, "controller")) {
 		telemetry_type = SNDK_TELEMETRY_TYPE_CONTROLLER;
 		telemetry_data_area = cfg.data_area;
+	} else if (!strcmp(cfg.type, "BOTH") || !strcmp(cfg.type, "both")) {
+		telemetry_type = SNDK_TELEMETRY_TYPE_BOTH;
+		telemetry_data_area = cfg.data_area;
 	} else {
 		fprintf(stderr,
-			"ERROR: SNDK: Invalid type - Must be NONE, HOST or CONTROLLER\n");
+			"ERROR: SNDK: Invalid type - Must be NONE, HOST, CONTROLLER, or BOTH\n");
 		ret = -1;
 		goto out;
 	}
 
 	capabilities = sndk_get_drive_capabilities(ctx, hdl);
 
-	/* Supported through WDC plugin for non-telemetry */
-	if ((capabilities & SNDK_DRIVE_CAP_INTERNAL_LOG) &&
+	if ((capabilities & SNDK_DRIVE_CAP_INTERNAL_LOG_MASK) &&
 	    (telemetry_type != SNDK_TELEMETRY_TYPE_NONE)) {
-		if (sndk_get_default_telemetry_da(hdl, &telemetry_data_area)) {
-			fprintf(stderr, "%s: Error determining default telemetry data area\n",
-				__func__);
-			return -EINVAL;
+		/* If no data area specified, get the default value */
+		if (telemetry_data_area == 0) {
+			if (sndk_get_default_telemetry_da(hdl, &telemetry_data_area)) {
+				fprintf(stderr, "%s: Error determining default telemetry data area\n",
+						__func__);
+				return -EINVAL;
+			}
 		}
 
-		ret = sndk_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
-				telemetry_type, telemetry_data_area);
+		if (telemetry_type == SNDK_TELEMETRY_TYPE_BOTH) {
+			/* For BOTH type, ensure filename has .tar extension */
+			char tar_file[PATH_MAX] = {0};
+			if (strstr(f, ".tar") == NULL) {
+				char *bin_ext = strstr(f, ".bin");
+				if (bin_ext) {
+					*bin_ext = '\0';
+				}
+				snprintf(tar_file, PATH_MAX, "%s.tar", f);
+			} else {
+				snprintf(tar_file, PATH_MAX, "%s", f);
+			}
+			ret = sndk_do_cap_both_telemetry_log(ctx, hdl,
+					tar_file, xfer_size,
+					telemetry_data_area);
+		} else {
+			ret = sndk_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
+					telemetry_type, telemetry_data_area);
+		}
 		goto out;
 	}
 
 	if (capabilities & SNDK_DRIVE_CAP_UDUI) {
-		if ((telemetry_type == SNDK_TELEMETRY_TYPE_HOST) ||
-		    (telemetry_type == SNDK_TELEMETRY_TYPE_CONTROLLER)) {
-			if (sndk_get_default_telemetry_da(hdl, &telemetry_data_area)) {
-				fprintf(stderr, "%s: Error determining default telemetry data area\n",
-					__func__);
-				return -EINVAL;
-			}
-
-			ret = sndk_do_cap_telemetry_log(ctx, hdl, f, xfer_size,
-					telemetry_type, telemetry_data_area);
-			goto out;
-		} else {
-			ret = sndk_do_cap_udui(hdl, f, xfer_size,
-					 nvme_args.verbose, cfg.file_size,
-					 cfg.offset);
+		if (cfg.data_area) {
+			fprintf(stderr,
+				"ERROR: SNDK: Data area parameter is not supported when type is NONE\n");
+			ret = -1;
 			goto out;
 		}
+		ret = sndk_do_cap_udui(hdl, f, xfer_size, cfg.verbose);
+		goto out;
 	}
 
 	/* Fallback to WDC plugin if otherwise not supported */
