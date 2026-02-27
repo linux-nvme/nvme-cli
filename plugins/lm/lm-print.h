@@ -2,8 +2,9 @@
 #ifndef LM_PRINT_H
 #define LM_PRINT_H
 
+#include <libnvme.h>
+
 #include "nvme.h"
-#include "libnvme.h"
 
 struct lm_print_ops {
 	void (*controller_state_data)(struct nvme_lm_controller_state_data *data, size_t len,

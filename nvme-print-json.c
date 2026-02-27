@@ -8,13 +8,14 @@
 #include <arpa/inet.h>
 #include <ccan/compiler/compiler.h>
 
+#include <libnvme.h>
+
 #include "nvme-print.h"
 
 #include "util/json.h"
 #include "logging.h"
 #include "nvme.h"
 #include "common.h"
-#include "libnvme.h"
 
 #define ERROR_MSG_LEN 100
 #define NAME_LEN 128

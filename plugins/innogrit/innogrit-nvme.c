@@ -7,9 +7,10 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#include <libnvme.h>
+
 #include "common.h"
 #include "nvme.h"
-#include "libnvme.h"
 #include "nvme-print.h"
 #include "typedef.h"
 #include "util/cleanup.h"
