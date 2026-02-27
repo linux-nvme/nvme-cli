@@ -19,16 +19,6 @@
 
 #include <nvme/types.h>
 
-/*
- * We can not always count on the kernel UAPI being installed. Use the same
- * 'ifdef' guard to avoid double definitions just in case.
- */
-#ifndef _UAPI_LINUX_NVME_IOCTL_H
-#define _UAPI_LINUX_NVME_IOCTL_H
-
-#ifndef _LINUX_NVME_IOCTL_H
-#define _LINUX_NVME_IOCTL_H
-
 /**
  * DOC: ioctl.h
  *
@@ -134,10 +124,6 @@ struct nvme_uring_cmd {
 	__u32	timeout_ms;
 	__u32   rsvd2;
 };
-
-#endif /* _UAPI_LINUX_NVME_IOCTL_H */
-
-#endif /* _LINUX_NVME_IOCTL_H */
 
 enum nvme_cmd_dword_fields {
 	NVME_DEVICE_SELF_TEST_CDW10_STC_SHIFT			= 0,
