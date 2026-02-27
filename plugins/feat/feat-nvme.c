@@ -500,7 +500,7 @@ static int arbitration_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	if (err > 0) {
 		nvme_show_status(err);
 	} else if (err < 0) {
-		nvme_show_perror("Set %s", temp_thresh_feat);
+		nvme_show_perror("Set %s", arbitration_feat);
 	} else {
 		nvme_show_result("Set %s: (%s)", arbitration_feat, sv ? "Save" : "Not save");
 		nvme_feature_show_fields(fid, NVME_SET(cfg->ab, FEAT_ARBITRATION_BURST) |
@@ -534,7 +534,7 @@ static int feat_arbitration(int argc, char **argv, struct command *acmd, struct 
 		  OPT_BYTE("mpw", 'm', &cfg.mpw, mpw),
 		  OPT_BYTE("hpw", 'H', &cfg.hpw, hpw));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, TEMP_THRESH_DESC, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, ARBITRATION_DESC, opts);
 	if (err)
 		return err;
 
@@ -672,7 +672,7 @@ static int feat_power_limit(int argc, char **argv, struct command *acmd,
 }
 
 static int power_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
-			    __u8 ptv, __u8 pts, __u8 pmts, __u8 ept, __u8 uidx,
+			    __u16 ptv, __u8 pts, __u8 pmts, __u8 ept, __u8 uidx,
 			    bool sv)
 {
 	__u32 cdw11 = NVME_SET(ptv, FEAT_POWER_THRESH_PTV) |
@@ -718,7 +718,7 @@ static int feat_power_thresh(int argc, char **argv, struct command *acmd,
 	int err;
 
 	struct config {
-		__u8 ptv;
+		__u16 ptv;
 		__u8 pts;
 		__u8 pmts;
 		__u8 ept;
@@ -729,17 +729,18 @@ static int feat_power_thresh(int argc, char **argv, struct command *acmd,
 	struct config cfg = { 0 };
 
 	FEAT_ARGS(opts,
-		  OPT_BYTE("ptv", 'p', &cfg.ptv, ptv),
+		  OPT_SHRT("ptv", 'p', &cfg.ptv, ptv),
 		  OPT_BYTE("pts", 't', &cfg.pts, pts),
 		  OPT_BYTE("pmts", 'm', &cfg.pmts, pmts),
 		  OPT_BYTE("ept", 'e', &cfg.ept, ept),
 		  OPT_BYTE("uuid-index", 'u', &cfg.uidx, uuid_index));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, POWER_LIMIT_DESC, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, POWER_THRESH_DESC, opts);
 	if (err)
 		return err;
 
 	if (argconfig_parse_seen(opts, "ptv") ||
+	    argconfig_parse_seen(opts, "pts") ||
 	    argconfig_parse_seen(opts, "pmts") ||
 	    argconfig_parse_seen(opts, "ept"))
 		err = power_thresh_set(hdl, fid, cfg.ptv, cfg.pts, cfg.pmts,
