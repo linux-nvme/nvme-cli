@@ -135,17 +135,6 @@ struct nvme_uring_cmd {
 	__u32   rsvd2;
 };
 
-#define NVME_IOCTL_ID		_IO('N', 0x40)
-#define NVME_IOCTL_RESET	_IO('N', 0x44)
-#define NVME_IOCTL_SUBSYS_RESET	_IO('N', 0x45)
-#define NVME_IOCTL_RESCAN	_IO('N', 0x46)
-
-/* io_uring async commands: */
-#define NVME_URING_CMD_IO	_IOWR('N', 0x80, struct nvme_uring_cmd)
-#define NVME_URING_CMD_IO_VEC	_IOWR('N', 0x81, struct nvme_uring_cmd)
-#define NVME_URING_CMD_ADMIN	_IOWR('N', 0x82, struct nvme_uring_cmd)
-#define NVME_URING_CMD_ADMIN_VEC _IOWR('N', 0x83, struct nvme_uring_cmd)
-
 #endif /* _UAPI_LINUX_NVME_IOCTL_H */
 
 #endif /* _LINUX_NVME_IOCTL_H */
