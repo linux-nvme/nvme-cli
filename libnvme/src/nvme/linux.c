@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <sys/ioctl.h>
+
 #ifdef CONFIG_OPENSSL
 #include <openssl/evp.h>
 #include <openssl/hmac.h>

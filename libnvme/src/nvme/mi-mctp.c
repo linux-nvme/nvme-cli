@@ -17,6 +17,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <sys/ioctl.h>
 
 #if HAVE_LINUX_MCTP_H
 #include <linux/mctp.h>
