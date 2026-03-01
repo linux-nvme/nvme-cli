@@ -100,7 +100,7 @@ static void stdout_fw_activation_history(const struct fw_activation_history *fw_
 	printf("\n");
 }
 
-static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsigned int version)
+static void stdout_smart_extended_log(struct ocp_smart_extended_log *log)
 {
 	uint16_t smart_log_ver = 0;
 	uint16_t dssd_version = 0;
