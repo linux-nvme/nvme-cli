@@ -30,6 +30,7 @@ plugin_sources = [
     'plugins/wdc/wdc-utils.c',
     'plugins/ymtc/ymtc-nvme.c',
     'plugins/zns/zns.c',
+    'plugins/twsc/twsc-nvme.c',
 ]
 
 subdir('feat')
