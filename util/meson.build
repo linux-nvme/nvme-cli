@@ -9,7 +9,8 @@ util_sources = [
     'util/suffix.c',
     'util/types.c',
     'util/utils.c',
-    'util/table.c'
+    'util/table.c',
+    'util/delay.c'
 ]
 
 if json_c_dep.found()
