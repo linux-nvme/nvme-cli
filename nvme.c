@@ -3456,19 +3456,29 @@ parse_lba:
 	return err;
 }
 
+static bool nvme_match_devname(char *devname, nvme_ns_t ns)
+{
+	if (!strcmp(devname, nvme_ns_get_name(ns)) ||
+	    !strcmp(devname, nvme_ctrl_get_name(nvme_ns_get_ctrl(ns))) ||
+	    !strcmp(devname, nvme_ns_get_generic_name(ns)))
+		return true;
+
+	return false;
+}
+
 static bool nvme_match_device_filter(nvme_subsystem_t s,
 		nvme_ctrl_t c, nvme_ns_t ns, void *f_args)
 {
 	char *devname = f_args;
 	nvme_ns_t n;
 
-	if (ns && !strcmp(devname, nvme_ns_get_name(ns)))
+	if (ns && nvme_match_devname(devname, ns))
 		return true;
 
 	if (c) {
 		s = nvme_ctrl_get_subsystem(c);
 		nvme_ctrl_for_each_ns(c, n) {
-			if (!strcmp(devname, nvme_ns_get_name(n)))
+			if (nvme_match_devname(devname, n))
 				return true;
 		}
 	}
@@ -3524,7 +3534,8 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 	if (devname) {
 		int subsys_num;
 
-		if (sscanf(devname, "nvme%dn%d", &subsys_num, &nsid) != 2) {
+		if (sscanf(devname, "nvme%dn%d", &subsys_num, &nsid) < 1 &&
+		    sscanf(devname, "ng%dn%d", &subsys_num, &nsid) != 2) {
 			nvme_show_error("Invalid device name %s", devname);
 			return -EINVAL;
 		}
@@ -10397,7 +10408,8 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	if (devname) {
 		int subsys_id, nsid;
 
-		if (sscanf(devname, "nvme%dn%d", &subsys_id, &nsid) != 2) {
+		if (sscanf(devname, "nvme%dn%d", &subsys_id, &nsid) < 1 &&
+		    sscanf(devname, "ng%dn%d", &subsys_id, &nsid) != 2) {
 			nvme_show_error("Invalid device name %s\n", devname);
 			return -EINVAL;
 		}
