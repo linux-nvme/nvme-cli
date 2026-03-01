@@ -200,11 +200,6 @@ static void json_id_iocs_iocsc(struct json_object *obj_iocsc, __u64 iocsc)
 	obj_add_str(obj_iocsc, "NVM Command Set", nvmcs ? "Selected" : "Not selected");
 }
 
-static bool verbose_mode(void)
-{
-	return true;
-}
-
 static void json_id_iocs(struct nvme_id_iocs *iocs)
 {
 	struct json_object *r = json_create_object();
@@ -234,21 +229,14 @@ static void json_nvme_id_ns_lbaf(struct nvme_id_ns *ns, int i, struct json_objec
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &flbas);
 
-	if (verbose_mode()) {
-		obj_add_int(lbaf, "LBA Format", i);
-		obj_add_string(lbaf, "Metadata Size", "%d bytes", le16_to_cpu(ns->lbaf[i].ms));
-		obj_add_string(lbaf, "Data Size", "%d bytes", 1 << ns->lbaf[i].ds);
-		obj_add_string(lbaf, "Relative Performance", "0x%x %s", ns->lbaf[i].rp,
-			       ns->lbaf[i].rp == 3 ? "Degraded" : ns->lbaf[i].rp == 2 ? "Good" :
-			       ns->lbaf[i].rp == 1 ? "Better" : "Best");
-		obj_add_str(lbaf, "in use", i == flbas ? "yes" : "no");
-	} else {
-		obj_add_int(lbaf, "lbaf", i);
-		obj_add_int(lbaf, "ms", le16_to_cpu(ns->lbaf[i].ms));
-		obj_add_int(lbaf, "ds", ns->lbaf[i].ds);
-		obj_add_int(lbaf, "rp", ns->lbaf[i].rp);
-		obj_add_int(lbaf, "in_use", i == flbas);
-	}
+	obj_add_int(lbaf, "LBA Format", i);
+	obj_add_string(lbaf, "Metadata Size", "%d bytes",
+		       le16_to_cpu(ns->lbaf[i].ms));
+	obj_add_string(lbaf, "Data Size", "%d bytes", 1 << ns->lbaf[i].ds);
+	obj_add_string(lbaf, "Relative Performance", "0x%x %s", ns->lbaf[i].rp,
+		       ns->lbaf[i].rp == 3 ? "Degraded" : ns->lbaf[i].rp == 2 ?
+		       "Good" : ns->lbaf[i].rp == 1 ? "Better" : "Best");
+	obj_add_str(lbaf, "in use", i == flbas ? "yes" : "no");
 
 	array_add_obj(lbafs, lbaf);
 }
@@ -721,21 +709,18 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	nvme_uint128_t media_errors = le128_to_cpu(smart->media_errors);
 	nvme_uint128_t num_err_log_entries = le128_to_cpu(smart->num_err_log_entries);
 
-	if (verbose_mode()) {
-		struct json_object *crt = json_create_object();
+	struct json_object *crt = json_create_object();
 
-		obj_add_int(crt, "value", smart->critical_warning);
-		obj_add_int(crt, "available_spare", smart->critical_warning & 1);
-		obj_add_int(crt, "temp_threshold", (smart->critical_warning & 2) >> 1);
-		obj_add_int(crt, "reliability_degraded", (smart->critical_warning & 4) >> 2);
-		obj_add_int(crt, "ro", (smart->critical_warning & 8) >> 3);
-		obj_add_int(crt, "vmbu_failed", (smart->critical_warning & 0x10) >> 4);
-		obj_add_int(crt, "pmr_ro", (smart->critical_warning & 0x20) >> 5);
+	obj_add_int(crt, "value", smart->critical_warning);
+	obj_add_int(crt, "available_spare", smart->critical_warning & 1);
+	obj_add_int(crt, "temp_threshold", (smart->critical_warning & 2) >> 1);
+	obj_add_int(crt, "reliability_degraded",
+		    (smart->critical_warning & 4) >> 2);
+	obj_add_int(crt, "ro", (smart->critical_warning & 8) >> 3);
+	obj_add_int(crt, "vmbu_failed", (smart->critical_warning & 0x10) >> 4);
+	obj_add_int(crt, "pmr_ro", (smart->critical_warning & 0x20) >> 5);
 
-		obj_add_obj(r, "critical_warning", crt);
-	} else {
-		obj_add_int(r, "critical_warning", smart->critical_warning);
-	}
+	obj_add_obj(r, "critical_warning", crt);
 
 	obj_add_int(r, "temperature", temperature);
 	obj_add_int(r, "avail_spare", smart->avail_spare);
@@ -1376,24 +1361,8 @@ static void json_single_property_human(int offset, uint64_t value64, struct json
 static void json_single_property(int offset, uint64_t value64)
 {
 	struct json_object *r = json_create_object();
-	char json_str[STR_LEN];
-	uint32_t value32 = (uint32_t)value64;
 
-	if (verbose_mode()) {
-		json_single_property_human(offset, value64, r);
-	} else {
-		sprintf(json_str, "0x%02x", offset);
-		obj_add_str(r, "property", json_str);
-
-		obj_add_str(r, "name", nvme_register_to_string(offset));
-
-		if (nvme_is_64bit_reg(offset))
-			sprintf(json_str, "%"PRIx64"", value64);
-		else
-			sprintf(json_str, "%x", value32);
-
-		obj_add_str(r, "value", json_str);
-	}
+	json_single_property_human(offset, value64, r);
 
 	json_print(r);
 }
@@ -2729,18 +2698,16 @@ static void json_print_nvme_subsystem_list(struct nvme_global_ctx *ctx,
 			obj_add_str(subsystem_attrs, "Name", nvme_subsystem_get_name(s));
 			obj_add_str(subsystem_attrs, "NQN", nvme_subsystem_get_nqn(s));
 
-			if (verbose_mode()) {
-				obj_add_str(subsystem_attrs, "Model",
-						nvme_subsystem_get_model(s));
-				obj_add_str(subsystem_attrs, "Serial",
-						nvme_subsystem_get_serial(s));
-				obj_add_str(subsystem_attrs, "Firmware",
-						nvme_subsystem_get_fw_rev(s));
-				obj_add_str(subsystem_attrs, "IOPolicy",
-						nvme_subsystem_get_iopolicy(s));
-				obj_add_str(subsystem_attrs, "Type",
-						nvme_subsystem_get_type(s));
-			}
+			obj_add_str(subsystem_attrs, "Model",
+					nvme_subsystem_get_model(s));
+			obj_add_str(subsystem_attrs, "Serial",
+					nvme_subsystem_get_serial(s));
+			obj_add_str(subsystem_attrs, "Firmware",
+					nvme_subsystem_get_fw_rev(s));
+			obj_add_str(subsystem_attrs, "IOPolicy",
+					nvme_subsystem_get_iopolicy(s));
+			obj_add_str(subsystem_attrs, "Type",
+					nvme_subsystem_get_type(s));
 
 			array_add_obj(subsystems, subsystem_attrs);
 			paths = json_create_array();
@@ -2761,290 +2728,202 @@ static void json_ctrl_registers_cap(void *bar, struct json_object *r)
 {
 	uint64_t cap = mmio_read64(bar + NVME_REG_CAP);
 
-	if (verbose_mode())
-		json_registers_cap((struct nvme_bar_cap *)&cap, obj_create_array_obj(r, "cap"));
-	else
-		obj_add_uint64(r, "cap", cap);
+	json_registers_cap((struct nvme_bar_cap *)&cap,
+			   obj_create_array_obj(r, "cap"));
 }
 
 static void json_ctrl_registers_vs(void *bar, struct json_object *r)
 {
 	uint32_t vs = mmio_read32(bar + NVME_REG_VS);
 
-	if (verbose_mode())
-		json_registers_version(vs, obj_create_array_obj(r, "vs"));
-	else
-		obj_add_int(r, "vs", vs);
+	json_registers_version(vs, obj_create_array_obj(r, "vs"));
 }
 
 static void json_ctrl_registers_intms(void *bar, struct json_object *r)
 {
 	uint32_t intms = mmio_read32(bar + NVME_REG_INTMS);
 
-	if (verbose_mode())
-		json_registers_intms(intms, obj_create_array_obj(r, "intms"));
-	else
-		obj_add_int(r, "intms", intms);
+	json_registers_intms(intms, obj_create_array_obj(r, "intms"));
 }
 
 static void json_ctrl_registers_intmc(void *bar, struct json_object *r)
 {
 	uint32_t intmc = mmio_read32(bar + NVME_REG_INTMC);
 
-	if (verbose_mode())
-		json_registers_intmc(intmc, obj_create_array_obj(r, "intmc"));
-	else
-		obj_add_int(r, "intmc", intmc);
+	json_registers_intmc(intmc, obj_create_array_obj(r, "intmc"));
 }
 
 static void json_ctrl_registers_cc(void *bar, struct json_object *r)
 {
 	uint32_t cc = mmio_read32(bar + NVME_REG_CC);
 
-	if (verbose_mode())
-		json_registers_cc(cc, obj_create_array_obj(r, "cc"));
-	else
-		obj_add_int(r, "cc", cc);
+	json_registers_cc(cc, obj_create_array_obj(r, "cc"));
 }
 
 static void json_ctrl_registers_csts(void *bar, struct json_object *r)
 {
 	uint32_t csts = mmio_read32(bar + NVME_REG_CSTS);
 
-	if (verbose_mode())
-		json_registers_csts(csts, obj_create_array_obj(r, "csts"));
-	else
-		obj_add_int(r, "csts", csts);
+	json_registers_csts(csts, obj_create_array_obj(r, "csts"));
 }
 
 static void json_ctrl_registers_nssr(void *bar, struct json_object *r)
 {
 	uint32_t nssr = mmio_read32(bar + NVME_REG_NSSR);
 
-	if (verbose_mode())
-		json_registers_nssr(nssr, obj_create_array_obj(r, "nssr"));
-	else
-		obj_add_int(r, "nssr", nssr);
+	json_registers_nssr(nssr, obj_create_array_obj(r, "nssr"));
 }
 
 static void json_ctrl_registers_nssd(void *bar, struct json_object *r)
 {
 	uint32_t nssd = mmio_read32(bar + NVME_REG_NSSD);
 
-	if (verbose_mode())
-		json_registers_nssd(nssd, obj_create_array_obj(r, "nssd"));
-	else
-		obj_add_int(r, "nssd", nssd);
+	json_registers_nssd(nssd, obj_create_array_obj(r, "nssd"));
 }
 
 static void json_ctrl_registers_crto(void *bar, struct json_object *r)
 {
 	uint32_t crto = mmio_read32(bar + NVME_REG_CRTO);
 
-	if (verbose_mode())
-		json_registers_crto(crto, obj_create_array_obj(r, "crto"));
-	else
-		obj_add_int(r, "crto", crto);
+	json_registers_crto(crto, obj_create_array_obj(r, "crto"));
 }
 
 static void json_ctrl_registers_aqa(void *bar, struct json_object *r)
 {
 	uint32_t aqa = mmio_read32(bar + NVME_REG_AQA);
 
-	if (verbose_mode())
-		json_registers_aqa(aqa, obj_create_array_obj(r, "aqa"));
-	else
-		obj_add_int(r, "aqa", aqa);
+	json_registers_aqa(aqa, obj_create_array_obj(r, "aqa"));
 }
 
 static void json_ctrl_registers_asq(void *bar, struct json_object *r)
 {
 	uint64_t asq = mmio_read64(bar + NVME_REG_ASQ);
 
-	if (verbose_mode())
-		json_registers_asq(asq, obj_create_array_obj(r, "asq"));
-	else
-		obj_add_uint64(r, "asq", asq);
+	json_registers_asq(asq, obj_create_array_obj(r, "asq"));
 }
 
 static void json_ctrl_registers_acq(void *bar, struct json_object *r)
 {
 	uint64_t acq = mmio_read64(bar + NVME_REG_ACQ);
 
-	if (verbose_mode())
-		json_registers_acq(acq, obj_create_array_obj(r, "acq"));
-	else
-		obj_add_uint64(r, "acq", acq);
+	json_registers_acq(acq, obj_create_array_obj(r, "acq"));
 }
 
 static void json_ctrl_registers_cmbloc(void *bar, struct json_object *r)
 {
 	uint32_t cmbloc = mmio_read32(bar + NVME_REG_CMBLOC);
-	uint32_t cmbsz;
-	bool support;
+	uint32_t cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
+	bool support = nvme_registers_cmbloc_support(cmbsz);
 
-	if (verbose_mode()) {
-		cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
-		support = nvme_registers_cmbloc_support(cmbsz);
-		json_registers_cmbloc(cmbloc, support, obj_create_array_obj(r, "cmbloc"));
-	} else {
-		obj_add_int(r, "cmbloc", cmbloc);
-	}
+	json_registers_cmbloc(cmbloc, support,
+			      obj_create_array_obj(r, "cmbloc"));
 }
 
 static void json_ctrl_registers_cmbsz(void *bar, struct json_object *r)
 {
 	uint32_t cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
 
-	if (verbose_mode())
-		json_registers_cmbsz(cmbsz, obj_create_array_obj(r, "cmbsz"));
-	else
-		obj_add_int(r, "cmbsz", cmbsz);
+	json_registers_cmbsz(cmbsz, obj_create_array_obj(r, "cmbsz"));
 }
 
 static void json_ctrl_registers_bpinfo(void *bar, struct json_object *r)
 {
 	uint32_t bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
 
-	if (verbose_mode())
-		json_registers_bpinfo(bpinfo, obj_create_array_obj(r, "bpinfo"));
-	else
-		obj_add_int(r, "bpinfo", bpinfo);
+	json_registers_bpinfo(bpinfo, obj_create_array_obj(r, "bpinfo"));
 }
 
 static void json_ctrl_registers_bprsel(void *bar, struct json_object *r)
 {
 	uint32_t bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
 
-	if (verbose_mode())
-		json_registers_bprsel(bprsel, obj_create_array_obj(r, "bprsel"));
-	else
-		obj_add_int(r, "bprsel", bprsel);
+	json_registers_bprsel(bprsel, obj_create_array_obj(r, "bprsel"));
 }
 
 static void json_ctrl_registers_bpmbl(void *bar, struct json_object *r)
 {
 	uint64_t bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
 
-	if (verbose_mode())
-		json_registers_bpmbl(bpmbl, obj_create_array_obj(r, "bpmbl"));
-	else
-		obj_add_uint64(r, "bpmbl", bpmbl);
+	json_registers_bpmbl(bpmbl, obj_create_array_obj(r, "bpmbl"));
 }
 
 static void json_ctrl_registers_cmbmsc(void *bar, struct json_object *r)
 {
 	uint64_t cmbmsc = mmio_read64(bar + NVME_REG_CMBMSC);
 
-	if (verbose_mode())
-		json_registers_cmbmsc(cmbmsc, obj_create_array_obj(r, "cmbmsc"));
-	else
-		obj_add_uint64(r, "cmbmsc", cmbmsc);
+	json_registers_cmbmsc(cmbmsc, obj_create_array_obj(r, "cmbmsc"));
 }
 
 static void json_ctrl_registers_cmbsts(void *bar, struct json_object *r)
 {
 	uint32_t cmbsts = mmio_read32(bar + NVME_REG_CMBSTS);
 
-	if (verbose_mode())
-		json_registers_cmbsts(cmbsts, obj_create_array_obj(r, "cmbsts"));
-	else
-		obj_add_int(r, "cmbsts", cmbsts);
+	json_registers_cmbsts(cmbsts, obj_create_array_obj(r, "cmbsts"));
 }
 
 static void json_ctrl_registers_cmbebs(void *bar, struct json_object *r)
 {
 	uint32_t cmbebs = mmio_read32(bar + NVME_REG_CMBEBS);
 
-	if (verbose_mode())
-		json_registers_cmbebs(cmbebs, obj_create_array_obj(r, "cmbebs"));
-	else
-		obj_add_int(r, "cmbebs", cmbebs);
+	json_registers_cmbebs(cmbebs, obj_create_array_obj(r, "cmbebs"));
 }
 
 static void json_ctrl_registers_cmbswtp(void *bar, struct json_object *r)
 {
 	uint32_t cmbswtp = mmio_read32(bar + NVME_REG_CMBSWTP);
 
-	if (verbose_mode())
-		json_registers_cmbswtp(cmbswtp, obj_create_array_obj(r, "cmbswtp"));
-	else
-		obj_add_int(r, "cmbswtp", cmbswtp);
+	json_registers_cmbswtp(cmbswtp, obj_create_array_obj(r, "cmbswtp"));
 }
 
 static void json_ctrl_registers_pmrcap(void *bar, struct json_object *r)
 {
 	uint32_t pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
 
-	if (verbose_mode())
-		json_registers_pmrcap(pmrcap, obj_create_array_obj(r, "pmrcap"));
-	else
-		obj_add_int(r, "pmrcap", pmrcap);
+	json_registers_pmrcap(pmrcap, obj_create_array_obj(r, "pmrcap"));
 }
 
 static void json_ctrl_registers_pmrctl(void *bar, struct json_object *r)
 {
 	uint32_t pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
 
-	if (verbose_mode())
-		json_registers_pmrctl(pmrctl, obj_create_array_obj(r, "pmrctl"));
-	else
-		obj_add_int(r, "pmrctl", pmrctl);
+	json_registers_pmrctl(pmrctl, obj_create_array_obj(r, "pmrctl"));
 }
 
 static void json_ctrl_registers_pmrsts(void *bar, struct json_object *r)
 {
 	uint32_t pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
-	uint32_t pmrctl;
-	bool ready;
+	uint32_t pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
+	bool ready = nvme_registers_pmrctl_ready(pmrctl);
 
-	if (verbose_mode()) {
-		pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
-		ready = nvme_registers_pmrctl_ready(pmrctl);
-		json_registers_pmrsts(pmrsts, ready, obj_create_array_obj(r, "pmrsts"));
-	} else {
-		obj_add_int(r, "pmrsts", pmrsts);
-	}
+	json_registers_pmrsts(pmrsts, ready, obj_create_array_obj(r, "pmrsts"));
 }
 
 static void json_ctrl_registers_pmrebs(void *bar, struct json_object *r)
 {
 	uint32_t pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
 
-	if (verbose_mode())
-		json_registers_pmrebs(pmrebs, obj_create_array_obj(r, "pmrebs"));
-	else
-		obj_add_int(r, "pmrebs", pmrebs);
+	json_registers_pmrebs(pmrebs, obj_create_array_obj(r, "pmrebs"));
 }
 
 static void json_ctrl_registers_pmrswtp(void *bar, struct json_object *r)
 {
 	uint32_t pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
 
-	if (verbose_mode())
-		json_registers_pmrswtp(pmrswtp, obj_create_array_obj(r, "pmrswtp"));
-	else
-		obj_add_int(r, "pmrswtp", pmrswtp);
+	json_registers_pmrswtp(pmrswtp, obj_create_array_obj(r, "pmrswtp"));
 }
 
 static void json_ctrl_registers_pmrmscl(void *bar, struct json_object *r)
 {
 	uint32_t pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
 
-	if (verbose_mode())
-		json_registers_pmrmscl(pmrmscl, obj_create_array_obj(r, "pmrmscl"));
-	else
-		obj_add_uint(r, "pmrmscl", pmrmscl);
+	json_registers_pmrmscl(pmrmscl, obj_create_array_obj(r, "pmrmscl"));
 }
 
 static void json_ctrl_registers_pmrmscu(void *bar, struct json_object *r)
 {
 	uint32_t pmrmscu = mmio_read32(bar + NVME_REG_PMRMSCU);
 
-	if (verbose_mode())
-		json_registers_pmrmscu(pmrmscu, obj_create_array_obj(r, "pmrmscu"));
-	else
-		obj_add_uint(r, "pmrmscu", pmrmscu);
+	json_registers_pmrmscu(pmrmscu, obj_create_array_obj(r, "pmrmscu"));
 }
 
 static void json_ctrl_registers(void *bar, bool fabrics)
@@ -3192,13 +3071,8 @@ static void json_ctrl_register(int offset, uint64_t value)
 	sprintf(json_str, "register: %#04x", offset);
 	r = obj_create(json_str);
 
-	if (verbose_mode()) {
-		obj_add_uint64(r, nvme_register_to_string(offset), value);
-		json_ctrl_register_human(offset, value, r);
-	} else {
-		obj_add_str(r, "name", nvme_register_symbol_to_string(offset));
-		obj_add_uint64(r, "value", value);
-	}
+	obj_add_uint64(r, nvme_register_to_string(offset), value);
+	json_ctrl_register_human(offset, value, r);
 }
 
 static void json_nvme_cmd_set_independent_id_ns(struct nvme_id_independent_id_ns *ns,
@@ -3309,6 +3183,8 @@ static void json_nvme_id_ns_descs(void *data, unsigned int nsid)
 static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 {
 	struct json_object *r = json_create_object();
+	__u16 rsvd = (ctrl_nvm->aocs & 0xfffe) >> 1;
+	__u8 ralbas = ctrl_nvm->aocs & 0x1;
 
 	obj_add_uint(r, "vsl", ctrl_nvm->vsl);
 	obj_add_uint(r, "wzsl", ctrl_nvm->wzsl);
@@ -3320,14 +3196,10 @@ static void json_nvme_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm)
 	obj_add_uint(r, "wzdsl", ctrl_nvm->wzdsl);
 	obj_add_uint(r, "aocs", le16_to_cpu(ctrl_nvm->aocs));
 
-	if (verbose_mode()) {
-		__u16 rsvd = (ctrl_nvm->aocs & 0xfffe) >> 1;
-		__u8 ralbas = ctrl_nvm->aocs & 0x1;
+	if (rsvd)
+		obj_add_uint(r, "[15:1]: Reserved", rsvd);
 
-		if (rsvd)
-			obj_add_uint(r, "[15:1]: Reserved", rsvd);
-		obj_add_uint(r, "[0:0]: Reporting Allocated LBA Supported", ralbas);
-	}
+	obj_add_uint(r, "[0:0]: Reporting Allocated LBA Supported", ralbas);
 
 	obj_add_uint(r, "ver", le32_to_cpu(ctrl_nvm->ver));
 	obj_add_uint(r, "lbamqf", ctrl_nvm->lbamqf);
@@ -4908,16 +4780,14 @@ static void json_simple_topology(struct nvme_global_ctx *ctx)
 			obj_add_str(subsystem_attrs, "IOPolicy",
 					nvme_subsystem_get_iopolicy(s));
 
-			if (verbose_mode()) {
-				obj_add_str(subsystem_attrs, "Model",
-						nvme_subsystem_get_model(s));
-				obj_add_str(subsystem_attrs, "Serial",
-						nvme_subsystem_get_serial(s));
-				obj_add_str(subsystem_attrs, "Firmware",
-						nvme_subsystem_get_fw_rev(s));
-				obj_add_str(subsystem_attrs, "Type",
-						nvme_subsystem_get_type(s));
-			}
+			obj_add_str(subsystem_attrs, "Model",
+					nvme_subsystem_get_model(s));
+			obj_add_str(subsystem_attrs, "Serial",
+					nvme_subsystem_get_serial(s));
+			obj_add_str(subsystem_attrs, "Firmware",
+					nvme_subsystem_get_fw_rev(s));
+			obj_add_str(subsystem_attrs, "Type",
+					nvme_subsystem_get_type(s));
 
 			array_add_obj(subsystems, subsystem_attrs);
 			namespaces = json_create_array();
@@ -5032,7 +4902,6 @@ static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __
 				void *buf, __u32 len)
 {
 	struct json_object *r = json_create_object();
-	struct json_object *data;
 	char json_str[STR_LEN];
 
 	sprintf(json_str, "%#x", type);
@@ -5046,13 +4915,7 @@ static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __
 	sprintf(json_str, "%#"PRIx64, (uint64_t)result);
 	obj_add_result(r, json_str);
 
-	if (verbose_mode()) {
-		json_directive_show_fields(type, oper, result, buf, r);
-	} else if (buf) {
-		data = json_create_array();
-		d_json((unsigned char *)buf, len, 16, 1, data);
-		obj_add_array(r, "data", data);
-	}
+	json_directive_show_fields(type, oper, result, buf, r);
 
 	json_print(r);
 }
