@@ -202,7 +202,7 @@ static void json_id_iocs_iocsc(struct json_object *obj_iocsc, __u64 iocsc)
 
 static bool verbose_mode(void)
 {
-	return json_print_ops.flags & VERBOSE || nvme_args.output_format_ver == 2;
+	return true;
 }
 
 static void json_id_iocs(struct nvme_id_iocs *iocs)
