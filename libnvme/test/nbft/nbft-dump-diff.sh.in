@@ -5,4 +5,4 @@ if [ $# -ne 2 ]; then
   exit 255
 fi
 
-"@NBFT_DUMP_PATH@" "$1" | diff --unified "$2" -
+"@NBFT_DUMP_PATH@" "$1" | diff -u "$2" -
