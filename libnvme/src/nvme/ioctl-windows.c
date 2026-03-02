@@ -74,6 +74,24 @@ static int get_errno_from_storage_protocol_status(DWORD status)
 	}
 }
 
+static bool get_is_win_pe(void)
+{
+	HKEY key;
+	LONG rc = RegOpenKeyExW(
+		HKEY_LOCAL_MACHINE,
+		L"SYSTEM\\CurrentControlSet\\Control\\MiniNT",
+		0,
+		KEY_READ,
+		&key
+	);
+
+	if (rc == ERROR_SUCCESS) {
+		RegCloseKey(key);
+		return true;
+	}
+	return false;
+}
+
 int nvme_subsystem_reset(struct nvme_transport_handle *hdl)
 {
 	(void)hdl;
@@ -1018,6 +1036,10 @@ static int nvme_submit_admin_format_nvm(struct nvme_transport_handle *hdl,
 {
 	__u8 ses;
 
+	/* For WinPE, use storage protocol command. */
+	if (get_is_win_pe())
+		return nvme_submit_storage_protocol_command(hdl, cmd);
+
 	/* Namespace-specific format is not supported on Windows */
 	if (cmd->nsid != NVME_NSID_ALL)
 		return -ENOTSUP;
@@ -1203,6 +1225,13 @@ int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
 		return nvme_submit_admin_set_features(hdl, cmd);
 	case nvme_admin_get_features:
 		return nvme_submit_admin_get_features(hdl, cmd);
+	case nvme_admin_ns_mgmt:
+	case nvme_admin_ns_attach:
+		/* Only supported on WinPE */
+		if (get_is_win_pe())
+			return nvme_submit_storage_protocol_command(hdl, cmd);
+		else
+			return -ENOTSUP;
 	case nvme_admin_fw_commit:
 		return nvme_submit_admin_fw_commit(hdl, cmd);
 	case nvme_admin_fw_download:
