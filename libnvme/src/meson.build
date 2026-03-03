@@ -96,17 +96,17 @@ install_headers(
 )
 install_headers(
     [
+        'nvme/cmds.h',
         'nvme/fabrics.h',
         'nvme/filters.h',
         'nvme/ioctl.h',
         'nvme/linux.h',
-        'nvme/cmds.h',
         'nvme/log.h',
+        'nvme/mi.h',
         'nvme/nbft.h',
         'nvme/tree.h',
         'nvme/types.h',
         'nvme/util.h',
-        'nvme/mi.h',
     ],
     subdir: 'nvme',
     install_mode: mode,
