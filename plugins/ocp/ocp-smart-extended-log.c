@@ -26,8 +26,7 @@ static __u8 scao_guid[GUID_LEN] = {
 	0xC9, 0x14, 0xD5, 0xAF
 };
 
-static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
-			   unsigned int format_version)
+static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format)
 {
 	struct ocp_smart_extended_log *data;
 	struct nvme_passthru_cmd cmd;
@@ -85,7 +84,7 @@ static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
 		}
 
 		/* print the data */
-		ocp_smart_extended_log(data, format_version, fmt);
+		ocp_smart_extended_log(data, fmt);
 	} else {
 		fprintf(stderr, "ERROR : OCP : Unable to read C0 data from buffer\n");
 	}
@@ -109,8 +108,7 @@ int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
-	ret = get_c0_log_page(hdl, nvme_args.output_format,
-			      nvme_args.output_format_ver);
+	ret = get_c0_log_page(hdl, nvme_args.output_format);
 	if (ret)
 		fprintf(stderr, "ERROR : OCP : Failure reading the C0 Log Page, ret = %d\n",
 			ret);
