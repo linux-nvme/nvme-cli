@@ -15,6 +15,7 @@
 #include <linux/types.h>
 
 struct nvme_global_ctx;
+struct nvme_passthru_cmd;
 struct nvme_transport_handle;
 
 /**

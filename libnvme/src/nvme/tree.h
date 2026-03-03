@@ -6,18 +6,12 @@
  * Authors: Keith Busch <keith.busch@wdc.com>
  *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
-
-#ifndef _LIBNVME_TREE_H
-#define _LIBNVME_TREE_H
+#pragma once
 
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <sys/types.h>
-#include <netinet/in.h>
-
-#include <nvme/ioctl.h>
-#include <nvme/util.h>
+#include <nvme/types.h>
 
 /**
  * DOC: tree.h
@@ -1516,5 +1510,3 @@ const char *nvme_host_get_hostsymname(nvme_host_t h);
  * @hostsymname:	Symbolic name
  */
 void nvme_host_set_hostsymname(nvme_host_t h, const char *hostsymname);
-
-#endif /* _LIBNVME_TREE_H */
