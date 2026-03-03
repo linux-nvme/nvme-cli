@@ -69,7 +69,8 @@ static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
 			return -ENOMEM;
 	}
 
-	err = nvme_get_features(hdl, 0, fid, sel, cdw11, 0, buf, len, &result);
+	err = nvme_get_features(hdl, 0, fid, sel, cdw11, uidx, buf, len,
+				&result);
 
 	nvme_show_init();
 
