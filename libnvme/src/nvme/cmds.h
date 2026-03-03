@@ -7115,3 +7115,123 @@ int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, bool ish,
  */
 int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, bool ish,
 			__u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
+
+/**
+ * nvme_init_ctrl_list() - Initialize an nvme_ctrl_list structure from an array.
+ * @cntlist:   The controller list structure to initialize
+ * @num_ctrls: The number of controllers in the array, &ctrlist.
+ * @ctrlist:   An array of controller identifiers in CPU native endian.
+ *
+ * This is intended to be used with any command that takes a controller list
+ * argument. See nvme_ns_attach_ctrls() and nvme_ns_detach().
+ */
+void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
+			 __u16 *ctrlist);
+
+/**
+ * nvme_init_dsm_range() - Constructs a data set range structure
+ * @dsm:	DSM range array
+ * @ctx_attrs:	Array of context attributes
+ * @llbas:	Array of length in logical blocks
+ * @slbas:	Array of starting logical blocks
+ * @nr_ranges:	The size of the dsm arrays
+ *
+ * Each array must be the same size of size 'nr_ranges'. This is intended to be
+ * used with constructing a payload for nvme_dsm().
+ *
+ * Return: The nvme command status if a response was received or -errno
+ * otherwise.
+ */
+void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
+			  __u32 *llbas, __u64 *slbas, __u16 nr_ranges);
+
+/**
+ * nvme_init_copy_range() - Constructs a copy range structure
+ * @copy:	Copy range array
+ * @nlbs:	Number of logical blocks
+ * @slbas:	Starting LBA
+ * @eilbrts:	Expected initial logical block reference tag
+ * @elbatms:	Expected logical block application tag mask
+ * @elbats:	Expected logical block application tag
+ * @nr:		Number of descriptors to construct
+ */
+void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
+			  __u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
+			  __u32 *elbats, __u16 nr);
+
+/**
+ * nvme_init_copy_range_f1() - Constructs a copy range f1 structure
+ * @copy:	Copy range array
+ * @nlbs:	Number of logical blocks
+ * @slbas:	Starting LBA
+ * @eilbrts:	Expected initial logical block reference tag
+ * @elbatms:	Expected logical block application tag mask
+ * @elbats:	Expected logical block application tag
+ * @nr:		Number of descriptors to construct
+ */
+void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
+			     __u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
+			     __u32 *elbats, __u16 nr);
+
+/**
+ * nvme_init_copy_range_f2() - Constructs a copy range f2 structure
+ * @copy:	Copy range array
+ * @snsids:	Source namespace identifier
+ * @nlbs:	Number of logical blocks
+ * @slbas:	Starting LBA
+ * @sopts:	Source options
+ * @eilbrts:	Expected initial logical block reference tag
+ * @elbatms:	Expected logical block application tag mask
+ * @elbats:	Expected logical block application tag
+ * @nr:		Number of descriptors to construct
+ */
+void nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy, __u32 *snsids,
+			     __u16 *nlbs, __u64 *slbas, __u16 *sopts,
+			     __u32 *eilbrts, __u32 *elbatms, __u32 *elbats,
+			     __u16 nr);
+
+/**
+ * nvme_init_copy_range_f3() - Constructs a copy range f3 structure
+ * @copy:	Copy range array
+ * @snsids:	Source namespace identifier
+ * @nlbs:	Number of logical blocks
+ * @slbas:	Starting LBA
+ * @sopts:	Source options
+ * @eilbrts:	Expected initial logical block reference tag
+ * @elbatms:	Expected logical block application tag mask
+ * @elbats:	Expected logical block application tag
+ * @nr:		Number of descriptors to construct
+ */
+void nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
+			     __u16 *nlbs, __u64 *slbas, __u16 *sopts,
+			     __u64 *eilbrts, __u32 *elbatms, __u32 *elbats,
+			     __u16 nr);
+
+/**
+ * nvme_get_feature_length() - Retrieve the command payload length for a
+ *			       specific feature identifier
+ * @fid:   Feature identifier, see &enum nvme_features_id.
+ * @cdw11: The cdw11 value may affect the transfer (only known fid is
+ *	   %NVME_FEAT_FID_HOST_ID)
+ * @dir:   Data transfer direction: false - host to controller, true -
+ *	   controller to host may affect the transfer (only known fid is
+ *	   %NVME_FEAT_FID_HOST_MEM_BUF).
+ * @len:   On success, set to this features payload length in bytes.
+ *
+ * Return: 0 on success, -1 with errno set to EINVAL if the function did not
+ * recognize &fid.
+ */
+int nvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
+			    __u32 *len);
+
+/**
+ * nvme_get_directive_receive_length() - Get directive receive length
+ * @dtype: Directive type, see &enum nvme_directive_dtype
+ * @doper: Directive receive operation, see &enum nvme_directive_receive_doper
+ * @len:   On success, set to this directives payload length in bytes.
+ *
+ * Return: 0 on success, -1 with errno set to EINVAL if the function did not
+ * recognize &dtype or &doper.
+ */
+int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
+		enum nvme_directive_receive_doper doper, __u32 *len);
