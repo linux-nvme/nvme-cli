@@ -6,14 +6,14 @@
  * Authors: Keith Busch <keith.busch@wdc.com>
  *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
-#ifndef _LIBNVME_LINUX_H
-#define _LIBNVME_LINUX_H
+#pragma once
 
 #include <stddef.h>
-#include <stdio.h>
+#include <stdbool.h>
 
-#include <nvme/ioctl.h>
-#include <nvme/types.h>
+struct nvme_transport_handle;
+struct nvme_passthru_cmd;
+struct nvme_global_ctx;
 
 /**
  * DOC: linux.h
@@ -555,5 +555,3 @@ void nvme_set_dry_run(struct nvme_global_ctx *ctx, bool enable);
  * IOCTL probing is enabled per default.
  */
 void nvme_set_ioctl_probing(struct nvme_global_ctx *ctx, bool enable);
-
-#endif /* _LIBNVME_LINUX_H */
