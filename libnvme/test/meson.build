@@ -178,6 +178,7 @@ if openssl_dep.found()
 endif
 
 foreach hdr : [
+    'cmds',
     'fabrics',
     'filters',
     'ioctl',
