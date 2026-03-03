@@ -7,6 +7,7 @@
 #
 sources = [
     'nvme/base64.c',
+    'nvme/cmds.c',
     'nvme/crc32.c',
     'nvme/fabrics.c',
     'nvme/filters.c',
