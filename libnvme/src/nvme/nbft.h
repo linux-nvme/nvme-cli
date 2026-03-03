@@ -6,12 +6,11 @@
  * Authors: Stuart Hayes <Stuart_Hayes@Dell.com>
  *
  */
-#ifndef _NBFT_H
-#define _NBFT_H
+#pragma once
 
 #include <sys/types.h>
 
-#include <nvme/util.h>
+#include <nvme/types.h>
 
 /**
  * DOC: nbft.h
@@ -1252,5 +1251,3 @@ int nvme_nbft_read(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
  * @nbft: Parsed NBFT table data.
  */
 void nvme_nbft_free(struct nvme_global_ctx *ctx, struct nbft_info *nbft);
-
-#endif
