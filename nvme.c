@@ -3458,8 +3458,10 @@ parse_lba:
 
 static bool nvme_match_devname(char *devname, nvme_ns_t ns)
 {
+	nvme_ctrl_t c = nvme_ns_get_ctrl(ns);
+
 	if (!strcmp(devname, nvme_ns_get_name(ns)) ||
-	    !strcmp(devname, nvme_ctrl_get_name(nvme_ns_get_ctrl(ns))) ||
+	    (c && !strcmp(devname, nvme_ctrl_get_name(c))) ||
 	    !strcmp(devname, nvme_ns_get_generic_name(ns)))
 		return true;
 
