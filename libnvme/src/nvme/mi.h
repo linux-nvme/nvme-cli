@@ -80,14 +80,11 @@
  * 1.1, where possible.
  *
  */
-
-#ifndef _LIBNVME_MI_MI_H
-#define _LIBNVME_MI_MI_H
+#pragma once
 
 #include <endian.h>
 #include <stdint.h>
 
-#include <nvme/types.h>
 #include <nvme/tree.h>
 
 /**
@@ -1552,5 +1549,3 @@ int nvme_mi_aem_disable(nvme_mi_ep_t ep);
  * Return: 0 is a success, nonzero is an error and errno may be read for further details
  */
 int nvme_mi_aem_process(nvme_mi_ep_t ep, void *userdata);
-
-#endif /* _LIBNVME_MI_MI_H */
