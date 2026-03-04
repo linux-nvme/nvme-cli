@@ -21,7 +21,6 @@ extern "C" {
 #include <nvme/lib-types.h>
 #include <nvme/lib.h>
 #include <nvme/linux.h>
-#include <nvme/log.h>
 #include <nvme/nbft.h>
 #include <nvme/tree.h>
 #include <nvme/types.h>

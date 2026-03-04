@@ -185,7 +185,6 @@ foreach hdr : [
     'lib',
     'lib-types',
     'linux',
-    'log',
     'mi',
     'nbft',
     'tree',

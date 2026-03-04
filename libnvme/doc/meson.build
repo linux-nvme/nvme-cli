@@ -13,7 +13,6 @@ api_files = [
     'filters.h',
     'ioctl.h',
     'linux.h',
-    'log.h',
     'mi.h',
     'nbft.h',
     'tree.h',

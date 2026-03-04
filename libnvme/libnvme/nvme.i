@@ -510,7 +510,7 @@ struct nvme_ns {
 		else if (!strcmp(level, "crit")) log_level = LOG_CRIT;
 		else if (!strcmp(level, "alert")) log_level = LOG_ALERT;
 		else if (!strcmp(level, "emerg")) log_level = LOG_EMERG;
-		nvme_init_logging($self, log_level, false, false);
+		nvme_set_logging_level($self, log_level, false, false);
 	}
 	%pythoncode %{
 	def hosts(self):

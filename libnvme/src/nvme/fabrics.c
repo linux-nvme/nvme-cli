@@ -35,9 +35,7 @@
 #include <libnvme.h>
 
 #include "cleanup.h"
-#include "log.h"
 #include "private.h"
-#include "util.h"
 
 #define NVMF_HOSTID_SIZE	37
 
@@ -2818,7 +2816,7 @@ static int nbft_connect(struct nvme_global_ctx *ctx,
 
 	/* Pause logging for unavailable SSNSs */
 	if (ss && ss->unavailable && saved_log_level < 1)
-		nvme_init_logging(ctx, -1, false, false);
+		nvme_set_logging_level(ctx, -1, false, false);
 
 	if (e) {
 		if (e->trtype == NVMF_TRTYPE_TCP &&
@@ -2830,7 +2828,7 @@ static int nbft_connect(struct nvme_global_ctx *ctx,
 
 	/* Resume logging */
 	if (ss && ss->unavailable && saved_log_level < 1)
-		nvme_init_logging(ctx,
+		nvme_set_logging_level(ctx,
 				  saved_log_level,
 				  saved_log_pid,
 				  saved_log_tstamp);

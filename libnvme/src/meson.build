@@ -105,7 +105,6 @@ install_headers(
         'nvme/lib-types.h',
         'nvme/lib.h',
         'nvme/linux.h',
-        'nvme/log.h',
         'nvme/mi.h',
         'nvme/nbft.h',
         'nvme/tree.h',
