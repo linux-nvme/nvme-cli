@@ -5,17 +5,15 @@
  * Author: karl.dedow@solidigm.com
  */
 
-#include "solidigm-log-page-dir.h"
-
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 
 #include "common.h"
 #include "nvme-print.h"
-
 #include "plugins/ocp/ocp-nvme.h"
 #include "plugins/ocp/ocp-utils.h"
+#include "solidigm-log-page-dir.h"
 #include "solidigm-util.h"
 
 #define MIN_VENDOR_LID 0xC0

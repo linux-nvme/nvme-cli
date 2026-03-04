@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 #include <arpa/inet.h>
+
 #include <ccan/endian/endian.h>
 
 #include <libnvme.h>

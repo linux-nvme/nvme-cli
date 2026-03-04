@@ -4,11 +4,11 @@
  * Copyright (c) 2023 Red Hat Inc.
  */
 
-#include <stdlib.h>
+#include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <inttypes.h>
 
 #include <libnvme.h>
 

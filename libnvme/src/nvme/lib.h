@@ -8,8 +8,8 @@
  */
 #pragma once
 
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <syslog.h>
 
 #include <nvme/lib-types.h>

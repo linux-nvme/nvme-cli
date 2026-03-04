@@ -20,10 +20,11 @@
  * MA  02110-1301, USA.
  */
 
+#include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+
 #include <sys/types.h>
 
 static const char base64_table[65] =

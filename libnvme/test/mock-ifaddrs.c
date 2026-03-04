@@ -3,15 +3,16 @@
  * This file is part of libnvme.
  * Copyright (c) 2023 Martin Belanger, Dell Technologies Inc.
  */
-#include <sys/types.h>
 #include <ifaddrs.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
-#include <netinet/in.h>
-#include <net/if.h>
+
 #include <arpa/inet.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <sys/types.h>
 
 struct ifaddrs_storage {
 	struct ifaddrs ifa;

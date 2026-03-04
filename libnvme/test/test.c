@@ -15,18 +15,17 @@
  * program exists successfully; an ungraceful exit means a bug exists
  * somewhere.
  */
-#include <libnvme.h>
-
-#include "nvme/private.h"
-
+#include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <inttypes.h>
-#include <libnvme.h>
 
 #include <ccan/endian/endian.h>
+
+#include <libnvme.h>
+
+#include "nvme/private.h"
 
 static bool nvme_match_subsysnqn_filter(nvme_subsystem_t s,
 		nvme_ctrl_t c, nvme_ns_t ns, void *f_args)

@@ -7,21 +7,23 @@
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
+#include <errno.h>
+#include <fcntl.h>
+#ifndef _GNU_SOURCE
+#include <libgen.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <unistd.h>
+
+#include <sys/ioctl.h>
+#include <sys/param.h>
+#include <sys/stat.h>
 
 #ifndef _GNU_SOURCE
 #include <libgen.h>
 #endif
-
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#include <sys/ioctl.h>
 
 #ifdef CONFIG_OPENSSL
 #include <openssl/evp.h>

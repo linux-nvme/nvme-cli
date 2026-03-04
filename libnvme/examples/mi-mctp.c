@@ -13,15 +13,15 @@
 #include <assert.h>
 #include <ctype.h>
 #include <err.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <string.h>
-
-#include <libnvme-mi.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
+
+#include <libnvme-mi.h>
 
 static void show_port_pcie(struct nvme_mi_read_port_info *port)
 {

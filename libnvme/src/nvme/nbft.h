@@ -9,9 +9,9 @@
 #pragma once
 
 #include <stdbool.h>
-#include <sys/types.h>
 
 #include <linux/types.h>
+#include <sys/types.h>
 
 #include <nvme/lib-types.h>
 

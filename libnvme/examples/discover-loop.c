@@ -14,13 +14,14 @@
  */
 #define __SANE_USERSPACE_TYPES__
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <libnvme.h>
 
 #include <ccan/endian/endian.h>
+
+#include <libnvme.h>
 
 static void print_discover_log(struct nvmf_discovery_log *log)
 {

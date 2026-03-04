@@ -6,13 +6,14 @@
  * Authors: Daniel Wagner <wagi@kernel.org>
  */
 
+#include <stdio.h>
+#include <string.h>
+
 #include <openssl/core_names.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/kdf.h>
 #include <openssl/params.h>
-#include <stdio.h>
-#include <string.h>
 
 #define SHA256_LEN 32
 

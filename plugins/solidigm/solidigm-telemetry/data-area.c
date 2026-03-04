@@ -5,15 +5,16 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include "common.h"
-#include "header.h"
-#include "cod.h"
-#include "data-area.h"
-#include "config.h"
-#include "nlog.h"
-#include "skht.h"
-#include "side-trace.h"
 #include <ctype.h>
+
+#include "cod.h"
+#include "common.h"
+#include "config.h"
+#include "data-area.h"
+#include "header.h"
+#include "nlog.h"
+#include "side-trace.h"
+#include "skht.h"
 
 #define SIGNED_int_PREFIX "int"
 #define SIGNED_INT_PREFIX "INT"

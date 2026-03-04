@@ -24,31 +24,27 @@
 /**
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
-#include "nvme/tree.h"
-#include "nvme/types.h"
-#include "util/cleanup.h"
+#include <dirent.h>
 #include <errno.h>
-#include <getopt.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <inttypes.h>
+#include <libgen.h>
 #include <locale.h>
-#include <stdio.h>
+#include <math.h>
+#include <signal.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <math.h>
-#include <dirent.h>
-#include <libgen.h>
-#include <signal.h>
 
 #include <linux/fs.h>
 
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
-
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #if HAVE_SYS_RANDOM
 	#include <sys/random.h>
@@ -59,10 +55,13 @@
 #include "common.h"
 #include "nvme.h"
 #include "nvme-print.h"
+#include "nvme/tree.h"
+#include "nvme/types.h"
 #include "plugin.h"
-#include "util/base64.h"
-#include "util/crc32.h"
 #include "util/argconfig.h"
+#include "util/base64.h"
+#include "util/cleanup.h"
+#include "util/crc32.h"
 #include "util/suffix.h"
 #include "logging.h"
 #include "util/sighdl.h"

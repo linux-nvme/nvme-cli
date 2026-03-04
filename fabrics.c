@@ -19,24 +19,25 @@
  * Fabrics specification standard.
  */
 
-#include <errno.h>
-#include <getopt.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <unistd.h>
 #include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <getopt.h>
 #include <inttypes.h>
 #include <libgen.h>
-#include <sys/stat.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <syslog.h>
 #include <time.h>
+#include <unistd.h>
 
-#include <sys/types.h>
 #include <linux/types.h>
+
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <libnvme.h>
 

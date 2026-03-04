@@ -8,22 +8,21 @@
  */
 #include <errno.h>
 #include <fcntl.h>
-#ifdef CONFIG_LIBURING
-#include <liburing.h>
-#endif
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <inttypes.h>
 
 #include <sys/ioctl.h>
 #include <sys/stat.h>
-#include <sys/time.h>
+
+#ifdef CONFIG_LIBURING
+#include <liburing.h>
+#endif
 
 #include <ccan/build_assert/build_assert.h>
-#include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
+#include <ccan/minmax/minmax.h>
 
 #include <libnvme.h>
 

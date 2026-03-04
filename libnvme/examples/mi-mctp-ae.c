@@ -10,19 +10,20 @@
 #include <assert.h>
 #include <ctype.h>
 #include <err.h>
+#include <errno.h>
+#include <poll.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <string.h>
-#include <errno.h>
 #include <unistd.h> // for usleep
 
-#include <libnvme-mi.h>
-#include <poll.h>
+#include <sys/select.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
-#include <sys/select.h>
+
+#include <libnvme-mi.h>
 
 struct app_userdata {
 	uint32_t count;

@@ -5,15 +5,16 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include "debug-info.h"
+#include <string.h>
+
 #include "common.h"
 #include "config.h"
 #include "data-area.h"
+#include "debug-info.h"
 #include "skht.h"
 #include "tracker.h"
 #include "uart-log.h"
 #include "util/json.h"
-#include <string.h>
 
 #define DEBUG_INFO_SIGNATURE 0x54321234 /* "ST21" */
 #define MAX_DEBUG_INFO_CORES 255

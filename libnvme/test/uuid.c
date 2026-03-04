@@ -4,8 +4,8 @@
  * Copyright (c) 2022 Daniel Wagner, SUSE Software Solutions
  */
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <ccan/array_size/array_size.h>
 

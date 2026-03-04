@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <libnvme.h>
+
 #include "plugin.h"
 #include "util/argconfig.h"
-
-#include <libnvme.h>
 
 static int version_cmd(struct plugin *plugin)
 {

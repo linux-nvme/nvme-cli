@@ -7,15 +7,14 @@
  */
 
 #include <errno.h>
-#include <stdlib.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
-#include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
+#include <ccan/minmax/minmax.h>
 
 #include <libnvme.h>
 #include <libnvme-mi.h>

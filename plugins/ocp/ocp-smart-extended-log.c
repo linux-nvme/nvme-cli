@@ -6,14 +6,14 @@
  *          Venkat Ramesh <venkatraghavan@fb.com>
  */
 
-#include "ocp-smart-extended-log.h"
-
 #include <errno.h>
 #include <stdio.h>
 
 #include "common.h"
 #include "nvme-print.h"
+#include "ocp-nvme.h"
 #include "ocp-print.h"
+#include "ocp-smart-extended-log.h"
 #include "ocp-utils.h"
 
 /* C0 SCAO Log Page */

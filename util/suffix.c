@@ -30,17 +30,17 @@
  *
  */
 
-#include "suffix.h"
-#include "common.h"
-
-#include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
-#include <math.h>
 #include <float.h>
 #include <limits.h>
 #include <locale.h>
+#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#include "suffix.h"
+#include "common.h"
 
 static struct si_suffix {
 	long double magnitude;

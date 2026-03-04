@@ -6,9 +6,9 @@
  * Authors: Keith Busch <keith.busch@wdc.com>
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
+#include <dirent.h>
 #include <stdio.h>
 #include <string.h>
-#include <dirent.h>
 
 #include <libnvme.h>
 

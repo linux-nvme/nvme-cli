@@ -4,11 +4,11 @@
  * Copyright (c) 2024 Daniel Wagner, SUSE LLC
  */
 
-#include <string.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
-#include <errno.h>
 
 #include <libnvme.h>
 

@@ -18,12 +18,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <libnvme-mi.h>
-
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 
 #include <dbus/dbus.h>
+
+#include <libnvme-mi.h>
 
 #define MCTP_DBUS_NAME "au.com.codeconstruct.MCTP1"
 #define MCTP_DBUS_PATH "/au/com/codeconstruct/mctp1"
