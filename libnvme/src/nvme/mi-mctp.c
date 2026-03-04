@@ -954,7 +954,7 @@ struct nvme_global_ctx *nvme_mi_scan_mctp(void)
 	dbus_bool_t drc;
 	DBusError berr;
 
-	ctx = nvme_mi_create_global_ctx(NULL, DEFAULT_LOGLEVEL);
+	ctx = nvme_create_global_ctx(NULL, DEFAULT_LOGLEVEL);
 	if (!ctx) {
 		errno = ENOMEM;
 		return NULL;
@@ -1028,7 +1028,7 @@ out:
 
 	if (rc < 0) {
 		if (ctx) {
-			nvme_mi_free_global_ctx(ctx);
+			nvme_free_global_ctx(ctx);
 		}
 		errno = errno_save;
 		ctx = NULL;

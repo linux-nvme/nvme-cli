@@ -132,14 +132,12 @@ LIBNVME_2_0 {
 		nvme_mi_close;
 		nvme_mi_close_transport_handle;
 		nvme_mi_control;
-		nvme_mi_create_global_ctx;
 		nvme_mi_ctrl_id;
 		nvme_mi_endpoint_desc;
 		nvme_mi_ep_get_timeout;
 		nvme_mi_ep_set_timeout;
 		nvme_mi_first_ctrl;
 		nvme_mi_first_endpoint;
-		nvme_mi_free_global_ctx;
 		nvme_mi_init_transport_handle;
 		nvme_mi_mi_config_get;
 		nvme_mi_mi_config_set;
