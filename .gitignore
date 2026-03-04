@@ -23,4 +23,3 @@ tests/*.pyc
 dist/
 
 .vscode/
-.github
