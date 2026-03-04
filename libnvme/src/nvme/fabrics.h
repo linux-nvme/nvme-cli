@@ -380,12 +380,12 @@ int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
 int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **uri);
 
 /**
- * nvme_free_uri() - Free the URI structure
+ * nvmf_free_uri() - Free the URI structure
  * @uri:	&nvme_fabrics_uri structure
  *
  * Free an &nvme_fabrics_uri structure.
  */
-void nvme_free_uri(struct nvme_fabrics_uri *uri);
+void nvmf_free_uri(struct nvme_fabrics_uri *uri);
 
 /**
  * nvmf_get_default_trsvcid() - Get default transport service ID

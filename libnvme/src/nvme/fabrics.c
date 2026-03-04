@@ -1962,13 +1962,13 @@ int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **urip)
 
 	if (sscanf(str, "%m[^:/]://%m[^/?#]%ms",
 		   &scheme, &authority, &path) < 2) {
-		nvme_free_uri(uri);
+		nvmf_free_uri(uri);
 		return -EINVAL;
 	}
 
 	if (sscanf(scheme, "%m[^+]+%ms",
 		   &uri->scheme, &uri->protocol) < 1) {
-		nvme_free_uri(uri);
+		nvmf_free_uri(uri);
 		return -EINVAL;
 	}
 
@@ -1986,7 +1986,7 @@ int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **urip)
 		/* treat it as IPv4/hostname */
 		if (sscanf(host, "%m[^:]:%d",
 			   &h, &uri->port) < 1) {
-			nvme_free_uri(uri);
+			nvmf_free_uri(uri);
 			return -EINVAL;
 		}
 		uri->host = unescape_uri(h, 0);
@@ -2030,7 +2030,7 @@ int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **urip)
 	return 0;
 }
 
-void nvme_free_uri(struct nvme_fabrics_uri *uri)
+void nvmf_free_uri(struct nvme_fabrics_uri *uri)
 {
 	char **s;
 
