@@ -1327,25 +1327,6 @@ int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
 		       size_t *resp_data_size);
 
 /**
- * nvme_mi_admin_admin_passthru() - Submit an nvme admin passthrough command
- * @hdl:	Transport handle to send command to
- * @cmd:	The nvme admin command to send
- *
- * Send a customized NVMe Admin command request message and get the corresponding
- * response message.
- *
- * This interface supports no data, host to controller and controller to
- * host but it doesn't support bidirectional data transfer.
- * Also this interface only supports data transfer size range [0, 4096] (bytes)
- * so the & data_len parameter must be less than 4097.
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
- */
-int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd);
-
-/**
  * nvme_mi_control() - Perform a Control Primitive command
  * @ep: endpoint for MI communication
  * @opcode: Control Primitive opcode (using &enum nvme_mi_control_opcode)

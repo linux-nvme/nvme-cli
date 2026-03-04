@@ -123,7 +123,6 @@ LIBNVME_2_0 {
 		nvme_insert_tls_key_versioned;
 		nvme_lookup_key;
 		nvme_lookup_keyring;
-		nvme_mi_admin_admin_passthru;
 		nvme_mi_admin_xfer;
 		nvme_mi_aem_disable;
 		nvme_mi_aem_enable;
