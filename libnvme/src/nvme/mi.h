@@ -651,38 +651,6 @@ struct nvme_mi_control_resp {
  */
 const char *nvme_mi_status_to_string(int status);
 
-/**
- * nvme_mi_create_global_ctx() - Create top-level MI (ctx) handle.
- * @fp:		File descriptor for logging messages
- * @log_level:	Logging level to use
- *
- * Create the top-level (library) handle for creating subsequent endpoint
- * objects. Similar to nvme_create_global_ctx(), but we provide this to
- * allow linking without the core libnvme.
- *
- * Return: new nvme_global_ctx object, or NULL on failure.
- *
- * See &nvme_create_global_ctx.
- */
-struct nvme_global_ctx *nvme_mi_create_global_ctx(FILE *fp, int log_level);
-
-/**
- * nvme_mi_free_global_ctx() - Free nvme_global_ctx object.
- * @ctx:	&struct nvme_global_ctx object
- */
-void nvme_mi_free_global_ctx(struct nvme_global_ctx *ctx);
-
-/**
- * nvme_mi_set_probe_enabled() - enable/disable the probe for new endpoints
- * @ctx:	&struct nvme_global_ctx object
- * @enabled: whether to probe new endpoints
- *
- * Controls whether newly-created endpoints are probed for quirks on creation.
- * Defaults to enabled, which results in some initial messaging with the
- * endpoint to determine model-specific details.
- */
-void nvme_mi_set_probe_enabled(struct nvme_global_ctx *ctx, bool enabled);
-
 /* Top level management object: NVMe-MI Management Endpoint */
 struct nvme_mi_ep;
 

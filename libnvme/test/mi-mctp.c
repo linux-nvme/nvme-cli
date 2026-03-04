@@ -1461,7 +1461,7 @@ int main(void)
 
 	__nvme_mi_mctp_set_ops(&ops);
 
-	ctx = nvme_mi_create_global_ctx(fd, DEFAULT_LOGLEVEL);
+	ctx = nvme_create_global_ctx(fd, DEFAULT_LOGLEVEL);
 	assert(ctx);
 
 	ep = nvme_mi_open_mctp(ctx, 0, 0);
@@ -1473,7 +1473,7 @@ int main(void)
 	}
 
 	nvme_mi_close(ep);
-	nvme_mi_free_global_ctx(ctx);
+	nvme_free_global_ctx(ctx);
 
 	test_close_log(fd);
 

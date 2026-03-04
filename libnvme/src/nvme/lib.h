@@ -205,6 +205,17 @@ void nvme_transport_handle_set_decide_retry(struct nvme_transport_handle *hdl,
 				struct nvme_passthru_cmd *cmd, int err));
 
 /**
+ * nvme_set_probe_enabled() - enable/disable the probe for new MI endpoints
+ * @ctx:	&struct nvme_global_ctx object
+ * @enabled: whether to probe new endpoints
+ *
+ * Controls whether newly-created endpoints are probed for quirks on creation.
+ * Defaults to enabled, which results in some initial messaging with the
+ * endpoint to determine model-specific details.
+ */
+void nvme_set_probe_enabled(struct nvme_global_ctx *ctx, bool enabled);
+
+/**
  * nvme_set_dry_run() - Set global dry run state
  * @ctx:	struct nvme_global_ctx object
  * @enable:	Enable/disable dry run state
