@@ -8,9 +8,12 @@
  */
 #pragma once
 
+#include <stdbool.h>
 #include <sys/types.h>
 
-#include <nvme/types.h>
+#include <linux/types.h>
+
+#include <nvme/lib-types.h>
 
 /**
  * DOC: nbft.h

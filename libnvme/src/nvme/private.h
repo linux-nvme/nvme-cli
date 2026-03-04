@@ -443,6 +443,8 @@ nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, const char *transport,
 			   const char *subsysnqn, const char *host_traddr,
 			   const char *host_iface);
 
+void __nvme_free_host(nvme_host_t h);
+
 #if (LOG_FUNCNAME == 1)
 #define __nvme_log_func __func__
 #else

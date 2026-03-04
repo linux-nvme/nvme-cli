@@ -182,6 +182,8 @@ foreach hdr : [
     'fabrics',
     'filters',
     'ioctl',
+    'lib',
+    'lib-types',
     'linux',
     'log',
     'mi',

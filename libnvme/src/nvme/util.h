@@ -150,6 +150,7 @@ const char *nvme_errno_to_string(int err);
 const char *nvme_strerror(int err);
 
 struct nvme_root;
+struct nvme_global_ctx;
 
 int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr, char **hostname);
 
