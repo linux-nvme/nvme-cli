@@ -96,6 +96,12 @@ option(
   description : 'directory for udev rules files'
 )
 option(
+  'nmdispatchdir',
+  type : 'string',
+  value : 'lib/NetworkManager/dispatcher.d',
+  description : 'directory for NetworkManager dispatcher scripts'
+)
+option(
   'version-tag',
   type : 'string',
   description : 'override the git version string'
