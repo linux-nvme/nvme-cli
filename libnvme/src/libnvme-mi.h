@@ -13,10 +13,10 @@
 extern "C" {
 #endif
 
+#include <nvme/lib.h>
 #include <nvme/types.h>
 #include <nvme/cmds.h>
 #include <nvme/mi.h>
-#include <nvme/log.h>
 
 #ifdef __cplusplus
 }

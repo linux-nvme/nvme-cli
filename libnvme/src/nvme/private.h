@@ -734,4 +734,3 @@ static inline __u16 nvmf_exat_size(size_t val_len)
 {
 	return (__u16)(sizeof(struct nvmf_ext_attr) + nvmf_exat_len(val_len));
 }
-

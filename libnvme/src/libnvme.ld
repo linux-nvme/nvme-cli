@@ -85,6 +85,7 @@ LIBNVME_2_0 {
 		nvme_get_feature_length;
 		nvme_get_host_telemetry;
 		nvme_get_log;
+		nvme_get_logging_level;
 		nvme_get_logical_block_size;
 		nvme_get_new_host_telemetry;
 		nvme_get_ns_attr;
@@ -117,7 +118,6 @@ LIBNVME_2_0 {
 		nvme_init_ctrl;
 		nvme_init_ctrl_list;
 		nvme_init_dsm_range;
-		nvme_init_logging;
 		nvme_insert_tls_key;
 		nvme_insert_tls_key_compat;
 		nvme_insert_tls_key_versioned;
@@ -230,6 +230,7 @@ LIBNVME_2_0 {
 		nvme_set_etdas;
 		nvme_set_ioctl_probing;
 		nvme_set_keyring;
+		nvme_set_logging_level;
 		nvme_set_property;
 		nvme_set_root;
 		nvme_skip_namespaces;

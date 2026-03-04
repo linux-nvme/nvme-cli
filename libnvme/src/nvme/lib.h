@@ -10,8 +10,16 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <syslog.h>
 
 #include <nvme/lib-types.h>
+
+#ifndef MAX_LOGLEVEL
+#  define MAX_LOGLEVEL LOG_DEBUG
+#endif
+#ifndef DEFAULT_LOGLEVEL
+#  define DEFAULT_LOGLEVEL LOG_NOTICE
+#endif
 
 /**
  * nvme_create_global_ctx() - Initialize global context object
@@ -29,6 +37,33 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level);
  * Free an &struct nvme_global_ctx object and all attached objects
  */
 void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
+
+/**
+ * nvme_set_logging_level() - Set current logging level
+ * @ctx:	struct nvme_global_ctx object
+ * @log_level:	Logging level to set
+ * @log_pid:	Boolean to enable logging of the PID
+ * @log_tstamp:	Boolean to enable logging of the timestamp
+ *
+ * Sets the current logging level for the global context.
+ */
+void nvme_set_logging_level(struct nvme_global_ctx *ctx, int log_level,
+		bool log_pid, bool log_tstamp);
+
+/**
+ * nvme_get_logging_level() - Get current logging level
+ * @ctx:	struct nvme_global_ctx object
+ * @log_pid:	Pointer to store a current value of logging of
+ *		the PID flag at (optional).
+ * @log_tstamp:	Pointer to store a current value of logging of
+ *		the timestamp flag at (optional).
+ *
+ * Retrieves current values of logging variables.
+ *
+ * Return: current log level value or DEFAULT_LOGLEVEL if not initialized.
+ */
+int nvme_get_logging_level(struct nvme_global_ctx *ctx, bool *log_pid,
+		bool *log_tstamp);
 
 /**
  * nvme_open() - Open an nvme controller or namespace device
