@@ -15,7 +15,7 @@ main = executable(
     dependencies: [
         config_dep,
         ccan_dep,
-        libnvme_dep,
+        libnvme_test_dep,
     ],
 )
 
@@ -61,7 +61,7 @@ zns = executable(
     dependencies: [
         config_dep,
         ccan_dep,
-        libnvme_dep,
+        libnvme_test_dep,
     ],
 )
 

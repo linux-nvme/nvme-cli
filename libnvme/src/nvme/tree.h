@@ -503,28 +503,6 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 		p = nvme_namespace_next_path(n, p))
 
 /**
- * nvme_ns_get_transport_handle() - Get associated transport handle
- * @n:	Namespace instance
- *
- * libnvme will open() the file (if not already opened) and keep
- * an internal copy of the link handle. Following calls to
- * this API retrieve the internal cached copy of the link
- * handle. The file will remain opened and the device handle will
- * remain cached until the ns object is deleted or
- * nvme_ns_release_transport_handle() is called.
- *
- * Return: Link handle with @n or NULL
- */
-struct nvme_transport_handle *nvme_ns_get_transport_handle(nvme_ns_t n);
-
-/**
- * nvme_ns_release_transport_handle() - Free transport handle from ns object
- * @n:	Namespace instance
- *
- */
-void nvme_ns_release_transport_handle(nvme_ns_t n);
-
-/**
  * nvme_ns_get_nsid() - NSID of a namespace
  * @n:	Namespace instance
  *
