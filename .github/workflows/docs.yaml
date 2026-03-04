@@ -1,5 +1,5 @@
 ---
-name: docs
+name: Build documentation
 
 on:
   push:
