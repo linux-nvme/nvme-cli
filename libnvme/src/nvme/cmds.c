@@ -26,17 +26,18 @@ int nvme_fw_download_seq(struct nvme_transport_handle *hdl, bool ish,
 		nvme_init_mi_cmd_flags(&cmd, ish);
 
 	while (size > 0) {
-		err = nvme_init_fw_download(&cmd, data,
-			min(xfer, size), offset);
+		__u32 chunk = min(xfer, size);
+
+		err = nvme_init_fw_download(&cmd, data, chunk, offset);
 		if (err)
 			break;
 		err = nvme_submit_admin_passthru(hdl, &cmd);
 		if (err)
 			break;
 
-		data += xfer;
-		size -= xfer;
-		offset += xfer;
+		data += chunk;
+		size -= chunk;
+		offset += chunk;
 	}
 
 	return err;
