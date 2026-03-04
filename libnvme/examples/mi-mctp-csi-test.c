@@ -237,12 +237,12 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	ctx = nvme_mi_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	ctx = nvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
 	if (!ctx)
 		err(EXIT_FAILURE, "can't create NVMe root");
 
 	rc = do_action_endpoint(action, ctx, net, eid, argc, argv);
-	nvme_mi_free_global_ctx(ctx);
+	nvme_free_global_ctx(ctx);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

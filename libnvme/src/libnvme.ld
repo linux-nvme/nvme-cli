@@ -157,7 +157,6 @@ LIBNVME_2_0 {
 		nvme_mi_scan_ep;
 		nvme_mi_scan_mctp;
 		nvme_mi_set_csi;
-		nvme_mi_set_probe_enabled;
 		nvme_mi_status_to_string;
 		nvme_mi_submit_entry;
 		nvme_mi_submit_exit;
@@ -229,6 +228,7 @@ LIBNVME_2_0 {
 		nvme_set_ioctl_probing;
 		nvme_set_keyring;
 		nvme_set_logging_level;
+		nvme_set_probe_enabled;
 		nvme_set_property;
 		nvme_set_root;
 		nvme_skip_namespaces;

@@ -43,20 +43,6 @@ static int nvme_mi_get_async_message(nvme_mi_ep_t ep,
 static const int default_timeout = 1000; /* milliseconds; endpoints may
 					    override */
 
-static bool nvme_mi_probe_enabled_default(void)
-{
-	char *val;
-
-	val = getenv("LIBNVME_MI_PROBE_ENABLED");
-	if (!val)
-		return true;
-
-	return strcmp(val, "0") &&
-		strcasecmp(val, "false") &&
-		strncasecmp(val, "disable", 7);
-
-}
-
 static int parse_devname(const char *dev, unsigned int *net, uint8_t *eid,
 			unsigned int *ctrl)
 {
@@ -111,53 +97,6 @@ void __nvme_transport_handle_close_mi(struct nvme_transport_handle *hdl)
 {
 	list_del(&hdl->ep_entry);
 	free(hdl);
-}
-
-/* MI-equivalent of nvme_create_root, but avoids clashing symbol names
- * when linking against both libnvme and libnvme-mi.
- */
-struct nvme_global_ctx *nvme_mi_create_global_ctx(FILE *fp, int log_level)
-{
-	struct nvme_global_ctx *ctx;
-	int fd;
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx)
-		return NULL;
-
-	if (fp) {
-		fd = fileno(fp);
-		if (fd < 0) {
-			free(ctx);
-			return NULL;
-		}
-	} else
-		fd = STDERR_FILENO;
-
-	ctx->log.fd = fd;
-	ctx->log.level = log_level;
-
-	ctx->mi_probe_enabled = nvme_mi_probe_enabled_default();
-
-	list_head_init(&ctx->hosts);
-	list_head_init(&ctx->endpoints);
-
-	return ctx;
-}
-
-void nvme_mi_free_global_ctx(struct nvme_global_ctx *ctx)
-{
-	nvme_mi_ep_t ep, tmp;
-
-	nvme_mi_for_each_endpoint_safe(ctx, ep, tmp)
-		nvme_mi_close(ep);
-
-	free(ctx);
-}
-
-void nvme_mi_set_probe_enabled(struct nvme_global_ctx *ctx, bool enabled)
-{
-	ctx->mi_probe_enabled = enabled;
 }
 
 static void nvme_mi_record_resp_time(struct nvme_mi_ep *ep)

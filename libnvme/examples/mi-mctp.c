@@ -846,9 +846,9 @@ int main(int argc, char **argv)
 			printf("---\n");
 			free(desc);
 		}
-		nvme_mi_free_global_ctx(ctx);
+		nvme_free_global_ctx(ctx);
 	} else {
-		ctx = nvme_mi_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+		ctx = nvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
 		if (!ctx)
 			err(EXIT_FAILURE, "can't create NVMe root");
 
@@ -857,7 +857,7 @@ int main(int argc, char **argv)
 			errx(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
 		rc = do_action_endpoint(action, ep, argc, argv);
 		nvme_mi_close(ep);
-		nvme_mi_free_global_ctx(ctx);
+		nvme_free_global_ctx(ctx);
 	}
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;

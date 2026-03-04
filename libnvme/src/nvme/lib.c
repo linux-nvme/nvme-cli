@@ -13,8 +13,23 @@
 #include "private.h"
 
 #include <libgen.h>
+#include <strings.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+
+static bool nvme_mi_probe_enabled_default(void)
+{
+	char *val;
+
+	val = getenv("LIBNVME_MI_PROBE_ENABLED");
+	if (!val)
+		return true;
+
+	return strcmp(val, "0") &&
+		strcasecmp(val, "false") &&
+		strncasecmp(val, "disable", 7);
+
+}
 
 struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 {
@@ -41,6 +56,7 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 	list_head_init(&ctx->endpoints);
 
 	ctx->ioctl_probing = true;
+	ctx->mi_probe_enabled = nvme_mi_probe_enabled_default();
 
 	return ctx;
 }
@@ -48,6 +64,7 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 void nvme_free_global_ctx(struct nvme_global_ctx *ctx)
 {
 	struct nvme_host *h, *_h;
+	nvme_mi_ep_t ep, tmp;
 
 	if (!ctx)
 		return;
@@ -58,6 +75,8 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx)
 	free(ctx->options);
 	nvme_for_each_host_safe(ctx, h, _h)
 		__nvme_free_host(h);
+	nvme_mi_for_each_endpoint_safe(ctx, ep, tmp)
+		nvme_mi_close(ep);
 	free(ctx->config_file);
 	free(ctx->application);
 	free(ctx);
