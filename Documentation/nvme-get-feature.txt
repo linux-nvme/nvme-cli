@@ -16,7 +16,7 @@ SYNOPSIS
 			[--raw-binary | -b] [--cdw11=<cdw11> | -c <cdw11>]
 			[--human-readable | -H] [--changed | -C]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout> | -t <timeout>]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -146,7 +146,6 @@ OPTIONS
 --verbose::
 	Increase the information detail in the output.
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 

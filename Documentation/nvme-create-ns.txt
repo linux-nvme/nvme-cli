@@ -20,7 +20,7 @@ SYNOPSIS
 			[--lbstm=<lbstm> | -l <lbstm>]
 			[--nphndls=<nphndls> | -n <nphndls>]
 			[--block-size=<block-size> | -b <block-size>]
-			[--timeout=<timeout> | -t <timeout>]
+			[--timeout=<timeout>]
 			[--nsze-si=<nsze-si> | -S <nsze-si>]
 			[--ncap-si=<ncap-si> | -C <ncap-si>]
 			[--azr | -z]
@@ -148,7 +148,6 @@ OPTIONS
 --verbose::
 	Increase the information detail in the output.
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value 120,000. In milliseconds.
 

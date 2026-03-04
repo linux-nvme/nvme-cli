@@ -35,7 +35,6 @@ OPTIONS
 	Set the reporting format to 'normal', 'json' or 'binary'. Only one
 	output format can be used at a time.
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 

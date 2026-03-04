@@ -13,7 +13,7 @@ SYNOPSIS
 			[--max-dw=<max-dw> | -m <max-dw>]
 			[--action=<action-type> | -a <action-type>]
 			[--range-len=<range-len> | -l <range-len>]
-			[--timeout=<timeout> | -t <timeout>]
+			[--timeout=<timeout>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 
 DESCRIPTION
@@ -53,7 +53,6 @@ OPTIONS
 --range-len=<range-len>::
 	Range Length(RL) specifies the length of the range of contiguous LBAs beginning at SLBA
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 

@@ -14,7 +14,7 @@ SYNOPSIS
 			[--cap-lower=<cap-lower> | -l <cap-lower>]
 			[--cap-upper=<cap-upper> | -u <cap-upper>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout> | -t <timeout>]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -56,7 +56,6 @@ OPTIONS
 --verbose::
 	Increase the information detail in the output.
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 

@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme zns zrwa-flush-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
 			[--lba=<LBA> | -l <LBA>]
-			[--timeout=<timeout> | -t <timeout>]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -33,7 +33,6 @@ OPTIONS
 --lba=<lba>::
 	The LBA to flush up to.
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 

@@ -12,7 +12,7 @@ SYNOPSIS
 'nvme set-property' <device> [--offset=<offset> | -O <offset>]
 			[--value=<val> | -V <val>]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout> | -t <timeout>]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -37,7 +37,6 @@ OPTIONS
 --verbose::
 	Increase the information detail in the output.
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 
