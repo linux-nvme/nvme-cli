@@ -50,19 +50,9 @@ subdir('rst')
 top_source_dir = meson.current_source_dir() + '/../'
 
 kernel_doc = find_program(top_source_dir + 'scripts/kernel-doc')
+kernel_doc_check = find_program(top_source_dir +'scripts/kernel-doc-check')
 
-if is_windows
-    powershell = find_program('powershell', required: false)
-    if powershell.found()
-        kernel_doc_check_script = top_source_dir + 'scripts/kernel-doc-check.ps1'
-        test('libnvme - kdoc', powershell,
-             args: ['-ExecutionPolicy', 'Bypass', '-File', kernel_doc_check_script] + api_paths)
-    endif
-else
-    kernel_doc_check = find_program(top_source_dir +'scripts/kernel-doc-check')
-
-    test('libnvme - kdoc', kernel_doc_check, args: api_paths)
-endif
+test('libnvme - kdoc', kernel_doc_check, args: api_paths)
 
 if want_docs != 'false'
     if want_docs == 'all' or want_docs == 'man'

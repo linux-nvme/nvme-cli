@@ -116,10 +116,8 @@ version_tag = get_option('version-tag')
 if version_tag != ''
     conf.set('GIT_VERSION', '"@0@"'.format(version_tag))
 else
-    windows_vcs_cmd = ['powershell', '-File', 'scripts/meson-vcs-tag.ps1']
-    linux_vcs_cmd = 'scripts/meson-vcs-tag.sh'
     r = run_command(
-        is_windows ? windows_vcs_cmd : linux_vcs_cmd,
+        'scripts/meson-vcs-tag.sh',
         meson.current_source_dir(),
         meson.project_version(),
         check: true,
