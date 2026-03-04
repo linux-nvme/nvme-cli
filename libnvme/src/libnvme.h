@@ -14,16 +14,18 @@
 extern "C" {
 #endif
 
-#include <nvme/types.h>
 #include <nvme/cmds.h>
-#include <nvme/linux.h>
-#include <nvme/ioctl.h>
-#include <nvme/nbft.h>
 #include <nvme/fabrics.h>
 #include <nvme/filters.h>
-#include <nvme/tree.h>
-#include <nvme/util.h>
+#include <nvme/ioctl.h>
+#include <nvme/lib-types.h>
+#include <nvme/lib.h>
+#include <nvme/linux.h>
 #include <nvme/log.h>
+#include <nvme/nbft.h>
+#include <nvme/tree.h>
+#include <nvme/types.h>
+#include <nvme/util.h>
 
 #ifdef __cplusplus
 }

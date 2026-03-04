@@ -11,6 +11,8 @@
 
 #include <linux/types.h>
 
+#include <nvme/lib-types.h>
+
 /**
  * DOC: ioctl.h
  *
@@ -116,8 +118,6 @@ struct nvme_uring_cmd {
 	__u32	timeout_ms;
 	__u32   rsvd2;
 };
-
-struct nvme_transport_handle;
 
 /**
  * nvme_submit_admin_passthru() - Submit an nvme passthrough admin command

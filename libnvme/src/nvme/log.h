@@ -8,8 +8,7 @@
 #include <syslog.h>
 #include <stdio.h>
 
-struct nvme_global_ctx;
-struct nvme_transport_handle;
+#include <nvme/lib-types.h>
 
 #ifndef MAX_LOGLEVEL
 #  define MAX_LOGLEVEL LOG_DEBUG

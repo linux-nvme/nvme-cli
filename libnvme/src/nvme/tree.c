@@ -56,7 +56,6 @@ struct candidate_args {
 };
 typedef bool (*ctrl_match_t)(struct nvme_ctrl *c, struct candidate_args *candidate);
 
-static void __nvme_free_host(nvme_host_t h);
 static void __nvme_free_ctrl(nvme_ctrl_t c);
 static int nvme_subsystem_scan_namespace(struct nvme_global_ctx *ctx,
 					 struct nvme_subsystem *s, char *name);
@@ -324,35 +323,6 @@ int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *
 	return 0;
 }
 
-struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
-{
-	struct nvme_global_ctx *ctx;
-	int fd;
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx)
-		return NULL;
-
-	if (fp) {
-		fd = fileno(fp);
-		if (fd < 0) {
-			free(ctx);
-			return NULL;
-		}
-	} else
-		fd = STDERR_FILENO;
-
-	ctx->log.fd = fd;
-	ctx->log.level = log_level;
-
-	list_head_init(&ctx->hosts);
-	list_head_init(&ctx->endpoints);
-
-	ctx->ioctl_probing = true;
-
-	return ctx;
-}
-
 int nvme_read_config(struct nvme_global_ctx *ctx, const char *config_file)
 {
 	int err;
@@ -513,24 +483,6 @@ void nvme_refresh_topology(struct nvme_global_ctx *ctx)
 	nvme_for_each_host_safe(ctx, h, _h)
 		__nvme_free_host(h);
 	nvme_scan_topology(ctx, NULL, NULL);
-}
-
-void nvme_free_global_ctx(struct nvme_global_ctx *ctx)
-{
-	struct nvme_host *h, *_h;
-
-	if (!ctx)
-		return;
-
-	freeifaddrs(ctx->ifaddrs_cache); /* NULL-safe */
-	ctx->ifaddrs_cache = NULL;
-
-	free(ctx->options);
-	nvme_for_each_host_safe(ctx, h, _h)
-		__nvme_free_host(h);
-	free(ctx->config_file);
-	free(ctx->application);
-	free(ctx);
 }
 
 void nvme_root_release_fds(struct nvme_global_ctx *ctx)
@@ -758,7 +710,7 @@ int nvme_subsystem_get(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-static void __nvme_free_host(struct nvme_host *h)
+void __nvme_free_host(struct nvme_host *h)
 {
 	struct nvme_subsystem *s, *_s;
 

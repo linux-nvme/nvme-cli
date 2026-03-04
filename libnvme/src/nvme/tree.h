@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include <nvme/lib-types.h>
 #include <nvme/types.h>
 
 /**
