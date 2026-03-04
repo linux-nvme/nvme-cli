@@ -2,14 +2,14 @@
 /*
  * Copyright (c) 2021 Martin Wilck, SUSE LLC
  */
-#ifndef _LOG_H
-#define _LOG_H
+#pragma once
 
 #include <stdbool.h>
 #include <syslog.h>
+#include <stdio.h>
 
-/* for nvme_root_t */
-#include <nvme/tree.h>
+struct nvme_global_ctx;
+struct nvme_transport_handle;
 
 #ifndef MAX_LOGLEVEL
 #  define MAX_LOGLEVEL LOG_DEBUG
@@ -63,5 +63,3 @@ void nvme_init_default_logging(FILE *fp, int lvl, bool log_pid,
  */
 int nvme_get_logging_level(struct nvme_global_ctx *ctx, bool *log_pid,
 		bool *log_tstamp);
-
-#endif /* _LOG_H */
