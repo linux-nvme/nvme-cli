@@ -11,7 +11,7 @@ SYNOPSIS
 'nvme device-self-test' <device> [--namespace-id=<NUM> | -n <NUM>]
 			[--self-test-code=<NUM> | -s <NUM>] [--wait | -w]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout> | -t <timeout>]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -55,7 +55,6 @@ OPTIONS
 --verbose::
 	Increase the information detail in the output.
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 

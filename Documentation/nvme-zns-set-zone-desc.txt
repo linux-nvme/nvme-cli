@@ -12,7 +12,7 @@ SYNOPSIS
 			[--start-lba=<IONUM>, -s <IONUM>]
 			[--zrwaa | -r]
 			[--data=<FILE>, -d <FILE>]
-			[--timeout=<timeout> | -t <timeout>]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -41,7 +41,6 @@ OPTIONS
 --data=<FILE>::
 	Optional file for data (default stdin)
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 

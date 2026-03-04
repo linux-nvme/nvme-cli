@@ -11,7 +11,7 @@ SYNOPSIS
 'nvme zns offline-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
 						[--start-lba=<LBA> | -s <LBA>]
 						[--select-all | -a]
-						[--timeout=<timeout> | -t <timeout>]
+						[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -37,7 +37,6 @@ OPTIONS
 --select-all::
 	Select all zones for this action
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 

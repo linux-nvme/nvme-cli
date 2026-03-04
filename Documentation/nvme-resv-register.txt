@@ -14,7 +14,7 @@ SYNOPSIS
 			[--rrega=<rrega> | -r <rrega>]
 			[--cptpl=<cptpl> | -p <cptpl>] [--iekey | -i]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout> | -t <timeout>]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -94,7 +94,6 @@ Indicator option, defaults to '0'.
 --verbose::
 	Increase the information detail in the output.
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 
