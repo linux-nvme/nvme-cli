@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include <libnvme.h>
+#include <nvme/private.h>
 
 static size_t safe_strlen(const char *p) {
 	return p ? strlen(p) : strlen("null");

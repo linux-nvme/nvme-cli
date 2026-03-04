@@ -121,7 +121,6 @@ LIBNVME_2_0 {
 		nvme_insert_tls_key;
 		nvme_insert_tls_key_compat;
 		nvme_insert_tls_key_versioned;
-		nvme_ipaddrs_eq;
 		nvme_lookup_key;
 		nvme_lookup_keyring;
 		nvme_mi_admin_admin_passthru;
