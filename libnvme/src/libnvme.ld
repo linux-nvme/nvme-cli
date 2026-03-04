@@ -69,7 +69,6 @@ LIBNVME_2_0 {
 		nvme_free_host;
 		nvme_free_ns;
 		nvme_free_subsystem;
-		nvme_free_uri;
 		nvme_fw_download_seq;
 		nvme_gen_dhchap_key;
 		nvme_generate_tls_key_identity;
@@ -320,6 +319,7 @@ LIBNVME_2_0 {
 		nvmf_discovery_nbft;
 		nvmf_eflags_str;
 		nvmf_exat_ptr_next;
+		nvmf_free_uri;
 		nvmf_get_default_trsvcid;
 		nvmf_get_discovery_log;
 		nvmf_get_discovery_wargs;

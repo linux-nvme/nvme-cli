@@ -191,7 +191,7 @@ static void test_uriparser(void)
 			assert(strcmp(d->frag, parsed_data->fragment) == 0);
 		} else
 			assert(d->frag == parsed_data->fragment);
-		nvme_free_uri(parsed_data);
+		nvmf_free_uri(parsed_data);
 		printf("  OK\n");
 	}
 }
