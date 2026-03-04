@@ -178,7 +178,7 @@ out:
 int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd)
 {
-	if (hdl->ioctl64)
+	if (hdl->ioctl64 && S_ISBLK(hdl->stat.st_mode))
 		return nvme_submit_passthru64(hdl, NVME_IOCTL_IO64_CMD, cmd);
 	return nvme_submit_passthru32(hdl, NVME_IOCTL_IO_CMD, cmd);
 }
