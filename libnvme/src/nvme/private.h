@@ -734,3 +734,25 @@ static inline __u16 nvmf_exat_size(size_t val_len)
 {
 	return (__u16)(sizeof(struct nvmf_ext_attr) + nvmf_exat_len(val_len));
 }
+
+/**
+ * nvme_ns_get_transport_handle() - Get associated transport handle
+ * @n:	Namespace instance
+ *
+ * libnvme will open() the file (if not already opened) and keep
+ * an internal copy of the link handle. Following calls to
+ * this API retrieve the internal cached copy of the link
+ * handle. The file will remain opened and the device handle will
+ * remain cached until the ns object is deleted or
+ * nvme_ns_release_transport_handle() is called.
+ *
+ * Return: Link handle with @n or NULL
+ */
+struct nvme_transport_handle *nvme_ns_get_transport_handle(nvme_ns_t n);
+
+/**
+ * nvme_ns_release_transport_handle() - Free transport handle from ns object
+ * @n:	Namespace instance
+ *
+ */
+void nvme_ns_release_transport_handle(nvme_ns_t n);

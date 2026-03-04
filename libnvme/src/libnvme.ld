@@ -189,11 +189,9 @@ LIBNVME_2_0 {
 		nvme_ns_get_serial;
 		nvme_ns_get_subsystem;
 		nvme_ns_get_sysfs_dir;
-		nvme_ns_get_transport_handle;
 		nvme_ns_get_uuid;
 		nvme_ns_identify;
 		nvme_ns_read;
-		nvme_ns_release_transport_handle;
 		nvme_ns_rescan;
 		nvme_ns_verify;
 		nvme_ns_write;
