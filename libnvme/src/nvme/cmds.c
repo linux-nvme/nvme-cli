@@ -124,7 +124,7 @@ int nvme_get_uuid_list(struct nvme_transport_handle *hdl,
 int nvme_get_telemetry_max(struct nvme_transport_handle *hdl,
 		enum nvme_telemetry_da *da, size_t *data_tx)
 {
-	struct nvme_id_ctrl *id_ctrl = NULL;
+	_cleanup_free_ struct nvme_id_ctrl *id_ctrl = NULL;
 	struct nvme_passthru_cmd cmd;
 	int err;
 
