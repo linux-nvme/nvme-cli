@@ -5427,6 +5427,16 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 				      field);
 		printf("\n");
 		break;
+	case NVME_FEAT_FID_POWER_MEASUREMENT:
+		field = NVME_FEAT_POWER_MEAS_ACT(result);
+		printf("\tAction (ACT): %u - %s\n", field,
+		       nvme_power_measurement_action_to_string(field));
+		field = NVME_FEAT_POWER_MEAS_PMTS(result);
+		printf("\tPower Measurement Type Select (PMTS): %u - %s\n",
+		       field, nvme_power_measurement_type_to_string(field));
+		printf("\tStop Measurement Time (SMT): %u\n",
+		       NVME_FEAT_POWER_MEAS_SMT(result));
+		break;
 	default:
 		break;
 	}
