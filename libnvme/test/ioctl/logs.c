@@ -7,7 +7,6 @@
 #include <nvme/ioctl.h>
 #include <nvme/types.h>
 
-#define TEST_FD 0xFD
 #define TEST_NSID 0x12345678
 #define TEST_NVMSETID 0xABCD
 #define TEST_CSI NVME_CSI_KV

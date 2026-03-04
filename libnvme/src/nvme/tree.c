@@ -14,13 +14,8 @@
 #include <string.h>
 #include <fcntl.h>
 #include <libgen.h>
-#include <unistd.h>
-#include <ifaddrs.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#include "platform/includes.h"
 
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
@@ -61,6 +56,7 @@ struct candidate_args {
 };
 typedef bool (*ctrl_match_t)(struct nvme_ctrl *c, struct candidate_args *candidate);
 
+#ifndef _WIN32
 static void __nvme_free_host(nvme_host_t h);
 static void __nvme_free_ctrl(nvme_ctrl_t c);
 static int nvme_subsystem_scan_namespace(struct nvme_global_ctx *ctx,
@@ -328,6 +324,7 @@ int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *
 
 	return 0;
 }
+#endif /* !_WIN32 */
 
 struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 {
@@ -358,6 +355,7 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 	return ctx;
 }
 
+#ifndef _WIN32
 int nvme_read_config(struct nvme_global_ctx *ctx, const char *config_file)
 {
 	int err;
@@ -2734,7 +2732,7 @@ static int nvme_ns_init(const char *path, struct nvme_ns *ns)
 		if (ret)
 			return ret;
 	} else {
-		_cleanup_free_ struct nvme_id_ns *id = NULL;
+		_cleanup_nvme_free_ struct nvme_id_ns *id = NULL;
 		uint8_t flbas;
 
 		id = __nvme_alloc(sizeof(*ns));
@@ -3020,3 +3018,4 @@ struct nvme_ns *nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 	}
 	return NULL;
 }
+#endif /* !_WIN32 */

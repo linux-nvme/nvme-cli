@@ -5,10 +5,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/ioctl.h>
-#include <sys/syslog.h>
-#include <sys/time.h>
-#include <linux/types.h>
+
+#include "platform/includes.h"
 
 #include <libnvme.h>
 #include <libnvme-mi.h>

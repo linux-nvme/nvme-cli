@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include <stdlib.h>
-#include <unistd.h>
 #include <malloc.h>
 #include <string.h>
-#include <sys/mman.h>
+
+#include "platform/includes.h"
 
 #include "mem.h"
 
@@ -32,12 +32,18 @@ void *nvme_realloc(void *p, size_t len)
 
 	if (p) {
 		memcpy(result, p, min(old_len, len));
-		free(p);
+		nvme_free(p);
 	}
 
 	return result;
 }
 
+void nvme_free(void *p)
+{
+	platform_aligned_free(p);
+}
+
+#ifndef _WIN32
 void *nvme_alloc_huge(size_t len, struct nvme_mem_huge *mh)
 {
 	memset(mh, 0, sizeof(*mh));
@@ -100,10 +106,11 @@ void nvme_free_huge(struct nvme_mem_huge *mh)
 		return;
 
 	if (mh->posix_memalign)
-		free(mh->p);
+		nvme_free(mh->p);
 	else
 		munmap(mh->p, mh->len);
 
 	mh->len = 0;
 	mh->p = NULL;
 }
+#endif

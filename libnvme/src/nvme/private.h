@@ -10,11 +10,7 @@
 #define _LIBNVME_PRIVATE_H
 
 #include <ccan/list/list.h>
-#include <poll.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <ifaddrs.h>
+#include "platform/includes.h"
 
 #include <nvme/fabrics.h>
 #include <nvme/mi.h>
@@ -101,7 +97,7 @@ struct nvme_transport_handle {
 			struct nvme_passthru_cmd *cmd, int err);
 
 	/* direct */
-	int fd;
+	nvme_fd_t fd;
 	struct stat stat;
 	bool ioctl64;
 
@@ -416,6 +412,8 @@ nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 void *__nvme_alloc(size_t len);
 
 void *__nvme_realloc(void *p, size_t len);
+
+void __nvme_free(void *p);
 
 nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 			     const char *hostid);

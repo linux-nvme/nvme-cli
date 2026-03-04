@@ -27,6 +27,12 @@ static inline void freep(void *p)
 }
 #define _cleanup_free_ __cleanup__(freep)
 
+static inline void nvme_freep(void *p)
+{
+	nvme_free(*(void **)p);
+}
+#define _cleanup_nvme_free_ __cleanup__(nvme_freep)
+
 #define _cleanup_huge_ __cleanup__(nvme_free_huge)
 
 static inline void cleanup_fd(int *fd)

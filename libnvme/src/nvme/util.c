@@ -16,11 +16,8 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
+
+#include "platform/includes.h"
 
 #include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
@@ -949,17 +946,12 @@ int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN])
 
 int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
 {
-	_cleanup_fd_ int f = -1;
-	ssize_t n;
+	int ret;
 
-	f = open("/dev/urandom", O_RDONLY);
-	if (f < 0)
-		return -errno;
-	n = read(f, uuid, NVME_UUID_LEN);
-	if (n < 0)
-		return -errno;
-	else if (n != NVME_UUID_LEN)
-		return -EIO;
+	/* Generate random bytes using platform-specific implementation */
+	ret = random_uuid(uuid, NVME_UUID_LEN);
+	if (ret < 0)
+		return ret;
 
 	/*
 	 * See https://www.rfc-editor.org/rfc/rfc4122#section-4.4
@@ -1162,12 +1154,18 @@ void *__nvme_realloc(void *p, size_t len)
 
 	if (p && result) {
 		memcpy(result, p, min(old_len, len));
-		free(p);
+		__nvme_free(p);
 	}
 
 	return result;
 }
 
+void __nvme_free(void *p)
+{
+	platform_aligned_free(p);
+}
+
+#ifndef _WIN32
 const struct ifaddrs *nvme_getifaddrs(struct nvme_global_ctx *ctx)
 {
 	if (!ctx->ifaddrs_cache) {
@@ -1179,3 +1177,4 @@ const struct ifaddrs *nvme_getifaddrs(struct nvme_global_ctx *ctx)
 
 	return ctx->ifaddrs_cache;
 }
+#endif /* _WIN32 */

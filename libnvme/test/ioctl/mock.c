@@ -19,7 +19,7 @@ struct mock_cmds {
 	size_t remaining_cmds;
 };
 
-static int mock_fd = -1;
+static nvme_fd_t mock_fd = INIT_FD;
 static struct mock_cmds mock_admin_cmds = {.name = "admin"};
 static struct mock_cmds mock_io_cmds = {.name = "IO"};
 
@@ -37,7 +37,7 @@ static void mock_cmds_done(const struct mock_cmds *mock_cmds)
 	      mock_cmds->remaining_cmds, mock_cmds->name);
 }
 
-void set_mock_fd(int fd)
+void set_mock_fd(nvme_fd_t fd)
 {
 	mock_fd = fd;
 }
@@ -120,11 +120,11 @@ void end_mock_cmds(void)
 })
 
 #if defined(HAVE_GLIBC_IOCTL) && HAVE_GLIBC_IOCTL == 1
-typedef int (*ioctl_func_t)(int, unsigned long, void *);
-int ioctl(int fd, unsigned long request, ...)
+typedef int (*ioctl_func_t)(nvme_fd_t, unsigned long, void *);
+int ioctl(nvme_fd_t fd, unsigned long request, ...)
 #else
-typedef int (*ioctl_func_t)(int, int, void *);
-int ioctl(int fd, int request, ...)
+typedef int (*ioctl_func_t)(nvme_fd_t, int, void *);
+int ioctl(nvme_fd_t fd, int request, ...)
 #endif
 {
 	ioctl_func_t real_ioctl = NULL;

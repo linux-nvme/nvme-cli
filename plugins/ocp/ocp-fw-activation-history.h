@@ -6,7 +6,7 @@
  */
 #include <libnvme.h>
 #include "common.h"
-#include "linux/types.h"
+#include "platform/types.h"
 
 #ifndef OCP_FIRMWARE_ACTIVATION_HISTORY_H
 #define OCP_FIRMWARE_ACTIVATION_HISTORY_H

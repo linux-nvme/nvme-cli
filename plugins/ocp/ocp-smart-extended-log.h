@@ -7,7 +7,7 @@
  */
 
 #include "common.h"
-#include "linux/types.h"
+#include "platform/types.h"
 
 #ifndef OCP_SMART_EXTENDED_LOG_H
 #define OCP_SMART_EXTENDED_LOG_H

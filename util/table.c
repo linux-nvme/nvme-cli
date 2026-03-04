@@ -22,6 +22,8 @@
 
 #include "table.h"
 
+#include "platform/includes.h"
+
 static int table_get_value_width(struct value *v)
 {
 	char buf[64];

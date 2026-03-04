@@ -1718,7 +1718,7 @@ int main(int argc, char *argv[])
 		"#include <string.h>\n"
 		"#include <stdbool.h>\n"
 		"#include <stdint.h>\n"
-		"#include <linux/types.h> /* __u32, __u64, etc. */\n"
+		"#include <platform/types.h> /* __u32, __u64, etc. */\n"
 		"\n", banner, guard, guard);
 
 	fprintf(generated_hdr, "/* Forward declarations. These are internal (opaque) structs. */\n");

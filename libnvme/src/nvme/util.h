@@ -9,7 +9,7 @@
 #ifndef _LIBNVME_UTIL_H
 #define _LIBNVME_UTIL_H
 
-#include <ifaddrs.h>
+#include "platform/includes.h"
 
 #include <nvme/types.h>
 

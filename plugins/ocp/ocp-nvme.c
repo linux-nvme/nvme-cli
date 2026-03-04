@@ -20,7 +20,7 @@
 #include "nvme.h"
 #include "libnvme.h"
 #include "plugin.h"
-#include "linux/types.h"
+#include "platform/types.h"
 #include "util/types.h"
 #include "logging.h"
 #include "nvme-print.h"
@@ -347,7 +347,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = fstat(nvme_transport_handle_get_fd(hdl), &nvme_stat);
+	err = nvme_fstat(nvme_transport_handle_get_fd(hdl), &nvme_stat);
 	if (err < 0)
 		return err;
 
@@ -1453,7 +1453,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	if (opt.telemetry_type == 0)
 		opt.telemetry_type = "host";
 
-	err = fstat(nvme_transport_handle_get_fd(hdl), &nvme_stat);
+	err = nvme_fstat(nvme_transport_handle_get_fd(hdl), &nvme_stat);
 	if (err < 0)
 		return err;
 
@@ -2621,7 +2621,7 @@ static int fw_activation_history_log(int argc, char **argv, struct command *acmd
 
 static int error_injection_get(struct nvme_transport_handle *hdl, const __u8 sel, bool uuid, __u32 nsid)
 {
-	_cleanup_free_ struct erri_entry *entry = NULL;
+	_cleanup_nvme_free_ struct erri_entry *entry = NULL;
 	struct erri_get_cq_entry cq_entry;
 	const __u8 fid = OCP_FID_ERRI;
 	__u64 result;
@@ -2704,7 +2704,7 @@ static int get_error_injection(int argc, char **argv, struct command *acmd, stru
 
 static int error_injection_set(struct nvme_transport_handle *hdl, struct erri_config *cfg, bool uuid, __u32 nsid)
 {
-	_cleanup_free_ struct erri_entry *entry = NULL;
+	_cleanup_nvme_free_ struct erri_entry *entry = NULL;
 	_cleanup_fd_ int ffd = -1;
 	__u32 data_len;
 	__u8 uidx = 0;
@@ -2927,7 +2927,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 		"processing this persistent log page command.";
 	const char *log_len = "number of bytes to retrieve";
 
-	_cleanup_free_ struct nvme_persistent_event_log *pevent = NULL;
+	_cleanup_nvme_free_ struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;

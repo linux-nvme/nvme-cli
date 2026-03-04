@@ -422,7 +422,7 @@ close_ffd:
 	if (cfg.file)
 		close(ffd);
 free:
-	free(buf);
+	platform_aligned_free(buf);
 	return err;
 }
 
@@ -1072,12 +1072,12 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 		perror("zns zone-append");
 
 free_meta:
-	free(mbuf);
+	platform_aligned_free(mbuf);
 close_mfd:
 	if (cfg.metadata)
 		close(mfd);
 free_data:
-	free(buf);
+	platform_aligned_free(buf);
 close_dfd:
 	if (cfg.data)
 		close(dfd);

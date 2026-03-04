@@ -6,7 +6,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <inttypes.h>
+#ifndef _WIN32
 #include <linux/fs.h>
+#endif
 #include <sys/stat.h>
 
 #include "common.h"
