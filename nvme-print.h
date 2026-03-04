@@ -343,6 +343,7 @@ const char *nvme_pls_mode_to_string(__u8 mode);
 const char *nvme_bpwps_to_string(__u8 bpwps);
 const char *nvme_feature_power_limit_scale_to_string(__u8 pls);
 const char *nvme_power_measurement_type_to_string(__u8 pmt);
+const char *nvme_power_measurement_action_to_string(__u8 act);
 
 void nvme_dev_full_path(nvme_ns_t n, char *path, size_t len);
 void nvme_generic_full_path(nvme_ns_t n, char *path, size_t len);
