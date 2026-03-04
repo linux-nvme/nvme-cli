@@ -5,9 +5,7 @@
  *
  * Authors: Hannes Reinecke <hare@suse.de>
  */
-
-#ifndef _LIBNVME_PRIVATE_H
-#define _LIBNVME_PRIVATE_H
+#pragma once
 
 #include <ccan/list/list.h>
 #include <poll.h>
@@ -584,4 +582,156 @@ static inline char *xstrdup(const char *s)
  */
 const struct ifaddrs *nvme_getifaddrs(struct nvme_global_ctx *ctx);
 
-#endif /* _LIBNVME_PRIVATE_H */
+/**
+ * nvme_ipaddrs_eq - Check if 2 IP addresses are equal.
+ * @addr1: IP address (can be IPv4 or IPv6)
+ * @addr2: IP address (can be IPv4 or IPv6)
+ *
+ * Return: true if addr1 == addr2. false otherwise.
+ */
+bool nvme_ipaddrs_eq(const char *addr1, const char *addr2);
+
+/**
+ * nvme_iface_matching_addr - Get interface matching @addr
+ * @iface_list: Interface list returned by getifaddrs()
+ * @addr: Address to match
+ *
+ * Parse the interface list pointed to by @iface_list looking
+ * for the interface that has @addr as one of its assigned
+ * addresses.
+ *
+ * Return: The name of the interface that owns @addr or NULL.
+ */
+const char *nvme_iface_matching_addr(const struct ifaddrs *iface_list,
+		const char *addr);
+
+/**
+ * nvme_iface_primary_addr_matches - Check that interface's primary
+ * address matches
+ * @iface_list: Interface list returned by getifaddrs()
+ * @iface: Interface to match
+ * @addr: Address to match
+ *
+ * Parse the interface list pointed to by @iface_list and looking for
+ * interface @iface. The get its primary address and check if it matches
+ * @addr.
+ *
+ * Return: true if a match is found, false otherwise.
+ */
+bool nvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
+		const char *iface, const char *addr);
+
+int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr,
+		char **hostname);
+
+/**
+ * get_entity_name - Get Entity Name (ENAME).
+ * @buffer: The buffer where the ENAME will be saved as an ASCII string.
+ * @bufsz:  The size of @buffer.
+ *
+ * Per TP8010, ENAME is defined as the name associated with the host (i.e.
+ * hostname).
+ *
+ * Return: Number of characters copied to @buffer.
+ */
+size_t get_entity_name(char *buffer, size_t bufsz);
+
+/**
+ * get_entity_version - Get Entity Version (EVER).
+ * @buffer: The buffer where the EVER will be saved as an ASCII string.
+ * @bufsz:  The size of @buffer.
+ *
+ * EVER is defined as the operating system name and version as an ASCII
+ * string. This function reads different files from the file system and
+ * builds a string as follows: [os type] [os release] [distro release]
+ *
+ *     E.g. "Linux 5.17.0-rc1 SLES 15.4"
+ *
+ * Return: Number of characters copied to @buffer.
+ */
+size_t get_entity_version(char *buffer, size_t bufsz);
+
+
+/**
+ * startswith - Checks that a string starts with a given prefix.
+ * @s:      The string to check
+ * @prefix: A string that @s could be starting with
+ *
+ * Return: If @s starts with @prefix, then return a pointer within @s at
+ * the first character after the matched @prefix. NULL otherwise.
+ */
+char *startswith(const char *s, const char *prefix);
+
+/**
+ * kv_strip - Strip blanks from key value string
+ * @kv: The key-value string to strip
+ *
+ * Strip leading/trailing blanks as well as trailing comments from the
+ * Key=Value string pointed to by @kv.
+ *
+ * Return: A pointer to the stripped string. Note that the original string,
+ * @kv, gets modified.
+ */
+char *kv_strip(char *kv);
+
+/**
+ * kv_keymatch - Look for key in key value string
+ * @kv:  The key=value string to search for the presence of @key
+ * @key: The key to look for
+ *
+ * Look for @key in the Key=Value pair pointed to by @k and return a
+ * pointer to the Value if @key is found.
+ *
+ * Check if @kv starts with @key. If it does then make sure that we
+ * have a whole-word match on the @key, and if we do, return a pointer
+ * to the first character of value (i.e. skip leading spaces, tabs,
+ * and equal sign)
+ *
+ * Return: A pointer to the first character of "value" if a match is found.
+ * NULL otherwise.
+ */
+char *kv_keymatch(const char *kv, const char *key);
+
+#define __round_mask(val, mult) ((__typeof__(val))((mult)-1))
+
+/**
+ * round_up - Round a value @val to the next multiple specified by @mult.
+ * @val:  Value to round
+ * @mult: Multiple to round to.
+ *
+ * usage: int x = round_up(13, sizeof(__u32)); // 13 -> 16
+ */
+#define round_up(val, mult)     ((((val)-1) | __round_mask((val), (mult)))+1)
+
+/**
+ * nvmf_exat_len() - Return length rounded up by 4
+ * @val_len: Value length
+ *
+ * Return the size in bytes, rounded to a multiple of 4 (e.g., size of
+ * __u32), of the buffer needed to hold the exat value of size
+ * @val_len.
+ *
+ * Return: Length rounded up by 4
+ */
+static inline __u16 nvmf_exat_len(size_t val_len)
+{
+	return (__u16)round_up(val_len, sizeof(__u32));
+}
+
+/**
+ * nvmf_exat_size - Return min aligned size to hold value
+ * @val_len: This is the length of the data to be copied to the "exatval"
+ *           field of a "struct nvmf_ext_attr".
+ *
+ * Return the size of the "struct nvmf_ext_attr" needed to hold
+ * a value of size @val_len.
+ *
+ * Return: The size in bytes, rounded to a multiple of 4 (i.e. size of
+ * __u32), of the "struct nvmf_ext_attr" required to hold a string of
+ * length @val_len.
+ */
+static inline __u16 nvmf_exat_size(size_t val_len)
+{
+	return (__u16)(sizeof(struct nvmf_ext_attr) + nvmf_exat_len(val_len));
+}
+

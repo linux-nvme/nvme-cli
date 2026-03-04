@@ -143,7 +143,7 @@ if conf.get('HAVE_NETDB')
         dependencies: [
             config_dep,
             ccan_dep,
-            libnvme_dep,
+            libnvme_test_dep,
         ],
     )
     test('libnvme - util', test_util)
