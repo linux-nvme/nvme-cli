@@ -3,12 +3,13 @@
 #define __CLEANUP_H
 
 #include <dirent.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
+
 #include <sys/socket.h>
-#include <netdb.h>
+#include <sys/types.h>
 
 #include "fabrics.h"
 

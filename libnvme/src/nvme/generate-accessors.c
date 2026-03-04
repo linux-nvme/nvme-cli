@@ -27,21 +27,20 @@
  *   ./generate-accessors private.h
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <ctype.h>
+#include <errno.h>
+#include <getopt.h>
+#include <glob.h>
+#include <libgen.h>
 #include <limits.h>
 #include <regex.h>
 #include <stdbool.h>
-#include <getopt.h>
-#include <glob.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <errno.h>
-#include <string.h>
-#include <libgen.h>
-#include <stdio.h>
-#include <ctype.h>
 
 #ifdef NVME_HAVE_SENDFILE
 #include <sys/sendfile.h>

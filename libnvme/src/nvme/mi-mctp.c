@@ -7,17 +7,17 @@
  */
 
 #include <errno.h>
+#include <fcntl.h>
+#include <poll.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <poll.h>
-#include <fcntl.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/uio.h>
-#include <sys/ioctl.h>
 
 #if HAVE_LINUX_MCTP_H
 #include <linux/mctp.h>

@@ -7,15 +7,16 @@
  *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
+#include <fcntl.h>
+#include <libgen.h>
+#include <strings.h>
+
+#include <sys/ioctl.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "private.h"
-
-#include <libgen.h>
-#include <strings.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
 
 static bool nvme_mi_probe_enabled_default(void)
 {

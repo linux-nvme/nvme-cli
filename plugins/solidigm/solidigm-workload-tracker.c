@@ -5,10 +5,11 @@
  * Authors: leonardo.da.cunha@solidigm.com
  */
 
-#include "common.h"
-#include "nvme-print.h"
 #include <errno.h>
 #include <time.h>
+
+#include "common.h"
+#include "nvme-print.h"
 
 #define LID 0xf9
 #define FID 0xf1

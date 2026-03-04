@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#include <inttypes.h>
+#include <string.h>
+
 #include <libnvme.h>
 
 #include "mock.h"
 #include "util.h"
-
-#include <string.h>
-#include <inttypes.h>
 
 #define TEST_FD 0xFD
 #define TEST_NSID 0x12345678

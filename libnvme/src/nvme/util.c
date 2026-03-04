@@ -7,23 +7,23 @@
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
 #include <errno.h>
-#include <malloc.h>
-
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#include <malloc.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-#include <ccan/minmax/minmax.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <ccan/endian/endian.h>
+#include <ccan/minmax/minmax.h>
 
 #include <libnvme.h>
 

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "lm-print.h"
-
 #include <inttypes.h>
 
 #include "common.h"
+#include "lm-print.h"
 #include "util/types.h"
 
 static struct lm_print_ops stdout_print_ops;

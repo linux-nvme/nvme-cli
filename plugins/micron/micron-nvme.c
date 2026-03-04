@@ -9,31 +9,31 @@
  *			Sivaprasad Gutha <sivaprasadg@micron.com>
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
-#include <stdlib.h>
-#include <inttypes.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <time.h>
-#include <string.h>
+#include <inttypes.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stddef.h>
-#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include <libnvme.h>
 
 #include "common.h"
-#include "nvme.h"
-#include <limits.h>
 #include "linux/types.h"
+#include "nvme.h"
 #include "nvme-print.h"
 #include "util/cleanup.h"
-#include "util/utils.h"
 #include "util/types.h"
+#include "util/utils.h"
 
 #define CREATE_CMD
 #include "micron-nvme.h"

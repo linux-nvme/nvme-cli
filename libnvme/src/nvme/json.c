@@ -6,9 +6,9 @@
  * Authors: Hannes Reinecke <hare@suse.de>
  */
 
+#include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #include <json.h>
 

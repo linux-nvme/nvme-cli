@@ -17,12 +17,13 @@
 #define _NVME_H
 
 #include <dirent.h>
+#include <endian.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <endian.h>
-#include <sys/time.h>
+
 #include <sys/stat.h>
+#include <sys/time.h>
 
 #include <libnvme-mi.h>
 

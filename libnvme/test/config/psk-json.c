@@ -4,15 +4,16 @@
  * Copyright (c) 2024 Daniel Wagner, SUSE LLC
  */
 
-#include "nvme/linux.h"
-#include "nvme/tree.h"
-#include <string.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
-#include <errno.h>
 
 #include <libnvme.h>
+
+#include "nvme/linux.h"
+#include "nvme/tree.h"
 
 static bool import_export_key(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 {

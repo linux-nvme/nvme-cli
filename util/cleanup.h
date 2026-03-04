@@ -2,8 +2,8 @@
 #ifndef __CLEANUP_H
 #define __CLEANUP_H
 
-#include <unistd.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 

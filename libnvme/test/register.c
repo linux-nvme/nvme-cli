@@ -15,15 +15,16 @@
 
 #include <fcntl.h>
 #include <inttypes.h>
-#include <libnvme.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <unistd.h>
 
 #include <sys/mman.h>
 
 #include <ccan/endian/endian.h>
+
+#include <libnvme.h>
 
 static inline uint32_t nvme_mmio_read32(volatile void *addr)
 {

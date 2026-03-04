@@ -5,14 +5,15 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include "common.h"
-#include "telemetry-log.h"
-#include "side-trace.h"
-#include "data-area.h"
-#include "header.h"
-#include "config.h"
 #include <ctype.h>
 #include <string.h>
+
+#include "common.h"
+#include "config.h"
+#include "data-area.h"
+#include "header.h"
+#include "side-trace.h"
+#include "telemetry-log.h"
 
 #define NUM_BITS_IN_BYTE 8
 #define SIDETRACE_BLOCK_SIZE 256

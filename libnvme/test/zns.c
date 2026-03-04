@@ -9,18 +9,17 @@
 /*
  * Search out for ZNS type namespaces, and if found, report their properties.
  */
+#include <inttypes.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <ccan/endian/endian.h>
+
 #include <libnvme.h>
 
 #include "nvme/private.h"
-
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <libnvme.h>
-#include <inttypes.h>
-
-#include <ccan/endian/endian.h>
 
 static void show_zns_properties(nvme_ns_t n)
 {

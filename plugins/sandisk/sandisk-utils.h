@@ -6,20 +6,19 @@
  *           Brandon Paupore <brandon.paupore@sandisk.com>
  */
 
-#include <stdio.h>
-#include <ctype.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
 #include <assert.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-
+#include <ctype.h>
 #include <stdbool.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
+
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 /* Device Config */
 #define SNDK_NVME_WDC_VID                   0x1b96

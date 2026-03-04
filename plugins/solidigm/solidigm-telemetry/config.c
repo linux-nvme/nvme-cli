@@ -5,10 +5,13 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <json.h>
+
 #include "config.h"
 
 #define NOT_FOUND "NOT_FOUND"

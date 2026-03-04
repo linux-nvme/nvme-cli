@@ -5,17 +5,15 @@
  * Author: karl.dedow@solidigm.com
  */
 
-#include "ocp-fw-activation-history.h"
-
 #include <errno.h>
 #include <stdio.h>
 
 #include "common.h"
 #include "nvme-print.h"
-
+#include "ocp-fw-activation-history.h"
 #include "ocp-nvme.h"
-#include "ocp-utils.h"
 #include "ocp-print.h"
+#include "ocp-utils.h"
 
 static const unsigned char ocp_fw_activation_history_guid[GUID_LEN] = {
 	0x6D, 0x79, 0x9a, 0x76,
