@@ -12,6 +12,8 @@
 #include "private.h"
 #include "types.h"
 
+#include <libnvme.h>
+
 #include <windows.h>
 #include <winioctl.h>
 #include <errno.h>

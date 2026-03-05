@@ -47,7 +47,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/ioctl.h>
 
 
 #if HAVE_SYS_RANDOM

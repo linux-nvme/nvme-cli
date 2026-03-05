@@ -11,7 +11,6 @@ sources = [
     'nvme/crc32.c',
     'nvme/ioctl.c',
     'nvme/lib.c',
-    'nvme/linux.c',
     'nvme/log.c',
     'nvme/nbft.c',
     'nvme/tree.c',
@@ -21,12 +20,13 @@ sources = [
 if is_windows
     sources += [
         'nvme/ioctl-windows.c',  # Windows stubs for Linux-specific ioctl functions
-        'nvme/windows.c',  # Windows implementations of linux.h functions
+        'nvme/lib-windows.c',  # Windows implementations of lib.h functions
         'nvme/windows-stubs.c',  # Stubs for excluded functions
         'platform/windows.c',  # POSIX compatibility implementations
     ]
 else
     sources += [
+        'nvme/linux.c',
         'nvme/fabrics.c',
         'nvme/filters.c',
         'nvme/mi-mctp.c',

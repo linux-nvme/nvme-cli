@@ -173,7 +173,7 @@ struct iovec {
     size_t iov_len;
 };
 
-/* Windows missing network structures */
+/* Windows missing network structures - ifaddrs.h stubs */
 struct ifaddrs {
     struct ifaddrs *ifa_next;
     char *ifa_name;
@@ -183,6 +183,7 @@ struct ifaddrs {
     struct sockaddr *ifa_broadaddr;
     void *ifa_data;
 };
+static inline void freeifaddrs(struct ifaddrs *ifa) { (void)ifa; }
 
 /* Extract IPv4 from IPv6 mapped address */
 #define ipv4_from_in6_addr(addr) &(addr.u.Byte[12])

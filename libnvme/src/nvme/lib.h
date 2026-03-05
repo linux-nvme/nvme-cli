@@ -10,7 +10,8 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include <syslog.h>
+
+#include "platform/includes.h"
 
 #include <nvme/lib-types.h>
 
@@ -92,9 +93,10 @@ void nvme_close(struct nvme_transport_handle *hdl);
  * If the device handle is for a ioctl based device,
  * nvme_transport_handle_get_fd will return a valid file descriptor.
  *
- * Return: File descriptor for an IOCTL based transport handle, otherwise -1.
+ * Return: File descriptor for an IOCTL based transport handle,
+ * otherwise INIT_FD.
  */
-int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl);
+nvme_fd_t nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl);
 
 /**
  * nvme_transport_handle_get_name - Return name of the device transport handle

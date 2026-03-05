@@ -15,7 +15,6 @@
 #include <libgen.h>
 #include <strings.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
 
 static bool nvme_mi_probe_enabled_default(void)
 {
@@ -120,6 +119,7 @@ void nvme_transport_handle_set_decide_retry(struct nvme_transport_handle *hdl,
 		hdl->decide_retry = __nvme_decide_retry;
 }
 
+#ifndef _WIN32
 static int __nvme_transport_handle_open_direct(
 		struct nvme_transport_handle *hdl, const char *devname)
 {
@@ -176,6 +176,7 @@ void __nvme_transport_handle_close_direct(struct nvme_transport_handle *hdl)
 	close(hdl->fd);
 	free(hdl);
 }
+#endif /* !_WIN32 */
 
 struct nvme_transport_handle *__nvme_create_transport_handle(
 		struct nvme_global_ctx *ctx)
@@ -194,6 +195,7 @@ struct nvme_transport_handle *__nvme_create_transport_handle(
 	return hdl;
 }
 
+#ifndef _WIN32
 int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 	      struct nvme_transport_handle **hdlp)
 {
@@ -255,8 +257,9 @@ void nvme_close(struct nvme_transport_handle *hdl)
 		break;
 	}
 }
+#endif /* !_WIN32 */
 
-int nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
+nvme_fd_t nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
 {
 	return hdl->fd;
 }

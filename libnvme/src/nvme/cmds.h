@@ -15,7 +15,6 @@
 
 #include <string.h>
 #include <errno.h>
-#include <endian.h>
 
 enum nvme_cmd_dword_fields {
 	NVME_DEVICE_SELF_TEST_CDW10_STC_SHIFT			= 0,

@@ -132,6 +132,11 @@ void nvme_free_uri(struct nvme_fabrics_uri *uri)
  * Stub implementations for tree functions (tree.c)
  * Minimal support - just return NULL/errors
  */
+void __nvme_free_host(struct nvme_host *h)
+{
+	stub_log(__func__);
+	(void)h;
+}
 
 void nvme_release_fds(struct nvme_global_ctx *ctx)
 {
@@ -152,12 +157,6 @@ void nvme_free_tree(void *r)
 {
 	stub_log(__func__);
 	(void)r;
-}
-
-void nvme_free_global_ctx(struct nvme_global_ctx *ctx)
-{
-	stub_log(__func__);
-	(void)ctx;
 }
 
 const char *nvme_root_get_application(void *r)
@@ -942,16 +941,6 @@ nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p)
 	return NULL;
 }
 
-/* ANA log utilities (linux.c) */
-size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
-	bool rgo)
-{
-	stub_log(__func__);
-	(void)id_ctrl;
-	(void)rgo;
-	return 0;
-}
-
 /* MI status string (mi.c) */
 const char *nvme_mi_status_to_string(int status)
 {
@@ -1154,25 +1143,6 @@ char *nvmf_hostnqn_generate_from_hostid(char *hostid)
 	stub_log(__func__);
 	(void)hostid;
 	return NULL;
-}
-
-/* Extended Telemetry (linux.c) */
-int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
-{
-	stub_log(__func__);
-	(void)hdl;
-	(void)changed;
-	errno = ENOTSUP;
-	return -1;
-}
-
-int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed)
-{
-	stub_log(__func__);
-	(void)hdl;
-	(void)changed;
-	errno = ENOTSUP;
-	return -1;
 }
 
 /* Path property getters (tree.c) */

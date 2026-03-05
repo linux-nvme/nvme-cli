@@ -7,7 +7,7 @@
  */
 
 #include "private.h"
-#include "nvme/linux.h"
+#include "nvme/lib.h"
 
 
 static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl, const char *name)
