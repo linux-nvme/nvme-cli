@@ -31,7 +31,11 @@ all_plugins = {
 }
 
 # Get the list of plugins to build
-selected_plugins = get_option('plugins')
+if host_system != 'windows'
+  selected_plugins = get_option('plugins')
+else
+  selected_plugins = []
+endif
 
 # Build the plugin_sources list from simple plugins
 plugin_sources = []

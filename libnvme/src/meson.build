@@ -5,22 +5,27 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-sources = [
-    'nvme/accessors.c',
-    'nvme/base64.c',
-    'nvme/cmds.c',
-    'nvme/crc32.c',
-    'nvme/filters.c',
-    'nvme/ioctl.c',
-    'nvme/lib.c',
-    'nvme/linux.c',
-    'nvme/log.c',
-    'nvme/mi-mctp.c',
-    'nvme/mi.c',
-    'nvme/sysfs.c',
-    'nvme/tree.c',
-    'nvme/util.c',
-]
+sources = []
+if host_system == 'windows'
+    sources += []
+else
+    sources += [
+        'nvme/accessors.c',
+        'nvme/base64.c',
+        'nvme/cmds.c',
+        'nvme/crc32.c',
+        'nvme/filters.c',
+        'nvme/ioctl.c',
+        'nvme/lib.c',
+        'nvme/linux.c',
+        'nvme/log.c',
+        'nvme/mi-mctp.c',
+        'nvme/mi.c',
+        'nvme/sysfs.c',
+        'nvme/tree.c',
+        'nvme/util.c',
+    ]
+endif
 headers = [
     'nvme/accessors.h',
     'nvme/cmds.h',
@@ -50,10 +55,12 @@ if liburing_dep.found()
     sources += 'nvme/uring.c'
 endif
 
-if json_c_dep.found()
-    sources += 'nvme/json.c'
-else
-    sources += 'nvme/no-json.c'
+if host_system != 'windows'
+    if json_c_dep.found()
+        sources += 'nvme/json.c'
+    else
+        sources += 'nvme/no-json.c'
+    endif
 endif
 
 deps = [
@@ -61,10 +68,18 @@ deps = [
     ccan_dep,
     json_c_dep,
     keyutils_dep,
-    libdbus_dep,
-    liburing_dep,
     openssl_dep,
 ]
+if host_system == 'windows'
+    deps += [
+        kernel32_dep
+    ]
+else
+    deps += [
+        libdbus_dep,
+        liburing_dep,
+    ]
+endif
 
 nvme_ld = meson.current_source_dir() / 'libnvme.ld'
 nvmf_ld = meson.current_source_dir() / 'libnvmf.ld'
