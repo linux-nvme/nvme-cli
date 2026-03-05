@@ -1,8 +1,5 @@
-# CodeQL build configuration for nvme-cli
-# Mostly based on auto-configuration with additions and tweaks for:
-# * meson install
-# * language detection
-name: "CodeQL"
+---
+name: CodeQL
 
 on:
   push:
@@ -65,7 +62,7 @@ jobs:
   
     - name: meson build
       run: |
-         meson setup --force-fallback-for=libnvme,json-c .build
+         meson setup --force-fallback-for=json-c .build
          ninja -C .build
 
     - name: Perform CodeQL Analysis

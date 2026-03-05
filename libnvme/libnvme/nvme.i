@@ -28,13 +28,8 @@
 %{
 	#include <ccan/list/list.h>
 	#include <ccan/endian/endian.h>
-	#include "nvme/tree.h"
-	#include "nvme/fabrics.h"
+	#include <libnvme.h>
 	#include "nvme/private.h"
-	#include "nvme/log.h"
-	#include "nvme/ioctl.h"
-	#include "nvme/types.h"
-	#include "nvme/nbft.h"
 
 	static int connect_err = 0;
 	static int discover_err = 0;
@@ -515,7 +510,7 @@ struct nvme_ns {
 		else if (!strcmp(level, "crit")) log_level = LOG_CRIT;
 		else if (!strcmp(level, "alert")) log_level = LOG_ALERT;
 		else if (!strcmp(level, "emerg")) log_level = LOG_EMERG;
-		nvme_init_logging($self, log_level, false, false);
+		nvme_set_logging_level($self, log_level, false, false);
 	}
 	%pythoncode %{
 	def hosts(self):

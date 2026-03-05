@@ -15,7 +15,7 @@ SYNOPSIS
 			[--data=<data-file> | -d <data-file>] [--save | -s]
 			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 			[--cdw12=<cdw12> | -c <cdw12>]
-			[--timeout=<timeout> | -t <timeout>]
+			[--timeout=<timeout>]
 
 DESCRIPTION
 -----------
@@ -128,7 +128,6 @@ OPTIONS
 --cdw12=<cdw12>::
 	The value for command dword 12, if applicable.
 
--t <timeout>::
 --timeout=<timeout>::
 	Override default timeout value. In milliseconds.
 

@@ -54,7 +54,7 @@ static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_ctrl, nvme_ctrl_t, nvme_free_ctrl
 static inline void free_uri(struct nvme_fabrics_uri **uri)
 {
 	if (*uri)
-		nvme_free_uri(*uri);
+		nvmf_free_uri(*uri);
 }
 #define _cleanup_uri_ __cleanup__(free_uri)
 

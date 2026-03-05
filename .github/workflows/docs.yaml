@@ -1,15 +1,17 @@
 ---
-name: docs
+name: Build documentation
 
 on:
   push:
     branches: [master]
     paths:
       - Documentation/**
+      - libnvme/doc/**
   pull_request:
     branches: [master]
     paths:
       - Documentation/**
+      - libnvme/doc/**
 
   workflow_dispatch:
 

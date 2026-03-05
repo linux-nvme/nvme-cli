@@ -1,5 +1,5 @@
 ---
-name: coverity
+name: Coverity
 
 on:
   schedule:

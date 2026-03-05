@@ -76,7 +76,6 @@ LIBNVME_2_0 {
 		nvme_free_host;
 		nvme_free_ns;
 		nvme_free_subsystem;
-		nvme_free_uri;
 		nvme_fstat;
 		nvme_fw_download_seq;
 		nvme_gen_dhchap_key;
@@ -93,6 +92,7 @@ LIBNVME_2_0 {
 		nvme_get_feature_length;
 		nvme_get_host_telemetry;
 		nvme_get_log;
+		nvme_get_logging_level;
 		nvme_get_logical_block_size;
 		nvme_get_new_host_telemetry;
 		nvme_get_ns_attr;
@@ -125,14 +125,11 @@ LIBNVME_2_0 {
 		nvme_init_ctrl;
 		nvme_init_ctrl_list;
 		nvme_init_dsm_range;
-		nvme_init_logging;
 		nvme_insert_tls_key;
 		nvme_insert_tls_key_compat;
 		nvme_insert_tls_key_versioned;
-		nvme_ipaddrs_eq;
 		nvme_lookup_key;
 		nvme_lookup_keyring;
-		nvme_mi_admin_admin_passthru;
 		nvme_mi_admin_xfer;
 		nvme_mi_aem_disable;
 		nvme_mi_aem_enable;
@@ -143,14 +140,12 @@ LIBNVME_2_0 {
 		nvme_mi_close;
 		nvme_mi_close_transport_handle;
 		nvme_mi_control;
-		nvme_mi_create_global_ctx;
 		nvme_mi_ctrl_id;
 		nvme_mi_endpoint_desc;
 		nvme_mi_ep_get_timeout;
 		nvme_mi_ep_set_timeout;
 		nvme_mi_first_ctrl;
 		nvme_mi_first_endpoint;
-		nvme_mi_free_global_ctx;
 		nvme_mi_init_transport_handle;
 		nvme_mi_mi_config_get;
 		nvme_mi_mi_config_set;
@@ -166,7 +161,6 @@ LIBNVME_2_0 {
 		nvme_mi_scan_ep;
 		nvme_mi_scan_mctp;
 		nvme_mi_set_csi;
-		nvme_mi_set_probe_enabled;
 		nvme_mi_status_to_string;
 		nvme_mi_submit_entry;
 		nvme_mi_submit_exit;
@@ -198,11 +192,9 @@ LIBNVME_2_0 {
 		nvme_ns_get_serial;
 		nvme_ns_get_subsystem;
 		nvme_ns_get_sysfs_dir;
-		nvme_ns_get_transport_handle;
 		nvme_ns_get_uuid;
 		nvme_ns_identify;
 		nvme_ns_read;
-		nvme_ns_release_transport_handle;
 		nvme_ns_rescan;
 		nvme_ns_verify;
 		nvme_ns_write;
@@ -239,6 +231,8 @@ LIBNVME_2_0 {
 		nvme_set_etdas;
 		nvme_set_ioctl_probing;
 		nvme_set_keyring;
+		nvme_set_logging_level;
+		nvme_set_probe_enabled;
 		nvme_set_property;
 		nvme_set_root;
 		nvme_skip_namespaces;
@@ -331,6 +325,7 @@ LIBNVME_2_0 {
 		nvmf_discovery_nbft;
 		nvmf_eflags_str;
 		nvmf_exat_ptr_next;
+		nvmf_free_uri;
 		nvmf_get_default_trsvcid;
 		nvmf_get_discovery_log;
 		nvmf_get_discovery_wargs;

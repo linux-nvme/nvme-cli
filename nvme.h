@@ -78,7 +78,7 @@ struct nvme_args {
 		OPT_FMT("output-format", 'o', &nvme_args.output_format,                \
                          DESC_OUTPUT_FORMAT),                                          \
 		##__VA_ARGS__,                                                         \
-		OPT_UINT("timeout",      't', &nvme_args.timeout,                      \
+		OPT_UINT("timeout",        0, &nvme_args.timeout,                      \
                          "timeout value, in milliseconds"),                            \
 		OPT_FLAG("dry-run",        0, &nvme_args.dry_run,                      \
                          "show command instead of executing"),                         \

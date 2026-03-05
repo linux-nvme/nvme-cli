@@ -24,8 +24,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+
+#include <libnvme.h>
+
 #include "nvme.h"
-#include "libnvme.h"
 #include "nvme-print.h"
 #include "wdc-utils.h"
 

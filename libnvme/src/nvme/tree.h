@@ -6,17 +6,12 @@
  * Authors: Keith Busch <keith.busch@wdc.com>
  *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
-
-#ifndef _LIBNVME_TREE_H
-#define _LIBNVME_TREE_H
+#pragma once
 
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "platform/includes.h"
-
-#include <nvme/ioctl.h>
-#include <nvme/util.h>
+#include <nvme/lib-types.h>
 #include <nvme/types.h>
 
 /**
@@ -506,28 +501,6 @@ nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n);
 #define nvme_namespace_for_each_path(n, p)			\
 	for (p = nvme_namespace_first_path(n); p != NULL;	\
 		p = nvme_namespace_next_path(n, p))
-
-/**
- * nvme_ns_get_transport_handle() - Get associated transport handle
- * @n:	Namespace instance
- *
- * libnvme will open() the file (if not already opened) and keep
- * an internal copy of the link handle. Following calls to
- * this API retrieve the internal cached copy of the link
- * handle. The file will remain opened and the device handle will
- * remain cached until the ns object is deleted or
- * nvme_ns_release_transport_handle() is called.
- *
- * Return: Link handle with @n or NULL
- */
-struct nvme_transport_handle *nvme_ns_get_transport_handle(nvme_ns_t n);
-
-/**
- * nvme_ns_release_transport_handle() - Free transport handle from ns object
- * @n:	Namespace instance
- *
- */
-void nvme_ns_release_transport_handle(nvme_ns_t n);
 
 /**
  * nvme_ns_get_nsid() - NSID of a namespace
@@ -1516,5 +1489,3 @@ const char *nvme_host_get_hostsymname(nvme_host_t h);
  * @hostsymname:	Symbolic name
  */
 void nvme_host_set_hostsymname(nvme_host_t h, const char *hostsymname);
-
-#endif /* _LIBNVME_TREE_H */

@@ -15,7 +15,7 @@ main = executable(
     dependencies: [
         config_dep,
         ccan_dep,
-        libnvme_dep,
+        libnvme_test_dep,
     ],
 )
 
@@ -62,7 +62,7 @@ if not is_windows
         dependencies: [
             config_dep,
             ccan_dep,
-            libnvme_dep,
+            libnvme_test_dep,
         ],
     )
 
@@ -146,7 +146,7 @@ if not is_windows
             dependencies: [
                 config_dep,
                 ccan_dep,
-                libnvme_dep,
+                libnvme_test_dep,
             ],
         )
         test('libnvme - util', test_util)
@@ -181,3 +181,32 @@ if not is_windows
     endif
 
 endif # not is_windows
+
+foreach hdr : [
+    'cmds',
+    'fabrics',
+    'filters',
+    'ioctl',
+    'lib',
+    'lib-types',
+    'linux',
+    'mi',
+    'nbft',
+    'tree',
+    'types',
+    'util',
+]
+    hdr_conf = configuration_data()
+    hdr_conf.set('HDR', hdr)
+    src = configure_file(
+        input: 'test-header.c.in',
+        output: 'test-header-' + hdr + '.c',
+        configuration: hdr_conf,
+    )
+    exe = executable(
+        'test-header-' + hdr,
+        src,
+        dependencies: [libnvme_dep],
+    )
+    test('libnvme - header/' + hdr, exe)
+endforeach

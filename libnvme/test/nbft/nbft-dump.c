@@ -9,7 +9,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <inttypes.h>
-#include "libnvme.h"
+
+#include <libnvme.h>
 
 static void print_hex(unsigned char *buf, int len)
 {

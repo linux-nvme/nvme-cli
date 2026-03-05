@@ -9,7 +9,10 @@
 /*
  * Search out for ZNS type namespaces, and if found, report their properties.
  */
-#include "nvme/tree.h"
+#include <libnvme.h>
+
+#include "nvme/private.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>

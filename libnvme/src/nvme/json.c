@@ -6,19 +6,16 @@
  * Authors: Hannes Reinecke <hare@suse.de>
  */
 
-#include <stdio.h>
-#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 
 #include <json.h>
 
+#include <libnvme.h>
+
 #include "cleanup.h"
-#include "fabrics.h"
-#include "log.h"
 #include "private.h"
-#include "linux.h"
 
 #define JSON_UPDATE_INT_OPTION(c, k, a, o)				\
 	if (!strcmp(# a, k ) && !c->a) c->a = json_object_get_int(o);

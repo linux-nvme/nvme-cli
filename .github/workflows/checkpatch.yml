@@ -1,4 +1,5 @@
-name: checkpatch review
+---
+name: Checkpatch Review
 on: [pull_request]
 jobs:
   checkpatch:

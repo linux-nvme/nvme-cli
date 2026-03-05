@@ -13,11 +13,11 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 
-/* we define a custom transport, so need the internal headers */
-#include "nvme/linux.h"
-#include "nvme/private.h"
+#include <libnvme.h>
+#include <libnvme-mi.h>
 
-#include "libnvme-mi.h"
+/* we define a custom transport, so need the internal headers */
+#include "nvme/private.h"
 
 #include "utils.h"
 
@@ -2131,7 +2131,7 @@ int main(void)
 
 	fd = test_setup_log();
 
-	ctx = nvme_mi_create_global_ctx(fd, DEFAULT_LOGLEVEL);
+	ctx = nvme_create_global_ctx(fd, DEFAULT_LOGLEVEL);
 	assert(ctx);
 
 	ep = nvme_mi_open_test(ctx);
@@ -2142,7 +2142,7 @@ int main(void)
 	}
 
 	nvme_mi_close(ep);
-	nvme_mi_free_global_ctx(ctx);
+	nvme_free_global_ctx(ctx);
 
 	test_close_log(fd);
 

@@ -80,15 +80,12 @@
  * 1.1, where possible.
  *
  */
-
-#ifndef _LIBNVME_MI_MI_H
-#define _LIBNVME_MI_MI_H
+#pragma once
 
 #include <stdint.h>
 
 #include "platform/includes.h"
 
-#include <nvme/types.h>
 #include <nvme/tree.h>
 
 /**
@@ -654,38 +651,6 @@ struct nvme_mi_control_resp {
  * Returns: A string representing the status value
  */
 const char *nvme_mi_status_to_string(int status);
-
-/**
- * nvme_mi_create_global_ctx() - Create top-level MI (ctx) handle.
- * @fp:		File descriptor for logging messages
- * @log_level:	Logging level to use
- *
- * Create the top-level (library) handle for creating subsequent endpoint
- * objects. Similar to nvme_create_global_ctx(), but we provide this to
- * allow linking without the core libnvme.
- *
- * Return: new nvme_global_ctx object, or NULL on failure.
- *
- * See &nvme_create_global_ctx.
- */
-struct nvme_global_ctx *nvme_mi_create_global_ctx(FILE *fp, int log_level);
-
-/**
- * nvme_mi_free_global_ctx() - Free nvme_global_ctx object.
- * @ctx:	&struct nvme_global_ctx object
- */
-void nvme_mi_free_global_ctx(struct nvme_global_ctx *ctx);
-
-/**
- * nvme_mi_set_probe_enabled() - enable/disable the probe for new endpoints
- * @ctx:	&struct nvme_global_ctx object
- * @enabled: whether to probe new endpoints
- *
- * Controls whether newly-created endpoints are probed for quirks on creation.
- * Defaults to enabled, which results in some initial messaging with the
- * endpoint to determine model-specific details.
- */
-void nvme_mi_set_probe_enabled(struct nvme_global_ctx *ctx, bool enabled);
 
 /* Top level management object: NVMe-MI Management Endpoint */
 struct nvme_mi_ep;
@@ -1363,25 +1328,6 @@ int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
 		       size_t *resp_data_size);
 
 /**
- * nvme_mi_admin_admin_passthru() - Submit an nvme admin passthrough command
- * @hdl:	Transport handle to send command to
- * @cmd:	The nvme admin command to send
- *
- * Send a customized NVMe Admin command request message and get the corresponding
- * response message.
- *
- * This interface supports no data, host to controller and controller to
- * host but it doesn't support bidirectional data transfer.
- * Also this interface only supports data transfer size range [0, 4096] (bytes)
- * so the & data_len parameter must be less than 4097.
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
- */
-int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd);
-
-/**
  * nvme_mi_control() - Perform a Control Primitive command
  * @ep: endpoint for MI communication
  * @opcode: Control Primitive opcode (using &enum nvme_mi_control_opcode)
@@ -1553,5 +1499,3 @@ int nvme_mi_aem_disable(nvme_mi_ep_t ep);
  * Return: 0 is a success, nonzero is an error and errno may be read for further details
  */
 int nvme_mi_aem_process(nvme_mi_ep_t ep, void *userdata);
-
-#endif /* _LIBNVME_MI_MI_H */

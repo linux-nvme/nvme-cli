@@ -1,5 +1,5 @@
 ---
-name: run-nightly-tests
+name: Run nightly tests
 
 on:
   workflow_dispatch:

@@ -12,7 +12,6 @@
 #include <liburing.h>
 #endif
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
@@ -21,7 +20,8 @@
 #include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
 
-#include "ioctl.h"
+#include <libnvme.h>
+
 #include "private.h"
 
 #ifndef _WIN32

@@ -6,35 +6,13 @@
  * Authors: Keith Busch <keith.busch@wdc.com>
  *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
-
-#ifndef _LIBNVME_TYPES_H
-#define _LIBNVME_TYPES_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
 #include "platform/includes.h"
-
-struct nvme_global_ctx;
-struct nvme_transport_handle;
-
-/**
- * nvme_create_global_ctx() - Initialize global context object
- * @fp:		File descriptor for logging messages
- * @log_level:	Logging level to use
- *
- * Return: Initialized &struct nvme_global_ctx object
- */
-struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level);
-
-/**
- * nvme_free_global_ctx() - Free global context object
- * @ctx:	&struct nvme_global_ctx object
- *
- * Free an &struct nvme_global_ctx object and all attached objects
- */
-void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
 
 /**
  * DOC: types.h
@@ -10509,4 +10487,302 @@ struct nvme_lm_ctrl_data_queue_fid_data {
 	__le32 hp;
 	__le32 tpt;
 };
-#endif /* _LIBNVME_TYPES_H */
+
+#define NVME_FEAT_ARB_BURST(v)		NVME_GET(v, FEAT_ARBITRATION_BURST)
+#define NVME_FEAT_ARB_LPW(v)		NVME_GET(v, FEAT_ARBITRATION_LPW)
+#define NVME_FEAT_ARB_MPW(v)		NVME_GET(v, FEAT_ARBITRATION_MPW)
+#define NVME_FEAT_ARB_HPW(v)		NVME_GET(v, FEAT_ARBITRATION_HPW)
+
+static inline void nvme_feature_decode_arbitration(__u32 value, __u8 *ab,
+						   __u8 *lpw, __u8 *mpw,
+						   __u8 *hpw)
+{
+	*ab  = NVME_FEAT_ARB_BURST(value);
+	*lpw = NVME_FEAT_ARB_LPW(value);
+	*mpw = NVME_FEAT_ARB_MPW(value);
+	*hpw = NVME_FEAT_ARB_HPW(value);
+};
+
+#define NVME_FEAT_PM_PS(v)		NVME_GET(v, FEAT_PWRMGMT_PS)
+#define NVME_FEAT_PM_WH(v)		NVME_GET(v, FEAT_PWRMGMT_WH)
+
+#define NVME_FEAT_POWER_LIMIT_PLV(v)	NVME_GET(v, FEAT_POWER_LIMIT_PLV)
+#define NVME_FEAT_POWER_LIMIT_PLS(v)	NVME_GET(v, FEAT_POWER_LIMIT_PLS)
+
+#define NVME_FEAT_POWER_THRESH_PTV(v)	NVME_GET(v, FEAT_POWER_THRESH_PTV)
+#define NVME_FEAT_POWER_THRESH_PTS(v)	NVME_GET(v, FEAT_POWER_THRESH_PTS)
+#define NVME_FEAT_POWER_THRESH_PMTS(v)	NVME_GET(v, FEAT_POWER_THRESH_PMTS)
+#define NVME_FEAT_POWER_THRESH_EPT(v)	NVME_GET(v, FEAT_POWER_THRESH_EPT)
+
+static inline void
+nvme_feature_decode_power_mgmt(__u32 value, __u8 *ps, __u8 *wh)
+{
+	*ps = NVME_FEAT_PM_PS(value);
+	*wh = NVME_FEAT_PM_WH(value);
+}
+
+#define NVME_FEAT_LBAR_NR(v)		NVME_GET(v, FEAT_LBAR_NR)
+
+static inline void
+nvme_feature_decode_lba_range(__u32 value, __u8 *num)
+{
+	*num = NVME_FEAT_LBAR_NR(value);
+}
+
+#define NVME_FEAT_TT_TMPTH(v)		NVME_GET(v, FEAT_TT_TMPTH)
+#define NVME_FEAT_TT_TMPSEL(v)		NVME_GET(v, FEAT_TT_TMPSEL)
+#define NVME_FEAT_TT_THSEL(v)		NVME_GET(v, FEAT_TT_THSEL)
+#define NVME_FEAT_TT_TMPTHH(v)		NVME_GET(v, FEAT_TT_TMPTHH)
+
+static inline void
+nvme_feature_decode_temp_threshold(__u32 value, __u16 *tmpth,
+		__u8 *tmpsel, __u8 *thsel, __u8 *tmpthh)
+{
+	*tmpth	= NVME_FEAT_TT_TMPTH(value);
+	*tmpsel	= NVME_FEAT_TT_TMPSEL(value);
+	*thsel	= NVME_FEAT_TT_THSEL(value);
+	*tmpthh	= NVME_FEAT_TT_TMPTHH(value);
+}
+
+#define NVME_FEAT_ER_TLER(v)		NVME_GET(v, FEAT_ERROR_RECOVERY_TLER)
+#define NVME_FEAT_ER_DULBE(v)		NVME_GET(v, FEAT_ERROR_RECOVERY_DULBE)
+
+static inline void
+nvme_feature_decode_error_recovery(__u32 value, __u16 *tler, bool *dulbe)
+{
+	*tler	= NVME_FEAT_ER_TLER(value);
+	*dulbe	= NVME_FEAT_ER_DULBE(value);
+}
+
+#define NVME_FEAT_VWC_WCE(v)		NVME_GET(v, FEAT_VWC_WCE)
+
+static inline void
+nvme_feature_decode_volatile_write_cache(__u32 value, bool *wce)
+{
+	*wce	= NVME_FEAT_VWC_WCE(value);
+}
+
+#define NVME_FEAT_NRQS_NSQR(v)		NVME_GET(v, FEAT_NRQS_NSQR)
+#define NVME_FEAT_NRQS_NCQR(v)		NVME_GET(v, FEAT_NRQS_NCQR)
+
+static inline void
+nvme_feature_decode_number_of_queues(__u32 value, __u16 *nsqr, __u16 *ncqr)
+{
+	*nsqr	= NVME_FEAT_NRQS_NSQR(value);
+	*ncqr	= NVME_FEAT_NRQS_NCQR(value);
+}
+
+#define NVME_FEAT_IRQC_THR(v)		NVME_GET(v, FEAT_IRQC_THR)
+#define NVME_FEAT_IRQC_TIME(v)		NVME_GET(v, FEAT_IRQC_TIME)
+
+static inline void
+nvme_feature_decode_interrupt_coalescing(__u32 value, __u8 *thr, __u8 *time)
+{
+	*thr	= NVME_FEAT_IRQC_THR(value);
+	*time	= NVME_FEAT_IRQC_TIME(value);
+}
+
+#define NVME_FEAT_ICFG_IV(v)		NVME_GET(v, FEAT_ICFG_IV)
+#define NVME_FEAT_ICFG_CD(v)		NVME_GET(v, FEAT_ICFG_CD)
+
+static inline void
+nvme_feature_decode_interrupt_config(__u32 value, __u16 *iv, bool *cd)
+{
+	*iv	= NVME_FEAT_ICFG_IV(value);
+	*cd	= NVME_FEAT_ICFG_CD(value);
+}
+
+#define NVME_FEAT_WA_DN(v)		NVME_GET(v, FEAT_WA_DN)
+
+static inline void
+nvme_feature_decode_write_atomicity(__u32 value, bool *dn)
+{
+	*dn	= NVME_FEAT_WA_DN(value);
+}
+
+#define NVME_FEAT_AE_SMART(v)		NVME_GET(v, FEAT_AE_SMART)
+#define NVME_FEAT_AE_NAN(v)		NVME_GET(v, FEAT_AE_NAN)
+#define NVME_FEAT_AE_FW(v)		NVME_GET(v, FEAT_AE_FW)
+#define NVME_FEAT_AE_TELEM(v)		NVME_GET(v, FEAT_AE_TELEM)
+#define NVME_FEAT_AE_ANA(v)		NVME_GET(v, FEAT_AE_ANA)
+#define NVME_FEAT_AE_PLA(v)		NVME_GET(v, FEAT_AE_PLA)
+#define NVME_FEAT_AE_LBAS(v)		NVME_GET(v, FEAT_AE_LBAS)
+#define NVME_FEAT_AE_EGA(v)		NVME_GET(v, FEAT_AE_EGA)
+#define NVME_FEAT_AE_NNSSHDN(v)		NVME_GET(v, FEAT_AE_NNSSHDN)
+#define NVME_FEAT_AE_TTHRY(v)		NVME_GET(v, FEAT_AE_TTHRY)
+#define NVME_FEAT_AE_RASSN(v)		NVME_GET(v, FEAT_AE_RASSN)
+#define NVME_FEAT_AE_RGRP0(v)		NVME_GET(v, FEAT_AE_RGRP0)
+#define NVME_FEAT_AE_ANSAN(v)		NVME_GET(v, FEAT_AE_ANSAN)
+#define NVME_FEAT_AE_ZDCN(v)		NVME_GET(v, FEAT_AE_ZDCN)
+#define NVME_FEAT_AE_PMDRLPCN(v)	NVME_GET(v, FEAT_AE_PMDRLPCN)
+#define NVME_FEAT_AE_ADLPCN(v)		NVME_GET(v, FEAT_AE_ADLPCN)
+#define NVME_FEAT_AE_HDLPCN(v)		NVME_GET(v, FEAT_AE_HDLPCN)
+#define NVME_FEAT_AE_DLPCN(v)		NVME_GET(v, FEAT_AE_DLPCN)
+
+static inline void
+nvme_feature_decode_async_event_config(__u32 value, __u8 *smart, bool *nan,
+		bool *fw, bool *telem, bool *ana, bool *pla,
+		bool *lbas, bool *ega)
+{
+	*smart	= NVME_FEAT_AE_SMART(value);
+	*nan	= NVME_FEAT_AE_NAN(value);
+	*fw	= NVME_FEAT_AE_FW(value);
+	*telem	= NVME_FEAT_AE_TELEM(value);
+	*ana	= NVME_FEAT_AE_ANA(value);
+	*pla	= NVME_FEAT_AE_PLA(value);
+	*lbas	= NVME_FEAT_AE_LBAS(value);
+	*ega	= NVME_FEAT_AE_EGA(value);
+}
+
+#define NVME_FEAT_APST_APSTE(v)		NVME_GET(v, FEAT_APST_APSTE)
+
+static inline void
+nvme_feature_decode_auto_power_state(__u32 value, bool *apste)
+{
+	*apste	= NVME_FEAT_APST_APSTE(value);
+}
+
+#define NVME_FEAT_HMEM_EHM(v)		NVME_GET(v, FEAT_HMEM_EHM)
+
+static inline void
+nvme_feature_decode_host_memory_buffer(__u32 value, bool *ehm)
+{
+	*ehm	= NVME_FEAT_HMEM_EHM(value);
+}
+
+#define NVME_FEAT_HCTM_TMT2(v)		NVME_GET(v, FEAT_HCTM_TMT2)
+#define NVME_FEAT_HCTM_TMT1(v)		NVME_GET(v, FEAT_HCTM_TMT1)
+
+static inline void
+nvme_feature_decode_host_thermal_mgmt(__u32 value, __u16 *tmt2, __u16 *tmt1)
+{
+	*tmt2	= NVME_FEAT_HCTM_TMT2(value);
+	*tmt1	= NVME_FEAT_HCTM_TMT1(value);
+}
+
+#define NVME_FEAT_NOPS_NOPPME(v)	NVME_GET(v, FEAT_NOPS_NOPPME)
+
+static inline void
+nvme_feature_decode_non_op_power_config(__u32 value, bool *noppme)
+{
+	*noppme	= NVME_FEAT_NOPS_NOPPME(value);
+}
+
+#define NVME_FEAT_RRL_RRL(v)		NVME_GET(v, FEAT_RRL_RRL)
+
+static inline void
+nvme_feature_decode_read_recovery_level_config(__u32 value, __u8 *rrl)
+{
+	*rrl	= NVME_FEAT_RRL_RRL(value);
+}
+
+#define NVME_FEAT_PLM_LPE(v)		NVME_GET(v, FEAT_PLM_LPE)
+
+static inline void
+nvme_feature_decode_predictable_latency_mode_config(__u32 value, bool *lpe)
+{
+	*lpe	= NVME_FEAT_PLM_LPE(value);
+}
+
+#define NVME_FEAT_PLMW_WS(v)		NVME_GET(v, FEAT_PLMW_WS)
+
+static inline void
+nvme_feature_decode_predictable_latency_mode_window(__u32 value, __u8 *ws)
+{
+	*ws	= NVME_FEAT_PLMW_WS(value);
+}
+
+#define NVME_FEAT_LBAS_LSIRI(v)		NVME_GET(v, FEAT_LBAS_LSIRI)
+#define NVME_FEAT_LBAS_LSIPI(v)		NVME_GET(v, FEAT_LBAS_LSIPI)
+
+static inline void
+nvme_feature_decode_lba_status_attributes(__u32 value, __u16 *lsiri,
+		__u16 *lsipi)
+{
+	*lsiri	= NVME_FEAT_LBAS_LSIRI(value);
+	*lsipi	= NVME_FEAT_LBAS_LSIPI(value);
+}
+
+#define NVME_FEAT_SC_NODRM(v)		NVME_GET(v, FEAT_SC_NODRM)
+
+static inline void
+nvme_feature_decode_sanitize_config(__u32 value, bool *nodrm)
+{
+	*nodrm	= NVME_FEAT_SC_NODRM(value);
+}
+
+#define NVME_FEAT_EG_ENDGID(v)		NVME_GET(v, FEAT_EG_ENDGID)
+#define NVME_FEAT_EG_EGCW(v)		NVME_GET(v, FEAT_EG_EGCW)
+
+static inline void
+nvme_feature_decode_endurance_group_event_config(__u32 value,
+		__u16 *endgid, __u8 *endgcw)
+{
+	*endgid	= NVME_FEAT_EG_ENDGID(value);
+	*endgcw	= NVME_FEAT_EG_EGCW(value);
+}
+
+#define NVME_FEAT_PERFC_ATTRI(v) NVME_GET(v, FEAT_PERFC_ATTRI)
+#define NVME_FEAT_PERFC_RVSPA(v) NVME_GET(v, FEAT_PERFC_RVSPA)
+
+static inline void
+nvme_feature_decode_perf_characteristics(__u32 value, __u8 *attri, bool *rvspa)
+{
+	*attri = NVME_FEAT_PERFC_ATTRI(value);
+	*rvspa = NVME_FEAT_PERFC_RVSPA(value);
+}
+
+#define NVME_FEAT_SPM_PBSLC(v)		NVME_GET(v, FEAT_SPM_PBSLC)
+
+static inline void
+nvme_feature_decode_software_progress_marker(__u32 value, __u8 *pbslc)
+{
+	*pbslc	= NVME_FEAT_SPM_PBSLC(value);
+}
+
+#define NVME_FEAT_HOSTID_EXHID(v)	NVME_GET(v, FEAT_HOSTID_EXHID)
+
+static inline void
+nvme_feature_decode_host_identifier(__u32 value, bool *exhid)
+{
+	*exhid = NVME_FEAT_HOSTID_EXHID(value);
+}
+
+#define NVME_FEAT_RM_REGPRE(v)		NVME_GET(v, FEAT_RM_REGPRE)
+#define NVME_FEAT_RM_RESREL(v)		NVME_GET(v, FEAT_RM_RESREL)
+#define NVME_FEAT_RM_RESPRE(v)		NVME_GET(v, FEAT_RM_RESPRE)
+
+static inline void
+nvme_feature_decode_reservation_notification(__u32 value, bool *regpre,
+		bool *resrel, bool *respre)
+{
+	*regpre	= NVME_FEAT_RM_REGPRE(value);
+	*resrel	= NVME_FEAT_RM_RESREL(value);
+	*respre	= NVME_FEAT_RM_RESPRE(value);
+}
+
+#define NVME_FEAT_RP_PTPL(v)		NVME_GET(v, FEAT_RP_PTPL)
+
+static inline void
+nvme_feature_decode_reservation_persistance(__u32 value, bool *ptpl)
+{
+	*ptpl	= NVME_FEAT_RP_PTPL(value);
+}
+
+#define NVME_FEAT_WP_WPS(v)		NVME_GET(v, FEAT_WP_WPS)
+
+static inline void
+nvme_feature_decode_namespace_write_protect(__u32 value, __u8 *wps)
+{
+	*wps	= NVME_FEAT_WP_WPS(value);
+}
+
+#define NVME_FEAT_BPWPC_BP0WPS(v)	NVME_GET(v, FEAT_BPWPC_BP0WPS)
+#define NVME_FEAT_BPWPC_BP1WPS(v)	NVME_GET(v, FEAT_BPWPC_BP1WPS)
+
+static inline void
+nvme_id_ns_flbas_to_lbaf_inuse(__u8 flbas, __u8 *lbaf_inuse)
+{
+	*lbaf_inuse = ((NVME_FLBAS_HIGHER(flbas) << 4) |
+			NVME_FLBAS_LOWER(flbas));
+}

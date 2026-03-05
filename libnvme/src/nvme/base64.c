@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /*
  * base64.c - RFC4648-compliant base64 encoding
  *
@@ -8,7 +8,6 @@
  */
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>

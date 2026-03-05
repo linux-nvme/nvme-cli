@@ -13,14 +13,16 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
-
+#include <sys/ioctl.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 
-#include "libnvme-mi.h"
-#include "nvme/linux.h"
+#include <libnvme.h>
+#include <libnvme-mi.h>
+
 #include "nvme/private.h"
+
 #include "utils.h"
 
 #if HAVE_LINUX_MCTP_H
@@ -1459,7 +1461,7 @@ int main(void)
 
 	__nvme_mi_mctp_set_ops(&ops);
 
-	ctx = nvme_mi_create_global_ctx(fd, DEFAULT_LOGLEVEL);
+	ctx = nvme_create_global_ctx(fd, DEFAULT_LOGLEVEL);
 	assert(ctx);
 
 	ep = nvme_mi_open_mctp(ctx, 0, 0);
@@ -1471,7 +1473,7 @@ int main(void)
 	}
 
 	nvme_mi_close(ep);
-	nvme_mi_free_global_ctx(ctx);
+	nvme_free_global_ctx(ctx);
 
 	test_close_log(fd);
 

@@ -24,9 +24,10 @@
 #include <string.h>
 #include <libgen.h>
 
+#include <libnvme.h>
+
 #include "common.h"
 #include "nvme.h"
-#include "libnvme.h"
 
 #include "util/suffix.h"
 

@@ -20,8 +20,8 @@
 #include <netdb.h>
 #include <string.h>
 
-#include "nvme/log.c"		/* to resolve __nvme_msg() */
-#include "nvme/util.c"
+#include <libnvme.h>
+#include <nvme/private.h>
 
 static size_t safe_strlen(const char *p) {
 	return p ? strlen(p) : strlen("null");

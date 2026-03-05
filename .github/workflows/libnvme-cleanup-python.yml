@@ -1,14 +1,15 @@
-name: cleanup python
+---
+name: Cleanup Python dev releases
 
 on:
   workflow_dispatch:
     inputs:
       keep-last:
-        description: "How many recent dev releases to keep"
+        description: "Number of recent dev releases to keep"
         required: false
         default: "5"
       dry-run:
-        description: "Only simulate the deletion (true/false)"
+        description: "Only simulate deletions (true/false)"
         required: false
         default: "true"
 
@@ -17,18 +18,18 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Install pypi-cleanup
         run: pip install pypi-cleanup
 
       - name: Run pypi-cleanup on TestPyPI
         env:
-          PYPI_USERNAME: __token__
-          PYPI_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          PYPI_API_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
         run: |
           cd libnvme
           pypi-cleanup \
-            --username "$PYPI_USERNAME" \
-            --password "$PYPI_PASSWORD" \
             --repository-url https://test.pypi.org/legacy/ \
             --package libnvme \
             --keep ${{ github.event.inputs.keep-last }} \

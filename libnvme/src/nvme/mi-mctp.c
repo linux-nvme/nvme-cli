@@ -30,9 +30,10 @@
 #define MCTP_DBUS_IFACE_ENDPOINT "xyz.openbmc_project.MCTP.Endpoint"
 #endif
 
+#include <libnvme.h>
+#include <libnvme-mi.h>
+
 #include "private.h"
-#include "log.h"
-#include "mi.h"
 
 
 #if !defined(AF_MCTP)
@@ -948,7 +949,7 @@ struct nvme_global_ctx *nvme_mi_scan_mctp(void)
 	dbus_bool_t drc;
 	DBusError berr;
 
-	ctx = nvme_mi_create_global_ctx(NULL, DEFAULT_LOGLEVEL);
+	ctx = nvme_create_global_ctx(NULL, DEFAULT_LOGLEVEL);
 	if (!ctx) {
 		errno = ENOMEM;
 		return NULL;
@@ -1022,7 +1023,7 @@ out:
 
 	if (rc < 0) {
 		if (ctx) {
-			nvme_mi_free_global_ctx(ctx);
+			nvme_free_global_ctx(ctx);
 		}
 		errno = errno_save;
 		ctx = NULL;

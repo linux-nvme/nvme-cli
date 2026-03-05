@@ -10,8 +10,9 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include <libnvme.h>
+
 #include "nvme.h"
-#include "libnvme.h"
 #include "plugin.h"
 #include "platform/types.h"
 #include "nvme-print.h"
