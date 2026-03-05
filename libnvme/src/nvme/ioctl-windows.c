@@ -117,14 +117,10 @@ int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
 	return -ENOTSUP;
 }
 
-int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
-{
-	(void)hdl;
-	(void)cmd;
-	return -ENOTSUP;
-}
-
+/*
+ * IOCTL_STORAGE_PROTOCOL_COMMAND pass-through implementation used for
+ * VU commands and a small subset of other admin and IO commands.
+ */
 static int nvme_submit_storage_protocol_command(
 		struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd)
@@ -134,7 +130,7 @@ static int nvme_submit_storage_protocol_command(
 	ULONG returned_len = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
-	void *user_data;
+	void *user_data = NULL;
 	int err = 0;
 	bool is_read = false;
 	bool is_write = false;
@@ -253,6 +249,320 @@ out:
 	return err;
 }
 
+/*
+ * Windows-specific IO command implementations.
+ */
+
+/* SCSI operation code definitions */
+#define SCSIOP_SYNCHRONIZE_CACHE 0x35
+#define SCSIOP_READ16 0x88
+#define SCSIOP_WRITE16 0x8A
+
+static int nvme_submit_io_flush(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd)
+{
+	PSCSI_PASS_THROUGH pass_through = NULL;
+	ULONG buffer_len = 0;
+	ULONG returned_len = 0;
+	BOOL result = FALSE;
+	PUCHAR buffer = NULL;
+	void *user_data = NULL;
+	int err = 0;
+
+	user_data = hdl->submit_entry(hdl, cmd);
+	if (hdl->ctx->dry_run)
+		goto out;
+
+	if (hdl->fd == INVALID_HANDLE_VALUE || hdl->fd == NULL) {
+		err = -EBADF;
+		goto out;
+	}
+
+	buffer_len = sizeof(SCSI_PASS_THROUGH);
+	buffer = (PUCHAR)malloc(buffer_len);
+	if (!buffer) {
+		err = -ENOMEM;
+		goto out;
+	}
+
+	ZeroMemory(buffer, buffer_len);
+
+	pass_through = (PSCSI_PASS_THROUGH)buffer;
+	pass_through->Length = sizeof(SCSI_PASS_THROUGH);
+	pass_through->CdbLength = 10;
+	pass_through->DataIn = SCSI_IOCTL_DATA_UNSPECIFIED;
+	pass_through->TimeOutValue = (cmd->timeout_ms > 0) ?
+		((cmd->timeout_ms + 999) / 1000) : 30;
+
+	pass_through->Cdb[0] = SCSIOP_SYNCHRONIZE_CACHE;
+
+	do {
+		err = 0;
+		result = DeviceIoControl(hdl->fd,
+				IOCTL_SCSI_PASS_THROUGH,
+				buffer,
+				buffer_len,
+				buffer,
+				buffer_len,
+				&returned_len,
+				NULL);
+		if (result && !pass_through->ScsiStatus)
+			break;
+
+		if (!result)
+			err = get_last_error_as_errno();
+		else
+			err = -EIO;
+	} while (hdl->decide_retry(hdl, cmd, err));
+
+	if (err)
+		goto out_free_buffer;
+
+	cmd->result = 0;
+
+out_free_buffer:
+	free(buffer);
+out:
+	hdl->submit_exit(hdl, cmd, err, user_data);
+	return err;
+}
+
+static __u8 nvme_prinfo_to_scsi_wrrdprotect(__u8 prinfo)
+{
+	/*
+	 * From WRPROTECT/RDPROTECT -> PRINFO (PRACT + PRCHK) mapping tables
+	 * in NVM Express: SCSI Translation Reference documentation.
+	 */
+	switch (prinfo) {
+	case 0b0111:
+		return 1;
+	case 0b0011:
+		return 2;
+	case 0b0000:
+		return 3;
+	case 0b0100:
+		return 4;
+	case 0b1000:	/* For Write */
+	case 0b1111:	/* For Read */
+	default:
+		return 0; /* Default to no check */
+	}
+}
+
+/**
+ * fill_scsi_rw16_cdb() - Fill the CDB for a SCSI READ(16) or WRITE(16) command.
+ * @cmd:    NVMe command containing the CDW fields to translate
+ * @cdb:    CDB buffer to fill
+ *
+ * Fills the CDB for a SCSI READ(16) or WRITE(16) command based on the
+ * supported NVMe command fields.
+ *
+ * See NVM Express: SCSI Translation Reference documentation.
+ */
+static void fill_scsi_rw16_cdb(struct nvme_passthru_cmd *cmd, UCHAR cdb[16])
+{
+	__u8 opcode = (cmd->opcode == nvme_cmd_read) ?
+			SCSIOP_READ16 : SCSIOP_WRITE16;
+	__u64 lba = ((__u64)cmd->cdw11 << 32) | cmd->cdw10;
+	__u32 transfer_len = NVME_FIELD_DECODE(cmd->cdw12,
+			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
+			NVME_IOCS_COMMON_CDW12_NLB_MASK) + 1; /* NLB + 1 */
+	__u8 prinfo = NVME_FIELD_DECODE(cmd->cdw12,
+			NVME_IOCS_COMMON_CDW12_PRINFO_SHIFT,
+			NVME_IOCS_COMMON_CDW12_PRINFO_MASK);
+	__u8 fua = NVME_FIELD_DECODE(cmd->cdw12,
+			NVME_IOCS_COMMON_CDW12_FUA_SHIFT,
+			NVME_IOCS_COMMON_CDW12_FUA_MASK);
+
+	__u8 wrrdprotect = nvme_prinfo_to_scsi_wrrdprotect(prinfo);
+
+	cdb[0] = opcode;
+	cdb[1] = (wrrdprotect << 5) | ((fua & 1) << 3);
+	cdb[2] = (lba >> 56) & 0xFF;
+	cdb[3] = (lba >> 48) & 0xFF;
+	cdb[4] = (lba >> 40) & 0xFF;
+	cdb[5] = (lba >> 32) & 0xFF;
+	cdb[6] = (lba >> 24) & 0xFF;
+	cdb[7] = (lba >> 16) & 0xFF;
+	cdb[8] = (lba >> 8) & 0xFF;
+	cdb[9] = lba & 0xFF;
+	cdb[10] = (transfer_len >> 24) & 0xFF;
+	cdb[11] = (transfer_len >> 16) & 0xFF;
+	cdb[12] = (transfer_len >> 8) & 0xFF;
+	cdb[13] = transfer_len & 0xFF;
+	cdb[14] = 0;
+	cdb[15] = 0;
+}
+
+static int nvme_submit_io_write(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd)
+{
+	PSCSI_PASS_THROUGH pass_through = NULL;
+	ULONG buffer_len = 0;
+	ULONG returned_len = 0;
+	BOOL result = FALSE;
+	PUCHAR buffer = NULL;
+	void *user_data = NULL;
+	int err = 0;
+
+	user_data = hdl->submit_entry(hdl, cmd);
+	if (hdl->ctx->dry_run)
+		goto out;
+
+	if (hdl->fd == INVALID_HANDLE_VALUE || hdl->fd == NULL) {
+		err = -EBADF;
+		goto out;
+	}
+
+	if (cmd->data_len > 0 && !cmd->addr) {
+		err = -EINVAL;
+		goto out;
+	}
+
+	/* Allocate buffer for SCSI_PASS_THROUGH + write payload */
+	buffer_len = sizeof(SCSI_PASS_THROUGH) + cmd->data_len;
+	buffer = (PUCHAR)malloc(buffer_len);
+	if (!buffer) {
+		err = -ENOMEM;
+		goto out;
+	}
+
+	ZeroMemory(buffer, buffer_len);
+
+	pass_through = (PSCSI_PASS_THROUGH)buffer;
+	pass_through->Length = sizeof(SCSI_PASS_THROUGH);
+	pass_through->CdbLength = 16;
+	pass_through->DataIn = SCSI_IOCTL_DATA_OUT;
+	pass_through->DataTransferLength = cmd->data_len;
+	pass_through->TimeOutValue = (cmd->timeout_ms > 0) ?
+		((cmd->timeout_ms + 999) / 1000) : 30;
+	pass_through->DataBufferOffset = sizeof(SCSI_PASS_THROUGH);
+
+	fill_scsi_rw16_cdb(cmd, pass_through->Cdb);
+
+	if (cmd->addr && cmd->data_len > 0) {
+		memcpy(buffer + pass_through->DataBufferOffset,
+			(void *)(uintptr_t)cmd->addr, cmd->data_len);
+	}
+
+	do {
+		err = 0;
+		result = DeviceIoControl(hdl->fd,
+				IOCTL_SCSI_PASS_THROUGH,
+				buffer,
+				buffer_len,
+				buffer,
+				buffer_len,
+				&returned_len,
+				NULL);
+		if (result && !pass_through->ScsiStatus)
+			break;
+
+		if (!result)
+			err = get_last_error_as_errno();
+		else
+			err = -EIO;
+	} while (hdl->decide_retry(hdl, cmd, err));
+
+	if (err)
+		goto out_free_buffer;
+
+	cmd->result = 0;
+
+out_free_buffer:
+	free(buffer);
+out:
+	hdl->submit_exit(hdl, cmd, err, user_data);
+	return err;
+}
+
+static int nvme_submit_io_read(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd)
+{
+	PSCSI_PASS_THROUGH pass_through = NULL;
+	ULONG buffer_len = 0;
+	ULONG returned_len = 0;
+	BOOL result = FALSE;
+	PUCHAR buffer = NULL;
+	void *user_data = NULL;
+	int err = 0;
+
+	user_data = hdl->submit_entry(hdl, cmd);
+	if (hdl->ctx->dry_run)
+		goto out;
+
+	if (hdl->fd == INVALID_HANDLE_VALUE || hdl->fd == NULL) {
+		err = -EBADF;
+		goto out;
+	}
+
+	if (cmd->data_len > 0 && !cmd->addr) {
+		err = -EINVAL;
+		goto out;
+	}
+
+	/* Allocate buffer for SCSI_PASS_THROUGH + read payload */
+	buffer_len = sizeof(SCSI_PASS_THROUGH) + cmd->data_len;
+	buffer = (PUCHAR)malloc(buffer_len);
+	if (!buffer) {
+		err = -ENOMEM;
+		goto out;
+	}
+
+	ZeroMemory(buffer, buffer_len);
+
+	pass_through = (PSCSI_PASS_THROUGH)buffer;
+	pass_through->Length = sizeof(SCSI_PASS_THROUGH);
+	pass_through->CdbLength = 16;
+	pass_through->DataIn = SCSI_IOCTL_DATA_IN;
+	pass_through->DataTransferLength = cmd->data_len;
+	pass_through->TimeOutValue = (cmd->timeout_ms > 0) ?
+		((cmd->timeout_ms + 999) / 1000) : 30;
+	pass_through->DataBufferOffset = sizeof(SCSI_PASS_THROUGH);
+
+	fill_scsi_rw16_cdb(cmd, pass_through->Cdb);
+
+	do {
+		err = 0;
+		result = DeviceIoControl(hdl->fd,
+				IOCTL_SCSI_PASS_THROUGH,
+				buffer,
+				buffer_len,
+				buffer,
+				buffer_len,
+				&returned_len,
+				NULL);
+		if (result && !pass_through->ScsiStatus)
+			break;
+
+		if (!result)
+			err = get_last_error_as_errno();
+		else
+			err = -EIO;
+	} while (hdl->decide_retry(hdl, cmd, err));
+
+	if (err)
+		goto out_free_buffer;
+
+	if (cmd->addr && cmd->data_len > 0) {
+		memcpy((void *)(uintptr_t)cmd->addr,
+			buffer + pass_through->DataBufferOffset,
+			min(pass_through->DataTransferLength, cmd->data_len));
+	}
+
+	cmd->result = 0;
+
+out_free_buffer:
+	free(buffer);
+out:
+	hdl->submit_exit(hdl, cmd, err, user_data);
+	return err;
+}
+
+/*
+ * Windows-specific admin command implementations.
+ */
+
 static int nvme_submit_admin_get_log_page(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd)
 {
@@ -263,9 +573,9 @@ static int nvme_submit_admin_get_log_page(struct nvme_transport_handle *hdl,
 	ULONG returned_len = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
-	__u32 csi;
-	void *user_data;
+	void *user_data = NULL;
 	int err = 0;
+	__u32 csi;
 
 	user_data = hdl->submit_entry(hdl, cmd);
 	if (hdl->ctx->dry_run)
@@ -376,10 +686,10 @@ static int nvme_submit_admin_identify(struct nvme_transport_handle *hdl,
 	ULONG returned_len = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
+	void *user_data = NULL;
+	int err = 0;
 	__u32 cns;
 	__u32 csi;
-	void *user_data;
-	int err = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
 	if (hdl->ctx->dry_run)
@@ -486,7 +796,7 @@ static int nvme_submit_admin_set_features(struct nvme_transport_handle *hdl,
 	ULONG returned_len = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
-	void *user_data;
+	void *user_data = NULL;
 	int err = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
@@ -577,7 +887,7 @@ static int nvme_submit_admin_get_features(struct nvme_transport_handle *hdl,
 	ULONG returned_len = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
-	void *user_data;
+	void *user_data = NULL;
 	int err = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
@@ -708,9 +1018,9 @@ static int nvme_submit_admin_fw_commit(struct nvme_transport_handle *hdl,
 	ULONG buffer_len = 0;
 	ULONG returned_len = 0;
 	BOOL result = FALSE;
-	__u8 commit_action;
-	void *user_data;
+	void *user_data = NULL;
 	int err = 0;
+	__u8 commit_action;
 
 	user_data = hdl->submit_entry(hdl, cmd);
 	if (hdl->ctx->dry_run)
@@ -800,7 +1110,7 @@ static int nvme_submit_admin_fw_download(struct nvme_transport_handle *hdl,
 	ULONG returned_len = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
-	void *user_data;
+	void *user_data = NULL;
 	int err = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
@@ -906,7 +1216,7 @@ static int nvme_submit_admin_format_nvm_user_data_erase(
 	ULONG returned_len = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
-	void *user_data;
+	void *user_data = NULL;
 	int err = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
@@ -997,7 +1307,7 @@ static int nvme_submit_admin_format_nvm_crypto_erase(
 {
 	BOOL result = FALSE;
 	ULONG returned_len = 0;
-	void *user_data;
+	void *user_data = NULL;
 	int err = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
@@ -1083,7 +1393,7 @@ static int nvme_submit_admin_security_send_receive(
 	ULONG returned_len = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
-	void *user_data;
+	void *user_data = NULL;
 	int err = 0;
 	bool is_send = (cmd->opcode == nvme_admin_security_send);
 
@@ -1195,11 +1505,47 @@ out:
 }
 
 /*
+ * Windows only supports a subset of NVMe IO command calls from user space
+ * and uses different IOCTLs for different commands instead of a single
+ * passthru interface.
+ * Passthru is supported using IOCTL_STORAGE_PROTOCOL_COMMAND,
+ * but only for vendor-specific commands and a small subset of IO commands.
+ * For supported commands and a mapping to the required IOCTLs, see:
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
+ */
+int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd)
+{
+	if (!hdl || !cmd)
+		return -EINVAL;
+
+	switch (cmd->opcode) {
+	case nvme_cmd_flush:
+		return nvme_submit_io_flush(hdl, cmd);
+	case nvme_cmd_write:
+		return nvme_submit_io_write(hdl, cmd);
+	case nvme_cmd_read:
+		return nvme_submit_io_read(hdl, cmd);
+	case nvme_cmd_compare:
+		/* Only supported on WinPE */
+		if (get_is_win_pe())
+			return nvme_submit_storage_protocol_command(hdl, cmd);
+		else
+			return -ENOTSUP;
+	case 0x80 ... 0xFF: /* vendor-specific commands */
+		return nvme_submit_storage_protocol_command(hdl, cmd);
+	default:
+		return -ENOTSUP;
+	}
+	return -ENOTSUP;
+}
+
+/*
  * Windows only supports a subset of NVMe admin command calls from user space
  * and uses different IOCTLs for different commands instead of a single
  * passthru interface.
  * Passthru is supported using IOCTL_STORAGE_PROTOCOL_COMMAND,
- * but only for VU commands and a small subset of admin commands.
+ * but only for vendor-specific commands and a small subset of admin commands.
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
@@ -1211,10 +1557,6 @@ int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
 
 	if (hdl->type != NVME_TRANSPORT_HANDLE_TYPE_DIRECT)
 		return -ENOTSUP;
-
-	/* VU commands */
-	if (cmd->opcode >= 0xC0 && cmd->opcode <= 0xFF)
-		return nvme_submit_storage_protocol_command(hdl, cmd);
 
 	switch (cmd->opcode) {
 	case nvme_admin_get_log_page:
@@ -1244,6 +1586,8 @@ int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
 	case nvme_admin_security_recv:
 		return nvme_submit_admin_security_send_receive(hdl, cmd);
 	case nvme_admin_sanitize_nvm:
+		return nvme_submit_storage_protocol_command(hdl, cmd);
+	case 0xC0 ... 0xFF: /* vendor-specific commands */
 		return nvme_submit_storage_protocol_command(hdl, cmd);
 	default:
 		return -ENOTSUP;
