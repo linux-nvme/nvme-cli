@@ -34,10 +34,10 @@ if want_libnvme
     subdir('tools/generator')  # generate code needed by src below
     subdir('src')              # declares: libnvme_dep
     subdir('libnvme')
-    if get_option('tests')
+    if want_tests
         subdir('test')
     endif
-    if get_option('examples')
+    if want_examples
         subdir('examples')
     endif
 
