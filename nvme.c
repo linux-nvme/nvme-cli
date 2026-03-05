@@ -4875,6 +4875,7 @@ static bool is_get_feature_result_set(enum nvme_features_id feature_id)
 {
 	switch (feature_id) {
 	case NVME_FEAT_FID_PERF_CHARACTERISTICS:
+	case NVME_FEAT_FID_HOST_ID:
 		return false;
 	default:
 		break;

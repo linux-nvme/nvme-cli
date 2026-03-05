@@ -5133,6 +5133,29 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 	}
 }
 
+static void stdout_feat_host_id(unsigned int result, unsigned char *hostid)
+{
+	uint64_t ull;
+	bool exhid;
+
+	if (!hostid)
+		return;
+
+	nvme_feature_decode_host_id(result, &exhid);
+
+	if (exhid) {
+		printf("\tHost Identifier (HOSTID):  %s\n",
+		       uint128_t_to_l10n_string(le128_to_cpu(hostid)));
+		return;
+	}
+
+	ull =  hostid[7]; ull <<= 8; ull |= hostid[6]; ull <<= 8;
+	ull |= hostid[5]; ull <<= 8; ull |= hostid[4]; ull <<= 8;
+	ull |= hostid[3]; ull <<= 8; ull |= hostid[2]; ull <<= 8;
+	ull |= hostid[1]; ull <<= 8; ull |= hostid[0];
+	printf("\tHost Identifier (HOSTID):  %" PRIu64 "\n", ull);
+}
+
 static void stdout_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	printf("get-feature:%#0*x (%s), %s value:%#0*x\n", fid ? 4 : 2, fid,
@@ -5146,7 +5169,6 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 	const char *async = "Send async event";
 	const char *no_async = "Do not send async event";
 	__u8 field;
-	uint64_t ull;
 
 	switch (fid) {
 	case NVME_FEAT_FID_ARBITRATION:
@@ -5354,12 +5376,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		printf("\tPre-boot Software Load Count (PBSLC): %u\n", NVME_FEAT_SPM_PBSLC(result));
 		break;
 	case NVME_FEAT_FID_HOST_ID:
-		if (buf) {
-			ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;
-			ull |= buf[4]; ull <<= 8; ull |= buf[3]; ull <<= 8; ull |= buf[2]; ull <<= 8;
-			ull |= buf[1]; ull <<= 8; ull |= buf[0];
-			printf("\tHost Identifier (HOSTID):  %" PRIu64 "\n", ull);
-		}
+		stdout_feat_host_id(result, buf);
 		break;
 	case NVME_FEAT_FID_RESV_MASK:
 		printf("\tMask Reservation Preempted Notification  (RESPRE): %s\n",
