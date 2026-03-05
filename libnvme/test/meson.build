@@ -21,6 +21,10 @@ endif
 # define as meson unit-tests, and therefore get run as part of the 'test'
 # target. However, they're available for developer use, when hardware is
 # available.
+
+# Skip tests on Windows for now.
+if host_system != 'windows'
+
 main = executable(
     'main-test',
     ['test.c'],
@@ -221,3 +225,5 @@ foreach hdr : [
     )
     test('libnvme - header/' + hdr, exe)
 endforeach
+
+endif # host_system != 'windows'

@@ -23,3 +23,5 @@ tests/*.pyc
 
 # Ignore PyPI build artifacts
 dist/
+
+.vscode/

@@ -23,7 +23,6 @@ project(
     default_options: [
         'c_std=gnu99',
         'buildtype=debugoptimized',
-        'prefix=/usr/local',
         'warning_level=1',
         'sysconfdir=etc',
         'wrap_mode=nofallback',
@@ -34,6 +33,7 @@ fs = import('fs')
 
 cc = meson.get_compiler('c')
 cxx_available = add_languages('cpp', required: false, native: false)
+host_system = host_machine.system()
 
 ################################################################################
 # Determine which features we need to build: The nvme executable, the libnvme
@@ -51,7 +51,7 @@ cxx_available = add_languages('cpp', required: false, native: false)
 # dependencies are present. Also, -Dpython=enabled forces -Dlibnvme=enabled.
 want_nvme = get_option('nvme').disabled() == false
 want_libnvme = get_option('libnvme').disabled() == false
-want_fabrics = get_option('fabrics').disabled() == false
+want_fabrics = get_option('fabrics').disabled() == false and host_system != 'windows'
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
 
@@ -131,8 +131,12 @@ conf.set('RUNDIR', '"@0@"'.format(rundir))
 
 conf.set('CONFIG_FABRICS', want_fabrics, description: 'Is fabrics enabled')
 
+if host_system == 'windows'
+    kernel32_dep = cc.find_library('kernel32', required: true)
+endif
+
 # Check for libjson-c availability
-if get_option('json-c').disabled()
+if host_system == 'windows' or get_option('json-c').disabled()
     json_c_dep = dependency('', required: false)
 else
     json_c_dep = dependency(
@@ -365,7 +369,7 @@ conf.set10(
 
 is_static = get_option('default_library') == 'static'
 have_netdb = false
-if not is_static
+if not is_static and host_system != 'windows'
     have_netdb = cc.links(
         '''#include <sys/types.h>
         #include <sys/socket.h>
@@ -471,18 +475,26 @@ if want_nvme
     subdir('plugins')   # declares: plugin_sources
     subdir('util')      # declares: util_sources
 
-    sources = [
-        'libnvme-wrap.c',
-        'logging.c',
-        'nvme-cmds.c',
-        'nvme-models.c',
-        'nvme-print-binary.c',
-        'nvme-print-stdout.c',
-        'nvme-print.c',
-        'nvme-rpmb.c',
-        'nvme.c',
-        'plugin.c',
-    ]
+    sources = []
+    if host_system == 'windows'
+        sources += [
+            'nvme-dummy.c', # Dummy source file for Windows port bring up.
+        ]
+    else
+        sources += [
+            'libnvme-wrap.c',
+            'logging.c',
+            'nvme-cmds.c',
+            'nvme-models.c',
+            'nvme-print-binary.c',
+            'nvme-print-stdout.c',
+            'nvme-print.c',
+            'nvme-rpmb.c',
+            'nvme.c',
+            'plugin.c',
+        ]
+    endif
+
     if want_fabrics
         sources += 'fabrics.c'
     endif
@@ -495,16 +507,27 @@ if want_nvme
     sources += plugin_sources
     sources += util_sources
 
+    link_args_list = []
+    link_deps = [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+        json_c_dep,
+    ]
+
+    if host_system == 'windows'
+        link_deps += [
+            kernel32_dep,
+        ]
+    else
+        link_args_list = ['-ldl']
+    endif
+
     executable(
         'nvme',
         sources,
-        dependencies: [
-            config_dep,
-            ccan_dep,
-            libnvme_dep,
-            json_c_dep,
-        ],
-        link_args: '-ldl',
+        dependencies: link_deps,
+        link_args: link_args_list,
         install: true,
         install_dir: sbindir,
     )
@@ -632,6 +655,11 @@ dep_dict = {
     'python3':          py3_dep.found(),
     'liburing':         liburing_dep.found(),
 }
+if host_system == 'windows'
+    dep_dict += {
+        'kernel32':     kernel32_dep.found(),
+    }
+endif
 summary(dep_dict, section: 'Dependencies', bool_yn: true)
 
 wanted_dict = {
@@ -648,4 +676,3 @@ conf_dict = {
     'pdc enabled':      get_option('pdc-enabled'),
 }
 summary(conf_dict, section: 'Configuration', bool_yn: true)
-

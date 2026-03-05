@@ -5,6 +5,10 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
+
+# Skip examples on Windows for now.
+if host_system != 'windows'
+
 executable(
     'telemetry-listen',
     ['telemetry-listen.c'],
@@ -90,3 +94,5 @@ if libdbus_dep.found()
         ],
     )
 endif
+
+endif # host_system != 'windows'
