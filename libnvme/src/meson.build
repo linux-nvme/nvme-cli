@@ -5,28 +5,33 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-sources = [
-    'nvme/base64.c',
-    'nvme/cmds.c',
-    'nvme/crc32.c',
-    'nvme/fabrics.c',
-    'nvme/filters.c',
-    'nvme/ioctl.c',
-    'nvme/lib.c',
-    'nvme/linux.c',
-    'nvme/log.c',
-    'nvme/mi-mctp.c',
-    'nvme/mi.c',
-    'nvme/nbft.c',
-    'nvme/sysfs.c',
-    'nvme/tree.c',
-    'nvme/util.c',
-]
-
-if json_c_dep.found()
-    sources += 'nvme/json.c'
+sources = []
+if host_system == 'windows'
+    sources += []
 else
-    sources += 'nvme/no-json.c'
+    sources += [
+        'nvme/base64.c',
+        'nvme/cmds.c',
+        'nvme/crc32.c',
+        'nvme/fabrics.c',
+        'nvme/filters.c',
+        'nvme/ioctl.c',
+        'nvme/lib.c',
+        'nvme/linux.c',
+        'nvme/log.c',
+        'nvme/mi-mctp.c',
+        'nvme/mi.c',
+        'nvme/nbft.c',
+        'nvme/sysfs.c',
+        'nvme/tree.c',
+        'nvme/util.c',
+    ]
+
+    if json_c_dep.found()
+        sources += 'nvme/json.c'
+    else
+        sources += 'nvme/no-json.c'
+    endif
 endif
 
 # Generate accessors (setter/getter functions)
@@ -37,22 +42,37 @@ deps = [
     ccan_dep,
     json_c_dep,
     keyutils_dep,
-    libdbus_dep,
-    liburing_dep,
     openssl_dep,
     accessors_dep,
 ]
+if host_system == 'windows'
+    deps += [
+        kernel32_dep
+    ]
+else
+    deps += [
+        libdbus_dep,
+        liburing_dep,
+    ]
+endif
 
 ldfile = 'libnvme.ld'
+
+libnvme_link_args = [
+    '-Wl,--version-script=@0@'.format(meson.current_source_dir() / ldfile),
+]
+# Skipping accessor generation for now on Windows. Needs to be ported.
+if host_system != 'windows'
+    libnvme_link_args += [
+        '-Wl,--version-script=@0@'.format(accessors_ld_full_path),
+    ]
+endif
 
 libnvme = library(
     'nvme', # produces libnvme.so
     sources,
     version: libnvme_so_version,
-    link_args: [
-        '-Wl,--version-script=@0@'.format(meson.current_source_dir() / ldfile),
-        '-Wl,--version-script=@0@'.format(accessors_ld_full_path),
-    ],
+    link_args: libnvme_link_args,
     dependencies: deps,
     install: true,
 )
