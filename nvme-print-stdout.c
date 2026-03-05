@@ -5083,7 +5083,7 @@ static void stdout_feat_perfc_vs(struct nvme_vs_perf_attr *data)
 	d((unsigned char *)data->vs, data->attrl, 16, 1);
 }
 
-static void stdout_feat_perfc(enum nvme_features_id fid, unsigned int result,
+static void stdout_feat_perfc(unsigned int result,
 			      struct nvme_perf_characteristics *data)
 {
 	__u8 attri;
@@ -5364,7 +5364,8 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		       nvme_pls_mode_to_string(NVME_GET(result, FEAT_PLS_MODE)));
 		break;
 	case NVME_FEAT_FID_PERF_CHARACTERISTICS:
-		stdout_feat_perfc(fid, result, (struct nvme_perf_characteristics *)buf);
+		stdout_feat_perfc(result,
+				  (struct nvme_perf_characteristics *)buf);
 		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
 	case NVME_FEAT_FID_CTRL_METADATA:
