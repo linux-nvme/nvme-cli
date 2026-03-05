@@ -5,6 +5,10 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
+
+# Skip examples on Windows for now.
+if not is_windows
+
 executable(
     'telemetry-listen',
     ['telemetry-listen.c'],
@@ -88,3 +92,5 @@ if libdbus_dep.found()
         ],
     )
 endif
+
+endif # not is_windows
