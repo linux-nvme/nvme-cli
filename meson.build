@@ -323,7 +323,7 @@ conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils a
 if get_option('libdbus').disabled()
     libdbus_dep = dependency('', required: false)
 else
-    # Check for libdus availability. Optional, only required for MCTP dbus scan
+    # Check for libdbus availability. Optional, only required for MCTP dbus scan
     libdbus_dep = dependency(
         'dbus-1',
         required: true,
@@ -620,7 +620,7 @@ summary(path_dict, section: 'Paths')
 dep_dict = {
     'json-c':           json_c_dep.found(),
     'OpenSSL':          openssl_dep.found(),
-    'keyutitls':        keyutils_dep.found(),
+    'keyutils':         keyutils_dep.found(),
     'libdbus':          libdbus_dep.found(),
     'python3':          py3_dep.found(),
     'liburing':         liburing_dep.found(),
