@@ -137,7 +137,7 @@ jobs:
           make static
 
   build-musl:
-    name: build with musl standard C library
+    name: musl libc build on Debian
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/linux-nvme/debian:latest
@@ -148,6 +148,19 @@ jobs:
       - name: build
         run: |
           CC=musl-gcc scripts/build.sh musl
+
+  build-alpine:
+    name: musl libc build on Alpine
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/alpine:next
+    steps:
+      - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: build
+        run: |
+          scripts/build.sh musl
 
   build-distro:
     name: build libnvme and nvme-cli separately
