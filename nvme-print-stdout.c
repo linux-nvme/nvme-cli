@@ -2421,6 +2421,32 @@ static void stdout_id_ctrl_tmpthha(__u8 tmpthha)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_cdpa(__le16 ctrl_cdpa)
+{
+	__u16 cdpa = le16_to_cpu(ctrl_cdpa);
+	__u16 rsvd1 = (cdpa >> 1);
+	bool hmac_sha_384 = !!(cdpa & NVME_CTRL_CDPA_HMAC_SHA_384);
+
+	if (rsvd1)
+		printf("  [15:1] : %#x\tReserved\n", rsvd1);
+	printf("  [0:0] : %#x\tHMAC-SHA-384 %sSupported\n",
+			hmac_sha_384, hmac_sha_384 ? "" : "Not ");
+
+	printf("\n");
+}
+
+static void stdout_id_ctrl_ipmsr(__le16 ctrl_ipmsr)
+{
+	__u16 ipmsr = le16_to_cpu(ctrl_ipmsr);
+	__u16 srs = NVME_GET(ipmsr, CTRL_IPMSR_SRS);
+	__u16 srv = NVME_GET(ipmsr, CTRL_IPMSR_SRV);
+
+	printf("  [15:8] : %#x\tSample Rate Scale\n", srs);
+	printf("  [7:0]  : %#x\tSample Rate Value\n", srv);
+
+	printf("\n");
+}
+
 static void stdout_id_ctrl_sqes(__u8 sqes)
 {
 	__u8 msqes = (sqes & 0xF0) >> 4;
@@ -2688,6 +2714,26 @@ static void stdout_id_ctrl_ofcs(__le16 ofcs)
 		disconn, disconn ? "" : "Not");
 	printf("\n");
 
+}
+
+static void stdout_id_ctrl_dctype(__u8 dctype)
+{
+	__u8 rsvd = (dctype & 0xFC) >> 2;
+	__u8 dctype_val = dctype & 0x3;
+	char *dctype_str;
+
+	if (rsvd)
+		printf("  [7:3] : %#x\tReserved\n", rsvd);
+	if (dctype_val == NVME_CTRL_DCTYPE_CDC)
+		dctype_str = "CDC";
+	else if (dctype_val == NVME_CTRL_DCTYPE_DDC)
+		dctype_str = "DDC";
+	else
+		dctype_str = "not reported";
+
+	printf("  [0:2] : %#x\tDiscovery Controller Type: %s\n",
+				dctype_val, dctype_str);
+	printf("\n");
 }
 
 static void stdout_id_ns_size(uint64_t nsze, uint64_t ncap, uint64_t nuse)
@@ -3425,6 +3471,14 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	if (human)
 		stdout_id_ctrl_tmpthha(ctrl->tmpthha);
 	printf("cqt       : %d\n", le16_to_cpu(ctrl->cqt));
+	printf("cdpa      : %d\n", le16_to_cpu(ctrl->cdpa));
+	if (human)
+		stdout_id_ctrl_cdpa(ctrl->cdpa);
+	printf("mup       : %d\n", le16_to_cpu(ctrl->mup));
+	printf("ipmsr     : %#x\n", le16_to_cpu(ctrl->ipmsr));
+	if (human)
+		stdout_id_ctrl_ipmsr(ctrl->ipmsr);
+	printf("msmt      : %#x\n", le16_to_cpu(ctrl->msmt));
 	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		stdout_id_ctrl_sqes(ctrl->sqes);
@@ -3490,6 +3544,10 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	printf("ofcs      : %d\n", le16_to_cpu(ctrl->ofcs));
 	if (human)
 		stdout_id_ctrl_ofcs(ctrl->ofcs);
+	printf("dctype    : %d\n", ctrl->dctype);
+	if (human)
+		stdout_id_ctrl_dctype(ctrl->dctype);
+	printf("ccrl      : %d\n", ctrl->ccrl);
 
 	stdout_id_ctrl_power(ctrl);
 	if (vendor_show)
