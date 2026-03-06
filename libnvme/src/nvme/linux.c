@@ -12,6 +12,10 @@
 #include <string.h>
 #include <errno.h>
 
+#ifndef _GNU_SOURCE
+#include <libgen.h>
+#endif
+
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <fcntl.h>
