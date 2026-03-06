@@ -5089,7 +5089,7 @@ static void stdout_feat_perfc_vs(struct nvme_vs_perf_attr *data)
 	d((unsigned char *)data->vs, data->attrl, 16, 1);
 }
 
-static void stdout_feat_perfc(enum nvme_features_id fid, unsigned int result,
+static void stdout_feat_perfc(unsigned int result,
 			      struct nvme_perf_characteristics *data)
 {
 	__u8 attri;
@@ -5139,6 +5139,29 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 	}
 }
 
+static void stdout_feat_host_id(unsigned int result, unsigned char *hostid)
+{
+	uint64_t ull;
+	bool exhid;
+
+	if (!hostid)
+		return;
+
+	nvme_feature_decode_host_id(result, &exhid);
+
+	if (exhid) {
+		printf("\tHost Identifier (HOSTID):  %s\n",
+		       uint128_t_to_l10n_string(le128_to_cpu(hostid)));
+		return;
+	}
+
+	ull =  hostid[7]; ull <<= 8; ull |= hostid[6]; ull <<= 8;
+	ull |= hostid[5]; ull <<= 8; ull |= hostid[4]; ull <<= 8;
+	ull |= hostid[3]; ull <<= 8; ull |= hostid[2]; ull <<= 8;
+	ull |= hostid[1]; ull <<= 8; ull |= hostid[0];
+	printf("\tHost Identifier (HOSTID):  %" PRIu64 "\n", ull);
+}
+
 static void stdout_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	printf("get-feature:%#0*x (%s), %s value:%#0*x\n", fid ? 4 : 2, fid,
@@ -5152,7 +5175,6 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 	const char *async = "Send async event";
 	const char *no_async = "Do not send async event";
 	__u8 field;
-	uint64_t ull;
 
 	switch (fid) {
 	case NVME_FEAT_FID_ARBITRATION:
@@ -5348,7 +5370,8 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		       nvme_pls_mode_to_string(NVME_GET(result, FEAT_PLS_MODE)));
 		break;
 	case NVME_FEAT_FID_PERF_CHARACTERISTICS:
-		stdout_feat_perfc(fid, result, (struct nvme_perf_characteristics *)buf);
+		stdout_feat_perfc(result,
+				  (struct nvme_perf_characteristics *)buf);
 		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:
 	case NVME_FEAT_FID_CTRL_METADATA:
@@ -5360,12 +5383,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		printf("\tPre-boot Software Load Count (PBSLC): %u\n", NVME_FEAT_SPM_PBSLC(result));
 		break;
 	case NVME_FEAT_FID_HOST_ID:
-		if (buf) {
-			ull =  buf[7]; ull <<= 8; ull |= buf[6]; ull <<= 8; ull |= buf[5]; ull <<= 8;
-			ull |= buf[4]; ull <<= 8; ull |= buf[3]; ull <<= 8; ull |= buf[2]; ull <<= 8;
-			ull |= buf[1]; ull <<= 8; ull |= buf[0];
-			printf("\tHost Identifier (HOSTID):  %" PRIu64 "\n", ull);
-		}
+		stdout_feat_host_id(result, buf);
 		break;
 	case NVME_FEAT_FID_RESV_MASK:
 		printf("\tMask Reservation Preempted Notification  (RESPRE): %s\n",
@@ -5432,6 +5450,16 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		print_power_and_scale(NVME_FEAT_POWER_THRESH_PTV(result),
 				      field);
 		printf("\n");
+		break;
+	case NVME_FEAT_FID_POWER_MEASUREMENT:
+		field = NVME_FEAT_POWER_MEAS_ACT(result);
+		printf("\tAction (ACT): %u - %s\n", field,
+		       nvme_power_measurement_action_to_string(field));
+		field = NVME_FEAT_POWER_MEAS_PMTS(result);
+		printf("\tPower Measurement Type Select (PMTS): %u - %s\n",
+		       field, nvme_power_measurement_type_to_string(field));
+		printf("\tStop Measurement Time (SMT): %u\n",
+		       NVME_FEAT_POWER_MEAS_SMT(result));
 		break;
 	default:
 		break;

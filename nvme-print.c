@@ -952,7 +952,7 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 	case NVME_FEAT_FID_CONF_DEV_PERSONALITY:return "Configurable Device Personality";
 	case NVME_FEAT_FID_POWER_LIMIT:		return "Power Limit";
 	case NVME_FEAT_FID_POWER_THRESH:	return "Power Threshold";
-	case NVME_FEAT_FID_POEWR_MEASUREMENT:	return "Power Measurement";
+	case NVME_FEAT_FID_POWER_MEASUREMENT:	return "Power Measurement";
 	case NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR:	return "Embedded Management Controller Address";
 	case NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR:return "Host Management Agent Address";
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:	return "Enhanced Controller Metadata";
@@ -1519,6 +1519,21 @@ const char *nvme_power_measurement_type_to_string(__u8 pmt)
 		return "NVM subsystem total power";
 	case NVME_PMT_VS_MIN ... NVME_PMT_VS_MAX:
 		return "Vendor Specific";
+	default:
+		break;
+	}
+
+	return "Reserved";
+}
+
+
+const char *nvme_power_measurement_action_to_string(__u8 act)
+{
+	switch (act) {
+	case 0:
+		return "Stop";
+	case 1:
+		return "Start";
 	default:
 		break;
 	}

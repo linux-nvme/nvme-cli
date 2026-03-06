@@ -50,6 +50,7 @@ static const char *arbitration_feat = "arbitration feature";
 static const char *volatile_wc_feat = "volatile write cache feature";
 static const char *power_limit_feat = "power limit feature";
 static const char *power_thresh_feat = "power threshold feature";
+static const char *power_meas_feat = "power measurement feature";
 
 static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
 		    __u32 cdw11, __u8 sel, __u8 uidx, const char *feat)
@@ -750,6 +751,81 @@ static int feat_power_thresh(int argc, char **argv, struct command *acmd,
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, cfg.uidx,
 			       power_thresh_feat);
+
+	return err;
+}
+
+static int power_meas_set(struct nvme_transport_handle *hdl, const __u8 fid,
+			  __u8 action, __u8 pmts, __u16 smt, __u8 uidx, bool sv)
+{
+	__u32 cdw11 = NVME_SET(action, FEAT_POWER_MEAS_ACT) |
+		      NVME_SET(pmts, FEAT_POWER_MEAS_PMTS) |
+		      NVME_SET(smt, FEAT_POWER_MEAS_SMT);
+	__u64 result;
+	int err;
+
+	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, uidx, 0, NULL, 0,
+			&result);
+
+	nvme_show_init();
+
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set %s", power_meas_feat);
+	} else {
+		nvme_show_result("Set %s: 0x%04x (%s)", power_meas_feat, cdw11,
+				 sv ? "Save" : "Not save");
+		nvme_feature_show_fields(fid, cdw11, NULL);
+	}
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_power_meas(int argc, char **argv, struct command *cmd,
+			   struct plugin *plugin)
+{
+	const char *action = "action [0-1]: stop|start";
+	const char *pmts = "power measurement type select";
+	const char *smt = "stop measurement time";
+	const __u8 fid = NVME_FEAT_FID_POWER_MEASUREMENT;
+
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl =
+	    NULL;
+	int err;
+
+	struct config {
+		__u8 act;
+		__u8 pmts;
+		__u16 smt;
+		__u8 uidx;
+		__u8 sel;
+	};
+
+	struct config cfg = { 0 };
+
+	FEAT_ARGS(opts,
+		  OPT_BYTE("act", 0, &cfg.act, action),
+		  OPT_BYTE("pmts", 0, &cfg.pmts, pmts),
+		  OPT_SHRT("smt", 0, &cfg.smt, smt),
+		  OPT_BYTE("uuid-index", 'u', &cfg.uidx, uuid_index));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, POWER_MEAS_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "act") ||
+	    argconfig_parse_seen(opts, "pmts") ||
+	    argconfig_parse_seen(opts, "smt"))
+		err = power_meas_set(hdl, fid, cfg.act, cfg.pmts, cfg.smt,
+				     cfg.uidx,
+				     argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, power_meas_feat);
 
 	return err;
 }

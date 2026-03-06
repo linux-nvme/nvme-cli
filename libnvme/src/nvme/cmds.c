@@ -565,6 +565,7 @@ int nvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
 	case NVME_FEAT_FID_RESV_PERSIST:
 	case NVME_FEAT_FID_WRITE_PROTECT:
 	case NVME_FEAT_FID_POWER_LIMIT:
+	case NVME_FEAT_FID_POWER_MEASUREMENT:
 		*len = 0;
 		break;
 	case NVME_FEAT_FID_ENH_CTRL_METADATA:

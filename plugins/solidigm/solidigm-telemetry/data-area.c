@@ -12,6 +12,7 @@
 #include "config.h"
 #include "nlog.h"
 #include "skht.h"
+#include "side-trace.h"
 #include <ctype.h>
 
 #define SIGNED_int_PREFIX "int"
@@ -578,6 +579,40 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 						 object_file_offset + header_offset,
 						 toc->items[i].ContentSizeBytes - header_offset,
 						 parsed_struct, toc_item);
+		}
+
+		// Check if this is a side trace object
+		struct json_object *obj_name = NULL;
+
+		if (json_object_object_get_ex(toc_item, "objName", &obj_name)) {
+			const char *obj_name_str =
+				json_object_get_string(obj_name);
+
+			if (obj_name_str &&
+			    (strstr(obj_name_str, "sideTrace") ||
+			     strstr(obj_name_str, "SideTrace") ||
+			     strstr(obj_name_str, "SIDETRACE"))) {
+				/* This is a side trace object, parse it when
+				 * configuration is available. We want to
+				 * replace array member fwSideTrace by parsed
+				 * entries.
+				 */
+				struct json_object *first_dic = NULL;
+
+				json_object_object_foreach(parsed_struct, key,
+							   val) {
+					(void)key;
+					if (json_object_is_type(val,
+							json_type_object)) {
+						first_dic = val;
+						break;
+					}
+				}
+				sldm_parse_side_trace(tl, object_file_offset,
+						      toc->items[i]
+						      .ContentSizeBytes,
+						      first_dic, toc_item);
+			}
 		}
 	}
 }
