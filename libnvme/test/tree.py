@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 '''
-SPDX-License-Identifier: LGPL-3.1-or-later
+SPDX-License-Identifier: LGPL-2.1-or-later
 
 This file is part of libnvme.
 Copyright (c) 2021 SUSE Software Solutions AG
