@@ -18,7 +18,7 @@ jobs:
     name: coverity scan
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/linux-nvme/debian.python:latest
+      image: ghcr.io/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:

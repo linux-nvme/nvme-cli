@@ -144,4 +144,4 @@ jobs:
             -e BDEV0 \
             -v "${PWD}/test.sh":"/test.sh" \
             -v "${PWD}/nvme-cli":"/nvme-cli":z \
-            ghcr.io/linux-nvme/debian.python:latest /test.sh
+            ghcr.io/linux-nvme/debian:latest /test.sh
