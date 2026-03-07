@@ -179,7 +179,11 @@ config_meson_static() {
         --prefix=/usr                           \
         -Dc_link_args="-static"                 \
         -Dkeyutils=disabled                     \
-        -Dopenssl:werror=false                  \
+        -Dliburing=disabled                     \
+        -Dpython=disabled                       \
+        -Dopenssl=disabled                      \
+        -Dtests=false                           \
+        -Dexamples=false                        \
         "${BUILDDIR}"
 }
 
