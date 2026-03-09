@@ -596,9 +596,9 @@ if want_nvme
         'completions/_nvme',
         install_dir: datadir / 'zsh/site-functions',
     )
-endif
 
-subdir('Documentation')
+    subdir('Documentation')
+endif
 
 
 ################################################################################
