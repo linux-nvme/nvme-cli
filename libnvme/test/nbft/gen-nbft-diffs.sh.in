@@ -1,4 +1,5 @@
 #!/bin/sh
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 for T in "@TABLES_DIR@"/*; do
   "@NBFT_DUMP_PATH@" "$T" > "@DIFF_DIR@/`basename $T`"

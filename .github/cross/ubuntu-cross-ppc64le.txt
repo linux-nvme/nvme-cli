@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 [binaries]
 c = '/usr/bin/powerpc64le-linux-gnu-gcc'
 ar = '/usr/powerpc64le-linux-gnu/bin/ar'

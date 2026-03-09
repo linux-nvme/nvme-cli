@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
 # Python bindings for libnvme
 
 We use [SWIG](http://www.swig.org/) to generate Python bindings for libnvme.

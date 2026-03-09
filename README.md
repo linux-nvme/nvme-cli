@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: GPL-2.0-only -->
 # nvme-cli
 ![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)
 ![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)
