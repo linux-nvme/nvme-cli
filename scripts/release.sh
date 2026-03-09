@@ -67,7 +67,7 @@ trap cleanup EXIT
 register_cleanup
 
 # expected version regex
-re='^v([0-9]+\.[0-9]+(\.[0-9]+)?)(-rc[0-9]+)?$'
+re='^v([0-9]+\.[0-9]+(\.[0-9]+)?)(-(rc|a|b)\.[0-9]+)?$'
 
 # use the version string provided from the command line
 if [[ "$VERSION" =~ ${re} ]]; then
