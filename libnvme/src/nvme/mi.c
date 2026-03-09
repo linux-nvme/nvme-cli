@@ -1440,6 +1440,8 @@ void nvme_mi_aem_aeolli_set_aeoltl(struct nvme_mi_aem_occ_list_hdr *hdr, __u32 a
 
 static int validate_enabled_list(struct nvme_mi_aem_supported_list *list, size_t len)
 {
+	if (len < sizeof(struct nvme_mi_aem_supported_list))
+		return -EPROTO;
 	if (list->hdr.aeslver != 0)
 		return -EPROTO;
 	if (list->hdr.aeslhl != sizeof(struct nvme_mi_aem_supported_list))
