@@ -68,9 +68,9 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 	va_start(ap, v);
 
 	if (vasprintf(&value, v, ap) < 0)
-		value = alloc_error;
+		value = NULL;
 
-	obj_add_str(o, "Result", value);
+	obj_add_str(o, "Result", value ? value : alloc_error);
 
 	va_end(ap);
 }
