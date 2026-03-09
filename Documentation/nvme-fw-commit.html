@@ -753,7 +753,7 @@ nvme-fw-commit(1) Manual Page
                         [--action=&lt;action&gt; | -a &lt;action&gt;]
                         [--bpid=&lt;boot-partid&gt; | -b &lt;boot-partid&gt;]
                         [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]
-                        [--timeout=&lt;timeout&gt; | -t &lt;timeout&gt;]</pre>
+                        [--timeout=&lt;timeout&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -812,34 +812,36 @@ cellspacing="0" cellpadding="4">
 <td align="left" valign="top"><p class="table">Definition</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">0</p></td>
-<td align="left" valign="top"><p class="table">Downloaded image replaces the image indicated by the Firmware Slot
-field. This image is not activated.</p></td>
+<td align="left" valign="top"><p class="table">0 | <em>replace</em></p></td>
+<td align="left" valign="top"><p class="table">Downloaded image replaces the image indicated by the
+Firmware Slot field. This image is not activated.</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">1</p></td>
-<td align="left" valign="top"><p class="table">Downloaded image replaces the image indicated by the Firmware Slot
-field. This image is activated at the next reset.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">2</p></td>
-<td align="left" valign="top"><p class="table">The image indicated by the Firmware Slot field is activated at the
+<td align="left" valign="top"><p class="table">1 | <em>replace-and-activate</em></p></td>
+<td align="left" valign="top"><p class="table">Downloaded image replaces the image
+indicated by the Firmware Slot field. This image is activated at the
 next reset.</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">3</p></td>
-<td align="left" valign="top"><p class="table">The image specified by the Firmware Slot field is requested to be
-activated immediately without reset.</p></td>
+<td align="left" valign="top"><p class="table">2 | <em>set-active</em></p></td>
+<td align="left" valign="top"><p class="table">The image indicated by the Firmware Slot field is
+activated at the next reset.</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">6</p></td>
-<td align="left" valign="top"><p class="table">Downloaded image replaces the Boot Partition specified by the Boot Partition
-ID field.</p></td>
+<td align="left" valign="top"><p class="table">3 | <em>replace-and-activate-immediate</em></p></td>
+<td align="left" valign="top"><p class="table">The image specified by the
+Firmware Slot field is requested to be activated immediately without
+reset.</p></td>
 </tr>
 <tr>
-<td align="left" valign="top"><p class="table">7</p></td>
-<td align="left" valign="top"><p class="table">Mark the Boot Partition specified in the BPID field as active and update
-BPINFO.ABPID.</p></td>
+<td align="left" valign="top"><p class="table">6 | <em>replace-boot-partition</em></p></td>
+<td align="left" valign="top"><p class="table">Downloaded image replaces the Boot
+Partition specified by the Boot Partition ID field.</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">7 | <em>activate-boot-partition</em></p></td>
+<td align="left" valign="top"><p class="table">Mark the Boot Partition specified in
+the BPID field as active and update BPINFO.ABPID.</p></td>
 </tr>
 </tbody>
 </table>
@@ -895,9 +897,6 @@ BPINFO.ABPID.</p></td>
 </p>
 </dd>
 <dt class="hdlist1">
--t &lt;timeout&gt;
-</dt>
-<dt class="hdlist1">
 --timeout=&lt;timeout&gt;
 </dt>
 <dd>
@@ -941,7 +940,7 @@ commit the last downloaded fw to slot 1.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2025-11-04 10:36:28 CET
+ 2026-03-09 16:06:01 CET
 </div>
 </div>
 </body>

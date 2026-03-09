@@ -804,37 +804,13 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-        DUI data area to retrieve. The DUI data areas from 1 to &lt;DATA AREA&gt; will
-        be retrieved. This parameter is currently only supported on the SN340,
-        SN640, SN730, and SN840 devices.
-</p>
-</dd>
-<dt class="hdlist1">
--f &lt;FILE SIZE&gt;
-</dt>
-<dt class="hdlist1">
---file-size=&lt;FILE SIZE&gt;
-</dt>
-<dd>
-<p>
-        Specifies the desired size of the data file starting at the passed in
-        offset. This allows the user to retrieve the data in several smaller
-        files of the passed in size. This parameter is currently only supported
-        on the SN340 device.
-</p>
-</dd>
-<dt class="hdlist1">
--e &lt;OFFSET&gt;
-</dt>
-<dt class="hdlist1">
---offset=&lt;OFFSET&gt;
-</dt>
-<dd>
-<p>
-        Specifies the data offset at which to start retrieving the data. This
-        parameter is used in combination with the file size parameter to
-        retrieve the data in several smaller files. This parameter is currently
-        only supported on the SN340 device.
+        Data area to retrieve. For capture with a --type value that includes
+        telemetry (CONTROLLER, HOST, or BOTH), this specifies the NVMe
+        telemetry data area to capture, containing data from areas 1 to
+        &lt;DATA AREA&gt;. For capture without such a --type value, this specifies
+        the amount of vendor defined debug data to capture, and this is only
+        supported on the SN340, SN350, SN530, SN570, SN730, SN740, SN840,
+        SN850X, SN5000, SN5100S, SN7000S, SN7100, and SN7150 devices.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -845,11 +821,12 @@ Results for any other device are undefined.</p></div>
 </dt>
 <dd>
 <p>
-        Specifies the telemetry type - NONE, HOST, or CONTROLLER. This parameter
-        is used to get either the host generated or controller initiated
-        telemetry log page. If not specified or none is specified, the command
-        will return the default E6 log data. This parameter is currently only
-        supported on the SN640 and SN840 devices.
+        Specifies the telemetry type - NONE, HOST, CONTROLLER, or BOTH. This
+        parameter is used to get either the host-initiated or controller-
+        initiated telemetry log page. If BOTH is specified, both host and
+        controller telemetry are captured and packaged into a tar archive.
+        If not specified or if &lt;TYPE&gt; is NONE, the command will return vendor
+        defined debug data.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -861,6 +838,37 @@ Results for any other device are undefined.</p></div>
 <dd>
 <p>
         Provides additional debug messages for certain drives.
+</p>
+</dd>
+<dt class="hdlist1">
+-f &lt;FILE SIZE&gt;
+</dt>
+<dt class="hdlist1">
+--file-size=&lt;FILE SIZE&gt;
+</dt>
+<dd>
+<p>
+        Deprecated. Specifies the desired size of the data file starting at the
+        passed in offset. This allows the user to retrieve the data in several
+        smaller files of the passed in size. This parameter is only supported on
+        the devices mentioned in the documentation of the --data-area parameter,
+        and only for capture with --type=NONE or --type not specified.
+</p>
+</dd>
+<dt class="hdlist1">
+-e &lt;OFFSET&gt;
+</dt>
+<dt class="hdlist1">
+--offset=&lt;OFFSET&gt;
+</dt>
+<dd>
+<p>
+        Deprecated. Specifies the data offset at which to start retrieving the
+        data. This parameter is used in combination with the file size parameter
+        to retrieve the data in several smaller files. This parameter is only
+        supported on the devices mentioned in the documentation of the
+        --data-area parameter, and only for capture with --type=NONE or --type
+        not specified.
 </p>
 </dd>
 </dl></div>
@@ -944,6 +952,15 @@ Gets the controller telemetry log page to data area 3 from the device and stores
 <pre><code># nvme sndk vs-internal-log /dev/nvme1 -t controller -o ctlr-telem-log-da3.bin -d 3</code></pre>
 </div></div>
 </li>
+<li>
+<p>
+Gets both host and controller telemetry log pages to data area 3 from the device and packages them in a tar file:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme sndk vs-internal-log /dev/nvme1 -t both -o both-telem-log-da3.tar -d 3</code></pre>
+</div></div>
+</li>
 </ul></div>
 </div>
 </div>
@@ -958,7 +975,7 @@ Gets the controller telemetry log page to data area 3 from the device and stores
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2025-11-04 10:36:28 CET
+ 2026-03-09 16:06:01 CET
 </div>
 </div>
 </body>
