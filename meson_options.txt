@@ -142,3 +142,14 @@ option(
   value : false,
   description : 'building for PyPI (use short soversion, e.g. libnvme.so.3)'
 )
+option(
+  'plugins',
+  type : 'array',
+  choices: ['amzn', 'dapustor', 'dell', 'dera',
+            'fdp', 'feat', 'huawei', 'ibm', 'innogrit', 'inspur', 'intel',
+            'lm', 'mangoboost', 'memblaze', 'micron', 'nbft',
+            'netapp', 'nvidia', 'ocp', 'sandisk', 'scaleflux',
+            'seagate', 'sed', 'shannon', 'solidigm', 'ssstc', 'toshiba',
+            'transcend', 'virtium', 'wdc', 'ymtc', 'zns'],
+  description : 'comma-separated list of plugins to build (all plugins are included if unset, [] = no plugins)'
+)
