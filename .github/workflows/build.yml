@@ -14,10 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        distro: [debian, fedora, tumbleweed]
         compiler: [gcc, clang]
         buildtype: [debug, release]
     container:
-      image: ghcr.io/linux-nvme/debian:latest
+      image: ghcr.io/linux-nvme/${{ matrix.distro }}:latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Mark repo as safe for git
@@ -37,10 +38,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        compiler: [gcc, clang]
-        buildtype: [debug, release]
+        distro: [debian]
+        compiler: [gcc]
+        buildtype: [release]
     container:
-      image: ghcr.io/linux-nvme/debian:latest
+      image: ghcr.io/linux-nvme/${{ matrix.distro }}:latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Mark repo as safe for git
