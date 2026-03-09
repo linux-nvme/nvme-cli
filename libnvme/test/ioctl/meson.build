@@ -1,3 +1,10 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+
 mock_conf = configuration_data()
 
 mock_conf.set(

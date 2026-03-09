@@ -1,3 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+
 [wrap-git]
 url = https://gitlab.freedesktop.org/dbus/dbus.git
 revision = cd1a9bb09a4e9330f8669fb6d385b1e095f97fc2

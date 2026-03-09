@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: GPL-2.0-only -->
 # Contributing to the NVM-e CLI
 
 Here you will find instructions on how to contribute to the NVM-Express command

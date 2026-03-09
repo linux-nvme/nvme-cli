@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 [binaries]
 c = '/usr/bin/s390x-linux-gnu-gcc'
 ar = '/usr/s390x-linux-gnu/bin/ar'

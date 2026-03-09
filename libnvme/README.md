@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
 # libnvme
 
 ![PyBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/libnvme-release-python.yml/badge.svg)

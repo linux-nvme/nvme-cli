@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 plugin_sources += [
     'plugins/lm/lm-nvme.c',
     'plugins/lm/lm-print.c',
@@ -10,3 +12,4 @@ if json_c_dep.found()
         'plugins/lm/lm-print-json.c',
     ]
 endif
+
