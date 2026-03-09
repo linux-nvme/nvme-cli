@@ -776,6 +776,8 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	obj_add_uint(r, "thm_temp2_trans_count", le32_to_cpu(smart->thm_temp2_trans_count));
 	obj_add_uint(r, "thm_temp1_total_time", le32_to_cpu(smart->thm_temp1_total_time));
 	obj_add_uint(r, "thm_temp2_total_time", le32_to_cpu(smart->thm_temp2_total_time));
+	obj_add_uint64(r, "op_lifetime_energy_consumed", le64_to_cpu(smart->op_lifetime_energy_consumed));
+	obj_add_uint(r, "interval_power_measurement", le32_to_cpu(smart->interval_power_measurement));
 
 	json_print(r);
 }
@@ -3768,24 +3770,10 @@ static void json_feature_show_fields_host_mem_buf(struct json_object *r, unsigne
 
 static void json_timestamp(struct json_object *r, struct nvme_timestamp *ts)
 {
-	char buffer[BUF_LEN];
-	time_t timestamp = int48_to_long(ts->timestamp) / 1000;
-	struct tm *tm = localtime(&timestamp);
-
 	obj_add_uint64(r, "timestamp", int48_to_long(ts->timestamp));
-
-	if (!strftime(buffer, sizeof(buffer), "%c %Z", tm))
-		sprintf(buffer, "%s", "-");
-
-	obj_add_str(r, "timestamp string", buffer);
-
-	obj_add_str(r, "timestamp origin", ts->attr & 2 ?
-	    "The Timestamp field was initialized with a Timestamp value using a Set Features command." :
-	    "The Timestamp field was initialized to 0h by a Controller Level Reset.");
-
-	obj_add_str(r, "synch", ts->attr & 1 ?
-	    "The controller may have stopped counting during vendor specific intervals after the Timestamp value was initialized." :
-	    "The controller counted time in milliseconds continuously since the Timestamp value was initialized.");
+	obj_add_str(r, "timestamp string", nvme_format_timestamp(ts->timestamp));
+	obj_add_str(r, "timestamp origin", nvme_format_timestamp_origin(ts->attr));
+	obj_add_str(r, "synch", nvme_format_timestamp_sync(ts->attr));
 }
 
 static void json_feature_show_fields_timestamp(struct json_object *r, unsigned char *buf)
@@ -5716,6 +5704,63 @@ static void json_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log)
 	obj_d(r, "osp", (unsigned char *)log->osp, osp_len, 16, 1);
 }
 
+static void json_power_meas_log(struct nvme_power_meas_log *log, __u32 size UNUSED)
+{
+	struct json_object *r = json_create_object();
+	struct json_object *descs;
+	struct json_object *smts_obj;
+	struct json_object *mipwrt_obj;
+	__u16 nphd = le16_to_cpu(log->nphd);
+	__u16 pma = le16_to_cpu(log->pma);
+	__u8 pmt = NVME_GET(pma, PMA_PMT);
+	__u16 i;
+
+	obj_add_uint(r, "ver", log->ver);
+	obj_add_uint(r, "pmgn", log->pmgn);
+	obj_add_uint(r, "pma", pma);
+	obj_add_uint(r, "pme", NVME_GET(pma, PMA_PME));
+	obj_add_uint(r, "ncpdf", NVME_GET(pma, PMA_NCPDF));
+	obj_add_uint(r, "epf", NVME_GET(pma, PMA_EPF));
+	obj_add_uint(r, "mipwrts", NVME_GET(pma, PMA_MIPWRTS));
+	obj_add_uint(r, "phdo", NVME_GET(pma, PMA_PHDO));
+	obj_add_uint(r, "pmt", pmt);
+	obj_add_str(r, "pmt_str", nvme_power_measurement_type_to_string(pmt));
+	obj_add_uint(r, "sze", le32_to_cpu(log->sze));
+	obj_add_uint(r, "pmc", le32_to_cpu(log->pmc));
+	obj_add_uint(r, "nphd", nphd);
+	obj_add_uint(r, "smtr", le16_to_cpu(log->smtr));
+
+	smts_obj = json_create_object();
+	json_timestamp(smts_obj, &log->smts);
+	obj_add_obj(r, "smts", smts_obj);
+
+	obj_add_uint(r, "phds", le16_to_cpu(log->phds));
+	obj_add_uint(r, "phbs", le16_to_cpu(log->phbs));
+	obj_add_uint(r, "nphds", le16_to_cpu(log->nphds));
+	obj_add_uint(r, "vss", le16_to_cpu(log->vss));
+	obj_add_uint(r, "phdoc", le32_to_cpu(log->phdoc));
+	obj_add_uint(r, "aipwr", le32_to_cpu(log->aipwr));
+	obj_add_uint(r, "mipwr", le32_to_cpu(log->mipwr));
+
+	mipwrt_obj = json_create_object();
+	json_timestamp(mipwrt_obj, &log->mipwrt);
+	obj_add_obj(r, "mipwrt", mipwrt_obj);
+
+	obj_add_uint(r, "ipwrpe", log->ipwrpe);
+
+	descs = json_create_array();
+	for (i = 0; i < nphd; i++) {
+		struct json_object *desc = json_create_object();
+
+		obj_add_uint(desc, "phbc", le32_to_cpu(log->descs[i].phbc));
+		obj_add_uint(desc, "phblt", le32_to_cpu(log->descs[i].phblt));
+		json_object_array_add(descs, desc);
+	}
+	obj_add_obj(r, "descs", descs);
+
+	json_print(r);
+}
+
 static struct print_ops json_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= json_ana_log,
@@ -5791,6 +5836,7 @@ static struct print_ops json_print_ops = {
 	.host_discovery_log		= json_host_discovery_log,
 	.ave_discovery_log		= json_ave_discovery_log,
 	.pull_model_ddc_req_log		= json_pull_model_ddc_req_log,
+	.power_meas_log			= json_power_meas_log,
 
 	/* libnvme tree print functions */
 	.list_item			= json_list_item,

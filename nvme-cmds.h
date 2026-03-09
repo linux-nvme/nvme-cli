@@ -1101,6 +1101,33 @@ nvme_get_log_mgmt_addr_list(struct nvme_transport_handle *hdl,
 }
 
 /**
+ * nvme_get_log_power_measurement() - Retrieve the Power Measurement Log Page
+ * @hdl:	Transport handle for the controller.
+ * @log:	Pointer to the buffer (@struct nvme_power_meas_log) where
+ *		the log page data will be stored.
+ * @len:	Length of the buffer provided in @log.
+ *
+ * Submits the Get Log Page command specifically for the Power Measurement Log.
+ *
+ * It automatically sets the Log Identifier (LID) to
+ * NVME_LOG_LID_POWER_MEASUREMENT, Retain Asynchronous Event (RAE) to false,
+ * and uses NVME_NSID_ALL.
+ *
+ * Return: 0 on success, the NVMe command status on error, or a negative
+ * errno otherwise.
+ */
+static inline int
+nvme_get_log_power_measurement(struct nvme_transport_handle *hdl,
+		struct nvme_power_meas_log *log, __u32 len)
+{
+	struct nvme_passthru_cmd cmd;
+
+	nvme_init_get_log_power_measurement(&cmd, log, len);
+
+	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+}
+
+/**
  * nvme_get_log_phy_rx_eom() - Retrieve the Physical Interface Receiver Eye
  * Opening Measurement Log Page
  * @hdl:	Transport handle for the controller.

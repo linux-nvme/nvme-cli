@@ -67,6 +67,7 @@ COMMAND_LIST(
 	ENTRY("host-discovery-log", "Retrieve Host Discovery Log, show it", get_host_discovery_log)
 	ENTRY("ave-discovery-log", "Retrieve AVE Discovery Log, show it", get_ave_discovery_log)
 	ENTRY("pull-model-ddc-req-log", "Retrieve Pull Model DDC Request Log, show it", get_pull_model_ddc_req_log)
+	ENTRY("power-measurement-log", "Retrieve Power Measurement Log, show it", get_power_measurement_log)
 	ENTRY("set-feature", "Set a feature and show the resulting value", set_feature)
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("get-property", "Get a property and show the resulting value", get_property)

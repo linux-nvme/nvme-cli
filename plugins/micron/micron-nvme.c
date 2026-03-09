@@ -4189,21 +4189,14 @@ struct micron_smart_log_ext {
 	/* Access vendor-specific fields via rsvd232 overlay */
 };
 
-/*
- * OLEC: bytes 232-239 (rsvd232[0:7])
- * IPM:  bytes 240-243 (rsvd232[8:11])
- */
-#define SMART_OLEC_OFFSET 0
-#define SMART_IPM_OFFSET  8
-
 static inline __u64 get_smart_olec(struct nvme_smart_log *smart)
 {
-	return le64_to_cpu(*(__le64 *)&smart->rsvd232[SMART_OLEC_OFFSET]);
+	return le64_to_cpu(smart->op_lifetime_energy_consumed);
 }
 
 static inline __u32 get_smart_ipm(struct nvme_smart_log *smart)
 {
-	return le32_to_cpu(*(__le32 *)&smart->rsvd232[SMART_IPM_OFFSET]);
+	return le32_to_cpu(smart->interval_power_measurement);
 }
 
 static void print_micron_health_log_normal(struct nvme_smart_log *smart,

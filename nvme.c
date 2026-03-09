@@ -10789,6 +10789,83 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 	return err;
 }
 
+static int get_power_measurement_log(int argc, char **argv, struct command *acmd,
+				     struct plugin *plugin)
+{
+	const char *desc = "Retrieve Power Measurement Log (Log ID 0x25) "
+		"for the given device in either decoded format (default), "
+		"json, or binary.";
+
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_free_ struct nvme_power_meas_log *log = NULL;
+	nvme_print_flags_t flags;
+	__u32 min_log_size = sizeof(struct nvme_power_meas_log);
+	__u32 log_size;
+	int err = -1;
+
+	struct config {
+		bool	raw_binary;
+	};
+
+	struct config cfg = {
+		.raw_binary	= false,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_output));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	if (argconfig_parse_seen(opts, "verbose"))
+		flags |= VERBOSE;
+
+	/* First read minimum size to discover the full log size */
+	log = nvme_alloc(min_log_size);
+	if (!log)
+		return -ENOMEM;
+
+	err = nvme_get_log_power_measurement(hdl, log, min_log_size);
+	if (err) {
+		nvme_show_err("power-measurement-log", err);
+		return err;
+	}
+
+	log_size = le32_to_cpu(log->sze);
+
+	/* If sze is 0 or smaller than the minimum, just use minimum */
+	if (log_size < min_log_size)
+		log_size = min_log_size;
+
+	/* If the log is larger, re-read with full size */
+	if (log_size > min_log_size) {
+		log = nvme_realloc(log, log_size);
+		if (!log)
+			return -ENOMEM;
+
+		err = nvme_get_log_power_measurement(hdl, log, log_size);
+		if (err) {
+			nvme_show_err("power-measurement-log", err);
+			return err;
+		}
+	}
+
+	nvme_show_power_meas_log(log, log_size, flags);
+
+	return err;
+}
+
 static int get_log_offset(struct nvme_transport_handle *hdl,
 			  struct nvme_get_log_args *args, __u64 *offset,
 			  __u32 len, void **log)

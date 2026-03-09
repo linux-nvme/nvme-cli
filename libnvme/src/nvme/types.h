@@ -3773,7 +3773,26 @@ enum nvme_err_status_field {
  *			   reached. A value of %0h, indicates that this transition
  *			   has never occurred or this field is not implemented.
  * @thm_temp2_total_time:  Total Time For Thermal Management Temperature 2
- * @rsvd232:		   Reserved
+ * @op_lifetime_energy_consumed: Operational Lifetime Energy Consumed: Contains
+ *			   the cumulative operational energy consumed by the NVM
+ *			   subsystem in watt-hours calculated from all interval
+ *			   power measurements collected from the time of
+ *			   manufacture to the point that this log page is read.
+ *			   This value is rounded up (e.g., two indicates the
+ *			   number of watt-hours consumed is greater than 1 and
+ *			   less than or equal to 2). This field shall not wrap
+ *			   once the value %FFFFFFFFFFFFFFFFh is reached. A value
+ *			   of %0h indicates that the cumulative operational energy
+ *			   consumed is not reported.
+ * @interval_power_measurement: Interval Power Measurement: Contains the average
+ *			   of power measurement samples over the most recent one
+ *			   second interval at the time of processing the Get Log
+ *			   Page command. The power in Watts is equal to the
+ *			   Interval Power Measurement Value (bits 15:0) multiplied
+ *			   by the scale indicated in the Interval Power Measurement
+ *			   Scale field (bits 17:16). A value of %0h indicates that
+ *			   the interval power measurement is not reported.
+ * @rsvd244:		   Reserved
  */
 struct nvme_smart_log {
 	__u8			critical_warning;
@@ -3800,7 +3819,9 @@ struct nvme_smart_log {
 	__le32			thm_temp2_trans_count;
 	__le32			thm_temp1_total_time;
 	__le32			thm_temp2_total_time;
-	__u8			rsvd232[280];
+	__le64			op_lifetime_energy_consumed;
+	__le32			interval_power_measurement;
+	__u8			rsvd244[268];
 };
 
 /**
@@ -4668,6 +4689,23 @@ struct nvme_timestamp {
 	__u8 attr;
 	__u8 rsvd;
 };
+
+/**
+ * enum nvme_timestamp_attr - Timestamp Attribute field
+ * @NVME_TIMESTAMP_ATTR_SYNC_SHIFT:	Shift amount to get the timestamp synch
+ * @NVME_TIMESTAMP_ATTR_TO_SHIFT:	Shift amount to get the timestamp origin
+ * @NVME_TIMESTAMP_ATTR_SYNC_MASK:	Mask to get the timestamp synch
+ * @NVME_TIMESTAMP_ATTR_TO_MASK:	Mask to get the timestamp origin
+ */
+enum nvme_timestamp_attr {
+	NVME_TIMESTAMP_ATTR_SYNC_SHIFT	= 0,
+	NVME_TIMESTAMP_ATTR_TO_SHIFT	= 1,
+	NVME_TIMESTAMP_ATTR_SYNC_MASK	= 0x1,
+	NVME_TIMESTAMP_ATTR_TO_MASK	= 0x7,
+};
+
+#define NVME_TIMESTAMP_ATTR_SYNC(attr)	NVME_GET(attr, TIMESTAMP_ATTR_SYNC)
+#define NVME_TIMESTAMP_ATTR_TO(attr)	NVME_GET(attr, TIMESTAMP_ATTR_TO)
 
 /**
  * struct nvme_time_stamp_change_event - Timestamp Change Event
@@ -6101,6 +6139,113 @@ struct nvme_fdp_ruh_status {
 	__le16 nruhsd;
 	struct nvme_fdp_ruh_status_desc ruhss[];
 };
+
+/**
+ * enum nvme_pma - Power Measurement Attributes (PMA) field
+ * @NVME_PMA_PME_SHIFT:		Shift amount to get the power measurement enable
+ * @NVME_PMA_NCPDF_SHIFT:	Shift amount to get the non-contiguous power data flag
+ * @NVME_PMA_EPF_SHIFT:		Shift amount to get the estimated power flag
+ * @NVME_PMA_MIPWRTS_SHIFT:	Shift amount to get the maximum interval power timestamp support
+ * @NVME_PMA_PHDO_SHIFT:	Shift amount to get the power histogram descriptor overflow
+ * @NVME_PMA_PMT_SHIFT:		Shift amount to get the power measurement type
+ * @NVME_PMA_PME_MASK:		Mask to get the power measurement enable
+ * @NVME_PMA_NCPDF_MASK:	Mask to get the non-contiguous power data flag
+ * @NVME_PMA_EPF_MASK:		Mask to get the estimated power flag
+ * @NVME_PMA_MIPWRTS_MASK:	Mask to get the maximum interval power timestamp support
+ * @NVME_PMA_PHDO_MASK:		Mask to get the power histogram descriptor overflow
+ * @NVME_PMA_PMT_MASK:		Mask to get the power measurement type
+ */
+enum nvme_pma {
+	NVME_PMA_PME_SHIFT	= 0,
+	NVME_PMA_NCPDF_SHIFT	= 1,
+	NVME_PMA_EPF_SHIFT	= 2,
+	NVME_PMA_MIPWRTS_SHIFT	= 3,
+	NVME_PMA_PHDO_SHIFT	= 4,
+	NVME_PMA_PMT_SHIFT	= 12,
+	NVME_PMA_PME_MASK	= 0x1,
+	NVME_PMA_NCPDF_MASK	= 0x1,
+	NVME_PMA_EPF_MASK	= 0x1,
+	NVME_PMA_MIPWRTS_MASK	= 0x1,
+	NVME_PMA_PHDO_MASK	= 0x1,
+	NVME_PMA_PMT_MASK	= 0xf,
+};
+
+/**
+ * struct nvme_power_histogram_desc - Power Histogram Descriptor
+ * @phbc:	Power Histogram Bin Count. Does not wrap after %FFFFFFFFh.
+ *		Cleared to %0h if PMC is %0h.
+ * @phblt:	Power Histogram Bin Lower Threshold. Bits 17:16 are PWRS
+ *		(see &enum nvme_psd_ps), bits 15:0 are PWRV.
+ */
+struct nvme_power_histogram_desc {
+	__le32	phbc;
+	__le32	phblt;
+};
+
+/**
+ * struct nvme_power_meas_log - Power Measurement Log Page (Log Identifier 25h)
+ * @ver:	Version. Shall be cleared to %0h.
+ * @pmgn:	Power Measurement Generation Number. Incremented each time a
+ *		Set Features command with Action = %1h (Start Power Measurements)
+ *		is successfully completed. Rolls over from %FFh to %0h.
+ * @pma:	Power Measurement Attributes. See &enum nvme_pma.
+ * @sze:	Size. Indicates the size of this log page in bytes.
+ * @pmc:	Power Measurement Count. Number of interval power measurements
+ *		collected. Does not wrap after %FFFFFFFFh. Cleared to %0h when
+ *		Start Power Measurements succeeds or if no measurement has occurred.
+ * @nphd:	Number of Power Histogram Descriptors in this log page.
+ * @smtr:	Stop Measurement Time Remaining. Time remaining in minutes until
+ *		controller stops collecting interval power measurements.
+ *		%0h means not specified.
+ * @smts:	Stop Measurement Timestamp. Timestamp of when interval power
+ *		measurements stopped being collected. See &struct nvme_timestamp.
+ * @phds:	Power Histogram Descriptor Size. Size in bytes of each descriptor.
+ * @phbs:	Power Histogram Bin Size. Size in milliwatts of each bin.
+ *		Shall be set to 250 milliwatts.
+ * @nphds:	Number of Power Histogram Descriptors Supported. Maximum number
+ *		of descriptors that can be reported. If %0h, NPHD shall be
+ *		cleared to %0h and no descriptors are reported.
+ * @vss:	Vendor Specific Size. Size in bytes of the Vendor Specific field.
+ * @phdoc:	Power Histogram Descriptor Overflow Count. Number of interval
+ *		power measurements greater than the maximum power indicated by
+ *		the last Power Histogram Descriptor. Does not wrap after %FFFFFFFFh.
+ * @rsvd36:	Reserved.
+ * @aipwr:	Average Interval Power. Bits 31:18 are reserved. Bits 17:16
+ *		contain the Power Scale (PWRS); see &enum nvme_psd_ps. Bits 15:0
+ *		contain the Power Value (PWRV).
+ * @mipwr:	Maximum Interval Power. Bits 31:18 are reserved. Bits 17:16
+ *		contain the Power Scale (PWRS); see &enum nvme_psd_ps. Bits 15:0
+ *		contain the Power Value (PWRV).
+ * @mipwrt:	Maximum Interval Power Timestamp. Timestamp of when the maximum
+ *		interval power was collected. See &struct nvme_timestamp.
+ * @ipwrpe:	Interval Power Percent Error. Maximum percent error (0-100%).
+ *		Values 101-254 reserved. 255 indicates not reported.
+ * @rsvd57:	Reserved.
+ * @descs:	Power Histogram Descriptors (&struct nvme_power_histogram_desc).
+ */
+struct nvme_power_meas_log {
+	__u8	ver;
+	__u8	pmgn;
+	__le16	pma;
+	__le32	sze;
+	__le32	pmc;
+	__le16	nphd;
+	__le16	smtr;
+	struct nvme_timestamp	smts;
+	__le16	phds;
+	__le16	phbs;
+	__le16	nphds;
+	__le16	vss;
+	__le32	phdoc;
+	__u8	rsvd36[4];
+	__le32	aipwr;
+	__le32	mipwr;
+	struct nvme_timestamp	mipwrt;
+	__u8	ipwrpe;
+	__u8	rsvd57[7];
+	struct nvme_power_histogram_desc descs[];
+};
+
 
 /**
  * struct nvme_lba_status_desc - LBA Status Descriptor Entry

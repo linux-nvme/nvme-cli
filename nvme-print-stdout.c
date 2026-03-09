@@ -3271,6 +3271,11 @@ static void print_ps_power_and_scale(__le16 ctr_power, __u8 scale)
 	print_power_and_scale(le16_to_cpu(ctr_power), scale);
 }
 
+static void print_power_field(__u32 pwr)
+{
+	print_power_and_scale(pwr & 0xffff, (pwr >> 16) & 0x3);
+}
+
 static void print_psd_time(const char *desc, __u8 time, __u8 ts)
 {
 	int width = 12 + strlen(desc);
@@ -4545,6 +4550,7 @@ static void stdout_endurance_log(struct nvme_endurance_group_log *endurance_log,
 static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, const char *devname)
 {
 	__u16 temperature = smart->temperature[1] << 8 | smart->temperature[0];
+	__u32 ipm = le32_to_cpu(smart->interval_power_measurement);
 	int i;
 	bool human = stdout_print_ops.flags & VERBOSE;
 
@@ -4617,6 +4623,13 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 	       le32_to_cpu(smart->thm_temp1_total_time));
 	printf("Thermal Management T2 Total Time	: %u\n",
 	       le32_to_cpu(smart->thm_temp2_total_time));
+	printf("Operational Lifetime Energy Consumed	: %"PRIu64"\n",
+	       le64_to_cpu(smart->op_lifetime_energy_consumed));
+	printf("Interval Power Measurement Type		: %s\n",
+	       nvme_power_measurement_type_to_string((ipm >> 20) & 0x3f));
+	printf("Interval Power Measurement		: ");
+	print_power_field(ipm);
+	printf("\n");
 }
 
 static void stdout_ana_log(struct nvme_ana_log *ana_log, const char *devname,
@@ -4904,27 +4917,22 @@ static void stdout_auto_pst(struct nvme_feat_auto_pst *apst)
 	}
 }
 
+static const char *stdout_format_timestamp(__u8 *timestamp_bytes)
+{
+	static char buf[STR_LEN];
+	uint64_t ts_ms = int48_to_long(timestamp_bytes);
+
+	snprintf(buf, sizeof(buf), "%"PRIu64" (%s)", ts_ms,
+		nvme_format_timestamp(timestamp_bytes));
+
+	return buf;
+}
+
 static void stdout_timestamp(struct nvme_timestamp *ts)
 {
-	struct tm *tm;
-	char buffer[320];
-	time_t timestamp = int48_to_long(ts->timestamp) / 1000;
-
-	tm = localtime(&timestamp);
-
-	printf("\tThe timestamp is : %'"PRIu64" (%s)\n",
-		int48_to_long(ts->timestamp),
-		strftime(buffer, sizeof(buffer), "%c %Z", tm) ? buffer : "-");
-	printf("\t%s\n", (ts->attr & 2) ?
-		"The Timestamp field was initialized with a "\
-			"Timestamp value using a Set Features command." :
-		"The Timestamp field was initialized "\
-			"to ‘0’ by a Controller Level Reset.");
-	printf("\t%s\n", (ts->attr & 1) ?
-		"The controller may have stopped counting during vendor specific "\
-			"intervals after the Timestamp value was initialized" :
-		"The controller counted time in milliseconds "\
-			"continuously since the Timestamp value was initialized.");
+	printf("\tThe timestamp is : %s\n", stdout_format_timestamp(ts->timestamp));
+	printf("\t%s\n", nvme_format_timestamp_origin(ts->attr));
+	printf("\t%s\n", nvme_format_timestamp_sync(ts->attr));
 }
 
 static void stdout_host_mem_buffer(struct nvme_host_mem_buf_attrs *hmb)
@@ -6622,6 +6630,83 @@ static void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *lo
 	d((unsigned char *)log->osp, osp_len, 16, 1);
 }
 
+static void stdout_power_meas_log(struct nvme_power_meas_log *log, __u32 size)
+{
+	__u16 nphd = le16_to_cpu(log->nphd);
+	__u16 pma = le16_to_cpu(log->pma);
+	__u8 pmt = NVME_GET(pma, PMA_PMT);
+	__u32 aipwr = le32_to_cpu(log->aipwr);
+	__u32 mipwr = le32_to_cpu(log->mipwr);
+	__u16 i;
+	bool verbose = stdout_print_ops.flags & VERBOSE;
+
+	printf("Power Measurement Log\n");
+	printf("%-47s : %u\n",   "Version", log->ver);
+	printf("%-47s : %u\n",   "Power Measurement Generation Number", log->pmgn);
+	printf("%-47s : %#06x\n", "Power Measurement Attributes", pma);
+
+	if (verbose) {
+		printf("    %-43s : %u\n", "Power Measurement Enable", NVME_GET(pma, PMA_PME));
+		printf("    %-43s : %u\n", "Non-Contiguous Power Data Flag", NVME_GET(pma, PMA_NCPDF));
+		printf("    %-43s : %u\n", "Estimated Power Flag", NVME_GET(pma, PMA_EPF));
+		printf("    %-43s : %u\n", "Maximum Interval Power Timestamp Support", NVME_GET(pma, PMA_MIPWRTS));
+		printf("    %-43s : %u\n", "Power Histogram Descriptor Overflow", NVME_GET(pma, PMA_PHDO));
+		printf("    %-43s : %u (%s)\n", "Power Measurement Type", pmt,
+		       nvme_power_measurement_type_to_string(pmt));
+	}
+
+	printf("%-47s : %u\n",   "Size (bytes)", le32_to_cpu(log->sze));
+	printf("%-47s : %u\n",   "Power Measurement Count", le32_to_cpu(log->pmc));
+	printf("%-47s : %u\n",   "Number of Power Histogram Descriptors", nphd);
+	printf("%-47s : %u\n",   "Stop Measurement Time Remaining (minutes)", le16_to_cpu(log->smtr));
+	printf("%-47s : %s\n", "Stop Measurement Timestamp", stdout_format_timestamp(log->smts.timestamp));
+
+	if (verbose) {
+		printf("    %-43s : %u (%s)\n", "Timestamp Origin",
+		       NVME_TIMESTAMP_ATTR_TO(log->smts.attr),
+		       nvme_format_timestamp_origin(log->smts.attr));
+		printf("    %-43s : %u (%s)\n", "Sync",
+		       NVME_TIMESTAMP_ATTR_SYNC(log->smts.attr),
+		       nvme_format_timestamp_sync(log->smts.attr));
+	}
+
+	printf("%-47s : %u\n",   "Power Histogram Descriptor Size (bytes)", le16_to_cpu(log->phds));
+	printf("%-47s : %u\n",   "Power Histogram Bin Size (mW)", le16_to_cpu(log->phbs));
+	printf("%-47s : %u\n",   "Number of Power Histogram Descriptors Supported", le16_to_cpu(log->nphds));
+	printf("%-47s : %u\n",   "Vendor Specific Size (bytes)", le16_to_cpu(log->vss));
+	printf("%-47s : %u\n",   "Power Histogram Descriptor Overflow Count", le32_to_cpu(log->phdoc));
+	printf("%-47s : ", "Average Interval Power");
+	print_power_field(aipwr);
+	printf("\n");
+	printf("%-47s : ", "Maximum Interval Power");
+	print_power_field(mipwr);
+	printf("\n");
+	printf("%-47s : %s\n", "Maximum Interval Power Timestamp", stdout_format_timestamp(log->mipwrt.timestamp));
+
+	if (verbose) {
+		printf("    %-43s : %u (%s)\n", "Timestamp Origin",
+		       NVME_TIMESTAMP_ATTR_TO(log->mipwrt.attr),
+		       nvme_format_timestamp_origin(log->mipwrt.attr));
+		printf("    %-43s : %u (%s)\n", "Sync",
+		       NVME_TIMESTAMP_ATTR_SYNC(log->mipwrt.attr),
+		       nvme_format_timestamp_sync(log->mipwrt.attr));
+	}
+
+	printf("%-47s : %u\n",   "Interval Power Percent Error", log->ipwrpe);
+
+	if (verbose) {
+		for (i = 0; i < nphd; i++) {
+			__u32 phblt = le32_to_cpu(log->descs[i].phblt);
+
+			printf("Power Histogram Descriptor [%u]:\n", i);
+			printf("    %-43s : %u\n", "Power Histogram Bin Count", le32_to_cpu(log->descs[i].phbc));
+			printf("    %-43s : ", "Power Histogram Bin Lower Threshold");
+			print_power_field(phblt);
+			printf("\n");
+		}
+	}
+}
+
 static void stdout_relatives(struct nvme_global_ctx *ctx, const char *name)
 {
 	struct nvme_resources res;
@@ -6808,6 +6893,9 @@ static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 	case NVME_LOG_LID_PULL_MODEL_DDC_REQ:
 		stdout_pull_model_ddc_req_log((struct nvme_pull_model_ddc_req_log *)args->log);
 		break;
+	case NVME_LOG_LID_POWER_MEASUREMENT:
+		stdout_power_meas_log((struct nvme_power_meas_log *)args->log, args->len);
+		break;
 	case NVME_LOG_LID_RESERVATION:
 		stdout_resv_notif_log((struct nvme_resv_notification_log *)args->log, devname);
 		break;
@@ -6898,6 +6986,7 @@ static struct print_ops stdout_print_ops = {
 	.host_discovery_log		= stdout_host_discovery_log,
 	.ave_discovery_log		= stdout_ave_discovery_log,
 	.pull_model_ddc_req_log		= stdout_pull_model_ddc_req_log,
+	.power_meas_log			= stdout_power_meas_log,
 	.log				= stdout_log,
 
 	/* libnvme tree print functions */
