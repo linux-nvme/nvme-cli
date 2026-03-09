@@ -346,13 +346,13 @@ All CI containers are published as OCI/Docker images.
 Example: Ubuntu latest CI image:
 
 ```bash
-docker pull ghcr.io/linux-nvme/debian.python:latest
+docker pull ghcr.io/linux-nvme/debian:latest
 ```
 
 Or with Podman:
 
 ```bash
-podman pull ghcr.io/linux-nvme/debian.python:latest
+podman pull ghcr.io/linux-nvme/debian:latest
 ```
 
 ### 2. Start the Container and Log In
@@ -362,7 +362,7 @@ Start an interactive shell inside the container:
 ```bash
 docker run --rm -it \
   --name nvme-cli-debug \
-  ghcr.io/linux-nvme/debian.python:latest \
+  ghcr.io/linux-nvme/debian:latest \
   bash
 ```
 
@@ -371,7 +371,7 @@ Or with Podman:
 ```bash
 podman run --rm -it \
   --name nvme-cli-debug \
-  ghcr.io/linux-nvme/debian.python:latest \
+  ghcr.io/linux-nvme/debian:latest \
   bash
 ```
 

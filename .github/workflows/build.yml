@@ -17,7 +17,7 @@ jobs:
         compiler: [gcc, clang]
         buildtype: [debug, release]
     container:
-      image: ghcr.io/linux-nvme/debian.python:latest
+      image: ghcr.io/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Mark repo as safe for git
@@ -40,7 +40,7 @@ jobs:
         compiler: [gcc, clang]
         buildtype: [debug, release]
     container:
-      image: ghcr.io/linux-nvme/debian.python:latest
+      image: ghcr.io/linux-nvme/debian:latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Mark repo as safe for git
@@ -135,6 +135,32 @@ jobs:
       - name: build
         run: |
           make static
+
+  build-musl:
+    name: musl libc build on Debian
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: build
+        run: |
+          CC=musl-gcc scripts/build.sh musl
+
+  build-alpine:
+    name: musl libc build on Alpine
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/alpine:latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: build
+        run: |
+          scripts/build.sh musl
 
   build-distro:
     name: build libnvme and nvme-cli separately

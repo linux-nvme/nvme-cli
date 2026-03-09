@@ -125,15 +125,11 @@ static int __nvme_transport_handle_open_direct(
 {
 	struct nvme_passthru_cmd dummy = { 0 };
 	_cleanup_free_ char *path = NULL;
-	_cleanup_free_ char *_devname = NULL;
 	char *name;
 	int ret, id, ns;
 	bool c = true;
 
-	_devname = strdup(devname);
-	if (!_devname)
-		return -ENOMEM;
-	name = basename(_devname);
+	name = nvme_basename(devname);
 
 	hdl->type = NVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 
