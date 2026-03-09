@@ -123,9 +123,9 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 	va_start(ap, v);
 
 	if (vasprintf(&value, v, ap) < 0)
-		value = alloc_error;
+		value = NULL;
 
-	obj_add_str(o, "Result", value);
+	obj_add_str(o, "Result", value ? value : alloc_error);
 
 	va_end(ap);
 }
@@ -139,9 +139,9 @@ static void obj_add_key(struct json_object *o, const char *k, const char *v, ...
 	va_start(ap, v);
 
 	if (vasprintf(&value, v, ap) < 0)
-		value = alloc_error;
+		value = NULL;
 
-	obj_add_str(o, k, value);
+	obj_add_str(o, k, value ? value : alloc_error);
 
 	va_end(ap);
 }
@@ -5357,9 +5357,9 @@ static void json_output_message(bool error, const char *msg, va_list ap)
 	_cleanup_free_ char *value = NULL;
 
 	if (vasprintf(&value, msg, ap) < 0)
-		value = alloc_error;
+		value = NULL;
 
-	obj_add_str(r, error ? "error" : "result", value);
+	obj_add_str(r, error ? "error" : "result", value ? value : alloc_error);
 
 	obj_print(r);
 }
@@ -5371,9 +5371,10 @@ static void json_output_perror(const char *msg, va_list ap)
 	_cleanup_free_ char *error = NULL;
 
 	if (vasprintf(&error, msg, ap) < 0)
-		error = alloc_error;
+		error = NULL;
 
-	obj_add_key(r, "error", "%s: %s", error, nvme_strerror(errno));
+	obj_add_key(r, "error", "%s: %s", error ? error : alloc_error,
+		    nvme_strerror(errno));
 
 	json_output_object(r);
 }
