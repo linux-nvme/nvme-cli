@@ -9,12 +9,17 @@ NAME          := nvme
 .DEFAULT_GOAL := ${NAME}
 BUILD-DIR     := .build
 
+# Allow PLUGINS variable as a shorthand for MESON_ARGS
+ifdef PLUGINS
+	MESON_ARGS += -Dplugins=$(PLUGINS)
+endif
+
 .PHONY: update-subprojects
 update-subprojects:
 	meson subprojects update
 
 ${BUILD-DIR}:
-	meson setup $@
+	meson setup $@ ${MESON_ARGS}
 	@echo "Configuration located in: $@"
 	@echo "-------------------------------------------------------"
 
@@ -55,7 +60,7 @@ test-strict: ${NAME}
 
 .PHONY: rpm
 rpm:
-	meson setup ${BUILD-DIR} \
+	meson setup ${BUILD-DIR} ${MESON_ARGS} \
 		-Dudevrulesdir=$(shell rpm --eval '%{_udevrulesdir}') \
 		-Dsystemddir=$(shell rpm --eval '%{_unitdir}') \
 		-Ddocs=man -Ddocs-build=true
@@ -63,12 +68,13 @@ rpm:
 
 .PHONY: debug
 debug:
-	meson setup ${BUILD-DIR} --buildtype=debug
+	meson setup ${BUILD-DIR} ${MESON_ARGS} --buildtype=debug
 	meson compile -C ${BUILD-DIR}
 
 .PHONY: static
 static:
-	meson setup ${BUILD-DIR} --buildtype=release \
+	meson setup ${BUILD-DIR} ${MESON_ARGS}
+		--buildtype=release \
 		--wrap-mode=forcefallback \
 		--default-library=static \
 		--prefix=/usr \
