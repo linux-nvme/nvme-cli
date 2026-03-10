@@ -900,6 +900,8 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 
 	json_object_add_value_int(root, "Statistics Identifier String Table Start",
 				  le64_to_cpu(log_data->sits));
+	json_object_add_value_int(root, "Statistics Identifier String Table Size",
+				  le64_to_cpu(log_data->sitsz));
 	json_object_add_value_int(root, "Event String Table Start", le64_to_cpu(log_data->ests));
 	json_object_add_value_int(root, "Event String Table Size", le64_to_cpu(log_data->estsz));
 	json_object_add_value_int(root, "VU Event String Table Start",
