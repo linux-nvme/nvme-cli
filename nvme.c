@@ -256,7 +256,7 @@ static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
 
 struct nvme_args nvme_args = {
 	.output_format = "normal",
-	.output_format_ver = 1,
+	.output_format_ver = 2,
 	.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 };
 
