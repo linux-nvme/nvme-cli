@@ -64,3 +64,13 @@ host = None
 ctx = None
 ```
 
+## Testing PyPI package
+
+Use the following command to test installing the package from TestPyPI before publishing to the official PyPI registry.
+
+```bash
+pip install \
+  --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  libnvme==[libnvme-version]
+```
