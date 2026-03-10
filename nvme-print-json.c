@@ -4020,19 +4020,22 @@ static void json_feature_show_fields_sw_progress(struct json_object *r, unsigned
 	obj_add_uint(r, "Pre-boot Software Load Count (PBSLC)", result & 0xff);
 }
 
-static void json_feature_show_fields_host_id(struct json_object *r, unsigned char *buf)
+static void json_feature_show_fields_host_id(struct json_object *r,
+		unsigned int result, unsigned char *hostid)
 {
-	uint64_t ull = 0;
-	int i;
+	bool exhid;
 
-	if (buf) {
-		for (i = sizeof(ull) / sizeof(*buf); i; i--) {
-			ull |=  buf[i - 1];
-			if (i - 1)
-				ull <<= BYTE_TO_BIT(sizeof(buf[i]));
-		}
-		obj_add_uint64(r, "Host Identifier (HOSTID)", ull);
-	}
+	if (!hostid)
+		return;
+
+	nvme_feature_decode_host_id(result, &exhid);
+
+	if (exhid)
+		obj_add_str(r, "Host Identifier (HOSTID)",
+			    uint128_t_to_l10n_string(le128_to_cpu(hostid)));
+	else
+		obj_add_uint64(r, "Host Identifier (HOSTID)",
+			       le64_to_cpu(*(__le64 *)hostid));
 }
 
 static void json_feature_show_fields_resv_mask(struct json_object *r, unsigned int result)
@@ -4296,7 +4299,7 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 		json_feature_show_fields_sw_progress(r, result);
 		break;
 	case NVME_FEAT_FID_HOST_ID:
-		json_feature_show_fields_host_id(r, buf);
+		json_feature_show_fields_host_id(r, result, buf);
 		break;
 	case NVME_FEAT_FID_RESV_MASK:
 		json_feature_show_fields_resv_mask(r, result);

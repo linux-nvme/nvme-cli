@@ -5141,7 +5141,6 @@ static void stdout_host_metadata(enum nvme_features_id fid,
 
 static void stdout_feat_host_id(unsigned int result, unsigned char *hostid)
 {
-	uint64_t ull;
 	bool exhid;
 
 	if (!hostid)
@@ -5149,17 +5148,12 @@ static void stdout_feat_host_id(unsigned int result, unsigned char *hostid)
 
 	nvme_feature_decode_host_id(result, &exhid);
 
-	if (exhid) {
+	if (exhid)
 		printf("\tHost Identifier (HOSTID):  %s\n",
 		       uint128_t_to_l10n_string(le128_to_cpu(hostid)));
-		return;
-	}
-
-	ull =  hostid[7]; ull <<= 8; ull |= hostid[6]; ull <<= 8;
-	ull |= hostid[5]; ull <<= 8; ull |= hostid[4]; ull <<= 8;
-	ull |= hostid[3]; ull <<= 8; ull |= hostid[2]; ull <<= 8;
-	ull |= hostid[1]; ull <<= 8; ull |= hostid[0];
-	printf("\tHost Identifier (HOSTID):  %" PRIu64 "\n", ull);
+	else
+		printf("\tHost Identifier (HOSTID):  %" PRIu64 "\n",
+		       le64_to_cpu(*(__le64 *)hostid));
 }
 
 static void stdout_feature_show(enum nvme_features_id fid, int sel, unsigned int result)

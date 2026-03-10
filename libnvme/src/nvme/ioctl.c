@@ -176,7 +176,7 @@ out:
 int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd)
 {
-	if (hdl->ioctl64)
+	if (hdl->ioctl_io64)
 		return nvme_submit_passthru64(hdl, NVME_IOCTL_IO64_CMD, cmd);
 	return nvme_submit_passthru32(hdl, NVME_IOCTL_IO_CMD, cmd);
 }
@@ -186,7 +186,7 @@ int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
 {
 	switch (hdl->type) {
 	case NVME_TRANSPORT_HANDLE_TYPE_DIRECT:
-		if (hdl->ioctl64)
+		if (hdl->ioctl_admin64)
 			return nvme_submit_passthru64(hdl,
 				NVME_IOCTL_ADMIN64_CMD, cmd);
 		if (cmd->opcode == nvme_admin_fabrics)

@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 10.2.0" />
-<title>nvme-sndk-get-error-recovery-log(1)</title>
+<title>nvme-micron-id-ctrl(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,12 +735,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-sndk-get-error-recovery-log(1) Manual Page
+nvme-micron-id-ctrl(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nvme-sndk-get-error-recovery-log -
-   Send NVMe sndk get-error-recovery-log plugin command, return parsed log output.
+<p>nvme-micron-id-ctrl -
+   Send NVMe Identify Controller with Micron vendor-specific fields
 </p>
 </div>
 </div>
@@ -749,8 +749,7 @@ nvme-sndk-get-error-recovery-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme sndk get-error-recovery-log</em> &lt;device&gt; [--output-format=&lt;normal|json&gt;
--o &lt;normal|json&gt;]</pre>
+<pre class="content"><em>nvme micron id-ctrl</em> &lt;device&gt; [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -758,15 +757,41 @@ nvme-sndk-get-error-recovery-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, send a sndk plugin get-error-recovery-log command
-and output the error recovery log data. The --output-format option will format
-the output as specified.</p></div>
+<div class="paragraph"><p>For the NVMe device given, sends an identify controller command and
+provides the result with Micron vendor-specific fields decoded.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0).</p></div>
-<div class="paragraph"><p>This will only work on Sandisk devices supporting this log page.
-Results for any other device are undefined.</p></div>
-<div class="paragraph"><p>On success it returns the parsed error recovery log page data, error
-code otherwise.</p></div>
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>This command extends the standard Identify Controller output with
+Micron-specific fields:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+PMS (Power Measurement Support)
+</dt>
+<dd>
+<p>
+        Bit 21 of CTRATT (Controller Attributes).
+        Indicates whether the controller supports power measurement.
+</p>
+</dd>
+<dt class="hdlist1">
+IPMSR (Interval Power Measurement Sample Rate)
+</dt>
+<dd>
+<p>
+        Located at bytes 392-393 in the Identify Controller reserved area.
+        Specifies the sample rate for interval power measurement.
+</p>
+</dd>
+<dt class="hdlist1">
+MSMT (Maximum Stop Measurement Time)
+</dt>
+<dd>
+<p>
+        Located at bytes 394-395 in the Identify Controller reserved area.
+        Specifies the maximum time to stop power measurement.
+</p>
+</dd>
+</dl></div>
 </div>
 </div>
 <div class="sect1">
@@ -781,9 +806,8 @@ code otherwise.</p></div>
 </dt>
 <dd>
 <p>
-        Set the reporting format to <em>normal</em>, or
-        <em>json</em>. Only one output format can be used at a time.
-        Default is normal.
+        Set the reporting format to <em>normal</em> or <em>json</em>.
+        Default is <em>normal</em>.
 </p>
 </dd>
 </dl></div>
@@ -795,11 +819,20 @@ code otherwise.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Has the program issue sndk get-error-recovery-log plugin command :
+Display Identify Controller in human-readable format:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme sndk get-error-recovery-log /dev/nvme0</code></pre>
+<pre><code># nvme micron id-ctrl /dev/nvme0</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Display Identify Controller in JSON format:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme micron id-ctrl /dev/nvme0 -o json</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -808,7 +841,7 @@ Has the program issue sndk get-error-recovery-log plugin command :
 <div class="sect1">
 <h2 id="_nvme">NVME</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Part of the nvme-user suite.</p></div>
+<div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
 </div>

@@ -108,7 +108,8 @@ struct nvme_transport_handle {
 	/* direct */
 	nvme_fd_t fd;
 	struct stat stat;
-	bool ioctl64;
+	bool ioctl_admin64;
+	bool ioctl_io64;
 
 	/* mi */
 	struct nvme_mi_ep *ep;

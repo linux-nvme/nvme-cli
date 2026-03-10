@@ -160,8 +160,12 @@ static int __nvme_transport_handle_open_direct(
 
 	if (hdl->ctx->ioctl_probing) {
 		ret = ioctl(hdl->fd, NVME_IOCTL_ADMIN64_CMD, &dummy);
-		if (ret > 0)
-			hdl->ioctl64 = true;
+		if (ret > 0) {
+			hdl->ioctl_admin64 = true;
+			ret = ioctl(hdl->fd, NVME_IOCTL_IO64_CMD, &dummy);
+			if (ret != -1 || errno != ENOTTY)
+				hdl->ioctl_io64 = true;
+		}
 	}
 
 	return 0;
@@ -213,7 +217,7 @@ int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 		hdl->fd = 0xFD;
 
 		if (!strcmp(name, "NVME_TEST_FD64"))
-			hdl->ioctl64 = true;
+			hdl->ioctl_admin64 = true;
 
 		*hdlp = hdl;
 		return 0;
