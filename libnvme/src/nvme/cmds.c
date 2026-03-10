@@ -413,16 +413,6 @@ int nvme_get_logical_block_size(struct nvme_transport_handle *hdl,
 	return 0;
 }
 
-static inline void nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
-{
-	int i;
-
-	for (i = 0; i < 8; i++)
-		elbt[9 - i] = (eilbrt >> (8 * i)) & 0xff;
-	elbt[1] = 0;
-	elbt[0] = 0;
-}
-
 void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
 			  __u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
 			  __u32 *elbats, __u16 nr)
@@ -449,7 +439,7 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 		copy[i].slba = cpu_to_le64(slbas[i]);
 		copy[i].elbatm = cpu_to_le16(elbatms[i]);
 		copy[i].elbat = cpu_to_le16(elbats[i]);
-		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
+		*(__le64 *)copy[i].elbt = cpu_to_le64(eilbrts[i]);
 	}
 }
 
@@ -485,7 +475,7 @@ void nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 		copy[i].sopt = cpu_to_le16(sopts[i]);
 		copy[i].elbatm = cpu_to_le16(elbatms[i]);
 		copy[i].elbat = cpu_to_le16(elbats[i]);
-		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
+		*(__le64 *)copy[i].elbt = cpu_to_le64(eilbrts[i]);
 	}
 }
 
