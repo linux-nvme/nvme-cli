@@ -355,7 +355,7 @@ int nvme_scan(const char *config_file, struct nvme_global_ctx **ctxp)
 		return -ENOMEM;
 
 	ret = nvme_scan_topology(ctx, NULL, NULL);
-	if (ret)
+	if (ret && ret != -ENOENT)
 		goto err;
 	if (config_file) {
 		ret = nvme_read_config(ctx, config_file);
