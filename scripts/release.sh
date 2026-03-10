@@ -157,10 +157,6 @@ done
 
 # update meson.build
 sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'$ver\',/" meson.build
-if [[ -n "$libnvme_VERSION" ]] && [[ -f subprojects/libnvme.wrap ]]; then
-    sed -i -e "s/\(dependency('libnvme', version: '>=\)\([0-9]\+\(\.[0-9]\+\)*\)/\1$libnvme_ver/" meson.build
-fi
-
 git add meson.build
 git commit -s -m "Release $VERSION"
 
