@@ -159,7 +159,7 @@ struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags);
 struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags);
 
 void nvme_show_status(int status);
-void nvme_show_err(int err, const char *msg);
+void nvme_show_err(int err, const char *fmt, ...);
 void nvme_show_io_cmd_err(const char *msg, struct nvme_passthru_cmd *cmd,
 			  int err);
 void nvme_show_admin_cmd_err(const char *msg, struct nvme_passthru_cmd *cmd,
