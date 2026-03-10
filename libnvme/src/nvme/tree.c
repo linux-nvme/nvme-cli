@@ -282,9 +282,14 @@ int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *
 
 	ctrls.num = nvme_scan_ctrls(&ctrls.ents);
 	if (ctrls.num < 0) {
-		nvme_msg(ctx, LOG_DEBUG, "failed to scan ctrls: %s\n",
-			 nvme_strerror(-ctrls.num));
-		return ctrls.num;
+		int err = errno;
+
+		if (err != ENOENT) {
+			nvme_msg(ctx, LOG_DEBUG, "failed to scan ctrls: %s\n",
+				 strerror(err));
+			return -err;
+		}
+		ctrls.num = 0;
 	}
 
 	for (i = 0; i < ctrls.num; i++) {
@@ -300,9 +305,14 @@ int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *
 
 	subsys.num = nvme_scan_subsystems(&subsys.ents);
 	if (subsys.num < 0) {
-		nvme_msg(ctx, LOG_DEBUG, "failed to scan subsystems: %s\n",
-			 nvme_strerror(-subsys.num));
-		return subsys.num;
+		int err = errno;
+
+		if (err != ENOENT) {
+			nvme_msg(ctx, LOG_DEBUG, "failed to scan subsystems: %s\n",
+				 strerror(err));
+			return -err;
+		}
+		subsys.num = 0;
 	}
 
 	for (i = 0; i < subsys.num; i++) {
