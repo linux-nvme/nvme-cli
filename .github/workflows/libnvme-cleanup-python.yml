@@ -19,7 +19,7 @@ jobs:
     environment: pypi
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Install pypi-cleanup
         run: pip install pypi-cleanup
