@@ -1,0 +1,109 @@
+'\" t
+.\"     Title: nvme-micron-smart-log
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 03/10/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-MICRON\-SMART\" "1" "03/10/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-micron-smart-log \- Retrieve SMART/Health log with Micron vendor\-specific fields
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme micron smart\-log\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>]
+.fi
+.SH "DESCRIPTION"
+.sp
+For the NVMe device given, retrieves the SMART/Health Information log page and displays it with Micron vendor\-specific fields decoded\&.
+.sp
+The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+This command extends the standard SMART log with Micron\-specific fields:
+.PP
+OLEC (Operational Lifetime Energy Consumed)
+.RS 4
+Located at bytes 232\-239 in the SMART log reserved area\&. Reports cumulative energy consumed by the device\&.
+.RE
+.PP
+IPM (Interval Power Measurement)
+.RS 4
+Located at bytes 240\-243 in the SMART log reserved area\&. Reports power measurement over sampling interval\&.
+.RE
+.SH "OPTIONS"
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR
+or
+\fIjson\fR\&. Default is
+\fInormal\fR\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Display SMART log in human\-readable format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme micron smart\-log /dev/nvme0
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Display SMART log in JSON format:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme micron smart\-log /dev/nvme0 \-o json
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

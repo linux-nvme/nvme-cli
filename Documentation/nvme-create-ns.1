@@ -2,12 +2,12 @@
 .\"     Title: nvme-create-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/04/2025
+.\"      Date: 03/10/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CREATE\-NS" "1" "11/04/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-CREATE\-NS" "1" "03/10/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -44,7 +44,7 @@ nvme-create-ns \- Send NVMe Namespace management command to create namespace, re
                         [\-\-lbstm=<lbstm> | \-l <lbstm>]
                         [\-\-nphndls=<nphndls> | \-n <nphndls>]
                         [\-\-block\-size=<block\-size> | \-b <block\-size>]
-                        [\-\-timeout=<timeout> | \-t <timeout>]
+                        [\-\-timeout=<timeout>]
                         [\-\-nsze\-si=<nsze\-si> | \-S <nsze\-si>]
                         [\-\-ncap\-si=<ncap\-si> | \-C <ncap\-si>]
                         [\-\-azr | \-z]
@@ -170,7 +170,7 @@ or
 Increase the information detail in the output\&.
 .RE
 .PP
-\-t <timeout>, \-\-timeout=<timeout>
+\-\-timeout=<timeout>
 .RS 4
 Override default timeout value 120,000\&. In milliseconds\&.
 .RE

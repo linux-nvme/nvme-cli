@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-property
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/04/2025
+.\"      Date: 03/10/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-PROPERTY" "1" "11/04/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-PROPERTY" "1" "03/10/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,7 +35,7 @@ nvme-get-property \- Reads and shows the defined NVMe controller property for NV
 \fInvme get\-property\fR <device> [\-\-offset=<offset> | \-O <offset>]
                         [\-\-human\-readable | \-H]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
-                        [\-\-timeout=<timeout> | \-t <timeout>]
+                        [\-\-timeout=<timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -66,7 +66,7 @@ or
 Increase the information detail in the output\&.
 .RE
 .PP
-\-t <timeout>, \-\-timeout=<timeout>
+\-\-timeout=<timeout>
 .RS 4
 Override default timeout value\&. In milliseconds\&.
 .RE
