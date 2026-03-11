@@ -102,21 +102,9 @@ if [ "$force" = false ] ; then
     fi
 fi
 
-# update all docs
-doc_dir=""
-if [ -d "Documentation" ]; then
-    doc_dir="Documentation"
-elif [ -d "doc" ]; then
-    doc_dir="doc"
-else
-    echo "documentation directory not found"
-    exit 1
-fi
-
 if [ "$build_doc" = true ]; then
-    # update documentation
     ./scripts/update-docs.sh
-    git add $doc_dir
+    git add Documentation libnvme/doc
     git commit -s -m "doc: Regenerate all docs for $VERSION"
 fi
 
