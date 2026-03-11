@@ -1,0 +1,16 @@
+.TH "nvmf_context_set_persistent" 9 "nvmf_context_set_persistent" "March 2026" "libnvme API manual" LINUX
+.SH NAME
+nvmf_context_set_persistent \- Set persistence for context
+.SH SYNOPSIS
+.B "int" nvmf_context_set_persistent
+.BI "(struct nvmf_context *fctx "  ","
+.BI "bool persistent "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context
+.IP "persistent" 12
+Whether to enable persistent connections
+.SH "DESCRIPTION"
+Sets whether the context should use persistent connections.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

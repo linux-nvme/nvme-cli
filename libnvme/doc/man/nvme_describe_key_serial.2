@@ -1,10 +1,13 @@
-.TH "nvme_describe_key_serial" 9 "nvme_describe_key_serial" "November 2025" "libnvme API manual" LINUX
+.TH "nvme_describe_key_serial" 9 "nvme_describe_key_serial" "March 2026" "libnvme API manual" LINUX
 .SH NAME
 nvme_describe_key_serial \- Return key description
 .SH SYNOPSIS
 .B "char *" nvme_describe_key_serial
-.BI "(long key_id "  ");"
+.BI "(struct nvme_global_ctx *ctx "  ","
+.BI "long key_id "  ");"
 .SH ARGUMENTS
+.IP "ctx" 12
+struct nvme_global_ctx object
 .IP "key_id" 12
 Key serial number
 .SH "DESCRIPTION"

@@ -1,0 +1,12 @@
+.TH "nvme_strerror" 9 "nvme_strerror" "March 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_strerror \- Returns string describing nvme errors and errno
+.SH SYNOPSIS
+.B "const char *" nvme_strerror
+.BI "(int err "  ");"
+.SH ARGUMENTS
+.IP "err" 12
+Returned error codes from all libnvme functions
+.SH "RETURN"
+String representation of either the nvme connect error codes
+(positive values) or errno string (negative values)

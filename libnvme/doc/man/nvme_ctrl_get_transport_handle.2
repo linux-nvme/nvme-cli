@@ -1,0 +1,17 @@
+.TH "nvme_ctrl_get_transport_handle" 9 "nvme_ctrl_get_transport_handle" "March 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_ctrl_get_transport_handle \- Get associated transport handle
+.SH SYNOPSIS
+.B "struct nvme_transport_handle *" nvme_ctrl_get_transport_handle
+.BI "(nvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.SH "DESCRIPTION"
+libnvme will \fBopen\fP the device (if not already opened) and keep an
+internal copy of the link handle. Following calls to this API retrieve
+the internal cached copy of the link handle. The file will remain
+opened and the handle will remain cached until the controller object
+is deleted or \fBnvme_ctrl_release_transport_handle\fP is called.
+.SH "RETURN"
+Link handle associated with \fIc\fP or NULL

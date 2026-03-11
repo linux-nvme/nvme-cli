@@ -1,0 +1,16 @@
+.TH "nvmf_context_set_fabrics_config" 9 "nvmf_context_set_fabrics_config" "March 2026" "libnvme API manual" LINUX
+.SH NAME
+nvmf_context_set_fabrics_config \- Set fabrics configuration for context
+.SH SYNOPSIS
+.B "int" nvmf_context_set_fabrics_config
+.BI "(struct nvmf_context *fctx "  ","
+.BI "struct nvme_fabrics_config *cfg "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context
+.IP "cfg" 12
+Fabrics configuration to apply
+.SH "DESCRIPTION"
+Applies the given fabrics configuration to the context.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

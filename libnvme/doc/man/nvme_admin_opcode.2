@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_admin_opcode" "November 2025" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_admin_opcode" "March 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_admin_opcode \- Known NVMe admin opcodes
 .SH SYNOPSIS
@@ -197,6 +197,10 @@ enum nvme_admin_opcode {
 .br
 .br
 .BI "    nvme_admin_mem_range_set_mgmt"
+, 
+.br
+.br
+.BI "    nvme_admin_sanitize_ns"
 
 };
 .SH Constants
@@ -298,3 +302,5 @@ Get LBA Status
 Program Activation Management
 .IP "nvme_admin_mem_range_set_mgmt" 12
 Memory Range Set Management
+.IP "nvme_admin_sanitize_ns" 12
+Sanitize Namespace

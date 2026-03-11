@@ -1,0 +1,14 @@
+.TH "nvmf_nbft_free" 9 "nvmf_nbft_free" "March 2026" "libnvme API manual" LINUX
+.SH NAME
+nvmf_nbft_free \- Free NBFT file entry list
+.SH SYNOPSIS
+.B "void" nvmf_nbft_free
+.BI "(struct nvme_global_ctx *ctx "  ","
+.BI "struct nbft_file_entry *head "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct nvme_global_ctx object
+.IP "head" 12
+Head of the NBFT file entry list
+.SH "DESCRIPTION"
+Frees all memory associated with the NBFT file entry list.

@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_sanitize_log_page" "November 2025" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_sanitize_log_page" "March 2026" "API Manual" LINUX
 .SH NAME
 struct nvme_sanitize_log_page \- Sanitize Status (Log Identifier 81h)
 .SH SYNOPSIS
@@ -38,7 +38,7 @@ Sanitize Progress (SPROG): indicates the fraction complete of the
 sanitize operation. The value is a numerator of the fraction
 complete that has 65,536 (10000h) as its denominator. This value
 shall be set to FFFFh if the \fIsstat\fP field is not set to
-NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS.
+NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS.
 .IP "sstat" 12
 Sanitize Status (SSTAT): indicates the status associated with
 the most recent sanitize operation. See \fIenum nvme_sanitize_sstat\fP.

@@ -5,31 +5,14 @@
 
 libnvme tree object interface
 
-.. c:function:: nvme_root_t nvme_create_root (FILE *fp, int log_level)
-
-   Initialize root object
-
-**Parameters**
-
-``FILE *fp``
-  File descriptor for logging messages
-
-``int log_level``
-  Logging level to use
-
-**Return**
-
-Initialized :c:type:`nvme_root_t` object
-
-
-.. c:function:: void nvme_root_set_application (nvme_root_t r, const char *a)
+.. c:function:: void nvme_set_application (struct nvme_global_ctx *ctx, const char *a)
 
    Specify managing application
 
 **Parameters**
 
-``nvme_root_t r``
-  :c:type:`nvme_root_t` object
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
 ``const char *a``
   Application string
@@ -39,42 +22,42 @@ Initialized :c:type:`nvme_root_t` object
 Sets the managing application string for **r**.
 
 
-.. c:function:: const char * nvme_root_get_application (nvme_root_t r)
+.. c:function:: const char * nvme_get_application (struct nvme_global_ctx *ctx)
 
    Get managing application
 
 **Parameters**
 
-``nvme_root_t r``
-  :c:type:`nvme_root_t` object
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
 **Description**
 
 Returns the managing application string for **r** or NULL if not set.
 
 
-.. c:function:: void nvme_root_skip_namespaces (nvme_root_t r)
+.. c:function:: void nvme_skip_namespaces (struct nvme_global_ctx *ctx)
 
    Skip namespace scanning
 
 **Parameters**
 
-``nvme_root_t r``
-  :c:type:`nvme_root_t` object
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
 **Description**
 
 Sets a flag to skip namespaces during scanning.
 
 
-.. c:function:: void nvme_root_release_fds (nvme_root_t r)
+.. c:function:: void nvme_release_fds (struct nvme_global_ctx *ctx)
 
    Close all opened file descriptors in the tree
 
 **Parameters**
 
-``nvme_root_t r``
-  :c:type:`nvme_root_t` object
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
 **Description**
 
@@ -83,42 +66,28 @@ of opened nvme devices. This API can be used to close and
 clear all cached fds in the tree.
 
 
-.. c:function:: void nvme_free_tree (nvme_root_t r)
-
-   Free root object
-
-**Parameters**
-
-``nvme_root_t r``
-  :c:type:`nvme_root_t` object
-
-**Description**
-
-Free an :c:type:`nvme_root_t` object and all attached objects
-
-
-.. c:function:: nvme_host_t nvme_first_host (nvme_root_t r)
+.. c:function:: nvme_host_t nvme_first_host (struct nvme_global_ctx *ctx)
 
    Start host iterator
 
 **Parameters**
 
-``nvme_root_t r``
-  :c:type:`nvme_root_t` object
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
 **Return**
 
 First :c:type:`nvme_host_t` object in an iterator
 
 
-.. c:function:: nvme_host_t nvme_next_host (nvme_root_t r, nvme_host_t h)
+.. c:function:: nvme_host_t nvme_next_host (struct nvme_global_ctx *ctx, nvme_host_t h)
 
    Next host iterator
 
 **Parameters**
 
-``nvme_root_t r``
-  :c:type:`nvme_root_t` object
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
 ``nvme_host_t h``
   Previous :c:type:`nvme_host_t` iterator
@@ -128,9 +97,9 @@ First :c:type:`nvme_host_t` object in an iterator
 Next :c:type:`nvme_host_t` object in an iterator
 
 
-.. c:function:: nvme_root_t nvme_host_get_root (nvme_host_t h)
+.. c:function:: struct nvme_global_ctx * nvme_host_get_global_ctx (nvme_host_t h)
 
-   Returns nvme_root_t object
+   Returns nvme_global_ctx object
 
 **Parameters**
 
@@ -139,32 +108,7 @@ Next :c:type:`nvme_host_t` object in an iterator
 
 **Return**
 
-:c:type:`nvme_root_t` object from **h**
-
-
-.. c:function:: nvme_host_t nvme_lookup_host (nvme_root_t r, const char *hostnqn, const char *hostid)
-
-   Lookup nvme_host_t object
-
-**Parameters**
-
-``nvme_root_t r``
-  :c:type:`nvme_root_t` object
-
-``const char *hostnqn``
-  Host NQN
-
-``const char *hostid``
-  Host ID
-
-**Description**
-
-Lookup a nvme_host_t object based on **hostnqn** and **hostid**
-or create one if not found.
-
-**Return**
-
-:c:type:`nvme_host_t` object
+:c:type:`struct nvme_global_ctx <nvme_global_ctx>` object from **h**
 
 
 .. c:function:: const char * nvme_host_get_dhchap_key (nvme_host_t h)
@@ -232,38 +176,47 @@ passed into the function and not the undefined flag value.
 true if PDC is enabled for **h**, else false
 
 
-.. c:function:: nvme_host_t nvme_default_host (nvme_root_t r)
+.. c:function:: int nvme_host_get (struct nvme_global_ctx *ctx, const char *hostnqn, const char *hostid, nvme_host_t *h)
 
-   Initializes the default host
+   Returns a host object
 
 **Parameters**
 
-``nvme_root_t r``
-  :c:type:`nvme_root_t` object
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
+
+``const char *hostnqn``
+  Host NQN (optional)
+
+``const char *hostid``
+  Host ID (optional)
+
+``nvme_host_t *h``
+  :c:type:`nvme_host_t` object to return
 
 **Description**
 
-Initializes the default host object based on the hostnqn/hostid
-values returned by nvme_host_get_ids() and attaches it to **r**.
+Returns a host object based on the hostnqn/hostid values or the default if
+hostnqn/hostid are NULL.
 
 **Return**
 
-:c:type:`nvme_host_t` object
+0 on success or negative error code otherwise
 
 
-.. c:function:: int nvme_host_get_ids (nvme_root_t r, char *hostnqn_arg, char *hostid_arg, char **hostnqn, char **hostid)
+.. c:function:: int nvme_host_get_ids (struct nvme_global_ctx *ctx, const char *hostnqn_arg, const char *hostid_arg, char **hostnqn, char **hostid)
 
    Retrieve host ids from various sources
 
 **Parameters**
 
-``nvme_root_t r``
-  :c:type:`nvme_root_t` object
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
-``char *hostnqn_arg``
+``const char *hostnqn_arg``
   Input hostnqn (command line) argument
 
-``char *hostid_arg``
+``const char *hostid_arg``
   Input hostid (command line) argument
 
 ``char **hostnqn``
@@ -296,7 +249,7 @@ The order is:
 **Return**
 
 0 on success (**hostnqn** and **hostid** contain valid strings
- which the caller needs to free), -1 otherwise and errno is set.
+ which the caller needs to free), or negative error code otherwise.
 
 
 .. c:function:: nvme_subsystem_t nvme_first_subsystem (nvme_host_t h)
@@ -330,11 +283,14 @@ first :c:type:`nvme_subsystem_t` object in an iterator
 next :c:type:`nvme_subsystem_t` object in an iterator
 
 
-.. c:function:: nvme_subsystem_t nvme_lookup_subsystem (struct nvme_host *h, const char *name, const char *subsysnqn)
+.. c:function:: int nvme_subsystem_get (struct nvme_global_ctx *ctx, struct nvme_host *h, const char *name, const char *subsysnqn, struct nvme_subsystem **s)
 
-   Lookup nvme_subsystem_t object
+   Returns nvme_subsystem_t object
 
 **Parameters**
+
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
 ``struct nvme_host *h``
   :c:type:`nvme_host_t` object
@@ -345,14 +301,13 @@ next :c:type:`nvme_subsystem_t` object in an iterator
 ``const char *subsysnqn``
   Subsystem NQN
 
+``struct nvme_subsystem **s``
+  nvme_subsystem_t object
+
 **Description**
 
-Lookup a :c:type:`nvme_subsystem_t` object in **h** base on **name** (if present)
+Returns an :c:type:`nvme_subsystem_t` object in **h** base on **name** (if present)
 and **subsysnqn** or create one if not found.
-
-**Return**
-
-nvme_subsystem_t object
 
 
 .. c:function:: void nvme_free_subsystem (struct nvme_subsystem *s)
@@ -507,88 +462,6 @@ First :c:type:`nvme_path_t` object of an **ns** iterator
 Next :c:type:`nvme_path_t` object of an **ns** iterator
 
 
-.. c:function:: nvme_ctrl_t nvme_lookup_ctrl (nvme_subsystem_t s, const char *transport, const char *traddr, const char *host_traddr, const char *host_iface, const char *trsvcid, nvme_ctrl_t p)
-
-   Lookup nvme_ctrl_t object
-
-**Parameters**
-
-``nvme_subsystem_t s``
-  :c:type:`nvme_subsystem_t` object
-
-``const char *transport``
-  Transport name
-
-``const char *traddr``
-  Transport address
-
-``const char *host_traddr``
-  Host transport address
-
-``const char *host_iface``
-  Host interface name
-
-``const char *trsvcid``
-  Transport service identifier
-
-``nvme_ctrl_t p``
-  Previous controller instance
-
-**Description**
-
-Lookup a controller in **s** based on **transport**, **traddr**,
-**host_traddr**, **host_iface**, and **trsvcid**. **transport** must be specified,
-other fields may be required depending on the transport. A new
-object is created if none is found. If **p** is specified the lookup
-will start at **p** instead of the first controller.
-
-**Return**
-
-Controller instance
-
-
-.. c:function:: nvme_ctrl_t nvme_ctrl_find (nvme_subsystem_t s, const char *transport, const char *traddr, const char *trsvcid, const char *subsysnqn, const char *host_traddr, const char *host_iface)
-
-   Locate an existing controller
-
-**Parameters**
-
-``nvme_subsystem_t s``
-  :c:type:`nvme_subsystem_t` object
-
-``const char *transport``
-  Transport name
-
-``const char *traddr``
-  Transport address
-
-``const char *trsvcid``
-  Transport service identifier
-
-``const char *subsysnqn``
-  Subsystem NQN
-
-``const char *host_traddr``
-  Host transport address
-
-``const char *host_iface``
-  Host interface name
-
-**Description**
-
-Lookup a controller in **s** based on **transport**, **traddr**, **trsvcid**,
-**subsysnqn**, **host_traddr**, and **host_iface**. **transport** must be specified,
-other fields may be required depending on the transport. Parameters set
-to NULL will be ignored.
-
-Unlike nvme_lookup_ctrl(), this function does not create a new object if
-an existing controller cannot be found.
-
-**Return**
-
-Controller instance on success, NULL otherwise.
-
-
 .. c:function:: bool nvme_ctrl_config_match (struct nvme_ctrl *c, const char *transport, const char *traddr, const char *trsvcid, const char *subsysnqn, const char *host_traddr, const char *host_iface)
 
    Check if ctrl **c** matches config params
@@ -627,14 +500,14 @@ to NULL will be ignored.
 true if there's a match, false otherwise.
 
 
-.. c:function:: nvme_ctrl_t nvme_create_ctrl (nvme_root_t r, const char *subsysnqn, const char *transport, const char *traddr, const char *host_traddr, const char *host_iface, const char *trsvcid)
+.. c:function:: int nvme_create_ctrl (struct nvme_global_ctx *ctx, const char *subsysnqn, const char *transport, const char *traddr, const char *host_traddr, const char *host_iface, const char *trsvcid, nvme_ctrl_t *c)
 
    Allocate an unconnected NVMe controller
 
 **Parameters**
 
-``nvme_root_t r``
-  NVMe root element
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
 ``const char *subsysnqn``
   Subsystem NQN
@@ -654,13 +527,16 @@ true if there's a match, false otherwise.
 ``const char *trsvcid``
   Transport service ID
 
+``nvme_ctrl_t *c``
+  **nvme_ctrl_t** object to return
+
 **Description**
 
 Creates an unconnected controller to be used for nvme_add_ctrl().
 
 **Return**
 
-Controller instance
+0 on success or negative error code otherwise
 
 
 .. c:function:: nvme_ns_t nvme_subsystem_first_ns (nvme_subsystem_t s)
@@ -694,7 +570,9 @@ First :c:type:`nvme_ns_t` object of an **s** iterator
 Next :c:type:`nvme_ns_t` object of an **s** iterator
 
 
-.. c:function:: nvme_for_each_host_safe (r, h, _h)
+.. c:macro:: nvme_for_each_host_safe
+
+``nvme_for_each_host_safe (r, h, _h)``
 
    Traverse host list
 
@@ -710,7 +588,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   Temporary :c:type:`nvme_host_t` object
 
 
-.. c:function:: nvme_for_each_host (r, h)
+.. c:macro:: nvme_for_each_host
+
+``nvme_for_each_host (r, h)``
 
    Traverse host list
 
@@ -723,7 +603,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   :c:type:`nvme_host_t` object
 
 
-.. c:function:: nvme_for_each_subsystem_safe (h, s, _s)
+.. c:macro:: nvme_for_each_subsystem_safe
+
+``nvme_for_each_subsystem_safe (h, s, _s)``
 
    Traverse subsystems
 
@@ -739,7 +621,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   Temporary :c:type:`nvme_subsystem_t` object
 
 
-.. c:function:: nvme_for_each_subsystem (h, s)
+.. c:macro:: nvme_for_each_subsystem
+
+``nvme_for_each_subsystem (h, s)``
 
    Traverse subsystems
 
@@ -752,7 +636,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   :c:type:`nvme_subsystem_t` object
 
 
-.. c:function:: nvme_subsystem_for_each_ctrl_safe (s, c, _c)
+.. c:macro:: nvme_subsystem_for_each_ctrl_safe
+
+``nvme_subsystem_for_each_ctrl_safe (s, c, _c)``
 
    Traverse controllers
 
@@ -768,7 +654,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   A :c:type:`nvme_ctrl_t_node` to use as temporary storage
 
 
-.. c:function:: nvme_subsystem_for_each_ctrl (s, c)
+.. c:macro:: nvme_subsystem_for_each_ctrl
+
+``nvme_subsystem_for_each_ctrl (s, c)``
 
    Traverse controllers
 
@@ -781,7 +669,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   Controller instance
 
 
-.. c:function:: nvme_ctrl_for_each_ns_safe (c, n, _n)
+.. c:macro:: nvme_ctrl_for_each_ns_safe
+
+``nvme_ctrl_for_each_ns_safe (c, n, _n)``
 
    Traverse namespaces
 
@@ -797,7 +687,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   A :c:type:`nvme_ns_t_node` to use as temporary storage
 
 
-.. c:function:: nvme_ctrl_for_each_ns (c, n)
+.. c:macro:: nvme_ctrl_for_each_ns
+
+``nvme_ctrl_for_each_ns (c, n)``
 
    Traverse namespaces
 
@@ -810,7 +702,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   :c:type:`nvme_ns_t` object
 
 
-.. c:function:: nvme_ctrl_for_each_path_safe (c, p, _p)
+.. c:macro:: nvme_ctrl_for_each_path_safe
+
+``nvme_ctrl_for_each_path_safe (c, p, _p)``
 
    Traverse paths
 
@@ -826,7 +720,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   A :c:type:`nvme_path_t_node` to use as temporary storage
 
 
-.. c:function:: nvme_ctrl_for_each_path (c, p)
+.. c:macro:: nvme_ctrl_for_each_path
+
+``nvme_ctrl_for_each_path (c, p)``
 
    Traverse paths
 
@@ -839,7 +735,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   :c:type:`nvme_path_t` object
 
 
-.. c:function:: nvme_subsystem_for_each_ns_safe (s, n, _n)
+.. c:macro:: nvme_subsystem_for_each_ns_safe
+
+``nvme_subsystem_for_each_ns_safe (s, n, _n)``
 
    Traverse namespaces
 
@@ -855,7 +753,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   A :c:type:`nvme_ns_t_node` to use as temporary storage
 
 
-.. c:function:: nvme_subsystem_for_each_ns (s, n)
+.. c:macro:: nvme_subsystem_for_each_ns
+
+``nvme_subsystem_for_each_ns (s, n)``
 
    Traverse namespaces
 
@@ -868,7 +768,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   :c:type:`nvme_ns_t` object
 
 
-.. c:function:: nvme_namespace_for_each_path_safe (n, p, _p)
+.. c:macro:: nvme_namespace_for_each_path_safe
+
+``nvme_namespace_for_each_path_safe (n, p, _p)``
 
    Traverse paths
 
@@ -884,7 +786,9 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
   A :c:type:`nvme_path_t_node` to use as temporary storage
 
 
-.. c:function:: nvme_namespace_for_each_path (n, p)
+.. c:macro:: nvme_namespace_for_each_path
+
+``nvme_namespace_for_each_path (n, p)``
 
    Traverse paths
 
@@ -895,39 +799,6 @@ Next :c:type:`nvme_ns_t` object of an **s** iterator
 
 ``p``
   :c:type:`nvme_path_t` object
-
-
-.. c:function:: int nvme_ns_get_fd (nvme_ns_t n)
-
-   Get associated file descriptor
-
-**Parameters**
-
-``nvme_ns_t n``
-  Namespace instance
-
-**Description**
-
-libnvme will open() the file (if not already opened) and keep
-an internal copy of the file descriptor. Following calls to
-this API retrieve the internal cached copy of the file
-descriptor. The file will remain opened and the fd will
-remain cached until the ns object is deleted or
-nvme_ns_release_fd() is called.
-
-**Return**
-
-File descriptor associated with **n** or -1
-
-
-.. c:function:: void nvme_ns_release_fd (nvme_ns_t n)
-
-   Close fd and clear fd from ns object
-
-**Parameters**
-
-``nvme_ns_t n``
-  Namespace instance
 
 
 .. c:function:: int nvme_ns_get_nsid (nvme_ns_t n)
@@ -1470,9 +1341,9 @@ Parent controller if present
 Parent namespace if present
 
 
-.. c:function:: int nvme_ctrl_get_fd (nvme_ctrl_t c)
+.. c:function:: struct nvme_transport_handle * nvme_ctrl_get_transport_handle (nvme_ctrl_t c)
 
-   Get associated file descriptor
+   Get associated transport handle
 
 **Parameters**
 
@@ -1481,21 +1352,20 @@ Parent namespace if present
 
 **Description**
 
-libnvme will open() the file (if not already opened) and keep
-an internal copy of the file descriptor. Following calls to
-this API retrieve the internal cached copy of the file
-descriptor. The file will remain opened and the fd will
-remain cached until the controller object is deleted or
-nvme_ctrl_release_fd() is called.
+libnvme will open() the device (if not already opened) and keep an
+internal copy of the link handle. Following calls to this API retrieve
+the internal cached copy of the link handle. The file will remain
+opened and the handle will remain cached until the controller object
+is deleted or nvme_ctrl_release_transport_handle() is called.
 
 **Return**
 
-File descriptor associated with **c** or -1
+Link handle associated with **c** or NULL
 
 
-.. c:function:: void nvme_ctrl_release_fd (nvme_ctrl_t c)
+.. c:function:: void nvme_ctrl_release_transport_handle (nvme_ctrl_t c)
 
-   Close fd and clear fd from controller object
+   Free transport handle from controller object
 
 **Parameters**
 
@@ -2125,17 +1995,20 @@ Issues a 'disconnect' fabrics command to **c**
 0 on success, -1 on failure.
 
 
-.. c:function:: nvme_ctrl_t nvme_scan_ctrl (nvme_root_t r, const char *name)
+.. c:function:: int nvme_scan_ctrl (struct nvme_global_ctx *ctx, const char *name, nvme_ctrl_t *c)
 
    Scan on a controller
 
 **Parameters**
 
-``nvme_root_t r``
-  nvme_root_t object
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
 ``const char *name``
   Name of the controller
+
+``nvme_ctrl_t *c``
+  **nvme_ctrl_t** object to return
 
 **Description**
 
@@ -2143,7 +2016,7 @@ Scans a controller with sysfs name **name** and add it to **r**.
 
 **Return**
 
-nvme_ctrl_t object
+0 on success or negative error code otherwise
 
 
 .. c:function:: void nvme_rescan_ctrl (nvme_ctrl_t c)
@@ -2173,7 +2046,7 @@ nvme_ctrl_t object
 
 **Return**
 
-The ioctl() return code. Typically 0 on success.
+0 on success or negative error code otherwise
 
 
 .. c:function:: void nvme_free_ctrl (struct nvme_ctrl *c)
@@ -2343,14 +2216,14 @@ Serial number of the current subsystem
 Firmware revision of the current subsystem
 
 
-.. c:function:: int nvme_scan_topology (nvme_root_t r, nvme_scan_filter_t f, void *f_args)
+.. c:function:: int nvme_scan_topology (struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *f_args)
 
    Scan NVMe topology and apply filter
 
 **Parameters**
 
-``nvme_root_t r``
-  nvme_root_t object
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
 
 ``nvme_scan_filter_t f``
   filter to apply
@@ -2365,7 +2238,7 @@ by applying **f**.
 
 **Return**
 
-0 on success, -1 on failure with errno set.
+0 on success, or negative error code otherwise.
 
 
 .. c:function:: const char * nvme_host_get_hostnqn (nvme_host_t h)
@@ -2422,28 +2295,14 @@ clear all cached fds under this host.
   nvme_host_t object
 
 
-.. c:function:: nvme_root_t nvme_scan (const char *config_file)
-
-   Scan NVMe topology
-
-**Parameters**
-
-``const char *config_file``
-  Configuration file
-
-**Return**
-
-nvme_root_t object of found elements
-
-
-.. c:function:: int nvme_read_config (nvme_root_t r, const char *config_file)
+.. c:function:: int nvme_read_config (struct nvme_global_ctx *ctx, const char *config_file)
 
    Read NVMe JSON configuration file
 
 **Parameters**
 
-``nvme_root_t r``
-  nvme_root_t object
+``struct nvme_global_ctx *ctx``
+  :c:type:`struct nvme_global_ctx <nvme_global_ctx>` object
 
 ``const char *config_file``
   JSON configuration file
@@ -2455,68 +2314,53 @@ the elements in **r**.
 
 **Return**
 
-0 on success, -1 on failure with errno set.
+0 on success or negative error code otherwise
 
 
-.. c:function:: void nvme_refresh_topology (nvme_root_t r)
+.. c:function:: void nvme_refresh_topology (struct nvme_global_ctx *ctx)
 
    Refresh nvme_root_t object contents
 
 **Parameters**
 
-``nvme_root_t r``
-  nvme_root_t object
+``struct nvme_global_ctx *ctx``
+  :c:type:`struct nvme_global_ctx <nvme_global_ctx>` object
 
 **Description**
 
 Removes all elements in **r** and rescans the existing topology.
 
 
-.. c:function:: int nvme_update_config (nvme_root_t r)
-
-   Update JSON configuration
-
-**Parameters**
-
-``nvme_root_t r``
-  nvme_root_t object
-
-**Description**
-
-Updates the JSON configuration file with the contents of **r**.
-
-**Return**
-
-0 on success, -1 on failure.
-
-
-.. c:function:: int nvme_dump_config (nvme_root_t r)
+.. c:function:: int nvme_dump_config (struct nvme_global_ctx *ctx, int fd)
 
    Print the JSON configuration
 
 **Parameters**
 
-``nvme_root_t r``
-  nvme_root_t object
+``struct nvme_global_ctx *ctx``
+  :c:type:`struct nvme_global_ctx <nvme_global_ctx>` object
+
+``int fd``
+  File descriptor to write the JSON configuration.
 
 **Description**
 
-Prints the current contents of the JSON configuration
-file to stdout.
+Writes the current contents of the JSON configuration
+to the file descriptor fd.
 
 **Return**
 
-0 on success, -1 on failure.
+0 on success, or negative error code otherwise.
 
 
-.. c:function:: int nvme_dump_tree (nvme_root_t r)
+.. c:function:: int nvme_dump_tree (struct nvme_global_ctx *ctx)
 
    Dump internal object tree
 
 **Parameters**
 
-``nvme_root_t r``
-  nvme_root_t object
+``struct nvme_global_ctx *ctx``
+  :c:type:`struct nvme_global_ctx <nvme_global_ctx>` object
 
 **Description**
 
@@ -2525,7 +2369,7 @@ to stdout.
 
 **Return**
 
-0 on success, -1 on failure.
+0 on success or negative error code otherwise
 
 
 .. c:function:: char * nvme_get_attr (const char *d, const char *attr)
@@ -2542,8 +2386,8 @@ to stdout.
 
 **Return**
 
-String with the contents of **attr** or ``NULL`` in case of an empty value
-        or in case of an error (indicated by non-zero errno code).
+String with the contents of **attr** or ``NULL`` in case of an empty
+        value or error.
 
 
 .. c:function:: char * nvme_get_subsys_attr (nvme_subsystem_t s, const char *attr)
@@ -2560,8 +2404,8 @@ String with the contents of **attr** or ``NULL`` in case of an empty value
 
 **Return**
 
-String with the contents of **attr** or ``NULL`` in case of an empty value
-        or in case of an error (indicated by non-zero errno code).
+String with the contents of **attr** or ``NULL`` in case of an empty
+        value or error.
 
 
 .. c:function:: char * nvme_get_ctrl_attr (nvme_ctrl_t c, const char *attr)
@@ -2579,7 +2423,7 @@ String with the contents of **attr** or ``NULL`` in case of an empty value
 **Return**
 
 String with the contents of **attr** or ``NULL`` in case of an empty value
-        or in case of an error (indicated by non-zero errno code).
+        or in case of an error.
 
 
 .. c:function:: char * nvme_get_ns_attr (nvme_ns_t n, const char *attr)
@@ -2597,7 +2441,7 @@ String with the contents of **attr** or ``NULL`` in case of an empty value
 **Return**
 
 String with the contents of **attr** or ``NULL`` in case of an empty value
-        or in case of an error (indicated by non-zero errno code).
+        or in case of an error.
 
 
 .. c:function:: nvme_ns_t nvme_subsystem_lookup_namespace (struct nvme_subsystem *s, __u32 nsid)
@@ -2648,21 +2492,27 @@ clear all cached fds under this subsystem.
 **Return**
 
 String with the contents of **attr** or ``NULL`` in case of an empty value
-        or in case of an error (indicated by non-zero errno code).
+        or in case of an error.
 
 
-.. c:function:: nvme_ns_t nvme_scan_namespace (const char *name)
+.. c:function:: int nvme_scan_namespace (struct nvme_global_ctx *ctx, const char *name, nvme_ns_t *ns)
 
    scan namespace based on sysfs name
 
 **Parameters**
 
+``struct nvme_global_ctx *ctx``
+  :c:type:`struct nvme_global_ctx <nvme_global_ctx>` object
+
 ``const char *name``
   sysfs name of the namespace to scan
 
+``nvme_ns_t *ns``
+  :c:type:`nvme_ns_t` object to return
+
 **Return**
 
-nvme_ns_t object or NULL if not found.
+0 on success or negative error code otherwise
 
 
 .. c:function:: const char * nvme_host_get_hostsymname (nvme_host_t h)

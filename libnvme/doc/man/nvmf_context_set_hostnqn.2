@@ -1,0 +1,19 @@
+.TH "nvmf_context_set_hostnqn" 9 "nvmf_context_set_hostnqn" "March 2026" "libnvme API manual" LINUX
+.SH NAME
+nvmf_context_set_hostnqn \- Set host NQN and host ID for context
+.SH SYNOPSIS
+.B "int" nvmf_context_set_hostnqn
+.BI "(struct nvmf_context *fctx "  ","
+.BI "const char *hostnqn "  ","
+.BI "const char *hostid "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context
+.IP "hostnqn" 12
+Host NQN
+.IP "hostid" 12
+Host identifier
+.SH "DESCRIPTION"
+Sets the host NQN and host ID for the context.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

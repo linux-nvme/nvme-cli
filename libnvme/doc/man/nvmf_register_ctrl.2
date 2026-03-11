@@ -1,4 +1,4 @@
-.TH "nvmf_register_ctrl" 9 "nvmf_register_ctrl" "November 2025" "libnvme API manual" LINUX
+.TH "nvmf_register_ctrl" 9 "nvmf_register_ctrl" "March 2026" "libnvme API manual" LINUX
 .SH NAME
 nvmf_register_ctrl \- Perform registration task with a DC
 .SH SYNOPSIS
@@ -19,4 +19,4 @@ completion.
 Perform registration task with a Discovery Controller (DC). Three
 tasks are supported: register, deregister, and registration update.
 .SH "RETURN"
-0 on success; on failure -1 is returned and errno is set
+0 on success, or an error code on failure.
