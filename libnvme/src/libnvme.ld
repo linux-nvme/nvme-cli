@@ -208,7 +208,6 @@ LIBNVME_2_0 {
 		nvme_release_fds;
 		nvme_rescan_ctrl;
 		nvme_revoke_tls_key;
-		nvme_scan;
 		nvme_scan_ctrl;
 		nvme_scan_ctrl_namespace_paths;
 		nvme_scan_ctrl_namespaces;

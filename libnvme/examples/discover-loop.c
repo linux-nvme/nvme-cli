@@ -50,7 +50,7 @@ static void print_discover_log(struct nvmf_discovery_log *log)
 
 int main()
 {
-	struct nvmf_discovery_log *log = NULL;
+	struct nvmf_discovery_log *log;
 	struct nvme_global_ctx *ctx;
 	nvme_host_t h;
 	nvme_ctrl_t c;
@@ -59,24 +59,30 @@ int main()
 
 	nvmf_default_config(&cfg);
 
-	ret = nvme_scan(NULL, &ctx);
-	if (ret)
-		return ret;
+	ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	if (!ctx)
+		return 1;
+
+	ret = nvme_scan_topology(ctx, NULL, NULL);
+	if (ret) {
+		nvme_free_global_ctx(ctx);
+		return 1;
+	}
 	ret = nvme_host_get(ctx, NULL, NULL, &h);
 	if (ret) {
 		fprintf(stderr, "Failed to allocated memory\n");
-		return ret;
+		return 1;
 	}
 	ret = nvme_create_ctrl(ctx, NVME_DISC_SUBSYS_NAME, "loop",
 			       NULL, NULL, NULL, NULL, &c);
 	if (ret) {
 		fprintf(stderr, "Failed to allocate memory\n");
-		return ENOMEM;
+		return 1;
 	}
 	ret = nvmf_add_ctrl(h, c, &cfg);
 	if (ret) {
 		fprintf(stderr, "no controller found\n");
-		return ret;
+		return 1;
 	}
 
 	ret = nvmf_get_discovery_log(c, &log, 4);
