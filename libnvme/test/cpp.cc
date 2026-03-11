@@ -25,9 +25,11 @@ int main()
 		return 1;
 
 	err = nvme_scan_topology(ctx, NULL, NULL);
-	if (err && !(err == -ENOENT || err == -EACCES))
-		goto out;
-	err = 0;
+	if (err && !(err == -ENOENT || err == -EACCES)) {
+		fprintf(stderr, "nvme_scan_topology failed %d\n", err);
+		nvme_free_global_ctx(ctx);
+		return 1;
+	}
 
 	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
@@ -68,8 +70,7 @@ int main()
 	}
 	std::cout << "\n";
 
-out:
 	nvme_free_global_ctx(ctx);
 
-	return err != 0 ? 1 : 0;
+	return 0;
 }

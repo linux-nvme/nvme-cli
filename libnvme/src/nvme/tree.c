@@ -345,32 +345,6 @@ int nvme_read_config(struct nvme_global_ctx *ctx, const char *config_file)
 	return err;
 }
 
-int nvme_scan(const char *config_file, struct nvme_global_ctx **ctxp)
-{
-	struct nvme_global_ctx *ctx =
-		nvme_create_global_ctx(NULL, DEFAULT_LOGLEVEL);
-	int ret;
-
-	if (!ctx)
-		return -ENOMEM;
-
-	ret = nvme_scan_topology(ctx, NULL, NULL);
-	if (ret && ret != -ENOENT)
-		goto err;
-	if (config_file) {
-		ret = nvme_read_config(ctx, config_file);
-		if (ret)
-			goto err;
-	}
-
-	*ctxp = ctx;
-	return 0;
-
-err:
-	nvme_free_global_ctx(ctx);
-	return ret;
-}
-
 int nvme_dump_config(struct nvme_global_ctx *ctx, int fd)
 {
 	return json_update_config(ctx, fd);

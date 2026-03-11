@@ -22,9 +22,17 @@ int main()
 	nvme_ctrl_t c, _c;
 	nvme_path_t p, _p;
 	nvme_ns_t n, _n;
+	int err;
 
-	if (nvme_scan(NULL, &ctx))
-		return -1;
+	ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	if (!ctx)
+		return 1;
+
+	err = nvme_scan_topology(ctx, NULL, NULL);
+	if (err) {
+		nvme_free_global_ctx(ctx);
+		return 1;
+	}
 
 	printf(".\n");
 	nvme_for_each_host(ctx, h) {

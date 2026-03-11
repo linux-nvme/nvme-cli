@@ -487,8 +487,14 @@ struct nvme_ns {
 %extend nvme_global_ctx {
 	nvme_global_ctx(const char *config_file = NULL) {
 		struct nvme_global_ctx *ctx;
-		if (nvme_scan(config_file, &ctx))
+
+		ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+		if (!ctx)
 			return NULL;
+
+		nvme_scan_topology(ctx, NULL, NULL);
+		nvme_read_config(ctx, config_file);
+
 		return ctx;
 	}
 	~nvme_global_ctx() {

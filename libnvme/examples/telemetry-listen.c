@@ -135,8 +135,14 @@ int main()
 	nvme_ctrl_t c;
 	nvme_host_t h;
 
-	if (nvme_scan(NULL, &ctx))
+	ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	if (!ctx)
+		return 1;
+
+	if (nvme_scan_topology(ctx, NULL, NULL)) {
+		nvme_free_global_ctx(ctx);
 		return EXIT_FAILURE;
+	}
 
 	nvme_for_each_host(ctx, h)
 		nvme_for_each_subsystem(h, s)
