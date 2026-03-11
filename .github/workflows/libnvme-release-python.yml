@@ -1,4 +1,11 @@
 ---
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+
 name: Release Python
 
 on:
@@ -66,7 +73,7 @@ jobs:
         id: version
         run: |
           TAG=$(git describe --tags --abbrev=0)
-          REV=$(git rev-list "$TAG"..HEAD --count)
+          REV=$(git rev-list HEAD --count)
           BASE_VERSION="${TAG#v}"
           VERSION="${BASE_VERSION}.dev${REV}"
           echo "dev_version=$VERSION" >> $GITHUB_OUTPUT
@@ -107,7 +114,7 @@ jobs:
     environment: pypi
     permissions:
       id-token: write
-    if: github.repository == 'linux-nvme/nvme-cli'
+    if: github.repository == 'linux-nvme/nvme-cli' && github.ref_type == 'branch'
     steps:
       - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
@@ -118,6 +125,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
         with:
           repository-url: https://test.pypi.org/legacy/
+          #skip_existing: true
 
   upload_pypi:
     needs: [build_sdist]

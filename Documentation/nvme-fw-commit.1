@@ -2,12 +2,12 @@
 .\"     Title: nvme-fw-commit
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/04/2025
+.\"      Date: 03/10/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FW\-COMMIT" "1" "11/04/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-FW\-COMMIT" "1" "03/10/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,7 +36,7 @@ nvme-fw-commit \- Used to verify and commit a firmware image\&.
                         [\-\-action=<action> | \-a <action>]
                         [\-\-bpid=<boot\-partid> | \-b <boot\-partid>]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
-                        [\-\-timeout=<timeout> | \-t <timeout>]
+                        [\-\-timeout=<timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -77,32 +77,38 @@ T}:T{
 Definition
 T}
 T{
-0
+0 |
+\fIreplace\fR
 T}:T{
 Downloaded image replaces the image indicated by the Firmware Slot field\&. This image is not activated\&.
 T}
 T{
-1
+1 |
+\fIreplace\-and\-activate\fR
 T}:T{
 Downloaded image replaces the image indicated by the Firmware Slot field\&. This image is activated at the next reset\&.
 T}
 T{
-2
+2 |
+\fIset\-active\fR
 T}:T{
 The image indicated by the Firmware Slot field is activated at the next reset\&.
 T}
 T{
-3
+3 |
+\fIreplace\-and\-activate\-immediate\fR
 T}:T{
 The image specified by the Firmware Slot field is requested to be activated immediately without reset\&.
 T}
 T{
-6
+6 |
+\fIreplace\-boot\-partition\fR
 T}:T{
 Downloaded image replaces the Boot Partition specified by the Boot Partition ID field\&.
 T}
 T{
-7
+7 |
+\fIactivate\-boot\-partition\fR
 T}:T{
 Mark the Boot Partition specified in the BPID field as active and update BPINFO\&.ABPID\&.
 T}
@@ -134,7 +140,7 @@ or
 Increase the information detail in the output\&.
 .RE
 .PP
-\-t <timeout>, \-\-timeout=<timeout>
+\-\-timeout=<timeout>
 .RS 4
 Override default timeout value\&. In milliseconds\&.
 .RE

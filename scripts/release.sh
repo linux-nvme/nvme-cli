@@ -1,4 +1,10 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
 
 usage() {
     echo "Usage: release.sh [-d] VERSION"
@@ -151,10 +157,6 @@ done
 
 # update meson.build
 sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'$ver\',/" meson.build
-if [[ -n "$libnvme_VERSION" ]] && [[ -f subprojects/libnvme.wrap ]]; then
-    sed -i -e "s/\(dependency('libnvme', version: '>=\)\([0-9]\+\(\.[0-9]\+\)*\)/\1$libnvme_ver/" meson.build
-fi
-
 git add meson.build
 git commit -s -m "Release $VERSION"
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 Name: 		nvme
 Version: 	@VERSION@
 Release: 	1%{?dist}

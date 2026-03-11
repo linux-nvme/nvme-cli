@@ -1,3 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+
 [wrap-file]
 directory = json-c-0.18
 source_url = https://s3.amazonaws.com/json-c_releases/releases/json-c-0.18.tar.gz

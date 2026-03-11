@@ -55,7 +55,8 @@ static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl
 	nvme_fstat(hdl->fd, &hdl->stat);
 
 	/* Windows doesn't distinguish 32/64-bit ioctl, assume 64-bit capable */
-	hdl->ioctl64 = true;
+	hdl->ioctl_admin64 = true;
+	hdl->ioctl_io64 = true;
 
 	return 0;
 }
@@ -83,7 +84,7 @@ int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 		hdl->fd = TEST_FD;
 
 		if (!strcmp(name, "NVME_TEST_FD64"))
-			hdl->ioctl64 = true;
+			hdl->ioctl_admin64 = true;
 
 		*hdlp = hdl;
 		return 0;

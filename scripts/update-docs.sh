@@ -7,11 +7,12 @@ BUILDDIR="$(mktemp -d)"
 trap 'rm -rf -- $BUILDDIR' EXIT
 
 meson setup                                 \
-	-Dnvme=disabled                         \
-	-Dlibnvme=disabled                      \
+	-Dnvme=enabled                          \
+	-Dlibnvme=enabled                       \
 	-Ddocs=all                              \
 	-Ddocs-build=true                       \
 	"${BUILDDIR}"
+# TODO add 'docs' target
 meson compile -C "${BUILDDIR}"
 
 # libnvme

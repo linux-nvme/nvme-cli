@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/04/2025
+.\"      Date: 03/10/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "11/04/2025" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "03/10/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -592,6 +592,16 @@ Retrieves NAND statistics
 \fBnvme-micron-temperature-stats\fR(1)
 .RS 4
 Retrieves temperature information of given micron device
+.RE
+.PP
+\fBnvme-micron-smart-log\fR(1)
+.RS 4
+Retrieve SMART/Health log with Micron vendor\-specific fields
+.RE
+.PP
+\fBnvme-micron-id-ctrl\fR(1)
+.RS 4
+Send NVMe Identify Controller with Micron vendor\-specific fields
 .RE
 .PP
 \fBnvme-ocp-internal-log\fR(1)

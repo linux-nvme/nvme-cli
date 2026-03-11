@@ -2,12 +2,12 @@
 .\"     Title: nvme-capacity-mgmt
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/04/2025
+.\"      Date: 03/10/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CAPACITY\-MGMT" "1" "11/04/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-CAPACITY\-MGMT" "1" "03/10/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,7 +37,7 @@ nvme-capacity-mgmt \- Send capacity management command to configure/create/delet
                         [\-\-cap\-lower=<cap\-lower> | \-l <cap\-lower>]
                         [\-\-cap\-upper=<cap\-upper> | \-u <cap\-upper>]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
-                        [\-\-timeout=<timeout> | \-t <timeout>]
+                        [\-\-timeout=<timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -80,7 +80,7 @@ or
 Increase the information detail in the output\&.
 .RE
 .PP
-\-t <timeout>, \-\-timeout=<timeout>
+\-\-timeout=<timeout>
 .RS 4
 Override default timeout value\&. In milliseconds\&.
 .RE

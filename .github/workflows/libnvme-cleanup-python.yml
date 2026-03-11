@@ -1,4 +1,11 @@
 ---
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+
 name: Cleanup Python dev releases
 
 on:
@@ -19,7 +26,7 @@ jobs:
     environment: pypi
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install pypi-cleanup
         run: pip install pypi-cleanup

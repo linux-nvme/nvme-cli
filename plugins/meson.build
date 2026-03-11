@@ -1,54 +1,69 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-plugin_sources = [
-    'plugins/amzn/amzn-nvme.c',
-    'plugins/dapustor/dapustor-nvme.c',
-    'plugins/dell/dell-nvme.c',
-    'plugins/dera/dera-nvme.c',
-    'plugins/fdp/fdp.c',
-    'plugins/innogrit/innogrit-nvme.c',
-    'plugins/inspur/inspur-nvme.c',
-    'plugins/intel/intel-nvme.c',
-    'plugins/mangoboost/mangoboost-nvme.c',
-    'plugins/memblaze/memblaze-nvme.c',
-    'plugins/micron/micron-nvme.c',
-    'plugins/nbft/nbft-plugin.c',
-    'plugins/nvidia/nvidia-nvme.c',
-    'plugins/seagate/seagate-nvme.c',
-    'plugins/shannon/shannon-nvme.c',
-    'plugins/ssstc/ssstc-nvme.c',
-    'plugins/toshiba/toshiba-nvme.c',
-    'plugins/transcend/transcend-nvme.c',
-    'plugins/virtium/virtium-nvme.c',
-]
+# Define all available plugins and their source files
+all_plugins = {
+  'amzn': ['plugins/amzn/amzn-nvme.c'],
+  'dapustor': ['plugins/dapustor/dapustor-nvme.c'],
+  'dell': ['plugins/dell/dell-nvme.c'],
+  'dera': ['plugins/dera/dera-nvme.c'],
+  'fdp': ['plugins/fdp/fdp.c'],
+  'innogrit': ['plugins/innogrit/innogrit-nvme.c'],
+  'inspur': ['plugins/inspur/inspur-nvme.c'],
+  'intel': ['plugins/intel/intel-nvme.c'],
+  'mangoboost': ['plugins/mangoboost/mangoboost-nvme.c'],
+  'memblaze': ['plugins/memblaze/memblaze-nvme.c'],
+  'micron': ['plugins/micron/micron-nvme.c'],
+  'nbft': ['plugins/nbft/nbft-plugin.c'],
+  'nvidia': ['plugins/nvidia/nvidia-nvme.c'],
+  'seagate': ['plugins/seagate/seagate-nvme.c'],
+  'shannon': ['plugins/shannon/shannon-nvme.c'],
+  'ssstc': ['plugins/ssstc/ssstc-nvme.c'],
+  'toshiba': ['plugins/toshiba/toshiba-nvme.c'],
+  'transcend': ['plugins/transcend/transcend-nvme.c'],
+  'virtium': ['plugins/virtium/virtium-nvme.c'],
+}
 
 if not is_windows
-    plugin_sources += [
-        'plugins/huawei/huawei-nvme.c',
-        'plugins/ibm/ibm-nvme.c',
-        'plugins/netapp/netapp-nvme.c',
-        'plugins/sandisk/sandisk-nvme.c',
-        'plugins/sandisk/sandisk-utils.c',
-        'plugins/scaleflux/sfx-nvme.c',
-        'plugins/wdc/wdc-nvme.c',
-        'plugins/wdc/wdc-utils.c',
-        'plugins/ymtc/ymtc-nvme.c',
-        'plugins/zns/zns.c',
-    ]
+    all_plugins += {
+      'huawei': ['plugins/huawei/huawei-nvme.c'],
+      'ibm': ['plugins/ibm/ibm-nvme.c'],
+      'netapp': ['plugins/netapp/netapp-nvme.c'],
+      'sandisk': ['plugins/sandisk/sandisk-nvme.c', 'plugins/sandisk/sandisk-utils.c'],
+      'scaleflux': ['plugins/scaleflux/sfx-nvme.c'],
+      'wdc': ['plugins/wdc/wdc-nvme.c', 'plugins/wdc/wdc-utils.c'],
+      'ymtc': ['plugins/ymtc/ymtc-nvme.c'],
+      'zns': ['plugins/zns/zns.c'],
+    }
 endif
 
-subdir('feat')
+# Get the list of plugins to build
+selected_plugins = get_option('plugins')
 
-if not is_windows
-    subdir('lm')
+# Build the plugin_sources list from simple plugins
+plugin_sources = []
+foreach plugin_name : selected_plugins
+  plugin_name_stripped = plugin_name.strip()
+  if plugin_name_stripped in all_plugins
+    plugin_sources += all_plugins[plugin_name_stripped]
+  endif
+endforeach
+
+if 'feat' in selected_plugins
+  subdir('feat')
 endif
 
-subdir('ocp')
-
-if conf.get('HAVE_SED_OPAL') != 0
-    subdir('sed')
+if 'lm' in selected_plugins and not is_windows
+  subdir('lm')
 endif
 
-if json_c_dep.found()
-    subdir('solidigm')
+if 'ocp' in selected_plugins
+  subdir('ocp')
+endif
+
+if 'sed' in selected_plugins and conf.get('HAVE_SED_OPAL') != 0
+  subdir('sed')
+endif
+
+if 'solidigm' in selected_plugins and json_c_dep.found()
+  subdir('solidigm')
 endif

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 Kelly Kaoudis, kelly.n.kaoudis at intel.com, June 2015
 
 Setting Up NVMe Tab Autocompletion for bash or zsh

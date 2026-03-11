@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 11/04/2025
+.\"      Date: 03/10/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "11/04/2025" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "03/10/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,7 +34,7 @@ nvme-show-regs \- Reads and shows the defined NVMe controller registers for NVMe
 .nf
 \fInvme show\-regs\fR <device> [\-\-human\-readable | \-H]
                         [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
-                        [\-\-timeout=<timeout> | \-t <timeout>]
+                        [\-\-timeout=<timeout>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -62,7 +62,7 @@ or
 Increase the information detail in the output\&.
 .RE
 .PP
-\-t <timeout>, \-\-timeout=<timeout>
+\-\-timeout=<timeout>
 .RS 4
 Override default timeout value\&. In milliseconds\&.
 .RE

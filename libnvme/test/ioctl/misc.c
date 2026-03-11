@@ -988,7 +988,7 @@ static void test_copy(void)
 
 	_cleanup_free_ struct nvme_copy_range *copy = NULL;
 
-	copy = malloc(copy_size);
+	copy = calloc(1, copy_size);
 	check(copy, "copy: ENOMEM");
 
 	struct mock_cmd mock_io_cmd = {

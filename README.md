@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: GPL-2.0-only -->
 # nvme-cli
 ![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)
 ![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)
@@ -113,7 +114,26 @@ If not sure how to use, find the top-level documentation with:
 Or find a short summary with:
 
 	$ nvme help
-	
+
+### Building with specific plugins
+
+By default, all vendor plugins are built. To build only specific plugins, use the `plugins` option:
+
+	$ meson setup .build -Dplugins=intel,wdc,ocp
+	$ meson compile -C .build
+
+Or with the Makefile wrapper:
+
+	$ make PLUGINS="intel,wdc,ocp"
+
+When `PLUGINS` is not used, the value defaults to `all`, which selects all plugins:
+
+	$ make PLUGINS="all"
+
+To build without any vendor plugins:
+
+	$ make PLUGINS=""
+
 ## Distro Support
 
 Many popular distributions (Alpine, Arch, Debian, Fedora, FreeBSD, Gentoo,

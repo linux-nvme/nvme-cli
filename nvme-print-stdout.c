@@ -6287,9 +6287,9 @@ static void stdout_perror(const char *msg, va_list ap)
 	_cleanup_free_ char *error = NULL;
 
 	if (vasprintf(&error, msg, ap) < 0)
-		error = alloc_error;
+		error = NULL;
 
-	perror(error);
+	perror(error ? error : alloc_error);
 }
 
 static void stdout_key_value(const char *key, const char *val, va_list ap)
@@ -6299,7 +6299,7 @@ static void stdout_key_value(const char *key, const char *val, va_list ap)
 	if (vasprintf(&value, val, ap) < 0)
 		value = NULL;
 
-	printf("%s: %s\n", key, value ? value : "Could not allocate string");
+	printf("%s: %s\n", key, value ? value : alloc_error);
 }
 
 static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)

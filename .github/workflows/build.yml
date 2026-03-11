@@ -1,4 +1,11 @@
 ---
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
+
 name: Build
 
 on:
@@ -14,16 +21,46 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        distro: [debian, fedora, tumbleweed]
         compiler: [gcc, clang]
         buildtype: [debug, release]
     container:
-      image: ghcr.io/linux-nvme/debian:latest
+      image: ghcr.io/linux-nvme/${{ matrix.distro }}:latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
         run: |
+          if [ "${{ matrix.compiler }}" = "gcc" ]; then
+            if [ "${{ matrix.buildtype }}" = "release" ]; then
+              if [ "${{ matrix.distro }}" = "tumbleweed" ]; then
+                export CFLAGS="-O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 \
+                  -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables \
+                  -fstack-clash-protection -Werror=return-type -flto=auto -g"
+                export CXXFLAGS="$CFLAGS"
+                export LDFLAGS="-flto=auto"
+              # TODO: The RH build depends on environment varibles/settings which prevent
+              # the compiler from working.
+              #
+              # elif [ "${{ matrix.distro }}" = "fedora" ]; then
+              #   export CFLAGS="-O2 -flto=auto -ffat-lto-objects -fexceptions -g \
+              #     -grecord-gcc-switches -pipe -Wall -Werror=format-security \
+              #     -Wp,-U_FORTIFY_SOURCE,-D_FORTIFY_SOURCE=3 -Wp,-D_GLIBCXX_ASSERTIONS \
+              #     -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -fstack-protector-strong \
+              #     -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1 -m32 -march=i686 -mtune=generic \
+              #     -msse2 -mfpmath=sse -mstackrealign -fasynchronous-unwind-tables \
+              #     -fstack-clash-protection"
+              #   export CXXFLAGS="$CFLAGS"
+              #   export LDFLAGS='-Wl,-z,relro -Wl,--as-needed -Wl,-z,pack-relative-relocs \
+              #     -Wl,-z,now -specs=/usr/lib/rpm/redhat/redhat-hardened-ld \
+              #     -specs=/usr/lib/rpm/redhat/redhat-hardened-ld-errors \
+              #     -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1 \
+              #     -Wl,--build-id=sha1 -specs=/usr/lib/rpm/redhat/redhat-package-notes'
+              fi
+            fi
+          fi
+
           scripts/build.sh -b ${{ matrix.buildtype }} -c ${{ matrix.compiler }} -x
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         name: upload logs
@@ -37,10 +74,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        compiler: [gcc, clang]
-        buildtype: [debug, release]
+        distro: [debian]
+        compiler: [gcc]
+        buildtype: [release]
     container:
-      image: ghcr.io/linux-nvme/debian:latest
+      image: ghcr.io/linux-nvme/${{ matrix.distro }}:latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Mark repo as safe for git
@@ -67,9 +105,9 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: enable foreign arch
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -142,7 +180,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -155,7 +193,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/alpine:latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
