@@ -1843,7 +1843,7 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 static int nvme_ctrl_scan_paths(struct nvme_global_ctx *ctx, struct nvme_ctrl *c)
 {
 	_cleanup_dirents_ struct dirents paths = {};
-	int i;
+	int err, i;
 
 	if (ctx->create_only) {
 		nvme_msg(ctx, LOG_DEBUG,
@@ -1854,8 +1854,11 @@ static int nvme_ctrl_scan_paths(struct nvme_global_ctx *ctx, struct nvme_ctrl *c
 	if (paths.num < 0)
 		return paths.num;
 
-	for (i = 0; i < paths.num; i++)
-		nvme_ctrl_scan_path(ctx, c, paths.ents[i]->d_name);
+	for (i = 0; i < paths.num; i++) {
+		err = nvme_ctrl_scan_path(ctx, c, paths.ents[i]->d_name);
+		if (err)
+			return err;
+	}
 
 	return 0;
 }
@@ -1863,7 +1866,7 @@ static int nvme_ctrl_scan_paths(struct nvme_global_ctx *ctx, struct nvme_ctrl *c
 static int nvme_ctrl_scan_namespaces(struct nvme_global_ctx *ctx, struct nvme_ctrl *c)
 {
 	_cleanup_dirents_ struct dirents namespaces = {};
-	int i;
+	int err, i;
 
 	if (ctx->create_only) {
 		nvme_msg(ctx, LOG_DEBUG, "skipping namespace scan for ctrl %s\n",
@@ -1871,8 +1874,12 @@ static int nvme_ctrl_scan_namespaces(struct nvme_global_ctx *ctx, struct nvme_ct
 		return 0;
 	}
 	namespaces.num = nvme_scan_ctrl_namespaces(c, &namespaces.ents);
-	for (i = 0; i < namespaces.num; i++)
-		nvme_ctrl_scan_namespace(ctx, c, namespaces.ents[i]->d_name);
+	for (i = 0; i < namespaces.num; i++) {
+		err = nvme_ctrl_scan_namespace(ctx, c,
+			namespaces.ents[i]->d_name);
+		if (err)
+			return err;
+	}
 
 	return 0;
 }
@@ -2267,8 +2274,17 @@ int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name,
 	if (ret)
 		return ret;
 
-	nvme_ctrl_scan_paths(ctx, c);
-	nvme_ctrl_scan_namespaces(ctx, c);
+	ret = nvme_ctrl_scan_paths(ctx, c);
+	if (ret) {
+		nvme_free_ctrl(c);
+		return ret;
+	}
+
+	ret = nvme_ctrl_scan_namespaces(ctx, c);
+	if (ret) {
+		nvme_free_ctrl(c);
+		return ret;
+	}
 
 	*cp = c;
 	return 0;
