@@ -25,6 +25,7 @@ extern "C" {
 #include <nvme/tree.h>
 #include <nvme/types.h>
 #include <nvme/util.h>
+#include <nvme/accessors.h>
 
 #ifdef __cplusplus
 }

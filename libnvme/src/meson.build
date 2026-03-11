@@ -69,6 +69,7 @@ pkg.generate(libnvme,
 libnvme_dep = declare_dependency(
     dependencies: [
         json_c_dep.partial_dependency(compile_args: true, includes: true),
+        accessors_dep,
     ],
     link_with: libnvme,
     include_directories: '.',
@@ -86,6 +87,9 @@ libnvme_test = library(
 libnvme_test_dep = declare_dependency(
     link_with: libnvme_test,
     include_directories: '.',
+    dependencies: [
+        accessors_dep,
+    ],
 )
 
 mode = 'rw-r--r--'

@@ -41,7 +41,8 @@ accessors_ch_custom_tgt = custom_target(
         '--h-out', '@OUTPUT0@',
         '--c-out', '@OUTPUT1@',
         '--ld-out', '@OUTPUT2@',
-        '--incl', join_paths(meson.current_source_dir(), 'structs-to-include.txt'),
+        '--incl', join_paths(meson.current_source_dir(), 'generate-accessors-include.list'),
+        '--excl', join_paths(meson.current_source_dir(), 'generate-accessors-exclude.list'),
         '@INPUT@',
     ],
     build_by_default: true,
@@ -64,6 +65,9 @@ accessors_dep = declare_dependency(
         tgt_accessors_h,
     ],
     include_directories: '.',
+    dependencies: [
+        ccan_dep,
+    ],
 )
 
 if meson.version().version_compare('>=1.4.0')
