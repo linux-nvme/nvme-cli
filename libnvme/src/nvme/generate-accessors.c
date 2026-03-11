@@ -58,6 +58,22 @@
 #define SPACES        " \t\n\r"
 #define streq(a, b)   (strcmp((a), (b)) == 0)
 
+/**
+ * Function naming convention:
+ *  This controls whether to generate the functions as:
+ *    nvme_foo_get() / nvme_foo_set()
+ *  Or:
+ *    nvme_get_foo() / nvme_set_foo()
+ */
+#define SET_GET_AT_THE_END
+#ifdef SET_GET_AT_THE_END
+#   define SET_FMT "%s%s_%s_set"
+#   define GET_FMT "%s%s_%s_get"
+#else
+#   define SET_FMT "%s%s_set_%s"
+#   define GET_FMT "%s%s_get_%s"
+#endif
+
 static const char *banner =
 	"// SPDX-License-Identifier: LGPL-2.1-or-later\n"
 	"/**\n"
@@ -207,8 +223,8 @@ static char *to_uppercase(char *s)
  * Any character that violates these rules is replaced with an underscore ('_').
  * The string is always modified in place; no new memory is allocated.
  *
- * @param s Pointer to the NUL-terminated string to sanitize.
- *           If @p s is NULL or points to an empty string, the function does nothing.
+ * @param s Pointer to the NUL-terminated string to sanitize. If @s is NULL or
+ *          points to an empty string, the function does nothing.
  *
  * @note This function does not check for C keywords or identifier length limits.
  *
@@ -808,7 +824,7 @@ typedef struct Conf {
 	bool             verbose;
 	const char       *c_fname;	/* Generated output *.c file name */
 	const char       *h_fname;	/* Generated output *.h file name */
-	const char       *l_fname;	/* Generated ou5tput *.ld file name */
+	const char       *l_fname;	/* Generated output *.ld file name */
 	const char       *prefix;	/* Prefix added to each functions */
 	StringList_t     hdr_files;	/* Input header file list */
 	StringList_t     incl_list;	/* Inclusion list (read from --incl) */
@@ -1269,18 +1285,18 @@ static void generate_hdr(FILE  *generated_hdr, StructInfo_t  *si, Conf_t *conf)
 		if (!members->is_const) { /* No setter on const members */
 			if (members->is_char_array || streq(members->type, "const char *"))
 				fprintf(generated_hdr,
-					"void %s%s_%s_set(struct %s *p, const char *%s);\n",
+					"void " SET_FMT "(struct %s *p, const char *%s);\n",
 					conf->prefix, si->name,
 					members->name, si->name, members->name);
 			else
 				fprintf(generated_hdr,
-					"void %s%s_%s_set(struct %s *p, %s %s);\n",
+					"void " SET_FMT "(struct %s *p, %s %s);\n",
 					conf->prefix, si->name,
 					members->name, si->name, members->type, members->name);
 		}
 
 		/* Getter method */
-		fprintf(generated_hdr, "%s %s%s_%s_get(const struct %s *p);\n\n",
+		fprintf(generated_hdr, "%s " GET_FMT "(const struct %s *p);\n\n",
 			members->type, conf->prefix, si->name, members->name, si->name);
 	}
 }
@@ -1309,7 +1325,7 @@ static void generate_src(FILE  *generated_src, StructInfo_t  *si, Conf_t  *conf)
 			if (!member->is_char_array && streq(member->type, "const char *")) {
 				/* dynamic string */
 				fprintf(generated_src,
-					"void %s%s_%s_set(struct %s *p, const char *%s) {\n"
+					"void " SET_FMT "(struct %s *p, const char *%s) {\n"
 					"    free(p->%s);\n"
 					"    p->%s = %s ? strdup(%s) : NULL;\n"
 					"}\n\n",
@@ -1323,7 +1339,7 @@ static void generate_src(FILE  *generated_src, StructInfo_t  *si, Conf_t  *conf)
 					unsigned long sz = strtoul(member->array_size, NULL, 10);
 
 					fprintf(generated_src,
-						"void %s%s_%s_set(struct %s *p, const char *%s) {\n"
+						"void " SET_FMT "(struct %s *p, const char *%s) {\n"
 						"    strncpy(p->%s, %s, %lu);\n"
 						"    p->%s[%lu] = '\\0';\n"
 						"}\n\n",
@@ -1333,7 +1349,7 @@ static void generate_src(FILE  *generated_src, StructInfo_t  *si, Conf_t  *conf)
 						member->name, sz - 1);
 				} else {
 					fprintf(generated_src,
-						"void %s%s_%s_set(struct %s *p, const char *%s) {\n"
+						"void " SET_FMT "(struct %s *p, const char *%s) {\n"
 						"    strncpy(p->%s, %s, %s);\n"
 						"    p->%s[%s - 1] = '\\0';\n"
 						"}\n\n",
@@ -1344,7 +1360,7 @@ static void generate_src(FILE  *generated_src, StructInfo_t  *si, Conf_t  *conf)
 				}
 			} else { /* numeric or struct */
 				fprintf(generated_src,
-					"void %s%s_%s_set(struct %s *p, %s %s) {\n"
+					"void " SET_FMT "(struct %s *p, %s %s) {\n"
 					"    p->%s = %s;\n"
 					"}\n\n",
 					conf->prefix, si->name, member->name, si->name,
@@ -1355,7 +1371,7 @@ static void generate_src(FILE  *generated_src, StructInfo_t  *si, Conf_t  *conf)
 		}
 
 		/* Getter method */
-		fprintf(generated_src, "%s %s%s_%s_get(const struct %s *p) {\n"
+		fprintf(generated_src, "%s " GET_FMT "(const struct %s *p) {\n"
 			"    return p->%s;\n"
 			"}\n\n",
 			member->type, conf->prefix, si->name, member->name, si->name,
@@ -1368,7 +1384,7 @@ static void generate_src(FILE  *generated_src, StructInfo_t  *si, Conf_t  *conf)
  * one struct.
  *
  * Writes linker entries for each member in @si to the provided output
- * FILE (@generated_ld). Handles special
+ * FILE (@generated_ld).
  *
  * @param generated_ld: FILE* to write implementations to.
  * @param si: Pointer to the struct description.
@@ -1380,8 +1396,8 @@ static void generate_ld(FILE  *generated_ld, StructInfo_t  *si, Conf_t  *conf)
 		Member_t  *member = &si->members[m];
 
 		fprintf(generated_ld,
-				"\t\t%s%s_%s_get;\n"
-				"\t\t%s%s_%s_set;\n",
+				"\t\t" GET_FMT ";\n"
+				"\t\t" SET_FMT ";\n",
 				conf->prefix, si->name, member->name,
 				conf->prefix, si->name, member->name);
 	}
