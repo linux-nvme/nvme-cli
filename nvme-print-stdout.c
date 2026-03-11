@@ -1312,7 +1312,7 @@ static void stdout_registers_version(__u32 vs)
 
 static void stdout_registers_cc_ams(__u8 ams)
 {
-	printf("\tArbitration Mechanism Selected     (AMS): ");
+	printf("\tArbitration Mechanism Selected     (AMS)                   : ");
 	switch (ams) {
 	case NVME_CC_AMS_RR:
 		printf("Round Robin\n");
@@ -1331,7 +1331,7 @@ static void stdout_registers_cc_ams(__u8 ams)
 
 static void stdout_registers_cc_shn(__u8 shn)
 {
-	printf("\tShutdown Notification              (SHN): ");
+	printf("\tShutdown Notification              (SHN)                   : ");
 	switch (shn) {
 	case NVME_CC_SHN_NONE:
 		printf("No notification; no effect\n");
@@ -1350,22 +1350,22 @@ static void stdout_registers_cc_shn(__u8 shn)
 
 static void stdout_registers_cc(__u32 cc)
 {
-	printf("\tController Ready Independent of Media Enable (CRIME): %s\n",
+	printf("\tController Ready Independent of Media Enable (CRIME)       : %s\n",
 		NVME_CC_CRIME(cc) ? "Enabled" : "Disabled");
 
-	printf("\tI/O Completion Queue Entry Size (IOCQES): %u bytes\n",
+	printf("\tI/O Completion Queue Entry Size (IOCQES)                   : %u bytes\n",
 	       POWER_OF_TWO(NVME_CC_IOCQES(cc)));
-	printf("\tI/O Submission Queue Entry Size (IOSQES): %u bytes\n",
+	printf("\tI/O Submission Queue Entry Size (IOSQES)                   : %u bytes\n",
 	       POWER_OF_TWO(NVME_CC_IOSQES(cc)));
 	stdout_registers_cc_shn(NVME_CC_SHN(cc));
 	stdout_registers_cc_ams(NVME_CC_AMS(cc));
-	printf("\tMemory Page Size                   (MPS): %u bytes\n",
+	printf("\tMemory Page Size                   (MPS)                   : %u bytes\n",
 	       POWER_OF_TWO(12 + NVME_CC_MPS(cc)));
-	printf("\tI/O Command Set Selected           (CSS): %s\n",
+	printf("\tI/O Command Set Selected           (CSS)                   : %s\n",
 	       NVME_CC_CSS(cc) == NVME_CC_CSS_NVM ? "NVM Command Set" :
 	       NVME_CC_CSS(cc) == NVME_CC_CSS_CSI ? "All supported I/O Command Sets" :
 	       NVME_CC_CSS(cc) == NVME_CC_CSS_ADMIN ? "Admin Command Set only" : "Reserved");
-	printf("\tEnable                              (EN): %s\n\n", NVME_CC_EN(cc) ? "Yes" : "No");
+	printf("\tEnable                              (EN)                   : %s\n\n", NVME_CC_EN(cc) ? "Yes" : "No");
 }
 
 static void stdout_registers_csts_shst(__u8 shst)
