@@ -324,12 +324,16 @@ static int test_ctrl(nvme_ctrl_t c)
 static int test_namespace(nvme_ns_t n)
 {
 	int ret, nsid = nvme_ns_get_nsid(n);
-	struct nvme_transport_handle *hdl = nvme_ns_get_transport_handle(n);
+	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
 	struct nvme_id_ns ns = { 0 }, allocated = { 0 };
 	struct nvme_ns_id_desc *descs;
 	__u64 result = 0;
 	__u8 flbas;
+
+	ret = nvme_ns_get_transport_handle(n, &hdl);
+	if (ret)
+		return ret;
 
 	ret = nvme_ns_identify(n, &ns);
 	if (ret)
