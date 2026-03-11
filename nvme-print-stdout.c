@@ -5324,19 +5324,19 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		if (buf) {
 			struct nvme_feat_host_behavior *host_behavior =
 				(struct nvme_feat_host_behavior *)buf;
-			printf("\tAdvanced Command Retry Enable (ACRE): %s\n",
+			printf("\tAdvanced Command Retry Enable (ACRE)                    : %s\n",
 			       host_behavior->acre ? "True" : "False");
-			printf("\tExtended Telemetry Data Area 4 Supported (ETDAS): %s\n",
+			printf("\tExtended Telemetry Data Area 4 Supported (ETDAS)        : %s\n",
 			       host_behavior->etdas ? "True" : "False");
-			printf("\tLBA Format Extension Enable (LBAFEE): %s\n",
+			printf("\tLBA Format Extension Enable (LBAFEE)                    : %s\n",
 			       host_behavior->lbafee ? "True" : "False");
-			printf("\tHost Dispersed Namespace Support (HDISNS) : %s\n",
+			printf("\tHost Dispersed Namespace Support (HDISNS)               : %s\n",
 			       host_behavior->hdisns ? "Enabled" : "Disabled");
-			printf("\tCopy Descriptor Format 2h Enabled (CDF2E) : %s\n",
+			printf("\tCopy Descriptor Format 2h Enabled (CDF2E)               : %s\n",
 			       host_behavior->cdfe & (1 << 2) ? "True" : "False");
-			printf("\tCopy Descriptor Format 3h Enabled (CDF3E) : %s\n",
+			printf("\tCopy Descriptor Format 3h Enabled (CDF3E)               : %s\n",
 			       host_behavior->cdfe & (1 << 3) ? "True" : "False");
-			printf("\tCopy Descriptor Format 4h Enabled (CDF4E) : %s\n",
+			printf("\tCopy Descriptor Format 4h Enabled (CDF4E)               : %s\n",
 			       host_behavior->cdfe & (1 << 4) ? "True" : "False");
 		}
 		break;
