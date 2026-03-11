@@ -11,6 +11,7 @@
             "traddr":"192.168.154.148",
             "trsvcid":"4420",
             "dhchap_key":"none",
+            "dhchap_ctrl_key":"none",
             "tls":true,
             "tls_key":"NVMeTLSkey-1:01:Hhc5sFjwSZ6w5hPY19tqprajYtuYci3tN+Z2wGViDk3rpSR+:"
           }

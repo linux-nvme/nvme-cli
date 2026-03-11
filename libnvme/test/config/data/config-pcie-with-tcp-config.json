@@ -10,13 +10,15 @@
             "transport":"tcp",
             "traddr":"192.168.154.144",
             "trsvcid":"4420",
-            "dhchap_key":"none"
+            "dhchap_key":"none",
+            "dhchap_ctrl_key":"none"
           },
           {
             "transport":"tcp",
             "traddr":"192.168.154.144",
             "trsvcid":"4421",
-            "dhchap_key":"none"
+            "dhchap_key":"none",
+            "dhchap_ctrl_key":"none"
           }
         ]
       }
@@ -33,13 +35,15 @@
             "transport":"tcp",
             "traddr":"192.168.154.144",
             "trsvcid":"4420",
-            "dhchap_key":"none"
+            "dhchap_key":"none",
+            "dhchap_ctrl_key":"none"
           },
           {
             "transport":"tcp",
             "traddr":"192.168.154.144",
             "trsvcid":"4421",
-            "dhchap_key":"none"
+            "dhchap_key":"none",
+            "dhchap_ctrl_key":"none"
           }
         ]
       }
