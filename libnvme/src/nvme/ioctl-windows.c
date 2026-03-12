@@ -114,9 +114,17 @@ int nvme_ns_rescan(struct nvme_transport_handle *hdl)
 
 int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
 {
-	(void)hdl;
-	(void)nsid;
-	return -ENOTSUP;
+	/* Get the SCSI LUN, which corresponds to NSID - 1. */
+	SCSI_ADDRESS addr = {0};
+	addr.Length = sizeof(addr);
+
+	DWORD bytesReturned = 0;
+	if (!DeviceIoControl(hdl->fd, IOCTL_SCSI_GET_ADDRESS, NULL, 0,
+				&addr, sizeof(addr), &bytesReturned, NULL))
+		return -EIO;
+
+	*nsid = addr.Lun + 1;
+	return 0;
 }
 
 /*
@@ -703,19 +711,13 @@ static int nvme_submit_admin_identify(struct nvme_transport_handle *hdl,
 	}
 
 	/*
-	 * From Windows STORAGE_PROTOCOL_NVME_DATA_TYPE documentation
-	 * for NVMeDataTypeIdentify:
-	 * "ProtocolDataRequestValue will be NVME_IDENTIFY_CNS_CONTROLLER for
-	 * adapter or NVME_IDENTIFY_CNS_SPECIFIC_NAMESPACE for namespace."
-	 * Other CNS values are not supported.
+	 * Not all Controller or Namespace Structure values are supported
+	 * on Windows, but allow the requested command to be issued and fail
+	 * if not supported.
 	 */
 	cns = NVME_FIELD_DECODE(cmd->cdw10,
 				NVME_IDENTIFY_CDW10_CNS_SHIFT,
 				NVME_IDENTIFY_CDW10_CNS_MASK);
-	if (cns != NVME_IDENTIFY_CNS_CTRL && cns != NVME_IDENTIFY_CNS_NS) {
-		err = -ENOTSUP;
-		goto out;
-	}
 
 	/* Command Set Indicator values other than NVME_CSI_NVM not supported */
 	csi = NVME_FIELD_DECODE(cmd->cdw11,
@@ -740,15 +742,9 @@ static int nvme_submit_admin_identify(struct nvme_transport_handle *hdl,
 	query = (PSTORAGE_PROPERTY_QUERY)buffer;
 	protocol_data = (PSTORAGE_PROTOCOL_SPECIFIC_DATA)query->AdditionalParameters;
 
-	/*
-	 * NOTE: If testing fails with Identify Specific Namespace, try
-	 * StorageDeviceProtocolSpecificProperty for that cns.
-	 */
 	query->PropertyId = StorageAdapterProtocolSpecificProperty;
-
 	protocol_data->ProtocolType = ProtocolTypeNvme;
 	protocol_data->DataType = NVMeDataTypeIdentify;
-
 	protocol_data->ProtocolDataRequestValue = cns;
 	protocol_data->ProtocolDataRequestSubValue = cmd->nsid;
 	protocol_data->ProtocolDataOffset = sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
