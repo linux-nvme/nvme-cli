@@ -6,6 +6,7 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 sources = [
+    'nvme/accessors.c',
     'nvme/base64.c',
     'nvme/cmds.c',
     'nvme/crc32.c',
@@ -29,8 +30,7 @@ else
     sources += 'nvme/no-json.c'
 endif
 
-# Generate accessors (setter/getter functions)
-subdir('nvme')  # declares: accessors_dep, accessors_ld_full_path
+subdir('nvme')  # declares: accessors_ld_full_path
 
 deps = [
     config_dep,
@@ -40,7 +40,6 @@ deps = [
     libdbus_dep,
     liburing_dep,
     openssl_dep,
-    accessors_dep,
 ]
 
 ldfile = 'libnvme.ld'
@@ -98,6 +97,7 @@ install_headers(
 )
 install_headers(
     [
+        'nvme/accessors.h',
         'nvme/cmds.h',
         'nvme/fabrics.h',
         'nvme/filters.h',
