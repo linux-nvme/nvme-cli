@@ -10427,6 +10427,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	return err;
 }
 
+#ifdef CONFIG_FABRICS
 static int discover_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Send Get Log Page request to Discovery Controller.";
@@ -10477,6 +10478,7 @@ static int dim_cmd(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	return fabrics_dim(desc, argc, argv);
 }
+#endif
 
 static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 {

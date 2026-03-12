@@ -101,17 +101,19 @@ uuid = executable(
 
 test('libnvme - uuid', uuid)
 
-uriparser = executable(
-    'test-uriparser',
-    ['uriparser.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-)
+if want_fabrics
+    uriparser = executable(
+        'test-uriparser',
+        ['uriparser.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
 
 test('libnvme - uriparser', uriparser)
+endif
 
 if conf.get('HAVE_NETDB')
     mock_ifaddrs = library(
@@ -162,7 +164,9 @@ psk = executable(
 test('libnvme - psk', psk)
 
 subdir('ioctl')
-subdir('nbft')
+if want_fabrics
+    subdir('nbft')
+endif
 
 if json_c_dep.found()
     subdir('sysfs')

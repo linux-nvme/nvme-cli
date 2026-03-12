@@ -6354,6 +6354,7 @@ static void stdout_key_value(const char *key, const char *val, va_list ap)
 	printf("%s: %s\n", key, value ? value : alloc_error);
 }
 
+#ifdef CONFIG_FABRICS
 static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 {
 	int i;
@@ -6396,6 +6397,9 @@ static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		}
 	}
 }
+#else
+static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec) {}
+#endif
 
 static void stdout_connect_msg(nvme_ctrl_t c)
 {
@@ -6490,6 +6494,7 @@ static void stdout_reachability_associations_log(struct nvme_reachability_associ
 	}
 }
 
+#ifdef CONFIG_FABRICS
 static void stdout_host_discovery_log(struct nvme_host_discover_log *log)
 {
 	__u32 i;
@@ -6600,6 +6605,10 @@ static void stdout_ave_discovery_log(struct nvme_ave_discover_log *log)
 		}
 	}
 }
+#else
+static void stdout_host_discovery_log(struct nvme_host_discover_log *log) {}
+static void stdout_ave_discovery_log(struct nvme_ave_discover_log *log) {}
+#endif
 
 static void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log)
 {

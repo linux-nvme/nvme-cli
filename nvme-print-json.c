@@ -5201,6 +5201,7 @@ static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __
 	json_print(r);
 }
 
+#ifdef CONFIG_FABRICS
 static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 {
 	struct json_object *r = json_create_object();
@@ -5242,6 +5243,9 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 
 	json_print(r);
 }
+#else
+static void json_discovery_log(struct nvmf_discovery_log *log, int numrec) {}
+#endif
 
 static void json_connect_msg(nvme_ctrl_t c)
 {
@@ -5568,6 +5572,7 @@ static void json_reachability_associations_log(struct nvme_reachability_associat
 	json_print(r);
 }
 
+#ifdef CONFIG_FABRICS
 static void json_host_discovery_log(struct nvme_host_discover_log *log)
 {
 	struct json_object *r = json_create_object();
@@ -5695,6 +5700,10 @@ static void json_ave_discovery_log(struct nvme_ave_discover_log *log)
 		obj_add_obj(r, json_str, adlpe_o);
 	}
 }
+#else
+static void json_host_discovery_log(struct nvme_host_discover_log *log) {}
+static void json_ave_discovery_log(struct nvme_ave_discover_log *log) {}
+#endif
 
 static void json_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log)
 {

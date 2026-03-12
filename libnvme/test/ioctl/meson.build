@@ -52,17 +52,19 @@ ana = executable(
 )
 test('libnvme - ana', ana, env: mock_ioctl_env)
 
-discovery = executable(
-    'test-discovery',
-    'discovery.c',
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-    link_with: mock_ioctl,
-)
-test('libnvme - discovery', discovery, env: mock_ioctl_env)
+if want_fabrics
+    discovery = executable(
+        'test-discovery',
+        'discovery.c',
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+        link_with: mock_ioctl,
+    )
+    test('libnvme - discovery', discovery, env: mock_ioctl_env)
+endif
 
 features = executable(
     'test-features',
