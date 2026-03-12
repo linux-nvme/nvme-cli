@@ -9522,7 +9522,7 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 {
 	char *hostnqn;
 
-	hostnqn = nvmf_hostnqn_generate();
+	hostnqn = nvme_hostnqn_generate();
 	if (!hostnqn) {
 		nvme_show_error("\"%s\" not supported. Install lib uuid and rebuild.",
 				acmd->name);
@@ -9537,9 +9537,9 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 {
 	char *hostnqn;
 
-	hostnqn = nvmf_hostnqn_from_file();
+	hostnqn = nvme_hostnqn_from_file();
 	if (!hostnqn)
-		hostnqn =  nvmf_hostnqn_generate();
+		hostnqn =  nvme_hostnqn_generate();
 
 	if (!hostnqn) {
 		nvme_show_error("hostnqn is not available -- use nvme gen-hostnqn");
@@ -9667,7 +9667,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	}
 
 	if (!cfg.nqn) {
-		cfg.nqn = hnqn = nvmf_hostnqn_from_file();
+		cfg.nqn = hnqn = nvme_hostnqn_from_file();
 		if (!cfg.nqn) {
 			nvme_show_error("Could not read host NQN");
 			return -ENOENT;
@@ -9931,7 +9931,7 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 			return -EINVAL;
 		}
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = nvmf_hostnqn_from_file();
+			cfg.hostnqn = hnqn = nvme_hostnqn_from_file();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;
@@ -10093,7 +10093,7 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.subsysnqn) {
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = nvmf_hostnqn_from_file();
+			cfg.hostnqn = hnqn = nvme_hostnqn_from_file();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;

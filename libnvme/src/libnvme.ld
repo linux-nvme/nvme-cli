@@ -77,6 +77,11 @@ LIBNVME_2_0 {
 		nvme_host_is_pdc_enabled;
 		nvme_host_release_fds;
 		nvme_host_set_pdc_enabled;
+		nvme_hostid_from_file;
+		nvme_hostid_generate;
+		nvme_hostnqn_from_file;
+		nvme_hostnqn_generate;
+		nvme_hostnqn_generate_from_hostid;
 		nvme_import_tls_key;
 		nvme_import_tls_key_versioned;
 		nvme_init_copy_range;
@@ -271,11 +276,6 @@ LIBNVME_2_0 {
 		nvmf_get_default_trsvcid;
 		nvmf_get_discovery_log;
 		nvmf_get_discovery_wargs;
-		nvmf_hostid_from_file;
-		nvmf_hostid_generate;
-		nvmf_hostnqn_from_file;
-		nvmf_hostnqn_generate;
-		nvmf_hostnqn_generate_from_hostid;
 		nvmf_is_registration_supported;
 		nvmf_nbft_free;
 		nvmf_nbft_read_files;

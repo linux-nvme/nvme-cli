@@ -144,9 +144,9 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 
 	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */
 	if (!hid)
-		hid = nvmf_hostid_from_file();
+		hid = nvme_hostid_from_file();
 	if (!hnqn)
-		hnqn = nvmf_hostnqn_from_file();
+		hnqn = nvme_hostnqn_from_file();
 
 	/* incomplete configuration, thus derive hostid from hostnqn */
 	if (!hid && hnqn)
@@ -157,7 +157,7 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 	 * fails generate one
 	 */
 	if (!hid) {
-		hid = nvmf_hostid_generate();
+		hid = nvme_hostid_generate();
 		if (!hid)
 			return -ENOMEM;
 
@@ -167,7 +167,7 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 
 	/* incomplete configuration, thus derive hostnqn from hostid */
 	if (!hnqn) {
-		hnqn = nvmf_hostnqn_generate_from_hostid(hid);
+		hnqn = nvme_hostnqn_generate_from_hostid(hid);
 		if (!hnqn)
 			return -ENOMEM;
 	}

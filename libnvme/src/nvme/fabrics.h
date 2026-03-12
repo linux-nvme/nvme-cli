@@ -284,57 +284,6 @@ int nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args,
 			     struct nvmf_discovery_log **log);
 
 /**
- * nvmf_hostnqn_generate() - Generate a machine specific host nqn
- * Returns: An nvm namespace qualified name string based on the machine
- * identifier, or NULL if not successful.
- */
-char *nvmf_hostnqn_generate();
-
-/**
- * nvmf_hostnqn_generate_from_hostid() - Generate a host nqn from host identifier
- * @hostid:		Host identifier
- *
- * If @hostid is NULL, the function generates it based on the machine
- * identifier.
- *
- * Return: On success, an NVMe Qualified Name for host identification. This
- * name is based on the given host identifier. On failure, NULL.
- */
-char *nvmf_hostnqn_generate_from_hostid(char *hostid);
-
-/**
- * nvmf_hostid_generate() - Generate a machine specific host identifier
- *
- * Return: On success, an identifier string based on the machine identifier to
- * be used as NVMe Host Identifier, or NULL on failure.
- */
-char *nvmf_hostid_generate();
-
-/**
- * nvmf_hostnqn_from_file() - Reads the host nvm qualified name from the config
- *			      default location
- *
- * Retrieve the qualified name from the config file located in $SYSCONFIDR/nvme.
- * $SYSCONFDIR is usually /etc.
- *
- * Return: The host nqn, or NULL if unsuccessful. If found, the caller
- * is responsible to free the string.
- */
-char *nvmf_hostnqn_from_file();
-
-/**
- * nvmf_hostid_from_file() - Reads the host identifier from the config default
- *			     location
- *
- * Retrieve the host idenditifer from the config file located in $SYSCONFDIR/nvme/.
- * $SYSCONFDIR is usually /etc.
- *
- * Return: The host identifier, or NULL if unsuccessful. If found, the caller
- *	   is responsible to free the string.
- */
-char *nvmf_hostid_from_file();
-
-/**
  * nvmf_is_registration_supported - check whether registration can be performed.
  * @c:	Controller instance
  *
