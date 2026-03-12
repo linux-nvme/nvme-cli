@@ -108,41 +108,6 @@ if [ "$build_doc" = true ]; then
     git commit -s -m "doc: Regenerate all docs for $VERSION"
 fi
 
-declare -A ldscripts
-ldscripts=(
-    [libnvme/src/libnvme.ld]=LIBNVME
-)
-
-lib_ver="${ver//./_}"
-
-for ld_file in "${!ldscripts[@]}"
-do
-    lib_name=${ldscripts[$ld_file]}
-
-    if [ ! -f "${ld_file}" ]; then
-       continue
-    fi
-
-    lib_unreleased="${lib_name}_UNRELEASED"
-
-    # Check if UNRELEASED has symbols
-    if ! awk -v lib_unreleased="$lib_unreleased" '
-        $0 ~ "^"lib_unreleased { in_section = 1; next }
-        in_section && $0 ~ /\}/ { exit }
-        in_section && $0 !~ /^[[:space:]]*($|\/|\/\*|\*|#)/ { found = 1; exit }
-        END { exit !found }
-    ' "${ld_file}"; then
-        continue
-    fi
-
-    sed -i \
-        -e "s/^${lib_unreleased}\s*{/&\n};\n\n${lib_name}_${lib_ver} {/" \
-        "$ld_file"
-
-    git add "${ld_file}"
-    echo "${ld_file} updated."
-done
-
 # update meson.build
 sed -i -e "0,/[ \t]version: /s/\([ \t]version: \).*/\1\'$ver\',/" meson.build
 git add meson.build
