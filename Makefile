@@ -45,6 +45,10 @@ install: ${NAME}
 uninstall:
 	cd ${BUILD-DIR} && meson --internal uninstall
 
+.PHONY: update-accessors
+update-accessors: ${BUILD-DIR}
+	meson compile -C ${BUILD-DIR} update-accessors
+
 .PHONY: dist
 dist: ${NAME}
 	meson dist -C ${BUILD-DIR} --formats gztar

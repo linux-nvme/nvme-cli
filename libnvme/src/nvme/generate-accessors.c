@@ -57,10 +57,26 @@
 #define SPACES        " \t\n\r"
 #define streq(a, b)   (strcmp((a), (b)) == 0)
 
+/**
+ * Function naming convention:
+ *  This controls whether to generate the functions as:
+ *    nvme_foo_get() / nvme_foo_set()
+ *  Or:
+ *    nvme_get_foo() / nvme_set_foo()
+ */
+#define SET_FMT "%s_set_%s"    /* alternate name: "%s_%s_set" */
+#define GET_FMT "%s_get_%s"    /* alternate name: "%s_%s_get" */
+
+/* checkpatch requires C99 // SPDX in *.c and block-style SPDX in *.h */
+static const char *spdx_c = "// SPDX-License-Identifier: LGPL-2.1-or-later";
+static const char *spdx_h = "/* SPDX-License-Identifier: LGPL-2.1-or-later */";
+
 static const char *banner =
-	"// SPDX-License-Identifier: LGPL-2.1-or-later\n"
 	"/**\n"
 	" * This file is part of libnvme.\n"
+	" *\n"
+	" * Copyright (c) 2025, Dell Technologies Inc. or its subsidiaries.\n"
+	" * Authors: Martin Belanger <Martin.Belanger@dell.com>\n"
 	" *\n"
 	" *   ____                           _           _    ____          _\n"
 	" *  / ___| ___ _ __   ___ _ __ __ _| |_ ___  __| |  / ___|___   __| | ___\n"
@@ -69,7 +85,7 @@ static const char *banner =
 	" *  \\____|\\___|_| |_|\\___|_|  \\__,_|\\__\\___|\\__,_|  \\____\\___/ \\__,_|\\___|\n"
 	" *\n"
 	" * Auto-generated struct member accessors (setter/getter)\n"
-	" */\n";
+	" */";
 
 /**
  * @brief Remove leading whitespace characters from string
@@ -206,8 +222,8 @@ static char *to_uppercase(char *s)
  * Any character that violates these rules is replaced with an underscore ('_').
  * The string is always modified in place; no new memory is allocated.
  *
- * @param s Pointer to the NUL-terminated string to sanitize.
- *           If @p s is NULL or points to an empty string, the function does nothing.
+ * @param s Pointer to the NUL-terminated string to sanitize. If @s is NULL or
+ *          points to an empty string, the function does nothing.
  *
  * @note This function does not check for C keywords or identifier length limits.
  *
@@ -263,7 +279,7 @@ static char *safe_strdup(const char *s)
 	if (!new_string)
 		return NULL; /* Return NULL on allocation failure */
 
-	memcpy(new_string, s, len); /* Copy the string including NUL-terminator */
+	memcpy(new_string, s, len); /* Copy the string incl. NUL-terminator */
 
 	return new_string;
 }
@@ -616,8 +632,9 @@ static void strlst_add(StringList_t *list, const char *string, bool steal)
 	if (list->count == list->capacity) {
 		/* Reallocate to double capacity */
 		list->capacity *= 2;
-		list->strings = (const char **)realloc(list->strings,
-						       list->capacity * sizeof(char *));
+		list->strings =
+			(const char **)realloc(list->strings,
+					       list->capacity * sizeof(char *));
 		for (size_t i = list->count; i < list->capacity; i++)
 			list->strings[i] = NULL;
 	}
@@ -679,7 +696,8 @@ static void strlst_free(StringList_t *list)
 #define STRLST_FOREACH(sl, s) \
 	for (size_t __str_next = 0; \
 	({ \
-		(s) = (__str_next >= (sl)->count) ? NULL : (sl)->strings[__str_next++]; \
+		(s) = (__str_next >= (sl)->count) \
+		      ? NULL : (sl)->strings[__str_next++]; \
 		(s) != NULL; \
 	});)
 
@@ -725,7 +743,8 @@ static void strlst_load(StringList_t *list, const char *filename)
 
 	f = fopen(filename, "r");
 	if (!f) {
-		fprintf(stderr, "Warning: could not open file '%s'\n", filename);
+		fprintf(stderr,
+			"Warning: could not open file '%s'\n", filename);
 		return;
 	}
 
@@ -807,15 +826,15 @@ typedef struct Conf {
 	bool             verbose;
 	const char       *c_fname;	/* Generated output *.c file name */
 	const char       *h_fname;	/* Generated output *.h file name */
-	const char       *l_fname;	/* Generated ou5tput *.ld file name */
+	const char       *l_fname;	/* Generated output *.ld file name */
 	const char       *prefix;	/* Prefix added to each functions */
 	StringList_t     hdr_files;	/* Input header file list */
 	StringList_t     incl_list;	/* Inclusion list (read from --incl) */
 	StringList_t     excl_list;	/* Enclusion list (read from --excl) */
 	struct {
 		regex_t  re_struct;	/* regex to match struct definitions */
-		regex_t  re_char_array;	/* regex to match char array struct members */
-		regex_t  re_member;	/* regex to match all other struct members */
+		regex_t  re_char_array;	/* regex to match char array members */
+		regex_t  re_member;	/* regex to match all other members */
 	} re;				/* Precompiled regular expressions */
 } Conf_t;
 
@@ -866,13 +885,13 @@ typedef struct Member {
 
 typedef struct StructInfo {
 	char          *name;         /* Name of the struct */
-	Member_t      *members;      /* Array of struct members (each entry is one member) */
+	Member_t      *members;      /* Array of members (each entry is 1 member) */
 	size_t        count;         /* Number of entries in members */
 	size_t        capacity;      /* Allocated capacity for members */
 } StructInfo_t;
 
 typedef struct StructList {
-	StructInfo_t  *items;        /* Array of structs (each entry corresponds to one struct) */
+	StructInfo_t  *items;        /* Array of structs (each entry is 1 struct) */
 	size_t        count;         /* Number of entries in items */
 	size_t        capacity;      /* Allocated capacity for items */
 } StructList_t;
@@ -993,7 +1012,9 @@ static Member_t *struct_info_member_add(StructInfo_t *si,
 	if (si->count == si->capacity) {
 		/* Reallocate to double capacity */
 		si->capacity *= 2;
-		si->members = (Member_t *)realloc(si->members, si->capacity * sizeof(Member_t));
+		si->members =
+			(Member_t *)realloc(si->members,
+					    si->capacity * sizeof(Member_t));
 		for (size_t i = si->count; i < si->capacity; i++)
 			member_init(&si->members[i]);
 	}
@@ -1161,7 +1182,7 @@ static void struct_list_parse(StructList_t *sl, const char *text, Conf_t *conf)
 			trimmed_line = trim(trim_inline_comments(line));
 
 			if (trimmed_line[0] == '\0' ||        /* empty line */
-			    !strchr(trimmed_line, ';') ||     /* skip lines without semicolon */
+			    !strchr(trimmed_line, ';') ||     /* skip lines w/o semicolon */
 			    strstr(trimmed_line, "static") || /* skip static members */
 			    strstr(trimmed_line, "struct"))   /* skip struct members */
 				continue;
@@ -1242,123 +1263,424 @@ static void struct_list_parse(StructList_t *sl, const char *text, Conf_t *conf)
 #define STRUCT_LIST_FOREACH(sl, si) \
 	for (size_t __si_next = 0; \
 	({ \
-		(si) = (__si_next >= (sl)->count) ? NULL : &(sl)->items[__si_next++]; \
+		(si) = (__si_next >= (sl)->count) \
+		       ? NULL : &(sl)->items[__si_next++]; \
 		(si) != NULL; \
 	});)
 
 /******************************************************************************/
 
+/*
+ * The emit_hdr_*() and emit_src_*() helpers below generate the content of
+ * accessors.h and accessors.c respectively.  The generated files are checked
+ * into the repository and must pass checkpatch.pl cleanly, so several
+ * design choices exist purely for that reason:
+ *
+ * 1. type_sep() — checkpatch requires that a '*' in a pointer return type
+ *    is attached to the function name, not to the type keyword.  For example:
+ *      const char *nvme_ctrl_get_name(...)   <- correct
+ *      const char * nvme_ctrl_get_name(...)  <- checkpatch error
+ *    type_sep() returns "" when the type already ends with '*' so that no
+ *    extra space is inserted between the type and the function name.
+ *
+ * 2. snprintf(NULL, 0, ...) — checkpatch warns about source lines longer
+ *    than 80 characters.  Because the length of a generated prototype depends
+ *    on the struct and member names (which vary widely), we cannot know at
+ *    compile time whether a declaration will fit on one line.  snprintf with
+ *    a NULL buffer and size 0 is a standard C99 idiom that returns the number
+ *    of characters that *would* have been written, allowing us to measure the
+ *    line length before committing to either the single-line or the wrapped
+ *    two-line form.  The LINE_FITS_80() macro below wraps this idiom into a
+ *    readable boolean test.
+ */
+
+/*
+ * True when the printf-formatted string would fit within checkpatch's
+ * 80-character line-length limit.  Uses snprintf(NULL, 0, ...) to measure
+ * the output length without allocating a buffer (C99 - 7.19.6.5).
+ *
+ * LINE_FITS_80_NTABS is a tab-aware variant for body lines that begin with
+ * n hard tabs: checkpatch expands each tab to an 8-space tab stop, so each
+ * tab costs 7 extra visible columns compared to the 1 byte snprintf counts.
+ */
+#define LINE_FITS_80(fmt, ...) \
+	(snprintf(NULL, 0, fmt, ##__VA_ARGS__) <= 80)
+#define LINE_FITS_80_NTABS(n, fmt, ...) \
+	(snprintf(NULL, 0, fmt, ##__VA_ARGS__) + (n) * 7 <= 80)
+
+/**
+ * @brief Return the separator to place between a C type and a function name.
+ *
+ * When @type already ends with '*' (e.g. "const char *") no additional
+ * space is needed before the function name; otherwise a single space is
+ * required to separate the type keyword from the identifier.
+ *
+ * @param type: The return-type string (e.g. "int", "const char *").
+ *
+ * @return "" if @type ends with '*', " " otherwise.
+ */
+static const char *type_sep(const char *type)
+{
+	size_t len = strlen(type);
+
+	return (len > 0 && type[len - 1] == '*') ? "" : " ";
+}
+
+/**
+ * @brief Emit a header declaration for a string setter.
+ *
+ * Writes the Kerneldoc comment and prototype for a setter that accepts
+ * a "const char *" argument.  Handles both dynamic strings (strdup'd)
+ * and fixed-size char arrays (snprintf'd).  The prototype is wrapped
+ * onto two lines when it would exceed 80 characters.
+ *
+ * @param f: Output FILE*.
+ * @param prefix: Function-name prefix (e.g. "nvme").
+ * @param sname: Struct name (e.g. "ctrl").
+ * @param mname: Member name (e.g. "firmware").
+ * @param is_dyn_str: true for dynamic "const char *", false for char array.
+ */
+static void emit_hdr_setter_str(FILE *f, const char *prefix,
+		const char *sname, const char *mname, bool is_dyn_str)
+{
+	fprintf(f,
+		"/**\n"
+		" * %s" SET_FMT "() - Set %s.\n"
+		" * @p: The &struct %s instance to update.\n",
+		prefix, sname, mname,
+		mname,
+		sname);
+	if (is_dyn_str)
+		fprintf(f,
+			" * @%s: New string; a copy is stored. Pass NULL to clear.\n",
+			mname);
+	else
+		fprintf(f,
+			" * @%s: New string; truncated to fit, always NUL-terminated.\n",
+			mname);
+	fprintf(f, " */\n");
+
+	if (LINE_FITS_80("void %s" SET_FMT "(struct %s *p, const char *%s);",
+			 prefix, sname, mname, sname, mname))
+		fprintf(f,
+			"void %s" SET_FMT "(struct %s *p, const char *%s);\n\n",
+			prefix, sname, mname, sname, mname);
+	else
+		fprintf(f,
+			"void %s" SET_FMT "(\n"
+			"\t\tstruct %s *p,\n"
+			"\t\tconst char *%s);\n\n",
+			prefix, sname, mname, sname, mname);
+}
+
+/**
+ * @brief Emit a header declaration for a value setter.
+ *
+ * Writes the Kerneldoc comment and prototype for a setter that accepts
+ * a numeric or boolean argument.  The prototype is wrapped onto two
+ * lines when it would exceed 80 characters.
+ *
+ * @param f: Output FILE*.
+ * @param prefix: Function-name prefix (e.g. "nvme").
+ * @param sname: Struct name (e.g. "ctrl").
+ * @param mname: Member name (e.g. "nsid").
+ * @param mtype: Member type string (e.g. "__u32").
+ */
+static void emit_hdr_setter_val(FILE *f, const char *prefix,
+		const char *sname, const char *mname, const char *mtype)
+{
+	fprintf(f,
+		"/**\n"
+		" * %s" SET_FMT "() - Set %s.\n"
+		" * @p: The &struct %s instance to update.\n"
+		" * @%s: Value to assign to the %s field.\n"
+		" */\n",
+		prefix, sname, mname,
+		mname,
+		sname,
+		mname, mname);
+
+	if (LINE_FITS_80("void %s" SET_FMT "(struct %s *p, %s %s);",
+			 prefix, sname, mname, sname, mtype, mname))
+		fprintf(f,
+			"void %s" SET_FMT "(struct %s *p, %s %s);\n\n",
+			prefix, sname, mname, sname, mtype, mname);
+	else
+		fprintf(f,
+			"void %s" SET_FMT "(\n"
+			"\t\tstruct %s *p,\n"
+			"\t\t%s %s);\n\n",
+			prefix, sname, mname, sname, mtype, mname);
+}
+
+/**
+ * @brief Emit a header declaration for a getter.
+ *
+ * Writes the Kerneldoc comment and prototype for a getter.  The
+ * prototype is wrapped onto two lines when it would exceed 80
+ * characters.
+ *
+ * @param f: Output FILE*.
+ * @param prefix: Function-name prefix (e.g. "nvme").
+ * @param sname: Struct name (e.g. "ctrl").
+ * @param mname: Member name (e.g. "firmware").
+ * @param mtype: Return type string (e.g. "const char *").
+ * @param is_dyn_str: true for dynamic strings (affects Return: doc).
+ */
+static void emit_hdr_getter(FILE *f, const char *prefix,
+		const char *sname, const char *mname,
+		const char *mtype, bool is_dyn_str)
+{
+	fprintf(f,
+		"/**\n"
+		" * %s" GET_FMT "() - Get %s.\n"
+		" * @p: The &struct %s instance to query.\n"
+		" *\n"
+		" * Return: The value of the %s field%s\n"
+		" */\n",
+		prefix, sname, mname,
+		mname,
+		sname,
+		mname,
+		is_dyn_str ? ", or NULL if not set." : ".");
+
+	if (LINE_FITS_80("%s%s%s" GET_FMT "(const struct %s *p);",
+			 mtype, type_sep(mtype), prefix, sname, mname, sname))
+		fprintf(f,
+			"%s%s%s" GET_FMT "(const struct %s *p);\n\n",
+			mtype, type_sep(mtype), prefix, sname, mname, sname);
+	else
+		fprintf(f,
+			"%s%s%s" GET_FMT "(\n"
+			"\t\tconst struct %s *p);\n\n",
+			mtype, type_sep(mtype), prefix, sname, mname, sname);
+}
 
 /**
  * @brief Generate header (.h) declarations for accessors of one struct.
  *
- * Writes function prototypes for setters and getters for every member
- * of @si to the provided output FILE (@generated_hdr).
+ * Iterates over the members of @si and calls the appropriate emit_hdr_*
+ * helper for each setter and getter.
  *
  * @param generated_hdr: FILE* to write header declarations to.
  * @param si: Pointer to StructInfo_t describing the struct and members.
  * @param conf: Pointer to Conf_t containing args and generation options.
  */
-static void generate_hdr(FILE  *generated_hdr, StructInfo_t  *si, Conf_t *conf)
+static void generate_hdr(FILE *generated_hdr, StructInfo_t *si, Conf_t *conf)
 {
 	for (size_t m = 0; m < si->count; m++) {
-		Member_t  *members = &si->members[m];
+		Member_t *members = &si->members[m];
+		bool is_dyn_str = !members->is_char_array &&
+				  streq(members->type, "const char *");
 
-		/* Setter method */
 		if (!members->is_const) { /* No setter on const members */
-			if (members->is_char_array || streq(members->type, "const char *"))
-				fprintf(generated_hdr,
-					"void %s%s_%s_set(struct %s *p, const char *%s);\n",
-					conf->prefix, si->name,
-					members->name, si->name, members->name);
+			if (members->is_char_array || is_dyn_str)
+				emit_hdr_setter_str(generated_hdr, conf->prefix,
+						    si->name, members->name,
+						    is_dyn_str);
 			else
-				fprintf(generated_hdr,
-					"void %s%s_%s_set(struct %s *p, %s %s);\n",
-					conf->prefix, si->name,
-					members->name, si->name, members->type, members->name);
+				emit_hdr_setter_val(generated_hdr, conf->prefix,
+						    si->name, members->name,
+						    members->type);
 		}
 
-		/* Getter method */
-		fprintf(generated_hdr, "%s %s%s_%s_get(const struct %s *p);\n\n",
-			members->type, conf->prefix, si->name, members->name, si->name);
+		emit_hdr_getter(generated_hdr, conf->prefix,
+				si->name, members->name,
+				members->type, is_dyn_str);
 	}
+}
+
+/**
+ * @brief Emit a source definition for a dynamic-string setter.
+ *
+ * Generates a setter that frees the old value and strdup's the new one.
+ * Passing NULL clears the field.
+ *
+ * @param f: Output FILE*.
+ * @param prefix: Function-name prefix (e.g. "nvme").
+ * @param sname: Struct name.
+ * @param mname: Member name.
+ */
+static void emit_src_setter_dynstr(FILE *f, const char *prefix,
+		const char *sname, const char *mname)
+{
+	/* Emit function signature, wrapping if it exceeds 80 chars. */
+	if (LINE_FITS_80("void %s" SET_FMT "(struct %s *p, const char *%s)",
+			 prefix, sname, mname, sname, mname))
+		fprintf(f,
+			"void %s" SET_FMT "(struct %s *p, const char *%s)\n",
+			prefix, sname, mname, sname, mname);
+	else
+		fprintf(f,
+			"void %s" SET_FMT "(\n"
+			"\t\tstruct %s *p,\n"
+			"\t\tconst char *%s)\n",
+			prefix, sname, mname, sname, mname);
+
+	/* Emit function body; wrap the strdup line if it exceeds 80 chars.
+	 * checkpatch expands the leading tab to 8 spaces, so use NTABS(1).
+	 */
+	fprintf(f, "{\n\tfree(p->%s);\n", mname);
+	if (LINE_FITS_80_NTABS(1, "\tp->%s = %s ? strdup(%s) : NULL;",
+			       mname, mname, mname))
+		fprintf(f, "\tp->%s = %s ? strdup(%s) : NULL;\n",
+			mname, mname, mname);
+	else
+		fprintf(f, "\tp->%s =\n\t\t%s ? strdup(%s) : NULL;\n",
+			mname, mname, mname);
+	fprintf(f, "}\n\n");
+}
+
+/**
+ * @brief Emit a source definition for a fixed char-array setter.
+ *
+ * Generates a setter that uses snprintf to copy into a fixed-size
+ * char array, always NUL-terminating the result.  @array_size may be
+ * a numeric literal or a symbolic constant.
+ *
+ * @param f: Output FILE*.
+ * @param prefix: Function-name prefix (e.g. "nvme").
+ * @param sname: Struct name.
+ * @param mname: Member name.
+ * @param array_size: Size of the char array as a string.
+ */
+static void emit_src_setter_chararray(FILE *f, const char *prefix,
+		const char *sname, const char *mname, const char *array_size)
+{
+	if (LINE_FITS_80("void %s" SET_FMT "(struct %s *p, const char *%s)",
+			 prefix, sname, mname, sname, mname))
+		fprintf(f,
+			"void %s" SET_FMT "(struct %s *p, const char *%s)\n",
+			prefix, sname, mname, sname, mname);
+	else
+		fprintf(f,
+			"void %s" SET_FMT "(\n"
+			"\t\tstruct %s *p,\n"
+			"\t\tconst char *%s)\n",
+			prefix, sname, mname, sname, mname);
+
+	if (str_is_all_numbers(array_size)) {
+		unsigned long sz = strtoul(array_size, NULL, 10);
+
+		fprintf(f,
+			"{\n"
+			"\tsnprintf(p->%s, %lu, \"%%s\", %s);\n"
+			"}\n\n",
+			mname, sz, mname);
+	} else {
+		fprintf(f,
+			"{\n"
+			"\tsnprintf(p->%s, %s, \"%%s\", %s);\n"
+			"}\n\n",
+			mname, array_size, mname);
+	}
+}
+
+/**
+ * @brief Emit a source definition for a value setter.
+ *
+ * Generates a setter that directly assigns the argument to the member.
+ *
+ * @param f: Output FILE*.
+ * @param prefix: Function-name prefix (e.g. "nvme").
+ * @param sname: Struct name.
+ * @param mname: Member name.
+ * @param mtype: Member type string (e.g. "__u32").
+ */
+static void emit_src_setter_val(FILE *f, const char *prefix,
+		const char *sname, const char *mname, const char *mtype)
+{
+	if (LINE_FITS_80("void %s" SET_FMT "(struct %s *p, %s %s)",
+			 prefix, sname, mname, sname, mtype, mname))
+		fprintf(f,
+			"void %s" SET_FMT "(struct %s *p, %s %s)\n"
+			"{\n"
+			"\tp->%s = %s;\n"
+			"}\n\n",
+			prefix, sname, mname,
+			sname, mtype, mname,
+			mname, mname);
+	else
+		fprintf(f,
+			"void %s" SET_FMT "(\n"
+			"\t\tstruct %s *p,\n"
+			"\t\t%s %s)\n"
+			"{\n"
+			"\tp->%s = %s;\n"
+			"}\n\n",
+			prefix, sname, mname,
+			sname, mtype, mname,
+			mname, mname);
+}
+
+/**
+ * @brief Emit a source definition for a getter.
+ *
+ * Generates a getter that returns the value of the struct member.
+ *
+ * @param f: Output FILE*.
+ * @param prefix: Function-name prefix (e.g. "nvme").
+ * @param sname: Struct name.
+ * @param mname: Member name.
+ * @param mtype: Return type string (e.g. "const char *").
+ */
+static void emit_src_getter(FILE *f, const char *prefix,
+		const char *sname, const char *mname, const char *mtype)
+{
+	if (LINE_FITS_80("%s%s%s" GET_FMT "(const struct %s *p)",
+			 mtype, type_sep(mtype), prefix, sname, mname, sname))
+		fprintf(f,
+			"%s%s%s" GET_FMT "(const struct %s *p)\n"
+			"{\n"
+			"\treturn p->%s;\n"
+			"}\n\n",
+			mtype, type_sep(mtype), prefix, sname, mname,
+			sname, mname);
+	else
+		fprintf(f,
+			"%s%s%s" GET_FMT "(\n"
+			"\t\tconst struct %s *p)\n"
+			"{\n"
+			"\treturn p->%s;\n"
+			"}\n\n",
+			mtype, type_sep(mtype), prefix, sname, mname,
+			sname, mname);
 }
 
 /**
  * @brief Generate source (.c) implementations for accessors of one struct.
  *
- * Writes setter and getter function implementations for each member in
- * @si to the provided output FILE (@generated_src). Handles special
- * cases:
- *  - dynamic "const char *" members are strdup'd and freed on set.
- *  - fixed-size char arrays use strncpy and ensure NUL termination.
- *  - other members are assigned directly.
+ * Iterates over the members of @si and calls the appropriate emit_src_*
+ * helper for each setter and getter.
  *
  * @param generated_src: FILE* to write implementations to.
  * @param si: Pointer to the struct description.
  * @param conf: Pointer to Conf_t containing args and generation options.
  */
-static void generate_src(FILE  *generated_src, StructInfo_t  *si, Conf_t  *conf)
+static void generate_src(FILE *generated_src, StructInfo_t *si, Conf_t *conf)
 {
 	for (size_t m = 0; m < si->count; m++) {
-		Member_t  *member = &si->members[m];
+		Member_t *member = &si->members[m];
 
-		/* Setter method */
 		if (!member->is_const) {
-			if (!member->is_char_array && streq(member->type, "const char *")) {
-				/* dynamic string */
-				fprintf(generated_src,
-					"void %s%s_%s_set(struct %s *p, const char *%s) {\n"
-					"    free(p->%s);\n"
-					"    p->%s = %s ? strdup(%s) : NULL;\n"
-					"}\n\n",
-					conf->prefix, si->name, member->name,
-					si->name, member->name,
-					member->name,
-					member->name, member->name, member->name);
-			} else if (member->is_char_array) {
-				/* fixed-size array */
-				if (str_is_all_numbers(member->array_size)) {
-					unsigned long sz = strtoul(member->array_size, NULL, 10);
-
-					fprintf(generated_src,
-						"void %s%s_%s_set(struct %s *p, const char *%s) {\n"
-						"    strncpy(p->%s, %s, %lu);\n"
-						"    p->%s[%lu] = '\\0';\n"
-						"}\n\n",
-						conf->prefix, si->name, member->name,
-						si->name, member->name,
-						member->name, member->name, sz,
-						member->name, sz - 1);
-				} else {
-					fprintf(generated_src,
-						"void %s%s_%s_set(struct %s *p, const char *%s) {\n"
-						"    strncpy(p->%s, %s, %s);\n"
-						"    p->%s[%s - 1] = '\\0';\n"
-						"}\n\n",
-						conf->prefix, si->name, member->name,
-						si->name, member->name,
-						member->name, member->name, member->array_size,
-						member->name, member->array_size);
-				}
-			} else { /* numeric or struct */
-				fprintf(generated_src,
-					"void %s%s_%s_set(struct %s *p, %s %s) {\n"
-					"    p->%s = %s;\n"
-					"}\n\n",
-					conf->prefix, si->name, member->name, si->name,
-					member->type, member->name,
-					member->name, member->name);
-
-			}
+			if (!member->is_char_array &&
+			    streq(member->type, "const char *"))
+				emit_src_setter_dynstr(generated_src,
+						       conf->prefix,
+						       si->name, member->name);
+			else if (member->is_char_array)
+				emit_src_setter_chararray(generated_src,
+							  conf->prefix,
+							  si->name, member->name,
+							  member->array_size);
+			else
+				emit_src_setter_val(generated_src, conf->prefix,
+						    si->name, member->name,
+						    member->type);
 		}
 
-		/* Getter method */
-		fprintf(generated_src, "%s %s%s_%s_get(const struct %s *p) {\n"
-			"    return p->%s;\n"
-			"}\n\n",
-			member->type, conf->prefix, si->name, member->name, si->name,
-			member->name);
+		emit_src_getter(generated_src, conf->prefix,
+				si->name, member->name, member->type);
 	}
 }
 
@@ -1367,7 +1689,7 @@ static void generate_src(FILE  *generated_src, StructInfo_t  *si, Conf_t  *conf)
  * one struct.
  *
  * Writes linker entries for each member in @si to the provided output
- * FILE (@generated_ld). Handles special
+ * FILE (@generated_ld).
  *
  * @param generated_ld: FILE* to write implementations to.
  * @param si: Pointer to the struct description.
@@ -1379,10 +1701,10 @@ static void generate_ld(FILE  *generated_ld, StructInfo_t  *si, Conf_t  *conf)
 		Member_t  *member = &si->members[m];
 
 		fprintf(generated_ld,
-				"\t\t%s%s_%s_get;\n"
-				"\t\t%s%s_%s_set;\n",
-				conf->prefix, si->name, member->name,
-				conf->prefix, si->name, member->name);
+			"\t\t%s" GET_FMT ";\n"
+			"\t\t%s" SET_FMT ";\n",
+			conf->prefix, si->name, member->name,
+			conf->prefix, si->name, member->name);
 	}
 }
 
@@ -1403,8 +1725,8 @@ static void print_usage(const char *prog)
 		"  -c, --c-out         Name of the generated *.c file. Default: %s\n"
 		"  -h, --h-out         Name of the generated *.h file. Default: %s\n"
 		"  -l, --ld-out        Name of the generated *.ld file. Default: %s\n"
-		"  -e, --excl <file>   Exclusion list. Which member of a struct to exclude (struct::member per line). Default: do not exclude anything\n"
-		"  -i, --incl <file>   Inclusion list. Which struct to include (struct name per line). Default: include every struct found\n"
+		"  -e, --excl <file>   Exclusion list. struct::member to exclude (1 struct::member per line). Default: do not exclude anything\n"
+		"  -i, --incl <file>   Inclusion list. structs to include (1 struct name per line). Default: include every struct found\n"
 		"  -p, --prefix <str>  Prefix for generated function names\n"
 		"  -v, --verbose       Verbose output\n"
 		"  -H, --help          Show this message\n",
@@ -1477,12 +1799,16 @@ static void args_parse(Conf_t *conf, int argc, char *argv[])
 	strlst_init(&conf->hdr_files, 16);
 	for (int i = optind; i < argc; ++i) {
 		glob_t  glob_result = { 0 };
-		int  ret = glob(argv[i], GLOB_TILDE|GLOB_NOCHECK, NULL, &glob_result);
+		int  ret = glob(argv[i], GLOB_TILDE|GLOB_NOCHECK, NULL,
+				&glob_result);
 
 		if (ret == 0) {
-			for (size_t j = 0; j < glob_result.gl_pathc; ++j)
-				strlst_add(&conf->hdr_files,
-					   realpath(glob_result.gl_pathv[j], NULL), true);
+			char *rp;
+
+			for (size_t j = 0; j < glob_result.gl_pathc; ++j) {
+				rp = realpath(glob_result.gl_pathv[j], NULL);
+				strlst_add(&conf->hdr_files, rp, true);
+			}
 		} else {
 			fprintf(stderr, "Warning: No match for %s\n", argv[i]);
 		}
@@ -1540,9 +1866,10 @@ static void conf_free(Conf_t *conf)
  * This function copies all data from the source file stream (`srce`)
  * to the destination file stream (`dest`).
  *
- * If `NVME_HAVE_SENDFILE` is defined, the function uses the `sendfile()` system
- * call for efficient data transfer between file descriptors. Otherwise, it falls
- * back to a standard character-by-character copy using `fgetc()` and `fputc()`.
+ * If `NVME_HAVE_SENDFILE` is defined, the function uses the `sendfile()`
+ * system call for efficient data transfer between file descriptors. Otherwise,
+ * it falls back to a standard character-by-character copy using `fgetc()` and
+ * `fputc()`.
  *
  * The source file position is reset to the beginning before copying.
  * The destination file is not closed or flushed beyond the initial `fflush()`
@@ -1671,18 +1998,18 @@ int main(int argc, char *argv[])
 
 			/* Generate code for the header file (*.h) */
 			fprintf(tmp_hdr_code,
-				"\n"
 				"/****************************************************************************\n"
 				" * Accessors for: struct %s\n"
-				" */\n", si->name);
+				" ****************************************************************************/\n"
+				"\n", si->name);
 			generate_hdr(tmp_hdr_code, si, &conf);
 
 			/* Generate code for the source file (*.c) */
 			fprintf(tmp_src_code,
-				"\n"
 				"/****************************************************************************\n"
 				" * Accessors for: struct %s\n"
-				" */\n", si->name);
+				" ****************************************************************************/\n"
+				"\n", si->name);
 			generate_src(tmp_src_code, si, &conf);
 
 			/* Generate entries for the linker script (*.ld) */
@@ -1692,7 +2019,7 @@ int main(int argc, char *argv[])
 
 	struct_list_free(&sl);
 
-	/* We've collected all the data we needed. Now let's generate some files. */
+	/* We've collected all the data we needed. Now let's generate files. */
 
 	/***********************************************************************
 	 * First, output the generated header file.
@@ -1705,10 +2032,12 @@ int main(int argc, char *argv[])
 	dont_care = asprintf(&guard, "_%s_", get_filename(conf.h_fname));
 	sanitize_identifier(to_uppercase(guard));
 
-	mkdir_fullpath(conf.h_fname, 0755); /* create output file's directory if needed */
+	mkdir_fullpath(conf.h_fname, 0755); /* create output folder if needed */
 
 	generated_hdr = fopen(conf.h_fname, "w");
 	fprintf(generated_hdr,
+		"%s\n"
+		"\n"
 		"%s\n"
 		"#ifndef %s\n"
 		"#define %s\n"
@@ -1718,12 +2047,14 @@ int main(int argc, char *argv[])
 		"#include <stdbool.h>\n"
 		"#include <stdint.h>\n"
 		"#include <linux/types.h> /* __u32, __u64, etc. */\n"
-		"\n", banner, guard, guard);
+		"\n", spdx_h, banner, guard, guard);
 
-	fprintf(generated_hdr, "/* Forward declarations. These are internal (opaque) structs. */\n");
+	fprintf(generated_hdr,
+		"/* Forward declarations. These are internal (opaque) structs. */\n");
 	STRLST_FOREACH(&forward_declares, struct_to_declare)
 		fprintf(generated_hdr, "struct %s;\n", struct_to_declare);
 	strlst_free(&forward_declares);
+	fprintf(generated_hdr, "\n");
 
 	/* Copy temporary file to output */
 	append_file(generated_hdr, tmp_hdr_code);
@@ -1737,18 +2068,21 @@ int main(int argc, char *argv[])
 	 * Second, output the generated source file.
 	 */
 
-	mkdir_fullpath(conf.c_fname, 0755); /* create output file's directory if needed */
+	mkdir_fullpath(conf.c_fname, 0755); /* create output folder if needed */
 	generated_src = fopen(conf.c_fname, "w");
 	fprintf(generated_src,
+		"%s\n"
+		"\n"
 		"%s\n"
 		"#include <stdlib.h>\n"
 		"#include <string.h>\n"
 		"#include \"%s\"\n"
-		"\n", banner, get_filename(conf.h_fname));
+		"\n", spdx_c, banner, get_filename(conf.h_fname));
 
 	STRLST_FOREACH(&files_to_include, include_fname)
 		fprintf(generated_src, "#include \"%s\"\n", include_fname);
 	strlst_free(&files_to_include);
+	fprintf(generated_src, "\n");
 
 	/* Copy temporary file to output */
 	append_file(generated_src, tmp_src_code);
@@ -1758,7 +2092,7 @@ int main(int argc, char *argv[])
 	/***********************************************************************
 	 * Third, output the linker script file.
 	 */
-	mkdir_fullpath(conf.l_fname, 0755); /* create output file's directory if needed */
+	mkdir_fullpath(conf.l_fname, 0755); /* create output folder if needed */
 	generated_ld = fopen(conf.l_fname, "w");
 	fprintf(generated_ld,
 		"\n"

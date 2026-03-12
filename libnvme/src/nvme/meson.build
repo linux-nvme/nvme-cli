@@ -5,18 +5,22 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-# Run generate-accessors to generate the setter/getter functions.
+# The accessor files (accessors.h, accessors.c, accessors.ld) are
+# pre-generated and committed to the source tree.  They are NOT
+# regenerated during a normal build.
+#
+# To regenerate them after changing private.h or structs-to-include.txt:
+#
+#   meson compile -C <build-dir> update-accessors
 
-generated_h = 'accessors.h'
-generated_c = 'accessors.c'
-generated_ld = 'accessors.ld'
+# ---------------------------------------------------------------------------
+# Developer-only helper: build the generator and regenerate if structs change.
+# NOT executed during a normal build (build_by_default: false).
+# Usage: meson compile -C <build-dir> update-accessors
+# ---------------------------------------------------------------------------
 
-# List of header files to parse for structs
-headers_to_scan = [
-    '../nvme/private.h',
-]
+accessors_ld_full_path = meson.current_source_dir() / 'accessors.ld'
 
-# Build the code generator tool
 generate_accessors = executable(
     'generate-accessors',
     'generate-accessors.c',
@@ -25,49 +29,18 @@ generate_accessors = executable(
         config_dep,
     ],
     native: true,
+    build_by_default: false,
 )
 
-# Generate accessors code
-accessors_ch_custom_tgt = custom_target(
-    'accessors[.c.h.ld]',
-    input: files(headers_to_scan),
-    output: [
-        generated_h,
-        generated_c,
-        generated_ld,
-    ],
+run_target(
+    'update-accessors',
     command: [
+        meson.current_source_dir() / 'update-accessors.sh',
         generate_accessors,
-        '--h-out', '@OUTPUT0@',
-        '--c-out', '@OUTPUT1@',
-        '--ld-out', '@OUTPUT2@',
-        '--incl', join_paths(meson.current_source_dir(), 'structs-to-include.txt'),
-        '@INPUT@',
+        meson.current_source_dir(),
+        meson.current_source_dir() / 'generate-accessors-include.list',
+        meson.current_source_dir() / 'generate-accessors-exclude.list',
+        meson.current_source_dir() / 'private.h',
     ],
-    build_by_default: true,
-    install: true,
-    install_dir: [
-        get_option('includedir') / 'nvme',
-        false,
-        false,
-    ],
-    install_mode: 'rw-r--r--',
+    depends: generate_accessors,
 )
-
-tgt_accessors_h = accessors_ch_custom_tgt[0]
-tgt_accessors_c = accessors_ch_custom_tgt[1]
-tgt_accessors_ld = accessors_ch_custom_tgt[2]
-
-accessors_dep = declare_dependency(
-    sources: [
-        tgt_accessors_c,
-        tgt_accessors_h,
-    ],
-    include_directories: '.',
-)
-
-if meson.version().version_compare('>=1.4.0')
-    accessors_ld_full_path = tgt_accessors_ld.full_path()
-else
-    accessors_ld_full_path = meson.current_build_dir() / generated_ld
-endif
