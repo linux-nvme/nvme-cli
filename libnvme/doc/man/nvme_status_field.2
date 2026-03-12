@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_status_field" "November 2025" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_status_field" "March 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_status_field \- Defines all parts of the nvme status field: status code, status code type, and additional flags.
 .SH SYNOPSIS
@@ -321,6 +321,10 @@ enum nvme_status_field {
 .br
 .br
 .BI "    NVME_SC_FW_NEEDS_MAX_TIME"
+, 
+.br
+.br
+.BI "    NVME_SC_EXCEEDS_MAX_NS_SANITIZE"
 , 
 .br
 .br
@@ -999,6 +1003,8 @@ activated immediately would exceed the
 Maximum Time for Firmware Activation
 (MTFA) value reported in Identify
 Controller.
+.IP "NVME_SC_EXCEEDS_MAX_NS_SANITIZE" 12
+Exceeds Max NS Sanitize Operations
 .IP "NVME_SC_FW_ACTIVATE_PROHIBITED" 12
 Firmware Activation Prohibited: The image
 specified is being prohibited from

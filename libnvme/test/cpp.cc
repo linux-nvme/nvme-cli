@@ -18,9 +18,18 @@ int main()
 	nvme_ctrl_t c;
 	nvme_path_t p;
 	nvme_ns_t n;
+	int err;
 
-	if (nvme_scan(NULL, &ctx))
-		return -1;
+	ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	if (!ctx)
+		return 1;
+
+	err = nvme_scan_topology(ctx, NULL, NULL);
+	if (err && !(err == -ENOENT || err == -EACCES)) {
+		fprintf(stderr, "nvme_scan_topology failed %d\n", err);
+		nvme_free_global_ctx(ctx);
+		return 1;
+	}
 
 	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
@@ -60,6 +69,7 @@ int main()
 		}
 	}
 	std::cout << "\n";
+
 	nvme_free_global_ctx(ctx);
 
 	return 0;

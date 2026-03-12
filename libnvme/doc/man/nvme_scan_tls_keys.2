@@ -1,12 +1,15 @@
-.TH "nvme_scan_tls_keys" 9 "nvme_scan_tls_keys" "November 2025" "libnvme API manual" LINUX
+.TH "nvme_scan_tls_keys" 9 "nvme_scan_tls_keys" "March 2026" "libnvme API manual" LINUX
 .SH NAME
 nvme_scan_tls_keys \- Iterate over TLS keys in a keyring
 .SH SYNOPSIS
 .B "int" nvme_scan_tls_keys
-.BI "(const char *keyring "  ","
+.BI "(struct nvme_global_ctx *ctx "  ","
+.BI "const char *keyring "  ","
 .BI "nvme_scan_tls_keys_cb_t cb "  ","
 .BI "void *data "  ");"
 .SH ARGUMENTS
+.IP "ctx" 12
+struct nvme_global_ctx object
 .IP "keyring" 12
 Keyring holding TLS keys
 .IP "cb" 12
@@ -20,5 +23,4 @@ A TLS key must be of type 'psk' and the description must be of the
 form 'NVMe<0|1><R|G>0<1|2> <identity>', otherwise it will be skipped
 during iteration.
 .SH "RETURN"
-Number of keys for which \fIcb\fP was called, or -1 with errno set
-on error.
+Number of keys for which \fIcb\fP was called, or negative error code

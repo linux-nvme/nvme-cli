@@ -1,0 +1,27 @@
+.TH "libnvme" 9 "struct nvme_vs_event_desc" "March 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_vs_event_desc \- Vendor Specific Event Descriptor
+.SH SYNOPSIS
+struct nvme_vs_event_desc {
+.br
+.BI "    __le16 vsec;"
+.br
+.BI "    __u8 vsedt;"
+.br
+.BI "    __u8 uidx;"
+.br
+.BI "    __le16 vsedl;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "vsec" 12
+Vendor Specific Event Code
+.IP "vsedt" 12
+Vendor Specific Event Data Type
+.IP "uidx" 12
+UUID Index
+.IP "vsedl" 12
+Vendor Specific Event Data Length

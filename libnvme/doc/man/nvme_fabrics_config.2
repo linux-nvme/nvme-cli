@@ -1,12 +1,8 @@
-.TH "libnvme" 9 "struct nvme_fabrics_config" "November 2025" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_fabrics_config" "March 2026" "API Manual" LINUX
 .SH NAME
 struct nvme_fabrics_config \- Defines all linux nvme fabrics initiator options
 .SH SYNOPSIS
 struct nvme_fabrics_config {
-.br
-.BI "    char *host_traddr;"
-.br
-.BI "    char *host_iface;"
 .br
 .BI "    int queue_size;"
 .br
@@ -49,10 +45,6 @@ struct nvme_fabrics_config {
 .br
 
 .SH Members
-.IP "host_traddr" 12
-Host transport address
-.IP "host_iface" 12
-Host interface name
 .IP "queue_size" 12
 Number of IO queue entries
 .IP "nr_io_queues" 12

@@ -476,7 +476,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 			timeInfo.second);
 		snprintf(fileSuffix, PATH_MAX, "_internal_fw_log_%s", (char *)timeStamp);
 
-		ret = sndk_get_serial_name(hdl, f, PATH_MAX, fileSuffix);
+		ret = sndk_get_serial_name(hdl, f, PATH_MAX-5, fileSuffix);
 		if (ret) {
 			fprintf(stderr, "ERROR: SNDK: failed to generate file name\n");
 			goto out;

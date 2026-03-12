@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_cmd_get_log_lid" "November 2025" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_cmd_get_log_lid" "March 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_cmd_get_log_lid \- Get Log Page -Log Page Identifiers
 .SH SYNOPSIS
@@ -116,7 +116,19 @@ enum nvme_cmd_get_log_lid {
 , 
 .br
 .br
-.BI "    NVME_LOG_LID_CHANGED_ALLOC_NS_LIST"
+.BI "    NVME_LOG_LID_CHANGED_ALLOC_NS"
+, 
+.br
+.br
+.BI "    NVME_LOG_LID_DEV_PERSONALITY"
+, 
+.br
+.br
+.BI "    NVME_LOG_LID_CROSS_CTRL_RESET"
+, 
+.br
+.br
+.BI "    NVME_LOG_LID_LOST_HOST_COMMUNICATION"
 , 
 .br
 .br
@@ -136,19 +148,27 @@ enum nvme_cmd_get_log_lid {
 , 
 .br
 .br
-.BI "    NVME_LOG_LID_DISCOVER"
+.BI "    NVME_LOG_LID_POWER_MEASUREMENT"
 , 
 .br
 .br
-.BI "    NVME_LOG_LID_HOST_DISCOVER"
+.BI "    NVME_LOG_LID_DISCOVERY"
 , 
 .br
 .br
-.BI "    NVME_LOG_LID_AVE_DISCOVER"
+.BI "    NVME_LOG_LID_HOST_DISCOVERY"
+, 
+.br
+.br
+.BI "    NVME_LOG_LID_AVE_DISCOVERY"
 , 
 .br
 .br
 .BI "    NVME_LOG_LID_PULL_MODEL_DDC_REQ"
+, 
+.br
+.br
+.BI "    NVME_LOG_LID_SANITIZE_NS_STATUS_LIST"
 , 
 .br
 .br
@@ -220,8 +240,14 @@ Physical Interface Receiver Eye Opening Measurement
 Reachability Groups
 .IP "NVME_LOG_LID_REACHABILITY_ASSOCIATIONS" 12
 Reachability Associations
-.IP "NVME_LOG_LID_CHANGED_ALLOC_NS_LIST" 12
+.IP "NVME_LOG_LID_CHANGED_ALLOC_NS" 12
 Changed Allocated Namespace List
+.IP "NVME_LOG_LID_DEV_PERSONALITY" 12
+Device Personalities
+.IP "NVME_LOG_LID_CROSS_CTRL_RESET" 12
+Cross-Controller Reset
+.IP "NVME_LOG_LID_LOST_HOST_COMMUNICATION" 12
+Lost Host Communication
 .IP "NVME_LOG_LID_FDP_CONFIGS" 12
 FDP Configurations
 .IP "NVME_LOG_LID_FDP_RUH_USAGE" 12
@@ -230,14 +256,18 @@ Reclaim Unit Handle Usage
 FDP Statistics
 .IP "NVME_LOG_LID_FDP_EVENTS" 12
 FDP Events
-.IP "NVME_LOG_LID_DISCOVER" 12
+.IP "NVME_LOG_LID_POWER_MEASUREMENT" 12
+Power Measurement
+.IP "NVME_LOG_LID_DISCOVERY" 12
 Discovery
-.IP "NVME_LOG_LID_HOST_DISCOVER" 12
+.IP "NVME_LOG_LID_HOST_DISCOVERY" 12
 Host Discovery
-.IP "NVME_LOG_LID_AVE_DISCOVER" 12
+.IP "NVME_LOG_LID_AVE_DISCOVERY" 12
 AVE Discovery
 .IP "NVME_LOG_LID_PULL_MODEL_DDC_REQ" 12
 Pull Model DDC Request
+.IP "NVME_LOG_LID_SANITIZE_NS_STATUS_LIST" 12
+Sanitize Namespace Status List
 .IP "NVME_LOG_LID_RESERVATION" 12
 Reservation Notification
 .IP "NVME_LOG_LID_SANITIZE" 12

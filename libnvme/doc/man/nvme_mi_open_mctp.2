@@ -1,14 +1,14 @@
-.TH "nvme_mi_open_mctp" 9 "nvme_mi_open_mctp" "November 2025" "libnvme API manual" LINUX
+.TH "nvme_mi_open_mctp" 9 "nvme_mi_open_mctp" "March 2026" "libnvme API manual" LINUX
 .SH NAME
 nvme_mi_open_mctp \- Create an endpoint using a MCTP connection.
 .SH SYNOPSIS
 .B "nvme_mi_ep_t" nvme_mi_open_mctp
-.BI "(nvme_root_t root "  ","
+.BI "(struct nvme_global_ctx *ctx "  ","
 .BI "unsigned int netid "  ","
 .BI "uint8_t eid "  ");"
 .SH ARGUMENTS
-.IP "root" 12
-root object to create under
+.IP "ctx" 12
+\fIstruct nvme_global_ctx\fP object
 .IP "netid" 12
 MCTP network ID on this system
 .IP "eid" 12

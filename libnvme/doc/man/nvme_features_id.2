@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_features_id" "November 2025" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_features_id" "March 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_features_id \- Features - Feature Identifiers
 .SH SYNOPSIS
@@ -136,6 +136,22 @@ enum nvme_features_id {
 , 
 .br
 .br
+.BI "    NVME_FEAT_FID_CONF_DEV_PERSONALITY"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_POWER_LIMIT"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_POWER_THRESH"
+, 
+.br
+.br
+.BI "    NVME_FEAT_FID_POWER_MEASUREMENT"
+, 
+.br
+.br
 .BI "    NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR"
 , 
 .br
@@ -246,6 +262,14 @@ Namespace Admin Label
 Key Value Configuration
 .IP "NVME_FEAT_FID_CTRL_DATA_QUEUE" 12
 Controller Data Queue
+.IP "NVME_FEAT_FID_CONF_DEV_PERSONALITY" 12
+Configurable Device Personality
+.IP "NVME_FEAT_FID_POWER_LIMIT" 12
+Power Limit
+.IP "NVME_FEAT_FID_POWER_THRESH" 12
+Power Threshold
+.IP "NVME_FEAT_FID_POWER_MEASUREMENT" 12
+Power Measurement
 .IP "NVME_FEAT_FID_EMB_MGMT_CTRL_ADDR" 12
 Embedded Management Controller Address
 .IP "NVME_FEAT_FID_HOST_MGMT_AGENT_ADDR" 12

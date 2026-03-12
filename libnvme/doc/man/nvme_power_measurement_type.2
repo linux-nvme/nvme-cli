@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvme_power_measurement_type" "March 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_power_measurement_type \- Power measurement types.
+.SH SYNOPSIS
+enum nvme_power_measurement_type {
+.br
+.BI "    NVME_PMT_NSS_TOTAL_POWER"
+, 
+.br
+.br
+.BI "    NVME_PMT_RSVD_MIN"
+, 
+.br
+.br
+.BI "    NVME_PMT_RSVD_MAX"
+, 
+.br
+.br
+.BI "    NVME_PMT_VS_MIN"
+, 
+.br
+.br
+.BI "    NVME_PMT_VS_MAX"
+
+};
+.SH Constants
+.IP "NVME_PMT_NSS_TOTAL_POWER" 12
+NVM subsystem total power
+.IP "NVME_PMT_RSVD_MIN" 12
+Reserved minimum value
+.IP "NVME_PMT_RSVD_MAX" 12
+Reserved maximum value
+.IP "NVME_PMT_VS_MIN" 12
+Vendor Specific minimum value
+.IP "NVME_PMT_VS_MAX" 12
+Vendor Specific maximum value

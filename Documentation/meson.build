@@ -268,8 +268,8 @@ adoc_includes = [
 ]
 
 if want_docs != 'false'
-    mandir = join_paths(get_option('mandir'), 'man1')
-    htmldir = join_paths(get_option('htmldir'), 'nvme')
+    mandir = join_paths(prefixdir, get_option('mandir'), 'man1')
+    htmldir = join_paths(prefixdir, get_option('htmldir'), 'nvme')
 
     asciidoctor = find_program('asciidoc', required: want_docs_build)
     if want_docs_build and asciidoctor.found()

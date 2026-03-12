@@ -324,12 +324,16 @@ static int test_ctrl(nvme_ctrl_t c)
 static int test_namespace(nvme_ns_t n)
 {
 	int ret, nsid = nvme_ns_get_nsid(n);
-	struct nvme_transport_handle *hdl = nvme_ns_get_transport_handle(n);
+	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
 	struct nvme_id_ns ns = { 0 }, allocated = { 0 };
 	struct nvme_ns_id_desc *descs;
 	__u64 result = 0;
 	__u8 flbas;
+
+	ret = nvme_ns_get_transport_handle(n, &hdl);
+	if (ret)
+		return ret;
 
 	ret = nvme_ns_identify(n, &ns);
 	if (ret)
@@ -383,14 +387,22 @@ int main(int argc, char **argv)
 	nvme_ctrl_t c;
 	nvme_path_t p;
 	nvme_ns_t n;
+	int err;
 	const char *ctrl = "nvme4";
 	const char *nqn_match = "testnqn";
 
 	printf("Test filter for common loop back target\n");
-	ctx = nvme_create_global_ctx(NULL, DEFAULT_LOGLEVEL);
+	ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 	if (!ctx)
 		return 1;
-	nvme_scan_topology(ctx, nvme_match_subsysnqn_filter, (void *)nqn_match);
+
+	err = nvme_scan_topology(ctx, nvme_match_subsysnqn_filter,
+		(void *)nqn_match);
+	if (err && !(err == ENOENT || err == EACCES)) {
+		nvme_free_global_ctx(ctx);
+		return 1;
+	}
+
 	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
@@ -417,10 +429,6 @@ int main(int argc, char **argv)
 		nvme_free_ctrl(c);
 	}
 	printf("\n");
-	nvme_free_global_ctx(ctx);
-
-	if (nvme_scan(NULL, &ctx))
-		return -1;
 
 	printf("Test walking the topology\n");
 	nvme_for_each_host(ctx, h) {

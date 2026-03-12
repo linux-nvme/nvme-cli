@@ -24,11 +24,16 @@
 
 static void show_zns_properties(nvme_ns_t n)
 {
-	struct nvme_transport_handle *hdl = nvme_ns_get_transport_handle(n);
+	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
 	struct nvme_zns_id_ns zns_ns;
 	struct nvme_zns_id_ctrl zns_ctrl;
 	struct nvme_zone_report *zr;
+	int err;
+
+	err = nvme_ns_get_transport_handle(n, &hdl);
+	if (err)
+		return;
 
 	zr = calloc(1, 0x1000);
 	if (!zr)
@@ -75,9 +80,17 @@ int main()
 	nvme_host_t h;
 	nvme_ctrl_t c;
 	nvme_ns_t n;
+	int err;
 
-	if (nvme_scan(NULL, &ctx))
-		return -1;
+	ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	if (!ctx)
+		return 1;
+
+	err = nvme_scan_topology(ctx, NULL, NULL);
+	if (err && !(err == -ENOENT || err == -EACCES)) {
+		nvme_free_global_ctx(ctx);
+		return 1;
+	}
 
 	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
@@ -93,5 +106,7 @@ int main()
 			}
 		}
 	}
+
 	nvme_free_global_ctx(ctx);
+	return 0;
 }

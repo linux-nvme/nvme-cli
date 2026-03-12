@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_sanitize_sstat" "November 2025" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_sanitize_sstat" "March 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_sanitize_sstat \- Sanitize Status (SSTAT)
 .SH SYNOPSIS
@@ -20,7 +20,7 @@ enum nvme_sanitize_sstat {
 , 
 .br
 .br
-.BI "    NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS"
+.BI "    NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS"
 , 
 .br
 .br
@@ -75,8 +75,9 @@ sanitized.
 The most recent sanitize operation
 completed successfully including any
 additional media modification.
-.IP "NVME_SANITIZE_SSTAT_STATUS_IN_PROGESS" 12
-A sanitize operation is currently in progress.
+.IP "NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS" 12
+A sanitize operation is currently in
+progress.
 .IP "NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED" 12
 The most recent sanitize operation
 failed.

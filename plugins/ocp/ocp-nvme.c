@@ -1333,7 +1333,8 @@ static int get_c9_log_page_data(struct nvme_transport_handle *hdl,
 
 		ret = ocp_get_log_simple(hdl, OCP_LID_TELSLG, total_log_page_sz, pC9_string_buffer);
 	} else {
-		fprintf(stderr, "ERROR : OCP : Unable to read C9 data.\n");
+		fprintf(stderr, "ERROR : OCP : Unable to read C9 data, ret: %d.\n", ret);
+		return ret;
 	}
 
 	if (save_bin) {
@@ -1341,15 +1342,21 @@ static int get_c9_log_page_data(struct nvme_transport_handle *hdl,
 		if (fd < 0) {
 			fprintf(stderr, "Failed to open output file %s: %s!\n", output_file,
 				nvme_strerror(errno));
-			return fd;
+			ret = fd;
+			goto free;
 		}
 
 		ret = write(fd, (void *)pC9_string_buffer, total_log_page_sz);
 		if (ret != total_log_page_sz)
-			fprintf(stderr, "Failed to flush all data to file!\n");
+			fprintf(stderr, "Failed to flush all data to file! ret: %d\n", ret);
+		else
+			/* all data written, set ret = SUCCESS */
+			ret = 0;
 	}
 
-	return 0;
+free:
+	free(pC9_string_buffer);
+	return ret;
 }
 
 int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)

@@ -7,7 +7,7 @@ Fabrics-specific definitions.
 
 
 
-.. c:type:: struct nvme_fabrics_config
+.. c:struct:: nvme_fabrics_config
 
    Defines all linux nvme fabrics initiator options
 
@@ -16,8 +16,6 @@ Fabrics-specific definitions.
 ::
 
   struct nvme_fabrics_config {
-    char *host_traddr;
-    char *host_iface;
     int queue_size;
     int nr_io_queues;
     int reconnect_delay;
@@ -39,12 +37,6 @@ Fabrics-specific definitions.
   };
 
 **Members**
-
-``host_traddr``
-  Host transport address
-
-``host_iface``
-  Host interface name
 
 ``queue_size``
   Number of IO queue entries
@@ -104,7 +96,7 @@ Fabrics-specific definitions.
 
 
 
-.. c:type:: struct nvme_fabrics_uri
+.. c:struct:: nvme_fabrics_uri
 
    Parsed URI structure
 
@@ -377,7 +369,7 @@ into the topology using **h** as parent.
 
 **Return**
 
-0 on success; on failure errno is set and -1 is returned.
+0 on success, or an error code on failure.
 
 
 .. c:function:: int nvmf_connect_ctrl (nvme_ctrl_t c)
@@ -396,7 +388,7 @@ Issues a 'connect' command to the NVMe-oF controller.
 
 **Return**
 
-0 on success; on failure errno is set and -1 is returned.
+0 on success, or an error code on failure.
 
 
 .. c:function:: int nvmf_get_discovery_log (nvme_ctrl_t c, struct nvmf_discovery_log **logp, int max_retries)
@@ -409,7 +401,7 @@ Issues a 'connect' command to the NVMe-oF controller.
   Discovery controller to use
 
 ``struct nvmf_discovery_log **logp``
-  Pointer to the log page to be returned
+  Log page object to return
 
 ``int max_retries``
   Number of retries in case of failure
@@ -425,12 +417,12 @@ Consider using nvmf_get_discovery_wargs() instead.
 
 **Return**
 
-0 on success; on failure -1 is returned and errno is set
+0 on success, or an error code on failure.
 
 
 
 
-.. c:type:: struct nvme_get_discovery_args
+.. c:struct:: nvme_get_discovery_args
 
    Arguments for nvmf_get_discovery_wargs()
 
@@ -469,7 +461,7 @@ Consider using nvmf_get_discovery_wargs() instead.
 
 
 
-.. c:function:: struct nvmf_discovery_log * nvmf_get_discovery_wargs (struct nvme_get_discovery_args *args)
+.. c:function:: int nvmf_get_discovery_wargs (struct nvme_get_discovery_args *args, struct nvmf_discovery_log **log)
 
    Get the discovery log page with args
 
@@ -477,6 +469,9 @@ Consider using nvmf_get_discovery_wargs() instead.
 
 ``struct nvme_get_discovery_args *args``
   Argument structure
+
+``struct nvmf_discovery_log **log``
+  Discovery log page object to return
 
 **Description**
 
@@ -490,8 +485,7 @@ DLP must be freed by the caller using free().
 
 **Return**
 
-Pointer to the discovery log page (to be freed). NULL
-on failure and errno is set.
+0 on success, or an error code on failure.
 
 
 .. c:function:: char * nvmf_hostnqn_generate ()
@@ -574,29 +568,6 @@ The host identifier, or NULL if unsuccessful. If found, the caller
         is responsible to free the string.
 
 
-.. c:function:: nvme_ctrl_t nvmf_connect_disc_entry (nvme_host_t h, struct nvmf_disc_log_entry *e, const struct nvme_fabrics_config *defcfg, bool *discover)
-
-   Connect controller based on the discovery log page entry
-
-**Parameters**
-
-``nvme_host_t h``
-  Host to which the controller should be connected
-
-``struct nvmf_disc_log_entry *e``
-  Discovery log page entry
-
-``const struct nvme_fabrics_config *defcfg``
-  Default configuration to be used for the new controller
-
-``bool *discover``
-  Set to 'true' if the new controller is a discovery controller
-
-**Return**
-
-Pointer to the new controller
-
-
 .. c:function:: bool nvmf_is_registration_supported (nvme_ctrl_t c)
 
    check whether registration can be performed.
@@ -644,10 +615,10 @@ tasks are supported: register, deregister, and registration update.
 
 **Return**
 
-0 on success; on failure -1 is returned and errno is set
+0 on success, or an error code on failure.
 
 
-.. c:function:: struct nvme_fabrics_uri * nvme_parse_uri (const char *str)
+.. c:function:: int nvme_parse_uri (const char *str, struct nvme_fabrics_uri **uri)
 
    Parse the URI string
 
@@ -655,6 +626,9 @@ tasks are supported: register, deregister, and registration update.
 
 ``const char *str``
   URI string
+
+``struct nvme_fabrics_uri **uri``
+  URI object to return
 
 **Description**
 
@@ -669,7 +643,7 @@ Supported URI elements looks as follows:
 set.
 
 
-.. c:function:: void nvme_free_uri (struct nvme_fabrics_uri *uri)
+.. c:function:: void nvmf_free_uri (struct nvme_fabrics_uri *uri)
 
    Free the URI structure
 
@@ -681,5 +655,509 @@ set.
 **Description**
 
 Free an :c:type:`nvme_fabrics_uri` structure.
+
+
+.. c:function:: const char * nvmf_get_default_trsvcid (const char *transport, bool discovery_ctrl)
+
+   Get default transport service ID
+
+**Parameters**
+
+``const char *transport``
+  Transport type string (e.g., "tcp", "rdma")
+
+``bool discovery_ctrl``
+  True if for discovery controller, false otherwise
+
+**Description**
+
+Returns the default trsvcid (port) for the given transport and controller
+type.
+
+**Return**
+
+Allocated string with default trsvcid, or NULL on failure.
+
+
+.. c:function:: int nvmf_context_create (struct nvme_global_ctx *ctx, bool (*decide_retry)(struct nvmf_context *fctx, int err, void *user_data), void (*connected)(struct nvmf_context *fctx, struct nvme_ctrl *c, void *user_data), void (*already_connected)(struct nvmf_context *fctx, struct nvme_host *host, const char *subsysnqn, const char *transport, const char *traddr, const char *trsvcid, void *user_data), void *user_data, struct nvmf_context **fctxp)
+
+   Create a new fabrics context for discovery/connect
+
+**Parameters**
+
+``struct nvme_global_ctx *ctx``
+  Global context
+
+``bool (*decide_retry)(struct nvmf_context *fctx, int err, void *user_data)``
+  Callback to decide if a retry should be attempted
+
+``void (*connected)(struct nvmf_context *fctx, struct nvme_ctrl *c, void *user_data)``
+  Callback invoked when a connection is established
+
+``void (*already_connected)(struct nvmf_context *fctx, struct nvme_host *host, const char *subsysnqn, const char *transport, const char *traddr, const char *trsvcid, void *user_data)``
+  Callback invoked if already connected
+
+``void *user_data``
+  User data passed to callbacks
+
+``struct nvmf_context **fctxp``
+  Pointer to store the created context
+
+**Description**
+
+Allocates and initializes a new fabrics context for discovery/connect
+operations.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_context_set_discovery_cbs (struct nvmf_context *fctx, void (*discovery_log)(struct nvmf_context *fctx, bool connect, struct nvmf_discovery_log *log, uint64_t numrec, void *user_data), int (*parser_init)(struct nvmf_context *fctx, void *user_data), void (*parser_cleanup)(struct nvmf_context *fctx, void *user_data), int (*parser_next_line)(struct nvmf_context *fctx, void *user_data))
+
+   Set discovery callbacks for context
+
+**Parameters**
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``void (*discovery_log)(struct nvmf_context *fctx, bool connect, struct nvmf_discovery_log *log, uint64_t numrec, void *user_data)``
+  Callback for discovery log events
+
+``int (*parser_init)(struct nvmf_context *fctx, void *user_data)``
+  Callback to initialize parser
+
+``void (*parser_cleanup)(struct nvmf_context *fctx, void *user_data)``
+  Callback to cleanup parser
+
+``int (*parser_next_line)(struct nvmf_context *fctx, void *user_data)``
+  Callback to parse next line
+
+**Description**
+
+Sets the callbacks used during discovery operations for the given context.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_context_set_discovery_defaults (struct nvmf_context *fctx, int max_discovery_retries, int keep_alive_timeout)
+
+   Set default discovery parameters
+
+**Parameters**
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``int max_discovery_retries``
+  Maximum number of discovery retries
+
+``int keep_alive_timeout``
+  Keep-alive timeout in seconds
+
+**Description**
+
+Sets default values for discovery retries and keep-alive timeout.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_context_set_fabrics_config (struct nvmf_context *fctx, struct nvme_fabrics_config *cfg)
+
+   Set fabrics configuration for context
+
+**Parameters**
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``struct nvme_fabrics_config *cfg``
+  Fabrics configuration to apply
+
+**Description**
+
+Applies the given fabrics configuration to the context.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_context_set_connection (struct nvmf_context *fctx, const char *subsysnqn, const char *transport, const char *traddr, const char *trsvcid, const char *host_traddr, const char *host_iface)
+
+   Set connection parameters for context
+
+**Parameters**
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``const char *subsysnqn``
+  Subsystem NQN
+
+``const char *transport``
+  Transport type
+
+``const char *traddr``
+  Transport address
+
+``const char *trsvcid``
+  Transport service ID
+
+``const char *host_traddr``
+  Host transport address
+
+``const char *host_iface``
+  Host interface
+
+**Description**
+
+Sets the connection parameters for the context.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_context_set_hostnqn (struct nvmf_context *fctx, const char *hostnqn, const char *hostid)
+
+   Set host NQN and host ID for context
+
+**Parameters**
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``const char *hostnqn``
+  Host NQN
+
+``const char *hostid``
+  Host identifier
+
+**Description**
+
+Sets the host NQN and host ID for the context.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_context_set_crypto (struct nvmf_context *fctx, const char *hostkey, const char *ctrlkey, const char *keyring, const char *tls_key, const char *tls_key_identity)
+
+   Set cryptographic parameters for context
+
+**Parameters**
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``const char *hostkey``
+  Host key
+
+``const char *ctrlkey``
+  Controller key
+
+``const char *keyring``
+  Keyring identifier
+
+``const char *tls_key``
+  TLS key
+
+``const char *tls_key_identity``
+  TLS key identity
+
+**Description**
+
+Sets cryptographic and TLS parameters for the context.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_context_set_persistent (struct nvmf_context *fctx, bool persistent)
+
+   Set persistence for context
+
+**Parameters**
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``bool persistent``
+  Whether to enable persistent connections
+
+**Description**
+
+Sets whether the context should use persistent connections.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_context_set_device (struct nvmf_context *fctx, const char *device)
+
+   Set device for context
+
+**Parameters**
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``const char *device``
+  Device path or identifier
+
+**Description**
+
+Sets the device to be used by the context.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_discovery (struct nvme_global_ctx *ctx, struct nvmf_context *fctx, bool connect, bool force)
+
+   Perform fabrics discovery
+
+**Parameters**
+
+``struct nvme_global_ctx *ctx``
+  Global context
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``bool connect``
+  Whether to connect discovered subsystems
+
+``bool force``
+  Force discovery even if already connected
+
+**Description**
+
+Performs discovery for fabrics subsystems and optionally connects.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_discovery_config_json (struct nvme_global_ctx *ctx, struct nvmf_context *fctx, bool connect, bool force)
+
+   Perform discovery using JSON config
+
+**Parameters**
+
+``struct nvme_global_ctx *ctx``
+  Global context
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``bool connect``
+  Whether to connect discovered subsystems
+
+``bool force``
+  Force discovery even if already connected
+
+**Description**
+
+Performs discovery using a JSON configuration.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_discovery_config_file (struct nvme_global_ctx *ctx, struct nvmf_context *fctx, bool connect, bool force)
+
+   Perform discovery using config file
+
+**Parameters**
+
+``struct nvme_global_ctx *ctx``
+  Global context
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``bool connect``
+  Whether to connect discovered subsystems
+
+``bool force``
+  Force discovery even if already connected
+
+**Description**
+
+Performs discovery using a configuration file.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_discovery_nbft (struct nvme_global_ctx *ctx, struct nvmf_context *fctx, bool connect, char *nbft_path)
+
+   Perform discovery using NBFT
+
+**Parameters**
+
+``struct nvme_global_ctx *ctx``
+  Global context
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+``bool connect``
+  Whether to connect discovered subsystems
+
+``char *nbft_path``
+  Path to NBFT file
+
+**Description**
+
+Performs discovery using the specified NBFT file.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_connect (struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
+
+   Connect to fabrics subsystem
+
+**Parameters**
+
+``struct nvme_global_ctx *ctx``
+  Global context
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+**Description**
+
+Connects to the fabrics subsystem using the provided context.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_connect_config_json (struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
+
+   Connect using JSON config
+
+**Parameters**
+
+``struct nvme_global_ctx *ctx``
+  Global context
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+**Description**
+
+Connects to the fabrics subsystem using a JSON configuration.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: int nvmf_config_modify (struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
+
+   Modify and update the configurtion
+
+**Parameters**
+
+``struct nvme_global_ctx *ctx``
+  Global context
+
+``struct nvmf_context *fctx``
+  Fabrics context
+
+**Description**
+
+Update the current configuration by adding the crypto
+information.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+
+
+.. c:struct:: nbft_file_entry
+
+   Linked list entry for NBFT files
+
+**Definition**
+
+::
+
+  struct nbft_file_entry {
+    struct nbft_file_entry *next;
+    struct nbft_info *nbft;
+  };
+
+**Members**
+
+``next``
+  Pointer to next entry
+
+``nbft``
+  Pointer to NBFT info structure
+
+
+
+.. c:function:: int nvmf_nbft_read_files (struct nvme_global_ctx *ctx, char *path, struct nbft_file_entry **head)
+
+   Read NBFT files from path
+
+**Parameters**
+
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
+
+``char *path``
+  Path to NBFT files
+
+``struct nbft_file_entry **head``
+  Pointer to store linked list of NBFT file entries
+
+**Description**
+
+Reads NBFT files from the specified path and populates a linked list.
+
+**Return**
+
+0 on success, or a negative error code on failure.
+
+
+.. c:function:: void nvmf_nbft_free (struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
+
+   Free NBFT file entry list
+
+**Parameters**
+
+``struct nvme_global_ctx *ctx``
+  struct nvme_global_ctx object
+
+``struct nbft_file_entry *head``
+  Head of the NBFT file entry list
+
+**Description**
+
+Frees all memory associated with the NBFT file entry list.
 
 

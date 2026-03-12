@@ -1,0 +1,19 @@
+.TH "libnvme" 9 "struct nbft_file_entry" "March 2026" "API Manual" LINUX
+.SH NAME
+struct nbft_file_entry \- Linked list entry for NBFT files
+.SH SYNOPSIS
+struct nbft_file_entry {
+.br
+.BI "    struct nbft_file_entry *next;"
+.br
+.BI "    struct nbft_info *nbft;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "next" 12
+Pointer to next entry
+.IP "nbft" 12
+Pointer to NBFT info structure

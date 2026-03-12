@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_lm_cdq_fields" "November 2025" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_lm_cdq_fields" "March 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_lm_cdq_fields \- Controller Data Queue command fields
 .SH SYNOPSIS
@@ -52,6 +52,14 @@ enum nvme_lm_cdq_fields {
 , 
 .br
 .br
+.BI "    NVME_LM_CREATE_CDQ_PC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_LM_CREATE_CDQ_PC_MASK"
+, 
+.br
+.br
 .BI "    NVME_LM_CREATE_CDQ_CNTLID_SHIFT"
 , 
 .br
@@ -100,6 +108,10 @@ Mask to set CQS field
 User Data Migration Queue type
 .IP "NVME_LM_CREATE_CDQ_PC" 12
 Physically Contiguous (PC)
+.IP "NVME_LM_CREATE_CDQ_PC_SHIFT" 12
+Shift amount to set the PC field
+.IP "NVME_LM_CREATE_CDQ_PC_MASK" 12
+Mask to set PC field
 .IP "NVME_LM_CREATE_CDQ_CNTLID_SHIFT" 12
 Shift amount to set CNTLID field relative to MOS
 .IP "NVME_LM_CREATE_CDQ_CNTLID_MASK" 12

@@ -1,12 +1,12 @@
-.TH "nvme_ns_rescan" 9 "nvme_ns_rescan" "November 2025" "libnvme API manual" LINUX
+.TH "nvme_ns_rescan" 9 "nvme_ns_rescan" "March 2026" "libnvme API manual" LINUX
 .SH NAME
 nvme_ns_rescan \- Initiate a controller rescan
 .SH SYNOPSIS
 .B "int" nvme_ns_rescan
-.BI "(int fd "  ");"
+.BI "(struct nvme_transport_handle *hdl "  ");"
 .SH ARGUMENTS
-.IP "fd" 12
-File descriptor of nvme device
+.IP "hdl" 12
+Transport handle
 .SH "DESCRIPTION"
 This should only be sent to controller handles, not to namespaces.
 .SH "RETURN"

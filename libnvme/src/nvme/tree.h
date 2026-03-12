@@ -1340,15 +1340,6 @@ void nvme_host_release_fds(struct nvme_host *h);
 void nvme_free_host(nvme_host_t h);
 
 /**
- * nvme_scan() - Scan NVMe topology
- * @config_file:	Configuration file
- * @ctx:		&nvme_global_ctx object to return
- *
- * Return: 0 on success or negative error code otherwise
- */
-int nvme_scan(const char *config_file, struct nvme_global_ctx **ctx);
-
-/**
  * nvme_read_config() - Read NVMe JSON configuration file
  * @ctx:		&struct nvme_global_ctx object
  * @config_file:	JSON configuration file

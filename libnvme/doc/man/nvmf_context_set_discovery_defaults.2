@@ -1,0 +1,19 @@
+.TH "nvmf_context_set_discovery_defaults" 9 "nvmf_context_set_discovery_defaults" "March 2026" "libnvme API manual" LINUX
+.SH NAME
+nvmf_context_set_discovery_defaults \- Set default discovery parameters
+.SH SYNOPSIS
+.B "int" nvmf_context_set_discovery_defaults
+.BI "(struct nvmf_context *fctx "  ","
+.BI "int max_discovery_retries "  ","
+.BI "int keep_alive_timeout "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context
+.IP "max_discovery_retries" 12
+Maximum number of discovery retries
+.IP "keep_alive_timeout" 12
+Keep-alive timeout in seconds
+.SH "DESCRIPTION"
+Sets default values for discovery retries and keep-alive timeout.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

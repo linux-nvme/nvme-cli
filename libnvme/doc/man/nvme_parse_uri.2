@@ -1,12 +1,15 @@
-.TH "nvme_parse_uri" 9 "nvme_parse_uri" "November 2025" "libnvme API manual" LINUX
+.TH "nvme_parse_uri" 9 "nvme_parse_uri" "March 2026" "libnvme API manual" LINUX
 .SH NAME
 nvme_parse_uri \- Parse the URI string
 .SH SYNOPSIS
-.B "struct nvme_fabrics_uri *" nvme_parse_uri
-.BI "(const char *str "  ");"
+.B "int" nvme_parse_uri
+.BI "(const char *str "  ","
+.BI "struct nvme_fabrics_uri **uri "  ");"
 .SH ARGUMENTS
 .IP "str" 12
 URI string
+.IP "uri" 12
+URI object to return
 .SH "DESCRIPTION"
 Parse the URI string as defined in the NVM Express Boot Specification.
 Supported URI elements looks as follows:

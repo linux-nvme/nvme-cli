@@ -1,0 +1,36 @@
+.TH "libnvme" 9 "enum nvme_pel_vsedt_code" "March 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_pel_vsedt_code \- Persistent Event Log - Vendor Specific Event Data Type Code
+.SH SYNOPSIS
+enum nvme_pel_vsedt_code {
+.br
+.BI "    NVME_PEL_VSEDT_RSVD"
+, 
+.br
+.br
+.BI "    NVME_PEL_VSEDT_EVENT_NAME"
+, 
+.br
+.br
+.BI "    NVME_PEL_VSEDT_ASCII_STRING"
+, 
+.br
+.br
+.BI "    NVME_PEL_VSEDT_BINARY"
+, 
+.br
+.br
+.BI "    NVME_PEL_VSEDT_SIGNED_INT"
+
+};
+.SH Constants
+.IP "NVME_PEL_VSEDT_RSVD" 12
+Reserved
+.IP "NVME_PEL_VSEDT_EVENT_NAME" 12
+Event Name
+.IP "NVME_PEL_VSEDT_ASCII_STRING" 12
+ASCII String
+.IP "NVME_PEL_VSEDT_BINARY" 12
+Binary
+.IP "NVME_PEL_VSEDT_SIGNED_INT" 12
+Signed Integer

@@ -7,7 +7,7 @@ libnvme utility functions
 
 
 
-.. c:type:: enum nvme_connect_err
+.. c:enum:: nvme_connect_err
 
    nvme connect error codes
 
@@ -113,6 +113,41 @@ String representation of the nvme status if it is an nvme status field,
 or a standard errno string if status is < 0.
 
 
+.. c:function:: const char * nvme_sanitize_ns_status_to_string (__u16 sc)
+
+   Returns sanitize ns status string.
+
+**Parameters**
+
+``__u16 sc``
+  Return status code from an sanitize ns command
+
+**Return**
+
+The sanitize ns status string if it is a specific status code.
+
+
+.. c:function:: const char * nvme_opcode_status_to_string (int status, bool admin, __u8 opcode)
+
+   Returns nvme opcode status string.
+
+**Parameters**
+
+``int status``
+  Return status from an nvme passthrough command
+
+``bool admin``
+  Set to true if an admin command
+
+``__u8 opcode``
+  Opcode from an nvme passthrough command
+
+**Return**
+
+The nvme opcode status string if it is an nvme status field,
+or a standard errno string if status is < 0.
+
+
 .. c:function:: const char * nvme_errno_to_string (int err)
 
    Returns string describing nvme connect failures
@@ -127,423 +162,19 @@ or a standard errno string if status is < 0.
 String representation of the nvme connect error codes
 
 
-.. c:function:: void nvme_init_ctrl_list (struct nvme_ctrl_list *cntlist, __u16 num_ctrls, __u16 *ctrlist)
+.. c:function:: const char * nvme_strerror (int err)
 
-   Initialize an nvme_ctrl_list structure from an array.
-
-**Parameters**
-
-``struct nvme_ctrl_list *cntlist``
-  The controller list structure to initialize
-
-``__u16 num_ctrls``
-  The number of controllers in the array, :c:type:`ctrlist`.
-
-``__u16 *ctrlist``
-  An array of controller identifiers in CPU native endian.
-
-**Description**
-
-This is intended to be used with any command that takes a controller list
-argument. See nvme_ns_attach_ctrls() and nvme_ns_detach().
-
-
-.. c:function:: void nvme_init_dsm_range (struct nvme_dsm_range *dsm, __u32 *ctx_attrs, __u32 *llbas, __u64 *slbas, __u16 nr_ranges)
-
-   Constructs a data set range structure
+   Returns string describing nvme errors and errno
 
 **Parameters**
 
-``struct nvme_dsm_range *dsm``
-  DSM range array
-
-``__u32 *ctx_attrs``
-  Array of context attributes
-
-``__u32 *llbas``
-  Array of length in logical blocks
-
-``__u64 *slbas``
-  Array of starting logical blocks
-
-``__u16 nr_ranges``
-  The size of the dsm arrays
-
-**Description**
-
-Each array must be the same size of size 'nr_ranges'. This is intended to be
-used with constructing a payload for nvme_dsm().
+``int err``
+  Returned error codes from all libnvme functions
 
 **Return**
 
-The nvme command status if a response was received or -errno
-otherwise.
-
-
-.. c:function:: void nvme_init_copy_range (struct nvme_copy_range *copy, __u16 *nlbs, __u64 *slbas, __u32 *eilbrts, __u32 *elbatms, __u32 *elbats, __u16 nr)
-
-   Constructs a copy range structure
-
-**Parameters**
-
-``struct nvme_copy_range *copy``
-  Copy range array
-
-``__u16 *nlbs``
-  Number of logical blocks
-
-``__u64 *slbas``
-  Starting LBA
-
-``__u32 *eilbrts``
-  Expected initial logical block reference tag
-
-``__u32 *elbatms``
-  Expected logical block application tag mask
-
-``__u32 *elbats``
-  Expected logical block application tag
-
-``__u16 nr``
-  Number of descriptors to construct
-
-
-.. c:function:: void nvme_init_copy_range_f1 (struct nvme_copy_range_f1 *copy, __u16 *nlbs, __u64 *slbas, __u64 *eilbrts, __u32 *elbatms, __u32 *elbats, __u16 nr)
-
-   Constructs a copy range f1 structure
-
-**Parameters**
-
-``struct nvme_copy_range_f1 *copy``
-  Copy range array
-
-``__u16 *nlbs``
-  Number of logical blocks
-
-``__u64 *slbas``
-  Starting LBA
-
-``__u64 *eilbrts``
-  Expected initial logical block reference tag
-
-``__u32 *elbatms``
-  Expected logical block application tag mask
-
-``__u32 *elbats``
-  Expected logical block application tag
-
-``__u16 nr``
-  Number of descriptors to construct
-
-
-.. c:function:: void nvme_init_copy_range_f2 (struct nvme_copy_range_f2 *copy, __u32 *snsids, __u16 *nlbs, __u64 *slbas, __u16 *sopts, __u32 *eilbrts, __u32 *elbatms, __u32 *elbats, __u16 nr)
-
-   Constructs a copy range f2 structure
-
-**Parameters**
-
-``struct nvme_copy_range_f2 *copy``
-  Copy range array
-
-``__u32 *snsids``
-  Source namespace identifier
-
-``__u16 *nlbs``
-  Number of logical blocks
-
-``__u64 *slbas``
-  Starting LBA
-
-``__u16 *sopts``
-  Source options
-
-``__u32 *eilbrts``
-  Expected initial logical block reference tag
-
-``__u32 *elbatms``
-  Expected logical block application tag mask
-
-``__u32 *elbats``
-  Expected logical block application tag
-
-``__u16 nr``
-  Number of descriptors to construct
-
-
-.. c:function:: void nvme_init_copy_range_f3 (struct nvme_copy_range_f3 *copy, __u32 *snsids, __u16 *nlbs, __u64 *slbas, __u16 *sopts, __u64 *eilbrts, __u32 *elbatms, __u32 *elbats, __u16 nr)
-
-   Constructs a copy range f3 structure
-
-**Parameters**
-
-``struct nvme_copy_range_f3 *copy``
-  Copy range array
-
-``__u32 *snsids``
-  Source namespace identifier
-
-``__u16 *nlbs``
-  Number of logical blocks
-
-``__u64 *slbas``
-  Starting LBA
-
-``__u16 *sopts``
-  Source options
-
-``__u64 *eilbrts``
-  Expected initial logical block reference tag
-
-``__u32 *elbatms``
-  Expected logical block application tag mask
-
-``__u32 *elbats``
-  Expected logical block application tag
-
-``__u16 nr``
-  Number of descriptors to construct
-
-
-.. c:function:: int nvme_get_feature_length (int fid, __u32 cdw11, __u32 *len)
-
-   Retreive the command payload length for a specific feature identifier
-
-**Parameters**
-
-``int fid``
-  Feature identifier, see :c:type:`enum nvme_features_id <nvme_features_id>`.
-
-``__u32 cdw11``
-  The cdw11 value may affect the transfer (only known fid is
-  ``NVME_FEAT_FID_HOST_ID``)
-
-``__u32 *len``
-  On success, set to this features payload length in bytes.
-
-**Return**
-
-0 on success, -1 with errno set to EINVAL if the function did not
-recognize :c:type:`fid`.
-
-
-.. c:function:: int nvme_get_feature_length2 (int fid, __u32 cdw11, enum nvme_data_tfr dir, __u32 *len)
-
-   Retreive the command payload length for a specific feature identifier
-
-**Parameters**
-
-``int fid``
-  Feature identifier, see :c:type:`enum nvme_features_id <nvme_features_id>`.
-
-``__u32 cdw11``
-  The cdw11 value may affect the transfer (only known fid is
-  ``NVME_FEAT_FID_HOST_ID``)
-
-``enum nvme_data_tfr dir``
-  Data transfer direction: false - host to controller, true -
-  controller to host may affect the transfer (only known fid is
-  ``NVME_FEAT_FID_HOST_MEM_BUF``).
-
-``__u32 *len``
-  On success, set to this features payload length in bytes.
-
-**Return**
-
-0 on success, -1 with errno set to EINVAL if the function did not
-recognize :c:type:`fid`.
-
-
-.. c:function:: int nvme_get_directive_receive_length (enum nvme_directive_dtype dtype, enum nvme_directive_receive_doper doper, __u32 *len)
-
-   Get directive receive length
-
-**Parameters**
-
-``enum nvme_directive_dtype dtype``
-  Directive type, see :c:type:`enum nvme_directive_dtype <nvme_directive_dtype>`
-
-``enum nvme_directive_receive_doper doper``
-  Directive receive operation, see :c:type:`enum nvme_directive_receive_doper <nvme_directive_receive_doper>`
-
-``__u32 *len``
-  On success, set to this directives payload length in bytes.
-
-**Return**
-
-0 on success, -1 with errno set to EINVAL if the function did not
-recognize :c:type:`dtype` or :c:type:`doper`.
-
-
-.. c:function:: size_t get_entity_name (char *buffer, size_t bufsz)
-
-   Get Entity Name (ENAME).
-
-**Parameters**
-
-``char *buffer``
-  The buffer where the ENAME will be saved as an ASCII string.
-
-``size_t bufsz``
-  The size of **buffer**.
-
-**Description**
-
-Per TP8010, ENAME is defined as the name associated with the host (i.e.
-hostname).
-
-**Return**
-
-Number of characters copied to **buffer**.
-
-
-.. c:function:: size_t get_entity_version (char *buffer, size_t bufsz)
-
-   Get Entity Version (EVER).
-
-**Parameters**
-
-``char *buffer``
-  The buffer where the EVER will be saved as an ASCII string.
-
-``size_t bufsz``
-  The size of **buffer**.
-
-**Description**
-
-EVER is defined as the operating system name and version as an ASCII
-string. This function reads different files from the file system and
-builds a string as follows: [os type] [os release] [distro release]
-
-    E.g. "Linux 5.17.0-rc1 SLES 15.4"
-
-**Return**
-
-Number of characters copied to **buffer**.
-
-
-.. c:function:: char * kv_strip (char *kv)
-
-   Strip blanks from key value string
-
-**Parameters**
-
-``char *kv``
-  The key-value string to strip
-
-**Description**
-
-Strip leading/trailing blanks as well as trailing comments from the
-Key=Value string pointed to by **kv**.
-
-**Return**
-
-A pointer to the stripped string. Note that the original string,
-**kv**, gets modified.
-
-
-.. c:function:: char * kv_keymatch (const char *kv, const char *key)
-
-   Look for key in key value string
-
-**Parameters**
-
-``const char *kv``
-  The key=value string to search for the presence of **key**
-
-``const char *key``
-  The key to look for
-
-**Description**
-
-Look for **key** in the Key=Value pair pointed to by **k** and return a
-pointer to the Value if **key** is found.
-
-Check if **kv** starts with **key**. If it does then make sure that we
-have a whole-word match on the **key**, and if we do, return a pointer
-to the first character of value (i.e. skip leading spaces, tabs,
-and equal sign)
-
-**Return**
-
-A pointer to the first character of "value" if a match is found.
-NULL otherwise.
-
-
-.. c:function:: char * startswith (const char *s, const char *prefix)
-
-   Checks that a string starts with a given prefix.
-
-**Parameters**
-
-``const char *s``
-  The string to check
-
-``const char *prefix``
-  A string that **s** could be starting with
-
-**Return**
-
-If **s** starts with **prefix**, then return a pointer within **s** at
-the first character after the matched **prefix**. NULL otherwise.
-
-
-.. c:function:: round_up (val, mult)
-
-   Round a value **val** to the next multiple specified by **mult**.
-
-**Parameters**
-
-``val``
-  Value to round
-
-``mult``
-  Multiple to round to.
-
-**Description**
-
-usage: int x = round_up(13, sizeof(__u32)); // 13 -> 16
-
-
-.. c:function:: __u16 nvmf_exat_len (size_t val_len)
-
-   Return length rounded up by 4
-
-**Parameters**
-
-``size_t val_len``
-  Value length
-
-**Description**
-
-Return the size in bytes, rounded to a multiple of 4 (e.g., size of
-__u32), of the buffer needed to hold the exat value of size
-**val_len**.
-
-**Return**
-
-Length rounded up by 4
-
-
-.. c:function:: __u16 nvmf_exat_size (size_t val_len)
-
-   Return min aligned size to hold value
-
-**Parameters**
-
-``size_t val_len``
-  This is the length of the data to be copied to the "exatval"
-  field of a "struct nvmf_ext_attr".
-
-**Description**
-
-Return the size of the "struct nvmf_ext_attr" needed to hold
-a value of size **val_len**.
-
-**Return**
-
-The size in bytes, rounded to a multiple of 4 (i.e. size of
-__u32), of the "struct nvmf_ext_attr" required to hold a string of
-length **val_len**.
+String representation of either the nvme connect error codes
+(positive values) or errno string (negative values)
 
 
 .. c:function:: struct nvmf_ext_attr * nvmf_exat_ptr_next (struct nvmf_ext_attr *p)
@@ -570,7 +201,7 @@ Pointer to the next element in the array.
 
 
 
-.. c:type:: enum nvme_version
+.. c:enum:: nvme_version
 
    Selector for version to be returned by **nvme_get_version**
 
@@ -667,69 +298,17 @@ Returns error code if generating of random number fails.
 The array position where given UUID is present, or -1 on failure with errno set.
 
 
-.. c:function:: bool nvme_ipaddrs_eq (const char *addr1, const char *addr2)
+.. c:function:: char * nvme_basename (const char *path)
 
-   Check if 2 IP addresses are equal.
-
-**Parameters**
-
-``const char *addr1``
-  IP address (can be IPv4 or IPv6)
-
-``const char *addr2``
-  IP address (can be IPv4 or IPv6)
-
-**Return**
-
-true if addr1 == addr2. false otherwise.
-
-
-.. c:function:: const char * nvme_iface_matching_addr (const struct ifaddrs *iface_list, const char *addr)
-
-   Get interface matching **addr**
+   Return the final path component (the one after the last '/')
 
 **Parameters**
 
-``const struct ifaddrs *iface_list``
-  Interface list returned by getifaddrs()
-
-``const char *addr``
-  Address to match
-
-**Description**
-
-Parse the interface list pointed to by **iface_list** looking
-for the interface that has **addr** as one of its assigned
-addresses.
+``const char *path``
+  A string containing a filesystem path
 
 **Return**
 
-The name of the interface that owns **addr** or NULL.
-
-
-.. c:function:: bool nvme_iface_primary_addr_matches (const struct ifaddrs *iface_list, const char *iface, const char *addr)
-
-   Check that interface's primary address matches
-
-**Parameters**
-
-``const struct ifaddrs *iface_list``
-  Interface list returned by getifaddrs()
-
-``const char *iface``
-  Interface to match
-
-``const char *addr``
-  Address to match
-
-**Description**
-
-Parse the interface list pointed to by **iface_list** and looking for
-interface **iface**. The get its primary address and check if it matches
-**addr**.
-
-**Return**
-
-true if a match is found, false otherwise.
+A pointer into the original null-terminated path string.
 
 

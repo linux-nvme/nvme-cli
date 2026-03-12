@@ -1272,36 +1272,36 @@ static void stdout_subsystem_list(struct nvme_global_ctx *ctx, bool show_ana)
 
 static void stdout_registers_cap(struct nvme_bar_cap *cap)
 {
-	printf("\tNVM Subsystem Shutdown Enhancements Supported (NSSES): %s\n",
+	printf("\tNVM Subsystem Shutdown Enhancements Supported (NSSES)      : %s\n",
 		cap->nsses ? "Supported" : "Not Supported");
-	printf("\tController Ready With Media Support (CRWMS): %s\n",
+	printf("\tController Ready With Media Support (CRWMS)                : %s\n",
 	       cap->crwms ? "Supported" : "Not Supported");
-	printf("\tController Ready Independent of Media Support (CRIMS): %s\n",
+	printf("\tController Ready Independent of Media Support (CRIMS)      : %s\n",
 	       cap->crims ? "Supported" : "Not Supported");
-	printf("\tNVM Subsystem Shutdown Supported   (NSSS): %s\n", cap->nsss ? "Supported" : "Not Supported");
-	printf("\tController Memory Buffer Supported (CMBS): The Controller Memory Buffer is %s\n",
+	printf("\tNVM Subsystem Shutdown Supported   (NSSS)                  : %s\n", cap->nsss ? "Supported" : "Not Supported");
+	printf("\tController Memory Buffer Supported (CMBS)                  : The Controller Memory Buffer is %s\n",
 	       cap->cmbs ? "Supported" : "Not Supported");
-	printf("\tPersistent Memory Region Supported (PMRS): The Persistent Memory Region is %s\n",
+	printf("\tPersistent Memory Region Supported (PMRS)                  : The Persistent Memory Region is %s\n",
 	       cap->pmrs ? "Supported" : "Not Supported");
-	printf("\tMemory Page Size Maximum         (MPSMAX): %u bytes\n", 1 << (12 + cap->mpsmax));
-	printf("\tMemory Page Size Minimum         (MPSMIN): %u bytes\n", 1 << (12 + cap->mpsmin));
-	printf("\tController Power Scope              (CPS): %s\n",
+	printf("\tMemory Page Size Maximum         (MPSMAX)                  : %u bytes\n", 1 << (12 + cap->mpsmax));
+	printf("\tMemory Page Size Minimum         (MPSMIN)                  : %u bytes\n", 1 << (12 + cap->mpsmin));
+	printf("\tController Power Scope              (CPS)                  : %s\n",
 	       !cap->cps ? "Not Reported" : cap->cps == 1 ? "Controller scope" :
 	       cap->cps == 2 ? "Domain scope" : "NVM subsystem scope");
-	printf("\tBoot Partition Support              (BPS): %s\n", cap->bps ? "Yes" : "No");
-	printf("\tCommand Sets Supported              (CSS): NVM command set is %s\n",
+	printf("\tBoot Partition Support              (BPS)                  : %s\n", cap->bps ? "Yes" : "No");
+	printf("\tCommand Sets Supported              (CSS)                  : NVM command set is %s\n",
 	       cap->css & 0x01 ? "Supported" : "Not Supported");
-	printf("\t                                           One or more I/O Command Sets are %s\n",
+	printf("\t                                                             One or more I/O Command Sets are %s\n",
 	       cap->css & 0x40 ? "Supported" : "Not Supported");
-	printf("\t                                           %s\n",
+	printf("\t                                                             %s\n",
 	       cap->css & 0x80 ? "Only Admin Command Set Supported" : "I/O Command Set is Supported");
-	printf("\tNVM Subsystem Reset Supported     (NSSRS): %s\n", cap->nssrs ? "Yes" : "No");
-	printf("\tDoorbell Stride                   (DSTRD): %u bytes\n", 1 << (2 + cap->dstrd));
-	printf("\tTimeout                              (TO): %u ms\n", cap->to * 500);
-	printf("\tArbitration Mechanism Supported     (AMS): Weighted Round Robin with Urgent Priority Class is %s\n",
+	printf("\tNVM Subsystem Reset Supported     (NSSRS)                  : %s\n", cap->nssrs ? "Yes" : "No");
+	printf("\tDoorbell Stride                   (DSTRD)                  : %u bytes\n", 1 << (2 + cap->dstrd));
+	printf("\tTimeout                              (TO)                  : %u ms\n", cap->to * 500);
+	printf("\tArbitration Mechanism Supported     (AMS)                  : Weighted Round Robin with Urgent Priority Class is %s\n",
 	       cap->ams & 0x01 ? "Supported" : "Not supported");
-	printf("\tContiguous Queues Required          (CQR): %s\n", cap->cqr ? "Yes" : "No");
-	printf("\tMaximum Queue Entries Supported    (MQES): %u\n\n", cap->mqes + 1);
+	printf("\tContiguous Queues Required          (CQR)                  : %s\n", cap->cqr ? "Yes" : "No");
+	printf("\tMaximum Queue Entries Supported    (MQES)                  : %u\n\n", cap->mqes + 1);
 }
 
 static void stdout_registers_version(__u32 vs)
@@ -1312,7 +1312,7 @@ static void stdout_registers_version(__u32 vs)
 
 static void stdout_registers_cc_ams(__u8 ams)
 {
-	printf("\tArbitration Mechanism Selected     (AMS): ");
+	printf("\tArbitration Mechanism Selected     (AMS)                   : ");
 	switch (ams) {
 	case NVME_CC_AMS_RR:
 		printf("Round Robin\n");
@@ -1331,7 +1331,7 @@ static void stdout_registers_cc_ams(__u8 ams)
 
 static void stdout_registers_cc_shn(__u8 shn)
 {
-	printf("\tShutdown Notification              (SHN): ");
+	printf("\tShutdown Notification              (SHN)                   : ");
 	switch (shn) {
 	case NVME_CC_SHN_NONE:
 		printf("No notification; no effect\n");
@@ -1350,22 +1350,22 @@ static void stdout_registers_cc_shn(__u8 shn)
 
 static void stdout_registers_cc(__u32 cc)
 {
-	printf("\tController Ready Independent of Media Enable (CRIME): %s\n",
+	printf("\tController Ready Independent of Media Enable (CRIME)       : %s\n",
 		NVME_CC_CRIME(cc) ? "Enabled" : "Disabled");
 
-	printf("\tI/O Completion Queue Entry Size (IOCQES): %u bytes\n",
+	printf("\tI/O Completion Queue Entry Size (IOCQES)                   : %u bytes\n",
 	       POWER_OF_TWO(NVME_CC_IOCQES(cc)));
-	printf("\tI/O Submission Queue Entry Size (IOSQES): %u bytes\n",
+	printf("\tI/O Submission Queue Entry Size (IOSQES)                   : %u bytes\n",
 	       POWER_OF_TWO(NVME_CC_IOSQES(cc)));
 	stdout_registers_cc_shn(NVME_CC_SHN(cc));
 	stdout_registers_cc_ams(NVME_CC_AMS(cc));
-	printf("\tMemory Page Size                   (MPS): %u bytes\n",
+	printf("\tMemory Page Size                   (MPS)                   : %u bytes\n",
 	       POWER_OF_TWO(12 + NVME_CC_MPS(cc)));
-	printf("\tI/O Command Set Selected           (CSS): %s\n",
+	printf("\tI/O Command Set Selected           (CSS)                   : %s\n",
 	       NVME_CC_CSS(cc) == NVME_CC_CSS_NVM ? "NVM Command Set" :
 	       NVME_CC_CSS(cc) == NVME_CC_CSS_CSI ? "All supported I/O Command Sets" :
 	       NVME_CC_CSS(cc) == NVME_CC_CSS_ADMIN ? "Admin Command Set only" : "Reserved");
-	printf("\tEnable                              (EN): %s\n\n", NVME_CC_EN(cc) ? "Yes" : "No");
+	printf("\tEnable                              (EN)                   : %s\n\n", NVME_CC_EN(cc) ? "Yes" : "No");
 }
 
 static void stdout_registers_csts_shst(__u8 shst)
@@ -5330,19 +5330,19 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		if (buf) {
 			struct nvme_feat_host_behavior *host_behavior =
 				(struct nvme_feat_host_behavior *)buf;
-			printf("\tAdvanced Command Retry Enable (ACRE): %s\n",
+			printf("\tAdvanced Command Retry Enable (ACRE)                    : %s\n",
 			       host_behavior->acre ? "True" : "False");
-			printf("\tExtended Telemetry Data Area 4 Supported (ETDAS): %s\n",
+			printf("\tExtended Telemetry Data Area 4 Supported (ETDAS)        : %s\n",
 			       host_behavior->etdas ? "True" : "False");
-			printf("\tLBA Format Extension Enable (LBAFEE): %s\n",
+			printf("\tLBA Format Extension Enable (LBAFEE)                    : %s\n",
 			       host_behavior->lbafee ? "True" : "False");
-			printf("\tHost Dispersed Namespace Support (HDISNS) : %s\n",
+			printf("\tHost Dispersed Namespace Support (HDISNS)               : %s\n",
 			       host_behavior->hdisns ? "Enabled" : "Disabled");
-			printf("\tCopy Descriptor Format 2h Enabled (CDF2E) : %s\n",
+			printf("\tCopy Descriptor Format 2h Enabled (CDF2E)               : %s\n",
 			       host_behavior->cdfe & (1 << 2) ? "True" : "False");
-			printf("\tCopy Descriptor Format 3h Enabled (CDF3E) : %s\n",
+			printf("\tCopy Descriptor Format 3h Enabled (CDF3E)               : %s\n",
 			       host_behavior->cdfe & (1 << 3) ? "True" : "False");
-			printf("\tCopy Descriptor Format 4h Enabled (CDF4E) : %s\n",
+			printf("\tCopy Descriptor Format 4h Enabled (CDF4E)               : %s\n",
 			       host_behavior->cdfe & (1 << 4) ? "True" : "False");
 		}
 		break;
