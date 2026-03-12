@@ -2110,11 +2110,7 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *acmd,
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	cap_log = nvme_alloc(sizeof(*cap_log));
-	if (!cap_log)
-		return -ENOMEM;
-
-	err = nvme_get_log_support_cap_config_list(hdl, cfg.domainid, cap_log);
+	err = nvme_get_log_support_cap_config_list(hdl, cfg.domainid, &cap_log);
 	if (err) {
 		nvme_show_err(
 		    "supported capacity configuration list log", err);
