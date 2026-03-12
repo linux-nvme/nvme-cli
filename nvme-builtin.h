@@ -102,12 +102,15 @@ COMMAND_LIST(
 	ENTRY("show-regs", "Shows the controller registers or properties. Requires character device", show_registers)
 	ENTRY("set-reg", "Set a register and show the resulting value", set_register)
 	ENTRY("get-reg", "Get a register and show the resulting value", get_register)
+#ifdef CONFIG_FABRICS
 	ENTRY("discover", "Discover NVMeoF subsystems", discover_cmd)
 	ENTRY("connect-all", "Discover and Connect to NVMeoF subsystems", connect_all_cmd)
 	ENTRY("connect", "Connect to NVMeoF subsystem", connect_cmd)
 	ENTRY("disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd)
 	ENTRY("disconnect-all", "Disconnect from all connected NVMeoF subsystems", disconnect_all_cmd)
 	ENTRY("config", "Configuration of NVMeoF subsystems", config_cmd)
+	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller", dim_cmd)
+#endif
 	ENTRY("gen-hostnqn", "Generate NVMeoF host NQN", gen_hostnqn_cmd)
 	ENTRY("show-hostnqn", "Show NVMeoF host NQN", show_hostnqn_cmd)
 	ENTRY("gen-dhchap-key", "Generate NVMeoF DH-HMAC-CHAP host key", gen_dhchap_key)
@@ -120,8 +123,7 @@ COMMAND_LIST(
 	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller", virtual_mgmt)
 	ENTRY("rpmb", "Replay Protection Memory Block commands", rpmb_cmd)
 	ENTRY("lockdown", "Submit a Lockdown command,return result", lockdown_cmd)
-	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller", dim_cmd) \
-	ENTRY("show-topology", "Show the topology", show_topology_cmd) \
+	ENTRY("show-topology", "Show the topology", show_topology_cmd)
 	ENTRY("io-mgmt-recv", "I/O Management Receive", io_mgmt_recv)
 	ENTRY("io-mgmt-send", "I/O Management Send", io_mgmt_send)
 	ENTRY("nvme-mi-recv", "Submit a NVMe-MI Receive command, return results", nmi_recv)

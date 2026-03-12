@@ -12,6 +12,12 @@ option(
   description: 'Build libnvme library'
 )
 option(
+  'fabrics',
+  type : 'feature',
+  value: 'enabled',
+  description : 'NVMeoF support'
+)
+option(
   'python',
   type : 'feature',
   value: 'auto',

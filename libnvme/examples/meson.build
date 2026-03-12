@@ -35,15 +35,17 @@ executable(
     ],
 )
 
-executable(
-    'discover-loop',
-    ['discover-loop.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-)
+if want_fabrics
+    executable(
+        'discover-loop',
+        ['discover-loop.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+endif
 
 executable(
     'mi-mctp',
