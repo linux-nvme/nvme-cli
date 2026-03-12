@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+# Skip on Windows for now.
+if host_system != 'windows'
+
 test_uint128 = executable(
     'test-uint128',
     ['test-uint128.c', '../util/types.c', '../util/suffix.c'],
@@ -59,3 +62,5 @@ test_argconfig_parse = executable(
 )
 
 test('nvme-cli - argconfig_parse', test_argconfig_parse)
+
+endif # host_system != 'windows'

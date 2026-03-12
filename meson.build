@@ -23,7 +23,6 @@ project(
     default_options: [
         'c_std=gnu99',
         'buildtype=debugoptimized',
-        'prefix=/usr/local',
         'warning_level=1',
         'sysconfdir=etc',
         'wrap_mode=nofallback',
@@ -34,6 +33,7 @@ fs = import('fs')
 
 cc = meson.get_compiler('c')
 cxx_available = add_languages('cpp', required: false, native: false)
+host_system = host_machine.system()
 
 ################################################################################
 # Determine which features we need to build: The nvme executable, the libnvme
@@ -55,7 +55,7 @@ want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
 
 feature_python = get_option('python')
-if feature_python.disabled()
+if host_system == 'windows' or feature_python.disabled()
     py3_dep = dependency('', required: false)  # Needed for muon
     want_python = false
 else
@@ -128,8 +128,12 @@ endif
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 conf.set('RUNDIR', '"@0@"'.format(rundir))
 
+if host_system == 'windows'
+    kernel32_dep = cc.find_library('kernel32', required: true)
+endif
+
 # Check for libjson-c availability
-if get_option('json-c').disabled()
+if host_system == 'windows' or get_option('json-c').disabled()
     json_c_dep = dependency('', required: false)
 else
     json_c_dep = dependency(
@@ -277,7 +281,7 @@ else
 endif
 
 
-if get_option('liburing').disabled()
+if host_system == 'windows' or get_option('liburing').disabled()
     liburing_dep = dependency('', required: false)
 else
     liburing_dep = dependency('liburing', version: '>=2.2', required: get_option('liburing'))
@@ -313,14 +317,14 @@ if openssl_dep.found()
 endif
 conf.set('CONFIG_OPENSSL', openssl_dep.found(), description: 'Is OpenSSL/LibreSSL available?')
 
-if get_option('keyutils').disabled()
+if host_system == 'windows' or get_option('keyutils').disabled()
     keyutils_dep = dependency('', required: false)
 else
     keyutils_dep = dependency('libkeyutils', required : get_option('keyutils'))
 endif
 conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils available?')
 
-if get_option('libdbus').disabled()
+if host_system == 'windows' or get_option('libdbus').disabled()
     libdbus_dep = dependency('', required: false)
 else
     # Check for libdbus availability. Optional, only required for MCTP dbus scan
@@ -362,7 +366,7 @@ conf.set10(
 
 is_static = get_option('default_library') == 'static'
 have_netdb = false
-if not is_static
+if not is_static and host_system != 'windows'
     have_netdb = cc.links(
         '''#include <sys/types.h>
         #include <sys/socket.h>
@@ -468,18 +472,25 @@ if want_nvme
     subdir('plugins')   # declares: plugin_sources
     subdir('util')      # declares: util_sources
 
-    sources = [
-        'fabrics.c',
-        'nvme.c',
-        'nvme-models.c',
-        'nvme-print.c',
-        'nvme-print-stdout.c',
-        'nvme-print-binary.c',
-        'nvme-rpmb.c',
-        'plugin.c',
-        'libnvme-wrap.c',
-        'logging.c',
-    ]
+    sources = []
+    if host_system == 'windows'
+        sources += [
+            'nvme-dummy.c', # Dummy source file for Windows port bring up.
+        ]
+    else
+        sources += [
+            'fabrics.c',
+            'nvme.c',
+            'nvme-models.c',
+            'nvme-print.c',
+            'nvme-print-stdout.c',
+            'nvme-print-binary.c',
+            'nvme-rpmb.c',
+            'plugin.c',
+            'libnvme-wrap.c',
+            'logging.c',
+        ]
+    endif
     if json_c_dep.found()
         sources += [
             'nvme-print-json.c',
@@ -488,16 +499,27 @@ if want_nvme
     sources += plugin_sources
     sources += util_sources
 
+    link_args_list = []
+    link_deps = [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+        json_c_dep,
+    ]
+
+    if host_system == 'windows'
+        link_deps += [
+            kernel32_dep,
+        ]
+    else
+        link_args_list = ['-ldl']
+    endif
+
     executable(
         'nvme',
         sources,
-        dependencies: [
-            config_dep,
-            ccan_dep,
-            libnvme_dep,
-            json_c_dep,
-        ],
-        link_args: '-ldl',
+        dependencies: link_deps,
+        link_args: link_args_list,
         install: true,
         install_dir: sbindir,
     )
@@ -625,6 +647,11 @@ dep_dict = {
     'python3':          py3_dep.found(),
     'liburing':         liburing_dep.found(),
 }
+if host_system == 'windows'
+    dep_dict += {
+        'kernel32':     kernel32_dep.found(),
+    }
+endif
 summary(dep_dict, section: 'Dependencies', bool_yn: true)
 
 wanted_dict = {
@@ -640,4 +667,3 @@ conf_dict = {
     'pdc enabled':      get_option('pdc-enabled'),
 }
 summary(conf_dict, section: 'Configuration', bool_yn: true)
-
