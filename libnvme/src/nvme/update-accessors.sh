@@ -14,7 +14,7 @@
 # produces different output.
 #
 # accessors.ld is NOT updated automatically because its version section labels
-# (e.g. LIBNVME_ACCESSORS_3_0) must be assigned by the maintainer.  Instead,
+# (e.g. LIBNVME_ACCESSORS_3) must be assigned by the maintainer.  Instead,
 # this script reports which symbols have been added or removed so the maintainer
 # knows exactly what to change in accessors.ld.
 #
@@ -78,7 +78,7 @@ fi
 # Compare symbol lists to detect accessors.ld drift.
 #
 # accessors.ld is manually maintained because its version section labels
-# (e.g. LIBNVME_ACCESSORS_3_0) must be assigned by a human.  We therefore
+# (e.g. LIBNVME_ACCESSORS_3) must be assigned by a human.  We therefore
 # only report what has changed; we never overwrite the file.
 #
 # Symbol lines in an ld version script look like:

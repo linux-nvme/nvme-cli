@@ -2096,7 +2096,7 @@ int main(int argc, char *argv[])
 	generated_ld = fopen(conf.l_fname, "w");
 	fprintf(generated_ld,
 		"\n"
-		"LIBNVME_ACCESSORS_3_0 {\n"
+		"LIBNVME_ACCESSORS_3 {\n"
 		"	global:\n");
 
 	/* Copy temporary file to output */

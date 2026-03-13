@@ -285,7 +285,7 @@ $ git commit -m "libnvme: regenerate accessors following <struct> changes"
 
 `accessors.ld` is a GNU linker version script that controls which accessor
 symbols are exported from `libnvme.so` and under which ABI version label they
-were introduced (e.g. `LIBNVME_ACCESSORS_3_0`).
+were introduced (e.g. `LIBNVME_ACCESSORS_3`).
 
 This file is **not** updated automatically, because each symbol must be placed
 in the correct version section by the maintainer. Adding a symbol to an

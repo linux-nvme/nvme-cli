@@ -1,5 +1,5 @@
 
-LIBNVME_ACCESSORS_3_0 {
+LIBNVME_ACCESSORS_3 {
 	global:
 		nvme_path_get_name;
 		nvme_path_set_name;
