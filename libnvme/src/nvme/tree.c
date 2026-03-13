@@ -2573,7 +2573,7 @@ static int __nvme_scan_namespace(struct nvme_global_ctx *ctx,
 {
 	_cleanup_free_ char *blkdev = NULL;
 	_cleanup_free_ char *path = NULL;
-	struct nvme_ns *n;
+	struct nvme_ns *n = NULL;
 	int ret;
 
 	blkdev = nvme_ns_generic_to_blkdev(name);
