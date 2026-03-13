@@ -73,20 +73,18 @@ static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
 
 	err = nvme_get_features(hdl, 0, fid, sel, cdw11, uidx, buf, len,
 				&result);
+	if (err) {
+		nvme_show_err(err, "Get %s", feat);
+		return err;
+	}
 
 	nvme_show_init();
 
-	if (!err) {
-		nvme_feature_show(fid, sel, result);
-		if (NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
-			nvme_show_select_result(fid, result);
-		else
-			nvme_feature_show_fields(fid, result, buf);
-	} else if (err > 0) {
-		nvme_show_status(err);
-	} else {
-		nvme_show_error("Get %s: %s", feat, nvme_strerror(errno));
-	}
+	nvme_feature_show(fid, sel, result);
+	if (NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
+		nvme_show_select_result(fid, result);
+	else
+		nvme_feature_show_fields(fid, result, buf);
 
 	nvme_show_finish();
 
@@ -103,17 +101,16 @@ static int power_mgmt_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
 			&result);
 
+	if (err) {
+		nvme_show_err(err, "Set %s", power_mgmt_feat);
+		return err;
+	}
+
 	nvme_show_init();
 
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		nvme_show_perror("Set %s", power_mgmt_feat);
-	} else {
-		nvme_show_result("Set %s: 0x%04x (%s)", power_mgmt_feat, cdw11,
-				 sv ? "Save" : "Not save");
-		nvme_feature_show_fields(fid, cdw11, NULL);
-	}
+	nvme_show_result("Set %s: 0x%04x (%s)", power_mgmt_feat, cdw11,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cdw11, NULL);
 
 	nvme_show_finish();
 
@@ -195,18 +192,16 @@ static int perfc_set(struct nvme_transport_handle *hdl, __u8 fid, __u32 cdw11,
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, &data,
 			sizeof(data), &result);
+	if (err) {
+		nvme_show_err(err, "Set %s", perfc_feat);
+		return err;
+	}
 
 	nvme_show_init();
 
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		nvme_show_perror("Set %s", perfc_feat);
-	} else {
-		nvme_show_result("Set %s: 0x%04x (%s)", perfc_feat, cdw11,
-				 sv ? "Save" : "Not save");
-		nvme_feature_show_fields(fid, cdw11, NULL);
-	}
+	nvme_show_result("Set %s: 0x%04x (%s)", perfc_feat, cdw11,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cdw11, NULL);
 
 	nvme_show_finish();
 
@@ -267,18 +262,16 @@ static int hctm_set(struct nvme_transport_handle *hdl, const __u8 fid,
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
 			&result);
+	if (err) {
+		nvme_show_err(err, "Set %s", hctm_feat);
+		return err;
+	}
 
 	nvme_show_init();
 
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		nvme_show_perror("Set %s", hctm_feat);
-	} else {
-		nvme_show_result("Set %s: 0x%04x (%s)", hctm_feat, cdw11,
-				 sv ? "Save" : "Not save");
-		nvme_feature_show_fields(fid, cdw11, NULL);
-	}
+	nvme_show_result("Set %s: 0x%04x (%s)", hctm_feat, cdw11,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cdw11, NULL);
 
 	nvme_show_finish();
 
@@ -331,17 +324,16 @@ static int timestamp_set(struct nvme_transport_handle *hdl, const __u8 fid,
 
 	err = nvme_set_features(hdl, 0, fid, sv, 0, 0, 0, 0, 0, &ts, sizeof(ts),
 			&result);
+	if (err) {
+		nvme_show_err(err, "Set %s", timestamp_feat);
+		return err;
+	}
 
 	nvme_show_init();
 
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		nvme_show_perror("Set %s", timestamp_feat);
-	} else {
-		nvme_show_result("Set %s: (%s)", timestamp_feat, sv ? "Save" : "Not save");
-		nvme_feature_show_fields(fid, 0, (unsigned char *)&ts);
-	}
+	nvme_show_result("Set %s: (%s)", timestamp_feat,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, 0, (unsigned char *)&ts);
 
 	nvme_show_finish();
 
@@ -410,20 +402,19 @@ static int temp_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	nvme_init_set_features_temp_thresh(&cmd, sv, cfg->tmpth, cfg->tmpsel,
 					   cfg->thsel, cfg->tmpthh);
 	err = nvme_submit_admin_passthru(hdl, &cmd);
+	if (err) {
+		nvme_show_err(err, "Set %s", temp_thresh_feat);
+		return err;
+	}
 
 	nvme_show_init();
 
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		nvme_show_perror("Set %s", temp_thresh_feat);
-	} else {
-		nvme_show_result("Set %s: (%s)", temp_thresh_feat, sv ? "Save" : "Not save");
-		nvme_feature_show_fields(fid, NVME_SET(cfg->tmpth, FEAT_TT_TMPTH) |
-					 NVME_SET(cfg->tmpsel, FEAT_TT_TMPSEL) |
-					 NVME_SET(cfg->thsel, FEAT_TT_THSEL) |
-					 NVME_SET(cfg->tmpthh, FEAT_TT_TMPTHH), NULL);
-	}
+	nvme_show_result("Set %s: (%s)", temp_thresh_feat,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, NVME_SET(cfg->tmpth, FEAT_TT_TMPTH) |
+				 NVME_SET(cfg->tmpsel, FEAT_TT_TMPSEL) |
+				 NVME_SET(cfg->thsel, FEAT_TT_THSEL) |
+				 NVME_SET(cfg->tmpthh, FEAT_TT_TMPTHH), NULL);
 
 	nvme_show_finish();
 
@@ -497,20 +488,21 @@ static int arbitration_set(struct nvme_transport_handle *hdl, const __u8 fid,
 	nvme_init_set_features_arbitration(&cmd, sv, cfg->ab, cfg->lpw,
 					   cfg->mpw, cfg->hpw);
 	err = nvme_submit_admin_passthru(hdl, &cmd);
+	if (err) {
+		nvme_show_err(err, "Set %s", arbitration_feat);
+		return err;
+	}
 
 	nvme_show_init();
 
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		nvme_show_perror("Set %s", arbitration_feat);
-	} else {
-		nvme_show_result("Set %s: (%s)", arbitration_feat, sv ? "Save" : "Not save");
-		nvme_feature_show_fields(fid, NVME_SET(cfg->ab, FEAT_ARBITRATION_BURST) |
-					 NVME_SET(cfg->lpw, FEAT_ARBITRATION_LPW) |
-					 NVME_SET(cfg->mpw, FEAT_ARBITRATION_MPW) |
-					 NVME_SET(cfg->hpw, FEAT_ARBITRATION_HPW), NULL);
-	}
+	nvme_show_result("Set %s: (%s)", arbitration_feat,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid,
+				 NVME_SET(cfg->ab, FEAT_ARBITRATION_BURST) |
+				 NVME_SET(cfg->lpw, FEAT_ARBITRATION_LPW) |
+				 NVME_SET(cfg->mpw, FEAT_ARBITRATION_MPW) |
+				 NVME_SET(cfg->hpw, FEAT_ARBITRATION_HPW),
+				 NULL);
 
 	nvme_show_finish();
 
@@ -556,18 +548,16 @@ static int volatile_wc_set(struct nvme_transport_handle *hdl, const __u8 fid,
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
 			&result);
+	if (err) {
+		nvme_show_err(err, "Set %s", volatile_wc_feat);
+		return err;
+	}
 
 	nvme_show_init();
 
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		nvme_show_perror("Set %s", volatile_wc_feat);
-	} else {
-		nvme_show_result("Set %s: 0x%04x (%s)", volatile_wc_feat, cdw11,
-				 sv ? "Save" : "Not save");
-		nvme_feature_show_fields(fid, cdw11, NULL);
-	}
+	nvme_show_result("Set %s: 0x%04x (%s)", volatile_wc_feat, cdw11,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cdw11, NULL);
 
 	nvme_show_finish();
 
@@ -615,18 +605,16 @@ static int power_limit_set(struct nvme_transport_handle *hdl, const __u8 fid,
 
 	err = nvme_set_features(hdl, 0, fid, sv, 0, 0, cdw13, uidx, 0, NULL, 0,
 				&result);
+	if (err) {
+		nvme_show_err(err, "Set %s", power_limit_feat);
+		return err;
+	}
 
 	nvme_show_init();
 
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		nvme_show_perror("Set %s", power_limit_feat);
-	} else {
-		nvme_show_result("Set %s: 0x%04x (%s)", power_limit_feat, cdw13,
-				 sv ? "Save" : "Not save");
-		nvme_feature_show_fields(fid, cdw13, NULL);
-	}
+	nvme_show_result("Set %s: 0x%04x (%s)", power_limit_feat, cdw13,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cdw13, NULL);
 
 	nvme_show_finish();
 
@@ -687,18 +675,16 @@ static int power_thresh_set(struct nvme_transport_handle *hdl, const __u8 fid,
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, uidx, 0, NULL, 0,
 				&result);
+	if (err) {
+		nvme_show_err(err, "Set %s", power_thresh_feat);
+		return err;
+	}
 
 	nvme_show_init();
 
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		nvme_show_perror("Set %s", power_thresh_feat);
-	} else {
-		nvme_show_result("Set %s: 0x%04x (%s)", power_thresh_feat,
-				 cdw11, sv ? "Save" : "Not save");
-		nvme_feature_show_fields(fid, cdw11, NULL);
-	}
+	nvme_show_result("Set %s: 0x%04x (%s)", power_thresh_feat,
+			 cdw11, sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cdw11, NULL);
 
 	nvme_show_finish();
 
@@ -767,18 +753,16 @@ static int power_meas_set(struct nvme_transport_handle *hdl, const __u8 fid,
 
 	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, uidx, 0, NULL, 0,
 			&result);
+	if (err) {
+		nvme_show_err(err, "Set %s", power_meas_feat);
+		return err;
+	}
 
 	nvme_show_init();
 
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		nvme_show_perror("Set %s", power_meas_feat);
-	} else {
-		nvme_show_result("Set %s: 0x%04x (%s)", power_meas_feat, cdw11,
-				 sv ? "Save" : "Not save");
-		nvme_feature_show_fields(fid, cdw11, NULL);
-	}
+	nvme_show_result("Set %s: 0x%04x (%s)", power_meas_feat, cdw11,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, cdw11, NULL);
 
 	nvme_show_finish();
 
