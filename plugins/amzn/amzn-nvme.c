@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <fcntl.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -73,8 +74,8 @@ struct amzn_latency_log_page_base {
 	__u64 total_write_time;
 	__u64 ebs_volume_performance_exceeded_iops;
 	__u64 ebs_volume_performance_exceeded_tp;
-	__u64 ec2_instance_ebs_performance_exceeded_iops;
-	__u64 ec2_instance_ebs_performance_exceeded_tp;
+	__u64 ec2_instance_performance_exceeded_iops;
+	__u64 ec2_instance_performance_exceeded_tp;
 	__u64 volume_queue_length;
 	__u8 reserved1[416];
 
@@ -189,24 +190,20 @@ static void amzn_print_io_stats(struct amzn_latency_log_page *log_page)
 	printf("  Read: %"PRIu64"\n", (uint64_t)base->total_read_time);
 	printf("  Write: %"PRIu64"\n\n", (uint64_t)base->total_write_time);
 
-	if (is_local_storage(log_page)) {
-		printf("EC2 Instance Local Storage Performance Exceeded (us):\n");
-		printf("  IOPS: %"PRIu64"\n",
-				(uint64_t)base->ec2_instance_ebs_performance_exceeded_iops);
-		printf("  Throughput: %"PRIu64"\n\n",
-				(uint64_t)base->ec2_instance_ebs_performance_exceeded_tp);
-	} else {
+	if (!is_local_storage(log_page)) {
 		printf("EBS Volume Performance Exceeded (us):\n");
 		printf("  IOPS: %"PRIu64"\n", (uint64_t)base->ebs_volume_performance_exceeded_iops);
 		printf("  Throughput: %"PRIu64"\n\n",
 				(uint64_t)base->ebs_volume_performance_exceeded_tp);
-		printf("EC2 Instance EBS Performance Exceeded (us):\n");
-		printf("  IOPS: %"PRIu64"\n",
-				(uint64_t)base->ec2_instance_ebs_performance_exceeded_iops);
-		printf("  Throughput: %"PRIu64"\n\n",
-				(uint64_t)base->ec2_instance_ebs_performance_exceeded_tp);
-
 	}
+
+	printf("%s Performance Exceeded (us):\n",
+	       is_local_storage(log_page) ?
+	       "EC2 Instance Local Storage" : "EC2 Instance EBS");
+	printf("  IOPS: %"PRIu64"\n",
+			(uint64_t)base->ec2_instance_performance_exceeded_iops);
+	printf("  Throughput: %"PRIu64"\n\n",
+			(uint64_t)base->ec2_instance_performance_exceeded_tp);
 
 	printf("Queue Length (point in time): %"PRIu64"\n\n",
 	       (uint64_t)base->volume_queue_length);
@@ -321,10 +318,10 @@ static void amzn_json_add_io_stats(struct json_object *root,
 	obj_add_uint64(root, "ebs_volume_performance_exceeded_tp",
 		       base->ebs_volume_performance_exceeded_tp);
 	obj_add_uint64(root,
-		       "ec2_instance_ebs_performance_exceeded_iops",
-		       base->ec2_instance_ebs_performance_exceeded_iops);
-	obj_add_uint64(root, "ec2_instance_ebs_performance_exceeded_tp",
-			   base->ec2_instance_ebs_performance_exceeded_tp);
+		       "ec2_instance_performance_exceeded_iops",
+		       base->ec2_instance_performance_exceeded_iops);
+	obj_add_uint64(root, "ec2_instance_performance_exceeded_tp",
+			   base->ec2_instance_performance_exceeded_tp);
 	obj_add_uint64(root, "volume_queue_length", base->volume_queue_length);
 
 }
@@ -463,6 +460,102 @@ static void amzn_print_json_stats(struct amzn_latency_log_page *log, bool detail
 #define amzn_print_json_stats(log, detail)
 #endif /* CONFIG_JSONC */
 
+static void amzn_print_stats(struct amzn_latency_log_page *log,
+			     bool detail, nvme_print_flags_t flags)
+{
+	if (flags & JSON)
+		amzn_print_json_stats(log, detail);
+	else
+		amzn_print_normal_stats(log, detail);
+}
+
+static sig_atomic_t amzn_keep_polling = 1;
+
+static void amzn_sigint_handler(int sig)
+{
+	(void)sig;
+	amzn_keep_polling = 0;
+}
+
+static void amzn_compute_histogram_diff(struct amzn_latency_histogram *diff,
+					struct amzn_latency_histogram *curr,
+					struct amzn_latency_histogram *prev)
+{
+	diff->num_bins = curr->num_bins;
+	for (int b = 0; b < curr->num_bins && b < 64; b++) {
+		diff->bins[b].lower = curr->bins[b].lower;
+		diff->bins[b].upper = curr->bins[b].upper;
+		diff->bins[b].count = curr->bins[b].count - prev->bins[b].count;
+	}
+}
+
+static void amzn_compute_stats_diff(struct amzn_latency_log_page *diff,
+				    struct amzn_latency_log_page *curr,
+				    struct amzn_latency_log_page *prev)
+{
+	struct amzn_latency_log_page_base *d = &diff->base;
+	struct amzn_latency_log_page_base *c = &curr->base;
+	struct amzn_latency_log_page_base *p = &prev->base;
+
+	d->magic = c->magic;
+	d->version = c->version;
+	d->total_read_ops = c->total_read_ops - p->total_read_ops;
+	d->total_write_ops = c->total_write_ops - p->total_write_ops;
+	d->total_read_bytes = c->total_read_bytes - p->total_read_bytes;
+	d->total_write_bytes = c->total_write_bytes - p->total_write_bytes;
+	d->total_read_time = c->total_read_time - p->total_read_time;
+	d->total_write_time = c->total_write_time - p->total_write_time;
+	d->ebs_volume_performance_exceeded_iops =
+		c->ebs_volume_performance_exceeded_iops -
+		p->ebs_volume_performance_exceeded_iops;
+	d->ebs_volume_performance_exceeded_tp =
+		c->ebs_volume_performance_exceeded_tp -
+		p->ebs_volume_performance_exceeded_tp;
+	d->ec2_instance_performance_exceeded_iops =
+		c->ec2_instance_performance_exceeded_iops -
+		p->ec2_instance_performance_exceeded_iops;
+	d->ec2_instance_performance_exceeded_tp =
+		c->ec2_instance_performance_exceeded_tp -
+		p->ec2_instance_performance_exceeded_tp;
+
+	/* queue length is point-in-time, not cumulative */
+	d->volume_queue_length = c->volume_queue_length;
+
+	amzn_compute_histogram_diff(&d->read_io_latency_histogram,
+				    &c->read_io_latency_histogram,
+				    &p->read_io_latency_histogram);
+	amzn_compute_histogram_diff(&d->write_io_latency_histogram,
+				    &c->write_io_latency_histogram,
+				    &p->write_io_latency_histogram);
+
+	/* copy detail IO metadata from current */
+	d->num_of_hists = c->num_of_hists;
+	memcpy(d->hist_io_sizes, c->hist_io_sizes, sizeof(d->hist_io_sizes));
+
+	/* diff detail IO histogram counts */
+	for (int i = 0; i < AMZN_NVME_STATS_NUM_HISTOGRAM; i++) {
+		for (int b = 0; b < AMZN_NVME_STATS_NUM_HISTOGRAM_BINS; b++) {
+			__u64 cr, pr, cw, pw;
+
+			cr = curr->detail_io.io_hist_array[i]
+				.read_io_histogram_counts.counts[b];
+			pr = prev->detail_io.io_hist_array[i]
+				.read_io_histogram_counts.counts[b];
+			cw = curr->detail_io.io_hist_array[i]
+				.write_io_histogram_counts.counts[b];
+			pw = prev->detail_io.io_hist_array[i]
+				.write_io_histogram_counts.counts[b];
+
+			diff->detail_io.io_hist_array[i]
+				.read_io_histogram_counts.counts[b] =
+				cr - pr;
+			diff->detail_io.io_hist_array[i]
+				.write_io_histogram_counts.counts[b] =
+				cw - pw;
+		}
+	}
+}
+
 static int get_stats(int argc, char **argv, struct command *acmd,
 		     struct plugin *plugin)
 {
@@ -470,10 +563,11 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
 	struct amzn_latency_log_page log = { 0 };
-	nvme_print_flags_t flags = 0; // Initialize flags to 0
+	nvme_print_flags_t flags = 0;
 	struct nvme_passthru_cmd cmd;
 	struct nvme_id_ctrl ctrl;
 	bool detail = false;
+	unsigned int interval = 0;
 	size_t len;
 	__u32 nsid = 1;
 	int rc;
@@ -487,7 +581,10 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_FLAG("details", 'd', &detail, "Detail IO histogram of each block size ranges"));
+		OPT_FLAG("details", 'd', &detail,
+			 "Detail IO histogram of each block size ranges"),
+		OPT_UINT("interval", 'i', &interval,
+			 "Polling interval in seconds"));
 
 	rc = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (rc)
@@ -538,10 +635,50 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 		goto done;
 	}
 
-	if (flags & JSON)
-		amzn_print_json_stats(&log, detail);
-	else
-		amzn_print_normal_stats(&log, detail);
+	if (interval > 0) {
+		struct amzn_latency_log_page prev, curr, diff;
+		struct sigaction sa = { .sa_handler = amzn_sigint_handler };
+
+		sigemptyset(&sa.sa_mask);
+		sigaction(SIGINT, &sa, NULL);
+
+		printf("Polling NVMe stats every %u sec(s);"
+		       " press Ctrl+C to stop\n\n",
+		       interval);
+
+		amzn_print_stats(&log, detail, flags);
+
+		prev = log;
+		amzn_keep_polling = 1;
+
+		while (amzn_keep_polling) {
+			sleep(interval);
+			if (!amzn_keep_polling)
+				break;
+
+			memset(&curr, 0, sizeof(curr));
+			nvme_init_get_log(&cmd, nsid,
+					  AMZN_NVME_STATS_LOGPAGE_ID,
+					  NVME_CSI_NVM, &curr, len);
+			rc = nvme_get_log(hdl, &cmd, false,
+					  NVME_LOG_PAGE_PDU_SIZE);
+			if (rc != 0) {
+				nvme_show_error("get log page failed, rc=%d",
+						rc);
+				goto done;
+			}
+
+			memset(&diff, 0, sizeof(diff));
+			amzn_compute_stats_diff(&diff, &curr, &prev);
+
+			amzn_print_stats(&diff, detail, flags);
+
+			prev = curr;
+			printf("\n");
+		}
+	} else {
+		amzn_print_stats(&log, detail, flags);
+	}
 
 done:
 	return rc;

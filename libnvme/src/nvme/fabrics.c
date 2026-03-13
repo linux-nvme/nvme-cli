@@ -1342,6 +1342,17 @@ static void sanitize_discovery_log_entry(struct nvmf_disc_log_entry *e)
 {
 	strchomp(e->trsvcid, sizeof(e->trsvcid));
 	strchomp(e->traddr, sizeof(e->traddr));
+
+	/*
+	 * Report traddr always in 'nn-0x:pn-0x' format, but some discovery logs
+	 * provide 'nn-0x,pn-0x'.
+	 */
+	if (e->trtype == NVMF_TRTYPE_FC) {
+		char *comma = strchr(e->traddr, ',');
+
+		if (comma)
+			*comma = ':';
+	}
 }
 
 int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
