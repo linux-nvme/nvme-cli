@@ -5,6 +5,8 @@
 /* type conversion helpers */
 
 #include <stdint.h>
+#include <time.h>
+
 #include <linux/types.h>
 
 #include <libnvme.h>
