@@ -1118,6 +1118,13 @@ static bool traddr_is_hostname(const char *transport, const char *traddr)
 	return true;
 }
 
+void nvmf_default_config(struct nvme_fabrics_config *cfg)
+{
+	memset(cfg, 0, sizeof(*cfg));
+	cfg->tos = -1;
+	cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
+}
+
 int nvme_create_ctrl(struct nvme_global_ctx *ctx,
 		     const char *subsysnqn, const char *transport,
 		     const char *traddr, const char *host_traddr,
