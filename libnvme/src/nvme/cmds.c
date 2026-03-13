@@ -424,7 +424,7 @@ static inline void nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
 }
 
 void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
-			  __u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
+			  __u64 *slbas, __u32 *elbts, __u32 *elbatms,
 			  __u32 *elbats, __u16 nr)
 {
 	int i;
@@ -432,7 +432,7 @@ void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = cpu_to_le16(nlbs[i]);
 		copy[i].slba = cpu_to_le64(slbas[i]);
-		copy[i].eilbrt = cpu_to_le32(eilbrts[i]);
+		copy[i].elbt = cpu_to_be32(elbts[i]);
 		copy[i].elbatm = cpu_to_le16(elbatms[i]);
 		copy[i].elbat = cpu_to_le16(elbats[i]);
 	}
@@ -455,7 +455,7 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 
 void nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy, __u32 *snsids,
 			  __u16 *nlbs, __u64 *slbas, __u16 *sopts,
-			  __u32 *eilbrts, __u32 *elbatms, __u32 *elbats,
+			  __u32 *elbts, __u32 *elbatms, __u32 *elbats,
 			  __u16 nr)
 {
 	int i;
@@ -465,7 +465,7 @@ void nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy, __u32 *snsids,
 		copy[i].nlb = cpu_to_le16(nlbs[i]);
 		copy[i].slba = cpu_to_le64(slbas[i]);
 		copy[i].sopt = cpu_to_le16(sopts[i]);
-		copy[i].eilbrt = cpu_to_le32(eilbrts[i]);
+		copy[i].elbt = cpu_to_be32(elbts[i]);
 		copy[i].elbatm = cpu_to_le16(elbatms[i]);
 		copy[i].elbat = cpu_to_le16(elbats[i]);
 	}

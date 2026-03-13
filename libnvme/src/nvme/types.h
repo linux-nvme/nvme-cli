@@ -6392,7 +6392,7 @@ struct nvme_dsm_range {
  * @slba:	Starting LBA
  * @nlb:	Number of Logical Blocks
  * @rsvd18:	Reserved
- * @eilbrt:	Expected Initial Logical Block Reference Tag /
+ * @elbt:	Expected Initial Logical Block Reference Tag /
  *		Expected Logical Block Storage Tag
  * @elbatm:	Expected Logical Block Application Tag Mask
  * @elbat:	Expected Logical Block Application Tag
@@ -6402,7 +6402,7 @@ struct nvme_copy_range {
 	__le64			slba;
 	__le16			nlb;
 	__u8			rsvd18[6];
-	__le32			eilbrt;
+	__be32			elbt;
 	__le16			elbat;
 	__le16			elbatm;
 };
@@ -6444,7 +6444,7 @@ enum nvme_copy_range_sopt {
  * @nlb:	Number of Logical Blocks
  * @rsvd18:	Reserved
  * @sopt:	Source Options
- * @eilbrt:	Expected Initial Logical Block Reference Tag /
+ * @elbt:	Expected Initial Logical Block Reference Tag /
  *		Expected Logical Block Storage Tag
  * @elbatm:	Expected Logical Block Application Tag Mask
  * @elbat:	Expected Logical Block Application Tag
@@ -6456,7 +6456,7 @@ struct nvme_copy_range_f2 {
 	__le16			nlb;
 	__u8			rsvd18[4];
 	__le16			sopt;
-	__le32			eilbrt;
+	__be32			elbt;
 	__le16			elbat;
 	__le16			elbatm;
 };
