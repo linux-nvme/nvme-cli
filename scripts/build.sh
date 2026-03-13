@@ -91,14 +91,17 @@ config_meson_default() {
 }
 
 config_meson_musl() {
-    local c_args="-U_GNU_SOURCE \
--idirafter /usr/include -idirafter \
-/usr/include/x86_64-linux-gnu"
+	local cflags=(
+		-U_GNU_SOURCE
+		-idirafter /usr/include
+		-idirafter /usr/include/x86_64-linux-gnu
+	)
+	local cflags_str="${cflags[*]}"
 
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
-        -Dc_args="${c_args}"                    \
+        -Dc_args="${cflags_str}"                \
         -Ddefault_library=static                \
         -Djson-c=disabled                       \
         -Dopenssl=disabled                      \
