@@ -76,16 +76,19 @@ jobs:
           sudo apt-get install -y sshpass
           mkdir -p ~/.ssh
           echo "${SFTP_HOST_KEY}" > ~/.ssh/known_hosts
+          {
+            echo "Host ${SFTP_SERVER}"
+            echo "    PubkeyAuthentication no"
+            echo "    PreferredAuthentications password"
+          } > ~/.ssh/config
+          chmod 600 ~/.ssh/config
           (
             echo "cd /upload"
             for f in upload/nvme-cli-*; do
               [ -f "$f" ] || continue
               echo "put $f $(basename "$f")"
             done
-          ) | sshpass -e sftp -b - \
-                -o PubkeyAuthentication=no \
-                -o PreferredAuthentications=password \
-                "${SFTP_USERNAME}@${SFTP_SERVER}"
+          ) | sshpass -e sftp -b - "${SFTP_USERNAME}@${SFTP_SERVER}"
 
   upload-release-assets:
     name: upload GitHub release assets
