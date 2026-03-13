@@ -82,7 +82,10 @@ jobs:
               [ -f "$f" ] || continue
               echo "put $f $(basename "$f")"
             done
-          ) | sshpass -e sftp -b - "${SFTP_USERNAME}@${SFTP_SERVER}"
+          ) | sshpass -e sftp -b - \
+                -o PubkeyAuthentication=no \
+                -o PreferredAuthentications=password \
+                "${SFTP_USERNAME}@${SFTP_SERVER}"
 
   upload-release-assets:
     name: upload GitHub release assets
