@@ -8351,9 +8351,9 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	__u32 dsmgmt = 0;
 	int mode = 0644;
 	void *buffer;
+	__u16 ms = 0;
 	int err = 0;
 	int flags;
-	__u16 ms;
 
 	const char *start_block_addr = "64-bit addr of first block to access";
 	const char *block_size = "if specified, logical block size in bytes;\n"
@@ -8530,13 +8530,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	} else {
 		err = get_pi_info(hdl, cfg.nsid, cfg.prinfo,
 			cfg.ilbrt, cfg.lbst, &logical_block_size, &ms);
-		if (err) {
-			logical_block_size = 0;
-			ms = 0;
-			pi_available = false;
-		} else {
-			pi_available = true;
-		}
+		pi_available = err == 0;
 	}
 
 	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
