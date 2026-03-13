@@ -11,6 +11,8 @@ name: Upload
 on:
   push:
     branches: [master]
+    tags:
+      - 'v*'
   release:
     types: [published]
 
@@ -41,9 +43,11 @@ jobs:
           scripts/build.sh static
           mkdir upload
           cp .build-ci/nvme upload/nvme-cli-latest-x86_64
-          if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
-            cp .build-ci/nvme "upload/nvme-cli-${VERSION}-x86_64"
-          fi
+          case "${GITHUB_REF}" in
+            refs/tags/v*)
+              cp .build-ci/nvme "upload/nvme-cli-${GITHUB_REF_NAME}-x86_64"
+              ;;
+          esac
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         name: upload artifacts to github
