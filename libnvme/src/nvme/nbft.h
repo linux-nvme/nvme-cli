@@ -1254,3 +1254,14 @@ int nvme_nbft_read(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
  * @nbft: Parsed NBFT table data.
  */
 void nvme_nbft_free(struct nvme_global_ctx *ctx, struct nbft_info *nbft);
+
+/**
+ * struct nbft_file_entry - Linked list entry for NBFT files
+ * @next: Pointer to next entry
+ * @nbft: Pointer to NBFT info structure
+ */
+struct nbft_file_entry {
+	struct nbft_file_entry *next;
+	struct nbft_info *nbft;
+};
+

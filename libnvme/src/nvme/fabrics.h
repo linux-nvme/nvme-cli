@@ -645,15 +645,7 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 int nvmf_config_modify(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx);
 
-/**
- * struct nbft_file_entry - Linked list entry for NBFT files
- * @next: Pointer to next entry
- * @nbft: Pointer to NBFT info structure
- */
-struct nbft_file_entry {
-	struct nbft_file_entry *next;
-	struct nbft_info *nbft;
-};
+struct nbft_file_entry;
 
 /**
  * nvmf_nbft_read_files() - Read NBFT files from path
