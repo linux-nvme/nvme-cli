@@ -66,19 +66,23 @@ jobs:
           name: nvme-cli
           path: upload
 
-      - name: FTP Deployer
-        uses: sand4rt/ftp-deployer@518beaad91d1b18fd55a69321de7ed89080d2ae3 # v1.8
-        with:
-          sftp: true
-          host: ${{ secrets.SFTP_SERVER }}
-          port: 22
-          username: ${{ secrets.SFTP_USERNAME }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          remote_folder: '/upload'
-          local_folder: upload
-          cleanup: false
-          include: '[ "nvme-cli-*" ]'
-          exclude: '[".github/**", ".git/**", "*.env"]'
+      - name: upload to SFTP server
+        env:
+          SSHPASS: ${{ secrets.SFTP_PASSWORD }}
+          SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
+          SFTP_SERVER: ${{ secrets.SFTP_SERVER }}
+          SFTP_HOST_KEY: ${{ secrets.SFTP_HOST_KEY }}
+        run: |
+          sudo apt-get install -y sshpass
+          mkdir -p ~/.ssh
+          echo "${SFTP_HOST_KEY}" > ~/.ssh/known_hosts
+          (
+            echo "cd /upload"
+            for f in upload/nvme-cli-*; do
+              [ -f "$f" ] || continue
+              echo "put $f $(basename "$f")"
+            done
+          ) | sshpass -e sftp -b - "${SFTP_USERNAME}@${SFTP_SERVER}"
 
   upload-release-assets:
     name: upload GitHub release assets
