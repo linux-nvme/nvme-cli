@@ -426,7 +426,7 @@ char *nvme_hostid_generate();
  * nvme_hostnqn_from_file() - Reads the host nvm qualified name from the config
  *			      default location
  *
- * Retrieve the qualified name from the config file located in $SYSCONFIDR/nvme.
+ * Retrieve the qualified name from the config file located in $SYSCONFDIR/nvme.
  * $SYSCONFDIR is usually /etc.
  *
  * Return: The host nqn, or NULL if unsuccessful. If found, the caller
