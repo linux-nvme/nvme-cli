@@ -68,24 +68,24 @@ jobs:
 
       - name: upload to SFTP server
         env:
-          SSHPASS: ${{ secrets.SFTP_PASSWORD }}
           SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
           SFTP_SERVER: ${{ secrets.SFTP_SERVER }}
           SFTP_HOST_KEY: ${{ secrets.SFTP_HOST_KEY }}
+          SFTP_PRIVATE_KEY: ${{ secrets.SFTP_PRIVATE_KEY }}
         run: |
-          sudo apt-get install -y sshpass
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           echo "${SFTP_HOST_KEY}" > ~/.ssh/known_hosts
-          (
-            echo "cd /upload"
-            for f in upload/nvme-cli-*; do
-              [ -f "$f" ] || continue
-              echo "put $f $(basename "$f")"
-            done
-          ) | sshpass -e sftp -b - \
-                -o PubkeyAuthentication=no \
-                -o PreferredAuthentications=password \
-                "${SFTP_USERNAME}@${SFTP_SERVER}"
+          echo "${SFTP_PRIVATE_KEY}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          SFTP_BATCH=$(mktemp)
+          trap 'rm -f "$SFTP_BATCH"' EXIT
+          echo "cd /upload" > "$SFTP_BATCH"
+          for f in upload/nvme-cli-*; do
+            [ -f "$f" ] || continue
+            echo "put $f $(basename "$f")" >> "$SFTP_BATCH"
+          done
+          sftp -b "$SFTP_BATCH" "${SFTP_USERNAME}@${SFTP_SERVER}"
 
   upload-release-assets:
     name: upload GitHub release assets
