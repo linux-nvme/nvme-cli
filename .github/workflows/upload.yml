@@ -82,13 +82,14 @@ jobs:
             echo "    PreferredAuthentications password"
           } > ~/.ssh/config
           chmod 600 ~/.ssh/config
-          (
-            echo "cd /upload"
-            for f in upload/nvme-cli-*; do
-              [ -f "$f" ] || continue
-              echo "put $f $(basename "$f")"
-            done
-          ) | sshpass -e sftp -b - "${SFTP_USERNAME}@${SFTP_SERVER}"
+          SFTP_BATCH=$(mktemp)
+          echo "cd /upload" > "$SFTP_BATCH"
+          for f in upload/nvme-cli-*; do
+            [ -f "$f" ] || continue
+            echo "put $f $(basename "$f")" >> "$SFTP_BATCH"
+          done
+          sshpass -e sftp -b "$SFTP_BATCH" "${SFTP_USERNAME}@${SFTP_SERVER}"
+          rm -f "$SFTP_BATCH"
 
   upload-release-assets:
     name: upload GitHub release assets
