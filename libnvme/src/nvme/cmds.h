@@ -16,6 +16,7 @@
 #include <string.h>
 #include <errno.h>
 #include <endian.h>
+#include <stdlib.h>
 
 enum nvme_cmd_dword_fields {
 	NVME_DEVICE_SELF_TEST_CDW10_STC_SHIFT			= 0,
@@ -6569,13 +6570,35 @@ nvme_get_log_media_unit_stat(struct nvme_transport_handle *hdl,
  */
 static inline int
 nvme_get_log_support_cap_config_list(struct nvme_transport_handle *hdl,
-		__u16 domid, struct nvme_supported_cap_config_list_log *cap)
+		__u16 domid, struct nvme_supported_cap_config_list_log **cap)
 {
+	struct nvme_supported_cap_config_list_log hdr, *log;
 	struct nvme_passthru_cmd cmd;
+	size_t size;
+	int err;
 
-	nvme_init_get_log_support_cap_config_list(&cmd, domid, cap);
+	nvme_init_get_log_support_cap_config_list(&cmd, domid, &hdr);
 
-	return nvme_get_log(hdl, &cmd, false, sizeof(*cap));
+	err = nvme_get_log(hdl, &cmd, false, sizeof(hdr));
+	if (err)
+		return err;
+
+	size = sizeof(hdr) +
+		sizeof(struct nvme_capacity_config_desc) * hdr.sccn;
+	log = (struct nvme_supported_cap_config_list_log *)malloc(size);
+	if (!log)
+		return -ENOMEM;
+
+	nvme_init_get_log_support_cap_config_list(&cmd, domid, log);
+
+	err = nvme_get_log(hdl, &cmd, false, size);
+	if (err) {
+		free(log);
+		return err;
+	}
+
+	*cap = log;
+	return 0;
 }
 
 /**
