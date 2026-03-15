@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <linux/fs.h>
@@ -65,6 +66,7 @@
 #include "util/suffix.h"
 #include "logging.h"
 #include "util/sighdl.h"
+#include "util/delay.h"
 #include "fabrics.h"
 #define CREATE_CMD
 #include "nvme-builtin.h"
@@ -185,6 +187,7 @@ static struct program nvme = {
 };
 
 const char *uuid_index = "UUID index";
+const char *delay = "iterative delay as SECS [.TENTHS]";
 
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
@@ -370,7 +373,7 @@ static int parse_args(int argc, char *argv[], const char *desc,
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	return 0;
+	return ret = delay_set_stdout_file(&nvme_args.delay);
 }
 
 int parse_and_open(struct nvme_global_ctx **ctx,
@@ -10367,9 +10370,10 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
+		  OPT_FMT("ranking",       'r', &cfg.ranking,          ranking),
+		  OPT_DOUBLE("delay",      'd', &nvme_args.delay.time, delay));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -11300,9 +11304,11 @@ int main(int argc, char **argv)
 	if (err)
 		return err;
 
-	err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
-	if (err == -ENOTTY)
-		general_help(&builtin, NULL);
+	do {
+		err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
+		if (err == -ENOTTY)
+			general_help(&builtin, NULL);
+	} while (!err && delay_handle(&nvme_args.delay));
 
 	return err ? 1 : 0;
 }

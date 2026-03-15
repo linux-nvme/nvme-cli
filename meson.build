@@ -272,6 +272,21 @@ conf.set(
     ),
     description: 'Does struct tm have a tm_gmtoff field?'
 )
+conf.set(
+    'HAVE_STDOUT_TO_SET',
+    cc.compiles(
+        '''
+            #include <stdio.h>
+            int main(void) {
+                char *buf;
+                size_t len;
+                stdout = open_memstream(&buf, &len);
+            }
+        ''',
+        name: 'stdout_to_set'
+    ),
+    description: 'Is stdout to set a mstream available?'
+)
 
 if cc.has_function_attribute('fallthrough')
     conf.set('fallthrough', '__attribute__((__fallthrough__))')

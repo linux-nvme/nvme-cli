@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 extern bool nvme_sigint_received;
+extern bool nvme_sigwinch_received;
 
 int nvme_install_sigint_handler(void);
 
