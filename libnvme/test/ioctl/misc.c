@@ -742,11 +742,12 @@ static void test_flush(void)
 		.opcode = nvme_cmd_flush,
 		.nsid = TEST_NSID,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_flush(test_hdl, TEST_NSID);
+	nvme_init_flush(&cmd, TEST_NSID);
+	err = nvme_submit_io_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 }

@@ -10,9 +10,12 @@
 #include <unistd.h>
 
 #include "common.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
+
 #include "plugins/ocp/ocp-nvme.h"
 #include "plugins/ocp/ocp-utils.h"
+
 #include "solidigm-log-page-dir.h"
 #include "solidigm-util.h"
 

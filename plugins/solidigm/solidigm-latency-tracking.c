@@ -14,10 +14,11 @@
 #include <libnvme.h>
 
 #include "common.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "linux/types.h"
-#include "nvme-print.h"
+
 #include "solidigm-util.h"
 
 #define BUCKET_LIST_SIZE_4_0 152

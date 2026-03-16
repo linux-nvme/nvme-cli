@@ -19,12 +19,12 @@
 #include <libnvme.h>
 
 #include "common.h"
+#include "logging.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "linux/types.h"
 #include "util/types.h"
-#include "logging.h"
-#include "nvme-print.h"
 
 #include "ocp-smart-extended-log.h"
 #include "ocp-clear-features.h"

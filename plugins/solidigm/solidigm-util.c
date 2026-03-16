@@ -6,6 +6,9 @@
  */
 
 #include <errno.h>
+
+#include "nvme-cmds.h"
+
 #include "solidigm-util.h"
 
 const unsigned char solidigm_uuid[NVME_UUID_LEN] = {

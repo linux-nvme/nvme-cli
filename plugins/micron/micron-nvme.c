@@ -28,9 +28,9 @@
 #include <libnvme.h>
 
 #include "common.h"
-#include "linux/types.h"
-#include "nvme.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "nvme.h"
 #include "util/cleanup.h"
 #include "util/types.h"
 #include "util/utils.h"

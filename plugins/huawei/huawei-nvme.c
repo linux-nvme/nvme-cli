@@ -30,6 +30,7 @@
 #include <libnvme.h>
 
 #include "common.h"
+#include "nvme-cmds.h"
 #include "nvme.h"
 #include "plugin.h"
 

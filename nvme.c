@@ -53,8 +53,11 @@
 #include <libnvme.h>
 
 #include "common.h"
-#include "nvme.h"
+#include "fabrics.h"
+#include "logging.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "nvme.h"
 #include "nvme/tree.h"
 #include "nvme/types.h"
 #include "plugin.h"
@@ -62,10 +65,9 @@
 #include "util/base64.h"
 #include "util/cleanup.h"
 #include "util/crc32.h"
-#include "util/suffix.h"
-#include "logging.h"
 #include "util/sighdl.h"
-#include "fabrics.h"
+#include "util/suffix.h"
+
 #define CREATE_CMD
 #include "nvme-builtin.h"
 #include "malloc.h"
