@@ -144,9 +144,9 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 
 	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */
 	if (!hid)
-		hid = nvme_hostid_from_file();
+		hid = nvme_read_hostid();
 	if (!hnqn)
-		hnqn = nvme_hostnqn_from_file();
+		hnqn = nvme_read_hostnqn();
 
 	/* incomplete configuration, thus derive hostid from hostnqn */
 	if (!hid && hnqn)
@@ -157,7 +157,7 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 	 * fails generate one
 	 */
 	if (!hid) {
-		hid = nvme_hostid_generate();
+		hid = nvme_generate_hostid();
 		if (!hid)
 			return -ENOMEM;
 
@@ -167,7 +167,7 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 
 	/* incomplete configuration, thus derive hostnqn from hostid */
 	if (!hnqn) {
-		hnqn = nvme_hostnqn_generate_from_hostid(hid);
+		hnqn = nvme_generate_hostnqn_from_hostid(hid);
 		if (!hnqn)
 			return -ENOMEM;
 	}
@@ -188,7 +188,7 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-int nvme_host_get(struct nvme_global_ctx *ctx, const char *hostnqn,
+int nvme_get_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, nvme_host_t *host)
 {
 	_cleanup_free_ char *hnqn = NULL;
@@ -592,7 +592,7 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 	return nvme_alloc_subsystem(h, name, subsysnqn);
 }
 
-int nvme_subsystem_get(struct nvme_global_ctx *ctx,
+int nvme_get_subsystem(struct nvme_global_ctx *ctx,
 		struct nvme_host *h, const char *name,
 		const char *subsysnqn, struct nvme_subsystem **subsys)
 {
@@ -779,7 +779,7 @@ static int nvme_scan_subsystem(struct nvme_global_ctx *ctx, const char *name)
 		 */
 		nvme_msg(ctx, LOG_DEBUG, "creating detached subsystem '%s'\n",
 			 name);
-		ret = nvme_host_get(ctx, NULL, NULL, &h);
+		ret = nvme_get_host(ctx, NULL, NULL, &h);
 		if (ret)
 			return ret;
 		s = nvme_alloc_subsystem(h, name, subsysnqn);
@@ -1525,7 +1525,7 @@ nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 	return matching_c;
 }
 
-bool nvme_ctrl_config_match(struct nvme_ctrl *c, const char *transport,
+bool nvme_ctrl_match_config(struct nvme_ctrl *c, const char *transport,
 			    const char *traddr, const char *trsvcid,
 			    const char *subsysnqn, const char *host_traddr,
 			    const char *host_iface)
@@ -1981,7 +1981,7 @@ int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name,
 
 	hostnqn = nvme_get_attr(path, "hostnqn");
 	hostid = nvme_get_attr(path, "hostid");
-	ret = nvme_host_get(ctx, hostnqn, hostid, &h);
+	ret = nvme_get_host(ctx, hostnqn, hostid, &h);
 	if (ret)
 		return ret;
 

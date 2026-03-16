@@ -1422,7 +1422,7 @@ static int nvme_expand_cap(struct nvme_transport_handle *hdl, __u32 namespace_id
 	else
 		strcpy(dev_name, nvme_transport_handle_get_name(hdl));
 
-	num = scandir("/dev", &devices, nvme_namespace_filter, alphasort);
+	num = scandir("/dev", &devices, nvme_filter_namespace, alphasort);
 	if (num <= 0) {
 		err = num;
 		goto ret;

@@ -395,14 +395,14 @@ int nvme_import_tls_key_versioned(struct nvme_global_ctx *ctx,
 		unsigned char *hmac, size_t *key_len, unsigned char **key);
 
 /**
- * nvme_hostnqn_generate() - Generate a machine specific host nqn
+ * nvme_generate_hostnqn() - Generate a machine specific host nqn
  * Returns: An nvm namespace qualified name string based on the machine
  * identifier, or NULL if not successful.
  */
-char *nvme_hostnqn_generate();
+char *nvme_generate_hostnqn(void);
 
 /**
- * nvme_hostnqn_generate_from_hostid() - Generate a host nqn from
+ * nvme_generate_hostnqn_from_hostid() - Generate a host nqn from
  * host identifier
  * @hostid:		Host identifier
  *
@@ -412,18 +412,18 @@ char *nvme_hostnqn_generate();
  * Return: On success, an NVMe Qualified Name for host identification. This
  * name is based on the given host identifier. On failure, NULL.
  */
-char *nvme_hostnqn_generate_from_hostid(char *hostid);
+char *nvme_generate_hostnqn_from_hostid(char *hostid);
 
 /**
- * nvme_hostid_generate() - Generate a machine specific host identifier
+ * nvme_generate_hostid() - Generate a machine specific host identifier
  *
  * Return: On success, an identifier string based on the machine identifier to
  * be used as NVMe Host Identifier, or NULL on failure.
  */
-char *nvme_hostid_generate();
+char *nvme_generate_hostid(void);
 
 /**
- * nvme_hostnqn_from_file() - Reads the host nvm qualified name from the config
+ * nvme_read_hostnqn() - Reads the host nvm qualified name from the config
  *			      default location
  *
  * Retrieve the qualified name from the config file located in $SYSCONFDIR/nvme.
@@ -432,10 +432,10 @@ char *nvme_hostid_generate();
  * Return: The host nqn, or NULL if unsuccessful. If found, the caller
  * is responsible to free the string.
  */
-char *nvme_hostnqn_from_file();
+char *nvme_read_hostnqn(void);
 
 /**
- * nvme_hostid_from_file() - Reads the host identifier from the config default
+ * nvme_read_hostid() - Reads the host identifier from the config default
  *			     location
  *
  * Retrieve the host idenditifer from the config file located in
@@ -444,4 +444,4 @@ char *nvme_hostnqn_from_file();
  * Return: The host identifier, or NULL if unsuccessful. If found, the caller
  *	   is responsible to free the string.
  */
-char *nvme_hostid_from_file();
+char *nvme_read_hostid(void);

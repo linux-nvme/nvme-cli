@@ -1723,7 +1723,7 @@ static int uuid_from_dmi(char *system_uuid)
 	return ret;
 }
 
-char *nvme_hostid_generate()
+char *nvme_generate_hostid(void)
 {
 	int ret;
 	char uuid_str[NVME_UUID_LEN_STRING];
@@ -1733,7 +1733,7 @@ char *nvme_hostid_generate()
 	if (ret < 0)
 		ret = uuid_from_device_tree(uuid_str);
 	if (ret < 0) {
-		if (nvme_uuid_random(uuid) < 0)
+		if (nvme_random_uuid(uuid) < 0)
 			memset(uuid, 0, NVME_UUID_LEN);
 		nvme_uuid_to_string(uuid, uuid_str);
 	}
@@ -1741,14 +1741,14 @@ char *nvme_hostid_generate()
 	return strdup(uuid_str);
 }
 
-char *nvme_hostnqn_generate_from_hostid(char *hostid)
+char *nvme_generate_hostnqn_from_hostid(char *hostid)
 {
 	char *hid = NULL;
 	char *hostnqn;
 	int ret;
 
 	if (!hostid)
-		hostid = hid = nvme_hostid_generate();
+		hostid = hid = nvme_generate_hostid();
 
 	ret = asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s", hostid);
 	free(hid);
@@ -1756,9 +1756,9 @@ char *nvme_hostnqn_generate_from_hostid(char *hostid)
 	return (ret < 0) ? NULL : hostnqn;
 }
 
-char *nvme_hostnqn_generate()
+char *nvme_generate_hostnqn(void)
 {
-	return nvme_hostnqn_generate_from_hostid(NULL);
+	return nvme_generate_hostnqn_from_hostid(NULL);
 }
 
 static char *nvmf_read_file(const char *f, int len)
@@ -1779,7 +1779,7 @@ static char *nvmf_read_file(const char *f, int len)
 	return strndup(buf, strcspn(buf, "\n"));
 }
 
-char *nvme_hostnqn_from_file()
+char *nvme_read_hostnqn(void)
 {
 	char *hostnqn = getenv("LIBNVME_HOSTNQN");
 
@@ -1792,7 +1792,7 @@ char *nvme_hostnqn_from_file()
 	return nvmf_read_file(NVMF_HOSTNQN_FILE, NVMF_NQN_SIZE);
 }
 
-char *nvme_hostid_from_file()
+char *nvme_read_hostid(void)
 {
 	char *hostid = getenv("LIBNVME_HOSTID");
 

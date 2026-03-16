@@ -38,21 +38,21 @@
 		PyDict_SetItemString(p, key, val); /* Does NOT steal reference to val .. */
 		Py_XDECREF(val);                   /* .. therefore decrement ref. count. */
 	}
-	PyObject *hostnqn_from_file() {
-		char * val = nvme_hostnqn_from_file();
+	PyObject *read_hostnqn() {
+		char * val = nvme_read_hostnqn();
 		PyObject * obj = PyUnicode_FromString(val);
 		free(val);
 		return obj;
 	}
-	PyObject *hostid_from_file() {
-		char * val = nvme_hostid_from_file();
+	PyObject *read_hostid() {
+		char * val = nvme_read_hostid();
 		PyObject * obj = PyUnicode_FromString(val);
 		free(val);
 		return obj;
 	}
 %}
-PyObject *hostnqn_from_file();
-PyObject *hostid_from_file();
+PyObject *read_hostnqn();
+PyObject *read_hostid();
 
 %exception nvme_ctrl::connect {
 	connect_err = 0;
@@ -557,7 +557,7 @@ struct nvme_ns {
 		  const char *hostkey = NULL,
 		  const char *hostsymname = NULL) {
 		nvme_host_t h;
-		if (nvme_host_get(ctx, hostnqn, hostid, &h))
+		if (nvme_get_host(ctx, hostnqn, hostid, &h))
 			return NULL;
 		if (hostsymname)
 			nvme_host_set_hostsymname(h, hostsymname);
@@ -613,7 +613,7 @@ struct nvme_ns {
 		       const char *name = NULL) {
 		struct nvme_subsystem *s;
 
-		if (nvme_subsystem_get(ctx, host, name, subsysnqn, &s))
+		if (nvme_get_subsystem(ctx, host, name, subsysnqn, &s))
 			return NULL;
 
 		return s;
@@ -1245,13 +1245,13 @@ struct nvme_ns {
 		PyObject *output;
 		int ret;
 
-		ret = nvme_nbft_read(ctx, &nbft, filename);
+		ret = nvme_read_nbft(ctx, &nbft, filename);
 		if (ret) {
 			Py_RETURN_NONE;
 		}
 
 		output = nbft_to_pydict(nbft);
-		nvme_nbft_free(ctx, nbft);
+		nvme_free_nbft(ctx, nbft);
 		return output;
 	}
 %};

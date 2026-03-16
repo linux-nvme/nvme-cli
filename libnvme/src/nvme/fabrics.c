@@ -2425,9 +2425,9 @@ int nvmf_config_modify(struct nvme_global_ctx *ctx,
 	struct nvme_ctrl *c;
 
 	if (!fctx->hostnqn)
-		fctx->hostnqn = hnqn = nvme_hostnqn_from_file();
+		fctx->hostnqn = hnqn = nvme_read_hostnqn();
 	if (!fctx->hostid && hnqn)
-		fctx->hostid = hid = nvme_hostid_from_file();
+		fctx->hostid = hid = nvme_read_hostid();
 
 	h = nvme_lookup_host(ctx, fctx->hostnqn, fctx->hostid);
 	if (!h) {
@@ -2489,7 +2489,7 @@ int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
 		snprintf(filename, sizeof(filename), "%s/%s", path,
 			dent[i]->d_name);
 
-		ret = nvme_nbft_read(ctx, &nbft, filename);
+		ret = nvme_read_nbft(ctx, &nbft, filename);
 		if (!ret) {
 			struct nbft_file_entry *new;
 
@@ -2516,7 +2516,7 @@ void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
 	while (head) {
 		struct nbft_file_entry *next = head->next;
 
-		nvme_nbft_free(ctx, head->nbft);
+		nvme_free_nbft(ctx, head->nbft);
 		free(head);
 
 		head = next;
@@ -3041,7 +3041,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 		ret = nvme_scan_ctrl(ctx, fctx->device, &c);
 		if (!ret) {
 			/* Check if device matches command-line options */
-			if (!nvme_ctrl_config_match(c, fctx->transport,
+			if (!nvme_ctrl_match_config(c, fctx->transport,
 				fctx->traddr, fctx->trsvcid,
 					fctx->subsysnqn, fctx->host_traddr,
 					fctx->host_iface)) {

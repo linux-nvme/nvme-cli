@@ -69,7 +69,7 @@ int main()
 		nvme_free_global_ctx(ctx);
 		return 1;
 	}
-	ret = nvme_host_get(ctx, NULL, NULL, &h);
+	ret = nvme_get_host(ctx, NULL, NULL, &h);
 	if (ret) {
 		fprintf(stderr, "Failed to allocated memory\n");
 		return 1;

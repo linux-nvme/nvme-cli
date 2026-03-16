@@ -337,16 +337,16 @@ bool sndk_get_dev_mgment_data(struct nvme_global_ctx *ctx, struct nvme_transport
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 	if (!nvme_get_uuid_list(hdl, &uuid_list)) {
 		/* check for the Sandisk UUID first  */
-		uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+		uuid_index = nvme_find_uuid(&uuid_list, SNDK_UUID);
 
 		if (uuid_index < 0) {
 			/* The Sandisk UUID is not found;
 			 * check for the WDC UUID second.
 			 */
-			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+			uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID);
 			if (uuid_index < 0)
 				/* Check for the UUID used on SN640 and SN655 drives */
-				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
+				uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID_SN640_3);
 		}
 
 		if (uuid_index >= 0)
@@ -684,16 +684,16 @@ __u64 sndk_get_enc_drive_capabilities(struct nvme_global_ctx *ctx,
 		memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 		if (!nvme_get_uuid_list(hdl, &uuid_list)) {
 			/* check for the Sandisk UUID first  */
-			uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+			uuid_index = nvme_find_uuid(&uuid_list, SNDK_UUID);
 
 			if (uuid_index < 0) {
 				/* The Sandisk UUID is not found;
 				 * check for the WDC UUID second.
 				 */
-				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+				uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID);
 				if (uuid_index < 0)
 					/* Check for the UUID used on SN640 and SN655 drives */
-					uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
+					uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID_SN640_3);
 			}
 		} else {
 			/* UUID Lists not supported, Use default uuid index - 0 */

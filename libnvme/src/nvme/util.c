@@ -749,7 +749,7 @@ int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN])
 
 }
 
-int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
+int nvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
 {
 	_cleanup_fd_ int f = -1;
 	ssize_t n;
@@ -774,7 +774,8 @@ int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
 	return 0;
 }
 
-int nvme_uuid_find(struct nvme_id_uuid_list *uuid_list, const unsigned char uuid[NVME_UUID_LEN])
+int nvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
+		const unsigned char uuid[NVME_UUID_LEN])
 {
 	const unsigned char uuid_end[NVME_UUID_LEN] = {0};
 

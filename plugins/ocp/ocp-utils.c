@@ -20,7 +20,7 @@ const unsigned char ocp_uuid[NVME_UUID_LEN] = {
 
 int ocp_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index)
 {
-	int i = nvme_uuid_find(uuid_list, ocp_uuid);
+	int i = nvme_find_uuid(uuid_list, ocp_uuid);
 
 	*index = 0;
 	if (i > 0)
