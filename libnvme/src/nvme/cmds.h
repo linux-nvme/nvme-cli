@@ -5222,8 +5222,16 @@ nvme_init_mi_cmd_flags(struct nvme_passthru_cmd *cmd, bool ish)
  * This is intended to be used with any command that takes a controller list
  * argument. See nvme_ns_attach_ctrls() and nvme_ns_detach().
  */
-void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
-			 __u16 *ctrlist);
+static inline void
+nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
+		__u16 *ctrlist)
+{
+	int i;
+
+	cntlist->num = htole16(num_ctrls);
+	for (i = 0; i < num_ctrls; i++)
+		cntlist->identifier[i] = htole16(ctrlist[i]);
+}
 
 /**
  * nvme_init_dsm_range() - Constructs a data set range structure
@@ -5239,8 +5247,34 @@ void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
  * Return: The nvme command status if a response was received or -errno
  * otherwise.
  */
-void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
-			  __u32 *llbas, __u64 *slbas, __u16 nr_ranges);
+static inline void
+nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
+		__u32 *llbas, __u64 *slbas, __u16 nr_ranges)
+{
+	int i;
+
+	for (i = 0; i < nr_ranges; i++) {
+		dsm[i].cattr = htole32(ctx_attrs[i]);
+		dsm[i].nlb = htole32(llbas[i]);
+		dsm[i].slba = htole64(slbas[i]);
+	}
+}
+
+/**
+ * nvme_init_copy_range_elbt() - Constructs a copy range elbt structure
+ * @elbt:
+ * @eilbrts:	Expected initial logical block reference tag
+ */
+static inline void
+nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
+{
+	int i;
+
+	for (i = 0; i < 8; i++)
+		elbt[9 - i] = (eilbrt >> (8 * i)) & 0xff;
+	elbt[1] = 0;
+	elbt[0] = 0;
+}
 
 /**
  * nvme_init_copy_range() - Constructs a copy range structure
@@ -5252,9 +5286,21 @@ void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
  * @elbats:	Expected logical block application tag
  * @nr:		Number of descriptors to construct
  */
-void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
-			  __u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
-			  __u32 *elbats, __u16 nr);
+static inline void
+nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
+		__u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
+		__u32 *elbats, __u16 nr)
+{
+	int i;
+
+	for (i = 0; i < nr; i++) {
+		copy[i].nlb = htole16(nlbs[i]);
+		copy[i].slba = htole64(slbas[i]);
+		copy[i].eilbrt = htole32(eilbrts[i]);
+		copy[i].elbatm = htole16(elbatms[i]);
+		copy[i].elbat = htole16(elbats[i]);
+	}
+}
 
 /**
  * nvme_init_copy_range_f1() - Constructs a copy range f1 structure
@@ -5266,9 +5312,21 @@ void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
  * @elbats:	Expected logical block application tag
  * @nr:		Number of descriptors to construct
  */
-void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
-			     __u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
-			     __u32 *elbats, __u16 nr);
+static inline void
+nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
+		__u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
+		__u32 *elbats, __u16 nr)
+{
+	int i;
+
+	for (i = 0; i < nr; i++) {
+		copy[i].nlb = htole16(nlbs[i]);
+		copy[i].slba = htole64(slbas[i]);
+		copy[i].elbatm = htole16(elbatms[i]);
+		copy[i].elbat = htole16(elbats[i]);
+		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
+	}
+}
 
 /**
  * nvme_init_copy_range_f2() - Constructs a copy range f2 structure
@@ -5282,10 +5340,24 @@ void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
  * @elbats:	Expected logical block application tag
  * @nr:		Number of descriptors to construct
  */
-void nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy, __u32 *snsids,
-			     __u16 *nlbs, __u64 *slbas, __u16 *sopts,
-			     __u32 *eilbrts, __u32 *elbatms, __u32 *elbats,
-			     __u16 nr);
+static inline void
+nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
+		__u32 *snsids, __u16 *nlbs, __u64 *slbas, __u16 *sopts,
+		__u32 *eilbrts, __u32 *elbatms, __u32 *elbats,
+		__u16 nr)
+{
+	int i;
+
+	for (i = 0; i < nr; i++) {
+		copy[i].snsid = htole32(snsids[i]);
+		copy[i].nlb = htole16(nlbs[i]);
+		copy[i].slba = htole64(slbas[i]);
+		copy[i].sopt = htole16(sopts[i]);
+		copy[i].eilbrt = htole32(eilbrts[i]);
+		copy[i].elbatm = htole16(elbatms[i]);
+		copy[i].elbat = htole16(elbats[i]);
+	}
+}
 
 /**
  * nvme_init_copy_range_f3() - Constructs a copy range f3 structure
@@ -5299,11 +5371,24 @@ void nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy, __u32 *snsids,
  * @elbats:	Expected logical block application tag
  * @nr:		Number of descriptors to construct
  */
-void nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
-			     __u16 *nlbs, __u64 *slbas, __u16 *sopts,
-			     __u64 *eilbrts, __u32 *elbatms, __u32 *elbats,
-			     __u16 nr);
+static inline void
+nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
+		__u16 *nlbs, __u64 *slbas, __u16 *sopts,
+		__u64 *eilbrts, __u32 *elbatms, __u32 *elbats,
+		__u16 nr)
+{
+	int i;
 
+	for (i = 0; i < nr; i++) {
+		copy[i].snsid = htole32(snsids[i]);
+		copy[i].nlb = htole16(nlbs[i]);
+		copy[i].slba = htole64(slbas[i]);
+		copy[i].sopt = htole16(sopts[i]);
+		copy[i].elbatm = htole16(elbatms[i]);
+		copy[i].elbat = htole16(elbats[i]);
+		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
+	}
+}
 
 /**
  * nvme_get_log() - Get log page data
