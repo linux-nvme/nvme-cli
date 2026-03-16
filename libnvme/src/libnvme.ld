@@ -42,7 +42,6 @@ LIBNVME_3 {
 		nvme_free_host;
 		nvme_free_ns;
 		nvme_free_subsystem;
-		nvme_fw_download_seq;
 		nvme_gen_dhchap_key;
 		nvme_generate_tls_key_identity;
 		nvme_generate_tls_key_identity_compat;
