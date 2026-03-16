@@ -769,21 +769,6 @@ const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c);
 nvme_subsystem_t nvme_ctrl_get_subsystem(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_dhchap_host_key() - Return host key
- * @c:	Controller to be checked
- *
- * Return: DH-HMAC-CHAP host key or NULL if not set
- */
-const char *nvme_ctrl_get_dhchap_host_key(nvme_ctrl_t c);
-
-/**
- * nvme_ctrl_set_dhchap_host_key() - Set host key
- * @c:		Host for which the key should be set
- * @key:	DH-HMAC-CHAP Key to set or NULL to clear existing key
- */
-void nvme_ctrl_set_dhchap_host_key(nvme_ctrl_t c, const char *key);
-
-/**
  * nvme_ns_head_get_sysfs_dir() - sysfs dir of namespave head
  * @head: namespace head instance
  *

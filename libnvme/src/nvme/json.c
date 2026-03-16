@@ -112,7 +112,7 @@ static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
 		nvme_ctrl_set_dhchap_host_key(c, json_object_get_string(attr_obj));
 	attr_obj = json_object_object_get(port_obj, "dhchap_ctrl_key");
 	if (attr_obj)
-		nvme_ctrl_set_dhchap_key(c, json_object_get_string(attr_obj));
+		nvme_ctrl_set_dhchap_ctrl_key(c, json_object_get_string(attr_obj));
 	attr_obj = json_object_object_get(port_obj, "keyring");
 	if (attr_obj)
 		nvme_ctrl_set_keyring(c, json_object_get_string(attr_obj));
@@ -175,7 +175,7 @@ static void json_parse_host(struct nvme_global_ctx *ctx, struct json_object *hos
 	h = nvme_lookup_host(ctx, hostnqn, hostid);
 	attr_obj = json_object_object_get(host_obj, "dhchap_key");
 	if (attr_obj)
-		nvme_host_set_dhchap_key(h, json_object_get_string(attr_obj));
+		nvme_host_set_dhchap_host_key(h, json_object_get_string(attr_obj));
 	attr_obj = json_object_object_get(host_obj, "hostsymname");
 	if (attr_obj)
 		nvme_host_set_hostsymname(h, json_object_get_string(attr_obj));
@@ -308,7 +308,7 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	if (value)
 		json_object_object_add(port_obj, "dhchap_key",
 				       json_object_new_string(value));
-	value = nvme_ctrl_get_dhchap_key(c);
+	value = nvme_ctrl_get_dhchap_ctrl_key(c);
 	if (value)
 		json_object_object_add(port_obj, "dhchap_ctrl_key",
 				       json_object_new_string(value));
@@ -405,7 +405,7 @@ int json_update_config(struct nvme_global_ctx *ctx, int fd)
 		if (hostid)
 			json_object_object_add(host_obj, "hostid",
 					       json_object_new_string(hostid));
-		dhchap_key = nvme_host_get_dhchap_key(h);
+		dhchap_key = nvme_host_get_dhchap_host_key(h);
 		if (dhchap_key)
 			json_object_object_add(host_obj, "dhchap_key",
 					       json_object_new_string(dhchap_key));
@@ -475,7 +475,7 @@ static void json_dump_ctrl(struct json_object *ctrl_array, nvme_ctrl_t c)
 	if (value)
 		json_object_object_add(ctrl_obj, "dhchap_key",
 				       json_object_new_string(value));
-	value = nvme_ctrl_get_dhchap_key(c);
+	value = nvme_ctrl_get_dhchap_ctrl_key(c);
 	if (value)
 		json_object_object_add(ctrl_obj, "dhchap_ctrl_key",
 				       json_object_new_string(value));
@@ -635,7 +635,7 @@ int json_dump_tree(struct nvme_global_ctx *ctx)
 		if (hostid)
 			json_object_object_add(host_obj, "hostid",
 					       json_object_new_string(hostid));
-		dhchap_key = nvme_host_get_dhchap_key(h);
+		dhchap_key = nvme_host_get_dhchap_host_key(h);
 		if (dhchap_key)
 			json_object_object_add(host_obj, "dhchap_key",
 					       json_object_new_string(dhchap_key));

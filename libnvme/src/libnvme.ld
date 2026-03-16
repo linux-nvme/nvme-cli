@@ -11,7 +11,6 @@ LIBNVME_3 {
 		nvme_ctrl_first_path;
 		nvme_ctrl_get_address;
 		nvme_ctrl_get_config;
-		nvme_ctrl_get_dhchap_host_key;
 		nvme_ctrl_get_phy_slot;
 		nvme_ctrl_get_src_addr;
 		nvme_ctrl_get_state;
@@ -26,7 +25,6 @@ LIBNVME_3 {
 		nvme_ctrl_next_path;
 		nvme_ctrl_release_transport_handle;
 		nvme_reset_ctrl;
-		nvme_ctrl_set_dhchap_host_key;
 		nvme_filter_ctrls;
 		nvme_describe_key_serial;
 		nvme_disconnect_ctrl;

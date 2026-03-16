@@ -369,7 +369,7 @@ struct nvme_host {
 	char *hostid;
 	char *hostsymname;
 	%extend {
-		char *dhchap_key;
+		char *dhchap_host_key;
 	}
 };
 
@@ -457,6 +457,9 @@ struct nvme_ctrl {
 		char *tls_key_identity;
 		char *tls_key;
 
+		char *dhchap_host_key;
+		char *dhchap_ctrl_key;
+
 		/**
 		 * We are remapping the following members of the C code's
 		 * nvme_ctrl_t to different names in Python. Here's the mapping:
@@ -464,12 +467,8 @@ struct nvme_ctrl {
 		 * C code                 Python (SWIG)
 		 * =====================  =====================
 		 * ctrl->s                ctrl->subsystem
-		 * ctrl->dhchap_key       ctrl->dhchap_host_key
-		 * ctrl->dhchap_ctrl_key  ctrl->dhchap_key
 		 */
 		struct nvme_subsystem *subsystem; // Maps to "s" in the C code
-		char *dhchap_host_key;            // Maps to "dhchap_key" in the C code
-		char *dhchap_key;                 // Maps to "dhchap_ctrl_key" in the C code
 	}
 };
 
@@ -562,7 +561,7 @@ struct nvme_ns {
 		if (hostsymname)
 			nvme_host_set_hostsymname(h, hostsymname);
 		if (hostkey)
-			nvme_host_set_dhchap_key(h, hostkey);
+			nvme_host_set_dhchap_host_key(h, hostkey);
 		return h;
 	}
 	~nvme_host() {
@@ -593,11 +592,11 @@ struct nvme_ns {
 }
 
 %{
-	const char *nvme_host_dhchap_key_get(struct nvme_host *h) {
-		return nvme_host_get_dhchap_key(h);
+	const char *nvme_host_dhchap_host_key_get(struct nvme_host *h) {
+		return nvme_host_get_dhchap_host_key(h);
 	}
-	void nvme_host_dhchap_key_set(struct nvme_host *h, char *key) {
-		nvme_host_set_dhchap_key(h, key);
+	void nvme_host_dhchap_host_key_set(struct nvme_host *h, char *key) {
+		nvme_host_set_dhchap_host_key(h, key);
 	}
 %};
 
@@ -880,11 +879,11 @@ struct nvme_ns {
 	const char *nvme_ctrl_state_get(struct nvme_ctrl *c) {
 		return nvme_ctrl_get_state(c);
 	}
-	const char *nvme_ctrl_dhchap_key_get(struct nvme_ctrl *c) {
-		return nvme_ctrl_get_dhchap_key(c);
+	const char *nvme_ctrl_dhchap_ctrl_key_get(struct nvme_ctrl *c) {
+		return nvme_ctrl_get_dhchap_ctrl_key(c);
 	}
-	void nvme_ctrl_dhchap_key_set(struct nvme_ctrl *c, const char *key) {
-		nvme_ctrl_set_dhchap_key(c, key);
+	void nvme_ctrl_dhchap_ctrl_key_set(struct nvme_ctrl *c, const char *key) {
+		nvme_ctrl_set_dhchap_ctrl_key(c, key);
 	}
 	const char *nvme_ctrl_dhchap_host_key_get(struct nvme_ctrl *c) {
 		return nvme_ctrl_get_dhchap_host_key(c);

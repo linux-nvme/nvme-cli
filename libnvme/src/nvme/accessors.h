@@ -407,19 +407,21 @@ void nvme_ctrl_set_trsvcid(struct nvme_ctrl *p, const char *trsvcid);
 const char *nvme_ctrl_get_trsvcid(const struct nvme_ctrl *p);
 
 /**
- * nvme_ctrl_set_dhchap_key() - Set dhchap_key.
+ * nvme_ctrl_set_dhchap_host_key() - Set dhchap_host_key.
  * @p: The &struct nvme_ctrl instance to update.
- * @dhchap_key: New string; a copy is stored. Pass NULL to clear.
+ * @dhchap_host_key: New string; a copy is stored. Pass NULL to clear.
  */
-void nvme_ctrl_set_dhchap_key(struct nvme_ctrl *p, const char *dhchap_key);
+void nvme_ctrl_set_dhchap_host_key(
+		struct nvme_ctrl *p,
+		const char *dhchap_host_key);
 
 /**
- * nvme_ctrl_get_dhchap_key() - Get dhchap_key.
+ * nvme_ctrl_get_dhchap_host_key() - Get dhchap_host_key.
  * @p: The &struct nvme_ctrl instance to query.
  *
- * Return: The value of the dhchap_key field, or NULL if not set.
+ * Return: The value of the dhchap_host_key field, or NULL if not set.
  */
-const char *nvme_ctrl_get_dhchap_key(const struct nvme_ctrl *p);
+const char *nvme_ctrl_get_dhchap_host_key(const struct nvme_ctrl *p);
 
 /**
  * nvme_ctrl_set_dhchap_ctrl_key() - Set dhchap_ctrl_key.
@@ -808,19 +810,21 @@ void nvme_host_set_hostid(struct nvme_host *p, const char *hostid);
 const char *nvme_host_get_hostid(const struct nvme_host *p);
 
 /**
- * nvme_host_set_dhchap_key() - Set dhchap_key.
+ * nvme_host_set_dhchap_host_key() - Set dhchap_host_key.
  * @p: The &struct nvme_host instance to update.
- * @dhchap_key: New string; a copy is stored. Pass NULL to clear.
+ * @dhchap_host_key: New string; a copy is stored. Pass NULL to clear.
  */
-void nvme_host_set_dhchap_key(struct nvme_host *p, const char *dhchap_key);
+void nvme_host_set_dhchap_host_key(
+		struct nvme_host *p,
+		const char *dhchap_host_key);
 
 /**
- * nvme_host_get_dhchap_key() - Get dhchap_key.
+ * nvme_host_get_dhchap_host_key() - Get dhchap_host_key.
  * @p: The &struct nvme_host instance to query.
  *
- * Return: The value of the dhchap_key field, or NULL if not set.
+ * Return: The value of the dhchap_host_key field, or NULL if not set.
  */
-const char *nvme_host_get_dhchap_key(const struct nvme_host *p);
+const char *nvme_host_get_dhchap_host_key(const struct nvme_host *p);
 
 /**
  * nvme_host_set_hostsymname() - Set hostsymname.
