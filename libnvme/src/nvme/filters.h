@@ -20,36 +20,36 @@
  */
 
 /**
- * nvme_namespace_filter() - Filter for namespaces
+ * nvme_filter_namespace() - Filter for namespaces
  * @d: dirent to check
  *
  * Return: 1 if @d matches, 0 otherwise
  */
-int nvme_namespace_filter(const struct dirent *d);
+int nvme_filter_namespace(const struct dirent *d);
 
 /**
- * nvme_paths_filter() - Filter for paths
+ * nvme_filter_paths() - Filter for paths
  * @d: dirent to check
  *
  * Return: 1 if @d matches, 0 otherwise
  */
-int nvme_paths_filter(const struct dirent *d);
+int nvme_filter_paths(const struct dirent *d);
 
 /**
- * nvme_ctrls_filter() - Filter for controllers
+ * nvme_filter_ctrls() - Filter for controllers
  * @d: dirent to check
  *
  * Return: 1 if @d matches, 0 otherwise
  */
-int nvme_ctrls_filter(const struct dirent *d);
+int nvme_filter_ctrls(const struct dirent *d);
 
 /**
- * nvme_subsys_filter() - Filter for subsystems
+ * nvme_filter_subsys() - Filter for subsystems
  * @d: dirent to check
  *
  * Return: 1 if @d matches, 0 otherwise
  */
-int nvme_subsys_filter(const struct dirent *d);
+int nvme_filter_subsys(const struct dirent *d);
 
 /**
  * nvme_scan_subsystems() - Scan for subsystems

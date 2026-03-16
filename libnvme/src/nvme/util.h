@@ -199,7 +199,7 @@ int nvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str);
 int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN]);
 
 /**
- * nvme_uuid_random - Generate random UUID
+ * nvme_random_uuid - Generate random UUID
  * @uuid:       Generated random UUID
  *
  * Generate random number according
@@ -207,16 +207,18 @@ int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN]);
  *
  * Return: Returns error code if generating of random number fails.
  */
-int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN]);
+int nvme_random_uuid(unsigned char uuid[NVME_UUID_LEN]);
 
 /**
- * nvme_uuid_find - Find UUID position on UUID list
+ * nvme_find_uuid - Find UUID position on UUID list
  * @uuid_list:	UUID list returned by identify UUID
  * @uuid:	Binary encoded input UUID
  *
- * Return: The array position where given UUID is present, or -1 on failure with errno set.
+ * Return: The array position where given UUID is present, or -1 on failure
+ *  with errno set.
  */
-int nvme_uuid_find(struct nvme_id_uuid_list *uuid_list, const unsigned char uuid[NVME_UUID_LEN]);
+int nvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
+		const unsigned char uuid[NVME_UUID_LEN]);
 
 /**
  * nvme_basename - Return the final path component (the one after the last '/')

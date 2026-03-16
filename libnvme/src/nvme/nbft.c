@@ -711,7 +711,7 @@ static int parse_raw_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
 	return 0;
 }
 
-void nvme_nbft_free(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
+void nvme_free_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
 {
 	struct nbft_info_hfi **hfi;
 	struct nbft_info_security **sec;
@@ -737,7 +737,7 @@ void nvme_nbft_free(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
 	free(nbft);
 }
 
-int nvme_nbft_read(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
+int nvme_read_nbft(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
 		const char *filename)
 {
 	__u8 *raw_nbft = NULL;
@@ -801,7 +801,7 @@ int nvme_nbft_read(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
 
 	if (parse_raw_nbft(ctx, *nbft)) {
 		nvme_msg(ctx, LOG_ERR, "Failed to parse %s\n", filename);
-		nvme_nbft_free(ctx, *nbft);
+		nvme_free_nbft(ctx, *nbft);
 		return -EINVAL;
 	}
 	return 0;

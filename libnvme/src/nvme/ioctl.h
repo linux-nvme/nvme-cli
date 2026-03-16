@@ -53,7 +53,7 @@ int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd);
 
 /**
- * nvme_subsystem_reset() - Initiate a subsystem reset
+ * nvme_reset_subsystem() - Initiate a subsystem reset
  * @hdl:	Transport handle
  *
  * This should only be sent to controller handles, not to namespaces.
@@ -61,27 +61,27 @@ int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
  * Return: Zero if a subsystem reset was initiated or -1 with errno set
  * otherwise.
  */
-int nvme_subsystem_reset(struct nvme_transport_handle *hdl);
+int nvme_reset_subsystem(struct nvme_transport_handle *hdl);
 
 /**
- * nvme_ctrl_reset() - Initiate a controller reset
+ * nvme_reset_ctrl() - Initiate a controller reset
  * @hdl:	Transport handle
  *
  * This should only be sent to controller handles, not to namespaces.
  *
  * Return: 0 if a reset was initiated or -1 with errno set otherwise.
  */
-int nvme_ctrl_reset(struct nvme_transport_handle *hdl);
+int nvme_reset_ctrl(struct nvme_transport_handle *hdl);
 
 /**
- * nvme_ns_rescan() - Initiate a controller rescan
+ * nvme_rescan_ns() - Initiate a controller rescan
  * @hdl:	Transport handle
  *
  * This should only be sent to controller handles, not to namespaces.
  *
  * Return: 0 if a rescan was initiated or -1 with errno set otherwise.
  */
-int nvme_ns_rescan(struct nvme_transport_handle *hdl);
+int nvme_rescan_ns(struct nvme_transport_handle *hdl);
 
 /**
  * nvme_get_nsid() - Retrieve the NSID from a namespace file descriptor

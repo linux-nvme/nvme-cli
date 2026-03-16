@@ -5468,7 +5468,7 @@ static int subsystem_reset(int argc, char **argv, struct command *acmd, struct p
 		return -EINVAL;
 	}
 
-	err = nvme_subsystem_reset(hdl);
+	err = nvme_reset_subsystem(hdl);
 	if (err < 0) {
 		if (errno == ENOTTY)
 			nvme_show_error("Subsystem-reset: NVM Subsystem Reset not supported.");
@@ -5499,7 +5499,7 @@ static int reset(int argc, char **argv, struct command *acmd, struct plugin *plu
 		return -EINVAL;
 	}
 
-	err = nvme_ctrl_reset(hdl);
+	err = nvme_reset_ctrl(hdl);
 	if (err < 0)
 		nvme_show_error("Reset: %s", nvme_strerror(-err));
 	else if (argconfig_parse_seen(opts, "verbose"))
@@ -5534,7 +5534,7 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 		return err;
 	}
 
-	err = nvme_ns_rescan(hdl);
+	err = nvme_rescan_ns(hdl);
 	if (err < 0)
 		nvme_show_error("Namespace Rescan: %s\n", nvme_strerror(-err));
 	else if (argconfig_parse_seen(opts, "verbose"))
@@ -6825,7 +6825,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	printf("Success formatting namespace:%x\n", cfg.namespace_id);
 	if (nvme_transport_handle_is_direct(hdl) && cfg.lbaf != prev_lbaf) {
 		if (nvme_transport_handle_is_chardev(hdl)) {
-			if (nvme_ns_rescan(hdl) < 0) {
+			if (nvme_rescan_ns(hdl) < 0) {
 				nvme_show_error("failed to rescan namespaces");
 				return -errno;
 			}
@@ -6857,7 +6857,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	}
 	if (nvme_transport_handle_is_direct(hdl) && cfg.reset &&
 	    nvme_transport_handle_is_chardev(hdl))
-		nvme_ctrl_reset(hdl);
+		nvme_reset_ctrl(hdl);
 
 	return err;
 }
@@ -9524,7 +9524,7 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 {
 	char *hostnqn;
 
-	hostnqn = nvme_hostnqn_generate();
+	hostnqn = nvme_generate_hostnqn();
 	if (!hostnqn) {
 		nvme_show_error("\"%s\" not supported. Install lib uuid and rebuild.",
 				acmd->name);
@@ -9539,9 +9539,9 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 {
 	char *hostnqn;
 
-	hostnqn = nvme_hostnqn_from_file();
+	hostnqn = nvme_read_hostnqn();
 	if (!hostnqn)
-		hostnqn =  nvme_hostnqn_generate();
+		hostnqn =  nvme_generate_hostnqn();
 
 	if (!hostnqn) {
 		nvme_show_error("hostnqn is not available -- use nvme gen-hostnqn");
@@ -9669,7 +9669,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	}
 
 	if (!cfg.nqn) {
-		cfg.nqn = hnqn = nvme_hostnqn_from_file();
+		cfg.nqn = hnqn = nvme_read_hostnqn();
 		if (!cfg.nqn) {
 			nvme_show_error("Could not read host NQN");
 			return -ENOENT;
@@ -9933,7 +9933,7 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 			return -EINVAL;
 		}
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = nvme_hostnqn_from_file();
+			cfg.hostnqn = hnqn = nvme_read_hostnqn();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;
@@ -10095,7 +10095,7 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.subsysnqn) {
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = nvme_hostnqn_from_file();
+			cfg.hostnqn = hnqn = nvme_read_hostnqn();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;

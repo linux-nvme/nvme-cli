@@ -114,7 +114,7 @@ void nvme_host_set_pdc_enabled(nvme_host_t h, bool enabled);
 bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback);
 
 /**
- * nvme_host_get() - Returns a host object
+ * nvme_get_host() - Returns a host object
  * @ctx:	struct nvme_global_ctx object
  * @hostnqn:	Host NQN (optional)
  * @hostid:	Host ID (optional)
@@ -125,7 +125,7 @@ bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback);
  *
  * Return: 0 on success or negative error code otherwise
  */
-int nvme_host_get(struct nvme_global_ctx *ctx, const char *hostnqn,
+int nvme_get_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, nvme_host_t *h);
 
 /**
@@ -181,7 +181,7 @@ nvme_subsystem_t nvme_first_subsystem(nvme_host_t h);
 nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s);
 
 /**
- * nvme_subsystem_get() - Returns nvme_subsystem_t object
+ * nvme_get_subsystem() - Returns nvme_subsystem_t object
  * @ctx:	struct nvme_global_ctx object
  * @h:		&nvme_host_t object
  * @name:	Name of the subsystem (may be NULL)
@@ -192,7 +192,7 @@ nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s);
  * and @subsysnqn or create one if not found.
  *
  */
-int nvme_subsystem_get(struct nvme_global_ctx *ctx,
+int nvme_get_subsystem(struct nvme_global_ctx *ctx,
 		struct nvme_host *h, const char *name,
 		const char *subsysnqn, struct nvme_subsystem **s);
 
@@ -281,7 +281,7 @@ nvme_path_t nvme_namespace_first_path(nvme_ns_t ns);
 nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p);
 
 /**
- * nvme_ctrl_config_match() - Check if ctrl @c matches config params
+ * nvme_ctrl_match_config() - Check if ctrl @c matches config params
  * @c:			An existing controller instance
  * @transport:		Transport name
  * @traddr:		Transport address
@@ -296,7 +296,7 @@ nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p);
  *
  * Return: true if there's a match, false otherwise.
  */
-bool nvme_ctrl_config_match(struct nvme_ctrl *c, const char *transport,
+bool nvme_ctrl_match_config(struct nvme_ctrl *c, const char *transport,
 			    const char *traddr, const char *trsvcid,
 			    const char *subsysnqn, const char *host_traddr,
 			    const char *host_iface);
