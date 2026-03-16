@@ -1858,31 +1858,6 @@ nvme_init_get_log_zns_changed_zones(struct nvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_get_ana_log_atomic() - Retrieve Asymmetric Namespace Access
- * log page atomically
- * @hdl:	Transport handle
- * @rae:	Whether to retain asynchronous events
- * @rgo:	Whether to retrieve ANA groups only (no NSIDs)
- * @log:	Pointer to a buffer to receive the ANA log page
- * @len:	Input: the length of the log page buffer.
- *		Output: the actual length of the ANA log page.
- * @retries:	The maximum number of times to retry on log page changes
- *
- * See &struct nvme_ana_log for the definition of the returned structure.
- *
- * Return: If successful, returns 0 and sets *len to the actual log page length.
- * If unsuccessful, returns the nvme command status if a response was received
- * (see &enum nvme_status_field) or -1 with errno set otherwise.
- * Sets errno = EINVAL if retries == 0.
- * Sets errno = EAGAIN if unable to read the log page atomically
- * because chgcnt changed during each of the retries attempts.
- * Sets errno = ENOSPC if the full log page does not fit in the provided buffer.
- */
-int
-nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rgo,
-		struct nvme_ana_log *log, __u32 *len, unsigned int retries);
-
-/**
  * nvme_init_set_features() - Initialize passthru command for
  * Set Features
  * @cmd:	Passthru command to use
@@ -5533,6 +5508,31 @@ int nvme_get_new_host_telemetry(struct nvme_transport_handle *hdl,
  */
 size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
 		bool rgo);
+
+/**
+ * nvme_get_ana_log_atomic() - Retrieve Asymmetric Namespace Access
+ * log page atomically
+ * @hdl:	Transport handle
+ * @rae:	Whether to retain asynchronous events
+ * @rgo:	Whether to retrieve ANA groups only (no NSIDs)
+ * @log:	Pointer to a buffer to receive the ANA log page
+ * @len:	Input: the length of the log page buffer.
+ *		Output: the actual length of the ANA log page.
+ * @retries:	The maximum number of times to retry on log page changes
+ *
+ * See &struct nvme_ana_log for the definition of the returned structure.
+ *
+ * Return: If successful, returns 0 and sets *len to the actual log page length.
+ * If unsuccessful, returns the nvme command status if a response was received
+ * (see &enum nvme_status_field) or -1 with errno set otherwise.
+ * Sets errno = EINVAL if retries == 0.
+ * Sets errno = EAGAIN if unable to read the log page atomically
+ * because chgcnt changed during each of the retries attempts.
+ * Sets errno = ENOSPC if the full log page does not fit in the provided buffer.
+ */
+int
+nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rgo,
+		struct nvme_ana_log *log, __u32 *len, unsigned int retries);
 
 /**
  * nvme_get_ana_log_len() - Retrieve size of the current ANA log
