@@ -121,22 +121,22 @@ char *nvme_get_attr(const char *dir, const char *attr)
 	return __nvme_get_attr(path);
 }
 
-char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr)
+char *nvme_subsystem_get_attr(nvme_subsystem_t s, const char *attr)
 {
 	return nvme_get_attr(nvme_subsystem_get_sysfs_dir(s), attr);
 }
 
-char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr)
+char *nvme_ctrl_get_attr(nvme_ctrl_t c, const char *attr)
 {
 	return nvme_get_attr(nvme_ctrl_get_sysfs_dir(c), attr);
 }
 
-char *nvme_get_ns_attr(nvme_ns_t n, const char *attr)
+char *nvme_ns_get_attr(nvme_ns_t n, const char *attr)
 {
 	return nvme_get_attr(nvme_ns_get_sysfs_dir(n), attr);
 }
 
-char *nvme_get_path_attr(nvme_path_t p, const char *attr)
+char *nvme_path_get_attr(nvme_path_t p, const char *attr)
 {
 	return nvme_get_attr(nvme_path_get_sysfs_dir(p), attr);
 }

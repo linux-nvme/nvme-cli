@@ -810,7 +810,7 @@ int nvme_path_get_queue_depth(nvme_path_t p)
 {
 	_cleanup_free_ char *queue_depth = NULL;
 
-	queue_depth = nvme_get_path_attr(p, "queue_depth");
+	queue_depth = nvme_path_get_attr(p, "queue_depth");
 	if (queue_depth) {
 		sscanf(queue_depth, "%d", &p->queue_depth);
 	}
@@ -852,20 +852,20 @@ static int nvme_ctrl_scan_path(struct nvme_global_ctx *ctx, struct nvme_ctrl *c,
 	p->name = strdup(name);
 	p->sysfs_dir = path;
 	path = NULL;
-	p->ana_state = nvme_get_path_attr(p, "ana_state");
+	p->ana_state = nvme_path_get_attr(p, "ana_state");
 	if (!p->ana_state)
 		p->ana_state = strdup("optimized");
 
-	p->numa_nodes = nvme_get_path_attr(p, "numa_nodes");
+	p->numa_nodes = nvme_path_get_attr(p, "numa_nodes");
 	if (!p->numa_nodes)
 		p->numa_nodes = strdup("-1");
 
-	grpid = nvme_get_path_attr(p, "ana_grpid");
+	grpid = nvme_path_get_attr(p, "ana_grpid");
 	if (grpid) {
 		sscanf(grpid, "%d", &p->grpid);
 	}
 
-	queue_depth = nvme_get_path_attr(p, "queue_depth");
+	queue_depth = nvme_path_get_attr(p, "queue_depth");
 	if (queue_depth) {
 		sscanf(queue_depth, "%d", &p->queue_depth);
 	}
@@ -950,7 +950,7 @@ const char *nvme_ctrl_get_state(nvme_ctrl_t c)
 {
 	char *state = c->state;
 
-	c->state = nvme_get_ctrl_attr(c, "state");
+	c->state = nvme_ctrl_get_attr(c, "state");
 	free(state);
 	return c->state;
 }
@@ -1712,7 +1712,7 @@ static void nvme_read_sysfs_dhchap(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 {
 	char *host_key, *ctrl_key;
 
-	host_key = nvme_get_ctrl_attr(c, "dhchap_secret");
+	host_key = nvme_ctrl_get_attr(c, "dhchap_secret");
 	if (host_key && !strcmp(host_key, "none")) {
 		free(host_key);
 		host_key = NULL;
@@ -1722,7 +1722,7 @@ static void nvme_read_sysfs_dhchap(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 		c->dhchap_key = host_key;
 	}
 
-	ctrl_key = nvme_get_ctrl_attr(c, "dhchap_ctrl_secret");
+	ctrl_key = nvme_ctrl_get_attr(c, "dhchap_ctrl_secret");
 	if (ctrl_key && !strcmp(ctrl_key, "none")) {
 		free(ctrl_key);
 		ctrl_key = NULL;
@@ -1739,14 +1739,14 @@ static void nvme_read_sysfs_tls(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 	long key_id;
 	char *key, *keyring;
 
-	key = nvme_get_ctrl_attr(c, "tls_key");
+	key = nvme_ctrl_get_attr(c, "tls_key");
 	if (!key) {
 		/* tls_key is only present if --tls has been used. */
 		return;
 	}
 	c->cfg.tls = true;
 
-	keyring = nvme_get_ctrl_attr(c, "tls_keyring");
+	keyring = nvme_ctrl_get_attr(c, "tls_keyring");
 	nvme_ctrl_set_keyring(c, keyring);
 	free(keyring);
 
@@ -1757,7 +1757,7 @@ static void nvme_read_sysfs_tls(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 
 	free(key);
 
-	key = nvme_get_ctrl_attr(c, "tls_configured_key");
+	key = nvme_ctrl_get_attr(c, "tls_configured_key");
 	if (!key)
 		return;
 
@@ -1804,16 +1804,16 @@ static int nvme_reconfigure_ctrl(struct nvme_global_ctx *ctx, nvme_ctrl_t c, con
 	c->hdl = NULL;
 	c->name = xstrdup(name);
 	c->sysfs_dir = xstrdup(path);
-	c->firmware = nvme_get_ctrl_attr(c, "firmware_rev");
-	c->model = nvme_get_ctrl_attr(c, "model");
-	c->state = nvme_get_ctrl_attr(c, "state");
-	c->numa_node = nvme_get_ctrl_attr(c, "numa_node");
-	c->queue_count = nvme_get_ctrl_attr(c, "queue_count");
-	c->serial = nvme_get_ctrl_attr(c, "serial");
-	c->sqsize = nvme_get_ctrl_attr(c, "sqsize");
-	c->cntrltype = nvme_get_ctrl_attr(c, "cntrltype");
-	c->cntlid = nvme_get_ctrl_attr(c, "cntlid");
-	c->dctype = nvme_get_ctrl_attr(c, "dctype");
+	c->firmware = nvme_ctrl_get_attr(c, "firmware_rev");
+	c->model = nvme_ctrl_get_attr(c, "model");
+	c->state = nvme_ctrl_get_attr(c, "state");
+	c->numa_node = nvme_ctrl_get_attr(c, "numa_node");
+	c->queue_count = nvme_ctrl_get_attr(c, "queue_count");
+	c->serial = nvme_ctrl_get_attr(c, "serial");
+	c->sqsize = nvme_ctrl_get_attr(c, "sqsize");
+	c->cntrltype = nvme_ctrl_get_attr(c, "cntrltype");
+	c->cntlid = nvme_ctrl_get_attr(c, "cntlid");
+	c->dctype = nvme_ctrl_get_attr(c, "dctype");
 	nvme_ctrl_lookup_phy_slot(ctx, c->address, &c->phy_slot);
 	nvme_read_sysfs_dhchap(ctx, c);
 	nvme_read_sysfs_tls(ctx, c);

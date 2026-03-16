@@ -2390,7 +2390,7 @@ String with the contents of **attr** or ``NULL`` in case of an empty
         value or error.
 
 
-.. c:function:: char * nvme_get_subsys_attr (nvme_subsystem_t s, const char *attr)
+.. c:function:: char * nvme_subsystem_get_attr (nvme_subsystem_t s, const char *attr)
 
    Read subsystem sysfs attribute
 
@@ -2408,7 +2408,7 @@ String with the contents of **attr** or ``NULL`` in case of an empty
         value or error.
 
 
-.. c:function:: char * nvme_get_ctrl_attr (nvme_ctrl_t c, const char *attr)
+.. c:function:: char * nvme_ctrl_get_attr (nvme_ctrl_t c, const char *attr)
 
    Read controller sysfs attribute
 
@@ -2426,7 +2426,7 @@ String with the contents of **attr** or ``NULL`` in case of an empty value
         or in case of an error.
 
 
-.. c:function:: char * nvme_get_ns_attr (nvme_ns_t n, const char *attr)
+.. c:function:: char * nvme_ns_get_attr (nvme_ns_t n, const char *attr)
 
    Read namespace sysfs attribute
 
@@ -2477,7 +2477,7 @@ of opened nvme devices. This API can be used to close and
 clear all cached fds under this subsystem.
 
 
-.. c:function:: char * nvme_get_path_attr (nvme_path_t p, const char *attr)
+.. c:function:: char * nvme_path_get_attr (nvme_path_t p, const char *attr)
 
    Read path sysfs attribute
 

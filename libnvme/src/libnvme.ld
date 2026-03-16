@@ -10,6 +10,7 @@ LIBNVME_3 {
 		nvme_ctrl_first_ns;
 		nvme_ctrl_first_path;
 		nvme_ctrl_get_address;
+		nvme_ctrl_get_attr;
 		nvme_ctrl_get_config;
 		nvme_ctrl_get_dhchap_host_key;
 		nvme_ctrl_get_phy_slot;
@@ -51,7 +52,6 @@ LIBNVME_3 {
 		nvme_get_ana_log_len_from_id_ctrl;
 		nvme_get_application;
 		nvme_get_attr;
-		nvme_get_ctrl_attr;
 		nvme_get_ctrl_telemetry;
 		nvme_get_directive_receive_length;
 		nvme_get_feature_length;
@@ -60,11 +60,8 @@ LIBNVME_3 {
 		nvme_get_logging_level;
 		nvme_get_logical_block_size;
 		nvme_get_new_host_telemetry;
-		nvme_get_ns_attr;
 		nvme_get_nsid;
-		nvme_get_path_attr;
 		nvme_get_property;
-		nvme_get_subsys_attr;
 		nvme_get_telemetry_log;
 		nvme_get_telemetry_max;
 		nvme_get_uuid_list;
@@ -140,6 +137,7 @@ LIBNVME_3 {
 		nvme_ns_attach;
 		nvme_ns_compare;
 		nvme_ns_flush;
+		nvme_ns_get_attr;
 		nvme_ns_get_csi;
 		nvme_ns_get_ctrl;
 		nvme_ns_get_eui64;
@@ -159,6 +157,7 @@ LIBNVME_3 {
 		nvme_ns_write_zeros;
 		nvme_open;
 		nvme_parse_uri;
+		nvme_path_get_attr;
 		nvme_path_get_ctrl;
 		nvme_path_get_ns;
 		nvme_path_get_queue_depth;
@@ -197,6 +196,7 @@ LIBNVME_3 {
 		nvme_subsystem_first_ctrl;
 		nvme_subsystem_first_ns;
 		nvme_subsystem_get;
+		nvme_subsystem_get_attr;
 		nvme_subsystem_get_fw_rev;
 		nvme_subsystem_get_host;
 		nvme_subsystem_get_nqn;

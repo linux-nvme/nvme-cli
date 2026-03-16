@@ -1005,34 +1005,34 @@ int nvme_dump_tree(struct nvme_global_ctx *ctx);
 char *nvme_get_attr(const char *d, const char *attr);
 
 /**
- * nvme_get_subsys_attr() - Read subsystem sysfs attribute
+ * nvme_subsystem_get_attr() - Read subsystem sysfs attribute
  * @s:		nvme_subsystem_t object
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty
  *	   value or error.
  */
-char *nvme_get_subsys_attr(nvme_subsystem_t s, const char *attr);
+char *nvme_subsystem_get_attr(nvme_subsystem_t s, const char *attr);
 
 /**
- * nvme_get_ctrl_attr() - Read controller sysfs attribute
+ * nvme_ctrl_get_attr() - Read controller sysfs attribute
  * @c:		Controller instance
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
  *	   or in case of an error.
  */
-char *nvme_get_ctrl_attr(nvme_ctrl_t c, const char *attr);
+char *nvme_ctrl_get_attr(nvme_ctrl_t c, const char *attr);
 
 /**
- * nvme_get_ns_attr() - Read namespace sysfs attribute
+ * nvme_ns_get_attr() - Read namespace sysfs attribute
  * @n:		nvme_ns_t object
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
  *	   or in case of an error.
  */
-char *nvme_get_ns_attr(nvme_ns_t n, const char *attr);
+char *nvme_ns_get_attr(nvme_ns_t n, const char *attr);
 
 /**
  * nvme_subsystem_lookup_namespace() - lookup namespace by NSID
@@ -1057,14 +1057,14 @@ void nvme_subsystem_release_fds(struct nvme_subsystem *s);
 
 
 /**
- * nvme_get_path_attr() - Read path sysfs attribute
+ * nvme_path_get_attr() - Read path sysfs attribute
  * @p:		nvme_path_t object
  * @attr:	sysfs attribute name
  *
  * Return: String with the contents of @attr or %NULL in case of an empty value
  *	   or in case of an error.
  */
-char *nvme_get_path_attr(nvme_path_t p, const char *attr);
+char *nvme_path_get_attr(nvme_path_t p, const char *attr);
 
 /**
  * nvme_scan_namespace() - scan namespace based on sysfs name
