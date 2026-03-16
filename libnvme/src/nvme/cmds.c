@@ -15,34 +15,6 @@
 #include "cleanup.h"
 #include "private.h"
 
-int nvme_fw_download_seq(struct nvme_transport_handle *hdl, bool ish,
-		__u32 size, __u32 xfer, __u32 offset, void *buf)
-{
-	struct nvme_passthru_cmd cmd;
-	void *data = buf;
-	int err = 0;
-
-	if (ish && nvme_transport_handle_is_mi(hdl))
-		nvme_init_mi_cmd_flags(&cmd, ish);
-
-	while (size > 0) {
-		__u32 chunk = min(xfer, size);
-
-		err = nvme_init_fw_download(&cmd, data, chunk, offset);
-		if (err)
-			break;
-		err = nvme_submit_admin_passthru(hdl, &cmd);
-		if (err)
-			break;
-
-		data += chunk;
-		size -= chunk;
-		offset += chunk;
-	}
-
-	return err;
-}
-
 int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
 {
 	struct nvme_feat_host_behavior da4;

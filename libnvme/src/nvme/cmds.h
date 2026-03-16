@@ -5228,21 +5228,6 @@ nvme_init_mi_cmd_flags(struct nvme_passthru_cmd *cmd, bool ish)
 }
 
 /**
- * nvme_fw_download_seq() - Firmware download sequence
- * @hdl:	Transport handle
- * @ish:	Ignore Shutdown (for NVMe-MI command)
- * @size:	Total size of the firmware image to transfer
- * @xfer:	Maximum size to send with each partial transfer
- * @offset:	Starting offset to send with this firmware download
- * @buf:	Address of buffer containing all or part of the firmware image.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-int nvme_fw_download_seq(struct nvme_transport_handle *hdl, bool ish,
-			__u32 size, __u32 xfer, __u32 offset, void *buf);
-
-/**
  * nvme_set_etdas() - Set the Extended Telemetry Data Area 4 Supported bit
  * @hdl:	Transport handle
  * @changed:	boolean to indicate whether or not the host
