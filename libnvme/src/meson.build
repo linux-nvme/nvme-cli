@@ -46,6 +46,10 @@ if want_fabrics
     ]
 endif
 
+if liburing_dep.found()
+    sources += 'nvme/uring.c'
+endif
+
 if json_c_dep.found()
     sources += 'nvme/json.c'
 else

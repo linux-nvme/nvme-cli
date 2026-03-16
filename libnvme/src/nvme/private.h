@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <errno.h>
 #include <ifaddrs.h>
 #include <poll.h>
 
@@ -117,6 +118,7 @@ struct nvme_transport_handle {
 	struct stat stat;
 	bool ioctl_admin64;
 	bool ioctl_io64;
+	bool uring_enabled;
 
 	/* mi */
 	struct nvme_mi_ep *ep;
@@ -278,6 +280,12 @@ struct nvme_fabric_options {
 	bool trsvcid;
 };
 
+enum nvme_io_uring_state {
+	NVME_IO_URING_STATE_UNKNOWN = 0,
+	NVME_IO_URING_STATE_NOT_AVAILABLE,
+	NVME_IO_URING_STATE_AVAILABLE,
+};
+
 struct nvme_global_ctx {
 	char *config_file;
 	char *application;
@@ -290,6 +298,12 @@ struct nvme_global_ctx {
 	bool dry_run;
 	struct nvme_fabric_options *options;
 	struct ifaddrs *ifaddrs_cache; /* init with nvme_getifaddrs() */
+
+	enum nvme_io_uring_state uring_state;
+#ifdef CONFIG_LIBURING
+	int ring_cmds;
+	struct io_uring *ring;
+#endif
 };
 
 struct nvmf_discovery_ctx {
@@ -780,3 +794,40 @@ void nvme_ns_release_transport_handle(nvme_ns_t n);
  */
 int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd);
+
+#ifdef CONFIG_LIBURING
+int nvme_open_uring(struct nvme_global_ctx *ctx);
+void nvme_close_uring(struct nvme_global_ctx *ctx);
+int __nvme_transport_handle_open_uring(struct nvme_transport_handle *hdl);
+int nvme_submit_admin_passthru_async(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd);
+int nvme_wait_complete_passthru(struct nvme_transport_handle *hdl);
+#else
+static inline int
+nvme_open_uring(struct nvme_global_ctx *ctx)
+{
+	return -ENOTSUP;
+}
+static inline void
+nvme_close_uring(struct nvme_global_ctx *ctx)
+{
+}
+static inline int
+__nvme_transport_handle_open_uring(struct nvme_transport_handle *hdl)
+{
+	hdl->ctx->uring_state = NVME_IO_URING_STATE_NOT_AVAILABLE;
+	return -ENOTSUP;
+}
+static inline int
+nvme_submit_admin_passthru_async(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd)
+{
+	return -ENOTSUP;
+}
+static inline int
+nvme_wait_complete_passthru(struct nvme_transport_handle *hdl)
+{
+	return -ENOTSUP;
+}
+#endif
+
