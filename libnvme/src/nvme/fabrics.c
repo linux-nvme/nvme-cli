@@ -757,9 +757,9 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	    (hostid && add_argument(ctx, argstr, hostid, hostid)) ||
 	    (discover && !discovery_nqn &&
 	     add_bool_argument(ctx, argstr, discovery, true)) ||
-	    (!discover && hostkey &&
+	    (hostkey &&
 	     add_argument(ctx, argstr, dhchap_secret, hostkey)) ||
-	    (!discover && ctrlkey &&
+	    (ctrlkey &&
 	     add_argument(ctx, argstr, dhchap_ctrl_secret, ctrlkey)) ||
 	    (!discover &&
 	     add_int_argument(ctx, argstr, nr_io_queues,
@@ -2090,7 +2090,7 @@ static int __create_discovery_ctrl(struct nvme_global_ctx *ctx,
 		     strcmp(trcfg->subsysnqn, NVME_DISC_SUBSYS_NAME));
 	tmo = set_discovery_kato(fctx, cfg);
 
-	if (fctx->hostkey) {
+	if (nvme_ctrl_is_unique_discovery_ctrl(c) && fctx->hostkey) {
 		nvme_ctrl_set_dhchap_host_key(c, fctx->hostkey);
 		if (fctx->ctrlkey)
 			nvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
