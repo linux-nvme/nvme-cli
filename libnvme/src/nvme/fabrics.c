@@ -2090,6 +2090,12 @@ static int __create_discovery_ctrl(struct nvme_global_ctx *ctx,
 		     strcmp(trcfg->subsysnqn, NVME_DISC_SUBSYS_NAME));
 	tmo = set_discovery_kato(fctx, cfg);
 
+	if (fctx->hostkey) {
+		nvme_ctrl_set_dhchap_host_key(c, fctx->hostkey);
+		if (fctx->ctrlkey)
+			nvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
+	}
+
 	ret = nvme_add_ctrl(fctx, h, c, cfg);
 	cfg->keep_alive_tmo = tmo;
 	if (ret) {
