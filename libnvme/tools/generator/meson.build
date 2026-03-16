@@ -9,7 +9,7 @@
 # pre-generated and committed to the source tree.  They are NOT
 # regenerated during a normal build.
 #
-# To regenerate them after changing private.h or structs-to-include.txt:
+# To regenerate them after changing private.h or the include/exclude lists:
 #
 #   meson compile -C <build-dir> update-accessors
 
@@ -19,12 +19,19 @@
 # Usage: meson compile -C <build-dir> update-accessors
 # ---------------------------------------------------------------------------
 
-accessors_ld_full_path = meson.current_source_dir() / 'accessors.ld'
+# Generated source files go to src/nvme/ (alongside the library sources).
+# The generated version script goes to src/ (alongside the other .ld files).
+libnvme_src = libnvme_srcroot / 'src'
+libnvme_src_nvme = libnvme_src / 'nvme'
 
 generate_accessors = executable(
     'generate-accessors',
-    'generate-accessors.c',
-    c_args: ['-D_GNU_SOURCE'],
+    [
+        'generate-accessors.c',
+    ],
+    c_args: [
+        '-D_GNU_SOURCE',
+    ],
     dependencies: [
         config_dep,
     ],
@@ -35,12 +42,13 @@ generate_accessors = executable(
 run_target(
     'update-accessors',
     command: [
-        meson.current_source_dir() / 'update-accessors.sh',
+        'update-accessors.sh',
         generate_accessors,
-        meson.current_source_dir(),
+        libnvme_src_nvme,
+        libnvme_src,
         meson.current_source_dir() / 'generate-accessors-include.list',
         meson.current_source_dir() / 'generate-accessors-exclude.list',
-        meson.current_source_dir() / 'private.h',
+        libnvme_src_nvme / 'private.h',
     ],
     depends: generate_accessors,
 )

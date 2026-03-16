@@ -13,6 +13,9 @@
  *  \____|\___|_| |_|\___|_|  \__,_|\__\___|\__,_|  \____\___/ \__,_|\___|
  *
  * Auto-generated struct member accessors (setter/getter)
+ *
+ * To update run: meson compile -C [BUILD-DIR] update-accessors
+ * Or:            make update-accessors
  */
 #include <stdlib.h>
 #include <string.h>

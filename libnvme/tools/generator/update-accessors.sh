@@ -20,18 +20,20 @@
 #
 # Arguments (supplied by the Meson run_target):
 #   $1      path to the compiled generate-accessors binary
-#   $2      source directory (where to write the files back)
-#   $3      path to generate-accessors-include.list
-#   $4      path to generate-accessors-exclude.list
-#   $5 ...  one or more input headers (wildcards are accepted)
+#   $2      source directory for accessors.c and accessors.h (src/nvme/)
+#   $3      source directory for accessors.ld (src/)
+#   $4      path to generate-accessors-include.list
+#   $5      path to generate-accessors-exclude.list
+#   $6 ...  one or more input headers (wildcards are accepted)
 
 set -euo pipefail
 
 GENERATOR="${1:?missing generator binary}"
-SRCDIR="${2:?missing source directory}"
-INCL_FILE="${3:?missing file generate-accessors-include.list}"
-EXCL_FILE="${4:?missing file generate-accessors-exclude.list}"
-shift 4
+NVME_SRCDIR="${2:?missing nvme source directory}"
+LD_SRCDIR="${3:?missing ld source directory}"
+INCL_FILE="${4:?missing file generate-accessors-include.list}"
+EXCL_FILE="${5:?missing file generate-accessors-exclude.list}"
+shift 5
 INPUT_HEADERS=("$@")
 [ ${#INPUT_HEADERS[@]} -gt 0 ] || { echo "error: no input headers specified" >&2; exit 1; }
 
@@ -53,12 +55,12 @@ echo "Regenerating accessor files..."
 # ---------------------------------------------------------------------------
 changed=0
 for f in accessors.h accessors.c; do
-    dest="$SRCDIR/$f"
+    dest="$NVME_SRCDIR/$f"
     if [ -f "$dest" ] && cmp -s "$TMPDIR/$f" "$dest"; then
         printf "  unchanged: %s\n" "$f"
     else
         # Write to a sibling temp file then rename for atomicity
-        tmp_dest=$(mktemp "$SRCDIR/.${f}.XXXXXX")
+        tmp_dest=$(mktemp "$NVME_SRCDIR/.${f}.XXXXXX")
         cp "$TMPDIR/$f" "$tmp_dest"
         mv -f "$tmp_dest" "$dest"
         printf "  updated:   %s\n" "$f"
@@ -68,7 +70,7 @@ done
 
 echo ""
 if [ "$changed" -gt 0 ]; then
-    printf "%d file(s) updated in %s\n" "$changed" "$SRCDIR"
+    printf "%d file(s) updated in %s\n" "$changed" "$NVME_SRCDIR"
     echo "Don't forget to commit the updated files."
 else
     echo "All accessor source files are up to date."
@@ -91,7 +93,7 @@ extract_syms() {
 }
 
 extract_syms "$TMPDIR/accessors.ld"  > "$TMPDIR/syms_new.txt"
-extract_syms "$SRCDIR/accessors.ld"  > "$TMPDIR/syms_old.txt"
+extract_syms "$LD_SRCDIR/accessors.ld"  > "$TMPDIR/syms_old.txt"
 
 added=$(comm   -23 "$TMPDIR/syms_new.txt" "$TMPDIR/syms_old.txt")
 removed=$(comm -13 "$TMPDIR/syms_new.txt" "$TMPDIR/syms_old.txt")
