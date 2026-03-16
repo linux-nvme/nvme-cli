@@ -292,15 +292,17 @@ const char *nvme_ctrl_get_trsvcid(const struct nvme_ctrl *p)
 	return p->trsvcid;
 }
 
-void nvme_ctrl_set_dhchap_key(struct nvme_ctrl *p, const char *dhchap_key)
+void nvme_ctrl_set_dhchap_host_key(
+		struct nvme_ctrl *p,
+		const char *dhchap_host_key)
 {
-	free(p->dhchap_key);
-	p->dhchap_key = dhchap_key ? strdup(dhchap_key) : NULL;
+	free(p->dhchap_host_key);
+	p->dhchap_host_key = dhchap_host_key ? strdup(dhchap_host_key) : NULL;
 }
 
-const char *nvme_ctrl_get_dhchap_key(const struct nvme_ctrl *p)
+const char *nvme_ctrl_get_dhchap_host_key(const struct nvme_ctrl *p)
 {
-	return p->dhchap_key;
+	return p->dhchap_host_key;
 }
 
 void nvme_ctrl_set_dhchap_ctrl_key(
@@ -586,15 +588,17 @@ const char *nvme_host_get_hostid(const struct nvme_host *p)
 	return p->hostid;
 }
 
-void nvme_host_set_dhchap_key(struct nvme_host *p, const char *dhchap_key)
+void nvme_host_set_dhchap_host_key(
+		struct nvme_host *p,
+		const char *dhchap_host_key)
 {
-	free(p->dhchap_key);
-	p->dhchap_key = dhchap_key ? strdup(dhchap_key) : NULL;
+	free(p->dhchap_host_key);
+	p->dhchap_host_key = dhchap_host_key ? strdup(dhchap_host_key) : NULL;
 }
 
-const char *nvme_host_get_dhchap_key(const struct nvme_host *p)
+const char *nvme_host_get_dhchap_host_key(const struct nvme_host *p)
 {
-	return p->dhchap_key;
+	return p->dhchap_host_key;
 }
 
 void nvme_host_set_hostsymname(struct nvme_host *p, const char *hostsymname)

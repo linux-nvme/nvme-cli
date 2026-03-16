@@ -672,7 +672,7 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 {
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
 	const char *transport = nvme_ctrl_get_transport(c);
-	const char *hostnqn, *hostid, *hostkey, *ctrlkey;
+	const char *hostnqn, *hostid, *hostkey, *ctrlkey = NULL;
 	bool discover = false, discovery_nqn = false;
 	struct nvme_global_ctx *ctx = h->ctx;
 	long keyring_id = 0;
@@ -708,11 +708,12 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 
 	hostnqn = nvme_host_get_hostnqn(h);
 	hostid = nvme_host_get_hostid(h);
-	hostkey = nvme_host_get_dhchap_key(h);
+	hostkey = nvme_host_get_dhchap_host_key(h);
 	if (!hostkey)
 		hostkey = nvme_ctrl_get_dhchap_host_key(c);
 
-	ctrlkey = nvme_ctrl_get_dhchap_key(c);
+	if (hostkey)
+		ctrlkey = nvme_ctrl_get_dhchap_ctrl_key(c);
 
 	if (cfg->tls && cfg->concat) {
 		nvme_msg(h->ctx, LOG_ERR, "cannot specify --tls and --concat together\n");
@@ -1020,9 +1021,9 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 			key = nvme_ctrl_get_dhchap_host_key(fc);
 			if (key)
 				nvme_ctrl_set_dhchap_host_key(c, key);
-			key = nvme_ctrl_get_dhchap_key(fc);
+			key = nvme_ctrl_get_dhchap_ctrl_key(fc);
 			if (key)
-				nvme_ctrl_set_dhchap_key(c, key);
+				nvme_ctrl_set_dhchap_ctrl_key(c, key);
 			key = nvme_ctrl_get_keyring(fc);
 			if (key)
 				nvme_ctrl_set_keyring(c, key);
@@ -1854,7 +1855,7 @@ static int setup_connection(struct nvmf_context *fctx, struct nvme_host *h,
 		bool discovery)
 {
 	if (fctx->hostkey)
-		nvme_host_set_dhchap_key(h, fctx->hostkey);
+		nvme_host_set_dhchap_host_key(h, fctx->hostkey);
 
 	if (!fctx->trsvcid)
 		fctx->trsvcid = nvmf_get_default_trsvcid(fctx->transport,
@@ -2437,7 +2438,7 @@ int nvmf_config_modify(struct nvme_global_ctx *ctx,
 	}
 
 	if (fctx->hostkey)
-		nvme_host_set_dhchap_key(h, fctx->hostkey);
+		nvme_host_set_dhchap_host_key(h, fctx->hostkey);
 
 	s = nvme_lookup_subsystem(h, NULL, fctx->subsysnqn);
 	if (!s) {
@@ -2455,7 +2456,7 @@ int nvmf_config_modify(struct nvme_global_ctx *ctx,
 	}
 
 	if (fctx->ctrlkey)
-		nvme_ctrl_set_dhchap_key(c, fctx->ctrlkey);
+		nvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
 
 	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,
 			    fctx->tls_key_identity, fctx->cfg, c);
@@ -3081,8 +3082,11 @@ int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
 	if (err)
 		return err;
 
-	if (fctx->ctrlkey)
-		nvme_ctrl_set_dhchap_key(c, fctx->ctrlkey);
+	if (fctx->hostkey) {
+		nvme_ctrl_set_dhchap_host_key(c, fctx->hostkey);
+		if (fctx->ctrlkey)
+			nvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
+	}
 
 	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,
 		fctx->tls_key_identity, fctx->cfg, c);

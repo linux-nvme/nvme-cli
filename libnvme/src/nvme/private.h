@@ -198,7 +198,7 @@ struct nvme_ctrl {
 	char *subsysnqn;
 	char *traddr;
 	char *trsvcid;
-	char *dhchap_key;
+	char *dhchap_host_key;
 	char *dhchap_ctrl_key;
 	char *keyring;
 	char *tls_key_identity;
@@ -240,7 +240,7 @@ struct nvme_host {
 
 	char *hostnqn;
 	char *hostid;
-	char *dhchap_key;
+	char *dhchap_host_key;
 	char *hostsymname;
 	bool pdc_enabled;
 	bool pdc_enabled_valid; /* set if pdc_enabled doesn't have an undefined
