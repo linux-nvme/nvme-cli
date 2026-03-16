@@ -81,13 +81,7 @@ LIBNVME_3 {
 		nvme_hostnqn_generate_from_hostid;
 		nvme_import_tls_key;
 		nvme_import_tls_key_versioned;
-		nvme_init_copy_range;
-		nvme_init_copy_range_f1;
-		nvme_init_copy_range_f2;
-		nvme_init_copy_range_f3;
 		nvme_init_ctrl;
-		nvme_init_ctrl_list;
-		nvme_init_dsm_range;
 		nvme_insert_tls_key;
 		nvme_insert_tls_key_compat;
 		nvme_insert_tls_key_versioned;
