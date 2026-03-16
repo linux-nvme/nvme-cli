@@ -2294,13 +2294,15 @@ int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count)
 int nvme_ns_flush(nvme_ns_t n)
 {
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	err = nvme_ns_get_transport_handle(n, &hdl);
 	if (err)
 		return err;
 
-	return nvme_flush(hdl, nvme_ns_get_nsid(n));
+	nvme_init_flush(&cmd, nvme_ns_get_nsid(n));
+	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
 static int nvme_strtou64(const char *str, void *res)

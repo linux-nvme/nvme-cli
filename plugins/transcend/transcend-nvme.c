@@ -8,6 +8,7 @@
 
 #include <libnvme.h>
 
+#include "nvme-cmds.h"
 #include "nvme.h"
 #include "plugin.h"
 

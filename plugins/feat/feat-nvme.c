@@ -3,8 +3,9 @@
 #include <fcntl.h>
 
 #include "common.h"
-#include "nvme.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "nvme.h"
 #include "plugin.h"
 
 #define CREATE_CMD

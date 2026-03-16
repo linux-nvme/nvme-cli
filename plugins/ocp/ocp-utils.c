@@ -8,8 +8,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include <linux/types.h>
-
+#include "nvme-cmds.h"
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
 #include "types.h"

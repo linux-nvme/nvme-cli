@@ -27,8 +27,10 @@
 
 #include <libnvme.h>
 
-#include "nvme.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "nvme.h"
+
 #include "wdc-utils.h"
 
 int wdc_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer, const char *format, ...)

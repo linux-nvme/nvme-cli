@@ -9,6 +9,7 @@
 #include <time.h>
 
 #include "common.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
 
 #define LID 0xf9
