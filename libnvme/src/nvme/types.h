@@ -6436,11 +6436,14 @@ struct nvme_dsm_range {
 };
 
 /**
- * struct nvme_copy_range_f0 - Copy - Source Range Entries Descriptor Format
+ * struct nvme_copy_range_f0 - Copy - Source Range Entries Descriptor Format 0h
  * @rsvd0:	Reserved
  * @slba:	Starting LBA
  * @nlb:	Number of Logical Blocks
- * @rsvd18:	Reserved
+ * @cetype:	Bits 3-0: Command Extension Type
+ * @rsvd19:	Reserved
+ * @cev:	Command Extension Value
+ * @rsvd22:	Reserved
  * @elbt:	Expected Initial Logical Block Reference Tag /
  *		Expected Logical Block Storage Tag
  * @elbatm:	Expected Logical Block Application Tag Mask
@@ -6450,7 +6453,10 @@ struct nvme_copy_range_f0 {
 	__u8			rsvd0[8];
 	__le64			slba;
 	__le16			nlb;
-	__u8			rsvd18[6];
+	__u8			cetype;
+	__u8			rsvd19;
+	__le16			cev;
+	__u8			rsvd22[2];
 	__be32			elbt;
 	__le16			elbat;
 	__le16			elbatm;
