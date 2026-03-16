@@ -26,11 +26,6 @@
  */
 #define NVME_LOG_PAGE_PDU_SIZE 4096
 
-/*
- * should not exceed CAP.MQES, 16 is rational for most ssd
- */
-#define NVME_URING_ENTRIES 16
-
 /**
  * nvme_submit_admin_passthru() - Submit an nvme passthrough admin command
  * @hdl:	Transport handle

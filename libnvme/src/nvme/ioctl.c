@@ -16,10 +16,6 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 
-#ifdef CONFIG_LIBURING
-#include <liburing.h>
-#endif
-
 #include <ccan/build_assert/build_assert.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
@@ -219,95 +215,6 @@ static void nvme_init_env(void)
 		force_4k = true;
 }
 
-#ifdef CONFIG_LIBURING
-enum {
-	IO_URING_NOT_AVAILABLE,
-	IO_URING_AVAILABLE,
-} io_uring_kernel_support = IO_URING_NOT_AVAILABLE;
-
-/*
- * gcc specific attribute, call automatically on the library loading.
- * if IORING_OP_URING_CMD is not supported, fallback to ioctl interface.
- *
- * The uring API expects the command of type struct nvme_passthru_cmd64.
- */
-__attribute__((constructor))
-static void nvme_uring_cmd_probe()
-{
-	struct io_uring_probe *probe = io_uring_get_probe();
-
-	if (!probe)
-		return;
-
-	if (!io_uring_opcode_supported(probe, IORING_OP_URING_CMD))
-		return;
-
-	io_uring_kernel_support = IO_URING_AVAILABLE;
-}
-
-static int nvme_uring_cmd_setup(struct io_uring *ring)
-{
-	if (io_uring_queue_init(NVME_URING_ENTRIES, ring,
-				   IORING_SETUP_SQE128 | IORING_SETUP_CQE32))
-		return -errno;
-	return 0;
-}
-
-static void nvme_uring_cmd_exit(struct io_uring *ring)
-{
-	io_uring_queue_exit(ring);
-}
-
-static int nvme_uring_cmd_admin_passthru_async(struct nvme_transport_handle *hdl,
-		struct io_uring *ring, struct nvme_passthru_cmd *cmd)
-{
-	struct io_uring_sqe *sqe;
-	int ret;
-
-	sqe = io_uring_get_sqe(ring);
-	if (!sqe)
-		return -1;
-
-	memcpy(&sqe->cmd, cmd, sizeof(*cmd));
-
-	sqe->fd = hdl->fd;
-	sqe->opcode = IORING_OP_URING_CMD;
-	sqe->cmd_op = NVME_URING_CMD_ADMIN;
-
-	ret = io_uring_submit(ring);
-	if (ret < 0)
-		return -errno;
-
-	return 0;
-}
-
-static int nvme_uring_cmd_wait_complete(struct io_uring *ring, int n)
-{
-	struct io_uring_cqe *cqe;
-	int ret, i;
-
-	for (i = 0; i < n; i++) {
-		ret = io_uring_wait_cqe(ring, &cqe);
-		if (ret < 0)
-			return -errno;
-		io_uring_cqe_seen(ring, cqe);
-	}
-
-	return 0;
-}
-
-static bool nvme_uring_is_usable(struct nvme_transport_handle *hdl)
-{
-	struct stat st;
-
-	if (io_uring_kernel_support != IO_URING_AVAILABLE ||
-	    hdl->type != NVME_TRANSPORT_HANDLE_TYPE_DIRECT ||
-	    fstat(hdl->fd, &st) || !S_ISCHR(st.st_mode))
-		return false;
-
-	return true;
-}
-#endif /* CONFIG_LIBURING */
 
 int nvme_get_log(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd, bool rae,
@@ -324,17 +231,6 @@ int nvme_get_log(struct nvme_transport_handle *hdl,
 	__u32 cdw10 = cmd->cdw10 & (NVME_VAL(LOG_CDW10_LID) |
 				    NVME_VAL(LOG_CDW10_LSP));
 	__u32 cdw11 = cmd->cdw11 & NVME_VAL(LOG_CDW11_LSI);
-#ifdef CONFIG_LIBURING
-	bool use_uring = nvme_uring_is_usable(hdl);
-	struct io_uring ring;
-	int n = 0;
-
-	if (use_uring) {
-		ret = nvme_uring_cmd_setup(&ring);
-		if (ret)
-			return ret;
-	}
-#endif /* CONFIG_LIBURING */
 
 	if (force_4k)
 		xfer_len = NVME_LOG_PAGE_PDU_SIZE;
@@ -373,27 +269,10 @@ int nvme_get_log(struct nvme_transport_handle *hdl,
 		cmd->data_len = xfer;
 		cmd->addr = (__u64)(uintptr_t)ptr;
 
-#ifdef CONFIG_LIBURING
-		if (use_uring) {
-			if (n >= NVME_URING_ENTRIES) {
-				ret = nvme_uring_cmd_wait_complete(&ring, n);
-				if (ret)
-					goto uring_exit;
-				n = 0;
-			}
-			n += 1;
-			ret = nvme_uring_cmd_admin_passthru_async(hdl,
-				&ring, cmd);
-			if (ret)
-				goto uring_exit;
-		} else {
+		if (hdl->uring_enabled)
+			ret = nvme_submit_admin_passthru_async(hdl, cmd);
+		else
 			ret = nvme_submit_admin_passthru(hdl, cmd);
-			if (ret)
-				return ret;
-		}
-#else /* CONFIG_LIBURING */
-		ret = nvme_submit_admin_passthru(hdl, cmd);
-#endif /* CONFIG_LIBURING */
 		if (ret)
 			return ret;
 
@@ -401,15 +280,11 @@ int nvme_get_log(struct nvme_transport_handle *hdl,
 		ptr += xfer;
 	} while (offset < data_len);
 
-#ifdef CONFIG_LIBURING
-	if (use_uring) {
-		ret = nvme_uring_cmd_wait_complete(&ring, n);
-uring_exit:
-		nvme_uring_cmd_exit(&ring);
+	if (hdl->uring_enabled) {
+		ret = nvme_wait_complete_passthru(hdl);
 		if (ret)
 			return ret;
 	}
-#endif /* CONFIG_LIBURING */
 
 	return 0;
 }

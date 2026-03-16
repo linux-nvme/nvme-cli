@@ -80,6 +80,7 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx)
 		nvme_mi_close(ep);
 	free(ctx->config_file);
 	free(ctx->application);
+	nvme_close_uring(ctx);
 	free(ctx);
 }
 
@@ -155,6 +156,11 @@ static int __nvme_transport_handle_open_direct(
 	if (c) {
 		if (!S_ISCHR(hdl->stat.st_mode))
 			return -EINVAL;
+		ret = __nvme_transport_handle_open_uring(hdl);
+		if (ret && ret != -ENOTSUP) {
+			close(hdl->fd);
+			return ret;
+		}
 	} else if (!S_ISBLK(hdl->stat.st_mode)) {
 		return -EINVAL;
 	}
