@@ -5569,34 +5569,6 @@ int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae,
 		struct nvme_lba_status_log **log);
 
 /**
- * nvme_namespace_attach_ctrls() - Attach namespace to controller(s)
- * @hdl:	Transport handle
- * @ish:	Ignore Shutdown (for NVMe-MI command)
- * @nsid:	Namespace ID to attach
- * @num_ctrls:	Number of controllers in ctrlist
- * @ctrlist:	List of controller IDs to perform the attach action
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, bool ish,
-				__u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
-
-/**
- * nvme_namespace_detach_ctrls() - Detach namespace from controller(s)
- * @hdl:	Transport handle
- * @ish:	Ignore Shutdown (for NVMe-MI command)
- * @nsid:	Namespace ID to detach
- * @num_ctrls:	Number of controllers in ctrlist
- * @ctrlist:	List of controller IDs to perform the detach action
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, bool ish,
-			__u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
-
-/**
  * nvme_get_feature_length() - Retrieve the command payload length for a
  *			       specific feature identifier
  * @fid:   Feature identifier, see &enum nvme_features_id.

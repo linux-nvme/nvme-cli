@@ -1717,5 +1717,33 @@ nvme_get_features_simple(struct nvme_transport_handle *hdl, __u8 fid,
 	return err;
 }
 
+/**
+ * nvme_namespace_attach_ctrls() - Attach namespace to controller(s)
+ * @hdl:	Transport handle
+ * @ish:	Ignore Shutdown (for NVMe-MI command)
+ * @nsid:	Namespace ID to attach
+ * @num_ctrls:	Number of controllers in ctrlist
+ * @ctrlist:	List of controller IDs to perform the attach action
+ *
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
+ */
+int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, bool ish,
+				__u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
+
+/**
+ * nvme_namespace_detach_ctrls() - Detach namespace from controller(s)
+ * @hdl:	Transport handle
+ * @ish:	Ignore Shutdown (for NVMe-MI command)
+ * @nsid:	Namespace ID to detach
+ * @num_ctrls:	Number of controllers in ctrlist
+ * @ctrlist:	List of controller IDs to perform the detach action
+ *
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
+ */
+int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, bool ish,
+			__u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
+
 
 #endif /* NVME_CMDS */

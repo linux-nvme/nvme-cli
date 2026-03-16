@@ -472,15 +472,16 @@ if want_nvme
     subdir('util')      # declares: util_sources
 
     sources = [
-        'nvme.c',
-        'nvme-models.c',
-        'nvme-print.c',
-        'nvme-print-stdout.c',
-        'nvme-print-binary.c',
-        'nvme-rpmb.c',
-        'plugin.c',
         'libnvme-wrap.c',
         'logging.c',
+        'nvme-cmds.c',
+        'nvme-models.c',
+        'nvme-print-binary.c',
+        'nvme-print-stdout.c',
+        'nvme-print.c',
+        'nvme-rpmb.c',
+        'nvme.c',
+        'plugin.c',
     ]
     if want_fabrics
         sources += 'fabrics.c'
