@@ -15,6 +15,222 @@
 #include "cleanup.h"
 #include "private.h"
 
+static bool force_4k;
+
+__attribute__((constructor))
+static void nvme_init_env(void)
+{
+	char *val;
+
+	val = getenv("LIBNVME_FORCE_4K");
+	if (!val)
+		return;
+	if (!strcmp(val, "1") ||
+	    !strcasecmp(val, "true") ||
+	    !strncasecmp(val, "enable", 6))
+		force_4k = true;
+}
+
+int nvme_get_log(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, bool rae,
+		__u32 xfer_len)
+{
+	__u64 offset = 0, xfer, data_len = cmd->data_len;
+	__u64 start = (__u64)cmd->cdw13 << 32 | cmd->cdw12;
+	__u64 lpo;
+	void *ptr = (void *)(uintptr_t)cmd->addr;
+	int ret;
+	bool _rae;
+	__u32 numd;
+	__u16 numdu, numdl;
+	__u32 cdw10 = cmd->cdw10 & (NVME_VAL(LOG_CDW10_LID) |
+				    NVME_VAL(LOG_CDW10_LSP));
+	__u32 cdw11 = cmd->cdw11 & NVME_VAL(LOG_CDW11_LSI);
+
+	if (force_4k)
+		xfer_len = NVME_LOG_PAGE_PDU_SIZE;
+
+	/*
+	 * 4k is the smallest possible transfer unit, so restricting to 4k
+	 * avoids having to check the MDTS value of the controller.
+	 */
+	do {
+		if (!force_4k) {
+			xfer = data_len - offset;
+			if (xfer > xfer_len)
+				xfer  = xfer_len;
+		} else {
+			xfer = NVME_LOG_PAGE_PDU_SIZE;
+		}
+
+		/*
+		 * Always retain regardless of the RAE parameter until the very
+		 * last portion of this log page so the data remains latched
+		 * during the fetch sequence.
+		 */
+		lpo = start + offset;
+		numd = (xfer >> 2) - 1;
+		numdu = numd >> 16;
+		numdl = numd & 0xffff;
+		_rae = offset + xfer < data_len || rae;
+
+		cmd->cdw10 = cdw10 |
+			NVME_SET(!!_rae, LOG_CDW10_RAE) |
+			NVME_SET(numdl, LOG_CDW10_NUMDL);
+		cmd->cdw11 = cdw11 |
+			NVME_SET(numdu, LOG_CDW11_NUMDU);
+		cmd->cdw12 = lpo & 0xffffffff;
+		cmd->cdw13 = lpo >> 32;
+		cmd->data_len = xfer;
+		cmd->addr = (__u64)(uintptr_t)ptr;
+
+		if (hdl->uring_enabled)
+			ret = nvme_submit_admin_passthru_async(hdl, cmd);
+		else
+			ret = nvme_submit_admin_passthru(hdl, cmd);
+		if (ret)
+			return ret;
+
+		offset += xfer;
+		ptr += xfer;
+	} while (offset < data_len);
+
+	if (hdl->uring_enabled) {
+		ret = nvme_wait_complete_passthru(hdl);
+		if (ret)
+			return ret;
+	}
+
+	return 0;
+}
+
+static int read_ana_chunk(struct nvme_transport_handle *hdl,
+		enum nvme_log_ana_lsp lsp, bool rae,
+		__u8 *log, __u8 **read, __u8 *to_read, __u8 *log_end)
+{
+	struct nvme_passthru_cmd cmd;
+
+	if (to_read > log_end)
+		return -ENOSPC;
+
+	while (*read < to_read) {
+		__u32 len = min_t(__u32, log_end - *read,
+			NVME_LOG_PAGE_PDU_SIZE);
+		int ret;
+
+		nvme_init_get_log_ana(&cmd, lsp, *read - log, *read, len);
+		ret = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
+		if (ret)
+			return ret;
+
+		*read += len;
+	}
+	return 0;
+}
+
+static int try_read_ana(struct nvme_transport_handle *hdl,
+		enum nvme_log_ana_lsp lsp, bool rae,
+		struct nvme_ana_log *log, __u8 *log_end,
+		__u8 *read, __u8 **to_read, bool *may_retry)
+{
+	__u16 ngrps = le16_to_cpu(log->ngrps);
+
+	while (ngrps--) {
+		__u8 *group = *to_read;
+		int ret;
+		__le32 nnsids;
+
+		*to_read += sizeof(*log->descs);
+		ret = read_ana_chunk(hdl, lsp, rae,
+				     (__u8 *)log, &read, *to_read, log_end);
+		if (ret) {
+			/*
+			 * If the provided buffer isn't long enough,
+			 * the log page may have changed while reading it
+			 * and the computed length was inaccurate.
+			 * Have the caller check chgcnt and retry.
+			 */
+			*may_retry = ret == -ENOSPC;
+			return ret;
+		}
+
+		/*
+		 * struct nvme_ana_group_desc has 8-byte alignment
+		 * but the group pointer is only 4-byte aligned.
+		 * Don't dereference the misaligned pointer.
+		 */
+		memcpy(&nnsids,
+		       group + offsetof(struct nvme_ana_group_desc, nnsids),
+		       sizeof(nnsids));
+		*to_read += le32_to_cpu(nnsids) * sizeof(__le32);
+		ret = read_ana_chunk(hdl, lsp, rae,
+				     (__u8 *)log, &read, *to_read, log_end);
+		if (ret) {
+			*may_retry = ret == -ENOSPC;
+			return ret;
+		}
+	}
+
+	*may_retry = true;
+	return 0;
+}
+
+int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl,
+		bool rae, bool rgo, struct nvme_ana_log *log, __u32 *len,
+		unsigned int retries)
+{
+	const enum nvme_log_ana_lsp lsp =
+		rgo ? NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY : 0;
+	/* Get Log Page can only fetch multiples of dwords */
+	__u8 * const log_end = (__u8 *)log + (*len & -4);
+	__u8 *read = (__u8 *)log;
+	__u8 *to_read;
+	int ret;
+
+	if (!retries)
+		return -EINVAL;
+
+	to_read = (__u8 *)log->descs;
+	ret = read_ana_chunk(hdl, lsp, rae,
+			     (__u8 *)log, &read, to_read, log_end);
+	if (ret)
+		return ret;
+
+	do {
+		bool may_retry = false;
+		int saved_ret;
+		int saved_errno;
+		__le64 chgcnt;
+
+		saved_ret = try_read_ana(hdl, lsp, rae, log, log_end,
+					 read, &to_read, &may_retry);
+		/*
+		 * If the log page was read with multiple Get Log Page commands,
+		 * chgcnt must be checked afterwards to ensure atomicity
+		 */
+		*len = to_read - (__u8 *)log;
+		if (*len <= NVME_LOG_PAGE_PDU_SIZE || !may_retry)
+			return saved_ret;
+
+		saved_errno = errno;
+		chgcnt = log->chgcnt;
+		read = (__u8 *)log;
+		to_read = (__u8 *)log->descs;
+		ret = read_ana_chunk(hdl, lsp, rae,
+				     (__u8 *)log, &read, to_read, log_end);
+		if (ret)
+			return ret;
+
+		if (log->chgcnt == chgcnt) {
+			/* Log hasn't changed; return try_read_ana() result */
+			errno = saved_errno;
+			return saved_ret;
+		}
+	} while (--retries);
+
+	return -EAGAIN;
+}
+
 int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
 {
 	struct nvme_feat_host_behavior da4;
