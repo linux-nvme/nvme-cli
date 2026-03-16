@@ -56,8 +56,6 @@ else
     sources += 'nvme/no-json.c'
 endif
 
-subdir('nvme')  # declares: accessors_ld_full_path
-
 deps = [
     config_dep,
     ccan_dep,
@@ -70,10 +68,11 @@ deps = [
 
 nvme_ld = meson.current_source_dir() / 'libnvme.ld'
 nvmf_ld = meson.current_source_dir() / 'libnvmf.ld'
+accessors_ld = meson.current_source_dir() / 'accessors.ld'
 
 link_args = [
     '-Wl,--version-script=@0@'.format(nvme_ld),
-    '-Wl,--version-script=@0@'.format(accessors_ld_full_path),
+    '-Wl,--version-script=@0@'.format(accessors_ld),
 ]
 
 libconf = configuration_data()

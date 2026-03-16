@@ -30,7 +30,9 @@ if want_libnvme
     )
 
     ############################################################################
-    subdir('src')       # declares: libnvme_dep
+    libnvme_srcroot = meson.current_source_dir() # needed by tools/generator
+    subdir('tools/generator')  # generate code needed by src below
+    subdir('src')              # declares: libnvme_dep
     subdir('libnvme')
     if get_option('tests')
         subdir('test')

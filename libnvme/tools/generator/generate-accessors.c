@@ -70,6 +70,7 @@
 /* checkpatch requires C99 // SPDX in *.c and block-style SPDX in *.h */
 static const char *spdx_c = "// SPDX-License-Identifier: LGPL-2.1-or-later";
 static const char *spdx_h = "/* SPDX-License-Identifier: LGPL-2.1-or-later */";
+static const char *spdx_ld = "# SPDX-License-Identifier: LGPL-2.1-or-later";
 
 static const char *banner =
 	"/**\n"
@@ -85,6 +86,9 @@ static const char *banner =
 	" *  \\____|\\___|_| |_|\\___|_|  \\__,_|\\__\\___|\\__,_|  \\____\\___/ \\__,_|\\___|\n"
 	" *\n"
 	" * Auto-generated struct member accessors (setter/getter)\n"
+	" *\n"
+	" * To update run: meson compile -C [BUILD-DIR] update-accessors\n"
+	" * Or:            make update-accessors\n"
 	" */";
 
 /**
@@ -2095,9 +2099,13 @@ int main(int argc, char *argv[])
 	mkdir_fullpath(conf.l_fname, 0755); /* create output folder if needed */
 	generated_ld = fopen(conf.l_fname, "w");
 	fprintf(generated_ld,
+		"%s\n"
+		"\n"
+		"%s\n"
 		"\n"
 		"LIBNVME_ACCESSORS_3 {\n"
-		"	global:\n");
+		"	global:\n",
+		spdx_ld, banner);
 
 	/* Copy temporary file to output */
 	append_file(generated_ld, tmp_ld_map);
