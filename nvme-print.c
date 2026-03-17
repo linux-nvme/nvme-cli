@@ -1580,6 +1580,26 @@ const char *nvme_power_measurement_action_to_string(__u8 act)
 	return "Reserved";
 }
 
+const char *nvme_ipmsr_srs_to_string(__u8 srs)
+{
+	switch (srs) {
+	case 0:
+		return "Not reported";
+	case 1:
+		return "1 microsecond";
+	case 2:
+		return "10 microseconds";
+	case 3:
+		return "100 microseconds";
+	case 4:
+		return "1 millisecond";
+	case 5:
+		return "10 milliseconds";
+	default:
+		return "Reserved";
+	}
+}
+
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	nvme_print(show_feature, NORMAL, fid, sel, result);
