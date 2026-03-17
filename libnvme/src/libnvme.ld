@@ -17,9 +17,6 @@ LIBNVME_3 {
 		nvme_ctrl_get_subsystem;
 		nvme_ctrl_get_transport_handle;
 		nvme_ctrl_identify;
-		nvme_ctrl_is_discovery_ctrl;
-		nvme_ctrl_is_persistent;
-		nvme_ctrl_is_unique_discovery_ctrl;
 		nvme_ctrl_next_ns;
 		nvme_ctrl_next_path;
 		nvme_ctrl_release_transport_handle;
@@ -187,10 +184,7 @@ LIBNVME_3 {
 		nvme_subsystem_first_ctrl;
 		nvme_subsystem_first_ns;
 		nvme_get_subsystem;
-		nvme_subsystem_get_fw_rev;
 		nvme_subsystem_get_host;
-		nvme_subsystem_get_nqn;
-		nvme_subsystem_get_type;
 		nvme_subsystem_lookup_namespace;
 		nvme_subsystem_next_ctrl;
 		nvme_subsystem_next_ns;

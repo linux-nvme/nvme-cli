@@ -703,7 +703,7 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 		discovery_nqn = true;
 	}
 
-	if (nvme_ctrl_is_discovery_ctrl(c))
+	if (nvme_ctrl_get_discovery_ctrl(c))
 		discover = true;
 
 	hostnqn = nvme_host_get_hostnqn(h);
@@ -1040,7 +1040,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	root_app = nvme_get_application(h->ctx);
 	if (root_app) {
 		app = nvme_subsystem_get_application(s);
-		if (!app && nvme_ctrl_is_discovery_ctrl(c))
+		if (!app && nvme_ctrl_get_discovery_ctrl(c))
 			app = lookup_context(h->ctx, c);
 
 		/*
@@ -1051,7 +1051,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		 */
 		if (app && strcmp(app, root_app)) {
 			nvme_msg(h->ctx, LOG_INFO, "skip %s, not managed by %s\n",
-				 nvme_subsystem_get_nqn(s), root_app);
+				 nvme_subsystem_get_subsysnqn(s), root_app);
 			return -ENVME_CONNECT_IGNORED;
 		}
 	}
@@ -1182,7 +1182,7 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 		break;
 	}
 
-	if (nvme_ctrl_is_discovered(c)) {
+	if (nvme_ctrl_get_discovered(c)) {
 		nvme_free_ctrl(c);
 		return -EAGAIN;
 	}
@@ -2050,7 +2050,7 @@ const char *nvmf_get_default_trsvcid(const char *transport,
 static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
 {
 	if (nvme_host_is_pdc_enabled(h, DEFAULT_PDC_ENABLED))
-		return nvme_ctrl_is_unique_discovery_ctrl(c);
+		return nvme_ctrl_get_unique_discovery_ctrl(c);
 
 	return false;
 }
@@ -2090,7 +2090,7 @@ static int __create_discovery_ctrl(struct nvme_global_ctx *ctx,
 		     strcmp(trcfg->subsysnqn, NVME_DISC_SUBSYS_NAME));
 	tmo = set_discovery_kato(fctx, cfg);
 
-	if (nvme_ctrl_is_unique_discovery_ctrl(c) && fctx->hostkey) {
+	if (nvme_ctrl_get_unique_discovery_ctrl(c) && fctx->hostkey) {
 		nvme_ctrl_set_dhchap_host_key(c, fctx->hostkey);
 		if (fctx->ctrlkey)
 			nvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
@@ -2121,7 +2121,7 @@ static int nvmf_create_discovery_ctrl(struct nvme_global_ctx *ctx,
 	if (ret)
 		return ret;
 
-	if (nvme_ctrl_is_unique_discovery_ctrl(c)) {
+	if (nvme_ctrl_get_unique_discovery_ctrl(c)) {
 		*ctrl = c;
 		return 0;
 	}
@@ -2220,7 +2220,7 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 	else
 		subsysnqn = NVME_DISC_SUBSYS_NAME;
 
-	if (nvme_ctrl_is_persistent(c))
+	if (nvme_ctrl_get_persistent(c))
 		fctx->persistent = true;
 
 	memcpy(&cfg, fctx->cfg, sizeof(cfg));
@@ -2971,7 +2971,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 				    fctx->device);
 			}
 
-			if (!nvme_ctrl_is_discovery_ctrl(c)) {
+			if (!nvme_ctrl_get_discovery_ctrl(c)) {
 				nvme_msg(
 					ctx, LOG_ERR,
 					"ctrl device %s found, ignoring non discovery controller\n",

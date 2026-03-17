@@ -42,7 +42,7 @@ int main()
 		nvme_for_each_subsystem(h, s) {
 			bool first = true;
 			printf("%-16s %-96s ", nvme_subsystem_get_name(s),
-			       nvme_subsystem_get_nqn(s));
+			       nvme_subsystem_get_subsysnqn(s));
 
 			nvme_subsystem_for_each_ctrl(s, c) {
 				printf("%s%s", first ? "": ", ",

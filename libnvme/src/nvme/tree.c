@@ -429,21 +429,6 @@ void nvme_root_release_fds(struct nvme_global_ctx *ctx)
 		nvme_host_release_fds(h);
 }
 
-const char *nvme_subsystem_get_nqn(nvme_subsystem_t s)
-{
-	return s->subsysnqn;
-}
-
-const char *nvme_subsystem_get_type(nvme_subsystem_t s)
-{
-	return s->subsystype;
-}
-
-const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s)
-{
-	return s->firmware;
-}
-
 nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
 {
 	return list_top(&s->ctrls, struct nvme_ctrl, entry);
@@ -955,26 +940,6 @@ struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
 	return &c->cfg;
 }
 
-bool nvme_ctrl_is_discovered(nvme_ctrl_t c)
-{
-	return c->discovered;
-}
-
-bool nvme_ctrl_is_persistent(nvme_ctrl_t c)
-{
-	return c->persistent;
-}
-
-bool nvme_ctrl_is_discovery_ctrl(nvme_ctrl_t c)
-{
-	return c->discovery_ctrl;
-}
-
-bool nvme_ctrl_is_unique_discovery_ctrl(nvme_ctrl_t c)
-{
-	return c->unique_discovery_ctrl;
-}
-
 int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
 	struct nvme_transport_handle *hdl = nvme_ctrl_get_transport_handle(c);
@@ -1363,7 +1328,7 @@ static bool _tcp_match_ctrl(struct nvme_ctrl *c, struct candidate_args *candidat
 	if (!candidate->addreq(c->traddr, candidate->traddr))
 		return false;
 
-	if (candidate->well_known_nqn && !nvme_ctrl_is_discovery_ctrl(c))
+	if (candidate->well_known_nqn && !nvme_ctrl_get_discovery_ctrl(c))
 		return false;
 
 	if (candidate->subsysnqn && !streq0(c->subsysnqn, candidate->subsysnqn))
@@ -1409,7 +1374,7 @@ static bool _match_ctrl(struct nvme_ctrl *c, struct candidate_args *candidate)
 	    !streq0(c->trsvcid, candidate->trsvcid))
 		return false;
 
-	if (candidate->well_known_nqn && !nvme_ctrl_is_discovery_ctrl(c))
+	if (candidate->well_known_nqn && !nvme_ctrl_get_discovery_ctrl(c))
 		return false;
 
 	if (candidate->subsysnqn && !streq0(c->subsysnqn, candidate->subsysnqn))
