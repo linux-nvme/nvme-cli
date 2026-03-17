@@ -6467,7 +6467,10 @@ struct nvme_copy_range_f0 {
  * @rsvd0:	Reserved
  * @slba:	Starting LBA
  * @nlb:	Number of Logical Blocks
- * @rsvd18:	Reserved
+ * @cetype:	Bits 3-0: Command Extension Type
+ * @rsvd19:	Reserved
+ * @cev:	Command Extension Value
+ * @rsvd22:	Reserved
  * @elbt:	Expected Initial Logical Block Reference Tag /
  *		Expected Logical Block Storage Tag
  * @elbatm:	Expected Logical Block Application Tag Mask
@@ -6477,7 +6480,10 @@ struct nvme_copy_range_f1 {
 	__u8			rsvd0[8];
 	__le64			slba;
 	__le16			nlb;
-	__u8			rsvd18[8];
+	__u8			cetype;
+	__u8			rsvd19;
+	__le16			cev;
+	__u8			rsvd22[4];
 	__u8			elbt[10];
 	__le16			elbat;
 	__le16			elbatm;
@@ -6526,8 +6532,10 @@ struct nvme_copy_range_f2 {
  * @rsvd4:	Reserved
  * @slba:	Starting LBA
  * @nlb:	Number of Logical Blocks
- * @rsvd18:	Reserved
+ * @cetype:	Bits 3-0: Command Extension Type
+ * @rsvd19:	Reserved
  * @sopt:	Source Options
+ * @cev:	Command Extension Value
  * @rsvd24:	Reserved
  * @elbt:	Expected Initial Logical Block Reference Tag /
  *		Expected Logical Block Storage Tag
@@ -6539,7 +6547,9 @@ struct nvme_copy_range_f3 {
 	__u8			rsvd4[4];
 	__le64			slba;
 	__le16			nlb;
-	__u8			rsvd18[4];
+	__u8			cetype;
+	__u8			rsvd19;
+	__le16			cev;
 	__le16			sopt;
 	__u8			rsvd24[2];
 	__u8			elbt[10];
