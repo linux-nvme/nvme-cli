@@ -6436,7 +6436,7 @@ struct nvme_dsm_range {
 };
 
 /**
- * struct nvme_copy_range - Copy - Source Range Entries Descriptor Format
+ * struct nvme_copy_range_f0 - Copy - Source Range Entries Descriptor Format
  * @rsvd0:	Reserved
  * @slba:	Starting LBA
  * @nlb:	Number of Logical Blocks
@@ -6446,7 +6446,7 @@ struct nvme_dsm_range {
  * @elbatm:	Expected Logical Block Application Tag Mask
  * @elbat:	Expected Logical Block Application Tag
  */
-struct nvme_copy_range {
+struct nvme_copy_range_f0 {
 	__u8			rsvd0[8];
 	__le64			slba;
 	__le16			nlb;

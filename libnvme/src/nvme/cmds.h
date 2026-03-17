@@ -4383,7 +4383,7 @@ nvme_init_copy(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 sdlba,
 		data_len = nr * sizeof(struct nvme_copy_range_f3);
 		break;
 	default:
-		data_len = nr * sizeof(struct nvme_copy_range);
+		data_len = nr * sizeof(struct nvme_copy_range_f0);
 		break;
 	}
 
@@ -5252,7 +5252,7 @@ nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
 }
 
 /**
- * nvme_init_copy_range() - Constructs a copy range structure
+ * nvme_init_copy_range_f0() - Constructs a copy range structure
  * @copy:	Copy range array
  * @nlbs:	Number of logical blocks
  * @slbas:	Starting LBA
@@ -5262,7 +5262,7 @@ nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
  * @nr:		Number of descriptors to construct
  */
 static inline void
-nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
+nvme_init_copy_range_f0(struct nvme_copy_range_f0 *copy, __u16 *nlbs,
 		__u64 *slbas, __u32 *elbts, __u32 *elbatms,
 		__u32 *elbats, __u16 nr)
 {
