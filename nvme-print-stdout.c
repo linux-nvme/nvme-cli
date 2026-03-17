@@ -2441,7 +2441,8 @@ static void stdout_id_ctrl_ipmsr(__le16 ctrl_ipmsr)
 	__u16 srs = NVME_GET(ipmsr, CTRL_IPMSR_SRS);
 	__u16 srv = NVME_GET(ipmsr, CTRL_IPMSR_SRV);
 
-	printf("  [15:8] : %#x\tSample Rate Scale\n", srs);
+	printf("  [15:8] : %#x\tSample Rate Scale (%s)\n", srs,
+		nvme_ipmsr_srs_to_string(srs));
 	printf("  [7:0]  : %#x\tSample Rate Value\n", srv);
 
 	printf("\n");
