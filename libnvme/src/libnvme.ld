@@ -9,7 +9,6 @@ LIBNVME_3 {
 		nvme_ctrl_match_config;
 		nvme_ctrl_first_ns;
 		nvme_ctrl_first_path;
-		nvme_ctrl_get_address;
 		nvme_ctrl_get_config;
 		nvme_ctrl_get_phy_slot;
 		nvme_ctrl_get_src_addr;

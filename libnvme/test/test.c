@@ -409,7 +409,7 @@ int main(int argc, char **argv)
 			nvme_subsystem_for_each_ctrl(s, c) {
 				printf("  %s %s %s %s\n", nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_ctrl_get_state(c));
 			}
 		}
@@ -423,7 +423,7 @@ int main(int argc, char **argv)
 	if (!nvme_scan_ctrl(ctx, ctrl, &c)) {
 		printf("%s %s %s %s\n", nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
-			nvme_ctrl_get_address(c),
+			nvme_ctrl_get_traddr(c),
 			nvme_ctrl_get_state(c));
 		nvme_free_ctrl(c);
 	}
@@ -438,7 +438,7 @@ int main(int argc, char **argv)
 				printf(" `- %s %s %s %s\n",
 				       nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_ctrl_get_state(c));
 
 				nvme_ctrl_for_each_ns(c, n) {

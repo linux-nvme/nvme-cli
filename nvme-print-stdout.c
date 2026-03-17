@@ -1188,7 +1188,7 @@ static unsigned int stdout_subsystem_multipath(nvme_subsystem_t s)
 		printf(" +- %s %s %s %s %s\n",
 			nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
-			nvme_ctrl_get_address(c),
+			nvme_ctrl_get_traddr(c),
 			nvme_ctrl_get_state(c),
 			ana_state);
 		i++;
@@ -1205,7 +1205,7 @@ static void stdout_subsystem_ctrls(nvme_subsystem_t s)
 		printf(" +- %s %s %s %s\n",
 			nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
-			nvme_ctrl_get_address(c),
+			nvme_ctrl_get_traddr(c),
 			nvme_ctrl_get_state(c));
 	}
 }
@@ -5808,7 +5808,7 @@ static bool stdout_detailed_ctrl(const char *name, void *arg)
 	       nvme_ctrl_get_model(c),
 	       nvme_ctrl_get_firmware(c),
 	       nvme_ctrl_get_transport(c),
-	       nvme_ctrl_get_address(c),
+	       nvme_ctrl_get_traddr(c),
 	       nvme_ctrl_get_phy_slot(c),
 	       nvme_subsystem_get_name(nvme_ctrl_get_subsystem(c)));
 
@@ -6015,7 +6015,7 @@ static void stdout_tabular_subsystem_topology_multipath(nvme_subsystem_t s)
 					nvme_ctrl_get_transport(c), LEFT);
 			/* col 7: Address */
 			table_set_value_str(t, ++col, row,
-					nvme_ctrl_get_address(c), LEFT);
+					nvme_ctrl_get_traddr(c), LEFT);
 			/* col 8: State */
 			table_set_value_str(t, ++col, row,
 					nvme_ctrl_get_state(c), LEFT);
@@ -6050,7 +6050,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 				printf("  +- %s %s %s %s %s\n",
 				       nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_ctrl_get_state(c),
 				       nvme_path_get_ana_state(p));
 			}
@@ -6061,7 +6061,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 			printf(" +- %s %s %s\n",
 			       nvme_ctrl_get_name(c),
 			       nvme_ctrl_get_transport(c),
-			       nvme_ctrl_get_address(c));
+			       nvme_ctrl_get_traddr(c));
 			printf(" \\\n");
 
 			nvme_subsystem_for_each_ns(s, n) {
@@ -6097,7 +6097,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 						nvme_path_get_numa_nodes(p),
 						nvme_ctrl_get_name(c),
 						nvme_ctrl_get_transport(c),
-						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_traddr(c),
 						nvme_ctrl_get_state(c));
 
 				} else if (!strcmp(iopolicy, "queue-depth")) {
@@ -6111,7 +6111,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 						nvme_path_get_queue_depth(p),
 						nvme_ctrl_get_name(c),
 						nvme_ctrl_get_transport(c),
-						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_traddr(c),
 						nvme_ctrl_get_state(c));
 
 				} else { /* round-robin */
@@ -6124,7 +6124,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 						nvme_path_get_ana_state(p),
 						nvme_ctrl_get_name(c),
 						nvme_ctrl_get_transport(c),
-						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_traddr(c),
 						nvme_ctrl_get_state(c));
 				}
 			}
@@ -6182,7 +6182,7 @@ static void stdout_tabular_subsystem_topology(nvme_subsystem_t s)
 					nvme_ctrl_get_transport(c), LEFT);
 			/* col 4: Address */
 			table_set_value_str(t, 4, row,
-					nvme_ctrl_get_address(c), LEFT);
+					nvme_ctrl_get_traddr(c), LEFT);
 			/* col 5: State */
 			table_set_value_str(t, 5, row,
 					nvme_ctrl_get_state(c), LEFT);
@@ -6209,7 +6209,7 @@ static void stdout_subsystem_topology(nvme_subsystem_t s,
 				printf("  +- %s %s %s %s\n",
 				       nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_ctrl_get_state(c));
 			}
 		}
@@ -6219,7 +6219,7 @@ static void stdout_subsystem_topology(nvme_subsystem_t s,
 			printf(" +- %s %s %s\n",
 			       nvme_ctrl_get_name(c),
 			       nvme_ctrl_get_transport(c),
-			       nvme_ctrl_get_address(c));
+			       nvme_ctrl_get_traddr(c));
 			printf(" \\\n");
 			nvme_ctrl_for_each_ns(c, n) {
 				printf("  +- ns %d %s\n",
@@ -6240,7 +6240,7 @@ static void stdout_subsystem_topology(nvme_subsystem_t s,
 				printf("  +- %s %s %s %s\n",
 						nvme_ctrl_get_name(c),
 						nvme_ctrl_get_transport(c),
-						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_traddr(c),
 						nvme_ctrl_get_state(c));
 			}
 		}
