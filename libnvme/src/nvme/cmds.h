@@ -5256,14 +5256,14 @@ nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
  * @copy:	Copy range array
  * @nlbs:	Number of logical blocks
  * @slbas:	Starting LBA
- * @eilbrts:	Expected initial logical block reference tag
+ * @elbts:	Expected initial logical block reference tag
  * @elbatms:	Expected logical block application tag mask
  * @elbats:	Expected logical block application tag
  * @nr:		Number of descriptors to construct
  */
 static inline void
 nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
-		__u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
+		__u64 *slbas, __u32 *elbts, __u32 *elbatms,
 		__u32 *elbats, __u16 nr)
 {
 	int i;
@@ -5271,7 +5271,7 @@ nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
-		copy[i].eilbrt = htole32(eilbrts[i]);
+		copy[i].elbt = htobe32(elbts[i]);
 		copy[i].elbatm = htole16(elbatms[i]);
 		copy[i].elbat = htole16(elbats[i]);
 	}
@@ -5310,7 +5310,7 @@ nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
  * @nlbs:	Number of logical blocks
  * @slbas:	Starting LBA
  * @sopts:	Source options
- * @eilbrts:	Expected initial logical block reference tag
+ * @elbts:	Expected initial logical block reference tag
  * @elbatms:	Expected logical block application tag mask
  * @elbats:	Expected logical block application tag
  * @nr:		Number of descriptors to construct
@@ -5318,7 +5318,7 @@ nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 static inline void
 nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
 		__u32 *snsids, __u16 *nlbs, __u64 *slbas, __u16 *sopts,
-		__u32 *eilbrts, __u32 *elbatms, __u32 *elbats,
+		__u32 *elbts, __u32 *elbatms, __u32 *elbats,
 		__u16 nr)
 {
 	int i;
@@ -5328,7 +5328,7 @@ nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
 		copy[i].sopt = htole16(sopts[i]);
-		copy[i].eilbrt = htole32(eilbrts[i]);
+		copy[i].elbt = htobe32(elbts[i]);
 		copy[i].elbatm = htole16(elbatms[i]);
 		copy[i].elbat = htole16(elbats[i]);
 	}
