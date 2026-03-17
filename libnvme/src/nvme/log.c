@@ -83,15 +83,19 @@ __nvme_msg(struct nvme_global_ctx *ctx, int level,
 		message ? message : "<error>");
 }
 
-void nvme_set_logging_level(struct nvme_global_ctx *ctx, int log_level,
-		bool log_pid, bool log_tstamp)
+LIBNVME_PUBLIC void nvme_set_logging_level(
+		struct nvme_global_ctx *ctx,
+		int log_level,
+		bool log_pid,
+		bool log_tstamp)
 {
 	ctx->log.level = log_level;
 	ctx->log.pid = log_pid;
 	ctx->log.timestamp = log_tstamp;
 }
 
-int nvme_get_logging_level(struct nvme_global_ctx *ctx,
+LIBNVME_PUBLIC int nvme_get_logging_level(
+		struct nvme_global_ctx *ctx,
 		bool *log_pid, bool *log_tstamp)
 {
 	if (log_pid)

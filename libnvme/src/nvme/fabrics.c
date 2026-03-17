@@ -68,7 +68,7 @@ const char * const trtypes[] = {
 	[NVMF_TRTYPE_LOOP]	= "loop",
 };
 
-const char *nvmf_trtype_str(__u8 trtype)
+LIBNVME_PUBLIC const char *nvmf_trtype_str(__u8 trtype)
 {
 	return arg_str(trtypes, ARRAY_SIZE(trtypes), trtype);
 }
@@ -81,7 +81,7 @@ static const char * const adrfams[] = {
 	[NVMF_ADDR_FAMILY_FC]	= "fibre-channel",
 };
 
-const char *nvmf_adrfam_str(__u8 adrfam)
+LIBNVME_PUBLIC const char *nvmf_adrfam_str(__u8 adrfam)
 {
 	return arg_str(adrfams, ARRAY_SIZE(adrfams), adrfam);
 }
@@ -92,7 +92,7 @@ static const char * const subtypes[] = {
 	[NVME_NQN_CURR]		= "current discovery subsystem",
 };
 
-const char *nvmf_subtype_str(__u8 subtype)
+LIBNVME_PUBLIC const char *nvmf_subtype_str(__u8 subtype)
 {
 	return arg_str(subtypes, ARRAY_SIZE(subtypes), subtype);
 }
@@ -112,7 +112,7 @@ static const char * const treqs[] = {
 				"sq flow control disable supported",
 };
 
-const char *nvmf_treq_str(__u8 treq)
+LIBNVME_PUBLIC const char *nvmf_treq_str(__u8 treq)
 {
 	return arg_str(treqs, ARRAY_SIZE(treqs), treq);
 }
@@ -138,7 +138,7 @@ static const char * const eflags_strings[] = {
 					  "no cdc connectivity",
 };
 
-const char *nvmf_eflags_str(__u16 eflags)
+LIBNVME_PUBLIC const char *nvmf_eflags_str(__u16 eflags)
 {
 	return arg_str(eflags_strings, ARRAY_SIZE(eflags_strings), eflags);
 }
@@ -149,7 +149,7 @@ static const char * const sectypes[] = {
 	[NVMF_TCP_SECTYPE_TLS13]	= "tls13",
 };
 
-const char *nvmf_sectype_str(__u8 sectype)
+LIBNVME_PUBLIC const char *nvmf_sectype_str(__u8 sectype)
 {
 	return arg_str(sectypes, ARRAY_SIZE(sectypes), sectype);
 }
@@ -162,7 +162,7 @@ static const char * const prtypes[] = {
 	[NVMF_RDMA_PRTYPE_IWARP]		= "iwarp",
 };
 
-const char *nvmf_prtype_str(__u8 prtype)
+LIBNVME_PUBLIC const char *nvmf_prtype_str(__u8 prtype)
 {
 	return arg_str(prtypes, ARRAY_SIZE(prtypes), prtype);
 }
@@ -172,7 +172,7 @@ static const char * const qptypes[] = {
 	[NVMF_RDMA_QPTYPE_DATAGRAM]	= "datagram",
 };
 
-const char *nvmf_qptype_str(__u8 qptype)
+LIBNVME_PUBLIC const char *nvmf_qptype_str(__u8 qptype)
 {
 	return arg_str(qptypes, ARRAY_SIZE(qptypes), qptype);
 }
@@ -181,12 +181,13 @@ static const char * const cms[] = {
 	[NVMF_RDMA_CMS_RDMA_CM]	= "rdma-cm",
 };
 
-const char *nvmf_cms_str(__u8 cm)
+LIBNVME_PUBLIC const char *nvmf_cms_str(__u8 cm)
 {
 	return arg_str(cms, ARRAY_SIZE(cms), cm);
 }
 
-int nvmf_context_create(struct nvme_global_ctx *ctx,
+LIBNVME_PUBLIC int nvmf_context_create(
+		struct nvme_global_ctx *ctx,
 		bool (*decide_retry)(struct nvmf_context *fctx, int err,
 			void *user_data),
 		void (*connected)(struct nvmf_context *fctx,
@@ -195,7 +196,8 @@ int nvmf_context_create(struct nvme_global_ctx *ctx,
 			struct nvme_host *host, const char *subsysnqn,
 			const char *transport, const char *traddr,
 			const char *trsvcid, void *user_data),
-		void *user_data, struct nvmf_context **fctxp)
+		void *user_data,
+		struct nvmf_context **fctxp)
 {
 	struct nvmf_context *fctx;
 
@@ -213,7 +215,8 @@ int nvmf_context_create(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-int nvmf_context_set_discovery_cbs(struct nvmf_context *fctx,
+LIBNVME_PUBLIC int nvmf_context_set_discovery_cbs(
+		struct nvmf_context *fctx,
 		void (*discovery_log)(struct nvmf_context *fctx,
 			bool connect,
 			struct nvmf_discovery_log *log,
@@ -233,8 +236,10 @@ int nvmf_context_set_discovery_cbs(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_discovery_defaults(struct nvmf_context *fctx,
-		int max_discovery_retries, int keep_alive_timeout)
+LIBNVME_PUBLIC int nvmf_context_set_discovery_defaults(
+		struct nvmf_context *fctx,
+		int max_discovery_retries,
+		int keep_alive_timeout)
 {
 	fctx->default_max_discovery_retries = max_discovery_retries;
 	fctx->default_keep_alive_timeout = keep_alive_timeout;
@@ -242,7 +247,8 @@ int nvmf_context_set_discovery_defaults(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_fabrics_config(struct nvmf_context *fctx,
+LIBNVME_PUBLIC int nvmf_context_set_fabrics_config(
+		struct nvmf_context *fctx,
 		struct nvme_fabrics_config *cfg)
 {
 	fctx->cfg = cfg;
@@ -250,10 +256,14 @@ int nvmf_context_set_fabrics_config(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_connection(struct nvmf_context *fctx,
-		const char *subsysnqn, const char *transport,
-		const char *traddr, const char *trsvcid,
-		const char *host_traddr, const char *host_iface)
+LIBNVME_PUBLIC int nvmf_context_set_connection(
+		struct nvmf_context *fctx,
+		const char *subsysnqn,
+		const char *transport,
+		const char *traddr,
+		const char *trsvcid,
+		const char *host_traddr,
+		const char *host_iface)
 {
 	fctx->subsysnqn = subsysnqn;
 	fctx->transport = transport;
@@ -265,8 +275,10 @@ int nvmf_context_set_connection(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
-		const char *hostnqn, const char *hostid)
+LIBNVME_PUBLIC int nvmf_context_set_hostnqn(
+		struct nvmf_context *fctx,
+		const char *hostnqn,
+		const char *hostid)
 {
 	fctx->hostnqn = hostnqn;
 	fctx->hostid = hostid;
@@ -274,9 +286,12 @@ int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_crypto(struct nvmf_context *fctx,
-		const char *hostkey, const char *ctrlkey,
-		const char *keyring, const char *tls_key,
+LIBNVME_PUBLIC int nvmf_context_set_crypto(
+		struct nvmf_context *fctx,
+		const char *hostkey,
+		const char *ctrlkey,
+		const char *keyring,
+		const char *tls_key,
 		const char *tls_key_identity)
 {
 	fctx->hostkey = hostkey;
@@ -288,14 +303,18 @@ int nvmf_context_set_crypto(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_persistent(struct nvmf_context *fctx, bool persistent)
+LIBNVME_PUBLIC int nvmf_context_set_persistent(
+		struct nvmf_context *fctx,
+		bool persistent)
 {
 	fctx->persistent = persistent;
 
 	return 0;
 }
 
-int nvmf_context_set_device(struct nvmf_context *fctx, const char *device)
+LIBNVME_PUBLIC int nvmf_context_set_device(
+		struct nvmf_context *fctx,
+		const char *device)
 {
 	fctx->device = device;
 
@@ -364,7 +383,9 @@ static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
 
 #define UPDATE_CFG_OPTION(c, n, o, d)			\
 	if ((n)->o != d) (c)->o = (n)->o
-void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg)
+LIBNVME_PUBLIC void nvmf_update_config(
+		nvme_ctrl_t c,
+		const struct nvme_fabrics_config *cfg)
 {
 	struct nvme_fabrics_config *ctrl_cfg = nvme_ctrl_get_config(c);
 
@@ -986,8 +1007,10 @@ static const char *lookup_context(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 	return NULL;
 }
 
-int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
-		  const struct nvme_fabrics_config *cfg)
+LIBNVME_PUBLIC int nvmf_add_ctrl(
+		nvme_host_t h,
+		nvme_ctrl_t c,
+		const struct nvme_fabrics_config *cfg)
 {
 	nvme_subsystem_t s;
 	const char *root_app, *app;
@@ -1080,7 +1103,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	return nvme_init_ctrl(h, c, ret);
 }
 
-int nvmf_connect_ctrl(nvme_ctrl_t c)
+LIBNVME_PUBLIC int nvmf_connect_ctrl(nvme_ctrl_t c)
 {
 	_cleanup_free_ char *argstr = NULL;
 	int ret;
@@ -1349,8 +1372,10 @@ static void sanitize_discovery_log_entry(struct nvmf_disc_log_entry *e)
 	}
 }
 
-int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
-			   int max_retries)
+LIBNVME_PUBLIC int nvmf_get_discovery_log(
+		nvme_ctrl_t c,
+		struct nvmf_discovery_log **logp,
+		int max_retries)
 {
 	struct nvme_get_discovery_args args = {
 		.c = c,
@@ -1363,8 +1388,9 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 	return nvmf_get_discovery_wargs(&args, logp);
 }
 
-int nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args,
-			     struct nvmf_discovery_log **logp)
+LIBNVME_PUBLIC int nvmf_get_discovery_wargs(
+		struct nvme_get_discovery_args *args,
+		struct nvmf_discovery_log **logp)
 {
 	struct nvmf_discovery_log *log;
 	int err;
@@ -1645,7 +1671,7 @@ static int nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
 	return 0;
 }
 
-bool nvmf_is_registration_supported(nvme_ctrl_t c)
+LIBNVME_PUBLIC bool nvmf_is_registration_supported(nvme_ctrl_t c)
 {
 	if (!c->cntrltype || !c->dctype)
 		if (nvme_fetch_cntrltype_dctype_from_id(c))
@@ -1654,7 +1680,10 @@ bool nvmf_is_registration_supported(nvme_ctrl_t c)
 	return !strcmp(c->dctype, "ddc") || !strcmp(c->dctype, "cdc");
 }
 
-int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result)
+LIBNVME_PUBLIC int nvmf_register_ctrl(
+		nvme_ctrl_t c,
+		enum nvmf_dim_tas tas,
+		__u32 *result)
 {
 	if (!nvmf_is_registration_supported(c))
 		return -ENOTSUP;
@@ -1695,7 +1724,9 @@ static char *unescape_uri(const char *str, int len)
 	return dst;
 }
 
-int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **urip)
+LIBNVME_PUBLIC int nvme_parse_uri(
+		const char *str,
+		struct nvme_fabrics_uri **urip)
 {
 	struct nvme_fabrics_uri *uri;
 	_cleanup_free_ char *scheme = NULL;
@@ -1792,7 +1823,7 @@ int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **urip)
 	return 0;
 }
 
-void nvmf_free_uri(struct nvme_fabrics_uri *uri)
+LIBNVME_PUBLIC void nvmf_free_uri(struct nvme_fabrics_uri *uri)
 {
 	char **s;
 
@@ -2028,7 +2059,8 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-const char *nvmf_get_default_trsvcid(const char *transport,
+LIBNVME_PUBLIC const char *nvmf_get_default_trsvcid(
+		const char *transport,
 		bool discovery_ctrl)
 {
 	if (!transport)
@@ -2255,8 +2287,11 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 	return ret;
 }
 
-int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
-		struct nvmf_context *fctx, bool connect, bool force)
+LIBNVME_PUBLIC int nvmf_discovery_config_json(
+		struct nvme_global_ctx *ctx,
+		struct nvmf_context *fctx,
+		bool connect,
+		bool force)
 {
 	const char *hnqn, *hid;
 	struct nvme_subsystem *s;
@@ -2303,7 +2338,8 @@ int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 	return ret;
 }
 
-int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
+LIBNVME_PUBLIC int nvmf_connect_config_json(
+		struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx)
 {
 	const char *hnqn, *hid;
@@ -2362,8 +2398,11 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 	return ret;
 }
 
-int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
-		struct nvmf_context *fctx, bool connect, bool force)
+LIBNVME_PUBLIC int nvmf_discovery_config_file(
+		struct nvme_global_ctx *ctx,
+		struct nvmf_context *fctx,
+		bool connect,
+		bool force)
 {
 	struct nvme_host *h;
 	struct nvme_ctrl *c;
@@ -2422,7 +2461,8 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-int nvmf_config_modify(struct nvme_global_ctx *ctx,
+LIBNVME_PUBLIC int nvmf_config_modify(
+		struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx)
 {
 	_cleanup_free_ char *hnqn = NULL;
@@ -2479,7 +2519,9 @@ static int nbft_filter(const struct dirent *dent)
 	return !fnmatch(NBFT_SYSFS_FILENAME, dent->d_name, FNM_PATHNAME);
 }
 
-int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
+LIBNVME_PUBLIC int nvmf_nbft_read_files(
+		struct nvme_global_ctx *ctx,
+		char *path,
 		struct nbft_file_entry **head)
 {
 	struct nbft_file_entry *entry = NULL;
@@ -2518,7 +2560,9 @@ int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
 	return 0;
 }
 
-void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
+LIBNVME_PUBLIC void nvmf_nbft_free(
+		struct nvme_global_ctx *ctx,
+		struct nbft_file_entry *head)
 {
 	while (head) {
 		struct nbft_file_entry *next = head->next;
@@ -2725,8 +2769,11 @@ static int nbft_discovery(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
-		struct nvmf_context *fctx, bool connect, char *nbft_path)
+LIBNVME_PUBLIC int nvmf_discovery_nbft(
+		struct nvme_global_ctx *ctx,
+		struct nvmf_context *fctx,
+		bool connect,
+		char *nbft_path)
 {
 	const char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
 	char uuid[NVME_UUID_LEN_STRING];
@@ -2943,8 +2990,11 @@ out_free:
 	return ret;
 }
 
-int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
-		bool connect, bool force)
+LIBNVME_PUBLIC int nvmf_discovery(
+		struct nvme_global_ctx *ctx,
+		struct nvmf_context *fctx,
+		bool connect,
+		bool force)
 {
 	struct nvme_ctrl *c = NULL;
 	struct nvme_host *h;
@@ -3051,7 +3101,9 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 	return ret;
 }
 
-int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
+LIBNVME_PUBLIC int nvmf_connect(
+		struct nvme_global_ctx *ctx,
+		struct nvmf_context *fctx)
 {
 	struct nvme_host *h;
 	struct nvme_ctrl *c;

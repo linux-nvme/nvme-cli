@@ -56,17 +56,6 @@ const char *nvme_get_application(struct nvme_global_ctx *ctx);
 void nvme_skip_namespaces(struct nvme_global_ctx *ctx);
 
 /**
- * nvme_release_fds - Close all opened file descriptors in the tree
- * @ctx:	struct nvme_global_ctx object
- *
- * Controller and Namespace objects cache the file descriptors
- * of opened nvme devices. This API can be used to close and
- * clear all cached fds in the tree.
- *
- */
-void nvme_release_fds(struct nvme_global_ctx *ctx);
-
-/**
  * nvme_first_host() - Start host iterator
  * @ctx:	struct nvme_global_ctx object
  *

@@ -14,7 +14,7 @@
 
 #include "private.h"
 
-int nvme_filter_namespace(const struct dirent *d)
+LIBNVME_PUBLIC int nvme_filter_namespace(const struct dirent *d)
 {
 	int i, n;
 
@@ -28,7 +28,7 @@ int nvme_filter_namespace(const struct dirent *d)
 	return 0;
 }
 
-int nvme_filter_paths(const struct dirent *d)
+LIBNVME_PUBLIC int nvme_filter_paths(const struct dirent *d)
 {
 	int i, c, n;
 
@@ -42,7 +42,7 @@ int nvme_filter_paths(const struct dirent *d)
 	return 0;
 }
 
-int nvme_filter_ctrls(const struct dirent *d)
+LIBNVME_PUBLIC int nvme_filter_ctrls(const struct dirent *d)
 {
 	int i, c, n;
 
@@ -61,7 +61,7 @@ int nvme_filter_ctrls(const struct dirent *d)
 	return 0;
 }
 
-int nvme_filter_subsys(const struct dirent *d)
+LIBNVME_PUBLIC int nvme_filter_subsys(const struct dirent *d)
 {
 	int i;
 
@@ -75,7 +75,7 @@ int nvme_filter_subsys(const struct dirent *d)
 	return 0;
 }
 
-int nvme_scan_subsystems(struct dirent ***subsys)
+LIBNVME_PUBLIC int nvme_scan_subsystems(struct dirent ***subsys)
 {
 	const char *dir = nvme_subsys_sysfs_dir();
 	int ret;
@@ -87,7 +87,9 @@ int nvme_scan_subsystems(struct dirent ***subsys)
 	return ret;
 }
 
-int nvme_scan_subsystem_namespaces(nvme_subsystem_t s, struct dirent ***ns)
+LIBNVME_PUBLIC int nvme_scan_subsystem_namespaces(
+		nvme_subsystem_t s,
+		struct dirent ***ns)
 {
 	int ret;
 
@@ -99,7 +101,7 @@ int nvme_scan_subsystem_namespaces(nvme_subsystem_t s, struct dirent ***ns)
 	return ret;
 }
 
-int nvme_scan_ctrls(struct dirent ***ctrls)
+LIBNVME_PUBLIC int nvme_scan_ctrls(struct dirent ***ctrls)
 {
 	const char *dir = nvme_ctrl_sysfs_dir();
 	int ret;
@@ -111,7 +113,9 @@ int nvme_scan_ctrls(struct dirent ***ctrls)
 	return ret;
 }
 
-int nvme_scan_ctrl_namespace_paths(nvme_ctrl_t c, struct dirent ***paths)
+LIBNVME_PUBLIC int nvme_scan_ctrl_namespace_paths(
+		nvme_ctrl_t c,
+		struct dirent ***paths)
 {
 	int ret;
 
@@ -123,7 +127,7 @@ int nvme_scan_ctrl_namespace_paths(nvme_ctrl_t c, struct dirent ***paths)
 	return ret;
 }
 
-int nvme_scan_ctrl_namespaces(nvme_ctrl_t c, struct dirent ***ns)
+LIBNVME_PUBLIC int nvme_scan_ctrl_namespaces(nvme_ctrl_t c, struct dirent ***ns)
 {
 	int ret;
 

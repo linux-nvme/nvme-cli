@@ -892,8 +892,6 @@ int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan);
  * &nvme_mi_mi_read_mi_data_ctrl_list.
  *
  * Return: New transport handle object, or NULL on failure.
- *
- * See &nvme_mi_close_transport_handle
  */
 struct nvme_transport_handle *nvme_mi_init_transport_handle(nvme_mi_ep_t ep, __u16 ctrl_id);
 

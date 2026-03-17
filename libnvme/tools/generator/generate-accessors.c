@@ -1312,6 +1312,14 @@ static void struct_list_parse(StructList_t *sl, const char *text, Conf_t *conf)
 #define LINE_FITS_80_NTABS(n, fmt, ...) \
 	(snprintf(NULL, 0, fmt, ##__VA_ARGS__) + (n) * 7 <= 80)
 
+/*
+ * PUB() prepends "LIBNVME_PUBLIC " to a string literal at compile time.
+ * Used in emit_src_*() to annotate generated function definitions.
+ * Header declarations (emit_hdr_*) are intentionally left unannotated so
+ * that installed public headers remain free of build-internal attributes.
+ */
+#define PUB(s) "LIBNVME_PUBLIC " s
+
 /**
  * @brief Return the separator to place between a C type and a function name.
  *
@@ -1509,14 +1517,14 @@ static void emit_src_setter_dynstr(FILE *f, const char *prefix,
 		const char *sname, const char *mname)
 {
 	/* Emit function signature, wrapping if it exceeds 80 chars. */
-	if (LINE_FITS_80("void %s" SET_FMT "(struct %s *p, const char *%s)",
+	if (LINE_FITS_80(PUB("void %s" SET_FMT "(struct %s *p, const char *%s)"),
 			 prefix, sname, mname, sname, mname))
 		fprintf(f,
-			"void %s" SET_FMT "(struct %s *p, const char *%s)\n",
+			PUB("void %s" SET_FMT "(struct %s *p, const char *%s)") "\n",
 			prefix, sname, mname, sname, mname);
 	else
 		fprintf(f,
-			"void %s" SET_FMT "(\n"
+			PUB("void %s" SET_FMT "(") "\n"
 			"\t\tstruct %s *p,\n"
 			"\t\tconst char *%s)\n",
 			prefix, sname, mname, sname, mname);
@@ -1551,14 +1559,14 @@ static void emit_src_setter_dynstr(FILE *f, const char *prefix,
 static void emit_src_setter_chararray(FILE *f, const char *prefix,
 		const char *sname, const char *mname, const char *array_size)
 {
-	if (LINE_FITS_80("void %s" SET_FMT "(struct %s *p, const char *%s)",
+	if (LINE_FITS_80(PUB("void %s" SET_FMT "(struct %s *p, const char *%s)"),
 			 prefix, sname, mname, sname, mname))
 		fprintf(f,
-			"void %s" SET_FMT "(struct %s *p, const char *%s)\n",
+			PUB("void %s" SET_FMT "(struct %s *p, const char *%s)") "\n",
 			prefix, sname, mname, sname, mname);
 	else
 		fprintf(f,
-			"void %s" SET_FMT "(\n"
+			PUB("void %s" SET_FMT "(") "\n"
 			"\t\tstruct %s *p,\n"
 			"\t\tconst char *%s)\n",
 			prefix, sname, mname, sname, mname);
@@ -1594,10 +1602,10 @@ static void emit_src_setter_chararray(FILE *f, const char *prefix,
 static void emit_src_setter_val(FILE *f, const char *prefix,
 		const char *sname, const char *mname, const char *mtype)
 {
-	if (LINE_FITS_80("void %s" SET_FMT "(struct %s *p, %s %s)",
+	if (LINE_FITS_80(PUB("void %s" SET_FMT "(struct %s *p, %s %s)"),
 			 prefix, sname, mname, sname, mtype, mname))
 		fprintf(f,
-			"void %s" SET_FMT "(struct %s *p, %s %s)\n"
+			PUB("void %s" SET_FMT "(struct %s *p, %s %s)") "\n"
 			"{\n"
 			"\tp->%s = %s;\n"
 			"}\n\n",
@@ -1606,7 +1614,7 @@ static void emit_src_setter_val(FILE *f, const char *prefix,
 			mname, mname);
 	else
 		fprintf(f,
-			"void %s" SET_FMT "(\n"
+			PUB("void %s" SET_FMT "(") "\n"
 			"\t\tstruct %s *p,\n"
 			"\t\t%s %s)\n"
 			"{\n"
@@ -1631,10 +1639,10 @@ static void emit_src_setter_val(FILE *f, const char *prefix,
 static void emit_src_getter(FILE *f, const char *prefix,
 		const char *sname, const char *mname, const char *mtype)
 {
-	if (LINE_FITS_80("%s%s%s" GET_FMT "(const struct %s *p)",
+	if (LINE_FITS_80(PUB("%s%s%s" GET_FMT "(const struct %s *p)"),
 			 mtype, type_sep(mtype), prefix, sname, mname, sname))
 		fprintf(f,
-			"%s%s%s" GET_FMT "(const struct %s *p)\n"
+			PUB("%s%s%s" GET_FMT "(const struct %s *p)") "\n"
 			"{\n"
 			"\treturn p->%s;\n"
 			"}\n\n",
@@ -1642,7 +1650,7 @@ static void emit_src_getter(FILE *f, const char *prefix,
 			sname, mname);
 	else
 		fprintf(f,
-			"%s%s%s" GET_FMT "(\n"
+			PUB("%s%s%s" GET_FMT "(") "\n"
 			"\t\tconst struct %s *p)\n"
 			"{\n"
 			"\treturn p->%s;\n"

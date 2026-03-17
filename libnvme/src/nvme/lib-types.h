@@ -10,6 +10,15 @@
 
 #include <linux/types.h>
 
+/**
+ * LIBNVME_PUBLIC - mark a symbol as part of the public API.
+ *
+ * When the library is built with -fvisibility=hidden all symbols are hidden
+ * by default.  Annotating a function with LIBNVME_PUBLIC overrides that and
+ * makes the symbol visible in the shared library ABI.
+ */
+#define LIBNVME_PUBLIC __attribute__((visibility("default")))
+
 struct nvme_global_ctx;
 struct nvme_transport_handle;
 
