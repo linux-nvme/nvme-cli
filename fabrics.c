@@ -716,7 +716,7 @@ static void nvmf_disconnect_nqn(struct nvme_global_ctx *ctx, char *nqn)
 			continue;
 		nvme_for_each_host(ctx, h) {
 			nvme_for_each_subsystem(h, s) {
-				if (strcmp(nvme_subsystem_get_nqn(s), p))
+				if (strcmp(nvme_subsystem_get_subsysnqn(s), p))
 					continue;
 				nvme_subsystem_for_each_ctrl(s, c) {
 					if (!nvme_disconnect_ctrl(c))
@@ -1062,7 +1062,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 				continue;
 			nvme_for_each_host(ctx, h) {
 				nvme_for_each_subsystem(h, s) {
-					if (strcmp(nvme_subsystem_get_nqn(s), p))
+					if (strcmp(nvme_subsystem_get_subsysnqn(s), p))
 						continue;
 					nvme_subsystem_for_each_ctrl(s, c)
 						ret = dim_operation(c, tas, p);

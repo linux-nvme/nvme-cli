@@ -1215,7 +1215,7 @@ static void stdout_subsys_config(nvme_subsystem_t s, bool show_iopolicy)
 	int len = strlen(nvme_subsystem_get_name(s));
 
 	printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
-	       nvme_subsystem_get_nqn(s));
+	       nvme_subsystem_get_subsysnqn(s));
 	printf("%*s   hostnqn=%s\n", len, " ",
 	       nvme_host_get_hostnqn(nvme_subsystem_get_host(s)));
 	if (show_iopolicy)
@@ -1228,9 +1228,9 @@ static void stdout_subsys_config(nvme_subsystem_t s, bool show_iopolicy)
 		printf("%*s   serial=%s\n", len, " ",
 			nvme_subsystem_get_serial(s));
 		printf("%*s   firmware=%s\n", len, " ",
-			nvme_subsystem_get_fw_rev(s));
+			nvme_subsystem_get_firmware(s));
 		printf("%*s   type=%s\n", len, " ",
-			nvme_subsystem_get_type(s));
+			nvme_subsystem_get_subsystype(s));
 	}
 }
 
@@ -5773,7 +5773,8 @@ static bool stdout_detailed_subsys(const char *name, void *arg)
 	     s;
 	     s = htable_subsys_getnext(&res->ht_s, name, &it)) {
 		if (first) {
-			printf("%-16s %-96s ", name, nvme_subsystem_get_nqn(s));
+			printf("%-16s %-96s ", name,
+			       nvme_subsystem_get_subsysnqn(s));
 			first = false;
 		}
 

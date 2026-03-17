@@ -33,7 +33,7 @@ static bool nvme_match_subsysnqn_filter(nvme_subsystem_t s,
 	char *nqn_match = f_args;
 
 	if (s)
-		return strcmp(nvme_subsystem_get_nqn(s), nqn_match) == 0;
+		return strcmp(nvme_subsystem_get_subsysnqn(s), nqn_match) == 0;
 	return true;
 }
 
@@ -405,7 +405,7 @@ int main(int argc, char **argv)
 	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
-			       nvme_subsystem_get_nqn(s));
+			       nvme_subsystem_get_subsysnqn(s));
 			nvme_subsystem_for_each_ctrl(s, c) {
 				printf("  %s %s %s %s\n", nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
@@ -433,7 +433,7 @@ int main(int argc, char **argv)
 	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
-			       nvme_subsystem_get_nqn(s));
+			       nvme_subsystem_get_subsysnqn(s));
 			nvme_subsystem_for_each_ctrl(s, c) {
 				printf(" `- %s %s %s %s\n",
 				       nvme_ctrl_get_name(c),

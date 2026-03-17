@@ -776,41 +776,6 @@ const char *nvme_ns_head_get_sysfs_dir(nvme_ns_head_t head);
 struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_is_discovered() - Returns the value of the 'discovered' flag
- * @c:	Controller instance
- *
- * Return: Value of the 'discovered' flag of @c
- */
-bool nvme_ctrl_is_discovered(nvme_ctrl_t c);
-
-/**
- * nvme_ctrl_is_persistent() - Returns the value of the 'persistent' flag
- * @c:	Controller instance
- *
- * Return: Value of the 'persistent' flag of @c
- */
-bool nvme_ctrl_is_persistent(nvme_ctrl_t c);
-
-/**
- * nvme_ctrl_is_discovery_ctrl() - Check the 'discovery_ctrl' flag
- * @c:	Controller to be checked
- *
- * Returns the value of the 'discovery_ctrl' flag which specifies whether
- * @c connects to a discovery subsystem.
- *
- * Return: Value of the 'discover_ctrl' flag
- */
-bool nvme_ctrl_is_discovery_ctrl(nvme_ctrl_t c);
-
-/**
- * nvme_ctrl_is_unique_discovery_ctrl() - Check the 'unique_discovery_ctrl' flag
- * @c:		Controller to be checked
- *
- * Return: Value of the 'unique_discovery_ctrl' flag
- */
-bool nvme_ctrl_is_unique_discovery_ctrl(nvme_ctrl_t c);
-
-/**
  * nvme_ctrl_identify() - Issues an 'identify controller' command
  * @c:	Controller instance
  * @id:	Identify controller data structure
@@ -871,32 +836,6 @@ void nvme_free_ctrl(struct nvme_ctrl *c);
  * @c:	Controller instance
  */
 void nvme_unlink_ctrl(struct nvme_ctrl *c);
-
-/**
- * nvme_subsystem_get_nqn() - Retrieve NQN from subsystem
- * @s:	nvme_subsystem_t object
- *
- * Return: NQN of subsystem
- */
-const char *nvme_subsystem_get_nqn(nvme_subsystem_t s);
-
-/**
- * nvme_subsystem_get_type() - Returns the type of a subsystem
- * @s:	nvme_subsystem_t object
- *
- * Returns the subsystem type of @s.
- *
- * Return: 'nvm' or 'discovery'
- */
-const char *nvme_subsystem_get_type(nvme_subsystem_t s);
-
-/**
- * nvme_subsystem_get_fw_rev() - Return the firmware rev of subsystem
- * @s:	nvme_subsystem_t object
- *
- * Return: Firmware revision of the current subsystem
- */
-const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s);
 
 /**
  * nvme_scan_topology() - Scan NVMe topology and apply filter

@@ -39,7 +39,7 @@ int main()
 		nvme_for_each_subsystem_safe(h, s, _s) {
 			printf("%c-- %s - NQN=%s\n", _s ? '|' : '`',
 			       nvme_subsystem_get_name(s),
-			       nvme_subsystem_get_nqn(s));
+			       nvme_subsystem_get_subsysnqn(s));
 
 			nvme_subsystem_for_each_ns_safe(s, n, _n) {
 				printf("%c   |-- %s lba size:%d lba max:%" PRIu64 "\n",

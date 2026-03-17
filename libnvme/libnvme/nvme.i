@@ -897,7 +897,7 @@ struct nvme_ns {
 	}
 
 	bool nvme_ctrl_persistent_get(struct nvme_ctrl *c) {
-		return nvme_ctrl_is_persistent(c);
+		return nvme_ctrl_get_persistent(c);
 	}
 	void nvme_ctrl_persistent_set(struct nvme_ctrl *c, bool persistent) {
 		nvme_ctrl_set_persistent(c, persistent);
@@ -956,14 +956,14 @@ struct nvme_ns {
 	}
 
 	bool nvme_ctrl_discovery_ctrl_get(struct nvme_ctrl *c) {
-		return nvme_ctrl_is_discovery_ctrl(c);
+		return nvme_ctrl_get_discovery_ctrl(c);
 	}
 	void nvme_ctrl_discovery_ctrl_set(struct nvme_ctrl *c, bool discovery) {
 		nvme_ctrl_set_discovery_ctrl(c, discovery);
 	}
 
 	bool nvme_ctrl_unique_discovery_ctrl_get(nvme_ctrl_t c) {
-		return nvme_ctrl_is_unique_discovery_ctrl(c);
+		return nvme_ctrl_get_unique_discovery_ctrl(c);
 	}
 	void nvme_ctrl_unique_discovery_ctrl_set(nvme_ctrl_t c, bool unique) {
 		nvme_ctrl_set_unique_discovery_ctrl(c, unique);
