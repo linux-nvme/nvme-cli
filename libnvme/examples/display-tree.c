@@ -54,7 +54,7 @@ int main()
 				       _s ? '|' : ' ', _c ? '|' : '`',
 				       nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_ctrl_get_state(c));
 
 				nvme_ctrl_for_each_ns_safe(c, n, _n)

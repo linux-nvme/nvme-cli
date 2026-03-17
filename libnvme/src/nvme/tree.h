@@ -717,15 +717,6 @@ struct nvme_transport_handle *nvme_ctrl_get_transport_handle(nvme_ctrl_t c);
 void nvme_ctrl_release_transport_handle(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_address() - Address string of a controller
- * @c:	Controller instance
- *
- * Return: NVMe-over-Fabrics address string of @c or empty string
- * of no address is present.
- */
-const char *nvme_ctrl_get_address(nvme_ctrl_t c);
-
-/**
  * nvme_ctrl_get_src_addr() - Extract src_addr from the c->address string
  * @c:	Controller instance
  * @src_addr: Where to copy the src_addr. Size must be at least INET6_ADDRSTRLEN.

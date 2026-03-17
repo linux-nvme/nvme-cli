@@ -2291,7 +2291,7 @@ int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 						"failed to connect to hostnqn=%s,nqn=%s,%s\n",
 						nvme_host_get_hostnqn(h),
 						nvme_subsystem_get_name(s),
-						nvme_ctrl_get_address(c));
+						nvme_ctrl_get_traddr(c));
 
 					if (!ret)
 						ret = err;
@@ -2350,7 +2350,7 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 						 "failed to connect to hostnqn=%s,nqn=%s,%s\n",
 						 nvme_host_get_hostnqn(h),
 						 nvme_subsystem_get_name(s),
-						 nvme_ctrl_get_address(c));
+						 nvme_ctrl_get_traddr(c));
 
 					if (!ret)
 						ret = err;

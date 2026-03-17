@@ -910,11 +910,6 @@ const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c)
 	return c->s ? c->s->subsysnqn : c->subsysnqn;
 }
 
-const char *nvme_ctrl_get_address(nvme_ctrl_t c)
-{
-	return c->address ? c->address : "";
-}
-
 char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len)
 {
 	size_t l;

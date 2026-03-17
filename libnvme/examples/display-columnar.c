@@ -70,7 +70,7 @@ int main()
 				       nvme_ctrl_get_model(c),
 				       nvme_ctrl_get_firmware(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_subsystem_get_name(s));
 
 				nvme_ctrl_for_each_ns(c, n) {

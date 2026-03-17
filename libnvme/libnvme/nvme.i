@@ -948,7 +948,7 @@ struct nvme_ns {
 	}
 
 	const char *nvme_ctrl_address_get(nvme_ctrl_t c) {
-		return nvme_ctrl_get_address(c);
+		return nvme_ctrl_get_traddr(c);
 	}
 
 	const char *nvme_ctrl_sysfs_dir_get(nvme_ctrl_t c) {
