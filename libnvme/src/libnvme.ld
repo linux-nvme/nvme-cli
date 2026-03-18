@@ -56,7 +56,6 @@ LIBNVME_3 {
 		nvme_get_ns_attr;
 		nvme_get_nsid;
 		nvme_get_path_attr;
-		nvme_get_property;
 		nvme_get_subsys_attr;
 		nvme_get_telemetry_log;
 		nvme_get_telemetry_max;
@@ -89,13 +88,11 @@ LIBNVME_3 {
 		nvme_mi_aem_get_next_event;
 		nvme_mi_aem_process;
 		nvme_mi_close;
-		nvme_mi_close_transport_handle;
 		nvme_mi_control;
 		nvme_mi_ctrl_id;
 		nvme_mi_endpoint_desc;
 		nvme_mi_ep_get_timeout;
 		nvme_mi_ep_set_timeout;
-		nvme_mi_first_ctrl;
 		nvme_mi_first_endpoint;
 		nvme_mi_init_transport_handle;
 		nvme_mi_mi_config_get;
@@ -106,7 +103,6 @@ LIBNVME_3 {
 		nvme_mi_mi_read_mi_data_subsys;
 		nvme_mi_mi_subsystem_health_status_poll;
 		nvme_mi_mi_xfer;
-		nvme_mi_next_ctrl;
 		nvme_mi_next_endpoint;
 		nvme_mi_open_mctp;
 		nvme_mi_scan_ep;
@@ -115,8 +111,6 @@ LIBNVME_3 {
 		nvme_mi_status_to_string;
 		nvme_mi_submit_entry;
 		nvme_mi_submit_exit;
-		nvme_namespace_attach_ctrls;
-		nvme_namespace_detach_ctrls;
 		nvme_filter_namespace;
 		nvme_namespace_first_path;
 		nvme_namespace_next_path;
@@ -124,7 +118,6 @@ LIBNVME_3 {
 		nvme_read_nbft;
 		nvme_next_host;
 		nvme_next_subsystem;
-		nvme_ns_attach;
 		nvme_ns_compare;
 		nvme_ns_flush;
 		nvme_ns_get_csi;
@@ -153,7 +146,6 @@ LIBNVME_3 {
 		nvme_read_config;
 		nvme_read_key;
 		nvme_refresh_topology;
-		nvme_release_fds;
 		nvme_rescan_ctrl;
 		nvme_revoke_tls_key;
 		nvme_scan_ctrl;
@@ -171,9 +163,6 @@ LIBNVME_3 {
 		nvme_set_ioctl_probing;
 		nvme_set_keyring;
 		nvme_set_logging_level;
-		nvme_set_probe_enabled;
-		nvme_set_property;
-		nvme_set_root;
 		nvme_skip_namespaces;
 		nvme_status_to_errno;
 		nvme_status_to_string;
