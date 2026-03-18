@@ -96,6 +96,7 @@ libnvme = library(
     'nvme', # produces libnvme.so
     sources,
     version: libnvme_so_version,
+    c_args: ['-fvisibility=hidden'],
     link_args: link_args,
     dependencies: deps,
     install: true,
