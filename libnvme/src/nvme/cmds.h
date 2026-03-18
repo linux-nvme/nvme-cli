@@ -5237,18 +5237,17 @@ nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
 
 /**
  * nvme_init_copy_range_elbt() - Constructs a copy range elbt structure
- * @elbt:
- * @eilbrts:	Expected initial logical block reference tag
+ * @elbt:	Expected logical block tags
+ * @eilbrt:	Expected initial logical block reference tag
+ * @size:	eilbrts size
  */
 static inline void
-nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
+nvme_init_copy_range_elbt(__u8 *elbt, __u8 *eilbrt, int size)
 {
 	int i;
 
-	for (i = 0; i < 8; i++)
-		elbt[9 - i] = (eilbrt >> (8 * i)) & 0xff;
-	elbt[1] = 0;
-	elbt[0] = 0;
+	for (i = 0; i < size; i++)
+		elbt[size - 1 - i] = eilbrt[i];
 }
 
 /**
@@ -5271,7 +5270,8 @@ nvme_init_copy_range_f0(struct nvme_copy_range_f0 *copy, __u16 *nlbs,
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
-		copy[i].elbt = htobe32(elbts[i]);
+		nvme_init_copy_range_elbt(copy[i].elbt, (__u8 *)&elbts[i],
+					  sizeof(elbts[i]));
 		copy[i].elbatm = htole16(elbatms[i]);
 		copy[i].elbat = htole16(elbats[i]);
 	}
@@ -5294,12 +5294,15 @@ nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 {
 	int i;
 
+	memset(copy, 0, sizeof(*copy) * nr);
+
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
 		copy[i].elbatm = htole16(elbatms[i]);
 		copy[i].elbat = htole16(elbats[i]);
-		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
+		nvme_init_copy_range_elbt(&copy[i].elbt[2], (__u8 *)&eilbrts[i],
+					  sizeof(eilbrts[i]));
 	}
 }
 
@@ -5328,7 +5331,8 @@ nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
 		copy[i].sopt = htole16(sopts[i]);
-		copy[i].elbt = htobe32(elbts[i]);
+		nvme_init_copy_range_elbt(copy[i].elbt, (__u8 *)&elbts[i],
+					  sizeof(elbts[i]));
 		copy[i].elbatm = htole16(elbatms[i]);
 		copy[i].elbat = htole16(elbats[i]);
 	}
@@ -5354,6 +5358,8 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 {
 	int i;
 
+	memset(copy, 0, sizeof(*copy) * nr);
+
 	for (i = 0; i < nr; i++) {
 		copy[i].snsid = htole32(snsids[i]);
 		copy[i].nlb = htole16(nlbs[i]);
@@ -5361,7 +5367,8 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 		copy[i].sopt = htole16(sopts[i]);
 		copy[i].elbatm = htole16(elbatms[i]);
 		copy[i].elbat = htole16(elbats[i]);
-		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
+		nvme_init_copy_range_elbt(&copy[i].elbt[2], (__u8 *)&eilbrts[i],
+					  sizeof(eilbrts[i]));
 	}
 }
 
