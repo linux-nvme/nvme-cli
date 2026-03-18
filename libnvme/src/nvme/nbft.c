@@ -17,6 +17,7 @@
 #include <libnvme.h>
 
 #include "private.h"
+#include "compiler_attributes.h"
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
@@ -711,7 +712,7 @@ static int parse_raw_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
 	return 0;
 }
 
-void nvme_free_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
+__public void nvme_free_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
 {
 	struct nbft_info_hfi **hfi;
 	struct nbft_info_security **sec;
@@ -737,7 +738,7 @@ void nvme_free_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
 	free(nbft);
 }
 
-int nvme_read_nbft(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
+__public int nvme_read_nbft(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
 		const char *filename)
 {
 	__u8 *raw_nbft = NULL;

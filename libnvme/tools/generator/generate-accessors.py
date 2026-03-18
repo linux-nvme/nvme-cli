@@ -392,7 +392,7 @@ def generate_hdr(f, prefix, struct_name, members):
 # Source (*.c) code emitters
 # ---------------------------------------------------------------------------
 
-PUB = ''  # PUB = '__public '  # Uncomment when merging the __public branch
+PUB = '__public '
 
 
 def emit_src_setter_dynstr(f, prefix, sname, mname):
@@ -646,7 +646,7 @@ def main():
         )
         for fname in files_to_include:
             f.write(f'#include "{fname}"\n')
-        # f.write('#include "compiler_attributes.h"\n')  # Uncomment when merging the __public branch
+        f.write('#include "compiler_attributes.h"\n')
         f.write('\n')
         f.write(''.join(src_parts))
 
