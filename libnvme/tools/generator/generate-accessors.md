@@ -1,296 +1,271 @@
 # Generate Accessors Tool
 
-This tool generates **setter and getter functions** for C structs automatically.
- It supports dynamic strings, fixed-size char arrays, const fields, and exclusion/inclusion lists.
-
-------
-
-## Compilation / Testing
-
-```bash
-make
-make test
-```
+This tool generates **setter and getter functions** for C structs automatically. It supports dynamic strings, fixed-size char arrays, and `const` fields, with control over which structs and members participate via **in-source annotations**.
 
 ------
 
 ## Usage
 
 ```
-./generate-accessors [options] <header-files>
+python3 generate-accessors.py [options] <header-files>
 ```
 
 **Options:**
 
-| Short | Long        | Argument | Description                                                  |
-| ----- | ----------- | -------- | ------------------------------------------------------------ |
-| `-h`  | `--h-out`   | `<file>` | Output: Full path (incl. directories) of the *.h file to generate. |
-| `-c`  | `--c-out`   | `<file>` | Output: Full path (incl. directories) of the *.c file to generate. |
-| `-e`  | `--excl`    | `<file>` | Exclusion list file with `struct::member` per line           |
-| `-i`  | `--incl`    | `<file>` | Inclusion list file with `struct` per line. The list of `struct` to be included in the generation. When not specified, accessors will be generated for all `struct` found in the `header-file`. |
-| `-p`  | `--prefix`  | `<str>`  | Prefix for generated function names                          |
-| `-v`  | `--verbose` | none     | Verbose output showing which `struct` is being processed     |
-| `-H`  | `--help`    | none     | Show this help message                                       |
+| Short | Long       | Argument | Description                                              |
+| ----- | ---------- | -------- | -------------------------------------------------------- |
+| `-h`  | `--h-out`  | `<file>` | Full path of the `*.h` file to generate. Default: `accessors.h` |
+| `-c`  | `--c-out`  | `<file>` | Full path of the `*.c` file to generate. Default: `accessors.c` |
+| `-l`  | `--ld-out` | `<file>` | Full path of the `*.ld` file to generate. Default: `accessors.ld` |
+| `-p`  | `--prefix` | `<str>`  | Prefix prepended to every generated function name        |
+| `-v`  | `--verbose`| none     | Verbose output showing which structs are being processed |
+| `-H`  | `--help`   | none     | Show this help message                                   |
 
 ------
 
-## Examples
+## Annotations
 
-### Single Struct Example
+Struct inclusion and member behaviour are controlled by **annotations written as comments directly in the header file**. Both `/* */` (block) and `//` (line) comment styles are supported for every annotation.
 
-Header file `person.h`:
+### Struct inclusion — `generate-accessors`
 
-```
-struct person {
-    char *name;
-    int age;
-    const char *id;
+Place the annotation on the same line as the struct's opening brace to opt that struct in to code generation:
+
+```c
+struct nvme_ctrl { /*!generate-accessors*/
+    ...
 };
 ```
 
-Command:
-
-```
-./generate-accessors person.h
-```
-
-Generated `accessors.h`:
-
-```
-// SPDX-License-Identifier: LGPL-2.1-or-later
-/**
- * This file is part of libnvme.
- *
- *   ____                           _           _    ____          _
- *  / ___| ___ _ __   ___ _ __ __ _| |_ ___  __| |  / ___|___   __| | ___
- * | |  _ / _ \ '_ \ / _ \ '__/ _` | __/ _ \/ _` | | |   / _ \ / _` |/ _ \
- * | |_| |  __/ | | |  __/ | | (_| | ||  __/ (_| | | |__| (_) | (_| |  __/
- *  \____|\___|_| |_|\___|_|  \__,_|\__\___|\__,_|  \____\___/ \__,_|\___|
- *
- * Auto-generated struct member accessors (setter/getter)
- */
-
-#ifndef ACCESSORS_H
-#define ACCESSORS_H
-
-#include <stdlib.h>
-#include <string.h>
-
-#include "structs.h"
-
-/****************************************************************************
- * Accessors for: struct person
- */
-void person_name_set(struct person *p, const char *name);
-const char * person_name_get(struct person *p);
-
-void person_age_set(struct person *p, int age);
-int person_age_get(struct person *p);
-
-int person_id_get(struct person *p);
-
-#endif /* ACCESSORS_H */
-
+```c
+struct nvme_ctrl { //!generate-accessors
+    ...
+};
 ```
 
-Generated `accessors.c`:
+Only structs carrying this annotation will have accessors generated. All other structs in the header are ignored.
 
+### Member exclusion — `accessors:none`
+
+Place the annotation on a member's declaration line to suppress accessor generation for that member entirely (no setter, no getter):
+
+```c
+struct nvme_ctrl { /*!generate-accessors*/
+    char *name;
+    char *state;      //!accessors:none
+    char *subsysnqn;  /*!accessors:none*/
+};
 ```
-// SPDX-License-Identifier: LGPL-2.1-or-later
-/**
- * This file is part of libnvme.
- *
- *   ____                           _           _    ____          _
- *  / ___| ___ _ __   ___ _ __ __ _| |_ ___  __| |  / ___|___   __| | ___
- * | |  _ / _ \ '_ \ / _ \ '__/ _` | __/ _ \/ _` | | |   / _ \ / _` |/ _ \
- * | |_| |  __/ | | |  __/ | | (_| | ||  __/ (_| | | |__| (_) | (_| |  __/
- *  \____|\___|_| |_|\___|_|  \__,_|\__\___|\__,_|  \____\___/ \__,_|\___|
- *
- * Auto-generated struct member accessors (setter/getter)
- */
 
-#include <stdlib.h>
-#include <string.h>
-#include "accessors.h"
+### Read-only members — `accessors:readonly`
 
-/****************************************************************************
- * Accessors for: struct person
- */
-void person_name_set(struct person *p, const char *name) {
-    free(p->name);
-    p->name = name ? strdup(name) : NULL;
-}
+Place the annotation on a member's declaration line to generate only a getter (no setter). This has the same effect as declaring the member `const`, but without changing the type in the struct:
 
-const char * person_name_get(struct person *p) {
-    return p->name;
-}
-
-void person_age_set(struct person *p, int age) {
-    p->age = age;
-}
-
-int person_age_get(struct person *p) {
-    return p->age;
-}
-
-int person_id_get(struct person *p) {
-    return p->id;
-}
+```c
+struct nvme_ctrl { /*!generate-accessors*/
+    char *name;
+    char *firmware;   //!accessors:readonly
+    char *model;      /*!accessors:readonly*/
+};
 ```
+
+Members declared with the `const` qualifier are also automatically read-only.
+
+### Annotation summary
+
+| Annotation                  | Where        | Effect                          |
+| --------------------------- | ------------ | ------------------------------- |
+| `/*!generate-accessors*/`   | struct brace | Include this struct             |
+| `//!generate-accessors`     | struct brace | Include this struct             |
+| `/*!accessors:none*/`       | member line  | Skip this member entirely       |
+| `//!accessors:none`         | member line  | Skip this member entirely       |
+| `/*!accessors:readonly*/`   | member line  | Generate getter only            |
+| `//!accessors:readonly`     | member line  | Generate getter only            |
+| `const` qualifier on member | member type  | Generate getter only (built-in) |
 
 ------
 
-### Multi-Struct Example
+## Example
 
-Header file `example_structs.h`:
+### Header file (`person.h`)
 
-```
-struct person {
+```c
+struct person { /*!generate-accessors*/
     char *name;
     int age;
-    const char *id;
+    const char *id;       /* const → getter only, no annotation needed */
+    char *secret;         //!accessors:none
+    char *role;           //!accessors:readonly
 };
 
-struct car {
+struct car { /*!generate-accessors*/
     char *model;
     int year;
     const char *vin;
 };
 ```
 
-Command:
+### Command
 
 ```
-./generate-accessors --prefix my_ example_structs.h
+python3 generate-accessors.py person.h
 ```
 
-Generated `accessors.h`:
+### Generated `accessors.h`
 
-```
-// SPDX-License-Identifier: LGPL-2.1-or-later
-/**
- * This file is part of libnvme.
- *
- *   ____                           _           _    ____          _
- *  / ___| ___ _ __   ___ _ __ __ _| |_ ___  __| |  / ___|___   __| | ___
- * | |  _ / _ \ '_ \ / _ \ '__/ _` | __/ _ \/ _` | | |   / _ \ / _` |/ _ \
- * | |_| |  __/ | | |  __/ | | (_| | ||  __/ (_| | | |__| (_) | (_| |  __/
- *  \____|\___|_| |_|\___|_|  \__,_|\__\___|\__,_|  \____\___/ \__,_|\___|
- *
- * Auto-generated struct member accessors (setter/getter)
- */
+```c
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
+/* ... banner ... */
 
-#ifndef ACCESSORS_H
-#define ACCESSORS_H
+#ifndef _ACCESSORS_H_
+#define _ACCESSORS_H_
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <linux/types.h> /* __u32, __u64, etc. */
 
-#include "example_structs.h"
+/* Forward declarations. These are internal (opaque) structs. */
+struct person;
+struct car;
 
 /****************************************************************************
  * Accessors for: struct person
+ ****************************************************************************/
+
+/**
+ * person_set_name() - Set name.
+ * @p: The &struct person instance to update.
+ * @name: New string; a copy is stored. Pass NULL to clear.
  */
-void my_person_name_set(struct person *p, const char *name);
-const char * my_person_name_get(struct person *p);
+void person_set_name(struct person *p, const char *name);
 
-void my_person_age_set(struct person *p, int age);
-int my_person_age_get(struct person *p);
+/**
+ * person_get_name() - Get name.
+ * @p: The &struct person instance to query.
+ *
+ * Return: The value of the name field, or NULL if not set.
+ */
+const char *person_get_name(const struct person *p);
 
-const char * my_person_id_get(struct person *p);
+/**
+ * person_set_age() - Set age.
+ * @p: The &struct person instance to update.
+ * @age: Value to assign to the age field.
+ */
+void person_set_age(struct person *p, int age);
 
+/**
+ * person_get_age() - Get age.
+ * @p: The &struct person instance to query.
+ *
+ * Return: The value of the age field.
+ */
+int person_get_age(const struct person *p);
+
+/**
+ * person_get_id() - Get id.
+ * @p: The &struct person instance to query.
+ *
+ * Return: The value of the id field, or NULL if not set.
+ */
+const char *person_get_id(const struct person *p);
+
+/* secret: no accessors (//!accessors:none) */
+
+/**
+ * person_get_role() - Get role.
+ * @p: The &struct person instance to query.
+ *
+ * Return: The value of the role field, or NULL if not set.
+ */
+const char *person_get_role(const struct person *p);
 
 /****************************************************************************
  * Accessors for: struct car
- */
-void my_car_model_set(struct car *p, const char *model);
-const char * my_car_model_get(struct car *p);
+ ****************************************************************************/
 
-void my_car_year_set(struct car *p, int year);
-int my_car_year_get(struct car *p);
+void car_set_model(struct car *p, const char *model);
+const char *car_get_model(const struct car *p);
 
-const char * my_car_vin_get(struct car *p);
+void car_set_year(struct car *p, int year);
+int car_get_year(const struct car *p);
 
-#endif /* ACCESSORS_H */
+const char *car_get_vin(const struct car *p);
 
+#endif /* _ACCESSORS_H_ */
 ```
 
-Generated `accessors.c`:
+> **Note:** The `secret` member is absent because of `//!accessors:none`. The `role` member has only a getter because of `//!accessors:readonly`. The `id` and `vin` members have only getters because they are declared `const`.
 
-```
+### Generated `accessors.c`
+
+```c
 // SPDX-License-Identifier: LGPL-2.1-or-later
-/**
- * This file is part of libnvme.
- *
- *   ____                           _           _    ____          _
- *  / ___| ___ _ __   ___ _ __ __ _| |_ ___  __| |  / ___|___   __| | ___
- * | |  _ / _ \ '_ \ / _ \ '__/ _` | __/ _ \/ _` | | |   / _ \ / _` |/ _ \
- * | |_| |  __/ | | |  __/ | | (_| | ||  __/ (_| | | |__| (_) | (_| |  __/
- *  \____|\___|_| |_|\___|_|  \__,_|\__\___|\__,_|  \____\___/ \__,_|\___|
- *
- * Auto-generated struct member accessors (setter/getter)
- */
+/* ... banner ... */
 
 #include <stdlib.h>
 #include <string.h>
 #include "accessors.h"
 
+#include "person.h"
+#include "compiler_attributes.h"
+
 /****************************************************************************
  * Accessors for: struct person
- */
-void my_person_name_set(struct person *p, const char *name) {
+ ****************************************************************************/
+
+__public void person_set_name(struct person *p, const char *name)
+{
     free(p->name);
     p->name = name ? strdup(name) : NULL;
 }
 
-const char * my_person_name_get(struct person *p) {
+__public const char *person_get_name(const struct person *p)
+{
     return p->name;
 }
 
-void my_person_age_set(struct person *p, int age) {
+__public void person_set_age(struct person *p, int age)
+{
     p->age = age;
 }
 
-int my_person_age_get(struct person *p) {
+__public int person_get_age(const struct person *p)
+{
     return p->age;
 }
 
-const char * my_person_id_get(struct person *p) {
+__public const char *person_get_id(const struct person *p)
+{
     return p->id;
 }
 
-/****************************************************************************
- * Accessors for: struct car
- */
-void my_car_model_set(struct car *p, const char *model) {
-    free(p->model);
-    p->model = model ? strdup(model) : NULL;
+__public const char *person_get_role(const struct person *p)
+{
+    return p->role;
 }
 
-const char * my_car_model_get(struct car *p) {
-    return p->model;
-}
-
-void my_car_year_set(struct car *p, int year) {
-    p->year = year;
-}
-
-int my_car_year_get(struct car *p) {
-    return p->year;
-}
-
-const char * my_car_vin_get(struct car *p) {
-    return p->vin;
-}
+/* ... struct car accessors follow the same pattern ... */
 ```
 
 ------
 
-### Notes
+## Limitations
 
-1. **Dynamic strings** (`char *`) are NULL-safe.
-2. **Const fields** generate **getter-only functions**.
-3. Numeric fields and other types have normal setters/getters.
-4. The `--prefix` option adds a custom prefix to all generated functions.
-5. The exclusion list (`--excl`) prevents generating accessors for specific `struct:member` pairs.
-7. The inclusion list (`--incl`) limits generation to only the listed `struct` names.
+- `typedef struct` is not supported.
+- Nested structs (a `struct` member whose type is also a `struct`) are skipped.
+- Only `char *` pointer members are supported; other pointer types are skipped.
+
+------
+
+## Notes
+
+1. **Dynamic strings** (`char *`) — setters store a `strdup()` copy; passing `NULL` clears the field.
+2. **Fixed char arrays** (`char foo[N]`) — setters use `snprintf`, always NUL-terminated.
+3. **`const` members** — only a getter is generated, no setter.
+4. **`//!accessors:readonly`** — same effect as `const`: getter only.
+5. **`//!accessors:none`** — member is completely ignored by the generator.
+6. **`--prefix`** — prepended to every function name (e.g. `--prefix nvme_` turns `ctrl_set_name` into `nvme_ctrl_set_name`).
+7. **Line length** — generated code is automatically wrapped to stay within the 80-column limit required by `checkpatch.pl`.

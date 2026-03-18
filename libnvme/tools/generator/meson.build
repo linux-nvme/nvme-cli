@@ -9,12 +9,13 @@
 # pre-generated and committed to the source tree.  They are NOT
 # regenerated during a normal build.
 #
-# To regenerate them after changing private.h or the include/exclude lists:
+# To regenerate them after changing private.h (e.g. adding or removing
+# a /*!generate-accessors*/ annotation):
 #
 #   meson compile -C <build-dir> update-accessors
 
 # ---------------------------------------------------------------------------
-# Developer-only helper: build the generator and regenerate if structs change.
+# Developer-only helper: run the generator and regenerate if structs change.
 # NOT executed during a normal build (build_by_default: false).
 # Usage: meson compile -C <build-dir> update-accessors
 # ---------------------------------------------------------------------------
@@ -24,31 +25,16 @@
 libnvme_src = libnvme_srcroot / 'src'
 libnvme_src_nvme = libnvme_src / 'nvme'
 
-generate_accessors = executable(
-    'generate-accessors',
-    [
-        'generate-accessors.c',
-    ],
-    c_args: [
-        '-D_GNU_SOURCE',
-    ],
-    dependencies: [
-        config_dep,
-    ],
-    native: true,
-    build_by_default: false,
-)
+_py3 = find_program('python3', required: true)
 
 run_target(
     'update-accessors',
     command: [
         'update-accessors.sh',
-        generate_accessors,
+        _py3,
+        files('generate-accessors.py'),
         libnvme_src_nvme,
         libnvme_src,
-        meson.current_source_dir() / 'generate-accessors-include.list',
-        meson.current_source_dir() / 'generate-accessors-exclude.list',
         libnvme_src_nvme / 'private.h',
     ],
-    depends: generate_accessors,
 )

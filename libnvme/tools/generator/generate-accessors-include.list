@@ -1,8 +1,0 @@
-# SPDX-License-Identifier: LGPL-2.1-or-later
-
-nvme_path
-nvme_ns
-nvme_ctrl
-nvme_subsystem
-nvme_host
-nvme_fabric_options
