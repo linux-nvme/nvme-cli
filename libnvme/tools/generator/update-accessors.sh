@@ -19,21 +19,19 @@
 # knows exactly what to change in accessors.ld.
 #
 # Arguments (supplied by the Meson run_target):
-#   $1      path to the compiled generate-accessors binary
-#   $2      source directory for accessors.c and accessors.h (src/nvme/)
-#   $3      source directory for accessors.ld (src/)
-#   $4      path to generate-accessors-include.list
-#   $5      path to generate-accessors-exclude.list
-#   $6 ...  one or more input headers (wildcards are accepted)
+#   $1      path to the python3 interpreter
+#   $2      path to generate-accessors.py
+#   $3      source directory for accessors.c and accessors.h (src/nvme/)
+#   $4      source directory for accessors.ld (src/)
+#   $5 ...  one or more input headers (wildcards are accepted)
 
 set -euo pipefail
 
-GENERATOR="${1:?missing generator binary}"
-NVME_SRCDIR="${2:?missing nvme source directory}"
-LD_SRCDIR="${3:?missing ld source directory}"
-INCL_FILE="${4:?missing file generate-accessors-include.list}"
-EXCL_FILE="${5:?missing file generate-accessors-exclude.list}"
-shift 5
+PYTHON="${1:?missing python3 interpreter}"
+GENERATOR="${2:?missing generator script}"
+NVME_SRCDIR="${3:?missing nvme source directory}"
+LD_SRCDIR="${4:?missing ld source directory}"
+shift 4
 INPUT_HEADERS=("$@")
 [ ${#INPUT_HEADERS[@]} -gt 0 ] || { echo "error: no input headers specified" >&2; exit 1; }
 
@@ -42,12 +40,10 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 echo "Regenerating accessor files..."
 
-"$GENERATOR" \
+"$PYTHON" "$GENERATOR" \
     --h-out  "$TMPDIR/accessors.h"  \
     --c-out  "$TMPDIR/accessors.c"  \
     --ld-out "$TMPDIR/accessors.ld" \
-    --incl   "$INCL_FILE"           \
-    --excl   "$EXCL_FILE"           \
     "${INPUT_HEADERS[@]}"
 
 # ---------------------------------------------------------------------------

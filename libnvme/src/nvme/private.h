@@ -128,7 +128,7 @@ struct nvme_transport_handle {
 	struct nvme_log *log;
 };
 
-struct nvme_path {
+struct nvme_path { /*!generate-accessors*/
 	struct list_node entry;
 	struct list_node nentry;
 
@@ -140,7 +140,7 @@ struct nvme_path {
 	char *ana_state;
 	char *numa_nodes;
 	int grpid;
-	int queue_depth;
+	int queue_depth; //!accessors:none
 };
 
 struct nvme_ns_head {
@@ -150,7 +150,7 @@ struct nvme_ns_head {
 	char *sysfs_dir;
 };
 
-struct nvme_ns {
+struct nvme_ns { /*!generate-accessors*/
 	struct list_node entry;
 
 	struct nvme_subsystem *s;
@@ -161,7 +161,7 @@ struct nvme_ns {
 	struct nvme_transport_handle *hdl;
 	__u32 nsid;
 	char *name;
-	char *generic_name;
+	char *generic_name; //!accessors:none
 	char *sysfs_dir;
 
 	int lba_shift;
@@ -176,7 +176,7 @@ struct nvme_ns {
 	enum nvme_csi csi;
 };
 
-struct nvme_ctrl {
+struct nvme_ctrl { /*!generate-accessors*/
 	struct list_node entry;
 	struct list_head paths;
 	struct list_head namespaces;
@@ -186,16 +186,16 @@ struct nvme_ctrl {
 	struct nvme_transport_handle *hdl;
 	char *name;
 	char *sysfs_dir;
-	char *address;
+	char *address; //!accessors:none
 	char *firmware;
 	char *model;
-	char *state;
+	char *state; //!accessors:none
 	char *numa_node;
 	char *queue_count;
 	char *serial;
 	char *sqsize;
 	char *transport;
-	char *subsysnqn;
+	char *subsysnqn; //!accessors:none
 	char *traddr;
 	char *trsvcid;
 	char *dhchap_host_key;
@@ -206,7 +206,7 @@ struct nvme_ctrl {
 	char *cntrltype;
 	char *cntlid;
 	char *dctype;
-	char *phy_slot;
+	char *phy_slot; //!accessors:none
 	char *host_traddr;
 	char *host_iface;
 	bool discovery_ctrl;
@@ -216,7 +216,7 @@ struct nvme_ctrl {
 	struct nvme_fabrics_config cfg;
 };
 
-struct nvme_subsystem {
+struct nvme_subsystem { /*!generate-accessors*/
 	struct list_node entry;
 	struct list_head ctrls;
 	struct list_head namespaces;
@@ -233,7 +233,7 @@ struct nvme_subsystem {
 	char *iopolicy;
 };
 
-struct nvme_host {
+struct nvme_host { /*!generate-accessors*/
 	struct list_node entry;
 	struct list_head subsystems;
 	struct nvme_global_ctx *ctx;
@@ -242,12 +242,12 @@ struct nvme_host {
 	char *hostid;
 	char *dhchap_host_key;
 	char *hostsymname;
-	bool pdc_enabled;
+	bool pdc_enabled; //!accessors:none
 	bool pdc_enabled_valid; /* set if pdc_enabled doesn't have an undefined
 				 * value */
 };
 
-struct nvme_fabric_options {
+struct nvme_fabric_options { /*!generate-accessors*/
 	bool cntlid;
 	bool concat;
 	bool ctrl_loss_tmo;
