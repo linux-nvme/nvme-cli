@@ -405,15 +405,6 @@ struct nvmf_context {
 	void *user_data;
 };
 
-struct fabric_args {
-	const char *subsysnqn;
-	const char *transport;
-	const char *traddr;
-	const char *trsvcid;
-	const char *host_traddr;
-	const char *host_iface;
-};
-
 int nvme_set_attr(const char *dir, const char *attr, const char *value);
 
 int json_read_config(struct nvme_global_ctx *ctx, const char *config_file);
