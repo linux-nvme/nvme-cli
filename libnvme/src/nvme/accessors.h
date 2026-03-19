@@ -242,26 +242,12 @@ uint64_t nvme_ns_get_lba_util(const struct nvme_ns *p);
  ****************************************************************************/
 
 /**
- * nvme_ctrl_set_name() - Set name.
- * @p: The &struct nvme_ctrl instance to update.
- * @name: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_name(struct nvme_ctrl *p, const char *name);
-
-/**
  * nvme_ctrl_get_name() - Get name.
  * @p: The &struct nvme_ctrl instance to query.
  *
  * Return: The value of the name field, or NULL if not set.
  */
 const char *nvme_ctrl_get_name(const struct nvme_ctrl *p);
-
-/**
- * nvme_ctrl_set_sysfs_dir() - Set sysfs_dir.
- * @p: The &struct nvme_ctrl instance to update.
- * @sysfs_dir: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_sysfs_dir(struct nvme_ctrl *p, const char *sysfs_dir);
 
 /**
  * nvme_ctrl_get_sysfs_dir() - Get sysfs_dir.
@@ -272,26 +258,12 @@ void nvme_ctrl_set_sysfs_dir(struct nvme_ctrl *p, const char *sysfs_dir);
 const char *nvme_ctrl_get_sysfs_dir(const struct nvme_ctrl *p);
 
 /**
- * nvme_ctrl_set_firmware() - Set firmware.
- * @p: The &struct nvme_ctrl instance to update.
- * @firmware: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_firmware(struct nvme_ctrl *p, const char *firmware);
-
-/**
  * nvme_ctrl_get_firmware() - Get firmware.
  * @p: The &struct nvme_ctrl instance to query.
  *
  * Return: The value of the firmware field, or NULL if not set.
  */
 const char *nvme_ctrl_get_firmware(const struct nvme_ctrl *p);
-
-/**
- * nvme_ctrl_set_model() - Set model.
- * @p: The &struct nvme_ctrl instance to update.
- * @model: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_model(struct nvme_ctrl *p, const char *model);
 
 /**
  * nvme_ctrl_get_model() - Get model.
@@ -302,26 +274,12 @@ void nvme_ctrl_set_model(struct nvme_ctrl *p, const char *model);
 const char *nvme_ctrl_get_model(const struct nvme_ctrl *p);
 
 /**
- * nvme_ctrl_set_numa_node() - Set numa_node.
- * @p: The &struct nvme_ctrl instance to update.
- * @numa_node: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_numa_node(struct nvme_ctrl *p, const char *numa_node);
-
-/**
  * nvme_ctrl_get_numa_node() - Get numa_node.
  * @p: The &struct nvme_ctrl instance to query.
  *
  * Return: The value of the numa_node field, or NULL if not set.
  */
 const char *nvme_ctrl_get_numa_node(const struct nvme_ctrl *p);
-
-/**
- * nvme_ctrl_set_queue_count() - Set queue_count.
- * @p: The &struct nvme_ctrl instance to update.
- * @queue_count: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_queue_count(struct nvme_ctrl *p, const char *queue_count);
 
 /**
  * nvme_ctrl_get_queue_count() - Get queue_count.
@@ -332,26 +290,12 @@ void nvme_ctrl_set_queue_count(struct nvme_ctrl *p, const char *queue_count);
 const char *nvme_ctrl_get_queue_count(const struct nvme_ctrl *p);
 
 /**
- * nvme_ctrl_set_serial() - Set serial.
- * @p: The &struct nvme_ctrl instance to update.
- * @serial: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_serial(struct nvme_ctrl *p, const char *serial);
-
-/**
  * nvme_ctrl_get_serial() - Get serial.
  * @p: The &struct nvme_ctrl instance to query.
  *
  * Return: The value of the serial field, or NULL if not set.
  */
 const char *nvme_ctrl_get_serial(const struct nvme_ctrl *p);
-
-/**
- * nvme_ctrl_set_sqsize() - Set sqsize.
- * @p: The &struct nvme_ctrl instance to update.
- * @sqsize: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_sqsize(struct nvme_ctrl *p, const char *sqsize);
 
 /**
  * nvme_ctrl_get_sqsize() - Get sqsize.
@@ -362,13 +306,6 @@ void nvme_ctrl_set_sqsize(struct nvme_ctrl *p, const char *sqsize);
 const char *nvme_ctrl_get_sqsize(const struct nvme_ctrl *p);
 
 /**
- * nvme_ctrl_set_transport() - Set transport.
- * @p: The &struct nvme_ctrl instance to update.
- * @transport: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_transport(struct nvme_ctrl *p, const char *transport);
-
-/**
  * nvme_ctrl_get_transport() - Get transport.
  * @p: The &struct nvme_ctrl instance to query.
  *
@@ -377,26 +314,12 @@ void nvme_ctrl_set_transport(struct nvme_ctrl *p, const char *transport);
 const char *nvme_ctrl_get_transport(const struct nvme_ctrl *p);
 
 /**
- * nvme_ctrl_set_traddr() - Set traddr.
- * @p: The &struct nvme_ctrl instance to update.
- * @traddr: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_traddr(struct nvme_ctrl *p, const char *traddr);
-
-/**
  * nvme_ctrl_get_traddr() - Get traddr.
  * @p: The &struct nvme_ctrl instance to query.
  *
  * Return: The value of the traddr field, or NULL if not set.
  */
 const char *nvme_ctrl_get_traddr(const struct nvme_ctrl *p);
-
-/**
- * nvme_ctrl_set_trsvcid() - Set trsvcid.
- * @p: The &struct nvme_ctrl instance to update.
- * @trsvcid: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_trsvcid(struct nvme_ctrl *p, const char *trsvcid);
 
 /**
  * nvme_ctrl_get_trsvcid() - Get trsvcid.
@@ -488,13 +411,6 @@ void nvme_ctrl_set_tls_key(struct nvme_ctrl *p, const char *tls_key);
 const char *nvme_ctrl_get_tls_key(const struct nvme_ctrl *p);
 
 /**
- * nvme_ctrl_set_cntrltype() - Set cntrltype.
- * @p: The &struct nvme_ctrl instance to update.
- * @cntrltype: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_cntrltype(struct nvme_ctrl *p, const char *cntrltype);
-
-/**
  * nvme_ctrl_get_cntrltype() - Get cntrltype.
  * @p: The &struct nvme_ctrl instance to query.
  *
@@ -503,26 +419,12 @@ void nvme_ctrl_set_cntrltype(struct nvme_ctrl *p, const char *cntrltype);
 const char *nvme_ctrl_get_cntrltype(const struct nvme_ctrl *p);
 
 /**
- * nvme_ctrl_set_cntlid() - Set cntlid.
- * @p: The &struct nvme_ctrl instance to update.
- * @cntlid: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_cntlid(struct nvme_ctrl *p, const char *cntlid);
-
-/**
  * nvme_ctrl_get_cntlid() - Get cntlid.
  * @p: The &struct nvme_ctrl instance to query.
  *
  * Return: The value of the cntlid field, or NULL if not set.
  */
 const char *nvme_ctrl_get_cntlid(const struct nvme_ctrl *p);
-
-/**
- * nvme_ctrl_set_dctype() - Set dctype.
- * @p: The &struct nvme_ctrl instance to update.
- * @dctype: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_dctype(struct nvme_ctrl *p, const char *dctype);
 
 /**
  * nvme_ctrl_get_dctype() - Get dctype.
@@ -541,26 +443,12 @@ const char *nvme_ctrl_get_dctype(const struct nvme_ctrl *p);
 const char *nvme_ctrl_get_phy_slot(const struct nvme_ctrl *p);
 
 /**
- * nvme_ctrl_set_host_traddr() - Set host_traddr.
- * @p: The &struct nvme_ctrl instance to update.
- * @host_traddr: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_host_traddr(struct nvme_ctrl *p, const char *host_traddr);
-
-/**
  * nvme_ctrl_get_host_traddr() - Get host_traddr.
  * @p: The &struct nvme_ctrl instance to query.
  *
  * Return: The value of the host_traddr field, or NULL if not set.
  */
 const char *nvme_ctrl_get_host_traddr(const struct nvme_ctrl *p);
-
-/**
- * nvme_ctrl_set_host_iface() - Set host_iface.
- * @p: The &struct nvme_ctrl instance to update.
- * @host_iface: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_ctrl_set_host_iface(struct nvme_ctrl *p, const char *host_iface);
 
 /**
  * nvme_ctrl_get_host_iface() - Get host_iface.
