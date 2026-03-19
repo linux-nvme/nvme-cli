@@ -968,13 +968,15 @@ static const char *lookup_context(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 
 	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
-			if (__nvme_lookup_ctrl(s, nvme_ctrl_get_transport(c),
-					       nvme_ctrl_get_traddr(c),
-					       NULL,
-					       NULL,
-					       nvme_ctrl_get_trsvcid(c),
-					       NULL,
-					       NULL))
+			struct nvmf_context fctx = {
+				.transport = nvme_ctrl_get_transport(c),
+				.traddr = nvme_ctrl_get_traddr(c),
+				.host_traddr = NULL,
+				.host_iface = NULL,
+				.trsvcid = nvme_ctrl_get_trsvcid(c),
+				.subsysnqn = NULL,
+			};
+			if (__nvme_lookup_ctrl(s, &fctx, NULL))
 				return nvme_subsystem_get_application(s);
 		}
 	}
@@ -997,14 +999,16 @@ __public int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	s = nvme_lookup_subsystem(h, NULL, nvme_ctrl_get_subsysnqn(c));
 	if (s) {
 		nvme_ctrl_t fc;
+		struct nvmf_context fctx = {
+			.transport = nvme_ctrl_get_transport(c),
+			.traddr = nvme_ctrl_get_traddr(c),
+			.host_traddr = nvme_ctrl_get_host_traddr(c),
+			.host_iface = nvme_ctrl_get_trsvcid(c),
+			.trsvcid = nvme_ctrl_get_trsvcid(c),
+			.subsysnqn = NULL,
+		};
 
-		fc = __nvme_lookup_ctrl(s, nvme_ctrl_get_transport(c),
-					nvme_ctrl_get_traddr(c),
-					nvme_ctrl_get_host_traddr(c),
-					nvme_ctrl_get_host_iface(c),
-					nvme_ctrl_get_trsvcid(c),
-					NULL,
-					NULL);
+		fc = __nvme_lookup_ctrl(s, &fctx, NULL);
 		if (fc) {
 			const char *key;
 
@@ -2439,7 +2443,6 @@ __public int nvmf_config_modify(struct nvme_global_ctx *ctx,
 		nvme_msg(ctx, LOG_ERR, "Failed to lookup controller\n");
 		return -ENODEV;
 	}
-
 	if (fctx->ctrlkey)
 		nvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
 

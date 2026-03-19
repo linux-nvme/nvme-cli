@@ -381,10 +381,9 @@ int __nvme_transport_handle_open_mi(struct nvme_transport_handle *hdl, const cha
 int __nvme_transport_handle_init_mi(struct nvme_transport_handle *hdl);
 void __nvme_transport_handle_close_mi(struct nvme_transport_handle *hdl);
 
-nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
-			       const char *traddr, const char *host_traddr,
-			       const char *host_iface, const char *trsvcid,
-			       const char *subsysnqn, nvme_ctrl_t p);
+nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s,
+			       struct nvmf_context *fctx,
+			       nvme_ctrl_t p);
 
 void *__nvme_alloc(size_t len);
 
