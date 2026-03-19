@@ -1102,8 +1102,10 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 		const struct nvme_fabrics_config *cfg,
 		bool *discover, nvme_ctrl_t *cp)
 {
-	char *traddr = NULL, *trsvcid = NULL;
-	const char *transport;
+	struct nvmf_context fctx = {
+		.host_traddr = host_traddr,
+		.host_iface = host_iface,
+	};
 	nvme_ctrl_t c;
 	int ret;
 
@@ -1113,8 +1115,8 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_IP4:
 		case NVMF_ADDR_FAMILY_IP6:
-			traddr = e->traddr;
-			trsvcid = e->trsvcid;
+			fctx.traddr = e->traddr;
+			fctx.trsvcid = e->trsvcid;
 			break;
 		default:
 			nvme_msg(h->ctx, LOG_ERR,
@@ -1126,7 +1128,7 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
         case NVMF_TRTYPE_FC:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
-			traddr = e->traddr;
+			fctx.traddr = e->traddr;
 			break;
 		default:
 			nvme_msg(h->ctx, LOG_ERR,
@@ -1136,7 +1138,7 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 		}
 		break;
 	case NVMF_TRTYPE_LOOP:
-		traddr = strlen(e->traddr) ? e->traddr : NULL;
+		fctx.traddr = strlen(e->traddr) ? e->traddr : NULL;
 		break;
 	default:
 		nvme_msg(h->ctx, LOG_ERR, "skipping unsupported transport %d\n",
@@ -1144,18 +1146,18 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 		return -EINVAL;
 	}
 
-	transport = nvmf_trtype_str(e->trtype);
+	fctx.transport = nvmf_trtype_str(e->trtype);
+	fctx.subsysnqn = e->subnqn;
 
 	nvme_msg(h->ctx, LOG_DEBUG, "lookup ctrl "
 		 "(transport: %s, traddr: %s, trsvcid %s)\n",
-		 transport, traddr, trsvcid);
+		 fctx.transport, fctx.traddr, fctx.trsvcid);
 
-	ret = nvme_create_ctrl(h->ctx, e->subnqn, transport, traddr,
-			       host_traddr, host_iface, trsvcid, &c);
+	ret = _nvme_create_ctrl(h->ctx, &fctx, &c);
 	if (ret) {
 		nvme_msg(h->ctx, LOG_DEBUG, "skipping discovery entry, "
 			 "failed to allocate %s controller with traddr %s\n",
-			 transport, traddr);
+			 fctx.transport, fctx.traddr);
 		return ret;
 	}
 
@@ -2070,9 +2072,7 @@ static int __create_discovery_ctrl(struct nvme_global_ctx *ctx,
 	nvme_ctrl_t c;
 	int tmo, ret;
 
-	ret = nvme_create_ctrl(ctx, fctx->subsysnqn, fctx->transport,
-			     fctx->traddr, fctx->host_traddr,
-			     fctx->host_iface, fctx->trsvcid, &c);
+	ret = _nvme_create_ctrl(ctx, fctx, &c);
 	if (ret)
 		return ret;
 
@@ -2551,9 +2551,7 @@ static int nbft_connect(struct nvme_global_ctx *ctx,
 	if (c && nvme_ctrl_get_name(c))
 		return 0;
 
-	ret = nvme_create_ctrl(ctx, fctx->subsysnqn, fctx->transport,
-			     fctx->traddr, fctx->host_traddr,
-			     fctx->host_iface, fctx->trsvcid, &c);
+	ret = _nvme_create_ctrl(ctx, fctx, &c);
 	if (ret)
 		return ret;
 
@@ -3034,9 +3032,7 @@ __public int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx
 		return -EALREADY;
 	}
 
-	err = nvme_create_ctrl(ctx, fctx->subsysnqn, fctx->transport,
-		fctx->traddr, fctx->host_traddr, fctx->host_iface,
-		fctx->trsvcid, &c);
+	err = _nvme_create_ctrl(ctx, fctx, &c);
 	if (err)
 		return err;
 
