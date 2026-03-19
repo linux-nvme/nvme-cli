@@ -306,51 +306,6 @@ struct nvme_global_ctx {
 #endif
 };
 
-struct nvmf_discovery_ctx {
-	/* defaults */
-	int default_max_discovery_retries;
-	int default_keep_alive_timeout;
-
-	void (*discovery_log)(struct nvmf_discovery_ctx *dctx,
-			bool connect,
-			struct nvmf_discovery_log *log,
-			uint64_t numrec, void *user_data);
-	void (*already_connected)(struct nvme_host *host,
-			struct nvmf_disc_log_entry *entry,
-			void *user_data);
-	bool (*decide_retry)(struct nvmf_discovery_ctx *dctx, int err,
-			void *user_data);
-	void (*connected)(struct nvmf_discovery_ctx *dctx, struct nvme_ctrl *c,
-			void *user_data);
-	int (*parser_init)(struct nvmf_discovery_ctx *dctx,
-			void *user_data);
-	void (*parser_cleanup)(struct nvmf_discovery_ctx *dctx,
-			void *user_data);
-	int (*parser_next_line)(struct nvmf_discovery_ctx *dctx,
-			void *user_data);
-
-	/* connfiguration */
-	bool persistent;
-	const char *device;
-	const char *subsysnqn;
-	const char *transport;
-	const char *traddr;
-	const char *host_traddr;
-	const char *host_iface;
-	const char *trsvcid;
-	const char *hostnqn;
-	const char *hostid;
-	const char *hostkey;
-	const char *ctrlkey;
-	const char *keyring;
-	const char *tls_key;
-	const char *tls_key_identity;
-	struct nvme_fabrics_config *cfg;
-	struct nvme_fabrics_config *defcfg;
-
-	void *user_data;
-};
-
 struct nvmf_context {
 	/* common callbacks */
 	bool (*decide_retry)(struct nvmf_context *fctx, int err,
