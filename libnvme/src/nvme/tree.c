@@ -1393,23 +1393,20 @@ static bool _match_ctrl(struct nvme_ctrl *c, struct candidate_args *candidate)
  */
 static ctrl_match_t _candidate_init(struct nvme_global_ctx *ctx,
 				    struct candidate_args *candidate,
-				    const char *transport,
-				    const char *traddr,
-				    const char *trsvcid,
-				    const char *subsysnqn,
-				    const char *host_traddr,
-				    const char *host_iface)
+				    struct nvmf_context *fctx)
 {
 	memset(candidate, 0, sizeof(*candidate));
 
-	candidate->traddr = traddr;
-	candidate->trsvcid = trsvcid;
-	candidate->transport = transport;
-	candidate->subsysnqn = subsysnqn;
-	candidate->host_iface = streqcase0(host_iface, "none") ? NULL : host_iface;
-	candidate->host_traddr = streqcase0(host_traddr, "none") ? NULL : host_traddr;
+	candidate->traddr = fctx->traddr;
+	candidate->trsvcid = fctx->trsvcid;
+	candidate->transport = fctx->transport;
+	candidate->subsysnqn = fctx->subsysnqn;
+	candidate->host_iface = streqcase0(fctx->host_iface, "none") ?
+		NULL : fctx->host_iface;
+	candidate->host_traddr = streqcase0(fctx->host_traddr, "none") ?
+		NULL : fctx->host_traddr;
 
-	if (streq0(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+	if (streq0(fctx->subsysnqn, NVME_DISC_SUBSYS_NAME)) {
 		/* Since TP8013, the NQN of discovery controllers can be the
 		 * well-known NQN (i.e. nqn.2014-08.org.nvmexpress.discovery) or
 		 * a unique NQN. A DC created using the well-known NQN may later
@@ -1421,13 +1418,13 @@ static ctrl_match_t _candidate_init(struct nvme_global_ctx *ctx,
 		candidate->well_known_nqn = true;
 	}
 
-	if (streq0(transport, "tcp")) {
+	if (streq0(fctx->transport, "tcp")) {
 		candidate->iface_list = nvme_getifaddrs(ctx); /* TCP only */
 		candidate->addreq = nvme_ipaddrs_eq;
 		return _tcp_match_ctrl;
 	}
 
-	if (streq0(transport, "rdma")) {
+	if (streq0(fctx->transport, "rdma")) {
 		candidate->addreq = nvme_ipaddrs_eq;
 		return _match_ctrl;
 	}
@@ -1445,10 +1442,7 @@ nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, struct nvmf_context *fctx,
 	ctrl_match_t ctrl_match;
 
 	/* Init candidate and get the matching function to use */
-	ctrl_match = _candidate_init(s->h->ctx, &candidate,
-				     fctx->transport, fctx->traddr,
-				     fctx->trsvcid, fctx->subsysnqn,
-				     fctx->host_traddr, fctx->host_iface);
+	ctrl_match = _candidate_init(s->h->ctx, &candidate, fctx);
 
 	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
 	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
@@ -1468,11 +1462,17 @@ __public bool nvme_ctrl_match_config(struct nvme_ctrl *c, const char *transport,
 {
 	struct candidate_args candidate = {};
 	ctrl_match_t ctrl_match;
+	struct nvmf_context fctx = {
+		.transport = transport,
+		.traddr = traddr,
+		.host_traddr = host_traddr,
+		.host_iface = host_iface,
+		.trsvcid = trsvcid,
+		.subsysnqn = subsysnqn,
+	};
 
 	/* Init candidate and get the matching function to use */
-	ctrl_match = _candidate_init(c->ctx, &candidate, transport, traddr,
-				     trsvcid, subsysnqn, host_traddr,
-				     host_iface);
+	ctrl_match = _candidate_init(c->ctx, &candidate, &fctx);
 
 	return ctrl_match(c, &candidate);
 }
