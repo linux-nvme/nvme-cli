@@ -2925,10 +2925,7 @@ __public int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fc
 		ret = nvme_scan_ctrl(ctx, fctx->device, &c);
 		if (!ret) {
 			/* Check if device matches command-line options */
-			if (!nvme_ctrl_match_config(c, fctx->transport,
-				fctx->traddr, fctx->trsvcid,
-					fctx->subsysnqn, fctx->host_traddr,
-					fctx->host_iface)) {
+			if (!_nvme_ctrl_match_config(c, fctx)) {
 				nvme_msg(ctx, LOG_ERR,
 				    "ctrl device %s found, ignoring non matching command-line options\n",
 				    fctx->device);

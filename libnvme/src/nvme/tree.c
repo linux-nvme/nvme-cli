@@ -1472,13 +1472,22 @@ nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, struct nvmf_context *fctx,
 	return matching_c;
 }
 
+bool _nvme_ctrl_match_config(struct nvme_ctrl *c, struct nvmf_context *fctx)
+{
+	struct candidate_args candidate = {};
+	ctrl_match_t ctrl_match;
+
+	/* Init candidate and get the matching function to use */
+	ctrl_match = _candidate_init(c->ctx, &candidate, fctx);
+
+	return ctrl_match(c, &candidate);
+}
+
 __public bool nvme_ctrl_match_config(struct nvme_ctrl *c, const char *transport,
 			    const char *traddr, const char *trsvcid,
 			    const char *subsysnqn, const char *host_traddr,
 			    const char *host_iface)
 {
-	struct candidate_args candidate = {};
-	ctrl_match_t ctrl_match;
 	struct nvmf_context fctx = {
 		.transport = transport,
 		.traddr = traddr,
@@ -1488,10 +1497,7 @@ __public bool nvme_ctrl_match_config(struct nvme_ctrl *c, const char *transport,
 		.subsysnqn = subsysnqn,
 	};
 
-	/* Init candidate and get the matching function to use */
-	ctrl_match = _candidate_init(c->ctx, &candidate, &fctx);
-
-	return ctrl_match(c, &candidate);
+	return _nvme_ctrl_match_config(c, &fctx);
 }
 
 nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, struct nvmf_context *fctx)
