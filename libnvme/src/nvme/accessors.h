@@ -314,6 +314,14 @@ const char *nvme_ctrl_get_sqsize(const struct nvme_ctrl *p);
 const char *nvme_ctrl_get_transport(const struct nvme_ctrl *p);
 
 /**
+ * nvme_ctrl_get_subsysnqn() - Get subsysnqn.
+ * @p: The &struct nvme_ctrl instance to query.
+ *
+ * Return: The value of the subsysnqn field, or NULL if not set.
+ */
+const char *nvme_ctrl_get_subsysnqn(const struct nvme_ctrl *p);
+
+/**
  * nvme_ctrl_get_traddr() - Get traddr.
  * @p: The &struct nvme_ctrl instance to query.
  *

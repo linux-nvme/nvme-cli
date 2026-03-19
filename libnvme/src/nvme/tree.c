@@ -890,11 +890,6 @@ nvme_subsystem_t nvme_ctrl_get_subsystem(nvme_ctrl_t c)
 }
 
 
-const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c)
-{
-	return c->s ? c->s->subsysnqn : c->subsysnqn;
-}
-
 char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len)
 {
 	size_t l;

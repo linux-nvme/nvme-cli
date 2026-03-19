@@ -195,7 +195,7 @@ struct nvme_ctrl { /*!generate-accessors*/
 	char *serial; //!accessors:readonly
 	char *sqsize; //!accessors:readonly
 	char *transport; //!accessors:readonly
-	char *subsysnqn; //!accessors:none
+	char *subsysnqn; //!accessors:readonly
 	char *traddr; //!accessors:readonly
 	char *trsvcid; //!accessors:readonly
 	char *dhchap_host_key;

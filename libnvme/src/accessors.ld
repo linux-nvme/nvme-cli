@@ -45,6 +45,7 @@ LIBNVME_ACCESSORS_3 {
 		nvme_ctrl_get_serial;
 		nvme_ctrl_get_sqsize;
 		nvme_ctrl_get_transport;
+		nvme_ctrl_get_subsysnqn;
 		nvme_ctrl_get_traddr;
 		nvme_ctrl_get_trsvcid;
 		nvme_ctrl_get_dhchap_host_key;
