@@ -1437,19 +1437,18 @@ static ctrl_match_t _candidate_init(struct nvme_global_ctx *ctx,
 	return _match_ctrl;
 }
 
-nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
-			       const char *traddr, const char *host_traddr,
-			       const char *host_iface, const char *trsvcid,
-			       const char *subsysnqn, nvme_ctrl_t p)
+nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, struct nvmf_context *fctx,
+			       nvme_ctrl_t p)
 {
 	struct candidate_args candidate = {};
 	struct nvme_ctrl *c, *matching_c = NULL;
 	ctrl_match_t ctrl_match;
 
 	/* Init candidate and get the matching function to use */
-	ctrl_match = _candidate_init(s->h->ctx, &candidate, transport, traddr,
-				     trsvcid, subsysnqn, host_traddr,
-				     host_iface);
+	ctrl_match = _candidate_init(s->h->ctx, &candidate,
+				     fctx->transport, fctx->traddr,
+				     fctx->trsvcid, fctx->subsysnqn,
+				     fctx->host_traddr, fctx->host_iface);
 
 	c = p ? nvme_subsystem_next_ctrl(s, p) : nvme_subsystem_first_ctrl(s);
 	for (; c != NULL; c = nvme_subsystem_next_ctrl(s, c)) {
@@ -1483,8 +1482,16 @@ nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, const char *transport,
 			   const char *subsysnqn, const char *host_traddr,
 			   const char *host_iface)
 {
-	return __nvme_lookup_ctrl(s, transport, traddr, host_traddr, host_iface,
-				  trsvcid, subsysnqn, NULL/*p*/);
+	struct nvmf_context fctx = {
+		.transport = transport,
+		.traddr = traddr,
+		.host_traddr = host_traddr,
+		.host_iface = host_iface,
+		.trsvcid = trsvcid,
+		.subsysnqn = subsysnqn,
+	};
+
+	return __nvme_lookup_ctrl(s, &fctx, NULL/*p*/);
 }
 
 nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
@@ -1499,8 +1506,16 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 	if (!s || !transport)
 		return NULL;
 
-	c = __nvme_lookup_ctrl(s, transport, traddr, host_traddr,
-			       host_iface, trsvcid, NULL, p);
+	struct nvmf_context fctx = {
+		.transport = transport,
+		.traddr = traddr,
+		.host_traddr = host_traddr,
+		.host_iface = host_iface,
+		.trsvcid = trsvcid,
+		.subsysnqn = NULL,
+	};
+
+	c = __nvme_lookup_ctrl(s, &fctx, p);
 	if (c)
 		return c;
 
