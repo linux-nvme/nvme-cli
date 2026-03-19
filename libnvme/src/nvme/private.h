@@ -238,8 +238,8 @@ struct nvme_host { /*!generate-accessors*/
 	struct list_head subsystems;
 	struct nvme_global_ctx *ctx;
 
-	char *hostnqn;
-	char *hostid;
+	char *hostnqn; /*!accessors:readonly*/
+	char *hostid; /*!accessors:readonly*/
 	char *dhchap_host_key;
 	char *hostsymname;
 	bool pdc_enabled; //!accessors:none

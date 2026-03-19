@@ -619,26 +619,12 @@ const char *nvme_subsystem_get_iopolicy(const struct nvme_subsystem *p);
  ****************************************************************************/
 
 /**
- * nvme_host_set_hostnqn() - Set hostnqn.
- * @p: The &struct nvme_host instance to update.
- * @hostnqn: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_host_set_hostnqn(struct nvme_host *p, const char *hostnqn);
-
-/**
  * nvme_host_get_hostnqn() - Get hostnqn.
  * @p: The &struct nvme_host instance to query.
  *
  * Return: The value of the hostnqn field, or NULL if not set.
  */
 const char *nvme_host_get_hostnqn(const struct nvme_host *p);
-
-/**
- * nvme_host_set_hostid() - Set hostid.
- * @p: The &struct nvme_host instance to update.
- * @hostid: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_host_set_hostid(struct nvme_host *p, const char *hostid);
 
 /**
  * nvme_host_get_hostid() - Get hostid.

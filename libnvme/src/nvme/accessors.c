@@ -427,21 +427,9 @@ const char *nvme_subsystem_get_iopolicy(const struct nvme_subsystem *p)
  * Accessors for: struct nvme_host
  ****************************************************************************/
 
-void nvme_host_set_hostnqn(struct nvme_host *p, const char *hostnqn)
-{
-	free(p->hostnqn);
-	p->hostnqn = hostnqn ? strdup(hostnqn) : NULL;
-}
-
 const char *nvme_host_get_hostnqn(const struct nvme_host *p)
 {
 	return p->hostnqn;
-}
-
-void nvme_host_set_hostid(struct nvme_host *p, const char *hostid)
-{
-	free(p->hostid);
-	p->hostid = hostid ? strdup(hostid) : NULL;
 }
 
 const char *nvme_host_get_hostid(const struct nvme_host *p)
