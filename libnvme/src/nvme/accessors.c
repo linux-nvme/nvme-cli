@@ -171,21 +171,9 @@ uint64_t nvme_ns_get_lba_util(const struct nvme_ns *p)
  * Accessors for: struct nvme_ctrl
  ****************************************************************************/
 
-void nvme_ctrl_set_name(struct nvme_ctrl *p, const char *name)
-{
-	free(p->name);
-	p->name = name ? strdup(name) : NULL;
-}
-
 const char *nvme_ctrl_get_name(const struct nvme_ctrl *p)
 {
 	return p->name;
-}
-
-void nvme_ctrl_set_sysfs_dir(struct nvme_ctrl *p, const char *sysfs_dir)
-{
-	free(p->sysfs_dir);
-	p->sysfs_dir = sysfs_dir ? strdup(sysfs_dir) : NULL;
 }
 
 const char *nvme_ctrl_get_sysfs_dir(const struct nvme_ctrl *p)
@@ -193,21 +181,9 @@ const char *nvme_ctrl_get_sysfs_dir(const struct nvme_ctrl *p)
 	return p->sysfs_dir;
 }
 
-void nvme_ctrl_set_firmware(struct nvme_ctrl *p, const char *firmware)
-{
-	free(p->firmware);
-	p->firmware = firmware ? strdup(firmware) : NULL;
-}
-
 const char *nvme_ctrl_get_firmware(const struct nvme_ctrl *p)
 {
 	return p->firmware;
-}
-
-void nvme_ctrl_set_model(struct nvme_ctrl *p, const char *model)
-{
-	free(p->model);
-	p->model = model ? strdup(model) : NULL;
 }
 
 const char *nvme_ctrl_get_model(const struct nvme_ctrl *p)
@@ -215,21 +191,9 @@ const char *nvme_ctrl_get_model(const struct nvme_ctrl *p)
 	return p->model;
 }
 
-void nvme_ctrl_set_numa_node(struct nvme_ctrl *p, const char *numa_node)
-{
-	free(p->numa_node);
-	p->numa_node = numa_node ? strdup(numa_node) : NULL;
-}
-
 const char *nvme_ctrl_get_numa_node(const struct nvme_ctrl *p)
 {
 	return p->numa_node;
-}
-
-void nvme_ctrl_set_queue_count(struct nvme_ctrl *p, const char *queue_count)
-{
-	free(p->queue_count);
-	p->queue_count = queue_count ? strdup(queue_count) : NULL;
 }
 
 const char *nvme_ctrl_get_queue_count(const struct nvme_ctrl *p)
@@ -237,21 +201,9 @@ const char *nvme_ctrl_get_queue_count(const struct nvme_ctrl *p)
 	return p->queue_count;
 }
 
-void nvme_ctrl_set_serial(struct nvme_ctrl *p, const char *serial)
-{
-	free(p->serial);
-	p->serial = serial ? strdup(serial) : NULL;
-}
-
 const char *nvme_ctrl_get_serial(const struct nvme_ctrl *p)
 {
 	return p->serial;
-}
-
-void nvme_ctrl_set_sqsize(struct nvme_ctrl *p, const char *sqsize)
-{
-	free(p->sqsize);
-	p->sqsize = sqsize ? strdup(sqsize) : NULL;
 }
 
 const char *nvme_ctrl_get_sqsize(const struct nvme_ctrl *p)
@@ -259,32 +211,14 @@ const char *nvme_ctrl_get_sqsize(const struct nvme_ctrl *p)
 	return p->sqsize;
 }
 
-void nvme_ctrl_set_transport(struct nvme_ctrl *p, const char *transport)
-{
-	free(p->transport);
-	p->transport = transport ? strdup(transport) : NULL;
-}
-
 const char *nvme_ctrl_get_transport(const struct nvme_ctrl *p)
 {
 	return p->transport;
 }
 
-void nvme_ctrl_set_traddr(struct nvme_ctrl *p, const char *traddr)
-{
-	free(p->traddr);
-	p->traddr = traddr ? strdup(traddr) : NULL;
-}
-
 const char *nvme_ctrl_get_traddr(const struct nvme_ctrl *p)
 {
 	return p->traddr;
-}
-
-void nvme_ctrl_set_trsvcid(struct nvme_ctrl *p, const char *trsvcid)
-{
-	free(p->trsvcid);
-	p->trsvcid = trsvcid ? strdup(trsvcid) : NULL;
 }
 
 const char *nvme_ctrl_get_trsvcid(const struct nvme_ctrl *p)
@@ -354,32 +288,14 @@ const char *nvme_ctrl_get_tls_key(const struct nvme_ctrl *p)
 	return p->tls_key;
 }
 
-void nvme_ctrl_set_cntrltype(struct nvme_ctrl *p, const char *cntrltype)
-{
-	free(p->cntrltype);
-	p->cntrltype = cntrltype ? strdup(cntrltype) : NULL;
-}
-
 const char *nvme_ctrl_get_cntrltype(const struct nvme_ctrl *p)
 {
 	return p->cntrltype;
 }
 
-void nvme_ctrl_set_cntlid(struct nvme_ctrl *p, const char *cntlid)
-{
-	free(p->cntlid);
-	p->cntlid = cntlid ? strdup(cntlid) : NULL;
-}
-
 const char *nvme_ctrl_get_cntlid(const struct nvme_ctrl *p)
 {
 	return p->cntlid;
-}
-
-void nvme_ctrl_set_dctype(struct nvme_ctrl *p, const char *dctype)
-{
-	free(p->dctype);
-	p->dctype = dctype ? strdup(dctype) : NULL;
 }
 
 const char *nvme_ctrl_get_dctype(const struct nvme_ctrl *p)
@@ -392,21 +308,9 @@ const char *nvme_ctrl_get_phy_slot(const struct nvme_ctrl *p)
 	return p->phy_slot;
 }
 
-void nvme_ctrl_set_host_traddr(struct nvme_ctrl *p, const char *host_traddr)
-{
-	free(p->host_traddr);
-	p->host_traddr = host_traddr ? strdup(host_traddr) : NULL;
-}
-
 const char *nvme_ctrl_get_host_traddr(const struct nvme_ctrl *p)
 {
 	return p->host_traddr;
-}
-
-void nvme_ctrl_set_host_iface(struct nvme_ctrl *p, const char *host_iface)
-{
-	free(p->host_iface);
-	p->host_iface = host_iface ? strdup(host_iface) : NULL;
 }
 
 const char *nvme_ctrl_get_host_iface(const struct nvme_ctrl *p)

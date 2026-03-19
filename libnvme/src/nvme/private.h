@@ -184,31 +184,31 @@ struct nvme_ctrl { /*!generate-accessors*/
 
 	struct nvme_global_ctx *ctx;
 	struct nvme_transport_handle *hdl;
-	char *name;
-	char *sysfs_dir;
+	char *name; //!accessors:readonly
+	char *sysfs_dir; //!accessors:readonly
 	char *address; //!accessors:none
-	char *firmware;
-	char *model;
+	char *firmware; //!accessors:readonly
+	char *model; //!accessors:readonly
 	char *state; //!accessors:none
-	char *numa_node;
-	char *queue_count;
-	char *serial;
-	char *sqsize;
-	char *transport;
+	char *numa_node; //!accessors:readonly
+	char *queue_count; //!accessors:readonly
+	char *serial; //!accessors:readonly
+	char *sqsize; //!accessors:readonly
+	char *transport; //!accessors:readonly
 	char *subsysnqn; //!accessors:none
-	char *traddr;
-	char *trsvcid;
+	char *traddr; //!accessors:readonly
+	char *trsvcid; //!accessors:readonly
 	char *dhchap_host_key;
 	char *dhchap_ctrl_key;
 	char *keyring;
 	char *tls_key_identity;
 	char *tls_key;
-	char *cntrltype;
-	char *cntlid;
-	char *dctype;
+	char *cntrltype; //!accessors:readonly
+	char *cntlid; //!accessors:readonly
+	char *dctype; //!accessors:readonly
 	char *phy_slot; //!accessors:readonly
-	char *host_traddr;
-	char *host_iface;
+	char *host_traddr; //!accessors:readonly
+	char *host_iface; //!accessors:readonly
 	bool discovery_ctrl;
 	bool unique_discovery_ctrl;
 	bool discovered;
