@@ -455,6 +455,14 @@ static bool ctrl_match(const char *tag,
 		       bool should_match)
 {
 	struct nvme_global_ctx *ctx;
+	struct nvmf_context fctx = {
+		.transport = candidate->transport,
+		.traddr = candidate->traddr,
+		.host_traddr = candidate->host_traddr,
+		.host_iface = candidate->host_iface,
+		.trsvcid = candidate->trsvcid,
+		.subsysnqn = candidate->subsysnqn,
+	};
 	nvme_host_t h;
 	nvme_ctrl_t reference_ctrl; /* Existing controller (from sysfs) */
 	nvme_ctrl_t candidate_ctrl;
@@ -483,10 +491,7 @@ static bool ctrl_match(const char *tag,
 	}
 
 	/* nvme_ctrl_find() MUST BE RUN BEFORE nvme_lookup_ctrl() */
-	found_ctrl = nvme_ctrl_find(s, candidate->transport, candidate->traddr,
-				    candidate->trsvcid, candidate->subsysnqn,
-				    candidate->host_traddr,
-				    candidate->host_iface);
+	found_ctrl = nvme_ctrl_find(s, &fctx);
 
 	candidate_ctrl = nvme_lookup_ctrl(s, candidate->transport, candidate->traddr,
 					  candidate->host_traddr, candidate->host_iface,
