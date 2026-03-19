@@ -1062,26 +1062,24 @@ __public void nvmf_default_config(struct nvme_fabrics_config *cfg)
 	cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 }
 
-__public int nvme_create_ctrl(struct nvme_global_ctx *ctx,
-		     const char *subsysnqn, const char *transport,
-		     const char *traddr, const char *host_traddr,
-	   	     const char *host_iface, const char *trsvcid,
-		     nvme_ctrl_t *cp)
+int _nvme_create_ctrl(struct nvme_global_ctx *ctx,
+		      struct nvmf_context *fctx,
+		      nvme_ctrl_t *cp)
 {
 	struct nvme_ctrl *c;
 
-	if (!transport) {
+	if (!fctx->transport) {
 		nvme_msg(ctx, LOG_ERR, "No transport specified\n");
 		return -EINVAL;
 	}
-	if (strncmp(transport, "loop", 4) &&
-	    strncmp(transport, "pcie", 4) &&
-	    strncmp(transport, "apple-nvme", 10) && !traddr) {
+	if (strncmp(fctx->transport, "loop", 4) &&
+	    strncmp(fctx->transport, "pcie", 4) &&
+	    strncmp(fctx->transport, "apple-nvme", 10) && !fctx->traddr) {
 		nvme_msg(ctx, LOG_ERR, "No transport address for '%s'\n",
-			 transport);
+			 fctx->transport);
 	       return -EINVAL;
 	}
-	if (!subsysnqn) {
+	if (!fctx->subsysnqn) {
 		nvme_msg(ctx, LOG_ERR, "No subsystem NQN specified\n");
 		return -EINVAL;
 	}
@@ -1095,23 +1093,42 @@ __public int nvme_create_ctrl(struct nvme_global_ctx *ctx,
 	list_head_init(&c->namespaces);
 	list_head_init(&c->paths);
 	list_node_init(&c->entry);
-	c->transport = strdup(transport);
-	c->subsysnqn = strdup(subsysnqn);
-	if (traddr)
-		c->traddr = strdup(traddr);
-	if (host_traddr) {
-		if (traddr_is_hostname(transport, host_traddr))
-			hostname2traddr(ctx, host_traddr, &c->host_traddr);
+	c->transport = strdup(fctx->transport);
+	c->subsysnqn = strdup(fctx->subsysnqn);
+	if (fctx->traddr)
+		c->traddr = strdup(fctx->traddr);
+	if (fctx->host_traddr) {
+		if (traddr_is_hostname(fctx->transport, fctx->host_traddr))
+			hostname2traddr(ctx, fctx->host_traddr,
+					&c->host_traddr);
 		if (!c->host_traddr)
-			c->host_traddr = strdup(host_traddr);
+			c->host_traddr = strdup(fctx->host_traddr);
 	}
-	if (host_iface)
-		c->host_iface = strdup(host_iface);
-	if (trsvcid)
-		c->trsvcid = strdup(trsvcid);
+	if (fctx->host_iface)
+		c->host_iface = strdup(fctx->host_iface);
+	if (fctx->trsvcid)
+		c->trsvcid = strdup(fctx->trsvcid);
 
 	*cp = c;
 	return 0;
+}
+
+__public int nvme_create_ctrl(struct nvme_global_ctx *ctx,
+			      const char *subsysnqn, const char *transport,
+			      const char *traddr, const char *host_traddr,
+			      const char *host_iface, const char *trsvcid,
+			      nvme_ctrl_t *cp)
+{
+	struct nvmf_context fctx = {
+		.transport = transport,
+		.traddr = traddr,
+		.host_traddr = host_traddr,
+		.host_iface = host_iface,
+		.trsvcid = trsvcid,
+		.subsysnqn = subsysnqn,
+	};
+
+	return _nvme_create_ctrl(ctx, &fctx, cp);
 }
 
 /**
@@ -1508,8 +1525,8 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 		return c;
 
 	ctx = s->h ? s->h->ctx : NULL;
-	ret = nvme_create_ctrl(ctx, s->subsysnqn, transport, traddr,
-			     host_traddr, host_iface, trsvcid, &c);
+	fctx.subsysnqn = s->subsysnqn;
+	ret = _nvme_create_ctrl(ctx, &fctx, &c);
 	if (ret)
 		return NULL;
 
