@@ -1098,14 +1098,10 @@ __public int nvmf_connect_ctrl(nvme_ctrl_t c)
 
 static int nvmf_connect_disc_entry(nvme_host_t h,
 		struct nvmf_disc_log_entry *e,
-		const char *host_traddr, const char *host_iface,
+		struct nvmf_context *fctx,
 		const struct nvme_fabrics_config *cfg,
 		bool *discover, nvme_ctrl_t *cp)
 {
-	struct nvmf_context fctx = {
-		.host_traddr = host_traddr,
-		.host_iface = host_iface,
-	};
 	nvme_ctrl_t c;
 	int ret;
 
@@ -1115,8 +1111,8 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_IP4:
 		case NVMF_ADDR_FAMILY_IP6:
-			fctx.traddr = e->traddr;
-			fctx.trsvcid = e->trsvcid;
+			fctx->traddr = e->traddr;
+			fctx->trsvcid = e->trsvcid;
 			break;
 		default:
 			nvme_msg(h->ctx, LOG_ERR,
@@ -1128,7 +1124,7 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
         case NVMF_TRTYPE_FC:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
-			fctx.traddr = e->traddr;
+			fctx->traddr = e->traddr;
 			break;
 		default:
 			nvme_msg(h->ctx, LOG_ERR,
@@ -1138,7 +1134,7 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 		}
 		break;
 	case NVMF_TRTYPE_LOOP:
-		fctx.traddr = strlen(e->traddr) ? e->traddr : NULL;
+		fctx->traddr = strlen(e->traddr) ? e->traddr : NULL;
 		break;
 	default:
 		nvme_msg(h->ctx, LOG_ERR, "skipping unsupported transport %d\n",
@@ -1146,18 +1142,18 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 		return -EINVAL;
 	}
 
-	fctx.transport = nvmf_trtype_str(e->trtype);
-	fctx.subsysnqn = e->subnqn;
+	fctx->transport = nvmf_trtype_str(e->trtype);
+	fctx->subsysnqn = e->subnqn;
 
 	nvme_msg(h->ctx, LOG_DEBUG, "lookup ctrl "
 		 "(transport: %s, traddr: %s, trsvcid %s)\n",
-		 fctx.transport, fctx.traddr, fctx.trsvcid);
+		 fctx->transport, fctx->traddr, fctx->trsvcid);
 
-	ret = _nvme_create_ctrl(h->ctx, &fctx, &c);
+	ret = _nvme_create_ctrl(h->ctx, fctx, &c);
 	if (ret) {
 		nvme_msg(h->ctx, LOG_DEBUG, "skipping discovery entry, "
 			 "failed to allocate %s controller with traddr %s\n",
-			 fctx.transport, fctx.traddr);
+			 fctx->transport, fctx->traddr);
 		return ret;
 	}
 
@@ -1996,8 +1992,7 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 			disconnect = false;
 		}
 
-		err = nvmf_connect_disc_entry(h, e, nfctx.host_traddr,
-			nfctx.host_iface, nfctx.cfg,
+		err = nvmf_connect_disc_entry(h, e, &nfctx, nfctx.cfg,
 			&discover, &child);
 
 		nfctx.cfg->keep_alive_tmo = tmo;
@@ -2648,8 +2643,7 @@ static int nbft_discovery(struct nvme_global_ctx *ctx,
 		if (e->subtype == NVME_NQN_DISC) {
 			nvme_ctrl_t child;
 
-			ret = nvmf_connect_disc_entry(h, e,
-				nfctx.host_traddr, nfctx.host_iface,
+			ret = nvmf_connect_disc_entry(h, e, &nfctx,
 				defcfg, NULL, &child);
 			if (ret)
 				continue;
