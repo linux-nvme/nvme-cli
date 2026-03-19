@@ -216,6 +216,11 @@ const char *nvme_ctrl_get_transport(const struct nvme_ctrl *p)
 	return p->transport;
 }
 
+const char *nvme_ctrl_get_subsysnqn(const struct nvme_ctrl *p)
+{
+	return p->subsysnqn;
+}
+
 const char *nvme_ctrl_get_traddr(const struct nvme_ctrl *p)
 {
 	return p->traddr;

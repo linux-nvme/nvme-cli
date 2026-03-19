@@ -735,14 +735,6 @@ char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len)
 const char *nvme_ctrl_get_state(nvme_ctrl_t c);
 
 /**
- * nvme_ctrl_get_subsysnqn() - Subsystem NQN of a controller
- * @c:	Controller instance
- *
- * Return: Subsystem NQN of @c
- */
-const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c);
-
-/**
  * nvme_ctrl_get_subsystem() - Parent subsystem of a controller
  * @c:	Controller instance
  *
