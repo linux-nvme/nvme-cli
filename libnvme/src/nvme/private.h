@@ -206,7 +206,7 @@ struct nvme_ctrl { /*!generate-accessors*/
 	char *cntrltype;
 	char *cntlid;
 	char *dctype;
-	char *phy_slot; //!accessors:none
+	char *phy_slot; //!accessors:readonly
 	char *host_traddr;
 	char *host_iface;
 	bool discovery_ctrl;

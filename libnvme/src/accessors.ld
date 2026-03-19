@@ -86,6 +86,7 @@ LIBNVME_ACCESSORS_3 {
 		nvme_ctrl_set_discovered;
 		nvme_ctrl_get_persistent;
 		nvme_ctrl_set_persistent;
+		nvme_ctrl_get_phy_slot;
 		nvme_subsystem_get_name;
 		nvme_subsystem_set_name;
 		nvme_subsystem_get_sysfs_dir;
