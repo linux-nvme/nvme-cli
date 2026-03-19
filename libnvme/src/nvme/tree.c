@@ -1477,21 +1477,9 @@ __public bool nvme_ctrl_match_config(struct nvme_ctrl *c, const char *transport,
 	return ctrl_match(c, &candidate);
 }
 
-nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, const char *transport,
-			   const char *traddr, const char *trsvcid,
-			   const char *subsysnqn, const char *host_traddr,
-			   const char *host_iface)
+nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, struct nvmf_context *fctx)
 {
-	struct nvmf_context fctx = {
-		.transport = transport,
-		.traddr = traddr,
-		.host_traddr = host_traddr,
-		.host_iface = host_iface,
-		.trsvcid = trsvcid,
-		.subsysnqn = subsysnqn,
-	};
-
-	return __nvme_lookup_ctrl(s, &fctx, NULL/*p*/);
+	return __nvme_lookup_ctrl(s, fctx, NULL/*p*/);
 }
 
 nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,

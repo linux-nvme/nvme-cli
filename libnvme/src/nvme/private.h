@@ -398,10 +398,7 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			     const char *traddr, const char *host_traddr,
 			     const char *host_iface, const char *trsvcid,
 			     nvme_ctrl_t p);
-nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, const char *transport,
-			   const char *traddr, const char *trsvcid,
-			   const char *subsysnqn, const char *host_traddr,
-			   const char *host_iface);
+nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, struct nvmf_context *fctx);
 
 void __nvme_free_host(nvme_host_t h);
 

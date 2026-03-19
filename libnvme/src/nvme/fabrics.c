@@ -1816,13 +1816,7 @@ static nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct nvmf_context *fctx)
 	nvme_ctrl_t c;
 
 	nvme_for_each_subsystem(h, s) {
-		c = nvme_ctrl_find(s,
-				   fctx->transport,
-				   fctx->traddr,
-				   fctx->trsvcid,
-				   fctx->subsysnqn,
-				   fctx->host_traddr,
-				   fctx->host_iface);
+		c = nvme_ctrl_find(s, fctx);
 		if (c)
 			return c;
 	}
