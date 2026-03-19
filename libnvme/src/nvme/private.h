@@ -222,13 +222,13 @@ struct nvme_subsystem { /*!generate-accessors*/
 	struct list_head namespaces;
 	struct nvme_host *h;
 
-	char *name;
-	char *sysfs_dir;
-	char *subsysnqn;
-	char *model;
-	char *serial;
-	char *firmware;
-	char *subsystype;
+	char *name; /*!accessors:readonly*/
+	char *sysfs_dir; /*!accessors:readonly*/
+	char *subsysnqn; /*!accessors:readonly*/
+	char *model; /*!accessors:readonly*/
+	char *serial; /*!accessors:readonly*/
+	char *firmware; /*!accessors:readonly*/
+	char *subsystype; /*!accessors:readonly*/
 	char *application;
 	char *iopolicy;
 };
