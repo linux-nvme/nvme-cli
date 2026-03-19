@@ -533,6 +533,14 @@ void nvme_ctrl_set_dctype(struct nvme_ctrl *p, const char *dctype);
 const char *nvme_ctrl_get_dctype(const struct nvme_ctrl *p);
 
 /**
+ * nvme_ctrl_get_phy_slot() - Get phy_slot.
+ * @p: The &struct nvme_ctrl instance to query.
+ *
+ * Return: The value of the phy_slot field, or NULL if not set.
+ */
+const char *nvme_ctrl_get_phy_slot(const struct nvme_ctrl *p);
+
+/**
  * nvme_ctrl_set_host_traddr() - Set host_traddr.
  * @p: The &struct nvme_ctrl instance to update.
  * @host_traddr: New string; a copy is stored. Pass NULL to clear.

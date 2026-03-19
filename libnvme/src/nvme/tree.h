@@ -727,15 +727,6 @@ void nvme_ctrl_release_transport_handle(nvme_ctrl_t c);
 char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len);
 
 /**
- * nvme_ctrl_get_phy_slot() - PCI physical slot number of a controller
- * @c:	Controller instance
- *
- * Return: PCI physical slot number of @c or empty string if slot
- * number is not present.
- */
-const char *nvme_ctrl_get_phy_slot(nvme_ctrl_t c);
-
-/**
  * nvme_ctrl_get_state() - Running state of a controller
  * @c:	Controller instance
  *

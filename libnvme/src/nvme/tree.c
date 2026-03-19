@@ -921,11 +921,6 @@ char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len)
 	return src_addr;
 }
 
-const char *nvme_ctrl_get_phy_slot(nvme_ctrl_t c)
-{
-	return c->phy_slot ? c->phy_slot : "";
-}
-
 const char *nvme_ctrl_get_state(nvme_ctrl_t c)
 {
 	char *state = c->state;
@@ -1603,8 +1598,7 @@ static int nvme_ctrl_lookup_subsystem_name(struct nvme_global_ctx *ctx,
 }
 
 static int nvme_ctrl_lookup_phy_slot(struct nvme_global_ctx *ctx,
-				     const char *address,
-				     char **slotp)
+				     nvme_ctrl_t c)
 {
 	const char *slots_sysfs_dir = nvme_slots_sysfs_dir();
 	_cleanup_free_ char *target_addr = NULL;
@@ -1613,7 +1607,7 @@ static int nvme_ctrl_lookup_phy_slot(struct nvme_global_ctx *ctx,
 	char *slot;
 	int ret;
 
-	if (!address)
+	if (!c->address)
 		return -EINVAL;
 
 	slots_dir = opendir(slots_sysfs_dir);
@@ -1623,7 +1617,7 @@ static int nvme_ctrl_lookup_phy_slot(struct nvme_global_ctx *ctx,
 		return -errno;
 	}
 
-	target_addr = strndup(address, 10);
+	target_addr = strndup(c->address, 10);
 	while ((entry = readdir(slots_dir))) {
 		if (entry->d_type == DT_DIR &&
 		    strncmp(entry->d_name, ".", 1) != 0 &&
@@ -1647,7 +1641,7 @@ static int nvme_ctrl_lookup_phy_slot(struct nvme_global_ctx *ctx,
 			if (!slot)
 				return -ENOMEM;
 
-			*slotp = slot;
+			c->phy_slot = slot;
 			return 0;
 		}
 	}
@@ -1760,7 +1754,7 @@ static int nvme_reconfigure_ctrl(struct nvme_global_ctx *ctx, nvme_ctrl_t c, con
 	c->cntrltype = nvme_get_ctrl_attr(c, "cntrltype");
 	c->cntlid = nvme_get_ctrl_attr(c, "cntlid");
 	c->dctype = nvme_get_ctrl_attr(c, "dctype");
-	nvme_ctrl_lookup_phy_slot(ctx, c->address, &c->phy_slot);
+	nvme_ctrl_lookup_phy_slot(ctx, c);
 	nvme_read_sysfs_dhchap(ctx, c);
 	nvme_read_sysfs_tls(ctx, c);
 
