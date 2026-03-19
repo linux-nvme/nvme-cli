@@ -525,28 +525,12 @@ bool nvme_ctrl_get_persistent(const struct nvme_ctrl *p);
  ****************************************************************************/
 
 /**
- * nvme_subsystem_set_name() - Set name.
- * @p: The &struct nvme_subsystem instance to update.
- * @name: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_subsystem_set_name(struct nvme_subsystem *p, const char *name);
-
-/**
  * nvme_subsystem_get_name() - Get name.
  * @p: The &struct nvme_subsystem instance to query.
  *
  * Return: The value of the name field, or NULL if not set.
  */
 const char *nvme_subsystem_get_name(const struct nvme_subsystem *p);
-
-/**
- * nvme_subsystem_set_sysfs_dir() - Set sysfs_dir.
- * @p: The &struct nvme_subsystem instance to update.
- * @sysfs_dir: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_subsystem_set_sysfs_dir(
-		struct nvme_subsystem *p,
-		const char *sysfs_dir);
 
 /**
  * nvme_subsystem_get_sysfs_dir() - Get sysfs_dir.
@@ -557,28 +541,12 @@ void nvme_subsystem_set_sysfs_dir(
 const char *nvme_subsystem_get_sysfs_dir(const struct nvme_subsystem *p);
 
 /**
- * nvme_subsystem_set_subsysnqn() - Set subsysnqn.
- * @p: The &struct nvme_subsystem instance to update.
- * @subsysnqn: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_subsystem_set_subsysnqn(
-		struct nvme_subsystem *p,
-		const char *subsysnqn);
-
-/**
  * nvme_subsystem_get_subsysnqn() - Get subsysnqn.
  * @p: The &struct nvme_subsystem instance to query.
  *
  * Return: The value of the subsysnqn field, or NULL if not set.
  */
 const char *nvme_subsystem_get_subsysnqn(const struct nvme_subsystem *p);
-
-/**
- * nvme_subsystem_set_model() - Set model.
- * @p: The &struct nvme_subsystem instance to update.
- * @model: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_subsystem_set_model(struct nvme_subsystem *p, const char *model);
 
 /**
  * nvme_subsystem_get_model() - Get model.
@@ -589,13 +557,6 @@ void nvme_subsystem_set_model(struct nvme_subsystem *p, const char *model);
 const char *nvme_subsystem_get_model(const struct nvme_subsystem *p);
 
 /**
- * nvme_subsystem_set_serial() - Set serial.
- * @p: The &struct nvme_subsystem instance to update.
- * @serial: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_subsystem_set_serial(struct nvme_subsystem *p, const char *serial);
-
-/**
  * nvme_subsystem_get_serial() - Get serial.
  * @p: The &struct nvme_subsystem instance to query.
  *
@@ -604,30 +565,12 @@ void nvme_subsystem_set_serial(struct nvme_subsystem *p, const char *serial);
 const char *nvme_subsystem_get_serial(const struct nvme_subsystem *p);
 
 /**
- * nvme_subsystem_set_firmware() - Set firmware.
- * @p: The &struct nvme_subsystem instance to update.
- * @firmware: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_subsystem_set_firmware(
-		struct nvme_subsystem *p,
-		const char *firmware);
-
-/**
  * nvme_subsystem_get_firmware() - Get firmware.
  * @p: The &struct nvme_subsystem instance to query.
  *
  * Return: The value of the firmware field, or NULL if not set.
  */
 const char *nvme_subsystem_get_firmware(const struct nvme_subsystem *p);
-
-/**
- * nvme_subsystem_set_subsystype() - Set subsystype.
- * @p: The &struct nvme_subsystem instance to update.
- * @subsystype: New string; a copy is stored. Pass NULL to clear.
- */
-void nvme_subsystem_set_subsystype(
-		struct nvme_subsystem *p,
-		const char *subsystype);
 
 /**
  * nvme_subsystem_get_subsystype() - Get subsystype.

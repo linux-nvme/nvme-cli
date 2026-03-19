@@ -364,23 +364,9 @@ bool nvme_ctrl_get_persistent(const struct nvme_ctrl *p)
  * Accessors for: struct nvme_subsystem
  ****************************************************************************/
 
-void nvme_subsystem_set_name(struct nvme_subsystem *p, const char *name)
-{
-	free(p->name);
-	p->name = name ? strdup(name) : NULL;
-}
-
 const char *nvme_subsystem_get_name(const struct nvme_subsystem *p)
 {
 	return p->name;
-}
-
-void nvme_subsystem_set_sysfs_dir(
-		struct nvme_subsystem *p,
-		const char *sysfs_dir)
-{
-	free(p->sysfs_dir);
-	p->sysfs_dir = sysfs_dir ? strdup(sysfs_dir) : NULL;
 }
 
 const char *nvme_subsystem_get_sysfs_dir(const struct nvme_subsystem *p)
@@ -388,23 +374,9 @@ const char *nvme_subsystem_get_sysfs_dir(const struct nvme_subsystem *p)
 	return p->sysfs_dir;
 }
 
-void nvme_subsystem_set_subsysnqn(
-		struct nvme_subsystem *p,
-		const char *subsysnqn)
-{
-	free(p->subsysnqn);
-	p->subsysnqn = subsysnqn ? strdup(subsysnqn) : NULL;
-}
-
 const char *nvme_subsystem_get_subsysnqn(const struct nvme_subsystem *p)
 {
 	return p->subsysnqn;
-}
-
-void nvme_subsystem_set_model(struct nvme_subsystem *p, const char *model)
-{
-	free(p->model);
-	p->model = model ? strdup(model) : NULL;
 }
 
 const char *nvme_subsystem_get_model(const struct nvme_subsystem *p)
@@ -412,34 +384,14 @@ const char *nvme_subsystem_get_model(const struct nvme_subsystem *p)
 	return p->model;
 }
 
-void nvme_subsystem_set_serial(struct nvme_subsystem *p, const char *serial)
-{
-	free(p->serial);
-	p->serial = serial ? strdup(serial) : NULL;
-}
-
 const char *nvme_subsystem_get_serial(const struct nvme_subsystem *p)
 {
 	return p->serial;
 }
 
-void nvme_subsystem_set_firmware(struct nvme_subsystem *p, const char *firmware)
-{
-	free(p->firmware);
-	p->firmware = firmware ? strdup(firmware) : NULL;
-}
-
 const char *nvme_subsystem_get_firmware(const struct nvme_subsystem *p)
 {
 	return p->firmware;
-}
-
-void nvme_subsystem_set_subsystype(
-		struct nvme_subsystem *p,
-		const char *subsystype)
-{
-	free(p->subsystype);
-	p->subsystype = subsystype ? strdup(subsystype) : NULL;
 }
 
 const char *nvme_subsystem_get_subsystype(const struct nvme_subsystem *p)
