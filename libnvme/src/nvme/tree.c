@@ -1451,8 +1451,9 @@ static ctrl_match_t _candidate_init(struct nvme_global_ctx *ctx,
 	return _match_ctrl;
 }
 
-nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, struct nvmf_context *fctx,
-			       nvme_ctrl_t p)
+static nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s,
+				      struct nvmf_context *fctx,
+				      nvme_ctrl_t p)
 {
 	struct candidate_args candidate = {};
 	struct nvme_ctrl *c, *matching_c = NULL;
