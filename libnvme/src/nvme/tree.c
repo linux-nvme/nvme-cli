@@ -1451,9 +1451,9 @@ static ctrl_match_t _candidate_init(struct nvme_global_ctx *ctx,
 	return _match_ctrl;
 }
 
-static nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s,
-				      struct nvmf_context *fctx,
-				      nvme_ctrl_t p)
+static nvme_ctrl_t __nvme_ctrl_find(nvme_subsystem_t s,
+				    struct nvmf_context *fctx,
+				    nvme_ctrl_t p)
 {
 	struct candidate_args candidate = {};
 	struct nvme_ctrl *c, *matching_c = NULL;
@@ -1503,7 +1503,42 @@ __public bool nvme_ctrl_match_config(struct nvme_ctrl *c, const char *transport,
 
 nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, struct nvmf_context *fctx)
 {
-	return __nvme_lookup_ctrl(s, fctx, NULL/*p*/);
+	return __nvme_ctrl_find(s, fctx, NULL/*p*/);
+}
+
+nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s,
+			       struct nvmf_context *fctx,
+			       nvme_ctrl_t p)
+{
+	struct nvme_global_ctx *ctx;
+	struct nvme_ctrl *c;
+	const char *subsysnqn = fctx->subsysnqn;
+	int ret;
+
+	if (!s || !fctx->transport)
+		return NULL;
+
+	/* Clear out subsysnqn; might be different for discovery subsystems */
+	fctx->subsysnqn = NULL;
+	c = __nvme_ctrl_find(s, fctx, p);
+	if (c) {
+		fctx->subsysnqn = subsysnqn;
+		return c;
+	}
+
+	ctx = s->h ? s->h->ctx : NULL;
+	/* Set the NQN to the subsystem the controller should be created in */
+	fctx->subsysnqn = s->subsysnqn;
+	ret = _nvme_create_ctrl(ctx, fctx, &c);
+	/* And restore NQN to avoid issues with repetitive calls */
+	fctx->subsysnqn = subsysnqn;
+	if (ret)
+		return NULL;
+
+	c->s = s;
+	list_add_tail(&s->ctrls, &c->entry);
+
+	return c;
 }
 
 nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
@@ -1511,10 +1546,6 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 			     const char *host_iface, const char *trsvcid,
 			     nvme_ctrl_t p)
 {
-	struct nvme_global_ctx *ctx;
-	struct nvme_ctrl *c;
-	int ret;
-
 	if (!s || !transport)
 		return NULL;
 
@@ -1527,20 +1558,7 @@ nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 		.subsysnqn = NULL,
 	};
 
-	c = __nvme_lookup_ctrl(s, &fctx, p);
-	if (c)
-		return c;
-
-	ctx = s->h ? s->h->ctx : NULL;
-	fctx.subsysnqn = s->subsysnqn;
-	ret = _nvme_create_ctrl(ctx, &fctx, &c);
-	if (ret)
-		return NULL;
-
-	c->s = s;
-	list_add_tail(&s->ctrls, &c->entry);
-
-	return c;
+	return __nvme_lookup_ctrl(s, &fctx, p);
 }
 
 static int nvme_ctrl_scan_paths(struct nvme_global_ctx *ctx, struct nvme_ctrl *c)
@@ -1893,8 +1911,14 @@ int nvme_ctrl_alloc(struct nvme_global_ctx *ctx, nvme_subsystem_t s,
 skip_address:
 	p = NULL;
 	do {
-		c = nvme_lookup_ctrl(s, transport, traddr,
-				     host_traddr, host_iface, trsvcid, p);
+		struct nvmf_context fctx = {
+			.transport = transport,
+			.traddr = traddr,
+			.host_traddr = host_traddr,
+			.host_iface = host_iface,
+			.trsvcid = trsvcid,
+		};
+		c = __nvme_lookup_ctrl(s, &fctx, p);
 		if (c) {
 			if (!c->name)
 				break;
