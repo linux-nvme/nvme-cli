@@ -101,7 +101,7 @@ static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
 	attr_obj = json_object_object_get(port_obj, "trsvcid");
 	if (attr_obj)
 		fctx.trsvcid = json_object_get_string(attr_obj);
-	c = __nvme_lookup_ctrl(s, &fctx, NULL);
+	c = nvme_lookup_ctrl(s, &fctx, NULL);
 	if (!c)
 		return;
 	json_update_attributes(c, port_obj);

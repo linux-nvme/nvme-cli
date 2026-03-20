@@ -1506,9 +1506,9 @@ nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, struct nvmf_context *fctx)
 	return __nvme_ctrl_find(s, fctx, NULL/*p*/);
 }
 
-nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s,
-			       struct nvmf_context *fctx,
-			       nvme_ctrl_t p)
+nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s,
+			     struct nvmf_context *fctx,
+			     nvme_ctrl_t p)
 {
 	struct nvme_global_ctx *ctx;
 	struct nvme_ctrl *c;
@@ -1539,26 +1539,6 @@ nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s,
 	list_add_tail(&s->ctrls, &c->entry);
 
 	return c;
-}
-
-nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
-			     const char *traddr, const char *host_traddr,
-			     const char *host_iface, const char *trsvcid,
-			     nvme_ctrl_t p)
-{
-	if (!s || !transport)
-		return NULL;
-
-	struct nvmf_context fctx = {
-		.transport = transport,
-		.traddr = traddr,
-		.host_traddr = host_traddr,
-		.host_iface = host_iface,
-		.trsvcid = trsvcid,
-		.subsysnqn = NULL,
-	};
-
-	return __nvme_lookup_ctrl(s, &fctx, p);
 }
 
 static int nvme_ctrl_scan_paths(struct nvme_global_ctx *ctx, struct nvme_ctrl *c)
@@ -1918,7 +1898,7 @@ skip_address:
 			.host_iface = host_iface,
 			.trsvcid = trsvcid,
 		};
-		c = __nvme_lookup_ctrl(s, &fctx, p);
+		c = nvme_lookup_ctrl(s, &fctx, p);
 		if (c) {
 			if (!c->name)
 				break;
