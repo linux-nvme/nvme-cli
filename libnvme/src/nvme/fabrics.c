@@ -2566,8 +2566,16 @@ static int nbft_connect(struct nvme_global_ctx *ctx,
 
 	if (e) {
 		if (e->trtype == NVMF_TRTYPE_TCP &&
-		    e->tsas.tcp.sectype != NVMF_TCP_SECTYPE_NONE)
-			cfg->tls = true;
+		    e->tsas.tcp.sectype != NVMF_TCP_SECTYPE_NONE) {
+			if (e->treq & NVMF_TREQ_REQUIRED) {
+				nvme_msg(ctx, LOG_DEBUG, "setting --tls due to treq %s and sectype %s\n",
+						nvmf_treq_str(e->treq), nvmf_sectype_str(e->tsas.tcp.sectype));
+				cfg->tls = true;
+			} else if (e->treq & NVMF_TREQ_NOT_REQUIRED) {
+				nvme_msg(ctx, LOG_DEBUG, "setting --concat due to treq %s and sectype %s\n",
+						nvmf_treq_str(e->treq), nvmf_sectype_str(e->tsas.tcp.sectype));
+				cfg->concat = true;
+		}
 	}
 
 	ret = nvmf_add_ctrl(h, c, cfg);
