@@ -83,27 +83,25 @@ static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
 {
 	nvme_ctrl_t c;
 	struct json_object *attr_obj;
-	const char *transport, *traddr = NULL;
-	const char *host_traddr = NULL, *host_iface = NULL, *trsvcid = NULL;
+	struct nvmf_context fctx = {};
 
 	attr_obj = json_object_object_get(port_obj, "transport");
 	if (!attr_obj)
 		return;
-	transport = json_object_get_string(attr_obj);
+	fctx.transport = json_object_get_string(attr_obj);
 	attr_obj = json_object_object_get(port_obj, "traddr");
 	if (attr_obj)
-		traddr = json_object_get_string(attr_obj);
+		fctx.traddr = json_object_get_string(attr_obj);
 	attr_obj = json_object_object_get(port_obj, "host_traddr");
 	if (attr_obj)
-		host_traddr = json_object_get_string(attr_obj);
+		fctx.host_traddr = json_object_get_string(attr_obj);
 	attr_obj = json_object_object_get(port_obj, "host_iface");
 	if (attr_obj)
-		host_iface = json_object_get_string(attr_obj);
+		fctx.host_iface = json_object_get_string(attr_obj);
 	attr_obj = json_object_object_get(port_obj, "trsvcid");
 	if (attr_obj)
-		trsvcid = json_object_get_string(attr_obj);
-	c = nvme_lookup_ctrl(s, transport, traddr, host_traddr,
-			     host_iface, trsvcid, NULL);
+		fctx.trsvcid = json_object_get_string(attr_obj);
+	c = nvme_lookup_ctrl(s, &fctx, NULL);
 	if (!c)
 		return;
 	json_update_attributes(c, port_obj);
