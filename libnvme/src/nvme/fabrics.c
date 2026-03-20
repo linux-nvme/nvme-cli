@@ -976,7 +976,7 @@ static const char *lookup_context(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 				.trsvcid = nvme_ctrl_get_trsvcid(c),
 				.subsysnqn = NULL,
 			};
-			if (__nvme_lookup_ctrl(s, &fctx, NULL))
+			if (nvme_ctrl_find(s, &fctx))
 				return nvme_subsystem_get_application(s);
 		}
 	}
@@ -1008,7 +1008,7 @@ __public int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 			.subsysnqn = NULL,
 		};
 
-		fc = __nvme_lookup_ctrl(s, &fctx, NULL);
+		fc = nvme_ctrl_find(s, &fctx);
 		if (fc) {
 			const char *key;
 
