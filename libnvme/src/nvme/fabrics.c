@@ -2425,9 +2425,7 @@ __public int nvmf_config_modify(struct nvme_global_ctx *ctx,
 		return -ENODEV;
 	}
 
-	c = nvme_lookup_ctrl(s, fctx->transport, fctx->traddr,
-			     fctx->host_traddr, fctx->host_iface,
-			     fctx->trsvcid, NULL);
+	c = __nvme_lookup_ctrl(s, fctx, NULL);
 	if (!c) {
 		nvme_msg(ctx, LOG_ERR, "Failed to lookup controller\n");
 		return -ENODEV;
