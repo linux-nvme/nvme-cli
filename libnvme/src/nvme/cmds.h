@@ -5247,7 +5247,11 @@ nvme_init_copy_range_elbt(__u8 *elbt, __u8 *eilbrt, int size)
 	int i;
 
 	for (i = 0; i < size; i++)
+#if __BYTE_ORDER == __LITTLE_ENDIAN
 		elbt[size - 1 - i] = eilbrt[i];
+#else /* __BYTE_ORDER == __LITTLE_ENDIAN */
+		elbt[i] = eilbrt[i];
+#endif /* __BYTE_ORDER == __LITTLE_ENDIAN */
 }
 
 /**
