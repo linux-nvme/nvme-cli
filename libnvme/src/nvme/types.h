@@ -6458,8 +6458,8 @@ struct nvme_copy_range_f0 {
 	__le16			cev;
 	__u8			rsvd22[2];
 	__u8			elbt[4];
-	__le16			elbat;
-	__le16			elbatm;
+	__u8			elbat[2];
+	__u8			elbatm[2];
 };
 
 /**
@@ -6485,8 +6485,8 @@ struct nvme_copy_range_f1 {
 	__le16			cev;
 	__u8			rsvd22[4];
 	__u8			elbt[10];
-	__le16			elbat;
-	__le16			elbatm;
+	__u8			elbat[2];
+	__u8			elbatm[2];
 };
 
 /**
@@ -6522,8 +6522,8 @@ struct nvme_copy_range_f2 {
 	__le16			cev;
 	__le16			sopt;
 	__u8			elbt[4];
-	__le16			elbat;
-	__le16			elbatm;
+	__u8			elbat[2];
+	__u8			elbatm[2];
 };
 
 /**
@@ -6553,8 +6553,8 @@ struct nvme_copy_range_f3 {
 	__le16			sopt;
 	__u8			rsvd24[2];
 	__u8			elbt[10];
-	__le16			elbat;
-	__le16			elbatm;
+	__u8			elbat[2];
+	__u8			elbatm[2];
 };
 
 /**

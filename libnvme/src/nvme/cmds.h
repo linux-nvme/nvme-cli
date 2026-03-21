@@ -5262,8 +5262,8 @@ nvme_init_copy_range_elbt(__u8 *elbt, __u8 *eilbrt, int size)
  */
 static inline void
 nvme_init_copy_range_f0(struct nvme_copy_range_f0 *copy, __u16 *nlbs,
-		__u64 *slbas, __u32 *elbts, __u32 *elbatms,
-		__u32 *elbats, __u16 nr)
+		__u64 *slbas, __u32 *elbts, __u16 *elbatms,
+		__u16 *elbats, __u16 nr)
 {
 	int i;
 
@@ -5272,8 +5272,10 @@ nvme_init_copy_range_f0(struct nvme_copy_range_f0 *copy, __u16 *nlbs,
 		copy[i].slba = htole64(slbas[i]);
 		nvme_init_copy_range_elbt(copy[i].elbt, (__u8 *)&elbts[i],
 					  sizeof(elbts[i]));
-		copy[i].elbatm = htole16(elbatms[i]);
-		copy[i].elbat = htole16(elbats[i]);
+		nvme_init_copy_range_elbt(copy[i].elbatm, (__u8 *)&elbatms[i],
+					  sizeof(copy[i].elbatm));
+		nvme_init_copy_range_elbt(copy[i].elbat, (__u8 *)&elbats[i],
+					  sizeof(copy[i].elbat));
 	}
 }
 
@@ -5289,8 +5291,8 @@ nvme_init_copy_range_f0(struct nvme_copy_range_f0 *copy, __u16 *nlbs,
  */
 static inline void
 nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
-		__u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
-		__u32 *elbats, __u16 nr)
+		__u64 *slbas, __u64 *eilbrts, __u16 *elbatms,
+		__u16 *elbats, __u16 nr)
 {
 	int i;
 
@@ -5299,10 +5301,12 @@ nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
-		copy[i].elbatm = htole16(elbatms[i]);
-		copy[i].elbat = htole16(elbats[i]);
 		nvme_init_copy_range_elbt(&copy[i].elbt[2], (__u8 *)&eilbrts[i],
 					  sizeof(eilbrts[i]));
+		nvme_init_copy_range_elbt(copy[i].elbatm, (__u8 *)&elbatms[i],
+					  sizeof(copy[i].elbatm));
+		nvme_init_copy_range_elbt(copy[i].elbat, (__u8 *)&elbats[i],
+					  sizeof(copy[i].elbat));
 	}
 }
 
@@ -5321,7 +5325,7 @@ nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 static inline void
 nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
 		__u32 *snsids, __u16 *nlbs, __u64 *slbas, __u16 *sopts,
-		__u32 *elbts, __u32 *elbatms, __u32 *elbats,
+		__u32 *elbts, __u16 *elbatms, __u16 *elbats,
 		__u16 nr)
 {
 	int i;
@@ -5333,8 +5337,10 @@ nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
 		copy[i].sopt = htole16(sopts[i]);
 		nvme_init_copy_range_elbt(copy[i].elbt, (__u8 *)&elbts[i],
 					  sizeof(elbts[i]));
-		copy[i].elbatm = htole16(elbatms[i]);
-		copy[i].elbat = htole16(elbats[i]);
+		nvme_init_copy_range_elbt(copy[i].elbatm, (__u8 *)&elbatms[i],
+					  sizeof(copy[i].elbatm));
+		nvme_init_copy_range_elbt(copy[i].elbat, (__u8 *)&elbats[i],
+					  sizeof(copy[i].elbat));
 	}
 }
 
@@ -5353,7 +5359,7 @@ nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
 static inline void
 nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 		__u16 *nlbs, __u64 *slbas, __u16 *sopts,
-		__u64 *eilbrts, __u32 *elbatms, __u32 *elbats,
+		__u64 *eilbrts, __u16 *elbatms, __u16 *elbats,
 		__u16 nr)
 {
 	int i;
@@ -5365,10 +5371,12 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
 		copy[i].sopt = htole16(sopts[i]);
-		copy[i].elbatm = htole16(elbatms[i]);
-		copy[i].elbat = htole16(elbats[i]);
 		nvme_init_copy_range_elbt(&copy[i].elbt[2], (__u8 *)&eilbrts[i],
 					  sizeof(eilbrts[i]));
+		nvme_init_copy_range_elbt(copy[i].elbatm, (__u8 *)&elbatms[i],
+					  sizeof(copy[i].elbatm));
+		nvme_init_copy_range_elbt(copy[i].elbat, (__u8 *)&elbats[i],
+					  sizeof(copy[i].elbat));
 	}
 }
 

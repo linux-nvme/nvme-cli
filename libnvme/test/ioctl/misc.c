@@ -991,15 +991,15 @@ static void test_copy(void)
 	__u16 nlbs[TEST_COPY_NR] = { 0xa, 0xb, 0xc };
 	__u64 slbas[TEST_COPY_NR] = { 0x1000, 0x20000000, 0x300040000000 };
 	__u32 short_pi[TEST_COPY_NR] = { 0x1000, 0x20000000, 0x40000000 };
-	__u32 elbatms[TEST_COPY_NR] = { 0x1ff, 0x3ff, 0x3ff };
-	__u32 elbats[TEST_COPY_NR] = { 0x111, 0x222, 0x333 };
+	__u16 elbatms[TEST_COPY_NR] = { 0x1ff, 0x3ff, 0x3ff };
+	__u16 elbats[TEST_COPY_NR] = { 0x111, 0x222, 0x333 };
 	__u8 expected_data[sizeof(struct nvme_copy_range_f0) * TEST_COPY_NR] = {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10, 0, 0, 0, 0, 0, 0,
-		0xa, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10, 0, 0x11, 1, 0xff, 1,
+		0xa, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10, 0, 1, 0x11, 1, 0xff,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x20, 0, 0, 0, 0,
-		0xb, 0, 0, 0, 0, 0, 0, 0, 0x20, 0, 0, 0, 0x22, 2, 0xff, 3,
+		0xb, 0, 0, 0, 0, 0, 0, 0, 0x20, 0, 0, 0, 2, 0x22, 3, 0xff,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0x30, 0, 0,
-		0xc, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0, 0, 0x33, 3, 0xff, 3
+		0xc, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0, 0, 3, 0x33, 3, 0xff
 	};
 
 	_cleanup_free_ struct nvme_copy_range_f0 *copy = NULL;
