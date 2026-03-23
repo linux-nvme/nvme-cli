@@ -5236,22 +5236,6 @@ nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
 }
 
 /**
- * nvme_init_copy_range_elbt() - Constructs a copy range elbt structure
- * @elbt:
- * @eilbrts:	Expected initial logical block reference tag
- */
-static inline void
-nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
-{
-	int i;
-
-	for (i = 0; i < 8; i++)
-		elbt[9 - i] = (eilbrt >> (8 * i)) & 0xff;
-	elbt[1] = 0;
-	elbt[0] = 0;
-}
-
-/**
  * nvme_init_copy_range_f0() - Constructs a copy range structure
  * @copy:	Copy range array
  * @nlbs:	Number of logical blocks
@@ -5263,17 +5247,17 @@ nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
  */
 static inline void
 nvme_init_copy_range_f0(struct nvme_copy_range_f0 *copy, __u16 *nlbs,
-		__u64 *slbas, __u32 *elbts, __u32 *elbatms,
-		__u32 *elbats, __u16 nr)
+		__u64 *slbas, __u32 *elbts, __u16 *elbatms,
+		__u16 *elbats, __u16 nr)
 {
 	int i;
 
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
-		copy[i].elbt = htole32(elbts[i]);
-		copy[i].elbatm = htole16(elbatms[i]);
-		copy[i].elbat = htole16(elbats[i]);
+		copy[i].elbt = htobe32(elbts[i]);
+		copy[i].elbatm = htobe16(elbatms[i]);
+		copy[i].elbat = htobe16(elbats[i]);
 	}
 }
 
@@ -5289,17 +5273,19 @@ nvme_init_copy_range_f0(struct nvme_copy_range_f0 *copy, __u16 *nlbs,
  */
 static inline void
 nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
-		__u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
-		__u32 *elbats, __u16 nr)
+		__u64 *slbas, __u64 *eilbrts, __u16 *elbatms,
+		__u16 *elbats, __u16 nr)
 {
 	int i;
+
+	memset(copy, 0, sizeof(*copy) * nr);
 
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
-		copy[i].elbatm = htole16(elbatms[i]);
-		copy[i].elbat = htole16(elbats[i]);
-		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
+		*(__be64 *)&copy[i].elbt[2] = htobe64(eilbrts[i]);
+		copy[i].elbatm = htobe16(elbatms[i]);
+		copy[i].elbat = htobe16(elbats[i]);
 	}
 }
 
@@ -5310,7 +5296,7 @@ nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
  * @nlbs:	Number of logical blocks
  * @slbas:	Starting LBA
  * @sopts:	Source options
- * @eilbrts:	Expected initial logical block reference tag
+ * @elbts:	Expected initial logical block reference tag
  * @elbatms:	Expected logical block application tag mask
  * @elbats:	Expected logical block application tag
  * @nr:		Number of descriptors to construct
@@ -5318,7 +5304,7 @@ nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
 static inline void
 nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
 		__u32 *snsids, __u16 *nlbs, __u64 *slbas, __u16 *sopts,
-		__u32 *eilbrts, __u32 *elbatms, __u32 *elbats,
+		__u32 *elbts, __u16 *elbatms, __u16 *elbats,
 		__u16 nr)
 {
 	int i;
@@ -5328,9 +5314,9 @@ nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
 		copy[i].sopt = htole16(sopts[i]);
-		copy[i].eilbrt = htole32(eilbrts[i]);
-		copy[i].elbatm = htole16(elbatms[i]);
-		copy[i].elbat = htole16(elbats[i]);
+		copy[i].elbt = htobe32(elbts[i]);
+		copy[i].elbatm = htobe16(elbatms[i]);
+		copy[i].elbat = htobe16(elbats[i]);
 	}
 }
 
@@ -5349,19 +5335,21 @@ nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy,
 static inline void
 nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 		__u16 *nlbs, __u64 *slbas, __u16 *sopts,
-		__u64 *eilbrts, __u32 *elbatms, __u32 *elbats,
+		__u64 *eilbrts, __u16 *elbatms, __u16 *elbats,
 		__u16 nr)
 {
 	int i;
+
+	memset(copy, 0, sizeof(*copy) * nr);
 
 	for (i = 0; i < nr; i++) {
 		copy[i].snsid = htole32(snsids[i]);
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
 		copy[i].sopt = htole16(sopts[i]);
-		copy[i].elbatm = htole16(elbatms[i]);
-		copy[i].elbat = htole16(elbats[i]);
-		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
+		*(__be64 *)&copy[i].elbt[2] = htobe64(eilbrts[i]);
+		copy[i].elbatm = htobe16(elbatms[i]);
+		copy[i].elbat = htobe16(elbats[i]);
 	}
 }
 

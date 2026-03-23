@@ -6457,9 +6457,9 @@ struct nvme_copy_range_f0 {
 	__u8			rsvd19;
 	__le16			cev;
 	__u8			rsvd22[2];
-	__le32			elbt;
-	__le16			elbat;
-	__le16			elbatm;
+	__be32			elbt;
+	__be16			elbat;
+	__be16			elbatm;
 };
 
 /**
@@ -6485,8 +6485,8 @@ struct nvme_copy_range_f1 {
 	__le16			cev;
 	__u8			rsvd22[4];
 	__u8			elbt[10];
-	__le16			elbat;
-	__le16			elbatm;
+	__be16			elbat;
+	__be16			elbatm;
 };
 
 /**
@@ -6507,7 +6507,7 @@ enum nvme_copy_range_sopt {
  * @rsvd19:	Reserved
  * @cev:	Command Extension Value
  * @sopt:	Source Options
- * @eilbrt:	Expected Initial Logical Block Reference Tag /
+ * @elbt:	Expected Initial Logical Block Reference Tag /
  *		Expected Logical Block Storage Tag
  * @elbatm:	Expected Logical Block Application Tag Mask
  * @elbat:	Expected Logical Block Application Tag
@@ -6521,9 +6521,9 @@ struct nvme_copy_range_f2 {
 	__u8			rsvd19;
 	__le16			cev;
 	__le16			sopt;
-	__le32			eilbrt;
-	__le16			elbat;
-	__le16			elbatm;
+	__be32			elbt;
+	__be16			elbat;
+	__be16			elbatm;
 };
 
 /**
@@ -6553,8 +6553,8 @@ struct nvme_copy_range_f3 {
 	__le16			sopt;
 	__u8			rsvd24[2];
 	__u8			elbt[10];
-	__le16			elbat;
-	__le16			elbatm;
+	__be16			elbat;
+	__be16			elbatm;
 };
 
 /**
