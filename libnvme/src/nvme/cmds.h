@@ -4383,7 +4383,7 @@ nvme_init_copy(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 sdlba,
 		data_len = nr * sizeof(struct nvme_copy_range_f3);
 		break;
 	default:
-		data_len = nr * sizeof(struct nvme_copy_range);
+		data_len = nr * sizeof(struct nvme_copy_range_f0);
 		break;
 	}
 
@@ -5252,18 +5252,18 @@ nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
 }
 
 /**
- * nvme_init_copy_range() - Constructs a copy range structure
+ * nvme_init_copy_range_f0() - Constructs a copy range structure
  * @copy:	Copy range array
  * @nlbs:	Number of logical blocks
  * @slbas:	Starting LBA
- * @eilbrts:	Expected initial logical block reference tag
+ * @elbts:	Expected initial logical block reference tag
  * @elbatms:	Expected logical block application tag mask
  * @elbats:	Expected logical block application tag
  * @nr:		Number of descriptors to construct
  */
 static inline void
-nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
-		__u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
+nvme_init_copy_range_f0(struct nvme_copy_range_f0 *copy, __u16 *nlbs,
+		__u64 *slbas, __u32 *elbts, __u32 *elbatms,
 		__u32 *elbats, __u16 nr)
 {
 	int i;
@@ -5271,7 +5271,7 @@ nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
 	for (i = 0; i < nr; i++) {
 		copy[i].nlb = htole16(nlbs[i]);
 		copy[i].slba = htole64(slbas[i]);
-		copy[i].eilbrt = htole32(eilbrts[i]);
+		copy[i].elbt = htole32(elbts[i]);
 		copy[i].elbatm = htole16(elbatms[i]);
 		copy[i].elbat = htole16(elbats[i]);
 	}
