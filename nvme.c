@@ -7770,7 +7770,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	__u32 elbats[256] = { 0 };
 
 	_cleanup_free_ union {
-		struct nvme_copy_range f0[256];
+		struct nvme_copy_range_f0 f0[256];
 		struct nvme_copy_range_f1 f1[256];
 		struct nvme_copy_range_f2 f2[256];
 		struct nvme_copy_range_f3 f3[256];
@@ -7922,8 +7922,8 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 					eilbrts.long_pi, elbatms, elbats, nr);
 		break;
 	default:
-		nvme_init_copy_range(copy->f0, nlbs, slbas, eilbrts.short_pi,
-				     elbatms, elbats, nr);
+		nvme_init_copy_range_f0(copy->f0, nlbs, slbas, eilbrts.short_pi,
+					elbatms, elbats, nr);
 		break;
 	}
 

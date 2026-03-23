@@ -983,7 +983,7 @@ static void test_dsm(void)
 static void test_copy(void)
 {
 	__u16 nr = TEST_COPY_NR, cev = 0, dspec = 0;
-	int copy_size = sizeof(struct nvme_copy_range) * nr, err;
+	int copy_size = sizeof(struct nvme_copy_range_f0) * nr, err;
 	bool prinfor = false, prinfow = false, stcw = false,
 		stcr = false, fua = false, lr = false;
 	__u8 cetype = 0, dtype = 0, desfmt = 0xf;
@@ -993,7 +993,7 @@ static void test_copy(void)
 	__u32 short_pi[TEST_COPY_NR] = { 0x1000, 0x20000000, 0x40000000 };
 	__u32 elbatms[TEST_COPY_NR] = { 0x1ff, 0x3ff, 0x3ff };
 	__u32 elbats[TEST_COPY_NR] = { 0x111, 0x222, 0x333 };
-	__u8 expected_data[sizeof(struct nvme_copy_range) * TEST_COPY_NR] = {
+	__u8 expected_data[sizeof(struct nvme_copy_range_f0) * TEST_COPY_NR] = {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10, 0, 0, 0, 0, 0, 0,
 		0xa, 0, 0, 0, 0, 0, 0, 0, 0, 0x10, 0, 0, 0x11, 1, 0xff, 1,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x20, 0, 0, 0, 0,
@@ -1002,7 +1002,7 @@ static void test_copy(void)
 		0xc, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0x33, 3, 0xff, 3
 	};
 
-	_cleanup_free_ struct nvme_copy_range *copy = NULL;
+	_cleanup_free_ struct nvme_copy_range_f0 *copy = NULL;
 
 	copy = calloc(1, copy_size);
 	check(copy, "copy: ENOMEM");
@@ -1017,13 +1017,14 @@ static void test_copy(void)
 			 ((dtype & 0xf) << 20) |
 			 ((prinfow & 0xf) << 26) |
 			 ((fua & 0x1) << 30) | ((lr & 0x1) << 31),
-		.data_len = nr * sizeof(struct nvme_copy_range),
+		.data_len = nr * sizeof(struct nvme_copy_range_f0),
 		.in_data = expected_data,
 	};
 	struct nvme_passthru_cmd cmd;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	nvme_init_copy_range(copy, nlbs, slbas, short_pi, elbatms, elbats, nr);
+	nvme_init_copy_range_f0(copy, nlbs, slbas, short_pi, elbatms, elbats,
+				nr);
 	nvme_init_copy(&cmd, TEST_NSID, sdlba, nr, desfmt,
 		prinfor, prinfow, cetype, dtype, stcw, stcr,
 		fua, lr, cev, dspec, (void *)copy);
