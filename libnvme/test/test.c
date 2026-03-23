@@ -15,18 +15,17 @@
  * program exists successfully; an ungraceful exit means a bug exists
  * somewhere.
  */
-#include <libnvme.h>
-
-#include "nvme/private.h"
-
+#include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <inttypes.h>
-#include <libnvme.h>
 
 #include <ccan/endian/endian.h>
+
+#include <libnvme.h>
+
+#include "nvme/private.h"
 
 static bool nvme_match_subsysnqn_filter(nvme_subsystem_t s,
 		nvme_ctrl_t c, nvme_ns_t ns, void *f_args)
@@ -34,7 +33,7 @@ static bool nvme_match_subsysnqn_filter(nvme_subsystem_t s,
 	char *nqn_match = f_args;
 
 	if (s)
-		return strcmp(nvme_subsystem_get_nqn(s), nqn_match) == 0;
+		return strcmp(nvme_subsystem_get_subsysnqn(s), nqn_match) == 0;
 	return true;
 }
 
@@ -406,11 +405,11 @@ int main(int argc, char **argv)
 	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
-			       nvme_subsystem_get_nqn(s));
+			       nvme_subsystem_get_subsysnqn(s));
 			nvme_subsystem_for_each_ctrl(s, c) {
 				printf("  %s %s %s %s\n", nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_ctrl_get_state(c));
 			}
 		}
@@ -424,7 +423,7 @@ int main(int argc, char **argv)
 	if (!nvme_scan_ctrl(ctx, ctrl, &c)) {
 		printf("%s %s %s %s\n", nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
-			nvme_ctrl_get_address(c),
+			nvme_ctrl_get_traddr(c),
 			nvme_ctrl_get_state(c));
 		nvme_free_ctrl(c);
 	}
@@ -434,12 +433,12 @@ int main(int argc, char **argv)
 	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
-			       nvme_subsystem_get_nqn(s));
+			       nvme_subsystem_get_subsysnqn(s));
 			nvme_subsystem_for_each_ctrl(s, c) {
 				printf(" `- %s %s %s %s\n",
 				       nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_ctrl_get_state(c));
 
 				nvme_ctrl_for_each_ns(c, n) {

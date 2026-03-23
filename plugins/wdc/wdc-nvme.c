@@ -34,12 +34,12 @@
 #include <libnvme.h>
 
 #include "common.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "platform/types.h"
 #include "util/cleanup.h"
 #include "util/types.h"
-#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "wdc-nvme.h"
@@ -2121,13 +2121,13 @@ static __u64 wdc_get_enc_drive_capabilities(struct nvme_global_ctx *ctx,
 		memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 		if (wdc_CheckUuidListSupport(hdl, &uuid_list)) {
 			/* check for the Sandisk UUID first  */
-			uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+			uuid_index = nvme_find_uuid(&uuid_list, SNDK_UUID);
 
 			if (uuid_index < 0)
 				/* The Sandisk UUID is not found;
 				 * check for the WDC UUID second.
 				 */
-				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+				uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID);
 		}
 
 		/* WD UUID not found, use default uuid index - 0 */
@@ -2734,15 +2734,15 @@ static bool get_dev_mgment_data(struct nvme_global_ctx *ctx, struct nvme_transpo
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 	if (wdc_CheckUuidListSupport(hdl, &uuid_list)) {
 		/* check for the Sandisk UUID first  */
-		uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+		uuid_index = nvme_find_uuid(&uuid_list, SNDK_UUID);
 
 		if (uuid_index < 0) {
 			/* The Sandisk UUID is not found;
 			 * check for the WDC UUID second.
 			 */
-			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+			uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID);
 			if (uuid_index < 0)
-				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
+				uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID_SN640_3);
 		}
 
 		if (uuid_index >= 0)
@@ -2803,15 +2803,15 @@ static bool get_dev_mgment_cbs_data(struct nvme_global_ctx *ctx, struct nvme_tra
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 	if (wdc_CheckUuidListSupport(hdl, &uuid_list)) {
 		/* check for the Sandisk UUID first  */
-		uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+		uuid_index = nvme_find_uuid(&uuid_list, SNDK_UUID);
 
 		if (uuid_index < 0) {
 			/* The Sandisk UUID is not found;
 			 * check for the WDC UUID second.
 			 */
-			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+			uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID);
 			if (uuid_index < 0)
-				uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID_SN640_3);
+				uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID_SN640_3);
 		}
 
 		if (uuid_index >= 0)
@@ -9096,13 +9096,13 @@ static int wdc_drive_status(int argc, char **argv, struct command *acmd,
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 	if (wdc_CheckUuidListSupport(hdl, &uuid_list)) {
 		/* check for the Sandisk UUID first  */
-		uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+		uuid_index = nvme_find_uuid(&uuid_list, SNDK_UUID);
 
 		if (uuid_index < 0)
 			/* The Sandisk UUID is not found;
 			 * check for the WDC UUID second.
 			 */
-			uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+			uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID);
 	}
 
 	/* WD UUID not found, use default uuid index - 0 */
@@ -10871,13 +10871,13 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 		if (!wdc_is_sn861(device_id)) {
 			if (uuid_supported) {
 				/* check for the Sandisk UUID first  */
-				uuid_index = nvme_uuid_find(&uuid_list, SNDK_UUID);
+				uuid_index = nvme_find_uuid(&uuid_list, SNDK_UUID);
 
 				if (uuid_index < 0)
 					/* The Sandisk UUID is not found;
 					 * check for the WDC UUID second.
 					 */
-					uuid_index = nvme_uuid_find(&uuid_list, WDC_UUID);
+					uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID);
 			}
 
 			/* WD UUID not found, use default uuid index - 0 */

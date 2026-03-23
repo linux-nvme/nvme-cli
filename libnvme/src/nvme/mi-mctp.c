@@ -7,10 +7,11 @@
  */
 
 #include <errno.h>
+#include <fcntl.h>
+#include <poll.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 
 #include "platform/includes.h"
 
@@ -34,6 +35,7 @@
 #include <libnvme-mi.h>
 
 #include "private.h"
+#include "compiler_attributes.h"
 
 
 #if !defined(AF_MCTP)
@@ -669,7 +671,7 @@ int nvme_mi_aem_open(nvme_mi_ep_t ep)
 	return 0;
 }
 
-nvme_mi_ep_t nvme_mi_open_mctp(struct nvme_global_ctx *ctx,
+__public nvme_mi_ep_t nvme_mi_open_mctp(struct nvme_global_ctx *ctx,
 			       unsigned int netid, __u8 eid)
 {
 	struct nvme_mi_transport_mctp *mctp;
@@ -939,7 +941,7 @@ static int handle_mctp_obj(struct nvme_global_ctx *ctx, DBusMessageIter *obj)
 	return 0;
 }
 
-struct nvme_global_ctx *nvme_mi_scan_mctp(void)
+__public struct nvme_global_ctx *nvme_mi_scan_mctp(void)
 {
 	DBusMessage *msg, *resp = NULL;
 	DBusConnection *bus = NULL;
@@ -1033,7 +1035,7 @@ out:
 
 #else /* CONFIG_DBUS */
 
-struct nvme_global_ctx *nvme_mi_scan_mctp(void)
+__public struct nvme_global_ctx *nvme_mi_scan_mctp(void)
 {
 	return NULL;
 }

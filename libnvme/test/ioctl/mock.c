@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <string.h>
+
 #include <sys/ioctl.h>
-#include <dlfcn.h>
 
 #include <libnvme.h>
 

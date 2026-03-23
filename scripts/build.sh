@@ -34,6 +34,7 @@ usage() {
     echo "  html_docs           build html documentation only"
     echo "  rst_docs            build rst documentation only"
     echo "  static              build a static binary"
+    echo "  minimal_static      build a static binary without fabrics support"
     echo "  libnvme             build only libnvme"
     echo ""
     echo "configs with muon:"
@@ -90,14 +91,17 @@ config_meson_default() {
 }
 
 config_meson_musl() {
-    local c_args="-U_GNU_SOURCE \
--idirafter /usr/include -idirafter \
-/usr/include/x86_64-linux-gnu"
+	local cflags=(
+		-U_GNU_SOURCE
+		-idirafter /usr/include
+		-idirafter /usr/include/x86_64-linux-gnu
+	)
+	local cflags_str="${cflags[*]}"
 
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
-        -Dc_args="${c_args}"                    \
+        -Dc_args="${cflags_str}"                \
         -Ddefault_library=static                \
         -Djson-c=disabled                       \
         -Dopenssl=disabled                      \
@@ -189,6 +193,46 @@ config_meson_static() {
         -Dliburing=disabled                     \
         -Dpython=disabled                       \
         -Dopenssl=disabled                      \
+        -Dtests=false                           \
+        -Dexamples=false                        \
+        "${BUILDDIR}"
+}
+
+config_meson_minimal_static() {
+	local cflags=(
+		-U_GNU_SOURCE
+		-idirafter /usr/include
+		-idirafter /usr/include/x86_64-linux-gnu
+		-Oz
+		-flto
+		-ffunction-sections
+		-fdata-sections
+		-fno-unwind-tables
+		-fno-asynchronous-unwind-tables
+		-fno-stack-protector
+	)
+	local ldflags=(
+		-flto
+		-Wl,--gc-sections
+		-s
+		-Wl,--build-id=none
+		-static
+	)
+	local cflags_str="${cflags[*]}"
+	local ldflags_str="${ldflags[*]}"
+
+	CC=musl-gcc
+
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype=release                     \
+        --default-library=static                \
+        --prefix=/usr                           \
+        -Dplugins="sed,lm,feat,zns,fdp"         \
+        -Dc_args="${cflags_str}"                \
+        -Dc_link_args="${ldflags_str}"          \
+        -Dfabrics=disabled                      \
+        -Djson-c=disabled                       \
         -Dtests=false                           \
         -Dexamples=false                        \
         "${BUILDDIR}"

@@ -20,20 +20,19 @@
  *   Author: Jeff Lien <jeff.lien@wdc.com>,
  */
 
-#include <stdio.h>
-#include <ctype.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
 #include <assert.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-
+#include <ctype.h>
 #include <stdbool.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
+
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 /* Create Dir Command Status */
 #define WDC_STATUS_SUCCESS                		  			0

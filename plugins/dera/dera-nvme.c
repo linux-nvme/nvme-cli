@@ -5,17 +5,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <dirent.h> 
-#include <ctype.h> 
+#include <dirent.h>
+#include <ctype.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
 #include <libnvme.h>
 
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
 #include "platform/types.h"
-#include "nvme-print.h"
 
 #define CREATE_CMD
 #include "dera-nvme.h"

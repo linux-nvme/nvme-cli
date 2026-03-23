@@ -11,18 +11,21 @@
  * is observed with controller telemetry data, read the log and save it to a
  * file in /var/log/ with the device's unique name and epoch timestamp.
  */
-#include "nvme/tree.h"
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <time.h>
-#include <libnvme.h>
+#include <unistd.h>
+
 #include <sys/stat.h>
 
 #include <ccan/endian/endian.h>
+
+#include <libnvme.h>
+
+#include "nvme/tree.h"
 
 struct events {
 	nvme_ctrl_t c;

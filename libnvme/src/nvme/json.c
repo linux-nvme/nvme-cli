@@ -6,9 +6,9 @@
  * Authors: Hannes Reinecke <hare@suse.de>
  */
 
+#include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 #include <json.h>
 
@@ -60,10 +60,10 @@ static void json_update_attributes(nvme_ctrl_t c,
 		JSON_UPDATE_BOOL_OPTION(cfg, key_str,
 					concat, val_obj);
 		if (!strcmp("persistent", key_str) &&
-		    !nvme_ctrl_is_persistent(c))
+		    !nvme_ctrl_get_persistent(c))
 			nvme_ctrl_set_persistent(c, true);
 		if (!strcmp("discovery", key_str) &&
-		    !nvme_ctrl_is_discovery_ctrl(c))
+		    !nvme_ctrl_get_discovery_ctrl(c))
 			nvme_ctrl_set_discovery_ctrl(c, true);
 		if (!strcmp("keyring", key_str))
 			nvme_ctrl_set_keyring(c,
@@ -112,7 +112,7 @@ static void json_parse_port(nvme_subsystem_t s, struct json_object *port_obj)
 		nvme_ctrl_set_dhchap_host_key(c, json_object_get_string(attr_obj));
 	attr_obj = json_object_object_get(port_obj, "dhchap_ctrl_key");
 	if (attr_obj)
-		nvme_ctrl_set_dhchap_key(c, json_object_get_string(attr_obj));
+		nvme_ctrl_set_dhchap_ctrl_key(c, json_object_get_string(attr_obj));
 	attr_obj = json_object_object_get(port_obj, "keyring");
 	if (attr_obj)
 		nvme_ctrl_set_keyring(c, json_object_get_string(attr_obj));
@@ -175,7 +175,7 @@ static void json_parse_host(struct nvme_global_ctx *ctx, struct json_object *hos
 	h = nvme_lookup_host(ctx, hostnqn, hostid);
 	attr_obj = json_object_object_get(host_obj, "dhchap_key");
 	if (attr_obj)
-		nvme_host_set_dhchap_key(h, json_object_get_string(attr_obj));
+		nvme_host_set_dhchap_host_key(h, json_object_get_string(attr_obj));
 	attr_obj = json_object_object_get(host_obj, "hostsymname");
 	if (attr_obj)
 		nvme_host_set_hostsymname(h, json_object_get_string(attr_obj));
@@ -308,7 +308,7 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	if (value)
 		json_object_object_add(port_obj, "dhchap_key",
 				       json_object_new_string(value));
-	value = nvme_ctrl_get_dhchap_key(c);
+	value = nvme_ctrl_get_dhchap_ctrl_key(c);
 	if (value)
 		json_object_object_add(port_obj, "dhchap_ctrl_key",
 				       json_object_new_string(value));
@@ -342,10 +342,10 @@ static void json_update_port(struct json_object *ctrl_array, nvme_ctrl_t c)
 	JSON_BOOL_OPTION(cfg, port_obj, hdr_digest);
 	JSON_BOOL_OPTION(cfg, port_obj, data_digest);
 	JSON_BOOL_OPTION(cfg, port_obj, concat);
-	if (nvme_ctrl_is_persistent(c))
+	if (nvme_ctrl_get_persistent(c))
 		json_object_object_add(port_obj, "persistent",
 				       json_object_new_boolean(true));
-	if (nvme_ctrl_is_discovery_ctrl(c))
+	if (nvme_ctrl_get_discovery_ctrl(c))
 		json_object_object_add(port_obj, "discovery",
 				       json_object_new_boolean(true));
 
@@ -356,7 +356,7 @@ static void json_update_subsys(struct json_object *subsys_array,
 			       nvme_subsystem_t s)
 {
 	nvme_ctrl_t c;
-	const char *subsysnqn = nvme_subsystem_get_nqn(s), *app;
+	const char *subsysnqn = nvme_subsystem_get_subsysnqn(s), *app;
 	struct json_object *subsys_obj = json_object_new_object();
 	struct json_object *port_array;
 
@@ -405,7 +405,7 @@ int json_update_config(struct nvme_global_ctx *ctx, int fd)
 		if (hostid)
 			json_object_object_add(host_obj, "hostid",
 					       json_object_new_string(hostid));
-		dhchap_key = nvme_host_get_dhchap_key(h);
+		dhchap_key = nvme_host_get_dhchap_host_key(h);
 		if (dhchap_key)
 			json_object_object_add(host_obj, "dhchap_key",
 					       json_object_new_string(dhchap_key));
@@ -475,7 +475,7 @@ static void json_dump_ctrl(struct json_object *ctrl_array, nvme_ctrl_t c)
 	if (value)
 		json_object_object_add(ctrl_obj, "dhchap_key",
 				       json_object_new_string(value));
-	value = nvme_ctrl_get_dhchap_key(c);
+	value = nvme_ctrl_get_dhchap_ctrl_key(c);
 	if (value)
 		json_object_object_add(ctrl_obj, "dhchap_ctrl_key",
 				       json_object_new_string(value));
@@ -512,10 +512,10 @@ static void json_dump_ctrl(struct json_object *ctrl_array, nvme_ctrl_t c)
 					       json_object_new_string(value));
 	}
 	JSON_BOOL_OPTION(cfg, ctrl_obj, concat);
-	if (nvme_ctrl_is_persistent(c))
+	if (nvme_ctrl_get_persistent(c))
 		json_object_object_add(ctrl_obj, "persistent",
 				       json_object_new_boolean(true));
-	if (nvme_ctrl_is_discovery_ctrl(c))
+	if (nvme_ctrl_get_discovery_ctrl(c))
 		json_object_object_add(ctrl_obj, "discovery",
 				       json_object_new_boolean(true));
 	json_object_array_add(ctrl_array, ctrl_obj);
@@ -602,7 +602,7 @@ static void json_dump_subsys(struct json_object *subsys_array,
 	json_object_object_add(subsys_obj, "name",
 			       json_object_new_string(nvme_subsystem_get_name(s)));
 	json_object_object_add(subsys_obj, "nqn",
-			       json_object_new_string(nvme_subsystem_get_nqn(s)));
+			       json_object_new_string(nvme_subsystem_get_subsysnqn(s)));
 
 	ns_array = json_object_new_array();
 	if (!json_dump_subsys_multipath(s, ns_array))
@@ -635,7 +635,7 @@ int json_dump_tree(struct nvme_global_ctx *ctx)
 		if (hostid)
 			json_object_object_add(host_obj, "hostid",
 					       json_object_new_string(hostid));
-		dhchap_key = nvme_host_get_dhchap_key(h);
+		dhchap_key = nvme_host_get_dhchap_host_key(h);
 		if (dhchap_key)
 			json_object_object_add(host_obj, "dhchap_key",
 					       json_object_new_string(dhchap_key));

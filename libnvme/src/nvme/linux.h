@@ -8,8 +8,8 @@
  */
 #pragma once
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #include <nvme/lib-types.h>
 
@@ -393,3 +393,55 @@ int nvme_import_tls_key(struct nvme_global_ctx *ctx, const char *encoded_key,
 int nvme_import_tls_key_versioned(struct nvme_global_ctx *ctx,
 		const char *encoded_key, unsigned char *version,
 		unsigned char *hmac, size_t *key_len, unsigned char **key);
+
+/**
+ * nvme_generate_hostnqn() - Generate a machine specific host nqn
+ * Returns: An nvm namespace qualified name string based on the machine
+ * identifier, or NULL if not successful.
+ */
+char *nvme_generate_hostnqn(void);
+
+/**
+ * nvme_generate_hostnqn_from_hostid() - Generate a host nqn from
+ * host identifier
+ * @hostid:		Host identifier
+ *
+ * If @hostid is NULL, the function generates it based on the machine
+ * identifier.
+ *
+ * Return: On success, an NVMe Qualified Name for host identification. This
+ * name is based on the given host identifier. On failure, NULL.
+ */
+char *nvme_generate_hostnqn_from_hostid(char *hostid);
+
+/**
+ * nvme_generate_hostid() - Generate a machine specific host identifier
+ *
+ * Return: On success, an identifier string based on the machine identifier to
+ * be used as NVMe Host Identifier, or NULL on failure.
+ */
+char *nvme_generate_hostid(void);
+
+/**
+ * nvme_read_hostnqn() - Reads the host nvm qualified name from the config
+ *			      default location
+ *
+ * Retrieve the qualified name from the config file located in $SYSCONFDIR/nvme.
+ * $SYSCONFDIR is usually /etc.
+ *
+ * Return: The host nqn, or NULL if unsuccessful. If found, the caller
+ * is responsible to free the string.
+ */
+char *nvme_read_hostnqn(void);
+
+/**
+ * nvme_read_hostid() - Reads the host identifier from the config default
+ *			     location
+ *
+ * Retrieve the host idenditifer from the config file located in
+ * $SYSCONFDIR/nvme/. $SYSCONFDIR is usually /etc.
+ *
+ * Return: The host identifier, or NULL if unsuccessful. If found, the caller
+ *	   is responsible to free the string.
+ */
+char *nvme_read_hostid(void);

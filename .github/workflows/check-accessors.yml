@@ -1,0 +1,48 @@
+---
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2025 Dell Technologies Inc. or its subsidiaries.
+#
+# Authors: Martin Belanger <Martin.Belanger@dell.com>
+#
+# Verify that the committed accessor files (accessors.h, accessors.c) are
+# up to date with the generate-accessors tool and the structs in private.h.
+#
+# If this check fails, run the following command and commit the result:
+#
+#   meson compile -C <build-dir> update-accessors
+
+name: Check accessors
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+  workflow_dispatch:
+
+jobs:
+  check-accessors:
+    name: check generated accessor files are up to date
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Configure
+        run: meson setup .build-ci
+      - name: Regenerate accessor files
+        run: meson compile -C .build-ci update-accessors
+      - name: Check for uncommitted differences
+        run: |
+          if ! git diff --exit-code libnvme/src/nvme/accessors.h \
+                                    libnvme/src/nvme/accessors.c; then
+            echo ""
+            echo "ERROR: accessor files are out of date."
+            echo "Run 'meson compile -C <build-dir> update-accessors' and commit the result."
+            exit 1
+          fi

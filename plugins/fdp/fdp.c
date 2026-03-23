@@ -14,8 +14,9 @@
 #include <libnvme.h>
 
 #include "common.h"
-#include "nvme.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "nvme.h"
 
 #define CREATE_CMD
 #include "fdp.h"

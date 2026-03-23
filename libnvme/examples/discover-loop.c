@@ -14,13 +14,14 @@
  */
 #define __SANE_USERSPACE_TYPES__
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <libnvme.h>
 
 #include <ccan/endian/endian.h>
+
+#include <libnvme.h>
 
 static void print_discover_log(struct nvmf_discovery_log *log)
 {
@@ -68,7 +69,7 @@ int main()
 		nvme_free_global_ctx(ctx);
 		return 1;
 	}
-	ret = nvme_host_get(ctx, NULL, NULL, &h);
+	ret = nvme_get_host(ctx, NULL, NULL, &h);
 	if (ret) {
 		fprintf(stderr, "Failed to allocated memory\n");
 		return 1;

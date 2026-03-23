@@ -7,8 +7,9 @@
  */
 #pragma once
 
+#include <platform/includes.h>
+
 #include <ccan/list/list.h>
-#include "platform/includes.h"
 
 #include <nvme/fabrics.h>
 #include <nvme/mi.h>
@@ -110,6 +111,7 @@ struct nvme_transport_handle {
 	struct stat stat;
 	bool ioctl_admin64;
 	bool ioctl_io64;
+	bool uring_enabled;
 
 	/* mi */
 	struct nvme_mi_ep *ep;
@@ -119,7 +121,7 @@ struct nvme_transport_handle {
 	struct nvme_log *log;
 };
 
-struct nvme_path {
+struct nvme_path { /*!generate-accessors*/
 	struct list_node entry;
 	struct list_node nentry;
 
@@ -131,7 +133,7 @@ struct nvme_path {
 	char *ana_state;
 	char *numa_nodes;
 	int grpid;
-	int queue_depth;
+	int queue_depth; //!accessors:none
 };
 
 struct nvme_ns_head {
@@ -141,7 +143,7 @@ struct nvme_ns_head {
 	char *sysfs_dir;
 };
 
-struct nvme_ns {
+struct nvme_ns { /*!generate-accessors*/
 	struct list_node entry;
 
 	struct nvme_subsystem *s;
@@ -152,7 +154,7 @@ struct nvme_ns {
 	struct nvme_transport_handle *hdl;
 	__u32 nsid;
 	char *name;
-	char *generic_name;
+	char *generic_name; //!accessors:none
 	char *sysfs_dir;
 
 	int lba_shift;
@@ -167,7 +169,7 @@ struct nvme_ns {
 	enum nvme_csi csi;
 };
 
-struct nvme_ctrl {
+struct nvme_ctrl { /*!generate-accessors*/
 	struct list_node entry;
 	struct list_head paths;
 	struct list_head namespaces;
@@ -175,31 +177,31 @@ struct nvme_ctrl {
 
 	struct nvme_global_ctx *ctx;
 	struct nvme_transport_handle *hdl;
-	char *name;
-	char *sysfs_dir;
-	char *address;
-	char *firmware;
-	char *model;
-	char *state;
-	char *numa_node;
-	char *queue_count;
-	char *serial;
-	char *sqsize;
-	char *transport;
-	char *subsysnqn;
-	char *traddr;
-	char *trsvcid;
-	char *dhchap_key;
+	char *name; //!accessors:readonly
+	char *sysfs_dir; //!accessors:readonly
+	char *address; //!accessors:none
+	char *firmware; //!accessors:readonly
+	char *model; //!accessors:readonly
+	char *state; //!accessors:none
+	char *numa_node; //!accessors:readonly
+	char *queue_count; //!accessors:readonly
+	char *serial; //!accessors:readonly
+	char *sqsize; //!accessors:readonly
+	char *transport; //!accessors:readonly
+	char *subsysnqn; //!accessors:readonly
+	char *traddr; //!accessors:readonly
+	char *trsvcid; //!accessors:readonly
+	char *dhchap_host_key;
 	char *dhchap_ctrl_key;
 	char *keyring;
 	char *tls_key_identity;
 	char *tls_key;
-	char *cntrltype;
-	char *cntlid;
-	char *dctype;
-	char *phy_slot;
-	char *host_traddr;
-	char *host_iface;
+	char *cntrltype; //!accessors:readonly
+	char *cntlid; //!accessors:readonly
+	char *dctype; //!accessors:readonly
+	char *phy_slot; //!accessors:readonly
+	char *host_traddr; //!accessors:readonly
+	char *host_iface; //!accessors:readonly
 	bool discovery_ctrl;
 	bool unique_discovery_ctrl;
 	bool discovered;
@@ -207,38 +209,38 @@ struct nvme_ctrl {
 	struct nvme_fabrics_config cfg;
 };
 
-struct nvme_subsystem {
+struct nvme_subsystem { /*!generate-accessors*/
 	struct list_node entry;
 	struct list_head ctrls;
 	struct list_head namespaces;
 	struct nvme_host *h;
 
-	char *name;
-	char *sysfs_dir;
-	char *subsysnqn;
-	char *model;
-	char *serial;
-	char *firmware;
-	char *subsystype;
+	char *name; /*!accessors:readonly*/
+	char *sysfs_dir; /*!accessors:readonly*/
+	char *subsysnqn; /*!accessors:readonly*/
+	char *model; /*!accessors:readonly*/
+	char *serial; /*!accessors:readonly*/
+	char *firmware; /*!accessors:readonly*/
+	char *subsystype; /*!accessors:readonly*/
 	char *application;
 	char *iopolicy;
 };
 
-struct nvme_host {
+struct nvme_host { /*!generate-accessors*/
 	struct list_node entry;
 	struct list_head subsystems;
 	struct nvme_global_ctx *ctx;
 
-	char *hostnqn;
-	char *hostid;
-	char *dhchap_key;
+	char *hostnqn; /*!accessors:readonly*/
+	char *hostid; /*!accessors:readonly*/
+	char *dhchap_host_key;
 	char *hostsymname;
-	bool pdc_enabled;
+	bool pdc_enabled; //!accessors:none
 	bool pdc_enabled_valid; /* set if pdc_enabled doesn't have an undefined
 				 * value */
 };
 
-struct nvme_fabric_options {
+struct nvme_fabric_options { /*!generate-accessors*/
 	bool cntlid;
 	bool concat;
 	bool ctrl_loss_tmo;
@@ -271,6 +273,12 @@ struct nvme_fabric_options {
 	bool trsvcid;
 };
 
+enum nvme_io_uring_state {
+	NVME_IO_URING_STATE_UNKNOWN = 0,
+	NVME_IO_URING_STATE_NOT_AVAILABLE,
+	NVME_IO_URING_STATE_AVAILABLE,
+};
+
 struct nvme_global_ctx {
 	char *config_file;
 	char *application;
@@ -283,51 +291,12 @@ struct nvme_global_ctx {
 	bool dry_run;
 	struct nvme_fabric_options *options;
 	struct ifaddrs *ifaddrs_cache; /* init with nvme_getifaddrs() */
-};
 
-struct nvmf_discovery_ctx {
-	/* defaults */
-	int default_max_discovery_retries;
-	int default_keep_alive_timeout;
-
-	void (*discovery_log)(struct nvmf_discovery_ctx *dctx,
-			bool connect,
-			struct nvmf_discovery_log *log,
-			uint64_t numrec, void *user_data);
-	void (*already_connected)(struct nvme_host *host,
-			struct nvmf_disc_log_entry *entry,
-			void *user_data);
-	bool (*decide_retry)(struct nvmf_discovery_ctx *dctx, int err,
-			void *user_data);
-	void (*connected)(struct nvmf_discovery_ctx *dctx, struct nvme_ctrl *c,
-			void *user_data);
-	int (*parser_init)(struct nvmf_discovery_ctx *dctx,
-			void *user_data);
-	void (*parser_cleanup)(struct nvmf_discovery_ctx *dctx,
-			void *user_data);
-	int (*parser_next_line)(struct nvmf_discovery_ctx *dctx,
-			void *user_data);
-
-	/* connfiguration */
-	bool persistent;
-	const char *device;
-	const char *subsysnqn;
-	const char *transport;
-	const char *traddr;
-	const char *host_traddr;
-	const char *host_iface;
-	const char *trsvcid;
-	const char *hostnqn;
-	const char *hostid;
-	const char *hostkey;
-	const char *ctrlkey;
-	const char *keyring;
-	const char *tls_key;
-	const char *tls_key_identity;
-	struct nvme_fabrics_config *cfg;
-	struct nvme_fabrics_config *defcfg;
-
-	void *user_data;
+	enum nvme_io_uring_state uring_state;
+#ifdef CONFIG_LIBURING
+	int ring_cmds;
+	struct io_uring *ring;
+#endif
 };
 
 struct nvmf_context {
@@ -382,15 +351,6 @@ struct nvmf_context {
 	const char *tls_key_identity;
 
 	void *user_data;
-};
-
-struct fabric_args {
-	const char *subsysnqn;
-	const char *transport;
-	const char *traddr;
-	const char *trsvcid;
-	const char *host_traddr;
-	const char *host_iface;
 };
 
 int nvme_set_attr(const char *dir, const char *attr, const char *value);
@@ -775,3 +735,40 @@ void nvme_ns_release_transport_handle(nvme_ns_t n);
  */
 int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd);
+
+#ifdef CONFIG_LIBURING
+int nvme_open_uring(struct nvme_global_ctx *ctx);
+void nvme_close_uring(struct nvme_global_ctx *ctx);
+int __nvme_transport_handle_open_uring(struct nvme_transport_handle *hdl);
+int nvme_submit_admin_passthru_async(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd);
+int nvme_wait_complete_passthru(struct nvme_transport_handle *hdl);
+#else
+static inline int
+nvme_open_uring(struct nvme_global_ctx *ctx)
+{
+	return -ENOTSUP;
+}
+static inline void
+nvme_close_uring(struct nvme_global_ctx *ctx)
+{
+}
+static inline int
+__nvme_transport_handle_open_uring(struct nvme_transport_handle *hdl)
+{
+	hdl->ctx->uring_state = NVME_IO_URING_STATE_NOT_AVAILABLE;
+	return -ENOTSUP;
+}
+static inline int
+nvme_submit_admin_passthru_async(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd)
+{
+	return -ENOTSUP;
+}
+static inline int
+nvme_wait_complete_passthru(struct nvme_transport_handle *hdl)
+{
+	return -ENOTSUP;
+}
+#endif
+

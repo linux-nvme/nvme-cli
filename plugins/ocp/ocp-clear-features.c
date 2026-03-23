@@ -7,10 +7,13 @@
  */
 
 #include <unistd.h>
+
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "util/types.h"
+
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
-#include "nvme-print.h"
 
 static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8 fid)
 {

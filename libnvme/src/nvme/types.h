@@ -1373,11 +1373,24 @@ struct nvme_id_psd {
  *	       of a single Endurance Group.
  * @tmpthha:   Temperature Threshold Hysteresis Attributes
  * @rsvd385:   Reserved
- * @cqt:       Command Quiesce Time (CQT). his field indicates the expected
+ * @cqt:       Command Quiesce Time (CQT). This field indicates the expected
  *	       worst-case time in 1 millisecond units for the controller to
  *	       quiesce all outstanding commands after a Keep Alive Timeout or
  *	       other communication loss.
- * @rsvd388:   Reserved
+ * @cdpa:      Configurable Device Personality Attributes: This field
+ *         indicates the Configurable Device Personality feature attributes
+ *         the controller supports.
+ * @mup:       Maximum Unlimited Power: This field specifies the maximum
+ *         power for power state 0 that results from removal of a power
+ *         limit (i.e., the maximum power is not limited).
+ * @ipmsr:     Interval Power Measurement Sample Rate: This field
+ *         indicates the maximum interval between power measurement
+ *         samples used to collect interval power measurements.
+ * @msmt:      Maximum Stop Measurement Time: This field indicates the
+ *         maximum stop measurement time allowed to be specified in the
+ *         SMT field for a Set Features command specifying the Power
+ *         Measurement feature.
+ * @rsvd396:   Reserved
  * @sqes:      Submission Queue Entry Size, see &enum nvme_id_ctrl_sqes.
  * @cqes:      Completion Queue Entry Size, see &enum nvme_id_ctrl_cqes.
  * @maxcmd:    Maximum Outstanding Commands indicates the maximum number of
@@ -1485,7 +1498,11 @@ struct nvme_id_psd {
  * @dctype:    Discovery Controller Type (DCTYPE). This field indicates what
  *	       type of Discovery controller the controller is (see enum
  *	       nvme_id_ctrl_dctype)
- * @rsvd1807:  Reserved
+ * @ccrl:      Cross-Controller Reset Limit: This field indicates the limit
+ *         on the number of simultaneous in-progress Cross-Controller Reset
+ *         operations this controller is able to cause to be initiated that
+ *         are supported.
+ * @rsvd1808:  Reserved
  * @psd:       Power State Descriptors, see &struct nvme_id_psd.
  * @vs:	       Vendor Specific
  */
@@ -1564,7 +1581,11 @@ struct nvme_id_ctrl {
 	__u8			tmpthha;
 	__u8			rsvd385;
 	__le16			cqt;
-	__u8			rsvd388[124];
+	__le16			cdpa;
+	__le16			mup;
+	__le16			ipmsr;
+	__le16			msmt;
+	__u8			rsvd396[116];
 	__u8			sqes;
 	__u8			cqes;
 	__le16			maxcmd;
@@ -1609,7 +1630,8 @@ struct nvme_id_ctrl {
 	__u8			msdbd;
 	__le16			ofcs;
 	__u8			dctype;
-	__u8			rsvd1807[241];
+	__u8			ccrl;
+	__u8			rsvd1808[240];
 
 	struct nvme_id_psd	psd[32];
 	__u8			vs[1024];
@@ -2276,6 +2298,33 @@ enum nvme_id_ctrl_kpioc {
 	NVME_CTRL_KPIOC_KPIOSC_SHIFT	= 1,
 	NVME_CTRL_KPIOC_KPIOS_MASK	= 0x1,
 	NVME_CTRL_KPIOC_KPIOSC_MASK	= 0x1,
+};
+
+/**
+ * enum nvme_id_ctrl_cdpa - Configurable Device Personality Attributes
+ * @NVME_CTRL_CDPA_HMAC_SHA_384:    If set, then the controller supports
+ *					the HMAC-SHA-384 standard.
+ */
+enum nvme_id_ctrl_cdpa {
+	NVME_CTRL_CDPA_HMAC_SHA_384		= 1 << 0,
+};
+
+/**
+ * enum nvme_id_ctrl_ipmsr - Interval Power Measurement Sample Rate
+ * @NVME_CTRL_IPMSR_SRS_SHIFT:	Shift amount to get the Sample Rate
+ *		Scale from the &struct nvme_id_ctrl.ipmsr field.
+ * @NVME_CTRL_IPMSR_SRV_SHIFT:	Shift amount to get the Sample Rate
+ *		Value from the &struct nvme_id_ctrl.ipmsr field.
+ * @NVME_CTRL_IPMSR_SRS_MASK:	Mask to get the Sample Rate Scale
+ *		from the &struct nvme_id_ctrl.ipmsr field.
+ * @NVME_CTRL_IPMSR_SRV_MASK:	Mask to get the Sample Rate Value
+ *		from the &struct nvme_id_ctrl.ipmsr field.
+ */
+enum nvme_id_ctrl_ipmsr {
+	NVME_CTRL_IPMSR_SRS_SHIFT	= 8,
+	NVME_CTRL_IPMSR_SRV_SHIFT	= 0,
+	NVME_CTRL_IPMSR_SRS_MASK	= 0x00FF,
+	NVME_CTRL_IPMSR_SRV_MASK	= 0x00FF,
 };
 
 /**

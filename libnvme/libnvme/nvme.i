@@ -38,21 +38,21 @@
 		PyDict_SetItemString(p, key, val); /* Does NOT steal reference to val .. */
 		Py_XDECREF(val);                   /* .. therefore decrement ref. count. */
 	}
-	PyObject *hostnqn_from_file() {
-		char * val = nvmf_hostnqn_from_file();
+	PyObject *read_hostnqn() {
+		char * val = nvme_read_hostnqn();
 		PyObject * obj = PyUnicode_FromString(val);
 		free(val);
 		return obj;
 	}
-	PyObject *hostid_from_file() {
-		char * val = nvmf_hostid_from_file();
+	PyObject *read_hostid() {
+		char * val = nvme_read_hostid();
 		PyObject * obj = PyUnicode_FromString(val);
 		free(val);
 		return obj;
 	}
 %}
-PyObject *hostnqn_from_file();
-PyObject *hostid_from_file();
+PyObject *read_hostnqn();
+PyObject *read_hostid();
 
 %exception nvme_ctrl::connect {
 	connect_err = 0;
@@ -369,7 +369,7 @@ struct nvme_host {
 	char *hostid;
 	char *hostsymname;
 	%extend {
-		char *dhchap_key;
+		char *dhchap_host_key;
 	}
 };
 
@@ -457,6 +457,9 @@ struct nvme_ctrl {
 		char *tls_key_identity;
 		char *tls_key;
 
+		char *dhchap_host_key;
+		char *dhchap_ctrl_key;
+
 		/**
 		 * We are remapping the following members of the C code's
 		 * nvme_ctrl_t to different names in Python. Here's the mapping:
@@ -464,12 +467,8 @@ struct nvme_ctrl {
 		 * C code                 Python (SWIG)
 		 * =====================  =====================
 		 * ctrl->s                ctrl->subsystem
-		 * ctrl->dhchap_key       ctrl->dhchap_host_key
-		 * ctrl->dhchap_ctrl_key  ctrl->dhchap_key
 		 */
 		struct nvme_subsystem *subsystem; // Maps to "s" in the C code
-		char *dhchap_host_key;            // Maps to "dhchap_key" in the C code
-		char *dhchap_key;                 // Maps to "dhchap_ctrl_key" in the C code
 	}
 };
 
@@ -557,12 +556,12 @@ struct nvme_ns {
 		  const char *hostkey = NULL,
 		  const char *hostsymname = NULL) {
 		nvme_host_t h;
-		if (nvme_host_get(ctx, hostnqn, hostid, &h))
+		if (nvme_get_host(ctx, hostnqn, hostid, &h))
 			return NULL;
 		if (hostsymname)
 			nvme_host_set_hostsymname(h, hostsymname);
 		if (hostkey)
-			nvme_host_set_dhchap_key(h, hostkey);
+			nvme_host_set_dhchap_host_key(h, hostkey);
 		return h;
 	}
 	~nvme_host() {
@@ -593,11 +592,11 @@ struct nvme_ns {
 }
 
 %{
-	const char *nvme_host_dhchap_key_get(struct nvme_host *h) {
-		return nvme_host_get_dhchap_key(h);
+	const char *nvme_host_dhchap_host_key_get(struct nvme_host *h) {
+		return nvme_host_get_dhchap_host_key(h);
 	}
-	void nvme_host_dhchap_key_set(struct nvme_host *h, char *key) {
-		nvme_host_set_dhchap_key(h, key);
+	void nvme_host_dhchap_host_key_set(struct nvme_host *h, char *key) {
+		nvme_host_set_dhchap_host_key(h, key);
 	}
 %};
 
@@ -613,7 +612,7 @@ struct nvme_ns {
 		       const char *name = NULL) {
 		struct nvme_subsystem *s;
 
-		if (nvme_subsystem_get(ctx, host, name, subsysnqn, &s))
+		if (nvme_get_subsystem(ctx, host, name, subsysnqn, &s))
 			return NULL;
 
 		return s;
@@ -880,11 +879,11 @@ struct nvme_ns {
 	const char *nvme_ctrl_state_get(struct nvme_ctrl *c) {
 		return nvme_ctrl_get_state(c);
 	}
-	const char *nvme_ctrl_dhchap_key_get(struct nvme_ctrl *c) {
-		return nvme_ctrl_get_dhchap_key(c);
+	const char *nvme_ctrl_dhchap_ctrl_key_get(struct nvme_ctrl *c) {
+		return nvme_ctrl_get_dhchap_ctrl_key(c);
 	}
-	void nvme_ctrl_dhchap_key_set(struct nvme_ctrl *c, const char *key) {
-		nvme_ctrl_set_dhchap_key(c, key);
+	void nvme_ctrl_dhchap_ctrl_key_set(struct nvme_ctrl *c, const char *key) {
+		nvme_ctrl_set_dhchap_ctrl_key(c, key);
 	}
 	const char *nvme_ctrl_dhchap_host_key_get(struct nvme_ctrl *c) {
 		return nvme_ctrl_get_dhchap_host_key(c);
@@ -898,7 +897,7 @@ struct nvme_ns {
 	}
 
 	bool nvme_ctrl_persistent_get(struct nvme_ctrl *c) {
-		return nvme_ctrl_is_persistent(c);
+		return nvme_ctrl_get_persistent(c);
 	}
 	void nvme_ctrl_persistent_set(struct nvme_ctrl *c, bool persistent) {
 		nvme_ctrl_set_persistent(c, persistent);
@@ -949,7 +948,7 @@ struct nvme_ns {
 	}
 
 	const char *nvme_ctrl_address_get(nvme_ctrl_t c) {
-		return nvme_ctrl_get_address(c);
+		return nvme_ctrl_get_traddr(c);
 	}
 
 	const char *nvme_ctrl_sysfs_dir_get(nvme_ctrl_t c) {
@@ -957,14 +956,14 @@ struct nvme_ns {
 	}
 
 	bool nvme_ctrl_discovery_ctrl_get(struct nvme_ctrl *c) {
-		return nvme_ctrl_is_discovery_ctrl(c);
+		return nvme_ctrl_get_discovery_ctrl(c);
 	}
 	void nvme_ctrl_discovery_ctrl_set(struct nvme_ctrl *c, bool discovery) {
 		nvme_ctrl_set_discovery_ctrl(c, discovery);
 	}
 
 	bool nvme_ctrl_unique_discovery_ctrl_get(nvme_ctrl_t c) {
-		return nvme_ctrl_is_unique_discovery_ctrl(c);
+		return nvme_ctrl_get_unique_discovery_ctrl(c);
 	}
 	void nvme_ctrl_unique_discovery_ctrl_set(nvme_ctrl_t c, bool unique) {
 		nvme_ctrl_set_unique_discovery_ctrl(c, unique);
@@ -1245,13 +1244,13 @@ struct nvme_ns {
 		PyObject *output;
 		int ret;
 
-		ret = nvme_nbft_read(ctx, &nbft, filename);
+		ret = nvme_read_nbft(ctx, &nbft, filename);
 		if (ret) {
 			Py_RETURN_NONE;
 		}
 
 		output = nbft_to_pydict(nbft);
-		nvme_nbft_free(ctx, nbft);
+		nvme_free_nbft(ctx, nbft);
 		return output;
 	}
 %};

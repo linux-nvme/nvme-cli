@@ -6,30 +6,32 @@
  */
 
 #include <assert.h>
-#include <fcntl.h>
+#include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
-#include <linux/fs.h>
-#include <inttypes.h>
+
 #include <asm/byteorder.h>
+#include <linux/fs.h>
+
 #include <sys/mman.h>
 #include <sys/shm.h>
-#include <sys/sysinfo.h>
 #include <sys/stat.h>
+#include <sys/sysinfo.h>
 #include <sys/types.h>
-#include <dirent.h>
-#include <time.h>
 
 #include <libnvme.h>
 
 #include "common.h"
-#include "nvme.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "nvme.h"
 #include "plugin.h"
-#include "platform/types.h"
 #include "util/cleanup.h"
 
 #define CREATE_CMD

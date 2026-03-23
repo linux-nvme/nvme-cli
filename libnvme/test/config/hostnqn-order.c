@@ -4,10 +4,10 @@
  * Copyright (c) 2024 Daniel Wagner, SUSE LLC
  */
 
-#include <string.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <errno.h>
+#include <string.h>
 
 #include <libnvme.h>
 

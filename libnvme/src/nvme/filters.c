@@ -6,15 +6,16 @@
  * Authors: Keith Busch <keith.busch@wdc.com>
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
+#include <dirent.h>
 #include <stdio.h>
 #include <string.h>
-#include <dirent.h>
 
 #include <libnvme.h>
 
 #include "private.h"
+#include "compiler_attributes.h"
 
-int nvme_namespace_filter(const struct dirent *d)
+__public int nvme_filter_namespace(const struct dirent *d)
 {
 	int i, n;
 
@@ -28,7 +29,7 @@ int nvme_namespace_filter(const struct dirent *d)
 	return 0;
 }
 
-int nvme_paths_filter(const struct dirent *d)
+__public int nvme_filter_paths(const struct dirent *d)
 {
 	int i, c, n;
 
@@ -42,7 +43,7 @@ int nvme_paths_filter(const struct dirent *d)
 	return 0;
 }
 
-int nvme_ctrls_filter(const struct dirent *d)
+__public int nvme_filter_ctrls(const struct dirent *d)
 {
 	int i, c, n;
 
@@ -61,7 +62,7 @@ int nvme_ctrls_filter(const struct dirent *d)
 	return 0;
 }
 
-int nvme_subsys_filter(const struct dirent *d)
+__public int nvme_filter_subsys(const struct dirent *d)
 {
 	int i;
 
@@ -75,60 +76,60 @@ int nvme_subsys_filter(const struct dirent *d)
 	return 0;
 }
 
-int nvme_scan_subsystems(struct dirent ***subsys)
+__public int nvme_scan_subsystems(struct dirent ***subsys)
 {
 	const char *dir = nvme_subsys_sysfs_dir();
 	int ret;
 
-	ret = scandir(dir, subsys, nvme_subsys_filter, alphasort);
+	ret = scandir(dir, subsys, nvme_filter_subsys, alphasort);
 	if (ret < 0)
 		return -errno;
 
 	return ret;
 }
 
-int nvme_scan_subsystem_namespaces(nvme_subsystem_t s, struct dirent ***ns)
+__public int nvme_scan_subsystem_namespaces(nvme_subsystem_t s, struct dirent ***ns)
 {
 	int ret;
 
 	ret = scandir(nvme_subsystem_get_sysfs_dir(s), ns,
-		       nvme_namespace_filter, alphasort);
+		       nvme_filter_namespace, alphasort);
 	if (ret < 0)
 		return -errno;
 
 	return ret;
 }
 
-int nvme_scan_ctrls(struct dirent ***ctrls)
+__public int nvme_scan_ctrls(struct dirent ***ctrls)
 {
 	const char *dir = nvme_ctrl_sysfs_dir();
 	int ret;
 
-	ret = scandir(dir, ctrls, nvme_ctrls_filter, alphasort);
+	ret = scandir(dir, ctrls, nvme_filter_ctrls, alphasort);
 	if (ret < 0)
 		return -errno;
 
 	return ret;
 }
 
-int nvme_scan_ctrl_namespace_paths(nvme_ctrl_t c, struct dirent ***paths)
+__public int nvme_scan_ctrl_namespace_paths(nvme_ctrl_t c, struct dirent ***paths)
 {
 	int ret;
 
 	ret = scandir(nvme_ctrl_get_sysfs_dir(c), paths,
-		       nvme_paths_filter, alphasort);
+		       nvme_filter_paths, alphasort);
 	if (ret < 0)
 		return -errno;
 
 	return ret;
 }
 
-int nvme_scan_ctrl_namespaces(nvme_ctrl_t c, struct dirent ***ns)
+__public int nvme_scan_ctrl_namespaces(nvme_ctrl_t c, struct dirent ***ns)
 {
 	int ret;
 
 	ret = scandir(nvme_ctrl_get_sysfs_dir(c), ns,
-		       nvme_namespace_filter, alphasort);
+		       nvme_filter_namespace, alphasort);
 	if (ret < 0)
 		return -errno;
 
@@ -140,7 +141,7 @@ int nvme_scan_ns_head_paths(nvme_ns_head_t head, struct dirent ***paths)
 	int ret;
 
 	ret = scandir(nvme_ns_head_get_sysfs_dir(head), paths,
-		       nvme_paths_filter, alphasort);
+		       nvme_filter_paths, alphasort);
 	if (ret < 0)
 		return -errno;
 

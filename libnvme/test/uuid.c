@@ -4,8 +4,8 @@
  * Copyright (c) 2022 Daniel Wagner, SUSE Software Solutions
  */
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <ccan/array_size/array_size.h>
 
@@ -85,9 +85,9 @@ static void random_uuid_test(void)
 	unsigned char uuid1[NVME_UUID_LEN], uuid2[NVME_UUID_LEN];
 	char str1[NVME_UUID_LEN_STRING], str2[NVME_UUID_LEN_STRING];
 
-	if (nvme_uuid_random(uuid1) || nvme_uuid_random(uuid2)) {
+	if (nvme_random_uuid(uuid1) || nvme_random_uuid(uuid2)) {
 		test_rc = 1;
-		printf("ERROR: nvme_uuid_random() failed\n");
+		printf("ERROR: nvme_random_uuid() failed\n");
 		return;
 	}
 

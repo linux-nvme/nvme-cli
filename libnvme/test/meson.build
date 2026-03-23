@@ -5,6 +5,18 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 
+python3_prog = find_program('python3', required: false)
+if python3_prog.found()
+    test(
+        'libnvme - check-public-symbols',
+        python3_prog,
+        args: [
+            files('../tools/check-public-symbols.py'),
+            meson.project_source_root() / 'libnvme',
+        ],
+    )
+endif
+
 # These tests all require interaction with a real NVMe device, so we don't
 # define as meson unit-tests, and therefore get run as part of the 'test'
 # target. However, they're available for developer use, when hardware is
@@ -104,17 +116,19 @@ uuid = executable(
 test('libnvme - uuid', uuid)
 
 if not is_windows
-    uriparser = executable(
-        'test-uriparser',
-        ['uriparser.c'],
-        dependencies: [
-            config_dep,
-            ccan_dep,
-            libnvme_dep,
-        ],
-    )
+    if want_fabrics
+        uriparser = executable(
+            'test-uriparser',
+            ['uriparser.c'],
+            dependencies: [
+                config_dep,
+                ccan_dep,
+                libnvme_dep,
+            ],
+        )
 
-    test('libnvme - uriparser', uriparser)
+        test('libnvme - uriparser', uriparser)
+    endif
 
     if conf.get('HAVE_NETDB')
         mock_ifaddrs = library(
@@ -165,7 +179,9 @@ if not is_windows
     test('libnvme - psk', psk)
 
     subdir('ioctl')
-    subdir('nbft')
+    if want_fabrics
+        subdir('nbft')
+    endif
 
     if json_c_dep.found()
         subdir('sysfs')

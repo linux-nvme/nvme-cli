@@ -13,7 +13,6 @@ all_plugins = {
   'mangoboost': ['plugins/mangoboost/mangoboost-nvme.c'],
   'memblaze': ['plugins/memblaze/memblaze-nvme.c'],
   'micron': ['plugins/micron/micron-nvme.c'],
-  'nbft': ['plugins/nbft/nbft-plugin.c'],
   'nvidia': ['plugins/nvidia/nvidia-nvme.c'],
   'seagate': ['plugins/seagate/seagate-nvme.c'],
   'shannon': ['plugins/shannon/shannon-nvme.c'],
@@ -47,6 +46,10 @@ foreach plugin_name : selected_plugins
     plugin_sources += all_plugins[plugin_name_stripped]
   endif
 endforeach
+
+if want_fabrics and 'nbft' in selected_plugins
+    plugin_sources += ['plugins/nbft/nbft-plugin.c']
+endif
 
 if 'feat' in selected_plugins
   subdir('feat')

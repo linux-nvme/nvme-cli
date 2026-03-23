@@ -2,12 +2,13 @@
 #ifndef NVME_PRINT_H
 #define NVME_PRINT_H
 
-#include "nvme.h"
-#include "types.h"
-#include "util/table.h"
 #include <inttypes.h>
 
 #include <ccan/list/list.h>
+
+#include "nvme.h"
+#include "types.h"
+#include "util/table.h"
 
 typedef struct nvme_effects_log_node {
 	struct nvme_cmd_effects_log effects; /* needs to be first member because of alignment requirement. */

@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+LIBNVMF_3 {
+	global:
+		nvmf_add_ctrl;
+		nvmf_adrfam_str;
+		nvmf_cms_str;
+		nvmf_config_modify;
+		nvmf_connect;
+		nvmf_connect_config_json;
+		nvmf_connect_ctrl;
+		nvmf_context_create;
+		nvmf_context_set_connection;
+		nvmf_context_set_crypto;
+		nvmf_context_set_device;
+		nvmf_context_set_discovery_cbs;
+		nvmf_context_set_discovery_defaults;
+		nvmf_context_set_fabrics_config;
+		nvmf_context_set_hostnqn;
+		nvmf_context_set_persistent;
+		nvmf_default_config;
+		nvmf_discovery;
+		nvmf_discovery_config_file;
+		nvmf_discovery_config_json;
+		nvmf_discovery_nbft;
+		nvmf_eflags_str;
+		nvmf_exat_ptr_next;
+		nvmf_free_uri;
+		nvmf_get_default_trsvcid;
+		nvmf_get_discovery_log;
+		nvmf_get_discovery_wargs;
+		nvmf_is_registration_supported;
+		nvmf_nbft_free;
+		nvmf_nbft_read_files;
+		nvmf_prtype_str;
+		nvmf_qptype_str;
+		nvmf_register_ctrl;
+		nvmf_sectype_str;
+		nvmf_subtype_str;
+		nvmf_treq_str;
+		nvmf_trtype_str;
+		nvmf_update_config;
+	local:
+		*;
+};

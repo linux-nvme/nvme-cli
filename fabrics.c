@@ -19,24 +19,25 @@
  * Fabrics specification standard.
  */
 
-#include <errno.h>
-#include <getopt.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <unistd.h>
 #include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <getopt.h>
 #include <inttypes.h>
 #include <libgen.h>
-#include <sys/stat.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <syslog.h>
 #include <time.h>
+#include <unistd.h>
 
-#include <sys/types.h>
 #include <platform/types.h>
+
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <libnvme.h>
 
@@ -715,7 +716,7 @@ static void nvmf_disconnect_nqn(struct nvme_global_ctx *ctx, char *nqn)
 			continue;
 		nvme_for_each_host(ctx, h) {
 			nvme_for_each_subsystem(h, s) {
-				if (strcmp(nvme_subsystem_get_nqn(s), p))
+				if (strcmp(nvme_subsystem_get_subsysnqn(s), p))
 					continue;
 				nvme_subsystem_for_each_ctrl(s, c) {
 					if (!nvme_disconnect_ctrl(c))
@@ -1061,7 +1062,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 				continue;
 			nvme_for_each_host(ctx, h) {
 				nvme_for_each_subsystem(h, s) {
-					if (strcmp(nvme_subsystem_get_nqn(s), p))
+					if (strcmp(nvme_subsystem_get_subsysnqn(s), p))
 						continue;
 					nvme_subsystem_for_each_ctrl(s, c)
 						ret = dim_operation(c, tas, p);

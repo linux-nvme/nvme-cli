@@ -16,36 +16,225 @@
 
 #include "cleanup.h"
 #include "private.h"
+#include "compiler_attributes.h"
 
-int nvme_fw_download_seq(struct nvme_transport_handle *hdl, bool ish,
-		__u32 size, __u32 xfer, __u32 offset, void *buf)
+static bool force_4k;
+
+__attribute__((constructor))
+static void nvme_init_env(void)
 {
-	struct nvme_passthru_cmd cmd;
-	void *data = buf;
-	int err = 0;
+	char *val;
 
-	if (ish && nvme_transport_handle_is_mi(hdl))
-		nvme_init_mi_cmd_flags(&cmd, ish);
-
-	while (size > 0) {
-		__u32 chunk = min(xfer, size);
-
-		err = nvme_init_fw_download(&cmd, data, chunk, offset);
-		if (err)
-			break;
-		err = nvme_submit_admin_passthru(hdl, &cmd);
-		if (err)
-			break;
-
-		data += chunk;
-		size -= chunk;
-		offset += chunk;
-	}
-
-	return err;
+	val = getenv("LIBNVME_FORCE_4K");
+	if (!val)
+		return;
+	if (!strcmp(val, "1") ||
+	    !strcasecmp(val, "true") ||
+	    !strncasecmp(val, "enable", 6))
+		force_4k = true;
 }
 
-int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
+__public int nvme_get_log(struct nvme_transport_handle *hdl,
+		struct nvme_passthru_cmd *cmd, bool rae,
+		__u32 xfer_len)
+{
+	__u64 offset = 0, xfer, data_len = cmd->data_len;
+	__u64 start = (__u64)cmd->cdw13 << 32 | cmd->cdw12;
+	__u64 lpo;
+	void *ptr = (void *)(uintptr_t)cmd->addr;
+	int ret;
+	bool _rae;
+	__u32 numd;
+	__u16 numdu, numdl;
+	__u32 cdw10 = cmd->cdw10 & (NVME_VAL(LOG_CDW10_LID) |
+				    NVME_VAL(LOG_CDW10_LSP));
+	__u32 cdw11 = cmd->cdw11 & NVME_VAL(LOG_CDW11_LSI);
+
+	if (force_4k)
+		xfer_len = NVME_LOG_PAGE_PDU_SIZE;
+
+	/*
+	 * 4k is the smallest possible transfer unit, so restricting to 4k
+	 * avoids having to check the MDTS value of the controller.
+	 */
+	do {
+		if (!force_4k) {
+			xfer = data_len - offset;
+			if (xfer > xfer_len)
+				xfer  = xfer_len;
+		} else {
+			xfer = NVME_LOG_PAGE_PDU_SIZE;
+		}
+
+		/*
+		 * Always retain regardless of the RAE parameter until the very
+		 * last portion of this log page so the data remains latched
+		 * during the fetch sequence.
+		 */
+		lpo = start + offset;
+		numd = (xfer >> 2) - 1;
+		numdu = numd >> 16;
+		numdl = numd & 0xffff;
+		_rae = offset + xfer < data_len || rae;
+
+		cmd->cdw10 = cdw10 |
+			NVME_SET(!!_rae, LOG_CDW10_RAE) |
+			NVME_SET(numdl, LOG_CDW10_NUMDL);
+		cmd->cdw11 = cdw11 |
+			NVME_SET(numdu, LOG_CDW11_NUMDU);
+		cmd->cdw12 = lpo & 0xffffffff;
+		cmd->cdw13 = lpo >> 32;
+		cmd->data_len = xfer;
+		cmd->addr = (__u64)(uintptr_t)ptr;
+
+		if (hdl->uring_enabled)
+			ret = nvme_submit_admin_passthru_async(hdl, cmd);
+		else
+			ret = nvme_submit_admin_passthru(hdl, cmd);
+		if (ret)
+			return ret;
+
+		offset += xfer;
+		ptr += xfer;
+	} while (offset < data_len);
+
+	if (hdl->uring_enabled) {
+		ret = nvme_wait_complete_passthru(hdl);
+		if (ret)
+			return ret;
+	}
+
+	return 0;
+}
+
+static int read_ana_chunk(struct nvme_transport_handle *hdl,
+		enum nvme_log_ana_lsp lsp, bool rae,
+		__u8 *log, __u8 **read, __u8 *to_read, __u8 *log_end)
+{
+	struct nvme_passthru_cmd cmd;
+
+	if (to_read > log_end)
+		return -ENOSPC;
+
+	while (*read < to_read) {
+		__u32 len = min_t(__u32, log_end - *read,
+			NVME_LOG_PAGE_PDU_SIZE);
+		int ret;
+
+		nvme_init_get_log_ana(&cmd, lsp, *read - log, *read, len);
+		ret = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
+		if (ret)
+			return ret;
+
+		*read += len;
+	}
+	return 0;
+}
+
+static int try_read_ana(struct nvme_transport_handle *hdl,
+		enum nvme_log_ana_lsp lsp, bool rae,
+		struct nvme_ana_log *log, __u8 *log_end,
+		__u8 *read, __u8 **to_read, bool *may_retry)
+{
+	__u16 ngrps = le16_to_cpu(log->ngrps);
+
+	while (ngrps--) {
+		__u8 *group = *to_read;
+		int ret;
+		__le32 nnsids;
+
+		*to_read += sizeof(*log->descs);
+		ret = read_ana_chunk(hdl, lsp, rae,
+				     (__u8 *)log, &read, *to_read, log_end);
+		if (ret) {
+			/*
+			 * If the provided buffer isn't long enough,
+			 * the log page may have changed while reading it
+			 * and the computed length was inaccurate.
+			 * Have the caller check chgcnt and retry.
+			 */
+			*may_retry = ret == -ENOSPC;
+			return ret;
+		}
+
+		/*
+		 * struct nvme_ana_group_desc has 8-byte alignment
+		 * but the group pointer is only 4-byte aligned.
+		 * Don't dereference the misaligned pointer.
+		 */
+		memcpy(&nnsids,
+		       group + offsetof(struct nvme_ana_group_desc, nnsids),
+		       sizeof(nnsids));
+		*to_read += le32_to_cpu(nnsids) * sizeof(__le32);
+		ret = read_ana_chunk(hdl, lsp, rae,
+				     (__u8 *)log, &read, *to_read, log_end);
+		if (ret) {
+			*may_retry = ret == -ENOSPC;
+			return ret;
+		}
+	}
+
+	*may_retry = true;
+	return 0;
+}
+
+__public int nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl,
+		bool rae, bool rgo, struct nvme_ana_log *log, __u32 *len,
+		unsigned int retries)
+{
+	const enum nvme_log_ana_lsp lsp =
+		rgo ? NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY : 0;
+	/* Get Log Page can only fetch multiples of dwords */
+	__u8 * const log_end = (__u8 *)log + (*len & -4);
+	__u8 *read = (__u8 *)log;
+	__u8 *to_read;
+	int ret;
+
+	if (!retries)
+		return -EINVAL;
+
+	to_read = (__u8 *)log->descs;
+	ret = read_ana_chunk(hdl, lsp, rae,
+			     (__u8 *)log, &read, to_read, log_end);
+	if (ret)
+		return ret;
+
+	do {
+		bool may_retry = false;
+		int saved_ret;
+		int saved_errno;
+		__le64 chgcnt;
+
+		saved_ret = try_read_ana(hdl, lsp, rae, log, log_end,
+					 read, &to_read, &may_retry);
+		/*
+		 * If the log page was read with multiple Get Log Page commands,
+		 * chgcnt must be checked afterwards to ensure atomicity
+		 */
+		*len = to_read - (__u8 *)log;
+		if (*len <= NVME_LOG_PAGE_PDU_SIZE || !may_retry)
+			return saved_ret;
+
+		saved_errno = errno;
+		chgcnt = log->chgcnt;
+		read = (__u8 *)log;
+		to_read = (__u8 *)log->descs;
+		ret = read_ana_chunk(hdl, lsp, rae,
+				     (__u8 *)log, &read, to_read, log_end);
+		if (ret)
+			return ret;
+
+		if (log->chgcnt == chgcnt) {
+			/* Log hasn't changed; return try_read_ana() result */
+			errno = saved_errno;
+			return saved_ret;
+		}
+	} while (--retries);
+
+	return -EAGAIN;
+}
+
+__public int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
 {
 	struct nvme_feat_host_behavior da4;
 	struct nvme_passthru_cmd cmd;
@@ -72,7 +261,7 @@ int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed)
 	return 0;
 }
 
-int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed)
+__public int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed)
 {
 	struct nvme_feat_host_behavior da4;
 	struct nvme_passthru_cmd cmd;
@@ -98,7 +287,7 @@ int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed)
 	return 0;
 }
 
-int nvme_get_uuid_list(struct nvme_transport_handle *hdl,
+__public int nvme_get_uuid_list(struct nvme_transport_handle *hdl,
 		struct nvme_id_uuid_list *uuid_list)
 {
 	struct nvme_passthru_cmd cmd;
@@ -123,7 +312,7 @@ int nvme_get_uuid_list(struct nvme_transport_handle *hdl,
 	return err;
 }
 
-int nvme_get_telemetry_max(struct nvme_transport_handle *hdl,
+__public int nvme_get_telemetry_max(struct nvme_transport_handle *hdl,
 		enum nvme_telemetry_da *da, size_t *data_tx)
 {
 	_cleanup_free_ struct nvme_id_ctrl *id_ctrl = NULL;
@@ -159,7 +348,7 @@ int nvme_get_telemetry_max(struct nvme_transport_handle *hdl,
 	return err;
 }
 
-int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create,
+__public int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create,
 		bool ctrl, bool rae, size_t max_data_tx,
 		enum nvme_telemetry_da da, struct nvme_telemetry_log **buf,
 		size_t *size)
@@ -263,7 +452,7 @@ static int nvme_check_get_telemetry_log(struct nvme_transport_handle *hdl,
 }
 
 
-int nvme_get_ctrl_telemetry(struct nvme_transport_handle *hdl, bool rae,
+__public int nvme_get_ctrl_telemetry(struct nvme_transport_handle *hdl, bool rae,
 		struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size)
 {
@@ -271,7 +460,7 @@ int nvme_get_ctrl_telemetry(struct nvme_transport_handle *hdl, bool rae,
 		da, size);
 }
 
-int nvme_get_host_telemetry(struct nvme_transport_handle *hdl,
+__public int nvme_get_host_telemetry(struct nvme_transport_handle *hdl,
 		struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size)
 {
@@ -279,7 +468,7 @@ int nvme_get_host_telemetry(struct nvme_transport_handle *hdl,
 		da, size);
 }
 
-int nvme_get_new_host_telemetry(struct nvme_transport_handle *hdl,
+__public int nvme_get_new_host_telemetry(struct nvme_transport_handle *hdl,
 		struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size)
 {
@@ -333,37 +522,7 @@ int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae,
 	return 0;
 }
 
-static int nvme_ns_attachment(struct nvme_transport_handle *hdl, bool ish,
-		__u32 nsid, __u16 num_ctrls, __u16 *ctrlist, bool attach)
-{
-	struct nvme_ctrl_list cntlist = { 0 };
-	struct nvme_passthru_cmd cmd;
-
-	nvme_init_ctrl_list(&cntlist, num_ctrls, ctrlist);
-	if (ish && nvme_transport_handle_is_mi(hdl))
-		nvme_init_mi_cmd_flags(&cmd, ish);
-
-	if (attach)
-		nvme_init_ns_attach_ctrls(&cmd, nsid, &cntlist);
-	else
-		nvme_init_ns_detach_ctrls(&cmd, nsid, &cntlist);
-
-	return nvme_submit_admin_passthru(hdl, &cmd);
-}
-
-int nvme_namespace_attach_ctrls(struct nvme_transport_handle *hdl, bool ish,
-		__u32 nsid, __u16 num_ctrls, __u16 *ctrlist)
-{
-	return nvme_ns_attachment(hdl, ish, nsid, num_ctrls, ctrlist, true);
-}
-
-int nvme_namespace_detach_ctrls(struct nvme_transport_handle *hdl, bool ish,
-		__u32 nsid, __u16 num_ctrls, __u16 *ctrlist)
-{
-	return nvme_ns_attachment(hdl, ish, nsid, num_ctrls, ctrlist, false);
-}
-
-size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
+__public size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
 					 bool rgo)
 {
 	__u32 nanagrpid = le32_to_cpu(id_ctrl->nanagrpid);
@@ -373,7 +532,7 @@ size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
 	return rgo ? size : size + le32_to_cpu(id_ctrl->mnan) * sizeof(__le32);
 }
 
-int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen)
+__public int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen)
 {
 	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
 	struct nvme_passthru_cmd cmd;
@@ -392,7 +551,7 @@ int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen)
 	return 0;
 }
 
-int nvme_get_logical_block_size(struct nvme_transport_handle *hdl,
+__public int nvme_get_logical_block_size(struct nvme_transport_handle *hdl,
 		__u32 nsid, int *blksize)
 {
 	_cleanup_free_ struct nvme_id_ns *ns = NULL;
@@ -415,105 +574,7 @@ int nvme_get_logical_block_size(struct nvme_transport_handle *hdl,
 	return 0;
 }
 
-static inline void nvme_init_copy_range_elbt(__u8 *elbt, __u64 eilbrt)
-{
-	int i;
-
-	for (i = 0; i < 8; i++)
-		elbt[9 - i] = (eilbrt >> (8 * i)) & 0xff;
-	elbt[1] = 0;
-	elbt[0] = 0;
-}
-
-void nvme_init_copy_range(struct nvme_copy_range *copy, __u16 *nlbs,
-			  __u64 *slbas, __u32 *eilbrts, __u32 *elbatms,
-			  __u32 *elbats, __u16 nr)
-{
-	int i;
-
-	for (i = 0; i < nr; i++) {
-		copy[i].nlb = cpu_to_le16(nlbs[i]);
-		copy[i].slba = cpu_to_le64(slbas[i]);
-		copy[i].eilbrt = cpu_to_le32(eilbrts[i]);
-		copy[i].elbatm = cpu_to_le16(elbatms[i]);
-		copy[i].elbat = cpu_to_le16(elbats[i]);
-	}
-}
-
-void nvme_init_copy_range_f1(struct nvme_copy_range_f1 *copy, __u16 *nlbs,
-			  __u64 *slbas, __u64 *eilbrts, __u32 *elbatms,
-			  __u32 *elbats, __u16 nr)
-{
-	int i;
-
-	for (i = 0; i < nr; i++) {
-		copy[i].nlb = cpu_to_le16(nlbs[i]);
-		copy[i].slba = cpu_to_le64(slbas[i]);
-		copy[i].elbatm = cpu_to_le16(elbatms[i]);
-		copy[i].elbat = cpu_to_le16(elbats[i]);
-		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
-	}
-}
-
-void nvme_init_copy_range_f2(struct nvme_copy_range_f2 *copy, __u32 *snsids,
-			  __u16 *nlbs, __u64 *slbas, __u16 *sopts,
-			  __u32 *eilbrts, __u32 *elbatms, __u32 *elbats,
-			  __u16 nr)
-{
-	int i;
-
-	for (i = 0; i < nr; i++) {
-		copy[i].snsid = cpu_to_le32(snsids[i]);
-		copy[i].nlb = cpu_to_le16(nlbs[i]);
-		copy[i].slba = cpu_to_le64(slbas[i]);
-		copy[i].sopt = cpu_to_le16(sopts[i]);
-		copy[i].eilbrt = cpu_to_le32(eilbrts[i]);
-		copy[i].elbatm = cpu_to_le16(elbatms[i]);
-		copy[i].elbat = cpu_to_le16(elbats[i]);
-	}
-}
-
-void nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
-			  __u16 *nlbs, __u64 *slbas, __u16 *sopts,
-			  __u64 *eilbrts, __u32 *elbatms, __u32 *elbats,
-			  __u16 nr)
-{
-	int i;
-
-	for (i = 0; i < nr; i++) {
-		copy[i].snsid = cpu_to_le32(snsids[i]);
-		copy[i].nlb = cpu_to_le16(nlbs[i]);
-		copy[i].slba = cpu_to_le64(slbas[i]);
-		copy[i].sopt = cpu_to_le16(sopts[i]);
-		copy[i].elbatm = cpu_to_le16(elbatms[i]);
-		copy[i].elbat = cpu_to_le16(elbats[i]);
-		nvme_init_copy_range_elbt(copy[i].elbt, eilbrts[i]);
-	}
-}
-
-void nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
-			 __u32 *llbas, __u64 *slbas, __u16 nr_ranges)
-{
-	int i;
-
-	for (i = 0; i < nr_ranges; i++) {
-		dsm[i].cattr = cpu_to_le32(ctx_attrs[i]);
-		dsm[i].nlb = cpu_to_le32(llbas[i]);
-		dsm[i].slba = cpu_to_le64(slbas[i]);
-	}
-}
-
-void nvme_init_ctrl_list(struct nvme_ctrl_list *cntlist, __u16 num_ctrls,
-			  __u16 *ctrlist)
-{
-	int i;
-
-	cntlist->num = cpu_to_le16(num_ctrls);
-	for (i = 0; i < num_ctrls; i++)
-		cntlist->identifier[i] = cpu_to_le16(ctrlist[i]);
-}
-
-int nvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
+__public int nvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
 			     __u32 *len)
 {
 	switch (fid) {
@@ -586,7 +647,7 @@ int nvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
 	return 0;
 }
 
-int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
+__public int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
 		enum nvme_directive_receive_doper doper, __u32 *len)
 {
 	switch (dtype) {

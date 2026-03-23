@@ -24,30 +24,27 @@
 /**
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
-#include "nvme/tree.h"
-#include "nvme/types.h"
-#include "util/cleanup.h"
+#include <dirent.h>
 #include <errno.h>
-#include <getopt.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <inttypes.h>
+#include <libgen.h>
 #include <locale.h>
-#include <stdio.h>
+#include <math.h>
+#include <signal.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <math.h>
-#include <libgen.h>
-#include <signal.h>
 
 #ifndef _WIN32
 #include <linux/fs.h>
 #endif
 
-#include <sys/types.h>
 #include <sys/stat.h>
-
+#include <sys/types.h>
 
 #if HAVE_SYS_RANDOM
 	#include <sys/random.h>
@@ -56,16 +53,21 @@
 #include <libnvme.h>
 
 #include "common.h"
-#include "nvme.h"
-#include "nvme-print.h"
-#include "plugin.h"
-#include "util/base64.h"
-#include "util/crc32.h"
-#include "util/argconfig.h"
-#include "util/suffix.h"
-#include "logging.h"
-#include "util/sighdl.h"
 #include "fabrics.h"
+#include "logging.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
+#include "nvme.h"
+#include "nvme/tree.h"
+#include "nvme/types.h"
+#include "plugin.h"
+#include "util/argconfig.h"
+#include "util/base64.h"
+#include "util/cleanup.h"
+#include "util/crc32.h"
+#include "util/sighdl.h"
+#include "util/suffix.h"
+
 #define CREATE_CMD
 #include "nvme-builtin.h"
 #include "malloc.h"
@@ -5466,7 +5468,7 @@ static int subsystem_reset(int argc, char **argv, struct command *acmd, struct p
 		return -EINVAL;
 	}
 
-	err = nvme_subsystem_reset(hdl);
+	err = nvme_reset_subsystem(hdl);
 	if (err < 0) {
 		if (errno == ENOTTY)
 			nvme_show_error("Subsystem-reset: NVM Subsystem Reset not supported.");
@@ -5497,7 +5499,7 @@ static int reset(int argc, char **argv, struct command *acmd, struct plugin *plu
 		return -EINVAL;
 	}
 
-	err = nvme_ctrl_reset(hdl);
+	err = nvme_reset_ctrl(hdl);
 	if (err < 0)
 		nvme_show_error("Reset: %s", nvme_strerror(-err));
 	else if (argconfig_parse_seen(opts, "verbose"))
@@ -5532,7 +5534,7 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 		return err;
 	}
 
-	err = nvme_ns_rescan(hdl);
+	err = nvme_rescan_ns(hdl);
 	if (err < 0)
 		nvme_show_error("Namespace Rescan: %s\n", nvme_strerror(-err));
 	else if (argconfig_parse_seen(opts, "verbose"))
@@ -6823,7 +6825,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	printf("Success formatting namespace:%x\n", cfg.namespace_id);
 	if (nvme_transport_handle_is_direct(hdl) && cfg.lbaf != prev_lbaf) {
 		if (nvme_transport_handle_is_chardev(hdl)) {
-			if (nvme_ns_rescan(hdl) < 0) {
+			if (nvme_rescan_ns(hdl) < 0) {
 				nvme_show_error("failed to rescan namespaces");
 				return -errno;
 			}
@@ -6855,7 +6857,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	}
 	if (nvme_transport_handle_is_direct(hdl) && cfg.reset &&
 	    nvme_transport_handle_is_chardev(hdl))
-		nvme_ctrl_reset(hdl);
+		nvme_reset_ctrl(hdl);
 
 	return err;
 }
@@ -8351,9 +8353,9 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	__u32 dsmgmt = 0;
 	int mode = 0644;
 	void *buffer;
+	__u16 ms = 0;
 	int err = 0;
 	int flags;
-	__u16 ms;
 
 	const char *start_block_addr = "64-bit addr of first block to access";
 	const char *block_size = "if specified, logical block size in bytes;\n"
@@ -8530,13 +8532,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	} else {
 		err = get_pi_info(hdl, cfg.nsid, cfg.prinfo,
 			cfg.ilbrt, cfg.lbst, &logical_block_size, &ms);
-		if (err) {
-			logical_block_size = 0;
-			ms = 0;
-			pi_available = false;
-		} else {
-			pi_available = true;
-		}
+		pi_available = err == 0;
 	}
 
 	buffer_size = ((long long)cfg.block_count + 1) * logical_block_size;
@@ -9528,7 +9524,7 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 {
 	char *hostnqn;
 
-	hostnqn = nvmf_hostnqn_generate();
+	hostnqn = nvme_generate_hostnqn();
 	if (!hostnqn) {
 		nvme_show_error("\"%s\" not supported. Install lib uuid and rebuild.",
 				acmd->name);
@@ -9543,9 +9539,9 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 {
 	char *hostnqn;
 
-	hostnqn = nvmf_hostnqn_from_file();
+	hostnqn = nvme_read_hostnqn();
 	if (!hostnqn)
-		hostnqn =  nvmf_hostnqn_generate();
+		hostnqn =  nvme_generate_hostnqn();
 
 	if (!hostnqn) {
 		nvme_show_error("hostnqn is not available -- use nvme gen-hostnqn");
@@ -9673,7 +9669,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	}
 
 	if (!cfg.nqn) {
-		cfg.nqn = hnqn = nvmf_hostnqn_from_file();
+		cfg.nqn = hnqn = nvme_read_hostnqn();
 		if (!cfg.nqn) {
 			nvme_show_error("Could not read host NQN");
 			return -ENOENT;
@@ -9937,7 +9933,7 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 			return -EINVAL;
 		}
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = nvmf_hostnqn_from_file();
+			cfg.hostnqn = hnqn = nvme_read_hostnqn();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;
@@ -10099,7 +10095,7 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.subsysnqn) {
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = nvmf_hostnqn_from_file();
+			cfg.hostnqn = hnqn = nvme_read_hostnqn();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;
@@ -10433,6 +10429,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	return err;
 }
 
+#ifdef CONFIG_FABRICS
 static int discover_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Send Get Log Page request to Discovery Controller.";
@@ -10483,6 +10480,7 @@ static int dim_cmd(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	return fabrics_dim(desc, argc, argv);
 }
+#endif
 
 static int nvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 {

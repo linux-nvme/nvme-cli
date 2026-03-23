@@ -9,11 +9,12 @@
 
 #include <libnvme.h>
 
-#include "nvme.h"
 #include "common.h"
-#include "plugin.h"
-#include "platform/types.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "nvme.h"
+#include "platform/types.h"
+#include "plugin.h"
 
 #define CREATE_CMD
 #include "memblaze-nvme.h"

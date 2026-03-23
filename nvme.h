@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+
 #include <sys/stat.h>
 
 #include "platform/includes.h"

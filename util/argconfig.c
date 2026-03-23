@@ -29,20 +29,20 @@
  *
  */
 
+#include <errno.h>
+#include <getopt.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <locale.h>
+#include <stdbool.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "argconfig.h"
 #include "cleanup.h"
 #include "suffix.h"
-
-#include <errno.h>
-#include <inttypes.h>
-#include <getopt.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdbool.h>
-#include <locale.h>
 
 const char *nvme_strerror(int errnum);
 

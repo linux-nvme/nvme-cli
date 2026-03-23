@@ -7,35 +7,36 @@
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <fnmatch.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fnmatch.h>
-#include <dirent.h>
-#include <inttypes.h>
 
-#include "platform/includes.h"
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <netdb.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+#include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
-#include <ccan/array_size/array_size.h>
 #include <ccan/str/str.h>
 
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "private.h"
-
-#define NVMF_HOSTID_SIZE	37
-
-#define NVMF_HOSTNQN_FILE	SYSCONFDIR "/nvme/hostnqn"
-#define NVMF_HOSTID_FILE	SYSCONFDIR "/nvme/hostid"
+#include "compiler_attributes.h"
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 
@@ -68,7 +69,7 @@ const char * const trtypes[] = {
 	[NVMF_TRTYPE_LOOP]	= "loop",
 };
 
-const char *nvmf_trtype_str(__u8 trtype)
+__public const char *nvmf_trtype_str(__u8 trtype)
 {
 	return arg_str(trtypes, ARRAY_SIZE(trtypes), trtype);
 }
@@ -81,7 +82,7 @@ static const char * const adrfams[] = {
 	[NVMF_ADDR_FAMILY_FC]	= "fibre-channel",
 };
 
-const char *nvmf_adrfam_str(__u8 adrfam)
+__public const char *nvmf_adrfam_str(__u8 adrfam)
 {
 	return arg_str(adrfams, ARRAY_SIZE(adrfams), adrfam);
 }
@@ -92,7 +93,7 @@ static const char * const subtypes[] = {
 	[NVME_NQN_CURR]		= "current discovery subsystem",
 };
 
-const char *nvmf_subtype_str(__u8 subtype)
+__public const char *nvmf_subtype_str(__u8 subtype)
 {
 	return arg_str(subtypes, ARRAY_SIZE(subtypes), subtype);
 }
@@ -112,7 +113,7 @@ static const char * const treqs[] = {
 				"sq flow control disable supported",
 };
 
-const char *nvmf_treq_str(__u8 treq)
+__public const char *nvmf_treq_str(__u8 treq)
 {
 	return arg_str(treqs, ARRAY_SIZE(treqs), treq);
 }
@@ -138,7 +139,7 @@ static const char * const eflags_strings[] = {
 					  "no cdc connectivity",
 };
 
-const char *nvmf_eflags_str(__u16 eflags)
+__public const char *nvmf_eflags_str(__u16 eflags)
 {
 	return arg_str(eflags_strings, ARRAY_SIZE(eflags_strings), eflags);
 }
@@ -149,7 +150,7 @@ static const char * const sectypes[] = {
 	[NVMF_TCP_SECTYPE_TLS13]	= "tls13",
 };
 
-const char *nvmf_sectype_str(__u8 sectype)
+__public const char *nvmf_sectype_str(__u8 sectype)
 {
 	return arg_str(sectypes, ARRAY_SIZE(sectypes), sectype);
 }
@@ -162,7 +163,7 @@ static const char * const prtypes[] = {
 	[NVMF_RDMA_PRTYPE_IWARP]		= "iwarp",
 };
 
-const char *nvmf_prtype_str(__u8 prtype)
+__public const char *nvmf_prtype_str(__u8 prtype)
 {
 	return arg_str(prtypes, ARRAY_SIZE(prtypes), prtype);
 }
@@ -172,7 +173,7 @@ static const char * const qptypes[] = {
 	[NVMF_RDMA_QPTYPE_DATAGRAM]	= "datagram",
 };
 
-const char *nvmf_qptype_str(__u8 qptype)
+__public const char *nvmf_qptype_str(__u8 qptype)
 {
 	return arg_str(qptypes, ARRAY_SIZE(qptypes), qptype);
 }
@@ -181,12 +182,12 @@ static const char * const cms[] = {
 	[NVMF_RDMA_CMS_RDMA_CM]	= "rdma-cm",
 };
 
-const char *nvmf_cms_str(__u8 cm)
+__public const char *nvmf_cms_str(__u8 cm)
 {
 	return arg_str(cms, ARRAY_SIZE(cms), cm);
 }
 
-int nvmf_context_create(struct nvme_global_ctx *ctx,
+__public int nvmf_context_create(struct nvme_global_ctx *ctx,
 		bool (*decide_retry)(struct nvmf_context *fctx, int err,
 			void *user_data),
 		void (*connected)(struct nvmf_context *fctx,
@@ -213,7 +214,7 @@ int nvmf_context_create(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-int nvmf_context_set_discovery_cbs(struct nvmf_context *fctx,
+__public int nvmf_context_set_discovery_cbs(struct nvmf_context *fctx,
 		void (*discovery_log)(struct nvmf_context *fctx,
 			bool connect,
 			struct nvmf_discovery_log *log,
@@ -233,7 +234,7 @@ int nvmf_context_set_discovery_cbs(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_discovery_defaults(struct nvmf_context *fctx,
+__public int nvmf_context_set_discovery_defaults(struct nvmf_context *fctx,
 		int max_discovery_retries, int keep_alive_timeout)
 {
 	fctx->default_max_discovery_retries = max_discovery_retries;
@@ -242,7 +243,7 @@ int nvmf_context_set_discovery_defaults(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_fabrics_config(struct nvmf_context *fctx,
+__public int nvmf_context_set_fabrics_config(struct nvmf_context *fctx,
 		struct nvme_fabrics_config *cfg)
 {
 	fctx->cfg = cfg;
@@ -250,7 +251,7 @@ int nvmf_context_set_fabrics_config(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_connection(struct nvmf_context *fctx,
+__public int nvmf_context_set_connection(struct nvmf_context *fctx,
 		const char *subsysnqn, const char *transport,
 		const char *traddr, const char *trsvcid,
 		const char *host_traddr, const char *host_iface)
@@ -265,7 +266,7 @@ int nvmf_context_set_connection(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
+__public int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
 		const char *hostnqn, const char *hostid)
 {
 	fctx->hostnqn = hostnqn;
@@ -274,7 +275,7 @@ int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_crypto(struct nvmf_context *fctx,
+__public int nvmf_context_set_crypto(struct nvmf_context *fctx,
 		const char *hostkey, const char *ctrlkey,
 		const char *keyring, const char *tls_key,
 		const char *tls_key_identity)
@@ -288,14 +289,14 @@ int nvmf_context_set_crypto(struct nvmf_context *fctx,
 	return 0;
 }
 
-int nvmf_context_set_persistent(struct nvmf_context *fctx, bool persistent)
+__public int nvmf_context_set_persistent(struct nvmf_context *fctx, bool persistent)
 {
 	fctx->persistent = persistent;
 
 	return 0;
 }
 
-int nvmf_context_set_device(struct nvmf_context *fctx, const char *device)
+__public int nvmf_context_set_device(struct nvmf_context *fctx, const char *device)
 {
 	fctx->device = device;
 
@@ -333,13 +334,6 @@ static const struct nvme_fabric_options default_supported_options = {
 	.trsvcid = true,
 };
 
-void nvmf_default_config(struct nvme_fabrics_config *cfg)
-{
-	memset(cfg, 0, sizeof(*cfg));
-	cfg->tos = -1;
-	cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
-}
-
 #define MERGE_CFG_OPTION(c, n, o, d)			\
 	if ((c)->o == d) (c)->o = (n)->o
 static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
@@ -371,7 +365,7 @@ static struct nvme_fabrics_config *merge_config(nvme_ctrl_t c,
 
 #define UPDATE_CFG_OPTION(c, n, o, d)			\
 	if ((n)->o != d) (c)->o = (n)->o
-void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg)
+__public void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg)
 {
 	struct nvme_fabrics_config *ctrl_cfg = nvme_ctrl_get_config(c);
 
@@ -679,7 +673,7 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 {
 	struct nvme_fabrics_config *cfg = nvme_ctrl_get_config(c);
 	const char *transport = nvme_ctrl_get_transport(c);
-	const char *hostnqn, *hostid, *hostkey, *ctrlkey;
+	const char *hostnqn, *hostid, *hostkey, *ctrlkey = NULL;
 	bool discover = false, discovery_nqn = false;
 	struct nvme_global_ctx *ctx = h->ctx;
 	long keyring_id = 0;
@@ -710,16 +704,17 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 		discovery_nqn = true;
 	}
 
-	if (nvme_ctrl_is_discovery_ctrl(c))
+	if (nvme_ctrl_get_discovery_ctrl(c))
 		discover = true;
 
 	hostnqn = nvme_host_get_hostnqn(h);
 	hostid = nvme_host_get_hostid(h);
-	hostkey = nvme_host_get_dhchap_key(h);
+	hostkey = nvme_host_get_dhchap_host_key(h);
 	if (!hostkey)
 		hostkey = nvme_ctrl_get_dhchap_host_key(c);
 
-	ctrlkey = nvme_ctrl_get_dhchap_key(c);
+	if (hostkey)
+		ctrlkey = nvme_ctrl_get_dhchap_ctrl_key(c);
 
 	if (cfg->tls && cfg->concat) {
 		nvme_msg(h->ctx, LOG_ERR, "cannot specify --tls and --concat together\n");
@@ -728,11 +723,6 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 
 	if (cfg->concat && !hostkey) {
 		nvme_msg(h->ctx, LOG_ERR, "required argument [--dhchap-secret | -S] not specified with --concat\n");
-		return -ENVME_CONNECT_INVAL;
-	}
-
-	if (cfg->concat && ctrlkey) {
-		nvme_msg(h->ctx, LOG_ERR, "cannot specify [--dhchap-ctrl-secret | -C] with --concat\n");
 		return -ENVME_CONNECT_INVAL;
 	}
 
@@ -763,9 +753,9 @@ static int build_options(nvme_host_t h, nvme_ctrl_t c, char **argstr)
 	    (hostid && add_argument(ctx, argstr, hostid, hostid)) ||
 	    (discover && !discovery_nqn &&
 	     add_bool_argument(ctx, argstr, discovery, true)) ||
-	    (!discover && hostkey &&
+	    (hostkey &&
 	     add_argument(ctx, argstr, dhchap_secret, hostkey)) ||
-	    (!discover && ctrlkey &&
+	    (ctrlkey &&
 	     add_argument(ctx, argstr, dhchap_ctrl_secret, ctrlkey)) ||
 	    (!discover &&
 	     add_int_argument(ctx, argstr, nr_io_queues,
@@ -992,7 +982,7 @@ static const char *lookup_context(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 	return NULL;
 }
 
-int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
+__public int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		  const struct nvme_fabrics_config *cfg)
 {
 	nvme_subsystem_t s;
@@ -1027,9 +1017,9 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 			key = nvme_ctrl_get_dhchap_host_key(fc);
 			if (key)
 				nvme_ctrl_set_dhchap_host_key(c, key);
-			key = nvme_ctrl_get_dhchap_key(fc);
+			key = nvme_ctrl_get_dhchap_ctrl_key(fc);
 			if (key)
-				nvme_ctrl_set_dhchap_key(c, key);
+				nvme_ctrl_set_dhchap_ctrl_key(c, key);
 			key = nvme_ctrl_get_keyring(fc);
 			if (key)
 				nvme_ctrl_set_keyring(c, key);
@@ -1046,7 +1036,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	root_app = nvme_get_application(h->ctx);
 	if (root_app) {
 		app = nvme_subsystem_get_application(s);
-		if (!app && nvme_ctrl_is_discovery_ctrl(c))
+		if (!app && nvme_ctrl_get_discovery_ctrl(c))
 			app = lookup_context(h->ctx, c);
 
 		/*
@@ -1057,7 +1047,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 		 */
 		if (app && strcmp(app, root_app)) {
 			nvme_msg(h->ctx, LOG_INFO, "skip %s, not managed by %s\n",
-				 nvme_subsystem_get_nqn(s), root_app);
+				 nvme_subsystem_get_subsysnqn(s), root_app);
 			return -ENVME_CONNECT_IGNORED;
 		}
 	}
@@ -1086,7 +1076,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
 	return nvme_init_ctrl(h, c, ret);
 }
 
-int nvmf_connect_ctrl(nvme_ctrl_t c)
+__public int nvmf_connect_ctrl(nvme_ctrl_t c)
 {
 	_cleanup_free_ char *argstr = NULL;
 	int ret;
@@ -1188,7 +1178,7 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 		break;
 	}
 
-	if (nvme_ctrl_is_discovered(c)) {
+	if (nvme_ctrl_get_discovered(c)) {
 		nvme_free_ctrl(c);
 		return -EAGAIN;
 	}
@@ -1355,7 +1345,7 @@ static void sanitize_discovery_log_entry(struct nvmf_disc_log_entry *e)
 	}
 }
 
-int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
+__public int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 			   int max_retries)
 {
 	struct nvme_get_discovery_args args = {
@@ -1369,7 +1359,7 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
 	return nvmf_get_discovery_wargs(&args, logp);
 }
 
-int nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args,
+__public int nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args,
 			     struct nvmf_discovery_log **logp)
 {
 	struct nvmf_discovery_log *log;
@@ -1384,244 +1374,6 @@ int nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args,
 
 	*logp = log;
 	return 0;
-}
-
-static int uuid_from_device_tree(char *system_uuid)
-{
-	_cleanup_fd_ int f = -1;
-	ssize_t len;
-
-	f = open(nvme_uuid_ibm_filename(), O_RDONLY);
-	if (f < 0)
-		return -ENXIO;
-
-	memset(system_uuid, 0, NVME_UUID_LEN_STRING);
-	len = read(f, system_uuid, NVME_UUID_LEN_STRING - 1);
-	if (len < 0)
-		return -ENXIO;
-
-	return strlen(system_uuid) ? 0 : -ENXIO;
-}
-
-/*
- * See System Management BIOS (SMBIOS) Reference Specification
- * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.2.0.pdf
- */
-#define DMI_SYSTEM_INFORMATION	1
-
-static bool is_dmi_uuid_valid(const char *buf, size_t len)
-{
-	int i;
-
-	/* UUID bytes are from byte 8 to 23 */
-	if (len < 24)
-		return false;
-
-	/* Test it's a invalid UUID with all zeros */
-	for (i = 8; i < 24; i++) {
-		if (buf[i])
-			break;
-	}
-	if (i == 24)
-		return false;
-
-	return true;
-}
-
-static int uuid_from_dmi_entries(char *system_uuid)
-{
-	_cleanup_dir_ DIR *d = NULL;
-	const char *entries_dir = nvme_dmi_entries_dir();
-	int f;
-	struct dirent *de;
-	char buf[512] = {0};
-
-	system_uuid[0] = '\0';
-	d = opendir(entries_dir);
-	if (!d)
-		return -ENXIO;
-	while ((de = readdir(d))) {
-		char filename[PATH_MAX];
-		int len, type;
-
-		if (de->d_name[0] == '.')
-			continue;
-		sprintf(filename, "%s/%s/type", entries_dir, de->d_name);
-		f = open(filename, O_RDONLY);
-		if (f < 0)
-			continue;
-		len = read(f, buf, 512);
-		close(f);
-		if (len <= 0)
-			continue;
-		if (sscanf(buf, "%d", &type) != 1)
-			continue;
-		if (type != DMI_SYSTEM_INFORMATION)
-			continue;
-		sprintf(filename, "%s/%s/raw", entries_dir, de->d_name);
-		f = open(filename, O_RDONLY);
-		if (f < 0)
-			continue;
-		len = read(f, buf, 512);
-		close(f);
-		if (len <= 0)
-			continue;
-
-		if (!is_dmi_uuid_valid(buf, len))
-			continue;
-
-		/* Sigh. https://en.wikipedia.org/wiki/Overengineering */
-		/* DMTF SMBIOS 3.0 Section 7.2.1 System UUID */
-		sprintf(system_uuid,
-			"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-"
-			"%02x%02x%02x%02x%02x%02x",
-			(uint8_t)buf[8 + 3], (uint8_t)buf[8 + 2],
-			(uint8_t)buf[8 + 1], (uint8_t)buf[8 + 0],
-			(uint8_t)buf[8 + 5], (uint8_t)buf[8 + 4],
-			(uint8_t)buf[8 + 7], (uint8_t)buf[8 + 6],
-			(uint8_t)buf[8 + 8], (uint8_t)buf[8 + 9],
-			(uint8_t)buf[8 + 10], (uint8_t)buf[8 + 11],
-			(uint8_t)buf[8 + 12], (uint8_t)buf[8 + 13],
-			(uint8_t)buf[8 + 14], (uint8_t)buf[8 + 15]);
-		break;
-	}
-	return strlen(system_uuid) ? 0 : -ENXIO;
-}
-
-#define PATH_DMI_PROD_UUID  "/sys/class/dmi/id/product_uuid"
-
-/**
- * uuid_from_product_uuid() - Get system UUID from product_uuid
- * @system_uuid: Where to save the system UUID.
- *
- * Return: 0 on success, -ENXIO otherwise.
- */
-static int uuid_from_product_uuid(char *system_uuid)
-{
-	_cleanup_file_ FILE *stream = NULL;
-	ssize_t nread;
-	_cleanup_free_ char *line = NULL;
-	size_t len = 0;
-
-	stream = fopen(PATH_DMI_PROD_UUID, "re");
-	if (!stream)
-		return -ENXIO;
-	system_uuid[0] = '\0';
-
-	nread = getline(&line, &len, stream);
-	if (nread != NVME_UUID_LEN_STRING)
-		return -ENXIO;
-
-	/* The kernel is handling the byte swapping according DMTF
-	 * SMBIOS 3.0 Section 7.2.1 System UUID */
-
-	memcpy(system_uuid, line, NVME_UUID_LEN_STRING - 1);
-	system_uuid[NVME_UUID_LEN_STRING - 1] = '\0';
-
-	return 0;
-}
-
-/**
- * uuid_from_dmi() - read system UUID
- * @system_uuid: buffer for the UUID
- *
- * The system UUID can be read from two different locations:
- *
- *     1) /sys/class/dmi/id/product_uuid
- *     2) /sys/firmware/dmi/entries
- *
- * Note that the second location is not present on Debian-based systems.
- *
- * Return: 0 on success, negative errno otherwise.
- */
-static int uuid_from_dmi(char *system_uuid)
-{
-	int ret = uuid_from_product_uuid(system_uuid);
-	if (ret != 0)
-		ret = uuid_from_dmi_entries(system_uuid);
-	return ret;
-}
-
-char *nvmf_hostid_generate()
-{
-	int ret;
-	char uuid_str[NVME_UUID_LEN_STRING];
-	unsigned char uuid[NVME_UUID_LEN];
-
-	ret = uuid_from_dmi(uuid_str);
-	if (ret < 0)
-		ret = uuid_from_device_tree(uuid_str);
-	if (ret < 0) {
-		if (nvme_uuid_random(uuid) < 0)
-			memset(uuid, 0, NVME_UUID_LEN);
-		nvme_uuid_to_string(uuid, uuid_str);
-	}
-
-	return strdup(uuid_str);
-}
-
-char *nvmf_hostnqn_generate_from_hostid(char *hostid)
-{
-	char *hid = NULL;
-	char *hostnqn;
-	int ret;
-
-	if (!hostid)
-		hostid = hid = nvmf_hostid_generate();
-
-	ret = asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s", hostid);
-	free(hid);
-
-	return (ret < 0) ? NULL : hostnqn;
-}
-
-char *nvmf_hostnqn_generate()
-{
-	return nvmf_hostnqn_generate_from_hostid(NULL);
-}
-
-static char *nvmf_read_file(const char *f, int len)
-{
-	char buf[len];
-	_cleanup_fd_ int fd = -1;
-	int ret;
-
-	fd = open(f, O_RDONLY);
-	if (fd < 0)
-		return NULL;
-
-	memset(buf, 0, len);
-	ret = read(fd, buf, len - 1);
-
-	if (ret < 0 || !strlen(buf))
-		return NULL;
-	return strndup(buf, strcspn(buf, "\n"));
-}
-
-char *nvmf_hostnqn_from_file()
-{
-	char *hostnqn = getenv("LIBNVME_HOSTNQN");
-
-	if (hostnqn) {
-		if (!strcmp(hostnqn, ""))
-			return NULL;
-		return strdup(hostnqn);
-	}
-
-	return nvmf_read_file(NVMF_HOSTNQN_FILE, NVMF_NQN_SIZE);
-}
-
-char *nvmf_hostid_from_file()
-{
-	char *hostid = getenv("LIBNVME_HOSTID");
-
-	if (hostid) {
-		if (!strcmp(hostid, ""))
-			return NULL;
-		return strdup(hostid);
-	}
-
-	return nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
 }
 
 /**
@@ -1889,7 +1641,7 @@ static int nvme_fetch_cntrltype_dctype_from_id(nvme_ctrl_t c)
 	return 0;
 }
 
-bool nvmf_is_registration_supported(nvme_ctrl_t c)
+__public bool nvmf_is_registration_supported(nvme_ctrl_t c)
 {
 	if (!c->cntrltype || !c->dctype)
 		if (nvme_fetch_cntrltype_dctype_from_id(c))
@@ -1898,7 +1650,7 @@ bool nvmf_is_registration_supported(nvme_ctrl_t c)
 	return !strcmp(c->dctype, "ddc") || !strcmp(c->dctype, "cdc");
 }
 
-int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result)
+__public int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result)
 {
 	if (!nvmf_is_registration_supported(c))
 		return -ENOTSUP;
@@ -1939,7 +1691,7 @@ static char *unescape_uri(const char *str, int len)
 	return dst;
 }
 
-int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **urip)
+__public int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **urip)
 {
 	struct nvme_fabrics_uri *uri;
 	_cleanup_free_ char *scheme = NULL;
@@ -2036,7 +1788,7 @@ int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **urip)
 	return 0;
 }
 
-void nvmf_free_uri(struct nvme_fabrics_uri *uri)
+__public void nvmf_free_uri(struct nvme_fabrics_uri *uri)
 {
 	char **s;
 
@@ -2054,19 +1806,19 @@ void nvmf_free_uri(struct nvme_fabrics_uri *uri)
 	free(uri);
 }
 
-static nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct fabric_args *trcfg)
+static nvme_ctrl_t lookup_ctrl(nvme_host_t h, struct nvmf_context *fctx)
 {
 	nvme_subsystem_t s;
 	nvme_ctrl_t c;
 
 	nvme_for_each_subsystem(h, s) {
 		c = nvme_ctrl_find(s,
-				   trcfg->transport,
-				   trcfg->traddr,
-				   trcfg->trsvcid,
-				   trcfg->subsysnqn,
-				   trcfg->host_traddr,
-				   trcfg->host_iface);
+				   fctx->transport,
+				   fctx->traddr,
+				   fctx->trsvcid,
+				   fctx->subsysnqn,
+				   fctx->host_traddr,
+				   fctx->host_iface);
 		if (c)
 			return c;
 	}
@@ -2099,7 +1851,7 @@ static int setup_connection(struct nvmf_context *fctx, struct nvme_host *h,
 		bool discovery)
 {
 	if (fctx->hostkey)
-		nvme_host_set_dhchap_key(h, fctx->hostkey);
+		nvme_host_set_dhchap_host_key(h, fctx->hostkey);
 
 	if (!fctx->trsvcid)
 		fctx->trsvcid = nvmf_get_default_trsvcid(fctx->transport,
@@ -2193,24 +1945,22 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 		bool disconnect;
 		nvme_ctrl_t child = { 0 };
 		int tmo = fctx->cfg->keep_alive_tmo;
+		struct nvmf_context nfctx = *fctx;
 
-		struct fabric_args trcfg = {
-			.subsysnqn	= e->subnqn,
-			.transport	= nvmf_trtype_str(e->trtype),
-			.traddr		= e->traddr,
-			.trsvcid	= e->trsvcid,
-			.host_traddr	= fctx->host_traddr,
-			.host_iface	= fctx->host_iface,
-		};
+		nfctx.subsysnqn = e->subnqn;
+		nfctx.transport = nvmf_trtype_str(e->trtype);
+		nfctx.traddr = e->traddr;
+		nfctx.trsvcid = e->trsvcid;
+		nfctx.cfg = fctx->cfg;
 
 		/* Already connected ? */
-		cl = lookup_ctrl(h, &trcfg);
+		cl = lookup_ctrl(h, &nfctx);
 		if (cl && nvme_ctrl_get_name(cl))
 			continue;
 
 		/* Skip connect if the transport types don't match */
 		if (strcmp(nvme_ctrl_get_transport(c),
-			   nvmf_trtype_str(e->trtype)))
+			   nfctx.transport))
 			continue;
 
 		if (e->subtype == NVME_NQN_DISC ||
@@ -2227,7 +1977,7 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 			 * Are we supposed to keep the discovery
 			 * controller around?
 			 */
-			disconnect = !fctx->persistent;
+			disconnect = !nfctx.persistent;
 
 			if (strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME)) {
 				/*
@@ -2240,21 +1990,21 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 					disconnect = false;
 			}
 
-			set_discovery_kato(fctx, fctx->cfg);
+			set_discovery_kato(&nfctx, fctx->cfg);
 		} else {
 			/* NVME_NQN_NVME */
 			disconnect = false;
 		}
 
-		err = nvmf_connect_disc_entry(h, e, fctx->host_traddr,
-			fctx->host_iface, fctx->cfg,
+		err = nvmf_connect_disc_entry(h, e, nfctx.host_traddr,
+			nfctx.host_iface, nfctx.cfg,
 			&discover, &child);
 
-		fctx->cfg->keep_alive_tmo = tmo;
+		nfctx.cfg->keep_alive_tmo = tmo;
 
 		if (!child) {
 			if (discover)
-				_nvmf_discovery(ctx, fctx, true, child);
+				_nvmf_discovery(ctx, &nfctx, true, child);
 
 			if (child && disconnect) {
 				nvme_disconnect_ctrl(child);
@@ -2263,16 +2013,16 @@ static int _nvmf_discovery(struct nvme_global_ctx *ctx,
 		} else if (err == -ENVME_CONNECT_ALREADY) {
 			struct nvmf_disc_log_entry *e = &log->entries[i];
 
-			fctx->already_connected(fctx, h, e->subnqn,
+			nfctx.already_connected(&nfctx, h, e->subnqn,
 				nvmf_trtype_str(e->trtype), e->traddr,
-				e->trsvcid, fctx->user_data);
+				e->trsvcid, nfctx.user_data);
 		}
 	}
 
 	return 0;
 }
 
-const char *nvmf_get_default_trsvcid(const char *transport,
+__public const char *nvmf_get_default_trsvcid(const char *transport,
 		bool discovery_ctrl)
 {
 	if (!transport)
@@ -2294,7 +2044,7 @@ const char *nvmf_get_default_trsvcid(const char *transport,
 static bool is_persistent_discovery_ctrl(nvme_host_t h, nvme_ctrl_t c)
 {
 	if (nvme_host_is_pdc_enabled(h, DEFAULT_PDC_ENABLED))
-		return nvme_ctrl_is_unique_discovery_ctrl(c);
+		return nvme_ctrl_get_unique_discovery_ctrl(c);
 
 	return false;
 }
@@ -2317,22 +2067,27 @@ retry:
 
 static int __create_discovery_ctrl(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, nvme_host_t h,
-		struct nvme_fabrics_config *cfg, struct fabric_args *trcfg,
-		struct nvme_ctrl **ctrl)
+		struct nvme_fabrics_config *cfg, struct nvme_ctrl **ctrl)
 {
 	nvme_ctrl_t c;
 	int tmo, ret;
 
-	ret = nvme_create_ctrl(ctx, trcfg->subsysnqn, trcfg->transport,
-			     trcfg->traddr, trcfg->host_traddr,
-			     trcfg->host_iface, trcfg->trsvcid, &c);
+	ret = nvme_create_ctrl(ctx, fctx->subsysnqn, fctx->transport,
+			     fctx->traddr, fctx->host_traddr,
+			     fctx->host_iface, fctx->trsvcid, &c);
 	if (ret)
 		return ret;
 
 	nvme_ctrl_set_discovery_ctrl(c, true);
 	nvme_ctrl_set_unique_discovery_ctrl(c,
-		     strcmp(trcfg->subsysnqn, NVME_DISC_SUBSYS_NAME));
+		     strcmp(fctx->subsysnqn, NVME_DISC_SUBSYS_NAME));
 	tmo = set_discovery_kato(fctx, cfg);
+
+	if (nvme_ctrl_get_unique_discovery_ctrl(c) && fctx->hostkey) {
+		nvme_ctrl_set_dhchap_host_key(c, fctx->hostkey);
+		if (fctx->ctrlkey)
+			nvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
+	}
 
 	ret = nvme_add_ctrl(fctx, h, c, cfg);
 	cfg->keep_alive_tmo = tmo;
@@ -2348,18 +2103,17 @@ static int __create_discovery_ctrl(struct nvme_global_ctx *ctx,
 static int nvmf_create_discovery_ctrl(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, nvme_host_t h,
 		struct nvme_fabrics_config *cfg,
-		struct fabric_args *trcfg,
 		struct nvme_ctrl **ctrl)
 {
 	_cleanup_nvme_free_ struct nvme_id_ctrl *id = NULL;
 	struct nvme_ctrl *c;
 	int ret;
 
-	ret = __create_discovery_ctrl(ctx, fctx, h, cfg, trcfg, &c);
+	ret = __create_discovery_ctrl(ctx, fctx, h, cfg, &c);
 	if (ret)
 		return ret;
 
-	if (nvme_ctrl_is_unique_discovery_ctrl(c)) {
+	if (nvme_ctrl_get_unique_discovery_ctrl(c)) {
 		*ctrl = c;
 		return 0;
 	}
@@ -2399,8 +2153,8 @@ static int nvmf_create_discovery_ctrl(struct nvme_global_ctx *ctx,
 	nvme_disconnect_ctrl(c);
 	nvme_free_ctrl(c);
 
-	trcfg->subsysnqn = id->subnqn;
-	ret = __create_discovery_ctrl(ctx, fctx, h, cfg, trcfg, &c);
+	fctx->subsysnqn = id->subnqn;
+	ret = __create_discovery_ctrl(ctx, fctx, h, cfg, &c);
 	if (ret)
 		return ret;
 
@@ -2412,80 +2166,73 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, nvme_host_t h, nvme_ctrl_t c,
 		bool connect, bool force)
 {
-	const char *transport, *traddr, *host_traddr;
-	const char *host_iface, *trsvcid, *subsysnqn;
+	struct nvmf_context nfctx = *fctx;
 	struct nvme_fabrics_config cfg;
 	nvme_ctrl_t cn;
 	int ret = 0;
 
-	transport = nvme_ctrl_get_transport(c);
-	traddr = nvme_ctrl_get_traddr(c);
-	host_traddr = nvme_ctrl_get_host_traddr(c);
-	host_iface = nvme_ctrl_get_host_iface(c);
+	nfctx.transport = nvme_ctrl_get_transport(c);
+	nfctx.traddr = nvme_ctrl_get_traddr(c);
+	nfctx.host_traddr = nvme_ctrl_get_host_traddr(c);
+	nfctx.host_iface = nvme_ctrl_get_host_iface(c);
 
-	if (!transport && !traddr)
+	if (!nfctx.transport && !nfctx.traddr)
 		return 0;
 
 	/* ignore none fabric transports */
-	if (strcmp(transport, "tcp") &&
-	    strcmp(transport, "rdma") &&
-	    strcmp(transport, "fc"))
+	if (strcmp(nfctx.transport, "tcp") &&
+	    strcmp(nfctx.transport, "rdma") &&
+	    strcmp(nfctx.transport, "fc"))
 		return 0;
 
 	/* ignore if no host_traddr for fc */
-	if (!strcmp(transport, "fc")) {
-		if (!host_traddr) {
-			nvme_msg(ctx, LOG_ERR, "host_traddr required for fc\n");
+	if (!strcmp(nfctx.transport, "fc")) {
+		if (!nfctx.host_traddr) {
+			nvme_msg(ctx, LOG_ERR,
+				 "host_traddr required for fc\n");
 			return 0;
 		}
 	}
 
 	/* ignore if host_iface set for any transport other than tcp */
-	if (!strcmp(transport, "rdma") || !strcmp(transport, "fc")) {
-		if (host_iface) {
+	if (!strcmp(nfctx.transport, "rdma") ||
+	    !strcmp(nfctx.transport, "fc")) {
+		if (nfctx.host_iface) {
 			nvme_msg(ctx, LOG_ERR,
 				 "host_iface not permitted for rdma or fc\n");
 			return 0;
 		}
 	}
 
-	trsvcid = nvme_ctrl_get_trsvcid(c);
-	if (!trsvcid || !strcmp(trsvcid, ""))
-		trsvcid = nvmf_get_default_trsvcid(transport, true);
+	nfctx.trsvcid = nvme_ctrl_get_trsvcid(c);
+	if (!nfctx.trsvcid || !strcmp(nfctx.trsvcid, ""))
+		nfctx.trsvcid =
+			nvmf_get_default_trsvcid(nfctx.transport, true);
 
 	if (force)
-		subsysnqn = nvme_ctrl_get_subsysnqn(c);
+		nfctx.subsysnqn = nvme_ctrl_get_subsysnqn(c);
 	else
-		subsysnqn = NVME_DISC_SUBSYS_NAME;
+		nfctx.subsysnqn = NVME_DISC_SUBSYS_NAME;
 
-	if (nvme_ctrl_is_persistent(c))
-		fctx->persistent = true;
+	if (nvme_ctrl_get_persistent(c))
+		nfctx.persistent = true;
 
 	memcpy(&cfg, fctx->cfg, sizeof(cfg));
 
-	struct fabric_args trcfg = {
-		.subsysnqn	= subsysnqn,
-		.transport	= transport,
-		.traddr		= traddr,
-		.trsvcid	= trsvcid,
-		.host_traddr	= host_traddr,
-		.host_iface	= host_iface,
-	};
-
 	if (!force) {
-		cn = lookup_ctrl(h, &trcfg);
+		cn = lookup_ctrl(h, &nfctx);
 		if (cn) {
-			fctx->persistent = true;
-			_nvmf_discovery(ctx, fctx, connect, cn);
+			nfctx.persistent = true;
+			_nvmf_discovery(ctx, &nfctx, connect, cn);
 			return 0;
 		}
 	}
 
-	ret = nvmf_create_discovery_ctrl(ctx, fctx, h, &cfg, &trcfg, &cn);
+	ret = nvmf_create_discovery_ctrl(ctx, &nfctx, h, &cfg, &cn);
 	if (ret)
 		return 0;
 
-	_nvmf_discovery(ctx, fctx, connect, cn);
+	_nvmf_discovery(ctx, &nfctx, connect, cn);
 	if (!(fctx->persistent || is_persistent_discovery_ctrl(h, cn)))
 		ret = nvme_disconnect_ctrl(cn);
 	nvme_free_ctrl(cn);
@@ -2493,7 +2240,7 @@ int _discovery_config_json(struct nvme_global_ctx *ctx,
 	return ret;
 }
 
-int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
+__public int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, bool connect, bool force)
 {
 	const char *hnqn, *hid;
@@ -2529,7 +2276,7 @@ int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 						"failed to connect to hostnqn=%s,nqn=%s,%s\n",
 						nvme_host_get_hostnqn(h),
 						nvme_subsystem_get_name(s),
-						nvme_ctrl_get_address(c));
+						nvme_ctrl_get_traddr(c));
 
 					if (!ret)
 						ret = err;
@@ -2541,7 +2288,7 @@ int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
 	return ret;
 }
 
-int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
+__public int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx)
 {
 	const char *hnqn, *hid;
@@ -2588,7 +2335,7 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 						 "failed to connect to hostnqn=%s,nqn=%s,%s\n",
 						 nvme_host_get_hostnqn(h),
 						 nvme_subsystem_get_name(s),
-						 nvme_ctrl_get_address(c));
+						 nvme_ctrl_get_traddr(c));
 
 					if (!ret)
 						ret = err;
@@ -2600,7 +2347,7 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
 	return ret;
 }
 
-int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
+__public int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, bool connect, bool force)
 {
 	struct nvme_host *h;
@@ -2624,30 +2371,24 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 		if (err)
 			break;
 
-		struct fabric_args trcfg = {
-			.subsysnqn	= fctx->subsysnqn,
-			.transport	= fctx->transport,
-			.traddr		= fctx->traddr,
-			.trsvcid	= fctx->trsvcid,
-			.host_traddr	= fctx->host_traddr,
-			.host_iface	= fctx->host_iface,
-		};
+		struct nvmf_context nfctx = *fctx;
 
 		if (!force) {
-			c = lookup_ctrl(h, &trcfg);
+			c = lookup_ctrl(h, &nfctx);
 			if (c) {
-				_nvmf_discovery(ctx, fctx, connect, c);
+				_nvmf_discovery(ctx, &nfctx, connect, c);
 				continue;
 			}
 		}
 
-		err = nvmf_create_discovery_ctrl(ctx, fctx, h, fctx->cfg,
-			&trcfg, &c);
+		err = nvmf_create_discovery_ctrl(ctx, &nfctx, h, fctx->cfg,
+			&c);
 		if (err)
 			continue;
 
-		_nvmf_discovery(ctx, fctx, connect, c);
-		if (!(fctx->persistent || is_persistent_discovery_ctrl(h, c)))
+		_nvmf_discovery(ctx, &nfctx, connect, c);
+		if (!(nfctx.persistent ||
+		      is_persistent_discovery_ctrl(h, c)))
 			err = nvme_disconnect_ctrl(c);
 		nvme_free_ctrl(c);
 	} while (!err);
@@ -2660,7 +2401,7 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-int nvmf_config_modify(struct nvme_global_ctx *ctx,
+__public int nvmf_config_modify(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx)
 {
 	_cleanup_free_ char *hnqn = NULL;
@@ -2670,9 +2411,9 @@ int nvmf_config_modify(struct nvme_global_ctx *ctx,
 	struct nvme_ctrl *c;
 
 	if (!fctx->hostnqn)
-		fctx->hostnqn = hnqn = nvmf_hostnqn_from_file();
+		fctx->hostnqn = hnqn = nvme_read_hostnqn();
 	if (!fctx->hostid && hnqn)
-		fctx->hostid = hid = nvmf_hostid_from_file();
+		fctx->hostid = hid = nvme_read_hostid();
 
 	h = nvme_lookup_host(ctx, fctx->hostnqn, fctx->hostid);
 	if (!h) {
@@ -2682,7 +2423,7 @@ int nvmf_config_modify(struct nvme_global_ctx *ctx,
 	}
 
 	if (fctx->hostkey)
-		nvme_host_set_dhchap_key(h, fctx->hostkey);
+		nvme_host_set_dhchap_host_key(h, fctx->hostkey);
 
 	s = nvme_lookup_subsystem(h, NULL, fctx->subsysnqn);
 	if (!s) {
@@ -2700,7 +2441,7 @@ int nvmf_config_modify(struct nvme_global_ctx *ctx,
 	}
 
 	if (fctx->ctrlkey)
-		nvme_ctrl_set_dhchap_key(c, fctx->ctrlkey);
+		nvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
 
 	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,
 			    fctx->tls_key_identity, fctx->cfg, c);
@@ -2717,7 +2458,7 @@ static int nbft_filter(const struct dirent *dent)
 	return !fnmatch(NBFT_SYSFS_FILENAME, dent->d_name, FNM_PATHNAME);
 }
 
-int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
+__public int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
 		struct nbft_file_entry **head)
 {
 	struct nbft_file_entry *entry = NULL;
@@ -2734,7 +2475,7 @@ int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
 		snprintf(filename, sizeof(filename), "%s/%s", path,
 			dent[i]->d_name);
 
-		ret = nvme_nbft_read(ctx, &nbft, filename);
+		ret = nvme_read_nbft(ctx, &nbft, filename);
 		if (!ret) {
 			struct nbft_file_entry *new;
 
@@ -2756,12 +2497,12 @@ int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
 	return 0;
 }
 
-void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
+__public void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head)
 {
 	while (head) {
 		struct nbft_file_entry *next = head->next;
 
-		nvme_nbft_free(ctx, head->nbft);
+		nvme_free_nbft(ctx, head->nbft);
 		free(head);
 
 		head = next;
@@ -2797,7 +2538,7 @@ static bool validate_uri(struct nvme_global_ctx *ctx,
 static int nbft_connect(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, struct nvme_host *h,
 		struct nvmf_disc_log_entry *e,
-		struct nbft_info_subsystem_ns *ss, struct fabric_args *trcfg,
+		struct nbft_info_subsystem_ns *ss,
 		struct nvme_fabrics_config *cfg)
 {
 	nvme_ctrl_t c;
@@ -2809,14 +2550,13 @@ static int nbft_connect(struct nvme_global_ctx *ctx,
 	saved_log_level = nvme_get_logging_level(ctx, &saved_log_tstamp,
 		&saved_log_pid);
 
-	/* Already connected ? */
-	c = lookup_ctrl(h, trcfg);
+	c = lookup_ctrl(h, fctx);
 	if (c && nvme_ctrl_get_name(c))
 		return 0;
 
-	ret = nvme_create_ctrl(ctx, trcfg->subsysnqn, trcfg->transport,
-			     trcfg->traddr, trcfg->host_traddr,
-			     trcfg->host_iface, trcfg->trsvcid, &c);
+	ret = nvme_create_ctrl(ctx, fctx->subsysnqn, fctx->transport,
+			     fctx->traddr, fctx->host_traddr,
+			     fctx->host_iface, fctx->trsvcid, &c);
 	if (ret)
 		return ret;
 
@@ -2863,7 +2603,7 @@ static int nbft_connect(struct nvme_global_ctx *ctx,
 static int nbft_discovery(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, struct nbft_info_discovery *dd,
 		struct nvme_host *h, struct nvme_ctrl *c,
-		struct nvme_fabrics_config *defcfg, struct fabric_args *deftrcfg)
+		struct nvme_fabrics_config *defcfg)
 {
 	struct nvmf_discovery_log *log = NULL;
 	int ret;
@@ -2888,44 +2628,42 @@ static int nbft_discovery(struct nvme_global_ctx *ctx,
 
 	for (i = 0; i < le64_to_cpu(log->numrec); i++) {
 		struct nvmf_disc_log_entry *e = &log->entries[i];
+		struct nvmf_context nfctx = *fctx;
 		nvme_ctrl_t cl;
 		int tmo = defcfg->keep_alive_tmo;
 
-		struct fabric_args trcfg = {
-			.subsysnqn	= e->subnqn,
-			.transport	= nvmf_trtype_str(e->trtype),
-			.traddr		= e->traddr,
-			.host_traddr	= fctx->host_traddr,
-			.host_iface	= fctx->host_iface,
-			.trsvcid	= e->trsvcid,
-		};
+		nfctx.subsysnqn = e->subnqn;
+		nfctx.transport = nvmf_trtype_str(e->trtype);
+		nfctx.traddr = e->traddr;
+		nfctx.trsvcid = e->trsvcid;
 
 		if (e->subtype == NVME_NQN_CURR)
 			continue;
 
 		/* Already connected ? */
-		cl = lookup_ctrl(h, &trcfg);
+		cl = lookup_ctrl(h, &nfctx);
 		if (cl && nvme_ctrl_get_name(cl))
 			continue;
 
 		/* Skip connect if the transport types don't match */
 		if (strcmp(nvme_ctrl_get_transport(c),
-			   nvmf_trtype_str(e->trtype)))
+			   nfctx.transport))
 			continue;
 
 		if (e->subtype == NVME_NQN_DISC) {
 			nvme_ctrl_t child;
 
-			ret = nvmf_connect_disc_entry(h, e, fctx->host_traddr,
-				fctx->host_iface, defcfg, NULL, &child);
+			ret = nvmf_connect_disc_entry(h, e,
+				nfctx.host_traddr, nfctx.host_iface,
+				defcfg, NULL, &child);
 			if (ret)
 				continue;
-			nbft_discovery(ctx, fctx, dd, h, child, defcfg, &trcfg);
+			nbft_discovery(ctx, &nfctx, dd, h, child, defcfg);
 			nvme_disconnect_ctrl(child);
 			nvme_free_ctrl(child);
 		} else {
-			ret = nbft_connect(ctx, fctx, h, e, NULL,
-				&trcfg, defcfg);
+			ret = nbft_connect(ctx, &nfctx, h, e, NULL,
+				defcfg);
 
 			/*
 			 * With TCP/DHCP, it can happen that the OS
@@ -2933,13 +2671,13 @@ static int nbft_discovery(struct nvme_global_ctx *ctx,
 			 * firmware had. Retry without host_traddr.
 			 */
 			if (ret == -ENVME_CONNECT_ADDRNOTAVAIL &&
-			    !strcmp(trcfg.transport, "tcp") &&
+			    !strcmp(nfctx.transport, "tcp") &&
 			    strlen(dd->hfi->tcp_info.dhcp_server_ipaddr) > 0) {
-				const char *htradr = trcfg.host_traddr;
+				const char *htradr = nfctx.host_traddr;
 
-				trcfg.host_traddr = NULL;
-				ret = nbft_connect(ctx, fctx, h, e, NULL,
-					&trcfg, defcfg);
+				nfctx.host_traddr = NULL;
+				ret = nbft_connect(ctx, &nfctx, h, e, NULL,
+					defcfg);
 
 				if (ret == 0)
 					nvme_msg(ctx, LOG_INFO,
@@ -2963,7 +2701,7 @@ static int nbft_discovery(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
+__public int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 		struct nvmf_context *fctx, bool connect, char *nbft_path)
 {
 	const char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
@@ -3025,6 +2763,8 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 		/* Subsystem Namespace Descriptor List */
 		for (ss = entry->nbft->subsystem_ns_list; ss && *ss; ss++)
 			for (i = 0; i < (*ss)->num_hfis; i++) {
+				struct nvmf_context nfctx = *fctx;
+
 				hfi = (*ss)->hfis[i];
 
 				/* Skip discovery NQN records */
@@ -3036,22 +2776,20 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 					continue;
 				}
 
-				host_traddr = NULL;
+				nfctx.host_traddr = NULL;
 				if (!fctx->host_traddr &&
 				    !strncmp((*ss)->transport, "tcp", 3))
-					host_traddr = hfi->tcp_info.ipaddr;
+					nfctx.host_traddr =
+						hfi->tcp_info.ipaddr;
 
-				struct fabric_args trcfg = {
-					.subsysnqn	= (*ss)->subsys_nqn,
-					.transport	= (*ss)->transport,
-					.traddr		= (*ss)->traddr,
-					.trsvcid	= (*ss)->trsvcid,
-					.host_traddr	= host_traddr,
-					.host_iface	= NULL,
-				};
+				nfctx.subsysnqn = (*ss)->subsys_nqn;
+				nfctx.transport = (*ss)->transport;
+				nfctx.traddr = (*ss)->traddr;
+				nfctx.trsvcid = (*ss)->trsvcid;
+				nfctx.host_iface = NULL;
 
-				rr = nbft_connect(ctx, fctx, h, NULL,
-					*ss, &trcfg, fctx->cfg);
+				rr = nbft_connect(ctx, &nfctx, h, NULL,
+					*ss, fctx->cfg);
 
 				/*
 				 * With TCP/DHCP, it can happen that the OS
@@ -3059,12 +2797,12 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 				 * firmware had. Retry without host_traddr.
 				 */
 				if (rr == -ENVME_CONNECT_ADDRNOTAVAIL &&
-				    !strcmp(trcfg.transport, "tcp") &&
+				    !strcmp(nfctx.transport, "tcp") &&
 				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
-					trcfg.host_traddr = NULL;
+					nfctx.host_traddr = NULL;
 
-					rr = nbft_connect(ctx, fctx, h, NULL,
-						*ss, &trcfg, fctx->cfg);
+					rr = nbft_connect(ctx, &nfctx, h, NULL,
+						*ss, fctx->cfg);
 
 					if (rr == 0)
 						nvme_msg(ctx, LOG_INFO,
@@ -3089,6 +2827,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 		for (dd = entry->nbft->discovery_list; dd && *dd; dd++) {
 			_cleanup_uri_ struct nvme_fabrics_uri *uri = NULL;
 			_cleanup_free_ char *trsvcid = NULL;
+			struct nvmf_context nfctx = *fctx;
 			bool persistent = false;
 			bool linked = false;
 			nvme_ctrl_t c;
@@ -3131,29 +2870,27 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 					strdup(nvmf_get_default_trsvcid(
 						uri->protocol, true));
 
-			struct fabric_args trcfg = {
-				.subsysnqn	= NVME_DISC_SUBSYS_NAME,
-				.transport	= uri->protocol,
-				.traddr		= uri->host,
-				.trsvcid	= trsvcid,
-				.host_traddr	= host_traddr,
-				.host_iface	= NULL,
-			};
+			nfctx.subsysnqn = NVME_DISC_SUBSYS_NAME;
+			nfctx.transport =  uri->protocol;
+			nfctx.traddr = uri->host;
+			nfctx.trsvcid = trsvcid;
+			nfctx.host_traddr = host_traddr;
+			nfctx.host_iface = NULL;
 
 			/* Lookup existing discovery controller */
-			c = lookup_ctrl(h, &trcfg);
+			c = lookup_ctrl(h, &nfctx);
 			if (c && nvme_ctrl_get_name(c))
 				persistent = true;
 
 			if (!c) {
-				ret = nvmf_create_discovery_ctrl(ctx, fctx, h,
-					fctx->cfg, &trcfg, &c);
+				ret = nvmf_create_discovery_ctrl(ctx, &nfctx,
+					h, fctx->cfg, &c);
 				if (ret == -ENVME_CONNECT_ADDRNOTAVAIL &&
-				    !strcmp(trcfg.transport, "tcp") &&
+				    !strcmp(nfctx.transport, "tcp") &&
 				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
-					trcfg.host_traddr = NULL;
+					nfctx.traddr = NULL;
 					ret = nvmf_create_discovery_ctrl(ctx,
-						fctx, h, fctx->cfg, &trcfg, &c);
+						&nfctx, h, fctx->cfg, &c);
 				}
 			} else
 				ret = 0;
@@ -3165,8 +2902,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
 				goto out_free;
 			}
 
-			rr = nbft_discovery(ctx, fctx, *dd, h, c, fctx->cfg,
-				&trcfg);
+			rr = nbft_discovery(ctx, &nfctx, *dd, h, c, fctx->cfg);
 			if (!persistent)
 				nvme_disconnect_ctrl(c);
 			nvme_free_ctrl(c);
@@ -3181,93 +2917,7 @@ out_free:
 	return ret;
 }
 
-static int __create_discover_ctrl(struct nvme_global_ctx *ctx,
-		struct nvmf_context *fctx, nvme_host_t h,
-		struct nvme_fabrics_config *cfg, struct fabric_args *trcfg,
-		struct nvme_ctrl **ctrl)
-{
-	struct nvme_ctrl *c;
-	int tmo, ret;
-
-	ret = nvme_create_ctrl(ctx, trcfg->subsysnqn, trcfg->transport,
-			       trcfg->traddr, trcfg->host_traddr,
-			       trcfg->host_iface, trcfg->trsvcid, &c);
-	if (ret)
-		return ret;
-
-	nvme_ctrl_set_discovery_ctrl(c, true);
-	nvme_ctrl_set_unique_discovery_ctrl(c,
-		     strcmp(trcfg->subsysnqn, NVME_DISC_SUBSYS_NAME));
-	tmo = set_discovery_kato(fctx, cfg);
-
-	ret = nvme_add_ctrl(fctx, h, c, cfg);
-	cfg->keep_alive_tmo = tmo;
-	if (ret) {
-		nvme_free_ctrl(c);
-		return ret;
-	}
-
-	*ctrl = c;
-	return 0;
-}
-
-static int nvmf_create_discover_ctrl(struct nvme_global_ctx *ctx,
-		struct nvmf_context *fctx,
-		struct nvme_host *h, struct nvme_fabrics_config *cfg,
-		struct fabric_args *trcfg, struct nvme_ctrl **ctrl)
-{
-	_cleanup_nvme_free_ struct nvme_id_ctrl *id = NULL;
-	struct nvme_ctrl *c;
-	int ret;
-
-	ret = __create_discover_ctrl(ctx, fctx, h, cfg, trcfg, &c);
-	if (ret)
-		return ret;
-
-	if (nvme_ctrl_is_unique_discovery_ctrl(c)) {
-		*ctrl = c;
-		return 0;
-	}
-
-	id = __nvme_alloc(sizeof(*id));
-	if (!id) {
-		nvme_free_ctrl(c);
-		return -ENOMEM;
-	}
-
-	/* Find out the name of discovery controller */
-	ret = nvme_ctrl_identify(c, id);
-	if (ret) {
-		nvme_msg(ctx, LOG_ERR,
-			 "failed to identify controller, error %s\n",
-			 nvme_strerror(-ret));
-		nvme_disconnect_ctrl(c);
-		nvme_free_ctrl(c);
-		return ret;
-	}
-
-	if (!strcmp(id->subnqn, NVME_DISC_SUBSYS_NAME)) {
-		*ctrl = c;
-		return 0;
-	}
-
-	/*
-	 * The subsysnqn is not the well-known name. Prefer the unique
-	 * subsysnqn over the well-known one.
-	 */
-	nvme_disconnect_ctrl(c);
-	nvme_free_ctrl(c);
-
-	trcfg->subsysnqn = id->subnqn;
-	ret = __create_discover_ctrl(ctx, fctx, h, cfg, trcfg, &c);
-	if (ret)
-		return ret;
-
-	*ctrl = c;
-	return 0;
-}
-
-int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
+__public int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 		bool connect, bool force)
 {
 	struct nvme_ctrl *c = NULL;
@@ -3286,7 +2936,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 		ret = nvme_scan_ctrl(ctx, fctx->device, &c);
 		if (!ret) {
 			/* Check if device matches command-line options */
-			if (!nvme_ctrl_config_match(c, fctx->transport,
+			if (!nvme_ctrl_match_config(c, fctx->transport,
 				fctx->traddr, fctx->trsvcid,
 					fctx->subsysnqn, fctx->host_traddr,
 					fctx->host_iface)) {
@@ -3295,7 +2945,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 				    fctx->device);
 			}
 
-			if (!nvme_ctrl_is_discovery_ctrl(c)) {
+			if (!nvme_ctrl_get_discovery_ctrl(c)) {
 				nvme_msg(
 					ctx, LOG_ERR,
 					"ctrl device %s found, ignoring non discovery controller\n",
@@ -3340,24 +2990,14 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 		}
 	}
 
-	struct fabric_args trcfg = {
-		.subsysnqn	= fctx->subsysnqn,
-		.transport	= fctx->transport,
-		.traddr		= fctx->traddr,
-		.trsvcid	= fctx->trsvcid,
-		.host_traddr	= fctx->host_traddr,
-		.host_iface	= fctx->host_iface,
-	};
-
 	if (!c && !force) {
-		c = lookup_ctrl(h, &trcfg);
+		c = lookup_ctrl(h, fctx);
 		if (c)
 			fctx->persistent = true;
 	}
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
-		ret = nvmf_create_discover_ctrl(ctx, fctx, h, fctx->cfg,
-			&trcfg, &c);
+		ret = nvmf_create_discovery_ctrl(ctx, fctx, h, fctx->cfg, &c);
 		if (ret) {
 			if (ret != -ENVME_CONNECT_IGNORED)
 				nvme_msg(ctx, LOG_ERR,
@@ -3375,7 +3015,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx, struct nvmf_context *fctx,
 	return ret;
 }
 
-int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
+__public int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
 {
 	struct nvme_host *h;
 	struct nvme_ctrl *c;
@@ -3389,16 +3029,7 @@ int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
 	if (err)
 		return err;
 
-	struct fabric_args trcfg = {
-		.subsysnqn	= fctx->subsysnqn,
-		.transport	= fctx->transport,
-		.traddr		= fctx->traddr,
-		.trsvcid	= fctx->trsvcid,
-		.host_traddr	= fctx->host_traddr,
-		.host_iface	= fctx->host_iface,
-	};
-
-	c = lookup_ctrl(h, &trcfg);
+	c = lookup_ctrl(h, fctx);
 	if (c && nvme_ctrl_get_name(c) && !fctx->cfg->duplicate_connect) {
 		fctx->already_connected(fctx, h, nvme_ctrl_get_subsysnqn(c),
 			nvme_ctrl_get_transport(c), nvme_ctrl_get_traddr(c),
@@ -3406,14 +3037,17 @@ int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
 		return -EALREADY;
 	}
 
-	err = nvme_create_ctrl(ctx, trcfg.subsysnqn, trcfg.transport,
-		trcfg.traddr, trcfg.host_traddr, trcfg.host_iface,
-		trcfg.trsvcid, &c);
+	err = nvme_create_ctrl(ctx, fctx->subsysnqn, fctx->transport,
+		fctx->traddr, fctx->host_traddr, fctx->host_iface,
+		fctx->trsvcid, &c);
 	if (err)
 		return err;
 
-	if (fctx->ctrlkey)
-		nvme_ctrl_set_dhchap_key(c, fctx->ctrlkey);
+	if (fctx->hostkey) {
+		nvme_ctrl_set_dhchap_host_key(c, fctx->hostkey);
+		if (fctx->ctrlkey)
+			nvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
+	}
 
 	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,
 		fctx->tls_key_identity, fctx->cfg, c);
@@ -3422,7 +3056,7 @@ int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx)
 	 * We are connecting to a discovery controller, so let's treat
 	 * this as a persistent connection and specify a KATO.
 	 */
-	if (!strcmp(trcfg.subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+	if (!strcmp(fctx->subsysnqn, NVME_DISC_SUBSYS_NAME)) {
 		fctx->persistent = true;
 
 		set_discovery_kato(fctx, fctx->cfg);

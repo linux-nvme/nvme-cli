@@ -2,8 +2,8 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -1188,7 +1188,7 @@ static unsigned int stdout_subsystem_multipath(nvme_subsystem_t s)
 		printf(" +- %s %s %s %s %s\n",
 			nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
-			nvme_ctrl_get_address(c),
+			nvme_ctrl_get_traddr(c),
 			nvme_ctrl_get_state(c),
 			ana_state);
 		i++;
@@ -1205,7 +1205,7 @@ static void stdout_subsystem_ctrls(nvme_subsystem_t s)
 		printf(" +- %s %s %s %s\n",
 			nvme_ctrl_get_name(c),
 			nvme_ctrl_get_transport(c),
-			nvme_ctrl_get_address(c),
+			nvme_ctrl_get_traddr(c),
 			nvme_ctrl_get_state(c));
 	}
 }
@@ -1215,7 +1215,7 @@ static void stdout_subsys_config(nvme_subsystem_t s, bool show_iopolicy)
 	int len = strlen(nvme_subsystem_get_name(s));
 
 	printf("%s - NQN=%s\n", nvme_subsystem_get_name(s),
-	       nvme_subsystem_get_nqn(s));
+	       nvme_subsystem_get_subsysnqn(s));
 	printf("%*s   hostnqn=%s\n", len, " ",
 	       nvme_host_get_hostnqn(nvme_subsystem_get_host(s)));
 	if (show_iopolicy)
@@ -1228,9 +1228,9 @@ static void stdout_subsys_config(nvme_subsystem_t s, bool show_iopolicy)
 		printf("%*s   serial=%s\n", len, " ",
 			nvme_subsystem_get_serial(s));
 		printf("%*s   firmware=%s\n", len, " ",
-			nvme_subsystem_get_fw_rev(s));
+			nvme_subsystem_get_firmware(s));
 		printf("%*s   type=%s\n", len, " ",
-			nvme_subsystem_get_type(s));
+			nvme_subsystem_get_subsystype(s));
 	}
 }
 
@@ -2427,6 +2427,32 @@ static void stdout_id_ctrl_tmpthha(__u8 tmpthha)
 	printf("\n");
 }
 
+static void stdout_id_ctrl_cdpa(__le16 ctrl_cdpa)
+{
+	__u16 cdpa = le16_to_cpu(ctrl_cdpa);
+	__u16 rsvd1 = (cdpa >> 1);
+	bool hmac_sha_384 = !!(cdpa & NVME_CTRL_CDPA_HMAC_SHA_384);
+
+	if (rsvd1)
+		printf("  [15:1] : %#x\tReserved\n", rsvd1);
+	printf("  [0:0] : %#x\tHMAC-SHA-384 %sSupported\n",
+			hmac_sha_384, hmac_sha_384 ? "" : "Not ");
+
+	printf("\n");
+}
+
+static void stdout_id_ctrl_ipmsr(__le16 ctrl_ipmsr)
+{
+	__u16 ipmsr = le16_to_cpu(ctrl_ipmsr);
+	__u16 srs = NVME_GET(ipmsr, CTRL_IPMSR_SRS);
+	__u16 srv = NVME_GET(ipmsr, CTRL_IPMSR_SRV);
+
+	printf("  [15:8] : %#x\tSample Rate Scale\n", srs);
+	printf("  [7:0]  : %#x\tSample Rate Value\n", srv);
+
+	printf("\n");
+}
+
 static void stdout_id_ctrl_sqes(__u8 sqes)
 {
 	__u8 msqes = (sqes & 0xF0) >> 4;
@@ -2694,6 +2720,26 @@ static void stdout_id_ctrl_ofcs(__le16 ofcs)
 		disconn, disconn ? "" : "Not");
 	printf("\n");
 
+}
+
+static void stdout_id_ctrl_dctype(__u8 dctype)
+{
+	__u8 rsvd = (dctype & 0xFC) >> 2;
+	__u8 dctype_val = dctype & 0x3;
+	char *dctype_str;
+
+	if (rsvd)
+		printf("  [7:3] : %#x\tReserved\n", rsvd);
+	if (dctype_val == NVME_CTRL_DCTYPE_CDC)
+		dctype_str = "CDC";
+	else if (dctype_val == NVME_CTRL_DCTYPE_DDC)
+		dctype_str = "DDC";
+	else
+		dctype_str = "not reported";
+
+	printf("  [0:2] : %#x\tDiscovery Controller Type: %s\n",
+				dctype_val, dctype_str);
+	printf("\n");
 }
 
 static void stdout_id_ns_size(uint64_t nsze, uint64_t ncap, uint64_t nuse)
@@ -3431,6 +3477,14 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	if (human)
 		stdout_id_ctrl_tmpthha(ctrl->tmpthha);
 	printf("cqt       : %d\n", le16_to_cpu(ctrl->cqt));
+	printf("cdpa      : %d\n", le16_to_cpu(ctrl->cdpa));
+	if (human)
+		stdout_id_ctrl_cdpa(ctrl->cdpa);
+	printf("mup       : %d\n", le16_to_cpu(ctrl->mup));
+	printf("ipmsr     : %#x\n", le16_to_cpu(ctrl->ipmsr));
+	if (human)
+		stdout_id_ctrl_ipmsr(ctrl->ipmsr);
+	printf("msmt      : %#x\n", le16_to_cpu(ctrl->msmt));
 	printf("sqes      : %#x\n", ctrl->sqes);
 	if (human)
 		stdout_id_ctrl_sqes(ctrl->sqes);
@@ -3496,6 +3550,10 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
 	printf("ofcs      : %d\n", le16_to_cpu(ctrl->ofcs));
 	if (human)
 		stdout_id_ctrl_ofcs(ctrl->ofcs);
+	printf("dctype    : %d\n", ctrl->dctype);
+	if (human)
+		stdout_id_ctrl_dctype(ctrl->dctype);
+	printf("ccrl      : %d\n", ctrl->ccrl);
 
 	stdout_id_ctrl_power(ctrl);
 	if (vendor_show)
@@ -5721,7 +5779,8 @@ static bool stdout_detailed_subsys(const char *name, void *arg)
 	     s;
 	     s = htable_subsys_getnext(&res->ht_s, name, &it)) {
 		if (first) {
-			printf("%-16s %-96s ", name, nvme_subsystem_get_nqn(s));
+			printf("%-16s %-96s ", name,
+			       nvme_subsystem_get_subsysnqn(s));
 			first = false;
 		}
 
@@ -5756,7 +5815,7 @@ static bool stdout_detailed_ctrl(const char *name, void *arg)
 	       nvme_ctrl_get_model(c),
 	       nvme_ctrl_get_firmware(c),
 	       nvme_ctrl_get_transport(c),
-	       nvme_ctrl_get_address(c),
+	       nvme_ctrl_get_traddr(c),
 	       nvme_ctrl_get_phy_slot(c),
 	       nvme_subsystem_get_name(nvme_ctrl_get_subsystem(c)));
 
@@ -5963,7 +6022,7 @@ static void stdout_tabular_subsystem_topology_multipath(nvme_subsystem_t s)
 					nvme_ctrl_get_transport(c), LEFT);
 			/* col 7: Address */
 			table_set_value_str(t, ++col, row,
-					nvme_ctrl_get_address(c), LEFT);
+					nvme_ctrl_get_traddr(c), LEFT);
 			/* col 8: State */
 			table_set_value_str(t, ++col, row,
 					nvme_ctrl_get_state(c), LEFT);
@@ -5998,7 +6057,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 				printf("  +- %s %s %s %s %s\n",
 				       nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_ctrl_get_state(c),
 				       nvme_path_get_ana_state(p));
 			}
@@ -6009,7 +6068,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 			printf(" +- %s %s %s\n",
 			       nvme_ctrl_get_name(c),
 			       nvme_ctrl_get_transport(c),
-			       nvme_ctrl_get_address(c));
+			       nvme_ctrl_get_traddr(c));
 			printf(" \\\n");
 
 			nvme_subsystem_for_each_ns(s, n) {
@@ -6045,7 +6104,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 						nvme_path_get_numa_nodes(p),
 						nvme_ctrl_get_name(c),
 						nvme_ctrl_get_transport(c),
-						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_traddr(c),
 						nvme_ctrl_get_state(c));
 
 				} else if (!strcmp(iopolicy, "queue-depth")) {
@@ -6059,7 +6118,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 						nvme_path_get_queue_depth(p),
 						nvme_ctrl_get_name(c),
 						nvme_ctrl_get_transport(c),
-						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_traddr(c),
 						nvme_ctrl_get_state(c));
 
 				} else { /* round-robin */
@@ -6072,7 +6131,7 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 						nvme_path_get_ana_state(p),
 						nvme_ctrl_get_name(c),
 						nvme_ctrl_get_transport(c),
-						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_traddr(c),
 						nvme_ctrl_get_state(c));
 				}
 			}
@@ -6130,7 +6189,7 @@ static void stdout_tabular_subsystem_topology(nvme_subsystem_t s)
 					nvme_ctrl_get_transport(c), LEFT);
 			/* col 4: Address */
 			table_set_value_str(t, 4, row,
-					nvme_ctrl_get_address(c), LEFT);
+					nvme_ctrl_get_traddr(c), LEFT);
 			/* col 5: State */
 			table_set_value_str(t, 5, row,
 					nvme_ctrl_get_state(c), LEFT);
@@ -6157,7 +6216,7 @@ static void stdout_subsystem_topology(nvme_subsystem_t s,
 				printf("  +- %s %s %s %s\n",
 				       nvme_ctrl_get_name(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_ctrl_get_state(c));
 			}
 		}
@@ -6167,7 +6226,7 @@ static void stdout_subsystem_topology(nvme_subsystem_t s,
 			printf(" +- %s %s %s\n",
 			       nvme_ctrl_get_name(c),
 			       nvme_ctrl_get_transport(c),
-			       nvme_ctrl_get_address(c));
+			       nvme_ctrl_get_traddr(c));
 			printf(" \\\n");
 			nvme_ctrl_for_each_ns(c, n) {
 				printf("  +- ns %d %s\n",
@@ -6188,7 +6247,7 @@ static void stdout_subsystem_topology(nvme_subsystem_t s,
 				printf("  +- %s %s %s %s\n",
 						nvme_ctrl_get_name(c),
 						nvme_ctrl_get_transport(c),
-						nvme_ctrl_get_address(c),
+						nvme_ctrl_get_traddr(c),
 						nvme_ctrl_get_state(c));
 			}
 		}
@@ -6302,6 +6361,7 @@ static void stdout_key_value(const char *key, const char *val, va_list ap)
 	printf("%s: %s\n", key, value ? value : alloc_error);
 }
 
+#ifdef CONFIG_FABRICS
 static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 {
 	int i;
@@ -6344,6 +6404,9 @@ static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		}
 	}
 }
+#else
+static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec) {}
+#endif
 
 static void stdout_connect_msg(nvme_ctrl_t c)
 {
@@ -6438,6 +6501,7 @@ static void stdout_reachability_associations_log(struct nvme_reachability_associ
 	}
 }
 
+#ifdef CONFIG_FABRICS
 static void stdout_host_discovery_log(struct nvme_host_discover_log *log)
 {
 	__u32 i;
@@ -6548,6 +6612,10 @@ static void stdout_ave_discovery_log(struct nvme_ave_discover_log *log)
 		}
 	}
 }
+#else
+static void stdout_host_discovery_log(struct nvme_host_discover_log *log) {}
+static void stdout_ave_discovery_log(struct nvme_ave_discover_log *log) {}
+#endif
 
 static void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log)
 {

@@ -5,12 +5,14 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include <unistd.h>
 #include <errno.h>
-#include "util/types.h"
+#include <unistd.h>
+
+#include "nvme-cmds.h"
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
 #include "types.h"
+#include "util/types.h"
 
 const unsigned char ocp_uuid[NVME_UUID_LEN] = {
 	0xc1, 0x94, 0xd5, 0x5b, 0xe0, 0x94, 0x47, 0x94, 0xa2, 0x1d,
@@ -18,7 +20,7 @@ const unsigned char ocp_uuid[NVME_UUID_LEN] = {
 
 int ocp_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index)
 {
-	int i = nvme_uuid_find(uuid_list, ocp_uuid);
+	int i = nvme_find_uuid(uuid_list, ocp_uuid);
 
 	*index = 0;
 	if (i > 0)

@@ -34,12 +34,12 @@
 #ifndef argconfig_H
 #define argconfig_H
 
-#include <string.h>
 #include <getopt.h>
-#include <stdarg.h>
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <platform/types.h>
 

@@ -5,9 +5,9 @@
  */
 
 #include <assert.h>
-#include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <ccan/array_size/array_size.h>
 

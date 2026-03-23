@@ -7,20 +7,20 @@
  */
 
 #include <errno.h>
-#include <stdlib.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
-#include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
+#include <ccan/minmax/minmax.h>
 
 #include <libnvme.h>
 #include <libnvme-mi.h>
 
 #include "private.h"
+#include "compiler_attributes.h"
 
 #define NUM_ENABLES    (256u)
 
@@ -297,7 +297,7 @@ struct nvme_mi_ep *nvme_mi_init_ep(struct nvme_global_ctx *ctx)
 	return ep;
 }
 
-int nvme_mi_ep_set_timeout(nvme_mi_ep_t ep, unsigned int timeout_ms)
+__public int nvme_mi_ep_set_timeout(nvme_mi_ep_t ep, unsigned int timeout_ms)
 {
 	if (ep->transport->check_timeout) {
 		int rc;
@@ -315,7 +315,7 @@ void nvme_mi_ep_set_mprt_max(nvme_mi_ep_t ep, unsigned int mprt_max_ms)
 	ep->mprt_max = mprt_max_ms;
 }
 
-unsigned int nvme_mi_ep_get_timeout(nvme_mi_ep_t ep)
+__public unsigned int nvme_mi_ep_get_timeout(nvme_mi_ep_t ep)
 {
 	return ep->timeout;
 }
@@ -325,7 +325,7 @@ static bool nvme_mi_ep_has_quirk(nvme_mi_ep_t ep, unsigned long quirk)
 	return ep->quirks & quirk;
 }
 
-struct nvme_transport_handle *nvme_mi_init_transport_handle(nvme_mi_ep_t ep, __u16 ctrl_id)
+__public struct nvme_transport_handle *nvme_mi_init_transport_handle(nvme_mi_ep_t ep, __u16 ctrl_id)
 {
 	struct nvme_transport_handle *hdl;
 
@@ -343,12 +343,12 @@ struct nvme_transport_handle *nvme_mi_init_transport_handle(nvme_mi_ep_t ep, __u
 	return hdl;
 }
 
-__u16 nvme_mi_ctrl_id(struct nvme_transport_handle *hdl)
+__public __u16 nvme_mi_ctrl_id(struct nvme_transport_handle *hdl)
 {
 	return hdl->id;
 }
 
-int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan)
+__public int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan)
 {
 	struct nvme_ctrl_list list;
 	unsigned int i, n_ctrl;
@@ -421,15 +421,15 @@ static int nvme_mi_verify_resp_mic(struct nvme_mi_resp *resp)
 	return resp->mic != ~crc;
 }
 
-__attribute__((weak)) void *nvme_mi_submit_entry(__u8 type, const struct nvme_mi_msg_hdr *hdr,
-						 size_t hdr_len, const void *data, size_t data_len)
+__public __weak void *nvme_mi_submit_entry(__u8 type, const struct nvme_mi_msg_hdr *hdr,
+					   size_t hdr_len, const void *data, size_t data_len)
 {
 	return NULL;
 }
 
-__attribute__((weak)) void nvme_mi_submit_exit(__u8 type, const struct nvme_mi_msg_hdr *hdr,
-					       size_t hdr_len, const void *data, size_t data_len,
-					       void *user_data) { }
+__public __weak void nvme_mi_submit_exit(__u8 type, const struct nvme_mi_msg_hdr *hdr,
+					 size_t hdr_len, const void *data, size_t data_len,
+					 void *user_data) { }
 
 
 int nvme_mi_async_read(nvme_mi_ep_t ep, struct nvme_mi_resp *resp)
@@ -569,7 +569,7 @@ int nvme_mi_submit(nvme_mi_ep_t ep, struct nvme_mi_req *req,
 	return 0;
 }
 
-int nvme_mi_set_csi(nvme_mi_ep_t ep, uint8_t csi)
+__public int nvme_mi_set_csi(nvme_mi_ep_t ep, uint8_t csi)
 {
 	uint8_t csi_bit = (csi) ? 1 : 0;
 
@@ -722,7 +722,7 @@ static int nvme_mi_get_async_message(nvme_mi_ep_t ep,
 }
 
 
-int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
+__public int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
 		       struct nvme_mi_admin_req_hdr *admin_req,
 		       size_t req_data_size,
 		       struct nvme_mi_admin_resp_hdr *admin_resp,
@@ -888,7 +888,7 @@ int nvme_mi_admin_admin_passthru(struct nvme_transport_handle *hdl,
 	return 0;
 }
 
-int nvme_mi_control(nvme_mi_ep_t ep, __u8 opcode,
+__public int nvme_mi_control(nvme_mi_ep_t ep, __u8 opcode,
 		    __u16 cpsp, __u16 *result_cpsr)
 {
 	struct nvme_mi_control_resp control_resp;
@@ -960,7 +960,7 @@ static int nvme_mi_read_data(nvme_mi_ep_t ep, __u32 cdw0,
 	return 0;
 }
 
-int nvme_mi_mi_xfer(nvme_mi_ep_t ep,
+__public int nvme_mi_mi_xfer(nvme_mi_ep_t ep,
 		       struct nvme_mi_mi_req_hdr *mi_req,
 		       size_t req_data_size,
 		       struct nvme_mi_mi_resp_hdr *mi_resp,
@@ -1010,7 +1010,7 @@ int nvme_mi_mi_xfer(nvme_mi_ep_t ep,
 	return 0;
 }
 
-int nvme_mi_mi_read_mi_data_subsys(nvme_mi_ep_t ep,
+__public int nvme_mi_mi_read_mi_data_subsys(nvme_mi_ep_t ep,
 				   struct nvme_mi_read_nvm_ss_info *s)
 {
 	size_t len;
@@ -1035,7 +1035,7 @@ int nvme_mi_mi_read_mi_data_subsys(nvme_mi_ep_t ep,
 	return 0;
 }
 
-int nvme_mi_mi_read_mi_data_port(nvme_mi_ep_t ep, __u8 portid,
+__public int nvme_mi_mi_read_mi_data_port(nvme_mi_ep_t ep, __u8 portid,
 				 struct nvme_mi_read_port_info *p)
 {
 	size_t len;
@@ -1055,7 +1055,7 @@ int nvme_mi_mi_read_mi_data_port(nvme_mi_ep_t ep, __u8 portid,
 	return 0;
 }
 
-int nvme_mi_mi_read_mi_data_ctrl_list(nvme_mi_ep_t ep, __u8 start_ctrlid,
+__public int nvme_mi_mi_read_mi_data_ctrl_list(nvme_mi_ep_t ep, __u8 start_ctrlid,
 				       struct nvme_ctrl_list *list)
 {
 	size_t len;
@@ -1072,7 +1072,7 @@ int nvme_mi_mi_read_mi_data_ctrl_list(nvme_mi_ep_t ep, __u8 start_ctrlid,
 	return 0;
 }
 
-int nvme_mi_mi_read_mi_data_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id,
+__public int nvme_mi_mi_read_mi_data_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id,
 				       struct nvme_mi_read_ctrl_info *ctrl)
 {
 	size_t len;
@@ -1092,7 +1092,7 @@ int nvme_mi_mi_read_mi_data_ctrl(nvme_mi_ep_t ep, __u16 ctrl_id,
 	return 0;
 }
 
-int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
+__public int nvme_mi_mi_subsystem_health_status_poll(nvme_mi_ep_t ep, bool clear,
 					    struct nvme_mi_nvm_ss_health_status *sshs)
 {
 	struct nvme_mi_mi_resp_hdr resp_hdr;
@@ -1168,7 +1168,7 @@ int nvme_mi_mi_config_set_get_ex(nvme_mi_ep_t ep, __u8 opcode, __u32 dw0,
 	return 0;
 }
 
-int nvme_mi_mi_config_get(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1,
+__public int nvme_mi_mi_config_get(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1,
 			  __u32 *nmresp)
 {
 	size_t data_in_len = 0;
@@ -1184,7 +1184,7 @@ int nvme_mi_mi_config_get(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1,
 					nmresp);
 }
 
-int nvme_mi_mi_config_set(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1)
+__public int nvme_mi_mi_config_set(nvme_mi_ep_t ep, __u32 dw0, __u32 dw1)
 {
 	size_t data_in_len = 0;
 
@@ -1268,7 +1268,7 @@ int nvme_mi_mi_config_set_async_event(nvme_mi_ep_t ep,
 }
 
 
-void nvme_mi_close(nvme_mi_ep_t ep)
+__public void nvme_mi_close(nvme_mi_ep_t ep)
 {
 	struct nvme_transport_handle *hdl, *tmp;
 
@@ -1284,7 +1284,7 @@ void nvme_mi_close(nvme_mi_ep_t ep)
 	free(ep);
 }
 
-char *nvme_mi_endpoint_desc(nvme_mi_ep_t ep)
+__public char *nvme_mi_endpoint_desc(nvme_mi_ep_t ep)
 {
 	char tsbuf[101], *s = NULL;
 	size_t tslen;
@@ -1314,12 +1314,12 @@ char *nvme_mi_endpoint_desc(nvme_mi_ep_t ep)
 	return s;
 }
 
-nvme_mi_ep_t nvme_mi_first_endpoint(struct nvme_global_ctx *ctx)
+__public nvme_mi_ep_t nvme_mi_first_endpoint(struct nvme_global_ctx *ctx)
 {
 	return list_top(&ctx->endpoints, struct nvme_mi_ep, root_entry);
 }
 
-nvme_mi_ep_t nvme_mi_next_endpoint(struct nvme_global_ctx *ctx, nvme_mi_ep_t ep)
+__public nvme_mi_ep_t nvme_mi_next_endpoint(struct nvme_global_ctx *ctx, nvme_mi_ep_t ep)
 {
 	return ep ? list_next(&ctx->endpoints, ep, root_entry) : NULL;
 }
@@ -1358,7 +1358,7 @@ static const char *const mi_status[] = {
 
 /* kept in mi.c while we have a split libnvme/libnvme-mi; consider moving
  * to utils.c (with nvme_status_to_string) if we ever merge. */
-const char *nvme_mi_status_to_string(int status)
+__public const char *nvme_mi_status_to_string(int status)
 {
 	const char *s = "Unknown status";
 
@@ -1526,7 +1526,7 @@ err_cleanup:
 	return err;
 }
 
-int nvme_mi_aem_get_fd(nvme_mi_ep_t ep)
+__public int nvme_mi_aem_get_fd(nvme_mi_ep_t ep)
 {
 	if (!ep || !ep->aem_ctx || !ep->transport || !ep->transport->aem_fd)
 		return -1;
@@ -1635,7 +1635,7 @@ static int aem_disable_enabled(nvme_mi_ep_t ep)
 	return rc;
 }
 
-int nvme_mi_aem_enable(nvme_mi_ep_t ep,
+__public int nvme_mi_aem_enable(nvme_mi_ep_t ep,
 	struct nvme_mi_aem_config *config,
 	void *userdata)
 {
@@ -1709,7 +1709,7 @@ cleanup_ctx:
 	return rc;
 }
 
-int nvme_mi_aem_get_enabled(nvme_mi_ep_t ep,
+__public int nvme_mi_aem_get_enabled(nvme_mi_ep_t ep,
 	struct nvme_mi_aem_enabled_map *enabled_map)
 {
 	if (!ep || !enabled_map)
@@ -1750,7 +1750,7 @@ cleanup:
 	return rc;
 }
 
-int nvme_mi_aem_disable(nvme_mi_ep_t ep)
+__public int nvme_mi_aem_disable(nvme_mi_ep_t ep)
 {
 	if (!ep)
 		return -1;
@@ -1768,7 +1768,7 @@ int nvme_mi_aem_disable(nvme_mi_ep_t ep)
  *spec_info and vend_spec_info must be copied to persist as they will not be valid after
  *the aem_handler has returned.
  */
-struct nvme_mi_event *nvme_mi_aem_get_next_event(nvme_mi_ep_t ep)
+__public struct nvme_mi_event *nvme_mi_aem_get_next_event(nvme_mi_ep_t ep)
 {
 	if (!ep || !ep->aem_ctx ||
 		!ep->aem_ctx->list_current ||
@@ -1805,7 +1805,7 @@ struct nvme_mi_event *nvme_mi_aem_get_next_event(nvme_mi_ep_t ep)
 /* POLLIN has indicated events.  This function reads and processes them.
  * A callback will likely be invoked.
  */
-int nvme_mi_aem_process(nvme_mi_ep_t ep, void *userdata)
+__public int nvme_mi_aem_process(nvme_mi_ep_t ep, void *userdata)
 {
 	int rc = 0;
 	uint8_t response_buffer[4096];

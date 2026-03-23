@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <errno.h>
 #include <inttypes.h>
 #include <signal.h>
 #include <stdint.h>
 #include <string.h>
-#include <errno.h>
 
-#include "platform/includes.h"
+#include <platform/includes.h>
+
+#include <ccan/endian/endian.h>
 
 #include <libnvme.h>
 #include <libnvme-mi.h>
-
-#include <ccan/endian/endian.h>
 
 #include "logging.h"
 #include "util/sighdl.h"

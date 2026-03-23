@@ -61,7 +61,7 @@ Note for nvme-cli the 'default' is set to nofallback.
 #### Installing
 
 	# meson install -C .build
-	
+
 ### Build with build.sh wrapper
 
 The `scripts/build.sh` is used for the CI build but can also be used for
@@ -236,6 +236,93 @@ File: foo-plugin.c
 After that, you just need to implement the functions you defined in each
 ENTRY, then append the object file name to the meson.build "sources".
 
+
+### Updating the libnvme accessor functions
+
+libnvme exposes a set of getter and setter functions (accessors) for its core
+internal structs (`nvme_path`, `nvme_ns`, `nvme_ctrl`, `nvme_subsystem`,
+`nvme_host`, `nvme_fabric_options`). These are generated from the struct
+definitions in `libnvme/src/nvme/private.h` by the tool
+`libnvme/src/nvme/generate-accessors.c`.
+
+The generated files are committed to the source tree and are **not**
+regenerated during a normal build:
+
+```
+libnvme/src/nvme/accessors.h   # public API declarations (with Doxygen stubs)
+libnvme/src/nvme/accessors.c   # implementations
+libnvme/src/nvme/accessors.ld  # linker version script (manually maintained)
+```
+
+#### When to regenerate
+
+Regeneration is needed when a struct member is added, removed, or renamed in
+`private.h`, or when a struct is added to or removed from
+`generate-accessors-include.list` or excluded in `generate-accessors-exclude.list`.
+
+#### How to regenerate
+
+```shell
+$ make update-accessors
+```
+
+or equivalently:
+
+```shell
+$ meson compile -C .build update-accessors
+```
+
+The script compiles the generator, runs it, and atomically updates
+`accessors.h` and `accessors.c` only when their content changes.
+Commit the updated files afterward:
+
+```shell
+$ git add libnvme/src/nvme/accessors.h libnvme/src/nvme/accessors.c
+$ git commit -m "libnvme: regenerate accessors following <struct> changes"
+```
+
+#### Maintaining accessors.ld
+
+`accessors.ld` is a GNU linker version script that controls which accessor
+symbols are exported from `libnvme.so` and under which ABI version label they
+were introduced (e.g. `LIBNVME_ACCESSORS_3`).
+
+This file is **not** updated automatically, because each symbol must be placed
+in the correct version section by the maintainer. Adding a symbol to an
+already-published version section would break binary compatibility for
+existing users of the library.
+
+When `make update-accessors` detects that the symbol list has drifted from
+`accessors.ld`, it prints a report like the following:
+
+```
+WARNING: accessors.ld needs manual attention.
+
+  Symbols to ADD (place in a new version section, e.g. LIBNVME_ACCESSORS_X_Y):
+    nvme_ctrl_get_new_field
+    nvme_ctrl_set_new_field
+```
+
+New symbols must be added to a **new** version section that chains the
+previous one. For example, if the current latest section is
+`LIBNVME_ACCESSORS_3_0`, add a new section for the next release:
+
+```
+LIBNVME_ACCESSORS_3_1 {
+    global:
+        nvme_ctrl_get_new_field;
+        nvme_ctrl_set_new_field;
+} LIBNVME_ACCESSORS_3_0;
+```
+
+Then commit `accessors.ld` together with the regenerated source files.
+
+#### CI enforcement
+
+A GitHub Actions workflow (`.github/workflows/check-accessors.yml`) runs on
+every push and pull request. It regenerates the accessor files and fails if
+the result differs from what is committed, ensuring the source tree never
+drifts silently.
 
 ## Dependency
 

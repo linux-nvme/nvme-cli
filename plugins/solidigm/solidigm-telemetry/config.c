@@ -5,11 +5,15 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <json.h>
+
 #include "config.h"
+#include "telemetry-log.h"
 
 #define NOT_FOUND "NOT_FOUND"
 
@@ -20,6 +24,7 @@
 #define NLOG_OBJ_PREFIX OBJ_NAME_PREFIX "NLOG_"
 
 static bool config_get_by_version(const struct json_object *obj,
+				   const char *key,
 				   int version_major, int version_minor,
 				   struct json_object **value)
 {
@@ -39,6 +44,10 @@ static bool config_get_by_version(const struct json_object *obj,
 		/* Try wildcard minor version if exact match failed */
 		if (json_object_object_get_ex(major_obj, "*", value))
 			return value != NULL;
+
+		SOLIDIGM_LOG_WARNING(
+			"Warning: Object %s version major %d found but minor %d not found\n",
+			key, version_major, version_minor);
 	}
 
 	/* Try wildcard major version if exact major version not found */
@@ -63,7 +72,8 @@ bool sldm_config_get_struct_by_key_version(const struct json_object *config, cha
 
 	if (!json_object_object_get_ex(config, key, &token))
 		return false;
-	if (!config_get_by_version(token, version_major, version_minor, value))
+	if (!config_get_by_version(token, key,
+				   version_major, version_minor, value))
 		return false;
 	return value != NULL;
 }

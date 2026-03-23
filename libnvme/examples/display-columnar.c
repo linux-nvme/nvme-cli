@@ -42,7 +42,7 @@ int main()
 		nvme_for_each_subsystem(h, s) {
 			bool first = true;
 			printf("%-16s %-96s ", nvme_subsystem_get_name(s),
-			       nvme_subsystem_get_nqn(s));
+			       nvme_subsystem_get_subsysnqn(s));
 
 			nvme_subsystem_for_each_ctrl(s, c) {
 				printf("%s%s", first ? "": ", ",
@@ -70,7 +70,7 @@ int main()
 				       nvme_ctrl_get_model(c),
 				       nvme_ctrl_get_firmware(c),
 				       nvme_ctrl_get_transport(c),
-				       nvme_ctrl_get_address(c),
+				       nvme_ctrl_get_traddr(c),
 				       nvme_subsystem_get_name(s));
 
 				nvme_ctrl_for_each_ns(c, n) {

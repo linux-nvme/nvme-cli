@@ -5,9 +5,9 @@
  */
 
 #include <assert.h>
-#include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <arpa/inet.h>
 
 #include <ccan/array_size/array_size.h>
@@ -131,14 +131,14 @@ static struct nvme_global_ctx *create_tree()
 
 	ctx = nvme_create_global_ctx(stdout, LOG_DEBUG);
 	assert(ctx);
-	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	nvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
 	printf("  ctrls created:\n");
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++) {
 		struct test_data *d = &test_data[i];
 
-		assert(!nvme_subsystem_get(ctx, h, d->subsysname,
+		assert(!nvme_get_subsystem(ctx, h, d->subsysname,
 			d->subsysnqn, &d->s));
 		assert(d->s);
 		d->c = nvme_lookup_ctrl(d->s, d->transport, d->traddr,
@@ -236,7 +236,7 @@ static bool ctrl_lookups(struct nvme_global_ctx *ctx)
 	bool pass = true;
 
 	h = nvme_first_host(ctx);
-	nvme_subsystem_get(ctx, h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, &s);
+	nvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, &s);
 
 	printf("  lookup controller:\n");
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++) {
@@ -288,10 +288,10 @@ static bool test_src_addr()
 	ctx = nvme_create_global_ctx(stdout, LOG_DEBUG);
 	assert(ctx);
 
-	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	nvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
-	nvme_subsystem_get(ctx, h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, &s);
+	nvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, &s);
 	assert(s);
 
 	c = nvme_lookup_ctrl(s, "tcp", "192.168.56.1", NULL, NULL, "8009", NULL);
@@ -464,10 +464,10 @@ static bool ctrl_match(const char *tag,
 	ctx = nvme_create_global_ctx(stdout, LOG_INFO);
 	assert(ctx);
 
-	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	nvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
-	assert(!nvme_subsystem_get(ctx, h, DEFAULT_SUBSYSNAME,
+	assert(!nvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
 		 reference->subsysnqn ?
 			reference->subsysnqn : DEFAULT_SUBSYSNQN,
 		&s));
@@ -1080,10 +1080,10 @@ static bool ctrl_config_match(const char *tag,
 	ctx = nvme_create_global_ctx(stdout, LOG_INFO);
 	assert(ctx);
 
-	nvme_host_get(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	nvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
-	assert(!nvme_subsystem_get(ctx, h, DEFAULT_SUBSYSNAME,
+	assert(!nvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
 		reference->subsysnqn ?
 			reference->subsysnqn : DEFAULT_SUBSYSNQN,
 		&s));
@@ -1098,9 +1098,10 @@ static bool ctrl_config_match(const char *tag,
 		reference_ctrl->address = (char *)reference->address;
 	}
 
-	match = nvme_ctrl_config_match(reference_ctrl, candidate->transport, candidate->traddr,
-				       candidate->trsvcid, candidate->subsysnqn,
-				       candidate->host_traddr, candidate->host_iface);
+	match = nvme_ctrl_match_config(reference_ctrl,
+			candidate->transport, candidate->traddr,
+			candidate->trsvcid, candidate->subsysnqn,
+			candidate->host_traddr, candidate->host_iface);
 
 	if (should_match) {
 		if (!match) {

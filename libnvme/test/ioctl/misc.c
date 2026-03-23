@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#include <inttypes.h>
+#include <string.h>
+
 #include <libnvme.h>
 
 #include "mock.h"
 #include "util.h"
 
-#include <string.h>
-#include <inttypes.h>
-
+#define TEST_FD 0xFD
 #define TEST_NSID 0x12345678
 #define TEST_CSI NVME_CSI_KV
+#define TEST_COPY_NR 0x12
 
 static struct nvme_transport_handle *test_hdl;
 
@@ -741,11 +743,12 @@ static void test_flush(void)
 		.opcode = nvme_cmd_flush,
 		.nsid = TEST_NSID,
 	};
-
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
-	err = nvme_flush(test_hdl, TEST_NSID);
+	nvme_init_flush(&cmd, TEST_NSID);
+	err = nvme_submit_io_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 }
@@ -979,12 +982,25 @@ static void test_dsm(void)
 
 static void test_copy(void)
 {
-	__u16 nr = 0x12, cev = 0, dspec = 0;
+	__u16 nr = TEST_COPY_NR, cev = 0, dspec = 0;
 	int copy_size = sizeof(struct nvme_copy_range) * nr, err;
 	bool prinfor = false, prinfow = false, stcw = false,
 		stcr = false, fua = false, lr = false;
 	__u8 cetype = 0, dtype = 0, desfmt = 0xf;
 	__u64 sdlba = 0xfffff;
+	__u16 nlbs[TEST_COPY_NR] = { 0xa, 0xb, 0xc };
+	__u64 slbas[TEST_COPY_NR] = { 0x1000, 0x20000000, 0x300040000000 };
+	__u32 short_pi[TEST_COPY_NR] = { 0x1000, 0x20000000, 0x40000000 };
+	__u32 elbatms[TEST_COPY_NR] = { 0x1ff, 0x3ff, 0x3ff };
+	__u32 elbats[TEST_COPY_NR] = { 0x111, 0x222, 0x333 };
+	__u8 expected_data[sizeof(struct nvme_copy_range) * TEST_COPY_NR] = {
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10, 0, 0, 0, 0, 0, 0,
+		0xa, 0, 0, 0, 0, 0, 0, 0, 0, 0x10, 0, 0, 0x11, 1, 0xff, 1,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x20, 0, 0, 0, 0,
+		0xb, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x20, 0x22, 2, 0xff, 3,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0x30, 0, 0,
+		0xc, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x40, 0x33, 3, 0xff, 3
+	};
 
 	_cleanup_free_ struct nvme_copy_range *copy = NULL;
 
@@ -1002,11 +1018,12 @@ static void test_copy(void)
 			 ((prinfow & 0xf) << 26) |
 			 ((fua & 0x1) << 30) | ((lr & 0x1) << 31),
 		.data_len = nr * sizeof(struct nvme_copy_range),
-		.in_data = copy,
+		.in_data = expected_data,
 	};
 	struct nvme_passthru_cmd cmd;
 
 	set_mock_io_cmds(&mock_io_cmd, 1);
+	nvme_init_copy_range(copy, nlbs, slbas, short_pi, elbatms, elbats, nr);
 	nvme_init_copy(&cmd, TEST_NSID, sdlba, nr, desfmt,
 		prinfor, prinfow, cetype, dtype, stcw, stcr,
 		fua, lr, cev, dspec, (void *)copy);

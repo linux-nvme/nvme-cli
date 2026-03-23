@@ -9,31 +9,31 @@
  *			Sivaprasad Gutha <sivaprasadg@micron.com>
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
-#include <stdlib.h>
-#include <inttypes.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <time.h>
-#include <string.h>
+#include <inttypes.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stddef.h>
-#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include <libnvme.h>
 
 #include "common.h"
-#include "nvme.h"
-#include <limits.h>
-#include "platform/types.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "nvme.h"
 #include "util/cleanup.h"
-#include "util/utils.h"
 #include "util/types.h"
+#include "util/utils.h"
 
 #define CREATE_CMD
 #include "micron-nvme.h"
@@ -4418,27 +4418,22 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 
 /*
  * Identify Controller field offsets for Micron-specific fields
- * IPMSR: Interval Power Measurement Sample Rate (2 bytes)
- * MSMT:  Maximum Stop Measurement Time (2 bytes)
  * PMS:   Power Measurement Support - bit 21 of CTRATT
  */
-#define ID_CTRL_RSVD388_OFFSET   388
-#define ID_CTRL_IPMSR_OFFSET     392
-#define ID_CTRL_MSMT_OFFSET      394
 #define CTRATT_PMS_BIT           21
 
 static inline __u16 get_id_ctrl_ipmsr(struct nvme_id_ctrl *ctrl)
 {
-	__u8 *p = &ctrl->rsvd388[ID_CTRL_IPMSR_OFFSET - ID_CTRL_RSVD388_OFFSET];
+	__le16 *p = (__le16 *)&ctrl->ipmsr;
 
-	return le16_to_cpu(*(__le16 *)p);
+	return le16_to_cpu(*p);
 }
 
 static inline __u16 get_id_ctrl_msmt(struct nvme_id_ctrl *ctrl)
 {
-	__u8 *p = &ctrl->rsvd388[ID_CTRL_MSMT_OFFSET - ID_CTRL_RSVD388_OFFSET];
+	__le16 *p = (__le16 *)&ctrl->msmt;
 
-	return le16_to_cpu(*(__le16 *)p);
+	return le16_to_cpu(*p);
 }
 
 static inline bool get_id_ctrl_pms(struct nvme_id_ctrl *ctrl)

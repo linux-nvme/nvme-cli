@@ -8,12 +8,19 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/socket.h>
+
 #include <sys/ioctl.h>
+#include <sys/socket.h>
+
+#if HAVE_LINUX_MCTP_H
+#include <linux/mctp.h>
+#else
+#include "nvme/mi-mctp-compat.h"
+#endif
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
@@ -24,12 +31,6 @@
 #include "nvme/private.h"
 
 #include "utils.h"
-
-#if HAVE_LINUX_MCTP_H
-#include <linux/mctp.h>
-#else
-#include "nvme/mi-mctp-compat.h"
-#endif
 
 /* 4096 byte max MCTP message, plus space for header data */
 #define MAX_BUFSIZ 8192

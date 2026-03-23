@@ -29,6 +29,8 @@ void *nvme_realloc(void *p, size_t len)
 	size_t old_len = malloc_usable_size(p);
 
 	void *result = nvme_alloc(len);
+	if (!result)
+		return NULL;
 
 	if (p) {
 		memcpy(result, p, min(old_len, len));

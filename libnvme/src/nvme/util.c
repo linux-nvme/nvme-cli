@@ -7,26 +7,26 @@
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
 #include <errno.h>
-#include <malloc.h>
-
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <malloc.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "platform/includes.h"
 
-#include <ccan/minmax/minmax.h>
 #include <ccan/endian/endian.h>
+#include <ccan/minmax/minmax.h>
 
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "private.h"
 #include "util.h"
+#include "compiler_attributes.h"
 
 /* The bionic libc implementation doesn't define LINE_MAX */
 #ifndef LINE_MAX
@@ -171,7 +171,7 @@ static inline __u8 nvme_fabrics_status_to_errno(__u16 status)
 	return EIO;
 }
 
-__u8 nvme_status_to_errno(int status, bool fabrics)
+__public __u8 nvme_status_to_errno(int status, bool fabrics)
 {
 	__u16 sc;
 
@@ -370,7 +370,7 @@ static const char *arg_str(const char * const *strings,
 	return "unrecognized";
 }
 
-const char *nvme_status_to_string(int status, bool fabrics)
+__public const char *nvme_status_to_string(int status, bool fabrics)
 {
 	const char *s = "Unknown status";
 	__u16 sc, sct;
@@ -434,14 +434,14 @@ static const char * const libnvme_status[] = {
 	[ENVME_CONNECT_NOKEY] = "pre-shared TLS key is missing"
 };
 
-const char *nvme_errno_to_string(int status)
+__public const char *nvme_errno_to_string(int status)
 {
 	const char *s = ARGSTR(libnvme_status, status);
 
 	return s;
 }
 
-const char *nvme_strerror(int errnum)
+__public const char *nvme_strerror(int errnum)
 {
 	if (errnum >= ENVME_CONNECT_RESOLVE)
 		return nvme_errno_to_string(errnum);
@@ -702,13 +702,13 @@ size_t get_entity_version(char *buffer, size_t bufsz)
 	return num_bytes;
 }
 
-struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p)
+__public struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p)
 {
 	return (struct nvmf_ext_attr *)
 		((uintptr_t)p + (ptrdiff_t)nvmf_exat_size(le16_to_cpu(p->exatlen)));
 }
 
-const char *nvme_get_version(enum nvme_version type)
+__public const char *nvme_get_version(enum nvme_version type)
 {
 	switch(type) {
 	case NVME_VERSION_PROJECT:
@@ -720,7 +720,7 @@ const char *nvme_get_version(enum nvme_version type)
 	}
 }
 
-int nvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str)
+__public int nvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str)
 {
 	int n;
 	n = snprintf(str, NVME_UUID_LEN_STRING,
@@ -732,7 +732,7 @@ int nvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str)
 	return n != NVME_UUID_LEN_STRING - 1 ? -EINVAL : 0;
 }
 
-int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN])
+__public int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN])
 {
 	int n;
 
@@ -746,7 +746,7 @@ int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN])
 
 }
 
-int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
+__public int nvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
 {
 	int ret;
 
@@ -766,7 +766,8 @@ int nvme_uuid_random(unsigned char uuid[NVME_UUID_LEN])
 	return 0;
 }
 
-int nvme_uuid_find(struct nvme_id_uuid_list *uuid_list, const unsigned char uuid[NVME_UUID_LEN])
+__public int nvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
+		const unsigned char uuid[NVME_UUID_LEN])
 {
 	const unsigned char uuid_end[NVME_UUID_LEN] = {0};
 

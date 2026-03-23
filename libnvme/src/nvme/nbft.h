@@ -9,9 +9,9 @@
 #pragma once
 
 #include <stdbool.h>
-#include <sys/types.h>
 
 #include <platform/types.h>
+#include <sys/types.h>
 
 #include <nvme/lib-types.h>
 
@@ -1234,23 +1234,34 @@ struct nbft_info {
 };
 
 /**
- * nvme_nbft_read() - Read and parse contents of an ACPI NBFT table
+ * nvme_read_nbft() - Read and parse contents of an ACPI NBFT table
  *
  * @ctx:      struct nvme_global_ctx object
  * @nbft:     Parsed NBFT table data.
  * @filename: Filename of the raw NBFT table to read.
  *
  * Read and parse the specified NBFT file into a struct nbft_info.
- * Free with nvme_nbft_free().
+ * Free with nvme_free_nbft().
  *
  * Return: 0 on success, errno otherwise.
  */
-int nvme_nbft_read(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
+int nvme_read_nbft(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
 		const char *filename);
 
 /**
- * nvme_nbft_free() - Free the struct nbft_info and its contents
+ * nvme_free_nbft() - Free the struct nbft_info and its contents
  * @ctx: struct nvme_global_ctx object
  * @nbft: Parsed NBFT table data.
  */
-void nvme_nbft_free(struct nvme_global_ctx *ctx, struct nbft_info *nbft);
+void nvme_free_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft);
+
+/**
+ * struct nbft_file_entry - Linked list entry for NBFT files
+ * @next: Pointer to next entry
+ * @nbft: Pointer to NBFT info structure
+ */
+struct nbft_file_entry {
+	struct nbft_file_entry *next;
+	struct nbft_info *nbft;
+};
+

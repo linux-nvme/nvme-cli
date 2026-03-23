@@ -6,16 +6,16 @@
  * Authors: Daniel Wagner <dwagner@suse.de>
  */
 
-#include <libnvme.h>
-
 #include <errno.h>
+
+#include <libnvme.h>
 
 int json_read_config(struct nvme_global_ctx *ctx, const char *config_file)
 {
 	return -ENOTSUP;
 }
 
-int json_update_config(struct nvme_global_ctx *ctx, const char *config_file)
+int json_update_config(struct nvme_global_ctx *ctx, int fd)
 {
 	return -ENOTSUP;
 }

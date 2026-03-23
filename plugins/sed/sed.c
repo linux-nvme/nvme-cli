@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdbool.h>
-#include <inttypes.h>
+
 #include <linux/fs.h>
+#include <linux/sed-opal.h>
+
 #include <sys/stat.h>
 
 #include <libnvme.h>
@@ -15,7 +18,6 @@
 #include "nvme.h"
 #include "nvme-print.h"
 #include "sedopal_cmd.h"
-#include <linux/sed-opal.h>
 
 #define CREATE_CMD
 #include "sed.h"

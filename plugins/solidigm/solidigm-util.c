@@ -6,6 +6,9 @@
  */
 
 #include <errno.h>
+
+#include "nvme-cmds.h"
+
 #include "solidigm-util.h"
 
 const unsigned char solidigm_uuid[NVME_UUID_LEN] = {
@@ -15,7 +18,7 @@ const unsigned char solidigm_uuid[NVME_UUID_LEN] = {
 
 int sldgm_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index)
 {
-	int i = nvme_uuid_find(uuid_list, solidigm_uuid);
+	int i = nvme_find_uuid(uuid_list, solidigm_uuid);
 
 	*index = 0;
 	if (i > 0)

@@ -8,18 +8,18 @@
  * This file implements basic logging functionality.
  */
 
-#include <sys/types.h>
-#include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include "platform/includes.h"
 #include <time.h>
+
+#include "platform/includes.h"
 
 #include <libnvme.h>
 
 #include "cleanup.h"
 #define LOG_FUNCNAME 1
 #include "private.h"
+#include "compiler_attributes.h"
 
 #ifndef LOG_CLOCK
 #define LOG_CLOCK CLOCK_MONOTONIC
@@ -83,7 +83,7 @@ __nvme_msg(struct nvme_global_ctx *ctx, int level,
 		message ? message : "<error>");
 }
 
-void nvme_set_logging_level(struct nvme_global_ctx *ctx, int log_level,
+__public void nvme_set_logging_level(struct nvme_global_ctx *ctx, int log_level,
 		bool log_pid, bool log_tstamp)
 {
 	ctx->log.level = log_level;
@@ -91,7 +91,7 @@ void nvme_set_logging_level(struct nvme_global_ctx *ctx, int log_level,
 	ctx->log.timestamp = log_tstamp;
 }
 
-int nvme_get_logging_level(struct nvme_global_ctx *ctx,
+__public int nvme_get_logging_level(struct nvme_global_ctx *ctx,
 		bool *log_pid, bool *log_tstamp)
 {
 	if (log_pid)

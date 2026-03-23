@@ -2,8 +2,9 @@
 #undef CMD_INC_FILE
 #define CMD_INC_FILE plugins/sed/sed
 
-#include "cmd.h"
 #include <linux/sed-opal.h>
+
+#include "cmd.h"
 
 PLUGIN(NAME("sed", "SED Opal Command Set", NVME_VERSION),
 	COMMAND_LIST(

@@ -23,23 +23,25 @@
  */
 
 
-#include <fcntl.h>
+#include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
-#include <inttypes.h>
+
 #include <sys/stat.h>
-#include <ctype.h>
+
 #include <libnvme.h>
 
 #include "common.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "platform/types.h"
-#include "nvme-print.h"
-#include <time.h>
 
 #define CREATE_CMD
 

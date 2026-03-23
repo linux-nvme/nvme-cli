@@ -8,12 +8,12 @@
  */
 #include <dirent.h>
 #include <errno.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "platform/includes.h"
 
@@ -25,6 +25,7 @@
 #include "cleanup.h"
 #include "private.h"
 #include "util.h"
+#include "compiler_attributes.h"
 
 /**
  * struct candidate_args - Used to look for a controller matching these parameters
@@ -114,7 +115,7 @@ static char *nvme_hostid_from_hostnqn(const char *hostnqn)
 	return strdup(uuid + strlen("uuid:"));
 }
 
-int nvme_host_get_ids(struct nvme_global_ctx *ctx,
+__public int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 		      const char *hostnqn_arg, const char *hostid_arg,
 		      char **hostnqn, char **hostid)
 {
@@ -140,9 +141,9 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 
 	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */
 	if (!hid)
-		hid = nvmf_hostid_from_file();
+		hid = nvme_read_hostid();
 	if (!hnqn)
-		hnqn = nvmf_hostnqn_from_file();
+		hnqn = nvme_read_hostnqn();
 
 	/* incomplete configuration, thus derive hostid from hostnqn */
 	if (!hid && hnqn)
@@ -153,7 +154,7 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 	 * fails generate one
 	 */
 	if (!hid) {
-		hid = nvmf_hostid_generate();
+		hid = nvme_generate_hostid();
 		if (!hid)
 			return -ENOMEM;
 
@@ -163,7 +164,7 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 
 	/* incomplete configuration, thus derive hostnqn from hostid */
 	if (!hnqn) {
-		hnqn = nvmf_hostnqn_generate_from_hostid(hid);
+		hnqn = nvme_generate_hostnqn_from_hostid(hid);
 		if (!hnqn)
 			return -ENOMEM;
 	}
@@ -184,7 +185,7 @@ int nvme_host_get_ids(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-int nvme_host_get(struct nvme_global_ctx *ctx, const char *hostnqn,
+__public int nvme_get_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, nvme_host_t *host)
 {
 	_cleanup_free_ char *hnqn = NULL;
@@ -268,7 +269,7 @@ static void nvme_filter_tree(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, 
 	}
 }
 
-int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *f_args)
+__public int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *f_args)
 {
 	_cleanup_dirents_ struct dirents subsys = {}, ctrls = {};
 	int i, ret;
@@ -319,7 +320,7 @@ int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *
 	return 0;
 }
 
-int nvme_read_config(struct nvme_global_ctx *ctx, const char *config_file)
+__public int nvme_read_config(struct nvme_global_ctx *ctx, const char *config_file)
 {
 	int err;
 
@@ -341,22 +342,22 @@ int nvme_read_config(struct nvme_global_ctx *ctx, const char *config_file)
 	return err;
 }
 
-int nvme_dump_config(struct nvme_global_ctx *ctx, int fd)
+__public int nvme_dump_config(struct nvme_global_ctx *ctx, int fd)
 {
 	return json_update_config(ctx, fd);
 }
 
-int nvme_dump_tree(struct nvme_global_ctx *ctx)
+__public int nvme_dump_tree(struct nvme_global_ctx *ctx)
 {
 	return json_dump_tree(ctx);
 }
 
-const char *nvme_get_application(struct nvme_global_ctx *ctx)
+__public const char *nvme_get_application(struct nvme_global_ctx *ctx)
 {
 	return ctx->application;
 }
 
-void nvme_set_application(struct nvme_global_ctx *ctx, const char *a)
+__public void nvme_set_application(struct nvme_global_ctx *ctx, const char *a)
 {
 	free(ctx->application);
 	ctx->application = NULL;
@@ -365,88 +366,50 @@ void nvme_set_application(struct nvme_global_ctx *ctx, const char *a)
 		ctx->application = strdup(a);
 }
 
-void nvme_skip_namespaces(struct nvme_global_ctx *ctx)
+__public void nvme_skip_namespaces(struct nvme_global_ctx *ctx)
 {
 	ctx->create_only = true;
 }
 
-nvme_host_t nvme_first_host(struct nvme_global_ctx *ctx)
+__public nvme_host_t nvme_first_host(struct nvme_global_ctx *ctx)
 {
 	return list_top(&ctx->hosts, struct nvme_host, entry);
 }
 
-nvme_host_t nvme_next_host(struct nvme_global_ctx *ctx, nvme_host_t h)
+__public nvme_host_t nvme_next_host(struct nvme_global_ctx *ctx, nvme_host_t h)
 {
 	return h ? list_next(&ctx->hosts, h, entry) : NULL;
 }
 
-struct nvme_global_ctx *nvme_host_get_global_ctx(nvme_host_t h)
+__public struct nvme_global_ctx *nvme_host_get_global_ctx(nvme_host_t h)
 {
 	return h->ctx;
 }
 
-const char *nvme_host_get_hostnqn(nvme_host_t h)
-{
-	return h->hostnqn;
-}
-
-const char *nvme_host_get_hostid(nvme_host_t h)
-{
-	return h->hostid;
-}
-
-const char *nvme_host_get_hostsymname(nvme_host_t h)
-{
-	return h->hostsymname;
-}
-
-void nvme_host_set_hostsymname(nvme_host_t h, const char *hostsymname)
-{
-	free(h->hostsymname);
-	h->hostsymname = NULL;
-
-	if (hostsymname)
-		h->hostsymname = strdup(hostsymname);
-}
-
-const char *nvme_host_get_dhchap_key(nvme_host_t h)
-{
-	return h->dhchap_key;
-}
-
-void nvme_host_set_dhchap_key(nvme_host_t h, const char *key)
-{
-	free(h->dhchap_key);
-	h->dhchap_key = NULL;
-
-	if (key)
-		h->dhchap_key = strdup(key);
-}
-
-void nvme_host_set_pdc_enabled(nvme_host_t h, bool enabled)
+__public void nvme_host_set_pdc_enabled(nvme_host_t h, bool enabled)
 {
 	h->pdc_enabled_valid = true;
 	h->pdc_enabled = enabled;
 }
 
-bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback)
+__public bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback)
 {
 	if (h->pdc_enabled_valid)
 		return h->pdc_enabled;
 	return fallback;
 }
 
-nvme_subsystem_t nvme_first_subsystem(nvme_host_t h)
+__public nvme_subsystem_t nvme_first_subsystem(nvme_host_t h)
 {
 	return list_top(&h->subsystems, struct nvme_subsystem, entry);
 }
 
-nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s)
+__public nvme_subsystem_t nvme_next_subsystem(nvme_host_t h, nvme_subsystem_t s)
 {
 	return s ? list_next(&h->subsystems, s, entry) : NULL;
 }
 
-void nvme_refresh_topology(struct nvme_global_ctx *ctx)
+__public void nvme_refresh_topology(struct nvme_global_ctx *ctx)
 {
 	struct nvme_host *h, *_h;
 
@@ -463,91 +426,37 @@ void nvme_root_release_fds(struct nvme_global_ctx *ctx)
 		nvme_host_release_fds(h);
 }
 
-const char *nvme_subsystem_get_nqn(nvme_subsystem_t s)
-{
-	return s->subsysnqn;
-}
-
-const char *nvme_subsystem_get_sysfs_dir(nvme_subsystem_t s)
-{
-	return s->sysfs_dir;
-}
-
-const char *nvme_subsystem_get_name(nvme_subsystem_t s)
-{
-	return s->name;
-}
-
-const char *nvme_subsystem_get_type(nvme_subsystem_t s)
-{
-	return s->subsystype;
-}
-
-const char *nvme_subsystem_get_application(nvme_subsystem_t s)
-{
-	return s->application;
-}
-
-void nvme_subsystem_set_application(nvme_subsystem_t s, const char *a)
-{
-	free(s->application);
-	s->application = NULL;
-
-	if (a)
-		s->application = strdup(a);
-}
-
-const char *nvme_subsystem_get_iopolicy(nvme_subsystem_t s)
-{
-	return s->iopolicy;
-}
-
-const char *nvme_subsystem_get_model(nvme_subsystem_t s)
-{
-	return s->model;
-}
-
-const char *nvme_subsystem_get_serial(nvme_subsystem_t s)
-{
-	return s->serial;
-}
-
-const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s)
-{
-	return s->firmware;
-}
-
-nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
+__public nvme_ctrl_t nvme_subsystem_first_ctrl(nvme_subsystem_t s)
 {
 	return list_top(&s->ctrls, struct nvme_ctrl, entry);
 }
 
-nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c)
+__public nvme_ctrl_t nvme_subsystem_next_ctrl(nvme_subsystem_t s, nvme_ctrl_t c)
 {
 	return c ? list_next(&s->ctrls, c, entry) : NULL;
 }
 
-nvme_host_t nvme_subsystem_get_host(nvme_subsystem_t s)
+__public nvme_host_t nvme_subsystem_get_host(nvme_subsystem_t s)
 {
 	return s->h;
 }
 
-nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s)
+__public nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s)
 {
 	return list_top(&s->namespaces, struct nvme_ns, entry);
 }
 
-nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n)
+__public nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n)
 {
 	return n ? list_next(&s->namespaces, n, entry) : NULL;
 }
 
-nvme_path_t nvme_namespace_first_path(nvme_ns_t ns)
+__public nvme_path_t nvme_namespace_first_path(nvme_ns_t ns)
 {
 	return list_top(&ns->head->paths, struct nvme_path, nentry);
 }
 
-nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p)
+__public nvme_path_t nvme_namespace_next_path(nvme_ns_t ns, nvme_path_t p)
 {
 	return p ? list_next(&ns->head->paths, p, nentry) : NULL;
 }
@@ -572,7 +481,7 @@ static void __nvme_free_ns(struct nvme_ns *n)
 }
 
 /* Stub for SWIG */
-void nvme_free_ns(struct nvme_ns *n)
+__public void nvme_free_ns(struct nvme_ns *n)
 {
 	__nvme_free_ns(n);
 }
@@ -601,7 +510,7 @@ static void __nvme_free_subsystem(struct nvme_subsystem *s)
 	free(s);
 }
 
-void nvme_subsystem_release_fds(struct nvme_subsystem *s)
+__public void nvme_subsystem_release_fds(struct nvme_subsystem *s)
 {
 	struct nvme_ctrl *c, *_c;
 	struct nvme_ns *n, *_n;
@@ -616,7 +525,7 @@ void nvme_subsystem_release_fds(struct nvme_subsystem *s)
 /*
  * Stub for SWIG
  */
-void nvme_free_subsystem(nvme_subsystem_t s)
+__public void nvme_free_subsystem(nvme_subsystem_t s)
 {
 }
 
@@ -665,7 +574,7 @@ struct nvme_subsystem *nvme_lookup_subsystem(struct nvme_host *h,
 	return nvme_alloc_subsystem(h, name, subsysnqn);
 }
 
-int nvme_subsystem_get(struct nvme_global_ctx *ctx,
+__public int nvme_get_subsystem(struct nvme_global_ctx *ctx,
 		struct nvme_host *h, const char *name,
 		const char *subsysnqn, struct nvme_subsystem **subsys)
 {
@@ -689,12 +598,12 @@ void __nvme_free_host(struct nvme_host *h)
 		__nvme_free_subsystem(s);
 	free(h->hostnqn);
 	free(h->hostid);
-	free(h->dhchap_key);
+	free(h->dhchap_host_key);
 	nvme_host_set_hostsymname(h, NULL);
 	free(h);
 }
 
-void nvme_host_release_fds(struct nvme_host *h)
+__public void nvme_host_release_fds(struct nvme_host *h)
 {
 	struct nvme_subsystem *s, *_s;
 
@@ -703,7 +612,7 @@ void nvme_host_release_fds(struct nvme_host *h)
 }
 
 /* Stub for SWIG */
-void nvme_free_host(struct nvme_host *h)
+__public void nvme_free_host(struct nvme_host *h)
 {
 	__nvme_free_host(h);
 }
@@ -852,7 +761,7 @@ static int nvme_scan_subsystem(struct nvme_global_ctx *ctx, const char *name)
 		 */
 		nvme_msg(ctx, LOG_DEBUG, "creating detached subsystem '%s'\n",
 			 name);
-		ret = nvme_host_get(ctx, NULL, NULL, &h);
+		ret = nvme_get_host(ctx, NULL, NULL, &h);
 		if (ret)
 			return ret;
 		s = nvme_alloc_subsystem(h, name, subsysnqn);
@@ -869,27 +778,17 @@ static int nvme_scan_subsystem(struct nvme_global_ctx *ctx, const char *name)
 	return 0;
 }
 
-nvme_ctrl_t nvme_path_get_ctrl(nvme_path_t p)
+__public nvme_ctrl_t nvme_path_get_ctrl(nvme_path_t p)
 {
 	return p->c;
 }
 
-nvme_ns_t nvme_path_get_ns(nvme_path_t p)
+__public nvme_ns_t nvme_path_get_ns(nvme_path_t p)
 {
 	return p->n;
 }
 
-const char *nvme_path_get_sysfs_dir(nvme_path_t p)
-{
-	return p->sysfs_dir;
-}
-
-const char *nvme_path_get_name(nvme_path_t p)
-{
-	return p->name;
-}
-
-int nvme_path_get_queue_depth(nvme_path_t p)
+__public int nvme_path_get_queue_depth(nvme_path_t p)
 {
 	_cleanup_free_ char *queue_depth = NULL;
 
@@ -899,16 +798,6 @@ int nvme_path_get_queue_depth(nvme_path_t p)
 	}
 
 	return p->queue_depth;
-}
-
-const char *nvme_path_get_ana_state(nvme_path_t p)
-{
-	return p->ana_state;
-}
-
-const char *nvme_path_get_numa_nodes(nvme_path_t p)
-{
-	return p->numa_nodes;
 }
 
 void nvme_free_path(struct nvme_path *p)
@@ -969,7 +858,7 @@ static int nvme_ctrl_scan_path(struct nvme_global_ctx *ctx, struct nvme_ctrl *c,
 	return 0;
 }
 
-struct nvme_transport_handle *nvme_ctrl_get_transport_handle(nvme_ctrl_t c)
+__public struct nvme_transport_handle *nvme_ctrl_get_transport_handle(nvme_ctrl_t c)
 {
 	if (!c->hdl) {
 		int err;
@@ -983,7 +872,7 @@ struct nvme_transport_handle *nvme_ctrl_get_transport_handle(nvme_ctrl_t c)
 	return c->hdl;
 }
 
-void nvme_ctrl_release_transport_handle(nvme_ctrl_t c)
+__public void nvme_ctrl_release_transport_handle(nvme_ctrl_t c)
 {
 	if (!c->hdl)
 		return;
@@ -992,32 +881,13 @@ void nvme_ctrl_release_transport_handle(nvme_ctrl_t c)
 	c->hdl = NULL;
 }
 
-nvme_subsystem_t nvme_ctrl_get_subsystem(nvme_ctrl_t c)
+__public nvme_subsystem_t nvme_ctrl_get_subsystem(nvme_ctrl_t c)
 {
 	return c->s;
 }
 
-const char *nvme_ctrl_get_name(nvme_ctrl_t c)
-{
-	return c->name;
-}
 
-const char *nvme_ctrl_get_sysfs_dir(nvme_ctrl_t c)
-{
-	return c->sysfs_dir;
-}
-
-const char *nvme_ctrl_get_subsysnqn(nvme_ctrl_t c)
-{
-	return c->s ? c->s->subsysnqn : c->subsysnqn;
-}
-
-const char *nvme_ctrl_get_address(nvme_ctrl_t c)
-{
-	return c->address ? c->address : "";
-}
-
-char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len)
+__public char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len)
 {
 	size_t l;
 	char *p;
@@ -1043,22 +913,7 @@ char *nvme_ctrl_get_src_addr(nvme_ctrl_t c, char *src_addr, size_t src_addr_len)
 	return src_addr;
 }
 
-const char *nvme_ctrl_get_phy_slot(nvme_ctrl_t c)
-{
-	return c->phy_slot ? c->phy_slot : "";
-}
-
-const char *nvme_ctrl_get_firmware(nvme_ctrl_t c)
-{
-	return c->firmware;
-}
-
-const char *nvme_ctrl_get_model(nvme_ctrl_t c)
-{
-	return c->model;
-}
-
-const char *nvme_ctrl_get_state(nvme_ctrl_t c)
+__public const char *nvme_ctrl_get_state(nvme_ctrl_t c)
 {
 	char *state = c->state;
 
@@ -1067,172 +922,12 @@ const char *nvme_ctrl_get_state(nvme_ctrl_t c)
 	return c->state;
 }
 
-const char *nvme_ctrl_get_numa_node(nvme_ctrl_t c)
-{
-	return c->numa_node;
-}
-
-const char *nvme_ctrl_get_queue_count(nvme_ctrl_t c)
-{
-	return c->queue_count;
-}
-
-const char *nvme_ctrl_get_serial(nvme_ctrl_t c)
-{
-	return c->serial;
-}
-
-const char *nvme_ctrl_get_sqsize(nvme_ctrl_t c)
-{
-	return c->sqsize;
-}
-
-const char *nvme_ctrl_get_transport(nvme_ctrl_t c)
-{
-	return c->transport;
-}
-
-const char *nvme_ctrl_get_traddr(nvme_ctrl_t c)
-{
-	return c->traddr;
-}
-
-const char *nvme_ctrl_get_trsvcid(nvme_ctrl_t c)
-{
-	return c->trsvcid;
-}
-
-const char *nvme_ctrl_get_host_traddr(nvme_ctrl_t c)
-{
-	return c->host_traddr;
-}
-
-const char *nvme_ctrl_get_host_iface(nvme_ctrl_t c)
-{
-	return c->host_iface;
-}
-
-struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
+__public struct nvme_fabrics_config *nvme_ctrl_get_config(nvme_ctrl_t c)
 {
 	return &c->cfg;
 }
 
-const char *nvme_ctrl_get_dhchap_host_key(nvme_ctrl_t c)
-{
-	return c->dhchap_key;
-}
-
-const char *nvme_ctrl_get_cntlid(nvme_ctrl_t c)
-{
-	return c->cntlid;
-}
-
-void nvme_ctrl_set_dhchap_host_key(nvme_ctrl_t c, const char *key)
-{
-	free(c->dhchap_key);
-	c->dhchap_key = NULL;
-
-	if (key)
-		c->dhchap_key = strdup(key);
-}
-
-const char *nvme_ctrl_get_dhchap_key(nvme_ctrl_t c)
-{
-	return c->dhchap_ctrl_key;
-}
-
-void nvme_ctrl_set_dhchap_key(nvme_ctrl_t c, const char *key)
-{
-	free(c->dhchap_ctrl_key);
-	c->dhchap_ctrl_key = NULL;
-
-	if (key)
-		c->dhchap_ctrl_key = strdup(key);
-}
-
-const char *nvme_ctrl_get_keyring(nvme_ctrl_t c)
-{
-	return c->keyring;
-}
-
-void nvme_ctrl_set_keyring(nvme_ctrl_t c, const char *keyring)
-{
-	free(c->keyring);
-	c->keyring = NULL;
-
-	if (keyring)
-		c->keyring = strdup(keyring);
-}
-
-const char *nvme_ctrl_get_tls_key_identity(nvme_ctrl_t c)
-{
-	return c->tls_key_identity;
-}
-
-void nvme_ctrl_set_tls_key_identity(nvme_ctrl_t c, const char *identity)
-{
-	free(c->tls_key_identity);
-	c->tls_key_identity = NULL;
-
-	if (identity)
-		c->tls_key_identity = strdup(identity);
-}
-
-const char *nvme_ctrl_get_tls_key(nvme_ctrl_t c)
-{
-	return c->tls_key;
-}
-
-void nvme_ctrl_set_tls_key(nvme_ctrl_t c, const char *key)
-{
-	free(c->tls_key);
-	c->tls_key = NULL;
-
-	if (key)
-		c->tls_key = strdup(key);
-}
-
-void nvme_ctrl_set_discovered(nvme_ctrl_t c, bool discovered)
-{
-	c->discovered = discovered;
-}
-
-bool nvme_ctrl_is_discovered(nvme_ctrl_t c)
-{
-	return c->discovered;
-}
-
-void nvme_ctrl_set_persistent(nvme_ctrl_t c, bool persistent)
-{
-	c->persistent = persistent;
-}
-
-bool nvme_ctrl_is_persistent(nvme_ctrl_t c)
-{
-	return c->persistent;
-}
-
-void nvme_ctrl_set_discovery_ctrl(nvme_ctrl_t c, bool discovery)
-{
-	c->discovery_ctrl = discovery;
-}
-
-bool nvme_ctrl_is_discovery_ctrl(nvme_ctrl_t c)
-{
-	return c->discovery_ctrl;
-}
-
-void nvme_ctrl_set_unique_discovery_ctrl(nvme_ctrl_t c, bool unique)
-{
-	c->unique_discovery_ctrl = unique;
-}
-
-bool nvme_ctrl_is_unique_discovery_ctrl(nvme_ctrl_t c)
-{
-	return c->unique_discovery_ctrl;
-}
-
-int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
+__public int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
 	struct nvme_transport_handle *hdl = nvme_ctrl_get_transport_handle(c);
 	struct nvme_passthru_cmd cmd;
@@ -1241,22 +936,22 @@ int nvme_ctrl_identify(nvme_ctrl_t c, struct nvme_id_ctrl *id)
 	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
-nvme_ns_t nvme_ctrl_first_ns(nvme_ctrl_t c)
+__public nvme_ns_t nvme_ctrl_first_ns(nvme_ctrl_t c)
 {
 	return list_top(&c->namespaces, struct nvme_ns, entry);
 }
 
-nvme_ns_t nvme_ctrl_next_ns(nvme_ctrl_t c, nvme_ns_t n)
+__public nvme_ns_t nvme_ctrl_next_ns(nvme_ctrl_t c, nvme_ns_t n)
 {
 	return n ? list_next(&c->namespaces, n, entry) : NULL;
 }
 
-nvme_path_t nvme_ctrl_first_path(nvme_ctrl_t c)
+__public nvme_path_t nvme_ctrl_first_path(nvme_ctrl_t c)
 {
 	return list_top(&c->paths, struct nvme_path, entry);
 }
 
-nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p)
+__public nvme_path_t nvme_ctrl_next_path(nvme_ctrl_t c, nvme_path_t p)
 {
 	return p ? list_next(&c->paths, p, entry) : NULL;
 }
@@ -1275,7 +970,7 @@ void nvme_deconfigure_ctrl(nvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->queue_count);
 	FREE_CTRL_ATTR(c->serial);
 	FREE_CTRL_ATTR(c->sqsize);
-	FREE_CTRL_ATTR(c->dhchap_key);
+	FREE_CTRL_ATTR(c->dhchap_host_key);
 	FREE_CTRL_ATTR(c->dhchap_ctrl_key);
 	FREE_CTRL_ATTR(c->keyring);
 	FREE_CTRL_ATTR(c->tls_key_identity);
@@ -1287,7 +982,7 @@ void nvme_deconfigure_ctrl(nvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->phy_slot);
 }
 
-int nvme_disconnect_ctrl(nvme_ctrl_t c)
+__public int nvme_disconnect_ctrl(nvme_ctrl_t c)
 {
 	struct nvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
 	int ret;
@@ -1304,7 +999,7 @@ int nvme_disconnect_ctrl(nvme_ctrl_t c)
 	return 0;
 }
 
-void nvme_unlink_ctrl(nvme_ctrl_t c)
+__public void nvme_unlink_ctrl(nvme_ctrl_t c)
 {
 	list_del_init(&c->entry);
 	c->s = NULL;
@@ -1334,7 +1029,7 @@ static void __nvme_free_ctrl(nvme_ctrl_t c)
 	free(c);
 }
 
-void nvme_free_ctrl(nvme_ctrl_t c)
+__public void nvme_free_ctrl(nvme_ctrl_t c)
 {
 	__nvme_free_ctrl(c);
 }
@@ -1356,7 +1051,14 @@ static bool traddr_is_hostname(const char *transport, const char *traddr)
 	return true;
 }
 
-int nvme_create_ctrl(struct nvme_global_ctx *ctx,
+__public void nvmf_default_config(struct nvme_fabrics_config *cfg)
+{
+	memset(cfg, 0, sizeof(*cfg));
+	cfg->tos = -1;
+	cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
+}
+
+__public int nvme_create_ctrl(struct nvme_global_ctx *ctx,
 		     const char *subsysnqn, const char *transport,
 		     const char *traddr, const char *host_traddr,
 	   	     const char *host_iface, const char *trsvcid,
@@ -1613,7 +1315,7 @@ static bool _tcp_match_ctrl(struct nvme_ctrl *c, struct candidate_args *candidat
 	if (!candidate->addreq(c->traddr, candidate->traddr))
 		return false;
 
-	if (candidate->well_known_nqn && !nvme_ctrl_is_discovery_ctrl(c))
+	if (candidate->well_known_nqn && !nvme_ctrl_get_discovery_ctrl(c))
 		return false;
 
 	if (candidate->subsysnqn && !streq0(c->subsysnqn, candidate->subsysnqn))
@@ -1659,7 +1361,7 @@ static bool _match_ctrl(struct nvme_ctrl *c, struct candidate_args *candidate)
 	    !streq0(c->trsvcid, candidate->trsvcid))
 		return false;
 
-	if (candidate->well_known_nqn && !nvme_ctrl_is_discovery_ctrl(c))
+	if (candidate->well_known_nqn && !nvme_ctrl_get_discovery_ctrl(c))
 		return false;
 
 	if (candidate->subsysnqn && !streq0(c->subsysnqn, candidate->subsysnqn))
@@ -1756,7 +1458,7 @@ nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
 	return matching_c;
 }
 
-bool nvme_ctrl_config_match(struct nvme_ctrl *c, const char *transport,
+__public bool nvme_ctrl_match_config(struct nvme_ctrl *c, const char *transport,
 			    const char *traddr, const char *trsvcid,
 			    const char *subsysnqn, const char *host_traddr,
 			    const char *host_iface)
@@ -1888,8 +1590,7 @@ static int nvme_ctrl_lookup_subsystem_name(struct nvme_global_ctx *ctx,
 }
 
 static int nvme_ctrl_lookup_phy_slot(struct nvme_global_ctx *ctx,
-				     const char *address,
-				     char **slotp)
+				     nvme_ctrl_t c)
 {
 	const char *slots_sysfs_dir = nvme_slots_sysfs_dir();
 	_cleanup_free_ char *target_addr = NULL;
@@ -1898,7 +1599,7 @@ static int nvme_ctrl_lookup_phy_slot(struct nvme_global_ctx *ctx,
 	char *slot;
 	int ret;
 
-	if (!address)
+	if (!c->address)
 		return -EINVAL;
 
 	slots_dir = opendir(slots_sysfs_dir);
@@ -1908,7 +1609,7 @@ static int nvme_ctrl_lookup_phy_slot(struct nvme_global_ctx *ctx,
 		return -errno;
 	}
 
-	target_addr = strndup(address, 10);
+	target_addr = strndup(c->address, 10);
 	while ((entry = readdir(slots_dir))) {
 		if (entry->d_type == DT_DIR &&
 		    strncmp(entry->d_name, ".", 1) != 0 &&
@@ -1932,7 +1633,7 @@ static int nvme_ctrl_lookup_phy_slot(struct nvme_global_ctx *ctx,
 			if (!slot)
 				return -ENOMEM;
 
-			*slotp = slot;
+			c->phy_slot = slot;
 			return 0;
 		}
 	}
@@ -1950,7 +1651,7 @@ static void nvme_read_sysfs_dhchap(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 	}
 	if (host_key) {
 		nvme_ctrl_set_dhchap_host_key(c, NULL);
-		c->dhchap_key = host_key;
+		c->dhchap_host_key = host_key;
 	}
 
 	ctrl_key = nvme_get_ctrl_attr(c, "dhchap_ctrl_secret");
@@ -1959,7 +1660,7 @@ static void nvme_read_sysfs_dhchap(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 		ctrl_key = NULL;
 	}
 	if (ctrl_key) {
-		nvme_ctrl_set_dhchap_key(c, NULL);
+		nvme_ctrl_set_dhchap_ctrl_key(c, NULL);
 		c->dhchap_ctrl_key = ctrl_key;
 	}
 }
@@ -2045,14 +1746,14 @@ static int nvme_reconfigure_ctrl(struct nvme_global_ctx *ctx, nvme_ctrl_t c, con
 	c->cntrltype = nvme_get_ctrl_attr(c, "cntrltype");
 	c->cntlid = nvme_get_ctrl_attr(c, "cntlid");
 	c->dctype = nvme_get_ctrl_attr(c, "dctype");
-	nvme_ctrl_lookup_phy_slot(ctx, c->address, &c->phy_slot);
+	nvme_ctrl_lookup_phy_slot(ctx, c);
 	nvme_read_sysfs_dhchap(ctx, c);
 	nvme_read_sysfs_tls(ctx, c);
 
 	return 0;
 }
 
-int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
+__public int nvme_init_ctrl(nvme_host_t h, nvme_ctrl_t c, int instance)
 {
 	_cleanup_free_ char *subsys_name = NULL, *name = NULL, *path = NULL;
 	nvme_subsystem_t s;
@@ -2193,7 +1894,7 @@ skip_address:
 	return 0;
 }
 
-int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name,
+__public int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name,
 		   nvme_ctrl_t *cp)
 {
 	_cleanup_free_ char *subsysnqn = NULL, *subsysname = NULL;
@@ -2212,14 +1913,14 @@ int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name,
 
 	hostnqn = nvme_get_attr(path, "hostnqn");
 	hostid = nvme_get_attr(path, "hostid");
-	ret = nvme_host_get(ctx, hostnqn, hostid, &h);
+	ret = nvme_get_host(ctx, hostnqn, hostid, &h);
 	if (ret)
 		return ret;
 
 	host_key = nvme_get_attr(path, "dhchap_secret");
 	if (host_key && strcmp(host_key, "none")) {
-		free(h->dhchap_key);
-		h->dhchap_key = host_key;
+		free(h->dhchap_host_key);
+		h->dhchap_host_key = host_key;
 		host_key = NULL;
 	}
 	free(host_key);
@@ -2260,7 +1961,7 @@ int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name,
 	return 0;
 }
 
-void nvme_rescan_ctrl(struct nvme_ctrl *c)
+__public void nvme_rescan_ctrl(struct nvme_ctrl *c)
 {
 	struct nvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
 	if (!c->s)
@@ -2314,24 +2015,14 @@ void nvme_ns_release_transport_handle(nvme_ns_t n)
 	n->hdl = NULL;
 }
 
-nvme_subsystem_t nvme_ns_get_subsystem(nvme_ns_t n)
+__public nvme_subsystem_t nvme_ns_get_subsystem(nvme_ns_t n)
 {
 	return n->s;
 }
 
-nvme_ctrl_t nvme_ns_get_ctrl(nvme_ns_t n)
+__public nvme_ctrl_t nvme_ns_get_ctrl(nvme_ns_t n)
 {
 	return n->c;
-}
-
-int nvme_ns_get_nsid(nvme_ns_t n)
-{
-	return n->nsid;
-}
-
-const char *nvme_ns_get_sysfs_dir(nvme_ns_t n)
-{
-	return n->sysfs_dir;
 }
 
 const char *nvme_ns_head_get_sysfs_dir(nvme_ns_head_t head)
@@ -2339,72 +2030,47 @@ const char *nvme_ns_head_get_sysfs_dir(nvme_ns_head_t head)
 	return head->sysfs_dir;
 }
 
-const char *nvme_ns_get_name(nvme_ns_t n)
-{
-	return n->name;
-}
-
-const char *nvme_ns_get_generic_name(nvme_ns_t n)
+__public const char *nvme_ns_get_generic_name(nvme_ns_t n)
 {
 	return n->generic_name;
 }
 
-const char *nvme_ns_get_model(nvme_ns_t n)
+__public const char *nvme_ns_get_model(nvme_ns_t n)
 {
 	return n->c ? n->c->model : n->s->model;
 }
 
-const char *nvme_ns_get_serial(nvme_ns_t n)
+__public const char *nvme_ns_get_serial(nvme_ns_t n)
 {
 	return n->c ? n->c->serial : n->s->serial;
 }
 
-const char *nvme_ns_get_firmware(nvme_ns_t n)
+__public const char *nvme_ns_get_firmware(nvme_ns_t n)
 {
 	return n->c ? n->c->firmware : n->s->firmware;
 }
 
-int nvme_ns_get_lba_size(nvme_ns_t n)
-{
-	return n->lba_size;
-}
-
-int nvme_ns_get_meta_size(nvme_ns_t n)
-{
-	return n->meta_size;
-}
-
-uint64_t nvme_ns_get_lba_count(nvme_ns_t n)
-{
-	return n->lba_count;
-}
-
-uint64_t nvme_ns_get_lba_util(nvme_ns_t n)
-{
-	return n->lba_util;
-}
-
-enum nvme_csi nvme_ns_get_csi(nvme_ns_t n)
+__public enum nvme_csi nvme_ns_get_csi(nvme_ns_t n)
 {
 	return n->csi;
 }
 
-const uint8_t *nvme_ns_get_eui64(nvme_ns_t n)
+__public const uint8_t *nvme_ns_get_eui64(nvme_ns_t n)
 {
 	return n->eui64;
 }
 
-const uint8_t *nvme_ns_get_nguid(nvme_ns_t n)
+__public const uint8_t *nvme_ns_get_nguid(nvme_ns_t n)
 {
 	return n->nguid;
 }
 
-void nvme_ns_get_uuid(nvme_ns_t n, unsigned char out[NVME_UUID_LEN])
+__public void nvme_ns_get_uuid(nvme_ns_t n, unsigned char out[NVME_UUID_LEN])
 {
 	memcpy(out, n->uuid, NVME_UUID_LEN);
 }
 
-int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)
+__public int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)
 {
 	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
@@ -2432,7 +2098,7 @@ int nvme_ns_identify_descs(nvme_ns_t n, struct nvme_ns_id_desc *descs)
 	return nvme_submit_admin_passthru(hdl, &cmd);
 }
 
-int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count)
+__public int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count)
 {
 	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
@@ -2453,7 +2119,7 @@ int nvme_ns_verify(nvme_ns_t n, off_t offset, size_t count)
 	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
-int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count)
+__public int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count)
 {
 	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
@@ -2474,7 +2140,7 @@ int nvme_ns_write_uncorrectable(nvme_ns_t n, off_t offset, size_t count)
 	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
-int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count)
+__public int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count)
 {
 	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
@@ -2494,7 +2160,7 @@ int nvme_ns_write_zeros(nvme_ns_t n, off_t offset, size_t count)
 	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
-int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count)
+__public int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count)
 {
 	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
@@ -2515,7 +2181,7 @@ int nvme_ns_write(nvme_ns_t n, void *buf, off_t offset, size_t count)
 	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
-int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count)
+__public int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count)
 {
 	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
@@ -2536,7 +2202,7 @@ int nvme_ns_read(nvme_ns_t n, void *buf, off_t offset, size_t count)
 	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
-int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count)
+__public int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count)
 {
 	struct nvme_transport_handle *hdl;
 	struct nvme_passthru_cmd cmd;
@@ -2557,16 +2223,18 @@ int nvme_ns_compare(nvme_ns_t n, void *buf, off_t offset, size_t count)
 	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
-int nvme_ns_flush(nvme_ns_t n)
+__public int nvme_ns_flush(nvme_ns_t n)
 {
 	struct nvme_transport_handle *hdl;
+	struct nvme_passthru_cmd cmd;
 	int err;
 
 	err = nvme_ns_get_transport_handle(n, &hdl);
 	if (err)
 		return err;
 
-	return nvme_flush(hdl, nvme_ns_get_nsid(n));
+	nvme_init_flush(&cmd, nvme_ns_get_nsid(n));
+	return nvme_submit_io_passthru(hdl, &cmd);
 }
 
 static int nvme_strtou64(const char *str, void *res)
@@ -2846,7 +2514,7 @@ static int __nvme_scan_namespace(struct nvme_global_ctx *ctx,
 {
 	_cleanup_free_ char *blkdev = NULL;
 	_cleanup_free_ char *path = NULL;
-	struct nvme_ns *n;
+	struct nvme_ns *n = NULL;
 	int ret;
 
 	blkdev = nvme_ns_generic_to_blkdev(name);
@@ -2868,7 +2536,7 @@ static int __nvme_scan_namespace(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-int nvme_scan_namespace(struct nvme_global_ctx *ctx, const char *name,
+__public int nvme_scan_namespace(struct nvme_global_ctx *ctx, const char *name,
 		nvme_ns_t *ns)
 {
 	return __nvme_scan_namespace(ctx, nvme_ns_sysfs_dir(), name, ns);
@@ -2993,7 +2661,7 @@ static int nvme_subsystem_scan_namespace(struct nvme_global_ctx *ctx, nvme_subsy
 	return 0;
 }
 
-struct nvme_ns *nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
+__public struct nvme_ns *nvme_subsystem_lookup_namespace(struct nvme_subsystem *s,
 						__u32 nsid)
 {
 	struct nvme_ns *n;

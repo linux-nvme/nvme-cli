@@ -51,11 +51,12 @@ is_windows = host_machine.system() == 'windows'
 # dependencies are present. Also, -Dpython=enabled forces -Dlibnvme=enabled.
 want_nvme = get_option('nvme').disabled() == false
 want_libnvme = get_option('libnvme').disabled() == false
+want_fabrics = get_option('fabrics').disabled() == false and not is_windows
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
 
 feature_python = get_option('python')
-if is_windows or feature_python.disabled()
+if not want_fabrics or feature_python.disabled()
     py3_dep = dependency('', required: false)  # Needed for muon
     want_python = false
 else
@@ -127,6 +128,8 @@ endif
 
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 conf.set('RUNDIR', '"@0@"'.format(rundir))
+
+conf.set('CONFIG_FABRICS', want_fabrics, description: 'Is fabrics enabled')
 
 if is_windows
     ws2_32_dep = cc.find_library('ws2_32', required: true)
@@ -293,14 +296,14 @@ else
 endif
 
 
-if is_windows or get_option('liburing').disabled()
+if not want_fabrics or get_option('liburing').disabled()
     liburing_dep = dependency('', required: false)
 else
     liburing_dep = dependency('liburing', version: '>=2.2', required: get_option('liburing'))
 endif
 conf.set('CONFIG_LIBURING', liburing_dep.found(), description: 'Is liburing available?')
 
-if get_option('openssl').disabled()
+if not want_fabrics or get_option('openssl').disabled()
     openssl_dep = dependency('', required: false)
 else
     openssl_dep = dependency(
@@ -329,14 +332,14 @@ if openssl_dep.found()
 endif
 conf.set('CONFIG_OPENSSL', openssl_dep.found(), description: 'Is OpenSSL/LibreSSL available?')
 
-if is_windows or get_option('keyutils').disabled()
+if not want_fabrics or get_option('keyutils').disabled()
     keyutils_dep = dependency('', required: false)
 else
     keyutils_dep = dependency('libkeyutils', required : get_option('keyutils'))
 endif
 conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils available?')
 
-if is_windows or get_option('libdbus').disabled()
+if not want_fabrics or get_option('libdbus').disabled()
     libdbus_dep = dependency('', required: false)
 else
     # Check for libdbus availability. Optional, only required for MCTP dbus scan
@@ -485,22 +488,26 @@ if want_nvme
     subdir('util')      # declares: util_sources
 
     sources = [
-        'nvme.c',
-        'nvme-models.c',
-        'nvme-print.c',
-        'nvme-print-stdout.c',
-        'nvme-print-binary.c',
-        'plugin.c',
         'libnvme-wrap.c',
         'logging.c',
+        'nvme-cmds.c',
+        'nvme-models.c',
+        'nvme-print-binary.c',
+        'nvme-print-stdout.c',
+        'nvme-print.c',
+        'nvme.c',
+        'plugin.c',
     ]
+    if want_fabrics
+        sources += 'fabrics.c'
+    endif
+
     if is_windows
         sources += [
             'windows-stubs.c',
         ]
     else
         sources += [
-            'fabrics.c',
             'nvme-rpmb.c',
         ]
     endif
@@ -673,6 +680,7 @@ summary(dep_dict, section: 'Dependencies', bool_yn: true)
 wanted_dict = {
     'nvme':             want_nvme,
     'libnvme':          want_libnvme,
+    'fabrics':          want_fabrics,
     'python bindings ': want_python,
     'build docs':       want_docs_build,
 }

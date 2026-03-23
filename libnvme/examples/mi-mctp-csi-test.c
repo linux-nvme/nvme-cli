@@ -11,16 +11,16 @@
 #include <assert.h>
 #include <ctype.h>
 #include <err.h>
+#include <pthread.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <string.h>
-#include <pthread.h>
-
-#include <libnvme-mi.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
+
+#include <libnvme-mi.h>
 
 void fhexdump(FILE *fp, const unsigned char *buf, int len)
 {

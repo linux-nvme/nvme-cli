@@ -4,11 +4,11 @@
  * Copyright (c) 2023 Red Hat Inc.
  */
 
-#include <stdlib.h>
+#include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <inttypes.h>
 
 #include <libnvme.h>
 
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	if (nvme_nbft_read(ctx, &table, argv[1]) != 0) {
+	if (nvme_read_nbft(ctx, &table, argv[1]) != 0) {
 		fprintf(stderr, "Error parsing the NBFT table %s: %m\n",
 			argv[1]);
 		nvme_free_global_ctx(ctx);
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 
 	print_nbft(table);
 
-	nvme_nbft_free(ctx, table);
+	nvme_free_nbft(ctx, table);
 	nvme_free_global_ctx(ctx);
 	return 0;
 }

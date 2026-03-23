@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <errno.h>
 #include <fcntl.h>
+
+#include "common.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "nvme-print.h"
-#include "common.h"
 
 #define CREATE_CMD
 #include "feat-nvme.h"

@@ -34,12 +34,12 @@ int main()
 	nvme_for_each_host(ctx, h) {
 		nvme_for_each_subsystem(h, s) {
 			std::cout <<  nvme_subsystem_get_name(s)
-				  << " - NQN=" << nvme_subsystem_get_nqn(s)
+				  << " - NQN=" << nvme_subsystem_get_subsysnqn(s)
 				  << "\n";
 			nvme_subsystem_for_each_ctrl(s, c) {
 				std::cout << " `- " << nvme_ctrl_get_name(c)
 					  << " " << nvme_ctrl_get_transport(c)
-					  << " " << nvme_ctrl_get_address(c)
+					  << " " << nvme_ctrl_get_traddr(c)
 					  << " " << nvme_ctrl_get_state(c)
 					  << "\n";
 				nvme_ctrl_for_each_ns(c, n) {

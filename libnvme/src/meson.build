@@ -12,7 +12,6 @@ sources = [
     'nvme/ioctl.c',
     'nvme/lib.c',
     'nvme/log.c',
-    'nvme/nbft.c',
     'nvme/tree.c',
     'nvme/util.c',
 ]
@@ -26,13 +25,41 @@ if is_windows
     ]
 else
     sources += [
+        'nvme/accessors.c',
         'nvme/linux.c',
-        'nvme/fabrics.c',
-        'nvme/filters.c',
         'nvme/mi-mctp.c',
         'nvme/mi.c',
         'nvme/sysfs.c',
     ]
+endif
+
+headers = [
+    'nvme/accessors.h',
+    'nvme/cmds.h',
+    'nvme/filters.h',
+    'nvme/ioctl.h',
+    'nvme/lib-types.h',
+    'nvme/lib.h',
+    'nvme/linux.h',
+    'nvme/mi.h',
+    'nvme/tree.h',
+    'nvme/types.h',
+    'nvme/util.h',
+]
+
+if want_fabrics
+    sources += [
+        'nvme/fabrics.c',
+        'nvme/nbft.c',
+    ]
+    headers += [
+        'nvme/fabrics.h',
+        'nvme/nbft.h',
+    ]
+endif
+
+if liburing_dep.found()
+    sources += 'nvme/uring.c'
 endif
 
 if json_c_dep.found()
@@ -41,16 +68,12 @@ else
     sources += 'nvme/no-json.c'
 endif
 
-# Generate accessors (setter/getter functions)
-subdir('nvme')  # declares: accessors_dep, accessors_ld_full_path
-
 deps = [
     config_dep,
     ccan_dep,
     json_c_dep,
     keyutils_dep,
     openssl_dep,
-    accessors_dep,
 ]
 if is_windows
     deps += [
@@ -65,23 +88,43 @@ else
     ]
 endif
 
-ldfile = 'libnvme.ld'
+nvme_ld = meson.current_source_dir() / 'libnvme.ld'
+nvmf_ld = meson.current_source_dir() / 'libnvmf.ld'
+accessors_ld = meson.current_source_dir() / 'accessors.ld'
 
-libnvme_link_args = [
-    '-Wl,--version-script=@0@'.format(meson.current_source_dir() / ldfile),
+link_args = [
+    '-Wl,--version-script=@0@'.format(nvme_ld),
 ]
 # Skipping accessor generation for now on Windows. Needs to be ported.
 if not is_windows
     libnvme_link_args += [
-        '-Wl,--version-script=@0@'.format(accessors_ld_full_path),
+        '-Wl,--version-script=@0@'.format(accessors_ld),
     ]
 endif
+
+libconf = configuration_data()
+if want_fabrics
+    link_args += '-Wl,--version-script=@0@'.format(nvmf_ld)
+    libconf.set('FABRICS_INCLUDE',
+                '#include <nvme/fabrics.h>\n#include <nvme/nbft.h>')
+else
+    libconf.set('FABRICS_INCLUDE', '')
+endif
+
+libnvme_header = configure_file(
+    input: 'libnvme.h.in',
+    output: 'libnvme.h',
+    configuration: libconf,
+    install: true,
+    install_dir: prefixdir / get_option('includedir')
+)
 
 libnvme = library(
     'nvme', # produces libnvme.so
     sources,
     version: libnvme_so_version,
-    link_args: libnvme_link_args,
+    c_args: ['-fvisibility=hidden'],
+    link_args: link_args,
     dependencies: deps,
     install: true,
 )
@@ -120,26 +163,12 @@ libnvme_test_dep = declare_dependency(
 mode = 'rw-r--r--'
 install_headers(
     [
-       'libnvme.h',
        'libnvme-mi.h',
     ],
     install_mode: mode,
 )
 install_headers(
-    [
-        'nvme/cmds.h',
-        'nvme/fabrics.h',
-        'nvme/filters.h',
-        'nvme/ioctl.h',
-        'nvme/lib-types.h',
-        'nvme/lib.h',
-        'nvme/linux.h',
-        'nvme/mi.h',
-        'nvme/nbft.h',
-        'nvme/tree.h',
-        'nvme/types.h',
-        'nvme/util.h',
-    ],
+    headers,
     subdir: 'nvme',
     install_mode: mode,
 )

@@ -15,25 +15,28 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * nvme-rpmb.c - Implementation of NVMe RPMB support commands in Nvme
  */
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stddef.h>
-#include <unistd.h>
-#include <errno.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/socket.h>
+#include <unistd.h>
+
 #include <linux/if_alg.h>
 #include <linux/socket.h>
-#include <limits.h>
+
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <libnvme.h>
 
 #include "common.h"
-#include "nvme.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
+#include "nvme.h"
 
 #define CREATE_CMD
 

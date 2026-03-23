@@ -7,14 +7,15 @@
  *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
+#include <fcntl.h>
+#include <libgen.h>
+#include <strings.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "private.h"
-
-#include <libgen.h>
-#include <strings.h>
-#include <fcntl.h>
+#include "compiler_attributes.h"
 
 static bool nvme_mi_probe_enabled_default(void)
 {
@@ -30,7 +31,7 @@ static bool nvme_mi_probe_enabled_default(void)
 
 }
 
-struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
+__public struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 {
 	struct nvme_global_ctx *ctx;
 	int fd;
@@ -60,7 +61,7 @@ struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level)
 	return ctx;
 }
 
-void nvme_free_global_ctx(struct nvme_global_ctx *ctx)
+__public void nvme_free_global_ctx(struct nvme_global_ctx *ctx)
 {
 	struct nvme_host *h, *_h;
 	nvme_mi_ep_t ep, tmp;
@@ -78,20 +79,21 @@ void nvme_free_global_ctx(struct nvme_global_ctx *ctx)
 		nvme_mi_close(ep);
 	free(ctx->config_file);
 	free(ctx->application);
+	nvme_close_uring(ctx);
 	free(ctx);
 }
 
-void nvme_set_dry_run(struct nvme_global_ctx *ctx, bool enable)
+__public void nvme_set_dry_run(struct nvme_global_ctx *ctx, bool enable)
 {
 	ctx->dry_run = enable;
 }
 
-void nvme_set_ioctl_probing(struct nvme_global_ctx *ctx, bool enable)
+__public void nvme_set_ioctl_probing(struct nvme_global_ctx *ctx, bool enable)
 {
 	ctx->ioctl_probing = enable;
 }
 
-void nvme_transport_handle_set_submit_entry(struct nvme_transport_handle *hdl,
+__public void nvme_transport_handle_set_submit_entry(struct nvme_transport_handle *hdl,
 		void *(*submit_entry)(struct nvme_transport_handle *hdl,
 				struct nvme_passthru_cmd *cmd))
 {
@@ -100,7 +102,7 @@ void nvme_transport_handle_set_submit_entry(struct nvme_transport_handle *hdl,
 		hdl->submit_exit = __nvme_submit_exit;
 }
 
-void nvme_transport_handle_set_submit_exit(struct nvme_transport_handle *hdl,
+__public void nvme_transport_handle_set_submit_exit(struct nvme_transport_handle *hdl,
 		void (*submit_exit)(struct nvme_transport_handle *hdl,
 				struct nvme_passthru_cmd *cmd,
 				int err, void *user_data))
@@ -110,7 +112,7 @@ void nvme_transport_handle_set_submit_exit(struct nvme_transport_handle *hdl,
 		hdl->submit_exit = __nvme_submit_exit;
 }
 
-void nvme_transport_handle_set_decide_retry(struct nvme_transport_handle *hdl,
+__public void nvme_transport_handle_set_decide_retry(struct nvme_transport_handle *hdl,
 		bool (*decide_retry)(struct nvme_transport_handle *hdl,
 				struct nvme_passthru_cmd *cmd, int err))
 {
@@ -154,6 +156,11 @@ static int __nvme_transport_handle_open_direct(
 	if (c) {
 		if (!S_ISCHR(hdl->stat.st_mode))
 			return -EINVAL;
+		ret = __nvme_transport_handle_open_uring(hdl);
+		if (ret && ret != -ENOTSUP) {
+			close(hdl->fd);
+			return ret;
+		}
 	} else if (!S_ISBLK(hdl->stat.st_mode)) {
 		return -EINVAL;
 	}
@@ -196,7 +203,7 @@ struct nvme_transport_handle *__nvme_create_transport_handle(
 }
 
 #ifndef _WIN32
-int nvme_open(struct nvme_global_ctx *ctx, const char *name,
+__public int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 	      struct nvme_transport_handle **hdlp)
 {
 	struct nvme_transport_handle *hdl;
@@ -238,7 +245,7 @@ int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 	return 0;
 }
 
-void nvme_close(struct nvme_transport_handle *hdl)
+__public void nvme_close(struct nvme_transport_handle *hdl)
 {
 	if (!hdl)
 		return;
@@ -259,32 +266,32 @@ void nvme_close(struct nvme_transport_handle *hdl)
 }
 #endif /* !_WIN32 */
 
-nvme_fd_t nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
+__public nvme_fd_t nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl)
 {
 	return hdl->fd;
 }
 
-const char *nvme_transport_handle_get_name(struct nvme_transport_handle *hdl)
+__public const char *nvme_transport_handle_get_name(struct nvme_transport_handle *hdl)
 {
 	return basename(hdl->name);
 }
 
-bool nvme_transport_handle_is_blkdev(struct nvme_transport_handle *hdl)
+__public bool nvme_transport_handle_is_blkdev(struct nvme_transport_handle *hdl)
 {
 	return S_ISBLK(hdl->stat.st_mode);
 }
 
-bool nvme_transport_handle_is_chardev(struct nvme_transport_handle *hdl)
+__public bool nvme_transport_handle_is_chardev(struct nvme_transport_handle *hdl)
 {
 	return S_ISCHR(hdl->stat.st_mode);
 }
 
-bool nvme_transport_handle_is_direct(struct nvme_transport_handle *hdl)
+__public bool nvme_transport_handle_is_direct(struct nvme_transport_handle *hdl)
 {
 	return hdl->type == NVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 }
 
-bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl)
+__public bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl)
 {
 	return hdl->type == NVME_TRANSPORT_HANDLE_TYPE_MI;
 }
