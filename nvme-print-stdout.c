@@ -1925,7 +1925,9 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 {
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
-	__u32 rsvd20 = (ctratt >> 20);
+	__u32 rsvd22 = (ctratt >> 22);
+	__u32 pms = (ctratt & NVME_CTRL_CTRATT_PMS) >> 21;
+	__u32 pls = (ctratt & NVME_CTRL_CTRATT_PLS) >> 20;
 	__u32 fdps = (ctratt & NVME_CTRL_CTRATT_FDPS) >> 19;
 	__u32 rhii = (ctratt & NVME_CTRL_CTRATT_RHII) >> 18;
 	__u32 hmbr = (ctratt & NVME_CTRL_CTRATT_HMBR) >> 17;
@@ -1947,8 +1949,12 @@ static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 	__u32 nopspm = (ctratt & NVME_CTRL_CTRATT_NON_OP_PSP) >> 1;
 	__u32 hids = (ctratt & NVME_CTRL_CTRATT_128_ID) >> 0;
 
-	if (rsvd20)
-		printf(" [31:20] : %#x\tReserved\n", rsvd20);
+	if (rsvd22)
+		printf("  [31:22] : %#x\tReserved\n", rsvd22);
+	printf("  [21:21] : %#x\tPower Measurement %sSupported\n",
+		pms, pms ? "" : "Not ");
+	printf("  [20:20] : %#x\tPower Limit %sSupported\n",
+		pls, pls ? "" : "Not ");
 	printf("  [19:19] : %#x\tFlexible Data Placement %sSupported\n",
 		fdps, fdps ? "" : "Not ");
 	printf("  [18:18] : %#x\tReservations and Host Identifier Interaction %sSupported\n",
