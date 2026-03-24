@@ -16,7 +16,6 @@
 #include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "platform/types.h"
 
 #define CREATE_CMD
 #include "dera-nvme.h"

@@ -374,10 +374,10 @@ int __nvme_transport_handle_open_mi(struct nvme_transport_handle *hdl, const cha
 int __nvme_transport_handle_init_mi(struct nvme_transport_handle *hdl);
 void __nvme_transport_handle_close_mi(struct nvme_transport_handle *hdl);
 
-nvme_ctrl_t __nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
-			       const char *traddr, const char *host_traddr,
-			       const char *host_iface, const char *trsvcid,
-			       const char *subsysnqn, nvme_ctrl_t p);
+int _nvme_create_ctrl(struct nvme_global_ctx *ctx,
+		      struct nvmf_context *fctx,
+		      nvme_ctrl_t *cp);
+bool _nvme_ctrl_match_config(struct nvme_ctrl *c, struct nvmf_context *fctx);
 
 void *__nvme_alloc(size_t len);
 
@@ -390,14 +390,10 @@ nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
 				       const char *name,
 				       const char *subsysnqn);
-nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
-			     const char *traddr, const char *host_traddr,
-			     const char *host_iface, const char *trsvcid,
+nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s,
+			     struct nvmf_context *fctx,
 			     nvme_ctrl_t p);
-nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, const char *transport,
-			   const char *traddr, const char *trsvcid,
-			   const char *subsysnqn, const char *host_traddr,
-			   const char *host_iface);
+nvme_ctrl_t nvme_ctrl_find(nvme_subsystem_t s, struct nvmf_context *fctx);
 
 void __nvme_free_host(nvme_host_t h);
 

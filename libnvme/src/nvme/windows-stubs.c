@@ -275,18 +275,13 @@ void *nvme_next_ctrl(void *s, void *c)
 	return NULL;
 }
 
-nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s, const char *transport,
-			     const char *traddr, const char *host_traddr,
-			     const char *host_iface, const char *trsvcid,
+nvme_ctrl_t nvme_lookup_ctrl(nvme_subsystem_t s,
+			     struct nvmf_context *fctx,
 			     nvme_ctrl_t p)
 {
 	stub_log(__func__);
 	(void)s;
-	(void)transport;
-	(void)traddr;
-	(void)host_traddr;
-	(void)host_iface;
-	(void)trsvcid;
+	(void)fctx;
 	(void)p;
 	return NULL;
 }

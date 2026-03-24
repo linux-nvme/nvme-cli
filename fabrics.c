@@ -34,7 +34,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <platform/types.h>
+#include <linux/types.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
