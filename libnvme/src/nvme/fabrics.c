@@ -2641,8 +2641,7 @@ static int nbft_discovery(struct nvme_global_ctx *ctx,
 		if (e->subtype == NVME_NQN_DISC) {
 			nvme_ctrl_t child;
 
-			ret = nvmf_connect_disc_entry(h, e,
-				nfctx.host_traddr, nfctx.host_iface,
+			ret = nvmf_connect_disc_entry(h, e, &nfctx,
 				defcfg, NULL, &child);
 			if (ret)
 				continue;
