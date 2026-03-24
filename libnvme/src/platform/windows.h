@@ -293,21 +293,131 @@ static inline int random_uuid(unsigned char *uuid, size_t len)
 /* If dirent.h is not available, we would define our own, but MinGW provides it */
 
 /* stdio.h POSIX extensions */
-ssize_t getline(char **lineptr, size_t *n, FILE *stream);
-FILE *open_memstream(char **ptr, size_t *sizeloc);
+
+/* getline implementation for Windows */
+static inline ssize_t getline(char **lineptr, size_t *n, FILE *stream)
+{
+	char *bufptr = NULL;
+	char *p = bufptr;
+	size_t size;
+	int c;
+
+	if (lineptr == NULL || stream == NULL || n == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	bufptr = *lineptr;
+	size = *n;
+
+	c = fgetc(stream);
+	if (c == EOF)
+		return -1;
+
+	if (bufptr == NULL) {
+		bufptr = (char *)malloc(128);
+		if (bufptr == NULL) {
+			errno = ENOMEM;
+			return -1;
+		}
+		size = 128;
+	}
+
+	p = bufptr;
+	while (c != EOF) {
+		if ((size_t)(p - bufptr) + 1 >= size) {
+			size_t pos = (size_t)(p - bufptr);
+
+			size = size + 128;
+			bufptr = (char *)realloc(bufptr, size);
+			if (bufptr == NULL) {
+				errno = ENOMEM;
+				return -1;
+			}
+			p = bufptr + pos;
+		}
+		*p++ = c;
+		if (c == '\n')
+			break;
+		c = fgetc(stream);
+	}
+
+	*p = '\0';
+	*lineptr = bufptr;
+	*n = size;
+
+	return p - bufptr;
+}
+
+/* open_memstream stub - returns a temporary file instead */
+static inline FILE *open_memstream(char **ptr, size_t *sizeloc)
+{
+	FILE *f = tmpfile();
+
+	if (ptr)
+		*ptr = NULL;
+	if (sizeloc)
+		*sizeloc = 0;
+	return f;
+}
 
 /* string.h POSIX extensions */
-char *strsep(char **stringp, const char *delim);
-void *reallocarray(void *ptr, size_t nmemb, size_t size);
+
+/* strsep implementation for Windows */
+static inline char *strsep(char **stringp, const char *delim)
+{
+	char *start = *stringp;
+	char *p;
+
+	if (start == NULL)
+		return NULL;
+
+	p = strpbrk(start, delim);
+	if (p) {
+		*p = '\0';
+		*stringp = p + 1;
+	} else {
+		*stringp = NULL;
+	}
+
+	return start;
+}
+
+/* reallocarray implementation for Windows */
+static inline void *reallocarray(void *ptr, size_t nmemb, size_t size)
+{
+	size_t total_size;
+
+	/* Check for multiplication overflow */
+	if (nmemb != 0 && size > SIZE_MAX / nmemb) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	total_size = nmemb * size;
+	return realloc(ptr, total_size);
+}
 
 /* unistd.h POSIX functions */
-int readlink(const char *path, char *buf, size_t bufsiz);
+
+/*
+ * readlink stub - Windows doesn't have symbolic links in the same way
+ * NOTE: This is only used by micron-nvme.c, and can be removed once that
+ * has been refactored to not rely on Linux-specific sysfs paths.
+ */
+static inline int readlink(const char *path, char *buf, size_t bufsiz)
+{
+	(void)path;
+	(void)buf;
+	(void)bufsiz;
+	errno = EINVAL;
+	return -1;
+}
 
 /* unistd.h additions */
 #ifndef fsync
 #define fsync _commit
 #endif
-int readlink(const char *path, char *buf, size_t bufsiz);
 
 /* time.h POSIX compatibility */
 static inline struct tm *gmtime_r(const time_t *timep, struct tm *result) {

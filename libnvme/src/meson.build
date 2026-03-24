@@ -22,7 +22,6 @@ if is_windows
         'nvme/ioctl-windows.c',  # Windows stubs for Linux-specific ioctl functions
         'nvme/lib-windows.c',  # Windows implementations of lib.h functions
         'nvme/windows-stubs.c',  # Stubs for excluded functions
-        'platform/windows.c',  # POSIX compatibility implementations
     ]
 else
     sources += [

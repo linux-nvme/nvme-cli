@@ -8,6 +8,7 @@
 
 #include "private.h"
 #include "nvme/lib.h"
+#include "compiler_attributes.h"
 
 
 static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl, const char *name)
@@ -62,7 +63,7 @@ static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl
 }
 
 /* Transport handle operations (linux.c) */
-int nvme_open(struct nvme_global_ctx *ctx, const char *name,
+__public int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 	      struct nvme_transport_handle **hdlp)
 {
 	struct nvme_transport_handle *hdl;
@@ -108,7 +109,7 @@ int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 	return 0;
 }
 
-void nvme_close(struct nvme_transport_handle *hdl)
+__public void nvme_close(struct nvme_transport_handle *hdl)
 {
 	if (!hdl)
 		return;
@@ -133,7 +134,7 @@ void nvme_close(struct nvme_transport_handle *hdl)
 }
 
 /* Platform-specific fstat wrapper for nvme_fd_t */
-int nvme_fstat(nvme_fd_t fd, struct stat *buf)
+__public int nvme_fstat(nvme_fd_t fd, struct stat *buf)
 {
 	BY_HANDLE_FILE_INFORMATION file_info;
 	ULARGE_INTEGER ull;
