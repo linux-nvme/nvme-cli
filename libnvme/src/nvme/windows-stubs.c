@@ -357,13 +357,6 @@ int nvme_ns_get_fd(void *ns)
 	return -1;
 }
 
-int nvme_ns_get_nsid(nvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return 0;
-}
-
 enum nvme_csi nvme_ns_get_csi(nvme_ns_t n)
 {
 	stub_log(__func__);
@@ -392,11 +385,13 @@ void nvme_ns_get_uuid(nvme_ns_t n, unsigned char out[NVME_UUID_LEN])
 	(void)out;
 }
 
-struct nvme_transport_handle *nvme_ns_get_transport_handle(nvme_ns_t n)
+int nvme_ns_get_transport_handle(nvme_ns_t n,
+		struct nvme_transport_handle **hdl)
 {
 	stub_log(__func__);
 	(void)n;
-	return NULL;
+	(void)hdl;
+	return -ENOTSUP;
 }
 
 int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)
@@ -408,66 +403,10 @@ int nvme_ns_identify(nvme_ns_t n, struct nvme_id_ns *ns)
 	return -1;
 }
 
-const char *nvme_ns_get_sysfs_dir(nvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return "";
-}
-
-const char *nvme_ns_get_name(nvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return "";
-}
-
 const char *nvme_ns_get_generic_name(nvme_ns_t n)
 {
 	stub_log(__func__);
 	(void)n;
-	return "";
-}
-
-int nvme_ns_get_lba_size(nvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return 0;
-}
-
-uint64_t nvme_ns_get_lba_count(nvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return 0;
-}
-
-uint64_t nvme_ns_get_lba_util(nvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return 0;
-}
-
-const char *nvme_path_get_name(nvme_path_t p)
-{
-	stub_log(__func__);
-	(void)p;
-	return "";
-}
-
-const char *nvme_path_get_sysfs_dir(nvme_path_t p)
-{
-	stub_log(__func__);
-	(void)p;
-	return "";
-}
-
-const char *nvme_path_get_ana_state(nvme_path_t p)
-{
-	stub_log(__func__);
-	(void)p;
 	return "";
 }
 
@@ -485,28 +424,7 @@ nvme_ns_t nvme_path_get_ns(nvme_path_t p)
 	return NULL;
 }
 
-const char *nvme_ctrl_get_name(nvme_ctrl_t c)
-{
-	stub_log(__func__);
-	(void)c;
-	return "";
-}
-
-const char *nvme_ctrl_get_sysfs_dir(nvme_ctrl_t c)
-{
-	stub_log(__func__);
-	(void)c;
-	return "";
-}
-
 const char *nvme_ctrl_get_address(nvme_ctrl_t c)
-{
-	stub_log(__func__);
-	(void)c;
-	return "";
-}
-
-const char *nvme_ctrl_get_transport(nvme_ctrl_t c)
 {
 	stub_log(__func__);
 	(void)c;
@@ -597,19 +515,9 @@ void *nvme_subsys_get_host(void *s)
 }
 
 /* Subsystem functions (full name) - same as subsys */
-const char *nvme_subsystem_get_name(nvme_subsystem_t s)
-{
-	return nvme_subsys_get_name(s);
-}
-
 const char *nvme_subsystem_get_nqn(nvme_subsystem_t s)
 {
 	return nvme_subsys_get_nqn(s);
-}
-
-const char *nvme_subsystem_get_sysfs_dir(nvme_subsystem_t s)
-{
-	return nvme_subsys_get_sysfs_dir(s);
 }
 
 nvme_host_t nvme_subsystem_get_host(nvme_subsystem_t s)
@@ -635,20 +543,6 @@ nvme_ns_t nvme_subsystem_first_ns(nvme_subsystem_t s)
 nvme_ns_t nvme_subsystem_next_ns(nvme_subsystem_t s, nvme_ns_t n)
 {
 	return nvme_subsys_next_ns(s, n);
-}
-
-const char *nvme_host_get_hostnqn(nvme_host_t h)
-{
-	stub_log(__func__);
-	(void)h;
-	return "";
-}
-
-const char *nvme_host_get_hostid(nvme_host_t h)
-{
-	stub_log(__func__);
-	(void)h;
-	return "";
 }
 
 void *nvme_host_get_root(void *h)
@@ -824,65 +718,8 @@ int nvme_import_tls_key(struct nvme_global_ctx *ctx, const char *encoded_key,
 /*
  * Additional stubs for nvme-cli linking
  */
-/* Controller property getters (tree.c) */
-const char *nvme_ctrl_get_cntlid(nvme_ctrl_t c)
-{
-	stub_log(__func__);
-	(void)c;
-	return "";
-}
-
-const char *nvme_ctrl_get_firmware(nvme_ctrl_t c)
-{
-	stub_log(__func__);
-	(void)c;
-	return "";
-}
-
-const char *nvme_ctrl_get_model(nvme_ctrl_t c)
-{
-	stub_log(__func__);
-	(void)c;
-	return "";
-}
-
-const char *nvme_ctrl_get_phy_slot(nvme_ctrl_t c)
-{
-	stub_log(__func__);
-	(void)c;
-	return "";
-}
-
-const char *nvme_ctrl_get_serial(nvme_ctrl_t c)
-{
-	stub_log(__func__);
-	(void)c;
-	return "";
-}
-
 /* Subsystem property getters (tree.c) */
 const char *nvme_subsystem_get_fw_rev(nvme_subsystem_t s)
-{
-	stub_log(__func__);
-	(void)s;
-	return "";
-}
-
-const char *nvme_subsystem_get_iopolicy(nvme_subsystem_t s)
-{
-	stub_log(__func__);
-	(void)s;
-	return "";
-}
-
-const char *nvme_subsystem_get_model(nvme_subsystem_t s)
-{
-	stub_log(__func__);
-	(void)s;
-	return "";
-}
-
-const char *nvme_subsystem_get_serial(nvme_subsystem_t s)
 {
 	stub_log(__func__);
 	(void)s;
@@ -902,13 +739,6 @@ const char *nvme_ns_get_firmware(nvme_ns_t n)
 	stub_log(__func__);
 	(void)n;
 	return "";
-}
-
-int nvme_ns_get_meta_size(nvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return 0;
 }
 
 const char *nvme_ns_get_model(nvme_ns_t n)
@@ -1107,7 +937,7 @@ int nvme_generate_tls_key_identity(struct nvme_global_ctx *ctx,
 	return -1;
 }
 
-char *nvmf_hostnqn_from_file(void)
+char *nvme_read_hostnqn(void)
 {
 	stub_log(__func__);
 	/* No /etc/nvme/hostnqn equivalent on Windows */
@@ -1131,28 +961,14 @@ int nvme_gen_dhchap_key(struct nvme_global_ctx *ctx,
 }
 
 /* Hostnqn generation (fabrics.c) */
-char *nvmf_hostnqn_generate(void)
+char *nvme_generate_hostnqn(void)
 {
 	stub_log(__func__);
 	/* Could implement UUID-based generation, but for now just fail */
 	return NULL;
 }
 
-char *nvmf_hostnqn_generate_from_hostid(char *hostid)
-{
-	stub_log(__func__);
-	(void)hostid;
-	return NULL;
-}
-
 /* Path property getters (tree.c) */
-const char *nvme_path_get_numa_nodes(struct nvme_path *p)
-{
-	stub_log(__func__);
-	(void)p;
-	return "";
-}
-
 int nvme_path_get_queue_depth(struct nvme_path *p)
 {
 	stub_log(__func__);

@@ -30,7 +30,6 @@
 #include <syslog.h>
 #include <dirent.h>
 #include <endian.h>
-#include <net/if.h>
 
 /* Linux cleanup attribute */
 #define __nvme_cleanup(fn) __attribute__((__cleanup__(fn)))

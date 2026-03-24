@@ -6,6 +6,7 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 sources = [
+    'nvme/accessors.c',
     'nvme/base64.c',
     'nvme/cmds.c',
     'nvme/crc32.c',
@@ -25,7 +26,7 @@ if is_windows
     ]
 else
     sources += [
-        'nvme/accessors.c',
+        'nvme/filters.c',
         'nvme/linux.c',
         'nvme/mi-mctp.c',
         'nvme/mi.c',
@@ -94,13 +95,8 @@ accessors_ld = meson.current_source_dir() / 'accessors.ld'
 
 link_args = [
     '-Wl,--version-script=@0@'.format(nvme_ld),
+    '-Wl,--version-script=@0@'.format(accessors_ld),
 ]
-# Skipping accessor generation for now on Windows. Needs to be ported.
-if not is_windows
-    libnvme_link_args += [
-        '-Wl,--version-script=@0@'.format(accessors_ld),
-    ]
-endif
 
 libconf = configuration_data()
 if want_fabrics

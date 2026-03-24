@@ -21,6 +21,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "compiler_attributes.h"
+
 /* Definitions not yet included in mingw's winerror.h */
 #define STG_E_FIRMWARE_SLOT_INVALID      _HRESULT_TYPEDEF_(0x80030208L)
 #define STG_E_FIRMWARE_IMAGE_INVALID     _HRESULT_TYPEDEF_(0x80030209L)
@@ -94,25 +96,25 @@ static bool get_is_win_pe(void)
 	return false;
 }
 
-int nvme_subsystem_reset(struct nvme_transport_handle *hdl)
+__public int nvme_reset_subsystem(struct nvme_transport_handle *hdl)
 {
 	(void)hdl;
 	return -ENOTSUP;
 }
 
-int nvme_ctrl_reset(struct nvme_transport_handle *hdl)
+__public int nvme_reset_ctrl(struct nvme_transport_handle *hdl)
 {
 	(void)hdl;
 	return -ENOTSUP;
 }
 
-int nvme_ns_rescan(struct nvme_transport_handle *hdl)
+__public int nvme_rescan_ns(struct nvme_transport_handle *hdl)
 {
 	(void)hdl;
 	return -ENOTSUP;
 }
 
-int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
+__public int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
 {
 	/* Get the SCSI LUN, which corresponds to NSID - 1. */
 	SCSI_ADDRESS addr = {0};
@@ -1511,7 +1513,7 @@ out:
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
+__public int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd)
 {
 	if (!hdl || !cmd)
@@ -1547,7 +1549,7 @@ int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
+__public int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
 		struct nvme_passthru_cmd *cmd)
 {
 	if (!hdl || !cmd)
