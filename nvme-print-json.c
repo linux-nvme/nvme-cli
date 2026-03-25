@@ -4,12 +4,11 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+
 #include <ccan/compiler/compiler.h>
 
 #include <libnvme.h>
-
+#include "platform/includes.h"
 #include "nvme-print.h"
 
 #include "util/json.h"
@@ -1867,7 +1866,7 @@ void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 {
 	__u32 progress = 0;
 	__u16 vsedl;
-	uint i;
+	__u32 i;
 	struct nvme_vs_event_desc *vs_desc;
 	struct json_object *vs_events = json_create_array();
 

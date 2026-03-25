@@ -138,6 +138,7 @@ __public int nvme_fstat(nvme_fd_t fd, struct stat *buf)
 {
 	BY_HANDLE_FILE_INFORMATION file_info;
 	ULARGE_INTEGER ull;
+	DWORD file_type;
 
 	if (!buf) {
 		errno = EINVAL;
@@ -150,8 +151,19 @@ __public int nvme_fstat(nvme_fd_t fd, struct stat *buf)
 		return -1;
 	}
 
-	/* Get file information from Windows handle */
+	/*
+	 * GetFileInformationByHandle() does not work for all device HANDLEs
+	 * (e.g. raw \\\\.\\PhysicalDriveN). For those, fall back to file type.
+	 */
 	if (!GetFileInformationByHandle(fd, &file_info)) {
+		file_type = GetFileType(fd);
+		if (file_type == FILE_TYPE_DISK || file_type == FILE_TYPE_CHAR) {
+			memset(buf, 0, sizeof(*buf));
+			buf->st_mode = S_IFBLK | 0600;
+			buf->st_nlink = 1;
+			return 0;
+		}
+
 		errno = EBADF;
 		return -1;
 	}

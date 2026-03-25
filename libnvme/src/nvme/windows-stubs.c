@@ -50,6 +50,17 @@ __public int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name, nvme_
 	return -1;
 }
 
+__public int nvme_scan_namespace(struct nvme_global_ctx *ctx,
+		const char *name, nvme_ns_t *ns)
+{
+	stub_log(__func__);
+	(void)ctx;
+	(void)name;
+	if (ns)
+		*ns = NULL;
+	return -ENOTSUP;
+}
+
 __public int nvme_scan_topology(struct nvme_global_ctx *ctx, nvme_scan_filter_t f, void *f_args)
 {
 	stub_log(__func__);

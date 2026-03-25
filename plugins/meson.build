@@ -59,7 +59,7 @@ if 'lm' in selected_plugins and not is_windows
   subdir('lm')
 endif
 
-if 'ocp' in selected_plugins
+if 'ocp' in selected_plugins and json_c_dep.found()
   subdir('ocp')
 endif
 

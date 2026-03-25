@@ -11291,6 +11291,7 @@ int main(int argc, char **argv)
 {
 	int err;
 
+	nvme_init();
 	nvme.extensions->parent = &nvme;
 	if (argc < 2) {
 		general_help(&builtin, NULL);

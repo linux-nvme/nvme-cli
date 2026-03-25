@@ -25,6 +25,7 @@
 #include <io.h>
 #include <direct.h>
 #include <process.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
@@ -576,6 +577,17 @@ static inline char *dlerror(void) {
 	DWORD err = GetLastError();
 	snprintf(buf, sizeof(buf), "Error %lu", err);
 	return buf;
+}
+
+/*
+ * Set stdout and stderr to binary mode to prevent Windows text-mode
+ * translation from converting LF to CRLF and corrupting raw binary output.
+ * Called once at startup from main().
+ */
+static inline void nvme_init(void)
+{
+	_setmode(_fileno(stdout), O_BINARY);
+	_setmode(_fileno(stderr), O_BINARY);
 }
 
 /* Socket compatibility */

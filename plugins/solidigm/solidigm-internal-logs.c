@@ -242,7 +242,7 @@ static int ilog_dump_assert_logs(struct nvme_transport_handle *hdl, struct ilog 
 	struct nvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
 		.nsid = NVME_NSID_ALL,
-		.addr = (unsigned long)(void *)head_buf,
+		.addr = (__u64)(uintptr_t)head_buf,
 		.cdw12 = ASSERTLOG,
 		.cdw13 = 0,
 	};
@@ -265,7 +265,7 @@ static int ilog_dump_assert_logs(struct nvme_transport_handle *hdl, struct ilog 
 		close(output);
 		return err;
 	}
-	cmd.addr = (unsigned long)(void *)buf;
+	cmd.addr = (__u64)(uintptr_t)buf;
 
 	if (ilog->cfg->verbose) {
 		printf("Assert Log, cores: %d log size: %d header size: %d\n", ad->header.numcores,
@@ -299,7 +299,7 @@ static int ilog_dump_event_logs(struct nvme_transport_handle *hdl, struct ilog *
 	struct nvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
 		.nsid = NVME_NSID_ALL,
-		.addr = (unsigned long)(void *)head_buf,
+		.addr = (__u64)(uintptr_t)head_buf,
 		.cdw12 = EVENTLOG,
 		.cdw13 = 0,
 	};
@@ -322,7 +322,7 @@ static int ilog_dump_event_logs(struct nvme_transport_handle *hdl, struct ilog *
 		close(output);
 		return err;
 	}
-	cmd.addr = (unsigned long)(void *)buf;
+	cmd.addr = (__u64)(uintptr_t)buf;
 
 	if (ilog->cfg->verbose)
 		printf("Event Log, cores: %d log size: %d\n", core_num, ehdr->header.log_size * 4);
@@ -374,7 +374,7 @@ static int ilog_dump_nlogs(struct nvme_transport_handle *hdl, struct ilog *ilog,
 	struct nvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
 		.nsid = NVME_NSID_ALL,
-		.addr = (unsigned long)(void *)buf
+		.addr = (__u64)(uintptr_t)buf
 	};
 
 	struct dump_select {

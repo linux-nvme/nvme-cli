@@ -38,7 +38,8 @@ static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output format\n");
+		fprintf(stderr, "ERROR : OCP : invalid output-format. "
+			"Valid values: normal|json|binary|tabular.\n");
 		return ret;
 	}
 

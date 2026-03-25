@@ -250,7 +250,8 @@ static int get_hwcomp_log(struct nvme_transport_handle *hdl, __u32 id, bool list
 
 	ret = validate_output_format(nvme_args.output_format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "error: ocp: invalid output format\n");
+		fprintf(stderr, "ERROR : OCP : invalid output-format. "
+			"Valid values: normal|json|binary|tabular.\n");
 		return ret;
 	}
 

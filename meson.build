@@ -138,7 +138,7 @@ if is_windows
 endif
 
 # Check for libjson-c availability
-if is_windows or get_option('json-c').disabled()
+if get_option('json-c').disabled()
     json_c_dep = dependency('', required: false)
 else
     json_c_dep = dependency(

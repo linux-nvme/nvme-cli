@@ -385,6 +385,7 @@ __public struct nvme_global_ctx *nvme_host_get_global_ctx(nvme_host_t h)
 {
 	return h->ctx;
 }
+#endif /* _WIN32 */
 
 __public void nvme_host_set_pdc_enabled(nvme_host_t h, bool enabled)
 {
@@ -399,6 +400,7 @@ __public bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback)
 	return fallback;
 }
 
+#ifndef _WIN32
 __public nvme_subsystem_t nvme_first_subsystem(nvme_host_t h)
 {
 	return list_top(&h->subsystems, struct nvme_subsystem, entry);

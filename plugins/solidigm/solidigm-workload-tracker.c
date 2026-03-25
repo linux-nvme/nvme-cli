@@ -244,8 +244,10 @@ static void wltracker_print_header(struct wltracker *wlt)
 	printf("%-24s %u.%u\n", "Log page version:", le16_to_cpu(log->majorVersion),
 	       le16_to_cpu(log->minorVersion));
 	printf("%-24s %u\n", "Sample period(ms):", le32_to_cpu(log->samplePeriodInMilliseconds));
-	printf("%-24s %lu\n", "timestamp_lastChange:", le64_to_cpu(log->timestamp_lastEntry));
-	printf("%-24s %lu\n", "timestamp_triggered:", le64_to_cpu(log->timestamp_triggered));
+	printf("%-24s %llu\n", "timestamp_lastChange:",
+	       (unsigned long long)le64_to_cpu(log->timestamp_lastEntry));
+	printf("%-24s %llu\n", "timestamp_triggered:",
+	       (unsigned long long)le64_to_cpu(log->timestamp_triggered));
 	printf("%-24s 0x%x\n", "config:", le32_to_cpu(log->config.dword));
 	printf("%-24s %u\n", "Triggerthreshold:", le32_to_cpu(log->triggerthreshold));
 	printf("%-24s %u\n", "ValueTriggered:", le32_to_cpu(log->triggeredValue));
@@ -253,7 +255,7 @@ static void wltracker_print_header(struct wltracker *wlt)
 	printf("%-24s %u\n", "Total log page entries:", le32_to_cpu(log->workloadLogCount));
 	printf("%-24s %u\n", "Trigger count:", log->triggeredEvents);
 	if (nvme_args.verbose > 1)
-		printf("%-24s %ld\n", "Poll count:", wlt->poll_count);
+		printf("%-24s %zu\n", "Poll count:", wlt->poll_count);
 	if (wlt->poll_count != 0)
 		wltracker_print_field_names(wlt);
 }
@@ -436,7 +438,7 @@ void wltracker_run_time_update(struct wltracker *wlt)
 		printf("run_time: %lluus\n", wlt->run_time_us);
 }
 
-static int stricmp(char const *a, char const *b)
+static int sldgm_stricmp(char const *a, char const *b)
 {
 	if (!a || !b)
 		return 1;
@@ -449,7 +451,7 @@ static int stricmp(char const *a, char const *b)
 static int find_option(char const *list[], int size, const char *val)
 {
 	for (int i = 0; i < size; i++) {
-		if (!stricmp(val, list[i]))
+		if (!sldgm_stricmp(val, list[i]))
 			return i;
 	}
 	return -EINVAL;
@@ -467,7 +469,7 @@ static void join_options(char *dest, char const *list[], size_t list_size)
 static int find_field(struct field *fields, const char *val)
 {
 	for (int i = 0; i < MAX_FIELDS; i++) {
-		if (!stricmp(val, fields[i].name))
+		if (!sldgm_stricmp(val, fields[i].name))
 			return i;
 	}
 	return -EINVAL;

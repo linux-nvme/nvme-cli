@@ -70,7 +70,8 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 		err = validate_output_format(nvme_args.output_format,
 			&print_flag);
 		if (err < 0) {
-			fprintf(stderr, "Error: Invalid output format.\n");
+			fprintf(stderr, "ERROR : OCP : invalid output-format. "
+				"Valid values: normal|json|binary|tabular.\n");
 			return err;
 		}
 

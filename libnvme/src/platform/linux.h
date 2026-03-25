@@ -41,11 +41,19 @@ typedef int nvme_fd_t;
 #define TEST_FD 0xFD
 #define INIT_FD -1
 
+/* O_BINARY is required on Windows, but not defined on Linux. */
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 /* Platform-specific fstat wrapper for nvme_fd_t */
 static inline int nvme_fstat(nvme_fd_t fd, struct stat *buf)
 {
 	return fstat(fd, buf);
 }
+
+/* Platform initialization - no-op on Linux */
+static inline void nvme_init(void) {}
 
 /* Platform-specific UUID generation using /dev/urandom */
 static inline int random_uuid(unsigned char *uuid, size_t len)
