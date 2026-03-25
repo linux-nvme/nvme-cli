@@ -7766,11 +7766,11 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		__u64 long_pi[256];
 	} eilbrts;
 
-	__u32 elbatms[256] = { 0 };
-	__u32 elbats[256] = { 0 };
+	__u16 elbatms[256] = { 0 };
+	__u16 elbats[256] = { 0 };
 
 	_cleanup_nvme_free_ union {
-		struct nvme_copy_range f0[256];
+		struct nvme_copy_range_f0 f0[256];
 		struct nvme_copy_range_f1 f1[256];
 		struct nvme_copy_range_f2 f2[256];
 		struct nvme_copy_range_f3 f3[256];
@@ -7876,9 +7876,9 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		return -EINVAL;
 	}
 
-	natms = argconfig_parse_comma_sep_array_u32(cfg.elbatms, elbatms,
+	natms = argconfig_parse_comma_sep_array_u16(cfg.elbatms, elbatms,
 						    ARRAY_SIZE(elbatms));
-	nats = argconfig_parse_comma_sep_array_u32(cfg.elbats, elbats,
+	nats = argconfig_parse_comma_sep_array_u16(cfg.elbats, elbats,
 						   ARRAY_SIZE(elbats));
 
 	nr = max(nb, max(ns, max(nrts, max(natms, nats))));
@@ -7922,8 +7922,8 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 					eilbrts.long_pi, elbatms, elbats, nr);
 		break;
 	default:
-		nvme_init_copy_range(copy->f0, nlbs, slbas, eilbrts.short_pi,
-				     elbatms, elbats, nr);
+		nvme_init_copy_range_f0(copy->f0, nlbs, slbas, eilbrts.short_pi,
+					elbatms, elbats, nr);
 		break;
 	}
 
