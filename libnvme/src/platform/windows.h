@@ -43,20 +43,26 @@
 
 /* Windows endian conversion macros */
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    #define htole16(x) __builtin_bswap16(x)
-    #define htole32(x) __builtin_bswap32(x)
-    #define htole64(x) __builtin_bswap64(x)
-    #define le16toh(x) __builtin_bswap16(x)
-    #define le32toh(x) __builtin_bswap32(x)
-    #define le64toh(x) __builtin_bswap64(x)
+	#define htobe16(x) (x)
+	#define htobe32(x) (x)
+	#define htobe64(x) (x)
+	#define htole16(x) __builtin_bswap16(x)
+	#define htole32(x) __builtin_bswap32(x)
+	#define htole64(x) __builtin_bswap64(x)
+	#define le16toh(x) __builtin_bswap16(x)
+	#define le32toh(x) __builtin_bswap32(x)
+	#define le64toh(x) __builtin_bswap64(x)
 #else
-    /* Little-endian (most common case for Windows) */
-    #define htole16(x) (x)
-    #define htole32(x) (x)
-    #define htole64(x) (x)
-    #define le16toh(x) (x)
-    #define le32toh(x) (x)
-    #define le64toh(x) (x)
+	/* Little-endian (most common case for Windows) */
+	#define htobe16(x) __builtin_bswap16(x)
+	#define htobe32(x) __builtin_bswap32(x)
+	#define htobe64(x) __builtin_bswap64(x)
+	#define htole16(x) (x)
+	#define htole32(x) (x)
+	#define htole64(x) (x)
+	#define le16toh(x) (x)
+	#define le32toh(x) (x)
+	#define le64toh(x) (x)
 #endif
 
 /* syslog.h stubs */
@@ -110,9 +116,9 @@ int nvme_fstat(nvme_fd_t fd, struct stat *buf);
 /* Windows ioctl stub functions */
 static inline int ioctl(nvme_fd_t fd, unsigned long request, ...)
 {
-    (void)fd; (void)request;
-    errno = ENOSYS;
-    return -1;
+	(void)fd; (void)request;
+	errno = ENOSYS;
+	return -1;
 }
 
 /* Windows file descriptors */
@@ -159,29 +165,29 @@ typedef unsigned int mode_t;
 
 /* Windows missing socket structures */
 struct msghdr {
-    void *msg_name;
-    socklen_t msg_namelen;
-    struct iovec *msg_iov;
-    size_t msg_iovlen;
-    void *msg_control;
-    size_t msg_controllen;
-    int msg_flags;
+	void *msg_name;
+	socklen_t msg_namelen;
+	struct iovec *msg_iov;
+	size_t msg_iovlen;
+	void *msg_control;
+	size_t msg_controllen;
+	int msg_flags;
 };
 
 struct iovec {
-    void *iov_base;
-    size_t iov_len;
+	void *iov_base;
+	size_t iov_len;
 };
 
 /* Windows missing network structures - ifaddrs.h stubs */
 struct ifaddrs {
-    struct ifaddrs *ifa_next;
-    char *ifa_name;
-    unsigned int ifa_flags;
-    struct sockaddr *ifa_addr;
-    struct sockaddr *ifa_netmask;
-    struct sockaddr *ifa_broadaddr;
-    void *ifa_data;
+	struct ifaddrs *ifa_next;
+	char *ifa_name;
+	unsigned int ifa_flags;
+	struct sockaddr *ifa_addr;
+	struct sockaddr *ifa_netmask;
+	struct sockaddr *ifa_broadaddr;
+	void *ifa_data;
 };
 static inline void freeifaddrs(struct ifaddrs *ifa) { (void)ifa; }
 
@@ -191,37 +197,38 @@ static inline void freeifaddrs(struct ifaddrs *ifa) { (void)ifa; }
 /* Windows missing POSIX functions */
 static inline int dprintf(int fd, const char *format, ...)
 {
-    va_list args;
-    char buffer[4096];
-    int result;
-    va_start(args, format);
-    result = vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-    if (fd == STDERR_FILENO) {
-        fputs(buffer, stderr);
-    } else if (fd == STDOUT_FILENO) {
-        fputs(buffer, stdout);
-    }
-    return result;
+	va_list args;
+	char buffer[4096];
+	int result;
+
+	va_start(args, format);
+	result = vsnprintf(buffer, sizeof(buffer), format, args);
+	va_end(args);
+	if (fd == STDERR_FILENO)
+		fputs(buffer, stderr);
+	else if (fd == STDOUT_FILENO)
+		fputs(buffer, stdout);
+	return result;
 }
 
 static inline DWORD getpagesize(void)
 {
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-    return si.dwPageSize;
+	SYSTEM_INFO si;
+
+	GetSystemInfo(&si);
+	return si.dwPageSize;
 }
 
 /* Aligned memory allocation function, use platform_aligned_free to free. */
 static inline int posix_memalign(void **memptr, size_t alignment, size_t size)
 {
-    *memptr = _aligned_malloc(size, alignment);
-    return (*memptr == NULL) ? ENOMEM : 0;
+	*memptr = _aligned_malloc(size, alignment);
+	return (*memptr == NULL) ? ENOMEM : 0;
 }
 
 static inline size_t malloc_usable_size(void *ptr)
 {
-    return _msize(ptr);
+	return _msize(ptr);
 }
 
 /*
@@ -240,10 +247,10 @@ static inline void platform_aligned_free(void *p)
 #define _IOC_READ  2U
 
 #define _IOC(dir,type,nr,size) \
-    (((dir)  << 30) | \
-     ((type) << 8) | \
-     ((nr)   << 0) | \
-     ((size) << 16))
+	(((dir)  << 30) | \
+	 ((type) << 8) | \
+	 ((nr)   << 0) | \
+	 ((size) << 16))
 
 /* Only define if winsock2.h hasn't already defined them */
 #ifndef _IO
