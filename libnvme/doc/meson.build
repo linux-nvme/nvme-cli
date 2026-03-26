@@ -62,7 +62,7 @@ if want_docs != 'false'
                 c = run_command(list_man_pages, apif, check: true)
                 man_pages = c.stdout().split()
                 foreach page : man_pages
-                    custom_target(
+                    doc_tgts += custom_target(
                         page.underscorify() + '_man',
                         input: apif,
                         output: page + '.2',
@@ -94,7 +94,7 @@ if want_docs != 'false'
         htmldir = join_paths(get_option('htmldir'), 'nvme')
         sphinx_build = find_program('sphinx-build-3', 'sphinx-build')
         if sphinx_build.found() and want_docs_build
-            custom_target(
+            doc_tgts += custom_target(
                 'generate_doc_html',
                 input: [static_sources, rst],
                 output: 'html',
