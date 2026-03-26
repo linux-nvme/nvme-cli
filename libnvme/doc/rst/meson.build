@@ -29,6 +29,7 @@ if want_docs != 'false'
                     install: true,
                     install_dir: rstdir,
                 )
+                doc_tgts += rst
             endforeach
         endif
     else

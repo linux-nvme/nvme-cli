@@ -31,6 +31,7 @@ usage() {
     echo "  coverage            build coverage report"
     echo "  distro              build libnvme and nvme-cli separately"
     echo "  docs                build all documentation"
+    echo "  man_docs            build man documentation only"
     echo "  html_docs           build html documentation only"
     echo "  rst_docs            build rst documentation only"
     echo "  static              build a static binary"
@@ -153,9 +154,15 @@ config_meson_coverage() {
 
 config_meson_docs() {
     CC="${CC}" "${MESON}" setup                 \
-        -Dnvme=disabled                         \
-        -Dlibnvme=disabled                      \
         -Ddocs=all                              \
+        -Ddocs-build=true                       \
+        --prefix=/tmp/usr                       \
+        "${BUILDDIR}"
+}
+
+config_meson_man_docs() {
+    CC="${CC}" "${MESON}" setup                 \
+        -Ddocs=man                              \
         -Ddocs-build=true                       \
         --prefix=/tmp/usr                       \
         "${BUILDDIR}"
@@ -163,8 +170,6 @@ config_meson_docs() {
 
 config_meson_html_docs() {
     CC="${CC}" "${MESON}" setup                 \
-        -Dnvme=disabled                         \
-        -Dlibnvme=disabled                      \
         -Ddocs=html                             \
         -Ddocs-build=true                       \
         --prefix=/tmp/usr                       \
@@ -173,8 +178,6 @@ config_meson_html_docs() {
 
 config_meson_rst_docs() {
     CC="${CC}" "${MESON}" setup                 \
-        -Dnvme=disabled                         \
-        -Dlibnvme=disabled                      \
         -Ddocs=rst                              \
         -Ddocs-build=true                       \
         --prefix=/tmp/usr                       \
@@ -252,6 +255,30 @@ build_meson() {
         -C "${BUILDDIR}"
 }
 
+build_meson_docs() {
+    "${MESON}" compile                          \
+        -C "${BUILDDIR}"                        \
+		docs
+}
+
+build_meson_man_docs() {
+    "${MESON}" compile                          \
+        -C "${BUILDDIR}"                        \
+		docs
+}
+
+build_meson_html_docs() {
+    "${MESON}" compile                          \
+        -C "${BUILDDIR}"                        \
+		docs
+}
+
+build_meson_rst_docs() {
+    "${MESON}" compile                          \
+        -C "${BUILDDIR}"                        \
+		docs
+}
+
 test_meson() {
     local args=(-C "${BUILDDIR}")
 
@@ -264,6 +291,22 @@ test_meson() {
     fi
 
     "${MESON}" test "${args[@]}"
+}
+
+test_meson_docs() {
+	true
+}
+
+test_meson_man_docs() {
+	true
+}
+
+test_meson_html_docs() {
+	true
+}
+
+test_meson_rst_docs() {
+	true
 }
 
 test_meson_coverage() {

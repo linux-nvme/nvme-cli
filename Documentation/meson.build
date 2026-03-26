@@ -302,7 +302,7 @@ if want_docs != 'false'
                             '@INPUT@',
                         ],
                     )
-                    custom_target(
+                    doc_tgts += custom_target(
                         adoc.underscorify() + '_man',
                         input: xml,
                         output: '@BASENAME@.1',
@@ -330,7 +330,7 @@ if want_docs != 'false'
                     output: adoc + '.hsubst',
                     configuration: substs,
                 )
-                custom_target(
+                doc_tgts += custom_target(
                     adoc.underscorify() + '_html',
                     input: subst,
                     output: '@BASENAME@.html',

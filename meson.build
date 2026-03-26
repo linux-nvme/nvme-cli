@@ -464,6 +464,8 @@ substs.set('VERSION_MAJOR', libnvme_so_version.split('.')[0])
 
 
 ################################################################################
+doc_tgts = []
+
 subdir('ccan')      # declares: ccan_dep
 subdir('libnvme')   # declares: libnvme_dep
 
@@ -606,6 +608,17 @@ if want_nvme
 
     subdir('Documentation')
 endif
+
+if doc_tgts.length() == 0
+    doc_tgts += custom_target(
+        'docs-dummy',
+        output: 'docs.stamp',
+        command: ['true'],
+        build_by_default: false,
+    )
+endif
+
+alias_target('docs', doc_tgts)
 
 
 ################################################################################
