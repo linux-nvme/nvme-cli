@@ -1,16 +1,22 @@
 <!-- SPDX-License-Identifier: GPL-2.0-only -->
-# nvme-cli
-![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)
+# nvme-cli and libnvme
+
+NVM-Express user space tooling for Linux.
+
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)](https://scan.coverity.com/projects/linux-nvme-nvme-cli)
+[![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli)
 ![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)
+
+nvme-cli:
 ![GitHub](https://img.shields.io/github/license/linux-nvme/nvme-cli)
+[![Docs](https://img.shields.io/readthedocs/nvme-cli)](https://nvme-cli.readthedocs.io/en/latest/)
+
+libnvme:
 ![GitHub](https://img.shields.io/github/license/linux-nvme/libnvme)
+[![Docs](https://img.shields.io/readthedocs/libnvme)](https://libnvme.readthedocs.io/en/latest/)
 ![PyBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/libnvme-release-python.yml/badge.svg)
 [![PyPI](https://img.shields.io/pypi/v/libnvme)](https://pypi.org/project/libnvme/)
 [![PyPI - Wheel](https://img.shields.io/pypi/wheel/libnvme)](https://pypi.org/project/libnvme/)
-[![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli)
-[![Read the libnvme Docs](https://img.shields.io/readthedocs/libnvme)](https://libnvme.readthedocs.io/en/latest/)
-
-NVM-Express user space tooling for Linux.
 
 ## Build from source
 

@@ -28,6 +28,9 @@ jobs:
         run: |
           scripts/build.sh coverage
       - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        env:
+          CODECOV_WORKING_DIR: ${{ github.workspace }}
         with:
+          root_dir: ${{ github.workspace }}
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
