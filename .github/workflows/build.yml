@@ -129,7 +129,7 @@ jobs:
           name: windows-msys2-ucrt64-logs
           path: |
             .build-ci/meson-logs/*.txt
-            
+
   cross:
     runs-on: ubuntu-latest
     strategy:
