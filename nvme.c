@@ -6995,7 +6995,8 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	err = nvme_set_features(hdl, cfg.nsid, cfg.fid, cfg.sv, cfg.value, cfg.cdw12,
 			0, cfg.uidx, 0, buf, cfg.data_len, &result);
 	if (err) {
-		nvme_show_err("set-feature", err);
+		nvme_show_admin_cmd_err("set-feature", nvme_admin_set_features,
+					err);
 		return err;
 	}
 

@@ -8215,6 +8215,11 @@ struct nvme_mi_vpd_hdr {
  * @NVME_SC_NS_INSUFFICIENT_CAP:      Namespace Insufficient Capacity: Creating
  *				      the namespace requires more free space
  *				      than is currently available.
+ * @NVME_SC_FEAT_IOCS_COMBINATION_REJECTED: Set Features - I/O Command Set
+ *				      Combination Rejected: This error indicates
+ *				      that the controller did not accept the
+ *				      request to select the requested I/O
+ *				      Command Set Combination.
  * @NVME_SC_NS_ID_UNAVAILABLE:	      Namespace Identifier Unavailable: The
  *				      number of namespaces supported has been
  *				      exceeded.
@@ -8306,6 +8311,10 @@ struct nvme_mi_vpd_hdr {
  *				      suspended.
  * @NVME_SC_CONTROLLER_DATA_QUEUE_FULL: The controller detected that a
  *				      Controller Data Queue became full.
+ * @NVME_SC_INVALID_POWER_LIMIT:      Invalid Power Limit: The power limit
+ *				      specified for the Power Limit feature is
+ *				      invalid because that power limit prohibits
+ *				      all operational power states.
  * @NVME_SC_BAD_ATTRIBUTES:	      Conflicting Dataset Management Attributes
  * @NVME_SC_INVALID_PI:		      Invalid Protection Information
  * @NVME_SC_READ_ONLY:		      Attempted Write to Read Only Range
@@ -8535,6 +8544,7 @@ enum nvme_status_field {
 	NVME_SC_FW_ACTIVATE_PROHIBITED		= 0x13,
 	NVME_SC_OVERLAPPING_RANGE		= 0x14,
 	NVME_SC_NS_INSUFFICIENT_CAP		= 0x15,
+	NVME_SC_FEAT_IOCS_COMBINATION_REJECTED	= 0x15,
 	NVME_SC_NS_ID_UNAVAILABLE		= 0x16,
 	NVME_SC_NS_ALREADY_ATTACHED		= 0x18,
 	NVME_SC_NS_IS_PRIVATE			= 0x19,
@@ -8581,6 +8591,11 @@ enum nvme_status_field {
 	NVME_SC_CONTROLLER_SUSPENDED		= 0x39,
 	NVME_SC_CONTROLLER_NOT_SUSPENDED	= 0x3A,
 	NVME_SC_CONTROLLER_DATA_QUEUE_FULL	= 0x3B,
+
+	/*
+	 * Command Set Specific - Set Features
+	 */
+	NVME_SC_INVALID_POWER_LIMIT		= 0x3e,
 
 	/*
 	 * I/O Command Set Specific - NVM commands:

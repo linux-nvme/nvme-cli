@@ -104,6 +104,35 @@ nvme_sanitize_ns_status_to_string(__u16 sc)
 };
 
 /**
+ * nvme_set_features_status_to_string() - Returns set features status string.
+ * @sc: Return status code from an set features command
+ *
+ * Return: The set features status string if it is a specific status code.
+ */
+static inline const char *
+nvme_set_features_status_to_string(__u16 sc)
+{
+	switch (sc) {
+	case NVME_SC_FEATURE_NOT_SAVEABLE:
+	case NVME_SC_FEATURE_NOT_CHANGEABLE:
+	case NVME_SC_FEATURE_NOT_PER_NS:
+		break;
+	case NVME_SC_OVERLAPPING_RANGE:
+		return "Overlapping Range: LBA range type data structure";
+	case NVME_SC_FEAT_IOCS_COMBINATION_REJECTED:
+		return "I/O Command Set Combination Rejected";
+	case NVME_SC_INVALID_CONTROLER_DATA_QUEUE:
+		break;
+	case NVME_SC_INVALID_POWER_LIMIT:
+		return "Invalid Power Limit";
+	default:
+		break;
+	}
+
+	return NULL;
+};
+
+/**
  * nvme_opcode_status_to_string() - Returns nvme opcode status string.
  * @status: Return status from an nvme passthrough command
  * @admin:  Set to true if an admin command
@@ -120,8 +149,18 @@ nvme_opcode_status_to_string(int status, bool admin, __u8 opcode)
 	const char *s = NULL;
 
 	if (status >= 0 && sct == NVME_SCT_CMD_SPECIFIC) {
-		if (admin && opcode == nvme_admin_sanitize_ns)
-			s = nvme_sanitize_ns_status_to_string(sc);
+		if (admin) {
+			switch (opcode) {
+			case nvme_admin_sanitize_ns:
+				s = nvme_sanitize_ns_status_to_string(sc);
+				break;
+			case nvme_admin_set_features:
+				s = nvme_set_features_status_to_string(sc);
+				break;
+			default:
+				break;
+			}
+		}
 	}
 
 	if (s)
