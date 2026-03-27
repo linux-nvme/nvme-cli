@@ -19,6 +19,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <sys/select.h>
 #include <sys/stat.h>
 
 #include <ccan/endian/endian.h>

@@ -33,7 +33,7 @@ fs = import('fs')
 
 cc = meson.get_compiler('c')
 cxx_available = add_languages('cpp', required: false, native: false)
-is_windows = host_machine.system() == 'windows'
+host_system = host_machine.system()
 
 ################################################################################
 # Determine which features we need to build: The nvme executable, the libnvme
@@ -51,9 +51,14 @@ is_windows = host_machine.system() == 'windows'
 # dependencies are present. Also, -Dpython=enabled forces -Dlibnvme=enabled.
 want_nvme = get_option('nvme').disabled() == false
 want_libnvme = get_option('libnvme').disabled() == false
-want_fabrics = get_option('fabrics').disabled() == false and not is_windows
+want_fabrics = get_option('fabrics').disabled() == false and host_system != 'windows'
+want_json_c = get_option('json-c').disabled() == false and host_system != 'windows'
+want_tests = get_option('tests') and host_system != 'windows'
+want_examples = get_option('examples') and host_system != 'windows'
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
+
+is_static = get_option('default_library') == 'static' and host_system != 'windows'
 
 feature_python = get_option('python')
 if not want_fabrics or feature_python.disabled()
@@ -131,14 +136,14 @@ conf.set('RUNDIR', '"@0@"'.format(rundir))
 
 conf.set('CONFIG_FABRICS', want_fabrics, description: 'Is fabrics enabled')
 
-if is_windows
+if host_system == 'windows'
     ws2_32_dep = cc.find_library('ws2_32', required: true)
     kernel32_dep = cc.find_library('kernel32', required: true)
     bcrypt_dep = cc.find_library('bcrypt', required: true)  # For BCryptGenRandom in nvme_uuid_random
 endif
 
 # Check for libjson-c availability
-if get_option('json-c').disabled()
+if not want_json_c
     json_c_dep = dependency('', required: false)
 else
     json_c_dep = dependency(
@@ -162,7 +167,7 @@ conf.set('LIBNVME_VERSION', '"@0@"'.format(meson.project_version()))
 conf.set10('DEFAULT_PDC_ENABLED', get_option('pdc-enabled'))
 
 # Windows-specific compiler flags
-if is_windows
+if host_system == 'windows'
     add_project_arguments(
         [
             '-DHAVE_GLIBC_IOCTL=0',
@@ -379,9 +384,8 @@ conf.set10(
     description: 'Is linux/mctp.h include-able?'
 )
 
-is_static = get_option('default_library') == 'static'
 have_netdb = false
-if not is_static and not is_windows
+if not is_static
     have_netdb = cc.links(
         '''#include <sys/types.h>
         #include <sys/socket.h>
@@ -500,11 +504,7 @@ if want_nvme
         'nvme.c',
         'plugin.c',
     ]
-    if want_fabrics
-        sources += 'fabrics.c'
-    endif
-
-    if is_windows
+    if host_system == 'windows'
         sources += [
             'windows-stubs.c',
         ]
@@ -513,11 +513,17 @@ if want_nvme
             'nvme-rpmb.c',
         ]
     endif
+
     if json_c_dep.found()
         sources += [
             'nvme-print-json.c',
         ]
     endif
+
+    if want_fabrics
+        sources += 'fabrics.c'
+    endif
+
     sources += plugin_sources
     sources += util_sources
 
@@ -529,7 +535,7 @@ if want_nvme
         json_c_dep,
     ]
 
-    if is_windows
+    if host_system == 'windows'
         link_deps += [
             ws2_32_dep,
             kernel32_dep,
@@ -547,7 +553,9 @@ if want_nvme
         install_dir: sbindir,
     )
 
-    subdir('unit')
+    if host_system != 'windows'
+        subdir('unit')
+    endif
     if get_option('nvme-tests')
         subdir('tests')
     endif
@@ -681,7 +689,7 @@ dep_dict = {
     'python3':          py3_dep.found(),
     'liburing':         liburing_dep.found(),
 }
-if is_windows
+if host_system == 'windows'
     dep_dict += {
         'ws2_32':       ws2_32_dep.found(),
         'kernel32':     kernel32_dep.found(),

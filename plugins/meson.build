@@ -22,7 +22,7 @@ all_plugins = {
   'virtium': ['plugins/virtium/virtium-nvme.c'],
 }
 
-if not is_windows
+if host_system != 'windows'
     all_plugins += {
       'huawei': ['plugins/huawei/huawei-nvme.c'],
       'ibm': ['plugins/ibm/ibm-nvme.c'],
@@ -36,7 +36,11 @@ if not is_windows
 endif
 
 # Get the list of plugins to build
-selected_plugins = get_option('plugins')
+if host_system != 'windows'
+  selected_plugins = get_option('plugins')
+else
+  selected_plugins = []
+endif
 
 # Build the plugin_sources list from simple plugins
 plugin_sources = []
@@ -55,7 +59,7 @@ if 'feat' in selected_plugins
   subdir('feat')
 endif
 
-if 'lm' in selected_plugins and not is_windows
+if 'lm' in selected_plugins
   subdir('lm')
 endif
 

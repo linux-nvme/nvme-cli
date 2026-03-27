@@ -7,7 +7,7 @@
 #
 
 # Skip examples on Windows for now.
-if not is_windows
+if host_system != 'windows'
 
 executable(
     'telemetry-listen',
@@ -95,4 +95,4 @@ if libdbus_dep.found()
     )
 endif
 
-endif # not is_windows
+endif # host_system != 'windows'

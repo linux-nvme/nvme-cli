@@ -57,7 +57,7 @@ if cxx_available
 
 endif
 
-if not is_windows
+if host_system != 'windows'
     register = executable(
         'test-register',
         ['register.c'],
@@ -101,7 +101,7 @@ if not is_windows
     )
 
     test('libnvme - mi-mctp', mi_mctp)
-endif # not is_windows
+endif # host_system != 'windows'
 
 uuid = executable(
     'test-uuid',
@@ -115,7 +115,7 @@ uuid = executable(
 
 test('libnvme - uuid', uuid)
 
-if not is_windows
+if host_system != 'windows'
     if want_fabrics
         uriparser = executable(
             'test-uriparser',
@@ -196,7 +196,7 @@ if not is_windows
         )
     endif
 
-endif # not is_windows
+endif # host_system != 'windows'
 
 foreach hdr : [
     'cmds',

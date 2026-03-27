@@ -16,8 +16,7 @@ sources = [
     'nvme/tree.c',
     'nvme/util.c',
 ]
-
-if is_windows
+if host_system == 'windows'
     sources += [
         'nvme/ioctl-windows.c',  # Windows stubs for Linux-specific ioctl functions
         'nvme/lib-windows.c',  # Windows implementations of lib.h functions
@@ -32,7 +31,6 @@ else
         'nvme/sysfs.c',
     ]
 endif
-
 headers = [
     'nvme/accessors.h',
     'nvme/cmds.h',
@@ -62,10 +60,12 @@ if liburing_dep.found()
     sources += 'nvme/uring.c'
 endif
 
-if json_c_dep.found()
-    sources += 'nvme/json.c'
-else
-    sources += 'nvme/no-json.c'
+if host_system != 'windows'
+    if json_c_dep.found()
+        sources += 'nvme/json.c'
+    else
+        sources += 'nvme/no-json.c'
+    endif
 endif
 
 deps = [
@@ -75,7 +75,7 @@ deps = [
     keyutils_dep,
     openssl_dep,
 ]
-if is_windows
+if host_system == 'windows'
     deps += [
         ws2_32_dep,
         kernel32_dep,

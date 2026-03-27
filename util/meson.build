@@ -12,10 +12,10 @@ util_sources = [
     'util/table.c'
 ]
 
-if is_windows
-	util_sources += [
-		'util/mem-windows.c',
-	]
+if host_system == 'windows'
+    util_sources += [
+        'util/mem-windows.c',
+    ]
 endif
 
 if json_c_dep.found()
