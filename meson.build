@@ -59,7 +59,7 @@ want_examples = get_option('examples') and host_system != 'windows'
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
 
-is_static = get_option('default_library') == 'static' and host_system != 'windows'
+is_static = get_option('default_library') == 'static'
 
 feature_python = get_option('python')
 if not want_fabrics or feature_python.disabled()
