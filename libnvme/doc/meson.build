@@ -49,9 +49,11 @@ subdir('rst')
 top_source_dir = meson.current_source_dir() + '/../'
 
 kernel_doc = find_program(top_source_dir + 'scripts/kernel-doc')
-kernel_doc_check = find_program(top_source_dir +'scripts/kernel-doc-check')
+kernel_doc_check = files(top_source_dir + 'scripts/kernel-doc-check')
+# Find the path to bash and use it so we don't pick up the WSL bash in Windows.
+bash_prog = find_program('bash', required: true)
 
-test('libnvme - kdoc', kernel_doc_check, args: api_paths)
+test('libnvme - kdoc', bash_prog, args: [kernel_doc_check] + api_paths)
 
 if want_docs != 'false'
     if want_docs == 'all' or want_docs == 'man'
