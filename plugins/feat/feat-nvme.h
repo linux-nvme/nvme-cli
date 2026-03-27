@@ -20,6 +20,7 @@
 #define POWER_LIMIT_DESC "Get and set power limit feature"
 #define POWER_THRESH_DESC "Get and set power threshold feature"
 #define POWER_MEAS_DESC "Get and set power measurement feature"
+#define ERR_RECOVERY_DESC "Get and set error recovery feature"
 
 #define FEAT_ARGS(n, ...)                                              \
 	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
@@ -37,6 +38,7 @@ PLUGIN(NAME("feat", "NVMe feature extensions", FEAT_PLUGIN_VERSION),
 		ENTRY("power-limit", POWER_LIMIT_DESC, feat_power_limit)
 		ENTRY("power-thresh", POWER_THRESH_DESC, feat_power_thresh)
 		ENTRY("power-meas", POWER_MEAS_DESC, feat_power_meas)
+		ENTRY("err-recovery", ERR_RECOVERY_DESC, feat_err_recovery)
 	)
 );
 #endif /* !FEAT_NVME || CMD_HEADER_MULTI_READ */

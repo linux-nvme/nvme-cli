@@ -187,6 +187,7 @@ static struct program nvme = {
 };
 
 const char *uuid_index = "UUID index";
+const char *namespace_id_desired = "identifier of desired namespace";
 
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
@@ -214,7 +215,6 @@ static const char *lsp = "log specific field";
 static const char *mos = "management operation specific";
 static const char *mo = "management operation";
 static const char *namespace_desired = "desired namespace";
-static const char *namespace_id_desired = "identifier of desired namespace";
 static const char *namespace_id_optional = "optional namespace attached to controller";
 static const char *nssf = "NVMe Security Specific Field";
 static const char *only_char_dev = "Only character device is allowed";
