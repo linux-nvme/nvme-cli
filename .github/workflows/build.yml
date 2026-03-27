@@ -94,6 +94,42 @@ jobs:
           path: |
             .build-ci/meson-logs/*.txt
 
+  windows-msys2-ucrt64:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: msys2/setup-msys2@cafece8e6baf9247cf9b1bf95097b0b983cc558d # v2.31.0
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-meson
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-ccache
+            mingw-w64-ucrt-x86_64-json-c
+
+      - name: Build nvme-cli
+        shell: msys2 {0}
+        run: |
+          set -euxo pipefail
+          which bash
+          bash --version
+          which git
+          git --version
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          scripts/build.sh -b release -c gcc
+
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        if: failure()
+        with:
+          name: windows-msys2-ucrt64-logs
+          path: |
+            .build-ci/meson-logs/*.txt
+            
   cross:
     runs-on: ubuntu-latest
     strategy:
