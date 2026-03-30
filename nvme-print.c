@@ -530,7 +530,7 @@ static void nvme_show_cmd_err(const char *msg, bool admin,
 	else if (err < 0)
 		nvme_show_error("%s: %s", msg, nvme_strerror(-err));
 	else if (cmd)
-		nvme_show_opcode_status(err, false, cmd->opcode);
+		nvme_show_opcode_status(err, admin, cmd->opcode);
 	else
 		nvme_show_status(err);
 }
