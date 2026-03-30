@@ -175,6 +175,7 @@ static int setup_common_context(struct nvmf_context *fctx,
 struct cb_fabrics_data {
 	struct nvme_fabrics_config *cfg;
 	nvme_print_flags_t flags;
+	bool quiet;
 	char *raw;
 	char **argv;
 	FILE *f;
@@ -195,6 +196,9 @@ static void cb_connected(struct nvmf_context *fctx,
 		struct nvme_ctrl *c, void *user_data)
 {
 	struct cb_fabrics_data *cfd = user_data;
+
+	if (cfd->quiet)
+		return;
 
 	if (cfd->flags == NORMAL) {
 		printf("device: %s\n", nvme_ctrl_get_name(c));
@@ -659,12 +663,13 @@ do_connect:
 		return ret;
 	}
 
-	struct cb_fabrics_data dld = {
+	struct cb_fabrics_data cfd = {
 		.flags = flags,
+		.quiet = dump_config,
 		.raw = raw,
 	};
 	ret = create_common_context(ctx, persistent, &fa,
-		&cfg, &dld, &fctx);
+		&cfg, &cfd, &fctx);
 	if (ret)
 		return ret;
 
