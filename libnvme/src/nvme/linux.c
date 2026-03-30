@@ -959,7 +959,9 @@ __public int nvme_lookup_key(struct nvme_global_ctx *ctx, const char *type,
 	key = keyctl_search(KEY_SPEC_SESSION_KEYRING, type, identity, 0);
 	if (key < 0)
 		return -errno;
-	return key;
+
+	*keyp = key;
+	return 0;
 }
 
 __public int nvme_set_keyring(struct nvme_global_ctx *ctx, long key_id)
