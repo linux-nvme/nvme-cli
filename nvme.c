@@ -5751,7 +5751,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
-		nvme_show_admin_cmd_err("sanitize ns", &cmd, err);
+		nvme_show_admin_cmd_err("sanitize ns", cmd.opcode, err);
 		return err;
 	}
 

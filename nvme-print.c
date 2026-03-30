@@ -522,34 +522,31 @@ void nvme_show_status(int status)
 		ops->show_status(status);
 }
 
-static void nvme_show_cmd_err(const char *msg, bool admin,
-			      struct nvme_passthru_cmd *cmd, int err)
+static void nvme_show_cmd_err(const char *msg, bool admin, __u8 opcode, int err)
 {
 	if (!err)
 		return;
 	else if (err < 0)
 		nvme_show_error("%s: %s", msg, nvme_strerror(-err));
-	else if (cmd)
-		nvme_show_opcode_status(err, admin, cmd->opcode);
+	else if (opcode)
+		nvme_show_opcode_status(err, admin, opcode);
 	else
 		nvme_show_status(err);
 }
 
 void nvme_show_err(const char *msg, int err)
 {
-	nvme_show_cmd_err(msg, false, NULL, err);
+	nvme_show_cmd_err(msg, false, 0, err);
 }
 
-void nvme_show_io_cmd_err(const char *msg, struct nvme_passthru_cmd *cmd,
-			  int err)
+void nvme_show_io_cmd_err(const char *msg, __u8 opcode, int err)
 {
-	nvme_show_cmd_err(msg, false, cmd, err);
+	nvme_show_cmd_err(msg, false, opcode, err);
 }
 
-void nvme_show_admin_cmd_err(const char *msg, struct nvme_passthru_cmd *cmd,
-			     int err)
+void nvme_show_admin_cmd_err(const char *msg, __u8 opcode, int err)
 {
-	nvme_show_cmd_err(msg, true, cmd, err);
+	nvme_show_cmd_err(msg, true, opcode, err);
 }
 
 void nvme_show_opcode_status(int status, bool admin, __u8 opcode)
