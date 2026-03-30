@@ -679,7 +679,7 @@ do_connect:
 	}
 
 	if (dump_config)
-		nvme_dump_config(ctx, STDERR_FILENO);
+		nvme_dump_config(ctx, STDOUT_FILENO);
 
 	return 0;
 }
