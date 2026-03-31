@@ -10,6 +10,7 @@ SYNOPSIS
 built-in plugin:
 [verse]
 'nvme' <command> <device> [<args>]
+			[--output-format-version=<version>]
 
 extension plugins:
 [verse]
@@ -44,6 +45,13 @@ Plugins/Vendor extension commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 include::cmd-plugins.txt[]
+
+OPTIONS
+-------
+--output-format-version=<version>::
+	Set the field labels in the reporting format to either '1'
+	(the original) or '2'. The default is 2 to generate field names
+	for the outputs that are easier to process via scripts.
 
 RETURNS
 -------
