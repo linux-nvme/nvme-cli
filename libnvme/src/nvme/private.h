@@ -239,7 +239,6 @@ struct nvme_host { /*!generate-accessors*/
 	struct nvme_global_ctx *ctx;
 
 	char *hostnqn; /*!accessors:readonly*/
-	char *hostid; /*!accessors:readonly*/
 	char *dhchap_host_key;
 	char *hostsymname;
 	bool pdc_enabled; //!accessors:none
@@ -261,8 +260,8 @@ struct nvme_fabric_options { /*!generate-accessors*/
 	bool hdr_digest;
 	bool host_iface;
 	bool host_traddr;
-	bool hostid;
 	bool hostnqn;
+	bool hostid; /*!accessors:none*/
 	bool instance;
 	bool keep_alive_tmo;
 	bool keyring;
@@ -350,7 +349,6 @@ struct nvmf_context {
 
 	/* host configuration */
 	const char *hostnqn;
-	const char *hostid;
 
 	/* authentication and transport encryption configuration */
 	const char *hostkey;
@@ -392,8 +390,10 @@ void *__nvme_alloc(size_t len);
 
 void *__nvme_realloc(void *p, size_t len);
 
-nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn,
-			     const char *hostid);
+char *nvme_hostnqn_from_hostid(const char *hostid);
+char *nvme_hostid_from_hostnqn(const char *hostnqn);
+
+nvme_host_t nvme_lookup_host(struct nvme_global_ctx *ctx, const char *hostnqn);
 nvme_subsystem_t nvme_lookup_subsystem(struct nvme_host *h,
 				       const char *name,
 				       const char *subsysnqn);

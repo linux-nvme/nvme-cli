@@ -16,7 +16,7 @@ static bool command_line(void)
 	struct nvme_global_ctx *ctx;
 	bool pass = false;
 	int err;
-	char *hostnqn, *hostid, *hnqn, *hid;
+	char *hostnqn, *hnqn;
 
 	ctx = nvme_create_global_ctx(stderr, LOG_ERR);
 	if (!ctx)
@@ -27,9 +27,8 @@ static bool command_line(void)
 		goto out;
 
 	hostnqn = "nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6";
-	hostid = "ce4fee3e-c02c-11ee-8442-830d068a36c6";
 
-	err = nvme_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
+	err = nvme_host_resolve_hostnqn(ctx, hostnqn, &hnqn);
 	if (err)
 		goto out;
 
@@ -37,13 +36,8 @@ static bool command_line(void)
 		printf("json config hostnqn '%s' does not match '%s'\n", hostnqn, hnqn);
 		goto out;
 	}
-	if (strcmp(hostid, hid)) {
-		printf("json config hostid '%s' does not match '%s'\n", hostid, hid);
-		goto out;
-	}
 
 	free(hnqn);
-	free(hid);
 
 	pass = true;
 
@@ -57,10 +51,9 @@ static bool json_config(char *file)
 	struct nvme_global_ctx *ctx;
 	bool pass = false;
 	int err;
-	char *hostnqn, *hostid, *hnqn, *hid;
+	char *hostnqn, *hnqn;
 
 	setenv("LIBNVME_HOSTNQN", "", 1);
-	setenv("LIBNVME_HOSTID", "", 1);
 
 	ctx = nvme_create_global_ctx(stderr, LOG_ERR);
 	if (!ctx)
@@ -76,9 +69,8 @@ static bool json_config(char *file)
 		goto out;
 
 	hostnqn = "nqn.2014-08.org.nvmexpress:uuid:2cd2c43b-a90a-45c1-a8cd-86b33ab273b5";
-	hostid = "2cd2c43b-a90a-45c1-a8cd-86b33ab273b5";
 
-	err = nvme_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
+	err = nvme_host_resolve_hostnqn(ctx, NULL, &hnqn);
 	if (err)
 		goto out;
 
@@ -86,13 +78,8 @@ static bool json_config(char *file)
 		printf("json config hostnqn '%s' does not match '%s'\n", hostnqn, hnqn);
 		goto out;
 	}
-	if (strcmp(hostid, hid)) {
-		printf("json config hostid '%s' does not match '%s'\n", hostid, hid);
-		goto out;
-	}
 
 	free(hnqn);
-	free(hid);
 
 	pass = true;
 
@@ -106,13 +93,11 @@ static bool from_file(void)
 	struct nvme_global_ctx *ctx;
 	bool pass = false;
 	int err;
-	char *hostnqn, *hostid, *hnqn, *hid;
+	char *hostnqn, *hnqn;
 
 	hostnqn = "nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6";
-	hostid = "ce4fee3e-c02c-11ee-8442-830d068a36c6";
 
 	setenv("LIBNVME_HOSTNQN", hostnqn, 1);
-	setenv("LIBNVME_HOSTID", hostid, 1);
 
 	ctx = nvme_create_global_ctx(stderr, LOG_ERR);
 	if (!ctx)
@@ -122,7 +107,7 @@ static bool from_file(void)
 	if (err && err != ENOENT)
 		goto out;
 
-	err = nvme_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
+	err = nvme_host_resolve_hostnqn(ctx, NULL, &hnqn);
 	if (err)
 		goto out;
 
@@ -130,13 +115,8 @@ static bool from_file(void)
 		printf("json config hostnqn '%s' does not match '%s'\n", hostnqn, hnqn);
 		goto out;
 	}
-	if (strcmp(hostid, hid)) {
-		printf("json config hostid '%s' does not match '%s'\n", hostid, hid);
-		goto out;
-	}
 
 	free(hnqn);
-	free(hid);
 
 	pass = true;
 

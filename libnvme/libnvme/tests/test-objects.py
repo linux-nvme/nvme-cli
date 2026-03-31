@@ -69,13 +69,6 @@ class TestHost(unittest.TestCase):
         self.assertIsNotNone(host)
         self.assertEqual(host.hostnqn, hostnqn)
 
-    def test_creation_with_hostnqn_and_hostid(self):
-        hostnqn = 'nqn.2014-08.com.example:test-host-props'
-        hostid = '11111111-2222-3333-4444-555555555555'
-        host = nvme.host(self.ctx, hostnqn=hostnqn, hostid=hostid)
-        self.assertEqual(host.hostnqn, hostnqn)
-        self.assertEqual(host.hostid, hostid)
-
     def test_creation_with_hostsymname(self):
         hostnqn = 'nqn.2014-08.com.example:test-host-symname'
         symname = 'my-storage-host'
@@ -247,10 +240,6 @@ class TestHelperFunctions(unittest.TestCase):
     def test_read_hostnqn_returns_string_or_none(self):
         hostnqn = nvme.read_hostnqn()
         self.assertIsInstance(hostnqn, (str, type(None)))
-
-    def test_read_hostid_returns_string_or_none(self):
-        hostid = nvme.read_hostid()
-        self.assertIsInstance(hostid, (str, type(None)))
 
 
 if __name__ == '__main__':

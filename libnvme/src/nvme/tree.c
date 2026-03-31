@@ -108,100 +108,50 @@ static void cleanup_dirents(struct dirents *ents)
 
 #define _cleanup_dirents_ __cleanup__(cleanup_dirents)
 
-static char *nvme_hostid_from_hostnqn(const char *hostnqn)
+__public int nvme_host_resolve_hostnqn(struct nvme_global_ctx *ctx,
+		const char *hostnqn_arg, char **hostnqn)
 {
-	const char *uuid;
-
-	uuid = strstr(hostnqn, "uuid:");
-	if (!uuid)
-		return NULL;
-
-	return strdup(uuid + strlen("uuid:"));
-}
-
-__public int nvme_host_get_ids(struct nvme_global_ctx *ctx,
-		      const char *hostnqn_arg, const char *hostid_arg,
-		      char **hostnqn, char **hostid)
-{
-	_cleanup_free_ char *nqn = NULL;
-	_cleanup_free_ char *hid = NULL;
 	_cleanup_free_ char *hnqn = NULL;
 	nvme_host_t h;
 
 	/* command line argumments */
-	if (hostid_arg)
-		hid = strdup(hostid_arg);
 	if (hostnqn_arg)
 		hnqn = strdup(hostnqn_arg);
 
 	/* JSON config: assume the first entry is the default host */
 	h = nvme_first_host(ctx);
-	if (h) {
-		if (!hid)
-			hid = xstrdup(nvme_host_get_hostid(h));
-		if (!hnqn)
-			hnqn = xstrdup(nvme_host_get_hostnqn(h));
-	}
+	if (h && !hnqn)
+		hnqn = xstrdup(nvme_host_get_hostnqn(h));
 
-	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */
-	if (!hid)
-		hid = nvme_read_hostid();
+	/* /etc/nvme/hostnqn */
 	if (!hnqn)
 		hnqn = nvme_read_hostnqn();
 
-	/* incomplete configuration, thus derive hostid from hostnqn */
-	if (!hid && hnqn)
-		hid = nvme_hostid_from_hostnqn(hnqn);
-
-	/*
-	 * fallback to use either DMI information or device-tree. If all
-	 * fails generate one
-	 */
-	if (!hid) {
-		hid = nvme_generate_hostid();
-		if (!hid)
-			return -ENOMEM;
-
-		nvme_msg(ctx, LOG_DEBUG,
-			 "warning: using auto generated hostid and hostnqn\n");
-	}
-
-	/* incomplete configuration, thus derive hostnqn from hostid */
+	/* no source has the hostnqn, generate one */
 	if (!hnqn) {
-		hnqn = nvme_generate_hostnqn_from_hostid(hid);
+		hnqn = nvme_generate_hostnqn();
 		if (!hnqn)
 			return -ENOMEM;
 	}
 
-	/* sanity checks */
-	nqn = nvme_hostid_from_hostnqn(hnqn);
-	if (nqn && strcmp(nqn, hid)) {
-		nvme_msg(ctx, LOG_DEBUG,
-			 "warning: use hostid '%s' which does not match uuid in hostnqn '%s'\n",
-			 hid, hnqn);
-	}
-
-	*hostid = hid;
 	*hostnqn = hnqn;
-	hid = NULL;
 	hnqn = NULL;
 
 	return 0;
 }
 
 __public int nvme_get_host(struct nvme_global_ctx *ctx, const char *hostnqn,
-		const char *hostid, nvme_host_t *host)
+		nvme_host_t *host)
 {
 	_cleanup_free_ char *hnqn = NULL;
-	_cleanup_free_ char *hid = NULL;
 	struct nvme_host *h;
 	int err;
 
-	err = nvme_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
+	err = nvme_host_resolve_hostnqn(ctx, hostnqn, &hnqn);
 	if (err)
 		return err;
 
-	h = nvme_lookup_host(ctx, hnqn, hid);
+	h = nvme_lookup_host(ctx, hnqn);
 	if (!h)
 		return -ENOMEM;
 
@@ -601,7 +551,6 @@ void __nvme_free_host(struct nvme_host *h)
 	nvme_for_each_subsystem_safe(h, s, _s)
 		__nvme_free_subsystem(s);
 	free(h->hostnqn);
-	free(h->hostid);
 	free(h->dhchap_host_key);
 	nvme_host_set_hostsymname(h, NULL);
 	free(h);
@@ -622,7 +571,7 @@ __public void nvme_free_host(struct nvme_host *h)
 }
 
 static int nvme_create_host(struct nvme_global_ctx *ctx, const char *hostnqn,
-		const char *hostid, struct nvme_host **host)
+		struct nvme_host **host)
 {
 	struct nvme_host *h;
 
@@ -631,8 +580,6 @@ static int nvme_create_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 		return -ENOMEM;
 
 	h->hostnqn = strdup(hostnqn);
-	if (hostid)
-		h->hostid = strdup(hostid);
 	list_head_init(&h->subsystems);
 	list_node_init(&h->entry);
 	h->ctx = ctx;
@@ -645,7 +592,7 @@ static int nvme_create_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 }
 
 struct nvme_host *nvme_lookup_host(struct nvme_global_ctx *ctx,
-		const char *hostnqn, const char *hostid)
+		const char *hostnqn)
 {
 	struct nvme_host *h;
 
@@ -655,13 +602,10 @@ struct nvme_host *nvme_lookup_host(struct nvme_global_ctx *ctx,
 	nvme_for_each_host(ctx, h) {
 		if (strcmp(h->hostnqn, hostnqn))
 			continue;
-		if (hostid && (!h->hostid ||
-		    strcmp(h->hostid, hostid)))
-			continue;
 		return h;
 	}
 
-	if (nvme_create_host(ctx, hostnqn, hostid, &h))
+	if (nvme_create_host(ctx, hostnqn, &h))
 		return NULL;
 
 	return h;
@@ -765,7 +709,7 @@ static int nvme_scan_subsystem(struct nvme_global_ctx *ctx, const char *name)
 		 */
 		nvme_msg(ctx, LOG_DEBUG, "creating detached subsystem '%s'\n",
 			 name);
-		ret = nvme_get_host(ctx, NULL, NULL, &h);
+		ret = nvme_get_host(ctx, NULL, &h);
 		if (ret)
 			return ret;
 		s = nvme_alloc_subsystem(h, name, subsysnqn);
@@ -1933,7 +1877,7 @@ __public int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name,
 		   nvme_ctrl_t *cp)
 {
 	_cleanup_free_ char *subsysnqn = NULL, *subsysname = NULL;
-	_cleanup_free_ char *hostnqn = NULL, *hostid = NULL;
+	_cleanup_free_ char *hostnqn = NULL;
 	_cleanup_free_ char *path = NULL;
 	char *host_key;
 	nvme_host_t h;
@@ -1947,8 +1891,7 @@ __public int nvme_scan_ctrl(struct nvme_global_ctx *ctx, const char *name,
 		return -ENOMEM;
 
 	hostnqn = nvme_get_attr(path, "hostnqn");
-	hostid = nvme_get_attr(path, "hostid");
-	ret = nvme_get_host(ctx, hostnqn, hostid, &h);
+	ret = nvme_get_host(ctx, hostnqn, &h);
 	if (ret)
 		return ret;
 

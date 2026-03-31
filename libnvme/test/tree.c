@@ -26,7 +26,6 @@ struct test_data {
 	int ctrl_id;
 };
 
-#define DEFAULT_HOSTID "9ba1651a-ed36-11f0-9858-6c1ff71ba506"
 #define DEFAULT_HOSTNQN "nqn.2014-08.org.nvmexpress:uuid:9ba1651a-ed36-11f0-9858-6c1ff71ba506"
 #define DEFAULT_SUBSYSNAME "subsysname"
 #define DEFAULT_SUBSYSNQN "subsysnqn"
@@ -130,7 +129,7 @@ static struct nvme_global_ctx *create_tree()
 
 	ctx = nvme_create_global_ctx(stdout, LOG_DEBUG);
 	assert(ctx);
-	nvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	nvme_get_host(ctx, DEFAULT_HOSTNQN, &h);
 	assert(h);
 
 	printf("  ctrls created:\n");
@@ -299,7 +298,7 @@ static bool test_src_addr()
 	ctx = nvme_create_global_ctx(stdout, LOG_DEBUG);
 	assert(ctx);
 
-	nvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	nvme_get_host(ctx, DEFAULT_HOSTNQN, &h);
 	assert(h);
 
 	nvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME, DEFAULT_SUBSYSNQN, &s);
@@ -470,7 +469,7 @@ static bool ctrl_match(const char *tag,
 	ctx = nvme_create_global_ctx(stdout, LOG_INFO);
 	assert(ctx);
 
-	nvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	nvme_get_host(ctx, DEFAULT_HOSTNQN, &h);
 	assert(h);
 
 	assert(!nvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
@@ -1092,7 +1091,7 @@ static bool ctrl_config_match(const char *tag,
 	ctx = nvme_create_global_ctx(stdout, LOG_INFO);
 	assert(ctx);
 
-	nvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	nvme_get_host(ctx, DEFAULT_HOSTNQN, &h);
 	assert(h);
 
 	assert(!nvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,

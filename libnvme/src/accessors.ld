@@ -84,7 +84,6 @@ LIBNVME_ACCESSORS_3 {
 		nvme_subsystem_get_iopolicy;
 		nvme_subsystem_set_iopolicy;
 		nvme_host_get_hostnqn;
-		nvme_host_get_hostid;
 		nvme_host_get_dhchap_host_key;
 		nvme_host_set_dhchap_host_key;
 		nvme_host_get_hostsymname;
@@ -117,8 +116,6 @@ LIBNVME_ACCESSORS_3 {
 		nvme_fabric_options_set_host_iface;
 		nvme_fabric_options_get_host_traddr;
 		nvme_fabric_options_set_host_traddr;
-		nvme_fabric_options_get_hostid;
-		nvme_fabric_options_set_hostid;
 		nvme_fabric_options_get_hostnqn;
 		nvme_fabric_options_set_hostnqn;
 		nvme_fabric_options_get_instance;

@@ -21,10 +21,6 @@
 		    "type": "string",
 		    "maxLength": 223
 		},
-		"hostid": {
-		    "description": "NVMe host ID",
-		    "type": "string"
-		},
 		"dhchap_key": {
 		    "description": "Host DH-HMAC-CHAP key",
 		    "type": "string"

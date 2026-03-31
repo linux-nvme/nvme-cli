@@ -452,11 +452,6 @@ __public const char *nvme_host_get_hostnqn(const struct nvme_host *p)
 	return p->hostnqn;
 }
 
-__public const char *nvme_host_get_hostid(const struct nvme_host *p)
-{
-	return p->hostid;
-}
-
 __public void nvme_host_set_dhchap_host_key(
 		struct nvme_host *p,
 		const char *dhchap_host_key)
@@ -666,19 +661,6 @@ __public bool nvme_fabric_options_get_host_traddr(
 		const struct nvme_fabric_options *p)
 {
 	return p->host_traddr;
-}
-
-__public void nvme_fabric_options_set_hostid(
-		struct nvme_fabric_options *p,
-		bool hostid)
-{
-	p->hostid = hostid;
-}
-
-__public bool nvme_fabric_options_get_hostid(
-		const struct nvme_fabric_options *p)
-{
-	return p->hostid;
 }
 
 __public void nvme_fabric_options_set_hostnqn(

@@ -460,17 +460,16 @@ int nvmf_context_set_connection(struct nvmf_context *fctx,
 		const char *host_traddr, const char *host_iface);
 
 /**
- * nvmf_context_set_hostnqn() - Set host NQN and host ID for context
+ * nvmf_context_set_hostnqn() - Set host NQN for context
  * @fctx: Fabrics context
  * @hostnqn: Host NQN
- * @hostid: Host identifier
  *
- * Sets the host NQN and host ID for the context.
+ * Sets the host NQN for the context.
  *
  * Return: 0 on success, or a negative error code on failure.
  */
 int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
-		const char *hostnqn, const char *hostid);
+		const char *hostnqn);
 
 /**
  * nvmf_context_set_crypto() - Set cryptographic parameters for context

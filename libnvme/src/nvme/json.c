@@ -160,17 +160,14 @@ static void json_parse_host(struct nvme_global_ctx *ctx, struct json_object *hos
 {
 	struct json_object *attr_obj, *subsys_array, *subsys_obj;
 	nvme_host_t h;
-	const char *hostnqn, *hostid = NULL;
+	const char *hostnqn;
 	int s;
 
 	attr_obj = json_object_object_get(host_obj, "hostnqn");
 	if (!attr_obj)
 		return;
 	hostnqn = json_object_get_string(attr_obj);
-	attr_obj = json_object_object_get(host_obj, "hostid");
-	if (attr_obj)
-		hostid = json_object_get_string(attr_obj);
-	h = nvme_lookup_host(ctx, hostnqn, hostid);
+	h = nvme_lookup_host(ctx, hostnqn);
 	attr_obj = json_object_object_get(host_obj, "dhchap_key");
 	if (attr_obj)
 		nvme_host_set_dhchap_host_key(h, json_object_get_string(attr_obj));
@@ -391,7 +388,7 @@ int json_update_config(struct nvme_global_ctx *ctx, int fd)
 	json_root = json_object_new_array();
 	nvme_for_each_host(ctx, h) {
 		nvme_subsystem_t s;
-		const char *hostnqn, *hostid, *dhchap_key, *hostsymname;
+		const char *hostnqn, *dhchap_key, *hostsymname;
 
 		host_obj = json_object_new_object();
 		if (!host_obj)
@@ -399,10 +396,6 @@ int json_update_config(struct nvme_global_ctx *ctx, int fd)
 		hostnqn = nvme_host_get_hostnqn(h);
 		json_object_object_add(host_obj, "hostnqn",
 				       json_object_new_string(hostnqn));
-		hostid = nvme_host_get_hostid(h);
-		if (hostid)
-			json_object_object_add(host_obj, "hostid",
-					       json_object_new_string(hostid));
 		dhchap_key = nvme_host_get_dhchap_host_key(h);
 		if (dhchap_key)
 			json_object_object_add(host_obj, "dhchap_key",
@@ -624,15 +617,11 @@ int json_dump_tree(struct nvme_global_ctx *ctx)
 	host_array = json_object_new_array();
 	nvme_for_each_host(ctx, h) {
 		nvme_subsystem_t s;
-		const char *hostid, *dhchap_key;
+		const char *dhchap_key;
 
 		host_obj = json_object_new_object();
 		json_object_object_add(host_obj, "hostnqn",
 				       json_object_new_string(nvme_host_get_hostnqn(h)));
-		hostid = nvme_host_get_hostid(h);
-		if (hostid)
-			json_object_object_add(host_obj, "hostid",
-					       json_object_new_string(hostid));
 		dhchap_key = nvme_host_get_dhchap_host_key(h);
 		if (dhchap_key)
 			json_object_object_add(host_obj, "dhchap_key",

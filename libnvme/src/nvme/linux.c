@@ -1860,11 +1860,27 @@ static int uuid_from_dmi(char *system_uuid)
 	return ret;
 }
 
-__public char *nvme_generate_hostid(void)
+
+char *nvme_hostid_from_hostnqn(const char *hostnqn)
 {
-	int ret;
+	const char *uuid;
+
+	uuid = strstr(hostnqn, "uuid:");
+	if (!uuid)
+		return NULL;
+
+	return strdup(uuid + strlen("uuid:"));
+}
+
+char *nvme_hostnqn_from_hostid(const char *hostid)
+{
 	char uuid_str[NVME_UUID_LEN_STRING];
 	unsigned char uuid[NVME_UUID_LEN];
+	char *hostnqn;
+	int ret;
+
+	if (hostid)
+		goto create_hostnqn;
 
 	ret = uuid_from_dmi(uuid_str);
 	if (ret < 0)
@@ -1874,28 +1890,19 @@ __public char *nvme_generate_hostid(void)
 			memset(uuid, 0, NVME_UUID_LEN);
 		nvme_uuid_to_string(uuid, uuid_str);
 	}
+	hostid = uuid_str;
 
-	return strdup(uuid_str);
-}
-
-__public char *nvme_generate_hostnqn_from_hostid(char *hostid)
-{
-	char *hid = NULL;
-	char *hostnqn;
-	int ret;
-
-	if (!hostid)
-		hostid = hid = nvme_generate_hostid();
-
+create_hostnqn:
 	ret = asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s", hostid);
-	free(hid);
+	if (ret < 0)
+		return NULL;
 
-	return (ret < 0) ? NULL : hostnqn;
+	return hostnqn;
 }
 
 __public char *nvme_generate_hostnqn(void)
 {
-	return nvme_generate_hostnqn_from_hostid(NULL);
+	return nvme_hostnqn_from_hostid(NULL);
 }
 
 static char *nvmf_read_file(const char *f, int len)
@@ -1927,17 +1934,4 @@ __public char *nvme_read_hostnqn(void)
 	}
 
 	return nvmf_read_file(NVMF_HOSTNQN_FILE, NVMF_NQN_SIZE);
-}
-
-__public char *nvme_read_hostid(void)
-{
-	char *hostid = getenv("LIBNVME_HOSTID");
-
-	if (hostid) {
-		if (!strcmp(hostid, ""))
-			return NULL;
-		return strdup(hostid);
-	}
-
-	return nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
 }

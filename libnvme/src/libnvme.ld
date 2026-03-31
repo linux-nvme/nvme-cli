@@ -42,9 +42,7 @@ LIBNVME_3 {
 		nvme_free_ns;
 		nvme_free_subsystem;
 		nvme_gen_dhchap_key;
-		nvme_generate_hostid;
 		nvme_generate_hostnqn;
-		nvme_generate_hostnqn_from_hostid;
 		nvme_generate_tls_key_identity;
 		nvme_generate_tls_key_identity_compat;
 		nvme_get_ana_log_atomic;
@@ -72,9 +70,9 @@ LIBNVME_3 {
 		nvme_get_uuid_list;
 		nvme_get_version;
 		nvme_host_get_global_ctx;
-		nvme_host_get_ids;
 		nvme_host_is_pdc_enabled;
 		nvme_host_release_fds;
+		nvme_host_resolve_hostnqn;
 		nvme_host_set_pdc_enabled;
 		nvme_import_tls_key;
 		nvme_import_tls_key_versioned;
@@ -144,7 +142,6 @@ LIBNVME_3 {
 		nvme_path_get_queue_depth;
 		nvme_random_uuid;
 		nvme_read_config;
-		nvme_read_hostid;
 		nvme_read_hostnqn;
 		nvme_read_key;
 		nvme_read_nbft;

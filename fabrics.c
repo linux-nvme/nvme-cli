@@ -70,7 +70,7 @@ static const char *nvmf_trsvcid		= "transport service id (e.g. IP port)";
 static const char *nvmf_htraddr		= "host traddr (e.g. FC WWN's)";
 static const char *nvmf_hiface		= "host interface (for tcp transport)";
 static const char *nvmf_hostnqn		= "user-defined hostnqn";
-static const char *nvmf_hostid		= "user-defined hostid (if default not used)";
+static const char *nvmf_hostid		= "(deprecated and ignored)";
 static const char *nvmf_hostkey		= "user-defined dhchap key (if default not used)";
 static const char *nvmf_ctrlkey		= "user-defined dhchap controller key (for bi-directional authentication)";
 static const char *nvmf_nr_io_queues	= "number of io queues to use (default is core count)";
@@ -334,7 +334,7 @@ static int setup_common_context(struct nvmf_context *fctx,
 		return err;
 
 	err = nvmf_context_set_hostnqn(fctx,
-		fa->hostnqn, fa->hostid);
+		fa->hostnqn);
 	if (err)
 		return err;
 
@@ -367,7 +367,7 @@ static int create_common_context(struct nvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
-	err = nvmf_context_set_hostnqn(fctx, fa->hostnqn, fa->hostid);
+	err = nvmf_context_set_hostnqn(fctx, fa->hostnqn);
 	if (err)
 		goto err;
 

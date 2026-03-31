@@ -44,15 +44,8 @@
 		free(val);
 		return obj;
 	}
-	PyObject *read_hostid() {
-		char * val = nvme_read_hostid();
-		PyObject * obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
-		free(val);
-		return obj;
-	}
 %}
 PyObject *read_hostnqn();
-PyObject *read_hostid();
 
 %exception nvme_ctrl::connect {
 	connect_err = 0;
@@ -363,10 +356,8 @@ struct nvme_global_ctx {
 
 struct nvme_host {
 	%immutable hostnqn;
-	%immutable hostid;
 	%immutable hostsymname;
 	char *hostnqn;
-	char *hostid;
 	char *hostsymname;
 	%extend {
 		char *dhchap_host_key;
@@ -546,18 +537,16 @@ struct nvme_ns {
 
 %pythonappend nvme_host::nvme_host(struct nvme_global_ctx *ctx,
 				   const char *hostnqn,
-				   const char *hostid,
 				   const char *hostkey,
 				   const char *hostsymname) {
 	self.__parent = ctx  # Keep a reference to parent to ensure garbage collection happens in the right order}
 %extend nvme_host {
 	nvme_host(struct nvme_global_ctx *ctx,
 		  const char *hostnqn = NULL,
-		  const char *hostid = NULL,
 		  const char *hostkey = NULL,
 		  const char *hostsymname = NULL) {
 		nvme_host_t h;
-		if (nvme_get_host(ctx, hostnqn, hostid, &h))
+		if (nvme_get_host(ctx, hostnqn, &h))
 			return NULL;
 		if (hostsymname)
 			nvme_host_set_hostsymname(h, hostsymname);
@@ -580,7 +569,7 @@ struct nvme_ns {
 	}
 
 	PyObject* __str__() {
-		return PyUnicode_FromFormat("nvme.host(%s,%s)", STR_OR_NONE($self->hostnqn), STR_OR_NONE($self->hostid));
+		return PyUnicode_FromFormat("nvme.host(%s)", STR_OR_NONE($self->hostnqn));
 	}
 	%pythoncode %{
 	def subsystems(self):

@@ -635,14 +635,6 @@ const char *nvme_subsystem_get_iopolicy(const struct nvme_subsystem *p);
 const char *nvme_host_get_hostnqn(const struct nvme_host *p);
 
 /**
- * nvme_host_get_hostid() - Get hostid.
- * @p: The &struct nvme_host instance to query.
- *
- * Return: The value of the hostid field, or NULL if not set.
- */
-const char *nvme_host_get_hostid(const struct nvme_host *p);
-
-/**
  * nvme_host_set_dhchap_host_key() - Set dhchap_host_key.
  * @p: The &struct nvme_host instance to update.
  * @dhchap_host_key: New string; a copy is stored. Pass NULL to clear.
@@ -915,21 +907,6 @@ void nvme_fabric_options_set_host_traddr(
  * Return: The value of the host_traddr field.
  */
 bool nvme_fabric_options_get_host_traddr(const struct nvme_fabric_options *p);
-
-/**
- * nvme_fabric_options_set_hostid() - Set hostid.
- * @p: The &struct nvme_fabric_options instance to update.
- * @hostid: Value to assign to the hostid field.
- */
-void nvme_fabric_options_set_hostid(struct nvme_fabric_options *p, bool hostid);
-
-/**
- * nvme_fabric_options_get_hostid() - Get hostid.
- * @p: The &struct nvme_fabric_options instance to query.
- *
- * Return: The value of the hostid field.
- */
-bool nvme_fabric_options_get_hostid(const struct nvme_fabric_options *p);
 
 /**
  * nvme_fabric_options_set_hostnqn() - Set hostnqn.

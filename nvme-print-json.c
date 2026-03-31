@@ -2717,13 +2717,9 @@ static void json_print_nvme_subsystem_list(struct nvme_global_ctx *ctx,
 
 	nvme_for_each_host(ctx, h) {
 		nvme_subsystem_t s;
-		const char *hostid;
 
 		host_attrs = json_create_object();
 		obj_add_str(host_attrs, "HostNQN", nvme_host_get_hostnqn(h));
-		hostid = nvme_host_get_hostid(h);
-		if (hostid)
-			obj_add_str(host_attrs, "HostID", hostid);
 		subsystems = json_create_array();
 		nvme_for_each_subsystem(h, s) {
 			nvme_ctrl_t c;
@@ -4717,12 +4713,8 @@ static void json_detail_list_v2(struct nvme_global_ctx *ctx)
 	nvme_for_each_host(ctx, h) {
 		struct json_object *hss = json_create_object();
 		struct json_object *jsslist = json_create_array();
-		const char *hostid;
 
 		obj_add_str(hss, "HostNQN", nvme_host_get_hostnqn(h));
-		hostid = nvme_host_get_hostid(h);
-		if (hostid)
-			obj_add_str(hss, "HostID", hostid);
 
 		nvme_for_each_subsystem(h, s) {
 			struct json_object *jss = json_create_object();
@@ -4761,12 +4753,8 @@ static void json_detail_list(struct nvme_global_ctx *ctx)
 	nvme_for_each_host(ctx, h) {
 		struct json_object *hss = json_create_object();
 		struct json_object *jsslist = json_create_array();
-		const char *hostid;
 
 		obj_add_str(hss, "HostNQN", nvme_host_get_hostnqn(h));
-		hostid = nvme_host_get_hostid(h);
-		if (hostid)
-			obj_add_str(hss, "HostID", hostid);
 
 		nvme_for_each_subsystem(h, s) {
 			struct json_object *jss = json_create_object();
@@ -5025,13 +5013,9 @@ static void json_simple_topology(struct nvme_global_ctx *ctx)
 
 	nvme_for_each_host(ctx, h) {
 		nvme_subsystem_t s;
-		const char *hostid;
 
 		host_attrs = json_create_object();
 		obj_add_str(host_attrs, "HostNQN", nvme_host_get_hostnqn(h));
-		hostid = nvme_host_get_hostid(h);
-		if (hostid)
-			obj_add_str(host_attrs, "HostID", hostid);
 		subsystems = json_create_array();
 		nvme_for_each_subsystem(h, s) {
 			subsystem_attrs = json_create_object();

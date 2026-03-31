@@ -117,51 +117,42 @@ bool nvme_host_is_pdc_enabled(nvme_host_t h, bool fallback);
  * nvme_get_host() - Returns a host object
  * @ctx:	struct nvme_global_ctx object
  * @hostnqn:	Host NQN (optional)
- * @hostid:	Host ID (optional)
  * @h:		&nvme_host_t object to return
  *
- * Returns a host object based on the hostnqn/hostid values or the default if
- * hostnqn/hostid are NULL.
+ * Returns a host object based on the hostnqn value or the default if
+ * hostnqn is NULL.
  *
  * Return: 0 on success or negative error code otherwise
  */
 int nvme_get_host(struct nvme_global_ctx *ctx, const char *hostnqn,
-		const char *hostid, nvme_host_t *h);
+		nvme_host_t *h);
 
 /**
- * nvme_host_get_ids - Retrieve host ids from various sources
+ * nvme_host_resolve_hostnqn - Resolve hostnqn from various sources
  *
  * @ctx:		struct nvme_global_ctx object
  * @hostnqn_arg:	Input hostnqn (command line) argument
- * @hostid_arg:		Input hostid (command line) argument
  * @hostnqn:		Output hostnqn
- * @hostid:		Output hostid
  *
- * nvme_host_get_ids figures out which hostnqn/hostid is to be used.
- * There are several sources where this information can be retrieved.
+ * nvme_host_resolve_hostnqn figures out which hostnqn is to be used.
+ * There are several sources where this information can be resolved.
  *
  * The order is:
  *
  *  - Start with informartion from DMI or device-tree
- *  - Override hostnqn and hostid from /etc/nvme files
- *  - Override hostnqn or hostid with values from JSON
- *    configuration file. The first host entry in the file is
- *    considered the default host.
- *  - Override hostnqn or hostid with values from the command line
- *    (@hostnqn_arg, @hostid_arg).
+ *  - Override hostnqn from the /etc/nvme/hostnqn file
+ *  - Override hostnqn value from JSON configuration file.
+ *    The first host entry in the file is considered the default host.
+ *  - Override hostnqn value from the command line @hostnqn_arg.
  *
- *  If the IDs are still NULL after the lookup algorithm, the function
- *  will generate random IDs.
+ *  If the hostnqn is still NULL after the lookup algorithm, the function
+ *  will generate a random hostnqn.
  *
- *  The function also verifies that hostnqn and hostid matches. The Linux
- *  NVMe implementation expects a 1:1 matching between the IDs.
- *
- *  Return: 0 on success (@hostnqn and @hostid contain valid strings
+ *  Return: 0 on success (@hostnqn will contain a valid string
  *  which the caller needs to free), or negative error code otherwise.
  */
-int nvme_host_get_ids(struct nvme_global_ctx *ctx,
-		      const char *hostnqn_arg, const char *hostid_arg,
-		      char **hostnqn, char **hostid);
+int nvme_host_resolve_hostnqn(struct nvme_global_ctx *ctx,
+		const char *hostnqn_arg, char **hostnqn);
 
 /**
  * nvme_first_subsystem() - Start subsystem iterator
