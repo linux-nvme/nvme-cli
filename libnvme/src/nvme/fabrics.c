@@ -274,10 +274,26 @@ __public int nvmf_context_set_connection(struct nvmf_context *fctx,
 	return 0;
 }
 
+static const char *hostid_from_hostnqn(const char *hostnqn)
+{
+	const char *match;
+
+	if (!hostnqn)
+		return NULL;
+
+	match = strstr(hostnqn, "uuid:");
+	if (!match)
+		return NULL;
+
+	return match + strlen("uuid:");
+}
+
 __public int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
 		const char *hostnqn, const char *hostid)
 {
 	fctx->hostnqn = hostnqn;
+	if (!hostid)
+		hostid = hostid_from_hostnqn(hostnqn);
 	fctx->hostid = hostid;
 
 	return 0;

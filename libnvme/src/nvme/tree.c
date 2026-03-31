@@ -631,6 +631,8 @@ static int nvme_create_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 		return -ENOMEM;
 
 	h->hostnqn = strdup(hostnqn);
+	if (!hostid)
+		hostid = nvme_hostid_from_hostnqn(hostnqn);
 	if (hostid)
 		h->hostid = strdup(hostid);
 	list_head_init(&h->subsystems);
