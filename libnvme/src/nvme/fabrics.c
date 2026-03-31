@@ -214,6 +214,11 @@ __public int nvmf_context_create(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
+__public void nvmf_context_free(struct nvmf_context *fctx)
+{
+	free(fctx);
+}
+
 __public int nvmf_context_set_discovery_cbs(struct nvmf_context *fctx,
 		void (*discovery_log)(struct nvmf_context *fctx,
 			bool connect,

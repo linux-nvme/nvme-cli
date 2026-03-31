@@ -389,7 +389,7 @@ static int create_common_context(struct nvme_global_ctx *ctx,
 	return 0;
 
 err:
-	free(fctx);
+	nvmf_context_free(fctx);
 	return err;
 }
 
@@ -425,7 +425,7 @@ static int create_discovery_context(struct nvme_global_ctx *ctx,
 	return 0;
 
 err:
-	free(fctx);
+	nvmf_context_free(fctx);
 	return err;
 }
 
@@ -480,7 +480,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	char *context = NULL;
 	nvme_print_flags_t flags;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_free_ struct nvmf_context *fctx = NULL;
+	_cleanup_nvmf_context_ struct nvmf_context *fctx = NULL;
 	int ret;
 	struct nvme_fabrics_config cfg;
 	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
@@ -592,7 +592,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	char *config_file = NULL;
 	char *context = NULL;
 	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_free_ struct nvmf_context *fctx = NULL;
+	_cleanup_nvmf_context_ struct nvmf_context *fctx = NULL;
 	_cleanup_nvme_ctrl_ nvme_ctrl_t c = NULL;
 	int ret;
 	nvme_print_flags_t flags;
@@ -931,7 +931,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 	}
 
 	if (modify_config) {
-		_cleanup_free_ struct nvmf_context *fctx = NULL;
+		_cleanup_nvmf_context_ struct nvmf_context *fctx = NULL;
 
 		if (!fa.subsysnqn) {
 			fprintf(stderr,
