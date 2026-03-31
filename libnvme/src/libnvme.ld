@@ -6,6 +6,7 @@ LIBNVME_3 {
 		nvme_close;
 		nvme_create_ctrl;
 		nvme_create_global_ctx;
+		nvme_create_raw_secret;
 		nvme_ctrl_first_ns;
 		nvme_ctrl_first_path;
 		nvme_ctrl_get_config;

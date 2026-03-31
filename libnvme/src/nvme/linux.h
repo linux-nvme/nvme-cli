@@ -104,6 +104,24 @@ int nvme_lookup_key(struct nvme_global_ctx *ctx, const char *type,
 int nvme_set_keyring(struct nvme_global_ctx *ctx, long keyring_id);
 
 /**
+ * nvme_create_raw_secret - Generate a raw secret buffer from input data
+ * @ctx:		struct nvme_global_ctx object
+ * @secret:		Input secret data
+ * @key_len:		The length of the raw_secret in bytes
+ * @raw_secret:		Return buffer with the generated raw secret
+ *
+ * Transforms the provided @secret into a raw secret buffer suitable for
+ * use with NVMe key management operations.
+ *
+ * The generated raw secret can subsequently be passed to nvme_read_key()
+ * or nvme_update_key().
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
+int nvme_create_raw_secret(struct nvme_global_ctx *ctx,
+		const char *secret, size_t key_len, unsigned char **raw_secret);
+
+/**
  * nvme_read_key() - Read key raw data
  * @ctx:		struct nvme_global_ctx object
  * @keyring_id:		Id of the keyring holding %key_id

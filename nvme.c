@@ -46,9 +46,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#if HAVE_SYS_RANDOM
-	#include <sys/random.h>
-#endif
 
 #include <libnvme.h>
 
@@ -310,24 +307,6 @@ static OPT_VALS(feature_name) = {
 	VAL_BYTE("bp-write-protect", NVME_FEAT_FID_BP_WRITE_PROTECT),
 	VAL_END()
 };
-
-static ssize_t getrandom_bytes(void *buf, size_t buflen)
-{
-	ssize_t result;
-#if HAVE_SYS_RANDOM
-	result = getrandom(buf, buflen, GRND_NONBLOCK);
-#else
-	_cleanup_fd_ int fd = -1;
-
-	fd = open("/dev/urandom", O_RDONLY);
-	if (fd < 0)
-		return -errno;
-	result = read(fd, buf, buflen);
-#endif
-	if (result < 0)
-		return -errno;
-	return result;
-}
 
 static int check_arg_dev(int argc, char **argv)
 {
@@ -9642,32 +9621,9 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		cfg.key_len = 32;
 	}
 
-	if (cfg.key_len != 32 && cfg.key_len != 48 && cfg.key_len != 64) {
-		nvme_show_error("Invalid key length %u", cfg.key_len);
-		return -EINVAL;
-	}
-	raw_secret = malloc(cfg.key_len);
-	if (!raw_secret)
-		return -ENOMEM;
-	if (!cfg.secret) {
-		if (getrandom_bytes(raw_secret, cfg.key_len) < 0)
-			return -errno;
-	} else {
-		int secret_len = 0, i;
-		unsigned int c;
-
-		for (i = 0; i < strlen(cfg.secret); i += 2) {
-			if (sscanf(&cfg.secret[i], "%02x", &c) != 1) {
-				nvme_show_error("Invalid secret '%s'", cfg.secret);
-				return -EINVAL;
-			}
-			raw_secret[secret_len++] = (unsigned char)c;
-		}
-		if (secret_len != cfg.key_len) {
-			nvme_show_error("Invalid key length (%d bytes)", secret_len);
-			return -EINVAL;
-		}
-	}
+	err = nvme_create_raw_secret(ctx, cfg.secret, cfg.key_len, &raw_secret);
+	if (err)
+		return err;
 
 	if (!cfg.nqn) {
 		cfg.nqn = hnqn = nvme_read_hostnqn();
@@ -9950,32 +9906,9 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 		return -ENOMEM;
 	}
 
-	raw_secret = malloc(key_len + 4);
-	if (!raw_secret)
-		return -ENOMEM;
-	if (!cfg.secret) {
-		if (getrandom_bytes(raw_secret, key_len) < 0)
-			return -errno;
-	} else {
-		int secret_len = 0, i;
-		unsigned int c;
-
-		for (i = 0; i < strlen(cfg.secret); i += 2) {
-			if (sscanf(&cfg.secret[i], "%02x", &c) != 1) {
-				nvme_show_error("Invalid secret '%s'", cfg.secret);
-				return -EINVAL;
-			}
-			if (i >= key_len * 2) {
-				fprintf(stderr, "Skipping excess secret bytes\n");
-				break;
-			}
-			raw_secret[secret_len++] = (unsigned char)c;
-		}
-		if (secret_len != key_len) {
-			nvme_show_error("Invalid key length (%d bytes)", secret_len);
-			return -EINVAL;
-		}
-	}
+	err = nvme_create_raw_secret(ctx, cfg.secret, key_len, &raw_secret);
+	if (err)
+		return err;
 
 	err = nvme_export_tls_key(ctx, raw_secret, key_len, &encoded_key);
 	if (err) {
