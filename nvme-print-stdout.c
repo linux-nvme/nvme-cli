@@ -6148,11 +6148,33 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 	}
 }
 
+static int subsystem_topology_add_row(struct table *t,
+		const char *ns, const char *nsid, const char *ctrl,
+		const char *trtype, const char *address, const char *state)
+{
+	int row = table_get_row_id(t);
+	if (row < 0) {
+		nvme_show_error("Failed to add subsys topology row");
+		return row;
+	}
+
+	table_set_value_str(t, 0, row, ns, CENTERED);
+	table_set_value_str(t, 1, row, nsid, CENTERED);
+	table_set_value_str(t, 2, row, ctrl, CENTERED);
+	table_set_value_str(t, 3, row, trtype, CENTERED);
+	table_set_value_str(t, 4, row, address, CENTERED);
+	table_set_value_str(t, 5, row, state, CENTERED);
+
+	table_add_row(t, row);
+
+	return 0;
+}
+
 static void stdout_tabular_subsystem_topology(nvme_subsystem_t s)
 {
 	nvme_ctrl_t c;
 	nvme_ns_t n;
-	int row;
+	int ret, num_ns;
 	struct table *t;
 	struct table_column columns[] = {
 		{"Namespace", LEFT, 0},
@@ -6165,45 +6187,48 @@ static void stdout_tabular_subsystem_topology(nvme_subsystem_t s)
 
 	t = table_create();
 	if (!t) {
-		printf("Failed to init table\n");
+		nvme_show_error("Failed to init subsys topology table");
 		return;
 	}
 
 	if (table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
-		printf("Failed to add columns\n");
+		nvme_show_error("Failed to add subsys topology columns");
 		goto free_tbl;
 	}
 
 	nvme_subsystem_for_each_ctrl(s, c) {
-		nvme_ctrl_for_each_ns(c, n) {
-			c = nvme_ns_get_ctrl(n);
+		num_ns = 0;
 
-			row = table_get_row_id(t);
-			if (row < 0) {
-				printf("Failed to add row\n");
+		nvme_ctrl_for_each_ns(c, n)
+			num_ns++;
+
+		if (!num_ns) {
+			ret = subsystem_topology_add_row(t,
+					"--",	/* Namespace */
+					"--",	/* NSID */
+					nvme_ctrl_get_name(c),
+					nvme_ctrl_get_transport(c),
+					nvme_ctrl_get_traddr(c),
+					nvme_ctrl_get_state(c));
+			if (ret < 0)
 				goto free_tbl;
+		} else {
+			nvme_ctrl_for_each_ns(c, n) {
+				char nsid[32];
+
+				snprintf(nsid, sizeof(nsid), "%u",
+						nvme_ns_get_nsid(n));
+
+				ret = subsystem_topology_add_row(t,
+						nvme_ns_get_name(n),
+						(const char *)nsid,
+						nvme_ctrl_get_name(c),
+						nvme_ctrl_get_transport(c),
+						nvme_ctrl_get_traddr(c),
+						nvme_ctrl_get_state(c));
+				if (ret < 0)
+					goto free_tbl;
 			}
-
-			/* col 0: Namespace */
-			table_set_value_str(t, 0, row,
-					nvme_ns_get_name(n), LEFT);
-			/* col 1: NSID */
-			table_set_value_int(t, 1, row,
-					nvme_ns_get_nsid(n), CENTERED);
-			/* col 2: Controller */
-			table_set_value_str(t, 2, row,
-					nvme_ctrl_get_name(c), LEFT);
-			/* col 3: Trtype */
-			table_set_value_str(t, 3, row,
-					nvme_ctrl_get_transport(c), LEFT);
-			/* col 4: Address */
-			table_set_value_str(t, 4, row,
-					nvme_ctrl_get_traddr(c), LEFT);
-			/* col 5: State */
-			table_set_value_str(t, 5, row,
-					nvme_ctrl_get_state(c), LEFT);
-
-			table_add_row(t, row);
 		}
 	}
 	table_print(t);
