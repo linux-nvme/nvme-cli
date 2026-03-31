@@ -204,6 +204,8 @@ __public int nvmf_context_create(struct nvme_global_ctx *ctx,
 	if (!fctx)
 		return -ENOMEM;
 
+	fctx->ctx = ctx;
+
 	fctx->decide_retry = decide_retry;
 	fctx->connected = connected;
 	fctx->already_connected = already_connected;
@@ -216,6 +218,7 @@ __public int nvmf_context_create(struct nvme_global_ctx *ctx,
 
 __public void nvmf_context_free(struct nvmf_context *fctx)
 {
+	free(fctx->tls_key);
 	free(fctx);
 }
 
@@ -285,12 +288,37 @@ __public int nvmf_context_set_crypto(struct nvmf_context *fctx,
 		const char *keyring, const char *tls_key,
 		const char *tls_key_identity)
 {
+	int err;
+
 	fctx->hostkey = hostkey;
 	fctx->ctrlkey = ctrlkey;
 	fctx->keyring = keyring;
-	fctx->tls_key = tls_key;
 	fctx->tls_key_identity = tls_key_identity;
 
+	if (!tls_key)
+		return 0;
+
+	if (!strncmp(tls_key, "pin:", 4)) {
+		_cleanup_free_ unsigned char *raw_secret = NULL;
+		_cleanup_free_ char *encoded_key = NULL;
+		int key_len = 32;
+
+		err = nvme_create_raw_secret(fctx->ctx, tls_key,
+			key_len, &raw_secret);
+		if (err)
+			return err;
+
+		err = nvme_export_tls_key(fctx->ctx, raw_secret,
+			key_len, &encoded_key);
+		if (err)
+			return err;
+
+		fctx->tls_key = encoded_key;
+		encoded_key = NULL;
+		return 0;
+	}
+
+	fctx->tls_key = strdup(tls_key);
 	return 0;
 }
 
