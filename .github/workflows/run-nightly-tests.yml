@@ -146,8 +146,8 @@ jobs:
             #that contains a valid nvme namespace which is capable of the nvm
             #command set.
 
-            sudo docker run --privileged \
-            -v "/dev":"/dev":z \
+            sudo podman run --privileged \
+            --device="${BDEV0}":"${BDEV0}":rwm \
             -e BDEV0 \
             -v "${PWD}/test.sh":"/test.sh" \
             -v "${PWD}/nvme-cli":"/nvme-cli":z \

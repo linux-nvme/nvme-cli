@@ -522,34 +522,31 @@ void nvme_show_status(int status)
 		ops->show_status(status);
 }
 
-static void nvme_show_cmd_err(const char *msg, bool admin,
-			      struct nvme_passthru_cmd *cmd, int err)
+static void nvme_show_cmd_err(const char *msg, bool admin, __u8 opcode, int err)
 {
 	if (!err)
 		return;
 	else if (err < 0)
 		nvme_show_error("%s: %s", msg, nvme_strerror(-err));
-	else if (cmd)
-		nvme_show_opcode_status(err, false, cmd->opcode);
+	else if (opcode)
+		nvme_show_opcode_status(err, admin, opcode);
 	else
 		nvme_show_status(err);
 }
 
 void nvme_show_err(const char *msg, int err)
 {
-	nvme_show_cmd_err(msg, false, NULL, err);
+	nvme_show_cmd_err(msg, false, 0, err);
 }
 
-void nvme_show_io_cmd_err(const char *msg, struct nvme_passthru_cmd *cmd,
-			  int err)
+void nvme_show_io_cmd_err(const char *msg, __u8 opcode, int err)
 {
-	nvme_show_cmd_err(msg, false, cmd, err);
+	nvme_show_cmd_err(msg, false, opcode, err);
 }
 
-void nvme_show_admin_cmd_err(const char *msg, struct nvme_passthru_cmd *cmd,
-			     int err)
+void nvme_show_admin_cmd_err(const char *msg, __u8 opcode, int err)
 {
-	nvme_show_cmd_err(msg, true, cmd, err);
+	nvme_show_cmd_err(msg, true, opcode, err);
 }
 
 void nvme_show_opcode_status(int status, bool admin, __u8 opcode)
@@ -888,6 +885,44 @@ const char *nvme_degrees_fahrenheit_string(long t)
 		sprintf(str, "%ld °%s", val, "F");
 
 	return str;
+}
+
+const char *nvme_format_timestamp(__u8 *timestamp_bytes)
+{
+	static char buf[STR_LEN];
+	struct tm *tm;
+	char timebuf[STR_LEN];
+	uint64_t ts_ms = int48_to_long(timestamp_bytes);
+	time_t ts_sec = ts_ms / 1000;
+
+	tm = localtime(&ts_sec);
+	if (!tm) {
+		snprintf(buf, sizeof(buf), "%s", "-");
+	} else {
+		snprintf(buf, sizeof(buf), "%s",
+			 strftime(timebuf, sizeof(timebuf), "%c %Z", tm) ? timebuf : "-");
+	}
+
+	return buf;
+}
+
+const char *nvme_format_timestamp_origin(__u8 attr)
+{
+	switch (NVME_TIMESTAMP_ATTR_TO(attr)) {
+	case 0:
+		return "The Timestamp field was initialized to 0h by a Controller Level Reset.";
+	case 1:
+		return "The Timestamp field was initialized with a Timestamp value using a Set Features command.";
+	default:
+		return "Reserved";
+	}
+}
+
+const char *nvme_format_timestamp_sync(__u8 attr)
+{
+	return NVME_TIMESTAMP_ATTR_SYNC(attr) ?
+		"The controller may have stopped counting during vendor specific intervals after the Timestamp value was initialized." :
+		"The controller counted time in milliseconds continuously since the Timestamp value was initialized.";
 }
 
 void nvme_show_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
@@ -1542,6 +1577,26 @@ const char *nvme_power_measurement_action_to_string(__u8 act)
 	return "Reserved";
 }
 
+const char *nvme_ipmsr_srs_to_string(__u8 srs)
+{
+	switch (srs) {
+	case 0:
+		return "Not reported";
+	case 1:
+		return "1 microsecond";
+	case 2:
+		return "10 microseconds";
+	case 3:
+		return "100 microseconds";
+	case 4:
+		return "1 millisecond";
+	case 5:
+		return "10 milliseconds";
+	default:
+		return "Reserved";
+	}
+}
+
 void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
 {
 	nvme_print(show_feature, NORMAL, fid, sel, result);
@@ -1701,6 +1756,12 @@ void nvme_show_finish(void)
 void nvme_show_mgmt_addr_list_log(struct nvme_mgmt_addr_list_log *ma_list, nvme_print_flags_t flags)
 {
 	nvme_print(mgmt_addr_list_log, flags, ma_list);
+}
+
+void nvme_show_power_meas_log(struct nvme_power_meas_log *log, __u32 size,
+			      nvme_print_flags_t flags)
+{
+	nvme_print(power_meas_log, flags, log, size);
 }
 
 void nvme_show_rotational_media_info_log(struct nvme_rotational_media_info_log *info,

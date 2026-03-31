@@ -41,6 +41,12 @@ struct arbitration_config {
 	__u8 sel;
 };
 
+struct err_recovery_config {
+	__u8 tler;
+	__u8 dulbe;
+	__u8 sel;
+};
+
 static const char *power_mgmt_feat = "power management feature";
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *save = "Specifies that the controller shall save the attribute";
@@ -53,9 +59,12 @@ static const char *volatile_wc_feat = "volatile write cache feature";
 static const char *power_limit_feat = "power limit feature";
 static const char *power_thresh_feat = "power threshold feature";
 static const char *power_meas_feat = "power measurement feature";
+static const char *err_recovery_feat = "error recovery feature";
+static const char *num_queues_feat = "number of queues feature";
 
-static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
-		    __u32 cdw11, __u8 sel, __u8 uidx, const char *feat)
+static int feat_get_nsid(struct nvme_transport_handle *hdl, __u32 nsid,
+			 const __u8 fid, __u32 cdw11, __u8 sel, __u8 uidx,
+			 const char *feat)
 {
 	__u64 result;
 	int err;
@@ -72,7 +81,7 @@ static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
 			return -ENOMEM;
 	}
 
-	err = nvme_get_features(hdl, 0, fid, sel, cdw11, uidx, buf, len,
+	err = nvme_get_features(hdl, nsid, fid, sel, cdw11, uidx, buf, len,
 				&result);
 
 	nvme_show_init();
@@ -92,6 +101,12 @@ static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
 	nvme_show_finish();
 
 	return err;
+}
+
+static int feat_get(struct nvme_transport_handle *hdl, const __u8 fid,
+		    __u32 cdw11, __u8 sel, __u8 uidx, const char *feat)
+{
+	return feat_get_nsid(hdl, 0, fid, cdw11, sel, uidx, feat);
 }
 
 static int power_mgmt_set(struct nvme_transport_handle *hdl, const __u8 fid,
@@ -828,6 +843,159 @@ static int feat_power_meas(int argc, char **argv, struct command *cmd,
 				     argconfig_parse_seen(opts, "save"));
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, power_meas_feat);
+
+	return err;
+}
+
+static int err_recovery_set(struct nvme_transport_handle *hdl, const __u8 fid,
+			    __u32 nsid, __u16 tler, bool dulbe, bool sv)
+{
+	__u32 cdw11 = NVME_SET(tler, FEAT_ERROR_RECOVERY_TLER) |
+		      NVME_SET(dulbe, FEAT_ERROR_RECOVERY_DULBE);
+	__u64 result;
+	int err;
+
+	err = nvme_set_features(hdl, nsid, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
+				&result);
+
+	nvme_show_init();
+
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set %s", err_recovery_feat);
+	} else {
+		nvme_show_result("Set %s: 0x%04x (%s)", err_recovery_feat,
+				 cdw11, sv ? "Save" : "Not save");
+		nvme_feature_show_fields(fid, cdw11, NULL);
+	}
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_err_recovery(int argc, char **argv, struct command *acmd,
+			     struct plugin *plugin)
+{
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl =
+	    NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+
+	const char *dulbe =
+	    "deallocated or unwritten logical block error enable";
+	const char *tler = "time limited error recovery";
+	const __u8 fid = NVME_FEAT_FID_ERR_RECOVERY;
+
+	int err;
+
+	struct config {
+		__u32 nsid;
+		__u16 tler;
+		bool dulbe;
+		__u8 sel;
+	};
+
+	struct config cfg = { 0 };
+
+	FEAT_ARGS(opts,
+		  OPT_UINT("nsid", 'n', &cfg.nsid, namespace_id_desired),
+		  OPT_SHRT("tler", 't', &cfg.tler, tler),
+		  OPT_FLAG("dulbe", 'd', &cfg.dulbe, dulbe));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, ERR_RECOVERY_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "tler") ||
+	    argconfig_parse_seen(opts, "dulbe"))
+		err = err_recovery_set(hdl, fid, cfg.nsid, cfg.tler, cfg.dulbe,
+				       argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get_nsid(hdl, cfg.nsid, fid, 0, cfg.sel, 0,
+				    err_recovery_feat);
+
+	return err;
+}
+
+static int num_queues_set(struct nvme_transport_handle *hdl, const __u8 fid,
+			  __u16 nsqr, __u16 ncqr, bool sv,
+			  struct argconfig_commandline_options *opts)
+{
+	enum nvme_get_features_sel sel = NVME_GET_FEATURES_SEL_CURRENT;
+	__u32 cdw11 = NVME_SET(nsqr, FEAT_NRQS_NSQR) |
+		      NVME_SET(ncqr, FEAT_NRQS_NCQR);
+	struct nvme_passthru_cmd cmd;
+	__u64 result;
+	int err;
+
+	if (sv)
+		sel = NVME_GET_FEATURES_SEL_SAVED;
+
+	nvme_init_get_features_num_queues(&cmd, sel);
+	err = nvme_submit_admin_passthru(hdl, &cmd);
+	if (!err) {
+		nvme_feature_decode_number_of_queues(cmd.result, &nsqr, &ncqr);
+		if (!argconfig_parse_seen(opts, "nsqr"))
+			cdw11 |= NVME_SET(nsqr, FEAT_NRQS_NSQR);
+		if (!argconfig_parse_seen(opts, "ncqr"))
+			cdw11 |= NVME_SET(ncqr, FEAT_NRQS_NSQR);
+	}
+
+	err = nvme_set_features(hdl, 0, fid, sv, cdw11, 0, 0, 0, 0, NULL, 0,
+				&result);
+
+	nvme_show_init();
+
+	if (err > 0) {
+		nvme_show_status(err);
+	} else if (err < 0) {
+		nvme_show_perror("Set %s", num_queues_feat);
+	} else {
+		nvme_show_result("Set %s: 0x%04x (%s)", num_queues_feat,
+				 cdw11, sv ? "Save" : "Not save");
+		nvme_feature_show_fields(fid, cdw11, NULL);
+	}
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_num_queues(int argc, char **argv, struct command *acmd,
+			     struct plugin *plugin)
+{
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl =
+	    NULL;
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+
+	const char *ncqr = "number of I/O completion queues requested";
+	const char *nsqr = "number of I/O submission queues requested";
+	const __u8 fid = NVME_FEAT_FID_NUM_QUEUES;
+	int err;
+
+	struct config {
+		__u16 nsqr;
+		__u16 ncqr;
+		__u8 sel;
+	};
+
+	struct config cfg = { 0 };
+
+	FEAT_ARGS(opts,
+		  OPT_SHRT("nsqr", 'n', &cfg.nsqr, nsqr),
+		  OPT_SHRT("ncqr", 'c', &cfg.ncqr, ncqr));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, NUM_QUEUES_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "nsqr") ||
+	    argconfig_parse_seen(opts, "ncqr"))
+		err = num_queues_set(hdl, fid, cfg.nsqr, cfg.ncqr,
+				     argconfig_parse_seen(opts, "save"), opts);
+	else
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, num_queues_feat);
 
 	return err;
 }

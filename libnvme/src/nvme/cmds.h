@@ -1520,6 +1520,25 @@ nvme_init_get_log_mgmt_addr_list(struct nvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_get_log_power_measurement() - Initialize passthru command for
+ * Power Measurement
+ * @cmd:	Passthru command to use
+ * @log:	User address to store the log page
+ * @len:	The allocated length of the log page
+ *
+ * Initializes the passthru command buffer for the Get Log command with
+ * LID value %NVME_LOG_LID_POWER_MEASUREMENT
+ */
+static inline void
+nvme_init_get_log_power_measurement(struct nvme_passthru_cmd *cmd,
+		struct nvme_power_meas_log *log, __u32 len)
+{
+	nvme_init_get_log(cmd, NVME_NSID_ALL,
+		NVME_LOG_LID_POWER_MEASUREMENT, NVME_CSI_NVM,
+		log, len);
+}
+
+/**
  * nvme_init_get_log_phy_rx_eom() - Initialize passthru command for
  * Physical Interface Receiver Eye Opening Measurement
  * @cmd:	Passthru command to use

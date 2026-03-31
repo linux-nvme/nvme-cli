@@ -19,11 +19,11 @@
 
 %allowexception;
 
-%rename(global_ctx)      nvme_global_ctx;
-%rename(host)      nvme_host;
-%rename(ctrl)      nvme_ctrl;
-%rename(subsystem) nvme_subsystem;
-%rename(ns)        nvme_ns;
+%rename(global_ctx) nvme_global_ctx;
+%rename(host)       nvme_host;
+%rename(ctrl)       nvme_ctrl;
+%rename(subsystem)  nvme_subsystem;
+%rename(ns)         nvme_ns;
 
 %{
 	#include <ccan/list/list.h>
@@ -40,13 +40,13 @@
 	}
 	PyObject *read_hostnqn() {
 		char * val = nvme_read_hostnqn();
-		PyObject * obj = PyUnicode_FromString(val);
+		PyObject * obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
 		free(val);
 		return obj;
 	}
 	PyObject *read_hostid() {
 		char * val = nvme_read_hostid();
-		PyObject * obj = PyUnicode_FromString(val);
+		PyObject * obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
 		free(val);
 		return obj;
 	}
@@ -461,8 +461,9 @@ struct nvme_ctrl {
 		char *dhchap_ctrl_key;
 
 		/**
-		 * We are remapping the following members of the C code's
-		 * nvme_ctrl_t to different names in Python. Here's the mapping:
+		 * We are remapping the following member(s) of the C code's
+		 * nvme_ctrl_t to different name(s) in Python. Here's the
+		 * mapping:
 		 *
 		 * C code                 Python (SWIG)
 		 * =====================  =====================
@@ -703,14 +704,6 @@ struct nvme_ns {
 		return $self;
 	}
 
-	%pythoncode %{
-	def discovery_ctrl_set(self, discovery: bool):
-	    r"""DEPRECATED METHOD: Use property setter instead (e.g. ctrl.discovery_ctrl = True)"""
-	    import warnings
-	    warnings.warn("Use property setter instead (e.g. ctrl_obj.discovery_ctrl = True)", DeprecationWarning, stacklevel=2)
-	    return _nvme.ctrl_discovery_ctrl_set(self, discovery)
-	%}
-
 	bool init(struct nvme_host *h, int instance) {
 		return nvme_init_ctrl(h, $self, instance) == 0;
 	}
@@ -738,13 +731,6 @@ struct nvme_ns {
 	bool connected() {
 		return nvme_ctrl_get_name($self) != NULL;
 	}
-	%pythoncode %{
-	def persistent_set(self, persistent: bool):
-	    r"""DEPRECATED METHOD: Use property setter instead (e.g. ctrl.persistent = True)"""
-	    import warnings
-	    warnings.warn("Use property setter instead (e.g. ctrl_obj.persistent = True)", DeprecationWarning, stacklevel=2)
-	    return _nvme.ctrl_persistent_set(self, persistent)
-	%}
 	void rescan() {
 		nvme_rescan_ctrl($self);
 	}
@@ -1268,12 +1254,3 @@ PyObject *nbft_get(struct nvme_global_ctx *ctx, const char * filename);
 %rename($ignore, %$isvariable) "";  // ignore all variables
 
 %include "../src/nvme/types.h"
-
-
-%pythoncode %{
-# Definitions for backward compatibility between libnvme 1.x and 3.x (there is no 2.x)
-# Some terms (class/variable names) were changed and this allows running older python
-# code written for libnvme 1.x with libnvme 3.x (and possibly later).
-NVME_LOG_LID_DISCOVER = _nvme.NVME_LOG_LID_DISCOVERY
-root = global_ctx
-%}

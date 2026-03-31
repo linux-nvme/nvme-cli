@@ -119,6 +119,7 @@ static inline DEFINE_CLEANUP_FUNC(
 #define _cleanup_nvme_transport_handle_ __cleanup__(cleanup_nvme_transport_handle)
 
 extern const char *uuid_index;
+extern const char *namespace_id_desired;
 extern struct nvme_args nvme_args;
 
 int validate_output_format(const char *format, nvme_print_flags_t *flags);

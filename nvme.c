@@ -187,6 +187,7 @@ static struct program nvme = {
 };
 
 const char *uuid_index = "UUID index";
+const char *namespace_id_desired = "identifier of desired namespace";
 
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
@@ -214,7 +215,6 @@ static const char *lsp = "log specific field";
 static const char *mos = "management operation specific";
 static const char *mo = "management operation";
 static const char *namespace_desired = "desired namespace";
-static const char *namespace_id_desired = "identifier of desired namespace";
 static const char *namespace_id_optional = "optional namespace attached to controller";
 static const char *nssf = "NVMe Security Specific Field";
 static const char *only_char_dev = "Only character device is allowed";
@@ -257,7 +257,7 @@ static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
 
 struct nvme_args nvme_args = {
 	.output_format = "normal",
-	.output_format_ver = 1,
+	.output_format_ver = 2,
 	.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 };
 
@@ -5751,7 +5751,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	}
 	err = nvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
-		nvme_show_admin_cmd_err("sanitize ns", &cmd, err);
+		nvme_show_admin_cmd_err("sanitize ns", cmd.opcode, err);
 		return err;
 	}
 
@@ -6995,7 +6995,8 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	err = nvme_set_features(hdl, cfg.nsid, cfg.fid, cfg.sv, cfg.value, cfg.cdw12,
 			0, cfg.uidx, 0, buf, cfg.data_len, &result);
 	if (err) {
-		nvme_show_err("set-feature", err);
+		nvme_show_admin_cmd_err("set-feature", nvme_admin_set_features,
+					err);
 		return err;
 	}
 
@@ -10785,6 +10786,83 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 	}
 
 	nvme_show_dispersed_ns_psub_log(log, flags);
+
+	return err;
+}
+
+static int get_power_measurement_log(int argc, char **argv, struct command *acmd,
+				     struct plugin *plugin)
+{
+	const char *desc = "Retrieve Power Measurement Log (Log ID 0x25) "
+		"for the given device in either decoded format (default), "
+		"json, or binary.";
+
+	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_free_ struct nvme_power_meas_log *log = NULL;
+	nvme_print_flags_t flags;
+	__u32 min_log_size = sizeof(struct nvme_power_meas_log);
+	__u32 log_size;
+	int err = -1;
+
+	struct config {
+		bool	raw_binary;
+	};
+
+	struct config cfg = {
+		.raw_binary	= false,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_output));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (cfg.raw_binary)
+		flags = BINARY;
+
+	if (argconfig_parse_seen(opts, "verbose"))
+		flags |= VERBOSE;
+
+	/* First read minimum size to discover the full log size */
+	log = nvme_alloc(min_log_size);
+	if (!log)
+		return -ENOMEM;
+
+	err = nvme_get_log_power_measurement(hdl, log, min_log_size);
+	if (err) {
+		nvme_show_err("power-measurement-log", err);
+		return err;
+	}
+
+	log_size = le32_to_cpu(log->sze);
+
+	/* If sze is 0 or smaller than the minimum, just use minimum */
+	if (log_size < min_log_size)
+		log_size = min_log_size;
+
+	/* If the log is larger, re-read with full size */
+	if (log_size > min_log_size) {
+		log = nvme_realloc(log, log_size);
+		if (!log)
+			return -ENOMEM;
+
+		err = nvme_get_log_power_measurement(hdl, log, log_size);
+		if (err) {
+			nvme_show_err("power-measurement-log", err);
+			return err;
+		}
+	}
+
+	nvme_show_power_meas_log(log, log_size, flags);
 
 	return err;
 }
