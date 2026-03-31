@@ -19,6 +19,9 @@
 
 #include <sys/ioctl.h>
 #include <sys/param.h>
+#if HAVE_SYS_RANDOM
+#include <sys/random.h>
+#endif
 #include <sys/stat.h>
 
 #ifndef _GNU_SOURCE
@@ -161,6 +164,14 @@ __public int nvme_gen_dhchap_key(struct nvme_global_ctx *ctx,
 
 	memcpy(key, secret, key_len);
 	return 0;
+}
+
+__public int nvme_create_raw_secret(struct nvme_global_ctx *ctx,
+		const char *secret, size_t key_len, unsigned char **raw_secret)
+{
+	nvme_msg(ctx, LOG_ERR, "NVMe TLS 2.0 is not supported; "
+		 "recompile with OpenSSL support.\n");
+	return -ENOTSUP;
 }
 
 static int derive_retained_key(struct nvme_global_ctx *ctx,
@@ -745,7 +756,130 @@ static int derive_psk_digest(struct nvme_global_ctx *ctx,
 
 	return strlen(digest);
 }
-#endif /* !CONFIG_OPENSSL */
+
+static ssize_t getrandom_bytes(void *buf, size_t buflen)
+{
+	ssize_t result;
+#if HAVE_SYS_RANDOM
+	result = getrandom(buf, buflen, GRND_NONBLOCK);
+#else
+	_cleanup_fd_ int fd = -1;
+
+	fd = open("/dev/urandom", O_RDONLY);
+	if (fd < 0)
+		return -errno;
+	result = read(fd, buf, buflen);
+#endif
+	if (result < 0)
+		return -errno;
+	return result;
+}
+
+static ssize_t getswordfish(struct nvme_global_ctx *ctx,
+		const char *seed, void *buf, size_t buflen)
+{
+	unsigned char hash[EVP_MAX_MD_SIZE];
+	EVP_MD_CTX *md_ctx;
+	size_t copied = 0;
+
+	md_ctx = EVP_MD_CTX_new();
+	if (!md_ctx)
+		return -ENOMEM;
+
+	while (copied < buflen) {
+		unsigned int counter = 0;
+		unsigned int hash_len;
+		size_t to_copy;
+
+		if (EVP_DigestInit_ex(md_ctx, EVP_sha256(), NULL) != 1)
+			goto err;
+
+		EVP_DigestUpdate(md_ctx, seed, strlen(seed));
+		EVP_DigestUpdate(md_ctx, &counter, sizeof(counter));
+
+		if (EVP_DigestFinal_ex(md_ctx, hash, &hash_len) != 1)
+			goto err;
+
+		to_copy = buflen - copied;
+		if (to_copy > hash_len)
+			to_copy = hash_len;
+
+		memcpy((unsigned char *)buf + copied, hash, to_copy);
+		copied += to_copy;
+		counter++;
+	}
+
+	EVP_MD_CTX_free(md_ctx);
+	return buflen;
+
+err:
+	EVP_MD_CTX_free(md_ctx);
+	return -EIO;
+}
+
+__public int nvme_create_raw_secret(struct nvme_global_ctx *ctx,
+		const char *secret, size_t key_len, unsigned char **raw_secret)
+{
+	_cleanup_free_ unsigned char *buf = NULL;
+	int secret_len = 0, i, err;
+	unsigned int c;
+
+	if (key_len != 32 && key_len != 48 && key_len != 64) {
+		nvme_msg(ctx, LOG_ERR, "Invalid key length %ld", key_len);
+		return -EINVAL;
+	}
+
+	buf = malloc(key_len);
+	if (!buf)
+		return -ENOMEM;
+
+	if (!secret) {
+		err = getrandom_bytes(buf, key_len);
+		if (err < 0)
+			return err;
+
+		goto out;
+	}
+
+	if (strlen(secret) < 4) {
+		nvme_msg(ctx, LOG_ERR, "Input secret too short\n");
+		return -EINVAL;
+	}
+
+	if (!strncmp(secret, "pin:", 4)) {
+		err = getswordfish(ctx, &secret[4], buf, key_len);
+		if (err < 0)
+			return err;
+
+		goto out;
+	}
+
+	for (i = 0; i < strlen(secret); i += 2) {
+		if (sscanf(&secret[i], "%02x", &c) != 1) {
+			nvme_msg(ctx, LOG_ERR,
+				"Invalid secret '%s'", secret);
+			return -EINVAL;
+		}
+		if (i >= key_len * 2) {
+			nvme_msg(ctx, LOG_ERR,
+				"Skipping excess secret bytes\n");
+			break;
+		}
+		buf[secret_len++] = (unsigned char)c;
+	}
+	if (secret_len != key_len) {
+		nvme_msg(ctx, LOG_ERR,
+			"Invalid key length (%d bytes)\n", secret_len);
+		return -EINVAL;
+	}
+
+out:
+	*raw_secret = buf;
+	buf = NULL;
+	return 0;
+}
+
+#endif /* CONFIG_OPENSSL */
 
 static int gen_tls_identity(const char *hostnqn, const char *subsysnqn,
 			    int version, int cipher, char *digest,
