@@ -115,8 +115,8 @@ OPTIONS
 
 -I <hostid>::
 --hostid=<hostid>::
-	UUID(Universally Unique Identifier) to be discovered which should be
-	formatted.
+	Deprecated and ignored. This option is kept around for backwards
+	compatibility. Use --hostnqn instead.
 
 -S <secret>::
 --dhchap-secret=<secret>::
