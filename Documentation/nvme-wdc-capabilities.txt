@@ -8,7 +8,8 @@ nvme-wdc-capabilities - Display WDC plugin command capabilities
 SYNOPSIS
 --------
 [verse]
-'nvme wdc capabilities' <device> 
+'nvme wdc capabilities' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -18,6 +19,10 @@ For the NVMe device given, displays list of commands and support status.
 The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
 
 On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+include::global-options.txt[]
 
 EXAMPLES
 --------

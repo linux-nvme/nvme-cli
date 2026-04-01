@@ -8,7 +8,8 @@ nvme-inspur-nvme-vendor-log - Send NVMe Inspur Device Vendor log page request, r
 SYNOPSIS
 --------
 [verse]
-'nvme inspur nvme-vendor-log' <device> 
+'nvme inspur nvme-vendor-log' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -22,6 +23,8 @@ On success, vendor log structure are printed in a readable format.
 OPTIONS
 -------
 none
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -8,7 +8,8 @@ nvme-sndk-get-latency-monitor-log - Display latency monitor log page data in hum
 SYNOPSIS
 --------
 [verse]
-'nvme sndk get-latency-monitor-log' <device> [--output-format=<normal|json> -o <normal|json>]
+'nvme sndk get-latency-monitor-log' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,10 +25,8 @@ On success it returns 0, error code otherwise.
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal' or 'json'. Only one output format
-	can be used at a time. The default is normal.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

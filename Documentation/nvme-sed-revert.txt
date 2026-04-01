@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme sed revert' [ --destructive, -e ] [ --psid, -p ] <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,7 @@ OPTIONS
 --psid::
 	Destructively revert drive using its PSID.
 
+include::global-options.txt[]
 
 EXAMPLES
 --------

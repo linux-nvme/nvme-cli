@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme wdc drive-log' <device> [--output-file=<FILE>, -o <FILE>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -27,6 +28,8 @@ OPTIONS
 -o <FILE>::
 --output-file=<FILE>::
 	Output file; defaults to device serial number followed by "drive_log" suffix
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

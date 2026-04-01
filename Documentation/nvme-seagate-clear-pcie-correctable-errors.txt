@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme seagate clear-pcie-correctable-errors [<device>] [OPTIONS]'
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,8 @@ OPTIONS
 -s::
 --save::
 	Specifies that the controller shall save the attribute
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

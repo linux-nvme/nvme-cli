@@ -8,7 +8,8 @@ nvme-wdc-vs-temperature-stats - Display temperature-related statistics
 SYNOPSIS
 --------
 [verse]
-'nvme wdc vs-temperature-stats' <device> 
+'nvme wdc vs-temperature-stats' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -64,6 +65,10 @@ Expected status and description :-
 |===
 
 On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+include::global-options.txt[]
 
 EXAMPLES
 --------

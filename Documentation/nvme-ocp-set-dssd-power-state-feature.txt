@@ -11,6 +11,7 @@ SYNOPSIS
 'nvme ocp set-dssd-power-state-feature' <device>
 			[--power-state=<fmt> | -p <fmt>] [--no-uuid | -n]
 			[--save | -s]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -29,6 +30,8 @@ OPTIONS
 -p <fmt>::
 --power-state=<fmt>::
 	DSSD Power State to set in watts.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

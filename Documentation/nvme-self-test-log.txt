@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme self-test'-log <device> [--log-entries=<entries> | -e <entries>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -35,14 +35,7 @@ OPTION
 	the device. This must be at least one, and shouldn't exceed the
 	20 entries. Defaults to 20 DST log entries.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

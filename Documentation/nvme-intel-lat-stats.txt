@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme intel lat-stats' <device> [--write | -w] [--raw-binary | -b]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -32,6 +33,8 @@ OPTIONS
 -w::
 --write::
 	Get write statistics. Read statistics are returned by default.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

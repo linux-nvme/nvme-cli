@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme ocp set-plp-health-check-interval' <device> [--plp_health_interval=<plp_health_interval> | -p <plp_health_interval>] [--save | -s] [--no-uuid | -n]
+			[<global-options>]
 
 
 DESCRIPTION
@@ -39,6 +40,7 @@ OPTIONS
 --save::
 	Save the attribute so that it persists through all power states and resets.
 
+include::global-options.txt[]
 
 EXAMPLES
 --------

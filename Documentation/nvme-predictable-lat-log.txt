@@ -11,7 +11,7 @@ SYNOPSIS
 [verse]
 'nvme predictable-lat-log' <device> [--nvmset-id=<nvmset_id> | -i <nvmset_id>]
 			[--raw-binary | -b]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -39,14 +39,7 @@ OPTIONS
 --raw-binary::
 	Print the raw Predictable latency per NVM set log buffer to stdout.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

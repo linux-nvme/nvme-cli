@@ -9,8 +9,8 @@ compliant device
 SYNOPSIS
 --------
 [verse]
-'nvme ocp smart-add-log' <device> [--output-format=<fmt> | -o <fmt>]
-			[--output-format-version=<version>]
+'nvme ocp smart-add-log' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -27,15 +27,8 @@ On success it returns 0, error code otherwise.
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal' or 'json'. Only one output format
-	can be used at a time. The default is normal.
 
---output-format-version=<version>::
-	Set the field labels in the reporting format to either '1'
-	(the original) or '2'. The default is 2 to generate field names
-	for the outputs that are easier to process via scripts.
+include::global-options.txt[]
 
 EXAMPLES
 --------

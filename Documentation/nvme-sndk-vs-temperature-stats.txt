@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme sndk vs-temperature-stats' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -64,6 +65,10 @@ Expected status and description :-
 |===
 
 On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+include::global-options.txt[]
 
 EXAMPLES
 --------

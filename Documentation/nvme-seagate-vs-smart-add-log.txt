@@ -10,6 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme seagate vs-smart-add-log <device> [OPTIONS]'
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -41,6 +42,8 @@ OPTIONS
 -o <FILE>::
 --output-file=<FILE>::
 	Output in binary format. Defaults to text-formatted dump to stdout
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

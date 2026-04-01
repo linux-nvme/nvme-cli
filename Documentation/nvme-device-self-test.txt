@@ -10,8 +10,7 @@ SYNOPSIS
 [verse]
 'nvme device-self-test' <device> [--namespace-id=<NUM> | -n <NUM>]
 			[--self-test-code=<NUM> | -s <NUM>] [--wait | -w]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -46,17 +45,7 @@ OPTIONS
 	The device self-test is aborted by SIGINT signal interrupt for the wait
 	The option is ignored if the abort self-test code option specified.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

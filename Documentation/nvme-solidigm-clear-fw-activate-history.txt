@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm clear-fw-activate-history' <device> [--no-uuid | -n]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,8 @@ OPTIONS
 --no-uuid::
 	Do not try to automatically detect UUID index for this command (required
 	for old OCP 1.0 support)
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

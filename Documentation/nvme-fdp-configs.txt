@@ -9,8 +9,9 @@ SYNOPSIS
 --------
 [verse]
 'nvme fdp configs' <device> [--endgrp-id=<NUM> | -e <NUM>]
-			[--human-readable | -H] [--raw-binary | -b]
-			[--output-format=<fmt> | -o <fmt>]
+			[--human-readable | -H]
+			[--raw-binary | -b]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -25,16 +26,14 @@ OPTIONS
 
 -H::
 --human-readable::
-	Parse, print and describe individual parts of bitfields.
+	Display values in a human-readable format where possible.
+	(deprecated, use --verbose)
 
 -b::
 --raw-binary::
 	Print the raw buffer to the standard output stream.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json', or 'binary'. Only one
-	output format can be used at a time.
+include::global-options.txt[]
 
 NVME
 ----

@@ -10,6 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme wdc drive-resize' <device> [--size=<sz> | -s <sz>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -28,6 +29,8 @@ OPTIONS
 -s <sz>::
 --size=<sz>::
 	The new size (in GB) to resize the drive to.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -8,8 +8,8 @@ nvme-pull-model-ddr-req-log - Retrieve Pull Model DDC Request Log, show it
 SYNOPSIS
 --------
 [verse]
-'nvme pull-model-ddr-req-log' <device> [--rae | -r] [--verbose | -v]
-			[--output-format=<fmt> | -o <fmt>] [--timeout=<timeout>]
+'nvme pull-model-ddr-req-log' <device> [--rae | -r]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -25,17 +25,7 @@ OPTIONS
 --rae::
 	Retain an Asynchronous Event.
 
--v::
---verbose::
-	Increase the information detail in the output.
-
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

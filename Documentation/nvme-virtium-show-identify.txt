@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme virtium show-identify' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,8 @@ On success, the command prints identify device in human readable format.
 OPTIONS
 -------
 none
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

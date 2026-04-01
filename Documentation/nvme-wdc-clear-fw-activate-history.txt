@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme wdc clear-fw-activate-history' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -23,6 +24,8 @@ Results for any other device are undefined.
 OPTIONS
 -------
 None
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

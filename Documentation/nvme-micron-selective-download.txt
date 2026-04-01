@@ -12,6 +12,7 @@ SYNOPSIS
 [verse]
 'nvme micron selective-download' <device> [--fw=<FILE>, -f <FILE>]
 			[--select=<flag>, -s <flag>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -38,6 +39,8 @@ OPTIONS
 	 OOB:: This updates the OOB and main firmware\n"
 	 EEP:: This updates the eeprom and main firmware\n"
 	 ALL:: This updates the eeprom, OOB, and main firmware";
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

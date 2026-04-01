@@ -9,8 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme ocp hardware-component-log' <device> [--comp-id=<num> | -i <num>]
-			[--list | -l] [--verbose | -v]
-			[--output-format=<fmt> | -o <fmt>] [--timeout=<timeout>]
+			[--list | -l]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -53,17 +53,7 @@ OPTIONS
 --list::
 	list component descriptions
 
--v::
---verbose::
-	Increase the information detail in the output.
-
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

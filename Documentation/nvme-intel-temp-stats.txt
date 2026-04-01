@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme intel temp-stats' <device> [--raw-binary | -b]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -28,6 +29,8 @@ OPTIONS
 -b::
 --raw-binary::
 	Print the raw temperature stats log buffer to stdout.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -11,6 +11,7 @@ SYNOPSIS
 [verse]
 'nvme dapustor smart-log-add' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--raw-binary | -b] [--json | -j]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -42,6 +43,8 @@ OPTIONS
 -j::
 --json::
 	Dump output in json format.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

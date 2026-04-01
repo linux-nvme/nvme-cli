@@ -9,9 +9,9 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm latency-tracking-log' <device> [--enable | -e] [--disable | -d]
-                                              [--read | -r] [--write | -w]
-                                              [--type <value> | -t <value>]
-                                              [--output-format=<fmt> | -o <fmt>]
+ [--read | -r] [--write | -w]
+ [--type <value> | -t <value>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -43,10 +43,7 @@ OPTIONS
 --type <value>::
 	Specify the log type to retrieve. Valid values depend on the device's capabilities.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json', or 'binary'. Only one
-	output format can be used at a time.
+include::global-options.txt[]
 
 EXAMPLES
 --------

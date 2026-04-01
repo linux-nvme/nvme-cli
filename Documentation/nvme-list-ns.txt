@@ -11,8 +11,7 @@ SYNOPSIS
 'nvme list-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--csi=<command_set_identifier> | -y <command_set_identifier>]
 			[--all | -a]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -43,17 +42,7 @@ OPTIONS
 	Retrieve the identify list structure for all namespaces in the
 	subsystem, whether attached or inactive.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

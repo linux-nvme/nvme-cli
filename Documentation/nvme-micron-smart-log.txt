@@ -8,7 +8,8 @@ nvme-micron-smart-log - Retrieve SMART/Health log with Micron vendor-specific fi
 SYNOPSIS
 --------
 [verse]
-'nvme micron smart-log' <device> [--output-format=<fmt> | -o <fmt>]
+'nvme micron smart-log' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -30,10 +31,8 @@ IPM (Interval Power Measurement)::
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal' or 'json'.
-	Default is 'normal'.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

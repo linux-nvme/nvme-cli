@@ -10,8 +10,9 @@ SYNOPSIS
 --------
 [verse]
 'nvme toshiba vs-smart-add-log ' <device> [--log=<NUM>, -l <NUM>]
-		[--namespace-id=<NUM>, -n <NUM>]
-		[--output-file=<FILE>, -o <FILE>]
+	  		[--namespace-id=<NUM>, -n <NUM>]
+			[--output-file=<FILE>, -o <FILE>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -42,6 +43,8 @@ OPTIONS
 -o <FILE>::
 --output-file=<FILE>::
 	Output binary file. Defaults to text-formatted dump to stdout
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

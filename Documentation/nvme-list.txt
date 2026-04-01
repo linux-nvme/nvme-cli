@@ -8,7 +8,8 @@ nvme-list - List all recognized NVMe devices
 SYNOPSIS
 --------
 [verse]
-'nvme list' [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+'nvme list'
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -18,16 +19,8 @@ Namespace usage printed in powers of 1,000 with SI prefixes. (e.g., 1.02  TB)
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
 
--v::
---verbose::
-	Increase the information in the output, showing nvme subsystems,
-	controllers and namespaces separately and how they're related to each
-	other.
+include::global-options.txt[]
 
 ENVIRONMENT
 -----------

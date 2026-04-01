@@ -9,17 +9,17 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm workload-tracker' <device> [--uuid-index=<id> | -U <id>]
-                                      [--enable | -e] [--disable | -d]
-                                      [--sample-time=<time> | -s <time>]
-                                      [--type=<type> | -t <type>]
-                                      [--run-time=<seconds> | -r <seconds>]
-                                      [--flush-freq=<count> | -f <count>]
-                                      [--wall-clock | -w]
-                                      [--trigger-field=<field> | -T <field>]
-                                      [--trigger-threshold=<value> | -V <value>]
-                                      [--trigger-on-delta | -D]
-                                      [--trigger-on-latency | -L]
-                                      [--verbose | -v]
+			[--enable | -e] [--disable | -d]
+			[--sample-time=<time> | -s <time>]
+			[--type=<type> | -t <type>]
+			[--run-time=<seconds> | -r <seconds>]
+			[--flush-freq=<count> | -f <count>]
+			[--wall-clock | -w]
+			[--trigger-field=<field> | -T <field>]
+			[--trigger-threshold=<value> | -V <value>]
+			[--trigger-on-delta | -D]
+			[--trigger-on-latency | -L]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -70,6 +70,8 @@ OPTIONS
 
 -v, --verbose::
     Increase logging verbosity. Can be used multiple times.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -13,12 +13,11 @@ SYNOPSIS
 			[--hostnqn=<nqn> | -n <nqn>]
 			[--subsysnqn=<nqn> | -c <nqn>]
 			[--keydata=<key> | -d <key>]
-			[--output-format=<fmt> | -o <fmt>]
 			[--identity=<id-vers> | -I <id-vers>]
 			[--insert | -i ]
 			[--compat | -C ]
 			[--keyfile=<keyfile> | -f <keyfile>]
-			[--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -73,14 +72,7 @@ OPTIONS
 	Append the resulting TLS key to keyfile. This command line option is
 	depending on --insert.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

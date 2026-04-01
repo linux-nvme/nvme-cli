@@ -10,6 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme micron vs-internal-log' <device> [--package=<FILE>, -p <FILE>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -31,6 +32,8 @@ OPTIONS
 -l <FILE>::
 --package=<FILE>::
 	name of the file (with .zip extension) to save the device logs
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

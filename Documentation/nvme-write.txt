@@ -25,8 +25,7 @@ SYNOPSIS
 			[--show-command | -V] [--dry-run | -w] [--latency | -t]
 			[--storage-tag<storage-tag> | -g <storage-tag>]
 			[--storage-tag-check | -C] [--force]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -156,17 +155,7 @@ metadata is passes.
 	Ignore namespace is currently busy and performed the operation
 	even though.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

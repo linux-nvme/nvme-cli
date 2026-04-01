@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm market-log' <device> [--raw-binary | -b]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -22,6 +23,8 @@ OPTIONS
 -b::
 --raw-binary::
 	Output the raw log data in binary format.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

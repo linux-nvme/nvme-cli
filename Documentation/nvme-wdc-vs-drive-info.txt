@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme wdc vs-drive-info' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -41,6 +42,10 @@ TCG Device Ownership
 EXAMPLE
 --------
 # nvme wdc vs-drive-info /dev/nvme0
+
+OPTIONS
+-------
+include::global-options.txt[]
 
 NVME
 ----

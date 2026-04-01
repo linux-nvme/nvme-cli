@@ -1,0 +1,124 @@
+FABRICS OPTIONS
+---------------
+
+The following options are common to NVMe over Fabrics commands such as
+`nvme connect`:
+
+-a <traddr>::
+--traddr=<traddr>::
+	Specify the network address of the controller. For transports
+	using IP addressing (e.g. rdma, tcp), this should be an IP address.
+
+--concat::
+	Enable secure concatenation (TCP).
+
+-c <#>::
+--reconnect-delay=<#>::
+	Set the delay in seconds before reconnect is attempted after a
+	connection loss.
+
+-C <secret>::
+--dhchap-ctrl-secret=<secret>::
+	Controller authentication secret for bi-directional authentication.
+	If not specified, bi-directional authentication is not attempted.
+
+-S <secret>::
+--dhchap-secret=<secret>::
+	Host authentication secret (DH-HMAC-CHAP). Must be provided in ASCII
+	format as defined in the NVMe specification.
+
+--disable-sqflow::
+	Disable submission queue flow control.
+
+-G::
+--data-digest::
+	Enable data digest generation/verification (TCP).
+
+-D::
+--duplicate-connect::
+	Allow duplicate connections to the same subsystem.
+
+-g::
+--hdr-digest::
+	Enable header digest generation/verification (TCP).
+
+-f <iface>::
+--host-iface=<iface>::
+	Specify the network interface to use for the connection.
+
+-I <hostid>::
+--hostid=<hostid>::
+	Specify the host UUID.
+
+-q <hostnqn>::
+--hostnqn=<hostnqn>::
+	Override the default host NQN.
+
+-w <traddr>::
+--host-traddr=<traddr>::
+	Specify the source address on the host side of the connection.
+
+-k <#>::
+--keep-alive-tmo=<#>::
+	Set the keep-alive timeout in seconds.
+
+--keyring=<keyring>::
+	Keyring to use for TLS key lookup.
+
+-n <subnqn>::
+--nqn=<subnqn>::
+	Specify the NVMe subsystem NQN to connect to.
+
+-i <#>::
+--nr-io-queues=<#>::
+	Number of I/O queues to create.
+
+-P <#>::
+--nr-poll-queues=<#>::
+	Number of polling queues to create.
+
+-W <#>::
+--nr-write-queues=<#>::
+	Number of write queues to create.
+
+-Q <#>::
+--queue-size=<#>::
+	Queue depth for I/O queues.
+
+-l <#>::
+--ctrl-loss-tmo=<#>::
+	Maximum time in seconds to retry reconnect attempts after
+	controller loss.
+
+-s <trsvcid>::
+--trsvcid=<trsvcid>::
+	Transport service identifier (e.g. TCP/rdma port). Default is 4420
+	for RDMA.
+
+-T <#>::
+--tos=<#>::
+	Type of service value for the connection (TCP).
+
+-t <trtype>::
+--transport=<trtype>::
+	Specify the transport type. Supported values include:
+
++
+[]
+|=================
+|Value | Description
+|rdma  | RDMA (RoCE, iWARP, InfiniBand)
+|tcp   | TCP/IP
+|fc    | Fibre Channel (*experimental*)
+|loop  | Local loopback transport
+|=================
+
+--tls::
+	Enable TLS encryption (TCP).
+
+--tls-key=<tls-key>::
+	TLS key for the connection. It is recommended to preload keys
+	into the system keyring instead of passing them via the command line.
+
+--tls-key-identity=<identity>::
+	Identity associated with the TLS key.

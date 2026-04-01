@@ -15,7 +15,7 @@ SYNOPSIS
 			[--address=<offset> | -o <offset>]
 			[--blocks=<512 byte sectors> | -b <sectors>]
 			[--target=<target-id> | -t <id>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -105,14 +105,7 @@ OPTIONS
 	The size in 512 byte sectors to be used for data transfer commands
 	(read or write) for a specified RPMB target.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------
