@@ -201,7 +201,7 @@ static void cb_connected(struct nvmf_context *fctx,
 		return;
 
 	if (cfd->flags == NORMAL) {
-		printf("device: %s\n", nvme_ctrl_get_name(c));
+		printf("connecting to device: %s\n", nvme_ctrl_get_name(c));
 		return;
 	}
 
