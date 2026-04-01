@@ -10,6 +10,7 @@ LIBNVMF_3 {
 		nvmf_connect_config_json;
 		nvmf_connect_ctrl;
 		nvmf_context_create;
+		nvmf_context_free;
 		nvmf_context_set_connection;
 		nvmf_context_set_crypto;
 		nvmf_context_set_device;

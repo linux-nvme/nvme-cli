@@ -382,6 +382,17 @@ int nvmf_context_create(struct nvme_global_ctx *ctx,
 		void *user_data, struct nvmf_context **fctxp);
 
 /**
+ * nvmf_context_free() - Free a fabrics context
+ * @fctx: Fabrics context to free
+ *
+ * Releases all resources associated with @fctx. The context must have
+ * been previously created with nvmf_context_create().
+ *
+ * After this call, @fctx must not be used.
+ */
+void nvmf_context_free(struct nvmf_context *fctx);
+
+/**
  * nvmf_context_set_discovery_cbs() - Set discovery callbacks for context
  * @fctx: Fabrics context
  * @discovery_log: Callback for discovery log events

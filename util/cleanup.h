@@ -58,6 +58,12 @@ static inline void free_uri(struct nvme_fabrics_uri **uri)
 		nvmf_free_uri(*uri);
 }
 #define _cleanup_uri_ __cleanup__(free_uri)
+
+static inline void cleanup_nvmf_context(struct nvmf_context **fctx)
+{
+	nvmf_context_free(*fctx);
+}
+#define _cleanup_nvmf_context_ __cleanup__(cleanup_nvmf_context)
 #endif
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)

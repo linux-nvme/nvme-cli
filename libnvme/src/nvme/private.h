@@ -300,6 +300,8 @@ struct nvme_global_ctx {
 };
 
 struct nvmf_context {
+	struct nvme_global_ctx *ctx;
+
 	/* common callbacks */
 	bool (*decide_retry)(struct nvmf_context *fctx, int err,
 			void *user_data);
@@ -347,7 +349,7 @@ struct nvmf_context {
 	const char *hostkey;
 	const char *ctrlkey;
 	const char *keyring;
-	const char *tls_key;
+	char *tls_key;
 	const char *tls_key_identity;
 
 	void *user_data;
