@@ -696,6 +696,13 @@ __public int nvme_gen_dhchap_key(struct nvme_global_ctx *ctx,
 	return -1;
 }
 
+__public int nvme_create_raw_secret(struct nvme_global_ctx *ctx,
+		const char *secret, size_t key_len, unsigned char **raw_secret)
+{
+	stub_log(__func__);
+	return -ENOTSUP;
+}
+
 /* Hostnqn generation (fabrics.c) */
 __public char *nvme_generate_hostnqn(void)
 {
