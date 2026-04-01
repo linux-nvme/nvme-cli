@@ -1766,6 +1766,21 @@ static void libnvme_read_sysfs_tls(struct libnvme_global_ctx *ctx,
 	free(key);
 }
 
+static void libnvme_read_sysfs_tls_mode(struct libnvme_global_ctx *ctx,
+		libnvme_ctrl_t c)
+{
+	_cleanup_free_ char *mode = NULL;
+
+	mode = libnvme_get_ctrl_attr(c, "tls_mode");
+	if (!mode)
+		return;
+
+	if (!strcmp(mode, "tls"))
+		c->cfg.tls = true;
+	else if (!strcmp(mode, "concat"))
+		c->cfg.concat = true;
+}
+
 static int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c, const char *path, const char *name)
 {
@@ -1814,6 +1829,7 @@ static int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	libnvme_ctrl_lookup_phy_slot(ctx, c);
 	libnvme_read_sysfs_dhchap(ctx, c);
 	libnvme_read_sysfs_tls(ctx, c);
+	libnvme_read_sysfs_tls_mode(ctx, c);
 
 	return 0;
 }
