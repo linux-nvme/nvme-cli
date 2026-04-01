@@ -51,13 +51,13 @@ jobs:
     # Initializes the CodeQL tools for scanning.
     - if: matrix.language == 'c-cpp'
       name: Initialize CodeQL C
-      uses: github/codeql-action/init@38697555549f1db7851b81482ff19f1fa5c4fedc # v4.34.1
+      uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
       with:
         languages: 'c-cpp'
 
     - if: matrix.language == 'python'
       name: Initialize CodeQL Python
-      uses: github/codeql-action/init@38697555549f1db7851b81482ff19f1fa5c4fedc # v4.34.1
+      uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
       with:
         languages: 'python'
         config-file: ./.github/codeql/codeql-config.yml
@@ -68,6 +68,6 @@ jobs:
          ninja -C .build
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@38697555549f1db7851b81482ff19f1fa5c4fedc # v4.34.1
+      uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 # v4.35.1
       with:
         category: "/language:${{matrix.language}}"
