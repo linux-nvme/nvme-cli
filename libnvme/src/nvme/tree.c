@@ -1729,6 +1729,20 @@ static void nvme_read_sysfs_tls(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 	free(key);
 }
 
+static void nvme_read_sysfs_tls_mode(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
+{
+	_cleanup_free_ char *mode = NULL;
+
+	mode = nvme_get_ctrl_attr(c, "tls_mode");
+	if (!mode)
+		return;
+
+	if (!strcmp(mode, "tls"))
+		c->cfg.tls = true;
+	else if (!strcmp(mode, "concat"))
+		c->cfg.concat = true;
+}
+
 static int nvme_reconfigure_ctrl(struct nvme_global_ctx *ctx, nvme_ctrl_t c, const char *path,
 				 const char *name)
 {
@@ -1777,6 +1791,7 @@ static int nvme_reconfigure_ctrl(struct nvme_global_ctx *ctx, nvme_ctrl_t c, con
 	nvme_ctrl_lookup_phy_slot(ctx, c);
 	nvme_read_sysfs_dhchap(ctx, c);
 	nvme_read_sysfs_tls(ctx, c);
+	nvme_read_sysfs_tls_mode(ctx, c);
 
 	return 0;
 }
