@@ -11,8 +11,7 @@ SYNOPSIS
 [verse]
 'nvme get-property' <device> [--offset=<offset> | -O <offset>]
 			[--human-readable | -H]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -25,20 +24,11 @@ OPTIONS
 	The offset of the property. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20
 
 -H::
---human-readable:
-	Show the fields packed in the property
+--human-readable::
+	Display values in a human-readable format where possible.
+	(deprecated, use --verbose)
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

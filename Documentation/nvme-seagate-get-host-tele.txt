@@ -10,6 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme seagate get-host-tele <device> [OPTIONS]'
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -34,6 +35,8 @@ OPTIONS
 -b::
 --raw-binary::
 	output in raw format
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

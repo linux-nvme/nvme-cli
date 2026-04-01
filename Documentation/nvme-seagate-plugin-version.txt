@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme seagate plugin-version'
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -17,6 +18,8 @@ Provides the help information for the Seagate plugin.
 OPTIONS
 -------
 No Options
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

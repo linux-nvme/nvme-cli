@@ -9,9 +9,9 @@ NVMe over PCIe or the controller properties for NVMe over Fabrics.
 SYNOPSIS
 --------
 [verse]
-'nvme show-regs' <device> [--human-readable | -H]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout>]
+'nvme show-regs' <device>
+			[--human-readable | -H]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -31,19 +31,10 @@ OPTIONS
 -------
 -H::
 --human-readable::
-	Display registers or supported properties in human readable format.
+	Display values in a human-readable format where possible.
+	(deprecated, use --verbose)
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

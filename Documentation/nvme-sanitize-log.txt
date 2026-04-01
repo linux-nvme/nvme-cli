@@ -8,9 +8,9 @@ nvme-sanitize-log - Send NVMe sanitize-log Command, return result
 SYNOPSIS
 --------
 [verse]
-'nvme sanitize-log' <device> [--rae | -r] [--human-readable | -H]
+'nvme sanitize-log' <device> [--rae | -r]
 			[--raw-binary | -b]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -58,24 +58,12 @@ OPTIONS
 --rae::
 	Retain an Asynchronous Event.
 
--H::
---human-readable::
-	This option will parse and format many of the bit fields
-	into human-readable formats.
-
 -b::
 --raw-binary::
 	Print the raw buffer to stdout. Structure is not parsed by
 	program. This overrides the vendor specific and human readable options.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

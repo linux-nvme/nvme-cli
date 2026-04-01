@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme intel id-ctrl' <device> [--vendor-specific | -v] [--raw-binary | -b]
-			[--output-format=<fmt> | -o <fmt>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -39,15 +39,7 @@ OPTIONS
 	the vendor specific region of the structure in hex with ascii
 	interpretation.
 
--H::
---human-readable::
-	This option will parse and format many of the bit fields
-	into human-readable formats.
-
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json', or
-	'binary'. Only one output format can be used at a time.
+include::global-options.txt[]
 
 EXAMPLES
 --------

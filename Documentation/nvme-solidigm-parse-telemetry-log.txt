@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm parse-telemetry-log' <device> [OPTIONS]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -45,6 +46,8 @@ OPTIONS
     Specifies a binary file containing a telemetry log dump to parse instead of
     retrieving the log from a device. When this option is used, no device argument
     should be provided.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme fdp update' <device> [--namespace-id=<NUM> | -n <NUM>]
 			[--pids=<NUM,> | -p <NUM,>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -25,6 +26,8 @@ OPTIONS
 -p <NUM,>::
 --pids=<NUM,>::
 	Comma-separated list of placement identifiers to update.
+
+include::global-options.txt[]
 
 NVME
 ----

@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme ocp set-telemetry-profile' <device>
 			[--telemetry-profile-select=<tps> | -t <tps>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -29,6 +30,8 @@ OPTIONS
 --tps=<tps>::
 	Telemetry Profile Select. The device shall collect debug data per the
 	specified profile number.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

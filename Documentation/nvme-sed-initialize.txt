@@ -8,7 +8,8 @@ nvme-sed-initialize - Initialize a SED Opal Device for locking
 SYNOPSIS
 --------
 [verse]
-'nvme sed initialize' [ --read-only, -r ]  <device>
+'nvme sed initialize' [ --read-only, -r ] <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -19,6 +20,8 @@ OPTIONS
 -r::
 --read-only::
 	Set locking range to read-only.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

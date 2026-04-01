@@ -8,7 +8,8 @@ nvme-solidigm-vs-drive-info - Retrieve drive information
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm vs-drive-info' <device> [--output-format=<fmt> | -o <fmt>]
+'nvme solidigm vs-drive-info' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -21,10 +22,8 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal' or 'json'. Only one output format
-	can be used at a time.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -8,7 +8,8 @@ nvme-sed-unlock - Unlock a SED Opal Device
 SYNOPSIS
 --------
 [verse]
-'nvme sed unlock' [--read-only | -r] [--ask-key | -k]  <device>
+'nvme sed unlock' [--read-only | -r] [--ask-key | -k] <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,7 @@ OPTIONS
 --ask-key::
 	Prompt for SED authentication key.
 
+include::global-options.txt[]
 
 EXAMPLES
 --------

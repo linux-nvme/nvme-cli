@@ -9,7 +9,8 @@ return result and log
 SYNOPSIS
 --------
 [verse]
-'nvme resv-notif-log' <device> [--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+'nvme resv-notif-log' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -26,14 +27,8 @@ may be printed to stdout for another program to parse.
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
 
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

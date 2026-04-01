@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme sndk cloud-SSD-plugin-version' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -19,6 +20,10 @@ Plugin Version (if supported by the device).
 The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
 
 On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+include::global-options.txt[]
 
 EXAMPLES
 --------

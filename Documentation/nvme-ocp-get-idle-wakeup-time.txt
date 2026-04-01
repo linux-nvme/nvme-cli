@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme ocp get-idle-wakeup-time' <device> [--sel=<select> | -s <select>] [--namespace-id=<nsid> | -n <namespace-id>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -45,6 +46,8 @@ OPTIONS
 |3|Supported capabilities
 |4-7|Reserved
 |==================
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

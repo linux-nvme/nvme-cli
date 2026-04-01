@@ -11,7 +11,8 @@ SYNOPSIS
 'nvme ocp set-error-injection' <device> [--data=<file> | -d <file>]
 			[--number=<num> | -n <num>] [--no-uuid | -N]
 			[--all-ns | -a] [--type=<type> | -t <type>]
-			[--nrtdp=<num> | -r <num>] [--timeout=<timeout>]
+			[--nrtdp=<num> | -r <num>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -51,8 +52,7 @@ OPTIONS
 --nrtdp=<num>::
 	Number of reads to trigger device panic
 
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

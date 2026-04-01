@@ -9,8 +9,8 @@ returns results and structure
 SYNOPSIS
 --------
 [verse]
-'nvme-mi-cmd-support-effects-log' <device> [--human-readable | -H]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+'nvme-mi-cmd-support-effects-log' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -26,19 +26,8 @@ raw buffer may be printed to stdout.
 
 OPTIONS
 -------
--H::
---human-readable::
-	This option will parse and format many of the bit fields
-	into human-readable formats.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

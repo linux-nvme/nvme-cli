@@ -13,9 +13,8 @@ SYNOPSIS
 			[--uuid-index=<uuid-index> | -U <uuid_index>]
 			[--data-len=<data-len> | -l <data-len>]
 			[--data=<data-file> | -d <data-file>] [--save | -s]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
 			[--cdw12=<cdw12> | -c <cdw12>]
-			[--timeout=<timeout>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -115,21 +114,11 @@ OPTIONS
 --uuid-index=<uuid-index>::
 	UUID Index of the feature
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
 -c <cdw12>::
 --cdw12=<cdw12>::
 	The value for command dword 12, if applicable.
 
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

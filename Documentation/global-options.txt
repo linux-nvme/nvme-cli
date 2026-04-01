@@ -1,0 +1,33 @@
+GLOBAL OPTIONS
+--------------
+
+The following options are defined at the top-level `nvme` command
+and are available to this subcommand:
+
+--dry-run::
+	Print the command that would be executed, but do not actually
+	execute it.
+
+--no-ioctl-probing::
+	Disable probing for 64-bit IOCTL support.
+
+--no-retries::
+	Disable retry logic on transient errors.
+
+-o <fmt>::
+--output-format=<fmt>::
+	Set the reporting format to 'normal', 'tabular, 'json', or 'binary'.
+	Only one output format may be used at a time.
+
+--output-format-version=<version>::
+	Select the output format version. Version '1' uses the original
+	field naming, while version '2' (default) provides more consistent
+	and script-friendly field names.
+
+--timeout=<ms>::
+	Set the timeout for the command in milliseconds.
+
+-v::
+--verbose::
+	Increase the level of detail in the output. May be specified
+	multiple times to further increase verbosity.

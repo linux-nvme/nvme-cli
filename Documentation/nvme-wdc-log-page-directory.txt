@@ -8,7 +8,8 @@ nvme-wdc-log-page-directory - Retrieves the list of Log IDs supported by the dri
 SYNOPSIS
 --------
 [verse]
-'nvme wdc log-page-directory' <device> [--output-format=<normal|json|binary> -o <normal|json|binary>]
+'nvme wdc log-page-directory' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -25,10 +26,8 @@ On success it returns the log page directory information, error code otherwise.
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json', or 'binary'. Only one output format
-	can be used at a time. The default is normal.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -20,6 +20,7 @@ SYNOPSIS
 				[--app-tag-mask=<NUM> | -m <NUM>]
 				[--app-tag=<NUM> | -a <NUM>]
 				[--prinfo=<NUM> | -p <NUM>]
+				[<global-options>]
 
 DESCRIPTION
 -----------
@@ -81,6 +82,8 @@ OPTIONS
 -p <NUM>::
 --prinfo=<NUM>::
 	Protection Information field definition.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

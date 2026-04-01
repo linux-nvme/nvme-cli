@@ -20,8 +20,7 @@ SYNOPSIS
 			[--storage-tag-check<storage-tag-check> | -C <storage-tag-check>]
 			[--dir-type=<dtype> | -T <dtype>]
 			[--dir-spec=<dspec> | -D <dspec>] [--namespace-zeroes | -Z]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -101,17 +100,7 @@ metadata is passes.
 --namespace-zeroes::
 	If set, then the controller clear all logical blocks to zero in the entire namespace.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme ocp get-telemetry-profile' <device> [--sel=<select> | -s <select>]
 			[--namespace-id <nsid> | -n <nsid>] [--no-uuid | -u]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -48,6 +49,8 @@ OPTIONS
 --no-uuid::
 	Do not try to automatically detect UUID index for this command (required
 	for old OCP 1.0 support)
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -20,7 +20,6 @@ SYNOPSIS
 			[--lbstm=<lbstm> | -l <lbstm>]
 			[--nphndls=<nphndls> | -n <nphndls>]
 			[--block-size=<block-size> | -b <block-size>]
-			[--timeout=<timeout>]
 			[--nsze-si=<nsze-si> | -S <nsze-si>]
 			[--ncap-si=<ncap-si> | -C <ncap-si>]
 			[--azr | -z]
@@ -28,7 +27,7 @@ SYNOPSIS
 			[--ror=<ror> | -O <ror>]
 			[--rnumzrwa=<rnumzrwa> | -u <rnumzrwa>]
 			[--phndls=<placement-handle-list,> | -p <placement-handle-list,>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -139,17 +138,7 @@ OPTIONS
 	The comma separated list of Reclaim Unit Handle Identifier to be associated
 	with each Placement Handle.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value 120,000. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

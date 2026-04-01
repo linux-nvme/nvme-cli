@@ -12,7 +12,8 @@ SYNOPSIS
 			[--start-lba=<LBA> | -s <LBA>]
 			[--data-len=<IONUM>, -l <IONUM>]
 			[--zra=<NUM>, -z <NUM>] [--zrasf=<NUM>, -a <NUM>]
-			[--zra-spec-feat, -f] [--output-format=<fmt>, -o <fmt>]
+			[--zra-spec-feat, -f]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -52,9 +53,7 @@ OPTIONS
 --zra-spec-feat::
 	Enable Zone Receive Action Specific features
 
--o <fmt>::
---output-format=<fmt>::
-	Output format: normal|json|binary
+include::global-options.txt[]
 
 EXAMPLES
 --------

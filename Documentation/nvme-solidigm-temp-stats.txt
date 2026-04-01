@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm temp-stats' <device> [--raw-binary | -b]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,8 @@ OPTIONS
 --raw-binary::
     Dump output in binary format. This option will display the raw data
     instead of interpreting it.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -13,7 +13,7 @@ SYNOPSIS
 			[--select-all, -a] [--zsa=<NUM>, -z <NUM>]
 			[--data-len=<IONUM>, -l <IONUM>]
 			[--data=<FILE>, -d <FILE>]
-			[--timeout=<timeout>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -58,8 +58,7 @@ OPTIONS
 --data=<FILE>::
 	Optional file for data (default stdin)
 
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

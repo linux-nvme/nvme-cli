@@ -12,6 +12,7 @@ SYNOPSIS
 'nvme ocp eol-plp-failure-mode' <device> [--mode=<mode> | -m <mode>]
 			[--no-uuid | -n] [--save | -s]
 			[--sel=<select> | -S <select>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -58,6 +59,8 @@ OPTIONS
 |3|Supported capabilities
 |4-7|Reserved
 |==================
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

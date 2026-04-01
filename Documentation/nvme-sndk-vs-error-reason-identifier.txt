@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme sndk vs-error-reason-identifier' <device> [--log-id=<NUM>, -i <NUM>] [--file=<FILE>, -o <FILE>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -37,6 +38,8 @@ OPTIONS
 	Output file; defaults to "<device serial number>_error_reason_identifier_host_<date>_<time>.bin" for
 	the host generated log or "<device serial number>_error_reason_identifier_ctlr_<date>_<time>.bin" for
 	the controller initiated log.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

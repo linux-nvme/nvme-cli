@@ -13,6 +13,7 @@ SYNOPSIS
 			[--freq=<NUM> | -f <NUM>]
 			[--output-file=<FILE> | -o <FILE>]
 			[--test-name=<NAME> | -n <NAME>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -58,6 +59,8 @@ OPTIONS
 --test-name=<NAME>::
 	(optional) Name of the test you are doing. We use this string as part of
 	the name of the log file.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -19,6 +19,7 @@ SYNOPSIS
 			[--debug_log_trigger_enable=<NUM> | -r <NUM>]
 			[--discard_debug_log=<NUM> | -l <NUM>]
 			[--latency_monitor_feature_enable=<NUM> | -e <NUM>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -85,6 +86,8 @@ OPTIONS
 	Latency Monitor Feature Enable; When set to 01h the Latency Monitor
 	Feature is enabled. When cleared to 00h the Latency Monitor Feature is
 	disabled.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -11,7 +11,7 @@ SYNOPSIS
 [verse]
 'nvme phy-rx-eom-log' <device> [--lsp=<field> | -s <field>]
 			[--controller=<id> | -c <id>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -35,19 +35,7 @@ OPTIONS
 	Controller ID of the controller associated with the PCIe port to be
 	measured.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json', or
-	'binary'. Only one output format can be used at a time.
-
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

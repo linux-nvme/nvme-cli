@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme seagate version'
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -17,6 +18,8 @@ Provides the git version information for the Seagate version for nvme-cli. This 
 OPTIONS
 -------
 No Options
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

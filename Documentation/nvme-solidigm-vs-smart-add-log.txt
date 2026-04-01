@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm vs-smart-add-log' <device> [OPTIONS]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -16,9 +17,8 @@ This command retrieves the SMART / health extended log for Solidigm NVMe devices
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal' or 'json'. Only one output format can be used at a time. Default is normal.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

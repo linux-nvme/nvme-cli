@@ -14,8 +14,7 @@ SYNOPSIS
 				 [--state=<NUM> | -S <NUM>]
 				 [--extended | -e]
 				 [--partial | -p]
-				 [--verbose | -v]
-				 [--output-format=<fmt> | -o <fmt>]
+				 [<global-options>]
 
 DESCRIPTION
 -----------
@@ -72,14 +71,7 @@ OPTIONS
 	If set, the device will return the number of zones that match the state
 	rather than the number of zones returned in the report.
 
--v::
---verbose::
-	Increase the information detail in the output.
-
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json', or
-	'binary'. Only one output format can be used at a time.
+include::global-options.txt[]
 
 EXAMPLES
 --------

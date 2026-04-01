@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme boot-part-log' <device> [--lsp=<field> | -s <field>]
 			[--output-file=<file> | -f <file>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -33,14 +33,7 @@ OPTIONS
 --output-file=<file>::
 	File name to which raw binary data will be saved to.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

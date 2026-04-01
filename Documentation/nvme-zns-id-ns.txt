@@ -10,7 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme zns id-ns' <device> [--namespace-id=<NUM> | -n <NUM>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -31,14 +31,7 @@ OPTIONS
 	namespace id of the block device will be used. If the command is issued
 	to a non-block device, the parameter is required.
 
--v::
---verbose::
-	Increase the information detail in the output.
-
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json', or
-	'binary'. Only one output format can be used at a time.
+include::global-options.txt[]
 
 EXAMPLES
 --------

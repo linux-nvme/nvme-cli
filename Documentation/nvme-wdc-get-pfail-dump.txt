@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme wdc get-pfail-dump' <device> [--output-file=<FILE>, -o <FILE>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -28,6 +29,8 @@ OPTIONS
 -o <FILE>::
 --output-file=<FILE>::
 	Output file; defaults to device serial number followed by "pfail_dump" suffix
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

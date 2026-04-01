@@ -8,7 +8,8 @@ nvme-transcend-badblock - Retrieve Transcend NVMe device's bad blocks.
 SYNOPSIS
 --------
 [verse]
-'nvme transcend badblock' <device> 
+'nvme transcend badblock' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -22,6 +23,8 @@ On success, the returned value would print the amount of bad blocks.
 OPTIONS
 -------
 none
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

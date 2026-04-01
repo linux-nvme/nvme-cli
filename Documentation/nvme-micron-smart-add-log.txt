@@ -10,6 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme micron vs-smart-add-log' <device> -f <json|normal>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -34,6 +35,8 @@ OPTIONS
 -------
 -f <json|normal>::
 	Controls the format of displayed output.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

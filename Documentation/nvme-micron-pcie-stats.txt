@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme micron vs-pcie-stats' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -25,6 +26,8 @@ new devices may be added subsequently.
 OPTIONS
 -------
 None
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

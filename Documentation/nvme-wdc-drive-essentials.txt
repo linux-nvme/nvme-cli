@@ -9,7 +9,8 @@ save to a tar file.
 SYNOPSIS
 --------
 [verse]
-'nvme wdc drive-essentials' <device> [--dir-name=<DIRECTORY>, -d <DIRECTORY>] 
+'nvme wdc drive-essentials' <device> [--dir-name=<DIRECTORY>, -d <DIRECTORY>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -29,6 +30,8 @@ OPTIONS
 -d <DIRECTORY>::
 --dir-name=<DIRECTORY>::
 	Output directory; defaults to current working directory. 
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

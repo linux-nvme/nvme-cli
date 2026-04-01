@@ -11,6 +11,7 @@ SYNOPSIS
 [verse]
 'nvme sndk vs-telemetry-controller-option' <device>
 			[--disable, -d] [--enable, -e] [--status, -s]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -38,6 +39,8 @@ OPTIONS
 --status::
 	Returns the current status (enabled or disabled) of the controller
 	initiated option of the telemetry log page.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

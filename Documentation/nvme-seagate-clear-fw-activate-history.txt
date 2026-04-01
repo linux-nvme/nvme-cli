@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme seagate clear-fw-activate-history <device> [OPTIONS]'
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -23,6 +24,8 @@ OPTIONS
 -s
 --save::
 	specifies that the controller shall save the attribute.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

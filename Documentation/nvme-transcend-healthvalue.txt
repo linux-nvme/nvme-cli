@@ -10,6 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme transcend healthvalue' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,8 @@ On success, the returned value would print health percentage value.
 OPTIONS
 -------
 none
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

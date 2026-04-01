@@ -11,7 +11,7 @@ SYNOPSIS
 [verse]
 'nvme list-secondary' <device> [--cntid=<cntid> | -c <cntid>]
 			[--num-entries=<entries> | -e <entries>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -32,14 +32,7 @@ OPTIONS
 --num-entries=<entries>::
 	Number of entries to retrieve.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------
