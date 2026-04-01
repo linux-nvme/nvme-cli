@@ -534,7 +534,7 @@ static void nvme_show_cmd_err(const char *msg, bool admin, __u8 opcode, int err)
 		nvme_show_status(err);
 }
 
-void nvme_show_err(const char *msg, int err)
+void nvme_show_err(int err, const char *msg)
 {
 	nvme_show_cmd_err(msg, false, 0, err);
 }

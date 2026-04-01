@@ -169,7 +169,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 
 		err = nvme_get_telemetry_max(hdl, NULL, &max_data_tx);
 		if (err) {
-			nvme_show_err("identify_ctrl", err);
+			nvme_show_err(err, "identify_ctrl");
 			return err;
 		}
 		power2 = max_data_tx / NVME_LOG_PAGE_PDU_SIZE;
@@ -181,7 +181,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		err = sldgm_dynamic_telemetry(hdl, cfg.host_gen, cfg.ctrl_init, true,
 					      mdts, cfg.data_area, &tlog, &tl.log_size);
 		if (err) {
-			nvme_show_err("get-telemetry-log", err);
+			nvme_show_err(err, "get-telemetry-log");
 			return err;
 		}
 	}
