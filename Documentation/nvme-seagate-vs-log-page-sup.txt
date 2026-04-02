@@ -10,6 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme seagate vs-log-page-sup <device> [OPTIONS]'
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -21,9 +22,8 @@ NVMe block device (ex: /dev/nvme0n1).
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Output in binary format
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

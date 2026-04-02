@@ -10,7 +10,7 @@ SYNOPSIS
 [verse]
 'nvme attach-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--controllers=<ctrl-list,> | -c <ctrl-list,>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -33,14 +33,7 @@ OPTIONS
 	namespace too. If no list is provided, the namespace will be attached
 	to the <device> controller used for this command.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

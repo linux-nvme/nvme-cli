@@ -629,6 +629,8 @@ static int nvme_create_host(struct nvme_global_ctx *ctx, const char *hostnqn,
 		return -ENOMEM;
 
 	h->hostnqn = strdup(hostnqn);
+	if (!hostid)
+		hostid = nvme_hostid_from_hostnqn(hostnqn);
 	if (hostid)
 		h->hostid = strdup(hostid);
 	list_head_init(&h->subsystems);
@@ -1700,10 +1702,9 @@ static void nvme_read_sysfs_tls(struct nvme_global_ctx *ctx, nvme_ctrl_t c)
 
 	key = nvme_get_ctrl_attr(c, "tls_key");
 	if (!key) {
-		/* tls_key is only present if --tls has been used. */
+		/* tls_key is only present if --tls or --concat has been used */
 		return;
 	}
-	c->cfg.tls = true;
 
 	keyring = nvme_get_ctrl_attr(c, "tls_keyring");
 	nvme_ctrl_set_keyring(c, keyring);

@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme ocp get-dssd-async-event-config' <device> [--sel=<select> | -s <select>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -39,6 +40,8 @@ OPTIONS
 |3|Supported capabilities
 |4-7|Reserved
 |==================
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

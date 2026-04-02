@@ -9,7 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme fdp events' <device> [--endgrp-id=<NUM> | -e <NUM>] [--host-events | -E]
-			[--raw-binary | -b] [--output-format=<fmt> | -o <fmt>]
+			[--raw-binary | -b]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -30,10 +31,7 @@ OPTIONS
 --raw-binary::
 	Print the raw buffer to the standard output stream.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json', or 'binary'. Only one
-	output format can be used at a time.
+include::global-options.txt[]
 
 NVME
 ----

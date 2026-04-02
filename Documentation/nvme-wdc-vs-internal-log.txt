@@ -13,7 +13,8 @@ SYNOPSIS
 			[--data-area=<DATA AREA>, -d <DATA_AREA>]
 			[--file-size=<FILE SIZE>, -f <FILE SIZE>]
 			[--offset=<OFFSET>, -e <OFFSET>]
-			[--type=<TYPE>, -t <type>] [--verbose, -v]
+			[--type=<TYPE>, -t <type>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -54,10 +55,6 @@ OPTIONS
 	telemetry log page. If not specified or if <TYPE> is NONE, the command
 	will return vendor defined debug data.
 
--v <VERBOSE>::
---verbose=<VERBOSE>::
-	Provides additional debug messages for certain drives.
-
 -f <FILE SIZE>::
 --file-size=<FILE SIZE>::
 	Deprecated. Specifies the desired size of the data file starting at the
@@ -74,6 +71,8 @@ OPTIONS
 	supported on the devices mentioned in the documentation of the
 	--data-area parameter, and only for capture with --type=NONE or --type
 	not specified.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

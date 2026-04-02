@@ -9,9 +9,9 @@ SYNOPSIS
 --------
 [verse]
 'nvme fdp' <device> [--endgrp-id=<NUM> | -e <NUM>]
-                [--enable-conf-idx=<NUM> | -c <NUM>]
-                [--disable | -d]
-                [--verbose | -v]
+			[--enable-conf-idx=<NUM> | -c <NUM>]
+			[--disable | -d]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -42,9 +42,7 @@ OPTIONS
 --disable::
     Disable the current FDP feature configuration.
 
--v::
---verbose::
-    Increase verbosity of the output.
+include::global-options.txt[]
 
 SEE ALSO
 --------

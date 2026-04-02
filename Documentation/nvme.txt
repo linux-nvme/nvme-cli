@@ -9,11 +9,11 @@ SYNOPSIS
 --------
 built-in plugin:
 [verse]
-'nvme' <command> <device> [<args>]
+'nvme' <command> <device> [<args>] [<global-options>]
 
 extension plugins:
 [verse]
-'nvme' <plugin> <command> <device> [<args>]
+'nvme' <plugin> <command> <device> [<args>] [<global-options>]
 
 DESCRIPTION
 -----------
@@ -44,6 +44,8 @@ Plugins/Vendor extension commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 include::cmd-plugins.txt[]
+
+include::global-options.txt[]
 
 RETURNS
 -------

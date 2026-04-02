@@ -11,8 +11,7 @@ SYNOPSIS
 'nvme fw-commit' <device> [--slot=<slot> | -s <slot>]
 			[--action=<action> | -a <action>]
 			[--bpid=<boot-partid> | -b <boot-partid>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -79,17 +78,7 @@ the BPID field as active and update BPINFO.ABPID.
 	Specifies the Boot partition that shall be used for the Commit Action,
 	if applicable (default: 0)
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

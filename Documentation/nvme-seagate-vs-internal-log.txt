@@ -10,6 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme seagate vs-internal-log <device> [OPTIONS]'
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -28,6 +29,8 @@ OPTIONS
 -f <FILE>::
 --dump-file=<FILE>::
 	Dump file
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

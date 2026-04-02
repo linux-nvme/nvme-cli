@@ -10,8 +10,7 @@ SYNOPSIS
 [verse]
 'nvme id-ns' <device> [--uuid-index=<uuid-index> | -U <uuid_index>]
 			[--lba-format-index=<lba_format_index> | -i <lba_format_index>]
-			[--verbose | -v]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -37,14 +36,7 @@ OPTIONS
 	This field specifies the index into the LBA Format list identifying
 	the LBA Format capabilities that are to be returned
 
--v::
---verbose::
-	Increase the information detail in the output.
-
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
+include::global-options.txt[]
 
 EXAMPLES
 --------

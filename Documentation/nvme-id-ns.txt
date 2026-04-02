@@ -11,7 +11,7 @@ SYNOPSIS
 'nvme id-ns' <device> [--vendor-specific | -V] [--raw-binary | -b]
 			[--namespace-id=<nsid> | -n <nsid>] [--force]
 			[--human-readable | -H]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -59,17 +59,10 @@ OPTIONS
 
 -H::
 --human-readable::
-	This option will parse and format many of the bit fields
-	into human-readable formats.
+	Display values in a human-readable format where possible.
+	(deprecated, use --verbose)
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -274,10 +274,26 @@ __public int nvmf_context_set_connection(struct nvmf_context *fctx,
 	return 0;
 }
 
+static const char *hostid_from_hostnqn(const char *hostnqn)
+{
+	const char *match;
+
+	if (!hostnqn)
+		return NULL;
+
+	match = strstr(hostnqn, "uuid:");
+	if (!match)
+		return NULL;
+
+	return match + strlen("uuid:");
+}
+
 __public int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
 		const char *hostnqn, const char *hostid)
 {
 	fctx->hostnqn = hostnqn;
+	if (!hostid)
+		hostid = hostid_from_hostnqn(hostnqn);
 	fctx->hostid = hostid;
 
 	return 0;
@@ -1129,6 +1145,34 @@ __public int nvmf_connect_ctrl(nvme_ctrl_t c)
 	return 0;
 }
 
+static void nvmf_update_tls_concat(struct nvmf_disc_log_entry *e,
+		nvme_ctrl_t c, nvme_host_t h)
+{
+	if (e->trtype != NVMF_TRTYPE_TCP ||
+	    e->tsas.tcp.sectype == NVMF_TCP_SECTYPE_NONE)
+		return;
+
+	if (e->treq & NVMF_TREQ_REQUIRED) {
+		nvme_msg(h->ctx, LOG_DEBUG,
+			"setting --tls due to treq %s and sectype %s\n",
+			nvmf_treq_str(e->treq),
+			nvmf_sectype_str(e->tsas.tcp.sectype));
+
+		c->cfg.tls = true;
+		return;
+	}
+
+	if (e->treq & NVMF_TREQ_NOT_REQUIRED) {
+		nvme_msg(h->ctx, LOG_DEBUG,
+			"setting --concat due to treq %s and sectype %s\n",
+			nvmf_treq_str(e->treq),
+			nvmf_sectype_str(e->tsas.tcp.sectype));
+
+		c->cfg.concat = true;
+		return;
+	}
+}
+
 static int nvmf_connect_disc_entry(nvme_host_t h,
 		struct nvmf_disc_log_entry *e,
 		struct nvmf_context *fctx,
@@ -1222,18 +1266,8 @@ static int nvmf_connect_disc_entry(nvme_host_t h,
 	    nvmf_check_option(h->ctx, disable_sqflow))
 		c->cfg.disable_sqflow = true;
 
-	if (e->trtype == NVMF_TRTYPE_TCP &&
-	    e->tsas.tcp.sectype != NVMF_TCP_SECTYPE_NONE) {
-		if (e->treq & NVMF_TREQ_REQUIRED) {
-			nvme_msg(h->ctx, LOG_DEBUG, "setting --tls due to treq %s and sectype %s\n",
-					nvmf_treq_str(e->treq), nvmf_sectype_str(e->tsas.tcp.sectype));
-			c->cfg.tls = true;
-		} else if (e->treq & NVMF_TREQ_NOT_REQUIRED) {
-			nvme_msg(h->ctx, LOG_DEBUG, "setting --concat due to treq %s and sectype %s\n",
-					nvmf_treq_str(e->treq), nvmf_sectype_str(e->tsas.tcp.sectype));
-			c->cfg.concat = true;
-		}
-	}
+	/* update tls or concat */
+	nvmf_update_tls_concat(e, c, h);
 
 	ret = nvmf_add_ctrl(h, c, cfg);
 	if (!ret) {
@@ -2585,11 +2619,8 @@ static int nbft_connect(struct nvme_global_ctx *ctx,
 	if (ss && ss->unavailable && saved_log_level < 1)
 		nvme_set_logging_level(ctx, -1, false, false);
 
-	if (e) {
-		if (e->trtype == NVMF_TRTYPE_TCP &&
-		    e->tsas.tcp.sectype != NVMF_TCP_SECTYPE_NONE)
-			cfg->tls = true;
-	}
+	/* Update tls or concat */
+	nvmf_update_tls_concat(e, c, h);
 
 	ret = nvmf_add_ctrl(h, c, cfg);
 

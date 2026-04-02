@@ -10,7 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme media-unit-stat-log' <device> [--dom-id | -d] [--raw-binary | -b]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,12 +24,6 @@ On success, the returned Media unit status log pages log structure will be print
 
 OPTIONS
 -------
-
--o <fmt>::
---output-format=<fmt>::
-	This option will set the reporting format to normal, json, or binary.
-	Only one output format can be used at a time.
-
 -d::
 --dom-id::
 	To get the domain ID.
@@ -37,6 +31,8 @@ OPTIONS
 -b::
 --raw-binary::
 	To show raw binary data.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

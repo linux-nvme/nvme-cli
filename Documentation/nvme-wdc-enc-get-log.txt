@@ -12,6 +12,7 @@ SYNOPSIS
 'nvme wdc enc-get-log' <device> [--log-id=<NUM>, -l <NUM>]
 			[--output-file=<FILE>, -o <FILE>]
 			[--transfer-size=<SIZE>, -s <SIZE>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -40,6 +41,8 @@ OPTIONS
 --transfer-size=<NUM>::
 	Data retrieval transfer size, maximum transfer size should be 0x2000
 	(decimal 8192)
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

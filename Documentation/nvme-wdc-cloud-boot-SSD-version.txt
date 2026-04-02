@@ -8,7 +8,8 @@ nvme-wdc-cloud-boot-SSD-version - Display WDC plugin Cloud Boot SSD Version
 SYNOPSIS
 --------
 [verse]
-'nvme wdc cloud-boot-SSD-version' <device> 
+'nvme wdc cloud-boot-SSD-version' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -19,6 +20,10 @@ Boot Version (if supported by the device).
 The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
 
 On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme micron clear-pcie-correctable-errors' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,8 @@ devices may be added subsequently.
 OPTIONS
 -------
 None
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

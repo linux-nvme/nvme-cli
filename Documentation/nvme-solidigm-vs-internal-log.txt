@@ -9,8 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm vs-internal-log' <device> [--log-type=<type> | -t <type>]
-                                          [--output-dir=<dir> | -d <dir>]
-                                          [--verbose | -v]
+ [--output-dir=<dir> | -d <dir>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -33,9 +33,7 @@ OPTIONS
 --output-dir=<dir>::
     Specify the output directory for the log files. Defaults to the current working directory.
 
--v::
---verbose::
-    Enable verbose output for additional information during the log retrieval process.
+include::global-options.txt[]
 
 EXAMPLES
 --------

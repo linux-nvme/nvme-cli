@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme sndk clear-assert-dump' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -24,6 +25,8 @@ The command will not be executed on devices that don't support it.
 OPTIONS
 -------
 None
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

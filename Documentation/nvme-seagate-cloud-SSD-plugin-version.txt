@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme seagate cloud-SSD-plugin-version'
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -17,6 +18,8 @@ Shows OCP Seagate plugin's version information
 OPTIONS
 -------
 No Options
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

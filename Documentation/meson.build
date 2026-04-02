@@ -265,6 +265,8 @@ adoc_sources = [
 adoc_includes = [
     'cmd-plugins.txt',
     'cmds-main.txt',
+    'global-options.txt',
+    'fabrics-options.txt',
 ]
 
 if want_docs != 'false'

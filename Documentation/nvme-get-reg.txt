@@ -8,15 +8,15 @@ nvme-get-reg - Read and show the defined NVMe controller register
 SYNOPSIS
 --------
 [verse]
-'nvme get-reg' <device> [--offset=<offset>, -O <offset>] [--human-readable | -H]
+'nvme get-reg' <device> [--offset=<offset>, -O <offset>]
 			[--cap] [--vs] [--cmbloc] [--cmbsz] [--bpinfo]
 			[--cmbsts] [--cmbebs] [--cmbswtp] [--crto] [--pmrcap]
 			[--pmrsts] [--pmrebs] [--pmrswtp] [--intms] [--intmc]
 			[--cc] [--csts] [--nssr] [--aqa] [--asq] [--acq]
 			[--bprsel] [--bpmbl] [--cmbmsc] [--nssd] [--pmrctl]
 			[--pmrmscl] [--pmrmscu]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout>]
+			[--human-readable | -H]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -30,10 +30,6 @@ OPTIONS
 -O <offset>::
 --offset=<offset>::
 	offset of the requested register
-
--H::
---human-readable::
-	show register in readable format
 
 --cap::
 	CAP=0x0 register offset
@@ -119,17 +115,12 @@ OPTIONS
 --pmrmscu::
 	PMRMSCU=0xe18 register offset
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
+-H::
+--human-readable::
+	Display values in a human-readable format where possible.
+	(deprecated, use --verbose)
 
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -13,6 +13,7 @@ SYNOPSIS
 		[--nlognum=<NUM>, m <NUM>]
 		[--namespace-id=<NUM>, -n <NUM>]
 		[--output-file=<FILE>, -o <FILE>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -52,6 +53,8 @@ OPTIONS
 --nlognum=<NUM>::
 	When used with 'nlog', this specifies which nlog to read. -1
 	for all, if supported by the device.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

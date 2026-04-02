@@ -15,9 +15,9 @@ SYNOPSIS
 			[--dir-oper=<doper> | -O <doper>]
 			[--endir=<endir> | -e <endir>]
 			[--target-dir=<tdir> | -T <tdir>]
-			[--human-readable | -H] [--raw-binary | -b]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
-			[--timeout=<timeout>]
+			[--human-readable | -H]
+			[--raw-binary | -b]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -84,19 +84,10 @@ OPTIONS
 
 -H::
 --human-readable::
-	deprecated; does nothing so use the --verbose flag instead.
+	Display values in a human-readable format where possible.
+	(deprecated, use --verbose)
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

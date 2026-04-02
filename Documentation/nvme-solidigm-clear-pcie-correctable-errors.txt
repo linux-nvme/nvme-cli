@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm clear-pcie-correctable-errors' <device> [--no-uuid | -n]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -25,6 +26,8 @@ OPTIONS
     Do not try to automatically detect UUID index for this command (required
     for old OCP 1.0 support). This option is necessary for devices that do not
     support OCP 2.0 or NVMe 1.4.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

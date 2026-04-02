@@ -13,8 +13,7 @@ SYNOPSIS
 			[--max-dw=<max-dw> | -m <max-dw>]
 			[--action=<action-type> | -a <action-type>]
 			[--range-len=<range-len> | -l <range-len>]
-			[--timeout=<timeout>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -53,17 +52,7 @@ OPTIONS
 --range-len=<range-len>::
 	Range Length(RL) specifies the length of the range of contiguous LBAs beginning at SLBA
 
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
-
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

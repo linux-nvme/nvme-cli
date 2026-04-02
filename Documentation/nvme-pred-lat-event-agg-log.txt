@@ -12,7 +12,7 @@ SYNOPSIS
 'nvme pred-lat-event-agg-log' <device>
 			[--log-entries=<log_entries> | -e <log_entries>]
 			[--rae | -r] [--raw-binary | -b]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -46,10 +46,7 @@ OPTIONS
 --raw-binary::
 	Print the raw Predictable Latency Event Aggregate log buffer to stdout.
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json', or 'binary'.
-	Only one output format can be used at a time.
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -5951,13 +5951,47 @@ static bool subsystem_iopolicy_filter(const char *name, void *arg)
 	return true;
 }
 
+static int subsystem_topology_multipath_add_row(struct table *t,
+		const char *iopolicy, const char *nshead,
+		const char *nsid, const char *nspath,
+		const char *anastate, const char *iopolicy_info,
+		const char *ctrl, const char *trtype,
+		const char *address, const char *state)
+{
+	int row;
+	int col = -1;
+
+	row = table_get_row_id(t);
+	if (row < 0) {
+		nvme_show_error("Failed to add subsys topology multipath row");
+		return row;
+	}
+
+	table_set_value_str(t, ++col, row, nshead, CENTERED);
+	table_set_value_str(t, ++col, row, nsid, CENTERED);
+	table_set_value_str(t, ++col, row, nspath, CENTERED);
+	table_set_value_str(t, ++col, row, anastate, CENTERED);
+	if (!strcmp(iopolicy, "numa") || !strcmp(iopolicy, "queue-depth"))
+		table_set_value_str(t, ++col, row, iopolicy_info, CENTERED);
+	table_set_value_str(t, ++col, row, ctrl, CENTERED);
+	table_set_value_str(t, ++col, row, trtype, CENTERED);
+	table_set_value_str(t, ++col, row, address, CENTERED);
+	table_set_value_str(t, ++col, row, state, CENTERED);
+
+	table_add_row(t, row);
+
+	return 0;
+}
+
 static void stdout_tabular_subsystem_topology_multipath(nvme_subsystem_t s)
 {
 	nvme_ns_t n;
 	nvme_path_t p;
 	nvme_ctrl_t c;
-	int row, col;
 	bool first;
+	char nshead[32], nsid[32];
+	char iopolicy_info[256];
+	int ret, num_path;
 	struct table *t;
 	const char *iopolicy = nvme_subsystem_get_iopolicy(s);
 	struct table_column columns[] = {
@@ -5975,13 +6009,13 @@ static void stdout_tabular_subsystem_topology_multipath(nvme_subsystem_t s)
 
 	t = table_create();
 	if (!t) {
-		printf("Failed to init table\n");
+		nvme_show_error("Failed to init subsys topology multipath table");
 		return;
 	}
 
 	if (table_add_columns_filter(t, columns, ARRAY_SIZE(columns),
 			subsystem_iopolicy_filter, (void *)s) < 0) {
-		printf("Failed to add columns\n");
+		nvme_show_error("Failed to add subsys topology multipath columns");
 		goto free_tbl;
 	}
 
@@ -5990,61 +6024,71 @@ static void stdout_tabular_subsystem_topology_multipath(nvme_subsystem_t s)
 		nvme_namespace_for_each_path(n, p) {
 			c = nvme_path_get_ctrl(p);
 
-			row = table_get_row_id(t);
-			if (row < 0) {
-				printf("Failed to add row\n");
-				goto free_tbl;
-			}
-			/* For the first row we print actual NSHead name,
+			/*
+			 * For the first row we print actual NSHead name,
 			 * however, for the subsequent rows we print "arrow"
 			 * ("-->") symbol for NSHead. This "arrow" style makes
 			 * it visually obvious that susequenet entries (if
 			 * present) are a path under the first NSHead.
 			 */
-			col = -1;
-			/* col 0: NSHead */
 			if (first) {
-				table_set_value_str(t, ++col, row,
-						nvme_ns_get_name(n), LEFT);
+				snprintf(nshead, sizeof(nshead), "%s",
+						nvme_ns_get_name(n));
 				first = false;
 			} else
-				table_set_value_str(t, ++col, row,
-						"-->", CENTERED);
-			/* col 1: NSID */
-			table_set_value_int(t, ++col, row,
-					nvme_ns_get_nsid(n), CENTERED);
-			/* col 2: NSPath */
-			table_set_value_str(t, ++col, row,
-					nvme_path_get_name(p), LEFT);
-			/* col 3: ANAState */
-			table_set_value_str(t, ++col, row,
-					nvme_path_get_ana_state(p), LEFT);
+				snprintf(nshead, sizeof(nshead), "%s", "-->");
+
+			snprintf(nsid, sizeof(nsid), "%u", nvme_ns_get_nsid(n));
 
 			if (!strcmp(iopolicy, "numa"))
-				/* col 4: Nodes */
-				table_set_value_str(t, ++col, row,
-					nvme_path_get_numa_nodes(p), CENTERED);
+				snprintf(iopolicy_info, sizeof(iopolicy_info),
+					"%s", nvme_path_get_numa_nodes(p));
 			else if (!strcmp(iopolicy, "queue-depth"))
-				/* col 4 : Qdepth */
-				table_set_value_int(t, ++col, row,
-					nvme_path_get_queue_depth(p), CENTERED);
+				snprintf(iopolicy_info, sizeof(iopolicy_info),
+					"%d", nvme_path_get_queue_depth(p));
 
-			/* col 5: Controller */
-			table_set_value_str(t, ++col, row,
-					nvme_ctrl_get_name(c), LEFT);
-			/* col 6: TrType */
-			table_set_value_str(t, ++col, row,
-					nvme_ctrl_get_transport(c), LEFT);
-			/* col 7: Address */
-			table_set_value_str(t, ++col, row,
-					nvme_ctrl_get_traddr(c), LEFT);
-			/* col 8: State */
-			table_set_value_str(t, ++col, row,
-					nvme_ctrl_get_state(c), LEFT);
-
-			table_add_row(t, row);
+			ret = subsystem_topology_multipath_add_row(t,
+						    iopolicy,
+						    nshead,
+						    nsid,
+						    nvme_path_get_name(p),
+						    nvme_path_get_ana_state(p),
+						    iopolicy_info,
+						    nvme_ctrl_get_name(c),
+						    nvme_ctrl_get_transport(c),
+						    nvme_ctrl_get_traddr(c),
+						    nvme_ctrl_get_state(c));
+			if (ret < 0)
+				goto free_tbl;
 		}
 	}
+
+	/*
+	 * Next we print controller in the subsystem which may not have any
+	 * nvme path associated to it.
+	 */
+	nvme_subsystem_for_each_ctrl(s, c) {
+		num_path = 0;
+		nvme_ctrl_for_each_path(c, p)
+			num_path++;
+
+		if (!num_path) {
+			ret = subsystem_topology_multipath_add_row(t,
+					iopolicy,
+					"--", /* NSHead */
+					"--", /* NSID */
+					"--", /* NSPath */
+					"--", /* ANAState */
+					"--", /* Nodes/Qdepth */
+					nvme_ctrl_get_name(c),
+					nvme_ctrl_get_transport(c),
+					nvme_ctrl_get_traddr(c),
+					nvme_ctrl_get_state(c));
+			if (ret < 0)
+				goto free_tbl;
+		}
+	}
+
 	table_print(t);
 free_tbl:
 	table_free(t);
@@ -6154,11 +6198,33 @@ static void stdout_subsystem_topology_multipath(nvme_subsystem_t s,
 	}
 }
 
+static int subsystem_topology_add_row(struct table *t,
+		const char *ns, const char *nsid, const char *ctrl,
+		const char *trtype, const char *address, const char *state)
+{
+	int row = table_get_row_id(t);
+	if (row < 0) {
+		nvme_show_error("Failed to add subsys topology row");
+		return row;
+	}
+
+	table_set_value_str(t, 0, row, ns, CENTERED);
+	table_set_value_str(t, 1, row, nsid, CENTERED);
+	table_set_value_str(t, 2, row, ctrl, CENTERED);
+	table_set_value_str(t, 3, row, trtype, CENTERED);
+	table_set_value_str(t, 4, row, address, CENTERED);
+	table_set_value_str(t, 5, row, state, CENTERED);
+
+	table_add_row(t, row);
+
+	return 0;
+}
+
 static void stdout_tabular_subsystem_topology(nvme_subsystem_t s)
 {
 	nvme_ctrl_t c;
 	nvme_ns_t n;
-	int row;
+	int ret, num_ns;
 	struct table *t;
 	struct table_column columns[] = {
 		{"Namespace", LEFT, 0},
@@ -6171,45 +6237,48 @@ static void stdout_tabular_subsystem_topology(nvme_subsystem_t s)
 
 	t = table_create();
 	if (!t) {
-		printf("Failed to init table\n");
+		nvme_show_error("Failed to init subsys topology table");
 		return;
 	}
 
 	if (table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
-		printf("Failed to add columns\n");
+		nvme_show_error("Failed to add subsys topology columns");
 		goto free_tbl;
 	}
 
 	nvme_subsystem_for_each_ctrl(s, c) {
-		nvme_ctrl_for_each_ns(c, n) {
-			c = nvme_ns_get_ctrl(n);
+		num_ns = 0;
 
-			row = table_get_row_id(t);
-			if (row < 0) {
-				printf("Failed to add row\n");
+		nvme_ctrl_for_each_ns(c, n)
+			num_ns++;
+
+		if (!num_ns) {
+			ret = subsystem_topology_add_row(t,
+					"--",	/* Namespace */
+					"--",	/* NSID */
+					nvme_ctrl_get_name(c),
+					nvme_ctrl_get_transport(c),
+					nvme_ctrl_get_traddr(c),
+					nvme_ctrl_get_state(c));
+			if (ret < 0)
 				goto free_tbl;
+		} else {
+			nvme_ctrl_for_each_ns(c, n) {
+				char nsid[32];
+
+				snprintf(nsid, sizeof(nsid), "%u",
+						nvme_ns_get_nsid(n));
+
+				ret = subsystem_topology_add_row(t,
+						nvme_ns_get_name(n),
+						(const char *)nsid,
+						nvme_ctrl_get_name(c),
+						nvme_ctrl_get_transport(c),
+						nvme_ctrl_get_traddr(c),
+						nvme_ctrl_get_state(c));
+				if (ret < 0)
+					goto free_tbl;
 			}
-
-			/* col 0: Namespace */
-			table_set_value_str(t, 0, row,
-					nvme_ns_get_name(n), LEFT);
-			/* col 1: NSID */
-			table_set_value_int(t, 1, row,
-					nvme_ns_get_nsid(n), CENTERED);
-			/* col 2: Controller */
-			table_set_value_str(t, 2, row,
-					nvme_ctrl_get_name(c), LEFT);
-			/* col 3: Trtype */
-			table_set_value_str(t, 3, row,
-					nvme_ctrl_get_transport(c), LEFT);
-			/* col 4: Address */
-			table_set_value_str(t, 4, row,
-					nvme_ctrl_get_traddr(c), LEFT);
-			/* col 5: State */
-			table_set_value_str(t, 5, row,
-					nvme_ctrl_get_state(c), LEFT);
-
-			table_add_row(t, row);
 		}
 	}
 	table_print(t);

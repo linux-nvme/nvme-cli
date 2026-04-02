@@ -11,6 +11,7 @@ SYNOPSIS
 [verse]
 'nvme sndk get-unsupported-reqs-log' <device> [--output-format=<normal|json>
 -o <normal|json>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -29,11 +30,8 @@ code otherwise.
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', or
-	'json'. Only one output format can be used at a time.
-	Default is normal.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

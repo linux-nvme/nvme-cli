@@ -10,6 +10,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme sndk get-drive-status' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -46,6 +47,10 @@ Output Explanation
 |The 3 possible states are : Not Corrupted, Corrupt due to FW Assert, or Corrupt for Unknown Reason.
 
 |===
+
+OPTIONS
+-------
+include::global-options.txt[]
 
 EXAMPLES
 --------

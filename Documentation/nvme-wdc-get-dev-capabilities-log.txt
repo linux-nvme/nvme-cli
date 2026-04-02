@@ -9,7 +9,8 @@ plugin command, return parsed log output
 SYNOPSIS
 --------
 [verse]
-'nvme wdc get-dev-capabilities-log' <device> [--output-format=<fmt> | -o <fmt>]
+'nvme wdc get-dev-capabilities-log' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -28,11 +29,8 @@ code otherwise.
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', or
-	'json'. Only one output format can be used at a time.
-	Default is normal.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

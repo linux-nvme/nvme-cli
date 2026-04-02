@@ -9,7 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme id-iocs' <device> [--controller-id=<cntid> | -c <cntid>]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[--human-readable | -H]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -25,19 +26,13 @@ OPTIONS
 --controller-id=<cntid>::
 	Retrieve the identify I/O Command set data structure for the given
 	cntid. If this value is not given, cntid will be 0xffff.
+
 -H::
 --human-readable::
-	This option will parse and format many of the bit fields
-	into human-readable formats.
+	Display values in a human-readable format where possible.
+	(deprecated, use --verbose)
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
+include::global-options.txt[]
 
 EXAMPLES
 --------

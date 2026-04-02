@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme ocp set-dssd-async-event-config' <device> [--enable-panic-notices | -e] [--save | -s]
+			[<global-options>]
 
 
 DESCRIPTION
@@ -33,6 +34,7 @@ OPTIONS
 --save::
 	Save the attribute so that it persists through all power states and resets.
 
+include::global-options.txt[]
 
 EXAMPLES
 --------

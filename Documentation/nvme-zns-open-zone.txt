@@ -10,7 +10,8 @@ SYNOPSIS
 [verse]
 'nvme zns open-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
 			[--start-lba=<LBA> | -s <LBA>] [--zrwaa | -r]
-			[--select-all | -a] [--timeout=<timeout>]
+			[--select-all | -a]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -40,8 +41,7 @@ OPTIONS
 --select-all::
 	Select all zones for this action
 
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

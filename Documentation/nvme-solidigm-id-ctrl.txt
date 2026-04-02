@@ -9,8 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm id-ctrl' <device> [--raw-binary | -b] [--vendor-specific | -V]
-                              [--output-format=<fmt> | -o <fmt>] [--human-readable | -H]
-                              [--verbose | -v] [--timeout=<seconds> | -t <seconds>]
+			[--human-readable | -H]
+	  		[<global-options>]
 
 DESCRIPTION
 -----------
@@ -21,15 +21,14 @@ and returned structure.
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0)
 or a namespace block device (ex: /dev/nvme0n1).
 
-This command includes all options available in the generic `nvme id-ctrl` command, including:
-- `--raw-binary` or `-b`
-- `--vendor-specific` or `-V`
-- `--output-format=<fmt>` or `-o <fmt>`
-- `--human-readable` or `-H`
-- `--verbose` or `-v`
-- `--timeout=<seconds>` or `-t <seconds>`
+OPTIONS
+-------
+-H::
+--human-readable::
+	Display values in a human-readable format where possible.
+	(deprecated, use --verbose)
 
-For detailed usage and options, please refer to the documentation for 'nvme id-ctrl'.
+include::global-options.txt[]
 
 EXAMPLES
 --------

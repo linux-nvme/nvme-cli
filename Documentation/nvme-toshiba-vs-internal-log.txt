@@ -9,8 +9,9 @@ SYNOPSIS
 --------
 [verse]
 'nvme toshiba vs-internal-log ' <device>
-		[--output-file=<FILE>, -o <FILE>] (optional)
-		[--saved-log, -s] (optional)
+			[--output-file=<FILE>, -o <FILE>] (optional)
+			[--saved-log, -s] (optional)
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -41,6 +42,8 @@ OPTIONS
 -p::
 --prev-log::
 	Use previous log contents. Defaults to the current log contents.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

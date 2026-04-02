@@ -20,11 +20,11 @@ SYNOPSIS
 			[--read | -r] [--write | -w]
 			[--input-file=<file> | -i <file>]
 			[--metadata=<file> | -M <file>]
-			[--timeout=<timeout>] [--show-command | -s]
+			[--show-command | -s]
 			[--dry-run | -d] [--raw-binary | -b]
 			[--prefill=<prefill> | -p <prefill>]
 			[--latency | -T]
-			[--output-format=<fmt> | -o <fmt>] [--verbose | -v]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -122,17 +122,7 @@ OPTIONS
 --latency::
 	Print out the latency the IOCTL took (in us).
 
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', 'json' or 'binary'. Only one
-	output format can be used at a time.
-
--v::
---verbose::
-	Increase the information detail in the output.
-
---timeout=<timeout>::
-	Override default timeout value. In milliseconds.
+include::global-options.txt[]
 
 EXAMPLES
 --------

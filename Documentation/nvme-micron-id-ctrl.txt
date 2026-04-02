@@ -8,7 +8,8 @@ nvme-micron-id-ctrl - Send NVMe Identify Controller with Micron vendor-specific 
 SYNOPSIS
 --------
 [verse]
-'nvme micron id-ctrl' <device> [--output-format=<fmt> | -o <fmt>]
+'nvme micron id-ctrl' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -35,10 +36,8 @@ MSMT (Maximum Stop Measurement Time)::
 
 OPTIONS
 -------
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal' or 'json'.
-	Default is 'normal'.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

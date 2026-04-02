@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme wdc purge-monitor' <device>
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -48,6 +49,8 @@ On success it returns 0, error code otherwise.
 OPTIONS
 -------
 No options yet.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

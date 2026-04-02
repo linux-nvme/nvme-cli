@@ -10,10 +10,10 @@ SYNOPSIS
 --------
 [verse]
 'nvme sndk vs-smart-add-log' <device> [--interval=<NUM>, -i <NUM>]
-			[--output-format=<normal|json> -o <normal|json>]
 			[--log-page-version=<NUM>, -l <NUM>]
 			[--log-page-mask=<LIST>, -p <LIST>]
 			[--namespace-id=<nsid> | -n <nsid>]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -35,12 +35,6 @@ OPTIONS
 	Return the statistics from specific interval, defaults to 14. This
 	parameter is only valid for the 0xC1 log page and ignored for all other
 	log pages.
-
--o <fmt>::
---output-format=<fmt>::
-	Set the reporting format to 'normal', or
-	'json'. Only one output format can be used at a time.
-	Default is normal.
 
 -l <NUM>::
 --log-page-version=<NUM>::
@@ -83,6 +77,8 @@ accumulated statistics.
 |*15*
 |The statistical set accumulated during the entire lifetime of the device.
 |===
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme intel market-name' <device> [--raw-binary | -b]
+			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -29,6 +30,8 @@ OPTIONS
 --raw-binary::
 	Print the raw buffer to stdout. Structure is not parsed by
 	program. This overrides the vendor specific and human readable options.
+
+include::global-options.txt[]
 
 EXAMPLES
 --------

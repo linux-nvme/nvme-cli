@@ -9,10 +9,15 @@ SYNOPSIS
 --------
 [verse]
 'nvme solidigm cloud-SSDplugin-version'
+			[<global-options>]
 
 DESCRIPTION
 -----------
 Displays the OCP (Open Compute Project) version of the Solidigm cloud SSD plugin.
+
+OPTIONS
+-------
+include::global-options.txt[]
 
 EXAMPLES
 --------
