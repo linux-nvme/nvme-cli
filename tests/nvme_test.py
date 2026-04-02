@@ -43,7 +43,12 @@ def to_decimal(value):
         - Returns:
             - Decimal integer
     """
-    return int(str(value), 0)
+    val = 0
+    try:
+        val = int(str(value), 0)
+    except (TypeError, ValueError):
+        raise ValueError(f"Invalid value: {value!r}")
+    return val
 
 
 class TestNVMe(unittest.TestCase):
@@ -77,14 +82,17 @@ class TestNVMe(unittest.TestCase):
         self.load_config()
         if self.do_validate_pci_device:
             self.validate_pci_device()
-        self.create_and_attach_default_ns()
+        self.ns_mgmt_supported = self.get_ns_mgmt_support()
+        if self.ns_mgmt_supported:
+            self.create_and_attach_default_ns()
         print(f"\nsetup: ctrl: {self.ctrl}, ns1: {self.ns1}, default_nsid: {self.default_nsid}, flbas: {self.flbas}\n")
 
     def tearDown(self):
         """ Post Section for TestNVMe. """
         if self.clear_log_dir is True:
             shutil.rmtree(self.log_dir, ignore_errors=True)
-        self.create_and_attach_default_ns()
+        if self.ns_mgmt_supported:
+            self.create_and_attach_default_ns()
         print(f"\nteardown: ctrl: {self.ctrl}, ns1: {self.ns1}, default_nsid: {self.default_nsid}, flbas: {self.flbas}\n")
 
     @classmethod
@@ -208,6 +216,30 @@ class TestNVMe(unittest.TestCase):
         self.assertTrue(len(json_output['ctrl_list']) > 0,
                         "ERROR : nvme list-ctrl could not find ctrl")
         return str(json_output['ctrl_list'][0]['ctrl_id'])
+
+    def get_ns_mgmt_support(self):
+        """
+        Determine whether Namespace Management and Namespace Attachment
+        operations are supported by the controller.
+
+        This method reads the Optional Admin Command Support (OACS) field
+        from the Identify Controller data structure and evaluates specific
+        bits that indicate support for:
+          - Namespace Management (bit 3)
+          - Namespace Attachment (bit 4)
+
+        Both features must be supported for this function to return True.
+
+        Returns:
+            bool: True if both Namespace Management and Namespace Attachment
+            are supported, False otherwise.
+        """
+        oacs = to_decimal(self.get_id_ctrl_field_value("oacs"))
+
+        ns_mgmt_supported = bool(oacs & (1 << 3))
+        ns_attach_supported = bool(oacs & (1 << 4))
+
+        return ns_mgmt_supported and ns_attach_supported
 
     def get_nsid_list(self):
         """ Wrapper for extracting the namespace list.

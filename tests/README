@@ -16,59 +16,10 @@ nvmetests
     DO NOT RUN THEM IF YOU DO NOT KNOW WHAT YOU ARE DOING!
 
     You have been warned.
-
-1. Common Package Dependencies
-------------------------------
-
-    1. Python(>= 3.3)
-    2. nose2 (Installation guide http://nose2.readthedocs.io/)
-    3. flake8 (https://pypi.python.org/pypi/flake8)
-    4. mypy (https://pypi.org/project/mypy/)
-    5. autopep8 (https://pypi.org/project/autopep8/)
-    6. isort (https://pypi.org/project/isort/)
-
-    Python package management system pip can be used to install most of the
-    listed packages(https://pip.pypa.io/en/stable/installing/) :-
-    $ pip install nose2 flake8 mypy autopep8 isort
-
-2. Overview
------------
-
-    This framework follows simple class hierarchy. Each test file contains
-    one test. Each test is direct subclass or indirect subclass of TestNVMe
-    class which represents one testcase. To write a new testcase one can copy
-    existing template "nvme_simple_template_test.py" and start adding new
-    testcase specific functionality. For detailed information please look into
-    section 3.
-
-    For more information about tests, class hierarchy and code please refer :-
-
-    1. Documentation :- html/
-    2. Class Index :-  html/index.html
-    3. Class Hierarchy :- html/class-tree.html
-
-    For each testcase it will create log directory mentioned in
-    configuration file. This directory will be used for a temporary files
-    and storing execution logs of each testcases. Current implementation stores
-    stdout and stderr for each testcase under log directory, e.g. :-
-
-        $ tree nvmetests/
-        nvmetests/
-        ├── TestNVMeAttachDetachNSCmd
-        │   ├── stderr.log
-        │   └── stdout.log
-        ├── TestNVMeFlushCmd
-        │   ├── stderr.log
-        │   └── stdout.log
-        └── TestNVMeFormatCmd
-            ├── stderr.log
-            └── stdout.log
-                 .
-                 .
                  .
 
-3. Walk-Through Example for writing a new testcase
---------------------------------------------------
+Walk-Through Example for writing a new testcase
+-----------------------------------------------
     1. Copy simple test template file from current directory
        with appropriate name, replace "simple_template" with testcase name
        in new file name. Update config.json if necessary.
@@ -90,11 +41,11 @@ nvmetests
 	       - Example "$ ninja -C .build format-python" will run autopep8 and
 	         isort on all the python files in the current directory.
 
-4. Running testcases with framework
------------------------------------
-    1. Running single testcase (in the source tree) with nose2 :-
-       $ nose2 --verbose --start-dir tests nvme_writezeros_test
-       $ nose2 --verbose --start-dir tests nvme_read_write_test
+Running testcases with framework
+--------------------------------
+    1. Running single testcase :-
+       $ python3 tests/tap_runner.py --start-dir tests nvme_id_ctrl_test
+       $ meson test -C .build 'nvme-cli - nvme_id_ctrl_test'
 
-    2. Running all the testcases (in the build root directory) with ninja :-
-       $ ninja test -C .build
+    2. Running all the testcases (in the build root directory) :-
+       $ meson test -C .build

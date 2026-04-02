@@ -37,6 +37,7 @@ usage() {
     echo "  static              build a static binary"
     echo "  minimal_static      build a static binary without fabrics support"
     echo "  libnvme             build only libnvme"
+    echo "  tests               build for nightly build"
     echo ""
     echo "configs with muon:"
     echo "  [default]           minimal static build"
@@ -238,6 +239,14 @@ config_meson_minimal_static() {
         -Djson-c=disabled                       \
         -Dtests=false                           \
         -Dexamples=false                        \
+        "${BUILDDIR}"
+}
+
+config_meson_tests() {
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        -Dnvme-tests=true                       \
         "${BUILDDIR}"
 }
 
