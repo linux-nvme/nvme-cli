@@ -14,9 +14,32 @@ parse individual subtest results when protocol: 'tap' is set in meson.build.
 
 import argparse
 import importlib
+import io
 import sys
 import traceback
 import unittest
+
+
+class DiagnosticCapture(io.TextIOBase):
+    """Capture writes and re-emit them as TAP diagnostic lines (# ...)."""
+
+    def __init__(self, real_stdout: io.TextIOBase) -> None:
+        self._real = real_stdout
+        self._buf = ''
+
+    def write(self, text: str) -> int:
+        self._buf += text
+        while '\n' in self._buf:
+            line, self._buf = self._buf.split('\n', 1)
+            self._real.write('# {}\n'.format(line))
+        self._real.flush()
+        return len(text)
+
+    def flush(self) -> None:
+        if self._buf:
+            self._real.write('# {}\n'.format(self._buf))
+            self._buf = ''
+        self._real.flush()
 
 
 class TAPTestResult(unittest.TestResult):
@@ -72,12 +95,11 @@ class TAPTestResult(unittest.TestResult):
         self._lines.append('not ok {} - {} # TODO unexpected success\n'.format(
             self._test_count, self._description(test)))
 
-    def print_tap(self, stream: object = sys.stdout) -> None:
-        stream.write('TAP version 13\n')  # type: ignore[union-attr]
-        stream.write('1..{}\n'.format(self._test_count))  # type: ignore[union-attr]
+    def print_tap(self, stream: io.TextIOBase) -> None:
+        stream.write('1..{}\n'.format(self._test_count))
         for line in self._lines:
-            stream.write(line)  # type: ignore[union-attr]
-        stream.flush()  # type: ignore[union-attr]
+            stream.write(line)
+        stream.flush()
 
 
 def run_tests(test_module_name: str, start_dir: str | None = None) -> bool:
@@ -89,9 +111,22 @@ def run_tests(test_module_name: str, start_dir: str | None = None) -> bool:
     loader = unittest.TestLoader()
     suite = loader.loadTestsFromModule(module)
 
-    result = TAPTestResult()
-    suite.run(result)
-    result.print_tap()
+    real_stdout = sys.stdout
+    # TAP version header must be the very first line on stdout.
+    real_stdout.write('TAP version 13\n')
+    real_stdout.flush()
+
+    # Redirect stdout so any print() calls from setUp/tearDown/tests are
+    # re-emitted as TAP diagnostic lines and do not break the TAP stream.
+    sys.stdout = DiagnosticCapture(real_stdout)  # type: ignore[assignment]
+    try:
+        result = TAPTestResult()
+        suite.run(result)
+    finally:
+        sys.stdout.flush()
+        sys.stdout = real_stdout
+
+    result.print_tap(real_stdout)
     return result.wasSuccessful()
 
 
