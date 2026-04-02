@@ -339,7 +339,7 @@ else
     # Check for libdbus availability. Optional, only required for MCTP dbus scan
     libdbus_dep = dependency(
         'dbus-1',
-        required: true,
+        required: get_option('libdbus'),
         fallback: ['dbus', 'libdbus_dep'],
         default_options: [
             'default_library=static',
