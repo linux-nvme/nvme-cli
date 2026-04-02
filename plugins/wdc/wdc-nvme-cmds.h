@@ -117,13 +117,13 @@ int run_wdc_cu_smart_log(int argc, char **argv,
 		struct command *command,
 		struct plugin *plugin);
 
-bool run_wdc_nvme_check_supported_log_page(struct nvme_global_ctx *ctx,
-		struct nvme_transport_handle *hdl,
+bool run_wdc_nvme_check_supported_log_page(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl,
 		__u8 log_id,
 		__u8 uuid_index);
 
-__u32 run_wdc_get_fw_cust_id(struct nvme_global_ctx *ctx,
-		struct nvme_transport_handle *hdl);
+__u32 run_wdc_get_fw_cust_id(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl);
 
-__u64 run_wdc_get_drive_capabilities(struct nvme_global_ctx *ctx,
-		struct nvme_transport_handle *hdl);
+__u64 run_wdc_get_drive_capabilities(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl);

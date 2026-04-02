@@ -142,13 +142,13 @@ static struct __mi_mctp_socket_ops ops = {
 	ioctl_tag,
 };
 
-void __nvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops)
+void __libnvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops)
 {
 	ops = *newops;
 }
-static const struct nvme_mi_transport nvme_mi_transport_mctp;
+static const struct libnvme_mi_transport nvme_mi_transport_mctp;
 
-static __u8 nvme_mi_mctp_tag_alloc(struct nvme_mi_ep *ep)
+static __u8 nvme_mi_mctp_tag_alloc(struct libnvme_mi_ep *ep)
 {
 	struct nvme_mi_transport_mctp *mctp;
 	struct mctp_ioc_tag_ctl ctl = { 0 };
@@ -165,7 +165,7 @@ static __u8 nvme_mi_mctp_tag_alloc(struct nvme_mi_ep *ep)
 		if (!logged) {
 			/* not necessarily fatal, just means we can't handle
 			 * "more processing required" messages */
-			nvme_msg(ep->ctx, LOG_INFO,
+			libnvme_msg(ep->ctx, LOG_INFO,
 				 "System does not support explicit tag allocation\n");
 			logged = true;
 		}
@@ -175,7 +175,7 @@ static __u8 nvme_mi_mctp_tag_alloc(struct nvme_mi_ep *ep)
 	return ctl.tag;
 }
 
-static void nvme_mi_mctp_tag_drop(struct nvme_mi_ep *ep, __u8 tag)
+static void nvme_mi_mctp_tag_drop(struct libnvme_mi_ep *ep, __u8 tag)
 {
 	struct nvme_mi_transport_mctp *mctp;
 	struct mctp_ioc_tag_ctl ctl = { 0 };
@@ -233,7 +233,7 @@ static bool nvme_mi_mctp_resp_is_mpr(void *buf, size_t len,
 	 * header data here, and need to preserve the resp pointer & size
 	 * values, so can't use verify_resp_mic here.
 	 */
-	crc = ~nvme_mi_crc32_update(0xffffffff, buf, len);
+	crc = ~libnvme_mi_crc32_update(0xffffffff, buf, len);
 	if (le32_to_cpu(mic) != crc)
 		return false;
 
@@ -243,7 +243,7 @@ static bool nvme_mi_mctp_resp_is_mpr(void *buf, size_t len,
 	return true;
 }
 
-static int nvme_mi_mctp_aem_fd(struct nvme_mi_ep *ep)
+static int nvme_mi_mctp_aem_fd(struct libnvme_mi_ep *ep)
 {
 	struct nvme_mi_transport_mctp *mctp;
 
@@ -256,7 +256,7 @@ static int nvme_mi_mctp_aem_fd(struct nvme_mi_ep *ep)
 	return mctp->sd_aem;
 }
 
-static int nvme_mi_mctp_aem_purge(struct nvme_mi_ep *ep)
+static int nvme_mi_mctp_aem_purge(struct libnvme_mi_ep *ep)
 {
 	struct nvme_mi_transport_mctp *mctp = ep->transport_data;
 	struct msghdr msg = {0};
@@ -276,8 +276,8 @@ static int nvme_mi_mctp_aem_purge(struct nvme_mi_ep *ep)
 }
 
 
-static int nvme_mi_mctp_aem_read(struct nvme_mi_ep *ep,
-			       struct nvme_mi_resp *resp)
+static int nvme_mi_mctp_aem_read(struct libnvme_mi_ep *ep,
+			       struct libnvme_mi_resp *resp)
 {
 	ssize_t len, resp_len, resp_hdr_len, resp_data_len;
 	struct sockaddr_mctp src_addr = { 0 };
@@ -306,7 +306,7 @@ static int nvme_mi_mctp_aem_read(struct nvme_mi_ep *ep,
 
 		if (!tmp) {
 			errno_save = errno;
-			nvme_msg(ep->ctx, LOG_ERR,
+			libnvme_msg(ep->ctx, LOG_ERR,
 				 "Failure allocating response buffer: %m\n");
 			errno = errno_save;
 			rc = -1;
@@ -334,7 +334,7 @@ static int nvme_mi_mctp_aem_read(struct nvme_mi_ep *ep,
 			goto out;
 
 		errno_save = errno;
-		nvme_msg(ep->ctx, LOG_ERR,
+		libnvme_msg(ep->ctx, LOG_ERR,
 			 "Failure receiving MCTP message: %m\n");
 		errno = errno_save;
 		goto out;
@@ -342,13 +342,13 @@ static int nvme_mi_mctp_aem_read(struct nvme_mi_ep *ep,
 
 
 	if (len == 0) {
-		nvme_msg(ep->ctx, LOG_WARNING, "No data from MCTP endpoint\n");
+		libnvme_msg(ep->ctx, LOG_WARNING, "No data from MCTP endpoint\n");
 		errno = EIO;
 		goto out;
 	}
 
 	if (resp_msg.msg_namelen < sizeof(src_addr)) {
-		nvme_msg(ep->ctx, LOG_WARNING, "Unexpected src address length\n");
+		libnvme_msg(ep->ctx, LOG_WARNING, "Unexpected src address length\n");
 		errno = EIO;
 		goto out;
 	}
@@ -367,7 +367,7 @@ static int nvme_mi_mctp_aem_read(struct nvme_mi_ep *ep,
 	 * plus four bytes of error data (excluding MIC). Ensure we have enough.
 	 */
 	if (len < 8 + sizeof(mic)) {
-		nvme_msg(ep->ctx, LOG_ERR,
+		libnvme_msg(ep->ctx, LOG_ERR,
 			 "Invalid MCTP response: too short (%zd bytes, needed %zd)\n",
 			 len, 8 + sizeof(mic));
 		errno = EPROTO;
@@ -405,9 +405,9 @@ out:
 	return rc;
 }
 
-static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
-			       struct nvme_mi_req *req,
-			       struct nvme_mi_resp *resp)
+static int nvme_mi_mctp_submit(struct libnvme_mi_ep *ep,
+			       struct libnvme_mi_req *req,
+			       struct libnvme_mi_resp *resp)
 {
 	ssize_t len, resp_len, resp_hdr_len, resp_data_len;
 	struct nvme_mi_transport_mctp *mctp;
@@ -466,7 +466,7 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 	len = ops.sendmsg(mctp->sd, &req_msg, 0);
 	if (len < 0) {
 		errno_save = errno;
-		nvme_msg(ep->ctx, LOG_ERR,
+		libnvme_msg(ep->ctx, LOG_ERR,
 			 "Failure sending MCTP message: %m\n");
 		errno = errno_save;
 		rc = -1;
@@ -478,7 +478,7 @@ static int nvme_mi_mctp_submit(struct nvme_mi_ep *ep,
 		void *tmp = realloc(mctp->resp_buf, resp_len);
 		if (!tmp) {
 			errno_save = errno;
-			nvme_msg(ep->ctx, LOG_ERR,
+			libnvme_msg(ep->ctx, LOG_ERR,
 				 "Failure allocating response buffer: %m\n");
 			errno = errno_save;
 			rc = -1;
@@ -507,14 +507,14 @@ retry:
 		if (errno == EINTR)
 			goto retry;
 		errno_save = errno;
-		nvme_msg(ep->ctx, LOG_ERR,
+		libnvme_msg(ep->ctx, LOG_ERR,
 			 "Failed polling on MCTP socket: %m");
 		errno = errno_save;
 		goto out;
 	}
 
 	if (rc == 0) {
-		nvme_msg(ep->ctx, LOG_DEBUG, "Timeout on MCTP socket");
+		libnvme_msg(ep->ctx, LOG_DEBUG, "Timeout on MCTP socket");
 		errno = ETIMEDOUT;
 		rc = -1;
 		goto out;
@@ -525,7 +525,7 @@ retry:
 
 	if (len < 0) {
 		errno_save = errno;
-		nvme_msg(ep->ctx, LOG_ERR,
+		libnvme_msg(ep->ctx, LOG_ERR,
 			 "Failure receiving MCTP message: %m\n");
 		errno = errno_save;
 		goto out;
@@ -533,7 +533,7 @@ retry:
 
 
 	if (len == 0) {
-		nvme_msg(ep->ctx, LOG_WARNING, "No data from MCTP endpoint\n");
+		libnvme_msg(ep->ctx, LOG_WARNING, "No data from MCTP endpoint\n");
 		errno = EIO;
 		goto out;
 	}
@@ -546,7 +546,7 @@ retry:
 	 * plus four bytes of error data (excluding MIC). Ensure we have enough.
 	 */
 	if (len < 8 + sizeof(mic)) {
-		nvme_msg(ep->ctx, LOG_ERR,
+		libnvme_msg(ep->ctx, LOG_ERR,
 			 "Invalid MCTP response: too short (%zd bytes, needed %zd)\n",
 			 len, 8 + sizeof(mic));
 		errno = EPROTO;
@@ -568,7 +568,7 @@ retry:
 	 * to keep the tag allocated and retry the recvmsg
 	 */
 	if (nvme_mi_mctp_resp_is_mpr(mctp->resp_buf, len, mic, &mpr_time)) {
-		nvme_msg(ep->ctx, LOG_DEBUG,
+		libnvme_msg(ep->ctx, LOG_DEBUG,
 			 "Received More Processing Required, waiting for response\n");
 
 		/* if the controller hasn't set MPRT, fall back to our command/
@@ -609,7 +609,7 @@ out:
 	return rc;
 }
 
-static void nvme_mi_mctp_close(struct nvme_mi_ep *ep)
+static void nvme_mi_mctp_close(struct libnvme_mi_ep *ep)
 {
 	struct nvme_mi_transport_mctp *mctp;
 
@@ -625,7 +625,7 @@ static void nvme_mi_mctp_close(struct nvme_mi_ep *ep)
 	free(ep->transport_data);
 }
 
-static int nvme_mi_mctp_desc_ep(struct nvme_mi_ep *ep, char *buf, size_t len)
+static int nvme_mi_mctp_desc_ep(struct libnvme_mi_ep *ep, char *buf, size_t len)
 {
 	struct nvme_mi_transport_mctp *mctp;
 
@@ -641,7 +641,7 @@ static int nvme_mi_mctp_desc_ep(struct nvme_mi_ep *ep, char *buf, size_t len)
 	return 0;
 }
 
-static const struct nvme_mi_transport nvme_mi_transport_mctp = {
+static const struct libnvme_mi_transport nvme_mi_transport_mctp = {
 	.name = "mctp",
 	.mic_enabled = true,
 	.submit = nvme_mi_mctp_submit,
@@ -675,14 +675,14 @@ int nvme_mi_aem_open(nvme_mi_ep_t ep)
 	return 0;
 }
 
-__public nvme_mi_ep_t nvme_mi_open_mctp(struct nvme_global_ctx *ctx,
+__public nvme_mi_ep_t nvme_mi_open_mctp(struct libnvme_global_ctx *ctx,
 			       unsigned int netid, __u8 eid)
 {
 	struct nvme_mi_transport_mctp *mctp;
-	struct nvme_mi_ep *ep;
+	struct libnvme_mi_ep *ep;
 	int errno_save;
 
-	ep = nvme_mi_init_ep(ctx);
+	ep = libnvme_mi_init_ep(ctx);
 	if (!ep)
 		return NULL;
 
@@ -747,7 +747,7 @@ err_close_ep:
 
 #ifdef CONFIG_DBUS
 
-static int nvme_mi_mctp_add(struct nvme_global_ctx *ctx, unsigned int netid, __u8 eid)
+static int nvme_mi_mctp_add(struct libnvme_global_ctx *ctx, unsigned int netid, __u8 eid)
 {
 	nvme_mi_ep_t ep = NULL;
 
@@ -812,7 +812,7 @@ static bool has_message_type(DBusMessageIter *prop, uint8_t type)
 	return false;
 }
 
-static int handle_mctp_endpoint(struct nvme_global_ctx *ctx, const char* objpath,
+static int handle_mctp_endpoint(struct libnvme_global_ctx *ctx, const char* objpath,
 	DBusMessageIter *props)
 {
 	bool have_eid = false, have_net = false, have_nvmemi = false;
@@ -828,7 +828,7 @@ static int handle_mctp_endpoint(struct nvme_global_ctx *ctx, const char* objpath
 		dbus_message_iter_recurse(props, &prop);
 
 		if (!dbus_object_is_type(&prop, DBUS_TYPE_STRING)) {
-			nvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LOG_ERR,
 				 "error unmashalling object (propname)\n");
 			return -1;
 		}
@@ -838,7 +838,7 @@ static int handle_mctp_endpoint(struct nvme_global_ctx *ctx, const char* objpath
 		dbus_message_iter_next(&prop);
 
 		if (!dbus_object_is_type(&prop, DBUS_TYPE_VARIANT)) {
-			nvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LOG_ERR,
 				 "error unmashalling object (propval)\n");
 			return -1;
 		}
@@ -866,7 +866,7 @@ static int handle_mctp_endpoint(struct nvme_global_ctx *ctx, const char* objpath
 
 	if (have_nvmemi) {
 		if (!(have_eid && have_net)) {
-			nvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LOG_ERR,
 				 "Missing property for %s\n", objpath);
 			errno = ENOENT;
 			return -1;
@@ -874,7 +874,7 @@ static int handle_mctp_endpoint(struct nvme_global_ctx *ctx, const char* objpath
 		rc = nvme_mi_mctp_add(ctx, net, eid);
 		if (rc < 0) {
 			int errno_save = errno;
-			nvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LOG_ERR,
 				 "Error adding net %d eid %d: %m\n", net, eid);
 			errno = errno_save;
 		}
@@ -888,13 +888,13 @@ static int handle_mctp_endpoint(struct nvme_global_ctx *ctx, const char* objpath
 /* obj is an array of (object path, interfaces) dict entries - ie., dbus type
  *   a{oa{sa{sv}}}
  */
-static int handle_mctp_obj(struct nvme_global_ctx *ctx, DBusMessageIter *obj)
+static int handle_mctp_obj(struct libnvme_global_ctx *ctx, DBusMessageIter *obj)
 {
 	const char *objpath = NULL;
 	DBusMessageIter intfs;
 
 	if (!dbus_object_is_type(obj, DBUS_TYPE_OBJECT_PATH)) {
-		nvme_msg(ctx, LOG_ERR, "error unmashalling object (path)\n");
+		libnvme_msg(ctx, LOG_ERR, "error unmashalling object (path)\n");
 		return -1;
 	}
 
@@ -903,7 +903,7 @@ static int handle_mctp_obj(struct nvme_global_ctx *ctx, DBusMessageIter *obj)
 	dbus_message_iter_next(obj);
 
 	if (!dbus_object_is_dict(obj)) {
-		nvme_msg(ctx, LOG_ERR, "error unmashalling object (intfs)\n");
+		libnvme_msg(ctx, LOG_ERR, "error unmashalling object (intfs)\n");
 		return -1;
 	}
 
@@ -917,7 +917,7 @@ static int handle_mctp_obj(struct nvme_global_ctx *ctx, DBusMessageIter *obj)
 		dbus_message_iter_recurse(&intfs, &intf);
 
 		if (!dbus_object_is_type(&intf, DBUS_TYPE_STRING)) {
-			nvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LOG_ERR,
 				 "error unmashalling object (intf)\n");
 			return -1;
 		}
@@ -933,7 +933,7 @@ static int handle_mctp_obj(struct nvme_global_ctx *ctx, DBusMessageIter *obj)
 		dbus_message_iter_next(&intf);
 
 		if (!dbus_object_is_dict(&intf)) {
-			nvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LOG_ERR,
 				 "error unmarshalling object (props)\n");
 			return -1;
 		}
@@ -945,17 +945,17 @@ static int handle_mctp_obj(struct nvme_global_ctx *ctx, DBusMessageIter *obj)
 	return 0;
 }
 
-__public struct nvme_global_ctx *nvme_mi_scan_mctp(void)
+__public struct libnvme_global_ctx *nvme_mi_scan_mctp(void)
 {
 	DBusMessage *msg, *resp = NULL;
 	DBusConnection *bus = NULL;
 	DBusMessageIter args, objs;
 	int errno_save, rc = -1;
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	dbus_bool_t drc;
 	DBusError berr;
 
-	ctx = nvme_create_global_ctx(NULL, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(NULL, DEFAULT_LOGLEVEL);
 	if (!ctx) {
 		errno = ENOMEM;
 		return NULL;
@@ -965,7 +965,7 @@ __public struct nvme_global_ctx *nvme_mi_scan_mctp(void)
 
 	bus = dbus_bus_get(DBUS_BUS_SYSTEM, &berr);
 	if (!bus) {
-		nvme_msg(ctx, LOG_ERR, "Failed connecting to D-Bus: %s (%s)\n",
+		libnvme_msg(ctx, LOG_ERR, "Failed connecting to D-Bus: %s (%s)\n",
 			 berr.message, berr.name);
 		goto out;
 	}
@@ -975,7 +975,7 @@ __public struct nvme_global_ctx *nvme_mi_scan_mctp(void)
 					   "org.freedesktop.DBus.ObjectManager",
 					   "GetManagedObjects");
 	if (!msg) {
-		nvme_msg(ctx, LOG_ERR, "Failed creating call message\n");
+		libnvme_msg(ctx, LOG_ERR, "Failed creating call message\n");
 		goto out;
 	}
 
@@ -984,7 +984,7 @@ __public struct nvme_global_ctx *nvme_mi_scan_mctp(void)
 							 &berr);
 	dbus_message_unref(msg);
 	if (!resp) {
-		nvme_msg(ctx, LOG_ERR, "Failed querying MCTP D-Bus: %s (%s)\n",
+		libnvme_msg(ctx, LOG_ERR, "Failed querying MCTP D-Bus: %s (%s)\n",
 			 berr.message, berr.name);
 		goto out;
 	}
@@ -992,12 +992,12 @@ __public struct nvme_global_ctx *nvme_mi_scan_mctp(void)
 	/* argument container */
 	drc = dbus_message_iter_init(resp, &args);
 	if (!drc) {
-		nvme_msg(ctx, LOG_ERR, "can't read dbus reply args\n");
+		libnvme_msg(ctx, LOG_ERR, "can't read dbus reply args\n");
 		goto out;
 	}
 
 	if (!dbus_object_is_dict(&args)) {
-		nvme_msg(ctx, LOG_ERR, "error unmashalling args\n");
+		libnvme_msg(ctx, LOG_ERR, "error unmashalling args\n");
 		goto out;
 	}
 
@@ -1029,7 +1029,7 @@ out:
 
 	if (rc < 0) {
 		if (ctx) {
-			nvme_free_global_ctx(ctx);
+			libnvme_free_global_ctx(ctx);
 		}
 		errno = errno_save;
 		ctx = NULL;
@@ -1039,7 +1039,7 @@ out:
 
 #else /* CONFIG_DBUS */
 
-__public struct nvme_global_ctx *nvme_mi_scan_mctp(void)
+__public struct libnvme_global_ctx *nvme_mi_scan_mctp(void)
 {
 	return NULL;
 }

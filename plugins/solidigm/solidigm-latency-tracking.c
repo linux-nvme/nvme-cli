@@ -43,7 +43,7 @@ struct config {
 };
 
 struct latency_tracker {
-	struct nvme_transport_handle *hdl;
+	struct libnvme_transport_handle *hdl;
 	__u8 uuid_index;
 	struct config cfg;
 	nvme_print_flags_t print_flags;
@@ -312,7 +312,7 @@ static int latency_tracking_enable(struct latency_tracker *lt)
 
 static int latency_tracker_get_log(struct latency_tracker *lt)
 {
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	if (lt->cfg.read && lt->cfg.write) {
@@ -332,7 +332,7 @@ static int latency_tracker_get_log(struct latency_tracker *lt)
 	cmd.cdw14 |= NVME_FIELD_ENCODE(lt->uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	err = nvme_get_log(lt->hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	err = libnvme_get_log(lt->hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err)
 		return err;
 
@@ -349,8 +349,8 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acm
 				      struct plugin *plugin)
 {
 	const char *desc = "Get and Parse Solidigm Latency Tracking Statistics log.";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 enabled;
 	int err;
 

@@ -24,8 +24,8 @@ static int getHealthValue(int argc, char **argv, struct command *acmd, struct pl
 	struct nvme_smart_log smart_log;
 	char *desc = "Get nvme health percentage.";
 	int  percent_used = 0, healthvalue = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int result;
 
 	NVME_ARGS(opts);
@@ -55,9 +55,9 @@ static int getBadblock(int argc, char **argv, struct command *acmd, struct plugi
 {
 
 	char *desc = "Get nvme bad block number.";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	struct nvme_passthru_cmd nvmecmd;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd nvmecmd;
 	unsigned char data[1] = {0};
 	int result;
 
@@ -76,7 +76,7 @@ static int getBadblock(int argc, char **argv, struct command *acmd, struct plugi
 	nvmecmd.addr = (__u64)(uintptr_t)data;
 	nvmecmd.data_len = 0x1;
 
-	result = nvme_submit_admin_passthru(hdl, &nvmecmd);
+	result = libnvme_submit_admin_passthru(hdl, &nvmecmd);
 	if (!result) {
 		int badblock  = data[0];
 

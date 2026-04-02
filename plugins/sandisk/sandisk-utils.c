@@ -40,35 +40,35 @@ static const __u8 SNDK_UUID[NVME_UUID_LEN] = {
 	0xad, 0xd8, 0x3c, 0x29, 0xd1, 0x23, 0x7c, 0x70
 };
 
-int sndk_get_pci_ids(struct nvme_global_ctx *ctx, struct nvme_transport_handle *hdl,
+int sndk_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_handle *hdl,
 			   uint32_t *device_id, uint32_t *vendor_id)
 {
 	char vid[256], did[256], id[32];
-	nvme_ctrl_t c = NULL;
-	nvme_ns_t n = NULL;
+	libnvme_ctrl_t c = NULL;
+	libnvme_ns_t n = NULL;
 	const char *name;
 	int fd, ret;
 
-	name = nvme_transport_handle_get_name(hdl);
-	ret = nvme_scan_ctrl(ctx, name, &c);
+	name = libnvme_transport_handle_get_name(hdl);
+	ret = libnvme_scan_ctrl(ctx, name, &c);
 	if (!ret) {
 		snprintf(vid, sizeof(vid), "%s/device/vendor",
-			nvme_ctrl_get_sysfs_dir(c));
+			libnvme_ctrl_get_sysfs_dir(c));
 		snprintf(did, sizeof(did), "%s/device/device",
-			nvme_ctrl_get_sysfs_dir(c));
-		nvme_free_ctrl(c);
+			libnvme_ctrl_get_sysfs_dir(c));
+		libnvme_free_ctrl(c);
 	} else {
-		ret = nvme_scan_namespace(ctx, name, &n);
+		ret = libnvme_scan_namespace(ctx, name, &n);
 		if (!ret) {
 			fprintf(stderr, "Unable to find %s\n", name);
 			return ret;
 		}
 
 		snprintf(vid, sizeof(vid), "%s/device/device/vendor",
-			nvme_ns_get_sysfs_dir(n));
+			libnvme_ns_get_sysfs_dir(n));
 		snprintf(did, sizeof(did), "%s/device/device/device",
-			nvme_ns_get_sysfs_dir(n));
-		nvme_free_ns(n);
+			libnvme_ns_get_sysfs_dir(n));
+		libnvme_free_ns(n);
 	}
 
 	fd = open(vid, O_RDONLY);
@@ -112,7 +112,7 @@ int sndk_get_pci_ids(struct nvme_global_ctx *ctx, struct nvme_transport_handle *
 	return 0;
 }
 
-int sndk_get_vendor_id(struct nvme_transport_handle *hdl, uint32_t *vendor_id)
+int sndk_get_vendor_id(struct libnvme_transport_handle *hdl, uint32_t *vendor_id)
 {
 	struct nvme_id_ctrl ctrl;
 	int ret;
@@ -129,8 +129,8 @@ int sndk_get_vendor_id(struct nvme_transport_handle *hdl, uint32_t *vendor_id)
 	return ret;
 }
 
-bool sndk_check_device(struct nvme_global_ctx *ctx,
-		       struct nvme_transport_handle *hdl)
+bool sndk_check_device(struct libnvme_global_ctx *ctx,
+		       struct libnvme_transport_handle *hdl)
 {
 	uint32_t read_device_id = -1, read_vendor_id = -1;
 	bool supported;
@@ -316,7 +316,7 @@ bool sndk_nvme_parse_dev_status_log_str(void *log_data,
 }
 
 
-bool sndk_get_dev_mgment_data(struct nvme_global_ctx *ctx, struct nvme_transport_handle *hdl,
+bool sndk_get_dev_mgment_data(struct libnvme_global_ctx *ctx, struct libnvme_transport_handle *hdl,
 				void **data)
 {
 	bool found = false;
@@ -335,18 +335,18 @@ bool sndk_get_dev_mgment_data(struct nvme_global_ctx *ctx, struct nvme_transport
 	sndk_get_pci_ids(ctx, hdl, &device_id, &vendor_id);
 
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
-	if (!nvme_get_uuid_list(hdl, &uuid_list)) {
+	if (!libnvme_get_uuid_list(hdl, &uuid_list)) {
 		/* check for the Sandisk UUID first  */
-		uuid_index = nvme_find_uuid(&uuid_list, SNDK_UUID);
+		uuid_index = libnvme_find_uuid(&uuid_list, SNDK_UUID);
 
 		if (uuid_index < 0) {
 			/* The Sandisk UUID is not found;
 			 * check for the WDC UUID second.
 			 */
-			uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID);
+			uuid_index = libnvme_find_uuid(&uuid_list, WDC_UUID);
 			if (uuid_index < 0)
 				/* Check for the UUID used on SN640 and SN655 drives */
-				uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID_SN640_3);
+				uuid_index = libnvme_find_uuid(&uuid_list, WDC_UUID_SN640_3);
 		}
 
 		if (uuid_index >= 0)
@@ -439,12 +439,12 @@ bool sndk_validate_dev_mng_log(void *data)
 	return valid_log;
 }
 
-bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
+bool sndk_get_dev_mgmt_log_page_data(struct libnvme_transport_handle *hdl,
 		void **log_data,
 		__u8 uuid_ix)
 {
 	struct sndk_c2_log_page_header *hdr_ptr;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	bool valid = false;
 	__u32 length = 0;
 	void *data;
@@ -452,7 +452,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 
 	data = (__u8 *)malloc(sizeof(__u8) * SNDK_DEV_MGMNT_LOG_PAGE_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR: SNDK: malloc: %s\n", nvme_strerror(errno));
+		fprintf(stderr, "ERROR: SNDK: malloc: %s\n", libnvme_strerror(errno));
 		return false;
 	}
 
@@ -465,7 +465,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_ix,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (ret) {
 		fprintf(stderr,
 			"ERROR: SNDK: Unable to get 0x%x Log Page with uuid %d, ret = 0x%x\n",
@@ -481,7 +481,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 		free(data);
 		data = calloc(length, sizeof(__u8));
 		if (!data) {
-			fprintf(stderr, "ERROR: SNDK: malloc: %s\n", nvme_strerror(errno));
+			fprintf(stderr, "ERROR: SNDK: malloc: %s\n", libnvme_strerror(errno));
 			goto end;
 		}
 
@@ -492,7 +492,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 		cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_ix,
 				NVME_LOG_CDW14_UUID_SHIFT,
 				NVME_LOG_CDW14_UUID_MASK);
-		ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+		ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (ret) {
 			fprintf(stderr,
 				"ERROR: SNDK: Unable to read 0x%x Log with uuid %d, ret = 0x%x\n",
@@ -506,7 +506,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct nvme_transport_handle *hdl,
 		/* Ensure size of log data matches length in log header */
 		*log_data = calloc(length, sizeof(__u8));
 		if (!*log_data) {
-			fprintf(stderr, "ERROR: SNDK: calloc: %s\n", nvme_strerror(errno));
+			fprintf(stderr, "ERROR: SNDK: calloc: %s\n", libnvme_strerror(errno));
 			valid = false;
 			goto end;
 		}
@@ -521,8 +521,8 @@ end:
 	return valid;
 }
 
-__u64 sndk_get_drive_capabilities(struct nvme_global_ctx *ctx,
-				  struct nvme_transport_handle *hdl)
+__u64 sndk_get_drive_capabilities(struct libnvme_global_ctx *ctx,
+				  struct libnvme_transport_handle *hdl)
 {
 	uint32_t read_device_id = -1, read_vendor_id = -1;
 	__u64 capabilities = 0;
@@ -654,8 +654,8 @@ __u64 sndk_get_drive_capabilities(struct nvme_global_ctx *ctx,
 	return capabilities;
 }
 
-__u64 sndk_get_enc_drive_capabilities(struct nvme_global_ctx *ctx,
-					    struct nvme_transport_handle *hdl)
+__u64 sndk_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
+					    struct libnvme_transport_handle *hdl)
 {
 	int ret;
 	uint32_t read_vendor_id;
@@ -682,18 +682,18 @@ __u64 sndk_get_enc_drive_capabilities(struct nvme_global_ctx *ctx,
 
 		/* Check for the Sandisk or WDC UUID index  */
 		memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
-		if (!nvme_get_uuid_list(hdl, &uuid_list)) {
+		if (!libnvme_get_uuid_list(hdl, &uuid_list)) {
 			/* check for the Sandisk UUID first  */
-			uuid_index = nvme_find_uuid(&uuid_list, SNDK_UUID);
+			uuid_index = libnvme_find_uuid(&uuid_list, SNDK_UUID);
 
 			if (uuid_index < 0) {
 				/* The Sandisk UUID is not found;
 				 * check for the WDC UUID second.
 				 */
-				uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID);
+				uuid_index = libnvme_find_uuid(&uuid_list, WDC_UUID);
 				if (uuid_index < 0)
 					/* Check for the UUID used on SN640 and SN655 drives */
-					uuid_index = nvme_find_uuid(&uuid_list, WDC_UUID_SN640_3);
+					uuid_index = libnvme_find_uuid(&uuid_list, WDC_UUID_SN640_3);
 			}
 		} else {
 			/* UUID Lists not supported, Use default uuid index - 0 */
@@ -800,7 +800,7 @@ out:
 	return capabilities;
 }
 
-int sndk_get_serial_name(struct nvme_transport_handle *hdl, char *file,
+int sndk_get_serial_name(struct libnvme_transport_handle *hdl, char *file,
 			 size_t len, const char *suffix)
 {
 	int i;
@@ -876,7 +876,7 @@ int sndk_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer,
 }
 
 /* Verify the Controller Initiated Option is enabled */
-int sndk_check_ctrl_telemetry_option_disabled(struct nvme_transport_handle *hdl)
+int sndk_check_ctrl_telemetry_option_disabled(struct libnvme_transport_handle *hdl)
 {
 	int err;
 	__u64 result;

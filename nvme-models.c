@@ -246,7 +246,7 @@ static int read_sys_node(char *where, char *save, size_t savesz)
 	fd = open(where, O_RDONLY);
 	if (fd < 0) {
 		fprintf(stderr, "Failed to open %s with errno %s\n",
-			where, nvme_strerror(errno));
+			where, libnvme_strerror(errno));
 		return 1;
 	}
 	/* -1 so we can safely use strstr below */
@@ -329,7 +329,7 @@ char *nvme_product_name(int id)
 
 	line = malloc(1024);
 	if (!line) {
-		fprintf(stderr, "malloc: %s\n", nvme_strerror(errno));
+		fprintf(stderr, "malloc: %s\n", libnvme_strerror(errno));
 		goto error0;
 	}
 

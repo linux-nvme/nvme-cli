@@ -137,19 +137,19 @@ int ioctl(int fd, int request, ...)
 	void *cmd;
 
 	switch (request) {
-	case NVME_IOCTL_ADMIN_CMD:
+	case LIBNVME_IOCTL_ADMIN_CMD:
 		mock_cmds = &mock_admin_cmds;
 		result64 = false;
 		break;
-	case NVME_IOCTL_ADMIN64_CMD:
+	case LIBNVME_IOCTL_ADMIN64_CMD:
 		mock_cmds = &mock_admin_cmds;
 		result64 = true;
 		break;
-	case NVME_IOCTL_IO_CMD:
+	case LIBNVME_IOCTL_IO_CMD:
 		mock_cmds = &mock_io_cmds;
 		result64 = false;
 		break;
-	case NVME_IOCTL_IO64_CMD:
+	case LIBNVME_IOCTL_IO64_CMD:
 		mock_cmds = &mock_io_cmds;
 		result64 = true;
 		break;

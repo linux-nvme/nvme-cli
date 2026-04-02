@@ -40,10 +40,10 @@ static void show_temp_stats(struct temp_stats *stats)
 
 int sldgm_get_temp_stats_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	unsigned char buffer[4096] = {0};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	__u8 uuid_idx;
 	int err;
 
@@ -72,7 +72,7 @@ int sldgm_get_temp_stats_log(int argc, char **argv, struct command *acmd, struct
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_idx,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err > 0) {
 		nvme_init_get_log(&cmd, NVME_NSID_ALL,
 				  SLDGM_LEGACY_TEMP_STATS_LID, NVME_CSI_NVM,
@@ -80,7 +80,7 @@ int sldgm_get_temp_stats_log(int argc, char **argv, struct command *acmd, struct
 		cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_idx,
 					       NVME_LOG_CDW14_UUID_SHIFT,
 					       NVME_LOG_CDW14_UUID_MASK);
-		err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+		err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (!err) {
 			uint64_t *guid = (uint64_t *)&buffer[4080];
 

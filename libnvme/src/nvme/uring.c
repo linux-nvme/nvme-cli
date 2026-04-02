@@ -18,7 +18,7 @@
  */
 #define NVME_URING_ENTRIES 16
 
-int nvme_open_uring(struct nvme_global_ctx *ctx)
+int libnvme_open_uring(struct libnvme_global_ctx *ctx)
 {
 	struct io_uring_probe *probe;
 	struct io_uring *ring;
@@ -44,7 +44,7 @@ int nvme_open_uring(struct nvme_global_ctx *ctx)
 	return 0;
 }
 
-void nvme_close_uring(struct nvme_global_ctx *ctx)
+void libnvme_close_uring(struct libnvme_global_ctx *ctx)
 {
 	if (!ctx->ring)
 		return;
@@ -53,20 +53,20 @@ void nvme_close_uring(struct nvme_global_ctx *ctx)
 	free(ctx->ring);
 }
 
-int __nvme_transport_handle_open_uring(struct nvme_transport_handle *hdl)
+int __libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl)
 {
 	int err;
 
 	switch (hdl->ctx->uring_state) {
-	case NVME_IO_URING_STATE_NOT_AVAILABLE:
+	case LIBNVME_IO_URING_STATE_NOT_AVAILABLE:
 		return -ENOTSUP;
-	case NVME_IO_URING_STATE_AVAILABLE:
+	case LIBNVME_IO_URING_STATE_AVAILABLE:
 		goto uring_enabled;
-	case NVME_IO_URING_STATE_UNKNOWN:
+	case LIBNVME_IO_URING_STATE_UNKNOWN:
 		break;
 	}
 
-	err = nvme_open_uring(hdl->ctx);
+	err = libnvme_open_uring(hdl->ctx);
 	if (err)
 		return err;
 
@@ -77,7 +77,7 @@ uring_enabled:
 }
 
 static int nvme_submit_uring_cmd(struct io_uring *ring, int fd,
-		struct nvme_passthru_cmd *cmd)
+		struct libnvme_passthru_cmd *cmd)
 {
 	struct io_uring_sqe *sqe;
 	int ret;
@@ -90,7 +90,7 @@ static int nvme_submit_uring_cmd(struct io_uring *ring, int fd,
 
 	sqe->fd = fd;
 	sqe->opcode = IORING_OP_URING_CMD;
-	sqe->cmd_op = NVME_URING_CMD_ADMIN;
+	sqe->cmd_op = LIBNVME_URING_CMD_ADMIN;
 
 	ret = io_uring_submit(ring);
 	if (ret < 0)
@@ -99,7 +99,7 @@ static int nvme_submit_uring_cmd(struct io_uring *ring, int fd,
 	return 0;
 }
 
-int nvme_wait_complete_passthru(struct nvme_transport_handle *hdl)
+int libnvme_wait_complete_passthru(struct libnvme_transport_handle *hdl)
 {
 	struct io_uring_cqe *cqe;
 	struct io_uring *ring;
@@ -118,13 +118,13 @@ int nvme_wait_complete_passthru(struct nvme_transport_handle *hdl)
 	return 0;
 }
 
-int nvme_submit_admin_passthru_async(struct nvme_transport_handle *hdl,
-		 struct nvme_passthru_cmd *cmd)
+int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
+		 struct libnvme_passthru_cmd *cmd)
 {
 	int err;
 
 	if (hdl->ctx->ring_cmds >= NVME_URING_ENTRIES) {
-		err = nvme_wait_complete_passthru(hdl);
+		err = libnvme_wait_complete_passthru(hdl);
 		if (err)
 			return err;
 	}

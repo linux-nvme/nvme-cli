@@ -20,7 +20,7 @@ const unsigned char ocp_uuid[NVME_UUID_LEN] = {
 
 int ocp_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index)
 {
-	int i = nvme_find_uuid(uuid_list, ocp_uuid);
+	int i = libnvme_find_uuid(uuid_list, ocp_uuid);
 
 	*index = 0;
 	if (i > 0)
@@ -31,7 +31,7 @@ int ocp_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index)
 	return 0;
 }
 
-int ocp_get_uuid_index(struct nvme_transport_handle *hdl, __u8 *index)
+int ocp_get_uuid_index(struct libnvme_transport_handle *hdl, __u8 *index)
 {
 	struct nvme_id_uuid_list uuid_list;
 	int err;
@@ -45,10 +45,10 @@ int ocp_get_uuid_index(struct nvme_transport_handle *hdl, __u8 *index)
 	return ocp_find_uuid_index(&uuid_list, index);
 }
 
-int ocp_get_log_simple(struct nvme_transport_handle *hdl,
+int ocp_get_log_simple(struct libnvme_transport_handle *hdl,
 		       enum ocp_dssd_log_id lid, __u32 len, void *log)
 {
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	__u8 uidx;
 
 	ocp_get_uuid_index(hdl, &uidx);
@@ -58,7 +58,7 @@ int ocp_get_log_simple(struct nvme_transport_handle *hdl,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
 
-	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	return libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 }
 
 bool ocp_is_tcg_activity_event(struct nvme_persistent_event_entry *pevent_entry_head,

@@ -178,8 +178,8 @@ static const char *__copy_id_str(const void *field, size_t size,
 
 int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 {
-	struct nvme_transport_handle *hdl;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_transport_handle *hdl;
+	struct libnvme_passthru_cmd cmd;
 	struct nvme_id_ctrl id;
 	uint16_t ctrl_id;
 	char buf[41];
@@ -216,7 +216,7 @@ int do_identify(nvme_mi_ep_t ep, int argc, char **argv)
 	if (partial)
 		cmd.data_len = offsetof(struct nvme_id_ctrl, rab);
 
-	rc = nvme_submit_admin_passthru(hdl, &cmd);
+	rc = libnvme_submit_admin_passthru(hdl, &cmd);
 	if (rc) {
 		warn("can't perform Admin Identify command");
 		return -1;
@@ -364,9 +364,9 @@ void hexdump(const unsigned char *buf, int len)
 
 int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 {
-	struct nvme_transport_handle *hdl;
+	struct libnvme_transport_handle *hdl;
 	enum nvme_cmd_get_log_lid lid;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	uint8_t buf[512];
 	uint16_t ctrl_id;
 	int rc, tmp;
@@ -399,7 +399,7 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 
 	nvme_init_get_log(&cmd, NVME_NSID_NONE, lid, NVME_CSI_NVM,
 			  buf, sizeof(buf));
-	rc = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
+	rc = libnvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	if (rc) {
 		warn("can't perform Get Log page command");
 		return -1;
@@ -415,7 +415,7 @@ int do_admin_raw(nvme_mi_ep_t ep, int argc, char **argv)
 {
 	struct nvme_mi_admin_req_hdr req;
 	struct nvme_mi_admin_resp_hdr *resp;
-  	struct nvme_transport_handle *hdl;
+  	struct libnvme_transport_handle *hdl;
 	size_t resp_data_len;
 	unsigned long tmp;
 	uint8_t buf[512];
@@ -532,8 +532,8 @@ static const char *sec_proto_description(uint8_t id)
 
 int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
 {
-	struct nvme_transport_handle *hdl;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_transport_handle *hdl;
+	struct libnvme_passthru_cmd cmd;
 	int i, rc, n_proto;
 	unsigned long tmp;
 	uint16_t ctrl_id;
@@ -566,7 +566,7 @@ int do_security_info(nvme_mi_ep_t ep, int argc, char **argv)
 	}
 
 	nvme_init_security_receive(&cmd, 0, 0, 0, 0, 0, data, data_len);
-	rc = nvme_submit_admin_passthru(hdl, &cmd);
+	rc = libnvme_submit_admin_passthru(hdl, &cmd);
 	if (rc) {
 		warnx("can't perform Security Receive command: rc %d", rc);
 		return -1;
@@ -758,7 +758,7 @@ static int do_action_endpoint(enum action action, nvme_mi_ep_t ep, int argc, cha
 
 int main(int argc, char **argv)
 {
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	enum action action;
 	nvme_mi_ep_t ep;
 	bool dbus = false, usage = true;
@@ -830,7 +830,7 @@ int main(int argc, char **argv)
 		}
 	}
 	if (dbus) {
-		struct nvme_global_ctx *ctx;
+		struct libnvme_global_ctx *ctx;
 		int i = 0;
 
 		ctx = nvme_mi_scan_mctp();
@@ -846,9 +846,9 @@ int main(int argc, char **argv)
 			printf("---\n");
 			free(desc);
 		}
-		nvme_free_global_ctx(ctx);
+		libnvme_free_global_ctx(ctx);
 	} else {
-		ctx = nvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+		ctx = libnvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
 		if (!ctx)
 			err(EXIT_FAILURE, "can't create NVMe root");
 
@@ -857,7 +857,7 @@ int main(int argc, char **argv)
 			errx(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
 		rc = do_action_endpoint(action, ep, argc, argv);
 		nvme_mi_close(ep);
-		nvme_free_global_ctx(ctx);
+		libnvme_free_global_ctx(ctx);
 	}
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;

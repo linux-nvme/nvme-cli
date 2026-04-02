@@ -41,10 +41,10 @@ static void init_lid_dir(struct lid_dir *lid_dir)
 	}
 }
 
-static int get_supported_log_pages_log(struct nvme_transport_handle *hdl, int uuid_index,
+static int get_supported_log_pages_log(struct libnvme_transport_handle *hdl, int uuid_index,
 				       struct nvme_supported_log_pages *supported)
 {
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 
 	memset(supported, 0, sizeof(*supported));
 	nvme_init_get_log(&cmd, NVME_NSID_ALL,
@@ -53,7 +53,7 @@ static int get_supported_log_pages_log(struct nvme_transport_handle *hdl, int uu
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	return nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	return libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 }
 
 static struct lid_dir *get_standard_lids(struct nvme_supported_log_pages *supported)
@@ -185,8 +185,8 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *a
 	const int NO_UUID_INDEX = 0;
 	const char *description = "Retrieves list of supported log pages for each UUID index.";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	NVME_ARGS(options);
 

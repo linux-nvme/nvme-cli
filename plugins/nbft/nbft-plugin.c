@@ -151,7 +151,7 @@ static json_object *ssns_to_json(struct nbft_info_subsystem_ns *ss)
 	case NBFT_INFO_NID_TYPE_NS_UUID:
 		if (json_object_add_value_string(ss_json, "nid_type", "uuid"))
 			goto fail;
-		nvme_uuid_to_string(ss->nid, json_str);
+		libnvme_uuid_to_string(ss->nid, json_str);
 		break;
 
 	default:
@@ -536,7 +536,7 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 {
 	const char *desc = "Display contents of the ACPI NBFT files.";
 	bool show_subsys = false, show_hfi = false, show_discovery = false;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	struct nbft_file_entry *head = NULL;
 	struct list_head nbft_list;
 	char *nbft_path = NBFT_SYSFS_PATH;
@@ -559,7 +559,7 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	if (ret < 0)
 		return ret;
 
-	ctx = nvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return -ENOMEM;

@@ -93,13 +93,13 @@ struct nvme_args {
 		OPT_END()                                                              \
 	}
 
-static inline bool nvme_is_multipath(nvme_subsystem_t s)
+static inline bool nvme_is_multipath(libnvme_subsystem_t s)
 {
-	nvme_ns_t n;
-	nvme_path_t p;
+	libnvme_ns_t n;
+	libnvme_path_t p;
 
-	nvme_subsystem_for_each_ns(s, n)
-		nvme_namespace_for_each_path(n, p)
+	libnvme_subsystem_for_each_ns(s, n)
+		libnvme_namespace_for_each_path(n, p)
 			return true;
 
 	return false;
@@ -110,13 +110,13 @@ void register_extension(struct plugin *plugin);
 /*
  * parse_and_open - parses arguments and opens the NVMe device, populating @ctx, @hdl
  */
-int parse_and_open(struct nvme_global_ctx **ctx,
-		struct nvme_transport_handle **hdl, int argc, char **argv,
+int parse_and_open(struct libnvme_global_ctx **ctx,
+		struct libnvme_transport_handle **hdl, int argc, char **argv,
 		const char *desc, struct argconfig_commandline_options *clo);
 
 // TODO: unsure if we need a double ptr here
 static inline DEFINE_CLEANUP_FUNC(
-	cleanup_nvme_transport_handle, struct nvme_transport_handle *, nvme_close)
+	cleanup_nvme_transport_handle, struct libnvme_transport_handle *, libnvme_close)
 #define _cleanup_nvme_transport_handle_ __cleanup__(cleanup_nvme_transport_handle)
 
 extern const char *uuid_index;
@@ -128,7 +128,7 @@ bool nvme_is_output_format_json(void);
 int __id_ctrl(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));
 
-const char *nvme_strerror(int errnum);
+const char *libnvme_strerror(int errnum);
 
 unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time);
@@ -142,15 +142,15 @@ void d_raw(unsigned char *buf, unsigned len);
 int get_reg_size(int offset);
 bool nvme_is_ctrl_reg(int offset);
 
-static inline int nvme_get_nsid_log(struct nvme_transport_handle *hdl,
+static inline int nvme_get_nsid_log(struct libnvme_transport_handle *hdl,
 				    __u32 nsid, bool rae,
 				    enum nvme_cmd_get_log_lid lid,
 				    void *log, __u32 len)
 {
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 
 	nvme_init_get_log(&cmd, nsid, lid, NVME_CSI_NVM, log, len);
 
-	return nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
+	return libnvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
 }
 #endif /* _NVME_H */
