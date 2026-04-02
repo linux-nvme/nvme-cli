@@ -484,7 +484,7 @@ static void show_dapustor_smart_log(struct nvme_additional_smart_log *smart,
 }
 
 static int dapustor_additional_smart_log_data(
-		struct nvme_transport_handle *hdl,
+		struct libnvme_transport_handle *hdl,
 		struct nvme_additional_smart_log *smart_log,
 		struct nvme_extended_additional_smart_log *ext_smart_log,
 		bool *has_ext)
@@ -511,9 +511,9 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 	const char *json = "Dump output in json format";
 #endif /* CONFIG_JSONC */
 
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_extended_additional_smart_log ext_smart_log;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	struct nvme_additional_smart_log smart_log;
 	nvme_print_flags_t flags;
 	bool has_ext = false;
@@ -550,12 +550,12 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 		if (flags & JSON || cfg.json)
 			show_dapustor_smart_log_jsn(&smart_log, &ext_smart_log,
 						    cfg.namespace_id,
-						    nvme_transport_handle_get_name(hdl),
+						    libnvme_transport_handle_get_name(hdl),
 						    has_ext);
 		else if (!cfg.raw_binary)
 			show_dapustor_smart_log(&smart_log, &ext_smart_log,
 						cfg.namespace_id,
-						nvme_transport_handle_get_name(hdl), has_ext);
+						libnvme_transport_handle_get_name(hdl), has_ext);
 		else {
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 			if (has_ext)

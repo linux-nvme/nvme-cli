@@ -198,7 +198,7 @@ struct workloadLog { // Full WL Log Structure
 #pragma pack(pop)
 
 struct wltracker {
-	struct nvme_transport_handle *hdl;
+	struct libnvme_transport_handle *hdl;
 	__u8 uuid_index;
 	struct workloadLog workload_log;
 	size_t poll_count;
@@ -284,7 +284,7 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 	struct workloadLog *log = &wlt->workload_log;
 	union WorkloadLogEnable workloadEnable;
 	static __u64 last_timestamp_us;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	__u64 timestamp_us = 0;
 	__u64 timestamp = 0;
 	__u8 content_group;
@@ -296,7 +296,7 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 	cmd.cdw14 |= NVME_FIELD_ENCODE(wlt->uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	err = nvme_get_log(wlt->hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	err = libnvme_get_log(wlt->hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err > 0) {
 		nvme_show_status(err);
 		return err;
@@ -493,8 +493,8 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 	const char *run_time = "Limit runtime capture time in seconds";
 	const char *flush_frequency =
 		"Samples (1 to 126) to wait for extracting data. Default 100 samples";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct wltracker wlt = {0};
 	union WorkloadLogEnable we = {0};
 	char type_options[80] = {0};
@@ -605,7 +605,7 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		err = nvme_set_features(wlt.hdl, 0, 0xf5, 0, cfg.trigger_treshold, 0,
 				0, wlt.uuid_index, 0, NULL, 0, NULL);
 		if (err < 0) {
-			nvme_show_error("Trigger Threshold set-feature: %s", nvme_strerror(errno));
+			nvme_show_error("Trigger Threshold set-feature: %s", libnvme_strerror(errno));
 			return err;
 		} else if (err > 0) {
 			nvme_show_status(err);
@@ -623,7 +623,7 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		we.trackerEnable = true;
 		err = wltracker_config(&wlt, &we);
 		if (err < 0) {
-			nvme_show_error("tracker set-feature: %s", nvme_strerror(errno));
+			nvme_show_error("tracker set-feature: %s", libnvme_strerror(errno));
 			return err;
 		} else if (err > 0) {
 			nvme_show_status(err);
@@ -677,7 +677,7 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		we2.triggerEnable = false;
 		err = wltracker_config(&wlt, &we2);
 		if (err < 0) {
-			nvme_show_error("tracker set-feature: %s", nvme_strerror(errno));
+			nvme_show_error("tracker set-feature: %s", libnvme_strerror(errno));
 			return err;
 		} else if (err > 0) {
 			nvme_show_status(err);

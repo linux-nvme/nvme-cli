@@ -169,7 +169,7 @@ void wdc_StrFormat(char *formatter, size_t fmt_sz, char *tofmt, size_t tofmtsz)
 	}
 }
 
-bool wdc_CheckUuidListSupport(struct nvme_transport_handle *hdl,
+bool wdc_CheckUuidListSupport(struct libnvme_transport_handle *hdl,
 			      struct nvme_id_uuid_list *uuid_list)
 {
 	struct nvme_id_ctrl ctrl;
@@ -189,7 +189,7 @@ bool wdc_CheckUuidListSupport(struct nvme_transport_handle *hdl,
 		else if (err > 0)
 			nvme_show_status(err);
 		else
-			nvme_show_error("identify UUID list: %s", nvme_strerror(errno));
+			nvme_show_error("identify UUID list: %s", libnvme_strerror(errno));
 	}
 
 	return false;

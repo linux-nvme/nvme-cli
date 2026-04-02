@@ -18,12 +18,12 @@
 #define CREATE_CMD
 #include "innogrit-nvme.h"
 
-static int nvme_vucmd(struct nvme_transport_handle *hdl, unsigned char opcode,
+static int nvme_vucmd(struct libnvme_transport_handle *hdl, unsigned char opcode,
 		      unsigned int cdw12, unsigned int cdw13,
 		      unsigned int cdw14, unsigned int cdw15, char *data,
 		      int data_len)
 {
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = opcode;
@@ -36,14 +36,14 @@ static int nvme_vucmd(struct nvme_transport_handle *hdl, unsigned char opcode,
 	cmd.nsid = 0xffffffff;
 	cmd.addr = (__u64)(__u64)(uintptr_t)data;
 	cmd.data_len = data_len;
-	return nvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_submit_admin_passthru(hdl, &cmd);
 }
 
-static int getlogpage(struct nvme_transport_handle *hdl, unsigned char ilogid,
+static int getlogpage(struct libnvme_transport_handle *hdl, unsigned char ilogid,
 		      unsigned char ilsp, char *data, int data_len,
 		      __u64 *result)
 {
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 
 	nvme_init_get_log(&cmd, NVME_NSID_ALL, ilogid, NVME_CSI_NVM,
 			  data, data_len);
@@ -51,10 +51,10 @@ static int getlogpage(struct nvme_transport_handle *hdl, unsigned char ilogid,
 			NVME_LOG_CDW10_LSP_SHIFT,
 			NVME_LOG_CDW10_LSP_MASK);
 
-	return nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
+	return libnvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 }
 
-static int getvsctype(struct nvme_transport_handle *hdl)
+static int getvsctype(struct libnvme_transport_handle *hdl)
 {
 	unsigned char ilogid;
 	char data[4096];
@@ -76,7 +76,7 @@ static int getvsctype(struct nvme_transport_handle *hdl)
 	return 0;
 }
 
-static int getvsc_eventlog(struct nvme_transport_handle *hdl, FILE *fp)
+static int getvsc_eventlog(struct libnvme_transport_handle *hdl, FILE *fp)
 {
 	unsigned int errcnt, rxlen, start_flag;
 	int ivsctype = getvsctype(hdl);
@@ -136,7 +136,7 @@ static int getvsc_eventlog(struct nvme_transport_handle *hdl, FILE *fp)
 	return IG_SUCCESS;
 }
 
-int getlogpage_eventlog(struct nvme_transport_handle *hdl, FILE *fp)
+int getlogpage_eventlog(struct libnvme_transport_handle *hdl, FILE *fp)
 {
 	unsigned int i, total_size;
 	char data[4096];
@@ -174,8 +174,8 @@ static int innogrit_geteventlog(int argc, char **argv,
 				struct plugin *plugin)
 {
 	const char *desc = "Recrieve event log for the given device ";
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_file_ FILE *fp = NULL;
 	char currentdir[128], filename[512];
 	struct tm *logtime;
@@ -214,8 +214,8 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Recrieve cdump data for the given device ";
 	char currentdir[128], filename[512], fname[128];
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	unsigned int itotal, icur, ivsctype;
 	unsigned int ipackcount, ipackindex;
 	unsigned char busevsc = false;

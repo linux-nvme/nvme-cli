@@ -27,8 +27,8 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 	const char *human_readable = "show log in readable format";
 	const char *raw = "use binary output";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	_cleanup_free_ void *log = NULL;
 	struct nvme_fdp_config_log hdr;
 	nvme_print_flags_t flags;
@@ -97,8 +97,8 @@ static int fdp_usage(int argc, char **argv, struct command *acmd, struct plugin 
 	const char *egid = "Endurance group identifier";
 	const char *raw = "use binary output";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	_cleanup_free_ void *log = NULL;
 	struct nvme_fdp_ruhu_log hdr;
 	nvme_print_flags_t flags;
@@ -161,8 +161,8 @@ static int fdp_stats(int argc, char **argv, struct command *acmd, struct plugin 
 	const char *egid = "Endurance group identifier";
 	const char *raw = "use binary output";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_fdp_stats_log stats;
 	nvme_print_flags_t flags;
 	int err;
@@ -219,8 +219,8 @@ static int fdp_events(int argc, char **argv, struct command *acmd, struct plugin
 	const char *host_events = "Get host events";
 	const char *raw = "use binary output";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_fdp_events_log events;
 	nvme_print_flags_t flags;
 	int err;
@@ -278,11 +278,11 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 	const char *namespace_id = "Namespace identifier";
 	const char *raw = "use binary output";
 
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_free_ void *buf = NULL;
 	struct nvme_fdp_ruh_status hdr;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err = -1;
 	size_t len;
@@ -312,7 +312,7 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 		flags = BINARY;
 
 	if (!cfg.nsid) {
-		err = nvme_get_nsid(hdl, &cfg.nsid);
+		err = libnvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			perror("get-namespace-id");
 			return err;
@@ -321,7 +321,7 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 
 	nvme_init_fdp_reclaim_unit_handle_status(&cmd, cfg.nsid, &hdr,
 		sizeof(hdr));
-	err = nvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_submit_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_status(err);
 		return err;
@@ -334,7 +334,7 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 		return -ENOMEM;
 
 	nvme_init_fdp_reclaim_unit_handle_status(&cmd, cfg.nsid, buf, len);
-	err = nvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_submit_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_status(err);
 		return err;
@@ -351,9 +351,9 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 	const char *namespace_id = "Namespace identifier";
 	const char *_pids = "Comma-separated list of placement identifiers to update";
 
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	struct nvme_passthru_cmd cmd;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	struct libnvme_passthru_cmd cmd;
 	unsigned short pids[256];
 	__u16 buf[256];
 	int err = -1;
@@ -386,7 +386,7 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 	}
 
 	if (!cfg.nsid) {
-		err = nvme_get_nsid(hdl, &cfg.nsid);
+		err = libnvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			perror("get-namespace-id");
 			return err;
@@ -397,7 +397,7 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 		buf[i] = cpu_to_le16(pids[i]);
 
 	nvme_init_fdp_reclaim_unit_handle_status(&cmd, cfg.nsid, buf, npids);
-	err = nvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_submit_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_status(err);
 		return err;
@@ -417,8 +417,8 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 	const char *ph = "Placement Handle";
 	const char *sv = "specifies that the controller shall save the attribute";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	unsigned short evts[255];
 	__u8 buf[255];
 	int err = -1;
@@ -461,10 +461,10 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 	}
 
 	if (!cfg.nsid) {
-		err = nvme_get_nsid(hdl, &cfg.nsid);
+		err = libnvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			if (errno != ENOTTY) {
-				fprintf(stderr, "get-namespace-id: %s\n", nvme_strerror(errno));
+				fprintf(stderr, "get-namespace-id: %s\n", libnvme_strerror(errno));
 				return err;
 			}
 
@@ -495,8 +495,8 @@ static int fdp_feature(int argc, char **argv, struct command *acmd, struct plugi
 	const char *endurance_group = "Endurance group ID";
 	const char *disable = "Disable current FDP configuration";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	bool enabling_conf_idx = false;
 	__u64 result;
 	int err = -1;

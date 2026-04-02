@@ -175,8 +175,8 @@ static void print_nlog_header(__u8 *buffer)
 #define INTERNAL_LOG_MAX_BYTE_TRANSFER 4096
 #define INTERNAL_LOG_MAX_DWORD_TRANSFER (INTERNAL_LOG_MAX_BYTE_TRANSFER / 4)
 
-static int cmd_dump_repeat(struct nvme_passthru_cmd *cmd, __u32 total_dw_size,
-			   int out_fd, struct nvme_transport_handle *hdl, bool force_max_transfer)
+static int cmd_dump_repeat(struct libnvme_passthru_cmd *cmd, __u32 total_dw_size,
+			   int out_fd, struct libnvme_transport_handle *hdl, bool force_max_transfer)
 {
 	int err = 0;
 
@@ -185,7 +185,7 @@ static int cmd_dump_repeat(struct nvme_passthru_cmd *cmd, __u32 total_dw_size,
 
 		cmd->cdw10 = force_max_transfer ? INTERNAL_LOG_MAX_DWORD_TRANSFER : dword_tfer;
 		cmd->data_len = dword_tfer * 4;
-		err = nvme_submit_admin_passthru(hdl, cmd);
+		err = libnvme_submit_admin_passthru(hdl, cmd);
 		if (err)
 			return err;
 
@@ -210,13 +210,13 @@ static int write_header(__u8 *buf, int fd, size_t amnt)
 	return 0;
 }
 
-static int read_header(struct nvme_passthru_cmd *cmd, struct nvme_transport_handle *hdl)
+static int read_header(struct libnvme_passthru_cmd *cmd, struct libnvme_transport_handle *hdl)
 {
 	memset((void *)(uintptr_t)cmd->addr, 0, INTERNAL_LOG_MAX_BYTE_TRANSFER);
 	return cmd_dump_repeat(cmd, INTERNAL_LOG_MAX_DWORD_TRANSFER, -1, hdl, false);
 }
 
-static int get_serial_number(char *str, struct nvme_transport_handle *hdl)
+static int get_serial_number(char *str, struct libnvme_transport_handle *hdl)
 {
 	struct nvme_id_ctrl ctrl = {0};
 	int err;
@@ -232,14 +232,14 @@ static int get_serial_number(char *str, struct nvme_transport_handle *hdl)
 	return err;
 }
 
-static int ilog_dump_assert_logs(struct nvme_transport_handle *hdl, struct ilog *ilog)
+static int ilog_dump_assert_logs(struct libnvme_transport_handle *hdl, struct ilog *ilog)
 {
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	__u8 head_buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	_cleanup_free_ char *file_path = NULL;
 	char file_name[] = "AssertLog.bin";
 	struct assert_dump_header *ad = (struct assert_dump_header *) head_buf;
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
 		.nsid = NVME_NSID_ALL,
 		.addr = (unsigned long)(void *)head_buf,
@@ -290,13 +290,13 @@ static int ilog_dump_assert_logs(struct nvme_transport_handle *hdl, struct ilog 
 	return err;
 }
 
-static int ilog_dump_event_logs(struct nvme_transport_handle *hdl, struct ilog *ilog)
+static int ilog_dump_event_logs(struct libnvme_transport_handle *hdl, struct ilog *ilog)
 {
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	__u8 head_buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	_cleanup_free_ char *file_path = NULL;
 	struct event_dump_header *ehdr = (struct event_dump_header *) head_buf;
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
 		.nsid = NVME_NSID_ALL,
 		.addr = (unsigned long)(void *)head_buf,
@@ -364,14 +364,14 @@ static size_t get_nlog_header_size(struct nlog_dump_header_common *nlog_header)
 }
 
 /* dumps nlogs from specified core or all cores when core = -1 */
-static int ilog_dump_nlogs(struct nvme_transport_handle *hdl, struct ilog *ilog, int core)
+static int ilog_dump_nlogs(struct libnvme_transport_handle *hdl, struct ilog *ilog, int core)
 {
 	int err = 0;
 	__u32 count, core_num;
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	_cleanup_free_ char *file_path = NULL;
 	struct nlog_dump_header_common *nlog_header = (struct nlog_dump_header_common *)buf;
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
 		.nsid = NVME_NSID_ALL,
 		.addr = (unsigned long)(void *)buf
@@ -493,7 +493,7 @@ static int log_save(struct log *log, const char *parent_dir_name, const char *su
 	return 0;
 }
 
-static int ilog_dump_identify_page(struct nvme_transport_handle *hdl,
+static int ilog_dump_identify_page(struct libnvme_transport_handle *hdl,
 		struct ilog *ilog, struct log *cns, __u32 nsid)
 {
 	__u8 data[NVME_IDENTIFY_DATA_SIZE];
@@ -514,7 +514,7 @@ static int ilog_dump_identify_page(struct nvme_transport_handle *hdl,
 			sizeof(data));
 }
 
-static int ilog_ensure_dump_id_ctrl(struct nvme_transport_handle *hdl,
+static int ilog_ensure_dump_id_ctrl(struct libnvme_transport_handle *hdl,
 		struct ilog *ilog)
 {
 	static bool first = true;
@@ -534,13 +534,13 @@ static int ilog_ensure_dump_id_ctrl(struct nvme_transport_handle *hdl,
 	return err;
 }
 
-static bool is_atmos(struct nvme_transport_handle *hdl, struct ilog *ilog)
+static bool is_atmos(struct libnvme_transport_handle *hdl, struct ilog *ilog)
 {
 	ilog_ensure_dump_id_ctrl(hdl, ilog);
 	return !strncmp(ilog->id_ctrl.mn, ATMOS_MODEL_PREFIX, sizeof(ATMOS_MODEL_PREFIX) - 1);
 }
 
-static enum nvme_telemetry_da get_max_da(struct nvme_transport_handle *hdl,
+static enum nvme_telemetry_da get_max_da(struct libnvme_transport_handle *hdl,
 		struct ilog *ilog, enum log_type ttype)
 {
 	enum nvme_telemetry_da max_da = NVME_TELEMETRY_DA_1;
@@ -557,7 +557,7 @@ static enum nvme_telemetry_da get_max_da(struct nvme_transport_handle *hdl,
 	return max_da;
 }
 
-static int ilog_dump_telemetry(struct nvme_transport_handle *hdl, struct ilog *ilog, enum log_type ttype)
+static int ilog_dump_telemetry(struct libnvme_transport_handle *hdl, struct ilog *ilog, enum log_type ttype)
 {
 	int err = 0;
 	enum nvme_telemetry_da da;
@@ -565,7 +565,7 @@ static int ilog_dump_telemetry(struct nvme_transport_handle *hdl, struct ilog *i
 	const char *file_name;
 	struct nvme_feat_host_behavior prev = {0};
 	bool host_behavior_changed = false;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	struct log log = {0};
 
 	err = ilog_ensure_dump_id_ctrl(hdl, ilog);
@@ -577,14 +577,14 @@ static int ilog_dump_telemetry(struct nvme_transport_handle *hdl, struct ilog *i
 
 	if (da == 4) {
 		nvme_init_get_features_host_behavior(&cmd, 0, &prev);
-		int err = nvme_submit_admin_passthru(hdl, &cmd);
+		int err = libnvme_submit_admin_passthru(hdl, &cmd);
 
 		if (!err && !prev.etdas) {
 			struct nvme_feat_host_behavior da4_enable = prev;
 
 			da4_enable.etdas = 1;
 			nvme_init_set_features_host_behavior(&cmd, 0, &da4_enable);
-			nvme_submit_admin_passthru(hdl, &cmd);
+			libnvme_submit_admin_passthru(hdl, &cmd);
 			host_behavior_changed = true;
 		}
 	}
@@ -612,7 +612,7 @@ static int ilog_dump_telemetry(struct nvme_transport_handle *hdl, struct ilog *i
 
 	if (host_behavior_changed) {
 		nvme_init_set_features_host_behavior(&cmd, 0, &prev);
-		nvme_submit_admin_passthru(hdl, &cmd);
+		libnvme_submit_admin_passthru(hdl, &cmd);
 	}
 
 	if (err)
@@ -623,7 +623,7 @@ static int ilog_dump_telemetry(struct nvme_transport_handle *hdl, struct ilog *i
 	return err;
 }
 
-static int ilog_dump_identify_pages(struct nvme_transport_handle *hdl, struct ilog *ilog)
+static int ilog_dump_identify_pages(struct libnvme_transport_handle *hdl, struct ilog *ilog)
 {
 	struct nvme_ns_list ns_attached_list;
 	struct nvme_ns_list ns_allocated_list;
@@ -682,7 +682,7 @@ static int ilog_dump_identify_pages(struct nvme_transport_handle *hdl, struct il
 	return 0;
 }
 
-static int ilog_dump_log_page(struct nvme_transport_handle *hdl, struct ilog *ilog, struct log *lp, __u32 nsid)
+static int ilog_dump_log_page(struct libnvme_transport_handle *hdl, struct ilog *ilog, struct log *lp, __u32 nsid)
 {
 	__u8 *buff = lp->buffer;
 	_cleanup_free_ char *filename = NULL;
@@ -705,7 +705,7 @@ static int ilog_dump_log_page(struct nvme_transport_handle *hdl, struct ilog *il
 	return log_save(lp, ilog->cfg->out_dir, "log_pages", filename, buff, lp->buffer_size);
 }
 
-static int ilog_dump_no_lsp_log_pages(struct nvme_transport_handle *hdl, struct ilog *ilog)
+static int ilog_dump_no_lsp_log_pages(struct libnvme_transport_handle *hdl, struct ilog *ilog)
 {
 	struct lba_status_info {
 		__u32 lslplen;
@@ -774,7 +774,7 @@ static int ilog_dump_no_lsp_log_pages(struct nvme_transport_handle *hdl, struct 
 	return 0;
 }
 
-static int ilog_dump_pel(struct nvme_transport_handle *hdl, struct ilog *ilog)
+static int ilog_dump_pel(struct libnvme_transport_handle *hdl, struct ilog *ilog)
 {
 	_cleanup_free_ struct nvme_persistent_event_log *pevent = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = {0};
@@ -838,8 +838,8 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	_cleanup_free_ char *full_folder = NULL;
 	_cleanup_free_ char *unique_folder = NULL;
 	_cleanup_free_ char *zip_name = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	char *initial_folder;
 	char *output_path;
 	struct ilog ilog = {0};

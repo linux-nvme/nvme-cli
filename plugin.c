@@ -21,8 +21,8 @@ static int version_cmd(struct plugin *plugin)
 		       prog->name, prog->version, GIT_VERSION);
 	}
 	printf("libnvme version %s (git %s)\n",
-		nvme_get_version(NVME_VERSION_PROJECT),
-		nvme_get_version(NVME_VERSION_GIT));
+		libnvme_get_version(LIBNVME_VERSION_PROJECT),
+		libnvme_get_version(LIBNVME_VERSION_GIT));
 	return 0;
 }
 

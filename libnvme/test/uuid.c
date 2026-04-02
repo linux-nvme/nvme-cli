@@ -59,9 +59,9 @@ static void tostr_test(struct test_data *test)
 {
 	char str[NVME_UUID_LEN_STRING];
 
-	if (nvme_uuid_to_string(test->uuid, str)) {
+	if (libnvme_uuid_to_string(test->uuid, str)) {
 		test_rc = 1;
-		printf("ERROR: nvme_uuid_to_string() failed\n");
+		printf("ERROR: libnvme_uuid_to_string() failed\n");
 		return;
 	}
 	check_str(test->str, str);
@@ -72,9 +72,9 @@ static void fromstr_test(struct test_data *test)
 
 	unsigned char uuid[NVME_UUID_LEN];
 
-	if (nvme_uuid_from_string(test->str, uuid)) {
+	if (libnvme_uuid_from_string(test->str, uuid)) {
 		test_rc = 1;
-		printf("ERROR: nvme_uuid_from_string() failed\n");
+		printf("ERROR: libnvme_uuid_from_string() failed\n");
 		return;
 	}
 	check_uuid(test->uuid, uuid);
@@ -85,9 +85,9 @@ static void random_uuid_test(void)
 	unsigned char uuid1[NVME_UUID_LEN], uuid2[NVME_UUID_LEN];
 	char str1[NVME_UUID_LEN_STRING], str2[NVME_UUID_LEN_STRING];
 
-	if (nvme_random_uuid(uuid1) || nvme_random_uuid(uuid2)) {
+	if (libnvme_random_uuid(uuid1) || libnvme_random_uuid(uuid2)) {
 		test_rc = 1;
-		printf("ERROR: nvme_random_uuid() failed\n");
+		printf("ERROR: libnvme_random_uuid() failed\n");
 		return;
 	}
 
@@ -97,8 +97,8 @@ static void random_uuid_test(void)
 		return;
 	}
 
-	if (nvme_uuid_to_string(uuid1, str1) ||
-	    nvme_uuid_to_string(uuid2, str2)) {
+	if (libnvme_uuid_to_string(uuid1, str1) ||
+	    libnvme_uuid_to_string(uuid2, str2)) {
 		test_rc = 1;
 		printf("ERROR: could not stringify randomly generated UUID\n");
 		return;
