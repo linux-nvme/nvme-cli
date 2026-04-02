@@ -1,4 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Copyright (c) 2026 SUSE LLC
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
 
 infra = [
     'config.json',
@@ -6,6 +11,7 @@ infra = [
     'nvme_test_io.py',
     'nvme_test_logger.py',
     'nvme_simple_template_test.py',
+    'tap_runner.py',
 ]
 
 tests = [
@@ -31,28 +37,25 @@ tests = [
     'nvme_ctrl_reset_test.py',
 ]
 
-runtests = find_program('nose2', required : false)
-
-if runtests.found()
-    foreach file : infra + tests
-        configure_file(input: file, output: file, copy: true)
-    endforeach
-
-    foreach t : tests
-        t_name = t.split('.')[0]
-        test(
-            'nvme-cli - @0@'.format(t_name),
-            runtests,
-            args: ['--verbose', '--start-dir', meson.current_build_dir(), t_name],
-            env: ['PATH=' + meson.project_build_root() + ':/usr/bin:/usr/sbin'],
-            timeout: 500,
-        )
-    endforeach
-endif
-
 python_module = import('python')
 
 python = python_module.find_installation('python3')
+
+foreach t : tests
+    t_name = t.split('.')[0]
+    test(
+        'nvme-cli - @0@'.format(t_name),
+        python,
+        args: [
+            meson.current_source_dir() / 'tap_runner.py',
+            '--start-dir', meson.current_source_dir(),
+            t_name,
+        ],
+        env: ['PATH=' + meson.project_build_root() + ':/usr/bin:/usr/sbin'],
+        timeout: 500,
+        protocol: 'tap',
+    )
+endforeach
 
 mypy = find_program(
     'mypy',
