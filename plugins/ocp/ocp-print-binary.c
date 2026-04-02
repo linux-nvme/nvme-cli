@@ -21,7 +21,7 @@ static void binary_persistent_event_log(void *pevent_log_info,
 	d_raw((unsigned char *)pevent_log_info, size);
 }
 
-static void binary_c5_log(struct nvme_transport_handle *hdl, struct unsupported_requirement_log *log_data)
+static void binary_c5_log(struct libnvme_transport_handle *hdl, struct unsupported_requirement_log *log_data)
 {
 	d_raw((unsigned char *)log_data, sizeof(*log_data));
 }
@@ -42,7 +42,7 @@ static void binary_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_d
 	d_raw((unsigned char *)log_data_buf, total_log_page_size);
 }
 
-static void binary_c7_log(struct nvme_transport_handle *hdl, struct tcg_configuration_log *log_data)
+static void binary_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data)
 {
 	d_raw((unsigned char *)log_data, sizeof(*log_data));
 }

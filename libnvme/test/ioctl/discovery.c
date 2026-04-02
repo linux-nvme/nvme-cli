@@ -16,7 +16,7 @@
 #define TEST_FD 0xFD
 #define HEADER_LEN 20
 
-static struct nvme_transport_handle *test_hdl;
+static struct libnvme_transport_handle *test_hdl;
 
 static void arbitrary_ascii_string(size_t max_len, char *str, char *log_str)
 {
@@ -58,7 +58,7 @@ static void arbitrary_entries(size_t len,
 		arbitrary_entry(&entries[i], &log_entries[i]);
 }
 
-static void test_no_entries(nvme_ctrl_t c)
+static void test_no_entries(libnvme_ctrl_t c)
 {
 	struct nvmf_discovery_log header = {};
 	/* No entries to fetch after fetching the header */
@@ -80,7 +80,7 @@ static void test_no_entries(nvme_ctrl_t c)
 	free(log);
 }
 
-static void test_four_entries(nvme_ctrl_t c)
+static void test_four_entries(libnvme_ctrl_t c)
 {
 	size_t num_entries = 4;
 	struct nvmf_disc_log_entry entries[num_entries];
@@ -125,7 +125,7 @@ static void test_four_entries(nvme_ctrl_t c)
 	free(log);
 }
 
-static void test_five_entries(nvme_ctrl_t c)
+static void test_five_entries(libnvme_ctrl_t c)
 {
 	size_t num_entries = 5;
 	struct nvmf_disc_log_entry entries[num_entries];
@@ -184,7 +184,7 @@ static void test_five_entries(nvme_ctrl_t c)
 	free(log);
 }
 
-static void test_genctr_change(nvme_ctrl_t c)
+static void test_genctr_change(libnvme_ctrl_t c)
 {
 	struct nvmf_disc_log_entry entries1[1];
 	struct nvmf_discovery_log header1 = {
@@ -252,7 +252,7 @@ static void test_genctr_change(nvme_ctrl_t c)
 	free(log);
 }
 
-static void test_max_retries(nvme_ctrl_t c)
+static void test_max_retries(libnvme_ctrl_t c)
 {
 	struct nvmf_disc_log_entry entry;
 	struct nvmf_discovery_log header1 = {.numrec = cpu_to_le64(1)};
@@ -313,7 +313,7 @@ static void test_max_retries(nvme_ctrl_t c)
 	check(!log, "unexpected log page returned");
 }
 
-static void test_header_error(nvme_ctrl_t c)
+static void test_header_error(libnvme_ctrl_t c)
 {
 	/* Stop after an error in fetching the header the first time */
 	struct mock_cmd mock_admin_cmds[] = {
@@ -333,7 +333,7 @@ static void test_header_error(nvme_ctrl_t c)
 	check(!log, "unexpected log page returned");
 }
 
-static void test_entries_error(nvme_ctrl_t c)
+static void test_entries_error(libnvme_ctrl_t c)
 {
 	struct nvmf_discovery_log header = {.numrec = cpu_to_le64(1)};
 	size_t entry_size = sizeof(struct nvmf_disc_log_entry);
@@ -363,7 +363,7 @@ static void test_entries_error(nvme_ctrl_t c)
 	check(!log, "unexpected log page returned");
 }
 
-static void test_genctr_error(nvme_ctrl_t c)
+static void test_genctr_error(libnvme_ctrl_t c)
 {
 	struct nvmf_disc_log_entry entry;
 	struct nvmf_discovery_log header = {.numrec = cpu_to_le64(1)};
@@ -401,10 +401,10 @@ static void test_genctr_error(nvme_ctrl_t c)
 	check(!log, "unexpected log page returned");
 }
 
-static void run_test(struct nvme_global_ctx *ctx, const char *test_name,
-		void (*test_fn)(nvme_ctrl_t))
+static void run_test(struct libnvme_global_ctx *ctx, const char *test_name,
+		void (*test_fn)(libnvme_ctrl_t))
 {
-	struct nvme_ctrl c = { .ctx = ctx, .hdl = test_hdl };
+	struct libnvme_ctrl c = { .ctx = ctx, .hdl = test_hdl };
 
 	printf("Running test %s...", test_name);
 	fflush(stdout);
@@ -418,11 +418,11 @@ static void run_test(struct nvme_global_ctx *ctx, const char *test_name,
 
 int main(void)
 {
-	struct nvme_global_ctx *ctx =
-		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	struct libnvme_global_ctx *ctx =
+		libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 
 	set_mock_fd(TEST_FD);
-	check(!nvme_open(ctx, "NVME_TEST_FD", &test_hdl),
+	check(!libnvme_open(ctx, "NVME_TEST_FD", &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(no_entries);
@@ -434,5 +434,5 @@ int main(void)
 	RUN_TEST(entries_error);
 	RUN_TEST(genctr_error);
 
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 }

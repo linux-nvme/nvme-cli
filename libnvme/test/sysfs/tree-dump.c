@@ -13,28 +13,28 @@
 
 static bool tree_dump(void)
 {
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	bool pass = false;
 	int err;
 
-	ctx = nvme_create_global_ctx(stdout, LOG_ERR);
+	ctx = libnvme_create_global_ctx(stdout, LOG_ERR);
 	if (!ctx)
 		return false;
 
-	err = nvme_scan_topology(ctx, NULL, NULL);
+	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err && !(err == ENOENT || err == EACCES)) {
-		fprintf(stderr, "nvme_scan_topology failed %d\n", err);
+		fprintf(stderr, "libnvme_scan_topology failed %d\n", err);
 		goto out;
 	}
 
-	if (nvme_dump_tree(ctx))
+	if (libnvme_dump_tree(ctx))
 		goto out;
 	printf("\n");
 
 	pass = true;
 
 out:
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 	return pass;
 }
 

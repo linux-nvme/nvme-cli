@@ -652,7 +652,7 @@ struct nvme_mi_control_resp {
 const char *nvme_mi_status_to_string(int status);
 
 /* Top level management object: NVMe-MI Management Endpoint */
-struct nvme_mi_ep;
+struct libnvme_mi_ep;
 
 /**
  * typedef nvme_mi_ep_t - MI Endpoint object.
@@ -667,7 +667,7 @@ struct nvme_mi_ep;
  * Subsequent operations on the endpoint (and related controllers) are
  * transport-independent.
  */
-typedef struct nvme_mi_ep * nvme_mi_ep_t;
+typedef struct libnvme_mi_ep * nvme_mi_ep_t;
 
 /**
  * nvme_mi_set_csi - Assign a CSI to an endpoint.
@@ -681,18 +681,18 @@ int nvme_mi_set_csi(nvme_mi_ep_t ep, uint8_t csi);
 
 /**
  * nvme_mi_first_endpoint - Start endpoint iterator
- * @ctx:	&struct nvme_global_ctx object
+ * @ctx:	&struct libnvme_global_ctx object
  *
  * Return: first MI endpoint object under this root, or NULL if no endpoints
  *         are present.
  *
  * See: &nvme_mi_next_endpoint, &nvme_mi_for_each_endpoint
  */
-nvme_mi_ep_t nvme_mi_first_endpoint(struct nvme_global_ctx *ctx);
+nvme_mi_ep_t nvme_mi_first_endpoint(struct libnvme_global_ctx *ctx);
 
 /**
  * nvme_mi_next_endpoint - Continue endpoint iterator
- * @ctx:	&struct nvme_global_ctx object
+ * @ctx:	&struct libnvme_global_ctx object
  * @e: &nvme_mi_ep_t current position of iterator
  *
  * Return: next endpoint MI endpoint object after @e under this root, or NULL
@@ -700,11 +700,11 @@ nvme_mi_ep_t nvme_mi_first_endpoint(struct nvme_global_ctx *ctx);
  *
  * See: &nvme_mi_first_endpoint, &nvme_mi_for_each_endpoint
  */
-nvme_mi_ep_t nvme_mi_next_endpoint(struct nvme_global_ctx *ctx, nvme_mi_ep_t e);
+nvme_mi_ep_t nvme_mi_next_endpoint(struct libnvme_global_ctx *ctx, nvme_mi_ep_t e);
 
 /**
  * nvme_mi_for_each_endpoint - Iterator for NVMe-MI endpoints.
- * @c: &struct nvme_global_ctx object
+ * @c: &struct libnvme_global_ctx object
  * @e: &nvme_mi_ep_t object, set on each iteration
  */
 #define nvme_mi_for_each_endpoint(c, e)			\
@@ -714,7 +714,7 @@ nvme_mi_ep_t nvme_mi_next_endpoint(struct nvme_global_ctx *ctx, nvme_mi_ep_t e);
 /**
  * nvme_mi_for_each_endpoint_safe - Iterator for NVMe-MI endpoints, allowing
  * deletion during traversal
- * @c: &struct nvme_global_ctx object
+ * @c: &struct libnvme_global_ctx object
  * @e: &nvme_mi_ep_t object, set on each iteration
  * @_e: &nvme_mi_ep_t object used as temporary storage
  */
@@ -765,7 +765,7 @@ unsigned int nvme_mi_ep_get_timeout(nvme_mi_ep_t ep);
  *
  * See: &nvme_mi_next_transport_handle, &nvme_mi_for_each_transport_handle
  */
-struct nvme_transport_handle *nvme_mi_first_transport_handle(nvme_mi_ep_t ep);
+struct libnvme_transport_handle *nvme_mi_first_transport_handle(nvme_mi_ep_t ep);
 
 /**
  * nvme_mi_next_transport_handle - Continue transport handle iterator
@@ -777,8 +777,8 @@ struct nvme_transport_handle *nvme_mi_first_transport_handle(nvme_mi_ep_t ep);
  *
  * See: &nvme_mi_first_transport_handle, &nvme_mi_for_each_transport_handle
  */
-struct nvme_transport_handle *nvme_mi_next_transport_handle(nvme_mi_ep_t ep,
-							    struct nvme_transport_handle *hdl);
+struct libnvme_transport_handle *nvme_mi_next_transport_handle(nvme_mi_ep_t ep,
+							    struct libnvme_transport_handle *hdl);
 
 /**
  * nvme_mi_for_each_transport_handle - Iterator for transport handle to NVMe-MI controllers.
@@ -817,7 +817,7 @@ struct nvme_transport_handle *nvme_mi_next_transport_handle(nvme_mi_ep_t ep,
 
 /**
  * nvme_mi_open_mctp() - Create an endpoint using a MCTP connection.
- * @ctx: &struct nvme_global_ctx object
+ * @ctx: &struct libnvme_global_ctx object
  * @netid: MCTP network ID on this system
  * @eid: MCTP endpoint ID
  *
@@ -828,7 +828,7 @@ struct nvme_transport_handle *nvme_mi_next_transport_handle(nvme_mi_ep_t ep,
  *
  * See &nvme_mi_close
  */
-nvme_mi_ep_t nvme_mi_open_mctp(struct nvme_global_ctx *ctx,
+nvme_mi_ep_t nvme_mi_open_mctp(struct libnvme_global_ctx *ctx,
 			       unsigned int netid, uint8_t eid);
 
 /**
@@ -856,10 +856,10 @@ void nvme_mi_close(nvme_mi_ep_t ep);
  * This requires libvnme-mi to be compiled with D-Bus support; if not, this
  * will return NULL.
  *
- * Return: A @struct nvme_global_ctx populated with a set of
+ * Return: A @struct libnvme_global_ctx populated with a set of
  *         MCTP-connected endpoints, or NULL on failure
  */
-struct nvme_global_ctx *nvme_mi_scan_mctp(void);
+struct libnvme_global_ctx *nvme_mi_scan_mctp(void);
 
 /**
  * nvme_mi_scan_ep - query an endpoint for its NVMe controllers.
@@ -895,7 +895,7 @@ int nvme_mi_scan_ep(nvme_mi_ep_t ep, bool force_rescan);
  *
  * See &nvme_mi_close_transport_handle
  */
-struct nvme_transport_handle *nvme_mi_init_transport_handle(nvme_mi_ep_t ep, __u16 ctrl_id);
+struct libnvme_transport_handle *nvme_mi_init_transport_handle(nvme_mi_ep_t ep, __u16 ctrl_id);
 
 /**
  * nvme_mi_ctrl_id() - get the ID of a controller
@@ -908,7 +908,7 @@ struct nvme_transport_handle *nvme_mi_init_transport_handle(nvme_mi_ep_t ep, __u
  *
  * Return: the (locally-stored) ID of this controller.
  */
-__u16 nvme_mi_ctrl_id(struct nvme_transport_handle *hdl);
+__u16 nvme_mi_ctrl_id(struct libnvme_transport_handle *hdl);
 
 /**
  * nvme_mi_endpoint_desc - Get a string describing a MI endpoint.
@@ -1319,7 +1319,7 @@ static inline int nvme_mi_aem_ack(nvme_mi_ep_t ep,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise..
  */
-int nvme_mi_admin_xfer(struct nvme_transport_handle *hdl,
+int nvme_mi_admin_xfer(struct libnvme_transport_handle *hdl,
 		       struct nvme_mi_admin_req_hdr *admin_req,
 		       size_t req_data_size,
 		       struct nvme_mi_admin_resp_hdr *admin_resp,

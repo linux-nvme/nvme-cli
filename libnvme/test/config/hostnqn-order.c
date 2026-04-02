@@ -13,23 +13,23 @@
 
 static bool command_line(void)
 {
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	bool pass = false;
 	int err;
 	char *hostnqn, *hostid, *hnqn, *hid;
 
-	ctx = nvme_create_global_ctx(stderr, LOG_ERR);
+	ctx = libnvme_create_global_ctx(stderr, LOG_ERR);
 	if (!ctx)
 		return false;
 
-	err = nvme_scan_topology(ctx, NULL, NULL);
+	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err && err != ENOENT)
 		goto out;
 
 	hostnqn = "nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6";
 	hostid = "ce4fee3e-c02c-11ee-8442-830d068a36c6";
 
-	err = nvme_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
+	err = libnvme_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
 	if (err)
 		goto out;
 
@@ -48,13 +48,13 @@ static bool command_line(void)
 	pass = true;
 
 out:
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 	return pass;
 }
 
 static bool json_config(char *file)
 {
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	bool pass = false;
 	int err;
 	char *hostnqn, *hostid, *hnqn, *hid;
@@ -62,23 +62,23 @@ static bool json_config(char *file)
 	setenv("LIBNVME_HOSTNQN", "", 1);
 	setenv("LIBNVME_HOSTID", "", 1);
 
-	ctx = nvme_create_global_ctx(stderr, LOG_ERR);
+	ctx = libnvme_create_global_ctx(stderr, LOG_ERR);
 	if (!ctx)
 		return false;
 
 	/* We need to read the config in before we scan */
-	err = nvme_read_config(ctx, file);
+	err = libnvme_read_config(ctx, file);
 	if (err)
 		goto out;
 
-	err = nvme_scan_topology(ctx, NULL, NULL);
+	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err && err != ENOENT)
 		goto out;
 
 	hostnqn = "nqn.2014-08.org.nvmexpress:uuid:2cd2c43b-a90a-45c1-a8cd-86b33ab273b5";
 	hostid = "2cd2c43b-a90a-45c1-a8cd-86b33ab273b5";
 
-	err = nvme_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
+	err = libnvme_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
 	if (err)
 		goto out;
 
@@ -97,13 +97,13 @@ static bool json_config(char *file)
 	pass = true;
 
 out:
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 	return pass;
 }
 
 static bool from_file(void)
 {
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	bool pass = false;
 	int err;
 	char *hostnqn, *hostid, *hnqn, *hid;
@@ -114,15 +114,15 @@ static bool from_file(void)
 	setenv("LIBNVME_HOSTNQN", hostnqn, 1);
 	setenv("LIBNVME_HOSTID", hostid, 1);
 
-	ctx = nvme_create_global_ctx(stderr, LOG_ERR);
+	ctx = libnvme_create_global_ctx(stderr, LOG_ERR);
 	if (!ctx)
 		return false;
 
-	err = nvme_scan_topology(ctx, NULL, NULL);
+	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err && err != ENOENT)
 		goto out;
 
-	err = nvme_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
+	err = libnvme_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
 	if (err)
 		goto out;
 
@@ -141,7 +141,7 @@ static bool from_file(void)
 	pass = true;
 
 out:
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 	return pass;
 }
 

@@ -389,8 +389,8 @@ int ssstc_get_add_smart_log(int argc, char **argv, struct command *acmd, struct 
 #endif /* CONFIG_JSONC */
 
 	struct nvme_additional_smart_log smart_log_add;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -417,11 +417,11 @@ int ssstc_get_add_smart_log(int argc, char **argv, struct command *acmd, struct 
 		if (cfg.json)
 			show_ssstc_add_smart_log_jsn(
 				&smart_log_add, cfg.namespace_id,
-				nvme_transport_handle_get_name(hdl));
+				libnvme_transport_handle_get_name(hdl));
 		else if (!cfg.raw_binary)
 			show_ssstc_add_smart_log(
 				&smart_log_add, cfg.namespace_id,
-				nvme_transport_handle_get_name(hdl));
+				libnvme_transport_handle_get_name(hdl));
 		else
 			d_raw((unsigned char *)&smart_log_add, sizeof(smart_log_add));
 	} else if (err > 0) {

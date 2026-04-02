@@ -25,7 +25,7 @@ static const char *make_sysfs_dir(const char *path)
 	return str;
 }
 
-const char *nvme_subsys_sysfs_dir(void)
+const char *libnvme_subsys_sysfs_dir(void)
 {
 	static const char *str;
 
@@ -35,7 +35,7 @@ const char *nvme_subsys_sysfs_dir(void)
 	return str = make_sysfs_dir(PATH_SYSFS_NVME_SUBSYSTEM);
 }
 
-const char *nvme_ctrl_sysfs_dir(void)
+const char *libnvme_ctrl_sysfs_dir(void)
 {
 	static const char *str;
 
@@ -45,7 +45,7 @@ const char *nvme_ctrl_sysfs_dir(void)
 	return str = make_sysfs_dir(PATH_SYSFS_NVME);
 }
 
-const char *nvme_ns_sysfs_dir(void)
+const char *libnvme_ns_sysfs_dir(void)
 {
 	static const char *str;
 
@@ -55,7 +55,7 @@ const char *nvme_ns_sysfs_dir(void)
 	return str = make_sysfs_dir(PATH_SYSFS_BLOCK);
 }
 
-const char *nvme_slots_sysfs_dir(void)
+const char *libnvme_slots_sysfs_dir(void)
 {
 	static const char *str;
 
@@ -65,7 +65,7 @@ const char *nvme_slots_sysfs_dir(void)
 	return str = make_sysfs_dir(PATH_SYSFS_SLOTS);
 }
 
-const char *nvme_uuid_ibm_filename(void)
+const char *libnvme_uuid_ibm_filename(void)
 {
 	static const char *str;
 
@@ -75,7 +75,7 @@ const char *nvme_uuid_ibm_filename(void)
 	return str = make_sysfs_dir(PATH_UUID_IBM);
 }
 
-const char *nvme_dmi_entries_dir(void)
+const char *libnvme_dmi_entries_dir(void)
 {
 	static const char *str;
 

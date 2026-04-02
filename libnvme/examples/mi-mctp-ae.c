@@ -79,7 +79,7 @@ enum nvme_mi_aem_handler_next_action aem_handler(nvme_mi_ep_t ep, size_t num_eve
 
 int main(int argc, char **argv)
 {
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	nvme_mi_ep_t ep;
 	uint8_t eid = 0;
 	int rc = 0, net = 0;
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	ctx = nvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
 	if (!ctx)
 		err(EXIT_FAILURE, "can't create NVMe root");
 
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
 	//Cleanup
 	nvme_mi_aem_disable(ep);
 	nvme_mi_close(ep);
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }
