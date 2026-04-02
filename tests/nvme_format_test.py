@@ -62,6 +62,10 @@ class TestNVMeFormatCmd(TestNVMe):
     def setUp(self):
         """ Pre Section for TestNVMeFormatCmd """
         super().setUp()
+
+        if not self.ns_mgmt_supported:
+            self.skipTest("Namespace Management / Attach not supported by controller")
+
         self.dps = 0
         self.flbas = 0
         # Assuming run_ns_io with 4KiB * 10 writes.

@@ -48,6 +48,10 @@ class TestNVMeAttachDetachNSCmd(TestNVMe):
     def setUp(self):
         """ Pre Section for TestNVMeAttachDetachNSCmd """
         super().setUp()
+
+        if not self.ns_mgmt_supported:
+            self.skipTest("Namespace Management / Attach not supported by controller")
+
         self.dps = 0
         self.flbas = 0
         (ds, ms) = self.get_lba_format_size()
