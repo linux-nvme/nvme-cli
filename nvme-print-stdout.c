@@ -1815,7 +1815,7 @@ static void stdout_status(int status)
 		break;
 	case NVME_STATUS_TYPE_MI:
 		fprintf(stderr, "NVMe-MI status: %s(%#x)\n",
-			nvme_mi_status_to_string(val), val);
+			libnvme_mi_status_to_string(val), val);
 		break;
 	default:
 		fprintf(stderr, "Unknown status type %d, value %#x\n", type,

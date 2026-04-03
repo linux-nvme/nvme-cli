@@ -460,9 +460,9 @@ struct libnvme_mi_aem_ctx {
 	struct nvme_mi_aem_occ_data *list_start;
 	struct nvme_mi_aem_occ_data *list_current;
 	int list_current_index;
-	struct nvme_mi_aem_config callbacks;
+	struct libnvme_mi_aem_config callbacks;
 	int last_generation_num;
-	struct nvme_mi_event event;
+	struct libnvme_mi_event event;
 };
 
 /* quirks */

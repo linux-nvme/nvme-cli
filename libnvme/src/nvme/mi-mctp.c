@@ -78,7 +78,7 @@ struct mctp_ioc_tag_ctl {
 #define MCTP_TYPE_NVME		0x04
 #define MCTP_TYPE_MIC		0x80
 
-struct nvme_mi_transport_mctp {
+struct libnvme_mi_transport_mctp {
 	int	net;
 	__u8	eid;
 	int	sd;
@@ -94,12 +94,12 @@ static int ioctl_tag(int sd, unsigned long req, struct mctp_ioc_tag_ctl *ctl)
 	return ioctl(sd, req, ctl);
 }
 
-static int nvme_mi_msg_socket(void)
+static int libnvme_mi_msg_socket(void)
 {
 	return socket(AF_MCTP, SOCK_DGRAM, 0);
 }
 
-static int nvme_mi_aem_socket(__u8 eid, unsigned int network)
+static int libnvme_mi_aem_socket(__u8 eid, unsigned int network)
 {
 	struct sockaddr_mctp local_addr = {0}, remote_addr = {0};
 	int sd, rc;
@@ -134,8 +134,8 @@ err_close:
 }
 
 static struct __mi_mctp_socket_ops ops = {
-	nvme_mi_msg_socket,
-	nvme_mi_aem_socket,
+	libnvme_mi_msg_socket,
+	libnvme_mi_aem_socket,
 	sendmsg,
 	recvmsg,
 	poll,
@@ -146,11 +146,11 @@ void __libnvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops)
 {
 	ops = *newops;
 }
-static const struct libnvme_mi_transport nvme_mi_transport_mctp;
+static const struct libnvme_mi_transport libnvme_mi_transport_mctp;
 
-static __u8 nvme_mi_mctp_tag_alloc(struct libnvme_mi_ep *ep)
+static __u8 libnvme_mi_mctp_tag_alloc(struct libnvme_mi_ep *ep)
 {
-	struct nvme_mi_transport_mctp *mctp;
+	struct libnvme_mi_transport_mctp *mctp;
 	struct mctp_ioc_tag_ctl ctl = { 0 };
 	static bool logged;
 	int rc;
@@ -175,9 +175,9 @@ static __u8 nvme_mi_mctp_tag_alloc(struct libnvme_mi_ep *ep)
 	return ctl.tag;
 }
 
-static void nvme_mi_mctp_tag_drop(struct libnvme_mi_ep *ep, __u8 tag)
+static void libnvme_mi_mctp_tag_drop(struct libnvme_mi_ep *ep, __u8 tag)
 {
-	struct nvme_mi_transport_mctp *mctp;
+	struct libnvme_mi_transport_mctp *mctp;
 	struct mctp_ioc_tag_ctl ctl = { 0 };
 
 	mctp = ep->transport_data;
@@ -191,7 +191,7 @@ static void nvme_mi_mctp_tag_drop(struct libnvme_mi_ep *ep, __u8 tag)
 	ops.ioctl_tag(mctp->sd, SIOCMCTPDROPTAG, &ctl);
 }
 
-struct nvme_mi_msg_resp_mpr {
+struct libnvme_mi_msg_resp_mpr {
 	struct nvme_mi_msg_hdr hdr;
 	__u8	status;
 	__u8	rsvd0;
@@ -204,17 +204,17 @@ struct nvme_mi_msg_resp_mpr {
  * buf is the incoming message data, including type byte, but excluding
  * the MIC which has been extracted into the mic argument already.
  */
-static bool nvme_mi_mctp_resp_is_mpr(void *buf, size_t len,
+static bool libnvme_mi_mctp_resp_is_mpr(void *buf, size_t len,
 				     __le32 mic, unsigned int *mpr_time)
 {
-	struct nvme_mi_msg_resp_mpr *msg;
+	struct libnvme_mi_msg_resp_mpr *msg;
 	__u32 crc;
 
 	/* We need at least the minimal header */
 	if (len < sizeof(*msg))
 		return false;
 
-	msg = (struct nvme_mi_msg_resp_mpr *)buf;
+	msg = (struct libnvme_mi_msg_resp_mpr *)buf;
 
 	if (msg->status != NVME_MI_RESP_MPR)
 		return false;
@@ -243,11 +243,11 @@ static bool nvme_mi_mctp_resp_is_mpr(void *buf, size_t len,
 	return true;
 }
 
-static int nvme_mi_mctp_aem_fd(struct libnvme_mi_ep *ep)
+static int libnvme_mi_mctp_aem_fd(struct libnvme_mi_ep *ep)
 {
-	struct nvme_mi_transport_mctp *mctp;
+	struct libnvme_mi_transport_mctp *mctp;
 
-	if (ep->transport != &nvme_mi_transport_mctp) {
+	if (ep->transport != &libnvme_mi_transport_mctp) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -256,9 +256,9 @@ static int nvme_mi_mctp_aem_fd(struct libnvme_mi_ep *ep)
 	return mctp->sd_aem;
 }
 
-static int nvme_mi_mctp_aem_purge(struct libnvme_mi_ep *ep)
+static int libnvme_mi_mctp_aem_purge(struct libnvme_mi_ep *ep)
 {
-	struct nvme_mi_transport_mctp *mctp = ep->transport_data;
+	struct libnvme_mi_transport_mctp *mctp = ep->transport_data;
 	struct msghdr msg = {0};
 	struct iovec iov;
 	char buffer;
@@ -276,18 +276,18 @@ static int nvme_mi_mctp_aem_purge(struct libnvme_mi_ep *ep)
 }
 
 
-static int nvme_mi_mctp_aem_read(struct libnvme_mi_ep *ep,
+static int libnvme_mi_mctp_aem_read(struct libnvme_mi_ep *ep,
 			       struct libnvme_mi_resp *resp)
 {
 	ssize_t len, resp_len, resp_hdr_len, resp_data_len;
 	struct sockaddr_mctp src_addr = { 0 };
-	struct nvme_mi_transport_mctp *mctp;
+	struct libnvme_mi_transport_mctp *mctp;
 	struct iovec resp_iov[1];
 	struct msghdr resp_msg;
 	int rc, errno_save;
 	__le32 mic;
 
-	if (ep->transport != &nvme_mi_transport_mctp) {
+	if (ep->transport != &libnvme_mi_transport_mctp) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -405,12 +405,12 @@ out:
 	return rc;
 }
 
-static int nvme_mi_mctp_submit(struct libnvme_mi_ep *ep,
+static int libnvme_mi_mctp_submit(struct libnvme_mi_ep *ep,
 			       struct libnvme_mi_req *req,
 			       struct libnvme_mi_resp *resp)
 {
 	ssize_t len, resp_len, resp_hdr_len, resp_data_len;
-	struct nvme_mi_transport_mctp *mctp;
+	struct libnvme_mi_transport_mctp *mctp;
 	struct iovec req_iov[3], resp_iov[1];
 	struct msghdr req_msg, resp_msg;
 	int i, rc, errno_save, timeout;
@@ -420,7 +420,7 @@ static int nvme_mi_mctp_submit(struct libnvme_mi_ep *ep,
 	__le32 mic;
 	__u8 tag;
 
-	if (ep->transport != &nvme_mi_transport_mctp) {
+	if (ep->transport != &libnvme_mi_transport_mctp) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -432,7 +432,7 @@ static int nvme_mi_mctp_submit(struct libnvme_mi_ep *ep,
 	}
 
 	mctp = ep->transport_data;
-	tag = nvme_mi_mctp_tag_alloc(ep);
+	tag = libnvme_mi_mctp_tag_alloc(ep);
 
 	memset(&addr, 0, sizeof(addr));
 	addr.smctp_family = AF_MCTP;
@@ -567,7 +567,7 @@ retry:
 	 * header fields. However, we need to do this in the transport in order
 	 * to keep the tag allocated and retry the recvmsg
 	 */
-	if (nvme_mi_mctp_resp_is_mpr(mctp->resp_buf, len, mic, &mpr_time)) {
+	if (libnvme_mi_mctp_resp_is_mpr(mctp->resp_buf, len, mic, &mpr_time)) {
 		libnvme_msg(ep->ctx, LOG_DEBUG,
 			 "Received More Processing Required, waiting for response\n");
 
@@ -604,16 +604,16 @@ retry:
 	rc = 0;
 
 out:
-	nvme_mi_mctp_tag_drop(ep, tag);
+	libnvme_mi_mctp_tag_drop(ep, tag);
 
 	return rc;
 }
 
-static void nvme_mi_mctp_close(struct libnvme_mi_ep *ep)
+static void libnvme_mi_mctp_close(struct libnvme_mi_ep *ep)
 {
-	struct nvme_mi_transport_mctp *mctp;
+	struct libnvme_mi_transport_mctp *mctp;
 
-	if (ep->transport != &nvme_mi_transport_mctp)
+	if (ep->transport != &libnvme_mi_transport_mctp)
 		return;
 
 	mctp = ep->transport_data;
@@ -625,11 +625,11 @@ static void nvme_mi_mctp_close(struct libnvme_mi_ep *ep)
 	free(ep->transport_data);
 }
 
-static int nvme_mi_mctp_desc_ep(struct libnvme_mi_ep *ep, char *buf, size_t len)
+static int libnvme_mi_mctp_desc_ep(struct libnvme_mi_ep *ep, char *buf, size_t len)
 {
-	struct nvme_mi_transport_mctp *mctp;
+	struct libnvme_mi_transport_mctp *mctp;
 
-	if (ep->transport != &nvme_mi_transport_mctp) {
+	if (ep->transport != &libnvme_mi_transport_mctp) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -641,22 +641,22 @@ static int nvme_mi_mctp_desc_ep(struct libnvme_mi_ep *ep, char *buf, size_t len)
 	return 0;
 }
 
-static const struct libnvme_mi_transport nvme_mi_transport_mctp = {
+static const struct libnvme_mi_transport libnvme_mi_transport_mctp = {
 	.name = "mctp",
 	.mic_enabled = true,
-	.submit = nvme_mi_mctp_submit,
-	.close = nvme_mi_mctp_close,
-	.desc_ep = nvme_mi_mctp_desc_ep,
-	.aem_read = nvme_mi_mctp_aem_read,
-	.aem_fd = nvme_mi_mctp_aem_fd,
-	.aem_purge = nvme_mi_mctp_aem_purge,
+	.submit = libnvme_mi_mctp_submit,
+	.close = libnvme_mi_mctp_close,
+	.desc_ep = libnvme_mi_mctp_desc_ep,
+	.aem_read = libnvme_mi_mctp_aem_read,
+	.aem_fd = libnvme_mi_mctp_aem_fd,
+	.aem_purge = libnvme_mi_mctp_aem_purge,
 };
 
-int nvme_mi_aem_open(nvme_mi_ep_t ep)
+int libnvme_mi_aem_open(libnvme_mi_ep_t ep)
 {
-	struct nvme_mi_transport_mctp *mctp;
+	struct libnvme_mi_transport_mctp *mctp;
 
-	if (ep->transport != &nvme_mi_transport_mctp) {
+	if (ep->transport != &libnvme_mi_transport_mctp) {
 		errno = EINVAL;
 		return -1;
 	}
@@ -675,10 +675,10 @@ int nvme_mi_aem_open(nvme_mi_ep_t ep)
 	return 0;
 }
 
-__public nvme_mi_ep_t nvme_mi_open_mctp(struct libnvme_global_ctx *ctx,
+__public libnvme_mi_ep_t libnvme_mi_open_mctp(struct libnvme_global_ctx *ctx,
 			       unsigned int netid, __u8 eid)
 {
-	struct nvme_mi_transport_mctp *mctp;
+	struct libnvme_mi_transport_mctp *mctp;
 	struct libnvme_mi_ep *ep;
 	int errno_save;
 
@@ -719,7 +719,7 @@ __public nvme_mi_ep_t nvme_mi_open_mctp(struct libnvme_global_ctx *ctx,
 		goto err_free_aem_rspbuf;
 	}
 
-	ep->transport = &nvme_mi_transport_mctp;
+	ep->transport = &libnvme_mi_transport_mctp;
 	ep->transport_data = mctp;
 
 	/* Assuming an i2c transport at 100kHz, smallest MTU (64+4). Given
@@ -739,30 +739,30 @@ err_free_mctp:
 	free(mctp);
 err_close_ep:
 	/* the ep->transport is not set yet, so this will not call back
-	 * into nvme_mi_mctp_close() */
-	nvme_mi_close(ep);
+	 * into libnvme_mi_mctp_close() */
+	libnvme_mi_close(ep);
 	errno = errno_save;
 	return NULL;
 }
 
 #ifdef CONFIG_DBUS
 
-static int nvme_mi_mctp_add(struct libnvme_global_ctx *ctx, unsigned int netid, __u8 eid)
+static int libnvme_mi_mctp_add(struct libnvme_global_ctx *ctx, unsigned int netid, __u8 eid)
 {
-	nvme_mi_ep_t ep = NULL;
+	libnvme_mi_ep_t ep = NULL;
 
 	/* ensure we don't already have an endpoint with the same net/eid. if
 	 * we do, just skip, no need to re-add. */
 	list_for_each(&ctx->endpoints, ep, root_entry) {
-		if (ep->transport != &nvme_mi_transport_mctp) {
+		if (ep->transport != &libnvme_mi_transport_mctp) {
 			continue;
 		}
-		const struct nvme_mi_transport_mctp *t = ep->transport_data;
+		const struct libnvme_mi_transport_mctp *t = ep->transport_data;
 		if (t->eid == eid && t->net == netid)
 			return 0;
 	}
 
-	ep = nvme_mi_open_mctp(ctx, netid, eid);
+	ep = libnvme_mi_open_mctp(ctx, netid, eid);
 	if (!ep)
 		return -1;
 
@@ -871,7 +871,7 @@ static int handle_mctp_endpoint(struct libnvme_global_ctx *ctx, const char* objp
 			errno = ENOENT;
 			return -1;
 		}
-		rc = nvme_mi_mctp_add(ctx, net, eid);
+		rc = libnvme_mi_mctp_add(ctx, net, eid);
 		if (rc < 0) {
 			int errno_save = errno;
 			libnvme_msg(ctx, LOG_ERR,
@@ -945,7 +945,7 @@ static int handle_mctp_obj(struct libnvme_global_ctx *ctx, DBusMessageIter *obj)
 	return 0;
 }
 
-__public struct libnvme_global_ctx *nvme_mi_scan_mctp(void)
+__public struct libnvme_global_ctx *libnvme_mi_scan_mctp(void)
 {
 	DBusMessage *msg, *resp = NULL;
 	DBusConnection *bus = NULL;
@@ -1039,7 +1039,7 @@ out:
 
 #else /* CONFIG_DBUS */
 
-__public struct libnvme_global_ctx *nvme_mi_scan_mctp(void)
+__public struct libnvme_global_ctx *libnvme_mi_scan_mctp(void)
 {
 	return NULL;
 }

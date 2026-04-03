@@ -5274,7 +5274,7 @@ static void json_output_status(int status)
 		obj_add_str(r, "type", "nvme");
 		break;
 	case NVME_STATUS_TYPE_MI:
-		obj_add_str(r, "error", nvme_mi_status_to_string(val));
+		obj_add_str(r, "error", libnvme_mi_status_to_string(val));
 		obj_add_str(r, "type", "nvme-mi");
 		break;
 	default:
@@ -5335,7 +5335,7 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 		obj_add_str(r, "type", "nvme");
 		break;
 	case NVME_STATUS_TYPE_MI:
-		obj_add_str(r, "status", nvme_mi_status_to_string(val));
+		obj_add_str(r, "status", libnvme_mi_status_to_string(val));
 		obj_add_str(r, "type", "nvme-mi");
 		break;
 	default:
