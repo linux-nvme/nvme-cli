@@ -29,10 +29,10 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct fw_activation_history fw_history = { 0 };
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	__u8 uuid_index = 0;
 	int err;
 
@@ -51,7 +51,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err)
 		nvme_show_status(err);
 

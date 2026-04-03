@@ -22,7 +22,7 @@ static void get_ymtc_smart_info(struct nvme_ymtc_smart_log *smart, int index, u8
 	memcpy(raw_val, smart->itemArr[index].rawVal, RAW_SIZE);
 }
 
-static int show_ymtc_smart_log(struct nvme_transport_handle *hdl, __u32 nsid,
+static int show_ymtc_smart_log(struct libnvme_transport_handle *hdl, __u32 nsid,
 			       struct nvme_ymtc_smart_log *smart)
 {
 	struct nvme_id_ctrl ctrl;
@@ -53,7 +53,7 @@ static int show_ymtc_smart_log(struct nvme_transport_handle *hdl, __u32 nsid,
 
 	/* Table Title */
 	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
-	       nvme_transport_handle_get_name(hdl), nsid);
+	       libnvme_transport_handle_get_name(hdl), nsid);
 	/* Column Name*/
 	printf("key                               normalized raw\n");
 	/* 00 SI_VD_PROGRAM_FAIL */
@@ -124,8 +124,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	    "Get Ymtc vendor specific additional smart log (optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct config {
 		__u32 namespace_id;
 		bool  raw_binary;

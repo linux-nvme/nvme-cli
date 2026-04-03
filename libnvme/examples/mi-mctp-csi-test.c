@@ -56,9 +56,9 @@ void hexdump(const unsigned char *buf, int len)
 
 int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 {
-	struct nvme_transport_handle *hdl;
+	struct libnvme_transport_handle *hdl;
 	enum nvme_cmd_get_log_lid lid;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	uint8_t buf[4096];
 	uint16_t ctrl_id;
 	int rc, tmp;
@@ -91,7 +91,7 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 
 	nvme_init_get_log(&cmd, NVME_NSID_NONE, lid, NVME_CSI_NVM,
 			  buf, sizeof(buf));
-	rc = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	rc = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (rc) {
 		warn("can't perform Get Log page command");
 		return -1;
@@ -122,7 +122,7 @@ enum action {
 	ACTION_CSI_TEST,
 };
 
-int do_csi_test(struct nvme_global_ctx *ctx, int net, __u8 eid,
+int do_csi_test(struct libnvme_global_ctx *ctx, int net, __u8 eid,
 		int argc, char **argv)
 {
 	int rc = 0;
@@ -175,7 +175,7 @@ int do_csi_test(struct nvme_global_ctx *ctx, int net, __u8 eid,
 }
 
 static int do_action_endpoint(enum action action,
-				struct nvme_global_ctx *ctx,
+				struct libnvme_global_ctx *ctx,
 				int net,
 				uint8_t eid,
 				int argc,
@@ -200,7 +200,7 @@ static int do_action_endpoint(enum action action,
 
 int main(int argc, char **argv)
 {
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	enum action action;
 	bool usage = true;
 	uint8_t eid = 0;
@@ -237,12 +237,12 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	ctx = nvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
 	if (!ctx)
 		err(EXIT_FAILURE, "can't create NVMe root");
 
 	rc = do_action_endpoint(action, ctx, net, eid, argc, argv);
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

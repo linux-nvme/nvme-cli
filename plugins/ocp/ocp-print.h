@@ -14,13 +14,13 @@ struct ocp_print_ops {
 	void (*persistent_event_log)(void *pevent_log_info, __u8 action, __u32 size, const char *devname);
 	void (*smart_extended_log)(struct ocp_smart_extended_log *log, unsigned int version);
 	void (*telemetry_log)(struct ocp_telemetry_parse_options *options);
-	void (*c3_log)(struct nvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data);
-	void (*c5_log)(struct nvme_transport_handle *hdl, struct unsupported_requirement_log *log_data);
+	void (*c3_log)(struct libnvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data);
+	void (*c5_log)(struct libnvme_transport_handle *hdl, struct unsupported_requirement_log *log_data);
 	void (*c1_log)(struct ocp_error_recovery_log_page *log_data);
 	void (*c4_log)(struct ocp_device_capabilities_log_page *log_data);
 	void (*c9_log)(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
 		       int total_log_page_size);
-	void (*c7_log)(struct nvme_transport_handle *hdl, struct tcg_configuration_log *log_data);
+	void (*c7_log)(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data);
 	nvme_print_flags_t flags;
 };
 
@@ -44,14 +44,14 @@ void ocp_show_persistent_event_log(void *pevent_log_info,
 void ocp_smart_extended_log(struct ocp_smart_extended_log *log, unsigned int version,
 		nvme_print_flags_t flags);
 void ocp_show_telemetry_log(struct ocp_telemetry_parse_options *options, nvme_print_flags_t flags);
-void ocp_c3_log(struct nvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data,
+void ocp_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data,
 		nvme_print_flags_t flags);
-void ocp_c5_log(struct nvme_transport_handle *hdl, struct unsupported_requirement_log *log_data,
+void ocp_c5_log(struct libnvme_transport_handle *hdl, struct unsupported_requirement_log *log_data,
 		nvme_print_flags_t flags);
 void ocp_c1_log(struct ocp_error_recovery_log_page *log_data, nvme_print_flags_t flags);
 void ocp_c4_log(struct ocp_device_capabilities_log_page *log_data, nvme_print_flags_t flags);
 void ocp_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
 		int total_log_page_size, nvme_print_flags_t flags);
-void ocp_c7_log(struct nvme_transport_handle *hdl, struct tcg_configuration_log *log_data,
+void ocp_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data,
 		nvme_print_flags_t flags);
 #endif /* OCP_PRINT_H */

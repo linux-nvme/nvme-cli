@@ -153,7 +153,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 
 	fd = open(raw, O_CREAT | O_RDWR | O_TRUNC, 0600);
 	if (fd < 0) {
-		fprintf(stderr, "failed to open %s: %s\n", raw, nvme_strerror(errno));
+		fprintf(stderr, "failed to open %s: %s\n", raw, libnvme_strerror(errno));
 		return;
 	}
 
@@ -162,7 +162,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 	ret = write(fd, log, len);
 	if (ret < 0)
 		fprintf(stderr, "failed to write to %s: %s\n",
-			raw, nvme_strerror(errno));
+			raw, libnvme_strerror(errno));
 	else
 		printf("Discovery log is saved to %s\n", raw);
 
@@ -173,7 +173,7 @@ static int setup_common_context(struct nvmf_context *fctx,
 		struct nvmf_args *fa);
 
 struct cb_fabrics_data {
-	struct nvme_fabrics_config *cfg;
+	struct libnvme_fabrics_config *cfg;
 	nvme_print_flags_t flags;
 	bool quiet;
 	char *raw;
@@ -185,7 +185,7 @@ static bool cb_decide_retry(struct nvmf_context *fctx, int err,
 		void *user_data)
 {
 	if (err == -EAGAIN || (err == -EINTR && !nvme_sigint_received)) {
-		print_debug("nvmf_add_ctrl returned '%s'\n", nvme_strerror(-err));
+		print_debug("nvmf_add_ctrl returned '%s'\n", libnvme_strerror(-err));
 		return true;
 	}
 
@@ -193,7 +193,7 @@ static bool cb_decide_retry(struct nvmf_context *fctx, int err,
 }
 
 static void cb_connected(struct nvmf_context *fctx,
-		struct nvme_ctrl *c, void *user_data)
+		struct libnvme_ctrl *c, void *user_data)
 {
 	struct cb_fabrics_data *cfd = user_data;
 
@@ -201,7 +201,7 @@ static void cb_connected(struct nvmf_context *fctx,
 		return;
 
 	if (cfd->flags == NORMAL) {
-		printf("connecting to device: %s\n", nvme_ctrl_get_name(c));
+		printf("connecting to device: %s\n", libnvme_ctrl_get_name(c));
 		return;
 	}
 
@@ -212,7 +212,7 @@ static void cb_connected(struct nvmf_context *fctx,
 		root = json_create_object();
 
 		json_object_add_value_string(root, "device",
-			nvme_ctrl_get_name(c));
+			libnvme_ctrl_get_name(c));
 
 		json_print_object(root, NULL);
 		printf("\n");
@@ -222,7 +222,7 @@ static void cb_connected(struct nvmf_context *fctx,
 }
 
 static void cb_already_connected(struct nvmf_context *fctx,
-		struct nvme_host *host, const char *subsysnqn,
+		struct libnvme_host *host, const char *subsysnqn,
 		const char *transport, const char *traddr,
 		const char *trsvcid, void *user_data)
 {
@@ -230,7 +230,7 @@ static void cb_already_connected(struct nvmf_context *fctx,
 		return;
 
 	fprintf(stderr,	"already connected to hostnqn=%s,nqn=%s,transport=%s,traddr=%s,trsvcid=%s\n",
-		nvme_host_get_hostnqn(host), subsysnqn,
+		libnvme_host_get_hostnqn(host), subsysnqn,
 		transport, traddr, trsvcid);
 }
 
@@ -276,7 +276,7 @@ static void cb_parser_cleanup(struct nvmf_context *fctx, void *user_data)
 static int cb_parser_next_line(struct nvmf_context *fctx, void *user_data)
 {
 	struct cb_fabrics_data *cfd = user_data;
-	struct nvme_fabrics_config cfg;
+	struct libnvme_fabrics_config cfg;
 	struct nvmf_args fa = {};
 	char *ptr, *p, line[4096];
 	int argc, ret = 0;
@@ -348,9 +348,9 @@ static int setup_common_context(struct nvmf_context *fctx,
 	return 0;
 }
 
-static int create_common_context(struct nvme_global_ctx *ctx,
+static int create_common_context(struct libnvme_global_ctx *ctx,
 		bool persistent, struct nvmf_args *fa,
-		struct nvme_fabrics_config *cfg,
+		struct libnvme_fabrics_config *cfg,
 		void *user_data, struct nvmf_context **fctxp)
 {
 	struct nvmf_context *fctx;
@@ -393,10 +393,10 @@ err:
 	return err;
 }
 
-static int create_discovery_context(struct nvme_global_ctx *ctx,
+static int create_discovery_context(struct libnvme_global_ctx *ctx,
 		bool persistent, const char *device,
 		struct nvmf_args *fa,
-		struct nvme_fabrics_config *cfg,
+		struct libnvme_fabrics_config *cfg,
 		void *user_data, struct nvmf_context **fctxp)
 {
 	struct nvmf_context *fctx;
@@ -429,7 +429,7 @@ err:
 	return err;
 }
 
-static int nvme_read_volatile_config(struct nvme_global_ctx *ctx)
+static int nvme_read_volatile_config(struct libnvme_global_ctx *ctx)
 {
 	char *filename, *ext;
 	struct dirent *dir;
@@ -453,7 +453,7 @@ static int nvme_read_volatile_config(struct nvme_global_ctx *ctx)
 			break;
 		}
 
-		if (nvme_read_config(ctx, filename))
+		if (libnvme_read_config(ctx, filename))
 			ret = 0;
 
 		free(filename);
@@ -463,13 +463,13 @@ static int nvme_read_volatile_config(struct nvme_global_ctx *ctx)
 	return ret;
 }
 
-static int nvme_read_config_checked(struct nvme_global_ctx *ctx,
+static int nvme_read_config_checked(struct libnvme_global_ctx *ctx,
 				    const char *filename)
 {
 	if (access(filename, F_OK))
 		return -errno;
 
-	return nvme_read_config(ctx, filename);
+	return libnvme_read_config(ctx, filename);
 }
 
 #define NBFT_SYSFS_PATH		"/sys/firmware/acpi/tables"
@@ -479,10 +479,10 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	char *config_file = PATH_NVMF_CONFIG;
 	char *context = NULL;
 	nvme_print_flags_t flags;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvmf_context_ struct nvmf_context *fctx = NULL;
 	int ret;
-	struct nvme_fabrics_config cfg;
+	struct libnvme_fabrics_config cfg;
 	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
 	char *device = NULL;
 	bool force = false;
@@ -520,25 +520,25 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 	log_level = map_log_level(nvme_args.verbose, quiet);
 
-	ctx = nvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
-			nvme_strerror(errno));
+			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
 	if (context)
-		nvme_set_application(ctx, context);
+		libnvme_set_application(ctx, context);
 
 	if (!nvme_read_config_checked(ctx, config_file))
 		json_config = true;
 	if (!nvme_read_volatile_config(ctx))
 		json_config = true;
 
-	nvme_skip_namespaces(ctx);
-	ret = nvme_scan_topology(ctx, NULL, NULL);
+	libnvme_skip_namespaces(ctx);
+	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topology: %s\n",
-			nvme_strerror(-ret));
+			libnvme_strerror(-ret));
 		return ret;
 	}
 
@@ -580,7 +580,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 out_free:
 	if (dump_config)
-		nvme_dump_config(ctx, STDOUT_FILENO);
+		libnvme_dump_config(ctx, STDOUT_FILENO);
 
 	return ret;
 }
@@ -591,12 +591,12 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	_cleanup_free_ char *hid = NULL;
 	char *config_file = NULL;
 	char *context = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvmf_context_ struct nvmf_context *fctx = NULL;
-	_cleanup_nvme_ctrl_ nvme_ctrl_t c = NULL;
+	_cleanup_nvme_ctrl_ libnvme_ctrl_t c = NULL;
 	int ret;
 	nvme_print_flags_t flags;
-	struct nvme_fabrics_config cfg = { 0 };
+	struct libnvme_fabrics_config cfg = { 0 };
 	struct nvmf_args fa = { 0 };
 
 	NVMF_ARGS(opts, fa, cfg,
@@ -643,23 +643,23 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 do_connect:
 	log_level = map_log_level(nvme_args.verbose, quiet);
 
-	ctx = nvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
-			nvme_strerror(errno));
+			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
 	if (context)
-		nvme_set_application(ctx, context);
+		libnvme_set_application(ctx, context);
 
-	nvme_read_config(ctx, config_file);
+	libnvme_read_config(ctx, config_file);
 	nvme_read_volatile_config(ctx);
 
-	nvme_skip_namespaces(ctx);
-	ret = nvme_scan_topology(ctx, NULL, NULL);
+	libnvme_skip_namespaces(ctx);
+	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topology: %s\n",
-			nvme_strerror(-ret));
+			libnvme_strerror(-ret));
 		return ret;
 	}
 
@@ -679,27 +679,27 @@ do_connect:
 	ret = nvmf_connect(ctx, fctx);
 	if (ret) {
 		fprintf(stderr, "failed to connect: %s\n",
-			nvme_strerror(-ret));
+			libnvme_strerror(-ret));
 		return ret;
 	}
 
 	if (dump_config)
-		nvme_dump_config(ctx, STDOUT_FILENO);
+		libnvme_dump_config(ctx, STDOUT_FILENO);
 
 	return 0;
 }
 
-static nvme_ctrl_t lookup_nvme_ctrl(struct nvme_global_ctx *ctx,
+static libnvme_ctrl_t lookup_nvme_ctrl(struct libnvme_global_ctx *ctx,
 				    const char *name)
 {
-	nvme_host_t h;
-	nvme_subsystem_t s;
-	nvme_ctrl_t c;
+	libnvme_host_t h;
+	libnvme_subsystem_t s;
+	libnvme_ctrl_t c;
 
-	nvme_for_each_host(ctx, h) {
-		nvme_for_each_subsystem(h, s) {
-			nvme_subsystem_for_each_ctrl(s, c) {
-				if (!strcmp(nvme_ctrl_get_name(c), name))
+	libnvme_for_each_host(ctx, h) {
+		libnvme_for_each_subsystem(h, s) {
+			libnvme_subsystem_for_each_ctrl(s, c) {
+				if (!strcmp(libnvme_ctrl_get_name(c), name))
 					return c;
 			}
 		}
@@ -707,24 +707,24 @@ static nvme_ctrl_t lookup_nvme_ctrl(struct nvme_global_ctx *ctx,
 	return NULL;
 }
 
-static void nvmf_disconnect_nqn(struct nvme_global_ctx *ctx, char *nqn)
+static void nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
 {
 	int i = 0;
 	char *n = nqn;
 	char *p;
-	nvme_host_t h;
-	nvme_subsystem_t s;
-	nvme_ctrl_t c;
+	libnvme_host_t h;
+	libnvme_subsystem_t s;
+	libnvme_ctrl_t c;
 
 	while ((p = strsep(&n, ",")) != NULL) {
 		if (!strlen(p))
 			continue;
-		nvme_for_each_host(ctx, h) {
-			nvme_for_each_subsystem(h, s) {
-				if (strcmp(nvme_subsystem_get_subsysnqn(s), p))
+		libnvme_for_each_host(ctx, h) {
+			libnvme_for_each_subsystem(h, s) {
+				if (strcmp(libnvme_subsystem_get_subsysnqn(s), p))
 					continue;
-				nvme_subsystem_for_each_ctrl(s, c) {
-					if (!nvme_disconnect_ctrl(c))
+				libnvme_subsystem_for_each_ctrl(s, c) {
+					if (!libnvme_disconnect_ctrl(c))
 						i++;
 				}
 			}
@@ -736,8 +736,8 @@ static void nvmf_disconnect_nqn(struct nvme_global_ctx *ctx, char *nqn)
 int fabrics_disconnect(const char *desc, int argc, char **argv)
 {
 	const char *device = "nvme device handle";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	nvme_ctrl_t c;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	libnvme_ctrl_t c;
 	char *p;
 	int ret;
 
@@ -769,14 +769,14 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	ctx = nvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
-			nvme_strerror(errno));
+			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
-	nvme_skip_namespaces(ctx);
-	ret = nvme_scan_topology(ctx, NULL, NULL);
+	libnvme_skip_namespaces(ctx);
+	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret < 0) {
 		/*
 		 * Do not report an error when the modules are not
@@ -787,7 +787,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 			return 0;
 
 		fprintf(stderr, "Failed to scan topology: %s\n",
-			nvme_strerror(-ret));
+			libnvme_strerror(-ret));
 		return ret;
 	}
 
@@ -807,11 +807,11 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 					"Did not find device %s\n", p);
 				return -ENODEV;
 			}
-			ret = nvme_disconnect_ctrl(c);
+			ret = libnvme_disconnect_ctrl(c);
 			if (ret)
 				fprintf(stderr,
 					"Failed to disconnect %s: %s\n",
-					p, nvme_strerror(-ret));
+					p, libnvme_strerror(-ret));
 		}
 	}
 
@@ -820,10 +820,10 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 {
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	nvme_host_t h;
-	nvme_subsystem_t s;
-	nvme_ctrl_t c;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	libnvme_host_t h;
+	libnvme_subsystem_t s;
+	libnvme_ctrl_t c;
 	int ret;
 
 	struct config {
@@ -841,14 +841,14 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	ctx = nvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
-			nvme_strerror(errno));
+			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
-	nvme_skip_namespaces(ctx);
-	ret = nvme_scan_topology(ctx, NULL, NULL);
+	libnvme_skip_namespaces(ctx);
+	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret < 0) {
 		/*
 		 * Do not report an error when the modules are not
@@ -859,24 +859,24 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 			return 0;
 
 		fprintf(stderr, "Failed to scan topology: %s\n",
-			nvme_strerror(-ret));
+			libnvme_strerror(-ret));
 		return ret;
 	}
 
-	nvme_for_each_host(ctx, h) {
-		nvme_for_each_subsystem(h, s) {
-			nvme_subsystem_for_each_ctrl(s, c) {
+	libnvme_for_each_host(ctx, h) {
+		libnvme_for_each_subsystem(h, s) {
+			libnvme_subsystem_for_each_ctrl(s, c) {
 				if (cfg.transport &&
 				    strcmp(cfg.transport,
-					   nvme_ctrl_get_transport(c)))
+					   libnvme_ctrl_get_transport(c)))
 					continue;
-				else if (!strcmp(nvme_ctrl_get_transport(c),
+				else if (!strcmp(libnvme_ctrl_get_transport(c),
 						 "pcie"))
 					continue;
-				if (nvme_disconnect_ctrl(c))
+				if (libnvme_disconnect_ctrl(c))
 					fprintf(stderr,
 						"failed to disconnect %s\n",
-						nvme_ctrl_get_name(c));
+						libnvme_ctrl_get_name(c));
 			}
 		}
 	}
@@ -887,9 +887,9 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 int fabrics_config(const char *desc, int argc, char **argv)
 {
 	bool scan_tree = false, modify_config = false, update_config = false;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
-	struct nvme_fabrics_config cfg;
+	struct libnvme_fabrics_config cfg;
 	struct nvmf_args fa = { };
 	int ret;
 
@@ -911,21 +911,21 @@ int fabrics_config(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, quiet);
 
-	ctx = nvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
-			nvme_strerror(errno));
+			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
 
-	nvme_read_config(ctx, config_file);
+	libnvme_read_config(ctx, config_file);
 
 	if (scan_tree) {
-		nvme_skip_namespaces(ctx);
-		ret = nvme_scan_topology(ctx, NULL, NULL);
+		libnvme_skip_namespaces(ctx);
+		ret = libnvme_scan_topology(ctx, NULL, NULL);
 		if (ret < 0) {
 			fprintf(stderr, "Failed to scan topology: %s\n",
-				nvme_strerror(-ret));
+				libnvme_strerror(-ret));
 			return -ret;
 		}
 	}
@@ -962,16 +962,16 @@ int fabrics_config(const char *desc, int argc, char **argv)
 
 		fd = open(config_file, O_RDONLY, 0);
 		if (fd != -1)
-			nvme_dump_config(ctx, fd);
+			libnvme_dump_config(ctx, fd);
 	}
 
 	if (dump_config)
-		nvme_dump_config(ctx, STDOUT_FILENO);
+		libnvme_dump_config(ctx, STDOUT_FILENO);
 
 	return 0;
 }
 
-static int dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name)
+static int dim_operation(libnvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name)
 {
 	static const char * const task[] = {
 		[NVMF_DIM_TAS_REGISTER]   = "register",
@@ -987,20 +987,20 @@ static int dim_operation(nvme_ctrl_t c, enum nvmf_dim_tas tas, const char *name)
 		printf("%s DIM %s command success\n", name, t);
 	} else if (status < NVME_SC_SUCCESS) {
 		fprintf(stderr, "%s DIM %s command error. Status:0x%04x - %s\n",
-			name, t, status, nvme_status_to_string(status, false));
+			name, t, status, libnvme_status_to_string(status, false));
 	} else {
 		fprintf(stderr, "%s DIM %s command error. Result:0x%04x, Status:0x%04x - %s\n",
-			name, t, result, status, nvme_status_to_string(status, false));
+			name, t, result, status, libnvme_status_to_string(status, false));
 	}
 
-	return nvme_status_to_errno(status, true);
+	return libnvme_status_to_errno(status, true);
 }
 
 int fabrics_dim(const char *desc, int argc, char **argv)
 {
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	enum nvmf_dim_tas tas;
-	nvme_ctrl_t c;
+	libnvme_ctrl_t c;
 	char *p;
 	int ret;
 
@@ -1043,33 +1043,33 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	ctx = nvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
-			nvme_strerror(errno));
+			libnvme_strerror(errno));
 		return -ENODEV;
 	}
-	nvme_skip_namespaces(ctx);
-	ret = nvme_scan_topology(ctx, NULL, NULL);
+	libnvme_skip_namespaces(ctx);
+	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret < 0) {
 		fprintf(stderr, "Failed to scan topology: %s\n",
-			nvme_strerror(-ret));
+			libnvme_strerror(-ret));
 		return ret;
 	}
 
 	if (cfg.nqn) {
-		nvme_host_t h;
-		nvme_subsystem_t s;
+		libnvme_host_t h;
+		libnvme_subsystem_t s;
 		char *n = cfg.nqn;
 
 		while ((p = strsep(&n, ",")) != NULL) {
 			if (!strlen(p))
 				continue;
-			nvme_for_each_host(ctx, h) {
-				nvme_for_each_subsystem(h, s) {
-					if (strcmp(nvme_subsystem_get_subsysnqn(s), p))
+			libnvme_for_each_host(ctx, h) {
+				libnvme_for_each_subsystem(h, s) {
+					if (strcmp(libnvme_subsystem_get_subsysnqn(s), p))
 						continue;
-					nvme_subsystem_for_each_ctrl(s, c)
+					libnvme_subsystem_for_each_ctrl(s, c)
 						ret = dim_operation(c, tas, p);
 				}
 			}
@@ -1082,11 +1082,11 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		while ((p = strsep(&d, ",")) != NULL) {
 			if (!strncmp(p, "/dev/", 5))
 				p += 5;
-			ret = nvme_scan_ctrl(ctx, p, &c);
+			ret = libnvme_scan_ctrl(ctx, p, &c);
 			if (ret) {
 				fprintf(stderr,
 					"Did not find device %s: %s\n",
-					p, nvme_strerror(ret));
+					p, libnvme_strerror(ret));
 				return ret;
 			}
 			ret = dim_operation(c, tas, p);

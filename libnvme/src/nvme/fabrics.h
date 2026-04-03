@@ -24,7 +24,7 @@
 #define NVMF_DEF_CTRL_LOSS_TMO		600
 
 /**
- * struct nvme_fabrics_config - Defines all linux nvme fabrics initiator options
+ * struct libnvme_fabrics_config - Defines all linux nvme fabrics initiator options
  * @queue_size:		Number of IO queue entries
  * @nr_io_queues:	Number of controller IO queues to establish
  * @reconnect_delay:	Time between two consecutive reconnect attempts.
@@ -44,7 +44,7 @@
  * @tls:		Start TLS on the connection (TCP)
  * @concat:		Enable secure concatenation (TCP)
  */
-struct nvme_fabrics_config {
+struct libnvme_fabrics_config {
 	int queue_size;
 	int nr_io_queues;
 	int reconnect_delay;
@@ -67,7 +67,7 @@ struct nvme_fabrics_config {
 };
 
 /**
- * struct nvme_fabrics_uri - Parsed URI structure
+ * struct libnvme_fabrics_uri - Parsed URI structure
  * @scheme:		Scheme name (typically 'nvme')
  * @protocol:		Optional protocol/transport (e.g. 'tcp')
  * @userinfo:		Optional user information component of the URI authority
@@ -77,7 +77,7 @@ struct nvme_fabrics_config {
  * @query:		Optional query string component (separated by '?')
  * @fragment:		Optional fragment identifier component (separated by '#')
  */
-struct nvme_fabrics_uri {
+struct libnvme_fabrics_uri {
 	char *scheme;
 	char *protocol;
 	char *userinfo;
@@ -193,7 +193,7 @@ const char *nvmf_cms_str(__u8 cms);
  *
  * Initializes @cfg with default values.
  */
-void nvmf_default_config(struct nvme_fabrics_config *cfg);
+void nvmf_default_config(struct libnvme_fabrics_config *cfg);
 
 /**
  * nvmf_update_config() - Update fabrics configuration values
@@ -203,7 +203,8 @@ void nvmf_default_config(struct nvme_fabrics_config *cfg);
  * Updates the values from @c with the configuration values from @cfg;
  * all non-default values from @cfg will overwrite the values in @c.
  */
-void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg);
+void nvmf_update_config(libnvme_ctrl_t c,
+		const struct libnvme_fabrics_config *cfg);
 
 /**
  * nvmf_add_ctrl() - Connect a controller and update topology
@@ -217,8 +218,8 @@ void nvmf_update_config(nvme_ctrl_t c, const struct nvme_fabrics_config *cfg);
  *
  * Return: 0 on success, or an error code on failure.
  */
-int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
-		  const struct nvme_fabrics_config *cfg);
+int nvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
+		  const struct libnvme_fabrics_config *cfg);
 
 /**
  * nvmf_connect_ctrl() - Connect a controller
@@ -229,7 +230,7 @@ int nvmf_add_ctrl(nvme_host_t h, nvme_ctrl_t c,
  *
  * Return: 0 on success, or an error code on failure.
  */
-int nvmf_connect_ctrl(nvme_ctrl_t c);
+int nvmf_connect_ctrl(libnvme_ctrl_t c);
 
 /**
  * nvmf_get_discovery_log() - Return the discovery log page
@@ -244,11 +245,11 @@ int nvmf_connect_ctrl(nvme_ctrl_t c);
  *
  * Return: 0 on success, or an error code on failure.
  */
-int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
+int nvmf_get_discovery_log(libnvme_ctrl_t c, struct nvmf_discovery_log **logp,
 			   int max_retries);
 
 /**
- * struct nvme_get_discovery_args - Arguments for nvmf_get_discovery_wargs()
+ * struct libnvme_get_discovery_args - Arguments for nvmf_get_discovery_wargs()
  * @c:			Discovery controller
  * @args_size:		Length of the structure
  * @max_retries:	Number of retries in case of failure
@@ -256,8 +257,8 @@ int nvmf_get_discovery_log(nvme_ctrl_t c, struct nvmf_discovery_log **logp,
  * @timeout:		Timeout in ms (default: NVME_DEFAULT_IOCTL_TIMEOUT)
  * @lsp:		Log specific field (See enum nvmf_log_discovery_lsp)
  */
-struct nvme_get_discovery_args {
-	nvme_ctrl_t c;
+struct libnvme_get_discovery_args {
+	libnvme_ctrl_t c;
 	int args_size;
 	int max_retries;
 	__u32 *result;
@@ -280,7 +281,7 @@ struct nvme_get_discovery_args {
  *
  * Return: 0 on success, or an error code on failure.
  */
-int nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args,
+int nvmf_get_discovery_wargs(struct libnvme_get_discovery_args *args,
 			     struct nvmf_discovery_log **log);
 
 /**
@@ -296,7 +297,7 @@ int nvmf_get_discovery_wargs(struct nvme_get_discovery_args *args,
  * Return: true if controller supports explicit registration. false
  * otherwise.
  */
-bool nvmf_is_registration_supported(nvme_ctrl_t c);
+bool nvmf_is_registration_supported(libnvme_ctrl_t c);
 
 /**
  * nvmf_register_ctrl() - Perform registration task with a DC
@@ -311,10 +312,10 @@ bool nvmf_is_registration_supported(nvme_ctrl_t c);
  *
  * Return: 0 on success, or an error code on failure.
  */
-int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
+int nvmf_register_ctrl(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
 
 /**
- * nvme_parse_uri() - Parse the URI string
+ * libnvme_parse_uri() - Parse the URI string
  * @str:	URI string
  * @uri:	URI object to return
  *
@@ -323,18 +324,18 @@ int nvmf_register_ctrl(nvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
  *
  *   nvme+tcp://user@host:port/subsys_nqn/nid?query=val#fragment
  *
- * Return: &nvme_fabrics_uri structure on success; NULL on failure with errno
+ * Return: &libnvme_fabrics_uri structure on success; NULL on failure with errno
  * set.
  */
-int nvme_parse_uri(const char *str, struct nvme_fabrics_uri **uri);
+int libnvme_parse_uri(const char *str, struct libnvme_fabrics_uri **uri);
 
 /**
  * nvmf_free_uri() - Free the URI structure
- * @uri:	&nvme_fabrics_uri structure
+ * @uri:	&libnvme_fabrics_uri structure
  *
- * Free an &nvme_fabrics_uri structure.
+ * Free an &libnvme_fabrics_uri structure.
  */
-void nvmf_free_uri(struct nvme_fabrics_uri *uri);
+void nvmf_free_uri(struct libnvme_fabrics_uri *uri);
 
 /**
  * nvmf_get_default_trsvcid() - Get default transport service ID
@@ -370,13 +371,13 @@ struct nvmf_context;
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_context_create(struct nvme_global_ctx *ctx,
+int nvmf_context_create(struct libnvme_global_ctx *ctx,
 		bool (*decide_retry)(struct nvmf_context *fctx, int err,
 			void *user_data),
 		void (*connected)(struct nvmf_context *fctx,
-			struct nvme_ctrl *c, void *user_data),
+			struct libnvme_ctrl *c, void *user_data),
 		void (*already_connected)(struct nvmf_context *fctx,
-			struct nvme_host *host, const char *subsysnqn,
+			struct libnvme_host *host, const char *subsysnqn,
 			const char *transport, const char *traddr,
 			const char *trsvcid, void *user_data),
 		void *user_data, struct nvmf_context **fctxp);
@@ -438,7 +439,7 @@ int nvmf_context_set_discovery_defaults(struct nvmf_context *fctx,
  * Return: 0 on success, or a negative error code on failure.
  */
 int nvmf_context_set_fabrics_config(struct nvmf_context *fctx,
-		struct nvme_fabrics_config *cfg);
+		struct libnvme_fabrics_config *cfg);
 
 /**
  * nvmf_context_set_connection() - Set connection parameters for context
@@ -524,7 +525,7 @@ int nvmf_context_set_device(struct nvmf_context *fctx, const char *device);
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_discovery(struct nvme_global_ctx *ctx,
+int nvmf_discovery(struct libnvme_global_ctx *ctx,
 		struct nvmf_context *fctx, bool connect, bool force);
 
 /**
@@ -538,7 +539,7 @@ int nvmf_discovery(struct nvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
+int nvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
 		struct nvmf_context *fctx, bool connect, bool force);
 
 /**
@@ -552,7 +553,7 @@ int nvmf_discovery_config_json(struct nvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
+int nvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
 		struct nvmf_context *fctx, bool connect, bool force);
 
 /**
@@ -566,7 +567,7 @@ int nvmf_discovery_config_file(struct nvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
+int nvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 		struct nvmf_context *fctx, bool connect, char *nbft_path);
 
 /**
@@ -578,7 +579,7 @@ int nvmf_discovery_nbft(struct nvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx);
+int nvmf_connect(struct libnvme_global_ctx *ctx, struct nvmf_context *fctx);
 
 /**
  * nvmf_connect_config_json() - Connect using JSON config
@@ -589,7 +590,7 @@ int nvmf_connect(struct nvme_global_ctx *ctx, struct nvmf_context *fctx);
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
+int nvmf_connect_config_json(struct libnvme_global_ctx *ctx,
 		struct nvmf_context *fctx);
 
 /**
@@ -602,14 +603,14 @@ int nvmf_connect_config_json(struct nvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_config_modify(struct nvme_global_ctx *ctx,
+int nvmf_config_modify(struct libnvme_global_ctx *ctx,
 		struct nvmf_context *fctx);
 
 struct nbft_file_entry;
 
 /**
  * nvmf_nbft_read_files() - Read NBFT files from path
- * @ctx: struct nvme_global_ctx object
+ * @ctx: struct libnvme_global_ctx object
  * @path: Path to NBFT files
  * @head: Pointer to store linked list of NBFT file entries
  *
@@ -617,16 +618,17 @@ struct nbft_file_entry;
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_nbft_read_files(struct nvme_global_ctx *ctx, char *path,
+int nvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
 		struct nbft_file_entry **head);
 
 /**
  * nvmf_nbft_free() - Free NBFT file entry list
- * @ctx: struct nvme_global_ctx object
+ * @ctx: struct libnvme_global_ctx object
  * @head: Head of the NBFT file entry list
  *
  * Frees all memory associated with the NBFT file entry list.
  */
-void nvmf_nbft_free(struct nvme_global_ctx *ctx, struct nbft_file_entry *head);
+void nvmf_nbft_free(struct libnvme_global_ctx *ctx,
+		struct nbft_file_entry *head);
 
 #endif /* _LIBNVME_FABRICS_H */

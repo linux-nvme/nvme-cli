@@ -137,7 +137,7 @@ out:
 
 int main(int argc, char **argv)
 {
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	uint16_t cur_mtu, mtu;
 	DBusConnection *bus;
 	const char *devstr;
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
 	if (rc)
 		errx(EXIT_FAILURE, "can't parse MI device string '%s'", devstr);
 
-	ctx = nvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
 	if (!ctx)
 		err(EXIT_FAILURE, "can't create global context");
 
@@ -219,7 +219,7 @@ out_close_ep:
 	dbus_error_free(&berr);
 	nvme_mi_close(ep);
 out_free_ctx:
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

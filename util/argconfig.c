@@ -44,7 +44,7 @@
 #include "cleanup.h"
 #include "suffix.h"
 
-const char *nvme_strerror(int errnum);
+const char *libnvme_strerror(int errnum);
 
 static bool is_null_or_empty(const char *s)
 {
@@ -317,7 +317,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	short_opts = calloc(options_count * 3 + 3, sizeof(*short_opts));
 
 	if (!long_opts || !short_opts) {
-		fprintf(stderr, "failed to allocate memory for opts: %s\n", nvme_strerror(errno));
+		fprintf(stderr, "failed to allocate memory for opts: %s\n", libnvme_strerror(errno));
 		return -errno;
 	}
 

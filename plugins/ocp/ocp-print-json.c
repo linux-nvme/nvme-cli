@@ -556,7 +556,7 @@ static void json_telemetry_log(struct ocp_telemetry_parse_options *options)
 	print_ocp_telemetry_json(options);
 }
 
-static void json_c3_log(struct nvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data)
+static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency_monitor_log *log_data)
 {
 	struct json_object *root;
 	char ts_buf[128];
@@ -727,7 +727,7 @@ static void json_c3_log(struct nvme_transport_handle *hdl, struct ssd_latency_mo
 	json_free_object(root);
 }
 
-static void json_c5_log(struct nvme_transport_handle *hdl, struct unsupported_requirement_log *log_data)
+static void json_c5_log(struct libnvme_transport_handle *hdl, struct unsupported_requirement_log *log_data)
 {
 	int j;
 	struct json_object *root;
@@ -1111,7 +1111,7 @@ static void json_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_dat
 	json_free_object(root);
 }
 
-static void json_c7_log(struct nvme_transport_handle *hdl, struct tcg_configuration_log *log_data)
+static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data)
 {
 	int j;
 	struct json_object *root;

@@ -55,14 +55,14 @@ void ocp_show_telemetry_log(struct ocp_telemetry_parse_options *options, nvme_pr
 	ocp_print(telemetry_log, flags, options);
 }
 
-void ocp_c3_log(struct nvme_transport_handle *hdl,
+void ocp_c3_log(struct libnvme_transport_handle *hdl,
 		struct ssd_latency_monitor_log *log_data,
 		nvme_print_flags_t flags)
 {
 	ocp_print(c3_log, flags, hdl, log_data);
 }
 
-void ocp_c5_log(struct nvme_transport_handle *hdl,
+void ocp_c5_log(struct libnvme_transport_handle *hdl,
 		struct unsupported_requirement_log *log_data,
 		nvme_print_flags_t flags)
 {
@@ -85,7 +85,7 @@ void ocp_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
 	ocp_print(c9_log, flags, log_data, log_data_buf, total_log_page_size);
 }
 
-void ocp_c7_log(struct nvme_transport_handle *hdl,
+void ocp_c7_log(struct libnvme_transport_handle *hdl,
 		struct tcg_configuration_log *log_data,
 		nvme_print_flags_t flags)
 {
