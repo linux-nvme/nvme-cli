@@ -15,7 +15,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "platform/includes.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <platform/includes.h>
 
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>

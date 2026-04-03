@@ -12,8 +12,6 @@
 
 #include <libnvme.h>
 
-#include "platform/includes.h"
-
 #include "cleanup.h"
 #include "private.h"
 #include "compiler_attributes.h"

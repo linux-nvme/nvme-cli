@@ -20,9 +20,9 @@
 #include <errno.h>
 #include <string.h>
 
-#include "table.h"
+#include <platform/includes.h>
 
-#include "platform/includes.h"
+#include "table.h"
 
 static int table_get_value_width(struct value *v)
 {

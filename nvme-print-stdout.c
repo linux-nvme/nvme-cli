@@ -5,16 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <platform/includes.h>
 #include <ccan/strset/strset.h>
 #include <ccan/htable/htable_type.h>
 #include <ccan/htable/htable.h>
 #include <ccan/hash/hash.h>
 
 #include <libnvme.h>
-
-#include "platform/includes.h"
 
 #include "nvme.h"
 #include "nvme-print.h"

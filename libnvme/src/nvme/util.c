@@ -16,7 +16,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "platform/includes.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <platform/includes.h>
 
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>

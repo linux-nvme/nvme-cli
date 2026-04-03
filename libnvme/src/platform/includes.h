@@ -6,8 +6,7 @@
  * Common platform-specific includes and definitions.
  */
 
-#ifndef _LIBNVME_PLATFORM_INCLUDES_H
-#define _LIBNVME_PLATFORM_INCLUDES_H
+#pragma once
 
 #include "platform/types.h"
 
@@ -17,5 +16,3 @@
 #else
     #include "platform/linux.h"
 #endif
-
-#endif /* _LIBNVME_PLATFORM_INCLUDES_H */

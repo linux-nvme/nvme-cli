@@ -1,38 +1,34 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /*
  * This file is part of libnvme.
- * Copyright (c) 2025 Micron Technology, Inc.
+ * Copyright (c) 2026 Micron Technology, Inc.
  *
  * Linux platform-specific definitions and includes.
  */
 
-#ifndef _LIBNVME_PLATFORM_LINUX_H
-#define _LIBNVME_PLATFORM_LINUX_H
+#pragma once
 
-/* Linux includes */
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/mman.h>
-#include <sys/param.h>
-#include <sys/time.h>
-#include <sys/uio.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <ifaddrs.h>
-#include <poll.h>
-#include <syslog.h>
+/* Linux-specific includes */
 #include <dirent.h>
 #include <endian.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-/* Linux cleanup attribute */
-#define __nvme_cleanup(fn) __attribute__((__cleanup__(fn)))
+#include <syslog.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/param.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/uio.h>
+
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <netdb.h>
+#include <netinet/in.h>
 
 /* Extract IPv4 from IPv6 mapped address */
 #define ipv4_from_in6_addr(addr) &(addr.s6_addr32[3])
@@ -83,5 +79,3 @@ static inline void platform_aligned_free(void *p)
 {
 	free(p);
 }
-
-#endif /* _LIBNVME_PLATFORM_LINUX_H */

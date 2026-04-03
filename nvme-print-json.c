@@ -4,11 +4,11 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/types.h>
+#include <platform/includes.h>
 
 #include <ccan/compiler/compiler.h>
 
 #include <libnvme.h>
-#include "platform/includes.h"
 #include "nvme-print.h"
 
 #include "util/json.h"

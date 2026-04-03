@@ -3,9 +3,10 @@
 #include <errno.h>
 #include <stddef.h>
 
+#include <platform/includes.h>
+
 #include "sighdl.h"
 
-#include "platform/includes.h"
 
 bool nvme_sigint_received;
 

@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "platform/includes.h"
+#include <platform/includes.h>
 
 #if HAVE_LINUX_MCTP_H
 #include <linux/mctp.h>

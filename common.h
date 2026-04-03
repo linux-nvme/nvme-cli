@@ -9,7 +9,7 @@
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
-/* On Windows, min/max may be provided by libnvme but ensure they exist */
+/* On Windows, min/max may already be defined */
 #ifndef min
 #define min(x, y) ((x) > (y) ? (y) : (x))
 #endif

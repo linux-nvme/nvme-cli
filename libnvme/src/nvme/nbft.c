@@ -10,8 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <platform/includes.h>
+
 #include <ccan/endian/endian.h>
-#include "platform/includes.h"
 
 #include <libnvme.h>
 

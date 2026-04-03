@@ -1,15 +1,17 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
+ * This file is part of libnvme.
+ * Copyright (c) 2026 Micron Technology, Inc.
+ *
  * Platform compatibility for linux/types.h
  */
-#ifndef _PLATFORM_TYPES_H
-#define _PLATFORM_TYPES_H
+#pragma once
 
 #ifdef _WIN32
 
 #include <stdint.h>
 
-/* Windows type definitions to replace linux/types.h */
+/* Standard type definitions for linux/types.h compatibility */
 typedef uint8_t  __u8;
 typedef uint16_t __u16;
 typedef uint32_t __u32;
@@ -40,5 +42,3 @@ typedef __s64    __be64s;
 #include <linux/types.h>
 
 #endif
-
-#endif /* _PLATFORM_TYPES_H */
