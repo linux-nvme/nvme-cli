@@ -19,7 +19,7 @@
 #include "private.h"
 #include "compiler_attributes.h"
 
-static bool nvme_mi_probe_enabled_default(void)
+static bool libnvme_mi_probe_enabled_default(void)
 {
 	char *val;
 
@@ -58,7 +58,7 @@ __public struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_
 	list_head_init(&ctx->endpoints);
 
 	ctx->ioctl_probing = true;
-	ctx->mi_probe_enabled = nvme_mi_probe_enabled_default();
+	ctx->mi_probe_enabled = libnvme_mi_probe_enabled_default();
 
 	return ctx;
 }
@@ -66,7 +66,7 @@ __public struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_
 __public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
-	nvme_mi_ep_t ep, tmp;
+	libnvme_mi_ep_t ep, tmp;
 
 	if (!ctx)
 		return;
@@ -77,8 +77,8 @@ __public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	free(ctx->options);
 	libnvme_for_each_host_safe(ctx, h, _h)
 		__libnvme_free_host(h);
-	nvme_mi_for_each_endpoint_safe(ctx, ep, tmp)
-		nvme_mi_close(ep);
+	libnvme_mi_for_each_endpoint_safe(ctx, ep, tmp)
+		libnvme_mi_close(ep);
 	free(ctx->config_file);
 	free(ctx->application);
 	libnvme_close_uring(ctx);

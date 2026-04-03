@@ -192,7 +192,7 @@ static void nvme_show_req(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t h
 	}
 }
 
-void *nvme_mi_submit_entry(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
+void *libnvme_mi_submit_entry(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
 			   const void *data, size_t data_len)
 {
 	memset(&sb, 0, sizeof(sb));
@@ -235,7 +235,7 @@ static void nvme_show_resp(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t 
 	}
 }
 
-void nvme_mi_submit_exit(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
+void libnvme_mi_submit_exit(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
 			 const void *data, size_t data_len, void *user_data)
 {
 	struct submit_data *sb = user_data;
