@@ -10,9 +10,10 @@
 
 #pragma once
 
-#include <endian.h>
 #include <errno.h>
 #include <string.h>
+
+#include <platform/includes.h>
 
 #include <nvme/ioctl.h>
 #include <nvme/types.h>

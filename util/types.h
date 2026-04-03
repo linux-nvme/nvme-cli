@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#include <linux/types.h>
+#include <platform/types.h>
 
 #include <libnvme.h>
 

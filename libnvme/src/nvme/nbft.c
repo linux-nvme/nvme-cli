@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <arpa/inet.h>
+#include <platform/includes.h>
 
 #include <ccan/endian/endian.h>
 
@@ -18,8 +18,6 @@
 
 #include "private.h"
 #include "compiler_attributes.h"
-
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 static __u8 csum(const __u8 *buffer, ssize_t length)
 {

@@ -3,7 +3,8 @@
 #include <unistd.h>
 #include <malloc.h>
 #include <string.h>
-#include <sys/mman.h>
+
+#include <platform/includes.h>
 
 #include "mem.h"
 

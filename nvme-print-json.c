@@ -4,10 +4,8 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include <platform/includes.h>
 #include <ccan/compiler/compiler.h>
-
 #include <libnvme.h>
 
 #include "nvme-print.h"

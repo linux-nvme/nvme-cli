@@ -10,10 +10,9 @@
 
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <syslog.h>
 #include <time.h>
-#include <unistd.h>
+
+#include <platform/includes.h>
 
 #include <libnvme.h>
 

@@ -7,8 +7,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include <platform/includes.h>
 #include <ccan/strset/strset.h>
 #include <ccan/htable/htable_type.h>
 #include <ccan/htable/htable.h>
