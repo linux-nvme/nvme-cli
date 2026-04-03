@@ -34,6 +34,7 @@ headers = [
     'nvme/lib-types.h',
     'nvme/lib.h',
     'nvme/linux.h',
+    'nvme/mi-types.h',
     'nvme/mi.h',
     'nvme/tree.h',
     'nvme/types.h',
