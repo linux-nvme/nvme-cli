@@ -534,9 +534,20 @@ static void nvme_show_cmd_err(const char *msg, bool admin, __u8 opcode, int err)
 		nvme_show_status(err);
 }
 
-void nvme_show_err(const char *msg, int err)
+void nvme_show_err(int err, const char *fmt, ...)
 {
-	nvme_show_cmd_err(msg, false, 0, err);
+	va_list ap;
+
+	_cleanup_free_ char *msg = NULL;
+
+	va_start(ap, fmt);
+
+	if (vasprintf(&msg, fmt, ap) < 0)
+		msg = NULL;
+
+	nvme_show_cmd_err(msg ? msg : alloc_error, false, 0, err);
+
+	va_end(ap);
 }
 
 void nvme_show_io_cmd_err(const char *msg, __u8 opcode, int err)
