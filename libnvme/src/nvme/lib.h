@@ -10,7 +10,8 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <syslog.h>
+
+#include <platform/includes.h>
 
 #include <nvme/lib-types.h>
 

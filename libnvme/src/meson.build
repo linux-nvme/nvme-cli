@@ -160,3 +160,14 @@ install_headers(
     subdir: 'nvme',
     install_mode: mode,
 )
+
+# Install platform abstraction headers
+install_headers([
+        'platform/includes.h',
+        'platform/linux.h',
+        'platform/windows.h',
+        'platform/types.h'
+    ],
+    subdir: 'platform',
+    install_mode: mode,
+)

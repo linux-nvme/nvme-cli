@@ -124,7 +124,7 @@ python3 generate-accessors.py person.h
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <linux/types.h> /* __u32, __u64, etc. */
+#include <platform/types.h> /* __u32, __u64, etc. */
 
 /* Forward declarations. These are internal (opaque) structs. */
 struct person;

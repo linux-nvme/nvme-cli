@@ -12,12 +12,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/uio.h>
+#include <platform/includes.h>
 
 #if HAVE_LINUX_MCTP_H
 #include <linux/mctp.h>

@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <linux/types.h>
+#include <platform/types.h>
 
 enum argconfig_types {
 	CFG_FLAG,

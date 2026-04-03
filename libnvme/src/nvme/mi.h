@@ -82,8 +82,9 @@
  */
 #pragma once
 
-#include <endian.h>
 #include <stdint.h>
+
+#include <platform/includes.h>
 
 #include <nvme/tree.h>
 
