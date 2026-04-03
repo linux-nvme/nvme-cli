@@ -413,7 +413,6 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	struct nvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	void *data = NULL;
-	__u64 result = 0;
 	int err = -1;
 	__u16 mos;
 
@@ -495,7 +494,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		if (flags == NORMAL)
 			printf("CDW0: 0x%"PRIu64": Controller %sSuspended\n",
 			       (uint64_t)cmd.result,
-			       (result & NVME_LM_GET_CONTROLLER_STATE_CSUP) ?
+			       (cmd.result & NVME_LM_GET_CONTROLLER_STATE_CSUP) ?
 			       "" : "NOT ");
 
 		if (cfg.output && strlen(cfg.output)) {
