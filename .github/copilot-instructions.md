@@ -181,7 +181,7 @@ You're currently working on Windows implementation (`libnvme/src/nvme/ioctl-wind
   - **Single-line standalone comments**: Use `/* */` format: `/* Single line comment */`
   - **Inline comments** (end-of-line): Use `/* */` format: `/* Inline comment */`
   - **TODO comments**: Use C++ style: `// TODO: description`
-  - **SPDX license headers**: Use C++ style: `// SPDX-License-Identifier: ...`
+  - **SPDX license headers**: Use C style: `/* SPDX-License-Identifier: ... */`
 - **Type declarations**: Prefer kernel types (`__u32`, `__le16`) for hardware structures
 
 See the Linux kernel [coding style documentation](https://www.kernel.org/doc/html/latest/process/coding-style.html) for complete details.
