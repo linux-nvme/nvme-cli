@@ -1309,6 +1309,12 @@ static int nvme_discovery_log(const struct libnvme_get_discovery_args *args,
 	struct libnvme_transport_handle *hdl = libnvme_ctrl_get_transport_handle(args->c);
 	struct libnvme_passthru_cmd cmd;
 
+	if (!hdl) {
+		libnvme_msg(ctx, LOG_DEBUG,
+			 "%s: no transport handle, skipping discovery\n", name);
+		return -ENOENT;
+	}
+
 	log = __libnvme_alloc(sizeof(*log));
 	if (!log) {
 		libnvme_msg(ctx, LOG_ERR,
