@@ -21,12 +21,12 @@ libnvme:
 ## Build from source
 
 nvme-cli uses meson as its build system. There is more than one way to configure and
-build the project in order to mitigate meson dependency on the build environment.
+build the project to accommodate environments with an older version of meson.
 
 If you build on a relatively modern system, either use meson directly or the
 Makefile wrapper.
 
-Older distros might ship a too old version of meson. In this case, it's possible
+Older distros may ship an outdated version of meson. In this case, it's possible
 to build the project using [samurai](https://github.com/michaelforney/samurai)
 and [muon](https://github.com/annacrombie/muon). Both build tools have only a
 minimal dependency on the build environment. To ease this step, there is a build
@@ -52,22 +52,30 @@ built as part of nvme-cli.
 No special configuration is required for libnvme, as it is now part of the
 nvme-cli source tree. Simply run:
 
-	$ meson setup .build
+```shell
+$ meson setup .build
+```
 
-With meson's --wrap-mode argument it's possible to control if additional
+With meson's `--wrap-mode` argument it's possible to control if additional
 dependencies should be resolved. The options are:
 
-	--wrap-mode {default,nofallback,nodownload,forcefallback,nopromote}
+```
+--wrap-mode {default,nofallback,nodownload,forcefallback,nopromote}
+```
 
 Note for nvme-cli the 'default' is set to nofallback.
 
 #### Building
 
-	$ meson compile -C .build
+```shell
+$ meson compile -C .build
+```
 
 #### Installing
 
-	# meson install -C .build
+```shell
+# meson install -C .build
+```
 
 ### Build with build.sh wrapper
 
@@ -79,11 +87,15 @@ default configuration (meson, gcc and defaults)
 
 It's possible to change the compiler to clang
 
-`scripts/build.sh -c clang`
+```shell
+scripts/build.sh -c clang
+```
 
 or enable all the fallbacks
 
-`scripts/build.sh fallback`
+```shell
+scripts/build.sh fallback
+```
 
 ### Minimal static build with muon
 
@@ -100,46 +112,64 @@ Furthermore, this configuration will produce a static binary.
 
 There is a Makefile wrapper for meson for backwards compatibility
 
-	$ make
-	# make install
+```shell
+$ make
+# make install
+```
 
 Note: In previous versions, libnvme needed to be installed by hand.
 This is no longer required in nvme-cli 3.x and later.
 
 RPM build support via Makefile that uses meson
 
-	$ make rpm
+```shell
+$ make rpm
+```
 
 Static binary (no dependency) build support via Makefile that uses meson
 
-	$ make static
+```shell
+$ make static
+```
 
 If you are not sure how to use it, find the top-level documentation with:
 
-	$ man nvme
+```shell
+$ man nvme
+```
 
 Or find a short summary with:
 
-	$ nvme help
+```shell
+$ nvme help
+```
 
 ### Building with specific plugins
 
 By default, all vendor plugins are built. To build only specific plugins, use the `plugins` option:
 
-	$ meson setup .build -Dplugins=intel,wdc,ocp
-	$ meson compile -C .build
+```shell
+$ meson setup .build -Dplugins=intel,wdc,ocp
+$ meson compile -C .build
+```
 
 Or with the Makefile wrapper:
 
-	$ make PLUGINS="intel,wdc,ocp"
+```shell
+$ make PLUGINS="intel,wdc,ocp"
+```
 
 When `PLUGINS` is not used, the value defaults to `all`, which selects all plugins:
 
-	$ make PLUGINS="all"
+```shell
+$ make PLUGINS="all"
+```
 
 To build without any vendor plugins:
 
-	$ make PLUGINS=""
+```shell
+$ make PLUGINS=""
+```
 
 ## Distro Support
 
@@ -147,12 +177,12 @@ It is available on many popular distributions (Alpine, Arch, Debian, Fedora,
 FreeBSD, Gentoo, Ubuntu, Nix(OS), openSUSE, ...) and the usual package name is
 nvme-cli.
 
-#### OpenEmbedded/Yocto
+### OpenEmbedded/Yocto
 
 An [nvme-cli recipe](https://layers.openembedded.org/layerindex/recipe/88631/)
 is available as part of the `meta-openembedded` layer collection.
 
-#### Buildroot
+### Buildroot
 
 `nvme-cli` is available as a [buildroot](https://buildroot.org) package. The
 package is named `nvme`.
@@ -201,7 +231,7 @@ to get going using the macros. To start, first create a header file
 to define your plugin. This is where you will give your plugin a name,
 description, and define all the sub-commands your plugin implements.
 
-There is a very important order on how to define the plugin. The following
+The macros must appear in a specific order within the header file. The following
 is a basic example on how to start this:
 
 File: foo-plugin.h
@@ -218,7 +248,7 @@ PLUGIN(NAME("foo", "Foo plugin"),
 	COMMAND_LIST(
 		ENTRY("bar", "foo bar", bar)
 		ENTRY("baz", "foo baz", baz)
-		ENTRY("qux", "foo quz", qux)
+		ENTRY("qux", "foo qux", qux)
 	)
 );
 
@@ -245,12 +275,11 @@ File: foo-plugin.c
 After that, you just need to implement the functions you defined in each
 ENTRY, then append the object file name to the meson.build "sources".
 
-
 ### Updating the libnvme accessor functions
 
 libnvme exposes a set of getter and setter functions (accessors) for its core
-internal structs (`nvme_path`, `nvme_ns`, `nvme_ctrl`, `nvme_subsystem`,
-`nvme_host`, `nvme_fabric_options`). These are generated from the struct
+internal structs (`libnvme_path`, `libnvme_ns`, `libnvme_ctrl`, `libnvme_subsystem`,
+`libnvme_host`, `libnvme_fabric_options`). These are generated from the struct
 definitions in `libnvme/src/nvme/private.h` by the tool
 `libnvme/src/nvme/generate-accessors.c`.
 
@@ -308,8 +337,8 @@ When `make update-accessors` detects that the symbol list has drifted from
 WARNING: accessors.ld needs manual attention.
 
   Symbols to ADD (place in a new version section, e.g. LIBNVME_ACCESSORS_X_Y):
-    nvme_ctrl_get_new_field
-    nvme_ctrl_set_new_field
+    libnvme_ctrl_get_new_field
+    libnvme_ctrl_set_new_field
 ```
 
 New symbols must be added to a **new** version section that chains the
@@ -319,8 +348,8 @@ previous one. For example, if the current latest section is
 ```
 LIBNVME_ACCESSORS_3_1 {
     global:
-        nvme_ctrl_get_new_field;
-        nvme_ctrl_set_new_field;
+        libnvme_ctrl_get_new_field;
+        libnvme_ctrl_set_new_field;
 } LIBNVME_ACCESSORS_3_0;
 ```
 
@@ -335,9 +364,8 @@ drifts silently.
 
 ## Dependency
 
-libnvme depends on the /sys/class/nvme-subsystem interface which was
-introduced in the Linux kernel release v4.15. Hence nvme-cli 2.x only works on
-kernels >= v4.15. For older kernels nvme-cli 1.x is recommended to be used.
+libnvme depends on the `/sys/class/nvme-subsystem` interface which was
+introduced in Linux kernel v4.15. nvme-cli requires kernel v4.15 or later.
 
 ## How to contribute
 
@@ -345,13 +373,12 @@ There are two ways to send code changes to the project. The first one
 is by sending the changes to linux-nvme@lists.infradead.org. The
 second one is by posting a pull request on Github. In both cases
 please follow the Linux contributions guidelines as documented in
-
-https://docs.kernel.org/process/submitting-patches.html#
+[Submitting patches](https://docs.kernel.org/process/submitting-patches.html).
 
 That means the changes should be a clean series (no merges should be
 present in a Github PR for example) and every commit should build.
 
-See also https://opensource.com/article/19/7/create-pull-request-github
+See also [How to create a pull request on GitHub](https://opensource.com/article/19/7/create-pull-request-github).
 
 ### How to clean up your series before creating a PR
 
@@ -386,7 +413,7 @@ $ git rebase master
 $ git push -u origin fix-something
 ```
 
-## Persistent, volatile configuration
+## Persistent and volatile configuration
 
 Persistent configurations can be stored in two different locations: either in
 the file `/etc/nvme/discovery.conf` using the old style, or in the file
@@ -432,15 +459,13 @@ For example, a `blktests` volatile configuration could look like:
 Note when updating the volatile configuration during runtime, it should be done
 in an atomic way. For example, create a temporary file without the `.json` file
 extension in `/run/nvme` and write the contents to this file. When finished, use
-`rename` to add the `'.json'` file name extension. This ensures nvme-cli only
+`rename` to add the `.json` file name extension. This ensures nvme-cli only
 sees the complete file.
 
 ## Testing
 
 For testing purposes, an x86_64 static build from the current HEAD is available
-here:
-
-https://monom.org/linux-nvme/upload/nvme-cli-latest-x86_64
+[here](https://monom.org/linux-nvme/upload/nvme-cli-latest-x86_64).
 
 ## Container-Based Debugging and CI Build Reproduction
 
@@ -449,16 +474,16 @@ reproduce GitHub Actions builds for debugging and development. These containers
 mirror the environments used in the official CI workflows.
 
 CI Containers Repository:
-https://github.com/linux-nvme/ci-containers
+[linux-nvme/ci-containers](https://github.com/linux-nvme/ci-containers)
 
 CI Build Workflow Reference:
-https://github.com/linux-nvme/nvme-cli/blob/master/.github/workflows/libnvme-build.yml
+[libnvme-build.yml](https://github.com/linux-nvme/nvme-cli/blob/master/.github/workflows/libnvme-build.yml)
 
 ### 1. Pull a CI Container
 
 All CI containers are published as OCI/Docker images.
 
-Example: Ubuntu latest CI image:
+Example: Debian latest CI image:
 
 ```bash
 docker pull ghcr.io/linux-nvme/debian:latest
@@ -501,7 +526,7 @@ git clone https://github.com/linux-nvme/nvme-cli.git
 cd nvme-cli
 ```
 
-(Optional) Checkout a specific branch or pull request:
+(Optional) Check out a specific branch or pull request:
 
 ```bash
 git checkout <branch-or-commit>
