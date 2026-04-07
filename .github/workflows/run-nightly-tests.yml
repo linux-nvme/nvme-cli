@@ -130,3 +130,10 @@ jobs:
             -v "${PWD}/test.sh":"/test.sh" \
             -v "${PWD}/nvme-cli":"/nvme-cli":z \
             ghcr.io/linux-nvme/debian:latest /test.sh
+            podman_exit=$?
+
+            mkdir -p nvme-cli/tests/nvmetests/meson-logs
+            cp -r nvme-cli/.build-ci/meson-logs/. \
+              nvme-cli/tests/nvmetests/meson-logs/ 2>/dev/null || true
+
+            exit $podman_exit
