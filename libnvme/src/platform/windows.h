@@ -458,13 +458,6 @@ static inline int fnmatch(const char *pattern, const char *string, int flags)
 #endif
 
 
-/* sys/stat.h compatibility */
-
-/* Window stub - always returning 0 */
-#ifndef S_ISBLK
-#define S_ISBLK(m) (0)
-#endif
-
 /* Windows _mkdir doesn't take mode parameter */
 #define mkdir(path, mode) _mkdir(path)
 
