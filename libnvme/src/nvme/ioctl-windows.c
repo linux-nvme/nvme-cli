@@ -111,7 +111,7 @@ __public int nvme_reset_ctrl(struct nvme_transport_handle *hdl)
 __public int nvme_rescan_ns(struct nvme_transport_handle *hdl)
 {
 	(void)hdl;
-	return -ENOTSUP;
+	return 0;	// NOP on Windows
 }
 
 __public int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
@@ -127,6 +127,14 @@ __public int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
 
 	*nsid = addr.Lun + 1;
 	return 0;
+}
+
+__public int nvme_update_block_size(struct nvme_transport_handle *hdl,
+		int block_size)
+{
+	(void)hdl;
+	(void)block_size;
+	return 0;	// NOP on Windows
 }
 
 /*

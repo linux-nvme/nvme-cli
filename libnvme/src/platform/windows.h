@@ -91,21 +91,6 @@ static inline void closelog(void) { }
 typedef unsigned long nfds_t;
 
 
-/* sys/ioctl.h stubs */
-
-/* Linux ioctl constants - stubs for block device operations */
-#define BLKBSZSET 0x40081271
-#define BLKRRPART 0x125F
-
-/* Windows ioctl stub functions */
-static inline int ioctl(nvme_fd_t fd, unsigned long request, ...)
-{
-	(void)fd; (void)request;
-	errno = ENOSYS;
-	return -1;
-}
-
-
 /* sys/param.h compatibility */
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))

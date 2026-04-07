@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef _WIN32
+#include <linux/fs.h>
+#endif
+
 #include <ccan/build_assert/build_assert.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
@@ -87,6 +91,23 @@ __public int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
 		return -errno;
 
 	*nsid = tmp;
+	return 0;
+}
+
+__public int nvme_update_block_size(struct nvme_transport_handle *hdl,
+		int block_size)
+{
+	int ret;
+	nvme_fd_t fd = nvme_transport_handle_get_fd(hdl);
+
+	ret = ioctl(fd, BLKBSZSET, &block_size);
+	if (ret < 0)
+		return -errno;
+
+	ret = ioctl(fd, BLKRRPART);
+	if (ret < 0)
+		return -errno;
+
 	return 0;
 }
 #endif
