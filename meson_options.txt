@@ -60,6 +60,12 @@ option(
   description: 'JSON suppport'
 )
 option(
+  'libkmod',
+  type: 'feature',
+  value: 'auto',
+  description: 'libkmod support'
+)
+option(
   'nvme-tests',
   type : 'boolean',
   value : false,

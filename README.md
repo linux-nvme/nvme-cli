@@ -43,6 +43,7 @@ built as part of nvme-cli.
 |---------|------------|-------|
 | libnvme, libnvme-mi | integrated | No external dependency, included in nvme-cli |
 | json-c | optional | Recommended; without it, all plugins are disabled and json-c output format is disabled |
+| libkmod | optional | Without it, nvme-cli won't be able to load the nvme-fabrics module when needed |
 
 
 ### Build with meson

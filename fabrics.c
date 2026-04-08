@@ -41,6 +41,10 @@
 
 #include <libnvme.h>
 
+#ifdef HAVE_LIBKMOD
+#include <libkmod.h>
+#endif
+
 #include "common.h"
 #include "nvme.h"
 #include "nvme-print.h"
@@ -472,6 +476,50 @@ static int nvme_read_config_checked(struct libnvme_global_ctx *ctx,
 	return libnvme_read_config(ctx, filename);
 }
 
+static void load_nvme_fabrics_module(void)
+{
+#ifdef HAVE_LIBKMOD
+	struct kmod_ctx *ctx;
+	struct kmod_module *mod;
+	int err, state;
+	int timeout = 20; /* 2 seconds */
+
+	ctx = kmod_new(NULL, NULL);
+	if (!ctx)
+		return;
+
+	err = kmod_module_new_from_name(ctx, "nvme-fabrics", &mod);
+	if (err)
+		goto unref;
+
+	state = kmod_module_get_initstate(mod);
+	if (state != KMOD_MODULE_LIVE && state != KMOD_MODULE_BUILTIN) {
+		err = kmod_module_probe_insert_module(mod,
+			KMOD_PROBE_APPLY_BLACKLIST, NULL, NULL, NULL, NULL);
+		if (err)
+			goto mod_unref;
+
+		while (timeout--) {
+			state = kmod_module_get_initstate(mod);
+			if (state == KMOD_MODULE_LIVE)
+				goto mod_unref;
+
+			/* 100 ms */
+			usleep(100 * 1000);
+		}
+		err = -ENOENT;
+	}
+
+mod_unref:
+	kmod_module_unref(mod);
+unref:
+	kmod_unref(ctx);
+
+	if (err)
+		fprintf(stderr, "Couldn't load the nvme-fabrics module\n");
+#endif
+}
+
 #define NBFT_SYSFS_PATH		"/sys/firmware/acpi/tables"
 
 int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
@@ -504,6 +552,8 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		  OPT_STRING("context",      0, "STR", &context,       nvmf_context));
 
 	nvmf_default_config(&cfg);
+
+	load_nvme_fabrics_module();
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -605,6 +655,8 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		  OPT_STRING("context",              0, "STR", &context,  nvmf_context));
 
 	nvmf_default_config(&cfg);
+
+	load_nvme_fabrics_module();
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
