@@ -77,6 +77,7 @@ class TestNVMe(unittest.TestCase):
         self.do_validate_pci_device = True
         self.default_nsid = 0x1
         self.flbas = 0
+        self.debug = False
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
 
         self.load_config()
@@ -85,7 +86,8 @@ class TestNVMe(unittest.TestCase):
         self.ns_mgmt_supported = self.get_ns_mgmt_support()
         if self.ns_mgmt_supported:
             self.create_and_attach_default_ns()
-        print(f"\nsetup: ctrl: {self.ctrl}, ns1: {self.ns1}, default_nsid: {self.default_nsid}, flbas: {self.flbas}\n")
+        if self.debug:
+            print(f"setup: ctrl: {self.ctrl}, ns1: {self.ns1}, default_nsid: {self.default_nsid}, flbas: {self.flbas}")
 
     def tearDown(self):
         """ Post Section for TestNVMe. """
@@ -93,11 +95,10 @@ class TestNVMe(unittest.TestCase):
             shutil.rmtree(self.log_dir, ignore_errors=True)
         if self.ns_mgmt_supported:
             self.create_and_attach_default_ns()
-        print(f"\nteardown: ctrl: {self.ctrl}, ns1: {self.ns1}, default_nsid: {self.default_nsid}, flbas: {self.flbas}\n")
 
     @classmethod
     def tearDownClass(cls):
-        print("\n")
+        pass
 
     def create_and_attach_default_ns(self):
         """ Creates a default namespace with the full capacity of the ctrls NVM
@@ -147,7 +148,9 @@ class TestNVMe(unittest.TestCase):
             self.ns1 = config['ns1']
             self.log_dir = config['log_dir']
             self.nvme_bin = config.get('nvme_bin', self.nvme_bin)
-            print(f"\nUsing nvme binary '{self.nvme_bin}'")
+            self.debug = config.get('debug', False)
+            if self.debug:
+                print(f"Using nvme binary '{self.nvme_bin}'")
             self.do_validate_pci_device = config.get(
                 'do_validate_pci_device', self.do_validate_pci_device)
             self.clear_log_dir = False
