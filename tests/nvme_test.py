@@ -77,7 +77,7 @@ class TestNVMe(unittest.TestCase):
         self.do_validate_pci_device = True
         self.default_nsid = 0x1
         self.flbas = 0
-        self.config_file = 'tests/config.json'
+        self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
 
         self.load_config()
         if self.do_validate_pci_device:
