@@ -1336,7 +1336,7 @@ static int nvme_discovery_log(const struct libnvme_get_discovery_args *args,
 		if (numrec == 0)
 			break;
 
-		__nvme_free(log);
+		__libnvme_free(log);
 		entries_size = sizeof(*log->entries) * numrec;
 		log = __libnvme_alloc(sizeof(*log) + entries_size);
 		if (!log) {
@@ -1393,7 +1393,7 @@ static int nvme_discovery_log(const struct libnvme_get_discovery_args *args,
 	}
 
 out_free_log:
-	__nvme_free(log);
+	__libnvme_free(log);
 	return err;
 }
 

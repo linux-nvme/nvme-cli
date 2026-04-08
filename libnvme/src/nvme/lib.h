@@ -97,7 +97,7 @@ void libnvme_close(struct libnvme_transport_handle *hdl);
  * Return: File descriptor for an IOCTL based transport handle,
  * otherwise INIT_FD.
  */
-nvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl);
+libnvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl);
 
 /**
  * libnvme_transport_handle_get_name - Return name of the device

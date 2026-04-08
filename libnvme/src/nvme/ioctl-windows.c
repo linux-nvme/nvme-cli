@@ -96,25 +96,25 @@ static bool get_is_win_pe(void)
 	return false;
 }
 
-__public int nvme_reset_subsystem(struct nvme_transport_handle *hdl)
+__public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
 {
 	(void)hdl;
 	return -ENOTSUP;
 }
 
-__public int nvme_reset_ctrl(struct nvme_transport_handle *hdl)
+__public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	(void)hdl;
 	return -ENOTSUP;
 }
 
-__public int nvme_rescan_ns(struct nvme_transport_handle *hdl)
+__public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 {
 	(void)hdl;
 	return 0;	// NOP on Windows
 }
 
-__public int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
+__public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
 {
 	/* Get the SCSI LUN, which corresponds to NSID - 1. */
 	SCSI_ADDRESS addr = {0};
@@ -129,7 +129,7 @@ __public int nvme_get_nsid(struct nvme_transport_handle *hdl, __u32 *nsid)
 	return 0;
 }
 
-__public int nvme_update_block_size(struct nvme_transport_handle *hdl,
+__public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
 		int block_size)
 {
 	(void)hdl;
@@ -141,9 +141,9 @@ __public int nvme_update_block_size(struct nvme_transport_handle *hdl,
  * IOCTL_STORAGE_PROTOCOL_COMMAND pass-through implementation used for
  * VU commands and a small subset of other admin and IO commands.
  */
-static int nvme_submit_storage_protocol_command(
-		struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_storage_protocol_command(
+		struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSTORAGE_PROTOCOL_COMMAND protocol_command = NULL;
 	ULONG buffer_len = 0;
@@ -278,8 +278,8 @@ out:
 #define SCSIOP_READ16 0x88
 #define SCSIOP_WRITE16 0x8A
 
-static int nvme_submit_io_flush(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_io_flush(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSCSI_PASS_THROUGH pass_through = NULL;
 	ULONG buffer_len = 0;
@@ -379,7 +379,7 @@ static __u8 nvme_prinfo_to_scsi_wrrdprotect(__u8 prinfo)
  *
  * See NVM Express: SCSI Translation Reference documentation.
  */
-static void fill_scsi_rw16_cdb(struct nvme_passthru_cmd *cmd, UCHAR cdb[16])
+static void fill_scsi_rw16_cdb(struct libnvme_passthru_cmd *cmd, UCHAR cdb[16])
 {
 	__u8 opcode = (cmd->opcode == nvme_cmd_read) ?
 			SCSIOP_READ16 : SCSIOP_WRITE16;
@@ -414,8 +414,8 @@ static void fill_scsi_rw16_cdb(struct nvme_passthru_cmd *cmd, UCHAR cdb[16])
 	cdb[15] = 0;
 }
 
-static int nvme_submit_io_write(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_io_write(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSCSI_PASS_THROUGH pass_through = NULL;
 	ULONG buffer_len = 0;
@@ -496,8 +496,8 @@ out:
 	return err;
 }
 
-static int nvme_submit_io_read(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_io_read(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSCSI_PASS_THROUGH pass_through = NULL;
 	ULONG buffer_len = 0;
@@ -583,8 +583,8 @@ out:
  * Windows-specific admin command implementations.
  */
 
-static int nvme_submit_admin_get_log_page(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSTORAGE_PROPERTY_QUERY query = NULL;
 	PSTORAGE_PROTOCOL_SPECIFIC_DATA protocol_data = NULL;
@@ -697,8 +697,8 @@ out:
 	return err;
 }
 
-static int nvme_submit_admin_identify(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_admin_identify(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSTORAGE_PROPERTY_QUERY query = NULL;
 	PSTORAGE_PROTOCOL_SPECIFIC_DATA protocol_data = NULL;
@@ -795,8 +795,8 @@ out:
 	return err;
 }
 
-static int nvme_submit_admin_set_features(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_admin_set_features(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSTORAGE_PROPERTY_SET set_property = NULL;
 	PSTORAGE_PROTOCOL_SPECIFIC_DATA_EXT protocol_data = NULL;
@@ -886,8 +886,8 @@ out:
 	return err;
 }
 
-static int nvme_submit_admin_get_features(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_admin_get_features(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSTORAGE_PROPERTY_QUERY query = NULL;
 	PSTORAGE_PROTOCOL_SPECIFIC_DATA protocol_data = NULL;
@@ -1019,8 +1019,8 @@ typedef struct _STORAGE_HW_FIRMWARE_DOWNLOAD {
 
 #endif
 
-static int nvme_submit_admin_fw_commit(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_admin_fw_commit(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSTORAGE_HW_FIRMWARE_ACTIVATE firmware_activate = NULL;
 	ULONG buffer_len = 0;
@@ -1110,8 +1110,8 @@ out:
 	return err;
 }
 
-static int nvme_submit_admin_fw_download(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_admin_fw_download(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSTORAGE_HW_FIRMWARE_DOWNLOAD firmware_download = NULL;
 	ULONG buffer_len = 0;
@@ -1210,9 +1210,9 @@ out:
 /* SCSI operation code for sanitize command - from ddk/scsi.h */
 #define SCSIOP_SANITIZE 0x48
 
-static int nvme_submit_admin_format_nvm_user_data_erase(
-		struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_admin_format_nvm_user_data_erase(
+		struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	/*
 	 * User Data Erase: Use IOCTL_SCSI_PASS_THROUGH with SCSIOP_SANITIZE
@@ -1309,9 +1309,9 @@ out:
 	return err;
 }
 
-static int nvme_submit_admin_format_nvm_crypto_erase(
-		struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_admin_format_nvm_crypto_erase(
+		struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	BOOL result = FALSE;
 	ULONG returned_len = 0;
@@ -1349,14 +1349,14 @@ out:
 	return err;
 }
 
-static int nvme_submit_admin_format_nvm(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_admin_format_nvm(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	__u8 ses;
 
 	/* For WinPE, use storage protocol command. */
 	if (get_is_win_pe())
-		return nvme_submit_storage_protocol_command(hdl, cmd);
+		return submit_storage_protocol_command(hdl, cmd);
 
 	/* Namespace-specific format is not supported on Windows */
 	if (cmd->nsid != NVME_NSID_ALL)
@@ -1380,9 +1380,9 @@ static int nvme_submit_admin_format_nvm(struct nvme_transport_handle *hdl,
 	case NVME_FORMAT_SES_NONE:
 		return -ENOTSUP;	/* Not supported on Windows */
 	case NVME_FORMAT_SES_USER_DATA_ERASE:
-		return nvme_submit_admin_format_nvm_user_data_erase(hdl, cmd);
+		return submit_admin_format_nvm_user_data_erase(hdl, cmd);
 	case NVME_FORMAT_SES_CRYPTO_ERASE:
-		return nvme_submit_admin_format_nvm_crypto_erase(hdl, cmd);
+		return submit_admin_format_nvm_crypto_erase(hdl, cmd);
 	default:
 		return -EINVAL;
 	}
@@ -1392,9 +1392,9 @@ static int nvme_submit_admin_format_nvm(struct nvme_transport_handle *hdl,
 #define SCSIOP_SECURITY_PROTOCOL_IN      0xA2
 #define SCSIOP_SECURITY_PROTOCOL_OUT     0xB5
 
-static int nvme_submit_admin_security_send_receive(
-		struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+static int submit_admin_security_send_receive(
+		struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	PSCSI_PASS_THROUGH pass_through = NULL;
 	ULONG buffer_len = 0;
@@ -1521,27 +1521,27 @@ out:
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-__public int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+__public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl || !cmd)
 		return -EINVAL;
 
 	switch (cmd->opcode) {
 	case nvme_cmd_flush:
-		return nvme_submit_io_flush(hdl, cmd);
+		return submit_io_flush(hdl, cmd);
 	case nvme_cmd_write:
-		return nvme_submit_io_write(hdl, cmd);
+		return submit_io_write(hdl, cmd);
 	case nvme_cmd_read:
-		return nvme_submit_io_read(hdl, cmd);
+		return submit_io_read(hdl, cmd);
 	case nvme_cmd_compare:
 		/* Only supported on WinPE */
 		if (get_is_win_pe())
-			return nvme_submit_storage_protocol_command(hdl, cmd);
+			return submit_storage_protocol_command(hdl, cmd);
 		else
 			return -ENOTSUP;
 	case 0x80 ... 0xFF: /* vendor-specific commands */
-		return nvme_submit_storage_protocol_command(hdl, cmd);
+		return submit_storage_protocol_command(hdl, cmd);
 	default:
 		return -ENOTSUP;
 	}
@@ -1557,46 +1557,46 @@ __public int nvme_submit_io_passthru(struct nvme_transport_handle *hdl,
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-__public int nvme_submit_admin_passthru(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd)
+__public int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl || !cmd)
 		return -EINVAL;
 
-	if (hdl->type != NVME_TRANSPORT_HANDLE_TYPE_DIRECT)
+	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
 		return -ENOTSUP;
 
 	switch (cmd->opcode) {
 	case nvme_admin_get_log_page:
-		return nvme_submit_admin_get_log_page(hdl, cmd);
+		return submit_admin_get_log_page(hdl, cmd);
 	case nvme_admin_identify:
-		return nvme_submit_admin_identify(hdl, cmd);
+		return submit_admin_identify(hdl, cmd);
 	case nvme_admin_set_features:
-		return nvme_submit_admin_set_features(hdl, cmd);
+		return submit_admin_set_features(hdl, cmd);
 	case nvme_admin_get_features:
-		return nvme_submit_admin_get_features(hdl, cmd);
+		return submit_admin_get_features(hdl, cmd);
 	case nvme_admin_ns_mgmt:
 	case nvme_admin_ns_attach:
 		/* Only supported on WinPE */
 		if (get_is_win_pe())
-			return nvme_submit_storage_protocol_command(hdl, cmd);
+			return submit_storage_protocol_command(hdl, cmd);
 		else
 			return -ENOTSUP;
 	case nvme_admin_fw_commit:
-		return nvme_submit_admin_fw_commit(hdl, cmd);
+		return submit_admin_fw_commit(hdl, cmd);
 	case nvme_admin_fw_download:
-		return nvme_submit_admin_fw_download(hdl, cmd);
+		return submit_admin_fw_download(hdl, cmd);
 	case nvme_admin_dev_self_test:
-		return nvme_submit_storage_protocol_command(hdl, cmd);
+		return submit_storage_protocol_command(hdl, cmd);
 	case nvme_admin_format_nvm:
-		return nvme_submit_admin_format_nvm(hdl, cmd);
+		return submit_admin_format_nvm(hdl, cmd);
 	case nvme_admin_security_send:
 	case nvme_admin_security_recv:
-		return nvme_submit_admin_security_send_receive(hdl, cmd);
+		return submit_admin_security_send_receive(hdl, cmd);
 	case nvme_admin_sanitize_nvm:
-		return nvme_submit_storage_protocol_command(hdl, cmd);
+		return submit_storage_protocol_command(hdl, cmd);
 	case 0xC0 ... 0xFF: /* vendor-specific commands */
-		return nvme_submit_storage_protocol_command(hdl, cmd);
+		return submit_storage_protocol_command(hdl, cmd);
 	default:
 		return -ENOTSUP;
 	}

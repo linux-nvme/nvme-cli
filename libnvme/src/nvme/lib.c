@@ -267,7 +267,7 @@ __public void libnvme_close(struct libnvme_transport_handle *hdl)
 }
 #endif /* !_WIN32 */
 
-__public nvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl)
+__public libnvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl)
 {
 	return hdl->fd;
 }

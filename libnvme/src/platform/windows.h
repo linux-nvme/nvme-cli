@@ -29,7 +29,7 @@
 
 /* Platform compatibility helper types and methods */
 
-typedef HANDLE nvme_fd_t;
+typedef HANDLE libnvme_fd_t;
 #define TEST_FD INVALID_HANDLE_VALUE
 #define INIT_FD nullptr
 
@@ -38,7 +38,7 @@ typedef HANDLE nvme_fd_t;
  * translation from converting LF to CRLF and corrupting raw binary output.
  * Called once at startup from main().
  */
-static inline void nvme_init(void)
+static inline void libnvme_init(void)
 {
 	_setmode(_fileno(stdout), O_BINARY);
 	_setmode(_fileno(stderr), O_BINARY);
@@ -446,8 +446,8 @@ static inline int fnmatch(const char *pattern, const char *string, int flags)
 /* Windows _mkdir doesn't take mode parameter */
 #define mkdir(path, mode) _mkdir(path)
 
-/* Platform-specific fstat wrapper for nvme_fd_t */
-int nvme_fstat(nvme_fd_t fd, struct stat *buf);
+/* Platform-specific fstat wrapper for libnvme_fd_t */
+int libnvme_fstat(libnvme_fd_t fd, struct stat *buf);
 
 
 /* mman.h memory mapping stubs - not supported on Windows */

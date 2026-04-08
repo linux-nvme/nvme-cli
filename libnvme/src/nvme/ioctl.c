@@ -29,7 +29,7 @@
 static int nvme_verify_chr(struct libnvme_transport_handle *hdl)
 {
 	static struct stat nvme_stat;
-	int err = nvme_fstat(hdl->fd, &nvme_stat);
+	int err = libnvme_fstat(hdl->fd, &nvme_stat);
 
 	if (err < 0)
 		return -errno;
@@ -94,28 +94,11 @@ __public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
 	return 0;
 }
 
-__public int nvme_update_block_size(struct nvme_transport_handle *hdl,
+__public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
 		int block_size)
 {
 	int ret;
-	nvme_fd_t fd = nvme_transport_handle_get_fd(hdl);
-
-	ret = ioctl(fd, BLKBSZSET, &block_size);
-	if (ret < 0)
-		return -errno;
-
-	ret = ioctl(fd, BLKRRPART);
-	if (ret < 0)
-		return -errno;
-
-	return 0;
-}
-
-__public int nvme_update_block_size(struct nvme_transport_handle *hdl,
-		int block_size)
-{
-	int ret;
-	nvme_fd_t fd = nvme_transport_handle_get_fd(hdl);
+	libnvme_fd_t fd = libnvme_transport_handle_get_fd(hdl);
 
 	ret = ioctl(fd, BLKBSZSET, &block_size);
 	if (ret < 0)

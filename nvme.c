@@ -6811,7 +6811,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 			 * to the given one because blkdev will not
 			 * update by itself without re-opening fd.
 			 */
-			err = nvme_update_block_size(hdl, block_size);
+			err = libnvme_update_block_size(hdl, block_size);
 			if (err < 0) {
 				nvme_show_error(
 				    "failed to set block size to %d",
@@ -11288,7 +11288,7 @@ int main(int argc, char **argv)
 {
 	int err;
 
-	nvme_init();
+	libnvme_init();
 	nvme.extensions->parent = &nvme;
 	if (argc < 2) {
 		general_help(&builtin, NULL);

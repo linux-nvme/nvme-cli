@@ -41,7 +41,7 @@ LIBNVME_3 {
 		libnvme_free_nbft;
 		libnvme_free_ns;
 		libnvme_free_subsystem;
-		nvme_fstat;
+		libnvme_fstat;
 		libnvme_gen_dhchap_key;
 		libnvme_generate_hostid;
 		libnvme_generate_hostnqn;
@@ -194,7 +194,7 @@ LIBNVME_3 {
 		libnvme_transport_handle_set_submit_entry;
 		libnvme_transport_handle_set_submit_exit;
 		libnvme_unlink_ctrl;
-		nvme_update_block_size;
+		libnvme_update_block_size;
 		libnvme_update_key;
 		libnvme_uuid_from_string;
 		libnvme_uuid_to_string;

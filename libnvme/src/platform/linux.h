@@ -33,7 +33,7 @@
 /* Extract IPv4 from IPv6 mapped address */
 #define ipv4_from_in6_addr(addr) &(addr.s6_addr32[3])
 
-typedef int nvme_fd_t;
+typedef int libnvme_fd_t;
 #define TEST_FD 0xFD
 #define INIT_FD -1
 
@@ -42,14 +42,14 @@ typedef int nvme_fd_t;
 #define O_BINARY 0
 #endif
 
-/* Platform-specific fstat wrapper for nvme_fd_t */
-static inline int nvme_fstat(nvme_fd_t fd, struct stat *buf)
+/* Platform-specific fstat wrapper for libnvme_fd_t */
+static inline int libnvme_fstat(libnvme_fd_t fd, struct stat *buf)
 {
 	return fstat(fd, buf);
 }
 
 /* Platform initialization - no-op on Linux */
-static inline void nvme_init(void) {}
+static inline void libnvme_init(void) {}
 
 /* Platform-specific UUID generation using /dev/urandom */
 static inline int random_uuid(unsigned char *uuid, size_t len)

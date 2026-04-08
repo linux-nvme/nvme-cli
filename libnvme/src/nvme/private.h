@@ -107,7 +107,7 @@ struct libnvme_transport_handle {
 			struct libnvme_passthru_cmd *cmd, int err);
 
 	/* direct */
-	nvme_fd_t fd;
+	libnvme_fd_t fd;
 	struct stat stat;
 	bool ioctl_admin64;
 	bool ioctl_io64;
@@ -389,7 +389,7 @@ void *__libnvme_alloc(size_t len);
 
 void *__libnvme_realloc(void *p, size_t len);
 
-void __nvme_free(void *p);
+void __libnvme_free(void *p);
 
 libnvme_host_t libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid);

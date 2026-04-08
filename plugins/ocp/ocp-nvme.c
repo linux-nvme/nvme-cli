@@ -349,7 +349,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = nvme_fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat);
+	err = libnvme_fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat);
 	if (err < 0)
 		return err;
 
@@ -1463,7 +1463,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	if (opt.telemetry_type == 0)
 		opt.telemetry_type = "host";
 
-	err = nvme_fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat);
+	err = libnvme_fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat);
 	if (err < 0)
 		return err;
 

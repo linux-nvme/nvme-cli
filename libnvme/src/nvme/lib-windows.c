@@ -11,13 +11,13 @@
 #include "compiler_attributes.h"
 
 
-static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl, const char *name)
+static int __nvme_transport_handle_open_direct(struct libnvme_transport_handle *hdl, const char *name)
 {
 	char device_path[MAX_PATH];
 	HANDLE h;
 
 	/* Parse and open direct device */
-	hdl->type = NVME_TRANSPORT_HANDLE_TYPE_DIRECT;
+	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 
 	/* Convert device name to Windows path */
 	if (strncmp(name, "\\\\.\\", 4) == 0) {
@@ -53,7 +53,7 @@ static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl
 
 	hdl->fd = h;
 
-	nvme_fstat(hdl->fd, &hdl->stat);
+	libnvme_fstat(hdl->fd, &hdl->stat);
 
 	/* Windows doesn't distinguish 32/64-bit ioctl, assume 64-bit capable */
 	hdl->ioctl_admin64 = true;
@@ -63,13 +63,13 @@ static int __nvme_transport_handle_open_direct(struct nvme_transport_handle *hdl
 }
 
 /* Transport handle operations (linux.c) */
-__public int nvme_open(struct nvme_global_ctx *ctx, const char *name,
-	      struct nvme_transport_handle **hdlp)
+__public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
+	      struct libnvme_transport_handle **hdlp)
 {
-	struct nvme_transport_handle *hdl;
+	struct libnvme_transport_handle *hdl;
 	int ret;
 
-	hdl = __nvme_create_transport_handle(ctx);
+	hdl = __libnvme_create_transport_handle(ctx);
 	if (!hdl)
 		return -ENOMEM;
 
@@ -81,7 +81,7 @@ __public int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 
 	/* Handle test devices */
 	if (!strncmp(name, "NVME_TEST_FD", 12)) {
-		hdl->type = NVME_TRANSPORT_HANDLE_TYPE_DIRECT;
+		hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 		hdl->fd = TEST_FD;
 
 		if (!strcmp(name, "NVME_TEST_FD64"))
@@ -93,14 +93,14 @@ __public int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 
 	/* MI transport not supported on Windows */
 	if (!strncmp(name, "mctp:", strlen("mctp:"))) {
-		nvme_close(hdl);
+		libnvme_close(hdl);
 		return -ENOTSUP;
 	} else {
 		ret = __nvme_transport_handle_open_direct(hdl, name);
 	}
 
 	if (ret) {
-		nvme_close(hdl);
+		libnvme_close(hdl);
 		return ret;
 	}
 
@@ -109,7 +109,7 @@ __public int nvme_open(struct nvme_global_ctx *ctx, const char *name,
 	return 0;
 }
 
-__public void nvme_close(struct nvme_transport_handle *hdl)
+__public void libnvme_close(struct libnvme_transport_handle *hdl)
 {
 	if (!hdl)
 		return;
@@ -117,24 +117,24 @@ __public void nvme_close(struct nvme_transport_handle *hdl)
 	free(hdl->name);
 
 	switch (hdl->type) {
-	case NVME_TRANSPORT_HANDLE_TYPE_DIRECT:
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT:
 		/* Close Windows HANDLE if valid */
 		if (hdl->fd && hdl->fd != TEST_FD)
 			CloseHandle(hdl->fd);
 		free(hdl);
 		break;
-	case NVME_TRANSPORT_HANDLE_TYPE_MI:
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_MI:
 		/* MI not supported on Windows */
 		free(hdl);
 		break;
-	case NVME_TRANSPORT_HANDLE_TYPE_UNKNOWN:
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_UNKNOWN:
 		free(hdl);
 		break;
 	}
 }
 
-/* Platform-specific fstat wrapper for nvme_fd_t */
-__public int nvme_fstat(nvme_fd_t fd, struct stat *buf)
+/* Platform-specific fstat wrapper for libnvme_fd_t */
+__public int libnvme_fstat(libnvme_fd_t fd, struct stat *buf)
 {
 	BY_HANDLE_FILE_INFORMATION file_info;
 	ULARGE_INTEGER ull;
@@ -174,7 +174,7 @@ __public int nvme_fstat(nvme_fd_t fd, struct stat *buf)
 	/* Convert Windows file attributes to stat mode */
 	if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)
 		/* Windows device files should be marked as block devices */
-		/* This is used by nvme_verify_chr to check device type */
+		/* This is used by libnvme_verify_chr to check device type */
 		buf->st_mode = S_IFBLK | 0600;
 	else if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		buf->st_mode = S_IFDIR | 0755;
