@@ -23,37 +23,37 @@
 #endif
 
 /**
- * nvme_create_global_ctx() - Initialize global context object
+ * libnvme_create_global_ctx() - Initialize global context object
  * @fp:		File descriptor for logging messages
  * @log_level:	Logging level to use
  *
- * Return: Initialized &struct nvme_global_ctx object
+ * Return: Initialized &struct libnvme_global_ctx object
  */
-struct nvme_global_ctx *nvme_create_global_ctx(FILE *fp, int log_level);
+struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_level);
 
 /**
- * nvme_free_global_ctx() - Free global context object
- * @ctx:	&struct nvme_global_ctx object
+ * libnvme_free_global_ctx() - Free global context object
+ * @ctx:	&struct libnvme_global_ctx object
  *
- * Free an &struct nvme_global_ctx object and all attached objects
+ * Free an &struct libnvme_global_ctx object and all attached objects
  */
-void nvme_free_global_ctx(struct nvme_global_ctx *ctx);
+void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx);
 
 /**
- * nvme_set_logging_level() - Set current logging level
- * @ctx:	struct nvme_global_ctx object
+ * libnvme_set_logging_level() - Set current logging level
+ * @ctx:	struct libnvme_global_ctx object
  * @log_level:	Logging level to set
  * @log_pid:	Boolean to enable logging of the PID
  * @log_tstamp:	Boolean to enable logging of the timestamp
  *
  * Sets the current logging level for the global context.
  */
-void nvme_set_logging_level(struct nvme_global_ctx *ctx, int log_level,
+void libnvme_set_logging_level(struct libnvme_global_ctx *ctx, int log_level,
 		bool log_pid, bool log_tstamp);
 
 /**
- * nvme_get_logging_level() - Get current logging level
- * @ctx:	struct nvme_global_ctx object
+ * libnvme_get_logging_level() - Get current logging level
+ * @ctx:	struct libnvme_global_ctx object
  * @log_pid:	Pointer to store a current value of logging of
  *		the PID flag at (optional).
  * @log_tstamp:	Pointer to store a current value of logging of
@@ -63,12 +63,12 @@ void nvme_set_logging_level(struct nvme_global_ctx *ctx, int log_level,
  *
  * Return: current log level value or DEFAULT_LOGLEVEL if not initialized.
  */
-int nvme_get_logging_level(struct nvme_global_ctx *ctx, bool *log_pid,
+int libnvme_get_logging_level(struct libnvme_global_ctx *ctx, bool *log_pid,
 		bool *log_tstamp);
 
 /**
- * nvme_open() - Open an nvme controller or namespace device
- * @ctx:	struct nvme_global_ctx object
+ * libnvme_open() - Open an nvme controller or namespace device
+ * @ctx:	struct libnvme_global_ctx object
  * @name:	The basename of the device to open
  * @hdl:	Transport handle to return
  *
@@ -77,73 +77,78 @@ int nvme_get_logging_level(struct nvme_global_ctx *ctx, bool *log_pid,
  *
  * Return: 0 on success or negative error code otherwise
  */
-int nvme_open(struct nvme_global_ctx *ctx, const char *name,
-	      struct nvme_transport_handle **hdl);
+int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
+	      struct libnvme_transport_handle **hdl);
 
 /**
- * nvme_close() - Close transport handle
+ * libnvme_close() - Close transport handle
  * @hdl:	Transport handle
  */
-void nvme_close(struct nvme_transport_handle *hdl);
+void libnvme_close(struct libnvme_transport_handle *hdl);
 
 /**
- * nvme_transport_handle_get_fd - Return file descriptor from transport handle
+ * libnvme_transport_handle_get_fd - Return file descriptor from
+ * the transport handle
  * @hdl:	Transport handle
  *
  * If the device handle is for a ioctl based device,
- * nvme_transport_handle_get_fd will return a valid file descriptor.
+ * libnvme_transport_handle_get_fd will return a valid file descriptor.
  *
  * Return: File descriptor for an IOCTL based transport handle,
  * otherwise INIT_FD.
  */
-nvme_fd_t nvme_transport_handle_get_fd(struct nvme_transport_handle *hdl);
+nvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl);
 
 /**
- * nvme_transport_handle_get_name - Return name of the device transport handle
+ * libnvme_transport_handle_get_name - Return name of the device
+ * transport handle
  * @hdl:	Transport handle
  *
  * Return: Device file name, otherwise -1.
  */
-const char *nvme_transport_handle_get_name(struct nvme_transport_handle *hdl);
+const char *libnvme_transport_handle_get_name(
+		struct libnvme_transport_handle *hdl);
 
 /**
- * nvme_transport_handle_is_blkdev - Check if transport handle is a block device
+ * libnvme_transport_handle_is_blkdev - Check if transport handle is a
+ * block device
  * @hdl:	Transport handle
  *
  * Return: Return true if transport handle is a block device, otherwise false.
  */
-bool nvme_transport_handle_is_blkdev(struct nvme_transport_handle *hdl);
+bool libnvme_transport_handle_is_blkdev(struct libnvme_transport_handle *hdl);
 
 /**
- * nvme_transport_handle_is_chardev - Check if transport handle is a char device
+ * libnvme_transport_handle_is_chardev - Check if transport handle is a
+ * char device
  * @hdl:	Transport handle
  *
  * Return: Return true if transport handle is a char device, otherwise false.
  */
-bool nvme_transport_handle_is_chardev(struct nvme_transport_handle *hdl);
+bool libnvme_transport_handle_is_chardev(struct libnvme_transport_handle *hdl);
 
 /**
- * nvme_transport_handle_is_direct - Check if transport handle is using IOCTL
+ * libnvme_transport_handle_is_direct - Check if transport handle is using IOCTL
  * interface
  * @hdl:	Transport handle
  *
  * Return: Return true if transport handle is using IOCTL itnerface,
  * otherwise false.
  */
-bool nvme_transport_handle_is_direct(struct nvme_transport_handle *hdl);
+bool libnvme_transport_handle_is_direct(struct libnvme_transport_handle *hdl);
 
 /**
- * nvme_transport_handle_is_mi - Check if transport handle is a using MI
+ * libnvme_transport_handle_is_mi - Check if transport handle is a using MI
  * interface
  * @hdl:	Transport handle
  *
  * Return: Return true if transport handle is using MI interface,
  * otherwise false.
  */
-bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl);
+bool libnvme_transport_handle_is_mi(struct libnvme_transport_handle *hdl);
 
 /**
- * nvme_transport_handle_set_submit_entry() - Install a submit-entry callback
+ * libnvme_transport_handle_set_submit_entry() - Install a submit-entry callback
  * @hdl:	Transport handle to configure
  * @submit_entry: Callback invoked immediately before a passthrough command is
  *		submitted. The function receives the command about to be issued
@@ -158,12 +163,13 @@ bool nvme_transport_handle_is_mi(struct nvme_transport_handle *hdl);
  *
  * Return: None.
  */
-void nvme_transport_handle_set_submit_entry(struct nvme_transport_handle *hdl,
-		void *(*submit_entry)(struct nvme_transport_handle *hdl,
-				struct nvme_passthru_cmd *cmd));
+void libnvme_transport_handle_set_submit_entry(
+		struct libnvme_transport_handle *hdl,
+		void *(*submit_entry)(struct libnvme_transport_handle *hdl,
+				struct libnvme_passthru_cmd *cmd));
 
 /**
- * nvme_transport_handle_set_submit_exit() - Install a submit-exit callback
+ * libnvme_transport_handle_set_submit_exit() - Install a submit-exit callback
  * @hdl:	Transport handle to configure
  * @submit_exit: Callback invoked after a passthrough command completes. The
  *		function receives the command, the completion status @err
@@ -177,13 +183,15 @@ void nvme_transport_handle_set_submit_entry(struct nvme_transport_handle *hdl,
  *
  * Return: None.
  */
-void nvme_transport_handle_set_submit_exit(struct nvme_transport_handle *hdl,
-		void (*submit_exit)(struct nvme_transport_handle *hdl,
-				struct nvme_passthru_cmd *cmd,
+void libnvme_transport_handle_set_submit_exit(
+		struct libnvme_transport_handle *hdl,
+		void (*submit_exit)(struct libnvme_transport_handle *hdl,
+				struct libnvme_passthru_cmd *cmd,
 				int err, void *user_data));
 
 /**
- * nvme_transport_handle_set_decide_retry() - Install a retry-decision callback
+ * libnvme_transport_handle_set_decide_retry() - Install a retry-decision
+ * callback
  * @hdl:	Transport handle to configure
  * @decide_retry: Callback used to determine whether a passthrough command
  *		should be retried after an error. The function is called with
@@ -202,34 +210,35 @@ void nvme_transport_handle_set_submit_exit(struct nvme_transport_handle *hdl,
  *
  * Return: None.
  */
-void nvme_transport_handle_set_decide_retry(struct nvme_transport_handle *hdl,
-		bool (*decide_retry)(struct nvme_transport_handle *hdl,
-				struct nvme_passthru_cmd *cmd, int err));
+void libnvme_transport_handle_set_decide_retry(
+		struct libnvme_transport_handle *hdl,
+		bool (*decide_retry)(struct libnvme_transport_handle *hdl,
+				struct libnvme_passthru_cmd *cmd, int err));
 
 /**
- * nvme_set_probe_enabled() - enable/disable the probe for new MI endpoints
- * @ctx:	&struct nvme_global_ctx object
+ * libnvme_set_probe_enabled() - enable/disable the probe for new MI endpoints
+ * @ctx:	&struct libnvme_global_ctx object
  * @enabled: whether to probe new endpoints
  *
  * Controls whether newly-created endpoints are probed for quirks on creation.
  * Defaults to enabled, which results in some initial messaging with the
  * endpoint to determine model-specific details.
  */
-void nvme_set_probe_enabled(struct nvme_global_ctx *ctx, bool enabled);
+void libnvme_set_probe_enabled(struct libnvme_global_ctx *ctx, bool enabled);
 
 /**
- * nvme_set_dry_run() - Set global dry run state
- * @ctx:	struct nvme_global_ctx object
+ * libnvme_set_dry_run() - Set global dry run state
+ * @ctx:	struct libnvme_global_ctx object
  * @enable:	Enable/disable dry run state
  *
  * When dry_run is enabled, any IOCTL commands send via the passthru
  * interface won't be executed.
  */
-void nvme_set_dry_run(struct nvme_global_ctx *ctx, bool enable);
+void libnvme_set_dry_run(struct libnvme_global_ctx *ctx, bool enable);
 
 /**
- * nvme_set_ioctl_probing() - Enable/disable 64-bit IOCTL probing
- * @ctx:	struct nvme_global_ctx object
+ * libnvme_set_ioctl_probing() - Enable/disable 64-bit IOCTL probing
+ * @ctx:	struct libnvme_global_ctx object
  * @enable:	Enable/disable 64-bit IOCTL probing
  *
  * When IOCTL probing is enabled, a 64-bit IOCTL command is issued to
@@ -237,4 +246,4 @@ void nvme_set_dry_run(struct nvme_global_ctx *ctx, bool enable);
  *
  * IOCTL probing is enabled per default.
  */
-void nvme_set_ioctl_probing(struct nvme_global_ctx *ctx, bool enable);
+void libnvme_set_ioctl_probing(struct libnvme_global_ctx *ctx, bool enable);

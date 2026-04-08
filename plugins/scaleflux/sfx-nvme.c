@@ -48,54 +48,54 @@
 
 
 
-int nvme_query_cap(struct nvme_transport_handle *hdl, __u32 nsid, __u32 data_len, void *data)
+int nvme_query_cap(struct libnvme_transport_handle *hdl, __u32 nsid, __u32 data_len, void *data)
 {
 	int rc = 0;
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode		= nvme_admin_query_cap_info,
 		.nsid		= nsid,
 		.addr		= (__u64)(uintptr_t) data,
 		.data_len	= data_len,
 	};
 
-	rc = ioctl(nvme_transport_handle_get_fd(hdl), SFX_GET_FREESPACE, data);
-	return rc ? nvme_submit_admin_passthru(hdl, &cmd) : 0;
+	rc = ioctl(libnvme_transport_handle_get_fd(hdl), SFX_GET_FREESPACE, data);
+	return rc ? libnvme_submit_admin_passthru(hdl, &cmd) : 0;
 }
 
-int nvme_change_cap(struct nvme_transport_handle *hdl, __u32 nsid, __u64 capacity)
+int nvme_change_cap(struct libnvme_transport_handle *hdl, __u32 nsid, __u64 capacity)
 {
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode	= nvme_admin_change_cap,
 		.nsid	= nsid,
 		.cdw10	= (capacity & 0xffffffff),
 		.cdw11	= (capacity >> 32),
 	};
 
-	return nvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_submit_admin_passthru(hdl, &cmd);
 }
 
-int nvme_sfx_set_features(struct nvme_transport_handle *hdl, __u32 nsid, __u32 fid, __u32 value)
+int nvme_sfx_set_features(struct libnvme_transport_handle *hdl, __u32 nsid, __u32 fid, __u32 value)
 {
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode	= nvme_admin_sfx_set_features,
 		.nsid	= nsid,
 		.cdw10	= fid,
 		.cdw11	= value,
 	};
 
-	return nvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_submit_admin_passthru(hdl, &cmd);
 }
 
-int nvme_sfx_get_features(struct nvme_transport_handle *hdl, __u32 nsid, __u32 fid, __u32 *result)
+int nvme_sfx_get_features(struct libnvme_transport_handle *hdl, __u32 nsid, __u32 fid, __u32 *result)
 {
 	int err = 0;
-		struct nvme_passthru_cmd cmd = {
+		struct libnvme_passthru_cmd cmd = {
 		.opcode	= nvme_admin_sfx_get_features,
 		.nsid	= nsid,
 		.cdw10	= fid,
 	};
 
-	err = nvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_submit_admin_passthru(hdl, &cmd);
 	if (!err && result)
 		*result = cmd.result;
 
@@ -336,8 +336,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 #ifdef CONFIG_JSONC
 	const char *json = "Dump output in json format";
 #endif /* CONFIG_JSONC */
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	struct config {
 		__u32 namespace_id;
@@ -370,10 +370,10 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	if (!err) {
 		if (flags & JSON || cfg.json)
 			show_sfx_smart_log_jsn(&smart_log, cfg.namespace_id,
-					       nvme_transport_handle_get_name(hdl));
+					       libnvme_transport_handle_get_name(hdl));
 		else if (!cfg.raw_binary)
 			show_sfx_smart_log(&smart_log, cfg.namespace_id,
-					   nvme_transport_handle_get_name(hdl));
+					   libnvme_transport_handle_get_name(hdl));
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	} else if (err > 0) {
@@ -509,8 +509,8 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 	char *desc = "Get ScaleFlux Latency Statistics log and show it.";
 	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct config {
 		bool raw_binary;
 		bool write;
@@ -551,9 +551,9 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 	return err;
 }
 
-int sfx_nvme_get_log(struct nvme_transport_handle *hdl, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
+int sfx_nvme_get_log(struct libnvme_transport_handle *hdl, __u32 nsid, __u8 log_id, __u32 data_len, void *data)
 {
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode		   = nvme_admin_get_log_page,
 		.nsid		 = nsid,
 		.addr		 = (__u64)(uintptr_t) data,
@@ -565,7 +565,7 @@ int sfx_nvme_get_log(struct nvme_transport_handle *hdl, __u32 nsid, __u8 log_id,
 	cmd.cdw10 = log_id | (numdl << 16);
 	cmd.cdw11 = numdu;
 
-	return nvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -577,9 +577,9 @@ int sfx_nvme_get_log(struct nvme_transport_handle *hdl, __u32 nsid, __u8 log_id,
  *
  * @return -1 fail ; 0 success
  */
-static int get_bb_table(struct nvme_transport_handle *hdl, __u32 nsid, unsigned char *buf, __u64 size)
+static int get_bb_table(struct libnvme_transport_handle *hdl, __u32 nsid, unsigned char *buf, __u64 size)
 {
-	if (nvme_transport_handle_get_fd(hdl) < 0 || !buf || size != 256*4096*sizeof(unsigned char)) {
+	if (libnvme_transport_handle_get_fd(hdl) < 0 || !buf || size != 256*4096*sizeof(unsigned char)) {
 		fprintf(stderr, "Invalid Param \r\n");
 		return -EINVAL;
 	}
@@ -653,8 +653,8 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *acmd, struct
 {
 	const __u64 buf_size = 256*4096*sizeof(unsigned char);
 	unsigned char *data_buf;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 
 	char *desc = "Get bad block table of sfx block device.";
@@ -705,8 +705,8 @@ static int query_cap_info(int argc, char **argv, struct command *acmd, struct pl
 	struct sfx_freespace_ctx sfctx = { 0 };
 	char *desc = "query current capacity info";
 	const char *raw = "dump output in binary format";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct config {
 		bool  raw_binary;
 	};
@@ -734,7 +734,7 @@ static int query_cap_info(int argc, char **argv, struct command *acmd, struct pl
 	return err;
 }
 
-static int change_sanity_check(struct nvme_transport_handle *hdl, __u64 trg_in_4k, int *shrink)
+static int change_sanity_check(struct libnvme_transport_handle *hdl, __u64 trg_in_4k, int *shrink)
 {
 	struct sfx_freespace_ctx freespace_ctx = { 0 };
 	struct sysinfo s_info;
@@ -822,8 +822,8 @@ static int change_cap(int argc, char **argv, struct command *acmd, struct plugin
 	const char *cap_gb = "cap size in GB";
 	const char *cap_byte = "cap size in byte";
 	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 cap_in_4k = 0;
 	__u64 cap_in_sec = 0;
 	int shrink = 0;
@@ -873,15 +873,15 @@ static int change_cap(int argc, char **argv, struct command *acmd, struct plugin
 		nvme_show_status(err);
 	} else {
 		printf("ScaleFlux change-capacity: success\n");
-		ioctl(nvme_transport_handle_get_fd(hdl), BLKRRPART);
+		ioctl(libnvme_transport_handle_get_fd(hdl), BLKRRPART);
 	}
 	return err;
 }
 
-static int sfx_verify_chr(struct nvme_transport_handle *hdl)
+static int sfx_verify_chr(struct libnvme_transport_handle *hdl)
 {
 	static struct stat nvme_stat;
-	int err = fstat(nvme_transport_handle_get_fd(hdl), &nvme_stat);
+	int err = fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat);
 
 	if (err < 0) {
 		perror("fstat");
@@ -895,14 +895,14 @@ static int sfx_verify_chr(struct nvme_transport_handle *hdl)
 	return 0;
 }
 
-static int sfx_clean_card(struct nvme_transport_handle *hdl)
+static int sfx_clean_card(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
 	ret = sfx_verify_chr(hdl);
 	if (ret)
 		return ret;
-	ret = ioctl(nvme_transport_handle_get_fd(hdl), NVME_IOCTL_CLR_CARD);
+	ret = ioctl(libnvme_transport_handle_get_fd(hdl), NVME_IOCTL_CLR_CARD);
 	if (ret)
 		perror("Ioctl Fail.");
 	else
@@ -933,8 +933,8 @@ static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct p
 	const char *feature_id = "hex feature name (required)";
 	const char *namespace_id = "desired namespace";
 	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_id_ns ns;
 	int err = 0;
 
@@ -1029,8 +1029,8 @@ static int sfx_get_feature(int argc, char **argv, struct command *acmd, struct p
 				 "feature id 1: ATOMIC";
 	const char *feature_id = "hex feature name (required)";
 	const char *namespace_id = "desired namespace";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u32 result = 0;
 	int err = 0;
 
@@ -1199,7 +1199,7 @@ ret:
 	return err;
 }
 
-static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_id, __u32 storage_medium,
+static int nvme_dump_evtlog(struct libnvme_transport_handle *hdl, __u32 namespace_id, __u32 storage_medium,
 			    char *file, bool parse, char *output)
 {
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
@@ -1215,7 +1215,7 @@ static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_i
 	void *log;
 	int  err = 0;
 	FILE *fd = NULL;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 
 	if (!storage_medium) {
 		lsp_base = 0;
@@ -1239,7 +1239,7 @@ static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_i
 	cmd.cdw10 |= NVME_FIELD_ENCODE(lsp,
 				       NVME_LOG_CDW10_LSP_SHIFT,
 				       NVME_LOG_CDW10_LSP_MASK);
-	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err) {
 		fprintf(stderr, "Unable to get evtlog lsp=0x%x, ret = 0x%x\n",
 		        lsp, err);
@@ -1252,7 +1252,7 @@ static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_i
 	cmd.cdw10 |= NVME_FIELD_ENCODE(lsp,
 				       NVME_LOG_CDW10_LSP_SHIFT,
 				       NVME_LOG_CDW10_LSP_MASK);
-	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err) {
 		fprintf(stderr, "Unable to get evtlog lsp=0x%x, ret = 0x%x\n",
 			lsp, err);
@@ -1294,7 +1294,7 @@ static int nvme_dump_evtlog(struct nvme_transport_handle *hdl, __u32 namespace_i
 					       NVME_LOG_CDW10_LSP_SHIFT,
 		 			       NVME_LOG_CDW10_LSP_MASK);
 		nvme_init_get_log_lpo(&cmd, lpo);
-		err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+		err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (err) {
 			fprintf(stderr,
 				"Unable to get evtlog offset=0x%x len 0x%x ret = 0x%x\n",
@@ -1355,8 +1355,8 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *acmd, struct p
 				     "0: nand(default) 1: nor";
 	const char *parse = "parse error & warning evtlog from evtlog file";
 	const char *output = "parse result output file";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 
 	struct config {
@@ -1400,7 +1400,7 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *acmd, struct p
 	return 0;
 }
 
-static int nvme_expand_cap(struct nvme_transport_handle *hdl, __u32 namespace_id, __u64 namespace_size,
+static int nvme_expand_cap(struct libnvme_transport_handle *hdl, __u32 namespace_id, __u64 namespace_size,
 			   __u64 namespace_cap, __u32 lbaf, __u32 units)
 {
 	struct dirent **devices;
@@ -1417,12 +1417,12 @@ static int nvme_expand_cap(struct nvme_transport_handle *hdl, __u32 namespace_id
 		__u8  reserve1[5];
 	} __packed;
 
-	if (nvme_transport_handle_is_chardev(hdl))
-		snprintf(dev_name, 32, "%sn%u", nvme_transport_handle_get_name(hdl), namespace_id);
+	if (libnvme_transport_handle_is_chardev(hdl))
+		snprintf(dev_name, 32, "%sn%u", libnvme_transport_handle_get_name(hdl), namespace_id);
 	else
-		strcpy(dev_name, nvme_transport_handle_get_name(hdl));
+		strcpy(dev_name, libnvme_transport_handle_get_name(hdl));
 
-	num = scandir("/dev", &devices, nvme_filter_namespace, alphasort);
+	num = scandir("/dev", &devices, libnvme_filter_namespace, alphasort);
 	if (num <= 0) {
 		err = num;
 		goto ret;
@@ -1445,7 +1445,7 @@ static int nvme_expand_cap(struct nvme_transport_handle *hdl, __u32 namespace_id
 		.lbaf = lbaf,
 	};
 
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode		 = nvme_admin_ns_mgmt,
 		.nsid		 = namespace_id,
 		.addr		 = (__u64)(uintptr_t)&info,
@@ -1453,7 +1453,7 @@ static int nvme_expand_cap(struct nvme_transport_handle *hdl, __u32 namespace_id
 		.cdw10       = 0x0e,
 	};
 
-	err = nvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
 		fprintf(stderr, "Create ns failed\n");
 		nvme_show_status(err);
@@ -1478,8 +1478,8 @@ static int sfx_expand_cap(int argc, char **argv, struct command *acmd, struct pl
 			   "0: 512(default) 1: 4096";
 	const char *units = "namespace size/capacity units\n"
 			    "0: GB(default) 1: LBA";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 
 	struct config {
@@ -1507,11 +1507,11 @@ static int sfx_expand_cap(int argc, char **argv, struct command *acmd, struct pl
 		return err;
 
 	if (cfg.namespace_id == NVME_NSID_ALL) {
-		if (nvme_transport_handle_is_chardev(hdl)) {
+		if (libnvme_transport_handle_is_chardev(hdl)) {
 			fprintf(stderr, "namespace_id or blk device required\n");
 			return -EINVAL;
 		} else {
-			cfg.namespace_id = atoi(&nvme_transport_handle_get_name(hdl)[strlen(nvme_transport_handle_get_name(hdl)) - 1]);
+			cfg.namespace_id = atoi(&libnvme_transport_handle_get_name(hdl)[strlen(libnvme_transport_handle_get_name(hdl)) - 1]);
 		}
 	}
 
@@ -1538,8 +1538,8 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 {
 	const char *desc				= "Get ScaleFlux specific status information and print it";
 	const char *json_desc			= "Print output in JSON format, otherwise human readable";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl id_ctrl = { 0 };
 	struct extended_health_info_myrtle sfx_smart = { 0 };
 	struct nvme_smart_log smart_log = { 0 };
@@ -1579,7 +1579,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 
 	//Calculate formatted capacity, not concerned with errors, we may have a char device
 	memset(&path, 0, 512);
-	snprintf(path, 512, "/dev/%s", nvme_transport_handle_get_name(hdl));
+	snprintf(path, 512, "/dev/%s", libnvme_transport_handle_get_name(hdl));
 	fd = open(path, O_RDONLY | O_NONBLOCK);
 	if (fd >= 0) {
 		err = ioctl(fd, BLKSSZGET, &sector_size);
@@ -1596,7 +1596,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		capacity = capacity / (1000 * 1000 * 1000); //B --> GB
 
 	memset(&chr_dev, 0, 8);
-	strcpy(chr_dev, nvme_transport_handle_get_name(hdl));
+	strcpy(chr_dev, libnvme_transport_handle_get_name(hdl));
 	for (len = 2; len < 8; len++) {
 		if (chr_dev[len] == 'n')
 			chr_dev[len] = '\0';
@@ -1903,7 +1903,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 
 	if (flags & JSON || cfg.json) {
 		root = json_create_object();
-		json_object_add_value_string(root, "ScaleFlux Status", nvme_transport_handle_get_name(hdl));
+		json_object_add_value_string(root, "ScaleFlux Status", libnvme_transport_handle_get_name(hdl));
 
 		dev_stats = json_create_object();
 		link_stats = json_create_object();
@@ -1983,7 +1983,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		if (len < 11)
 			strcpy(path, "None");
 
-		printf("%-35s%s%s\n",	"ScaleFlux Drive:",					"/dev/", nvme_transport_handle_get_name(hdl));
+		printf("%-35s%s%s\n",	"ScaleFlux Drive:",					"/dev/", libnvme_transport_handle_get_name(hdl));
 		printf("%-35s%s\n",		"PCIe Vendor ID:",				pci_vid);
 		printf("%-35s%s\n",		"PCIe Subsystem Vendor ID:",	pci_ssvid);
 		printf("%-35s%s\n",		"Manufacturer:",				vendor);

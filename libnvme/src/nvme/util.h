@@ -17,7 +17,7 @@
  */
 
 /**
- * enum nvme_connect_err - nvme connect error codes
+ * enum libnvme_connect_err - nvme connect error codes
  * @ENVME_CONNECT_RESOLVE:	failed to resolve host
  * @ENVME_CONNECT_ADDRFAM:	unrecognized address family
  * @ENVME_CONNECT_TRADDR:	failed to get traddr
@@ -40,7 +40,7 @@
  * @ENVME_CONNECT_IGNORED:	connect attempt is ignored due to configuration
  * @ENVME_CONNECT_NOKEY:	the TLS key is missing
  */
-enum nvme_connect_err {
+enum libnvme_connect_err {
 	ENVME_CONNECT_RESOLVE	= 1000,
 	ENVME_CONNECT_ADDRFAM,
 	ENVME_CONNECT_TRADDR,
@@ -65,33 +65,33 @@ enum nvme_connect_err {
 };
 
 /**
- * nvme_status_to_errno() - Converts nvme return status to errno
+ * libnvme_status_to_errno() - Converts nvme return status to errno
  * @status:  Return status from an nvme passthrough command
  * @fabrics: Set to true if &status is to a fabrics target.
  *
  * Return: An errno representing the nvme status if it is an nvme status field,
  * or unchanged status is < 0 since errno is already set.
  */
-__u8 nvme_status_to_errno(int status, bool fabrics);
+__u8 libnvme_status_to_errno(int status, bool fabrics);
 
 /**
- * nvme_status_to_string() - Returns string describing nvme return status.
+ * libnvme_status_to_string() - Returns string describing nvme return status.
  * @status:  Return status from an nvme passthrough command
  * @fabrics: Set to true if &status is to a fabrics target.
  *
  * Return: String representation of the nvme status if it is an nvme status field,
  * or a standard errno string if status is < 0.
  */
-const char *nvme_status_to_string(int status, bool fabrics);
+const char *libnvme_status_to_string(int status, bool fabrics);
 
 /**
- * nvme_sanitize_ns_status_to_string() - Returns sanitize ns status string.
+ * libnvme_sanitize_ns_status_to_string() - Returns sanitize ns status string.
  * @sc: Return status code from an sanitize ns command
  *
  * Return: The sanitize ns status string if it is a specific status code.
  */
 static inline const char *
-nvme_sanitize_ns_status_to_string(__u16 sc)
+libnvme_sanitize_ns_status_to_string(__u16 sc)
 {
 	switch (sc) {
 	case NVME_SC_EXCEEDS_MAX_NS_SANITIZE:
@@ -104,13 +104,13 @@ nvme_sanitize_ns_status_to_string(__u16 sc)
 };
 
 /**
- * nvme_set_features_status_to_string() - Returns set features status string.
+ * libnvme_set_features_status_to_string() - Returns set features status string.
  * @sc: Return status code from an set features command
  *
  * Return: The set features status string if it is a specific status code.
  */
 static inline const char *
-nvme_set_features_status_to_string(__u16 sc)
+libnvme_set_features_status_to_string(__u16 sc)
 {
 	switch (sc) {
 	case NVME_SC_FEATURE_NOT_SAVEABLE:
@@ -133,7 +133,7 @@ nvme_set_features_status_to_string(__u16 sc)
 };
 
 /**
- * nvme_opcode_status_to_string() - Returns nvme opcode status string.
+ * libnvme_opcode_status_to_string() - Returns nvme opcode status string.
  * @status: Return status from an nvme passthrough command
  * @admin:  Set to true if an admin command
  * @opcode: Opcode from an nvme passthrough command
@@ -142,7 +142,7 @@ nvme_set_features_status_to_string(__u16 sc)
  * or a standard errno string if status is < 0.
  */
 static inline const char *
-nvme_opcode_status_to_string(int status, bool admin, __u8 opcode)
+libnvme_opcode_status_to_string(int status, bool admin, __u8 opcode)
 {
 	__u16 sct = nvme_status_code_type(status);
 	__u16 sc = nvme_status_code(status);
@@ -152,10 +152,10 @@ nvme_opcode_status_to_string(int status, bool admin, __u8 opcode)
 		if (admin) {
 			switch (opcode) {
 			case nvme_admin_sanitize_ns:
-				s = nvme_sanitize_ns_status_to_string(sc);
+				s = libnvme_sanitize_ns_status_to_string(sc);
 				break;
 			case nvme_admin_set_features:
-				s = nvme_set_features_status_to_string(sc);
+				s = libnvme_set_features_status_to_string(sc);
 				break;
 			default:
 				break;
@@ -166,25 +166,25 @@ nvme_opcode_status_to_string(int status, bool admin, __u8 opcode)
 	if (s)
 		return s;
 
-	return nvme_status_to_string(status, false);
+	return libnvme_status_to_string(status, false);
 }
 
 /**
- * nvme_errno_to_string() - Returns string describing nvme connect failures
- * @err: Returned error code from nvme_add_ctrl()
+ * libnvme_errno_to_string() - Returns string describing nvme connect failures
+ * @err: Returned error code from libnvme_add_ctrl()
  *
  * Return: String representation of the nvme connect error codes
  */
-const char *nvme_errno_to_string(int err);
+const char *libnvme_errno_to_string(int err);
 
 /**
- * nvme_strerror() - Returns string describing nvme errors and errno
+ * libnvme_strerror() - Returns string describing nvme errors and errno
  * @err: Returned error codes from all libnvme functions
  *
  * Return: String representation of either the nvme connect error codes
  * (positive values) or errno string (negative values)
  */
-const char *nvme_strerror(int err);
+const char *libnvme_strerror(int err);
 
 /**
  * nvmf_exat_ptr_next - Increment @p to the next element in the array.
@@ -201,44 +201,45 @@ const char *nvme_strerror(int err);
 struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p);
 
 /**
- * enum nvme_version - Selector for version to be returned by @nvme_get_version
+ * enum libnvme_version - Selector for version to be returned by
+ * @libnvme_get_version
  *
- * @NVME_VERSION_PROJECT:	Project release version
- * @NVME_VERSION_GIT:		Git reference
+ * @LIBNVME_VERSION_PROJECT:	Project release version
+ * @LIBNVME_VERSION_GIT:	Git reference
  */
-enum nvme_version {
-	NVME_VERSION_PROJECT	= 0,
-	NVME_VERSION_GIT	= 1,
+enum libnvme_version {
+	LIBNVME_VERSION_PROJECT	= 0,
+	LIBNVME_VERSION_GIT	= 1,
 };
 
 /**
- * nvme_get_version - Return version libnvme string
- * @type:	Selects which version type (see @struct nvme_version)
+ * libnvme_get_version - Return version libnvme string
+ * @type:	Selects which version type (see @struct libnvme_version)
  *
  * Return: Returns version string for known types or else "n/a"
  */
-const char *nvme_get_version(enum nvme_version type);
+const char *libnvme_get_version(enum libnvme_version type);
 
 /**
- * nvme_uuid_to_string - Return string represenation of encoded UUID
+ * libnvme_uuid_to_string - Return string represenation of encoded UUID
  * @uuid:	Binary encoded input UUID
  * @str:	Output string represenation of UUID
  *
  * Return: Returns error code if type conversion fails.
  */
-int nvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str);
+int libnvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str);
 
 /**
- * nvme_uuid_from_string - Return encoded UUID represenation of string UUID
+ * libnvme_uuid_from_string - Return encoded UUID represenation of string UUID
  * @uuid:	Binary encoded input UUID
  * @str:	Output string represenation of UUID
  *
  * Return: Returns error code if type conversion fails.
  */
-int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN]);
+int libnvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN]);
 
 /**
- * nvme_random_uuid - Generate random UUID
+ * libnvme_random_uuid - Generate random UUID
  * @uuid:       Generated random UUID
  *
  * Generate random number according
@@ -246,23 +247,24 @@ int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN]);
  *
  * Return: Returns error code if generating of random number fails.
  */
-int nvme_random_uuid(unsigned char uuid[NVME_UUID_LEN]);
+int libnvme_random_uuid(unsigned char uuid[NVME_UUID_LEN]);
 
 /**
- * nvme_find_uuid - Find UUID position on UUID list
+ * libnvme_find_uuid - Find UUID position on UUID list
  * @uuid_list:	UUID list returned by identify UUID
  * @uuid:	Binary encoded input UUID
  *
  * Return: The array position where given UUID is present, or -1 on failure
  *  with errno set.
  */
-int nvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
+int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
 		const unsigned char uuid[NVME_UUID_LEN]);
 
 /**
- * nvme_basename - Return the final path component (the one after the last '/')
+ * libnvme_basename - Return the final path component (the one
+ * after the last '/')
  * @path: A string containing a filesystem path
  *
  * Return: A pointer into the original null-terminated path string.
  */
-char *nvme_basename(const char *path);
+char *libnvme_basename(const char *path);

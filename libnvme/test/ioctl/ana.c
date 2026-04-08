@@ -16,7 +16,7 @@
 
 #define PDU_SIZE NVME_LOG_PAGE_PDU_SIZE
 
-static struct nvme_transport_handle *test_hdl;
+static struct libnvme_transport_handle *test_hdl;
 
 static void test_no_retries(void)
 {
@@ -24,7 +24,7 @@ static void test_no_retries(void)
 	__u32 len = sizeof(log);
 
 	/* max_retries = 0 is nonsensical */
-	check(nvme_get_ana_log_atomic(test_hdl, false, false,
+	check(libnvme_get_ana_log_atomic(test_hdl, false, false,
 				      &log, &len, 0) == -EINVAL,
 	      "get log page succeeded");
 }
@@ -35,7 +35,7 @@ static void test_len_too_short(void)
 	__u32 len = sizeof(log) - 1;
 
 	/* Provided buffer doesn't have enough space to read the header */
-	check(nvme_get_ana_log_atomic(test_hdl, false, false,
+	check(libnvme_get_ana_log_atomic(test_hdl, false, false,
 				      &log, &len, 1) == -ENOSPC,
 	      "get log page succeeded");
 }
@@ -58,7 +58,7 @@ static void test_no_groups(void)
 	arbitrary(&header, sizeof(header));
 	header.ngrps = cpu_to_le16(0);
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	check(!nvme_get_ana_log_atomic(test_hdl, false, false, &log, &len, 1),
+	check(!libnvme_get_ana_log_atomic(test_hdl, false, false, &log, &len, 1),
 	      "get log page failed");
 	end_mock_cmds();
 	cmp(&log, &header, sizeof(header), "incorrect header");
@@ -96,7 +96,7 @@ static void test_one_group_rgo(void)
 	memcpy(log_page, &header, sizeof(header));
 	memcpy(log_page + sizeof(header), &group, sizeof(group));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	check(!nvme_get_ana_log_atomic(test_hdl, false, true, log, &len, 1),
+	check(!libnvme_get_ana_log_atomic(test_hdl, false, true, log, &len, 1),
 	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
@@ -137,7 +137,7 @@ static void test_one_group_nsids(void)
 	memcpy(log_page + sizeof(header), &group, sizeof(group));
 	memcpy(log_page + sizeof(header) + sizeof(group), nsids, sizeof(nsids));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	check(!nvme_get_ana_log_atomic(test_hdl, false, false, log, &len, 1),
+	check(!libnvme_get_ana_log_atomic(test_hdl, false, false, log, &len, 1),
 	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
@@ -178,7 +178,7 @@ static void test_multiple_groups_rgo(void)
 	memcpy(log_page, &header, sizeof(header));
 	memcpy(log_page + sizeof(header), groups, sizeof(groups));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	check(!nvme_get_ana_log_atomic(test_hdl, true, true, log, &len, 1),
+	check(!libnvme_get_ana_log_atomic(test_hdl, true, true, log, &len, 1),
 	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
@@ -244,7 +244,7 @@ static void test_multiple_groups_nsids(void)
 			  sizeof(group2) + sizeof(nsids2) + sizeof(group3),
 	       nsids3, sizeof(nsids3));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	check(!nvme_get_ana_log_atomic(test_hdl, false, false, log, &len, 1),
+	check(!libnvme_get_ana_log_atomic(test_hdl, false, false, log, &len, 1),
 	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
@@ -316,7 +316,7 @@ static void test_long_log(void)
 	memcpy(log_page + sizeof(header), &group, sizeof(group));
 	memcpy(log_page + sizeof(header) + sizeof(group), nsids, sizeof(nsids));
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(!nvme_get_ana_log_atomic(test_hdl, true, false, log, &len, 1),
+	check(!libnvme_get_ana_log_atomic(test_hdl, true, false, log, &len, 1),
 	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
@@ -392,7 +392,7 @@ static void test_chgcnt_change(void)
 	memcpy(log_page2, &header2, sizeof(header2));
 	memcpy(log_page2 + sizeof(header2), &group2, sizeof(group2));
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(!nvme_get_ana_log_atomic(test_hdl, true, true, log, &len, 2),
+	check(!libnvme_get_ana_log_atomic(test_hdl, true, true, log, &len, 2),
 	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page2, sizeof(log_page2), "incorrect log page");
@@ -474,7 +474,7 @@ static void test_buffer_too_short_chgcnt_change(void)
 	memcpy(log_page2 + sizeof(header2) + sizeof(group2),
 	       &nsid2, sizeof(nsid2));
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(!nvme_get_ana_log_atomic(test_hdl, false, false, log, &len, 2),
+	check(!libnvme_get_ana_log_atomic(test_hdl, false, false, log, &len, 2),
 	      "get log page failed");
 	end_mock_cmds();
 	cmp(log, log_page2, sizeof(log_page2), "incorrect log page");
@@ -570,7 +570,7 @@ static void test_chgcnt_max_retries(void)
 	memcpy(log_page2 + sizeof(header2) + sizeof(group),
 	       nsids, sizeof(nsids));
 	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
-	check(nvme_get_ana_log_atomic(test_hdl, true, false, log, &len, 2) == -EAGAIN,
+	check(libnvme_get_ana_log_atomic(test_hdl, true, false, log, &len, 2) == -EAGAIN,
 	      "get log page succeeded");
 	end_mock_cmds();
 	free(log);
@@ -610,7 +610,7 @@ static void test_buffer_too_short(void)
 	memcpy(log_page + sizeof(header), &group, sizeof(group));
 	memcpy(log_page + sizeof(header) + sizeof(group), nsids, sizeof(nsids));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	check(nvme_get_ana_log_atomic(test_hdl, true, false, log, &len, 2) == -ENOSPC,
+	check(libnvme_get_ana_log_atomic(test_hdl, true, false, log, &len, 2) == -ENOSPC,
 	      "log page succeeded");
 	end_mock_cmds();
 	free(log);
@@ -628,11 +628,11 @@ static void run_test(const char *test_name, void (*test_fn)(void))
 
 int main(void)
 {
-	struct nvme_global_ctx *ctx =
-		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	struct libnvme_global_ctx *ctx =
+		libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 
 	set_mock_fd(TEST_FD);
-	check(!nvme_open(ctx, "NVME_TEST_FD", &test_hdl),
+	check(!libnvme_open(ctx, "NVME_TEST_FD", &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(no_retries);
@@ -648,5 +648,5 @@ int main(void)
 	RUN_TEST(chgcnt_max_retries);
 	RUN_TEST(buffer_too_short);
 
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 }

@@ -49,20 +49,20 @@ enum {
 	CODE_1 = 0x10
 };
 
-static int nvme_sct_op(struct nvme_transport_handle *hdl, __u32 opcode,
+static int nvme_sct_op(struct libnvme_transport_handle *hdl, __u32 opcode,
 		       __u32 cdw10, __u32 cdw11, void *data, __u32 data_len)
 {
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode		= opcode,
 		.cdw10		= cdw10,
 		.cdw11		= cdw11,
 		.data_len	= data_len,
 		.addr		= (__u64)(uintptr_t)data,
 	};
-	return nvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_submit_admin_passthru(hdl, &cmd);
 }
 
-static int nvme_get_sct_status(struct nvme_transport_handle *hdl, __u32 device_mask)
+static int nvme_get_sct_status(struct libnvme_transport_handle *hdl, __u32 device_mask)
 {
 	int err;
 	void *data = NULL;
@@ -114,7 +114,7 @@ end:
 	return err;
 }
 
-static int nvme_sct_command_transfer_log(struct nvme_transport_handle *hdl, bool current)
+static int nvme_sct_command_transfer_log(struct libnvme_transport_handle *hdl, bool current)
 {
 	int err;
 	void *data = NULL;
@@ -138,7 +138,7 @@ static int nvme_sct_command_transfer_log(struct nvme_transport_handle *hdl, bool
 	return err;
 }
 
-static int nvme_sct_data_transfer(struct nvme_transport_handle *hdl, void *data,
+static int nvme_sct_data_transfer(struct libnvme_transport_handle *hdl, void *data,
 				  size_t data_len, size_t offset)
 {
 	__u32 dw10, dw11, lba_count = (data_len) / 512;
@@ -197,7 +197,7 @@ static void progress_runner(float progress)
 	fflush(stdout);
 }
 
-static int nvme_get_internal_log(struct nvme_transport_handle *hdl,
+static int nvme_get_internal_log(struct libnvme_transport_handle *hdl,
 				 const char *const filename, bool current)
 {
 	int err;
@@ -318,7 +318,7 @@ end:
 	return err;
 }
 
-static int nvme_get_internal_log_file(struct nvme_transport_handle *hdl,
+static int nvme_get_internal_log_file(struct libnvme_transport_handle *hdl,
 				      const char *const filename, bool current)
 {
 	int err;
@@ -346,12 +346,12 @@ struct nvme_xdn_smart_log_c0 {
 	__u8 resv[512 - NR_SMART_ITEMS_C0];
 };
 
-static void default_show_vendor_log_c0(struct nvme_transport_handle *hdl,
+static void default_show_vendor_log_c0(struct libnvme_transport_handle *hdl,
 				       __u32 nsid,
 				       struct nvme_xdn_smart_log_c0 *smart)
 {
 	printf("Vendor Log Page Directory 0xC0 for NVME device:%s namespace-id:%x\n",
-		nvme_transport_handle_get_name(hdl), nsid);
+		libnvme_transport_handle_get_name(hdl), nsid);
 	printf("Error Log          : %u\n", smart->items[ERROR_LOG_C0]);
 	printf("SMART Health Log   : %u\n", smart->items[SMART_HEALTH_LOG_C0]);
 	printf("Firmware Slot Info : %u\n", smart->items[FIRMWARE_SLOT_INFO_C0]);
@@ -361,7 +361,7 @@ static void default_show_vendor_log_c0(struct nvme_transport_handle *hdl,
 	printf("SMART Attributes   : %u\n", smart->items[SMART_ATTRIBUTES_C0]);
 }
 
-static int nvme_get_vendor_log(struct nvme_transport_handle *hdl,
+static int nvme_get_vendor_log(struct libnvme_transport_handle *hdl,
 			       __u32 namespace_id, int log_page,
 			       const char *const filename)
 {
@@ -421,8 +421,8 @@ static int vendor_log(int argc, char **argv, struct command *acmd, struct plugin
 	const char *namespace = "(optional) desired namespace";
 	const char *output_file = "(optional) binary output filename";
 	const char *log = "(optional) log ID (0xC0, or 0xCA), default 0xCA";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -470,8 +470,8 @@ static int internal_log(int argc, char **argv, struct command *acmd, struct plug
 	char *desc = "Get internal status log and show it.";
 	const char *output_file = "(optional) binary output filename";
 	const char *prev_log = "(optional) use previous log. Otherwise uses current log.";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -513,8 +513,8 @@ static int clear_correctable_errors(int argc, char **argv, struct command *acmd,
 				    struct plugin *plugin)
 {
 	char *desc = "Clear PCIe correctable error count.";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	const __u32 namespace_id = 0xFFFFFFFF;
 	const __u32 feature_id = 0xCA;
 	const __u32 value = 1; /* Bit0 - reset clear PCIe correctable count */

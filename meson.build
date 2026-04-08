@@ -122,8 +122,11 @@ version_tag = get_option('version-tag')
 if version_tag != ''
     conf.set('GIT_VERSION', '"@0@"'.format(version_tag))
 else
+    # Find the path to bash and use it so we don't pick up the WSL bash in Windows.
+    bash_prog = find_program('bash', required: true)
     r = run_command(
-        'scripts/meson-vcs-tag.sh',
+        bash_prog,
+        files('scripts/meson-vcs-tag.sh'),
         meson.current_source_dir(),
         meson.project_version(),
         check: true,
@@ -350,7 +353,7 @@ else
     # Check for libdbus availability. Optional, only required for MCTP dbus scan
     libdbus_dep = dependency(
         'dbus-1',
-        required: true,
+        required: get_option('libdbus'),
         fallback: ['dbus', 'libdbus_dep'],
         default_options: [
             'default_library=static',

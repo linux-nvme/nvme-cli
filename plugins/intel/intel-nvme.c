@@ -343,8 +343,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 #endif /* CONFIG_JSONC */
 
 	struct nvme_additional_smart_log smart_log;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	int err;
 
@@ -377,10 +377,10 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	if (!err) {
 		if (flags & JSON || cfg.json)
 			show_intel_smart_log_jsn(&smart_log, cfg.namespace_id,
-						 nvme_transport_handle_get_name(hdl));
+						 libnvme_transport_handle_get_name(hdl));
 		else if (!cfg.raw_binary)
 			show_intel_smart_log(&smart_log, cfg.namespace_id,
-					     nvme_transport_handle_get_name(hdl));
+					     libnvme_transport_handle_get_name(hdl));
 		else
 			d_raw((unsigned char *)&smart_log, sizeof(smart_log));
 	} else if (err > 0) {
@@ -393,8 +393,8 @@ static int get_market_log(int argc, char **argv, struct command *acmd, struct pl
 {
 	const char *desc = "Get Intel Marketing Name log and show it.";
 	const char *raw = "dump output in binary format";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	char log[512];
 	int err;
 
@@ -452,8 +452,8 @@ static void show_temp_stats(struct intel_temp_stats *stats)
 static int get_temp_stats_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct intel_temp_stats stats;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	const char *desc = "Get Temperature Statistics log and show it.";
@@ -1030,8 +1030,8 @@ static void show_lat_stats(int write)
 static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	__u8 data[NAND_LAT_STATS_LEN];
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	int err;
 
@@ -1225,16 +1225,16 @@ static void print_intel_nlog(struct intel_vu_nlog *intel_nlog)
 	       intel_nlog->nlogbufnummax, intel_nlog->coreselected);
 }
 
-static int read_entire_cmd(struct nvme_passthru_cmd *cmd, int total_size,
+static int read_entire_cmd(struct libnvme_passthru_cmd *cmd, int total_size,
 			   const size_t max_tfer, int out_fd,
-			   struct nvme_transport_handle *hdl, __u8 *buf)
+			   struct libnvme_transport_handle *hdl, __u8 *buf)
 {
 	int err = 0;
 	size_t dword_tfer = 0;
 
 	dword_tfer = min(max_tfer, total_size);
 	while (total_size > 0) {
-		err = nvme_submit_admin_passthru(hdl, cmd);
+		err = libnvme_submit_admin_passthru(hdl, cmd);
 		if (err) {
 			fprintf(stderr,
 				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",
@@ -1268,8 +1268,8 @@ static int write_header(__u8 *buf, int fd, size_t amnt)
 	return 0;
 }
 
-static int read_header(struct nvme_passthru_cmd *cmd, __u8 *buf,
-		       struct nvme_transport_handle *hdl, __u32 dw12, int nsid)
+static int read_header(struct libnvme_passthru_cmd *cmd, __u8 *buf,
+		       struct libnvme_transport_handle *hdl, __u32 dw12, int nsid)
 {
 	memset(cmd, 0, sizeof(*cmd));
 	memset(buf, 0, 4096);
@@ -1282,7 +1282,7 @@ static int read_header(struct nvme_passthru_cmd *cmd, __u8 *buf,
 	return read_entire_cmd(cmd, 0x400, 0x400, -1, hdl, buf);
 }
 
-static int setup_file(char *f, char *file, struct nvme_transport_handle *hdl, int type)
+static int setup_file(char *f, char *file, struct libnvme_transport_handle *hdl, int type)
 {
 	struct nvme_id_ctrl ctrl;
 	int err = 0, i = sizeof(ctrl.sn) - 1;
@@ -1304,8 +1304,8 @@ static int setup_file(char *f, char *file, struct nvme_transport_handle *hdl, in
 }
 
 static int get_internal_log_old(__u8 *buf, int output,
-				struct nvme_transport_handle *hdl,
-				struct nvme_passthru_cmd *cmd)
+				struct libnvme_transport_handle *hdl,
+				struct libnvme_passthru_cmd *cmd)
 {
 	struct intel_vu_log *intel;
 	int err = 0;
@@ -1341,14 +1341,14 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 	__u8 buf[0x2000];
 	char f[0x100];
 	int err, output, i, j, count = 0, core_num = 1;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	struct intel_cd_log cdlog;
 	struct intel_vu_log *intel = malloc(sizeof(struct intel_vu_log));
 	struct intel_vu_nlog *intel_nlog = (struct intel_vu_nlog *)buf;
 	struct intel_assert_dump *ad = (struct intel_assert_dump *) intel->reserved;
 	struct intel_event_header *ehdr = (struct intel_event_header *)intel->reserved;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	const char *desc = "Get Intel Firmware Log and save it.";
 	const char *log = "Log type: 0, 1, or 2 for nlog, event log, and assert log, respectively.";
@@ -1539,8 +1539,8 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	const __u32 cdw12 = 0x0;
 	const __u32 data_len = 32;
 	const __u32 sv = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	void *buf = NULL;
 	__u64 result;
 	int err;
@@ -1623,8 +1623,8 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 	const __u8 fid = 0xf7;
 	const __u32 cdw12 = 0x0;
 	const __u32 sv = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	int err, num;
 

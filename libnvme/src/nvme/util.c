@@ -174,7 +174,7 @@ static inline __u8 nvme_fabrics_status_to_errno(__u16 status)
 	return EIO;
 }
 
-__public __u8 nvme_status_to_errno(int status, bool fabrics)
+__public __u8 libnvme_status_to_errno(int status, bool fabrics)
 {
 	__u16 sc;
 
@@ -373,7 +373,7 @@ static const char *arg_str(const char * const *strings,
 	return "unrecognized";
 }
 
-__public const char *nvme_status_to_string(int status, bool fabrics)
+__public const char *libnvme_status_to_string(int status, bool fabrics)
 {
 	const char *s = "Unknown status";
 	__u16 sc, sct;
@@ -437,22 +437,22 @@ static const char * const libnvme_status[] = {
 	[ENVME_CONNECT_NOKEY] = "pre-shared TLS key is missing"
 };
 
-__public const char *nvme_errno_to_string(int status)
+__public const char *libnvme_errno_to_string(int status)
 {
 	const char *s = ARGSTR(libnvme_status, status);
 
 	return s;
 }
 
-__public const char *nvme_strerror(int errnum)
+__public const char *libnvme_strerror(int errnum)
 {
 	if (errnum >= ENVME_CONNECT_RESOLVE)
-		return nvme_errno_to_string(errnum);
+		return libnvme_errno_to_string(errnum);
 	return strerror(errnum);
 }
 
 #ifdef HAVE_NETDB
-int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr,
+int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 		    char **hostname)
 {
 	_cleanup_addrinfo_ struct addrinfo *host_info = NULL;
@@ -463,7 +463,7 @@ int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr,
 
 	ret = getaddrinfo(traddr, NULL, &hints, &host_info);
 	if (ret) {
-		nvme_msg(ctx, LOG_ERR, "failed to resolve host %s info\n",
+		libnvme_msg(ctx, LOG_ERR, "failed to resolve host %s info\n",
 			 traddr);
 		return -errno;
 	}
@@ -480,13 +480,13 @@ int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr,
 			addrstr, NVMF_TRADDR_SIZE);
 		break;
 	default:
-		nvme_msg(ctx, LOG_ERR, "unrecognized address family (%d) %s\n",
+		libnvme_msg(ctx, LOG_ERR, "unrecognized address family (%d) %s\n",
 			 host_info->ai_family, traddr);
 		return -EINVAL;
 	}
 
 	if (!p) {
-		nvme_msg(ctx, LOG_ERR, "failed to get traddr for %s\n",
+		libnvme_msg(ctx, LOG_ERR, "failed to get traddr for %s\n",
 			 traddr);
 		return -EIO;
 	}
@@ -497,9 +497,9 @@ int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr,
 	return 0;
 }
 #else /* HAVE_NETDB */
-int hostname2traddr(struct nvme_global_ctx *ctx, const char *traddr, char **hostname)
+int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr, char **hostname)
 {
-	nvme_msg(ctx, LOG_ERR, "No support for hostname IP address resolution; " \
+	libnvme_msg(ctx, LOG_ERR, "No support for hostname IP address resolution; " \
 		"recompile with libnss support.\n");
 
 	return -ENOTSUP;
@@ -711,19 +711,19 @@ __public struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p)
 		((uintptr_t)p + (ptrdiff_t)nvmf_exat_size(le16_to_cpu(p->exatlen)));
 }
 
-__public const char *nvme_get_version(enum nvme_version type)
+__public const char *libnvme_get_version(enum libnvme_version type)
 {
 	switch(type) {
-	case NVME_VERSION_PROJECT:
+	case LIBNVME_VERSION_PROJECT:
 		return LIBNVME_VERSION;
-	case NVME_VERSION_GIT:
+	case LIBNVME_VERSION_GIT:
 		return GIT_VERSION;
 	default:
 		return "n/a";
 	}
 }
 
-__public int nvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str)
+__public int libnvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str)
 {
 	int n;
 	n = snprintf(str, NVME_UUID_LEN_STRING,
@@ -735,7 +735,7 @@ __public int nvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str)
 	return n != NVME_UUID_LEN_STRING - 1 ? -EINVAL : 0;
 }
 
-__public int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN])
+__public int libnvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN])
 {
 	int n;
 
@@ -749,7 +749,7 @@ __public int nvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID
 
 }
 
-__public int nvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
+__public int libnvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
 {
 	int ret;
 
@@ -769,7 +769,7 @@ __public int nvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
 	return 0;
 }
 
-__public int nvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
+__public int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
 		const unsigned char uuid[NVME_UUID_LEN])
 {
 	const unsigned char uuid_end[NVME_UUID_LEN] = {0};
@@ -827,7 +827,7 @@ static bool _nvme_ipaddrs_eq(struct sockaddr *addr1, struct sockaddr *addr2)
 	return false;
 }
 
-bool nvme_ipaddrs_eq(const char *addr1, const char *addr2)
+bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 {
 	bool result = false;
 	struct addrinfo *info1 = NULL, hint1 = { .ai_flags=AI_NUMERICHOST, .ai_family=AF_UNSPEC };
@@ -855,9 +855,9 @@ ipaddrs_eq_fail:
 	return result;
 }
 #else /* HAVE_NETDB */
-bool nvme_ipaddrs_eq(const char *addr1, const char *addr2)
+bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 {
-	nvme_msg(NULL, LOG_ERR, "no support for hostname ip address resolution; " \
+	libnvme_msg(NULL, LOG_ERR, "no support for hostname ip address resolution; " \
 		"recompile with libnss support.\n");
 
 	return false;
@@ -865,7 +865,8 @@ bool nvme_ipaddrs_eq(const char *addr1, const char *addr2)
 #endif /* HAVE_NETDB */
 
 #ifdef HAVE_NETDB
-const char *nvme_iface_matching_addr(const struct ifaddrs *iface_list, const char *addr)
+const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
+		const char *addr)
 {
 	const struct ifaddrs *iface_it;
 	struct addrinfo *info = NULL, hint = { .ai_flags = AI_NUMERICHOST, .ai_family = AF_UNSPEC };
@@ -890,7 +891,8 @@ const char *nvme_iface_matching_addr(const struct ifaddrs *iface_list, const cha
 	return iface_name;
 }
 
-bool nvme_iface_primary_addr_matches(const struct ifaddrs *iface_list, const char *iface, const char *addr)
+bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
+		const char *iface, const char *addr)
 {
 	const struct ifaddrs *iface_it;
 	struct addrinfo *info = NULL, hint = { .ai_flags = AI_NUMERICHOST, .ai_family = AF_UNSPEC };
@@ -922,17 +924,19 @@ bool nvme_iface_primary_addr_matches(const struct ifaddrs *iface_list, const cha
 
 #else /* HAVE_NETDB */
 
-const char *nvme_iface_matching_addr(const struct ifaddrs *iface_list, const char *addr)
+const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
+		const char *addr)
 {
-	nvme_msg(NULL, LOG_ERR, "no support for interface lookup; "
+	libnvme_msg(NULL, LOG_ERR, "no support for interface lookup; "
 		"recompile with libnss support.\n");
 
 	return NULL;
 }
 
-bool nvme_iface_primary_addr_matches(const struct ifaddrs *iface_list, const char *iface, const char *addr)
+bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
+		const char *iface, const char *addr)
 {
-	nvme_msg(NULL, LOG_ERR, "no support for interface lookup; "
+	libnvme_msg(NULL, LOG_ERR, "no support for interface lookup; "
 		"recompile with libnss support.\n");
 
 	return false;
@@ -940,7 +944,7 @@ bool nvme_iface_primary_addr_matches(const struct ifaddrs *iface_list, const cha
 
 #endif /* HAVE_NETDB */
 
-void *__nvme_alloc(size_t len)
+void *__libnvme_alloc(size_t len)
 {
 	size_t _len = round_up(len, 0x1000);
 	void *p;
@@ -952,11 +956,11 @@ void *__nvme_alloc(size_t len)
 	return p;
 }
 
-void *__nvme_realloc(void *p, size_t len)
+void *__libnvme_realloc(void *p, size_t len)
 {
 	size_t old_len = malloc_usable_size(p);
 
-	void *result = __nvme_alloc(len);
+	void *result = __libnvme_alloc(len);
 
 	if (p && result) {
 		memcpy(result, p, min(old_len, len));
@@ -972,7 +976,7 @@ void __nvme_free(void *p)
 }
 
 #ifndef _WIN32
-const struct ifaddrs *nvme_getifaddrs(struct nvme_global_ctx *ctx)
+const struct ifaddrs *libnvme_getifaddrs(struct libnvme_global_ctx *ctx)
 {
 	if (!ctx->ifaddrs_cache) {
 		struct ifaddrs *p;
@@ -988,7 +992,7 @@ const struct ifaddrs *nvme_getifaddrs(struct nvme_global_ctx *ctx)
 /* This used instead of basename() due to behavioral differences between
  * the POSIX and the GNU version. This is the glibc implementation.
  * Original source: https://github.com/bminor/glibc/blob/master/string/basename.c */
-char *nvme_basename(const char *path)
+char *libnvme_basename(const char *path)
 {
 	char *p = (char *) strrchr(path, '/');
 	return p ? p + 1 : (char *) path;

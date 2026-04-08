@@ -332,7 +332,7 @@ enum nvme_cmd_dword_fields {
  * Prepare the @cmd data structure for the NVMe Identify command.
  */
 static inline void
-nvme_init_identify(struct nvme_passthru_cmd *cmd,
+nvme_init_identify(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, enum nvme_csi csi, enum nvme_identify_cns cns,
 		void *data, __u32 len)
 {
@@ -364,7 +364,7 @@ nvme_init_identify(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_NS.
  */
 static inline void
-nvme_init_identify_ns(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_ns(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, struct nvme_id_ns *id)
 {
 	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
@@ -382,7 +382,8 @@ nvme_init_identify_ns(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_CTRL.
  */
 static inline void
-nvme_init_identify_ctrl(struct nvme_passthru_cmd *cmd, struct nvme_id_ctrl *id)
+nvme_init_identify_ctrl(struct libnvme_passthru_cmd *cmd,
+		struct nvme_id_ctrl *id)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
 			   NVME_IDENTIFY_CNS_CTRL,
@@ -400,7 +401,7 @@ nvme_init_identify_ctrl(struct nvme_passthru_cmd *cmd, struct nvme_id_ctrl *id)
  * CNS value %NVME_IDENTIFY_CNS_NS_ACTIVE_LIST.
  */
 static inline void
-nvme_init_identify_active_ns_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_active_ns_list(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, struct nvme_ns_list *list)
 {
 	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
@@ -419,7 +420,7 @@ nvme_init_identify_active_ns_list(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_NS_DESC_LIST.
  */
 static inline void
-nvme_init_identify_ns_descs_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_ns_descs_list(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, struct nvme_ns_id_desc *descs)
 {
 	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
@@ -439,7 +440,7 @@ nvme_init_identify_ns_descs_list(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_NS_ACTIVE_LIST.
  */
 static inline void
-nvme_init_identify_nvmset_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_nvmset_list(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, __u16 nvmsetid, struct nvme_id_nvmset_list *nvmset)
 {
 	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
@@ -463,7 +464,7 @@ nvme_init_identify_nvmset_list(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_CSI_NS.
  */
 static inline void
-nvme_init_identify_csi_ns(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_csi_ns(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, enum nvme_csi csi, __u8 uidx, void *data)
 {
 	nvme_init_identify(cmd, nsid, csi,
@@ -485,7 +486,7 @@ nvme_init_identify_csi_ns(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_CSI_CTRL.
  */
 static inline void
-nvme_init_identify_csi_ctrl(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_csi_ctrl(struct libnvme_passthru_cmd *cmd,
 		enum nvme_csi csi, void *data)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
@@ -505,7 +506,7 @@ nvme_init_identify_csi_ctrl(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST.
  */
 static inline void
-nvme_init_identify_csi_active_ns_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_csi_active_ns_list(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, enum nvme_csi csi, struct nvme_ns_list *ns_list)
 {
 	nvme_init_identify(cmd, nsid, csi,
@@ -525,7 +526,8 @@ nvme_init_identify_csi_active_ns_list(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS.
  */
 static inline void
-nvme_init_identify_csi_independent_identify_id_ns(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_csi_independent_identify_id_ns(
+		struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, struct nvme_id_independent_id_ns *ns)
 {
 	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
@@ -546,7 +548,7 @@ nvme_init_identify_csi_independent_identify_id_ns(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT.
  */
 static inline void
-nvme_init_identify_ns_user_data_format(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_ns_user_data_format(struct libnvme_passthru_cmd *cmd,
 		enum nvme_csi csi, __u16 fidx, __u8 uidx, void *data)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
@@ -573,7 +575,7 @@ nvme_init_identify_ns_user_data_format(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT.
  */
 static inline void
-nvme_init_identify_csi_ns_user_data_format(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_csi_ns_user_data_format(struct libnvme_passthru_cmd *cmd,
 		enum nvme_csi csi, __u16 fidx, __u8 uidx, void *data)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
@@ -598,7 +600,7 @@ nvme_init_identify_csi_ns_user_data_format(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST.
  */
 static inline void
-nvme_init_identify_allocated_ns_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_allocated_ns_list(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, struct nvme_ns_list *ns_list)
 {
 	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
@@ -617,7 +619,7 @@ nvme_init_identify_allocated_ns_list(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_ALLOCATED_NS.
  */
 static inline void
-nvme_init_identify_allocated_ns(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_allocated_ns(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, struct nvme_id_ns *ns)
 {
 	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
@@ -637,7 +639,7 @@ nvme_init_identify_allocated_ns(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_NS_CTRL_LIST.
  */
 static inline void
-nvme_init_identify_ns_ctrl_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_ns_ctrl_list(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, __u16 cntid, struct nvme_ctrl_list *cntlist)
 {
 	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
@@ -659,7 +661,7 @@ nvme_init_identify_ns_ctrl_list(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_CTRL_LIST.
  */
 static inline void
-nvme_init_identify_ctrl_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_ctrl_list(struct libnvme_passthru_cmd *cmd,
 		__u16 cntid, struct nvme_ctrl_list *cntlist)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
@@ -681,7 +683,7 @@ nvme_init_identify_ctrl_list(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP.
  */
 static inline void
-nvme_init_identify_primary_ctrl_cap(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_primary_ctrl_cap(struct libnvme_passthru_cmd *cmd,
 		__u16 cntid, struct nvme_primary_ctrl_cap *cap)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
@@ -703,7 +705,7 @@ nvme_init_identify_primary_ctrl_cap(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST.
  */
 static inline void
-nvme_init_identify_secondary_ctrl_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_secondary_ctrl_list(struct libnvme_passthru_cmd *cmd,
 		__u16 cntid, struct nvme_secondary_ctrl_list *sc_list)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
@@ -725,7 +727,7 @@ nvme_init_identify_secondary_ctrl_list(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST.
  */
 static inline void
-nvme_init_identify_ns_granularity(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_ns_granularity(struct libnvme_passthru_cmd *cmd,
 		struct nvme_id_ns_granularity_list *gr_list)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
@@ -743,7 +745,7 @@ nvme_init_identify_ns_granularity(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_UUID_LIST.
  */
 static inline void
-nvme_init_identify_uuid_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_uuid_list(struct libnvme_passthru_cmd *cmd,
 		struct nvme_id_uuid_list *uuid_list)
 {
 	nvme_init_identify(cmd, NVME_UUID_NONE, NVME_CSI_NVM,
@@ -762,7 +764,7 @@ nvme_init_identify_uuid_list(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_DOMAIN_LIST.
  */
 static inline void
-nvme_init_identify_domain_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_domain_list(struct libnvme_passthru_cmd *cmd,
 		__u16 domid, struct nvme_id_domain_list *list)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
@@ -784,7 +786,7 @@ nvme_init_identify_domain_list(struct nvme_passthru_cmd *cmd,
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 static inline void
-nvme_init_identify_endurance_group_id(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_endurance_group_id(struct libnvme_passthru_cmd *cmd,
 		__u16 enggid, struct nvme_id_endurance_group_list *list)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
@@ -807,7 +809,7 @@ nvme_init_identify_endurance_group_id(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST.
  */
 static inline void
-nvme_init_identify_csi_allocated_ns_list(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_csi_allocated_ns_list(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, enum nvme_csi csi, struct nvme_ns_list *ns_list)
 {
 	nvme_init_identify(cmd, nsid, csi,
@@ -827,7 +829,7 @@ nvme_init_identify_csi_allocated_ns_list(struct nvme_passthru_cmd *cmd,
  * CNS value %NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE.
  */
 static inline void
-nvme_init_identify_csi_id_ns_data_structure(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_csi_id_ns_data_structure(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, enum nvme_csi csi, void *data)
 {
 	nvme_init_identify(cmd, nsid, csi,
@@ -849,7 +851,7 @@ nvme_init_identify_csi_id_ns_data_structure(struct nvme_passthru_cmd *cmd,
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 static inline void
-nvme_init_identify_command_set_structure(struct nvme_passthru_cmd *cmd,
+nvme_init_identify_command_set_structure(struct libnvme_passthru_cmd *cmd,
 		__u16 cntid, struct nvme_id_iocs *iocs)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
@@ -868,7 +870,7 @@ nvme_init_identify_command_set_structure(struct nvme_passthru_cmd *cmd,
  * @data:	User space destination address to transfer the data
  */
 static inline void
-nvme_init_zns_identify_ns(struct nvme_passthru_cmd *cmd,
+nvme_init_zns_identify_ns(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, struct nvme_zns_id_ns *data)
 {
 	nvme_init_identify(cmd, nsid, NVME_CSI_ZNS,
@@ -883,7 +885,7 @@ nvme_init_zns_identify_ns(struct nvme_passthru_cmd *cmd,
  * @id:	User space destination address to transfer the data
  */
 static inline void
-nvme_init_zns_identify_ctrl(struct nvme_passthru_cmd *cmd,
+nvme_init_zns_identify_ctrl(struct libnvme_passthru_cmd *cmd,
 		struct nvme_zns_id_ctrl *id)
 {
 	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_ZNS,
@@ -898,7 +900,7 @@ nvme_init_zns_identify_ctrl(struct nvme_passthru_cmd *cmd,
  * @lpo:	Log Page Offset to set
  */
 static inline void
-nvme_init_get_log_lpo(struct nvme_passthru_cmd *cmd, __u64 lpo)
+nvme_init_get_log_lpo(struct libnvme_passthru_cmd *cmd, __u64 lpo)
 {
 	cmd->cdw12 = lpo & 0xffffffff;
 	cmd->cdw13 = lpo >> 32;
@@ -915,7 +917,7 @@ nvme_init_get_log_lpo(struct nvme_passthru_cmd *cmd, __u64 lpo)
  * @len:	Length of provided user buffer to hold the log data in bytes
  */
 static inline void
-nvme_init_get_log(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_get_log(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_cmd_get_log_lid lid, enum nvme_csi csi,
 		void *data, __u32 len)
 {
@@ -957,7 +959,7 @@ nvme_init_get_log(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * LID value %NVME_LOG_LID_SUPPORTED_LOG_PAGES.
  */
 static inline void
-nvme_init_get_log_supported_log_pages(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_supported_log_pages(struct libnvme_passthru_cmd *cmd,
 		enum nvme_csi csi, struct nvme_supported_log_pages *log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_SUPPORTED_LOG_PAGES,
@@ -974,8 +976,8 @@ nvme_init_get_log_supported_log_pages(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_ERROR.
  */
 static inline void
-nvme_init_get_log_error(struct nvme_passthru_cmd *cmd, unsigned int nr_entries,
-		struct nvme_error_log_page *err_log)
+nvme_init_get_log_error(struct libnvme_passthru_cmd *cmd,
+		unsigned int nr_entries, struct nvme_error_log_page *err_log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_ERROR,
 		NVME_CSI_NVM, err_log, sizeof(*err_log) * nr_entries);
@@ -992,7 +994,7 @@ nvme_init_get_log_error(struct nvme_passthru_cmd *cmd, unsigned int nr_entries,
  * LID value %NVME_LOG_LID_SMART.
  */
 static inline void
-nvme_init_get_log_smart(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_get_log_smart(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		struct nvme_smart_log *smart_log)
 {
 	nvme_init_get_log(cmd, nsid, NVME_LOG_LID_SMART, NVME_CSI_NVM,
@@ -1009,7 +1011,7 @@ nvme_init_get_log_smart(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * LID value %NVME_LOG_LID_SMART.
  */
 static inline void
-nvme_init_get_log_fw_slot(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_fw_slot(struct libnvme_passthru_cmd *cmd,
 		struct nvme_firmware_slot *fw_log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_FW_SLOT,
@@ -1026,7 +1028,7 @@ nvme_init_get_log_fw_slot(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_CHANGED_NS.
  */
 static inline void
-nvme_init_get_log_changed_ns(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_changed_ns(struct libnvme_passthru_cmd *cmd,
 			struct nvme_ns_list *ns_log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_CHANGED_NS,
@@ -1045,7 +1047,7 @@ nvme_init_get_log_changed_ns(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_CMD_EFFECTS.
  */
 static inline void
-nvme_init_get_log_cmd_effects(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_cmd_effects(struct libnvme_passthru_cmd *cmd,
 		enum nvme_csi csi, struct nvme_cmd_effects_log *effects_log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_CMD_EFFECTS, csi,
@@ -1062,7 +1064,7 @@ nvme_init_get_log_cmd_effects(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_DEVICE_SELF_TEST.
  */
 static inline void
-nvme_init_get_log_device_self_test(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_device_self_test(struct libnvme_passthru_cmd *cmd,
 		struct nvme_self_test_log *log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_DEVICE_SELF_TEST,
@@ -1081,7 +1083,7 @@ nvme_init_get_log_device_self_test(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_TELEMETRY_HOST.
  */
 static inline void
-nvme_init_get_log_telemetry_host(struct nvme_passthru_cmd *cmd, __u64 lpo,
+nvme_init_get_log_telemetry_host(struct libnvme_passthru_cmd *cmd, __u64 lpo,
 		void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE, NVME_LOG_LID_TELEMETRY_HOST,
@@ -1104,7 +1106,7 @@ nvme_init_get_log_telemetry_host(struct nvme_passthru_cmd *cmd, __u64 lpo,
  * LSP value %NVME_LOG_TELEM_HOST_LSP_CREATE.
  */
 static inline void
-nvme_init_get_log_create_telemetry_host_mcda(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_create_telemetry_host_mcda(struct libnvme_passthru_cmd *cmd,
 		enum nvme_telemetry_da mcda, struct nvme_telemetry_log *log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE, NVME_LOG_LID_TELEMETRY_HOST,
@@ -1126,7 +1128,7 @@ nvme_init_get_log_create_telemetry_host_mcda(struct nvme_passthru_cmd *cmd,
  * LSP value %NVME_LOG_TELEM_HOST_LSP_CREATE.
  */
 static inline void
-nvme_init_get_log_create_telemetry_host(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_create_telemetry_host(struct libnvme_passthru_cmd *cmd,
 			struct nvme_telemetry_log *log)
 {
 	nvme_init_get_log_create_telemetry_host_mcda(cmd,
@@ -1145,7 +1147,7 @@ nvme_init_get_log_create_telemetry_host(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_TELEMETRY_CTRL.
  */
 static inline void
-nvme_init_get_log_telemetry_ctrl(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_telemetry_ctrl(struct libnvme_passthru_cmd *cmd,
 		__u64 lpo, void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE, NVME_LOG_LID_TELEMETRY_CTRL,
@@ -1164,8 +1166,8 @@ nvme_init_get_log_telemetry_ctrl(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_ENDURANCE_GROUP.
  */
 static inline void
-nvme_init_get_log_endurance_group(struct nvme_passthru_cmd *cmd, __u16 endgid,
-		struct nvme_endurance_group_log *log)
+nvme_init_get_log_endurance_group(struct libnvme_passthru_cmd *cmd,
+		__u16 endgid, struct nvme_endurance_group_log *log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE, NVME_LOG_LID_ENDURANCE_GROUP,
 		NVME_CSI_NVM, log, sizeof(*log));
@@ -1185,7 +1187,7 @@ nvme_init_get_log_endurance_group(struct nvme_passthru_cmd *cmd, __u16 endgid,
  * LID value %NVME_LOG_LID_PREDICTABLE_LAT_NVMSET.
  */
 static inline void
-nvme_init_get_log_predictable_lat_nvmset(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_predictable_lat_nvmset(struct libnvme_passthru_cmd *cmd,
 		__u16 nvmsetid, struct nvme_nvmset_predictable_lat_log *log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1208,7 +1210,7 @@ nvme_init_get_log_predictable_lat_nvmset(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_PREDICTABLE_LAT_AGG.
  */
 static inline void
-nvme_init_get_log_predictable_lat_event(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_predictable_lat_event(struct libnvme_passthru_cmd *cmd,
 		__u64 lpo, void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1231,7 +1233,7 @@ nvme_init_get_log_predictable_lat_event(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_ANA.
  */
 static inline void
-nvme_init_get_log_ana(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_ana(struct libnvme_passthru_cmd *cmd,
 		enum nvme_log_ana_lsp lsp, __u64 lpo, void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1255,7 +1257,7 @@ nvme_init_get_log_ana(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_ANA and LSP value %NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY
  */
 static inline void
-nvme_init_get_log_ana_groups(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_ana_groups(struct libnvme_passthru_cmd *cmd,
 		struct nvme_ana_log *log, __u32 len)
 {
 	nvme_init_get_log_ana(cmd, NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY,
@@ -1274,7 +1276,7 @@ nvme_init_get_log_ana_groups(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_PERSISTENT_EVENT
  */
 static inline void
-nvme_init_get_log_persistent_event(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_persistent_event(struct libnvme_passthru_cmd *cmd,
 		enum nvme_pevent_log_action action,
 		void *pevent_log, __u32 len)
 {
@@ -1298,7 +1300,7 @@ nvme_init_get_log_persistent_event(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_LBA_STATUS
  */
 static inline void
-nvme_init_get_log_lba_status(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_lba_status(struct libnvme_passthru_cmd *cmd,
 		__u64 lpo, void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1320,7 +1322,7 @@ nvme_init_get_log_lba_status(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_ENDURANCE_GRP_EVT
  */
 static inline void
-nvme_init_get_log_endurance_grp_evt(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_endurance_grp_evt(struct libnvme_passthru_cmd *cmd,
 		__u64 lpo, void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1340,7 +1342,7 @@ nvme_init_get_log_endurance_grp_evt(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_MEDIA_UNIT_STATUS
  */
 static inline void
-nvme_init_get_log_media_unit_stat(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_media_unit_stat(struct libnvme_passthru_cmd *cmd,
 		__u16 domid, struct nvme_media_unit_stat_log *mus)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1362,7 +1364,7 @@ nvme_init_get_log_media_unit_stat(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST
  */
 static inline void
-nvme_init_get_log_support_cap_config_list(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_support_cap_config_list(struct libnvme_passthru_cmd *cmd,
 		__u16 domid, struct nvme_supported_cap_config_list_log *cap)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1384,7 +1386,7 @@ nvme_init_get_log_support_cap_config_list(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_FID_SUPPORTED_EFFECTS
  */
 static inline void
-nvme_init_get_log_fid_supported_effects(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_fid_supported_effects(struct libnvme_passthru_cmd *cmd,
 		enum nvme_csi csi, struct nvme_fid_supported_effects_log *log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1402,7 +1404,7 @@ nvme_init_get_log_fid_supported_effects(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS
  */
 static inline void
-nvme_init_get_log_mi_cmd_supported_effects(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_mi_cmd_supported_effects(struct libnvme_passthru_cmd *cmd,
 		struct nvme_mi_cmd_supported_effects_log *log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1422,7 +1424,7 @@ nvme_init_get_log_mi_cmd_supported_effects(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN
  */
 static inline void
-nvme_init_get_log_lockdown(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_lockdown(struct libnvme_passthru_cmd *cmd,
 		__u8 cnscp, struct nvme_lockdown_log *lockdown_log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
@@ -1446,7 +1448,7 @@ nvme_init_get_log_lockdown(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_BOOT_PARTITION
  */
 static inline void
-nvme_init_get_log_boot_partition(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_boot_partition(struct libnvme_passthru_cmd *cmd,
 		__u8 lsp, struct nvme_boot_partition *part, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1469,7 +1471,7 @@ nvme_init_get_log_boot_partition(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_ROTATIONAL_MEDIA_INFO
  */
 static inline void
-nvme_init_get_log_rotational_media_info(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_rotational_media_info(struct libnvme_passthru_cmd *cmd,
 		__u16 endgid, struct nvme_rotational_media_info_log *log,
 		__u32 len)
 {
@@ -1493,9 +1495,9 @@ nvme_init_get_log_rotational_media_info(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS
  */
 static inline void
-nvme_init_get_log_dispersed_ns_participating_nss(struct nvme_passthru_cmd *cmd,
-		__u32 nsid, struct nvme_dispersed_ns_participating_nss_log *log,
-		__u32 len)
+nvme_init_get_log_dispersed_ns_participating_nss(
+		struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		struct nvme_dispersed_ns_participating_nss_log *log, __u32 len)
 {
 	nvme_init_get_log(cmd, nsid,
 		NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS, NVME_CSI_NVM,
@@ -1513,7 +1515,7 @@ nvme_init_get_log_dispersed_ns_participating_nss(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_MGMT_ADDR_LIST
  */
 static inline void
-nvme_init_get_log_mgmt_addr_list(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_mgmt_addr_list(struct libnvme_passthru_cmd *cmd,
 		struct nvme_mgmt_addr_list_log *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
@@ -1532,7 +1534,7 @@ nvme_init_get_log_mgmt_addr_list(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_POWER_MEASUREMENT
  */
 static inline void
-nvme_init_get_log_power_measurement(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_power_measurement(struct libnvme_passthru_cmd *cmd,
 		struct nvme_power_meas_log *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
@@ -1554,7 +1556,7 @@ nvme_init_get_log_power_measurement(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_PHY_RX_EOM
  */
 static inline void
-nvme_init_get_log_phy_rx_eom(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_phy_rx_eom(struct libnvme_passthru_cmd *cmd,
 		__u8 lsp, __u16 controller, struct nvme_phy_rx_eom_log *log,
 		__u32 len)
 {
@@ -1581,7 +1583,7 @@ nvme_init_get_log_phy_rx_eom(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_REACHABILITY_GROUPS
  */
 static inline void
-nvme_init_get_log_reachability_groups(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_reachability_groups(struct libnvme_passthru_cmd *cmd,
 		bool rgo, struct nvme_reachability_groups_log *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
@@ -1604,7 +1606,7 @@ nvme_init_get_log_reachability_groups(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_REACHABILITY_ASSOCIATIONS
  */
 static inline void
-nvme_init_get_log_reachability_associations(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_reachability_associations(struct libnvme_passthru_cmd *cmd,
 		bool rao, struct nvme_reachability_associations_log *log,
 		__u32 len)
 {
@@ -1627,7 +1629,7 @@ nvme_init_get_log_reachability_associations(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_CHANGED_ALLOC_NS
  */
 static inline void
-nvme_init_get_log_changed_alloc_ns(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_changed_alloc_ns(struct libnvme_passthru_cmd *cmd,
 		struct nvme_ns_list *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
@@ -1648,7 +1650,7 @@ nvme_init_get_log_changed_alloc_ns(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_FDP_CONFIGS
  */
 static inline void
-nvme_init_get_log_fdp_configurations(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_fdp_configurations(struct libnvme_passthru_cmd *cmd,
 		__u16 egid, __u64 lpo, void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1673,7 +1675,7 @@ nvme_init_get_log_fdp_configurations(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_RUH_USAGE
  */
 static inline void
-nvme_init_get_log_reclaim_unit_handle_usage(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_reclaim_unit_handle_usage(struct libnvme_passthru_cmd *cmd,
 		__u16 egid, __u64 lpo, void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1698,7 +1700,7 @@ nvme_init_get_log_reclaim_unit_handle_usage(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_FDP_STATS
  */
 static inline
-void nvme_init_get_log_fdp_stats(struct nvme_passthru_cmd *cmd,
+void nvme_init_get_log_fdp_stats(struct libnvme_passthru_cmd *cmd,
 		__u16 egid, __u64 lpo, void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1725,7 +1727,7 @@ void nvme_init_get_log_fdp_stats(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_FDP_EVENTS
  */
 static inline void
-nvme_init_get_log_fdp_events(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_fdp_events(struct libnvme_passthru_cmd *cmd,
 		bool host_events, __u16 egid, __u64 lpo, void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1752,7 +1754,7 @@ nvme_init_get_log_fdp_events(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_DISCOVERY
  */
 static inline void
-nvme_init_get_log_discovery(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_discovery(struct libnvme_passthru_cmd *cmd,
 			__u64 lpo, void *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_NONE,
@@ -1773,7 +1775,7 @@ nvme_init_get_log_discovery(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_HOST_DISCOVERY
  */
 static inline void
-nvme_init_get_log_host_discovery(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_host_discovery(struct libnvme_passthru_cmd *cmd,
 		bool allhoste, struct nvme_host_discover_log *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
@@ -1795,7 +1797,7 @@ nvme_init_get_log_host_discovery(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_AVE_DISCOVERY
  */
 static inline void
-nvme_init_get_log_ave_discovery(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_ave_discovery(struct libnvme_passthru_cmd *cmd,
 		struct nvme_ave_discover_log *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
@@ -1814,7 +1816,7 @@ nvme_init_get_log_ave_discovery(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_PULL_MODEL_DDC_REQ
  */
 static inline void
-nvme_init_get_log_pull_model_ddc_req(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_pull_model_ddc_req(struct libnvme_passthru_cmd *cmd,
 		struct nvme_pull_model_ddc_req_log *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
@@ -1832,7 +1834,7 @@ nvme_init_get_log_pull_model_ddc_req(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_RESERVATION
  */
 static inline void
-nvme_init_get_log_reservation(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_reservation(struct libnvme_passthru_cmd *cmd,
 			struct nvme_resv_notification_log *log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
@@ -1850,7 +1852,7 @@ nvme_init_get_log_reservation(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_SANITIZE
  */
 static inline void
-nvme_init_get_log_sanitize(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_sanitize(struct libnvme_passthru_cmd *cmd,
 		struct nvme_sanitize_log_page *log)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
@@ -1869,7 +1871,7 @@ nvme_init_get_log_sanitize(struct nvme_passthru_cmd *cmd,
  * LID value %NVME_LOG_LID_ZNS_CHANGED_ZONES
  */
 static inline void
-nvme_init_get_log_zns_changed_zones(struct nvme_passthru_cmd *cmd,
+nvme_init_get_log_zns_changed_zones(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, struct nvme_zns_changed_zone_log *log)
 {
 	nvme_init_get_log(cmd, nsid,
@@ -1885,7 +1887,7 @@ nvme_init_get_log_zns_changed_zones(struct nvme_passthru_cmd *cmd,
  * @sv:		Save value across power states
  */
 static inline void
-nvme_init_set_features(struct nvme_passthru_cmd *cmd, __u8 fid, bool sv)
+nvme_init_set_features(struct libnvme_passthru_cmd *cmd, __u8 fid, bool sv)
 {
 	__u32 cdw10 = NVME_FIELD_ENCODE(fid,
 			NVME_SET_FEATURES_CDW10_FID_SHIFT,
@@ -1914,7 +1916,7 @@ nvme_init_set_features(struct nvme_passthru_cmd *cmd, __u8 fid, bool sv)
  * FID value %NVME_FEAT_FID_ARBRITARTION
  */
 static inline void
-nvme_init_set_features_arbitration(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_arbitration(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u8 ab, __u8 lpw, __u8 mpw, __u8 hpw)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_ARBITRATION, sv);
@@ -1944,7 +1946,7 @@ nvme_init_set_features_arbitration(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_PWRMGMT_PS
  */
 static inline void
-nvme_init_set_features_power_mgmt(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_power_mgmt(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u8 ps, __u8 wh)
 {
 
@@ -1970,7 +1972,7 @@ nvme_init_set_features_power_mgmt(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_LBA_RANGE
  */
 static inline void
-nvme_init_set_features_lba_range(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_lba_range(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, bool sv, __u8 num,
 		struct nvme_lba_range_type *data)
 {
@@ -1997,7 +1999,7 @@ nvme_init_set_features_lba_range(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_TEMP_THRESH
  */
 static inline void
-nvme_init_set_features_temp_thresh(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_temp_thresh(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u16 tmpth, __u8 tmpsel,
 		enum nvme_feat_tmpthresh_thsel thsel, __u8 tmpthh)
 {
@@ -2030,7 +2032,7 @@ nvme_init_set_features_temp_thresh(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_ERR_RECOVERY
  */
 static inline void
-nvme_init_set_features_err_recovery(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_err_recovery(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, bool sv, __u16 tler, bool dulbe)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_ERR_RECOVERY, sv);
@@ -2054,7 +2056,7 @@ nvme_init_set_features_err_recovery(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_VOLATILE_WC
  */
 static inline void
-nvme_init_set_features_volatile_wc(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_volatile_wc(struct libnvme_passthru_cmd *cmd,
 		bool sv, bool wce)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_VOLATILE_WC, sv);
@@ -2075,7 +2077,7 @@ nvme_init_set_features_volatile_wc(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_IRQ_COALESCE
  */
 static inline void
-nvme_init_set_features_irq_coalesce(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_irq_coalesce(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u8 thr, __u8 time)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_IRQ_COALESCE, sv);
@@ -2099,7 +2101,7 @@ nvme_init_set_features_irq_coalesce(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_IRQ_CONFIG
  */
 static inline void
-nvme_init_set_features_irq_config(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_irq_config(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u16 iv, bool cd)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_IRQ_CONFIG, sv);
@@ -2122,7 +2124,7 @@ nvme_init_set_features_irq_config(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_WRITE_ATOMIC
  */
 static inline void
-nvme_init_set_features_write_atomic(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_write_atomic(struct libnvme_passthru_cmd *cmd,
 		bool sv, bool dn)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_WRITE_ATOMIC, sv);
@@ -2142,7 +2144,7 @@ nvme_init_set_features_write_atomic(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_ASYNC_EVENT
  */
 static inline void
-nvme_init_set_features_async_event(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_async_event(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u32 events)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_ASYNC_EVENT, sv);
@@ -2161,7 +2163,7 @@ nvme_init_set_features_async_event(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_AUTO_PST
  */
 static inline void
-nvme_init_set_features_auto_pst(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_auto_pst(struct libnvme_passthru_cmd *cmd,
 		bool sv, bool apste, struct nvme_feat_auto_pst *apst)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_AUTO_PST, sv);
@@ -2185,7 +2187,7 @@ nvme_init_set_features_auto_pst(struct nvme_passthru_cmd *cmd,
  * buffer via @ts, which this function will populate.
  */
 static inline void
-nvme_init_set_features_timestamp(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_timestamp(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u64 tstmp, struct nvme_timestamp *ts)
 {
 	__le64 t = htole64(tstmp);
@@ -2209,7 +2211,7 @@ nvme_init_set_features_timestamp(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_HCTM
  */
 static inline void
-nvme_init_set_features_hctm(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_hctm(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u16 tmt2, __u16 tmt1)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_HCTM, sv);
@@ -2232,7 +2234,7 @@ nvme_init_set_features_hctm(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_NOPSC
  */
 static inline void
-nvme_init_set_features_nopsc(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_nopsc(struct libnvme_passthru_cmd *cmd,
 		bool sv, bool noppme)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_NOPSC, sv);
@@ -2253,7 +2255,7 @@ nvme_init_set_features_nopsc(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_RRL
  */
 static inline void
-nvme_init_set_features_rrl(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_rrl(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u16 nvmsetid, __u8 rrl)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_RRL, sv);
@@ -2278,7 +2280,7 @@ nvme_init_set_features_rrl(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_PLM_CONFIG
  */
 static inline void
-nvme_init_set_features_plm_config(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_plm_config(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u16 nvmsetid, bool lpe, struct nvme_plm_config *data)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_PLM_CONFIG, sv);
@@ -2304,7 +2306,7 @@ nvme_init_set_features_plm_config(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_PLM_WINDOW
  */
 static inline void
-nvme_init_set_features_plm_window(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_plm_window(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u16 nvmsetid,
 		enum nvme_feat_plm_window_select wsel)
 {
@@ -2329,7 +2331,7 @@ nvme_init_set_features_plm_window(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_LBA_STS_INTERVAL
  */
 static inline void
-nvme_init_set_features_lba_sts_interval(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_lba_sts_interval(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u16 lsiri, __u16 lsipi)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_LBA_STS_INTERVAL, sv);
@@ -2352,7 +2354,7 @@ nvme_init_set_features_lba_sts_interval(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_HOST_BEHAVIOR
  */
 static inline void
-nvme_init_set_features_host_behavior(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_host_behavior(struct libnvme_passthru_cmd *cmd,
 		bool sv, struct nvme_feat_host_behavior *data)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_HOST_BEHAVIOR, sv);
@@ -2371,7 +2373,7 @@ nvme_init_set_features_host_behavior(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_SANITIZE
  */
 static inline void
-nvme_init_set_features_sanitize(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_sanitize(struct libnvme_passthru_cmd *cmd,
 		bool sv, bool nodrm)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_SANITIZE, sv);
@@ -2393,7 +2395,7 @@ nvme_init_set_features_sanitize(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_ENDURANCE_EVT_CFG
  */
 static inline void
-nvme_init_set_features_endurance_evt_cfg(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_endurance_evt_cfg(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u16 endgid, __u8 egcw)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_ENDURANCE_EVT_CFG, sv);
@@ -2416,7 +2418,7 @@ nvme_init_set_features_endurance_evt_cfg(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_SW_PROGRESS
  */
 static inline void
-nvme_init_set_features_sw_progress(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_sw_progress(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u8 pbslc)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_SW_PROGRESS, sv);
@@ -2437,7 +2439,7 @@ nvme_init_set_features_sw_progress(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_HOST_ID.
  */
 static inline void
-nvme_init_set_features_host_id(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_host_id(struct libnvme_passthru_cmd *cmd,
 		bool sv, bool exhid, __u8 *hostid)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_HOST_ID, sv);
@@ -2460,7 +2462,7 @@ nvme_init_set_features_host_id(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_RESV_MASK
  */
 static inline void
-nvme_init_set_features_resv_mask(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_set_features_resv_mask(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		bool sv, __u32 mask)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_RESV_MASK, sv);
@@ -2480,7 +2482,7 @@ nvme_init_set_features_resv_mask(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * FID value %NVME_FEAT_FID_RESV_PERSIST
  */
 static inline void
-nvme_init_set_features_resv_persist(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_set_features_resv_persist(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		bool sv, bool ptpl)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_RESV_PERSIST, sv);
@@ -2502,8 +2504,8 @@ nvme_init_set_features_resv_persist(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * FID value %NVME_FEAT_FID_WRITE_PROTECT
  */
 static inline void
-nvme_init_set_features_write_protect(struct nvme_passthru_cmd *cmd, __u32 nsid,
-		bool sv, enum nvme_feat_nswpcfg_state wps)
+nvme_init_set_features_write_protect(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, bool sv, enum nvme_feat_nswpcfg_state wps)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_WRITE_PROTECT, sv);
 	cmd->nsid = nsid;
@@ -2523,7 +2525,7 @@ nvme_init_set_features_write_protect(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * FID value %NVME_FEAT_FID_IOCS_PROFILE
  */
 static inline void
-nvme_init_set_features_iocs_profile(struct nvme_passthru_cmd *cmd,
+nvme_init_set_features_iocs_profile(struct libnvme_passthru_cmd *cmd,
 		bool sv, __u16 iocsci)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_IOCS_PROFILE, sv);
@@ -2541,7 +2543,7 @@ nvme_init_set_features_iocs_profile(struct nvme_passthru_cmd *cmd,
  *		see &enum nvme_get_features_sel
  */
 static inline void
-nvme_init_get_features(struct nvme_passthru_cmd *cmd, __u8 fid,
+nvme_init_get_features(struct libnvme_passthru_cmd *cmd, __u8 fid,
 		enum nvme_get_features_sel sel)
 {
 	__u32 cdw10 = NVME_FIELD_ENCODE(fid,
@@ -2568,7 +2570,7 @@ nvme_init_get_features(struct nvme_passthru_cmd *cmd, __u8 fid,
  * FID value %NVME_FEAT_FID_ARBITRATION
  */
 static inline void
-nvme_init_get_features_arbitration(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_arbitration(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_ARBITRATION, sel);
@@ -2585,7 +2587,7 @@ nvme_init_get_features_arbitration(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_POWER_MGMT
  */
 static inline void
-nvme_init_get_features_power_mgmt(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_power_mgmt(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_POWER_MGMT, sel);
@@ -2604,7 +2606,7 @@ nvme_init_get_features_power_mgmt(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_LBA_RANGE
  */
 static inline void
-nvme_init_get_features_lba_range(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_get_features_lba_range(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_get_features_sel sel, struct nvme_lba_range_type *lrt)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_LBA_RANGE, sel);
@@ -2626,7 +2628,7 @@ nvme_init_get_features_lba_range(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * FID value %NVME_FEAT_FID_TEMP_THRESH
  */
 static inline void
-nvme_init_get_features_temp_thresh(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_temp_thresh(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel,
 		__u8 tmpsel, enum nvme_feat_tmpthresh_thsel thsel)
 {
@@ -2652,8 +2654,8 @@ nvme_init_get_features_temp_thresh(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_ERR_RECOVERY
  */
 static inline void
-nvme_init_get_features_err_recovery(struct nvme_passthru_cmd *cmd, __u32 nsid,
-		enum nvme_get_features_sel sel)
+nvme_init_get_features_err_recovery(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_ERR_RECOVERY, sel);
 	cmd->nsid = nsid;
@@ -2670,7 +2672,7 @@ nvme_init_get_features_err_recovery(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * FID value %NVME_FEAT_FID_VOLATILE_WC
  */
 static inline void
-nvme_init_get_features_volatile_wc(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_volatile_wc(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_VOLATILE_WC, sel);
@@ -2687,7 +2689,7 @@ nvme_init_get_features_volatile_wc(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_NUM_QUEUES
  */
 static inline void
-nvme_init_get_features_num_queues(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_num_queues(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_NUM_QUEUES, sel);
@@ -2704,7 +2706,7 @@ nvme_init_get_features_num_queues(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_IRQ_COALESCE
  */
 static inline void
-nvme_init_get_features_irq_coalesce(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_irq_coalesce(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_IRQ_COALESCE, sel);
@@ -2723,9 +2725,8 @@ nvme_init_get_features_irq_coalesce(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_IRQ_CONFIG
  */
 static inline void
-nvme_init_get_features_irq_config(struct nvme_passthru_cmd *cmd,
-		enum nvme_get_features_sel sel,
-		__u16 iv, bool cd)
+nvme_init_get_features_irq_config(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u16 iv, bool cd)
 {
 	__u32 cdw11 = NVME_FIELD_ENCODE(iv,
 				       NVME_FEAT_ICFG_IV_SHIFT,
@@ -2749,7 +2750,7 @@ nvme_init_get_features_irq_config(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_WRITE_ATOMIC
  */
 static inline void
-nvme_init_get_features_write_atomic(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_write_atomic(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_WRITE_ATOMIC, sel);
@@ -2766,7 +2767,7 @@ nvme_init_get_features_write_atomic(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_ASYNC_EVENT
  */
 static inline void
-nvme_init_get_features_async_event(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_async_event(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_ASYNC_EVENT, sel);
@@ -2784,7 +2785,7 @@ nvme_init_get_features_async_event(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_AUTO_PST
  */
 static inline void
-nvme_init_get_features_auto_pst(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_auto_pst(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel, struct nvme_feat_auto_pst *apst)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_AUTO_PST, sel);
@@ -2804,7 +2805,7 @@ nvme_init_get_features_auto_pst(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_HOST_MEM_BUF
  */
 static inline void
-nvme_init_get_features_host_mem_buf(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_host_mem_buf(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel,
 		struct nvme_host_mem_buf_attrs  *attrs)
 {
@@ -2825,7 +2826,7 @@ nvme_init_get_features_host_mem_buf(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_TIMESTAMP
  */
 static inline void
-nvme_init_get_features_timestamp(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_timestamp(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel, struct nvme_timestamp *ts)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_TIMESTAMP, sel);
@@ -2844,7 +2845,7 @@ nvme_init_get_features_timestamp(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_KATO
  */
 static inline void
-nvme_init_get_features_kato(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_kato(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_KATO, sel);
@@ -2861,7 +2862,7 @@ nvme_init_get_features_kato(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_HCTM
  */
 static inline void
-nvme_init_get_features_hctm(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_hctm(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_HCTM, sel);
@@ -2878,7 +2879,7 @@ nvme_init_get_features_hctm(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_NOPSC
  */
 static inline void
-nvme_init_get_features_nopsc(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_nopsc(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_NOPSC, sel);
@@ -2895,7 +2896,7 @@ nvme_init_get_features_nopsc(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_RRL
  */
 static inline void
-nvme_init_get_features_rrl(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_rrl(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_RRL, sel);
@@ -2914,7 +2915,7 @@ nvme_init_get_features_rrl(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_PLM_CONFIG
  */
 static inline void
-nvme_init_get_features_plm_config(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_plm_config(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel, __u16 nvmsetid,
 		struct nvme_plm_config *plmc)
 {
@@ -2938,7 +2939,7 @@ nvme_init_get_features_plm_config(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_PLM_WINDOW
  */
 static inline void
-nvme_init_get_features_plm_window(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_plm_window(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel, __u16 nvmsetid)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_PLM_WINDOW, sel);
@@ -2958,7 +2959,7 @@ nvme_init_get_features_plm_window(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_LBA_STS_INTERVAL
  */
 static inline void
-nvme_init_get_features_lba_sts_interval(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_lba_sts_interval(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_LBA_STS_INTERVAL, sel);
@@ -2976,7 +2977,7 @@ nvme_init_get_features_lba_sts_interval(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_HOST_BEHAVIOR
  */
 static inline void
-nvme_init_get_features_host_behavior(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_host_behavior(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel,
 		struct nvme_feat_host_behavior *fhb)
 {
@@ -2996,7 +2997,7 @@ nvme_init_get_features_host_behavior(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_SANITIZE
  */
 static inline void
-nvme_init_get_features_sanitize(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_sanitize(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_SANITIZE, sel);
@@ -3014,7 +3015,7 @@ nvme_init_get_features_sanitize(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_ENDURANCE_EVT_CFG
  */
 static inline void
-nvme_init_get_features_endurance_event_cfg(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_endurance_event_cfg(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel, __u16 endgid)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_ENDURANCE_EVT_CFG, sel);
@@ -3034,7 +3035,7 @@ nvme_init_get_features_endurance_event_cfg(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_SW_PROGRESS
  */
 static inline void
-nvme_init_get_features_sw_progress(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_sw_progress(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_SW_PROGRESS, sel);
@@ -3054,7 +3055,7 @@ nvme_init_get_features_sw_progress(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_HOST_ID
  */
 static inline void
-nvme_init_get_features_host_id(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_host_id(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel, bool exhid,
 		void *hostid, __u32 len)
 {
@@ -3078,7 +3079,7 @@ nvme_init_get_features_host_id(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_RESV_MASK
  */
 static inline void
-nvme_init_get_features_resv_mask(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_get_features_resv_mask(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_RESV_MASK, sel);
@@ -3097,8 +3098,8 @@ nvme_init_get_features_resv_mask(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * FID value %NVME_FEAT_FID_RESV_PERSIST
  */
 static inline void
-nvme_init_get_features_resv_persist(struct nvme_passthru_cmd *cmd, __u32 nsid,
-		enum nvme_get_features_sel sel)
+nvme_init_get_features_resv_persist(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_RESV_PERSIST, sel);
 	cmd->nsid = nsid;
@@ -3116,8 +3117,8 @@ nvme_init_get_features_resv_persist(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * FID value %NVME_FEAT_FID_WRITE_PROTECT
  */
 static inline void
-nvme_init_get_features_write_protect(struct nvme_passthru_cmd *cmd, __u32 nsid,
-		enum nvme_get_features_sel sel)
+nvme_init_get_features_write_protect(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_WRITE_PROTECT, sel);
 	cmd->nsid = nsid;
@@ -3134,7 +3135,7 @@ nvme_init_get_features_write_protect(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * FID value %NVME_FEAT_FID_IOCS_PROFILE
  */
 static inline void
-nvme_init_get_features_iocs_profile(struct nvme_passthru_cmd *cmd,
+nvme_init_get_features_iocs_profile(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel)
 {
 	nvme_init_get_features(cmd, NVME_FEAT_FID_IOCS_PROFILE, sel);
@@ -3153,7 +3154,7 @@ nvme_init_get_features_iocs_profile(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the Format NVM command.
  */
 static inline void
-nvme_init_format_nvm(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 lbaf,
+nvme_init_format_nvm(struct libnvme_passthru_cmd *cmd, __u32 nsid, __u8 lbaf,
 		enum nvme_cmd_format_mset mset, enum nvme_cmd_format_pi pi,
 		enum nvme_cmd_format_pil pil, enum nvme_cmd_format_ses ses)
 {
@@ -3192,7 +3193,7 @@ nvme_init_format_nvm(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 lbaf,
  * Initializes the passthru command buffer for the Namespace Management command.
  */
 static inline void
-nvme_init_ns_mgmt(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_ns_mgmt(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_ns_mgmt_sel sel, __u8 csi,
 		struct nvme_ns_mgmt_host_sw_specified *data)
 {
@@ -3222,7 +3223,7 @@ nvme_init_ns_mgmt(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * command. The command uses NVME_NSID_NONE as the target NSID.
  */
 static inline void
-nvme_init_ns_mgmt_create(struct nvme_passthru_cmd *cmd, __u8 csi,
+nvme_init_ns_mgmt_create(struct libnvme_passthru_cmd *cmd, __u8 csi,
 		struct nvme_ns_mgmt_host_sw_specified *data)
 {
 	nvme_init_ns_mgmt(cmd, NVME_NSID_NONE, NVME_NS_MGMT_SEL_CREATE,
@@ -3240,7 +3241,7 @@ nvme_init_ns_mgmt_create(struct nvme_passthru_cmd *cmd, __u8 csi,
  * the target NSID.
  */
 static inline void
-nvme_init_ns_mgmt_delete(struct nvme_passthru_cmd *cmd, __u32 nsid)
+nvme_init_ns_mgmt_delete(struct libnvme_passthru_cmd *cmd, __u32 nsid)
 {
 	nvme_init_ns_mgmt(cmd, nsid, NVME_NS_MGMT_SEL_DELETE,
 		NVME_CSI_NVM, NULL);
@@ -3258,7 +3259,7 @@ nvme_init_ns_mgmt_delete(struct nvme_passthru_cmd *cmd, __u32 nsid)
  * command.
  */
 static inline void
-nvme_init_ns_attach(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_ns_attach(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_ns_attach_sel sel, struct nvme_ctrl_list *ctrlist)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -3283,7 +3284,7 @@ nvme_init_ns_attach(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * (NVME_NS_ATTACH_SEL_CTRL_ATTACH).
  */
 static inline void
-nvme_init_ns_attach_ctrls(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_ns_attach_ctrls(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		struct nvme_ctrl_list *ctrlist)
 {
 	nvme_init_ns_attach(cmd, nsid, NVME_NS_ATTACH_SEL_CTRL_ATTACH,
@@ -3301,7 +3302,7 @@ nvme_init_ns_attach_ctrls(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * (NVME_NS_ATTACH_SEL_CTRL_DEATTACH).
  */
 static inline void
-nvme_init_ns_detach_ctrls(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_ns_detach_ctrls(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		struct nvme_ctrl_list *ctrlist)
 {
 	nvme_init_ns_attach(cmd, nsid, NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
@@ -3324,7 +3325,7 @@ nvme_init_ns_detach_ctrls(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Returns: 0 on success, or error code if arguments are invalid.
  */
 static inline int
-nvme_init_fw_download(struct nvme_passthru_cmd *cmd, void *data,
+nvme_init_fw_download(struct libnvme_passthru_cmd *cmd, void *data,
 		__u32 len, __u32 offset)
 {
 	if (len & 0x3 || !len)
@@ -3356,7 +3357,7 @@ nvme_init_fw_download(struct nvme_passthru_cmd *cmd, void *data,
  * Initializes the passthru command buffer for the Firmware Commit command.
  */
 static inline void
-nvme_init_fw_commit(struct nvme_passthru_cmd *cmd, __u8 fs,
+nvme_init_fw_commit(struct libnvme_passthru_cmd *cmd, __u8 fs,
 		    enum nvme_fw_commit_ca ca, bool bpid)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -3387,7 +3388,7 @@ nvme_init_fw_commit(struct nvme_passthru_cmd *cmd, __u8 fs,
  * Initializes the passthru command buffer for the Security Send command.
  */
 static inline void
-nvme_init_security_send(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
+nvme_init_security_send(struct libnvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
 		__u16 spsp, __u8 secp, __u32 tl, void *data, __u32 len)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -3426,8 +3427,9 @@ nvme_init_security_send(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
  * Initializes the passthru command buffer for the Security Receive command.
  */
 static inline void
-nvme_init_security_receive(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
-		__u16 spsp, __u8 secp, __u32 al, void *data, __u32 len)
+nvme_init_security_receive(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u8 nssf, __u16 spsp, __u8 secp, __u32 al, void *data,
+		__u32 len)
 {
 	memset(cmd, 0, sizeof(*cmd));
 
@@ -3465,9 +3467,9 @@ nvme_init_security_receive(struct nvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
  * Initializes the passthru command buffer for the Get LBA Status command.
  */
 static inline void
-nvme_init_get_lba_status(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
-		__u32 mndw, enum nvme_lba_status_atype atype, __u16 rl,
-		struct nvme_lba_status *lbas)
+nvme_init_get_lba_status(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u64 slba, __u32 mndw, enum nvme_lba_status_atype atype,
+		__u16 rl, struct nvme_lba_status *lbas)
 {
 	memset(cmd, 0, sizeof(*cmd));
 
@@ -3499,7 +3501,7 @@ nvme_init_get_lba_status(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
  * Initializes the passthru command buffer for the Directive Send command.
  */
 static inline void
-nvme_init_directive_send(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_directive_send(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_directive_send_doper doper,
 		enum nvme_directive_dtype dtype, __u16 dspec,
 		void *data, __u32 len)
@@ -3536,7 +3538,7 @@ nvme_init_directive_send(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * (Enable Directive) command.
  */
 static inline void
-nvme_init_directive_send_id_endir(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_directive_send_id_endir(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		 bool endir, enum nvme_directive_dtype dtype,
 		 struct nvme_id_directives *id)
 {
@@ -3563,7 +3565,7 @@ nvme_init_directive_send_id_endir(struct nvme_passthru_cmd *cmd, __u32 nsid,
  */
 static inline void
 nvme_init_directive_send_stream_release_identifier(
-		struct nvme_passthru_cmd *cmd,
+		struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, __u16 stream_id)
 {
 	nvme_init_directive_send(cmd, nsid,
@@ -3581,8 +3583,8 @@ nvme_init_directive_send_stream_release_identifier(
  * Release Resource command.
  */
 static inline void
-nvme_init_directive_send_stream_release_resource(struct nvme_passthru_cmd *cmd,
-		__u32 nsid)
+nvme_init_directive_send_stream_release_resource(
+		struct libnvme_passthru_cmd *cmd, __u32 nsid)
 {
 	nvme_init_directive_send(cmd, nsid,
 		NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE,
@@ -3604,7 +3606,7 @@ nvme_init_directive_send_stream_release_resource(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the Directive Receive command.
  */
 static inline void
-nvme_init_directive_recv(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_directive_recv(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_directive_receive_doper doper,
 		enum nvme_directive_dtype dtype, __u16 dspec,
 		void *data, __u32 len)
@@ -3639,7 +3641,7 @@ nvme_init_directive_recv(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Parameters command.
  */
 static inline void
-nvme_init_directive_recv_identify_parameters(struct nvme_passthru_cmd *cmd,
+nvme_init_directive_recv_identify_parameters(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, struct nvme_id_directives *id)
 {
 	nvme_init_directive_recv(cmd, nsid,
@@ -3658,7 +3660,7 @@ nvme_init_directive_recv_identify_parameters(struct nvme_passthru_cmd *cmd,
  * Parameters command.
  */
 static inline void
-nvme_init_directive_recv_stream_parameters(struct nvme_passthru_cmd *cmd,
+nvme_init_directive_recv_stream_parameters(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, struct nvme_streams_directive_params *parms)
 {
 	nvme_init_directive_recv(cmd, nsid,
@@ -3680,7 +3682,7 @@ nvme_init_directive_recv_stream_parameters(struct nvme_passthru_cmd *cmd,
  * Return: 0 on success, or error code if arguments are invalid.
  */
 static inline int
-nvme_init_directive_recv_stream_status(struct nvme_passthru_cmd *cmd,
+nvme_init_directive_recv_stream_status(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, unsigned int nr_entries,
 		struct nvme_streams_directive_status *id)
 {
@@ -3706,7 +3708,7 @@ nvme_init_directive_recv_stream_status(struct nvme_passthru_cmd *cmd,
  * Allocate command.
  */
 static inline void
-nvme_init_directive_recv_stream_allocate(struct nvme_passthru_cmd *cmd,
+nvme_init_directive_recv_stream_allocate(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, __u16 nsr)
 {
 	nvme_init_directive_recv(cmd, nsid,
@@ -3727,7 +3729,7 @@ nvme_init_directive_recv_stream_allocate(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the Capacity Management command.
  */
 static inline void
-nvme_init_capacity_mgmt(struct nvme_passthru_cmd *cmd,
+nvme_init_capacity_mgmt(struct libnvme_passthru_cmd *cmd,
 		__u8 oper, __u16 elid, __u64 cap)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -3759,7 +3761,7 @@ nvme_init_capacity_mgmt(struct nvme_passthru_cmd *cmd,
   * Initializes the passthru command buffer for the Lockdown command.
   */
 static inline void
-nvme_init_lockdown(struct nvme_passthru_cmd *cmd, __u8 scp, __u8 prhbt,
+nvme_init_lockdown(struct libnvme_passthru_cmd *cmd, __u8 scp, __u8 prhbt,
 		__u8 ifc, __u8 ofi, __u8 uidx)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -3793,7 +3795,8 @@ nvme_init_lockdown(struct nvme_passthru_cmd *cmd, __u8 scp, __u8 prhbt,
  * This is an NVMe-over-Fabrics specific command.
  */
 static inline void
-nvme_init_set_property(struct nvme_passthru_cmd *cmd, __u32 offset, __u64 value)
+nvme_init_set_property(struct libnvme_passthru_cmd *cmd, __u32 offset,
+		__u64 value)
 {
 	memset(cmd, 0, sizeof(*cmd));
 
@@ -3815,7 +3818,7 @@ nvme_init_set_property(struct nvme_passthru_cmd *cmd, __u32 offset, __u64 value)
  * This is an NVMe-over-Fabrics specific command.
  */
 static inline void
-nvme_init_get_property(struct nvme_passthru_cmd *cmd, __u32 offset)
+nvme_init_get_property(struct libnvme_passthru_cmd *cmd, __u32 offset)
 {
 
 	memset(cmd, 0, sizeof(*cmd));
@@ -3841,7 +3844,7 @@ nvme_init_get_property(struct nvme_passthru_cmd *cmd, __u32 offset)
  * Initializes the passthru command buffer for the Sanitize NVM command.
  */
 static inline void
-nvme_init_sanitize_nvm(struct nvme_passthru_cmd *cmd,
+nvme_init_sanitize_nvm(struct libnvme_passthru_cmd *cmd,
 		enum nvme_sanitize_sanact sanact, bool ause, __u8 owpass,
 		bool oipbp, bool ndas, bool emvs, __u32 ovrpat)
 {
@@ -3880,7 +3883,7 @@ nvme_init_sanitize_nvm(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the Sanitize namespace command.
  */
 static inline void
-nvme_init_sanitize_ns(struct nvme_passthru_cmd *cmd,
+nvme_init_sanitize_ns(struct libnvme_passthru_cmd *cmd,
 		enum nvme_sanitize_sanact sanact, bool ause, bool emvs)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -3907,7 +3910,7 @@ nvme_init_sanitize_ns(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the Device Self-test command.
  */
 static inline void
-nvme_init_dev_self_test(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_dev_self_test(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_dst_stc stc)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -3932,7 +3935,7 @@ nvme_init_dev_self_test(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Management command.
  */
 static inline void
-nvme_init_virtual_mgmt(struct nvme_passthru_cmd *cmd,
+nvme_init_virtual_mgmt(struct libnvme_passthru_cmd *cmd,
 		enum nvme_virt_mgmt_act act, enum nvme_virt_mgmt_rt rt,
 		__u16 cntlid, __u16 nr)
 {
@@ -3963,7 +3966,7 @@ nvme_init_virtual_mgmt(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the Flush command.
  */
 static inline void
-nvme_init_flush(struct nvme_passthru_cmd *cmd, __u32 nsid)
+nvme_init_flush(struct libnvme_passthru_cmd *cmd, __u32 nsid)
 {
 	memset(cmd, 0, sizeof(*cmd));
 	cmd->opcode = nvme_cmd_flush;
@@ -3983,7 +3986,7 @@ nvme_init_flush(struct nvme_passthru_cmd *cmd, __u32 nsid)
  * @len:	Length of provided user buffer to hold the log data in bytes
  */
 static inline void
-nvme_init_dsm(struct nvme_passthru_cmd *cmd,
+nvme_init_dsm(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, __u16 nr, __u8 idr, __u8 idw, __u8 ad, void *data,
 		__u32 len)
 {
@@ -4021,7 +4024,7 @@ nvme_init_dsm(struct nvme_passthru_cmd *cmd,
  * the command-specific init function (like nvme_init_zns_append).
  */
 static inline int
-nvme_init_var_size_tags(struct nvme_passthru_cmd *cmd,
+nvme_init_var_size_tags(struct libnvme_passthru_cmd *cmd,
 		__u8 pif, __u8 sts, __u64 reftag, __u64 storage_tag)
 {
 	__u32 cdw2 = 0, cdw3 = 0, cdw14 = 0;
@@ -4098,7 +4101,7 @@ nvme_init_var_size_tags(struct nvme_passthru_cmd *cmd,
  * @lbatm:	Logical block application tag mask
  */
 static inline void
-nvme_init_app_tag(struct nvme_passthru_cmd *cmd,
+nvme_init_app_tag(struct libnvme_passthru_cmd *cmd,
 	__u16 lbat, __u16 lbatm)
 {
 	cmd->cdw15 = NVME_FIELD_ENCODE(lbat,
@@ -4126,7 +4129,8 @@ nvme_init_app_tag(struct nvme_passthru_cmd *cmd,
  * that function is checked for error.
  */
 static inline void
-nvme_init_io(struct nvme_passthru_cmd *cmd, __u8 opcode, __u32 nsid, __u64 slba,
+nvme_init_io(struct libnvme_passthru_cmd *cmd, __u8 opcode,
+		__u32 nsid, __u64 slba,
 		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -4166,7 +4170,8 @@ nvme_init_io(struct nvme_passthru_cmd *cmd, __u8 opcode, __u32 nsid, __u64 slba,
  * the parameters are used for a generic nvme_init_io wrapper.
  */
 static inline void
-nvme_init_read(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
+nvme_init_read(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba,
 		__u16 nlb, __u16 control, __u8 dsm, __u16 cev,
 		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
 {
@@ -4205,7 +4210,8 @@ nvme_init_read(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
  * Initializes the passthru command buffer for the Write command.
  */
 static inline void
-nvme_init_write(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
+nvme_init_write(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba,
 		__u16 nlb, __u16 control, __u16 dspec, __u8 dsm, __u8 cev,
 		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
 {
@@ -4243,9 +4249,10 @@ nvme_init_write(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
  * Initializes the passthru command buffer for the Compare command.
  */
 static inline void
-nvme_init_compare(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
-		__u16 nlb, __u16 control, __u8 cev, void *data, __u32 data_len,
-		void *metadata, __u32 metadata_len)
+nvme_init_compare(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba,
+		__u16 nlb, __u16 control, __u8 cev,
+		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
 {
 	nvme_init_io(cmd, nvme_cmd_compare, nsid, slba,
 		data, data_len, metadata, metadata_len);
@@ -4277,7 +4284,8 @@ nvme_init_compare(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
  * Note: Write Zeroes command does not transfer data or metadata.
  */
 static inline void
-nvme_init_write_zeros(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
+nvme_init_write_zeros(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba,
 		__u16 nlb, __u16 control, __u16 dspec, __u8 dsm, __u8 cev)
 {
 	nvme_init_io(cmd, nvme_cmd_write_zeroes, nsid, slba, NULL, 0, NULL, 0);
@@ -4312,8 +4320,8 @@ nvme_init_write_zeros(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
  * Note: This command transfers no data or metadata.
  */
 static inline void
-nvme_init_write_uncorrectable(struct nvme_passthru_cmd *cmd, __u32 nsid,
-		__u64 slba, __u16 nlb, __u16 control, __u16 dspec)
+nvme_init_write_uncorrectable(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba, __u16 nlb, __u16 control, __u16 dspec)
 {
 	nvme_init_io(cmd, nvme_cmd_write_uncor, nsid, slba, NULL, 0, NULL, 0);
 	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
@@ -4345,9 +4353,10 @@ nvme_init_write_uncorrectable(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * the verification but not back to the host.
  */
 static inline void
-nvme_init_verify(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
-		__u16 nlb, __u16 control, __u8 cev, void *data, __u32 data_len,
-		void *metadata, __u32 metadata_len)
+nvme_init_verify(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba,
+		__u16 nlb, __u16 control, __u8 cev,
+		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
 {
 	nvme_init_io(cmd, nvme_cmd_verify, nsid, slba,
 		data, data_len, metadata, metadata_len);
@@ -4385,7 +4394,7 @@ nvme_init_verify(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 slba,
  * the data length and calling the generic I/O initializer.
  */
 static inline void
-nvme_init_copy(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 sdlba,
+nvme_init_copy(struct libnvme_passthru_cmd *cmd, __u32 nsid, __u64 sdlba,
 		__u16 nr, __u8 desfmt, __u8 prinfor, __u8 prinfow,
 		__u8 cetype, __u8 dtype, bool stcw, bool stcr, bool fua,
 		bool lr, __u16 cev, __u16 dspec, void *cpydsc)
@@ -4464,7 +4473,7 @@ nvme_init_copy(struct nvme_passthru_cmd *cmd, __u32 nsid, __u64 sdlba,
  * Initializes the passthru command buffer for the Reservation Acquire command.
  */
 static inline void
-nvme_init_resv_acquire(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_resv_acquire(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_resv_racqa racqa, bool iekey, bool disnsrs,
 		enum nvme_resv_rtype rtype, __u64 crkey, __u64 prkey,
 		__le64 *payload)
@@ -4509,7 +4518,7 @@ nvme_init_resv_acquire(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Initializes the passthru command buffer for the Reservation Register command.
  */
 static inline void
-nvme_init_resv_register(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_resv_register(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_resv_rrega rrega, bool iekey, bool disnsrs,
 		enum nvme_resv_cptpl cptpl, __u64 crkey, __u64 nrkey,
 		__le64 *payload)
@@ -4552,7 +4561,7 @@ nvme_init_resv_register(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Initializes the passthru command buffer for the Reservation Release command.
  */
 static inline void
-nvme_init_resv_release(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_resv_release(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_resv_rrela rrela, bool iekey, bool disnsrs,
 		enum nvme_resv_rtype rtype, __u64 crkey, __le64 *payload)
 {
@@ -4592,7 +4601,7 @@ nvme_init_resv_release(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Initializes the passthru command buffer for the Reservation Report command.
  */
 static inline void
-nvme_init_resv_report(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_resv_report(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		bool eds, bool disnsrs, struct nvme_resv_status *report,
 		__u32 len)
 {
@@ -4625,7 +4634,7 @@ nvme_init_resv_report(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Receive command.
  */
 static inline void
-nvme_init_io_mgmt_recv(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_io_mgmt_recv(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		__u8 mo, __u16 mos, void *data, __u32 len)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -4655,7 +4664,7 @@ nvme_init_io_mgmt_recv(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Reclaim Unit Handle Status command.
  */
 static inline void
-nvme_init_fdp_reclaim_unit_handle_status(struct nvme_passthru_cmd *cmd,
+nvme_init_fdp_reclaim_unit_handle_status(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, void *data, __u32 len)
 {
 	nvme_init_io_mgmt_recv(cmd, nsid, NVME_IO_MGMT_RECV_RUH_STATUS, 0,
@@ -4675,7 +4684,7 @@ nvme_init_fdp_reclaim_unit_handle_status(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the I/O Management Send command.
  */
 static inline void
-nvme_init_io_mgmt_send(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_io_mgmt_send(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		__u8 mo, __u16 mos, void *data, __u32 len)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -4704,7 +4713,7 @@ nvme_init_io_mgmt_send(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Reclaim Unit Handle Update command.
  */
 static inline void
-nvme_init_fdp_reclaim_unit_handle_update(struct nvme_passthru_cmd *cmd,
+nvme_init_fdp_reclaim_unit_handle_update(struct libnvme_passthru_cmd *cmd,
 		__u32 nsid, void *pids, unsigned int npids)
 {
 	__u16 mos = npids - 1; /* MOS = NPI - 1 */
@@ -4730,7 +4739,7 @@ nvme_init_fdp_reclaim_unit_handle_update(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the ZNS Management Send command.
  */
 static inline void
-nvme_init_zns_mgmt_send(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_zns_mgmt_send(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		__u64 slba, enum nvme_zns_send_action zsa, bool selall,
 		__u8 zsaso, __u8 zm, void *data, __u32 len)
 {
@@ -4772,7 +4781,7 @@ nvme_init_zns_mgmt_send(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Receive command.
  */
 static inline void
-nvme_init_zns_mgmt_recv(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_zns_mgmt_recv(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		__u64 slba, enum nvme_zns_recv_action zra, __u16 zras,
 		bool zraspf, void *data, __u32 len)
 {
@@ -4812,7 +4821,7 @@ nvme_init_zns_mgmt_recv(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Report Zones command.
  */
 static inline void
-nvme_init_zns_report_zones(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_zns_report_zones(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		__u64 slba, enum nvme_zns_report_options opts,
 		bool extended, bool partial,
 		void *data, __u32 len)
@@ -4842,7 +4851,7 @@ nvme_init_zns_report_zones(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Initializes the passthru command buffer for the ZNS Append command.
  */
 static inline void
-nvme_init_zns_append(struct nvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_zns_append(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		__u64 zslba, __u16 nlb, __u16 control, __u16 cev, __u16 dspec,
 		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
 {
@@ -4887,7 +4896,7 @@ nvme_init_zns_append(struct nvme_passthru_cmd *cmd, __u32 nsid,
  * Management Send command.
  */
 static inline void
-nvme_init_dim_send(struct nvme_passthru_cmd *cmd,
+nvme_init_dim_send(struct libnvme_passthru_cmd *cmd,
 		__u8 tas, void *data, __u32 len)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -4917,7 +4926,7 @@ nvme_init_dim_send(struct nvme_passthru_cmd *cmd,
  * submission function must handle.
  */
 static inline void
-nvme_init_lm_cdq_create(struct nvme_passthru_cmd *cmd,
+nvme_init_lm_cdq_create(struct libnvme_passthru_cmd *cmd,
 		__u16 mos, __u16 cntlid, __u32 cdqsize, void *data)
 {
 	__u16 cqs;
@@ -4959,7 +4968,7 @@ nvme_init_lm_cdq_create(struct nvme_passthru_cmd *cmd,
  * command.
  */
 static inline void
-nvme_init_lm_cdq_delete(struct nvme_passthru_cmd *cmd,
+nvme_init_lm_cdq_delete(struct libnvme_passthru_cmd *cmd,
 		__u16 mos, __u16 cdqid)
 {
 	memset(cmd, 0, sizeof(*cmd));
@@ -4989,7 +4998,7 @@ nvme_init_lm_cdq_delete(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the Track Send command.
  */
 static inline void
-nvme_init_lm_track_send(struct nvme_passthru_cmd *cmd,
+nvme_init_lm_track_send(struct libnvme_passthru_cmd *cmd,
 		__u8 sel, __u16 mos, __u16 cdqid)
 {
 
@@ -5029,7 +5038,7 @@ nvme_init_lm_track_send(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the Migration Send command.
  */
 static inline void
-nvme_init_lm_migration_send(struct nvme_passthru_cmd *cmd,
+nvme_init_lm_migration_send(struct libnvme_passthru_cmd *cmd,
 		__u16 sel, __u16 mos, __u16 cntlid, __u8 stype, bool dudmq,
 		__u8 csvi, __u16 csuuidi, __u64 cso, __u8 uidx,
 		void *data, __u32 len)
@@ -5105,7 +5114,7 @@ nvme_init_lm_migration_send(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the Migration Receive command.
  */
 static inline void
-nvme_init_lm_migration_recv(struct nvme_passthru_cmd *cmd,
+nvme_init_lm_migration_recv(struct libnvme_passthru_cmd *cmd,
 		__u64 offset, __u16 mos, __u16 cntlid, __u16 csuuidi, __u8 sel,
 		__u8 uidx, __u8 csuidxp, void *data, __u32 len)
 {
@@ -5158,7 +5167,7 @@ nvme_init_lm_migration_recv(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_CTRL_DATA_QUEUE.
  */
 static inline void
-nvme_init_lm_set_features_ctrl_data_queue(struct nvme_passthru_cmd *cmd,
+nvme_init_lm_set_features_ctrl_data_queue(struct libnvme_passthru_cmd *cmd,
 	__u16 cdqid, __u32 hp, __u32 tpt, bool etpt)
 {
 	nvme_init_set_features(cmd, NVME_FEAT_FID_CTRL_DATA_QUEUE, false);
@@ -5183,7 +5192,7 @@ nvme_init_lm_set_features_ctrl_data_queue(struct nvme_passthru_cmd *cmd,
  * FID value %NVME_FEAT_FID_CTRL_DATA_QUEUE.
  */
 static inline void
-nvme_init_lm_get_features_ctrl_data_queue(struct nvme_passthru_cmd *cmd,
+nvme_init_lm_get_features_ctrl_data_queue(struct libnvme_passthru_cmd *cmd,
 		enum nvme_get_features_sel sel, __u16 cdqid,
 		struct nvme_lm_ctrl_data_queue_fid_data *qfd)
 {
@@ -5201,7 +5210,7 @@ nvme_init_lm_get_features_ctrl_data_queue(struct nvme_passthru_cmd *cmd,
  * Initializes the passthru command flags
  */
 static inline void
-nvme_init_mi_cmd_flags(struct nvme_passthru_cmd *cmd, bool ish)
+nvme_init_mi_cmd_flags(struct libnvme_passthru_cmd *cmd, bool ish)
 {
 	cmd->flags = NVME_FIELD_ENCODE(ish,
 			NVME_MI_ADMIN_CFLAGS_ISH_SHIFT,
@@ -5374,7 +5383,7 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 }
 
 /**
- * nvme_get_log() - Get log page data
+ * libnvme_get_log() - Get log page data
  * @hdl:	Transport handle
  * @cmd:	Passthru command
  * @rae:	Retain asynchronous events
@@ -5383,12 +5392,12 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_get_log(struct nvme_transport_handle *hdl,
-		struct nvme_passthru_cmd *cmd, bool rae,
+int libnvme_get_log(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd, bool rae,
 		 __u32 xfer_len);
 
 /**
- * nvme_set_etdas() - Set the Extended Telemetry Data Area 4 Supported bit
+ * libnvme_set_etdas() - Set the Extended Telemetry Data Area 4 Supported bit
  * @hdl:	Transport handle
  * @changed:	boolean to indicate whether or not the host
  *		behavior support feature had been changed
@@ -5396,10 +5405,11 @@ int nvme_get_log(struct nvme_transport_handle *hdl,
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed);
+int libnvme_set_etdas(struct libnvme_transport_handle *hdl, bool *changed);
 
 /**
- * nvme_clear_etdas() - Clear the Extended Telemetry Data Area 4 Supported bit
+ * libnvme_clear_etdas() - Clear the Extended Telemetry Data Area 4
+ * Supported bit
  * @hdl:	Transport handle
  * @changed:	boolean to indicate whether or not the host
  *		behavior support feature had been changed
@@ -5407,21 +5417,21 @@ int nvme_set_etdas(struct nvme_transport_handle *hdl, bool *changed);
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_clear_etdas(struct nvme_transport_handle *hdl, bool *changed);
+int libnvme_clear_etdas(struct libnvme_transport_handle *hdl, bool *changed);
 
 /**
- * nvme_get_uuid_list - Returns the uuid list (if supported)
+ * libnvme_get_uuid_list - Returns the uuid list (if supported)
  * @hdl:	Transport handle
  * @uuid_list:	UUID list returned by identify UUID
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field) or -1 with errno set otherwise.
  */
-int nvme_get_uuid_list(struct nvme_transport_handle *hdl,
+int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
 		struct nvme_id_uuid_list *uuid_list);
 
 /**
- * nvme_get_telemetry_max() - Get telemetry limits
+ * libnvme_get_telemetry_max() - Get telemetry limits
  * @hdl:	Transport handle
  * @da:		On success return max supported data area
  * @max_data_tx: On success set to max transfer chunk supported by
@@ -5430,11 +5440,11 @@ int nvme_get_uuid_list(struct nvme_transport_handle *hdl,
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_get_telemetry_max(struct nvme_transport_handle *hdl,
+int libnvme_get_telemetry_max(struct libnvme_transport_handle *hdl,
 		enum nvme_telemetry_da *da, size_t *max_data_tx);
 
 /**
- * nvme_get_telemetry_log() - Get specified telemetry log
+ * libnvme_get_telemetry_log() - Get specified telemetry log
  * @hdl:	Transport handle
  * @create:	Generate new host initated telemetry capture
  * @ctrl:	Get controller Initiated log
@@ -5450,13 +5460,13 @@ int nvme_get_telemetry_max(struct nvme_transport_handle *hdl,
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create,
+int libnvme_get_telemetry_log(struct libnvme_transport_handle *hdl, bool create,
 		bool ctrl, bool rae, size_t max_data_tx,
 		enum nvme_telemetry_da da, struct nvme_telemetry_log **log,
 		size_t *size);
 
 /**
- * nvme_get_ctrl_telemetry() - Get controller telemetry log
+ * libnvme_get_ctrl_telemetry() - Get controller telemetry log
  * @hdl:	Transport handle
  * @rae:	Retain asynchronous events
  * @log:	On success, set to the value of the allocated and retrieved log.
@@ -5469,12 +5479,12 @@ int nvme_get_telemetry_log(struct nvme_transport_handle *hdl, bool create,
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_get_ctrl_telemetry(struct nvme_transport_handle *hdl, bool rae,
+int libnvme_get_ctrl_telemetry(struct libnvme_transport_handle *hdl, bool rae,
 		struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
 
 /**
- * nvme_get_host_telemetry() - Get host telemetry log
+ * libnvme_get_host_telemetry() - Get host telemetry log
  * @hdl:	Transport handle
  * @log:	On success, set to the value of the allocated and retrieved log.
  * @da:		Log page data area, valid values: &enum nvme_telemetry_da
@@ -5486,12 +5496,12 @@ int nvme_get_ctrl_telemetry(struct nvme_transport_handle *hdl, bool rae,
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_get_host_telemetry(struct nvme_transport_handle *hdl,
+int libnvme_get_host_telemetry(struct libnvme_transport_handle *hdl,
 		struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
 
 /**
- * nvme_get_new_host_telemetry() - Get new host telemetry log
+ * libnvme_get_new_host_telemetry() - Get new host telemetry log
  * @hdl:	Transport handle
  * @log:	On success, set to the value of the allocated and retrieved log.
  * @da:		Log page data area, valid values: &enum nvme_telemetry_da
@@ -5503,22 +5513,23 @@ int nvme_get_host_telemetry(struct nvme_transport_handle *hdl,
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_get_new_host_telemetry(struct nvme_transport_handle *hdl,
+int libnvme_get_new_host_telemetry(struct libnvme_transport_handle *hdl,
 		struct nvme_telemetry_log **log,
 		enum nvme_telemetry_da da, size_t *size);
 
 /**
- * nvme_get_ana_log_len_from_id_ctrl() - Retrieve maximum possible ANA log size
+ * libnvme_get_ana_log_len_from_id_ctrl() - Retrieve maximum possible
+ * ANA log size
  * @id_ctrl:	Controller identify data
  * @rgo:	If true, return maximum log page size without NSIDs
  *
  * Return: A byte limit on the size of the controller's ANA log page
  */
-size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
+size_t libnvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
 		bool rgo);
 
 /**
- * nvme_get_ana_log_atomic() - Retrieve Asymmetric Namespace Access
+ * libnvme_get_ana_log_atomic() - Retrieve Asymmetric Namespace Access
  * log page atomically
  * @hdl:	Transport handle
  * @rae:	Whether to retain asynchronous events
@@ -5539,21 +5550,23 @@ size_t nvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
  * Sets errno = ENOSPC if the full log page does not fit in the provided buffer.
  */
 int
-nvme_get_ana_log_atomic(struct nvme_transport_handle *hdl, bool rae, bool rgo,
-		struct nvme_ana_log *log, __u32 *len, unsigned int retries);
+libnvme_get_ana_log_atomic(struct libnvme_transport_handle *hdl, bool rae,
+		bool rgo, struct nvme_ana_log *log, __u32 *len,
+		unsigned int retries);
 
 /**
- * nvme_get_ana_log_len() - Retrieve size of the current ANA log
+ * libnvme_get_ana_log_len() - Retrieve size of the current ANA log
  * @hdl:	Transport handle
  * @analen:	Pointer to where the length will be set on success
  *
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen);
+int libnvme_get_ana_log_len(struct libnvme_transport_handle *hdl,
+		size_t *analen);
 
 /**
- * nvme_get_logical_block_size() - Retrieve block size
+ * libnvme_get_logical_block_size() - Retrieve block size
  * @hdl:	Transport handle
  * @nsid:	Namespace id
  * @blksize:	Pointer to where the block size will be set on success
@@ -5561,11 +5574,11 @@ int nvme_get_ana_log_len(struct nvme_transport_handle *hdl, size_t *analen);
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_get_logical_block_size(struct nvme_transport_handle *hdl, __u32 nsid,
-		int *blksize);
+int libnvme_get_logical_block_size(struct libnvme_transport_handle *hdl,
+		__u32 nsid, int *blksize);
 
 /**
- * nvme_get_lba_status_log() - Retrieve the LBA Status log page
+ * libnvme_get_lba_status_log() - Retrieve the LBA Status log page
  * @hdl:	Transport handle
  * @rae:	Retain asynchronous events
  * @log:	On success, set to the value of the allocated and retrieved log.
@@ -5573,11 +5586,11 @@ int nvme_get_logical_block_size(struct nvme_transport_handle *hdl, __u32 nsid,
  * Return: 0 on success, the nvme command status if a response was
  * received (see &enum nvme_status_field) or a negative error otherwise.
  */
-int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae,
+int libnvme_get_lba_status_log(struct libnvme_transport_handle *hdl, bool rae,
 		struct nvme_lba_status_log **log);
 
 /**
- * nvme_get_feature_length() - Retrieve the command payload length for a
+ * libnvme_get_feature_length() - Retrieve the command payload length for a
  *			       specific feature identifier
  * @fid:   Feature identifier, see &enum nvme_features_id.
  * @cdw11: The cdw11 value may affect the transfer (only known fid is
@@ -5590,11 +5603,11 @@ int nvme_get_lba_status_log(struct nvme_transport_handle *hdl, bool rae,
  * Return: 0 on success, -1 with errno set to EINVAL if the function did not
  * recognize &fid.
  */
-int nvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
+int libnvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
 			    __u32 *len);
 
 /**
- * nvme_get_directive_receive_length() - Get directive receive length
+ * libnvme_get_directive_receive_length() - Get directive receive length
  * @dtype: Directive type, see &enum nvme_directive_dtype
  * @doper: Directive receive operation, see &enum nvme_directive_receive_doper
  * @len:   On success, set to this directives payload length in bytes.
@@ -5602,5 +5615,5 @@ int nvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
  * Return: 0 on success, -1 with errno set to EINVAL if the function did not
  * recognize &dtype or &doper.
  */
-int nvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
+int libnvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
 		enum nvme_directive_receive_doper doper, __u32 *len);

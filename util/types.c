@@ -151,7 +151,7 @@ const char *util_uuid_to_string(unsigned char uuid[NVME_UUID_LEN])
 {
 	static char uuid_str[NVME_UUID_LEN_STRING];
 
-	nvme_uuid_to_string(uuid, uuid_str);
+	libnvme_uuid_to_string(uuid, uuid_str);
 
 	return uuid_str;
 }

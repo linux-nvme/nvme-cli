@@ -10,13 +10,13 @@
 
 #include <platform/types.h>
 
-struct nvme_global_ctx;
-struct nvme_transport_handle;
+struct libnvme_global_ctx;
+struct libnvme_transport_handle;
 
 /**
- * struct nvme_passthru_cmd - nvme passthrough command structure
- * @opcode:	Operation code, see &enum nvme_io_opcodes and
- *		&enum nvme_admin_opcodes
+ * struct libnvme_passthru_cmd - nvme passthrough command structure
+ * @opcode:	Operation code, see &enum libnvme_io_opcodes and
+ *		&enum libnvme_admin_opcodes
  * @flags:	Supported only for NVMe-MI
  * @rsvd1:	Reserved for future use
  * @nsid:	Namespace Identifier, or Fabrics type
@@ -37,7 +37,7 @@ struct nvme_transport_handle;
  * @result:	Set on completion to the command's CQE DWORD 0-1
  *		controller response
  */
-struct nvme_passthru_cmd {
+struct libnvme_passthru_cmd {
 	__u8    opcode;
 	__u8    flags;
 	__u16   rsvd1;
@@ -60,9 +60,9 @@ struct nvme_passthru_cmd {
 };
 
 /**
- * struct nvme_uring_cmd - nvme uring command structure
- * @opcode:	Operation code, see &enum nvme_io_opcodes and
- *		&enum nvme_admin_opcodes
+ * struct libnvme_uring_cmd - nvme uring command structure
+ * @opcode:	Operation code, see &enum libnvme_io_opcodes and
+ *		&enum libnvme_admin_opcodes
  * @flags:	Not supported: intended for command flags (eg: SGL, FUSE)
  * @rsvd1:	Reserved for future use
  * @nsid:	Namespace Identifier, or Fabrics type
@@ -81,7 +81,7 @@ struct nvme_passthru_cmd {
  * @timeout_ms:	If non-zero, overrides system default timeout in milliseconds
  * @rsvd2:	Reserved for future use (and fills an implicit struct pad
  */
-struct nvme_uring_cmd {
+struct libnvme_uring_cmd {
 	__u8	opcode;
 	__u8	flags;
 	__u16	rsvd1;

@@ -96,11 +96,11 @@ enum dera_device_status
 	DEVICE_STAUTS__OVER_TEMPRATURE = 0x09,
 };
 
-static int nvme_dera_get_device_status(struct nvme_transport_handle *hdl, enum dera_device_status *result)
+static int nvme_dera_get_device_status(struct libnvme_transport_handle *hdl, enum dera_device_status *result)
 {
 	int err = 0;
 
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode = 0xc0, 
 		.addr = (__u64)(uintptr_t)NULL,
 		.data_len = 0,
@@ -108,7 +108,7 @@ static int nvme_dera_get_device_status(struct nvme_transport_handle *hdl, enum d
 		.cdw12 = 0x104,
 	};
 
-	err = nvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_submit_admin_passthru(hdl, &cmd);
 	if (!err && result)
 		*result = cmd.result;
 
@@ -117,9 +117,9 @@ static int nvme_dera_get_device_status(struct nvme_transport_handle *hdl, enum d
 
 static int get_status(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	enum dera_device_status state = DEVICE_STATUS_FATAL_ERROR;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	char *desc = "Get the Dera device status";
 	struct nvme_dera_smart_info_log log;
 	int err;

@@ -54,11 +54,11 @@ void hexdump(const unsigned char *buf, int len)
 	fhexdump(stdout, buf, len);
 }
 
-int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
+int do_get_log_page(libnvme_mi_ep_t ep, int argc, char **argv)
 {
-	struct nvme_transport_handle *hdl;
+	struct libnvme_transport_handle *hdl;
 	enum nvme_cmd_get_log_lid lid;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	uint8_t buf[4096];
 	uint16_t ctrl_id;
 	int rc, tmp;
@@ -83,7 +83,7 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 		lid = 0x1;
 	}
 
-	hdl = nvme_mi_init_transport_handle(ep, ctrl_id);
+	hdl = libnvme_mi_init_transport_handle(ep, ctrl_id);
 	if (!hdl) {
 		warn("can't create controller");
 		return -1;
@@ -91,7 +91,7 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 
 	nvme_init_get_log(&cmd, NVME_NSID_NONE, lid, NVME_CSI_NVM,
 			  buf, sizeof(buf));
-	rc = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	rc = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (rc) {
 		warn("can't perform Get Log page command");
 		return -1;
@@ -104,7 +104,7 @@ int do_get_log_page(nvme_mi_ep_t ep, int argc, char **argv)
 }
 
 struct thread_struct {
-	nvme_mi_ep_t ep;
+	libnvme_mi_ep_t ep;
 	int argc;
 	char **argv;
 	int rc;
@@ -122,23 +122,23 @@ enum action {
 	ACTION_CSI_TEST,
 };
 
-int do_csi_test(struct nvme_global_ctx *ctx, int net, __u8 eid,
+int do_csi_test(struct libnvme_global_ctx *ctx, int net, __u8 eid,
 		int argc, char **argv)
 {
 	int rc = 0;
-	nvme_mi_ep_t ep1, ep2;
+	libnvme_mi_ep_t ep1, ep2;
 
-	ep1 = nvme_mi_open_mctp(ctx, net, eid);
+	ep1 = libnvme_mi_open_mctp(ctx, net, eid);
 	if (!ep1)
 		errx(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
-	ep2 = nvme_mi_open_mctp(ctx, net, eid);
+	ep2 = libnvme_mi_open_mctp(ctx, net, eid);
 	if (!ep2)
 		errx(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
 
 	pthread_t thread;
 
-	nvme_mi_set_csi(ep1, 0);//Not necessary, but to be explicit
-	nvme_mi_set_csi(ep2, 1);
+	libnvme_mi_set_csi(ep1, 0);//Not necessary, but to be explicit
+	libnvme_mi_set_csi(ep2, 1);
 	struct thread_struct s;
 
 	s.ep = ep2;
@@ -164,8 +164,8 @@ int do_csi_test(struct nvme_global_ctx *ctx, int net, __u8 eid,
 
 	printf("Second thread finished with rc=%d\n", s.rc);
 
-	nvme_mi_close(ep1);
-	nvme_mi_close(ep2);
+	libnvme_mi_close(ep1);
+	libnvme_mi_close(ep2);
 
 	if (rc)
 		return rc;
@@ -175,7 +175,7 @@ int do_csi_test(struct nvme_global_ctx *ctx, int net, __u8 eid,
 }
 
 static int do_action_endpoint(enum action action,
-				struct nvme_global_ctx *ctx,
+				struct libnvme_global_ctx *ctx,
 				int net,
 				uint8_t eid,
 				int argc,
@@ -200,7 +200,7 @@ static int do_action_endpoint(enum action action,
 
 int main(int argc, char **argv)
 {
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	enum action action;
 	bool usage = true;
 	uint8_t eid = 0;
@@ -237,12 +237,12 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	ctx = nvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
 	if (!ctx)
 		err(EXIT_FAILURE, "can't create NVMe root");
 
 	rc = do_action_endpoint(action, ctx, net, eid, argc, argv);
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

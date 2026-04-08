@@ -26,11 +26,11 @@ static __u8 scao_guid[GUID_LEN] = {
 	0xC9, 0x14, 0xD5, 0xAF
 };
 
-static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
+static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 			   unsigned int format_version)
 {
 	struct ocp_smart_extended_log *data;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t fmt;
 	__u8 uidx;
 	int ret;
@@ -45,7 +45,7 @@ static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
 
 	data = malloc(sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
@@ -57,11 +57,11 @@ static int get_c0_log_page(struct nvme_transport_handle *hdl, char *format,
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
-	ret = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 
 	if (strcmp(format, "json"))
 		fprintf(stderr, "NVMe Status:%s(%x)\n",
-			nvme_status_to_string(ret, false), ret);
+			libnvme_status_to_string(ret, false), ret);
 
 	if (ret == 0) {
 		/* check log page guid */
@@ -100,8 +100,8 @@ int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 		      struct plugin *plugin)
 {
 	const char *desc = "Retrieve the extended SMART health data.";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
 	NVME_ARGS(opts);

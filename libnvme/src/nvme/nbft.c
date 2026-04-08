@@ -77,13 +77,13 @@ static char *trtype_to_string(__u8 transport_type)
 #define verify(ctx, condition, message)					\
 	do {								\
 		if (!(condition)) {					\
-			nvme_msg(ctx, LOG_DEBUG, "file %s: " message "\n", \
+			libnvme_msg(ctx, LOG_DEBUG, "file %s: " message "\n", \
 				 nbft->filename);			\
 			return -EINVAL;					\
 		}							\
 	} while (0)
 
-static int __get_heap_obj(struct nvme_global_ctx *ctx,
+static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 		struct nbft_header *header, const char *filename,
 		const char *descriptorname, const char *fieldname,
 		struct nbft_heap_obj obj, bool is_string,
@@ -93,7 +93,7 @@ static int __get_heap_obj(struct nvme_global_ctx *ctx,
 		return -ENOENT;
 
 	if (!in_heap(header, obj)) {
-		nvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LOG_DEBUG,
 			"file %s: field '%s' in descriptor '%s' has invalid offset or length\n",
 			filename, fieldname, descriptorname);
 		return -EINVAL;
@@ -105,14 +105,14 @@ static int __get_heap_obj(struct nvme_global_ctx *ctx,
 	if (is_string) {
 		if (strnlen(*output, le16_to_cpu(obj.length) + 1) <
 				le16_to_cpu(obj.length)) {
-			nvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LOG_DEBUG,
 				"file %s: string '%s' in descriptor '%s' is shorter (%u) than specified length (%u)\n",
 				filename, fieldname, descriptorname,
 				(unsigned int)strnlen(*output, le16_to_cpu(obj.length) + 1),
 					le16_to_cpu(obj.length));
 		} else if (strnlen(*output, le16_to_cpu(obj.length) + 1) >
 				le16_to_cpu(obj.length)) {
-			nvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LOG_DEBUG,
 				"file %s: string '%s' in descriptor '%s' is not zero terminated\n",
 				filename, fieldname, descriptorname);
 			return -EINVAL;
@@ -163,7 +163,7 @@ static struct nbft_info_security *security_from_index(struct nbft_info *nbft,
 	return NULL;
 }
 
-static int read_ssns_exended_info(struct nvme_global_ctx *ctx,
+static int read_ssns_exended_info(struct libnvme_global_ctx *ctx,
 		struct nbft_info *nbft, struct nbft_info_subsystem_ns *ssns,
 		struct nbft_ssns_ext_info *raw_ssns_ei)
 {
@@ -188,7 +188,7 @@ static int read_ssns_exended_info(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-static int read_ssns(struct nvme_global_ctx *ctx,
+static int read_ssns(struct libnvme_global_ctx *ctx,
 		struct nbft_info *nbft, struct nbft_ssns *raw_ssns,
 		struct nbft_info_subsystem_ns **s)
 {
@@ -231,7 +231,7 @@ static int read_ssns(struct nvme_global_ctx *ctx,
 		ssns->discovery = discovery_from_index(nbft,
 			raw_ssns->primary_discovery_ctrl_index);
 		if (!ssns->discovery)
-			nvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LOG_DEBUG,
 				 "file %s: namespace %d discovery controller not found\n",
 				 nbft->filename, ssns->index);
 	}
@@ -268,7 +268,7 @@ static int read_ssns(struct nvme_global_ctx *ctx,
 		ssns->security = security_from_index(nbft,
 			raw_ssns->security_desc_index);
 		if (!ssns->security)
-			nvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LOG_DEBUG,
 				 "file %s: namespace %d security controller not found\n",
 				 nbft->filename, ssns->index);
 	}
@@ -288,7 +288,7 @@ static int read_ssns(struct nvme_global_ctx *ctx,
 	}
 	ssns->hfis[0] = hfi_from_index(nbft, raw_ssns->primary_hfi_desc_index);
 	if (!ssns->hfis[0]) {
-		nvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LOG_DEBUG,
 			"file %s: SSNS %d: HFI %d not found\n",
 			nbft->filename, ssns->index,
 			raw_ssns->primary_hfi_desc_index);
@@ -313,7 +313,7 @@ static int read_ssns(struct nvme_global_ctx *ctx,
 			duplicate = true;
 
 		if (duplicate) {
-			nvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LOG_DEBUG,
 				"file %s: SSNS %d skipping duplicate HFI index %d\n",
 				nbft->filename, ssns->index, ss_hfi_indexes[i]);
 			continue;
@@ -321,7 +321,7 @@ static int read_ssns(struct nvme_global_ctx *ctx,
 
 		ssns->hfis[i + 1] = hfi_from_index(nbft, ss_hfi_indexes[i]);
 		if (ss_hfi_indexes[i] && !ssns->hfis[i + 1])
-			nvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LOG_DEBUG,
 				"file %s: SSNS %d HFI %d not found\n",
 				nbft->filename, ssns->index, ss_hfi_indexes[i]);
 		else
@@ -353,7 +353,7 @@ fail:
 	return ret;
 }
 
-static int read_hfi_info_tcp(struct nvme_global_ctx *ctx,
+static int read_hfi_info_tcp(struct libnvme_global_ctx *ctx,
 		struct nbft_info *nbft,
 		struct nbft_hfi_info_tcp *raw_hfi_info_tcp,
 		struct nbft_info_hfi *hfi)
@@ -368,7 +368,7 @@ static int read_hfi_info_tcp(struct nvme_global_ctx *ctx,
 	verify(ctx, raw_hfi_info_tcp->version == 1,
 	       "invalid version in HFI transport descriptor");
 	if (le16_to_cpu(raw_hfi_info_tcp->hfi_index) != hfi->index)
-		nvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LOG_DEBUG,
 			"file %s: HFI descriptor index %d does not match index in HFI transport descriptor\n",
 			nbft->filename, hfi->index);
 
@@ -404,7 +404,7 @@ static int read_hfi_info_tcp(struct nvme_global_ctx *ctx,
 	return 0;
 }
 
-static int read_hfi(struct nvme_global_ctx *ctx, struct nbft_info *nbft,
+static int read_hfi(struct libnvme_global_ctx *ctx, struct nbft_info *nbft,
 		struct nbft_hfi *raw_hfi, struct nbft_info_hfi **h)
 {
 	int ret;
@@ -442,7 +442,7 @@ static int read_hfi(struct nvme_global_ctx *ctx, struct nbft_info *nbft,
 		if (ret)
 			goto fail;
 	} else {
-		nvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LOG_DEBUG,
 			 "file %s: invalid transport type %d\n",
 			 nbft->filename, raw_hfi->trtype);
 		ret = -EINVAL;
@@ -457,7 +457,7 @@ fail:
 	return ret;
 }
 
-static int read_discovery(struct nvme_global_ctx *ctx,
+static int read_discovery(struct libnvme_global_ctx *ctx,
 		struct nbft_info *nbft,
 		struct nbft_discovery *raw_discovery,
 		struct nbft_info_discovery **d)
@@ -490,14 +490,14 @@ static int read_discovery(struct nvme_global_ctx *ctx,
 
 	discovery->hfi = hfi_from_index(nbft, raw_discovery->hfi_index);
 	if (raw_discovery->hfi_index && !discovery->hfi)
-		nvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LOG_DEBUG,
 			 "file %s: discovery %d HFI not found\n",
 			 nbft->filename, discovery->index);
 
 	discovery->security =
 		security_from_index(nbft, raw_discovery->sec_index);
 	if (raw_discovery->sec_index && !discovery->security)
-		nvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LOG_DEBUG,
 			 "file %s: discovery %d security descriptor not found\n",
 			 nbft->filename, discovery->index);
 
@@ -510,14 +510,14 @@ error:
 	return r;
 }
 
-static int read_security(struct nvme_global_ctx *ctx, struct nbft_info *nbft,
+static int read_security(struct libnvme_global_ctx *ctx, struct nbft_info *nbft,
 		struct nbft_security *raw_security,
 		struct nbft_info_security **s)
 {
 	return -EINVAL;
 }
 
-static void read_hfi_descriptors(struct nvme_global_ctx *ctx,
+static void read_hfi_descriptors(struct libnvme_global_ctx *ctx,
 		struct nbft_info *nbft, int num_hfi,
 		struct nbft_hfi *raw_hfi_array, int hfi_len)
 {
@@ -531,7 +531,7 @@ static void read_hfi_descriptors(struct nvme_global_ctx *ctx,
 	}
 }
 
-static void read_security_descriptors(struct nvme_global_ctx *ctx,
+static void read_security_descriptors(struct libnvme_global_ctx *ctx,
 		struct nbft_info *nbft, int num_sec,
 		struct nbft_security *raw_sec_array, int sec_len)
 {
@@ -546,7 +546,7 @@ static void read_security_descriptors(struct nvme_global_ctx *ctx,
 	}
 }
 
-static void read_discovery_descriptors(struct nvme_global_ctx *ctx,
+static void read_discovery_descriptors(struct libnvme_global_ctx *ctx,
 		struct nbft_info *nbft, int num_disc,
 		struct nbft_discovery *raw_disc_array, int disc_len)
 {
@@ -561,7 +561,7 @@ static void read_discovery_descriptors(struct nvme_global_ctx *ctx,
 	}
 }
 
-static void read_ssns_descriptors(struct nvme_global_ctx *ctx,
+static void read_ssns_descriptors(struct libnvme_global_ctx *ctx,
 		struct nbft_info *nbft, int num_ssns,
 		struct nbft_ssns *raw_ssns_array, int ssns_len)
 {
@@ -582,7 +582,7 @@ static void read_ssns_descriptors(struct nvme_global_ctx *ctx,
  *
  * Returns 0 on success, errno otherwise.
  */
-static int parse_raw_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
+static int parse_raw_nbft(struct libnvme_global_ctx *ctx, struct nbft_info *nbft)
 {
 	__u8 *raw_nbft = nbft->raw_nbft;
 	int raw_nbft_size = nbft->raw_nbft_size;
@@ -714,7 +714,7 @@ static int parse_raw_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
 	return 0;
 }
 
-__public void nvme_free_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft)
+__public void libnvme_free_nbft(struct libnvme_global_ctx *ctx, struct nbft_info *nbft)
 {
 	struct nbft_info_hfi **hfi;
 	struct nbft_info_security **sec;
@@ -740,7 +740,7 @@ __public void nvme_free_nbft(struct nvme_global_ctx *ctx, struct nbft_info *nbft
 	free(nbft);
 }
 
-__public int nvme_read_nbft(struct nvme_global_ctx *ctx, struct nbft_info **nbft,
+__public int libnvme_read_nbft(struct libnvme_global_ctx *ctx, struct nbft_info **nbft,
 		const char *filename)
 {
 	__u8 *raw_nbft = NULL;
@@ -753,15 +753,15 @@ __public int nvme_read_nbft(struct nvme_global_ctx *ctx, struct nbft_info **nbft
 	 */
 	raw_nbft_fp = fopen(filename, "rb");
 	if (raw_nbft_fp == NULL) {
-		nvme_msg(ctx, LOG_ERR, "Failed to open %s: %s\n",
-			 filename, nvme_strerror(errno));
+		libnvme_msg(ctx, LOG_ERR, "Failed to open %s: %s\n",
+			 filename, libnvme_strerror(errno));
 		return -EINVAL;
 	}
 
 	i = fseek(raw_nbft_fp, 0L, SEEK_END);
 	if (i) {
-		nvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
-			 filename, nvme_strerror(errno));
+		libnvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
+			 filename, libnvme_strerror(errno));
 		fclose(raw_nbft_fp);
 		return -EINVAL;
 	}
@@ -771,7 +771,7 @@ __public int nvme_read_nbft(struct nvme_global_ctx *ctx, struct nbft_info **nbft
 
 	raw_nbft = malloc(raw_nbft_size);
 	if (!raw_nbft) {
-		nvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LOG_ERR,
 			"Failed to allocate memory for NBFT table");
 		fclose(raw_nbft_fp);
 		return -ENOMEM;
@@ -779,8 +779,8 @@ __public int nvme_read_nbft(struct nvme_global_ctx *ctx, struct nbft_info **nbft
 
 	i = fread(raw_nbft, sizeof(*raw_nbft), raw_nbft_size, raw_nbft_fp);
 	if (i != raw_nbft_size) {
-		nvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
-			 filename, nvme_strerror(errno));
+		libnvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
+			 filename, libnvme_strerror(errno));
 		fclose(raw_nbft_fp);
 		free(raw_nbft);
 		return -EINVAL;
@@ -793,7 +793,7 @@ __public int nvme_read_nbft(struct nvme_global_ctx *ctx, struct nbft_info **nbft
 	 */
 	*nbft = calloc(1, sizeof(struct nbft_info));
 	if (!*nbft) {
-		nvme_msg(ctx, LOG_ERR, "Could not allocate memory for NBFT\n");
+		libnvme_msg(ctx, LOG_ERR, "Could not allocate memory for NBFT\n");
 		free(raw_nbft);
 		return -ENOMEM;
 	}
@@ -803,8 +803,8 @@ __public int nvme_read_nbft(struct nvme_global_ctx *ctx, struct nbft_info **nbft
 	(*nbft)->raw_nbft_size = raw_nbft_size;
 
 	if (parse_raw_nbft(ctx, *nbft)) {
-		nvme_msg(ctx, LOG_ERR, "Failed to parse %s\n", filename);
-		nvme_free_nbft(ctx, *nbft);
+		libnvme_msg(ctx, LOG_ERR, "Failed to parse %s\n", filename);
+		libnvme_free_nbft(ctx, *nbft);
 		return -EINVAL;
 	}
 	return 0;

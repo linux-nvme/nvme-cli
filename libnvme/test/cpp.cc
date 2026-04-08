@@ -12,65 +12,65 @@
 
 int main()
 {
-	struct nvme_global_ctx *ctx;
-	nvme_host_t h;
-	nvme_subsystem_t s;
-	nvme_ctrl_t c;
-	nvme_path_t p;
-	nvme_ns_t n;
+	struct libnvme_global_ctx *ctx;
+	libnvme_host_t h;
+	libnvme_subsystem_t s;
+	libnvme_ctrl_t c;
+	libnvme_path_t p;
+	libnvme_ns_t n;
 	int err;
 
-	ctx = nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 	if (!ctx)
 		return 1;
 
-	err = nvme_scan_topology(ctx, NULL, NULL);
+	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err && !(err == -ENOENT || err == -EACCES)) {
-		fprintf(stderr, "nvme_scan_topology failed %d\n", err);
-		nvme_free_global_ctx(ctx);
+		fprintf(stderr, "libnvme_scan_topology failed %d\n", err);
+		libnvme_free_global_ctx(ctx);
 		return 1;
 	}
 
-	nvme_for_each_host(ctx, h) {
-		nvme_for_each_subsystem(h, s) {
-			std::cout <<  nvme_subsystem_get_name(s)
-				  << " - NQN=" << nvme_subsystem_get_subsysnqn(s)
+	libnvme_for_each_host(ctx, h) {
+		libnvme_for_each_subsystem(h, s) {
+			std::cout <<  libnvme_subsystem_get_name(s)
+				  << " - NQN=" << libnvme_subsystem_get_subsysnqn(s)
 				  << "\n";
-			nvme_subsystem_for_each_ctrl(s, c) {
-				std::cout << " `- " << nvme_ctrl_get_name(c)
-					  << " " << nvme_ctrl_get_transport(c)
-					  << " " << nvme_ctrl_get_traddr(c)
-					  << " " << nvme_ctrl_get_state(c)
+			libnvme_subsystem_for_each_ctrl(s, c) {
+				std::cout << " `- " << libnvme_ctrl_get_name(c)
+					  << " " << libnvme_ctrl_get_transport(c)
+					  << " " << libnvme_ctrl_get_traddr(c)
+					  << " " << libnvme_ctrl_get_state(c)
 					  << "\n";
-				nvme_ctrl_for_each_ns(c, n) {
+				libnvme_ctrl_for_each_ns(c, n) {
 					std::cout << "   `- "
-						  << nvme_ns_get_name(n)
+						  << libnvme_ns_get_name(n)
 						  << "lba size:"
-						  << nvme_ns_get_lba_size(n)
+						  << libnvme_ns_get_lba_size(n)
 						  << " lba max:"
-						  << nvme_ns_get_lba_count(n)
+						  << libnvme_ns_get_lba_count(n)
 						  << "\n";
 				}
-				nvme_ctrl_for_each_path(c, p) {
+				libnvme_ctrl_for_each_path(c, p) {
 					std::cout << "   `- "
-						  << nvme_path_get_name(p)
+						  << libnvme_path_get_name(p)
 						  << " "
-						  << nvme_path_get_ana_state(p)
+						  << libnvme_path_get_ana_state(p)
 						  << "\n";
 				}
 			}
-			nvme_subsystem_for_each_ns(s, n) {
-				std::cout << "   `- " << nvme_ns_get_name(n)
+			libnvme_subsystem_for_each_ns(s, n) {
+				std::cout << "   `- " << libnvme_ns_get_name(n)
 					  << "lba size:"
-					  << nvme_ns_get_lba_size(n)
+					  << libnvme_ns_get_lba_size(n)
 					  << " lba max:"
-					  << nvme_ns_get_lba_count(n) << "\n";
+					  << libnvme_ns_get_lba_count(n) << "\n";
 			}
 		}
 	}
 	std::cout << "\n";
 
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 
 	return 0;
 }

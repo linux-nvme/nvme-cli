@@ -31,7 +31,7 @@ static struct test_data_psk test_data_psk[] = {
 	    0xF4, 0x42, 0xE2, 0xDD,
 	    0x6D, 0x8B, 0xC4, 0x87,
 	    0x0B, 0x5D, 0x5B, 0x03},
-	  32, 1, NVME_HMAC_ALG_NONE,
+	  32, 1, LIBNVME_HMAC_ALG_NONE,
 	  "NVMeTLSkey-1:00:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwNf9LrZ:" },
 	{ { 0x55, 0x12, 0xDB, 0xB6,
 	    0x73, 0x7D, 0x01, 0x06,
@@ -41,7 +41,7 @@ static struct test_data_psk test_data_psk[] = {
 	    0xF4, 0x42, 0xE2, 0xDD,
 	    0x6D, 0x8B, 0xC4, 0x87,
 	    0x0B, 0x5D, 0x5B, 0x03},
-	  32, 1, NVME_HMAC_ALG_SHA2_256,
+	  32, 1, LIBNVME_HMAC_ALG_SHA2_256,
 	  "NVMeTLSkey-1:01:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwNf9LrZ:" },
 	{ { 0x55, 0x12, 0xDB, 0xB6,
 	    0x73, 0x7D, 0x01, 0x06,
@@ -55,7 +55,7 @@ static struct test_data_psk test_data_psk[] = {
 	    0xF4, 0x42, 0xE2, 0xDD,
 	    0x6D, 0x8B, 0xC4, 0x87,
 	    0x0B, 0x5D, 0x5B, 0x03},
-	  48, 1, NVME_HMAC_ALG_SHA2_384,
+	  48, 1, LIBNVME_HMAC_ALG_SHA2_384,
 	  "NVMeTLSkey-1:02:VRLbtnN9AQb2WXW3c9+wEf/DRLz0QuLdbYvEhwtdWwP/w0S89ELi3W2LxIcLXVsDn8kXZQ==:" },
 };
 
@@ -78,7 +78,7 @@ static struct test_data_identity test_data_identity[] = {
 	    0xF4, 0x42, 0xE2, 0xDD,
 	    0x6D, 0x8B, 0xC4, 0x87,
 	    0x0B, 0x5D, 0x5B, 0x03},
-	  32, 1, NVME_HMAC_ALG_SHA2_256,
+	  32, 1, LIBNVME_HMAC_ALG_SHA2_256,
 	  "nqn.psk-test-host", "nqn.psk-test-subsys",
 	  "NVMe1R01 nqn.psk-test-host nqn.psk-test-subsys iSbjiStwJ/1TrTvDlt2fjFmzvsytOJelidNnA+X5lEU=" },
 	{ { 0x55, 0x12, 0xDB, 0xB6,
@@ -93,7 +93,7 @@ static struct test_data_identity test_data_identity[] = {
 	    0xF4, 0x42, 0xE2, 0xDD,
 	    0x6D, 0x8B, 0xC4, 0x87,
 	    0x0B, 0x5D, 0x5B, 0x03},
-	  48, 1, NVME_HMAC_ALG_SHA2_384,
+	  48, 1, LIBNVME_HMAC_ALG_SHA2_384,
 	  "nqn.psk-test-host", "nqn.psk-test-subsys",
 	  "NVMe1R02 nqn.psk-test-host nqn.psk-test-subsys QhW2+Rp6RzHlNtCslyRxMnwJ11tKKhz8JCAQpQ+XUD8f9td1VeH5h53yz2wKJG1a" },
 };
@@ -107,7 +107,7 @@ static struct test_data_identity test_data_identity_compat[] = {
 	    0xF4, 0x42, 0xE2, 0xDD,
 	    0x6D, 0x8B, 0xC4, 0x87,
 	    0x0B, 0x5D, 0x5B, 0x03},
-	  32, 1, NVME_HMAC_ALG_SHA2_256,
+	  32, 1, LIBNVME_HMAC_ALG_SHA2_256,
 	  "nqn.psk-test-host", "nqn.psk-test-subsys",
 	  "NVMe1R01 nqn.psk-test-host nqn.psk-test-subsys 66GuqV08TsAGII39teWUfwQwizjv06Jy8jOcX3NAAzM=" },
 	{ { 0x55, 0x12, 0xDB, 0xB6,
@@ -122,7 +122,7 @@ static struct test_data_identity test_data_identity_compat[] = {
 	    0xF4, 0x42, 0xE2, 0xDD,
 	    0x6D, 0x8B, 0xC4, 0x87,
 	    0x0B, 0x5D, 0x5B, 0x03},
-	  48, 1, NVME_HMAC_ALG_SHA2_384,
+	  48, 1, LIBNVME_HMAC_ALG_SHA2_384,
 	  "nqn.psk-test-host", "nqn.psk-test-subsys",
 	  "NVMe1R02 nqn.psk-test-host nqn.psk-test-subsys RsKmYJ3nAn1ApjjMloJFbAkLPivONDAX/xW327YBUsn2eGShXSjCZvBaOxscLqmz" },
 };
@@ -137,32 +137,32 @@ static void check_str(const char *exp, const char *res)
 	test_rc = 1;
 }
 
-static void export_test(struct nvme_global_ctx *ctx,
+static void export_test(struct libnvme_global_ctx *ctx,
 		struct test_data_psk *test)
 {
 	char *psk;
 	int ret;
 
 	if (test->version != 1 ||
-	    !(test->hmac == NVME_HMAC_ALG_SHA2_256 ||
-	      test->hmac == NVME_HMAC_ALG_SHA2_384))
+	    !(test->hmac == LIBNVME_HMAC_ALG_SHA2_256 ||
+	      test->hmac == LIBNVME_HMAC_ALG_SHA2_384))
 		return;
 
-	printf("test nvme_export_tls_key hmac %d %s\n",
+	printf("test libnvme_export_tls_key hmac %d %s\n",
 	       test->hmac, test->exported_psk);
 
-	ret = nvme_export_tls_key(ctx, test->configured_psk,
+	ret = libnvme_export_tls_key(ctx, test->configured_psk,
 		test->psk_length, &psk);
 	if (ret) {
 		test_rc = 1;
-		printf("ERROR: nvme_export_tls_key() failed with %d\n", ret);
+		printf("ERROR: libnvme_export_tls_key() failed with %d\n", ret);
 		return;
 	}
 	check_str(test->exported_psk, psk);
 	free(psk);
 }
 
-static void import_test(struct nvme_global_ctx *ctx,
+static void import_test(struct libnvme_global_ctx *ctx,
 		struct test_data_psk *test)
 {
 	unsigned char *psk;
@@ -171,18 +171,18 @@ static void import_test(struct nvme_global_ctx *ctx,
 	int ret;
 
 	if (test->version != 1 ||
-	    !(test->hmac == NVME_HMAC_ALG_SHA2_256 ||
-	      test->hmac == NVME_HMAC_ALG_SHA2_384))
+	    !(test->hmac == LIBNVME_HMAC_ALG_SHA2_256 ||
+	      test->hmac == LIBNVME_HMAC_ALG_SHA2_384))
 		return;
 
-	printf("test nvme_import_tls_key hmac %d %s\n",
+	printf("test libnvme_import_tls_key hmac %d %s\n",
 	       test->hmac, test->exported_psk);
 
-	ret = nvme_import_tls_key(ctx, test->exported_psk, &psk_length,
+	ret = libnvme_import_tls_key(ctx, test->exported_psk, &psk_length,
 		&hmac, &psk);
 	if (ret) {
 		test_rc = 1;
-		printf("ERROR: nvme_import_tls_key() failed with %d\n", ret);
+		printf("ERROR: libnvme_import_tls_key() failed with %d\n", ret);
 		return;
 	}
 
@@ -206,7 +206,7 @@ out:
 	free(psk);
 }
 
-static void export_versioned_test(struct nvme_global_ctx *ctx,
+static void export_versioned_test(struct libnvme_global_ctx *ctx,
 		struct test_data_psk *test)
 {
 	char *psk;
@@ -215,15 +215,15 @@ static void export_versioned_test(struct nvme_global_ctx *ctx,
 	if (test->version != 1)
 		return;
 
-	printf("test nvme_export_tls_key_versioned hmac %d %s\n",
+	printf("test libnvme_export_tls_key_versioned hmac %d %s\n",
 	       test->hmac, test->exported_psk);
 
-	ret = nvme_export_tls_key_versioned(ctx, test->version, test->hmac,
+	ret = libnvme_export_tls_key_versioned(ctx, test->version, test->hmac,
 					    test->configured_psk,
 					    test->psk_length, &psk);
 	if (ret) {
 		test_rc = 1;
-		printf("ERROR: nvme_export_tls_key_versioned() failed with %d\n",
+		printf("ERROR: libnvme_export_tls_key_versioned() failed with %d\n",
 		       ret);
 		return;
 	}
@@ -233,7 +233,7 @@ static void export_versioned_test(struct nvme_global_ctx *ctx,
 	free(psk);
 }
 
-static void import_versioned_test(struct nvme_global_ctx *ctx,
+static void import_versioned_test(struct libnvme_global_ctx *ctx,
 		struct test_data_psk *test)
 {
 	unsigned char *psk;
@@ -245,14 +245,14 @@ static void import_versioned_test(struct nvme_global_ctx *ctx,
 	if (test->version != 1)
 		return;
 
-	printf("test nvme_import_tls_key_versioned hmac %d %s\n",
+	printf("test libnvme_import_tls_key_versioned hmac %d %s\n",
 	       test->hmac, test->exported_psk);
 
-	ret = nvme_import_tls_key_versioned(ctx, test->exported_psk, &version,
+	ret = libnvme_import_tls_key_versioned(ctx, test->exported_psk, &version,
 					    &hmac, &psk_length, &psk);
 	if (ret) {
 		test_rc = 1;
-		printf("ERROR: nvme_import_tls_key_versioned() failed with %d\n",
+		printf("ERROR: libnvme_import_tls_key_versioned() failed with %d\n",
 		       ret);
 		return;
 	}
@@ -284,21 +284,21 @@ out:
 	free(psk);
 }
 
-static void identity_test(struct nvme_global_ctx *ctx,
+static void identity_test(struct libnvme_global_ctx *ctx,
 		struct test_data_identity *test)
 {
 	char *id;
 	int ret;
 
 	if (test->version != 1 ||
-	    !(test->hmac == NVME_HMAC_ALG_SHA2_256 ||
-	      test->hmac == NVME_HMAC_ALG_SHA2_384))
+	    !(test->hmac == LIBNVME_HMAC_ALG_SHA2_256 ||
+	      test->hmac == LIBNVME_HMAC_ALG_SHA2_384))
 		return;
 
-	printf("test nvme_generate_tls_key_identity host %s subsys %s hmac %d %s\n",
+	printf("test libnvme_generate_tls_key_identity host %s subsys %s hmac %d %s\n",
 	       test->hostnqn, test->subsysnqn, test->hmac, test->identity);
 
-	ret = nvme_generate_tls_key_identity(ctx, test->hostnqn,
+	ret = libnvme_generate_tls_key_identity(ctx, test->hostnqn,
 		test->subsysnqn, test->version, test->hmac,
 		(unsigned char *)test->configured_psk,
 		test->psk_length, &id);
@@ -306,28 +306,28 @@ static void identity_test(struct nvme_global_ctx *ctx,
 		if (ret == -ENOTSUP)
 			return;
 		test_rc = 1;
-		printf("ERROR: nvme_generate_tls_key_identity() failed with %d\n", ret);
+		printf("ERROR: libnvme_generate_tls_key_identity() failed with %d\n", ret);
 		return;
 	}
 	check_str(test->identity, id);
 	free(id);
 }
 
-static void identity_test_compat(struct nvme_global_ctx *ctx,
+static void identity_test_compat(struct libnvme_global_ctx *ctx,
 		struct test_data_identity *test)
 {
 	char *id;
 	int ret;
 
 	if (test->version != 1 ||
-	    !(test->hmac == NVME_HMAC_ALG_SHA2_256 ||
-	      test->hmac == NVME_HMAC_ALG_SHA2_384))
+	    !(test->hmac == LIBNVME_HMAC_ALG_SHA2_256 ||
+	      test->hmac == LIBNVME_HMAC_ALG_SHA2_384))
 		return;
 
-	printf("test nvme_generate_tls_key_identity_compat host %s subsys %s hmac %d %s\n",
+	printf("test libnvme_generate_tls_key_identity_compat host %s subsys %s hmac %d %s\n",
 	       test->hostnqn, test->subsysnqn, test->hmac, test->identity);
 
-	ret = nvme_generate_tls_key_identity_compat(ctx, test->hostnqn,
+	ret = libnvme_generate_tls_key_identity_compat(ctx, test->hostnqn,
 		test->subsysnqn, test->version, test->hmac,
 		(unsigned char *)test->configured_psk,
 		test->psk_length, &id);
@@ -335,7 +335,7 @@ static void identity_test_compat(struct nvme_global_ctx *ctx,
 		if (ret == -ENOTSUP)
 			return;
 		test_rc = 1;
-		printf("ERROR: nvme_generate_tls_key_identity_compat() failed with %d\n", ret);
+		printf("ERROR: libnvme_generate_tls_key_identity_compat() failed with %d\n", ret);
 		return;
 	}
 	check_str(test->identity, id);
@@ -344,8 +344,8 @@ static void identity_test_compat(struct nvme_global_ctx *ctx,
 
 int main(void)
 {
-	struct nvme_global_ctx *ctx =
-		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	struct libnvme_global_ctx *ctx =
+		libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 
 	for (int i = 0; i < ARRAY_SIZE(test_data_psk); i++)
 		export_test(ctx, &test_data_psk[i]);
@@ -365,7 +365,7 @@ int main(void)
 	for (int i = 0; i < ARRAY_SIZE(test_data_identity_compat); i++)
 		identity_test_compat(ctx, &test_data_identity_compat[i]);
 
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 
 	return test_rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

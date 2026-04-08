@@ -395,7 +395,7 @@ exit_status:
 	return err;
 }
 
-static int GetLogPageSize(struct nvme_transport_handle *hdl, unsigned char ucLogID, int *nLogSize)
+static int GetLogPageSize(struct libnvme_transport_handle *hdl, unsigned char ucLogID, int *nLogSize)
 {
 	int err = 0;
 	unsigned char pTmpBuf[CommonChunkSize] = { 0 };
@@ -422,11 +422,11 @@ static int GetLogPageSize(struct nvme_transport_handle *hdl, unsigned char ucLog
 	return err;
 }
 
-static int NVMEGetLogPage(struct nvme_transport_handle *hdl, unsigned char ucLogID, unsigned char *pBuffer, int nBuffSize,
+static int NVMEGetLogPage(struct libnvme_transport_handle *hdl, unsigned char ucLogID, unsigned char *pBuffer, int nBuffSize,
 			  int offset)
 {
 	int err = 0;
-	struct nvme_passthru_cmd cmd = { 0 };
+	struct libnvme_passthru_cmd cmd = { 0 };
 	unsigned int uiNumDwords = (unsigned int)nBuffSize / sizeof(unsigned int);
 	unsigned int uiMaxChunk = uiNumDwords;
 	unsigned int uiNumChunks = 1;
@@ -474,7 +474,7 @@ static int NVMEGetLogPage(struct nvme_transport_handle *hdl, unsigned char ucLog
 		cmd.addr = (__u64) (uintptr_t) pTempPtr;
 		cmd.nsid = 0xFFFFFFFF;
 		cmd.data_len = uiXferDwords * 4;
-		err = nvme_submit_admin_passthru(hdl, &cmd);
+		err = libnvme_submit_admin_passthru(hdl, &cmd);
 		ullBytesRead += uiXferDwords * 4;
 		if (ucLogID == 0x07 || ucLogID == 0x08 || ucLogID == 0xE9)
 			pTempPtr = pBuffer + (ullBytesRead - offset);
@@ -485,7 +485,7 @@ static int NVMEGetLogPage(struct nvme_transport_handle *hdl, unsigned char ucLog
 	return err;
 }
 
-static int NVMEResetLog(struct nvme_transport_handle *hdl, unsigned char ucLogID, int nBufferSize,
+static int NVMEResetLog(struct libnvme_transport_handle *hdl, unsigned char ucLogID, int nBufferSize,
 			long long llMaxSize)
 {
 	unsigned int *pBuffer = NULL;
@@ -512,7 +512,7 @@ static int NVMEResetLog(struct nvme_transport_handle *hdl, unsigned char ucLogID
 	return err;
 }
 
-static int GetCommonLogPage(struct nvme_transport_handle *hdl, unsigned char ucLogID,
+static int GetCommonLogPage(struct libnvme_transport_handle *hdl, unsigned char ucLogID,
 			    unsigned char **pBuffer, int nBuffSize)
 {
 	unsigned char *pTempPtr = NULL;
@@ -532,8 +532,8 @@ exit_status:
 /*
  * Plugin Commands
  */
-static int micron_parse_options(struct nvme_global_ctx **ctx,
-				struct nvme_transport_handle **hdl, int argc,
+static int micron_parse_options(struct libnvme_global_ctx **ctx,
+				struct libnvme_transport_handle **hdl, int argc,
 				char **argv, const char *desc,
 				struct argconfig_commandline_options *opts,
 				enum eDriveModel *modelp)
@@ -555,15 +555,15 @@ static int micron_parse_options(struct nvme_global_ctx **ctx,
 	return 0;
 }
 
-static int micron_fw_commit(struct nvme_transport_handle *hdl, int select)
+static int micron_fw_commit(struct libnvme_transport_handle *hdl, int select)
 {
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode = nvme_admin_fw_commit,
 		.cdw10 = 8,
 		.cdw12 = select,
 	};
 
-	return nvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_submit_admin_passthru(hdl, &cmd);
 }
 
 static int micron_selective_download(int argc, char **argv,
@@ -579,11 +579,11 @@ static int micron_selective_download(int argc, char **argv,
 	const char *fw = "firmware file (required)";
 	const char *select = "FW Select (e.g., --select=ALL)";
 
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 
 	int selectNo, fw_fd, fw_size, err, offset = 0;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int xfer = 4096;
 	struct stat sb;
 	void *fw_buf;
@@ -664,7 +664,7 @@ static int micron_selective_download(int argc, char **argv,
 			perror("fw-download");
 			goto out_free;
 		}
-		err = nvme_submit_admin_passthru(hdl, &cmd);
+		err = libnvme_submit_admin_passthru(hdl, &cmd);
 		if (err < 0) {
 			perror("fw-download");
 			goto out_free;
@@ -705,8 +705,8 @@ static int micron_smbus_option(int argc, char **argv,
 	const char *save = "1 - persistent, 0 - non-persistent (default)";
 	int fid = MICRON_FEATURE_SMBUS_OPTION;
 	enum eDriveModel model = UNKNOWN_MODEL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 
 	struct {
@@ -787,8 +787,8 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	bool is_json = false;
 	struct json_object *root;
 	struct json_object *logPages;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	NVME_ARGS(opts,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
@@ -912,8 +912,8 @@ static int micron_pcie_stats(int argc, char **argv,
 {
 	int  i, err = 0, bus = 0, domain = 0, device = 0, function = 0, ctrlIdx;
 	char strTempFile[1024], strTempFile2[1024], cmdbuf[1024];
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	char *businfo = NULL;
 	char *devicename = NULL;
@@ -922,7 +922,7 @@ static int micron_pcie_stats(int argc, char **argv,
 	FILE *fp;
 	char correctable[8] = { 0 };
 	char uncorrectable[8] = { 0 };
-	struct nvme_passthru_cmd admin_cmd = { 0 };
+	struct libnvme_passthru_cmd admin_cmd = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	char *res;
 	bool is_json = true;
@@ -971,7 +971,7 @@ static int micron_pcie_stats(int argc, char **argv,
 		admin_cmd.addr = (__u64)(uintptr_t)&pcie_error_counters;
 		admin_cmd.data_len = sizeof(pcie_error_counters);
 		admin_cmd.cdw10 = 1;
-		err = nvme_submit_admin_passthru(hdl, &admin_cmd);
+		err = libnvme_submit_admin_passthru(hdl, &admin_cmd);
 		if (!err) {
 			counters = true;
 			correctable_errors = 10;
@@ -1101,14 +1101,14 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 {
 	int err = -EINVAL, bus, domain, device, function;
 	char strTempFile[1024], strTempFile2[1024], cmdbuf[1024];
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	char *businfo = NULL;
 	char *devicename = NULL;
 	char tdevice[PATH_MAX] = { 0 };
 	ssize_t sLinkSize = 0;
 	enum eDriveModel model = UNKNOWN_MODEL;
-	struct nvme_passthru_cmd admin_cmd = { 0 };
+	struct libnvme_passthru_cmd admin_cmd = { 0 };
 	char correctable[8] = { 0 };
 	FILE *fp;
 	char *res;
@@ -1139,7 +1139,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		admin_cmd.opcode = 0xD6;
 		admin_cmd.addr = 0;
 		admin_cmd.cdw10 = 0;
-		err = nvme_submit_admin_passthru(hdl, &admin_cmd);
+		err = libnvme_submit_admin_passthru(hdl, &admin_cmd);
 		if (!err) {
 			printf("Device correctable error counters are cleared!\n");
 			goto out;
@@ -1812,8 +1812,8 @@ static int micron_nand_stats(int argc, char **argv,
 	unsigned char logC0[C0_log_size] = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	struct nvme_id_ctrl ctrl;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err, ctrlIdx;
 	__u8 nsze;
 	bool has_d0_log = true;
@@ -1961,8 +1961,8 @@ static int micron_smart_ext_log(int argc, char **argv,
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	int err = 0, ctrlIdx = 0;
 	__u8 log_id;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	bool is_json = true;
 	struct format {
 		char *fmt;
@@ -2010,8 +2010,8 @@ static int micron_work_load_log(int argc, char **argv, struct command *acmd, str
 	const char *desc = "Retrieve Micron Workload logs for the given device ";
 	unsigned int micronWorkLoadLog[C5_MicronWorkLoad_log_size/sizeof(int)] = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	int err = 0, ctrlIdx = 0;
 	bool is_json = true;
@@ -2062,8 +2062,8 @@ static int micron_vendor_telemetry_log(int argc, char **argv,
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	int err = 0, ctrlIdx = 0;
 	bool is_json = true;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	struct format {
 		char *fmt;
@@ -2184,7 +2184,7 @@ static void GetCtrlIDDInfo(const char *dir, struct nvme_id_ctrl *ctrlp)
 			  "nvme_controller_identify_data.bin", "id-ctrl");
 }
 
-static void GetSmartlogData(struct nvme_transport_handle *hdl, const char *dir)
+static void GetSmartlogData(struct libnvme_transport_handle *hdl, const char *dir)
 {
 	struct nvme_smart_log smart_log;
 
@@ -2193,7 +2193,7 @@ static void GetSmartlogData(struct nvme_transport_handle *hdl, const char *dir)
 			  "smart_data.bin", "smart log");
 }
 
-static void GetErrorlogData(struct nvme_transport_handle *hdl, int entries, const char *dir)
+static void GetErrorlogData(struct libnvme_transport_handle *hdl, int entries, const char *dir)
 {
 	int logSize = entries * sizeof(struct nvme_error_log_page);
 	struct nvme_error_log_page *error_log =
@@ -2209,7 +2209,7 @@ static void GetErrorlogData(struct nvme_transport_handle *hdl, int entries, cons
 	free(error_log);
 }
 
-static void GetGenericLogs(struct nvme_transport_handle *hdl, const char *dir)
+static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir)
 {
 	struct nvme_self_test_log self_test_log;
 	struct nvme_firmware_slot fw_log;
@@ -2260,7 +2260,7 @@ static void GetGenericLogs(struct nvme_transport_handle *hdl, const char *dir)
 			  "persistent_event_log.bin", "persistent event log");
 }
 
-static void GetNSIDDInfo(struct nvme_transport_handle *hdl, const char *dir, int nsid)
+static void GetNSIDDInfo(struct libnvme_transport_handle *hdl, const char *dir, int nsid)
 {
 	char file[PATH_MAX] = { 0 };
 	struct nvme_id_ns ns;
@@ -2311,7 +2311,7 @@ static void GetOSConfig(const char *strOSDirName)
 	}
 }
 
-static int micron_telemetry_log(struct nvme_transport_handle *hdl, __u8 type, __u8 **data,
+static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type, __u8 **data,
 				int *logSize, int da)
 {
 	int err, bs = 512, offset = bs;
@@ -2372,7 +2372,7 @@ static int micron_telemetry_log(struct nvme_transport_handle *hdl, __u8 type, __
 	return err;
 }
 
-static int GetTelemetryData(struct nvme_transport_handle *hdl, const char *dir)
+static int GetTelemetryData(struct libnvme_transport_handle *hdl, const char *dir)
 {
 	unsigned char *buffer = NULL;
 	int i, err, logSize = 0;
@@ -2398,7 +2398,7 @@ static int GetTelemetryData(struct nvme_transport_handle *hdl, const char *dir)
 	return err;
 }
 
-static int GetFeatureSettings(struct nvme_transport_handle *hdl, const char *dir)
+static int GetFeatureSettings(struct libnvme_transport_handle *hdl, const char *dir)
 {
 	unsigned char *bufp, buf[4096] = { 0 };
 	int i, err, len, errcnt = 0;
@@ -2452,7 +2452,7 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Get drive HW information";
 	struct nvme_id_ctrl ctrl =	{ 0 };
-	struct nvme_passthru_cmd admin_cmd = { 0 };
+	struct libnvme_passthru_cmd admin_cmd = { 0 };
 	unsigned char logC0[C0_log_size] = { 0 };
 	struct fb_drive_info {
 		unsigned char hw_ver_major;
@@ -2467,8 +2467,8 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 	bool is_json = false;
 	struct json_object *root;
 	struct json_object *driveInfo;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct format {
 		char *fmt;
 	};
@@ -2504,7 +2504,7 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 		admin_cmd.addr = (__u64) (uintptr_t) &dinfo;
 		admin_cmd.data_len = (__u32)sizeof(dinfo);
 		admin_cmd.cdw12 = 3;
-		err = nvme_submit_admin_passthru(hdl, &admin_cmd);
+		err = libnvme_submit_admin_passthru(hdl, &admin_cmd);
 		if (err) {
 			fprintf(stderr, "ERROR : drive-info opcode failed with 0x%x\n", err);
 			return -1;
@@ -2781,8 +2781,8 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 	int count = 0;
 	unsigned int logC2[C2_log_size/sizeof(int)] = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 	bool is_json = false;
 	struct json_object *root, *fw_act, *element;
@@ -2890,8 +2890,8 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 	uint32_t command_mask = 0x7;	   /* 1:read 2:write 4:trim 7:all */
 	uint32_t timing_mask = 0x08080800; /* R[31-24]:W[23:16]:T[15:8]:0 */
 	uint32_t enable = 2;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct {
 		char *option;
 		char *command;
@@ -3027,8 +3027,8 @@ static int micron_latency_stats_logs(int argc, char **argv, struct command *acmd
 		uint32_t   rfu[6];
 	} log[LATENCY_LOG_ENTRIES];
 	enum eDriveModel model = UNKNOWN_MODEL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err = -1;
 	const char *desc = "Display Latency tracking log information";
 
@@ -3063,8 +3063,8 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *acmd
 	const char *desc = "display command latency statistics";
 	const char *cmdstr = "command to display stats - all|read|write|trim, default is all";
 	int err = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	enum eDriveModel model = UNKNOWN_MODEL;
 	#define LATENCY_BUCKET_COUNT 32
 	#define LATENCY_BUCKET_RSVD  32
@@ -3159,8 +3159,8 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *a
 	unsigned int logFB[FB_log_size/sizeof(int)] = { 0 };
 	struct nvme_id_ctrl ctrl;
 	enum eDriveModel eModel = UNKNOWN_MODEL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	bool is_json = true;
 	nsze_from_oacs = false;
 	struct format {
@@ -3229,8 +3229,8 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 	__u64 result = 0;
 	__u8 fid = MICRON_FEATURE_CLEAR_FW_ACTIVATION_HISTORY;
 	enum eDriveModel model = UNKNOWN_MODEL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	NVME_ARGS(opts);
 	int err = 0;
@@ -3268,8 +3268,8 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 	int fid = MICRON_FEATURE_TELEMETRY_CONTROL_OPTION;
 	enum eDriveModel model = UNKNOWN_MODEL;
 	struct nvme_id_ctrl ctrl = { 0 };
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	struct {
 		char *option;
@@ -3339,11 +3339,11 @@ struct micron_common_log_header  {
 };
 
 /* helper function to retrieve logs with specific offset and max chunk size */
-int nvme_get_log_lpo(struct nvme_transport_handle *hdl, __u8 log_id, __u32 lpo, __u32 chunk,
+int nvme_get_log_lpo(struct libnvme_transport_handle *hdl, __u8 log_id, __u32 lpo, __u32 chunk,
 		     __u32 data_len, void *data)
 {
 	__u32 offset = lpo, xfer_len = data_len;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	void *ptr = data;
 	int ret = 0;
 
@@ -3356,7 +3356,7 @@ int nvme_get_log_lpo(struct nvme_transport_handle *hdl, __u8 log_id, __u32 lpo, 
 		nvme_init_get_log(&cmd, NVME_NSID_ALL, log_id, NVME_CSI_NVM,
 				  ptr, xfer_len);
 		nvme_init_get_log_lpo(&cmd, lpo);
-		ret = nvme_get_log(hdl, &cmd, false, xfer_len);
+		ret = libnvme_get_log(hdl, &cmd, false, xfer_len);
 		if (ret)
 			return ret;
 		offset += xfer_len;
@@ -3366,7 +3366,7 @@ int nvme_get_log_lpo(struct nvme_transport_handle *hdl, __u8 log_id, __u32 lpo, 
 }
 
 /* retrieves logs with common log format */
-static int get_common_log(struct nvme_transport_handle *hdl, uint8_t id, uint8_t **buf, int *size)
+static int get_common_log(struct libnvme_transport_handle *hdl, uint8_t id, uint8_t **buf, int *size)
 {
 	struct micron_common_log_header hdr = { 0 };
 	int log_size = sizeof(hdr), first = 0, second = 0;
@@ -3457,7 +3457,7 @@ static int get_common_log(struct nvme_transport_handle *hdl, uint8_t id, uint8_t
 	return ret;
 }
 
-static int GetOcpEnhancedTelemetryLog(struct nvme_transport_handle *hdl, const char *dir, int nLogID)
+static int GetOcpEnhancedTelemetryLog(struct libnvme_transport_handle *hdl, const char *dir, int nLogID)
 {
 	int err = 0;
 	unsigned char *pTelemetryDataHeader = 0;
@@ -3592,8 +3592,8 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	char sn[20] = { 0 };
 	char msg[256] = { 0 };
 	int  c_logs_index = 8; /* should be current size of aVendorLogs */
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct {
 		unsigned char ucLogPage;
 		const char *strFileName;
@@ -3950,8 +3950,8 @@ static int micron_logpage_dir(int argc, char **argv, struct command *acmd,
 	const char *desc = "List the supported log pages";
 	enum eDriveModel model = UNKNOWN_MODEL;
 	char logbuf[MIN_LOG_SIZE];
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int i;
 
 	NVME_ARGS(opts);
@@ -4016,8 +4016,8 @@ static int micron_cloud_boot_SSD_version(int argc, char **argv,
 	struct nvme_id_ctrl ctrl;
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	int err = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct format {
 	char *fmt;
 	};
@@ -4072,8 +4072,8 @@ static int micron_device_waf(int argc, char **argv, struct command *acmd,
 	struct nvme_smart_log smart_log;
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	int err = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	long double tlc_units_written, slc_units_written;
 	long double data_units_written, write_amplification_factor;
@@ -4136,8 +4136,8 @@ static int micron_cloud_log(int argc, char **argv, struct command *acmd,
 	struct nvme_id_ctrl ctrl;
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	int err = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	bool is_json = true;
 	struct format {
 		char *fmt;
@@ -4368,8 +4368,8 @@ static void print_micron_health_log_json(struct nvme_smart_log *smart,
 static int micron_health_info(int argc, char **argv, struct command *acmd,
 			      struct plugin *plugin)
 {
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	const char *desc = "Retrieve SMART/Health log for Micron drives";
 	const char *fmt = "output format normal|json";
 	enum eDriveModel eModel = UNKNOWN_MODEL;
@@ -4399,7 +4399,7 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
 	if (err) {
 		fprintf(stderr, "Failed to get SMART log: %s\n",
-			nvme_strerror(err));
+			libnvme_strerror(err));
 		return err;
 	}
 
@@ -4462,8 +4462,8 @@ static void micron_id_ctrl_vs(__u8 *vs, struct json_object *root)
 static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
 			  struct plugin *plugin)
 {
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	const char *desc = "Identify Controller with Micron vendor fields";
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	struct nvme_id_ctrl ctrl = { 0 };
@@ -4490,7 +4490,7 @@ static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err) {
 		fprintf(stderr, "identify controller failed: %s\n",
-			nvme_strerror(err));
+			libnvme_strerror(err));
 		return err;
 	}
 

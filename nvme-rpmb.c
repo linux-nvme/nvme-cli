@@ -172,7 +172,7 @@ static int read_file(const char *file, unsigned char **data, unsigned int *len)
 	if (file == NULL) return err;
 
 	if ((fd = open(file, O_RDONLY)) < 0) {
-		fprintf(stderr, "Failed to open %s: %s\n", file, nvme_strerror(errno));
+		fprintf(stderr, "Failed to open %s: %s\n", file, libnvme_strerror(errno));
 		return fd;
 	}
 
@@ -193,7 +193,7 @@ static int read_file(const char *file, unsigned char **data, unsigned int *len)
 	if (err < 0) {
 		err = -errno;
 		fprintf(stderr, "Failed to read data from file"
-				" %s with %s\n", file, nvme_strerror(errno));
+				" %s with %s\n", file, libnvme_strerror(errno));
 		platform_aligned_free(buf);
 		goto out;
 	}
@@ -275,24 +275,24 @@ struct rpmb_config_block_t {
 #define RPMB_NVME_SECP        0xEA 
 #define RPMB_NVME_SPSP        0x0001
 
-static int send_rpmb_req(struct nvme_transport_handle *hdl, unsigned char tgt,
+static int send_rpmb_req(struct libnvme_transport_handle *hdl, unsigned char tgt,
 			 int size, struct rpmb_data_frame_t *req)
 {
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 
 	nvme_init_security_send(&cmd, NVME_NSID_NONE, tgt, RPMB_NVME_SPSP,
 			        RPMB_NVME_SECP, 0, req, size);
-	return nvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_submit_admin_passthru(hdl, &cmd);
 }
 
-static int recv_rpmb_rsp(struct nvme_transport_handle *hdl, int tgt, int size,
+static int recv_rpmb_rsp(struct libnvme_transport_handle *hdl, int tgt, int size,
 			 struct rpmb_data_frame_t *rsp)
 {
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 
 	nvme_init_security_receive(&cmd, 0, tgt, RPMB_NVME_SPSP,
 				   RPMB_NVME_SECP, 0, rsp, size);
-	return nvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_submit_admin_passthru(hdl, &cmd);
 }
 
 /* Initialize nonce value in rpmb request frame */
@@ -398,7 +398,7 @@ static int check_rpmb_response(struct rpmb_data_frame_t *req,
  * successful completion (caller must free), NULL otherwise
  */
 static struct rpmb_data_frame_t *
-rpmb_read_request(struct nvme_transport_handle *hdl,
+rpmb_read_request(struct libnvme_transport_handle *hdl,
 		  struct rpmb_data_frame_t *req,
 		  int req_size,
 		  int rsp_size)
@@ -442,7 +442,7 @@ error_out:
 }
 
 /* read current write counter value from controller */
-static int rpmb_read_write_counter(struct nvme_transport_handle *hdl,
+static int rpmb_read_write_counter(struct libnvme_transport_handle *hdl,
 				   unsigned char target,
 				   unsigned int *counter)
 {
@@ -470,7 +470,7 @@ out:
  * current write counter value returned as part of response, in case of error it
  * returns 0
  */
-static unsigned int rpmb_read_config_block(struct nvme_transport_handle *hdl,
+static unsigned int rpmb_read_config_block(struct libnvme_transport_handle *hdl,
 					   unsigned char **config_buf)
 {
 	int req_size = sizeof(struct rpmb_data_frame_t);
@@ -511,7 +511,7 @@ out:
 }
 
 
-static int rpmb_auth_data_read(struct nvme_transport_handle *hdl,
+static int rpmb_auth_data_read(struct libnvme_transport_handle *hdl,
 			       unsigned char target,
 			       unsigned int offset,
 			       unsigned char **msg_buf,
@@ -564,7 +564,7 @@ out:
 }
 
 /* Implementation of programming authentication key to given RPMB target */
-static int rpmb_program_auth_key(struct nvme_transport_handle *hdl,
+static int rpmb_program_auth_key(struct libnvme_transport_handle *hdl,
 				 unsigned char target, unsigned char *key_buf,
 				 int key_size)
 {
@@ -628,7 +628,7 @@ out:
  * number of bytes actually written to, otherwise negetive error code
  * on failures.
  */
-static int auth_data_write_chunk(struct nvme_transport_handle *hdl,
+static int auth_data_write_chunk(struct libnvme_transport_handle *hdl,
 				 unsigned char tgt, unsigned int addr,
 				 unsigned char *msg_buf, int msg_size,
 				 unsigned char *keybuf, int keysize)
@@ -706,7 +706,7 @@ out:
 }
 
 /* send the request and get response */
-static int rpmb_auth_data_write(struct nvme_transport_handle *hdl,
+static int rpmb_auth_data_write(struct libnvme_transport_handle *hdl,
 				unsigned char target, unsigned int addr,
 				int acc_size, unsigned char *msg_buf,
 				int msg_size, unsigned char *keybuf,
@@ -736,7 +736,7 @@ static int rpmb_auth_data_write(struct nvme_transport_handle *hdl,
 }
 
 /* writes given config_block buffer to the drive target 0 */
-static int rpmb_write_config_block(struct nvme_transport_handle *hdl,
+static int rpmb_write_config_block(struct libnvme_transport_handle *hdl,
 				   unsigned char *cfg_buf,
 				   unsigned char *keybuf, int keysize)
 {
@@ -871,8 +871,8 @@ int rpmb_cmd_option(int argc, char **argv, struct command *acmd, struct plugin *
 	
 	_cleanup_free_ unsigned char *key_buf = NULL;
 	_cleanup_free_ unsigned char *msg_buf = NULL;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	unsigned int write_cntr = 0;
 	unsigned int msg_size = 0;
 	unsigned int key_size = 0;

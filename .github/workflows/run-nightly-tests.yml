@@ -95,12 +95,10 @@ jobs:
             set -e
             set -x
             uname -a
-            PIPX_BIN_DIR=/usr/local/bin pipx install nose2 --force
             git clone https://github.com/${{ github.repository }} /nvme-cli
             git config --global --add safe.directory /nvme-cli
             cd /nvme-cli
             git checkout ${{ github.sha }}
-            scripts/build.sh -b release -c gcc
             CONTROLLER=$(echo "${BDEV0}" | sed 's/n[0-9]*$//')
             cat > tests/config.json << EOJ
             {
@@ -112,27 +110,7 @@ jobs:
             EOJ
             cat tests/config.json
 
-            nose2 --verbose --start-dir tests \
-            nvme_attach_detach_ns_test \
-            nvme_compare_test \
-            nvme_copy_test \
-            nvme_create_max_ns_test \
-            nvme_ctrl_reset_test \
-            nvme_dsm_test \
-            nvme_error_log_test \
-            nvme_flush_test \
-            nvme_format_test \
-            nvme_fw_log_test \
-            nvme_get_features_test \
-            nvme_get_lba_status_test \
-            nvme_id_ctrl_test \
-            nvme_id_ns_test \
-            nvme_lba_status_log_test \
-            nvme_read_write_test \
-            nvme_smart_log_test \
-            nvme_verify_test \
-            nvme_writeuncor_test \
-            nvme_writezeros_test
+            scripts/build.sh -b release -c gcc tests
             EOF
 
             sudo chmod +x test.sh
@@ -152,3 +130,10 @@ jobs:
             -v "${PWD}/test.sh":"/test.sh" \
             -v "${PWD}/nvme-cli":"/nvme-cli":z \
             ghcr.io/linux-nvme/debian:latest /test.sh
+            podman_exit=$?
+
+            mkdir -p nvme-cli/tests/nvmetests/meson-logs
+            cp -r nvme-cli/.build-ci/meson-logs/. \
+              nvme-cli/tests/nvmetests/meson-logs/ 2>/dev/null || true
+
+            exit $podman_exit

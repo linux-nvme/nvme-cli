@@ -18,7 +18,7 @@
 #define TEST_FIDX 0xF
 #define TEST_SC NVME_SC_INVALID_FIELD
 
-static struct nvme_transport_handle *test_hdl;
+static struct libnvme_transport_handle *test_hdl;
 
 static void test_ns(void)
 {
@@ -30,13 +30,13 @@ static void test_ns(void)
 		.cdw10 = NVME_IDENTIFY_CNS_NS,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_ns(&cmd, TEST_NSID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -51,13 +51,13 @@ static void test_ctrl(void)
 		.cdw10 = NVME_IDENTIFY_CNS_CTRL,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_ctrl(&cmd, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -73,13 +73,13 @@ static void test_active_ns_list(void)
 		.cdw10 = NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_active_ns_list(&cmd, TEST_NSID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -96,7 +96,7 @@ static void test_ns_descs(void)
 		.cdw10 = NVME_IDENTIFY_CNS_NS_DESC_LIST,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(expected_id, sizeof(expected_id));
@@ -104,7 +104,7 @@ static void test_ns_descs(void)
 	check(id, "memory allocation failed");
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_ns_descs_list(&cmd, TEST_NSID, id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(id, expected_id, sizeof(expected_id), "incorrect identify data");
@@ -121,13 +121,13 @@ static void test_nvmset_list(void)
 		.cdw11 = TEST_NVMSETID,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_nvmset_list(&cmd, NVME_NSID_NONE, TEST_NVMSETID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -146,13 +146,13 @@ static void test_ns_csi(void)
 		.cdw14 = TEST_UUID,
 		.out_data = expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_csi_ns(&cmd, TEST_NSID, TEST_CSI, TEST_UUID, id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(id, expected_id, sizeof(id), "incorrect identify data");
@@ -169,13 +169,13 @@ static void test_zns_identify_ns(void)
 		.cdw11 = NVME_CSI_ZNS << 24,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_zns_identify_ns(&cmd, TEST_NSID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -191,13 +191,13 @@ static void test_nvm_identify_ctrl(void)
 		.cdw11 = NVME_CSI_NVM << 24,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_csi_ctrl(&cmd, NVME_CSI_NVM, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -213,13 +213,13 @@ static void test_zns_identify_ctrl(void)
 		.cdw11 = NVME_CSI_ZNS << 24,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_zns_identify_ctrl(&cmd, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -236,13 +236,13 @@ static void test_active_ns_list_csi(void)
 		.cdw11 = TEST_CSI << 24,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_csi_active_ns_list(&cmd, TEST_NSID, TEST_CSI, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -258,14 +258,14 @@ static void test_independent_identify_ns(void)
 		.cdw10 = NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	/* That's a mouthful! */
 	nvme_init_identify_csi_independent_identify_id_ns(&cmd, TEST_NSID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -281,13 +281,13 @@ static void test_allocated_ns_list(void)
 		.cdw10 = NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_allocated_ns_list(&cmd, TEST_NSID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -303,13 +303,13 @@ static void test_allocated_ns(void)
 		.cdw10 = NVME_IDENTIFY_CNS_ALLOCATED_NS,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_allocated_ns(&cmd, TEST_NSID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -326,13 +326,13 @@ static void test_nsid_ctrl_list(void)
 		       | NVME_IDENTIFY_CNS_NS_CTRL_LIST,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_ns_ctrl_list(&cmd, TEST_NSID, TEST_CNTID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -348,13 +348,13 @@ static void test_ctrl_list(void)
 		       | NVME_IDENTIFY_CNS_CTRL_LIST,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_ctrl_list(&cmd, TEST_CNTID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -370,13 +370,13 @@ static void test_primary_ctrl(void)
 		       | NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_primary_ctrl_cap(&cmd, TEST_CNTID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -392,13 +392,13 @@ static void test_secondary_ctrl_list(void)
 		       | NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_secondary_ctrl_list(&cmd, TEST_CNTID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -413,13 +413,13 @@ static void test_ns_granularity(void)
 		.cdw10 = NVME_IDENTIFY_CNS_NS_GRANULARITY,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_ns_granularity(&cmd, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -434,13 +434,13 @@ static void test_uuid(void)
 		.cdw10 = NVME_IDENTIFY_CNS_UUID_LIST,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_uuid_list(&cmd, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -456,13 +456,13 @@ static void test_domain_list(void)
 		.cdw11 = TEST_DOMID,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_domain_list(&cmd, TEST_DOMID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -478,13 +478,13 @@ static void test_endurance_group_list(void)
 		.cdw11 = TEST_ENDGID,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_endurance_group_id(&cmd, TEST_ENDGID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -501,13 +501,13 @@ static void test_allocated_ns_list_csi(void)
 		.cdw11 = TEST_CSI << 24,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_csi_allocated_ns_list(&cmd, TEST_NSID, TEST_CSI, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -523,13 +523,13 @@ static void test_iocs(void)
 		       | NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_command_set_structure(&cmd, TEST_CNTID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -550,12 +550,12 @@ static void test_status_code_error(void)
 		.cdw11 = TEST_NVMSETID,
 		.err = TEST_SC,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_nvmset_list(&cmd, NVME_NSID_NONE, TEST_NVMSETID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == TEST_SC, "got error %d, expected TEST_SC", err);
 }
@@ -570,12 +570,12 @@ static void test_kernel_error(void)
 		.cdw10 = NVME_IDENTIFY_CNS_NS,
 		.err = -EIO,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_ns(&cmd, TEST_NSID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == -EIO, "got error %d, expected -EIO", err);
 }
@@ -593,14 +593,14 @@ static void test_identify_ns_csi_user_data_format(void)
 		.cdw14 = TEST_UUID,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_ns_user_data_format(&cmd, NVME_CSI_NVM,
 		TEST_FIDX, TEST_UUID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -618,14 +618,14 @@ static void test_identify_iocs_ns_csi_user_data_format(void)
 		.cdw14 = TEST_UUID,
 		.out_data = &expected_id,
 	};
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
 	nvme_init_identify_csi_ns_user_data_format(&cmd, TEST_CSI,
 		TEST_FIDX, TEST_UUID, &id);
-	err = nvme_submit_admin_passthru(test_hdl, &cmd);
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "identify returned error %d, errno %m", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -643,11 +643,11 @@ static void run_test(const char *test_name, void (*test_fn)(void))
 
 int main(void)
 {
-	struct nvme_global_ctx * ctx =
-		nvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	struct libnvme_global_ctx * ctx =
+		libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 
 	set_mock_fd(TEST_FD);
-	check(!nvme_open(ctx, "NVME_TEST_FD", &test_hdl),
+	check(!libnvme_open(ctx, "NVME_TEST_FD", &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(ns);
@@ -678,5 +678,5 @@ int main(void)
 	RUN_TEST(identify_ns_csi_user_data_format);
 	RUN_TEST(identify_iocs_ns_csi_user_data_format);
 
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 }

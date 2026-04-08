@@ -198,7 +198,7 @@ static const char *save = "Specifies that the controller shall save the attribut
 static const char *enable_ieee1667_silo = "enable IEEE1667 silo";
 static const char *raw_use = "use binary output";
 
-static int get_c3_log_page(struct nvme_transport_handle *hdl, char *format)
+static int get_c3_log_page(struct libnvme_transport_handle *hdl, char *format)
 {
 	struct ssd_latency_monitor_log *log_data;
 	nvme_print_flags_t fmt;
@@ -215,7 +215,7 @@ static int get_c3_log_page(struct nvme_transport_handle *hdl, char *format)
 
 	data = malloc(sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
@@ -223,7 +223,7 @@ static int get_c3_log_page(struct nvme_transport_handle *hdl, char *format)
 	ret = ocp_get_log_simple(hdl, OCP_LID_LMLOG, C3_LATENCY_MON_LOG_BUF_LEN, data);
 
 	if (strcmp(format, "json"))
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(ret, false), ret);
+		fprintf(stderr, "NVMe Status:%s(%x)\n", libnvme_status_to_string(ret, false), ret);
 
 	if (!ret) {
 		log_data = (struct ssd_latency_monitor_log *)data;
@@ -265,8 +265,8 @@ static int ocp_latency_monitor_log(int argc, char **argv,
 				   struct plugin *plugin)
 {
 	const char *desc = "Retrieve latency monitor log data.";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
 	NVME_ARGS(opts);
@@ -287,8 +287,8 @@ static int ocp_latency_monitor_log(int argc, char **argv,
 int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	int err = -1;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	struct feature_latency_monitor buf = { 0 };
 	__u32  nsid = NVME_NSID_ALL;
@@ -349,12 +349,12 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = nvme_fstat(nvme_transport_handle_get_fd(hdl), &nvme_stat);
+	err = nvme_fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat);
 	if (err < 0)
 		return err;
 
 	if (S_ISBLK(nvme_stat.st_mode)) {
-		err = nvme_get_nsid(hdl, &nsid);
+		err = libnvme_get_nsid(hdl, &nsid);
 		if (err < 0) {
 			perror("invalid-namespace-id");
 			return err;
@@ -395,7 +395,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 		printf("discard debug log: 0x%x\n", buf.discard_debug_log);
 		printf("latency monitor feature enable: 0x%x\n", buf.latency_monitor_feature_enable);
 	} else if (err > 0) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n", nvme_status_to_string(err, false), err);
+		fprintf(stderr, "NVMe Status:%s(%x)\n", libnvme_status_to_string(err, false), err);
 	}
 
 	return err;
@@ -408,8 +408,8 @@ static int ocp_get_latency_monitor_feature(int argc, char **argv, struct command
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	__u64 result;
 	int err;
@@ -483,7 +483,7 @@ static const char *eol_plp_failure_mode_to_string(__u8 mode)
 	return "Reserved";
 }
 
-static int eol_plp_failure_mode_get(struct nvme_transport_handle *hdl, const __u32 nsid, const __u8 fid,
+static int eol_plp_failure_mode_get(struct libnvme_transport_handle *hdl, const __u32 nsid, const __u8 fid,
 				    __u8 sel, bool uuid)
 {
 	__u8 uidx = 0;
@@ -514,7 +514,7 @@ static int eol_plp_failure_mode_get(struct nvme_transport_handle *hdl, const __u
 	return err;
 }
 
-static int eol_plp_failure_mode_set(struct nvme_transport_handle *hdl, const __u32 nsid,
+static int eol_plp_failure_mode_set(struct libnvme_transport_handle *hdl, const __u32 nsid,
 				    const __u8 fid, __u8 mode, bool sv,
 				    bool uuid)
 {
@@ -556,8 +556,8 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 	const char *mode = "[0-3]: default/rom/wtm/normal";
 	const __u32 nsid = 0;
 	const __u8 fid = OCP_FID_ROWTM;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -657,11 +657,11 @@ static void print_telemetry_header(struct telemetry_initiated_log *logheader, in
 	}
 }
 
-static int get_telemetry_data(struct nvme_transport_handle *hdl, __u32 ns, __u8 tele_type,
+static int get_telemetry_data(struct libnvme_transport_handle *hdl, __u32 ns, __u8 tele_type,
 							  __u32 data_len, void *data, __u8 nLSP, __u8 nRAE,
 							  __u64 offset)
 {
-	struct nvme_passthru_cmd cmd = {
+	struct libnvme_passthru_cmd cmd = {
 		.opcode = nvme_admin_get_log_page,
 		.nsid = ns,
 		.addr = (__u64)(uintptr_t) data,
@@ -676,7 +676,7 @@ static int get_telemetry_data(struct nvme_transport_handle *hdl, __u32 ns, __u8 
 	cmd.cdw12 = (__u32)(0x00000000FFFFFFFF & offset);
 	cmd.cdw13 = (__u32)((0xFFFFFFFF00000000 & offset) >> 8);
 	cmd.cdw14 = 0;
-	return nvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_submit_admin_passthru(hdl, &cmd);
 }
 
 static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,
@@ -796,7 +796,7 @@ static void print_telemetry_da_fifo(struct telemetry_event_desc *da_fifo,
 		printf("===============================================\n\n");
 	}
 }
-static int extract_dump_get_log(struct nvme_transport_handle *hdl, char *featurename, char *filename, char *sn,
+static int extract_dump_get_log(struct libnvme_transport_handle *hdl, char *featurename, char *filename, char *sn,
 				int dumpsize, int transfersize, __u32 nsid, __u8 log_id,
 				__u8 lsp, __u64 offset, bool rae)
 {
@@ -807,7 +807,7 @@ static int extract_dump_get_log(struct nvme_transport_handle *hdl, char *feature
 	int output = 0;
 	int total_loop_cnt = dumpsize / transfersize;
 	int last_xfer_size = dumpsize % transfersize;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 
 	if (last_xfer_size)
 		total_loop_cnt++;
@@ -825,7 +825,7 @@ static int extract_dump_get_log(struct nvme_transport_handle *hdl, char *feature
 		nvme_init_get_log(&cmd, nsid, log_id, NVME_CSI_NVM,
 				  data, transfersize);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
+		err = libnvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
 		if (err) {
 			if (i > 0)
 				goto close_output;
@@ -864,7 +864,7 @@ end:
 	return err;
 }
 
-static int get_telemetry_dump(struct nvme_transport_handle *hdl, char *filename, char *sn,
+static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filename, char *sn,
 			      enum TELEMETRY_TYPE tele_type, int data_area, bool header_print)
 {
 	__u32 err = 0, nsid = 0;
@@ -1165,7 +1165,7 @@ static int get_telemetry_dump(struct nvme_transport_handle *hdl, char *filename,
 	return err;
 }
 
-static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
+static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		int tele_type,
 		int tele_area,
 		const char *output_file)
@@ -1173,7 +1173,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 	void *telemetry_log;
 	const size_t bs = 512;
 	struct nvme_telemetry_log *hdr;
-	struct nvme_passthru_cmd cmd;
+	struct libnvme_passthru_cmd cmd;
 	size_t full_size = 0, offset = bs;
 	int err, fd;
 
@@ -1187,7 +1187,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 	telemetry_log = malloc(bs);
 	if (!hdr || !telemetry_log) {
 		fprintf(stderr, "Failed to allocate %zu bytes for log: %s\n",
-			bs, nvme_strerror(errno));
+			bs, libnvme_strerror(errno));
 		err = -ENOMEM;
 		goto exit_status;
 	}
@@ -1196,7 +1196,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 	fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
 	if (fd < 0) {
 		fprintf(stderr, "Failed to open output file %s: %s!\n",
-				output_file, nvme_strerror(errno));
+				output_file, libnvme_strerror(errno));
 		err = fd;
 		goto exit_status;
 	}
@@ -1205,7 +1205,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 	cmd.cdw10 |= NVME_FIELD_ENCODE(NVME_LOG_TELEM_HOST_LSP_CREATE,
 			NVME_LOG_CDW10_LSP_SHIFT,
 			NVME_LOG_CDW10_LSP_MASK);
-	err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err < 0)
 		nvme_show_error("Failed to fetch the log from drive.\n");
 	else if (err > 0) {
@@ -1242,7 +1242,7 @@ static int get_telemetry_log_page_data(struct nvme_transport_handle *hdl,
 		nvme_init_get_log(&cmd, NVME_NSID_ALL, log_id, NVME_CSI_NVM,
 				  telemetry_log, bs);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+		err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (err < 0) {
 			nvme_show_error("Failed to fetch the log from drive.\n");
 			break;
@@ -1270,7 +1270,7 @@ exit_status:
 	return err;
 }
 
-static int get_c9_log_page_data(struct nvme_transport_handle *hdl,
+static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 		int print_data,
 		int save_bin,
 		const char *output_file)
@@ -1285,7 +1285,7 @@ static int get_c9_log_page_data(struct nvme_transport_handle *hdl,
 
 	header_data = (__u8 *)malloc(sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
 	if (!header_data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(header_data, 0, sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
@@ -1327,7 +1327,7 @@ static int get_c9_log_page_data(struct nvme_transport_handle *hdl,
 
 		pC9_string_buffer = (__u8 *)malloc(sizeof(__u8) * total_log_page_sz);
 		if (!pC9_string_buffer) {
-			fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
+			fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
 			return -1;
 		}
 		memset(pC9_string_buffer, 0, sizeof(__u8) * total_log_page_sz);
@@ -1342,7 +1342,7 @@ static int get_c9_log_page_data(struct nvme_transport_handle *hdl,
 		fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
 		if (fd < 0) {
 			fprintf(stderr, "Failed to open output file %s: %s!\n", output_file,
-				nvme_strerror(errno));
+				libnvme_strerror(errno));
 			ret = fd;
 			goto free;
 		}
@@ -1433,8 +1433,8 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 
 	const char *telemetry_type = "Telemetry Type; 'host', 'host0', 'host1' or 'controller'";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 	__u32  nsid = NVME_NSID_ALL;
 	struct stat nvme_stat;
@@ -1463,12 +1463,12 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	if (opt.telemetry_type == 0)
 		opt.telemetry_type = "host";
 
-	err = nvme_fstat(nvme_transport_handle_get_fd(hdl), &nvme_stat);
+	err = nvme_fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat);
 	if (err < 0)
 		return err;
 
 	if (S_ISBLK(nvme_stat.st_mode)) {
-		err = nvme_get_nsid(hdl, &nsid);
+		err = libnvme_get_nsid(hdl, &nsid);
 		if (err < 0)
 			return err;
 	}
@@ -1524,7 +1524,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 				goto out;
 			}
 
-			err = nvme_set_etdas(hdl, &host_behavior_changed);
+			err = libnvme_set_etdas(hdl, &host_behavior_changed);
 			if (err) {
 				fprintf(stderr, "%s: Failed to set ETDAS bit\n", __func__);
 				return err;
@@ -1546,7 +1546,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 
 		if (host_behavior_changed) {
 			host_behavior_changed = false;
-			err = nvme_clear_etdas(hdl, &host_behavior_changed);
+			err = libnvme_clear_etdas(hdl, &host_behavior_changed);
 			if (err) {
 				/* Continue on if this fails, it's not a fatal condition */
 				nvme_show_error("Failed to clear ETDAS bit.\n");
@@ -1601,7 +1601,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 
 		err = get_telemetry_dump(hdl, opt.output_file, sn, tele_type, tele_area, true);
 		if (err)
-			fprintf(stderr, "NVMe Status: %s(%x)\n", nvme_status_to_string(err, false),
+			fprintf(stderr, "NVMe Status: %s(%x)\n", libnvme_status_to_string(err, false),
 				err);
 		break;
 	}
@@ -1631,7 +1631,7 @@ static __u8 unsupported_req_guid[GUID_LEN] = {
 static int ocp_unsupported_requirements_log(int argc, char **argv, struct command *acmd,
 					    struct plugin *plugin);
 
-static int get_c5_log_page(struct nvme_transport_handle *hdl, char *format)
+static int get_c5_log_page(struct libnvme_transport_handle *hdl, char *format)
 {
 	nvme_print_flags_t fmt;
 	int ret;
@@ -1649,7 +1649,7 @@ static int get_c5_log_page(struct nvme_transport_handle *hdl, char *format)
 
 	data = (__u8 *)malloc(sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
@@ -1691,8 +1691,8 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 					    struct plugin *plugin)
 {
 	const char *desc = "Retrieve unsupported requirements log data.";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
 	struct config {
@@ -1731,10 +1731,10 @@ static __u8 error_recovery_guid[GUID_LEN] = {
 	0xba, 0x83, 0x19, 0x5a
 };
 
-static int get_c1_log_page(struct nvme_transport_handle *hdl, char *format);
+static int get_c1_log_page(struct libnvme_transport_handle *hdl, char *format);
 static int ocp_error_recovery_log(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 
-static int get_c1_log_page(struct nvme_transport_handle *hdl, char *format)
+static int get_c1_log_page(struct libnvme_transport_handle *hdl, char *format)
 {
 	struct ocp_error_recovery_log_page *log_data;
 	nvme_print_flags_t fmt;
@@ -1751,7 +1751,7 @@ static int get_c1_log_page(struct nvme_transport_handle *hdl, char *format)
 
 	data = (__u8 *)malloc(sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
@@ -1793,8 +1793,8 @@ out:
 static int ocp_error_recovery_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve C1h Error Recovery Log data.";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
 	struct config {
@@ -1832,10 +1832,10 @@ static __u8 dev_cap_req_guid[GUID_LEN] = {
 	0x91, 0x3c, 0x05, 0xb7
 };
 
-static int get_c4_log_page(struct nvme_transport_handle *hdl, char *format);
+static int get_c4_log_page(struct libnvme_transport_handle *hdl, char *format);
 static int ocp_device_capabilities_log(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 
-static int get_c4_log_page(struct nvme_transport_handle *hdl, char *format)
+static int get_c4_log_page(struct libnvme_transport_handle *hdl, char *format)
 {
 	struct ocp_device_capabilities_log_page *log_data;
 	nvme_print_flags_t fmt;
@@ -1852,7 +1852,7 @@ static int get_c4_log_page(struct nvme_transport_handle *hdl, char *format)
 
 	data = (__u8 *)malloc(sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
@@ -1894,8 +1894,8 @@ out:
 static int ocp_device_capabilities_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve C4h Device Capabilities Log data.";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
 	struct config {
@@ -1925,7 +1925,7 @@ static int ocp_device_capabilities_log(int argc, char **argv, struct command *ac
 ///////////////////////////////////////////////////////////////////////////////
 /// Set Telemetry Profile (Feature Identifier C8h) Set Feature
 
-static int ocp_set_telemetry_profile(struct nvme_transport_handle *hdl, __u8 tps)
+static int ocp_set_telemetry_profile(struct libnvme_transport_handle *hdl, __u8 tps)
 {
 	__u64 result;
 	int err;
@@ -1958,8 +1958,8 @@ static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct comma
 {
 	const char *desc = "Set Telemetry Profile (Feature Identifier C8h) Set Feature.";
 	const char *tps = "Telemetry Profile Select for device debug data collection";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -1997,8 +1997,8 @@ static int ocp_get_telemetry_profile_feature(int argc, char **argv, struct comma
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	__u64 result;
 	int err;
@@ -2057,7 +2057,7 @@ static int ocp_get_telemetry_profile_feature(int argc, char **argv, struct comma
 /// DSSD Power State (Feature Identifier C7h) Set Feature
 
 static int
-set_dssd_power_state(struct nvme_transport_handle *hdl,
+set_dssd_power_state(struct libnvme_transport_handle *hdl,
 				const __u32 nsid,
 				const __u8 fid, __u8 power_state, bool sv,
 				bool uuid)
@@ -2098,8 +2098,8 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *a
 	const char *power_state = "DSSD Power State to set in watts";
 	const char *save = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -2134,7 +2134,7 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *a
 ///////////////////////////////////////////////////////////////////////////////
 /// DSSD Power State (Feature Identifier C7h) Get Feature
 
-static int get_dssd_power_state(struct nvme_transport_handle *hdl, const __u32 nsid,
+static int get_dssd_power_state(struct libnvme_transport_handle *hdl, const __u32 nsid,
 				const __u8 fid, __u8 sel, bool uuid)
 {
 	__u64 result;
@@ -2172,8 +2172,8 @@ static int get_dssd_power_state_feature(int argc, char **argv, struct command *a
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const __u32 nsid = 0;
 	const __u8 fid = OCP_FID_DSSDPS;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int i, err;
 
 	struct config {
@@ -2225,8 +2225,8 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 	const char *plp_health_interval = "[31:16]:PLP Health Check Interval";
 	const char *sv = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 	__u64 result;
 	__u8 uidx = 0;
@@ -2283,8 +2283,8 @@ static int get_plp_health_check_interval(int argc, char **argv, struct command *
 	const char *desc = "Define Issue Get Feature command (FID : 0xC6) PLP Health Check Interval";
 	const __u32 nsid = 0;
 	const __u8 fid = 0xc6;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	int err;
 
@@ -2332,8 +2332,8 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *ac
 	const char *epn = "[0]:Enable Panic Notices";
 	const char *sv = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 	__u64 result;
 	__u8 uidx = 0;
@@ -2386,8 +2386,8 @@ static int get_dssd_async_event_config(int argc, char **argv, struct command *ac
 	const char *sel = "[0-3]: current/default/saved/supported";
 	const __u32 nsid = 0;
 	const __u8 fid = OCP_FID_DAEC;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	int err;
 
@@ -2430,7 +2430,7 @@ static int get_dssd_async_event_config(int argc, char **argv, struct command *ac
 static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *acmd,
 					struct plugin *plugin);
 
-static int get_c9_log_page(struct nvme_transport_handle *hdl,
+static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 		char *format,
 		const char *output_file)
 {
@@ -2458,8 +2458,8 @@ static int get_c9_log_page(struct nvme_transport_handle *hdl,
 static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *acmd,
 					struct plugin *plugin)
 {
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 	char file_path[PATH_MAX];
 	const char *string_suffix = ".bin";
@@ -2517,7 +2517,7 @@ static __u8 tcg_configuration_guid[GUID_LEN] = {
 static int ocp_tcg_configuration_log(int argc, char **argv, struct command *acmd,
 					    struct plugin *plugin);
 
-static int get_c7_log_page(struct nvme_transport_handle *hdl, char *format)
+static int get_c7_log_page(struct libnvme_transport_handle *hdl, char *format)
 {
 	nvme_print_flags_t fmt;
 	int ret;
@@ -2535,7 +2535,7 @@ static int get_c7_log_page(struct nvme_transport_handle *hdl, char *format)
 
 	data = (__u8 *)malloc(sizeof(__u8) * C7_TCG_CONFIGURATION_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", nvme_strerror(errno));
+		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C7_TCG_CONFIGURATION_LEN);
@@ -2577,8 +2577,8 @@ static int ocp_tcg_configuration_log(int argc, char **argv, struct command *acmd
 					    struct plugin *plugin)
 {
 	const char *desc = "Retrieve TCG Configuration Log Page Data";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
 	struct config {
@@ -2638,7 +2638,7 @@ static int fw_activation_history_log(int argc, char **argv, struct command *acmd
 	return ocp_fw_activation_history_log(argc, argv, acmd, plugin);
 }
 
-static int error_injection_get(struct nvme_transport_handle *hdl, const __u8 sel, bool uuid, __u32 nsid)
+static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 sel, bool uuid, __u32 nsid)
 {
 	_cleanup_nvme_free_ struct erri_entry *entry = NULL;
 	struct erri_get_cq_entry cq_entry;
@@ -2662,7 +2662,7 @@ static int error_injection_get(struct nvme_transport_handle *hdl, const __u8 sel
 
 	entry = nvme_alloc(data_len);
 	if (!entry) {
-		nvme_show_error("malloc: %s", nvme_strerror(errno));
+		nvme_show_error("malloc: %s", libnvme_strerror(errno));
 		return -ENOMEM;
 	}
 
@@ -2691,8 +2691,8 @@ static int error_injection_get(struct nvme_transport_handle *hdl, const __u8 sel
 static int get_error_injection(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Return set of error injection";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 	struct config {
 		__u8 sel;
@@ -2721,7 +2721,7 @@ static int get_error_injection(int argc, char **argv, struct command *acmd, stru
 	return error_injection_get(hdl, cfg.sel, !argconfig_parse_seen(opts, "no-uuid"), nsid);
 }
 
-static int error_injection_set(struct nvme_transport_handle *hdl, struct erri_config *cfg, bool uuid, __u32 nsid)
+static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri_config *cfg, bool uuid, __u32 nsid)
 {
 	_cleanup_nvme_free_ struct erri_entry *entry = NULL;
 	_cleanup_fd_ int ffd = -1;
@@ -2741,20 +2741,20 @@ static int error_injection_set(struct nvme_transport_handle *hdl, struct erri_co
 	data_len = cfg->number * sizeof(struct erri_entry);
 	entry = nvme_alloc(data_len);
 	if (!entry) {
-		nvme_show_error("malloc: %s", nvme_strerror(errno));
+		nvme_show_error("malloc: %s", libnvme_strerror(errno));
 		return -ENOMEM;
 	}
 
 	if (cfg->file && strlen(cfg->file)) {
 		ffd = open(cfg->file, O_RDONLY);
 		if (ffd < 0) {
-			nvme_show_error("Failed to open file %s: %s", cfg->file, nvme_strerror(errno));
+			nvme_show_error("Failed to open file %s: %s", cfg->file, libnvme_strerror(errno));
 			return -EINVAL;
 		}
 		err = read(ffd, entry, data_len);
 		if (err < 0) {
 			nvme_show_error("failed to read data buffer from input file: %s",
-					nvme_strerror(errno));
+					libnvme_strerror(errno));
 			return -errno;
 		}
 	} else {
@@ -2768,7 +2768,7 @@ static int error_injection_set(struct nvme_transport_handle *hdl, struct erri_co
 			 0, 0, 0, 0, entry, data_len, NULL);
 	if (err) {
 		if (err < 0)
-			nvme_show_error("set-error-injection: %s", nvme_strerror(errno));
+			nvme_show_error("set-error-injection: %s", libnvme_strerror(errno));
 		else if (err > 0)
 			nvme_show_status(err);
 		return err;
@@ -2785,8 +2785,8 @@ static int error_injection_set(struct nvme_transport_handle *hdl, struct erri_co
 static int set_error_injection(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Inject error conditions";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u32 nsid;
 	int err;
 
@@ -2816,7 +2816,7 @@ static int set_error_injection(int argc, char **argv, struct command *acmd, stru
 	return error_injection_set(hdl, &cfg, !argconfig_parse_seen(opts, "no-uuid"), nsid);
 }
 
-static int enable_ieee1667_silo_get(struct nvme_transport_handle *hdl, const __u8 sel, bool uuid)
+static int enable_ieee1667_silo_get(struct libnvme_transport_handle *hdl, const __u8 sel, bool uuid)
 {
 	struct ieee1667_get_cq_entry cq_entry = { 0 };
 	const __u8 fid = OCP_FID_1667;
@@ -2859,8 +2859,8 @@ static int get_enable_ieee1667_silo(int argc, char **argv, struct command *acmd,
 	};
 	struct config cfg = { 0 };
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	NVME_ARGS(opts,
 		OPT_BYTE("sel", 's', &cfg.sel, sel),
@@ -2873,7 +2873,7 @@ static int get_enable_ieee1667_silo(int argc, char **argv, struct command *acmd,
 	return enable_ieee1667_silo_get(hdl, cfg.sel, !argconfig_parse_seen(opts, "no-uuid"));
 }
 
-static int enable_ieee1667_silo_set(struct nvme_transport_handle *hdl,
+static int enable_ieee1667_silo_set(struct libnvme_transport_handle *hdl,
 				    struct argconfig_commandline_options *opts)
 {
 	bool enable = argconfig_parse_seen(opts, "enable");
@@ -2917,8 +2917,8 @@ static int set_enable_ieee1667_silo(int argc, char **argv, struct command *acmd,
 {
 	int err;
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	NVME_ARGS(opts,
 		OPT_FLAG("enable", 'e', NULL, no_uuid),
@@ -2949,8 +2949,8 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	_cleanup_nvme_free_ struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	nvme_print_flags_t flags;
 	void *pevent_log_info;
@@ -2994,7 +2994,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	err = nvme_get_log_persistent_event(hdl, cfg.action,
 					    pevent, sizeof(*pevent));
 	if (err < 0) {
-		nvme_show_error("persistent event log: %s", nvme_strerror(err));
+		nvme_show_error("persistent event log: %s", libnvme_strerror(err));
 		return err;
 	} else if (err) {
 		nvme_show_status(err);
@@ -3036,7 +3036,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 							pevent,
 							sizeof(*pevent));
 		if (err < 0) {
-			nvme_show_error("persistent event log: %s", nvme_strerror(err));
+			nvme_show_error("persistent event log: %s", libnvme_strerror(err));
 			return err;
 		} else if (err) {
 			nvme_show_status(err);
@@ -3050,11 +3050,11 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 		}
 
 		ocp_show_persistent_event_log(pevent_log_info, cfg.action,
-			cfg.log_len, nvme_transport_handle_get_name(hdl), flags);
+			cfg.log_len, libnvme_transport_handle_get_name(hdl), flags);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
-		nvme_show_error("persistent event log: %s", nvme_strerror(err));
+		nvme_show_error("persistent event log: %s", libnvme_strerror(err));
 	}
 
 	return err;
@@ -3073,8 +3073,8 @@ static int ocp_get_idle_wakeup_time_config_feature(int argc, char **argv,
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: NSID Valid/Invalid/Inactive";
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 
 	__u64 result;

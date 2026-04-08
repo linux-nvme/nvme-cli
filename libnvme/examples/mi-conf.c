@@ -40,7 +40,7 @@ static int parse_mctp(const char *devstr, unsigned int *net, uint8_t *eid)
 	return 0;
 }
 
-int find_port(nvme_mi_ep_t ep, uint8_t *portp, uint16_t *mtup)
+int find_port(libnvme_mi_ep_t ep, uint8_t *portp, uint16_t *mtup)
 {
 	struct nvme_mi_read_nvm_ss_info ss_info;
 	struct nvme_mi_read_port_info port_info;
@@ -49,7 +49,7 @@ int find_port(nvme_mi_ep_t ep, uint8_t *portp, uint16_t *mtup)
 	int rc;
 
 	/* query number of ports */
-	rc = nvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
+	rc = libnvme_mi_mi_read_mi_data_subsys(ep, &ss_info);
 	if (rc) {
 		warn("Failed reading subsystem info");
 		return -1;
@@ -57,7 +57,7 @@ int find_port(nvme_mi_ep_t ep, uint8_t *portp, uint16_t *mtup)
 
 	found = false;
 	for (port = 0; port <= ss_info.nump; port++) {
-		rc = nvme_mi_mi_read_mi_data_port(ep, port, &port_info);
+		rc = libnvme_mi_mi_read_mi_data_port(ep, port, &port_info);
 		if (rc) {
 			warn("Failed reading port info for port %ud", port);
 			return -1;
@@ -137,13 +137,13 @@ out:
 
 int main(int argc, char **argv)
 {
-	struct nvme_global_ctx *ctx;
+	struct libnvme_global_ctx *ctx;
 	uint16_t cur_mtu, mtu;
 	DBusConnection *bus;
 	const char *devstr;
 	uint8_t eid, port;
 	unsigned int net;
-	nvme_mi_ep_t ep;
+	libnvme_mi_ep_t ep;
 	DBusError berr;
 	int rc;
 
@@ -157,11 +157,11 @@ int main(int argc, char **argv)
 	if (rc)
 		errx(EXIT_FAILURE, "can't parse MI device string '%s'", devstr);
 
-	ctx = nvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
 	if (!ctx)
 		err(EXIT_FAILURE, "can't create global context");
 
-	ep = nvme_mi_open_mctp(ctx, net, eid);
+	ep = libnvme_mi_open_mctp(ctx, net, eid);
 	if (!ep) {
 		warnx("can't open MCTP endpoint %d:%d", net, eid);
 		goto out_free_ctx;
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
 		goto out_close_bus;
 	}
 
-	rc = nvme_mi_mi_config_get_mctp_mtu(ep, port, &cur_mtu);
+	rc = libnvme_mi_mi_config_get_mctp_mtu(ep, port, &cur_mtu);
 	if (rc) {
 		cur_mtu = 0;
 		warn("Can't query current MTU; no way to revert on failure");
@@ -193,7 +193,7 @@ int main(int argc, char **argv)
 		goto out_close_bus;
 	}
 
-	rc = nvme_mi_mi_config_set_mctp_mtu(ep, port, mtu);
+	rc = libnvme_mi_mi_config_set_mctp_mtu(ep, port, mtu);
 	if (rc) {
 		warn("Can't set MCTP MTU");
 		goto out_close_bus;
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
 	if (rc) {
 		/* revert if we have an old setting */
 		if (cur_mtu) {
-			rc = nvme_mi_mi_config_set_mctp_mtu(ep, port, cur_mtu);
+			rc = libnvme_mi_mi_config_set_mctp_mtu(ep, port, cur_mtu);
 			if (rc)
 				warn("Failed to restore previous MTU!");
 			rc = -1;
@@ -217,9 +217,9 @@ out_close_bus:
 	dbus_connection_unref(bus);
 out_close_ep:
 	dbus_error_free(&berr);
-	nvme_mi_close(ep);
+	libnvme_mi_close(ep);
 out_free_ctx:
-	nvme_free_global_ctx(ctx);
+	libnvme_free_global_ctx(ctx);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

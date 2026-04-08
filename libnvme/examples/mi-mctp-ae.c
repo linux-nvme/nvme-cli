@@ -38,7 +38,7 @@ static void print_byte_array(void *data, size_t len)
 	printf("\n");
 }
 
-static void print_event_info(struct nvme_mi_event *event)
+static void print_event_info(struct libnvme_mi_event *event)
 {
 	printf("aeoi: %02X\n", event->aeoi);
 	printf("aeocidi: %04X\n", event->aeocidi);
@@ -55,7 +55,7 @@ static void print_event_info(struct nvme_mi_event *event)
 	}
 }
 
-enum nvme_mi_aem_handler_next_action aem_handler(nvme_mi_ep_t ep, size_t num_events, void *userdata)
+enum libnvme_mi_aem_handler_next_action aem_handler(libnvme_mi_ep_t ep, size_t num_events, void *userdata)
 {
 	struct app_userdata *data = (struct app_userdata *) userdata;
 
@@ -63,7 +63,7 @@ enum nvme_mi_aem_handler_next_action aem_handler(nvme_mi_ep_t ep, size_t num_eve
 
 	printf("Received notification #%d with %zu events:\n", data->count, num_events);
 	for (int i = 0; i < num_events; i++) {
-		struct nvme_mi_event *event = nvme_mi_aem_get_next_event(ep);
+		struct libnvme_mi_event *event = libnvme_mi_aem_get_next_event(ep);
 
 		if (event == NULL)
 			printf("Unexpected NULL event\n");
@@ -79,12 +79,12 @@ enum nvme_mi_aem_handler_next_action aem_handler(nvme_mi_ep_t ep, size_t num_eve
 
 int main(int argc, char **argv)
 {
-	struct nvme_global_ctx *ctx;
-	nvme_mi_ep_t ep;
+	struct libnvme_global_ctx *ctx;
+	libnvme_mi_ep_t ep;
 	uint8_t eid = 0;
 	int rc = 0, net = 0;
-	struct nvme_mi_aem_config aem_config = {0};
-	struct nvme_mi_aem_enabled_map enabled_map = {0};
+	struct libnvme_mi_aem_config aem_config = {0};
+	struct libnvme_mi_aem_enabled_map enabled_map = {0};
 	struct app_userdata data = {0};
 
 	const uint8_t AEM_FD_INDEX = 0;
@@ -110,11 +110,11 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	ctx = nvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
 	if (!ctx)
 		err(EXIT_FAILURE, "can't create NVMe root");
 
-	ep = nvme_mi_open_mctp(ctx, net, eid);
+	ep = libnvme_mi_open_mctp(ctx, net, eid);
 	if (!ep)
 		err(EXIT_FAILURE, "can't open MCTP endpoint %d:%d", net, eid);
 
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 	aem_config.aemd = 1;
 	aem_config.aerd = 100;
 
-	rc = nvme_mi_aem_get_enabled(ep, &enabled_map);
+	rc = libnvme_mi_aem_get_enabled(ep, &enabled_map);
 	if (rc)
 		err(EXIT_FAILURE, "Can't query enabled aems:%d", rc);
 	printf("The following events were previously enabled:\n");
@@ -131,19 +131,19 @@ int main(int argc, char **argv)
 			printf("Event: %d\n", i);
 	}
 
-	rc = nvme_mi_aem_enable(ep, &aem_config, &data);
+	rc = libnvme_mi_aem_enable(ep, &aem_config, &data);
 	if (rc == EOPNOTSUPP)
 		errx(EXIT_FAILURE, "MCTP Peer-Bind is required for AEM");
 	else if (rc)
 		err(EXIT_FAILURE, "Can't enable aem:%d", rc);
 
-	rc = nvme_mi_aem_get_enabled(ep, &enabled_map);
+	rc = libnvme_mi_aem_get_enabled(ep, &enabled_map);
 	if (rc)
 		err(EXIT_FAILURE, "Can't query enabled aems:%d", rc);
 
 	struct pollfd fds[2];
 
-	fds[AEM_FD_INDEX].fd = nvme_mi_aem_get_fd(ep);
+	fds[AEM_FD_INDEX].fd = libnvme_mi_aem_get_fd(ep);
 	if (fds[AEM_FD_INDEX].fd < 0)
 		errx(EXIT_FAILURE, "Can't get aem fd");
 
@@ -162,19 +162,19 @@ int main(int argc, char **argv)
 		}
 		//Time to do the work
 		if (fds[AEM_FD_INDEX].revents & POLLIN) {
-			rc = nvme_mi_aem_process(ep, &data);
+			rc = libnvme_mi_aem_process(ep, &data);
 			if (rc)
 				err(EXIT_FAILURE,
-					"nvme_mi_aem_process failed with:%d", rc);
+					"libnvme_mi_aem_process failed with:%d", rc);
 		}
 		if (fds[STD_IN_FD_INDEX].revents & POLLIN)
 			break;//we are done
 	}
 
 	//Cleanup
-	nvme_mi_aem_disable(ep);
-	nvme_mi_close(ep);
-	nvme_free_global_ctx(ctx);
+	libnvme_mi_aem_disable(ep);
+	libnvme_mi_close(ep);
+	libnvme_free_global_ctx(ctx);
 
 	return rc ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -153,8 +153,8 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 	__u32 i = 0;
 	log_page_map logPageMap;
 	const char *desc = "Retrieve Seagate Supported Log-Page information for the given device ";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	int fmt;
 
@@ -896,8 +896,8 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	struct json_object *lbafs_ExtSmart, *lbafs_DramSmart;
 
 	const char *desc = "Retrieve the Firmware Activation History for Seagate NVMe drives";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	int err, index = 0;
 
@@ -1075,8 +1075,8 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 	nvme_print_flags_t flags;
 	unsigned int temperature = 0, PcbTemp = 0, SocTemp = 0, scCurrentTemp = 0, scMaxTemp = 0;
 	unsigned long long maxTemperature = 0, MaxSocTemp = 0;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	NVME_ARGS(opts);
 
@@ -1234,8 +1234,8 @@ static void json_vs_pcie_error_log(pcie_error_log_page pcieErrorLog)
 static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	pcie_error_log_page pcieErrorLog;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	const char *desc = "Retrieve Seagate PCIe error counters for the given device ";
 	int err;
@@ -1369,8 +1369,8 @@ static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActi
 static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	stx_fw_activ_history_log_page fwActivHis;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	const char *desc = "Retrieve FW Activate History for Seagate device ";
 	int err;
@@ -1413,8 +1413,8 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 	const char *desc = "Clear FW Activation History for the given Seagate device ";
 	const char *save = "specifies that the controller shall save the attribute";
 	int err;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl ctrl;
 	char modelNo[40];
 	__u64 result;
@@ -1471,8 +1471,8 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 	struct nvme_id_ctrl ctrl;
 	char modelNo[40];
 
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	__u64 result;
 	int err;
@@ -1533,9 +1533,9 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 	const char *raw = "output in raw format";
 	struct nvme_temetry_log_hdr tele_log;
 	int blkCnt, maxBlk = 0, blksToGet;
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	struct nvme_passthru_cmd cmd;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	unsigned char  *log;
 	__le64  offset = 0;
 	int err, dump_fd;
@@ -1570,7 +1570,7 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 
 		if (!cfg.raw_binary) {
 			printf("Device:%s log-id:%d namespace-id:%#x\n",
-				   nvme_transport_handle_get_name(hdl), cfg.log_id,
+				   libnvme_transport_handle_get_name(hdl), cfg.log_id,
 				   cfg.namespace_id);
 			printf("Data Block 1 Last Block:%d Data Block 2 Last Block:%d Data Block 3 Last Block:%d\n",
 				   tele_log.tele_data_area1, tele_log.tele_data_area2, tele_log.tele_data_area3);
@@ -1610,7 +1610,7 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 		nvme_init_get_log(&cmd, cfg.namespace_id, cfg.log_id,
 				  NVME_CSI_NVM, log, bytesToGet);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
+		err = libnvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
@@ -1640,9 +1640,9 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 	    "Capture the Telemetry Controller-Initiated Data in either hex-dump (default) or binary format";
 	const char *namespace_id = "desired namespace";
 	const char *raw = "output in raw format";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	struct nvme_passthru_cmd cmd;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	int err, dump_fd;
 	struct nvme_temetry_log_hdr tele_log;
 	__le64  offset = 0;
@@ -1678,7 +1678,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 
 		if (!cfg.raw_binary) {
 			printf("Device:%s namespace-id:%#x\n",
-				   nvme_transport_handle_get_name(hdl), cfg.namespace_id);
+				   libnvme_transport_handle_get_name(hdl), cfg.namespace_id);
 			printf("Data Block 1 Last Block:%d Data Block 2 Last Block:%d Data Block 3 Last Block:%d\n",
 				   tele_log.tele_data_area1, tele_log.tele_data_area2, tele_log.tele_data_area3);
 
@@ -1714,7 +1714,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 		nvme_init_get_log(&cmd, cfg.namespace_id, log_id,
 				  NVME_CSI_NVM, log, bytesToGet);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
+		err = libnvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
@@ -1753,9 +1753,9 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 	const char *namespace_id = "desired namespace";
 
 	const char *file = "dump file";
-	_cleanup_nvme_global_ctx_ struct nvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct nvme_transport_handle *hdl = NULL;
-	struct nvme_passthru_cmd cmd;
+	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	int err, dump_fd;
 	int flags = O_WRONLY | O_CREAT;
 	int mode = 0664;
@@ -1831,7 +1831,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 		nvme_init_get_log(&cmd, cfg.namespace_id, log_id,
 				  NVME_CSI_NVM, log, bytesToGet);
 		nvme_init_get_log_lpo(&cmd, offset);
-		err = nvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
+		err = libnvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 		if (!err) {
 			offset += (__le64)bytesToGet;
 
