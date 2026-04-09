@@ -104,7 +104,7 @@ jobs:
             {
               "controller" : "${CONTROLLER}",
               "ns1": "${BDEV0}",
-              "log_dir": "tests/nvmetests/",
+              "log_dir": "/nvme-cli/tests/nvmetests/",
               "nvme_bin": "/nvme-cli/.build-ci/nvme"
             }
             EOJ
@@ -116,7 +116,7 @@ jobs:
             sudo chmod +x test.sh
 
             #Create shared volume mount point for artifact upload
-            mkdir nvme-cli
+            mkdir -p nvme-cli
 
             #Expose all devices to the container through the `privileged` flag.
             #
@@ -132,8 +132,8 @@ jobs:
             ghcr.io/linux-nvme/debian:latest /test.sh
             podman_exit=$?
 
-            mkdir -p nvme-cli/tests/nvmetests/meson-logs
-            cp -r nvme-cli/.build-ci/meson-logs/. \
-              nvme-cli/tests/nvmetests/meson-logs/ 2>/dev/null || true
+            # Copy the results into the expected upload directory
+            sudo cp -r nvme-cli/.build-ci/meson-logs \
+              nvme-cli/tests/nvmetests 2>/dev/null || true
 
             exit $podman_exit

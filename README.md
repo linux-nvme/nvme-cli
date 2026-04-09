@@ -77,6 +77,32 @@ $ meson compile -C .build
 # meson install -C .build
 ```
 
+#### Installation paths
+
+By default, meson installs everything under `/usr/local` (executables in
+`/usr/local/bin`, libraries in `/usr/local/lib`, configuration in
+`/usr/local/etc`, etc.). This is controlled by two meson built-in options
+whose defaults are set in `meson.build`:
+
+| Option | Default |
+|--------|---------|
+| `--prefix` | `/usr/local` |
+| `--sysconfdir` | `etc` (relative to prefix → `/usr/local/etc`) |
+
+To install into the standard system locations that a Linux distribution would
+use (`/usr/bin`, `/usr/lib`, `/etc`, …), pass these options at configure time:
+
+```shell
+$ meson setup .build --prefix /usr --sysconfdir /etc
+```
+
+Optionally add `--buildtype release` to disable debug symbols and enable
+optimizations for a production install:
+
+```shell
+$ meson setup .build --prefix /usr --sysconfdir /etc --buildtype release
+```
+
 ### Build with build.sh wrapper
 
 The `scripts/build.sh` is used for the CI build but can also be used for
