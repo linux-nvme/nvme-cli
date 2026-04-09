@@ -104,7 +104,8 @@ jobs:
             {
               "controller" : "${CONTROLLER}",
               "ns1": "${BDEV0}",
-              "log_dir": "/nvme-cli/tests/nvmetests/",
+              "log_dir": "/nvme-cli/tests/nvmetests",
+              "log_level": "DEBUG",
               "nvme_bin": "/nvme-cli/.build-ci/nvme"
             }
             EOJ
