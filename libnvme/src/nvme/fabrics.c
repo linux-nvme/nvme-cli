@@ -1319,6 +1319,7 @@ static int nvme_discovery_log(const struct libnvme_get_discovery_args *args,
 	libnvme_msg(ctx, LOG_DEBUG, "%s: get header (try %d/%d)\n",
 		 name, retries, args->max_retries);
 	nvme_init_get_log_discovery(&cmd, 0, log, DISCOVERY_HEADER_LEN);
+	cmd.timeout_ms = args->timeout;
 	err = libnvme_get_log(hdl, &cmd, false, DISCOVERY_HEADER_LEN);
 	if (err) {
 		libnvme_msg(ctx, LOG_INFO,
@@ -1350,6 +1351,7 @@ static int nvme_discovery_log(const struct libnvme_get_discovery_args *args,
 			 name, numrec, genctr);
 
 		nvme_init_get_log_discovery(&cmd, sizeof(*log), log->entries, entries_size);
+		cmd.timeout_ms = args->timeout;
 		cmd.cdw10 |= NVME_FIELD_ENCODE(args->lsp,
 					       NVME_LOG_CDW10_LSP_SHIFT,
 					       NVME_LOG_CDW10_LSP_MASK);
@@ -1368,6 +1370,7 @@ static int nvme_discovery_log(const struct libnvme_get_discovery_args *args,
 		libnvme_msg(ctx, LOG_DEBUG, "%s: get header again\n", name);
 
 		nvme_init_get_log_discovery(&cmd, 0, log, DISCOVERY_HEADER_LEN);
+		cmd.timeout_ms = args->timeout;
 		err = libnvme_get_log(hdl, &cmd, false, DISCOVERY_HEADER_LEN);
 		if (err) {
 			libnvme_msg(ctx, LOG_INFO,
