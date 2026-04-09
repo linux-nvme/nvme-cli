@@ -1989,8 +1989,8 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 		.c = c,
 		.args_size = sizeof(args),
 		.max_retries = fctx->default_max_discovery_retries,
-		.result = 0,
-		.lsp = 0,
+		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+		.lsp = NVMF_LOG_DISC_LSP_NONE,
 	};
 
 	err = nvmf_get_discovery_wargs(&args, &log);
@@ -2672,9 +2672,8 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 		.c = c,
 		.args_size = sizeof(args),
 		.max_retries = 10 /* MAX_DISC_RETRIES */,
-		.result = 0,
 		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lsp = 0,
+		.lsp = NVMF_LOG_DISC_LSP_NONE,
 	};
 
 	ret = nvmf_get_discovery_wargs(&args, &log);
