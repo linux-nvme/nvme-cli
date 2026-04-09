@@ -103,6 +103,34 @@ static bool validate_uri(struct nbft_info_discovery *dd,
 	return true;
 }
 
+static void update_tls_concat(struct nvmf_disc_log_entry *e,
+		struct nvme_fabrics_config *cfg)
+{
+	if (e->trtype != NVMF_TRTYPE_TCP ||
+	    e->tsas.tcp.sectype == NVMF_TCP_SECTYPE_NONE)
+		return;
+
+	if (e->treq & NVMF_TREQ_REQUIRED) {
+		fprintf(stderr,
+			"setting --tls due to treq %s and sectype %s\n",
+			nvmf_treq_str(e->treq),
+			nvmf_sectype_str(e->tsas.tcp.sectype));
+
+		cfg->tls = true;
+		return;
+	}
+
+	if (e->treq & NVMF_TREQ_NOT_REQUIRED) {
+		fprintf(stderr,
+			"setting --concat due to treq %s and sectype %s\n",
+			nvmf_treq_str(e->treq),
+			nvmf_sectype_str(e->tsas.tcp.sectype));
+
+		cfg->concat = true;
+		return;
+	}
+}
+
 /* returns 0 for success or negative errno otherwise */
 static int do_connect(nvme_root_t r,
 		      nvme_host_t h,
@@ -138,11 +166,8 @@ static int do_connect(nvme_root_t r,
 		nvme_init_logging(r, -1, false, false);
 	}
 
-	if (e) {
-		if (e->trtype == NVMF_TRTYPE_TCP &&
-		    e->tsas.tcp.sectype != NVMF_TCP_SECTYPE_NONE)
-			cfg->tls = true;
-	}
+	/* Update tls or concat */
+	update_tls_concat(e, cfg);
 
 	errno = 0;
 	ret = nvmf_add_ctrl(h, c, cfg);
