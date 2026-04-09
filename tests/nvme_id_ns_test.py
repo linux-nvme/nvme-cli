@@ -27,8 +27,6 @@ NVme Identify Namespace Testcase:-
     2. Execute id-ns on all namespaces
 """
 
-import subprocess
-
 from nvme_test import TestNVMe
 
 
@@ -62,11 +60,7 @@ class TestNVMeIdentifyNamespace(TestNVMe):
         """
         id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
             f"--namespace-id={str(nsid)}"
-        proc = subprocess.Popen(id_ns_cmd,
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                encoding='utf-8')
-        return proc.wait()
+        return self.exec_cmd(id_ns_cmd)
 
     def get_id_ns_all(self):
         """

@@ -12,8 +12,6 @@ NVMe LBA Status Log Testcase :-
     1. Execute lba-status-log on a device.
 """
 
-import subprocess
-
 from nvme_test import TestNVMe
 
 
@@ -46,11 +44,7 @@ class TestNVMeLbaStatLogCmd(TestNVMe):
                 - 0 on success, error code on failure.
         """
         lba_stat_log_cmd = f"{self.nvme_bin} lba-status-log {self.ctrl}"
-        proc = subprocess.Popen(lba_stat_log_cmd,
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                encoding='utf-8')
-        return proc.wait()
+        return self.exec_cmd(lba_stat_log_cmd)
 
     def test_lba_stat_log(self):
         """ Testcase main """
