@@ -54,6 +54,7 @@ foreach t : tests
         env: ['PATH=' + meson.project_build_root() + ':/usr/bin:/usr/sbin'],
         timeout: 500,
         protocol: 'tap',
+        is_parallel: false,
     )
 endforeach
 
