@@ -51,12 +51,13 @@ static void print_discover_log(struct nvmf_discovery_log *log)
 
 int main()
 {
-	struct nvmf_discovery_log *log;
+	struct nvmf_discovery_log *log = NULL;
 	struct libnvme_global_ctx *ctx;
 	libnvme_host_t h;
 	libnvme_ctrl_t c;
 	int ret;
 	struct libnvme_fabrics_config cfg;
+	struct nvmf_discovery_args *args;
 
 	nvmf_default_config(&cfg);
 
@@ -86,7 +87,13 @@ int main()
 		return 1;
 	}
 
-	ret = nvmf_get_discovery_log(c, &log, 4);
+	ret = nvmf_discovery_args_create(&args);
+	if (!ret) {
+		nvmf_discovery_args_set_max_retries(args, 4);
+		ret = nvmf_get_discovery_log(c, args, &log);
+		nvmf_discovery_args_free(args);
+	}
+
 	libnvme_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);
 

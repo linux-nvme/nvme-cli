@@ -232,57 +232,47 @@ int nvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
  */
 int nvmf_connect_ctrl(libnvme_ctrl_t c);
 
-/**
- * nvmf_get_discovery_log() - Return the discovery log page
- * @c:			Discovery controller to use
- * @logp:		Log page object to return
- * @max_retries:	Number of retries in case of failure
+/*
+ * struct nvmf_discovery_args - Opaque arguments for nvmf_get_discovery_log()
  *
- * The memory allocated for the log page and returned in @logp
- * must be freed by the caller using free().
- *
- * Note: Consider using nvmf_get_discovery_wargs() instead.
- *
- * Return: 0 on success, or an error code on failure.
+ * Allocate with nvmf_discovery_args_create() and release with
+ * nvmf_discovery_args_free(). Use the setter/getter accessors to configure
+ * fields; do not access members directly.
  */
-int nvmf_get_discovery_log(libnvme_ctrl_t c, struct nvmf_discovery_log **logp,
-			   int max_retries);
+struct nvmf_discovery_args;
 
 /**
- * struct libnvme_get_discovery_args - Arguments for nvmf_get_discovery_wargs()
- * @c:			Discovery controller
- * @args_size:		Length of the structure
- * @max_retries:	Number of retries in case of failure
- * @result:		The command completion result from CQE dword0
- * @timeout:		Timeout in ms (default: NVME_DEFAULT_IOCTL_TIMEOUT)
- * @lsp:		Log specific field (See enum nvmf_log_discovery_lsp)
+ * nvmf_discovery_args_create() - Allocate a discovery args object
+ * @argsp:	On success, set to the newly allocated object
+ *
+ * Allocates and initialises a &struct nvmf_discovery_args with sensible
+ * defaults. The caller must release it with nvmf_discovery_args_free().
+ *
+ * Return: 0 on success, or a negative error code on failure.
  */
-struct libnvme_get_discovery_args {
-	libnvme_ctrl_t c;
-	int args_size;
-	int max_retries;
-	__u32 *result;
-	__u32 timeout;
-	__u8 lsp;
-};
+int nvmf_discovery_args_create(struct nvmf_discovery_args **argsp);
 
 /**
- * nvmf_get_discovery_wargs() - Get the discovery log page with args
- * @args:	Argument structure
- * @log:	Discovery log page object to return
- *
- * This function is similar to nvmf_get_discovery_log(), but
- * takes an extensible @args parameter. @args provides more
- * options than nvmf_get_discovery_log().
- *
- * This function performs a get discovery log page (DLP) command
- * and returns the DLP. The memory allocated for the returned
- * DLP must be freed by the caller using free().
- *
- * Return: 0 on success, or an error code on failure.
+ * nvmf_discovery_args_free() - Release a discovery args object
+ * @args:	Object previously returned by nvmf_discovery_args_create()
  */
-int nvmf_get_discovery_wargs(struct libnvme_get_discovery_args *args,
-			     struct nvmf_discovery_log **log);
+void nvmf_discovery_args_free(struct nvmf_discovery_args *args);
+
+/**
+ * nvmf_get_discovery_log() - Fetch the NVMe-oF discovery log page
+ * @ctrl:	Discovery controller
+ * @args:	Optional arguments (pass NULL for defaults)
+ * @logp:	On success, set to the allocated log page (caller must free())
+ *
+ * Issues the three-phase Get Log Page protocol against @ctrl, validates
+ * generation-counter atomicity, and normalises each log entry.
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
+int nvmf_get_discovery_log(libnvme_ctrl_t ctrl,
+			   const struct nvmf_discovery_args *args,
+			   struct nvmf_discovery_log **logp);
+
 
 /**
  * nvmf_is_registration_supported - check whether registration can be performed.

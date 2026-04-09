@@ -36,6 +36,7 @@
 
 #include "cleanup.h"
 #include "private.h"
+#include "private-fabrics.h"
 #include "compiler_attributes.h"
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
@@ -1297,16 +1298,19 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
  */
 #define DISCOVERY_HEADER_LEN 20
 
-static int nvme_discovery_log(const struct libnvme_get_discovery_args *args,
+static int nvme_discovery_log(libnvme_ctrl_t ctrl,
+			      const struct nvmf_discovery_args *args,
 			      struct nvmf_discovery_log **logp)
 {
-	struct libnvme_global_ctx *ctx = args->c->ctx;
+	struct libnvme_global_ctx *ctx = ctrl->ctx;
 	struct nvmf_discovery_log *log;
 	int retries = 0;
 	int err;
-	const char *name = libnvme_ctrl_get_name(args->c);
+	const char *name = libnvme_ctrl_get_name(ctrl);
 	uint64_t genctr, numrec;
-	struct libnvme_transport_handle *hdl = libnvme_ctrl_get_transport_handle(args->c);
+	struct libnvme_transport_handle *hdl;
+
+	hdl = libnvme_ctrl_get_transport_handle(ctrl);
 	struct libnvme_passthru_cmd cmd;
 
 	log = __libnvme_alloc(sizeof(*log));
@@ -1319,7 +1323,6 @@ static int nvme_discovery_log(const struct libnvme_get_discovery_args *args,
 	libnvme_msg(ctx, LOG_DEBUG, "%s: get header (try %d/%d)\n",
 		 name, retries, args->max_retries);
 	nvme_init_get_log_discovery(&cmd, 0, log, DISCOVERY_HEADER_LEN);
-	cmd.timeout_ms = args->timeout;
 	err = libnvme_get_log(hdl, &cmd, false, DISCOVERY_HEADER_LEN);
 	if (err) {
 		libnvme_msg(ctx, LOG_INFO,
@@ -1351,7 +1354,6 @@ static int nvme_discovery_log(const struct libnvme_get_discovery_args *args,
 			 name, numrec, genctr);
 
 		nvme_init_get_log_discovery(&cmd, sizeof(*log), log->entries, entries_size);
-		cmd.timeout_ms = args->timeout;
 		cmd.cdw10 |= NVME_FIELD_ENCODE(args->lsp,
 					       NVME_LOG_CDW10_LSP_SHIFT,
 					       NVME_LOG_CDW10_LSP_MASK);
@@ -1370,7 +1372,6 @@ static int nvme_discovery_log(const struct libnvme_get_discovery_args *args,
 		libnvme_msg(ctx, LOG_DEBUG, "%s: get header again\n", name);
 
 		nvme_init_get_log_discovery(&cmd, 0, log, DISCOVERY_HEADER_LEN);
-		cmd.timeout_ms = args->timeout;
 		err = libnvme_get_log(hdl, &cmd, false, DISCOVERY_HEADER_LEN);
 		if (err) {
 			libnvme_msg(ctx, LOG_INFO,
@@ -1421,36 +1422,54 @@ static void sanitize_discovery_log_entry(struct libnvme_global_ctx *ctx,
 	}
 }
 
-__public int nvmf_get_discovery_log(libnvme_ctrl_t c, struct nvmf_discovery_log **logp,
-			   int max_retries)
+__public int nvmf_discovery_args_create(struct nvmf_discovery_args **argsp)
 {
-	struct libnvme_get_discovery_args args = {
-		.c = c,
-		.max_retries = max_retries,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-		.lsp = NVMF_LOG_DISC_LSP_NONE,
-	};
+	struct nvmf_discovery_args *args;
 
+	if (!argsp)
+		return -EINVAL;
 
-	return nvmf_get_discovery_wargs(&args, logp);
+	args = calloc(1, sizeof(*args));
+	if (!args)
+		return -ENOMEM;
+
+	args->max_retries = 6;
+	args->lsp = NVMF_LOG_DISC_LSP_NONE;
+
+	*argsp = args;
+	return 0;
 }
 
-__public int nvmf_get_discovery_wargs(struct libnvme_get_discovery_args *args,
-			     struct nvmf_discovery_log **logp)
+__public void nvmf_discovery_args_free(struct nvmf_discovery_args *args)
 {
+	free(args);
+}
+
+__public int nvmf_get_discovery_log(libnvme_ctrl_t ctrl,
+				    const struct nvmf_discovery_args *args,
+				    struct nvmf_discovery_log **logp)
+{
+	static const struct nvmf_discovery_args defaults = {
+		.max_retries = 6,
+		.lsp         = NVMF_LOG_DISC_LSP_NONE,
+	};
 	struct nvmf_discovery_log *log;
 	int err;
 
-	err = nvme_discovery_log(args, &log);
+	if (!args)
+		args = &defaults;
+
+	err = nvme_discovery_log(ctrl, args, &log);
 	if (err)
 		return err;
 
 	for (int i = 0; i < le64_to_cpu(log->numrec); i++)
-		sanitize_discovery_log_entry(args->c->ctx, &log->entries[i]);
+		sanitize_discovery_log_entry(ctrl->ctx, &log->entries[i]);
 
 	*logp = log;
 	return 0;
 }
+
 
 /**
  * nvmf_get_tel() - Calculate the amount of memory needed for a DIE.
@@ -1985,15 +2004,12 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 	uint64_t numrec;
 	int err;
 
-	struct libnvme_get_discovery_args args = {
-		.c = c,
-		.args_size = sizeof(args),
+	struct nvmf_discovery_args args = {
 		.max_retries = fctx->default_max_discovery_retries,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lsp = NVMF_LOG_DISC_LSP_NONE,
 	};
 
-	err = nvmf_get_discovery_wargs(&args, &log);
+	err = nvme_discovery_log(c, &args, &log);
 	if (err) {
 		libnvme_msg(ctx, LOG_ERR, "failed to get discovery log: %s\n",
 			libnvme_strerror(err));
@@ -2668,15 +2684,12 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 	int ret;
 	int i;
 
-	struct libnvme_get_discovery_args args = {
-		.c = c,
-		.args_size = sizeof(args),
+	struct nvmf_discovery_args args = {
 		.max_retries = 10 /* MAX_DISC_RETRIES */,
-		.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
 		.lsp = NVMF_LOG_DISC_LSP_NONE,
 	};
 
-	ret = nvmf_get_discovery_wargs(&args, &log);
+	ret = nvme_discovery_log(c, &args, &log);
 	if (ret) {
 		libnvme_msg(ctx, LOG_ERR,
 			"Discovery Descriptor %d: failed to get discovery log: %s\n",
