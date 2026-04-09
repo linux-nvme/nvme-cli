@@ -486,11 +486,7 @@ class TestNVMe(unittest.TestCase):
         """
         smart_log_cmd = f"{self.nvme_bin} smart-log {self.ctrl} " + \
             f"--namespace-id={str(nsid)}"
-        proc = subprocess.Popen(smart_log_cmd,
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                encoding='utf-8')
-        err = proc.wait()
+        err = self.exec_cmd(smart_log_cmd)
         self.assertEqual(err, 0, "ERROR : nvme smart log failed")
         return err
 
@@ -506,11 +502,7 @@ class TestNVMe(unittest.TestCase):
         else:
             id_ctrl_cmd = f"{self.nvme_bin} id-ctrl " +\
                 f"--vendor-specific {self.ctrl}"
-        proc = subprocess.Popen(id_ctrl_cmd,
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                encoding='utf-8')
-        err = proc.wait()
+        err = self.exec_cmd(id_ctrl_cmd)
         self.assertEqual(err, 0, "ERROR : nvme id controller failed")
         return err
 
