@@ -28,8 +28,9 @@ LIBNVMF_3 {
 		nvmf_exat_ptr_next;
 		nvmf_free_uri;
 		nvmf_get_default_trsvcid;
+		nvmf_discovery_args_create;
+		nvmf_discovery_args_free;
 		nvmf_get_discovery_log;
-		nvmf_get_discovery_wargs;
 		nvmf_is_registration_supported;
 		nvmf_nbft_free;
 		nvmf_nbft_read_files;

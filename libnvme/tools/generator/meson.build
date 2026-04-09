@@ -27,14 +27,31 @@ libnvme_src_nvme = libnvme_src / 'nvme'
 
 _py3 = find_program('python3', required: true)
 
-run_target(
-    'update-accessors',
+_tgt_common = run_target(
+    'update-common-accessors',
     command: [
         'update-accessors.sh',
         _py3,
         files('generate-accessors.py'),
-        libnvme_src_nvme,
-        libnvme_src,
+        libnvme_src_nvme / 'accessors.h',
+        libnvme_src_nvme / 'accessors.c',
+        libnvme_src / 'accessors.ld',
         libnvme_src_nvme / 'private.h',
     ],
 )
+
+_tgt_fabrics = run_target(
+    'update-fabrics-accessors',
+    command: [
+        'update-accessors.sh',
+        _py3,
+        files('generate-accessors.py'),
+        libnvme_src_nvme / 'nvmf-accessors.h',
+        libnvme_src_nvme / 'nvmf-accessors.c',
+        libnvme_src / 'nvmf-accessors.ld',
+        libnvme_src_nvme / 'private-fabrics.h',
+    ],
+)
+
+# This alias allows generating all accessors in one shot.
+alias_target('update-accessors', _tgt_common, _tgt_fabrics)
