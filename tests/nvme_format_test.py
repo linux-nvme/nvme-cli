@@ -38,10 +38,13 @@ Namespace Format testcase :-
 """
 
 import json
+import logging
 import math
 import subprocess
 
 from nvme_test import TestNVMe
+
+logger = logging.getLogger(__name__)
 
 
 class TestNVMeFormatCmd(TestNVMe):
@@ -107,13 +110,16 @@ class TestNVMeFormatCmd(TestNVMe):
         # read lbaf information
         id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
             f"--namespace-id={self.default_nsid} --output-format=json"
+        logger.debug(id_ns_cmd)
         proc = subprocess.Popen(id_ns_cmd,
                                 shell=True,
                                 stdout=subprocess.PIPE,
                                 encoding='utf-8')
         err = proc.wait()
         self.assertEqual(err, 0, "ERROR : nvme id-ns failed")
-        json_output = json.loads(proc.stdout.read())
+        output = proc.stdout.read()
+        logger.debug(output)
+        json_output = json.loads(output)
         self.lba_format_list = json_output['lbafs']
         self.assertTrue(len(self.lba_format_list) > 0,
                         "ERROR : nvme id-ns could not find any lba formats")
