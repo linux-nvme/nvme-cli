@@ -74,6 +74,16 @@ BANNER = (
     " */"
 )
 
+LD_BANNER = (
+    "/**\n"
+    " * This file is part of libnvme.\n"
+    " *\n"
+    " * Copyright (c) 2025, Dell Technologies Inc. or its subsidiaries.\n"
+    " * Authors: Martin Belanger <Martin.Belanger@dell.com>\n"
+    " *\n"
+    " */"
+)
+
 # ---------------------------------------------------------------------------
 # Regular expressions
 # ---------------------------------------------------------------------------
@@ -500,10 +510,9 @@ def generate_src(f, prefix, struct_name, members):
 def generate_ld(f, prefix, struct_name, members):
     """Write linker version-script entries for all members of one struct."""
     for member in members:
-        f.write(
-            f'\t\t{_get_name(prefix, struct_name, member.name)};\n'
-            f'\t\t{_set_name(prefix, struct_name, member.name)};\n'
-        )
+        f.write(f'\t\t{_get_name(prefix, struct_name, member.name)};\n')
+        if not member.is_const:
+            f.write(f'\t\t{_set_name(prefix, struct_name, member.name)};\n')
 
 
 # ---------------------------------------------------------------------------
@@ -656,7 +665,7 @@ def main():
         f.write(
             f'{SPDX_LD}\n'
             f'\n'
-            f'{BANNER}\n'
+            f'{LD_BANNER}\n'
             f'\n'
             f'LIBNVME_ACCESSORS_3 {{\n'
             f'\tglobal:\n'
