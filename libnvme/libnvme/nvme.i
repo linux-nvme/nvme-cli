@@ -720,7 +720,7 @@ struct libnvme_ns {
 		}
 
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
-		    ret = nvmf_add_ctrl(h, $self, cfg);
+		    ret = libnvmf_add_ctrl(h, $self, cfg);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
 		if (ret) {
@@ -752,7 +752,7 @@ struct libnvme_ns {
 
 	%feature("autodoc", "@return: True if controller supports explicit registration. False otherwise.") is_registration_supported;
 	bool is_registration_supported() {
-		return nvmf_is_registration_supported($self);
+		return libnvmf_is_registration_supported($self);
 	}
 
 	%feature("autodoc", "@return None on success or Error string on error.") registration_ctlr;
@@ -761,7 +761,7 @@ struct libnvme_ns {
 		int   status;
 
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
-		    status = nvmf_register_ctrl($self, NVMF_DIM_TAS_REGISTER, &result);
+		    status = libnvmf_register_ctrl($self, NVMF_DIM_TAS_REGISTER, &result);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
 			if (status != NVME_SC_SUCCESS) {
@@ -778,21 +778,21 @@ struct libnvme_ns {
 	%newobject discover;
 	struct nvmf_discovery_log *discover(int lsp = 0, int max_retries = 6) {
 		struct nvmf_discovery_log *logp = NULL;
-		struct nvmf_discovery_args *args = NULL;
+		struct libnvmf_discovery_args *args = NULL;
 
 		if (!libnvme_ctrl_get_name($self)) {
 			discover_err = 1;
 			return NULL;
 		}
-		discover_err = nvmf_discovery_args_create(&args);
+		discover_err = libnvmf_discovery_args_create(&args);
 		if (discover_err)
 			return NULL;
-		nvmf_discovery_args_set_lsp(args, lsp);
-		nvmf_discovery_args_set_max_retries(args, max_retries);
+		libnvmf_discovery_args_set_lsp(args, lsp);
+		libnvmf_discovery_args_set_max_retries(args, max_retries);
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
-		    discover_err = nvmf_get_discovery_log($self, args, &logp);
+		    discover_err = libnvmf_get_discovery_log($self, args, &logp);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
-		nvmf_discovery_args_free(args);
+		libnvmf_discovery_args_free(args);
 
 		if (logp == NULL) discover_err = 2;
 		return logp;

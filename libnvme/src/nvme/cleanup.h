@@ -50,7 +50,7 @@ static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *, freeaddri
 static inline void free_uri(struct libnvme_fabrics_uri **uri)
 {
 	if (*uri)
-		nvmf_free_uri(*uri);
+		libnvmf_free_uri(*uri);
 }
 #define _cleanup_uri_ __cleanup__(free_uri)
 

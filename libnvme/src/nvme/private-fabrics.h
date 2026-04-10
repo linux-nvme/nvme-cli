@@ -16,11 +16,11 @@
  *
  * Structs in this file are NVMe-oF-specific (fabrics layer). They are kept
  * separate from private.h so that PCIe-only builds can exclude this entire
- * file and its generated accessors (nvmf-accessors.{h,c}) along with the
+ * file and its generated accessors (accessors-fabrics.{h,c}) along with the
  * rest of the fabrics layer.
  */
 
-struct nvmf_discovery_args { /*!generate-accessors*/
+struct libnvmf_discovery_args { /*!generate-accessors*/
 	int max_retries;
 	__u8 lsp;
 };

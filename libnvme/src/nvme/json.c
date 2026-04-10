@@ -83,7 +83,7 @@ static void json_parse_port(libnvme_subsystem_t s, struct json_object *port_obj)
 {
 	libnvme_ctrl_t c;
 	struct json_object *attr_obj;
-	struct nvmf_context fctx = {};
+	struct libnvmf_context fctx = {};
 
 	attr_obj = json_object_object_get(port_obj, "transport");
 	if (!attr_obj)

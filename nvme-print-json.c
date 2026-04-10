@@ -5203,25 +5203,25 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		struct nvmf_disc_log_entry *e = &log->entries[i];
 		struct json_object *entry = json_create_object();
 
-		obj_add_str(entry, "trtype", nvmf_trtype_str(e->trtype));
-		obj_add_str(entry, "adrfam", nvmf_adrfam_str(e->adrfam));
-		obj_add_str(entry, "subtype", nvmf_subtype_str(e->subtype));
-		obj_add_str(entry, "treq", nvmf_treq_str(e->treq));
+		obj_add_str(entry, "trtype", libnvmf_trtype_str(e->trtype));
+		obj_add_str(entry, "adrfam", libnvmf_adrfam_str(e->adrfam));
+		obj_add_str(entry, "subtype", libnvmf_subtype_str(e->subtype));
+		obj_add_str(entry, "treq", libnvmf_treq_str(e->treq));
 		obj_add_uint(entry, "portid", le16_to_cpu(e->portid));
 		obj_add_str(entry, "trsvcid", e->trsvcid);
 		obj_add_str(entry, "subnqn", e->subnqn);
 		obj_add_str(entry, "traddr", e->traddr);
-		obj_add_str(entry, "eflags", nvmf_eflags_str(le16_to_cpu(e->eflags)));
+		obj_add_str(entry, "eflags", libnvmf_eflags_str(le16_to_cpu(e->eflags)));
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
-			obj_add_str(entry, "rdma_prtype", nvmf_prtype_str(e->tsas.rdma.prtype));
-			obj_add_str(entry, "rdma_qptype", nvmf_qptype_str(e->tsas.rdma.qptype));
-			obj_add_str(entry, "rdma_cms", nvmf_cms_str(e->tsas.rdma.cms));
+			obj_add_str(entry, "rdma_prtype", libnvmf_prtype_str(e->tsas.rdma.prtype));
+			obj_add_str(entry, "rdma_qptype", libnvmf_qptype_str(e->tsas.rdma.qptype));
+			obj_add_str(entry, "rdma_cms", libnvmf_cms_str(e->tsas.rdma.cms));
 			obj_add_uint(entry, "rdma_pkey", le16_to_cpu(e->tsas.rdma.pkey));
 			break;
 		case NVMF_TRTYPE_TCP:
-			obj_add_str(entry, "sectype", nvmf_sectype_str(e->tsas.tcp.sectype));
+			obj_add_str(entry, "sectype", libnvmf_sectype_str(e->tsas.tcp.sectype));
 			break;
 		default:
 			break;
@@ -5588,22 +5588,22 @@ static void json_host_discovery_log(struct nvme_host_discover_log *log)
 		hedlpe = (void *)log + i;
 		tel = le32_to_cpu(hedlpe->tel);
 		numexat = le16_to_cpu(hedlpe->numexat);
-		obj_add_str(hedlpe_o, "trtype", nvmf_trtype_str(hedlpe->trtype));
+		obj_add_str(hedlpe_o, "trtype", libnvmf_trtype_str(hedlpe->trtype));
 		obj_add_str(hedlpe_o, "adrfam",
-			    strlen(hedlpe->traddr) ? nvmf_adrfam_str(hedlpe->adrfam) : "");
-		obj_add_str(hedlpe_o, "eflags", nvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
+			    strlen(hedlpe->traddr) ? libnvmf_adrfam_str(hedlpe->adrfam) : "");
+		obj_add_str(hedlpe_o, "eflags", libnvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
 		obj_add_str(hedlpe_o, "hostnqn", hedlpe->hostnqn);
 		obj_add_str(hedlpe_o, "traddr", hedlpe->traddr);
 		tsas_o = json_create_object();
 		switch (hedlpe->trtype) {
 		case NVMF_TRTYPE_RDMA:
-			obj_add_str(tsas_o, "prtype", nvmf_prtype_str(hedlpe->tsas.rdma.prtype));
-			obj_add_str(tsas_o, "qptype", nvmf_qptype_str(hedlpe->tsas.rdma.qptype));
-			obj_add_str(tsas_o, "cms", nvmf_cms_str(hedlpe->tsas.rdma.cms));
+			obj_add_str(tsas_o, "prtype", libnvmf_prtype_str(hedlpe->tsas.rdma.prtype));
+			obj_add_str(tsas_o, "qptype", libnvmf_qptype_str(hedlpe->tsas.rdma.qptype));
+			obj_add_str(tsas_o, "cms", libnvmf_cms_str(hedlpe->tsas.rdma.cms));
 			obj_add_uint_0nx(tsas_o, "pkey", le16_to_cpu(hedlpe->tsas.rdma.pkey), 4);
 			break;
 		case NVMF_TRTYPE_TCP:
-			obj_add_str(tsas_o, "sectype", nvmf_sectype_str(hedlpe->tsas.tcp.sectype));
+			obj_add_str(tsas_o, "sectype", libnvmf_sectype_str(hedlpe->tsas.tcp.sectype));
 			break;
 		default:
 			obj_d(tsas_o, "common", (unsigned char *)hedlpe->tsas.common,
@@ -5623,7 +5623,7 @@ static void json_host_discovery_log(struct nvme_host_discover_log *log)
 			obj_d(exat_o, "exatval", (unsigned char *)exat->exatval,
 			      le16_to_cpu(exat->exatlen), 16, 1);
 			obj_add_obj(hedlpe_o, json_str, exat_o);
-			exat = nvmf_exat_ptr_next(exat);
+			exat = libnvmf_exat_ptr_next(exat);
 		}
 		snprintf(json_str, sizeof(json_str), "hedlpe: %d", n++);
 		obj_add_obj(r, json_str, hedlpe_o);
@@ -5641,7 +5641,7 @@ static void obj_add_traddr(struct json_object *o, const char *k, __u8 adrfam, __
 		size = INET6_ADDRSTRLEN;
 	}
 
-	if (inet_ntop(af, nvmf_adrfam_str(adrfam), dst, size))
+	if (inet_ntop(af, libnvmf_adrfam_str(adrfam), dst, size))
 		obj_add_str(o, k, dst);
 }
 
@@ -5678,7 +5678,7 @@ static void json_ave_discovery_log(struct nvme_ave_discover_log *log)
 		for (j = 0; j < numatr; j++) {
 			atr_o = json_create_object();
 			snprintf(json_str, sizeof(json_str), "atr: %d", j);
-			obj_add_str(atr_o, "aveadrfam", nvmf_adrfam_str(atr->aveadrfam));
+			obj_add_str(atr_o, "aveadrfam", libnvmf_adrfam_str(atr->aveadrfam));
 			obj_add_uint(atr_o, "avetrsvcid", le16_to_cpu(atr->avetrsvcid));
 			obj_add_traddr(atr_o, "avetraddr", atr->aveadrfam, atr->avetraddr);
 			obj_add_obj(adlpe_o, json_str, atr_o);

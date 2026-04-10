@@ -201,7 +201,7 @@ or PCIe-only) builds can exclude all fabrics code entirely.
 | Meson target | Input header | Generated files |
 |---|---|---|
 | `update-common-accessors` | `src/nvme/private.h` | `src/nvme/accessors.{h,c}`, `src/accessors.ld` |
-| `update-fabrics-accessors` | `src/nvme/private-fabrics.h` | `src/nvme/nvmf-accessors.{h,c}`, `src/nvmf-accessors.ld` |
+| `update-fabrics-accessors` | `src/nvme/private-fabrics.h` | `src/nvme/accessors-fabrics.{h,c}`, `src/accessors-fabrics.ld` |
 
 ### When to regenerate
 
@@ -228,13 +228,13 @@ changes. Commit the updated files afterward:
 
 ```bash
 git add libnvme/src/nvme/accessors.h libnvme/src/nvme/accessors.c
-git add libnvme/src/nvme/nvmf-accessors.h libnvme/src/nvme/nvmf-accessors.c
+git add libnvme/src/nvme/accessors-fabrics.h libnvme/src/nvme/accessors-fabrics.c
 git commit -m "libnvme: regenerate accessors following <struct> changes"
 ```
 
 ### Maintaining the .ld version-script files
 
-The `.ld` files (`src/accessors.ld` and `src/nvmf-accessors.ld`) are GNU
+The `.ld` files (`src/accessors.ld` and `src/accessors-fabrics.ld`) are GNU
 linker version scripts that control which accessor symbols are exported from
 the shared library and under which ABI version label they were introduced
 (e.g. `LIBNVME_ACCESSORS_3`, `LIBNVMF_ACCESSORS_3`).

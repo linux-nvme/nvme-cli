@@ -187,7 +187,7 @@ const char *libnvme_errno_to_string(int err);
 const char *libnvme_strerror(int err);
 
 /**
- * nvmf_exat_ptr_next - Increment @p to the next element in the array.
+ * libnvmf_exat_ptr_next - Increment @p to the next element in the array.
  * @p: Pointer to an element of an array of "struct nvmf_ext_attr".
  *
  * Extended attributes are saved to an array of "struct nvmf_ext_attr"
@@ -198,7 +198,7 @@ const char *libnvme_strerror(int err);
  *
  * Return: Pointer to the next element in the array.
  */
-struct nvmf_ext_attr *nvmf_exat_ptr_next(struct nvmf_ext_attr *p);
+struct nvmf_ext_attr *libnvmf_exat_ptr_next(struct nvmf_ext_attr *p);
 
 /**
  * enum libnvme_version - Selector for version to be returned by

@@ -1081,7 +1081,7 @@ static bool traddr_is_hostname(const char *transport, const char *traddr)
 	return true;
 }
 
-__public void nvmf_default_config(struct libnvme_fabrics_config *cfg)
+__public void libnvmf_default_config(struct libnvme_fabrics_config *cfg)
 {
 	memset(cfg, 0, sizeof(*cfg));
 	cfg->tos = -1;
@@ -1089,7 +1089,7 @@ __public void nvmf_default_config(struct libnvme_fabrics_config *cfg)
 }
 
 int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
-		struct nvmf_context *fctx, libnvme_ctrl_t *cp)
+		struct libnvmf_context *fctx, libnvme_ctrl_t *cp)
 {
 	struct libnvme_ctrl *c;
 
@@ -1114,7 +1114,7 @@ int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 
 	c->ctx = ctx;
 	c->hdl = NULL;
-	nvmf_default_config(&c->cfg);
+	libnvmf_default_config(&c->cfg);
 	list_head_init(&c->namespaces);
 	list_head_init(&c->paths);
 	list_node_init(&c->entry);
@@ -1144,7 +1144,7 @@ __public int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		const char *host_iface, const char *trsvcid,
 		libnvme_ctrl_t *cp)
 {
-	struct nvmf_context fctx = {
+	struct libnvmf_context fctx = {
 		.transport = transport,
 		.traddr = traddr,
 		.host_traddr = host_traddr,
@@ -1443,7 +1443,7 @@ static bool _match_ctrl(struct libnvme_ctrl *c,
  * controller to the candidate controller.
  */
 static ctrl_match_t _candidate_init(struct libnvme_global_ctx *ctx,
-		struct candidate_args *candidate, struct nvmf_context *fctx)
+		struct candidate_args *candidate, struct libnvmf_context *fctx)
 {
 	memset(candidate, 0, sizeof(*candidate));
 
@@ -1485,7 +1485,7 @@ static ctrl_match_t _candidate_init(struct libnvme_global_ctx *ctx,
 }
 
 static libnvme_ctrl_t __nvme_ctrl_find(libnvme_subsystem_t s,
-		struct nvmf_context *fctx, libnvme_ctrl_t p)
+		struct libnvmf_context *fctx, libnvme_ctrl_t p)
 {
 	struct candidate_args candidate = {};
 	struct libnvme_ctrl *c, *matching_c = NULL;
@@ -1506,7 +1506,7 @@ static libnvme_ctrl_t __nvme_ctrl_find(libnvme_subsystem_t s,
 }
 
 bool _libnvme_ctrl_match_config(struct libnvme_ctrl *c,
-		struct nvmf_context *fctx)
+		struct libnvmf_context *fctx)
 {
 	struct candidate_args candidate = {};
 	ctrl_match_t ctrl_match;
@@ -1522,7 +1522,7 @@ __public bool libnvme_ctrl_match_config(struct libnvme_ctrl *c,
 		const char *subsysnqn, const char *host_traddr,
 		const char *host_iface)
 {
-	struct nvmf_context fctx = {
+	struct libnvmf_context fctx = {
 		.transport = transport,
 		.traddr = traddr,
 		.host_traddr = host_traddr,
@@ -1535,13 +1535,13 @@ __public bool libnvme_ctrl_match_config(struct libnvme_ctrl *c,
 }
 
 libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
-		struct nvmf_context *fctx)
+		struct libnvmf_context *fctx)
 {
 	return __nvme_ctrl_find(s, fctx, NULL/*p*/);
 }
 
 libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
-			     struct nvmf_context *fctx,
+			     struct libnvmf_context *fctx,
 			     libnvme_ctrl_t p)
 {
 	struct libnvme_global_ctx *ctx;
@@ -1942,7 +1942,7 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 skip_address:
 	p = NULL;
 	do {
-		struct nvmf_context fctx = {
+		struct libnvmf_context fctx = {
 			.transport = transport,
 			.traddr = traddr,
 			.host_traddr = host_traddr,

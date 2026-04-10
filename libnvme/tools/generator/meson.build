@@ -46,9 +46,9 @@ _tgt_fabrics = run_target(
         'update-accessors.sh',
         _py3,
         files('generate-accessors.py'),
-        libnvme_src_nvme / 'nvmf-accessors.h',
-        libnvme_src_nvme / 'nvmf-accessors.c',
-        libnvme_src / 'nvmf-accessors.ld',
+        libnvme_src_nvme / 'accessors-fabrics.h',
+        libnvme_src_nvme / 'accessors-fabrics.c',
+        libnvme_src / 'accessors-fabrics.ld',
         libnvme_src_nvme / 'private-fabrics.h',
     ],
 )

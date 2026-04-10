@@ -19,36 +19,36 @@
  */
 #include <stdlib.h>
 #include <string.h>
-#include "nvmf-accessors.h"
+#include "accessors-fabrics.h"
 
 #include "private-fabrics.h"
 #include "compiler_attributes.h"
 
 /****************************************************************************
- * Accessors for: struct nvmf_discovery_args
+ * Accessors for: struct libnvmf_discovery_args
  ****************************************************************************/
 
-__public void nvmf_discovery_args_set_max_retries(
-		struct nvmf_discovery_args *p,
+__public void libnvmf_discovery_args_set_max_retries(
+		struct libnvmf_discovery_args *p,
 		int max_retries)
 {
 	p->max_retries = max_retries;
 }
 
-__public int nvmf_discovery_args_get_max_retries(
-		const struct nvmf_discovery_args *p)
+__public int libnvmf_discovery_args_get_max_retries(
+		const struct libnvmf_discovery_args *p)
 {
 	return p->max_retries;
 }
 
-__public void nvmf_discovery_args_set_lsp(
-		struct nvmf_discovery_args *p,
+__public void libnvmf_discovery_args_set_lsp(
+		struct libnvmf_discovery_args *p,
 		__u8 lsp)
 {
 	p->lsp = lsp;
 }
 
-__public __u8 nvmf_discovery_args_get_lsp(const struct nvmf_discovery_args *p)
+__public __u8 libnvmf_discovery_args_get_lsp(const struct libnvmf_discovery_args *p)
 {
 	return p->lsp;
 }

@@ -38,7 +38,7 @@ LD_FILES = [
     ROOT / 'src' / 'libnvme.ld',
     ROOT / 'src' / 'libnvmf.ld',
     ROOT / 'src' / 'accessors.ld',
-    ROOT / 'src' / 'nvmf-accessors.ld',
+    ROOT / 'src' / 'accessors-fabrics.ld',
 ]
 
 # ---------------------------------------------------------------------------

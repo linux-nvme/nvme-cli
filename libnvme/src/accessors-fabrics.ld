@@ -10,8 +10,8 @@
 
 LIBNVMF_ACCESSORS_3 {
 	global:
-		nvmf_discovery_args_get_lsp;
-		nvmf_discovery_args_set_lsp;
-		nvmf_discovery_args_get_max_retries;
-		nvmf_discovery_args_set_max_retries;
+		libnvmf_discovery_args_get_lsp;
+		libnvmf_discovery_args_set_lsp;
+		libnvmf_discovery_args_get_max_retries;
+		libnvmf_discovery_args_set_max_retries;
 };
