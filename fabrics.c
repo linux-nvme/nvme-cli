@@ -110,9 +110,27 @@ struct nvmf_args {
 	const char *keyring;
 	const char *tls_key;
 	const char *tls_key_identity;
+	int queue_size;
+	int nr_io_queues;
+	int reconnect_delay;
+	int ctrl_loss_tmo;
+	int fast_io_fail_tmo;
+	int keep_alive_tmo;
+	int nr_write_queues;
+	int nr_poll_queues;
+	int tos;
+	long keyring_id;
+	long tls_key_id;
+	long tls_configured_key_id;
+	bool duplicate_connect;
+	bool disable_sqflow;
+	bool hdr_digest;
+	bool data_digest;
+	bool tls;
+	bool concat;
 };
 
-#define NVMF_ARGS(n, f, c, ...)                                                                  \
+#define NVMF_ARGS(n, f, ...)                                                                  \
 	NVME_ARGS(n,                                                                              \
 		OPT_STRING("transport",       't', "STR", &f.transport,     nvmf_tport),         \
 		OPT_STRING("nqn",             'n', "STR", &f.subsysnqn,     nvmf_nqn),           \
@@ -127,25 +145,31 @@ struct nvmf_args {
 		OPT_STRING("keyring",          0,  "STR", &f.keyring,       nvmf_keyring),       \
 		OPT_STRING("tls-key",          0,  "STR", &f.tls_key,       nvmf_tls_key),       \
 		OPT_STRING("tls-key-identity", 0,  "STR", &f.tls_key_identity, nvmf_tls_key_identity), \
-		OPT_INT("nr-io-queues",       'i', &c.nr_io_queues,       nvmf_nr_io_queues),    \
-		OPT_INT("nr-write-queues",    'W', &c.nr_write_queues,    nvmf_nr_write_queues), \
-		OPT_INT("nr-poll-queues",     'P', &c.nr_poll_queues,     nvmf_nr_poll_queues),  \
-		OPT_INT("queue-size",         'Q', &c.queue_size,         nvmf_queue_size),      \
-		OPT_INT("keep-alive-tmo",     'k', &c.keep_alive_tmo,     nvmf_keep_alive_tmo),  \
-		OPT_INT("reconnect-delay",    'c', &c.reconnect_delay,    nvmf_reconnect_delay), \
-		OPT_INT("ctrl-loss-tmo",      'l', &c.ctrl_loss_tmo,      nvmf_ctrl_loss_tmo),   \
-		OPT_INT("fast_io_fail_tmo",   'F', &c.fast_io_fail_tmo,   nvmf_fast_io_fail_tmo),\
-		OPT_INT("tos",                'T', &c.tos,                nvmf_tos),             \
-		OPT_INT("tls_key",              0, &c.tls_key_id,         nvmf_tls_key_legacy),  \
-		OPT_FLAG("duplicate-connect", 'D', &c.duplicate_connect,  nvmf_dup_connect),     \
-		OPT_FLAG("disable-sqflow",      0, &c.disable_sqflow,     nvmf_disable_sqflow),  \
-		OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),      \
-		OPT_FLAG("data-digest",       'G', &c.data_digest,        nvmf_data_digest),     \
-		OPT_FLAG("tls",                 0, &c.tls,                nvmf_tls),             \
-		OPT_FLAG("concat",              0, &c.concat,             nvmf_concat),          \
+		OPT_INT("nr-io-queues",       'i', &f.nr_io_queues,       nvmf_nr_io_queues),    \
+		OPT_INT("nr-write-queues",    'W', &f.nr_write_queues,    nvmf_nr_write_queues), \
+		OPT_INT("nr-poll-queues",     'P', &f.nr_poll_queues,     nvmf_nr_poll_queues),  \
+		OPT_INT("queue-size",         'Q', &f.queue_size,         nvmf_queue_size),      \
+		OPT_INT("keep-alive-tmo",     'k', &f.keep_alive_tmo,     nvmf_keep_alive_tmo),  \
+		OPT_INT("reconnect-delay",    'c', &f.reconnect_delay,    nvmf_reconnect_delay), \
+		OPT_INT("ctrl-loss-tmo",      'l', &f.ctrl_loss_tmo,      nvmf_ctrl_loss_tmo),   \
+		OPT_INT("fast_io_fail_tmo",   'F', &f.fast_io_fail_tmo,   nvmf_fast_io_fail_tmo),\
+		OPT_INT("tos",                'T', &f.tos,                nvmf_tos),             \
+		OPT_INT("tls_key",              0, &f.tls_key_id,         nvmf_tls_key_legacy),  \
+		OPT_FLAG("duplicate-connect", 'D', &f.duplicate_connect,  nvmf_dup_connect),     \
+		OPT_FLAG("disable-sqflow",      0, &f.disable_sqflow,     nvmf_disable_sqflow),  \
+		OPT_FLAG("hdr-digest",        'g', &f.hdr_digest,         nvmf_hdr_digest),      \
+		OPT_FLAG("data-digest",       'G', &f.data_digest,        nvmf_data_digest),     \
+		OPT_FLAG("tls",                 0, &f.tls,                nvmf_tls),             \
+		OPT_FLAG("concat",              0, &f.concat,             nvmf_concat),          \
 		##__VA_ARGS__                                                                    \
 	)
 
+static void nvmf_default_args(struct nvmf_args *fa)
+{
+	memset(fa, 0, sizeof(*fa));
+	fa->tos = -1;
+	fa->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
+}
 
 static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 {
@@ -174,7 +198,7 @@ static int setup_common_context(struct libnvmf_context *fctx,
 		struct nvmf_args *fa);
 
 struct cb_fabrics_data {
-	struct libnvme_fabrics_config *cfg;
+	struct nvmf_args *fa;
 	nvme_print_flags_t flags;
 	bool quiet;
 	char *raw;
@@ -274,20 +298,46 @@ static void cb_parser_cleanup(struct libnvmf_context *fctx, void *user_data)
 	fclose(cfd->f);
 }
 
+static int set_fabrics_options(struct libnvmf_context *fctx,
+		struct nvmf_args *fa)
+{
+	struct libnvme_fabrics_config fcfg;
+
+	fcfg.queue_size = fa->queue_size;
+	fcfg.nr_io_queues = fa->nr_io_queues;
+	fcfg.reconnect_delay = fa->reconnect_delay;
+	fcfg.ctrl_loss_tmo = fa->ctrl_loss_tmo;
+	fcfg.fast_io_fail_tmo = fa->fast_io_fail_tmo;
+	fcfg.keep_alive_tmo = fa->keep_alive_tmo;
+	fcfg.nr_write_queues = fa->nr_write_queues;
+	fcfg.nr_poll_queues = fa->nr_poll_queues;
+	fcfg.tos = fa->tos;
+	fcfg.keyring_id = fa->keyring_id;
+	fcfg.tls_key_id = fa->tls_key_id;
+	fcfg.tls_configured_key_id = fa->tls_configured_key_id;
+	fcfg.duplicate_connect = fa->duplicate_connect;
+	fcfg.disable_sqflow = fa->disable_sqflow;
+	fcfg.hdr_digest = fa->hdr_digest;
+	fcfg.data_digest = fa->data_digest;
+	fcfg.tls = fa->tls;
+	fcfg.concat = fa->concat;
+
+	return libnvmf_context_set_fabrics_config(fctx, &fcfg);
+}
+
 static int cb_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 {
 	struct cb_fabrics_data *cfd = user_data;
-	struct libnvme_fabrics_config cfg;
-	struct nvmf_args fa = {};
+	struct nvmf_args fa;
 	char *ptr, *p, line[4096];
 	int argc, ret = 0;
 	bool force = false;
 
-	NVMF_ARGS(opts, fa, cfg,
+	NVMF_ARGS(opts, fa,
 		  OPT_FLAG("persistent",   'p', &persistent, "persistent discovery connection"),
 		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
 
-	memcpy(&cfg, cfd->cfg, sizeof(cfg));
+	memcpy(&fa, cfd->fa, sizeof(fa));
 next:
 	if (fgets(line, sizeof(line), cfd->f) == NULL)
 		return -EOF;
@@ -315,7 +365,7 @@ next:
 	if (ret)
 		return ret;
 
-	ret = libnvmf_context_set_fabrics_config(fctx, &cfg);
+	ret = set_fabrics_options(fctx, &fa);
 	if (ret)
 		return ret;
 
@@ -351,7 +401,6 @@ static int setup_common_context(struct libnvmf_context *fctx,
 
 static int create_common_context(struct libnvme_global_ctx *ctx,
 		bool persistent, struct nvmf_args *fa,
-		struct libnvme_fabrics_config *cfg,
 		void *user_data, struct libnvmf_context **fctxp)
 {
 	struct libnvmf_context *fctx;
@@ -372,7 +421,7 @@ static int create_common_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
-	err = libnvmf_context_set_fabrics_config(fctx, cfg);
+	err = set_fabrics_options(fctx, fa);
 	if (err)
 		goto err;
 
@@ -397,13 +446,12 @@ err:
 static int create_discovery_context(struct libnvme_global_ctx *ctx,
 		bool persistent, const char *device,
 		struct nvmf_args *fa,
-		struct libnvme_fabrics_config *cfg,
 		void *user_data, struct libnvmf_context **fctxp)
 {
 	struct libnvmf_context *fctx;
 	int err;
 
-	err = create_common_context(ctx, persistent, fa, cfg, user_data,
+	err = create_common_context(ctx, persistent, fa, user_data,
 		&fctx);
 	if (err)
 		return err;
@@ -527,7 +575,6 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	int ret;
-	struct libnvme_fabrics_config cfg;
 	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
 	char *device = NULL;
 	bool force = false;
@@ -535,7 +582,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	bool nbft = false, nonbft = false;
 	char *nbft_path = NBFT_SYSFS_PATH;
 
-	NVMF_ARGS(opts, fa, cfg,
+	NVMF_ARGS(opts, fa,
 		  OPT_STRING("device",     'd', "DEV", &device,       "use existing discovery controller device"),
 		  OPT_FILE("raw",          'r', &raw,                 "save raw output to file"),
 		  OPT_FLAG("persistent",   'p', &persistent,          "persistent discovery connection"),
@@ -548,7 +595,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		  OPT_STRING("nbft-path",    0, "STR", &nbft_path,    "user-defined path for NBFT tables"),
 		  OPT_STRING("context",      0, "STR", &context,       nvmf_context));
 
-	libnvmf_default_config(&cfg);
+	nvmf_default_args(&fa);
 
 	load_nvme_fabrics_module();
 
@@ -597,12 +644,12 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	}
 
 	struct cb_fabrics_data dld = {
-		.cfg = &cfg,
+		.fa = &fa,
 		.flags = flags,
 		.raw = raw,
 	};
 	ret = create_discovery_context(ctx, persistent, device, &fa,
-		&cfg, &dld, &fctx);
+		&dld, &fctx);
 	if (ret)
 		return ret;
 
@@ -643,15 +690,14 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	__cleanup_nvme_ctrl libnvme_ctrl_t c = NULL;
 	int ret;
 	nvme_print_flags_t flags;
-	struct libnvme_fabrics_config cfg = { 0 };
 	struct nvmf_args fa = { 0 };
 
-	NVMF_ARGS(opts, fa, cfg,
+	NVMF_ARGS(opts, fa,
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"),
 		  OPT_STRING("context",              0, "STR", &context,  nvmf_context));
 
-	libnvmf_default_config(&cfg);
+	nvmf_default_args(&fa);
 
 	load_nvme_fabrics_module();
 
@@ -717,8 +763,7 @@ do_connect:
 		.quiet = dump_config,
 		.raw = raw,
 	};
-	ret = create_common_context(ctx, persistent, &fa,
-		&cfg, &cfd, &fctx);
+	ret = create_common_context(ctx, persistent, &fa, &cfd, &fctx);
 	if (ret)
 		return ret;
 
@@ -938,18 +983,17 @@ int fabrics_config(const char *desc, int argc, char **argv)
 	bool scan_tree = false, modify_config = false, update_config = false;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
-	struct libnvme_fabrics_config cfg;
 	struct nvmf_args fa = { };
 	int ret;
 
-	NVMF_ARGS(opts, fa, cfg,
+	NVMF_ARGS(opts, fa,
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_FLAG("scan",                 'R', &scan_tree,           "Scan current NVMeoF topology"),
 		  OPT_FLAG("modify",               'M', &modify_config,       "Modify JSON configuration file"),
 		  OPT_FLAG("dump",                 'O', &dump_config,         "Dump JSON configuration to stdout"),
 		  OPT_FLAG("update",               'U', &update_config,       "Update JSON configuration file"));
 
-	libnvmf_default_config(&cfg);
+	nvmf_default_args(&fa);
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -994,8 +1038,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 			return -EINVAL;
 		}
 
-		ret = create_common_context(ctx, persistent, &fa,
-			&cfg, NULL, &fctx);
+		ret = create_common_context(ctx, persistent, &fa, NULL, &fctx);
 		if (ret)
 			return ret;
 
