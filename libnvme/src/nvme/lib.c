@@ -166,6 +166,8 @@ static int __nvme_transport_handle_open_direct(
 	}
 
 	if (hdl->ctx->ioctl_probing) {
+		/* avoid kernel logging 'cmd does not match nsid' */
+		dummy.nsid = ns;
 		ret = ioctl(hdl->fd, LIBNVME_IOCTL_ADMIN64_CMD, &dummy);
 		if (ret > 0) {
 			hdl->ioctl_admin64 = true;

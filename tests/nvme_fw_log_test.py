@@ -26,8 +26,6 @@ NVMe Firmware Log Testcase :-
     1. Execute fw-log on a device.
 """
 
-import subprocess
-
 from nvme_test import TestNVMe
 
 
@@ -58,11 +56,7 @@ class TestNVMeFwLogCmd(TestNVMe):
                 - 0 on success, error code on failure.
         """
         fw_log_cmd = f"{self.nvme_bin} fw-log {self.ctrl}"
-        proc = subprocess.Popen(fw_log_cmd,
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                encoding='utf-8')
-        return proc.wait()
+        return self.exec_cmd(fw_log_cmd)
 
     def test_fw_log(self):
         """ Testcase main """

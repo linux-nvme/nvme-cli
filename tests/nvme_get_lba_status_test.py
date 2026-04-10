@@ -12,8 +12,6 @@ NVMe LBA Status Log Testcase :-
     1. Execute get-lba-status on a device.
 """
 
-import subprocess
-
 from nvme_test import TestNVMe
 
 
@@ -56,11 +54,7 @@ class TestNVMeGetLbaStatusCmd(TestNVMe):
             f"--max-dw={str(self.max_dw)} " + \
             f"--action={str(self.action)} " + \
             f"--range-len={str(self.range_len)}"
-        proc = subprocess.Popen(get_lba_status_cmd,
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                encoding='utf-8')
-        return proc.wait()
+        return self.exec_cmd(get_lba_status_cmd)
 
     def test_get_lba_status(self):
         """ Testcase main """
