@@ -6451,33 +6451,33 @@ static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 		struct nvmf_disc_log_entry *e = &log->entries[i];
 
 		printf("=====Discovery Log Entry %d======\n", i);
-		printf("trtype:  %s\n", nvmf_trtype_str(e->trtype));
+		printf("trtype:  %s\n", libnvmf_trtype_str(e->trtype));
 		printf("adrfam:  %s\n",
 			strlen(e->traddr) ?
-			nvmf_adrfam_str(e->adrfam) : "");
-		printf("subtype: %s\n", nvmf_subtype_str(e->subtype));
-		printf("treq:    %s\n", nvmf_treq_str(e->treq));
+			libnvmf_adrfam_str(e->adrfam) : "");
+		printf("subtype: %s\n", libnvmf_subtype_str(e->subtype));
+		printf("treq:    %s\n", libnvmf_treq_str(e->treq));
 		printf("portid:  %d\n", le16_to_cpu(e->portid));
 		printf("trsvcid: %s\n", e->trsvcid);
 		printf("subnqn:  %s\n", e->subnqn);
 		printf("traddr:  %s\n", e->traddr);
 		printf("eflags:  %s\n",
-		       nvmf_eflags_str(le16_to_cpu(e->eflags)));
+		       libnvmf_eflags_str(le16_to_cpu(e->eflags)));
 
 		switch (e->trtype) {
 		case NVMF_TRTYPE_RDMA:
 			printf("rdma_prtype: %s\n",
-				nvmf_prtype_str(e->tsas.rdma.prtype));
+				libnvmf_prtype_str(e->tsas.rdma.prtype));
 			printf("rdma_qptype: %s\n",
-				nvmf_qptype_str(e->tsas.rdma.qptype));
+				libnvmf_qptype_str(e->tsas.rdma.qptype));
 			printf("rdma_cms:    %s\n",
-				nvmf_cms_str(e->tsas.rdma.cms));
+				libnvmf_cms_str(e->tsas.rdma.cms));
 			printf("rdma_pkey: %#04x\n",
 				le16_to_cpu(e->tsas.rdma.pkey));
 			break;
 		case NVMF_TRTYPE_TCP:
 			printf("sectype: %s\n",
-				nvmf_sectype_str(e->tsas.tcp.sectype));
+				libnvmf_sectype_str(e->tsas.tcp.sectype));
 			break;
 		}
 	}
@@ -6602,23 +6602,23 @@ static void stdout_host_discovery_log(struct nvme_host_discover_log *log)
 		hedlpe = (void *)log + i;
 		tel = le32_to_cpu(hedlpe->tel);
 		numexat = le16_to_cpu(hedlpe->numexat);
-		printf("trtype: %s\n", nvmf_trtype_str(hedlpe->trtype));
+		printf("trtype: %s\n", libnvmf_trtype_str(hedlpe->trtype));
 		printf("adrfam: %s\n",
-		       strlen(hedlpe->traddr) ? nvmf_adrfam_str(hedlpe->adrfam) : "");
-		printf("eflags: %s\n", nvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
+		       strlen(hedlpe->traddr) ? libnvmf_adrfam_str(hedlpe->adrfam) : "");
+		printf("eflags: %s\n", libnvmf_eflags_str(le16_to_cpu(hedlpe->eflags)));
 		printf("hostnqn: %s\n", hedlpe->hostnqn);
 		printf("traddr: %s\n", hedlpe->traddr);
 		printf("tsas: ");
 		switch (hedlpe->trtype) {
 		case NVMF_TRTYPE_RDMA:
 			printf("prtype: %s, qptype: %s, cms: %s, pkey: 0x%04x\n",
-			       nvmf_prtype_str(hedlpe->tsas.rdma.prtype),
-			       nvmf_qptype_str(hedlpe->tsas.rdma.qptype),
-			       nvmf_cms_str(hedlpe->tsas.rdma.cms),
+			       libnvmf_prtype_str(hedlpe->tsas.rdma.prtype),
+			       libnvmf_qptype_str(hedlpe->tsas.rdma.qptype),
+			       libnvmf_cms_str(hedlpe->tsas.rdma.cms),
 			       le16_to_cpu(hedlpe->tsas.rdma.pkey));
 			break;
 		case NVMF_TRTYPE_TCP:
-			printf("sectype: %s\n", nvmf_sectype_str(hedlpe->tsas.tcp.sectype));
+			printf("sectype: %s\n", libnvmf_sectype_str(hedlpe->tsas.tcp.sectype));
 			break;
 		default:
 			printf("common:\n");
@@ -6635,7 +6635,7 @@ static void stdout_host_discovery_log(struct nvme_host_discover_log *log)
 			printf("exatlen: %u\n", le16_to_cpu(exat->exatlen));
 			printf("exatval:\n");
 			d((unsigned char *)exat->exatval, le16_to_cpu(exat->exatlen), 16, 1);
-			exat = nvmf_exat_ptr_next(exat);
+			exat = libnvmf_exat_ptr_next(exat);
 		}
 	}
 }
@@ -6651,7 +6651,7 @@ static void print_traddr(char *field, __u8 adrfam, __u8 *traddr)
 		size = INET6_ADDRSTRLEN;
 	}
 
-	if (inet_ntop(af, nvmf_adrfam_str(adrfam), dst, size))
+	if (inet_ntop(af, libnvmf_adrfam_str(adrfam), dst, size))
 		printf("%s: %s\n", field, dst);
 }
 
@@ -6683,7 +6683,7 @@ static void stdout_ave_discovery_log(struct nvme_ave_discover_log *log)
 		atr = adlpe->atr;
 		for (j = 0; j < numatr; j++) {
 			printf("atr: %d\n", j);
-			printf("aveadrfam: %s\n", nvmf_adrfam_str(atr->aveadrfam));
+			printf("aveadrfam: %s\n", libnvmf_adrfam_str(atr->aveadrfam));
 			printf("avetrsvcid: %u\n", le16_to_cpu(atr->avetrsvcid));
 			print_traddr("avetraddr", atr->aveadrfam, atr->avetraddr);
 			atr++;

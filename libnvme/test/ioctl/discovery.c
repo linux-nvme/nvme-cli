@@ -42,15 +42,15 @@ static int fetch_discovery_log(libnvme_ctrl_t c,
 			       struct nvmf_discovery_log **logp,
 			       int max_retries)
 {
-	struct nvmf_discovery_args *args;
+	struct libnvmf_discovery_args *args;
 	int err;
 
-	err = nvmf_discovery_args_create(&args);
+	err = libnvmf_discovery_args_create(&args);
 	if (err)
 		return err;
-	nvmf_discovery_args_set_max_retries(args, max_retries);
-	err = nvmf_get_discovery_log(c, args, logp);
-	nvmf_discovery_args_free(args);
+	libnvmf_discovery_args_set_max_retries(args, max_retries);
+	err = libnvmf_get_discovery_log(c, args, logp);
+	libnvmf_discovery_args_free(args);
 	return err;
 }
 

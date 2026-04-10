@@ -309,7 +309,7 @@ ABI-stable opaque structs. Two sets of accessors are maintained:
 | Set | Input header | Generated files |
 |-----|-------------|-----------------|
 | Common NVMe | `libnvme/src/nvme/private.h` | `src/nvme/accessors.{h,c}`, `src/accessors.ld` |
-| NVMe-oF | `libnvme/src/nvme/private-fabrics.h` | `src/nvme/nvmf-accessors.{h,c}`, `src/nvmf-accessors.ld` |
+| NVMe-oF | `libnvme/src/nvme/private-fabrics.h` | `src/nvme/accessors-fabrics.{h,c}`, `src/accessors-fabrics.ld` |
 
 The generated `.h` and `.c` files are committed to the source tree and are
 **not** regenerated during a normal build. To regenerate after modifying a

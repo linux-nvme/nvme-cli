@@ -17,8 +17,8 @@
  * To update run: meson compile -C [BUILD-DIR] update-accessors
  * Or:            make update-accessors
  */
-#ifndef _NVMF_ACCESSORS_H_
-#define _NVMF_ACCESSORS_H_
+#ifndef _ACCESSORS_FABRICS_H_
+#define _ACCESSORS_FABRICS_H_
 
 #include <stdlib.h>
 #include <string.h>
@@ -27,42 +27,42 @@
 #include <linux/types.h> /* __u32, __u64, etc. */
 
 /* Forward declarations. These are internal (opaque) structs. */
-struct nvmf_discovery_args;
+struct libnvmf_discovery_args;
 
 /****************************************************************************
- * Accessors for: struct nvmf_discovery_args
+ * Accessors for: struct libnvmf_discovery_args
  ****************************************************************************/
 
 /**
- * nvmf_discovery_args_set_max_retries() - Set max_retries.
- * @p: The &struct nvmf_discovery_args instance to update.
+ * libnvmf_discovery_args_set_max_retries() - Set max_retries.
+ * @p: The &struct libnvmf_discovery_args instance to update.
  * @max_retries: Value to assign to the max_retries field.
  */
-void nvmf_discovery_args_set_max_retries(
-		struct nvmf_discovery_args *p,
+void libnvmf_discovery_args_set_max_retries(
+		struct libnvmf_discovery_args *p,
 		int max_retries);
 
 /**
- * nvmf_discovery_args_get_max_retries() - Get max_retries.
- * @p: The &struct nvmf_discovery_args instance to query.
+ * libnvmf_discovery_args_get_max_retries() - Get max_retries.
+ * @p: The &struct libnvmf_discovery_args instance to query.
  *
  * Return: The value of the max_retries field.
  */
-int nvmf_discovery_args_get_max_retries(const struct nvmf_discovery_args *p);
+int libnvmf_discovery_args_get_max_retries(const struct libnvmf_discovery_args *p);
 
 /**
- * nvmf_discovery_args_set_lsp() - Set lsp.
- * @p: The &struct nvmf_discovery_args instance to update.
+ * libnvmf_discovery_args_set_lsp() - Set lsp.
+ * @p: The &struct libnvmf_discovery_args instance to update.
  * @lsp: Value to assign to the lsp field.
  */
-void nvmf_discovery_args_set_lsp(struct nvmf_discovery_args *p, __u8 lsp);
+void libnvmf_discovery_args_set_lsp(struct libnvmf_discovery_args *p, __u8 lsp);
 
 /**
- * nvmf_discovery_args_get_lsp() - Get lsp.
- * @p: The &struct nvmf_discovery_args instance to query.
+ * libnvmf_discovery_args_get_lsp() - Get lsp.
+ * @p: The &struct libnvmf_discovery_args instance to query.
  *
  * Return: The value of the lsp field.
  */
-__u8 nvmf_discovery_args_get_lsp(const struct nvmf_discovery_args *p);
+__u8 libnvmf_discovery_args_get_lsp(const struct libnvmf_discovery_args *p);
 
-#endif /* _NVMF_ACCESSORS_H_ */
+#endif /* _ACCESSORS_FABRICS_H_ */
