@@ -61,6 +61,7 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_ctrl_get_cntrltype;
 		libnvme_ctrl_get_cntlid;
 		libnvme_ctrl_get_dctype;
+		libnvme_ctrl_get_phy_slot;
 		libnvme_ctrl_get_host_traddr;
 		libnvme_ctrl_get_host_iface;
 		libnvme_ctrl_get_discovery_ctrl;
@@ -71,7 +72,6 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_ctrl_set_discovered;
 		libnvme_ctrl_get_persistent;
 		libnvme_ctrl_set_persistent;
-		libnvme_ctrl_get_phy_slot;
 		libnvme_subsystem_get_name;
 		libnvme_subsystem_get_sysfs_dir;
 		libnvme_subsystem_get_subsysnqn;

@@ -3,6 +3,12 @@
 
 NVM-Express user space tooling for Linux.
 
+For more information on the NVM Express standard, see https://nvmexpress.org.
+
+Subscribe to linux-nvme@lists.infradead.org for Linux NVMe discussions and
+development. The list is archived at
+https://lists.infradead.org/mailman/listinfo/linux-nvme
+
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)](https://scan.coverity.com/projects/linux-nvme-nvme-cli)
 [![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli)
 ![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)
@@ -22,6 +28,11 @@ libnvme:
 
 nvme-cli uses meson as its build system. There is more than one way to configure and
 build the project to accommodate environments with an older version of meson.
+
+A minimal build requires:
+- gcc (or clang)
+- ninja
+- meson
 
 If you build on a relatively modern system, either use meson directly or the
 Makefile wrapper.
@@ -44,6 +55,33 @@ built as part of nvme-cli.
 | libnvme, libnvme-mi | integrated | No external dependency, included in nvme-cli |
 | json-c | optional | Recommended; without it, all plugins are disabled and json-c output format is disabled |
 
+### Optional feature dependencies
+
+The following optional libraries unlock additional features. Each can be
+explicitly enabled (`-Doption=enabled`) or disabled (`-Doption=disabled`);
+the default is `auto` (use if found) unless noted otherwise.
+
+| Option | Default | Feature unlocked |
+|--------|---------|-----------------|
+| `json-c` | `auto` | `/etc/nvme/config.json` parsing; all vendor plugins; JSON output format |
+| `openssl` | `auto` | TLS over NVMe-TCP; host authentication |
+| `keyutils` | `auto` | Key management for NVMe-oF authentication |
+| `libdbus` | `disabled` | End-point discovery for NVMe-MI |
+| `liburing` | `disabled` | Get-log-page via io_uring passthrough |
+| `python` | `auto` | Python bindings for libnvme |
+
+Example: explicitly disable Python bindings:
+
+```shell
+$ meson setup .build -Dpython=disabled
+```
+
+Options specific to nvme-cli are defined in [`meson_options.txt`](meson_options.txt). 
+To see the full list of available options, including meson built-ins:
+
+```shell
+$ meson configure .build
+```
 
 ### Build with meson
 
@@ -77,6 +115,18 @@ $ meson compile -C .build
 # meson install -C .build
 ```
 
+To build a static library instead of a shared one:
+
+```shell
+$ meson setup --default-library=static .build
+```
+
+#### Running unit tests
+
+```shell
+$ meson test -C .build
+```
+
 #### Installation paths
 
 By default, meson installs everything under `/usr/local` (executables in
@@ -102,6 +152,31 @@ optimizations for a production install:
 ```shell
 $ meson setup .build --prefix /usr --sysconfdir /etc --buildtype release
 ```
+
+#### Debug and sanitizer builds
+
+To configure a build for debugging (optimizations off, debug symbols on):
+
+```shell
+$ meson setup .build --buildtype=debug
+```
+
+To enable address sanitizer (detects memory errors at runtime):
+
+```shell
+$ meson setup .build -Db_sanitize=address
+```
+
+When using the sanitizer, `libasan.so` must be preloaded if you encounter
+linking issues:
+
+```shell
+$ meson setup .build -Db_sanitize=address && \
+  LD_PRELOAD=/lib64/libasan.so.6 ninja -C .build test
+```
+
+The undefined behavior sanitizer is also supported: `-Db_sanitize=undefined`.
+To enable both: `-Db_sanitize=address,undefined`.
 
 ### Build with build.sh wrapper
 
@@ -213,231 +288,16 @@ is available as part of the `meta-openembedded` layer collection.
 `nvme-cli` is available as a [buildroot](https://buildroot.org) package. The
 package is named `nvme`.
 
-## Developers
-
-You may wish to add a new command or possibly an entirely new plug-in
-for some special extension outside the spec.
-
-This project provides macros that help generate the code for you. If
-you're interested in how that works, it is very similar to how trace
-events are created by Linux kernel's 'ftrace' component.
-
-### Add command to existing built-in
-
-The first thing to do is define a new command entry in the command
-list. This is declared in nvme-builtin.h. Simply append a new "ENTRY" into
-the list. The ENTRY normally takes three arguments: the "name" of the
-subcommand (this is what the user will type at the command line to invoke
-your command), a short help description of what your command does, and the
-name of the function callback that you're going to write. Additionally,
-you can declare an alias name of the subcommand with a fourth argument, if
-needed.
-
-After the ENTRY is defined, you need to implement the callback. It takes
-four arguments: argc, argv, the command structure associated with the
-callback, and the plug-in structure that contains that command. The
-prototype looks like this:
-
-  ```c
-  int f(int argc, char **argv, struct command *command, struct plugin *plugin);
-  ```
-
-The argc and argv are adjusted from the command line arguments to start
-after the sub-command. So if the command line is "nvme foo --option=bar",
-the argc is 1 and argv starts at "--option".
-
-You can then define argument parsing for your sub-command's specific
-options then do some command-specific action in your callback.
-
-### Add a new plugin
-
-The nvme-cli provides macros to make defining a new plug-in simpler. You
-can certainly do all this by hand if you want, but it should be easier
-to get going using the macros. To start, first create a header file
-to define your plugin. This is where you will give your plugin a name,
-description, and define all the sub-commands your plugin implements.
-
-The macros must appear in a specific order within the header file. The following
-is a basic example on how to start this:
-
-File: foo-plugin.h
-```c
-#undef CMD_INC_FILE
-#define CMD_INC_FILE plugins/foo/foo-plugin
-
-#if !defined(FOO) || defined(CMD_HEADER_MULTI_READ)
-#define FOO
-
-#include "cmd.h"
-
-PLUGIN(NAME("foo", "Foo plugin"),
-	COMMAND_LIST(
-		ENTRY("bar", "foo bar", bar)
-		ENTRY("baz", "foo baz", baz)
-		ENTRY("qux", "foo qux", qux)
-	)
-);
-
-#endif
-
-#include "define_cmd.h"
-```
-
-In order to have the compiler generate the plugin through the xmacro
-expansion, you need to include this header in your source file, with
-a pre-defining macro directive to create the commands.
-
-To get started from the above example, we just need to define "CREATE_CMD"
-and include the header:
-
-File: foo-plugin.c
-```c
-#include "nvme.h"
-
-#define CREATE_CMD
-#include "foo-plugin.h"
-```
-
-After that, you just need to implement the functions you defined in each
-ENTRY, then append the object file name to the meson.build "sources".
-
-### Updating the libnvme accessor functions
-
-libnvme exposes a set of getter and setter functions (accessors) for its core
-internal structs (`libnvme_path`, `libnvme_ns`, `libnvme_ctrl`, `libnvme_subsystem`,
-`libnvme_host`, `libnvme_fabric_options`). These are generated from the struct
-definitions in `libnvme/src/nvme/private.h` by the tool
-`libnvme/src/nvme/generate-accessors.c`.
-
-The generated files are committed to the source tree and are **not**
-regenerated during a normal build:
-
-```
-libnvme/src/nvme/accessors.h   # public API declarations (with Doxygen stubs)
-libnvme/src/nvme/accessors.c   # implementations
-libnvme/src/nvme/accessors.ld  # linker version script (manually maintained)
-```
-
-#### When to regenerate
-
-Regeneration is needed when a struct member is added, removed, or renamed in
-`private.h`, or when a struct is added to or removed from
-`generate-accessors-include.list` or excluded in `generate-accessors-exclude.list`.
-
-#### How to regenerate
-
-```shell
-$ make update-accessors
-```
-
-or equivalently:
-
-```shell
-$ meson compile -C .build update-accessors
-```
-
-The script compiles the generator, runs it, and atomically updates
-`accessors.h` and `accessors.c` only when their content changes.
-Commit the updated files afterward:
-
-```shell
-$ git add libnvme/src/nvme/accessors.h libnvme/src/nvme/accessors.c
-$ git commit -m "libnvme: regenerate accessors following <struct> changes"
-```
-
-#### Maintaining accessors.ld
-
-`accessors.ld` is a GNU linker version script that controls which accessor
-symbols are exported from `libnvme.so` and under which ABI version label they
-were introduced (e.g. `LIBNVME_ACCESSORS_3`).
-
-This file is **not** updated automatically, because each symbol must be placed
-in the correct version section by the maintainer. Adding a symbol to an
-already-published version section would break binary compatibility for
-existing users of the library.
-
-When `make update-accessors` detects that the symbol list has drifted from
-`accessors.ld`, it prints a report like the following:
-
-```
-WARNING: accessors.ld needs manual attention.
-
-  Symbols to ADD (place in a new version section, e.g. LIBNVME_ACCESSORS_X_Y):
-    libnvme_ctrl_get_new_field
-    libnvme_ctrl_set_new_field
-```
-
-New symbols must be added to a **new** version section that chains the
-previous one. For example, if the current latest section is
-`LIBNVME_ACCESSORS_3_0`, add a new section for the next release:
-
-```
-LIBNVME_ACCESSORS_3_1 {
-    global:
-        libnvme_ctrl_get_new_field;
-        libnvme_ctrl_set_new_field;
-} LIBNVME_ACCESSORS_3_0;
-```
-
-Then commit `accessors.ld` together with the regenerated source files.
-
-#### CI enforcement
-
-A GitHub Actions workflow (`.github/workflows/check-accessors.yml`) runs on
-every push and pull request. It regenerates the accessor files and fails if
-the result differs from what is committed, ensuring the source tree never
-drifts silently.
-
 ## Dependency
 
 libnvme depends on the `/sys/class/nvme-subsystem` interface which was
 introduced in Linux kernel v4.15. nvme-cli requires kernel v4.15 or later.
 
-## How to contribute
+## Contributing
 
-There are two ways to send code changes to the project. The first one
-is by sending the changes to linux-nvme@lists.infradead.org. The
-second one is by posting a pull request on Github. In both cases
-please follow the Linux contributions guidelines as documented in
-[Submitting patches](https://docs.kernel.org/process/submitting-patches.html).
-
-That means the changes should be a clean series (no merges should be
-present in a Github PR for example) and every commit should build.
-
-See also [How to create a pull request on GitHub](https://opensource.com/article/19/7/create-pull-request-github).
-
-### How to clean up your series before creating a PR
-
-This example here assumes the changes are in a branch called
-fix-something, which branched away from master in the past. In the
-meantime the upstream project has changed, hence the fix-something
-branch is not based on the current HEAD. Before posting the PR, the
-branch should be rebased on the current HEAD and retest everything.
-
-For example, rebasing can be done by the following steps
-
-```shell
-# Update master branch
-#   upstream == https://github.com/linux-nvme/nvme-cli.git
-$ git switch master
-$ git fetch --all
-$ git reset --hard upstream/master
-
-# Make sure all dependencies are up to date and make a sanity build
-$ meson subprojects update
-$ ninja -C .build
-
-# Go back to the fix-something branch
-$ git switch fix-something
-
-# Rebase it to the current HEAD
-$ git rebase master
-[fixup all merge conflicts]
-[retest]
-
-# Push your changes to Github and trigger a PR
-$ git push -u origin fix-something
-```
+For information on adding commands, adding plugins, API naming conventions,
+commit guidelines, and the pull request workflow, see
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Persistent and volatile configuration
 
@@ -488,133 +348,7 @@ extension in `/run/nvme` and write the contents to this file. When finished, use
 `rename` to add the `.json` file name extension. This ensures nvme-cli only
 sees the complete file.
 
-## Testing
+## Testing and CI
 
-For testing purposes, an x86_64 static build from the current HEAD is available
-[here](https://monom.org/linux-nvme/upload/nvme-cli-latest-x86_64).
-
-## Container-Based Debugging and CI Build Reproduction
-
-The nvme-cli project provides prebuilt CI containers that allow you to locally
-reproduce GitHub Actions builds for debugging and development. These containers
-mirror the environments used in the official CI workflows.
-
-CI Containers Repository:
-[linux-nvme/ci-containers](https://github.com/linux-nvme/ci-containers)
-
-CI Build Workflow Reference:
-[libnvme-build.yml](https://github.com/linux-nvme/nvme-cli/blob/master/.github/workflows/libnvme-build.yml)
-
-### 1. Pull a CI Container
-
-All CI containers are published as OCI/Docker images.
-
-Example: Debian latest CI image:
-
-```bash
-docker pull ghcr.io/linux-nvme/debian:latest
-```
-
-Or with Podman:
-
-```bash
-podman pull ghcr.io/linux-nvme/debian:latest
-```
-
-### 2. Start the Container and Log In
-
-Start an interactive shell inside the container:
-
-```bash
-docker run --rm -it \
-  --name nvme-cli-debug \
-  ghcr.io/linux-nvme/debian:latest \
-  bash
-```
-
-Or with Podman:
-
-```bash
-podman run --rm -it \
-  --name nvme-cli-debug \
-  ghcr.io/linux-nvme/debian:latest \
-  bash
-```
-
-You are now logged into the same environment used by CI.
-
-### 3. Clone the nvme-cli Repository
-
-Inside the running container:
-
-```bash
-git clone https://github.com/linux-nvme/nvme-cli.git
-cd nvme-cli
-```
-
-(Optional) Check out a specific branch or pull request:
-
-```bash
-git checkout <branch-or-commit>
-```
-
-### 4. Run the CI Build Script
-
-The GitHub Actions workflow uses `scripts/build.sh`. To reproduce the CI build locally:
-
-```bash
-./scripts/build.sh
-```
-
-Build artifacts remain inside the container unless a host volume is mounted.
-
-### 5. Cross-Build Example
-
-The CI supports cross compilation using a dedicated cross-build container.
-
-#### 5.1 Pull the Cross-Build Container
-
-```bash
-docker pull ghcr.io/linux-nvme/ubuntu-cross-s390x:latest
-```
-
-Or with Podman:
-
-```bash
-podman pull ghcr.io/linux-nvme/ubuntu-cross-s390x:latest
-```
-
-#### 5.2 Start the Cross-Build Container
-
-```bash
-docker run --rm -it \
-  --name nvme-cli-cross \
-  ghcr.io/linux-nvme/ubuntu-cross-s390x:latest \
-  bash
-```
-
-Or with Podman:
-
-```bash
-podman run --rm -it \
-  --name nvme-cli-cross \
-  ghcr.io/linux-nvme/ubuntu-cross-s390x:latest \
-  bash
-```
-
-#### 5.3 Clone the Repository
-
-```bash
-git clone https://github.com/linux-nvme/nvme-cli.git
-cd nvme-cli
-```
-
-#### 5.4 Run a Cross Build
-
-Example: Cross-build for `s390x`:
-
-```bash
-./scripts/build.sh -b release -c gcc -t s390x cross
-```
-
-The exact supported targets depend on the toolchains installed in the container.
+For pre-built binaries, CI build reproduction, and container-based debugging,
+see [TESTING.md](TESTING.md).

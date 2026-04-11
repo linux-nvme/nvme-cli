@@ -16,12 +16,7 @@ NVMe Copy Testcase:-
 
 """
 
-import logging
-import subprocess
-
 from nvme_test import TestNVMe
-
-logger = logging.getLogger(__name__)
 
 
 class TestNVMeCopy(TestNVMe):
@@ -44,14 +39,10 @@ class TestNVMeCopy(TestNVMe):
             # get host behavior support data
             get_features_cmd = f"{self.nvme_bin} get-feature {self.ctrl} " + \
                 "--feature-id=0x16 --data-len=512 --raw-binary"
-            logger.debug(get_features_cmd)
-            proc = subprocess.Popen(get_features_cmd,
-                                    shell=True,
-                                    stdout=subprocess.PIPE,
-                                    encoding='utf-8')
-            err = proc.wait()
+            result = self.run_cmd(get_features_cmd)
+            err = result.returncode
             self.assertEqual(err, 0, "ERROR : nvme get-feature failed")
-            self.host_behavior_data = proc.stdout.read()
+            self.host_behavior_data = result.stdout
             # enable cross-namespace copy formats
             if self.host_behavior_data[4] & cross_namespace_copy:
                 # skip if already enabled
@@ -61,23 +52,13 @@ class TestNVMeCopy(TestNVMe):
                 data = self.host_behavior_data[:4] + cross_namespace_copy.to_bytes(2, 'little') + self.host_behavior_data[6:]
                 set_features_cmd = f"{self.nvme_bin} set-feature " + \
                     f"{self.ctrl} --feature-id=0x16 --data-len=512"
-                proc = subprocess.Popen(set_features_cmd,
-                                        shell=True,
-                                        stdout=subprocess.PIPE,
-                                        stdin=subprocess.PIPE,
-                                        encoding='utf-8')
-                proc.communicate(input=data)
-                self.assertEqual(proc.returncode, 0, "Failed to enable cross-namespace copy formats")
+                result = self.run_cmd(set_features_cmd, stdin_data=data)
+                self.assertEqual(result.returncode, 0, "Failed to enable cross-namespace copy formats")
         get_ns_id_cmd = f"{self.nvme_bin} get-ns-id {self.ns1}"
-        logger.debug(get_ns_id_cmd)
-        proc = subprocess.Popen(get_ns_id_cmd,
-                                shell=True,
-                                stdout=subprocess.PIPE,
-                                encoding='utf-8')
-        err = proc.wait()
+        result = self.run_cmd(get_ns_id_cmd)
+        err = result.returncode
         self.assertEqual(err, 0, "ERROR : nvme get-ns-id failed")
-        output = proc.stdout.read()
-        logger.debug(output)
+        output = result.stdout
         self.ns1_nsid = int(output.strip().split(':')[-1])
         self.setup_log_dir(self.__class__.__name__)
 
@@ -87,13 +68,7 @@ class TestNVMeCopy(TestNVMe):
             # restore saved host behavior support data
             set_features_cmd = f"{self.nvme_bin} set-feature {self.ctrl} " + \
                 "--feature-id=0x16 --data-len=512"
-            logger.debug(set_features_cmd)
-            proc = subprocess.Popen(set_features_cmd,
-                                    shell=True,
-                                    stdout=subprocess.PIPE,
-                                    stdin=subprocess.PIPE,
-                                    encoding='utf-8')
-            proc.communicate(input=self.host_behavior_data)
+            self.run_cmd(set_features_cmd, stdin_data=self.host_behavior_data)
         super().tearDown()
 
     def copy(self, sdlba, blocks, slbs, **kwargs):

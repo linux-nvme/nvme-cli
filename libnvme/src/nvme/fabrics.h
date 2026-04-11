@@ -89,7 +89,7 @@ struct libnvme_fabrics_uri {
 };
 
 /**
- * nvmf_trtype_str() - Decode TRTYPE field
+ * libnvmf_trtype_str() - Decode TRTYPE field
  * @trtype: value to be decoded
  *
  * Decode the transport type field in the discovery
@@ -97,10 +97,10 @@ struct libnvme_fabrics_uri {
  *
  * Return: decoded string
  */
-const char *nvmf_trtype_str(__u8 trtype);
+const char *libnvmf_trtype_str(__u8 trtype);
 
 /**
- * nvmf_adrfam_str() - Decode ADRFAM field
+ * libnvmf_adrfam_str() - Decode ADRFAM field
  * @adrfam: value to be decoded
  *
  * Decode the address family field in the discovery
@@ -108,10 +108,10 @@ const char *nvmf_trtype_str(__u8 trtype);
  *
  * Return: decoded string
  */
-const char *nvmf_adrfam_str(__u8 adrfam);
+const char *libnvmf_adrfam_str(__u8 adrfam);
 
 /**
- * nvmf_subtype_str() - Decode SUBTYPE field
+ * libnvmf_subtype_str() - Decode SUBTYPE field
  * @subtype: value to be decoded
  *
  * Decode the subsystem type field in the discovery
@@ -119,10 +119,10 @@ const char *nvmf_adrfam_str(__u8 adrfam);
  *
  * Return: decoded string
  */
-const char *nvmf_subtype_str(__u8 subtype);
+const char *libnvmf_subtype_str(__u8 subtype);
 
 /**
- * nvmf_treq_str() - Decode TREQ field
+ * libnvmf_treq_str() - Decode TREQ field
  * @treq: value to be decoded
  *
  * Decode the transport requirements field in the
@@ -130,10 +130,10 @@ const char *nvmf_subtype_str(__u8 subtype);
  *
  * Return: decoded string
  */
-const char *nvmf_treq_str(__u8 treq);
+const char *libnvmf_treq_str(__u8 treq);
 
 /**
- * nvmf_eflags_str() - Decode EFLAGS field
+ * libnvmf_eflags_str() - Decode EFLAGS field
  * @eflags: value to be decoded
  *
  * Decode the EFLAGS field in the discovery log page
@@ -141,10 +141,10 @@ const char *nvmf_treq_str(__u8 treq);
  *
  * Return: decoded string
  */
-const char *nvmf_eflags_str(__u16 eflags);
+const char *libnvmf_eflags_str(__u16 eflags);
 
 /**
- * nvmf_sectype_str() - Decode SECTYPE field
+ * libnvmf_sectype_str() - Decode SECTYPE field
  * @sectype: value to be decoded
  *
  * Decode the SECTYPE field in the discovery log page
@@ -152,10 +152,10 @@ const char *nvmf_eflags_str(__u16 eflags);
  *
  * Return: decoded string
  */
-const char *nvmf_sectype_str(__u8 sectype);
+const char *libnvmf_sectype_str(__u8 sectype);
 
 /**
- * nvmf_prtype_str() - Decode RDMA Provider type field
+ * libnvmf_prtype_str() - Decode RDMA Provider type field
  * @prtype: value to be decoded
  *
  * Decode the RDMA Provider type field in the discovery
@@ -163,10 +163,10 @@ const char *nvmf_sectype_str(__u8 sectype);
  *
  * Return: decoded string
  */
-const char *nvmf_prtype_str(__u8 prtype);
+const char *libnvmf_prtype_str(__u8 prtype);
 
 /**
- * nvmf_qptype_str() - Decode RDMA QP Service type field
+ * libnvmf_qptype_str() - Decode RDMA QP Service type field
  * @qptype: value to be decoded
  *
  * Decode the RDMA QP Service type field in the discovery log page
@@ -174,10 +174,10 @@ const char *nvmf_prtype_str(__u8 prtype);
  *
  * Return: decoded string
  */
-const char *nvmf_qptype_str(__u8 qptype);
+const char *libnvmf_qptype_str(__u8 qptype);
 
 /**
- * nvmf_cms_str() - Decode RDMA connection management service field
+ * libnvmf_cms_str() - Decode RDMA connection management service field
  * @cms: value to be decoded
  *
  * Decode the RDMA connection management service field in the discovery
@@ -185,29 +185,29 @@ const char *nvmf_qptype_str(__u8 qptype);
  *
  * Return: decoded string
  */
-const char *nvmf_cms_str(__u8 cms);
+const char *libnvmf_cms_str(__u8 cms);
 
 /**
- * nvmf_default_config() - Default values for fabrics configuration
+ * libnvmf_default_config() - Default values for fabrics configuration
  * @cfg: config values to set
  *
  * Initializes @cfg with default values.
  */
-void nvmf_default_config(struct libnvme_fabrics_config *cfg);
+void libnvmf_default_config(struct libnvme_fabrics_config *cfg);
 
 /**
- * nvmf_update_config() - Update fabrics configuration values
+ * libnvmf_update_config() - Update fabrics configuration values
  * @c:          Controller to be modified
  * @cfg:        Updated configuration values
  *
  * Updates the values from @c with the configuration values from @cfg;
  * all non-default values from @cfg will overwrite the values in @c.
  */
-void nvmf_update_config(libnvme_ctrl_t c,
+void libnvmf_update_config(libnvme_ctrl_t c,
 		const struct libnvme_fabrics_config *cfg);
 
 /**
- * nvmf_add_ctrl() - Connect a controller and update topology
+ * libnvmf_add_ctrl() - Connect a controller and update topology
  * @h:		Host to which the controller should be attached
  * @c:		Controller to be connected
  * @cfg:	Default configuration for the controller
@@ -218,11 +218,11 @@ void nvmf_update_config(libnvme_ctrl_t c,
  *
  * Return: 0 on success, or an error code on failure.
  */
-int nvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
+int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 		  const struct libnvme_fabrics_config *cfg);
 
 /**
- * nvmf_connect_ctrl() - Connect a controller
+ * libnvmf_connect_ctrl() - Connect a controller
  * @c:		Controller to be connected
  *
  * Issues a 'connect' command to the NVMe-oF controller.
@@ -230,62 +230,52 @@ int nvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
  *
  * Return: 0 on success, or an error code on failure.
  */
-int nvmf_connect_ctrl(libnvme_ctrl_t c);
+int libnvmf_connect_ctrl(libnvme_ctrl_t c);
 
-/**
- * nvmf_get_discovery_log() - Return the discovery log page
- * @c:			Discovery controller to use
- * @logp:		Log page object to return
- * @max_retries:	Number of retries in case of failure
+/*
+ * struct libnvmf_discovery_args - Opaque arguments for libnvmf_get_discovery_log()
  *
- * The memory allocated for the log page and returned in @logp
- * must be freed by the caller using free().
- *
- * Note: Consider using nvmf_get_discovery_wargs() instead.
- *
- * Return: 0 on success, or an error code on failure.
+ * Allocate with libnvmf_discovery_args_create() and release with
+ * libnvmf_discovery_args_free(). Use the setter/getter accessors to configure
+ * fields; do not access members directly.
  */
-int nvmf_get_discovery_log(libnvme_ctrl_t c, struct nvmf_discovery_log **logp,
-			   int max_retries);
+struct libnvmf_discovery_args;
 
 /**
- * struct libnvme_get_discovery_args - Arguments for nvmf_get_discovery_wargs()
- * @c:			Discovery controller
- * @args_size:		Length of the structure
- * @max_retries:	Number of retries in case of failure
- * @result:		The command completion result from CQE dword0
- * @timeout:		Timeout in ms (default: NVME_DEFAULT_IOCTL_TIMEOUT)
- * @lsp:		Log specific field (See enum nvmf_log_discovery_lsp)
+ * libnvmf_discovery_args_create() - Allocate a discovery args object
+ * @argsp:	On success, set to the newly allocated object
+ *
+ * Allocates and initialises a &struct libnvmf_discovery_args with sensible
+ * defaults. The caller must release it with libnvmf_discovery_args_free().
+ *
+ * Return: 0 on success, or a negative error code on failure.
  */
-struct libnvme_get_discovery_args {
-	libnvme_ctrl_t c;
-	int args_size;
-	int max_retries;
-	__u32 *result;
-	__u32 timeout;
-	__u8 lsp;
-};
+int libnvmf_discovery_args_create(struct libnvmf_discovery_args **argsp);
 
 /**
- * nvmf_get_discovery_wargs() - Get the discovery log page with args
- * @args:	Argument structure
- * @log:	Discovery log page object to return
- *
- * This function is similar to nvmf_get_discovery_log(), but
- * takes an extensible @args parameter. @args provides more
- * options than nvmf_get_discovery_log().
- *
- * This function performs a get discovery log page (DLP) command
- * and returns the DLP. The memory allocated for the returned
- * DLP must be freed by the caller using free().
- *
- * Return: 0 on success, or an error code on failure.
+ * libnvmf_discovery_args_free() - Release a discovery args object
+ * @args:	Object previously returned by libnvmf_discovery_args_create()
  */
-int nvmf_get_discovery_wargs(struct libnvme_get_discovery_args *args,
-			     struct nvmf_discovery_log **log);
+void libnvmf_discovery_args_free(struct libnvmf_discovery_args *args);
 
 /**
- * nvmf_is_registration_supported - check whether registration can be performed.
+ * libnvmf_get_discovery_log() - Fetch the NVMe-oF discovery log page
+ * @ctrl:	Discovery controller
+ * @args:	Optional arguments (pass NULL for defaults)
+ * @logp:	On success, set to the allocated log page (caller must free())
+ *
+ * Issues the three-phase Get Log Page protocol against @ctrl, validates
+ * generation-counter atomicity, and normalises each log entry.
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
+int libnvmf_get_discovery_log(libnvme_ctrl_t ctrl,
+			   const struct libnvmf_discovery_args *args,
+			   struct nvmf_discovery_log **logp);
+
+
+/**
+ * libnvmf_is_registration_supported - check whether registration can be performed.
  * @c:	Controller instance
  *
  * Only discovery controllers (DC) that comply with TP8010 support
@@ -297,10 +287,10 @@ int nvmf_get_discovery_wargs(struct libnvme_get_discovery_args *args,
  * Return: true if controller supports explicit registration. false
  * otherwise.
  */
-bool nvmf_is_registration_supported(libnvme_ctrl_t c);
+bool libnvmf_is_registration_supported(libnvme_ctrl_t c);
 
 /**
- * nvmf_register_ctrl() - Perform registration task with a DC
+ * libnvmf_register_ctrl() - Perform registration task with a DC
  * @c:		Controller instance
  * @tas:	Task field of the Command Dword 10 (cdw10). Indicates whether to
  *		perform a Registration, Deregistration, or Registration-update.
@@ -312,7 +302,7 @@ bool nvmf_is_registration_supported(libnvme_ctrl_t c);
  *
  * Return: 0 on success, or an error code on failure.
  */
-int nvmf_register_ctrl(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
+int libnvmf_register_ctrl(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
 
 /**
  * libnvme_parse_uri() - Parse the URI string
@@ -330,15 +320,15 @@ int nvmf_register_ctrl(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
 int libnvme_parse_uri(const char *str, struct libnvme_fabrics_uri **uri);
 
 /**
- * nvmf_free_uri() - Free the URI structure
+ * libnvmf_free_uri() - Free the URI structure
  * @uri:	&libnvme_fabrics_uri structure
  *
  * Free an &libnvme_fabrics_uri structure.
  */
-void nvmf_free_uri(struct libnvme_fabrics_uri *uri);
+void libnvmf_free_uri(struct libnvme_fabrics_uri *uri);
 
 /**
- * nvmf_get_default_trsvcid() - Get default transport service ID
+ * libnvmf_get_default_trsvcid() - Get default transport service ID
  * @transport: Transport type string (e.g., "tcp", "rdma")
  * @discovery_ctrl: True if for discovery controller, false otherwise
  *
@@ -347,18 +337,18 @@ void nvmf_free_uri(struct libnvme_fabrics_uri *uri);
  *
  * Return: Allocated string with default trsvcid, or NULL on failure.
  */
-const char *nvmf_get_default_trsvcid(const char *transport,
+const char *libnvmf_get_default_trsvcid(const char *transport,
 		bool discovery_ctrl);
 /*
- * struct nvmf_context - Opaque context for fabrics operations
+ * struct libnvmf_context - Opaque context for fabrics operations
  *
  * Used to manage state and configuration for fabrics discovery and connect
  * operations.
  */
-struct nvmf_context;
+struct libnvmf_context;
 
 /**
- * nvmf_context_create() - Create a new fabrics context for discovery/connect
+ * libnvmf_context_create() - Create a new fabrics context for discovery/connect
  * @ctx: Global context
  * @decide_retry: Callback to decide if a retry should be attempted
  * @connected: Callback invoked when a connection is established
@@ -371,30 +361,30 @@ struct nvmf_context;
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_context_create(struct libnvme_global_ctx *ctx,
-		bool (*decide_retry)(struct nvmf_context *fctx, int err,
+int libnvmf_context_create(struct libnvme_global_ctx *ctx,
+		bool (*decide_retry)(struct libnvmf_context *fctx, int err,
 			void *user_data),
-		void (*connected)(struct nvmf_context *fctx,
+		void (*connected)(struct libnvmf_context *fctx,
 			struct libnvme_ctrl *c, void *user_data),
-		void (*already_connected)(struct nvmf_context *fctx,
+		void (*already_connected)(struct libnvmf_context *fctx,
 			struct libnvme_host *host, const char *subsysnqn,
 			const char *transport, const char *traddr,
 			const char *trsvcid, void *user_data),
-		void *user_data, struct nvmf_context **fctxp);
+		void *user_data, struct libnvmf_context **fctxp);
 
 /**
- * nvmf_context_free() - Free a fabrics context
+ * libnvmf_context_free() - Free a fabrics context
  * @fctx: Fabrics context to free
  *
  * Releases all resources associated with @fctx. The context must have
- * been previously created with nvmf_context_create().
+ * been previously created with libnvmf_context_create().
  *
  * After this call, @fctx must not be used.
  */
-void nvmf_context_free(struct nvmf_context *fctx);
+void libnvmf_context_free(struct libnvmf_context *fctx);
 
 /**
- * nvmf_context_set_discovery_cbs() - Set discovery callbacks for context
+ * libnvmf_context_set_discovery_cbs() - Set discovery callbacks for context
  * @fctx: Fabrics context
  * @discovery_log: Callback for discovery log events
  * @parser_init: Callback to initialize parser
@@ -405,19 +395,19 @@ void nvmf_context_free(struct nvmf_context *fctx);
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_context_set_discovery_cbs(struct nvmf_context *fctx,
-		void (*discovery_log)(struct nvmf_context *fctx,
+int libnvmf_context_set_discovery_cbs(struct libnvmf_context *fctx,
+		void (*discovery_log)(struct libnvmf_context *fctx,
 			bool connect, struct nvmf_discovery_log *log,
 			uint64_t numrec, void *user_data),
-		int (*parser_init)(struct nvmf_context *fctx,
+		int (*parser_init)(struct libnvmf_context *fctx,
 			void *user_data),
-		void (*parser_cleanup)(struct nvmf_context *fctx,
+		void (*parser_cleanup)(struct libnvmf_context *fctx,
 			void *user_data),
-		int (*parser_next_line)(struct nvmf_context *fctx,
+		int (*parser_next_line)(struct libnvmf_context *fctx,
 			void *user_data));
 
 /**
- * nvmf_context_set_discovery_defaults() - Set default discovery parameters
+ * libnvmf_context_set_discovery_defaults() - Set default discovery parameters
  * @fctx: Fabrics context
  * @max_discovery_retries: Maximum number of discovery retries
  * @keep_alive_timeout: Keep-alive timeout in seconds
@@ -426,11 +416,11 @@ int nvmf_context_set_discovery_cbs(struct nvmf_context *fctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_context_set_discovery_defaults(struct nvmf_context *fctx,
+int libnvmf_context_set_discovery_defaults(struct libnvmf_context *fctx,
 		int max_discovery_retries, int keep_alive_timeout);
 
 /**
- * nvmf_context_set_fabrics_config() - Set fabrics configuration for context
+ * libnvmf_context_set_fabrics_config() - Set fabrics configuration for context
  * @fctx: Fabrics context
  * @cfg: Fabrics configuration to apply
  *
@@ -438,11 +428,11 @@ int nvmf_context_set_discovery_defaults(struct nvmf_context *fctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_context_set_fabrics_config(struct nvmf_context *fctx,
+int libnvmf_context_set_fabrics_config(struct libnvmf_context *fctx,
 		struct libnvme_fabrics_config *cfg);
 
 /**
- * nvmf_context_set_connection() - Set connection parameters for context
+ * libnvmf_context_set_connection() - Set connection parameters for context
  * @fctx: Fabrics context
  * @subsysnqn: Subsystem NQN
  * @transport: Transport type
@@ -455,13 +445,13 @@ int nvmf_context_set_fabrics_config(struct nvmf_context *fctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_context_set_connection(struct nvmf_context *fctx,
+int libnvmf_context_set_connection(struct libnvmf_context *fctx,
 		const char *subsysnqn, const char *transport,
 		const char *traddr, const char *trsvcid,
 		const char *host_traddr, const char *host_iface);
 
 /**
- * nvmf_context_set_hostnqn() - Set host NQN and host ID for context
+ * libnvmf_context_set_hostnqn() - Set host NQN and host ID for context
  * @fctx: Fabrics context
  * @hostnqn: Host NQN
  * @hostid: Host identifier
@@ -470,11 +460,11 @@ int nvmf_context_set_connection(struct nvmf_context *fctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
+int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
 		const char *hostnqn, const char *hostid);
 
 /**
- * nvmf_context_set_crypto() - Set cryptographic parameters for context
+ * libnvmf_context_set_crypto() - Set cryptographic parameters for context
  * @fctx: Fabrics context
  * @hostkey: Host key
  * @ctrlkey: Controller key
@@ -486,13 +476,13 @@ int nvmf_context_set_hostnqn(struct nvmf_context *fctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_context_set_crypto(struct nvmf_context *fctx,
+int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		const char *hostkey, const char *ctrlkey,
 		const char *keyring, const char *tls_key,
 		const char *tls_key_identity);
 
 /**
- * nvmf_context_set_persistent() - Set persistence for context
+ * libnvmf_context_set_persistent() - Set persistence for context
  * @fctx: Fabrics context
  * @persistent: Whether to enable persistent connections
  *
@@ -501,10 +491,10 @@ int nvmf_context_set_crypto(struct nvmf_context *fctx,
  * Return: 0 on success, or a negative error code on failure.
  */
 
-int nvmf_context_set_persistent(struct nvmf_context *fctx, bool persistent);
+int libnvmf_context_set_persistent(struct libnvmf_context *fctx, bool persistent);
 
 /**
- * nvmf_context_set_device() - Set device for context
+ * libnvmf_context_set_device() - Set device for context
  * @fctx: Fabrics context
  * @device: Device path or identifier
  *
@@ -512,10 +502,10 @@ int nvmf_context_set_persistent(struct nvmf_context *fctx, bool persistent);
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_context_set_device(struct nvmf_context *fctx, const char *device);
+int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
 
 /**
- * nvmf_discovery() - Perform fabrics discovery
+ * libnvmf_discovery() - Perform fabrics discovery
  * @ctx: Global context
  * @fctx: Fabrics context
  * @connect: Whether to connect discovered subsystems
@@ -525,11 +515,11 @@ int nvmf_context_set_device(struct nvmf_context *fctx, const char *device);
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_discovery(struct libnvme_global_ctx *ctx,
-		struct nvmf_context *fctx, bool connect, bool force);
+int libnvmf_discovery(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx, bool connect, bool force);
 
 /**
- * nvmf_discovery_config_json() - Perform discovery using JSON config
+ * libnvmf_discovery_config_json() - Perform discovery using JSON config
  * @ctx: Global context
  * @fctx: Fabrics context
  * @connect: Whether to connect discovered subsystems
@@ -539,11 +529,11 @@ int nvmf_discovery(struct libnvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
-		struct nvmf_context *fctx, bool connect, bool force);
+int libnvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx, bool connect, bool force);
 
 /**
- * nvmf_discovery_config_file() - Perform discovery using config file
+ * libnvmf_discovery_config_file() - Perform discovery using config file
  * @ctx: Global context
  * @fctx: Fabrics context
  * @connect: Whether to connect discovered subsystems
@@ -553,11 +543,11 @@ int nvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
-		struct nvmf_context *fctx, bool connect, bool force);
+int libnvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx, bool connect, bool force);
 
 /**
- * nvmf_discovery_nbft() - Perform discovery using NBFT
+ * libnvmf_discovery_nbft() - Perform discovery using NBFT
  * @ctx: Global context
  * @fctx: Fabrics context
  * @connect: Whether to connect discovered subsystems
@@ -567,11 +557,11 @@ int nvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
-		struct nvmf_context *fctx, bool connect, char *nbft_path);
+int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx, bool connect, char *nbft_path);
 
 /**
- * nvmf_connect() - Connect to fabrics subsystem
+ * libnvmf_connect() - Connect to fabrics subsystem
  * @ctx: Global context
  * @fctx: Fabrics context
  *
@@ -579,10 +569,10 @@ int nvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_connect(struct libnvme_global_ctx *ctx, struct nvmf_context *fctx);
+int libnvmf_connect(struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx);
 
 /**
- * nvmf_connect_config_json() - Connect using JSON config
+ * libnvmf_connect_config_json() - Connect using JSON config
  * @ctx: Global context
  * @fctx: Fabrics context
  *
@@ -590,11 +580,11 @@ int nvmf_connect(struct libnvme_global_ctx *ctx, struct nvmf_context *fctx);
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_connect_config_json(struct libnvme_global_ctx *ctx,
-		struct nvmf_context *fctx);
+int libnvmf_connect_config_json(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx);
 
 /**
- * nvmf_config_modify() - Modify and update the configurtion
+ * libnvmf_config_modify() - Modify and update the configurtion
  * @ctx: Global context
  * @fctx: Fabrics context
  *
@@ -603,13 +593,13 @@ int nvmf_connect_config_json(struct libnvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_config_modify(struct libnvme_global_ctx *ctx,
-		struct nvmf_context *fctx);
+int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx);
 
 struct nbft_file_entry;
 
 /**
- * nvmf_nbft_read_files() - Read NBFT files from path
+ * libnvmf_nbft_read_files() - Read NBFT files from path
  * @ctx: struct libnvme_global_ctx object
  * @path: Path to NBFT files
  * @head: Pointer to store linked list of NBFT file entries
@@ -618,17 +608,17 @@ struct nbft_file_entry;
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int nvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
+int libnvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
 		struct nbft_file_entry **head);
 
 /**
- * nvmf_nbft_free() - Free NBFT file entry list
+ * libnvmf_nbft_free() - Free NBFT file entry list
  * @ctx: struct libnvme_global_ctx object
  * @head: Head of the NBFT file entry list
  *
  * Frees all memory associated with the NBFT file entry list.
  */
-void nvmf_nbft_free(struct libnvme_global_ctx *ctx,
+void libnvmf_nbft_free(struct libnvme_global_ctx *ctx,
 		struct nbft_file_entry *head);
 
 #endif /* _LIBNVME_FABRICS_H */

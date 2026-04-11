@@ -55,13 +55,13 @@ static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_ctrl, libnvme_ctrl_t, libnvme_fre
 static inline void free_uri(struct libnvme_fabrics_uri **uri)
 {
 	if (*uri)
-		nvmf_free_uri(*uri);
+		libnvmf_free_uri(*uri);
 }
 #define _cleanup_uri_ __cleanup__(free_uri)
 
-static inline void cleanup_nvmf_context(struct nvmf_context **fctx)
+static inline void cleanup_nvmf_context(struct libnvmf_context **fctx)
 {
-	nvmf_context_free(*fctx);
+	libnvmf_context_free(*fctx);
 }
 #define _cleanup_nvmf_context_ __cleanup__(cleanup_nvmf_context)
 #endif

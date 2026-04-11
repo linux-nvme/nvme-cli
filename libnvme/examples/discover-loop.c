@@ -51,14 +51,15 @@ static void print_discover_log(struct nvmf_discovery_log *log)
 
 int main()
 {
-	struct nvmf_discovery_log *log;
+	struct nvmf_discovery_log *log = NULL;
 	struct libnvme_global_ctx *ctx;
 	libnvme_host_t h;
 	libnvme_ctrl_t c;
 	int ret;
 	struct libnvme_fabrics_config cfg;
+	struct libnvmf_discovery_args *args;
 
-	nvmf_default_config(&cfg);
+	libnvmf_default_config(&cfg);
 
 	ctx = libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 	if (!ctx)
@@ -80,13 +81,19 @@ int main()
 		fprintf(stderr, "Failed to allocate memory\n");
 		return 1;
 	}
-	ret = nvmf_add_ctrl(h, c, &cfg);
+	ret = libnvmf_add_ctrl(h, c, &cfg);
 	if (ret) {
 		fprintf(stderr, "no controller found\n");
 		return 1;
 	}
 
-	ret = nvmf_get_discovery_log(c, &log, 4);
+	ret = libnvmf_discovery_args_create(&args);
+	if (!ret) {
+		libnvmf_discovery_args_set_max_retries(args, 4);
+		ret = libnvmf_get_discovery_log(c, args, &log);
+		libnvmf_discovery_args_free(args);
+	}
+
 	libnvme_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);
 

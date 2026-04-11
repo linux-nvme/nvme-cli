@@ -571,7 +571,7 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		show_subsys = show_hfi = show_discovery = true;
 
 	list_head_init(&nbft_list);
-	ret = nvmf_nbft_read_files(ctx, nbft_path, &head);
+	ret = libnvmf_nbft_read_files(ctx, nbft_path, &head);
 	if (!ret && head) {
 		if (flags == NORMAL)
 			normal_show_nbfts(head, show_subsys,
@@ -579,7 +579,7 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		else if (flags == JSON)
 			ret = json_show_nbfts(head, show_subsys,
 				show_hfi, show_discovery);
-		nvmf_nbft_free(ctx, head);
+		libnvmf_nbft_free(ctx, head);
 	}
 	return ret;
 }

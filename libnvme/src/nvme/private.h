@@ -299,29 +299,29 @@ struct libnvme_global_ctx {
 #endif
 };
 
-struct nvmf_context {
+struct libnvmf_context {
 	struct libnvme_global_ctx *ctx;
 
 	/* common callbacks */
-	bool (*decide_retry)(struct nvmf_context *fctx, int err,
+	bool (*decide_retry)(struct libnvmf_context *fctx, int err,
 			void *user_data);
-	void (*connected)(struct nvmf_context *fctx, struct libnvme_ctrl *c,
+	void (*connected)(struct libnvmf_context *fctx, struct libnvme_ctrl *c,
 			void *user_data);
-	void (*already_connected)(struct nvmf_context *fctx,
+	void (*already_connected)(struct libnvmf_context *fctx,
 			struct libnvme_host *host, const char *subsysnqn,
 			const char *transport, const char *traddr,
 			const char *trsvcid, void *user_data);
 
 	/* discovery callbacks */
-	void (*discovery_log)(struct nvmf_context *fctx,
+	void (*discovery_log)(struct libnvmf_context *fctx,
 			bool connect,
 			struct nvmf_discovery_log *log,
 			uint64_t numrec, void *user_data);
-	int (*parser_init)(struct nvmf_context *fctx,
+	int (*parser_init)(struct libnvmf_context *fctx,
 			void *user_data);
-	void (*parser_cleanup)(struct nvmf_context *fctx,
+	void (*parser_cleanup)(struct libnvmf_context *fctx,
 			void *user_data);
-	int (*parser_next_line)(struct nvmf_context *fctx,
+	int (*parser_next_line)(struct libnvmf_context *fctx,
 			void *user_data);
 
 	/* discovery defaults */
@@ -380,10 +380,10 @@ int __libnvme_transport_handle_init_mi(struct libnvme_transport_handle *hdl);
 void __libnvme_transport_handle_close_mi(struct libnvme_transport_handle *hdl);
 
 int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
-		struct nvmf_context *fctx,
+		struct libnvmf_context *fctx,
 		libnvme_ctrl_t *cp);
 bool _libnvme_ctrl_match_config(struct libnvme_ctrl *c,
-		struct nvmf_context *fctx);
+		struct libnvmf_context *fctx);
 
 void *__libnvme_alloc(size_t len);
 
@@ -396,9 +396,9 @@ libnvme_host_t libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 libnvme_subsystem_t libnvme_lookup_subsystem(struct libnvme_host *h,
 		const char *name, const char *subsysnqn);
 libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
-		struct nvmf_context *fctx, libnvme_ctrl_t p);
+		struct libnvmf_context *fctx, libnvme_ctrl_t p);
 libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
-		struct nvmf_context *fctx);
+		struct libnvmf_context *fctx);
 
 void __libnvme_free_host(libnvme_host_t h);
 

@@ -169,7 +169,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 	close(fd);
 }
 
-static int setup_common_context(struct nvmf_context *fctx,
+static int setup_common_context(struct libnvmf_context *fctx,
 		struct nvmf_args *fa);
 
 struct cb_fabrics_data {
@@ -181,18 +181,18 @@ struct cb_fabrics_data {
 	FILE *f;
 };
 
-static bool cb_decide_retry(struct nvmf_context *fctx, int err,
+static bool cb_decide_retry(struct libnvmf_context *fctx, int err,
 		void *user_data)
 {
 	if (err == -EAGAIN || (err == -EINTR && !nvme_sigint_received)) {
-		print_debug("nvmf_add_ctrl returned '%s'\n", libnvme_strerror(-err));
+		print_debug("libnvmf_add_ctrl returned '%s'\n", libnvme_strerror(-err));
 		return true;
 	}
 
 	return false;
 }
 
-static void cb_connected(struct nvmf_context *fctx,
+static void cb_connected(struct libnvmf_context *fctx,
 		struct libnvme_ctrl *c, void *user_data)
 {
 	struct cb_fabrics_data *cfd = user_data;
@@ -221,7 +221,7 @@ static void cb_connected(struct nvmf_context *fctx,
 #endif
 }
 
-static void cb_already_connected(struct nvmf_context *fctx,
+static void cb_already_connected(struct libnvmf_context *fctx,
 		struct libnvme_host *host, const char *subsysnqn,
 		const char *transport, const char *traddr,
 		const char *trsvcid, void *user_data)
@@ -234,7 +234,7 @@ static void cb_already_connected(struct nvmf_context *fctx,
 		transport, traddr, trsvcid);
 }
 
-static void cb_discovery_log(struct nvmf_context *fctx,
+static void cb_discovery_log(struct libnvmf_context *fctx,
 		bool connect, struct nvmf_discovery_log *log,
 		uint64_t numrec, void *user_data)
 {
@@ -246,7 +246,7 @@ static void cb_discovery_log(struct nvmf_context *fctx,
 		nvme_show_discovery_log(log, numrec, cfd->flags);
 }
 
-static int cb_parser_init(struct nvmf_context *dctx, void *user_data)
+static int cb_parser_init(struct libnvmf_context *dctx, void *user_data)
 {
 	struct cb_fabrics_data *cfd = user_data;
 
@@ -265,7 +265,7 @@ static int cb_parser_init(struct nvmf_context *dctx, void *user_data)
 	return 0;
 }
 
-static void cb_parser_cleanup(struct nvmf_context *fctx, void *user_data)
+static void cb_parser_cleanup(struct libnvmf_context *fctx, void *user_data)
 {
 	struct cb_fabrics_data *cfd = user_data;
 
@@ -273,7 +273,7 @@ static void cb_parser_cleanup(struct nvmf_context *fctx, void *user_data)
 	fclose(cfd->f);
 }
 
-static int cb_parser_next_line(struct nvmf_context *fctx, void *user_data)
+static int cb_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 {
 	struct cb_fabrics_data *cfd = user_data;
 	struct libnvme_fabrics_config cfg;
@@ -308,37 +308,37 @@ next:
 		goto next;
 
 	if (!fa.trsvcid)
-		fa.trsvcid = nvmf_get_default_trsvcid(fa.transport, true);
+		fa.trsvcid = libnvmf_get_default_trsvcid(fa.transport, true);
 
 	ret = setup_common_context(fctx, &fa);
 	if (ret)
 		return ret;
 
-	ret = nvmf_context_set_fabrics_config(fctx, &cfg);
+	ret = libnvmf_context_set_fabrics_config(fctx, &cfg);
 	if (ret)
 		return ret;
 
 	return 0;
 }
 
-static int setup_common_context(struct nvmf_context *fctx,
+static int setup_common_context(struct libnvmf_context *fctx,
 		struct nvmf_args *fa)
 {
 	int err;
 
-	err = nvmf_context_set_connection(fctx,
+	err = libnvmf_context_set_connection(fctx,
 		fa->subsysnqn, fa->transport,
 		fa->traddr, fa->trsvcid,
 		fa->host_traddr, fa->host_iface);
 	if (err)
 		return err;
 
-	err = nvmf_context_set_hostnqn(fctx,
+	err = libnvmf_context_set_hostnqn(fctx,
 		fa->hostnqn, fa->hostid);
 	if (err)
 		return err;
 
-	err = nvmf_context_set_crypto(fctx,
+	err = libnvmf_context_set_crypto(fctx,
 		fa->hostkey, fa->ctrlkey,
 		fa->keyring, fa->tls_key,
 		fa->tls_key_identity);
@@ -351,36 +351,36 @@ static int setup_common_context(struct nvmf_context *fctx,
 static int create_common_context(struct libnvme_global_ctx *ctx,
 		bool persistent, struct nvmf_args *fa,
 		struct libnvme_fabrics_config *cfg,
-		void *user_data, struct nvmf_context **fctxp)
+		void *user_data, struct libnvmf_context **fctxp)
 {
-	struct nvmf_context *fctx;
+	struct libnvmf_context *fctx;
 	int err;
 
-	err = nvmf_context_create(ctx, cb_decide_retry, cb_connected,
+	err = libnvmf_context_create(ctx, cb_decide_retry, cb_connected,
 		cb_already_connected, user_data, &fctx);
 	if (err)
 		return err;
 
-	err = nvmf_context_set_connection(fctx, fa->subsysnqn,
+	err = libnvmf_context_set_connection(fctx, fa->subsysnqn,
 		fa->transport, fa->traddr, fa->trsvcid,
 		fa->host_traddr, fa->host_iface);
 	if (err)
 		goto err;
 
-	err = nvmf_context_set_hostnqn(fctx, fa->hostnqn, fa->hostid);
+	err = libnvmf_context_set_hostnqn(fctx, fa->hostnqn, fa->hostid);
 	if (err)
 		goto err;
 
-	err = nvmf_context_set_fabrics_config(fctx, cfg);
+	err = libnvmf_context_set_fabrics_config(fctx, cfg);
 	if (err)
 		goto err;
 
-	err = nvmf_context_set_crypto(fctx, fa->hostkey, fa->ctrlkey,
+	err = libnvmf_context_set_crypto(fctx, fa->hostkey, fa->ctrlkey,
 		fa->keyring, fa->tls_key, fa->tls_key_identity);
 	if (err)
 		goto err;
 
-	err = nvmf_context_set_persistent(fctx, persistent);
+	err = libnvmf_context_set_persistent(fctx, persistent);
 	if (err)
 		goto err;
 
@@ -389,7 +389,7 @@ static int create_common_context(struct libnvme_global_ctx *ctx,
 	return 0;
 
 err:
-	nvmf_context_free(fctx);
+	libnvmf_context_free(fctx);
 	return err;
 }
 
@@ -397,9 +397,9 @@ static int create_discovery_context(struct libnvme_global_ctx *ctx,
 		bool persistent, const char *device,
 		struct nvmf_args *fa,
 		struct libnvme_fabrics_config *cfg,
-		void *user_data, struct nvmf_context **fctxp)
+		void *user_data, struct libnvmf_context **fctxp)
 {
-	struct nvmf_context *fctx;
+	struct libnvmf_context *fctx;
 	int err;
 
 	err = create_common_context(ctx, persistent, fa, cfg, user_data,
@@ -407,17 +407,17 @@ static int create_discovery_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		return err;
 
-	err = nvmf_context_set_discovery_cbs(fctx, cb_discovery_log,
+	err = libnvmf_context_set_discovery_cbs(fctx, cb_discovery_log,
 		cb_parser_init, cb_parser_cleanup, cb_parser_next_line);
 	if (err)
 		goto err;
 
-	err = nvmf_context_set_discovery_defaults(fctx, MAX_DISC_RETRIES,
+	err = libnvmf_context_set_discovery_defaults(fctx, MAX_DISC_RETRIES,
 		NVMF_DEF_DISC_TMO);
 	if (err)
 		goto err;
 
-	err = nvmf_context_set_device(fctx, device);
+	err = libnvmf_context_set_device(fctx, device);
 	if (err)
 		goto err;
 
@@ -425,7 +425,7 @@ static int create_discovery_context(struct libnvme_global_ctx *ctx,
 	return 0;
 
 err:
-	nvmf_context_free(fctx);
+	libnvmf_context_free(fctx);
 	return err;
 }
 
@@ -480,7 +480,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	char *context = NULL;
 	nvme_print_flags_t flags;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvmf_context_ struct nvmf_context *fctx = NULL;
+	_cleanup_nvmf_context_ struct libnvmf_context *fctx = NULL;
 	int ret;
 	struct libnvme_fabrics_config cfg;
 	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
@@ -503,7 +503,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		  OPT_STRING("nbft-path",    0, "STR", &nbft_path,    "user-defined path for NBFT tables"),
 		  OPT_STRING("context",      0, "STR", &context,       nvmf_context));
 
-	nvmf_default_config(&cfg);
+	libnvmf_default_config(&cfg);
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -561,22 +561,22 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 	if (!device && !fa.transport && !fa.traddr) {
 		if (!nonbft)
-			ret = nvmf_discovery_nbft(ctx, fctx,
+			ret = libnvmf_discovery_nbft(ctx, fctx,
 				connect, nbft_path);
 		if (nbft)
 			goto out_free;
 
 		if (json_config)
-			ret = nvmf_discovery_config_json(ctx, fctx,
+			ret = libnvmf_discovery_config_json(ctx, fctx,
 				connect, force);
 		if (ret || access(PATH_NVMF_DISC, F_OK))
 			goto out_free;
 
-		ret = nvmf_discovery_config_file(ctx, fctx, connect, force);
+		ret = libnvmf_discovery_config_file(ctx, fctx, connect, force);
 		goto out_free;
 	}
 
-	ret = nvmf_discovery(ctx, fctx, connect, force);
+	ret = libnvmf_discovery(ctx, fctx, connect, force);
 
 out_free:
 	if (dump_config)
@@ -592,7 +592,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	char *config_file = NULL;
 	char *context = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvmf_context_ struct nvmf_context *fctx = NULL;
+	_cleanup_nvmf_context_ struct libnvmf_context *fctx = NULL;
 	_cleanup_nvme_ctrl_ libnvme_ctrl_t c = NULL;
 	int ret;
 	nvme_print_flags_t flags;
@@ -604,7 +604,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"),
 		  OPT_STRING("context",              0, "STR", &context,  nvmf_context));
 
-	nvmf_default_config(&cfg);
+	libnvmf_default_config(&cfg);
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -674,9 +674,9 @@ do_connect:
 		return ret;
 
 	if (config_file)
-		return nvmf_connect_config_json(ctx, fctx);
+		return libnvmf_connect_config_json(ctx, fctx);
 
-	ret = nvmf_connect(ctx, fctx);
+	ret = libnvmf_connect(ctx, fctx);
 	if (ret) {
 		fprintf(stderr, "failed to connect: %s\n",
 			libnvme_strerror(-ret));
@@ -900,7 +900,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 		  OPT_FLAG("dump",                 'O', &dump_config,         "Dump JSON configuration to stdout"),
 		  OPT_FLAG("update",               'U', &update_config,       "Update JSON configuration file"));
 
-	nvmf_default_config(&cfg);
+	libnvmf_default_config(&cfg);
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -931,7 +931,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 	}
 
 	if (modify_config) {
-		_cleanup_nvmf_context_ struct nvmf_context *fctx = NULL;
+		_cleanup_nvmf_context_ struct libnvmf_context *fctx = NULL;
 
 		if (!fa.subsysnqn) {
 			fprintf(stderr,
@@ -950,7 +950,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 		if (ret)
 			return ret;
 
-		ret = nvmf_config_modify(ctx, fctx);
+		ret = libnvmf_config_modify(ctx, fctx);
 		if (ret) {
 			fprintf(stderr, "failed to update config\n");
 			return ret;
@@ -982,7 +982,7 @@ static int dim_operation(libnvme_ctrl_t c, enum nvmf_dim_tas tas, const char *na
 	__u32 result;
 
 	t = (tas > NVMF_DIM_TAS_DEREGISTER || !task[tas]) ? "reserved" : task[tas];
-	status = nvmf_register_ctrl(c, tas, &result);
+	status = libnvmf_register_ctrl(c, tas, &result);
 	if (status == NVME_SC_SUCCESS) {
 		printf("%s DIM %s command success\n", name, t);
 	} else if (status < NVME_SC_SUCCESS) {
