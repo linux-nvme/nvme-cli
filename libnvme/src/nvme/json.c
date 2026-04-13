@@ -16,6 +16,7 @@
 
 #include "cleanup.h"
 #include "private.h"
+#include "private-fabrics.h"
 
 #define JSON_UPDATE_INT_OPTION(c, k, a, o)				\
 	if (!strcmp(# a, k ) && !c->a) c->a = json_object_get_int(o);

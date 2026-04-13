@@ -14,6 +14,7 @@
 
 #include <libnvme.h>
 #include <nvme/private.h>
+#include <nvme/private-fabrics.h>
 
 struct test_data {
 	/* input data */
