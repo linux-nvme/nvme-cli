@@ -53,38 +53,41 @@ int main()
 {
 	struct nvmf_discovery_log *log = NULL;
 	struct libnvme_global_ctx *ctx;
+	struct libnvmf_context *fctx;
 	libnvme_host_t h;
 	libnvme_ctrl_t c;
 	int ret;
-	struct libnvme_fabrics_config cfg;
 	struct libnvmf_discovery_args *args;
-
-	libnvmf_default_config(&cfg);
 
 	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
 	if (!ctx)
 		return 1;
 
+	ret = libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx);
+	if (ret)
+		goto free_ctx;
+
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
-	if (ret) {
-		libnvme_free_global_ctx(ctx);
-		return 1;
-	}
+	if (ret)
+		goto free_fctx;
+
 	ret = libnvme_get_host(ctx, NULL, NULL, &h);
 	if (ret) {
 		fprintf(stderr, "Failed to allocated memory\n");
-		return 1;
+		goto free_fctx;
 	}
+
 	ret = libnvme_create_ctrl(ctx, NVME_DISC_SUBSYS_NAME, "loop",
 			       NULL, NULL, NULL, NULL, &c);
 	if (ret) {
 		fprintf(stderr, "Failed to allocate memory\n");
-		return 1;
+		goto free_fctx;
 	}
-	ret = libnvmf_add_ctrl(h, c, &cfg);
+
+	ret = libnvmf_add_ctrl(h, c, fctx);
 	if (ret) {
 		fprintf(stderr, "no controller found\n");
-		return 1;
+		goto free_fctx;
 	}
 
 	ret = libnvmf_discovery_args_create(&args);
@@ -102,7 +105,11 @@ int main()
 	else
 		print_discover_log(log);
 
+free_fctx:
+	libnvmf_context_free(fctx);
+free_ctx:
 	libnvme_free_global_ctx(ctx);
 	free(log);
-	return 0;
+
+	return ret ? 1 : 0;
 }
