@@ -19,8 +19,6 @@
 #include "private.h"
 #include "compiler_attributes.h"
 
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
 static __u8 csum(const __u8 *buffer, ssize_t length)
 {
 	int n;
