@@ -235,6 +235,9 @@ __public int libnvmf_context_create(struct libnvme_global_ctx *ctx,
 
 __public void libnvmf_context_free(struct libnvmf_context *fctx)
 {
+	if (!fctx)
+		return;
+
 	free(fctx->tls_key);
 	free(fctx);
 }
