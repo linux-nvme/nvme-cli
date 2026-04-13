@@ -623,7 +623,7 @@ static size_t copy_value(char *buf, size_t buflen, const char *value)
 	 /* Remove trailing " */
 	val_len = strcspn(value, "\"");
 
-	memcpy(buf, value, MIN(val_len, buflen-1));
+	memcpy(buf, value, min(val_len, buflen-1));
 
 	return val_len;
 }
@@ -694,7 +694,7 @@ size_t get_entity_version(char *buffer, size_t bufsz)
 		if (name_len) {
 			/* Append a space */
 			buffer[num_bytes++] = ' ';
-			name_len = MIN(name_len, bufsz);
+			name_len = min(name_len, bufsz);
 			memcpy(&buffer[num_bytes], name, name_len);
 			bufsz -= name_len;
 			num_bytes += name_len;
@@ -703,7 +703,7 @@ size_t get_entity_version(char *buffer, size_t bufsz)
 		if (ver_id_len) {
 			/* Append a space */
 			buffer[num_bytes++] = ' ';
-			ver_id_len = MIN(ver_id_len, bufsz);
+			ver_id_len = min(ver_id_len, bufsz);
 			memcpy(&buffer[num_bytes], ver_id, ver_id_len);
 			bufsz -= ver_id_len;
 			num_bytes += ver_id_len;
