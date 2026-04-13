@@ -16,9 +16,16 @@ Limitations:
   - Does not support typedef struct.
   - Does not support struct within struct.
 
-Struct inclusion — annotate the opening brace line of the struct:
-  struct nvme_ctrl { /*!generate-accessors*/
-  struct nvme_ctrl { //!generate-accessors
+Struct inclusion — annotate the opening brace line of the struct.
+The optional mode qualifier sets the default for all members of the struct:
+  struct nvme_ctrl { /*!generate-accessors*/          — default: both getter and setter
+  struct nvme_ctrl { //!generate-accessors            — default: both getter and setter
+  struct nvme_ctrl { /*!generate-accessors:none*/     — default: no accessors
+  struct nvme_ctrl { //!generate-accessors:none       — default: no accessors
+  struct nvme_ctrl { /*!generate-accessors:readonly*/ — default: getter only
+  struct nvme_ctrl { //!generate-accessors:readonly   — default: getter only
+  struct nvme_ctrl { /*!generate-accessors:writeonly*/ — default: setter only
+  struct nvme_ctrl { //!generate-accessors:writeonly   — default: setter only
 
 Member exclusion — annotate the member declaration line:
   char *model; /*!accessors:none*/
@@ -29,6 +36,16 @@ Read-only members (getter only, setter suppressed):
   - Annotate the member declaration line:
       char *state; /*!accessors:readonly*/
       char *state; //!accessors:readonly
+
+Write-only members (setter only, getter suppressed):
+  - Annotate the member declaration line:
+      char *state; /*!accessors:writeonly*/
+      char *state; //!accessors:writeonly
+
+Both getter and setter (override a restrictive struct-level default):
+  - Annotate the member declaration line:
+      char *state; /*!accessors:readwrite*/
+      char *state; //!accessors:readwrite
 
 Example usage:
   ./generate-accessors.py private.h
@@ -185,12 +202,15 @@ def fits_80_ntabs(n, s):
 class Member:
     """Represents one member of a parsed C struct."""
 
-    __slots__ = ('name', 'type', 'is_const', 'is_char_array', 'array_size')
+    __slots__ = ('name', 'type', 'gen_getter', 'gen_setter',
+                 'is_char_array', 'array_size')
 
-    def __init__(self, name, type_str, is_const, is_char_array, array_size):
+    def __init__(self, name, type_str, gen_getter, gen_setter,
+                 is_char_array, array_size):
         self.name = name
-        self.type = type_str        # e.g. "const char *", "int", "__u32"
-        self.is_const = is_const    # True → getter only (no setter generated)
+        self.type = type_str          # e.g. "const char *", "int", "__u32"
+        self.gen_getter = gen_getter  # True → emit getter
+        self.gen_setter = gen_setter  # True → emit setter
         self.is_char_array = is_char_array
         self.array_size = array_size  # only valid when is_char_array is True
 
@@ -199,8 +219,15 @@ class Member:
 # Parsing
 # ---------------------------------------------------------------------------
 
-def parse_members(struct_name, raw_body, verbose):
+def parse_members(struct_name, raw_body, struct_mode, verbose):
     """Parse *raw_body* and return a list of Member objects.
+
+    *struct_mode* is the default access mode for all members of this struct,
+    derived from the generate-accessors annotation qualifier:
+      'both'      — generate getter and setter (default when no qualifier)
+      'readonly'  — generate getter only
+      'writeonly' — generate setter only
+      'none'      — generate nothing unless a per-member annotation overrides
 
     Annotations are detected on the **raw** (un-stripped) line so that
     comment masking cannot hide them.  Comments are stripped only afterwards,
@@ -214,7 +241,18 @@ def parse_members(struct_name, raw_body, verbose):
         # ----------------------------------------------------------------
         if has_annotation(raw_line, 'accessors:none'):
             continue
-        readonly = has_annotation(raw_line, 'accessors:readonly')
+
+        if has_annotation(raw_line, 'accessors:readwrite'):
+            member_mode = 'both'
+        elif has_annotation(raw_line, 'accessors:readonly'):
+            member_mode = 'readonly'
+        elif has_annotation(raw_line, 'accessors:writeonly'):
+            member_mode = 'writeonly'
+        else:
+            member_mode = struct_mode
+
+        gen_getter = member_mode in ('both', 'readonly')
+        gen_setter = member_mode in ('both', 'writeonly')
 
         # ----------------------------------------------------------------
         # Strip comments for member-declaration parsing.
@@ -229,10 +267,12 @@ def parse_members(struct_name, raw_body, verbose):
         # --- char array: [const] char name[size]; -----------------------
         m = CHAR_ARRAY_RE.match(clean)
         if m:
+            is_const_qual = bool(m.group(1))
             members.append(Member(
                 name=m.group(2),
                 type_str='const char *',
-                is_const=readonly or bool(m.group(1)),
+                gen_getter=gen_getter,
+                gen_setter=gen_setter and not is_const_qual,
                 is_char_array=True,
                 array_size=m.group(3),
             ))
@@ -257,12 +297,55 @@ def parse_members(struct_name, raw_body, verbose):
             members.append(Member(
                 name=name,
                 type_str=type_str,
-                is_const=readonly or is_const_qual,
+                gen_getter=gen_getter,
+                gen_setter=gen_setter and not is_const_qual,
                 is_char_array=False,
                 array_size=None,
             ))
 
     return members
+
+
+_VALID_MODES = frozenset(('both', 'none', 'readonly', 'writeonly'))
+
+
+def parse_struct_annotation(raw_body):
+    """Return the default mode for a struct from its generate-accessors annotation.
+
+    Recognises both comment styles with an optional mode qualifier:
+      /*!generate-accessors*/           → 'both'
+      /*!generate-accessors:none*/      → 'none'
+      /*!generate-accessors:readonly*/  → 'readonly'
+      /*!generate-accessors:writeonly*/ → 'writeonly'
+      //!generate-accessors             → 'both'
+      //!generate-accessors:none        → 'none'
+      //!generate-accessors:readonly    → 'readonly'
+      //!generate-accessors:writeonly   → 'writeonly'
+
+    Returns None when the annotation is absent.
+    Prints a warning and falls back to 'both' for unrecognised qualifiers.
+    """
+    first_token = raw_body.lstrip()
+
+    for pattern in (
+        r'/\*!generate-accessors(?::([a-z]+))?\*/',
+        r'//!generate-accessors(?::([a-z]+))?',
+    ):
+        m = re.match(pattern, first_token)
+        if m:
+            qualifier = m.group(1) or 'both'
+            if qualifier not in _VALID_MODES:
+                print(
+                    f"warning: unknown generate-accessors qualifier "
+                    f"'{qualifier}'; valid values are: "
+                    f"{', '.join(sorted(_VALID_MODES))}. "
+                    f"Defaulting to 'both'.",
+                    file=sys.stderr,
+                )
+                qualifier = 'both'
+            return qualifier
+
+    return None
 
 
 def parse_file(text, verbose):
@@ -278,16 +361,15 @@ def parse_file(text, verbose):
         struct_name = match.group(1)
         raw_body    = match.group(2)
 
-        # The annotation must be the first token after the opening '{'.
-        first_token = raw_body.lstrip()
-        if not (first_token.startswith('/*!generate-accessors*/') or
-                first_token.startswith('//!generate-accessors')):
+        struct_mode = parse_struct_annotation(raw_body)
+        if struct_mode is None:
             continue
 
-        members = parse_members(struct_name, raw_body, verbose)
+        members = parse_members(struct_name, raw_body, struct_mode, verbose)
 
         if verbose and members:
-            print(f"Found struct: {struct_name} ({len(members)} members)")
+            print(f"Found struct: {struct_name} ({len(members)} members)"
+                  f" [mode: {struct_mode}]")
 
         if members:
             result.append((struct_name, members))
@@ -387,15 +469,16 @@ def generate_hdr(f, prefix, struct_name, members):
     for member in members:
         is_dyn_str = (not member.is_char_array and
                       member.type == 'const char *')
-        if not member.is_const:
+        if member.gen_setter:
             if member.is_char_array or is_dyn_str:
                 emit_hdr_setter_str(f, prefix, struct_name,
                                     member.name, is_dyn_str)
             else:
                 emit_hdr_setter_val(f, prefix, struct_name,
                                     member.name, member.type)
-        emit_hdr_getter(f, prefix, struct_name,
-                        member.name, member.type, is_dyn_str)
+        if member.gen_getter:
+            emit_hdr_getter(f, prefix, struct_name,
+                            member.name, member.type, is_dyn_str)
 
 
 # ---------------------------------------------------------------------------
@@ -489,9 +572,9 @@ def emit_src_getter(f, prefix, sname, mname, mtype):
 def generate_src(f, prefix, struct_name, members):
     """Write source implementations for all members of one struct."""
     for member in members:
-        if not member.is_const:
-            is_dyn_str = (not member.is_char_array and
-                          member.type == 'const char *')
+        is_dyn_str = (not member.is_char_array and
+                      member.type == 'const char *')
+        if member.gen_setter:
             if is_dyn_str:
                 emit_src_setter_dynstr(f, prefix, struct_name, member.name)
             elif member.is_char_array:
@@ -500,7 +583,8 @@ def generate_src(f, prefix, struct_name, members):
             else:
                 emit_src_setter_val(f, prefix, struct_name,
                                     member.name, member.type)
-        emit_src_getter(f, prefix, struct_name, member.name, member.type)
+        if member.gen_getter:
+            emit_src_getter(f, prefix, struct_name, member.name, member.type)
 
 
 # ---------------------------------------------------------------------------
@@ -510,8 +594,9 @@ def generate_src(f, prefix, struct_name, members):
 def generate_ld(f, prefix, struct_name, members):
     """Write linker version-script entries for all members of one struct."""
     for member in members:
-        f.write(f'\t\t{_get_name(prefix, struct_name, member.name)};\n')
-        if not member.is_const:
+        if member.gen_getter:
+            f.write(f'\t\t{_get_name(prefix, struct_name, member.name)};\n')
+        if member.gen_setter:
             f.write(f'\t\t{_set_name(prefix, struct_name, member.name)};\n')
 
 
