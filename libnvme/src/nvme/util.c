@@ -17,7 +17,6 @@
 #include <unistd.h>
 
 #include <arpa/inet.h>
-#include <netdb.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>

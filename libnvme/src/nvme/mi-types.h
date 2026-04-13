@@ -7,7 +7,6 @@
  */
 #pragma once
 
-#include <endian.h>
 #include <stdint.h>
 
 #include <nvme/types.h>

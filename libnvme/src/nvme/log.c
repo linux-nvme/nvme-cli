@@ -11,9 +11,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <syslog.h>
 #include <time.h>
-#include <unistd.h>
 
 #include <libnvme.h>
 

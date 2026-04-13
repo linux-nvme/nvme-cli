@@ -8,7 +8,6 @@
 
 #include <linux/types.h>
 
-#include <sys/ioctl.h>
 #include <sys/syslog.h>
 #include <sys/time.h>
 
