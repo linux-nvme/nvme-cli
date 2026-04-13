@@ -1702,7 +1702,7 @@ static void libnvme_read_sysfs_tls(struct libnvme_global_ctx *ctx,
 	/* the sysfs entry is not prefixing the id but it's in hex */
 	key_id = strtol(key, &endptr, 16);
 	if (endptr != key)
-		c->cfg.tls_key = key_id;
+		c->cfg.tls_key_id = key_id;
 
 	free(key);
 
@@ -1713,7 +1713,7 @@ static void libnvme_read_sysfs_tls(struct libnvme_global_ctx *ctx,
 	/* the sysfs entry is not prefixing the id but it's in hex */
 	key_id = strtol(key, &endptr, 16);
 	if (endptr != key)
-		c->cfg.tls_configured_key = key_id;
+		c->cfg.tls_configured_key_id = key_id;
 
 	free(key);
 }

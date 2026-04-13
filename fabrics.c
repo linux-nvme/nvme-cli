@@ -136,7 +136,7 @@ struct nvmf_args {
 		OPT_INT("ctrl-loss-tmo",      'l', &c.ctrl_loss_tmo,      nvmf_ctrl_loss_tmo),   \
 		OPT_INT("fast_io_fail_tmo",   'F', &c.fast_io_fail_tmo,   nvmf_fast_io_fail_tmo),\
 		OPT_INT("tos",                'T', &c.tos,                nvmf_tos),             \
-		OPT_INT("tls_key",              0, &c.tls_key,            nvmf_tls_key_legacy),  \
+		OPT_INT("tls_key",              0, &c.tls_key_id,         nvmf_tls_key_legacy),  \
 		OPT_FLAG("duplicate-connect", 'D', &c.duplicate_connect,  nvmf_dup_connect),     \
 		OPT_FLAG("disable-sqflow",      0, &c.disable_sqflow,     nvmf_disable_sqflow),  \
 		OPT_FLAG("hdr-digest",        'g', &c.hdr_digest,         nvmf_hdr_digest),      \

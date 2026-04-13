@@ -1388,7 +1388,7 @@ int __libnvme_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
 		if (ret)
 			return ret;
 	} else
-		kr_id = c->cfg.keyring;
+		kr_id = c->cfg.keyring_id;
 
 	/*
 	 * Fallback to the default keyring. Note this will also add the
