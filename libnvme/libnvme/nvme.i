@@ -450,25 +450,19 @@ struct libnvmf_context {};
 %extend libnvmf_context {
 	libnvmf_context(struct libnvme_global_ctx *ctx) {
 		struct libnvmf_context *fctx;
-		struct libnvme_fabrics_config *cfg;
+		struct libnvme_fabrics_config cfg = {};
 		int err;
 
 		err = libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx);
 		if (err)
 			return NULL;
 
-		cfg = calloc(1, sizeof(*cfg));
-		if (!cfg) {
-			libnvmf_context_free(fctx);
-			return NULL;
-		}
-		libnvmf_default_config(cfg);
-		libnvmf_context_set_fabrics_config(fctx, cfg);
+		libnvmf_default_config(&cfg);
+		libnvmf_context_set_fabrics_config(fctx, &cfg);
 
 		return fctx;
 	}
 	~libnvmf_context() {
-		free($self->cfg);
 		libnvmf_context_free($self);
 	}
 	int fctx_set_hostnqn(const char *hostnqn, const char *hostid = NULL) {
@@ -492,8 +486,6 @@ struct libnvmf_context {};
 		Py_ssize_t pos = 0;
 		PyObject *key, *value;
 
-		if (!$self->cfg)
-			return;
 		if (!PyDict_Check(dict)) {
 			PyErr_SetString(PyExc_TypeError,
 					"set_fabrics_config: argument must be a dict");
@@ -502,50 +494,50 @@ struct libnvmf_context {};
 
 		while (PyDict_Next(dict, &pos, &key, &value)) {
 			if (!PyUnicode_CompareWithASCIIString(key, "nr_io_queues")) {
-				$self->cfg->nr_io_queues = PyLong_AsLong(value);
+				$self->cfg.nr_io_queues = PyLong_AsLong(value);
 				continue;
 			}
 			if (!PyUnicode_CompareWithASCIIString(key, "reconnect_delay")) {
-				$self->cfg->reconnect_delay = PyLong_AsLong(value);
+				$self->cfg.reconnect_delay = PyLong_AsLong(value);
 				continue;
 			}
 			if (!PyUnicode_CompareWithASCIIString(key, "ctrl_loss_tmo")) {
-				$self->cfg->ctrl_loss_tmo = PyLong_AsLong(value);
+				$self->cfg.ctrl_loss_tmo = PyLong_AsLong(value);
 				continue;
 			}
 			if (!PyUnicode_CompareWithASCIIString(key, "keep_alive_tmo")) {
-				$self->cfg->keep_alive_tmo = PyLong_AsLong(value);
+				$self->cfg.keep_alive_tmo = PyLong_AsLong(value);
 				continue;
 			}
 			if (!PyUnicode_CompareWithASCIIString(key, "nr_write_queues")) {
-				$self->cfg->nr_write_queues = PyLong_AsLong(value);
+				$self->cfg.nr_write_queues = PyLong_AsLong(value);
 				continue;
 			}
 			if (!PyUnicode_CompareWithASCIIString(key, "nr_poll_queues")) {
-				$self->cfg->nr_poll_queues = PyLong_AsLong(value);
+				$self->cfg.nr_poll_queues = PyLong_AsLong(value);
 				continue;
 			}
 			if (!PyUnicode_CompareWithASCIIString(key, "tos")) {
-				$self->cfg->tos = PyLong_AsLong(value);
+				$self->cfg.tos = PyLong_AsLong(value);
 				continue;
 			}
 			if (!PyUnicode_CompareWithASCIIString(key, "duplicate_connect")) {
-				$self->cfg->duplicate_connect =
+				$self->cfg.duplicate_connect =
 					PyObject_IsTrue(value) ? true : false;
 				continue;
 			}
 			if (!PyUnicode_CompareWithASCIIString(key, "disable_sqflow")) {
-				$self->cfg->disable_sqflow =
+				$self->cfg.disable_sqflow =
 					PyObject_IsTrue(value) ? true : false;
 				continue;
 			}
 			if (!PyUnicode_CompareWithASCIIString(key, "hdr_digest")) {
-				$self->cfg->hdr_digest =
+				$self->cfg.hdr_digest =
 					PyObject_IsTrue(value) ? true : false;
 				continue;
 			}
 			if (!PyUnicode_CompareWithASCIIString(key, "data_digest")) {
-				$self->cfg->data_digest =
+				$self->cfg.data_digest =
 					PyObject_IsTrue(value) ? true : false;
 				continue;
 			}
@@ -777,7 +769,7 @@ struct libnvmf_context {};
 		     struct libnvmf_context *fctx = NULL) {
 		int ret;
 		const char *dev;
-		const struct libnvme_fabrics_config *cfg = fctx ? fctx->cfg : NULL;
+		const struct libnvme_fabrics_config *cfg = fctx ? &fctx->cfg : NULL;
 
 		dev = libnvme_ctrl_get_name($self);
 		if (dev && !(cfg && cfg->duplicate_connect)) {
