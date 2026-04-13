@@ -394,7 +394,7 @@ static const struct libnvme_fabric_options default_supported_options = {
 
 #define MERGE_CFG_OPTION(c, n, o, d)			\
 	if ((c)->o == d) (c)->o = (n)->o
-static struct libnvme_fabrics_config *merge_config(libnvme_ctrl_t c,
+static void merge_config(libnvme_ctrl_t c,
 		const struct libnvme_fabrics_config *cfg)
 {
 	struct libnvme_fabrics_config *ctrl_cfg = libnvme_ctrl_get_config(c);
@@ -417,8 +417,6 @@ static struct libnvme_fabrics_config *merge_config(libnvme_ctrl_t c,
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, data_digest, false);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, tls, false);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, concat, false);
-
-	return ctrl_cfg;
 }
 
 #define UPDATE_CFG_OPTION(c, n, o, d)			\
@@ -1056,7 +1054,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 	int ret;
 
 	/* highest prio have configs from command line */
-	cfg = merge_config(c, cfg);
+	merge_config(c, cfg);
 
 	/* apply configuration from config file (JSON) */
 	s = libnvme_lookup_subsystem(h, NULL, libnvme_ctrl_get_subsysnqn(c));
@@ -1075,7 +1073,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 		if (fc) {
 			const char *key;
 
-			cfg = merge_config(c, libnvme_ctrl_get_config(fc));
+			merge_config(c, libnvme_ctrl_get_config(fc));
 			/*
 			 * An authentication key might already been set
 			 * in @cfg, so ensure to update @c with the correct
