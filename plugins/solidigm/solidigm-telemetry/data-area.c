@@ -137,7 +137,6 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 	struct json_object *obj_arraySizeArray = NULL;
 	struct json_object *obj = NULL;
 	struct json_object *obj_memberList;
-	struct json_object *major_dimension = NULL;
 	struct json_object *sub_output;
 	struct json_object *obj_arraySizeIndicator = NULL;
 	bool force_array = false;
@@ -218,7 +217,6 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 		struct json_object *dimension = json_object_array_get_idx(obj_arraySizeArray, i);
 
 		array_size_dimension[i] = json_object_get_int(dimension);
-		major_dimension = dimension;
 	}
 
 	// Check for arraySizeIndicator property to support dynamic array sizes
@@ -241,25 +239,42 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 	}
 
 	if (array_rank > 1) {
-		uint32_t linear_pos_per_index = array_size_dimension[0];
+		uint32_t linear_pos_per_index = 1;
 		uint32_t prev_index_offset_bit = 0;
 		struct json_object *dimension_output;
+		struct json_object *inner_dim_array;
 
-		for (unsigned int i = 1; i < (array_rank - 1); i++)
+		/* Stride = product of all inner dimensions (1..rank-1) */
+		for (unsigned int i = 1; i < array_rank; i++)
 			linear_pos_per_index *= array_size_dimension[i];
 
-		dimension_output = json_create_array();
-		if (json_object_get_type(output) == json_type_array)
-			json_object_array_add(output, dimension_output);
-		else
+		/*
+		 * When output is already an array (recursive call from
+		 * outer dimension), fill it directly to avoid extra wrap.
+		 */
+		if (json_object_get_type(output) == json_type_array) {
+			dimension_output = output;
+		} else {
+			dimension_output = json_create_array();
 			json_object_add_value_array(output, name, dimension_output);
+		}
 
 		/*
-		 * Make sure major_dimension object will not be
-		 * deleted from memory when deleted from array
+		 * Build a copy of arraySize without the first dimension
+		 * so recursive calls see only the inner dimensions.
 		 */
-		json_object_get(major_dimension);
-		json_object_array_del_idx(obj_arraySizeArray, array_rank - 1, 1);
+		inner_dim_array = json_create_array();
+		for (size_t i = 1; i < array_rank; i++) {
+			struct json_object *dim =
+				json_object_array_get_idx(
+					obj_arraySizeArray, i);
+
+			json_object_get(dim);
+			json_object_array_add(inner_dim_array, dim);
+		}
+		json_object_get(obj_arraySizeArray);
+		json_object_object_add(struct_def, "arraySize",
+				      inner_dim_array);
 
 		for (unsigned int i = 0 ; i < array_size_dimension[0]; i++) {
 			struct json_object *sub_array = json_create_array();
@@ -273,8 +288,8 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 			prev_index_offset_bit += linear_pos_per_index * size_bit;
 		}
 
-		json_object_array_put_idx(obj_arraySizeArray, array_rank - 1,
-					  major_dimension);
+		json_object_object_add(struct_def, "arraySize",
+				      obj_arraySizeArray);
 
 		return 0;
 	}
@@ -300,11 +315,16 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 			json_object_put(str_obj);
 		}
 
-		sub_output = json_create_array();
-		if (json_object_is_type(output, json_type_array))
-			json_object_array_add(output, sub_output);
-		else
+		/*
+		 * When output is already an array (from an outer
+		 * multi-dim call), fill it directly to avoid extra wrap.
+		 */
+		if (json_object_is_type(output, json_type_array)) {
+			sub_output = output;
+		} else {
+			sub_output = json_create_array();
 			json_object_add_value_array(output, name, sub_output);
+		}
 	}
 
 	for (uint32_t j = 0; j < array_size_dimension[0]; j++) {
