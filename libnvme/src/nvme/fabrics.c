@@ -272,9 +272,9 @@ __public int libnvmf_context_set_fabrics_config(struct libnvmf_context *fctx,
 	fctx->cfg.nr_write_queues = cfg->nr_write_queues;
 	fctx->cfg.nr_poll_queues = cfg->nr_poll_queues;
 	fctx->cfg.tos = cfg->tos;
-	fctx->cfg.keyring = cfg->keyring;
-	fctx->cfg.tls_key = cfg->tls_key;
-	fctx->cfg.tls_configured_key = cfg->tls_configured_key;
+	fctx->cfg.keyring_id = cfg->keyring_id;
+	fctx->cfg.tls_key_id = cfg->tls_key_id;
+	fctx->cfg.tls_configured_key_id = cfg->tls_configured_key_id;
 	fctx->cfg.duplicate_connect = cfg->duplicate_connect;
 	fctx->cfg.disable_sqflow = cfg->disable_sqflow;
 	fctx->cfg.hdr_digest = cfg->hdr_digest;
@@ -432,8 +432,8 @@ static void merge_config(libnvme_ctrl_t c,
 			  NVMF_DEF_CTRL_LOSS_TMO);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, fast_io_fail_tmo, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, tos, -1);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, keyring, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, tls_key, 0);
+	MERGE_CFG_OPTION(ctrl_cfg, cfg, keyring_id, 0);
+	MERGE_CFG_OPTION(ctrl_cfg, cfg, tls_key_id, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, duplicate_connect, false);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
@@ -458,8 +458,8 @@ __public void libnvmf_update_config(libnvme_ctrl_t c, const struct libnvme_fabri
 			  NVMF_DEF_CTRL_LOSS_TMO);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, fast_io_fail_tmo, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tos, -1);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, keyring, 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tls_key, 0);
+	UPDATE_CFG_OPTION(ctrl_cfg, cfg, keyring_id , 0);
+	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tls_key_id, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, duplicate_connect, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
@@ -817,10 +817,10 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 			return ret;
 
 		if (key_id == 0) {
-			if (cfg->tls_configured_key)
-				key_id = cfg->tls_configured_key;
+			if (cfg->tls_configured_key_id)
+				key_id = cfg->tls_configured_key_id;
 			else
-				key_id = cfg->tls_key;
+				key_id = cfg->tls_key_id;
 		}
 	}
 
@@ -2042,7 +2042,7 @@ static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
 		long id = strtol(keyring, &endptr, 0);
 
 		if (endptr != keyring)
-			cfg->keyring = id;
+			cfg->keyring_id = id;
 		else
 			libnvme_ctrl_set_keyring(c, keyring);
 	}
@@ -2055,7 +2055,7 @@ static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
 		long id = strtol(tls_key, &endptr, 0);
 
 		if (endptr != tls_key)
-			cfg->tls_key = id;
+			cfg->tls_key_id = id;
 		else
 			libnvme_ctrl_set_tls_key(c, tls_key);
 	}

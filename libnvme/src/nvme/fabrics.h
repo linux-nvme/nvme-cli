@@ -42,9 +42,9 @@ struct libnvmf_context;
  * @nr_write_queues:	Number of queues to use for exclusively for writing
  * @nr_poll_queues:	Number of queues to reserve for polling completions
  * @tos:		Type of service
- * @keyring:		Keyring to store and lookup keys
- * @tls_key:		TLS PSK for the connection
- * @tls_configured_key: TLS PSK for connect command for the connection
+ * @keyring_id:		Keyring to store and lookup keys
+ * @tls_key_id:		TLS PSK for the connection
+ * @tls_configured_key_id: TLS PSK for connect command for the connection
  * @duplicate_connect:	Allow multiple connections to the same target
  * @disable_sqflow:	Disable controller sq flow control
  * @hdr_digest:		Generate/verify header digest (TCP)
@@ -62,9 +62,9 @@ struct libnvme_fabrics_config {
 	int nr_write_queues;
 	int nr_poll_queues;
 	int tos;
-	long keyring;
-	long tls_key;
-	long tls_configured_key;
+	long keyring_id;
+	long tls_key_id;
+	long tls_configured_key_id;
 
 	bool duplicate_connect;
 	bool disable_sqflow;
