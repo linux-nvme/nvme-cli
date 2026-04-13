@@ -1063,7 +1063,7 @@ static const char *lookup_context(struct libnvme_global_ctx *ctx, libnvme_ctrl_t
 }
 
 __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
-		  const struct libnvme_fabrics_config *cfg)
+		  const struct libnvmf_context *fctx)
 {
 	libnvme_subsystem_t s;
 	const char *root_app, *app;
@@ -1071,7 +1071,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 	int ret;
 
 	/* highest prio have configs from command line */
-	merge_config(c, cfg);
+	merge_config(c, &fctx->cfg);
 
 	/* apply configuration from config file (JSON) */
 	s = libnvme_lookup_subsystem(h, NULL, libnvme_ctrl_get_subsysnqn(c));
@@ -1297,7 +1297,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 	/* update tls or concat */
 	nvmf_update_tls_concat(e, c, h);
 
-	ret = libnvmf_add_ctrl(h, c, &fctx->cfg);
+	ret = libnvmf_add_ctrl(h, c, fctx);
 	if (!ret) {
 		*cp = c;
 		return 0;
@@ -1308,7 +1308,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 		libnvme_msg(h->ctx, LIBNVME_LOG_INFO, "failed to connect controller, "
 			 "retry with disabling SQ flow control\n");
 		c->cfg.disable_sqflow = false;
-		ret = libnvmf_add_ctrl(h, c, &fctx->cfg);
+		ret = libnvmf_add_ctrl(h, c, fctx);
 		if (!ret) {
 			*cp = c;
 			return 0;
@@ -2165,7 +2165,7 @@ static int libnvme_add_ctrl(struct libnvmf_context *fctx,
 	int err;
 
 retry:
-	err = libnvmf_add_ctrl(h, c, &fctx->cfg);
+	err = libnvmf_add_ctrl(h, c, fctx);
 	if (!err)
 		return 0;
 	if (fctx->decide_retry(fctx, err, fctx->user_data))
@@ -2663,7 +2663,7 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 	/* Update tls or concat */
 	nvmf_update_tls_concat(e, c, h);
 
-	ret = libnvmf_add_ctrl(h, c, &fctx->cfg);
+	ret = libnvmf_add_ctrl(h, c, fctx);
 
 	/* Resume logging */
 	if (ss && ss->unavailable && saved_log_level < 1)

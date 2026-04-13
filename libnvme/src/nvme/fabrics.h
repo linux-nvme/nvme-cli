@@ -23,6 +23,14 @@
 /* default to 600 seconds of reconnect attempts before giving up */
 #define NVMF_DEF_CTRL_LOSS_TMO		600
 
+/*
+ * struct libnvmf_context - Opaque context for fabrics operations
+ *
+ * Used to manage state and configuration for fabrics discovery and connect
+ * operations.
+ */
+struct libnvmf_context;
+
 /**
  * struct libnvme_fabrics_config - Defines all linux nvme fabrics initiator options
  * @queue_size:		Number of IO queue entries
@@ -210,7 +218,7 @@ void libnvmf_update_config(libnvme_ctrl_t c,
  * libnvmf_add_ctrl() - Connect a controller and update topology
  * @h:		Host to which the controller should be attached
  * @c:		Controller to be connected
- * @cfg:	Default configuration for the controller
+ * @fctx:	Fabrics context
  *
  * Issues a 'connect' command to the NVMe-oF controller and inserts @c
  * into the topology using @h as parent.
@@ -219,7 +227,7 @@ void libnvmf_update_config(libnvme_ctrl_t c,
  * Return: 0 on success, or an error code on failure.
  */
 int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
-		  const struct libnvme_fabrics_config *cfg);
+		  const struct libnvmf_context *fctx);
 
 /**
  * libnvmf_connect_ctrl() - Connect a controller
@@ -339,13 +347,6 @@ void libnvmf_free_uri(struct libnvme_fabrics_uri *uri);
  */
 const char *libnvmf_get_default_trsvcid(const char *transport,
 		bool discovery_ctrl);
-/*
- * struct libnvmf_context - Opaque context for fabrics operations
- *
- * Used to manage state and configuration for fabrics discovery and connect
- * operations.
- */
-struct libnvmf_context;
 
 /**
  * libnvmf_context_create() - Create a new fabrics context for discovery/connect

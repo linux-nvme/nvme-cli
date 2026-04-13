@@ -769,16 +769,15 @@ struct libnvmf_context {};
 		     struct libnvmf_context *fctx = NULL) {
 		int ret;
 		const char *dev;
-		const struct libnvme_fabrics_config *cfg = fctx ? &fctx->cfg : NULL;
 
 		dev = libnvme_ctrl_get_name($self);
-		if (dev && !(cfg && cfg->duplicate_connect)) {
+		if (dev && !(fctx && fctx->cfg.duplicate_connect)) {
 			connect_err = -ENVME_CONNECT_ALREADY;
 			return;
 		}
 
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
-		    ret = libnvmf_add_ctrl(h, $self, cfg);
+		ret = libnvmf_add_ctrl(h, $self, fctx);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
 		if (ret) {
