@@ -19,17 +19,19 @@
 
 %allowexception;
 
-%rename(global_ctx) libnvme_global_ctx;
-%rename(host)       libnvme_host;
-%rename(ctrl)       libnvme_ctrl;
-%rename(subsystem)  libnvme_subsystem;
-%rename(ns)         libnvme_ns;
+%rename(global_ctx)      libnvme_global_ctx;
+%rename(host)            libnvme_host;
+%rename(ctrl)            libnvme_ctrl;
+%rename(subsystem)       libnvme_subsystem;
+%rename(ns)              libnvme_ns;
+%rename(fabrics_context) libnvmf_context;
 
 %{
 	#include <ccan/list/list.h>
 	#include <ccan/endian/endian.h>
 	#include <libnvme.h>
 	#include "nvme/private.h"
+	#include "nvme/private-fabrics.h"
 
 	static int connect_err = 0;
 	static int discover_err = 0;
@@ -98,60 +100,6 @@ PyObject *read_hostid();
 	}
 }
 
-%typemap(in) struct libnvme_fabrics_config *($*1_type temp){
-	Py_ssize_t pos = 0;
-	PyObject * key,*value;
-	memset(&temp, 0, sizeof(temp));
-	temp.tos = -1;
-	temp.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
-	while (PyDict_Next($input, &pos, &key, &value)) {
-		if (!PyUnicode_CompareWithASCIIString(key, "nr_io_queues")) {
-			temp.nr_io_queues = PyLong_AsLong(value);
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "reconnect_delay")) {
-			temp.reconnect_delay = PyLong_AsLong(value);
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "ctrl_loss_tmo")) {
-			temp.ctrl_loss_tmo = PyLong_AsLong(value);
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "keep_alive_tmo")) {
-			temp.keep_alive_tmo = PyLong_AsLong(value);
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "nr_write_queues")) {
-			temp.nr_write_queues = PyLong_AsLong(value);
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "nr_poll_queues")) {
-			temp.nr_poll_queues = PyLong_AsLong(value);
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "tos")) {
-			temp.tos = PyLong_AsLong(value);
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "duplicate_connect")) {
-			temp.duplicate_connect = PyObject_IsTrue(value) ? true : false;
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "disable_sqflow")) {
-			temp.disable_sqflow = PyObject_IsTrue(value) ? true : false;
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "hdr_digest")) {
-			temp.hdr_digest = PyObject_IsTrue(value) ? true : false;
-			continue;
-		}
-		if (!PyUnicode_CompareWithASCIIString(key, "data_digest")) {
-			temp.data_digest = PyObject_IsTrue(value) ? true : false;
-			continue;
-		}
-	}
-	$1 = &temp;
-};
 
 %typemap(out) uint8_t [8] {
 	$result = PyBytes_FromStringAndSize((char *)$1, 8);
@@ -484,6 +432,127 @@ struct libnvme_ns {
 	uint8_t uuid[16];
 };
 
+/*
+ * %rename directives give the %extend methods Python-friendly names while
+ * using distinct C-level names (fctx_*) that do not collide with the public
+ * libnvmf_context_* API declarations in fabrics.h.  Without this, SWIG would
+ * emit SWIGINTERN libnvmf_context_set_hostnqn() which clashes with the
+ * non-static extern of the same name.
+ */
+%rename(set_hostnqn)        libnvmf_context::fctx_set_hostnqn;
+%rename(set_connection)     libnvmf_context::fctx_set_connection;
+%rename(set_persistent)     libnvmf_context::fctx_set_persistent;
+%rename(set_device)         libnvmf_context::fctx_set_device;
+%rename(set_fabrics_config) libnvmf_context::fctx_set_fabrics_config;
+
+struct libnvmf_context {};
+
+%extend libnvmf_context {
+	libnvmf_context(struct libnvme_global_ctx *ctx) {
+		struct libnvmf_context *fctx;
+		struct libnvme_fabrics_config *cfg;
+		int err;
+
+		err = libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx);
+		if (err)
+			return NULL;
+
+		cfg = calloc(1, sizeof(*cfg));
+		if (!cfg) {
+			libnvmf_context_free(fctx);
+			return NULL;
+		}
+		libnvmf_default_config(cfg);
+		libnvmf_context_set_fabrics_config(fctx, cfg);
+
+		return fctx;
+	}
+	~libnvmf_context() {
+		free($self->cfg);
+		libnvmf_context_free($self);
+	}
+	int fctx_set_hostnqn(const char *hostnqn, const char *hostid = NULL) {
+		return libnvmf_context_set_hostnqn($self, hostnqn, hostid);
+	}
+	int fctx_set_connection(const char *subsysnqn, const char *transport,
+				const char *traddr = NULL, const char *trsvcid = NULL,
+				const char *host_traddr = NULL,
+				const char *host_iface = NULL) {
+		return libnvmf_context_set_connection($self, subsysnqn, transport,
+					      traddr, trsvcid,
+					      host_traddr, host_iface);
+	}
+	int fctx_set_persistent(bool persistent) {
+		return libnvmf_context_set_persistent($self, persistent);
+	}
+	int fctx_set_device(const char *device) {
+		return libnvmf_context_set_device($self, device);
+	}
+	void fctx_set_fabrics_config(PyObject *dict) {
+		Py_ssize_t pos = 0;
+		PyObject *key, *value;
+
+		if (!$self->cfg)
+			return;
+		if (!PyDict_Check(dict)) {
+			PyErr_SetString(PyExc_TypeError,
+					"set_fabrics_config: argument must be a dict");
+			return;
+		}
+
+		while (PyDict_Next(dict, &pos, &key, &value)) {
+			if (!PyUnicode_CompareWithASCIIString(key, "nr_io_queues")) {
+				$self->cfg->nr_io_queues = PyLong_AsLong(value);
+				continue;
+			}
+			if (!PyUnicode_CompareWithASCIIString(key, "reconnect_delay")) {
+				$self->cfg->reconnect_delay = PyLong_AsLong(value);
+				continue;
+			}
+			if (!PyUnicode_CompareWithASCIIString(key, "ctrl_loss_tmo")) {
+				$self->cfg->ctrl_loss_tmo = PyLong_AsLong(value);
+				continue;
+			}
+			if (!PyUnicode_CompareWithASCIIString(key, "keep_alive_tmo")) {
+				$self->cfg->keep_alive_tmo = PyLong_AsLong(value);
+				continue;
+			}
+			if (!PyUnicode_CompareWithASCIIString(key, "nr_write_queues")) {
+				$self->cfg->nr_write_queues = PyLong_AsLong(value);
+				continue;
+			}
+			if (!PyUnicode_CompareWithASCIIString(key, "nr_poll_queues")) {
+				$self->cfg->nr_poll_queues = PyLong_AsLong(value);
+				continue;
+			}
+			if (!PyUnicode_CompareWithASCIIString(key, "tos")) {
+				$self->cfg->tos = PyLong_AsLong(value);
+				continue;
+			}
+			if (!PyUnicode_CompareWithASCIIString(key, "duplicate_connect")) {
+				$self->cfg->duplicate_connect =
+					PyObject_IsTrue(value) ? true : false;
+				continue;
+			}
+			if (!PyUnicode_CompareWithASCIIString(key, "disable_sqflow")) {
+				$self->cfg->disable_sqflow =
+					PyObject_IsTrue(value) ? true : false;
+				continue;
+			}
+			if (!PyUnicode_CompareWithASCIIString(key, "hdr_digest")) {
+				$self->cfg->hdr_digest =
+					PyObject_IsTrue(value) ? true : false;
+				continue;
+			}
+			if (!PyUnicode_CompareWithASCIIString(key, "data_digest")) {
+				$self->cfg->data_digest =
+					PyObject_IsTrue(value) ? true : false;
+				continue;
+			}
+		}
+	}
+};
+
 %extend libnvme_global_ctx {
 	libnvme_global_ctx(const char *config_file = NULL) {
 		struct libnvme_global_ctx *ctx;
@@ -670,7 +739,7 @@ struct libnvme_ns {
 %};
 
 %pythonappend libnvme_ctrl::connect(struct libnvme_host *h,
-				 struct libnvme_fabrics_config *cfg) {
+				 struct libnvmf_context *fctx) {
     self.__host = h  # Keep a reference to parent to ensure ctrl obj gets GCed before host}
 %pythonappend libnvme_ctrl::init(struct libnvme_host *h, int instance) {
     self.__host = h  # Keep a reference to parent to ensure ctrl obj gets GCed before host}
@@ -705,12 +774,13 @@ struct libnvme_ns {
 	}
 
 	void connect(struct libnvme_host *h,
-		     struct libnvme_fabrics_config *cfg = NULL) {
+		     struct libnvmf_context *fctx = NULL) {
 		int ret;
 		const char *dev;
+		const struct libnvme_fabrics_config *cfg = fctx ? fctx->cfg : NULL;
 
 		dev = libnvme_ctrl_get_name($self);
-		if (dev && !cfg->duplicate_connect) {
+		if (dev && !(cfg && cfg->duplicate_connect)) {
 			connect_err = -ENVME_CONNECT_ALREADY;
 			return;
 		}
