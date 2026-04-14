@@ -39,7 +39,7 @@
 #include <libnvme-mi.h>
 
 #include "private.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 
 #if !defined(AF_MCTP)

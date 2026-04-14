@@ -13,7 +13,7 @@
 #include <libnvme.h>
 
 #include "private.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 __public int libnvme_filter_namespace(const struct dirent *d)
 {

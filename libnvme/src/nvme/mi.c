@@ -20,7 +20,7 @@
 #include <libnvme-mi.h>
 
 #include "private.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 #define NUM_ENABLES    (256u)
 

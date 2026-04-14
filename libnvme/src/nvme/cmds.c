@@ -14,7 +14,7 @@
 
 #include "cleanup.h"
 #include "private.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 static bool force_4k;
 

@@ -655,7 +655,7 @@ def main():
         )
         for fname in files_to_include:
             f.write(f'#include "{fname}"\n')
-        f.write('#include "compiler_attributes.h"\n')
+        f.write('#include "compiler-attributes.h"\n')
         f.write('\n')
         f.write(''.join(src_parts))
 
