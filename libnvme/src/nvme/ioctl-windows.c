@@ -35,9 +35,12 @@ static int get_last_error_as_errno(void)
 	switch (error) {
 	case ERROR_INVALID_PARAMETER:
 		return -EINVAL;
+	case ERROR_CALL_NOT_IMPLEMENTED:
+	case ERROR_INVALID_FUNCTION:
 	case ERROR_NOT_SUPPORTED:
 		return -ENOTSUP;
 	case ERROR_INSUFFICIENT_BUFFER:
+	case ERROR_NO_SYSTEM_RESOURCES:
 		return -ENOMEM;
 	case ERROR_IO_DEVICE:
 		return -EIO;
