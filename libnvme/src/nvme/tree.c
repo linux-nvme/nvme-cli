@@ -109,7 +109,7 @@ static void cleanup_dirents(struct dirents *ents)
 	free(ents->ents);
 }
 
-#define _cleanup_dirents_ __cleanup(cleanup_dirents)
+#define __cleanup_dirents __cleanup(cleanup_dirents)
 
 static char *nvme_hostid_from_hostnqn(const char *hostnqn)
 {
@@ -280,7 +280,7 @@ static void libnvme_filter_tree(struct libnvme_global_ctx *ctx,
 __public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 		libnvme_scan_filter_t f, void *f_args)
 {
-	_cleanup_dirents_ struct dirents subsys = {}, ctrls = {};
+	__cleanup_dirents struct dirents subsys = {}, ctrls = {};
 	int i, ret;
 
 	if (!ctx)
@@ -686,7 +686,7 @@ struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 static int nvme_subsystem_scan_namespaces(struct libnvme_global_ctx *ctx,
 		libnvme_subsystem_t s)
 {
-	_cleanup_dirents_ struct dirents namespaces = {};
+	__cleanup_dirents struct dirents namespaces = {};
 	int i, ret;
 
 	if (ctx->create_only) {
@@ -1578,7 +1578,7 @@ libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
 static int libnvme_ctrl_scan_paths(struct libnvme_global_ctx *ctx,
 			struct libnvme_ctrl *c)
 {
-	_cleanup_dirents_ struct dirents paths = {};
+	__cleanup_dirents struct dirents paths = {};
 	int err, i;
 
 	if (ctx->create_only) {
@@ -1602,7 +1602,7 @@ static int libnvme_ctrl_scan_paths(struct libnvme_global_ctx *ctx,
 static int libnvme_ctrl_scan_namespaces(struct libnvme_global_ctx *ctx,
 		struct libnvme_ctrl *c)
 {
-	_cleanup_dirents_ struct dirents namespaces = {};
+	__cleanup_dirents struct dirents namespaces = {};
 	int err, i;
 
 	if (ctx->create_only) {
@@ -1625,7 +1625,7 @@ static int libnvme_ctrl_lookup_subsystem_name(struct libnvme_global_ctx *ctx,
 		const char *ctrl_name, char **name)
 {
 	const char *subsys_dir = libnvme_subsys_sysfs_dir();
-	_cleanup_dirents_ struct dirents subsys = {};
+	__cleanup_dirents struct dirents subsys = {};
 	int i;
 
 	subsys.num = libnvme_scan_subsystems(&subsys.ents);
