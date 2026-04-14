@@ -1748,7 +1748,7 @@ static bool is_dmi_uuid_valid(const char *buf, size_t len)
 
 static int uuid_from_dmi_entries(char *system_uuid)
 {
-	_cleanup_dir_ DIR *d = NULL;
+	__cleanup_dir DIR *d = NULL;
 	const char *entries_dir = libnvme_dmi_entries_dir();
 	int f;
 	struct dirent *de;

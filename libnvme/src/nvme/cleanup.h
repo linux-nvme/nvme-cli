@@ -35,7 +35,7 @@ static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
 #define __cleanup_file __cleanup(cleanup_file)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_dir, DIR *, closedir)
-#define _cleanup_dir_ __cleanup(cleanup_dir)
+#define __cleanup_dir __cleanup(cleanup_dir)
 
 static inline void cleanup_fd(int *fd)
 {
