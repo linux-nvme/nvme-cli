@@ -253,7 +253,7 @@ jobs:
           which git
           git --version
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          scripts/build.sh -b release -c gcc
+          scripts/build.sh -b release -c /ucrt64/bin/gcc
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: failure()
