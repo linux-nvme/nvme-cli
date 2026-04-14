@@ -29,7 +29,7 @@ static inline void freep(void *p)
 {
 	free(*(void **)p);
 }
-#define _cleanup_free_ __cleanup(freep)
+#define __cleanup_free __cleanup(freep)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
 #define _cleanup_file_ __cleanup(cleanup_file)

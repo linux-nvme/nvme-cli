@@ -92,7 +92,7 @@ void json_object_add_byte_array(struct json_object *o, const char *k, unsigned c
 {
 	int i;
 
-	_cleanup_free_ char *value = NULL;
+	__cleanup_free char *value = NULL;
 
 	if (!buf || !len) {
 		json_object_add_value_string(o, k, "No information provided");
@@ -139,7 +139,7 @@ void json_object_add_0nprix64(struct json_object *o, const char *k, uint64_t v, 
 
 void json_object_add_string(struct json_object *o, const char *k, const char *format, ...)
 {
-	_cleanup_free_ char *value = NULL;
+	__cleanup_free char *value = NULL;
 	va_list ap;
 
 	va_start(ap, format);

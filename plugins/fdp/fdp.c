@@ -29,7 +29,7 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_free_ void *log = NULL;
+	__cleanup_free void *log = NULL;
 	struct nvme_fdp_config_log hdr;
 	nvme_print_flags_t flags;
 	int err;
@@ -99,7 +99,7 @@ static int fdp_usage(int argc, char **argv, struct command *acmd, struct plugin 
 
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_free_ void *log = NULL;
+	__cleanup_free void *log = NULL;
 	struct nvme_fdp_ruhu_log hdr;
 	nvme_print_flags_t flags;
 	size_t len;
@@ -280,7 +280,7 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_free_ void *buf = NULL;
+	__cleanup_free void *buf = NULL;
 	struct nvme_fdp_ruh_status hdr;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;

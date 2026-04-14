@@ -74,7 +74,7 @@ static int __nvme_set_attr(const char *path, const char *value)
 
 int libnvme_set_attr(const char *dir, const char *attr, const char *value)
 {
-	_cleanup_free_ char *path = NULL;
+	__cleanup_free char *path = NULL;
 	int ret;
 
 	ret = asprintf(&path, "%s/%s", dir, attr);
@@ -115,7 +115,7 @@ static char *__nvme_get_attr(const char *path)
 
 __public char *libnvme_get_attr(const char *dir, const char *attr)
 {
-	_cleanup_free_ char *path = NULL;
+	__cleanup_free char *path = NULL;
 	int ret;
 
 	ret = asprintf(&path, "%s/%s", dir, attr);
@@ -304,7 +304,7 @@ static int derive_retained_key(struct libnvme_global_ctx *ctx,
 		size_t key_len)
 {
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ectx = NULL;
-	_cleanup_free_ uint8_t *hkdf_info = NULL;
+	__cleanup_free uint8_t *hkdf_info = NULL;
 	char *hkdf_label;
 	const EVP_MD *md;
 	size_t hmac_len;
@@ -373,7 +373,7 @@ static int derive_retained_key_compat(struct libnvme_global_ctx *ctx,
 		unsigned char *retained, size_t key_len)
 {
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ectx = NULL;
-	_cleanup_free_ uint8_t *hkdf_info = NULL;
+	__cleanup_free uint8_t *hkdf_info = NULL;
 	const EVP_MD *md;
 	size_t hmac_len;
 	char *pos;
@@ -454,7 +454,7 @@ static int derive_tls_key(struct libnvme_global_ctx *ctx,
 		unsigned char *retained, unsigned char *psk, size_t key_len)
 {
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ectx = NULL;
-	_cleanup_free_ uint8_t *hkdf_info = NULL;
+	__cleanup_free uint8_t *hkdf_info = NULL;
 	char *hkdf_label;
 	const EVP_MD *md;
 	size_t hmac_len;
@@ -531,7 +531,7 @@ static int derive_tls_key_compat(struct libnvme_global_ctx *ctx,
 		unsigned char *retained, unsigned char *psk, size_t key_len)
 {
 	_cleanup_evp_pkey_ctx_ EVP_PKEY_CTX *ectx = NULL;
-	_cleanup_free_ uint8_t *hkdf_info = NULL;
+	__cleanup_free uint8_t *hkdf_info = NULL;
 	const EVP_MD *md;
 	size_t hmac_len;
 	char *pos;
@@ -680,7 +680,7 @@ static int derive_psk_digest(struct libnvme_global_ctx *ctx,
 	static const char hmac_seed[] = "NVMe-over-Fabrics";
 	_cleanup_ossl_lib_ctx_ OSSL_LIB_CTX *lib_ctx = NULL;
 	_cleanup_evp_mac_ctx_ EVP_MAC_CTX *mac_ctx = NULL;
-	_cleanup_free_ unsigned char *psk_ctx = NULL;
+	__cleanup_free unsigned char *psk_ctx = NULL;
 	_cleanup_evp_mac_ EVP_MAC *mac = NULL;
 	OSSL_PARAM params[2], *p = params;
 	size_t hmac_len;
@@ -820,7 +820,7 @@ err:
 __public int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
 		const char *secret, size_t key_len, unsigned char **raw_secret)
 {
-	_cleanup_free_ unsigned char *buf = NULL;
+	__cleanup_free unsigned char *buf = NULL;
 	int secret_len = 0, i, err;
 	unsigned int c;
 
@@ -904,8 +904,8 @@ static int derive_nvme_keys(struct libnvme_global_ctx *ctx,
 		int hmac, unsigned char *configured,
 		unsigned char *psk, int key_len, bool compat)
 {
-	_cleanup_free_ unsigned char *retained = NULL;
-	_cleanup_free_ char *digest = NULL;
+	__cleanup_free unsigned char *retained = NULL;
+	__cleanup_free char *digest = NULL;
 	char *context = identity;
 	unsigned char cipher;
 	int ret = -1;
@@ -981,8 +981,8 @@ __public int libnvme_generate_tls_key_identity(struct libnvme_global_ctx *ctx,
 		unsigned char *configured_key, int key_len,
 		char **ident)
 {
-	_cleanup_free_ unsigned char *psk = NULL;
-	_cleanup_free_ char *identity = NULL;
+	__cleanup_free unsigned char *psk = NULL;
+	__cleanup_free char *identity = NULL;
 	ssize_t identity_len;
 	int ret;
 
@@ -1018,8 +1018,8 @@ __public int libnvme_generate_tls_key_identity_compat(struct libnvme_global_ctx 
 		int version, int hmac, unsigned char *configured_key,
 		int key_len, char **ident)
 {
-	_cleanup_free_ unsigned char *psk = NULL;
-	_cleanup_free_ char *identity = NULL;
+	__cleanup_free unsigned char *psk = NULL;
+	__cleanup_free char *identity = NULL;
 	ssize_t identity_len;
 	int ret;
 
@@ -1068,7 +1068,7 @@ __public int libnvme_lookup_keyring(struct libnvme_global_ctx *ctx, const char *
 
 __public char *libnvme_describe_key_serial(struct libnvme_global_ctx *ctx, long key_id)
 {
-	_cleanup_free_ char *str = NULL;
+	__cleanup_free char *str = NULL;
 	char *last;
 
 	if (keyctl_describe_alloc(key_id, &str) < 0)
@@ -1224,8 +1224,8 @@ static int __nvme_insert_tls_key(struct libnvme_global_ctx *ctx,
 		int version, int hmac, unsigned char *configured_key,
 		int key_len, bool compat, long *keyp)
 {
-	_cleanup_free_ unsigned char *psk = NULL;
-	_cleanup_free_ char *identity = NULL;
+	__cleanup_free unsigned char *psk = NULL;
+	__cleanup_free char *identity = NULL;
 	ssize_t identity_len;
 	long key;
 	int ret;
@@ -1333,7 +1333,7 @@ static int __nvme_import_tls_key(struct libnvme_global_ctx *ctx, long keyring_id
 		const char *identity, const char *key,
 		long *keyp)
 {
-	_cleanup_free_ unsigned char *key_data = NULL;
+	__cleanup_free unsigned char *key_data = NULL;
 	unsigned char version;
 	unsigned char hmac;
 	size_t key_len;
@@ -1818,7 +1818,7 @@ static int uuid_from_product_uuid(char *system_uuid)
 {
 	_cleanup_file_ FILE *stream = NULL;
 	ssize_t nread;
-	_cleanup_free_ char *line = NULL;
+	__cleanup_free char *line = NULL;
 	size_t len = 0;
 
 	stream = fopen(PATH_DMI_PROD_UUID, "re");

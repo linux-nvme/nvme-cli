@@ -126,9 +126,9 @@ __public int libnvme_host_get_ids(struct libnvme_global_ctx *ctx,
 		      const char *hostnqn_arg, const char *hostid_arg,
 		      char **hostnqn, char **hostid)
 {
-	_cleanup_free_ char *nqn = NULL;
-	_cleanup_free_ char *hid = NULL;
-	_cleanup_free_ char *hnqn = NULL;
+	__cleanup_free char *nqn = NULL;
+	__cleanup_free char *hid = NULL;
+	__cleanup_free char *hnqn = NULL;
 	libnvme_host_t h;
 
 	/* command line argumments */
@@ -195,8 +195,8 @@ __public int libnvme_host_get_ids(struct libnvme_global_ctx *ctx,
 __public int libnvme_get_host(struct libnvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, libnvme_host_t *host)
 {
-	_cleanup_free_ char *hnqn = NULL;
-	_cleanup_free_ char *hid = NULL;
+	__cleanup_free char *hnqn = NULL;
+	__cleanup_free char *hid = NULL;
 	struct libnvme_host *h;
 	int err;
 
@@ -748,7 +748,7 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 		const char *name)
 {
 	struct libnvme_subsystem *s = NULL, *_s;
-	_cleanup_free_ char *path = NULL, *subsysnqn = NULL;
+	__cleanup_free char *path = NULL, *subsysnqn = NULL;
 	libnvme_host_t h = NULL;
 	int ret;
 
@@ -813,7 +813,7 @@ __public libnvme_ns_t libnvme_path_get_ns(libnvme_path_t p)
 
 __public int libnvme_path_get_queue_depth(libnvme_path_t p)
 {
-	_cleanup_free_ char *queue_depth = NULL;
+	__cleanup_free char *queue_depth = NULL;
 
 	queue_depth = libnvme_get_path_attr(p, "queue_depth");
 	if (queue_depth) {
@@ -838,7 +838,7 @@ static int libnvme_ctrl_scan_path(struct libnvme_global_ctx *ctx,
 		struct libnvme_ctrl *c, char *name)
 {
 	struct libnvme_path *p;
-	_cleanup_free_ char *path = NULL, *grpid = NULL, *queue_depth = NULL;
+	__cleanup_free char *path = NULL, *grpid = NULL, *queue_depth = NULL;
 	int ret;
 
 	libnvme_msg(ctx, LOG_DEBUG, "scan controller %s path %s\n",
@@ -1634,7 +1634,7 @@ static int libnvme_ctrl_lookup_subsystem_name(struct libnvme_global_ctx *ctx,
 
 	for (i = 0; i < subsys.num; i++) {
 		struct stat st;
-		_cleanup_free_ char *path = NULL;
+		__cleanup_free char *path = NULL;
 
 		if (asprintf(&path, "%s/%s/%s", subsys_dir,
 			     subsys.ents[i]->d_name, ctrl_name) < 0)
@@ -1657,7 +1657,7 @@ static int libnvme_ctrl_lookup_phy_slot(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c)
 {
 	const char *slots_sysfs_dir = libnvme_slots_sysfs_dir();
-	_cleanup_free_ char *target_addr = NULL;
+	__cleanup_free char *target_addr = NULL;
 	_cleanup_dir_ DIR *slots_dir = NULL;
 	struct dirent *entry;
 	char *slot;
@@ -1678,8 +1678,8 @@ static int libnvme_ctrl_lookup_phy_slot(struct libnvme_global_ctx *ctx,
 		if (entry->d_type == DT_DIR &&
 		    strncmp(entry->d_name, ".", 1) != 0 &&
 		    strncmp(entry->d_name, "..", 2) != 0) {
-			_cleanup_free_ char *path = NULL;
-			_cleanup_free_ char *addr = NULL;
+			__cleanup_free char *path = NULL;
+			__cleanup_free char *addr = NULL;
 
 			ret = asprintf(&path, "%s/%s",
 				       slots_sysfs_dir, entry->d_name);
@@ -1769,7 +1769,7 @@ static void libnvme_read_sysfs_tls(struct libnvme_global_ctx *ctx,
 static void libnvme_read_sysfs_tls_mode(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c)
 {
-	_cleanup_free_ char *mode = NULL;
+	__cleanup_free char *mode = NULL;
 
 	mode = libnvme_get_ctrl_attr(c, "tls_mode");
 	if (!mode)
@@ -1836,7 +1836,7 @@ static int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 
 __public int libnvme_init_ctrl(libnvme_host_t h, libnvme_ctrl_t c, int instance)
 {
-	_cleanup_free_ char *subsys_name = NULL, *name = NULL, *path = NULL;
+	__cleanup_free char *subsys_name = NULL, *name = NULL, *path = NULL;
 	libnvme_subsystem_t s;
 	int ret;
 
@@ -1880,7 +1880,7 @@ __public int libnvme_init_ctrl(libnvme_host_t h, libnvme_ctrl_t c, int instance)
 int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 		const char *path, const char *name, libnvme_ctrl_t *cp)
 {
-	_cleanup_free_ char *addr = NULL, *address = NULL, *transport = NULL;
+	__cleanup_free char *addr = NULL, *address = NULL, *transport = NULL;
 	char *host_traddr = NULL, *host_iface = NULL;
 	char *traddr = NULL, *trsvcid = NULL;
 	char *a = NULL, *e = NULL;
@@ -1894,7 +1894,7 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 	/* Parse 'address' string into components */
 	addr = libnvme_get_attr(path, "address");
 	if (!addr) {
-		_cleanup_free_ char *rpath = NULL;
+		__cleanup_free char *rpath = NULL;
 		char *p = NULL, *_a = NULL;
 
 		/* loop transport might not have an address */
@@ -1984,9 +1984,9 @@ skip_address:
 __public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
 		   libnvme_ctrl_t *cp)
 {
-	_cleanup_free_ char *subsysnqn = NULL, *subsysname = NULL;
-	_cleanup_free_ char *hostnqn = NULL, *hostid = NULL;
-	_cleanup_free_ char *path = NULL;
+	__cleanup_free char *subsysnqn = NULL, *subsysname = NULL;
+	__cleanup_free char *hostnqn = NULL, *hostid = NULL;
+	__cleanup_free char *path = NULL;
 	char *host_key;
 	libnvme_host_t h;
 	libnvme_subsystem_t s;
@@ -2437,7 +2437,7 @@ static int parse_attrs(const char *path, struct sysfs_attr_table *tbl, int size)
 
 static int libnvme_ns_init(const char *path, struct libnvme_ns *ns)
 {
-	_cleanup_free_ char *attr = NULL;
+	__cleanup_free char *attr = NULL;
 	struct stat sb;
 	uint64_t size;
 	int ret;
@@ -2479,7 +2479,7 @@ static int libnvme_ns_init(const char *path, struct libnvme_ns *ns)
 		if (ret)
 			return ret;
 	} else {
-		_cleanup_free_ struct nvme_id_ns *id = NULL;
+		__cleanup_free struct nvme_id_ns *id = NULL;
 		uint8_t flbas;
 
 		id = __libnvme_alloc(sizeof(*ns));
@@ -2520,7 +2520,7 @@ static int libnvme_ns_open(struct libnvme_global_ctx *ctx, const char *sys_path,
 	struct libnvme_ns *n;
 	struct libnvme_ns_head *head;
 	struct stat arg;
-	_cleanup_free_ char *path = NULL;
+	__cleanup_free char *path = NULL;
 
 	n = calloc(1, sizeof(*n));
 	if (!n)
@@ -2605,8 +2605,8 @@ static char *libnvme_ns_generic_to_blkdev(const char *generic)
 static int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 		const char *sysfs_dir, const char *name, libnvme_ns_t *ns)
 {
-	_cleanup_free_ char *blkdev = NULL;
-	_cleanup_free_ char *path = NULL;
+	__cleanup_free char *blkdev = NULL;
+	__cleanup_free char *path = NULL;
 	struct libnvme_ns *n = NULL;
 	int ret;
 

@@ -70,7 +70,7 @@ static int feat_get_nsid(struct libnvme_transport_handle *hdl, __u32 nsid,
 	int err;
 	__u32 len = 0;
 
-	_cleanup_free_ void *buf = NULL;
+	__cleanup_free void *buf = NULL;
 
 	if (!NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
 		libnvme_get_feature_length(fid, cdw11, NVME_DATA_TFR_CTRL_TO_HOST, &len);

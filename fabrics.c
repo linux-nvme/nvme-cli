@@ -587,8 +587,8 @@ out_free:
 
 int fabrics_connect(const char *desc, int argc, char **argv)
 {
-	_cleanup_free_ char *hnqn = NULL;
-	_cleanup_free_ char *hid = NULL;
+	__cleanup_free char *hnqn = NULL;
+	__cleanup_free char *hid = NULL;
 	char *config_file = NULL;
 	char *context = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
