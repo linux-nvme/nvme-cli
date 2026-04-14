@@ -7,9 +7,9 @@
  */
 #pragma once
 
-#include <endian.h>
 #include <stdint.h>
 
+#include <nvme/endian.h>
 #include <nvme/nvme-types.h>
 
 /**

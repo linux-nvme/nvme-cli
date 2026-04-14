@@ -26,6 +26,7 @@ else
 endif
 headers = [
     'nvme/accessors.h',
+    'nvme/endian.h',
     'nvme/filters.h',
     'nvme/ioctl.h',
     'nvme/lib-types.h',
