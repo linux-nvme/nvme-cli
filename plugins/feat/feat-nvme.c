@@ -174,7 +174,7 @@ static int perfc_set(struct libnvme_transport_handle *hdl, __u8 fid, __u32 cdw11
 	__u64 result;
 	int err;
 
-	_cleanup_fd_ int ffd = STDIN_FILENO;
+	__cleanup_fd int ffd = STDIN_FILENO;
 
 	struct nvme_perf_characteristics data = {
 		.attr_buf = { 0 },

@@ -823,7 +823,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 	__cleanup_free struct nvme_id_ctrl *id_ctrl = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_fd_ int output = -1;
+	__cleanup_fd int output = -1;
 	int err = 0;
 	size_t total_size = 0;
 	__u8 *data_ptr = NULL;
@@ -1831,7 +1831,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 	__cleanup_free __u8 *bp_log = NULL;
 	nvme_print_flags_t flags;
 	int err = -1;
-	_cleanup_fd_ int output = -1;
+	__cleanup_fd int output = -1;
 	__u32 bpsz = 0;
 
 	struct config {
@@ -2111,7 +2111,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_fd_ int dfd = STDIN_FILENO;
+	__cleanup_fd int dfd = STDIN_FILENO;
 	__cleanup_free void *buf = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err = -1;
@@ -2189,7 +2189,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free void *buf = NULL;
 	struct libnvme_passthru_cmd cmd;
-	_cleanup_fd_ int dfd = -1;
+	__cleanup_fd int dfd = -1;
 	int err = -1;
 
 	struct config {
@@ -5124,7 +5124,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
-	_cleanup_fd_ int fw_fd = -1;
+	__cleanup_fd int fw_fd = -1;
 	unsigned int fw_size, pos;
 	int err;
 	struct stat sb;
@@ -6861,7 +6861,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free void *buf = NULL;
-	_cleanup_fd_ int ffd = STDIN_FILENO;
+	__cleanup_fd int ffd = STDIN_FILENO;
 	int err;
 	__u64 result;
 	nvme_print_flags_t flags;
@@ -7007,7 +7007,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	__cleanup_free void *sec_buf = NULL;
-	_cleanup_fd_ int sec_fd = -1;
+	__cleanup_fd int sec_fd = -1;
 	unsigned int sec_size;
 	int err;
 	nvme_print_flags_t flags;
@@ -7120,7 +7120,7 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 	__cleanup_free void *buf = NULL;
 	struct libnvme_passthru_cmd cmd;
 	__u32 dw12 = 0;
-	_cleanup_fd_ int ffd = STDIN_FILENO;
+	__cleanup_fd int ffd = STDIN_FILENO;
 	int err;
 
 	struct config {
@@ -8322,7 +8322,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	unsigned int logical_block_size = 0;
 	struct timeval start_time, end_time;
 	__cleanup_free void *mbuffer = NULL;
-	_cleanup_fd_ int dfd = -1, mfd = -1;
+	__cleanup_fd int dfd = -1, mfd = -1;
 	__u16 control = 0, nblocks = 0;
 	struct libnvme_passthru_cmd cmd;
 	__u8 sts = 0, pif = 0;
@@ -9274,7 +9274,7 @@ static int passthru(int argc, char **argv, bool admin,
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_fd_ int dfd = -1, mfd = -1;
+	__cleanup_fd int dfd = -1, mfd = -1;
 	int flags;
 	int mode = 0644;
 	void *data = NULL;
@@ -10426,7 +10426,7 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 	void *data = NULL;
 	int err = 0;
 	bool send;
-	_cleanup_fd_ int fd = -1;
+	__cleanup_fd int fd = -1;
 	int flags;
 	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;

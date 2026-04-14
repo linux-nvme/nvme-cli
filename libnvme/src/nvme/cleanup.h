@@ -42,7 +42,7 @@ static inline void cleanup_fd(int *fd)
 	if (*fd >= 0)
 		close(*fd);
 }
-#define _cleanup_fd_ __cleanup(cleanup_fd)
+#define __cleanup_fd __cleanup(cleanup_fd)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *, freeaddrinfo)
 #define _cleanup_addrinfo_ __cleanup(cleanup_addrinfo)

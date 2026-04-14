@@ -958,7 +958,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 	}
 
 	if (update_config) {
-		_cleanup_fd_ int fd = -1;
+		__cleanup_fd int fd = -1;
 
 		fd = open(config_file, O_RDONLY, 0);
 		if (fd != -1)

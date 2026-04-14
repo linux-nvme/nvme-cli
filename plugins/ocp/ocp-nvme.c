@@ -1280,7 +1280,7 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 	__le64 vu_event_str_table_ofst = 0;
 	__le64 ascii_table_ofst = 0;
 
-	_cleanup_fd_ int fd = STDIN_FILENO;
+	__cleanup_fd int fd = STDIN_FILENO;
 
 	header_data = (__u8 *)malloc(sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
 	if (!header_data) {
@@ -2713,7 +2713,7 @@ static int get_error_injection(int argc, char **argv, struct command *acmd, stru
 static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri_config *cfg, bool uuid, __u32 nsid)
 {
 	__cleanup_free struct erri_entry *entry = NULL;
-	_cleanup_fd_ int ffd = -1;
+	__cleanup_fd int ffd = -1;
 	__u32 data_len;
 	__u8 uidx = 0;
 	int err;

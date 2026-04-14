@@ -752,7 +752,7 @@ __public int libnvme_uuid_from_string(const char *str, unsigned char uuid[NVME_U
 
 __public int libnvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
 {
-	_cleanup_fd_ int f = -1;
+	__cleanup_fd int f = -1;
 	ssize_t n;
 
 	f = open("/dev/urandom", O_RDONLY);

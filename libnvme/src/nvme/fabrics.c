@@ -862,7 +862,7 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 {
 	char buf[0x1000], *options, *p, *v;
-	_cleanup_fd_ int fd = -1;
+	__cleanup_fd int fd = -1;
 	ssize_t len;
 
 	if (ctx->options)
@@ -949,7 +949,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 
 static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 {
-	_cleanup_fd_ int fd = -1;
+	__cleanup_fd int fd = -1;
 	int ret, len = strlen(argstr);
 	char buf[0x1000], *options, *p;
 
