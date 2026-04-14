@@ -1658,7 +1658,7 @@ static int libnvme_ctrl_lookup_phy_slot(struct libnvme_global_ctx *ctx,
 {
 	const char *slots_sysfs_dir = libnvme_slots_sysfs_dir();
 	__cleanup_free char *target_addr = NULL;
-	_cleanup_dir_ DIR *slots_dir = NULL;
+	__cleanup_dir DIR *slots_dir = NULL;
 	struct dirent *entry;
 	char *slot;
 	int ret;
