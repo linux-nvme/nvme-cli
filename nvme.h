@@ -17,7 +17,6 @@
 #define _NVME_H
 
 #include <dirent.h>
-#include <endian.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

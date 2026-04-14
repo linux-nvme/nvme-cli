@@ -194,6 +194,7 @@ if openssl_dep.found()
 endif
 
 foreach hdr : [
+    'endian',
     'fabrics',
     'filters',
     'ioctl',

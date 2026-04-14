@@ -10,10 +10,10 @@
 
 #pragma once
 
-#include <endian.h>
 #include <errno.h>
 #include <string.h>
 
+#include <nvme/endian.h>
 #include <nvme/ioctl.h>
 #include <nvme/nvme-types.h>
 
