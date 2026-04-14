@@ -7,7 +7,6 @@
  */
 #pragma once
 
-#include <errno.h>
 #include <ifaddrs.h>
 #include <poll.h>
 
@@ -743,39 +742,10 @@ void libnvme_ns_release_transport_handle(libnvme_ns_t n);
 int libnvme_mi_admin_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
 
-#ifdef CONFIG_LIBURING
 int libnvme_open_uring(struct libnvme_global_ctx *ctx);
 void libnvme_close_uring(struct libnvme_global_ctx *ctx);
 int __libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl);
 int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
 int libnvme_wait_complete_passthru(struct libnvme_transport_handle *hdl);
-#else
-static inline int
-libnvme_open_uring(struct libnvme_global_ctx *ctx)
-{
-	return -ENOTSUP;
-}
-static inline void
-libnvme_close_uring(struct libnvme_global_ctx *ctx)
-{
-}
-static inline int
-__libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl)
-{
-	hdl->ctx->uring_state = LIBNVME_IO_URING_STATE_NOT_AVAILABLE;
-	return -ENOTSUP;
-}
-static inline int
-libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd)
-{
-	return -ENOTSUP;
-}
-static inline int
-libnvme_wait_complete_passthru(struct libnvme_transport_handle *hdl)
-{
-	return -ENOTSUP;
-}
-#endif
 
