@@ -2895,7 +2895,7 @@ __public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 
 		/* Discovery Descriptor List */
 		for (dd = entry->nbft->discovery_list; dd && *dd; dd++) {
-			_cleanup_uri_ struct libnvme_fabrics_uri *uri = NULL;
+			__cleanup_uri struct libnvme_fabrics_uri *uri = NULL;
 			__cleanup_free char *trsvcid = NULL;
 			struct libnvmf_context nfctx = *fctx;
 			bool persistent = false;

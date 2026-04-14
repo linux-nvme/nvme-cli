@@ -51,7 +51,7 @@ static inline void free_uri(struct libnvme_fabrics_uri **uri)
 	if (*uri)
 		libnvmf_free_uri(*uri);
 }
-#define _cleanup_uri_ __cleanup(free_uri)
+#define __cleanup_uri __cleanup(free_uri)
 
 static inline void cleanup_nvmf_context(struct libnvmf_context **fctx)
 {
