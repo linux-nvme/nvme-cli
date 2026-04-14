@@ -7,7 +7,6 @@
  */
 #pragma once
 
-#include <ifaddrs.h>
 #include <poll.h>
 
 #include <sys/ioctl.h>
@@ -295,8 +294,10 @@ struct libnvme_global_ctx {
 	bool ioctl_probing;
 	bool create_only;
 	bool dry_run;
+#ifdef CONFIG_FABRICS
 	struct libnvme_fabric_options *options;
 	struct ifaddrs *ifaddrs_cache; /* init with libnvme_getifaddrs() */
+#endif
 
 	enum libnvme_io_uring_state uring_state;
 #ifdef CONFIG_LIBURING

@@ -9,7 +9,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <ifaddrs.h>
 #include <libgen.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,10 +16,15 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#ifdef CONFIG_FABRICS
+#include <ifaddrs.h>
+#include <netdb.h>
+
+#include <arpa/inet.h>
+#endif
 
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
@@ -1067,18 +1071,21 @@ __public void libnvme_free_ctrl(libnvme_ctrl_t c)
 
 static bool traddr_is_hostname(const char *transport, const char *traddr)
 {
-	char addrstr[NVMF_TRADDR_SIZE];
 
 	if (!traddr || !transport)
 		return false;
 	if (!strcmp(traddr, "none"))
 		return false;
+#ifdef CONFIG_FABRICS
+	char addrstr[NVMF_TRADDR_SIZE];
+
 	if (strcmp(transport, "tcp") &&
 	    strcmp(transport, "rdma"))
 		return false;
 	if (inet_pton(AF_INET, traddr, addrstr) > 0 ||
 	    inet_pton(AF_INET6, traddr, addrstr) > 0)
 		return false;
+#endif
 	return true;
 }
 
@@ -1157,6 +1164,7 @@ __public int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 	return _libnvme_create_ctrl(ctx, &fctx, cp);
 }
 
+#ifdef CONFIG_FABRICS
 /**
  * _tcp_ctrl_match_host_traddr_no_src_addr() - Match host_traddr w/o src_addr
  * @c:	An existing controller instance
@@ -1383,6 +1391,7 @@ static bool _tcp_match_ctrl(struct libnvme_ctrl *c,
 
 	return true;
 }
+#endif
 
 /**
  * _match_ctrl() - Check if controller matches candidate (non TCP transport)
@@ -1425,6 +1434,7 @@ static bool _match_ctrl(struct libnvme_ctrl *c,
 
 	return true;
 }
+
 /**
  * _candidate_init() - Init candidate and get the matching function
  *
@@ -1469,6 +1479,7 @@ static ctrl_match_t _candidate_init(struct libnvme_global_ctx *ctx,
 		candidate->well_known_nqn = true;
 	}
 
+#ifdef CONFIG_FABRICS
 	if (streq0(fctx->transport, "tcp")) {
 		candidate->iface_list = libnvme_getifaddrs(ctx); /* TCP only */
 		candidate->addreq = libnvme_ipaddrs_eq;
@@ -1479,6 +1490,7 @@ static ctrl_match_t _candidate_init(struct libnvme_global_ctx *ctx,
 		candidate->addreq = libnvme_ipaddrs_eq;
 		return _match_ctrl;
 	}
+#endif
 
 	/* All other transport types */
 	candidate->addreq = streqcase0;
