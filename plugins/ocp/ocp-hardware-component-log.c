@@ -271,7 +271,7 @@ static int get_hwcomp_log(struct libnvme_transport_handle *hdl, __u32 id, bool l
 int ocp_hwcomp_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 	const char *desc = "retrieve hardware component log";
 	struct config {

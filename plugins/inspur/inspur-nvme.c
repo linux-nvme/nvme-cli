@@ -210,7 +210,7 @@ static int nvme_get_vendor_log(int argc, char **argv, struct command *acmd, stru
 {
 	char *desc = "Get the Inspur vendor log";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__u8 local_mem[BYTE_OF_4K];
 	int err;
 

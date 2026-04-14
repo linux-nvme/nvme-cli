@@ -154,7 +154,7 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 	log_page_map logPageMap;
 	const char *desc = "Retrieve Seagate Supported Log-Page information for the given device ";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	int fmt;
 
@@ -897,7 +897,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 
 	const char *desc = "Retrieve the Firmware Activation History for Seagate NVMe drives";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	int err, index = 0;
 
@@ -1076,7 +1076,7 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 	unsigned int temperature = 0, PcbTemp = 0, SocTemp = 0, scCurrentTemp = 0, scMaxTemp = 0;
 	unsigned long long maxTemperature = 0, MaxSocTemp = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	NVME_ARGS(opts);
 
@@ -1235,7 +1235,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 {
 	pcie_error_log_page pcieErrorLog;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	const char *desc = "Retrieve Seagate PCIe error counters for the given device ";
 	int err;
@@ -1370,7 +1370,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 {
 	stx_fw_activ_history_log_page fwActivHis;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	const char *desc = "Retrieve FW Activate History for Seagate device ";
 	int err;
@@ -1414,7 +1414,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 	const char *save = "specifies that the controller shall save the attribute";
 	int err;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl ctrl;
 	char modelNo[40];
 	__u64 result;
@@ -1472,7 +1472,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 	char modelNo[40];
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	__u64 result;
 	int err;
@@ -1534,7 +1534,7 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 	struct nvme_temetry_log_hdr tele_log;
 	int blkCnt, maxBlk = 0, blksToGet;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	unsigned char  *log;
 	__le64  offset = 0;
@@ -1641,7 +1641,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 	const char *namespace_id = "desired namespace";
 	const char *raw = "output in raw format";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err, dump_fd;
 	struct nvme_temetry_log_hdr tele_log;
@@ -1754,7 +1754,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 
 	const char *file = "dump file";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err, dump_fd;
 	int flags = O_WRONLY | O_CREAT;

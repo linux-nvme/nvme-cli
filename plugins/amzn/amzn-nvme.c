@@ -561,7 +561,7 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 		     struct plugin *plugin)
 {
 	const char *desc = "display command latency statistics";
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct amzn_latency_log_page log = { 0 };
 	nvme_print_flags_t flags = 0;

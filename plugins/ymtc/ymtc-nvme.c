@@ -125,7 +125,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct config {
 		__u32 namespace_id;
 		bool  raw_binary;

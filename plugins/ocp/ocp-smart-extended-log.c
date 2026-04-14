@@ -100,7 +100,7 @@ int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Retrieve the extended SMART health data.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
 	NVME_ARGS(opts);
