@@ -957,7 +957,7 @@ __public struct libnvme_global_ctx *libnvme_mi_scan_mctp(void)
 	dbus_bool_t drc;
 	DBusError berr;
 
-	ctx = libnvme_create_global_ctx(NULL, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(NULL, LIBNVME_DEFAULT_LOGLEVEL);
 	if (!ctx) {
 		errno = ENOMEM;
 		return NULL;

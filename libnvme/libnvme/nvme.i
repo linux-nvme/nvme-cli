@@ -488,7 +488,7 @@ struct libnvme_ns {
 	libnvme_global_ctx(const char *config_file = NULL) {
 		struct libnvme_global_ctx *ctx;
 
-		ctx = libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+		ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
 		if (!ctx)
 			return NULL;
 
@@ -507,7 +507,7 @@ struct libnvme_ns {
 		return $self;
 	}
 	void log_level(const char *level) {
-		int log_level = DEFAULT_LOGLEVEL;
+		int log_level = LIBNVME_DEFAULT_LOGLEVEL;
 		if (!strcmp(level, "debug")) log_level = LIBNVME_LOG_DEBUG;
 		else if (!strcmp(level, "info")) log_level = LIBNVME_LOG_INFO;
 		else if (!strcmp(level, "warning")) log_level = LIBNVME_LOG_WARN;
