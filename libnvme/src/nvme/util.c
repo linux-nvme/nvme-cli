@@ -474,7 +474,7 @@ int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 
 	ret = getaddrinfo(traddr, NULL, &hints, &host_info);
 	if (ret) {
-		libnvme_msg(ctx, LOG_ERR, "failed to resolve host %s info\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to resolve host %s info\n",
 			 traddr);
 		return -errno;
 	}
@@ -491,13 +491,13 @@ int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 			addrstr, NVMF_TRADDR_SIZE);
 		break;
 	default:
-		libnvme_msg(ctx, LOG_ERR, "unrecognized address family (%d) %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "unrecognized address family (%d) %s\n",
 			 host_info->ai_family, traddr);
 		return -EINVAL;
 	}
 
 	if (!p) {
-		libnvme_msg(ctx, LOG_ERR, "failed to get traddr for %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to get traddr for %s\n",
 			 traddr);
 		return -EIO;
 	}
@@ -510,7 +510,7 @@ int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 #else /* HAVE_NETDB */
 int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr, char **hostname)
 {
-	libnvme_msg(ctx, LOG_ERR, "No support for hostname IP address resolution; " \
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "No support for hostname IP address resolution; " \
 		"recompile with libnss support.\n");
 
 	return -ENOTSUP;
@@ -873,7 +873,7 @@ ipaddrs_eq_fail:
 #else /* HAVE_NETDB */
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 {
-	libnvme_msg(NULL, LOG_ERR, "no support for hostname ip address resolution; " \
+	libnvme_msg(NULL, LIBNVME_LOG_ERR, "no support for hostname ip address resolution; " \
 		"recompile with libnss support.\n");
 
 	return false;
@@ -943,7 +943,7 @@ bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
 		const char *addr)
 {
-	libnvme_msg(NULL, LOG_ERR, "no support for interface lookup; "
+	libnvme_msg(NULL, LIBNVME_LOG_ERR, "no support for interface lookup; "
 		"recompile with libnss support.\n");
 
 	return NULL;
@@ -952,7 +952,7 @@ const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
 bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr)
 {
-	libnvme_msg(NULL, LOG_ERR, "no support for interface lookup; "
+	libnvme_msg(NULL, LIBNVME_LOG_ERR, "no support for interface lookup; "
 		"recompile with libnss support.\n");
 
 	return false;

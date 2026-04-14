@@ -9,7 +9,6 @@
 #include <linux/types.h>
 
 #include <sys/ioctl.h>
-#include <sys/syslog.h>
 #include <sys/time.h>
 
 #include <ccan/endian/endian.h>
@@ -37,32 +36,13 @@ bool is_printable_at_level(int level)
 
 int map_log_level(int verbose, bool quiet)
 {
-	int log_level;
+	if (verbose == 0 || quiet)
+		return LIBNVME_LOG_ERR;
 
-	/*
-	 * LOG_NOTICE is unused thus the user has to provide two 'v' for getting
-	 * any feedback at all. Thus skip this level
-	 */
-	verbose++;
+	if (verbose == 1)
+		return LIBNVME_LOG_INFO;
 
-	switch (verbose) {
-	case 0:
-		log_level = LOG_WARNING;
-		break;
-	case 1:
-		log_level = LOG_NOTICE;
-		break;
-	case 2:
-		log_level = LOG_INFO;
-		break;
-	default:
-		log_level = LOG_DEBUG;
-		break;
-	}
-	if (quiet)
-		log_level = LOG_ERR;
-
-	return log_level;
+	return LIBNVME_LOG_DEBUG;
 }
 
 static void nvme_show_common(struct libnvme_passthru_cmd *cmd)
@@ -102,7 +82,7 @@ static void nvme_show_latency(struct timeval start, struct timeval end)
 
 static void nvme_log_retry(int errnum)
 {
-	if (log_level < LOG_DEBUG)
+	if (log_level < LIBNVME_LOG_DEBUG)
 		return;
 
 	printf("passthru command returned '%s'\n", libnvme_strerror(errnum));
@@ -113,7 +93,7 @@ void *nvme_submit_entry(struct libnvme_transport_handle *hdl,
 {
 	memset(&sb, 0, sizeof(sb));
 
-	if (log_level >= LOG_DEBUG)
+	if (log_level >= LIBNVME_LOG_DEBUG)
 		gettimeofday(&sb.start, NULL);
 
 	return &sb;
@@ -124,7 +104,7 @@ void nvme_submit_exit(struct libnvme_transport_handle *hdl,
 {
 	struct submit_data *sb = user_data;
 
-	if (log_level >= LOG_DEBUG) {
+	if (log_level >= LIBNVME_LOG_DEBUG) {
 		gettimeofday(&sb->end, NULL);
 		nvme_show_command(cmd, err);
 		nvme_show_latency(sb->start, sb->end);
@@ -197,7 +177,7 @@ void *libnvme_mi_submit_entry(__u8 type, const struct nvme_mi_msg_hdr *hdr, size
 {
 	memset(&sb, 0, sizeof(sb));
 
-	if (log_level >= LOG_DEBUG) {
+	if (log_level >= LIBNVME_LOG_DEBUG) {
 		nvme_show_req(type, hdr, hdr_len, data, data_len);
 		gettimeofday(&sb.start, NULL);
 	}
@@ -240,7 +220,7 @@ void libnvme_mi_submit_exit(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t
 {
 	struct submit_data *sb = user_data;
 
-	if (log_level >= LOG_DEBUG) {
+	if (log_level >= LIBNVME_LOG_DEBUG) {
 		gettimeofday(&sb->end, NULL);
 		nvme_show_resp(type, hdr, hdr_len, data, data_len);
 		nvme_show_latency(sb->start, sb->end);
