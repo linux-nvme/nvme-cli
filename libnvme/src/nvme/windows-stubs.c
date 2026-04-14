@@ -120,7 +120,7 @@ libnvme_subsystem_t libnvme_lookup_subsystem(struct libnvme_host *h, const char 
 }
 
 libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
-			     struct nvmf_context *fctx,
+			     struct libnvmf_context *fctx,
 			     libnvme_ctrl_t p)
 {
 	stub_log(__func__);
@@ -720,63 +720,63 @@ __public int libnvme_path_get_queue_depth(struct libnvme_path *p)
 }
 
 /* Fabrics string conversion functions (fabrics.c) */
-__public const char *nvmf_trtype_str(__u8 trtype)
+__public const char *libnvmf_trtype_str(__u8 trtype)
 {
 	stub_log(__func__);
 	(void)trtype;
 	return "unknown";
 }
 
-__public const char *nvmf_eflags_str(__u16 eflags)
+__public const char *libnvmf_eflags_str(__u16 eflags)
 {
 	stub_log(__func__);
 	(void)eflags;
 	return "unknown";
 }
 
-__public const char *nvmf_sectype_str(__u8 sectype)
+__public const char *libnvmf_sectype_str(__u8 sectype)
 {
 	stub_log(__func__);
 	(void)sectype;
 	return "unknown";
 }
 
-__public const char *nvmf_cms_str(__u8 cms)
+__public const char *libnvmf_cms_str(__u8 cms)
 {
 	stub_log(__func__);
 	(void)cms;
 	return "unknown";
 }
 
-__public const char *nvmf_qptype_str(__u8 qptype)
+__public const char *libnvmf_qptype_str(__u8 qptype)
 {
 	stub_log(__func__);
 	(void)qptype;
 	return "unknown";
 }
 
-__public const char *nvmf_prtype_str(__u8 prtype)
+__public const char *libnvmf_prtype_str(__u8 prtype)
 {
 	stub_log(__func__);
 	(void)prtype;
 	return "unknown";
 }
 
-__public const char *nvmf_adrfam_str(__u8 adrfam)
+__public const char *libnvmf_adrfam_str(__u8 adrfam)
 {
 	stub_log(__func__);
 	(void)adrfam;
 	return "unknown";
 }
 
-__public const char *nvmf_subtype_str(__u8 subtype)
+__public const char *libnvmf_subtype_str(__u8 subtype)
 {
 	stub_log(__func__);
 	(void)subtype;
 	return "unknown";
 }
 
-__public const char *nvmf_treq_str(__u8 treq)
+__public const char *libnvmf_treq_str(__u8 treq)
 {
 	stub_log(__func__);
 	(void)treq;
@@ -784,7 +784,7 @@ __public const char *nvmf_treq_str(__u8 treq)
 }
 
 /* NBFT functions (nbft.c) */
-__public int nvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
+__public int libnvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
 			  struct nbft_file_entry **nbft_list)
 {
 	stub_log(__func__);
@@ -795,7 +795,7 @@ __public int nvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
 	return -1;
 }
 
-__public void nvmf_nbft_free(struct libnvme_global_ctx *ctx, struct nbft_file_entry *head)
+__public void libnvmf_nbft_free(struct libnvme_global_ctx *ctx, struct nbft_file_entry *head)
 {
 	stub_log(__func__);
 	(void)ctx;
