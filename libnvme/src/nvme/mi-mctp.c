@@ -27,6 +27,8 @@
 
 #include <ccan/endian/endian.h>
 
+#include "private-mi.h"
+
 #ifdef CONFIG_DBUS
 #include <dbus/dbus.h>
 

@@ -19,8 +19,6 @@ else
         'nvme/lib.c',
         'nvme/linux.c',
         'nvme/log.c',
-        'nvme/mi-mctp.c',
-        'nvme/mi.c',
         'nvme/sysfs.c',
         'nvme/tree.c',
         'nvme/util.c',
@@ -34,8 +32,6 @@ headers = [
     'nvme/lib-types.h',
     'nvme/lib.h',
     'nvme/linux.h',
-    'nvme/mi-types.h',
-    'nvme/mi.h',
     'nvme/tree.h',
     'nvme/types.h',
     'nvme/util.h',
@@ -51,6 +47,21 @@ if want_fabrics
         'nvme/fabrics.h',
         'nvme/nbft.h',
         'nvme/accessors-fabrics.h',
+    ]
+endif
+
+if want_mi
+    sources += [
+        'nvme/mi-mctp.c',
+        'nvme/mi.c',
+    ]
+    headers += [
+        'nvme/mi-types.h',
+        'nvme/mi.h',
+    ]
+else
+    sources += [
+        'nvme/no-mi.c'
     ]
 endif
 
@@ -159,13 +170,16 @@ libnvme_test_dep = declare_dependency(
 
 mode = 'rw-r--r--'
 install_headers(
-    [
-       'libnvme-mi.h',
-    ],
-    install_mode: mode,
-)
-install_headers(
     headers,
     subdir: 'nvme',
     install_mode: mode,
 )
+if want_mi
+    install_headers(
+        [
+           'libnvme-mi.h',
+        ],
+        install_mode: mode,
+    )
+endif
+

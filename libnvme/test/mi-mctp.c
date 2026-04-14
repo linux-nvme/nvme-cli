@@ -29,6 +29,7 @@
 #include <libnvme-mi.h>
 
 #include "nvme/private.h"
+#include "nvme/private-mi.h"
 
 #include "utils.h"
 

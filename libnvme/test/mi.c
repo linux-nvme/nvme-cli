@@ -18,6 +18,7 @@
 
 /* we define a custom transport, so need the internal headers */
 #include "nvme/private.h"
+#include "nvme/private-mi.h"
 
 #include "utils.h"
 

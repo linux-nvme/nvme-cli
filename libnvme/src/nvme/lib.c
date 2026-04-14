@@ -24,6 +24,7 @@
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"
+#include "private-mi.h"
 #include "compiler-attributes.h"
 
 static bool libnvme_mi_probe_enabled_default(void)
@@ -73,7 +74,9 @@ __public struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_
 __public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
+#ifdef CONFIG_MI
 	libnvme_mi_ep_t ep, tmp;
+#endif
 
 	if (!ctx)
 		return;
@@ -86,8 +89,10 @@ __public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 
 	libnvme_for_each_host_safe(ctx, h, _h)
 		__libnvme_free_host(h);
+#ifdef CONFIG_MI
 	libnvme_mi_for_each_endpoint_safe(ctx, ep, tmp)
 		libnvme_mi_close(ep);
+#endif
 	free(ctx->config_file);
 	free(ctx->application);
 	libnvme_close_uring(ctx);
