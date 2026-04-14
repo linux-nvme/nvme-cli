@@ -453,6 +453,10 @@ __public const char *libnvme_strerror(int errnum)
 }
 
 #ifdef HAVE_NETDB
+static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *,
+		freeaddrinfo)
+#define __cleanup_addrinfo __cleanup(cleanup_addrinfo)
+
 int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 		    char **hostname)
 {

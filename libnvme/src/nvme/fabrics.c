@@ -41,6 +41,13 @@
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 
+static inline void free_uri(struct libnvme_fabrics_uri **uri)
+{
+	if (*uri)
+		libnvmf_free_uri(*uri);
+}
+#define __cleanup_uri __cleanup(free_uri)
+
 /**
  * strchomp() - Strip trailing spaces
  * @str: String to strip
