@@ -264,7 +264,7 @@ static int ocp_latency_monitor_log(int argc, char **argv,
 				   struct plugin *plugin)
 {
 	const char *desc = "Retrieve latency monitor log data.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
@@ -286,7 +286,7 @@ static int ocp_latency_monitor_log(int argc, char **argv,
 int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	int err = -1;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	struct feature_latency_monitor buf = { 0 };
@@ -407,7 +407,7 @@ static int ocp_get_latency_monitor_feature(int argc, char **argv, struct command
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	__u64 result;
@@ -555,7 +555,7 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 	const char *mode = "[0-3]: default/rom/wtm/normal";
 	const __u32 nsid = 0;
 	const __u8 fid = OCP_FID_ROWTM;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
@@ -1431,7 +1431,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 
 	const char *telemetry_type = "Telemetry Type; 'host', 'host0', 'host1' or 'controller'";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 	__u32  nsid = NVME_NSID_ALL;
@@ -1684,7 +1684,7 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 					    struct plugin *plugin)
 {
 	const char *desc = "Retrieve unsupported requirements log data.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
@@ -1785,7 +1785,7 @@ out:
 static int ocp_error_recovery_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve C1h Error Recovery Log data.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
@@ -1885,7 +1885,7 @@ out:
 static int ocp_device_capabilities_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve C4h Device Capabilities Log data.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
@@ -1949,7 +1949,7 @@ static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct comma
 {
 	const char *desc = "Set Telemetry Profile (Feature Identifier C8h) Set Feature.";
 	const char *tps = "Telemetry Profile Select for device debug data collection";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
@@ -1988,7 +1988,7 @@ static int ocp_get_telemetry_profile_feature(int argc, char **argv, struct comma
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	__u64 result;
@@ -2089,7 +2089,7 @@ static int set_dssd_power_state_feature(int argc, char **argv, struct command *a
 	const char *power_state = "DSSD Power State to set in watts";
 	const char *save = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
@@ -2163,7 +2163,7 @@ static int get_dssd_power_state_feature(int argc, char **argv, struct command *a
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const __u32 nsid = 0;
 	const __u8 fid = OCP_FID_DSSDPS;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int i, err;
 
@@ -2216,7 +2216,7 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 	const char *plp_health_interval = "[31:16]:PLP Health Check Interval";
 	const char *sv = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 	__u64 result;
@@ -2274,7 +2274,7 @@ static int get_plp_health_check_interval(int argc, char **argv, struct command *
 	const char *desc = "Define Issue Get Feature command (FID : 0xC6) PLP Health Check Interval";
 	const __u32 nsid = 0;
 	const __u8 fid = 0xc6;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	int err;
@@ -2323,7 +2323,7 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *ac
 	const char *epn = "[0]:Enable Panic Notices";
 	const char *sv = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 	__u64 result;
@@ -2377,7 +2377,7 @@ static int get_dssd_async_event_config(int argc, char **argv, struct command *ac
 	const char *sel = "[0-3]: current/default/saved/supported";
 	const __u32 nsid = 0;
 	const __u8 fid = OCP_FID_DAEC;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	int err;
@@ -2448,7 +2448,7 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *acmd,
 					struct plugin *plugin)
 {
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 	char file_path[PATH_MAX];
@@ -2566,7 +2566,7 @@ static int ocp_tcg_configuration_log(int argc, char **argv, struct command *acmd
 					    struct plugin *plugin)
 {
 	const char *desc = "Retrieve TCG Configuration Log Page Data";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
@@ -2680,7 +2680,7 @@ static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 
 static int get_error_injection(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Return set of error injection";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 	struct config {
@@ -2774,7 +2774,7 @@ static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri
 static int set_error_injection(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Inject error conditions";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u32 nsid;
 	int err;
@@ -2848,7 +2848,7 @@ static int get_enable_ieee1667_silo(int argc, char **argv, struct command *acmd,
 	};
 	struct config cfg = { 0 };
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	NVME_ARGS(opts,
@@ -2906,7 +2906,7 @@ static int set_enable_ieee1667_silo(int argc, char **argv, struct command *acmd,
 {
 	int err;
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	NVME_ARGS(opts,
@@ -2938,7 +2938,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	__cleanup_free struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
 	__cleanup_huge struct nvme_mem_huge mh = { 0, };
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	nvme_print_flags_t flags;
@@ -3061,7 +3061,7 @@ static int ocp_get_idle_wakeup_time_config_feature(int argc, char **argv,
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: NSID Valid/Invalid/Inactive";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 

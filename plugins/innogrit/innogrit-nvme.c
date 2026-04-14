@@ -175,7 +175,7 @@ static int innogrit_geteventlog(int argc, char **argv,
 {
 	const char *desc = "Recrieve event log for the given device ";
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_file FILE *fp = NULL;
 	char currentdir[128], filename[512];
 	struct tm *logtime;
@@ -214,7 +214,7 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Recrieve cdump data for the given device ";
 	char currentdir[128], filename[512], fname[128];
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	unsigned int itotal, icur, ivsctype;
 	unsigned int ipackcount, ipackindex;

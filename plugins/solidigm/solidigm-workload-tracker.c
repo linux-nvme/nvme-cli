@@ -493,7 +493,7 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 	const char *run_time = "Limit runtime capture time in seconds";
 	const char *flush_frequency =
 		"Samples (1 to 126) to wait for extracting data. Default 100 samples";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct wltracker wlt = {0};
 	union WorkloadLogEnable we = {0};

@@ -536,7 +536,7 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 {
 	const char *desc = "Display contents of the ACPI NBFT files.";
 	bool show_subsys = false, show_hfi = false, show_discovery = false;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct nbft_file_entry *head = NULL;
 	struct list_head nbft_list;
 	char *nbft_path = NBFT_SYSFS_PATH;

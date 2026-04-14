@@ -92,7 +92,7 @@ static int print_zns_list(struct libnvme_global_ctx *ctx, struct table *t)
 static int list(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int err;
 	struct table_column columns[] = {
 		{ "Node", LEFT, 21 },
@@ -133,7 +133,7 @@ static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *p
 			   "the given device and report information about the specified\n"
 			   "controller in various formats.";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	struct nvme_zns_id_ctrl ctrl;
@@ -170,7 +170,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	const char *vendor_specific = "dump binary vendor fields";
 	const char *human_readable = "show identify in readable format";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	struct nvme_zns_id_ns ns;
@@ -233,7 +233,7 @@ static int zns_mgmt_send(int argc, char **argv, struct command *acmd, struct plu
 	const char *zslba = "starting LBA of the zone for this command";
 	const char *select_all = "send command to all zones";
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err, zcapc = 0;
 	char *cmdstr;
@@ -328,7 +328,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 	const char *data = "optional file for data (default stdin)";
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int ffd = STDIN_FILENO, err = -1;
 	struct libnvme_passthru_cmd cmd;
 	void *buf = NULL;
@@ -451,7 +451,7 @@ static int open_zone(int argc, char **argv, struct command *acmd, struct plugin 
 	const char *zrwaa = "Allocate Zone Random Write Area to zone";
 	const char *select_all = "send command to all zones";
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
@@ -520,7 +520,7 @@ static int set_zone_desc(int argc, char **argv, struct command *acmd, struct plu
 	const char *data = "optional file for zone extension data (default stdin)";
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int ffd = STDIN_FILENO, err;
 	void *buf = NULL;
@@ -608,7 +608,7 @@ static int zrwa_flush_zone(int argc, char **argv, struct command *acmd, struct p
 	const char *desc = "Flush Explicit ZRWA Range";
 	const char *slba = "LBA to flush up to";
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
@@ -659,7 +659,7 @@ static int zone_mgmt_recv(int argc, char **argv, struct command *acmd, struct pl
 	const char *data_len = "length of data in bytes";
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	void *data = NULL;
@@ -739,7 +739,7 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 	const char *verbose = "show report zones verbosity";
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	struct nvme_zone_report *report, *buff;
 	struct libnvme_passthru_cmd cmd;
@@ -915,7 +915,7 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 	const char *latency = "output latency statistics";
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int err = -1, dfd = STDIN_FILENO, mfd = STDIN_FILENO;
 	struct timeval start_time, end_time;
 	unsigned int lba_size, meta_size;
@@ -1094,7 +1094,7 @@ static int changed_zone_list(int argc, char **argv, struct command *acmd, struct
 	const char *desc = "Retrieve Changed Zone log for the given device";
 	const char *rae = "retain an asynchronous event";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_zns_changed_zone_log log;
 	nvme_print_flags_t flags;

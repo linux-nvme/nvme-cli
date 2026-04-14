@@ -3901,7 +3901,7 @@ out:
 static int wdc_cap_diag(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	const char *desc = "Capture Diagnostics Log.";
 	const char *file = "Output file pathname.";
@@ -4317,7 +4317,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 	char f[PATH_MAX] = {0};
 	char fb[PATH_MAX/2] = {0};
 	char fileSuffix[PATH_MAX] = {0};
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u32 xfer_size = 0;
 	int telemetry_type = 0, telemetry_data_area = 0;
@@ -4713,7 +4713,7 @@ static int wdc_drive_log(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Capture Drive Log.";
 	const char *file = "Output file pathname.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	char f[PATH_MAX] = {0};
 	int ret;
@@ -4760,7 +4760,7 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *acmd,
 	const char *desc = "Get Crash Dump.";
 	const char *file = "Output file pathname.";
 	__u64 capabilities = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret;
 
@@ -4801,7 +4801,7 @@ static int wdc_get_pfail_dump(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Get Pfail Crash Dump.";
 	const char *file = "Output file pathname.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 capabilities = 0;
 	struct config {
@@ -4886,7 +4886,7 @@ static int wdc_purge(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send a Purge command.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd admin_cmd;
 	__u64 capabilities = 0;
@@ -4937,7 +4937,7 @@ static int wdc_purge_monitor(int argc, char **argv,
 {
 	const char *desc = "Send a Purge Monitor command.";
 	__u8 output[WDC_NVME_PURGE_MONITOR_DATA_LEN];
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	double progress_percent;
 	struct libnvme_passthru_cmd admin_cmd;
@@ -8296,7 +8296,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *acmd,
 	const char *log_page_mask = "Log Page Mask, comma separated list: 0xC0, 0xC1, 0xCA, 0xD0";
 	const char *namespace_id = "desired namespace id";
 	nvme_print_flags_t fmt;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 	int uuid_index = 0;
@@ -8437,7 +8437,7 @@ static int wdc_cu_smart_log(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Retrieve customer unique smart log statistics.";
 	const char *uuid_index = "The uuid index to select the correct log page implementation.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int ret = 0;
@@ -8547,7 +8547,7 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *acmd,
 	const char *namespace_id = "desired namespace id";
 	nvme_print_flags_t fmt;
 	__u64 capabilities = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret;
 	__u8 *data;
@@ -8692,7 +8692,7 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Retrieve Device Write Amplication Factor";
 	const char *namespace_id = "desired namespace id";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_smart_log smart_log;
 	nvme_print_flags_t fmt;
@@ -8810,7 +8810,7 @@ static int wdc_get_latency_monitor_log(int argc, char **argv, struct command *ac
 {
 	const char *desc = "Retrieve latency monitor log data.";
 	__u64 capabilities = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
@@ -8852,7 +8852,7 @@ static int wdc_get_error_recovery_log(int argc, char **argv, struct command *acm
 {
 	const char *desc = "Retrieve error recovery log data.";
 	__u64 capabilities = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
@@ -8895,7 +8895,7 @@ static int wdc_get_dev_capabilities_log(int argc, char **argv, struct command *a
 {
 	const char *desc = "Retrieve device capabilities log data.";
 	__u64 capabilities = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
@@ -8938,7 +8938,7 @@ static int wdc_get_unsupported_reqs_log(int argc, char **argv, struct command *a
 {
 	const char *desc = "Retrieve unsupported requirements log data.";
 	__u64 capabilities = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 
@@ -9021,7 +9021,7 @@ static int wdc_clear_pcie_correctable_errors(int argc, char **argv, struct comma
 		struct plugin *plugin)
 {
 	const char *desc = "Clear PCIE Correctable Errors.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 capabilities = 0;
 	int ret;
@@ -9058,7 +9058,7 @@ static int wdc_drive_status(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Get Drive Status.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = 0;
 	int uuid_index;
@@ -9209,7 +9209,7 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Clear Assert Dump Present Status.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = -1;
 	__le32 assert_status = cpu_to_le32(0xFFFFFFFF);
@@ -9427,7 +9427,7 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *acm
 {
 	const char *desc = "Retrieve FW activate history table.";
 	__u64 capabilities = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret = -1;
 
@@ -9518,7 +9518,7 @@ static int wdc_clear_fw_activate_history(int argc, char **argv, struct command *
 {
 	const char *desc = "Clear FW activate history table.";
 	__u64 capabilities = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret;
 
@@ -9557,7 +9557,7 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 	const char *enable = "Enable controller option of the telemetry log page.";
 	const char *status = "Displays the current state of the controller initiated log page.";
 	__u64 capabilities = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	int ret = -1;
@@ -10350,7 +10350,7 @@ static int wdc_drive_essentials(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Capture Drive Essentials.";
 	const char *dirName = "Output directory pathname.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	char d[PATH_MAX] = {0};
 	char k[PATH_MAX] = {0};
@@ -10450,7 +10450,7 @@ static int wdc_drive_resize(int argc, char **argv,
 {
 	const char *desc = "Send a Resize command.";
 	const char *size = "The new size (in GB) to resize the drive to.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	uint64_t capabilities = 0;
 	int ret;
@@ -10496,7 +10496,7 @@ static int wdc_namespace_resize(int argc, char **argv,
 	const char *desc = "Send a Namespace Resize command.";
 	const char *namespace_id = "The namespace id to resize.";
 	const char *op_option = "The over provisioning option to set for namespace.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	uint64_t capabilities = 0;
 	int ret;
@@ -10552,7 +10552,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 	const char *desc = "Retrieve telemetry log reason identifier.";
 	const char *log_id = "Log ID to retrieve - host - 7 or controller - 8";
 	const char *fname = "File name to save raw binary identifier";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int ret;
 	uint64_t capabilities = 0;
@@ -10811,7 +10811,7 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve Log Page Directory.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t fmt;
 	int ret = 0;
@@ -11567,7 +11567,7 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve NAND statistics.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 capabilities = 0;
 	uint32_t read_device_id = 0, read_vendor_id = 0;
@@ -11641,7 +11641,7 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	const char *desc = "Retrieve PCIE statistics.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t fmt;
 	int ret;
@@ -11714,7 +11714,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send a vs-drive-info command.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t fmt;
 	uint64_t capabilities = 0;
@@ -11977,7 +11977,7 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
 	const char *desc = "Send a vs-temperature-stats command.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_smart_log smart_log;
 	struct nvme_id_ctrl id_ctrl;
@@ -12092,7 +12092,7 @@ out:
 static int wdc_capabilities(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Send a capabilities command.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	uint64_t capabilities = 0;
 	int ret;
@@ -12197,7 +12197,7 @@ static int wdc_cloud_ssd_plugin_version(int argc, char **argv, struct command *a
 					struct plugin *plugin)
 {
 	const char *desc = "Get Cloud SSD Plugin Version command.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	uint64_t capabilities = 0;
 	int ret;
@@ -12230,7 +12230,7 @@ static int wdc_cloud_boot_SSD_version(int argc, char **argv, struct command *acm
 {
 	const char *desc = "Get Cloud Boot SSD Version command.";
 	const char *namespace_id = "desired namespace id";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	uint64_t capabilities = 0;
 	int ret;
@@ -12291,7 +12291,7 @@ static int wdc_enc_get_log(int argc, char **argv, struct command *acmd, struct p
 	const char *file = "Output file pathname.";
 	const char *size = "Data retrieval transfer size.";
 	const char *log = "Enclosure Log Page ID.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	FILE *output_fd;
 	int xfer_size = 0;
@@ -12554,7 +12554,7 @@ int wdc_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 
 	struct feature_latency_monitor buf = {0,};
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	uint64_t capabilities = 0;
 	__u64 result;
 	int ret;

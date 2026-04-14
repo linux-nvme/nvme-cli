@@ -871,7 +871,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *acmd, struct plugin *
 	
 	__cleanup_free unsigned char *key_buf = NULL;
 	__cleanup_free unsigned char *msg_buf = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	unsigned int write_cntr = 0;
 	unsigned int msg_size = 0;

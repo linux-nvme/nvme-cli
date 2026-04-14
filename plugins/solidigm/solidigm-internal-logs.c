@@ -838,7 +838,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	__cleanup_free char *full_folder = NULL;
 	__cleanup_free char *unique_folder = NULL;
 	__cleanup_free char *zip_name = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	char *initial_folder;
 	char *output_path;

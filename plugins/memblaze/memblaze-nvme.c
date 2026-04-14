@@ -422,7 +422,7 @@ static int mb_get_additional_smart_log(int argc, char **argv, struct command *ac
 	    "Get Memblaze vendor specific additional smart log, and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	struct config {
 		__u32 namespace_id;
@@ -478,7 +478,7 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *acm
 	const char *desc = "Get Memblaze power management ststus\n	(value 0 - 25w, 1 - 20w, 2 - 15w)";
 	__u64 result;
 	__u32 feature_id = MB_FEAT_POWER_MGMT;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
@@ -506,7 +506,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *acm
 	const char *desc = "Set Memblaze power management status\n	(value 0 - 25w, 1 - 20w, 2 - 15w)";
 	const char *value = "new value of feature (required)";
 	const char *save = "specifies that the controller shall save the attribute";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	int err;
@@ -556,7 +556,7 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *acmd,
 			   "	p2 value: 1 .. 5000 ms";
 	const char *param = "input parameters";
 	int param1 = 0, param2 = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	__u64 result;
@@ -696,7 +696,7 @@ static int mb_high_latency_log_print(int argc, char **argv, struct command *acmd
 {
 	const char *desc = "Get Memblaze high latency log";
 	char buf[LOG_PAGE_SIZE];
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	FILE *fdi = NULL;
@@ -753,7 +753,7 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 	const char *select = "FW Select (e.g., --select=OOB, EEP, ALL)";
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 
 	int selectNo, fw_fd, fw_size, err, offset = 0;
 	struct libnvme_passthru_cmd cmd;
@@ -959,7 +959,7 @@ static int mb_lat_stats_log_print(int argc, char **argv, struct command *acmd, s
 	char stats[LOG_PAGE_SIZE];
 	char f1[] = FID_C1_LOG_FILENAME;
 	char f2[] = FID_C2_LOG_FILENAME;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	int err;
@@ -996,7 +996,7 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	char *desc = "Clear Memblaze devices error log.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	int err;
@@ -1048,7 +1048,7 @@ static int mb_set_lat_stats(int argc, char **argv, struct command *acmd, struct 
 	const __u32 cdw12 = 0x0;
 	const __u32 data_len = 32;
 	const __u32 save = 0;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	void *buf = NULL;
@@ -1552,7 +1552,7 @@ static int mb_get_smart_log_add(int argc, char **argv, struct command *acmd, str
 	NVME_ARGS(opts,
 		OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, "dump the whole log buffer in binary format"));
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 
@@ -1713,7 +1713,7 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *acmd, s
 		OPT_UINT("set-trim-threshold", 't', &cfg.de_allocate_trim_threshold,
 		  "set trim high latency log threshold, it's a 0-based value and unit is 10ms"));
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 
@@ -1752,7 +1752,7 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, s
 
 	NVME_ARGS(opts);
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, acmd->help, opts);
@@ -1903,7 +1903,7 @@ static int mb_get_latency_stats(int argc, char **argv, struct command *acmd, str
 			&cfg.raw_binary,
 			"dump the whole log buffer in binary format"));
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	int err = parse_and_open(&ctx, &hdl, argc, argv, acmd->help, opts);
@@ -2008,7 +2008,7 @@ static int mb_get_high_latency_log(int argc, char **argv, struct command *acmd,
 			&cfg.raw_binary,
 			"dump the whole log buffer in binary format"));
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	int err = parse_and_open(&ctx, &hdl, argc, argv, acmd->help, opts);
@@ -2254,7 +2254,7 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *acmd,
 			&cfg.raw_binary,
 			"dump the whole log buffer in binary format"));
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 
 	int err = parse_and_open(&ctx, &hdl, argc, argv, acmd->help, opts);
