@@ -346,8 +346,8 @@ static void test_get_lba_status(void)
 	__u16 rl = 0x42;
 	int err;
 
-	_cleanup_free_ struct nvme_lba_status *lbas = NULL;
-	_cleanup_free_ struct nvme_lba_status *expected_lbas = NULL;
+	__cleanup_free struct nvme_lba_status *lbas = NULL;
+	__cleanup_free struct nvme_lba_status *expected_lbas = NULL;
 
 	lbas = malloc(lba_status_size);
 	check(lbas, "lbas: ENOMEM");
@@ -558,9 +558,9 @@ static void test_directive_recv_stream_status(void)
 		sizeof(struct nvme_streams_directive_status) +
 		nr_entries * sizeof(__le16);
 
-	_cleanup_free_ struct nvme_streams_directive_status *expected_status =
+	__cleanup_free struct nvme_streams_directive_status *expected_status =
 		NULL;
-	_cleanup_free_ struct nvme_streams_directive_status *status = NULL;
+	__cleanup_free struct nvme_streams_directive_status *status = NULL;
 
 	status = malloc(stream_status_size);
 	check(status, "status: ENOMEM");
@@ -955,7 +955,7 @@ static void test_dsm(void)
 	__u16 nr_ranges = 0xab;
 	int dsm_size = sizeof(struct nvme_dsm_range) * nr_ranges;
 
-	_cleanup_free_ struct nvme_dsm_range *dsm = NULL;
+	__cleanup_free struct nvme_dsm_range *dsm = NULL;
 
 	dsm = malloc(dsm_size);
 	check(dsm, "dsm: ENOMEM");
@@ -1002,7 +1002,7 @@ static void test_copy(void)
 		0xc, 0, 0, 0, 0, 0, 0, 0, 0x40, 0, 0, 0, 3, 0x33, 3, 0xff
 	};
 
-	_cleanup_free_ struct nvme_copy_range_f0 *copy = NULL;
+	__cleanup_free struct nvme_copy_range_f0 *copy = NULL;
 
 	copy = calloc(1, copy_size);
 	check(copy, "copy: ENOMEM");
@@ -1058,7 +1058,7 @@ static void test_copy_range_f1(void)
 		0x40, 0, 0, 0, 3, 0x33, 3, 0xff
 	};
 
-	_cleanup_free_ struct nvme_copy_range_f1 *copy = NULL;
+	__cleanup_free struct nvme_copy_range_f1 *copy = NULL;
 
 	copy = calloc(1, copy_size);
 	check(copy, "copy: ENOMEM");

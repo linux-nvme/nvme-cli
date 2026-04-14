@@ -538,7 +538,7 @@ void nvme_show_err(int err, const char *fmt, ...)
 {
 	va_list ap;
 
-	_cleanup_free_ char *msg = NULL;
+	__cleanup_free char *msg = NULL;
 
 	va_start(ap, fmt);
 

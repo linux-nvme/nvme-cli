@@ -63,7 +63,7 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 {
 	va_list ap;
 
-	_cleanup_free_ char *value = NULL;
+	__cleanup_free char *value = NULL;
 
 	va_start(ap, v);
 
@@ -92,7 +92,7 @@ static void print_hwcomp_desc_json(struct hwcomp_desc_entry *e, struct json_obje
 static void print_hwcomp_desc_list_json(struct json_object *r, struct hwcomp_desc_entry *e,
 					bool list, int num)
 {
-	_cleanup_free_ char *k = NULL;
+	__cleanup_free char *k = NULL;
 
 	if (asprintf(&k, "Component %d", num) < 0)
 		return;

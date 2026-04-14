@@ -313,7 +313,7 @@ __public int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
 __public int libnvme_get_telemetry_max(struct libnvme_transport_handle *hdl,
 		enum nvme_telemetry_da *da, size_t *data_tx)
 {
-	_cleanup_free_ struct nvme_id_ctrl *id_ctrl = NULL;
+	__cleanup_free struct nvme_id_ctrl *id_ctrl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
@@ -354,7 +354,7 @@ __public int libnvme_get_telemetry_log(struct libnvme_transport_handle *hdl, boo
 	static const __u32 xfer = NVME_LOG_TELEM_BLOCK_SIZE;
 	struct nvme_telemetry_log *telem;
 	struct libnvme_passthru_cmd cmd;
-	_cleanup_free_ void *log = NULL;
+	__cleanup_free void *log = NULL;
 	void *tmp;
 	int err;
 	size_t dalb;
@@ -477,7 +477,7 @@ __public int libnvme_get_new_host_telemetry(struct libnvme_transport_handle *hdl
 int libnvme_get_lba_status_log(struct libnvme_transport_handle *hdl, bool rae,
 		struct nvme_lba_status_log **log)
 {
-	_cleanup_free_ struct nvme_lba_status_log *buf = NULL;
+	__cleanup_free struct nvme_lba_status_log *buf = NULL;
 	struct libnvme_passthru_cmd cmd;
 	__u32 size;
 	void *tmp;
@@ -532,7 +532,7 @@ __public size_t libnvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *
 
 __public int libnvme_get_ana_log_len(struct libnvme_transport_handle *hdl, size_t *analen)
 {
-	_cleanup_free_ struct nvme_id_ctrl *ctrl = NULL;
+	__cleanup_free struct nvme_id_ctrl *ctrl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int ret;
 
@@ -552,7 +552,7 @@ __public int libnvme_get_ana_log_len(struct libnvme_transport_handle *hdl, size_
 __public int libnvme_get_logical_block_size(struct libnvme_transport_handle *hdl,
 		__u32 nsid, int *blksize)
 {
-	_cleanup_free_ struct nvme_id_ns *ns = NULL;
+	__cleanup_free struct nvme_id_ns *ns = NULL;
 	struct libnvme_passthru_cmd cmd;
 	__u8 flbas;
 	int ret;

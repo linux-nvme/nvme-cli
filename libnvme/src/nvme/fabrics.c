@@ -316,8 +316,8 @@ __public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		return 0;
 
 	if (!strncmp(tls_key, "pin:", 4)) {
-		_cleanup_free_ unsigned char *raw_secret = NULL;
-		_cleanup_free_ char *encoded_key = NULL;
+		__cleanup_free unsigned char *raw_secret = NULL;
+		__cleanup_free char *encoded_key = NULL;
 		int key_len = 32;
 
 		err = libnvme_create_raw_secret(fctx->ctx, tls_key,
@@ -629,7 +629,7 @@ static int inet6_pton(struct libnvme_global_ctx *ctx, const char *src, uint16_t 
 	if (strlen(src) > INET6_ADDRSTRLEN)
 		return -EINVAL;
 
-	_cleanup_free_ char *tmp = strdup(src);
+	__cleanup_free char *tmp = strdup(src);
 	if (!tmp) {
 		libnvme_msg(ctx, LOG_ERR, "cannot copy: %s\n", src);
 		return -ENOMEM;
@@ -1039,7 +1039,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 {
 	libnvme_subsystem_t s;
 	const char *root_app, *app;
-	_cleanup_free_ char *argstr = NULL;
+	__cleanup_free char *argstr = NULL;
 	int ret;
 
 	/* highest prio have configs from command line */
@@ -1132,7 +1132,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 
 __public int libnvmf_connect_ctrl(libnvme_ctrl_t c)
 {
-	_cleanup_free_ char *argstr = NULL;
+	__cleanup_free char *argstr = NULL;
 	int ret;
 
 	ret = build_options(c->s->h, c, &argstr);
@@ -1578,7 +1578,7 @@ static int nvmf_dim(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 		    __u32 *result)
 {
 	struct libnvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
-	_cleanup_free_ struct nvmf_dim_data *dim = NULL;
+	__cleanup_free struct nvmf_dim_data *dim = NULL;
 	struct libnvme_transport_handle *hdl = libnvme_ctrl_get_transport_handle(c);
 	struct libnvme_passthru_cmd cmd;
 	struct nvmf_ext_die  *die;
@@ -1709,7 +1709,7 @@ static const char *dctype_str[] = {
  */
 static int nvme_fetch_cntrltype_dctype_from_id(libnvme_ctrl_t c)
 {
-	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
+	__cleanup_free struct nvme_id_ctrl *id = NULL;
 	int ret;
 
 	id = __libnvme_alloc(sizeof(*id));
@@ -1789,10 +1789,10 @@ static char *unescape_uri(const char *str, int len)
 __public int libnvme_parse_uri(const char *str, struct libnvme_fabrics_uri **urip)
 {
 	struct libnvme_fabrics_uri *uri;
-	_cleanup_free_ char *scheme = NULL;
-	_cleanup_free_ char *authority = NULL;
-	_cleanup_free_ char *path = NULL;
-	_cleanup_free_ char *h = NULL;
+	__cleanup_free char *scheme = NULL;
+	__cleanup_free char *authority = NULL;
+	__cleanup_free char *path = NULL;
+	__cleanup_free char *h = NULL;
 	const char *host;
 	int i;
 
@@ -1918,8 +1918,8 @@ static libnvme_ctrl_t lookup_ctrl(libnvme_host_t h, struct libnvmf_context *fctx
 static int lookup_host(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, struct libnvme_host **host)
 {
-	_cleanup_free_ char *hnqn = NULL;
-	_cleanup_free_ char *hid = NULL;
+	__cleanup_free char *hnqn = NULL;
+	__cleanup_free char *hid = NULL;
 	struct libnvme_host *h;
 	int err;
 
@@ -1998,7 +1998,7 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect,
 		struct libnvme_ctrl *c)
 {
-	_cleanup_free_ struct nvmf_discovery_log *log = NULL;
+	__cleanup_free struct nvmf_discovery_log *log = NULL;
 	libnvme_subsystem_t s = libnvme_ctrl_get_subsystem(c);
 	libnvme_host_t h = libnvme_subsystem_get_host(s);
 	uint64_t numrec;
@@ -2188,7 +2188,7 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvme_fabrics_config *cfg,
 		struct libnvme_ctrl **ctrl)
 {
-	_cleanup_free_ struct nvme_id_ctrl *id = NULL;
+	__cleanup_free struct nvme_id_ctrl *id = NULL;
 	struct libnvme_ctrl *c;
 	int ret;
 
@@ -2487,8 +2487,8 @@ __public int libnvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
 __public int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx)
 {
-	_cleanup_free_ char *hnqn = NULL;
-	_cleanup_free_ char *hid = NULL;
+	__cleanup_free char *hnqn = NULL;
+	__cleanup_free char *hid = NULL;
 	struct libnvme_host *h;
 	struct libnvme_subsystem *s;
 	struct libnvme_ctrl *c;
@@ -2896,7 +2896,7 @@ __public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 		/* Discovery Descriptor List */
 		for (dd = entry->nbft->discovery_list; dd && *dd; dd++) {
 			_cleanup_uri_ struct libnvme_fabrics_uri *uri = NULL;
-			_cleanup_free_ char *trsvcid = NULL;
+			__cleanup_free char *trsvcid = NULL;
 			struct libnvmf_context nfctx = *fctx;
 			bool persistent = false;
 			bool linked = false;

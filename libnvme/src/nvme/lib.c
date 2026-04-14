@@ -127,7 +127,7 @@ static int __nvme_transport_handle_open_direct(
 		struct libnvme_transport_handle *hdl, const char *devname)
 {
 	struct libnvme_passthru_cmd dummy = { 0 };
-	_cleanup_free_ char *path = NULL;
+	__cleanup_free char *path = NULL;
 	char *name;
 	int ret, id, ns;
 	bool c = true;

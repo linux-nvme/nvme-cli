@@ -200,7 +200,7 @@ static struct json_object *parse_json(struct libnvme_global_ctx *ctx, int fd)
 	char *str = NULL;
 	_cleanup_tokener_ json_tokener *tok = NULL;
 	int ret;
-	_cleanup_free_ void *ptr = NULL;
+	__cleanup_free void *ptr = NULL;
 	int len = 0;
 
 	while ((ret = read(fd, buf, JSON_FILE_BUF_SIZE)) > 0) {

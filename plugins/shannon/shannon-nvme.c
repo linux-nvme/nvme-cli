@@ -255,7 +255,7 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 	const char *save = "specifies that the controller shall save the attribute";
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_free_ void *buf = NULL;
+	__cleanup_free void *buf = NULL;
 	int ffd = STDIN_FILENO;
 	__u64 result;
 	int err;

@@ -869,8 +869,8 @@ int rpmb_cmd_option(int argc, char **argv, struct command *acmd, struct plugin *
 		OPT_UINT("blocks",    'b', &cfg.blocks,   blocks),
 		OPT_UINT("target",    't', &cfg.target,   target));
 	
-	_cleanup_free_ unsigned char *key_buf = NULL;
-	_cleanup_free_ unsigned char *msg_buf = NULL;
+	__cleanup_free unsigned char *key_buf = NULL;
+	__cleanup_free unsigned char *msg_buf = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	unsigned int write_cntr = 0;
