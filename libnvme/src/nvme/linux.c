@@ -59,7 +59,7 @@
 
 static int __nvme_set_attr(const char *path, const char *value)
 {
-	_cleanup_fd_ int fd = -1;
+	__cleanup_fd int fd = -1;
 
 	fd = open(path, O_WRONLY);
 	if (fd < 0) {
@@ -763,7 +763,7 @@ static ssize_t getrandom_bytes(void *buf, size_t buflen)
 #if HAVE_SYS_RANDOM
 	result = getrandom(buf, buflen, GRND_NONBLOCK);
 #else
-	_cleanup_fd_ int fd = -1;
+	__cleanup_fd int fd = -1;
 
 	fd = open("/dev/urandom", O_RDONLY);
 	if (fd < 0)
@@ -1706,7 +1706,7 @@ __public int libnvme_import_tls_key(struct libnvme_global_ctx *ctx, const char *
 
 static int uuid_from_device_tree(char *system_uuid)
 {
-	_cleanup_fd_ int f = -1;
+	__cleanup_fd int f = -1;
 	ssize_t len;
 
 	f = open(libnvme_uuid_ibm_filename(), O_RDONLY);
@@ -1901,7 +1901,7 @@ __public char *libnvme_generate_hostnqn(void)
 static char *nvmf_read_file(const char *f, int len)
 {
 	char buf[len];
-	_cleanup_fd_ int fd = -1;
+	__cleanup_fd int fd = -1;
 	int ret;
 
 	fd = open(f, O_RDONLY);

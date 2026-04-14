@@ -34,7 +34,7 @@ static inline void cleanup_fd(int *fd)
 	if (*fd > STDERR_FILENO)
 		close(*fd);
 }
-#define _cleanup_fd_ __cleanup(cleanup_fd)
+#define __cleanup_fd __cleanup(cleanup_fd)
 
 static inline void cleanup_nvme_global_ctx(struct libnvme_global_ctx **ctx)
 {
