@@ -593,7 +593,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	char *context = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvmf_context_ struct libnvmf_context *fctx = NULL;
-	_cleanup_nvme_ctrl_ libnvme_ctrl_t c = NULL;
+	__cleanup_nvme_ctrl libnvme_ctrl_t c = NULL;
 	int ret;
 	nvme_print_flags_t flags;
 	struct libnvme_fabrics_config cfg = { 0 };
