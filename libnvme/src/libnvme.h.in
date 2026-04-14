@@ -14,17 +14,17 @@
 extern "C" {
 #endif
 
-#include <nvme/cmds.h>
-@FABRICS_INCLUDE@
+#include <nvme/accessors.h>
 #include <nvme/filters.h>
 #include <nvme/ioctl.h>
 #include <nvme/lib-types.h>
 #include <nvme/lib.h>
 #include <nvme/linux.h>
+#include <nvme/nvme-cmds.h>
+#include <nvme/nvme-types.h>
 #include <nvme/tree.h>
-#include <nvme/types.h>
 #include <nvme/util.h>
-#include <nvme/accessors.h>
+@FABRICS_INCLUDE@
 
 #ifdef __cplusplus
 }

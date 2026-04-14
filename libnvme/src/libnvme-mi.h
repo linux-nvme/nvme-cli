@@ -14,9 +14,9 @@ extern "C" {
 #endif
 
 #include <nvme/lib.h>
-#include <nvme/types.h>
-#include <nvme/cmds.h>
 #include <nvme/mi.h>
+#include <nvme/nvme-types.h>
+#include <nvme/nvme-cmds.h>
 
 #ifdef __cplusplus
 }

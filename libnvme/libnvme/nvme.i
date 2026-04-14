@@ -1238,7 +1238,7 @@ struct libnvme_ns {
 		    "@param filename: file to read") nbft_get;
 PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char * filename);
 
-// We want to swig all the #define and enum from types.h, but none of the structs.
+// We want to swig all the #define and enum from nvme-types.h, but none of the structs.
 #pragma SWIG nowarn=503             // Supress warnings about unnamed struct
 #define __attribute__(x)
 %rename($ignore, %$isclass) "";     // ignore all classes/structs
@@ -1246,4 +1246,4 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char * filename);
 %rename($ignore, %$isunion) "";     // ignore all unions
 %rename($ignore, %$isvariable) "";  // ignore all variables
 
-%include "../src/nvme/types.h"
+%include "../src/nvme/nvme-types.h"

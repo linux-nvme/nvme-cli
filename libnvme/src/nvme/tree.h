@@ -12,7 +12,7 @@
 #include <stddef.h>
 
 #include <nvme/lib-types.h>
-#include <nvme/types.h>
+#include <nvme/nvme-types.h>
 
 /**
  * DOC: tree.h

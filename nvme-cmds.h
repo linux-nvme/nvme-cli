@@ -11,9 +11,8 @@
 #ifndef NVME_CMDS
 #define NVME_CMDS
 
-#include <nvme/cmds.h>
 #include <nvme/ioctl.h>
-#include <nvme/types.h>
+#include <nvme/nvme-cmds.h>
 
 /**
  * nvme_flush() - Send an nvme flush command

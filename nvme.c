@@ -55,8 +55,6 @@
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
-#include "nvme/tree.h"
-#include "nvme/types.h"
 #include "plugin.h"
 #include "util/argconfig.h"
 #include "util/base64.h"
