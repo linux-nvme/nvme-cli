@@ -349,7 +349,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acm
 				      struct plugin *plugin)
 {
 	const char *desc = "Get and Parse Solidigm Latency Tracking Statistics log.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u64 enabled;
 	int err;

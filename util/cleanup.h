@@ -40,7 +40,7 @@ static inline void cleanup_nvme_global_ctx(struct libnvme_global_ctx **ctx)
 {
 	libnvme_free_global_ctx(*ctx);
 }
-#define _cleanup_nvme_global_ctx_ __cleanup(cleanup_nvme_global_ctx)
+#define __cleanup_nvme_global_ctx __cleanup(cleanup_nvme_global_ctx)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_ctrl, libnvme_ctrl_t, libnvme_free_ctrl)
 #define __cleanup_nvme_ctrl __cleanup(cleanup_nvme_ctrl)

@@ -209,7 +209,7 @@ void show_r1_media_err_log(r1_cli_vendor_log_t *vendorlog)
 static int nvme_get_vendor_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *desc = "Get the Inspur vendor log";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u8 local_mem[BYTE_OF_4K];
 	int err;

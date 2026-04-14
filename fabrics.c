@@ -479,7 +479,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	char *config_file = PATH_NVMF_CONFIG;
 	char *context = NULL;
 	nvme_print_flags_t flags;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvmf_context_ struct libnvmf_context *fctx = NULL;
 	int ret;
 	struct libnvme_fabrics_config cfg;
@@ -591,7 +591,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	__cleanup_free char *hid = NULL;
 	char *config_file = NULL;
 	char *context = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvmf_context_ struct libnvmf_context *fctx = NULL;
 	__cleanup_nvme_ctrl libnvme_ctrl_t c = NULL;
 	int ret;
@@ -736,7 +736,7 @@ static void nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
 int fabrics_disconnect(const char *desc, int argc, char **argv)
 {
 	const char *device = "nvme device handle";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	libnvme_ctrl_t c;
 	char *p;
 	int ret;
@@ -820,7 +820,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 {
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	libnvme_host_t h;
 	libnvme_subsystem_t s;
 	libnvme_ctrl_t c;
@@ -887,7 +887,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 int fabrics_config(const char *desc, int argc, char **argv)
 {
 	bool scan_tree = false, modify_config = false, update_config = false;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	struct libnvme_fabrics_config cfg;
 	struct nvmf_args fa = { };
@@ -998,7 +998,7 @@ static int dim_operation(libnvme_ctrl_t c, enum nvmf_dim_tas tas, const char *na
 
 int fabrics_dim(const char *desc, int argc, char **argv)
 {
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	enum nvmf_dim_tas tas;
 	libnvme_ctrl_t c;
 	char *p;
