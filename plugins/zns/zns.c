@@ -740,7 +740,7 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	struct nvme_zone_report *report, *buff;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;

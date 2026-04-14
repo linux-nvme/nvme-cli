@@ -777,7 +777,7 @@ static int ilog_dump_no_lsp_log_pages(struct libnvme_transport_handle *hdl, stru
 static int ilog_dump_pel(struct libnvme_transport_handle *hdl, struct ilog *ilog)
 {
 	__cleanup_free struct nvme_persistent_event_log *pevent = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = {0};
+	__cleanup_huge struct nvme_mem_huge mh = {0};
 	void *pevent_log_full;
 	size_t max_data_tx;
 	struct log lp = {
