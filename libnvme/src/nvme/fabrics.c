@@ -35,6 +35,7 @@
 #include <libnvme.h>
 
 #include "cleanup.h"
+#include "cleanup-linux.h"
 #include "private.h"
 #include "private-fabrics.h"
 #include "compiler-attributes.h"

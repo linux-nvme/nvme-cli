@@ -50,6 +50,7 @@
 #include "crc32.h"
 #include "base64.h"
 #include "cleanup.h"
+#include "cleanup-linux.h"
 #include "private.h"
 #include "compiler-attributes.h"
 
