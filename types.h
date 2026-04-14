@@ -2,7 +2,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include "nvme/types.h"
+#include <nvme/nvme-types.h>
 
 /**
  * struct nvme_get_log_args - Arguments for the NVMe Admin Get Log command

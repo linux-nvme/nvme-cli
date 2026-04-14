@@ -12,13 +12,13 @@ else
     sources += [
         'nvme/accessors.c',
         'nvme/base64.c',
-        'nvme/cmds.c',
         'nvme/crc32.c',
         'nvme/filters.c',
         'nvme/ioctl.c',
         'nvme/lib.c',
         'nvme/linux.c',
         'nvme/log.c',
+        'nvme/nvme-cmds.c',
         'nvme/sysfs.c',
         'nvme/tree.c',
         'nvme/util.c',
@@ -26,14 +26,14 @@ else
 endif
 headers = [
     'nvme/accessors.h',
-    'nvme/cmds.h',
     'nvme/filters.h',
     'nvme/ioctl.h',
     'nvme/lib-types.h',
     'nvme/lib.h',
     'nvme/linux.h',
+    'nvme/nvme-cmds.h',
+    'nvme/nvme-types.h',
     'nvme/tree.h',
-    'nvme/types.h',
     'nvme/util.h',
 ]
 

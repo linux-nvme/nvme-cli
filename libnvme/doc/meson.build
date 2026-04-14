@@ -15,8 +15,9 @@ api_files = [
     'linux.h',
     'mi.h',
     'nbft.h',
+    'nvme-cmds.h',
+    'nvme-types.h',
     'tree.h',
-    'types.h',
     'util.h'
 ]
 
