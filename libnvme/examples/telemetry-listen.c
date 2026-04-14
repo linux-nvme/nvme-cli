@@ -139,7 +139,7 @@ int main()
 	libnvme_ctrl_t c;
 	libnvme_host_t h;
 
-	ctx = libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
 	if (!ctx)
 		return 1;
 
