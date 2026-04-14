@@ -11,6 +11,12 @@
 #include <libgen.h>
 #include <strings.h>
 
+#ifdef CONFIG_FABRICS
+#include <sys/types.h>
+
+#include <ifaddrs.h>
+#endif
+
 #include <sys/ioctl.h>
 
 #include <libnvme.h>
@@ -72,10 +78,12 @@ __public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	if (!ctx)
 		return;
 
+#ifdef CONFIG_FABRICS
 	freeifaddrs(ctx->ifaddrs_cache); /* NULL-safe */
 	ctx->ifaddrs_cache = NULL;
-
 	free(ctx->options);
+#endif
+
 	libnvme_for_each_host_safe(ctx, h, _h)
 		__libnvme_free_host(h);
 	libnvme_mi_for_each_endpoint_safe(ctx, ep, tmp)
