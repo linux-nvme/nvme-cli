@@ -32,7 +32,7 @@ static inline void freep(void *p)
 #define __cleanup_free __cleanup(freep)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
-#define _cleanup_file_ __cleanup(cleanup_file)
+#define __cleanup_file __cleanup(cleanup_file)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_dir, DIR *, closedir)
 #define _cleanup_dir_ __cleanup(cleanup_dir)

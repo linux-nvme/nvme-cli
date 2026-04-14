@@ -1816,7 +1816,7 @@ static int uuid_from_dmi_entries(char *system_uuid)
  */
 static int uuid_from_product_uuid(char *system_uuid)
 {
-	_cleanup_file_ FILE *stream = NULL;
+	__cleanup_file FILE *stream = NULL;
 	ssize_t nread;
 	__cleanup_free char *line = NULL;
 	size_t len = 0;

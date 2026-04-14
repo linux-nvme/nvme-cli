@@ -61,6 +61,6 @@ static inline void cleanup_nvmf_context(struct libnvmf_context **fctx)
 #endif
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
-#define _cleanup_file_ __cleanup(cleanup_file)
+#define __cleanup_file __cleanup(cleanup_file)
 
 #endif /* __CLEANUP_H */

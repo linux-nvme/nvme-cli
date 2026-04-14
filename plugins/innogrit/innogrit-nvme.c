@@ -176,7 +176,7 @@ static int innogrit_geteventlog(int argc, char **argv,
 	const char *desc = "Recrieve event log for the given device ";
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_file_ FILE *fp = NULL;
+	__cleanup_file FILE *fp = NULL;
 	char currentdir[128], filename[512];
 	struct tm *logtime;
 	time_t timep;
