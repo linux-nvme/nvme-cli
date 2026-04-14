@@ -13,7 +13,7 @@
 
 #include "fabrics.h"
 
-#define __cleanup__(fn) __attribute__((cleanup(fn)))
+#define __cleanup(fn) __attribute__((cleanup(fn)))
 
 #define DECLARE_CLEANUP_FUNC(name, type) \
 	void name(type *__p)
@@ -29,29 +29,29 @@ static inline void freep(void *p)
 {
 	free(*(void **)p);
 }
-#define _cleanup_free_ __cleanup__(freep)
+#define _cleanup_free_ __cleanup(freep)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
-#define _cleanup_file_ __cleanup__(cleanup_file)
+#define _cleanup_file_ __cleanup(cleanup_file)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_dir, DIR *, closedir)
-#define _cleanup_dir_ __cleanup__(cleanup_dir)
+#define _cleanup_dir_ __cleanup(cleanup_dir)
 
 static inline void cleanup_fd(int *fd)
 {
 	if (*fd >= 0)
 		close(*fd);
 }
-#define _cleanup_fd_ __cleanup__(cleanup_fd)
+#define _cleanup_fd_ __cleanup(cleanup_fd)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *, freeaddrinfo)
-#define _cleanup_addrinfo_ __cleanup__(cleanup_addrinfo)
+#define _cleanup_addrinfo_ __cleanup(cleanup_addrinfo)
 
 static inline void free_uri(struct libnvme_fabrics_uri **uri)
 {
 	if (*uri)
 		libnvmf_free_uri(*uri);
 }
-#define _cleanup_uri_ __cleanup__(free_uri)
+#define _cleanup_uri_ __cleanup(free_uri)
 
 #endif

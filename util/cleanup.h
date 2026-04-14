@@ -9,7 +9,7 @@
 
 #include "util/mem.h"
 
-#define __cleanup__(fn) __attribute__((cleanup(fn)))
+#define __cleanup(fn) __attribute__((cleanup(fn)))
 
 #define DECLARE_CLEANUP_FUNC(name, type) \
 	void name(type *__p)
@@ -25,25 +25,25 @@ static inline void freep(void *p)
 {
 	free(*(void **)p);
 }
-#define _cleanup_free_ __cleanup__(freep)
+#define _cleanup_free_ __cleanup(freep)
 
-#define _cleanup_huge_ __cleanup__(nvme_free_huge)
+#define _cleanup_huge_ __cleanup(nvme_free_huge)
 
 static inline void cleanup_fd(int *fd)
 {
 	if (*fd > STDERR_FILENO)
 		close(*fd);
 }
-#define _cleanup_fd_ __cleanup__(cleanup_fd)
+#define _cleanup_fd_ __cleanup(cleanup_fd)
 
 static inline void cleanup_nvme_global_ctx(struct libnvme_global_ctx **ctx)
 {
 	libnvme_free_global_ctx(*ctx);
 }
-#define _cleanup_nvme_global_ctx_ __cleanup__(cleanup_nvme_global_ctx)
+#define _cleanup_nvme_global_ctx_ __cleanup(cleanup_nvme_global_ctx)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_ctrl, libnvme_ctrl_t, libnvme_free_ctrl)
-#define _cleanup_nvme_ctrl_ __cleanup__(cleanup_nvme_ctrl)
+#define _cleanup_nvme_ctrl_ __cleanup(cleanup_nvme_ctrl)
 
 #ifdef CONFIG_FABRICS
 static inline void free_uri(struct libnvme_fabrics_uri **uri)
@@ -51,16 +51,16 @@ static inline void free_uri(struct libnvme_fabrics_uri **uri)
 	if (*uri)
 		libnvmf_free_uri(*uri);
 }
-#define _cleanup_uri_ __cleanup__(free_uri)
+#define _cleanup_uri_ __cleanup(free_uri)
 
 static inline void cleanup_nvmf_context(struct libnvmf_context **fctx)
 {
 	libnvmf_context_free(*fctx);
 }
-#define _cleanup_nvmf_context_ __cleanup__(cleanup_nvmf_context)
+#define _cleanup_nvmf_context_ __cleanup(cleanup_nvmf_context)
 #endif
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
-#define _cleanup_file_ __cleanup__(cleanup_file)
+#define _cleanup_file_ __cleanup(cleanup_file)
 
 #endif /* __CLEANUP_H */

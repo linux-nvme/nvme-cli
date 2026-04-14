@@ -263,7 +263,7 @@ static const EVP_MD *select_hmac(int hmac, size_t *hmac_len)
 
 static DEFINE_CLEANUP_FUNC(
 	cleanup_evp_pkey_ctx, EVP_PKEY_CTX *, EVP_PKEY_CTX_free)
-#define _cleanup_evp_pkey_ctx_ __cleanup__(cleanup_evp_pkey_ctx)
+#define _cleanup_evp_pkey_ctx_ __cleanup(cleanup_evp_pkey_ctx)
 
 /* NVMe is using the TLS 1.3 HkdfLabel structure */
 #define HKDF_INFO_MAX_LEN 514
@@ -598,11 +598,11 @@ static int derive_tls_key_compat(struct libnvme_global_ctx *ctx,
 
 static DEFINE_CLEANUP_FUNC(
 	cleanup_ossl_lib_ctx, OSSL_LIB_CTX *, OSSL_LIB_CTX_free)
-#define _cleanup_ossl_lib_ctx_ __cleanup__(cleanup_ossl_lib_ctx)
+#define _cleanup_ossl_lib_ctx_ __cleanup(cleanup_ossl_lib_ctx)
 static DEFINE_CLEANUP_FUNC(cleanup_evp_mac_ctx, EVP_MAC_CTX *, EVP_MAC_CTX_free)
-#define _cleanup_evp_mac_ctx_ __cleanup__(cleanup_evp_mac_ctx)
+#define _cleanup_evp_mac_ctx_ __cleanup(cleanup_evp_mac_ctx)
 static DEFINE_CLEANUP_FUNC(cleanup_evp_mac, EVP_MAC *, EVP_MAC_free)
-#define _cleanup_evp_mac_ __cleanup__(cleanup_evp_mac)
+#define _cleanup_evp_mac_ __cleanup(cleanup_evp_mac)
 
 __public int libnvme_gen_dhchap_key(struct libnvme_global_ctx *ctx,
 		char *hostnqn, enum libnvme_hmac_alg hmac,

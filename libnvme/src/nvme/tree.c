@@ -109,7 +109,7 @@ static void cleanup_dirents(struct dirents *ents)
 	free(ents->ents);
 }
 
-#define _cleanup_dirents_ __cleanup__(cleanup_dirents)
+#define _cleanup_dirents_ __cleanup(cleanup_dirents)
 
 static char *nvme_hostid_from_hostnqn(const char *hostnqn)
 {
