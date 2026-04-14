@@ -53,6 +53,7 @@ host_system = host_machine.system()
 want_nvme = get_option('nvme').disabled() == false
 want_libnvme = get_option('libnvme').disabled() == false
 want_fabrics = get_option('fabrics').disabled() == false and host_system != 'windows'
+want_mi = get_option('mi').disabled() == false and host_system != 'windows'
 want_json_c = get_option('json-c').disabled() == false and host_system != 'windows'
 want_tests = get_option('tests') and host_system != 'windows'
 want_examples = get_option('examples') and host_system != 'windows'
@@ -139,6 +140,7 @@ conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 conf.set('RUNDIR', '"@0@"'.format(rundir))
 
 conf.set('CONFIG_FABRICS', want_fabrics, description: 'Is fabrics enabled')
+conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
 
 if host_system == 'windows'
     kernel32_dep = cc.find_library('kernel32', required: true)
@@ -336,7 +338,7 @@ else
 endif
 conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils available?')
 
-if not want_fabrics or get_option('libdbus').disabled()
+if not want_mi or get_option('libdbus').disabled()
     libdbus_dep = dependency('', required: false)
 else
     # Check for libdbus availability. Optional, only required for MCTP dbus scan

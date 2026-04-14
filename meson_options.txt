@@ -18,6 +18,12 @@ option(
   description : 'NVMeoF support'
 )
 option(
+  'mi',
+  type : 'feature',
+  value: 'enabled',
+  description : 'MI support'
+)
+option(
   'python',
   type : 'feature',
   value: 'auto',
