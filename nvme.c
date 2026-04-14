@@ -9743,7 +9743,7 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 	__cleanup_free unsigned char *key_data = NULL;
 	__cleanup_free char *exported_key = NULL;
 	__cleanup_free char *identity = NULL;
-	_cleanup_file_ FILE *fd = NULL;
+	__cleanup_file FILE *fd = NULL;
 	int err, ver, hmac, key_len;
 	mode_t old_umask;
 	long kr_id;
@@ -10166,7 +10166,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 	const char *revoke = "Revoke key from the keyring.";
 
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_file_ FILE *fd = NULL;
+	__cleanup_file FILE *fd = NULL;
 	mode_t old_umask = 0;
 	int cnt, err = 0;
 

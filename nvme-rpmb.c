@@ -210,7 +210,7 @@ static void write_file(unsigned char *data, size_t len, const char *dir,
 		       const char *file, const char *msg)
 {
 	char temp_folder[PATH_MAX] = { 0 };
-	_cleanup_file_ FILE *fp = NULL;
+	__cleanup_file FILE *fp = NULL;
 
 	if (dir != NULL)
 		sprintf(temp_folder, "%s/%s", dir, file);
