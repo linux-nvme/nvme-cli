@@ -17,7 +17,7 @@
 
 #include "cleanup.h"
 #include "private.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 static bool libnvme_mi_probe_enabled_default(void)
 {

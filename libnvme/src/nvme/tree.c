@@ -30,7 +30,7 @@
 #include "cleanup.h"
 #include "private.h"
 #include "util.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 /**
  * struct candidate_args - Used to look for a controller matching these parameters

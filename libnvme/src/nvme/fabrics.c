@@ -37,7 +37,7 @@
 #include "cleanup.h"
 #include "private.h"
 #include "private-fabrics.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 

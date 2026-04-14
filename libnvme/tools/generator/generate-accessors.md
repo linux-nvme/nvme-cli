@@ -210,7 +210,7 @@ const char *car_get_vin(const struct car *p);
 #include "accessors.h"
 
 #include "person.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 /****************************************************************************
  * Accessors for: struct person

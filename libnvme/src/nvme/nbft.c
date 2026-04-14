@@ -17,7 +17,7 @@
 #include <libnvme.h>
 
 #include "private.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 

@@ -50,7 +50,7 @@
 #include "base64.h"
 #include "cleanup.h"
 #include "private.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 #define NVMF_HOSTID_SIZE	37
 
