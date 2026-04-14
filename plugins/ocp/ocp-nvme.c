@@ -2937,7 +2937,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 
 	__cleanup_free struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 

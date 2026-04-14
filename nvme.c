@@ -1532,7 +1532,7 @@ static int get_persistent_event_log(int argc, char **argv,
 
 	__cleanup_free struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -5123,7 +5123,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	__cleanup_fd int fw_fd = -1;
 	unsigned int fw_size, pos;
 	int err;
@@ -8317,7 +8317,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	unsigned long long buffer_size = 0, mbuffer_size = 0;
 	__cleanup_free struct nvme_nvm_id_ns *nvm_ns = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	__cleanup_free struct nvme_id_ns *ns = NULL;
 	unsigned int logical_block_size = 0;
 	struct timeval start_time, end_time;
@@ -9271,7 +9271,7 @@ static int passthru(int argc, char **argv, bool admin,
 	const char *wr = "set dataflow direction to send";
 	const char *prefill = "prefill buffers with known byte-value, default 0";
 
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_fd int dfd = -1, mfd = -1;
@@ -10428,7 +10428,7 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 	bool send;
 	__cleanup_fd int fd = -1;
 	int flags;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	__u32 result;

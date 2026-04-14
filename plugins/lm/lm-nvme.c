@@ -63,7 +63,7 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
 	struct lba_migration_queue_entry_type_0 *queue = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	struct libnvme_passthru_cmd cmd;
 	int err = -1;
 
@@ -276,7 +276,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	__cleanup_file FILE *file = NULL;
 	struct libnvme_passthru_cmd cmd;
 	void *data = NULL;
@@ -408,7 +408,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 
 	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
 	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	__cleanup_file FILE *fd = NULL;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
