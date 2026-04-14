@@ -7,8 +7,6 @@
  */
 #pragma once
 
-#include <linux/types.h>
-
 #include <nvme/tree.h>
 
 /**

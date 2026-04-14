@@ -17,7 +17,6 @@
 #include "common.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "linux/types.h"
 #include "nvme-print.h"
 #include "solidigm-garbage-collection.h"
 #include "solidigm-util.h"

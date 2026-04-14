@@ -630,8 +630,8 @@ def main():
             f'#include <stdlib.h>\n'
             f'#include <string.h>\n'
             f'#include <stdbool.h>\n'
-            f'#include <stdint.h>\n'
-            f'#include <linux/types.h> /* __u32, __u64, etc. */\n'
+            f'#include <stdint.h>\n\n'
+            f'#include <nvme/types.h>\n'
             f'\n'
         )
         f.write('/* Forward declarations. These are internal (opaque) structs. */\n')
