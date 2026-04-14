@@ -296,7 +296,7 @@ __public int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
 	nvme_init_identify_ctrl(&cmd, &ctrl);
 	err = libnvme_submit_admin_passthru(hdl, &cmd);
 	if (err) {
-		libnvme_msg(hdl->ctx, LOG_ERR,
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR,
 			 "ERROR: nvme_identify_ctrl() failed 0x%x\n", err);
 		return err;
 	}

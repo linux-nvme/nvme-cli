@@ -18,7 +18,7 @@ static bool config_dump(const char *file)
 	bool pass = false;
 	int err;
 
-	ctx = libnvme_create_global_ctx(stderr, LOG_ERR);
+	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
 	if (!ctx)
 		return false;
 

@@ -45,7 +45,7 @@ class TestGlobalCtx(unittest.TestCase):
 
     def test_log_level_all_valid_levels(self):
         ctx = nvme.global_ctx()
-        for level in ('debug', 'info', 'notice', 'warning', 'err', 'crit', 'alert', 'emerg'):
+        for level in ('debug', 'info', 'warning', 'err'):
             with self.subTest(level=level):
                 ctx.log_level(level)
 

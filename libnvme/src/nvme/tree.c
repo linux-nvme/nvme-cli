@@ -170,7 +170,7 @@ __public int libnvme_host_get_ids(struct libnvme_global_ctx *ctx,
 		if (!hid)
 			return -ENOMEM;
 
-		libnvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			 "warning: using auto generated hostid and hostnqn\n");
 	}
 
@@ -184,7 +184,7 @@ __public int libnvme_host_get_ids(struct libnvme_global_ctx *ctx,
 	/* sanity checks */
 	nqn = nvme_hostid_from_hostnqn(hnqn);
 	if (nqn && strcmp(nqn, hid)) {
-		libnvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			 "warning: use hostid '%s' which does not match uuid in hostnqn '%s'\n",
 			 hid, hnqn);
 	}
@@ -225,7 +225,7 @@ static void libnvme_filter_subsystem(struct libnvme_global_ctx *ctx,
 	if (f(s, NULL, NULL, f_args))
 		return;
 
-	libnvme_msg(ctx, LOG_DEBUG, "filter out subsystem %s\n",
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "filter out subsystem %s\n",
 		 libnvme_subsystem_get_name(s));
 	libnvme_free_subsystem(s);
 }
@@ -236,7 +236,7 @@ static void libnvme_filter_ns(struct libnvme_global_ctx *ctx, libnvme_ns_t n,
 	if (f(NULL, NULL, n, f_args))
 		return;
 
-	libnvme_msg(ctx, LOG_DEBUG, "filter out namespace %s\n",
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "filter out namespace %s\n",
 		 libnvme_ns_get_name(n));
 	libnvme_free_ns(n);
 }
@@ -247,7 +247,7 @@ static void libnvme_filter_ctrl(struct libnvme_global_ctx *ctx,
 	if (f(NULL, c, NULL, f_args))
 		return;
 
-	libnvme_msg(ctx, LOG_DEBUG, "filter out controller %s\n",
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "filter out controller %s\n",
 		 libnvme_ctrl_get_name(c));
 	libnvme_free_ctrl(c);
 }
@@ -293,7 +293,7 @@ __public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 
 	ctrls.num = libnvme_scan_ctrls(&ctrls.ents);
 	if (ctrls.num < 0) {
-		libnvme_msg(ctx, LOG_DEBUG, "failed to scan ctrls: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "failed to scan ctrls: %s\n",
 			 libnvme_strerror(-ctrls.num));
 		return ctrls.num;
 	}
@@ -303,7 +303,7 @@ __public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 
 		ret = libnvme_scan_ctrl(ctx, ctrls.ents[i]->d_name, &c);
 		if (ret < 0) {
-			libnvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 				"failed to scan ctrl %s: %s\n",
 				ctrls.ents[i]->d_name, libnvme_strerror(-ret));
 			continue;
@@ -312,7 +312,7 @@ __public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 
 	subsys.num = libnvme_scan_subsystems(&subsys.ents);
 	if (subsys.num < 0) {
-		libnvme_msg(ctx, LOG_DEBUG, "failed to scan subsystems: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "failed to scan subsystems: %s\n",
 			libnvme_strerror(-subsys.num));
 		return subsys.num;
 	}
@@ -320,7 +320,7 @@ __public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 	for (i = 0; i < subsys.num; i++) {
 		ret = libnvme_scan_subsystem(ctx, subsys.ents[i]->d_name);
 		if (ret < 0) {
-			libnvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 				"failed to scan subsystem %s: %s\n",
 				subsys.ents[i]->d_name,
 				libnvme_strerror(-ret));
@@ -695,14 +695,14 @@ static int nvme_subsystem_scan_namespaces(struct libnvme_global_ctx *ctx,
 	int i, ret;
 
 	if (ctx->create_only) {
-		libnvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			 "skipping namespace scan for subsys %s\n",
 			 s->subsysnqn);
 		return 0;
 	}
 	namespaces.num = libnvme_scan_subsystem_namespaces(s, &namespaces.ents);
 	if (namespaces.num < 0) {
-		libnvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			"failed to scan namespaces for subsys %s: %s\n",
 			s->subsysnqn, libnvme_strerror(-namespaces.num));
 		return namespaces.num;
@@ -712,7 +712,7 @@ static int nvme_subsystem_scan_namespaces(struct libnvme_global_ctx *ctx,
 		ret = libnvme_subsystem_scan_namespace(ctx, s,
 				namespaces.ents[i]->d_name);
 		if (ret < 0)
-			libnvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 				"failed to scan namespace %s: %s\n",
 				namespaces.ents[i]->d_name,
 				libnvme_strerror(-ret));
@@ -757,7 +757,7 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 	libnvme_host_t h = NULL;
 	int ret;
 
-	libnvme_msg(ctx, LOG_DEBUG, "scan subsystem %s\n", name);
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan subsystem %s\n", name);
 	ret = asprintf(&path, "%s/%s", libnvme_subsys_sysfs_dir(), name);
 	if (ret < 0)
 		return -ENOMEM;
@@ -787,7 +787,7 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 		 * Create a subsystem with the default host
 		 * and hope for the best.
 		 */
-		libnvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			"creating detached subsystem '%s'\n", name);
 		ret = libnvme_get_host(ctx, NULL, NULL, &h);
 		if (ret)
@@ -798,7 +798,7 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 		if (nvme_subsystem_scan_namespaces(ctx, s))
 			return -EINVAL;
 	} else if (strcmp(s->subsysnqn, subsysnqn)) {
-		libnvme_msg(ctx, LOG_DEBUG, "NQN mismatch for subsystem '%s'\n",
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "NQN mismatch for subsystem '%s'\n",
 			 name);
 		return -EINVAL;
 	}
@@ -846,7 +846,7 @@ static int libnvme_ctrl_scan_path(struct libnvme_global_ctx *ctx,
 	__cleanup_free char *path = NULL, *grpid = NULL, *queue_depth = NULL;
 	int ret;
 
-	libnvme_msg(ctx, LOG_DEBUG, "scan controller %s path %s\n",
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan controller %s path %s\n",
 		 c->name, name);
 	if (!c->s)
 		return -ENXIO;
@@ -895,7 +895,7 @@ __public struct libnvme_transport_handle *libnvme_ctrl_get_transport_handle(
 
 		err = libnvme_open(c->ctx, c->name, &c->hdl);
 		if (err)
-			libnvme_msg(c->ctx, LOG_ERR,
+			libnvme_msg(c->ctx, LIBNVME_LOG_ERR,
 				 "Failed to open ctrl %s, errno %d\n",
 				 c->name, err);
 	}
@@ -933,7 +933,7 @@ __public char *libnvme_ctrl_get_src_addr(libnvme_ctrl_t c, char *src_addr,
 	p += strlen("src_addr=");
 	l = strcspn(p, ",%"); /* % to eliminate IPv6 scope (if present) */
 	if (l >= src_addr_len) {
-		libnvme_msg(c->ctx, LOG_ERR,
+		libnvme_msg(c->ctx, LIBNVME_LOG_ERR,
 			"Buffer for src_addr is too small (%zu must be > %zu)\n",
 			src_addr_len, l);
 		return NULL;
@@ -1024,11 +1024,11 @@ __public int libnvme_disconnect_ctrl(libnvme_ctrl_t c)
 	ret = libnvme_set_attr(libnvme_ctrl_get_sysfs_dir(c),
 			    "delete_controller", "1");
 	if (ret < 0) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"%s: failed to disconnect, error %d\n", c->name, errno);
 		return ret;
 	}
-	libnvme_msg(ctx, LOG_INFO, "%s: %s disconnected\n",
+	libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: %s disconnected\n",
 		c->name, c->subsysnqn);
 	nvme_deconfigure_ctrl(c);
 	return 0;
@@ -1102,18 +1102,18 @@ int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 	struct libnvme_ctrl *c;
 
 	if (!fctx->transport) {
-		libnvme_msg(ctx, LOG_ERR, "No transport specified\n");
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "No transport specified\n");
 		return -EINVAL;
 	}
 	if (strncmp(fctx->transport, "loop", 4) &&
 	    strncmp(fctx->transport, "pcie", 4) &&
 	    strncmp(fctx->transport, "apple-nvme", 10) && !fctx->traddr) {
-		libnvme_msg(ctx, LOG_ERR, "No transport address for '%s'\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "No transport address for '%s'\n",
 			 fctx->transport);
 	       return -EINVAL;
 	}
 	if (!fctx->subsysnqn) {
-		libnvme_msg(ctx, LOG_ERR, "No subsystem NQN specified\n");
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "No subsystem NQN specified\n");
 		return -EINVAL;
 	}
 	c = calloc(1, sizeof(*c));
@@ -1200,7 +1200,7 @@ static bool _tcp_ctrl_match_host_traddr_no_src_addr(struct libnvme_ctrl *c,
 	 * 100% positive match. Regardless, let's be optimistic
 	 * and assume that we have a match.
 	 */
-	libnvme_msg(c->ctx, LOG_DEBUG,
+	libnvme_msg(c->ctx, LIBNVME_LOG_DEBUG,
 		"Not enough data, but assume %s matches candidate's host_traddr: %s\n",
 		libnvme_ctrl_get_name(c), candidate->host_traddr);
 
@@ -1243,7 +1243,7 @@ static bool _tcp_ctrl_match_host_iface_no_src_addr(struct libnvme_ctrl *c,
 	 * 100% positive match. Regardless, let's be optimistic
 	 * and assume that we have a match.
 	 */
-	libnvme_msg(c->ctx, LOG_DEBUG,
+	libnvme_msg(c->ctx, LIBNVME_LOG_DEBUG,
 		"Not enough data, but assume %s matches candidate's host_iface: %s\n",
 		libnvme_ctrl_get_name(c), candidate->host_iface);
 
@@ -1595,7 +1595,7 @@ static int libnvme_ctrl_scan_paths(struct libnvme_global_ctx *ctx,
 	int err, i;
 
 	if (ctx->create_only) {
-		libnvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			 "skipping path scan for ctrl %s\n", c->name);
 		return 0;
 	}
@@ -1619,7 +1619,7 @@ static int libnvme_ctrl_scan_namespaces(struct libnvme_global_ctx *ctx,
 	int err, i;
 
 	if (ctx->create_only) {
-		libnvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			"skipping namespace scan for ctrl %s\n", c->name);
 		return 0;
 	}
@@ -1652,7 +1652,7 @@ static int libnvme_ctrl_lookup_subsystem_name(struct libnvme_global_ctx *ctx,
 		if (asprintf(&path, "%s/%s/%s", subsys_dir,
 			     subsys.ents[i]->d_name, ctrl_name) < 0)
 			return -ENOMEM;
-		libnvme_msg(ctx, LOG_DEBUG, "lookup subsystem %s\n", path);
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "lookup subsystem %s\n", path);
 		if (stat(path, &st) < 0) {
 			continue;
 		}
@@ -1681,7 +1681,7 @@ static int libnvme_ctrl_lookup_phy_slot(struct libnvme_global_ctx *ctx,
 
 	slots_dir = opendir(slots_sysfs_dir);
 	if (!slots_dir) {
-		libnvme_msg(ctx, LOG_WARNING, "failed to open slots dir %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_WARN, "failed to open slots dir %s\n",
 		slots_sysfs_dir);
 		return -errno;
 	}
@@ -1820,7 +1820,7 @@ static int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 
 	d = opendir(path);
 	if (!d) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"Failed to open ctrl dir %s, error %d\n", path, errno);
 		return -ENODEV;
 	}
@@ -1871,7 +1871,7 @@ __public int libnvme_init_ctrl(libnvme_host_t h, libnvme_ctrl_t c, int instance)
 
 	ret = libnvme_ctrl_lookup_subsystem_name(h->ctx, name, &subsys_name);
 	if (ret) {
-		libnvme_msg(h->ctx, LOG_ERR,
+		libnvme_msg(h->ctx, LIBNVME_LOG_ERR,
 			 "Failed to lookup subsystem name for %s\n",
 			 c->name);
 		return ENVME_CONNECT_LOOKUP_SUBSYS_NAME;
@@ -1967,11 +1967,11 @@ skip_address:
 			if (!c->name)
 				break;
 			if (!strcmp(c->name, name)) {
-				libnvme_msg(ctx, LOG_DEBUG,
+				libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 					"found existing ctrl %s\n", c->name);
 				break;
 			}
-			libnvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 				"skipping ctrl %s\n", c->name);
 			p = c;
 		}
@@ -1979,7 +1979,7 @@ skip_address:
 	if (!c)
 		c = p;
 	if (!c && !p) {
-		libnvme_msg(ctx, LOG_ERR, "failed to lookup ctrl\n");
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to lookup ctrl\n");
 		return -ENODEV;
 	}
 	FREE_CTRL_ATTR(c->address);
@@ -2006,7 +2006,7 @@ __public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
 	libnvme_ctrl_t c;
 	int ret;
 
-	libnvme_msg(ctx, LOG_DEBUG, "scan controller %s\n", name);
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan controller %s\n", name);
 	ret = asprintf(&path, "%s/%s", libnvme_ctrl_sysfs_dir(), name);
 	if (ret < 0)
 		return -ENOMEM;
@@ -2031,7 +2031,7 @@ __public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
 
 	ret = libnvme_ctrl_lookup_subsystem_name(ctx, name, &subsysname);
 	if (ret) {
-		libnvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			 "failed to lookup subsystem for controller %s\n",
 			 name);
 		return ret;
@@ -2096,7 +2096,7 @@ int libnvme_ns_get_transport_handle(libnvme_ns_t n,
 
 	err = libnvme_open(n->ctx, n->name, &n->hdl);
 	if (err) {
-		libnvme_msg(n->ctx, LOG_ERR, "Failed to open ns %s, error %d\n",
+		libnvme_msg(n->ctx, LIBNVME_LOG_ERR, "Failed to open ns %s, error %d\n",
 			n->name, err);
 		return err;
 	}
@@ -2720,15 +2720,15 @@ static int libnvme_ctrl_scan_namespace(struct libnvme_global_ctx *ctx,
 	struct libnvme_ns *n, *_n, *__n;
 	int ret;
 
-	libnvme_msg(ctx, LOG_DEBUG, "scan controller %s namespace %s\n",
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan controller %s namespace %s\n",
 		 c->name, name);
 	if (!c->s) {
-		libnvme_msg(ctx, LOG_DEBUG, "no subsystem for %s\n", name);
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "no subsystem for %s\n", name);
 		return -EINVAL;
 	}
 	ret = __libnvme_scan_namespace(ctx, c->sysfs_dir, name, &n);
 	if (ret) {
-		libnvme_msg(ctx, LOG_DEBUG, "failed to scan namespace %s\n", name);
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "failed to scan namespace %s\n", name);
 		return ret;
 	}
 	libnvme_ctrl_for_each_ns_safe(c, _n, __n) {
@@ -2750,11 +2750,11 @@ static int libnvme_subsystem_scan_namespace(struct libnvme_global_ctx *ctx,
 	struct libnvme_ns *n, *_n, *__n;
 	int ret;
 
-	libnvme_msg(ctx, LOG_DEBUG, "scan subsystem %s namespace %s\n",
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan subsystem %s namespace %s\n",
 		 s->name, name);
 	ret = __libnvme_scan_namespace(ctx, s->sysfs_dir, name, &n);
 	if (ret) {
-		libnvme_msg(ctx, LOG_DEBUG, "failed to scan namespace %s\n", name);
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "failed to scan namespace %s\n", name);
 		return ret;
 	}
 	libnvme_subsystem_for_each_ns_safe(s, _n, __n) {

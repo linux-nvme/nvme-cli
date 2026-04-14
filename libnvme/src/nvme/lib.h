@@ -10,16 +10,17 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <syslog.h>
 
 #include <nvme/lib-types.h>
 
-#ifndef MAX_LOGLEVEL
-#  define MAX_LOGLEVEL LOG_DEBUG
-#endif
-#ifndef DEFAULT_LOGLEVEL
-#  define DEFAULT_LOGLEVEL LOG_NOTICE
-#endif
+enum libnvme_log_level {
+	LIBNVME_LOG_ERR	  = 0,
+	LIBNVME_LOG_WARN  = 1,
+	LIBNVME_LOG_INFO  = 2,
+	LIBNVME_LOG_DEBUG = 3,
+};
+
+#define DEFAULT_LOGLEVEL LIBNVME_LOG_WARN
 
 /**
  * libnvme_create_global_ctx() - Initialize global context object

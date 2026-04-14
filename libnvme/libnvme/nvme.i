@@ -508,14 +508,10 @@ struct libnvme_ns {
 	}
 	void log_level(const char *level) {
 		int log_level = DEFAULT_LOGLEVEL;
-		if (!strcmp(level, "debug")) log_level = LOG_DEBUG;
-		else if (!strcmp(level, "info")) log_level = LOG_INFO;
-		else if (!strcmp(level, "notice")) log_level = LOG_NOTICE;
-		else if (!strcmp(level, "warning")) log_level = LOG_WARNING;
-		else if (!strcmp(level, "err")) log_level = LOG_ERR;
-		else if (!strcmp(level, "crit")) log_level = LOG_CRIT;
-		else if (!strcmp(level, "alert")) log_level = LOG_ALERT;
-		else if (!strcmp(level, "emerg")) log_level = LOG_EMERG;
+		if (!strcmp(level, "debug")) log_level = LIBNVME_LOG_DEBUG;
+		else if (!strcmp(level, "info")) log_level = LIBNVME_LOG_INFO;
+		else if (!strcmp(level, "warning")) log_level = LIBNVME_LOG_WARN;
+		else if (!strcmp(level, "err")) log_level = LIBNVME_LOG_ERR;
 		libnvme_set_logging_level($self, log_level, false, false);
 	}
 	%pythoncode %{
