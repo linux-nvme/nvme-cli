@@ -331,7 +331,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 	}
 
 	for (i = 0; i < n; i++) {
-		_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+		__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 		snprintf(path, sizeof(path), "/dev/%s", devices[i]->d_name);
 		ret = libnvme_open(ctx, path, &hdl);

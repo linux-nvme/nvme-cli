@@ -390,7 +390,7 @@ int ssstc_get_add_smart_log(int argc, char **argv, struct command *acmd, struct 
 
 	struct nvme_additional_smart_log smart_log_add;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {

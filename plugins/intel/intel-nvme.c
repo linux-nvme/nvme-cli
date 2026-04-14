@@ -344,7 +344,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 
 	struct nvme_additional_smart_log smart_log;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	int err;
 
@@ -394,7 +394,7 @@ static int get_market_log(int argc, char **argv, struct command *acmd, struct pl
 	const char *desc = "Get Intel Marketing Name log and show it.";
 	const char *raw = "dump output in binary format";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	char log[512];
 	int err;
 
@@ -453,7 +453,7 @@ static int get_temp_stats_log(int argc, char **argv, struct command *acmd, struc
 {
 	struct intel_temp_stats stats;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	const char *desc = "Get Temperature Statistics log and show it.";
@@ -1031,7 +1031,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 {
 	__u8 data[NAND_LAT_STATS_LEN];
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	int err;
 
@@ -1348,7 +1348,7 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 	struct intel_assert_dump *ad = (struct intel_assert_dump *) intel->reserved;
 	struct intel_event_header *ehdr = (struct intel_event_header *)intel->reserved;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	const char *desc = "Get Intel Firmware Log and save it.";
 	const char *log = "Log type: 0, 1, or 2 for nlog, event log, and assert log, respectively.";
@@ -1540,7 +1540,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	const __u32 data_len = 32;
 	const __u32 sv = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	void *buf = NULL;
 	__u64 result;
 	int err;
@@ -1624,7 +1624,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 	const __u32 cdw12 = 0x0;
 	const __u32 sv = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	int err, num;
 

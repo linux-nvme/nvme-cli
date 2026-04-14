@@ -231,7 +231,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *acm
 	struct vu_smart_log smart_log_payload;
 	nvme_print_flags_t flags;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err;
 	__u8 uuid_index;

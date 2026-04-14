@@ -405,7 +405,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	__u32 device_id, read_vendor_id;
 	int ret = -1;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	struct config {
 		char *file;
@@ -644,7 +644,7 @@ static int sndk_drive_resize(int argc, char **argv,
 	const char *desc = "Send a Resize command.";
 	const char *size = "The new size (in GB) to resize the drive to.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	uint64_t capabilities = 0;
 	int ret;
 	uint32_t device_id = -1, vendor_id = -1;
@@ -995,7 +995,7 @@ static int sndk_vs_fw_activate_history(int argc, char **argv,
 {
 	const char *desc = "Retrieve FW activate history table.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	uint64_t capabilities = 0;
 	int ret;
 
@@ -1051,7 +1051,7 @@ static int sndk_clear_fw_activate_history(int argc, char **argv,
 {
 	const char *desc = "Clear FW activate history table.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__u64 capabilities = 0;
 	int ret;
 
@@ -1121,7 +1121,7 @@ static int sndk_capabilities(int argc, char **argv,
 {
 	const char *desc = "Send a capabilities command.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	uint64_t capabilities = 0;
 	int ret;
 

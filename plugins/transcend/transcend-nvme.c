@@ -25,7 +25,7 @@ static int getHealthValue(int argc, char **argv, struct command *acmd, struct pl
 	char *desc = "Get nvme health percentage.";
 	int  percent_used = 0, healthvalue = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int result;
 
 	NVME_ARGS(opts);
@@ -56,7 +56,7 @@ static int getBadblock(int argc, char **argv, struct command *acmd, struct plugi
 
 	char *desc = "Get nvme bad block number.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd nvmecmd;
 	unsigned char data[1] = {0};
 	int result;
