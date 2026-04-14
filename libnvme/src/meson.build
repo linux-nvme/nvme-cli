@@ -56,6 +56,8 @@ endif
 
 if liburing_dep.found()
     sources += 'nvme/uring.c'
+else
+    sources += 'nvme/no-uring.c'
 endif
 
 if host_system != 'windows'
