@@ -456,7 +456,7 @@ __public const char *libnvme_strerror(int errnum)
 int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 		    char **hostname)
 {
-	_cleanup_addrinfo_ struct addrinfo *host_info = NULL;
+	__cleanup_addrinfo struct addrinfo *host_info = NULL;
 	struct addrinfo hints = {.ai_family = AF_UNSPEC};
 	char addrstr[NVMF_TRADDR_SIZE];
 	const char *p;
