@@ -45,7 +45,7 @@ static inline void cleanup_fd(int *fd)
 #define __cleanup_fd __cleanup(cleanup_fd)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *, freeaddrinfo)
-#define _cleanup_addrinfo_ __cleanup(cleanup_addrinfo)
+#define __cleanup_addrinfo __cleanup(cleanup_addrinfo)
 
 static inline void free_uri(struct libnvme_fabrics_uri **uri)
 {
