@@ -8,7 +8,7 @@
  */
 #pragma once
 
-#include <linux/types.h>
+#include <nvme/types.h>
 
 struct libnvme_global_ctx;
 struct libnvme_transport_handle;

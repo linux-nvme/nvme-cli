@@ -35,6 +35,7 @@ headers = [
     'nvme/nvme-cmds.h',
     'nvme/nvme-types.h',
     'nvme/tree.h',
+    'nvme/types.h',
     'nvme/util.h',
 ]
 

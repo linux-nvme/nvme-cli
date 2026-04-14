@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <linux/types.h>
+#include <nvme/types.h>
 
 /**
  * DOC: types.h

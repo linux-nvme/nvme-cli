@@ -7,8 +7,6 @@
 #include <stdint.h>
 #include <time.h>
 
-#include <linux/types.h>
-
 #include <libnvme.h>
 
 #define ABSOLUTE_ZERO_CELSIUS -273

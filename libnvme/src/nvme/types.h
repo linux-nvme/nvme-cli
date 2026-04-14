@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+/*
+ * This file is part of libnvme.
+ * Copyright (c) 2026 SUSE Software Solutions
+ *
+ * Authors: Daniel Wagner <dwagner@suse.de>
+ */
+
+#pragma once
+
+#if defined(__linux__)
+#include <linux/types.h>
+#else
+#include <stdint.h>
+
+/* Standard type definitions for linux/types.h compatibility */
+typedef uint8_t  __u8;
+typedef uint16_t __u16;
+typedef uint32_t __u32;
+typedef uint64_t __u64;
+typedef int8_t   __s8;
+typedef int16_t  __s16;
+typedef int32_t  __s32;
+typedef int64_t  __s64;
+
+/* Little-endian types (Windows is little-endian) */
+typedef __u16    __le16;
+typedef __u32    __le32;
+typedef __u64    __le64;
+typedef __s16    __le16s;
+typedef __s32    __le32s;
+typedef __s64    __le64s;
+
+/* Big-endian types for completeness */
+typedef __u16    __be16;
+typedef __u32    __be32;
+typedef __u64    __be64;
+typedef __s16    __be16s;
+typedef __s32    __be32s;
+typedef __s64    __be64s;
+#endif

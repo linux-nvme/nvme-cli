@@ -6,8 +6,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <linux/types.h>
-
 #include <sys/ioctl.h>
 #include <sys/time.h>
 

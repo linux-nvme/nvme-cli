@@ -16,7 +16,6 @@
 #include "common.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "linux/types.h"
 #include "nvme-print.h"
 
 #include "solidigm-smart.h"

@@ -23,6 +23,7 @@ extern "C" {
 #include <nvme/nvme-cmds.h>
 #include <nvme/nvme-types.h>
 #include <nvme/tree.h>
+#include <nvme/types.h>
 #include <nvme/util.h>
 @FABRICS_INCLUDE@
 
