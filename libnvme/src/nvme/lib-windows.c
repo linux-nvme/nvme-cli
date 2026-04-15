@@ -8,7 +8,7 @@
 
 #include "private.h"
 #include "nvme/lib.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 
 static int __nvme_transport_handle_open_direct(struct libnvme_transport_handle *hdl, const char *name)

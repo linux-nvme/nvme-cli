@@ -14,7 +14,7 @@
 #include <nvme/types.h>
 
 #include "private.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 /* Logging control for stub calls */
 static int stub_log_enabled = 0;
@@ -342,66 +342,6 @@ __public int libnvme_dump_config(struct libnvme_global_ctx *ctx, int fd)
 	(void)fd;
 	errno = ENOTSUP;
 	return -1;
-}
-
-/*
- * Stub implementations for MI functions (mi.c and mi-mctp.c)
- */
-
-int libnvme_mi_admin_admin_passthru(struct libnvme_transport_handle *hdl,
-				 struct libnvme_passthru_cmd *cmd)
-{
-	stub_log(__func__);
-	(void)hdl;
-	(void)cmd;
-	errno = ENOTSUP;
-	return -1;
-}
-
-__public libnvme_mi_ep_t libnvme_mi_first_endpoint(struct libnvme_global_ctx *ctx)
-{
-	stub_log(__func__);
-	(void)ctx;
-	return NULL;
-}
-
-__public libnvme_mi_ep_t libnvme_mi_next_endpoint(struct libnvme_global_ctx *ctx, libnvme_mi_ep_t e)
-{
-	stub_log(__func__);
-	(void)ctx;
-	(void)e;
-	return NULL;
-}
-
-__public int libnvme_mi_scan_ep(libnvme_mi_ep_t ep, bool force_rescan)
-{
-	stub_log(__func__);
-	(void)ep;
-	(void)force_rescan;
-	errno = ENOTSUP;
-	return -1;
-}
-
-struct libnvme_transport_handle *libnvme_mi_first_transport_handle(libnvme_mi_ep_t ep)
-{
-	stub_log(__func__);
-	(void)ep;
-	return NULL;
-}
-
-struct libnvme_transport_handle *libnvme_mi_next_transport_handle(libnvme_mi_ep_t ep,
-	struct libnvme_transport_handle *hdl)
-{
-	stub_log(__func__);
-	(void)ep;
-	(void)hdl;
-	return NULL;
-}
-
-__public void libnvme_mi_close(libnvme_mi_ep_t ep)
-{
-	stub_log(__func__);
-	(void)ep;
 }
 
 /*

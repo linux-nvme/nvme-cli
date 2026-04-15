@@ -13,6 +13,8 @@
 
 #include <nvme/lib-types.h>
 
+#include <platform/includes.h> /* for libnvme_fd_t */
+
 enum libnvme_log_level {
 	LIBNVME_LOG_ERR	  = 0,
 	LIBNVME_LOG_WARN  = 1,

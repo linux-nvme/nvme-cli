@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 /* Definitions not yet included in mingw's winerror.h */
 #define STG_E_FIRMWARE_SLOT_INVALID      _HRESULT_TYPEDEF_(0x80030208L)

@@ -10,6 +10,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <platform/includes.h> /* for libnvme_fd_t */
+
 #include <ccan/list/list.h>
 
 #include <nvme/fabrics.h>
