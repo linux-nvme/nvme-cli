@@ -324,7 +324,7 @@ struct libnvme_transport_handle *__libnvme_create_transport_handle(
 
 int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx,
-		libnvme_ctrl_t *cp);
+		struct libnvme_ctrl **cp);
 bool _libnvme_ctrl_match_config(struct libnvme_ctrl *c,
 		struct libnvmf_context *fctx);
 
@@ -332,18 +332,18 @@ void *__libnvme_alloc(size_t len);
 
 void *__libnvme_realloc(void *p, size_t len);
 
-void nvme_deconfigure_ctrl(libnvme_ctrl_t c);
+void nvme_deconfigure_ctrl(struct libnvme_ctrl *c);
 
-libnvme_host_t libnvme_lookup_host(struct libnvme_global_ctx *ctx,
+struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid);
-libnvme_subsystem_t libnvme_lookup_subsystem(struct libnvme_host *h,
+struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 		const char *name, const char *subsysnqn);
-libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
-		struct libnvmf_context *fctx, libnvme_ctrl_t p);
-libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
+struct libnvme_ctrl * libnvme_lookup_ctrl(struct libnvme_subsystem * s,
+		struct libnvmf_context *fctx, struct libnvme_ctrl *p);
+struct libnvme_ctrl * libnvme_ctrl_find(struct libnvme_subsystem *s,
 		struct libnvmf_context *fctx);
 
-void __libnvme_free_host(libnvme_host_t h);
+void __libnvme_free_host(struct libnvme_host * h);
 
 #if (LOG_FUNCNAME == 1)
 #define __libnvme_log_func __func__
@@ -361,8 +361,8 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 #define SECTOR_SIZE	512
 #define SECTOR_SHIFT	9
 
-int __libnvme_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
-		long *keyring_id, long *key_id);
+int __libnvme_import_keys_from_config(struct libnvme_host *h,
+		struct libnvme_ctrl *c, long *keyring_id, long *key_id);
 
 static inline char *xstrdup(const char *s)
 {
@@ -552,7 +552,7 @@ static inline __u16 nvmf_exat_size(size_t val_len)
  *
  * Return: On success 0, else error code.
  */
-int libnvme_ns_get_transport_handle(libnvme_ns_t n,
+int libnvme_ns_get_transport_handle(struct libnvme_ns *n,
 		struct libnvme_transport_handle **hdl);
 
 /**
@@ -560,7 +560,7 @@ int libnvme_ns_get_transport_handle(libnvme_ns_t n,
  * @n:	Namespace instance
  *
  */
-void libnvme_ns_release_transport_handle(libnvme_ns_t n);
+void libnvme_ns_release_transport_handle(struct libnvme_ns *n);
 
 /**
  * libnvme_mi_admin_admin_passthru() - Submit an nvme admin passthrough command
