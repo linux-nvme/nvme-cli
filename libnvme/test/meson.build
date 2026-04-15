@@ -77,29 +77,31 @@ zns = executable(
     ],
 )
 
-mi = executable(
-    'test-mi',
-    ['mi.c', 'utils.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_test_dep,
-    ],
-)
+if want_mi
+    mi = executable(
+        'test-mi',
+        ['mi.c', 'utils.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
 
-test('libnvme - mi', mi)
+    test('libnvme - mi', mi)
 
-mi_mctp = executable(
-    'test-mi-mctp',
-    ['mi-mctp.c', 'utils.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_test_dep,
-    ],
-)
+    mi_mctp = executable(
+        'test-mi-mctp',
+        ['mi-mctp.c', 'utils.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
 
-test('libnvme - mi-mctp', mi_mctp)
+    test('libnvme - mi-mctp', mi_mctp)
+endif
 
 uuid = executable(
     'test-uuid',
