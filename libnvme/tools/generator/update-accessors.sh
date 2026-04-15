@@ -99,7 +99,7 @@ check_ld_drift() {
         echo ""
         if [ -n "$added" ]; then
             echo "  Symbols to ADD (new version section, e.g. <PREFIX>_ACCESSORS_X_Y):"
-            printf '%s\n' "$added" | sed 's/^/    /'
+            printf '%s\n' "$added" | sed 's/^/\t\t/' | sed 's/$/;/'
         fi
         if [ -n "$removed" ]; then
             echo ""
