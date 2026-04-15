@@ -34,6 +34,7 @@
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"
+#include "private-fabrics.h"
 #include "util.h"
 #include "compiler-attributes.h"
 
@@ -1069,26 +1070,6 @@ __public void libnvme_free_ctrl(libnvme_ctrl_t c)
 	__libnvme_free_ctrl(c);
 }
 
-static bool traddr_is_hostname(const char *transport, const char *traddr)
-{
-
-	if (!traddr || !transport)
-		return false;
-	if (!strcmp(traddr, "none"))
-		return false;
-#ifdef CONFIG_FABRICS
-	char addrstr[NVMF_TRADDR_SIZE];
-
-	if (strcmp(transport, "tcp") &&
-	    strcmp(transport, "rdma"))
-		return false;
-	if (inet_pton(AF_INET, traddr, addrstr) > 0 ||
-	    inet_pton(AF_INET6, traddr, addrstr) > 0)
-		return false;
-#endif
-	return true;
-}
-
 __public void libnvmf_default_config(struct libnvme_fabrics_config *cfg)
 {
 	memset(cfg, 0, sizeof(*cfg));
@@ -1131,7 +1112,7 @@ int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 	if (fctx->traddr)
 		c->traddr = strdup(fctx->traddr);
 	if (fctx->host_traddr) {
-		if (traddr_is_hostname(fctx->transport, fctx->host_traddr))
+		if (traddr_is_hostname(ctx, fctx->transport, fctx->host_traddr))
 			hostname2traddr(ctx, fctx->host_traddr,
 					&c->host_traddr);
 		if (!c->host_traddr)

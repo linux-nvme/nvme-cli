@@ -22,3 +22,6 @@ struct libnvmf_discovery_args { /*!generate-accessors*/
 	int max_retries;
 	__u8 lsp;
 };
+
+bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
+		const char *transport, const char *traddr);
