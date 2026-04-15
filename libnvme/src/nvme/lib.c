@@ -24,7 +24,11 @@
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"
+
+#ifdef CONFIG_MI
 #include "private-mi.h"
+#endif
+
 #include "compiler-attributes.h"
 
 static bool libnvme_mi_probe_enabled_default(void)
