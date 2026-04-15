@@ -744,7 +744,7 @@ struct libnvmf_context {};
 		  const char *host_iface = NULL,
 		  const char *trsvcid = NULL) {
 		struct libnvme_ctrl *c;
-		if (libnvme_create_ctrl(ctx, subsysnqn, transport, traddr,
+		if (libnvmf_create_ctrl(ctx, subsysnqn, transport, traddr,
 					host_traddr, host_iface, trsvcid, &c))
 			return NULL;
 		return c;
@@ -757,7 +757,7 @@ struct libnvmf_context {};
 	}
 	struct libnvme_ctrl* __exit__(PyObject *type, PyObject *value, PyObject *traceback) {
 		if (libnvme_ctrl_get_name($self))
-			libnvme_disconnect_ctrl($self);
+			libnvmf_disconnect_ctrl($self);
 		return $self;
 	}
 
@@ -801,7 +801,7 @@ struct libnvmf_context {};
 			return;
 		}
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
-		ret = libnvme_disconnect_ctrl($self);
+		ret = libnvmf_disconnect_ctrl($self);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 		if (ret < 0)
 			connect_err = 2;

@@ -26,7 +26,7 @@
 static void json_update_attributes(libnvme_ctrl_t c,
 				   struct json_object *ctrl_obj)
 {
-	struct libnvme_fabrics_config *cfg = libnvme_ctrl_get_config(c);
+	struct libnvme_fabrics_config *cfg = libnvmf_ctrl_get_config(c);
 
 	json_object_object_foreach(ctrl_obj, key_str, val_obj) {
 		JSON_UPDATE_INT_OPTION(cfg, key_str,
@@ -275,7 +275,7 @@ int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file)
 
 static void json_update_port(struct json_object *ctrl_array, libnvme_ctrl_t c)
 {
-	struct libnvme_fabrics_config *cfg = libnvme_ctrl_get_config(c);
+	struct libnvme_fabrics_config *cfg = libnvmf_ctrl_get_config(c);
 	struct json_object *port_obj = json_object_new_object();
 	const char *transport, *value;
 
@@ -443,7 +443,7 @@ int json_update_config(struct libnvme_global_ctx *ctx, int fd)
 
 static void json_dump_ctrl(struct json_object *ctrl_array, libnvme_ctrl_t c)
 {
-	struct libnvme_fabrics_config *cfg = libnvme_ctrl_get_config(c);
+	struct libnvme_fabrics_config *cfg = libnvmf_ctrl_get_config(c);
 	struct json_object *ctrl_obj = json_object_new_object();
 	const char *name, *transport, *value;
 

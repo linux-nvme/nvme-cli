@@ -332,6 +332,8 @@ void *__libnvme_alloc(size_t len);
 
 void *__libnvme_realloc(void *p, size_t len);
 
+void nvme_deconfigure_ctrl(libnvme_ctrl_t c);
+
 libnvme_host_t libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid);
 libnvme_subsystem_t libnvme_lookup_subsystem(struct libnvme_host *h,

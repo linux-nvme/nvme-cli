@@ -378,6 +378,12 @@ __public int libnvmf_context_set_device(struct libnvmf_context *fctx, const char
 	return 0;
 }
 
+__public struct libnvme_fabrics_config *libnvmf_ctrl_get_config(
+		libnvme_ctrl_t c)
+{
+	return &c->cfg;
+}
+
 /*
  * Derived from Linux's supported options (the opt_tokens table)
  * when the mechanism to report supported options was added (f18ee3d988157).
@@ -414,7 +420,7 @@ static const struct libnvme_fabric_options default_supported_options = {
 static void merge_config(libnvme_ctrl_t c,
 		const struct libnvme_fabrics_config *cfg)
 {
-	struct libnvme_fabrics_config *ctrl_cfg = libnvme_ctrl_get_config(c);
+	struct libnvme_fabrics_config *ctrl_cfg = libnvmf_ctrl_get_config(c);
 
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_io_queues, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_write_queues, 0);
@@ -440,7 +446,7 @@ static void merge_config(libnvme_ctrl_t c,
 	if ((n)->o != d) (c)->o = (n)->o
 __public void libnvmf_update_config(libnvme_ctrl_t c, const struct libnvme_fabrics_config *cfg)
 {
-	struct libnvme_fabrics_config *ctrl_cfg = libnvme_ctrl_get_config(c);
+	struct libnvme_fabrics_config *ctrl_cfg = libnvmf_ctrl_get_config(c);
 
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_io_queues, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_write_queues, 0);
@@ -749,7 +755,7 @@ bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 
 static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 {
-	struct libnvme_fabrics_config *cfg = libnvme_ctrl_get_config(c);
+	struct libnvme_fabrics_config *cfg = libnvmf_ctrl_get_config(c);
 	const char *transport = libnvme_ctrl_get_transport(c);
 	const char *hostnqn, *hostid, *hostkey, *ctrlkey = NULL;
 	bool discover = false, discovery_nqn = false;
@@ -1062,6 +1068,24 @@ static const char *lookup_context(struct libnvme_global_ctx *ctx, libnvme_ctrl_t
 	return NULL;
 }
 
+__public int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
+		const char *subsysnqn, const char *transport,
+		const char *traddr, const char *host_traddr,
+		const char *host_iface, const char *trsvcid,
+		libnvme_ctrl_t *cp)
+{
+	struct libnvmf_context fctx = {
+		.transport = transport,
+		.traddr = traddr,
+		.host_traddr = host_traddr,
+		.host_iface = host_iface,
+		.trsvcid = trsvcid,
+		.subsysnqn = subsysnqn,
+	};
+
+	return _libnvme_create_ctrl(ctx, &fctx, cp);
+}
+
 __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 		  const struct libnvmf_context *fctx)
 {
@@ -1090,7 +1114,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 		if (fc) {
 			const char *key;
 
-			merge_config(c, libnvme_ctrl_get_config(fc));
+			merge_config(c, libnvmf_ctrl_get_config(fc));
 			/*
 			 * An authentication key might already been set
 			 * in @cfg, so ensure to update @c with the correct
@@ -1171,6 +1195,24 @@ __public int libnvmf_connect_ctrl(libnvme_ctrl_t c)
 	if (ret < 0)
 		return ret;
 
+	return 0;
+}
+
+__public int libnvmf_disconnect_ctrl(libnvme_ctrl_t c)
+{
+	struct libnvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
+	int ret;
+
+	ret = libnvme_set_attr(libnvme_ctrl_get_sysfs_dir(c),
+			    "delete_controller", "1");
+	if (ret < 0) {
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			"%s: failed to disconnect, error %d\n", c->name, errno);
+		return ret;
+	}
+	libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: %s disconnected\n",
+		c->name, c->subsysnqn);
+	nvme_deconfigure_ctrl(c);
 	return 0;
 }
 
@@ -2117,7 +2159,7 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 				_nvmf_discovery(ctx, &nfctx, true, child);
 
 			if (child && disconnect) {
-				libnvme_disconnect_ctrl(child);
+				libnvmf_disconnect_ctrl(child);
 				libnvme_free_ctrl(child);
 			}
 		} else if (err == -ENVME_CONNECT_ALREADY) {
@@ -2242,7 +2284,7 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "failed to identify controller, error %s\n",
 			 libnvme_strerror(-ret));
-		libnvme_disconnect_ctrl(c);
+		libnvmf_disconnect_ctrl(c);
 		libnvme_free_ctrl(c);
 		return ret;
 	}
@@ -2256,7 +2298,7 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 	 * The subsysnqn is not the well-known name. Prefer the unique
 	 * subsysnqn over the well-known one.
 	 */
-	libnvme_disconnect_ctrl(c);
+	libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);
 
 	fctx->subsysnqn = id->subnqn;
@@ -2337,7 +2379,7 @@ int _discovery_config_json(struct libnvme_global_ctx *ctx,
 
 	_nvmf_discovery(ctx, &nfctx, connect, cn);
 	if (!(fctx->persistent || is_persistent_discovery_ctrl(h, cn)))
-		ret = libnvme_disconnect_ctrl(cn);
+		ret = libnvmf_disconnect_ctrl(cn);
 	libnvme_free_ctrl(cn);
 
 	return ret;
@@ -2491,7 +2533,7 @@ __public int libnvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
 		_nvmf_discovery(ctx, &nfctx, connect, c);
 		if (!(nfctx.persistent ||
 		      is_persistent_discovery_ctrl(h, c)))
-			err = libnvme_disconnect_ctrl(c);
+			err = libnvmf_disconnect_ctrl(c);
 		libnvme_free_ctrl(c);
 	} while (!err);
 
@@ -2746,7 +2788,7 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 			if (ret)
 				continue;
 			nbft_discovery(ctx, &nfctx, dd, h, child);
-			libnvme_disconnect_ctrl(child);
+			libnvmf_disconnect_ctrl(child);
 			libnvme_free_ctrl(child);
 		} else {
 			ret = nbft_connect(ctx, &nfctx, h, e, NULL);
@@ -2988,7 +3030,7 @@ __public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 
 			rr = nbft_discovery(ctx, &nfctx, *dd, h, c);
 			if (!persistent)
-				libnvme_disconnect_ctrl(c);
+				libnvmf_disconnect_ctrl(c);
 			libnvme_free_ctrl(c);
 			if (rr == -ENOMEM) {
 				ret = rr;
@@ -3090,7 +3132,7 @@ __public int libnvmf_discovery(struct libnvme_global_ctx *ctx, struct libnvmf_co
 
 	ret = _nvmf_discovery(ctx, fctx, connect, c);
 	if (!(fctx->persistent || is_persistent_discovery_ctrl(h, c)))
-		libnvme_disconnect_ctrl(c);
+		libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);
 
 	return ret;

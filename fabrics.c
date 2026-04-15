@@ -773,7 +773,7 @@ static void nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
 				if (strcmp(libnvme_subsystem_get_subsysnqn(s), p))
 					continue;
 				libnvme_subsystem_for_each_ctrl(s, c) {
-					if (!libnvme_disconnect_ctrl(c))
+					if (!libnvmf_disconnect_ctrl(c))
 						i++;
 				}
 			}
@@ -856,7 +856,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 					"Did not find device %s\n", p);
 				return -ENODEV;
 			}
-			ret = libnvme_disconnect_ctrl(c);
+			ret = libnvmf_disconnect_ctrl(c);
 			if (ret)
 				fprintf(stderr,
 					"Failed to disconnect %s: %s\n",
@@ -922,7 +922,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 				else if (!strcmp(libnvme_ctrl_get_transport(c),
 						 "pcie"))
 					continue;
-				if (libnvme_disconnect_ctrl(c))
+				if (libnvmf_disconnect_ctrl(c))
 					fprintf(stderr,
 						"failed to disconnect %s\n",
 						libnvme_ctrl_get_name(c));

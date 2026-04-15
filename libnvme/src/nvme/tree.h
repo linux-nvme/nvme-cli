@@ -305,28 +305,6 @@ bool libnvme_ctrl_match_config(struct libnvme_ctrl *c, const char *transport,
 			    const char *host_iface);
 
 /**
- * libnvme_create_ctrl() - Allocate an unconnected NVMe controller
- * @ctx:		struct libnvme_global_ctx object
- * @subsysnqn:		Subsystem NQN
- * @transport:		Transport type
- * @traddr:		Transport address
- * @host_traddr:	Host transport address
- * @host_iface:		Host interface name
- * @trsvcid:		Transport service ID
- * @c:			@libnvme_ctrl_t object to return
- *
- * Creates an unconnected controller to be used for libnvme_add_ctrl().
- *
- * Return: 0 on success or negative error code otherwise
- */
-int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
-		     const char *subsysnqn, const char *transport,
-		     const char *traddr, const char *host_traddr,
-		     const char *host_iface, const char *trsvcid,
-		     libnvme_ctrl_t *c);
-
-
-/**
  * libnvme_subsystem_first_ns() - Start namespace iterator
  * @s:	&libnvme_subsystem_t object
  *
@@ -759,14 +737,6 @@ libnvme_subsystem_t libnvme_ctrl_get_subsystem(libnvme_ctrl_t c);
 const char *libnvme_ns_head_get_sysfs_dir(libnvme_ns_head_t head);
 
 /**
- * libnvme_ctrl_get_config() - Fabrics configuration of a controller
- * @c:	Controller instance
- *
- * Return: Fabrics configuration of @c
- */
-struct libnvme_fabrics_config *libnvme_ctrl_get_config(libnvme_ctrl_t c);
-
-/**
  * libnvme_ctrl_identify() - Issues an 'identify controller' command
  * @c:	Controller instance
  * @id:	Identify controller data structure
@@ -777,16 +747,6 @@ struct libnvme_fabrics_config *libnvme_ctrl_get_config(libnvme_ctrl_t c);
  * Return: 0 on success or -1 on failure.
  */
 int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id);
-
-/**
- * libnvme_disconnect_ctrl() - Disconnect a controller
- * @c:	Controller instance
- *
- * Issues a 'disconnect' fabrics command to @c
- *
- * Return: 0 on success, -1 on failure.
- */
-int libnvme_disconnect_ctrl(libnvme_ctrl_t c);
 
 /**
  * libnvme_scan_ctrl() - Scan on a controller
