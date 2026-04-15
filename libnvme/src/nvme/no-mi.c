@@ -10,7 +10,9 @@
 
 #include <libnvme.h>
 
-const char *libnvme_mi_status_to_string(int status)
+#include "compiler-attributes.h"
+
+__public const char *libnvme_mi_status_to_string(int status)
 {
 	return "MI support disabled";
 }

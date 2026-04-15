@@ -8,6 +8,8 @@
 
 #pragma once
 
+#ifdef CONFIG_MI
+
 #include <poll.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -115,6 +117,8 @@ void __libnvme_mi_mctp_set_ops(const struct __mi_mctp_socket_ops *newops);
  * endpoint to use this with these devices should return an error
  */
 #define LIBNVME_QUIRK_CSI_1_NOT_SUPPORTED		(1 << 1)
+
+#endif
 
 int __libnvme_transport_handle_open_mi(struct libnvme_transport_handle *hdl,
 		const char *devname);
