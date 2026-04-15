@@ -449,6 +449,7 @@ static void merge_config(libnvme_ctrl_t c,
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, tos, -1);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, keyring_id, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, tls_key_id, 0);
+	MERGE_CFG_OPTION(ctrl_cfg, cfg, tls_configured_key_id, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, duplicate_connect, false);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
@@ -477,6 +478,7 @@ static void update_config(libnvme_ctrl_t c,
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tos, -1);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, keyring_id , 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tls_key_id, 0);
+	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tls_configured_key_id, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, duplicate_connect, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
