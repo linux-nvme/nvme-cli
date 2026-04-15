@@ -72,9 +72,9 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 	const char *sfile = "binary file containing log dump";
 	const char *jqfilt = "JSON config entry name containing jq filter";
 	bool has_binary_file = false;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_free_ struct nvme_telemetry_log *tlog = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_free struct nvme_telemetry_log *tlog = NULL;
 
 	__attribute__((cleanup(cleanup_json_object))) struct json_object *configuration = NULL;
 
@@ -142,7 +142,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 	}
 
 	if (argconfig_parse_seen(opts, "config-file")) {
-		_cleanup_free_ char *conf_str = NULL;
+		__cleanup_free char *conf_str = NULL;
 		size_t length = 0;
 		enum json_tokener_error jerr;
 

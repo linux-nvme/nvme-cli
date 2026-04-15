@@ -11,7 +11,7 @@
 #include "fabrics.h"
 #include "private.h"
 
-#define __cleanup__(fn) __attribute__((cleanup(fn)))
+#define __cleanup(fn) __attribute__((cleanup(fn)))
 
 #define DECLARE_CLEANUP_FUNC(name, type) \
 	void name(type *__p)
@@ -27,7 +27,7 @@ static inline void freep(void *p)
 {
 	free(*(void **)p);
 }
-#define _cleanup_free_ __cleanup__(freep)
+#define __cleanup_free __cleanup(freep)
 
 static inline void nvme_freep(void *p)
 {
@@ -36,26 +36,26 @@ static inline void nvme_freep(void *p)
 #define _cleanup_nvme_free_ __cleanup__(nvme_freep)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
-#define _cleanup_file_ __cleanup__(cleanup_file)
+#define __cleanup_file __cleanup(cleanup_file)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_dir, DIR *, closedir)
-#define _cleanup_dir_ __cleanup__(cleanup_dir)
+#define __cleanup_dir __cleanup(cleanup_dir)
 
 static inline void cleanup_fd(int *fd)
 {
 	if (*fd >= 0)
 		close(*fd);
 }
-#define _cleanup_fd_ __cleanup__(cleanup_fd)
+#define __cleanup_fd __cleanup(cleanup_fd)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *, freeaddrinfo)
-#define _cleanup_addrinfo_ __cleanup__(cleanup_addrinfo)
+#define __cleanup_addrinfo __cleanup(cleanup_addrinfo)
 
 static inline void free_uri(struct libnvme_fabrics_uri **uri)
 {
 	if (*uri)
 		libnvmf_free_uri(*uri);
 }
-#define _cleanup_uri_ __cleanup__(free_uri)
+#define __cleanup_uri __cleanup(free_uri)
 
 #endif

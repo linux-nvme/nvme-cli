@@ -17,8 +17,8 @@
 
 static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8 fid)
 {
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__u64 result = 0;
 	__u32 clear = 1 << 31;
 	__u8 uuid_index = 0;
@@ -66,8 +66,8 @@ int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
 	const char *no_uuid = "Do not try to automatically detect UUID index";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__u64 result;
 	int err;
 	bool uuid;

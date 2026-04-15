@@ -117,9 +117,9 @@ static int nvme_dera_get_device_status(struct libnvme_transport_handle *hdl, enu
 
 static int get_status(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	enum dera_device_status state = DEVICE_STATUS_FATAL_ERROR;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	char *desc = "Get the Dera device status";
 	struct nvme_dera_smart_info_log log;
 	int err;

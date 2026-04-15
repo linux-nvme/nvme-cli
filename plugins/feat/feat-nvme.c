@@ -70,7 +70,7 @@ static int feat_get_nsid(struct libnvme_transport_handle *hdl, __u32 nsid,
 	int err;
 	__u32 len = 0;
 
-	_cleanup_nvme_free_ void *buf = NULL;
+	__cleanup_nvme_free void *buf = NULL;
 
 	if (!NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
 		libnvme_get_feature_length(fid, cdw11, NVME_DATA_TFR_CTRL_TO_HOST, &len);
@@ -139,8 +139,8 @@ static int feat_power_mgmt(int argc, char **argv, struct command *acmd, struct p
 	const char *wh = "workload hint";
 	const __u8 fid = NVME_FEAT_FID_POWER_MGMT;
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -174,7 +174,7 @@ static int perfc_set(struct libnvme_transport_handle *hdl, __u8 fid, __u32 cdw11
 	__u64 result;
 	int err;
 
-	_cleanup_fd_ int ffd = STDIN_FILENO;
+	__cleanup_fd int ffd = STDIN_FILENO;
 
 	struct nvme_perf_characteristics data = {
 		.attr_buf = { 0 },
@@ -234,8 +234,8 @@ static int feat_perfc(int argc, char **argv, struct command *acmd, struct plugin
 	const char *attrl = "attribute length";
 	const char *vs_data = "vendor specific data";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 	__u8 fid = NVME_FEAT_FID_PERF_CHARACTERISTICS;
 	__u32 cdw11;
@@ -298,8 +298,8 @@ static int feat_hctm(int argc, char **argv, struct command *acmd, struct plugin 
 {
 	const __u8 fid = NVME_FEAT_FID_HCTM;
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -361,8 +361,8 @@ static int feat_timestamp(int argc, char **argv, struct command *acmd, struct pl
 	const __u8 fid = NVME_FEAT_FID_TIMESTAMP;
 	const char *tstmp = "timestamp";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -445,8 +445,8 @@ static int feat_temp_thresh(int argc, char **argv, struct command *acmd, struct 
 	const char *thsel = "threshold type select";
 	const char *tmpthh = "temperature threshold hysteresis";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct temp_thresh_config cfg = { 0 };
@@ -533,8 +533,8 @@ static int feat_arbitration(int argc, char **argv, struct command *acmd, struct 
 	const char *mpw = "medium priority weight";
 	const char *hpw = "high priority weight";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct arbitration_config cfg = { 0 };
@@ -585,8 +585,8 @@ static int feat_volatile_wc(int argc, char **argv, struct command *acmd, struct 
 	const __u8 fid = NVME_FEAT_FID_VOLATILE_WC;
 	const char *wce = "volatile write cache enable";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -644,9 +644,9 @@ static int feat_power_limit(int argc, char **argv, struct command *acmd,
 	const char *pls = "power limit scale";
 	const __u8 fid = NVME_FEAT_FID_POWER_LIMIT;
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl =
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
 	    NULL;
 	int err;
 
@@ -716,9 +716,9 @@ static int feat_power_thresh(int argc, char **argv, struct command *acmd,
 	const char *ept = "enable power threshold";
 	const __u8 fid = NVME_FEAT_FID_POWER_THRESH;
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl =
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
 	    NULL;
 	int err;
 
@@ -793,9 +793,9 @@ static int feat_power_meas(int argc, char **argv, struct command *cmd,
 	const char *smt = "stop measurement time";
 	const __u8 fid = NVME_FEAT_FID_POWER_MEASUREMENT;
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl =
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
 	    NULL;
 	int err;
 
@@ -860,9 +860,9 @@ static int err_recovery_set(struct libnvme_transport_handle *hdl, const __u8 fid
 static int feat_err_recovery(int argc, char **argv, struct command *acmd,
 			     struct plugin *plugin)
 {
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl =
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
 	    NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 
 	const char *dulbe =
 	    "deallocated or unwritten logical block error enable";
@@ -945,9 +945,9 @@ static int num_queues_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 static int feat_num_queues(int argc, char **argv, struct command *acmd,
 			     struct plugin *plugin)
 {
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl =
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
 	    NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 
 	const char *ncqr = "number of I/O completion queues requested";
 	const char *nsqr = "number of I/O submission queues requested";

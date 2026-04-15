@@ -236,7 +236,7 @@ static int ilog_dump_assert_logs(struct libnvme_transport_handle *hdl, struct il
 {
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	__u8 head_buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
-	_cleanup_free_ char *file_path = NULL;
+	__cleanup_free char *file_path = NULL;
 	char file_name[] = "AssertLog.bin";
 	struct assert_dump_header *ad = (struct assert_dump_header *) head_buf;
 	struct libnvme_passthru_cmd cmd = {
@@ -294,7 +294,7 @@ static int ilog_dump_event_logs(struct libnvme_transport_handle *hdl, struct ilo
 {
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
 	__u8 head_buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
-	_cleanup_free_ char *file_path = NULL;
+	__cleanup_free char *file_path = NULL;
 	struct event_dump_header *ehdr = (struct event_dump_header *) head_buf;
 	struct libnvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
@@ -369,7 +369,7 @@ static int ilog_dump_nlogs(struct libnvme_transport_handle *hdl, struct ilog *il
 	int err = 0;
 	__u32 count, core_num;
 	__u8 buf[INTERNAL_LOG_MAX_BYTE_TRANSFER];
-	_cleanup_free_ char *file_path = NULL;
+	__cleanup_free char *file_path = NULL;
 	struct nlog_dump_header_common *nlog_header = (struct nlog_dump_header_common *)buf;
 	struct libnvme_passthru_cmd cmd = {
 		.opcode = 0xd2,
@@ -439,7 +439,7 @@ static int ilog_dump_nlogs(struct libnvme_transport_handle *hdl, struct ilog *il
 
 int ensure_dir(const char *parent_dir_name, const char *name)
 {
-	_cleanup_free_ char *file_path = NULL;
+	__cleanup_free char *file_path = NULL;
 	struct stat sb;
 
 	if (asprintf(&file_path, "%s/%s", parent_dir_name, name) < 0)
@@ -465,8 +465,8 @@ struct log {
 static int log_save(struct log *log, const char *parent_dir_name, const char *subdir_name,
 		    const char *file_name, __u8 *buffer, size_t buf_size)
 {
-	_cleanup_fd_ int output = -1;
-	_cleanup_free_ char *file_path = NULL;
+	__cleanup_fd int output = -1;
+	__cleanup_free char *file_path = NULL;
 	size_t bytes_remaining = 0;
 
 	ensure_dir(parent_dir_name, subdir_name);
@@ -498,7 +498,7 @@ static int ilog_dump_identify_page(struct libnvme_transport_handle *hdl,
 {
 	__u8 data[NVME_IDENTIFY_DATA_SIZE];
 	__u8 *buff = cns->buffer ? cns->buffer : data;
-	_cleanup_free_ char *filename = NULL;
+	__cleanup_free char *filename = NULL;
 	int err;
 
 	err = nvme_identify(hdl, nsid, NVME_CSI_NVM, cns->id, buff,
@@ -685,7 +685,7 @@ static int ilog_dump_identify_pages(struct libnvme_transport_handle *hdl, struct
 static int ilog_dump_log_page(struct libnvme_transport_handle *hdl, struct ilog *ilog, struct log *lp, __u32 nsid)
 {
 	__u8 *buff = lp->buffer;
-	_cleanup_free_ char *filename = NULL;
+	__cleanup_free char *filename = NULL;
 
 	int err;
 	if (!lp->buffer_size)
@@ -776,8 +776,8 @@ static int ilog_dump_no_lsp_log_pages(struct libnvme_transport_handle *hdl, stru
 
 static int ilog_dump_pel(struct libnvme_transport_handle *hdl, struct ilog *ilog)
 {
-	_cleanup_nvme_free_ struct nvme_persistent_event_log *pevent = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = {0};
+	__cleanup_nvme_free struct nvme_persistent_event_log *pevent = NULL;
+	__cleanup_huge struct nvme_mem_huge mh = {0};
 	void *pevent_log_full;
 	size_t max_data_tx;
 	struct log lp = {
@@ -835,11 +835,11 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 {
 	char sn_prefix[sizeof(((struct nvme_id_ctrl *)0)->sn)+1];
 	char date_str[sizeof("-YYYYMMDDHHMMSS")];
-	_cleanup_free_ char *full_folder = NULL;
-	_cleanup_free_ char *unique_folder = NULL;
-	_cleanup_free_ char *zip_name = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_free char *full_folder = NULL;
+	__cleanup_free char *unique_folder = NULL;
+	__cleanup_free char *zip_name = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	char *initial_folder;
 	char *output_path;
 	struct ilog ilog = {0};
@@ -970,7 +970,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 
 	if (ilog.count > 0) {
 		int ret_cmd;
-		_cleanup_free_ char *cmd = NULL;
+		__cleanup_free char *cmd = NULL;
 		char *quiet = nvme_args.verbose ? "" : " -q";
 
 		if (asprintf(&zip_name, "%s.zip", unique_folder) < 0)

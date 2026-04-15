@@ -13,8 +13,8 @@ int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plu
 {
 	const char *desc = "Get drive HW information";
 	const char *FTL_unit_size_str = "FTL_unit_size";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	libnvme_ctrl_t c;
 	libnvme_ns_t n;

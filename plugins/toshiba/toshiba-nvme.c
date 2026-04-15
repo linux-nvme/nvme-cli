@@ -421,8 +421,8 @@ static int vendor_log(int argc, char **argv, struct command *acmd, struct plugin
 	const char *namespace = "(optional) desired namespace";
 	const char *output_file = "(optional) binary output filename";
 	const char *log = "(optional) log ID (0xC0, or 0xCA), default 0xCA";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -470,8 +470,8 @@ static int internal_log(int argc, char **argv, struct command *acmd, struct plug
 	char *desc = "Get internal status log and show it.";
 	const char *output_file = "(optional) binary output filename";
 	const char *prev_log = "(optional) use previous log. Otherwise uses current log.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	struct config {
@@ -513,8 +513,8 @@ static int clear_correctable_errors(int argc, char **argv, struct command *acmd,
 				    struct plugin *plugin)
 {
 	char *desc = "Clear PCIe correctable error count.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	const __u32 namespace_id = 0xFFFFFFFF;
 	const __u32 feature_id = 0xCA;
 	const __u32 value = 1; /* Bit0 - reset clear PCIe correctable count */

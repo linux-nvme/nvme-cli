@@ -120,8 +120,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	    "Get Shannon vendor specific additional smart log (optionally, for the specified namespace), and show it.";
 	const char *namespace = "(optional) desired namespace";
 	const char *raw = "dump output in binary format";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct config {
 		__u32 namespace_id;
 		bool  raw_binary;
@@ -175,8 +175,8 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 	const char *data_len = "buffer len (if) data is returned";
 	const char *cdw11 = "dword 11 for interrupt vector config";
 	const char *human_readable = "show infos in readable format";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	void *buf = NULL;
 	__u64 result;
 	int err;
@@ -253,9 +253,9 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 	const char *data = "optional file for feature data (default stdin)";
 	const char *value = "new value of feature (required)";
 	const char *save = "specifies that the controller shall save the attribute";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_free_ void *buf = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_free void *buf = NULL;
 	int ffd = STDIN_FILENO;
 	__u64 result;
 	int err;

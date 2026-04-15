@@ -17,12 +17,12 @@ void arbitrary(void *buf, size_t len);
 
 size_t arbitrary_range(size_t max);
 
-#define __cleanup__(fn) __attribute__((cleanup(fn)))
+#define __cleanup(fn) __attribute__((cleanup(fn)))
 
 static inline void freep(void *p)
 {
 	free(*(void **)p);
 }
-#define _cleanup_free_ __cleanup__(freep)
+#define __cleanup_free __cleanup(freep)
 
 #endif /* #ifndef _LIBNVME_TEST_IOCTL_UTIL_H */

@@ -296,7 +296,7 @@ static void huawei_print_list_items(struct huawei_list_item *list_items, unsigne
 static int huawei_list(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx =
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx =
 		libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
 	char path[264];
 	struct dirent **devices;
@@ -331,7 +331,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 	}
 
 	for (i = 0; i < n; i++) {
-		_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+		__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 		snprintf(path, sizeof(path), "/dev/%s", devices[i]->d_name);
 		ret = libnvme_open(ctx, path, &hdl);

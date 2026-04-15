@@ -455,7 +455,7 @@ __public const char *libnvme_strerror(int errnum)
 int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 		    char **hostname)
 {
-	_cleanup_addrinfo_ struct addrinfo *host_info = NULL;
+	__cleanup_addrinfo struct addrinfo *host_info = NULL;
 	struct addrinfo hints = {.ai_family = AF_UNSPEC};
 	char addrstr[NVMF_TRADDR_SIZE];
 	const char *p;
@@ -580,7 +580,7 @@ char *kv_keymatch(const char *kv, const char *key)
 static size_t read_file(const char * fname, char *buffer, size_t *bufsz)
 {
 	char   *p;
-	_cleanup_file_ FILE *file = NULL;
+	__cleanup_file FILE *file = NULL;
 	size_t len;
 
 	file = fopen(fname, "re");
@@ -629,7 +629,7 @@ size_t get_entity_name(char *buffer, size_t bufsz)
 
 size_t get_entity_version(char *buffer, size_t bufsz)
 {
-	_cleanup_file_ FILE *file = NULL;
+	__cleanup_file FILE *file = NULL;
 	size_t  num_bytes = 0;
 
 	/* /proc/sys/kernel/ostype typically contains the string "Linux" */

@@ -60,10 +60,10 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 			      "will write to invalid memory, inevitably leading to MMU faults or "
 			      "worse.";
 
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct lba_migration_queue_entry_type_0 *queue = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	struct libnvme_passthru_cmd cmd;
 	int err = -1;
 
@@ -126,8 +126,8 @@ static int lm_delete_cdq(int argc, char **argv, struct command *acmd, struct plu
 	const char *desc = "Delete Controller Data Queue";
 	const char *cdqid = "Controller Data Queue ID";
 
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err = -1;
 
@@ -176,8 +176,8 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 	const char *stop = "Equivalent to stop tracking with defaults";
 
 
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err = -1;
 
@@ -274,10 +274,10 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 	const char *numd = "Number of Dwords (NUMD)";
 	const char *input = "Controller State Data input file";
 
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
-	_cleanup_file_ FILE *file = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_file FILE *file = NULL;
 	struct libnvme_passthru_cmd cmd;
 	void *data = NULL;
 	int err = -1;
@@ -406,10 +406,10 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 	const char *output = "Controller State Data output file";
 	const char *human_readable_info = "show info in readable format";
 
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
-	_cleanup_file_ FILE *fd = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_file FILE *fd = NULL;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	void *data = NULL;
@@ -525,8 +525,8 @@ static int lm_set_cdq(int argc, char **argv, struct command *acmd, struct plugin
 	const char *tpt = "If specified, the slot that causes the controller "
 			  " to issue a CDQ Tail Pointer event";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err = -1;
 
 	struct config {
@@ -569,8 +569,8 @@ static int lm_get_cdq(int argc, char **argv, struct command *acmd, struct plugin
 			   "of a CDQ and specify the configuration of a CDQ Tail event.";
 	const char *cdqid = "Controller Data Queue ID";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	int err = -1;
 

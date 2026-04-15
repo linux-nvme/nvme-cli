@@ -303,8 +303,8 @@ static bool argconfig_check_human_readable(struct argconfig_commandline_options 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options)
 {
-	_cleanup_free_ char *short_opts = NULL;
-	_cleanup_free_ struct option *long_opts = NULL;
+	__cleanup_free char *short_opts = NULL;
+	__cleanup_free struct option *long_opts = NULL;
 	struct argconfig_commandline_options *s;
 	int c, option_index = 0, short_index = 0, options_count = 0;
 	int ret = 0;

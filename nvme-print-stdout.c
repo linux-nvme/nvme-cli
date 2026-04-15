@@ -6424,7 +6424,7 @@ static void stdout_message(bool error, const char *msg, va_list ap)
 
 static void stdout_perror(const char *msg, va_list ap)
 {
-	_cleanup_free_ char *error = NULL;
+	__cleanup_free char *error = NULL;
 
 	if (vasprintf(&error, msg, ap) < 0)
 		error = NULL;
@@ -6434,7 +6434,7 @@ static void stdout_perror(const char *msg, va_list ap)
 
 static void stdout_key_value(const char *key, const char *val, va_list ap)
 {
-	_cleanup_free_ char *value = NULL;
+	__cleanup_free char *value = NULL;
 
 	if (vasprintf(&value, val, ap) < 0)
 		value = NULL;

@@ -69,8 +69,8 @@ static void vu_gc_log_show(struct garbage_control_collection_log *payload, const
 int solidigm_get_garbage_collection_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Get and parse Solidigm vendor specific garbage collection event log.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;

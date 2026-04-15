@@ -43,8 +43,8 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 		"[%s] <%s>%s ",
 		"[%s] <%s> %s: ",
 	};
-	_cleanup_free_ char *header = NULL;
-	_cleanup_free_ char *message = NULL;
+	__cleanup_free char *header = NULL;
+	__cleanup_free char *message = NULL;
 	int idx = 0;
 
 	if (level > l->level)

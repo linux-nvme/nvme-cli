@@ -949,8 +949,8 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 	const char *freq = "(optional) How often you want to log SMART data (0.25 = 15' , 0.5 = 30' , 1 = 1 hour, 2 = 2 hours, etc.). Default = 10 hours.";
 	const char *output_file = "(optional) Name of the log file (give it a name that easy for you to remember what the test is). You can leave it blank too, we will take care it for you.";
 	const char *test_name = "(optional) Name of the test you are doing. We use this as part of the name of the log file.";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	struct vtview_save_log_settings cfg = {
 		.run_time_hrs = 20,
@@ -1026,8 +1026,8 @@ static int vt_show_identify(int argc, char **argv, struct command *acmd, struct 
 	char *desc = "Parse identify data to json format\n\n"
 		"Typical usages:\n\n"
 		"virtium show-identify /dev/yourDevice\n";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl ctrl;
 	int ret, err = 0;
 

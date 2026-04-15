@@ -210,7 +210,7 @@ static void write_file(unsigned char *data, size_t len, const char *dir,
 		       const char *file, const char *msg)
 {
 	char temp_folder[PATH_MAX] = { 0 };
-	_cleanup_file_ FILE *fp = NULL;
+	__cleanup_file FILE *fp = NULL;
 
 	if (dir != NULL)
 		sprintf(temp_folder, "%s/%s", dir, file);
@@ -869,10 +869,10 @@ int rpmb_cmd_option(int argc, char **argv, struct command *acmd, struct plugin *
 		OPT_UINT("blocks",    'b', &cfg.blocks,   blocks),
 		OPT_UINT("target",    't', &cfg.target,   target));
 	
-	_cleanup_free_ unsigned char *key_buf = NULL;
-	_cleanup_free_ unsigned char *msg_buf = NULL;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_free unsigned char *key_buf = NULL;
+	__cleanup_free unsigned char *msg_buf = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	unsigned int write_cntr = 0;
 	unsigned int msg_size = 0;
 	unsigned int key_size = 0;

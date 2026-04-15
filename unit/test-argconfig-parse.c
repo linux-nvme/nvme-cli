@@ -189,7 +189,7 @@ const struct comma_sep_array_test comma_sep_array_tests[] = {
 
 void comma_sep_array_test(const struct comma_sep_array_test *test)
 {
-	_cleanup_free_ char *input = strdup(test->input);
+	__cleanup_free char *input = strdup(test->input);
 	__u32 values[COMMA_SEP_ARRAY_MAX_VALUES] = {};
 	int ret = argconfig_parse_comma_sep_array_u32(
 		input, values, COMMA_SEP_ARRAY_MAX_VALUES);

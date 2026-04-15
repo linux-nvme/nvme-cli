@@ -117,7 +117,7 @@ static void obj_add_result(struct json_object *o, const char *v, ...)
 {
 	va_list ap;
 
-	_cleanup_free_ char *value = NULL;
+	__cleanup_free char *value = NULL;
 
 	va_start(ap, v);
 
@@ -133,7 +133,7 @@ static void obj_add_key(struct json_object *o, const char *k, const char *v, ...
 {
 	va_list ap;
 
-	_cleanup_free_ char *value = NULL;
+	__cleanup_free char *value = NULL;
 
 	va_start(ap, v);
 
@@ -647,7 +647,7 @@ void json_changed_ns_list_log(struct nvme_ns_list *log, const char *devname, boo
 	__u32 nsid;
 	int i;
 
-	_cleanup_free_ char *k = NULL;
+	__cleanup_free char *k = NULL;
 
 	if (log->ns[0] == cpu_to_le32(0xffffffff))
 		return;
@@ -2287,7 +2287,7 @@ static void json_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log,
 
 	for (i = 0; i < num_descs; i++) {
 		struct nvme_eom_lane_desc *desc = p;
-		_cleanup_free_ char *hexstr = NULL;
+		__cleanup_free char *hexstr = NULL;
 		unsigned char *vsdata = NULL;
 		unsigned int vsdataoffset = 0;
 		uint16_t nrows, ncols, edlen;
@@ -2351,7 +2351,7 @@ static void json_phy_rx_eom_log(struct nvme_phy_rx_eom_log *log, __u16 controlle
 	int i;
 	struct json_object *r = json_create_object();
 
-	_cleanup_free_ char **allocated_eyes = NULL;
+	__cleanup_free char **allocated_eyes = NULL;
 
 	obj_add_uint(r, "lid", log->lid);
 	obj_add_uint(r, "eomip", log->eomip);
@@ -4116,7 +4116,7 @@ static void json_feature_show_fields_power_limit(struct json_object *r,
 {
 	__u8 field = NVME_FEAT_POWER_LIMIT_PLS(result);
 
-	_cleanup_free_ char *k =
+	__cleanup_free char *k =
 	    get_power_and_scale(NVME_FEAT_POWER_LIMIT_PLV(result), field);
 
 	obj_add_str(r, "Power Limit Scale (PLS)",
@@ -4131,7 +4131,7 @@ static void json_feature_show_fields_power_thresh(struct json_object *r,
 {
 	__u8 field;
 	__u16 ptv;
-	_cleanup_free_ char *k = NULL;
+	__cleanup_free char *k = NULL;
 
 	field = NVME_FEAT_POWER_THRESH_EPT(result);
 
@@ -5311,7 +5311,7 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 	int val;
 	int type;
 
-	_cleanup_free_ char *value = NULL;
+	__cleanup_free char *value = NULL;
 
 	if (vasprintf(&value, msg, ap) < 0)
 		value = alloc_error;
@@ -5351,7 +5351,7 @@ static void json_output_message(bool error, const char *msg, va_list ap)
 {
 	struct json_object *r = json_r ? json_r : json_create_object();
 
-	_cleanup_free_ char *value = NULL;
+	__cleanup_free char *value = NULL;
 
 	if (vasprintf(&value, msg, ap) < 0)
 		value = NULL;
@@ -5365,7 +5365,7 @@ static void json_output_perror(const char *msg, va_list ap)
 {
 	struct json_object *r = json_create_object();
 
-	_cleanup_free_ char *error = NULL;
+	__cleanup_free char *error = NULL;
 
 	if (vasprintf(&error, msg, ap) < 0)
 		error = NULL;
@@ -5406,8 +5406,8 @@ static void json_output_key_value(const char *key, const char *val, va_list ap)
 {
 	struct json_object *r = json_r ? json_r : json_create_object();
 
-	_cleanup_free_ char *value = NULL;
-	_cleanup_free_ char *key_trim = trim_white_space(strdup(key));
+	__cleanup_free char *value = NULL;
+	__cleanup_free char *key_trim = trim_white_space(strdup(key));
 
 	if (vasprintf(&value, val, ap) < 0)
 		value = NULL;

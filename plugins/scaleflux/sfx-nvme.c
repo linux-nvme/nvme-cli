@@ -336,8 +336,8 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 #ifdef CONFIG_JSONC
 	const char *json = "Dump output in json format";
 #endif /* CONFIG_JSONC */
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
 	struct config {
 		__u32 namespace_id;
@@ -509,8 +509,8 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 	char *desc = "Get ScaleFlux Latency Statistics log and show it.";
 	const char *raw = "dump output in binary format";
 	const char *write = "Get write statistics (read default)";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct config {
 		bool raw_binary;
 		bool write;
@@ -653,8 +653,8 @@ static int sfx_get_bad_block(int argc, char **argv, struct command *acmd, struct
 {
 	const __u64 buf_size = 256*4096*sizeof(unsigned char);
 	unsigned char *data_buf;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 
 	char *desc = "Get bad block table of sfx block device.";
@@ -705,8 +705,8 @@ static int query_cap_info(int argc, char **argv, struct command *acmd, struct pl
 	struct sfx_freespace_ctx sfctx = { 0 };
 	char *desc = "query current capacity info";
 	const char *raw = "dump output in binary format";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct config {
 		bool  raw_binary;
 	};
@@ -822,8 +822,8 @@ static int change_cap(int argc, char **argv, struct command *acmd, struct plugin
 	const char *cap_gb = "cap size in GB";
 	const char *cap_byte = "cap size in byte";
 	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__u64 cap_in_4k = 0;
 	__u64 cap_in_sec = 0;
 	int shrink = 0;
@@ -933,8 +933,8 @@ static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct p
 	const char *feature_id = "hex feature name (required)";
 	const char *namespace_id = "desired namespace";
 	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_id_ns ns;
 	int err = 0;
 
@@ -1029,8 +1029,8 @@ static int sfx_get_feature(int argc, char **argv, struct command *acmd, struct p
 				 "feature id 1: ATOMIC";
 	const char *feature_id = "hex feature name (required)";
 	const char *namespace_id = "desired namespace";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__u32 result = 0;
 	int err = 0;
 
@@ -1202,7 +1202,7 @@ ret:
 static int nvme_dump_evtlog(struct libnvme_transport_handle *hdl, __u32 namespace_id, __u32 storage_medium,
 			    char *file, bool parse, char *output)
 {
-	_cleanup_huge_ struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	struct nvme_persistent_event_log *pevent;
 	void *pevent_log_info;
 	__u8  lsp_base, lsp;
@@ -1355,8 +1355,8 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *acmd, struct p
 				     "0: nand(default) 1: nor";
 	const char *parse = "parse error & warning evtlog from evtlog file";
 	const char *output = "parse result output file";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 
 	struct config {
@@ -1478,8 +1478,8 @@ static int sfx_expand_cap(int argc, char **argv, struct command *acmd, struct pl
 			   "0: 512(default) 1: 4096";
 	const char *units = "namespace size/capacity units\n"
 			    "0: GB(default) 1: LBA";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 
 	struct config {
@@ -1538,8 +1538,8 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 {
 	const char *desc				= "Get ScaleFlux specific status information and print it";
 	const char *json_desc			= "Print output in JSON format, otherwise human readable";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl id_ctrl = { 0 };
 	struct extended_health_info_myrtle sfx_smart = { 0 };
 	struct nvme_smart_log smart_log = { 0 };

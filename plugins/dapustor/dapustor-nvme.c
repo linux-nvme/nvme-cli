@@ -511,9 +511,9 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 	const char *json = "Dump output in json format";
 #endif /* CONFIG_JSONC */
 
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_extended_additional_smart_log ext_smart_log;
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct nvme_additional_smart_log smart_log;
 	nvme_print_flags_t flags;
 	bool has_ext = false;

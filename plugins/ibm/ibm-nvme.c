@@ -225,8 +225,8 @@ static int get_ibm_addi_smart_log(int argc, char **argv, struct command *cmd, st
 	const char *desc = "Get IBM specific additional smart log and show it.";
 	const char *raw = "Dump output in binary format";
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_ibm_additional_smart_log smart_log;
 	int err;
 
@@ -352,8 +352,8 @@ static void show_ibm_vpd_log(struct nvme_ibm_vpd_log *vpd, const char *devname)
 
 static int get_ibm_vpd_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_ibm_vpd_log vpd_log;
 	int err;
 
@@ -525,8 +525,8 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 	const char *action = "action the controller shall take during "
 		"processing this persistent log page command.";
 	const char *log_len = "number of bytes to retrieve";
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_persistent_event_log pevent_log;
 	void *pevent_log_info = NULL;
 	enum nvme_print_flags flags;

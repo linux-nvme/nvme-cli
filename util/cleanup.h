@@ -9,7 +9,7 @@
 
 #include "util/mem.h"
 
-#define __cleanup__(fn) __attribute__((cleanup(fn)))
+#define __cleanup(fn) __attribute__((cleanup(fn)))
 
 #define DECLARE_CLEANUP_FUNC(name, type) \
 	void name(type *__p)
@@ -25,31 +25,31 @@ static inline void freep(void *p)
 {
 	free(*(void **)p);
 }
-#define _cleanup_free_ __cleanup__(freep)
+#define __cleanup_free __cleanup(freep)
 
 static inline void nvme_freep(void *p)
 {
 	nvme_free(*(void **)p);
 }
-#define _cleanup_nvme_free_ __cleanup__(nvme_freep)
+#define __cleanup_nvme_free __cleanup(nvme_freep)
 
-#define _cleanup_huge_ __cleanup__(nvme_free_huge)
+#define __cleanup_huge __cleanup(nvme_free_huge)
 
 static inline void cleanup_fd(int *fd)
 {
 	if (*fd > STDERR_FILENO)
 		close(*fd);
 }
-#define _cleanup_fd_ __cleanup__(cleanup_fd)
+#define __cleanup_fd __cleanup(cleanup_fd)
 
 static inline void cleanup_nvme_global_ctx(struct libnvme_global_ctx **ctx)
 {
 	libnvme_free_global_ctx(*ctx);
 }
-#define _cleanup_nvme_global_ctx_ __cleanup__(cleanup_nvme_global_ctx)
+#define __cleanup_nvme_global_ctx __cleanup(cleanup_nvme_global_ctx)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_ctrl, libnvme_ctrl_t, libnvme_free_ctrl)
-#define _cleanup_nvme_ctrl_ __cleanup__(cleanup_nvme_ctrl)
+#define __cleanup_nvme_ctrl __cleanup(cleanup_nvme_ctrl)
 
 #ifdef CONFIG_FABRICS
 static inline void free_uri(struct libnvme_fabrics_uri **uri)
@@ -57,16 +57,16 @@ static inline void free_uri(struct libnvme_fabrics_uri **uri)
 	if (*uri)
 		libnvmf_free_uri(*uri);
 }
-#define _cleanup_uri_ __cleanup__(free_uri)
+#define __cleanup_uri __cleanup(free_uri)
 
 static inline void cleanup_nvmf_context(struct libnvmf_context **fctx)
 {
 	libnvmf_context_free(*fctx);
 }
-#define _cleanup_nvmf_context_ __cleanup__(cleanup_nvmf_context)
+#define __cleanup_nvmf_context __cleanup(cleanup_nvmf_context)
 #endif
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
-#define _cleanup_file_ __cleanup__(cleanup_file)
+#define __cleanup_file __cleanup(cleanup_file)
 
 #endif /* __CLEANUP_H */

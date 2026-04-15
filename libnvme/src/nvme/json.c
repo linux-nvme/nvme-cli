@@ -191,16 +191,16 @@ static void json_parse_host(struct libnvme_global_ctx *ctx, struct json_object *
 }
 
 static DEFINE_CLEANUP_FUNC(cleanup_tokener, json_tokener *, json_tokener_free)
-#define _cleanup_tokener_ __cleanup__(cleanup_tokener)
+#define __cleanup_tokener __cleanup(cleanup_tokener)
 
 static struct json_object *parse_json(struct libnvme_global_ctx *ctx, int fd)
 {
 	char buf[JSON_FILE_BUF_SIZE];
 	struct json_object *obj;
 	char *str = NULL;
-	_cleanup_tokener_ json_tokener *tok = NULL;
+	__cleanup_tokener json_tokener *tok = NULL;
 	int ret;
-	_cleanup_free_ void *ptr = NULL;
+	__cleanup_free void *ptr = NULL;
 	int len = 0;
 
 	while ((ret = read(fd, buf, JSON_FILE_BUF_SIZE)) > 0) {

@@ -29,8 +29,8 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	_cleanup_nvme_global_ctx_ struct libnvme_global_ctx *ctx = NULL;
-	_cleanup_nvme_transport_handle_ struct libnvme_transport_handle *hdl = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct fw_activation_history fw_history = { 0 };
 	struct libnvme_passthru_cmd cmd;
 	__u8 uuid_index = 0;
