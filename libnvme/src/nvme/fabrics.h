@@ -218,7 +218,6 @@ void libnvmf_update_config(libnvme_ctrl_t c,
  * libnvmf_add_ctrl() - Connect a controller and update topology
  * @h:		Host to which the controller should be attached
  * @c:		Controller to be connected
- * @fctx:	Fabrics context
  *
  * Issues a 'connect' command to the NVMe-oF controller and inserts @c
  * into the topology using @h as parent.
@@ -226,8 +225,7 @@ void libnvmf_update_config(libnvme_ctrl_t c,
  *
  * Return: 0 on success, or an error code on failure.
  */
-int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
-		  const struct libnvmf_context *fctx);
+int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c);
 
 /**
  * libnvmf_connect_ctrl() - Connect a controller
@@ -572,12 +570,7 @@ int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 /**
  * libnvmf_create_ctrl() - Allocate an unconnected NVMe controller
  * @ctx:		struct libnvme_global_ctx object
- * @subsysnqn:		Subsystem NQN
- * @transport:		Transport type
- * @traddr:		Transport address
- * @host_traddr:	Host transport address
- * @host_iface:		Host interface name
- * @trsvcid:		Transport service ID
+ * @fctx:		Fabrics context
  * @c:			@libnvme_ctrl_t object to return
  *
  * Creates an unconnected controller to be used for libnvme_add_ctrl().
@@ -585,10 +578,7 @@ int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
  * Return: 0 on success or negative error code otherwise
  */
 int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
-		     const char *subsysnqn, const char *transport,
-		     const char *traddr, const char *host_traddr,
-		     const char *host_iface, const char *trsvcid,
-		     libnvme_ctrl_t *c);
+		struct libnvmf_context *fctx, libnvme_ctrl_t *c);
 
 /**
  * libnvmf_connect() - Connect to fabrics subsystem
