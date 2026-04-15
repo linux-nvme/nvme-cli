@@ -41,7 +41,7 @@ struct libnvmf_context {
 	int default_max_discovery_retries;
 	int default_keep_alive_timeout;
 
-	/* common fabrics configuraiton */
+	/* common fabrics configuration */
 	const char *device;
 	bool persistent;
 	struct libnvme_fabrics_config cfg;
