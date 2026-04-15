@@ -33,7 +33,7 @@ static inline void nvme_freep(void *p)
 {
 	__libnvme_free(*(void **)p);
 }
-#define _cleanup_nvme_free_ __cleanup__(nvme_freep)
+#define __cleanup_nvme_free __cleanup(nvme_freep)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
 #define __cleanup_file __cleanup(cleanup_file)
