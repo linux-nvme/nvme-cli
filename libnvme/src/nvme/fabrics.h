@@ -506,6 +506,14 @@ int libnvmf_context_set_persistent(struct libnvmf_context *fctx, bool persistent
 int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
 
 /**
+ * libnvmf_ctrl_get_config() - Fabrics configuration of a controller
+ * @c:	Controller instance
+ *
+ * Return: Fabrics configuration of @c
+ */
+struct libnvme_fabrics_config *libnvmf_ctrl_get_config(libnvme_ctrl_t c);
+
+/**
  * libnvmf_discovery() - Perform fabrics discovery
  * @ctx: Global context
  * @fctx: Fabrics context
@@ -562,6 +570,27 @@ int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect, char *nbft_path);
 
 /**
+ * libnvmf_create_ctrl() - Allocate an unconnected NVMe controller
+ * @ctx:		struct libnvme_global_ctx object
+ * @subsysnqn:		Subsystem NQN
+ * @transport:		Transport type
+ * @traddr:		Transport address
+ * @host_traddr:	Host transport address
+ * @host_iface:		Host interface name
+ * @trsvcid:		Transport service ID
+ * @c:			@libnvme_ctrl_t object to return
+ *
+ * Creates an unconnected controller to be used for libnvme_add_ctrl().
+ *
+ * Return: 0 on success or negative error code otherwise
+ */
+int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
+		     const char *subsysnqn, const char *transport,
+		     const char *traddr, const char *host_traddr,
+		     const char *host_iface, const char *trsvcid,
+		     libnvme_ctrl_t *c);
+
+/**
  * libnvmf_connect() - Connect to fabrics subsystem
  * @ctx: Global context
  * @fctx: Fabrics context
@@ -570,7 +599,18 @@ int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int libnvmf_connect(struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx);
+int libnvmf_connect(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx);
+
+/**
+ * libnvmf_disconnect_ctrl() - Disconnect a controller
+ * @c:	Controller instance
+ *
+ * Issues a 'disconnect' fabrics command to @c
+ *
+ * Return: 0 on success, -1 on failure.
+ */
+int libnvmf_disconnect_ctrl(libnvme_ctrl_t c);
 
 /**
  * libnvmf_connect_config_json() - Connect using JSON config

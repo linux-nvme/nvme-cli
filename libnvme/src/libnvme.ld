@@ -4,12 +4,10 @@ LIBNVME_3 {
 	global:
 		libnvme_clear_etdas;
 		libnvme_close;
-		libnvme_create_ctrl;
 		libnvme_create_global_ctx;
 		libnvme_create_raw_secret;
 		libnvme_ctrl_first_ns;
 		libnvme_ctrl_first_path;
-		libnvme_ctrl_get_config;
 		libnvme_ctrl_get_phy_slot;
 		libnvme_ctrl_get_src_addr;
 		libnvme_ctrl_get_state;
@@ -22,7 +20,6 @@ LIBNVME_3 {
 		libnvme_ctrl_next_path;
 		libnvme_ctrl_release_transport_handle;
 		libnvme_describe_key_serial;
-		libnvme_disconnect_ctrl;
 		libnvme_dump_config;
 		libnvme_dump_tree;
 		libnvme_errno_to_string;

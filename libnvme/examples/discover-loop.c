@@ -77,7 +77,7 @@ int main()
 		goto free_fctx;
 	}
 
-	ret = libnvme_create_ctrl(ctx, NVME_DISC_SUBSYS_NAME, "loop",
+	ret = libnvmf_create_ctrl(ctx, NVME_DISC_SUBSYS_NAME, "loop",
 			       NULL, NULL, NULL, NULL, &c);
 	if (ret) {
 		fprintf(stderr, "Failed to allocate memory\n");
@@ -97,7 +97,7 @@ int main()
 		libnvmf_discovery_args_free(args);
 	}
 
-	libnvme_disconnect_ctrl(c);
+	libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);
 
 	if (ret)

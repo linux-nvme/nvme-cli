@@ -954,12 +954,6 @@ __public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 	return c->state;
 }
 
-__public struct libnvme_fabrics_config *libnvme_ctrl_get_config(
-		libnvme_ctrl_t c)
-{
-	return &c->cfg;
-}
-
 __public int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
 	struct libnvme_transport_handle *hdl =
@@ -1015,24 +1009,6 @@ void nvme_deconfigure_ctrl(libnvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->cntrltype);
 	FREE_CTRL_ATTR(c->cntlid);
 	FREE_CTRL_ATTR(c->phy_slot);
-}
-
-__public int libnvme_disconnect_ctrl(libnvme_ctrl_t c)
-{
-	struct libnvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
-	int ret;
-
-	ret = libnvme_set_attr(libnvme_ctrl_get_sysfs_dir(c),
-			    "delete_controller", "1");
-	if (ret < 0) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR,
-			"%s: failed to disconnect, error %d\n", c->name, errno);
-		return ret;
-	}
-	libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: %s disconnected\n",
-		c->name, c->subsysnqn);
-	nvme_deconfigure_ctrl(c);
-	return 0;
 }
 
 __public void libnvme_unlink_ctrl(libnvme_ctrl_t c)
@@ -1125,24 +1101,6 @@ int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 
 	*cp = c;
 	return 0;
-}
-
-__public int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
-		const char *subsysnqn, const char *transport,
-		const char *traddr, const char *host_traddr,
-		const char *host_iface, const char *trsvcid,
-		libnvme_ctrl_t *cp)
-{
-	struct libnvmf_context fctx = {
-		.transport = transport,
-		.traddr = traddr,
-		.host_traddr = host_traddr,
-		.host_iface = host_iface,
-		.trsvcid = trsvcid,
-		.subsysnqn = subsysnqn,
-	};
-
-	return _libnvme_create_ctrl(ctx, &fctx, cp);
 }
 
 #ifdef CONFIG_FABRICS
