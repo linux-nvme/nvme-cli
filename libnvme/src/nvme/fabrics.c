@@ -215,6 +215,8 @@ __public int libnvmf_context_create(struct libnvme_global_ctx *ctx,
 
 	fctx->ctx = ctx;
 
+	libnvmf_default_config(&fctx->cfg);
+
 	fctx->decide_retry = decide_retry;
 	fctx->connected = connected;
 	fctx->already_connected = already_connected;
@@ -1069,33 +1071,17 @@ static const char *lookup_context(struct libnvme_global_ctx *ctx, libnvme_ctrl_t
 }
 
 __public int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
-		const char *subsysnqn, const char *transport,
-		const char *traddr, const char *host_traddr,
-		const char *host_iface, const char *trsvcid,
-		libnvme_ctrl_t *cp)
+		struct libnvmf_context *fctx, libnvme_ctrl_t *cp)
 {
-	struct libnvmf_context fctx = {
-		.transport = transport,
-		.traddr = traddr,
-		.host_traddr = host_traddr,
-		.host_iface = host_iface,
-		.trsvcid = trsvcid,
-		.subsysnqn = subsysnqn,
-	};
-
-	return _libnvme_create_ctrl(ctx, &fctx, cp);
+	return _libnvme_create_ctrl(ctx, fctx, cp);
 }
 
-__public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
-		  const struct libnvmf_context *fctx)
+__public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 {
 	libnvme_subsystem_t s;
 	const char *root_app, *app;
 	__cleanup_free char *argstr = NULL;
 	int ret;
-
-	/* highest prio have configs from command line */
-	merge_config(c, &fctx->cfg);
 
 	/* apply configuration from config file (JSON) */
 	s = libnvme_lookup_subsystem(h, NULL, libnvme_ctrl_get_subsysnqn(c));
@@ -1339,7 +1325,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 	/* update tls or concat */
 	nvmf_update_tls_concat(e, c, h);
 
-	ret = libnvmf_add_ctrl(h, c, fctx);
+	ret = libnvmf_add_ctrl(h, c);
 	if (!ret) {
 		*cp = c;
 		return 0;
@@ -1350,7 +1336,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 		libnvme_msg(h->ctx, LIBNVME_LOG_INFO, "failed to connect controller, "
 			 "retry with disabling SQ flow control\n");
 		c->cfg.disable_sqflow = false;
-		ret = libnvmf_add_ctrl(h, c, fctx);
+		ret = libnvmf_add_ctrl(h, c);
 		if (!ret) {
 			*cp = c;
 			return 0;
@@ -2207,7 +2193,7 @@ static int libnvme_add_ctrl(struct libnvmf_context *fctx,
 	int err;
 
 retry:
-	err = libnvmf_add_ctrl(h, c, fctx);
+	err = libnvmf_add_ctrl(h, c);
 	if (!err)
 		return 0;
 	if (fctx->decide_retry(fctx, err, fctx->user_data))
@@ -2705,7 +2691,7 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 	/* Update tls or concat */
 	nvmf_update_tls_concat(e, c, h);
 
-	ret = libnvmf_add_ctrl(h, c, fctx);
+	ret = libnvmf_add_ctrl(h, c);
 
 	/* Resume logging */
 	if (ss && ss->unavailable && saved_log_level < 1)

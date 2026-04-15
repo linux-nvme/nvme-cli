@@ -737,15 +737,9 @@ struct libnvmf_context {};
     self.__host = h  # Keep a reference to parent to ensure ctrl obj gets GCed before host}
 %extend libnvme_ctrl {
 	libnvme_ctrl(struct libnvme_global_ctx *ctx,
-		  const char *subsysnqn,
-		  const char *transport,
-		  const char *traddr = NULL,
-		  const char *host_traddr = NULL,
-		  const char *host_iface = NULL,
-		  const char *trsvcid = NULL) {
+		  struct libnvmf_context *fctx) {
 		struct libnvme_ctrl *c;
-		if (libnvmf_create_ctrl(ctx, subsysnqn, transport, traddr,
-					host_traddr, host_iface, trsvcid, &c))
+		if (libnvmf_create_ctrl(ctx, fctx, &c))
 			return NULL;
 		return c;
 	}
@@ -765,19 +759,18 @@ struct libnvmf_context {};
 		return libnvme_init_ctrl(h, $self, instance) == 0;
 	}
 
-	void connect(struct libnvme_host *h,
-		     struct libnvmf_context *fctx = NULL) {
+	void connect(struct libnvme_host *h) {
 		int ret;
 		const char *dev;
 
 		dev = libnvme_ctrl_get_name($self);
-		if (dev && !(fctx && fctx->cfg.duplicate_connect)) {
+		if (dev && $self->cfg.duplicate_connect) {
 			connect_err = -ENVME_CONNECT_ALREADY;
 			return;
 		}
 
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
-		ret = libnvmf_add_ctrl(h, $self, fctx);
+		ret = libnvmf_add_ctrl(h, $self);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
 		if (ret) {

@@ -67,6 +67,11 @@ int main()
 	if (ret)
 		goto free_ctx;
 
+	ret = libnvmf_context_set_connection(fctx, NVME_DISC_SUBSYS_NAME,
+		"loop", NULL, NULL, NULL, NULL);
+	if (ret)
+		goto free_ctx;
+
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
 		goto free_fctx;
@@ -77,14 +82,13 @@ int main()
 		goto free_fctx;
 	}
 
-	ret = libnvmf_create_ctrl(ctx, NVME_DISC_SUBSYS_NAME, "loop",
-			       NULL, NULL, NULL, NULL, &c);
+	ret = libnvmf_create_ctrl(ctx, fctx, &c);
 	if (ret) {
 		fprintf(stderr, "Failed to allocate memory\n");
 		goto free_fctx;
 	}
 
-	ret = libnvmf_add_ctrl(h, c, fctx);
+	ret = libnvmf_add_ctrl(h, c);
 	if (ret) {
 		fprintf(stderr, "no controller found\n");
 		goto free_fctx;

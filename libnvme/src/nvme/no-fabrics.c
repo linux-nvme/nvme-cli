@@ -13,3 +13,6 @@ bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 {
 	return false;
 }
+__public void libnvmf_default_config(struct libnvme_fabrics_config *cfg)
+{
+}

@@ -1048,7 +1048,6 @@ __public void libnvme_free_ctrl(libnvme_ctrl_t c)
 
 __public void libnvmf_default_config(struct libnvme_fabrics_config *cfg)
 {
-	memset(cfg, 0, sizeof(*cfg));
 	cfg->tos = -1;
 	cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 }
@@ -1079,7 +1078,7 @@ int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 
 	c->ctx = ctx;
 	c->hdl = NULL;
-	libnvmf_default_config(&c->cfg);
+	c->cfg = fctx->cfg;
 	list_head_init(&c->namespaces);
 	list_head_init(&c->paths);
 	list_node_init(&c->entry);
@@ -1515,6 +1514,7 @@ libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
 	ctx = s->h ? s->h->ctx : NULL;
 	/* Set the NQN to the subsystem the controller should be created in */
 	fctx->subsysnqn = s->subsysnqn;
+	libnvmf_default_config(&fctx->cfg);
 	ret = _libnvme_create_ctrl(ctx, fctx, &c);
 	/* And restore NQN to avoid issues with repetitive calls */
 	fctx->subsysnqn = subsysnqn;
