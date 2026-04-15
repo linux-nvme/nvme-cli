@@ -443,22 +443,17 @@ struct libnvme_ns {
 %rename(set_connection)     libnvmf_context::fctx_set_connection;
 %rename(set_persistent)     libnvmf_context::fctx_set_persistent;
 %rename(set_device)         libnvmf_context::fctx_set_device;
-%rename(set_fabrics_config) libnvmf_context::fctx_set_fabrics_config;
 
 struct libnvmf_context {};
 
 %extend libnvmf_context {
 	libnvmf_context(struct libnvme_global_ctx *ctx) {
 		struct libnvmf_context *fctx;
-		struct libnvme_fabrics_config cfg = {};
 		int err;
 
 		err = libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx);
 		if (err)
 			return NULL;
-
-		libnvmf_default_config(&cfg);
-		libnvmf_context_set_fabrics_config(fctx, &cfg);
 
 		return fctx;
 	}

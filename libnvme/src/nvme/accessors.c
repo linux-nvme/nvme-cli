@@ -25,6 +25,244 @@
 #include "compiler-attributes.h"
 
 /****************************************************************************
+ * Accessors for: struct libnvme_fabrics_config
+ ****************************************************************************/
+
+__public void libnvme_fabrics_config_set_queue_size(
+		struct libnvme_fabrics_config *p,
+		int queue_size)
+{
+	p->queue_size = queue_size;
+}
+
+__public int libnvme_fabrics_config_get_queue_size(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->queue_size;
+}
+
+__public void libnvme_fabrics_config_set_nr_io_queues(
+		struct libnvme_fabrics_config *p,
+		int nr_io_queues)
+{
+	p->nr_io_queues = nr_io_queues;
+}
+
+__public int libnvme_fabrics_config_get_nr_io_queues(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->nr_io_queues;
+}
+
+__public void libnvme_fabrics_config_set_reconnect_delay(
+		struct libnvme_fabrics_config *p,
+		int reconnect_delay)
+{
+	p->reconnect_delay = reconnect_delay;
+}
+
+__public int libnvme_fabrics_config_get_reconnect_delay(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->reconnect_delay;
+}
+
+__public void libnvme_fabrics_config_set_ctrl_loss_tmo(
+		struct libnvme_fabrics_config *p,
+		int ctrl_loss_tmo)
+{
+	p->ctrl_loss_tmo = ctrl_loss_tmo;
+}
+
+__public int libnvme_fabrics_config_get_ctrl_loss_tmo(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->ctrl_loss_tmo;
+}
+
+__public void libnvme_fabrics_config_set_fast_io_fail_tmo(
+		struct libnvme_fabrics_config *p,
+		int fast_io_fail_tmo)
+{
+	p->fast_io_fail_tmo = fast_io_fail_tmo;
+}
+
+__public int libnvme_fabrics_config_get_fast_io_fail_tmo(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->fast_io_fail_tmo;
+}
+
+__public void libnvme_fabrics_config_set_keep_alive_tmo(
+		struct libnvme_fabrics_config *p,
+		int keep_alive_tmo)
+{
+	p->keep_alive_tmo = keep_alive_tmo;
+}
+
+__public int libnvme_fabrics_config_get_keep_alive_tmo(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->keep_alive_tmo;
+}
+
+__public void libnvme_fabrics_config_set_nr_write_queues(
+		struct libnvme_fabrics_config *p,
+		int nr_write_queues)
+{
+	p->nr_write_queues = nr_write_queues;
+}
+
+__public int libnvme_fabrics_config_get_nr_write_queues(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->nr_write_queues;
+}
+
+__public void libnvme_fabrics_config_set_nr_poll_queues(
+		struct libnvme_fabrics_config *p,
+		int nr_poll_queues)
+{
+	p->nr_poll_queues = nr_poll_queues;
+}
+
+__public int libnvme_fabrics_config_get_nr_poll_queues(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->nr_poll_queues;
+}
+
+__public void libnvme_fabrics_config_set_tos(
+		struct libnvme_fabrics_config *p,
+		int tos)
+{
+	p->tos = tos;
+}
+
+__public int libnvme_fabrics_config_get_tos(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->tos;
+}
+
+__public void libnvme_fabrics_config_set_keyring_id(
+		struct libnvme_fabrics_config *p,
+		long keyring_id)
+{
+	p->keyring_id = keyring_id;
+}
+
+__public long libnvme_fabrics_config_get_keyring_id(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->keyring_id;
+}
+
+__public void libnvme_fabrics_config_set_tls_key_id(
+		struct libnvme_fabrics_config *p,
+		long tls_key_id)
+{
+	p->tls_key_id = tls_key_id;
+}
+
+__public long libnvme_fabrics_config_get_tls_key_id(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->tls_key_id;
+}
+
+__public void libnvme_fabrics_config_set_tls_configured_key_id(
+		struct libnvme_fabrics_config *p,
+		long tls_configured_key_id)
+{
+	p->tls_configured_key_id = tls_configured_key_id;
+}
+
+__public long libnvme_fabrics_config_get_tls_configured_key_id(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->tls_configured_key_id;
+}
+
+__public void libnvme_fabrics_config_set_duplicate_connect(
+		struct libnvme_fabrics_config *p,
+		bool duplicate_connect)
+{
+	p->duplicate_connect = duplicate_connect;
+}
+
+__public bool libnvme_fabrics_config_get_duplicate_connect(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->duplicate_connect;
+}
+
+__public void libnvme_fabrics_config_set_disable_sqflow(
+		struct libnvme_fabrics_config *p,
+		bool disable_sqflow)
+{
+	p->disable_sqflow = disable_sqflow;
+}
+
+__public bool libnvme_fabrics_config_get_disable_sqflow(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->disable_sqflow;
+}
+
+__public void libnvme_fabrics_config_set_hdr_digest(
+		struct libnvme_fabrics_config *p,
+		bool hdr_digest)
+{
+	p->hdr_digest = hdr_digest;
+}
+
+__public bool libnvme_fabrics_config_get_hdr_digest(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->hdr_digest;
+}
+
+__public void libnvme_fabrics_config_set_data_digest(
+		struct libnvme_fabrics_config *p,
+		bool data_digest)
+{
+	p->data_digest = data_digest;
+}
+
+__public bool libnvme_fabrics_config_get_data_digest(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->data_digest;
+}
+
+__public void libnvme_fabrics_config_set_tls(
+		struct libnvme_fabrics_config *p,
+		bool tls)
+{
+	p->tls = tls;
+}
+
+__public bool libnvme_fabrics_config_get_tls(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->tls;
+}
+
+__public void libnvme_fabrics_config_set_concat(
+		struct libnvme_fabrics_config *p,
+		bool concat)
+{
+	p->concat = concat;
+}
+
+__public bool libnvme_fabrics_config_get_concat(
+		const struct libnvme_fabrics_config *p)
+{
+	return p->concat;
+}
+
+/****************************************************************************
  * Accessors for: struct libnvme_path
  ****************************************************************************/
 

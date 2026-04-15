@@ -49,7 +49,8 @@ void libnvmf_discovery_args_set_max_retries(
  *
  * Return: The value of the max_retries field.
  */
-int libnvmf_discovery_args_get_max_retries(const struct libnvmf_discovery_args *p);
+int libnvmf_discovery_args_get_max_retries(
+		const struct libnvmf_discovery_args *p);
 
 /**
  * libnvmf_discovery_args_set_lsp() - Set lsp.

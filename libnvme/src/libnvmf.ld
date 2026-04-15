@@ -11,6 +11,7 @@ LIBNVMF_3 {
 		libnvmf_connect_ctrl;
 		libnvmf_context_create;
 		libnvmf_context_free;
+		libnvmf_context_get_fabrics_config;
 		libnvmf_context_set_connection;
 		libnvmf_context_set_crypto;
 		libnvmf_context_set_device;
@@ -20,8 +21,7 @@ LIBNVMF_3 {
 		libnvmf_context_set_hostnqn;
 		libnvmf_context_set_persistent;
 		libnvmf_create_ctrl;
-		libnvmf_ctrl_get_config;
-		libnvmf_default_config;
+		libnvmf_ctrl_get_fabrics_config;
 		libnvmf_disconnect_ctrl;
 		libnvmf_discovery;
 		libnvmf_discovery_args_create;
@@ -44,7 +44,6 @@ LIBNVMF_3 {
 		libnvmf_subtype_str;
 		libnvmf_treq_str;
 		libnvmf_trtype_str;
-		libnvmf_update_config;
 	local:
 		*;
 };
