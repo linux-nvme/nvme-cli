@@ -13,7 +13,6 @@
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
-#include "platform/types.h"
 #include "plugin.h"
 
 #define CREATE_CMD
