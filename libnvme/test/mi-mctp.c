@@ -29,6 +29,7 @@
 #include <libnvme-mi.h>
 
 #include "nvme/private.h"
+#include "nvme/private-mi.h"
 
 #include "utils.h"
 
@@ -1462,7 +1463,7 @@ int main(void)
 
 	__libnvme_mi_mctp_set_ops(&ops);
 
-	ctx = libnvme_create_global_ctx(fd, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(fd, LIBNVME_DEFAULT_LOGLEVEL);
 	assert(ctx);
 
 	ep = libnvme_mi_open_mctp(ctx, 0, 0);

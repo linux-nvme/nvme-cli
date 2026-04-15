@@ -22,7 +22,7 @@
 #include "accessors.h"
 
 #include "private.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 /****************************************************************************
  * Accessors for: struct libnvme_path

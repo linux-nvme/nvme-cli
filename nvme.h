@@ -16,6 +16,7 @@
 #ifndef _NVME_H
 #define _NVME_H
 
+#include <dirent.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

@@ -51,8 +51,6 @@
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
-#include "nvme/tree.h"
-#include "nvme/types.h"
 #include "plugin.h"
 #include "util/argconfig.h"
 #include "util/base64.h"
@@ -330,7 +328,7 @@ static int get_transport_handle(struct libnvme_global_ctx *ctx, int argc,
 	ret = libnvme_open(ctx, devname, hdl);
 	if (ret)
 		nvme_show_err(ret, devname);
-	else if (log_level >= LOG_DEBUG)
+	else if (log_level >= LIBNVME_LOG_DEBUG)
 		nvme_show_init();
 
 	return ret;
@@ -5811,7 +5809,7 @@ static void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable)
 	sprintf(path, "/sys/class/nvme/%s/device/resource0", libnvme_transport_handle_get_name(hdl));
 	fd = open(path, writable ? O_RDWR : O_RDONLY);
 	if (fd < 0) {
-		if (log_level >= LOG_INFO)
+		if (log_level >= LIBNVME_LOG_INFO)
 			nvme_show_error("%s did not find a pci resource, open failed %s",
 					libnvme_transport_handle_get_name(hdl), libnvme_strerror(errno));
 		return NULL;
@@ -5819,7 +5817,7 @@ static void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable)
 
 	membase = mmap(NULL, getpagesize(), prot, MAP_SHARED, fd, 0);
 	if (membase == MAP_FAILED) {
-		if (log_level >= LOG_INFO) {
+		if (log_level >= LIBNVME_LOG_INFO) {
 			fprintf(stderr, "Failed to map registers to userspace.\n\n"
 				"Did your kernel enable CONFIG_IO_STRICT_DEVMEM?\n"
 				"You can disable this feature with command line argument\n\n"

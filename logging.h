@@ -5,15 +5,17 @@
 
 #include <stdbool.h>
 
+#include <nvme/lib.h>
+
 #define print_info(...)					\
 	do {						\
-		if (is_printable_at_level(LOG_INFO))	\
+		if (is_printable_at_level(LIBNVME_LOG_INFO))	\
 			printf(__VA_ARGS__);		\
 	} while (false)
 
 #define print_debug(...)				\
 	do {						\
-		if (is_printable_at_level(LOG_DEBUG))	\
+		if (is_printable_at_level(LIBNVME_LOG_DEBUG))	\
 			printf(__VA_ARGS__);		\
 	} while (false)
 

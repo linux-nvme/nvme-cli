@@ -297,7 +297,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx =
-		libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+		libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
 	char path[264];
 	struct dirent **devices;
 	struct huawei_list_item *list_items;

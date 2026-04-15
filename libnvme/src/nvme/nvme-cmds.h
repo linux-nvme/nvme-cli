@@ -13,10 +13,9 @@
 #include <errno.h>
 #include <string.h>
 
-#include <platform/includes.h>
-
+#include <nvme/endian.h>
 #include <nvme/ioctl.h>
-#include <nvme/types.h>
+#include <nvme/nvme-types.h>
 
 enum nvme_cmd_dword_fields {
 	NVME_DEVICE_SELF_TEST_CDW10_STC_SHIFT			= 0,

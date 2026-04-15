@@ -5059,7 +5059,7 @@ static void stdout_lba_status_info(__u64 result)
 
 static bool line_equal(unsigned char *buf, int len, int width, int offset)
 {
-	if (!offset || len < offset + width || log_level >= LOG_DEBUG)
+	if (!offset || len < offset + width || log_level >= LIBNVME_LOG_DEBUG)
 		return false;
 
 	return !memcmp(buf + offset - width, buf + offset, width);

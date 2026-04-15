@@ -237,7 +237,7 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	ctx = libnvme_create_global_ctx(stderr, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(stderr, LIBNVME_DEFAULT_LOGLEVEL);
 	if (!ctx)
 		err(EXIT_FAILURE, "can't create NVMe root");
 

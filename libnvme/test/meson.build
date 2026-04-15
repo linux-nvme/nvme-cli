@@ -199,7 +199,7 @@ if host_system != 'windows'
 endif # host_system != 'windows'
 
 foreach hdr : [
-    'cmds',
+    'endian',
     'fabrics',
     'filters',
     'ioctl',
@@ -208,8 +208,9 @@ foreach hdr : [
     'linux',
     'mi',
     'nbft',
+    'nvme-cmds',
+    'nvme-types',
     'tree',
-    'types',
     'util',
 ]
     hdr_conf = configuration_data()

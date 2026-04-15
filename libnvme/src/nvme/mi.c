@@ -20,7 +20,8 @@
 #include <libnvme-mi.h>
 
 #include "private.h"
-#include "compiler_attributes.h"
+#include "private-mi.h"
+#include "compiler-attributes.h"
 
 #define NUM_ENABLES    (256u)
 
@@ -116,7 +117,7 @@ static bool libnvme_mi_compare_vid_mn(struct libnvme_mi_ep *ep,
 
 	len = strlen(mn);
 	if (len >= sizeof(id->mn)) {
-		libnvme_msg(ep->ctx, LOG_ERR,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_ERR,
 			 "Internal error: invalid model number for %s\n",
 			 __func__);
 		return false;
@@ -196,7 +197,7 @@ void libnvme_mi_ep_probe(struct libnvme_mi_ep *ep)
 	cmd.data_len = offsetof(struct nvme_id_ctrl, rab);
 	rc = libnvme_submit_admin_passthru(hdl, &cmd);
 	if (rc) {
-		libnvme_msg(ep->ctx, LOG_WARNING,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_WARN,
 			 "Identify Controller failed, no quirks applied\n");
 		goto out_close;
 	}
@@ -220,7 +221,7 @@ void libnvme_mi_ep_probe(struct libnvme_mi_ep *ep)
 		char tmp[sizeof(id.mn) + 1];
 
 		libnvme_mi_format_mn(&id, tmp);
-		libnvme_msg(ep->ctx, LOG_DEBUG,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 			 "device %02x:%s: applying quirks 0x%08lx\n",
 			 id.vid, tmp, ep->quirks);
 	}
@@ -445,14 +446,14 @@ int libnvme_mi_async_read(libnvme_mi_ep_t ep, struct libnvme_mi_resp *resp)
 		resp->data_len = 0;//No data to process
 		return 0;
 	} else if (rc) {
-		libnvme_msg(ep->ctx, LOG_INFO, "transport failure\n");
+		libnvme_msg(ep->ctx, LIBNVME_LOG_INFO, "transport failure\n");
 		return rc;
 	}
 
 	if (ep->transport->mic_enabled) {
 		rc = libnvme_mi_verify_resp_mic(resp);
 		if (rc) {
-			libnvme_msg(ep->ctx, LOG_WARNING, "crc mismatch\n");
+			libnvme_msg(ep->ctx, LIBNVME_LOG_WARN, "crc mismatch\n");
 			return -EBADMSG;
 		}
 	}
@@ -461,25 +462,25 @@ int libnvme_mi_async_read(libnvme_mi_ep_t ep, struct libnvme_mi_resp *resp)
 
 	/* basic response checks */
 	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr)) {
-		libnvme_msg(ep->ctx, LOG_DEBUG,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 			 "Bad response header len: %zd\n", resp->hdr_len);
 		return -EPROTO;
 	}
 
 	if (resp->hdr->type != NVME_MI_MSGTYPE_NVME) {
-		libnvme_msg(ep->ctx, LOG_DEBUG,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 			 "Invalid message type 0x%02x\n", resp->hdr->type);
 		return -EPROTO;
 	}
 
 	if (!(resp->hdr->nmp & ~(NVME_MI_ROR_REQ << 7))) {
-		libnvme_msg(ep->ctx, LOG_DEBUG,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 			 "ROR value in response indicates a response\n");
 		return -EIO;
 	}
 
 	if (!(resp->hdr->nmp & (NVME_MI_MT_AE << 3))) {
-		libnvme_msg(ep->ctx, LOG_DEBUG,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 			 "NMIMT does not indicate AEM\n");
 		resp->data_len = 0;//No data to process
 		return 0;
@@ -524,39 +525,39 @@ int libnvme_mi_submit(libnvme_mi_ep_t ep, struct libnvme_mi_req *req,
 		libnvme_mi_record_resp_time(ep);
 
 	if (rc) {
-		libnvme_msg(ep->ctx, LOG_INFO, "transport failure\n");
+		libnvme_msg(ep->ctx, LIBNVME_LOG_INFO, "transport failure\n");
 		return rc;
 	}
 
 	if (ep->transport->mic_enabled) {
 		rc = libnvme_mi_verify_resp_mic(resp);
 		if (rc) {
-			libnvme_msg(ep->ctx, LOG_WARNING, "crc mismatch\n");
+			libnvme_msg(ep->ctx, LIBNVME_LOG_WARN, "crc mismatch\n");
 			return -EBADMSG;
 		}
 	}
 
 	/* basic response checks */
 	if (resp->hdr_len < sizeof(struct nvme_mi_msg_hdr)) {
-		libnvme_msg(ep->ctx, LOG_DEBUG,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 			 "Bad response header len: %zd\n", resp->hdr_len);
 		return -EPROTO;
 	}
 
 	if (resp->hdr->type != NVME_MI_MSGTYPE_NVME) {
-		libnvme_msg(ep->ctx, LOG_DEBUG,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 			 "Invalid message type 0x%02x\n", resp->hdr->type);
 		return -EPROTO;
 	}
 
 	if (!(resp->hdr->nmp & (NVME_MI_ROR_RSP << 7))) {
-		libnvme_msg(ep->ctx, LOG_DEBUG,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_DEBUG,
 			 "ROR value in response indicates a request\n");
 		return -EIO;
 	}
 
 	if ((resp->hdr->nmp & 0x1) != (req->hdr->nmp & 0x1)) {
-		libnvme_msg(ep->ctx, LOG_WARNING,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_WARN,
 			 "Command slot mismatch: req %d, resp %d\n",
 			 req->hdr->nmp & 0x1,
 			 resp->hdr->nmp & 0x1);
@@ -816,13 +817,13 @@ int libnvme_mi_admin_admin_passthru(struct libnvme_transport_handle *hdl,
 	bool has_read_data = false;
 
 	if (direction == NVME_DATA_TFR_BIDIRECTIONAL) {
-		libnvme_msg(hdl->ctx, LOG_ERR,
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR,
 			"libnvme_mi_admin_admin_passthru doesn't support bidirectional commands\n");
 		return -EINVAL;
 	}
 
 	if (cmd->data_len > 4096) {
-		libnvme_msg(hdl->ctx, LOG_ERR,
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR,
 			"libnvme_mi_admin_admin_passthru doesn't support data_len over 4096 bytes.\n");
 		return -EINVAL;
 	}
@@ -1025,7 +1026,7 @@ __public int libnvme_mi_mi_read_mi_data_subsys(libnvme_mi_ep_t ep,
 		return rc;
 
 	if (len != sizeof(*s)) {
-		libnvme_msg(ep->ctx, LOG_WARNING,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_WARN,
 			 "MI read data length mismatch: "
 			 "got %zd bytes, expected %zd\n",
 			 len, sizeof(*s));
@@ -1119,7 +1120,7 @@ __public int libnvme_mi_mi_subsystem_health_status_poll(libnvme_mi_ep_t ep, bool
 		return resp_hdr.status;
 
 	if (resp.data_len != sizeof(*sshs)) {
-		libnvme_msg(ep->ctx, LOG_WARNING,
+		libnvme_msg(ep->ctx, LIBNVME_LOG_WARN,
 			 "MI Subsystem Health Status length mismatch: "
 			 "got %zd bytes, expected %zd\n",
 			 resp.data_len, sizeof(*sshs));

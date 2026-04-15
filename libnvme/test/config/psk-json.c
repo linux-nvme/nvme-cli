@@ -56,7 +56,7 @@ static bool psk_json_test(char *file)
 	libnvme_ctrl_t c;
 	int err;
 
-	ctx = libnvme_create_global_ctx(stderr, LOG_ERR);
+	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
 	if (!ctx)
 		return false;
 

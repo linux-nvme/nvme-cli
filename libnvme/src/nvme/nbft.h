@@ -10,7 +10,6 @@
 
 #include <stdbool.h>
 
-#include <platform/types.h>
 #include <sys/types.h>
 
 #include <nvme/lib-types.h>

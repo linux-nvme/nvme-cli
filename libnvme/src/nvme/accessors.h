@@ -24,7 +24,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <platform/types.h> /* __u32, __u64, etc. */
+
+#include <nvme/types.h>
 
 /* Forward declarations. These are internal (opaque) structs. */
 struct libnvme_path;

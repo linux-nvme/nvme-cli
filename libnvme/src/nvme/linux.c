@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <netdb.h>
 
 #include <sys/ioctl.h>
 #include <sys/param.h>
@@ -49,8 +50,9 @@
 #include "crc32.h"
 #include "base64.h"
 #include "cleanup.h"
+#include "cleanup-linux.h"
 #include "private.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 #define NVMF_HOSTID_SIZE	37
 
@@ -64,7 +66,7 @@ static int __nvme_set_attr(const char *path, const char *value)
 	fd = open(path, O_WRONLY);
 	if (fd < 0) {
 #if 0
-		libnvme_msg(LOG_DEBUG, "Failed to open %s: %s\n", path,
+		libnvme_msg(LIBNVME_LOG_DEBUG, "Failed to open %s: %s\n", path,
 			 strerror(errno));
 #endif
 		return -errno;
@@ -157,7 +159,7 @@ __public int libnvme_gen_dhchap_key(struct libnvme_global_ctx *ctx,
 		unsigned char *key)
 {
 	if (hmac != LIBNVME_HMAC_ALG_NONE) {
-		libnvme_msg(ctx, LOG_ERR, "HMAC transformation not supported; "
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "HMAC transformation not supported; "
 			"recompile with OpenSSL support.\n");
 		return -EINVAL;
 	}
@@ -169,7 +171,7 @@ __public int libnvme_gen_dhchap_key(struct libnvme_global_ctx *ctx,
 __public int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
 		const char *secret, size_t key_len, unsigned char **raw_secret)
 {
-	libnvme_msg(ctx, LOG_ERR, "NVMe TLS 2.0 is not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "NVMe TLS 2.0 is not supported; "
 		 "recompile with OpenSSL support.\n");
 	return -ENOTSUP;
 }
@@ -178,7 +180,7 @@ static int derive_retained_key(struct libnvme_global_ctx *ctx,
 		int hmac, const char *hostnqn, unsigned char *generated,
 		unsigned char *retained, size_t key_len)
 {
-	libnvme_msg(ctx, LOG_ERR, "NVMe TLS is not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "NVMe TLS is not supported; "
 		 "recompile with OpenSSL support.\n");
 	return -ENOTSUP;
 }
@@ -187,7 +189,7 @@ static int derive_retained_key_compat(struct libnvme_global_ctx *ctx,
 		int hmac, const char *hostnqn, unsigned char *generated,
 		unsigned char *retained, size_t key_len)
 {
-	libnvme_msg(ctx, LOG_ERR, "NVMe TLS is not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "NVMe TLS is not supported; "
 		 "recompile with OpenSSL support.\n");
 	return -ENOTSUP;
 }
@@ -198,7 +200,7 @@ static int derive_psk_digest(struct libnvme_global_ctx *ctx,
 		unsigned char *retained, size_t key_len,
 		char *digest, size_t digest_len)
 {
-	libnvme_msg(ctx, LOG_ERR, "NVMe TLS 2.0 is not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "NVMe TLS 2.0 is not supported; "
 		 "recompile with OpenSSL support.\n");
 	return -ENOTSUP;
 }
@@ -207,7 +209,7 @@ static int derive_tls_key(struct libnvme_global_ctx *ctx,
 		int version, unsigned char cipher, const char *context,
 		unsigned char *retained, unsigned char *psk, size_t key_len)
 {
-	libnvme_msg(ctx, LOG_ERR, "NVMe TLS is not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "NVMe TLS is not supported; "
 		 "recompile with OpenSSL support.\n");
 	return -ENOTSUP;
 }
@@ -216,7 +218,7 @@ static int derive_tls_key_compat(struct libnvme_global_ctx *ctx,
 		int version, unsigned char cipher, const char *context,
 		unsigned char *retained, unsigned char *psk, size_t key_len)
 {
-	libnvme_msg(ctx, LOG_ERR, "NVMe TLS is not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "NVMe TLS is not supported; "
 		 "recompile with OpenSSL support.\n");
 	return -ENOTSUP;
 }
@@ -825,7 +827,7 @@ __public int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
 	unsigned int c;
 
 	if (key_len != 32 && key_len != 48 && key_len != 64) {
-		libnvme_msg(ctx, LOG_ERR, "Invalid key length %ld", key_len);
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Invalid key length %ld", key_len);
 		return -EINVAL;
 	}
 
@@ -842,7 +844,7 @@ __public int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
 	}
 
 	if (strlen(secret) < 4) {
-		libnvme_msg(ctx, LOG_ERR, "Input secret too short\n");
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Input secret too short\n");
 		return -EINVAL;
 	}
 
@@ -856,19 +858,19 @@ __public int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
 
 	for (i = 0; i < strlen(secret); i += 2) {
 		if (sscanf(&secret[i], "%02x", &c) != 1) {
-			libnvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				"Invalid secret '%s'", secret);
 			return -EINVAL;
 		}
 		if (i >= key_len * 2) {
-			libnvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				"Skipping excess secret bytes\n");
 			break;
 		}
 		buf[secret_len++] = (unsigned char)c;
 	}
 	if (secret_len != key_len) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"Invalid key length (%d bytes)\n", secret_len);
 		return -EINVAL;
 	}
@@ -1370,7 +1372,7 @@ int __libnvme_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
 	int ret;
 
 	if (!hostnqn || !subsysnqn) {
-		libnvme_msg(h->ctx, LOG_ERR, "Invalid NQNs (%s, %s)\n",
+		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "Invalid NQNs (%s, %s)\n",
 			 hostnqn, subsysnqn);
 		return -EINVAL;
 	}
@@ -1400,7 +1402,7 @@ int __libnvme_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
 	}
 
 	if (libnvme_set_keyring(h->ctx, kr_id) < 0) {
-		libnvme_msg(h->ctx, LOG_ERR, "Failed to set keyring\n");
+		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "Failed to set keyring\n");
 		return -errno;
 	}
 
@@ -1408,7 +1410,7 @@ int __libnvme_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
 	if (identity) {
 		ret = libnvme_lookup_key(h->ctx, "psk", identity, &id);
 		if (ret && !(ret == -ENOKEY || ret == -EKEYREVOKED)) {
-			libnvme_msg(h->ctx, LOG_ERR,
+			libnvme_msg(h->ctx, LIBNVME_LOG_ERR,
 				 "Failed to lookup key for identity %s, error %d\n",
 				  identity, ret);
 			return ret;
@@ -1419,7 +1421,7 @@ int __libnvme_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
 		ret = __nvme_import_tls_key(h->ctx, kr_id, hostnqn,
 					    subsysnqn, identity, key, &id);
 		if (ret) {
-			libnvme_msg(h->ctx, LOG_ERR,
+			libnvme_msg(h->ctx, LIBNVME_LOG_ERR,
 				 "Failed to insert TLS KEY, error %d\n", ret);
 			return ret;
 		}
@@ -1435,14 +1437,14 @@ out:
 __public int libnvme_lookup_keyring(struct libnvme_global_ctx *ctx, const char *keyring,
 		long *key)
 {
-	libnvme_msg(ctx, LOG_ERR, "key operations not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");
 	return -ENOTSUP;
 }
 
 __public char *libnvme_describe_key_serial(struct libnvme_global_ctx *ctx, long key_id)
 {
-	libnvme_msg(ctx, LOG_ERR, "key operations not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");
 	return NULL;
 }
@@ -1450,14 +1452,14 @@ __public char *libnvme_describe_key_serial(struct libnvme_global_ctx *ctx, long 
 __public int libnvme_lookup_key(struct libnvme_global_ctx *ctx, const char *type,
 		const char *identity, long *key)
 {
-	libnvme_msg(ctx, LOG_ERR, "key operations not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");
 	return -ENOTSUP;
 }
 
 __public int libnvme_set_keyring(struct libnvme_global_ctx *ctx, long key_id)
 {
-	libnvme_msg(ctx, LOG_ERR, "key operations not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");
 	return -ENOTSUP;
 }
@@ -1465,7 +1467,7 @@ __public int libnvme_set_keyring(struct libnvme_global_ctx *ctx, long key_id)
 __public int libnvme_read_key(struct libnvme_global_ctx *ctx, long keyring_id,
 		long key_id, int *len, unsigned char **key)
 {
-	libnvme_msg(ctx, LOG_ERR, "key operations not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");
 	return -ENOTSUP;
 }
@@ -1474,7 +1476,7 @@ __public int libnvme_update_key(struct libnvme_global_ctx *ctx, long keyring_id,
 		const char *key_type, const char *identity,
 		unsigned char *key_data, int key_len, long *key)
 {
-	libnvme_msg(ctx, LOG_ERR, "key operations not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");
 	return -ENOTSUP;
 }
@@ -1482,7 +1484,7 @@ __public int libnvme_update_key(struct libnvme_global_ctx *ctx, long keyring_id,
 __public int libnvme_scan_tls_keys(struct libnvme_global_ctx *ctx, const char *keyring,
 		libnvme_scan_tls_keys_cb_t cb, void *data)
 {
-	libnvme_msg(ctx, LOG_ERR, "key operations not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");
 	return -ENOTSUP;
 }
@@ -1494,7 +1496,7 @@ __public int libnvme_insert_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		unsigned char *configured_key, int key_len,
 		long *keyp)
 {
-	libnvme_msg(ctx, LOG_ERR, "key operations not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");
 	return -ENOTSUP;
 }
@@ -1506,7 +1508,7 @@ __public int libnvme_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
 		unsigned char *configured_key, int key_len,
 		long *keyp)
 {
-	libnvme_msg(ctx, LOG_ERR, "key operations not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");
 	return -ENOTSUP;
 }
@@ -1515,7 +1517,7 @@ __public int libnvme_revoke_tls_key(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *identity)
 {
-	libnvme_msg(ctx, LOG_ERR, "key operations not supported; "
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
 		 "recompile with keyutils support.\n");
 	return -ENOTSUP;
 }
@@ -1670,7 +1672,7 @@ __public int libnvme_import_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		((uint32_t)decoded_key[decoded_len + 2] << 16) |
 		((uint32_t)decoded_key[decoded_len + 3] << 24);
 	if (key_crc != crc) {
-		libnvme_msg(ctx, LOG_ERR, "CRC mismatch (key %08x, crc %08x)",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "CRC mismatch (key %08x, crc %08x)",
 			 key_crc, crc);
 		return -ENOKEY;
 	}

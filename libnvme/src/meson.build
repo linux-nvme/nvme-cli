@@ -8,11 +8,11 @@
 sources = [
     'nvme/accessors.c',
     'nvme/base64.c',
-    'nvme/cmds.c',
     'nvme/crc32.c',
     'nvme/ioctl.c',
     'nvme/lib.c',
     'nvme/log.c',
+    'nvme/nvme-cmds.c',
     'nvme/tree.c',
     'nvme/util.c',
 ]
@@ -26,21 +26,19 @@ else
     sources += [
         'nvme/filters.c',
         'nvme/linux.c',
-        'nvme/mi-mctp.c',
-        'nvme/mi.c',
         'nvme/sysfs.c',
     ]
 endif
 headers = [
     'nvme/accessors.h',
-    'nvme/cmds.h',
+    'nvme/endian.h',
     'nvme/filters.h',
     'nvme/ioctl.h',
     'nvme/lib-types.h',
     'nvme/lib.h',
     'nvme/linux.h',
-    'nvme/mi-types.h',
-    'nvme/mi.h',
+    'nvme/nvme-cmds.h',
+    'nvme/nvme-types.h',
     'nvme/tree.h',
     'nvme/types.h',
     'nvme/util.h',
@@ -59,8 +57,25 @@ if want_fabrics
     ]
 endif
 
+if want_mi
+    sources += [
+        'nvme/mi-mctp.c',
+        'nvme/mi.c',
+    ]
+    headers += [
+        'nvme/mi-types.h',
+        'nvme/mi.h',
+    ]
+else
+    sources += [
+        'nvme/no-mi.c'
+    ]
+endif
+
 if liburing_dep.found()
     sources += 'nvme/uring.c'
+else
+    sources += 'nvme/no-uring.c'
 endif
 
 if host_system != 'windows'
@@ -164,16 +179,19 @@ libnvme_test_dep = declare_dependency(
 
 mode = 'rw-r--r--'
 install_headers(
-    [
-       'libnvme-mi.h',
-    ],
-    install_mode: mode,
-)
-install_headers(
     headers,
     subdir: 'nvme',
     install_mode: mode,
 )
+if want_mi
+    install_headers(
+        [
+           'libnvme-mi.h',
+        ],
+        install_mode: mode,
+    )
+endif
+
 
 # Install platform abstraction headers
 install_headers([

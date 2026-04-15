@@ -6,8 +6,9 @@
  *          Venkat Ramesh <venkatraghavan@fb.com>
  */
 
+#include <nvme/types.h>
+
 #include "common.h"
-#include "platform/types.h"
 
 #ifndef OCP_SMART_EXTENDED_LOG_H
 #define OCP_SMART_EXTENDED_LOG_H

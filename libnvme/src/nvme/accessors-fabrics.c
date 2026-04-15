@@ -22,7 +22,7 @@
 #include "accessors-fabrics.h"
 
 #include "private-fabrics.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 /****************************************************************************
  * Accessors for: struct libnvmf_discovery_args

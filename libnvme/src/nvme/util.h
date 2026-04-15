@@ -8,7 +8,7 @@
  */
 #pragma once
 
-#include <nvme/types.h>
+#include <nvme/nvme-types.h>
 
 /**
  * DOC: util.h

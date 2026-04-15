@@ -224,7 +224,7 @@ static struct json_object *parse_json(struct libnvme_global_ctx *ctx, int fd)
 
 	obj = json_tokener_parse_ex(tok, str, len);
 	if (!obj)
-		libnvme_msg(ctx, LOG_DEBUG, "JSON parsing failed: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "JSON parsing failed: %s\n",
 			 json_util_get_last_err());
 
 	return obj;
@@ -237,7 +237,7 @@ int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file)
 
 	fd = open(config_file, O_RDONLY);
 	if (fd < 0) {
-		libnvme_msg(ctx, LOG_DEBUG, "Error opening %s, %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "Error opening %s, %s\n",
 			 config_file, libnvme_strerror(errno));
 		return fd;
 	}
@@ -246,7 +246,7 @@ int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file)
 	if (!json_root)
 		return -EPROTO;
 	if (!json_object_is_type(json_root, json_type_array)) {
-		libnvme_msg(ctx, LOG_DEBUG, "Wrong format, expected array\n");
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "Wrong format, expected array\n");
 		json_object_put(json_root);
 		return -EPROTO;
 	}
@@ -431,7 +431,7 @@ int json_update_config(struct libnvme_global_ctx *ctx, int fd)
 				JSON_C_TO_STRING_PRETTY |
 				JSON_C_TO_STRING_NOSLASHESCAPE);
 	if (ret < 0 || write(fd, "\n", 1) < 0) {
-		libnvme_msg(ctx, LOG_ERR, "Failed to write JSON config file: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to write JSON config file: %s\n",
 			 ret ? json_util_get_last_err() : strerror(errno));
 		ret = -EIO;
 	}
@@ -657,7 +657,7 @@ int json_dump_tree(struct libnvme_global_ctx *ctx)
 				JSON_C_TO_STRING_PRETTY |
 				JSON_C_TO_STRING_NOSLASHESCAPE);
 	if (ret < 0) {
-		libnvme_msg(ctx, LOG_ERR, "Failed to write, %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to write, %s\n",
 			 json_util_get_last_err());
 		ret = -EIO;
 	}

@@ -35,11 +35,19 @@
 #include <libnvme.h>
 
 #include "cleanup.h"
+#include "cleanup-linux.h"
 #include "private.h"
 #include "private-fabrics.h"
-#include "compiler_attributes.h"
+#include "compiler-attributes.h"
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
+
+static inline void free_uri(struct libnvme_fabrics_uri **uri)
+{
+	if (*uri)
+		libnvmf_free_uri(*uri);
+}
+#define __cleanup_uri __cleanup(free_uri)
 
 /**
  * strchomp() - Strip trailing spaces
@@ -528,7 +536,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx);
 					  stringify(tok),		\
 					  arg);				\
 	} else {							\
-		libnvme_msg(ctx, LOG_DEBUG,				\
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,				\
 			 "option \"%s\" ignored\n",			\
 			 stringify(tok));				\
 		ret = 0;						\
@@ -545,7 +553,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx);
 					arg,				\
 					allow_zero);			\
 	} else {							\
-		libnvme_msg(ctx, LOG_DEBUG,				\
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,				\
 			 "option \"%s\" ignored\n",			\
 			 stringify(tok));				\
 		ret = 0;						\
@@ -562,7 +570,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx);
 					arg,				\
 					allow_zero);			\
 	} else {							\
-		libnvme_msg(ctx, LOG_DEBUG,				\
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,				\
 			 "option \"%s\" ignored\n",			\
 			 stringify(tok));				\
 		ret = 0;						\
@@ -578,7 +586,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx);
 						     stringify(tok),	\
 						     arg);		\
 	} else {							\
-		libnvme_msg(ctx, LOG_DEBUG,				\
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,				\
 			 "option \"%s\" ignored\n",			\
 			 stringify(tok));				\
 		ret = 0;						\
@@ -594,7 +602,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx);
 				     stringify(tok),			\
 				     arg);				\
 	} else {							\
-		libnvme_msg(ctx, LOG_NOTICE,				\
+		libnvme_msg(ctx, LIBNVME_LOG_WARN,				\
 			 "option \"%s\" ignored\n",			\
 			 stringify(tok));				\
 		ret = 0;						\
@@ -631,7 +639,7 @@ static int inet6_pton(struct libnvme_global_ctx *ctx, const char *src, uint16_t 
 
 	__cleanup_free char *tmp = strdup(src);
 	if (!tmp) {
-		libnvme_msg(ctx, LOG_ERR, "cannot copy: %s\n", src);
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "cannot copy: %s\n", src);
 		return -ENOMEM;
 	}
 
@@ -647,7 +655,7 @@ static int inet6_pton(struct libnvme_global_ctx *ctx, const char *src, uint16_t 
 	if (IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr) && scope) {
 		addr6->sin6_scope_id = if_nametoindex(scope);
 		if (addr6->sin6_scope_id == 0) {
-			libnvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				 "can't find iface index for: %s (%m)\n", scope);
 			return -EINVAL;
 		}
@@ -679,7 +687,7 @@ static int inet_pton_with_scope(struct libnvme_global_ctx *ctx, int af,
 		unsigned long long tmp = strtoull(trsvcid, NULL, 0);
 		port = (uint16_t)tmp;
 		if (tmp != port) {
-			libnvme_msg(ctx, LOG_ERR, "trsvcid out of range: %s\n",
+			libnvme_msg(ctx, LIBNVME_LOG_ERR, "trsvcid out of range: %s\n",
 				 trsvcid);
 			return -ERANGE;
 		}
@@ -700,7 +708,7 @@ static int inet_pton_with_scope(struct libnvme_global_ctx *ctx, int af,
 			ret = inet6_pton(ctx, src, port, addr);
 		break;
 	default:
-		libnvme_msg(ctx, LOG_ERR, "unexpected address family %d\n", af);
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "unexpected address family %d\n", af);
 	}
 
 	return ret;
@@ -731,13 +739,13 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 	int ret;
 
 	if (!transport) {
-		libnvme_msg(ctx, LOG_ERR, "need a transport (-t) argument\n");
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "need a transport (-t) argument\n");
 		return -ENVME_CONNECT_TARG;
 	}
 
 	if (strncmp(transport, "loop", 4)) {
 		if (!libnvme_ctrl_get_traddr(c)) {
-			libnvme_msg(h->ctx, LOG_ERR, "need a address (-a) argument\n");
+			libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "need a address (-a) argument\n");
 			return -ENVME_CONNECT_AARG;
 		}
 	}
@@ -767,12 +775,12 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 		ctrlkey = libnvme_ctrl_get_dhchap_ctrl_key(c);
 
 	if (cfg->tls && cfg->concat) {
-		libnvme_msg(h->ctx, LOG_ERR, "cannot specify --tls and --concat together\n");
+		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "cannot specify --tls and --concat together\n");
 		return -ENVME_CONNECT_INVAL;
 	}
 
 	if (cfg->concat && !hostkey) {
-		libnvme_msg(h->ctx, LOG_ERR, "required argument [--dhchap-secret | -S] not specified with --concat\n");
+		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "required argument [--dhchap-secret | -S] not specified with --concat\n");
 		return -ENVME_CONNECT_INVAL;
 	}
 
@@ -874,7 +882,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 
 	fd = open(nvmf_dev, O_RDONLY);
 	if (fd < 0) {
-		libnvme_msg(ctx, LOG_ERR, "Failed to open %s: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to open %s: %s\n",
 			 nvmf_dev, libnvme_strerror(errno));
 		return -ENVME_CONNECT_OPEN;
 	}
@@ -887,14 +895,14 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 			 * Older Linux kernels don't allow reading from nvmf_dev
 			 * to get supported options, so use a default set
 			 */
-			libnvme_msg(ctx, LOG_DEBUG,
+			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			         "Cannot read %s, using default options\n",
 			         nvmf_dev);
 			*ctx->options = default_supported_options;
 			return 0;
 		}
 
-		libnvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to read from %s: %s\n",
 			 nvmf_dev, libnvme_strerror(errno));
 		return -ENVME_CONNECT_READ;
 	}
@@ -902,7 +910,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 	buf[len] = '\0';
 	options = buf;
 
-	libnvme_msg(ctx, LOG_DEBUG, "kernel supports: ");
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "kernel supports: ");
 
 	while ((p = strsep(&options, ",\n")) != NULL) {
 		if (!*p)
@@ -910,7 +918,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 		v = strsep(&p, "= ");
 		if (!v)
 			continue;
-		libnvme_msg(ctx, LOG_DEBUG, "%s ", v);
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "%s ", v);
 
 		parse_option(ctx, v, cntlid);
 		parse_option(ctx, v, concat);
@@ -943,7 +951,7 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 		parse_option(ctx, v, transport);
 		parse_option(ctx, v, trsvcid);
 	}
-	libnvme_msg(ctx, LOG_DEBUG, "\n");
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "\n");
 	return 0;
 }
 
@@ -955,16 +963,16 @@ static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 
 	fd = open(nvmf_dev, O_RDWR);
 	if (fd < 0) {
-		libnvme_msg(ctx, LOG_ERR, "Failed to open %s: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to open %s: %s\n",
 			 nvmf_dev, libnvme_strerror(errno));
 		return -ENVME_CONNECT_OPEN;
 	}
 
-	libnvme_msg(ctx, LOG_DEBUG, "connect ctrl, '%.*s'\n",
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "connect ctrl, '%.*s'\n",
 		 (int)strcspn(argstr,"\n"), argstr);
 	ret = write(fd, argstr, len);
 	if (ret != len) {
-		libnvme_msg(ctx, LOG_INFO, "Failed to write to %s: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_INFO, "Failed to write to %s: %s\n",
 			 nvmf_dev, libnvme_strerror(errno));
 		switch (errno) {
 		case EALREADY:
@@ -991,11 +999,11 @@ static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 	memset(buf, 0x0, sizeof(buf));
 	len = read(fd, buf, sizeof(buf) - 1);
 	if (len < 0) {
-		libnvme_msg(ctx, LOG_ERR, "Failed to read from %s: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to read from %s: %s\n",
 			 nvmf_dev, libnvme_strerror(errno));
 		return -ENVME_CONNECT_READ;
 	}
-	libnvme_msg(ctx, LOG_DEBUG, "connect ctrl, response '%.*s'\n",
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "connect ctrl, response '%.*s'\n",
 		 (int)strcspn(buf, "\n"), buf);
 	buf[len] = '\0';
 	options = buf;
@@ -1006,7 +1014,7 @@ static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 			return ret;
 	}
 
-	libnvme_msg(ctx, LOG_ERR, "Failed to parse ctrl info for \"%s\"\n", argstr);
+	libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to parse ctrl info for \"%s\"\n", argstr);
 	return -ENVME_CONNECT_PARSE;
 }
 
@@ -1100,7 +1108,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 		 * application string.
 		 */
 		if (app && strcmp(app, root_app)) {
-			libnvme_msg(h->ctx, LOG_INFO, "skip %s, not managed by %s\n",
+			libnvme_msg(h->ctx, LIBNVME_LOG_INFO, "skip %s, not managed by %s\n",
 				 libnvme_subsystem_get_subsysnqn(s), root_app);
 			return -ENVME_CONNECT_IGNORED;
 		}
@@ -1125,7 +1133,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 	if (ret < 0)
 		return ret;
 
-	libnvme_msg(h->ctx, LOG_INFO, "nvme%d: %s connected\n", ret,
+	libnvme_msg(h->ctx, LIBNVME_LOG_INFO, "nvme%d: %s connected\n", ret,
 		 libnvme_ctrl_get_subsysnqn(c));
 	return libnvme_init_ctrl(h, c, ret);
 }
@@ -1154,7 +1162,7 @@ static void nvmf_update_tls_concat(struct nvmf_disc_log_entry *e,
 		return;
 
 	if (e->treq & NVMF_TREQ_REQUIRED) {
-		libnvme_msg(h->ctx, LOG_DEBUG,
+		libnvme_msg(h->ctx, LIBNVME_LOG_DEBUG,
 			"setting --tls due to treq %s and sectype %s\n",
 			libnvmf_treq_str(e->treq),
 			libnvmf_sectype_str(e->tsas.tcp.sectype));
@@ -1164,7 +1172,7 @@ static void nvmf_update_tls_concat(struct nvmf_disc_log_entry *e,
 	}
 
 	if (e->treq & NVMF_TREQ_NOT_REQUIRED) {
-		libnvme_msg(h->ctx, LOG_DEBUG,
+		libnvme_msg(h->ctx, LIBNVME_LOG_DEBUG,
 			"setting --concat due to treq %s and sectype %s\n",
 			libnvmf_treq_str(e->treq),
 			libnvmf_sectype_str(e->tsas.tcp.sectype));
@@ -1193,7 +1201,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 			fctx->trsvcid = e->trsvcid;
 			break;
 		default:
-			libnvme_msg(h->ctx, LOG_ERR,
+			libnvme_msg(h->ctx, LIBNVME_LOG_ERR,
 				 "skipping unsupported adrfam %d\n",
 				 e->adrfam);
 			return -EINVAL;
@@ -1205,7 +1213,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 			fctx->traddr = e->traddr;
 			break;
 		default:
-			libnvme_msg(h->ctx, LOG_ERR,
+			libnvme_msg(h->ctx, LIBNVME_LOG_ERR,
 				 "skipping unsupported adrfam %d\n",
 				 e->adrfam);
 			return -EINVAL;
@@ -1215,7 +1223,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 		fctx->traddr = strlen(e->traddr) ? e->traddr : NULL;
 		break;
 	default:
-		libnvme_msg(h->ctx, LOG_ERR, "skipping unsupported transport %d\n",
+		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "skipping unsupported transport %d\n",
 			 e->trtype);
 		return -EINVAL;
 	}
@@ -1223,13 +1231,13 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 	fctx->transport = libnvmf_trtype_str(e->trtype);
 	fctx->subsysnqn = e->subnqn;
 
-	libnvme_msg(h->ctx, LOG_DEBUG, "lookup ctrl "
+	libnvme_msg(h->ctx, LIBNVME_LOG_DEBUG, "lookup ctrl "
 		 "(transport: %s, traddr: %s, trsvcid %s)\n",
 		 fctx->transport, fctx->traddr, fctx->trsvcid);
 
 	ret = _libnvme_create_ctrl(h->ctx, fctx, &c);
 	if (ret) {
-		libnvme_msg(h->ctx, LOG_DEBUG, "skipping discovery entry, "
+		libnvme_msg(h->ctx, LIBNVME_LOG_DEBUG, "skipping discovery entry, "
 			 "failed to allocate %s controller with traddr %s\n",
 			 fctx->transport, fctx->traddr);
 		return ret;
@@ -1249,7 +1257,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 				strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME));
 		break;
 	default:
-		libnvme_msg(h->ctx, LOG_ERR, "unsupported subtype %d\n",
+		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "unsupported subtype %d\n",
 			 e->subtype);
 		fallthrough;
 	case NVME_NQN_NVME:
@@ -1278,7 +1286,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 
 	if (ret == EINVAL && c->cfg.disable_sqflow) {
 		/* disable_sqflow is unrecognized option on older kernels */
-		libnvme_msg(h->ctx, LOG_INFO, "failed to connect controller, "
+		libnvme_msg(h->ctx, LIBNVME_LOG_INFO, "failed to connect controller, "
 			 "retry with disabling SQ flow control\n");
 		c->cfg.disable_sqflow = false;
 		ret = libnvmf_add_ctrl(h, c, cfg);
@@ -1315,17 +1323,17 @@ static int nvme_discovery_log(libnvme_ctrl_t ctrl,
 
 	log = __libnvme_alloc(sizeof(*log));
 	if (!log) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "could not allocate memory for discovery log header\n");
 		return -ENOMEM;
 	}
 
-	libnvme_msg(ctx, LOG_DEBUG, "%s: get header (try %d/%d)\n",
+	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "%s: get header (try %d/%d)\n",
 		 name, retries, args->max_retries);
 	nvme_init_get_log_discovery(&cmd, 0, log, DISCOVERY_HEADER_LEN);
 	err = libnvme_get_log(hdl, &cmd, false, DISCOVERY_HEADER_LEN);
 	if (err) {
-		libnvme_msg(ctx, LOG_INFO,
+		libnvme_msg(ctx, LIBNVME_LOG_INFO,
 			 "%s: discover try %d/%d failed, errno %d status 0x%x\n",
 			 name, retries, args->max_retries, errno, err);
 		goto out_free_log;
@@ -1344,12 +1352,12 @@ static int nvme_discovery_log(libnvme_ctrl_t ctrl,
 		entries_size = sizeof(*log->entries) * numrec;
 		log = __libnvme_alloc(sizeof(*log) + entries_size);
 		if (!log) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				 "could not alloc memory for discovery log page\n");
 			return -ENOMEM;
 		}
 
-		libnvme_msg(ctx, LOG_DEBUG,
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			 "%s: get %" PRIu64 " records (genctr %" PRIu64 ")\n",
 			 name, numrec, genctr);
 
@@ -1359,7 +1367,7 @@ static int nvme_discovery_log(libnvme_ctrl_t ctrl,
 					       NVME_LOG_CDW10_LSP_MASK);
 		err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (err) {
-			libnvme_msg(ctx, LOG_INFO,
+			libnvme_msg(ctx, LIBNVME_LOG_INFO,
 				 "%s: discover try %d/%d failed, errno %d status 0x%x\n",
 				 name, retries, args->max_retries, errno, err);
 			goto out_free_log;
@@ -1369,12 +1377,12 @@ static int nvme_discovery_log(libnvme_ctrl_t ctrl,
 		 * If the log page was read with multiple Get Log Page commands,
 		 * genctr must be checked afterwards to ensure atomicity
 		 */
-		libnvme_msg(ctx, LOG_DEBUG, "%s: get header again\n", name);
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "%s: get header again\n", name);
 
 		nvme_init_get_log_discovery(&cmd, 0, log, DISCOVERY_HEADER_LEN);
 		err = libnvme_get_log(hdl, &cmd, false, DISCOVERY_HEADER_LEN);
 		if (err) {
-			libnvme_msg(ctx, LOG_INFO,
+			libnvme_msg(ctx, LIBNVME_LOG_INFO,
 				 "%s: discover try %d/%d failed, errno %d status 0x%x\n",
 				 name, retries, args->max_retries, errno, err);
 			goto out_free_log;
@@ -1383,10 +1391,10 @@ static int nvme_discovery_log(libnvme_ctrl_t ctrl,
 		 ++retries < args->max_retries);
 
 	if (genctr != le64_to_cpu(log->genctr)) {
-		libnvme_msg(ctx, LOG_INFO, "%s: discover genctr mismatch\n", name);
+		libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: discover genctr mismatch\n", name);
 		err = -EAGAIN;
 	} else if (numrec != le64_to_cpu(log->numrec)) {
-		libnvme_msg(ctx, LOG_INFO,
+		libnvme_msg(ctx, LIBNVME_LOG_INFO,
 			 "%s: numrec changed unexpectedly "
 			 "from %" PRIu64 " to %" PRIu64 "\n",
 			 name, numrec, le64_to_cpu(log->numrec));
@@ -1415,7 +1423,7 @@ static void sanitize_discovery_log_entry(struct libnvme_global_ctx *ctx,
 		char *comma = strchr(e->traddr, ',');
 
 		if (comma) {
-			libnvme_msg(ctx, LOG_WARNING,
+			libnvme_msg(ctx, LIBNVME_LOG_WARN,
 				"invalid traddr separator ',' instead ':', fixing it");
 			*comma = ':';
 		}
@@ -1587,35 +1595,35 @@ static int nvmf_dim(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 	int ret;
 
 	if (!c->s) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "%s: failed to perform DIM. subsystem undefined.\n",
 			 c->name);
 		return -EINVAL;
 	}
 
 	if (!c->s->h) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "%s: failed to perform DIM. host undefined.\n",
 			 c->name);
 		return -EINVAL;
 	}
 
 	if (!c->s->h->hostid) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "%s: failed to perform DIM. hostid undefined.\n",
 			 c->name);
 		return -EINVAL;
 	}
 
 	if (!c->s->h->hostnqn) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "%s: failed to perform DIM. hostnqn undefined.\n",
 			 c->name);
 		return -EINVAL;
 	}
 
 	if (strcmp(c->transport, "tcp")) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "%s: DIM only supported for TCP connections.\n",
 			 c->name);
 		return -EINVAL;
@@ -1641,15 +1649,15 @@ static int nvmf_dim(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 
 	ret = get_entity_name(dim->ename, sizeof(dim->ename));
 	if (ret < 0)
-		libnvme_msg(ctx, LOG_INFO, "%s: Failed to retrieve ENAME. %s.\n",
+		libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: Failed to retrieve ENAME. %s.\n",
 			 c->name, libnvme_strerror(-ret));
 	else if (ret == 0)
-		libnvme_msg(ctx, LOG_INFO, "%s: Failed to retrieve ENAME.\n",
+		libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: Failed to retrieve ENAME.\n",
 			 c->name);
 
 	ret = get_entity_version(dim->ever, sizeof(dim->ever));
 	if (ret <= 0)
-		libnvme_msg(ctx, LOG_INFO, "%s: Failed to retrieve EVER.\n", c->name);
+		libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: Failed to retrieve EVER.\n", c->name);
 
 	die = &dim->die->extended;
 	nvmf_fill_die(die, c->s->h, tel, trtype, adrfam, reg_addr, tsas);
@@ -2011,7 +2019,7 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 
 	err = nvme_discovery_log(c, &args, &log);
 	if (err) {
-		libnvme_msg(ctx, LOG_ERR, "failed to get discovery log: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to get discovery log: %s\n",
 			libnvme_strerror(err));
 		return err;
 	}
@@ -2209,14 +2217,14 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 
 	ret = libnvme_open(ctx, c->name, &c->hdl);
 	if (ret) {
-		libnvme_msg(ctx, LOG_ERR, "failed to open %s\n", c->name);
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to open %s\n", c->name);
 		return ret;
 	}
 
 	/* Find out the name of discovery controller */
 	ret = libnvme_ctrl_identify(c, id);
 	if (ret)  {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "failed to identify controller, error %s\n",
 			 libnvme_strerror(-ret));
 		libnvme_disconnect_ctrl(c);
@@ -2271,7 +2279,7 @@ int _discovery_config_json(struct libnvme_global_ctx *ctx,
 	/* ignore if no host_traddr for fc */
 	if (!strcmp(nfctx.transport, "fc")) {
 		if (!nfctx.host_traddr) {
-			libnvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				 "host_traddr required for fc\n");
 			return 0;
 		}
@@ -2281,7 +2289,7 @@ int _discovery_config_json(struct libnvme_global_ctx *ctx,
 	if (!strcmp(nfctx.transport, "rdma") ||
 	    !strcmp(nfctx.transport, "fc")) {
 		if (nfctx.host_iface) {
-			libnvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				 "host_iface not permitted for rdma or fc\n");
 			return 0;
 		}
@@ -2355,7 +2363,7 @@ __public int libnvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
 				err = _discovery_config_json(ctx, fctx, h, c,
 					connect, force);
 				if (err) {
-					libnvme_msg(ctx, LOG_ERR,
+					libnvme_msg(ctx, LIBNVME_LOG_ERR,
 						"failed to connect to hostnqn=%s,nqn=%s,%s\n",
 						libnvme_host_get_hostnqn(h),
 						libnvme_subsystem_get_name(s),
@@ -2414,7 +2422,7 @@ __public int libnvmf_connect_config_json(struct libnvme_global_ctx *ctx,
 					if (err == -ENVME_CONNECT_ALREADY)
 						continue;
 
-					libnvme_msg(ctx, LOG_ERR,
+					libnvme_msg(ctx, LIBNVME_LOG_ERR,
 						 "failed to connect to hostnqn=%s,nqn=%s,%s\n",
 						 libnvme_host_get_hostnqn(h),
 						 libnvme_subsystem_get_name(s),
@@ -2500,7 +2508,7 @@ __public int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
 
 	h = libnvme_lookup_host(ctx, fctx->hostnqn, fctx->hostid);
 	if (!h) {
-		libnvme_msg(ctx, LOG_ERR, "Failed to lookup host '%s'\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to lookup host '%s'\n",
 			fctx->hostnqn);
 		return -ENODEV;
 	}
@@ -2510,14 +2518,14 @@ __public int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
 
 	s = libnvme_lookup_subsystem(h, NULL, fctx->subsysnqn);
 	if (!s) {
-		libnvme_msg(ctx, LOG_ERR, "Failed to lookup subsystem '%s'\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to lookup subsystem '%s'\n",
 			fctx->subsysnqn);
 		return -ENODEV;
 	}
 
 	c = libnvme_lookup_ctrl(s, fctx, NULL);
 	if (!c) {
-		libnvme_msg(ctx, LOG_ERR, "Failed to lookup controller\n");
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to lookup controller\n");
 		return -ENODEV;
 	}
 	if (fctx->ctrlkey)
@@ -2594,19 +2602,19 @@ static bool validate_uri(struct libnvme_global_ctx *ctx,
 			 struct libnvme_fabrics_uri *uri)
 {
 	if (!uri) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "Discovery Descriptor %d: failed to parse URI %s\n",
 			 dd->index, dd->uri);
 		return false;
 	}
 	if (strcmp(uri->scheme, "nvme") != 0) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "Discovery Descriptor %d: unsupported scheme '%s'\n",
 			 dd->index, uri->scheme);
 		return false;
 	}
 	if (!uri->protocol || strcmp(uri->protocol, "tcp") != 0) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "Discovery Descriptor %d: unsupported transport '%s'\n",
 			 dd->index, uri->protocol);
 		return false;
@@ -2661,7 +2669,7 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 		 * our connection attempt has failed, ignore it.
 		 */
 		if (ss && ss->unavailable) {
-			libnvme_msg(ctx, LOG_INFO,
+			libnvme_msg(ctx, LIBNVME_LOG_INFO,
 				"SSNS %d reported as unavailable, skipping\n",
 				ss->index);
 			return 0;
@@ -2691,7 +2699,7 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 
 	ret = nvme_discovery_log(c, &args, &log);
 	if (ret) {
-		libnvme_msg(ctx, LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"Discovery Descriptor %d: failed to get discovery log: %s\n",
 			dd->index, libnvme_strerror(ret));
 		return ret;
@@ -2750,14 +2758,14 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 					defcfg);
 
 				if (ret == 0)
-					libnvme_msg(ctx, LOG_INFO,
+					libnvme_msg(ctx, LIBNVME_LOG_INFO,
 						"Discovery Descriptor %d: connect with host_traddr=\"%s\" failed, success after omitting host_traddr\n",
 						dd->index,
 						htradr);
 			}
 
 			if (ret)
-				libnvme_msg(ctx, LOG_ERR,
+				libnvme_msg(ctx, LIBNVME_LOG_ERR,
 					"Discovery Descriptor %d: no controller found\n",
 					dd->index);
 			if (ret == -ENOMEM)
@@ -2798,7 +2806,7 @@ __public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 	ret = libnvmf_nbft_read_files(ctx, nbft_path, &entry);
 	if (ret) {
 		if (ret != -ENOENT)
-			libnvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				"Failed to access ACPI tables directory\n");
 		else
 			ret = 0;  /* nothing to connect */
@@ -2840,7 +2848,7 @@ __public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 				/* Skip discovery NQN records */
 				if (strcmp((*ss)->subsys_nqn,
 						NVME_DISC_SUBSYS_NAME) == 0) {
-					libnvme_msg(ctx, LOG_INFO,
+					libnvme_msg(ctx, LIBNVME_LOG_INFO,
 						"SSNS %d points to well-known discovery NQN, skipping\n",
 						(*ss)->index);
 					continue;
@@ -2875,14 +2883,14 @@ __public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 						*ss, fctx->cfg);
 
 					if (rr == 0)
-						libnvme_msg(ctx, LOG_INFO,
+						libnvme_msg(ctx, LIBNVME_LOG_INFO,
 							"SSNS %d: connect with host_traddr=\"%s\" failed, success after omitting host_traddr\n",
 							(*ss)->index,
 							host_traddr);
 				}
 
 				if (rr) {
-					libnvme_msg(ctx, LOG_ERR,
+					libnvme_msg(ctx, LIBNVME_LOG_ERR,
 						"SSNS %d: no controller found\n",
 						(*ss)->index);
 					/* report an error */
@@ -2966,7 +2974,7 @@ __public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 				ret = 0;
 
 			if (ret) {
-				libnvme_msg(ctx, LOG_ERR,
+				libnvme_msg(ctx, LIBNVME_LOG_ERR,
 					"Discovery Descriptor %d: failed to add discovery controller: %s\n",
 					(*dd)->index, libnvme_strerror(-ret));
 				goto out_free;
@@ -3007,14 +3015,14 @@ __public int libnvmf_discovery(struct libnvme_global_ctx *ctx, struct libnvmf_co
 		if (!ret) {
 			/* Check if device matches command-line options */
 			if (!_libnvme_ctrl_match_config(c, fctx)) {
-				libnvme_msg(ctx, LOG_ERR,
+				libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				    "ctrl device %s found, ignoring non matching command-line options\n",
 				    fctx->device);
 			}
 
 			if (!libnvme_ctrl_get_discovery_ctrl(c)) {
 				libnvme_msg(
-					ctx, LOG_ERR,
+					ctx, LIBNVME_LOG_ERR,
 					"ctrl device %s found, ignoring non discovery controller\n",
 					fctx->device);
 
@@ -3050,7 +3058,7 @@ __public int libnvmf_discovery(struct libnvme_global_ctx *ctx, struct libnvmf_co
 			 * No controller found, fall back to create one.
 			 * But that controller cannot be persistent.
 			 */
-			libnvme_msg(ctx, LOG_ERR,
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				"ctrl device %s not found%s\n", fctx->device,
 				fctx->persistent ? ", ignoring --persistent" : "");
 			fctx->persistent = false;
@@ -3067,7 +3075,7 @@ __public int libnvmf_discovery(struct libnvme_global_ctx *ctx, struct libnvmf_co
 		ret = nvmf_create_discovery_ctrl(ctx, fctx, h, fctx->cfg, &c);
 		if (ret) {
 			if (ret != -ENVME_CONNECT_IGNORED)
-				libnvme_msg(ctx, LOG_ERR,
+				libnvme_msg(ctx, LIBNVME_LOG_ERR,
 					 "failed to add controller, error %s\n",
 					 libnvme_strerror(-ret));
 			return ret;
@@ -3129,7 +3137,7 @@ __public int libnvmf_connect(struct libnvme_global_ctx *ctx, struct libnvmf_cont
 
 	err = libnvme_add_ctrl(fctx, h, c, fctx->cfg);
 	if (err) {
-		libnvme_msg(ctx, LOG_ERR, "could not add new controller: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "could not add new controller: %s\n",
 			libnvme_strerror(-err));
 		libnvme_free_ctrl(c);
 		return err;

@@ -236,6 +236,7 @@ config_meson_minimal_static() {
         -Dc_args="${cflags_str}"                \
         -Dc_link_args="${ldflags_str}"          \
         -Dfabrics=disabled                      \
+        -Dmi=disabled                           \
         -Djson-c=disabled                       \
         -Dtests=false                           \
         -Dexamples=false                        \

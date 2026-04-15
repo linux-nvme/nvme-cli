@@ -8,7 +8,6 @@
 #include "common.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "platform/types.h"
 #include "util/types.h"
 #include "nvme-print.h"
 

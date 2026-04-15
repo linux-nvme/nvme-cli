@@ -18,6 +18,7 @@
 
 /* we define a custom transport, so need the internal headers */
 #include "nvme/private.h"
+#include "nvme/private-mi.h"
 
 #include "utils.h"
 
@@ -2131,7 +2132,7 @@ int main(void)
 
 	fd = test_setup_log();
 
-	ctx = libnvme_create_global_ctx(fd, DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(fd, LIBNVME_DEFAULT_LOGLEVEL);
 	assert(ctx);
 
 	ep = libnvme_mi_open_test(ctx);

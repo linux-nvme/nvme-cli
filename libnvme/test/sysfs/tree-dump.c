@@ -17,7 +17,7 @@ static bool tree_dump(void)
 	bool pass = false;
 	int err;
 
-	ctx = libnvme_create_global_ctx(stdout, LOG_ERR);
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR);
 	if (!ctx)
 		return false;
 

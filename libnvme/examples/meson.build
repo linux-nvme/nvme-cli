@@ -51,48 +51,50 @@ if want_fabrics
     )
 endif
 
-executable(
-    'mi-mctp',
-    ['mi-mctp.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-)
-
-executable(
-    'mi-mctp-csi-test',
-    ['mi-mctp-csi-test.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-        threads_dep,
-    ],
-)
-
-executable(
-    'mi-mctp-ae',
-    ['mi-mctp-ae.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-)
-
-if libdbus_dep.found()
+if want_mi
     executable(
-        'mi-conf',
-        ['mi-conf.c'],
+        'mi-mctp',
+        ['mi-mctp.c'],
         dependencies: [
             config_dep,
             ccan_dep,
             libnvme_dep,
-            libdbus_dep,
         ],
     )
+
+    executable(
+        'mi-mctp-csi-test',
+        ['mi-mctp-csi-test.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+            threads_dep,
+        ],
+    )
+
+    executable(
+        'mi-mctp-ae',
+        ['mi-mctp-ae.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+
+    if libdbus_dep.found()
+        executable(
+            'mi-conf',
+            ['mi-conf.c'],
+            dependencies: [
+                config_dep,
+                ccan_dep,
+                libnvme_dep,
+                libdbus_dep,
+            ],
+        )
+    endif
 endif
 
 endif # host_system != 'windows'

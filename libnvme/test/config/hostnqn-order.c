@@ -18,7 +18,7 @@ static bool command_line(void)
 	int err;
 	char *hostnqn, *hostid, *hnqn, *hid;
 
-	ctx = libnvme_create_global_ctx(stderr, LOG_ERR);
+	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
 	if (!ctx)
 		return false;
 
@@ -62,7 +62,7 @@ static bool json_config(char *file)
 	setenv("LIBNVME_HOSTNQN", "", 1);
 	setenv("LIBNVME_HOSTID", "", 1);
 
-	ctx = libnvme_create_global_ctx(stderr, LOG_ERR);
+	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
 	if (!ctx)
 		return false;
 
@@ -114,7 +114,7 @@ static bool from_file(void)
 	setenv("LIBNVME_HOSTNQN", hostnqn, 1);
 	setenv("LIBNVME_HOSTID", hostid, 1);
 
-	ctx = libnvme_create_global_ctx(stderr, LOG_ERR);
+	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
 	if (!ctx)
 		return false;
 

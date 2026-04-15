@@ -488,7 +488,7 @@ struct libnvme_ns {
 	libnvme_global_ctx(const char *config_file = NULL) {
 		struct libnvme_global_ctx *ctx;
 
-		ctx = libnvme_create_global_ctx(stdout, DEFAULT_LOGLEVEL);
+		ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
 		if (!ctx)
 			return NULL;
 
@@ -507,15 +507,11 @@ struct libnvme_ns {
 		return $self;
 	}
 	void log_level(const char *level) {
-		int log_level = DEFAULT_LOGLEVEL;
-		if (!strcmp(level, "debug")) log_level = LOG_DEBUG;
-		else if (!strcmp(level, "info")) log_level = LOG_INFO;
-		else if (!strcmp(level, "notice")) log_level = LOG_NOTICE;
-		else if (!strcmp(level, "warning")) log_level = LOG_WARNING;
-		else if (!strcmp(level, "err")) log_level = LOG_ERR;
-		else if (!strcmp(level, "crit")) log_level = LOG_CRIT;
-		else if (!strcmp(level, "alert")) log_level = LOG_ALERT;
-		else if (!strcmp(level, "emerg")) log_level = LOG_EMERG;
+		int log_level = LIBNVME_DEFAULT_LOGLEVEL;
+		if (!strcmp(level, "debug")) log_level = LIBNVME_LOG_DEBUG;
+		else if (!strcmp(level, "info")) log_level = LIBNVME_LOG_INFO;
+		else if (!strcmp(level, "warning")) log_level = LIBNVME_LOG_WARN;
+		else if (!strcmp(level, "err")) log_level = LIBNVME_LOG_ERR;
 		libnvme_set_logging_level($self, log_level, false, false);
 	}
 	%pythoncode %{
@@ -1242,7 +1238,7 @@ struct libnvme_ns {
 		    "@param filename: file to read") nbft_get;
 PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char * filename);
 
-// We want to swig all the #define and enum from types.h, but none of the structs.
+// We want to swig all the #define and enum from nvme-types.h, but none of the structs.
 #pragma SWIG nowarn=503             // Supress warnings about unnamed struct
 #define __attribute__(x)
 %rename($ignore, %$isclass) "";     // ignore all classes/structs
@@ -1250,4 +1246,4 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char * filename);
 %rename($ignore, %$isunion) "";     // ignore all unions
 %rename($ignore, %$isvariable) "";  // ignore all variables
 
-%include "../src/nvme/types.h"
+%include "../src/nvme/nvme-types.h"

@@ -17,13 +17,13 @@
 
 #define print_info_array(...) \
 	do { \
-		if (log_level >= LOG_INFO) \
+		if (log_level >= LIBNVME_LOG_INFO) \
 			print_array(__VA_ARGS__); \
 	} while (false)
 
 #define print_info_error(...) \
 	do { \
-		if (log_level >= LOG_INFO) \
+		if (log_level >= LIBNVME_LOG_INFO) \
 			fprintf(stderr, __VA_ARGS__); \
 	} while (false)
 
