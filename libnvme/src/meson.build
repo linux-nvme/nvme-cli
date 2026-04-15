@@ -50,6 +50,10 @@ if want_fabrics
         'nvme/nbft.h',
         'nvme/accessors-fabrics.h',
     ]
+else
+    sources += [
+        'nvme/no-fabrics.c',
+    ]
 endif
 
 if want_mi

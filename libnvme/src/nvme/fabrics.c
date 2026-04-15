@@ -714,16 +714,21 @@ static int inet_pton_with_scope(struct libnvme_global_ctx *ctx, int af,
 	return ret;
 }
 
-static bool traddr_is_hostname(struct libnvme_global_ctx *ctx, libnvme_ctrl_t c)
+bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
+		const char *transport, const char *traddr)
 {
 	struct sockaddr_storage addr;
 
-	if (!c->traddr)
+	if (!traddr || !transport)
 		return false;
-	if (strcmp(c->transport, "tcp") && strcmp(c->transport, "rdma"))
+	if (!strcmp(traddr, "none"))
 		return false;
-	if (inet_pton_with_scope(ctx, AF_UNSPEC, c->traddr, c->trsvcid, &addr) == 0)
+	if (strcmp(transport, "tcp") && strcmp(transport, "rdma"))
 		return false;
+	if (inet_pton_with_scope(ctx, AF_UNSPEC,
+			traddr, NULL, &addr) == 0)  /* scope-aware */
+		return false;
+
 	return true;
 }
 
@@ -1115,7 +1120,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c,
 	}
 
 	libnvme_ctrl_set_discovered(c, true);
-	if (traddr_is_hostname(h->ctx, c)) {
+	if (traddr_is_hostname(h->ctx, c->transport, c->traddr)) {
 		char *traddr = c->traddr;
 
 		if (hostname2traddr(h->ctx, traddr, &c->traddr)) {
