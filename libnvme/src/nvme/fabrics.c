@@ -196,6 +196,12 @@ __public const char *libnvmf_cms_str(__u8 cm)
 	return arg_str(cms, ARRAY_SIZE(cms), cm);
 }
 
+void libnvmf_default_config(struct libnvme_fabrics_config *cfg)
+{
+	cfg->tos = -1;
+	cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
+}
+
 __public int libnvmf_context_create(struct libnvme_global_ctx *ctx,
 		bool (*decide_retry)(struct libnvmf_context *fctx, int err,
 			void *user_data),
@@ -380,7 +386,13 @@ __public int libnvmf_context_set_device(struct libnvmf_context *fctx, const char
 	return 0;
 }
 
-__public struct libnvme_fabrics_config *libnvmf_ctrl_get_config(
+__public struct libnvme_fabrics_config *libnvmf_context_get_fabrics_config(
+		struct libnvmf_context *fctx)
+{
+	return &fctx->cfg;
+}
+
+__public struct libnvme_fabrics_config *libnvmf_ctrl_get_fabrics_config(
 		libnvme_ctrl_t c)
 {
 	return &c->cfg;
@@ -422,7 +434,8 @@ static const struct libnvme_fabric_options default_supported_options = {
 static void merge_config(libnvme_ctrl_t c,
 		const struct libnvme_fabrics_config *cfg)
 {
-	struct libnvme_fabrics_config *ctrl_cfg = libnvmf_ctrl_get_config(c);
+	struct libnvme_fabrics_config *ctrl_cfg =
+		libnvmf_ctrl_get_fabrics_config(c);
 
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_io_queues, 0);
 	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_write_queues, 0);
@@ -446,9 +459,11 @@ static void merge_config(libnvme_ctrl_t c,
 
 #define UPDATE_CFG_OPTION(c, n, o, d)			\
 	if ((n)->o != d) (c)->o = (n)->o
-__public void libnvmf_update_config(libnvme_ctrl_t c, const struct libnvme_fabrics_config *cfg)
+static void update_config(libnvme_ctrl_t c,
+		const struct libnvme_fabrics_config *cfg)
 {
-	struct libnvme_fabrics_config *ctrl_cfg = libnvmf_ctrl_get_config(c);
+	struct libnvme_fabrics_config *ctrl_cfg =
+		libnvmf_ctrl_get_fabrics_config(c);
 
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_io_queues, 0);
 	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_write_queues, 0);
@@ -757,7 +772,7 @@ bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 
 static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 {
-	struct libnvme_fabrics_config *cfg = libnvmf_ctrl_get_config(c);
+	struct libnvme_fabrics_config *cfg = libnvmf_ctrl_get_fabrics_config(c);
 	const char *transport = libnvme_ctrl_get_transport(c);
 	const char *hostnqn, *hostid, *hostkey, *ctrlkey = NULL;
 	bool discover = false, discovery_nqn = false;
@@ -1100,7 +1115,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 		if (fc) {
 			const char *key;
 
-			merge_config(c, libnvmf_ctrl_get_config(fc));
+			merge_config(c, libnvmf_ctrl_get_fabrics_config(fc));
 			/*
 			 * An authentication key might already been set
 			 * in @cfg, so ensure to update @c with the correct
@@ -2573,7 +2588,7 @@ __public int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
 	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,
 			    fctx->tls_key_identity, &fctx->cfg, c);
 
-	libnvmf_update_config(c, &fctx->cfg);
+	update_config(c, &fctx->cfg);
 
 	return 0;
 }

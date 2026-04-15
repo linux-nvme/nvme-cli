@@ -301,28 +301,31 @@ static void cb_parser_cleanup(struct libnvmf_context *fctx, void *user_data)
 static int set_fabrics_options(struct libnvmf_context *fctx,
 		struct nvmf_args *fa)
 {
-	struct libnvme_fabrics_config fcfg;
+	struct libnvme_fabrics_config *fcfg;
 
-	fcfg.queue_size = fa->queue_size;
-	fcfg.nr_io_queues = fa->nr_io_queues;
-	fcfg.reconnect_delay = fa->reconnect_delay;
-	fcfg.ctrl_loss_tmo = fa->ctrl_loss_tmo;
-	fcfg.fast_io_fail_tmo = fa->fast_io_fail_tmo;
-	fcfg.keep_alive_tmo = fa->keep_alive_tmo;
-	fcfg.nr_write_queues = fa->nr_write_queues;
-	fcfg.nr_poll_queues = fa->nr_poll_queues;
-	fcfg.tos = fa->tos;
-	fcfg.keyring_id = fa->keyring_id;
-	fcfg.tls_key_id = fa->tls_key_id;
-	fcfg.tls_configured_key_id = fa->tls_configured_key_id;
-	fcfg.duplicate_connect = fa->duplicate_connect;
-	fcfg.disable_sqflow = fa->disable_sqflow;
-	fcfg.hdr_digest = fa->hdr_digest;
-	fcfg.data_digest = fa->data_digest;
-	fcfg.tls = fa->tls;
-	fcfg.concat = fa->concat;
+	fcfg = libnvmf_context_get_fabrics_config(fctx);
+	if (!fcfg)
+		return -EINVAL;
 
-	return libnvmf_context_set_fabrics_config(fctx, &fcfg);
+	libnvme_fabrics_config_set_nr_io_queues(fcfg, fa->nr_io_queues);
+	libnvme_fabrics_config_set_reconnect_delay(fcfg, fa->reconnect_delay);
+	libnvme_fabrics_config_set_ctrl_loss_tmo(fcfg, fa->ctrl_loss_tmo);
+	libnvme_fabrics_config_set_fast_io_fail_tmo(fcfg, fa->fast_io_fail_tmo);
+	libnvme_fabrics_config_set_keep_alive_tmo(fcfg, fa->keep_alive_tmo);
+	libnvme_fabrics_config_set_nr_write_queues(fcfg, fa->nr_write_queues);
+	libnvme_fabrics_config_set_nr_poll_queues(fcfg, fa->nr_poll_queues);
+	libnvme_fabrics_config_set_tos(fcfg, fa->tos);
+	libnvme_fabrics_config_set_keyring_id(fcfg, fa->keyring_id);
+	libnvme_fabrics_config_set_tls_key_id(fcfg, fa->tls_key_id);
+	libnvme_fabrics_config_set_tls_configured_key_id(fcfg, fa->tls_configured_key_id);
+	libnvme_fabrics_config_set_duplicate_connect(fcfg, fa->duplicate_connect);
+	libnvme_fabrics_config_set_disable_sqflow(fcfg, fa->disable_sqflow);
+	libnvme_fabrics_config_set_hdr_digest(fcfg, fa->hdr_digest);
+	libnvme_fabrics_config_set_data_digest(fcfg, fa->data_digest);
+	libnvme_fabrics_config_set_tls(fcfg, fa->tls);
+	libnvme_fabrics_config_set_concat(fcfg, fa->concat);
+
+	return 0;
 }
 
 static int cb_parser_next_line(struct libnvmf_context *fctx, void *user_data)

@@ -1046,12 +1046,6 @@ __public void libnvme_free_ctrl(libnvme_ctrl_t c)
 	__libnvme_free_ctrl(c);
 }
 
-__public void libnvmf_default_config(struct libnvme_fabrics_config *cfg)
-{
-	cfg->tos = -1;
-	cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
-}
-
 int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, libnvme_ctrl_t *cp)
 {

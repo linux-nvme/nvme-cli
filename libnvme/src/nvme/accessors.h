@@ -28,12 +28,334 @@
 #include <nvme/types.h>
 
 /* Forward declarations. These are internal (opaque) structs. */
+struct libnvme_fabrics_config;
 struct libnvme_path;
 struct libnvme_ns;
 struct libnvme_ctrl;
 struct libnvme_subsystem;
 struct libnvme_host;
 struct libnvme_fabric_options;
+
+/****************************************************************************
+ * Accessors for: struct libnvme_fabrics_config
+ ****************************************************************************/
+
+/**
+ * libnvme_fabrics_config_set_queue_size() - Set queue_size.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @queue_size: Value to assign to the queue_size field.
+ */
+void libnvme_fabrics_config_set_queue_size(
+		struct libnvme_fabrics_config *p,
+		int queue_size);
+
+/**
+ * libnvme_fabrics_config_get_queue_size() - Get queue_size.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the queue_size field.
+ */
+int libnvme_fabrics_config_get_queue_size(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_nr_io_queues() - Set nr_io_queues.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @nr_io_queues: Value to assign to the nr_io_queues field.
+ */
+void libnvme_fabrics_config_set_nr_io_queues(
+		struct libnvme_fabrics_config *p,
+		int nr_io_queues);
+
+/**
+ * libnvme_fabrics_config_get_nr_io_queues() - Get nr_io_queues.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the nr_io_queues field.
+ */
+int libnvme_fabrics_config_get_nr_io_queues(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_reconnect_delay() - Set reconnect_delay.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @reconnect_delay: Value to assign to the reconnect_delay field.
+ */
+void libnvme_fabrics_config_set_reconnect_delay(
+		struct libnvme_fabrics_config *p,
+		int reconnect_delay);
+
+/**
+ * libnvme_fabrics_config_get_reconnect_delay() - Get reconnect_delay.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the reconnect_delay field.
+ */
+int libnvme_fabrics_config_get_reconnect_delay(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_ctrl_loss_tmo() - Set ctrl_loss_tmo.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @ctrl_loss_tmo: Value to assign to the ctrl_loss_tmo field.
+ */
+void libnvme_fabrics_config_set_ctrl_loss_tmo(
+		struct libnvme_fabrics_config *p,
+		int ctrl_loss_tmo);
+
+/**
+ * libnvme_fabrics_config_get_ctrl_loss_tmo() - Get ctrl_loss_tmo.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the ctrl_loss_tmo field.
+ */
+int libnvme_fabrics_config_get_ctrl_loss_tmo(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_fast_io_fail_tmo() - Set fast_io_fail_tmo.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @fast_io_fail_tmo: Value to assign to the fast_io_fail_tmo field.
+ */
+void libnvme_fabrics_config_set_fast_io_fail_tmo(
+		struct libnvme_fabrics_config *p,
+		int fast_io_fail_tmo);
+
+/**
+ * libnvme_fabrics_config_get_fast_io_fail_tmo() - Get fast_io_fail_tmo.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the fast_io_fail_tmo field.
+ */
+int libnvme_fabrics_config_get_fast_io_fail_tmo(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_keep_alive_tmo() - Set keep_alive_tmo.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @keep_alive_tmo: Value to assign to the keep_alive_tmo field.
+ */
+void libnvme_fabrics_config_set_keep_alive_tmo(
+		struct libnvme_fabrics_config *p,
+		int keep_alive_tmo);
+
+/**
+ * libnvme_fabrics_config_get_keep_alive_tmo() - Get keep_alive_tmo.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the keep_alive_tmo field.
+ */
+int libnvme_fabrics_config_get_keep_alive_tmo(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_nr_write_queues() - Set nr_write_queues.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @nr_write_queues: Value to assign to the nr_write_queues field.
+ */
+void libnvme_fabrics_config_set_nr_write_queues(
+		struct libnvme_fabrics_config *p,
+		int nr_write_queues);
+
+/**
+ * libnvme_fabrics_config_get_nr_write_queues() - Get nr_write_queues.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the nr_write_queues field.
+ */
+int libnvme_fabrics_config_get_nr_write_queues(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_nr_poll_queues() - Set nr_poll_queues.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @nr_poll_queues: Value to assign to the nr_poll_queues field.
+ */
+void libnvme_fabrics_config_set_nr_poll_queues(
+		struct libnvme_fabrics_config *p,
+		int nr_poll_queues);
+
+/**
+ * libnvme_fabrics_config_get_nr_poll_queues() - Get nr_poll_queues.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the nr_poll_queues field.
+ */
+int libnvme_fabrics_config_get_nr_poll_queues(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_tos() - Set tos.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @tos: Value to assign to the tos field.
+ */
+void libnvme_fabrics_config_set_tos(struct libnvme_fabrics_config *p, int tos);
+
+/**
+ * libnvme_fabrics_config_get_tos() - Get tos.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the tos field.
+ */
+int libnvme_fabrics_config_get_tos(const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_keyring_id() - Set keyring_id.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @keyring_id: Value to assign to the keyring_id field.
+ */
+void libnvme_fabrics_config_set_keyring_id(
+		struct libnvme_fabrics_config *p,
+		long keyring_id);
+
+/**
+ * libnvme_fabrics_config_get_keyring_id() - Get keyring_id.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the keyring_id field.
+ */
+long libnvme_fabrics_config_get_keyring_id(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_tls_key_id() - Set tls_key_id.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @tls_key_id: Value to assign to the tls_key_id field.
+ */
+void libnvme_fabrics_config_set_tls_key_id(
+		struct libnvme_fabrics_config *p,
+		long tls_key_id);
+
+/**
+ * libnvme_fabrics_config_get_tls_key_id() - Get tls_key_id.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the tls_key_id field.
+ */
+long libnvme_fabrics_config_get_tls_key_id(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_tls_configured_key_id() - Set tls_configured_key_id.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @tls_configured_key_id: Value to assign to the tls_configured_key_id field.
+ */
+void libnvme_fabrics_config_set_tls_configured_key_id(
+		struct libnvme_fabrics_config *p,
+		long tls_configured_key_id);
+
+/**
+ * libnvme_fabrics_config_get_tls_configured_key_id() - Get tls_configured_key_id.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the tls_configured_key_id field.
+ */
+long libnvme_fabrics_config_get_tls_configured_key_id(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_duplicate_connect() - Set duplicate_connect.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @duplicate_connect: Value to assign to the duplicate_connect field.
+ */
+void libnvme_fabrics_config_set_duplicate_connect(
+		struct libnvme_fabrics_config *p,
+		bool duplicate_connect);
+
+/**
+ * libnvme_fabrics_config_get_duplicate_connect() - Get duplicate_connect.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the duplicate_connect field.
+ */
+bool libnvme_fabrics_config_get_duplicate_connect(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_disable_sqflow() - Set disable_sqflow.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @disable_sqflow: Value to assign to the disable_sqflow field.
+ */
+void libnvme_fabrics_config_set_disable_sqflow(
+		struct libnvme_fabrics_config *p,
+		bool disable_sqflow);
+
+/**
+ * libnvme_fabrics_config_get_disable_sqflow() - Get disable_sqflow.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the disable_sqflow field.
+ */
+bool libnvme_fabrics_config_get_disable_sqflow(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_hdr_digest() - Set hdr_digest.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @hdr_digest: Value to assign to the hdr_digest field.
+ */
+void libnvme_fabrics_config_set_hdr_digest(
+		struct libnvme_fabrics_config *p,
+		bool hdr_digest);
+
+/**
+ * libnvme_fabrics_config_get_hdr_digest() - Get hdr_digest.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the hdr_digest field.
+ */
+bool libnvme_fabrics_config_get_hdr_digest(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_data_digest() - Set data_digest.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @data_digest: Value to assign to the data_digest field.
+ */
+void libnvme_fabrics_config_set_data_digest(
+		struct libnvme_fabrics_config *p,
+		bool data_digest);
+
+/**
+ * libnvme_fabrics_config_get_data_digest() - Get data_digest.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the data_digest field.
+ */
+bool libnvme_fabrics_config_get_data_digest(
+		const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_tls() - Set tls.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @tls: Value to assign to the tls field.
+ */
+void libnvme_fabrics_config_set_tls(struct libnvme_fabrics_config *p, bool tls);
+
+/**
+ * libnvme_fabrics_config_get_tls() - Get tls.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the tls field.
+ */
+bool libnvme_fabrics_config_get_tls(const struct libnvme_fabrics_config *p);
+
+/**
+ * libnvme_fabrics_config_set_concat() - Set concat.
+ * @p: The &struct libnvme_fabrics_config instance to update.
+ * @concat: Value to assign to the concat field.
+ */
+void libnvme_fabrics_config_set_concat(
+		struct libnvme_fabrics_config *p,
+		bool concat);
+
+/**
+ * libnvme_fabrics_config_get_concat() - Get concat.
+ * @p: The &struct libnvme_fabrics_config instance to query.
+ *
+ * Return: The value of the concat field.
+ */
+bool libnvme_fabrics_config_get_concat(const struct libnvme_fabrics_config *p);
 
 /****************************************************************************
  * Accessors for: struct libnvme_path

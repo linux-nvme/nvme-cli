@@ -10,6 +10,8 @@
 #include <nvme/fabrics.h>
 #include <nvme/tree.h>
 
+#include "nvme/private.h"
+
 struct libnvmf_context {
 	struct libnvme_global_ctx *ctx;
 
@@ -83,3 +85,5 @@ struct libnvmf_discovery_args { /*!generate-accessors*/
 
 bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr);
+
+void libnvmf_default_config(struct libnvme_fabrics_config *cfg);

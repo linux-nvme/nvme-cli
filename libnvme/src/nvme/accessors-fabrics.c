@@ -48,7 +48,8 @@ __public void libnvmf_discovery_args_set_lsp(
 	p->lsp = lsp;
 }
 
-__public __u8 libnvmf_discovery_args_get_lsp(const struct libnvmf_discovery_args *p)
+__public __u8 libnvmf_discovery_args_get_lsp(
+		const struct libnvmf_discovery_args *p)
 {
 	return p->lsp;
 }

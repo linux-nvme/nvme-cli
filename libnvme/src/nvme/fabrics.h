@@ -32,49 +32,6 @@
 struct libnvmf_context;
 
 /**
- * struct libnvme_fabrics_config - Defines all linux nvme fabrics initiator options
- * @queue_size:		Number of IO queue entries
- * @nr_io_queues:	Number of controller IO queues to establish
- * @reconnect_delay:	Time between two consecutive reconnect attempts.
- * @ctrl_loss_tmo:	Override the default controller reconnect attempt timeout in seconds
- * @fast_io_fail_tmo:	Set the fast I/O fail timeout in seconds.
- * @keep_alive_tmo:	Override the default keep-alive-timeout to this value in seconds
- * @nr_write_queues:	Number of queues to use for exclusively for writing
- * @nr_poll_queues:	Number of queues to reserve for polling completions
- * @tos:		Type of service
- * @keyring_id:		Keyring to store and lookup keys
- * @tls_key_id:		TLS PSK for the connection
- * @tls_configured_key_id: TLS PSK for connect command for the connection
- * @duplicate_connect:	Allow multiple connections to the same target
- * @disable_sqflow:	Disable controller sq flow control
- * @hdr_digest:		Generate/verify header digest (TCP)
- * @data_digest:	Generate/verify data digest (TCP)
- * @tls:		Start TLS on the connection (TCP)
- * @concat:		Enable secure concatenation (TCP)
- */
-struct libnvme_fabrics_config {
-	int queue_size;
-	int nr_io_queues;
-	int reconnect_delay;
-	int ctrl_loss_tmo;
-	int fast_io_fail_tmo;
-	int keep_alive_tmo;
-	int nr_write_queues;
-	int nr_poll_queues;
-	int tos;
-	long keyring_id;
-	long tls_key_id;
-	long tls_configured_key_id;
-
-	bool duplicate_connect;
-	bool disable_sqflow;
-	bool hdr_digest;
-	bool data_digest;
-	bool tls;
-	bool concat;
-};
-
-/**
  * struct libnvme_fabrics_uri - Parsed URI structure
  * @scheme:		Scheme name (typically 'nvme')
  * @protocol:		Optional protocol/transport (e.g. 'tcp')
@@ -194,25 +151,6 @@ const char *libnvmf_qptype_str(__u8 qptype);
  * Return: decoded string
  */
 const char *libnvmf_cms_str(__u8 cms);
-
-/**
- * libnvmf_default_config() - Default values for fabrics configuration
- * @cfg: config values to set
- *
- * Initializes @cfg with default values.
- */
-void libnvmf_default_config(struct libnvme_fabrics_config *cfg);
-
-/**
- * libnvmf_update_config() - Update fabrics configuration values
- * @c:          Controller to be modified
- * @cfg:        Updated configuration values
- *
- * Updates the values from @c with the configuration values from @cfg;
- * all non-default values from @cfg will overwrite the values in @c.
- */
-void libnvmf_update_config(libnvme_ctrl_t c,
-		const struct libnvme_fabrics_config *cfg);
 
 /**
  * libnvmf_add_ctrl() - Connect a controller and update topology
@@ -419,18 +357,6 @@ int libnvmf_context_set_discovery_defaults(struct libnvmf_context *fctx,
 		int max_discovery_retries, int keep_alive_timeout);
 
 /**
- * libnvmf_context_set_fabrics_config() - Set fabrics configuration for context
- * @fctx: Fabrics context
- * @cfg: Fabrics configuration to apply
- *
- * Applies the given fabrics configuration to the context.
- *
- * Return: 0 on success, or a negative error code on failure.
- */
-int libnvmf_context_set_fabrics_config(struct libnvmf_context *fctx,
-		struct libnvme_fabrics_config *cfg);
-
-/**
  * libnvmf_context_set_connection() - Set connection parameters for context
  * @fctx: Fabrics context
  * @subsysnqn: Subsystem NQN
@@ -504,12 +430,23 @@ int libnvmf_context_set_persistent(struct libnvmf_context *fctx, bool persistent
 int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
 
 /**
- * libnvmf_ctrl_get_config() - Fabrics configuration of a controller
+ * libnvmf_context_get_fabrics_config() - Fabrics configuration of a fabrics
+ * context
+ * @fctx: Fabrics context
+ *
+ * Return: Fabrics configuration of @fctx
+ */
+struct libnvme_fabrics_config *libnvmf_context_get_fabrics_config(
+		struct libnvmf_context *fctx);
+
+/**
+ * libnvmf_ctrl_get_fabrics_config() - Fabrics configuration of a controller
  * @c:	Controller instance
  *
  * Return: Fabrics configuration of @c
  */
-struct libnvme_fabrics_config *libnvmf_ctrl_get_config(libnvme_ctrl_t c);
+struct libnvme_fabrics_config *libnvmf_ctrl_get_fabrics_config(
+		libnvme_ctrl_t c);
 
 /**
  * libnvmf_discovery() - Perform fabrics discovery
