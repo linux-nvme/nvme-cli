@@ -203,16 +203,17 @@ class Member:
     """Represents one member of a parsed C struct."""
 
     __slots__ = ('name', 'type', 'gen_getter', 'gen_setter',
-                 'is_char_array', 'array_size')
+                 'is_char_array', 'is_char_ptr_array', 'array_size')
 
     def __init__(self, name, type_str, gen_getter, gen_setter,
-                 is_char_array, array_size):
+                 is_char_array, is_char_ptr_array, array_size):
         self.name = name
         self.type = type_str          # e.g. "const char *", "int", "__u32"
         self.gen_getter = gen_getter  # True → emit getter
         self.gen_setter = gen_setter  # True → emit setter
         self.is_char_array = is_char_array
-        self.array_size = array_size  # only valid when is_char_array is True
+        self.is_char_ptr_array = is_char_ptr_array
+        self.array_size = array_size  # only for fixed-size char arrays (char[N])
 
 
 # ---------------------------------------------------------------------------
@@ -274,6 +275,7 @@ def parse_members(struct_name, raw_body, struct_mode, verbose):
                 gen_getter=gen_getter,
                 gen_setter=gen_setter and not is_const_qual,
                 is_char_array=True,
+                is_char_ptr_array=False,
                 array_size=m.group(3),
             ))
             continue
@@ -286,11 +288,16 @@ def parse_members(struct_name, raw_body, struct_mode, verbose):
             ptr_part  = m.group(3)
             name      = m.group(4)
 
-            is_ptr = '*' in ptr_part
-            if is_ptr:
+            ptr_depth = ptr_part.count('*')
+            if ptr_depth:
                 if type_base != 'char':
                     continue  # only char* pointers are supported
-                type_str = 'const char *'
+                if ptr_depth == 1:
+                    type_str = 'const char *'
+                elif ptr_depth == 2:
+                    type_str = 'const char *const *'
+                else:
+                    continue
             else:
                 type_str = type_base
 
@@ -300,6 +307,7 @@ def parse_members(struct_name, raw_body, struct_mode, verbose):
                 gen_getter=gen_getter,
                 gen_setter=gen_setter and not is_const_qual,
                 is_char_array=False,
+                is_char_ptr_array=(ptr_depth == 2),
                 array_size=None,
             ))
 
@@ -418,6 +426,28 @@ def emit_hdr_setter_str(f, prefix, sname, mname, is_dyn_str):
         )
 
 
+def emit_hdr_setter_str_array(f, prefix, sname, mname):
+    """Emit a header declaration for a string-array setter."""
+    f.write(
+        f'/**\n'
+        f' * {_set_name(prefix, sname, mname)}() - Set {mname}.\n'
+        f' * @p: The &struct {sname} instance to update.\n'
+        f' * @{mname}: New NULL-terminated string array; deep-copied.\n'
+        f' */\n'
+    )
+
+    single = (f'void {_set_name(prefix, sname, mname)}'
+              f'(struct {sname} *p, const char *const *{mname});')
+    if fits_80(single):
+        f.write(single + '\n\n')
+    else:
+        f.write(
+            f'void {_set_name(prefix, sname, mname)}(\n'
+            f'\t\tstruct {sname} *p,\n'
+            f'\t\tconst char *const *{mname});\n\n'
+        )
+
+
 def emit_hdr_setter_val(f, prefix, sname, mname, mtype):
     """Emit a header declaration for a value setter."""
     f.write(
@@ -468,9 +498,12 @@ def generate_hdr(f, prefix, struct_name, members):
     """Write header declarations for all members of one struct."""
     for member in members:
         is_dyn_str = (not member.is_char_array and
+                      not member.is_char_ptr_array and
                       member.type == 'const char *')
         if member.gen_setter:
-            if member.is_char_array or is_dyn_str:
+            if member.is_char_ptr_array:
+                emit_hdr_setter_str_array(f, prefix, struct_name, member.name)
+            elif member.is_char_array or is_dyn_str:
                 emit_hdr_setter_str(f, prefix, struct_name,
                                     member.name, is_dyn_str)
             else:
@@ -533,6 +566,49 @@ def emit_src_setter_chararray(f, prefix, sname, mname, array_size):
         )
 
 
+def emit_src_setter_str_array(f, prefix, sname, mname):
+    """Emit a NULL-terminated string-array setter (deep copy)."""
+    sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
+           f'(struct {sname} *p, const char *const *{mname})')
+    if fits_80(sig):
+        f.write(sig + '\n')
+    else:
+        f.write(
+            f'{PUB}void {_set_name(prefix, sname, mname)}(\n'
+            f'\t\tstruct {sname} *p,\n'
+            f'\t\tconst char *const *{mname})\n'
+        )
+
+    f.write(
+        '{\n'
+        '\tchar **new_array = NULL;\n'
+        '\tsize_t i;\n\n'
+        f'\tif ({mname}) {{\n'
+        f'\t\tfor (i = 0; {mname}[i]; i++)\n'
+        '\t\t\t;\n'
+        '\n'
+        '\t\tnew_array = calloc(i + 1, sizeof(char *));\n'
+        '\t\tif (new_array != NULL) {\n'
+        f'\t\t\tfor (i = 0; {mname}[i]; i++) {{\n'
+        f'\t\t\t\tnew_array[i] = strdup({mname}[i]);\n'
+        '\t\t\t\tif (!new_array[i]) {\n'
+        '\t\t\t\t\twhile (i > 0)\n'
+        '\t\t\t\t\t\tfree(new_array[--i]);\n'
+        '\t\t\t\t\tfree(new_array);\n'
+        '\t\t\t\t\tnew_array = NULL;\n'
+        '\t\t\t\t\tbreak;\n'
+        '\t\t\t\t}\n'
+        '\t\t\t}\n'
+        '\t\t}\n'
+        '\t}\n\n'
+        f'\tfor (i = 0; p->{mname} && p->{mname}[i]; i++)\n'
+        f'\t\tfree(p->{mname}[i]);\n'
+        f'\tfree(p->{mname});\n'
+        f'\tp->{mname} = new_array;\n'
+        '}\n\n'
+    )
+
+
 def emit_src_setter_val(f, prefix, sname, mname, mtype):
     """Emit a value setter (direct assignment)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
@@ -551,21 +627,25 @@ def emit_src_setter_val(f, prefix, sname, mname, mtype):
         )
 
 
-def emit_src_getter(f, prefix, sname, mname, mtype):
-    """Emit a getter (return member value)."""
+def emit_src_getter(f, prefix, sname, mname, mtype, cast=None):
+    """Emit a getter (return member value).
+
+    *cast* is an optional C cast expression (e.g. ``'(const char *const *)'``)
+    inserted before ``p->mname`` in the return statement.  Required when the
+    declared return type differs from the member's raw storage type (e.g. a
+    ``char **`` field exposed as ``const char *const *``).
+    """
     sep = type_sep(mtype)
     sig = (f'{PUB}{mtype}{sep}{_get_name(prefix, sname, mname)}'
            f'(const struct {sname} *p)')
+    ret = f'\treturn {cast}p->{mname};\n' if cast else f'\treturn p->{mname};\n'
     if fits_80(sig):
-        f.write(
-            sig + '\n'
-            f'{{\n\treturn p->{mname};\n}}\n\n'
-        )
+        f.write(sig + '\n' f'{{\n{ret}}}\n\n')
     else:
         f.write(
             f'{PUB}{mtype}{sep}{_get_name(prefix, sname, mname)}(\n'
             f'\t\tconst struct {sname} *p)\n'
-            f'{{\n\treturn p->{mname};\n}}\n\n'
+            f'{{\n{ret}}}\n\n'
         )
 
 
@@ -573,10 +653,13 @@ def generate_src(f, prefix, struct_name, members):
     """Write source implementations for all members of one struct."""
     for member in members:
         is_dyn_str = (not member.is_char_array and
+                      not member.is_char_ptr_array and
                       member.type == 'const char *')
         if member.gen_setter:
             if is_dyn_str:
                 emit_src_setter_dynstr(f, prefix, struct_name, member.name)
+            elif member.is_char_ptr_array:
+                emit_src_setter_str_array(f, prefix, struct_name, member.name)
             elif member.is_char_array:
                 emit_src_setter_chararray(f, prefix, struct_name,
                                           member.name, member.array_size)
@@ -584,7 +667,9 @@ def generate_src(f, prefix, struct_name, members):
                 emit_src_setter_val(f, prefix, struct_name,
                                     member.name, member.type)
         if member.gen_getter:
-            emit_src_getter(f, prefix, struct_name, member.name, member.type)
+            cast = '(const char *const *)' if member.is_char_ptr_array else None
+            emit_src_getter(f, prefix, struct_name, member.name, member.type,
+                            cast=cast)
 
 
 # ---------------------------------------------------------------------------

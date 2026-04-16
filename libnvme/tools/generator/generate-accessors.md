@@ -289,19 +289,20 @@ __public const char *person_get_role(const struct person *p)
 
 - `typedef struct` is not supported.
 - Nested structs (a `struct` member whose type is also a `struct`) are skipped.
-- Only `char *` pointer members are supported; other pointer types are skipped.
+- Only `char *` and `char **` pointer members are supported; other pointer types are skipped.
 
 ------
 
 ## Notes
 
 1. **Dynamic strings** (`char *`) — setters store a `strdup()` copy; passing `NULL` clears the field.
-2. **Fixed char arrays** (`char foo[N]`) — setters use `snprintf`, always NUL-terminated.
-3. **`const` members** — only a getter is generated, no setter (applies regardless of any annotation).
-4. **`//!accessors:readonly`** — same effect as `const`: getter only.
-5. **`//!accessors:writeonly`** — setter only; getter is suppressed.
-6. **`//!accessors:readwrite`** — both getter and setter; overrides a restrictive struct-level default.
-7. **`//!accessors:none`** — member is completely ignored by the generator.
-8. **Struct-level mode** — the qualifier on `generate-accessors` sets the default for every member in the struct; per-member annotations override the struct default.
-9. **`--prefix`** — prepended to every function name (e.g. `--prefix nvme_` turns `ctrl_set_name` into `nvme_ctrl_set_name`).
-10. **Line length** — generated code is automatically wrapped to stay within the 80-column limit required by `checkpatch.pl`.
+2. **String arrays** (`char **`) — setters deep-copy NULL-terminated arrays (each element and the container).
+3. **Fixed char arrays** (`char foo[N]`) — setters use `snprintf`, always NUL-terminated.
+4. **`const` members** — only a getter is generated, no setter (applies regardless of any annotation).
+5. **`//!accessors:readonly`** — same effect as `const`: getter only.
+6. **`//!accessors:writeonly`** — setter only; getter is suppressed.
+7. **`//!accessors:readwrite`** — both getter and setter; overrides a restrictive struct-level default.
+8. **`//!accessors:none`** — member is completely ignored by the generator.
+9. **Struct-level mode** — the qualifier on `generate-accessors` sets the default for every member in the struct; per-member annotations override the struct default.
+10. **`--prefix`** — prepended to every function name (e.g. `--prefix nvme_` turns `ctrl_set_name` into `nvme_ctrl_set_name`).
+11. **Line length** — generated code is automatically wrapped to stay within the 80-column limit required by `checkpatch.pl`.
