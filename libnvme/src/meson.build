@@ -84,20 +84,17 @@ else
 endif
 
 deps = [
-    config_dep,
     ccan_dep,
+    config_dep,
     json_c_dep,
     keyutils_dep,
+    libdbus_dep,
+    liburing_dep,
     openssl_dep,
 ]
 if host_system == 'windows'
     deps += [
         kernel32_dep
-    ]
-else
-    deps += [
-        libdbus_dep,
-        liburing_dep,
     ]
 endif
 
