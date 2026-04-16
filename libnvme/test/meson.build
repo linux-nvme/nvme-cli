@@ -224,6 +224,7 @@ foreach hdr : [
     'linux',
     'mi',
     'nbft',
+    'nbft-types',
     'nvme-cmds',
     'nvme-types',
     'tree',

@@ -41,14 +41,15 @@ headers = [
 
 if want_fabrics
     sources += [
+        'nvme/accessors-fabrics.c',
         'nvme/fabrics.c',
         'nvme/nbft.c',
-        'nvme/accessors-fabrics.c',
     ]
     headers += [
-        'nvme/fabrics.h',
-        'nvme/nbft.h',
         'nvme/accessors-fabrics.h',
+        'nvme/fabrics.h',
+        'nvme/nbft-types.h',
+        'nvme/nbft.h',
     ]
 else
     sources += [
