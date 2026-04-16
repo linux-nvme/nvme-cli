@@ -32,28 +32,6 @@
 struct libnvmf_context;
 
 /**
- * struct libnvme_fabrics_uri - Parsed URI structure
- * @scheme:		Scheme name (typically 'nvme')
- * @protocol:		Optional protocol/transport (e.g. 'tcp')
- * @userinfo:		Optional user information component of the URI authority
- * @host:		Host transport address
- * @port:		The port subcomponent or 0 if not specified
- * @path_segments:	NULL-terminated array of path segments
- * @query:		Optional query string component (separated by '?')
- * @fragment:		Optional fragment identifier component (separated by '#')
- */
-struct libnvme_fabrics_uri {
-	char *scheme;
-	char *protocol;
-	char *userinfo;
-	char *host;
-	int port;
-	char **path_segments;
-	char *query;
-	char *fragment;
-};
-
-/**
  * libnvmf_trtype_str() - Decode TRTYPE field
  * @trtype: value to be decoded
  *
@@ -185,6 +163,11 @@ int libnvmf_connect_ctrl(libnvme_ctrl_t c);
  */
 struct libnvmf_discovery_args;
 
+/*
+ * struct libnvmf_uri - Opaque data struct for URI
+ */
+struct libnvmf_uri;
+
 /**
  * libnvmf_discovery_args_create() - Allocate a discovery args object
  * @argsp:	On success, set to the newly allocated object
@@ -249,7 +232,7 @@ bool libnvmf_is_registration_supported(libnvme_ctrl_t c);
 int libnvmf_register_ctrl(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
 
 /**
- * libnvme_parse_uri() - Parse the URI string
+ * libnvmf_uri_parse() - Parse the URI string
  * @str:	URI string
  * @uri:	URI object to return
  *
@@ -258,18 +241,17 @@ int libnvmf_register_ctrl(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result
  *
  *   nvme+tcp://user@host:port/subsys_nqn/nid?query=val#fragment
  *
- * Return: &libnvme_fabrics_uri structure on success; NULL on failure with errno
- * set.
+ * Return: 0 on success, or a negative error code on failure.
  */
-int libnvme_parse_uri(const char *str, struct libnvme_fabrics_uri **uri);
+int libnvmf_uri_parse(const char *str, struct libnvmf_uri **uri);
 
 /**
- * libnvmf_free_uri() - Free the URI structure
+ * libnvmf_uri_free() - Free the URI structure
  * @uri:	&libnvme_fabrics_uri structure
  *
- * Free an &libnvme_fabrics_uri structure.
+ * Free an &libnvmf_uri structure.
  */
-void libnvmf_free_uri(struct libnvme_fabrics_uri *uri);
+void libnvmf_uri_free(struct libnvmf_uri *uri);
 
 /**
  * libnvmf_get_default_trsvcid() - Get default transport service ID

@@ -54,3 +54,127 @@ __public __u8 libnvmf_discovery_args_get_lsp(
 	return p->lsp;
 }
 
+/****************************************************************************
+ * Accessors for: struct libnvmf_uri
+ ****************************************************************************/
+
+__public void libnvmf_uri_set_scheme(struct libnvmf_uri *p, const char *scheme)
+{
+	free(p->scheme);
+	p->scheme = scheme ? strdup(scheme) : NULL;
+}
+
+__public const char *libnvmf_uri_get_scheme(const struct libnvmf_uri *p)
+{
+	return p->scheme;
+}
+
+__public void libnvmf_uri_set_protocol(
+		struct libnvmf_uri *p,
+		const char *protocol)
+{
+	free(p->protocol);
+	p->protocol = protocol ? strdup(protocol) : NULL;
+}
+
+__public const char *libnvmf_uri_get_protocol(const struct libnvmf_uri *p)
+{
+	return p->protocol;
+}
+
+__public void libnvmf_uri_set_userinfo(
+		struct libnvmf_uri *p,
+		const char *userinfo)
+{
+	free(p->userinfo);
+	p->userinfo = userinfo ? strdup(userinfo) : NULL;
+}
+
+__public const char *libnvmf_uri_get_userinfo(const struct libnvmf_uri *p)
+{
+	return p->userinfo;
+}
+
+__public void libnvmf_uri_set_host(struct libnvmf_uri *p, const char *host)
+{
+	free(p->host);
+	p->host = host ? strdup(host) : NULL;
+}
+
+__public const char *libnvmf_uri_get_host(const struct libnvmf_uri *p)
+{
+	return p->host;
+}
+
+__public void libnvmf_uri_set_port(struct libnvmf_uri *p, int port)
+{
+	p->port = port;
+}
+
+__public int libnvmf_uri_get_port(const struct libnvmf_uri *p)
+{
+	return p->port;
+}
+
+__public void libnvmf_uri_set_path_segments(
+		struct libnvmf_uri *p,
+		const char *const *path_segments)
+{
+	char **new_array = NULL;
+	size_t i;
+
+	if (path_segments) {
+		for (i = 0; path_segments[i]; i++)
+			;
+
+		new_array = calloc(i + 1, sizeof(char *));
+		if (new_array != NULL) {
+			for (i = 0; path_segments[i]; i++) {
+				new_array[i] = strdup(path_segments[i]);
+				if (!new_array[i]) {
+					while (i > 0)
+						free(new_array[--i]);
+					free(new_array);
+					new_array = NULL;
+					break;
+				}
+			}
+		}
+	}
+
+	for (i = 0; p->path_segments && p->path_segments[i]; i++)
+		free(p->path_segments[i]);
+	free(p->path_segments);
+	p->path_segments = new_array;
+}
+
+__public const char *const *libnvmf_uri_get_path_segments(
+		const struct libnvmf_uri *p)
+{
+	return (const char *const *)p->path_segments;
+}
+
+__public void libnvmf_uri_set_query(struct libnvmf_uri *p, const char *query)
+{
+	free(p->query);
+	p->query = query ? strdup(query) : NULL;
+}
+
+__public const char *libnvmf_uri_get_query(const struct libnvmf_uri *p)
+{
+	return p->query;
+}
+
+__public void libnvmf_uri_set_fragment(
+		struct libnvmf_uri *p,
+		const char *fragment)
+{
+	free(p->fragment);
+	p->fragment = fragment ? strdup(fragment) : NULL;
+}
+
+__public const char *libnvmf_uri_get_fragment(const struct libnvmf_uri *p)
+{
+	return p->fragment;
+}
+

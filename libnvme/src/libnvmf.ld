@@ -31,7 +31,6 @@ LIBNVMF_3 {
 		libnvmf_discovery_nbft;
 		libnvmf_eflags_str;
 		libnvmf_exat_ptr_next;
-		libnvmf_free_uri;
 		libnvmf_get_default_trsvcid;
 		libnvmf_get_discovery_log;
 		libnvmf_is_registration_supported;
@@ -44,6 +43,8 @@ LIBNVMF_3 {
 		libnvmf_subtype_str;
 		libnvmf_treq_str;
 		libnvmf_trtype_str;
+		libnvmf_uri_free;
+		libnvmf_uri_parse;
 	local:
 		*;
 };

@@ -136,7 +136,6 @@ LIBNVME_3 {
 		libnvme_ns_write_uncorrectable;
 		libnvme_ns_write_zeros;
 		libnvme_open;
-		libnvme_parse_uri;
 		libnvme_path_get_ctrl;
 		libnvme_path_get_ns;
 		libnvme_path_get_queue_depth;

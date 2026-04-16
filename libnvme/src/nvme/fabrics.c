@@ -42,10 +42,10 @@
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 
-static inline void free_uri(struct libnvme_fabrics_uri **uri)
+static inline void free_uri(struct libnvmf_uri **uri)
 {
 	if (*uri)
-		libnvmf_free_uri(*uri);
+		libnvmf_uri_free(*uri);
 }
 #define __cleanup_uri __cleanup(free_uri)
 
@@ -1858,9 +1858,9 @@ static char *unescape_uri(const char *str, int len)
 	return dst;
 }
 
-__public int libnvme_parse_uri(const char *str, struct libnvme_fabrics_uri **urip)
+__public int libnvmf_uri_parse(const char *str, struct libnvmf_uri **urip)
 {
-	struct libnvme_fabrics_uri *uri;
+	__cleanup_uri struct libnvmf_uri *uri = NULL;
 	__cleanup_free char *scheme = NULL;
 	__cleanup_free char *authority = NULL;
 	__cleanup_free char *path = NULL;
@@ -1881,21 +1881,17 @@ __public int libnvme_parse_uri(const char *str, struct libnvme_fabrics_uri **uri
 	 *  -CONTROLLER PORT]/NQN.2014-08.ORG.NVMEXPRESS.DISCOVERY/<NID>
 	 */
 
-	uri = calloc(1, sizeof(struct libnvme_fabrics_uri));
+	uri = calloc(1, sizeof(struct libnvmf_uri));
 	if (!uri)
 		return -ENOMEM;
 
 	if (sscanf(str, "%m[^:/]://%m[^/?#]%ms",
-		   &scheme, &authority, &path) < 2) {
-		libnvmf_free_uri(uri);
+		   &scheme, &authority, &path) < 2)
 		return -EINVAL;
-	}
 
 	if (sscanf(scheme, "%m[^+]+%ms",
-		   &uri->scheme, &uri->protocol) < 1) {
-		libnvmf_free_uri(uri);
+		   &uri->scheme, &uri->protocol) < 1)
 		return -EINVAL;
-	}
 
 	/* split userinfo */
 	host = strrchr(authority, '@');
@@ -1910,10 +1906,8 @@ __public int libnvme_parse_uri(const char *str, struct libnvme_fabrics_uri **uri
 		   &uri->host, &uri->port) < 1) {
 		/* treat it as IPv4/hostname */
 		if (sscanf(host, "%m[^:]:%d",
-			   &h, &uri->port) < 1) {
-			libnvmf_free_uri(uri);
+			   &h, &uri->port) < 1)
 			return -EINVAL;
-		}
 		uri->host = unescape_uri(h, 0);
 	}
 
@@ -1952,10 +1946,12 @@ __public int libnvme_parse_uri(const char *str, struct libnvme_fabrics_uri **uri
 	}
 
 	*urip = uri;
+	uri = NULL;
+
 	return 0;
 }
 
-__public void libnvmf_free_uri(struct libnvme_fabrics_uri *uri)
+__public void libnvmf_uri_free(struct libnvmf_uri *uri)
 {
 	char **s;
 
@@ -2655,7 +2651,7 @@ __public void libnvmf_nbft_free(struct libnvme_global_ctx *ctx, struct nbft_file
 
 static bool validate_uri(struct libnvme_global_ctx *ctx,
 			 struct nbft_info_discovery *dd,
-			 struct libnvme_fabrics_uri *uri)
+			 struct libnvmf_uri *uri)
 {
 	if (!uri) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
@@ -2954,7 +2950,7 @@ __public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 
 		/* Discovery Descriptor List */
 		for (dd = entry->nbft->discovery_list; dd && *dd; dd++) {
-			__cleanup_uri struct libnvme_fabrics_uri *uri = NULL;
+			__cleanup_uri struct libnvmf_uri *uri = NULL;
 			__cleanup_free char *trsvcid = NULL;
 			struct libnvmf_context nfctx = *fctx;
 			bool persistent = false;
@@ -2979,7 +2975,7 @@ __public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 				continue;
 
 			hfi = (*dd)->hfi;
-			ret = libnvme_parse_uri((*dd)->uri, &uri);
+			ret = libnvmf_uri_parse((*dd)->uri, &uri);
 			if (ret)
 				continue;
 			if (!validate_uri(ctx, *dd, uri))
