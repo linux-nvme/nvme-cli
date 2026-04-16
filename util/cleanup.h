@@ -42,14 +42,16 @@ static inline void cleanup_nvme_global_ctx(struct libnvme_global_ctx **ctx)
 }
 #define __cleanup_nvme_global_ctx __cleanup(cleanup_nvme_global_ctx)
 
-static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_ctrl, libnvme_ctrl_t, libnvme_free_ctrl)
+static inline void cleanup_nvme_ctrl(libnvme_ctrl_t *__p)
+{
+	libnvme_free_ctrl(*__p);
+}
 #define __cleanup_nvme_ctrl __cleanup(cleanup_nvme_ctrl)
 
 #ifdef CONFIG_FABRICS
 static inline void free_uri(struct libnvmf_uri **uri)
 {
-	if (*uri)
-		libnvmf_uri_free(*uri);
+	libnvmf_uri_free(*uri);
 }
 #define __cleanup_uri __cleanup(free_uri)
 
