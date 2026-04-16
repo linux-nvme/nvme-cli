@@ -205,8 +205,6 @@ int person_get_age(const struct person *p);
  */
 const char *person_get_id(const struct person *p);
 
-/* secret: no accessors (//!accessors:none) */
-
 /**
  * person_get_role() - Get role.
  * @p: The &struct person instance to query.
@@ -219,18 +217,48 @@ const char *person_get_role(const struct person *p);
  * Accessors for: struct car
  ****************************************************************************/
 
+/**
+ * car_set_model() - Set model.
+ * @p: The &struct car instance to update.
+ * @model: New string; a copy is stored. Pass NULL to clear.
+ */
 void car_set_model(struct car *p, const char *model);
+
+/**
+ * car_get_model() - Get model.
+ * @p: The &struct car instance to query.
+ *
+ * Return: The value of the model field, or NULL if not set.
+ */
 const char *car_get_model(const struct car *p);
 
+/**
+ * car_set_year() - Set year.
+ * @p: The &struct car instance to update.
+ * @year: Value to assign to the year field.
+ */
 void car_set_year(struct car *p, int year);
+
+/**
+ * car_get_year() - Get year.
+ * @p: The &struct car instance to query.
+ *
+ * Return: The value of the year field.
+ */
 int car_get_year(const struct car *p);
 
+/**
+ * car_get_vin() - Get vin.
+ * @p: The &struct car instance to query.
+ *
+ * Return: The value of the vin field, or NULL if not set.
+ */
 const char *car_get_vin(const struct car *p);
 
 #endif /* _ACCESSORS_H_ */
 ```
 
-> **Note:** The `secret` member is absent because of `//!accessors:none`. The `role` member has only a getter because of `//!accessors:readonly`. The `id` and `vin` members have only getters because they are declared `const`.
+> **Note:** The `secret` member is absent because of `//!accessors:none` — excluded members leave no trace in the output. The `role` member has only a getter because of `//!accessors:readonly`. The `id` and `vin` members have only getters because they are declared `const`.
 
 ### Generated `accessors.c`
 
@@ -251,37 +279,89 @@ const char *car_get_vin(const struct car *p);
 
 __public void person_set_name(struct person *p, const char *name)
 {
-    free(p->name);
-    p->name = name ? strdup(name) : NULL;
+	free(p->name);
+	p->name = name ? strdup(name) : NULL;
 }
 
 __public const char *person_get_name(const struct person *p)
 {
-    return p->name;
+	return p->name;
 }
 
 __public void person_set_age(struct person *p, int age)
 {
-    p->age = age;
+	p->age = age;
 }
 
 __public int person_get_age(const struct person *p)
 {
-    return p->age;
+	return p->age;
 }
 
 __public const char *person_get_id(const struct person *p)
 {
-    return p->id;
+	return p->id;
 }
 
 __public const char *person_get_role(const struct person *p)
 {
-    return p->role;
+	return p->role;
 }
 
-/* ... struct car accessors follow the same pattern ... */
+/****************************************************************************
+ * Accessors for: struct car
+ ****************************************************************************/
+
+__public void car_set_model(struct car *p, const char *model)
+{
+	free(p->model);
+	p->model = model ? strdup(model) : NULL;
+}
+
+__public const char *car_get_model(const struct car *p)
+{
+	return p->model;
+}
+
+__public void car_set_year(struct car *p, int year)
+{
+	p->year = year;
+}
+
+__public int car_get_year(const struct car *p)
+{
+	return p->year;
+}
+
+__public const char *car_get_vin(const struct car *p)
+{
+	return p->vin;
+}
 ```
+
+### Generated `accessors.ld`
+
+```
+# SPDX-License-Identifier: LGPL-2.1-or-later
+/* ... banner ... */
+
+LIBNVME_ACCESSORS_3 {
+	global:
+		person_get_name;
+		person_set_name;
+		person_get_age;
+		person_set_age;
+		person_get_id;
+		person_get_role;
+		car_get_model;
+		car_set_model;
+		car_get_year;
+		car_set_year;
+		car_get_vin;
+};
+```
+
+> **Note:** Only symbols for members that have accessors generated appear in the linker script. The `secret` member (excluded via `//!accessors:none`) and the write-only `token` example would have no getter entry. The version node name `LIBNVME_ACCESSORS_3` is hardcoded in the generator.
 
 ------
 
