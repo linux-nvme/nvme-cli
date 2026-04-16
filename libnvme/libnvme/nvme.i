@@ -1053,7 +1053,7 @@ struct libnvmf_context {};
   NBFT
  ******/
 %{
-	static PyObject *ssns_to_dict(struct nbft_info_subsystem_ns *ss)
+	static PyObject *ssns_to_dict(struct libnbft_subsystem_ns *ss)
 	{
 		unsigned int i;
 		PyObject *output = PyDict_New();
@@ -1073,14 +1073,14 @@ struct libnvmf_context {};
 		{
 			PyObject *nid;
 			switch (ss->nid_type) {
-			case NBFT_INFO_NID_TYPE_EUI64:
+			case LIBNBFT_NID_TYPE_EUI64:
 				PyDict_SetItemStringDecRef(output, "nid_type", PyUnicode_FromString("eui64"));
 				nid = PyUnicode_FromFormat("%02x%02x%02x%02x%02x%02x%02x%02x",
 							   ss->nid[0], ss->nid[1], ss->nid[2], ss->nid[3],
 							   ss->nid[4], ss->nid[5], ss->nid[6], ss->nid[7]);
 				break;
 
-			case NBFT_INFO_NID_TYPE_NGUID:
+			case LIBNBFT_NID_TYPE_NGUID:
 				PyDict_SetItemStringDecRef(output, "nid_type", PyUnicode_FromString("nguid"));
 				nid = PyUnicode_FromFormat("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 							   ss->nid[0], ss->nid[1], ss->nid[2], ss->nid[3],
@@ -1089,7 +1089,7 @@ struct libnvmf_context {};
 							   ss->nid[12], ss->nid[13], ss->nid[14], ss->nid[15]);
 				break;
 
-			case NBFT_INFO_NID_TYPE_NS_UUID:
+			case LIBNBFT_NID_TYPE_NS_UUID:
 			{
 				char uuid_str[NVME_UUID_LEN_STRING];
 				PyDict_SetItemStringDecRef(output, "nid_type", PyUnicode_FromString("uuid"));
@@ -1121,7 +1121,7 @@ struct libnvmf_context {};
 		return output;
 	}
 
-	static PyObject *hfi_to_dict(struct nbft_info_hfi *hfi)
+	static PyObject *hfi_to_dict(struct libnbft_hfi *hfi)
 	{
 		PyObject *output = PyDict_New();
 
@@ -1164,7 +1164,7 @@ struct libnvmf_context {};
 		return output;
 	}
 
-	static PyObject *discovery_to_dict(struct nbft_info_discovery *disc)
+	static PyObject *discovery_to_dict(struct libnbft_discovery *disc)
 	{
 		PyObject *output = PyDict_New();
 
@@ -1180,7 +1180,7 @@ struct libnvmf_context {};
 		return output;
 	}
 
-	static PyObject *nbft_to_pydict(struct nbft_info *nbft)
+	static PyObject *nbft_to_pydict(struct libnbft_info *nbft)
 	{
 		PyObject *val;
 		PyObject *output = PyDict_New();
@@ -1199,9 +1199,9 @@ struct libnvmf_context {};
 			PyDict_SetItemStringDecRef(host, "host_id_configured", PyBool_FromLong(nbft->host.host_id_configured));
 			PyDict_SetItemStringDecRef(host, "host_nqn_configured", PyBool_FromLong(nbft->host.host_nqn_configured));
 
-			val = PyUnicode_FromString(nbft->host.primary == NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED ? "not indicated" :
-						   nbft->host.primary == NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_UNSELECTED ? "unselected" :
-						   nbft->host.primary == NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_SELECTED ? "selected" : "reserved");
+			val = PyUnicode_FromString(nbft->host.primary == LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED ? "not indicated" :
+						   nbft->host.primary == LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_UNSELECTED ? "unselected" :
+						   nbft->host.primary == LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_SELECTED ? "selected" : "reserved");
 			PyDict_SetItemStringDecRef(host, "primary_admin_host_flag", val);
 
 			PyDict_SetItemStringDecRef(output, "host", host);
@@ -1209,7 +1209,7 @@ struct libnvmf_context {};
 
 		{
 			size_t ss_num = 0;
-			struct nbft_info_subsystem_ns **ss;
+			struct libnbft_subsystem_ns **ss;
 			PyObject *subsystem;
 
 			/* First, let's find how many entries there are */
@@ -1227,7 +1227,7 @@ struct libnvmf_context {};
 
 		{
 			size_t hfi_num = 0;
-			struct nbft_info_hfi **hfi;
+			struct libnbft_hfi **hfi;
 			PyObject *hfis;
 
 			/* First, let's find how many entries there are */
@@ -1245,7 +1245,7 @@ struct libnvmf_context {};
 
 		{
 			size_t disc_num = 0;
-			struct nbft_info_discovery **disc;
+			struct libnbft_discovery **disc;
 			PyObject *discovery;
 
 			/* First, let's find how many entries there are */
@@ -1268,7 +1268,7 @@ struct libnvmf_context {};
 
 	PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char * filename)
 	{
-		struct nbft_info *nbft;
+		struct libnbft_info *nbft;
 		PyObject *output;
 		int ret;
 

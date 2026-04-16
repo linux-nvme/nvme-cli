@@ -20,13 +20,13 @@ static void print_hex(unsigned char *buf, int len)
 		printf("%x", *buf);
 }
 
-static void print_nbft(struct nbft_info *table)
+static void print_nbft(struct libnbft_info *table)
 {
 	unsigned int i, j;
-	struct nbft_info_hfi **hfi;
-	struct nbft_info_security **sec;
-	struct nbft_info_discovery **disc;
-	struct nbft_info_subsystem_ns **ssns;
+	struct libnbft_hfi **hfi;
+	struct libnbft_security **sec;
+	struct libnbft_discovery **disc;
+	struct libnbft_subsystem_ns **ssns;
 
 	printf("raw_nbft_size=%zd\n", table->raw_nbft_size);
 
@@ -104,7 +104,7 @@ static void print_nbft(struct nbft_info *table)
 
 int main(int argc, char **argv)
 {
-	struct nbft_info *table = NULL;
+	struct libnbft_info *table = NULL;
 	struct libnvme_global_ctx *ctx;
 
 	if (argc < 2) {

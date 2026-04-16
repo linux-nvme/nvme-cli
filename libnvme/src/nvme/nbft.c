@@ -124,10 +124,10 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 		       descriptor->obj, is_string,		\
 		       output)
 
-static struct nbft_info_discovery *discovery_from_index(struct nbft_info *nbft,
+static struct libnbft_discovery *discovery_from_index(struct libnbft_info *nbft,
 		int i)
 {
-	struct nbft_info_discovery **d;
+	struct libnbft_discovery **d;
 
 	for (d = nbft->discovery_list; d && *d; d++) {
 		if ((*d)->index == i)
@@ -136,9 +136,9 @@ static struct nbft_info_discovery *discovery_from_index(struct nbft_info *nbft,
 	return NULL;
 }
 
-static struct nbft_info_hfi *hfi_from_index(struct nbft_info *nbft, int i)
+static struct libnbft_hfi *hfi_from_index(struct libnbft_info *nbft, int i)
 {
-	struct nbft_info_hfi **h;
+	struct libnbft_hfi **h;
 
 	for (h = nbft->hfi_list; h && *h; h++) {
 		if ((*h)->index == i)
@@ -147,10 +147,10 @@ static struct nbft_info_hfi *hfi_from_index(struct nbft_info *nbft, int i)
 	return NULL;
 }
 
-static struct nbft_info_security *security_from_index(struct nbft_info *nbft,
+static struct libnbft_security *security_from_index(struct libnbft_info *nbft,
 		int i)
 {
-	struct nbft_info_security **s;
+	struct libnbft_security **s;
 
 	for (s = nbft->security_list; s && *s; s++) {
 		if ((*s)->index == i)
@@ -160,7 +160,7 @@ static struct nbft_info_security *security_from_index(struct nbft_info *nbft,
 }
 
 static int read_ssns_exended_info(struct libnvme_global_ctx *ctx,
-		struct nbft_info *nbft, struct nbft_info_subsystem_ns *ssns,
+		struct libnbft_info *nbft, struct libnbft_subsystem_ns *ssns,
 		struct nbft_ssns_ext_info *raw_ssns_ei)
 {
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
@@ -185,11 +185,11 @@ static int read_ssns_exended_info(struct libnvme_global_ctx *ctx,
 }
 
 static int read_ssns(struct libnvme_global_ctx *ctx,
-		struct nbft_info *nbft, struct nbft_ssns *raw_ssns,
-		struct nbft_info_subsystem_ns **s)
+		struct libnbft_info *nbft, struct nbft_ssns *raw_ssns,
+		struct libnbft_subsystem_ns **s)
 {
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
-	struct nbft_info_subsystem_ns *ssns;
+	struct libnbft_subsystem_ns *ssns;
 	__u8 *ss_hfi_indexes = NULL;
 	__u8 *tmp = NULL;
 	int i, ret;
@@ -350,9 +350,9 @@ fail:
 }
 
 static int read_hfi_info_tcp(struct libnvme_global_ctx *ctx,
-		struct nbft_info *nbft,
+		struct libnbft_info *nbft,
 		struct nbft_hfi_info_tcp *raw_hfi_info_tcp,
-		struct nbft_info_hfi *hfi)
+		struct libnbft_hfi *hfi)
 {
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
 
@@ -400,11 +400,11 @@ static int read_hfi_info_tcp(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-static int read_hfi(struct libnvme_global_ctx *ctx, struct nbft_info *nbft,
-		struct nbft_hfi *raw_hfi, struct nbft_info_hfi **h)
+static int read_hfi(struct libnvme_global_ctx *ctx, struct libnbft_info *nbft,
+		struct nbft_hfi *raw_hfi, struct libnbft_hfi **h)
 {
 	int ret;
-	struct nbft_info_hfi *hfi;
+	struct libnbft_hfi *hfi;
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
 
 	if (!(raw_hfi->flags & NBFT_HFI_VALID))
@@ -413,7 +413,7 @@ static int read_hfi(struct libnvme_global_ctx *ctx, struct nbft_info *nbft,
 	verify(ctx, raw_hfi->structure_id == NBFT_DESC_HFI,
 		"invalid ID in HFI descriptor");
 
-	hfi = calloc(1, sizeof(struct nbft_info_hfi));
+	hfi = calloc(1, sizeof(struct libnbft_hfi));
 	if (!hfi)
 		return -ENOMEM;
 
@@ -454,11 +454,11 @@ fail:
 }
 
 static int read_discovery(struct libnvme_global_ctx *ctx,
-		struct nbft_info *nbft,
+		struct libnbft_info *nbft,
 		struct nbft_discovery *raw_discovery,
-		struct nbft_info_discovery **d)
+		struct libnbft_discovery **d)
 {
-	struct nbft_info_discovery *discovery = NULL;
+	struct libnbft_discovery *discovery = NULL;
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
 	int r = -EINVAL;
 
@@ -468,7 +468,7 @@ static int read_discovery(struct libnvme_global_ctx *ctx,
 	verify(ctx, raw_discovery->structure_id == NBFT_DESC_DISCOVERY,
 	       "invalid ID in discovery descriptor");
 
-	discovery = calloc(1, sizeof(struct nbft_info_discovery));
+	discovery = calloc(1, sizeof(struct libnbft_discovery));
 	if (!discovery) {
 		r = -ENOMEM;
 		goto error;
@@ -506,20 +506,20 @@ error:
 	return r;
 }
 
-static int read_security(struct libnvme_global_ctx *ctx, struct nbft_info *nbft,
+static int read_security(struct libnvme_global_ctx *ctx, struct libnbft_info *nbft,
 		struct nbft_security *raw_security,
-		struct nbft_info_security **s)
+		struct libnbft_security **s)
 {
 	return -EINVAL;
 }
 
 static void read_hfi_descriptors(struct libnvme_global_ctx *ctx,
-		struct nbft_info *nbft, int num_hfi,
+		struct libnbft_info *nbft, int num_hfi,
 		struct nbft_hfi *raw_hfi_array, int hfi_len)
 {
 	int i, cnt;
 
-	nbft->hfi_list = calloc(num_hfi + 1, sizeof(struct nbft_info_hfi));
+	nbft->hfi_list = calloc(num_hfi + 1, sizeof(struct libnbft_hfi));
 	for (i = 0, cnt = 0; i < num_hfi; i++) {
 		if (read_hfi(ctx, nbft, &raw_hfi_array[i],
 				&nbft->hfi_list[cnt]) == 0)
@@ -528,13 +528,13 @@ static void read_hfi_descriptors(struct libnvme_global_ctx *ctx,
 }
 
 static void read_security_descriptors(struct libnvme_global_ctx *ctx,
-		struct nbft_info *nbft, int num_sec,
+		struct libnbft_info *nbft, int num_sec,
 		struct nbft_security *raw_sec_array, int sec_len)
 {
 	int i, cnt;
 
 	nbft->security_list = calloc(num_sec + 1,
-		sizeof(struct nbft_info_security));
+		sizeof(struct libnbft_security));
 	for (i = 0, cnt = 0; i < num_sec; i++) {
 		if (read_security(ctx, nbft, &raw_sec_array[i],
 				&nbft->security_list[cnt]) == 0)
@@ -543,13 +543,13 @@ static void read_security_descriptors(struct libnvme_global_ctx *ctx,
 }
 
 static void read_discovery_descriptors(struct libnvme_global_ctx *ctx,
-		struct nbft_info *nbft, int num_disc,
+		struct libnbft_info *nbft, int num_disc,
 		struct nbft_discovery *raw_disc_array, int disc_len)
 {
 	int i, cnt;
 
 	nbft->discovery_list =
-		calloc(num_disc + 1, sizeof(struct nbft_info_discovery));
+		calloc(num_disc + 1, sizeof(struct libnbft_discovery));
 	for (i = 0, cnt = 0; i < num_disc; i++) {
 		if (read_discovery(ctx, nbft, &raw_disc_array[i],
 				&nbft->discovery_list[cnt]) == 0)
@@ -558,13 +558,13 @@ static void read_discovery_descriptors(struct libnvme_global_ctx *ctx,
 }
 
 static void read_ssns_descriptors(struct libnvme_global_ctx *ctx,
-		struct nbft_info *nbft, int num_ssns,
+		struct libnbft_info *nbft, int num_ssns,
 		struct nbft_ssns *raw_ssns_array, int ssns_len)
 {
 	int i, cnt;
 
 	nbft->subsystem_ns_list =
-		 calloc(num_ssns + 1, sizeof(struct nbft_info_subsystem_ns));
+		 calloc(num_ssns + 1, sizeof(struct libnbft_subsystem_ns));
 	for (i = 0, cnt = 0; i < num_ssns; i++) {
 		if (read_ssns(ctx, nbft, &raw_ssns_array[i],
 				&nbft->subsystem_ns_list[cnt]) == 0)
@@ -573,12 +573,12 @@ static void read_ssns_descriptors(struct libnvme_global_ctx *ctx,
 }
 
 /**
- * parse_raw_nbft - parses raw ACPI NBFT table and fill in abstracted nbft_info structure
- * @nbft: nbft_info struct containing only raw_nbft and raw_nbft_size
+ * parse_raw_nbft - parses raw ACPI NBFT table and fill in abstracted libnbft_info structure
+ * @nbft: libnbft_info struct containing only raw_nbft and raw_nbft_size
  *
  * Returns 0 on success, errno otherwise.
  */
-static int parse_raw_nbft(struct libnvme_global_ctx *ctx, struct nbft_info *nbft)
+static int parse_raw_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info *nbft)
 {
 	__u8 *raw_nbft = nbft->raw_nbft;
 	int raw_nbft_size = nbft->raw_nbft_size;
@@ -710,12 +710,12 @@ static int parse_raw_nbft(struct libnvme_global_ctx *ctx, struct nbft_info *nbft
 	return 0;
 }
 
-__public void libnvme_free_nbft(struct libnvme_global_ctx *ctx, struct nbft_info *nbft)
+__public void libnvme_free_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info *nbft)
 {
-	struct nbft_info_hfi **hfi;
-	struct nbft_info_security **sec;
-	struct nbft_info_discovery **disc;
-	struct nbft_info_subsystem_ns **ns;
+	struct libnbft_hfi **hfi;
+	struct libnbft_security **sec;
+	struct libnbft_discovery **disc;
+	struct libnbft_subsystem_ns **ns;
 
 	for (hfi = nbft->hfi_list; hfi && *hfi; hfi++)
 		free(*hfi);
@@ -736,7 +736,7 @@ __public void libnvme_free_nbft(struct libnvme_global_ctx *ctx, struct nbft_info
 	free(nbft);
 }
 
-__public int libnvme_read_nbft(struct libnvme_global_ctx *ctx, struct nbft_info **nbft,
+__public int libnvme_read_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info **nbft,
 		const char *filename)
 {
 	__u8 *raw_nbft = NULL;
@@ -784,10 +784,10 @@ __public int libnvme_read_nbft(struct libnvme_global_ctx *ctx, struct nbft_info 
 	fclose(raw_nbft_fp);
 
 	/*
-	 * alloc new struct nbft_info, add raw nbft & filename to it,
+	 * alloc new struct libnbft_info, add raw nbft & filename to it,
 	 * and add it to the list
 	 */
-	*nbft = calloc(1, sizeof(struct nbft_info));
+	*nbft = calloc(1, sizeof(struct libnbft_info));
 	if (!*nbft) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Could not allocate memory for NBFT\n");
 		free(raw_nbft);
