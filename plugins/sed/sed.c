@@ -63,7 +63,7 @@ OPT_ARGS(discovery_opts) = {
 
 /*
  * Open the NVMe device specified on the command line. It must be the
- * NVMe block device (e.g. /dev/nvme0n1).
+ * NVMe namespace device (e.g. /dev/nvme0n1).
  */
 static int sed_opal_open_device(struct libnvme_global_ctx **ctx, struct libnvme_transport_handle **hdl, int argc, char **argv,
 		const char *desc, struct argconfig_commandline_options *opts)
@@ -74,9 +74,10 @@ static int sed_opal_open_device(struct libnvme_global_ctx **ctx, struct libnvme_
 	if (err)
 		return err;
 
-	if (!libnvme_transport_handle_is_blkdev(*hdl)) {
+	if (!libnvme_transport_handle_is_ns(*hdl)) {
 		fprintf(stderr,
-			"ERROR : The NVMe block device must be specified\n");
+			"ERROR : The NVMe namespace device (e.g. /dev/nvme0n1) "
+			"must be specified\n");
 		err = -EINVAL;
 	}
 

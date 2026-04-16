@@ -109,29 +109,21 @@ const char *libnvme_transport_handle_get_name(
 		struct libnvme_transport_handle *hdl);
 
 /**
- * libnvme_transport_handle_is_blkdev - Check if transport handle is a
- * block device
+ * libnvme_transport_handle_is_ctrl - Check if transport handle is a
+ * controller device
  * @hdl:	Transport handle
  *
- * Return: Return true if transport handle is a block device, otherwise false.
+ * Return: Return true if transport handle is a controller device,
+ * otherwise false.
  */
-bool libnvme_transport_handle_is_blkdev(struct libnvme_transport_handle *hdl);
-
-/**
- * libnvme_transport_handle_is_chardev - Check if transport handle is a
- * char device
- * @hdl:	Transport handle
- *
- * Return: Return true if transport handle is a char device, otherwise false.
- */
-bool libnvme_transport_handle_is_chardev(struct libnvme_transport_handle *hdl);
+bool libnvme_transport_handle_is_ctrl(struct libnvme_transport_handle *hdl);
 
 /**
  * libnvme_transport_handle_is_direct - Check if transport handle is using IOCTL
  * interface
  * @hdl:	Transport handle
  *
- * Return: Return true if transport handle is using IOCTL itnerface,
+ * Return: Return true if transport handle is using IOCTL interface,
  * otherwise false.
  */
 bool libnvme_transport_handle_is_direct(struct libnvme_transport_handle *hdl);
@@ -145,6 +137,16 @@ bool libnvme_transport_handle_is_direct(struct libnvme_transport_handle *hdl);
  * otherwise false.
  */
 bool libnvme_transport_handle_is_mi(struct libnvme_transport_handle *hdl);
+
+/**
+ * libnvme_transport_handle_is_ns - Check if transport handle is a
+ * namespace device
+ * @hdl:	Transport handle
+ *
+ * Return: Return true if transport handle is a namespace device,
+ * otherwise false.
+ */
+bool libnvme_transport_handle_is_ns(struct libnvme_transport_handle *hdl);
 
 /**
  * libnvme_transport_handle_set_submit_entry() - Install a submit-entry callback
