@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <platform/includes.h>
+#include <arpa/inet.h>
 
 #include <ccan/endian/endian.h>
 
@@ -36,7 +36,7 @@ static void format_ip_addr(char *buf, size_t buflen, __u8 *addr)
 	memcpy(&addr_ipv6, addr, sizeof(addr_ipv6));
 	if (IN6_IS_ADDR_V4MAPPED(&addr_ipv6))
 		/* ipv4 */
-		inet_ntop(AF_INET, ipv4_from_in6_addr(addr_ipv6), buf, buflen);
+		inet_ntop(AF_INET, &addr_ipv6.s6_addr32[3], buf, buflen);
 	else
 		/* ipv6 */
 		inet_ntop(AF_INET6, &addr_ipv6, buf, buflen);
@@ -102,9 +102,9 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 		if (strnlen(*output, le16_to_cpu(obj.length) + 1) <
 				le16_to_cpu(obj.length)) {
 			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
-				"file %s: string '%s' in descriptor '%s' is shorter (%u) than specified length (%u)\n",
+				"file %s: string '%s' in descriptor '%s' is shorter (%zd) than specified length (%d)\n",
 				filename, fieldname, descriptorname,
-				(unsigned int)strnlen(*output, le16_to_cpu(obj.length) + 1),
+				strnlen(*output, le16_to_cpu(obj.length) + 1),
 					le16_to_cpu(obj.length));
 		} else if (strnlen(*output, le16_to_cpu(obj.length) + 1) >
 				le16_to_cpu(obj.length)) {

@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Micron Technology, Inc.
  *
  * Windows stub implementations for Linux-specific functionality
- * that is excluded from the Windows build (fabrics, MI, tree, filters, etc.)
+ * that is excluded from the Windows build (tree, filters, etc.)
  */
 
 #include <errno.h>
@@ -447,14 +447,6 @@ __public libnvme_path_t libnvme_namespace_next_path(libnvme_ns_t ns, libnvme_pat
 	return NULL;
 }
 
-/* MI status string (mi.c) */
-__public const char *libnvme_mi_status_to_string(int status)
-{
-	stub_log(__func__);
-	(void)status;
-	return "MI not supported on Windows";
-}
-
 /*
  * Linux keyring and TLS key management stubs (linux.c)
  * These are used by nvme-cli security commands
@@ -643,7 +635,7 @@ __public int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
 	return -ENOTSUP;
 }
 
-/* Hostnqn generation (fabrics.c) */
+/* Hostnqn generation */
 __public char *libnvme_generate_hostnqn(void)
 {
 	stub_log(__func__);
@@ -657,87 +649,4 @@ __public int libnvme_path_get_queue_depth(struct libnvme_path *p)
 	stub_log(__func__);
 	(void)p;
 	return 0;
-}
-
-/* Fabrics string conversion functions (fabrics.c) */
-__public const char *libnvmf_trtype_str(__u8 trtype)
-{
-	stub_log(__func__);
-	(void)trtype;
-	return "unknown";
-}
-
-__public const char *libnvmf_eflags_str(__u16 eflags)
-{
-	stub_log(__func__);
-	(void)eflags;
-	return "unknown";
-}
-
-__public const char *libnvmf_sectype_str(__u8 sectype)
-{
-	stub_log(__func__);
-	(void)sectype;
-	return "unknown";
-}
-
-__public const char *libnvmf_cms_str(__u8 cms)
-{
-	stub_log(__func__);
-	(void)cms;
-	return "unknown";
-}
-
-__public const char *libnvmf_qptype_str(__u8 qptype)
-{
-	stub_log(__func__);
-	(void)qptype;
-	return "unknown";
-}
-
-__public const char *libnvmf_prtype_str(__u8 prtype)
-{
-	stub_log(__func__);
-	(void)prtype;
-	return "unknown";
-}
-
-__public const char *libnvmf_adrfam_str(__u8 adrfam)
-{
-	stub_log(__func__);
-	(void)adrfam;
-	return "unknown";
-}
-
-__public const char *libnvmf_subtype_str(__u8 subtype)
-{
-	stub_log(__func__);
-	(void)subtype;
-	return "unknown";
-}
-
-__public const char *libnvmf_treq_str(__u8 treq)
-{
-	stub_log(__func__);
-	(void)treq;
-	return "unknown";
-}
-
-/* NBFT functions (nbft.c) */
-__public int libnvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
-			  struct nbft_file_entry **nbft_list)
-{
-	stub_log(__func__);
-	(void)ctx;
-	(void)path;
-	(void)nbft_list;
-	errno = ENOTSUP;
-	return -1;
-}
-
-__public void libnvmf_nbft_free(struct libnvme_global_ctx *ctx, struct nbft_file_entry *head)
-{
-	stub_log(__func__);
-	(void)ctx;
-	(void)head;
 }

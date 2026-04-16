@@ -30,8 +30,6 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
-/* Extract IPv4 from IPv6 mapped address */
-#define ipv4_from_in6_addr(addr) &(addr.s6_addr32[3])
 
 typedef int libnvme_fd_t;
 #define TEST_FD 0xFD

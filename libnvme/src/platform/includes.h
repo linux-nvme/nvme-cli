@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "platform/types.h"
-
 /* Platform-specific includes */
 #ifdef _WIN32
     #include "platform/windows.h"

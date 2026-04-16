@@ -198,7 +198,6 @@ install_headers([
         'platform/includes.h',
         'platform/linux.h',
         'platform/windows.h',
-        'platform/types.h'
     ],
     subdir: 'platform',
     install_mode: mode,

@@ -45,52 +45,6 @@ static inline void libnvme_init(void)
 }
 
 
-/* endian.h compatibility */
-
-#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	#define htobe16(x) (x)
-	#define htobe32(x) (x)
-	#define htobe64(x) (x)
-	#define htole16(x) __builtin_bswap16(x)
-	#define htole32(x) __builtin_bswap32(x)
-	#define htole64(x) __builtin_bswap64(x)
-	#define le16toh(x) __builtin_bswap16(x)
-	#define le32toh(x) __builtin_bswap32(x)
-	#define le64toh(x) __builtin_bswap64(x)
-#else
-	/* Little-endian (most common case for Windows) */
-	#define htobe16(x) __builtin_bswap16(x)
-	#define htobe32(x) __builtin_bswap32(x)
-	#define htobe64(x) __builtin_bswap64(x)
-	#define htole16(x) (x)
-	#define htole32(x) (x)
-	#define htole64(x) (x)
-	#define le16toh(x) (x)
-	#define le32toh(x) (x)
-	#define le64toh(x) (x)
-#endif
-
-
-/* syslog.h compatibility */
-
-#define LOG_EMERG   0
-#define LOG_ALERT   1
-#define LOG_CRIT    2
-#define LOG_ERR     3
-#define LOG_WARNING 4
-#define LOG_NOTICE  5
-#define LOG_INFO    6
-#define LOG_DEBUG   7
-static inline void syslog(int priority, const char *format, ...) { (void)priority; (void)format; }
-static inline void openlog(const char *ident, int option, int facility) { (void)ident; (void)option; (void)facility; }
-static inline void closelog(void) { }
-
-
-/* poll.h compatibility (winsock2.h provides additional compatibility) */
-
-typedef unsigned long nfds_t;
-
-
 /* sys/param.h compatibility */
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -104,27 +58,6 @@ typedef unsigned long nfds_t;
 #define ERESTART  85
 #define ENOTBLK   15
 #define ENAVAIL   119
-
-
-/* socket.h compatibility */
-
-struct msghdr {
-	void *msg_name;
-	socklen_t msg_namelen;
-	struct iovec *msg_iov;
-	size_t msg_iovlen;
-	void *msg_control;
-	size_t msg_controllen;
-	int msg_flags;
-};
-
-struct iovec {
-	void *iov_base;
-	size_t iov_len;
-};
-
-/* Extract IPv4 from IPv6 mapped address (in6_addr) */
-#define ipv4_from_in6_addr(addr) &(addr.u.Byte[12])
 
 
 /* ifaddrs.h compatibility */
