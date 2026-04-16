@@ -1494,28 +1494,6 @@ static void sanitize_discovery_log_entry(struct libnvme_global_ctx *ctx,
 	}
 }
 
-__public int libnvmf_discovery_args_create(struct libnvmf_discovery_args **argsp)
-{
-	struct libnvmf_discovery_args *args;
-
-	if (!argsp)
-		return -EINVAL;
-
-	args = calloc(1, sizeof(*args));
-	if (!args)
-		return -ENOMEM;
-
-	args->max_retries = 6;
-	args->lsp = NVMF_LOG_DISC_LSP_NONE;
-
-	*argsp = args;
-	return 0;
-}
-
-__public void libnvmf_discovery_args_free(struct libnvmf_discovery_args *args)
-{
-	free(args);
-}
 
 __public int libnvmf_get_discovery_log(libnvme_ctrl_t ctrl,
 				    const struct libnvmf_discovery_args *args,

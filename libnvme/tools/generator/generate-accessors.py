@@ -16,35 +16,54 @@ Limitations:
   - Does not support typedef struct.
   - Does not support struct within struct.
 
+Annotations use // line-comment style.  After '//', each '!keyword' token
+(optionally followed by ':qualifier' or ':VALUE') is a command.  Multiple
+annotations can appear in one comment:
+  struct nvme_ctrl { //!generate-accessors !generate-lifecycle
+
 Struct inclusion — annotate the opening brace line of the struct.
 The optional mode qualifier sets the default for all members of the struct:
-  struct nvme_ctrl { /*!generate-accessors*/          — default: both getter and setter
   struct nvme_ctrl { //!generate-accessors            — default: both getter and setter
-  struct nvme_ctrl { /*!generate-accessors:none*/     — default: no accessors
   struct nvme_ctrl { //!generate-accessors:none       — default: no accessors
-  struct nvme_ctrl { /*!generate-accessors:readonly*/ — default: getter only
   struct nvme_ctrl { //!generate-accessors:readonly   — default: getter only
-  struct nvme_ctrl { /*!generate-accessors:writeonly*/ — default: setter only
-  struct nvme_ctrl { //!generate-accessors:writeonly   — default: setter only
+  struct nvme_ctrl { //!generate-accessors:writeonly  — default: setter only
+
+Lifecycle (constructor + destructor) — annotate the opening brace line:
+  struct nvme_ctrl { //!generate-lifecycle
+The two annotations are independent and may appear in the same comment:
+  struct nvme_ctrl { //!generate-accessors !generate-lifecycle
+
+Lifecycle member exclusion — annotate the member declaration line:
+  char *cache; //!lifecycle:none     — skip this member in the destructor
+
+Defaults — annotate the member declaration line with a value to assign:
+  int max_retries;  //!default:6
+  __u8 lsp;         //!default:NVMF_LOG_DISC_LSP_NONE
+  char *transport;  //!default:"tcp"
+When any member carries a default annotation, an init_defaults function is
+generated. If generate-lifecycle is also present, the constructor calls it.
+The init_defaults function is also useful standalone to re-initialise a
+struct to its defaults without reallocating it.
+For scalar members the value is assigned directly. For char* members the
+generated code avoids unnecessary work by comparing the current value with
+the default first (strcmp); if they differ it frees the old value and
+strdup()s the new one. const char* members are assigned directly (no
+strdup) since they are assumed to point to externally owned storage.
 
 Member exclusion — annotate the member declaration line:
-  char *model; /*!accessors:none*/
   char *model; //!accessors:none
 
 Read-only members (getter only, setter suppressed):
   - Members declared with the 'const' qualifier, or
   - Annotate the member declaration line:
-      char *state; /*!accessors:readonly*/
       char *state; //!accessors:readonly
 
 Write-only members (setter only, getter suppressed):
   - Annotate the member declaration line:
-      char *state; /*!accessors:writeonly*/
       char *state; //!accessors:writeonly
 
 Both getter and setter (override a restrictive struct-level default):
   - Annotate the member declaration line:
-      char *state; /*!accessors:readwrite*/
       char *state; //!accessors:readwrite
 
 Example usage:
@@ -126,9 +145,32 @@ MEMBER_RE = re.compile(
 # Annotation helpers
 # ---------------------------------------------------------------------------
 
+def _comment_text(text):
+    """Return the portion of *text* after the first '//', or None.
+
+    This is the raw comment payload — the text the parser scans for
+    ``!keyword`` annotation tokens.
+    """
+    idx = text.find('//')
+    return text[idx + 2:] if idx >= 0 else None
+
+
 def has_annotation(text, annotation):
-    """Return True if *text* contains /*!annotation*/ or //!annotation."""
-    return f'/*!{annotation}*/' in text or f'//!{annotation}' in text
+    """Return True if *text* carries ``!annotation`` inside a ``//`` comment.
+
+    Annotations are ``!keyword`` tokens that appear anywhere after ``//`` on
+    the same line.  A single comment may carry several annotations, e.g.::
+
+        struct foo { //!generate-accessors !generate-lifecycle
+
+    The match is token-delimited: ``!generate-accessors`` will not match
+    inside ``!generate-accessors:none``.
+    """
+    comment = _comment_text(text)
+    if comment is None:
+        return False
+    return bool(re.search(
+        rf'!{re.escape(annotation)}(?=[\s!]|$)', comment))
 
 
 def strip_block_comments(text):
@@ -193,6 +235,19 @@ def fits_80(s):
 
 def fits_80_ntabs(n, s):
     return len(s) + n * 7 <= 80
+
+
+def kdoc_summary(fn, *descriptions):
+    """Return a KernelDoc summary line that fits within 80 columns.
+
+    Tries each description in order and returns the first that fits as
+    ' * fn() - description'.  Falls back to ' * fn()' if none fit.
+    """
+    for desc in descriptions:
+        line = f' * {fn}() - {desc}'
+        if fits_80(line):
+            return line
+    return f' * {fn}()'
 
 
 # ---------------------------------------------------------------------------
@@ -320,11 +375,7 @@ _VALID_MODES = frozenset(('both', 'none', 'readonly', 'writeonly'))
 def parse_struct_annotation(raw_body):
     """Return the default mode for a struct from its generate-accessors annotation.
 
-    Recognises both comment styles with an optional mode qualifier:
-      /*!generate-accessors*/           → 'both'
-      /*!generate-accessors:none*/      → 'none'
-      /*!generate-accessors:readonly*/  → 'readonly'
-      /*!generate-accessors:writeonly*/ → 'writeonly'
+    Recognises the ``//!`` comment style with an optional mode qualifier:
       //!generate-accessors             → 'both'
       //!generate-accessors:none        → 'none'
       //!generate-accessors:readonly    → 'readonly'
@@ -335,33 +386,190 @@ def parse_struct_annotation(raw_body):
     """
     first_token = raw_body.lstrip()
 
-    for pattern in (
-        r'/\*!generate-accessors(?::([a-z]+))?\*/',
-        r'//!generate-accessors(?::([a-z]+))?',
-    ):
-        m = re.match(pattern, first_token)
-        if m:
-            qualifier = m.group(1) or 'both'
-            if qualifier not in _VALID_MODES:
-                print(
-                    f"warning: unknown generate-accessors qualifier "
-                    f"'{qualifier}'; valid values are: "
-                    f"{', '.join(sorted(_VALID_MODES))}. "
-                    f"Defaulting to 'both'.",
-                    file=sys.stderr,
-                )
-                qualifier = 'both'
-            return qualifier
+    m = re.match(r'//!generate-accessors(?::([a-z]+))?', first_token)
+    if m:
+        qualifier = m.group(1) or 'both'
+        if qualifier not in _VALID_MODES:
+            print(
+                f"warning: unknown generate-accessors qualifier "
+                f"'{qualifier}'; valid values are: "
+                f"{', '.join(sorted(_VALID_MODES))}. "
+                f"Defaulting to 'both'.",
+                file=sys.stderr,
+            )
+            qualifier = 'both'
+        return qualifier
 
     return None
 
 
-def parse_file(text, verbose):
-    """Return list of (struct_name, [Member]) tuples found in *text*.
+def parse_lifecycle_annotation(raw_body):
+    """Return True when *raw_body* carries a ``!generate-lifecycle`` annotation.
 
-    Only structs annotated with ``/*!generate-accessors*/`` or
-    ``//!generate-accessors`` as the first token inside the opening brace
-    are processed.
+    The annotation must appear inside a ``//`` comment on the struct's opening
+    brace line.  It may share the comment with other annotations::
+
+        struct foo { //!generate-accessors !generate-lifecycle
+    """
+    for line in raw_body.splitlines():
+        if has_annotation(line, 'generate-lifecycle'):
+            return True
+    return False
+
+
+# ---------------------------------------------------------------------------
+# Lifecycle member: name + whether it is a char** (string array)
+# ---------------------------------------------------------------------------
+
+class LifecycleMember:
+    """A char* or char** member that the destructor must free."""
+
+    __slots__ = ('name', 'is_char_ptr_array')
+
+    def __init__(self, name, is_char_ptr_array):
+        self.name = name
+        self.is_char_ptr_array = is_char_ptr_array
+
+
+def parse_members_for_lifecycle(raw_body):
+    """Return a list of LifecycleMember for every char* or char** member.
+
+    Unlike parse_members(), this function:
+      - ignores ``accessors:none`` (the destructor must free all heap strings)
+      - respects ``lifecycle:none`` to let callers opt a member out
+      - collects only char* and char** members (the only types that need
+        explicit freeing)
+    """
+    members = []
+
+    for raw_line in raw_body.splitlines():
+        if has_annotation(raw_line, 'lifecycle:none'):
+            continue
+
+        clean = strip_inline_comment(strip_block_comments(raw_line)).strip()
+
+        if not clean or ';' not in clean:
+            continue
+        if 'static' in clean or 'struct' in clean:
+            continue
+
+        m = MEMBER_RE.match(clean)
+        if not m:
+            continue
+
+        is_const  = bool(m.group(1))
+        type_base = m.group(2)
+        ptr_part  = m.group(3)
+        name      = m.group(4)
+
+        # const char * members are not owned by the struct (no strdup),
+        # so the destructor must not free them.
+        if is_const:
+            continue
+
+        ptr_depth = ptr_part.count('*')
+        if not ptr_depth or type_base != 'char':
+            continue
+
+        if ptr_depth > 2:
+            continue
+
+        members.append(LifecycleMember(
+            name=name,
+            is_char_ptr_array=(ptr_depth == 2),
+        ))
+
+    return members
+
+
+# ---------------------------------------------------------------------------
+# Default member: name + default value expression
+# ---------------------------------------------------------------------------
+
+class DefaultMember:
+    """A member that carries a ``//!default:VALUE`` annotation."""
+
+    __slots__ = ('name', 'value', 'is_char_ptr')
+
+    def __init__(self, name, value, is_char_ptr=False):
+        self.name       = name
+        self.value      = value       # raw value string, emitted verbatim
+        self.is_char_ptr = is_char_ptr  # True → emit strdup/free pattern
+
+
+def parse_default_annotation(raw_line):
+    """Return the default value string from a ``!default:VALUE`` annotation.
+
+    The annotation must appear inside a ``//`` comment::
+
+        int port;   //!default:4420
+        char *host; //!default:"localhost"
+
+    VALUE may be a quoted C string literal (``"foo bar"``), which may contain
+    spaces, or any non-whitespace token (integer literal, macro name, etc.).
+
+    Returns None when no annotation is found.
+    """
+    comment = _comment_text(raw_line)
+    if comment is None:
+        return None
+    # Quoted string (double-quoted, with basic escape support) or bare token.
+    _val = r'"(?:[^"\\]|\\.)*"|\S+'
+    m = re.search(rf'!default:({_val})', comment)
+    return m.group(1) if m else None
+
+
+def parse_members_for_defaults(raw_body):
+    """Return a list of DefaultMember for every member with a default annotation.
+
+    Any member in the struct body that carries ``//!default:VALUE`` is
+    collected here, regardless of its accessor or lifecycle status.
+    The value is emitted verbatim in the generated assignment, so any
+    valid C expression (integer literal, macro name, etc.) is accepted.
+    """
+    defaults = []
+
+    for raw_line in raw_body.splitlines():
+        value = parse_default_annotation(raw_line)
+        if value is None:
+            continue
+
+        clean = strip_inline_comment(strip_block_comments(raw_line)).strip()
+
+        if not clean or ';' not in clean:
+            continue
+        if 'static' in clean or 'struct' in clean:
+            continue
+
+        # Try char array first, then general member regex.
+        m = CHAR_ARRAY_RE.match(clean)
+        if m:
+            defaults.append(DefaultMember(name=m.group(2), value=value,
+                                          is_char_ptr=False))
+            continue
+
+        m = MEMBER_RE.match(clean)
+        if m:
+            is_const  = bool(m.group(1))
+            type_base = m.group(2)
+            ptr_part  = m.group(3)
+            name      = m.group(4)
+            is_char_ptr = (type_base == 'char'
+                           and ptr_part.count('*') == 1
+                           and not is_const)
+            defaults.append(DefaultMember(name=name, value=value,
+                                          is_char_ptr=is_char_ptr))
+
+    return defaults
+
+
+def parse_file(text, verbose):
+    """Return list of (struct_name, [Member], [LifecycleMember],
+    [DefaultMember]) tuples.
+
+    Only structs annotated with ``//!generate-accessors`` as the first token
+    inside the opening brace, or with ``//!generate-lifecycle`` anywhere
+    inside the opening brace line, are processed.
     """
     result = []
 
@@ -369,18 +577,34 @@ def parse_file(text, verbose):
         struct_name = match.group(1)
         raw_body    = match.group(2)
 
-        struct_mode = parse_struct_annotation(raw_body)
-        if struct_mode is None:
+        struct_mode    = parse_struct_annotation(raw_body)
+        want_lifecycle = parse_lifecycle_annotation(raw_body)
+
+        if struct_mode is None and not want_lifecycle:
             continue
 
-        members = parse_members(struct_name, raw_body, struct_mode, verbose)
+        members = []
+        if struct_mode is not None:
+            members = parse_members(
+                struct_name, raw_body, struct_mode, verbose)
 
-        if verbose and members:
-            print(f"Found struct: {struct_name} ({len(members)} members)"
-                  f" [mode: {struct_mode}]")
+        lc_members = None
+        if want_lifecycle:
+            lc_members = parse_members_for_lifecycle(raw_body)
 
-        if members:
-            result.append((struct_name, members))
+        default_members = parse_members_for_defaults(raw_body)
+
+        if verbose and (members or lc_members is not None or default_members):
+            acc = f"{len(members)} members [mode: {struct_mode}]" \
+                  if members else "no accessors"
+            lc = (f"{len(lc_members)} lifecycle members"
+                  if lc_members is not None else "no lifecycle")
+            df = (f"{len(default_members)} defaults" if default_members
+                  else "no defaults")
+            print(f"Found struct: {struct_name} — {acc}, {lc}, {df}")
+
+        if members or lc_members is not None or default_members:
+            result.append((struct_name, members, lc_members, default_members))
 
     return result
 
@@ -399,9 +623,10 @@ def _get_name(prefix, sname, mname):
 
 def emit_hdr_setter_str(f, prefix, sname, mname, is_dyn_str):
     """Emit a header declaration for a string setter."""
+    fn = _set_name(prefix, sname, mname)
     f.write(
         f'/**\n'
-        f' * {_set_name(prefix, sname, mname)}() - Set {mname}.\n'
+        f'{kdoc_summary(fn, f"Set {mname}.", "Setter.")}\n'
         f' * @p: The &struct {sname} instance to update.\n'
     )
     if is_dyn_str:
@@ -428,9 +653,10 @@ def emit_hdr_setter_str(f, prefix, sname, mname, is_dyn_str):
 
 def emit_hdr_setter_str_array(f, prefix, sname, mname):
     """Emit a header declaration for a string-array setter."""
+    fn = _set_name(prefix, sname, mname)
     f.write(
         f'/**\n'
-        f' * {_set_name(prefix, sname, mname)}() - Set {mname}.\n'
+        f'{kdoc_summary(fn, f"Set {mname}.", "Setter.")}\n'
         f' * @p: The &struct {sname} instance to update.\n'
         f' * @{mname}: New NULL-terminated string array; deep-copied.\n'
         f' */\n'
@@ -450,9 +676,10 @@ def emit_hdr_setter_str_array(f, prefix, sname, mname):
 
 def emit_hdr_setter_val(f, prefix, sname, mname, mtype):
     """Emit a header declaration for a value setter."""
+    fn = _set_name(prefix, sname, mname)
     f.write(
         f'/**\n'
-        f' * {_set_name(prefix, sname, mname)}() - Set {mname}.\n'
+        f'{kdoc_summary(fn, f"Set {mname}.", "Setter.")}\n'
         f' * @p: The &struct {sname} instance to update.\n'
         f' * @{mname}: Value to assign to the {mname} field.\n'
         f' */\n'
@@ -472,10 +699,11 @@ def emit_hdr_setter_val(f, prefix, sname, mname, mtype):
 
 def emit_hdr_getter(f, prefix, sname, mname, mtype, is_dyn_str):
     """Emit a header declaration for a getter."""
+    fn = _get_name(prefix, sname, mname)
     tail = ', or NULL if not set.' if is_dyn_str else '.'
     f.write(
         f'/**\n'
-        f' * {_get_name(prefix, sname, mname)}() - Get {mname}.\n'
+        f'{kdoc_summary(fn, f"Get {mname}.", "Getter.")}\n'
         f' * @p: The &struct {sname} instance to query.\n'
         f' *\n'
         f' * Return: The value of the {mname} field{tail}\n'
@@ -668,11 +896,193 @@ def generate_src(f, prefix, struct_name, members):
 
 
 # ---------------------------------------------------------------------------
+# Lifecycle (constructor / destructor) emitters
+# ---------------------------------------------------------------------------
+
+def _new_name(prefix, sname):
+    return f'{prefix}{sname}_new'
+
+
+def _free_name(prefix, sname):
+    return f'{prefix}{sname}_free'
+
+
+def _init_defaults_name(prefix, sname):
+    return f'{prefix}{sname}_init_defaults'
+
+
+def emit_hdr_defaults(f, prefix, sname, default_members):
+    """Emit header declaration for the init_defaults function."""
+    fn = _init_defaults_name(prefix, sname)
+    new_fn = _new_name(prefix, sname)
+    f.write(
+        f'/**\n'
+        f'{kdoc_summary(fn, f"Apply default values to a {sname} instance.", "Set fields to their defaults.", "Initialise to defaults.")}\n'
+        f' * @p: The &struct {sname} instance to initialise.\n'
+        f' *\n'
+        f' * Sets each field that carries a default annotation to its\n'
+        f' * compile-time default value.  Called automatically by\n'
+        f' * {new_fn}() but may also be called directly to reset an\n'
+        f' * instance to its defaults without reallocating it.\n'
+        f' */\n'
+    )
+    single = f'void {fn}(struct {sname} *p);'
+    if fits_80(single):
+        f.write(single + '\n\n')
+    else:
+        f.write(f'void {fn}(\n\t\tstruct {sname} *p);\n\n')
+
+
+def emit_src_defaults(f, prefix, sname, default_members):
+    """Emit the init_defaults function implementation."""
+    fn = _init_defaults_name(prefix, sname)
+    sig = f'{PUB}void {fn}(struct {sname} *p)'
+    if fits_80(sig):
+        f.write(sig + '\n')
+    else:
+        f.write(f'{PUB}void {fn}(\n\t\tstruct {sname} *p)\n')
+
+    f.write('{\n')
+    f.write('\tif (!p)\n\t\treturn;\n')
+    for dm in default_members:
+        if dm.is_char_ptr:
+            # Skip the assignment when the string is already at its default
+            # value; otherwise free the old value and strdup the new one.
+            cmp = f'\tif (!p->{dm.name} || strcmp(p->{dm.name}, {dm.value}) != 0) {{'
+            if fits_80_ntabs(1, cmp.lstrip()):
+                f.write(cmp + '\n')
+            else:
+                f.write(
+                    f'\tif (!p->{dm.name} ||\n'
+                    f'\t    strcmp(p->{dm.name}, {dm.value}) != 0) {{\n'
+                )
+            f.write(f'\t\tfree(p->{dm.name});\n')
+            f.write(f'\t\tp->{dm.name} = strdup({dm.value});\n')
+            f.write('\t}\n')
+        else:
+            f.write(f'\tp->{dm.name} = {dm.value};\n')
+    f.write('}\n\n')
+
+
+def emit_hdr_lifecycle(f, prefix, sname, lc_members):
+    """Emit header declarations for the constructor and destructor."""
+
+    # --- constructor -------------------------------------------------------
+    new_fn = _new_name(prefix, sname)
+    f.write(
+        f'/**\n'
+        f'{kdoc_summary(new_fn, f"Allocate and initialise a {sname} object.", "Allocate and initialise a new instance.", "Constructor.")}\n'
+        f' * @pp: On success, *pp is set to the newly allocated object.\n'
+        f' *\n'
+        f' * Allocates a zeroed &struct {sname} on the heap.\n'
+        f' * The caller must release it with {_free_name(prefix, sname)}().\n'
+        f' *\n'
+        f' * Return: 0 on success, -EINVAL if @pp is NULL,\n'
+        f' *         -ENOMEM if allocation fails.\n'
+        f' */\n'
+    )
+    single = f'int {new_fn}(struct {sname} **pp);'
+    if fits_80(single):
+        f.write(single + '\n\n')
+    else:
+        f.write(f'int {new_fn}(\n\t\tstruct {sname} **pp);\n\n')
+
+    # --- destructor --------------------------------------------------------
+    free_fn = _free_name(prefix, sname)
+    f.write(
+        f'/**\n'
+        f'{kdoc_summary(free_fn, f"Release a {sname} object.", "Release this instance.", "Destructor.")}\n'
+        f' * @p: Object previously returned by {new_fn}().\n'
+        f' *     A NULL pointer is silently ignored.\n'
+        f' */\n'
+    )
+    single = f'void {free_fn}(struct {sname} *p);'
+    if fits_80(single):
+        f.write(single + '\n\n')
+    else:
+        f.write(f'void {free_fn}(\n\t\tstruct {sname} *p);\n\n')
+
+
+def emit_src_lifecycle(f, prefix, sname, lc_members, default_members):
+    """Emit constructor and destructor implementations."""
+
+    # --- constructor -------------------------------------------------------
+    new_fn = _new_name(prefix, sname)
+    sig = f'{PUB}int {new_fn}(struct {sname} **pp)'
+    if fits_80(sig):
+        f.write(sig + '\n')
+    else:
+        f.write(f'{PUB}int {new_fn}(\n\t\tstruct {sname} **pp)\n')
+
+    if default_members:
+        init_fn = _init_defaults_name(prefix, sname)
+        f.write(
+            '{\n'
+            '\tif (!pp)\n'
+            '\t\treturn -EINVAL;\n'
+            f'\t*pp = calloc(1, sizeof(struct {sname}));\n'
+            '\tif (!*pp)\n'
+            '\t\treturn -ENOMEM;\n'
+            f'\t{init_fn}(*pp);\n'
+            '\treturn 0;\n'
+            '}\n\n'
+        )
+    else:
+        f.write(
+            '{\n'
+            '\tif (!pp)\n'
+            '\t\treturn -EINVAL;\n'
+            f'\t*pp = calloc(1, sizeof(struct {sname}));\n'
+            '\treturn *pp ? 0 : -ENOMEM;\n'
+            '}\n\n'
+        )
+
+    # --- destructor --------------------------------------------------------
+    free_fn = _free_name(prefix, sname)
+    sig = f'{PUB}void {free_fn}(struct {sname} *p)'
+    if fits_80(sig):
+        f.write(sig + '\n')
+    else:
+        f.write(f'{PUB}void {free_fn}(\n\t\tstruct {sname} *p)\n')
+
+    f.write('{\n')
+
+    if lc_members:
+        # Members must be dereferenced, so guard against NULL p.
+        f.write('\tif (!p)\n\t\treturn;\n')
+        for m in lc_members:
+            if m.is_char_ptr_array:
+                # free each element then the container
+                loop = (f'\tfor (size_t i = 0;'
+                        f' p->{m.name} && p->{m.name}[i]; i++)')
+                free = f'\t\tfree(p->{m.name}[i]);'
+                if fits_80_ntabs(1, loop.lstrip()):
+                    f.write(loop + '\n')
+                else:
+                    f.write(
+                        f'\tfor (size_t i = 0;\n'
+                        f'\t     p->{m.name} && p->{m.name}[i]; i++)\n'
+                    )
+                f.write(free + '\n')
+                f.write(f'\tfree(p->{m.name});\n')
+            else:
+                f.write(f'\tfree(p->{m.name});\n')
+
+    # free(NULL) is safe — no NULL check needed when there are no members.
+    f.write('\tfree(p);\n}\n\n')
+
+
+# ---------------------------------------------------------------------------
 # Linker script (*.ld) emitter
 # ---------------------------------------------------------------------------
 
-def generate_ld(f, prefix, struct_name, members):
+def generate_ld(f, prefix, struct_name, members, lc_members, default_members):
     """Write linker version-script entries for all members of one struct."""
+    if lc_members is not None:
+        f.write(f'\t\t{_new_name(prefix, struct_name)};\n')
+        f.write(f'\t\t{_free_name(prefix, struct_name)};\n')
+    if default_members:
+        f.write(f'\t\t{_init_defaults_name(prefix, struct_name)};\n')
     for member in members:
         if member.gen_getter:
             f.write(f'\t\t{_get_name(prefix, struct_name, member.name)};\n')
@@ -752,7 +1162,7 @@ def main():
 
         files_to_include.append(os.path.basename(in_hdr))
 
-        for struct_name, members in structs:
+        for struct_name, members, lc_members, default_members in structs:
             forward_declares.append(struct_name)
 
             section_banner = (
@@ -764,16 +1174,29 @@ def main():
 
             hdr_buf = io.StringIO()
             hdr_buf.write(section_banner)
+            if lc_members is not None:
+                emit_hdr_lifecycle(hdr_buf, args.prefix, struct_name,
+                                   lc_members)
+            if default_members:
+                emit_hdr_defaults(hdr_buf, args.prefix, struct_name,
+                                  default_members)
             generate_hdr(hdr_buf, args.prefix, struct_name, members)
             hdr_parts.append(hdr_buf.getvalue())
 
             src_buf = io.StringIO()
             src_buf.write(section_banner)
+            if lc_members is not None:
+                emit_src_lifecycle(src_buf, args.prefix, struct_name,
+                                   lc_members, default_members)
+            if default_members:
+                emit_src_defaults(src_buf, args.prefix, struct_name,
+                                  default_members)
             generate_src(src_buf, args.prefix, struct_name, members)
             src_parts.append(src_buf.getvalue())
 
             ld_buf = io.StringIO()
-            generate_ld(ld_buf, args.prefix, struct_name, members)
+            generate_ld(ld_buf, args.prefix, struct_name, members,
+                        lc_members, default_members)
             ld_parts.append(ld_buf.getvalue())
 
     # -----------------------------------------------------------------------
@@ -813,6 +1236,7 @@ def main():
             f'{SPDX_C}\n'
             f'\n'
             f'{BANNER}\n'
+            f'#include <errno.h>\n'
             f'#include <stdlib.h>\n'
             f'#include <string.h>\n'
             f'#include "{os.path.basename(args.h_fname)}"\n'

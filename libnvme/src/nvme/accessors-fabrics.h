@@ -36,6 +36,36 @@ struct libnvmf_uri;
  ****************************************************************************/
 
 /**
+ * libnvmf_discovery_args_new() - Allocate and initialise a new instance.
+ * @pp: On success, *pp is set to the newly allocated object.
+ *
+ * Allocates a zeroed &struct libnvmf_discovery_args on the heap.
+ * The caller must release it with libnvmf_discovery_args_free().
+ *
+ * Return: 0 on success, -EINVAL if @pp is NULL,
+ *         -ENOMEM if allocation fails.
+ */
+int libnvmf_discovery_args_new(struct libnvmf_discovery_args **pp);
+
+/**
+ * libnvmf_discovery_args_free() - Release a libnvmf_discovery_args object.
+ * @p: Object previously returned by libnvmf_discovery_args_new().
+ *     A NULL pointer is silently ignored.
+ */
+void libnvmf_discovery_args_free(struct libnvmf_discovery_args *p);
+
+/**
+ * libnvmf_discovery_args_init_defaults() - Set fields to their defaults.
+ * @p: The &struct libnvmf_discovery_args instance to initialise.
+ *
+ * Sets each field that carries a default annotation to its
+ * compile-time default value.  Called automatically by
+ * libnvmf_discovery_args_new() but may also be called directly to reset an
+ * instance to its defaults without reallocating it.
+ */
+void libnvmf_discovery_args_init_defaults(struct libnvmf_discovery_args *p);
+
+/**
  * libnvmf_discovery_args_set_max_retries() - Set max_retries.
  * @p: The &struct libnvmf_discovery_args instance to update.
  * @max_retries: Value to assign to the max_retries field.

@@ -17,6 +17,7 @@
  * To update run: meson compile -C [BUILD-DIR] update-accessors
  * Or:            make update-accessors
  */
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include "accessors-fabrics.h"
@@ -27,6 +28,31 @@
 /****************************************************************************
  * Accessors for: struct libnvmf_discovery_args
  ****************************************************************************/
+
+__public int libnvmf_discovery_args_new(struct libnvmf_discovery_args **pp)
+{
+	if (!pp)
+		return -EINVAL;
+	*pp = calloc(1, sizeof(struct libnvmf_discovery_args));
+	if (!*pp)
+		return -ENOMEM;
+	libnvmf_discovery_args_init_defaults(*pp);
+	return 0;
+}
+
+__public void libnvmf_discovery_args_free(struct libnvmf_discovery_args *p)
+{
+	free(p);
+}
+
+__public void libnvmf_discovery_args_init_defaults(
+		struct libnvmf_discovery_args *p)
+{
+	if (!p)
+		return;
+	p->max_retries = 6;
+	p->lsp = NVMF_LOG_DISC_LSP_NONE;
+}
 
 __public void libnvmf_discovery_args_set_max_retries(
 		struct libnvmf_discovery_args *p,

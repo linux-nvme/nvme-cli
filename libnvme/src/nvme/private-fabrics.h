@@ -1,10 +1,18 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 /*
+ * NVMe-oF private struct definitions.
+ *
  * This file is part of libnvme.
  * Copyright (c) 2026, Dell Technologies Inc. or its subsidiaries.
  *
  * Authors: Martin Belanger <Martin.Belanger@dell.com>
+ *
+ * Structs in this file are NVMe-oF-specific (fabrics layer). They are kept
+ * separate from private.h so that PCIe-only builds can exclude this entire
+ * file and its generated accessors (accessors-fabrics.{h,c}) along with the
+ * rest of the fabrics layer.
  */
+
 #pragma once
 
 #include <nvme/fabrics.h>
@@ -69,18 +77,9 @@ struct libnvmf_context {
 };
 
 
-/**
- * NVMe-oF private struct definitions.
- *
- * Structs in this file are NVMe-oF-specific (fabrics layer). They are kept
- * separate from private.h so that PCIe-only builds can exclude this entire
- * file and its generated accessors (accessors-fabrics.{h,c}) along with the
- * rest of the fabrics layer.
- */
-
-struct libnvmf_discovery_args { /*!generate-accessors*/
-	int max_retries;
-	__u8 lsp;
+struct libnvmf_discovery_args { //!generate-accessors !generate-lifecycle
+	int max_retries;  //!default:6
+	__u8 lsp;         //!default:NVMF_LOG_DISC_LSP_NONE
 };
 
 /**

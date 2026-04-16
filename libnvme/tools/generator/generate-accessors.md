@@ -1,6 +1,6 @@
 # Generate Accessors Tool
 
-This tool generates **setter and getter functions** for C structs automatically. It supports dynamic strings, fixed-size char arrays, and `const` fields, with control over which structs and members participate via **in-source annotations**.
+This tool generates **setter and getter functions** for C structs automatically. It also optionally generates **constructor and destructor functions** (`foo_new` / `foo_free`). It supports dynamic strings, fixed-size char arrays, and `const` fields, with control over which structs and members participate via **in-source annotations**.
 
 ------
 
@@ -25,7 +25,7 @@ python3 generate-accessors.py [options] <header-files>
 
 ## Annotations
 
-Struct inclusion and member behaviour are controlled by **annotations written as comments directly in the header file**. Both `/* */` (block) and `//` (line) comment styles are supported for every annotation.
+Struct inclusion and member behavior are controlled by **annotations written as `//` line comments directly in the header file**. After `//`, each `!keyword` token (optionally followed by `:qualifier` or `:VALUE`) is a command. Multiple annotations may share one comment, separated by spaces:
 
 ### Struct inclusion — `generate-accessors`
 
@@ -39,7 +39,7 @@ Place the annotation on the same line as the struct's opening brace to opt that 
 | `//!generate-accessors:writeonly`       | setter only                       |
 
 ```c
-struct nvme_ctrl { /*!generate-accessors*/          /* both getter and setter */
+struct nvme_ctrl { //!generate-accessors            /* both getter and setter */
     ...
 };
 
@@ -57,10 +57,10 @@ Individual members can always override the struct-level default using a per-memb
 Place the annotation on a member's declaration line to suppress accessor generation for that member entirely (no setter, no getter):
 
 ```c
-struct nvme_ctrl { /*!generate-accessors*/
+struct nvme_ctrl { //!generate-accessors
     char *name;
     char *state;      //!accessors:none
-    char *subsysnqn;  /*!accessors:none*/
+    char *subsysnqn;  //!accessors:none
 };
 ```
 
@@ -69,10 +69,10 @@ struct nvme_ctrl { /*!generate-accessors*/
 Place the annotation on a member's declaration line to generate only a getter (no setter). This has the same effect as declaring the member `const`, but without changing the type in the struct. Also useful to override a `generate-accessors:writeonly` struct default for individual members:
 
 ```c
-struct nvme_ctrl { /*!generate-accessors*/
+struct nvme_ctrl { //!generate-accessors
     char *name;
     char *firmware;   //!accessors:readonly
-    char *model;      /*!accessors:readonly*/
+    char *model;      //!accessors:readonly
 };
 ```
 
@@ -83,7 +83,7 @@ Members declared with the `const` qualifier are also automatically read-only.
 Place the annotation on a member's declaration line to generate only a setter (no getter). Useful to override a `generate-accessors:readonly` struct default for individual members:
 
 ```c
-struct nvme_ctrl { /*!generate-accessors:readonly*/
+struct nvme_ctrl { //!generate-accessors:readonly
     char *name;       /* getter only (struct default) */
     char *token;      //!accessors:writeonly    /* setter only override */
 };
@@ -94,26 +94,87 @@ struct nvme_ctrl { /*!generate-accessors:readonly*/
 Place the annotation on a member's declaration line to generate both a getter and a setter, overriding a restrictive struct-level default (`none`, `readonly`, or `writeonly`):
 
 ```c
-struct nvme_ctrl { /*!generate-accessors:none*/
+struct nvme_ctrl { //!generate-accessors:none
     char *name;       /* no accessors (struct default) */
     char *model;      //!accessors:readwrite    /* both getter and setter */
     char *firmware;   //!accessors:readonly     /* getter only */
 };
 ```
 
+### Struct lifecycle — `generate-lifecycle`
+
+Place the annotation on the same line as the struct's opening brace to generate a constructor and a destructor for that struct:
+
+```c
+struct nvme_ctrl { //!generate-lifecycle
+    char *name;
+    char *subsysnqn;
+    char *serial;   //!lifecycle:none   /* excluded from destructor */
+};
+```
+
+This generates:
+
+- **`nvme_ctrl_new(struct nvme_ctrl **pp)`** — allocates a zeroed instance on the heap. Returns `0` on success, `-EINVAL` if `pp` is `NULL`, or `-ENOMEM` on allocation failure.
+- **`nvme_ctrl_free(struct nvme_ctrl *p)`** — frees all `char *` and `char **` members (except those marked `//!lifecycle:none`) and then frees the struct itself. A `NULL` argument is silently ignored.
+
+`generate-lifecycle` can appear alongside `generate-accessors` in the same comment:
+
+```c
+struct nvme_ctrl { //!generate-accessors !generate-lifecycle
+    char *name;
+    char *subsysnqn;
+};
+```
+
+`const char *` members are **never** freed by the destructor — they are assumed to point to externally owned storage.
+
+### Lifecycle member exclusion — `lifecycle:none`
+
+Place the annotation on a member's declaration line to exclude it from the destructor's free logic:
+
+```c
+struct nvme_ctrl { //!generate-lifecycle
+    char *name;
+    char *borrowed;  //!lifecycle:none   /* not freed — caller owns this */
+};
+```
+
+This annotation has no effect on accessor generation. Combine with `//!accessors:none` if both should be suppressed.
+
+### Member defaults — `default:VALUE`
+
+Place the annotation on a member's declaration line to assign a compile-time default value. When any member in the struct carries this annotation, a `foo_init_defaults()` function is generated:
+
+```c
+struct libnvmf_discovery_args { //!generate-accessors !generate-lifecycle
+    int max_retries;  //!default:6
+    __u8 lsp;         //!default:NVMF_LOG_DISC_LSP_NONE
+};
+```
+
+This generates `libnvmf_discovery_args_init_defaults()`, which sets each annotated field to its default value. If `generate-lifecycle` is also present, the constructor automatically calls `init_defaults()` after allocation. This lets callers re-initialise an existing instance without freeing and reallocating it.
+
+The value is emitted verbatim, so any valid C expression — integer literals, macro names, enum constants — is accepted.
+
+`init_defaults()` can be used independently of `generate-lifecycle`.
+
 ### Annotation summary
 
-| Annotation                              | Where        | Effect                                      |
-| --------------------------------------- | ------------ | ------------------------------------------- |
-| `//!generate-accessors`                 | struct brace | Include struct, default: getter + setter    |
-| `//!generate-accessors:none`            | struct brace | Include struct, default: no accessors       |
-| `//!generate-accessors:readonly`        | struct brace | Include struct, default: getter only        |
-| `//!generate-accessors:writeonly`       | struct brace | Include struct, default: setter only        |
-| `//!accessors:none`                     | member line  | Skip this member entirely                   |
-| `//!accessors:readonly`                 | member line  | Generate getter only                        |
-| `//!accessors:writeonly`                | member line  | Generate setter only                        |
-| `//!accessors:readwrite`                | member line  | Generate getter and setter                  |
-| `const` qualifier on member             | member type  | Suppress setter (built-in, always applies)  |
+| Annotation                              | Where        | Effect                                                    |
+| --------------------------------------- | ------------ | --------------------------------------------------------- |
+| `//!generate-accessors`                 | struct brace | Include struct, default: getter + setter                  |
+| `//!generate-accessors:none`            | struct brace | Include struct, default: no accessors                     |
+| `//!generate-accessors:readonly`        | struct brace | Include struct, default: getter only                      |
+| `//!generate-accessors:writeonly`       | struct brace | Include struct, default: setter only                      |
+| `//!generate-lifecycle`                 | struct brace | Generate constructor + destructor                         |
+| `//!accessors:none`                     | member line  | Skip this member entirely (accessors only)                |
+| `//!accessors:readonly`                 | member line  | Generate getter only                                      |
+| `//!accessors:writeonly`                | member line  | Generate setter only                                      |
+| `//!accessors:readwrite`                | member line  | Generate getter and setter                                |
+| `//!lifecycle:none`                     | member line  | Exclude member from destructor free logic                 |
+| `//!default:VALUE`                      | member line  | Set field to VALUE in `init_defaults()`                   |
+| `const` qualifier on member             | member type  | Suppress setter; suppress free in destructor              |
 
 ------
 
@@ -122,7 +183,7 @@ struct nvme_ctrl { /*!generate-accessors:none*/
 ### Header file (`person.h`)
 
 ```c
-struct person { /*!generate-accessors*/
+struct person { //!generate-accessors
     char *name;
     int age;
     const char *id;       /* const → getter only, no annotation needed */
@@ -130,7 +191,7 @@ struct person { /*!generate-accessors*/
     char *role;           //!accessors:readonly
 };
 
-struct car { /*!generate-accessors*/
+struct car { //!generate-accessors
     char *model;
     int year;
     const char *vin;
@@ -365,6 +426,177 @@ LIBNVME_ACCESSORS_3 {
 
 ------
 
+## Lifecycle example
+
+### Header file (`person.h`) — with lifecycle
+
+Adding `//!generate-lifecycle` to the same struct enables constructor and destructor generation alongside the accessors:
+
+```c
+struct person { //!generate-accessors !generate-lifecycle
+    char *name;
+    int age;
+    const char *id;       /* const → getter only; NOT freed by destructor */
+    char *secret;         //!accessors:none
+    char *role;           //!accessors:readonly
+};
+```
+
+### Additional declarations in `accessors.h`
+
+The constructor and destructor declarations are appended after the accessor declarations for the same struct:
+
+```c
+/**
+ * person_new() - Allocate and initialise a person object.
+ * @pp: On success, *pp is set to the newly allocated object.
+ *
+ * Allocates a zeroed &struct person on the heap.
+ * The caller must release it with person_free().
+ *
+ * Return: 0 on success, -EINVAL if @pp is NULL,
+ *         -ENOMEM if allocation fails.
+ */
+int person_new(struct person **pp);
+
+/**
+ * person_free() - Release a person object.
+ * @p: Object previously returned by person_new().
+ *     A NULL pointer is silently ignored.
+ */
+void person_free(struct person *p);
+```
+
+### Additional implementations in `accessors.c`
+
+```c
+__public int person_new(struct person **pp)
+{
+	if (!pp)
+		return -EINVAL;
+	*pp = calloc(1, sizeof(struct person));
+	return *pp ? 0 : -ENOMEM;
+}
+
+__public void person_free(struct person *p)
+{
+	if (!p)
+		return;
+	free(p->name);
+	free(p->secret);
+	free(p->role);
+	free(p);
+}
+```
+
+> **Notes:**
+> - `id` is `const char *` — the destructor never frees `const` members.
+> - `secret` is `//!accessors:none` but is still freed — `lifecycle:none` is the annotation to suppress a free.
+> - `age` is `int` — only `char *` and `char **` members are freed.
+
+### Additional entries in `accessors.ld`
+
+```
+		person_new;
+		person_free;
+```
+
+------
+
+## Defaults example
+
+```c
+struct conn_opts { //!generate-accessors !generate-lifecycle
+    int port;            //!default:4420
+    char *transport;     //!default:"tcp"
+    const char *trsvcid; //!default:"4420"
+};
+```
+
+### Generated declaration in `accessors.h`
+
+```c
+/**
+ * conn_opts_init_defaults() - Apply default values to a conn_opts instance.
+ * @p: The &struct conn_opts instance to initialise.
+ *
+ * Sets each field that carries a default annotation to its
+ * compile-time default value.  Called automatically by
+ * conn_opts_new() but may also be called directly to reset
+ * an instance to its defaults without reallocating it.
+ */
+void conn_opts_init_defaults(struct conn_opts *p);
+```
+
+### Generated implementation in `accessors.c`
+
+Note how `transport` (`char *`) is assigned via `strdup()` — the struct owns
+the memory and the destructor frees it. In contrast, `trsvcid` (`const char *`)
+receives a plain assignment to a string literal — no heap allocation, no free.
+
+```c
+__public void conn_opts_init_defaults(struct conn_opts *p)
+{
+	if (!p)
+		return;
+	p->port = 4420;
+	if (!p->transport || strcmp(p->transport, "tcp") != 0) {
+		free(p->transport);
+		p->transport = strdup("tcp");
+	}
+	p->trsvcid = "4420";
+}
+
+__public int conn_opts_new(struct conn_opts **pp)
+{
+	if (!pp)
+		return -EINVAL;
+	*pp = calloc(1, sizeof(struct conn_opts));
+	if (!*pp)
+		return -ENOMEM;
+	conn_opts_init_defaults(*pp);
+	return 0;
+}
+
+__public void conn_opts_free(struct conn_opts *p)
+{
+	if (!p)
+		return;
+	free(p->transport);
+	free(p);
+}
+```
+
+> **Notes:**
+> - Scalar members (`int`, `__u8`, etc.) are assigned directly.
+> - `char *` members use a compare-before-replace pattern: if the current
+>   value already matches the default (`strcmp`), nothing happens; otherwise
+>   the old value is freed and the new default is `strdup()`'d. This makes
+>   `init_defaults()` safe to call on an already-initialised struct without
+>   leaking memory.
+> - `const char *` members are assigned directly (no `strdup`) since they
+>   are assumed to point to externally owned storage. They are also not
+>   freed by the destructor, as seen in `conn_opts_free` — `trsvcid` has
+>   no `free()` call.
+> - The constructor (`_new`) calls `init_defaults()` after `calloc()`, so
+>   freshly allocated structs always start at their defined defaults rather
+>   than zero.
+
+### Additional entries in `accessors.ld`
+
+```
+		conn_opts_new;
+		conn_opts_free;
+		conn_opts_init_defaults;
+		conn_opts_get_port;
+		conn_opts_set_port;
+		conn_opts_get_transport;
+		conn_opts_set_transport;
+		conn_opts_get_trsvcid;
+```
+
+------
+
 ## Limitations
 
 - `typedef struct` is not supported.
@@ -378,11 +610,17 @@ LIBNVME_ACCESSORS_3 {
 1. **Dynamic strings** (`char *`) — setters store a `strdup()` copy; passing `NULL` clears the field.
 2. **String arrays** (`char **`) — setters deep-copy NULL-terminated arrays (each element and the container).
 3. **Fixed char arrays** (`char foo[N]`) — setters use `snprintf`, always NUL-terminated.
-4. **`const` members** — only a getter is generated, no setter (applies regardless of any annotation).
+4. **`const` members** — only a getter is generated, no setter (applies regardless of any annotation). `const char *` members are also skipped by the destructor.
 5. **`//!accessors:readonly`** — same effect as `const`: getter only.
 6. **`//!accessors:writeonly`** — setter only; getter is suppressed.
 7. **`//!accessors:readwrite`** — both getter and setter; overrides a restrictive struct-level default.
-8. **`//!accessors:none`** — member is completely ignored by the generator.
+8. **`//!accessors:none`** — member is completely ignored by the accessor generator. The destructor still frees it unless `//!lifecycle:none` is also present.
 9. **Struct-level mode** — the qualifier on `generate-accessors` sets the default for every member in the struct; per-member annotations override the struct default.
-10. **`--prefix`** — prepended to every function name (e.g. `--prefix nvme_` turns `ctrl_set_name` into `nvme_ctrl_set_name`).
-11. **Line length** — generated code is automatically wrapped to stay within the 80-column limit required by `checkpatch.pl`.
+10. **`//!generate-lifecycle`** — generates `foo_new()` (constructor) and `foo_free()` (destructor). Can appear on the same line as `generate-accessors`. A struct needs only one of the two annotations.
+11. **`//!lifecycle:none`** — excludes a member from the destructor's free logic. Use this when the struct does not own the pointed-to memory.
+12. **Destructor NULL safety** — `free(NULL)` is a no-op per the C standard, so destructors with no string members to dereference emit only `free(p)` with no NULL guard. Destructors that do dereference `p->field` guard with `if (!p) return;` first. In both cases passing NULL to the destructor is safe.
+13. **`//!default:VALUE`** — generates `foo_init_defaults()` that sets the annotated field to `VALUE`. Scalar members are assigned directly. `char *` members use a compare-before-replace pattern: if the current value already equals the default (`strcmp`), nothing happens; otherwise the old value is freed and the new default is `strdup()`'d. `const char *` members are assigned directly (no `strdup`). Quoted string values (`"foo bar"`) may contain spaces.
+14. **`init_defaults()` and `new()`** — when a struct has both `generate-lifecycle` and at least one `//!default:`, the constructor calls `init_defaults()` after `calloc()`. Without `generate-lifecycle`, `init_defaults()` is still generated as a standalone function.
+15. **`init_defaults()` for re-initialisation** — callers can call `init_defaults()` directly on an already-allocated instance to reset scalar fields to their defaults without freeing and reallocating the struct.
+16. **`--prefix`** — prepended to every function name (e.g. `--prefix nvme_` turns `ctrl_set_name` into `nvme_ctrl_set_name`).
+17. **Line length** — generated code is automatically wrapped to stay within the 80-column limit required by `checkpatch.pl`.

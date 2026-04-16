@@ -17,6 +17,7 @@
  * To update run: meson compile -C [BUILD-DIR] update-accessors
  * Or:            make update-accessors
  */
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include "accessors.h"

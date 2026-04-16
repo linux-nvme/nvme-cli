@@ -829,7 +829,7 @@ struct libnvmf_context {};
 			discover_err = 1;
 			return NULL;
 		}
-		discover_err = libnvmf_discovery_args_create(&args);
+		discover_err = libnvmf_discovery_args_new(&args);
 		if (discover_err)
 			return NULL;
 		libnvmf_discovery_args_set_lsp(args, lsp);

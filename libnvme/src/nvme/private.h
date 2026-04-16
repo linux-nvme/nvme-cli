@@ -167,7 +167,7 @@ struct libnvme_transport_handle {
 	struct libnvme_log *log;
 };
 
-struct libnvme_path { /*!generate-accessors*/
+struct libnvme_path { //!generate-accessors
 	struct list_node entry;
 	struct list_node nentry;
 
@@ -189,7 +189,7 @@ struct libnvme_ns_head {
 	char *sysfs_dir;
 };
 
-struct libnvme_ns { /*!generate-accessors*/
+struct libnvme_ns { //!generate-accessors
 	struct list_node entry;
 
 	struct libnvme_subsystem *s;
@@ -215,7 +215,7 @@ struct libnvme_ns { /*!generate-accessors*/
 	enum nvme_csi csi;
 };
 
-struct libnvme_ctrl { /*!generate-accessors*/
+struct libnvme_ctrl { //!generate-accessors
 	struct list_node entry;
 	struct list_head paths;
 	struct list_head namespaces;
@@ -255,30 +255,30 @@ struct libnvme_ctrl { /*!generate-accessors*/
 	struct libnvme_fabrics_config cfg;
 };
 
-struct libnvme_subsystem { /*!generate-accessors*/
+struct libnvme_subsystem { //!generate-accessors
 	struct list_node entry;
 	struct list_head ctrls;
 	struct list_head namespaces;
 	struct libnvme_host *h;
 
-	char *name; /*!accessors:readonly*/
-	char *sysfs_dir; /*!accessors:readonly*/
-	char *subsysnqn; /*!accessors:readonly*/
-	char *model; /*!accessors:readonly*/
-	char *serial; /*!accessors:readonly*/
-	char *firmware; /*!accessors:readonly*/
-	char *subsystype; /*!accessors:readonly*/
+	char *name; //!accessors:readonly
+	char *sysfs_dir; //!accessors:readonly
+	char *subsysnqn; //!accessors:readonly
+	char *model; //!accessors:readonly
+	char *serial; //!accessors:readonly
+	char *firmware; //!accessors:readonly
+	char *subsystype; //!accessors:readonly
 	char *application;
 	char *iopolicy;
 };
 
-struct libnvme_host { /*!generate-accessors*/
+struct libnvme_host { //!generate-accessors
 	struct list_node entry;
 	struct list_head subsystems;
 	struct libnvme_global_ctx *ctx;
 
-	char *hostnqn; /*!accessors:readonly*/
-	char *hostid; /*!accessors:readonly*/
+	char *hostnqn; //!accessors:readonly
+	char *hostid; //!accessors:readonly
 	char *dhchap_host_key;
 	char *hostsymname;
 	bool pdc_enabled; //!accessors:none
@@ -286,7 +286,7 @@ struct libnvme_host { /*!generate-accessors*/
 				 * value */
 };
 
-struct libnvme_fabric_options { /*!generate-accessors*/
+struct libnvme_fabric_options { //!generate-accessors
 	bool cntlid;
 	bool concat;
 	bool ctrl_loss_tmo;
