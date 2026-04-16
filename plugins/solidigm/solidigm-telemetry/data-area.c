@@ -23,36 +23,6 @@
 #define MAX_ARRAY_RANK 16
 #define NLOG_HEADER_ID 101
 
-static bool uint8_array_try_string(const struct telemetry_log *tl,
-				  uint64_t offset_bit, uint32_t size_bit,
-				  uint32_t array_size,
-				  struct json_object **str_obj)
-{
-	uint32_t offset_byte = (uint32_t)offset_bit / NUM_BITS_IN_BYTE;
-
-	if (size_bit != 8) {
-		*str_obj = json_object_new_string(
-			"Error: Only UINT8 arrays can be converted to strings");
-		return false;
-	}
-
-	if (offset_byte > (tl->log_size - array_size)) {
-		char err_msg[MAX_WARNING_SIZE];
-
-		snprintf(err_msg, MAX_WARNING_SIZE,
-			"String offset greater than binary size (%u > %zu).",
-			offset_byte, tl->log_size);
-		*str_obj = json_object_new_string(err_msg);
-		return false;
-	}
-
-	// Get direct pointer to the UINT8 array in the telemetry log
-	const uint8_t *data_ptr = (const uint8_t *)tl->log + offset_byte;
-
-	// Use the generic converter function
-	return sldm_uint8_array_to_string(data_ptr, array_size, str_obj);
-}
-
 static void reverse_string(char *buff, size_t len)
 {
 	char *start = buff;
@@ -298,23 +268,6 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 	sub_output = output;
 
 	if (array_size_dimension[0] > 1 || force_array) {
-		// Check if this is a UINT8 array that should be treated as a string
-		if (json_object_is_type(output, json_type_object) &&
-		    (strcmp(type, "UINT8") == 0 || strcmp(type, "uint8_t") == 0) && !force_array) {
-			// Handle UINT8 arrays as strings
-			struct json_object *str_obj = NULL;
-			uint64_t offset = parent_offset_bit + offset_bit;
-
-			if (uint8_array_try_string(tl, offset, size_bit,
-						  array_size_dimension[0], &str_obj)) {
-				json_object_object_add(output, name, str_obj);
-				return 0;
-			}
-
-			// If string conversion failed, fall back to normal array processing
-			json_object_put(str_obj);
-		}
-
 		/*
 		 * When output is already an array (from an outer
 		 * multi-dim call), fill it directly to avoid extra wrap.
