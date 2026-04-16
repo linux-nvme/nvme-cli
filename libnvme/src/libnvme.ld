@@ -181,10 +181,10 @@ LIBNVME_3 {
 		libnvme_subsystem_release_fds;
 		libnvme_transport_handle_get_fd;
 		libnvme_transport_handle_get_name;
-		libnvme_transport_handle_is_blkdev;
-		libnvme_transport_handle_is_chardev;
+		libnvme_transport_handle_is_ctrl;
 		libnvme_transport_handle_is_direct;
 		libnvme_transport_handle_is_mi;
+		libnvme_transport_handle_is_ns;
 		libnvme_transport_handle_set_decide_retry;
 		libnvme_transport_handle_set_submit_entry;
 		libnvme_transport_handle_set_submit_exit;

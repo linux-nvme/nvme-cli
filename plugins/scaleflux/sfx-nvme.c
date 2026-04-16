@@ -1417,7 +1417,7 @@ static int nvme_expand_cap(struct libnvme_transport_handle *hdl, __u32 namespace
 		__u8  reserve1[5];
 	} __packed;
 
-	if (libnvme_transport_handle_is_chardev(hdl))
+	if (libnvme_transport_handle_is_ctrl(hdl))
 		snprintf(dev_name, 32, "%sn%u", libnvme_transport_handle_get_name(hdl), namespace_id);
 	else
 		strcpy(dev_name, libnvme_transport_handle_get_name(hdl));
@@ -1507,8 +1507,8 @@ static int sfx_expand_cap(int argc, char **argv, struct command *acmd, struct pl
 		return err;
 
 	if (cfg.namespace_id == NVME_NSID_ALL) {
-		if (libnvme_transport_handle_is_chardev(hdl)) {
-			fprintf(stderr, "namespace_id or blk device required\n");
+		if (libnvme_transport_handle_is_ctrl(hdl)) {
+			fprintf(stderr, "namespace_id or namespace device required\n");
 			return -EINVAL;
 		} else {
 			cfg.namespace_id = atoi(&libnvme_transport_handle_get_name(hdl)[strlen(libnvme_transport_handle_get_name(hdl)) - 1]);

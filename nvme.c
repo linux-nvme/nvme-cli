@@ -174,8 +174,8 @@ static struct program nvme = {
 	.name = "nvme",
 	.version = nvme_version_string,
 	.usage = "<command> [<device>] [<args>]",
-	.desc = "The '<device>' may be either an NVMe character "
-		"device (ex: /dev/nvme0), an nvme block device "
+	.desc = "The '<device>' may be either an NVMe controller "
+		"device (ex: /dev/nvme0), an nvme namespace device "
 		"(ex: /dev/nvme0n1), or a mctp address in the form "
 		"mctp:<net>,<eid>[:ctrl-id]",
 	.extensions = &builtin,
@@ -212,7 +212,7 @@ static const char *mo = "management operation";
 static const char *namespace_desired = "desired namespace";
 static const char *namespace_id_optional = "optional namespace attached to controller";
 static const char *nssf = "NVMe Security Specific Field";
-static const char *only_char_dev = "Only character device is allowed";
+static const char *only_ctrl_dev = "Only controller device is allowed";
 static const char *prinfo = "PI and check field";
 static const char *rae = "Retain an Asynchronous Event";
 static const char *raw_directive = "show directive in binary format";
@@ -422,11 +422,11 @@ static int open_fallback_chardev(struct libnvme_global_ctx *ctx,
 	struct libnvme_transport_handle *hdl = *phdl;
 	int err;
 
-	if (libnvme_transport_handle_is_chardev(hdl)) {
+	if (libnvme_transport_handle_is_ctrl(hdl)) {
 		__cleanup_free char *cdev = NULL;
 
 		if (!nsid) {
-			nvme_show_error("char device not supported without --namespace-id");
+			nvme_show_error("controller device not supported without --namespace-id");
 			return -EINVAL;
 		}
 
@@ -1099,8 +1099,8 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 
 	if (cfg.csi < 0) {
 		__u64 cap;
-		if (libnvme_transport_handle_is_blkdev(hdl)) {
-			nvme_show_error("Block device isn't allowed without csi");
+		if (libnvme_transport_handle_is_ns(hdl)) {
+			nvme_show_error("Namespace device isn't allowed without csi");
 			return -EINVAL;
 		}
 		bar = mmap_registers(hdl, false);
@@ -3013,8 +3013,8 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		return err;
 	}
 
-	if (libnvme_transport_handle_is_blkdev(hdl)) {
-		nvme_show_error("%s: a block device opened (dev: %s, nsid: %d)", acmd->name,
+	if (libnvme_transport_handle_is_ns(hdl)) {
+		nvme_show_error("%s: a namespace device opened (dev: %s, nsid: %d)", acmd->name,
 				libnvme_transport_handle_get_name(hdl), cfg.nsid);
 		return -EINVAL;
 	}
@@ -5437,8 +5437,8 @@ static int subsystem_reset(int argc, char **argv, struct command *acmd, struct p
 	if (err)
 		return err;
 
-	if (!libnvme_transport_handle_is_chardev(hdl)) {
-		nvme_show_error(only_char_dev);
+	if (!libnvme_transport_handle_is_ctrl(hdl)) {
+		nvme_show_error(only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -5468,8 +5468,8 @@ static int reset(int argc, char **argv, struct command *acmd, struct plugin *plu
 	if (err)
 		return err;
 
-	if (!libnvme_transport_handle_is_chardev(hdl)) {
-		nvme_show_error(only_char_dev);
+	if (!libnvme_transport_handle_is_ctrl(hdl)) {
+		nvme_show_error(only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -5497,8 +5497,8 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 	if (err)
 		return err;
 
-	if (!libnvme_transport_handle_is_chardev(hdl)) {
-		nvme_show_error(only_char_dev);
+	if (!libnvme_transport_handle_is_ctrl(hdl)) {
+		nvme_show_error(only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -5860,8 +5860,8 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 	if (err)
 		return err;
 
-	if (libnvme_transport_handle_is_blkdev(hdl)) {
-		nvme_show_error(only_char_dev);
+	if (libnvme_transport_handle_is_ns(hdl)) {
+		nvme_show_error(only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -6137,8 +6137,8 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	if (libnvme_transport_handle_is_blkdev(hdl)) {
-		nvme_show_error(only_char_dev);
+	if (libnvme_transport_handle_is_ns(hdl)) {
+		nvme_show_error(only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -6441,8 +6441,8 @@ static int set_register(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	if (libnvme_transport_handle_is_blkdev(hdl)) {
-		nvme_show_error(only_char_dev);
+	if (libnvme_transport_handle_is_ns(hdl)) {
+		nvme_show_error(only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -6798,7 +6798,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 
 	printf("Success formatting namespace:%x\n", cfg.namespace_id);
 	if (libnvme_transport_handle_is_direct(hdl) && cfg.lbaf != prev_lbaf) {
-		if (libnvme_transport_handle_is_chardev(hdl)) {
+		if (libnvme_transport_handle_is_ctrl(hdl)) {
 			if (libnvme_rescan_ns(hdl) < 0) {
 				nvme_show_error("failed to rescan namespaces");
 				return -errno;
@@ -6830,7 +6830,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		}
 	}
 	if (libnvme_transport_handle_is_direct(hdl) && cfg.reset &&
-	    libnvme_transport_handle_is_chardev(hdl))
+	    libnvme_transport_handle_is_ctrl(hdl))
 		libnvme_reset_ctrl(hdl);
 
 	return err;

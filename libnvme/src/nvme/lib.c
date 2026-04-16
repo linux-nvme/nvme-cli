@@ -291,14 +291,14 @@ __public const char *libnvme_transport_handle_get_name(struct libnvme_transport_
 	return basename(hdl->name);
 }
 
-__public bool libnvme_transport_handle_is_blkdev(struct libnvme_transport_handle *hdl)
-{
-	return S_ISBLK(hdl->stat.st_mode);
-}
-
-__public bool libnvme_transport_handle_is_chardev(struct libnvme_transport_handle *hdl)
+__public bool libnvme_transport_handle_is_ctrl(struct libnvme_transport_handle *hdl)
 {
 	return S_ISCHR(hdl->stat.st_mode);
+}
+
+__public bool libnvme_transport_handle_is_ns(struct libnvme_transport_handle *hdl)
+{
+	return S_ISBLK(hdl->stat.st_mode);
 }
 
 __public bool libnvme_transport_handle_is_direct(struct libnvme_transport_handle *hdl)
