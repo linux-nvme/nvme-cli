@@ -556,14 +556,9 @@ def emit_src_setter_chararray(f, prefix, sname, mname, array_size):
             f'\t\tconst char *{mname})\n'
         )
 
-    if array_size.isdigit():
-        f.write(
-            f'{{\n\tsnprintf(p->{mname}, {int(array_size)}, "%s", {mname});\n}}\n\n'
-        )
-    else:
-        f.write(
-            f'{{\n\tsnprintf(p->{mname}, {array_size}, "%s", {mname});\n}}\n\n'
-        )
+    f.write(
+        f'{{\n\tsnprintf(p->{mname}, {array_size}, "%s", {mname});\n}}\n\n'
+    )
 
 
 def emit_src_setter_str_array(f, prefix, sname, mname):
