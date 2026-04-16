@@ -54,6 +54,7 @@ want_libnvme = get_option('libnvme').disabled() == false
 want_fabrics = get_option('fabrics').disabled() == false and host_system != 'windows'
 want_mi = get_option('mi').disabled() == false and host_system != 'windows'
 want_json_c = get_option('json-c').disabled() == false and host_system != 'windows'
+want_libkmod = get_option('libkmod').disabled() == false and host_system != 'windows'
 want_tests = get_option('tests') and host_system != 'windows'
 want_examples = get_option('examples') and host_system != 'windows'
 want_docs = get_option('docs')
@@ -313,6 +314,13 @@ else
 endif
 conf.set('CONFIG_LIBURING', liburing_dep.found(), description: 'Is liburing available?')
 
+if not want_libkmod
+    libkmod_dep = dependency('', required: false)
+else
+    libkmod_dep = dependency('libkmod', required: get_option('libkmod'))
+endif
+conf.set('HAVE_LIBKMOD', libkmod_dep.found(), description: 'Is libkmod available?')
+
 if not want_fabrics or get_option('openssl').disabled()
     openssl_dep = dependency('', required: false)
 else
@@ -538,6 +546,7 @@ if want_nvme
         ccan_dep,
         libnvme_dep,
         json_c_dep,
+        libkmod_dep,
     ]
 
     if host_system == 'windows'
@@ -706,6 +715,7 @@ dep_dict = {
     'libdbus':          libdbus_dep.found(),
     'python3':          py3_dep.found(),
     'liburing':         liburing_dep.found(),
+    'libkmod':          libkmod_dep.found(),
 }
 if host_system == 'windows'
     dep_dict += {
