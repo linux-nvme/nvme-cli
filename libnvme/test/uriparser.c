@@ -154,44 +154,59 @@ static void test_uriparser(void)
 	printf("Testing URI parser:\n");
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++) {
 		const struct test_data *d = &test_data[i];
-		struct libnvme_fabrics_uri *parsed_data;
-		char **s;
-		int i;
+		struct libnvmf_uri *parsed_data;
+		const char * const *segments;
+		const char *str;
+		int j;
 
 		printf(" '%s'...", d->uri);
-		assert(!libnvme_parse_uri(d->uri, &parsed_data));
+		assert(!libnvmf_uri_parse(d->uri, &parsed_data));
 
-		assert(strcmp(d->scheme, parsed_data->scheme) == 0);
+		assert(strcmp(d->scheme,
+		      libnvmf_uri_get_scheme(parsed_data)) == 0);
+
+		str = libnvmf_uri_get_protocol(parsed_data);
 		if (d->proto) {
-			assert(parsed_data->protocol != NULL);
-			assert(strcmp(d->proto, parsed_data->protocol) == 0);
-		} else
-			assert(d->proto == parsed_data->protocol);
-		assert(strcmp(d->host, parsed_data->host) == 0);
-		assert(d->port == parsed_data->port);
+			assert(str != NULL);
+			assert(strcmp(d->proto, str) == 0);
+		} else {
+			assert(d->proto == str);
+		}
 
-		if (!parsed_data->path_segments)
+		assert(strcmp(d->host,
+		      libnvmf_uri_get_host(parsed_data)) == 0);
+
+		assert(d->port == libnvmf_uri_get_port(parsed_data));
+
+		segments = libnvmf_uri_get_path_segments(parsed_data);
+		if (!segments) {
 			assert(d->path[0] == NULL);
-		else {
-			for (i = 0, s = parsed_data->path_segments;
-			     s && *s; s++, i++) {
-				assert(d->path[i] != NULL);
-				assert(strcmp(d->path[i], *s) == 0);
+		} else {
+			for (j = 0; segments && segments[j]; j++) {
+				assert(d->path[j] != NULL);
+				assert(strcmp(d->path[j], segments[j]) == 0);
 			}
 			/* trailing NULL element */
-			assert(d->path[i] == parsed_data->path_segments[i]);
+			assert(d->path[j] == segments[j]);
 		}
+
+		str = libnvmf_uri_get_query(parsed_data);
 		if (d->query) {
-			assert(parsed_data->query != NULL);
-			assert(strcmp(d->query, parsed_data->query) == 0);
-		} else
-			assert(d->query == parsed_data->query);
+			assert(str != NULL);
+			assert(strcmp(d->query, str) == 0);
+		} else {
+			assert(d->query == str);
+			}
+
+		str = libnvmf_uri_get_fragment(parsed_data);
 		if (d->frag) {
-			assert(parsed_data->fragment != NULL);
-			assert(strcmp(d->frag, parsed_data->fragment) == 0);
-		} else
-			assert(d->frag == parsed_data->fragment);
-		libnvmf_free_uri(parsed_data);
+			assert(str != NULL);
+			assert(strcmp(d->frag, str) == 0);
+		} else {
+			assert(d->frag == str);
+		}
+
+		libnvmf_uri_free(parsed_data);
 		printf("  OK\n");
 	}
 }
@@ -200,10 +215,10 @@ static void test_uriparser_bad(void)
 {
 	printf("Testing malformed URI strings:\n");
 	for (int i = 0; i < ARRAY_SIZE(test_data_bad); i++) {
-		struct libnvme_fabrics_uri *parsed_data = NULL;
+		struct libnvmf_uri *parsed_data = NULL;
 
 		printf(" '%s'...", test_data_bad[i]);
-		assert(libnvme_parse_uri(test_data_bad[i], &parsed_data));
+		assert(libnvmf_uri_parse(test_data_bad[i], &parsed_data));
 		assert(parsed_data == NULL);
 		printf("   OK\n");
 	}

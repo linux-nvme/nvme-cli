@@ -83,6 +83,29 @@ struct libnvmf_discovery_args { /*!generate-accessors*/
 	__u8 lsp;
 };
 
+/**
+ * struct libnvmf_uri - Parsed URI structure
+ * @scheme:		Scheme name (typically 'nvme')
+ * @protocol:		Optional protocol/transport (e.g. 'tcp')
+ * @userinfo:		Optional user information component of the URI authority
+ * @host:		Host transport address
+ * @port:		The port subcomponent or 0 if not specified
+ * @path_segments:	NULL-terminated array of path segments
+ * @query:		Optional query string component (separated by '?')
+ * @fragment:		Optional fragment identifier component
+ *			(separated by '#')
+ */
+struct libnvmf_uri { //!generate-accessors
+	char *scheme;
+	char *protocol;
+	char *userinfo;
+	char *host;
+	int port;
+	char **path_segments;
+	char *query;
+	char *fragment;
+};
+
 bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr);
 
