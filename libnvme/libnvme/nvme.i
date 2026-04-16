@@ -110,7 +110,7 @@ PyObject *read_hostid();
 };
 
 %typemap(newfree) struct nvmf_discovery_log * {
-	if ($1) free($1);
+	free($1);
 }
 
 %typemap(out) struct nvmf_discovery_log * {
