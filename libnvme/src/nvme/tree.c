@@ -508,6 +508,9 @@ static void __nvme_free_ns(struct libnvme_ns *n)
 /* Stub for SWIG */
 __public void libnvme_free_ns(struct libnvme_ns *n)
 {
+	if (!n)
+		return;
+
 	__nvme_free_ns(n);
 }
 
@@ -552,6 +555,10 @@ __public void libnvme_subsystem_release_fds(struct libnvme_subsystem *s)
  */
 __public void libnvme_free_subsystem(libnvme_subsystem_t s)
 {
+	if (!s)
+		return;
+
+	__nvme_free_subsystem(s);
 }
 
 struct libnvme_subsystem *nvme_alloc_subsystem(struct libnvme_host *h,
@@ -637,6 +644,9 @@ __public void libnvme_host_release_fds(struct libnvme_host *h)
 /* Stub for SWIG */
 __public void libnvme_free_host(struct libnvme_host *h)
 {
+	if (!h)
+		return;
+
 	__libnvme_free_host(h);
 }
 
@@ -831,6 +841,9 @@ __public int libnvme_path_get_queue_depth(libnvme_path_t p)
 
 void nvme_free_path(struct libnvme_path *p)
 {
+	if (!p)
+		return;
+
 	list_del_init(&p->entry);
 	list_del_init(&p->nentry);
 	free(p->name);
@@ -1043,6 +1056,9 @@ static void __libnvme_free_ctrl(libnvme_ctrl_t c)
 
 __public void libnvme_free_ctrl(libnvme_ctrl_t c)
 {
+	if (!c)
+		return;
+
 	__libnvme_free_ctrl(c);
 }
 

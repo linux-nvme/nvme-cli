@@ -44,8 +44,7 @@ const char *nvmf_dev = "/dev/nvme-fabrics";
 
 static inline void free_uri(struct libnvmf_uri **uri)
 {
-	if (*uri)
-		libnvmf_uri_free(*uri);
+	libnvmf_uri_free(*uri);
 }
 #define __cleanup_uri __cleanup(free_uri)
 
@@ -1517,6 +1516,9 @@ __public int libnvmf_discovery_args_create(struct libnvmf_discovery_args **argsp
 
 __public void libnvmf_discovery_args_free(struct libnvmf_discovery_args *args)
 {
+	if (!args)
+		return;
+
 	free(args);
 }
 
@@ -2642,6 +2644,9 @@ __public int libnvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
 
 __public void libnvmf_nbft_free(struct libnvme_global_ctx *ctx, struct nbft_file_entry *head)
 {
+	if (!head)
+		return;
+
 	while (head) {
 		struct nbft_file_entry *next = head->next;
 
