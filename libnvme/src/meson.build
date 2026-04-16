@@ -77,12 +77,10 @@ else
     sources += 'nvme/no-uring.c'
 endif
 
-if host_system != 'windows'
-    if json_c_dep.found()
-        sources += 'nvme/json.c'
-    else
-        sources += 'nvme/no-json.c'
-    endif
+if json_c_dep.found()
+    sources += 'nvme/json.c'
+else
+    sources += 'nvme/no-json.c'
 endif
 
 deps = [
