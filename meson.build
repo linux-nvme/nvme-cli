@@ -19,7 +19,7 @@ project(
         'GPL-2.0-only',         # nvme-cli
         'LGPL-2.1-or-later',    # libnvme
     ],
-    version: '3.0-a.3',
+    version: '3.0-a.4',
     default_options: [
         'c_std=gnu99',
         'buildtype=debugoptimized',
