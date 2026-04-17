@@ -7,7 +7,7 @@
  * Provides functionality that may be missing on some platforms.
  * Compatibility is not comprehensive. Only functionality required by
  * nvme-cli and libnvme is included.
- * 
+ *
  * Authors: Broc Going <bgoing@micron.com>
  *          Brandon Capener <bcapener@micron.com>
  */
@@ -23,4 +23,4 @@ static inline size_t malloc_usable_size(void *ptr)
 	return _msize(ptr);
 }
 
-#endif /* _WIN32 */
+#endif

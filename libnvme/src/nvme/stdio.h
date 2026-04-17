@@ -8,10 +8,9 @@
  * Compatibility is not comprehensive. Only functionality required by
  * nvme-cli and libnvme is included.
  *
- * Authors: Brandon Capener <bcapener@micron.com>
+ * Authors: Broc Going <bgoing@micron.com>
  *          Brandon Busacker <bbusacker@micron.com>
 */
-
 #pragma once
 
 #include <stdio.h>

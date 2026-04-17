@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <platform/includes.h> /* for libnvme_fd_t */
+#include <nvme/lib-compat.h>
 
 #include <ccan/list/list.h>
 

@@ -197,14 +197,3 @@ if want_mi
         install_mode: mode,
     )
 endif
-
-
-# Install platform abstraction headers
-install_headers([
-        'platform/includes.h',
-        'platform/linux.h',
-        'platform/windows.h',
-    ],
-    subdir: 'platform',
-    install_mode: mode,
-)

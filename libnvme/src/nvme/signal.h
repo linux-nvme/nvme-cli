@@ -7,9 +7,9 @@
  * Provides functionality that may be missing on some platforms.
  * Compatibility is not comprehensive. Only functionality required by
  * nvme-cli and libnvme is included.
- * 
- * Authors: Brandon Busacker <bbusacker@micron.com>
- *          Broc Going <bgoing@micron.com>
+ *
+ * Authors: Broc Going <bgoing@micron.com>
+ *          Brandon Busacker <bbusacker@micron.com>
  */
 #pragma once
 
