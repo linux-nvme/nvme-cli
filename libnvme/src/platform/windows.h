@@ -207,13 +207,6 @@ static inline int sigaction(int signum, const struct sigaction *act,
 }
 
 
-/* limits.h compatibility */
-
-#ifndef NAME_MAX
-#define NAME_MAX 260
-#endif
-
-
 /* sys/stat.h compatibility */
 
 /* Windows _mkdir doesn't take mode parameter */

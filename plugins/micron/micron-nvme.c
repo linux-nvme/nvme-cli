@@ -66,6 +66,10 @@
 #endif
 #define SensorCount 8
 
+#ifndef NAME_MAX
+#define NAME_MAX 260
+#endif
+
 /* Plugin version major_number.minor_number.patch */
 static const char *__version_major = "2";
 static const char *__version_minor = "0";
