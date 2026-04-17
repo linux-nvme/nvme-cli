@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 
+#include <nvme/signal.h>
 #include <libnvme.h>
 
 #include "common.h"

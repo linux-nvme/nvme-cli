@@ -43,33 +43,3 @@ static inline void libnvme_init(void)
 	_setmode(_fileno(stdout), O_BINARY);
 	_setmode(_fileno(stderr), O_BINARY);
 }
-
-
-/* signal.h POSIX compatibility - Windows doesn't have sigaction */
-
-struct sigaction {
-	void (*sa_handler)(int);
-	int sa_flags;
-	int sa_mask;  /* simplified - normally sigset_t */
-};
-
-static inline int sigemptyset(int *set)
-{
-	*set = 0;
-	return 0;
-}
-
-/*
- * Simplified signal handling using Windows signal() function
- * This is sufficient for handling SIGINT with no mask or flags.
- */
-static inline int sigaction(int signum, const struct sigaction *act,
-			struct sigaction *oldact)
-{
-	(void)oldact; /* ignore old action for simplicity */
-	if (act && act->sa_handler) {
-		signal(signum, act->sa_handler);
-		return 0;
-	}
-	return -1;
-}
