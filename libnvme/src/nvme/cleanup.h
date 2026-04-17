@@ -4,9 +4,7 @@
 
 #include <stdlib.h>
 
-#include <platform/includes.h>
-
-#include "private.h"
+#include "private.h"	/* for __libnvme_free */
 
 #define __cleanup(fn) __attribute__((cleanup(fn)))
 

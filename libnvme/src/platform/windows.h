@@ -44,20 +44,27 @@ static inline void libnvme_init(void)
 	_setmode(_fileno(stderr), O_BINARY);
 }
 
+/* Platform-specific UUID generation using BCryptGenRandom */
+static inline int random_uuid(unsigned char *uuid, size_t len)
+{
+	NTSTATUS status;
 
-/* sys/param.h compatibility */
+	status = BCryptGenRandom(NULL, uuid, (ULONG)len,
+				 BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+	if (!BCRYPT_SUCCESS(status))
+		return -EIO;
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
+	return 0;
+}
 
 
 /* errno.h compatibility */
 
-#define EREMOTEIO 121
-#define EDQUOT    122
-#define ERESTART  85
-#define ENOTBLK   15
-#define ENAVAIL   119
+#define EREMOTEIO 121	// util.c
+#define EDQUOT    122	// util.c
+#define ERESTART  85	// util.c
+#define ENOTBLK   15	// sfx-nvme.c - could they just use libnvme's check for char device instead?
+#define ENAVAIL   119	// nvme.c - just used internally, define a custom, internal error code for this?
 
 
 /* ifaddrs.h compatibility */
@@ -71,21 +78,6 @@ struct ifaddrs {
 	struct sockaddr *ifa_broadaddr;
 	void *ifa_data;
 };
-
-static inline void freeifaddrs(struct ifaddrs *ifa) { (void)ifa; }
-
-/* Platform-specific UUID generation using BCryptGenRandom */
-static inline int random_uuid(unsigned char *uuid, size_t len)
-{
-	NTSTATUS status;
-
-	status = BCryptGenRandom(NULL, uuid, (ULONG)len,
-				 BCRYPT_USE_SYSTEM_PREFERRED_RNG);
-	if (!BCRYPT_SUCCESS(status))
-		return -EIO;
-
-	return 0;
-}
 
 
 /* stdio.h POSIX extensions */
@@ -172,29 +164,6 @@ static inline FILE *open_memstream(char **ptr, size_t *sizeloc)
 	if (sizeloc)
 		*sizeloc = 0;
 	return f;
-}
-
-
-/* string.h POSIX extensions */
-
-/* strsep implementation for Windows */
-static inline char *strsep(char **stringp, const char *delim)
-{
-	char *start = *stringp;
-	char *p;
-
-	if (start == NULL)
-		return NULL;
-
-	p = strpbrk(start, delim);
-	if (p) {
-		*p = '\0';
-		*stringp = p + 1;
-	} else {
-		*stringp = NULL;
-	}
-
-	return start;
 }
 
 
@@ -316,59 +285,6 @@ static inline int sigaction(int signum, const struct sigaction *act,
 }
 
 
-/* fnmatch.h POSIX compatibility - Only used by fabrics - consider removing */
-
-#define FNM_NOMATCH 1
-#define FNM_PATHNAME 0x01
-
-/* Basic fnmatch implementation for Windows:
- * - Supports '*' (match any sequence, including empty) and
- *   '?' (match any single character).
- * - Ignores flags for now; they are accepted for compatibility.
- * Returns 0 on match, FNM_NOMATCH on mismatch.
- */
-static inline int fnmatch(const char *pattern, const char *string, int flags)
-{
-	(void)flags; /* flags currently unused */
-
-	while (*pattern) {
-		if (*pattern == '*') {
-			/* Skip consecutive '*' characters */
-			while (*pattern == '*')
-				pattern++;
-
-			if (!*pattern)
-				/* Trailing '*' matches the rest of the string */
-				return 0;
-
-			/* Try to match the remainder of the pattern at each suffix of string */
-			while (*string) {
-				if (!fnmatch(pattern, string, flags))
-					return 0;
-				string++;
-			}
-			/* No match found for pattern suffix after '*' */
-			return FNM_NOMATCH;
-		} else if (*pattern == '?') {
-			/* '?' matches any single character, if present */
-			if (!*string)
-				return FNM_NOMATCH;
-			pattern++;
-			string++;
-		} else {
-			/* Literal character match */
-			if (*pattern != *string)
-				return FNM_NOMATCH;
-			pattern++;
-			string++;
-		}
-	}
-
-	/* At end of pattern: match only if we're also at end of string */
-	return *string ? FNM_NOMATCH : 0;
-}
-
-
 /* limits.h compatibility */
 
 #ifndef NAME_MAX
@@ -376,7 +292,10 @@ static inline int fnmatch(const char *pattern, const char *string, int flags)
 #endif
 
 
+/* sys/stat.h compatibility */
+
 /* Windows _mkdir doesn't take mode parameter */
+/* _mkdir is defined in <direct.h> */
 #define mkdir(path, mode) _mkdir(path)
 
 /* Platform-specific fstat wrapper for libnvme_fd_t */

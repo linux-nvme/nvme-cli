@@ -19,12 +19,13 @@
 #if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
 #include <sys/types.h>
 #include <ifaddrs.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #endif
 
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include <platform/includes.h>
 
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>

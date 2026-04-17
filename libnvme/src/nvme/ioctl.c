@@ -29,7 +29,7 @@
 static int nvme_verify_chr(struct libnvme_transport_handle *hdl)
 {
 	static struct stat nvme_stat;
-	int err = libnvme_fstat(hdl->fd, &nvme_stat);
+	int err = fstat(hdl->fd, &nvme_stat);
 
 	if (err < 0)
 		return -errno;

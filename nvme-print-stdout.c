@@ -5,7 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <platform/includes.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#ifdef CONFIG_FABRICS
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#endif
+
 #include <ccan/strset/strset.h>
 #include <ccan/htable/htable_type.h>
 #include <ccan/htable/htable.h>

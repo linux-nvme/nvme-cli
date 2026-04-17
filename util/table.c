@@ -20,7 +20,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include <platform/includes.h>
+#include <platform/includes.h>	/* for reallocarray */
 
 #include "table.h"
 
