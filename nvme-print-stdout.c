@@ -13,6 +13,8 @@
 #include <arpa/inet.h>
 #endif
 
+#include <nvme/stdio.h>
+
 #include <ccan/strset/strset.h>
 #include <ccan/htable/htable_type.h>
 #include <ccan/htable/htable.h>

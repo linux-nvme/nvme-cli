@@ -14,6 +14,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <nvme/stdio.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
