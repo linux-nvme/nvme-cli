@@ -11,6 +11,9 @@
 #define CREATE_CMD
 #include "feat-nvme.h"
 
+extern const char *desc_uuid_index;
+extern const char *desc_namespace_id_desired;
+
 #define STR(x) #x
 #define TMT(n) "thermal management temperature " STR(n)
 
@@ -662,7 +665,7 @@ static int feat_power_limit(int argc, char **argv, struct command *acmd,
 	FEAT_ARGS(opts,
 		  OPT_BYTE("plv", 'p', &cfg.plv, plv),
 		  OPT_BYTE("pls", 'l', &cfg.pls, pls),
-		  OPT_BYTE("uuid-index", 'u', &cfg.uidx, uuid_index));
+		  OPT_BYTE("uuid-index", 'u', &cfg.uidx, desc_uuid_index));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, POWER_LIMIT_DESC, opts);
 	if (err)
@@ -738,7 +741,7 @@ static int feat_power_thresh(int argc, char **argv, struct command *acmd,
 		  OPT_BYTE("pts", 't', &cfg.pts, pts),
 		  OPT_BYTE("pmts", 'm', &cfg.pmts, pmts),
 		  OPT_BYTE("ept", 'e', &cfg.ept, ept),
-		  OPT_BYTE("uuid-index", 'u', &cfg.uidx, uuid_index));
+		  OPT_BYTE("uuid-index", 'u', &cfg.uidx, desc_uuid_index));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, POWER_THRESH_DESC, opts);
 	if (err)
@@ -813,7 +816,7 @@ static int feat_power_meas(int argc, char **argv, struct command *cmd,
 		  OPT_BYTE("act", 0, &cfg.act, action),
 		  OPT_BYTE("pmts", 0, &cfg.pmts, pmts),
 		  OPT_SHRT("smt", 0, &cfg.smt, smt),
-		  OPT_BYTE("uuid-index", 'u', &cfg.uidx, uuid_index));
+		  OPT_BYTE("uuid-index", 'u', &cfg.uidx, desc_uuid_index));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, POWER_MEAS_DESC, opts);
 	if (err)
@@ -881,7 +884,7 @@ static int feat_err_recovery(int argc, char **argv, struct command *acmd,
 	struct config cfg = { 0 };
 
 	FEAT_ARGS(opts,
-		  OPT_UINT("nsid", 'n', &cfg.nsid, namespace_id_desired),
+		  OPT_UINT("nsid", 'n', &cfg.nsid, desc_namespace_id_desired),
 		  OPT_SHRT("tler", 't', &cfg.tler, tler),
 		  OPT_FLAG("dulbe", 'd', &cfg.dulbe, dulbe));
 

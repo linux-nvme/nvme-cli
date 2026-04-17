@@ -181,74 +181,651 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
-const char *uuid_index = "UUID index";
-const char *namespace_id_desired = "identifier of desired namespace";
 
-static const char *app_tag = "app tag for end-to-end PI";
-static const char *app_tag_mask = "app tag mask for end-to-end PI";
-static const char *block_count = "number of blocks (zeroes based) on device to access";
-static const char *crkey = "current reservation key";
-static const char *csi = "command set identifier";
-static const char *buf_len = "buffer len (if) data is sent or received";
-static const char *deprecated = "deprecated; does nothing";
-static const char *domainid = "Domain Identifier";
-static const char *doper = "directive operation";
-static const char *dspec_w_dtype = "directive specification associated with directive type";
-static const char *dtype = "directive type";
-static const char *endgid = "Endurance Group Identifier (ENDGID)";
-static const char *force_unit_access = "force device to commit data before command completes";
-static const char *human_readable_directive = "show directive in readable format";
-static const char *human_readable_identify = "show identify in readable format";
-static const char *human_readable_info = "show info in readable format";
-static const char *human_readable_log = "show log in readable format";
-static const char *iekey = "ignore existing res. key";
-static const char *latency = "output latency statistics";
-static const char *lba_format_index = "The index into the LBA Format list\n"
-	"identifying the LBA Format capabilities that are to be returned";
-static const char *limited_retry = "limit media access attempts";
-static const char *lsp = "log specific field";
-static const char *mos = "management operation specific";
-static const char *mo = "management operation";
-static const char *namespace_desired = "desired namespace";
-static const char *namespace_id_optional = "optional namespace attached to controller";
-static const char *nssf = "NVMe Security Specific Field";
-static const char *only_ctrl_dev = "Only controller device is allowed";
-static const char *prinfo = "PI and check field";
-static const char *rae = "Retain an Asynchronous Event";
-static const char *raw_directive = "show directive in binary format";
-static const char *raw_dump = "dump output in binary format";
-static const char *raw_identify = "show identify in binary format";
-static const char *raw_log = "show log in binary format";
-static const char *raw_output = "output in binary format";
-static const char *ref_tag = "reference tag for end-to-end PI";
-static const char *raw_use = "use binary output";
-static const char *rtype = "reservation type";
-static const char *secp = "security protocol (cf. SPC-4)";
-static const char *spsp = "security-protocol-specific (cf. SPC-4)";
-static const char *start_block = "64-bit LBA of first block to access";
-static const char *storage_tag = "storage tag for end-to-end PI";
-static const char *storage_tag_check = "This bit specifies if the Storage Tag field shall be checked as\n"
-	"part of end-to-end data protection processing";
-static const char *uuid_index_specify = "specify uuid index";
 static const char dash[51] = {[0 ... 49] = '=', '\0'};
 static const char space[51] = {[0 ... 49] = ' ', '\0'};
-static const char *offset = "offset of the requested register";
-static const char *intms = "INTMS=0xc register offset";
-static const char *intmc = "INTMC=0x10 register offset";
-static const char *cc = "CC=0x14 register offset";
-static const char *csts = "CSTS=0x1c register offset";
-static const char *nssr = "NSSR=0x20 register offset";
-static const char *aqa = "AQA=0x24 register offset";
-static const char *asq = "ASQ=0x28 register offset";
-static const char *acq = "ACQ=0x30 register offset";
-static const char *bprsel = "BPRSEL=0x44 register offset";
-static const char *bpmbl = "BPMBL=0x48 register offset";
-static const char *cmbmsc = "CMBMSC=0x50 register offset";
-static const char *nssd = "NSSD=0x64 register offset";
-static const char *pmrctl = "PMRCTL=0xe04 register offset";
-static const char *pmrmscl = "PMRMSCL=0xe14 register offset";
-static const char *pmrmscu = "PMRMSCU=0xe18 register offset";
-static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
+
+/* Help text for command options, sorted alphabetically */
+static const char *desc___id_ctrl = "Send an Identify Controller command to "
+	"the given device and report information about the specified "
+	"controller in human-readable or "
+	"binary format. May also return vendor-specific "
+	"controller attributes in hex-dump if requested.";
+static const char *desc_acq = "ACQ=0x30 register offset";
+static const char *desc_act = "Action(ACT): [1,7,8,9]\n"
+	"1h: Primary Flexible\n"
+	"7h: Secondary Offline\n"
+	"8h: Secondary Assign\n"
+	"9h: Secondary Online";
+static const char *desc_action_fw_commit = "[0-7]: commit action: 0 = replace, "
+	"1 = replace and activate, 2 = set active, "
+	"3 = replace and activate immediate, "
+	"6 = replace boot partition, "
+	"7 = activate boot partition";
+static const char *desc_action_get_persistent_event_log = "action the controller shall take during "
+	"processing this persistent log page command.";
+static const char *desc_ad = "Attribute Deallocate";
+static const char *desc_admin_passthru =
+	"Send a user-defined Admin command to the specified device via IOCTL passthrough, return results.";
+static const char *desc_aen = "result of the aen, use to override log id";
+static const char *desc_al = "allocation length (cf. SPC-4)";
+static const char *desc_all = "show all namespaces in the subsystem, whether attached or inactive";
+static const char *desc_allhoste = "All Host Entries";
+static const char *desc_anagrpid = "ANA Group Identifier (ANAGRPID)";
+static const char *desc_app_tag = "app tag for end-to-end PI";
+static const char *desc_app_tag_mask = "app tag mask for end-to-end PI";
+static const char *desc_aqa = "AQA=0x24 register offset";
+static const char *desc_asq = "ASQ=0x28 register offset";
+static const char *desc_attach_ns = "Attach the given namespace to the "
+	"given controller or comma-sep list of controllers. ID of the "
+	"given namespace becomes active upon attachment to a "
+	"controller. A namespace must be attached to a controller "
+	"before IO commands may be directed to that namespace.";
+static const char *desc_atype = "Action Type(ATYPE) specifies the mechanism\n"
+	"the controller uses in determining the LBA Status Descriptors to return.";
+static const char *desc_ause_desc = "Allow unrestricted sanitize exit.";
+static const char *desc_azr = "Allocate ZRWA Resources (AZR) for Zoned Namespace Command Set";
+static const char *desc_block_count = "number of blocks (zeroes based) on device to access";
+static const char *desc_block_size = "if specified, logical block size in bytes;\n"
+	"discovered by identify namespace otherwise";
+static const char *desc_blocks = "Comma separated list of the number of blocks in each range";
+static const char *desc_bpid = "[0,1]: boot partition identifier, if applicable (default: 0)";
+static const char *desc_bpinfo = "BPINFO=0x40 register offset";
+static const char *desc_bpmbl = "BPMBL=0x48 register offset";
+static const char *desc_bprsel = "BPRSEL=0x44 register offset";
+static const char *desc_bs_create_ns = "target block size, specify only if \'FLBAS\' value not entered";
+static const char *desc_bs_format_cmd = "target block size";
+static const char *desc_buf_len = "buffer len (if) data is sent or received";
+static const char *desc_cap = "CAP=0x0 register offset";
+static const char *desc_cap_lower =
+	"Least significant 32 bits of the capacity in bytes of the Endurance Group or NVM Set to be created";
+static const char *desc_cap_upper =
+	"Most significant 32 bits of the capacity in bytes of the Endurance Group or NVM Set to be created";
+static const char *desc_capacity_mgmt = "Host software uses the Capacity Management command to\n"
+	"configure Endurance Groups and NVM Sets in an NVM subsystem by either\n"
+	"selecting one of a set of supported configurations or by specifying the\n"
+	"capacity of the Endurance Group or NVM Set to be created";
+static const char *desc_cc = "CC=0x14 register offset";
+static const char *desc_cdw10 = "command dword 10 value";
+static const char *desc_cdw11_dsm = "All the command DWORD 11 attributes. Use instead of specifying individual attributes";
+static const char *desc_cdw11_get_feature = "feature specific dword 11";
+static const char *desc_cdw11_passthru = "command dword 11 value";
+static const char *desc_cdw12_passthru = "command dword 12 value";
+static const char *desc_cdw12_set_feature = "feature cdw12, if used";
+static const char *desc_cdw13 = "command dword 13 value";
+static const char *desc_cdw14 = "command dword 14 value";
+static const char *desc_cdw15 = "command dword 15 value";
+static const char *desc_cdw2 = "command dword 2 value";
+static const char *desc_cdw3 = "command dword 3 value";
+static const char *desc_cflags = "command flags";
+static const char *desc_cgen = "Gather report generated by the controller.";
+static const char *desc_changed = "show feature changed";
+static const char *desc_check_dhchap_key =
+	"Check a DH-HMAC-CHAP host key for usability for NVMe In-Band Authentication.";
+static const char *desc_check_tls_key = "Check a TLS key for NVMe PSK Interchange format.\n";
+static const char *desc_cmbebs = "CMBEBS=0x5c register offset";
+static const char *desc_cmbloc = "CMBLOC=0x38 register offset";
+static const char *desc_cmbmsc = "CMBMSC=0x50 register offset";
+static const char *desc_cmbsts = "CMBSTS=0x58 register offset";
+static const char *desc_cmbswtp = "CMBSWTP=0x60 register offset";
+static const char *desc_cmbsz = "CMBSZ=0x3c register offset";
+static const char *desc_cmd_set_independent_id_ns = "Send an I/O Command Set Independent Identify "
+	"Namespace command to the given device, returns properties of the "
+	"specified namespace in human-readable or binary or json format.";
+static const char *desc_cntlid_primary_ctrl_caps = "Controller ID";
+static const char *desc_cntlid_virtual_mgmt = "Controller Identifier(CNTLID)";
+static const char *desc_compare = "Compare specified logical blocks on\n"
+	"device with specified data buffer; return failure if buffer\n"
+	"and block(s) are dissimilar";
+static const char *desc_compat_check_tls_key = "Use non-RFC 8446 compliant algorithm for checking TLS PSK for older implementations.";
+static const char *desc_compat_gen_tls_key = "Use non-RFC 8446 compliant algorithm for deriving TLS PSK for older implementations";
+static const char *desc_context_attrs = "Comma separated list of the context attributes in each range";
+static const char *desc_controller_get_phy_rx_eom_log = "Target Controller ID.";
+static const char *desc_controller_id = "identifier of desired controller";
+static const char *desc_controller_list_ctrl = "controller to display";
+static const char *desc_controller_list_secondary_ctrl = "lowest controller identifier to display";
+static const char *desc_controllers = "optional comma-separated controller id list";
+static const char *desc_copy_cmd = "The Copy command is used by the host to copy data\n"
+	"from one or more source logical block ranges to a\n"
+	"single consecutive destination logical block range.";
+static const char *desc_cptpl = "change persistence through power loss setting";
+static const char *desc_create_ns = "Send a namespace management command "
+	"to the specified device to create a namespace with the given "
+	"parameters. The next available namespace ID is used for the "
+	"create operation. Note that create-ns does not attach the "
+	"namespace to a controller, the attach-ns command is needed.";
+static const char *desc_crkey = "current reservation key";
+static const char *desc_crto = "CRTO=0x68 register offset";
+static const char *desc_csi = "command set identifier";
+static const char *desc_csts = "CSTS=0x1c register offset";
+static const char *desc_d_dspec = "directive specific (write part)";
+static const char *desc_d_dtype = "directive type (write part)";
+static const char *desc_d_eilbrts = "expected lba reference tags (read part, comma-separated list)";
+static const char *desc_d_elbatms = "expected lba application tag masks (read part, comma-separated list)";
+static const char *desc_d_elbats = "expected lba application tags (read part, comma-separated list)";
+static const char *desc_d_format = "source range entry format";
+static const char *desc_d_fua = "force unit access";
+static const char *desc_d_ilbrt = "initial lba reference tag (write part)";
+static const char *desc_d_lbat = "lba application tag (write part)";
+static const char *desc_d_lbatm = "lba application tag mask (write part)";
+static const char *desc_d_lr = "limited retry";
+static const char *desc_d_nlbs = "number of blocks per range (comma-separated list, zeroes-based values)";
+static const char *desc_d_prinfor = "protection information and check field (read part)";
+static const char *desc_d_prinfow = "protection information and check field (write part)";
+static const char *desc_d_sdlba = "64-bit addr of first destination logical block";
+static const char *desc_d_slbas = "64-bit addr of first block per range (comma-separated list)";
+static const char *desc_d_snsids = "source namespace identifier per range (comma-separated list)";
+static const char *desc_d_sopts = "source options per range (comma-separated list)";
+static const char *desc_data_io_mgmt_recv = "optional file for data (default stdout)";
+static const char *desc_data_io_mgmt_send = "optional file for data (default stdin)";
+static const char *desc_data_len = "data I/O length (bytes)";
+static const char *desc_data_set_feature = "optional file for feature data (default stdin)";
+static const char *desc_data_size = "size of data in bytes";
+static const char *desc_data_submit_io = "data file";
+static const char *desc_deac =
+	"Set DEAC bit, requesting controller to deallocate specified logical blocks";
+static const char *desc_delete_ns = "Delete the given namespace by "
+	"sending a namespace management command to "
+	"the provided device. All controllers should be detached from "
+	"the namespace prior to namespace deletion. A namespace ID "
+	"becomes inactive when that namespace is detached or, if "
+	"the namespace is not already inactive, once deleted.";
+static const char *desc_deprecated = "deprecated; does nothing";
+static const char *desc_detach_ns = "Detach the given namespace from the "
+	"given controller; de-activates the given namespace's ID. A "
+	"namespace must be attached to a controller before IO "
+	"commands may be directed to that namespace.";
+static const char *desc_device_self_test = "Implementing the device self-test feature "
+	"which provides the necessary log to determine the state of the device";
+static const char *desc_dgen = "Pick which telemetry data area to report. Default is 3 to fetch areas 1-3. Valid options are 1, 2, 3, 4.";
+static const char *desc_dir_receive = "Read directive parameters of the specified directive type.";
+static const char *desc_dir_send = "Set directive parameters of the specified directive type.";
+static const char *desc_domain_id = "identifier of desired domain";
+static const char *desc_domainid = "Domain Identifier";
+static const char *desc_doper = "directive operation";
+static const char *desc_dps = "data protection settings (DPS)";
+static const char *desc_dsm = "The Dataset Management command is used by the host to\n"
+	"indicate attributes for ranges of logical blocks. This includes attributes\n"
+	"for discarding unused blocks, data read and write frequency, access size, and other\n"
+	"information that may be used to optimize performance and reliability.";
+static const char *desc_dspec = "directive specific (for write-only)";
+static const char *desc_dspec_w_dtype = "directive specification associated with directive type";
+static const char *desc_dst_entries = "Indicate how many DST log entries to be retrieved, "
+	"by default all the 20 entries will be retrieved";
+static const char *desc_dtype = "directive type";
+static const char *desc_dtype_for_write = "directive type (for write-only)";
+static const char *desc_eds = "request extended data structure";
+static const char *desc_element_id = "Value specific to the value of the Operation field.";
+static const char *desc_emvs_desc = "Enter media verification state.";
+static const char *desc_endgid = "Endurance Group Identifier (ENDGID)";
+static const char *desc_endir = "directive enable";
+static const char *desc_endurance_grp_id = "Endurance Group ID";
+static const char *desc_export = "Export all keys from the keyring.";
+static const char *desc_feature_id = "feature identifier";
+static const char *desc_fid = "feature identifier (required)";
+static const char *desc_file = "transfer payload";
+static const char *desc_flbas =
+	"Formatted LBA size (FLBAS), if entering this value ignore \'block-size\' field";
+static const char *desc_flush_cmd = "Commit data and metadata associated with\n"
+	"given namespaces to nonvolatile media. Applies to all commands\n"
+	"finished before the flush was submitted. Additional data may also be\n"
+	"flushed by the controller, from any namespace, depending on controller and\n"
+	"associated namespace status.";
+static const char *desc_fname_get_boot_part_log = "boot partition data output file name";
+static const char *desc_fname_get_telemetry_log = "File name to save raw binary, includes header";
+static const char *desc_force_format_cmd = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
+static const char *desc_force_id_ns = "Return this namespace, even if not attached (1.2 devices only)";
+static const char *desc_force_submit_io = "The \"I know what I'm doing\" flag, do not enforce exclusive access for write";
+static const char *desc_force_unit_access = "force device to commit data before command completes";
+static const char *desc_force_unit_access_verify =
+	"force device to commit cached data before performing the verify operation";
+static const char *desc_format_cmd = "Re-format a specified namespace on the\n"
+	"given device. Can erase all data in namespace (user\n"
+	"data erase) or delete data encryption key if specified.\n"
+	"Can also be used to change LBAF to change the namespaces reported physical block format.";
+static const char *desc_fw = "firmware file (required)";
+static const char *desc_fw_commit = "Verify downloaded firmware image and "
+	"commit to specific firmware slot. Device is not automatically "
+	"reset following firmware activation. A reset may be issued "
+	"with an 'echo 1 > /sys/class/nvme/nvmeX/reset_controller'. "
+	"Ensure nvmeX is the device you just activated before reset.";
+static const char *desc_fw_download = "Copy all or part of a firmware image to "
+	"a controller for future update. Optionally, specify how "
+	"many KiB of the firmware to transfer at once. The offset will "
+	"start at 0 and automatically adjust based on xfer size "
+	"unless fw is split across multiple files. May be submitted "
+	"while outstanding commands exist on the Admin and IO "
+	"Submission Queues. Activate downloaded firmware with "
+	"fw-activate, and then reset the device to apply the downloaded firmware.";
+static const char *desc_gen_dhchap_key =
+	"Generate a DH-HMAC-CHAP host key usable for NVMe In-Band Authentication.";
+static const char *desc_gen_tls_key = "Generate a TLS key in NVMe PSK Interchange format.";
+static const char *desc_get_ana_log = "Retrieve ANA log for the given device in "
+	"decoded format (default), json or binary.";
+static const char *desc_get_ave_discovery_log = "Retrieve AVE Discovery Log, show it";
+static const char *desc_get_boot_part_log = "Retrieve Boot Partition "
+	"log page and prints it, for the given "
+	"device in either decoded format(default), json or binary.";
+static const char *desc_get_dispersed_ns_participating_nss_log = "Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it";
+static const char *desc_get_effects_log = "Retrieve command effects log page and print the table.";
+static const char *desc_get_endurance_event_agg_log = "Retrieve Retrieve Predictable Latency "
+	"Event Aggregate page and prints it, for the given "
+	"device in either decoded format(default), json or binary.";
+static const char *desc_get_endurance_log = "Retrieves endurance groups log page and prints the log.";
+static const char *desc_get_error_log = "Retrieve specified number of "
+	"error log entries from a given device "
+	"in either decoded format (default) or binary.";
+static const char *desc_get_feature = "Read operating parameters of the "
+	"specified controller. Operating parameters are grouped "
+	"and identified by Feature Identifiers; each Feature "
+	"Identifier contains one or more attributes that may affect "
+	"behavior of the feature. Each Feature has three possible "
+	"settings: default, saveable, and current. If a Feature is "
+	"saveable, it may be modified by set-feature. Default values "
+	"are vendor-specific and not changeable. Use set-feature to "
+	"change saveable Features.";
+static const char *desc_get_fid_support_effects_log = "Retrieve FID Support and Effects log and show it.";
+static const char *desc_get_fw_log = "Retrieve the firmware log for the "
+	"specified device in either decoded format (default) or binary.";
+static const char *desc_get_host_discovery_log = "Retrieve Host Discovery Log, show it";
+static const char *desc_get_lba_status = "Information about potentially unrecoverable LBAs.";
+static const char *desc_get_lba_status_log = "Retrieve Get LBA Status Info Log and prints it, "
+	"for the given device in either decoded format(default),json or binary.";
+static const char *desc_get_log = "Retrieve desired number of bytes "
+	"from a given log on a specified device in either "
+	"hex-dump (default) or binary format";
+static const char *desc_get_media_unit_stat_log = "Retrieve the configuration and wear of media units and print it";
+static const char *desc_get_mgmt_addr_list_log = "Retrieve Management Address List Log, show it";
+static const char *desc_get_mi_cmd_support_effects_log = "Retrieve NVMe-MI Command Support and Effects log and show it.";
+static const char *desc_get_ns_id = "Get namespace ID of a the block device.";
+static const char *desc_get_persistent_event_log = "Retrieve Persistent Event log info for "
+	"the given device in either decoded format(default), json or binary.";
+static const char *desc_get_phy_rx_eom_log = "Retrieve Physical Interface Receiver Eye Opening "
+	"Measurement log for the given device in decoded format "
+	"(default), json or binary.";
+static const char *desc_get_power_measurement_log = "Retrieve Power Measurement Log (Log ID 0x25) "
+	"for the given device in either decoded format (default), "
+	"json, or binary.";
+static const char *desc_get_pred_lat_event_agg_log = "Retrieve Predictable Latency Event "
+	"Aggregate Log page and prints it, for the given "
+	"device in either decoded format(default), json or binary.";
+static const char *desc_get_pred_lat_per_nvmset_log = "Retrieve Predictable latency per nvm set log "
+	"page and prints it for the given device in either decoded "
+	"format(default),json or binary.";
+static const char *desc_get_property = "Reads and shows the defined NVMe controller property\n"
+	"for NVMe over Fabric. Property offset must be one of:\n"
+	"CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20, NSSD=0x64, CRTO=0x68";
+static const char *desc_get_pull_model_ddc_req_log = "Retrieve Pull Model DDC Request Log, show it";
+static const char *desc_get_reachability_associations_log = "Retrieve Reachability Associations Log, show it";
+static const char *desc_get_reachability_groups_log = "Retrieve Reachability Groups Log, show it";
+static const char *desc_get_register = "Reads and shows the defined NVMe controller register.\n"
+	"Register offset must be one of:\n"
+	"CAP=0x0, VS=0x8, INTMS=0xc, INTMC=0x10, CC=0x14, CSTS=0x1c,\n"
+	"NSSR=0x20, AQA=0x24, ASQ=0x28, ACQ=0x30, CMBLOC=0x38,\n"
+	"CMBSZ=0x3c, BPINFO=0x40, BPRSEL=0x44, BPMBL=0x48, CMBMSC=0x50,\n"
+	"CMBSTS=0x58, CRTO=0x68, PMRCAP=0xe00, PMRCTL=0xe04,\n"
+	"PMRSTS=0xe08, PMREBS=0xe0c, PMRSWTP=0xe10, PMRMSCL=0xe14, PMRMSCU=0xe18";
+static const char *desc_get_resv_notif_log = "Retrieve Reservation Notification "
+	"log page and prints it, for the given "
+	"device in either decoded format(default), json or binary.";
+static const char *desc_get_rotational_media_info_log = "Retrieve Rotational Media Information Log, show it";
+static const char *desc_get_smart_log = "Retrieve SMART log for the given device "
+	"(or optionally a namespace) in either decoded format "
+	"(default) or binary.";
+static const char *desc_get_supp_cap_config_log = "Retrieve the list of Supported Capacity Configuration Descriptors";
+static const char *desc_get_supported_log_pages = "Retrieve supported logs and print the table.";
+static const char *desc_get_telemetry_log = "Retrieve telemetry log and write to binary file";
+static const char *desc_group_id = "The endurance group identifier";
+static const char *desc_groups = "Return ANA groups only.";
+static const char *desc_hgen = "Have the host tell the controller to generate the report";
+static const char *desc_hmac_gen_dhchap_key =
+	"HMAC function to use for key transformation (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).";
+static const char *desc_hmac_gen_tls_key = "HMAC function to use for the retained key (1 = SHA-256, 2 = SHA-384).";
+static const char *desc_hostnqn = "Host NQN for the retained key.";
+static const char *desc_human_readable_directive = "show directive in readable format";
+static const char *desc_human_readable_get_feature = "show feature in readable format";
+static const char *desc_human_readable_get_property = "show property in readable format";
+static const char *desc_human_readable_get_register = "show register in readable format";
+static const char *desc_human_readable_id_uuid = "show uuid in readable format";
+static const char *desc_human_readable_identify = "show identify in readable format";
+static const char *desc_human_readable_info = "show info in readable format";
+static const char *desc_human_readable_log = "show log in readable format";
+static const char *desc_human_readable_show_registers =
+	"show info in readable format in case of output_format == normal";
+static const char *desc_id_domain = "Send an Identify Domain List command to the "
+	"given device, returns properties of the specified domain "
+	"in either normal|json|binary format.";
+static const char *desc_id_endurance_grp_list = "Show endurance group list information for the given endurance group id";
+static const char *desc_id_iocs = "Send an Identify Command Set Data command to "
+	"the given device, returns properties of the specified controller "
+	"in either human-readable or binary format.";
+static const char *desc_id_ns = "Send an Identify Namespace command to the "
+	"given device, returns properties of the specified namespace "
+	"in either human-readable or binary format. Can also return "
+	"binary vendor-specific namespace attributes.";
+static const char *desc_id_ns_granularity = "Send an Identify Namespace Granularity List command to the "
+	"given device, returns namespace granularity list "
+	"in either human-readable or binary format.";
+static const char *desc_id_ns_lba_format = "Send an Identify Namespace command to the given "
+	"device, returns capability field properties of the specified "
+	"LBA Format index in  various formats.";
+static const char *desc_id_nvmset = "Send an Identify NVM Set List command to the "
+	"given device, returns entries for NVM Set identifiers greater "
+	"than or equal to the value specified CDW11.NVMSETID "
+	"in either binary format or json format";
+static const char *desc_id_uuid = "Send an Identify UUID List command to the "
+	"given device, returns list of supported Vendor Specific UUIDs "
+	"in either human-readable or binary format.";
+static const char *desc_identity = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)";
+static const char *desc_idr = "Attribute Integral Dataset for Read";
+static const char *desc_idw = "Attribute Integral Dataset for Write";
+static const char *desc_iekey = "ignore existing res. key";
+static const char *desc_ifc_desc =
+	"[0-3] Interface (INF) field identifies the interfaces affected by this command.";
+static const char *desc_ignore_ovr = "ignore overwrite errors";
+static const char *desc_import = "Import all keys into the keyring.";
+static const char *desc_input_dir_send = "write/send file (default stdin)";
+static const char *desc_input_passthru = "data input or output file";
+static const char *desc_insert = "Insert retained key into the keyring.";
+static const char *desc_intmc = "INTMC=0x10 register offset";
+static const char *desc_intms = "INTMS=0xc register offset";
+static const char *desc_io_mgmt_recv = "I/O Management Receive";
+static const char *desc_io_mgmt_send = "I/O Management Send";
+static const char *desc_io_passthru =
+	"Send a user-defined IO command to the specified device via IOCTL passthrough, return results.";
+static const char *desc_ish = "Ignore Shutdown (for NVMe-MI command)";
+static const char *desc_key = "DH-HMAC-CHAP key (in hexadecimal characters) to be validated.";
+static const char *desc_key_len = "Length of the resulting key (32, 48, or 64 bytes).";
+static const char *desc_keydata = "TLS key (in PSK Interchange format) to be validated.";
+static const char *desc_keyfile_gen_tls_key = "Update key file with the derive TLS PSK.";
+static const char *desc_keyfile_tls_key = "File for list of keys.";
+static const char *desc_keyring = "Keyring for the retained key.";
+static const char *desc_keytype = "Key type of the retained key.";
+static const char *desc_latency = "output latency statistics";
+static const char *desc_lba_format_index = "The index into the LBA Format list\n"
+	"identifying the LBA Format capabilities that are to be returned";
+static const char *desc_lbaf = "LBA format to apply (required)";
+static const char *desc_lbstm = "logical block storage tag mask (LBSTM)";
+static const char *desc_limited_retry = "limit media access attempts";
+static const char *desc_limited_retry_num = "limit num. media access attempts";
+static const char *desc_list = "Retrieve basic information for all NVMe namespaces";
+static const char *desc_list_ctrl = "Show controller list information for the subsystem the "
+	"given device is part of, or optionally controllers attached to a specific namespace.";
+static const char *desc_list_ns = "For the specified controller handle, show the "
+	"namespace list in the associated NVMe subsystem, optionally starting with a given nsid.";
+static const char *desc_list_secondary_ctrl =
+	"Show secondary controller list associated with the primary controller of the given device.";
+static const char *desc_list_subsys = "Retrieve information for subsystems";
+static const char *desc_lockdown_cmd = "The Lockdown command is used to control the\n"
+	"Command and Feature Lockdown capability which configures the\n"
+	"prohibition or allowance of execution of the specified command\n"
+	"or Set Features command targeting a specific Feature Identifier.";
+static const char *desc_log_entries_get_endurance_event_agg_log = "Number of pending Endurance Group Event log Entries list";
+static const char *desc_log_entries_get_error_log = "number of entries to retrieve";
+static const char *desc_log_entries_get_pred_lat_event_agg_log = "Number of pending NVM Set log Entries list";
+static const char *desc_log_id = "identifier of log to retrieve";
+static const char *desc_log_len_get_log = "how many bytes to retrieve";
+static const char *desc_log_len_get_persistent_event_log = "number of bytes to retrieve";
+static const char *desc_lpo = "log page offset specifies the location within a log page from where to start returning data";
+static const char *desc_lsi = "log specific identifier specifies an identifier that is required for a particular log page";
+static const char *desc_lsp = "log specific field";
+static const char *desc_mcda = "Host-init Maximum Created Data Area. Valid options are 0 ~ 4 "
+	"If given, This option will override dgen. 0 : controller determines data area";
+static const char *desc_metadata_len = "metadata seg. length (bytes)";
+static const char *desc_metadata_passthru = "metadata input or output file";
+static const char *desc_metadata_size = "size of metadata in bytes";
+static const char *desc_metadata_submit_io = "metadata file";
+static const char *desc_mmio32 = "Access 64-bit registers as 2 32-bit";
+static const char *desc_mndw =
+	"Maximum Number of Dwords(MNDW) specifies maximum number of dwords to return";
+static const char *desc_mo = "management operation";
+static const char *desc_mos = "management operation specific";
+static const char *desc_mset = "[0-1]: extended format off/on";
+static const char *desc_namespace = "(optional) desired namespace";
+static const char *desc_namespace_desired = "desired namespace";
+static const char *desc_namespace_id_attach = "namespace to attach";
+static const char *desc_namespace_id_delete = "namespace to delete";
+const char *desc_namespace_id_desired = "identifier of desired namespace";
+static const char *desc_namespace_id_device_self_test =
+	"Indicate the namespace in which the device self-test has to be carried out";
+static const char *desc_namespace_id_list_ns = "first nsid returned list should start from";
+static const char *desc_namespace_id_optional = "optional namespace attached to controller";
+static const char *desc_ncap = "capacity of ns (NCAP)";
+static const char *desc_ncap_si = "capacity of ns (NCAP) in standard SI units";
+static const char *desc_nmd0 = "nvme management dword 0 value";
+static const char *desc_nmd1 = "nvme management dword 1 value";
+static const char *desc_nmi_recv =
+	"Send a NVMe-MI Receive command to the specified device, return results.";
+static const char *desc_nmi_send = "Send a NVMe-MI Send command to the specified device, return results.";
+static const char *desc_nmic = "multipath and sharing capabilities (NMIC)";
+static const char *desc_nmimt = "nvme-mi message type";
+static const char *desc_no_dealloc_desc = "No deallocate after sanitize.";
+static const char *desc_nphndls = "Number of Placement Handles (NPHNDLS)";
+static const char *desc_nqn = "Host NQN to use for key transformation.";
+static const char *desc_nr = "Number of Controller Resources(NR)";
+static const char *desc_nrkey = "new reservation key";
+static const char *desc_ns_descs = "Send Namespace Identification Descriptors command to the "
+	"given device, returns the namespace identification descriptors "
+	"of the specific namespace in either human-readable or binary format.";
+static const char *desc_ns_rescan = "Rescans the NVMe namespaces\n";
+static const char *desc_nsr = "namespace stream requested";
+static const char *desc_nssd = "NSSD=0x64 register offset";
+static const char *desc_nssf = "NVMe Security Specific Field";
+static const char *desc_nssr = "NSSR=0x20 register offset";
+static const char *desc_nsz = "Clear all logical blocks to zero in the entire namespace";
+static const char *desc_nsze = "size of ns (NSZE)";
+static const char *desc_nsze_si = "size of ns (NSZE) in standard SI units";
+static const char *desc_num_entries = "number of entries to retrieve";
+static const char *desc_numd = "number of dwords to transfer";
+static const char *desc_nvm_id_ctrl = "Send an Identify Controller NVM Command Set "
+	"command to the given device and report information about "
+	"the specified controller in various formats.";
+static const char *desc_nvm_id_ns = "Send an Identify Namespace NVM Command Set "
+	"command to the given device and report information about "
+	"the specified namespace in various formats.";
+static const char *desc_nvm_id_ns_lba_format = "Send an NVM Command Set specific Identify Namespace "
+	"command to the given device, returns capability field properties of "
+	"the specified LBA Format index in the specified namespace in various formats.";
+static const char *desc_nvmset_id_get_pred_lat_per_nvmset_log = "NVM Set Identifier";
+static const char *desc_nvmset_id_id_nvmset = "NVM Set Identify value";
+static const char *desc_nvmsetid = "NVM Set Identifier (NVMSETID)";
+static const char *desc_offset = "offset of the requested register";
+static const char *desc_offset_type = "offset type";
+static const char *desc_ofi_desc = "Opcode or Feature Identifier (OFI)\n"
+	"specifies the command opcode or Set Features Feature Identifier\n"
+	"identified by the Scope field.";
+static const char *desc_oipbp_desc = "Overwrite invert pattern between passes.";
+static const char *desc_only_ctrl_dev = "Only controller device is allowed";
+static const char *desc_opcode = "opcode (required)";
+static const char *desc_operation = "Operation to be performed by the controller";
+static const char *desc_ovrpat_desc = "Overwrite pattern.";
+static const char *desc_owpass_desc = "Overwrite pass count.";
+static const char *desc_phndls = "Comma separated list of Placement Handle Associated RUH";
+static const char *desc_pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
+static const char *desc_pil = "[0-1]: protection info location last/first bytes of metadata";
+static const char *desc_pmrcap = "PMRCAP=0xe00 register offset";
+static const char *desc_pmrctl = "PMRCTL=0xe04 register offset";
+static const char *desc_pmrebs = "PMREBS=0xe0c register offset";
+static const char *desc_pmrmscl = "PMRMSCL=0xe14 register offset";
+static const char *desc_pmrmscu = "PMRMSCU=0xe18 register offset";
+static const char *desc_pmrsts = "PMRSTS=0xe08 register offset";
+static const char *desc_pmrswtp = "PMRSWTP=0xe10 register offset";
+static const char *desc_prefill = "prefill buffers with known byte-value, default 0";
+static const char *desc_prhbt_desc = "[0-1]Prohibit(PRHBT) bit specifies whether\n"
+	"to prohibit or allow the command opcode or Set Features Feature\n"
+	"Identifier specified by this command.";
+static const char *desc_primary_ctrl_caps = "Send an Identify Primary Controller Capabilities "
+	"command to the given device and report the information in a "
+	"decoded format (default), json or binary.";
+static const char *desc_prinfo = "PI and check field";
+static const char *desc_prkey = "pre-empt reservation key";
+static const char *desc_progress = "display firmware transfer progress";
+static const char *desc_racqa = "reservation acquire action";
+static const char *desc_rae = "Retain an Asynchronous Event";
+static const char *desc_ranking = "Ranking order: namespace|ctrl|multipath";
+static const char *desc_rao = "Return Associations Only";
+static const char *desc_rar = "Requested Active Resources (RAR) for Zoned Namespace Command Set";
+static const char *desc_raw_directive = "show directive in binary format";
+static const char *desc_raw_dump = "dump output in binary format";
+static const char *desc_raw_get_error_log = "dump in binary format";
+static const char *desc_raw_get_feature = "show feature in binary format";
+static const char *desc_raw_get_log = "output in raw format";
+static const char *desc_raw_id_uuid = "show uuid in binary format";
+static const char *desc_raw_identify = "show identify in binary format";
+static const char *desc_raw_log = "show log in binary format";
+static const char *desc_raw_ns_descs = "show descriptors in binary format";
+static const char *desc_raw_output = "output in binary format";
+static const char *desc_raw_use = "use binary output";
+static const char *desc_re = "set dataflow direction to receive";
+static const char *desc_read_cmd = "Copy specified logical blocks on the given\n"
+	"device to specified data buffer (default buffer is stdout).";
+static const char *desc_ref_tag = "reference tag for end-to-end PI";
+static const char *desc_reset = "Resets the NVMe controller\n";
+static const char *desc_resv_acquire = "Obtain a reservation on a given\n"
+	"namespace. Only one reservation is allowed at a time on a\n"
+	"given namespace, though multiple controllers may register\n"
+	"with that namespace. Namespace reservation will abort with\n"
+	"status Reservation Conflict if the given namespace is already reserved.";
+static const char *desc_resv_register = "Register, de-register, or\n"
+	"replace a controller's reservation on a given namespace.\n"
+	"Only one reservation at a time is allowed on any namespace.";
+static const char *desc_resv_release = "Releases reservation held on a\n"
+	"namespace by the given controller. If rtype != current reservation\n"
+	"type, release will fails. If the given controller holds no\n"
+	"reservation on the namespace or is not the namespace's current\n"
+	"reservation holder, the release command completes with no\n"
+	"effect. If the reservation type is not Write Exclusive or\n"
+	"Exclusive Access, all registrants on the namespace except\n"
+	"the issuing controller are notified.";
+static const char *desc_resv_report = "Returns Reservation Status data\n"
+	"structure describing any existing reservations on and the\n"
+	"status of a given namespace. Namespace Reservation Status\n"
+	"depends on the number of controllers registered for that namespace.";
+static const char *desc_revoke = "Revoke key from the keyring.";
+static const char *desc_rgo = "Return Groups Only";
+static const char *desc_rl =
+	"Range Length(RL) specifies the length of the range of contiguous LBAs beginning at SLBA";
+static const char *desc_rnumzrwa =
+	"Requested Number of ZRWA Resources (RNUMZRWA) for Zoned Namespace Command Set";
+static const char *desc_ror = "Requested Open Resources (ROR) for Zoned Namespace Command Set";
+static const char *desc_rrega = "reservation registration action";
+static const char *desc_rrela = "reservation release action";
+static const char *desc_rsvd = "value for reserved field";
+static const char *desc_rt = "Resource Type(RT): [0,1]\n"
+	"0h: VQ Resources\n"
+	"1h: VI Resources";
+static const char *desc_rtype = "reservation type";
+static const char *desc_sanact_desc_sanitize_cmd = "Sanitize action: 1 = Exit failure mode, 2 = Start block erase,"
+	"3 = Start overwrite, 4 = Start crypto erase, 5 = Exit media verification";
+static const char *desc_sanact_desc_sanitize_ns_cmd = "Sanitize action: 1 = Exit failure mode,\n"
+	"4 = Start a crypto erase namespace sanitize operation,\n"
+	"5 = Exit media verification state";
+static const char *desc_sanitize_cmd = "Send a sanitize command.";
+static const char *desc_sanitize_log = "Retrieve sanitize log and show it.";
+static const char *desc_sanitize_ns_cmd = "Send a sanitize namespace command.";
+static const char *desc_scp_desc =
+	"[0-15]Scope(SCP) field specifies the contents of the Opcode or Feature Identifier field.";
+static const char *desc_sec_recv = "Obtain results of one or more\n"
+	"previously submitted security-sends. Results, and association\n"
+	"between Security Send and Receive, depend on the security\n"
+	"protocol field as they are defined by the security protocol\n"
+	"used. A Security Receive must follow a Security Send made with\n"
+	"the same security protocol.";
+static const char *desc_sec_send = "Transfer security protocol data to\n"
+	"a controller. Security Receives for the same protocol should be\n"
+	"performed after Security Sends. The security protocol field\n"
+	"associates Security Sends (security-send) and Security Receives (security-recv).";
+static const char *desc_secp = "security protocol (cf. SPC-4)";
+static const char *desc_secret_gen_dhchap_key =
+	"Optional secret (in hexadecimal characters) to be used to initialize the host key.";
+static const char *desc_secret_gen_tls_key =
+	"Optional secret (in hexadecimal characters) to be used for the TLS key.";
+static const char *desc_sel = "[0-3]: current/default/saved/supported";
+static const char *desc_self_test_code =
+	"This field specifies the action taken by the device self-test command :\n"
+	"0h Show current state of device self-test operation\n"
+	"1h Start a short device self-test operation\n"
+	"2h Start a extended device self-test operation\n"
+	"3h Start a Host-Initiated Refresh operation\n"
+	"eh Start a vendor specific device self-test operation\n"
+	"fh Abort the device self-test operation";
+static const char *desc_self_test_log = "Retrieve the self-test log for the given device and given test "
+	"(or optionally a namespace) in either decoded format (default) or binary.";
+static const char *desc_ses = "[0-2]: secure erase";
+static const char *desc_set_feature = "Modify the saveable or changeable "
+	"current operating parameters of the controller. "
+	"Operating parameters are grouped and identified by Feature"
+	"Identifiers. Feature settings can be applied to the entire"
+	"controller and all associated namespaces, or to only a few"
+	"namespace(s) associated with the controller. Default values"
+	"for each Feature are vendor-specific and may not be modified."
+	"Use get-feature to determine which Features are supported by"
+	"the controller and are saveable/changeable.";
+static const char *desc_set_property =
+	"Writes and shows the defined NVMe controller property for NVMe over Fabric";
+static const char *desc_set_register = "Writes and shows the defined NVMe controller register";
+static const char *desc_show_passthru = "print command before sending";
+static const char *desc_show_registers = "Reads and shows the defined NVMe controller registers\n"
+	"in binary or human-readable format";
+static const char *desc_show_submit_io = "show command before sending";
+static const char *desc_show_topology_cmd = "Show the topology\n";
+static const char *desc_size = "size of buffer (prints to stdout on success)";
+static const char *desc_slba =
+	"Starting LBA(SLBA) in 64-bit address of the first logical block addressed by this command";
+static const char *desc_slot = "[0-7]: firmware slot for commit action";
+static const char *desc_spsp = "security-protocol-specific (cf. SPC-4)";
+static const char *desc_start_block = "64-bit LBA of first block to access";
+static const char *desc_start_block_addr = "64-bit addr of first block to access";
+static const char *desc_starting_blocks = "Comma separated list of the starting block in each range";
+static const char *desc_storage_tag = "storage tag for end-to-end PI";
+static const char *desc_storage_tag_check = "This bit specifies if the Storage Tag field shall be checked as\n"
+	"part of end-to-end data protection processing";
+static const char *desc_subsysnqn = "Subsystem NQN for the retained key.";
+static const char *desc_subsystem_reset = "Resets the NVMe subsystem";
+static const char *desc_sv = "specifies that the controller shall save the attribute";
+static const char *desc_tl = "transfer length (cf. SPC-4)";
+static const char *desc_tls_key = "Manipulation of TLS keys.\n";
+static const char *desc_ttype = "target directive type to be enabled/disabled";
+static const char *desc_uuid_desc = "UUID Index - If this field is set to a non-zero\n"
+	"value, then the value of this field is the index of a UUID in the UUID\n"
+	"List that is used by the command.If this field is cleared to 0h,\n"
+	"then no UUID index is specified";
+const char *desc_uuid_index = "UUID index";
+static const char *desc_uuid_index_specify = "specify uuid index";
+static const char *desc_value_set_feature = "new value of feature (required)";
+static const char *desc_value_set_property = "the value of the property to be set";
+static const char *desc_value_set_register = "the value of the register to be set";
+static const char *desc_vendor_specific___id_ctrl = "dump binary vendor field";
+static const char *desc_vendor_specific_id_ns = "dump binary vendor fields";
+static const char *desc_verify_cmd = "Verify specified logical blocks on the given device.";
+static const char *desc_version = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0";
+static const char *desc_virtual_mgmt = "The Virtualization Management command is supported by primary controllers "
+	"that support the Virtualization Enhancements capability. This command is used for:\n"
+	"  1. Modifying Flexible Resource allocation for the primary controller\n"
+	"  2. Assigning Flexible Resources for secondary controllers\n"
+	"  3. Setting the Online and Offline state for secondary controllers";
+static const char *desc_vs = "VS=0x8 register offset";
+static const char *desc_wait = "Wait for the test to finish";
+static const char *desc_wr = "set dataflow direction to send";
+static const char *desc_write_cmd = "Copy from provided data buffer (default\n"
+	"buffer is stdin) to specified logical blocks on the given device.";
+static const char *desc_write_uncor =
+	"The Write Uncorrectable command is used to set a range of logical blocks to invalid.";
+static const char *desc_write_zeroes =
+	"The Write Zeroes command is used to set a range of logical blocks to zero.";
+static const char *desc_xfer = "transfer chunksize limit";
+static const char *desc_xfer_len = "read chunk size (default 4k)";
+
+#ifdef CONFIG_FABRICS
+static const char *desc_config_cmd = "Configuration of NVMeoF subsystems";
+static const char *desc_connect_all_cmd = "Discover NVMeoF subsystems and connect to them";
+static const char *desc_connect_cmd = "Connect to NVMeoF subsystem";
+static const char *desc_dim_cmd = "Send Discovery Information Management command to a Discovery Controller (DC)";
+static const char *desc_disconnect_all_cmd = "Disconnect from all connected NVMeoF subsystems";
+static const char *desc_disconnect_cmd = "Disconnect from NVMeoF subsystem";
+static const char *desc_discover_cmd = "Send Get Log Page request to Discovery Controller.";
+#endif
+
 
 struct nvme_args nvme_args = {
 	.output_format = "normal",
@@ -488,14 +1065,9 @@ bool nvme_is_output_format_json(void)
 
 static int get_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve SMART log for the given device "
-		"(or optionally a namespace) in either decoded format "
-		"(default) or binary.";
-
 	__cleanup_free struct nvme_smart_log *smart_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	const char *namespace = "(optional) desired namespace";
 	nvme_print_flags_t flags;
 	int err = -1;
 
@@ -512,11 +1084,11 @@ static int get_smart_log(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_output),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
+		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   desc_namespace),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     desc_raw_output),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_info));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_smart_log, opts);
 	if (err)
 		return err;
 
@@ -551,10 +1123,6 @@ static int get_smart_log(int argc, char **argv, struct command *acmd, struct plu
 static int get_ana_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
-	const char *desc = "Retrieve ANA log for the given device in "
-		"decoded format (default), json or binary.";
-	const char *groups = "Return ANA groups only.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free struct nvme_id_ctrl *ctrl = NULL;
@@ -573,10 +1141,10 @@ static int get_ana_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("groups", 'g', &cfg.groups, groups));
+		  OPT_FLAG("groups", 'g', &cfg.groups, desc_groups));
 
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_ana_log, opts);
 	if (err)
 		return err;
 
@@ -809,14 +1377,6 @@ static int __get_telemetry_log_host(struct libnvme_transport_handle *hdl,
 static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 			     struct plugin *plugin)
 {
-	const char *desc = "Retrieve telemetry log and write to binary file";
-	const char *fname = "File name to save raw binary, includes header";
-	const char *hgen = "Have the host tell the controller to generate the report";
-	const char *cgen = "Gather report generated by the controller.";
-	const char *dgen = "Pick which telemetry data area to report. Default is 3 to fetch areas 1-3. Valid options are 1, 2, 3, 4.";
-	const char *mcda = "Host-init Maximum Created Data Area. Valid options are 0 ~ 4 "
-		"If given, This option will override dgen. 0 : controller determines data area";
-
 	__cleanup_free struct nvme_telemetry_log *log = NULL;
 	__cleanup_free struct nvme_id_ctrl *id_ctrl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -848,15 +1408,15 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FILE("output-file",     'O', &cfg.file_name, fname),
-		  OPT_UINT("host-generate",   'g', &cfg.host_gen,  hgen),
-		  OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, cgen),
-		  OPT_UINT("data-area",       'd', &cfg.data_area, dgen),
-		  OPT_FLAG("rae",             'r', &cfg.rae,       rae),
-		  OPT_BYTE("mcda",            'm', &cfg.mcda,      mcda));
+		  OPT_FILE("output-file",     'O', &cfg.file_name, desc_fname_get_telemetry_log),
+		  OPT_UINT("host-generate",   'g', &cfg.host_gen,  desc_hgen),
+		  OPT_FLAG("controller-init", 'c', &cfg.ctrl_init, desc_cgen),
+		  OPT_UINT("data-area",       'd', &cfg.data_area, desc_dgen),
+		  OPT_FLAG("rae",             'r', &cfg.rae,       desc_rae),
+		  OPT_BYTE("mcda",            'm', &cfg.mcda,      desc_mcda));
 
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_telemetry_log, opts);
 	if (err)
 		return err;
 
@@ -978,9 +1538,6 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 
 static int get_endurance_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieves endurance groups log page and prints the log.";
-	const char *group_id = "The endurance group identifier";
-
 	__cleanup_free struct nvme_endurance_group_log *endurance_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -996,10 +1553,10 @@ static int get_endurance_log(int argc, char **argv, struct command *acmd, struct
 	};
 
 	NVME_ARGS(opts,
-		  OPT_SHRT("group-id",     'g', &cfg.group_id,      group_id));
+		  OPT_SHRT("group-id",     'g', &cfg.group_id,      desc_group_id));
 
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_endurance_log, opts);
 	if (err)
 		return err;
 
@@ -1048,8 +1605,6 @@ static int collect_effects_log(struct libnvme_transport_handle *hdl, enum nvme_c
 
 static int get_effects_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve command effects log page and print the table.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -1074,12 +1629,12 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
-		  OPT_INT("csi",             'c', &cfg.csi,            csi));
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_log),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     desc_raw_log),
+		  OPT_INT("csi",             'c', &cfg.csi,            desc_csi));
 
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_effects_log, opts);
 	if (err)
 		return err;
 
@@ -1144,8 +1699,6 @@ cleanup_list:
 static int get_supported_log_pages(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin)
 {
-	const char *desc = "Retrieve supported logs and print the table.";
-
 	__cleanup_free struct nvme_supported_log_pages *supports = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -1154,7 +1707,7 @@ static int get_supported_log_pages(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_supported_log_pages, opts);
 	if (err)
 		return err;
 
@@ -1185,12 +1738,6 @@ static int get_supported_log_pages(int argc, char **argv, struct command *acmd,
 
 static int get_error_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve specified number of "
-		"error log entries from a given device "
-		"in either decoded format (default) or binary.";
-	const char *log_entries = "number of entries to retrieve";
-	const char *raw = "dump in binary format";
-
 	__cleanup_free struct nvme_error_log_page *err_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -1209,10 +1756,10 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
+		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   desc_log_entries_get_error_log),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    desc_raw_get_error_log));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_error_log, opts);
 	if (err)
 		return err;
 
@@ -1258,9 +1805,6 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 
 static int get_fw_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve the firmware log for the "
-		"specified device in either decoded format (default) or binary.";
-
 	__cleanup_free struct nvme_firmware_slot *fw_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -1276,9 +1820,9 @@ static int get_fw_log(int argc, char **argv, struct command *acmd, struct plugin
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    desc_raw_use));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_fw_log, opts);
 	if (err)
 		return err;
 
@@ -1324,7 +1868,7 @@ static int get_changed_ns_list_log(int argc, char **argv, bool alloc)
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_output));
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    desc_raw_output));
 
 	if (asprintf(&desc, "Retrieve Changed %s Namespaces log for the given device %s",
 		     alloc ? "Allocated" : "Attached",
@@ -1382,11 +1926,6 @@ static int get_changed_alloc_ns_list_log(int argc, char **argv, struct command *
 static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 	struct command *command, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Predictable latency per nvm set log "
-		"page and prints it for the given device in either decoded "
-		"format(default),json or binary.";
-	const char *nvmset_id = "NVM Set Identifier";
-
 	__cleanup_free struct nvme_nvmset_predictable_lat_log *plpns_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -1404,10 +1943,10 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_SHRT("nvmset-id",	   'i', &cfg.nvmset_id,     nvmset_id),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+		  OPT_SHRT("nvmset-id",	   'i', &cfg.nvmset_id,     desc_nvmset_id_get_pred_lat_per_nvmset_log),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    desc_raw_use));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_pred_lat_per_nvmset_log, opts);
 	if (err)
 		return err;
 
@@ -1440,11 +1979,6 @@ static int get_pred_lat_per_nvmset_log(int argc, char **argv,
 static int get_pred_lat_event_agg_log(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Predictable Latency Event "
-		"Aggregate Log page and prints it, for the given "
-		"device in either decoded format(default), json or binary.";
-	const char *log_entries = "Number of pending NVM Set log Entries list";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free struct nvme_id_ctrl *ctrl = NULL;
@@ -1466,11 +2000,11 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
-		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   desc_log_entries_get_pred_lat_event_agg_log),
+		  OPT_FLAG("rae",          'r', &cfg.rae,           desc_rae),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    desc_raw_use));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_pred_lat_event_agg_log, opts);
 	if (err)
 		return err;
 
@@ -1522,12 +2056,6 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 static int get_persistent_event_log(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Persistent Event log info for "
-		"the given device in either decoded format(default), json or binary.";
-	const char *action = "action the controller shall take during "
-		"processing this persistent log page command.";
-	const char *log_len = "number of bytes to retrieve";
-
 	__cleanup_free struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
 	__cleanup_huge struct nvme_mem_huge mh = { 0, };
@@ -1550,11 +2078,11 @@ static int get_persistent_event_log(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_BYTE("action",       'a', &cfg.action,        action),
-		  OPT_UINT("log_len",	 'l', &cfg.log_len,	  log_len),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+		  OPT_BYTE("action",     'a', &cfg.action,        desc_action_get_persistent_event_log),
+		  OPT_UINT("log_len",	 'l', &cfg.log_len,	  desc_log_len_get_persistent_event_log),
+		  OPT_FLAG("raw-binary", 'b', &cfg.raw_binary,    desc_raw_use));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_persistent_event_log, opts);
 	if (err)
 		return err;
 
@@ -1636,11 +2164,6 @@ static int get_persistent_event_log(int argc, char **argv,
 static int get_endurance_event_agg_log(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Retrieve Predictable Latency "
-		"Event Aggregate page and prints it, for the given "
-		"device in either decoded format(default), json or binary.";
-	const char *log_entries = "Number of pending Endurance Group Event log Entries list";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free struct nvme_id_ctrl *ctrl = NULL;
@@ -1662,11 +2185,11 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
-		  OPT_FLAG("rae",          'r', &cfg.rae,           rae),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw_use));
+		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   desc_log_entries_get_endurance_event_agg_log),
+		  OPT_FLAG("rae",          'r', &cfg.rae,           desc_rae),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    desc_raw_use));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_endurance_event_agg_log, opts);
 	if (err)
 		return err;
 
@@ -1720,9 +2243,6 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 static int get_lba_status_log(int argc, char **argv,
 		struct command *command, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Get LBA Status Info Log and prints it, "
-		"for the given device in either decoded format(default),json or binary.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free void *lba_status = NULL;
@@ -1739,9 +2259,9 @@ static int get_lba_status_log(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("rae",          'r', &cfg.rae,           rae));
+		  OPT_FLAG("rae",          'r', &cfg.rae,           desc_rae));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_lba_status_log, opts);
 	if (err)
 		return err;
 
@@ -1776,11 +2296,6 @@ static int get_lba_status_log(int argc, char **argv,
 static int get_resv_notif_log(int argc, char **argv,
 	struct command *command, struct plugin *plugin)
 {
-
-	const char *desc = "Retrieve Reservation Notification "
-		"log page and prints it, for the given "
-		"device in either decoded format(default), json or binary.";
-
 	__cleanup_free struct nvme_resv_notification_log *resv = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -1789,7 +2304,7 @@ static int get_resv_notif_log(int argc, char **argv,
 
 	NVME_ARGS(opts);
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_resv_notif_log, opts);
 	if (err)
 		return err;
 
@@ -1818,11 +2333,6 @@ static int get_resv_notif_log(int argc, char **argv,
 
 static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Boot Partition "
-		"log page and prints it, for the given "
-		"device in either decoded format(default), json or binary.";
-	const char *fname = "boot partition data output file name";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free struct nvme_boot_partition *boot = NULL;
@@ -1843,10 +2353,10 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 	};
 
 	NVME_ARGS(opts,
-		  OPT_BYTE("lsp",          's', &cfg.lsp,           lsp),
-		  OPT_FILE("output-file",  'f', &cfg.file_name,     fname));
+		  OPT_BYTE("lsp",          's', &cfg.lsp,           desc_lsp),
+		  OPT_FILE("output-file",  'f', &cfg.file_name,     desc_fname_get_boot_part_log));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_boot_part_log, opts);
 	if (err)
 		return err;
 
@@ -1910,10 +2420,6 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 static int get_phy_rx_eom_log(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
-	const char *desc = "Retrieve Physical Interface Receiver Eye Opening "
-		"Measurement log for the given device in decoded format "
-		"(default), json or binary.";
-	const char *controller = "Target Controller ID.";
 	__cleanup_free struct nvme_phy_rx_eom_log *phy_rx_eom_log = NULL;
 	size_t phy_rx_eom_log_len;
 	nvme_print_flags_t flags;
@@ -1933,10 +2439,10 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_BYTE("lsp",        's', &cfg.lsp,        lsp),
-		  OPT_SHRT("controller", 'c', &cfg.controller, controller));
+		  OPT_BYTE("lsp",        's', &cfg.lsp,        desc_lsp),
+		  OPT_SHRT("controller", 'c', &cfg.controller, desc_controller_get_phy_rx_eom_log));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_phy_rx_eom_log, opts);
 	if (err)
 		return err;
 
@@ -1999,8 +2505,6 @@ static int get_phy_rx_eom_log(int argc, char **argv, struct command *acmd,
 static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 				   struct plugin *plugin)
 {
-	const char *desc = "Retrieve the configuration and wear of media units and print it";
-
 	__cleanup_free struct nvme_media_unit_stat_log *mus = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -2018,10 +2522,10 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("domain-id",     'd', &cfg.domainid, domainid),
-		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw_use));
+		  OPT_UINT("domain-id",     'd', &cfg.domainid,   desc_domainid),
+		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, desc_raw_use));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_media_unit_stat_log, opts);
 	if (err)
 		return err;
 
@@ -2052,8 +2556,6 @@ static int get_media_unit_stat_log(int argc, char **argv, struct command *acmd,
 static int get_supp_cap_config_log(int argc, char **argv, struct command *acmd,
 				   struct plugin *plugin)
 {
-	const char *desc = "Retrieve the list of Supported Capacity Configuration Descriptors";
-
 	__cleanup_free struct nvme_supported_cap_config_list_log *cap_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -2071,10 +2573,10 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("domain-id",     'd', &cfg.domainid,       domainid),
-		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     raw_use));
+		  OPT_UINT("domain-id",     'd', &cfg.domainid,       desc_domainid),
+		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,     desc_raw_use));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_supp_cap_config_log, opts);
 	if (err)
 		return err;
 
@@ -2104,9 +2606,6 @@ static int get_supp_cap_config_log(int argc, char **argv, struct command *acmd,
 
 static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "I/O Management Send";
-	const char *data = "optional file for data (default stdin)";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_fd int dfd = STDIN_FILENO;
@@ -2127,13 +2626,13 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.nsid,		namespace_id_desired),
-		  OPT_SHRT("mos",           's', &cfg.mos,		mos),
-		  OPT_BYTE("mo",            'm', &cfg.mo,       mo),
-		  OPT_FILE("data",          'd', &cfg.file,     data),
-		  OPT_UINT("data-len",      'l', &cfg.data_len, buf_len));
+		  OPT_UINT("namespace-id",  'n', &cfg.nsid,	desc_namespace_id_desired),
+		  OPT_SHRT("mos",           's', &cfg.mos,	desc_mos),
+		  OPT_BYTE("mo",            'm', &cfg.mo,       desc_mo),
+		  OPT_FILE("data",          'd', &cfg.file,     desc_data_io_mgmt_send),
+		  OPT_UINT("data-len",      'l', &cfg.data_len, desc_buf_len));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_io_mgmt_send, opts);
 	if (err)
 		return err;
 
@@ -2180,9 +2679,6 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 
 static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "I/O Management Receive";
-	const char *data = "optional file for data (default stdout)";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free void *buf = NULL;
@@ -2203,13 +2699,13 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.nsid,		namespace_id_desired),
-		  OPT_SHRT("mos",           's', &cfg.mos,      mos),
-		  OPT_BYTE("mo",            'm', &cfg.mo,       mo),
-		  OPT_FILE("data",          'd', &cfg.file,     data),
-		  OPT_UINT("data-len",      'l', &cfg.data_len, buf_len));
+		  OPT_UINT("namespace-id",  'n', &cfg.nsid,	desc_namespace_id_desired),
+		  OPT_SHRT("mos",           's', &cfg.mos,      desc_mos),
+		  OPT_BYTE("mo",            'm', &cfg.mo,       desc_mo),
+		  OPT_FILE("data",          'd', &cfg.file,     desc_data_io_mgmt_recv),
+		  OPT_UINT("data-len",      'l', &cfg.data_len, desc_buf_len));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_io_mgmt_recv, opts);
 	if (err)
 		return err;
 
@@ -2259,18 +2755,6 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 
 static int get_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve desired number of bytes "
-		"from a given log on a specified device in either "
-		"hex-dump (default) or binary format";
-	const char *log_id = "identifier of log to retrieve";
-	const char *log_len = "how many bytes to retrieve";
-	const char *aen = "result of the aen, use to override log id";
-	const char *lpo = "log page offset specifies the location within a log page from where to start returning data";
-	const char *lsi = "log specific identifier specifies an identifier that is required for a particular log page";
-	const char *raw = "output in raw format";
-	const char *offset_type = "offset type";
-	const char *xfer_len = "read chunk size (default 4k)";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free unsigned char *log = NULL;
@@ -2359,22 +2843,22 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		  OPT_BYTE("log-id",       'i', &cfg.log_id,       log_id, log_name),
-		  OPT_UINT("log-len",      'l', &cfg.log_len,      log_len),
-		  OPT_UINT("aen",          'a', &cfg.aen,          aen),
-		  OPT_SUFFIX("lpo",        'L', &cfg.lpo,          lpo),
-		  OPT_BYTE("lsp",          's', &cfg.lsp,          lsp),
-		  OPT_SHRT("lsi",          'S', &cfg.lsi,          lsi),
-		  OPT_FLAG("rae",          'r', &cfg.rae,          rae),
-		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   uuid_index),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw),
-		  OPT_BYTE("csi",          'y', &cfg.csi,          csi),
-		  OPT_FLAG("ot",           'O', &cfg.ot,           offset_type),
-		  OPT_UINT("xfer-len",     'x', &cfg.xfer_len,     xfer_len));
+		  OPT_FLAG("ish",          'I', &cfg.ish,          desc_ish),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_desired),
+		  OPT_BYTE("log-id",       'i', &cfg.log_id,       desc_log_id, log_name),
+		  OPT_UINT("log-len",      'l', &cfg.log_len,      desc_log_len_get_log),
+		  OPT_UINT("aen",          'a', &cfg.aen,          desc_aen),
+		  OPT_SUFFIX("lpo",        'L', &cfg.lpo,          desc_lpo),
+		  OPT_BYTE("lsp",          's', &cfg.lsp,          desc_lsp),
+		  OPT_SHRT("lsi",          'S', &cfg.lsi,          desc_lsi),
+		  OPT_FLAG("rae",          'r', &cfg.rae,          desc_rae),
+		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,   desc_uuid_index),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   desc_raw_get_log),
+		  OPT_BYTE("csi",          'y', &cfg.csi,          desc_csi),
+		  OPT_FLAG("ot",           'O', &cfg.ot,           desc_offset_type),
+		  OPT_UINT("xfer-len",     'x', &cfg.xfer_len,     desc_xfer_len));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_log, opts);
 	if (err)
 		return err;
 
@@ -2431,7 +2915,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 			  cfg.csi, log, cfg.log_len);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -2473,8 +2957,6 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 
 static int sanitize_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve sanitize log and show it.";
-
 	__cleanup_free struct nvme_sanitize_log_page *sanitize_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -2494,11 +2976,11 @@ static int sanitize_log(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("rae",            'r', &cfg.rae,            rae),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log));
+		  OPT_FLAG("rae",            'r', &cfg.rae,            desc_rae),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_log),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     desc_raw_log));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_sanitize_log, opts);
 	if (err)
 		return err;
 
@@ -2533,8 +3015,6 @@ static int sanitize_log(int argc, char **argv, struct command *acmd, struct plug
 static int get_fid_support_effects_log(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin)
 {
-	const char *desc = "Retrieve FID Support and Effects log and show it.";
-
 	__cleanup_free struct nvme_fid_supported_effects_log *fid_support_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -2550,9 +3030,9 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *ac
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log));
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_log));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_fid_support_effects_log, opts);
 	if (err)
 		return err;
 
@@ -2585,8 +3065,6 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *ac
 static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin)
 {
-	const char *desc = "Retrieve NVMe-MI Command Support and Effects log and show it.";
-
 	__cleanup_free struct nvme_mi_cmd_supported_effects_log *mi_cmd_support_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -2602,9 +3080,9 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log));
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_log));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_mi_cmd_support_effects_log, opts);
 	if (err)
 		return err;
 
@@ -2635,10 +3113,6 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 
 static int list_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Show controller list information for the subsystem the "
-		"given device is part of, or optionally controllers attached to a specific namespace.";
-	const char *controller = "controller to display";
-
 	__cleanup_free struct nvme_ctrl_list *cntlist = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -2657,10 +3131,10 @@ static int list_ctrl(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id_optional));
+		  OPT_SHRT("cntid",        'c', &cfg.cntid,         desc_controller_list_ctrl),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  desc_namespace_id_optional));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_list_ctrl, opts);
 	if (err)
 		return err;
 
@@ -2693,12 +3167,6 @@ static int list_ctrl(int argc, char **argv, struct command *acmd, struct plugin 
 
 static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "For the specified controller handle, show the "
-		"namespace list in the associated NVMe subsystem, optionally starting with a given nsid.";
-	const char *namespace_id = "first nsid returned list should start from";
-	const char *csi = "I/O command set identifier";
-	const char *all = "show all namespaces in the subsystem, whether attached or inactive";
-
 	__cleanup_free struct nvme_ns_list *ns_list = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -2719,11 +3187,11 @@ static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *p
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-		  OPT_INT("csi",           'y', &cfg.csi,           csi),
-		  OPT_FLAG("all",          'a', &cfg.all,           all));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  desc_namespace_id_list_ns),
+		  OPT_INT("csi",           'y', &cfg.csi,           desc_csi),
+		  OPT_FLAG("all",          'a', &cfg.all,           desc_all));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_list_ns, opts);
 	if (err)
 		return err;
 
@@ -2768,10 +3236,6 @@ static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *p
 
 static int id_ns_lba_format(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Namespace command to the given "
-		"device, returns capability field properties of the specified "
-		"LBA Format index in  various formats.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free struct nvme_id_ns *ns = NULL;
@@ -2789,10 +3253,10 @@ static int id_ns_lba_format(int argc, char **argv, struct command *acmd, struct 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
-		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index));
+		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, desc_lba_format_index),
+		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       desc_uuid_index));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_id_ns_lba_format, opts);
 	if (err)
 		return err;
 
@@ -2826,9 +3290,6 @@ static int id_ns_lba_format(int argc, char **argv, struct command *acmd, struct 
 static int id_endurance_grp_list(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin)
 {
-	const char *desc = "Show endurance group list information for the given endurance group id";
-	const char *endurance_grp_id = "Endurance Group ID";
-
 	__cleanup_free struct nvme_id_endurance_group_list *endgrp_list = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -2845,9 +3306,9 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_SHRT("endgrp-id",    'i', &cfg.endgrp_id,     endurance_grp_id));
+		  OPT_SHRT("endgrp-id",    'i', &cfg.endgrp_id,     desc_endurance_grp_id));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_id_endurance_grp_list, opts);
 	if (err)
 		return err;
 
@@ -2913,14 +3374,6 @@ static void ns_mgmt_show_status(struct libnvme_transport_handle *hdl, int err, c
 
 static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Delete the given namespace by "
-		"sending a namespace management command to "
-		"the provided device. All controllers should be detached from "
-		"the namespace prior to namespace deletion. A namespace ID "
-		"becomes inactive when that namespace is detached or, if "
-		"the namespace is not already inactive, once deleted.";
-	const char *namespace_id = "namespace to delete";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -2938,10 +3391,10 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id));
+		  OPT_FLAG("ish",          'I', &cfg.ish,          desc_ish),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_id_delete));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_delete_ns, opts);
 	if (err)
 		return err;
 
@@ -2962,7 +3415,7 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	nvme_init_ns_mgmt_delete(&cmd, cfg.namespace_id);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -2976,15 +3429,11 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 {
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-
 	__cleanup_free struct nvme_ctrl_list *cntlist = NULL;
 	__u16 list[NVME_ID_CTRL_LIST_MAX];
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err, num;
-
-	const char *namespace_id = "namespace to attach";
-	const char *cont = "optional comma-sep controller id list";
 
 	struct config {
 		bool	ish;
@@ -2999,9 +3448,9 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,     ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.nsid,    namespace_id),
-		  OPT_LIST("controllers",  'c', &cfg.cntlist, cont));
+		  OPT_FLAG("ish",          'I', &cfg.ish,     desc_ish),
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,    desc_namespace_id_attach),
+		  OPT_LIST("controllers",  'c', &cfg.cntlist, desc_controllers));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -3056,7 +3505,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -3068,23 +3517,14 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 
 static int attach_ns(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Attach the given namespace to the "
-		"given controller or comma-sep list of controllers. ID of the "
-		"given namespace becomes active upon attachment to a "
-		"controller. A namespace must be attached to a controller "
-		"before IO commands may be directed to that namespace.";
 
-	return nvme_attach_ns(argc, argv, 1, desc, acmd);
+	return nvme_attach_ns(argc, argv, 1, desc_attach_ns, acmd);
 }
 
 static int detach_ns(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Detach the given namespace from the "
-		"given controller; de-activates the given namespace's ID. A "
-		"namespace must be attached to a controller before IO "
-		"commands may be directed to that namespace.";
 
-	return nvme_attach_ns(argc, argv, 0, desc, acmd);
+	return nvme_attach_ns(argc, argv, 0, desc_detach_ns, acmd);
 }
 
 static int parse_lba_num_si(struct libnvme_transport_handle *hdl, const char *opt,
@@ -3169,32 +3609,6 @@ static int parse_lba_num_si(struct libnvme_transport_handle *hdl, const char *op
 
 static int create_ns(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send a namespace management command "
-		"to the specified device to create a namespace with the given "
-		"parameters. The next available namespace ID is used for the "
-		"create operation. Note that create-ns does not attach the "
-		"namespace to a controller, the attach-ns command is needed.";
-	const char *nsze = "size of ns (NSZE)";
-	const char *ncap = "capacity of ns (NCAP)";
-	const char *flbas =
-	    "Formatted LBA size (FLBAS), if entering this value ignore \'block-size\' field";
-	const char *dps = "data protection settings (DPS)";
-	const char *nmic = "multipath and sharing capabilities (NMIC)";
-	const char *anagrpid = "ANA Group Identifier (ANAGRPID)";
-	const char *nvmsetid = "NVM Set Identifier (NVMSETID)";
-	const char *csi = "command set identifier (CSI)";
-	const char *lbstm = "logical block storage tag mask (LBSTM)";
-	const char *nphndls = "Number of Placement Handles (NPHNDLS)";
-	const char *bs = "target block size, specify only if \'FLBAS\' value not entered";
-	const char *nsze_si = "size of ns (NSZE) in standard SI units";
-	const char *ncap_si = "capacity of ns (NCAP) in standard SI units";
-	const char *azr = "Allocate ZRWA Resources (AZR) for Zoned Namespace Command Set";
-	const char *rar = "Requested Active Resources (RAR) for Zoned Namespace Command Set";
-	const char *ror = "Requested Open Resources (ROR) for Zoned Namespace Command Set";
-	const char *rnumzrwa =
-	    "Requested Number of ZRWA Resources (RNUMZRWA) for Zoned Namespace Command Set";
-	const char *phndls = "Comma separated list of Placement Handle Associated RUH";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free struct nvme_ns_mgmt_host_sw_specified *data = NULL;
 	__cleanup_free struct nvme_id_ns_granularity_list *gr_list = NULL;
@@ -3257,28 +3671,28 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,      ish),
-		  OPT_SUFFIX("nsze",       's', &cfg.nsze,     nsze),
-		  OPT_SUFFIX("ncap",       'c', &cfg.ncap,     ncap),
-		  OPT_BYTE("flbas",        'f', &cfg.flbas,    flbas),
-		  OPT_BYTE("dps",          'd', &cfg.dps,      dps),
-		  OPT_BYTE("nmic",         'm', &cfg.nmic,     nmic),
-		  OPT_UINT("anagrp-id",    'a', &cfg.anagrpid, anagrpid),
-		  OPT_SHRT("nvmset-id",    'i', &cfg.nvmsetid, nvmsetid),
-		  OPT_SHRT("endg-id",      'e', &cfg.endgid,   endgid),
-		  OPT_SUFFIX("block-size", 'b', &cfg.bs,       bs),
-		  OPT_BYTE("csi",          'y', &cfg.csi,      csi),
-		  OPT_SUFFIX("lbstm",      'l', &cfg.lbstm,    lbstm),
-		  OPT_SHRT("nphndls",      'n', &cfg.nphndls,  nphndls),
-		  OPT_STR("nsze-si",       'S', &cfg.nsze_si,  nsze_si),
-		  OPT_STR("ncap-si",       'C', &cfg.ncap_si,  ncap_si),
-		  OPT_FLAG("azr",          'z', &cfg.azr,      azr),
-		  OPT_UINT("rar",          'r', &cfg.rar,      rar),
-		  OPT_UINT("ror",          'O', &cfg.ror,      ror),
-		  OPT_UINT("rnumzrwa",     'u', &cfg.rnumzrwa, rnumzrwa),
-		  OPT_LIST("phndls",       'p', &cfg.phndls,   phndls));
+		  OPT_FLAG("ish",          'I', &cfg.ish,      desc_ish),
+		  OPT_SUFFIX("nsze",       's', &cfg.nsze,     desc_nsze),
+		  OPT_SUFFIX("ncap",       'c', &cfg.ncap,     desc_ncap),
+		  OPT_BYTE("flbas",        'f', &cfg.flbas,    desc_flbas),
+		  OPT_BYTE("dps",          'd', &cfg.dps,      desc_dps),
+		  OPT_BYTE("nmic",         'm', &cfg.nmic,     desc_nmic),
+		  OPT_UINT("anagrp-id",    'a', &cfg.anagrpid, desc_anagrpid),
+		  OPT_SHRT("nvmset-id",    'i', &cfg.nvmsetid, desc_nvmsetid),
+		  OPT_SHRT("endg-id",      'e', &cfg.endgid,   desc_endgid),
+		  OPT_SUFFIX("block-size", 'b', &cfg.bs,       desc_bs_create_ns),
+		  OPT_BYTE("csi",          'y', &cfg.csi,      desc_csi),
+		  OPT_SUFFIX("lbstm",      'l', &cfg.lbstm,    desc_lbstm),
+		  OPT_SHRT("nphndls",      'n', &cfg.nphndls,  desc_nphndls),
+		  OPT_STR("nsze-si",       'S', &cfg.nsze_si,  desc_nsze_si),
+		  OPT_STR("ncap-si",       'C', &cfg.ncap_si,  desc_ncap_si),
+		  OPT_FLAG("azr",          'z', &cfg.azr,      desc_azr),
+		  OPT_UINT("rar",          'r', &cfg.rar,      desc_rar),
+		  OPT_UINT("ror",          'O', &cfg.ror,      desc_ror),
+		  OPT_UINT("rnumzrwa",     'u', &cfg.rnumzrwa, desc_rnumzrwa),
+		  OPT_LIST("phndls",       'p', &cfg.phndls,   desc_phndls));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_create_ns, opts);
 	if (err)
 		return err;
 
@@ -3423,7 +3837,7 @@ parse_lba:
 	nvme_init_ns_mgmt_create(&cmd, cfg.csi, data);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -3477,7 +3891,6 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 {
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	nvme_print_flags_t flags;
-	const char *desc = "Retrieve information for subsystems";
 	libnvme_scan_filter_t filter = NULL;
 	char *devname;
 	int err;
@@ -3485,7 +3898,7 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	err = parse_args(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc_list_subsys, opts);
 	if (err)
 		return err;
 
@@ -3535,14 +3948,13 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 
 static int list(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve basic information for all NVMe namespaces";
 	nvme_print_flags_t flags;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int err = 0;
 
 	NVME_ARGS(opts);
 
-	err = parse_args(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc_list, opts);
 	if (err)
 		return err;
 
@@ -3574,13 +3986,6 @@ static int list(int argc, char **argv, struct command *acmd, struct plugin *plug
 int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin,
 		void (*vs)(__u8 *vs, struct json_object *root))
 {
-	const char *desc = "Send an Identify Controller command to "
-		"the given device and report information about the specified "
-		"controller in human-readable or "
-		"binary format. May also return vendor-specific "
-		"controller attributes in hex-dump if requested.";
-	const char *vendor_specific = "dump binary vendor field";
-
 	__cleanup_free struct nvme_id_ctrl *ctrl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -3600,11 +4005,11 @@ int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
-		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
+		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, desc_vendor_specific___id_ctrl),
+		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      desc_raw_identify),
+		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  desc_human_readable_identify));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc___id_ctrl, opts);
 	if (err)
 		return err;
 
@@ -3646,10 +4051,6 @@ static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *p
 static int nvm_id_ctrl(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Controller NVM Command Set "
-		"command to the given device and report information about "
-		"the specified controller in various formats.";
-
 	__cleanup_free struct nvme_id_ctrl_nvm *ctrl_nvm = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -3659,7 +4060,7 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_nvm_id_ctrl, opts);
 	if (err)
 		return err;
 
@@ -3691,10 +4092,6 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *acmd,
 static int nvm_id_ns(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Namespace NVM Command Set "
-		"command to the given device and report information about "
-		"the specified namespace in various formats.";
-
 	__cleanup_free struct nvme_nvm_id_ns *id_ns = NULL;
 	__cleanup_free struct nvme_id_ns *ns = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -3713,10 +4110,10 @@ static int nvm_id_ns(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,    namespace_id_desired),
-		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,      uuid_index));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,    desc_namespace_id_desired),
+		  OPT_BYTE("uuid-index",   'U', &cfg.uuid_index,      desc_uuid_index));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_nvm_id_ns, opts);
 	if (err)
 		return err;
 
@@ -3765,10 +4162,6 @@ static int nvm_id_ns(int argc, char **argv, struct command *acmd,
 
 static int nvm_id_ns_lba_format(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send an NVM Command Set specific Identify Namespace "
-		"command to the given device, returns capability field properties of "
-		"the specified LBA Format index in the specified namespace in various formats.";
-
 	__cleanup_free struct nvme_nvm_id_ns *nvm_ns = NULL;
 	__cleanup_free struct nvme_id_ns *ns = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -3787,10 +4180,10 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *acmd, str
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, lba_format_index),
-		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       uuid_index));
+		  OPT_UINT("lba-format-index", 'i', &cfg.lba_format_index, desc_lba_format_index),
+		  OPT_BYTE("uuid-index",       'U', &cfg.uuid_index,       desc_uuid_index));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_nvm_id_ns_lba_format, opts);
 	if (err)
 		return err;
 
@@ -3833,11 +4226,6 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *acmd, str
 
 static int ns_descs(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send Namespace Identification Descriptors command to the "
-		"given device, returns the namespace identification descriptors "
-		"of the specific namespace in either human-readable or binary format.";
-	const char *raw = "show descriptors in binary format";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free void *nsdescs = NULL;
@@ -3855,10 +4243,10 @@ static int ns_descs(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,  namespace_id_desired),
-		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,    raw));
+		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id,  desc_namespace_id_desired),
+		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary,    desc_raw_ns_descs));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_ns_descs, opts);
 	if (err)
 		return err;
 
@@ -3899,13 +4287,6 @@ static int ns_descs(int argc, char **argv, struct command *acmd, struct plugin *
 
 static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Namespace command to the "
-		"given device, returns properties of the specified namespace "
-		"in either human-readable or binary format. Can also return "
-		"binary vendor-specific namespace attributes.";
-	const char *force = "Return this namespace, even if not attached (1.2 devices only)";
-	const char *vendor_specific = "dump binary vendor fields";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free struct nvme_id_ns *ns = NULL;
@@ -3930,13 +4311,13 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
-		  OPT_FLAG("force",             0, &cfg.force,           force),
-		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
-		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
+		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    desc_namespace_id_desired),
+		  OPT_FLAG("force",             0, &cfg.force,           desc_force_id_ns),
+		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, desc_vendor_specific_id_ns),
+		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      desc_raw_identify),
+		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  desc_human_readable_identify));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_id_ns, opts);
 	if (err)
 		return err;
 
@@ -3987,10 +4368,6 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 static int cmd_set_independent_id_ns(int argc, char **argv, struct command *acmd,
 				     struct plugin *plugin)
 {
-	const char *desc = "Send an I/O Command Set Independent Identify "
-		"Namespace command to the given device, returns properties of the "
-		"specified namespace in human-readable or binary or json format.";
-
 	__cleanup_free struct nvme_id_independent_id_ns *ns = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -4011,11 +4388,11 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *acmd
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
-		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
+		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    desc_namespace_id_desired),
+		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      desc_raw_identify),
+		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  desc_human_readable_identify));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_cmd_set_independent_id_ns, opts);
 	if (err)
 		return err;
 
@@ -4059,10 +4436,6 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *acmd
 
 static int id_ns_granularity(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Namespace Granularity List command to the "
-		"given device, returns namespace granularity list "
-		"in either human-readable or binary format.";
-
 	__cleanup_free struct nvme_id_ns_granularity_list *granularity_list = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -4071,7 +4444,7 @@ static int id_ns_granularity(int argc, char **argv, struct command *acmd, struct
 
 	NVME_ARGS(opts);
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_id_ns_granularity, opts);
 	if (err)
 		return err;
 
@@ -4098,12 +4471,6 @@ static int id_ns_granularity(int argc, char **argv, struct command *acmd, struct
 
 static int id_nvmset(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify NVM Set List command to the "
-		"given device, returns entries for NVM Set identifiers greater "
-		"than or equal to the value specified CDW11.NVMSETID "
-		"in either binary format or json format";
-	const char *nvmset_id = "NVM Set Identify value";
-
 	__cleanup_free struct nvme_id_nvmset_list *nvmset = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -4120,9 +4487,9 @@ static int id_nvmset(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_SHRT("nvmset_id",    'i', &cfg.nvmset_id,     nvmset_id));
+		  OPT_SHRT("nvmset_id",    'i', &cfg.nvmset_id,     desc_nvmset_id_id_nvmset));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_id_nvmset, opts);
 	if (err)
 		return err;
 
@@ -4151,12 +4518,6 @@ static int id_nvmset(int argc, char **argv, struct command *acmd, struct plugin 
 
 static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify UUID List command to the "
-		"given device, returns list of supported Vendor Specific UUIDs "
-		"in either human-readable or binary format.";
-	const char *raw = "show uuid in binary format";
-	const char *human_readable = "show uuid in readable format";
-
 	__cleanup_free struct nvme_id_uuid_list *uuid_list = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -4174,10 +4535,10 @@ static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *p
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     desc_raw_id_uuid),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_id_uuid));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_id_uuid, opts);
 	if (err)
 		return err;
 
@@ -4210,11 +4571,6 @@ static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *p
 
 static int id_iocs(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Command Set Data command to "
-		"the given device, returns properties of the specified controller "
-		"in either human-readable or binary format.";
-	const char *controller_id = "identifier of desired controller";
-
 	__cleanup_free struct nvme_id_iocs *iocs = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -4231,9 +4587,9 @@ static int id_iocs(int argc, char **argv, struct command *acmd, struct plugin *p
 	};
 
 	NVME_ARGS(opts,
-		  OPT_SHRT("controller-id", 'c', &cfg.cntid, controller_id));
+		  OPT_SHRT("controller-id", 'c', &cfg.cntid, desc_controller_id));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_id_iocs, opts);
 	if (err)
 		return err;
 
@@ -4265,11 +4621,6 @@ static int id_iocs(int argc, char **argv, struct command *acmd, struct plugin *p
 
 static int id_domain(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send an Identify Domain List command to the "
-		"given device, returns properties of the specified domain "
-		"in either normal|json|binary format.";
-	const char *domain_id = "identifier of desired domain";
-
 	__cleanup_free struct nvme_id_domain_list *id_domain = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -4286,9 +4637,9 @@ static int id_domain(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_SHRT("dom-id",         'd', &cfg.dom_id,         domain_id));
+		  OPT_SHRT("dom-id",         'd', &cfg.dom_id,         desc_domain_id));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_id_domain, opts);
 	if (err)
 		return err;
 
@@ -4318,8 +4669,6 @@ static int id_domain(int argc, char **argv, struct command *acmd, struct plugin 
 
 static int get_ns_id(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Get namespace ID of a the block device.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	unsigned int nsid;
@@ -4328,7 +4677,7 @@ static int get_ns_id(int argc, char **argv, struct command *acmd, struct plugin 
 
 	NVME_ARGS(opts);
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_ns_id, opts);
 	if (err)
 		return err;
 
@@ -4351,22 +4700,6 @@ static int get_ns_id(int argc, char **argv, struct command *acmd, struct plugin 
 
 static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "The Virtualization Management command is supported by primary controllers "
-		"that support the Virtualization Enhancements capability. This command is used for:\n"
-		"  1. Modifying Flexible Resource allocation for the primary controller\n"
-		"  2. Assigning Flexible Resources for secondary controllers\n"
-		"  3. Setting the Online and Offline state for secondary controllers";
-	const char *cntlid = "Controller Identifier(CNTLID)";
-	const char *rt = "Resource Type(RT): [0,1]\n"
-		"0h: VQ Resources\n"
-		"1h: VI Resources";
-	const char *act = "Action(ACT): [1,7,8,9]\n"
-		"1h: Primary Flexible\n"
-		"7h: Secondary Offline\n"
-		"8h: Secondary Assign\n"
-		"9h: Secondary Online";
-	const char *nr = "Number of Controller Resources(NR)";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -4387,12 +4720,12 @@ static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_SHRT("cntlid", 'c', &cfg.cntlid, cntlid),
-		  OPT_BYTE("rt",     'r', &cfg.rt,     rt),
-		  OPT_BYTE("act",    'a', &cfg.act,    act),
-		  OPT_SHRT("nr",     'n', &cfg.nr,     nr));
+		  OPT_SHRT("cntlid", 'c', &cfg.cntlid, desc_cntlid_virtual_mgmt),
+		  OPT_BYTE("rt",     'r', &cfg.rt,     desc_rt),
+		  OPT_BYTE("act",    'a', &cfg.act,    desc_act),
+		  OPT_SHRT("nr",     'n', &cfg.nr,     desc_nr));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_virtual_mgmt, opts);
 	if (err)
 		return err;
 
@@ -4411,11 +4744,6 @@ static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plug
 
 static int primary_ctrl_caps(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *cntlid = "Controller ID";
-	const char *desc = "Send an Identify Primary Controller Capabilities "
-		"command to the given device and report the information in a "
-		"decoded format (default), json or binary.";
-
 	__cleanup_free struct nvme_primary_ctrl_cap *caps = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -4434,10 +4762,10 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *acmd, struct
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("cntlid",         'c', &cfg.cntlid, cntlid),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
+		  OPT_UINT("cntlid",         'c', &cfg.cntlid,         desc_cntlid_primary_ctrl_caps),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_info));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_primary_ctrl_caps, opts);
 	if (err)
 		return err;
 
@@ -4468,11 +4796,6 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *acmd, struct
 
 static int list_secondary_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc =
-	    "Show secondary controller list associated with the primary controller of the given device.";
-	const char *controller = "lowest controller identifier to display";
-	const char *num_entries = "number of entries to retrieve";
-
 	__cleanup_free struct nvme_secondary_ctrl_list *sc_list = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -4491,10 +4814,10 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *acmd, stru
 	};
 
 	NVME_ARGS(opts,
-		  OPT_SHRT("cntid",        'c', &cfg.cntid,         controller),
-		  OPT_UINT("num-entries",  'e', &cfg.num_entries,   num_entries));
+		  OPT_SHRT("cntid",        'c', &cfg.cntid,         desc_controller_list_secondary_ctrl),
+		  OPT_UINT("num-entries",  'e', &cfg.num_entries,   desc_num_entries));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_list_secondary_ctrl, opts);
 	if (err)
 		return err;
 
@@ -4627,20 +4950,6 @@ static void abort_self_test(struct libnvme_transport_handle *hdl, bool ish,
 
 static int device_self_test(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Implementing the device self-test feature "
-		"which provides the necessary log to determine the state of the device";
-	const char *namespace_id =
-	    "Indicate the namespace in which the device self-test has to be carried out";
-	const char *self_test_code =
-		"This field specifies the action taken by the device self-test command :\n"
-		"0h Show current state of device self-test operation\n"
-		"1h Start a short device self-test operation\n"
-		"2h Start a extended device self-test operation\n"
-		"3h Start a Host-Initiated Refresh operation\n"
-		"eh Start a vendor specific device self-test operation\n"
-		"fh Abort the device self-test operation";
-	const char *wait = "Wait for the test to finish";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -4662,12 +4971,12 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",            'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id, namespace_id),
-		  OPT_BYTE("self-test-code", 's', &cfg.stc,          self_test_code),
-		  OPT_FLAG("wait",           'w', &cfg.wait,         wait));
+		  OPT_FLAG("ish",            'I', &cfg.ish,          desc_ish),
+		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id, desc_namespace_id_device_self_test),
+		  OPT_BYTE("self-test-code", 's', &cfg.stc,          desc_self_test_code),
+		  OPT_FLAG("wait",           'w', &cfg.wait,         desc_wait));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_device_self_test, opts);
 	if (err)
 		return err;
 
@@ -4705,7 +5014,7 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 	nvme_init_dev_self_test(&cmd, cfg.namespace_id, cfg.stc);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -4736,11 +5045,6 @@ check_abort:
 
 static int self_test_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve the self-test log for the given device and given test "
-		"(or optionally a namespace) in either decoded format (default) or binary.";
-	const char *dst_entries = "Indicate how many DST log entries to be retrieved, "
-		"by default all the 20 entries will be retrieved";
-
 	__cleanup_free struct nvme_self_test_log *log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -4756,9 +5060,9 @@ static int self_test_log(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
-		  OPT_BYTE("dst-entries",  'e', &cfg.dst_entries,   dst_entries));
+		  OPT_BYTE("dst-entries",  'e', &cfg.dst_entries,   desc_dst_entries));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_self_test_log, opts);
 	if (err)
 		return err;
 
@@ -4925,21 +5229,6 @@ static int get_feature_ids(struct libnvme_transport_handle *hdl, struct feat_cfg
 static int get_feature(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
-	const char *desc = "Read operating parameters of the "
-		"specified controller. Operating parameters are grouped "
-		"and identified by Feature Identifiers; each Feature "
-		"Identifier contains one or more attributes that may affect "
-		"behavior of the feature. Each Feature has three possible "
-		"settings: default, saveable, and current. If a Feature is "
-		"saveable, it may be modified by set-feature. Default values "
-		"are vendor-specific and not changeable. Use set-feature to "
-		"change saveable Features.";
-	const char *raw = "show feature in binary format";
-	const char *feature_id = "feature identifier";
-	const char *sel = "[0-3]: current/default/saved/supported";
-	const char *cdw11 = "feature specific dword 11";
-	const char *human_readable = "show feature in readable format";
-	const char *changed = "show feature changed";
 	nvme_print_flags_t flags = NORMAL;
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -4958,17 +5247,17 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_BYTE("feature-id",     'f', &cfg.feature_id,     feature_id, feature_name),
-		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
-		  OPT_BYTE("sel",            's', &cfg.sel,            sel),
-		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
-		  OPT_UINT("cdw11",          'c', &cfg.cdw11,          cdw11),
-		  OPT_BYTE("uuid-index",     'U', &cfg.uuid_index,     uuid_index_specify),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
-		  OPT_FLAG("changed",        'C', &cfg.changed,        changed));
+		  OPT_BYTE("feature-id",     'f', &cfg.feature_id,     desc_feature_id, feature_name),
+		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   desc_namespace_id_desired),
+		  OPT_BYTE("sel",            's', &cfg.sel,            desc_sel),
+		  OPT_UINT("data-len",       'l', &cfg.data_len,       desc_buf_len),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     desc_raw_get_feature),
+		  OPT_UINT("cdw11",          'c', &cfg.cdw11,          desc_cdw11_get_feature),
+		  OPT_BYTE("uuid-index",     'U', &cfg.uuid_index,     desc_uuid_index_specify),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_get_feature),
+		  OPT_FLAG("changed",        'C', &cfg.changed,        desc_changed));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_feature, opts);
 	if (err)
 		return err;
 
@@ -5105,20 +5394,6 @@ static int fw_download_single(struct libnvme_transport_handle *hdl, void *fw_buf
 
 static int fw_download(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Copy all or part of a firmware image to "
-		"a controller for future update. Optionally, specify how "
-		"many KiB of the firmware to transfer at once. The offset will "
-		"start at 0 and automatically adjust based on xfer size "
-		"unless fw is split across multiple files. May be submitted "
-		"while outstanding commands exist on the Admin and IO "
-		"Submission Queues. Activate downloaded firmware with "
-		"fw-activate, and then reset the device to apply the downloaded firmware.";
-	const char *fw = "firmware file (required)";
-	const char *xfer = "transfer chunksize limit";
-	const char *offset = "starting dword offset, default 0";
-	const char *progress = "display firmware transfer progress";
-	const char *ignore_ovr = "ignore overwrite errors";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_huge struct nvme_mem_huge mh = { 0, };
@@ -5149,14 +5424,14 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FILE("fw",         'f', &cfg.fw,         fw),
-		  OPT_FLAG("ish",        'I', &cfg.ish,        ish),
-		  OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
-		  OPT_UINT("offset",     'O', &cfg.offset,     offset),
-		  OPT_FLAG("progress",   'p', &cfg.progress,   progress),
-		  OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr));
+		  OPT_FILE("fw",         'f', &cfg.fw,         desc_fw),
+		  OPT_FLAG("ish",        'I', &cfg.ish,        desc_ish),
+		  OPT_UINT("xfer",       'x', &cfg.xfer,       desc_xfer),
+		  OPT_UINT("offset",     'O', &cfg.offset,     desc_offset),
+		  OPT_FLAG("progress",   'p', &cfg.progress,   desc_progress),
+		  OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, desc_ignore_ovr));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_fw_download, opts);
 	if (err)
 		return err;
 
@@ -5315,19 +5590,6 @@ static void fw_commit_err(int err, __u8 action, __u8 slot, __u8 bpid)
 
 static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Verify downloaded firmware image and "
-		"commit to specific firmware slot. Device is not automatically "
-		"reset following firmware activation. A reset may be issued "
-		"with an 'echo 1 > /sys/class/nvme/nvmeX/reset_controller'. "
-		"Ensure nvmeX is the device you just activated before reset.";
-	const char *slot = "[0-7]: firmware slot for commit action";
-	const char *action = "[0-7]: commit action: 0 = replace, "
-				"1 = replace and activate, 2 = set active, "
-				"3 = replace and activate immediate, "
-				"6 = replace boot partition, "
-				"7 = activate boot partition";
-	const char *bpid = "[0,1]: boot partition identifier, if applicable (default: 0)";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -5363,12 +5625,12 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",    'I', &cfg.ish,    ish),
-		  OPT_BYTE("slot",   's', &cfg.slot,   slot),
-		  OPT_BYTE("action", 'a', &cfg.action, action, ca),
-		  OPT_BYTE("bpid",   'b', &cfg.bpid,   bpid));
+		  OPT_FLAG("ish",    'I', &cfg.ish,    desc_ish),
+		  OPT_BYTE("slot",   's', &cfg.slot,   desc_slot),
+		  OPT_BYTE("action", 'a', &cfg.action, desc_action_fw_commit, ca),
+		  OPT_BYTE("bpid",   'b', &cfg.bpid,   desc_bpid));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_fw_commit, opts);
 	if (err)
 		return err;
 
@@ -5403,7 +5665,7 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	nvme_init_fw_commit(&cmd, cfg.slot, cfg.action, cfg.bpid);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -5425,20 +5687,18 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 
 static int subsystem_reset(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Resets the NVMe subsystem";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
 
 	NVME_ARGS(opts);
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_subsystem_reset, opts);
 	if (err)
 		return err;
 
 	if (!libnvme_transport_handle_is_ctrl(hdl)) {
-		nvme_show_error(only_ctrl_dev);
+		nvme_show_error(desc_only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -5456,7 +5716,6 @@ static int subsystem_reset(int argc, char **argv, struct command *acmd, struct p
 
 static int reset(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Resets the NVMe controller\n";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -5464,12 +5723,12 @@ static int reset(int argc, char **argv, struct command *acmd, struct plugin *plu
 
 	NVME_ARGS(opts);
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_reset, opts);
 	if (err)
 		return err;
 
 	if (!libnvme_transport_handle_is_ctrl(hdl)) {
-		nvme_show_error(only_ctrl_dev);
+		nvme_show_error(desc_only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -5484,8 +5743,6 @@ static int reset(int argc, char **argv, struct command *acmd, struct plugin *plu
 
 static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Rescans the NVMe namespaces\n";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
@@ -5493,12 +5750,12 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 
 	NVME_ARGS(opts);
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_ns_rescan, opts);
 	if (err)
 		return err;
 
 	if (!libnvme_transport_handle_is_ctrl(hdl)) {
-		nvme_show_error(only_ctrl_dev);
+		nvme_show_error(desc_only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -5519,16 +5776,6 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 
 static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send a sanitize command.";
-	const char *emvs_desc = "Enter media verification state.";
-	const char *no_dealloc_desc = "No deallocate after sanitize.";
-	const char *oipbp_desc = "Overwrite invert pattern between passes.";
-	const char *owpass_desc = "Overwrite pass count.";
-	const char *ause_desc = "Allow unrestricted sanitize exit.";
-	const char *sanact_desc = "Sanitize action: 1 = Exit failure mode, 2 = Start block erase,"
-				"3 = Start overwrite, 4 = Start crypto erase, 5 = Exit media verification";
-	const char *ovrpat_desc = "Overwrite pattern.";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -5567,16 +5814,16 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",        'I', &cfg.ish,        ish),
-		  OPT_FLAG("no-dealloc", 'd', &cfg.no_dealloc, no_dealloc_desc),
-		  OPT_FLAG("oipbp",      'i', &cfg.oipbp,      oipbp_desc),
-		  OPT_BYTE("owpass",     'n', &cfg.owpass,     owpass_desc),
-		  OPT_FLAG("ause",       'u', &cfg.ause,       ause_desc),
-		  OPT_BYTE("sanact",     'a', &cfg.sanact,     sanact_desc, sanact),
-		  OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc),
-		  OPT_FLAG("emvs",       'e', &cfg.emvs,       emvs_desc));
+		  OPT_FLAG("ish",        'I', &cfg.ish,        desc_ish),
+		  OPT_FLAG("no-dealloc", 'd', &cfg.no_dealloc, desc_no_dealloc_desc),
+		  OPT_FLAG("oipbp",      'i', &cfg.oipbp,      desc_oipbp_desc),
+		  OPT_BYTE("owpass",     'n', &cfg.owpass,     desc_owpass_desc),
+		  OPT_FLAG("ause",       'u', &cfg.ause,       desc_ause_desc),
+		  OPT_BYTE("sanact",     'a', &cfg.sanact,     desc_sanact_desc_sanitize_cmd, sanact),
+		  OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     desc_ovrpat_desc),
+		  OPT_FLAG("emvs",       'e', &cfg.emvs,       desc_emvs_desc));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_sanitize_cmd, opts);
 	if (err)
 		return err;
 
@@ -5624,7 +5871,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		cfg.oipbp, cfg.no_dealloc, cfg.emvs, cfg.ovrpat);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -5640,13 +5887,6 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 			   struct plugin *plugin)
 {
-	const char *desc = "Send a sanitize namespace command.";
-	const char *emvs_desc = "Enter media verification state.";
-	const char *ause_desc = "Allow unrestricted sanitize exit.";
-	const char *sanact_desc = "Sanitize action: 1 = Exit failure mode,\n"
-		"4 = Start a crypto erase namespace sanitize operation,\n"
-		"5 = Exit media verification state";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl =
 		NULL;
 
@@ -5679,12 +5919,12 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",    'I', &cfg.ish,    ish),
-		  OPT_FLAG("ause",   'u', &cfg.ause,   ause_desc),
-		  OPT_BYTE("sanact", 'a', &cfg.sanact, sanact_desc, sanact),
-		  OPT_FLAG("emvs",   'e', &cfg.emvs,   emvs_desc));
+		  OPT_FLAG("ish",    'I', &cfg.ish,    desc_ish),
+		  OPT_FLAG("ause",   'u', &cfg.ause,   desc_ause_desc),
+		  OPT_BYTE("sanact", 'a', &cfg.sanact, desc_sanact_desc_sanitize_ns_cmd, sanact),
+		  OPT_FLAG("emvs",   'e', &cfg.emvs,   desc_emvs_desc));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_sanitize_ns_cmd, opts);
 	if (err)
 		return err;
 
@@ -5719,7 +5959,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 	nvme_init_sanitize_ns(&cmd, cfg.sanact, cfg.ause, cfg.emvs);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -5837,11 +6077,6 @@ static void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable)
 
 static int show_registers(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Reads and shows the defined NVMe controller registers\n"
-		"in binary or human-readable format";
-	const char *human_readable =
-	    "show info in readable format in case of output_format == normal";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -5854,14 +6089,14 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_show_registers));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_show_registers, opts);
 	if (err)
 		return err;
 
 	if (libnvme_transport_handle_is_ns(hdl)) {
-		nvme_show_error(only_ctrl_dev);
+		nvme_show_error(desc_only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -6065,30 +6300,6 @@ static bool get_register_offset(void *bar, bool fabrics, struct get_reg_config *
 
 static int get_register(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Reads and shows the defined NVMe controller register.\n"
-		"Register offset must be one of:\n"
-		"CAP=0x0, VS=0x8, INTMS=0xc, INTMC=0x10, CC=0x14, CSTS=0x1c,\n"
-		"NSSR=0x20, AQA=0x24, ASQ=0x28, ACQ=0x30, CMBLOC=0x38,\n"
-		"CMBSZ=0x3c, BPINFO=0x40, BPRSEL=0x44, BPMBL=0x48, CMBMSC=0x50,\n"
-		"CMBSTS=0x58, CRTO=0x68, PMRCAP=0xe00, PMRCTL=0xe04,\n"
-		"PMRSTS=0xe08, PMREBS=0xe0c, PMRSWTP=0xe10, PMRMSCL=0xe14, PMRMSCU=0xe18";
-	const char *human_readable = "show register in readable format";
-	const char *cap = "CAP=0x0 register offset";
-	const char *vs = "VS=0x8 register offset";
-	const char *cmbloc = "CMBLOC=0x38 register offset";
-	const char *cmbsz = "CMBSZ=0x3c register offset";
-	const char *bpinfo = "BPINFO=0x40 register offset";
-	const char *cmbsts = "CMBSTS=0x58 register offset";
-	const char *cmbebs = "CMBEBS=0x5c register offset";
-	const char *cmbswtp = "CMBSWTP=0x60 register offset";
-	const char *crto = "CRTO=0x68 register offset";
-	const char *pmrcap = "PMRCAP=0xe00 register offset";
-	const char *pmrsts = "PMRSTS=0xe08 register offset";
-	const char *pmrebs = "PMREBS=0xe0c register offset";
-	const char *pmrswtp = "PMRSWTP=0xe10 register offset";
-	const char *pmrmscl = "PMRMSCL=0xe14 register offset";
-	const char *pmrmscu = "PMRMSCU=0xe18 register offset";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
@@ -6102,43 +6313,43 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("offset",         'O', &cfg.offset,         offset),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
-		  OPT_FLAG("cap",              0, &cfg.cap,            cap),
-		  OPT_FLAG("vs",               0, &cfg.vs,             vs),
-		  OPT_FLAG("cmbloc",           0, &cfg.cmbloc,         cmbloc),
-		  OPT_FLAG("cmbsz",            0, &cfg.cmbsz,          cmbsz),
-		  OPT_FLAG("bpinfo",           0, &cfg.bpinfo,         bpinfo),
-		  OPT_FLAG("cmbsts",           0, &cfg.cmbsts,         cmbsts),
-		  OPT_FLAG("cmbebs",           0, &cfg.cmbebs,         cmbebs),
-		  OPT_FLAG("cmbswtp",          0, &cfg.cmbswtp,        cmbswtp),
-		  OPT_FLAG("crto",             0, &cfg.crto,           crto),
-		  OPT_FLAG("pmrcap",           0, &cfg.pmrcap,         pmrcap),
-		  OPT_FLAG("pmrsts",           0, &cfg.pmrsts,         pmrsts),
-		  OPT_FLAG("pmrebs",           0, &cfg.pmrebs,         pmrebs),
-		  OPT_FLAG("pmrswtp",          0, &cfg.pmrswtp,        pmrswtp),
-		  OPT_FLAG("intms",            0, &cfg.intms,          intms),
-		  OPT_FLAG("intmc",            0, &cfg.intmc,          intmc),
-		  OPT_FLAG("cc",               0, &cfg.cc,             cc),
-		  OPT_FLAG("csts",             0, &cfg.csts,           csts),
-		  OPT_FLAG("nssr",             0, &cfg.nssr,           nssr),
-		  OPT_FLAG("aqa",              0, &cfg.aqa,            aqa),
-		  OPT_FLAG("asq",              0, &cfg.asq,            asq),
-		  OPT_FLAG("acq",              0, &cfg.acq,            acq),
-		  OPT_FLAG("bprsel",           0, &cfg.bprsel,         bprsel),
-		  OPT_FLAG("bpmbl",            0, &cfg.bpmbl,          bpmbl),
-		  OPT_FLAG("cmbmsc",           0, &cfg.cmbmsc,         cmbmsc),
-		  OPT_FLAG("nssd",             0, &cfg.nssd,           nssd),
-		  OPT_FLAG("pmrctl",           0, &cfg.pmrctl,         pmrctl),
-		  OPT_FLAG("pmrmscl",          0, &cfg.pmrmscl,        pmrmscl),
-		  OPT_FLAG("pmrmscu",          0, &cfg.pmrmscu,        pmrmscu));
+		  OPT_UINT("offset",         'O', &cfg.offset,         desc_offset),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_get_register),
+		  OPT_FLAG("cap",              0, &cfg.cap,            desc_cap),
+		  OPT_FLAG("vs",               0, &cfg.vs,             desc_vs),
+		  OPT_FLAG("cmbloc",           0, &cfg.cmbloc,         desc_cmbloc),
+		  OPT_FLAG("cmbsz",            0, &cfg.cmbsz,          desc_cmbsz),
+		  OPT_FLAG("bpinfo",           0, &cfg.bpinfo,         desc_bpinfo),
+		  OPT_FLAG("cmbsts",           0, &cfg.cmbsts,         desc_cmbsts),
+		  OPT_FLAG("cmbebs",           0, &cfg.cmbebs,         desc_cmbebs),
+		  OPT_FLAG("cmbswtp",          0, &cfg.cmbswtp,        desc_cmbswtp),
+		  OPT_FLAG("crto",             0, &cfg.crto,           desc_crto),
+		  OPT_FLAG("pmrcap",           0, &cfg.pmrcap,         desc_pmrcap),
+		  OPT_FLAG("pmrsts",           0, &cfg.pmrsts,         desc_pmrsts),
+		  OPT_FLAG("pmrebs",           0, &cfg.pmrebs,         desc_pmrebs),
+		  OPT_FLAG("pmrswtp",          0, &cfg.pmrswtp,        desc_pmrswtp),
+		  OPT_FLAG("intms",            0, &cfg.intms,          desc_intms),
+		  OPT_FLAG("intmc",            0, &cfg.intmc,          desc_intmc),
+		  OPT_FLAG("cc",               0, &cfg.cc,             desc_cc),
+		  OPT_FLAG("csts",             0, &cfg.csts,           desc_csts),
+		  OPT_FLAG("nssr",             0, &cfg.nssr,           desc_nssr),
+		  OPT_FLAG("aqa",              0, &cfg.aqa,            desc_aqa),
+		  OPT_FLAG("asq",              0, &cfg.asq,            desc_asq),
+		  OPT_FLAG("acq",              0, &cfg.acq,            desc_acq),
+		  OPT_FLAG("bprsel",           0, &cfg.bprsel,         desc_bprsel),
+		  OPT_FLAG("bpmbl",            0, &cfg.bpmbl,          desc_bpmbl),
+		  OPT_FLAG("cmbmsc",           0, &cfg.cmbmsc,         desc_cmbmsc),
+		  OPT_FLAG("nssd",             0, &cfg.nssd,           desc_nssd),
+		  OPT_FLAG("pmrctl",           0, &cfg.pmrctl,         desc_pmrctl),
+		  OPT_FLAG("pmrmscl",          0, &cfg.pmrmscl,        desc_pmrmscl),
+		  OPT_FLAG("pmrmscu",          0, &cfg.pmrmscu,        desc_pmrmscu));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_register, opts);
 	if (err)
 		return err;
 
 	if (libnvme_transport_handle_is_ns(hdl)) {
-		nvme_show_error(only_ctrl_dev);
+		nvme_show_error(desc_only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -6404,10 +6615,6 @@ static int set_register_names(struct libnvme_transport_handle *hdl, void *bar, s
 
 static int set_register(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Writes and shows the defined NVMe controller register";
-	const char *value = "the value of the register to be set";
-	const char *mmio32 = "Access 64-bit registers as 2 32-bit";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
@@ -6418,31 +6625,31 @@ static int set_register(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("offset",  'O', &cfg.offset,  offset),
-		  OPT_SUFFIX("value", 'V', &cfg.value,   value),
-		  OPT_FLAG("mmio32",  'm', &cfg.mmio32,  mmio32),
-		  OPT_UINT("intms",     0, &cfg.intms,   intms),
-		  OPT_UINT("intmc",     0, &cfg.intmc,   intmc),
-		  OPT_UINT("cc",        0, &cfg.cc,      cc),
-		  OPT_UINT("csts",      0, &cfg.csts,    csts),
-		  OPT_UINT("nssr",      0, &cfg.nssr,    nssr),
-		  OPT_UINT("aqa",       0, &cfg.aqa,     aqa),
-		  OPT_SUFFIX("asq",     0, &cfg.asq,     asq),
-		  OPT_SUFFIX("acq",     0, &cfg.acq,     acq),
-		  OPT_UINT("bprsel",    0, &cfg.bprsel,  bprsel),
-		  OPT_SUFFIX("bpmbl",   0, &cfg.bpmbl,   bpmbl),
-		  OPT_SUFFIX("cmbmsc",  0, &cfg.cmbmsc,  cmbmsc),
-		  OPT_UINT("nssd",      0, &cfg.nssd,    nssd),
-		  OPT_UINT("pmrctl",    0, &cfg.pmrctl,  pmrctl),
-		  OPT_UINT("pmrmscl",   0, &cfg.pmrmscl, pmrmscl),
-		  OPT_UINT("pmrmscu",   0, &cfg.pmrmscu, pmrmscu));
+		  OPT_UINT("offset",  'O', &cfg.offset,  desc_offset),
+		  OPT_SUFFIX("value", 'V', &cfg.value,   desc_value_set_register),
+		  OPT_FLAG("mmio32",  'm', &cfg.mmio32,  desc_mmio32),
+		  OPT_UINT("intms",     0, &cfg.intms,   desc_intms),
+		  OPT_UINT("intmc",     0, &cfg.intmc,   desc_intmc),
+		  OPT_UINT("cc",        0, &cfg.cc,      desc_cc),
+		  OPT_UINT("csts",      0, &cfg.csts,    desc_csts),
+		  OPT_UINT("nssr",      0, &cfg.nssr,    desc_nssr),
+		  OPT_UINT("aqa",       0, &cfg.aqa,     desc_aqa),
+		  OPT_SUFFIX("asq",     0, &cfg.asq,     desc_asq),
+		  OPT_SUFFIX("acq",     0, &cfg.acq,     desc_acq),
+		  OPT_UINT("bprsel",    0, &cfg.bprsel,  desc_bprsel),
+		  OPT_SUFFIX("bpmbl",   0, &cfg.bpmbl,   desc_bpmbl),
+		  OPT_SUFFIX("cmbmsc",  0, &cfg.cmbmsc,  desc_cmbmsc),
+		  OPT_UINT("nssd",      0, &cfg.nssd,    desc_nssd),
+		  OPT_UINT("pmrctl",    0, &cfg.pmrctl,  desc_pmrctl),
+		  OPT_UINT("pmrmscl",   0, &cfg.pmrmscl, desc_pmrmscl),
+		  OPT_UINT("pmrmscu",   0, &cfg.pmrmscu, desc_pmrmscu));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_set_register, opts);
 	if (err)
 		return err;
 
 	if (libnvme_transport_handle_is_ns(hdl)) {
-		nvme_show_error(only_ctrl_dev);
+		nvme_show_error(desc_only_ctrl_dev);
 		return -EINVAL;
 	}
 
@@ -6462,12 +6669,6 @@ static int set_register(int argc, char **argv, struct command *acmd, struct plug
 
 static int get_property(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Reads and shows the defined NVMe controller property\n"
-		"for NVMe over Fabric. Property offset must be one of:\n"
-		"CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20, NSSD=0x64, CRTO=0x68";
-	const char *offset = "offset of the requested property";
-	const char *human_readable = "show property in readable format";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__u64 value;
@@ -6481,10 +6682,10 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("offset",         'O', &cfg.offset,         offset),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
+		  OPT_UINT("offset",         'O', &cfg.offset,         desc_offset),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_get_property));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_property, opts);
 	if (err)
 		return err;
 
@@ -6511,10 +6712,6 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 
 static int set_property(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc =
-	    "Writes and shows the defined NVMe controller property for NVMe over Fabric";
-	const char *offset = "the offset of the property";
-	const char *value = "the value of the property to be set";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -6527,10 +6724,10 @@ static int set_property(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("offset", 'O', &cfg.offset, offset),
-		  OPT_UINT("value",  'V', &cfg.value,  value));
+		  OPT_UINT("offset", 'O', &cfg.offset, desc_offset),
+		  OPT_UINT("value",  'V', &cfg.value,  desc_value_set_property));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_set_property, opts);
 	if (err)
 		return err;
 
@@ -6574,19 +6771,6 @@ static void show_relatives(const char *name, nvme_print_flags_t flags)
 
 static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Re-format a specified namespace on the\n"
-		"given device. Can erase all data in namespace (user\n"
-		"data erase) or delete data encryption key if specified.\n"
-		"Can also be used to change LBAF to change the namespaces reported physical block format.";
-	const char *lbaf = "LBA format to apply (required)";
-	const char *ses = "[0-2]: secure erase";
-	const char *pil = "[0-1]: protection info location last/first bytes of metadata";
-	const char *pi = "[0-3]: protection info off/Type 1/Type 2/Type 3";
-	const char *mset = "[0-1]: extended format off/on";
-	const char *reset = "Automatically reset the controller after successful format";
-	const char *bs = "target block size";
-	const char *force = "The \"I know what I'm doing\" flag, skip confirmation before sending command";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free struct nvme_id_ctrl *ctrl = NULL;
@@ -6628,18 +6812,18 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		timeout_ms = nvme_args.timeout;
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",         'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
-		  OPT_BYTE("lbaf",         'l', &cfg.lbaf,         lbaf),
-		  OPT_BYTE("ses",          's', &cfg.ses,          ses),
-		  OPT_BYTE("pi",           'i', &cfg.pi,           pi),
-		  OPT_BYTE("pil",          'p', &cfg.pil,          pil),
-		  OPT_BYTE("ms",           'm', &cfg.mset,         mset),
-		  OPT_FLAG("reset",        'r', &cfg.reset,        reset),
-		  OPT_FLAG("force",          0, &cfg.force,        force),
-		  OPT_SUFFIX("block-size", 'b', &cfg.bs,           bs));
+		  OPT_FLAG("ish",         'I', &cfg.ish,          desc_ish),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_id_desired),
+		  OPT_BYTE("lbaf",         'l', &cfg.lbaf,         desc_lbaf),
+		  OPT_BYTE("ses",          's', &cfg.ses,          desc_ses),
+		  OPT_BYTE("pi",           'i', &cfg.pi,           desc_pi),
+		  OPT_BYTE("pil",          'p', &cfg.pil,          desc_pil),
+		  OPT_BYTE("ms",           'm', &cfg.mset,         desc_mset),
+		  OPT_FLAG("reset",        'r', &cfg.reset,        desc_reset),
+		  OPT_FLAG("force",          0, &cfg.force,        desc_force_format_cmd),
+		  OPT_SUFFIX("block-size", 'b', &cfg.bs,           desc_bs_format_cmd));
 
-	err = parse_args(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc_format_cmd, opts);
 	if (err)
 		return err;
 
@@ -6651,7 +6835,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 			if (!cfg.force)
 				fprintf(stderr, "Use the force [--force] option to ignore that.\n");
 		} else {
-			argconfig_print_help(desc, opts);
+			argconfig_print_help(desc_format_cmd, opts);
 		}
 		return err;
 	}
@@ -6786,7 +6970,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	cmd.timeout_ms = timeout_ms;
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -6841,21 +7025,6 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 
 static int set_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Modify the saveable or changeable "
-		"current operating parameters of the controller. "
-		"Operating parameters are grouped and identified by Feature"
-		"Identifiers. Feature settings can be applied to the entire"
-		"controller and all associated namespaces, or to only a few"
-		"namespace(s) associated with the controller. Default values"
-		"for each Feature are vendor-specific and may not be modified."
-		"Use get-feature to determine which Features are supported by"
-		"the controller and are saveable/changeable.";
-	const char *fid = "feature identifier (required)";
-	const char *data = "optional file for feature data (default stdin)";
-	const char *value = "new value of feature (required)";
-	const char *cdw12 = "feature cdw12, if used";
-	const char *sv = "specifies that the controller shall save the attribute";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free void *buf = NULL;
@@ -6886,16 +7055,16 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.nsid,     namespace_desired),
-		  OPT_BYTE("feature-id",   'f', &cfg.fid,      fid, feature_name),
-		  OPT_SUFFIX("value",      'V', &cfg.value,    value),
-		  OPT_UINT("cdw12",        'c', &cfg.cdw12,    cdw12),
-		  OPT_BYTE("uuid-index",   'U', &cfg.uidx,     uuid_index_specify),
-		  OPT_UINT("data-len",     'l', &cfg.data_len, buf_len),
-		  OPT_FILE("data",         'd', &cfg.file,     data),
-		  OPT_FLAG("save",         's', &cfg.sv,       sv));
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,     desc_namespace_desired),
+		  OPT_BYTE("feature-id",   'f', &cfg.fid,      desc_fid, feature_name),
+		  OPT_SUFFIX("value",      'V', &cfg.value,    desc_value_set_feature),
+		  OPT_UINT("cdw12",        'c', &cfg.cdw12,    desc_cdw12_set_feature),
+		  OPT_BYTE("uuid-index",   'U', &cfg.uidx,     desc_uuid_index_specify),
+		  OPT_UINT("data-len",     'l', &cfg.data_len, desc_buf_len),
+		  OPT_FILE("data",         'd', &cfg.file,     desc_data_set_feature),
+		  OPT_FLAG("save",         's', &cfg.sv,       desc_sv));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_set_feature, opts);
 	if (err)
 		return err;
 
@@ -6994,12 +7163,6 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct stat sb;
-	const char *desc = "Transfer security protocol data to\n"
-		"a controller. Security Receives for the same protocol should be\n"
-		"performed after Security Sends. The security protocol field\n"
-		"associates Security Sends (security-send) and Security Receives (security-recv).";
-	const char *file = "transfer payload";
-	const char *tl = "transfer length (cf. SPC-4)";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -7031,15 +7194,15 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		  OPT_FILE("file",         'f', &cfg.file,         file),
-		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
-		  OPT_BYTE("secp",         'p', &cfg.secp,         secp),
-		  OPT_SHRT("spsp",         's', &cfg.spsp,         spsp),
-		  OPT_UINT("tl",           't', &cfg.tl,           tl));
+		  OPT_FLAG("ish",          'I', &cfg.ish,          desc_ish),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_desired),
+		  OPT_FILE("file",         'f', &cfg.file,         desc_file),
+		  OPT_BYTE("nssf",         'N', &cfg.nssf,         desc_nssf),
+		  OPT_BYTE("secp",         'p', &cfg.secp,         desc_secp),
+		  OPT_SHRT("spsp",         's', &cfg.spsp,         desc_spsp),
+		  OPT_UINT("tl",           't', &cfg.tl,           desc_tl));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_sec_send, opts);
 	if (err)
 		return err;
 
@@ -7091,7 +7254,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 		cfg.secp, cfg.tl, sec_buf, cfg.tl);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -7108,11 +7271,6 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 
 static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Set directive parameters of the specified directive type.";
-	const char *endir = "directive enable";
-	const char *ttype = "target directive type to be enabled/disabled";
-	const char *input = "write/send file (default stdin)";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free void *buf = NULL;
@@ -7148,18 +7306,18 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
-		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
-		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
-		  OPT_BYTE("target-dir",     'T', &cfg.ttype,          ttype),
-		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
-		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
-		  OPT_SHRT("endir",          'e', &cfg.endir,          endir),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, deprecated),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
-		  OPT_FILE("input-file",     'i', &cfg.file,           input));
+		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   desc_namespace_id_desired),
+		  OPT_UINT("data-len",       'l', &cfg.data_len,       desc_buf_len),
+		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          desc_dtype),
+		  OPT_BYTE("target-dir",     'T', &cfg.ttype,          desc_ttype),
+		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          desc_dspec_w_dtype),
+		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          desc_doper),
+		  OPT_SHRT("endir",          'e', &cfg.endir,          desc_endir),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_deprecated),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     desc_raw_directive),
+		  OPT_FILE("input-file",     'i', &cfg.file,           desc_input_dir_send));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_dir_send, opts);
 	if (err)
 		return err;
 
@@ -7243,9 +7401,6 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 
 static int write_uncor(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc =
-	    "The Write Uncorrectable command is used to set a range of logical blocks to invalid.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -7268,13 +7423,13 @@ static int write_uncor(int argc, char **argv, struct command *acmd, struct plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id, namespace_desired),
-		  OPT_SUFFIX("start-block", 's', &cfg.start_block,  start_block),
-		  OPT_SHRT("block-count",   'c', &cfg.block_count,  block_count),
-		  OPT_BYTE("dir-type",      'T', &cfg.dtype,        dtype),
-		  OPT_SHRT("dir-spec",      'S', &cfg.dspec,        dspec_w_dtype));
+		  OPT_UINT("namespace-id",  'n', &cfg.namespace_id, desc_namespace_desired),
+		  OPT_SUFFIX("start-block", 's', &cfg.start_block,  desc_start_block),
+		  OPT_SHRT("block-count",   'c', &cfg.block_count,  desc_block_count),
+		  OPT_BYTE("dir-type",      'T', &cfg.dtype,        desc_dtype),
+		  OPT_SHRT("dir-spec",      'S', &cfg.dspec,        desc_dspec_w_dtype));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_write_uncor, opts);
 	if (err)
 		return err;
 
@@ -7468,11 +7623,6 @@ static int write_zeroes(int argc, char **argv,
 	__u16 control = 0;
 	int err;
 
-	const char *desc =
-	    "The Write Zeroes command is used to set a range of logical blocks to zero.";
-	const char *deac =
-	    "Set DEAC bit, requesting controller to deallocate specified logical blocks";
-	const char *nsz = "Clear all logical blocks to zero in the entire namespace";
 
 	struct config {
 		__u32	nsid;
@@ -7511,23 +7661,23 @@ static int write_zeroes(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",      'n', &cfg.nsid,				 namespace_desired),
-		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
-		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
-		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype),
-		  OPT_FLAG("deac",              'd', &cfg.deac,              deac),
-		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
-		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
-		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		  OPT_SUFFIX("ref-tag",         'r', &cfg.ilbrt,			 ref_tag),
-		  OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,			 app_tag_mask),
-		  OPT_SHRT("app-tag",           'a', &cfg.lbat,				 app_tag),
-		  OPT_SUFFIX("storage-tag",     'S', &cfg.lbst,				 storage_tag),
-		  OPT_FLAG("storage-tag-check", 'C', &cfg.stc,				 storage_tag_check),
-		  OPT_SHRT("dir-spec",          'D', &cfg.dspec,             dspec_w_dtype),
-		  OPT_FLAG("namespace-zeroes",  'Z', &cfg.nsz,               nsz));
+		  OPT_UINT("namespace-id",      'n', &cfg.nsid,              desc_namespace_desired),
+		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       desc_start_block),
+		  OPT_SHRT("block-count",       'c', &cfg.block_count,       desc_block_count),
+		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             desc_dtype),
+		  OPT_FLAG("deac",              'd', &cfg.deac,              desc_deac),
+		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     desc_limited_retry),
+		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, desc_force_unit_access),
+		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            desc_prinfo),
+		  OPT_SUFFIX("ref-tag",         'r', &cfg.ilbrt,             desc_ref_tag),
+		  OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,             desc_app_tag_mask),
+		  OPT_SHRT("app-tag",           'a', &cfg.lbat,              desc_app_tag),
+		  OPT_SUFFIX("storage-tag",     'S', &cfg.lbst,              desc_storage_tag),
+		  OPT_FLAG("storage-tag-check", 'C', &cfg.stc,               desc_storage_tag_check),
+		  OPT_SHRT("dir-spec",          'D', &cfg.dspec,             desc_dspec_w_dtype),
+		  OPT_FLAG("namespace-zeroes",  'Z', &cfg.nsz,               desc_nsz));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_write_zeroes, opts);
 	if (err)
 		return err;
 
@@ -7589,18 +7739,6 @@ static int write_zeroes(int argc, char **argv,
 
 static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "The Dataset Management command is used by the host to\n"
-		"indicate attributes for ranges of logical blocks. This includes attributes\n"
-		"for discarding unused blocks, data read and write frequency, access size, and other\n"
-		"information that may be used to optimize performance and reliability.";
-	const char *blocks = "Comma separated list of the number of blocks in each range";
-	const char *starting_blocks = "Comma separated list of the starting block in each range";
-	const char *context_attrs = "Comma separated list of the context attributes in each range";
-	const char *ad = "Attribute Deallocate";
-	const char *idw = "Attribute Integral Dataset for Write";
-	const char *idr = "Attribute Integral Dataset for Read";
-	const char *cdw11 = "All the command DWORD 11 attributes. Use instead of specifying individual attributes";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free struct nvme_dsm_range *dsm = NULL;
@@ -7635,16 +7773,16 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
-		  OPT_LIST("ctx-attrs",    'a', &cfg.ctx_attrs,    context_attrs),
-		  OPT_LIST("blocks",       'b', &cfg.blocks,       blocks),
-		  OPT_LIST("slbs",         's', &cfg.slbas,        starting_blocks),
-		  OPT_FLAG("ad",           'd', &cfg.ad,           ad),
-		  OPT_FLAG("idw",          'w', &cfg.idw,          idw),
-		  OPT_FLAG("idr",          'r', &cfg.idr,          idr),
-		  OPT_UINT("cdw11",        'c', &cfg.cdw11,        cdw11));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_id_desired),
+		  OPT_LIST("ctx-attrs",    'a', &cfg.ctx_attrs,    desc_context_attrs),
+		  OPT_LIST("blocks",       'b', &cfg.blocks,       desc_blocks),
+		  OPT_LIST("slbs",         's', &cfg.slbas,        desc_starting_blocks),
+		  OPT_FLAG("ad",           'd', &cfg.ad,           desc_ad),
+		  OPT_FLAG("idw",          'w', &cfg.idw,          desc_idw),
+		  OPT_FLAG("idr",          'r', &cfg.idr,          desc_idr),
+		  OPT_UINT("cdw11",        'c', &cfg.cdw11,        desc_cdw11_dsm));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_dsm, opts);
 	if (err)
 		return err;
 
@@ -7704,28 +7842,6 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 
 static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "The Copy command is used by the host to copy data\n"
-		"from one or more source logical block ranges to a\n"
-		"single consecutive destination logical block range.";
-	const char *d_sdlba = "64-bit addr of first destination logical block";
-	const char *d_slbas = "64-bit addr of first block per range (comma-separated list)";
-	const char *d_nlbs = "number of blocks per range (comma-separated list, zeroes-based values)";
-	const char *d_snsids = "source namespace identifier per range (comma-separated list)";
-	const char *d_sopts = "source options per range (comma-separated list)";
-	const char *d_lr = "limited retry";
-	const char *d_fua = "force unit access";
-	const char *d_prinfor = "protection information and check field (read part)";
-	const char *d_prinfow = "protection information and check field (write part)";
-	const char *d_ilbrt = "initial lba reference tag (write part)";
-	const char *d_eilbrts = "expected lba reference tags (read part, comma-separated list)";
-	const char *d_lbat = "lba application tag (write part)";
-	const char *d_elbats = "expected lba application tags (read part, comma-separated list)";
-	const char *d_lbatm = "lba application tag mask (write part)";
-	const char *d_elbatms = "expected lba application tag masks (read part, comma-separated list)";
-	const char *d_dtype = "directive type (write part)";
-	const char *d_dspec = "directive specific (write part)";
-	const char *d_format = "source range entry format";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__u16 nr, nb, ns, nrts, natms, nats, nids;
@@ -7800,29 +7916,29 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",           'n', &cfg.nsid,		namespace_id_desired),
-		  OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,		d_sdlba),
-		  OPT_LIST("slbs",                   's', &cfg.slbas,		d_slbas),
-		  OPT_LIST("blocks",                 'b', &cfg.nlbs,		d_nlbs),
-		  OPT_LIST("snsids",                 'N', &cfg.snsids,		d_snsids),
-		  OPT_LIST("sopts",                  'O', &cfg.sopts,		d_sopts),
-		  OPT_FLAG("limited-retry",          'l', &cfg.lr,			d_lr),
-		  OPT_FLAG("force-unit-access",      'f', &cfg.fua,			d_fua),
-		  OPT_BYTE("prinfow",                'p', &cfg.prinfow,		d_prinfow),
-		  OPT_BYTE("prinfor",                'P', &cfg.prinfor,		d_prinfor),
-		  OPT_SUFFIX("ref-tag",              'r', &cfg.ilbrt,		d_ilbrt),
-		  OPT_LIST("expected-ref-tags",      'R', &cfg.eilbrts,		d_eilbrts),
-		  OPT_SHRT("app-tag",                'a', &cfg.lbat,		d_lbat),
-		  OPT_LIST("expected-app-tags",      'A', &cfg.elbats,		d_elbats),
-		  OPT_SHRT("app-tag-mask",           'm', &cfg.lbatm,		d_lbatm),
-		  OPT_LIST("expected-app-tag-masks", 'M', &cfg.elbatms,		d_elbatms),
-		  OPT_BYTE("dir-type",               'T', &cfg.dtype,		d_dtype),
-		  OPT_SHRT("dir-spec",               'S', &cfg.dspec,		d_dspec),
-		  OPT_BYTE("format",                 'F', &cfg.format,		d_format),
-		  OPT_SUFFIX("storage-tag",			 't', &cfg.lbst,		storage_tag),
-		  OPT_FLAG("storage-tag-check",		 'c', &cfg.stc,			storage_tag_check));
+		  OPT_UINT("namespace-id",           'n', &cfg.nsid,            desc_namespace_id_desired),
+		  OPT_SUFFIX("sdlba",                'd', &cfg.sdlba,           desc_d_sdlba),
+		  OPT_LIST("slbs",                   's', &cfg.slbas,           desc_d_slbas),
+		  OPT_LIST("blocks",                 'b', &cfg.nlbs,            desc_d_nlbs),
+		  OPT_LIST("snsids",                 'n', &cfg.snsids,          desc_d_snsids),
+		  OPT_LIST("sopts",                  'o', &cfg.sopts,           desc_d_sopts),
+		  OPT_FLAG("limited-retry",          'l', &cfg.lr,              desc_d_lr),
+		  OPT_FLAG("force-unit-access",      'f', &cfg.fua,             desc_d_fua),
+		  OPT_BYTE("prinfow",                'p', &cfg.prinfow,         desc_d_prinfow),
+		  OPT_BYTE("prinfor",                'p', &cfg.prinfor,         desc_d_prinfor),
+		  OPT_SUFFIX("ref-tag",              'r', &cfg.ilbrt,           desc_d_ilbrt),
+		  OPT_LIST("expected-ref-tags",      'r', &cfg.eilbrts,         desc_d_eilbrts),
+		  OPT_SHRT("app-tag",                'a', &cfg.lbat,            desc_d_lbat),
+		  OPT_LIST("expected-app-tags",      'a', &cfg.elbats,          desc_d_elbats),
+		  OPT_SHRT("app-tag-mask",           'm', &cfg.lbatm,           desc_d_lbatm),
+		  OPT_LIST("expected-app-tag-masks", 'm', &cfg.elbatms,         desc_d_elbatms),
+		  OPT_BYTE("dir-type",               't', &cfg.dtype,           desc_d_dtype),
+		  OPT_SHRT("dir-spec",               's', &cfg.dspec,           desc_d_dspec),
+		  OPT_BYTE("format",                 'f', &cfg.format,          desc_d_format),
+		  OPT_SUFFIX("storage-tag",          't', &cfg.lbst,            desc_storage_tag),
+		  OPT_FLAG("storage-tag-check",      'c', &cfg.stc,             desc_storage_tag_check));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_copy_cmd, opts);
 	if (err)
 		return err;
 
@@ -7922,12 +8038,6 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 
 static int flush_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Commit data and metadata associated with\n"
-		"given namespaces to nonvolatile media. Applies to all commands\n"
-		"finished before the flush was submitted. Additional data may also be\n"
-		"flushed by the controller, from any namespace, depending on controller and\n"
-		"associated namespace status.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
@@ -7941,9 +8051,9 @@ static int flush_cmd(int argc, char **argv, struct command *acmd, struct plugin 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_id_desired));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_flush_cmd, opts);
 	if (err)
 		return err;
 
@@ -7972,14 +8082,6 @@ static int flush_cmd(int argc, char **argv, struct command *acmd, struct plugin 
 
 static int resv_acquire(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Obtain a reservation on a given\n"
-		"namespace. Only one reservation is allowed at a time on a\n"
-		"given namespace, though multiple controllers may register\n"
-		"with that namespace. Namespace reservation will abort with\n"
-		"status Reservation Conflict if the given namespace is already reserved.";
-	const char *prkey = "pre-empt reservation key";
-	const char *racqa = "reservation acquire action";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -8006,14 +8108,14 @@ static int resv_acquire(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
-		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
-		  OPT_SUFFIX("prkey",      'p', &cfg.prkey,        prkey),
-		  OPT_BYTE("rtype",        't', &cfg.rtype,        rtype),
-		  OPT_BYTE("racqa",        'a', &cfg.racqa,        racqa),
-		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_id_desired),
+		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        desc_crkey),
+		  OPT_SUFFIX("prkey",      'p', &cfg.prkey,        desc_prkey),
+		  OPT_BYTE("rtype",        't', &cfg.rtype,        desc_rtype),
+		  OPT_BYTE("racqa",        'a', &cfg.racqa,        desc_racqa),
+		  OPT_FLAG("iekey",        'i', &cfg.iekey,        desc_iekey));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_resv_acquire, opts);
 	if (err)
 		return err;
 
@@ -8050,13 +8152,6 @@ static int resv_acquire(int argc, char **argv, struct command *acmd, struct plug
 
 static int resv_register(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Register, de-register, or\n"
-		"replace a controller's reservation on a given namespace.\n"
-		"Only one reservation at a time is allowed on any namespace.";
-	const char *nrkey = "new reservation key";
-	const char *rrega = "reservation registration action";
-	const char *cptpl = "change persistence through power loss setting";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -8082,14 +8177,14 @@ static int resv_register(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
-		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        crkey),
-		  OPT_SUFFIX("nrkey",      'k', &cfg.nrkey,        nrkey),
-		  OPT_BYTE("rrega",        'r', &cfg.rrega,        rrega),
-		  OPT_BYTE("cptpl",        'p', &cfg.cptpl,        cptpl),
-		  OPT_FLAG("iekey",        'i', &cfg.iekey,        iekey));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_id_desired),
+		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,        desc_crkey),
+		  OPT_SUFFIX("nrkey",      'k', &cfg.nrkey,        desc_nrkey),
+		  OPT_BYTE("rrega",        'r', &cfg.rrega,        desc_rrega),
+		  OPT_BYTE("cptpl",        'p', &cfg.cptpl,        desc_cptpl),
+		  OPT_FLAG("iekey",        'i', &cfg.iekey,        desc_iekey));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_resv_register, opts);
 	if (err)
 		return err;
 
@@ -8132,16 +8227,6 @@ static int resv_register(int argc, char **argv, struct command *acmd, struct plu
 
 static int resv_release(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Releases reservation held on a\n"
-		"namespace by the given controller. If rtype != current reservation\n"
-		"type, release will fails. If the given controller holds no\n"
-		"reservation on the namespace or is not the namespace's current\n"
-		"reservation holder, the release command completes with no\n"
-		"effect. If the reservation type is not Write Exclusive or\n"
-		"Exclusive Access, all registrants on the namespace except\n"
-		"the issuing controller are notified.";
-	const char *rrela = "reservation release action";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -8166,13 +8251,13 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id", 'n', &cfg.nsid,		namespace_desired),
-		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,     crkey),
-		  OPT_BYTE("rtype",        't', &cfg.rtype,     rtype),
-		  OPT_BYTE("rrela",        'a', &cfg.rrela,     rrela),
-		  OPT_FLAG("iekey",        'i', &cfg.iekey,     iekey));
+		  OPT_UINT("namespace-id", 'n', &cfg.nsid,		desc_namespace_desired),
+		  OPT_SUFFIX("crkey",      'c', &cfg.crkey,     desc_crkey),
+		  OPT_BYTE("rtype",        't', &cfg.rtype,     desc_rtype),
+		  OPT_BYTE("rrela",        'a', &cfg.rrela,     desc_rrela),
+		  OPT_FLAG("iekey",        'i', &cfg.iekey,     desc_iekey));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_resv_release, opts);
 	if (err)
 		return err;
 
@@ -8209,13 +8294,6 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 
 static int resv_report(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Returns Reservation Status data\n"
-		"structure describing any existing reservations on and the\n"
-		"status of a given namespace. Namespace Reservation Status\n"
-		"depends on the number of controllers registered for that namespace.";
-	const char *numd = "number of dwords to transfer";
-	const char *eds = "request extended data structure";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free struct nvme_resv_status *status = NULL;
@@ -8239,12 +8317,12 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.nsid,		  namespace_id_desired),
-		  OPT_UINT("numd",          'd', &cfg.numd,       numd),
-		  OPT_FLAG("eds",           'e', &cfg.eds,        eds),
-		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, raw_dump));
+		  OPT_UINT("namespace-id",  'n', &cfg.nsid,       desc_namespace_id_desired),
+		  OPT_UINT("numd",          'd', &cfg.numd,       desc_numd),
+		  OPT_FLAG("eds",           'e', &cfg.eds,        desc_eds),
+		  OPT_FLAG("raw-binary",    'b', &cfg.raw_binary, desc_raw_dump));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_resv_report, opts);
 	if (err)
 		return err;
 
@@ -8332,19 +8410,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	int err = 0;
 	int flags;
 
-	const char *start_block_addr = "64-bit addr of first block to access";
-	const char *block_size = "if specified, logical block size in bytes;\n"
-		"discovered by identify namespace otherwise";
-	const char *data_size = "size of data in bytes";
-	const char *metadata_size = "size of metadata in bytes";
-	const char *data = "data file";
-	const char *metadata = "metadata file";
-	const char *limited_retry_num = "limit num. media access attempts";
-	const char *show = "show command before sending";
-	const char *dtype_for_write = "directive type (for write-only)";
-	const char *dspec = "directive specific (for write-only)";
-	const char *dsm = "dataset management attributes (lower 8 bits)";
-	const char *force = "The \"I know what I'm doing\" flag, do not enforce exclusive access for write";
 
 	struct config {
 		__u32	nsid;
@@ -8397,28 +8462,28 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",      'n', &cfg.nsid,				 namespace_id_desired),
-		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block_addr),
-		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
-		  OPT_SHRT("block-size",        'b', &cfg.block_size,        block_size),
-		  OPT_SUFFIX("data-size",       'z', &cfg.data_size,         data_size),
-		  OPT_SUFFIX("metadata-size",   'y', &cfg.metadata_size,     metadata_size),
-		  OPT_SUFFIX("ref-tag",         'r', &cfg.ilbrt,			 ref_tag),
-		  OPT_FILE("data",              'd', &cfg.data,              data),
-		  OPT_FILE("metadata",          'M', &cfg.metadata,          metadata),
-		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		  OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,			 app_tag_mask),
-		  OPT_SHRT("app-tag",           'a', &cfg.lbat,				 app_tag),
-		  OPT_SUFFIX("storage-tag",     'g', &cfg.lbst,				 storage_tag),
-		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry_num),
-		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access),
-		  OPT_FLAG("storage-tag-check", 'C', &cfg.stc,				 storage_tag_check),
-		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             dtype_for_write),
-		  OPT_SHRT("dir-spec",          'S', &cfg.dspec,             dspec),
-		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            dsm),
-		  OPT_FLAG("show-command",      'V', &cfg.show,              show),
-		  OPT_FLAG("latency",           't', &cfg.latency,           latency),
-		  OPT_FLAG("force",               0, &cfg.force,             force));
+		  OPT_UINT("namespace-id",      'n', &cfg.nsid,              desc_namespace_id_desired),
+		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       desc_start_block_addr),
+		  OPT_SHRT("block-count",       'c', &cfg.block_count,       desc_block_count),
+		  OPT_SHRT("block-size",        'b', &cfg.block_size,        desc_block_size),
+		  OPT_SUFFIX("data-size",       'z', &cfg.data_size,         desc_data_size),
+		  OPT_SUFFIX("metadata-size",   'y', &cfg.metadata_size,     desc_metadata_size),
+		  OPT_SUFFIX("ref-tag",         'r', &cfg.ilbrt,             desc_ref_tag),
+		  OPT_FILE("data",              'd', &cfg.data,              desc_data_submit_io),
+		  OPT_FILE("metadata",          'M', &cfg.metadata,          desc_metadata_submit_io),
+		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            desc_prinfo),
+		  OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,             desc_app_tag_mask),
+		  OPT_SHRT("app-tag",           'a', &cfg.lbat,              desc_app_tag),
+		  OPT_SUFFIX("storage-tag",     'g', &cfg.lbst,              desc_storage_tag),
+		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     desc_limited_retry_num),
+		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, desc_force_unit_access),
+		  OPT_FLAG("storage-tag-check", 'C', &cfg.stc,               desc_storage_tag_check),
+		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             desc_dtype_for_write),
+		  OPT_SHRT("dir-spec",          'S', &cfg.dspec,             desc_dspec),
+		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            desc_dsm),
+		  OPT_FLAG("show-command",      'V', &cfg.show,              desc_show_submit_io),
+		  OPT_FLAG("latency",           't', &cfg.latency,           desc_latency),
+		  OPT_FLAG("force",               0, &cfg.force,             desc_force_submit_io));
 
 	if (opcode != nvme_cmd_write) {
 		err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -8636,27 +8701,20 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 
 static int compare(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Compare specified logical blocks on\n"
-		"device with specified data buffer; return failure if buffer\n"
-		"and block(s) are dissimilar";
 
-	return submit_io(nvme_cmd_compare, "compare", desc, argc, argv);
+	return submit_io(nvme_cmd_compare, "compare", desc_compare, argc, argv);
 }
 
 static int read_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Copy specified logical blocks on the given\n"
-		"device to specified data buffer (default buffer is stdout).";
 
-	return submit_io(nvme_cmd_read, "read", desc, argc, argv);
+	return submit_io(nvme_cmd_read, "read", desc_read_cmd, argc, argv);
 }
 
 static int write_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Copy from provided data buffer (default\n"
-		"buffer is stdin) to specified logical blocks on the given device.";
 
-	return submit_io(nvme_cmd_write, "write", desc, argc, argv);
+	return submit_io(nvme_cmd_write, "write", desc_write_cmd, argc, argv);
 }
 
 static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -8667,11 +8725,6 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	__u16 control = 0;
 	int err;
 
-	const char *desc = "Verify specified logical blocks on the given device.";
-	const char *force_unit_access_verify =
-	    "force device to commit cached data before performing the verify operation";
-	const char *storage_tag_check =
-	    "This bit specifies the Storage Tag field shall be checked as part of Verify operation";
 
 	struct config {
 		__u32	nsid;
@@ -8702,20 +8755,20 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",      'n', &cfg.nsid,				 namespace_desired),
-		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       start_block),
-		  OPT_SHRT("block-count",       'c', &cfg.block_count,       block_count),
-		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     limited_retry),
-		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, force_unit_access_verify),
-		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            prinfo),
-		  OPT_SUFFIX("ref-tag",         'r', &cfg.ilbrt,			 ref_tag),
-		  OPT_SHRT("app-tag",           'a', &cfg.lbat,				 app_tag),
-		  OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,			 app_tag_mask),
-		  OPT_SUFFIX("storage-tag",     'S', &cfg.lbst,				 storage_tag),
-		  OPT_FLAG("storage-tag-check", 'C', &cfg.stc,				 storage_tag_check));
+		  OPT_UINT("namespace-id",      'n', &cfg.nsid,              desc_namespace_desired),
+		  OPT_SUFFIX("start-block",     's', &cfg.start_block,       desc_start_block),
+		  OPT_SHRT("block-count",       'c', &cfg.block_count,       desc_block_count),
+		  OPT_FLAG("limited-retry",     'l', &cfg.limited_retry,     desc_limited_retry),
+		  OPT_FLAG("force-unit-access", 'f', &cfg.force_unit_access, desc_force_unit_access_verify),
+		  OPT_BYTE("prinfo",            'p', &cfg.prinfo,            desc_prinfo),
+		  OPT_SUFFIX("ref-tag",         'r', &cfg.ilbrt,             desc_ref_tag),
+		  OPT_SHRT("app-tag",           'a', &cfg.lbat,              desc_app_tag),
+		  OPT_SHRT("app-tag-mask",      'm', &cfg.lbatm,             desc_app_tag_mask),
+		  OPT_SUFFIX("storage-tag",     'S', &cfg.lbst,              desc_storage_tag),
+		  OPT_FLAG("storage-tag-check", 'C', &cfg.stc,               desc_storage_tag_check));
 
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_verify_cmd, opts);
 	if (err)
 		return err;
 
@@ -8761,15 +8814,6 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 
 static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Obtain results of one or more\n"
-		"previously submitted security-sends. Results, and association\n"
-		"between Security Send and Receive, depend on the security\n"
-		"protocol field as they are defined by the security protocol\n"
-		"used. A Security Receive must follow a Security Send made with\n"
-		"the same security protocol.";
-	const char *size = "size of buffer (prints to stdout on success)";
-	const char *al = "allocation length (cf. SPC-4)";
-
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free void *sec_buf = NULL;
@@ -8800,16 +8844,16 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,          ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		  OPT_UINT("size",         'x', &cfg.size,         size),
-		  OPT_BYTE("nssf",         'N', &cfg.nssf,         nssf),
-		  OPT_BYTE("secp",         'p', &cfg.secp,         secp),
-		  OPT_SHRT("spsp",         's', &cfg.spsp,         spsp),
-		  OPT_UINT("al",           't', &cfg.al,           al),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump));
+		  OPT_FLAG("ish",          'I', &cfg.ish,          desc_ish),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_desired),
+		  OPT_UINT("size",         'x', &cfg.size,         desc_size),
+		  OPT_BYTE("nssf",         'N', &cfg.nssf,         desc_nssf),
+		  OPT_BYTE("secp",         'p', &cfg.secp,         desc_secp),
+		  OPT_SHRT("spsp",         's', &cfg.spsp,         desc_spsp),
+		  OPT_UINT("al",           't', &cfg.al,           desc_al),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   desc_raw_dump));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_sec_recv, opts);
 	if (err)
 		return err;
 
@@ -8827,7 +8871,7 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -8852,16 +8896,6 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 static int get_lba_status(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
-	const char *desc = "Information about potentially unrecoverable LBAs.";
-	const char *slba =
-	    "Starting LBA(SLBA) in 64-bit address of the first logical block addressed by this command";
-	const char *mndw =
-	    "Maximum Number of Dwords(MNDW) specifies maximum number of dwords to return";
-	const char *atype = "Action Type(ATYPE) specifies the mechanism\n"
-		"the controller uses in determining the LBA Status Descriptors to return.";
-	const char *rl =
-	    "Range Length(RL) specifies the length of the range of contiguous LBAs beginning at SLBA";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -8889,14 +8923,14 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",          'I', &cfg.ish,           ish),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_desired),
-		  OPT_SUFFIX("start-lba",  's', &cfg.slba,          slba),
-		  OPT_UINT("max-dw",       'm', &cfg.mndw,          mndw),
-		  OPT_BYTE("action",       'a', &cfg.atype,         atype),
-		  OPT_SHRT("range-len",    'l', &cfg.rl,            rl));
+		  OPT_FLAG("ish",          'I', &cfg.ish,           desc_ish),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  desc_namespace_desired),
+		  OPT_SUFFIX("start-lba",  's', &cfg.slba,          desc_slba),
+		  OPT_UINT("max-dw",       'm', &cfg.mndw,          desc_mndw),
+		  OPT_BYTE("action",       'a', &cfg.atype,         desc_atype),
+		  OPT_SHRT("range-len",    'l', &cfg.rl,            desc_rl));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_lba_status, opts);
 	if (err)
 		return err;
 
@@ -8920,7 +8954,7 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 				 cfg.atype, cfg.rl, buf);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -8937,17 +8971,6 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 
 static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Host software uses the Capacity Management command to\n"
-		"configure Endurance Groups and NVM Sets in an NVM subsystem by either\n"
-		"selecting one of a set of supported configurations or by specifying the\n"
-		"capacity of the Endurance Group or NVM Set to be created";
-	const char *operation = "Operation to be performed by the controller";
-	const char *element_id = "Value specific to the value of the Operation field.";
-	const char *cap_lower =
-	    "Least significant 32 bits of the capacity in bytes of the Endurance Group or NVM Set to be created";
-	const char *cap_upper =
-	    "Most significant 32 bits of the capacity in bytes of the Endurance Group or NVM Set to be created";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -8971,14 +8994,14 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("ish",         'I', &cfg.ish,          ish),
-		  OPT_BYTE("operation",   'O', &cfg.operation,    operation),
-		  OPT_SHRT("element-id",  'i', &cfg.element_id,   element_id),
-		  OPT_UINT("cap-lower",   'l', &cfg.dw11,         cap_lower),
-		  OPT_UINT("cap-upper",   'u', &cfg.dw12,         cap_upper));
+		  OPT_FLAG("ish",         'I', &cfg.ish,          desc_ish),
+		  OPT_BYTE("operation",   'O', &cfg.operation,    desc_operation),
+		  OPT_SHRT("element-id",  'i', &cfg.element_id,   desc_element_id),
+		  OPT_UINT("cap-lower",   'l', &cfg.dw11,         desc_cap_lower),
+		  OPT_UINT("cap-upper",   'u', &cfg.dw12,         desc_cap_upper));
 
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_capacity_mgmt, opts);
 	if (err)
 		return err;
 
@@ -8997,7 +9020,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 		(__u64)cfg.dw12 << 32 | cfg.dw11);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
-			nvme_init_mi_cmd_flags(&cmd, ish);
+			nvme_init_mi_cmd_flags(&cmd, desc_ish);
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
@@ -9022,9 +9045,6 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 
 static int dir_receive(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Read directive parameters of the specified directive type.";
-	const char *nsr = "namespace stream requested";
-
 	nvme_print_flags_t flags = NORMAL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -9056,16 +9076,16 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace_id_desired),
-		  OPT_UINT("data-len",       'l', &cfg.data_len,       buf_len),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
-		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
-		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
-		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
-		  OPT_SHRT("req-resource",   'r', &cfg.nsr,            nsr),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_directive));
+		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   desc_namespace_id_desired),
+		  OPT_UINT("data-len",       'l', &cfg.data_len,       desc_buf_len),
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     desc_raw_directive),
+		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          desc_dtype),
+		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          desc_dspec_w_dtype),
+		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          desc_doper),
+		  OPT_SHRT("req-resource",   'r', &cfg.nsr,            desc_nsr),
+		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, desc_human_readable_directive));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_dir_receive, opts);
 	if (err)
 		return err;
 
@@ -9139,25 +9159,6 @@ static int rpmb_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 
 static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "The Lockdown command is used to control the\n"
-		"Command and Feature Lockdown capability which configures the\n"
-		"prohibition or allowance of execution of the specified command\n"
-		"or Set Features command targeting a specific Feature Identifier.";
-	const char *ofi_desc = "Opcode or Feature Identifier (OFI)\n"
-		"specifies the command opcode or Set Features Feature Identifier\n"
-		"identified by the Scope field.";
-	const char *ifc_desc =
-	    "[0-3] Interface (INF) field identifies the interfaces affected by this command.";
-	const char *prhbt_desc = "[0-1]Prohibit(PRHBT) bit specifies whether\n"
-		"to prohibit or allow the command opcode or Set Features Feature\n"
-		"Identifier specified by this command.";
-	const char *scp_desc =
-	    "[0-15]Scope(SCP) field specifies the contents of the Opcode or Feature Identifier field.";
-	const char *uuid_desc = "UUID Index - If this field is set to a non-zero\n"
-		"value, then the value of this field is the index of a UUID in the UUID\n"
-		"List that is used by the command.If this field is cleared to 0h,\n"
-		"then no UUID index is specified";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -9180,13 +9181,13 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		  OPT_BYTE("ofi",	'O', &cfg.ofi,      ofi_desc),
-		  OPT_BYTE("ifc",	'f', &cfg.ifc,      ifc_desc),
-		  OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
-		  OPT_BYTE("scp",	's', &cfg.scp,      scp_desc),
-		  OPT_BYTE("uuid",	'U', &cfg.uuid,     uuid_desc));
+		  OPT_BYTE("ofi",	'O', &cfg.ofi,      desc_ofi_desc),
+		  OPT_BYTE("ifc",	'f', &cfg.ifc,      desc_ifc_desc),
+		  OPT_BYTE("prhbt",	'p', &cfg.prhbt,    desc_prhbt_desc),
+		  OPT_BYTE("scp",	's', &cfg.scp,      desc_scp_desc),
+		  OPT_BYTE("uuid",	'U', &cfg.uuid,     desc_uuid_desc));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_lockdown_cmd, opts);
 	if (err)
 		return err;
 
@@ -9249,26 +9250,6 @@ static void passthru_print_read_output(struct passthru_config cfg, void *data, i
 static int passthru(int argc, char **argv, bool admin,
 		const char *desc, struct command *acmd)
 {
-	const char *opcode = "opcode (required)";
-	const char *cflags = "command flags";
-	const char *rsvd = "value for reserved field";
-	const char *data_len = "data I/O length (bytes)";
-	const char *metadata_len = "metadata seg. length (bytes)";
-	const char *metadata = "metadata input or output file";
-	const char *cdw2 = "command dword 2 value";
-	const char *cdw3 = "command dword 3 value";
-	const char *cdw10 = "command dword 10 value";
-	const char *cdw11 = "command dword 11 value";
-	const char *cdw12 = "command dword 12 value";
-	const char *cdw13 = "command dword 13 value";
-	const char *cdw14 = "command dword 14 value";
-	const char *cdw15 = "command dword 15 value";
-	const char *input = "data input or output file";
-	const char *show = "print command before sending";
-	const char *re = "set dataflow direction to receive";
-	const char *wr = "set dataflow direction to send";
-	const char *prefill = "prefill buffers with known byte-value, default 0";
-
 	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -9308,28 +9289,28 @@ static int passthru(int argc, char **argv, bool admin,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_BYTE("opcode",       'O', &cfg.opcode,       opcode),
-		  OPT_BYTE("flags",        'f', &cfg.flags,        cflags),
-		  OPT_BYTE("prefill",      'p', &cfg.prefill,      prefill),
-		  OPT_SHRT("rsvd",         'R', &cfg.rsvd,         rsvd),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		  OPT_UINT("data-len",     'l', &cfg.data_len,     data_len),
-		  OPT_UINT("metadata-len", 'm', &cfg.metadata_len, metadata_len),
-		  OPT_UINT("cdw2",         '2', &cfg.cdw2,         cdw2),
-		  OPT_UINT("cdw3",         '3', &cfg.cdw3,         cdw3),
-		  OPT_UINT("cdw10",        '4', &cfg.cdw10,        cdw10),
-		  OPT_UINT("cdw11",        '5', &cfg.cdw11,        cdw11),
-		  OPT_UINT("cdw12",        '6', &cfg.cdw12,        cdw12),
-		  OPT_UINT("cdw13",        '7', &cfg.cdw13,        cdw13),
-		  OPT_UINT("cdw14",        '8', &cfg.cdw14,        cdw14),
-		  OPT_UINT("cdw15",        '9', &cfg.cdw15,        cdw15),
-		  OPT_FILE("input-file",   'i', &cfg.input_file,   input),
-		  OPT_FILE("metadata",     'M', &cfg.metadata,     metadata),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_dump),
-		  OPT_FLAG("show-command", 's', &cfg.show_command, show),
-		  OPT_FLAG("read",         'r', &cfg.read,         re),
-		  OPT_FLAG("write",        'w', &cfg.write,        wr),
-		  OPT_FLAG("latency",      'T', &cfg.latency,      latency));
+		  OPT_BYTE("opcode",       'O', &cfg.opcode,       desc_opcode),
+		  OPT_BYTE("flags",        'f', &cfg.flags,        desc_cflags),
+		  OPT_BYTE("prefill",      'p', &cfg.prefill,      desc_prefill),
+		  OPT_SHRT("rsvd",         'R', &cfg.rsvd,         desc_rsvd),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_desired),
+		  OPT_UINT("data-len",     'l', &cfg.data_len,     desc_data_len),
+		  OPT_UINT("metadata-len", 'm', &cfg.metadata_len, desc_metadata_len),
+		  OPT_UINT("cdw2",         '2', &cfg.cdw2,         desc_cdw2),
+		  OPT_UINT("cdw3",         '3', &cfg.cdw3,         desc_cdw3),
+		  OPT_UINT("cdw10",        '4', &cfg.cdw10,        desc_cdw10),
+		  OPT_UINT("cdw11",        '5', &cfg.cdw11,        desc_cdw11_passthru),
+		  OPT_UINT("cdw12",        '6', &cfg.cdw12,        desc_cdw12_passthru),
+		  OPT_UINT("cdw13",        '7', &cfg.cdw13,        desc_cdw13),
+		  OPT_UINT("cdw14",        '8', &cfg.cdw14,        desc_cdw14),
+		  OPT_UINT("cdw15",        '9', &cfg.cdw15,        desc_cdw15),
+		  OPT_FILE("input-file",   'i', &cfg.input_file,   desc_input_passthru),
+		  OPT_FILE("metadata",     'M', &cfg.metadata,     desc_metadata_passthru),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   desc_raw_dump),
+		  OPT_FLAG("show-command", 's', &cfg.show_command, desc_show_passthru),
+		  OPT_FLAG("read",         'r', &cfg.read,         desc_re),
+		  OPT_FLAG("write",        'w', &cfg.write,        desc_wr),
+		  OPT_FLAG("latency",      'T', &cfg.latency,      desc_latency));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -9481,18 +9462,14 @@ static int passthru(int argc, char **argv, bool admin,
 
 static int io_passthru(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc =
-	    "Send a user-defined IO command to the specified device via IOCTL passthrough, return results.";
 
-	return passthru(argc, argv, false, desc, acmd);
+	return passthru(argc, argv, false, desc_io_passthru, acmd);
 }
 
 static int admin_passthru(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc =
-	    "Send a user-defined Admin command to the specified device via IOCTL passthrough, return results.";
 
-	return passthru(argc, argv, true, desc, acmd);
+	return passthru(argc, argv, true, desc_admin_passthru, acmd);
 }
 
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -9532,15 +9509,6 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 
 static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc =
-	    "Generate a DH-HMAC-CHAP host key usable for NVMe In-Band Authentication.";
-	const char *secret =
-	    "Optional secret (in hexadecimal characters) to be used to initialize the host key.";
-	const char *key_len = "Length of the resulting key (32, 48, or 64 bytes).";
-	const char *hmac =
-	    "HMAC function to use for key transformation (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).";
-	const char *nqn = "Host NQN to use for key transformation.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free unsigned char *raw_secret = NULL;
 	__cleanup_free char *hnqn = NULL;
@@ -9564,12 +9532,12 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	};
 
 	NVME_ARGS(opts,
-		  OPT_STR("secret",		's', &cfg.secret,	secret),
-		  OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
-		  OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
-		  OPT_UINT("hmac",		'm', &cfg.hmac,		hmac));
+		  OPT_STR("secret",		's', &cfg.secret,	desc_secret_gen_dhchap_key),
+		  OPT_UINT("key-length",	'l', &cfg.key_len,	desc_key_len),
+		  OPT_STR("nqn",		'n', &cfg.nqn,		desc_nqn),
+		  OPT_UINT("hmac",		'm', &cfg.hmac,		desc_hmac_gen_dhchap_key));
 
-	err = parse_args(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc_gen_dhchap_key, opts);
 	if (err)
 		return err;
 
@@ -9648,10 +9616,6 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 
 static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc =
-	    "Check a DH-HMAC-CHAP host key for usability for NVMe In-Band Authentication.";
-	const char *key = "DH-HMAC-CHAP key (in hexadecimal characters) to be validated.";
-
 	unsigned char decoded_key[128];
 	unsigned int decoded_len;
 	uint32_t crc = crc32(0L, NULL, 0);
@@ -9666,9 +9630,9 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 	};
 
 	NVME_ARGS(opts,
-		  OPT_STR("key", 'k', &cfg.key, key));
+		  OPT_STR("key", 'k', &cfg.key, desc_key));
 
-	err = parse_args(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc_check_dhchap_key, opts);
 	if (err)
 		return err;
 
@@ -9808,19 +9772,6 @@ out:
 
 static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Generate a TLS key in NVMe PSK Interchange format.";
-	const char *secret =
-	    "Optional secret (in hexadecimal characters) to be used for the TLS key.";
-	const char *hmac = "HMAC function to use for the retained key (1 = SHA-256, 2 = SHA-384).";
-	const char *version = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0";
-	const char *hostnqn = "Host NQN for the retained key.";
-	const char *subsysnqn = "Subsystem NQN for the retained key.";
-	const char *keyring = "Keyring for the retained key.";
-	const char *keytype = "Key type of the retained key.";
-	const char *insert = "Insert retained key into the keyring.";
-	const char *keyfile = "Update key file with the derive TLS PSK.";
-	const char *compat = "Use non-RFC 8446 compliant algorithm for deriving TLS PSK for older implementations";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free unsigned char *raw_secret = NULL;
 	__cleanup_free char *encoded_key = NULL;
@@ -9856,18 +9807,18 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 	};
 
 	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
-		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
-		  OPT_STR("secret",	's', &cfg.secret,	secret),
-		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
-		  OPT_BYTE("hmac",	'm', &cfg.hmac,		hmac),
-		  OPT_BYTE("identity",	'I', &cfg.version,	version),
-		  OPT_FLAG("insert",	'i', &cfg.insert,	insert),
-		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
+		  OPT_STR("keyring",	'k', &cfg.keyring,	desc_keyring),
+		  OPT_STR("keytype",	't', &cfg.keytype,	desc_keytype),
+		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	desc_hostnqn),
+		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	desc_subsysnqn),
+		  OPT_STR("secret",	's', &cfg.secret,	desc_secret_gen_tls_key),
+		  OPT_STR("keyfile",	'f', &cfg.keyfile,	desc_keyfile_gen_tls_key),
+		  OPT_BYTE("hmac",	'm', &cfg.hmac,		desc_hmac_gen_tls_key),
+		  OPT_BYTE("identity",	'I', &cfg.version,	desc_version),
+		  OPT_FLAG("insert",	'i', &cfg.insert,	desc_insert),
+		  OPT_FLAG("compat",	'C', &cfg.compat,	desc_compat_gen_tls_key));
 
-	err = parse_args(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc_gen_tls_key, opts);
 	if (err)
 		return err;
 	if (cfg.hmac < 1 || cfg.hmac > 2) {
@@ -9943,17 +9894,6 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 
 static int check_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Check a TLS key for NVMe PSK Interchange format.\n";
-	const char *keydata = "TLS key (in PSK Interchange format) to be validated.";
-	const char *identity = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)";
-	const char *hostnqn = "Host NQN for the retained key.";
-	const char *subsysnqn = "Subsystem NQN for the retained key.";
-	const char *keyring = "Keyring for the retained key.";
-	const char *keytype = "Key type of the retained key.";
-	const char *insert = "Insert retained key into the keyring.";
-	const char *keyfile = "Update key file with the derive TLS PSK.";
-	const char *compat = "Use non-RFC 8446 compliant algorithm for checking TLS PSK for older implementations.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free unsigned char *decoded_key = NULL;
 	__cleanup_free char *hnqn = NULL;
@@ -9985,17 +9925,17 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
-		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
-		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
-		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
-		  OPT_BYTE("identity",	'I', &cfg.identity,	identity),
-		  OPT_FLAG("insert",	'i', &cfg.insert,	insert),
-		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
+		  OPT_STR("keyring",	'k', &cfg.keyring,	desc_keyring),
+		  OPT_STR("keytype",	't', &cfg.keytype,	desc_keytype),
+		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	desc_hostnqn),
+		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	desc_subsysnqn),
+		  OPT_STR("keydata",	'd', &cfg.keydata,	desc_keydata),
+		  OPT_STR("keyfile",	'f', &cfg.keyfile,	desc_keyfile_gen_tls_key),
+		  OPT_BYTE("identity",	'I', &cfg.identity,	desc_identity),
+		  OPT_FLAG("insert",	'i', &cfg.insert,	desc_insert),
+		  OPT_FLAG("compat",	'C', &cfg.compat,	desc_compat_check_tls_key));
 
-	err = parse_args(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc_check_tls_key, opts);
 	if (err)
 		return err;
 
@@ -10155,14 +10095,6 @@ static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 
 static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Manipulation of TLS keys.\n";
-	const char *keyring = "Keyring for the retained key.";
-	const char *keytype = "Key type of the retained key.";
-	const char *keyfile = "File for list of keys.";
-	const char *import = "Import all keys into the keyring.";
-	const char *export = "Export all keys from the keyring.";
-	const char *revoke = "Revoke key from the keyring.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_file FILE *fd = NULL;
 	mode_t old_umask = 0;
@@ -10187,14 +10119,14 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 	};
 
 	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
-		  OPT_FLAG("import",	'i', &cfg.import,	import),
-		  OPT_FLAG("export",	'e', &cfg.export,	export),
-		  OPT_STR("revoke",	'r', &cfg.revoke,	revoke));
+		  OPT_STR("keyring",	'k', &cfg.keyring,	desc_keyring),
+		  OPT_STR("keytype",	't', &cfg.keytype,	desc_keytype),
+		  OPT_STR("keyfile",	'f', &cfg.keyfile,	desc_keyfile_tls_key),
+		  OPT_FLAG("import",	'i', &cfg.import,	desc_import),
+		  OPT_FLAG("export",	'e', &cfg.export,	desc_export),
+		  OPT_STR("revoke",	'r', &cfg.revoke,	desc_revoke));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = argconfig_parse(argc, argv, desc_tls_key, opts);
 	if (err)
 		return err;
 
@@ -10280,8 +10212,6 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 
 static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Show the topology\n";
-	const char *ranking = "Ranking order: namespace|ctrl|multipath";
 	nvme_print_flags_t flags;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	char *devname = NULL;
@@ -10298,9 +10228,9 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
+		  OPT_FMT("ranking",       'r', &cfg.ranking,       desc_ranking));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = argconfig_parse(argc, argv, desc_show_topology_cmd, opts);
 	if (err)
 		return err;
 
@@ -10361,65 +10291,50 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 #ifdef CONFIG_FABRICS
 static int discover_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send Get Log Page request to Discovery Controller.";
 
-	return fabrics_discovery(desc, argc, argv, false);
+	return fabrics_discovery(desc_discover_cmd, argc, argv, false);
 }
 
 static int connect_all_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Discover NVMeoF subsystems and connect to them";
 
-	return fabrics_discovery(desc, argc, argv, true);
+	return fabrics_discovery(desc_connect_all_cmd, argc, argv, true);
 }
 
 static int connect_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Connect to NVMeoF subsystem";
 
-	return fabrics_connect(desc, argc, argv);
+	return fabrics_connect(desc_connect_cmd, argc, argv);
 }
 
 static int disconnect_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Disconnect from NVMeoF subsystem";
 
-	return fabrics_disconnect(desc, argc, argv);
+	return fabrics_disconnect(desc_disconnect_cmd, argc, argv);
 }
 
 int disconnect_all_cmd(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin)
 {
-	const char *desc = "Disconnect from all connected NVMeoF subsystems";
 
-	return fabrics_disconnect_all(desc, argc, argv);
+	return fabrics_disconnect_all(desc_disconnect_all_cmd, argc, argv);
 }
 
 static int config_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Configuration of NVMeoF subsystems";
 
-	return fabrics_config(desc, argc, argv);
+	return fabrics_config(desc_config_cmd, argc, argv);
 }
 
 static int dim_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc =
-	    "Send Discovery Information Management command to a Discovery Controller (DC)";
 
-	return fabrics_dim(desc, argc, argv);
+	return fabrics_dim(desc_dim_cmd, argc, argv);
 }
 #endif
 
 static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 {
-	const char *opcode = "opcode (required)";
-	const char *data_len = "data I/O length (bytes)";
-	const char *nmimt = "nvme-mi message type";
-	const char *nmd0 = "nvme management dword 0 value";
-	const char *nmd1 = "nvme management dword 1 value";
-	const char *input = "data input or output file";
-
 	int mode = 0644;
 	void *data = NULL;
 	int err = 0;
@@ -10452,13 +10367,13 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 	};
 
 	NVME_ARGS(opts,
-		  OPT_BYTE("opcode", 'O', &cfg.opcode, opcode),
-		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_desired),
-		  OPT_UINT("data-len", 'l', &cfg.data_len, data_len),
-		  OPT_UINT("nmimt", 'm', &cfg.nmimt, nmimt),
-		  OPT_UINT("nmd0", '0', &cfg.nmd0, nmd0),
-		  OPT_UINT("nmd1", '1', &cfg.nmd1, nmd1),
-		  OPT_FILE("input-file", 'i', &cfg.input_file, input));
+		  OPT_BYTE("opcode",       'O', &cfg.opcode,       desc_opcode),
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_desired),
+		  OPT_UINT("data-len",     'l', &cfg.data_len,     desc_data_len),
+		  OPT_UINT("nmimt",        'm', &cfg.nmimt,        desc_nmimt),
+		  OPT_UINT("nmd0",         '0', &cfg.nmd0,         desc_nmd0),
+		  OPT_UINT("nmd1",         '1', &cfg.nmd1,         desc_nmd1),
+		  OPT_FILE("input-file",   'i', &cfg.input_file,   desc_input_passthru));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -10539,22 +10454,18 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 
 static int nmi_recv(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc =
-	    "Send a NVMe-MI Receive command to the specified device, return results.";
 
-	return libnvme_mi(argc, argv, nvme_admin_nvme_mi_recv, desc);
+	return libnvme_mi(argc, argv, nvme_admin_nvme_mi_recv, desc_nmi_recv);
 }
 
 static int nmi_send(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Send a NVMe-MI Send command to the specified device, return results.";
 
-	return libnvme_mi(argc, argv, nvme_admin_nvme_mi_send, desc);
+	return libnvme_mi(argc, argv, nvme_admin_nvme_mi_send, desc_nmi_send);
 }
 
 static int get_mgmt_addr_list_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Management Address List Log, show it";
 	nvme_print_flags_t flags;
 	int err = -1;
 
@@ -10564,7 +10475,7 @@ static int get_mgmt_addr_list_log(int argc, char **argv, struct command *acmd, s
 
 	NVME_ARGS(opts);
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_mgmt_addr_list_log, opts);
 	if (err)
 		return err;
 
@@ -10592,7 +10503,6 @@ static int get_mgmt_addr_list_log(int argc, char **argv, struct command *acmd, s
 static int get_rotational_media_info_log(int argc, char **argv, struct command *acmd,
 					 struct plugin *plugin)
 {
-	const char *desc = "Retrieve Rotational Media Information Log, show it";
 	nvme_print_flags_t flags;
 	int err = -1;
 
@@ -10609,9 +10519,9 @@ static int get_rotational_media_info_log(int argc, char **argv, struct command *
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("endg-id", 'e', &cfg.endgid, endgid));
+		  OPT_UINT("endg-id", 'e', &cfg.endgid, desc_endgid));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_rotational_media_info_log, opts);
 	if (err)
 		return err;
 
@@ -10679,7 +10589,6 @@ err_free:
 static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct command *acmd,
 						  struct plugin *plugin)
 {
-	const char *desc = "Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it";
 	nvme_print_flags_t flags;
 	int err;
 
@@ -10695,9 +10604,9 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 		.namespace_id = 1,
 	};
 
-	NVME_ARGS(opts, OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired));
+	NVME_ARGS(opts, OPT_UINT("namespace-id", 'n', &cfg.namespace_id, desc_namespace_id_desired));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_dispersed_ns_participating_nss_log, opts);
 	if (err)
 		return err;
 
@@ -10721,10 +10630,6 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 static int get_power_measurement_log(int argc, char **argv, struct command *acmd,
 				     struct plugin *plugin)
 {
-	const char *desc = "Retrieve Power Measurement Log (Log ID 0x25) "
-		"for the given device in either decoded format (default), "
-		"json, or binary.";
-
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_free struct nvme_power_meas_log *log = NULL;
@@ -10742,9 +10647,9 @@ static int get_power_measurement_log(int argc, char **argv, struct command *acmd
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, raw_output));
+		  OPT_FLAG("raw-binary", 'b', &cfg.raw_binary, desc_raw_output));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_power_measurement_log, opts);
 	if (err)
 		return err;
 
@@ -10900,8 +10805,6 @@ err_free:
 static int get_reachability_groups_log(int argc, char **argv, struct command *acmd,
 				       struct plugin *plugin)
 {
-	const char *desc = "Retrieve Reachability Groups Log, show it";
-	const char *rgo = "Return Groups Only";
 	nvme_print_flags_t flags;
 	int err;
 	__u64 len = 0;
@@ -10920,10 +10823,10 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *ac
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("groups-only", 'g', &cfg.rgo, rgo),
-		  OPT_FLAG("rae", 'r', &cfg.rae, rae));
+		  OPT_FLAG("groups-only", 'g', &cfg.rgo, desc_rgo),
+		  OPT_FLAG("rae", 'r', &cfg.rae, desc_rae));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_reachability_groups_log, opts);
 	if (err)
 		return err;
 
@@ -11011,8 +10914,6 @@ err_free:
 static int get_reachability_associations_log(int argc, char **argv, struct command *acmd,
 					     struct plugin *plugin)
 {
-	const char *desc = "Retrieve Reachability Associations Log, show it";
-	const char *rao = "Return Associations Only";
 	nvme_print_flags_t flags;
 	int err;
 	__u64 len = 0;
@@ -11031,10 +10932,10 @@ static int get_reachability_associations_log(int argc, char **argv, struct comma
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("associations-only", 'a', &cfg.rao, rao),
-		  OPT_FLAG("rae", 'r', &cfg.rae, rae));
+		  OPT_FLAG("associations-only", 'a', &cfg.rao, desc_rao),
+		  OPT_FLAG("rae", 'r', &cfg.rae, desc_rae));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_reachability_associations_log, opts);
 	if (err)
 		return err;
 
@@ -11092,8 +10993,6 @@ err_free:
 
 static int get_host_discovery_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve Host Discovery Log, show it";
-	const char *allhoste = "All Host Entries";
 	nvme_print_flags_t flags;
 	int err;
 	__cleanup_free struct nvme_host_discover_log *log = NULL;
@@ -11111,11 +11010,11 @@ static int get_host_discovery_log(int argc, char **argv, struct command *acmd, s
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("all-host-entries", 'a', &cfg.allhoste, allhoste),
-		  OPT_FLAG("rae", 'r', &cfg.rae, rae));
+		  OPT_FLAG("all-host-entries", 'a', &cfg.allhoste, desc_allhoste),
+		  OPT_FLAG("rae", 'r', &cfg.rae, desc_rae));
 
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_host_discovery_log, opts);
 	if (err)
 		return err;
 
@@ -11171,7 +11070,6 @@ err_free:
 
 static int get_ave_discovery_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Retrieve AVE Discovery Log, show it";
 	nvme_print_flags_t flags;
 	int err;
 
@@ -11187,9 +11085,9 @@ static int get_ave_discovery_log(int argc, char **argv, struct command *acmd, st
 		.rae = false,
 	};
 
-	NVME_ARGS(opts, OPT_FLAG("rae", 'r', &cfg.rae, rae));
+	NVME_ARGS(opts, OPT_FLAG("rae", 'r', &cfg.rae, desc_rae));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_ave_discovery_log, opts);
 	if (err)
 		return err;
 
@@ -11247,7 +11145,6 @@ err_free:
 static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acmd,
 				      struct plugin *plugin)
 {
-	const char *desc = "Retrieve Pull Model DDC Request Log, show it";
 	nvme_print_flags_t flags;
 	int err;
 
@@ -11263,9 +11160,9 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acm
 		.rae = false,
 	};
 
-	NVME_ARGS(opts, OPT_FLAG("rae", 'r', &cfg.rae, rae));
+	NVME_ARGS(opts, OPT_FLAG("rae", 'r', &cfg.rae, desc_rae));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc_get_pull_model_ddc_req_log, opts);
 	if (err)
 		return err;
 
