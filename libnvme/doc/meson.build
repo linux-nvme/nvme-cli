@@ -9,16 +9,22 @@
 #
 
 api_files = [
+    'accessors-fabrics.h',
+    'accessors.h',
     'fabrics.h',
     'filters.h',
     'ioctl.h',
+    'lib-types.h',
+    'lib.h',
     'linux.h',
+    'mi-types.h',
     'mi.h',
+    'nbft-types.h',
     'nbft.h',
     'nvme-cmds.h',
     'nvme-types.h',
     'tree.h',
-    'util.h'
+    'util.h',
 ]
 
 api_paths = []
