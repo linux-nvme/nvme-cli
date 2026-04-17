@@ -72,7 +72,7 @@ SPDX_H  = "/* SPDX-License-Identifier: LGPL-2.1-or-later */"
 SPDX_LD = "# SPDX-License-Identifier: LGPL-2.1-or-later"
 
 BANNER = (
-    "/**\n"
+    "/*\n"
     " * This file is part of libnvme.\n"
     " *\n"
     " * Copyright (c) 2025, Dell Technologies Inc. or its subsidiaries.\n"
@@ -92,7 +92,7 @@ BANNER = (
 )
 
 LD_BANNER = (
-    "/**\n"
+    "/*\n"
     " * This file is part of libnvme.\n"
     " *\n"
     " * Copyright (c) 2025, Dell Technologies Inc. or its subsidiaries.\n"
