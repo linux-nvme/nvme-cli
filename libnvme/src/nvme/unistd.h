@@ -7,9 +7,9 @@
  * Provides functionality that may be missing on some platforms.
  * Compatibility is not comprehensive. Only functionality required by
  * nvme-cli and libnvme is included.
- * 
- * Authors: Broc Going <bgoing@micron.com>
- *          Brandon Capener <bcapener@micron.com>
+ *
+ * Authors: Brandon Busacker <bbusacker@micron.com>
+ *          Broc Going <bgoing@micron.com>
  */
 #pragma once
 
@@ -17,14 +17,9 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 
-#include <io.h>
 #include <sysinfoapi.h>
 
 /* unistd.h POSIX compatibility */
-
-#define STDERR_FILENO 2
-#define STDOUT_FILENO 1
-#define STDIN_FILENO  0
 
 /* getpagesize implementation for Windows */
 static inline int getpagesize(void)
