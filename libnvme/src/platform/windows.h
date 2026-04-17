@@ -167,40 +167,6 @@ static inline FILE *open_memstream(char **ptr, size_t *sizeloc)
 }
 
 
-/* stdlib.h compatibility */
-
-/* Aligned memory allocation function, use platform_aligned_free to free. */
-static inline int posix_memalign(void **memptr, size_t alignment, size_t size)
-{
-	*memptr = _aligned_malloc(size, alignment);
-	return (*memptr == NULL) ? ENOMEM : 0;
-}
-
-/*
- * Platform-specific free for aligned memory allocations.
- * Use when posix_memalign is used to allocate memory.
- */
-static inline void platform_aligned_free(void *p)
-{
-	_aligned_free(p);
-}
-
-/* reallocarray implementation for Windows */
-static inline void *reallocarray(void *ptr, size_t nmemb, size_t size)
-{
-	size_t total_size;
-
-	/* Check for multiplication overflow */
-	if (nmemb != 0 && size > SIZE_MAX / nmemb) {
-		errno = ENOMEM;
-		return NULL;
-	}
-
-	total_size = nmemb * size;
-	return realloc(ptr, total_size);
-}
-
-
 /* malloc.h compatibility*/
 
 static inline size_t malloc_usable_size(void *ptr)

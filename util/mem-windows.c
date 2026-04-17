@@ -6,11 +6,11 @@
  * Authors: Brandon Capener <bcapener@micron.com>
  */
 
-#include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
 
-#include "platform/includes.h"
+#include <nvme/stdlib.h>
+#include "platform/includes.h" /* unistd.h + compatibility */
 
 #include "mem.h"
 #include "common.h"

@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #include <nvme/lib-types.h>
+#include <nvme/stdlib.h>
 
 #include <platform/includes.h> /* for libnvme_fd_t */
 

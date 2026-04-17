@@ -16,11 +16,10 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 
-#include <platform/includes.h>	/* for reallocarray */
+#include <nvme/stdlib.h>
 
 #include "table.h"
 

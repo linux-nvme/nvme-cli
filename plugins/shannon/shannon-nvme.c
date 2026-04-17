@@ -230,7 +230,7 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 			cfg.cdw11, 0, buf, cfg.data_len, &result);
 	if (err > 0)
 		nvme_show_status(err);
-	platform_aligned_free(buf);
+	aligned_free(buf);
 	return err;
 }
 

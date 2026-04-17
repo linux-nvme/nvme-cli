@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
 
-#include <platform/includes.h>
+#include <nvme/stdlib.h>
+#include <platform/includes.h>	/* getpagesize, malloc_usable_size */
 
 #include "mem.h"
 
@@ -42,7 +42,7 @@ void *nvme_realloc(void *p, size_t len)
 
 void nvme_free(void *p)
 {
-	platform_aligned_free(p);
+	aligned_free(p);
 }
 
 #ifndef _WIN32

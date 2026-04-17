@@ -861,7 +861,7 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 	}
 
 out_free:
-	platform_aligned_free(fw_buf);
+	aligned_free(fw_buf);
 out_close:
 	close(fw_fd);
 out:

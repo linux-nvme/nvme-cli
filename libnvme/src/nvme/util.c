@@ -12,7 +12,6 @@
 #include <malloc.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -26,6 +25,8 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#include <nvme/stdlib.h>
 
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
@@ -983,7 +984,7 @@ void *__libnvme_realloc(void *p, size_t len)
 
 void __libnvme_free(void *p)
 {
-	platform_aligned_free(p);
+	aligned_free(p);
 }
 
 #ifdef CONFIG_FABRICS
