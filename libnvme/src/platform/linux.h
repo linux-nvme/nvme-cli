@@ -12,10 +12,5 @@ typedef int libnvme_fd_t;
 #define TEST_FD 0xFD
 #define INIT_FD -1
 
-/* O_BINARY is required on Windows, but not defined on Linux. */
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
-
 /* Platform initialization - no-op on Linux */
 static inline void libnvme_init(void) {}
