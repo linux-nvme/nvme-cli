@@ -220,9 +220,6 @@ static inline int sigaction(int signum, const struct sigaction *act,
 /* _mkdir is defined in <direct.h> */
 #define mkdir(path, mode) _mkdir(path)
 
-/* Platform-specific fstat wrapper for libnvme_fd_t */
-int libnvme_fstat(libnvme_fd_t fd, struct stat *buf);
-
 
 /* mman.h memory mapping stubs - not supported on Windows */
 

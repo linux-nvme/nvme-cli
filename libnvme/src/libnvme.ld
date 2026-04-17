@@ -38,7 +38,6 @@ LIBNVME_3 {
 		libnvme_free_nbft;
 		libnvme_free_ns;
 		libnvme_free_subsystem;
-		libnvme_fstat;
 		libnvme_gen_dhchap_key;
 		libnvme_generate_hostid;
 		libnvme_generate_hostnqn;
