@@ -33,6 +33,8 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
+#include <nvme/unistd.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"

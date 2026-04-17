@@ -8,23 +8,12 @@
 
 #pragma once
 
-/* Windows-specific includes - winsock2 before windows.h to avoid warnings */
-#define WIN32_LEAN_AND_MEAN
-#include <winsock2.h>
-#include <ws2tcpip.h>
+/* Windows-specific includes */
+#define WIN32_LEAN_AND_MEAN	/* keeps windows.h from including winsock.*/
 #include <windows.h>
-#undef WIN32_LEAN_AND_MEAN
 
-#include <bcrypt.h>
-#include <direct.h>
-#include <errno.h>
 #include <fcntl.h>
-#include <io.h>
-#include <process.h>
-#include <signal.h>
 #include <stdio.h>
-#include <sys/stat.h>
-#include <time.h>
 
 
 /* Platform compatibility helper types and methods */

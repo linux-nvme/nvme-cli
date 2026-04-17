@@ -8,29 +8,6 @@
 
 #pragma once
 
-/* Linux-specific includes */
-#include <dirent.h>
-#include <endian.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <poll.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-#include <syslog.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <netinet/in.h>
-
-
 typedef int libnvme_fd_t;
 #define TEST_FD 0xFD
 #define INIT_FD -1

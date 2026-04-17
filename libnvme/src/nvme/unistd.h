@@ -17,6 +17,9 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 
+#define WIN32_LEAN_AND_MEAN	/* keeps windows.h from including winsock.*/
+#include <winsock2.h>	/* for gethostname */
+
 #include <sysinfoapi.h>
 
 /* unistd.h POSIX compatibility */
