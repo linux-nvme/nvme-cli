@@ -510,7 +510,6 @@ if want_nvme
     subdir('util')      # declares: util_sources
 
     sources = [
-        'libnvme-wrap.c',
         'logging.c',
         'nvme-cmds.c',
         'nvme-models.c',
@@ -526,6 +525,7 @@ if want_nvme
         ]
     else
         sources += [
+            'libnvme-wrap.c',
             'nvme-rpmb.c',
         ]
     endif

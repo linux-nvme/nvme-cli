@@ -5,9 +5,7 @@
  * Copyright (c) 2022 Daniel Wagner, SUSE
  */
 
-#ifndef _WIN32
 #include <dlfcn.h>
-#endif
 #include <errno.h>
 #include <stdlib.h>
 

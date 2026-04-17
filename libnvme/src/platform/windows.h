@@ -80,11 +80,3 @@ static inline int sigaction(int signum, const struct sigaction *act,
 /* Windows _mkdir doesn't take mode parameter */
 /* _mkdir is defined in <direct.h> */
 #define mkdir(path, mode) _mkdir(path)
-
-
-/* dlfcn.h compatibility */
-
-static inline void *dlsym(void *handle, const char *symbol)
-{
-	return (void *)GetProcAddress((HMODULE)handle, symbol);
-}
