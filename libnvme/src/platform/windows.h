@@ -45,16 +45,6 @@ static inline void libnvme_init(void)
 }
 
 
-/* time.h POSIX compatibility */
-
-static inline struct tm *gmtime_r(const time_t *timep, struct tm *result)
-{
-	if (gmtime_s(result, timep) == 0)
-		return result;
-	return NULL;
-}
-
-
 /* signal.h POSIX compatibility - Windows doesn't have sigaction */
 
 struct sigaction {

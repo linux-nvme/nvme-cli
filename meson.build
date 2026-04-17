@@ -177,6 +177,7 @@ if host_system == 'windows'
     add_project_arguments(
         [
             '-DHAVE_GLIBC_IOCTL=0',
+            '-D_POSIX_THREAD_SAFE_FUNCTIONS',
         ],
         language : 'c',
     )
