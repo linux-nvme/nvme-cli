@@ -1,0 +1,21 @@
+.TH "nvme_init_set_features_write_protect" 9 "nvme_init_set_features_write_protect" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_write_protect \- Initialize passthru command for Write Protect
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_write_protect
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "bool sv "  ","
+.BI "enum nvme_feat_nswpcfg_state wps "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "sv" 12
+Save value across power states
+.IP "wps" 12
+Write Protection State
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_WRITE_PROTECT

@@ -1,0 +1,21 @@
+.TH "libnvme_get_logging_level" 9 "libnvme_get_logging_level" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_get_logging_level \- Get current logging level
+.SH SYNOPSIS
+.B "int" libnvme_get_logging_level
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "bool *log_pid "  ","
+.BI "bool *log_tstamp "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "log_pid" 12
+Pointer to store a current value of logging of
+the PID flag at (optional).
+.IP "log_tstamp" 12
+Pointer to store a current value of logging of
+the timestamp flag at (optional).
+.SH "DESCRIPTION"
+Retrieves current values of logging variables.
+.SH "RETURN"
+current log level value or LIBNVME_DEFAULT_LOGLEVEL if not initialized.

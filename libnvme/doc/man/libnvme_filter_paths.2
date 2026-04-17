@@ -1,0 +1,11 @@
+.TH "libnvme_filter_paths" 9 "libnvme_filter_paths" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_filter_paths \- Filter for paths
+.SH SYNOPSIS
+.B "int" libnvme_filter_paths
+.BI "(const struct dirent *d "  ");"
+.SH ARGUMENTS
+.IP "d" 12
+dirent to check
+.SH "RETURN"
+1 if \fId\fP matches, 0 otherwise

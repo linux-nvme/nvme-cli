@@ -1,0 +1,15 @@
+.TH "libnvme_get_ana_log_len" 9 "libnvme_get_ana_log_len" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_get_ana_log_len \- Retrieve size of the current ANA log
+.SH SYNOPSIS
+.B "int" libnvme_get_ana_log_len
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "size_t *analen "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "analen" 12
+Pointer to where the length will be set on success
+.SH "RETURN"
+0 on success, the nvme command status if a response was
+received (see \fIenum nvme_status_field\fP) or a negative error otherwise.

@@ -1,0 +1,15 @@
+.TH "libnvme_set_dry_run" 9 "libnvme_set_dry_run" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_set_dry_run \- Set global dry run state
+.SH SYNOPSIS
+.B "void" libnvme_set_dry_run
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "bool enable "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "enable" 12
+Enable/disable dry run state
+.SH "DESCRIPTION"
+When dry_run is enabled, any IOCTL commands send via the passthru
+interface won't be executed.

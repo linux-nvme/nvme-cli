@@ -1,0 +1,16 @@
+.TH "libnvme_read_hostid" 9 "libnvme_read_hostid" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_read_hostid \- Reads the host identifier from the config default location
+.SH SYNOPSIS
+.B "char *" libnvme_read_hostid
+.BI "(void "  ");"
+.SH ARGUMENTS
+.IP "void" 12
+no arguments
+.SH "DESCRIPTION"
+
+Retrieve the host idenditifer from the config file located in
+$SYSCONFDIR/nvme/. $SYSCONFDIR is usually /etc.
+.SH "RETURN"
+The host identifier, or NULL if unsuccessful. If found, the caller
+is responsible to free the string.

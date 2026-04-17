@@ -1,0 +1,11 @@
+.TH "libnvme_ctrl_get_phy_slot" 9 "libnvme_ctrl_get_phy_slot" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_get_phy_slot \- Get phy_slot.
+.SH SYNOPSIS
+.B "const char *" libnvme_ctrl_get_phy_slot
+.BI "(const struct libnvme_ctrl *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to query.
+.SH "RETURN"
+The value of the phy_slot field, or NULL if not set.

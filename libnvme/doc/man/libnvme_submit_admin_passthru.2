@@ -1,0 +1,17 @@
+.TH "libnvme_submit_admin_passthru" 9 "libnvme_submit_admin_passthru" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_submit_admin_passthru \- Submit an nvme passthrough admin command
+.SH SYNOPSIS
+.B "int" libnvme_submit_admin_passthru
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "struct libnvme_passthru_cmd *cmd "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "cmd" 12
+The nvme admin command to send
+.SH "DESCRIPTION"
+Uses LIBNVME_IOCTL_ADMIN_CMD for the ioctl request.
+.SH "RETURN"
+0 on success, the nvme command status if a response was
+received (see \fIenum nvme_status_field\fP) or a negative error otherwise.

@@ -1,0 +1,14 @@
+.TH "libnvme_reset_subsystem" 9 "libnvme_reset_subsystem" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_reset_subsystem \- Initiate a subsystem reset
+.SH SYNOPSIS
+.B "int" libnvme_reset_subsystem
+.BI "(struct libnvme_transport_handle *hdl "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.SH "DESCRIPTION"
+This should only be sent to controller handles, not to namespaces.
+.SH "RETURN"
+Zero if a subsystem reset was initiated or -1 with errno set
+otherwise.

@@ -1,0 +1,57 @@
+.TH "nvme_init_copy" 9 "nvme_init_copy" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_copy \- Initialize passthru command for Copy command
+.SH SYNOPSIS
+.B "void" nvme_init_copy
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u64 sdlba "  ","
+.BI "__u16 nr "  ","
+.BI "__u8 desfmt "  ","
+.BI "__u8 prinfor "  ","
+.BI "__u8 prinfow "  ","
+.BI "__u8 cetype "  ","
+.BI "__u8 dtype "  ","
+.BI "bool stcw "  ","
+.BI "bool stcr "  ","
+.BI "bool fua "  ","
+.BI "bool lr "  ","
+.BI "__u16 cev "  ","
+.BI "__u16 dspec "  ","
+.BI "void *cpydsc "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace identifier
+.IP "sdlba" 12
+Start destination LBA
+.IP "nr" 12
+Number of ranges (1-based, 0-based in command)
+.IP "desfmt" 12
+Descriptor format
+.IP "prinfor" 12
+Protection information field for read
+.IP "prinfow" 12
+Protection information field for write
+.IP "cetype" 12
+Command Extension Type
+.IP "dtype" 12
+Directive Type
+.IP "stcw" 12
+Storage Tag Check Write
+.IP "stcr" 12
+Storage Tag Check Read
+.IP "fua" 12
+Force unit access
+.IP "lr" 12
+Limited retry
+.IP "cev" 12
+Command Extension Value
+.IP "dspec" 12
+Directive specific value
+.IP "cpydsc" 12
+Range description buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Copy command by calculating
+the data length and calling the generic I/O initializer.

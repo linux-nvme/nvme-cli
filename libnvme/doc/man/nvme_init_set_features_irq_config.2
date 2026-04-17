@@ -1,0 +1,21 @@
+.TH "nvme_init_set_features_irq_config" 9 "nvme_init_set_features_irq_config" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_irq_config \- Initialize passthru command for IRQ Config
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_irq_config
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u16 iv "  ","
+.BI "bool cd "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "iv" 12
+Interrupt Vector
+.IP "cd" 12
+Coalescing Disable
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_IRQ_CONFIG

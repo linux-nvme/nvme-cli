@@ -1,0 +1,19 @@
+.TH "libnvme_get_telemetry_max" 9 "libnvme_get_telemetry_max" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_get_telemetry_max \- Get telemetry limits
+.SH SYNOPSIS
+.B "int" libnvme_get_telemetry_max
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "enum nvme_telemetry_da *da "  ","
+.BI "size_t *max_data_tx "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "da" 12
+On success return max supported data area
+.IP "max_data_tx" 12
+On success set to max transfer chunk supported by
+the controller
+.SH "RETURN"
+0 on success, the nvme command status if a response was
+received (see \fIenum nvme_status_field\fP) or a negative error otherwise.

@@ -1,0 +1,14 @@
+.TH "libnvme_scan_ctrl_namespace_paths" 9 "libnvme_scan_ctrl_namespace_paths" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_scan_ctrl_namespace_paths \- Scan for namespace paths in a controller
+.SH SYNOPSIS
+.B "int" libnvme_scan_ctrl_namespace_paths
+.BI "(libnvme_ctrl_t c "  ","
+.BI "struct dirent ***paths "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller to scan
+.IP "paths" 12
+Pointer to array of dirents
+.SH "RETURN"
+number of entries in \fIpaths\fP or a negative error code

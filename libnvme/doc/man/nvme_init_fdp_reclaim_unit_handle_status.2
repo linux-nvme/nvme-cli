@@ -1,0 +1,21 @@
+.TH "nvme_init_fdp_reclaim_unit_handle_status" 9 "nvme_init_fdp_reclaim_unit_handle_status" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_fdp_reclaim_unit_handle_status \- Initialize passthru command to get reclaim unit handle status
+.SH SYNOPSIS
+.B "void" nvme_init_fdp_reclaim_unit_handle_status
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace identifier
+.IP "data" 12
+Response buffer
+.IP "len" 12
+Length of response buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the I/O Management Receive -
+Reclaim Unit Handle Status command.

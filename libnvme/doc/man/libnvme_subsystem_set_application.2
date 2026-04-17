@@ -1,0 +1,12 @@
+.TH "libnvme_subsystem_set_application" 9 "libnvme_subsystem_set_application" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_subsystem_set_application \- Set application.
+.SH SYNOPSIS
+.B "void" libnvme_subsystem_set_application
+.BI "(struct libnvme_subsystem *p "  ","
+.BI "const char *application "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_subsystem\fP instance to update.
+.IP "application" 12
+New string; a copy is stored. Pass NULL to clear.

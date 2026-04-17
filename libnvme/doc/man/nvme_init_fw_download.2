@@ -1,0 +1,25 @@
+.TH "nvme_init_fw_download" 9 "nvme_init_fw_download" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_fw_download \- Initialize passthru command to download part or all of a firmware image to the controller
+.SH SYNOPSIS
+.B "int" nvme_init_fw_download
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ","
+.BI "__u32 offset "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "data" 12
+Userspace address of the firmware data buffer
+.IP "len" 12
+Length of data in this command in bytes
+.IP "offset" 12
+Offset in the firmware data
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Firmware Image
+Download command.
+.SH "NOTE"
+Caller must ensure data_len and offset are DWord-aligned (0x4).
+.SH "RETURN"
+0 on success, or error code if arguments are invalid.

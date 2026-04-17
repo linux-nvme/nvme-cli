@@ -1,0 +1,18 @@
+.TH "nvme_init_identify_secondary_ctrl_list" 9 "nvme_init_identify_secondary_ctrl_list" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify_secondary_ctrl_list \- Initialize passhru command for Secondary Controller list
+.SH SYNOPSIS
+.B "void" nvme_init_identify_secondary_ctrl_list
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 cntid "  ","
+.BI "struct nvme_secondary_ctrl_list *sc_list "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "cntid" 12
+Return controllers starting at this identifier
+.IP "sc_list" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Identify command with
+CNS value NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST.

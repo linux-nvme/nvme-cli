@@ -1,0 +1,12 @@
+.TH "libnvme_host_set_dhchap_host_key" 9 "libnvme_host_set_dhchap_host_key" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_host_set_dhchap_host_key \- Set dhchap_host_key.
+.SH SYNOPSIS
+.B "void" libnvme_host_set_dhchap_host_key
+.BI "(struct libnvme_host *p "  ","
+.BI "const char *dhchap_host_key "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_host\fP instance to update.
+.IP "dhchap_host_key" 12
+New string; a copy is stored. Pass NULL to clear.

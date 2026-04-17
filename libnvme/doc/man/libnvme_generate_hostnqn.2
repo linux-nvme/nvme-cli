@@ -1,0 +1,12 @@
+.TH "libnvme_generate_hostnqn" 9 "libnvme_generate_hostnqn" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_generate_hostnqn \- Generate a machine specific host nqn
+.SH SYNOPSIS
+.B "char *" libnvme_generate_hostnqn
+.BI "(void "  ");"
+.SH ARGUMENTS
+.IP "void" 12
+no arguments
+.SH "RETURN"
+An nvm namespace qualified name string based on the machine
+identifier, or NULL if not successful.

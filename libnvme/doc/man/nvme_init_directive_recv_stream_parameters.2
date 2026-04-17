@@ -1,0 +1,18 @@
+.TH "nvme_init_directive_recv_stream_parameters" 9 "nvme_init_directive_recv_stream_parameters" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_directive_recv_stream_parameters \- Initialize passthru command for Directive Receive Stream Parameters
+.SH SYNOPSIS
+.B "void" nvme_init_directive_recv_stream_parameters
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_streams_directive_params *parms "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "parms" 12
+Streams directive parameters buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Directive Receive - Stream
+Parameters command.

@@ -1,0 +1,11 @@
+.TH "libnvme_path_get_ana_state" 9 "libnvme_path_get_ana_state" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_path_get_ana_state \- Get ana_state.
+.SH SYNOPSIS
+.B "const char *" libnvme_path_get_ana_state
+.BI "(const struct libnvme_path *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_path\fP instance to query.
+.SH "RETURN"
+The value of the ana_state field, or NULL if not set.

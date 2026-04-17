@@ -1,0 +1,18 @@
+.TH "nvme_init_get_log_zns_changed_zones" 9 "nvme_init_get_log_zns_changed_zones" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_zns_changed_zones \- Initialize passthru command for list of zones that have changed
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_zns_changed_zones
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_zns_changed_zone_log *log "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "log" 12
+User address to store the changed zone log
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_ZNS_CHANGED_ZONES

@@ -1,0 +1,22 @@
+.TH "libnvme_transport_handle_set_submit_exit" 9 "libnvme_transport_handle_set_submit_exit" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_transport_handle_set_submit_exit \- Install a submit-exit callback
+.SH SYNOPSIS
+.B "void" libnvme_transport_handle_set_submit_exit
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "void (*submit_exit)(struct libnvme_transport_handle *hdl, struct libnvme_passthru_cmd *cmd, int err, void *user_data) "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle to configure
+.IP "submit_exit" 12
+Callback invoked after a passthrough command completes. The
+function receives the command, the completion status \fIerr\fP
+(0 for success, a negative errno, or an NVMe status value), and
+the \fIuser_data\fP pointer returned earlier by the submit-entry
+callback. Implementations typically use this hook for logging,
+tracing, or freeing per-command state.
+.SH "DESCRIPTION"
+Installs a callback that is invoked when a passthrough command leaves the
+NVMe submission path. Passing NULL removes any previously installed callback.
+.SH "RETURN"
+None.

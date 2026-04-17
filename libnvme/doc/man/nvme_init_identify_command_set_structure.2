@@ -1,0 +1,21 @@
+.TH "nvme_init_identify_command_set_structure" 9 "nvme_init_identify_command_set_structure" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify_command_set_structure \- Initialize passthru command for I/O Command Set data structure
+.SH SYNOPSIS
+.B "void" nvme_init_identify_command_set_structure
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 cntid "  ","
+.BI "struct nvme_id_iocs *iocs "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "cntid" 12
+Controller ID
+.IP "iocs" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+Retrieves list of the controller's supported io command set vectors. See
+\fIstruct nvme_id_iocs\fP.
+.SH "RETURN"
+0 on success, the nvme command status if a response was
+received (see \fIenum nvme_status_field\fP) or a negative error otherwise.

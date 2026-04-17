@@ -1,0 +1,27 @@
+.TH "nvme_init_set_features_arbitration" 9 "nvme_init_set_features_arbitration" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_arbitration \- Initialize passthru command for Arbitration Features
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_arbitration
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u8 ab "  ","
+.BI "__u8 lpw "  ","
+.BI "__u8 mpw "  ","
+.BI "__u8 hpw "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "ab" 12
+Arbitration Burst
+.IP "lpw" 12
+Low Priority Weight
+.IP "mpw" 12
+Medium Priority Weight
+.IP "hpw" 12
+High Priority Weight
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_ARBRITARTION

@@ -1,0 +1,25 @@
+.TH "nvme_init_get_features_host_id" 9 "nvme_init_get_features_host_id" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_host_id \- Initialize passthru command for Get Features - Host Identifier
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_host_id
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "bool exhid "  ","
+.BI "void *hostid "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "exhid" 12
+Enable Extended Host Identifier
+.IP "hostid" 12
+Buffer for returned host ID
+.IP "len" 12
+Length of \fIhostid\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_HOST_ID

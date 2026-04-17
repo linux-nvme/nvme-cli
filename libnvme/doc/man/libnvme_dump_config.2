@@ -1,0 +1,17 @@
+.TH "libnvme_dump_config" 9 "libnvme_dump_config" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_dump_config \- Print the JSON configuration
+.SH SYNOPSIS
+.B "int" libnvme_dump_config
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "int fd "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+\fIstruct libnvme_global_ctx\fP object
+.IP "fd" 12
+File descriptor to write the JSON configuration.
+.SH "DESCRIPTION"
+Writes the current contents of the JSON configuration
+to the file descriptor fd.
+.SH "RETURN"
+0 on success, or negative error code otherwise.

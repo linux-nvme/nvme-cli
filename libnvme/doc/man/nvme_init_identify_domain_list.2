@@ -1,0 +1,18 @@
+.TH "nvme_init_identify_domain_list" 9 "nvme_init_identify_domain_list" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify_domain_list \- Initialize passthru command for Domain list
+.SH SYNOPSIS
+.B "void" nvme_init_identify_domain_list
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 domid "  ","
+.BI "struct nvme_id_domain_list *list "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "domid" 12
+Domain ID
+.IP "list" 12
+User space destination address to transfer data
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Identify command with
+CNS value NVME_IDENTIFY_CNS_DOMAIN_LIST.

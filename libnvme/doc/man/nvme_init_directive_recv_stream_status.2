@@ -1,0 +1,23 @@
+.TH "nvme_init_directive_recv_stream_status" 9 "nvme_init_directive_recv_stream_status" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_directive_recv_stream_status \- Initialize passthru command for Directive Receive Stream Status
+.SH SYNOPSIS
+.B "int" nvme_init_directive_recv_stream_status
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "unsigned int nr_entries "  ","
+.BI "struct nvme_streams_directive_status *id "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "nr_entries" 12
+Number of streams to receive
+.IP "id" 12
+Stream status buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Directive Receive - Stream
+Status command.
+.SH "RETURN"
+0 on success, or error code if arguments are invalid.

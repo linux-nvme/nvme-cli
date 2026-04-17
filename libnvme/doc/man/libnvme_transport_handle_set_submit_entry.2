@@ -1,0 +1,23 @@
+.TH "libnvme_transport_handle_set_submit_entry" 9 "libnvme_transport_handle_set_submit_entry" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_transport_handle_set_submit_entry \- Install a submit-entry callback
+.SH SYNOPSIS
+.B "void" libnvme_transport_handle_set_submit_entry
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "void *(*submit_entry)(struct libnvme_transport_handle *hdl, struct libnvme_passthru_cmd *cmd) "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle to configure
+.IP "submit_entry" 12
+Callback invoked immediately before a passthrough command is
+submitted. The function receives the command about to be issued
+and may return an opaque pointer representing per-command
+context. This pointer is later passed unmodified to the
+submit-exit callback. Implementations typically use this hook
+for logging, tracing, or allocating per-command state.
+.SH "DESCRIPTION"
+Installs a user-defined callback that is invoked at the moment a passthrough
+command enters the NVMe submission path. Passing NULL removes any previously
+installed callback.
+.SH "RETURN"
+None.

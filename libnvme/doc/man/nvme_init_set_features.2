@@ -1,0 +1,15 @@
+.TH "nvme_init_set_features" 9 "nvme_init_set_features" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features \- Initialize passthru command for Set Features
+.SH SYNOPSIS
+.B "void" nvme_init_set_features
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 fid "  ","
+.BI "bool sv "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "fid" 12
+Feature identifier
+.IP "sv" 12
+Save value across power states

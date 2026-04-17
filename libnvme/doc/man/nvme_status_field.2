@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "enum nvme_status_field" "March 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nvme_status_field" "April 2026" "API Manual" LINUX
 .SH NAME
 enum nvme_status_field \- Defines all parts of the nvme status field: status code, status code type, and additional flags.
 .SH SYNOPSIS
@@ -340,6 +340,10 @@ enum nvme_status_field {
 , 
 .br
 .br
+.BI "    NVME_SC_FEAT_IOCS_COMBINATION_REJECTED"
+, 
+.br
+.br
 .BI "    NVME_SC_NS_ID_UNAVAILABLE"
 , 
 .br
@@ -473,6 +477,10 @@ enum nvme_status_field {
 .br
 .br
 .BI "    NVME_SC_CONTROLLER_DATA_QUEUE_FULL"
+, 
+.br
+.br
+.BI "    NVME_SC_INVALID_POWER_LIMIT"
 , 
 .br
 .br
@@ -1017,6 +1025,12 @@ firmware image has overlapping ranges.
 Namespace Insufficient Capacity: Creating
 the namespace requires more free space
 than is currently available.
+.IP "NVME_SC_FEAT_IOCS_COMBINATION_REJECTED" 12
+Set Features - I/O Command Set
+Combination Rejected: This error indicates
+that the controller did not accept the
+request to select the requested I/O
+Command Set Combination.
 .IP "NVME_SC_NS_ID_UNAVAILABLE" 12
 Namespace Identifier Unavailable: The
 number of namespaces supported has been
@@ -1142,6 +1156,11 @@ suspended.
 .IP "NVME_SC_CONTROLLER_DATA_QUEUE_FULL" 12
 The controller detected that a
 Controller Data Queue became full.
+.IP "NVME_SC_INVALID_POWER_LIMIT" 12
+Invalid Power Limit: The power limit
+specified for the Power Limit feature is
+invalid because that power limit prohibits
+all operational power states.
 .IP "NVME_SC_BAD_ATTRIBUTES" 12
 Conflicting Dataset Management Attributes
 .IP "NVME_SC_INVALID_PI" 12

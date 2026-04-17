@@ -1,0 +1,11 @@
+.TH "libnvme_ns_get_nguid" 9 "libnvme_ns_get_nguid" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_nguid \- 128-bit nguid of a namespace
+.SH SYNOPSIS
+.B "const uint8_t *" libnvme_ns_get_nguid
+.BI "(libnvme_ns_t n "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+Namespace instance
+.SH "RETURN"
+A pointer to the 128-bit nguid

@@ -1,0 +1,109 @@
+.TH "libnvme" 9 "struct nvme_power_meas_log" "April 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_power_meas_log \- Power Measurement Log Page (Log Identifier 25h)
+.SH SYNOPSIS
+struct nvme_power_meas_log {
+.br
+.BI "    __u8 ver;"
+.br
+.BI "    __u8 pmgn;"
+.br
+.BI "    __le16 pma;"
+.br
+.BI "    __le32 sze;"
+.br
+.BI "    __le32 pmc;"
+.br
+.BI "    __le16 nphd;"
+.br
+.BI "    __le16 smtr;"
+.br
+.BI "    struct nvme_timestamp   smts;"
+.br
+.BI "    __le16 phds;"
+.br
+.BI "    __le16 phbs;"
+.br
+.BI "    __le16 nphds;"
+.br
+.BI "    __le16 vss;"
+.br
+.BI "    __le32 phdoc;"
+.br
+.BI "    __u8 rsvd36[4];"
+.br
+.BI "    __le32 aipwr;"
+.br
+.BI "    __le32 mipwr;"
+.br
+.BI "    struct nvme_timestamp   mipwrt;"
+.br
+.BI "    __u8 ipwrpe;"
+.br
+.BI "    __u8 rsvd57[7];"
+.br
+.BI "    struct nvme_power_histogram_desc descs[];"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "ver" 12
+Version. Shall be cleared to 0h.
+.IP "pmgn" 12
+Power Measurement Generation Number. Incremented each time a
+Set Features command with Action = 1h (Start Power Measurements)
+is successfully completed. Rolls over from FFh to 0h.
+.IP "pma" 12
+Power Measurement Attributes. See \fIenum nvme_pma\fP.
+.IP "sze" 12
+Size. Indicates the size of this log page in bytes.
+.IP "pmc" 12
+Power Measurement Count. Number of interval power measurements
+collected. Does not wrap after FFFFFFFFh. Cleared to 0h when
+Start Power Measurements succeeds or if no measurement has occurred.
+.IP "nphd" 12
+Number of Power Histogram Descriptors in this log page.
+.IP "smtr" 12
+Stop Measurement Time Remaining. Time remaining in minutes until
+controller stops collecting interval power measurements.
+0h means not specified.
+.IP "smts" 12
+Stop Measurement Timestamp. Timestamp of when interval power
+measurements stopped being collected. See \fIstruct nvme_timestamp\fP.
+.IP "phds" 12
+Power Histogram Descriptor Size. Size in bytes of each descriptor.
+.IP "phbs" 12
+Power Histogram Bin Size. Size in milliwatts of each bin.
+Shall be set to 250 milliwatts.
+.IP "nphds" 12
+Number of Power Histogram Descriptors Supported. Maximum number
+of descriptors that can be reported. If 0h, NPHD shall be
+cleared to 0h and no descriptors are reported.
+.IP "vss" 12
+Vendor Specific Size. Size in bytes of the Vendor Specific field.
+.IP "phdoc" 12
+Power Histogram Descriptor Overflow Count. Number of interval
+power measurements greater than the maximum power indicated by
+the last Power Histogram Descriptor. Does not wrap after FFFFFFFFh.
+.IP "rsvd36" 12
+Reserved.
+.IP "aipwr" 12
+Average Interval Power. Bits 31:18 are reserved. Bits 17:16
+contain the Power Scale (PWRS); see \fIenum nvme_psd_ps\fP. Bits 15:0
+contain the Power Value (PWRV).
+.IP "mipwr" 12
+Maximum Interval Power. Bits 31:18 are reserved. Bits 17:16
+contain the Power Scale (PWRS); see \fIenum nvme_psd_ps\fP. Bits 15:0
+contain the Power Value (PWRV).
+.IP "mipwrt" 12
+Maximum Interval Power Timestamp. Timestamp of when the maximum
+interval power was collected. See \fIstruct nvme_timestamp\fP.
+.IP "ipwrpe" 12
+Interval Power Percent Error. Maximum percent error (0-100%).
+Values 101-254 reserved. 255 indicates not reported.
+.IP "rsvd57" 12
+Reserved.
+.IP "descs" 12
+Power Histogram Descriptors (\fIstruct nvme_power_histogram_desc\fP).

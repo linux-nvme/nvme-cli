@@ -1,0 +1,11 @@
+.TH "libnvmf_uri_get_protocol" 9 "libnvmf_uri_get_protocol" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_uri_get_protocol \- Get protocol.
+.SH SYNOPSIS
+.B "const char *" libnvmf_uri_get_protocol
+.BI "(const struct libnvmf_uri *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_uri\fP instance to query.
+.SH "RETURN"
+The value of the protocol field, or NULL if not set.

@@ -1,0 +1,14 @@
+.TH "libnvme_scan_ctrl_namespaces" 9 "libnvme_scan_ctrl_namespaces" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_scan_ctrl_namespaces \- Scan for namespaces in a controller
+.SH SYNOPSIS
+.B "int" libnvme_scan_ctrl_namespaces
+.BI "(libnvme_ctrl_t c "  ","
+.BI "struct dirent ***ns "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller to scan
+.IP "ns" 12
+Pointer to array of dirents
+.SH "RETURN"
+number of entries in \fIns\fP or a negative error code

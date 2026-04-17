@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_id_ctrl" "March 2026" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_id_ctrl" "April 2026" "API Manual" LINUX
 .SH NAME
 struct nvme_id_ctrl \- Identify Controller data structure
 .SH SYNOPSIS
@@ -152,7 +152,15 @@ struct nvme_id_ctrl {
 .br
 .BI "    __le16 cqt;"
 .br
-.BI "    __u8 rsvd388[124];"
+.BI "    __le16 cdpa;"
+.br
+.BI "    __le16 mup;"
+.br
+.BI "    __le16 ipmsr;"
+.br
+.BI "    __le16 msmt;"
+.br
+.BI "    __u8 rsvd396[116];"
 .br
 .BI "    __u8 sqes;"
 .br
@@ -238,7 +246,9 @@ struct nvme_id_ctrl {
 .br
 .BI "    __u8 dctype;"
 .br
-.BI "    __u8 rsvd1807[241];"
+.BI "    __u8 ccrl;"
+.br
+.BI "    __u8 rsvd1808[240];"
 .br
 .BI "    struct nvme_id_psd      psd[32];"
 .br
@@ -484,11 +494,28 @@ Temperature Threshold Hysteresis Attributes
 .IP "rsvd385" 12
 Reserved
 .IP "cqt" 12
-Command Quiesce Time (CQT). his field indicates the expected
+Command Quiesce Time (CQT). This field indicates the expected
 worst-case time in 1 millisecond units for the controller to
 quiesce all outstanding commands after a Keep Alive Timeout or
 other communication loss.
-.IP "rsvd388" 12
+.IP "cdpa" 12
+Configurable Device Personality Attributes: This field
+indicates the Configurable Device Personality feature attributes
+the controller supports.
+.IP "mup" 12
+Maximum Unlimited Power: This field specifies the maximum
+power for power state 0 that results from removal of a power
+limit (i.e., the maximum power is not limited).
+.IP "ipmsr" 12
+Interval Power Measurement Sample Rate: This field
+indicates the maximum interval between power measurement
+samples used to collect interval power measurements.
+.IP "msmt" 12
+Maximum Stop Measurement Time: This field indicates the
+maximum stop measurement time allowed to be specified in the
+SMT field for a Set Features command specifying the Power
+Measurement feature.
+.IP "rsvd396" 12
 Reserved
 .IP "sqes" 12
 Submission Queue Entry Size, see \fIenum nvme_id_ctrl_sqes\fP.
@@ -639,7 +666,12 @@ Optional Fabric Commands Support, see \fIenum nvme_id_ctrl_ofcs\fP.
 Discovery Controller Type (DCTYPE). This field indicates what
 type of Discovery controller the controller is (see enum
 nvme_id_ctrl_dctype)
-.IP "rsvd1807" 12
+.IP "ccrl" 12
+Cross-Controller Reset Limit: This field indicates the limit
+on the number of simultaneous in-progress Cross-Controller Reset
+operations this controller is able to cause to be initiated that
+are supported.
+.IP "rsvd1808" 12
 Reserved
 .IP "psd" 12
 Power State Descriptors, see \fIstruct nvme_id_psd\fP.

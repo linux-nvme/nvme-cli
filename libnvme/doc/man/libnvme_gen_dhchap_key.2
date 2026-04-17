@@ -1,0 +1,27 @@
+.TH "libnvme_gen_dhchap_key" 9 "libnvme_gen_dhchap_key" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_gen_dhchap_key \- DH-HMAC-CHAP key generation
+.SH SYNOPSIS
+.B "int" libnvme_gen_dhchap_key
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "char *hostnqn "  ","
+.BI "enum libnvme_hmac_alg hmac "  ","
+.BI "unsigned int key_len "  ","
+.BI "unsigned char *secret "  ","
+.BI "unsigned char *key "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "hostnqn" 12
+Host NVMe Qualified Name
+.IP "hmac" 12
+HMAC algorithm
+.IP "key_len" 12
+Output key length
+.IP "secret" 12
+Secret to used for digest
+.IP "key" 12
+Generated DH-HMAC-CHAP key
+.SH "RETURN"
+If key generation was successful the function returns 0 or
+a negative error code otherwise.

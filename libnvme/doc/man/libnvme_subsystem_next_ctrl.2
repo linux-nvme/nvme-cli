@@ -1,0 +1,14 @@
+.TH "libnvme_subsystem_next_ctrl" 9 "libnvme_subsystem_next_ctrl" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_subsystem_next_ctrl \- Next ctrl iterator
+.SH SYNOPSIS
+.B "libnvme_ctrl_t" libnvme_subsystem_next_ctrl
+.BI "(libnvme_subsystem_t s "  ","
+.BI "libnvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+\fIlibnvme_subsystem_t\fP object
+.IP "c" 12
+Previous controller instance of an \fIs\fP iterator
+.SH "RETURN"
+Next controller of an \fIs\fP iterator

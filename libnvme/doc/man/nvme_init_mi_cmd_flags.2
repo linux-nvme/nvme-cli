@@ -1,0 +1,14 @@
+.TH "nvme_init_mi_cmd_flags" 9 "nvme_init_mi_cmd_flags" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_mi_cmd_flags \- Initialize command flags for NVMe-MI
+.SH SYNOPSIS
+.B "void" nvme_init_mi_cmd_flags
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool ish "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "ish" 12
+Ignore Shutdown (for NVMe-MI command)
+.SH "DESCRIPTION"
+Initializes the passthru command flags

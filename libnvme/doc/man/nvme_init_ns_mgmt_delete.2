@@ -1,0 +1,16 @@
+.TH "nvme_init_ns_mgmt_delete" 9 "nvme_init_ns_mgmt_delete" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_ns_mgmt_delete \- Initialize passthru command to delete a non attached namespace
+.SH SYNOPSIS
+.B "void" nvme_init_ns_mgmt_delete
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace identifier to delete
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Namespace Management - Delete
+command (NVME_NS_MGMT_SEL_DELETE). The command uses the provided \fInsid\fP as
+the target NSID.

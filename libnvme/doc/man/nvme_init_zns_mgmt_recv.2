@@ -1,0 +1,33 @@
+.TH "nvme_init_zns_mgmt_recv" 9 "nvme_init_zns_mgmt_recv" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_zns_mgmt_recv \- Initialize passthru command for ZNS management receive command
+.SH SYNOPSIS
+.B "void" nvme_init_zns_mgmt_recv
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u64 slba "  ","
+.BI "enum nvme_zns_recv_action zra "  ","
+.BI "__u16 zras "  ","
+.BI "bool zraspf "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "slba" 12
+Starting logical block address
+.IP "zra" 12
+zone receive action
+.IP "zras" 12
+Zone receive action specific field
+.IP "zraspf" 12
+Zone receive action specific features
+.IP "data" 12
+Userspace address of the data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the ZNS Management
+Receive command.

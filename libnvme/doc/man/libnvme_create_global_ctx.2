@@ -1,0 +1,14 @@
+.TH "libnvme_create_global_ctx" 9 "libnvme_create_global_ctx" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_create_global_ctx \- Initialize global context object
+.SH SYNOPSIS
+.B "struct libnvme_global_ctx *" libnvme_create_global_ctx
+.BI "(FILE *fp "  ","
+.BI "int log_level "  ");"
+.SH ARGUMENTS
+.IP "fp" 12
+File descriptor for logging messages
+.IP "log_level" 12
+Logging level to use
+.SH "RETURN"
+Initialized \fIstruct libnvme_global_ctx\fP object

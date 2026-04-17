@@ -1,0 +1,11 @@
+.TH "libnvme_host_get_hostsymname" 9 "libnvme_host_get_hostsymname" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_host_get_hostsymname \- Get hostsymname.
+.SH SYNOPSIS
+.B "const char *" libnvme_host_get_hostsymname
+.BI "(const struct libnvme_host *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_host\fP instance to query.
+.SH "RETURN"
+The value of the hostsymname field, or NULL if not set.

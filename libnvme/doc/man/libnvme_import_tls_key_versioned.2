@@ -1,0 +1,32 @@
+.TH "libnvme_import_tls_key_versioned" 9 "libnvme_import_tls_key_versioned" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_import_tls_key_versioned \- Import a TLS key
+.SH SYNOPSIS
+.B "int" libnvme_import_tls_key_versioned
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *encoded_key "  ","
+.BI "unsigned char *version "  ","
+.BI "unsigned char *hmac "  ","
+.BI "size_t *key_len "  ","
+.BI "unsigned char **key "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "encoded_key" 12
+TLS key in PSK interchange format
+.IP "version" 12
+Indicated the representation of the TLS PSK
+.IP "hmac" 12
+HMAC algorithm used to transfor the configured
+PSK in a retained PSK
+.IP "key_len" 12
+Length of the resulting key data
+.IP "key" 12
+Key serial to return
+.SH "DESCRIPTION"
+Imports \fIkey_data\fP in the PSK Interchange format as defined in section
+3.6.1.5 of the NVMe TCP Transport specification.
+
+It is the responsibility of the caller to free the returned string.
+.SH "RETURN"
+0 on success or negative error code otherwise

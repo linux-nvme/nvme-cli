@@ -1,0 +1,18 @@
+.TH "nvme_init_set_features_iocs_profile" 9 "nvme_init_set_features_iocs_profile" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_iocs_profile \- Initialize passthru command for I/O Command Set Profile
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_iocs_profile
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u16 iocsci "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "iocsci" 12
+I/O Command Set Combination Index
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_IOCS_PROFILE

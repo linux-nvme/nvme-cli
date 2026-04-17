@@ -1,0 +1,14 @@
+.TH "libnvmf_context_free" 9 "libnvmf_context_free" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_free \- Free a fabrics context
+.SH SYNOPSIS
+.B "void" libnvmf_context_free
+.BI "(struct libnvmf_context *fctx "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context to free
+.SH "DESCRIPTION"
+Releases all resources associated with \fIfctx\fP. The context must have
+been previously created with \fBlibnvmf_context_create\fP.
+
+After this call, \fIfctx\fP must not be used.

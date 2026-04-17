@@ -1,0 +1,16 @@
+.TH "libnvme_read_hostnqn" 9 "libnvme_read_hostnqn" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_read_hostnqn \- Reads the host nvm qualified name from the config default location
+.SH SYNOPSIS
+.B "char *" libnvme_read_hostnqn
+.BI "(void "  ");"
+.SH ARGUMENTS
+.IP "void" 12
+no arguments
+.SH "DESCRIPTION"
+
+Retrieve the qualified name from the config file located in $SYSCONFDIR/nvme.
+$SYSCONFDIR is usually /etc.
+.SH "RETURN"
+The host nqn, or NULL if unsuccessful. If found, the caller
+is responsible to free the string.

@@ -1,0 +1,19 @@
+.TH "nvme_init_get_features_auto_pst" 9 "nvme_init_get_features_auto_pst" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_auto_pst \- Initialize passthru command for Get Features - Autonomous Power State Transition
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_auto_pst
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "struct nvme_feat_auto_pst *apst "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "apst" 12
+Autonomous Power State Transition data buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_AUTO_PST

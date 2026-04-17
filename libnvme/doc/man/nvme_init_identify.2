@@ -1,0 +1,27 @@
+.TH "nvme_init_identify" 9 "nvme_init_identify" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify \- Initialize passthru command for NVMe Identify
+.SH SYNOPSIS
+.B "void" nvme_init_identify
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "enum nvme_csi csi "  ","
+.BI "enum nvme_identify_cns cns "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "nsid" 12
+Namespace identifier
+.IP "csi" 12
+Command Set Identifier
+.IP "cns" 12
+The Controller or Namespace structure,
+see \fIenum\fP nvme_identify_cns
+.IP "data" 12
+User space destination address to transfer the data
+.IP "len" 12
+Length of provided user buffer to hold the data in bytes
+.SH "DESCRIPTION"
+Prepare the \fIcmd\fP data structure for the NVMe Identify command.

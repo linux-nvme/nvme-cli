@@ -1,0 +1,22 @@
+.TH "nvme_init_get_log_boot_partition" 9 "nvme_init_get_log_boot_partition" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_boot_partition \- Initialize passthru command for Boot Partition
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_boot_partition
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 lsp "  ","
+.BI "struct nvme_boot_partition *part "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "lsp" 12
+The log specified field of LID
+.IP "part" 12
+User address to store the log page
+.IP "len" 12
+The allocated size, minimum
+struct nvme_boot_partition
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_BOOT_PARTITION

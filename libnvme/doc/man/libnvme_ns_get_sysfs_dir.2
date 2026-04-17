@@ -1,0 +1,11 @@
+.TH "libnvme_ns_get_sysfs_dir" 9 "libnvme_ns_get_sysfs_dir" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_sysfs_dir \- Get sysfs_dir.
+.SH SYNOPSIS
+.B "const char *" libnvme_ns_get_sysfs_dir
+.BI "(const struct libnvme_ns *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ns\fP instance to query.
+.SH "RETURN"
+The value of the sysfs_dir field, or NULL if not set.

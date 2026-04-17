@@ -1,0 +1,19 @@
+.TH "nvme_init_ns_mgmt_create" 9 "nvme_init_ns_mgmt_create" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_ns_mgmt_create \- Initialize passthru command to create a non attached namespace
+.SH SYNOPSIS
+.B "void" nvme_init_ns_mgmt_create
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 csi "  ","
+.BI "struct nvme_ns_mgmt_host_sw_specified *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "csi" 12
+Command Set Identifier
+.IP "data" 12
+Host Software Specified Fields buffer that defines NS
+creation parameters
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Namespace Management - Create
+command. The command uses NVME_NSID_NONE as the target NSID.

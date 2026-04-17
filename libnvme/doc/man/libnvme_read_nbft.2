@@ -1,0 +1,20 @@
+.TH "libnvme_read_nbft" 9 "libnvme_read_nbft" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_read_nbft \- Read and parse contents of an ACPI NBFT table
+.SH SYNOPSIS
+.B "int" libnvme_read_nbft
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnbft_info **nbft "  ","
+.BI "const char *filename "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "nbft" 12
+Parsed NBFT table data.
+.IP "filename" 12
+Filename of the raw NBFT table to read.
+.SH "DESCRIPTION"
+Read and parse the specified NBFT file into a struct libnbft_info.
+Free with \fBlibnvme_free_nbft\fP.
+.SH "RETURN"
+0 on success, errno otherwise.

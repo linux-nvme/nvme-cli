@@ -1,0 +1,21 @@
+.TH "nvme_init_set_features_lba_sts_interval" 9 "nvme_init_set_features_lba_sts_interval" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_lba_sts_interval \- Initialize passthru command for LBA Status Information Interval
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_lba_sts_interval
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u16 lsiri "  ","
+.BI "__u16 lsipi "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "lsiri" 12
+LBA Status Information Report Interval
+.IP "lsipi" 12
+LBA Status Information Poll Interval
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_LBA_STS_INTERVAL

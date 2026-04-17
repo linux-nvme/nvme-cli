@@ -1,0 +1,18 @@
+.TH "nvme_init_set_features_nopsc" 9 "nvme_init_set_features_nopsc" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_nopsc \- Initialize passthru command for Non-Operational Power State Config
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_nopsc
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "bool noppme "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "noppme" 12
+Non-Operational Power State Permissive Mode Enable
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_NOPSC

@@ -1,0 +1,19 @@
+.TH "libnvme_scan_ctrl" 9 "libnvme_scan_ctrl" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_scan_ctrl \- Scan on a controller
+.SH SYNOPSIS
+.B "int" libnvme_scan_ctrl
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ","
+.BI "libnvme_ctrl_t *c "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "name" 12
+Name of the controller
+.IP "c" 12
+\fIlibnvme_ctrl_t\fP object to return
+.SH "DESCRIPTION"
+Scans a controller with sysfs name \fIname\fP and add it to \fIr\fP.
+.SH "RETURN"
+0 on success or negative error code otherwise

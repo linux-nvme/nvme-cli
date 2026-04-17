@@ -1,0 +1,27 @@
+.TH "nvme_init_resv_report" 9 "nvme_init_resv_report" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_resv_report \- Initialize passthru command for Reservation Report
+.SH SYNOPSIS
+.B "void" nvme_init_resv_report
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "bool eds "  ","
+.BI "bool disnsrs "  ","
+.BI "struct nvme_resv_status *report "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace identifier
+.IP "eds" 12
+Request extended Data Structure
+.IP "disnsrs" 12
+Disperse Namespace Reservation Support
+.IP "report" 12
+The user space destination address to store the reservation
+report buffer
+.IP "len" 12
+Number of bytes to request transferred with this command
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Reservation Report command.

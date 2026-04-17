@@ -1,0 +1,35 @@
+.TH "nvme_init_zns_mgmt_send" 9 "nvme_init_zns_mgmt_send" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_zns_mgmt_send \- Initialize passthru command for ZNS management send command
+.SH SYNOPSIS
+.B "void" nvme_init_zns_mgmt_send
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u64 slba "  ","
+.BI "enum nvme_zns_send_action zsa "  ","
+.BI "bool selall "  ","
+.BI "__u8 zsaso "  ","
+.BI "__u8 zm "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "slba" 12
+Starting logical block address
+.IP "zsa" 12
+Zone send action
+.IP "selall" 12
+Select all flag
+.IP "zsaso" 12
+Zone Send Action Specific Option
+.IP "zm" 12
+Zone Management
+.IP "data" 12
+Userspace address of the data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the ZNS Management Send command.

@@ -2,12 +2,12 @@
 .\"     Title: nvme-solidigm-workload-tracker
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/11/2026
+.\"      Date: 04/17/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SOLIDIGM\-WORK" "1" "03/11/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SOLIDIGM\-WORK" "1" "04/17/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,17 +33,17 @@ nvme-solidigm-workload-tracker \- Real\-time capture of Workload Tracker samples
 .sp
 .nf
 \fInvme solidigm workload\-tracker\fR <device> [\-\-uuid\-index=<id> | \-U <id>]
-                                      [\-\-enable | \-e] [\-\-disable | \-d]
-                                      [\-\-sample\-time=<time> | \-s <time>]
-                                      [\-\-type=<type> | \-t <type>]
-                                      [\-\-run\-time=<seconds> | \-r <seconds>]
-                                      [\-\-flush\-freq=<count> | \-f <count>]
-                                      [\-\-wall\-clock | \-w]
-                                      [\-\-trigger\-field=<field> | \-T <field>]
-                                      [\-\-trigger\-threshold=<value> | \-V <value>]
-                                      [\-\-trigger\-on\-delta | \-D]
-                                      [\-\-trigger\-on\-latency | \-L]
-                                      [\-\-verbose | \-v]
+                        [\-\-enable | \-e] [\-\-disable | \-d]
+                        [\-\-sample\-time=<time> | \-s <time>]
+                        [\-\-type=<type> | \-t <type>]
+                        [\-\-run\-time=<seconds> | \-r <seconds>]
+                        [\-\-flush\-freq=<count> | \-f <count>]
+                        [\-\-wall\-clock | \-w]
+                        [\-\-trigger\-field=<field> | \-T <field>]
+                        [\-\-trigger\-threshold=<value> | \-V <value>]
+                        [\-\-trigger\-on\-delta | \-D]
+                        [\-\-trigger\-on\-latency | \-L]
+                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -115,6 +115,51 @@ Use latency tracker to trigger stop sampling\&.
 \-v, \-\-verbose
 .RS 4
 Increase logging verbosity\&. Can be used multiple times\&.
+.RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
 .SH "EXAMPLES"
 .sp

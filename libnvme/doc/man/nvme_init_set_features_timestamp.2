@@ -1,0 +1,22 @@
+.TH "nvme_init_set_features_timestamp" 9 "nvme_init_set_features_timestamp" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_timestamp \- Initialize passthru command for Timestamp
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_timestamp
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u64 tstmp "  ","
+.BI "struct nvme_timestamp *ts "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "tstmp" 12
+The current timestamp value to assign to this feature
+.IP "ts" 12
+Timestamp data buffer (populated by this function)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_TIMESTAMP. The caller must provide a valid
+buffer via \fIts\fP, which this function will populate.

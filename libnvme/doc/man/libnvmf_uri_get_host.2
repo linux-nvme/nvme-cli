@@ -1,0 +1,11 @@
+.TH "libnvmf_uri_get_host" 9 "libnvmf_uri_get_host" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_uri_get_host \- Get host.
+.SH SYNOPSIS
+.B "const char *" libnvmf_uri_get_host
+.BI "(const struct libnvmf_uri *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_uri\fP instance to query.
+.SH "RETURN"
+The value of the host field, or NULL if not set.

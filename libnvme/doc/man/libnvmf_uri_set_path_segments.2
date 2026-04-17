@@ -1,0 +1,12 @@
+.TH "libnvmf_uri_set_path_segments" 9 "libnvmf_uri_set_path_segments" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_uri_set_path_segments \- Set path_segments.
+.SH SYNOPSIS
+.B "void" libnvmf_uri_set_path_segments
+.BI "(struct libnvmf_uri *p "  ","
+.BI "const char *const *path_segments "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_uri\fP instance to update.
+.IP "path_segments" 12
+New NULL-terminated string array; deep-copied.

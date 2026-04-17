@@ -1,0 +1,24 @@
+.TH "nvme_init_directive_send_id_endir" 9 "nvme_init_directive_send_id_endir" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_directive_send_id_endir \- Initialize passthru command for Directive Send Enable Directive
+.SH SYNOPSIS
+.B "void" nvme_init_directive_send_id_endir
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "bool endir "  ","
+.BI "enum nvme_directive_dtype dtype "  ","
+.BI "struct nvme_id_directives *id "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace Identifier
+.IP "endir" 12
+Enable Directive
+.IP "dtype" 12
+Directive Type
+.IP "id" 12
+Pointer to structure nvme_id_directives
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Directive Send - Identify
+(Enable Directive) command.

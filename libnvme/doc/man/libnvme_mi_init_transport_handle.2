@@ -1,0 +1,20 @@
+.TH "libnvme_mi_init_transport_handle" 9 "libnvme_mi_init_transport_handle" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_mi_init_transport_handle \- initialise a transport handle to NVMe controller.
+.SH SYNOPSIS
+.B "struct libnvme_transport_handle *" libnvme_mi_init_transport_handle
+.BI "(libnvme_mi_ep_t ep "  ","
+.BI "__u16 ctrl_id "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+Endpoint to create under
+.IP "ctrl_id" 12
+ID of controller to initialize.
+.SH "DESCRIPTION"
+Create a connection to a controller behind the endpoint specified in \fIep\fP.
+Controller IDs may be queried from the endpoint through
+\fIlibnvme_mi_mi_read_mi_data_ctrl_list\fP.
+
+See \fIlibnvme_mi_close_transport_handle\fP
+.SH "RETURN"
+New transport handle object, or NULL on failure.

@@ -1,0 +1,14 @@
+.TH "libnvme_ns_get_uuid" 9 "libnvme_ns_get_uuid" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_uuid \- UUID of a namespace
+.SH SYNOPSIS
+.B "void" libnvme_ns_get_uuid
+.BI "(libnvme_ns_t n "  ","
+.BI "unsigned char out[NVME_UUID_LEN] "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+Namespace instance
+.IP "out" 12
+buffer for the UUID
+.SH "DESCRIPTION"
+Copies the namespace's uuid into \fIout\fP

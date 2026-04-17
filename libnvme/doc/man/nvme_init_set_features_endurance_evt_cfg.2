@@ -1,0 +1,22 @@
+.TH "nvme_init_set_features_endurance_evt_cfg" 9 "nvme_init_set_features_endurance_evt_cfg" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_endurance_evt_cfg \- Initialize passthru command for Endurance Group Event Configuration
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_endurance_evt_cfg
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u16 endgid "  ","
+.BI "__u8 egcw "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "endgid" 12
+Endurance Group Identifier
+.IP "egcw" 12
+Flags to enable warning,
+see \fIenum nvme_eg_critical_warning_flags\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_ENDURANCE_EVT_CFG

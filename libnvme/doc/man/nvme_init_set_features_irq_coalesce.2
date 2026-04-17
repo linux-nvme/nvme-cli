@@ -1,0 +1,21 @@
+.TH "nvme_init_set_features_irq_coalesce" 9 "nvme_init_set_features_irq_coalesce" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_irq_coalesce \- Initialize passthru command for IRQ Coalescing
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_irq_coalesce
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u8 thr "  ","
+.BI "__u8 time "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "thr" 12
+Aggregation Threshold
+.IP "time" 12
+Aggregation Time
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_IRQ_COALESCE

@@ -1,0 +1,19 @@
+.TH "nvme_init_get_features_endurance_event_cfg" 9 "nvme_init_get_features_endurance_event_cfg" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_endurance_event_cfg \- Initialize passthru command for Get Features - Endurance Group Event Configuration
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_endurance_event_cfg
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "__u16 endgid "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "endgid" 12
+Endurance Group Identifier
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_ENDURANCE_EVT_CFG

@@ -1,0 +1,12 @@
+.TH "libnvme_ctrl_set_tls_key_identity" 9 "libnvme_ctrl_set_tls_key_identity" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_set_tls_key_identity \- Set tls_key_identity.
+.SH SYNOPSIS
+.B "void" libnvme_ctrl_set_tls_key_identity
+.BI "(struct libnvme_ctrl *p "  ","
+.BI "const char *tls_key_identity "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to update.
+.IP "tls_key_identity" 12
+New string; a copy is stored. Pass NULL to clear.

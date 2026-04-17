@@ -1,0 +1,18 @@
+.TH "nvme_init_set_features_sw_progress" 9 "nvme_init_set_features_sw_progress" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_sw_progress \- Initialize passthru command for Software Pogress Marker
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_sw_progress
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u8 pbslc "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "pbslc" 12
+Pre-boot Software Load Count
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_SW_PROGRESS

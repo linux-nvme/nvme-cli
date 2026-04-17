@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/11/2026
+.\"      Date: 04/17/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "03/11/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "04/17/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,39 +32,150 @@ nvme-connect \- Connect to a Fabrics controller\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme connect\fR [\-\-transport=<trtype> | \-t <trtype>]
-                        [\-\-nqn=<subnqn> | \-n <subnqn>]
-                        [\-\-traddr=<traddr> | \-a <traddr>]
-                        [\-\-trsvcid=<trsvcid> | \-s <trsvcid>]
-                        [\-\-host\-traddr=<traddr> | \-w <traddr>]
-                        [\-\-host\-iface=<iface> | \-f <iface>]
-                        [\-\-hostnqn=<hostnqn> | \-q <hostnqn>]
-                        [\-\-hostid=<hostid> | \-I <hostid>]
-                        [\-\-config=<filename> | \-J <filename>]
-                        [\-\-dhchap\-secret=<secret> | \-S <secret>]
-                        [\-\-dhchap\-ctrl\-secret=<secret> | \-C <secret>]
-                        [\-\-nr\-io\-queues=<#> | \-i <#>]
-                        [\-\-nr\-write\-queues=<#> | \-W <#>]
-                        [\-\-nr\-poll\-queues=<#> | \-P <#>]
-                        [\-\-queue\-size=<#> | \-Q <#>]
-                        [\-\-keep\-alive\-tmo=<#> | \-k <#>]
-                        [\-\-reconnect\-delay=<#> | \-c <#>]
-                        [\-\-ctrl\-loss\-tmo=<#> | \-l <#>] [\-\-tos=<#> | \-T <#>]
-                        [\-\-keyring=<keyring>] [\-\-tls\-key=<tls\-key>]
-                        [\-\-tls\-key\-identity=<identity>]
-                        [\-\-duplicate\-connect | \-D] [\-\-disable\-sqflow ]
-                        [\-\-hdr\-digest | \-g] [\-\-data\-digest | \-G] [\-\-tls]
-                        [\-\-concat] [\-\-dump\-config | \-O] [\-\-application=<id>]
-                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+\fInvme connect\fR [\-\-config=<filename>]
+                        [\-\-application=<id>]
+                        [<fabrics\-options>]
+                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
 Create a transport connection to a remote system (specified by \-\-traddr and \-\-trsvcid) and create a NVMe over Fabrics controller for the NVMe subsystem specified by the \-\-nqn option\&.
 .SH "OPTIONS"
 .PP
+\-\-config=<filename>
+.RS 4
+Use the specified JSON configuration file instead of the default\&.
+.RE
+.PP
+\-\-context <STR>
+.RS 4
+Set the execution context to <STR>\&. This allows to coordinate the management of the global resources\&.
+.RE
+.SH "FABRICS OPTIONS"
+.sp
+The following options are common to NVMe over Fabrics commands such as nvme connect:
+.PP
+\-a <traddr>, \-\-traddr=<traddr>
+.RS 4
+Specify the network address of the controller\&. For transports using IP addressing (e\&.g\&. rdma, tcp), this should be an IP address\&.
+.RE
+.PP
+\-\-concat
+.RS 4
+Enable secure concatenation (TCP)\&.
+.RE
+.PP
+\-c <#>, \-\-reconnect\-delay=<#>
+.RS 4
+Set the delay in seconds before reconnect is attempted after a connection loss\&.
+.RE
+.PP
+\-C <secret>, \-\-dhchap\-ctrl\-secret=<secret>
+.RS 4
+Controller authentication secret for bi\-directional authentication\&. If not specified, bi\-directional authentication is not attempted\&.
+.RE
+.PP
+\-S <secret>, \-\-dhchap\-secret=<secret>
+.RS 4
+Host authentication secret (DH\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&.
+.RE
+.PP
+\-\-disable\-sqflow
+.RS 4
+Disable submission queue flow control\&.
+.RE
+.PP
+\-G, \-\-data\-digest
+.RS 4
+Enable data digest generation/verification (TCP)\&.
+.RE
+.PP
+\-D, \-\-duplicate\-connect
+.RS 4
+Allow duplicate connections to the same subsystem\&.
+.RE
+.PP
+\-g, \-\-hdr\-digest
+.RS 4
+Enable header digest generation/verification (TCP)\&.
+.RE
+.PP
+\-f <iface>, \-\-host\-iface=<iface>
+.RS 4
+Specify the network interface to use for the connection\&.
+.RE
+.PP
+\-I <hostid>, \-\-hostid=<hostid>
+.RS 4
+Specify the host UUID\&.
+.RE
+.PP
+\-q <hostnqn>, \-\-hostnqn=<hostnqn>
+.RS 4
+Override the default host NQN\&.
+.RE
+.PP
+\-w <traddr>, \-\-host\-traddr=<traddr>
+.RS 4
+Specify the source address on the host side of the connection\&.
+.RE
+.PP
+\-k <#>, \-\-keep\-alive\-tmo=<#>
+.RS 4
+Set the keep\-alive timeout in seconds\&.
+.RE
+.PP
+\-\-keyring=<keyring>
+.RS 4
+Keyring to use for TLS key lookup\&.
+.RE
+.PP
+\-n <subnqn>, \-\-nqn=<subnqn>
+.RS 4
+Specify the NVMe subsystem NQN to connect to\&.
+.RE
+.PP
+\-i <#>, \-\-nr\-io\-queues=<#>
+.RS 4
+Number of I/O queues to create\&.
+.RE
+.PP
+\-P <#>, \-\-nr\-poll\-queues=<#>
+.RS 4
+Number of polling queues to create\&.
+.RE
+.PP
+\-W <#>, \-\-nr\-write\-queues=<#>
+.RS 4
+Number of write queues to create\&.
+.RE
+.PP
+\-Q <#>, \-\-queue\-size=<#>
+.RS 4
+Queue depth for I/O queues\&.
+.RE
+.PP
+\-l <#>, \-\-ctrl\-loss\-tmo=<#>
+.RS 4
+Maximum time in seconds to retry reconnect attempts after controller loss\&.
+.RE
+.PP
+\-s <trsvcid>, \-\-trsvcid=<trsvcid>
+.RS 4
+Transport service identifier (e\&.g\&. TCP/rdma port)\&. Default is 4420 for RDMA\&.
+.RE
+.PP
+\-T <#>, \-\-tos=<#>
+.RS 4
+Type of service value for the connection (TCP)\&.
+.RE
+.PP
 \-t <trtype>, \-\-transport=<trtype>
 .RS 4
-This field specifies the network fabric being used for a NVMe\-over\-Fabrics network\&. Current string values include:
+Specify the transport type\&. Supported values include:
+.RE
+.sp
++
 .TS
 allbox tab(:);
 lt lt
@@ -73,203 +184,101 @@ lt lt
 lt lt
 lt lt.
 T{
+.sp
 Value
 T}:T{
-Definition
+.sp
+Description
 T}
 T{
+.sp
 rdma
 T}:T{
-The network fabric is an rdma network (RoCE, iWARP, Infiniband, basic rdma, etc)
+.sp
+RDMA (RoCE, iWARP, InfiniBand)
 T}
 T{
-fc
-T}:T{
-\fBWIP\fR
-The network fabric is a Fibre Channel network\&.
-T}
-T{
+.sp
 tcp
 T}:T{
-The network fabric is a TCP/IP network\&.
+.sp
+TCP/IP
 T}
 T{
+.sp
+fc
+T}:T{
+.sp
+Fibre Channel (\fBexperimental\fR)
+T}
+T{
+.sp
 loop
 T}:T{
-Connect to a NVMe over Fabrics target on the local host
+.sp
+Local loopback transport
 T}
 .TE
 .sp 1
-.RE
-.PP
-\-n <subnqn>, \-\-nqn <subnqn>
-.RS 4
-This field specifies the name for the NVMe subsystem to connect to\&.
-.RE
-.PP
-\-a <traddr>, \-\-traddr=<traddr>
-.RS 4
-This field specifies the network address of the Controller\&. For transports using IP addressing (e\&.g\&. rdma) this should be an IP\-based address (ex\&. IPv4)\&.
-.RE
-.PP
-\-s <trsvcid>, \-\-trsvcid=<trsvcid>
-.RS 4
-This field specifies the transport service id\&. For transports using IP addressing (e\&.g\&. rdma) this field is the port number\&. By default, the IP port number for the RDMA transport is 4420\&.
-.RE
-.PP
-\-w <traddr>, \-\-host\-traddr=<traddr>
-.RS 4
-This field specifies the network address used on the host to connect to the Controller\&. For TCP, this sets the source address on the socket\&.
-.RE
-.PP
-\-f <iface>, \-\-host\-iface=<iface>
-.RS 4
-This field specifies the network interface used on the host to connect to the Controller (e\&.g\&. IP eth1, enp2s0, enx78e7d1ea46da)\&. This forces the connection to be made on a specific interface instead of letting the system decide\&.
-.RE
-.PP
-\-q <hostnqn>, \-\-hostnqn=<hostnqn>
-.RS 4
-Overrides the default Host NQN that identifies the NVMe Host\&. If this option is not specified, the default is read from /usr/local/etc/nvme/hostnqn first\&. If that does not exist, the autogenerated NQN value from the NVMe Host kernel module is used next\&. The Host NQN uniquely identifies the NVMe Host\&.
-.RE
-.PP
-\-I <hostid>, \-\-hostid=<hostid>
-.RS 4
-UUID(Universally Unique Identifier) to be discovered which should be formatted\&.
-.RE
-.PP
-\-J <filename>, \-\-config=<filename>
-.RS 4
-Use the specified JSON configuration file instead of the default /usr/local/etc/nvme/config\&.json file or
-\fInone\fR
-to not read in an existing configuration file\&. The JSON configuration file format is documented in
-\m[blue]\fBhttps://github\&.com/linux\-nvme/nvme\-cli/blob/master/libnvme/doc/config\-schema\&.json\fR\m[]
-.RE
-.PP
-\-S <secret>, \-\-dhchap\-secret=<secret>
-.RS 4
-NVMe In\-band authentication secret; needs to be in ASCII format as specified in NVMe 2\&.0 section 8\&.13\&.5\&.8
-\fISecret representation\fR\&.
-.RE
-.PP
-\-C <secret>, \-\-dhchap\-ctrl\-secret=<secret>
-.RS 4
-NVMe In\-band authentication controller secret for bi\-directional authentication; needs to be in ASCII format as specified in NVMe 2\&.0 section 8\&.13\&.5\&.8
-\fISecret representation\fR\&. If not present bi\-directional authentication is not attempted\&.
-.RE
-.PP
-\-i <#>, \-\-nr\-io\-queues=<#>
-.RS 4
-Overrides the default number of I/O queues create by the driver\&.
-.RE
-.PP
-\-W <#>, \-\-nr\-write\-queues=<#>
-.RS 4
-Adds additional queues that will be used for write I/O\&.
-.RE
-.PP
-\-P <#>, \-\-nr\-poll\-queues=<#>
-.RS 4
-Adds additional queues that will be used for polling latency sensitive I/O\&.
-.RE
-.PP
-\-Q <#>, \-\-queue\-size=<#>
-.RS 4
-Overrides the default number of elements in the I/O queues created by the driver\&.
-.RE
-.PP
-\-k <#>, \-\-keep\-alive\-tmo=<#>
-.RS 4
-Overrides the default keep alive timeout (in seconds)\&.
-.RE
-.PP
-\-c <#>, \-\-reconnect\-delay=<#>
-.RS 4
-Overrides the default delay (in seconds) before reconnect is attempted after a connect loss\&.
-.RE
-.PP
-\-l <#>, \-\-ctrl\-loss\-tmo=<#>
-.RS 4
-Overrides the default controller loss timeout period (in seconds)\&. This is the maximum time the kernel will retry a connection, where each retry will be issued after
-\fIreconnect\-delay\fR
-seconds\&.
-.RE
-.PP
-\-T <#>, \-\-tos=<#>
-.RS 4
-Type of service for the connection (TCP)
-.RE
-.PP
-\-\-keyring=<keyring>
-.RS 4
-Keyring for TLS key lookup, either the key id or the keyring name\&.
-.RE
-.PP
-\-\-tls\-key=<tls\-key>
-.RS 4
-TLS key for the connection (TCP), either the TLS key in interchange format or the key id\&. It\(cqs strongly recommended not to provide the TLS key via the comamnd line due to security concerns\&. Instead in production situation, the key should be loaded into the keystore with
-\fInvme tls \-\-import\fR
-and only the
-\fI\-\-tls\fR
-options used\&. The kernel will select the matching key\&.
-.RE
-.PP
-\-\-tls\-key\-identity=<identity>
-.RS 4
-The identity used for the tls\-key\&. If none is provided the tls\-key provided via the comamnd line is considered a configuration key and a derive key will be loaded into the keyring\&.
-.RE
-.PP
-\-D, \-\-duplicate\-connect
-.RS 4
-Allows duplicated connections between same transport host and subsystem port\&.
-.RE
-.PP
-\-\-disable\-sqflow
-.RS 4
-Disables SQ flow control to omit head doorbell update for submission queues when sending nvme completions\&.
-.RE
-.PP
-\-g, \-\-hdr\-digest
-.RS 4
-Generates/verifies header digest (TCP)\&.
-.RE
-.PP
-\-G, \-\-data\-digest
-.RS 4
-Generates/verifies data digest (TCP)\&.
-.RE
 .PP
 \-\-tls
 .RS 4
 Enable TLS encryption (TCP)\&.
 .RE
 .PP
-\-\-concat
+\-\-tls\-key=<tls\-key>
 .RS 4
-Enable secure concatenation (TCP)\&.
+TLS key for the connection\&. It is recommended to preload keys into the system keyring instead of passing them via the command line\&.
 .RE
 .PP
-\-O, \-\-dump\-config
+\-\-tls\-key\-identity=<identity>
 .RS 4
-Print out resulting JSON configuration file to stdout\&.
+Identity associated with the TLS key\&.
+.RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
 .RE
 .PP
-\-\-context <STR>
+\-\-no\-ioctl\-probing
 .RS 4
-Set the execution context to <STR>\&. This allows to coordinate the management of the global resources\&.
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
 .RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR
-or
-\fIbinary\fR\&. Only one output format can be used at a time\&.
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
 .RE
 .PP
 \-v, \-\-verbose
 .RS 4
-Increase the information detail in the output\&.
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
 .SH "EXAMPLES"
 .sp

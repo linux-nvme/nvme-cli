@@ -1,0 +1,12 @@
+.TH "libnvme_path_set_sysfs_dir" 9 "libnvme_path_set_sysfs_dir" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_path_set_sysfs_dir \- Set sysfs_dir.
+.SH SYNOPSIS
+.B "void" libnvme_path_set_sysfs_dir
+.BI "(struct libnvme_path *p "  ","
+.BI "const char *sysfs_dir "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_path\fP instance to update.
+.IP "sysfs_dir" 12
+New string; a copy is stored. Pass NULL to clear.

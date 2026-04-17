@@ -1,0 +1,15 @@
+.TH "nvme_init_directive_send_stream_release_resource" 9 "nvme_init_directive_send_stream_release_resource" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_directive_send_stream_release_resource \- Initialize passthru command for Directive Send Stream release resources
+.SH SYNOPSIS
+.B "void" nvme_init_directive_send_stream_release_resource
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Directive Send - Stream
+Release Resource command.

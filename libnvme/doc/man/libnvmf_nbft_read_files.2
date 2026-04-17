@@ -1,0 +1,19 @@
+.TH "libnvmf_nbft_read_files" 9 "libnvmf_nbft_read_files" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_nbft_read_files \- Read NBFT files from path
+.SH SYNOPSIS
+.B "int" libnvmf_nbft_read_files
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "char *path "  ","
+.BI "struct nbft_file_entry **head "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "path" 12
+Path to NBFT files
+.IP "head" 12
+Pointer to store linked list of NBFT file entries
+.SH "DESCRIPTION"
+Reads NBFT files from the specified path and populates a linked list.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

@@ -1,0 +1,27 @@
+.TH "nvme_init_io_mgmt_recv" 9 "nvme_init_io_mgmt_recv" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_io_mgmt_recv \- Initialize passthru command for I/O Management Receive command
+.SH SYNOPSIS
+.B "void" nvme_init_io_mgmt_recv
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u8 mo "  ","
+.BI "__u16 mos "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace identifier
+.IP "mo" 12
+Management Operation
+.IP "mos" 12
+Management Operation Specific
+.IP "data" 12
+Userspace address of the data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the I/O Management
+Receive command.

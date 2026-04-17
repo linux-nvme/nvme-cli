@@ -749,30 +749,10 @@ nvme-connect(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme connect</em> [--transport=&lt;trtype&gt; | -t &lt;trtype&gt;]
-                        [--nqn=&lt;subnqn&gt; | -n &lt;subnqn&gt;]
-                        [--traddr=&lt;traddr&gt; | -a &lt;traddr&gt;]
-                        [--trsvcid=&lt;trsvcid&gt; | -s &lt;trsvcid&gt;]
-                        [--host-traddr=&lt;traddr&gt; | -w &lt;traddr&gt;]
-                        [--host-iface=&lt;iface&gt; | -f &lt;iface&gt;]
-                        [--hostnqn=&lt;hostnqn&gt; | -q &lt;hostnqn&gt;]
-                        [--hostid=&lt;hostid&gt; | -I &lt;hostid&gt;]
-                        [--config=&lt;filename&gt; | -J &lt;filename&gt;]
-                        [--dhchap-secret=&lt;secret&gt; | -S &lt;secret&gt;]
-                        [--dhchap-ctrl-secret=&lt;secret&gt; | -C &lt;secret&gt;]
-                        [--nr-io-queues=&lt;#&gt; | -i &lt;#&gt;]
-                        [--nr-write-queues=&lt;#&gt; | -W &lt;#&gt;]
-                        [--nr-poll-queues=&lt;#&gt; | -P &lt;#&gt;]
-                        [--queue-size=&lt;#&gt; | -Q &lt;#&gt;]
-                        [--keep-alive-tmo=&lt;#&gt; | -k &lt;#&gt;]
-                        [--reconnect-delay=&lt;#&gt; | -c &lt;#&gt;]
-                        [--ctrl-loss-tmo=&lt;#&gt; | -l &lt;#&gt;] [--tos=&lt;#&gt; | -T &lt;#&gt;]
-                        [--keyring=&lt;keyring&gt;] [--tls-key=&lt;tls-key&gt;]
-                        [--tls-key-identity=&lt;identity&gt;]
-                        [--duplicate-connect | -D] [--disable-sqflow ]
-                        [--hdr-digest | -g] [--data-digest | -G] [--tls]
-                        [--concat] [--dump-config | -O] [--application=&lt;id&gt;]
-                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
+<pre class="content"><em>nvme connect</em> [--config=&lt;filename&gt;]
+                        [--application=&lt;id&gt;]
+                        [&lt;fabrics-options&gt;]
+                        [&lt;global-options&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -790,371 +770,11 @@ specified by the --nqn option.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--t &lt;trtype&gt;
-</dt>
-<dt class="hdlist1">
---transport=&lt;trtype&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the network fabric being used for
-        a NVMe-over-Fabrics network. Current string values include:
-</p>
-<div class="tableblock">
-<table rules="all"
-width="100%"
-frame="border"
-cellspacing="0" cellpadding="4">
-<col width="50%" />
-<col width="50%" />
-<tbody>
-<tr>
-<td align="left" valign="top"><p class="table">Value</p></td>
-<td align="left" valign="top"><p class="table">Definition</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">rdma</p></td>
-<td align="left" valign="top"><p class="table">The network fabric is an rdma network (RoCE, iWARP, Infiniband, basic rdma, etc)</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">fc</p></td>
-<td align="left" valign="top"><p class="table"><strong>WIP</strong> The network fabric is a Fibre Channel network.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">tcp</p></td>
-<td align="left" valign="top"><p class="table">The network fabric is a TCP/IP network.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">loop</p></td>
-<td align="left" valign="top"><p class="table">Connect to a NVMe over Fabrics target on the local host</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</dd>
-<dt class="hdlist1">
--n &lt;subnqn&gt;
-</dt>
-<dt class="hdlist1">
---nqn &lt;subnqn&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the name for the NVMe subsystem to connect to.
-</p>
-</dd>
-<dt class="hdlist1">
--a &lt;traddr&gt;
-</dt>
-<dt class="hdlist1">
---traddr=&lt;traddr&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the network address of the Controller.
-        For transports using IP addressing (e.g. rdma) this should be an
-        IP-based address (ex. IPv4).
-</p>
-</dd>
-<dt class="hdlist1">
--s &lt;trsvcid&gt;
-</dt>
-<dt class="hdlist1">
---trsvcid=&lt;trsvcid&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the transport service id. For transports using IP
-        addressing (e.g. rdma) this field is the port number. By default, the IP
-        port number for the RDMA transport is 4420.
-</p>
-</dd>
-<dt class="hdlist1">
--w &lt;traddr&gt;
-</dt>
-<dt class="hdlist1">
---host-traddr=&lt;traddr&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the network address used on the host to connect
-        to the Controller. For TCP, this sets the source address on the socket.
-</p>
-</dd>
-<dt class="hdlist1">
--f &lt;iface&gt;
-</dt>
-<dt class="hdlist1">
---host-iface=&lt;iface&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the network interface used on the host to connect
-        to the Controller (e.g. IP eth1, enp2s0, enx78e7d1ea46da). This forces
-        the connection to be made on a specific interface instead of letting
-        the system decide.
-</p>
-</dd>
-<dt class="hdlist1">
--q &lt;hostnqn&gt;
-</dt>
-<dt class="hdlist1">
---hostnqn=&lt;hostnqn&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default Host NQN that identifies the NVMe Host.
-        If this option is not specified, the default is read from
-        /usr/local/etc/nvme/hostnqn first. If that does not exist, the autogenerated
-        NQN value from the NVMe Host kernel module is used next.
-        The Host NQN uniquely identifies the NVMe Host.
-</p>
-</dd>
-<dt class="hdlist1">
--I &lt;hostid&gt;
-</dt>
-<dt class="hdlist1">
---hostid=&lt;hostid&gt;
-</dt>
-<dd>
-<p>
-        UUID(Universally Unique Identifier) to be discovered which should be
-        formatted.
-</p>
-</dd>
-<dt class="hdlist1">
--J &lt;filename&gt;
-</dt>
-<dt class="hdlist1">
 --config=&lt;filename&gt;
 </dt>
 <dd>
 <p>
-        Use the specified JSON configuration file instead of the
-        default /usr/local/etc/nvme/config.json file or <em>none</em> to not read in
-        an existing configuration file. The JSON configuration file
-        format is documented in
-        <a href="https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/doc/config-schema.json">https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/doc/config-schema.json</a>
-</p>
-</dd>
-<dt class="hdlist1">
--S &lt;secret&gt;
-</dt>
-<dt class="hdlist1">
---dhchap-secret=&lt;secret&gt;
-</dt>
-<dd>
-<p>
-        NVMe In-band authentication secret; needs to be in ASCII format as
-        specified in NVMe 2.0 section 8.13.5.8 <em>Secret representation</em>.
-</p>
-</dd>
-<dt class="hdlist1">
--C &lt;secret&gt;
-</dt>
-<dt class="hdlist1">
---dhchap-ctrl-secret=&lt;secret&gt;
-</dt>
-<dd>
-<p>
-        NVMe In-band authentication controller secret for bi-directional
-        authentication; needs to be in ASCII format as
-        specified in NVMe 2.0 section 8.13.5.8 <em>Secret representation</em>.
-        If not present bi-directional authentication is not attempted.
-</p>
-</dd>
-<dt class="hdlist1">
--i &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---nr-io-queues=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default number of I/O queues create by the driver.
-</p>
-</dd>
-<dt class="hdlist1">
--W &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---nr-write-queues=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Adds additional queues that will be used for write I/O.
-</p>
-</dd>
-<dt class="hdlist1">
--P &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---nr-poll-queues=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Adds additional queues that will be used for polling latency sensitive I/O.
-</p>
-</dd>
-<dt class="hdlist1">
--Q &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---queue-size=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default number of elements in the I/O queues created
-        by the driver.
-</p>
-</dd>
-<dt class="hdlist1">
--k &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---keep-alive-tmo=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default keep alive timeout (in seconds).
-</p>
-</dd>
-<dt class="hdlist1">
--c &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---reconnect-delay=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default delay (in seconds) before reconnect is attempted
-        after a connect loss.
-</p>
-</dd>
-<dt class="hdlist1">
--l &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---ctrl-loss-tmo=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Overrides the default controller loss timeout period (in seconds).
-        This is the maximum time the kernel will retry a connection, where each
-        retry will be issued after <em>reconnect-delay</em> seconds.
-</p>
-</dd>
-<dt class="hdlist1">
--T &lt;#&gt;
-</dt>
-<dt class="hdlist1">
---tos=&lt;#&gt;
-</dt>
-<dd>
-<p>
-        Type of service for the connection (TCP)
-</p>
-</dd>
-<dt class="hdlist1">
---keyring=&lt;keyring&gt;
-</dt>
-<dd>
-<p>
-        Keyring for TLS key lookup, either the key id or the keyring name.
-</p>
-</dd>
-<dt class="hdlist1">
---tls-key=&lt;tls-key&gt;
-</dt>
-<dd>
-<p>
-        TLS key for the connection (TCP), either the TLS key in
-        interchange format or the key id. It&#8217;s strongly recommended not
-        to provide the TLS key via the comamnd line due to security
-        concerns. Instead in production situation, the key should be
-        loaded into the keystore with <em>nvme tls --import</em> and only the
-        <em>--tls</em> options used. The kernel will select the matching key.
-</p>
-</dd>
-<dt class="hdlist1">
---tls-key-identity=&lt;identity&gt;
-</dt>
-<dd>
-<p>
-        The identity used for the tls-key. If none is provided the
-        tls-key provided via the comamnd line is considered a
-        configuration key and a derive key will be loaded into the
-        keyring.
-</p>
-</dd>
-<dt class="hdlist1">
--D
-</dt>
-<dt class="hdlist1">
---duplicate-connect
-</dt>
-<dd>
-<p>
-        Allows duplicated connections between same transport host and subsystem
-        port.
-</p>
-</dd>
-<dt class="hdlist1">
---disable-sqflow
-</dt>
-<dd>
-<p>
-        Disables SQ flow control to omit head doorbell update for submission
-        queues when sending nvme completions.
-</p>
-</dd>
-<dt class="hdlist1">
--g
-</dt>
-<dt class="hdlist1">
---hdr-digest
-</dt>
-<dd>
-<p>
-        Generates/verifies header digest (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
--G
-</dt>
-<dt class="hdlist1">
---data-digest
-</dt>
-<dd>
-<p>
-        Generates/verifies data digest (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
---tls
-</dt>
-<dd>
-<p>
-        Enable TLS encryption (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
---concat
-</dt>
-<dd>
-<p>
-        Enable secure concatenation (TCP).
-</p>
-</dd>
-<dt class="hdlist1">
--O
-</dt>
-<dt class="hdlist1">
---dump-config
-</dt>
-<dd>
-<p>
-        Print out resulting JSON configuration file to stdout.
+        Use the specified JSON configuration file instead of the default.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1166,6 +786,369 @@ cellspacing="0" cellpadding="4">
         the management of the global resources.
 </p>
 </dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_fabrics_options">FABRICS OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The following options are common to NVMe over Fabrics commands such as
+<code>nvme connect</code>:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-a &lt;traddr&gt;
+</dt>
+<dt class="hdlist1">
+--traddr=&lt;traddr&gt;
+</dt>
+<dd>
+<p>
+        Specify the network address of the controller. For transports
+        using IP addressing (e.g. rdma, tcp), this should be an IP address.
+</p>
+</dd>
+<dt class="hdlist1">
+--concat
+</dt>
+<dd>
+<p>
+        Enable secure concatenation (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-c &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--reconnect-delay=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Set the delay in seconds before reconnect is attempted after a
+        connection loss.
+</p>
+</dd>
+<dt class="hdlist1">
+-C &lt;secret&gt;
+</dt>
+<dt class="hdlist1">
+--dhchap-ctrl-secret=&lt;secret&gt;
+</dt>
+<dd>
+<p>
+        Controller authentication secret for bi-directional authentication.
+        If not specified, bi-directional authentication is not attempted.
+</p>
+</dd>
+<dt class="hdlist1">
+-S &lt;secret&gt;
+</dt>
+<dt class="hdlist1">
+--dhchap-secret=&lt;secret&gt;
+</dt>
+<dd>
+<p>
+        Host authentication secret (DH-HMAC-CHAP). Must be provided in ASCII
+        format as defined in the NVMe specification.
+</p>
+</dd>
+<dt class="hdlist1">
+--disable-sqflow
+</dt>
+<dd>
+<p>
+        Disable submission queue flow control.
+</p>
+</dd>
+<dt class="hdlist1">
+-G
+</dt>
+<dt class="hdlist1">
+--data-digest
+</dt>
+<dd>
+<p>
+        Enable data digest generation/verification (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-D
+</dt>
+<dt class="hdlist1">
+--duplicate-connect
+</dt>
+<dd>
+<p>
+        Allow duplicate connections to the same subsystem.
+</p>
+</dd>
+<dt class="hdlist1">
+-g
+</dt>
+<dt class="hdlist1">
+--hdr-digest
+</dt>
+<dd>
+<p>
+        Enable header digest generation/verification (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-f &lt;iface&gt;
+</dt>
+<dt class="hdlist1">
+--host-iface=&lt;iface&gt;
+</dt>
+<dd>
+<p>
+        Specify the network interface to use for the connection.
+</p>
+</dd>
+<dt class="hdlist1">
+-I &lt;hostid&gt;
+</dt>
+<dt class="hdlist1">
+--hostid=&lt;hostid&gt;
+</dt>
+<dd>
+<p>
+        Specify the host UUID.
+</p>
+</dd>
+<dt class="hdlist1">
+-q &lt;hostnqn&gt;
+</dt>
+<dt class="hdlist1">
+--hostnqn=&lt;hostnqn&gt;
+</dt>
+<dd>
+<p>
+        Override the default host NQN.
+</p>
+</dd>
+<dt class="hdlist1">
+-w &lt;traddr&gt;
+</dt>
+<dt class="hdlist1">
+--host-traddr=&lt;traddr&gt;
+</dt>
+<dd>
+<p>
+        Specify the source address on the host side of the connection.
+</p>
+</dd>
+<dt class="hdlist1">
+-k &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--keep-alive-tmo=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Set the keep-alive timeout in seconds.
+</p>
+</dd>
+<dt class="hdlist1">
+--keyring=&lt;keyring&gt;
+</dt>
+<dd>
+<p>
+        Keyring to use for TLS key lookup.
+</p>
+</dd>
+<dt class="hdlist1">
+-n &lt;subnqn&gt;
+</dt>
+<dt class="hdlist1">
+--nqn=&lt;subnqn&gt;
+</dt>
+<dd>
+<p>
+        Specify the NVMe subsystem NQN to connect to.
+</p>
+</dd>
+<dt class="hdlist1">
+-i &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-io-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Number of I/O queues to create.
+</p>
+</dd>
+<dt class="hdlist1">
+-P &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-poll-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Number of polling queues to create.
+</p>
+</dd>
+<dt class="hdlist1">
+-W &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-write-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Number of write queues to create.
+</p>
+</dd>
+<dt class="hdlist1">
+-Q &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--queue-size=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Queue depth for I/O queues.
+</p>
+</dd>
+<dt class="hdlist1">
+-l &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--ctrl-loss-tmo=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Maximum time in seconds to retry reconnect attempts after
+        controller loss.
+</p>
+</dd>
+<dt class="hdlist1">
+-s &lt;trsvcid&gt;
+</dt>
+<dt class="hdlist1">
+--trsvcid=&lt;trsvcid&gt;
+</dt>
+<dd>
+<p>
+        Transport service identifier (e.g. TCP/rdma port). Default is 4420
+        for RDMA.
+</p>
+</dd>
+<dt class="hdlist1">
+-T &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--tos=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Type of service value for the connection (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;trtype&gt;
+</dt>
+<dt class="hdlist1">
+--transport=&lt;trtype&gt;
+</dt>
+<dd>
+<p>
+        Specify the transport type. Supported values include:
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>+</p></div>
+<div class="tableblock">
+<table rules="all"
+width="100%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">Value</p></td>
+<td align="left" valign="top"><p class="table">Description</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">rdma</p></td>
+<td align="left" valign="top"><p class="table">RDMA (RoCE, iWARP, InfiniBand)</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">tcp</p></td>
+<td align="left" valign="top"><p class="table">TCP/IP</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">fc</p></td>
+<td align="left" valign="top"><p class="table">Fibre Channel (<strong>experimental</strong>)</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">loop</p></td>
+<td align="left" valign="top"><p class="table">Local loopback transport</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+--tls
+</dt>
+<dd>
+<p>
+        Enable TLS encryption (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+--tls-key=&lt;tls-key&gt;
+</dt>
+<dd>
+<p>
+        TLS key for the connection. It is recommended to preload keys
+        into the system keyring instead of passing them via the command line.
+</p>
+</dd>
+<dt class="hdlist1">
+--tls-key-identity=&lt;identity&gt;
+</dt>
+<dd>
+<p>
+        Identity associated with the TLS key.
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_global_options">GLOBAL OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The following options are defined at the top-level <code>nvme</code> command
+and are available to this subcommand:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+--dry-run
+</dt>
+<dd>
+<p>
+        Print the command that would be executed, but do not actually
+        execute it.
+</p>
+</dd>
+<dt class="hdlist1">
+--no-ioctl-probing
+</dt>
+<dd>
+<p>
+        Disable probing for 64-bit IOCTL support.
+</p>
+</dd>
+<dt class="hdlist1">
+--no-retries
+</dt>
+<dd>
+<p>
+        Disable retry logic on transient errors.
+</p>
+</dd>
 <dt class="hdlist1">
 -o &lt;fmt&gt;
 </dt>
@@ -1174,8 +1157,26 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
-        output format can be used at a time.
+        Set the reporting format to <em>normal</em>, <em>tabular, 'json</em>, or <em>binary</em>.
+        Only one output format may be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+--output-format-version=&lt;version&gt;
+</dt>
+<dd>
+<p>
+        Select the output format version. Version <em>1</em> uses the original
+        field naming, while version <em>2</em> (default) provides more consistent
+        and script-friendly field names.
+</p>
+</dd>
+<dt class="hdlist1">
+--timeout=&lt;ms&gt;
+</dt>
+<dd>
+<p>
+        Set the timeout for the command in milliseconds.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1186,7 +1187,8 @@ cellspacing="0" cellpadding="4">
 </dt>
 <dd>
 <p>
-        Increase the information detail in the output.
+        Increase the level of detail in the output. May be specified
+        multiple times to further increase verbosity.
 </p>
 </dd>
 </dl></div>
@@ -1235,7 +1237,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-03-11 17:34:17 CET
+ 2026-04-17 09:23:05 CEST
 </div>
 </div>
 </body>

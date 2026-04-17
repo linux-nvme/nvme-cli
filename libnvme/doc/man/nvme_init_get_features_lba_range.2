@@ -1,0 +1,22 @@
+.TH "nvme_init_get_features_lba_range" 9 "nvme_init_get_features_lba_range" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_lba_range \- Initialize passthru command for Get Features - LBA Range
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_lba_range
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "struct nvme_lba_range_type *lrt "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "lrt" 12
+Buffer to receive LBA Range Type data structure
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_LBA_RANGE

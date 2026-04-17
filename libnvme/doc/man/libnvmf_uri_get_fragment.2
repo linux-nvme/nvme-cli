@@ -1,0 +1,11 @@
+.TH "libnvmf_uri_get_fragment" 9 "libnvmf_uri_get_fragment" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_uri_get_fragment \- Get fragment.
+.SH SYNOPSIS
+.B "const char *" libnvmf_uri_get_fragment
+.BI "(const struct libnvmf_uri *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_uri\fP instance to query.
+.SH "RETURN"
+The value of the fragment field, or NULL if not set.

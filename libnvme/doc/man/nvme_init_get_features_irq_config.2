@@ -1,0 +1,22 @@
+.TH "nvme_init_get_features_irq_config" 9 "nvme_init_get_features_irq_config" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_irq_config \- Initialize passthru command for Get Features - IRQ Config
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_irq_config
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "__u16 iv "  ","
+.BI "bool cd "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "iv" 12
+Interrupt Vector
+.IP "cd" 12
+Coalescing Disable
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_IRQ_CONFIG

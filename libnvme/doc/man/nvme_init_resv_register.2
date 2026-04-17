@@ -1,0 +1,36 @@
+.TH "nvme_init_resv_register" 9 "nvme_init_resv_register" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_resv_register \- Initialize passthru command for Reservation Register
+.SH SYNOPSIS
+.B "void" nvme_init_resv_register
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "enum nvme_resv_rrega rrega "  ","
+.BI "bool iekey "  ","
+.BI "bool disnsrs "  ","
+.BI "enum nvme_resv_cptpl cptpl "  ","
+.BI "__u64 crkey "  ","
+.BI "__u64 nrkey "  ","
+.BI "__le64 *payload "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace identifier
+.IP "rrega" 12
+The registration action, see \fIenum nvme_resv_rrega\fP
+.IP "iekey" 12
+Set to ignore the existing key
+.IP "disnsrs" 12
+Disperse Namespace Reservation Support
+.IP "cptpl" 12
+Change persist through power loss, see \fIenum nvme_resv_cptpl\fP
+.IP "crkey" 12
+The current reservation key associated with the host
+.IP "nrkey" 12
+The new reservation key to be register if action is register or
+replace
+.IP "payload" 12
+Data payload buffer to hold crkey and nrkey
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Reservation Register command.

@@ -1,0 +1,21 @@
+.TH "libnvme" 9 "struct nvme_power_histogram_desc" "April 2026" "API Manual" LINUX
+.SH NAME
+struct nvme_power_histogram_desc \- Power Histogram Descriptor
+.SH SYNOPSIS
+struct nvme_power_histogram_desc {
+.br
+.BI "    __le32 phbc;"
+.br
+.BI "    __le32 phblt;"
+.br
+.BI "
+};
+.br
+
+.SH Members
+.IP "phbc" 12
+Power Histogram Bin Count. Does not wrap after FFFFFFFFh.
+Cleared to 0h if PMC is 0h.
+.IP "phblt" 12
+Power Histogram Bin Lower Threshold. Bits 17:16 are PWRS
+(see \fIenum nvme_psd_ps\fP), bits 15:0 are PWRV.

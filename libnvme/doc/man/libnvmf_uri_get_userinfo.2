@@ -1,0 +1,11 @@
+.TH "libnvmf_uri_get_userinfo" 9 "libnvmf_uri_get_userinfo" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_uri_get_userinfo \- Get userinfo.
+.SH SYNOPSIS
+.B "const char *" libnvmf_uri_get_userinfo
+.BI "(const struct libnvmf_uri *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_uri\fP instance to query.
+.SH "RETURN"
+The value of the userinfo field, or NULL if not set.

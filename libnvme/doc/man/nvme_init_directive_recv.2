@@ -1,0 +1,30 @@
+.TH "nvme_init_directive_recv" 9 "nvme_init_directive_recv" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_directive_recv \- Initialize passthru command for Directive Receive
+.SH SYNOPSIS
+.B "void" nvme_init_directive_recv
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "enum nvme_directive_receive_doper doper "  ","
+.BI "enum nvme_directive_dtype dtype "  ","
+.BI "__u16 dspec "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID, if applicable
+.IP "doper" 12
+Directive receive operation,
+see \fIenum nvme_directive_receive_doper\fP
+.IP "dtype" 12
+Directive type, see \fIenum nvme_directive_dtype\fP
+.IP "dspec" 12
+Directive specific field
+.IP "data" 12
+Userspace address of data payload buffer
+.IP "len" 12
+Length of data payload in bytes
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Directive Receive command.

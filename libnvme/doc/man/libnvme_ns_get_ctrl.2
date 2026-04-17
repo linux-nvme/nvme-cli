@@ -1,0 +1,13 @@
+.TH "libnvme_ns_get_ctrl" 9 "libnvme_ns_get_ctrl" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_ctrl \- &libnvme_ctrl_t of a namespace
+.SH SYNOPSIS
+.B "libnvme_ctrl_t" libnvme_ns_get_ctrl
+.BI "(libnvme_ns_t n "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+Namespace instance
+.SH "DESCRIPTION"
+libnvme_ctrl_t object may be NULL for a multipathed namespace
+.SH "RETURN"
+libnvme_ctrl_t object of \fIn\fP if present

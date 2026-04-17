@@ -1,0 +1,16 @@
+.TH "libnvmf_connect" 9 "libnvmf_connect" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_connect \- Connect to fabrics subsystem
+.SH SYNOPSIS
+.B "int" libnvmf_connect
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnvmf_context *fctx "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+Global context
+.IP "fctx" 12
+Fabrics context
+.SH "DESCRIPTION"
+Connects to the fabrics subsystem using the provided context.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

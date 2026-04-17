@@ -1,0 +1,27 @@
+.TH "nvme_init_set_features_temp_thresh" 9 "nvme_init_set_features_temp_thresh" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_temp_thresh \- Initialize passthru command for Temperature Threshold
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_temp_thresh
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u16 tmpth "  ","
+.BI "__u8 tmpsel "  ","
+.BI "enum nvme_feat_tmpthresh_thsel thsel "  ","
+.BI "__u8 tmpthh "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "tmpth" 12
+Temperature Threshold
+.IP "tmpsel" 12
+Threshold Temperature Select
+.IP "thsel" 12
+Threshold Type Select
+.IP "tmpthh" 12
+Temperature Threshold Hysteresis
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_TEMP_THRESH

@@ -1,0 +1,11 @@
+.TH "libnvme_set_features_status_to_string" 9 "libnvme_set_features_status_to_string" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_set_features_status_to_string \- Returns set features status string.
+.SH SYNOPSIS
+.B "const char *" libnvme_set_features_status_to_string
+.BI "(__u16 sc "  ");"
+.SH ARGUMENTS
+.IP "sc" 12
+Return status code from an set features command
+.SH "RETURN"
+The set features status string if it is a specific status code.

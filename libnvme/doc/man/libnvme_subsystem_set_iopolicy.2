@@ -1,0 +1,12 @@
+.TH "libnvme_subsystem_set_iopolicy" 9 "libnvme_subsystem_set_iopolicy" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_subsystem_set_iopolicy \- Set iopolicy.
+.SH SYNOPSIS
+.B "void" libnvme_subsystem_set_iopolicy
+.BI "(struct libnvme_subsystem *p "  ","
+.BI "const char *iopolicy "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_subsystem\fP instance to update.
+.IP "iopolicy" 12
+New string; a copy is stored. Pass NULL to clear.

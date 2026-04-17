@@ -1,0 +1,17 @@
+.TH "libnvmf_get_default_trsvcid" 9 "libnvmf_get_default_trsvcid" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_get_default_trsvcid \- Get default transport service ID
+.SH SYNOPSIS
+.B "const char *" libnvmf_get_default_trsvcid
+.BI "(const char *transport "  ","
+.BI "bool discovery_ctrl "  ");"
+.SH ARGUMENTS
+.IP "transport" 12
+Transport type string (e.g., "tcp", "rdma")
+.IP "discovery_ctrl" 12
+True if for discovery controller, false otherwise
+.SH "DESCRIPTION"
+Returns the default trsvcid (port) for the given transport and controller
+type.
+.SH "RETURN"
+Allocated string with default trsvcid, or NULL on failure.

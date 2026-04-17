@@ -1,0 +1,20 @@
+.TH "nvme_init_sanitize_ns" 9 "nvme_init_sanitize_ns" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_sanitize_ns \- Initialize passthru command to start a sanitize namespace operation
+.SH SYNOPSIS
+.B "void" nvme_init_sanitize_ns
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_sanitize_sanact sanact "  ","
+.BI "bool ause "  ","
+.BI "bool emvs "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sanact" 12
+Sanitize action, see \fIenum nvme_sanitize_sanact\fP
+.IP "ause" 12
+Set to allow unrestricted sanitize exit
+.IP "emvs" 12
+Set to enter media verification state
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Sanitize namespace command.

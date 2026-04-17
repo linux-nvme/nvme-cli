@@ -1,0 +1,15 @@
+.TH "nvme_init_app_tag" 9 "nvme_init_app_tag" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_app_tag \- Initialize Command Dword fields for Logical Block Application Tag/Mask
+.SH SYNOPSIS
+.B "void" nvme_init_app_tag
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 lbat "  ","
+.BI "__u16 lbatm "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "lbat" 12
+Logical block application tag
+.IP "lbatm" 12
+Logical block application tag mask

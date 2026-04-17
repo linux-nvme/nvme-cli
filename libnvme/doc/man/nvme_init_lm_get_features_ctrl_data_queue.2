@@ -1,0 +1,22 @@
+.TH "nvme_init_lm_get_features_ctrl_data_queue" 9 "nvme_init_lm_get_features_ctrl_data_queue" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_lm_get_features_ctrl_data_queue \- Initialize passthru command for Get Controller Data Queue feature
+.SH SYNOPSIS
+.B "void" nvme_init_lm_get_features_ctrl_data_queue
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "__u16 cdqid "  ","
+.BI "struct nvme_lm_ctrl_data_queue_fid_data *qfd "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "cdqid" 12
+Controller Data Queue ID (CDQID)
+.IP "qfd" 12
+Get Controller Data Queue feature data buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_CTRL_DATA_QUEUE.

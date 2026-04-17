@@ -1,0 +1,18 @@
+.TH "nvme_init_get_log_fid_supported_effects" 9 "nvme_init_get_log_fid_supported_effects" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_fid_supported_effects \- Initialize passthru command for Feature Identifiers Supported and Effects
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_fid_supported_effects
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_csi csi "  ","
+.BI "struct nvme_fid_supported_effects_log *log "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "csi" 12
+Command set identifier, see \fIenum nvme_csi\fP for known values
+.IP "log" 12
+FID Supported and Effects data structure
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_FID_SUPPORTED_EFFECTS

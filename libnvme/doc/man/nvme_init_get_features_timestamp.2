@@ -1,0 +1,19 @@
+.TH "nvme_init_get_features_timestamp" 9 "nvme_init_get_features_timestamp" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_timestamp \- Initialize passthru command for Get Features - Timestamp
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_timestamp
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "struct nvme_timestamp *ts "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "ts" 12
+Current timestamp buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_TIMESTAMP

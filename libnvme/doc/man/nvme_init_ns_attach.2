@@ -1,0 +1,21 @@
+.TH "nvme_init_ns_attach" 9 "nvme_init_ns_attach" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_ns_attach \- Initialize passthru command for Namespace Attach/Detach
+.SH SYNOPSIS
+.B "void" nvme_init_ns_attach
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "enum nvme_ns_attach_sel sel "  ","
+.BI "struct nvme_ctrl_list *ctrlist "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID to execute attach selection
+.IP "sel" 12
+Attachment selection, see \fIenum nvme_ns_attach_sel\fP
+.IP "ctrlist" 12
+Controller list buffer to modify attachment state of nsid
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Namespace Attach/Detach
+command.

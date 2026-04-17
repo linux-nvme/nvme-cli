@@ -1,0 +1,21 @@
+.TH "nvme_init_set_features_plm_window" 9 "nvme_init_set_features_plm_window" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_plm_window \- Initialize passthru command for Predictable Latency Mode Window
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_plm_window
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u16 nvmsetid "  ","
+.BI "enum nvme_feat_plm_window_select wsel "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "nvmsetid" 12
+NVM Set Identifier
+.IP "wsel" 12
+Window Select
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_PLM_WINDOW

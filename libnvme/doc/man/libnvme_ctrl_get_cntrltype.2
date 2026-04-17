@@ -1,0 +1,11 @@
+.TH "libnvme_ctrl_get_cntrltype" 9 "libnvme_ctrl_get_cntrltype" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_get_cntrltype \- Get cntrltype.
+.SH SYNOPSIS
+.B "const char *" libnvme_ctrl_get_cntrltype
+.BI "(const struct libnvme_ctrl *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to query.
+.SH "RETURN"
+The value of the cntrltype field, or NULL if not set.

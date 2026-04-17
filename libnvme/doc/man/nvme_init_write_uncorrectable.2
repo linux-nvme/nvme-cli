@@ -1,0 +1,28 @@
+.TH "nvme_init_write_uncorrectable" 9 "nvme_init_write_uncorrectable" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_write_uncorrectable \- Initialize passthru command for a write uncorrectable command
+.SH SYNOPSIS
+.B "void" nvme_init_write_uncorrectable
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u64 slba "  ","
+.BI "__u16 nlb "  ","
+.BI "__u16 control "  ","
+.BI "__u16 dspec "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "slba" 12
+Starting logical block
+.IP "nlb" 12
+Number of logical blocks (0-based)
+.IP "control" 12
+Upper 16 bits of cdw12
+.IP "dspec" 12
+Directive specific value
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Write Uncorrectable command.
+.SH "NOTE"
+This command transfers no data or metadata.

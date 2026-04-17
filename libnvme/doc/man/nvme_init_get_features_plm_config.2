@@ -1,0 +1,22 @@
+.TH "nvme_init_get_features_plm_config" 9 "nvme_init_get_features_plm_config" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_plm_config \- Initialize passthru command for Get Features - Predictable Latency Mode Config
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_plm_config
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "__u16 nvmsetid "  ","
+.BI "struct nvme_plm_config *plmc "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "nvmsetid" 12
+NVM set id
+.IP "plmc" 12
+Buffer for returned Predictable Latency Mode Config
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_PLM_CONFIG

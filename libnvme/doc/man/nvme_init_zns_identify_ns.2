@@ -1,0 +1,15 @@
+.TH "nvme_init_zns_identify_ns" 9 "nvme_init_zns_identify_ns" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_zns_identify_ns \- Initialize passthru command for ZNS identify namespace data
+.SH SYNOPSIS
+.B "void" nvme_init_zns_identify_ns
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_zns_id_ns *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "nsid" 12
+Namespace to identify
+.IP "data" 12
+User space destination address to transfer the data

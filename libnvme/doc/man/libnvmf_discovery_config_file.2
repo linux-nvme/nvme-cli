@@ -1,0 +1,22 @@
+.TH "libnvmf_discovery_config_file" 9 "libnvmf_discovery_config_file" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_discovery_config_file \- Perform discovery using config file
+.SH SYNOPSIS
+.B "int" libnvmf_discovery_config_file
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnvmf_context *fctx "  ","
+.BI "bool connect "  ","
+.BI "bool force "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+Global context
+.IP "fctx" 12
+Fabrics context
+.IP "connect" 12
+Whether to connect discovered subsystems
+.IP "force" 12
+Force discovery even if already connected
+.SH "DESCRIPTION"
+Performs discovery using a configuration file.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

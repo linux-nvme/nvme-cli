@@ -1,0 +1,19 @@
+.TH "libnvmf_create_ctrl" 9 "libnvmf_create_ctrl" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_create_ctrl \- Allocate an unconnected NVMe controller
+.SH SYNOPSIS
+.B "int" libnvmf_create_ctrl
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnvmf_context *fctx "  ","
+.BI "libnvme_ctrl_t *c "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "fctx" 12
+Fabrics context
+.IP "c" 12
+\fIlibnvme_ctrl_t\fP object to return
+.SH "DESCRIPTION"
+Creates an unconnected controller to be used for \fBlibnvme_add_ctrl\fP.
+.SH "RETURN"
+0 on success or negative error code otherwise

@@ -1,0 +1,23 @@
+.TH "libnvme_get_host" 9 "libnvme_get_host" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_get_host \- Returns a host object
+.SH SYNOPSIS
+.B "int" libnvme_get_host
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *hostnqn "  ","
+.BI "const char *hostid "  ","
+.BI "libnvme_host_t *h "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "hostnqn" 12
+Host NQN (optional)
+.IP "hostid" 12
+Host ID (optional)
+.IP "h" 12
+\fIlibnvme_host_t\fP object to return
+.SH "DESCRIPTION"
+Returns a host object based on the hostnqn/hostid values or the default if
+hostnqn/hostid are NULL.
+.SH "RETURN"
+0 on success or negative error code otherwise

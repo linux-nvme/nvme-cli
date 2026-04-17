@@ -7,7 +7,7 @@ libnvme utility functions
 
 
 
-.. c:enum:: nvme_connect_err
+.. c:enum:: libnvme_connect_err
 
    nvme connect error codes
 
@@ -77,7 +77,7 @@ libnvme utility functions
   the TLS key is missing
 
 
-.. c:function:: __u8 nvme_status_to_errno (int status, bool fabrics)
+.. c:function:: __u8 libnvme_status_to_errno (int status, bool fabrics)
 
    Converts nvme return status to errno
 
@@ -95,7 +95,7 @@ An errno representing the nvme status if it is an nvme status field,
 or unchanged status is < 0 since errno is already set.
 
 
-.. c:function:: const char * nvme_status_to_string (int status, bool fabrics)
+.. c:function:: const char * libnvme_status_to_string (int status, bool fabrics)
 
    Returns string describing nvme return status.
 
@@ -113,7 +113,7 @@ String representation of the nvme status if it is an nvme status field,
 or a standard errno string if status is < 0.
 
 
-.. c:function:: const char * nvme_sanitize_ns_status_to_string (__u16 sc)
+.. c:function:: const char * libnvme_sanitize_ns_status_to_string (__u16 sc)
 
    Returns sanitize ns status string.
 
@@ -127,7 +127,21 @@ or a standard errno string if status is < 0.
 The sanitize ns status string if it is a specific status code.
 
 
-.. c:function:: const char * nvme_opcode_status_to_string (int status, bool admin, __u8 opcode)
+.. c:function:: const char * libnvme_set_features_status_to_string (__u16 sc)
+
+   Returns set features status string.
+
+**Parameters**
+
+``__u16 sc``
+  Return status code from an set features command
+
+**Return**
+
+The set features status string if it is a specific status code.
+
+
+.. c:function:: const char * libnvme_opcode_status_to_string (int status, bool admin, __u8 opcode)
 
    Returns nvme opcode status string.
 
@@ -148,21 +162,21 @@ The nvme opcode status string if it is an nvme status field,
 or a standard errno string if status is < 0.
 
 
-.. c:function:: const char * nvme_errno_to_string (int err)
+.. c:function:: const char * libnvme_errno_to_string (int err)
 
    Returns string describing nvme connect failures
 
 **Parameters**
 
 ``int err``
-  Returned error code from nvme_add_ctrl()
+  Returned error code from libnvme_add_ctrl()
 
 **Return**
 
 String representation of the nvme connect error codes
 
 
-.. c:function:: const char * nvme_strerror (int err)
+.. c:function:: const char * libnvme_strerror (int err)
 
    Returns string describing nvme errors and errno
 
@@ -177,7 +191,7 @@ String representation of either the nvme connect error codes
 (positive values) or errno string (negative values)
 
 
-.. c:function:: struct nvmf_ext_attr * nvmf_exat_ptr_next (struct nvmf_ext_attr *p)
+.. c:function:: struct nvmf_ext_attr * libnvmf_exat_ptr_next (struct nvmf_ext_attr *p)
 
    Increment **p** to the next element in the array.
 
@@ -201,34 +215,34 @@ Pointer to the next element in the array.
 
 
 
-.. c:enum:: nvme_version
+.. c:enum:: libnvme_version
 
-   Selector for version to be returned by **nvme_get_version**
+   Selector for version to be returned by **libnvme_get_version**
 
 **Constants**
 
-``NVME_VERSION_PROJECT``
+``LIBNVME_VERSION_PROJECT``
   Project release version
 
-``NVME_VERSION_GIT``
+``LIBNVME_VERSION_GIT``
   Git reference
 
 
-.. c:function:: const char * nvme_get_version (enum nvme_version type)
+.. c:function:: const char * libnvme_get_version (enum libnvme_version type)
 
    Return version libnvme string
 
 **Parameters**
 
-``enum nvme_version type``
-  Selects which version type (see **struct** nvme_version)
+``enum libnvme_version type``
+  Selects which version type (see **struct** libnvme_version)
 
 **Return**
 
 Returns version string for known types or else "n/a"
 
 
-.. c:function:: int nvme_uuid_to_string (unsigned char uuid[NVME_UUID_LEN], char *str)
+.. c:function:: int libnvme_uuid_to_string (unsigned char uuid[NVME_UUID_LEN], char *str)
 
    Return string represenation of encoded UUID
 
@@ -245,7 +259,7 @@ Returns version string for known types or else "n/a"
 Returns error code if type conversion fails.
 
 
-.. c:function:: int nvme_uuid_from_string (const char *str, unsigned char uuid[NVME_UUID_LEN])
+.. c:function:: int libnvme_uuid_from_string (const char *str, unsigned char uuid[NVME_UUID_LEN])
 
    Return encoded UUID represenation of string UUID
 
@@ -262,7 +276,7 @@ Returns error code if type conversion fails.
 Returns error code if type conversion fails.
 
 
-.. c:function:: int nvme_uuid_random (unsigned char uuid[NVME_UUID_LEN])
+.. c:function:: int libnvme_random_uuid (unsigned char uuid[NVME_UUID_LEN])
 
    Generate random UUID
 
@@ -281,7 +295,7 @@ https://www.rfc-editor.org/rfc/rfc4122#section-4.4
 Returns error code if generating of random number fails.
 
 
-.. c:function:: int nvme_uuid_find (struct nvme_id_uuid_list *uuid_list, const unsigned char uuid[NVME_UUID_LEN])
+.. c:function:: int libnvme_find_uuid (struct nvme_id_uuid_list *uuid_list, const unsigned char uuid[NVME_UUID_LEN])
 
    Find UUID position on UUID list
 
@@ -295,10 +309,11 @@ Returns error code if generating of random number fails.
 
 **Return**
 
-The array position where given UUID is present, or -1 on failure with errno set.
+The array position where given UUID is present, or -1 on failure
+ with errno set.
 
 
-.. c:function:: char * nvme_basename (const char *path)
+.. c:function:: char * libnvme_basename (const char *path)
 
    Return the final path component (the one after the last '/')
 

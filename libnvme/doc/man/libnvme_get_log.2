@@ -1,0 +1,21 @@
+.TH "libnvme_get_log" 9 "libnvme_get_log" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_get_log \- Get log page data
+.SH SYNOPSIS
+.B "int" libnvme_get_log
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool rae "  ","
+.BI "__u32 xfer_len "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "cmd" 12
+Passthru command
+.IP "rae" 12
+Retain asynchronous events
+.IP "xfer_len" 12
+Max log transfer size per request to split the total.
+.SH "RETURN"
+0 on success, the nvme command status if a response was
+received (see \fIenum nvme_status_field\fP) or a negative error otherwise.

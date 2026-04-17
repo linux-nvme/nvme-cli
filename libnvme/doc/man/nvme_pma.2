@@ -1,0 +1,78 @@
+.TH "libnvme" 9 "enum nvme_pma" "April 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_pma \- Power Measurement Attributes (PMA) field
+.SH SYNOPSIS
+enum nvme_pma {
+.br
+.BI "    NVME_PMA_PME_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMA_NCPDF_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMA_EPF_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMA_MIPWRTS_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMA_PHDO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMA_PMT_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_PMA_PME_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMA_NCPDF_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMA_EPF_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMA_MIPWRTS_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMA_PHDO_MASK"
+, 
+.br
+.br
+.BI "    NVME_PMA_PMT_MASK"
+
+};
+.SH Constants
+.IP "NVME_PMA_PME_SHIFT" 12
+Shift amount to get the power measurement enable
+.IP "NVME_PMA_NCPDF_SHIFT" 12
+Shift amount to get the non-contiguous power data flag
+.IP "NVME_PMA_EPF_SHIFT" 12
+Shift amount to get the estimated power flag
+.IP "NVME_PMA_MIPWRTS_SHIFT" 12
+Shift amount to get the maximum interval power timestamp support
+.IP "NVME_PMA_PHDO_SHIFT" 12
+Shift amount to get the power histogram descriptor overflow
+.IP "NVME_PMA_PMT_SHIFT" 12
+Shift amount to get the power measurement type
+.IP "NVME_PMA_PME_MASK" 12
+Mask to get the power measurement enable
+.IP "NVME_PMA_NCPDF_MASK" 12
+Mask to get the non-contiguous power data flag
+.IP "NVME_PMA_EPF_MASK" 12
+Mask to get the estimated power flag
+.IP "NVME_PMA_MIPWRTS_MASK" 12
+Mask to get the maximum interval power timestamp support
+.IP "NVME_PMA_PHDO_MASK" 12
+Mask to get the power histogram descriptor overflow
+.IP "NVME_PMA_PMT_MASK" 12
+Mask to get the power measurement type

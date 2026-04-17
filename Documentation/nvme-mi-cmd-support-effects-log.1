@@ -2,12 +2,12 @@
 .\"     Title: nvme-mi-cmd-support-effects-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/11/2026
+.\"      Date: 04/17/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-MI\-CMD\-SUPPO" "1" "03/11/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-MI\-CMD\-SUPPO" "1" "04/17/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,8 @@ nvme-mi-cmd-support-effects-log \- Send NVMe MI Command Support and Effects log,
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\-mi\-cmd\-support\-effects\-log\fR <device> [\-\-human\-readable | \-H]
-                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+\fInvme\-mi\-cmd\-support\-effects\-log\fR <device>
+                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -43,24 +43,50 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 .sp
 On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
 .SH "OPTIONS"
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
 .PP
-\-H, \-\-human\-readable
+\-\-dry\-run
 .RS 4
-This option will parse and format many of the bit fields into human\-readable formats\&.
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
 .RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR
-or
-\fIbinary\fR\&. Only one output format can be used at a time\&.
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
 .RE
 .PP
 \-v, \-\-verbose
 .RS 4
-Increase the information detail in the output\&.
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
 .SH "EXAMPLES"
 .sp

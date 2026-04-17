@@ -1,0 +1,12 @@
+.TH "libnvme_path_set_ana_state" 9 "libnvme_path_set_ana_state" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_path_set_ana_state \- Set ana_state.
+.SH SYNOPSIS
+.B "void" libnvme_path_set_ana_state
+.BI "(struct libnvme_path *p "  ","
+.BI "const char *ana_state "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_path\fP instance to update.
+.IP "ana_state" 12
+New string; a copy is stored. Pass NULL to clear.

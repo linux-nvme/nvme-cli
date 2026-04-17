@@ -1,0 +1,11 @@
+.TH "libnvme_subsystem_get_subsysnqn" 9 "libnvme_subsystem_get_subsysnqn" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_subsystem_get_subsysnqn \- Get subsysnqn.
+.SH SYNOPSIS
+.B "const char *" libnvme_subsystem_get_subsysnqn
+.BI "(const struct libnvme_subsystem *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_subsystem\fP instance to query.
+.SH "RETURN"
+The value of the subsysnqn field, or NULL if not set.

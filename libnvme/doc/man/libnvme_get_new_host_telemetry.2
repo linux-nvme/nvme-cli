@@ -1,0 +1,24 @@
+.TH "libnvme_get_new_host_telemetry" 9 "libnvme_get_new_host_telemetry" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_get_new_host_telemetry \- Get new host telemetry log
+.SH SYNOPSIS
+.B "int" libnvme_get_new_host_telemetry
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "struct nvme_telemetry_log **log "  ","
+.BI "enum nvme_telemetry_da da "  ","
+.BI "size_t *size "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "log" 12
+On success, set to the value of the allocated and retrieved log.
+.IP "da" 12
+Log page data area, valid values: \fIenum nvme_telemetry_da\fP
+.IP "size" 12
+Ptr to the telemetry log size, so it can be returned
+.SH "DESCRIPTION"
+The total size allocated can be calculated as:
+(nvme_telemetry_log da size  + 1) * NVME_LOG_TELEM_BLOCK_SIZE.
+.SH "RETURN"
+0 on success, the nvme command status if a response was
+received (see \fIenum nvme_status_field\fP) or a negative error otherwise.

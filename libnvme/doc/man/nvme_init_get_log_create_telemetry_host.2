@@ -1,0 +1,16 @@
+.TH "nvme_init_get_log_create_telemetry_host" 9 "nvme_init_get_log_create_telemetry_host" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_create_telemetry_host \- Initialize passthru command for Create Telemetry Host-Initiated
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_create_telemetry_host
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "struct nvme_telemetry_log *log "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "log" 12
+Userspace address of the log payload
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_TELEMETRY_HOST and
+LSP value NVME_LOG_TELEM_HOST_LSP_CREATE.

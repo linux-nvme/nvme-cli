@@ -1,0 +1,18 @@
+.TH "nvme_init_set_features_write_atomic" 9 "nvme_init_set_features_write_atomic" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_write_atomic \- Initialize passthru command for Write Atomic
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_write_atomic
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "bool dn "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "dn" 12
+Disable Normal
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_WRITE_ATOMIC

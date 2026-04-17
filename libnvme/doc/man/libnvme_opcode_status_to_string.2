@@ -1,0 +1,18 @@
+.TH "libnvme_opcode_status_to_string" 9 "libnvme_opcode_status_to_string" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_opcode_status_to_string \- Returns nvme opcode status string.
+.SH SYNOPSIS
+.B "const char *" libnvme_opcode_status_to_string
+.BI "(int status "  ","
+.BI "bool admin "  ","
+.BI "__u8 opcode "  ");"
+.SH ARGUMENTS
+.IP "status" 12
+Return status from an nvme passthrough command
+.IP "admin" 12
+Set to true if an admin command
+.IP "opcode" 12
+Opcode from an nvme passthrough command
+.SH "RETURN"
+The nvme opcode status string if it is an nvme status field,
+or a standard errno string if status is < 0.

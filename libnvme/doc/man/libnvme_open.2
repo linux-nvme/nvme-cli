@@ -1,0 +1,20 @@
+.TH "libnvme_open" 9 "libnvme_open" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_open \- Open an nvme controller or namespace device
+.SH SYNOPSIS
+.B "int" libnvme_open
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ","
+.BI "struct libnvme_transport_handle **hdl "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "name" 12
+The basename of the device to open
+.IP "hdl" 12
+Transport handle to return
+.SH "DESCRIPTION"
+This will look for the handle in /dev/ and validate the name and filetype
+match linux conventions.
+.SH "RETURN"
+0 on success or negative error code otherwise

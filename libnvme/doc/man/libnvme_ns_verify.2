@@ -1,0 +1,17 @@
+.TH "libnvme_ns_verify" 9 "libnvme_ns_verify" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_verify \- Verify data on a namespace
+.SH SYNOPSIS
+.B "int" libnvme_ns_verify
+.BI "(libnvme_ns_t n "  ","
+.BI "off_t offset "  ","
+.BI "size_t count "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+Namespace instance
+.IP "offset" 12
+LBA offset of \fIn\fP
+.IP "count" 12
+Number of sectors to be verified
+.SH "RETURN"
+Number of sectors verified

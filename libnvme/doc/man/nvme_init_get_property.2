@@ -1,0 +1,15 @@
+.TH "nvme_init_get_property" 9 "nvme_init_get_property" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_property \- Initialize passthru command to get a controller property
+.SH SYNOPSIS
+.B "void" nvme_init_get_property
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 offset "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "offset" 12
+Property offset from the base to retrieve
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Fabrics Get Property command.
+This is an NVMe-over-Fabrics specific command.

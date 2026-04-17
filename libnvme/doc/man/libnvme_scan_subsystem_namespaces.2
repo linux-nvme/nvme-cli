@@ -1,0 +1,14 @@
+.TH "libnvme_scan_subsystem_namespaces" 9 "libnvme_scan_subsystem_namespaces" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_scan_subsystem_namespaces \- Scan for namespaces in a subsystem
+.SH SYNOPSIS
+.B "int" libnvme_scan_subsystem_namespaces
+.BI "(libnvme_subsystem_t s "  ","
+.BI "struct dirent ***ns "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+Subsystem to scan
+.IP "ns" 12
+Pointer to array of dirents
+.SH "RETURN"
+number of entries in \fIns\fP or a negative error code

@@ -1,0 +1,18 @@
+.TH "nvme_init_identify_endurance_group_id" 9 "nvme_init_identify_endurance_group_id" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify_endurance_group_id \- Initialize passthru command for Endurance group list
+.SH SYNOPSIS
+.B "void" nvme_init_identify_endurance_group_id
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 enggid "  ","
+.BI "struct nvme_id_endurance_group_list *list "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "enggid" 12
+Endurance group identifier
+.IP "list" 12
+Array of endurance group identifiers
+.SH "RETURN"
+0 on success, the nvme command status if a response was
+received (see \fIenum nvme_status_field\fP) or a negative error otherwise.

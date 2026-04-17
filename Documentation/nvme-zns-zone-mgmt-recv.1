@@ -2,12 +2,12 @@
 .\"     Title: nvme-zns-zone-mgmt-recv
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/11/2026
+.\"      Date: 04/17/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-ZONE\-MGM" "1" "03/11/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-ZONE\-MGM" "1" "04/17/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,7 +36,8 @@ nvme-zns-zone-mgmt-recv \- Zone Management Receive command
                         [\-\-start\-lba=<LBA> | \-s <LBA>]
                         [\-\-data\-len=<IONUM>, \-l <IONUM>]
                         [\-\-zra=<NUM>, \-z <NUM>] [\-\-zrasf=<NUM>, \-a <NUM>]
-                        [\-\-zra\-spec\-feat, \-f] [\-\-output\-format=<fmt>, \-o <fmt>]
+                        [\-\-zra\-spec\-feat, \-f]
+                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -66,10 +67,50 @@ Zone Receive Action
 .RS 4
 Enable Zone Receive Action Specific features
 .RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
-Output format: normal|json|binary
+Set the reporting format to
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
 .SH "EXAMPLES"
 .sp

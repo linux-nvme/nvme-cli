@@ -1,0 +1,22 @@
+.TH "nvme_init_lm_track_send" 9 "nvme_init_lm_track_send" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_lm_track_send \- Initialize passthru command for Track Send command
+.SH SYNOPSIS
+.B "void" nvme_init_lm_track_send
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 sel "  ","
+.BI "__u16 mos "  ","
+.BI "__u16 cdqid "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select (SEL): This field specifies the type of
+management operation to perform
+.IP "mos" 12
+Management Operation Specific (MOS): This field
+is specific to the SEL type
+.IP "cdqid" 12
+Controller Data Queue ID (CDQID)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Track Send command.

@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum nvme_timestamp_attr" "April 2026" "API Manual" LINUX
+.SH NAME
+enum nvme_timestamp_attr \- Timestamp Attribute field
+.SH SYNOPSIS
+enum nvme_timestamp_attr {
+.br
+.BI "    NVME_TIMESTAMP_ATTR_SYNC_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_TIMESTAMP_ATTR_TO_SHIFT"
+, 
+.br
+.br
+.BI "    NVME_TIMESTAMP_ATTR_SYNC_MASK"
+, 
+.br
+.br
+.BI "    NVME_TIMESTAMP_ATTR_TO_MASK"
+
+};
+.SH Constants
+.IP "NVME_TIMESTAMP_ATTR_SYNC_SHIFT" 12
+Shift amount to get the timestamp synch
+.IP "NVME_TIMESTAMP_ATTR_TO_SHIFT" 12
+Shift amount to get the timestamp origin
+.IP "NVME_TIMESTAMP_ATTR_SYNC_MASK" 12
+Mask to get the timestamp synch
+.IP "NVME_TIMESTAMP_ATTR_TO_MASK" 12
+Mask to get the timestamp origin

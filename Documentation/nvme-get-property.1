@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-property
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/11/2026
+.\"      Date: 04/17/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-PROPERTY" "1" "03/11/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-PROPERTY" "1" "04/17/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,8 +34,7 @@ nvme-get-property \- Reads and shows the defined NVMe controller property for NV
 .nf
 \fInvme get\-property\fR <device> [\-\-offset=<offset> | \-O <offset>]
                         [\-\-human\-readable | \-H]
-                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
-                        [\-\-timeout=<timeout>]
+                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -47,28 +46,54 @@ Reads and shows the defined NVMe controller property for NVMe over Fabric\&.
 The offset of the property\&. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20
 .RE
 .PP
-\-H
+\-H, \-\-human\-readable
 .RS 4
-\-\-human\-readable: Show the fields packed in the property
+Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
+.RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
 .RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR
-or
-\fIbinary\fR\&. Only one output format can be used at a time\&.
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
 .RE
 .PP
 \-v, \-\-verbose
 .RS 4
-Increase the information detail in the output\&.
-.RE
-.PP
-\-\-timeout=<timeout>
-.RS 4
-Override default timeout value\&. In milliseconds\&.
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
 .SH "EXAMPLES"
 .sp

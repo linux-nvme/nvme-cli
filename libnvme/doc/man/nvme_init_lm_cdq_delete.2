@@ -1,0 +1,20 @@
+.TH "nvme_init_lm_cdq_delete" 9 "nvme_init_lm_cdq_delete" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_lm_cdq_delete \- Initialize passthru command for Controller Data Queue delete - Controller Data Queue command
+.SH SYNOPSIS
+.B "void" nvme_init_lm_cdq_delete
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 mos "  ","
+.BI "__u16 cdqid "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "mos" 12
+Management Operation Specific (MOS): This field is
+specific to the SEL type
+.IP "cdqid" 12
+Controller Data Queue ID (CDQID): For Delete CDQ, this
+field is the CDQID to delete.
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Controller Data Queue delete
+command.

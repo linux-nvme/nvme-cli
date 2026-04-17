@@ -1,0 +1,18 @@
+.TH "nvme_init_get_log_ana_groups" 9 "nvme_init_get_log_ana_groups" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_ana_groups \- Initialize passthru command for Asymmetric Namespace Access groups
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_ana_groups
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "struct nvme_ana_log *log "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "log" 12
+User address to store the ana group log
+.IP "len" 12
+The allocated length of the log page
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_ANA and LSP value NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY

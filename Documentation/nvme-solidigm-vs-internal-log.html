@@ -750,8 +750,8 @@ nvme-solidigm-vs-internal-log(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme solidigm vs-internal-log</em> &lt;device&gt; [--log-type=&lt;type&gt; | -t &lt;type&gt;]
-                                          [--output-dir=&lt;dir&gt; | -d &lt;dir&gt;]
-                                          [--verbose | -v]</pre>
+ [--output-dir=&lt;dir&gt; | -d &lt;dir&gt;]
+                        [&lt;global-options&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -794,6 +794,70 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
     Specify the output directory for the log files. Defaults to the current working directory.
 </p>
 </dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_global_options">GLOBAL OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The following options are defined at the top-level <code>nvme</code> command
+and are available to this subcommand:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+--dry-run
+</dt>
+<dd>
+<p>
+        Print the command that would be executed, but do not actually
+        execute it.
+</p>
+</dd>
+<dt class="hdlist1">
+--no-ioctl-probing
+</dt>
+<dd>
+<p>
+        Disable probing for 64-bit IOCTL support.
+</p>
+</dd>
+<dt class="hdlist1">
+--no-retries
+</dt>
+<dd>
+<p>
+        Disable retry logic on transient errors.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>tabular, 'json</em>, or <em>binary</em>.
+        Only one output format may be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+--output-format-version=&lt;version&gt;
+</dt>
+<dd>
+<p>
+        Select the output format version. Version <em>1</em> uses the original
+        field naming, while version <em>2</em> (default) provides more consistent
+        and script-friendly field names.
+</p>
+</dd>
+<dt class="hdlist1">
+--timeout=&lt;ms&gt;
+</dt>
+<dd>
+<p>
+        Set the timeout for the command in milliseconds.
+</p>
+</dd>
 <dt class="hdlist1">
 -v
 </dt>
@@ -802,7 +866,8 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 </dt>
 <dd>
 <p>
-    Enable verbose output for additional information during the log retrieval process.
+        Increase the level of detail in the output. May be specified
+        multiple times to further increase verbosity.
 </p>
 </dd>
 </dl></div>
@@ -862,7 +927,7 @@ Retrieve extended logs:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-03-11 17:34:18 CET
+ 2026-04-17 09:23:05 CEST
 </div>
 </div>
 </body>

@@ -1,0 +1,21 @@
+.TH "nvme_init_fw_commit" 9 "nvme_init_fw_commit" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_fw_commit \- Initialize passthru command to commit firmware using the specified action
+.SH SYNOPSIS
+.B "void" nvme_init_fw_commit
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 fs "  ","
+.BI "enum nvme_fw_commit_ca ca "  ","
+.BI "bool bpid "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "fs" 12
+Firmware slot to commit the downloaded image
+.IP "ca" 12
+Action to use for the firmware image,
+see \fIenum nvme_fw_commit_ca\fP
+.IP "bpid" 12
+Set to true to select the boot partition id
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Firmware Commit command.

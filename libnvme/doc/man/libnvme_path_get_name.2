@@ -1,0 +1,11 @@
+.TH "libnvme_path_get_name" 9 "libnvme_path_get_name" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_path_get_name \- Get name.
+.SH SYNOPSIS
+.B "const char *" libnvme_path_get_name
+.BI "(const struct libnvme_path *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_path\fP instance to query.
+.SH "RETURN"
+The value of the name field, or NULL if not set.

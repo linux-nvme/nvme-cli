@@ -1,0 +1,16 @@
+.TH "libnvmf_context_set_device" 9 "libnvmf_context_set_device" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_set_device \- Set device for context
+.SH SYNOPSIS
+.B "int" libnvmf_context_set_device
+.BI "(struct libnvmf_context *fctx "  ","
+.BI "const char *device "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context
+.IP "device" 12
+Device path or identifier
+.SH "DESCRIPTION"
+Sets the device to be used by the context.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

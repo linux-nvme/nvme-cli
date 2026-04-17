@@ -1,0 +1,18 @@
+.TH "nvme_init_get_log_smart" 9 "nvme_init_get_log_smart" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_smart \- Initialize passthru command for SMART / Health Information
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_smart
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_smart_log *smart_log "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Optional namespace identifier
+.IP "smart_log" 12
+User address to store the smart log
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_SMART.

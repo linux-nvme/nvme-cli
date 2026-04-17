@@ -1,0 +1,17 @@
+.TH "libnvme_set_ioctl_probing" 9 "libnvme_set_ioctl_probing" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_set_ioctl_probing \- Enable/disable 64-bit IOCTL probing
+.SH SYNOPSIS
+.B "void" libnvme_set_ioctl_probing
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "bool enable "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "enable" 12
+Enable/disable 64-bit IOCTL probing
+.SH "DESCRIPTION"
+When IOCTL probing is enabled, a 64-bit IOCTL command is issued to
+figure out if the passthru interface supports it.
+
+IOCTL probing is enabled per default.

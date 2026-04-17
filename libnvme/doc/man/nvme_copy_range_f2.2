@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_copy_range_f2" "March 2026" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_copy_range_f2" "April 2026" "API Manual" LINUX
 .SH NAME
 struct nvme_copy_range_f2 \- Copy - Source Range Entries Descriptor Format 2h
 .SH SYNOPSIS
@@ -12,15 +12,19 @@ struct nvme_copy_range_f2 {
 .br
 .BI "    __le16 nlb;"
 .br
-.BI "    __u8 rsvd18[4];"
+.BI "    __u8 cetype;"
+.br
+.BI "    __u8 rsvd19;"
+.br
+.BI "    __le16 cev;"
 .br
 .BI "    __le16 sopt;"
 .br
-.BI "    __le32 eilbrt;"
+.BI "    __be32 elbt;"
 .br
-.BI "    __le16 elbat;"
+.BI "    __be16 elbat;"
 .br
-.BI "    __le16 elbatm;"
+.BI "    __be16 elbatm;"
 .br
 .BI "
 };
@@ -35,11 +39,15 @@ Reserved
 Starting LBA
 .IP "nlb" 12
 Number of Logical Blocks
-.IP "rsvd18" 12
+.IP "cetype" 12
+Bits 3-0: Command Extension Type
+.IP "rsvd19" 12
 Reserved
+.IP "cev" 12
+Command Extension Value
 .IP "sopt" 12
 Source Options
-.IP "eilbrt" 12
+.IP "elbt" 12
 Expected Initial Logical Block Reference Tag /
 Expected Logical Block Storage Tag
 .IP "elbat" 12

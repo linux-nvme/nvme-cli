@@ -1,0 +1,13 @@
+.TH "libnvmf_disconnect_ctrl" 9 "libnvmf_disconnect_ctrl" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_disconnect_ctrl \- Disconnect a controller
+.SH SYNOPSIS
+.B "int" libnvmf_disconnect_ctrl
+.BI "(libnvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.SH "DESCRIPTION"
+Issues a 'disconnect' fabrics command to \fIc\fP
+.SH "RETURN"
+0 on success, -1 on failure.

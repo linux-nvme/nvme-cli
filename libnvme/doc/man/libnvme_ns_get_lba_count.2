@@ -1,0 +1,11 @@
+.TH "libnvme_ns_get_lba_count" 9 "libnvme_ns_get_lba_count" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_lba_count \- Get lba_count.
+.SH SYNOPSIS
+.B "uint64_t" libnvme_ns_get_lba_count
+.BI "(const struct libnvme_ns *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ns\fP instance to query.
+.SH "RETURN"
+The value of the lba_count field.

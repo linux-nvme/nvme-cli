@@ -1,0 +1,17 @@
+.TH "libnvme_ctrl_identify" 9 "libnvme_ctrl_identify" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_identify \- Issues an 'identify controller' command
+.SH SYNOPSIS
+.B "int" libnvme_ctrl_identify
+.BI "(libnvme_ctrl_t c "  ","
+.BI "struct nvme_id_ctrl *id "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.IP "id" 12
+Identify controller data structure
+.SH "DESCRIPTION"
+Issues an 'identify controller' command to \fIc\fP and copies the
+data into \fIid\fP.
+.SH "RETURN"
+0 on success or -1 on failure.

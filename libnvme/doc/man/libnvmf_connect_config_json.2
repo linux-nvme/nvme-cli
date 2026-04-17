@@ -1,0 +1,16 @@
+.TH "libnvmf_connect_config_json" 9 "libnvmf_connect_config_json" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_connect_config_json \- Connect using JSON config
+.SH SYNOPSIS
+.B "int" libnvmf_connect_config_json
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnvmf_context *fctx "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+Global context
+.IP "fctx" 12
+Fabrics context
+.SH "DESCRIPTION"
+Connects to the fabrics subsystem using a JSON configuration.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

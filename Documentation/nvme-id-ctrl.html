@@ -750,7 +750,8 @@ nvme-id-ctrl(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme id-ctrl</em> &lt;device&gt; [--vendor-specific | -V] [--raw-binary | -b]
-                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;] [--verbose | -v]</pre>
+                        [--human-readable | -H]
+                        [&lt;global-options&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -804,8 +805,42 @@ raw buffer may be printed to stdout.</p></div>
 </dt>
 <dd>
 <p>
-        This option will parse and format many of the bit fields
-        into human-readable formats.
+        Display values in a human-readable format where possible.
+        (deprecated, use --verbose)
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_global_options">GLOBAL OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The following options are defined at the top-level <code>nvme</code> command
+and are available to this subcommand:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+--dry-run
+</dt>
+<dd>
+<p>
+        Print the command that would be executed, but do not actually
+        execute it.
+</p>
+</dd>
+<dt class="hdlist1">
+--no-ioctl-probing
+</dt>
+<dd>
+<p>
+        Disable probing for 64-bit IOCTL support.
+</p>
+</dd>
+<dt class="hdlist1">
+--no-retries
+</dt>
+<dd>
+<p>
+        Disable retry logic on transient errors.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -816,8 +851,26 @@ raw buffer may be printed to stdout.</p></div>
 </dt>
 <dd>
 <p>
-        Set the reporting format to <em>normal</em>, <em>json</em> or <em>binary</em>. Only one
-        output format can be used at a time.
+        Set the reporting format to <em>normal</em>, <em>tabular, 'json</em>, or <em>binary</em>.
+        Only one output format may be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+--output-format-version=&lt;version&gt;
+</dt>
+<dd>
+<p>
+        Select the output format version. Version <em>1</em> uses the original
+        field naming, while version <em>2</em> (default) provides more consistent
+        and script-friendly field names.
+</p>
+</dd>
+<dt class="hdlist1">
+--timeout=&lt;ms&gt;
+</dt>
+<dd>
+<p>
+        Set the timeout for the command in milliseconds.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -828,7 +881,8 @@ raw buffer may be printed to stdout.</p></div>
 </dt>
 <dd>
 <p>
-        Increase the information detail in the output.
+        Increase the level of detail in the output. May be specified
+        multiple times to further increase verbosity.
 </p>
 </dd>
 </dl></div>
@@ -921,7 +975,7 @@ int main(int argc, char **argv)
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-03-11 17:34:17 CET
+ 2026-04-17 09:23:05 CEST
 </div>
 </div>
 </body>

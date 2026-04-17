@@ -1,0 +1,17 @@
+.TH "libnvmf_config_modify" 9 "libnvmf_config_modify" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_config_modify \- Modify and update the configurtion
+.SH SYNOPSIS
+.B "int" libnvmf_config_modify
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnvmf_context *fctx "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+Global context
+.IP "fctx" 12
+Fabrics context
+.SH "DESCRIPTION"
+Update the current configuration by adding the crypto
+information.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

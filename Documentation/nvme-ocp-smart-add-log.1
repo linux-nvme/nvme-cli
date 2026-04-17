@@ -2,12 +2,12 @@
 .\"     Title: nvme-ocp-smart-add-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/11/2026
+.\"      Date: 04/17/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-OCP\-SMART\-AD" "1" "03/11/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-OCP\-SMART\-AD" "1" "04/17/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,8 @@ nvme-ocp-smart-add-log \- Retrieves Extended SMART information of given OCP comp
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme ocp smart\-add\-log\fR <device> [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-output\-format\-version=<version>]
+\fInvme ocp smart\-add\-log\fR <device>
+                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -42,25 +43,52 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 .sp
 This will only work on OCP compliant devices supporting this feature\&. Results for any other device are undefined\&.
 .sp
-EXPERIMENTAL\&. The \-\-output\-format\-version can be set to 2 to generate field names for the outputs that are easier to process via scripts\&. Note this is experimental and the field names are subject to change\&.
-.sp
 On success it returns 0, error code otherwise\&.
 .SH "OPTIONS"
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
-\fInormal\fR
-or
-\fIjson\fR\&. Only one output format can be used at a time\&. The default is normal\&.
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
 .RE
 .PP
 \-\-output\-format\-version=<version>
 .RS 4
-Set the field labels in the reporting format to either
+Select the output format version\&. Version
 \fI1\fR
-(the original) or
-\fI2\fR\&. The default is 1\&. Note this is experimental\&.
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
 .SH "EXAMPLES"
 .sp

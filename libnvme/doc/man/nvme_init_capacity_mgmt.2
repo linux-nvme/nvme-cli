@@ -1,0 +1,21 @@
+.TH "nvme_init_capacity_mgmt" 9 "nvme_init_capacity_mgmt" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_capacity_mgmt \- Initialize passthru command for Capacity Management
+.SH SYNOPSIS
+.B "void" nvme_init_capacity_mgmt
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 oper "  ","
+.BI "__u16 elid "  ","
+.BI "__u64 cap "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "oper" 12
+Operation to be performed by the controller
+.IP "elid" 12
+Value specific to the value of the Operation field
+.IP "cap" 12
+Capacity in bytes of the Endurance Group or NVM Set to
+be created
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Capacity Management command.

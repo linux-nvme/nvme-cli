@@ -1,0 +1,11 @@
+.TH "libnvmf_uri_get_query" 9 "libnvmf_uri_get_query" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_uri_get_query \- Get query.
+.SH SYNOPSIS
+.B "const char *" libnvmf_uri_get_query
+.BI "(const struct libnvmf_uri *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_uri\fP instance to query.
+.SH "RETURN"
+The value of the query field, or NULL if not set.

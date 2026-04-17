@@ -1,0 +1,11 @@
+.TH "libnvme_scan_ctrls" 9 "libnvme_scan_ctrls" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_scan_ctrls \- Scan for controllers
+.SH SYNOPSIS
+.B "int" libnvme_scan_ctrls
+.BI "(struct dirent ***ctrls "  ");"
+.SH ARGUMENTS
+.IP "ctrls" 12
+Pointer to array of dirents
+.SH "RETURN"
+number of entries in \fIctrls\fP or a negative error code

@@ -1,0 +1,21 @@
+.TH "nvme_init_set_features_hctm" 9 "nvme_init_set_features_hctm" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_hctm \- Initialize passthru command for Host Controlled Thermal Management
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_hctm
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "__u16 tmt2 "  ","
+.BI "__u16 tmt1 "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "tmt2" 12
+Thermal Management Temperature 2
+.IP "tmt1" 12
+Thermal Management Temperature 1
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_HCTM

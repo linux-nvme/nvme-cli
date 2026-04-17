@@ -1,0 +1,12 @@
+.TH "libnvme_ctrl_set_keyring" 9 "libnvme_ctrl_set_keyring" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_set_keyring \- Set keyring.
+.SH SYNOPSIS
+.B "void" libnvme_ctrl_set_keyring
+.BI "(struct libnvme_ctrl *p "  ","
+.BI "const char *keyring "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to update.
+.IP "keyring" 12
+New string; a copy is stored. Pass NULL to clear.

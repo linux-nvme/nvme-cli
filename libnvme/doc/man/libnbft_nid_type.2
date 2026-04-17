@@ -1,0 +1,30 @@
+.TH "libnvme" 9 "enum libnbft_nid_type" "April 2026" "API Manual" LINUX
+.SH NAME
+enum libnbft_nid_type \- Namespace Identifier Type (NIDT)
+.SH SYNOPSIS
+enum libnbft_nid_type {
+.br
+.BI "    LIBNBFT_NID_TYPE_NONE"
+, 
+.br
+.br
+.BI "    LIBNBFT_NID_TYPE_EUI64"
+, 
+.br
+.br
+.BI "    LIBNBFT_NID_TYPE_NGUID"
+, 
+.br
+.br
+.BI "    LIBNBFT_NID_TYPE_NS_UUID"
+
+};
+.SH Constants
+.IP "LIBNBFT_NID_TYPE_NONE" 12
+No identifier available.
+.IP "LIBNBFT_NID_TYPE_EUI64" 12
+The EUI-64 identifier.
+.IP "LIBNBFT_NID_TYPE_NGUID" 12
+The NSGUID identifier.
+.IP "LIBNBFT_NID_TYPE_NS_UUID" 12
+The UUID identifier.

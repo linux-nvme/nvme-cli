@@ -1,0 +1,19 @@
+.TH "nvme_init_get_features_resv_mask" 9 "nvme_init_get_features_resv_mask" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_resv_mask \- Initialize passthru command for Get Features - Reservation Notification Mask
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_resv_mask
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "enum nvme_get_features_sel sel "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_RESV_MASK

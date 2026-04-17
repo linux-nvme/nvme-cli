@@ -1,0 +1,17 @@
+.TH "libnvme_scan_namespace" 9 "libnvme_scan_namespace" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_scan_namespace \- scan namespace based on sysfs name
+.SH SYNOPSIS
+.B "int" libnvme_scan_namespace
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *name "  ","
+.BI "libnvme_ns_t *ns "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+\fIstruct libnvme_global_ctx\fP object
+.IP "name" 12
+sysfs name of the namespace to scan
+.IP "ns" 12
+\fIlibnvme_ns_t\fP object to return
+.SH "RETURN"
+0 on success or negative error code otherwise

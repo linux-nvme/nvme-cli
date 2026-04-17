@@ -1,0 +1,14 @@
+.TH "libnvme_subsystem_next_ns" 9 "libnvme_subsystem_next_ns" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_subsystem_next_ns \- Next namespace iterator
+.SH SYNOPSIS
+.B "libnvme_ns_t" libnvme_subsystem_next_ns
+.BI "(libnvme_subsystem_t s "  ","
+.BI "libnvme_ns_t n "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+\fIlibnvme_subsystem_t\fP object
+.IP "n" 12
+Previous \fIlibnvme_ns_t\fP iterator
+.SH "RETURN"
+Next \fIlibnvme_ns_t\fP object of an \fIs\fP iterator

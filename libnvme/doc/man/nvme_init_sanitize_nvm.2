@@ -1,0 +1,32 @@
+.TH "nvme_init_sanitize_nvm" 9 "nvme_init_sanitize_nvm" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_sanitize_nvm \- Initialize passthru command to start a sanitize operation
+.SH SYNOPSIS
+.B "void" nvme_init_sanitize_nvm
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_sanitize_sanact sanact "  ","
+.BI "bool ause "  ","
+.BI "__u8 owpass "  ","
+.BI "bool oipbp "  ","
+.BI "bool ndas "  ","
+.BI "bool emvs "  ","
+.BI "__u32 ovrpat "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sanact" 12
+Sanitize action, see \fIenum nvme_sanitize_sanact\fP
+.IP "ause" 12
+Set to allow unrestricted sanitize exit
+.IP "owpass" 12
+Overwrite pass count
+.IP "oipbp" 12
+Set to overwrite invert pattern between passes
+.IP "ndas" 12
+Set to not deallocate blocks after sanitizing
+.IP "emvs" 12
+Set to enter media verification state
+.IP "ovrpat" 12
+Overwrite pattern
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Sanitize NVM command.

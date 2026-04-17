@@ -1,0 +1,17 @@
+.TH "nvme_init_dev_self_test" 9 "nvme_init_dev_self_test" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_dev_self_test \- Initialize passthru command to start or abort a self test
+.SH SYNOPSIS
+.B "void" nvme_init_dev_self_test
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "enum nvme_dst_stc stc "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID to test
+.IP "stc" 12
+Self test code, see \fIenum nvme_dst_stc\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Device Self-test command.

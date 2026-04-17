@@ -1,0 +1,22 @@
+.TH "nvme_init_get_features_temp_thresh" 9 "nvme_init_get_features_temp_thresh" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_features_temp_thresh \- Initialize passthru command for Get Features - Temperature Threshold
+.SH SYNOPSIS
+.B "void" nvme_init_get_features_temp_thresh
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_get_features_sel sel "  ","
+.BI "__u8 tmpsel "  ","
+.BI "enum nvme_feat_tmpthresh_thsel thsel "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select which type of attribute to return,
+see \fIenum nvme_get_features_sel\fP
+.IP "tmpsel" 12
+Threshold Temperature Select
+.IP "thsel" 12
+Threshold Type Select
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Features command with
+FID value NVME_FEAT_FID_TEMP_THRESH

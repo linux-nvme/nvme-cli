@@ -1,0 +1,28 @@
+.TH "libnvmf_context_set_crypto" 9 "libnvmf_context_set_crypto" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_set_crypto \- Set cryptographic parameters for context
+.SH SYNOPSIS
+.B "int" libnvmf_context_set_crypto
+.BI "(struct libnvmf_context *fctx "  ","
+.BI "const char *hostkey "  ","
+.BI "const char *ctrlkey "  ","
+.BI "const char *keyring "  ","
+.BI "const char *tls_key "  ","
+.BI "const char *tls_key_identity "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context
+.IP "hostkey" 12
+Host key
+.IP "ctrlkey" 12
+Controller key
+.IP "keyring" 12
+Keyring identifier
+.IP "tls_key" 12
+TLS key
+.IP "tls_key_identity" 12
+TLS key identity
+.SH "DESCRIPTION"
+Sets cryptographic and TLS parameters for the context.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

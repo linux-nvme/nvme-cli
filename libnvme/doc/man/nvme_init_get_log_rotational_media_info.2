@@ -1,0 +1,21 @@
+.TH "nvme_init_get_log_rotational_media_info" 9 "nvme_init_get_log_rotational_media_info" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_rotational_media_info \- Initialize passthru command for Rotational Media Information Log
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_rotational_media_info
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 endgid "  ","
+.BI "struct nvme_rotational_media_info_log *log "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "endgid" 12
+Endurance Group Identifier
+.IP "log" 12
+User address to store the log page
+.IP "len" 12
+The allocated length of the log page
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_ROTATIONAL_MEDIA_INFO

@@ -1,0 +1,17 @@
+.TH "nvme_init_flush" 9 "nvme_init_flush" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_flush \- Initialize passthru command for Flush command
+.SH SYNOPSIS
+.B "void" nvme_init_flush
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace identifier
+.SH "DESCRIPTION"
+The Flush command requests that the contents of volatile write cache be made
+non-volatile.
+
+Initializes the passthru command buffer for the Flush command.

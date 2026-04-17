@@ -2,12 +2,12 @@
 .\"     Title: nvme-device-self-test
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/11/2026
+.\"      Date: 04/17/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DEVICE\-SELF\-" "1" "03/11/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-DEVICE\-SELF\-" "1" "04/17/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,8 +34,7 @@ nvme-device-self-test \- Perform the necessary tests to observe the performance 
 .nf
 \fInvme device\-self\-test\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
                         [\-\-self\-test\-code=<NUM> | \-s <NUM>] [\-\-wait | \-w]
-                        [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
-                        [\-\-timeout=<timeout>]
+                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -62,24 +61,50 @@ This field specifies the action taken by the device self\-test command : 0h: Sho
 .RS 4
 Wait for the device self test to complete before exiting The device self\-test is aborted by SIGINT signal interrupt for the wait The option is ignored if the abort self\-test code option specified\&.
 .RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR
-or
-\fIbinary\fR\&. Only one output format can be used at a time\&.
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
 .RE
 .PP
 \-v, \-\-verbose
 .RS 4
-Increase the information detail in the output\&.
-.RE
-.PP
-\-\-timeout=<timeout>
-.RS 4
-Override default timeout value\&. In milliseconds\&.
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
 .SH "EXAMPLES"
 .sp

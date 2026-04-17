@@ -1,0 +1,18 @@
+.TH "nvme_init_directive_recv_stream_allocate" 9 "nvme_init_directive_recv_stream_allocate" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_directive_recv_stream_allocate \- Initialize passthru command for Directive Receive Stream Allocate
+.SH SYNOPSIS
+.B "void" nvme_init_directive_recv_stream_allocate
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u16 nsr "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "nsr" 12
+Namespace Streams Requested
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Directive Receive - Stream
+Allocate command.

@@ -1,0 +1,12 @@
+.TH "libnvme_path_set_name" 9 "libnvme_path_set_name" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_path_set_name \- Set name.
+.SH SYNOPSIS
+.B "void" libnvme_path_set_name
+.BI "(struct libnvme_path *p "  ","
+.BI "const char *name "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_path\fP instance to update.
+.IP "name" 12
+New string; a copy is stored. Pass NULL to clear.

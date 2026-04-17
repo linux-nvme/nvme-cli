@@ -1,0 +1,12 @@
+.TH "libnvme_free_nbft" 9 "libnvme_free_nbft" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_free_nbft \- Free the struct libnbft_info and its contents
+.SH SYNOPSIS
+.B "void" libnvme_free_nbft
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnbft_info *nbft "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "nbft" 12
+Parsed NBFT table data.

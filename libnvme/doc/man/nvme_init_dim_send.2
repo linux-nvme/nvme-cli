@@ -1,0 +1,21 @@
+.TH "nvme_init_dim_send" 9 "nvme_init_dim_send" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_dim_send \- Initialize passthru command for Discovery Information Management (DIM) Send
+.SH SYNOPSIS
+.B "void" nvme_init_dim_send
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 tas "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "tas" 12
+Task field of the Command Dword 10 (cdw10)
+.IP "data" 12
+Pointer to the DIM data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Discovery Information
+Management Send command.

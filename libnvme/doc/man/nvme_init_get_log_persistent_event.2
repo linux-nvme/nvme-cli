@@ -1,0 +1,21 @@
+.TH "nvme_init_get_log_persistent_event" 9 "nvme_init_get_log_persistent_event" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_persistent_event \- Initialize passthru command for Persistent Event Log
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_persistent_event
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "enum nvme_pevent_log_action action "  ","
+.BI "void *pevent_log "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "action" 12
+Action the controller should take during processing this command
+.IP "pevent_log" 12
+User address to store the persistent event log
+.IP "len" 12
+Size of \fIpevent_log\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_PERSISTENT_EVENT

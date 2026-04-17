@@ -1,0 +1,33 @@
+.TH "nvme_init_zns_report_zones" 9 "nvme_init_zns_report_zones" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_zns_report_zones \- Initialize passthru command to return the list of zones
+.SH SYNOPSIS
+.B "void" nvme_init_zns_report_zones
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u64 slba "  ","
+.BI "enum nvme_zns_report_options opts "  ","
+.BI "bool extended "  ","
+.BI "bool partial "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "slba" 12
+Starting LBA
+.IP "opts" 12
+Reporting options
+.IP "extended" 12
+Extended report
+.IP "partial" 12
+Partial report requested
+.IP "data" 12
+Userspace address of the report zones data buffer
+.IP "len" 12
+Length of the data buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the ZNS Management Receive -
+Report Zones command.

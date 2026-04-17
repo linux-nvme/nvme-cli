@@ -1,0 +1,36 @@
+.TH "nvme_init_io" 9 "nvme_init_io" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_io \- Initialize passthru command for a generic user I/O command
+.SH SYNOPSIS
+.B "void" nvme_init_io
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 opcode "  ","
+.BI "__u32 nsid "  ","
+.BI "__u64 slba "  ","
+.BI "void *data "  ","
+.BI "__u32 data_len "  ","
+.BI "void *metadata "  ","
+.BI "__u32 metadata_len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "opcode" 12
+Opcode to execute
+.IP "nsid" 12
+Namespace ID
+.IP "slba" 12
+Starting logical block
+.IP "data" 12
+Pointer to user address of the data buffer
+.IP "data_len" 12
+Length of user buffer, \fIdata\fP, in bytes
+.IP "metadata" 12
+Pointer to user address of the metadata buffer
+.IP "metadata_len" 12
+Length of user buffer, \fImetadata\fP, in bytes
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for a generic NVM I/O command.
+.SH "NOTE"
+If \fIelbas\fP is true, the caller must ensure the definition/logic for
+nvme_init_set_var_size_tags is available and that the return value from
+that function is checked for error.

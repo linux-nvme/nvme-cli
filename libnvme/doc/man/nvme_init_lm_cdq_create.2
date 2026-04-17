@@ -1,0 +1,27 @@
+.TH "nvme_init_lm_cdq_create" 9 "nvme_init_lm_cdq_create" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_lm_cdq_create \- Initialize passthru command for Controller Data Queue create - Controller Data Queue command
+.SH SYNOPSIS
+.B "void" nvme_init_lm_cdq_create
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 mos "  ","
+.BI "__u16 cntlid "  ","
+.BI "__u32 cdqsize "  ","
+.BI "void *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "mos" 12
+Management Operation Specific (MOS): This field is
+specific to the SEL type
+.IP "cntlid" 12
+Controller ID: For Create CDQ, specifies the target
+migratable controller
+.IP "cdqsize" 12
+For Create CDQ, specifies the size of CDQ, in dwords - 4 byte
+.IP "data" 12
+Pointer to data buffer
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Controller Data Queue
+command. Note: The result CDQID is returned in the CQE dword0, which the
+submission function must handle.

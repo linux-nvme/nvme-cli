@@ -1,4 +1,4 @@
-.TH "libnvme" 9 "struct nvme_smart_log" "March 2026" "API Manual" LINUX
+.TH "libnvme" 9 "struct nvme_smart_log" "April 2026" "API Manual" LINUX
 .SH NAME
 struct nvme_smart_log \- SMART / Health Information Log (Log Identifier 02h)
 .SH SYNOPSIS
@@ -52,7 +52,11 @@ struct nvme_smart_log {
 .br
 .BI "    __le32 thm_temp2_total_time;"
 .br
-.BI "    __u8 rsvd232[280];"
+.BI "    __le64 op_lifetime_energy_consumed;"
+.br
+.BI "    __le32 interval_power_measurement;"
+.br
+.BI "    __u8 rsvd244[268];"
 .br
 .BI "
 };
@@ -231,5 +235,26 @@ reached. A value of 0h, indicates that this transition
 has never occurred or this field is not implemented.
 .IP "thm_temp2_total_time" 12
 Total Time For Thermal Management Temperature 2
-.IP "rsvd232" 12
+.IP "op_lifetime_energy_consumed" 12
+Operational Lifetime Energy Consumed: Contains
+the cumulative operational energy consumed by the NVM
+subsystem in watt-hours calculated from all interval
+power measurements collected from the time of
+manufacture to the point that this log page is read.
+This value is rounded up (e.g., two indicates the
+number of watt-hours consumed is greater than 1 and
+less than or equal to 2). This field shall not wrap
+once the value FFFFFFFFFFFFFFFFh is reached. A value
+of 0h indicates that the cumulative operational energy
+consumed is not reported.
+.IP "interval_power_measurement" 12
+Interval Power Measurement: Contains the average
+of power measurement samples over the most recent one
+second interval at the time of processing the Get Log
+Page command. The power in Watts is equal to the
+Interval Power Measurement Value (bits 15:0) multiplied
+by the scale indicated in the Interval Power Measurement
+Scale field (bits 17:16). A value of 0h indicates that
+the interval power measurement is not reported.
+.IP "rsvd244" 12
 Reserved

@@ -1,0 +1,11 @@
+.TH "libnvme_sanitize_ns_status_to_string" 9 "libnvme_sanitize_ns_status_to_string" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_sanitize_ns_status_to_string \- Returns sanitize ns status string.
+.SH SYNOPSIS
+.B "const char *" libnvme_sanitize_ns_status_to_string
+.BI "(__u16 sc "  ");"
+.SH ARGUMENTS
+.IP "sc" 12
+Return status code from an sanitize ns command
+.SH "RETURN"
+The sanitize ns status string if it is a specific status code.

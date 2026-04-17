@@ -1,0 +1,41 @@
+.TH "nvme_init_zns_append" 9 "nvme_init_zns_append" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_zns_append \- Initialize passthru command to append data to a zone
+.SH SYNOPSIS
+.B "void" nvme_init_zns_append
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u64 zslba "  ","
+.BI "__u16 nlb "  ","
+.BI "__u16 control "  ","
+.BI "__u16 cev "  ","
+.BI "__u16 dspec "  ","
+.BI "void *data "  ","
+.BI "__u32 data_len "  ","
+.BI "void *metadata "  ","
+.BI "__u32 metadata_len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID
+.IP "zslba" 12
+Zone start logical block address
+.IP "nlb" 12
+Number of logical blocks
+.IP "control" 12
+Upper 16 bits of cdw12
+.IP "cev" 12
+Command Extension Value
+.IP "dspec" 12
+Directive Specific
+.IP "data" 12
+Userspace address of the data buffer
+.IP "data_len" 12
+Length of \fIdata\fP
+.IP "metadata" 12
+Userspace address of the metadata buffer
+.IP "metadata_len" 12
+Length of \fImetadata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the ZNS Append command.

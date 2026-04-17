@@ -1,0 +1,14 @@
+.TH "libnvmf_discovery_args_create" 9 "libnvmf_discovery_args_create" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_discovery_args_create \- Allocate a discovery args object
+.SH SYNOPSIS
+.B "int" libnvmf_discovery_args_create
+.BI "(struct libnvmf_discovery_args **argsp "  ");"
+.SH ARGUMENTS
+.IP "argsp" 12
+On success, set to the newly allocated object
+.SH "DESCRIPTION"
+Allocates and initialises a \fIstruct libnvmf_discovery_args\fP with sensible
+defaults. The caller must release it with \fBlibnvmf_discovery_args_free\fP.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

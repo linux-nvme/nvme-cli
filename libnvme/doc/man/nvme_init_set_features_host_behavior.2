@@ -1,0 +1,18 @@
+.TH "nvme_init_set_features_host_behavior" 9 "nvme_init_set_features_host_behavior" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_features_host_behavior \- Initialize passthru command for Host Behavior
+.SH SYNOPSIS
+.B "void" nvme_init_set_features_host_behavior
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "bool sv "  ","
+.BI "struct nvme_feat_host_behavior *data "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sv" 12
+Save value across power states
+.IP "data" 12
+Pointer to structure nvme_feat_host_behavior
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Set Features command with
+FID value NVME_FEAT_FID_HOST_BEHAVIOR

@@ -1,0 +1,16 @@
+.TH "libnvme_set_probe_enabled" 9 "libnvme_set_probe_enabled" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_set_probe_enabled \- enable/disable the probe for new MI endpoints
+.SH SYNOPSIS
+.B "void" libnvme_set_probe_enabled
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "bool enabled "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+\fIstruct libnvme_global_ctx\fP object
+.IP "enabled" 12
+whether to probe new endpoints
+.SH "DESCRIPTION"
+Controls whether newly-created endpoints are probed for quirks on creation.
+Defaults to enabled, which results in some initial messaging with the
+endpoint to determine model-specific details.

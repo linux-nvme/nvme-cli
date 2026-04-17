@@ -1,0 +1,12 @@
+.TH "libnvme_ns_set_lba_count" 9 "libnvme_ns_set_lba_count" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_set_lba_count \- Set lba_count.
+.SH SYNOPSIS
+.B "void" libnvme_ns_set_lba_count
+.BI "(struct libnvme_ns *p "  ","
+.BI "uint64_t lba_count "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ns\fP instance to update.
+.IP "lba_count" 12
+Value to assign to the lba_count field.

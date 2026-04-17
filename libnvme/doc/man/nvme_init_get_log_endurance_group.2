@@ -1,0 +1,18 @@
+.TH "nvme_init_get_log_endurance_group" 9 "nvme_init_get_log_endurance_group" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_endurance_group \- Initialize passthru command for Endurance Group Information
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_endurance_group
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 endgid "  ","
+.BI "struct nvme_endurance_group_log *log "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "endgid" 12
+Starting group identifier to return in the list
+.IP "log" 12
+User address to store the endurance log
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_ENDURANCE_GROUP.

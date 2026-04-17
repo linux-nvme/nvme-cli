@@ -2,12 +2,12 @@
 .\"     Title: nvme-list
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/11/2026
+.\"      Date: 04/17/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-LIST" "1" "03/11/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-LIST" "1" "04/17/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,25 +32,57 @@ nvme-list \- List all recognized NVMe devices
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme list\fR [\-\-output\-format=<fmt> | \-o <fmt>] [\-\-verbose | \-v]
+\fInvme list\fR
+                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
 Scan the sysfs tree for NVM Express devices and return the /dev node for those devices as well as some pertinent information about them\&. Namespace usage printed in powers of 1,000 with SI prefixes\&. (e\&.g\&., 1\&.02 TB)
 .SH "OPTIONS"
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
 .PP
 \-o <fmt>, \-\-output\-format=<fmt>
 .RS 4
 Set the reporting format to
 \fInormal\fR,
-\fIjson\fR
-or
-\fIbinary\fR\&. Only one output format can be used at a time\&.
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
 .RE
 .PP
 \-v, \-\-verbose
 .RS 4
-Increase the information in the output, showing nvme subsystems, controllers and namespaces separately and how they\(cqre related to each other\&.
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
 .SH "ENVIRONMENT"
 .sp

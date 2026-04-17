@@ -1,0 +1,16 @@
+.TH "libnvme_host_is_pdc_enabled" 9 "libnvme_host_is_pdc_enabled" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_host_is_pdc_enabled \- Is Persistenct Discovery Controller enabled
+.SH SYNOPSIS
+.B "bool" libnvme_host_is_pdc_enabled
+.BI "(libnvme_host_t h "  ","
+.BI "bool fallback "  ");"
+.SH ARGUMENTS
+.IP "h" 12
+Host which to check if PDC is enabled
+.IP "fallback" 12
+The fallback default value of the flag when
+\fIlibnvme_host_set_pdc_enabled\fP has not be used
+to set the flag.
+.SH "RETURN"
+true if PDC is enabled for \fIh\fP, else false

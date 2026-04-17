@@ -1,0 +1,18 @@
+.TH "nvme_init_get_log_predictable_lat_nvmset" 9 "nvme_init_get_log_predictable_lat_nvmset" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_predictable_lat_nvmset \- Initialize passthru command for Predictable Latency Per NVM Set
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_predictable_lat_nvmset
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 nvmsetid "  ","
+.BI "struct nvme_nvmset_predictable_lat_log *log "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nvmsetid" 12
+NVM set id
+.IP "log" 12
+User address to store the predictable latency log
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_PREDICTABLE_LAT_NVMSET.

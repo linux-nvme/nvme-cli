@@ -1,0 +1,18 @@
+.TH "nvme_init_get_log_error" 9 "nvme_init_get_log_error" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_error \- Initialize passthru command for Error Information
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_error
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "unsigned int nr_entries "  ","
+.BI "struct nvme_error_log_page *err_log "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nr_entries" 12
+Number of error log entries allocated
+.IP "err_log" 12
+Array of error logs of size 'entries'
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_ERROR.

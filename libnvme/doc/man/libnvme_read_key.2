@@ -1,0 +1,28 @@
+.TH "libnvme_read_key" 9 "libnvme_read_key" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_read_key \- Read key raw data
+.SH SYNOPSIS
+.B "int" libnvme_read_key
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "long keyring_id "  ","
+.BI "long key_id "  ","
+.BI "int *len "  ","
+.BI "unsigned char **key "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "keyring_id" 12
+Id of the keyring holding key_id
+.IP "key_id" 12
+Key id
+.IP "len" 12
+Length of the returned data
+.IP "key" 12
+Key serial to return
+.SH "DESCRIPTION"
+Links the keyring specified by \fIkeyring_id\fP into the session
+keyring and reads the payload of the key specified by \fIkey_id\fP.
+\fIlen\fP holds the size of the returned buffer.
+If \fIkeyring\fP is 0 the default keyring '.nvme' is used.
+.SH "RETURN"
+0 on success or negative error code otherwise

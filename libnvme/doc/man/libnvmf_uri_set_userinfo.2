@@ -1,0 +1,12 @@
+.TH "libnvmf_uri_set_userinfo" 9 "libnvmf_uri_set_userinfo" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_uri_set_userinfo \- Set userinfo.
+.SH SYNOPSIS
+.B "void" libnvmf_uri_set_userinfo
+.BI "(struct libnvmf_uri *p "  ","
+.BI "const char *userinfo "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_uri\fP instance to update.
+.IP "userinfo" 12
+New string; a copy is stored. Pass NULL to clear.

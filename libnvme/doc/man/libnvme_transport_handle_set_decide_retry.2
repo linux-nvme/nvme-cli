@@ -1,0 +1,27 @@
+.TH "libnvme_transport_handle_set_decide_retry" 9 "libnvme_transport_handle_set_decide_retry" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_transport_handle_set_decide_retry \- Install a retry-decision callback
+.SH SYNOPSIS
+.B "void" libnvme_transport_handle_set_decide_retry
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "bool (*decide_retry)(struct libnvme_transport_handle *hdl, struct libnvme_passthru_cmd *cmd, int err) "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle to configure
+.IP "decide_retry" 12
+Callback used to determine whether a passthrough command
+should be retried after an error. The function is called with
+the command that failed and the error code returned by the
+kernel or device. The callback should return true if the
+submission path should retry the command, or false if the
+error is final.
+.SH "DESCRIPTION"
+Installs a user-provided callback to control retry behavior for
+passthrough commands issued through \fIhdl\fP. This allows transports or
+higher-level logic to implement custom retry policies, such as retrying on
+transient conditions like -EAGAIN or device-specific status codes.
+
+Passing NULL clears any previously installed callback and reverts to the
+default behavior (no retries).
+.SH "RETURN"
+None.

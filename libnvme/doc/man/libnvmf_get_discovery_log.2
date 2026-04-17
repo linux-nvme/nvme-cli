@@ -1,0 +1,20 @@
+.TH "libnvmf_get_discovery_log" 9 "libnvmf_get_discovery_log" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_get_discovery_log \- Fetch the NVMe-oF discovery log page
+.SH SYNOPSIS
+.B "int" libnvmf_get_discovery_log
+.BI "(libnvme_ctrl_t ctrl "  ","
+.BI "const struct libnvmf_discovery_args *args "  ","
+.BI "struct nvmf_discovery_log **logp "  ");"
+.SH ARGUMENTS
+.IP "ctrl" 12
+Discovery controller
+.IP "args" 12
+Optional arguments (pass NULL for defaults)
+.IP "logp" 12
+On success, set to the allocated log page (caller must \fBfree\fP)
+.SH "DESCRIPTION"
+Issues the three-phase Get Log Page protocol against \fIctrl\fP, validates
+generation-counter atomicity, and normalises each log entry.
+.SH "RETURN"
+0 on success, or a negative error code on failure.

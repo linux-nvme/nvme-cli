@@ -1,0 +1,30 @@
+.TH "nvme_init_get_lba_status" 9 "nvme_init_get_lba_status" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_lba_status \- Initialize passthru command to retrieve information on possibly unrecoverable LBAs
+.SH SYNOPSIS
+.B "void" nvme_init_get_lba_status
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u64 slba "  ","
+.BI "__u32 mndw "  ","
+.BI "enum nvme_lba_status_atype atype "  ","
+.BI "__u16 rl "  ","
+.BI "struct nvme_lba_status *lbas "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID to retrieve LBA status
+.IP "slba" 12
+Starting logical block address to check statuses
+.IP "mndw" 12
+Maximum number of dwords to return
+.IP "atype" 12
+Action type mechanism to determine LBA status descriptors to
+return, see \fIenum nvme_lba_status_atype\fP
+.IP "rl" 12
+Range length from slba to perform the action
+.IP "lbas" 12
+Data payload buffer to return status descriptors
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get LBA Status command.

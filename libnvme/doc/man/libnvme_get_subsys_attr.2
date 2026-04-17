@@ -1,0 +1,15 @@
+.TH "libnvme_get_subsys_attr" 9 "libnvme_get_subsys_attr" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_get_subsys_attr \- Read subsystem sysfs attribute
+.SH SYNOPSIS
+.B "char *" libnvme_get_subsys_attr
+.BI "(libnvme_subsystem_t s "  ","
+.BI "const char *attr "  ");"
+.SH ARGUMENTS
+.IP "s" 12
+libnvme_subsystem_t object
+.IP "attr" 12
+sysfs attribute name
+.SH "RETURN"
+String with the contents of \fIattr\fP or NULL in case of an empty
+value or error.

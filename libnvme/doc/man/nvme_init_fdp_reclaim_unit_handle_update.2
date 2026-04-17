@@ -1,0 +1,21 @@
+.TH "nvme_init_fdp_reclaim_unit_handle_update" 9 "nvme_init_fdp_reclaim_unit_handle_update" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_fdp_reclaim_unit_handle_update \- Initialize passthru command to update a list of reclaim unit handles
+.SH SYNOPSIS
+.B "void" nvme_init_fdp_reclaim_unit_handle_update
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "void *pids "  ","
+.BI "unsigned int npids "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace identifier
+.IP "pids" 12
+List of placement identifiers buffer
+.IP "npids" 12
+Number of placement identifiers
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the I/O Management Send -
+Reclaim Unit Handle Update command.

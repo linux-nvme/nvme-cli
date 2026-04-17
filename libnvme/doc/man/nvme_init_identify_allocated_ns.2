@@ -1,0 +1,18 @@
+.TH "nvme_init_identify_allocated_ns" 9 "nvme_init_identify_allocated_ns" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify_allocated_ns \- Initialize passthru command for allocated Namespace ID list
+.SH SYNOPSIS
+.B "void" nvme_init_identify_allocated_ns
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_id_ns *ns "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "nsid" 12
+Namespace to identify
+.IP "ns" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Identify command with
+CNS value NVME_IDENTIFY_CNS_ALLOCATED_NS.

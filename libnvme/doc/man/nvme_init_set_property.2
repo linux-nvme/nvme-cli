@@ -1,0 +1,18 @@
+.TH "nvme_init_set_property" 9 "nvme_init_set_property" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_set_property \- Initialize passthru command to set controller property
+.SH SYNOPSIS
+.B "void" nvme_init_set_property
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 offset "  ","
+.BI "__u64 value "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "offset" 12
+Property offset from the base to set
+.IP "value" 12
+The value to set the property
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Fabrics Set Property command.
+This is an NVMe-over-Fabrics specific command.

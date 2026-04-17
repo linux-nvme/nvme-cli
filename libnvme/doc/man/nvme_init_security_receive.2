@@ -1,0 +1,32 @@
+.TH "nvme_init_security_receive" 9 "nvme_init_security_receive" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_security_receive \- Initialize passthru command for Security Receive
+.SH SYNOPSIS
+.B "void" nvme_init_security_receive
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "__u8 nssf "  ","
+.BI "__u16 spsp "  ","
+.BI "__u8 secp "  ","
+.BI "__u32 al "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace ID to issue security command on
+.IP "nssf" 12
+NVMe Security Specific field
+.IP "spsp" 12
+Security Protocol Specific field
+.IP "secp" 12
+Security Protocol
+.IP "al" 12
+Protocol specific allocation length
+.IP "data" 12
+Security data payload buffer to receive data into
+.IP "len" 12
+Data length of the payload in bytes (must match \fIal\fP)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Security Receive command.

@@ -1,0 +1,11 @@
+.TH "libnvme_ctrl_get_host_traddr" 9 "libnvme_ctrl_get_host_traddr" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_get_host_traddr \- Get host_traddr.
+.SH SYNOPSIS
+.B "const char *" libnvme_ctrl_get_host_traddr
+.BI "(const struct libnvme_ctrl *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to query.
+.SH "RETURN"
+The value of the host_traddr field, or NULL if not set.

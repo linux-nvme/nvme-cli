@@ -1,0 +1,17 @@
+.TH "libnvme_read_config" 9 "libnvme_read_config" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_read_config \- Read NVMe JSON configuration file
+.SH SYNOPSIS
+.B "int" libnvme_read_config
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *config_file "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+\fIstruct libnvme_global_ctx\fP object
+.IP "config_file" 12
+JSON configuration file
+.SH "DESCRIPTION"
+Read in the contents of \fIconfig_file\fP and merge them with
+the elements in \fIr\fP.
+.SH "RETURN"
+0 on success or negative error code otherwise

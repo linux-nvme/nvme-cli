@@ -1,0 +1,50 @@
+.TH "nvme_init_lm_migration_send" 9 "nvme_init_lm_migration_send" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_lm_migration_send \- Initialize passthru command for Migration Send command
+.SH SYNOPSIS
+.B "void" nvme_init_lm_migration_send
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 sel "  ","
+.BI "__u16 mos "  ","
+.BI "__u16 cntlid "  ","
+.BI "__u8 stype "  ","
+.BI "bool dudmq "  ","
+.BI "__u8 csvi "  ","
+.BI "__u16 csuuidi "  ","
+.BI "__u64 cso "  ","
+.BI "__u8 uidx "  ","
+.BI "void *data "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "sel" 12
+Select (SEL): This field specifies the type of management
+operation to perform.
+.IP "mos" 12
+Management Operation Specific (MOS): This field is specific
+to the SEL type
+.IP "cntlid" 12
+Controller ID: This field specifies the identifier of the
+controller to which the operation is performed.
+.IP "stype" 12
+Suspend Type (STYPE): This field specifies the type of suspend.
+.IP "dudmq" 12
+Delete User Data Migration Queue (DUDMQ): If set, the migration
+queue is deleted is deleted as part of the Suspend operation.
+.IP "csvi" 12
+Controller State Version Index (CSVI)
+.IP "csuuidi" 12
+Controller State UUID Index (CSUUIDI)
+.IP "cso" 12
+Offset: This field specifies the offset, in bytes, within
+the data available to be returned and specifies the starting
+point for that data for what is actually returned to the host.
+.IP "uidx" 12
+UUID Index (UIDX)
+.IP "data" 12
+Pointer to data buffer
+.IP "len" 12
+Length of \fIdata\fP
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Migration Send command.

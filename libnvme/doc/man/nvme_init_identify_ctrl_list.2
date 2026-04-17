@@ -1,0 +1,18 @@
+.TH "nvme_init_identify_ctrl_list" 9 "nvme_init_identify_ctrl_list" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify_ctrl_list \- Initialize passthru command for Controller List of controllers
+.SH SYNOPSIS
+.B "void" nvme_init_identify_ctrl_list
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u16 cntid "  ","
+.BI "struct nvme_ctrl_list *cntlist "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "cntid" 12
+Starting CNTLID to return in the list
+.IP "cntlist" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Identify command with
+CNS value NVME_IDENTIFY_CNS_CTRL_LIST.

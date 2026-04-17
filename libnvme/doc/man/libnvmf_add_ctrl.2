@@ -1,0 +1,18 @@
+.TH "libnvmf_add_ctrl" 9 "libnvmf_add_ctrl" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_add_ctrl \- Connect a controller and update topology
+.SH SYNOPSIS
+.B "int" libnvmf_add_ctrl
+.BI "(libnvme_host_t h "  ","
+.BI "libnvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "h" 12
+Host to which the controller should be attached
+.IP "c" 12
+Controller to be connected
+.SH "DESCRIPTION"
+Issues a 'connect' command to the NVMe-oF controller and inserts \fIc\fP
+into the topology using \fIh\fP as parent.
+\fIc\fP must be initialized and not connected to the topology.
+.SH "RETURN"
+0 on success, or an error code on failure.

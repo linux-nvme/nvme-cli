@@ -1,0 +1,19 @@
+.TH "libnvmf_uri_parse" 9 "libnvmf_uri_parse" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_uri_parse \- Parse the URI string
+.SH SYNOPSIS
+.B "int" libnvmf_uri_parse
+.BI "(const char *str "  ","
+.BI "struct libnvmf_uri **uri "  ");"
+.SH ARGUMENTS
+.IP "str" 12
+URI string
+.IP "uri" 12
+URI object to return
+.SH "DESCRIPTION"
+Parse the URI string as defined in the NVM Express Boot Specification.
+Supported URI elements looks as follows:
+
+nvme+tcp://user\fIhost\fP:port/subsys_nqn/nid?query=val#fragment
+.SH "RETURN"
+0 on success, or a negative error code on failure.

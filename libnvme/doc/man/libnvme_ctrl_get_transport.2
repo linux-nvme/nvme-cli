@@ -1,0 +1,11 @@
+.TH "libnvme_ctrl_get_transport" 9 "libnvme_ctrl_get_transport" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_get_transport \- Get transport.
+.SH SYNOPSIS
+.B "const char *" libnvme_ctrl_get_transport
+.BI "(const struct libnvme_ctrl *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ctrl\fP instance to query.
+.SH "RETURN"
+The value of the transport field, or NULL if not set.

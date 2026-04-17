@@ -1,0 +1,32 @@
+.TH "nvme_init_resv_release" 9 "nvme_init_resv_release" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_resv_release \- Initialize passthru command for Reservation Release
+.SH SYNOPSIS
+.B "void" nvme_init_resv_release
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "enum nvme_resv_rrela rrela "  ","
+.BI "bool iekey "  ","
+.BI "bool disnsrs "  ","
+.BI "enum nvme_resv_rtype rtype "  ","
+.BI "__u64 crkey "  ","
+.BI "__le64 *payload "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace identifier
+.IP "rrela" 12
+Reservation release action, see \fIenum nvme_resv_rrela\fP
+.IP "iekey" 12
+Set to ignore the existing key
+.IP "disnsrs" 12
+Disperse Namespace Reservation Support
+.IP "rtype" 12
+The type of reservation to be create, see \fIenum nvme_resv_rtype\fP
+.IP "crkey" 12
+The current reservation key to release
+.IP "payload" 12
+Data payload buffer to hold crkey
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Reservation Release command.

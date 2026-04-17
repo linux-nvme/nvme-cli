@@ -1,0 +1,14 @@
+.TH "libnvmf_cms_str" 9 "libnvmf_cms_str" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_cms_str \- Decode RDMA connection management service field
+.SH SYNOPSIS
+.B "const char *" libnvmf_cms_str
+.BI "(__u8 cms "  ");"
+.SH ARGUMENTS
+.IP "cms" 12
+value to be decoded
+.SH "DESCRIPTION"
+Decode the RDMA connection management service field in the discovery
+log page entry.
+.SH "RETURN"
+decoded string

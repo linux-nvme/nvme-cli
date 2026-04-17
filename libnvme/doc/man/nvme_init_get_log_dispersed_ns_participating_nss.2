@@ -1,0 +1,21 @@
+.TH "nvme_init_get_log_dispersed_ns_participating_nss" 9 "nvme_init_get_log_dispersed_ns_participating_nss" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_dispersed_ns_participating_nss \- Initialize passthru command for Dispersed Namespace Participating NVM Subsystems
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_dispersed_ns_participating_nss
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_dispersed_ns_participating_nss_log *log "  ","
+.BI "__u32 len "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "nsid" 12
+Namespace Identifier
+.IP "log" 12
+User address to store the log page
+.IP "len" 12
+The allocated length of the log page
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS

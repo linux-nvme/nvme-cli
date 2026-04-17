@@ -1,0 +1,12 @@
+.TH "libnvmf_uri_set_query" 9 "libnvmf_uri_set_query" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_uri_set_query \- Set query.
+.SH SYNOPSIS
+.B "void" libnvmf_uri_set_query
+.BI "(struct libnvmf_uri *p "  ","
+.BI "const char *query "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_uri\fP instance to update.
+.IP "query" 12
+New string; a copy is stored. Pass NULL to clear.

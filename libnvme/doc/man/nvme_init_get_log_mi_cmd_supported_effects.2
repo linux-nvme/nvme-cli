@@ -1,0 +1,15 @@
+.TH "nvme_init_get_log_mi_cmd_supported_effects" 9 "nvme_init_get_log_mi_cmd_supported_effects" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_mi_cmd_supported_effects \- Initialize passthru command for MI Commands Supported by the controller
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_mi_cmd_supported_effects
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "struct nvme_mi_cmd_supported_effects_log *log "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "log" 12
+MI Command Supported and Effects data structure
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS

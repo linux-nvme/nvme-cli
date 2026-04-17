@@ -1,0 +1,12 @@
+.TH "nvme_init_get_log_lpo" 9 "nvme_init_get_log_lpo" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_lpo \- Initializes passthru command with a Log Page Offset
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_lpo
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u64 lpo "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command
+.IP "lpo" 12
+Log Page Offset to set

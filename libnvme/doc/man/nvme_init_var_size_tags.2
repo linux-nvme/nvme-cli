@@ -1,0 +1,25 @@
+.TH "nvme_init_var_size_tags" 9 "nvme_init_var_size_tags" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_var_size_tags \- Initialize Command Dword fields for Extended LBA based on Variable Sized Tags
+.SH SYNOPSIS
+.B "int" nvme_init_var_size_tags
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 pif "  ","
+.BI "__u8 sts "  ","
+.BI "__u64 reftag "  ","
+.BI "__u64 storage_tag "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "pif" 12
+Protection information format, determines tag placement
+.IP "sts" 12
+Storage tag size in bits
+.IP "reftag" 12
+Expected Initial Logical Block Reference Tag (EILBRT)
+.IP "storage_tag" 12
+Expected Logical Block Storage Tag (ELBST)
+.SH "DESCRIPTION"
+Initializes the passthru command buffer fields cdw2, cdw3, and cdw14
+for commands supporting Extended LBA. This logic is usually called from
+the command-specific init function (like nvme_init_zns_append).

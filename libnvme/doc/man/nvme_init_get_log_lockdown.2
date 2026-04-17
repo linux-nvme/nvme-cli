@@ -1,0 +1,19 @@
+.TH "nvme_init_get_log_lockdown" 9 "nvme_init_get_log_lockdown" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_get_log_lockdown \- Initialize passthru command for Command and Feature Lockdown
+.SH SYNOPSIS
+.B "void" nvme_init_get_log_lockdown
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u8 cnscp "  ","
+.BI "struct nvme_lockdown_log *lockdown_log "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Passthru command to use
+.IP "cnscp" 12
+Contents and Scope of Command and Feature Identifier
+Lists
+.IP "lockdown_log" 12
+Buffer to store the lockdown log
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Get Log command with
+LID value NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN

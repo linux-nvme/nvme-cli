@@ -1,0 +1,18 @@
+.TH "libnvme_get_lba_status_log" 9 "libnvme_get_lba_status_log" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_get_lba_status_log \- Retrieve the LBA Status log page
+.SH SYNOPSIS
+.B "int" libnvme_get_lba_status_log
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "bool rae "  ","
+.BI "struct nvme_lba_status_log **log "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "rae" 12
+Retain asynchronous events
+.IP "log" 12
+On success, set to the value of the allocated and retrieved log.
+.SH "RETURN"
+0 on success, the nvme command status if a response was
+received (see \fIenum nvme_status_field\fP) or a negative error otherwise.

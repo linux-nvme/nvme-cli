@@ -1,0 +1,15 @@
+.TH "nvme_init_identify_ns_granularity" 9 "nvme_init_identify_ns_granularity" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify_ns_granularity \- Initialize passthru command for Namespace Granularity list
+.SH SYNOPSIS
+.B "void" nvme_init_identify_ns_granularity
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "struct nvme_id_ns_granularity_list *gr_list "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "gr_list" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Identify command with
+CNS value NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST.

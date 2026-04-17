@@ -1,0 +1,18 @@
+.TH "nvme_init_identify_ns_descs_list" 9 "nvme_init_identify_ns_descs_list" "April 2026" "libnvme API manual" LINUX
+.SH NAME
+nvme_init_identify_ns_descs_list \- Initialize passthru command for Namespace Descriptor list
+.SH SYNOPSIS
+.B "void" nvme_init_identify_ns_descs_list
+.BI "(struct libnvme_passthru_cmd *cmd "  ","
+.BI "__u32 nsid "  ","
+.BI "struct nvme_ns_id_desc *descs "  ");"
+.SH ARGUMENTS
+.IP "cmd" 12
+Command data structure to initialize
+.IP "nsid" 12
+The namespace id to retrieve descriptors
+.IP "descs" 12
+User space destination address to transfer the data
+.SH "DESCRIPTION"
+Initializes the passthru command buffer for the Identify command with
+CNS value NVME_IDENTIFY_CNS_NS_DESC_LIST.
