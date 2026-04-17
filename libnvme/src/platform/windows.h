@@ -44,19 +44,6 @@ static inline void libnvme_init(void)
 	_setmode(_fileno(stderr), O_BINARY);
 }
 
-/* Platform-specific UUID generation using BCryptGenRandom */
-static inline int random_uuid(unsigned char *uuid, size_t len)
-{
-	NTSTATUS status;
-
-	status = BCryptGenRandom(NULL, uuid, (ULONG)len,
-				 BCRYPT_USE_SYSTEM_PREFERRED_RNG);
-	if (!BCRYPT_SUCCESS(status))
-		return -EIO;
-
-	return 0;
-}
-
 
 /* time.h POSIX compatibility */
 

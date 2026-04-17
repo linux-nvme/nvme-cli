@@ -42,23 +42,3 @@ typedef int libnvme_fd_t;
 
 /* Platform initialization - no-op on Linux */
 static inline void libnvme_init(void) {}
-
-/* Platform-specific UUID generation using /dev/urandom */
-static inline int random_uuid(unsigned char *uuid, size_t len)
-{
-	int f, ret = 0;
-	ssize_t n;
-
-	f = open("/dev/urandom", O_RDONLY);
-	if (f < 0)
-		return -errno;
-
-	n = read(f, uuid, len);
-	if (n < 0)
-		ret = -errno;
-	else if ((size_t)n != len)
-		ret = -EIO;
-
-	close(f);
-	return ret;
-}
