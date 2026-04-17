@@ -292,7 +292,6 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 	__u64 result;
 	struct feature_latency_monitor buf = { 0 };
 	__u32  nsid = NVME_NSID_ALL;
-	struct stat nvme_stat;
 	struct nvme_id_ctrl ctrl;
 
 	const char *desc = "Set Latency Monitor feature.";
@@ -1433,7 +1432,6 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 	__u32  nsid = NVME_NSID_ALL;
-	struct stat nvme_stat;
 	char sn[21] = {0,};
 	struct nvme_id_ctrl ctrl;
 	bool is_support_telemetry_controller;

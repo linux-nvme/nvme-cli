@@ -58,28 +58,6 @@ static inline int random_uuid(unsigned char *uuid, size_t len)
 }
 
 
-/* errno.h compatibility */
-
-#define EREMOTEIO 121	// util.c
-#define EDQUOT    122	// util.c
-#define ERESTART  85	// util.c
-#define ENOTBLK   15	// sfx-nvme.c - could they just use libnvme's check for char device instead?
-#define ENAVAIL   119	// nvme.c - just used internally, define a custom, internal error code for this?
-
-
-/* ifaddrs.h compatibility */
-
-struct ifaddrs {
-	struct ifaddrs *ifa_next;
-	char *ifa_name;
-	unsigned int ifa_flags;
-	struct sockaddr *ifa_addr;
-	struct sockaddr *ifa_netmask;
-	struct sockaddr *ifa_broadaddr;
-	void *ifa_data;
-};
-
-
 /* time.h POSIX compatibility */
 
 static inline struct tm *gmtime_r(const time_t *timep, struct tm *result)

@@ -7353,6 +7353,9 @@ static void get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
 		*pif = (elbaf & NVME_NVM_ELBAF_QPIF_MASK) >> 9;
 }
 
+
+#define ERR_IGNORE_INVALID_FIELD 0x2000 /* invalid field error - ignore */
+
 static int get_pi_info(struct libnvme_transport_handle *hdl,
 		__u32 nsid, __u8 prinfo, __u64 ilbrt, __u64 lbst,
 		unsigned int *logical_block_size, __u16 *metadata_size)
@@ -7394,7 +7397,7 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 		 * Keep the I/O commands behavior same as before.
 		 * Since the error returned by drives unsupported.
 		 */
-		return -ENAVAIL;
+		return ERR_IGNORE_INVALID_FIELD;
 
 	pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
 	if (NVME_FLBAS_META_EXT(ns->flbas)) {
@@ -7449,7 +7452,7 @@ static int init_pi_tags(struct libnvme_transport_handle *hdl,
 		 * Keep the I/O commands behavior same as before.
 		 * Since the error returned by drives unsupported.
 		 */
-		return -ENAVAIL;
+		return ERR_IGNORE_INVALID_FIELD;
 
 	if (invalid_tags(lbst, ilbrt, sts, pif))
 		return -EINVAL;
@@ -7565,7 +7568,7 @@ static int write_zeroes(int argc, char **argv,
 
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst, cfg.lbat,
 			   cfg.lbatm);
-	if (err && err != -ENAVAIL)
+	if (err && err != ERR_IGNORE_INVALID_FIELD)
 		return err;
 
 	err = libnvme_submit_io_passthru(hdl, &cmd);
@@ -7908,7 +7911,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		       cfg.fua, cfg.lr, 0, cfg.dspec, copy->f0);
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst, cfg.lbat,
 		cfg.lbatm);
-	if (err != 0 && err != -ENAVAIL)
+	if (err != 0 && err != ERR_IGNORE_INVALID_FIELD)
 		return err;
 	err = libnvme_submit_io_passthru(hdl, &cmd);
 	if (err) {
@@ -8747,7 +8750,7 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		cfg.block_count, control, 0, NULL, 0, NULL, 0);
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
 		cfg.lbat, cfg.lbatm);
-	if (err != 0 && err != -ENAVAIL)
+	if (err != 0 && err != ERR_IGNORE_INVALID_FIELD)
 		return err;
 	err = libnvme_submit_io_passthru(hdl, &cmd);
 	if (err) {

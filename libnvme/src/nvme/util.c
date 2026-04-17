@@ -9,8 +9,10 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <malloc.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -42,6 +44,13 @@
 /* The bionic libc implementation doesn't define LINE_MAX */
 #ifndef LINE_MAX
 #define LINE_MAX 2048
+#endif
+
+/* Windows errno.h doesn't define these*/
+#if defined (_WIN32) || defined(_WIN64)
+#define EREMOTEIO 121
+#define EDQUOT    122
+#define ERESTART  85
 #endif
 
 /* Source Code Control System, query version of binary with 'what' */
