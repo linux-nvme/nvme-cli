@@ -36,11 +36,7 @@ if host_system != 'windows'
 endif
 
 # Get the list of plugins to build
-if host_system != 'windows'
-  selected_plugins = get_option('plugins')
-else
-  selected_plugins = []
-endif
+selected_plugins = get_option('plugins')
 
 # Build the plugin_sources list from simple plugins
 plugin_sources = []
@@ -59,7 +55,7 @@ if 'feat' in selected_plugins
   subdir('feat')
 endif
 
-if 'lm' in selected_plugins
+if 'lm' in selected_plugins and host_system != 'windows'
   subdir('lm')
 endif
 

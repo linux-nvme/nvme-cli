@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <time.h>
 
+#include <nvme/mkdir.h>
 #include <libnvme.h>
 
 #include "nvme-cmds.h"

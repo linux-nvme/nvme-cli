@@ -73,10 +73,3 @@ static inline int sigaction(int signum, const struct sigaction *act,
 	}
 	return -1;
 }
-
-
-/* sys/stat.h compatibility */
-
-/* Windows _mkdir doesn't take mode parameter */
-/* _mkdir is defined in <direct.h> */
-#define mkdir(path, mode) _mkdir(path)
