@@ -14,6 +14,7 @@
 #include <nvme/types.h>
 
 #include "private.h"
+#include "tree.h"
 #include "compiler-attributes.h"
 
 /* Logging control for stub calls */
