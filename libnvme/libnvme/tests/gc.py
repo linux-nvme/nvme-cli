@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: LGPL-2.1-or-later
+
+
 import gc
-import sys
-import pprint
 from libnvme import nvme
 
 ctx = nvme.global_ctx()
@@ -12,13 +12,16 @@ print(f'ctx: {ctx}')
 host = nvme.host(ctx)
 print(f'host: {host}')
 
+fctx = nvme.fabrics_context(ctx)
+fctx.set_connection(
+    subsysnqn=nvme.NVME_DISC_SUBSYS_NAME,
+    transport='loop',
+)
+print(f'fctx: {fctx}')
+
 ctrls = []
 for i in range(10):
-    ctrl = nvme.ctrl(
-        ctx,
-        subsysnqn=nvme.NVME_DISC_SUBSYS_NAME,
-        transport='loop',
-    )
+    ctrl = nvme.ctrl(ctx, fctx)
     ctrls.append(ctrl)
     print(f'ctrl {i}: {ctrl}')
 

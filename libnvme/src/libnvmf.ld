@@ -11,6 +11,7 @@ LIBNVMF_3 {
 		libnvmf_connect_ctrl;
 		libnvmf_context_create;
 		libnvmf_context_free;
+		libnvmf_context_get_fabrics_config;
 		libnvmf_context_set_connection;
 		libnvmf_context_set_crypto;
 		libnvmf_context_set_device;
@@ -19,17 +20,18 @@ LIBNVMF_3 {
 		libnvmf_context_set_fabrics_config;
 		libnvmf_context_set_hostnqn;
 		libnvmf_context_set_persistent;
-		libnvmf_default_config;
+		libnvmf_create_ctrl;
+		libnvmf_ctrl_get_fabrics_config;
+		libnvmf_disconnect_ctrl;
 		libnvmf_discovery;
+		libnvmf_discovery_args_create;
+		libnvmf_discovery_args_free;
 		libnvmf_discovery_config_file;
 		libnvmf_discovery_config_json;
 		libnvmf_discovery_nbft;
 		libnvmf_eflags_str;
 		libnvmf_exat_ptr_next;
-		libnvmf_free_uri;
 		libnvmf_get_default_trsvcid;
-		libnvmf_discovery_args_create;
-		libnvmf_discovery_args_free;
 		libnvmf_get_discovery_log;
 		libnvmf_is_registration_supported;
 		libnvmf_nbft_free;
@@ -41,7 +43,8 @@ LIBNVMF_3 {
 		libnvmf_subtype_str;
 		libnvmf_treq_str;
 		libnvmf_trtype_str;
-		libnvmf_update_config;
+		libnvmf_uri_free;
+		libnvmf_uri_parse;
 	local:
 		*;
 };

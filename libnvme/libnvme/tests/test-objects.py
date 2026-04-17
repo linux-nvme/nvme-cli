@@ -118,20 +118,26 @@ class TestCtrl(unittest.TestCase):
         gc.collect()
 
     def _make_loop_ctrl(self):
-        return nvme.ctrl(self.ctx, subsysnqn=self.subsysnqn, transport='loop')
+        fctx = nvme.fabrics_context(self.ctx)
+        fctx.set_connection(
+            subsysnqn=self.subsysnqn,
+            transport='loop'
+        )
+        return nvme.ctrl(self.ctx, fctx)
 
     def test_creation_loop_transport(self):
         ctrl = self._make_loop_ctrl()
         self.assertIsNotNone(ctrl)
 
     def test_creation_tcp_transport_with_traddr(self):
-        ctrl = nvme.ctrl(
-            self.ctx,
+        fctx = nvme.fabrics_context(self.ctx)
+        fctx.set_connection(
             subsysnqn=self.subsysnqn,
             transport='tcp',
             traddr='192.168.1.1',
-            trsvcid='4420',
+            trsvcid='4420'
         )
+        ctrl = nvme.ctrl(self.ctx, fctx)
         self.assertIsNotNone(ctrl)
 
     def test_transport_property(self):
@@ -143,22 +149,24 @@ class TestCtrl(unittest.TestCase):
         self.assertEqual(ctrl.subsysnqn, self.subsysnqn)
 
     def test_traddr_property(self):
-        ctrl = nvme.ctrl(
-            self.ctx,
+        fctx = nvme.fabrics_context(self.ctx)
+        fctx.set_connection(
             subsysnqn=self.subsysnqn,
             transport='tcp',
             traddr='10.0.0.1',
         )
+        ctrl = nvme.ctrl(self.ctx, fctx)
         self.assertEqual(ctrl.traddr, '10.0.0.1')
 
     def test_trsvcid_property(self):
-        ctrl = nvme.ctrl(
-            self.ctx,
+        fctx = nvme.fabrics_context(self.ctx)
+        fctx.set_connection(
             subsysnqn=self.subsysnqn,
             transport='tcp',
             traddr='10.0.0.1',
             trsvcid='8009',
         )
+        ctrl = nvme.ctrl(self.ctx, fctx)
         self.assertEqual(ctrl.trsvcid, '8009')
 
     def test_connected_returns_false_before_connect(self):
@@ -175,7 +183,12 @@ class TestCtrl(unittest.TestCase):
         self.assertIn('loop', s)
 
     def test_context_manager(self):
-        with nvme.ctrl(self.ctx, subsysnqn=self.subsysnqn, transport='loop') as c:
+        fctx = nvme.fabrics_context(self.ctx)
+        fctx.set_connection(
+            subsysnqn=self.subsysnqn,
+            transport='loop'
+        )
+        with nvme.ctrl(self.ctx, fctx) as c:
             self.assertIsNotNone(c)
 
     def test_namespaces_iterator_returns_list(self):
@@ -221,11 +234,12 @@ class TestCtrlErrorHandling(unittest.TestCase):
 
     def setUp(self):
         self.ctx = nvme.global_ctx()
-        self.ctrl = nvme.ctrl(
-            self.ctx,
+        fctx = nvme.fabrics_context(self.ctx)
+        fctx.set_connection(
             subsysnqn=nvme.NVME_DISC_SUBSYS_NAME,
             transport='loop',
         )
+        self.ctrl = nvme.ctrl(self.ctx, fctx)
 
     def tearDown(self):
         self.ctrl = None

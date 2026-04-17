@@ -14,7 +14,8 @@
 
 #include <ccan/list/list.h>
 
-#include <nvme/fabrics.h>
+#include "nvme/nvme-types.h"
+#include "nvme/lib-types.h"
 
 const char *libnvme_subsys_sysfs_dir(void);
 const char *libnvme_ctrl_sysfs_dir(void);
@@ -81,6 +82,49 @@ struct linux_passthru_cmd64 {
 #define LIBNVME_URING_CMD_IO_VEC	_IOWR('N', 0x81, struct libnvme_uring_cmd)
 #define LIBNVME_URING_CMD_ADMIN		_IOWR('N', 0x82, struct libnvme_uring_cmd)
 #define LIBNVME_URING_CMD_ADMIN_VEC	_IOWR('N', 0x83, struct libnvme_uring_cmd)
+
+/**
+ * struct libnvme_fabrics_config - Defines all linux nvme fabrics initiator options
+ * @queue_size:		Number of IO queue entries
+ * @nr_io_queues:	Number of controller IO queues to establish
+ * @reconnect_delay:	Time between two consecutive reconnect attempts.
+ * @ctrl_loss_tmo:	Override the default controller reconnect attempt timeout in seconds
+ * @fast_io_fail_tmo:	Set the fast I/O fail timeout in seconds.
+ * @keep_alive_tmo:	Override the default keep-alive-timeout to this value in seconds
+ * @nr_write_queues:	Number of queues to use for exclusively for writing
+ * @nr_poll_queues:	Number of queues to reserve for polling completions
+ * @tos:		Type of service
+ * @keyring_id:		Keyring to store and lookup keys
+ * @tls_key_id:		TLS PSK for the connection
+ * @tls_configured_key_id: TLS PSK for connect command for the connection
+ * @duplicate_connect:	Allow multiple connections to the same target
+ * @disable_sqflow:	Disable controller sq flow control
+ * @hdr_digest:		Generate/verify header digest (TCP)
+ * @data_digest:	Generate/verify data digest (TCP)
+ * @tls:		Start TLS on the connection (TCP)
+ * @concat:		Enable secure concatenation (TCP)
+ */
+struct libnvme_fabrics_config { //!generate-accessors
+	int queue_size;
+	int nr_io_queues;
+	int reconnect_delay;
+	int ctrl_loss_tmo;
+	int fast_io_fail_tmo;
+	int keep_alive_tmo;
+	int nr_write_queues;
+	int nr_poll_queues;
+	int tos;
+	long keyring_id;
+	long tls_key_id;
+	long tls_configured_key_id;
+
+	bool duplicate_connect;
+	bool disable_sqflow;
+	bool hdr_digest;
+	bool data_digest;
+	bool tls;
+	bool concat;
+};
 
 struct libnvme_log {
 	int fd;
@@ -304,63 +348,6 @@ struct libnvme_global_ctx {
 	struct io_uring *ring;
 #endif
 };
-
-struct libnvmf_context {
-	struct libnvme_global_ctx *ctx;
-
-	/* common callbacks */
-	bool (*decide_retry)(struct libnvmf_context *fctx, int err,
-			void *user_data);
-	void (*connected)(struct libnvmf_context *fctx, struct libnvme_ctrl *c,
-			void *user_data);
-	void (*already_connected)(struct libnvmf_context *fctx,
-			struct libnvme_host *host, const char *subsysnqn,
-			const char *transport, const char *traddr,
-			const char *trsvcid, void *user_data);
-
-	/* discovery callbacks */
-	void (*discovery_log)(struct libnvmf_context *fctx,
-			bool connect,
-			struct nvmf_discovery_log *log,
-			uint64_t numrec, void *user_data);
-	int (*parser_init)(struct libnvmf_context *fctx,
-			void *user_data);
-	void (*parser_cleanup)(struct libnvmf_context *fctx,
-			void *user_data);
-	int (*parser_next_line)(struct libnvmf_context *fctx,
-			void *user_data);
-
-	/* discovery defaults */
-	int default_max_discovery_retries;
-	int default_keep_alive_timeout;
-
-	/* common fabrics configuraiton */
-	const char *device;
-	bool persistent;
-	struct libnvme_fabrics_config *cfg;
-
-	/* connection configuration */
-	const char *subsysnqn;
-	const char *transport;
-	const char *traddr;
-	const char *trsvcid;
-	const char *host_traddr;
-	const char *host_iface;
-
-	/* host configuration */
-	const char *hostnqn;
-	const char *hostid;
-
-	/* authentication and transport encryption configuration */
-	const char *hostkey;
-	const char *ctrlkey;
-	const char *keyring;
-	char *tls_key;
-	const char *tls_key_identity;
-
-	void *user_data;
-};
-
 int libnvme_set_attr(const char *dir, const char *attr, const char *value);
 
 int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file);
@@ -381,9 +368,11 @@ struct libnvme_transport_handle *__libnvme_open(struct libnvme_global_ctx *ctx,
 struct libnvme_transport_handle *__libnvme_create_transport_handle(
 		struct libnvme_global_ctx *ctx);
 
+struct libnvmf_context;
+
 int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx,
-		libnvme_ctrl_t *cp);
+		struct libnvme_ctrl **cp);
 bool _libnvme_ctrl_match_config(struct libnvme_ctrl *c,
 		struct libnvmf_context *fctx);
 
@@ -393,16 +382,18 @@ void *__libnvme_realloc(void *p, size_t len);
 
 void __libnvme_free(void *p);
 
-libnvme_host_t libnvme_lookup_host(struct libnvme_global_ctx *ctx,
+void nvme_deconfigure_ctrl(struct libnvme_ctrl *c);
+
+struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid);
-libnvme_subsystem_t libnvme_lookup_subsystem(struct libnvme_host *h,
+struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 		const char *name, const char *subsysnqn);
-libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
-		struct libnvmf_context *fctx, libnvme_ctrl_t p);
-libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
+struct libnvme_ctrl * libnvme_lookup_ctrl(struct libnvme_subsystem * s,
+		struct libnvmf_context *fctx, struct libnvme_ctrl *p);
+struct libnvme_ctrl * libnvme_ctrl_find(struct libnvme_subsystem *s,
 		struct libnvmf_context *fctx);
 
-void __libnvme_free_host(libnvme_host_t h);
+void __libnvme_free_host(struct libnvme_host * h);
 
 #if (LOG_FUNCNAME == 1)
 #define __libnvme_log_func __func__
@@ -420,8 +411,8 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 #define SECTOR_SIZE	512
 #define SECTOR_SHIFT	9
 
-int __libnvme_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
-		long *keyring_id, long *key_id);
+int __libnvme_import_keys_from_config(struct libnvme_host *h,
+		struct libnvme_ctrl *c, long *keyring_id, long *key_id);
 
 static inline char *xstrdup(const char *s)
 {
@@ -611,7 +602,7 @@ static inline __u16 nvmf_exat_size(size_t val_len)
  *
  * Return: On success 0, else error code.
  */
-int libnvme_ns_get_transport_handle(libnvme_ns_t n,
+int libnvme_ns_get_transport_handle(struct libnvme_ns *n,
 		struct libnvme_transport_handle **hdl);
 
 /**
@@ -619,7 +610,7 @@ int libnvme_ns_get_transport_handle(libnvme_ns_t n,
  * @n:	Namespace instance
  *
  */
-void libnvme_ns_release_transport_handle(libnvme_ns_t n);
+void libnvme_ns_release_transport_handle(struct libnvme_ns *n);
 
 /**
  * libnvme_mi_admin_admin_passthru() - Submit an nvme admin passthrough command

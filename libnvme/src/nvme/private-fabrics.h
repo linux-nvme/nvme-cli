@@ -7,7 +7,67 @@
  */
 #pragma once
 
+#include <nvme/fabrics.h>
 #include <nvme/tree.h>
+
+#include "nvme/private.h"
+
+struct libnvmf_context {
+	struct libnvme_global_ctx *ctx;
+
+	/* common callbacks */
+	bool (*decide_retry)(struct libnvmf_context *fctx, int err,
+			void *user_data);
+	void (*connected)(struct libnvmf_context *fctx, struct libnvme_ctrl *c,
+			void *user_data);
+	void (*already_connected)(struct libnvmf_context *fctx,
+			struct libnvme_host *host, const char *subsysnqn,
+			const char *transport, const char *traddr,
+			const char *trsvcid, void *user_data);
+
+	/* discovery callbacks */
+	void (*discovery_log)(struct libnvmf_context *fctx,
+			bool connect,
+			struct nvmf_discovery_log *log,
+			uint64_t numrec, void *user_data);
+	int (*parser_init)(struct libnvmf_context *fctx,
+			void *user_data);
+	void (*parser_cleanup)(struct libnvmf_context *fctx,
+			void *user_data);
+	int (*parser_next_line)(struct libnvmf_context *fctx,
+			void *user_data);
+
+	/* discovery defaults */
+	int default_max_discovery_retries;
+	int default_keep_alive_timeout;
+
+	/* common fabrics configuration */
+	const char *device;
+	bool persistent;
+	struct libnvme_fabrics_config cfg;
+
+	/* connection configuration */
+	const char *subsysnqn;
+	const char *transport;
+	const char *traddr;
+	const char *trsvcid;
+	const char *host_traddr;
+	const char *host_iface;
+
+	/* host configuration */
+	const char *hostnqn;
+	const char *hostid;
+
+	/* authentication and transport encryption configuration */
+	const char *hostkey;
+	const char *ctrlkey;
+	const char *keyring;
+	char *tls_key;
+	const char *tls_key_identity;
+
+	void *user_data;
+};
+
 
 /**
  * NVMe-oF private struct definitions.
@@ -22,3 +82,31 @@ struct libnvmf_discovery_args { /*!generate-accessors*/
 	int max_retries;
 	__u8 lsp;
 };
+
+/**
+ * struct libnvmf_uri - Parsed URI structure
+ * @scheme:		Scheme name (typically 'nvme')
+ * @protocol:		Optional protocol/transport (e.g. 'tcp')
+ * @userinfo:		Optional user information component of the URI authority
+ * @host:		Host transport address
+ * @port:		The port subcomponent or 0 if not specified
+ * @path_segments:	NULL-terminated array of path segments
+ * @query:		Optional query string component (separated by '?')
+ * @fragment:		Optional fragment identifier component
+ *			(separated by '#')
+ */
+struct libnvmf_uri { //!generate-accessors
+	char *scheme;
+	char *protocol;
+	char *userinfo;
+	char *host;
+	int port;
+	char **path_segments;
+	char *query;
+	char *fragment;
+};
+
+bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
+		const char *transport, const char *traddr);
+
+void libnvmf_default_config(struct libnvme_fabrics_config *cfg);

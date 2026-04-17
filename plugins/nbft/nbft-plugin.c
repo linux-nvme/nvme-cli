@@ -50,7 +50,7 @@ static char *mac_addr_to_string(unsigned char mac_addr[6])
 }
 
 #ifdef CONFIG_JSONC
-static json_object *hfi_to_json(struct nbft_info_hfi *hfi)
+static json_object *hfi_to_json(struct libnbft_hfi *hfi)
 {
 	struct json_object *hfi_json;
 
@@ -101,7 +101,7 @@ fail:
 	return NULL;
 }
 
-static json_object *ssns_to_json(struct nbft_info_subsystem_ns *ss)
+static json_object *ssns_to_json(struct libnbft_subsystem_ns *ss)
 {
 	struct json_object *ss_json;
 	struct json_object *hfi_array_json;
@@ -136,21 +136,21 @@ static json_object *ssns_to_json(struct nbft_info_subsystem_ns *ss)
 	json_str_p = json_str;
 
 	switch (ss->nid_type) {
-	case NBFT_INFO_NID_TYPE_EUI64:
+	case LIBNBFT_NID_TYPE_EUI64:
 		if (json_object_add_value_string(ss_json, "nid_type", "eui64"))
 			goto fail;
 		for (i = 0; i < 8; i++)
 			json_str_p += sprintf(json_str_p, "%02x", ss->nid[i]);
 		break;
 
-	case NBFT_INFO_NID_TYPE_NGUID:
+	case LIBNBFT_NID_TYPE_NGUID:
 		if (json_object_add_value_string(ss_json, "nid_type", "nguid"))
 			goto fail;
 		for (i = 0; i < 16; i++)
 			json_str_p += sprintf(json_str_p, "%02x", ss->nid[i]);
 		break;
 
-	case NBFT_INFO_NID_TYPE_NS_UUID:
+	case LIBNBFT_NID_TYPE_NS_UUID:
 		if (json_object_add_value_string(ss_json, "nid_type", "uuid"))
 			goto fail;
 		libnvme_uuid_to_string(ss->nid, json_str);
@@ -185,7 +185,7 @@ fail:
 	return NULL;
 }
 
-static json_object *discovery_to_json(struct nbft_info_discovery *disc)
+static json_object *discovery_to_json(struct libnbft_discovery *disc)
 {
 	struct json_object *disc_json;
 
@@ -211,18 +211,18 @@ static json_object *discovery_to_json(struct nbft_info_discovery *disc)
 static const char *primary_admin_host_flag_to_str(unsigned int primary)
 {
 	static const char * const str[] = {
-		[NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED] =	"not indicated",
-		[NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_UNSELECTED] =	"unselected",
-		[NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_SELECTED] =		"selected",
-		[NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_RESERVED] =		"reserved",
+		[LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED] =	"not indicated",
+		[LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_UNSELECTED] =	"unselected",
+		[LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_SELECTED] =		"selected",
+		[LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_RESERVED] =		"reserved",
 	};
 
-	if (primary > NBFT_INFO_PRIMARY_ADMIN_HOST_FLAG_RESERVED)
+	if (primary > LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_RESERVED)
 		return "INVALID";
 	return str[primary];
 }
 
-static struct json_object *nbft_to_json(struct nbft_info *nbft, bool show_subsys,
+static struct json_object *nbft_to_json(struct libnbft_info *nbft, bool show_subsys,
 					bool show_hfi, bool show_discovery)
 {
 	struct json_object *nbft_json, *host_json;
@@ -256,7 +256,7 @@ static struct json_object *nbft_to_json(struct nbft_info *nbft, bool show_subsys
 
 	if (show_subsys) {
 		struct json_object *subsys_array_json, *subsys_json;
-		struct nbft_info_subsystem_ns **ss;
+		struct libnbft_subsystem_ns **ss;
 
 		subsys_array_json = json_create_array();
 		if (!subsys_array_json)
@@ -277,7 +277,7 @@ static struct json_object *nbft_to_json(struct nbft_info *nbft, bool show_subsys
 	}
 	if (show_hfi) {
 		struct json_object *hfi_array_json, *hfi_json;
-		struct nbft_info_hfi **hfi;
+		struct libnbft_hfi **hfi;
 
 		hfi_array_json = json_create_array();
 		if (!hfi_array_json)
@@ -298,7 +298,7 @@ static struct json_object *nbft_to_json(struct nbft_info *nbft, bool show_subsys
 	}
 	if (show_discovery) {
 		struct json_object *discovery_array_json, *discovery_json;
-		struct nbft_info_discovery **disc;
+		struct libnbft_discovery **disc;
 
 		discovery_array_json = json_create_array();
 		if (!discovery_array_json)
@@ -356,9 +356,9 @@ fail:
 #define json_show_nbfts(nbft_list, show_subsys, show_hfi, show_discovery) -EINVAL
 #endif /* CONFIG_JSONC */
 
-static void print_nbft_hfi_info(struct nbft_info *nbft)
+static void print_nbft_hfi_info(struct libnbft_info *nbft)
 {
-	struct nbft_info_hfi **hfi;
+	struct libnbft_hfi **hfi;
 	unsigned int ip_width = 8, gw_width = 8, dns_width = 8;
 
 	hfi = nbft->hfi_list;
@@ -400,9 +400,9 @@ static void print_nbft_hfi_info(struct nbft_info *nbft)
 		       dns_width, dns_width, (*hfi)->tcp_info.primary_dns_ipaddr);
 }
 
-static void print_nbft_discovery_info(struct nbft_info *nbft)
+static void print_nbft_discovery_info(struct libnbft_info *nbft)
 {
-	struct nbft_info_discovery **disc;
+	struct libnbft_discovery **disc;
 	unsigned int nqn_width = 20, uri_width = 12;
 
 	disc = nbft->discovery_list;
@@ -431,7 +431,7 @@ static void print_nbft_discovery_info(struct nbft_info *nbft)
 }
 
 #define HFIS_LEN 20
-static size_t print_hfis(const struct nbft_info_subsystem_ns *ss, char buf[HFIS_LEN])
+static size_t print_hfis(const struct libnbft_subsystem_ns *ss, char buf[HFIS_LEN])
 {
 	char hfi_buf[HFIS_LEN];
 	size_t len, ofs;
@@ -460,9 +460,9 @@ static size_t print_hfis(const struct nbft_info_subsystem_ns *ss, char buf[HFIS_
 }
 
 
-static void print_nbft_subsys_info(struct nbft_info *nbft)
+static void print_nbft_subsys_info(struct libnbft_info *nbft)
 {
-	struct nbft_info_subsystem_ns **ss;
+	struct libnbft_subsystem_ns **ss;
 	unsigned int nqn_width = 20, adr_width = 8, hfi_width = 4;
 
 	ss = nbft->subsystem_ns_list;
@@ -499,7 +499,7 @@ static void print_nbft_subsys_info(struct nbft_info *nbft)
 	}
 }
 
-static void normal_show_nbft(struct nbft_info *nbft, bool show_subsys,
+static void normal_show_nbft(struct libnbft_info *nbft, bool show_subsys,
 			     bool show_hfi, bool show_discovery)
 {
 	printf("%s:\n", nbft->filename);

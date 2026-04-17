@@ -77,7 +77,9 @@ if host_system != 'windows'
             libnvme_test_dep,
         ],
     )
+endif # host_system != 'windows'
 
+if want_mi
     mi = executable(
         'test-mi',
         ['mi.c', 'utils.c'],
@@ -101,7 +103,7 @@ if host_system != 'windows'
     )
 
     test('libnvme - mi-mctp', mi_mctp)
-endif # host_system != 'windows'
+endif
 
 uuid = executable(
     'test-uuid',
@@ -115,20 +117,40 @@ uuid = executable(
 
 test('libnvme - uuid', uuid)
 
-if host_system != 'windows'
-    if want_fabrics
-        uriparser = executable(
-            'test-uriparser',
-            ['uriparser.c'],
-            dependencies: [
-                config_dep,
-                ccan_dep,
-                libnvme_dep,
-            ],
-        )
+if want_fabrics
+    uriparser = executable(
+        'test-uriparser',
+        ['uriparser.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
 
-        test('libnvme - uriparser', uriparser)
-    endif
+    test('libnvme - uriparser', uriparser)
+
+    test_fabrics = executable(
+        'test-fabrics',
+        ['test-fabrics.c'],
+        # -fgnu89-inline: '#define static' (used to expose static helpers
+        # for unit testing) turns 'static inline' into plain 'inline'.
+        # Under C99, plain 'inline' has external linkage and may require an
+        # external symbol definition that doesn't exist for header-only
+        # inline functions.  GNU89 semantics treat it as an inlining hint
+        # only, avoiding the linker failure in -static builds.
+        c_args: ['-fgnu89-inline'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+
+    test('libnvme - fabrics', test_fabrics)
+endif
+
+if host_system != 'windows'
 
     if conf.get('HAVE_NETDB')
         mock_ifaddrs = library(
@@ -208,6 +230,7 @@ foreach hdr : [
     'linux',
     'mi',
     'nbft',
+    'nbft-types',
     'nvme-cmds',
     'nvme-types',
     'tree',
