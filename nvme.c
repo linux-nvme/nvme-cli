@@ -253,6 +253,7 @@ struct nvme_args nvme_args = {
 };
 
 static void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable);
+static int munmap_registers(void *addr);
 
 static OPT_VALS(feature_name) = {
 	VAL_BYTE("arbitration", NVME_FEAT_FID_ARBITRATION),
@@ -1103,7 +1104,7 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 
 		if (bar) {
 			cap = mmio_read64(bar + NVME_REG_CAP);
-			munmap(bar, getpagesize());
+			munmap_registers(bar);
 		} else {
 			nvme_init_get_property(&cmd, NVME_REG_CAP);
 			err = libnvme_submit_admin_passthru(hdl, &cmd);
@@ -5798,8 +5799,9 @@ static int nvme_get_properties(struct libnvme_transport_handle *hdl, void **pbar
 
 static void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable)
 {
+	void *membase = NULL;
+#ifdef HAVE_MMAP
 	char path[512];
-	void *membase;
 	int fd;
 	int prot = PROT_READ;
 
@@ -5828,7 +5830,17 @@ static void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable)
 	}
 
 	close(fd);
+#endif
 	return membase;
+}
+
+static int munmap_registers(void *addr)
+{
+#ifdef HAVE_MMAP
+	return munmap(addr, getpagesize());
+#else
+	return 0;
+#endif
 }
 
 static int show_registers(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -5882,7 +5894,7 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 	if (cfg.fabrics)
 		free(bar);
 	else
-		munmap(bar, getpagesize());
+		munmap_registers(bar);
 
 	return 0;
 }
@@ -6167,7 +6179,7 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 	if (fabrics)
 		free(bar);
 	else
-		munmap(bar, getpagesize());
+		munmap_registers(bar);
 
 	return err;
 }
@@ -6451,7 +6463,7 @@ static int set_register(int argc, char **argv, struct command *acmd, struct plug
 		err = set_register_names(hdl, bar, opts, &cfg);
 
 	if (bar)
-		munmap(bar, getpagesize());
+		munmap_registers(bar);
 
 	return err;
 }

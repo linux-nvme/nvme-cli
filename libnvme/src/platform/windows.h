@@ -221,28 +221,6 @@ static inline int sigaction(int signum, const struct sigaction *act,
 #define mkdir(path, mode) _mkdir(path)
 
 
-/* mman.h memory mapping stubs - not supported on Windows */
-
-#define PROT_READ  0x1
-#define PROT_WRITE 0x2
-#define MAP_SHARED 0x01
-#define MAP_FAILED ((void *) -1)
-
-static inline void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
-{
-	(void)addr; (void)length; (void)prot; (void)flags; (void)fd; (void)offset;
-	errno = ENOSYS;
-	return MAP_FAILED;
-}
-
-static inline int munmap(void *addr, size_t length)
-{
-	(void)addr; (void)length;
-	errno = ENOSYS;
-	return -1;
-}
-
-
 /* dlfcn.h compatibility */
 
 static inline void *dlsym(void *handle, const char *symbol)
