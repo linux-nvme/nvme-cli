@@ -430,12 +430,15 @@ class TestNVMe(unittest.TestCase):
 
         # Try to find block device for 5 seconds
         device_path = f"{self.ctrl}n{str(nsid)}"
-        stop_time = time.time() + 5
+        start_time = time.time()
+        stop_time = start_time + 5
         while time.time() < stop_time:
             if os.path.exists(device_path) and stat.S_ISBLK(os.stat(device_path).st_mode):
+                print(f"##### Found {device_path} in {time.time() - start_time} seconds")
                 return 0
             time.sleep(0.1)
 
+        print(f"##### Failed to find {device_path} in {time.time() - start_time} seconds")
         return 1
 
     def detach_ns(self, ctrl_id, nsid):
