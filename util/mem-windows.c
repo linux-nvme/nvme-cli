@@ -9,8 +9,10 @@
 #include <malloc.h>
 #include <string.h>
 
+#include <memoryapi.h>
+
 #include <nvme/stdlib.h>
-#include "platform/includes.h" /* unistd.h + compatibility */
+#include <nvme/unistd.h>
 
 #include "mem.h"
 #include "common.h"

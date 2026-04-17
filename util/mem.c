@@ -2,8 +2,9 @@
 #include <malloc.h>
 #include <string.h>
 
+#include <nvme/malloc.h>
 #include <nvme/stdlib.h>
-#include <platform/includes.h>	/* getpagesize, malloc_usable_size */
+#include <nvme/unistd.h>
 
 #include "mem.h"
 

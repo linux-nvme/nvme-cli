@@ -167,50 +167,6 @@ static inline FILE *open_memstream(char **ptr, size_t *sizeloc)
 }
 
 
-/* malloc.h compatibility*/
-
-static inline size_t malloc_usable_size(void *ptr)
-{
-	return _msize(ptr);
-}
-
-
-/* unistd.h POSIX compatibility */
-
-#define STDERR_FILENO 2
-#define STDOUT_FILENO 1
-#define STDIN_FILENO  0
-
-/* getpagesize implementation for Windows */
-static inline DWORD getpagesize(void)
-{
-	SYSTEM_INFO si;
-
-	GetSystemInfo(&si);
-	return si.dwPageSize;
-}
-
-/*
- * readlink stub - Windows doesn't have symbolic links in the same way
- * NOTE: This is only used by micron-nvme.c, and can be removed once that
- * has been refactored to not rely on Linux-specific sysfs paths.
- */
-static inline int readlink(const char *path, char *buf, size_t bufsiz)
-{
-	(void)path;
-	(void)buf;
-	(void)bufsiz;
-	errno = EINVAL;
-	return -1;
-}
-
-/* fsync implementation for Windows */
-static inline int fsync(int fd)
-{
-	return _commit(fd);
-}
-
-
 /* time.h POSIX compatibility */
 
 static inline struct tm *gmtime_r(const time_t *timep, struct tm *result)

@@ -9,7 +9,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <malloc.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +25,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <nvme/malloc.h>
 #include <nvme/stdlib.h>
 
 #include <ccan/endian/endian.h>
