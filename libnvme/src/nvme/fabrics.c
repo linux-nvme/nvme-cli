@@ -1415,7 +1415,7 @@ static int nvme_discovery_log(libnvme_ctrl_t ctrl,
 		if (numrec == 0)
 			break;
 
-		__libnvme_free(log);
+		free(log);
 		entries_size = sizeof(*log->entries) * numrec;
 		log = __libnvme_alloc(sizeof(*log) + entries_size);
 		if (!log) {
@@ -1472,7 +1472,7 @@ static int nvme_discovery_log(libnvme_ctrl_t ctrl,
 	}
 
 out_free_log:
-	__libnvme_free(log);
+	free(log);
 	return err;
 }
 
@@ -1784,7 +1784,7 @@ static const char *dctype_str[] = {
  */
 static int nvme_fetch_cntrltype_dctype_from_id(libnvme_ctrl_t c)
 {
-	__cleanup_nvme_free struct nvme_id_ctrl *id = NULL;
+	__cleanup_free struct nvme_id_ctrl *id = NULL;
 	int ret;
 
 	id = __libnvme_alloc(sizeof(*id));
@@ -2255,7 +2255,7 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, libnvme_host_t h,
 		struct libnvme_ctrl **ctrl)
 {
-	__cleanup_nvme_free struct nvme_id_ctrl *id = NULL;
+	__cleanup_free struct nvme_id_ctrl *id = NULL;
 	struct libnvme_ctrl *c;
 	int ret;
 

@@ -380,8 +380,6 @@ void *__libnvme_alloc(size_t len);
 
 void *__libnvme_realloc(void *p, size_t len);
 
-void __libnvme_free(void *p);
-
 void nvme_deconfigure_ctrl(struct libnvme_ctrl *c);
 
 struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,

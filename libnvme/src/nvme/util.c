@@ -1028,15 +1028,10 @@ void *__libnvme_realloc(void *p, size_t len)
 
 	if (p && result) {
 		memcpy(result, p, min(old_len, len));
-		__libnvme_free(p);
+		aligned_free(p);
 	}
 
 	return result;
-}
-
-void __libnvme_free(void *p)
-{
-	aligned_free(p);
 }
 
 #ifdef CONFIG_FABRICS
