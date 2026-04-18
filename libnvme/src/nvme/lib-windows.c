@@ -11,8 +11,8 @@
 #include "compiler-attributes.h"
 
 
-/* fstat implementation for device HANDLE */
-static int __libnvme_fd_fstat(libnvme_fd_t fd, struct stat *buf)
+/* fstat implementation for Windows device HANDLE */
+static int __handle_fstat(HANDLE fd, struct stat *buf)
 {
 	BY_HANDLE_FILE_INFORMATION file_info;
 	ULARGE_INTEGER ull;
@@ -126,7 +126,7 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 
 	hdl->fd = h;
 
-	__libnvme_fd_fstat(hdl->fd, &hdl->stat);
+	__handle_fstat(hdl->fd, &hdl->stat);
 
 	/* Windows doesn't distinguish 32/64-bit ioctl, assume 64-bit capable */
 	hdl->ioctl_admin64 = true;
