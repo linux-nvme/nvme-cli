@@ -39,9 +39,12 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef HAVE_MMAP
+#include <sys/mman.h>
+#endif
+
 #include <sys/stat.h>
 #include <sys/types.h>
-
 
 #include <libnvme.h>
 

@@ -1,6 +1,12 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
+#include <stdlib.h>
+#include <unistd.h>
 #include <malloc.h>
 #include <string.h>
+
+#ifdef HAVE_MMAP
+#include <sys/mman.h>
+#endif
 
 #include <nvme/malloc.h>
 #include <nvme/stdlib.h>

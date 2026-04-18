@@ -17,6 +17,10 @@
 #include <ifaddrs.h>
 #endif
 
+#ifndef _WIN32
+#include <sys/ioctl.h>
+#endif
+
 #include <libnvme.h>
 
 #include "cleanup.h"

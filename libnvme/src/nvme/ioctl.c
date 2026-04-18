@@ -11,8 +11,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+#include <sys/stat.h>
 
 #ifndef _WIN32
+#include <sys/ioctl.h>
 #include <linux/fs.h>
 #endif
 
