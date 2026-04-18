@@ -17,6 +17,7 @@
 #include <time.h>
 
 #include <libnvme.h>
+#include <nvme/fcntl.h>
 
 #include "common.h"
 #include "logging.h"
@@ -1188,11 +1189,7 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 	}
 	memset(hdr, 0, bs);
 
-#ifdef O_BINARY	/* required for Windows, not defined on Linux */
 	fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
-#else
-	fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-#endif
 	if (fd < 0) {
 		fprintf(stderr, "Failed to open output file %s: %s!\n",
 				output_file, libnvme_strerror(errno));
