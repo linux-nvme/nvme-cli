@@ -947,3 +947,37 @@ int libnvme_mi_aem_disable(libnvme_mi_ep_t ep);
  * Return: 0 is a success, nonzero is an error and errno may be read for further details
  */
 int libnvme_mi_aem_process(libnvme_mi_ep_t ep, void *userdata);
+
+/**
+ * libnvme_mi_submit_entry() - Weak hook called before an MI message is sent.
+ * @type:	MCTP message type
+ * @hdr:	Pointer to the MI message header
+ * @hdr_len:	Length of the message header in bytes
+ * @data:	Pointer to message payload data
+ * @data_len:	Length of payload data in bytes
+ *
+ * This is a weak symbol that can be overridden by an application to intercept
+ * outgoing MI messages for tracing or testing purposes.  The return value is
+ * passed back as @user_data to the matching libnvme_mi_submit_exit() call.
+ *
+ * Return: An opaque pointer passed to libnvme_mi_submit_exit(), or NULL.
+ */
+void *libnvme_mi_submit_entry(__u8 type, const struct nvme_mi_msg_hdr *hdr,
+			      size_t hdr_len, const void *data, size_t data_len);
+
+/**
+ * libnvme_mi_submit_exit() - Weak hook called after an MI message completes.
+ * @type:	MCTP message type
+ * @hdr:	Pointer to the MI response message header
+ * @hdr_len:	Length of the response message header in bytes
+ * @data:	Pointer to response payload data
+ * @data_len:	Length of response payload data in bytes
+ * @user_data:	Value returned by the matching libnvme_mi_submit_entry() call
+ *
+ * This is a weak symbol that can be overridden by an application to intercept
+ * completed MI transactions.  Called with the opaque pointer returned by the
+ * corresponding libnvme_mi_submit_entry() call.
+ */
+void libnvme_mi_submit_exit(__u8 type, const struct nvme_mi_msg_hdr *hdr,
+			    size_t hdr_len, const void *data, size_t data_len,
+			    void *user_data);

@@ -405,6 +405,19 @@ struct libnvme_fabrics_config *libnvmf_context_get_fabrics_config(
 		struct libnvmf_context *fctx);
 
 /**
+ * libnvmf_context_set_fabrics_config() - Set fabrics configuration for a
+ * fabrics context
+ * @fctx: Fabrics context
+ * @cfg:  Fabrics configuration to apply
+ *
+ * Copies the fields of @cfg into the fabrics configuration of @fctx.
+ *
+ * Return: 0 on success, or a negative error code on failure.
+ */
+int libnvmf_context_set_fabrics_config(struct libnvmf_context *fctx,
+		struct libnvme_fabrics_config *cfg);
+
+/**
  * libnvmf_ctrl_get_fabrics_config() - Fabrics configuration of a controller
  * @c:	Controller instance
  *
