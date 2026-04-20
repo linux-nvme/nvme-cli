@@ -4,8 +4,12 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/types.h>
+
+#ifdef CONFIG_FABRICS
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#endif
+
 #include <ccan/compiler/compiler.h>
 
 #include <libnvme.h>

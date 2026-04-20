@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <sys/ioctl.h>
 #include <sys/time.h>
 
 #include <ccan/endian/endian.h>
