@@ -553,6 +553,7 @@ static const char *desc_doper = "directive operation";
 static const char *desc_dps = "data protection settings (DPS)";
 static const char *desc_dspec = "directive specific (for write-only)";
 static const char *desc_dspec_w_dtype = "directive specification associated with directive type";
+static const char *desc_dsm = "dataset management field (for write-only)";
 static const char *desc_dst_entries = "Indicate how many DST log entries to be retrieved, "
 	"by default all the 20 entries will be retrieved";
 static const char *desc_dtype = "directive type";
@@ -8474,7 +8475,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		  OPT_FLAG("storage-tag-check", 'C', &cfg.stc,               desc_storage_tag_check),
 		  OPT_BYTE("dir-type",          'T', &cfg.dtype,             desc_dtype_for_write),
 		  OPT_SHRT("dir-spec",          'S', &cfg.dspec,             desc_dspec),
-		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            desc_cmd_dsm),
+		  OPT_BYTE("dsm",               'D', &cfg.dsmgmt,            desc_dsm),
 		  OPT_FLAG("show-command",      'V', &cfg.show,              desc_show_submit_io),
 		  OPT_FLAG("latency",           't', &cfg.latency,           desc_latency),
 		  OPT_FLAG("force",               0, &cfg.force,             desc_force_submit_io));
