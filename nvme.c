@@ -39,13 +39,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <linux/fs.h>
-
-#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
 
 #include <libnvme.h>
 
@@ -6813,19 +6809,12 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 			 * to the given one because blkdev will not
 			 * update by itself without re-opening fd.
 			 */
-			if (ioctl(libnvme_transport_handle_get_fd(hdl), BLKBSZSET,
-				  &block_size) < 0) {
+			err = libnvme_update_block_size(hdl, block_size);
+			if (err < 0) {
 				nvme_show_error(
 				    "failed to set block size to %d",
 				    block_size);
-				return -errno;
-			}
-
-			if (ioctl(libnvme_transport_handle_get_fd(hdl),
-				  BLKRRPART) < 0) {
-				nvme_show_error(
-				    "failed to re-read partition table");
-				return -errno;
+				return err;
 			}
 		}
 	}

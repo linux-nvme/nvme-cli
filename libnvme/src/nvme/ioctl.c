@@ -13,6 +13,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <linux/fs.h>
+
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 
@@ -90,6 +92,23 @@ __public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
 		return -errno;
 
 	*nsid = tmp;
+	return 0;
+}
+
+__public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
+		int block_size)
+{
+	int ret;
+	int fd = libnvme_transport_handle_get_fd(hdl);
+
+	ret = ioctl(fd, BLKBSZSET, &block_size);
+	if (ret < 0)
+		return -errno;
+
+	ret = ioctl(fd, BLKRRPART);
+	if (ret < 0)
+		return -errno;
+
 	return 0;
 }
 

@@ -96,3 +96,16 @@ int libnvme_rescan_ns(struct libnvme_transport_handle *hdl);
  * Return: 0 if @nsid was set successfully or -1 with errno set otherwise.
  */
 int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid);
+
+/**
+ * libnvme_update_block_size() - Update the block size
+ * @hdl:	Transport handle
+ * @block_size:	New block size
+ *
+ * Notify the kernel blkdev to update its block size after a block size change.
+ * This should only be used for namespace handles, not controllers.
+ *
+ * Return: 0 if the block size was updated or a negative error code otherwise.
+ */
+int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
+		int block_size);
