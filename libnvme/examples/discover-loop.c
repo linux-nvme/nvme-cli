@@ -94,7 +94,7 @@ int main()
 		goto free_fctx;
 	}
 
-	ret = libnvmf_discovery_args_create(&args);
+	ret = libnvmf_discovery_args_new(&args);
 	if (!ret) {
 		libnvmf_discovery_args_set_max_retries(args, 4);
 		ret = libnvmf_get_discovery_log(c, args, &log);

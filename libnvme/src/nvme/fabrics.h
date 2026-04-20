@@ -157,7 +157,7 @@ int libnvmf_connect_ctrl(libnvme_ctrl_t c);
 /*
  * struct libnvmf_discovery_args - Opaque arguments for libnvmf_get_discovery_log()
  *
- * Allocate with libnvmf_discovery_args_create() and release with
+ * Allocate with libnvmf_discovery_args_new() and release with
  * libnvmf_discovery_args_free(). Use the setter/getter accessors to configure
  * fields; do not access members directly.
  */
@@ -167,23 +167,6 @@ struct libnvmf_discovery_args;
  * struct libnvmf_uri - Opaque data struct for URI
  */
 struct libnvmf_uri;
-
-/**
- * libnvmf_discovery_args_create() - Allocate a discovery args object
- * @argsp:	On success, set to the newly allocated object
- *
- * Allocates and initialises a &struct libnvmf_discovery_args with sensible
- * defaults. The caller must release it with libnvmf_discovery_args_free().
- *
- * Return: 0 on success, or a negative error code on failure.
- */
-int libnvmf_discovery_args_create(struct libnvmf_discovery_args **argsp);
-
-/**
- * libnvmf_discovery_args_free() - Release a discovery args object
- * @args:	Object previously returned by libnvmf_discovery_args_create()
- */
-void libnvmf_discovery_args_free(struct libnvmf_discovery_args *args);
 
 /**
  * libnvmf_get_discovery_log() - Fetch the NVMe-oF discovery log page

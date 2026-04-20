@@ -236,7 +236,7 @@ long libnvme_fabrics_config_get_tls_key_id(
 		const struct libnvme_fabrics_config *p);
 
 /**
- * libnvme_fabrics_config_set_tls_configured_key_id() - Set tls_configured_key_id.
+ * libnvme_fabrics_config_set_tls_configured_key_id() - Setter.
  * @p: The &struct libnvme_fabrics_config instance to update.
  * @tls_configured_key_id: Value to assign to the tls_configured_key_id field.
  */
@@ -245,7 +245,7 @@ void libnvme_fabrics_config_set_tls_configured_key_id(
 		long tls_configured_key_id);
 
 /**
- * libnvme_fabrics_config_get_tls_configured_key_id() - Get tls_configured_key_id.
+ * libnvme_fabrics_config_get_tls_configured_key_id() - Getter.
  * @p: The &struct libnvme_fabrics_config instance to query.
  *
  * Return: The value of the tls_configured_key_id field.
