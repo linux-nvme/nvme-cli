@@ -14,6 +14,12 @@ if want_python
         swig_cmd = [swig, '-python', '-o', '@OUTPUT1@', '@INPUT0@']
     endif
 
+    py_compat_c_args = []
+    if not cc.has_header_symbol('Python.h', 'Py_NewRef', dependencies: py3_dep)
+        warning('Python < 3.10 detected: providing Py_NewRef compatibility shim in nvme.i')
+        py_compat_c_args = ['-DSWIG_COMPAT_PY_NEWREF']
+    endif
+
     pymod_swig = custom_target(
         'nvme.py',
         input:   ['nvme.i'],
@@ -28,6 +34,7 @@ if want_python
     pynvme_clib = python3.extension_module(
         '_nvme',
         nvme_wrap_c,
+        c_args: py_compat_c_args,
         dependencies: [config_dep, ccan_dep, libnvme_dep, py3_dep],
         install: true,
         subdir: 'libnvme',

@@ -10,6 +10,16 @@
                clashes with the same macro defined in Python.h.
  */
 #undef fallthrough
+
+/* WORKAROUND: Py_NewRef() was introduced in Python 3.10. SWIG >= 4.1 generates
+               calls to it in its runtime boilerplate. On older distributions,
+               meson detects the absence of Py_NewRef and passes
+               -DSWIG_COMPAT_PY_NEWREF so we can provide a macro shim here,
+               before Python.h is included.
+ */
+#ifdef SWIG_COMPAT_PY_NEWREF
+#define Py_NewRef(obj) (Py_INCREF(obj), (obj))
+#endif
 %}
 
 %module(docstring="Python bindings for libnvme") nvme
