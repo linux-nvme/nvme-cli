@@ -4,15 +4,12 @@
 
 from libnvme import nvme
 
-ctx = nvme.global_ctx()      
+ctx = nvme.global_ctx()
 ctx.log_level('debug')
 
-fctx = nvme.fabrics_context(ctx)
-fctx.set_connection(
-    subsysnqn=nvme.NVME_DISC_SUBSYS_NAME,
-    transport='loop',
-    traddr='127.0.0.1',
-    trsvcid='8009',
-)
-
-ctrl = nvme.ctrl(ctx, fctx)
+ctrl = nvme.ctrl(ctx, {
+    'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME,
+    'transport': 'loop',
+    'traddr': '127.0.0.1',
+    'trsvcid': '8009',
+})
