@@ -196,8 +196,8 @@ static const char *desc_cmd_capacity_mgmt = "Host software uses the Capacity Man
 	"selecting one of a set of supported configurations or by specifying the\n"
 	"capacity of the Endurance Group or NVM Set to be created";
 static const char *desc_cmd_cmd_set_independent_id_ns = "Send an I/O Command Set Independent Identify "
-	"Namespace command to the given device, returns properties of the "
-	"specified namespace in human-readable or binary or json format.";
+	"Namespace command to the given device and return properties of the "
+	"specified namespace in human-readable, binary, or JSON format.";
 static const char *desc_cmd_copy_cmd = "The Copy command is used by the host to copy data\n"
 	"from one or more source logical block ranges to a\n"
 	"single consecutive destination logical block range.";
@@ -212,8 +212,7 @@ static const char *desc_cmd_delete_ns = "Delete the given namespace by "
 	"the namespace prior to namespace deletion. A namespace ID "
 	"becomes inactive when that namespace is detached or, if "
 	"the namespace is not already inactive, once deleted.";
-static const char *desc_cmd_device_self_test = "Implementing the device self-test feature "
-	"which provides the necessary log to determine the state of the device";
+static const char *desc_cmd_device_self_test = "Implement the device self-test feature, which provides the necessary log to determine the device state.";
 static const char *desc_cmd_dir_receive = "Read directive parameters of the specified directive type.";
 static const char *desc_cmd_dir_send = "Set directive parameters of the specified directive type.";
 static const char *desc_cmd_dsm = "The Dataset Management command is used by the host to\n"
@@ -239,17 +238,15 @@ static const char *desc_cmd_fw_download = "Copy all or part of a firmware image 
 	"Submission Queues. Activate downloaded firmware with "
 	"fw-activate, and then reset the device to apply the downloaded firmware.";
 static const char *desc_cmd_get_ana_log = "Retrieve ANA log for the given device in "
-	"decoded format (default), json or binary.";
-static const char *desc_cmd_get_ave_discovery_log = "Retrieve AVE Discovery Log, show it";
-static const char *desc_cmd_get_boot_part_log = "Retrieve Boot Partition "
-	"log page and prints it, for the given "
-	"device in either decoded format(default), json or binary.";
-static const char *desc_cmd_get_dispersed_ns_participating_nss_log = "Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it";
+	"decoded format (default), JSON, or binary format.";
+static const char *desc_cmd_get_ave_discovery_log = "Retrieve the AVE Discovery Log and display it.";
+static const char *desc_cmd_get_boot_part_log = "Retrieve the Boot Partition log page and display it for the given "
+	"device in decoded format (default), JSON, or binary format.";
+static const char *desc_cmd_get_dispersed_ns_participating_nss_log = "Retrieve the Dispersed Namespace Participating NVM Subsystems Log and display it.";
 static const char *desc_cmd_get_effects_log = "Retrieve command effects log page and print the table.";
-static const char *desc_cmd_get_endurance_event_agg_log = "Retrieve Retrieve Predictable Latency "
-	"Event Aggregate page and prints it, for the given "
-	"device in either decoded format(default), json or binary.";
-static const char *desc_cmd_get_endurance_log = "Retrieves endurance groups log page and prints the log.";
+static const char *desc_cmd_get_endurance_event_agg_log = "Retrieve the Predictable Latency Event Aggregate page and display it for the "
+	"given device in decoded format (default), JSON, or binary format.";
+static const char *desc_cmd_get_endurance_log = "Retrieve the Endurance Groups log page and display the log.";
 static const char *desc_cmd_get_error_log = "Retrieve specified number of "
 	"error log entries from a given device "
 	"in either decoded format (default) or binary.";
@@ -265,37 +262,34 @@ static const char *desc_cmd_get_feature = "Read operating parameters of the "
 static const char *desc_cmd_get_fid_support_effects_log = "Retrieve FID Support and Effects log and show it.";
 static const char *desc_cmd_get_fw_log = "Retrieve the firmware log for the "
 	"specified device in either decoded format (default) or binary.";
-static const char *desc_cmd_get_host_discovery_log = "Retrieve Host Discovery Log, show it";
+static const char *desc_cmd_get_host_discovery_log = "Retrieve the Host Discovery Log and display it.";
 static const char *desc_cmd_get_lba_status = "Information about potentially unrecoverable LBAs.";
-static const char *desc_cmd_get_lba_status_log = "Retrieve Get LBA Status Info Log and prints it, "
-	"for the given device in either decoded format(default),json or binary.";
-static const char *desc_cmd_get_log = "Retrieve desired number of bytes "
-	"from a given log on a specified device in either "
-	"hex-dump (default) or binary format";
-static const char *desc_cmd_get_media_unit_stat_log = "Retrieve the configuration and wear of media units and print it";
-static const char *desc_cmd_get_mgmt_addr_list_log = "Retrieve Management Address List Log, show it";
+static const char *desc_cmd_get_lba_status_log = "Retrieve the Get LBA Status Info Log and display it for the given "
+	"device in decoded format (default), JSON, or binary format.";
+static const char *desc_cmd_get_log = "Retrieve the requested number of bytes from a given log on a specified "
+	"device in hex-dump (default) or binary format.";
+static const char *desc_cmd_get_media_unit_stat_log = "Retrieve the configuration and wear of media units and display it.";
+static const char *desc_cmd_get_mgmt_addr_list_log = "Retrieve the Management Address List Log and display it.";
 static const char *desc_cmd_get_mi_cmd_support_effects_log = "Retrieve NVMe-MI Command Support and Effects log and show it.";
-static const char *desc_cmd_get_ns_id = "Get namespace ID of a the block device.";
-static const char *desc_cmd_get_persistent_event_log = "Retrieve Persistent Event log info for "
-	"the given device in either decoded format(default), json or binary.";
+static const char *desc_cmd_get_ns_id = "Get the namespace ID of a block device.";
+static const char *desc_cmd_get_persistent_event_log = "Retrieve Persistent Event log information for the given device in decoded "
+	"format (default), JSON, or binary format.";
 static const char *desc_cmd_get_phy_rx_eom_log = "Retrieve Physical Interface Receiver Eye Opening "
 	"Measurement log for the given device in decoded format "
-	"(default), json or binary.";
+	"(default), JSON, or binary.";
 static const char *desc_cmd_get_power_measurement_log = "Retrieve Power Measurement Log (Log ID 0x25) "
 	"for the given device in either decoded format (default), "
-	"json, or binary.";
-static const char *desc_cmd_get_pred_lat_event_agg_log = "Retrieve Predictable Latency Event "
-	"Aggregate Log page and prints it, for the given "
-	"device in either decoded format(default), json or binary.";
-static const char *desc_cmd_get_pred_lat_per_nvmset_log = "Retrieve Predictable latency per nvm set log "
-	"page and prints it for the given device in either decoded "
-	"format(default),json or binary.";
+	"JSON, or binary.";
+static const char *desc_cmd_get_pred_lat_event_agg_log = "Retrieve the Predictable Latency Event Aggregate log page and display it for "
+	"the given device in decoded format (default), JSON, or binary format.";
+static const char *desc_cmd_get_pred_lat_per_nvmset_log = "Retrieve the Predictable Latency Per NVM Set log page and display it for the "
+	"given device in decoded format (default), JSON, or binary format.";
 static const char *desc_cmd_get_property = "Reads and shows the defined NVMe controller property\n"
 	"for NVMe over Fabric. Property offset must be one of:\n"
 	"CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20, NSSD=0x64, CRTO=0x68";
-static const char *desc_cmd_get_pull_model_ddc_req_log = "Retrieve Pull Model DDC Request Log, show it";
-static const char *desc_cmd_get_reachability_associations_log = "Retrieve Reachability Associations Log, show it";
-static const char *desc_cmd_get_reachability_groups_log = "Retrieve Reachability Groups Log, show it";
+static const char *desc_cmd_get_pull_model_ddc_req_log = "Retrieve the Pull Model DDC Request Log and display it.";
+static const char *desc_cmd_get_reachability_associations_log = "Retrieve the Reachability Associations Log and display it.";
+static const char *desc_cmd_get_reachability_groups_log = "Retrieve the Reachability Groups Log and display it.";
 static const char *desc_cmd_get_register = "Reads and shows the defined NVMe controller register.\n"
 	"Register offset must be one of:\n"
 	"CAP=0x0, VS=0x8, INTMS=0xc, INTMC=0x10, CC=0x14, CSTS=0x1c,\n"
@@ -303,46 +297,45 @@ static const char *desc_cmd_get_register = "Reads and shows the defined NVMe con
 	"CMBSZ=0x3c, BPINFO=0x40, BPRSEL=0x44, BPMBL=0x48, CMBMSC=0x50,\n"
 	"CMBSTS=0x58, CRTO=0x68, PMRCAP=0xe00, PMRCTL=0xe04,\n"
 	"PMRSTS=0xe08, PMREBS=0xe0c, PMRSWTP=0xe10, PMRMSCL=0xe14, PMRMSCU=0xe18";
-static const char *desc_cmd_get_resv_notif_log = "Retrieve Reservation Notification "
-	"log page and prints it, for the given "
-	"device in either decoded format(default), json or binary.";
-static const char *desc_cmd_get_rotational_media_info_log = "Retrieve Rotational Media Information Log, show it";
+static const char *desc_cmd_get_resv_notif_log = "Retrieve the Reservation Notification log page and display it for the given "
+	"device in decoded format (default), JSON, or binary format.";
+static const char *desc_cmd_get_rotational_media_info_log = "Retrieve the Rotational Media Information Log and display it.";
 static const char *desc_cmd_get_smart_log = "Retrieve SMART log for the given device "
 	"(or optionally a namespace) in either decoded format "
 	"(default) or binary.";
-static const char *desc_cmd_get_supp_cap_config_log = "Retrieve the list of Supported Capacity Configuration Descriptors";
+static const char *desc_cmd_get_supp_cap_config_log = "Retrieve the list of Supported Capacity Configuration Descriptors.";
 static const char *desc_cmd_get_supported_log_pages = "Retrieve supported logs and print the table.";
-static const char *desc_cmd_get_telemetry_log = "Retrieve telemetry log and write to binary file";
+static const char *desc_cmd_get_telemetry_log = "Retrieve the telemetry log and write it to a binary file.";
 static const char *desc_cmd_id_domain = "Send an Identify Domain List command to the "
-	"given device, returns properties of the specified domain "
-	"in either normal|json|binary format.";
-static const char *desc_cmd_id_endurance_grp_list = "Show endurance group list information for the given endurance group id";
+	"given device and return properties of the specified domain "
+	"in either normal, JSON, or binary format.";
+static const char *desc_cmd_id_endurance_grp_list = "Show endurance group list information for the given Endurance Group ID.";
 static const char *desc_cmd_id_iocs = "Send an Identify Command Set Data command to "
-	"the given device, returns properties of the specified controller "
+	"the given device and return properties of the specified controller "
 	"in either human-readable or binary format.";
 static const char *desc_cmd_id_ns = "Send an Identify Namespace command to the "
-	"given device, returns properties of the specified namespace "
+	"given device and return properties of the specified namespace "
 	"in either human-readable or binary format. Can also return "
 	"binary vendor-specific namespace attributes.";
 static const char *desc_cmd_id_ns_granularity = "Send an Identify Namespace Granularity List command to the "
-	"given device, returns namespace granularity list "
+	"given device and return the namespace granularity list "
 	"in either human-readable or binary format.";
 static const char *desc_cmd_id_ns_lba_format = "Send an Identify Namespace command to the given "
-	"device, returns capability field properties of the specified "
+	"device and return capability field properties of the specified "
 	"LBA Format index in  various formats.";
 static const char *desc_cmd_id_nvmset = "Send an Identify NVM Set List command to the "
-	"given device, returns entries for NVM Set identifiers greater "
-	"than or equal to the value specified CDW11.NVMSETID "
-	"in either binary format or json format";
+	"given device and return entries for NVM Set identifiers greater "
+	"than or equal to the value specified in CDW11.NVMSETID "
+	"in either binary or JSON format.";
 static const char *desc_cmd_id_uuid = "Send an Identify UUID List command to the "
-	"given device, returns list of supported Vendor Specific UUIDs "
+	"given device and return the list of supported Vendor Specific UUIDs "
 	"in either human-readable or binary format.";
-static const char *desc_cmd_io_mgmt_recv = "I/O Management Receive";
-static const char *desc_cmd_io_mgmt_send = "I/O Management Send";
+static const char *desc_cmd_io_mgmt_recv = "I/O Management Receive command.";
+static const char *desc_cmd_io_mgmt_send = "I/O Management Send command.";
 static const char *desc_cmd_list_ctrl = "Show controller list information for the subsystem the "
 	"given device is part of, or optionally controllers attached to a specific namespace.";
 static const char *desc_cmd_list_ns = "For the specified controller handle, show the "
-	"namespace list in the associated NVMe subsystem, optionally starting with a given nsid.";
+	"namespace list in the associated NVMe subsystem, optionally starting with a given NSID.";
 static const char *desc_cmd_list_secondary_ctrl =
 	"Show secondary controller list associated with the primary controller of the given device.";
 static const char *desc_cmd_lockdown_cmd = "The Lockdown command is used to control the\n"
@@ -350,7 +343,7 @@ static const char *desc_cmd_lockdown_cmd = "The Lockdown command is used to cont
 	"prohibition or allowance of execution of the specified command\n"
 	"or Set Features command targeting a specific Feature Identifier.";
 static const char *desc_cmd_ns_descs = "Send Namespace Identification Descriptors command to the "
-	"given device, returns the namespace identification descriptors "
+	"given device and return the namespace identification descriptors "
 	"of the specific namespace in either human-readable or binary format.";
 static const char *desc_cmd_ns_rescan = "Rescans the NVMe namespaces\n";
 static const char *desc_cmd_nvm_id_ctrl = "Send an Identify Controller NVM Command Set "
@@ -360,12 +353,12 @@ static const char *desc_cmd_nvm_id_ns = "Send an Identify Namespace NVM Command 
 	"command to the given device and report information about "
 	"the specified namespace in various formats.";
 static const char *desc_cmd_nvm_id_ns_lba_format = "Send an NVM Command Set specific Identify Namespace "
-	"command to the given device, returns capability field properties of "
+	"command to the given device and return capability field properties of "
 	"the specified LBA Format index in the specified namespace in various formats.";
 static const char *desc_cmd_primary_ctrl_caps = "Send an Identify Primary Controller Capabilities "
 	"command to the given device and report the information in a "
-	"decoded format (default), json or binary.";
-static const char *desc_cmd_reset = "Resets the NVMe controller\n";
+	"decoded format (default), JSON, or binary.";
+static const char *desc_cmd_reset = "Reset the NVMe controller.";
 static const char *desc_cmd_resv_acquire = "Obtain a reservation on a given\n"
 	"namespace. Only one reservation is allowed at a time on a\n"
 	"given namespace, though multiple controllers may register\n"
@@ -376,7 +369,7 @@ static const char *desc_cmd_resv_register = "Register, de-register, or\n"
 	"Only one reservation at a time is allowed on any namespace.";
 static const char *desc_cmd_resv_release = "Releases reservation held on a\n"
 	"namespace by the given controller. If rtype != current reservation\n"
-	"type, release will fails. If the given controller holds no\n"
+	"type, release will fail. If the given controller holds no\n"
 	"reservation on the namespace or is not the namespace's current\n"
 	"reservation holder, the release command completes with no\n"
 	"effect. If the reservation type is not Write Exclusive or\n"
@@ -415,15 +408,15 @@ static const char *desc_cmd_set_property =
 static const char *desc_cmd_set_register = "Writes and shows the defined NVMe controller register";
 static const char *desc_cmd_show_registers = "Reads and shows the defined NVMe controller registers\n"
 	"in binary or human-readable format";
-static const char *desc_cmd_show_topology_cmd = "Show the topology\n";
-static const char *desc_cmd_subsystem_reset = "Resets the NVMe subsystem";
+static const char *desc_cmd_show_topology_cmd = "Show the topology.";
+static const char *desc_cmd_subsystem_reset = "Reset the NVMe subsystem.";
 static const char *desc_cmd_tls_key = "Manipulation of TLS keys.\n";
 static const char *desc_cmd_verify_cmd = "Verify specified logical blocks on the given device.";
 static const char *desc_cmd_virtual_mgmt = "The Virtualization Management command is supported by primary controllers "
 	"that support the Virtualization Enhancements capability. This command is used for:\n"
 	"  1. Modifying Flexible Resource allocation for the primary controller\n"
 	"  2. Assigning Flexible Resources for secondary controllers\n"
-	"  3. Setting the Online and Offline state for secondary controllers";
+	"  3. Setting the online and offline state for secondary controllers";
 static const char *desc_cmd_write_uncor =
 	"The Write Uncorrectable command is used to set a range of logical blocks to invalid.";
 static const char *desc_cmd_write_zeroes =
