@@ -12,16 +12,12 @@ print(f'ctx: {ctx}')
 host = nvme.host(ctx)
 print(f'host: {host}')
 
-fctx = nvme.fabrics_context(ctx)
-fctx.set_connection(
-    subsysnqn=nvme.NVME_DISC_SUBSYS_NAME,
-    transport='loop',
-)
-print(f'fctx: {fctx}')
-
 ctrls = []
 for i in range(10):
-    ctrl = nvme.ctrl(ctx, fctx)
+    ctrl = nvme.ctrl(ctx, {
+        'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME,
+        'transport': 'loop',
+    })
     ctrls.append(ctrl)
     print(f'ctrl {i}: {ctrl}')
 
