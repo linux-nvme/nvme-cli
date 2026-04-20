@@ -16,36 +16,32 @@ Limitations:
   - Does not support typedef struct.
   - Does not support struct within struct.
 
+Annotations use // comments. Optional whitespace between // and ! is accepted,
+so // !token, //!token, and //\t!token are all equivalent. The canonical form
+used in this project's headers is "// !token" (one space).
+
 Struct inclusion — annotate the opening brace line of the struct.
 The optional mode qualifier sets the default for all members of the struct:
-  struct nvme_ctrl { /*!generate-accessors*/          — default: both getter and setter
-  struct nvme_ctrl { //!generate-accessors            — default: both getter and setter
-  struct nvme_ctrl { /*!generate-accessors:none*/     — default: no accessors
-  struct nvme_ctrl { //!generate-accessors:none       — default: no accessors
-  struct nvme_ctrl { /*!generate-accessors:readonly*/ — default: getter only
-  struct nvme_ctrl { //!generate-accessors:readonly   — default: getter only
-  struct nvme_ctrl { /*!generate-accessors:writeonly*/ — default: setter only
-  struct nvme_ctrl { //!generate-accessors:writeonly   — default: setter only
+  struct nvme_ctrl { // !generate-accessors            — default: both getter and setter
+  struct nvme_ctrl { // !generate-accessors:none       — default: no accessors
+  struct nvme_ctrl { // !generate-accessors:readonly   — default: getter only
+  struct nvme_ctrl { // !generate-accessors:writeonly  — default: setter only
 
 Member exclusion — annotate the member declaration line:
-  char *model; /*!accessors:none*/
-  char *model; //!accessors:none
+  char *model; // !accessors:none
 
 Read-only members (getter only, setter suppressed):
   - Members declared with the 'const' qualifier, or
   - Annotate the member declaration line:
-      char *state; /*!accessors:readonly*/
-      char *state; //!accessors:readonly
+      char *state; // !accessors:readonly
 
 Write-only members (setter only, getter suppressed):
   - Annotate the member declaration line:
-      char *state; /*!accessors:writeonly*/
-      char *state; //!accessors:writeonly
+      char *state; // !accessors:writeonly
 
 Both getter and setter (override a restrictive struct-level default):
   - Annotate the member declaration line:
-      char *state; /*!accessors:readwrite*/
-      char *state; //!accessors:readwrite
+      char *state; // !accessors:readwrite
 
 Example usage:
   ./generate-accessors.py private.h
@@ -126,9 +122,29 @@ MEMBER_RE = re.compile(
 # Annotation helpers
 # ---------------------------------------------------------------------------
 
+def _comment_text(text):
+    """Return the text after the first '//', leading whitespace stripped.
+
+    Returns None when no '//' is found.
+    Stripping leading whitespace makes '// !token', '//!token', and
+    '//\\t!token' all equivalent to the annotation scanner.
+    """
+    idx = text.find('//')
+    return text[idx + 2:].lstrip() if idx >= 0 else None
+
+
 def has_annotation(text, annotation):
-    """Return True if *text* contains /*!annotation*/ or //!annotation."""
-    return f'/*!{annotation}*/' in text or f'//!{annotation}' in text
+    """Return True if *text* has a // comment containing !annotation.
+
+    Matches '// !annotation', '//!annotation', '// \\t!annotation', etc.
+    The annotation must be followed by whitespace, another '!', or end of
+    string (word-boundary guard prevents 'accessors:none' matching inside
+    'accessors:noneXXX').
+    """
+    comment = _comment_text(text)
+    if comment is None:
+        return False
+    return bool(re.search(rf'!{re.escape(annotation)}(?=[\s!]|$)', comment))
 
 
 def strip_block_comments(text):
@@ -320,38 +336,31 @@ _VALID_MODES = frozenset(('both', 'none', 'readonly', 'writeonly'))
 def parse_struct_annotation(raw_body):
     """Return the default mode for a struct from its generate-accessors annotation.
 
-    Recognises both comment styles with an optional mode qualifier:
-      /*!generate-accessors*/           → 'both'
-      /*!generate-accessors:none*/      → 'none'
-      /*!generate-accessors:readonly*/  → 'readonly'
-      /*!generate-accessors:writeonly*/ → 'writeonly'
-      //!generate-accessors             → 'both'
-      //!generate-accessors:none        → 'none'
-      //!generate-accessors:readonly    → 'readonly'
-      //!generate-accessors:writeonly   → 'writeonly'
+    Recognises // comment style with optional whitespace after //:
+      // !generate-accessors            → 'both'
+      // !generate-accessors:none       → 'none'
+      // !generate-accessors:readonly   → 'readonly'
+      // !generate-accessors:writeonly  → 'writeonly'
+
+    '//!', '// !', and '//\\t!' are all accepted.
 
     Returns None when the annotation is absent.
     Prints a warning and falls back to 'both' for unrecognised qualifiers.
     """
     first_token = raw_body.lstrip()
-
-    for pattern in (
-        r'/\*!generate-accessors(?::([a-z]+))?\*/',
-        r'//!generate-accessors(?::([a-z]+))?',
-    ):
-        m = re.match(pattern, first_token)
-        if m:
-            qualifier = m.group(1) or 'both'
-            if qualifier not in _VALID_MODES:
-                print(
-                    f"warning: unknown generate-accessors qualifier "
-                    f"'{qualifier}'; valid values are: "
-                    f"{', '.join(sorted(_VALID_MODES))}. "
-                    f"Defaulting to 'both'.",
-                    file=sys.stderr,
-                )
-                qualifier = 'both'
-            return qualifier
+    m = re.match(r'//\s*!generate-accessors(?::([a-z]+))?', first_token)
+    if m:
+        qualifier = m.group(1) or 'both'
+        if qualifier not in _VALID_MODES:
+            print(
+                f"warning: unknown generate-accessors qualifier "
+                f"'{qualifier}'; valid values are: "
+                f"{', '.join(sorted(_VALID_MODES))}. "
+                f"Defaulting to 'both'.",
+                file=sys.stderr,
+            )
+            qualifier = 'both'
+        return qualifier
 
     return None
 
@@ -359,9 +368,8 @@ def parse_struct_annotation(raw_body):
 def parse_file(text, verbose):
     """Return list of (struct_name, [Member]) tuples found in *text*.
 
-    Only structs annotated with ``/*!generate-accessors*/`` or
-    ``//!generate-accessors`` as the first token inside the opening brace
-    are processed.
+    Only structs annotated with ``// !generate-accessors`` (or ``//!``) as
+    the first token inside the opening brace are processed.
     """
     result = []
 

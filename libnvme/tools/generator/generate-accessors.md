@@ -25,25 +25,29 @@ python3 generate-accessors.py [options] <header-files>
 
 ## Annotations
 
-Struct inclusion and member behaviour are controlled by **annotations written as comments directly in the header file**. Both `/* */` (block) and `//` (line) comment styles are supported for every annotation.
+Struct inclusion and member behaviour are controlled by **annotations written as
+`//` comments directly in the header file**. The canonical form is `// !token`
+(one space between `//` and `!`). The parser also accepts `//!token` and
+`//\t!token` — any amount of whitespace between `//` and `!` is treated
+identically, making the annotation resilient to contributor variation.
 
 ### Struct inclusion — `generate-accessors`
 
 Place the annotation on the same line as the struct's opening brace to opt that struct in to code generation. An optional mode qualifier sets the **default behaviour for all members** of that struct:
 
-| Annotation                              | Default for all members           |
-| --------------------------------------- | --------------------------------- |
-| `//!generate-accessors`                 | getter **and** setter (default)   |
-| `//!generate-accessors:none`            | no accessors                      |
-| `//!generate-accessors:readonly`        | getter only                       |
-| `//!generate-accessors:writeonly`       | setter only                       |
+| Annotation                               | Default for all members           |
+| ---------------------------------------- | --------------------------------- |
+| `// !generate-accessors`                 | getter **and** setter (default)   |
+| `// !generate-accessors:none`            | no accessors                      |
+| `// !generate-accessors:readonly`        | getter only                       |
+| `// !generate-accessors:writeonly`       | setter only                       |
 
 ```c
-struct nvme_ctrl { /*!generate-accessors*/          /* both getter and setter */
+struct nvme_ctrl { // !generate-accessors          /* both getter and setter */
     ...
 };
 
-struct nvme_ctrl { //!generate-accessors:readonly   /* getter only by default */
+struct nvme_ctrl { // !generate-accessors:readonly /* getter only by default */
     ...
 };
 ```
@@ -57,10 +61,10 @@ Individual members can always override the struct-level default using a per-memb
 Place the annotation on a member's declaration line to suppress accessor generation for that member entirely (no setter, no getter):
 
 ```c
-struct nvme_ctrl { /*!generate-accessors*/
+struct nvme_ctrl { // !generate-accessors
     char *name;
-    char *state;      //!accessors:none
-    char *subsysnqn;  /*!accessors:none*/
+    char *state;      // !accessors:none
+    char *subsysnqn;  // !accessors:none
 };
 ```
 
@@ -69,10 +73,10 @@ struct nvme_ctrl { /*!generate-accessors*/
 Place the annotation on a member's declaration line to generate only a getter (no setter). This has the same effect as declaring the member `const`, but without changing the type in the struct. Also useful to override a `generate-accessors:writeonly` struct default for individual members:
 
 ```c
-struct nvme_ctrl { /*!generate-accessors*/
+struct nvme_ctrl { // !generate-accessors
     char *name;
-    char *firmware;   //!accessors:readonly
-    char *model;      /*!accessors:readonly*/
+    char *firmware;   // !accessors:readonly
+    char *model;      // !accessors:readonly
 };
 ```
 
@@ -83,9 +87,9 @@ Members declared with the `const` qualifier are also automatically read-only.
 Place the annotation on a member's declaration line to generate only a setter (no getter). Useful to override a `generate-accessors:readonly` struct default for individual members:
 
 ```c
-struct nvme_ctrl { /*!generate-accessors:readonly*/
+struct nvme_ctrl { // !generate-accessors:readonly
     char *name;       /* getter only (struct default) */
-    char *token;      //!accessors:writeonly    /* setter only override */
+    char *token;      // !accessors:writeonly    /* setter only override */
 };
 ```
 
@@ -94,25 +98,25 @@ struct nvme_ctrl { /*!generate-accessors:readonly*/
 Place the annotation on a member's declaration line to generate both a getter and a setter, overriding a restrictive struct-level default (`none`, `readonly`, or `writeonly`):
 
 ```c
-struct nvme_ctrl { /*!generate-accessors:none*/
+struct nvme_ctrl { // !generate-accessors:none
     char *name;       /* no accessors (struct default) */
-    char *model;      //!accessors:readwrite    /* both getter and setter */
-    char *firmware;   //!accessors:readonly     /* getter only */
+    char *model;      // !accessors:readwrite    /* both getter and setter */
+    char *firmware;   // !accessors:readonly     /* getter only */
 };
 ```
 
 ### Annotation summary
 
-| Annotation                              | Where        | Effect                                      |
-| --------------------------------------- | ------------ | ------------------------------------------- |
-| `//!generate-accessors`                 | struct brace | Include struct, default: getter + setter    |
-| `//!generate-accessors:none`            | struct brace | Include struct, default: no accessors       |
-| `//!generate-accessors:readonly`        | struct brace | Include struct, default: getter only        |
-| `//!generate-accessors:writeonly`       | struct brace | Include struct, default: setter only        |
-| `//!accessors:none`                     | member line  | Skip this member entirely                   |
-| `//!accessors:readonly`                 | member line  | Generate getter only                        |
-| `//!accessors:writeonly`                | member line  | Generate setter only                        |
-| `//!accessors:readwrite`                | member line  | Generate getter and setter                  |
+| Annotation                               | Where        | Effect                                      |
+| ---------------------------------------- | ------------ | ------------------------------------------- |
+| `// !generate-accessors`                 | struct brace | Include struct, default: getter + setter    |
+| `// !generate-accessors:none`            | struct brace | Include struct, default: no accessors       |
+| `// !generate-accessors:readonly`        | struct brace | Include struct, default: getter only        |
+| `// !generate-accessors:writeonly`       | struct brace | Include struct, default: setter only        |
+| `// !accessors:none`                     | member line  | Skip this member entirely                   |
+| `// !accessors:readonly`                 | member line  | Generate getter only                        |
+| `// !accessors:writeonly`                | member line  | Generate setter only                        |
+| `// !accessors:readwrite`                | member line  | Generate getter and setter                  |
 | `const` qualifier on member             | member type  | Suppress setter (built-in, always applies)  |
 
 ------
@@ -122,15 +126,15 @@ struct nvme_ctrl { /*!generate-accessors:none*/
 ### Header file (`person.h`)
 
 ```c
-struct person { /*!generate-accessors*/
+struct person { // !generate-accessors
     char *name;
     int age;
     const char *id;       /* const → getter only, no annotation needed */
-    char *secret;         //!accessors:none
-    char *role;           //!accessors:readonly
+    char *secret;         // !accessors:none
+    char *role;           // !accessors:readonly
 };
 
-struct car { /*!generate-accessors*/
+struct car { // !generate-accessors
     char *model;
     int year;
     const char *vin;
@@ -258,7 +262,7 @@ const char *car_get_vin(const struct car *p);
 #endif /* _ACCESSORS_H_ */
 ```
 
-> **Note:** The `secret` member is absent because of `//!accessors:none` — excluded members leave no trace in the output. The `role` member has only a getter because of `//!accessors:readonly`. The `id` and `vin` members have only getters because they are declared `const`.
+> **Note:** The `secret` member is absent because of `// !accessors:none` — excluded members leave no trace in the output. The `role` member has only a getter because of `// !accessors:readonly`. The `id` and `vin` members have only getters because they are declared `const`.
 
 ### Generated `accessors.c`
 
@@ -361,7 +365,7 @@ LIBNVME_ACCESSORS_3 {
 };
 ```
 
-> **Note:** Only symbols for members that have accessors generated appear in the linker script. The `secret` member (excluded via `//!accessors:none`) and the write-only `token` example would have no getter entry. The version node name `LIBNVME_ACCESSORS_3` is hardcoded in the generator.
+> **Note:** Only symbols for members that have accessors generated appear in the linker script. The `secret` member (excluded via `// !accessors:none`) and the write-only `token` example would have no getter entry. The version node name `LIBNVME_ACCESSORS_3` is hardcoded in the generator.
 
 ------
 
@@ -379,10 +383,10 @@ LIBNVME_ACCESSORS_3 {
 2. **String arrays** (`char **`) — setters deep-copy NULL-terminated arrays (each element and the container).
 3. **Fixed char arrays** (`char foo[N]`) — setters use `snprintf`, always NUL-terminated.
 4. **`const` members** — only a getter is generated, no setter (applies regardless of any annotation).
-5. **`//!accessors:readonly`** — same effect as `const`: getter only.
-6. **`//!accessors:writeonly`** — setter only; getter is suppressed.
-7. **`//!accessors:readwrite`** — both getter and setter; overrides a restrictive struct-level default.
-8. **`//!accessors:none`** — member is completely ignored by the generator.
+5. **`// !accessors:readonly`** — same effect as `const`: getter only.
+6. **`// !accessors:writeonly`** — setter only; getter is suppressed.
+7. **`// !accessors:readwrite`** — both getter and setter; overrides a restrictive struct-level default.
+8. **`// !accessors:none`** — member is completely ignored by the generator.
 9. **Struct-level mode** — the qualifier on `generate-accessors` sets the default for every member in the struct; per-member annotations override the struct default.
 10. **`--prefix`** — prepended to every function name (e.g. `--prefix nvme_` turns `ctrl_set_name` into `nvme_ctrl_set_name`).
 11. **Line length** — generated code is automatically wrapped to stay within the 80-column limit required by `checkpatch.pl`.
