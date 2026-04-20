@@ -15,6 +15,19 @@ if python3_prog.found()
             meson.project_source_root() / 'libnvme',
         ],
     )
+    _ld_args = ['--ld', nvme_ld, '--ld', accessors_ld]
+    if want_fabrics
+        _ld_args += ['--ld', nvmf_ld, '--ld', nvmf_accessors_ld]
+    endif
+    _hdr_args = []
+    foreach hdr : headers
+        _hdr_args += ['--header', meson.project_source_root() / 'libnvme' / 'src' / hdr]
+    endforeach
+    test(
+        'libnvme - check-public-headers',
+        python3_prog,
+        args: [files('../tools/check-public-headers.py')] + _ld_args + _hdr_args,
+    )
 endif
 
 # These tests all require interaction with a real NVMe device, so we don't
