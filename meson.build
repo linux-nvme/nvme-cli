@@ -416,6 +416,8 @@ conf.set(
 
 conf.set('NVME_HAVE_SENDFILE', cc.has_function('sendfile'))
 
+conf.set('NVME_HAVE_MMAP', cc.has_function('mmap'))
+
 project_config_file = 'nvme-config.h'
 nvme_config_h = configure_file(output: project_config_file, configuration: conf)
 config_dep = declare_dependency(
