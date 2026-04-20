@@ -17,12 +17,12 @@
 #include <unistd.h>
 
 #if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
-#include <sys/types.h>
 #include <ifaddrs.h>
-#endif
 
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
+
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
