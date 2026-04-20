@@ -10,7 +10,7 @@
 # regenerated during a normal build.
 #
 # To regenerate them after changing private.h (e.g. adding or removing
-# a /*!generate-accessors*/ annotation):
+# a // !generate-accessors annotation):
 #
 #   meson compile -C <build-dir> update-accessors
 

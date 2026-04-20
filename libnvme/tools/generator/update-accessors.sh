@@ -25,7 +25,7 @@
 #   $4      full path of the output .c file
 #   $5      full path of the output .ld file
 #   $6 ...  one or more input headers scanned for
-#           /*!generate-accessors*/ structs
+#           // !generate-accessors structs
 
 set -euo pipefail
 
