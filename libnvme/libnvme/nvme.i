@@ -453,6 +453,7 @@ struct libnvme_ns {
 %rename(set_connection)     libnvmf_context::fctx_set_connection;
 %rename(set_persistent)     libnvmf_context::fctx_set_persistent;
 %rename(set_device)         libnvmf_context::fctx_set_device;
+%rename(set_fabrics_config) libnvmf_context::fctx_set_fabrics_config;
 
 struct libnvmf_context {};
 
@@ -735,8 +736,7 @@ struct libnvmf_context {};
 	}
 %};
 
-%pythonappend libnvme_ctrl::connect(struct libnvme_host *h,
-				 struct libnvmf_context *fctx) {
+%pythonappend libnvme_ctrl::connect(struct libnvme_host *h) {
     self.__host = h  # Keep a reference to parent to ensure ctrl obj gets GCed before host}
 %pythonappend libnvme_ctrl::init(struct libnvme_host *h, int instance) {
     self.__host = h  # Keep a reference to parent to ensure ctrl obj gets GCed before host}
@@ -766,13 +766,6 @@ struct libnvmf_context {};
 
 	void connect(struct libnvme_host *h) {
 		int ret;
-		const char *dev;
-
-		dev = libnvme_ctrl_get_name($self);
-		if (dev && $self->cfg.duplicate_connect) {
-			connect_err = -ENVME_CONNECT_ALREADY;
-			return;
-		}
 
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
 		ret = libnvmf_add_ctrl(h, $self);

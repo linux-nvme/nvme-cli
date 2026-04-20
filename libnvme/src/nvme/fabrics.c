@@ -1102,6 +1102,10 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 	__cleanup_free char *argstr = NULL;
 	int ret;
 
+	/* Are duplicate connections allowed on existing controller */
+	if (libnvme_ctrl_get_name(c) && !c->cfg.duplicate_connect)
+		return -ENVME_CONNECT_ALREADY;
+
 	/* apply configuration from config file (JSON) */
 	s = libnvme_lookup_subsystem(h, NULL, libnvme_ctrl_get_subsysnqn(c));
 	if (s) {
