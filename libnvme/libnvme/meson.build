@@ -6,6 +6,10 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 if want_python
+    if not cc.has_header_symbol('Python.h', 'Py_NewRef', dependencies: py3_dep)
+       warning('Python < 3.10 detected: providing Py_NewRef compatibility shim')
+    endif
+
     r = run_command(swig, ['-version'], check: true)  # Returns: "\nSWIG Version 4.1.1\n\nCompiled with ..."
     swig_version = r.stdout().split('\n')[1].split()[2].strip()
     if swig_version.version_compare('<4.1.0')

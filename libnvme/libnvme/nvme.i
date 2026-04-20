@@ -10,6 +10,20 @@
                clashes with the same macro defined in Python.h.
  */
 #undef fallthrough
+
+#include <Python.h>
+
+/*
+ * Py_NewRef was added in Python 3.10; provide a compat shim for
+ * older versions
+ */
+#if PY_VERSION_HEX < 0x030a0000
+static inline PyObject *Py_NewRef(PyObject *obj)
+{
+    Py_INCREF(obj);
+    return obj;
+}
+#endif
 %}
 
 %module(docstring="Python bindings for libnvme") nvme
