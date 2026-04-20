@@ -78,9 +78,9 @@ struct libnvmf_context {
  * rest of the fabrics layer.
  */
 
-struct libnvmf_discovery_args { // !generate-accessors
-	int max_retries;
-	__u8 lsp;
+struct libnvmf_discovery_args { // !generate-accessors !generate-lifecycle
+	int max_retries; // !default:6
+	__u8 lsp;        // !default:NVMF_LOG_DISC_LSP_NONE
 };
 
 /**
