@@ -22,8 +22,10 @@
 
 # Generated source files go to src/nvme/ (alongside the library sources).
 # The generated version script goes to src/ (alongside the other .ld files).
+# The generated SWIG include goes to libnvme/ (alongside nvme.i).
 libnvme_src = libnvme_srcroot / 'src'
 libnvme_src_nvme = libnvme_src / 'nvme'
+libnvme_swig_dir = libnvme_srcroot / 'libnvme'
 
 _py3 = find_program('python3', required: true)
 
@@ -53,5 +55,16 @@ _tgt_fabrics = run_target(
     ],
 )
 
+_tgt_swig = run_target(
+    'update-swig-accessors',
+    command: [
+        _py3,
+        files('generate-swig-accessors.py'),
+        '--output', libnvme_swig_dir / 'nvme-swig-accessors.i',
+        libnvme_src_nvme / 'accessors.h',
+        libnvme_src_nvme / 'accessors-fabrics.h',
+    ],
+)
+
 # This alias allows generating all accessors in one shot.
-alias_target('update-accessors', _tgt_common, _tgt_fabrics)
+alias_target('update-accessors', _tgt_common, _tgt_fabrics, _tgt_swig)
