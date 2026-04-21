@@ -1542,12 +1542,12 @@ static __u32 nvmf_get_tel(const char *hostsymname)
 	__u16 len;
 
 	/* Host ID is mandatory */
-	tel += nvmf_exat_size(NVME_UUID_LEN);
+	tel += libnvmf_exat_size(NVME_UUID_LEN);
 
 	/* Symbolic name is optional */
 	len = hostsymname ? strlen(hostsymname) : 0;
 	if (len)
-		tel += nvmf_exat_size(len);
+		tel += libnvmf_exat_size(len);
 
 	return tel;
 }
@@ -1586,13 +1586,13 @@ static void nvmf_fill_die(struct nvmf_ext_die *die, struct libnvme_host *h,
 	numexat++;
 	exat = die->exat;
 	exat->exattype = cpu_to_le16(NVMF_EXATTYPE_HOSTID);
-	exat->exatlen  = cpu_to_le16(nvmf_exat_len(NVME_UUID_LEN));
+	exat->exatlen  = cpu_to_le16(libnvmf_exat_len(NVME_UUID_LEN));
 	libnvme_uuid_from_string(h->hostid, exat->exatval);
 
 	/* Extended Attribute for the Symbolic Name (optional) */
 	symname_len = h->hostsymname ? strlen(h->hostsymname) : 0;
 	if (symname_len) {
-		__u16 exatlen = nvmf_exat_len(symname_len);
+		__u16 exatlen = libnvmf_exat_len(symname_len);
 
 		numexat++;
 		exat = libnvmf_exat_ptr_next(exat);

@@ -1429,7 +1429,7 @@ static ctrl_match_t _candidate_init(struct libnvme_global_ctx *ctx,
 
 #ifdef CONFIG_FABRICS
 	if (streq0(fctx->transport, "tcp")) {
-		candidate->iface_list = libnvme_getifaddrs(ctx); /* TCP only */
+		candidate->iface_list = libnvmf_getifaddrs(ctx); /* TCP only */
 		candidate->addreq = libnvme_ipaddrs_eq;
 		return _tcp_match_ctrl;
 	}

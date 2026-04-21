@@ -7,6 +7,10 @@
  */
 #pragma once
 
+#if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
+#include <ifaddrs.h>
+#endif
+
 #include <nvme/fabrics.h>
 #include <nvme/tree.h>
 
@@ -105,6 +109,54 @@ struct libnvmf_uri { // !generate-accessors
 	char *query;
 	char *fragment;
 };
+
+/**
+ * libnvmf_exat_len() - Return length rounded up by 4
+ * @val_len: Value length
+ *
+ * Return the size in bytes, rounded to a multiple of 4 (e.g., size of
+ * __u32), of the buffer needed to hold the exat value of size
+ * @val_len.
+ *
+ * Return: Length rounded up by 4
+ */
+static inline __u16 libnvmf_exat_len(size_t val_len)
+{
+	return (__u16)round_up(val_len, sizeof(__u32));
+}
+
+/**
+ * libnvmf_exat_size - Return min aligned size to hold value
+ * @val_len: This is the length of the data to be copied to the "exatval"
+ *           field of a "struct nvmf_ext_attr".
+ *
+ * Return the size of the "struct nvmf_ext_attr" needed to hold
+ * a value of size @val_len.
+ *
+ * Return: The size in bytes, rounded to a multiple of 4 (i.e. size of
+ * __u32), of the "struct nvmf_ext_attr" required to hold a string of
+ * length @val_len.
+ */
+static inline __u16 libnvmf_exat_size(size_t val_len)
+{
+	return (__u16)(sizeof(struct nvmf_ext_attr) + libnvmf_exat_len(val_len));
+}
+
+#if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
+/**
+ * libnvmf_getifaddrs - Cached wrapper around getifaddrs()
+ * @ctx: pointer to the global context
+ *
+ * On the first call, this function invokes the POSIX getifaddrs()
+ * and caches the result in the global context. Subsequent calls
+ * return the cached data. The caller must NOT call freeifaddrs()
+ * on the returned data. The cache will be freed when the global
+ * context is freed.
+ *
+ * Return: Pointer to I/F data, NULL on error (with errno set).
+ */
+const struct ifaddrs *libnvmf_getifaddrs(struct libnvme_global_ctx *ctx);
+#endif /* HAVE_NETDB || CONFIG_FABRICS */
 
 bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr);
