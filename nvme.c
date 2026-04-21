@@ -381,6 +381,9 @@ int parse_and_open(struct libnvme_global_ctx **ctx,
 	libnvme_transport_handle_set_submit_exit(hdl_new , nvme_submit_exit);
 	libnvme_transport_handle_set_decide_retry(hdl_new, nvme_decide_retry);
 	libnvme_set_dry_run(ctx_new, argconfig_parse_seen(opts, "dry-run"));
+	if (argconfig_parse_seen(opts, "timeout"))
+		libnvme_transport_handle_set_timeout(hdl_new,
+			nvme_args.timeout);
 
 	*ctx = ctx_new;
 	*hdl = hdl_new;

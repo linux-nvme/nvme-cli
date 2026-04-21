@@ -217,6 +217,19 @@ void libnvme_transport_handle_set_decide_retry(
 				struct libnvme_passthru_cmd *cmd, int err));
 
 /**
+ * libnvme_transport_handle_set_timeout() - Set the default command timeout
+ * @hdl:	Transport handle to configure
+ * @timeout_ms:	Timeout in milliseconds. A value of 0 means use the kernel
+ *		default (NVME_DEFAULT_IOCTL_TIMEOUT).
+ *
+ * Sets a default timeout that is applied to every passthrough command
+ * submitted through @hdl when the command's own timeout_ms field is 0.
+ * Commands that set a non-zero timeout_ms override this default.
+ */
+void libnvme_transport_handle_set_timeout(struct libnvme_transport_handle *hdl,
+		__u32 timeout_ms);
+
+/**
  * libnvme_set_probe_enabled() - enable/disable the probe for new MI endpoints
  * @ctx:	&struct libnvme_global_ctx object
  * @enabled: whether to probe new endpoints
