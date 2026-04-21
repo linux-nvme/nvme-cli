@@ -105,6 +105,14 @@ static inline PyObject *Py_NewRef(PyObject *obj)
 		cfg = libnvmf_context_get_fabrics_config(fctx);
 
 		while (PyDict_Next(dict, &pos, &key, &value)) {
+			/* Already consumed above via dict_get_str() */
+			if (!PyUnicode_CompareWithASCIIString(key, "subsysnqn") ||
+			    !PyUnicode_CompareWithASCIIString(key, "transport") ||
+			    !PyUnicode_CompareWithASCIIString(key, "traddr") ||
+			    !PyUnicode_CompareWithASCIIString(key, "trsvcid") ||
+			    !PyUnicode_CompareWithASCIIString(key, "host_traddr") ||
+			    !PyUnicode_CompareWithASCIIString(key, "host_iface"))
+				continue;
 			if (!PyUnicode_CompareWithASCIIString(key, "queue_size")) {
 				libnvme_fabrics_config_set_queue_size(cfg, PyLong_AsLong(value));
 				continue;
@@ -216,7 +224,8 @@ static inline PyObject *Py_NewRef(PyObject *obj)
 				has_persistent = true;
 				continue;
 			}
-			/* Unknown keys are silently ignored */
+			PyErr_Format(PyExc_KeyError, "unknown ctrl config key: '%U'", key);
+			return -1;
 		}
 
 		if (hostnqn || hostid)
@@ -686,6 +695,20 @@ struct libnvme_ns {
 	    while h:
 	        yield h
 	        h = libnvme_next_host(self, h)
+	def __setattr__(self, name, value):
+	    if name == 'this' or name.startswith('_'):
+	        object.__setattr__(self, name, value)
+	        return
+	    for klass in type(self).__mro__:
+	        attr = klass.__dict__.get(name)
+	        if attr is not None:
+	            if isinstance(attr, property) and attr.fset is not None:
+	                attr.fset(self, value)
+	                return
+	            break
+	    raise AttributeError(
+	        f"'{type(self).__name__}' object has no writable attribute '{name}'"
+	    )
 	%}
 	void refresh_topology() {
 		libnvme_refresh_topology($self);
@@ -750,6 +773,20 @@ struct libnvme_ns {
 	    while s:
 	        yield s
 	        s = libnvme_next_subsystem(self, s)
+	def __setattr__(self, name, value):
+	    if name == 'this' or name.startswith('_'):
+	        object.__setattr__(self, name, value)
+	        return
+	    for klass in type(self).__mro__:
+	        attr = klass.__dict__.get(name)
+	        if attr is not None:
+	            if isinstance(attr, property) and attr.fset is not None:
+	                attr.fset(self, value)
+	                return
+	            break
+	    raise AttributeError(
+	        f"'{type(self).__name__}' object has no writable attribute '{name}'"
+	    )
 	%}
 }
 
@@ -806,6 +843,20 @@ struct libnvme_ns {
 	    while ns:
 	        yield ns
 	        ns = libnvme_subsystem_next_ns(self, ns)
+	def __setattr__(self, name, value):
+	    if name == 'this' or name.startswith('_'):
+	        object.__setattr__(self, name, value)
+	        return
+	    for klass in type(self).__mro__:
+	        attr = klass.__dict__.get(name)
+	        if attr is not None:
+	            if isinstance(attr, property) and attr.fset is not None:
+	                attr.fset(self, value)
+	                return
+	            break
+	    raise AttributeError(
+	        f"'{type(self).__name__}' object has no writable attribute '{name}'"
+	    )
 	%}
 	%immutable name;
 	const char *name;
@@ -1035,6 +1086,20 @@ struct libnvme_ns {
 	    while ns:
 	        yield ns
 	        ns = libnvme_ctrl_next_ns(self, ns)
+	def __setattr__(self, name, value):
+	    if name == 'this' or name.startswith('_'):
+	        object.__setattr__(self, name, value)
+	        return
+	    for klass in type(self).__mro__:
+	        attr = klass.__dict__.get(name)
+	        if attr is not None:
+	            if isinstance(attr, property) and attr.fset is not None:
+	                attr.fset(self, value)
+	                return
+	            break
+	    raise AttributeError(
+	        f"'{type(self).__name__}' object has no writable attribute '{name}'"
+	    )
 	%}
 }
 
