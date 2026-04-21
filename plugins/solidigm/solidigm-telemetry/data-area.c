@@ -5,8 +5,6 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include <ctype.h>
-
 #include "cod.h"
 #include "common.h"
 #include "config.h"
@@ -210,12 +208,17 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 
 	if (array_rank > 1) {
 		uint32_t linear_pos_per_index = 1;
+		uint32_t outer_size = array_size_dimension[array_rank - 1];
 		uint32_t prev_index_offset_bit = 0;
 		struct json_object *dimension_output;
 		struct json_object *inner_dim_array;
 
-		/* Stride = product of all inner dimensions (1..rank-1) */
-		for (unsigned int i = 1; i < array_rank; i++)
+		/*
+		 * arraySize convention: the last element is the outermost
+		 * (major) dimension. Stride = product of all inner dims
+		 * [0..rank-2].
+		 */
+		for (unsigned int i = 0; i < array_rank - 1; i++)
 			linear_pos_per_index *= array_size_dimension[i];
 
 		/*
@@ -230,11 +233,11 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 		}
 
 		/*
-		 * Build a copy of arraySize without the first dimension
-		 * so recursive calls see only the inner dimensions.
+		 * Build a copy of arraySize without the last (outermost)
+		 * dimension so recursive calls see only the inner dimensions.
 		 */
 		inner_dim_array = json_create_array();
-		for (size_t i = 1; i < array_rank; i++) {
+		for (size_t i = 0; i < array_rank - 1; i++) {
 			struct json_object *dim =
 				json_object_array_get_idx(
 					obj_arraySizeArray, i);
@@ -246,7 +249,7 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 		json_object_object_add(struct_def, "arraySize",
 				      inner_dim_array);
 
-		for (unsigned int i = 0 ; i < array_size_dimension[0]; i++) {
+		for (unsigned int i = 0 ; i < outer_size; i++) {
 			struct json_object *sub_array = json_create_array();
 			uint64_t offset;
 
