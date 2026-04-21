@@ -2611,6 +2611,28 @@ __public void libnvme_ns_get_uuid(libnvme_ns_t n,
 	memcpy(out, n->uuid, NVME_UUID_LEN);
 }
 
+__public long libnvme_ns_get_command_retry_count(libnvme_ns_t n)
+{
+	__cleanup_free char *retry_count = NULL;
+
+	retry_count = libnvme_get_ns_attr(n, "command_retry_count");
+	if (retry_count)
+		sscanf(retry_count, "%ld", &n->command_retry_count);
+
+	return n->command_retry_count;
+}
+
+__public long libnvme_ns_get_command_error_count(libnvme_ns_t n)
+{
+	__cleanup_free char *error_count = NULL;
+
+	error_count = libnvme_get_ns_attr(n, "command_error_count");
+	if (error_count)
+		sscanf(error_count, "%ld", &n->command_error_count);
+
+	return n->command_error_count;
+}
+
 __public int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns)
 {
 	struct libnvme_transport_handle *hdl;

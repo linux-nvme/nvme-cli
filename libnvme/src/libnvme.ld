@@ -140,6 +140,8 @@ LIBNVME_3 {
 		libnvme_ns_get_write_sectors;
 		libnvme_ns_get_inflights;
 		libnvme_ns_get_io_ticks;
+		libnvme_ns_get_command_retry_count;
+		libnvme_ns_get_command_error_count;
 		libnvme_ns_identify;
 		libnvme_ns_read;
 		libnvme_ns_verify;
