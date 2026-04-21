@@ -1458,6 +1458,39 @@ __public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 	return c->state;
 }
 
+__public long libnvme_ctrl_get_command_error_count(libnvme_ctrl_t c)
+{
+	__cleanup_free char *error_count = NULL;
+
+	error_count = libnvme_get_ctrl_attr(c, "command_error_count");
+	if (error_count)
+		sscanf(error_count, "%ld", &c->command_error_count);
+
+	return c->command_error_count;
+}
+
+__public long libnvme_ctrl_get_reset_count(libnvme_ctrl_t c)
+{
+	__cleanup_free char *reset_count = NULL;
+
+	reset_count = libnvme_get_ctrl_attr(c, "reset_count");
+	if (reset_count)
+		sscanf(reset_count, "%ld", &c->reset_count);
+
+	return c->reset_count;
+}
+
+__public long libnvme_ctrl_get_reconnect_count(libnvme_ctrl_t c)
+{
+	__cleanup_free char *reconnect_count = NULL;
+
+	reconnect_count = libnvme_get_ctrl_attr(c, "reconnect_count");
+	if (reconnect_count)
+		sscanf(reconnect_count, "%ld", &c->reconnect_count);
+
+	return c->reconnect_count;
+}
+
 __public int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
 	struct libnvme_transport_handle *hdl =

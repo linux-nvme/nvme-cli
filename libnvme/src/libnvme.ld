@@ -14,6 +14,9 @@ LIBNVME_3 {
 		libnvme_ctrl_get_subsysnqn;
 		libnvme_ctrl_get_subsystem;
 		libnvme_ctrl_get_transport_handle;
+		libnvme_ctrl_get_command_error_count;
+		libnvme_ctrl_get_reset_count;
+		libnvme_ctrl_get_reconnect_count;
 		libnvme_ctrl_identify;
 		libnvme_ctrl_match_config;
 		libnvme_ctrl_next_ns;

@@ -298,6 +298,9 @@ struct libnvme_ctrl {			// !generate-accessors
 	bool unique_discovery_ctrl;
 	bool discovered;
 	bool persistent;
+	long command_error_count;	// !accessors:none
+	long reset_count;		// !accessors:none
+	long reconnect_count;		// !accessors:none
 	struct libnvme_fabrics_config cfg;
 };
 

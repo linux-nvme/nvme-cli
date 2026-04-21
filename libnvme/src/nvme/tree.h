@@ -1008,6 +1008,31 @@ unsigned long long libnvme_ns_get_read_sectors(libnvme_ns_t n);
 unsigned long long libnvme_ns_get_write_sectors(libnvme_ns_t n);
 
 /**
+ * libnvme_ctrl_get_command_error_count() - Get admin command error count
+ * @c: Controller instance
+ *
+ * Return: Number of times admin command issued to controller @c failed or
+ * returned error status
+ */
+long libnvme_ctrl_get_command_error_count(libnvme_ctrl_t c);
+
+/**
+ * libnvme_ctrl_get_reset_count() - Get controller reset count
+ * @c: Controller instance
+ *
+ * Return: Number of timer controller @c is reset
+ */
+long libnvme_ctrl_get_reset_count(libnvme_ctrl_t c);
+
+/**
+ * libnvme_ctrl_get_reconnect_count() - Get controller reconnect count
+ * @c: Controller instance
+ *
+ * Return: Number of times controller has to reconnect to the target
+ */
+long libnvme_ctrl_get_reconnect_count(libnvme_ctrl_t c);
+
+/**
  * libnvme_ctrl_identify() - Issues an 'identify controller' command
  * @c:	Controller instance
  * @id:	Identify controller data structure
