@@ -163,6 +163,9 @@ LIBNVME_3 {
 		libnvme_path_get_write_ticks;
 		libnvme_path_reset_stat;
 		libnvme_path_update_stat;
+		libnvme_path_get_command_retry_count;
+		libnvme_path_get_command_error_count;
+		libnvme_path_get_multipath_failover_count;
 		libnvme_random_uuid;
 		libnvme_read_config;
 		libnvme_read_hostid;

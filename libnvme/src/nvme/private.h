@@ -213,6 +213,9 @@ struct libnvme_path {			// !generate-accessors
 	char *numa_nodes;		// !accessors:none
 	int grpid;
 	int queue_depth;		// !accessors:none
+	long multipath_failover_count;	// !accessors:none
+	long command_retry_count;	// !accessors:none
+	long command_error_count;	// !accessors:none
 };
 
 struct libnvme_ns_head {

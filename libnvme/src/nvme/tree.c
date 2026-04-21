@@ -885,6 +885,39 @@ __public char *libnvme_path_get_numa_nodes(libnvme_path_t p)
 	return p->numa_nodes;
 }
 
+__public long libnvme_path_get_multipath_failover_count(libnvme_path_t p)
+{
+	__cleanup_free char *failover_count = NULL;
+
+	failover_count = libnvme_get_path_attr(p, "multipath_failover_count");
+	if (failover_count)
+		sscanf(failover_count, "%ld", &p->multipath_failover_count);
+
+	return p->multipath_failover_count;
+}
+
+__public long libnvme_path_get_command_retry_count(libnvme_path_t p)
+{
+	__cleanup_free char *retry_count = NULL;
+
+	retry_count = libnvme_get_path_attr(p, "command_retry_count");
+	if (retry_count)
+		sscanf(retry_count, "%ld", &p->command_retry_count);
+
+	return p->command_retry_count;
+}
+
+__public long libnvme_path_get_command_error_count(libnvme_path_t p)
+{
+	__cleanup_free char *error_count = NULL;
+
+	error_count = libnvme_get_path_attr(p, "command_error_count");
+	if (error_count)
+		sscanf(error_count, "%ld", &p->command_error_count);
+
+	return p->command_error_count;
+}
+
 static libnvme_stat_t libnvme_path_get_stat(libnvme_path_t p, unsigned int idx)
 {
 	if (idx > 1)
