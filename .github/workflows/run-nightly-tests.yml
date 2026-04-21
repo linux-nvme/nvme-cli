@@ -126,7 +126,7 @@ jobs:
             #command set.
 
             sudo podman run --privileged \
-            --device="${BDEV0}":"${BDEV0}":rwm \
+            -v /dev:/dev \
             -e BDEV0 \
             -v "${PWD}/test.sh":"/test.sh" \
             -v "${PWD}/nvme-cli":"/nvme-cli":z \
