@@ -166,7 +166,6 @@ struct nvmf_args {
 
 static void nvmf_default_args(struct nvmf_args *fa)
 {
-	memset(fa, 0, sizeof(*fa));
 	fa->tos = -1;
 	fa->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 }
