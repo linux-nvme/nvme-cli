@@ -137,6 +137,12 @@ __public void libnvme_transport_handle_set_decide_retry(struct libnvme_transport
 		hdl->decide_retry = __libnvme_decide_retry;
 }
 
+__public void libnvme_transport_handle_set_timeout(
+		struct libnvme_transport_handle *hdl, __u32 timeout_ms)
+{
+	hdl->timeout = timeout_ms;
+}
+
 static int __nvme_transport_handle_open_direct(
 		struct libnvme_transport_handle *hdl, const char *devname)
 {

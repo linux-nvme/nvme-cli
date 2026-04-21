@@ -150,6 +150,9 @@ struct libnvme_transport_handle {
 	bool (*decide_retry)(struct libnvme_transport_handle *hdl,
 			struct libnvme_passthru_cmd *cmd, int err);
 
+	/* global command timeout */
+	__u32 timeout;
+
 	/* direct */
 	int fd;
 	struct stat stat;
