@@ -130,9 +130,7 @@
 	#define libnvme_subsystem_firmware_get    libnvme_subsystem_get_firmware
 	#define libnvme_subsystem_subsystype_get  libnvme_subsystem_get_subsystype
 	#define libnvme_subsystem_application_get libnvme_subsystem_get_application
-	#define libnvme_subsystem_iopolicy_get    libnvme_subsystem_get_iopolicy
 	#define libnvme_subsystem_application_set libnvme_subsystem_set_application
-	#define libnvme_subsystem_iopolicy_set    libnvme_subsystem_set_iopolicy
 
 	/* struct libnvme_host */
 	#define libnvme_host_hostnqn_get           libnvme_host_get_hostnqn

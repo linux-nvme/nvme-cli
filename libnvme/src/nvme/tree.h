@@ -215,6 +215,14 @@ void libnvme_free_subsystem(struct libnvme_subsystem *s);
 libnvme_host_t libnvme_subsystem_get_host(libnvme_subsystem_t s);
 
 /**
+ * libnvme_subsystem_get_iopolicy() - Get subsystem iopolicy name
+ * @s:	subsystem
+ *
+ * Return: The iopolicy configured in subsystem @s
+ */
+char *libnvme_subsystem_get_iopolicy(libnvme_subsystem_t s);
+
+/**
  * libnvme_ctrl_first_ns() - Start namespace iterator
  * @c:	Controller instance
  *

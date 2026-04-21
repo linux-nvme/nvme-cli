@@ -464,6 +464,21 @@ __public libnvme_host_t libnvme_subsystem_get_host(libnvme_subsystem_t s)
 	return s->h;
 }
 
+__public char *libnvme_subsystem_get_iopolicy(libnvme_subsystem_t s)
+{
+	__cleanup_free char *iopolicy = NULL;
+
+	iopolicy = libnvme_get_subsys_attr(s, "iopolicy");
+	if (iopolicy) {
+		if (!s->iopolicy || strcmp(iopolicy, s->iopolicy)) {
+			free(s->iopolicy);
+			s->iopolicy = strdup(iopolicy);
+		}
+	}
+
+	return s->iopolicy;
+}
+
 __public libnvme_ns_t libnvme_subsystem_first_ns(libnvme_subsystem_t s)
 {
 	return list_top(&s->namespaces, struct libnvme_ns, entry);

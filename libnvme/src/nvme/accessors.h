@@ -901,23 +901,6 @@ void libnvme_subsystem_set_application(
 const char *libnvme_subsystem_get_application(
 		const struct libnvme_subsystem *p);
 
-/**
- * libnvme_subsystem_set_iopolicy() - Set iopolicy.
- * @p: The &struct libnvme_subsystem instance to update.
- * @iopolicy: New string; a copy is stored. Pass NULL to clear.
- */
-void libnvme_subsystem_set_iopolicy(
-		struct libnvme_subsystem *p,
-		const char *iopolicy);
-
-/**
- * libnvme_subsystem_get_iopolicy() - Get iopolicy.
- * @p: The &struct libnvme_subsystem instance to query.
- *
- * Return: The value of the iopolicy field, or NULL if not set.
- */
-const char *libnvme_subsystem_get_iopolicy(const struct libnvme_subsystem *p);
-
 /****************************************************************************
  * Accessors for: struct libnvme_host
  ****************************************************************************/

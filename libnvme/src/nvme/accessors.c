@@ -661,20 +661,6 @@ __public const char *libnvme_subsystem_get_application(
 	return p->application;
 }
 
-__public void libnvme_subsystem_set_iopolicy(
-		struct libnvme_subsystem *p,
-		const char *iopolicy)
-{
-	free(p->iopolicy);
-	p->iopolicy = iopolicy ? strdup(iopolicy) : NULL;
-}
-
-__public const char *libnvme_subsystem_get_iopolicy(
-		const struct libnvme_subsystem *p)
-{
-	return p->iopolicy;
-}
-
 /****************************************************************************
  * Accessors for: struct libnvme_host
  ****************************************************************************/

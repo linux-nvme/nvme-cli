@@ -272,7 +272,7 @@ struct libnvme_subsystem {		// !generate-accessors
 	char *firmware;			// !accessors:readonly
 	char *subsystype;		// !accessors:readonly
 	char *application;
-	char *iopolicy;
+	char *iopolicy;			// !accessors:none
 };
 
 struct libnvme_host {			// !generate-accessors

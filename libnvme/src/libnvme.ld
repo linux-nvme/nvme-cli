@@ -177,6 +177,7 @@ LIBNVME_3 {
 		libnvme_subsystem_first_ctrl;
 		libnvme_subsystem_first_ns;
 		libnvme_subsystem_get_host;
+		libnvme_subsystem_get_iopolicy;
 		libnvme_subsystem_lookup_namespace;
 		libnvme_subsystem_next_ctrl;
 		libnvme_subsystem_next_ns;
