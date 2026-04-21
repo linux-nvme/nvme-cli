@@ -23,6 +23,7 @@
 typedef struct libnvme_ns *libnvme_ns_t;
 typedef struct libnvme_ns_head *libnvme_ns_head_t;
 typedef struct libnvme_path *libnvme_path_t;
+typedef struct libnvme_stat *libnvme_stat_t;
 typedef struct libnvme_ctrl *libnvme_ctrl_t;
 typedef struct libnvme_subsystem *libnvme_subsystem_t;
 typedef struct libnvme_host *libnvme_host_t;
@@ -699,6 +700,98 @@ libnvme_ctrl_t libnvme_path_get_ctrl(libnvme_path_t p);
  * Return: Parent namespace if present
  */
 libnvme_ns_t libnvme_path_get_ns(libnvme_path_t p);
+
+/**
+ * libnvme_path_reset_stat() - Resets namespace path nvme stat
+ * @p:	&libnvme_path_t object
+ */
+void libnvme_path_reset_stat(libnvme_path_t p);
+
+/**
+ * libnvme_path_update_stat() - Update stat of an nvme_path_t object
+ * @p:		&libnvme_path_t object
+ * @diffstat:	If set to true then getters return the diff stat otherwise
+ *		return the current absolute stat
+ *
+ * Return:	0 on success, -1 on error
+ */
+int libnvme_path_update_stat(libnvme_path_t p, bool diffstat);
+
+/**
+ * libnvme_path_get_read_ios() - Calculate and return read IOs
+ * @p:		&libnvme_path_t object
+ *
+ * Return:	Num of read IOs processed between two stat samples
+ */
+unsigned long libnvme_path_get_read_ios(libnvme_path_t p);
+
+/**
+ * libnvme_path_get_write_ios() - Get write I/Os
+ * @p:		&libnvme_path_t object
+ *
+ * Return:	Num of write I/Os processed between two stat samples
+ */
+unsigned long libnvme_path_get_write_ios(libnvme_path_t p);
+
+/**
+ * libnvme_path_get_read_ticks() - Get read I/O ticks
+ * @p:		&libnvme_path_t object
+ *
+ * Return:	Time, in milliseconds, sepnt processing read I/O requests
+ *		between two stat samples
+ */
+unsigned int libnvme_path_get_read_ticks(libnvme_path_t p);
+
+/**
+ * libnvme_path_get_read_sectors() - Get read I/O sectors
+ * @p:		&libnvme_path_t object
+ *
+ * Return:	Number of sectors read from the device between two stat samples
+ */
+unsigned long long libnvme_path_get_read_sectors(libnvme_path_t p);
+
+/**
+ * libnvme_path_get_write_sectors() - Get write I/O sectors
+ * @p:		&libnvme_path_t object
+ *
+ * Return:	Num of sectors written to the device between two stat samples
+ */
+unsigned long long libnvme_path_get_write_sectors(libnvme_path_t p);
+
+/**
+ * libnvme_path_get_write_ticks() - Get write I/O ticks
+ * @p:		&libnvme_path_t object
+ *
+ * Return:	Time, in milliseconds, sepnt processing write I/O requests
+ *		between two stat samples
+ */
+unsigned int libnvme_path_get_write_ticks(libnvme_path_t p);
+
+/**
+ * libnvme_path_get_stat_interval() - Get interval between two stat samples
+ * @p:		&libnvme_path_t object
+ *
+ * Return:	Interval, in milliseconds between collection of two consecutive
+ *		stat samples
+ */
+double libnvme_path_get_stat_interval(libnvme_path_t p);
+
+/**
+ * libnvme_path_get_io_ticks() - Get I/O ticks
+ * @p:		&libnvme_path_t object
+ *
+ * Return:	Time consumed, in milliseconds, processing I/O requests between
+ *		two stat samples
+ */
+unsigned int libnvme_path_get_io_ticks(libnvme_path_t p);
+
+/**
+ * libnvme_path_get_inflights() - Inflight IOs for nvme_path_t object
+ * @p:		&libnvme_path_t object
+ *
+ * Return:	Inflight number of IOs
+ */
+unsigned int libnvme_path_get_inflights(libnvme_path_t p);
 
 /**
  * libnvme_ctrl_get_transport_handle() - Get associated transport handle

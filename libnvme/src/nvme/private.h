@@ -15,6 +15,8 @@
 #include "nvme/nvme-types.h"
 #include "nvme/lib-types.h"
 
+#include <nvme/tree.h>
+
 const char *libnvme_subsys_sysfs_dir(void);
 const char *libnvme_ctrl_sysfs_dir(void);
 const char *libnvme_ns_sysfs_dir(void);
@@ -170,9 +172,37 @@ struct libnvme_transport_handle {
 	struct libnvme_log *log;
 };
 
+enum libnvme_stat_group {
+	READ = 0,
+	WRITE,
+	DISCARD,
+	FLUSH,
+
+	NR_STAT_GROUPS
+};
+
+struct libnvme_stat {
+	struct {
+		unsigned long ios;
+		unsigned long merges;
+		unsigned long long sectors;
+		unsigned int ticks;	/* in milliseconds */
+	} group[NR_STAT_GROUPS];
+
+	unsigned int inflights;
+	unsigned int io_ticks;		/* in milliseconds */
+	unsigned int tot_ticks;		/* in milliseconds */
+
+	double ts_ms;			/* timestamp when the stat is updated */
+};
+
 struct libnvme_path {			// !generate-accessors
 	struct list_node entry;
 	struct list_node nentry;
+
+	struct libnvme_stat stat[2];	/* gendisk I/O stat */
+	unsigned int curr_idx;		/* current index into the stat[] */
+	bool diffstat;			// !accessors:none
 
 	struct libnvme_ctrl *c;
 	struct libnvme_ns *n;

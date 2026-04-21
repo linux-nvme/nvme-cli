@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -882,6 +883,276 @@ __public char *libnvme_path_get_numa_nodes(libnvme_path_t p)
 	}
 
 	return p->numa_nodes;
+}
+
+static libnvme_stat_t libnvme_path_get_stat(libnvme_path_t p, unsigned int idx)
+{
+	if (idx > 1)
+		return NULL;
+
+	return &p->stat[idx];
+}
+
+__public void libnvme_path_reset_stat(libnvme_path_t p)
+{
+	libnvme_stat_t stat = &p->stat[0];
+
+	memset(stat, 0, 2 * sizeof(struct libnvme_stat));
+}
+
+static int libnvme_update_stat(const char *sysfs_stat_path, libnvme_stat_t stat)
+{
+	int n;
+	struct timespec ts;
+	unsigned long rd_ios, rd_merges, wr_ios, wr_merges;
+	unsigned long dc_ios, dc_merges, fl_ios;
+	unsigned long long rd_sectors, wr_sectors, dc_sectors;
+	unsigned int rd_ticks, wr_ticks, dc_ticks, fl_ticks;
+	unsigned int io_ticks, tot_ticks, inflights;
+
+	memset(stat, 0, sizeof(struct libnvme_stat));
+
+	n = sscanf(sysfs_stat_path,
+		"%lu %lu %llu %u %lu %lu %llu %u %u %u %u %lu %lu %llu %u %lu %u",
+		&rd_ios, &rd_merges, &rd_sectors, &rd_ticks,
+		&wr_ios, &wr_merges, &wr_sectors, &wr_ticks,
+		&inflights, &io_ticks, &tot_ticks,
+		&dc_ios, &dc_merges, &dc_sectors, &dc_ticks,
+		&fl_ios, &fl_ticks);
+
+	if (n < 17)
+		return -EINVAL;
+
+	/* update read stat */
+	stat->group[READ].ios = rd_ios;
+	stat->group[READ].merges = rd_merges;
+	stat->group[READ].sectors = rd_sectors;
+	stat->group[READ].ticks = rd_ticks;
+
+	/* update write stat */
+	stat->group[WRITE].ios = wr_ios;
+	stat->group[WRITE].merges = wr_merges;
+	stat->group[WRITE].sectors = wr_sectors;
+	stat->group[WRITE].ticks = wr_ticks;
+
+	/* update inflight counters and ticks */
+	stat->inflights = inflights;
+	stat->io_ticks = io_ticks;
+	stat->tot_ticks = tot_ticks;
+
+	/* update discard stat */
+	stat->group[DISCARD].ios = dc_ios;
+	stat->group[DISCARD].merges = dc_merges;
+	stat->group[DISCARD].sectors = dc_sectors;
+	stat->group[DISCARD].ticks = dc_ticks;
+
+	/* update flush stat */
+	stat->group[FLUSH].ios = fl_ios;
+	stat->group[FLUSH].ticks = fl_ticks;
+
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	stat->ts_ms = ts.tv_sec * 1000 + (double)ts.tv_nsec / 1e6;
+
+	return 0;
+}
+
+__public int libnvme_path_update_stat(libnvme_path_t p, bool diffstat)
+{
+	__cleanup_free char *sysfs_stat_path = NULL;
+	libnvme_stat_t stat;
+
+	p->diffstat = diffstat;
+	p->curr_idx ^= 1;
+	stat = libnvme_path_get_stat(p, p->curr_idx);
+	if (!stat)
+		return -EINVAL;
+
+	sysfs_stat_path = libnvme_get_path_attr(p, "stat");
+	if (!sysfs_stat_path)
+		return -EINVAL;
+
+	return libnvme_update_stat(sysfs_stat_path, stat);
+}
+
+static int libnvme_stat_get_inflights(libnvme_stat_t stat)
+{
+	return stat->inflights;
+}
+
+__public unsigned int libnvme_path_get_inflights(libnvme_path_t p)
+{
+	libnvme_stat_t curr;
+
+	curr = libnvme_path_get_stat(p, p->curr_idx);
+	if (!curr)
+		return 0;
+
+	return libnvme_stat_get_inflights(curr);
+}
+
+static int libnvme_stat_get_io_ticks(libnvme_stat_t curr, libnvme_stat_t prev,
+		bool diffstat)
+{
+	unsigned int delta = 0;
+
+	if (!diffstat)
+		return curr->io_ticks;
+
+	if (curr->io_ticks > prev->io_ticks)
+		delta = curr->io_ticks - prev->io_ticks;
+
+	return delta;
+}
+
+__public unsigned int libnvme_path_get_io_ticks(libnvme_path_t p)
+{
+	libnvme_stat_t curr, prev;
+
+	curr = libnvme_path_get_stat(p, p->curr_idx);
+	prev = libnvme_path_get_stat(p, !p->curr_idx);
+
+	if (!curr || !prev)
+		return 0;
+
+	return libnvme_stat_get_io_ticks(curr, prev, p->diffstat);
+}
+
+static unsigned int libnvme_stat_get_ticks(libnvme_stat_t curr,
+		libnvme_stat_t prev, enum libnvme_stat_group grp, bool diffstat)
+{
+	unsigned int delta = 0;
+
+	if (!diffstat)
+		return curr->group[grp].ticks;
+
+	if (curr->group[grp].ticks > prev->group[grp].ticks)
+		delta = curr->group[grp].ticks - prev->group[grp].ticks;
+
+	return delta;
+}
+
+static unsigned int __libnvme_path_get_ticks(libnvme_path_t p,
+		enum libnvme_stat_group grp)
+{
+	libnvme_stat_t curr, prev;
+
+	curr = libnvme_path_get_stat(p, p->curr_idx);
+	prev = libnvme_path_get_stat(p, !p->curr_idx);
+
+	if (!curr || !prev)
+		return 0;
+
+	return libnvme_stat_get_ticks(curr, prev, grp, p->diffstat);
+}
+
+__public unsigned int libnvme_path_get_read_ticks(libnvme_path_t p)
+{
+	return __libnvme_path_get_ticks(p, READ);
+}
+
+__public unsigned int libnvme_path_get_write_ticks(libnvme_path_t p)
+{
+	return __libnvme_path_get_ticks(p, WRITE);
+}
+
+static double libnvme_stat_get_interval(libnvme_stat_t curr,
+		libnvme_stat_t prev)
+{
+	double delta = 0.0;
+
+	if (prev->ts_ms && curr->ts_ms > prev->ts_ms)
+		delta = curr->ts_ms - prev->ts_ms;
+
+	return delta;
+}
+
+__public double libnvme_path_get_stat_interval(libnvme_path_t p)
+{
+	libnvme_stat_t curr, prev;
+
+	curr = libnvme_path_get_stat(p, p->curr_idx);
+	prev = libnvme_path_get_stat(p, !p->curr_idx);
+
+	if (!curr || !prev)
+		return 0;
+
+	return libnvme_stat_get_interval(curr, prev);
+}
+
+static unsigned long libnvme_stat_get_ios(libnvme_stat_t curr,
+		libnvme_stat_t prev, enum libnvme_stat_group grp, bool diffstat)
+{
+	unsigned long ios = 0;
+
+	if (!diffstat)
+		return curr->group[grp].ios;
+
+	if (curr->group[grp].ios > prev->group[grp].ios)
+		ios = curr->group[grp].ios - prev->group[grp].ios;
+
+	return ios;
+}
+
+static unsigned long __libnvme_path_get_ios(libnvme_path_t p,
+		enum libnvme_stat_group grp)
+{
+	libnvme_stat_t curr, prev;
+
+	curr = libnvme_path_get_stat(p, p->curr_idx);
+	prev = libnvme_path_get_stat(p, !p->curr_idx);
+
+	if (!curr || !prev)
+		return 0;
+
+	return libnvme_stat_get_ios(curr, prev, grp, p->diffstat);
+}
+
+__public unsigned long libnvme_path_get_read_ios(libnvme_path_t p)
+{
+	return __libnvme_path_get_ios(p, READ);
+}
+
+__public unsigned long libnvme_path_get_write_ios(libnvme_path_t p)
+{
+	return __libnvme_path_get_ios(p, WRITE);
+}
+
+static unsigned long long libnvme_stat_get_sectors(libnvme_stat_t curr,
+		libnvme_stat_t prev, enum libnvme_stat_group grp, bool diffstat)
+{
+	unsigned long long sec = 0;
+
+	if (!diffstat)
+		return curr->group[grp].sectors;
+
+	if (curr->group[grp].sectors > prev->group[grp].sectors)
+		sec = curr->group[grp].sectors - prev->group[grp].sectors;
+
+	return sec;
+}
+
+static unsigned long long __libnvme_path_get_sectors(libnvme_path_t p,
+		enum libnvme_stat_group grp)
+{
+	libnvme_stat_t curr, prev;
+
+	curr = libnvme_path_get_stat(p, p->curr_idx);
+	prev = libnvme_path_get_stat(p, !p->curr_idx);
+
+	if (!curr || !prev)
+		return 0;
+
+	return libnvme_stat_get_sectors(curr, prev, grp, p->diffstat);
+}
+
+__public unsigned long long libnvme_path_get_read_sectors(libnvme_path_t p)
+{
+	return __libnvme_path_get_sectors(p, READ);
+}
+
+__public unsigned long long libnvme_path_get_write_sectors(libnvme_path_t p)
+{
+	return __libnvme_path_get_sectors(p, WRITE);
 }
 
 void nvme_free_path(struct libnvme_path *p)
