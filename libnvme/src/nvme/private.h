@@ -337,7 +337,7 @@ struct libnvme_global_ctx {
 	bool dry_run;
 #ifdef CONFIG_FABRICS
 	struct libnvme_fabric_options *options;
-	struct ifaddrs *ifaddrs_cache; /* init with libnvme_getifaddrs() */
+	struct ifaddrs *ifaddrs_cache; /* init with libnvmf_getifaddrs() */
 #endif
 
 	enum libnvme_io_uring_state uring_state;
@@ -418,20 +418,6 @@ static inline char *xstrdup(const char *s)
 }
 
 /**
- * libnvme_getifaddrs - Cached wrapper around getifaddrs()
- * @ctx: pointer to the global context
- *
- * On the first call, this function invokes the POSIX getifaddrs()
- * and caches the result in the global context. Subsequent calls
- * return the cached data. The caller must NOT call freeifaddrs()
- * on the returned data. The cache will be freed when the global
- * context is freed.
- *
- * Return: Pointer to I/F data, NULL on error (with errno set).
- */
-const struct ifaddrs *libnvme_getifaddrs(struct libnvme_global_ctx *ctx);
-
-/**
  * libnvme_ipaddrs_eq - Check if 2 IP addresses are equal.
  * @addr1: IP address (can be IPv4 or IPv6)
  * @addr2: IP address (can be IPv4 or IPv6)
@@ -440,6 +426,7 @@ const struct ifaddrs *libnvme_getifaddrs(struct libnvme_global_ctx *ctx);
  */
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2);
 
+#if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
 /**
  * libnvme_iface_matching_addr - Get interface matching @addr
  * @iface_list: Interface list returned by getifaddrs()
@@ -469,6 +456,7 @@ const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
  */
 bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr);
+#endif /* HAVE_NETDB || CONFIG_FABRICS */
 
 int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 		char **hostname);
@@ -551,38 +539,6 @@ char *kv_keymatch(const char *kv, const char *key);
  * usage: int x = round_up(13, sizeof(__u32)); // 13 -> 16
  */
 #define round_up(val, mult)     ((((val)-1) | __round_mask((val), (mult)))+1)
-
-/**
- * nvmf_exat_len() - Return length rounded up by 4
- * @val_len: Value length
- *
- * Return the size in bytes, rounded to a multiple of 4 (e.g., size of
- * __u32), of the buffer needed to hold the exat value of size
- * @val_len.
- *
- * Return: Length rounded up by 4
- */
-static inline __u16 nvmf_exat_len(size_t val_len)
-{
-	return (__u16)round_up(val_len, sizeof(__u32));
-}
-
-/**
- * nvmf_exat_size - Return min aligned size to hold value
- * @val_len: This is the length of the data to be copied to the "exatval"
- *           field of a "struct nvmf_ext_attr".
- *
- * Return the size of the "struct nvmf_ext_attr" needed to hold
- * a value of size @val_len.
- *
- * Return: The size in bytes, rounded to a multiple of 4 (i.e. size of
- * __u32), of the "struct nvmf_ext_attr" required to hold a string of
- * length @val_len.
- */
-static inline __u16 nvmf_exat_size(size_t val_len)
-{
-	return (__u16)(sizeof(struct nvmf_ext_attr) + nvmf_exat_len(val_len));
-}
 
 /**
  * libnvme_ns_get_transport_handle() - Get associated transport handle

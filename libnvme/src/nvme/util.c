@@ -716,12 +716,6 @@ size_t get_entity_version(char *buffer, size_t bufsz)
 	return num_bytes;
 }
 
-__public struct nvmf_ext_attr *libnvmf_exat_ptr_next(struct nvmf_ext_attr *p)
-{
-	return (struct nvmf_ext_attr *)
-		((uintptr_t)p + (ptrdiff_t)nvmf_exat_size(le16_to_cpu(p->exatlen)));
-}
-
 __public const char *libnvme_get_version(enum libnvme_version type)
 {
 	switch(type) {
@@ -938,7 +932,7 @@ bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 	return match_found;
 }
 
-#else /* HAVE_NETDB */
+#elif defined(CONFIG_FABRICS)
 
 const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
 		const char *addr)
@@ -958,7 +952,7 @@ bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 	return false;
 }
 
-#endif /* HAVE_NETDB */
+#endif /* HAVE_NETDB || CONFIG_FABRICS */
 
 void *__libnvme_alloc(size_t len)
 {
@@ -985,20 +979,6 @@ void *__libnvme_realloc(void *p, size_t len)
 
 	return result;
 }
-
-#ifdef CONFIG_FABRICS
-const struct ifaddrs *libnvme_getifaddrs(struct libnvme_global_ctx *ctx)
-{
-	if (!ctx->ifaddrs_cache) {
-		struct ifaddrs *p;
-
-		if (!getifaddrs(&p))
-			ctx->ifaddrs_cache = p;
-	}
-
-	return ctx->ifaddrs_cache;
-}
-#endif
 
 /* This used instead of basename() due to behavioral differences between
  * the POSIX and the GNU version. This is the glibc implementation.
