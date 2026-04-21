@@ -84,6 +84,7 @@ if want_python
         [ 'sigsegv-during-gc', [ files('tests/gc.py'), ] ],
         [ 'read-nbft-file', [ files('tests/test-nbft.py'), '--filename', join_paths(meson.current_source_dir(), 'tests', 'NBFT') ] ],
         [ 'object-properties-and-errors', [ files('tests/test-objects.py'), ] ],
+        [ 'setattr-guards', [ files('tests/test-setattr.py'), ] ],
     ]
     foreach test: py_tests
         description = test[0]
