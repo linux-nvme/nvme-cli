@@ -58,14 +58,12 @@
 	#define libnvme_fabrics_config_concat_set                libnvme_fabrics_config_set_concat
 
 	/* struct libnvme_path */
-	#define libnvme_path_name_get       libnvme_path_get_name
-	#define libnvme_path_sysfs_dir_get  libnvme_path_get_sysfs_dir
-	#define libnvme_path_numa_nodes_get libnvme_path_get_numa_nodes
-	#define libnvme_path_grpid_get      libnvme_path_get_grpid
-	#define libnvme_path_name_set       libnvme_path_set_name
-	#define libnvme_path_sysfs_dir_set  libnvme_path_set_sysfs_dir
-	#define libnvme_path_numa_nodes_set libnvme_path_set_numa_nodes
-	#define libnvme_path_grpid_set      libnvme_path_set_grpid
+	#define libnvme_path_name_get      libnvme_path_get_name
+	#define libnvme_path_sysfs_dir_get libnvme_path_get_sysfs_dir
+	#define libnvme_path_grpid_get     libnvme_path_get_grpid
+	#define libnvme_path_name_set      libnvme_path_set_name
+	#define libnvme_path_sysfs_dir_set libnvme_path_set_sysfs_dir
+	#define libnvme_path_grpid_set     libnvme_path_set_grpid
 
 	/* struct libnvme_ns */
 	#define libnvme_ns_nsid_get      libnvme_ns_get_nsid

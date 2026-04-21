@@ -139,6 +139,7 @@ LIBNVME_3 {
 		libnvme_path_get_ana_state;
 		libnvme_path_get_ctrl;
 		libnvme_path_get_ns;
+		libnvme_path_get_numa_nodes;
 		libnvme_path_get_queue_depth;
 		libnvme_random_uuid;
 		libnvme_read_config;

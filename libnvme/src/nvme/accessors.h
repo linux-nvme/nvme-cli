@@ -392,23 +392,6 @@ void libnvme_path_set_sysfs_dir(struct libnvme_path *p, const char *sysfs_dir);
 const char *libnvme_path_get_sysfs_dir(const struct libnvme_path *p);
 
 /**
- * libnvme_path_set_numa_nodes() - Set numa_nodes.
- * @p: The &struct libnvme_path instance to update.
- * @numa_nodes: New string; a copy is stored. Pass NULL to clear.
- */
-void libnvme_path_set_numa_nodes(
-		struct libnvme_path *p,
-		const char *numa_nodes);
-
-/**
- * libnvme_path_get_numa_nodes() - Get numa_nodes.
- * @p: The &struct libnvme_path instance to query.
- *
- * Return: The value of the numa_nodes field, or NULL if not set.
- */
-const char *libnvme_path_get_numa_nodes(const struct libnvme_path *p);
-
-/**
  * libnvme_path_set_grpid() - Set grpid.
  * @p: The &struct libnvme_path instance to update.
  * @grpid: Value to assign to the grpid field.

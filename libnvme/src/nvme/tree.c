@@ -854,6 +854,21 @@ __public char *libnvme_path_get_ana_state(libnvme_path_t p)
 	return p->ana_state;
 }
 
+__public char *libnvme_path_get_numa_nodes(libnvme_path_t p)
+{
+	__cleanup_free char *numa_nodes = NULL;
+
+	numa_nodes = libnvme_get_path_attr(p, "numa_nodes");
+	if (numa_nodes) {
+		if (!p->numa_nodes || strcmp(numa_nodes, p->numa_nodes)) {
+			free(p->numa_nodes);
+			p->numa_nodes = strdup(numa_nodes);
+		}
+	}
+
+	return p->numa_nodes;
+}
+
 void nvme_free_path(struct libnvme_path *p)
 {
 	if (!p)

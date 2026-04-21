@@ -669,6 +669,14 @@ int libnvme_path_get_queue_depth(libnvme_path_t p);
 char *libnvme_path_get_ana_state(libnvme_path_t p);
 
 /**
+ * libnvme_path_get_numa_nodes() - Numa nodes of an nvme_path_t object
+ * @p: &libnvme_path_t object
+ *
+ * Return: Numa nodes of @p
+ */
+char *libnvme_path_get_numa_nodes(libnvme_path_t p);
+
+/**
  * libnvme_path_get_ctrl() - Parent controller of an libnvme_path_t object
  * @p:	&libnvme_path_t object
  *

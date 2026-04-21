@@ -291,19 +291,6 @@ __public const char *libnvme_path_get_sysfs_dir(const struct libnvme_path *p)
 	return p->sysfs_dir;
 }
 
-__public void libnvme_path_set_numa_nodes(
-		struct libnvme_path *p,
-		const char *numa_nodes)
-{
-	free(p->numa_nodes);
-	p->numa_nodes = numa_nodes ? strdup(numa_nodes) : NULL;
-}
-
-__public const char *libnvme_path_get_numa_nodes(const struct libnvme_path *p)
-{
-	return p->numa_nodes;
-}
-
 __public void libnvme_path_set_grpid(struct libnvme_path *p, int grpid)
 {
 	p->grpid = grpid;
