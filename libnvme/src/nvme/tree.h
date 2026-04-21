@@ -528,6 +528,23 @@ long libnvme_ns_get_command_retry_count(libnvme_ns_t n);
 long libnvme_ns_get_command_error_count(libnvme_ns_t n);
 
 /**
+ * libnvme_ns_get_requeue_no_usable_path_count() - Get num of I/O requeue count
+ * @n: &libnvme_ns_t object
+ *
+ * Return: Number of I/Os which are re-queued due to the unavalibility of
+ * any usable path (maybe path is currently experiencing transinet link failure)
+ */
+long libnvme_ns_get_requeue_no_usable_path_count(libnvme_ns_t n);
+
+/**
+ * libnvme_ns_get_fail_no_available_path_count() - Get num of I/Os forced to fail
+ * @n: &libnvme_ns_t object
+ *
+ * Return: Number of I/Os which are forced to fail due to no path available
+ */
+long libnvme_ns_get_fail_no_available_path_count(libnvme_ns_t n);
+
+/**
  * libnvme_ns_get_generic_name() - Returns name of generic namespace chardev.
  * @n:	Namespace instance
  *

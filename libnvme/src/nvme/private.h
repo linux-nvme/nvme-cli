@@ -255,8 +255,10 @@ struct libnvme_ns {			// !generate-accessors
 	unsigned char uuid[NVME_UUID_LEN];
 	enum nvme_csi csi;
 
-	long command_retry_count;	// !accessors:none
-	long command_error_count;	// !accessors:none
+	long command_retry_count;		// !accessors:none
+	long command_error_count;		// !accessors:none
+	long requeue_no_usable_path_count;	// !accessors:none
+	long fail_no_available_path_count;	// !accessors:none
 };
 
 struct libnvme_ctrl {			// !generate-accessors

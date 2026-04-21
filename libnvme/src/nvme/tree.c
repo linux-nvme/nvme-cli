@@ -2633,6 +2633,28 @@ __public long libnvme_ns_get_command_error_count(libnvme_ns_t n)
 	return n->command_error_count;
 }
 
+__public long libnvme_ns_get_requeue_no_usable_path_count(libnvme_ns_t n)
+{
+	__cleanup_free char *requeue_count = NULL;
+
+	requeue_count = libnvme_get_ns_attr(n, "requeue_no_usable_path_count");
+	if (requeue_count)
+		sscanf(requeue_count, "%ld", &n->requeue_no_usable_path_count);
+
+	return n->requeue_no_usable_path_count;
+}
+
+__public long libnvme_ns_get_fail_no_available_path_count(libnvme_ns_t n)
+{
+	__cleanup_free char *fail_count = NULL;
+
+	fail_count = libnvme_get_ns_attr(n, "fail_no_available_path_count");
+	if (fail_count)
+		sscanf(fail_count, "%ld", &n->fail_no_available_path_count);
+
+	return n->fail_no_available_path_count;
+}
+
 __public int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns)
 {
 	struct libnvme_transport_handle *hdl;
