@@ -839,6 +839,21 @@ __public int libnvme_path_get_queue_depth(libnvme_path_t p)
 	return p->queue_depth;
 }
 
+__public char *libnvme_path_get_ana_state(libnvme_path_t p)
+{
+	__cleanup_free char *ana_state = NULL;
+
+	ana_state = libnvme_get_path_attr(p, "ana_state");
+	if (ana_state) {
+		if (!p->ana_state || strcmp(ana_state, p->ana_state)) {
+			free(p->ana_state);
+			p->ana_state = strdup(ana_state);
+		}
+	}
+
+	return p->ana_state;
+}
+
 void nvme_free_path(struct libnvme_path *p)
 {
 	if (!p)

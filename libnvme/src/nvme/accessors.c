@@ -291,19 +291,6 @@ __public const char *libnvme_path_get_sysfs_dir(const struct libnvme_path *p)
 	return p->sysfs_dir;
 }
 
-__public void libnvme_path_set_ana_state(
-		struct libnvme_path *p,
-		const char *ana_state)
-{
-	free(p->ana_state);
-	p->ana_state = ana_state ? strdup(ana_state) : NULL;
-}
-
-__public const char *libnvme_path_get_ana_state(const struct libnvme_path *p)
-{
-	return p->ana_state;
-}
-
 __public void libnvme_path_set_numa_nodes(
 		struct libnvme_path *p,
 		const char *numa_nodes)

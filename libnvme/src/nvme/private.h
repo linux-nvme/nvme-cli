@@ -179,7 +179,7 @@ struct libnvme_path {			// !generate-accessors
 
 	char *name;
 	char *sysfs_dir;
-	char *ana_state;
+	char *ana_state;		// !accessors:none
 	char *numa_nodes;
 	int grpid;
 	int queue_depth;		// !accessors:none

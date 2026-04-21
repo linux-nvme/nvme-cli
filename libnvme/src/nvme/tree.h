@@ -661,6 +661,14 @@ int libnvme_ns_identify_descs(libnvme_ns_t n, struct nvme_ns_id_desc *descs);
 int libnvme_path_get_queue_depth(libnvme_path_t p);
 
 /**
+ * libnvme_path_get_ana_state() - ANA state of an nvme_path_t object
+ * @p: &libnvme_path_t object
+ *
+ * Return: ANA state of @p
+ */
+char *libnvme_path_get_ana_state(libnvme_path_t p);
+
+/**
  * libnvme_path_get_ctrl() - Parent controller of an libnvme_path_t object
  * @p:	&libnvme_path_t object
  *
