@@ -854,6 +854,99 @@ libnvme_subsystem_t libnvme_ctrl_get_subsystem(libnvme_ctrl_t c);
 const char *libnvme_ns_head_get_sysfs_dir(libnvme_ns_head_t head);
 
 /**
+ * libnvme_ns_update_stat() - update the nvme namespace stat
+ * @n:		&libnvme_ns_t object
+ * @diffstat:	If set to true then getters return the diff stat otherwise
+ *		return the current absolute stat
+ *
+ * Returns:	0 on success, -1 on error
+ */
+int libnvme_ns_update_stat(libnvme_ns_t n, bool diffstat);
+
+/**
+ * libnvme_ns_reset_stat() - Resets nvme namespace stat
+ * @n:	&libnvme_ns_t object
+ *
+ */
+void libnvme_ns_reset_stat(libnvme_ns_t n);
+
+/**
+ * libnvme_ns_get_inflights() - Inflight IOs for nvme_ns_t object
+ * @n:		&libnvme_ns_t object
+ *
+ * Return:	Inflight number of IOs
+ */
+unsigned int libnvme_ns_get_inflights(libnvme_ns_t n);
+
+/**
+ * libnvme_ns_get_io_ticks() - Get IO ticks
+ * @n:		&libnvme_ns_t object
+ *
+ * Return:	Time consumed, in milliseconds, processing I/O requests between
+ *		two stat samples
+ */
+unsigned int libnvme_ns_get_io_ticks(libnvme_ns_t n);
+
+/**
+ * libnvme_ns_get_read_ticks() - Get read I/O ticks
+ * @n:		&libnvme_ns_t object
+ *
+ * Return:	Time, in milliseconds, sepnt processing read I/O requests
+ *		between two stat samples
+ */
+unsigned int libnvme_ns_get_read_ticks(libnvme_ns_t n);
+
+/**
+ * libnvme_ns_get_write_ticks() - Get write I/O ticks
+ * @n:		&libnvme_ns_t object
+ *
+ * Return:	Time, in milliseconds, sepnt processing write I/O requests
+ *		between two stat samples
+ */
+unsigned int libnvme_ns_get_write_ticks(libnvme_ns_t n);
+
+/**
+ * libnvme_ns_get_stat_interval() - Get interval between two stat samples
+ * @n:		&libnvme_ns_t object
+ *
+ * Return:	Interval, in milliseconds, between collection of two consecutive
+ *		stat samples
+ */
+double libnvme_ns_get_stat_interval(libnvme_ns_t n);
+
+/**
+ * libnvme_ns_get_read_ios() - Get num of read I/Os
+ * @n:		&libnvme_ns_t object
+ *
+ * Return:	Num of read IOs processed between two stat samples
+ */
+unsigned long libnvme_ns_get_read_ios(libnvme_ns_t n);
+
+/**
+ * libnvme_ns_get_write_ios() - Get num of write I/Os
+ * @n:		&libnvme_ns_t object
+ *
+ * Return:	Num of write IOs processed between two consecutive stat samples
+ */
+unsigned long libnvme_ns_get_write_ios(libnvme_ns_t n);
+
+/**
+ * libnvme_ns_get_read_sectors() - Get num of read sectors
+ * @n:		&libnvme_ns_t object
+ *
+ * Return:	Num of sectors read from the device between two stat samples
+ */
+unsigned long long libnvme_ns_get_read_sectors(libnvme_ns_t n);
+
+/**
+ * libnvme_ns_get_write_sectors() - Get num of write sectors
+ * @n:		&libnvme_ns_t object
+ *
+ * Return:	Num of sectors written to the device between two stat samples
+ */
+unsigned long long libnvme_ns_get_write_sectors(libnvme_ns_t n);
+
+/**
  * libnvme_ctrl_identify() - Issues an 'identify controller' command
  * @c:	Controller instance
  * @id:	Identify controller data structure

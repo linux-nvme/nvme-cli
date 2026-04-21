@@ -129,6 +129,17 @@ LIBNVME_3 {
 		libnvme_ns_get_serial;
 		libnvme_ns_get_subsystem;
 		libnvme_ns_get_uuid;
+		libnvme_ns_reset_stat;
+		libnvme_ns_update_stat;
+		libnvme_ns_get_stat_interval;
+		libnvme_ns_get_read_ios;
+		libnvme_ns_get_write_ios;
+		libnvme_ns_get_read_ticks;
+		libnvme_ns_get_write_ticks;
+		libnvme_ns_get_read_sectors;
+		libnvme_ns_get_write_sectors;
+		libnvme_ns_get_inflights;
+		libnvme_ns_get_io_ticks;
 		libnvme_ns_identify;
 		libnvme_ns_read;
 		libnvme_ns_verify;

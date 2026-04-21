@@ -230,6 +230,11 @@ struct libnvme_ns {			// !generate-accessors
 	struct libnvme_ns_head *head;
 
 	struct libnvme_global_ctx *ctx;
+
+	struct libnvme_stat stat[2];	/* gendisk I/O stat */
+	unsigned int curr_idx;		/* current index into the stat[] */
+	bool diffstat;			// !accessors:none
+
 	struct libnvme_transport_handle *hdl;
 	__u32 nsid;
 	char *name;
