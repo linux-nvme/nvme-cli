@@ -582,10 +582,10 @@ struct libnvme_host {
 	%immutable hostnqn;
 	%immutable hostid;
 	%immutable hostsymname;
-	char *hostnqn;
-	char *hostid;
-	char *hostsymname;
 	%extend {
+		char *hostnqn;
+		char *hostid;
+		char *hostsymname;
 		char *dhchap_host_key;
 	}
 };
@@ -598,13 +598,13 @@ struct libnvme_subsystem {
 	%immutable firmware;
 	%immutable subsystype;
 	%immutable iopolicy;
-	char *subsysnqn;
-	char *model;
-	char *serial;
-	char *firmware;
-	char *subsystype;
 
 	%extend {
+		char *subsysnqn;
+		char *model;
+		char *serial;
+		char *firmware;
+		char *subsystype;
 		const char *sysfs_dir;
 		const char *application;
 		const char *iopolicy;
@@ -632,10 +632,6 @@ struct libnvme_ctrl {
 	%immutable dctype;
 	%immutable phy_slot;
 	%immutable discovered;
-
-	const char *cntrltype;  // Do not put in %extend because there's no getter method in libnvme.map
-	const char *dctype;     // Do not put in %extend because there's no getter method in libnvme.map
-	const bool discovered;  // Do not put in %extend because there's no getter method in libnvme.map
 
 	%extend {
 		/**
@@ -665,10 +661,13 @@ struct libnvme_ctrl {
 		const char *trsvcid;
 		const char *cntlid;
 		const char *phy_slot;
+		const char *cntrltype;
+		const char *dctype;
 
 		bool unique_discovery_ctrl;
 		bool discovery_ctrl;
 		bool persistent;
+		bool discovered;
 
 		char *keyring;
 		char *tls_key_identity;
@@ -695,7 +694,9 @@ struct libnvme_ns {
 	%immutable eui64;
 	%immutable nguid;
 	%immutable uuid;
-	unsigned int nsid;
+	%extend {
+		unsigned int nsid;
+	}
 	uint8_t eui64[8];
 	uint8_t nguid[16];
 	uint8_t uuid[16];

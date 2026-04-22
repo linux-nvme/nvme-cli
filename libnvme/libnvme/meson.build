@@ -77,6 +77,32 @@ if want_python
     test_env.set('PYTHONMALLOC', 'malloc')
 
     # Test section
+    _priv_hdr_args = [
+        '--private-header',
+        meson.current_source_dir() / '..' / 'src' / 'nvme' / 'private.h',
+        '--private-header',
+        meson.current_source_dir() / '..' / 'src' / 'nvme' / 'private-fabrics.h',
+    ]
+    _swig_pub_hdr_args = []
+    foreach hdr : headers
+        _swig_pub_hdr_args += [
+            '--public-header',
+            meson.current_source_dir() / '..' / 'src' / hdr,
+        ]
+    endforeach
+    test(
+        'libnvme - check-nvme-i-consistency',
+        python3,
+        args: [
+            files('../tools/check-nvme-i-consistency.py'),
+        ] + _priv_hdr_args + _swig_pub_hdr_args + [
+            '--swig-interface',
+            meson.current_source_dir() / 'nvme.i',
+            '--swig-accessors',
+            meson.current_source_dir() / 'nvme-swig-accessors.i',
+        ],
+    )
+
     test('libnvme - python-import-libnvme', python3, args: ['-c', 'from libnvme import nvme'], env: test_env, depends: pynvme_clib)
 
     py_tests = [
