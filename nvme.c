@@ -351,6 +351,19 @@ static int parse_args(int argc, char *argv[], const char *desc,
 	return 0;
 }
 
+static void setup_transport_handle(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl,
+		struct argconfig_commandline_options *opts)
+{
+	libnvme_transport_handle_set_submit_entry(hdl, nvme_submit_entry);
+	libnvme_transport_handle_set_submit_exit(hdl, nvme_submit_exit);
+	libnvme_transport_handle_set_decide_retry(hdl, nvme_decide_retry);
+	libnvme_set_dry_run(ctx, argconfig_parse_seen(opts, "dry-run"));
+	if (nvme_args.timeout !=  NVME_DEFAULT_IOCTL_TIMEOUT ||
+			argconfig_parse_seen(opts, "timeout"))
+		libnvme_transport_handle_set_timeout(hdl, nvme_args.timeout);
+}
+
 int parse_and_open(struct libnvme_global_ctx **ctx,
 		   struct libnvme_transport_handle **hdl, int argc, char **argv,
 		   const char *desc, struct argconfig_commandline_options *opts)
@@ -377,22 +390,18 @@ int parse_and_open(struct libnvme_global_ctx **ctx,
 		return -ENXIO;
 	}
 
-	libnvme_transport_handle_set_submit_entry(hdl_new, nvme_submit_entry);
-	libnvme_transport_handle_set_submit_exit(hdl_new , nvme_submit_exit);
-	libnvme_transport_handle_set_decide_retry(hdl_new, nvme_decide_retry);
-	libnvme_set_dry_run(ctx_new, argconfig_parse_seen(opts, "dry-run"));
-	if (argconfig_parse_seen(opts, "timeout"))
-		libnvme_transport_handle_set_timeout(hdl_new,
-			nvme_args.timeout);
+	setup_transport_handle(ctx_new, hdl_new, opts);
 
 	*ctx = ctx_new;
 	*hdl = hdl_new;
+
 	return 0;
 }
 
 int open_exclusive(struct libnvme_global_ctx **ctx,
 		   struct libnvme_transport_handle **hdl, int argc, char **argv,
-		   int ignore_exclusive)
+		   int ignore_exclusive,
+		   struct argconfig_commandline_options *opts)
 {
 	struct libnvme_transport_handle *hdl_new;
 	struct libnvme_global_ctx *ctx_new;
@@ -412,8 +421,11 @@ int open_exclusive(struct libnvme_global_ctx **ctx,
 		return -ENXIO;
 	}
 
+	setup_transport_handle(ctx_new, hdl_new, opts);
+
 	*ctx = ctx_new;
 	*hdl = hdl_new;
+
 	return 0;
 }
 
@@ -6606,7 +6618,6 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	__cleanup_free struct nvme_id_ns *ns = NULL;
 	nvme_print_flags_t flags = NORMAL;
 	struct libnvme_passthru_cmd cmd;
-	__u32 timeout_ms = 600000;
 	__u8 prev_lbaf = 0;
 	int block_size;
 	int err, i;
@@ -6637,9 +6648,6 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		.bs		= 0,
 	};
 
-	if (nvme_args.timeout != NVME_DEFAULT_IOCTL_TIMEOUT)
-		timeout_ms = nvme_args.timeout;
-
 	NVME_ARGS(opts,
 		  OPT_FLAG("ish",         'I', &cfg.ish,          ish),
 		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
@@ -6652,11 +6660,14 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		  OPT_FLAG("force",          0, &cfg.force,        force),
 		  OPT_SUFFIX("block-size", 'b', &cfg.bs,           bs));
 
+	/* set default timeout for format to 60 seconds */
+	nvme_args.timeout = 600000;
+
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = open_exclusive(&ctx, &hdl, argc, argv, cfg.force);
+	err = open_exclusive(&ctx, &hdl, argc, argv, cfg.force, opts);
 	if (err) {
 		if (-err == EBUSY) {
 			fprintf(stderr, "Failed to open %s.\n", basename(argv[optind]));
@@ -6796,7 +6807,6 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 
 	nvme_init_format_nvm(&cmd, cfg.namespace_id, cfg.lbaf, cfg.mset,
 		cfg.pi, cfg.pil, cfg.ses);
-	cmd.timeout_ms = timeout_ms;
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
 			nvme_init_mi_cmd_flags(&cmd, ish);
@@ -8434,7 +8444,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		err = parse_args(argc, argv, desc, opts);
 		if (err)
 			return err;
-		err = open_exclusive(&ctx, &hdl, argc, argv, cfg.force);
+		err = open_exclusive(&ctx, &hdl, argc, argv, cfg.force, opts);
 		if (err) {
 			if (err == -EBUSY) {
 				fprintf(stderr, "Failed to open %s.\n", basename(argv[optind]));
