@@ -415,6 +415,9 @@ int open_exclusive(struct libnvme_global_ctx **ctx,
 	if (!ctx_new)
 		return -ENOMEM;
 
+	libnvme_set_ioctl_probing(ctx_new,
+		!argconfig_parse_seen(opts, "no-ioctl-probing"));
+
 	ret = get_transport_handle(ctx_new, argc, argv, flags, &hdl_new);
 	if (ret) {
 		libnvme_free_global_ctx(ctx_new);
