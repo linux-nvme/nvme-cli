@@ -170,7 +170,7 @@ struct libnvme_transport_handle {
 	struct libnvme_log *log;
 };
 
-struct libnvme_path { // !generate-accessors
+struct libnvme_path {			// !generate-accessors
 	struct list_node entry;
 	struct list_node nentry;
 
@@ -182,7 +182,7 @@ struct libnvme_path { // !generate-accessors
 	char *ana_state;
 	char *numa_nodes;
 	int grpid;
-	int queue_depth; // !accessors:none
+	int queue_depth;		// !accessors:none
 };
 
 struct libnvme_ns_head {
@@ -192,7 +192,7 @@ struct libnvme_ns_head {
 	char *sysfs_dir;
 };
 
-struct libnvme_ns { // !generate-accessors
+struct libnvme_ns {			// !generate-accessors
 	struct list_node entry;
 
 	struct libnvme_subsystem *s;
@@ -203,7 +203,7 @@ struct libnvme_ns { // !generate-accessors
 	struct libnvme_transport_handle *hdl;
 	__u32 nsid;
 	char *name;
-	char *generic_name; // !accessors:none
+	char *generic_name;		// !accessors:none
 	char *sysfs_dir;
 
 	int lba_shift;
@@ -218,7 +218,7 @@ struct libnvme_ns { // !generate-accessors
 	enum nvme_csi csi;
 };
 
-struct libnvme_ctrl { // !generate-accessors
+struct libnvme_ctrl {			// !generate-accessors
 	struct list_node entry;
 	struct list_head paths;
 	struct list_head namespaces;
@@ -226,31 +226,31 @@ struct libnvme_ctrl { // !generate-accessors
 
 	struct libnvme_global_ctx *ctx;
 	struct libnvme_transport_handle *hdl;
-	char *name; // !accessors:readonly
-	char *sysfs_dir; // !accessors:readonly
-	char *address; // !accessors:none
-	char *firmware; // !accessors:readonly
-	char *model; // !accessors:readonly
-	char *state; // !accessors:none
-	char *numa_node; // !accessors:readonly
-	char *queue_count; // !accessors:readonly
-	char *serial; // !accessors:readonly
-	char *sqsize; // !accessors:readonly
-	char *transport; // !accessors:readonly
-	char *subsysnqn; // !accessors:readonly
-	char *traddr; // !accessors:readonly
-	char *trsvcid; // !accessors:readonly
+	char *name;			// !accessors:readonly
+	char *sysfs_dir;		// !accessors:readonly
+	char *address;			// !accessors:none
+	char *firmware;			// !accessors:readonly
+	char *model;			// !accessors:readonly
+	char *state;			// !accessors:none
+	char *numa_node;	 	// !accessors:readonly
+	char *queue_count;		// !accessors:readonly
+	char *serial;			// !accessors:readonly
+	char *sqsize;			// !accessors:readonly
+	char *transport;		// !accessors:readonly
+	char *subsysnqn;		// !accessors:readonly
+	char *traddr;			// !accessors:readonly
+	char *trsvcid;			// !accessors:readonly
 	char *dhchap_host_key;
 	char *dhchap_ctrl_key;
 	char *keyring;
 	char *tls_key_identity;
 	char *tls_key;
-	char *cntrltype; // !accessors:readonly
-	char *cntlid; // !accessors:readonly
-	char *dctype; // !accessors:readonly
-	char *phy_slot; // !accessors:readonly
-	char *host_traddr; // !accessors:readonly
-	char *host_iface; // !accessors:readonly
+	char *cntrltype;		// !accessors:readonly
+	char *cntlid;			// !accessors:readonly
+	char *dctype;			// !accessors:readonly
+	char *phy_slot;			// !accessors:readonly
+	char *host_traddr;		// !accessors:readonly
+	char *host_iface;		// !accessors:readonly
 	bool discovery_ctrl;
 	bool unique_discovery_ctrl;
 	bool discovered;
@@ -258,33 +258,33 @@ struct libnvme_ctrl { // !generate-accessors
 	struct libnvme_fabrics_config cfg;
 };
 
-struct libnvme_subsystem { // !generate-accessors
+struct libnvme_subsystem {		// !generate-accessors
 	struct list_node entry;
 	struct list_head ctrls;
 	struct list_head namespaces;
 	struct libnvme_host *h;
 
-	char *name; // !accessors:readonly
-	char *sysfs_dir; // !accessors:readonly
-	char *subsysnqn; // !accessors:readonly
-	char *model; // !accessors:readonly
-	char *serial; // !accessors:readonly
-	char *firmware; // !accessors:readonly
-	char *subsystype; // !accessors:readonly
+	char *name;			// !accessors:readonly
+	char *sysfs_dir;		// !accessors:readonly
+	char *subsysnqn;		// !accessors:readonly
+	char *model;			// !accessors:readonly
+	char *serial;			// !accessors:readonly
+	char *firmware;			// !accessors:readonly
+	char *subsystype;		// !accessors:readonly
 	char *application;
 	char *iopolicy;
 };
 
-struct libnvme_host { // !generate-accessors
+struct libnvme_host {			// !generate-accessors
 	struct list_node entry;
 	struct list_head subsystems;
 	struct libnvme_global_ctx *ctx;
 
-	char *hostnqn; // !accessors:readonly
-	char *hostid; // !accessors:readonly
+	char *hostnqn;			// !accessors:readonly
+	char *hostid;			// !accessors:readonly
 	char *dhchap_host_key;
 	char *hostsymname;
-	bool pdc_enabled; // !accessors:none
+	bool pdc_enabled;		// !accessors:none
 	bool pdc_enabled_valid; /* set if pdc_enabled doesn't have an undefined
 				 * value */
 };
