@@ -53,26 +53,42 @@ static inline PyObject *Py_NewRef(PyObject *obj)
 	 * to bridge between SWIG's API naming convention
 	 * "struct_member_[set|get]" and libnvme's API naming convention
 	 * "struct_[set|get]_member.
-	 *
-	 * - libnvme_subsystem_host_get: 'host' is the Python-visible name; the C
-	 *   struct member is 's->h' and the hand-written accessor is
-	 *   libnvme_subsystem_get_host() in tree.c.
-	 *
-	 * - libnvme_ctrl_state_get: 'state' has !accessors:none in private.h
-	 *   (reads from sysfs dynamically); libnvme_ctrl_get_state() is
-	 *   hand-written in tree.c.
-	 *
-	 * - libnvme_ctrl_subsystem_get: 'subsystem' is the Python-visible name;
-	 *   the C struct member is named 's' and the hand-written accessor is
-	 *   libnvme_ctrl_get_subsystem() in tree.c.
-	 *
-	 * - libnvme_ctrl_address_get: 'address' has !accessors:none in private.h
-	 *   and maps to libnvme_ctrl_get_traddr(), not libnvme_ctrl_get_address().
 	 */
-	#define libnvme_subsystem_host_get libnvme_subsystem_get_host
-	#define libnvme_ctrl_state_get     libnvme_ctrl_get_state
-	#define libnvme_ctrl_subsystem_get libnvme_ctrl_get_subsystem
-	#define libnvme_ctrl_address_get   libnvme_ctrl_get_traddr
+	#define libnvme_ctrl_address_get	 		libnvme_ctrl_get_traddr
+	#define libnvme_ctrl_command_error_count_get		libnvme_ctrl_get_command_error_count
+	#define libnvme_ctrl_reconnect_count_get		libnvme_ctrl_get_reconnect_count
+	#define libnvme_ctrl_reset_count_get			libnvme_ctrl_get_reset_count
+	#define libnvme_ctrl_state_get				libnvme_ctrl_get_state
+	#define libnvme_ctrl_subsystem_get			libnvme_ctrl_get_subsystem
+	#define libnvme_ns_command_error_count_get		libnvme_ns_get_command_error_count
+	#define libnvme_ns_command_retry_count_get		libnvme_ns_get_command_retry_count
+	#define libnvme_ns_fail_no_available_path_count_get	libnvme_ns_get_fail_no_available_path_count
+	#define libnvme_ns_inflights_get			libnvme_ns_get_inflights
+	#define libnvme_ns_io_ticks_get				libnvme_ns_get_io_ticks
+	#define libnvme_ns_read_ios_get				libnvme_ns_get_read_ios
+	#define libnvme_ns_read_sectors_get			libnvme_ns_get_read_sectors
+	#define libnvme_ns_read_ticks_get			libnvme_ns_get_read_ticks
+	#define libnvme_ns_requeue_no_usable_path_count_get	libnvme_ns_get_requeue_no_usable_path_count
+	#define libnvme_ns_stat_interval_get			libnvme_ns_get_stat_interval
+	#define libnvme_ns_write_ios_get			libnvme_ns_get_write_ios
+	#define libnvme_ns_write_sectors_get			libnvme_ns_get_write_sectors
+	#define libnvme_ns_write_ticks_get			libnvme_ns_get_write_ticks
+	#define libnvme_path_ana_state_get			libnvme_path_get_ana_stat
+	#define libnvme_path_command_error_count_get		libnvme_path_get_command_error_count
+	#define libnvme_path_command_retry_count_get		libnvme_path_get_command_retry_count
+	#define libnvme_path_inflights_get			libnvme_path_get_inflights
+	#define libnvme_path_io_ticks_get			libnvme_path_get_io_ticks
+	#define libnvme_path_multipath_failover_count_get	libnvme_path_get_multipath_failover_count
+	#define libnvme_path_numa_nodes_get			libnvme_path_get_numa_nodes
+	#define libnvme_path_read_ios_get			libnvme_path_get_read_ios
+	#define libnvme_path_read_sectors_get			libnvme_path_get_read_sectors
+	#define libnvme_path_read_ticks_get			libnvme_path_get_read_ticks
+	#define libnvme_path_stat_interval_get			libnvme_path_get_stat_interval
+	#define libnvme_path_write_ios_get			libnvme_path_get_write_ios
+	#define libnvme_path_write_sectors_get			libnvme_path_get_write_sectors
+	#define libnvme_path_write_ticks_get			libnvme_path_get_write_ticks
+	#define libnvme_subsystem_host_get			libnvme_subsystem_get_host
+	#define libnvme_subsystem_iopolicy_get			libnvme_subsystem_get_iopolicy
 
 	static int connect_err = 0;
 	static int discover_err = 0;
