@@ -243,7 +243,7 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 
 	if (!strncmp(name, "NVME_TEST_FD", 12)) {
 		hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
-		hdl->fd = 0xFD;
+		hdl->fd = LIBNVME_TEST_FD;
 
 		if (!strcmp(name, "NVME_TEST_FD64"))
 			hdl->ioctl_admin64 = true;
@@ -287,7 +287,7 @@ __public void libnvme_close(struct libnvme_transport_handle *hdl)
 	}
 }
 
-__public int libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl)
+__public libnvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl)
 {
 	return hdl->fd;
 }

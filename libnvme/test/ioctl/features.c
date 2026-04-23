@@ -8,7 +8,6 @@
 #include "mock.h"
 #include "util.h"
 
-#define TEST_FD 0xFD
 #define TEST_TIMEOUT 1234
 #define TEST_NSID 0x89ABCDEF
 #define TEST_CDW11 0x11111111
@@ -1625,7 +1624,7 @@ int main(void)
 	struct libnvme_global_ctx *ctx =
 		libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
 
-	set_mock_fd(TEST_FD);
+	set_mock_fd(LIBNVME_TEST_FD);
 	check(!libnvme_open(ctx, "NVME_TEST_FD64", &test_hdl),
 	      "opening test link failed");
 

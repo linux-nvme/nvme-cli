@@ -13,7 +13,6 @@
 #include "mock.h"
 #include "util.h"
 
-#define TEST_FD 0xFD
 #define PDU_SIZE NVME_LOG_PAGE_PDU_SIZE
 
 static struct libnvme_transport_handle *test_hdl;
@@ -631,7 +630,7 @@ int main(void)
 	struct libnvme_global_ctx *ctx =
 		libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
 
-	set_mock_fd(TEST_FD);
+	set_mock_fd(LIBNVME_TEST_FD);
 	check(!libnvme_open(ctx, "NVME_TEST_FD", &test_hdl),
 	      "opening test link failed");
 
