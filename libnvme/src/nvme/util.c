@@ -43,6 +43,17 @@
 #define LINE_MAX 2048
 #endif
 
+/* Some error codes aren't defined on all platforms. Use best equivalents. */
+#ifndef EREMOTEIO
+#define EREMOTEIO ENXIO
+#endif
+#ifndef EDQUOT
+#define EDQUOT    ENOSPC
+#endif
+#ifndef ERESTART
+#define ERESTART  EAGAIN
+#endif
+
 /* Source Code Control System, query version of binary with 'what' */
 const char sccsid[] = "@(#)libnvme " GIT_VERSION;
 
