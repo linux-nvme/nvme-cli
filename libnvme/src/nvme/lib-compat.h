@@ -20,9 +20,8 @@
 #include <stdio.h>
 
 typedef HANDLE libnvme_fd_t;
-
-#define TEST_FD INVALID_HANDLE_VALUE
-#define INIT_FD NULL
+#define LIBNVME_INVALID_FD INVALID_HANDLE_VALUE
+#define LIBNVME_TEST_FD ((HANDLE)0xFD)
 
 /*
  * Set stdout and stderr to binary mode to prevent Windows text-mode
@@ -38,8 +37,8 @@ static inline void libnvme_init(void)
 #else
 
 typedef int libnvme_fd_t;
-#define TEST_FD 0xFD
-#define INIT_FD -1
+#define LIBNVME_INVALID_FD -1
+#define LIBNVME_TEST_FD 0xFD
 
 /* Platform initialization - no-op on Linux */
 static inline void libnvme_init(void) {}

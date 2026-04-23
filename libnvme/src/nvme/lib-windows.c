@@ -89,7 +89,6 @@ static int __handle_fstat(HANDLE fd, struct stat *buf)
 static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handle *hdl, const char *name)
 {
 	char device_path[MAX_PATH];
-	HANDLE h;
 
 	/* Parse and open direct device */
 	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
@@ -104,7 +103,7 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 		snprintf(device_path, sizeof(device_path), "\\\\.\\%s", name);
 	}
 
-	h = CreateFile(device_path,
+	hdl->fd = CreateFile(device_path,
 		GENERIC_READ,
 		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		NULL,
@@ -112,7 +111,7 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 		0,
 		NULL);
 
-	if (h == INVALID_HANDLE_VALUE) {
+	if (hdl->fd == INVALID_HANDLE_VALUE) {
 		int err = GetLastError();
 		/* Map Windows error to errno */
 		switch (err) {
@@ -125,8 +124,6 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 			return -EIO;
 		}
 	}
-
-	hdl->fd = h;
 
 	__handle_fstat(hdl->fd, &hdl->stat);
 
@@ -157,7 +154,7 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 	/* Handle test devices */
 	if (!strncmp(name, "NVME_TEST_FD", 12)) {
 		hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
-		hdl->fd = TEST_FD;
+		hdl->fd = LIBNVME_TEST_FD;
 
 		if (!strcmp(name, "NVME_TEST_FD64"))
 			hdl->ioctl_admin64 = true;
@@ -170,9 +167,9 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 	if (!strncmp(name, "mctp:", strlen("mctp:"))) {
 		libnvme_close(hdl);
 		return -ENOTSUP;
-	} else {
-		ret = __libnvme_transport_handle_open_direct(hdl, name);
 	}
+
+	ret = __libnvme_transport_handle_open_direct(hdl, name);
 
 	if (ret) {
 		libnvme_close(hdl);
@@ -186,15 +183,21 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 
 __public void libnvme_close(struct libnvme_transport_handle *hdl)
 {
+	bool is_test_fd;
+
 	if (!hdl)
 		return;
+
+	is_test_fd = hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT &&
+		hdl->fd == LIBNVME_TEST_FD &&
+		!strncmp(hdl->name, "NVME_TEST_FD", 12);
 
 	free(hdl->name);
 
 	switch (hdl->type) {
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT:
 		/* Close Windows HANDLE if valid */
-		if (hdl->fd && hdl->fd != TEST_FD)
+		if (!is_test_fd && hdl->fd && hdl->fd != INVALID_HANDLE_VALUE)
 			CloseHandle(hdl->fd);
 		free(hdl);
 		break;

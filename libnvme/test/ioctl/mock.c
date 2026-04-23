@@ -21,7 +21,7 @@ struct mock_cmds {
 	size_t remaining_cmds;
 };
 
-static libnvme_fd_t mock_fd = INIT_FD;
+static libnvme_fd_t mock_fd = LIBNVME_INVALID_FD;
 static struct mock_cmds mock_admin_cmds = {.name = "admin"};
 static struct mock_cmds mock_io_cmds = {.name = "IO"};
 
