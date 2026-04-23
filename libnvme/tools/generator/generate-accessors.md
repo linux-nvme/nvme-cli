@@ -25,81 +25,93 @@ python3 generate-accessors.py [options] <header-files>
 
 ## Annotations
 
-Struct inclusion and member behavior are controlled by **annotations written as `//` line comments directly in the header file**. After `//`, each `!keyword` token (optionally followed by `:qualifier` or `:VALUE`) is a command. Multiple annotations may share one comment, separated by spaces. The canonical form is `// !token` (one space between `//` and `!`); `//!token` and `//\t!token` are also accepted.
+Struct inclusion and member behavior are controlled by **annotations written as `//` line comments directly in the header file**. After `//`, each `!keyword` token (optionally followed by `:spec` or `:VALUE`) is a command. Multiple annotations may share one comment, separated by spaces. The canonical form is `// !token` (one space between `//` and `!`); `//!token` and `//\t!token` are also accepted.
+
+### Access model — two independent axes
+
+Accessor generation is controlled by **two independent axes**:
+
+- **`read`** — whether a getter exists for the field, and if so, how it is provided
+- **`write`** — whether a setter exists for the field, and if so, how it is provided
+
+Each axis takes one of three modes:
+
+| Mode        | Meaning                                                      |
+| ----------- | ------------------------------------------------------------ |
+| `generated` | This generator emits the accessor                            |
+| `custom`    | An accessor is expected to exist and is provided as a hand-written function; the generator emits nothing |
+| `none`      | No accessor exists for this axis; the generator emits nothing |
+
+Only `generated` produces output in this generator. The `custom` and `none` modes are **semantic declarations**: they advertise intent to downstream consumers — such as the Python-binding generator and the `nvme.i` consistency check — which need to distinguish "no accessor at all" from "accessor provided by hand".
 
 ### Struct inclusion — `generate-accessors`
 
-Place the annotation on the same line as the struct's opening brace to opt that struct in to code generation. An optional mode qualifier sets the **default behaviour for all members** of that struct:
-
-| Annotation                               | Default for all members           |
-| ---------------------------------------- | --------------------------------- |
-| `// !generate-accessors`                 | getter **and** setter (default)   |
-| `// !generate-accessors:none`            | no accessors                      |
-| `// !generate-accessors:readonly`        | getter only                       |
-| `// !generate-accessors:writeonly`       | setter only                       |
+Place the annotation on the same line as the struct's opening brace to opt that struct in to code generation. An optional spec sets the **default mode for each axis** of every member of the struct:
 
 ```c
-struct nvme_ctrl { // !generate-accessors          /* both getter and setter */
-    ...
+struct nvme_ctrl { // !generate-accessors
+    /* shorthand for read=generated, write=generated */
 };
 
-struct nvme_ctrl { // !generate-accessors:readonly /* getter only by default */
-    ...
+struct nvme_ctrl { // !generate-accessors:read=generated,write=generated
+    /* fully explicit form of the same default */
+};
+
+struct nvme_ctrl { // !generate-accessors:read=none,write=none
+    /* struct is included, but every member is opaque by default */
+};
+
+struct nvme_ctrl { // !generate-accessors:read=generated
+    /* partial spec: write inherits the built-in default (generated) */
 };
 ```
 
-Only structs carrying this annotation will have accessors generated. All other structs in the header are ignored.
+Only structs carrying this annotation are processed. All other structs in the header are ignored.
+
+**Built-in defaults.** Any axis not named at the struct level falls back to `generated`. The bare `// !generate-accessors` form is therefore shorthand for `// !generate-accessors:read=generated,write=generated`.
 
 Individual members can always override the struct-level default using a per-member annotation (see below).
 
-### Member exclusion — `accessors:none`
+### Member-level override — `access`
 
-Place the annotation on a member's declaration line to suppress accessor generation for that member entirely (no setter, no getter):
-
-```c
-struct nvme_ctrl { // !generate-accessors
-    char *name;
-    char *state;      // !access:none
-    char *subsysnqn;  // !access:none
-};
-```
-
-### Read-only members — `accessors:readonly`
-
-Place the annotation on a member's declaration line to generate only a getter (no setter). This has the same effect as declaring the member `const`, but without changing the type in the struct. Also useful to override a `generate-accessors:writeonly` struct default for individual members:
+Place the annotation on a member's declaration line to override the struct-level default for this field. The spec takes the same shape as the struct-level annotation:
 
 ```c
 struct nvme_ctrl { // !generate-accessors
     char *name;
-    char *firmware;   // !access:readonly
-    char *model;      // !access:readonly
+    char *state;     // !access:read=custom,write=none
+    char *token;     // !access:read=none,write=custom
+    char *secret;    // !access:read=none,write=none
 };
 ```
 
-Members declared with the `const` qualifier are also automatically read-only.
-
-### Write-only members — `accessors:writeonly`
-
-Place the annotation on a member's declaration line to generate only a setter (no getter). Useful to override a `generate-accessors:readonly` struct default for individual members:
+**Partial specs** are allowed — any axis not named in the member-level spec is **inherited from the struct-level default**, which is in turn drawn from the struct-level annotation (or from the built-in default when the struct has none). The order of `read` and `write` in the annotation is not significant:
 
 ```c
-struct nvme_ctrl { // !generate-accessors:readonly
-    char *name;       /* getter only (struct default) */
-    char *token;      // !access:writeonly    /* setter only override */
+struct nvme_ctrl { // !generate-accessors    /* defaults: read=generated, write=generated */
+    char *model;     // !access:read=custom
+        /* effective: read=custom, write=generated (inherited)   */
+    char *pw;        // !access:write=custom
+        /* effective: read=generated (inherited), write=custom   */
 };
 ```
 
-### Read-write members — `accessors:readwrite`
+**Common patterns:**
 
-Place the annotation on a member's declaration line to generate both a getter and a setter, overriding a restrictive struct-level default (`none`, `readonly`, or `writeonly`):
+| Member spec                           | Effective (inside `// !generate-accessors`)   | Meaning                                  |
+| ------------------------------------- | --------------------------------------------- | ---------------------------------------- |
+| *(no annotation)*                     | `read=generated, write=generated`             | Both accessors auto-generated            |
+| `// !access:read=generated,write=none`| `read=generated, write=none`                  | Read-only (auto-generated getter only)   |
+| `// !access:read=none,write=generated`| `read=none, write=generated`                  | Write-only (auto-generated setter only)  |
+| `// !access:read=none,write=none`     | `read=none, write=none`                       | Purely internal; no accessor of any kind |
+| `// !access:read=custom,write=none`   | `read=custom, write=none`                     | Hand-written getter only                 |
+| `// !access:read=none,write=custom`   | `read=none, write=custom`                     | Hand-written setter only                 |
+| `// !access:read=custom,write=custom` | `read=custom, write=custom`                   | Hand-written getter and setter           |
+| `// !access:read=generated,write=custom` | `read=generated, write=custom`             | Mixed: generated getter, hand-written setter |
 
-```c
-struct nvme_ctrl { // !generate-accessors:none
-    char *name;       /* no accessors (struct default) */
-    char *model;      // !access:readwrite    /* both getter and setter */
-    char *firmware;   // !access:readonly     /* getter only */
-};
-```
+### The `const` qualifier
+
+A `const`-qualified member forces `write=none` regardless of what the annotation (or inherited default) says — the generator cannot emit a setter for a member that the C type system forbids from being assigned. `const char *` members are also **never** freed by the destructor; they are assumed to point to externally owned storage.
 
 ### Struct lifecycle — `generate-lifecycle`
 
@@ -140,7 +152,7 @@ struct nvme_ctrl { // !generate-lifecycle
 };
 ```
 
-This annotation has no effect on accessor generation. Combine with `// !access:none` if both should be suppressed.
+This annotation has no effect on accessor generation. Combine with `// !access:read=none,write=none` if both should be suppressed.
 
 ### Member defaults — `default:VALUE`
 
@@ -161,20 +173,19 @@ The value is emitted verbatim, so any valid C expression — integer literals, m
 
 ### Annotation summary
 
-| Annotation                               | Where        | Effect                                                    |
-| ---------------------------------------- | ------------ | --------------------------------------------------------- |
-| `// !generate-accessors`                 | struct brace | Include struct, default: getter + setter                  |
-| `// !generate-accessors:none`            | struct brace | Include struct, default: no accessors                     |
-| `// !generate-accessors:readonly`        | struct brace | Include struct, default: getter only                      |
-| `// !generate-accessors:writeonly`       | struct brace | Include struct, default: setter only                      |
-| `// !generate-lifecycle`                 | struct brace | Generate constructor + destructor                         |
-| `// !access:none`                        | member line  | Skip this member entirely (accessors only)                |
-| `// !access:readonly`                    | member line  | Generate getter only                                      |
-| `// !access:writeonly`                   | member line  | Generate setter only                                      |
-| `// !access:readwrite`                   | member line  | Generate getter and setter                                |
-| `// !lifecycle:none`                     | member line  | Exclude member from destructor free logic                 |
-| `// !default:VALUE`                      | member line  | Set field to VALUE in `init_defaults()`                   |
-| `const` qualifier on member              | member type  | Suppress setter; suppress free in destructor              |
+| Annotation                                             | Where        | Effect                                                                                  |
+| ------------------------------------------------------ | ------------ | --------------------------------------------------------------------------------------- |
+| `// !generate-accessors`                               | struct brace | Include struct; defaults: `read=generated, write=generated`                             |
+| `// !generate-accessors:read=M,write=M`                | struct brace | Include struct; set struct-level default for each axis                                  |
+| `// !generate-accessors:read=M`                        | struct brace | Partial; other axis inherits the built-in default (`generated`)                         |
+| `// !generate-lifecycle`                               | struct brace | Generate constructor + destructor                                                       |
+| `// !access:read=M,write=M`                            | member line  | Override struct-level defaults for this member                                          |
+| `// !access:read=M`                                    | member line  | Partial override; other axis is inherited from the struct-level default                 |
+| `// !lifecycle:none`                                   | member line  | Exclude member from destructor free logic                                               |
+| `// !default:VALUE`                                    | member line  | Set field to VALUE in `init_defaults()`                                                 |
+| `const` qualifier on member                            | member type  | Force `write=none`; suppress free in destructor                                         |
+
+In the table above, `M` is one of `generated`, `custom`, or `none`.
 
 ------
 
@@ -187,8 +198,8 @@ struct person { // !generate-accessors
     char *name;
     int age;
     const char *id;       /* const → getter only, no annotation needed */
-    char *secret;         // !access:none
-    char *role;           // !access:readonly
+    char *secret;         // !access:read=none,write=none
+    char *role;           // !access:write=none      /* read inherits: generated */
 };
 
 struct car { // !generate-accessors
@@ -319,7 +330,7 @@ const char *car_get_vin(const struct car *p);
 #endif /* _ACCESSORS_H_ */
 ```
 
-> **Note:** The `secret` member is absent because of `// !access:none` — excluded members leave no trace in the output. The `role` member has only a getter because of `// !access:readonly`. The `id` and `vin` members have only getters because they are declared `const`.
+> **Note:** The `secret` member is absent because of `// !access:read=none,write=none` — with neither axis set to `generated`, the member leaves no trace in the output. The `role` member has only a getter because its `write=none` annotation (combined with the inherited `read=generated`) yields a read-only accessor. The `id` and `vin` members have only getters because they are declared `const`.
 
 ### Generated `accessors.c`
 
@@ -422,7 +433,7 @@ LIBNVME_ACCESSORS_3 {
 };
 ```
 
-> **Note:** Only symbols for members that have accessors generated appear in the linker script. The `secret` member (excluded via `// !access:none`) and the write-only `token` example would have no getter entry. The version node name `LIBNVME_ACCESSORS_3` is hardcoded in the generator.
+> **Note:** Only symbols for members that have accessors generated appear in the linker script. The `secret` member (excluded via `// !access:read=none,write=none`) and a write-only member (e.g. `// !access:read=none`) would have no getter entry. The version node name `LIBNVME_ACCESSORS_3` is hardcoded in the generator.
 
 ------
 
@@ -437,8 +448,8 @@ struct person { // !generate-accessors !generate-lifecycle
     char *name;
     int age;
     const char *id;       /* const → getter only; NOT freed by destructor */
-    char *secret;         // !access:none
-    char *role;           // !access:readonly
+    char *secret;         // !access:read=none,write=none
+    char *role;           // !access:write=none      /* read inherits: generated */
 };
 ```
 
@@ -491,7 +502,7 @@ __public void person_free(struct person *p)
 
 > **Notes:**
 > - `id` is `const char *` — the destructor never frees `const` members.
-> - `secret` is `// !access:none` but is still freed — `lifecycle:none` is the annotation to suppress a free.
+> - `secret` is `// !access:read=none,write=none` but is still freed — `lifecycle:none` is the annotation to suppress a free.
 > - `age` is `int` — only `char *` and `char **` members are freed.
 
 ### Additional entries in `accessors.ld`
@@ -610,12 +621,12 @@ __public void conn_opts_free(struct conn_opts *p)
 1. **Dynamic strings** (`char *`) — setters store a `strdup()` copy; passing `NULL` clears the field.
 2. **String arrays** (`char **`) — setters deep-copy NULL-terminated arrays (each element and the container).
 3. **Fixed char arrays** (`char foo[N]`) — setters use `snprintf`, always NUL-terminated.
-4. **`const` members** — only a getter is generated, no setter (applies regardless of any annotation). `const char *` members are also skipped by the destructor.
-5. **`// !access:readonly`** — same effect as `const`: getter only.
-6. **`// !access:writeonly`** — setter only; getter is suppressed.
-7. **`// !access:readwrite`** — both getter and setter; overrides a restrictive struct-level default.
-8. **`// !access:none`** — member is completely ignored by the accessor generator. The destructor still frees it unless `// !lifecycle:none` is also present.
-9. **Struct-level mode** — the qualifier on `generate-accessors` sets the default for every member in the struct; per-member annotations override the struct default.
+4. **`const` members** — force `write=none` regardless of the annotation: the generator cannot emit a setter for a member the C type system forbids from being assigned. `const char *` members are also skipped by the destructor (they are assumed to point to externally owned storage).
+5. **Access model — two independent axes** — every member has a `read` axis (getter) and a `write` axis (setter), each taking one of `generated`, `custom`, or `none`. Only `generated` produces output in this generator; `custom` and `none` are semantic declarations for downstream consumers (Python-binding generator, `nvme.i` consistency check).
+6. **`// !access:read=M,write=M`** — member-level override for either or both axes. Partial specs are allowed: any axis not named is inherited from the struct-level default, which is in turn drawn from the struct's `// !generate-accessors[:spec]` annotation (or from the built-in default `generated` when the struct has none).
+7. **Struct-level default** — `// !generate-accessors:read=M,write=M` sets the default mode for each axis for every member of the struct. Partial struct-level specs inherit the built-in default (`generated`) for any axis they do not name. Bare `// !generate-accessors` is shorthand for `read=generated, write=generated`.
+8. **Members with no `generated` axis are skipped entirely** — if the effective modes are `read=custom|none` AND `write=custom|none` (no axis set to `generated`), the generator emits nothing for that field. The annotation is still meaningful for downstream consumers, which read the private header directly.
+9. **Struct-level overrides cascade, member-level overrides win** — the cascade is: built-in default (`generated`) → struct-level spec → member-level spec. Each level only overrides the axes it names; un-named axes fall through to the level above.
 10. **`// !generate-lifecycle`** — generates `foo_new()` (constructor) and `foo_free()` (destructor). Can appear on the same line as `generate-accessors`. A struct needs only one of the two annotations.
 11. **`// !lifecycle:none`** — excludes a member from the destructor's free logic. Use this when the struct does not own the pointed-to memory.
 12. **Destructor NULL safety** — `free(NULL)` is a no-op per the C standard, so destructors with no string members to dereference emit only `free(p)` with no NULL guard. Destructors that do dereference `p->field` guard with `if (!p) return;` first. In both cases passing NULL to the destructor is safe.
