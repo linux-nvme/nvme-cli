@@ -202,20 +202,20 @@ struct libnvme_path {			// !generate-accessors
 
 	struct libnvme_stat stat[2];	/* gendisk I/O stat */
 	unsigned int curr_idx;		/* current index into the stat[] */
-	bool diffstat;			// !accessors:none
+	bool diffstat;			// !access:none
 
 	struct libnvme_ctrl *c;
 	struct libnvme_ns *n;
 
 	char *name;
 	char *sysfs_dir;
-	char *ana_state;		// !accessors:none
-	char *numa_nodes;		// !accessors:none
+	char *ana_state;		// !access:none
+	char *numa_nodes;		// !access:none
 	int grpid;
-	int queue_depth;		// !accessors:none
-	long multipath_failover_count;	// !accessors:none
-	long command_retry_count;	// !accessors:none
-	long command_error_count;	// !accessors:none
+	int queue_depth;		// !access:none
+	long multipath_failover_count;	// !access:none
+	long command_retry_count;	// !access:none
+	long command_error_count;	// !access:none
 };
 
 struct libnvme_ns_head {
@@ -236,12 +236,12 @@ struct libnvme_ns {			// !generate-accessors
 
 	struct libnvme_stat stat[2];	/* gendisk I/O stat */
 	unsigned int curr_idx;		/* current index into the stat[] */
-	bool diffstat;			// !accessors:none
+	bool diffstat;			// !access:none
 
 	struct libnvme_transport_handle *hdl;
 	__u32 nsid;
 	char *name;
-	char *generic_name;		// !accessors:none
+	char *generic_name;		// !access:none
 	char *sysfs_dir;
 
 	int lba_shift;
@@ -255,10 +255,10 @@ struct libnvme_ns {			// !generate-accessors
 	unsigned char uuid[NVME_UUID_LEN];
 	enum nvme_csi csi;
 
-	long command_retry_count;		// !accessors:none
-	long command_error_count;		// !accessors:none
-	long requeue_no_usable_path_count;	// !accessors:none
-	long fail_no_available_path_count;	// !accessors:none
+	long command_retry_count;		// !access:none
+	long command_error_count;		// !access:none
+	long requeue_no_usable_path_count;	// !access:none
+	long fail_no_available_path_count;	// !access:none
 };
 
 struct libnvme_ctrl {			// !generate-accessors
@@ -269,38 +269,38 @@ struct libnvme_ctrl {			// !generate-accessors
 
 	struct libnvme_global_ctx *ctx;
 	struct libnvme_transport_handle *hdl;
-	char *name;			// !accessors:readonly
-	char *sysfs_dir;		// !accessors:readonly
-	char *address;			// !accessors:none
-	char *firmware;			// !accessors:readonly
-	char *model;			// !accessors:readonly
-	char *state;			// !accessors:none
-	char *numa_node;	 	// !accessors:readonly
-	char *queue_count;		// !accessors:readonly
-	char *serial;			// !accessors:readonly
-	char *sqsize;			// !accessors:readonly
-	char *transport;		// !accessors:readonly
-	char *subsysnqn;		// !accessors:readonly
-	char *traddr;			// !accessors:readonly
-	char *trsvcid;			// !accessors:readonly
+	char *name;			// !access:readonly
+	char *sysfs_dir;		// !access:readonly
+	char *address;			// !access:none
+	char *firmware;			// !access:readonly
+	char *model;			// !access:readonly
+	char *state;			// !access:none
+	char *numa_node;	 	// !access:readonly
+	char *queue_count;		// !access:readonly
+	char *serial;			// !access:readonly
+	char *sqsize;			// !access:readonly
+	char *transport;		// !access:readonly
+	char *subsysnqn;		// !access:readonly
+	char *traddr;			// !access:readonly
+	char *trsvcid;			// !access:readonly
 	char *dhchap_host_key;
 	char *dhchap_ctrl_key;
 	char *keyring;
 	char *tls_key_identity;
 	char *tls_key;
-	char *cntrltype;		// !accessors:readonly
-	char *cntlid;			// !accessors:readonly
-	char *dctype;			// !accessors:readonly
-	char *phy_slot;			// !accessors:readonly
-	char *host_traddr;		// !accessors:readonly
-	char *host_iface;		// !accessors:readonly
+	char *cntrltype;		// !access:readonly
+	char *cntlid;			// !access:readonly
+	char *dctype;			// !access:readonly
+	char *phy_slot;			// !access:readonly
+	char *host_traddr;		// !access:readonly
+	char *host_iface;		// !access:readonly
 	bool discovery_ctrl;
 	bool unique_discovery_ctrl;
 	bool discovered;
 	bool persistent;
-	long command_error_count;	// !accessors:none
-	long reset_count;		// !accessors:none
-	long reconnect_count;		// !accessors:none
+	long command_error_count;	// !access:none
+	long reset_count;		// !access:none
+	long reconnect_count;		// !access:none
 	struct libnvme_fabrics_config cfg;
 };
 
@@ -310,15 +310,15 @@ struct libnvme_subsystem {		// !generate-accessors
 	struct list_head namespaces;
 	struct libnvme_host *h;
 
-	char *name;			// !accessors:readonly
-	char *sysfs_dir;		// !accessors:readonly
-	char *subsysnqn;		// !accessors:readonly
-	char *model;			// !accessors:readonly
-	char *serial;			// !accessors:readonly
-	char *firmware;			// !accessors:readonly
-	char *subsystype;		// !accessors:readonly
+	char *name;			// !access:readonly
+	char *sysfs_dir;		// !access:readonly
+	char *subsysnqn;		// !access:readonly
+	char *model;			// !access:readonly
+	char *serial;			// !access:readonly
+	char *firmware;			// !access:readonly
+	char *subsystype;		// !access:readonly
 	char *application;
-	char *iopolicy;			// !accessors:none
+	char *iopolicy;			// !access:none
 };
 
 struct libnvme_host {			// !generate-accessors
@@ -326,11 +326,11 @@ struct libnvme_host {			// !generate-accessors
 	struct list_head subsystems;
 	struct libnvme_global_ctx *ctx;
 
-	char *hostnqn;			// !accessors:readonly
-	char *hostid;			// !accessors:readonly
+	char *hostnqn;			// !access:readonly
+	char *hostid;			// !access:readonly
 	char *dhchap_host_key;
 	char *hostsymname;
-	bool pdc_enabled;		// !accessors:none
+	bool pdc_enabled;		// !access:none
 	bool pdc_enabled_valid; /* set if pdc_enabled doesn't have an undefined
 				 * value */
 };

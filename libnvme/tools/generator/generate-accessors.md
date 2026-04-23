@@ -59,8 +59,8 @@ Place the annotation on a member's declaration line to suppress accessor generat
 ```c
 struct nvme_ctrl { // !generate-accessors
     char *name;
-    char *state;      // !accessors:none
-    char *subsysnqn;  // !accessors:none
+    char *state;      // !access:none
+    char *subsysnqn;  // !access:none
 };
 ```
 
@@ -71,8 +71,8 @@ Place the annotation on a member's declaration line to generate only a getter (n
 ```c
 struct nvme_ctrl { // !generate-accessors
     char *name;
-    char *firmware;   // !accessors:readonly
-    char *model;      // !accessors:readonly
+    char *firmware;   // !access:readonly
+    char *model;      // !access:readonly
 };
 ```
 
@@ -85,7 +85,7 @@ Place the annotation on a member's declaration line to generate only a setter (n
 ```c
 struct nvme_ctrl { // !generate-accessors:readonly
     char *name;       /* getter only (struct default) */
-    char *token;      // !accessors:writeonly    /* setter only override */
+    char *token;      // !access:writeonly    /* setter only override */
 };
 ```
 
@@ -96,8 +96,8 @@ Place the annotation on a member's declaration line to generate both a getter an
 ```c
 struct nvme_ctrl { // !generate-accessors:none
     char *name;       /* no accessors (struct default) */
-    char *model;      // !accessors:readwrite    /* both getter and setter */
-    char *firmware;   // !accessors:readonly     /* getter only */
+    char *model;      // !access:readwrite    /* both getter and setter */
+    char *firmware;   // !access:readonly     /* getter only */
 };
 ```
 
@@ -140,7 +140,7 @@ struct nvme_ctrl { // !generate-lifecycle
 };
 ```
 
-This annotation has no effect on accessor generation. Combine with `// !accessors:none` if both should be suppressed.
+This annotation has no effect on accessor generation. Combine with `// !access:none` if both should be suppressed.
 
 ### Member defaults — `default:VALUE`
 
@@ -168,10 +168,10 @@ The value is emitted verbatim, so any valid C expression — integer literals, m
 | `// !generate-accessors:readonly`        | struct brace | Include struct, default: getter only                      |
 | `// !generate-accessors:writeonly`       | struct brace | Include struct, default: setter only                      |
 | `// !generate-lifecycle`                 | struct brace | Generate constructor + destructor                         |
-| `// !accessors:none`                     | member line  | Skip this member entirely (accessors only)                |
-| `// !accessors:readonly`                 | member line  | Generate getter only                                      |
-| `// !accessors:writeonly`                | member line  | Generate setter only                                      |
-| `// !accessors:readwrite`                | member line  | Generate getter and setter                                |
+| `// !access:none`                        | member line  | Skip this member entirely (accessors only)                |
+| `// !access:readonly`                    | member line  | Generate getter only                                      |
+| `// !access:writeonly`                   | member line  | Generate setter only                                      |
+| `// !access:readwrite`                   | member line  | Generate getter and setter                                |
 | `// !lifecycle:none`                     | member line  | Exclude member from destructor free logic                 |
 | `// !default:VALUE`                      | member line  | Set field to VALUE in `init_defaults()`                   |
 | `const` qualifier on member              | member type  | Suppress setter; suppress free in destructor              |
@@ -187,8 +187,8 @@ struct person { // !generate-accessors
     char *name;
     int age;
     const char *id;       /* const → getter only, no annotation needed */
-    char *secret;         // !accessors:none
-    char *role;           // !accessors:readonly
+    char *secret;         // !access:none
+    char *role;           // !access:readonly
 };
 
 struct car { // !generate-accessors
@@ -319,7 +319,7 @@ const char *car_get_vin(const struct car *p);
 #endif /* _ACCESSORS_H_ */
 ```
 
-> **Note:** The `secret` member is absent because of `// !accessors:none` — excluded members leave no trace in the output. The `role` member has only a getter because of `// !accessors:readonly`. The `id` and `vin` members have only getters because they are declared `const`.
+> **Note:** The `secret` member is absent because of `// !access:none` — excluded members leave no trace in the output. The `role` member has only a getter because of `// !access:readonly`. The `id` and `vin` members have only getters because they are declared `const`.
 
 ### Generated `accessors.c`
 
@@ -422,7 +422,7 @@ LIBNVME_ACCESSORS_3 {
 };
 ```
 
-> **Note:** Only symbols for members that have accessors generated appear in the linker script. The `secret` member (excluded via `// !accessors:none`) and the write-only `token` example would have no getter entry. The version node name `LIBNVME_ACCESSORS_3` is hardcoded in the generator.
+> **Note:** Only symbols for members that have accessors generated appear in the linker script. The `secret` member (excluded via `// !access:none`) and the write-only `token` example would have no getter entry. The version node name `LIBNVME_ACCESSORS_3` is hardcoded in the generator.
 
 ------
 
@@ -437,8 +437,8 @@ struct person { // !generate-accessors !generate-lifecycle
     char *name;
     int age;
     const char *id;       /* const → getter only; NOT freed by destructor */
-    char *secret;         // !accessors:none
-    char *role;           // !accessors:readonly
+    char *secret;         // !access:none
+    char *role;           // !access:readonly
 };
 ```
 
@@ -491,7 +491,7 @@ __public void person_free(struct person *p)
 
 > **Notes:**
 > - `id` is `const char *` — the destructor never frees `const` members.
-> - `secret` is `// !accessors:none` but is still freed — `lifecycle:none` is the annotation to suppress a free.
+> - `secret` is `// !access:none` but is still freed — `lifecycle:none` is the annotation to suppress a free.
 > - `age` is `int` — only `char *` and `char **` members are freed.
 
 ### Additional entries in `accessors.ld`
@@ -611,10 +611,10 @@ __public void conn_opts_free(struct conn_opts *p)
 2. **String arrays** (`char **`) — setters deep-copy NULL-terminated arrays (each element and the container).
 3. **Fixed char arrays** (`char foo[N]`) — setters use `snprintf`, always NUL-terminated.
 4. **`const` members** — only a getter is generated, no setter (applies regardless of any annotation). `const char *` members are also skipped by the destructor.
-5. **`// !accessors:readonly`** — same effect as `const`: getter only.
-6. **`// !accessors:writeonly`** — setter only; getter is suppressed.
-7. **`// !accessors:readwrite`** — both getter and setter; overrides a restrictive struct-level default.
-8. **`// !accessors:none`** — member is completely ignored by the accessor generator. The destructor still frees it unless `// !lifecycle:none` is also present.
+5. **`// !access:readonly`** — same effect as `const`: getter only.
+6. **`// !access:writeonly`** — setter only; getter is suppressed.
+7. **`// !access:readwrite`** — both getter and setter; overrides a restrictive struct-level default.
+8. **`// !access:none`** — member is completely ignored by the accessor generator. The destructor still frees it unless `// !lifecycle:none` is also present.
 9. **Struct-level mode** — the qualifier on `generate-accessors` sets the default for every member in the struct; per-member annotations override the struct default.
 10. **`// !generate-lifecycle`** — generates `foo_new()` (constructor) and `foo_free()` (destructor). Can appear on the same line as `generate-accessors`. A struct needs only one of the two annotations.
 11. **`// !lifecycle:none`** — excludes a member from the destructor's free logic. Use this when the struct does not own the pointed-to memory.
