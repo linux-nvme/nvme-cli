@@ -13,6 +13,7 @@
 #include <ccan/list/list.h>
 
 #include "nvme/nvme-types.h"
+#include "nvme/lib-compat.h"
 #include "nvme/lib-types.h"
 
 #include <nvme/tree.h>
@@ -156,7 +157,7 @@ struct libnvme_transport_handle {
 	__u32 timeout;
 
 	/* direct */
-	int fd;
+	libnvme_fd_t fd;
 	struct stat stat;
 	bool ioctl_admin64;
 	bool ioctl_io64;

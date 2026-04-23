@@ -99,7 +99,7 @@ __public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
 		int block_size)
 {
 	int ret;
-	int fd = libnvme_transport_handle_get_fd(hdl);
+	libnvme_fd_t fd = libnvme_transport_handle_get_fd(hdl);
 
 	ret = ioctl(fd, BLKBSZSET, &block_size);
 	if (ret < 0)
