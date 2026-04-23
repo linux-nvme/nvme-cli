@@ -17,7 +17,7 @@ Limitations:
   - Does not support struct within struct.
 
 Annotations use // line-comment style.  After '//', each '!keyword' token
-(optionally followed by ':qualifier' or ':VALUE') is a command.  Multiple
+(optionally followed by ':spec' or ':VALUE') is a command.  Multiple
 annotations can appear in one comment:
   struct nvme_ctrl { // !generate-accessors !generate-lifecycle
 
@@ -25,12 +25,57 @@ Optional whitespace between // and ! is accepted, so // !token, //!token,
 and //\t!token are all equivalent.  The canonical form used in this
 project's headers is "// !token" (one space).
 
+ACCESS MODEL — TWO INDEPENDENT AXES
+-----------------------------------
+Each struct member has two independent axes:
+  read  — whether a getter exists, and how
+  write — whether a setter exists, and how
+
+Each axis takes one of three modes:
+  generated — the generator emits the accessor
+  custom    — an accessor exists but is provided elsewhere as a hand-written
+              function in the public API; the generator emits nothing
+  none      — no accessor exists for this axis; the generator
+              emits nothing
+
+Only the 'generated' mode produces output in this generator.  'custom'
+and 'none' are semantic declarations for downstream consumers (the
+Python-binding generator, the nvme.i consistency check) that need to
+know the difference between "no accessor at all" and "accessor provided
+by hand".
+
 Struct inclusion — annotate the opening brace line of the struct.
-The optional mode qualifier sets the default for all members of the struct:
-  struct nvme_ctrl { // !generate-accessors            — default: both getter and setter
-  struct nvme_ctrl { // !generate-accessors:none       — default: no accessors
-  struct nvme_ctrl { // !generate-accessors:readonly   — default: getter only
-  struct nvme_ctrl { // !generate-accessors:writeonly  — default: setter only
+The optional spec sets the default mode for each axis of every member
+of the struct:
+  struct nvme_ctrl { // !generate-accessors
+    — shorthand for read=generated, write=generated
+  struct nvme_ctrl { // !generate-accessors:read=generated,write=generated
+    — explicit form of the same default
+  struct nvme_ctrl { // !generate-accessors:read=none,write=none
+    — include struct but emit nothing by default
+  struct nvme_ctrl { // !generate-accessors:read=generated
+    — read=generated, write inherits the built-in default (generated)
+
+Only structs carrying this annotation are processed.  Members of other
+structs are ignored.
+
+Member-level override — annotate the member declaration line.  Any axis
+not named in the spec is inherited from the struct-level default:
+  char *state;     // !access:read=custom,write=none
+    — custom getter, no setter
+  char *token;     // !access:read=none,write=custom
+    — no getter, custom setter
+  char *secret;    // !access:read=none,write=none
+    — no accessor of any kind
+  char *name;      // !access:read=custom
+    — custom getter; write axis inherited from struct default
+  char *pw;        // !access:write=custom
+    — custom setter; read axis inherited from struct default
+
+The 'const' qualifier on a member forces write=none regardless of the
+annotation (you cannot generate a setter for a const member).  'const
+char *' members are also never freed by the destructor — they are
+assumed to point to externally owned storage.
 
 Lifecycle (constructor + destructor) — annotate the opening brace line:
   struct nvme_ctrl { // !generate-lifecycle
@@ -53,22 +98,6 @@ generated code avoids unnecessary work by comparing the current value with
 the default first (strcmp); if they differ it frees the old value and
 strdup()s the new one. const char* members are assigned directly (no
 strdup) since they are assumed to point to externally owned storage.
-
-Member exclusion — annotate the member declaration line:
-  char *model; // !access:none
-
-Read-only members (getter only, setter suppressed):
-  - Members declared with the 'const' qualifier, or
-  - Annotate the member declaration line:
-      char *state; // !access:readonly
-
-Write-only members (setter only, getter suppressed):
-  - Annotate the member declaration line:
-      char *state; // !access:writeonly
-
-Both getter and setter (override a restrictive struct-level default):
-  - Annotate the member declaration line:
-      char *state; // !access:readwrite
 
 Example usage:
   ./generate-accessors.py private.h
@@ -170,7 +199,8 @@ def has_annotation(text, annotation):
 
     Accepts '// !annotation', '//!annotation', '//\\t!annotation', etc.
     The match is token-delimited: ``!generate-accessors`` will not match
-    inside ``!generate-accessors:none``.
+    inside ``!generate-accessors:read=none,write=none`` (the ':' is not
+    whitespace, '!', or end-of-string).
     """
     comment = _comment_text(text)
     if comment is None:
@@ -261,17 +291,27 @@ def kdoc_summary(fn, *descriptions):
 # ---------------------------------------------------------------------------
 
 class Member:
-    """Represents one member of a parsed C struct."""
+    """Represents one member of a parsed C struct.
 
-    __slots__ = ('name', 'type', 'gen_getter', 'gen_setter',
+    read_mode and write_mode each take one of:
+      'generated'  — this generator emits the accessor
+      'custom'     — an accessor exists elsewhere (hand-written or bridge)
+      'none'       — no accessor exists for this axis
+
+    Only 'generated' produces output in this generator.  The other two
+    modes exist for downstream consumers (Python binding generator,
+    consistency checks) that care about the semantic distinction.
+    """
+
+    __slots__ = ('name', 'type', 'read_mode', 'write_mode',
                  'is_char_array', 'is_char_ptr_array', 'array_size')
 
-    def __init__(self, name, type_str, gen_getter, gen_setter,
+    def __init__(self, name, type_str, read_mode, write_mode,
                  is_char_array, is_char_ptr_array, array_size):
         self.name = name
         self.type = type_str          # e.g. "const char *", "int", "__u32"
-        self.gen_getter = gen_getter  # True → emit getter
-        self.gen_setter = gen_setter  # True → emit setter
+        self.read_mode = read_mode    # 'generated' | 'custom' | 'none'
+        self.write_mode = write_mode  # 'generated' | 'custom' | 'none'
         self.is_char_array = is_char_array
         self.is_char_ptr_array = is_char_ptr_array
         self.array_size = array_size  # only for fixed-size char arrays (char[N])
@@ -281,40 +321,44 @@ class Member:
 # Parsing
 # ---------------------------------------------------------------------------
 
-def parse_members(struct_name, raw_body, struct_mode, verbose):
+def parse_members(struct_name, raw_body, struct_defaults, verbose):
     """Parse *raw_body* and return a list of Member objects.
 
-    *struct_mode* is the default access mode for all members of this struct,
-    derived from the generate-accessors annotation qualifier:
-      'both'      — generate getter and setter (default when no qualifier)
-      'readonly'  — generate getter only
-      'writeonly' — generate setter only
-      'none'      — generate nothing unless a per-member annotation overrides
+    *struct_defaults* is a (read_mode, write_mode) tuple taken from the
+    struct-level ``!generate-accessors`` annotation.  Each member inherits
+    these defaults and may override one or both axes with
+    ``// !access:read=...,write=...``.
+
+    Modes: 'generated' | 'custom' | 'none'.
+
+    Members whose effective read_mode and write_mode are both non-generated
+    are skipped — they produce no output, so there is no reason to carry
+    them through the emitter stage.
 
     Annotations are detected on the **raw** (un-stripped) line so that
     comment masking cannot hide them.  Comments are stripped only afterwards,
     for regex matching.
     """
+    struct_read, struct_write = struct_defaults
     members = []
 
     for raw_line in raw_body.splitlines():
         # ----------------------------------------------------------------
         # Annotation checks on the raw line — BEFORE stripping comments.
         # ----------------------------------------------------------------
-        if has_annotation(raw_line, 'access:none'):
-            continue
-
-        if has_annotation(raw_line, 'access:readwrite'):
-            member_mode = 'both'
-        elif has_annotation(raw_line, 'access:readonly'):
-            member_mode = 'readonly'
-        elif has_annotation(raw_line, 'access:writeonly'):
-            member_mode = 'writeonly'
+        override = parse_access_override(raw_line)
+        if override is None:
+            read_mode = struct_read
+            write_mode = struct_write
         else:
-            member_mode = struct_mode
+            read_mode  = override.get('read',  struct_read)
+            write_mode = override.get('write', struct_write)
 
-        gen_getter = member_mode in ('both', 'readonly')
-        gen_setter = member_mode in ('both', 'writeonly')
+        # Skip members that produce no generator output.  They may still
+        # carry a valid 'custom'/'none' declaration for downstream tools
+        # but this generator has nothing to emit for them.
+        if read_mode != 'generated' and write_mode != 'generated':
+            continue
 
         # ----------------------------------------------------------------
         # Strip comments for member-declaration parsing.
@@ -333,8 +377,10 @@ def parse_members(struct_name, raw_body, struct_mode, verbose):
             members.append(Member(
                 name=m.group(2),
                 type_str='const char *',
-                gen_getter=gen_getter,
-                gen_setter=gen_setter and not is_const_qual,
+                read_mode=read_mode,
+                # const forces write=none — you cannot generate a setter
+                # for a const member.
+                write_mode='none' if is_const_qual else write_mode,
                 is_char_array=True,
                 is_char_ptr_array=False,
                 array_size=m.group(3),
@@ -365,8 +411,8 @@ def parse_members(struct_name, raw_body, struct_mode, verbose):
             members.append(Member(
                 name=name,
                 type_str=type_str,
-                gen_getter=gen_getter,
-                gen_setter=gen_setter and not is_const_qual,
+                read_mode=read_mode,
+                write_mode='none' if is_const_qual else write_mode,
                 is_char_array=False,
                 is_char_ptr_array=(ptr_depth == 2),
                 array_size=None,
@@ -375,40 +421,101 @@ def parse_members(struct_name, raw_body, struct_mode, verbose):
     return members
 
 
-_VALID_MODES = frozenset(('both', 'none', 'readonly', 'writeonly'))
+_VALID_MODES = frozenset(('generated', 'custom', 'none'))
+
+
+def parse_access_spec(spec, origin):
+    """Parse a spec body like ``read=generated,write=custom``.
+
+    Returns a dict mapping axis names ('read', 'write') to mode strings.
+    Partial specs are allowed — any axis not named in the spec is absent
+    from the returned dict.  Unknown axes or modes trigger a warning and
+    are dropped from the result.
+
+    *origin* is a human-readable description of where the spec came from,
+    used only for warning messages (e.g. "!generate-accessors" or
+    "!access").
+    """
+    result = {}
+    for part in spec.split(','):
+        part = part.strip()
+        if not part:
+            continue
+        if '=' not in part:
+            print(f"warning: {origin} spec token '{part}' has no '='; "
+                  f"expected 'read=MODE' or 'write=MODE'.",
+                  file=sys.stderr)
+            continue
+        key, value = part.split('=', 1)
+        key   = key.strip()
+        value = value.strip()
+        if key not in ('read', 'write'):
+            print(f"warning: {origin} spec axis '{key}' is unknown; "
+                  f"expected 'read' or 'write'.",
+                  file=sys.stderr)
+            continue
+        if value not in _VALID_MODES:
+            print(f"warning: {origin} spec mode '{value}' for axis "
+                  f"'{key}' is unknown; expected one of: "
+                  f"{', '.join(sorted(_VALID_MODES))}.",
+                  file=sys.stderr)
+            continue
+        result[key] = value
+    return result
 
 
 def parse_struct_annotation(raw_body):
-    """Return the default mode for a struct from its generate-accessors annotation.
+    """Return the (read_mode, write_mode) defaults for a struct.
 
-    Recognises the ``//`` comment style with optional whitespace after ``//``:
-      // !generate-accessors             → 'both'
-      // !generate-accessors:none        → 'none'
-      // !generate-accessors:readonly    → 'readonly'
-      // !generate-accessors:writeonly   → 'writeonly'
+    Recognises::
 
-    '//!', '// !', and '//\\t!' are all accepted.
+      // !generate-accessors
+          → ('generated', 'generated')  [shorthand]
+      // !generate-accessors:read=X,write=Y
+          → (X, Y)                      [explicit, both axes]
+      // !generate-accessors:read=X
+          → (X, 'generated')            [partial — write inherits built-in]
+      // !generate-accessors:write=Y
+          → ('generated', Y)            [partial — read inherits built-in]
 
     Returns None when the annotation is absent.
-    Prints a warning and falls back to 'both' for unrecognised qualifiers.
-    """
-    first_token = raw_body.lstrip()
 
-    m = re.match(r'//\s*!generate-accessors(?::([a-z]+))?', first_token)
+    The built-in default for any axis not named at the struct level is
+    'generated'.
+    """
+    # Bare form first: "!generate-accessors" with no ':spec'.
+    bare_re = re.compile(r'!generate-accessors(?=[\s!]|$)')
+    # Specced form: "!generate-accessors:spec".
+    spec_re = re.compile(r'!generate-accessors:(\S+)(?=[\s!]|$)')
+
+    m = spec_re.search(raw_body)
     if m:
-        qualifier = m.group(1) or 'both'
-        if qualifier not in _VALID_MODES:
-            print(
-                f"warning: unknown generate-accessors qualifier "
-                f"'{qualifier}'; valid values are: "
-                f"{', '.join(sorted(_VALID_MODES))}. "
-                f"Defaulting to 'both'.",
-                file=sys.stderr,
-            )
-            qualifier = 'both'
-        return qualifier
+        parsed = parse_access_spec(m.group(1), '!generate-accessors')
+        return (parsed.get('read',  'generated'),
+                parsed.get('write', 'generated'))
+
+    if bare_re.search(raw_body):
+        return ('generated', 'generated')
 
     return None
+
+
+def parse_access_override(raw_line):
+    """Parse a member-level ``!access:<spec>`` annotation.
+
+    Returns a dict ``{'read': mode}`` / ``{'write': mode}`` / both, or
+    ``None`` when no ``!access`` annotation is present on the line.  A
+    partial spec yields a dict with only the named axes — missing axes
+    are the caller's responsibility to fill in (typically from the
+    struct-level default).
+    """
+    comment = _comment_text(raw_line)
+    if comment is None:
+        return None
+    m = re.search(r'!access:(\S+)(?=[\s!]|$)', comment)
+    if not m:
+        return None
+    return parse_access_spec(m.group(1), '!access')
 
 
 def parse_lifecycle_annotation(raw_body):
@@ -443,7 +550,8 @@ def parse_members_for_lifecycle(raw_body):
     """Return a list of LifecycleMember for every char* or char** member.
 
     Unlike parse_members(), this function:
-      - ignores ``accessors:none`` (the destructor must free all heap strings)
+      - ignores the ``!access`` annotation entirely (the destructor must
+        free all heap strings regardless of accessor mode)
       - respects ``lifecycle:none`` to let callers opt a member out
       - collects only char* and char** members (the only types that need
         explicit freeing)
@@ -585,16 +693,16 @@ def parse_file(text, verbose):
         struct_name = match.group(1)
         raw_body    = match.group(2)
 
-        struct_mode    = parse_struct_annotation(raw_body)
-        want_lifecycle = parse_lifecycle_annotation(raw_body)
+        struct_defaults = parse_struct_annotation(raw_body)
+        want_lifecycle  = parse_lifecycle_annotation(raw_body)
 
-        if struct_mode is None and not want_lifecycle:
+        if struct_defaults is None and not want_lifecycle:
             continue
 
         members = []
-        if struct_mode is not None:
+        if struct_defaults is not None:
             members = parse_members(
-                struct_name, raw_body, struct_mode, verbose)
+                struct_name, raw_body, struct_defaults, verbose)
 
         lc_members = None
         if want_lifecycle:
@@ -603,8 +711,12 @@ def parse_file(text, verbose):
         default_members = parse_members_for_defaults(raw_body)
 
         if verbose and (members or lc_members is not None or default_members):
-            acc = f"{len(members)} members [mode: {struct_mode}]" \
-                  if members else "no accessors"
+            if members:
+                sr, sw = struct_defaults
+                acc = (f"{len(members)} members "
+                       f"[defaults: read={sr}, write={sw}]")
+            else:
+                acc = "no accessors"
             lc = (f"{len(lc_members)} lifecycle members"
                   if lc_members is not None else "no lifecycle")
             df = (f"{len(default_members)} defaults" if default_members
@@ -736,7 +848,7 @@ def generate_hdr(f, prefix, struct_name, members):
         is_dyn_str = (not member.is_char_array and
                       not member.is_char_ptr_array and
                       member.type == 'const char *')
-        if member.gen_setter:
+        if member.write_mode == 'generated':
             if member.is_char_ptr_array:
                 emit_hdr_setter_str_array(f, prefix, struct_name, member.name)
             elif member.is_char_array or is_dyn_str:
@@ -745,7 +857,7 @@ def generate_hdr(f, prefix, struct_name, members):
             else:
                 emit_hdr_setter_val(f, prefix, struct_name,
                                     member.name, member.type)
-        if member.gen_getter:
+        if member.read_mode == 'generated':
             emit_hdr_getter(f, prefix, struct_name,
                             member.name, member.type, is_dyn_str)
 
@@ -886,7 +998,7 @@ def generate_src(f, prefix, struct_name, members):
         is_dyn_str = (not member.is_char_array and
                       not member.is_char_ptr_array and
                       member.type == 'const char *')
-        if member.gen_setter:
+        if member.write_mode == 'generated':
             if is_dyn_str:
                 emit_src_setter_dynstr(f, prefix, struct_name, member.name)
             elif member.is_char_ptr_array:
@@ -897,7 +1009,7 @@ def generate_src(f, prefix, struct_name, members):
             else:
                 emit_src_setter_val(f, prefix, struct_name,
                                     member.name, member.type)
-        if member.gen_getter:
+        if member.read_mode == 'generated':
             cast = '(const char *const *)' if member.is_char_ptr_array else None
             emit_src_getter(f, prefix, struct_name, member.name, member.type,
                             cast=cast)
@@ -1092,9 +1204,9 @@ def generate_ld(f, prefix, struct_name, members, lc_members, default_members):
     if default_members:
         f.write(f'\t\t{_init_defaults_name(prefix, struct_name)};\n')
     for member in members:
-        if member.gen_getter:
+        if member.read_mode == 'generated':
             f.write(f'\t\t{_get_name(prefix, struct_name, member.name)};\n')
-        if member.gen_setter:
+        if member.write_mode == 'generated':
             f.write(f'\t\t{_set_name(prefix, struct_name, member.name)};\n')
 
 
