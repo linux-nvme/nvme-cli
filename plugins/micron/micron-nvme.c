@@ -72,6 +72,20 @@
 #define NAME_MAX 260
 #endif
 
+#ifdef _WIN32
+/*
+ * readlink stub - Windows doesn't have symbolic links in the same way.
+ * This is only used by micron-nvme.c, and can be removed once micron-nvme.c
+ * has been refactored to not rely on Linux-specific sysfs paths when
+ * building on Windows.
+ */
+static inline ssize_t readlink(const char *path, char *buf, size_t bufsiz)
+{
+	errno = ENOTSUP;
+	return -1;
+}
+#endif
+
 /* Plugin version major_number.minor_number.patch */
 static const char *__version_major = "2";
 static const char *__version_minor = "0";

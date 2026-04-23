@@ -8,19 +8,12 @@
  * Compatibility is not comprehensive. Only functionality required by
  * nvme-cli and libnvme is included.
  *
- * Authors: Broc Going <bgoing@micron.com>
- *          Brandon Capener <bcapener@micron.com>
+ * Authors: Brandon Capener <bcapener@micron.com>
  */
 #pragma once
 
 #include <malloc.h>
 
-#ifdef _WIN32
-
-/* malloc_usable_size implementation for Windows */
-static inline size_t malloc_usable_size(void *ptr)
-{
-	return _msize(ptr);
-}
-
+#if defined(_WIN32)
+#define malloc_usable_size _msize
 #endif

@@ -5,14 +5,14 @@
  *
  * Cross-platform compatibility definitions, types, and utilities.
  *
- * Authors: Broc Going <bgoing@micron.com>
+ * Authors: Brandon Capener <bcapener@micron.com>
  *          Brandon Busacker <bbusacker@micron.com>
  */
 #pragma once
 
 #if defined(_WIN32)
 
-#define WIN32_LEAN_AND_MEAN	/* keeps windows.h from including winsock.*/
+#define WIN32_LEAN_AND_MEAN	/* keeps windows.h from including winsock */
 #include <windows.h>
 
 #include <io.h>

@@ -5,7 +5,7 @@
  *
  * Cross-platform compatibility for fcntl.h.
  *
- * Authors: Broc Going <bgoing@micron.com>
+ * Authors: Brandon Busacker <bbusacker@micron.com>
  */
 #pragma once
 

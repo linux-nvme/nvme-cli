@@ -10749,7 +10749,7 @@ static int get_power_measurement_log(int argc, char **argv, struct command *acmd
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	__cleanup_free struct nvme_power_meas_log *log = NULL;
+	__cleanup_nvme_free struct nvme_power_meas_log *log = NULL;
 	nvme_print_flags_t flags;
 	__u32 min_log_size = sizeof(struct nvme_power_meas_log);
 	__u32 log_size;

@@ -8,12 +8,21 @@
  * Compatibility is not comprehensive. Only functionality required by
  * nvme-cli and libnvme is included.
  *
- * Authors: Broc Going <bgoing@micron.com>
- *          Brandon Capener <bcapener@micron.com>
+ * Authors: Brandon Capener <bcapener@micron.com>
  */
 #pragma once
 
 #include <stdlib.h>
+
+/*
+ * Cross-platform compatible free for aligned memory allocations.
+ * Use when posix_memalign is used to allocate memory.
+ */
+#if defined(_WIN32)
+#define aligned_free _aligned_free
+#else
+#define aligned_free free
+#endif
 
 #if defined(_WIN32)
 
@@ -44,16 +53,3 @@ static inline void *reallocarray(void *ptr, size_t nmemb, size_t size)
 }
 
 #endif
-
-/*
- * Cross-platform compatible free for aligned memory allocations.
- * Use when posix_memalign is used to allocate memory.
- */
-static inline void aligned_free(void *p)
-{
-#if defined(_WIN32)
-	_aligned_free(p);
-#else
-	free(p);
-#endif
-}

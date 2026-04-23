@@ -9,7 +9,6 @@
  * nvme-cli and libnvme is included.
  *
  * Authors: Brandon Busacker <bbusacker@micron.com>
- *          Broc Going <bgoing@micron.com>
  */
 #pragma once
 
@@ -17,15 +16,13 @@
 
 #if defined(_WIN32)
 
-#define WIN32_LEAN_AND_MEAN	/* keeps windows.h from including winsock.*/
-#include <winsock2.h>	/* for gethostname */
-
-#include <errno.h>
 #include <io.h>
 #include <sysinfoapi.h>
-
+#include <winsock2.h>	/* for gethostname */
 
 /* unistd.h POSIX compatibility */
+
+#define fsync _commit
 
 /* getpagesize implementation for Windows */
 static inline int getpagesize(void)
@@ -34,23 +31,6 @@ static inline int getpagesize(void)
 
 	GetSystemInfo(&si);
 	return si.dwPageSize;
-}
-
-/*
- * readlink stub - Windows doesn't have symbolic links in the same way
- * NOTE: This is only used by micron-nvme.c, and can be removed once that
- * has been refactored to not rely on Linux-specific sysfs paths.
- */
-static inline ssize_t readlink(const char *path, char *buf, size_t bufsiz)
-{
-	errno = ENOTSUP;
-	return -1;
-}
-
-/* fsync implementation for Windows */
-static inline int fsync(int fd)
-{
-	return _commit(fd);
 }
 
 #endif
