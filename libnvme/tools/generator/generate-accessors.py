@@ -55,20 +55,20 @@ strdup()s the new one. const char* members are assigned directly (no
 strdup) since they are assumed to point to externally owned storage.
 
 Member exclusion — annotate the member declaration line:
-  char *model; // !accessors:none
+  char *model; // !access:none
 
 Read-only members (getter only, setter suppressed):
   - Members declared with the 'const' qualifier, or
   - Annotate the member declaration line:
-      char *state; // !accessors:readonly
+      char *state; // !access:readonly
 
 Write-only members (setter only, getter suppressed):
   - Annotate the member declaration line:
-      char *state; // !accessors:writeonly
+      char *state; // !access:writeonly
 
 Both getter and setter (override a restrictive struct-level default):
   - Annotate the member declaration line:
-      char *state; // !accessors:readwrite
+      char *state; // !access:readwrite
 
 Example usage:
   ./generate-accessors.py private.h
@@ -301,14 +301,14 @@ def parse_members(struct_name, raw_body, struct_mode, verbose):
         # ----------------------------------------------------------------
         # Annotation checks on the raw line — BEFORE stripping comments.
         # ----------------------------------------------------------------
-        if has_annotation(raw_line, 'accessors:none'):
+        if has_annotation(raw_line, 'access:none'):
             continue
 
-        if has_annotation(raw_line, 'accessors:readwrite'):
+        if has_annotation(raw_line, 'access:readwrite'):
             member_mode = 'both'
-        elif has_annotation(raw_line, 'accessors:readonly'):
+        elif has_annotation(raw_line, 'access:readonly'):
             member_mode = 'readonly'
-        elif has_annotation(raw_line, 'accessors:writeonly'):
+        elif has_annotation(raw_line, 'access:writeonly'):
             member_mode = 'writeonly'
         else:
             member_mode = struct_mode
