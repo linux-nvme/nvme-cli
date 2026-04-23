@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <assert.h>
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -17,6 +16,8 @@
 #include <ccan/htable/htable_type.h>
 #include <ccan/htable/htable.h>
 #include <ccan/hash/hash.h>
+
+#include <nvme/stdio.h>
 
 #include <libnvme.h>
 

@@ -230,7 +230,7 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 			cfg.cdw11, 0, buf, cfg.data_len, &result);
 	if (err > 0)
 		nvme_show_status(err);
-	free(buf);
+	aligned_free(buf);
 	return err;
 }
 
@@ -255,7 +255,7 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 	const char *save = "specifies that the controller shall save the attribute";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	__cleanup_free void *buf = NULL;
+	__cleanup_nvme_free void *buf = NULL;
 	int ffd = STDIN_FILENO;
 	__u64 result;
 	int err;

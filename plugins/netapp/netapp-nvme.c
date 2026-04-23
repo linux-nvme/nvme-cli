@@ -831,12 +831,12 @@ static int netapp_ontapdevices_get_info(struct libnvme_transport_handle *hdl,
 		fprintf(stderr, "Unable to identify namespace descriptor for %s (%s)\n",
 			dev, err < 0 ? libnvme_strerror(-err) :
 			libnvme_status_to_string(err, false));
-		free(nsdescs);
+		aligned_free(nsdescs);
 		return 0;
 	}
 
 	memcpy(item->uuid, nsdescs + sizeof(struct nvme_ns_id_desc), sizeof(item->uuid));
-	free(nsdescs);
+	aligned_free(nsdescs);
 
 	err = nvme_get_ontap_c2_log(hdl, item->nsid, item->log_data, ONTAP_C2_LOG_SIZE);
 	if (err) {

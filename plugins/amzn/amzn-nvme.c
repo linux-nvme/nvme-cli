@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <fcntl.h>
 #include <errno.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <inttypes.h>
+
+#include <nvme/signal.h>
 
 #include <libnvme.h>
 

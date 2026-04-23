@@ -31,6 +31,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <nvme/mkdir.h>
+
 #include <libnvme.h>
 
 #include "common.h"
@@ -2873,7 +2875,7 @@ static bool wdc_nvme_check_supported_log_page(struct libnvme_global_ctx *ctx,
 	int err = -1;
 	struct wdc_c2_cbs_data *cbs_data = NULL;
 
-	__cleanup_free struct nvme_supported_log_pages *supports = NULL;
+	__cleanup_nvme_free struct nvme_supported_log_pages *supports = NULL;
 
 	/* Check log page id 0 (supported log pages) first */
 	supports = nvme_alloc(sizeof(*supports));

@@ -7,6 +7,7 @@
 
 void *nvme_alloc(size_t len);
 void *nvme_realloc(void *p, size_t len);
+void nvme_free(void *p);
 
 struct nvme_mem_huge {
 	size_t len;

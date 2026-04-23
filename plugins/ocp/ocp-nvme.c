@@ -2629,7 +2629,7 @@ static int fw_activation_history_log(int argc, char **argv, struct command *acmd
 
 static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 sel, bool uuid, __u32 nsid)
 {
-	__cleanup_free struct erri_entry *entry = NULL;
+	__cleanup_nvme_free struct erri_entry *entry = NULL;
 	struct erri_get_cq_entry cq_entry;
 	const __u8 fid = OCP_FID_ERRI;
 	__u64 result;
@@ -2712,7 +2712,7 @@ static int get_error_injection(int argc, char **argv, struct command *acmd, stru
 
 static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri_config *cfg, bool uuid, __u32 nsid)
 {
-	__cleanup_free struct erri_entry *entry = NULL;
+	__cleanup_nvme_free struct erri_entry *entry = NULL;
 	__cleanup_fd int ffd = -1;
 	__u32 data_len;
 	__u8 uidx = 0;
@@ -2935,7 +2935,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 		"processing this persistent log page command.";
 	const char *log_len = "number of bytes to retrieve";
 
-	__cleanup_free struct nvme_persistent_event_log *pevent = NULL;
+	__cleanup_nvme_free struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
 	__cleanup_huge struct nvme_mem_huge mh = { 0, };
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;

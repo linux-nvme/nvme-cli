@@ -110,7 +110,7 @@ static int nvme_get_sct_status(struct libnvme_transport_handle *hdl, __u32 devic
 		}
 	}
 end:
-	free(data);
+	aligned_free(data);
 	return err;
 }
 
@@ -134,7 +134,7 @@ static int nvme_sct_command_transfer_log(struct libnvme_transport_handle *hdl, b
 	memcpy(data + 2, &function_code, sizeof(function_code));
 
 	err = nvme_sct_op(hdl, OP_SCT_COMMAND_TRANSFER, DW10_SCT_COMMAND_TRANSFER, DW11_SCT_COMMAND_TRANSFER, data, data_len);
-	free(data);
+	aligned_free(data);
 	return err;
 }
 
@@ -314,7 +314,7 @@ static int nvme_get_internal_log(struct libnvme_transport_handle *hdl,
 end:
 	if (o_fd >= 0)
 		close(o_fd);
-	free(page_data);
+	aligned_free(page_data);
 	return err;
 }
 
@@ -411,7 +411,7 @@ static int nvme_get_vendor_log(struct libnvme_transport_handle *hdl,
 			d(log, log_len, 16, 1);
 	}
 end:
-	free(log);
+	aligned_free(log);
 	return err;
 }
 

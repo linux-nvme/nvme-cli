@@ -25,6 +25,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <nvme/mkdir.h>
+
 #include <libnvme.h>
 
 #include "common.h"
@@ -684,7 +686,7 @@ static int micron_selective_download(int argc, char **argv,
 	}
 
 out_free:
-	free(fw_buf);
+	aligned_free(fw_buf);
 out:
 	close(fw_fd);
 	return err;

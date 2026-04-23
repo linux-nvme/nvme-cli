@@ -10,9 +10,10 @@
 
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+
+#include <nvme/stdio.h>
 
 #include <libnvme.h>
 
