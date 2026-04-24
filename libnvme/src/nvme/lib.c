@@ -149,7 +149,7 @@ static int __nvme_transport_handle_open_direct(
 	struct libnvme_passthru_cmd dummy = { 0 };
 	__cleanup_free char *path = NULL;
 	char *name;
-	int ret, id, ns;
+	int ret, id, ns = 0;
 	bool c = true;
 
 	name = libnvme_basename(devname);
