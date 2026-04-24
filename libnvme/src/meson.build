@@ -79,7 +79,7 @@ else
     sources += 'nvme/no-uring.c'
 endif
 
-if json_c_dep.found()
+if json_c_dep.found() and want_fabrics
     sources += 'nvme/json.c'
 else
     sources += 'nvme/no-json.c'
