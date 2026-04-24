@@ -2083,6 +2083,8 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 		int tmo = fctx->cfg.keep_alive_tmo;
 		struct libnvmf_context nfctx = *fctx;
 
+		sanitize_discovery_log_entry(c->ctx, e);
+
 		nfctx.subsysnqn = e->subnqn;
 		nfctx.transport = libnvmf_trtype_str(e->trtype);
 		nfctx.traddr = e->traddr;
@@ -2746,6 +2748,8 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context nfctx = *fctx;
 		libnvme_ctrl_t cl;
 		int tmo = fctx->cfg.keep_alive_tmo;
+
+		sanitize_discovery_log_entry(c->ctx, e);
 
 		nfctx.subsysnqn = e->subnqn;
 		nfctx.transport = libnvmf_trtype_str(e->trtype);
