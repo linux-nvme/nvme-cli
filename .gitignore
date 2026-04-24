@@ -13,7 +13,7 @@ subprojects/*
 cscope.*
 compile_commands.json
 
-tests/__pycache__
+__pycache__/
 tests/nvmetests
 tests/*.pyc
 
