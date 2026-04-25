@@ -16,6 +16,8 @@ NVMe Copy Testcase:-
 
 """
 
+import base64
+
 from nvme_test import TestNVMe
 
 
@@ -44,12 +46,12 @@ class TestNVMeCopy(TestNVMe):
             self.assertEqual(err, 0, "ERROR : nvme get-feature failed")
             self.host_behavior_data = result.stdout
             # enable cross-namespace copy formats
-            if self.host_behavior_data[4] & cross_namespace_copy:
+            if int.from_bytes(base64.b64decode(self.host_behavior_data[4])) & cross_namespace_copy:
                 # skip if already enabled
                 print("Cross-namespace copy already enabled, skipping set-features")
                 self.host_behavior_data = None
             else:
-                data = self.host_behavior_data[:4] + cross_namespace_copy.to_bytes(2, 'little') + self.host_behavior_data[6:]
+                data = self.host_behavior_data[:4] + str(cross_namespace_copy.to_bytes(2, 'little')) + self.host_behavior_data[6:]
                 set_features_cmd = f"{self.nvme_bin} set-feature " + \
                     f"{self.ctrl} --feature-id=0x16 --data-len=512"
                 result = self.run_cmd(set_features_cmd, stdin_data=data)
