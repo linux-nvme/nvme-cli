@@ -4838,19 +4838,19 @@ static int filter_out_flags(int status)
 static void get_feature_id_print(struct feat_cfg cfg, int err, __u64 result,
 		void *buf, nvme_print_flags_t flags)
 {
-	int status = filter_out_flags(err);
+	int status = err > 0 ? filter_out_flags(err) : err;
 	enum nvme_status_type type = NVME_STATUS_TYPE_NVME;
 
-	if (!err) {
-		nvme_show_feature(cfg.feature_id, cfg.sel, result, buf,
-				  cfg.data_len, flags);
-	} else if (err > 0) {
-		if (!nvme_status_equals(status, type, NVME_SC_INVALID_FIELD) &&
-		    !nvme_status_equals(status, type, NVME_SC_INVALID_NS))
-			nvme_show_status(err);
-	} else {
-		nvme_show_error("get-feature: %s", libnvme_strerror(err));
+	if (err) {
+		if (nvme_status_equals(status, type, NVME_SC_INVALID_FIELD) ||
+		    nvme_status_equals(status, type, NVME_SC_INVALID_NS))
+			return;
+		nvme_show_err(err, "get-feature");
+		return;
 	}
+
+	nvme_show_feature(cfg.feature_id, cfg.sel, result, buf, cfg.data_len,
+			  flags);
 }
 
 static bool is_get_feature_result_set(enum nvme_features_id feature_id)
