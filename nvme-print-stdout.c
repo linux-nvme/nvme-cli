@@ -5227,10 +5227,18 @@ static void stdout_feat_host_id(unsigned int result, unsigned char *hostid)
 		       le64_to_cpu(*(__le64 *)hostid));
 }
 
-static void stdout_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
+static void stdout_feature_show(enum nvme_features_id fid, int sel,
+				unsigned int result, void *buf, __u32 data_len)
 {
 	printf("get-feature:%#0*x (%s), %s value:%#0*x\n", fid ? 4 : 2, fid,
 	       nvme_feature_to_string(fid), nvme_select_to_string(sel), result ? 10 : 8, result);
+
+	if (NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
+		stdout_select_result(fid, result);
+	else if (stdout_print_ops.flags & VERBOSE)
+		stdout_feature_show_fields(fid, result, buf);
+	else if (buf)
+		d(buf, data_len, 16, 1);
 }
 
 static void stdout_feature_show_fields(enum nvme_features_id fid,

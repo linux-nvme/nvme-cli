@@ -4839,21 +4839,11 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u64 result,
 		void *buf, nvme_print_flags_t flags)
 {
 	int status = filter_out_flags(err);
-	int verbose = flags & VERBOSE;
 	enum nvme_status_type type = NVME_STATUS_TYPE_NVME;
 
 	if (!err) {
-		if (!cfg.raw_binary || !buf) {
-			nvme_feature_show(cfg.feature_id, cfg.sel, result);
-			if (NVME_CHECK(cfg.sel, GET_FEATURES_SEL, SUPPORTED))
-				nvme_show_select_result(cfg.feature_id, result);
-			else if (verbose || !strcmp(nvme_args.output_format, "json"))
-				nvme_feature_show_fields(cfg.feature_id, result, buf);
-			else if (buf)
-				d(buf, cfg.data_len, 16, 1);
-		} else if (buf) {
-			d_raw(buf, cfg.data_len);
-		}
+		nvme_show_feature(cfg.feature_id, cfg.sel, result, buf,
+				  cfg.data_len, flags);
 	} else if (err > 0) {
 		if (!nvme_status_equals(status, type, NVME_SC_INVALID_FIELD) &&
 		    !nvme_status_equals(status, type, NVME_SC_INVALID_NS))
