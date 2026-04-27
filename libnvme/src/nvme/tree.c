@@ -2603,11 +2603,6 @@ const char *libnvme_ns_head_get_sysfs_dir(libnvme_ns_head_t head)
 	return head->sysfs_dir;
 }
 
-__public const char *libnvme_ns_get_generic_name(libnvme_ns_t n)
-{
-	return n->generic_name;
-}
-
 __public const char *libnvme_ns_get_model(libnvme_ns_t n)
 {
 	return n->c ? n->c->model : n->s->model;
@@ -2621,21 +2616,6 @@ __public const char *libnvme_ns_get_serial(libnvme_ns_t n)
 __public const char *libnvme_ns_get_firmware(libnvme_ns_t n)
 {
 	return n->c ? n->c->firmware : n->s->firmware;
-}
-
-__public enum nvme_csi libnvme_ns_get_csi(libnvme_ns_t n)
-{
-	return n->csi;
-}
-
-__public const uint8_t *libnvme_ns_get_eui64(libnvme_ns_t n)
-{
-	return n->eui64;
-}
-
-__public const uint8_t *libnvme_ns_get_nguid(libnvme_ns_t n)
-{
-	return n->nguid;
 }
 
 __public void libnvme_ns_get_uuid(libnvme_ns_t n,

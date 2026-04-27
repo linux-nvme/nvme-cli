@@ -26,6 +26,7 @@
 #include <stdint.h>
 
 #include <nvme/types.h>
+#include <nvme/nvme-types.h>
 
 /* Forward declarations. These are internal (opaque) structs. */
 struct libnvme_fabrics_config;
@@ -441,6 +442,14 @@ void libnvme_ns_set_name(struct libnvme_ns *p, const char *name);
 const char *libnvme_ns_get_name(const struct libnvme_ns *p);
 
 /**
+ * libnvme_ns_get_generic_name() - Get generic_name.
+ * @p: The &struct libnvme_ns instance to query.
+ *
+ * Return: The value of the generic_name field, or NULL if not set.
+ */
+const char *libnvme_ns_get_generic_name(const struct libnvme_ns *p);
+
+/**
  * libnvme_ns_set_sysfs_dir() - Set sysfs_dir.
  * @p: The &struct libnvme_ns instance to update.
  * @sysfs_dir: New string; a copy is stored. Pass NULL to clear.
@@ -530,6 +539,30 @@ void libnvme_ns_set_lba_util(struct libnvme_ns *p, uint64_t lba_util);
  */
 uint64_t libnvme_ns_get_lba_util(const struct libnvme_ns *p);
 
+/**
+ * libnvme_ns_get_eui64() - Get eui64.
+ * @p: The &struct libnvme_ns instance to query.
+ *
+ * Return: Pointer to the eui64 array of 8 uint8_t elements.
+ */
+const uint8_t *libnvme_ns_get_eui64(const struct libnvme_ns *p);
+
+/**
+ * libnvme_ns_get_nguid() - Get nguid.
+ * @p: The &struct libnvme_ns instance to query.
+ *
+ * Return: Pointer to the nguid array of 16 uint8_t elements.
+ */
+const uint8_t *libnvme_ns_get_nguid(const struct libnvme_ns *p);
+
+/**
+ * libnvme_ns_get_csi() - Get csi.
+ * @p: The &struct libnvme_ns instance to query.
+ *
+ * Return: The value of the csi field.
+ */
+enum nvme_csi libnvme_ns_get_csi(const struct libnvme_ns *p);
+
 /****************************************************************************
  * Accessors for: struct libnvme_ctrl
  ****************************************************************************/
@@ -549,6 +582,14 @@ const char *libnvme_ctrl_get_name(const struct libnvme_ctrl *p);
  * Return: The value of the sysfs_dir field, or NULL if not set.
  */
 const char *libnvme_ctrl_get_sysfs_dir(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_address() - Get address.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the address field, or NULL if not set.
+ */
+const char *libnvme_ctrl_get_address(const struct libnvme_ctrl *p);
 
 /**
  * libnvme_ctrl_get_firmware() - Get firmware.
@@ -954,23 +995,6 @@ void libnvme_host_set_hostsymname(
  * Return: The value of the hostsymname field, or NULL if not set.
  */
 const char *libnvme_host_get_hostsymname(const struct libnvme_host *p);
-
-/**
- * libnvme_host_set_pdc_enabled_valid() - Set pdc_enabled_valid.
- * @p: The &struct libnvme_host instance to update.
- * @pdc_enabled_valid: Value to assign to the pdc_enabled_valid field.
- */
-void libnvme_host_set_pdc_enabled_valid(
-		struct libnvme_host *p,
-		bool pdc_enabled_valid);
-
-/**
- * libnvme_host_get_pdc_enabled_valid() - Get pdc_enabled_valid.
- * @p: The &struct libnvme_host instance to query.
- *
- * Return: The value of the pdc_enabled_valid field.
- */
-bool libnvme_host_get_pdc_enabled_valid(const struct libnvme_host *p);
 
 /****************************************************************************
  * Accessors for: struct libnvme_fabric_options

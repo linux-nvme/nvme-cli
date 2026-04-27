@@ -326,6 +326,11 @@ __public const char *libnvme_ns_get_name(const struct libnvme_ns *p)
 	return p->name;
 }
 
+__public const char *libnvme_ns_get_generic_name(const struct libnvme_ns *p)
+{
+	return p->generic_name;
+}
+
 __public void libnvme_ns_set_sysfs_dir(
 		struct libnvme_ns *p,
 		const char *sysfs_dir)
@@ -389,6 +394,21 @@ __public uint64_t libnvme_ns_get_lba_util(const struct libnvme_ns *p)
 	return p->lba_util;
 }
 
+__public const uint8_t *libnvme_ns_get_eui64(const struct libnvme_ns *p)
+{
+	return p->eui64;
+}
+
+__public const uint8_t *libnvme_ns_get_nguid(const struct libnvme_ns *p)
+{
+	return p->nguid;
+}
+
+__public enum nvme_csi libnvme_ns_get_csi(const struct libnvme_ns *p)
+{
+	return p->csi;
+}
+
 /****************************************************************************
  * Accessors for: struct libnvme_ctrl
  ****************************************************************************/
@@ -401,6 +421,11 @@ __public const char *libnvme_ctrl_get_name(const struct libnvme_ctrl *p)
 __public const char *libnvme_ctrl_get_sysfs_dir(const struct libnvme_ctrl *p)
 {
 	return p->sysfs_dir;
+}
+
+__public const char *libnvme_ctrl_get_address(const struct libnvme_ctrl *p)
+{
+	return p->address;
 }
 
 __public const char *libnvme_ctrl_get_firmware(const struct libnvme_ctrl *p)
@@ -700,18 +725,6 @@ __public void libnvme_host_set_hostsymname(
 __public const char *libnvme_host_get_hostsymname(const struct libnvme_host *p)
 {
 	return p->hostsymname;
-}
-
-__public void libnvme_host_set_pdc_enabled_valid(
-		struct libnvme_host *p,
-		bool pdc_enabled_valid)
-{
-	p->pdc_enabled_valid = pdc_enabled_valid;
-}
-
-__public bool libnvme_host_get_pdc_enabled_valid(const struct libnvme_host *p)
-{
-	return p->pdc_enabled_valid;
 }
 
 /****************************************************************************

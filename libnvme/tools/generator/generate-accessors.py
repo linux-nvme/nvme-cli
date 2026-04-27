@@ -168,9 +168,28 @@ CHAR_ARRAY_RE = re.compile(
     r'^(const\s+)?char\s+([A-Za-z_][A-Za-z0-9_]*)\s*\[\s*([A-Za-z0-9_]+)\s*\]\s*;'
 )
 
-# Matches:  [const] type[*] name;
+# Matches:  [const] type_word [type_word ...] [*[*]] name ;
+# Supports multi-word types such as "enum tag", "unsigned int", and
+# "unsigned long long".  Backtracking resolves the ambiguity between the
+# final type word and the member name: the engine tries the longest type
+# first and retreats until the pointer/space group and name can be satisfied.
 MEMBER_RE = re.compile(
-    r'^(const\s+)?([A-Za-z_][A-Za-z0-9_]*)([*\s]+)([A-Za-z_][A-Za-z0-9_]*)\s*;'
+    r'^(const\s+)?'
+    r'((?:[A-Za-z_][A-Za-z0-9_]*)(?:\s+[A-Za-z_][A-Za-z0-9_]*)*)'
+    r'([*\s]+)'
+    r'([A-Za-z_][A-Za-z0-9_]*)\s*;'
+)
+
+# Matches:  [const] type_word [type_word ...] name[size] ;
+# For fixed-size arrays of scalar types (e.g. uint8_t eui64[8],
+# unsigned char uuid[NVME_UUID_LEN]).  char arrays are caught first
+# by CHAR_ARRAY_RE and never reach this regex.
+SCALAR_ARRAY_RE = re.compile(
+    r'^(const\s+)?'
+    r'((?:[A-Za-z_][A-Za-z0-9_]*)(?:\s+[A-Za-z_][A-Za-z0-9_]*)*)'
+    r'\s+'
+    r'([A-Za-z_][A-Za-z0-9_]*)'
+    r'\s*\[\s*([A-Za-z0-9_]+)\s*\]\s*;'
 )
 
 
@@ -304,17 +323,19 @@ class Member:
     """
 
     __slots__ = ('name', 'type', 'read_mode', 'write_mode',
-                 'is_char_array', 'is_char_ptr_array', 'array_size')
+                 'is_char_array', 'is_char_ptr_array', 'is_scalar_array',
+                 'array_size')
 
     def __init__(self, name, type_str, read_mode, write_mode,
-                 is_char_array, is_char_ptr_array, array_size):
+                 is_char_array, is_char_ptr_array, is_scalar_array, array_size):
         self.name = name
         self.type = type_str          # e.g. "const char *", "int", "__u32"
         self.read_mode = read_mode    # 'generated' | 'custom' | 'none'
         self.write_mode = write_mode  # 'generated' | 'custom' | 'none'
         self.is_char_array = is_char_array
         self.is_char_ptr_array = is_char_ptr_array
-        self.array_size = array_size  # only for fixed-size char arrays (char[N])
+        self.is_scalar_array = is_scalar_array
+        self.array_size = array_size  # for fixed-size arrays (char[N] or type[N])
 
 
 # ---------------------------------------------------------------------------
@@ -383,7 +404,24 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
                 write_mode='none' if is_const_qual else write_mode,
                 is_char_array=True,
                 is_char_ptr_array=False,
+                is_scalar_array=False,
                 array_size=m.group(3),
+            ))
+            continue
+
+        # --- fixed-size scalar array: [const] type name[size]; ----------
+        m = SCALAR_ARRAY_RE.match(clean)
+        if m:
+            is_const_qual = bool(m.group(1))
+            members.append(Member(
+                name=m.group(3),
+                type_str=m.group(2),
+                read_mode=read_mode,
+                write_mode='none' if is_const_qual else write_mode,
+                is_char_array=False,
+                is_char_ptr_array=False,
+                is_scalar_array=True,
+                array_size=m.group(4),
             ))
             continue
 
@@ -415,6 +453,7 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
                 write_mode='none' if is_const_qual else write_mode,
                 is_char_array=False,
                 is_char_ptr_array=(ptr_depth == 2),
+                is_scalar_array=False,
                 array_size=None,
             ))
 
@@ -842,9 +881,65 @@ def emit_hdr_getter(f, prefix, sname, mname, mtype, is_dyn_str):
         )
 
 
+def emit_hdr_setter_scalar_array(f, prefix, sname, mname, elem_type, array_size):
+    """Emit a header declaration for a fixed-size scalar-array setter."""
+    fn = _set_name(prefix, sname, mname)
+    f.write(
+        f'/**\n'
+        f'{kdoc_summary(fn, f"Set {mname}.", "Setter.")}\n'
+        f' * @p: The &struct {sname} instance to update.\n'
+        f' * @{mname}: Array of {array_size} elements; copied into the struct.\n'
+        f' */\n'
+    )
+    single = (f'void {_set_name(prefix, sname, mname)}'
+              f'(struct {sname} *p, const {elem_type} {mname}[{array_size}]);')
+    if fits_80(single):
+        f.write(single + '\n\n')
+    else:
+        f.write(
+            f'void {_set_name(prefix, sname, mname)}(\n'
+            f'\t\tstruct {sname} *p,\n'
+            f'\t\tconst {elem_type} {mname}[{array_size}]);\n\n'
+        )
+
+
+def emit_hdr_getter_scalar_array(f, prefix, sname, mname, elem_type, array_size):
+    """Emit a header declaration for a fixed-size scalar-array getter."""
+    fn = _get_name(prefix, sname, mname)
+    ret_type = f'const {elem_type} *'
+    f.write(
+        f'/**\n'
+        f'{kdoc_summary(fn, f"Get {mname}.", "Getter.")}\n'
+        f' * @p: The &struct {sname} instance to query.\n'
+        f' *\n'
+        f' * Return: Pointer to the {mname} array'
+        f' of {array_size} {elem_type} elements.\n'
+        f' */\n'
+    )
+    single = (f'{ret_type}{_get_name(prefix, sname, mname)}'
+              f'(const struct {sname} *p);')
+    if fits_80(single):
+        f.write(single + '\n\n')
+    else:
+        f.write(
+            f'{ret_type}{_get_name(prefix, sname, mname)}(\n'
+            f'\t\tconst struct {sname} *p);\n\n'
+        )
+
+
 def generate_hdr(f, prefix, struct_name, members):
     """Write header declarations for all members of one struct."""
     for member in members:
+        if member.is_scalar_array:
+            if member.write_mode == 'generated':
+                emit_hdr_setter_scalar_array(f, prefix, struct_name,
+                                             member.name, member.type,
+                                             member.array_size)
+            if member.read_mode == 'generated':
+                emit_hdr_getter_scalar_array(f, prefix, struct_name,
+                                             member.name, member.type,
+                                             member.array_size)
+            continue
         is_dyn_str = (not member.is_char_array and
                       not member.is_char_ptr_array and
                       member.type == 'const char *')
@@ -992,9 +1087,48 @@ def emit_src_getter(f, prefix, sname, mname, mtype, cast=None):
         )
 
 
+def emit_src_setter_scalar_array(f, prefix, sname, mname, elem_type, array_size):
+    """Emit a fixed-size scalar-array setter (memcpy)."""
+    sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
+           f'(struct {sname} *p, const {elem_type} {mname}[{array_size}])')
+    if fits_80(sig):
+        f.write(sig + '\n')
+    else:
+        f.write(
+            f'{PUB}void {_set_name(prefix, sname, mname)}(\n'
+            f'\t\tstruct {sname} *p,\n'
+            f'\t\tconst {elem_type} {mname}[{array_size}])\n'
+        )
+    f.write(f'{{\n\tmemcpy(p->{mname}, {mname}, sizeof(p->{mname}));\n}}\n\n')
+
+
+def emit_src_getter_scalar_array(f, prefix, sname, mname, elem_type):
+    """Emit a fixed-size scalar-array getter (return pointer to first element)."""
+    ret_type = f'const {elem_type} *'
+    sig = (f'{PUB}{ret_type}{_get_name(prefix, sname, mname)}'
+           f'(const struct {sname} *p)')
+    if fits_80(sig):
+        f.write(sig + '\n')
+    else:
+        f.write(
+            f'{PUB}{ret_type}{_get_name(prefix, sname, mname)}(\n'
+            f'\t\tconst struct {sname} *p)\n'
+        )
+    f.write(f'{{\n\treturn p->{mname};\n}}\n\n')
+
+
 def generate_src(f, prefix, struct_name, members):
     """Write source implementations for all members of one struct."""
     for member in members:
+        if member.is_scalar_array:
+            if member.write_mode == 'generated':
+                emit_src_setter_scalar_array(f, prefix, struct_name,
+                                             member.name, member.type,
+                                             member.array_size)
+            if member.read_mode == 'generated':
+                emit_src_getter_scalar_array(f, prefix, struct_name,
+                                             member.name, member.type)
+            continue
         is_dyn_str = (not member.is_char_array and
                       not member.is_char_ptr_array and
                       member.type == 'const char *')
@@ -1340,6 +1474,7 @@ def main():
             f'#include <stdbool.h>\n'
             f'#include <stdint.h>\n\n'
             f'#include <nvme/types.h>\n'
+            f'#include <nvme/nvme-types.h>\n'
             f'\n'
         )
         f.write('/* Forward declarations. These are internal (opaque) structs. */\n')
