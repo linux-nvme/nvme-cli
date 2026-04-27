@@ -104,7 +104,7 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 	}
 
 	hdl->fd = CreateFile(device_path,
-		GENERIC_READ,
+		GENERIC_READ | GENERIC_WRITE,
 		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		NULL,
 		OPEN_EXISTING,

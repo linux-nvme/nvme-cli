@@ -29,6 +29,8 @@ class TestNVMeDsm(TestNVMe):
     def setUp(self):
         """ Pre Section for TestNVMeDsm """
         super().setUp()
+        if self.is_windows():
+            self.skipTest("Dataset Management command not supported by Windows")
         self.start_block = 0
         self.range = 0
         self.namespace = 1

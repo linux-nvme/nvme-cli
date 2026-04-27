@@ -37,6 +37,8 @@ class TestNVMeVerify(TestNVMe):
     def setUp(self):
         """ Pre Section for TestNVMeVerify """
         super().setUp()
+        if self.is_windows():
+            self.skipTest("Verify command not supported by Windows")
         if not self.verify_cmd_supported():
             self.skipTest(
                 "because: Optional NVM Command 'Verify' (NVMVFYS) not supported")

@@ -174,17 +174,19 @@ libnvme_dep = declare_dependency(
 
 # test library with all symbols visible, to use for MI unit tests. Should
 # match libnvme above, but with no version script, and install: false.
-libnvme_test = library(
-    'nvme-test', # produces libnvme-test.so
-    sources,
-    dependencies: deps,
-    install: false,
-)
+if want_tests
+    libnvme_test = library(
+        'nvme-test', # produces libnvme-test.so
+        sources,
+        dependencies: deps,
+        install: false,
+    )
 
-libnvme_test_dep = declare_dependency(
-    link_with: libnvme_test,
-    include_directories: '.',
-)
+    libnvme_test_dep = declare_dependency(
+        link_with: libnvme_test,
+        include_directories: '.',
+    )
+endif
 
 mode = 'rw-r--r--'
 install_headers(

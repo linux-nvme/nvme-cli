@@ -26,6 +26,7 @@ import json
 import logging
 import mmap
 import os
+import platform
 import re
 import shutil
 import stat
@@ -70,6 +71,9 @@ class TestNVMe(unittest.TestCase):
             - clear_log_dir : default log directory.
     """
 
+    def is_windows(self):
+        return platform.system() == 'Windows'
+
     def setUp(self):
         """ Pre Section for TestNVMe. """
         # common code used in various testcases.
@@ -111,6 +115,10 @@ class TestNVMe(unittest.TestCase):
         """
         self.dps = 0
         self.flbas = 0
+
+        if self.is_windows():
+            return  # Windows only supports namespace managment in WinPE
+
         (ds, ms) = self.get_lba_format_size()
         ncap = int(self.get_ncap() / (ds+ms))
         self.nsze = ncap
@@ -132,6 +140,9 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - None
         """
+        if self.is_windows():
+            return
+
         x1, x2, dev = self.ctrl.split('/')
         cmd = "find /sys/devices -name \\*" + dev + " | grep -i pci"
         err = self.run_cmd(cmd).returncode
@@ -148,6 +159,9 @@ class TestNVMe(unittest.TestCase):
             config = json.load(data_file)
             self.ctrl = config['controller']
             self.ns1 = config['ns1']
+            if self.is_windows():
+                self.ctrl = config.get('windows_controller', self.ctrl)
+                self.ns1 = config.get('windows_ns1', self.ns1)
             self.log_dir = config['log_dir']
             self.nvme_bin = config.get('nvme_bin', self.nvme_bin)
             self.do_validate_pci_device = config.get(
@@ -214,6 +228,7 @@ class TestNVMe(unittest.TestCase):
         nvme_reset_cmd = f"{self.nvme_bin} reset {self.ctrl}"
         err = self.run_cmd(nvme_reset_cmd).returncode
         self.assertEqual(err, 0, "ERROR : nvme reset failed")
+
         rescan_cmd = "echo 1 > /sys/bus/pci/rescan"
         result = self.run_cmd(rescan_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : pci rescan failed")
@@ -251,6 +266,9 @@ class TestNVMe(unittest.TestCase):
             bool: True if both Namespace Management and Namespace Attachment
             are supported, False otherwise.
         """
+        if self.is_windows():
+            return False    # Windows only supports namespace managment in WinPE
+
         oacs = to_decimal(self.get_id_ctrl_field_value("oacs"))
 
         ns_mgmt_supported = bool(oacs & (1 << 3))

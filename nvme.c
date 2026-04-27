@@ -4859,7 +4859,7 @@ static void get_feature_id_print(struct feat_cfg cfg, int err, __u64 result,
 		    !nvme_status_equals(status, type, NVME_SC_INVALID_NS))
 			nvme_show_status(err);
 	} else {
-		nvme_show_error("get-feature: %s", libnvme_strerror(err));
+		nvme_show_error("get-feature: %s", libnvme_strerror(-err));
 	}
 }
 

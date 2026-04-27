@@ -25,7 +25,7 @@ int main()
 		return 1;
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
-	if (err && !(err == -ENOENT || err == -EACCES)) {
+	if (err && !(err == -ENOENT || err == -EACCES || err == -ENOTSUP)) {
 		fprintf(stderr, "libnvme_scan_topology failed %d\n", err);
 		libnvme_free_global_ctx(ctx);
 		return 1;

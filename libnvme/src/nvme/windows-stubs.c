@@ -69,7 +69,7 @@ __public int libnvme_scan_topology(struct libnvme_global_ctx *ctx, libnvme_scan_
 	(void)f;
 	(void)f_args;
 	errno = ENOTSUP;
-	return -1;
+	return -ENOTSUP;
 }
 
 __public libnvme_host_t libnvme_first_host(struct libnvme_global_ctx *ctx)

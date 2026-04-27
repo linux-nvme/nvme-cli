@@ -34,8 +34,9 @@ Test the Mandatory features with get features command:-
     9. 0Bh M Asynchronous Event Configuration.
 """
 
-from nvme_test import TestNVMe
+import json
 
+from nvme_test import TestNVMe
 
 class TestNVMeGetMandatoryFeatures(TestNVMe):
 
@@ -52,13 +53,21 @@ class TestNVMeGetMandatoryFeatures(TestNVMe):
         """ Pre Section for TestNVMeGetMandatoryFeatures """
         super().setUp()
         self.setup_log_dir(self.__class__.__name__)
-        self.feature_id_list = ["0x01", "0x02", "0x04", "0x05", "0x07",
-                                "0x08", "0x09", "0x0A", "0x0B"]
-        device = self.ctrl.split('/')[-1]
-        get_vector_list_cmd = "grep " + device + "q /proc/interrupts |" \
-                              " cut -d : -f 1 | tr -d ' ' | tr '\n' ' '"
-        result = self.run_cmd(get_vector_list_cmd)
-        self.vector_list_len = len(result.stdout.strip().split(" "))
+
+        if self.is_windows():
+            # FIDs 5 and 7 are not supported by Windows.
+            self.feature_id_list = ["0x01", "0x02", "0x04",
+                                    "0x08", "0x09", "0x0A", "0x0B"]
+            # Interrupt vector discovery not available on Windows.
+            self.vector_list_len = 1
+        else:
+            self.feature_id_list = ["0x01", "0x02", "0x04", "0x05", "0x07",
+                                    "0x08", "0x09", "0x0A", "0x0B"]
+            device = self.ctrl.split('/')[-1]
+            get_vector_list_cmd = "grep " + device + "q /proc/interrupts |" \
+                                " cut -d : -f 1 | tr -d ' ' | tr '\n' ' '"
+            result = self.run_cmd(get_vector_list_cmd)
+            self.vector_list_len = len(result.stdout.strip().split(" "))
 
     def tearDown(self):
         """ Post Section for TestNVMeGetMandatoryFeatures
