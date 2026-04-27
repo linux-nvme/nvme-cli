@@ -7865,7 +7865,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	nats = argconfig_parse_comma_sep_array_u16(cfg.elbats, elbats,
 						   ARRAY_SIZE(elbats));
 
-	nr = max(nb, max(ns, max(nrts, max(natms, nats))));
+	nr = max(nb, max(ns, max(nrts, max(natms, nats)))) - 1;
 	if (cfg.format == 2 || cfg.format == 3) {
 		if (nr != nids) {
 			nvme_show_error("formats 2 and 3 require source namespace ids for each source range");
@@ -7875,7 +7875,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		nvme_show_error("formats 0 and 1 do not support cross-namespace copy");
 		return -EINVAL;
 	}
-	if (!nr || nr > 256) {
+	if (nr > 255) {
 		nvme_show_error("invalid range");
 		return -EINVAL;
 	}
