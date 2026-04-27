@@ -1,15 +1,19 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-util_sources = []
+util_sources = [
+    'util/mem.c'
+]
 
 if host_system == 'windows'
-    util_sources += []
+    util_sources += [
+        'util/mem-windows.c'
+    ]
 else
     util_sources += [
         'util/argconfig.c',
         'util/base64.c',
         'util/crc32.c',
-        'util/mem.c',
+        'util/mem-linux.c',
         'util/sighdl.c',
         'util/suffix.c',
         'util/types.c',

@@ -9,12 +9,9 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <malloc.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
 #include <ifaddrs.h>
@@ -29,6 +26,10 @@
 
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
+
+#include <nvme/malloc.h>
+#include <nvme/stdlib.h>
+#include <nvme/unistd.h>
 
 #include <libnvme.h>
 
@@ -966,6 +967,11 @@ void *__libnvme_alloc(size_t len)
 	return p;
 }
 
+void __libnvme_free(void *p)
+{
+	aligned_free(p);
+}
+
 void *__libnvme_realloc(void *p, size_t len)
 {
 	size_t old_len = malloc_usable_size(p);
@@ -974,7 +980,7 @@ void *__libnvme_realloc(void *p, size_t len)
 
 	if (p && result) {
 		memcpy(result, p, min(old_len, len));
-		free(p);
+		__libnvme_free(p);
 	}
 
 	return result;
