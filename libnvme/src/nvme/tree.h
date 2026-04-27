@@ -478,30 +478,6 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 		p = libnvme_namespace_next_path(n, p))
 
 /**
- * libnvme_ns_get_csi() - Command set identifier of a namespace
- * @n:	Namespace instance
- *
- * Return: The namespace's command set identifier in use
- */
-enum nvme_csi libnvme_ns_get_csi(libnvme_ns_t n);
-
-/**
- * libnvme_ns_get_eui64() - 64-bit eui of a namespace
- * @n:	Namespace instance
- *
- * Return: A pointer to the 64-bit eui
- */
-const uint8_t *libnvme_ns_get_eui64(libnvme_ns_t n);
-
-/**
- * libnvme_ns_get_nguid() - 128-bit nguid of a namespace
- * @n:	Namespace instance
- *
- * Return: A pointer to the 128-bit nguid
- */
-const uint8_t *libnvme_ns_get_nguid(libnvme_ns_t n);
-
-/**
  * libnvme_ns_get_uuid() - UUID of a namespace
  * @n:		Namespace instance
  * @out:	buffer for the UUID
@@ -543,14 +519,6 @@ long libnvme_ns_get_requeue_no_usable_path_count(libnvme_ns_t n);
  * Return: Number of I/Os which are forced to fail due to no path available
  */
 long libnvme_ns_get_fail_no_available_path_count(libnvme_ns_t n);
-
-/**
- * libnvme_ns_get_generic_name() - Returns name of generic namespace chardev.
- * @n:	Namespace instance
- *
- * Return: Name of generic namespace chardev
- */
-const char *libnvme_ns_get_generic_name(libnvme_ns_t n);
 
 /**
  * libnvme_ns_get_firmware() - Firmware string of a namespace

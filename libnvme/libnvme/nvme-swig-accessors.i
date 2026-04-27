@@ -66,26 +66,31 @@
 	#define libnvme_path_grpid_set     libnvme_path_set_grpid
 
 	/* struct libnvme_ns */
-	#define libnvme_ns_nsid_get      libnvme_ns_get_nsid
-	#define libnvme_ns_name_get      libnvme_ns_get_name
-	#define libnvme_ns_sysfs_dir_get libnvme_ns_get_sysfs_dir
-	#define libnvme_ns_lba_shift_get libnvme_ns_get_lba_shift
-	#define libnvme_ns_lba_size_get  libnvme_ns_get_lba_size
-	#define libnvme_ns_meta_size_get libnvme_ns_get_meta_size
-	#define libnvme_ns_lba_count_get libnvme_ns_get_lba_count
-	#define libnvme_ns_lba_util_get  libnvme_ns_get_lba_util
-	#define libnvme_ns_nsid_set      libnvme_ns_set_nsid
-	#define libnvme_ns_name_set      libnvme_ns_set_name
-	#define libnvme_ns_sysfs_dir_set libnvme_ns_set_sysfs_dir
-	#define libnvme_ns_lba_shift_set libnvme_ns_set_lba_shift
-	#define libnvme_ns_lba_size_set  libnvme_ns_set_lba_size
-	#define libnvme_ns_meta_size_set libnvme_ns_set_meta_size
-	#define libnvme_ns_lba_count_set libnvme_ns_set_lba_count
-	#define libnvme_ns_lba_util_set  libnvme_ns_set_lba_util
+	#define libnvme_ns_nsid_get         libnvme_ns_get_nsid
+	#define libnvme_ns_name_get         libnvme_ns_get_name
+	#define libnvme_ns_generic_name_get libnvme_ns_get_generic_name
+	#define libnvme_ns_sysfs_dir_get    libnvme_ns_get_sysfs_dir
+	#define libnvme_ns_lba_shift_get    libnvme_ns_get_lba_shift
+	#define libnvme_ns_lba_size_get     libnvme_ns_get_lba_size
+	#define libnvme_ns_meta_size_get    libnvme_ns_get_meta_size
+	#define libnvme_ns_lba_count_get    libnvme_ns_get_lba_count
+	#define libnvme_ns_lba_util_get     libnvme_ns_get_lba_util
+	#define libnvme_ns_eui64_get        libnvme_ns_get_eui64
+	#define libnvme_ns_nguid_get        libnvme_ns_get_nguid
+	#define libnvme_ns_csi_get          libnvme_ns_get_csi
+	#define libnvme_ns_nsid_set         libnvme_ns_set_nsid
+	#define libnvme_ns_name_set         libnvme_ns_set_name
+	#define libnvme_ns_sysfs_dir_set    libnvme_ns_set_sysfs_dir
+	#define libnvme_ns_lba_shift_set    libnvme_ns_set_lba_shift
+	#define libnvme_ns_lba_size_set     libnvme_ns_set_lba_size
+	#define libnvme_ns_meta_size_set    libnvme_ns_set_meta_size
+	#define libnvme_ns_lba_count_set    libnvme_ns_set_lba_count
+	#define libnvme_ns_lba_util_set     libnvme_ns_set_lba_util
 
 	/* struct libnvme_ctrl */
 	#define libnvme_ctrl_name_get                  libnvme_ctrl_get_name
 	#define libnvme_ctrl_sysfs_dir_get             libnvme_ctrl_get_sysfs_dir
+	#define libnvme_ctrl_address_get               libnvme_ctrl_get_address
 	#define libnvme_ctrl_firmware_get              libnvme_ctrl_get_firmware
 	#define libnvme_ctrl_model_get                 libnvme_ctrl_get_model
 	#define libnvme_ctrl_numa_node_get             libnvme_ctrl_get_numa_node
@@ -133,14 +138,12 @@
 	#define libnvme_subsystem_application_set libnvme_subsystem_set_application
 
 	/* struct libnvme_host */
-	#define libnvme_host_hostnqn_get           libnvme_host_get_hostnqn
-	#define libnvme_host_hostid_get            libnvme_host_get_hostid
-	#define libnvme_host_dhchap_host_key_get   libnvme_host_get_dhchap_host_key
-	#define libnvme_host_hostsymname_get       libnvme_host_get_hostsymname
-	#define libnvme_host_pdc_enabled_valid_get libnvme_host_get_pdc_enabled_valid
-	#define libnvme_host_dhchap_host_key_set   libnvme_host_set_dhchap_host_key
-	#define libnvme_host_hostsymname_set       libnvme_host_set_hostsymname
-	#define libnvme_host_pdc_enabled_valid_set libnvme_host_set_pdc_enabled_valid
+	#define libnvme_host_hostnqn_get         libnvme_host_get_hostnqn
+	#define libnvme_host_hostid_get          libnvme_host_get_hostid
+	#define libnvme_host_dhchap_host_key_get libnvme_host_get_dhchap_host_key
+	#define libnvme_host_hostsymname_get     libnvme_host_get_hostsymname
+	#define libnvme_host_dhchap_host_key_set libnvme_host_set_dhchap_host_key
+	#define libnvme_host_hostsymname_set     libnvme_host_set_hostsymname
 
 	/* struct libnvme_fabric_options */
 	#define libnvme_fabric_options_cntlid_get             libnvme_fabric_options_get_cntlid

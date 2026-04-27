@@ -54,7 +54,7 @@ static inline PyObject *Py_NewRef(PyObject *obj)
 	 * "struct_member_[set|get]" and libnvme's API naming convention
 	 * "struct_[set|get]_member.
 	 */
-	#define libnvme_ctrl_address_get	 		libnvme_ctrl_get_traddr
+	#define libnvme_ctrl_address_get	 		libnvme_ctrl_get_address
 	#define libnvme_ctrl_command_error_count_get		libnvme_ctrl_get_command_error_count
 	#define libnvme_ctrl_reconnect_count_get		libnvme_ctrl_get_reconnect_count
 	#define libnvme_ctrl_reset_count_get			libnvme_ctrl_get_reset_count
