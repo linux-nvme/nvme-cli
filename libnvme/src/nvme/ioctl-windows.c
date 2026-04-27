@@ -251,8 +251,12 @@ static int submit_storage_protocol_command(
 				protocol_command->ReturnStatus);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+			"GetLastError=%lu, status=%d, err=%d\n", __func__,
+			GetLastError(), protocol_command->ReturnStatus, err);
 		goto out_free_buffer;
+	}
 
 	/* Copy the returned data to the user's buffer */
 	if (cmd->addr && cmd->data_len > 0 && is_read) {
@@ -338,8 +342,12 @@ static int submit_io_flush(struct libnvme_transport_handle *hdl,
 			err = -EIO;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+			"GetLastError=%lu, err=%d\n",
+			__func__, GetLastError(), err);
 		goto out_free_buffer;
+	}
 
 	cmd->result = 0;
 
@@ -487,8 +495,12 @@ static int submit_io_write(struct libnvme_transport_handle *hdl,
 			err = -EIO;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+			"GetLastError=%lu, err=%d\n",
+			__func__, GetLastError(), err);
 		goto out_free_buffer;
+	}
 
 	cmd->result = 0;
 
@@ -564,8 +576,12 @@ static int submit_io_read(struct libnvme_transport_handle *hdl,
 			err = -EIO;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+			"GetLastError=%lu, err=%d\n",
+			__func__, GetLastError(), err);
 		goto out_free_buffer;
+	}
 
 	if (cmd->addr && cmd->data_len > 0) {
 		memcpy((void *)(uintptr_t)cmd->addr,
@@ -647,8 +663,8 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 					NVME_LOG_CDW10_LID_SHIFT,
 					NVME_LOG_CDW10_LID_MASK);
 
-	protocol_data->ProtocolDataRequestSubValue = cmd->cdw12;	/* LPO[31:0]  */
-	protocol_data->ProtocolDataRequestSubValue2 = cmd->cdw13;	/* LPO[63:32] */
+	protocol_data->ProtocolDataRequestSubValue = cmd->cdw12;  /* LPO[31:0]  */
+	protocol_data->ProtocolDataRequestSubValue2 = cmd->cdw13; /* LPO[63:32] */
 
 	protocol_data->ProtocolDataRequestSubValue3 = NVME_FIELD_DECODE(cmd->cdw11,
 					NVME_LOG_CDW11_LSI_SHIFT,
@@ -680,8 +696,12 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 		err = get_last_error_as_errno();
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+			"GetLastError=%lu, err=%d\n",
+			__func__, GetLastError(), err);
 		goto out_free_buffer;
+	}
 
 	/* Copy the returned log page data to the user's buffer */
 	if (cmd->addr && cmd->data_len > 0) {
@@ -778,8 +798,12 @@ static int submit_admin_identify(struct libnvme_transport_handle *hdl,
 		err = get_last_error_as_errno();
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+			"GetLastError=%lu, err=%d\n",
+			__func__, GetLastError(), err);
 		goto out_free_buffer;
+	}
 
 	/* Copy the returned data to the user's buffer */
 	if (cmd->addr && cmd->data_len > 0) {
@@ -876,8 +900,12 @@ static int submit_admin_set_features(struct libnvme_transport_handle *hdl,
 		err = get_last_error_as_errno();
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+			"GetLastError=%lu, err=%d\n",
+			__func__, GetLastError(), err);
 		goto out_free_buffer;
+	}
 
 	/* Only 32-bits of return data. Assuming CQE DW0. */
 	cmd->result = protocol_data->FixedProtocolReturnData;
@@ -941,7 +969,8 @@ static int submit_admin_get_features(struct libnvme_transport_handle *hdl,
 	protocol_data->ProtocolDataRequestSubValue3 = cmd->cdw13;
 	protocol_data->ProtocolDataRequestSubValue4 = cmd->cdw14;
 
-	protocol_data->ProtocolDataOffset = sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
+	protocol_data->ProtocolDataOffset = cmd->data_len == 0 ?
+			0 : sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
 	protocol_data->ProtocolDataLength = cmd->data_len;
 
 	do {
@@ -959,8 +988,12 @@ static int submit_admin_get_features(struct libnvme_transport_handle *hdl,
 		err = get_last_error_as_errno();
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+			"GetLastError=%lu, err=%d\n",
+			__func__, GetLastError(), err);
 		goto out_free_buffer;
+	}
 
 	/* Copy the returned data to the user's buffer if present */
 	if (cmd->addr && cmd->data_len > 0) {
