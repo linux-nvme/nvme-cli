@@ -16,7 +16,7 @@ NVMe Copy Testcase:-
 
 """
 
-import base64
+import json
 
 from nvme_test import TestNVMe
 
@@ -27,7 +27,7 @@ class TestNVMeCopy(TestNVMe):
     Represents NVMe Copy testcase.
         - Attributes:
               - ocfs : optional copy formats supported
-              - host_behavior_data : host behavior support data to restore during teardown
+              - original_cdfe : saved cdfe value to restore during teardown, or None
               - test_log_dir :  directory for logs, temp files.
     """
 
@@ -35,27 +35,31 @@ class TestNVMeCopy(TestNVMe):
         """ Pre Section for TestNVMeCopy """
         super().setUp()
         self.ocfs = self.get_ocfs()
-        self.host_behavior_data = None
+        self.original_cdfe = None
         cross_namespace_copy = self.ocfs & 0xc
         if cross_namespace_copy:
-            # get host behavior support data
-            get_features_cmd = f"{self.nvme_bin} get-feature {self.ctrl} " + \
-                "--feature-id=0x16 --data-len=512 --raw-binary"
+            get_features_cmd = f"{self.nvme_bin} feat host-behavior-support " + \
+                f"{self.ctrl} --output-format=json"
             result = self.run_cmd(get_features_cmd)
-            err = result.returncode
-            self.assertEqual(err, 0, "ERROR : nvme get-feature failed")
-            self.host_behavior_data = result.stdout
-            # enable cross-namespace copy formats
-            if int.from_bytes(base64.b64decode(self.host_behavior_data[4])) & cross_namespace_copy:
-                # skip if already enabled
+            self.assertEqual(result.returncode, 0,
+                             "ERROR : nvme feat host-behavior-support failed")
+            data = json.loads(result.stdout)
+            fields = data.get("Feature: 0x16", [{}])[0]
+            current_cdfe = (
+                (0x4 if fields.get("Copy Descriptor Format 2h Enable (CDF2E)") == "True" else 0) |
+                (0x8 if fields.get("Copy Descriptor Format 3h Enable (CDF3E)") == "True" else 0) |
+                (0x10 if fields.get("Copy Descriptor Format 4h Enable (CDF4E)") == "True" else 0)
+            )
+            if current_cdfe & cross_namespace_copy:
                 print("Cross-namespace copy already enabled, skipping set-features")
-                self.host_behavior_data = None
             else:
-                data = self.host_behavior_data[:4] + str(cross_namespace_copy.to_bytes(2, 'little')) + self.host_behavior_data[6:]
-                set_features_cmd = f"{self.nvme_bin} set-feature " + \
-                    f"{self.ctrl} --feature-id=0x16 --data-len=512"
-                result = self.run_cmd(set_features_cmd, stdin_data=data)
-                self.assertEqual(result.returncode, 0, "Failed to enable cross-namespace copy formats")
+                self.original_cdfe = current_cdfe
+                new_cdfe = current_cdfe | cross_namespace_copy
+                set_features_cmd = f"{self.nvme_bin} feat host-behavior-support " + \
+                    f"{self.ctrl} --cdfe={new_cdfe}"
+                result = self.run_cmd(set_features_cmd)
+                self.assertEqual(result.returncode, 0,
+                                 "Failed to enable cross-namespace copy formats")
         get_ns_id_cmd = f"{self.nvme_bin} get-ns-id {self.ns1}"
         result = self.run_cmd(get_ns_id_cmd)
         err = result.returncode
@@ -66,11 +70,10 @@ class TestNVMeCopy(TestNVMe):
 
     def tearDown(self):
         """ Post Section for TestNVMeCopy """
-        if self.host_behavior_data:
-            # restore saved host behavior support data
-            set_features_cmd = f"{self.nvme_bin} set-feature {self.ctrl} " + \
-                "--feature-id=0x16 --data-len=512"
-            self.run_cmd(set_features_cmd, stdin_data=self.host_behavior_data)
+        if self.original_cdfe is not None:
+            set_features_cmd = f"{self.nvme_bin} feat host-behavior-support " + \
+                f"{self.ctrl} --cdfe={self.original_cdfe}"
+            self.run_cmd(set_features_cmd)
         super().tearDown()
 
     def copy(self, sdlba, blocks, slbs, **kwargs):
