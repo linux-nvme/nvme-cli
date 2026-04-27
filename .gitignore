@@ -25,3 +25,17 @@ tests/*.pyc
 dist/
 
 .vscode/
+
+# Claude Code - ignore personal/local overrides
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Claude Code - ignore global session data if ~/.claude is ever inside the project
+.claude/memory/
+.claude/todos/
+
+# Claude Code - the following are intentionally NOT ignored (shared with team)
+# CLAUDE.md
+# .claude/settings.json
+# .claude/commands/
+# .claude/rules/
