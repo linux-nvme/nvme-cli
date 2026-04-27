@@ -22,6 +22,7 @@
 #define POWER_MEAS_DESC "Get and set power measurement feature"
 #define ERR_RECOVERY_DESC "Get and set error recovery feature"
 #define NUM_QUEUES_DESC "Get and set number of queues feature"
+#define HOST_BEHAVIOR_DESC "Get and set host behavior support feature"
 
 #define FEAT_ARGS(n, ...)                                              \
 	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
@@ -41,6 +42,7 @@ PLUGIN(NAME("feat", "NVMe feature extensions", FEAT_PLUGIN_VERSION),
 		ENTRY("power-meas", POWER_MEAS_DESC, feat_power_meas)
 		ENTRY("err-recovery", ERR_RECOVERY_DESC, feat_err_recovery)
 		ENTRY("num-queues", NUM_QUEUES_DESC, feat_num_queues)
+		ENTRY("host-behavior-support", HOST_BEHAVIOR_DESC, feat_host_behavior_support)
 	)
 );
 #endif /* !FEAT_NVME || CMD_HEADER_MULTI_READ */
