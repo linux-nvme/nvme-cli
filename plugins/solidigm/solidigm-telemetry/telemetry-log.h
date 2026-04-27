@@ -10,9 +10,6 @@
 
 #include <assert.h>
 #include <stdbool.h>
-
-#include <libnvme.h>
-
 #include "util/json.h"
 
 #if !defined __cplusplus
