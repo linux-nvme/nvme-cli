@@ -76,6 +76,11 @@ class TestNVMeCopy(TestNVMe):
             self.run_cmd(set_features_cmd)
         super().tearDown()
 
+    def _check_format_supported(self, desc_format):
+        """ Skip test if the given copy descriptor format is not supported """
+        if not self.ocfs & (1 << desc_format):
+            self.skipTest(f"descriptor format {desc_format} is not supported")
+
     def copy(self, sdlba, blocks, slbs, **kwargs):
         """ Wrapper for nvme copy
             - Args:
@@ -88,11 +93,7 @@ class TestNVMeCopy(TestNVMe):
             - Returns:
                 - None
         """
-        # skip if descriptor format not supported (default format is 0)
         desc_format = kwargs.get("descriptor_format", 0)
-        if not self.ocfs & (1 << desc_format):
-            print(f"Skip copy because descriptor format {desc_format} is not supported")
-            return
         # build copy command
         copy_cmd = f"{self.nvme_bin} copy {self.ns1} " + \
             f"--format={desc_format} --sdlba={sdlba} --blocks={blocks} " + \
@@ -104,11 +105,32 @@ class TestNVMeCopy(TestNVMe):
         # run and assert success
         self.assertEqual(self.exec_cmd(copy_cmd), 0)
 
-    def test_copy(self):
-        """ Testcase main """
+    def test_copy_format_0(self):
+        """ Test copy with descriptor format 0 """
+        self._check_format_supported(0)
         self.copy(0, 1, 2, descriptor_format=0)
+
+    def test_copy_format_1(self):
+        """ Test copy with descriptor format 1 """
+        self._check_format_supported(1)
         self.copy(0, 1, 2, descriptor_format=1)
+
+    def test_copy_format_2(self):
+        """ Test copy with descriptor format 2 """
+        self._check_format_supported(2)
         self.copy(0, 1, 2, descriptor_format=2, snsids=self.ns1_nsid)
+
+    def test_copy_format_2_sopts(self):
+        """ Test copy with descriptor format 2 and source options """
+        self._check_format_supported(2)
         self.copy(0, 1, 2, descriptor_format=2, snsids=self.ns1_nsid, sopts=0)
+
+    def test_copy_format_3(self):
+        """ Test copy with descriptor format 3 """
+        self._check_format_supported(3)
         self.copy(0, 1, 2, descriptor_format=3, snsids=self.ns1_nsid)
+
+    def test_copy_format_3_sopts(self):
+        """ Test copy with descriptor format 3 and source options """
+        self._check_format_supported(3)
         self.copy(0, 1, 2, descriptor_format=3, snsids=self.ns1_nsid, sopts=0)
