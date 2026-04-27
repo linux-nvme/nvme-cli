@@ -47,6 +47,15 @@ struct err_recovery_config {
 	__u8 sel;
 };
 
+struct host_behavior_config {
+	__u8 acre;
+	__u8 etdas;
+	__u8 lbafee;
+	__u8 hdisns;
+	__u16 cdfe;
+	__u8 sel;
+};
+
 static const char *power_mgmt_feat = "power management feature";
 static const char *sel = "[0-3]: current/default/saved/supported";
 static const char *save = "Specifies that the controller shall save the attribute";
@@ -61,6 +70,7 @@ static const char *power_thresh_feat = "power threshold feature";
 static const char *power_meas_feat = "power measurement feature";
 static const char *err_recovery_feat = "error recovery feature";
 static const char *num_queues_feat = "number of queues feature";
+static const char *host_behavior_feat = "host behavior support feature";
 
 static int feat_get_nsid(struct libnvme_transport_handle *hdl, __u32 nsid,
 			 const __u8 fid, __u32 cdw11, __u8 sel, __u8 uidx,
@@ -972,6 +982,94 @@ static int feat_num_queues(int argc, char **argv, struct command *acmd,
 				     argconfig_parse_seen(opts, "save"), opts);
 	else
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, num_queues_feat);
+
+	return err;
+}
+
+static int host_behavior_set(struct libnvme_transport_handle *hdl, __u8 fid,
+			     struct argconfig_commandline_options *opts,
+			     struct host_behavior_config *cfg, bool sv)
+{
+	enum nvme_get_features_sel gsel = NVME_GET_FEATURES_SEL_CURRENT;
+	struct libnvme_passthru_cmd cmd;
+	struct nvme_feat_host_behavior data = { 0 };
+	int err;
+
+	if (sv)
+		gsel = NVME_GET_FEATURES_SEL_SAVED;
+
+	nvme_init_get_features_host_behavior(&cmd, gsel, &data);
+	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	if (err) {
+		nvme_show_err(err, "Get %s", host_behavior_feat);
+		return err;
+	}
+
+	if (argconfig_parse_seen(opts, "acre"))
+		data.acre = cfg->acre;
+	if (argconfig_parse_seen(opts, "etdas"))
+		data.etdas = cfg->etdas;
+	if (argconfig_parse_seen(opts, "lbafee"))
+		data.lbafee = cfg->lbafee;
+	if (argconfig_parse_seen(opts, "hdisns"))
+		data.hdisns = cfg->hdisns;
+	if (argconfig_parse_seen(opts, "cdfe"))
+		data.cdfe = cpu_to_le16(cfg->cdfe);
+
+	nvme_init_set_features_host_behavior(&cmd, sv, &data);
+	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	if (err) {
+		nvme_show_err(err, "Set %s", host_behavior_feat);
+		return err;
+	}
+
+	nvme_show_init();
+
+	nvme_show_result("Set %s: (%s)", host_behavior_feat,
+			 sv ? "Save" : "Not save");
+	nvme_feature_show_fields(fid, 0, (unsigned char *)&data);
+
+	nvme_show_finish();
+
+	return err;
+}
+
+static int feat_host_behavior_support(int argc, char **argv, struct command *acmd,
+				      struct plugin *plugin)
+{
+	const char *acre_desc = "Advanced Command Retry Enable (0 or 1)";
+	const char *etdas_desc = "Extended Telemetry Data Area 4 Supported (0 or 1)";
+	const char *lbafee_desc = "LBA Format Extension Enable (0 or 1)";
+	const char *hdisns_desc = "Host Dispersed Namespace Support (0 or 1)";
+	const char *cdfe_desc = "Copy Descriptor Formats Enable bitmask";
+	const __u8 fid = NVME_FEAT_FID_HOST_BEHAVIOR;
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	int err;
+
+	struct host_behavior_config cfg = { 0 };
+
+	FEAT_ARGS(opts,
+		  OPT_BYTE("acre", 'a', &cfg.acre, acre_desc),
+		  OPT_BYTE("etdas", 'e', &cfg.etdas, etdas_desc),
+		  OPT_BYTE("lbafee", 'l', &cfg.lbafee, lbafee_desc),
+		  OPT_BYTE("hdisns", 'H', &cfg.hdisns, hdisns_desc),
+		  OPT_SHRT("cdfe", 'c', &cfg.cdfe, cdfe_desc));
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, HOST_BEHAVIOR_DESC, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "acre") ||
+	    argconfig_parse_seen(opts, "etdas") ||
+	    argconfig_parse_seen(opts, "lbafee") ||
+	    argconfig_parse_seen(opts, "hdisns") ||
+	    argconfig_parse_seen(opts, "cdfe"))
+		err = host_behavior_set(hdl, fid, opts, &cfg,
+					argconfig_parse_seen(opts, "save"));
+	else
+		err = feat_get(hdl, fid, 0, cfg.sel, 0, host_behavior_feat);
 
 	return err;
 }

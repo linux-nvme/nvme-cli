@@ -350,6 +350,22 @@ class TestNVMe(unittest.TestCase):
                         f"ERROR : reading field '{field}' failed")
         return str(json_output[field])
 
+    def get_id_ns_field_value(self, field):
+        """ Wrapper for extracting id-ns field values
+            - Args:
+                - field : field name to extract
+            - Returns:
+                - Field value of the given field as a string
+        """
+        id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+            "--output-format=json"
+        result = self.run_cmd(id_ns_cmd)
+        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns failed")
+        json_output = json.loads(result.stdout)
+        self.assertTrue(field in json_output,
+                        f"ERROR : reading field '{field}' failed")
+        return str(json_output[field])
+
     def get_ocfs(self):
         """ Wrapper for extracting optional copy formats supported
             - Args:
