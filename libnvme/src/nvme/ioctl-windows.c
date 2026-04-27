@@ -253,7 +253,7 @@ static int submit_storage_protocol_command(
 
 	if (err) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
-			"GetLastError=%lu, status=%d, err=%d\n", __func__,
+			"GetLastError=%lu, status=%lu, err=%d\n", __func__,
 			GetLastError(), protocol_command->ReturnStatus, err);
 		goto out_free_buffer;
 	}
