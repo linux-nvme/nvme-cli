@@ -25,7 +25,7 @@
 static int table_get_value_width(struct value *v)
 {
 	char buf[64];
-	int len = 0;
+	int len = -1;
 
 	switch (v->type) {
 	case FMT_STRING:
@@ -53,28 +53,10 @@ static int table_get_value_width(struct value *v)
 static void table_print_centered(struct value *val, int width, enum fmt_type type)
 {
 	int i, len, left_pad, right_pad;
-	char buf[64];
 
-	switch (type) {
-	case FMT_STRING:
-		len = strlen(val->s);
-		break;
-	case FMT_INT:
-		len = snprintf(buf, sizeof(buf), "%d", val->i);
-		break;
-	case FMT_UNSIGNED:
-		len = snprintf(buf, sizeof(buf), "%u", val->u);
-		break;
-	case FMT_LONG:
-		len = snprintf(buf, sizeof(buf), "%ld", val->ld);
-		break;
-	case FMT_UNSIGNED_LONG:
-		len = snprintf(buf, sizeof(buf), "%lu", val->lu);
-		break;
-	default:
-		fprintf(stderr, "Invalid format!\n");
+	len = table_get_value_width(val);
+	if (len < 0)
 		return;
-	}
 
 	left_pad = (width - len) / 2;
 	right_pad = width - len - left_pad;
@@ -84,7 +66,7 @@ static void table_print_centered(struct value *val, int width, enum fmt_type typ
 		putchar(' ');
 
 	/* print value */
-	switch (type) {
+	switch (val->type) {
 	case FMT_STRING:
 		printf("%s", val->s);
 		break;
