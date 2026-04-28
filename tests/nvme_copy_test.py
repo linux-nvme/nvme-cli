@@ -86,6 +86,53 @@ class TestNVMeCopy(TestNVMe):
         if missing:
             self.skipTest(f"{', '.join(missing)} are 0, copy not supported on this namespace")
 
+    def _get_current_ns_pif(self):
+        """
+        Return the Protection Information Format (pif) of the currently active
+        LBA format on self.ns1.
+
+        Reads the raw ``flbas`` byte from ``id-ns`` to determine the active
+        lbaf index (NVMe spec: bits[3:0] are lbaf_index[3:0], bits[6:5] are
+        lbaf_index[5:4]), then looks up that entry in the ``nvm-id-ns`` elbafs
+        array.  Returns 0 if either command fails or the pif field is absent
+        (0 = 16-bit guard / no PI, the safe default for format 0/2 copy).
+        """
+        id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} --output-format=json"
+        result = self.run_cmd(id_ns_cmd)
+        if result.returncode != 0:
+            return 0
+        flbas = int(json.loads(result.stdout).get("flbas", 0))
+        lbaf_idx = (flbas & 0xF) | (((flbas >> 5) & 0x3) << 4)
+
+        nvm_id_ns_cmd = f"{self.nvme_bin} nvm-id-ns {self.ns1} --output-format=json"
+        result = self.run_cmd(nvm_id_ns_cmd)
+        if result.returncode != 0:
+            return 0
+        elbafs = json.loads(result.stdout).get("elbafs", [])
+        if lbaf_idx < len(elbafs):
+            return elbafs[lbaf_idx].get("pif", 0)
+        return 0
+
+    def _check_16b_guard_ns(self):
+        """
+        Skip the test if the current namespace uses a non-16-bit-guard PI
+        format and namespace management is not available to restore it.
+
+        Copy descriptor formats 0 and 2 require the namespace to use 16-bit
+        guard PI (pif=0) or no PI.  When namespace management is supported,
+        TestNVMe.setUp() already recreates the namespace with flbas=0 (no
+        metadata, no PI), so this is a no-op in that case.  When namespace
+        management is not available and the namespace is already in a 64-bit
+        guard PI format (e.g. QEMU started with pif=2, or left over from a
+        previous test run), the copy command would fail with "Invalid Format"
+        rather than being skipped cleanly.
+        """
+        if not self.ns_mgmt_supported and self._get_current_ns_pif() != 0:
+            self.skipTest(
+                "current namespace uses non-16-bit-guard PI and namespace "
+                "management is not supported; cannot run 16-bit guard copy test"
+            )
+
     def _find_64b_guard_lbaf_index(self):
         """
         Search the nvm-id-ns elbafs for a format with 64-bit guard PI (pif == 2).
@@ -215,8 +262,15 @@ class TestNVMeCopyFormat0(TestNVMeCopy):
     NVMe Copy tests using Descriptor Format 0.
 
     Format 0 uses 16-bit guard PI and copies within a single namespace.
-    No special namespace formatting is required.
+    No special namespace formatting is required; the test is skipped if the
+    current namespace is already using a non-16-bit-guard PI format and
+    namespace management is not available to restore it.
     """
+
+    def setUp(self):
+        """ Pre Section for TestNVMeCopyFormat0 """
+        super().setUp()
+        self._check_16b_guard_ns()
 
     def test_copy_format_0(self):
         """ Test copy with descriptor format 0 """
@@ -275,6 +329,7 @@ class TestNVMeCopyFormat23(TestNVMeCopy):
     def test_copy_format_2(self):
         """ Test copy with descriptor format 2 """
         self._check_format_supported(2)
+        self._check_16b_guard_ns()
         self._check_ns_copy_limits()
         self._enable_cdfe_for_format(2)
         self.copy(0, 1, 2, descriptor_format=2, snsids=self.ns1_nsid)
@@ -282,6 +337,7 @@ class TestNVMeCopyFormat23(TestNVMeCopy):
     def test_copy_format_2_sopts(self):
         """ Test copy with descriptor format 2 and source options """
         self._check_format_supported(2)
+        self._check_16b_guard_ns()
         self._check_ns_copy_limits()
         self._enable_cdfe_for_format(2)
         self.copy(0, 1, 2, descriptor_format=2, snsids=self.ns1_nsid, sopts=0)
