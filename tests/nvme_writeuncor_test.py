@@ -30,6 +30,7 @@ NVMe Write Compare Testcae:-
 
 """
 
+from nvme_test import to_decimal
 from nvme_test_io import TestNVMeIO
 
 
@@ -51,6 +52,9 @@ class TestNVMeUncor(TestNVMeIO):
         self.read_file = self.test_log_dir + "/" + self.read_file
         self.create_data_file(self.write_file, self.data_size, "15")
         open(self.read_file, 'a').close()
+        oncs = to_decimal(self.get_id_ctrl_field_value("oncs"))
+        if not oncs & (1 << 1):
+            self.skipTest("write-uncor is not supported by this controller")
 
     def tearDown(self):
         """ Post Section for TestNVMeUncor """
