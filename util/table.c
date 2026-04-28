@@ -34,6 +34,15 @@ static int table_get_value_width(struct value *v)
 	case FMT_INT:
 		len = snprintf(buf, sizeof(buf), "%d", v->i);
 		break;
+	case FMT_UNSIGNED:
+		len = snprintf(buf, sizeof(buf), "%u", v->u);
+		break;
+	case FMT_UNSIGNED_LONG:
+		len = snprintf(buf, sizeof(buf), "%lu", v->lu);
+		break;
+	case FMT_LONG:
+		len = snprintf(buf, sizeof(buf), "%ld", v->ld);
+		break;
 	default:
 		printf("Invalid print format!\n");
 		break;
