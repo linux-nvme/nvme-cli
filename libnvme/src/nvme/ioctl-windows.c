@@ -252,7 +252,7 @@ static int submit_storage_protocol_command(
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, status=%lu, err=%d\n", __func__,
 			GetLastError(), protocol_command->ReturnStatus, err);
 		goto out_free_buffer;
@@ -343,7 +343,7 @@ static int submit_io_flush(struct libnvme_transport_handle *hdl,
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
 			__func__, GetLastError(), err);
 		goto out_free_buffer;
@@ -496,7 +496,7 @@ static int submit_io_write(struct libnvme_transport_handle *hdl,
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
 			__func__, GetLastError(), err);
 		goto out_free_buffer;
@@ -577,7 +577,7 @@ static int submit_io_read(struct libnvme_transport_handle *hdl,
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
 			__func__, GetLastError(), err);
 		goto out_free_buffer;
@@ -678,8 +678,9 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 					NVME_LOG_CDW10_LSP_MASK);
 	protocol_data->ProtocolDataRequestSubValue4 = protocol_data_subval.AsUlong;
 
-	protocol_data->ProtocolDataOffset = sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
 	protocol_data->ProtocolDataLength = cmd->data_len;
+	protocol_data->ProtocolDataOffset = cmd->data_len == 0 ?
+			0 : sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
 
 	do {
 		err = 0;
@@ -697,7 +698,7 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
 			__func__, GetLastError(), err);
 		goto out_free_buffer;
@@ -780,8 +781,10 @@ static int submit_admin_identify(struct libnvme_transport_handle *hdl,
 	protocol_data->DataType = NVMeDataTypeIdentify;
 	protocol_data->ProtocolDataRequestValue = cns;
 	protocol_data->ProtocolDataRequestSubValue = cmd->nsid;
-	protocol_data->ProtocolDataOffset = sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
+
 	protocol_data->ProtocolDataLength = cmd->data_len;
+	protocol_data->ProtocolDataOffset = cmd->data_len == 0 ?
+			0 : sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
 
 	do {
 		err = 0;
@@ -799,7 +802,7 @@ static int submit_admin_identify(struct libnvme_transport_handle *hdl,
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
 			__func__, GetLastError(), err);
 		goto out_free_buffer;
@@ -822,6 +825,10 @@ out:
 	return err;
 }
 
+/*
+ * NOTE: The Windows StorNVME driver currently only supports Set Features for
+ * Host Controlled Thermal Management (FID 0x10).
+ */
 static int submit_admin_set_features(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
@@ -875,8 +882,9 @@ static int submit_admin_set_features(struct libnvme_transport_handle *hdl,
 	protocol_data->ProtocolDataSubValue4 = cmd->cdw14;
 	protocol_data->ProtocolDataSubValue5 = cmd->cdw15;
 
-	protocol_data->ProtocolDataOffset = sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA_EXT);
 	protocol_data->ProtocolDataLength = cmd->data_len;
+	protocol_data->ProtocolDataOffset = cmd->data_len == 0 ?
+			0 : sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA_EXT);
 
 	/* Copy input data if present */
 	if (cmd->addr && cmd->data_len > 0) {
@@ -901,7 +909,7 @@ static int submit_admin_set_features(struct libnvme_transport_handle *hdl,
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
 			__func__, GetLastError(), err);
 		goto out_free_buffer;
@@ -969,9 +977,9 @@ static int submit_admin_get_features(struct libnvme_transport_handle *hdl,
 	protocol_data->ProtocolDataRequestSubValue3 = cmd->cdw13;
 	protocol_data->ProtocolDataRequestSubValue4 = cmd->cdw14;
 
+	protocol_data->ProtocolDataLength = cmd->data_len;
 	protocol_data->ProtocolDataOffset = cmd->data_len == 0 ?
 			0 : sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
-	protocol_data->ProtocolDataLength = cmd->data_len;
 
 	do {
 		err = 0;
@@ -989,7 +997,7 @@ static int submit_admin_get_features(struct libnvme_transport_handle *hdl,
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed,"
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
 			__func__, GetLastError(), err);
 		goto out_free_buffer;
