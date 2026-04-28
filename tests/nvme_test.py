@@ -315,14 +315,9 @@ class TestNVMe(unittest.TestCase):
         self.assertTrue(len(json_output['lbafs']) > self.flbas,
                         "Error : could not match the given flbas to an existing lbaf")
         lbaf_json = json_output['lbafs'][int(self.flbas)]
-        ms_expo = int(lbaf_json['ms'])
+        ms = int(lbaf_json['ms'])
         ds_expo = int(lbaf_json['ds'])
-        ds = 0
-        ms = 0
-        if ds_expo > 0:
-            ds = (1 << ds_expo)
-        if ms_expo > 0:
-            ms = (1 << ms_expo)
+        ds = (1 << ds_expo) if ds_expo > 0 else 0
         return (ds, ms)
 
     def get_ncap(self):
