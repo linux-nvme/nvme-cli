@@ -352,6 +352,14 @@ static void binary_power_meas_log(struct nvme_power_meas_log *log, __u32 size)
 	d_raw((unsigned char *)log, size);
 }
 
+static void binary_feature_show(enum nvme_features_id fid, int sel,
+				unsigned int result, void *buf, __u32 data_len)
+{
+	if (buf) {
+		d_raw(buf, data_len);
+	}
+}
+
 static struct print_ops binary_print_ops = {
 	/* libnvme types.h print functions */
 	.ana_log			= binary_ana_log,
@@ -410,7 +418,7 @@ static struct print_ops binary_print_ops = {
 	.zns_id_ctrl			= binary_zns_id_ctrl,
 	.zns_id_ns			= binary_zns_id_ns,
 	.zns_report_zones		= binary_zns_report_zones,
-	.show_feature			= NULL,
+	.show_feature			= binary_feature_show,
 	.show_feature_fields		= NULL,
 	.id_ctrl_rpmbs			= NULL,
 	.lba_range			= NULL,

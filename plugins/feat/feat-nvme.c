@@ -90,11 +90,7 @@ static int feat_get_nsid(struct libnvme_transport_handle *hdl, __u32 nsid,
 
 	nvme_show_init();
 
-	nvme_feature_show(fid, sel, result);
-	if (NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
-		nvme_show_select_result(fid, result);
-	else
-		nvme_feature_show_fields(fid, result, buf);
+	nvme_show_feature(fid, sel, result, buf, len, NORMAL);
 
 	nvme_show_finish();
 

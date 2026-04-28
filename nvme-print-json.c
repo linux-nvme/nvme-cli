@@ -4178,7 +4178,8 @@ static void json_feature_show_fields_power_meas(struct json_object *r,
 	obj_add_uint(r, "Stop Measurement Time (SMT)", smt);
 }
 
-static void json_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
+static void json_feature_show(enum nvme_features_id fid, int sel,
+			      unsigned int result, void *buf, __u32 data_len)
 {
 	struct json_object *r;
 	char json_str[STR_LEN];
@@ -4192,6 +4193,11 @@ static void json_feature_show(enum nvme_features_id fid, int sel, unsigned int r
 	obj_add_str(r, nvme_select_to_string(sel), json_str);
 
 	obj_print(r);
+
+	if (NVME_CHECK(sel, GET_FEATURES_SEL, SUPPORTED))
+		json_select_result(fid, result);
+	else
+		json_feature_show_fields(fid, result, buf);
 }
 
 static void json_feature_show_fields(enum nvme_features_id fid, unsigned int result,

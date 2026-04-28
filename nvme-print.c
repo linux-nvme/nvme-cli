@@ -1608,9 +1608,10 @@ const char *nvme_ipmsr_srs_to_string(__u8 srs)
 	}
 }
 
-void nvme_feature_show(enum nvme_features_id fid, int sel, unsigned int result)
+void nvme_show_feature(enum nvme_features_id fid, int sel, unsigned int result,
+		       void *buf, __u32 data_len, nvme_print_flags_t flags)
 {
-	nvme_print(show_feature, NORMAL, fid, sel, result);
+	nvme_print(show_feature, flags, fid, sel, result, buf, data_len);
 }
 
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf)
