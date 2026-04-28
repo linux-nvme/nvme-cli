@@ -2618,7 +2618,7 @@ __public const char *libnvme_ns_get_firmware(libnvme_ns_t n)
 	return n->c ? n->c->firmware : n->s->firmware;
 }
 
-__public void libnvme_ns_get_uuid(libnvme_ns_t n,
+__public void libnvme_ns_copy_uuid(libnvme_ns_t n,
 		unsigned char out[NVME_UUID_LEN])
 {
 	memcpy(out, n->uuid, NVME_UUID_LEN);

@@ -452,7 +452,7 @@ int main(int argc, char **argv)
 					print_hex(libnvme_ns_get_eui64(n), 8);
 					printf(" nguid:");
 					print_hex(libnvme_ns_get_nguid(n), 16);
-					libnvme_ns_get_uuid(n, uuid);
+					libnvme_ns_copy_uuid(n, uuid);
 					libnvme_uuid_to_string(uuid, uuid_str);
 					printf(" uuid:%s csi:%d\n", uuid_str,
 					       libnvme_ns_get_csi(n));

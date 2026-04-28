@@ -262,7 +262,7 @@ struct libnvme_ns {			// !generate-accessors
 
 	uint8_t eui64[8];		     // !access:write=none
 	uint8_t nguid[16];		     // !access:write=none
-	unsigned char uuid[NVME_UUID_LEN];   // !access:read=custom,write=none
+	unsigned char uuid[NVME_UUID_LEN];   // !access:read=none,write=none
 	enum nvme_csi csi;		     // !access:write=none
 
 	long command_retry_count;	     // !access:read=custom,write=none

@@ -478,13 +478,13 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 		p = libnvme_namespace_next_path(n, p))
 
 /**
- * libnvme_ns_get_uuid() - UUID of a namespace
+ * libnvme_ns_copy_uuid() - Copy UUID of a namespace into a caller buffer
  * @n:		Namespace instance
  * @out:	buffer for the UUID
  *
  * Copies the namespace's uuid into @out
  */
-void libnvme_ns_get_uuid(libnvme_ns_t n, unsigned char out[NVME_UUID_LEN]);
+void libnvme_ns_copy_uuid(libnvme_ns_t n, unsigned char out[NVME_UUID_LEN]);
 
 /**
  * libnvme_ns_get_command_retry_count() - Get command retry count
