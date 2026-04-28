@@ -2256,7 +2256,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 	       cfg.nsid);
 
 	if (cfg.file) {
-		dfd = open(cfg.file, O_WRONLY | O_CREAT, 0644);
+		dfd = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.file);
 			return -errno;
@@ -8485,7 +8485,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		flags = O_RDONLY;
 	} else {
 		dfd = mfd = STDOUT_FILENO;
-		flags = O_WRONLY | O_CREAT;
+		flags = O_WRONLY | O_CREAT | O_TRUNC;
 	}
 
 	if (strlen(cfg.data)) {
@@ -9363,7 +9363,7 @@ static int passthru(int argc, char **argv, bool admin,
 
 	if (cfg.opcode & 0x02) {
 		cfg.read = true;
-		flags = O_WRONLY | O_CREAT;
+		flags = O_WRONLY | O_CREAT | O_TRUNC;
 		dfd = mfd = STDOUT_FILENO;
 	}
 
@@ -10483,7 +10483,7 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 		fd = STDIN_FILENO;
 		send = true;
 	} else {
-		flags = O_WRONLY | O_CREAT;
+		flags = O_WRONLY | O_CREAT | O_TRUNC;
 		fd = STDOUT_FILENO;
 		send = false;
 	}
