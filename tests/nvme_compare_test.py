@@ -60,13 +60,19 @@ class TestNVMeCompareCmd(TestNVMeIO):
         super().setUp()
         if not self.compare_cmd_supported():
             self.skipTest("because: Optional NVM Command 'Compare' (NVMCMPS) not supported")
-        self.data_size = 1024
         self.start_block = 1023
         self.setup_log_dir(self.__class__.__name__)
         self.compare_file = self.test_log_dir + "/" + "compare_file.txt"
         self.write_file = self.test_log_dir + "/" + self.write_file
         self.create_data_file(self.write_file, self.data_size, "15")
         self.create_data_file(self.compare_file, self.data_size, "25")
+        self.compare_meta_file = None
+        if self.ms > 0 and not self.ns_meta_ext:
+            self.write_meta_file = self.test_log_dir + "/" + self.write_meta_file
+            self.compare_meta_file = \
+                self.test_log_dir + "/" + "compare_meta_file.bin"
+            self.create_meta_file(self.write_meta_file, self.ms)
+            self.create_meta_file(self.compare_meta_file, self.ms)
 
     def tearDown(self):
         """ Post Section for TestNVMeCompareCmd """
@@ -83,6 +89,11 @@ class TestNVMeCompareCmd(TestNVMeIO):
             f"--start-block={str(self.start_block)} " + \
             f"--block-count={str(self.block_count)} " + \
             f"--data-size={str(self.data_size)} --data={cmp_file}"
+        if self.prinfo:
+            compare_cmd += f" --prinfo={self.prinfo}"
+        if self.compare_meta_file:
+            compare_cmd += \
+                f" --metadata-size={self.ms} --metadata={self.compare_meta_file}"
         return self.exec_cmd(compare_cmd)
 
     def test_nvme_compare(self):
