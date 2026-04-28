@@ -57,7 +57,7 @@ static int table_get_value_width(struct value *v)
 	return len;
 }
 
-static void table_print_centered(struct value *val, int width, enum fmt_type type)
+static void table_print_centered(FILE *stream, struct value *val, int width)
 {
 	int i, len, left_pad, right_pad;
 
@@ -70,29 +70,30 @@ static void table_print_centered(struct value *val, int width, enum fmt_type typ
 
 	/* add left padding */
 	for (i = 0; i < left_pad; i++)
-		putchar(' ');
+		fputc(' ', stream);
 
 	/* print value */
 	switch (val->type) {
 	case FMT_STRING:
-		printf("%s", val->s);
+		fprintf(stream, "%s", val->s);
 		break;
 	case FMT_INT:
-		printf("%d", val->i);
+		fprintf(stream, "%d", val->i);
 		break;
 	case FMT_UNSIGNED:
-		printf("%u", val->u);
+		fprintf(stream, "%u", val->u);
 		break;
 	case FMT_LONG:
-		printf("%ld", val->ld);
+		fprintf(stream, "%ld", val->ld);
 		break;
 	case FMT_UNSIGNED_LONG:
-		printf("%lu", val->lu);
+		fprintf(stream, "%lu", val->lu);
+		break;
 	case FMT_FLOAT:
-		printf("%.2f", val->f);
+		fprintf(stream, "%.2f", val->f);
 		break;
 	case FMT_DOUBLE:
-		printf("%.2f", val->d);
+		fprintf(stream, "%.2f", val->d);
 		break;
 	default:
 		nvme_show_error("Invalid print format!\n");
@@ -101,10 +102,10 @@ static void table_print_centered(struct value *val, int width, enum fmt_type typ
 
 	/* add right padding */
 	for (i = 0; i < right_pad; i++)
-		putchar(' ');
+		fputc(' ', stream);
 }
 
-static void table_print_columns(const struct table *t)
+static void table_print_columns(FILE *stream, const struct table *t)
 {
 	int col, j, width;
 	struct table_column *c;
@@ -117,32 +118,33 @@ static void table_print_columns(const struct table *t)
 		case CENTERED:
 			v.s = c->name;
 			v.align = c->align;
-			table_print_centered(&v, width, FMT_STRING);
+			v.type = FMT_STRING;
+			table_print_centered(stream, &v, width);
 			break;
 		case LEFT:
 			width *= -1;
 			fallthrough;
 		default:
-			printf("%*s", width, c->name);
+			fprintf(stream, "%*s", width, c->name);
 			break;
 		}
 		if (col + 1 != t->num_columns)
-			putchar(' ');
+			fputc(' ', stream);
 	}
 
-	printf("\n");
+	fprintf(stream, "\n");
 
 	for (col = 0; col < t->num_columns; col++) {
 		for (j = 0; j < t->columns[col].width; j++)
-			putchar('-');
+			fputc('-', stream);
 		if (col + 1 != t->num_columns)
-			putchar(' ');
+			fputc(' ', stream);
 	}
 
-	printf("\n");
+	fprintf(stream, "\n");
 }
 
-static void table_print_rows(const struct table *t)
+static void table_print_rows(FILE *stream, const struct table *t)
 {
 	int row, col;
 	struct table_column *c;
@@ -151,15 +153,15 @@ static void table_print_rows(const struct table *t)
 	struct value *v;
 
 	for (row = 0; row < t->num_rows; row++) {
+		r = &t->rows[row];
 		for (col = 0; col < t->num_columns; col++) {
 			c = &t->columns[col];
-			r = &t->rows[row];
 			v = &r->val[col];
 
 			width = c->width;
 			switch (v->align) {
 			case CENTERED:
-				table_print_centered(v, width, v->type);
+				table_print_centered(stream, v, width);
 				break;
 			case LEFT:
 				width *= -1;
@@ -167,24 +169,25 @@ static void table_print_rows(const struct table *t)
 			default:
 				switch (v->type) {
 				case FMT_STRING:
-					printf("%*s", width, v->s);
+					fprintf(stream, "%*s", width, v->s);
 					break;
 				case FMT_INT:
-					printf("%*d", width, v->i);
+					fprintf(stream, "%*d", width, v->i);
 					break;
 				case FMT_UNSIGNED:
-					printf("%*u", width, v->u);
+					fprintf(stream, "%*u", width, v->u);
 					break;
 				case FMT_LONG:
-					printf("%*ld", width, v->ld);
+					fprintf(stream, "%*ld", width, v->ld);
 					break;
 				case FMT_UNSIGNED_LONG:
-					printf("%*lu", width, v->lu);
+					fprintf(stream, "%*lu", width, v->lu);
+					break;
 				case FMT_FLOAT:
-					printf("%*.2f", width, v->f);
+					fprintf(stream, "%*.2f", width, v->f);
 					break;
 				case FMT_DOUBLE:
-					printf("%*.2f", width, v->d);
+					fprintf(stream, "%*.2f", width, v->d);
 					break;
 				default:
 					nvme_show_error("Invalid format!\n");
@@ -193,19 +196,25 @@ static void table_print_rows(const struct table *t)
 				break;
 			}
 			if (col + 1 != t->num_columns)
-				putchar(' ');
+				fputc(' ', stream);
 		}
-		printf("\n");
+
+		fprintf(stream, "\n");
 	}
+}
+
+void table_print_stream(FILE *stream, struct table *t)
+{
+	/* first print columns */
+	table_print_columns(stream, t);
+
+	/* next print rows */
+	table_print_rows(stream, t);
 }
 
 void table_print(struct table *t)
 {
-	/* first print columns */
-	table_print_columns(t);
-
-	/* next print rows */
-	table_print_rows(t);
+	table_print_stream(stdout, t);
 }
 
 int table_get_row_id(struct table *t)
