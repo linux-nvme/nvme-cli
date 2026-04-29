@@ -887,12 +887,6 @@ struct libnvme_ns * libnvme_ctrl_next_ns(struct libnvme_ctrl * c, struct libnvme
 }
 
 
-%define SET_SYMNAME_DOCSTRING
-"Set or clear the host's symbolic name.
-
-Args:
-    hostsymname: Symbolic name string, or None to clear it."
-%enddef
 
 %pythonappend libnvme_host::libnvme_host(struct libnvme_global_ctx *ctx,
 				   const char *hostnqn,
@@ -938,11 +932,6 @@ Args:
 	struct libnvme_host* __exit__(PyObject *type, PyObject *value, PyObject *traceback) {
 		return $self;
 	}
-	%feature("autodoc", SET_SYMNAME_DOCSTRING) set_symname;
-	void set_symname(const char *hostsymname) {
-		libnvme_host_set_hostsymname($self, hostsymname);
-	}
-
 	PyObject* __str__() {
 		return PyUnicode_FromFormat("nvme.Host(%s,%s)", STR_OR_NONE($self->hostnqn), STR_OR_NONE($self->hostid));
 	}
@@ -1161,10 +1150,6 @@ Args:
 			return;
 		}
 	}
-	%feature("autodoc", "Return True if this controller is currently connected.") connected;
-	bool connected() {
-		return libnvme_ctrl_get_name($self) != NULL;
-	}
 	%feature("autodoc", "Rescan this controller and refresh its namespace list.") rescan;
 	void rescan() {
 		libnvme_rescan_ctrl($self);
@@ -1190,16 +1175,28 @@ Args:
 			connect_err = 2;
 	}
 
-	%feature("autodoc", "Return True if this controller supports explicit host registration.") is_registration_supported;
-	bool is_registration_supported() {
+	bool _registration_supported() {
 		return libnvmf_is_registration_supported($self);
 	}
+	bool _connected() {
+		return libnvme_ctrl_get_name($self) != NULL;
+	}
+	%pythoncode %{
+	@property
+	def connected(self):
+		"""True if this controller is currently connected."""
+		return self._connected()
+	@property
+	def registration_supported(self):
+		"""True if this controller supports explicit host registration."""
+		return self._registration_supported()
+	%}
 
 	%feature("autodoc", "Register this controller with the NVMe-oF DIM service.\n"
 		"\n"
 		"Returns:\n"
-		"    None on success, or an error string describing the failure.") registration_ctrl;
-	PyObject *registration_ctrl(enum nvmf_dim_tas tas) {
+		"    None on success, or an error string describing the failure.") registration_control;
+	PyObject *registration_control(enum nvmf_dim_tas tas) {
 		__u32 result;
 		int   status;
 

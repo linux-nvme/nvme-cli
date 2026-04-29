@@ -34,6 +34,11 @@ class TestGlobalCtx(unittest.TestCase):
         with nvme.GlobalCtx() as ctx:
             self.assertIsNotNone(ctx)
 
+    def test_context_manager_methods_accessible(self):
+        with nvme.GlobalCtx() as ctx:
+            hosts = list(ctx.hosts())
+            self.assertIsInstance(hosts, list)
+
     def test_hosts_iterator_returns_list(self):
         ctx = nvme.GlobalCtx()
         hosts = list(ctx.hosts())
@@ -82,10 +87,10 @@ class TestHost(unittest.TestCase):
         host = nvme.Host(self.ctx, hostnqn=hostnqn, hostsymname=symname)
         self.assertEqual(host.hostsymname, symname)
 
-    def test_set_symname(self):
+    def test_set_hostsymname(self):
         hostnqn = 'nqn.2014-08.com.example:test-host-set-symname'
         host = nvme.Host(self.ctx, hostnqn=hostnqn)
-        host.set_symname('updated-symname')
+        host.hostsymname = 'updated-symname'
         self.assertEqual(host.hostsymname, 'updated-symname')
 
     def test_dhchap_host_key_is_none_by_default(self):
@@ -105,6 +110,12 @@ class TestHost(unittest.TestCase):
     def test_context_manager(self):
         with nvme.Host(self.ctx) as h:
             self.assertIsNotNone(h)
+
+    def test_context_manager_properties_accessible(self):
+        hostnqn = 'nqn.2014-08.com.example:test-host-ctx-mgr'
+        with nvme.Host(self.ctx, hostnqn=hostnqn) as h:
+            self.assertEqual(h.hostnqn, hostnqn)
+            self.assertIsNone(h.dhchap_host_key)
 
 
 class TestCtrl(unittest.TestCase):
@@ -163,7 +174,7 @@ class TestCtrl(unittest.TestCase):
 
     def test_connected_returns_false_before_connect(self):
         ctrl = self._make_loop_ctrl()
-        self.assertFalse(ctrl.connected())
+        self.assertFalse(ctrl.connected)
 
     def test_name_is_none_before_connect(self):
         ctrl = self._make_loop_ctrl()
@@ -180,6 +191,15 @@ class TestCtrl(unittest.TestCase):
             'transport': 'loop',
         }) as c:
             self.assertIsNotNone(c)
+
+    def test_context_manager_properties_accessible(self):
+        with nvme.Ctrl(self.ctx, {
+            'subsysnqn': self.subsysnqn,
+            'transport': 'loop',
+        }) as c:
+            self.assertEqual(c.transport, 'loop')
+            self.assertEqual(c.subsysnqn, self.subsysnqn)
+            self.assertFalse(c.connected)
 
     def test_namespaces_iterator_returns_list(self):
         ctrl = self._make_loop_ctrl()
@@ -216,7 +236,7 @@ class TestCtrl(unittest.TestCase):
         ctrls = [self._make_loop_ctrl() for _ in range(5)]
         self.assertEqual(len(ctrls), 5)
         for c in ctrls:
-            self.assertFalse(c.connected())
+            self.assertFalse(c.connected)
 
 
 class TestCtrlErrorHandling(unittest.TestCase):
