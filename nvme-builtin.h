@@ -8,6 +8,7 @@
 #include "cmd.h"
 
 COMMAND_LIST(
+	ENTRY("top", "nvme top", top)
 	ENTRY("list", "List all NVMe devices and namespaces on machine", list)
 	ENTRY("list-subsys", "List nvme subsystems", list_subsys)
 	ENTRY("id-ctrl", "Send NVMe Identify Controller", id_ctrl)

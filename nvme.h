@@ -104,6 +104,28 @@ static inline bool nvme_is_multipath(libnvme_subsystem_t s)
 	return false;
 }
 
+static inline bool subsystem_iopolicy_filter(const char *name, void *arg)
+{
+	libnvme_subsystem_t s = arg;
+	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
+
+	if (!strcmp(iopolicy, "queue-depth")) {
+		/* exclude "Nodes" for iopolicy queue-depth */
+		if (!strcmp(name, "Nodes"))
+			return false;
+	} else if (!strcmp(iopolicy, "numa")) {
+		/* exclude "Qdepth" for iopolicy numa */
+		if (!strcmp(name, "Qdepth"))
+			return false;
+	} else { /* round-robin */
+		/* exclude "Nodes" and "Qdepth" for iopolicy round-robin */
+		if (!strcmp(name, "Nodes") || !strcmp(name, "Qdepth"))
+			return false;
+	}
+
+	return true;
+}
+
 void register_extension(struct plugin *plugin);
 
 /*
