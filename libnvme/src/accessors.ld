@@ -55,7 +55,6 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_ns_get_nsid;
 		libnvme_ns_set_nsid;
 		libnvme_ns_get_name;
-		libnvme_ns_set_name;
 		libnvme_ns_get_generic_name;
 		libnvme_ns_get_sysfs_dir;
 		libnvme_ns_set_sysfs_dir;

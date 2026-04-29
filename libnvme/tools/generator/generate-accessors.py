@@ -17,7 +17,8 @@ Limitations:
   - Does not support struct within struct.
 
 Annotations use // line-comment style.  After '//', each '!keyword' token
-(optionally followed by ':spec' or ':VALUE') is a command.  Multiple
+(optionally followed by ':metadata') is a command.  The ':metadata' portion
+carries extra parameters such as 'read=generated,write=none'.  Multiple
 annotations can appear in one comment:
   struct nvme_ctrl { // !generate-accessors !generate-lifecycle
 
@@ -121,6 +122,7 @@ GET_FMT = "{pre}_get_{mem}"
 
 SPDX_C  = "// SPDX-License-Identifier: LGPL-2.1-or-later"
 SPDX_H  = "/* SPDX-License-Identifier: LGPL-2.1-or-later */"
+SPDX_I  = SPDX_C
 SPDX_LD = "# SPDX-License-Identifier: LGPL-2.1-or-later"
 
 BANNER = (
@@ -317,17 +319,21 @@ class Member:
       'custom'     — an accessor exists elsewhere (hand-written or bridge)
       'none'       — no accessor exists for this axis
 
-    Only 'generated' produces output in this generator.  The other two
-    modes exist for downstream consumers (Python binding generator,
-    consistency checks) that care about the semantic distinction.
+    Only 'generated' produces C accessor output in this generator.  Members
+    with at least one non-'none' axis are retained for the SWIG emitter.
+
+    py_visible: False when annotated with ``// !python:none``.
+    py_alias: alternate Python attribute name from ``// !python:alias=NAME``,
+              or None to use the C member name.
     """
 
     __slots__ = ('name', 'type', 'read_mode', 'write_mode',
                  'is_char_array', 'is_char_ptr_array', 'is_scalar_array',
-                 'array_size')
+                 'array_size', 'py_visible', 'py_alias')
 
     def __init__(self, name, type_str, read_mode, write_mode,
-                 is_char_array, is_char_ptr_array, is_scalar_array, array_size):
+                 is_char_array, is_char_ptr_array, is_scalar_array, array_size,
+                 py_visible=True, py_alias=None):
         self.name = name
         self.type = type_str          # e.g. "const char *", "int", "__u32"
         self.read_mode = read_mode    # 'generated' | 'custom' | 'none'
@@ -336,6 +342,25 @@ class Member:
         self.is_char_ptr_array = is_char_ptr_array
         self.is_scalar_array = is_scalar_array
         self.array_size = array_size  # for fixed-size arrays (char[N] or type[N])
+        self.py_visible = py_visible  # False → excluded from SWIG fragment
+        self.py_alias = py_alias      # str → rename Python attribute; None → use C name
+
+    @property
+    def has_accessor(self):
+        """True when at least one axis has a real accessor (generated or custom)."""
+        return self.read_mode != 'none' or self.write_mode != 'none'
+
+    @property
+    def is_custom_accessor(self):
+        return self.read_mode == 'custom' or self.write_mode == 'custom'
+
+    @property
+    def gen_getter(self):
+        return self.read_mode == 'generated'
+
+    @property
+    def gen_setter(self):
+        return self.write_mode == 'generated'
 
 
 # ---------------------------------------------------------------------------
@@ -352,9 +377,13 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
 
     Modes: 'generated' | 'custom' | 'none'.
 
-    Members whose effective read_mode and write_mode are both non-generated
-    are skipped — they produce no output, so there is no reason to carry
-    them through the emitter stage.
+    Members where both axes are 'none' are dropped entirely.  Members with
+    at least one non-'none' axis are retained so the SWIG fragment emitter
+    can see 'custom' axes alongside 'generated' ones.
+
+    Per-member Python hints:
+      ``// !python:none``        → Member.py_visible = False (exclude from SWIG)
+      ``// !python:alias=NAME``  → Member.py_alias = 'NAME' (rename in Python)
 
     Annotations are detected on the **raw** (un-stripped) line so that
     comment masking cannot hide them.  Comments are stripped only afterwards,
@@ -362,6 +391,9 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
     """
     struct_read, struct_write = struct_defaults
     members = []
+
+    _py_none_re  = re.compile(r'!python:none(?=[\s!]|$)')
+    _py_alias_re = re.compile(r'!python:alias=(\w+)(?=[\s!]|$)')
 
     for raw_line in raw_body.splitlines():
         # ----------------------------------------------------------------
@@ -375,11 +407,16 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
             read_mode  = override.get('read',  struct_read)
             write_mode = override.get('write', struct_write)
 
-        # Skip members that produce no generator output.  They may still
-        # carry a valid 'custom'/'none' declaration for downstream tools
-        # but this generator has nothing to emit for them.
-        if read_mode != 'generated' and write_mode != 'generated':
+        # Retain members that have any accessor (generated or custom) so the
+        # SWIG emitter can see them.  Only drop members with no accessor at
+        # all on either axis.
+        if read_mode == 'none' and write_mode == 'none':
             continue
+
+        comment = _comment_text(raw_line) or ''
+        py_visible = _py_none_re.search(comment) is None
+        m_alias    = _py_alias_re.search(comment)
+        py_alias   = m_alias.group(1) if m_alias else None
 
         # ----------------------------------------------------------------
         # Strip comments for member-declaration parsing.
@@ -406,6 +443,8 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
                 is_char_ptr_array=False,
                 is_scalar_array=False,
                 array_size=m.group(3),
+                py_visible=py_visible,
+                py_alias=py_alias,
             ))
             continue
 
@@ -422,6 +461,8 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
                 is_char_ptr_array=False,
                 is_scalar_array=True,
                 array_size=m.group(4),
+                py_visible=py_visible,
+                py_alias=py_alias,
             ))
             continue
 
@@ -455,6 +496,8 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
                 is_char_ptr_array=(ptr_depth == 2),
                 is_scalar_array=False,
                 array_size=None,
+                py_visible=py_visible,
+                py_alias=py_alias,
             ))
 
     return members
@@ -558,17 +601,42 @@ def parse_access_override(raw_line):
 
 
 def parse_lifecycle_annotation(raw_body):
-    """Return True when *raw_body* carries a ``!generate-lifecycle`` annotation.
+    """Return True if ``!generate-lifecycle`` is present, else None.
 
-    The annotation must appear inside a ``//`` comment on the struct's opening
-    brace line.  It may share the comment with other annotations::
+    Recognises (on the struct's opening brace line)::
 
-        struct foo { // !generate-accessors !generate-lifecycle
+        // !generate-lifecycle   → True  (emit constructor + destructor)
+
+    Returns None when the annotation is absent.
+    """
+    _lc_re = re.compile(r'!generate-lifecycle(?=[\s!]|$)')
+    for line in raw_body.splitlines():
+        comment = _comment_text(line)
+        if comment is None:
+            continue
+        if _lc_re.search(comment):
+            return True
+    return None
+
+
+_GEN_PYTHON_RE = re.compile(r'!generate-python(?::alias=(\w+))?(?=[\s!]|$)')
+
+
+def parse_generate_python(raw_body):
+    """Return ``(emit_py, alias)`` from a ``// !generate-python[:alias=NAME]`` annotation.
+
+    *emit_py* is True when ``!generate-python`` is present on any line of
+    *raw_body*.  *alias* is the NAME string from ``:alias=NAME``, or None
+    when the option is absent.
     """
     for line in raw_body.splitlines():
-        if has_annotation(line, 'generate-lifecycle'):
-            return True
-    return False
+        comment = _comment_text(line)
+        if comment is None:
+            continue
+        m = _GEN_PYTHON_RE.search(comment)
+        if m:
+            return True, m.group(1)
+    return False, None
 
 
 # ---------------------------------------------------------------------------
@@ -720,11 +788,13 @@ def parse_members_for_defaults(raw_body):
 
 def parse_file(text, verbose):
     """Return list of (struct_name, [Member], [LifecycleMember],
-    [DefaultMember]) tuples.
+    [DefaultMember], emit_py_fragment) tuples.
 
     Only structs annotated with ``// !generate-accessors`` as the first token
     inside the opening brace, or with ``// !generate-lifecycle`` anywhere
     inside the opening brace line, are processed.
+
+    *emit_py_fragment* is True when the struct also carries ``!generate-python``.
     """
     result = []
 
@@ -732,38 +802,50 @@ def parse_file(text, verbose):
         struct_name = match.group(1)
         raw_body    = match.group(2)
 
-        struct_defaults = parse_struct_annotation(raw_body)
-        want_lifecycle  = parse_lifecycle_annotation(raw_body)
+        struct_defaults             = parse_struct_annotation(raw_body)
+        lifecycle_mode              = parse_lifecycle_annotation(raw_body)
+        emit_py_fragment, struct_alias = parse_generate_python(raw_body)
 
-        if struct_defaults is None and not want_lifecycle:
+        if struct_defaults is None and lifecycle_mode is None and not emit_py_fragment:
             continue
 
+        # If the struct has !generate-python but no !generate-accessors, parse
+        # members with default mode (none, none) so the SWIG emitter can see
+        # any explicit !access: overrides on individual members.
         members = []
-        if struct_defaults is not None:
+        acc_defaults = struct_defaults if struct_defaults is not None else ('none', 'none')
+        if struct_defaults is not None or emit_py_fragment:
             members = parse_members(
-                struct_name, raw_body, struct_defaults, verbose)
+                struct_name, raw_body, acc_defaults, verbose)
 
         lc_members = None
-        if want_lifecycle:
+        if lifecycle_mode:
             lc_members = parse_members_for_lifecycle(raw_body)
 
         default_members = parse_members_for_defaults(raw_body)
 
-        if verbose and (members or lc_members is not None or default_members):
-            if members:
+        if verbose and (members or lc_members is not None or default_members
+                        or emit_py_fragment):
+            if struct_defaults is not None and members:
                 sr, sw = struct_defaults
                 acc = (f"{len(members)} members "
                        f"[defaults: read={sr}, write={sw}]")
-            else:
+            elif struct_defaults is not None:
                 acc = "no accessors"
-            lc = (f"{len(lc_members)} lifecycle members"
-                  if lc_members is not None else "no lifecycle")
+            else:
+                acc = "no accessors (python-only)"
+            if lifecycle_mode:
+                lc = f"{len(lc_members)} lifecycle members"
+            else:
+                lc = "no lifecycle"
             df = (f"{len(default_members)} defaults" if default_members
                   else "no defaults")
-            print(f"Found struct: {struct_name} — {acc}, {lc}, {df}")
+            py = "generate-python" if emit_py_fragment else "no python"
+            print(f"Found struct: {struct_name} — {acc}, {lc}, {df}, {py}")
 
-        if members or lc_members is not None or default_members:
-            result.append((struct_name, members, lc_members, default_members))
+        if members or lc_members is not None or default_members or emit_py_fragment:
+            result.append((struct_name, members, lc_members, default_members,
+                           emit_py_fragment, struct_alias))
 
     return result
 
@@ -1345,6 +1427,165 @@ def generate_ld(f, prefix, struct_name, members, lc_members, default_members):
 
 
 # ---------------------------------------------------------------------------
+# SWIG fragment emitters
+# ---------------------------------------------------------------------------
+
+def generate_swig_prelude(f):
+    """Emit the shared ``_nvme_guarded_setattr`` helper.
+
+    Written once at the top of the first (common) generated fragment.
+    The fabrics fragment imports it from the common module at runtime.
+    """
+    f.write(
+        '%pythoncode %{\n'
+        'def _nvme_guarded_setattr(self, name, value):\n'
+        '    """Reject writes to unknown attributes.\n\n'
+        '    Typos like ``ctrl.nqn = x`` (should be ``ctrl.subsysnqn``) are\n'
+        '    silently ignored by default Python ``__setattr__``.  This guard\n'
+        '    raises ``AttributeError`` for any name not already present on the\n'
+        '    object, keeping the struct-like API strict.\n'
+        '    """\n'
+        '    if name.startswith(\'_\') or name in (\'this\', \'thisown\') or hasattr(type(self), name):\n'
+        '        object.__setattr__(self, name, value)\n'
+        '    else:\n'
+        '        raise AttributeError(\n'
+        '            f"{type(self).__name__!r} has no attribute {name!r}")\n'
+        '%}\n\n'
+    )
+
+
+def generate_swig_fragment(f, prefix, struct_name, members, errors,
+                           struct_alias=None):
+    """Emit SWIG struct decl with per-axis read/write routing.
+
+    Access routing per member:
+
+      is_custom_accessor (read==custom OR write==custom)
+          → member goes inside ``%extend {}`` so SWIG calls the hand-written
+            accessor function.  A ``%rename`` directive maps the function to
+            SWIG's expected ``prefix_name_get`` / ``prefix_name_set`` name.
+
+      all-generated (neither axis is custom, at least one is non-none)
+          → plain struct field declaration (outside ``%extend``); SWIG reads/
+            writes the field directly via ``p->member``.
+
+      write == none (on either kind)
+          → ``%immutable name;`` immediately before the field declaration
+            makes the attribute read-only.
+
+      both axes == none  →  member is not Python-visible; already excluded
+                             by the ``has_accessor`` filter.
+
+    SWIG does not support mixed mechanisms (direct read + accessor write) on
+    a single member, so any ``custom`` axis forces the whole member into
+    ``%extend``.
+
+    ``%extend {}`` is omitted entirely when no member needs it.
+
+    Struct-level naming:
+      struct_alias=NAME → emits ``%rename(NAME) struct_name;`` before the
+                          struct body, and uses NAME in ``%pythoncode``.
+      struct_alias=None → no struct-level ``%rename``; C struct name used
+                          everywhere.
+
+    Invariant: the number of ``%rename`` directives emitted equals the number
+    of ``custom`` axes among Python-visible members, plus one when struct_alias
+    is set.
+    """
+    py_class = struct_alias or struct_name
+    pre = f'{prefix}{struct_name}'
+    f.write(f'/* struct {struct_name} */\n')
+    if struct_alias:
+        f.write(f'%rename({struct_alias}) {struct_name};\n')
+
+    # Collect Python-visible members (has accessor AND py_visible flag set).
+    visible = [m for m in members if m.py_visible and m.has_accessor]
+
+    # Collision detection — report all collisions before emitting anything.
+    seen = {}
+    for m in visible:
+        py_name = m.py_alias or m.name
+        if py_name in seen:
+            errors.append(
+                f"error: struct {struct_name}: Python name '{py_name}' "
+                f"is used by both '{seen[py_name]}' and '{m.name}'")
+        else:
+            seen[py_name] = m.name
+
+    # Pass 1 — %rename directives.  Emitted ONLY for 'custom' axes.
+    for m in visible:
+        if not m.is_custom_accessor:
+            continue
+        py_name = m.py_alias or m.name
+        if m.read_mode == 'custom':
+            f.write(f'%rename({pre}_{py_name}_get) {pre}_get_{m.name};\n')
+        if m.write_mode == 'custom':
+            f.write(f'%rename({pre}_{py_name}_set) {pre}_set_{m.name};\n')
+
+    # Pass 1.5 — #define bridges for custom members.
+    # SWIG generates wrapper code that calls <struct>_<member>_get/set (SWIG
+    # naming convention), but the hand-written C accessors follow the libnvme
+    # convention <struct>_get/set_<member>.  A #define makes the generated C
+    # code compile without requiring the hand-written functions to be renamed.
+    bridges = []
+    for m in visible:
+        if not m.is_custom_accessor:
+            continue
+        py_name = m.py_alias or m.name
+        if m.read_mode == 'custom':
+            bridges.append(
+                f'#define {pre}_{py_name}_get {pre}_get_{m.name}')
+        if m.write_mode == 'custom':
+            bridges.append(
+                f'#define {pre}_{py_name}_set {pre}_set_{m.name}')
+    if bridges:
+        f.write('%{\n')
+        for bridge in bridges:
+            f.write(f'\t{bridge}\n')
+        f.write('%}\n')
+
+    # Pass 2 — struct body.
+    f.write(f'struct {struct_name} {{\n')
+
+    # Generated members: plain struct fields — SWIG accesses p->member directly.
+    for m in visible:
+        if m.is_custom_accessor:
+            continue
+        py_name = m.py_alias or m.name
+        if m.write_mode == 'none':
+            f.write(f'\t%immutable {py_name};\n')
+        if m.is_scalar_array:
+            f.write(f'\t{m.type} {py_name}[{m.array_size}];\n')
+        else:
+            f.write(f'\t{m.type} {py_name};\n')
+
+    # Custom members: inside %extend — SWIG calls the hand-written accessor.
+    # Members with read=none are excluded: SWIG always generates a getter for
+    # %extend members, and there is no C function to call for a read=none axis.
+    custom = [m for m in visible if m.is_custom_accessor and m.read_mode != 'none']
+    if custom:
+        f.write('\t%extend {\n')
+        for m in custom:
+            py_name = m.py_alias or m.name
+            if m.write_mode == 'none':
+                f.write(f'\t\t%immutable {py_name};\n')
+            if m.is_scalar_array:
+                f.write(f'\t\t{m.type} {py_name}[{m.array_size}];\n')
+            else:
+                f.write(f'\t\t{m.type} {py_name};\n')
+        f.write('\t}\n')
+
+    f.write('};\n\n')
+
+    # Install __setattr__ guard at module import time.
+    f.write(
+        f'%pythoncode %{{\n'
+        f'{py_class}.__setattr__ = _nvme_guarded_setattr\n'
+        f'%}}\n\n'
+    )
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1362,6 +1603,9 @@ def main():
     parser.add_argument('-l', '--ld-out',  default='accessors.ld',
                         dest='l_fname',   metavar='FILE',
                         help='Generated *.ld file. Default: accessors.ld')
+    parser.add_argument('-s', '--swig-out', default=None,
+                        dest='s_fname',   metavar='FILE',
+                        help='Generated SWIG fragment (*.i). Omit to skip.')
     parser.add_argument('-p', '--prefix',  default='',
                         dest='prefix',    metavar='STR',
                         help='Prefix prepended to every generated function name.')
@@ -1395,6 +1639,12 @@ def main():
     hdr_parts = []          # fragments for accessors.h
     src_parts = []          # fragments for accessors.c
     ld_parts  = []          # fragments for accessors.ld
+    swig_parts = []         # fragments for accessors.i (if --swig-out given)
+    swig_errors = []        # deferred SWIG validation errors
+    swig_aliases = set()    # alias names seen so far — uniqueness guard
+
+    emit_swig   = args.s_fname is not None
+    first_swig  = True      # prelude emitted once, before first struct
 
     for in_hdr in header_files:
         if args.verbose:
@@ -1416,42 +1666,73 @@ def main():
 
         files_to_include.append(os.path.basename(in_hdr))
 
-        for struct_name, members, lc_members, default_members in structs:
-            forward_declares.append(struct_name)
+        for struct_name, members, lc_members, default_members, emit_py, struct_alias in structs:
+            has_c_output = bool(members or lc_members is not None
+                                or default_members)
 
-            section_banner = (
-                f'/****************************************************************************\n'
-                f' * Accessors for: struct {struct_name}\n'
-                f' ****************************************************************************/\n'
-                f'\n'
-            )
+            if has_c_output:
+                forward_declares.append(struct_name)
 
-            hdr_buf = io.StringIO()
-            hdr_buf.write(section_banner)
-            if lc_members is not None:
-                emit_hdr_lifecycle(hdr_buf, args.prefix, struct_name,
-                                   lc_members)
-            if default_members:
-                emit_hdr_defaults(hdr_buf, args.prefix, struct_name,
-                                  default_members)
-            generate_hdr(hdr_buf, args.prefix, struct_name, members)
-            hdr_parts.append(hdr_buf.getvalue())
+                section_banner = (
+                    f'/****************************************************************************\n'
+                    f' * Accessors for: struct {struct_name}\n'
+                    f' ****************************************************************************/\n'
+                    f'\n'
+                )
 
-            src_buf = io.StringIO()
-            src_buf.write(section_banner)
-            if lc_members is not None:
-                emit_src_lifecycle(src_buf, args.prefix, struct_name,
-                                   lc_members, default_members)
-            if default_members:
-                emit_src_defaults(src_buf, args.prefix, struct_name,
-                                  default_members)
-            generate_src(src_buf, args.prefix, struct_name, members)
-            src_parts.append(src_buf.getvalue())
+                hdr_buf = io.StringIO()
+                hdr_buf.write(section_banner)
+                if lc_members is not None:
+                    emit_hdr_lifecycle(hdr_buf, args.prefix, struct_name,
+                                       lc_members)
+                if default_members:
+                    emit_hdr_defaults(hdr_buf, args.prefix, struct_name,
+                                      default_members)
+                generate_hdr(hdr_buf, args.prefix, struct_name, members)
+                hdr_parts.append(hdr_buf.getvalue())
 
-            ld_buf = io.StringIO()
-            generate_ld(ld_buf, args.prefix, struct_name, members,
-                        lc_members, default_members)
-            ld_parts.append(ld_buf.getvalue())
+                src_buf = io.StringIO()
+                src_buf.write(section_banner)
+                if lc_members is not None:
+                    emit_src_lifecycle(src_buf, args.prefix, struct_name,
+                                       lc_members, default_members)
+                if default_members:
+                    emit_src_defaults(src_buf, args.prefix, struct_name,
+                                      default_members)
+                generate_src(src_buf, args.prefix, struct_name, members)
+                src_parts.append(src_buf.getvalue())
+
+                ld_buf = io.StringIO()
+                generate_ld(ld_buf, args.prefix, struct_name, members,
+                            lc_members, default_members)
+                ld_parts.append(ld_buf.getvalue())
+
+            if emit_swig and emit_py:
+                if struct_alias is not None:
+                    if not struct_alias.isidentifier():
+                        swig_errors.append(
+                            f"error: struct {struct_name}: "
+                            f"alias={struct_alias!r} is not a valid "
+                            f"Python identifier")
+                    elif struct_alias in swig_aliases:
+                        swig_errors.append(
+                            f"error: struct {struct_name}: "
+                            f"alias={struct_alias!r} is already used by "
+                            f"another struct")
+                    else:
+                        swig_aliases.add(struct_alias)
+                swig_buf = io.StringIO()
+                if first_swig:
+                    generate_swig_prelude(swig_buf)
+                    first_swig = False
+                generate_swig_fragment(swig_buf, args.prefix, struct_name,
+                                       members, swig_errors, struct_alias)
+                swig_parts.append(swig_buf.getvalue())
+
+    if swig_errors:
+        for msg in swig_errors:
+            print(msg, file=sys.stderr)
+        sys.exit(1)
 
     # -----------------------------------------------------------------------
     # Pass 2 — write output files.
@@ -1517,8 +1798,21 @@ def main():
         f.write(''.join(ld_parts))
         f.write('};\n')
 
+    # --- accessors.i (SWIG fragment) ---------------------------------------
+    if emit_swig and args.s_fname:
+        makedirs_for(args.s_fname)
+        with open(args.s_fname, 'w') as f:
+            f.write(
+                f'{SPDX_I}\n'
+                f'\n'
+                f'{BANNER}\n'
+            )
+            f.write(''.join(swig_parts))
+
     if args.verbose:
         print(f"\nGenerated {args.h_fname} and {args.c_fname}")
+        if emit_swig and args.s_fname:
+            print(f"Generated {args.s_fname}")
 
 
 if __name__ == '__main__':

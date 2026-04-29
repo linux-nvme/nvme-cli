@@ -427,13 +427,6 @@ void libnvme_ns_set_nsid(struct libnvme_ns *p, __u32 nsid);
 __u32 libnvme_ns_get_nsid(const struct libnvme_ns *p);
 
 /**
- * libnvme_ns_set_name() - Set name.
- * @p: The &struct libnvme_ns instance to update.
- * @name: New string; a copy is stored. Pass NULL to clear.
- */
-void libnvme_ns_set_name(struct libnvme_ns *p, const char *name);
-
-/**
  * libnvme_ns_get_name() - Get name.
  * @p: The &struct libnvme_ns instance to query.
  *

@@ -315,12 +315,6 @@ __public __u32 libnvme_ns_get_nsid(const struct libnvme_ns *p)
 	return p->nsid;
 }
 
-__public void libnvme_ns_set_name(struct libnvme_ns *p, const char *name)
-{
-	free(p->name);
-	p->name = name ? strdup(name) : NULL;
-}
-
 __public const char *libnvme_ns_get_name(const struct libnvme_ns *p)
 {
 	return p->name;

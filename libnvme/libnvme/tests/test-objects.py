@@ -27,24 +27,24 @@ class TestConstants(unittest.TestCase):
 class TestGlobalCtx(unittest.TestCase):
 
     def test_creation_no_args(self):
-        ctx = nvme.global_ctx()
+        ctx = nvme.GlobalCtx()
         self.assertIsNotNone(ctx)
 
     def test_context_manager(self):
-        with nvme.global_ctx() as ctx:
+        with nvme.GlobalCtx() as ctx:
             self.assertIsNotNone(ctx)
 
     def test_hosts_iterator_returns_list(self):
-        ctx = nvme.global_ctx()
+        ctx = nvme.GlobalCtx()
         hosts = list(ctx.hosts())
         self.assertIsInstance(hosts, list)
 
     def test_refresh_topology_does_not_raise(self):
-        ctx = nvme.global_ctx()
+        ctx = nvme.GlobalCtx()
         ctx.refresh_topology()
 
     def test_log_level_all_valid_levels(self):
-        ctx = nvme.global_ctx()
+        ctx = nvme.GlobalCtx()
         for level in ('debug', 'info', 'warning', 'err'):
             with self.subTest(level=level):
                 ctx.log_level(level)
@@ -53,64 +53,64 @@ class TestGlobalCtx(unittest.TestCase):
 class TestHost(unittest.TestCase):
 
     def setUp(self):
-        self.ctx = nvme.global_ctx()
+        self.ctx = nvme.GlobalCtx()
 
     def tearDown(self):
         self.ctx = None
         gc.collect()
 
     def test_creation_default(self):
-        host = nvme.host(self.ctx)
+        host = nvme.Host(self.ctx)
         self.assertIsNotNone(host)
 
     def test_creation_with_explicit_hostnqn(self):
         hostnqn = 'nqn.2014-08.com.example:test-host-creation'
-        host = nvme.host(self.ctx, hostnqn=hostnqn)
+        host = nvme.Host(self.ctx, hostnqn=hostnqn)
         self.assertIsNotNone(host)
         self.assertEqual(host.hostnqn, hostnqn)
 
     def test_creation_with_hostnqn_and_hostid(self):
         hostnqn = 'nqn.2014-08.com.example:test-host-props'
         hostid = '11111111-2222-3333-4444-555555555555'
-        host = nvme.host(self.ctx, hostnqn=hostnqn, hostid=hostid)
+        host = nvme.Host(self.ctx, hostnqn=hostnqn, hostid=hostid)
         self.assertEqual(host.hostnqn, hostnqn)
         self.assertEqual(host.hostid, hostid)
 
     def test_creation_with_hostsymname(self):
         hostnqn = 'nqn.2014-08.com.example:test-host-symname'
         symname = 'my-storage-host'
-        host = nvme.host(self.ctx, hostnqn=hostnqn, hostsymname=symname)
+        host = nvme.Host(self.ctx, hostnqn=hostnqn, hostsymname=symname)
         self.assertEqual(host.hostsymname, symname)
 
     def test_set_symname(self):
         hostnqn = 'nqn.2014-08.com.example:test-host-set-symname'
-        host = nvme.host(self.ctx, hostnqn=hostnqn)
+        host = nvme.Host(self.ctx, hostnqn=hostnqn)
         host.set_symname('updated-symname')
         self.assertEqual(host.hostsymname, 'updated-symname')
 
     def test_dhchap_host_key_is_none_by_default(self):
         hostnqn = 'nqn.2014-08.com.example:test-host-dhchap'
-        host = nvme.host(self.ctx, hostnqn=hostnqn)
+        host = nvme.Host(self.ctx, hostnqn=hostnqn)
         self.assertIsNone(host.dhchap_host_key)
 
     def test_subsystems_iterator_returns_list(self):
-        host = nvme.host(self.ctx)
+        host = nvme.Host(self.ctx)
         subsystems = list(host.subsystems())
         self.assertIsInstance(subsystems, list)
 
     def test_str_contains_class_name(self):
-        host = nvme.host(self.ctx)
-        self.assertIn('nvme.host', str(host))
+        host = nvme.Host(self.ctx)
+        self.assertIn('nvme.Host', str(host))
 
     def test_context_manager(self):
-        with nvme.host(self.ctx) as h:
+        with nvme.Host(self.ctx) as h:
             self.assertIsNotNone(h)
 
 
 class TestCtrl(unittest.TestCase):
 
     def setUp(self):
-        self.ctx = nvme.global_ctx()
+        self.ctx = nvme.GlobalCtx()
         self.subsysnqn = nvme.NVME_DISC_SUBSYS_NAME
 
     def tearDown(self):
@@ -118,7 +118,7 @@ class TestCtrl(unittest.TestCase):
         gc.collect()
 
     def _make_loop_ctrl(self):
-        return nvme.ctrl(self.ctx, {
+        return nvme.Ctrl(self.ctx, {
             'subsysnqn': self.subsysnqn,
             'transport': 'loop',
         })
@@ -128,7 +128,7 @@ class TestCtrl(unittest.TestCase):
         self.assertIsNotNone(ctrl)
 
     def test_creation_tcp_transport_with_traddr(self):
-        ctrl = nvme.ctrl(self.ctx, {
+        ctrl = nvme.Ctrl(self.ctx, {
             'subsysnqn': self.subsysnqn,
             'transport': 'tcp',
             'traddr': '192.168.1.1',
@@ -145,7 +145,7 @@ class TestCtrl(unittest.TestCase):
         self.assertEqual(ctrl.subsysnqn, self.subsysnqn)
 
     def test_traddr_property(self):
-        ctrl = nvme.ctrl(self.ctx, {
+        ctrl = nvme.Ctrl(self.ctx, {
             'subsysnqn': self.subsysnqn,
             'transport': 'tcp',
             'traddr': '10.0.0.1',
@@ -153,7 +153,7 @@ class TestCtrl(unittest.TestCase):
         self.assertEqual(ctrl.traddr, '10.0.0.1')
 
     def test_trsvcid_property(self):
-        ctrl = nvme.ctrl(self.ctx, {
+        ctrl = nvme.Ctrl(self.ctx, {
             'subsysnqn': self.subsysnqn,
             'transport': 'tcp',
             'traddr': '10.0.0.1',
@@ -175,7 +175,7 @@ class TestCtrl(unittest.TestCase):
         self.assertIn('loop', s)
 
     def test_context_manager(self):
-        with nvme.ctrl(self.ctx, {
+        with nvme.Ctrl(self.ctx, {
             'subsysnqn': self.subsysnqn,
             'transport': 'loop',
         }) as c:
@@ -223,8 +223,8 @@ class TestCtrlErrorHandling(unittest.TestCase):
     """Error paths that can be exercised without real hardware."""
 
     def setUp(self):
-        self.ctx = nvme.global_ctx()
-        self.ctrl = nvme.ctrl(self.ctx, {
+        self.ctx = nvme.GlobalCtx()
+        self.ctrl = nvme.Ctrl(self.ctx, {
             'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME,
             'transport': 'loop',
         })

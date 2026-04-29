@@ -23,6 +23,11 @@ if want_python
         input:   ['nvme.i'],
         output:  ['nvme.py', 'nvme_wrap.c'],
         command: swig_cmd,
+        depend_files: [
+            'accessors.i',
+            'accessors-fabrics.i',
+            'nvme-manual-bridges.i',
+        ],
         install: true,
         install_dir: [python3.get_install_dir(pure: false, subdir: 'libnvme'), false],
     )

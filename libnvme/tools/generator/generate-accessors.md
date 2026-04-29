@@ -1,6 +1,6 @@
 # Generate Accessors Tool
 
-This tool generates **setter and getter functions** for C structs automatically. It also optionally generates **constructor and destructor functions** (`foo_new` / `foo_free`). It supports dynamic strings, fixed-size char arrays, and `const` fields, with control over which structs and members participate via **in-source annotations**.
+This tool generates **setter and getter functions** for C structs automatically. It also optionally generates a **constructor and destructor** (`foo_new` / `foo_free`) and a **defaults initialiser** (`foo_init_defaults`). It supports dynamic strings, fixed-size char arrays, `char **` arrays, and `const` fields, with control over which structs and members participate via **in-source annotations**.
 
 ------
 
@@ -25,7 +25,16 @@ python3 generate-accessors.py [options] <header-files>
 
 ## Annotations
 
-Struct inclusion and member behavior are controlled by **annotations written as `//` line comments directly in the header file**. After `//`, each `!keyword` token (optionally followed by `:spec` or `:VALUE`) is a command. Multiple annotations may share one comment, separated by spaces. The canonical form is `// !token` (one space between `//` and `!`); `//!token` and `//\t!token` are also accepted.
+Struct inclusion and member behavior are controlled by **annotations written as `//` line comments directly in the header file**. Each annotation begins with a `!keyword` token. Optional parameters — called **metadata** — follow the keyword after a colon (`:`) and carry additional configuration. Multiple annotations may share one comment, separated by spaces.
+
+```
+// !keyword                          annotation with no metadata
+// !keyword:key=value                annotation with metadata  key=value
+// !keyword:key1=value1,key2=value2  annotation with metadata  key1=value1,key2=value2
+// !keyword1 !keyword2:key=value     two annotations on one line
+```
+
+The canonical form is `// !token` (one space between `//` and `!`); `//!token` and `//\t!token` are also accepted.
 
 ### Access model — two independent axes
 
@@ -46,68 +55,56 @@ Only `generated` produces output in this generator. The `custom` and `none` mode
 
 ### Struct inclusion — `generate-accessors`
 
-Place the annotation on the same line as the struct's opening brace to opt that struct in to code generation. An optional spec sets the **default mode for each axis** of every member of the struct:
+Place the annotation on the same line as the struct's opening brace to opt that struct in to code generation. The optional metadata sets the **default mode for each axis** of every member of the struct:
 
 ```c
-struct nvme_ctrl { // !generate-accessors
+struct libnvme_ctrl { // !generate-accessors
     /* shorthand for read=generated, write=generated */
 };
 
-struct nvme_ctrl { // !generate-accessors:read=generated,write=generated
+struct libnvme_ctrl { // !generate-accessors:read=generated,write=generated
     /* fully explicit form of the same default */
 };
 
-struct nvme_ctrl { // !generate-accessors:read=none,write=none
-    /* struct is included, but every member is opaque by default */
-};
-
-struct nvme_ctrl { // !generate-accessors:read=generated
-    /* partial spec: write inherits the built-in default (generated) */
+struct libnvme_ctrl { // !generate-accessors:read=generated,write=none
+    /* all members read-only by default; setters require a per-member override */
 };
 ```
 
 Only structs carrying this annotation are processed. All other structs in the header are ignored.
 
-**Built-in defaults.** Any axis not named at the struct level falls back to `generated`. The bare `// !generate-accessors` form is therefore shorthand for `// !generate-accessors:read=generated,write=generated`.
+**Built-in defaults.** Any axis not named in the metadata falls back to `generated`. The bare `// !generate-accessors` form is therefore shorthand for `// !generate-accessors:read=generated,write=generated`.
 
 Individual members can always override the struct-level default using a per-member annotation (see below).
 
 ### Member-level override — `access`
 
-Place the annotation on a member's declaration line to override the struct-level default for this field. The spec takes the same shape as the struct-level annotation:
+Place the annotation on a member's declaration line to override the struct-level default for this field:
 
 ```c
-struct nvme_ctrl { // !generate-accessors
-    char *name;
-    char *state;     // !access:read=custom,write=none
-    char *token;     // !access:read=none,write=custom
-    char *secret;    // !access:read=none,write=none
+struct libnvme_ctrl { // !generate-accessors:read=generated,write=none
+    char *name;                  /* effective: read=generated, write=none (inherited) */
+    char *dhchap_host_key;       // !access:write=generated
+    /* effective: read=generated (inherited), write=generated */
+    long command_error_count;    // !access:read=custom
+    /* effective: read=custom, write=none (inherited) — hand-written getter */
 };
 ```
 
-**Partial specs** are allowed — any axis not named in the member-level spec is **inherited from the struct-level default**, which is in turn drawn from the struct-level annotation (or from the built-in default when the struct has none). The order of `read` and `write` in the annotation is not significant:
-
-```c
-struct nvme_ctrl { // !generate-accessors    /* defaults: read=generated, write=generated */
-    char *model;     // !access:read=custom
-        /* effective: read=custom, write=generated (inherited)   */
-    char *pw;        // !access:write=custom
-        /* effective: read=generated (inherited), write=custom   */
-};
-```
+**Partial metadata** is allowed — any axis not named in the metadata is **inherited from the struct-level default**, which is in turn drawn from the struct's `// !generate-accessors` annotation (or from the built-in default when none is given). The order of `read` and `write` in the metadata is not significant.
 
 **Common patterns:**
 
-| Member spec                           | Effective (inside `// !generate-accessors`)   | Meaning                                  |
-| ------------------------------------- | --------------------------------------------- | ---------------------------------------- |
-| *(no annotation)*                     | `read=generated, write=generated`             | Both accessors auto-generated            |
-| `// !access:read=generated,write=none`| `read=generated, write=none`                  | Read-only (auto-generated getter only)   |
-| `// !access:read=none,write=generated`| `read=none, write=generated`                  | Write-only (auto-generated setter only)  |
-| `// !access:read=none,write=none`     | `read=none, write=none`                       | Purely internal; no accessor of any kind |
-| `// !access:read=custom,write=none`   | `read=custom, write=none`                     | Hand-written getter only                 |
-| `// !access:read=none,write=custom`   | `read=none, write=custom`                     | Hand-written setter only                 |
-| `// !access:read=custom,write=custom` | `read=custom, write=custom`                   | Hand-written getter and setter           |
-| `// !access:read=generated,write=custom` | `read=generated, write=custom`             | Mixed: generated getter, hand-written setter |
+| Member annotation                        | Effective (inside `// !generate-accessors`)   | Meaning                                      |
+| ---------------------------------------- | --------------------------------------------- | -------------------------------------------- |
+| *(no annotation)*                        | `read=generated, write=generated`             | Both accessors auto-generated                |
+| `// !access:read=generated,write=none`   | `read=generated, write=none`                  | Read-only (auto-generated getter only)       |
+| `// !access:read=none,write=generated`   | `read=none, write=generated`                  | Write-only (auto-generated setter only)      |
+| `// !access:read=none,write=none`        | `read=none, write=none`                       | Purely internal; no accessor of any kind     |
+| `// !access:read=custom,write=none`      | `read=custom, write=none`                     | Hand-written getter only                     |
+| `// !access:read=none,write=custom`      | `read=none, write=custom`                     | Hand-written setter only                     |
+| `// !access:read=custom,write=custom`    | `read=custom, write=custom`                   | Hand-written getter and setter               |
+| `// !access:read=generated,write=custom` | `read=generated, write=custom`                | Mixed: generated getter, hand-written setter |
 
 ### The `const` qualifier
 
@@ -115,39 +112,30 @@ A `const`-qualified member forces `write=none` regardless of what the annotation
 
 ### Struct lifecycle — `generate-lifecycle`
 
-Place the annotation on the same line as the struct's opening brace to generate a constructor and a destructor for that struct:
+Place the annotation on the same line as the struct's opening brace to generate a constructor and a destructor for that struct. This annotation takes **no metadata** — its presence means "generate," its absence means "don't":
 
 ```c
-struct nvme_ctrl { // !generate-lifecycle
-    char *name;
-    char *subsysnqn;
-    char *serial;   // !lifecycle:none   /* excluded from destructor */
+struct libnvmf_uri { // !generate-accessors !generate-lifecycle
+    char *scheme;
+    char *host;
+    char *path;    // !lifecycle:none   /* excluded from destructor */
 };
 ```
 
 This generates:
 
-- **`nvme_ctrl_new(struct nvme_ctrl **pp)`** — allocates a zeroed instance on the heap. Returns `0` on success, `-EINVAL` if `pp` is `NULL`, or `-ENOMEM` on allocation failure.
-- **`nvme_ctrl_free(struct nvme_ctrl *p)`** — frees all `char *` and `char **` members (except those marked `// !lifecycle:none`) and then frees the struct itself. A `NULL` argument is silently ignored.
+- **`libnvmf_uri_new(struct libnvmf_uri **pp)`** — allocates a zeroed instance on the heap. Returns `0` on success, `-EINVAL` if `pp` is `NULL`, or `-ENOMEM` on allocation failure.
+- **`libnvmf_uri_free(struct libnvmf_uri *p)`** — frees all `char *` and `char **` members (except those marked `// !lifecycle:none`) and then frees the struct itself. A `NULL` argument is silently ignored.
 
-`generate-lifecycle` can appear alongside `generate-accessors` in the same comment:
-
-```c
-struct nvme_ctrl { // !generate-accessors !generate-lifecycle
-    char *name;
-    char *subsysnqn;
-};
-```
-
-`const char *` members are **never** freed by the destructor — they are assumed to point to externally owned storage.
+`generate-lifecycle` can appear alongside `generate-accessors` in the same comment. `const char *` members are **never** freed by the destructor — they are assumed to point to externally owned storage.
 
 ### Lifecycle member exclusion — `lifecycle:none`
 
 Place the annotation on a member's declaration line to exclude it from the destructor's free logic:
 
 ```c
-struct nvme_ctrl { // !generate-lifecycle
-    char *name;
+struct libnvmf_uri { // !generate-lifecycle
+    char *host;
     char *borrowed;  // !lifecycle:none   /* not freed — caller owns this */
 };
 ```
@@ -165,7 +153,7 @@ struct libnvmf_discovery_args { // !generate-accessors !generate-lifecycle
 };
 ```
 
-This generates `libnvmf_discovery_args_init_defaults()`, which sets each annotated field to its default value. If `generate-lifecycle` is also present, the constructor automatically calls `init_defaults()` after allocation. This lets callers re-initialise an existing instance without freeing and reallocating it.
+This generates `libnvmf_discovery_args_init_defaults()`, which sets each annotated field to its default value. If `generate-lifecycle` is also present, the constructor automatically calls `init_defaults()` after allocation.
 
 The value is emitted verbatim, so any valid C expression — integer literals, macro names, enum constants — is accepted.
 
@@ -177,10 +165,10 @@ The value is emitted verbatim, so any valid C expression — integer literals, m
 | ------------------------------------------------------ | ------------ | --------------------------------------------------------------------------------------- |
 | `// !generate-accessors`                               | struct brace | Include struct; defaults: `read=generated, write=generated`                             |
 | `// !generate-accessors:read=M,write=M`                | struct brace | Include struct; set struct-level default for each axis                                  |
-| `// !generate-accessors:read=M`                        | struct brace | Partial; other axis inherits the built-in default (`generated`)                         |
-| `// !generate-lifecycle`                               | struct brace | Generate constructor + destructor                                                       |
+| `// !generate-accessors:read=M`                        | struct brace | Partial metadata; other axis inherits the built-in default (`generated`)                |
+| `// !generate-lifecycle`                               | struct brace | Generate constructor + destructor (no metadata)                                         |
 | `// !access:read=M,write=M`                            | member line  | Override struct-level defaults for this member                                          |
-| `// !access:read=M`                                    | member line  | Partial override; other axis is inherited from the struct-level default                 |
+| `// !access:read=M`                                    | member line  | Partial metadata; other axis is inherited from the struct-level default                 |
 | `// !lifecycle:none`                                   | member line  | Exclude member from destructor free logic                                               |
 | `// !default:VALUE`                                    | member line  | Set field to VALUE in `init_defaults()`                                                 |
 | `const` qualifier on member                            | member type  | Force `write=none`; suppress free in destructor                                         |
@@ -191,148 +179,122 @@ In the table above, `M` is one of `generated`, `custom`, or `none`.
 
 ## Example
 
-### Header file (`person.h`)
+The following example is based on `struct libnvmf_uri` from
+`libnvme/src/nvme/private-fabrics.h`. The struct as defined in that file carries
+only `// !generate-accessors`; `!generate-lifecycle` and `// !default:4420` are
+added here to illustrate all features in one place.
+
+### Annotated header
 
 ```c
-struct person { // !generate-accessors
-    char *name;
-    int age;
-    const char *id;       /* const → getter only, no annotation needed */
-    char *secret;         // !access:read=none,write=none
-    char *role;           // !access:write=none      /* read inherits: generated */
-};
-
-struct car { // !generate-accessors
-    char *model;
-    int year;
-    const char *vin;
+/* Based on libnvme/src/nvme/private-fabrics.h */
+struct libnvmf_uri { // !generate-accessors !generate-lifecycle
+    char *scheme;
+    char *protocol;
+    char *userinfo;
+    char *host;
+    int port;              // !default:4420
+    char **path_segments;
+    char *query;
+    char *fragment;        // !access:write=none
 };
 ```
+
+What each member demonstrates:
+
+- `scheme`, `protocol`, `userinfo`, `host`, `query` — `char *` with both getter and setter; the setter stores a `strdup()` copy and frees the old value.
+- `port` — scalar `int` with `!default:4420`; triggers generation of `libnvmf_uri_init_defaults()`.
+- `path_segments` — `char **` NULL-terminated string array; setter deep-copies all elements; destructor frees each element and the container.
+- `fragment` — `!access:write=none` yields a getter only; no setter is emitted.
+- `!generate-lifecycle` — adds `libnvmf_uri_new()` and `libnvmf_uri_free()`; the constructor calls `init_defaults()` automatically.
 
 ### Command
 
 ```
-python3 generate-accessors.py person.h
+python3 generate-accessors.py \
+    --h-out  src/nvme/accessors-fabrics.h \
+    --c-out  src/nvme/accessors-fabrics.c \
+    --ld-out src/accessors-fabrics.ld \
+    src/nvme/private-fabrics.h
 ```
 
-### Generated `accessors.h`
+### Generated `accessors-fabrics.h`
 
 ```c
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 /* ... banner ... */
 
-#ifndef _ACCESSORS_H_
-#define _ACCESSORS_H_
+#ifndef _ACCESSORS_FABRICS_H_
+#define _ACCESSORS_FABRICS_H_
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdint.h>
-
-#include <nvme/types.h>
+/* ... standard includes ... */
 
 /* Forward declarations. These are internal (opaque) structs. */
-struct person;
-struct car;
+struct libnvmf_uri;
 
 /****************************************************************************
- * Accessors for: struct person
+ * Accessors for: struct libnvmf_uri
  ****************************************************************************/
 
 /**
- * person_set_name() - Set name.
- * @p: The &struct person instance to update.
- * @name: New string; a copy is stored. Pass NULL to clear.
- */
-void person_set_name(struct person *p, const char *name);
-
-/**
- * person_get_name() - Get name.
- * @p: The &struct person instance to query.
+ * libnvmf_uri_new() - Allocate and initialise a libnvmf_uri object.
+ * @pp: On success, *pp is set to the newly allocated object.
  *
- * Return: The value of the name field, or NULL if not set.
- */
-const char *person_get_name(const struct person *p);
-
-/**
- * person_set_age() - Set age.
- * @p: The &struct person instance to update.
- * @age: Value to assign to the age field.
- */
-void person_set_age(struct person *p, int age);
-
-/**
- * person_get_age() - Get age.
- * @p: The &struct person instance to query.
+ * Allocates a zeroed &struct libnvmf_uri on the heap.
+ * The caller must release it with libnvmf_uri_free().
  *
- * Return: The value of the age field.
+ * Return: 0 on success, -EINVAL if @pp is NULL,
+ *         -ENOMEM if allocation fails.
  */
-int person_get_age(const struct person *p);
+int libnvmf_uri_new(struct libnvmf_uri **pp);
 
 /**
- * person_get_id() - Get id.
- * @p: The &struct person instance to query.
+ * libnvmf_uri_free() - Release a libnvmf_uri object.
+ * @p: Object previously returned by libnvmf_uri_new().
+ *     A NULL pointer is silently ignored.
+ */
+void libnvmf_uri_free(struct libnvmf_uri *p);
+
+/**
+ * libnvmf_uri_init_defaults() - Apply default values to a libnvmf_uri instance.
+ * @p: The &struct libnvmf_uri instance to initialise.
  *
- * Return: The value of the id field, or NULL if not set.
+ * Sets each field that carries a !default annotation to its compile-time
+ * default value. Called automatically by libnvmf_uri_new() but may also be
+ * called directly to reset an instance to its defaults.
  */
-const char *person_get_id(const struct person *p);
+void libnvmf_uri_init_defaults(struct libnvmf_uri *p);
 
-/**
- * person_get_role() - Get role.
- * @p: The &struct person instance to query.
- *
- * Return: The value of the role field, or NULL if not set.
- */
-const char *person_get_role(const struct person *p);
+void libnvmf_uri_set_scheme(struct libnvmf_uri *p, const char *scheme);
+const char *libnvmf_uri_get_scheme(const struct libnvmf_uri *p);
 
-/****************************************************************************
- * Accessors for: struct car
- ****************************************************************************/
+void libnvmf_uri_set_protocol(struct libnvmf_uri *p, const char *protocol);
+const char *libnvmf_uri_get_protocol(const struct libnvmf_uri *p);
 
-/**
- * car_set_model() - Set model.
- * @p: The &struct car instance to update.
- * @model: New string; a copy is stored. Pass NULL to clear.
- */
-void car_set_model(struct car *p, const char *model);
+void libnvmf_uri_set_userinfo(struct libnvmf_uri *p, const char *userinfo);
+const char *libnvmf_uri_get_userinfo(const struct libnvmf_uri *p);
 
-/**
- * car_get_model() - Get model.
- * @p: The &struct car instance to query.
- *
- * Return: The value of the model field, or NULL if not set.
- */
-const char *car_get_model(const struct car *p);
+void libnvmf_uri_set_host(struct libnvmf_uri *p, const char *host);
+const char *libnvmf_uri_get_host(const struct libnvmf_uri *p);
 
-/**
- * car_set_year() - Set year.
- * @p: The &struct car instance to update.
- * @year: Value to assign to the year field.
- */
-void car_set_year(struct car *p, int year);
+void libnvmf_uri_set_port(struct libnvmf_uri *p, int port);
+int libnvmf_uri_get_port(const struct libnvmf_uri *p);
 
-/**
- * car_get_year() - Get year.
- * @p: The &struct car instance to query.
- *
- * Return: The value of the year field.
- */
-int car_get_year(const struct car *p);
+void libnvmf_uri_set_path_segments(struct libnvmf_uri *p,
+		const char *const *path_segments);
+const char *const *libnvmf_uri_get_path_segments(
+		const struct libnvmf_uri *p);
 
-/**
- * car_get_vin() - Get vin.
- * @p: The &struct car instance to query.
- *
- * Return: The value of the vin field, or NULL if not set.
- */
-const char *car_get_vin(const struct car *p);
+void libnvmf_uri_set_query(struct libnvmf_uri *p, const char *query);
+const char *libnvmf_uri_get_query(const struct libnvmf_uri *p);
 
-#endif /* _ACCESSORS_H_ */
+/* fragment: getter only — !access:write=none suppresses the setter */
+const char *libnvmf_uri_get_fragment(const struct libnvmf_uri *p);
+
+#endif /* _ACCESSORS_FABRICS_H_ */
 ```
 
-> **Note:** The `secret` member is absent because of `// !access:read=none,write=none` — with neither axis set to `generated`, the member leaves no trace in the output. The `role` member has only a getter because its `write=none` annotation (combined with the inherited `read=generated`) yields a read-only accessor. The `id` and `vin` members have only getters because they are declared `const`.
-
-### Generated `accessors.c`
+### Generated `accessors-fabrics.c`
 
 ```c
 // SPDX-License-Identifier: LGPL-2.1-or-later
@@ -340,271 +302,154 @@ const char *car_get_vin(const struct car *p);
 
 #include <stdlib.h>
 #include <string.h>
-#include "accessors.h"
-
-#include "person.h"
+#include "accessors-fabrics.h"
+#include "private-fabrics.h"
 #include "compiler-attributes.h"
 
 /****************************************************************************
- * Accessors for: struct person
+ * Accessors for: struct libnvmf_uri
  ****************************************************************************/
 
-__public void person_set_name(struct person *p, const char *name)
+__public int libnvmf_uri_new(struct libnvmf_uri **pp)
 {
-	free(p->name);
-	p->name = name ? strdup(name) : NULL;
+	if (!pp)
+		return -EINVAL;
+	*pp = calloc(1, sizeof(struct libnvmf_uri));
+	if (!*pp)
+		return -ENOMEM;
+	libnvmf_uri_init_defaults(*pp);
+	return 0;
 }
 
-__public const char *person_get_name(const struct person *p)
+__public void libnvmf_uri_free(struct libnvmf_uri *p)
 {
-	return p->name;
+	if (!p)
+		return;
+	free(p->scheme);
+	free(p->protocol);
+	free(p->userinfo);
+	free(p->host);
+	if (p->path_segments) {
+		size_t i;
+		for (i = 0; p->path_segments[i]; i++)
+			free(p->path_segments[i]);
+		free(p->path_segments);
+	}
+	free(p->query);
+	free(p->fragment);
+	free(p);
 }
 
-__public void person_set_age(struct person *p, int age)
+__public void libnvmf_uri_init_defaults(struct libnvmf_uri *p)
 {
-	p->age = age;
+	if (!p)
+		return;
+	p->port = 4420;
 }
 
-__public int person_get_age(const struct person *p)
+__public void libnvmf_uri_set_scheme(struct libnvmf_uri *p,
+		const char *scheme)
 {
-	return p->age;
+	free(p->scheme);
+	p->scheme = scheme ? strdup(scheme) : NULL;
 }
 
-__public const char *person_get_id(const struct person *p)
+__public const char *libnvmf_uri_get_scheme(const struct libnvmf_uri *p)
 {
-	return p->id;
+	return p->scheme;
 }
 
-__public const char *person_get_role(const struct person *p)
+/* ... similar implementations for protocol, userinfo, host, query ... */
+
+__public void libnvmf_uri_set_port(struct libnvmf_uri *p, int port)
 {
-	return p->role;
+	p->port = port;
 }
 
-/****************************************************************************
- * Accessors for: struct car
- ****************************************************************************/
-
-__public void car_set_model(struct car *p, const char *model)
+__public int libnvmf_uri_get_port(const struct libnvmf_uri *p)
 {
-	free(p->model);
-	p->model = model ? strdup(model) : NULL;
+	return p->port;
 }
 
-__public const char *car_get_model(const struct car *p)
+__public void libnvmf_uri_set_path_segments(struct libnvmf_uri *p,
+		const char *const *path_segments)
 {
-	return p->model;
+	char **new_array = NULL;
+	size_t i;
+
+	if (path_segments) {
+		for (i = 0; path_segments[i]; i++)
+			;
+
+		new_array = calloc(i + 1, sizeof(char *));
+		if (new_array != NULL) {
+			for (i = 0; path_segments[i]; i++) {
+				new_array[i] = strdup(path_segments[i]);
+				if (!new_array[i]) {
+					while (i > 0)
+						free(new_array[--i]);
+					free(new_array);
+					new_array = NULL;
+					break;
+				}
+			}
+		}
+	}
+
+	for (i = 0; p->path_segments && p->path_segments[i]; i++)
+		free(p->path_segments[i]);
+	free(p->path_segments);
+	p->path_segments = new_array;
 }
 
-__public void car_set_year(struct car *p, int year)
+__public const char *const *libnvmf_uri_get_path_segments(
+		const struct libnvmf_uri *p)
 {
-	p->year = year;
+	return (const char *const *)p->path_segments;
 }
 
-__public int car_get_year(const struct car *p)
+__public const char *libnvmf_uri_get_fragment(const struct libnvmf_uri *p)
 {
-	return p->year;
-}
-
-__public const char *car_get_vin(const struct car *p)
-{
-	return p->vin;
+	return p->fragment;
 }
 ```
 
-### Generated `accessors.ld`
+> **Notes:**
+> - `fragment` has no setter — `!access:write=none` suppresses it — but the destructor still frees it because `!lifecycle:none` was not set.
+> - `path_segments` (`char **`) setter: builds the new deep-copy first, then frees the old array. This ensures the struct is always in a valid state even if `strdup` fails partway through.
+> - `port` (`int`) receives a direct assignment in `init_defaults()`. For `char *` members with a string default, `init_defaults()` uses a compare-before-replace pattern: if the current value already matches the default (`strcmp`), nothing happens; otherwise the old value is freed and the default is `strdup()`'d.
+> - The constructor calls `init_defaults()` after `calloc()`, so freshly allocated objects start at their defined defaults rather than zero.
+
+### Generated `accessors-fabrics.ld`
 
 ```
 # SPDX-License-Identifier: LGPL-2.1-or-later
 /* ... banner ... */
 
-LIBNVME_ACCESSORS_3 {
+LIBNVMF_ACCESSORS_3 {
 	global:
-		person_get_name;
-		person_set_name;
-		person_get_age;
-		person_set_age;
-		person_get_id;
-		person_get_role;
-		car_get_model;
-		car_set_model;
-		car_get_year;
-		car_set_year;
-		car_get_vin;
+		libnvmf_uri_new;
+		libnvmf_uri_free;
+		libnvmf_uri_init_defaults;
+		libnvmf_uri_get_scheme;
+		libnvmf_uri_set_scheme;
+		libnvmf_uri_get_protocol;
+		libnvmf_uri_set_protocol;
+		libnvmf_uri_get_userinfo;
+		libnvmf_uri_set_userinfo;
+		libnvmf_uri_get_host;
+		libnvmf_uri_set_host;
+		libnvmf_uri_get_port;
+		libnvmf_uri_set_port;
+		libnvmf_uri_get_path_segments;
+		libnvmf_uri_set_path_segments;
+		libnvmf_uri_get_query;
+		libnvmf_uri_set_query;
+		libnvmf_uri_get_fragment;
 };
 ```
 
-> **Note:** Only symbols for members that have accessors generated appear in the linker script. The `secret` member (excluded via `// !access:read=none,write=none`) and a write-only member (e.g. `// !access:read=none`) would have no getter entry. The version node name `LIBNVME_ACCESSORS_3` is hardcoded in the generator.
-
-------
-
-## Lifecycle example
-
-### Header file (`person.h`) — with lifecycle
-
-Adding `// !generate-lifecycle` to the same struct enables constructor and destructor generation alongside the accessors:
-
-```c
-struct person { // !generate-accessors !generate-lifecycle
-    char *name;
-    int age;
-    const char *id;       /* const → getter only; NOT freed by destructor */
-    char *secret;         // !access:read=none,write=none
-    char *role;           // !access:write=none      /* read inherits: generated */
-};
-```
-
-### Additional declarations in `accessors.h`
-
-The constructor and destructor declarations are appended after the accessor declarations for the same struct:
-
-```c
-/**
- * person_new() - Allocate and initialise a person object.
- * @pp: On success, *pp is set to the newly allocated object.
- *
- * Allocates a zeroed &struct person on the heap.
- * The caller must release it with person_free().
- *
- * Return: 0 on success, -EINVAL if @pp is NULL,
- *         -ENOMEM if allocation fails.
- */
-int person_new(struct person **pp);
-
-/**
- * person_free() - Release a person object.
- * @p: Object previously returned by person_new().
- *     A NULL pointer is silently ignored.
- */
-void person_free(struct person *p);
-```
-
-### Additional implementations in `accessors.c`
-
-```c
-__public int person_new(struct person **pp)
-{
-	if (!pp)
-		return -EINVAL;
-	*pp = calloc(1, sizeof(struct person));
-	return *pp ? 0 : -ENOMEM;
-}
-
-__public void person_free(struct person *p)
-{
-	if (!p)
-		return;
-	free(p->name);
-	free(p->secret);
-	free(p->role);
-	free(p);
-}
-```
-
-> **Notes:**
-> - `id` is `const char *` — the destructor never frees `const` members.
-> - `secret` is `// !access:read=none,write=none` but is still freed — `lifecycle:none` is the annotation to suppress a free.
-> - `age` is `int` — only `char *` and `char **` members are freed.
-
-### Additional entries in `accessors.ld`
-
-```
-		person_new;
-		person_free;
-```
-
-------
-
-## Defaults example
-
-```c
-struct conn_opts { // !generate-accessors !generate-lifecycle
-    int port;            // !default:4420
-    char *transport;     // !default:"tcp"
-    const char *trsvcid; // !default:"4420"
-};
-```
-
-### Generated declaration in `accessors.h`
-
-```c
-/**
- * conn_opts_init_defaults() - Apply default values to a conn_opts instance.
- * @p: The &struct conn_opts instance to initialise.
- *
- * Sets each field that carries a default annotation to its
- * compile-time default value.  Called automatically by
- * conn_opts_new() but may also be called directly to reset
- * an instance to its defaults without reallocating it.
- */
-void conn_opts_init_defaults(struct conn_opts *p);
-```
-
-### Generated implementation in `accessors.c`
-
-Note how `transport` (`char *`) is assigned via `strdup()` — the struct owns
-the memory and the destructor frees it. In contrast, `trsvcid` (`const char *`)
-receives a plain assignment to a string literal — no heap allocation, no free.
-
-```c
-__public void conn_opts_init_defaults(struct conn_opts *p)
-{
-	if (!p)
-		return;
-	p->port = 4420;
-	if (!p->transport || strcmp(p->transport, "tcp") != 0) {
-		free(p->transport);
-		p->transport = strdup("tcp");
-	}
-	p->trsvcid = "4420";
-}
-
-__public int conn_opts_new(struct conn_opts **pp)
-{
-	if (!pp)
-		return -EINVAL;
-	*pp = calloc(1, sizeof(struct conn_opts));
-	if (!*pp)
-		return -ENOMEM;
-	conn_opts_init_defaults(*pp);
-	return 0;
-}
-
-__public void conn_opts_free(struct conn_opts *p)
-{
-	if (!p)
-		return;
-	free(p->transport);
-	free(p);
-}
-```
-
-> **Notes:**
-> - Scalar members (`int`, `__u8`, etc.) are assigned directly.
-> - `char *` members use a compare-before-replace pattern: if the current
->   value already matches the default (`strcmp`), nothing happens; otherwise
->   the old value is freed and the new default is `strdup()`'d. This makes
->   `init_defaults()` safe to call on an already-initialised struct without
->   leaking memory.
-> - `const char *` members are assigned directly (no `strdup`) since they
->   are assumed to point to externally owned storage. They are also not
->   freed by the destructor, as seen in `conn_opts_free` — `trsvcid` has
->   no `free()` call.
-> - The constructor (`_new`) calls `init_defaults()` after `calloc()`, so
->   freshly allocated structs always start at their defined defaults rather
->   than zero.
-
-### Additional entries in `accessors.ld`
-
-```
-		conn_opts_new;
-		conn_opts_free;
-		conn_opts_init_defaults;
-		conn_opts_get_port;
-		conn_opts_set_port;
-		conn_opts_get_transport;
-		conn_opts_set_transport;
-		conn_opts_get_trsvcid;
-```
+> **Note:** `fragment` has no `set` entry because `!access:write=none` suppresses the setter. The version node name (`LIBNVMF_ACCESSORS_3`) is assigned by the maintainer in the `.ld` file; the generator reports symbol drift but does not overwrite it.
 
 ------
 
@@ -613,25 +458,3 @@ __public void conn_opts_free(struct conn_opts *p)
 - `typedef struct` is not supported.
 - Nested structs (a `struct` member whose type is also a `struct`) are skipped.
 - Only `char *` and `char **` pointer members are supported; other pointer types are skipped.
-
-------
-
-## Notes
-
-1. **Dynamic strings** (`char *`) — setters store a `strdup()` copy; passing `NULL` clears the field.
-2. **String arrays** (`char **`) — setters deep-copy NULL-terminated arrays (each element and the container).
-3. **Fixed char arrays** (`char foo[N]`) — setters use `snprintf`, always NUL-terminated.
-4. **`const` members** — force `write=none` regardless of the annotation: the generator cannot emit a setter for a member the C type system forbids from being assigned. `const char *` members are also skipped by the destructor (they are assumed to point to externally owned storage).
-5. **Access model — two independent axes** — every member has a `read` axis (getter) and a `write` axis (setter), each taking one of `generated`, `custom`, or `none`. Only `generated` produces output in this generator; `custom` and `none` are semantic declarations for downstream consumers (Python-binding generator, `nvme.i` consistency check).
-6. **`// !access:read=M,write=M`** — member-level override for either or both axes. Partial specs are allowed: any axis not named is inherited from the struct-level default, which is in turn drawn from the struct's `// !generate-accessors[:spec]` annotation (or from the built-in default `generated` when the struct has none).
-7. **Struct-level default** — `// !generate-accessors:read=M,write=M` sets the default mode for each axis for every member of the struct. Partial struct-level specs inherit the built-in default (`generated`) for any axis they do not name. Bare `// !generate-accessors` is shorthand for `read=generated, write=generated`.
-8. **Members with no `generated` axis are skipped entirely** — if the effective modes are `read=custom|none` AND `write=custom|none` (no axis set to `generated`), the generator emits nothing for that field. The annotation is still meaningful for downstream consumers, which read the private header directly.
-9. **Struct-level overrides cascade, member-level overrides win** — the cascade is: built-in default (`generated`) → struct-level spec → member-level spec. Each level only overrides the axes it names; un-named axes fall through to the level above.
-10. **`// !generate-lifecycle`** — generates `foo_new()` (constructor) and `foo_free()` (destructor). Can appear on the same line as `generate-accessors`. A struct needs only one of the two annotations.
-11. **`// !lifecycle:none`** — excludes a member from the destructor's free logic. Use this when the struct does not own the pointed-to memory.
-12. **Destructor NULL safety** — `free(NULL)` is a no-op per the C standard, so destructors with no string members to dereference emit only `free(p)` with no NULL guard. Destructors that do dereference `p->field` guard with `if (!p) return;` first. In both cases passing NULL to the destructor is safe.
-13. **`// !default:VALUE`** — generates `foo_init_defaults()` that sets the annotated field to `VALUE`. Scalar members are assigned directly. `char *` members use a compare-before-replace pattern: if the current value already equals the default (`strcmp`), nothing happens; otherwise the old value is freed and the new default is `strdup()`'d. `const char *` members are assigned directly (no `strdup`). Quoted string values (`"foo bar"`) may contain spaces.
-14. **`init_defaults()` and `new()`** — when a struct has both `generate-lifecycle` and at least one `// !default:`, the constructor calls `init_defaults()` after `calloc()`. Without `generate-lifecycle`, `init_defaults()` is still generated as a standalone function.
-15. **`init_defaults()` for re-initialisation** — callers can call `init_defaults()` directly on an already-allocated instance to reset scalar fields to their defaults without freeing and reallocating the struct.
-16. **`--prefix`** — prepended to every function name (e.g. `--prefix nvme_` turns `ctrl_set_name` into `nvme_ctrl_set_name`).
-17. **Line length** — generated code is automatically wrapped to stay within the 80-column limit required by `checkpatch.pl`.

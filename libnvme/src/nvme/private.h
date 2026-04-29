@@ -196,7 +196,7 @@ struct libnvme_stat {
 	double ts_ms;			/* timestamp when the stat is updated */
 };
 
-struct libnvme_path {		// !generate-accessors:read=custom,write=none
+struct libnvme_path {		// !generate-accessors:read=generated,write=none
 	struct list_node entry;
 	struct list_node nentry;
 
@@ -212,15 +212,15 @@ struct libnvme_path {		// !generate-accessors:read=custom,write=none
 	struct libnvme_ctrl *c;
 	struct libnvme_ns *n;
 
-	char *name;		       // !access:read=generated,write=generated
-	char *sysfs_dir;	       // !access:read=generated,write=generated
-	char *ana_state;
-	char *numa_nodes;
-	int grpid;		       // !access:read=generated,write=generated
-	int queue_depth;
-	long multipath_failover_count;
-	long command_retry_count;
-	long command_error_count;
+	char *name;		       // !access:write=generated
+	char *sysfs_dir;	       // !access:write=generated
+	char *ana_state;	       // !access:read=custom
+	char *numa_nodes;	       // !access:read=custom
+	int grpid;		       // !access:write=generated
+	int queue_depth;	       // !access:read=custom
+	long multipath_failover_count; // !access:read=custom
+	long command_retry_count;      // !access:read=custom
+	long command_error_count;      // !access:read=custom
 };
 
 struct libnvme_ns_head {
@@ -230,7 +230,7 @@ struct libnvme_ns_head {
 	char *sysfs_dir;
 };
 
-struct libnvme_ns {			// !generate-accessors
+struct libnvme_ns {  // !generate-accessors:read=generated,write=none !generate-python:alias=Namespace
 	struct list_node entry;
 
 	struct libnvme_subsystem *s;
@@ -245,33 +245,33 @@ struct libnvme_ns {			// !generate-accessors
 	 * Managed exclusively by the stat subsystem — do not access directly.
 	 */
 	struct libnvme_stat stat[2];
-	unsigned int curr_idx;		     // !access:read=none,write=none
-	bool diffstat;			     // !access:read=none,write=none
+	unsigned int curr_idx;		     // !access:read=none
+	bool diffstat;			     // !access:read=none
 
 	struct libnvme_transport_handle *hdl;
-	__u32 nsid;
+	__u32 nsid;			     // !access:write=generated
 	char *name;
-	char *generic_name;		     // !access:write=none
-	char *sysfs_dir;
+	char *generic_name;
+	char *sysfs_dir;		     // !access:write=generated
 
-	int lba_shift;
-	int lba_size;
-	int meta_size;
-	uint64_t lba_count;
-	uint64_t lba_util;
+	int lba_shift;			     // !access:write=generated
+	int lba_size;			     // !access:write=generated
+	int meta_size;			     // !access:write=generated
+	uint64_t lba_count;		     // !access:write=generated
+	uint64_t lba_util;		     // !access:write=generated
 
-	uint8_t eui64[8];		     // !access:write=none
-	uint8_t nguid[16];		     // !access:write=none
-	unsigned char uuid[NVME_UUID_LEN];   // !access:read=none,write=none
-	enum nvme_csi csi;		     // !access:write=none
+	uint8_t eui64[8];
+	uint8_t nguid[16];
+	unsigned char uuid[NVME_UUID_LEN];   // !access:read=none
+	enum nvme_csi csi;
 
-	long command_retry_count;	     // !access:read=custom,write=none
-	long command_error_count;	     // !access:read=custom,write=none
-	long requeue_no_usable_path_count;   // !access:read=custom,write=none
-	long fail_no_available_path_count;   // !access:read=custom,write=none
+	long command_retry_count;	     // !access:read=custom
+	long command_error_count;	     // !access:read=custom
+	long requeue_no_usable_path_count;   // !access:read=custom
+	long fail_no_available_path_count;   // !access:read=custom
 };
 
-struct libnvme_ctrl {		// !generate-accessors:read=generated,write=none
+struct libnvme_ctrl {  // !generate-accessors:read=generated,write=none !generate-python:alias=Ctrl
 	struct list_node entry;
 	struct list_head paths;
 	struct list_head namespaces;
@@ -314,7 +314,7 @@ struct libnvme_ctrl {		// !generate-accessors:read=generated,write=none
 	struct libnvme_fabrics_config cfg;
 };
 
-struct libnvme_subsystem {	// !generate-accessors:read=generated,write=none
+struct libnvme_subsystem {  // !generate-accessors:read=generated,write=none !generate-python:alias=Subsystem
 	struct list_node entry;
 	struct list_head ctrls;
 	struct list_head namespaces;
@@ -331,22 +331,22 @@ struct libnvme_subsystem {	// !generate-accessors:read=generated,write=none
 	char *iopolicy;			// !access:read=custom
 };
 
-struct libnvme_host {			// !generate-accessors
+struct libnvme_host {  // !generate-accessors:read=generated,write=none !generate-python:alias=Host
 	struct list_node entry;
 	struct list_head subsystems;
 	struct libnvme_global_ctx *ctx;
 
-	char *hostnqn;			// !access:read=generated,write=none
-	char *hostid;			// !access:read=generated,write=none
-	char *dhchap_host_key;
-	char *hostsymname;
+	char *hostnqn;
+	char *hostid;
+	char *dhchap_host_key;		// !access:write=generated
+	char *hostsymname;		// !access:write=generated
 
 	/* pdc_enabled and pdc_enabled_valid work together. pdc_enabled_valid,
 	 * when true, indicates that pdc_enabled has been explicitly defined.
 	 * pdc_enabled_valid is internal meta-data for pdc_enabled.
 	 */
 	bool pdc_enabled;		// !access:read=none,write=custom
-	bool pdc_enabled_valid;		// !access:read=none,write=none
+	bool pdc_enabled_valid;		// !access:read=none
 };
 
 struct libnvme_fabric_options { // !generate-accessors
@@ -388,7 +388,7 @@ enum libnvme_io_uring_state {
 	LIBNVME_IO_URING_STATE_AVAILABLE,
 };
 
-struct libnvme_global_ctx {
+struct libnvme_global_ctx { // !generate-python:alias=GlobalCtx
 	char *config_file;
 	char *application;
 	struct list_head endpoints; /* MI endpoints */

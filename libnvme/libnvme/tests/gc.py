@@ -5,16 +5,16 @@
 import gc
 from libnvme import nvme
 
-ctx = nvme.global_ctx()
+ctx = nvme.GlobalCtx()
 ctx.log_level('debug')
 print(f'ctx: {ctx}')
 
-host = nvme.host(ctx)
+host = nvme.Host(ctx)
 print(f'host: {host}')
 
 ctrls = []
 for i in range(10):
-    ctrl = nvme.ctrl(ctx, {
+    ctrl = nvme.Ctrl(ctx, {
         'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME,
         'transport': 'loop',
     })

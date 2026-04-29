@@ -19,13 +19,14 @@
 # or removed so the maintainer knows exactly what to change.
 #
 # Arguments (supplied by the Meson run_target):
-#   $1      path to the python3 interpreter
-#   $2      path to generate-accessors.py
-#   $3      full path of the output .h file
-#   $4      full path of the output .c file
-#   $5      full path of the output .ld file
-#   $6 ...  one or more input headers scanned for
-#           // !generate-accessors structs
+#   $1             path to the python3 interpreter
+#   $2             path to generate-accessors.py
+#   $3             full path of the output .h file
+#   $4             full path of the output .c file
+#   $5             full path of the output .ld file
+#   [--swig-out F] optional: full path of the output SWIG fragment (.i file)
+#   $6 (or $8) ... one or more input headers scanned for
+#                  // !generate-accessors and // !generate-python structs
 
 set -euo pipefail
 
@@ -35,6 +36,12 @@ H_OUT="${3:?missing .h output path}"
 C_OUT="${4:?missing .c output path}"
 LD_OUT="${5:?missing .ld output path}"
 shift 5
+
+SWIG_OUT=""
+if [ "${1-}" = "--swig-out" ]; then
+    SWIG_OUT="${2:?--swig-out requires a path argument}"
+    shift 2
+fi
 
 if [ $# -eq 0 ]; then
     echo "error: no input headers provided" >&2
@@ -50,6 +57,7 @@ BASE="${LABEL%.h}"            # e.g. "accessors"    or "nvmf-accessors"
 TMP_H="$TMPDIR_WORK/${BASE}.h"
 TMP_C="$TMPDIR_WORK/${BASE}.c"
 TMP_LD="$TMPDIR_WORK/${BASE}.ld"
+TMP_I="$TMPDIR_WORK/${BASE}.i"
 
 # ---------------------------------------------------------------------------
 # Helper: update a source file atomically when content changes.
@@ -115,15 +123,21 @@ check_ld_drift() {
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "--- ${BASE}: begin generation ---"
 echo ""
+
+SWIG_ARGS=()
+[ -n "$SWIG_OUT" ] && SWIG_ARGS=(--swig-out "$TMP_I")
+
 "$PYTHON" "$GENERATOR" \
     --h-out  "$TMP_H"  \
     --c-out  "$TMP_C"  \
     --ld-out "$TMP_LD" \
+    "${SWIG_ARGS[@]}"  \
     "$@"
 
 CHANGED=0
 update_if_changed "$TMP_H" "$H_OUT"
 update_if_changed "$TMP_C" "$C_OUT"
+[ -n "$SWIG_OUT" ] && update_if_changed "$TMP_I" "$SWIG_OUT"
 echo ""
 if [ "$CHANGED" -gt 0 ]; then
     printf "%d file(s) updated in %s\n" "$CHANGED" "$(dirname "$H_OUT")"
