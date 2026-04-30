@@ -13,11 +13,17 @@ jobs:
     name: checkpatch review
     runs-on: ubuntu-latest
     steps:
-    - name: 'Calculate PR commits + 1'
-      run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> $GITHUB_ENV
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
+    - name: Fetch checkpatch.pl
+      run: |
+        curl -sSf \
+          https://raw.githubusercontent.com/torvalds/linux/master/scripts/checkpatch.pl \
+          -o checkpatch.pl
+
     - name: Run checkpatch review
-      uses: webispy/checkpatch-action@58374fe5bb03358b23d3d6871e2ff290ce77fcd2 # v9
+      run: |
+        git format-patch --stdout origin/${{ github.base_ref }}..HEAD \
+          | perl checkpatch.pl -
