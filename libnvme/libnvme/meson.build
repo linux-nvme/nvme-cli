@@ -60,19 +60,22 @@ if want_python
         },
     )
 
-    # Little hack to copy file __init__.py to the build directory. 
-    # This is needed to create the proper directory layout to run the tests.
-    # It's a hack because we don't really "configure" file __init__.py and we
-    # could simply install directly from the source tree with:
-    #   python3.install_sources(['__init__.py', ], pure:false, subdir:'libnvme')
-    # However, since we need __init__.py in the build directory to run the tests
-    # we resort to this hack to copy it.
-    configure_file(
-        input:  '__init__.py', 
-        output: '__init__.py',
-        configuration: conf,
-        install_dir: python3.get_install_dir(pure: false, subdir: 'libnvme'),
-    )
+    # Little hack to copy a list of files [__init__.py, etc.] to the build
+    # directory. This is needed to create the proper directory layout to run the
+    # tests. It's a hack because we don't really "configure" files and we could
+    # simply install directly from the source tree with:
+    #   python3.install_sources(files, pure:false, subdir:'libnvme')
+    # However, since we need these files in the build directory to run the tests
+    # we resort to this hack to copy them.
+    files = ['__init__.py', '_exceptions.py']
+    foreach file: files
+        configure_file(
+            input:  file,
+            output: file,
+            configuration: conf,
+            install_dir: python3.get_install_dir(pure: false, subdir: 'libnvme'),
+        )
+    endforeach
 
     # Set the PYTHONPATH so that we can run the 
     # tests directly from the build directory.
