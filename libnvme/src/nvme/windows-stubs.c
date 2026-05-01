@@ -175,34 +175,6 @@ __public libnvme_ctrl_t libnvme_ns_get_ctrl(libnvme_ns_t n)
 	return NULL;
 }
 
-__public enum nvme_csi libnvme_ns_get_csi(libnvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return 0;
-}
-
-__public const uint8_t *libnvme_ns_get_eui64(libnvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return NULL;
-}
-
-__public const uint8_t *libnvme_ns_get_nguid(libnvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return NULL;
-}
-
-__public void libnvme_ns_get_uuid(libnvme_ns_t n, unsigned char out[NVME_UUID_LEN])
-{
-	stub_log(__func__);
-	(void)n;
-	(void)out;
-}
-
 int libnvme_ns_get_transport_handle(libnvme_ns_t n,
 		struct libnvme_transport_handle **hdl)
 {
@@ -219,13 +191,6 @@ __public int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns)
 	(void)ns;
 	errno = ENOTSUP;
 	return -1;
-}
-
-__public const char *libnvme_ns_get_generic_name(libnvme_ns_t n)
-{
-	stub_log(__func__);
-	(void)n;
-	return "";
 }
 
 __public libnvme_ctrl_t libnvme_path_get_ctrl(libnvme_path_t p)
@@ -422,6 +387,14 @@ __public const char *libnvme_ns_get_firmware(libnvme_ns_t n)
 	stub_log(__func__);
 	(void)n;
 	return "";
+}
+
+__public void libnvme_ns_copy_uuid(libnvme_ns_t n,
+		unsigned char out[NVME_UUID_LEN])
+{
+	stub_log(__func__);
+	(void)n;
+	(void)out;
 }
 
 __public const char *libnvme_ns_get_model(libnvme_ns_t n)
