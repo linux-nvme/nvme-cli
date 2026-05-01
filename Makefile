@@ -91,3 +91,21 @@ static:
 		-Dexamples=false
 
 	meson compile -C ${BUILD-DIR}
+
+CHECKPATCH     := /tmp/checkpatch.pl
+CHECKPATCH_URL := https://raw.githubusercontent.com/torvalds/linux/master/scripts/checkpatch.pl
+BASE ?= master
+
+# make checkpatch              → check all commits on branch vs $(BASE)
+# make checkpatch BASE=HEAD~3  → check last 3 commits only
+.PHONY: checkpatch
+checkpatch:
+	@[ -f ${CHECKPATCH} ] || curl -sSf ${CHECKPATCH_URL} -o ${CHECKPATCH}
+	git format-patch --stdout ${BASE}..HEAD | perl ${CHECKPATCH} -
+
+# make checkpatch-diff  → check staged/unstaged changes + untracked files
+.PHONY: checkpatch-diff
+checkpatch-diff:
+	@[ -f ${CHECKPATCH} ] || curl -sSf ${CHECKPATCH_URL} -o ${CHECKPATCH}
+	git diff HEAD | perl ${CHECKPATCH} -
+	@git ls-files --others --exclude-standard | xargs -r -I{} perl ${CHECKPATCH} --file {}
