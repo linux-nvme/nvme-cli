@@ -54,6 +54,10 @@ class TestNVMeReadWriteTest(TestNVMeIO):
         self.read_file = self.test_log_dir + "/" + self.read_file
         self.create_data_file(self.write_file, self.data_size, "15")
         open(self.read_file, 'a').close()
+        if self.ms > 0 and not self.ns_meta_ext:
+            self.write_meta_file = self.test_log_dir + "/" + self.write_meta_file
+            self.read_meta_file = self.test_log_dir + "/" + self.read_meta_file
+            self.create_meta_file(self.write_meta_file, self.ms)
 
     def tearDown(self):
         """ Post Section for TestNVMeReadWriteTest """

@@ -84,6 +84,9 @@ class TestNVMe(unittest.TestCase):
         self.do_validate_pci_device = True
         self.default_nsid = 0x1
         self.flbas = 0
+        self.ns_dps = 0
+        self.ns_meta_ext = False
+        self.pif = 0
         self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
 
         self.load_config()
@@ -92,6 +95,11 @@ class TestNVMe(unittest.TestCase):
         self.ns_mgmt_supported = self.get_ns_mgmt_support()
         if self.ns_mgmt_supported:
             self.create_and_attach_default_ns()
+        else:
+            self.flbas = self._get_active_lbaf_index()
+            self.ns_dps = self._get_ns_dps()
+            self.ns_meta_ext = self._is_metadata_ext()
+            self.pif = self._get_pif()
         logger.debug("setup: ctrl: %s, ns1: %s, default_nsid: %s, flbas: %s",
                      self.ctrl, self.ns1, self.default_nsid, self.flbas)
 
@@ -318,6 +326,77 @@ class TestNVMe(unittest.TestCase):
         """
         return to_decimal(self.get_id_ctrl_field_value("oacs")) & (1 << 9)
 
+    def _get_active_lbaf_index(self):
+        """ Return the index of the currently active LBA format for ns1.
+            - Args:
+                - None
+            - Returns:
+                - lbaf index (int) of the format whose in_use flag is set,
+                  or 0 if no in_use entry is found.
+        """
+        nvme_id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+            "--output-format=json"
+        result = self.run_cmd(nvme_id_ns_cmd)
+        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns")
+        json_output = json.loads(result.stdout)
+        for lbaf in json_output.get('lbafs', []):
+            if lbaf.get('in_use') == 1:
+                return int(lbaf['lbaf'])
+        return 0
+
+    def _get_ns_dps(self):
+        """ Return the Data Protection Settings (DPS) field for ns1.
+            - Args:
+                - None
+            - Returns:
+                - dps value (int); bits 2:0 are the PI type (non-zero means
+                  end-to-end PI is enabled), bits 5:3 are the Protection
+                  Information Format (PIF) on NVMe 2.0+ devices.
+        """
+        nvme_id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+            "--output-format=json"
+        result = self.run_cmd(nvme_id_ns_cmd)
+        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns")
+        json_output = json.loads(result.stdout)
+        return int(json_output.get('dps', 0))
+
+    def _get_pif(self):
+        """ Return the Protection Information Format (PIF) for ns1.
+
+            The PIF is stored in bits 5:3 of the DPS field (NVMe 2.0+):
+              PIF 0 - 8-byte PI, 16-bit CRC guard (Type 1/2/3, all NVMe 1.x)
+              PIF 1 - 16-byte PI, 64-bit CRC guard
+              PIF 2 - 8-byte PI, 32-bit CRC guard
+
+            NVMe 1.x devices always return 0 for these bits.
+
+            - Args:
+                - None
+            - Returns:
+                - pif value (int, 0-7).
+        """
+        nvme_id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+            "--output-format=json"
+        result = self.run_cmd(nvme_id_ns_cmd)
+        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns")
+        json_output = json.loads(result.stdout)
+        dps = int(json_output.get('dps', 0))
+        return (dps >> 3) & 0x7
+
+    def _is_metadata_ext(self):
+        """ Return True if the active LBA format uses extended LBA (bit 4 of
+            the flbas field is set, meaning metadata is appended at the end of
+            the data buffer). Return False if bit 4 is clear, meaning metadata
+            is transferred as a separate, contiguous buffer.
+        """
+        nvme_id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+            "--output-format=json"
+        result = self.run_cmd(nvme_id_ns_cmd)
+        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns")
+        json_output = json.loads(result.stdout)
+        flbas = int(json_output.get('flbas', 0))
+        return bool(flbas & (1 << 4))
+
     def get_lba_format_size(self):
         """ Wrapper for extracting lba format size of the given flbas
             - Args:
@@ -333,14 +412,9 @@ class TestNVMe(unittest.TestCase):
         self.assertTrue(len(json_output['lbafs']) > self.flbas,
                         "Error : could not match the given flbas to an existing lbaf")
         lbaf_json = json_output['lbafs'][int(self.flbas)]
-        ms_expo = int(lbaf_json['ms'])
+        ms = int(lbaf_json['ms'])
         ds_expo = int(lbaf_json['ds'])
-        ds = 0
-        ms = 0
-        if ds_expo > 0:
-            ds = (1 << ds_expo)
-        if ms_expo > 0:
-            ms = (1 << ms_expo)
+        ds = (1 << ds_expo) if ds_expo > 0 else 0
         return (ds, ms)
 
     def get_ncap(self):
@@ -363,6 +437,22 @@ class TestNVMe(unittest.TestCase):
             "--output-format=json"
         result = self.run_cmd(id_ctrl_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : reading id-ctrl failed")
+        json_output = json.loads(result.stdout)
+        self.assertTrue(field in json_output,
+                        f"ERROR : reading field '{field}' failed")
+        return str(json_output[field])
+
+    def get_id_ns_field_value(self, field):
+        """ Wrapper for extracting id-ns field values
+            - Args:
+                - field : field name to extract
+            - Returns:
+                - Field value of the given field as a string
+        """
+        id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+            "--output-format=json"
+        result = self.run_cmd(id_ns_cmd)
+        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns failed")
         json_output = json.loads(result.stdout)
         self.assertTrue(field in json_output,
                         f"ERROR : reading field '{field}' failed")

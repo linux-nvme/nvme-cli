@@ -38,6 +38,7 @@ _tgt_common = run_target(
         libnvme_src_nvme / 'accessors.h',
         libnvme_src_nvme / 'accessors.c',
         libnvme_src / 'accessors.ld',
+        '--swig-out', libnvme_swig_dir / 'accessors.i',
         libnvme_src_nvme / 'private.h',
     ],
 )
@@ -51,20 +52,10 @@ _tgt_fabrics = run_target(
         libnvme_src_nvme / 'accessors-fabrics.h',
         libnvme_src_nvme / 'accessors-fabrics.c',
         libnvme_src / 'accessors-fabrics.ld',
+        '--swig-out', libnvme_swig_dir / 'accessors-fabrics.i',
         libnvme_src_nvme / 'private-fabrics.h',
     ],
 )
 
-_tgt_swig = run_target(
-    'update-swig-accessors',
-    command: [
-        _py3,
-        files('generate-swig-accessors.py'),
-        '--output', libnvme_swig_dir / 'nvme-swig-accessors.i',
-        libnvme_src_nvme / 'accessors.h',
-        libnvme_src_nvme / 'accessors-fabrics.h',
-    ],
-)
-
 # This alias allows generating all accessors in one shot.
-alias_target('update-accessors', _tgt_common, _tgt_fabrics, _tgt_swig)
+alias_target('update-accessors', _tgt_common, _tgt_fabrics)

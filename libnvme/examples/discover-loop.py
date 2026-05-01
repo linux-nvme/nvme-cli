@@ -16,7 +16,7 @@ def disc_supp_str(dlp_supp_opts):
     }
     return [txt for msk, txt in d.items() if dlp_supp_opts & msk]
 
-def discover(host, ctrl, iteration):
+def discover(ctx, host, ctrl, iteration):
     # Only 8 levels of indirection are supported
     if iteration > 8:
         return
@@ -51,19 +51,18 @@ def discover(host, ctrl, iteration):
         if dlpe['subtype'] == 'discovery' and dlpe['subnqn'] == nvme.NVME_DISC_SUBSYS_NAME:
             continue
         print(f'{iteration}: {dlpe["subtype"]} {dlpe["subnqn"]}')
-        with nvme.ctrl(root, subsysnqn=dlpe['subnqn'], transport=dlpe['trtype'], traddr=dlpe['traddr'], trsvcid=dlpe['trsvcid']) as new_ctrl:
+        with nvme.Ctrl(ctx, subsysnqn=dlpe['subnqn'], transport=dlpe['trtype'], traddr=dlpe['traddr'], trsvcid=dlpe['trsvcid']) as new_ctrl:
             discover(host, new_ctrl, iteration + 1)
 
-root = nvme.root()
-host = nvme.host(root)
-
+ctx = nvme.GlobalCtx()
+host = nvme.Host(ctx)
 subsysnqn = nvme.NVME_DISC_SUBSYS_NAME
 transport = 'tcp'
 traddr = '127.0.0.1'
 trsvcid = '4420'
 
-with nvme.ctrl(root, subsysnqn=subsysnqn, transport=transport, traddr=traddr, trsvcid=trsvcid) as ctrl:
-    discover(host, ctrl, 0)
+with nvme.Ctrl(ctx, subsysnqn=subsysnqn, transport=transport, traddr=traddr, trsvcid=trsvcid) as ctrl:
+    discover(ctx, host, ctrl, 0)
 
 for s in host.subsystems():
     for c in s.controllers():

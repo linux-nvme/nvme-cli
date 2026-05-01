@@ -11,8 +11,8 @@ from libnvme import nvme
 class TestCtrlSetattr(unittest.TestCase):
 
     def setUp(self):
-        self.ctx = nvme.global_ctx()
-        self.ctrl = nvme.ctrl(self.ctx, {
+        self.ctx = nvme.GlobalCtx()
+        self.ctrl = nvme.Ctrl(self.ctx, {
             'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME,
             'transport': 'loop',
         })
@@ -40,12 +40,12 @@ class TestCtrlSetattr(unittest.TestCase):
 class TestCtrlDictValidation(unittest.TestCase):
 
     def setUp(self):
-        self.ctx = nvme.global_ctx()
+        self.ctx = nvme.GlobalCtx()
 
     def test_unknown_dict_key_raises(self):
         """An unknown key in the constructor dict must raise KeyError."""
         with self.assertRaises(KeyError):
-            nvme.ctrl(self.ctx, {
+            nvme.Ctrl(self.ctx, {
                 'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME,
                 'transport': 'loop',
                 'typo_key': 'value',
@@ -54,9 +54,9 @@ class TestCtrlDictValidation(unittest.TestCase):
     def test_missing_required_key_raises(self):
         """Omitting a required key (subsysnqn or transport) must raise KeyError."""
         with self.assertRaises(KeyError):
-            nvme.ctrl(self.ctx, {'transport': 'loop'})
+            nvme.Ctrl(self.ctx, {'transport': 'loop'})
         with self.assertRaises(KeyError):
-            nvme.ctrl(self.ctx, {'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME})
+            nvme.Ctrl(self.ctx, {'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME})
 
 
 if __name__ == '__main__':

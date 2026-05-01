@@ -4,10 +4,10 @@
 
 from libnvme import nvme
 
-ctx = nvme.global_ctx()
+ctx = nvme.GlobalCtx()
 ctx.log_level('debug')
 
-ctrl = nvme.ctrl(ctx, {
+ctrl = nvme.Ctrl(ctx, {
     'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME,
     'transport': 'loop',
     'traddr': '127.0.0.1',

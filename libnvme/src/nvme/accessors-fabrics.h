@@ -26,6 +26,7 @@
 #include <stdint.h>
 
 #include <nvme/types.h>
+#include <nvme/nvme-types.h>
 
 /* Forward declarations. These are internal (opaque) structs. */
 struct libnvmf_discovery_args;

@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <json.h>
-
 #include "config.h"
 #include "telemetry-log.h"
 
