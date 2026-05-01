@@ -4432,7 +4432,7 @@ static void stdout_effects_log_segment(int admin, int a, int b,
 			stdout_effects_entry(stream, admin, i, effects->iocs[i], human);
 	}
 
-	fclose(stream);
+	close_memstream(stream, &stream_location, &stream_size);
 
 	if (stream_size && header) {
 		printf("%s\n", header);
