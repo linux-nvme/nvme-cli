@@ -22,7 +22,8 @@
 
 # Generated source files go to src/nvme/ (alongside the library sources).
 # The generated version script goes to src/ (alongside the other .ld files).
-# The generated SWIG include goes to libnvme/ (alongside nvme.i).
+# The generated SWIG includes and Python-only headers go to libnvme/ alongside
+# nvme.i.
 libnvme_src = libnvme_srcroot / 'src'
 libnvme_src_nvme = libnvme_src / 'nvme'
 libnvme_swig_dir = libnvme_srcroot / 'libnvme'
@@ -45,6 +46,7 @@ _tgt_common = run_target(
         libnvme_src / 'accessors.ld',
     ] + _check_flag + [
         '--swig-out', libnvme_swig_dir / 'accessors.i',
+        '--dict-table-out', libnvme_swig_dir / 'fctx_field_tables.h',
         libnvme_src_nvme / 'private.h',
     ],
 )
