@@ -102,13 +102,15 @@ static bool get_is_win_pe(void)
 __public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
 {
 	(void)hdl;
-	return -ENOTSUP;
+	errno = ENOTSUP;
+	return -errno;
 }
 
 __public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	(void)hdl;
-	return -ENOTSUP;
+	errno = ENOTSUP;
+	return -errno;
 }
 
 __public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
@@ -125,8 +127,15 @@ __public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
 
 	DWORD bytesReturned = 0;
 	if (!DeviceIoControl(hdl->fd, IOCTL_SCSI_GET_ADDRESS, NULL, 0,
-				&addr, sizeof(addr), &bytesReturned, NULL))
-		return -EIO;
+				&addr, sizeof(addr), &bytesReturned, NULL)) {
+		errno = EIO;
+		return -errno;
+	}
+
+	if (addr.PathId == 0xFF && addr.TargetId == 0xFF && addr.Lun == 0xFF) {
+		errno = ENOTTY;  /* wrong handle type */
+		return -errno;
+	}
 
 	*nsid = addr.Lun + 1;
 	return 0;

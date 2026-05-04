@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /*
  * This file is part of libnvme.
- * Copyright (c) 2025 Micron Technology, Inc.
+ * Copyright (c) 2026 Micron Technology, Inc.
  *
  * Authors: Brandon Capener <bcapener@micron.com>
  */
 
+#include "cleanup.h"
 #include "private.h"
+#include "nvme/filters-windows.h"
 #include "nvme/lib.h"
 #include "compiler-attributes.h"
 
@@ -26,7 +28,7 @@ static time_t __filetime_to_time_t(const FILETIME *ft)
 }
 
 /* fstat implementation for Windows device HANDLE */
-static int __handle_fstat(HANDLE fd, struct stat *buf)
+static int __handle_fstat(HANDLE fd, struct stat *buf, bool is_ctrl)
 {
 	BY_HANDLE_FILE_INFORMATION file_info;
 	DWORD file_type;
@@ -50,7 +52,7 @@ static int __handle_fstat(HANDLE fd, struct stat *buf)
 		file_type = GetFileType(fd);
 		if (file_type == FILE_TYPE_DISK || file_type == FILE_TYPE_CHAR) {
 			memset(buf, 0, sizeof(*buf));
-			buf->st_mode = S_IFBLK | 0600;
+			buf->st_mode = (is_ctrl ? S_IFCHR : S_IFBLK) | 0600;
 			buf->st_nlink = 1;
 			return 0;
 		}
@@ -65,7 +67,7 @@ static int __handle_fstat(HANDLE fd, struct stat *buf)
 	/* Convert Windows file attributes to stat mode */
 	if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)
 		/* Mark as block device for libnvme_transport_handle_is_ns. */
-		buf->st_mode = S_IFBLK | 0600;
+		buf->st_mode = (is_ctrl ? S_IFCHR : S_IFBLK) | 0600;
 	else if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		buf->st_mode = S_IFDIR | 0755;
 	else
@@ -86,6 +88,16 @@ static int __handle_fstat(HANDLE fd, struct stat *buf)
 	return 0;
 }
 
+static bool __is_controller_path(const char *device_path)
+{
+	/*
+	 * Controller device paths point to the PCI device, and begin with
+	 * "\\?\pci". Namespace device paths point to the disk device and begin
+	 * "\\.\PhysicalDrive".
+	 */
+	return strncasecmp(device_path, "\\\\?\\pci", 7) == 0;
+}
+
 static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handle *hdl, const char *name)
 {
 	char device_path[MAX_PATH];
@@ -94,7 +106,8 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 
 	/* Convert device name to Windows path */
-	if (strncmp(name, "\\\\.\\", 4) == 0) {
+	if (strncmp(name, "\\\\.\\", 4) == 0
+	    || strncmp(name, "\\\\?\\", 4) == 0) {
 		/* Already a Windows device path */
 		snprintf(device_path, sizeof(device_path), "%s", name);
 	} else {
@@ -125,7 +138,7 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 		}
 	}
 
-	__handle_fstat(hdl->fd, &hdl->stat);
+	__handle_fstat(hdl->fd, &hdl->stat, __is_controller_path(device_path));
 
 	/* Windows doesn't distinguish 32/64-bit ioctl, assume 64-bit capable */
 	hdl->ioctl_admin64 = true;
@@ -139,7 +152,27 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 	      struct libnvme_transport_handle **hdlp)
 {
 	struct libnvme_transport_handle *hdl;
+	__cleanup_free char *mapped_name = NULL;
 	int ret;
+	const struct storageport_map_entry *sp_entry;
+
+	sp_entry = libnvme_storageport_lookup_entry(name);
+	if (sp_entry) {
+		const char *n_pos = strchr(name + 4, 'n');
+		__u32 nsid;
+
+		if (n_pos && sscanf(n_pos, "n%u", &nsid) == 1) {
+			ret = libnvme_storageport_nsid_to_drive_path(
+				sp_entry, nsid, &mapped_name);
+		} else {
+			ret = libnvme_storageport_entry_get_ctrl_path(
+				sp_entry, &mapped_name);
+		}
+		if (ret)
+			return ret;
+
+		name = mapped_name;
+	}
 
 	hdl = __libnvme_create_transport_handle(ctx);
 	if (!hdl)

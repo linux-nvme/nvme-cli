@@ -463,7 +463,17 @@ void __libnvme_free_host(struct libnvme_host * h);
 #define __libnvme_log_func NULL
 #endif
 
-void __attribute__((format(printf, 4, 5)))
+/*
+ * MinGW GCC requires gnu_printf to correctly validates C99 formats like %zu.
+ * Other compilers/toolchains can use the generic printf archetype.
+ */
+#if (defined(__MINGW32__) || defined(__MINGW64__)) && defined(__GNUC__)
+#define LIBNVME_PRINTF_ARCHETYPE gnu_printf
+#else
+#define LIBNVME_PRINTF_ARCHETYPE printf
+#endif
+
+void __attribute__((format(LIBNVME_PRINTF_ARCHETYPE, 4, 5)))
 __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 		const char *func, const char *format, ...);
 

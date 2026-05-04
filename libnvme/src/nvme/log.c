@@ -27,7 +27,7 @@
 #define LOG_CLOCK CLOCK_MONOTONIC
 #endif
 
-void __attribute__((format(printf, 4, 5)))
+void __attribute__((format(LIBNVME_PRINTF_ARCHETYPE, 4, 5)))
 __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 	   const char *func, const char *format, ...)
 {

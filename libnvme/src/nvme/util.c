@@ -7,6 +7,7 @@
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <malloc.h>
@@ -1034,6 +1035,27 @@ void *__libnvme_realloc(void *p, size_t len)
 	}
 
 	return result;
+}
+
+char *libnvme_copy_and_rtrim(const char *src, size_t src_size)
+{
+	char *dst;
+	size_t len = src_size;
+
+	if (!src)
+		return NULL;
+
+	while (len > 0 && isspace((unsigned char)src[len - 1]))
+		len--;
+
+	dst = malloc(len + 1);
+	if (!dst)
+		return NULL;
+
+	memcpy(dst, src, len);
+	dst[len] = '\0';
+
+	return dst;
 }
 
 /* This used instead of basename() due to behavioral differences between

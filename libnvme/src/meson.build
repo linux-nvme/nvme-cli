@@ -16,19 +16,6 @@ sources = [
     'nvme/tree.c',
     'nvme/util.c',
 ]
-if host_system == 'windows'
-    sources += [
-        'nvme/ioctl-windows.c',  # Windows stubs for Linux-specific ioctl functions
-        'nvme/lib-windows.c',  # Windows implementations of lib.h functions
-        'nvme/windows-stubs.c',  # Stubs for excluded functions
-    ]
-else
-    sources += [
-        'nvme/filters.c',
-        'nvme/linux.c',
-        'nvme/sysfs.c',
-    ]
-endif
 headers = [
     'nvme/accessors.h',
     'nvme/endian.h',
@@ -51,6 +38,25 @@ headers = [
     'nvme/unistd.h',
     'nvme/util.h',
 ]
+
+if host_system == 'windows'
+    sources += [
+        'nvme/filters-windows.c',  # Windows implementations of filters functions
+        'nvme/ioctl-windows.c',  # Windows stubs for Linux-specific ioctl functions
+        'nvme/lib-windows.c',  # Windows implementations of lib.h functions
+        'nvme/tree-windows.c',  # Windows implementations of tree functions
+        'nvme/windows-stubs.c',  # Stubs for excluded functions
+    ]
+    headers += [
+        'nvme/filters-windows.h',
+    ]
+else
+    sources += [
+        'nvme/filters.c',
+        'nvme/linux.c',
+        'nvme/sysfs.c',
+    ]
+endif
 
 if want_fabrics
     sources += [
@@ -112,6 +118,8 @@ if host_system == 'windows'
         ws2_32_dep,
         kernel32_dep,
         bcrypt_dep,
+        setupapi_dep,
+        cfgmgr32_dep,
     ]
 endif
 
