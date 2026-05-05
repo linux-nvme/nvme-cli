@@ -1389,6 +1389,12 @@ static int nvme_discovery_log(libnvme_ctrl_t ctrl,
 	struct libnvme_transport_handle *hdl;
 
 	hdl = libnvme_ctrl_get_transport_handle(ctrl);
+	if (!hdl) {
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			 "%s: failed to get discovery log, device not accessible\n",
+			 name);
+		return -ENODEV;
+	}
 	struct libnvme_passthru_cmd cmd;
 
 	log = __libnvme_alloc(sizeof(*log));
@@ -1640,6 +1646,13 @@ static int nvmf_dim(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 	__u32 tdl;
 	__u32 tel;
 	int ret;
+
+	if (!hdl) {
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			 "%s: failed to perform DIM, device not accessible\n",
+			 c->name);
+		return -ENODEV;
+	}
 
 	if (!c->s) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,

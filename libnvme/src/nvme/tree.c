@@ -1497,6 +1497,12 @@ __public int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id)
 		libnvme_ctrl_get_transport_handle(c);
 	struct libnvme_passthru_cmd cmd;
 
+	if (!hdl) {
+		libnvme_msg(c->ctx, LIBNVME_LOG_DEBUG,
+			 "%s: failed to identify ctrl, device not accessible\n",
+			 c->name);
+		return -ENODEV;
+	}
 	nvme_init_identify_ctrl(&cmd, id);
 	return libnvme_submit_admin_passthru(hdl, &cmd);
 }

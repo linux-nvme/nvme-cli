@@ -36,6 +36,8 @@ __public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, bool rae,
 		__u32 xfer_len)
 {
+	if (!hdl)
+		return -ENODEV; /* safety net; callers must validate hdl */
 	__u64 offset = 0, xfer, data_len = cmd->data_len;
 	__u64 start = (__u64)cmd->cdw13 << 32 | cmd->cdw12;
 	__u64 lpo;
