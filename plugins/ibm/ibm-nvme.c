@@ -375,7 +375,7 @@ static int get_ibm_vpd_log(int argc, char **argv, struct command *cmd, struct pl
 	if (err < 0)
 		return err;
 
-	bzero(&vpd_log, sizeof(vpd_log));
+	memset(&vpd_log, 0, sizeof(vpd_log));
 	err = nvme_get_log_simple(hdl, 0xf1, &vpd_log, sizeof(vpd_log));
 
 	if (!err) {

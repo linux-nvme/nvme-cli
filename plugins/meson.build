@@ -7,6 +7,7 @@ all_plugins = {
   'dell': ['plugins/dell/dell-nvme.c'],
   'dera': ['plugins/dera/dera-nvme.c'],
   'fdp': ['plugins/fdp/fdp.c'],
+  'ibm': ['plugins/ibm/ibm-nvme.c'],
   'innogrit': ['plugins/innogrit/innogrit-nvme.c'],
   'inspur': ['plugins/inspur/inspur-nvme.c'],
   'intel': ['plugins/intel/intel-nvme.c'],
@@ -20,17 +21,16 @@ all_plugins = {
   'toshiba': ['plugins/toshiba/toshiba-nvme.c'],
   'transcend': ['plugins/transcend/transcend-nvme.c'],
   'virtium': ['plugins/virtium/virtium-nvme.c'],
+  'ymtc': ['plugins/ymtc/ymtc-nvme.c'],
 }
 
 if host_system != 'windows'
     all_plugins += {
       'huawei': ['plugins/huawei/huawei-nvme.c'],
-      'ibm': ['plugins/ibm/ibm-nvme.c'],
       'netapp': ['plugins/netapp/netapp-nvme.c'],
       'sandisk': ['plugins/sandisk/sandisk-nvme.c', 'plugins/sandisk/sandisk-utils.c'],
       'scaleflux': ['plugins/scaleflux/sfx-nvme.c'],
       'wdc': ['plugins/wdc/wdc-nvme.c', 'plugins/wdc/wdc-utils.c'],
-      'ymtc': ['plugins/ymtc/ymtc-nvme.c'],
       'zns': ['plugins/zns/zns.c'],
     }
 endif
