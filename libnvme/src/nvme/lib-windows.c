@@ -13,81 +13,6 @@
 #include "compiler-attributes.h"
 
 
-static time_t __filetime_to_time_t(const FILETIME *ft)
-{
-	ULARGE_INTEGER ull;
-
-	ull.LowPart = ft->dwLowDateTime;
-	ull.HighPart = ft->dwHighDateTime;
-
-	/*
-	 * Windows FILETIME is in 100-nanosecond intervals since Jan 1, 1601.
-	 * Convert to seconds and adjust to Unix epoch (seconds since Jan 1, 1970).
-	 */
-	return (time_t)((ull.QuadPart / 10000000ULL) - 11644473600ULL);
-}
-
-/* fstat implementation for Windows device HANDLE */
-static int __handle_fstat(HANDLE fd, struct stat *buf, bool is_ctrl)
-{
-	BY_HANDLE_FILE_INFORMATION file_info;
-	DWORD file_type;
-
-	if (!buf) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	/* Check for invalid handle */
-	if (fd == INVALID_HANDLE_VALUE || fd == NULL) {
-		errno = EBADF;
-		return -1;
-	}
-
-	/*
-	 * GetFileInformationByHandle() does not work for all device HANDLEs
-	 * (e.g. raw \\\\.\\PhysicalDriveN). For those, fall back to file type.
-	 */
-	if (!GetFileInformationByHandle(fd, &file_info)) {
-		file_type = GetFileType(fd);
-		if (file_type == FILE_TYPE_DISK || file_type == FILE_TYPE_CHAR) {
-			memset(buf, 0, sizeof(*buf));
-			buf->st_mode = (is_ctrl ? S_IFCHR : S_IFBLK) | 0600;
-			buf->st_nlink = 1;
-			return 0;
-		}
-
-		errno = EBADF;
-		return -1;
-	}
-
-	/* Fill in the stat structure */
-	memset(buf, 0, sizeof(*buf));
-
-	/* Convert Windows file attributes to stat mode */
-	if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)
-		/* Mark as block device for libnvme_transport_handle_is_ns. */
-		buf->st_mode = (is_ctrl ? S_IFCHR : S_IFBLK) | 0600;
-	else if (file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		buf->st_mode = S_IFDIR | 0755;
-	else
-		buf->st_mode = S_IFREG | 0644;
-
-	/* File size */
-	buf->st_size = (((off_t)file_info.nFileSizeHigh << 32)
-					| file_info.nFileSizeLow);
-
-	/* Number of hard links */
-	buf->st_nlink = file_info.nNumberOfLinks;
-
-	/* Convert FILETIME to time_t for timestamps */
-	buf->st_mtime = __filetime_to_time_t(&file_info.ftLastWriteTime);
-	buf->st_atime = __filetime_to_time_t(&file_info.ftLastAccessTime);
-	buf->st_ctime = __filetime_to_time_t(&file_info.ftCreationTime);
-
-	return 0;
-}
-
 static bool __is_controller_path(const char *device_path)
 {
 	/*
@@ -138,7 +63,11 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 		}
 	}
 
-	__handle_fstat(hdl->fd, &hdl->stat, __is_controller_path(device_path));
+	/* Mark st_mode based on device type for compatibility with Linux. */
+	memset(&hdl->stat, 0, sizeof(hdl->stat));
+	hdl->stat.st_mode =
+		(__is_controller_path(device_path) ? S_IFCHR : S_IFBLK) | 0600;
+	hdl->stat.st_nlink = 1;
 
 	/* Windows doesn't distinguish 32/64-bit ioctl, assume 64-bit capable */
 	hdl->ioctl_admin64 = true;
