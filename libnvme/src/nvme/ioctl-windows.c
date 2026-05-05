@@ -250,14 +250,15 @@ static int submit_storage_protocol_command(
 					buffer_len,
 					&returned_len,
 					NULL);
-		if (result && protocol_command->ReturnStatus == STORAGE_PROTOCOL_STATUS_SUCCESS)
+		if (result && (protocol_command->ReturnStatus == STORAGE_PROTOCOL_STATUS_SUCCESS ||
+			       protocol_command->ReturnStatus == STORAGE_PROTOCOL_STATUS_PENDING))
 			break;
 
-		if (!result)
-			err = get_last_error_as_errno();
-		else
+		if (protocol_command->ReturnStatus != STORAGE_PROTOCOL_STATUS_SUCCESS)
 			err = get_errno_from_storage_protocol_status(
 				protocol_command->ReturnStatus);
+		else
+			err = get_last_error_as_errno();
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
@@ -1263,15 +1264,14 @@ out:
 /* SCSI operation code for sanitize command - from ddk/scsi.h */
 #define SCSIOP_SANITIZE 0x48
 
+/*
+ * Windows maps SCSI_PASS_THROUGH with SCSIOP_SANITIZE to the NVMe Format NVM
+ * command with SES=1 (User Data Erase).
+ */
 static int submit_admin_format_nvm_user_data_erase(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
-	/*
-	 * User Data Erase: Use IOCTL_SCSI_PASS_THROUGH with SCSIOP_SANITIZE
-	 * to erase user data. The sanitize operation erases all user data,
-	 * with the contents being indeterminate after erase.
-	 */
 	PSCSI_PASS_THROUGH pass_through = NULL;
 	ULONG buffer_len = 0;
 	ULONG returned_len = 0;
@@ -1350,8 +1350,12 @@ static int submit_admin_format_nvm_user_data_erase(
 			err = -EIO;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
+			"GetLastError=%lu, err=%d\n",
+			__func__, GetLastError(), err);
 		goto out_free_buffer;
+	}
 
 	cmd->result = 0;
 
@@ -1362,6 +1366,10 @@ out:
 	return err;
 }
 
+/*
+ * Windows maps IOCTL_STORAGE_REINITIALIZE_MEDIA to the NVMe Format NVM command
+ * with SES=2 (Cryptographic Erase).
+ */
 static int submit_admin_format_nvm_crypto_erase(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
@@ -1411,9 +1419,11 @@ static int submit_admin_format_nvm(struct libnvme_transport_handle *hdl,
 	if (get_is_win_pe())
 		return submit_storage_protocol_command(hdl, cmd);
 
-	/* Namespace-specific format is not supported on Windows */
-	if (cmd->nsid != NVME_NSID_ALL)
+	if (libnvme_transport_handle_is_ctrl(hdl)) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "Windows only supports "
+			"format on namespace devices (e.g. nvme0n1)\n");
 		return -ENOTSUP;
+	}
 
 	/*
 	 * Extract the Secure Erase Settings (SES) from CDW10 and call the
@@ -1431,13 +1441,15 @@ static int submit_admin_format_nvm(struct libnvme_transport_handle *hdl,
 	 */
 	switch (ses) {
 	case NVME_FORMAT_SES_NONE:
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "SES=0 (No Erase) "
+			"is not supported on Windows\n");
 		return -ENOTSUP;	/* Not supported on Windows */
 	case NVME_FORMAT_SES_USER_DATA_ERASE:
 		return submit_admin_format_nvm_user_data_erase(hdl, cmd);
 	case NVME_FORMAT_SES_CRYPTO_ERASE:
 		return submit_admin_format_nvm_crypto_erase(hdl, cmd);
 	default:
-		return -EINVAL;
+		return NVME_SC_INVALID_FIELD;
 	}
 }
 
@@ -1596,6 +1608,8 @@ __public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
 	case 0x80 ... 0xFF: /* vendor-specific commands */
 		return submit_storage_protocol_command(hdl, cmd);
 	default:
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: opcode=0x%02x\n",
+			__func__, cmd->opcode);
 		return -ENOTSUP;
 	}
 	return -ENOTSUP;
@@ -1651,6 +1665,8 @@ __public int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
 	case 0xC0 ... 0xFF: /* vendor-specific commands */
 		return submit_storage_protocol_command(hdl, cmd);
 	default:
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: opcode=0x%02x\n",
+			__func__, cmd->opcode);
 		return -ENOTSUP;
 	}
 }
