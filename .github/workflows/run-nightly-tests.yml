@@ -27,6 +27,7 @@ jobs:
         id: blktests
         uses: ./.github/actions/kubevirt-action
         with:
+          host_devices: "nvme-wdc-zn540,nvme-wdc-sn640"
           kernel_version: linus-master
           vm_artifact_upload_dir: blktests/results/
           run_cmds: |
@@ -85,6 +86,7 @@ jobs:
         if: success() || steps.blktests.conclusion == 'failure'
         uses: ./.github/actions/kubevirt-action
         with:
+          host_devices: "nvme-wdc-zn540,nvme-wdc-sn640"
           kernel_version: linus-master
           vm_artifact_upload_dir: nvme-cli/tests/nvmetests/
           run_cmds: |
