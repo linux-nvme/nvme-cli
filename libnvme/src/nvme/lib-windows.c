@@ -6,11 +6,13 @@
  * Authors: Brandon Capener <bcapener@micron.com>
  */
 
-#include "cleanup.h"
-#include "private.h"
-#include "nvme/filters-windows.h"
-#include "nvme/lib.h"
 #include "compiler-attributes.h"
+#include "cleanup.h"
+#include "filters-windows.h"
+#include "ioctl.h"
+#include "lib.h"
+#include "private.h"
+#include "util.h"
 
 
 static bool __is_controller_path(const char *device_path)
@@ -76,14 +78,16 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 	return 0;
 }
 
-/* Transport handle operations (linux.c) */
 __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 	      struct libnvme_transport_handle **hdlp)
 {
 	struct libnvme_transport_handle *hdl;
-	__cleanup_free char *mapped_name = NULL;
+	char *mapped_name = NULL;
 	int ret;
 	const struct storageport_map_entry *sp_entry;
+
+	if (strncmp(name, "/dev/", 5) == 0)
+		name = libnvme_basename(name);
 
 	sp_entry = libnvme_storageport_lookup_entry(name);
 	if (sp_entry) {
@@ -99,19 +103,11 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 		}
 		if (ret)
 			return ret;
-
-		name = mapped_name;
 	}
 
 	hdl = __libnvme_create_transport_handle(ctx);
 	if (!hdl)
 		return -ENOMEM;
-
-	hdl->name = strdup(name);
-	if (!hdl->name) {
-		free(hdl);
-		return -ENOMEM;
-	}
 
 	/* Handle test devices */
 	if (!strncmp(name, "NVME_TEST_FD", 12)) {
@@ -131,11 +127,29 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 		return -ENOTSUP;
 	}
 
-	ret = __libnvme_transport_handle_open_direct(hdl, name);
+	ret = __libnvme_transport_handle_open_direct(hdl, mapped_name ?
+		mapped_name : name);
 
 	if (ret) {
 		libnvme_close(hdl);
 		return ret;
+	}
+
+	/* For PhysicalDrive names, create the nvme0n1-style name. */
+	sp_entry = libnvme_storageport_lookup_by_physdrive(name);
+	if (sp_entry) {
+		__u32 nsid;
+
+		if (libnvme_get_nsid(hdl, &nsid) == 0 &&
+		    asprintf(&mapped_name, "%sn%d", sp_entry->storageport_name, nsid) > 0)
+			name = mapped_name;
+	}
+
+	/* Store the nvme0 or nvme0n1-style name in hdl->name. */
+	hdl->name = strdup(name);
+	if (!hdl->name) {
+		free(hdl);
+		return -ENOMEM;
 	}
 
 	*hdlp = hdl;
