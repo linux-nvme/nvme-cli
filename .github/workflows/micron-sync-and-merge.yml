@@ -1,0 +1,229 @@
+---
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme.
+# Combined workflow to sync upstream master and merge into mingw
+
+name: Micron - Sync and Merge
+
+on:
+  schedule:
+    # Run daily at 12:00 UTC (5 AM MST / 6 AM MDT)
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      run_sync:
+        description: 'Run Sync'
+        type: boolean
+        default: true
+      run_merge:
+        description: 'Run Merge'
+        type: boolean
+        default: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || inputs.run_sync == true }}
+    permissions:
+      contents: write
+    concurrency:
+      group: sync-master-to-upstream
+      cancel-in-progress: false
+    steps:
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.SYNC_APP_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Prepare workspace and configure Git
+        run: |
+          set -euo pipefail
+          rm -rf work
+          mkdir -p work && cd work
+          git init
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add remotes
+        run: |
+          set -euo pipefail
+          cd work
+          git remote add origin "https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/${{ github.repository }}.git"
+          git remote add upstream https://github.com/linux-nvme/nvme-cli.git
+          git remote -v
+
+      - name: Fetch and validate upstream master
+        run: |
+          set -euo pipefail
+          cd work
+          git fetch upstream master
+          if ! git show-ref --verify --quiet "refs/remotes/upstream/master"; then
+            echo "::error::Branch 'master' does not exist in upstream repository"
+            exit 1
+          fi
+
+      - name: Merge upstream into origin branch
+        run: |
+          set -euo pipefail
+          cd work
+          # Fetch and checkout our fork's branch
+          git fetch origin master
+          git checkout -B master origin/master
+          # Merge upstream master
+          git merge upstream/master -m "Sync: merge upstream master into master" --no-edit
+          # Push the merged result
+          git push origin master
+
+  merge:
+    needs: [sync]
+    runs-on: ubuntu-latest
+    # always() required - without it, GitHub skips this job when sync is skipped, ignoring the rest of the condition
+    if: |
+      always() &&
+      needs.sync.result != 'failure' &&
+      (github.event_name == 'schedule' || inputs.run_merge == true)
+    permissions:
+      contents: write
+    concurrency:
+      group: merge-master-to-mingw
+      cancel-in-progress: false
+
+    steps:
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.SYNC_APP_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: mingw
+          fetch-depth: 0
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Configure Git identity
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge master into mingw
+        run: |
+          set -euo pipefail
+          git fetch origin master
+          git merge origin/master -m "Auto-merge master into mingw"
+
+      - name: Push changes
+        run: |
+          set -euo pipefail
+          git push origin mingw
+
+      - name: Notify on merge conflict
+        if: failure()
+        run: |
+          set -euo pipefail
+          echo "::error::Failed to merge master into mingw. Manual intervention required."
+          exit 1
+
+  notify:
+    needs: [sync, merge]
+    runs-on: ubuntu-latest
+    # always() required - without it, GitHub skips this job when sync or merge is skipped, ignoring the rest of the condition
+    if: |
+      always() &&
+      (needs.sync.result == 'failure' || needs.merge.result == 'failure')
+    steps:
+      - name: Determine failed job
+        id: failed-job
+        run: |
+          if [ "${{ needs.sync.result }}" == "failure" ]; then
+            echo "job_name=Sync" >> $GITHUB_OUTPUT
+            echo "job_step=sync upstream master" >> $GITHUB_OUTPUT
+          elif [ "${{ needs.merge.result }}" == "failure" ]; then
+            echo "job_name=Merge" >> $GITHUB_OUTPUT
+            echo "job_step=merge master into mingw" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Teams Notification
+        run: |
+          WORKFLOW_NAME="${{ github.workflow }}"
+          WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          BRANCH="${{ github.ref_name }}"
+          COMMIT="${{ github.sha }}"
+          COMMIT_SHORT="${COMMIT:0:7}"
+          REPO="${{ github.repository }}"
+          TRIGGERED_BY="${{ github.actor }}"
+          FAILED_JOB="${{ steps.failed-job.outputs.job_name }}"
+          FAILED_STEP="${{ steps.failed-job.outputs.job_step }}"
+
+          # Create Teams adaptive card payload
+          cat > payload.json <<EOF
+          {
+            "@type": "MessageCard",
+            "@context": "https://schema.org/extensions",
+            "summary": "Workflow Failed: ${WORKFLOW_NAME} - ${FAILED_JOB}",
+            "themeColor": "FF0000",
+            "title": "❌ Workflow Failed: ${WORKFLOW_NAME}",
+            "sections": [
+              {
+                "activityTitle": "Repository: ${REPO}",
+                "facts": [
+                  {
+                    "name": "Failed Job:",
+                    "value": "${FAILED_JOB} (${FAILED_STEP})"
+                  },
+                  {
+                    "name": "Branch:",
+                    "value": "${BRANCH}"
+                  },
+                  {
+                    "name": "Commit:",
+                    "value": "${COMMIT_SHORT}"
+                  },
+                  {
+                    "name": "Triggered by:",
+                    "value": "${TRIGGERED_BY}"
+                  },
+                  {
+                    "name": "Status:",
+                    "value": "Failed"
+                  }
+                ]
+              }
+            ],
+            "potentialAction": [
+              {
+                "@type": "OpenUri",
+                "name": "View Workflow Run",
+                "targets": [
+                  {
+                    "os": "default",
+                    "uri": "${WORKFLOW_URL}"
+                  }
+                ]
+              },
+              {
+                "@type": "OpenUri",
+                "name": "View Commit",
+                "targets": [
+                  {
+                    "os": "default",
+                    "uri": "https://github.com/${REPO}/commit/${COMMIT}"
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+
+          # Send notification to Teams webhook
+          curl -H "Content-Type: application/json" \
+               -d @payload.json \
+               "${{ secrets.TEAMS_WEBHOOK_URL }}"
