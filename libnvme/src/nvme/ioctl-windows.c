@@ -663,7 +663,7 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 	 * Per Windows documentation, this queries device/namespace
 	 * protocol-specific properties.
 	 */
-	query->PropertyId = StorageDeviceProtocolSpecificProperty;
+	query->PropertyId = StorageAdapterProtocolSpecificProperty;
 	query->QueryType = PropertyStandardQuery;
 
 	protocol_data->ProtocolType = ProtocolTypeNvme;

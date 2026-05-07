@@ -26,14 +26,18 @@ These commands are fully implemented and verified working on Windows.
 | `changed-ns-list-log` | Retrieve Changed Attached Namespace List, show it | |
 | `smart-log` | Retrieve SMART Log, show it | |
 | `error-log` | Retrieve Error Log, show it | |
-| `effects-log` | Retrieve Command Effects Log, show it | Usage: `nvme effects-log nvme0n1 -csi=0` |
+| `effects-log` | Retrieve Command Effects Log, show it | Usage: `--csi=0` |
 | `endurance-log` | Retrieve Endurance Group Log, show it | |
-| `persistent-event-log` | Retrieve Persistent Event Log, show it | |
+| `persistent-event-log` | Retrieve Persistent Event Log, show it | `--action=[0,2,3]` |
+| `endurance-event-agg-log` | Retrieve Endurance Group Event Aggregate Log, show it | |
+| `lba-status-log` | Retrieve LBA Status Information Log, show it | |
+| `phy-rx-eom-log` | Retrieve Physical Interface Receiver Eye Opening Measurement, show it | |
 | `get-feature` | Get feature and show the resulting value | |
 | `device-self-test` | Perform the necessary tests to observe the performance | |
 | `self-test-log` | Retrieve the SELF-TEST Log, show it | |
 | `supported-log-pages` | Retrieve the Supported Log pages details, show it | |
 | `fid-support-effects-log` | Retrieve FID Support and Effects log and show it | |
+| `mi-cmd-support-effects-log` | Retrieve MI Command Support and Effects log and show it | |
 | `changed-alloc-ns-list-log` | Retrieve Changed Allocated Namespace List, show it | |
 | `set-feature` | Set a feature and show the resulting value | |
 | `format` | Format namespace with new block format | |
@@ -81,10 +85,6 @@ been fully tested.
 | Command | Description | Issue |
 |---------|-------------|-------|
 | `sanitize` | Submit a sanitize command | Failing with `STORAGE_PROTOCOL_STATUS_PENDING` |
-| `endurance-event-agg-log` | Retrieve Endurance Group Event Aggregate Log, show it | I/O error on Windows, works on Linux |
-| `lba-status-log` | Retrieve LBA Status Information Log, show it | I/O error on Windows, works on Linux |
-| `phy-rx-eom-log` | Retrieve Physical Interface Receiver Eye Opening Measurement, show it | I/O error on Windows, works on Linux |
-| `mi-cmd-support-effects-log` | Retrieve MI Command Support and Effects log and show it | I/O error on Windows, works on Linux |
 
 ### Needs Testing
 
