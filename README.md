@@ -43,6 +43,13 @@ and [muon](https://github.com/annacrombie/muon). Both build tools have only a
 minimal dependency on the build environment. To ease this step, there is a build
 script which helps to setup a build environment.
 
+### Building on Windows
+
+nvme-cli can be built on Windows using the [msys2](https://www.msys2.org/)
+UCRT64 environment. After installing MSYS2 (`winget install MSYS2.MSYS2`), the
+`win-ucrt64-setup.sh` script can be run within the UCRT64 environment to install
+the required build system and nvme-cli dependencies.
+
 ### nvme-cli dependencies (3.x and later):
 
 Starting with nvme-cli 3.x, the libnvme library is fully integrated into the
