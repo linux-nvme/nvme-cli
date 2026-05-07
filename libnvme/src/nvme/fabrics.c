@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <fnmatch.h>
+#include <ifaddrs.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <stdbool.h>
@@ -21,7 +22,9 @@
 #include <unistd.h>
 
 #include <arpa/inet.h>
+#include <linux/if_ether.h>
 #include <net/if.h>
+#include <netpacket/packet.h>
 #include <netdb.h>
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -2799,6 +2802,76 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
+#define VLAN_PROC_PATH "/proc/net/vlan"
+
+/*
+ * Return 0 for no vlan_id, to be consistent with the NBFT spec.
+ */
+static int get_vlan_id(const char *ifname)
+{
+	char path[256], line[256];
+	int vlan_id = 0;
+	FILE *f;
+
+	snprintf(path, sizeof(path), "%s/%s", VLAN_PROC_PATH, ifname);
+	f = fopen(path, "r");
+	if (!f)
+		return 0;
+
+	while (fgets(line, sizeof(line), f)) {
+		if (sscanf(line, " VID: %d", &vlan_id) == 1) {
+			fclose(f);
+			return vlan_id;
+		}
+	}
+
+	fclose(f);
+	return 0;
+}
+
+/*
+ * Find network interface corresponding to the NBFT HFI
+ * by looking for mac address and vlan id.
+ */
+static char *nbft_find_hfi_iface(struct libnbft_hfi *hfi)
+{
+	struct ifaddrs *ifaddr, *ifa;
+	char *result = NULL;
+
+	if (strcmp((char *)hfi->transport, "tcp"))
+		return NULL;
+
+	if (getifaddrs(&ifaddr) != 0)
+		return NULL;
+
+	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+		struct sockaddr_ll *sll;
+
+		if (!ifa->ifa_addr)
+			continue;
+
+		if (ifa->ifa_addr->sa_family != AF_PACKET)
+			continue;
+
+		sll = (struct sockaddr_ll *)ifa->ifa_addr;
+
+		if (sll->sll_halen != ETH_ALEN)
+			continue;
+
+		if (!memcmp(sll->sll_addr, hfi->tcp_info.mac_addr, ETH_ALEN)) {
+			int vlan_id = get_vlan_id(ifa->ifa_name);
+
+			if (vlan_id == hfi->tcp_info.vlan) {
+				result = strdup(ifa->ifa_name);
+				break;
+			}
+		}
+	}
+
+	freeifaddrs(ifaddr);
+	return result;
+}
+
 __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect, char *nbft_path)
 {
@@ -2884,7 +2957,11 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 				nfctx.ctrl_params.transport = (*ss)->transport;
 				nfctx.ctrl_params.traddr = (*ss)->traddr;
 				nfctx.ctrl_params.trsvcid = (*ss)->trsvcid;
-				nfctx.ctrl_params.host_iface = NULL;
+				nfctx.ctrl_params.host_iface = nbft_find_hfi_iface(hfi);
+				if (!nfctx.ctrl_params.host_iface)
+					libnvme_msg(ctx, LIBNVME_LOG_INFO,
+						"SSNS %d: could not find host interface for HFI %d\n",
+						(*ss)->index, hfi->index);
 
 				rr = nbft_connect(ctx, &nfctx, h, NULL, *ss);
 
@@ -2908,6 +2985,9 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 							(*ss)->index,
 							host_traddr);
 				}
+
+				if (nfctx.ctrl_params.host_iface)
+					free((char *)nfctx.ctrl_params.host_iface);
 
 				if (rr) {
 					libnvme_msg(ctx, LIBNVME_LOG_ERR,
@@ -2973,7 +3053,11 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 			nfctx.ctrl_params.traddr = uri->host;
 			nfctx.ctrl_params.trsvcid = trsvcid;
 			nfctx.ctrl_params.host_traddr = host_traddr;
-			nfctx.ctrl_params.host_iface = NULL;
+			nfctx.ctrl_params.host_iface = nbft_find_hfi_iface(hfi);
+			if (!nfctx.ctrl_params.host_iface)
+				libnvme_msg(ctx, LIBNVME_LOG_INFO,
+					"SSNS %d: could not find host interface for HFI %d\n",
+					(*ss)->index, hfi->index);
 
 			/* Lookup existing discovery controller */
 			c = lookup_ctrl(h, &nfctx);
@@ -2993,6 +3077,9 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 				}
 			} else
 				ret = 0;
+
+			if (nfctx.ctrl_params.host_iface)
+				free((char *)nfctx.ctrl_params.host_iface);
 
 			if (ret) {
 				libnvme_msg(ctx, LIBNVME_LOG_ERR,
