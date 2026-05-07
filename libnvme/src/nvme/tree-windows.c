@@ -260,24 +260,6 @@ __public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
 	return 0;
 }
 
-__public long libnvme_ctrl_get_command_error_count(libnvme_ctrl_t c)
-{
-	(void)c;
-	return 0;
-}
-
-__public long libnvme_ctrl_get_reset_count(libnvme_ctrl_t c)
-{
-	(void)c;
-	return 0;
-}
-
-__public long libnvme_ctrl_get_reconnect_count(libnvme_ctrl_t c)
-{
-	(void)c;
-	return 0;
-}
-
 __public char *libnvme_get_subsys_attr(libnvme_subsystem_t s, const char *attr)
 {
 	(void)s;
@@ -295,6 +277,20 @@ __public char *libnvme_get_path_attr(libnvme_path_t p, const char *attr)
 __public char *libnvme_get_attr(const char *dir, const char *attr)
 {
 	(void)dir;
+	(void)attr;
+	return NULL;
+}
+
+__public char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr)
+{
+	(void)c;
+	(void)attr;
+	return NULL;
+}
+
+__public char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr)
+{
+	(void)n;
 	(void)attr;
 	return NULL;
 }

@@ -1031,7 +1031,6 @@ __public int libnvme_path_update_stat(libnvme_path_t p, bool diffstat)
 	return libnvme_update_stat(sysfs_stat_path, stat);
 }
 
-#if !defined(_WIN32)
 __public int libnvme_ns_update_stat(libnvme_ns_t n, bool diffstat)
 {
 	__cleanup_free char *sysfs_stat_path = NULL;
@@ -1049,7 +1048,6 @@ __public int libnvme_ns_update_stat(libnvme_ns_t n, bool diffstat)
 
 	return libnvme_update_stat(sysfs_stat_path, stat);
 }
-#endif /* !defined(_WIN32) */
 
 static int libnvme_stat_get_inflights(libnvme_stat_t stat)
 {
@@ -1469,6 +1467,7 @@ __public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 	free(state);
 	return c->state;
 }
+#endif /* !defined(_WIN32) */
 
 __public long libnvme_ctrl_get_command_error_count(libnvme_ctrl_t c)
 {
@@ -1502,7 +1501,6 @@ __public long libnvme_ctrl_get_reconnect_count(libnvme_ctrl_t c)
 
 	return c->reconnect_count;
 }
-#endif /* !defined(_WIN32) */
 
 __public int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
@@ -2648,7 +2646,7 @@ __public void libnvme_ns_copy_uuid(libnvme_ns_t n,
 {
 	memcpy(out, n->uuid, NVME_UUID_LEN);
 }
-#if !defined(_WIN32)
+
 __public long libnvme_ns_get_command_retry_count(libnvme_ns_t n)
 {
 	__cleanup_free char *retry_count = NULL;
@@ -2692,7 +2690,6 @@ __public long libnvme_ns_get_fail_no_available_path_count(libnvme_ns_t n)
 
 	return n->fail_no_available_path_count;
 }
-#endif /* !defined(_WIN32) */
 
 __public int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns)
 {
