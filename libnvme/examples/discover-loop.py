@@ -23,16 +23,16 @@ def discover(ctx, host, ctrl, iteration):
 
     try:
         ctrl.connect(host)
-    except Exception as e:
+    except nvme.ConnectError as e:
         print(f'Failed to connect: {e}')
         return
 
     print(f'{ctrl.name} connected to {ctrl.subsystem}')
 
-    slp = ctrl.supported_log_pages()
     try:
+        slp = ctrl.get_supported_log_pages()
         dlp_supp_opts = slp[nvme.NVME_LOG_LID_DISCOVERY] >> 16
-    except (TypeError, IndexError):
+    except (nvme.NvmeError, IndexError, TypeError):
         dlp_supp_opts = 0
 
     print(f"LID {nvme.NVME_LOG_LID_DISCOVERY}h (Discovery), supports: {disc_supp_str(dlp_supp_opts)}")
@@ -40,7 +40,7 @@ def discover(ctx, host, ctrl, iteration):
     try:
         lsp = nvme.NVMF_LOG_DISC_LSP_PLEO if dlp_supp_opts & nvme.NVMF_LOG_DISC_LID_PLEOS else 0
         disc_log = ctrl.discover(lsp=lsp)
-    except Exception as e:
+    except nvme.DiscoverError as e:
         print(f'Failed to discover: {e}')
         return
 
@@ -52,7 +52,7 @@ def discover(ctx, host, ctrl, iteration):
             continue
         print(f'{iteration}: {dlpe["subtype"]} {dlpe["subnqn"]}')
         with nvme.Ctrl(ctx, subsysnqn=dlpe['subnqn'], transport=dlpe['trtype'], traddr=dlpe['traddr'], trsvcid=dlpe['trsvcid']) as new_ctrl:
-            discover(host, new_ctrl, iteration + 1)
+            discover(ctx, host, new_ctrl, iteration + 1)
 
 ctx = nvme.GlobalCtx()
 host = nvme.Host(ctx)
