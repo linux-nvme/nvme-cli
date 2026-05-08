@@ -108,7 +108,7 @@ static int nvme_dera_get_device_status(struct libnvme_transport_handle *hdl, enu
 		.cdw12 = 0x104,
 	};
 
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err && result)
 		*result = cmd.result;
 

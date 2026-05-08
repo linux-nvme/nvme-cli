@@ -185,7 +185,7 @@ static int cmd_dump_repeat(struct libnvme_passthru_cmd *cmd, __u32 total_dw_size
 
 		cmd->cdw10 = force_max_transfer ? INTERNAL_LOG_MAX_DWORD_TRANSFER : dword_tfer;
 		cmd->data_len = dword_tfer * 4;
-		err = libnvme_submit_admin_passthru(hdl, cmd);
+		err = libnvme_exec_admin_passthru(hdl, cmd);
 		if (err)
 			return err;
 
@@ -577,14 +577,14 @@ static int ilog_dump_telemetry(struct libnvme_transport_handle *hdl, struct ilog
 
 	if (da == 4) {
 		nvme_init_get_features_host_behavior(&cmd, 0, &prev);
-		int err = libnvme_submit_admin_passthru(hdl, &cmd);
+		int err = libnvme_exec_admin_passthru(hdl, &cmd);
 
 		if (!err && !prev.etdas) {
 			struct nvme_feat_host_behavior da4_enable = prev;
 
 			da4_enable.etdas = 1;
 			nvme_init_set_features_host_behavior(&cmd, 0, &da4_enable);
-			libnvme_submit_admin_passthru(hdl, &cmd);
+			libnvme_exec_admin_passthru(hdl, &cmd);
 			host_behavior_changed = true;
 		}
 	}
@@ -612,7 +612,7 @@ static int ilog_dump_telemetry(struct libnvme_transport_handle *hdl, struct ilog
 
 	if (host_behavior_changed) {
 		nvme_init_set_features_host_behavior(&cmd, 0, &prev);
-		libnvme_submit_admin_passthru(hdl, &cmd);
+		libnvme_exec_admin_passthru(hdl, &cmd);
 	}
 
 	if (err)

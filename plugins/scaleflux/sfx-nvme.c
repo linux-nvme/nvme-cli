@@ -59,7 +59,7 @@ int nvme_query_cap(struct libnvme_transport_handle *hdl, __u32 nsid, __u32 data_
 	};
 
 	rc = ioctl(libnvme_transport_handle_get_fd(hdl), SFX_GET_FREESPACE, data);
-	return rc ? libnvme_submit_admin_passthru(hdl, &cmd) : 0;
+	return rc ? libnvme_exec_admin_passthru(hdl, &cmd) : 0;
 }
 
 int nvme_change_cap(struct libnvme_transport_handle *hdl, __u32 nsid, __u64 capacity)
@@ -71,7 +71,7 @@ int nvme_change_cap(struct libnvme_transport_handle *hdl, __u32 nsid, __u64 capa
 		.cdw11	= (capacity >> 32),
 	};
 
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 int nvme_sfx_set_features(struct libnvme_transport_handle *hdl, __u32 nsid, __u32 fid, __u32 value)
@@ -83,7 +83,7 @@ int nvme_sfx_set_features(struct libnvme_transport_handle *hdl, __u32 nsid, __u3
 		.cdw11	= value,
 	};
 
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 int nvme_sfx_get_features(struct libnvme_transport_handle *hdl, __u32 nsid, __u32 fid, __u32 *result)
@@ -95,7 +95,7 @@ int nvme_sfx_get_features(struct libnvme_transport_handle *hdl, __u32 nsid, __u3
 		.cdw10	= fid,
 	};
 
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err && result)
 		*result = cmd.result;
 
@@ -565,7 +565,7 @@ int sfx_nvme_get_log(struct libnvme_transport_handle *hdl, __u32 nsid, __u8 log_
 	cmd.cdw10 = log_id | (numdl << 16);
 	cmd.cdw11 = numdu;
 
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 /**
@@ -1453,7 +1453,7 @@ static int nvme_expand_cap(struct libnvme_transport_handle *hdl, __u32 namespace
 		.cdw10       = 0x0e,
 	};
 
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		fprintf(stderr, "Create ns failed\n");
 		nvme_show_status(err);

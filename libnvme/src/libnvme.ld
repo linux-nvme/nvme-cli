@@ -205,7 +205,9 @@ LIBNVME_3 {
 		libnvme_status_to_string;
 		libnvme_strerror;
 		libnvme_submit_admin_passthru;
+		libnvme_wait_admin_passthru;
 		libnvme_submit_io_passthru;
+		libnvme_wait_io_passthru;
 		libnvme_subsystem_first_ctrl;
 		libnvme_subsystem_first_ns;
 		libnvme_subsystem_get_host;

@@ -12,6 +12,7 @@
 #include <libnvme.h>
 
 #include "private.h"
+#include "compiler-attributes.h"
 
 /*
  * should not exceed CAP.MQES, 16 is rational for most ssd
@@ -99,7 +100,7 @@ static int nvme_submit_uring_cmd(struct io_uring *ring, int fd,
 	return 0;
 }
 
-int libnvme_wait_complete_passthru(struct libnvme_transport_handle *hdl)
+__public int libnvme_wait_admin_passthru(struct libnvme_transport_handle *hdl)
 {
 	struct io_uring_cqe *cqe;
 	struct io_uring *ring;
@@ -124,7 +125,7 @@ int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
 	int err;
 
 	if (hdl->ctx->ring_cmds >= NVME_URING_ENTRIES) {
-		err = libnvme_wait_complete_passthru(hdl);
+		err = libnvme_wait_admin_passthru(hdl);
 		if (err)
 			return err;
 	}
@@ -134,5 +135,10 @@ int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
 		return err;
 
 	hdl->ctx->ring_cmds += 1;
+	return 0;
+}
+
+__public int libnvme_wait_io_passthru(struct libnvme_transport_handle *hdl)
+{
 	return 0;
 }

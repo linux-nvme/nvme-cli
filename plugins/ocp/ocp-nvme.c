@@ -675,7 +675,7 @@ static int get_telemetry_data(struct libnvme_transport_handle *hdl, __u32 ns, __
 	cmd.cdw12 = (__u32)(0x00000000FFFFFFFF & offset);
 	cmd.cdw13 = (__u32)((0xFFFFFFFF00000000 & offset) >> 8);
 	cmd.cdw14 = 0;
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 static void print_telemetry_data_area_1(struct telemetry_data_area_1 *da1,

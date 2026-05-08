@@ -39,7 +39,7 @@ static void show_zns_properties(libnvme_ns_t n)
 		return;
 
 	nvme_init_zns_identify_ns(&cmd, libnvme_ns_get_nsid(n), &zns_ns);
-	if (libnvme_submit_admin_passthru(hdl, &cmd)) {
+	if (libnvme_exec_admin_passthru(hdl, &cmd)) {
 		fprintf(stderr, "failed to identify zns ns, result %" PRIx64 "\n",
 			(uint64_t)cmd.result);
 		free(zr);
@@ -51,7 +51,7 @@ static void show_zns_properties(libnvme_ns_t n)
 		le32_to_cpu(zns_ns.mor));
 
 	nvme_init_zns_identify_ctrl(&cmd, &zns_ctrl);
-	if (libnvme_submit_admin_passthru(hdl, &cmd)) {
+	if (libnvme_exec_admin_passthru(hdl, &cmd)) {
 		fprintf(stderr, "failed to identify zns ctrl\n");;
 		free(zr);
 		return;
@@ -61,7 +61,7 @@ static void show_zns_properties(libnvme_ns_t n)
 	nvme_init_zns_report_zones(&cmd, libnvme_ns_get_nsid(n), 0,
 				  NVME_ZNS_ZRAS_REPORT_ALL, false,
 				  true, (void *)zr, 0x1000);
-	if (libnvme_submit_io_passthru(hdl, &cmd)) {
+	if (libnvme_exec_io_passthru(hdl, &cmd)) {
 		fprintf(stderr, "failed to report zones, result %" PRIx64"\n",
 			(uint64_t)cmd.result);
 		free(zr);

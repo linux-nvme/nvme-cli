@@ -40,6 +40,41 @@ int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
 
 /**
+ * libnvme_wait_admin_passthru() - Wait for pending admin passthru completions
+ * @hdl:	Transport handle
+ *
+ * When io_uring is enabled, libnvme_submit_admin_passthru() queues commands
+ * asynchronously. Call this function after one or more submits to drain all
+ * pending completions before inspecting response data.
+ *
+ * This is a no-op when io_uring is not available.
+ *
+ * Return: 0 on success or a negative error code otherwise.
+ */
+int libnvme_wait_admin_passthru(struct libnvme_transport_handle *hdl);
+
+/**
+ * libnvme_exec_admin_passthru() - Submit an admin passthru command and wait
+ * @hdl:	Transport handle
+ * @cmd:	The nvme admin command to send
+ *
+ * Convenience wrapper that combines libnvme_submit_admin_passthru() and
+ * libnvme_wait_admin_passthru() into a single synchronous call. Use this
+ * for the common case where commands are sent one at a time. Use the
+ * split-phase API directly when batching multiple commands with io_uring.
+ *
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
+ */
+static inline int libnvme_exec_admin_passthru(
+		struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
+{
+	int err = libnvme_submit_admin_passthru(hdl, cmd);
+	return err ? err : libnvme_wait_admin_passthru(hdl);
+}
+
+/**
  * libnvme_submit_io_passthru() - Submit an nvme passthrough command
  * @hdl:	Transport handle
  * @cmd:	The nvme io command to send
@@ -51,6 +86,36 @@ int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
  */
 int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
+
+/**
+ * libnvme_wait_io_passthru() - Wait for pending IO passthru completions
+ * @hdl:	Transport handle
+ *
+ * Counterpart to libnvme_submit_io_passthru() for the split-phase API.
+ * Currently a no-op as the IO passthru path does not yet use io_uring.
+ *
+ * Return: 0 on success or a negative error code otherwise.
+ */
+int libnvme_wait_io_passthru(struct libnvme_transport_handle *hdl);
+
+/**
+ * libnvme_exec_io_passthru() - Submit an IO passthru command and wait
+ * @hdl:	Transport handle
+ * @cmd:	The nvme IO command to send
+ *
+ * Convenience wrapper combining libnvme_submit_io_passthru() and
+ * libnvme_wait_io_passthru() into a single synchronous call.
+ *
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
+ */
+static inline int libnvme_exec_io_passthru(
+		struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
+{
+	int err = libnvme_submit_io_passthru(hdl, cmd);
+	return err ? err : libnvme_wait_io_passthru(hdl);
+}
 
 /**
  * libnvme_reset_subsystem() - Initiate a subsystem reset

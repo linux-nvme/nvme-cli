@@ -1498,7 +1498,7 @@ __public int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id)
 	struct libnvme_passthru_cmd cmd;
 
 	nvme_init_identify_ctrl(&cmd, id);
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 __public libnvme_ns_t libnvme_ctrl_first_ns(libnvme_ctrl_t c)
@@ -2679,7 +2679,7 @@ __public int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns)
 		return err;
 
 	nvme_init_identify_ns(&cmd, libnvme_ns_get_nsid(n), ns);
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 int libnvme_ns_identify_descs(libnvme_ns_t n, struct nvme_ns_id_desc *descs)
@@ -2693,7 +2693,7 @@ int libnvme_ns_identify_descs(libnvme_ns_t n, struct nvme_ns_id_desc *descs)
 		return err;
 
 	nvme_init_identify_ns_descs_list(&cmd, libnvme_ns_get_nsid(n), descs);
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 __public int libnvme_ns_verify(libnvme_ns_t n, off_t offset, size_t count)
