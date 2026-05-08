@@ -104,7 +104,7 @@ struct linux_passthru_cmd64 {
  * @tls:		Start TLS on the connection (TCP)
  * @concat:		Enable secure concatenation (TCP)
  */
-struct libnvme_fabrics_config { // !generate-accessors
+struct libnvme_fabrics_config { // !generate-accessors !generate-dict-table
 	int queue_size;
 	int nr_io_queues;
 	int reconnect_delay;

@@ -639,6 +639,135 @@ def parse_generate_python(raw_body):
     return False, None
 
 
+_GEN_DICT_TABLE_RE = re.compile(r'!generate-dict-table(?=[\s!]|$)')
+
+
+def parse_generate_dict_table(raw_body):
+    """Return True if ``!generate-dict-table`` is present on any line."""
+    for line in raw_body.splitlines():
+        comment = _comment_text(line)
+        if comment is None:
+            continue
+        if _GEN_DICT_TABLE_RE.search(comment):
+            return True
+    return False
+
+
+def parse_dict_table_none(raw_line):
+    """Return True if ``!dict-table:none`` is present on *raw_line*."""
+    comment = _comment_text(raw_line)
+    if comment is None:
+        return False
+    return bool(re.search(r'!dict-table:none(?=[\s!]|$)', comment))
+
+
+# Types that map to the 'int' bucket (4-byte signed/unsigned integers).
+# The table loop writes them via *(int *)ptr, which is safe for same-sized
+# types.  Smaller types (__u8, short, etc.) are intentionally excluded —
+# writing 4 bytes to a 1- or 2-byte field would corrupt adjacent memory.
+_DICT_TABLE_INT_TYPES = frozenset({
+    'int', 'unsigned int',
+    'int32_t', '__s32',
+    'uint32_t', '__u32',
+})
+
+# Types that map to the 'long' bucket (8-byte integers on 64-bit Linux).
+_DICT_TABLE_LONG_TYPES = frozenset({
+    'long', 'unsigned long',
+    'long long', 'unsigned long long',
+    'int64_t', '__s64',
+    'uint64_t', '__u64',
+})
+
+# Types that map to the 'bool' bucket.
+_DICT_TABLE_BOOL_TYPES = frozenset({'bool', '_Bool'})
+
+# Scalar types that are KNOWN but not yet supported (wrong width or need
+# special handling).  A member with one of these types will trigger a
+# warning instead of being silently dropped.
+_DICT_TABLE_UNSUPPORTED_SCALAR = frozenset({
+    'short', 'unsigned short',
+    'int8_t',  'int16_t',
+    'uint8_t', 'uint16_t',
+    '__s8',  '__s16',
+    '__u8',  '__u16',
+    'signed char', 'unsigned char', 'char',
+    'float', 'double',
+})
+
+
+def parse_members_for_dict_table(raw_body, struct_name='<unknown>'):
+    """Bucket members by C type for dict-table generation.
+
+    Returns ``{'int': [...], 'long': [...], 'bool': [...], 'char *': [...]}``,
+    where each list holds the member names belonging to that type.
+
+    Members annotated ``// !dict-table:none`` are skipped silently.
+    Members of unsupported scalar types produce a warning on stderr.
+    Members of unrecognised non-scalar types (pointers, enums, structs)
+    also produce a warning.
+    """
+    buckets = {'int': [], 'long': [], 'bool': [], 'char *': []}
+
+    for raw_line in raw_body.splitlines():
+        if parse_dict_table_none(raw_line):
+            continue
+
+        clean = strip_inline_comment(strip_block_comments(raw_line)).strip()
+
+        if not clean or ';' not in clean:
+            continue
+        if 'static' in clean or 'struct' in clean:
+            continue
+
+        # Fixed-size scalar arrays (e.g. uint8_t eui64[8]) and char arrays
+        # are not supported; CHAR_ARRAY_RE / SCALAR_ARRAY_RE would match
+        # them, but we only run MEMBER_RE here.  Skip array declarations
+        # so they do not fall through to the warning path.
+        if CHAR_ARRAY_RE.match(clean) or SCALAR_ARRAY_RE.match(clean):
+            continue
+
+        m = MEMBER_RE.match(clean)
+        if not m:
+            continue
+
+        if bool(m.group(1)):    # const — skip silently
+            continue
+
+        type_base = m.group(2)
+        ptr_part  = m.group(3)
+        name      = m.group(4)
+
+        ptr_depth = ptr_part.count('*')
+
+        if ptr_depth == 1 and type_base == 'char':
+            buckets['char *'].append(name)
+        elif ptr_depth == 0:
+            if type_base in _DICT_TABLE_INT_TYPES:
+                buckets['int'].append(name)
+            elif type_base in _DICT_TABLE_LONG_TYPES:
+                buckets['long'].append(name)
+            elif type_base in _DICT_TABLE_BOOL_TYPES:
+                buckets['bool'].append(name)
+            else:
+                print(
+                    f"warning: struct {struct_name}: member '{name}' has "
+                    f"type '{type_base}' which is not supported by "
+                    f"!generate-dict-table; annotate with "
+                    f"// !dict-table:none to silence this warning.",
+                    file=sys.stderr)
+        else:
+            # Multi-level pointer (char **, void *, struct foo *, …)
+            print(
+                f"warning: struct {struct_name}: member '{name}' has "
+                f"pointer type '{type_base} {"*" * ptr_depth}' which is "
+                f"not supported by !generate-dict-table; annotate with "
+                f"// !dict-table:none to silence this warning.",
+                file=sys.stderr)
+
+    return buckets
+
+
 # ---------------------------------------------------------------------------
 # Lifecycle member: name + whether it is a char** (string array)
 # ---------------------------------------------------------------------------
@@ -1586,6 +1715,102 @@ def generate_swig_fragment(f, prefix, struct_name, members, errors,
 
 
 # ---------------------------------------------------------------------------
+# Dict-table emitters
+# ---------------------------------------------------------------------------
+
+_DICT_TABLE_SUFFIXES = (
+    ('int',    'int_fields'),
+    ('long',   'long_fields'),
+    ('bool',   'bool_fields'),
+    ('char *', 'str_fields'),
+)
+
+
+def emit_dict_table(f, struct_name, buckets, source_header):
+    """Emit field tables and key array for *struct_name* into *f*."""
+    f.write(f'/* Derived from struct {struct_name} in {source_header}. */\n\n')
+    f.write(f'#define _OFF(m) offsetof(struct {struct_name}, m)\n\n')
+
+    for type_key, suffix in _DICT_TABLE_SUFFIXES:
+        names = buckets.get(type_key, [])
+        if not names:
+            continue
+        arr_name = f'{struct_name}_{suffix}'
+        f.write(f'static const struct fctx_field {arr_name}[] = {{\n')
+        for mname in names:
+            f.write(f'\t{{ "{mname}", _OFF({mname}) }},\n')
+        f.write('\t{ NULL, 0 },\n')
+        f.write('};\n\n')
+
+    f.write('#undef _OFF\n\n')
+
+    all_names = [n for type_key, _ in _DICT_TABLE_SUFFIXES
+                 for n in buckets.get(type_key, [])]
+    if all_names:
+        f.write(f'static const char * const {struct_name}_keys[] = {{\n')
+        for mname in all_names:
+            f.write(f'\t"{mname}",\n')
+        f.write('\tNULL,\n')
+        f.write('};\n\n')
+
+
+def generate_dict_table_file(header_files, out_path, verbose):
+    """Write the dict-table header for all ``!generate-dict-table`` structs."""
+    results = []
+
+    for in_hdr in header_files:
+        try:
+            with open(in_hdr) as f:
+                text = f.read()
+        except OSError as e:
+            print(f"error: cannot read '{in_hdr}': {e}", file=sys.stderr)
+            sys.exit(1)
+
+        for match in STRUCT_RE.finditer(text):
+            struct_name = match.group(1)
+            raw_body    = match.group(2)
+
+            if not parse_generate_dict_table(raw_body):
+                continue
+
+            buckets = parse_members_for_dict_table(raw_body, struct_name)
+            results.append((struct_name, buckets, in_hdr))
+
+            if verbose:
+                total = sum(len(v) for v in buckets.values())
+                print(f"  dict-table: {struct_name} — {total} fields")
+
+    guard = '_' + sanitize_identifier(
+        os.path.basename(out_path).upper().replace('.', '_')) + '_'
+
+    makedirs_for(out_path)
+    with open(out_path, 'w') as f:
+        f.write(
+            f'{SPDX_H}\n'
+            f'\n'
+            f'{BANNER}\n'
+            f'\n'
+            f'#ifndef {guard}\n'
+            f'#define {guard}\n'
+            f'\n'
+            f'#include <stddef.h>\n'
+            f'\n'
+            f'struct fctx_field {{\n'
+            f'\tconst char *key;\n'
+            f'\tsize_t off;\n'
+            f'}};\n'
+            f'\n'
+        )
+        for struct_name, buckets, source_header in results:
+            emit_dict_table(f, struct_name, buckets,
+                            os.path.basename(source_header))
+        f.write(f'#endif /* {guard} */\n')
+
+    if verbose and results:
+        print(f"Generated {out_path}")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1606,6 +1831,9 @@ def main():
     parser.add_argument('-s', '--swig-out', default=None,
                         dest='s_fname',   metavar='FILE',
                         help='Generated SWIG fragment (*.i). Omit to skip.')
+    parser.add_argument('-d', '--dict-table-out', default=None,
+                        dest='d_fname',   metavar='FILE',
+                        help='Generated dict-table header (*.h). Omit to skip.')
     parser.add_argument('-p', '--prefix',  default='',
                         dest='prefix',    metavar='STR',
                         help='Prefix prepended to every generated function name.')
@@ -1813,6 +2041,10 @@ def main():
         print(f"\nGenerated {args.h_fname} and {args.c_fname}")
         if emit_swig and args.s_fname:
             print(f"Generated {args.s_fname}")
+
+    # --- fctx_field_tables.h (dict-table) ----------------------------------
+    if args.d_fname:
+        generate_dict_table_file(header_files, args.d_fname, args.verbose)
 
 
 if __name__ == '__main__':

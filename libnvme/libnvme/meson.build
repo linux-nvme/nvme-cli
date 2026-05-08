@@ -27,6 +27,7 @@ if want_python
             'accessors.i',
             'accessors-fabrics.i',
             'nvme-manual-bridges.i',
+            'fctx_field_tables.h',
         ],
         install: true,
         install_dir: [python3.get_install_dir(pure: false, subdir: 'libnvme'), false],
@@ -38,6 +39,7 @@ if want_python
         '_nvme',
         nvme_wrap_c,
         dependencies: [config_dep, ccan_dep, libnvme_dep, py3_dep],
+        include_directories: include_directories('.'),
         install: true,
         subdir: 'libnvme',
     )

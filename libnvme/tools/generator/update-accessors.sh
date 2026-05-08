@@ -31,9 +31,10 @@
 #   $3             full path of the output .h file
 #   $4             full path of the output .c file
 #   $5             full path of the output .ld file
-#   [--check]      optional: CI mode — read-only, exit non-zero on any drift
-#   [--swig-out F] optional: full path of the output SWIG fragment (.i file)
-#   $6 (or $8) ... one or more input headers scanned for
+#   [--check]             optional: CI mode; read-only, exit non-zero on drift
+#   [--swig-out F]        optional: full path of the SWIG fragment (.i file)
+#   [--dict-table-out F]  optional: full path of the dict-table header (.h file)
+#   $6 (or $8/10) ... one or more input headers scanned for
 #                  // !generate-accessors and // !generate-python structs
 
 set -euo pipefail
@@ -57,6 +58,12 @@ if [ "${1-}" = "--swig-out" ]; then
     shift 2
 fi
 
+DICT_TABLE_OUT=""
+if [ "${1-}" = "--dict-table-out" ]; then
+    DICT_TABLE_OUT="${2:?--dict-table-out requires a path argument}"
+    shift 2
+fi
+
 if [ $# -eq 0 ]; then
     echo "error: no input headers provided" >&2
     exit 1
@@ -72,6 +79,11 @@ TMP_H="$TMPDIR_WORK/${BASE}.h"
 TMP_C="$TMPDIR_WORK/${BASE}.c"
 TMP_LD="$TMPDIR_WORK/${BASE}.ld"
 TMP_I="$TMPDIR_WORK/${BASE}.i"
+if [ -n "$DICT_TABLE_OUT" ]; then
+    TMP_DT="$TMPDIR_WORK/$(basename "$DICT_TABLE_OUT")"
+else
+    TMP_DT="$TMPDIR_WORK/dict_table.h"
+fi
 
 # ---------------------------------------------------------------------------
 # Helper: update a source file atomically when content changes.
@@ -160,11 +172,15 @@ echo ""
 SWIG_ARGS=()
 [ -n "$SWIG_OUT" ] && SWIG_ARGS=(--swig-out "$TMP_I")
 
+DICT_TABLE_ARGS=()
+[ -n "$DICT_TABLE_OUT" ] && DICT_TABLE_ARGS=(--dict-table-out "$TMP_DT")
+
 "$PYTHON" "$GENERATOR" \
     --h-out  "$TMP_H"  \
     --c-out  "$TMP_C"  \
     --ld-out "$TMP_LD" \
     "${SWIG_ARGS[@]}"  \
+    "${DICT_TABLE_ARGS[@]}" \
     "$@"
 
 if [ "$CHECK_MODE" -eq 1 ]; then
@@ -175,7 +191,8 @@ if [ "$CHECK_MODE" -eq 1 ]; then
     DRIFT=0
     check_if_current "$TMP_H" "$H_OUT"
     check_if_current "$TMP_C" "$C_OUT"
-    [ -n "$SWIG_OUT" ] && check_if_current "$TMP_I" "$SWIG_OUT"
+    [ -n "$SWIG_OUT" ]       && check_if_current "$TMP_I"  "$SWIG_OUT"
+    [ -n "$DICT_TABLE_OUT" ] && check_if_current "$TMP_DT" "$DICT_TABLE_OUT"
     echo ""
     check_ld_drift "$TMP_LD" "$LD_OUT" || DRIFT=$((DRIFT + 1))
     echo ""
@@ -197,7 +214,8 @@ else
     CHANGED=0
     update_if_changed "$TMP_H" "$H_OUT"
     update_if_changed "$TMP_C" "$C_OUT"
-    [ -n "$SWIG_OUT" ] && update_if_changed "$TMP_I" "$SWIG_OUT"
+    [ -n "$SWIG_OUT" ]       && update_if_changed "$TMP_I"  "$SWIG_OUT"
+    [ -n "$DICT_TABLE_OUT" ] && update_if_changed "$TMP_DT" "$DICT_TABLE_OUT"
     echo ""
     if [ "$CHANGED" -gt 0 ]; then
         printf "%d file(s) updated in %s\n" "$CHANGED" "$(dirname "$H_OUT")"
