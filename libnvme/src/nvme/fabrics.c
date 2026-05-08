@@ -1228,6 +1228,9 @@ __public int libnvmf_disconnect_ctrl(libnvme_ctrl_t c)
 static void nvmf_update_tls_concat(struct nvmf_disc_log_entry *e,
 		libnvme_ctrl_t c, libnvme_host_t h)
 {
+	if (!e)
+		return;
+
 	if (e->trtype != NVMF_TRTYPE_TCP ||
 	    e->tsas.tcp.sectype == NVMF_TCP_SECTYPE_NONE)
 		return;

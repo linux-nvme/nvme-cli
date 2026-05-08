@@ -239,6 +239,47 @@ class TestCtrl(unittest.TestCase):
             self.assertFalse(c.connected)
 
 
+class TestExceptions(unittest.TestCase):
+    """Exception hierarchy exposed via the nvme module."""
+
+    def test_nvme_error_importable(self):
+        self.assertTrue(hasattr(nvme, 'NvmeError'))
+
+    def test_connect_error_importable(self):
+        self.assertTrue(hasattr(nvme, 'ConnectError'))
+
+    def test_disconnect_error_importable(self):
+        self.assertTrue(hasattr(nvme, 'DisconnectError'))
+
+    def test_discover_error_importable(self):
+        self.assertTrue(hasattr(nvme, 'DiscoverError'))
+
+    def test_not_connected_error_importable(self):
+        self.assertTrue(hasattr(nvme, 'NotConnectedError'))
+
+    def test_subclasses_inherit_from_nvme_error(self):
+        for cls in (nvme.ConnectError, nvme.DisconnectError,
+                    nvme.DiscoverError, nvme.NotConnectedError):
+            with self.subTest(cls=cls):
+                self.assertTrue(issubclass(cls, nvme.NvmeError))
+
+    def test_nvme_error_is_exception(self):
+        self.assertTrue(issubclass(nvme.NvmeError, Exception))
+
+    def test_nvme_error_has_errno_and_message(self):
+        e = nvme.NvmeError(5, 'test message')
+        self.assertEqual(e.errno, 5)
+        self.assertEqual(e.message, 'test message')
+
+    def test_not_connected_error_no_errno_arg(self):
+        e = nvme.NotConnectedError()
+        self.assertEqual(e.errno, 0)
+
+    def test_not_connected_error_custom_message(self):
+        e = nvme.NotConnectedError("custom msg")
+        self.assertEqual(e.message, "custom msg")
+
+
 class TestCtrlErrorHandling(unittest.TestCase):
     """Error paths that can be exercised without real hardware."""
 
@@ -254,12 +295,12 @@ class TestCtrlErrorHandling(unittest.TestCase):
         self.ctx = None
         gc.collect()
 
-    def test_disconnect_unconnected_raises_attribute_error(self):
-        with self.assertRaises(AttributeError):
+    def test_disconnect_unconnected_raises_not_connected_error(self):
+        with self.assertRaises(nvme.NotConnectedError):
             self.ctrl.disconnect()
 
-    def test_discover_unconnected_raises_attribute_error(self):
-        with self.assertRaises(AttributeError):
+    def test_discover_unconnected_raises_not_connected_error(self):
+        with self.assertRaises(nvme.NotConnectedError):
             self.ctrl.discover()
 
 

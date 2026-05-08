@@ -89,8 +89,22 @@ PyObject *read_hostid();
 
 #define STR_OR_NONE(str) (!(str) ? "None" : str)
 
-static int connect_err = 0;
-static int discover_err = 0;
+static PyObject *NvmeError             = NULL;
+static PyObject *NvmeConnectError      = NULL;
+static PyObject *NvmeDisconnectError   = NULL;
+static PyObject *NvmeDiscoverError     = NULL;
+static PyObject *NvmeNotConnectedError = NULL;
+
+static void raise_nvme(PyObject *cls, int err) {
+	const char *s = libnvme_errno_to_string(err < 0 ? -err : err);
+	PyObject *args = Py_BuildValue("(is)", err, s ? s : "unknown");
+	PyErr_SetObject(cls, args);
+	Py_DECREF(args);
+}
+
+static void raise_not_connected(void) {
+	PyErr_SetString(NvmeNotConnectedError, "Not connected");
+}
 
 static void PyDict_SetItemStringDecRef(PyObject * p, const char *key, PyObject *val) {
 	PyDict_SetItemString(p, key, val); /* Does NOT steal reference to val .. */
@@ -510,6 +524,26 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char * filename)
 }
 %} /* --------- end C implementation block --------- */
 
+%init %{
+	PyObject *_exc = PyImport_ImportModule("libnvme._exceptions");
+	NvmeError             = PyObject_GetAttrString(_exc, "NvmeError");
+	NvmeConnectError      = PyObject_GetAttrString(_exc, "ConnectError");
+	NvmeDisconnectError   = PyObject_GetAttrString(_exc, "DisconnectError");
+	NvmeDiscoverError     = PyObject_GetAttrString(_exc, "DiscoverError");
+	NvmeNotConnectedError = PyObject_GetAttrString(_exc, "NotConnectedError");
+	Py_DECREF(_exc);
+%}
+
+%pythoncode %{
+from libnvme._exceptions import (
+	NvmeError,
+	ConnectError,
+	DisconnectError,
+	DiscoverError,
+	NotConnectedError,
+)
+%}
+
 //##############################################################################
 
 /* All typemaps must be defined before the %include statements below so that
@@ -749,48 +783,21 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char * filename)
 %include "accessors.i"
 %include "accessors-fabrics.i"
 
+/* Propagate any Python exception set inside the helper function.
+ * raise_nvme() sets the exception; SWIG_fail jumps to the fail: label
+ * in the wrapper (not in the extracted SWIGINTERN helper), so it must
+ * live here rather than inside the %extend function body. */
 %exception libnvme_ctrl::connect {
-	connect_err = 0;
-	$action  /* $action sets connect_err to non-zero value on failure */
-	if (connect_err) {
-		const char *errstr = libnvme_errno_to_string(-connect_err);
-		if (errstr) {
-			SWIG_exception(SWIG_RuntimeError, errstr);
-		} else {
-			SWIG_exception(SWIG_RuntimeError, "Connect failed");
-		}
-	}
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
 }
-
 %exception libnvme_ctrl::disconnect {
-	connect_err = 0;
-	errno = 0;
-	$action  /* $action sets connect_err to non-zero value on failure */
-	if (connect_err == 1) {
-		SWIG_exception(SWIG_AttributeError, "No controller connection");
-	} else if (connect_err) {
-		const char *errstr = libnvme_errno_to_string(-connect_err);
-		if (errstr) {
-			SWIG_exception(SWIG_RuntimeError, errstr);
-		} else {
-			SWIG_exception(SWIG_RuntimeError, "Disconnect failed");
-		}
-	}
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
 }
-
 %exception libnvme_ctrl::discover {
-	discover_err = 0;
-	$action  /* $action sets discover_err to non-zero value on failure */
-	if (discover_err == 1) {
-		SWIG_exception(SWIG_AttributeError, "No controller connection");
-	} else if (discover_err) {
-		const char *errstr = libnvme_errno_to_string(-discover_err);
-		if (errstr) {
-			SWIG_exception(SWIG_RuntimeError, errstr);
-		} else {
-			SWIG_exception(SWIG_RuntimeError, "Discover failed");
-		}
-	}
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
 }
 
 #include "tree.h"
@@ -1137,7 +1144,7 @@ struct libnvme_ns * libnvme_ctrl_next_ns(struct libnvme_ctrl * c, struct libnvme
 		"    h: Host object to associate with the connection.\n"
 		"\n"
 		"Raises:\n"
-		"    RuntimeError: Connection failed.") connect;
+		"    ConnectError: Connection failed.") connect;
 	void connect(struct libnvme_host *h) {
 		int ret;
 
@@ -1146,7 +1153,7 @@ struct libnvme_ns * libnvme_ctrl_next_ns(struct libnvme_ctrl * c, struct libnvme
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
 		if (ret) {
-			connect_err = ret;
+			raise_nvme(NvmeConnectError, ret);
 			return;
 		}
 	}
@@ -1157,22 +1164,24 @@ struct libnvme_ns * libnvme_ctrl_next_ns(struct libnvme_ctrl * c, struct libnvme
 	%feature("autodoc", "Disconnect this controller from the NVMe-oF target.\n"
 		"\n"
 		"Raises:\n"
-		"    AttributeError: Controller is not currently connected.\n"
-		"    RuntimeError: Disconnect failed.") disconnect;
+		"    NotConnectedError: Controller is not currently connected.\n"
+		"    DisconnectError: Disconnect failed.") disconnect;
 	void disconnect() {
 		int ret;
 		const char *dev;
 
 		dev = libnvme_ctrl_get_name($self);
 		if (!dev) {
-			connect_err = 1;
+			raise_not_connected();
 			return;
 		}
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
 		ret = libnvmf_disconnect_ctrl($self);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
-		if (ret < 0)
-			connect_err = 2;
+		if (ret < 0) {
+			raise_nvme(NvmeDisconnectError, ret);
+			return;
+		}
 	}
 
 	bool _registration_supported() {
@@ -1231,28 +1240,34 @@ struct libnvme_ns * libnvme_ctrl_next_ns(struct libnvme_ctrl * c, struct libnvme
 		"    ``subtype``.\n"
 		"\n"
 		"Raises:\n"
-		"    AttributeError: Controller is not connected.\n"
-		"    RuntimeError: Discovery failed.") discover;
+		"    NotConnectedError: Controller is not connected.\n"
+		"    DiscoverError: Discovery failed.") discover;
 	%newobject discover;
 	struct nvmf_discovery_log *discover(int lsp = 0, int max_retries = 6) {
 		struct nvmf_discovery_log *logp = NULL;
 		struct libnvmf_discovery_args *args = NULL;
+		int ret;
 
 		if (!libnvme_ctrl_get_name($self)) {
-			discover_err = 1;
+			raise_not_connected();
 			return NULL;
 		}
-		discover_err = libnvmf_discovery_args_new(&args);
-		if (discover_err)
+		ret = libnvmf_discovery_args_new(&args);
+		if (ret) {
+			raise_nvme(NvmeDiscoverError, ret);
 			return NULL;
+		}
 		libnvmf_discovery_args_set_lsp(args, lsp);
 		libnvmf_discovery_args_set_max_retries(args, max_retries);
 		Py_BEGIN_ALLOW_THREADS  /* Release Python GIL */
-		    discover_err = libnvmf_get_discovery_log($self, args, &logp);
+		    ret = libnvmf_get_discovery_log($self, args, &logp);
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 		libnvmf_discovery_args_free(args);
 
-		if (logp == NULL) discover_err = 2;
+		if (ret || logp == NULL) {
+			raise_nvme(NvmeDiscoverError, ret);
+			return NULL;
+		}
 		return logp;
 	}
 
@@ -1263,8 +1278,11 @@ struct libnvme_ns * libnvme_ctrl_next_ns(struct libnvme_ctrl * c, struct libnvme
 		"\n"
 		"Returns:\n"
 		"    A list of integers, one per Log Identifier, encoding its\n"
-		"    supported features. Returns None if the command fails.") supported_log_pages;
-	PyObject *supported_log_pages(bool rae = true) {
+		"    supported features.\n"
+		"\n"
+		"Raises:\n"
+		"    NvmeError: The command failed.") get_supported_log_pages;
+	PyObject *get_supported_log_pages(bool rae = true) {
 		struct nvme_supported_log_pages log;
 		struct libnvme_passthru_cmd cmd;
 		PyObject *obj = NULL;
@@ -1276,11 +1294,12 @@ struct libnvme_ns * libnvme_ctrl_next_ns(struct libnvme_ctrl * c, struct libnvme
 		Py_END_ALLOW_THREADS    /* Reacquire Python GIL */
 
 		if (ret) {
-			Py_RETURN_NONE;
+			raise_nvme(NvmeError, ret);
+			return NULL;
 		}
 
 		obj = PyList_New(NVME_LOG_SUPPORTED_LOG_PAGES_MAX);
-		if (!obj) Py_RETURN_NONE;
+		if (!obj) return NULL;
 
 		for (int i = 0; i < NVME_LOG_SUPPORTED_LOG_PAGES_MAX; i++)
 			PyList_SetItem(obj, i, PyLong_FromLong(le32_to_cpu(log.lid_support[i]))); /* steals ref. to object - no need to decref */

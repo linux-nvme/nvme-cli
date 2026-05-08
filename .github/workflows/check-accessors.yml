@@ -6,12 +6,18 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-# Verify that the committed accessor files (accessors.h, accessors.c) are
-# up to date with the generate-accessors tool and the structs in private.h.
+# Verify that all committed generated accessor files (.h, .c, .i, .ld) are
+# in sync with the generate-accessors tool and the annotated private*.h files.
 #
-# If this check fails, run the following command and commit the result:
+# .h, .c, and .i files must be byte-identical to what the generator produces.
+# .ld files are checked at the symbol level: the committed file may carry
+# different version-section labels but must export the same set of symbols.
 #
-#   meson compile -C <build-dir> update-accessors
+# If this check fails:
+#   - For .h/.c/.i: run 'meson compile -C <build-dir> update-accessors'
+#                   and commit the result.
+#   - For .ld:      manually add/remove the symbols listed in the WARNING and
+#                   commit the result.
 
 name: Check accessors
 
@@ -34,15 +40,6 @@ jobs:
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Configure
-        run: meson setup .build-ci
-      - name: Regenerate accessor files
+        run: meson setup .build-ci -Dcheck-accessors=true
+      - name: Check generated accessor files are in sync
         run: meson compile -C .build-ci update-accessors
-      - name: Check for uncommitted differences
-        run: |
-          if ! git diff --exit-code libnvme/src/nvme/accessors.h \
-                                    libnvme/src/nvme/accessors.c; then
-            echo ""
-            echo "ERROR: accessor files are out of date."
-            echo "Run 'meson compile -C <build-dir> update-accessors' and commit the result."
-            exit 1
-          fi
