@@ -115,8 +115,17 @@ __public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 
 __public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 {
-	(void)hdl;
-	return 0;	// NOP on Windows
+	/*
+	 * Windows doesn't have a direct equivalent to rescan namespaces,
+	 * but we can cause the system to invalidate its cached partition table
+	 * and re-enumerate the device.
+	 */
+	if (!DeviceIoControl(hdl->fd, IOCTL_DISK_UPDATE_PROPERTIES,
+			NULL, 0, NULL, 0, NULL, NULL)) {
+		errno = get_last_error_as_errno();
+		return -errno;
+	}
+	return 0;
 }
 
 __public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
@@ -144,9 +153,13 @@ __public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
 __public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
 		int block_size)
 {
-	(void)hdl;
-	(void)block_size;
-	return 0;	// NOP on Windows
+	/* Invalidate cached partition table and re-enumerate the device. */
+	if (!DeviceIoControl(hdl->fd, IOCTL_DISK_UPDATE_PROPERTIES,
+			NULL, 0, NULL, 0, NULL, NULL)) {
+		errno = get_last_error_as_errno();
+		return -errno;
+	}
+	return 0;
 }
 
 /*

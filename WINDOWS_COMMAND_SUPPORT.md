@@ -47,7 +47,7 @@ These commands are fully implemented and verified working on Windows.
 | `read` | Submit a read command, return results | |
 | `write` | Submit a write command, return results | |
 | `sanitize-log` | Retrieve sanitize log, show it | |
-| `ns-rescan` | Rescans the NVME namespaces | No-op on Windows |
+| `ns-rescan` | Rescans the NVME namespaces | |
 | `show-topology` | Show the topology | |
 
 ### Supported on Windows but Not Supported by Current Test Device (Log Pages)
