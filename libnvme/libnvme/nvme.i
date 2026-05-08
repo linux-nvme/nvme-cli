@@ -97,18 +97,21 @@ static PyObject *NvmeDiscoverError     = NULL;
 static PyObject *NvmeNotConnectedError = NULL;
 static PyObject *fctx_known_keys       = NULL;
 
-static void raise_nvme(PyObject *cls, int err) {
+static void raise_nvme(PyObject *cls, int err)
+{
 	const char *s = libnvme_errno_to_string(err < 0 ? -err : err);
 	PyObject *args = Py_BuildValue("(is)", err, s ? s : "unknown");
 	PyErr_SetObject(cls, args);
 	Py_DECREF(args);
 }
 
-static void raise_not_connected(void) {
+static void raise_not_connected(void)
+{
 	PyErr_SetString(NvmeNotConnectedError, "Not connected");
 }
 
-static void PyDict_SetItemStringDecRef(PyObject * p, const char *key, PyObject *val) {
+static void PyDict_SetItemStringDecRef(PyObject *p, const char *key, PyObject *val)
+{
 	PyDict_SetItemString(p, key, val); /* Does NOT steal reference to val .. */
 	Py_XDECREF(val);                   /* .. therefore decrement ref. count. */
 }
