@@ -29,6 +29,11 @@ libnvme_swig_dir = libnvme_srcroot / 'libnvme'
 
 _py3 = find_program('python3', required: true)
 
+# When -Dcheck-accessors=true the script runs in read-only CI mode: it exits
+# non-zero if any generated file is out of sync with the source tree rather
+# than updating it.
+_check_flag = get_option('check-accessors') ? ['--check'] : []
+
 _tgt_common = run_target(
     'update-common-accessors',
     command: [
@@ -38,6 +43,7 @@ _tgt_common = run_target(
         libnvme_src_nvme / 'accessors.h',
         libnvme_src_nvme / 'accessors.c',
         libnvme_src / 'accessors.ld',
+    ] + _check_flag + [
         '--swig-out', libnvme_swig_dir / 'accessors.i',
         libnvme_src_nvme / 'private.h',
     ],
@@ -52,10 +58,11 @@ _tgt_fabrics = run_target(
         libnvme_src_nvme / 'accessors-fabrics.h',
         libnvme_src_nvme / 'accessors-fabrics.c',
         libnvme_src / 'accessors-fabrics.ld',
+    ] + _check_flag + [
         '--swig-out', libnvme_swig_dir / 'accessors-fabrics.i',
         libnvme_src_nvme / 'private-fabrics.h',
     ],
 )
 
-# This alias allows generating all accessors in one shot.
+# This alias allows generating/checking all accessors in one shot.
 alias_target('update-accessors', _tgt_common, _tgt_fabrics)

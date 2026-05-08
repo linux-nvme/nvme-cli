@@ -161,6 +161,12 @@ option(
   description : 'building for PyPI (use short soversion, e.g. libnvme.so.3)'
 )
 option(
+  'check-accessors',
+  type : 'boolean',
+  value : false,
+  description : 'CI mode: verify generated accessor files are in sync instead of updating them'
+)
+option(
   'plugins',
   type : 'array',
   choices: ['amzn', 'dapustor', 'dell', 'dera',
