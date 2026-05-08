@@ -23,9 +23,9 @@ name: Check accessors
 
 on:
   push:
-    branches: [master]
+    branches: [master, mingw]
   pull_request:
-    branches: [master]
+    branches: [master, mingw]
 
   workflow_dispatch:
 
