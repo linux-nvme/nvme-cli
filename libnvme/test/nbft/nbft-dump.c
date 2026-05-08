@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	if (libnvme_read_nbft(ctx, &table, argv[1]) != 0) {
+	if (libnvmf_read_nbft(ctx, &table, argv[1]) != 0) {
 		fprintf(stderr, "Error parsing the NBFT table %s: %m\n",
 			argv[1]);
 		libnvme_free_global_ctx(ctx);
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 
 	print_nbft(table);
 
-	libnvme_free_nbft(ctx, table);
+	libnvmf_free_nbft(ctx, table);
 	libnvme_free_global_ctx(ctx);
 	return 0;
 }

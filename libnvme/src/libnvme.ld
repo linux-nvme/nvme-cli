@@ -38,7 +38,6 @@ LIBNVME_3 {
 		libnvme_free_ctrl;
 		libnvme_free_global_ctx;
 		libnvme_free_host;
-		libnvme_free_nbft;
 		libnvme_free_ns;
 		libnvme_free_subsystem;
 		libnvme_gen_dhchap_key;
@@ -178,7 +177,6 @@ LIBNVME_3 {
 		libnvme_read_hostid;
 		libnvme_read_hostnqn;
 		libnvme_read_key;
-		libnvme_read_nbft;
 		libnvme_refresh_topology;
 		libnvme_rescan_ctrl;
 		libnvme_rescan_ns;

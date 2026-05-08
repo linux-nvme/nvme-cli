@@ -431,7 +431,7 @@
 
 
 
-.. c:function:: int libnvme_read_nbft (struct libnvme_global_ctx *ctx, struct libnbft_info **nbft, const char *filename)
+.. c:function:: int libnvmf_read_nbft (struct libnvme_global_ctx *ctx, struct libnbft_info **nbft, const char *filename)
 
    Read and parse contents of an ACPI NBFT table
 
@@ -449,14 +449,14 @@
 **Description**
 
 Read and parse the specified NBFT file into a struct libnbft_info.
-Free with libnvme_free_nbft().
+Free with libnvmf_free_nbft().
 
 **Return**
 
 0 on success, errno otherwise.
 
 
-.. c:function:: void libnvme_free_nbft (struct libnvme_global_ctx *ctx, struct libnbft_info *nbft)
+.. c:function:: void libnvmf_free_nbft (struct libnvme_global_ctx *ctx, struct libnbft_info *nbft)
 
    Free the struct libnbft_info and its contents
 

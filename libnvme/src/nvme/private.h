@@ -10,6 +10,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
+#include <ifaddrs.h>
+#endif
+
 #include <ccan/list/list.h>
 
 #include "nvme/nvme-types.h"
