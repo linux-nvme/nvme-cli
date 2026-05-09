@@ -2,6 +2,24 @@
 
 This tool generates **setter and getter functions** for C structs automatically. It also optionally generates a **constructor and destructor** (`foo_new` / `foo_free`) and a **defaults initialiser** (`foo_init_defaults`). It supports dynamic strings, fixed-size char arrays, `char **` arrays, and `const` fields, with control over which structs and members participate via **in-source annotations**.
 
+Beyond C code, the tool can also emit **SWIG fragments** that expose the generated accessors to the Python bindings, and **dict-table headers** used by the Python layer to populate structs from Python dictionaries.
+
+------
+
+## Design model
+
+### C public API
+
+The structs processed by this tool are **private** — defined in internal headers such as `private.h` and never exposed directly to external callers. The generated accessor functions form the stable public ABI: external code accesses struct fields only through them.
+
+Internal C code within libnvme is free to read and write struct members directly. Accessor functions are required even for internal code only when a member has **special handling** — for example, two fields that must always be written together, or a field whose value must be validated or derived from another. Those cases are hand-written and annotated with `custom`; everything else is `generated` and accessed directly.
+
+### Python bindings
+
+The same opaqueness applies to the Python layer: C structs are invisible to Python callers and are instead surfaced as properties of Python classes (`GlobalCtx`, `Host`, `Ctrl`, etc.). The public Python API is dict-based for configuration; users never see the underlying C structs.
+
+The SWIG-generated glue code, however, is not subject to this restriction — it has full access to the private headers and reads/writes struct members directly (`p->member`) for any axis annotated `generated`. A hand-written (custom) accessor is called only when a member requires special handling, making `custom` annotations the exception rather than the rule.
+
 ------
 
 ## Usage
@@ -17,9 +35,27 @@ python3 generate-accessors.py [options] <header-files>
 | `-h`  | `--h-out`  | `<file>` | Full path of the `*.h` file to generate. Default: `accessors.h` |
 | `-c`  | `--c-out`  | `<file>` | Full path of the `*.c` file to generate. Default: `accessors.c` |
 | `-l`  | `--ld-out` | `<file>` | Full path of the `*.ld` file to generate. Default: `accessors.ld` |
+| `-s`  | `--swig-out`       | `<file>` | Generated SWIG fragment (`*.i`). Omit to skip.           |
+| `-d`  | `--dict-table-out` | `<file>` | Generated dict-table header (`*.h`). Omit to skip.       |
 | `-p`  | `--prefix` | `<str>`  | Prefix prepended to every generated function name        |
 | `-v`  | `--verbose`| none     | Verbose output showing which structs are being processed |
 | `-H`  | `--help`   | none     | Show this help message                                   |
+
+------
+
+## Generated files
+
+Each output file is produced only when the corresponding command-line flag is supplied. The table below shows which annotation in the header source drives that file's content.
+
+| Flag               | Generated file        | Controlling annotation | Purpose                                                      |
+| ------------------ | --------------------- | ---------------------- | ------------------------------------------------------------ |
+| `--h-out`          | `accessors.h`         | `!generate-accessors`  | C header — accessor function declarations                    |
+| `--c-out`          | `accessors.c`         | `!generate-accessors`  | C implementation — accessor function bodies                  |
+| `--ld-out`         | `accessors.ld`        | `!generate-accessors`  | Linker version-script — exports accessor symbols in the shared library ABI |
+| `--swig-out`       | `accessors.i`         | `!generate-python`     | SWIG fragment — typemaps that expose accessors and accessible structs to the Python bindings |
+| `--dict-table-out` | `fctx_field_tables.h` | `!generate-dict-table` | C header — sentinel-terminated field offset tables used for dict parsing in the Python bindings |
+
+The first three flags share the same annotation (`!generate-accessors`) and are typically generated together in one invocation. The SWIG fragment (`--swig-out`) uses a separate annotation (`!generate-python`) and the dict-table header (`--dict-table-out`) uses yet another (`!generate-dict-table`); both may be passed to the same invocation as the other flags or to a separate one.
 
 ------
 
@@ -159,6 +195,104 @@ The value is emitted verbatim, so any valid C expression — integer literals, m
 
 `init_defaults()` can be used independently of `generate-lifecycle`.
 
+### Python SWIG fragment — `generate-python`
+
+Place the annotation on the same line as the struct's opening brace to include that struct in the SWIG output file (`--swig-out`). This annotation is independent of `!generate-accessors` — a struct may carry either or both:
+
+```c
+struct libnvme_ctrl { // !generate-accessors !generate-python
+    /* C accessors + SWIG Python fragment both generated */
+};
+
+struct libnvme_ctrl { // !generate-python
+    /* SWIG fragment only — public accessors (if any) are hand-written */
+};
+```
+
+The optional `alias=NAME` metadata renames the struct in Python without changing the C identifier:
+
+```c
+struct libnvme_fabrics_config { // !generate-accessors !generate-python:alias=FabricsConfig
+    /* Python class will be FabricsConfig, not libnvme_fabrics_config */
+};
+```
+
+For each struct carrying this annotation the generator emits into `accessors.i`:
+
+- `%rename(NAME) struct_name;` when `alias=NAME` is set.
+- `%rename` directives and `#define` bridges for any member whose `read` or `write` axis is `custom` — these map SWIG's expected `struct_member_get/set` naming to libnvme's `struct_get/set_member` convention.
+- A `struct { ... };` declaration body containing plain field entries for generated members and a `%extend { ... }` block for custom members. Read-only members (`write=none`) are preceded by `%immutable`.
+- A `%pythoncode` block that installs a strict `__setattr__` guard, causing Python to raise `AttributeError` for any attribute name not already present on the class.
+
+`!generate-python` is scanned separately from `!generate-accessors`. A struct without `!generate-accessors` is still parsed for SWIG purposes, treating all member axes as `generated` by default.
+
+### Python member visibility — `python:none`
+
+Place the annotation on a member's declaration line to exclude it from the SWIG fragment entirely. The member's C accessors (controlled by `!access`) are unaffected:
+
+```c
+struct libnvme_ctrl { // !generate-accessors !generate-python
+    char *name;
+    char *internal_tag;  // !python:none   /* not exposed to Python */
+};
+```
+
+### Python member renaming — `python:alias=NAME`
+
+Place the annotation on a member's declaration line to give it a different Python attribute name while keeping the C member name unchanged:
+
+```c
+struct libnvme_ctrl { // !generate-accessors !generate-python
+    char *subsysnqn;
+    int   kato_ms;      // !python:alias=kato   /* Python sees .kato */
+};
+```
+
+`!python:alias=NAME` can be combined with `!access` and `!python:none` (though combining with `!python:none` is pointless since the member is excluded anyway).
+
+### Dict-table generation — `generate-dict-table`
+
+Place the annotation on the same line as the struct's opening brace to include that struct in the dict-table output file (`--dict-table-out`). This annotation takes **no metadata** — its presence means "generate," its absence means "don't":
+
+```c
+struct libnvme_fabrics_config { // !generate-accessors !generate-dict-table
+    int  queue_size;
+    bool duplicate_connect;
+    char *hostnqn;   // !dict-table:none   /* excluded from the table */
+};
+```
+
+The generator buckets each eligible member by C type and emits:
+
+- One sentinel-terminated `fctx_field_t` array per bucket (`int`, `long`, `bool`, `char *`), using `offsetof` to record the field's byte offset.
+- A flat `NULL`-terminated `const char * const` array listing all included field names.
+
+These tables are consumed exclusively by the Python binding layer (`nvme.i`) to fill a `struct libnvme_fabrics_config` from a Python `dict` without a long chain of `strcmp` comparisons.
+
+**Supported member types:**
+
+| C type(s)                                              | Bucket     | Written via         |
+| ------------------------------------------------------ | ---------- | ------------------- |
+| `int`, `unsigned int`, `int32_t`, `__s32`, `uint32_t`, `__u32` | `int`  | `*(int *)ptr`       |
+| `long`, `unsigned long`, `long long`, …, `int64_t`, `__s64`, `uint64_t`, `__u64` | `long` | `*(long *)ptr` |
+| `bool`, `_Bool`                                        | `bool`     | `*(bool *)ptr`      |
+| `char *`                                               | `char *`   | key array only — values handled by hand-written code |
+
+`const`-qualified members and members with unsupported types (narrow integers, `void *`, nested structs, …) are skipped; the generator prints a warning for unknown scalars or multi-level pointers. Annotate those members with `// !dict-table:none` to suppress the warning.
+
+### Dict-table member exclusion — `dict-table:none`
+
+Place the annotation on a member's declaration line to exclude it from the dict-table output silently:
+
+```c
+struct libnvme_fabrics_config { // !generate-dict-table
+    int  queue_size;
+    char *hostnqn;   // !dict-table:none   /* handled by hand-written code */
+};
+```
+
+This annotation has no effect on accessor generation. It is independent of `!access` and `!lifecycle`.
+
 ### Annotation summary
 
 | Annotation                                             | Where        | Effect                                                                                  |
@@ -167,10 +301,16 @@ The value is emitted verbatim, so any valid C expression — integer literals, m
 | `// !generate-accessors:read=M,write=M`                | struct brace | Include struct; set struct-level default for each axis                                  |
 | `// !generate-accessors:read=M`                        | struct brace | Partial metadata; other axis inherits the built-in default (`generated`)                |
 | `// !generate-lifecycle`                               | struct brace | Generate constructor + destructor (no metadata)                                         |
+| `// !generate-python`                                  | struct brace | Include struct in the SWIG fragment output file (no metadata)                           |
+| `// !generate-python:alias=NAME`                       | struct brace | Same, and rename the struct to NAME in Python                                           |
+| `// !generate-dict-table`                              | struct brace | Include struct in the dict-table output file (no metadata)                              |
 | `// !access:read=M,write=M`                            | member line  | Override struct-level defaults for this member                                          |
 | `// !access:read=M`                                    | member line  | Partial metadata; other axis is inherited from the struct-level default                 |
 | `// !lifecycle:none`                                   | member line  | Exclude member from destructor free logic                                               |
 | `// !default:VALUE`                                    | member line  | Set field to VALUE in `init_defaults()`                                                 |
+| `// !python:none`                                      | member line  | Exclude member from SWIG fragment; C accessors unaffected                               |
+| `// !python:alias=NAME`                                | member line  | Rename Python attribute to NAME; C member name unchanged                                |
+| `// !dict-table:none`                                  | member line  | Exclude member from dict-table output; silences unsupported-type warnings               |
 | `const` qualifier on member                            | member type  | Force `write=none`; suppress free in destructor                                         |
 
 In the table above, `M` is one of `generated`, `custom`, or `none`.
@@ -179,10 +319,7 @@ In the table above, `M` is one of `generated`, `custom`, or `none`.
 
 ## Example
 
-The following example is based on `struct libnvmf_uri` from
-`libnvme/src/nvme/private-fabrics.h`. The struct as defined in that file carries
-only `// !generate-accessors`; `!generate-lifecycle` and `// !default:4420` are
-added here to illustrate all features in one place.
+The following example is based on `struct libnvmf_uri` from `libnvme/src/nvme/private-fabrics.h`. The struct as defined in that file carries only `// !generate-accessors`; `!generate-lifecycle` and `// !default:4420` are added here to illustrate all features in one place.
 
 ### Annotated header
 
