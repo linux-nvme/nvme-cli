@@ -15,7 +15,8 @@ SYNOPSIS
 DESCRIPTION
 -----------
 Retrieves NVMe Error log page from an NVMe device and provides the
-returned structure.
+returned structure. All the returned structure fields including the
+ordering of the entries are described in the spec.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
