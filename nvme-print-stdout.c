@@ -4222,15 +4222,23 @@ static void stdout_id_iocs(struct nvme_id_iocs *iocs)
 }
 
 static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
-			     const char *devname)
+			     const char *devname,
+			     struct nvme_error_log_filter *flt)
 {
+	int filtered = 0;
 	int i;
+	__u16 status;
 
 	printf("Error Log Entries for device:%s entries:%d\n", devname,
 								entries);
 	printf(".................\n");
 	for (i = 0; i < entries; i++) {
-		__u16 status = le16_to_cpu(err_log[i].status_field) >> 0x1;
+		if (nvme_is_error_log_filter(&err_log[i], flt)) {
+			filtered++;
+			continue;
+		}
+
+		status = le16_to_cpu(err_log[i].status_field) >> 0x1;
 
 		printf(" Entry[%2d]\n", i);
 		printf(".................\n");
@@ -4257,6 +4265,9 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 		printf("log_page_version: %d\n", err_log[i].log_page_version);
 		printf(".................\n");
 	}
+
+	if (entries == filtered)
+		printf("all entries filtered\n");
 }
 
 static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
@@ -6878,7 +6889,8 @@ static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 		break;
 	case NVME_LOG_LID_ERROR:
 		stdout_error_log((struct nvme_error_log_page *)args->log,
-				 args->len / sizeof(struct nvme_error_log_page), devname);
+				 args->len / sizeof(struct nvme_error_log_page),
+				 devname, NULL);
 		break;
 	case NVME_LOG_LID_SMART:
 		stdout_smart_log((struct nvme_smart_log *)args->log, args->nsid, devname);

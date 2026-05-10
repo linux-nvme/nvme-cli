@@ -216,7 +216,7 @@ static void binary_id_domain_list(struct nvme_id_domain_list *id_dom)
 }
 
 static void binary_error_log(struct nvme_error_log_page *err_log, int entries,
-	const char *devname)
+	const char *devname, struct nvme_error_log_filter *flt)
 {
 	d_raw((unsigned char *)err_log, entries * sizeof(*err_log));
 }

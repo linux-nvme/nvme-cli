@@ -521,16 +521,21 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 }
 
 static void json_error_log(struct nvme_error_log_page *err_log, int entries,
-			   const char *devname)
+			   const char *devname,
+			   struct nvme_error_log_filter *flt)
 {
 	struct json_object *r = json_create_object();
 	struct json_object *errors = json_create_array();
+	struct json_object *error;
 	int i;
 
 	obj_add_array(r, "errors", errors);
 
 	for (i = 0; i < entries; i++) {
-		struct json_object *error = json_create_object();
+		if (nvme_is_error_log_filter(&err_log[i], flt))
+			continue;
+
+		error = json_create_object();
 
 		obj_add_uint64(error, "error_count", le64_to_cpu(err_log[i].error_count));
 		obj_add_int(error, "sqid", le16_to_cpu(err_log[i].sqid));

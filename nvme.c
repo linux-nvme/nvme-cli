@@ -1206,6 +1206,14 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 		"error log entries from a given device "
 		"in either decoded format (default) or binary.";
 	const char *log_entries = "number of entries to retrieve";
+	const char *status = "output specified STATUS entry only";
+	const char *nsid = "output specified NSID entry only";
+	const char *trtype = "output specified TRTYPE entry only";
+	const char *opcode = "output specified OPC entry only";
+	const char *sqid = "output specified SQID entry only";
+	const char *valid_entry = "output valid entry only";
+	const char *lba = "output specified LBA entry only";
+	const char *csi = "output specified CSI entry only";
 	const char *raw = "dump in binary format";
 
 	__cleanup_free struct nvme_error_log_page *err_log = NULL;
@@ -1218,6 +1226,7 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 	struct config {
 		__u32	log_entries;
 		bool	raw_binary;
+		struct nvme_error_log_filter flt;
 	};
 
 	struct config cfg = {
@@ -1226,8 +1235,16 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("log-entries",  'e', &cfg.log_entries,   log_entries),
-		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,    raw));
+		  OPT_UINT("log-entries",  'e', &cfg.log_entries, log_entries),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,  raw),
+		  OPT_FLAG("valid-entry",  'V', &cfg.flt.valid,   valid_entry),
+		  OPT_SHRT("sqid",         'S', &cfg.flt.sqid,    sqid),
+		  OPT_SHRT("status",       's', &cfg.flt.status,  status),
+		  OPT_SUFFIX("lba",        'l', &cfg.flt.lba,     lba),
+		  OPT_UINT("namespace-id", 'n', &cfg.flt.nsid,    nsid),
+		  OPT_BYTE("trtype",       't', &cfg.flt.trtype,  trtype),
+		  OPT_BYTE("csi",          'c', &cfg.flt.csi,     csi),
+		  OPT_BYTE("opcode",       'O', &cfg.flt.opcode,  opcode));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -1268,7 +1285,8 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 	}
 
 	nvme_show_error_log(err_log, cfg.log_entries,
-			    libnvme_transport_handle_get_name(hdl), flags);
+			    libnvme_transport_handle_get_name(hdl), &cfg.flt,
+			    flags);
 
 	return err;
 }
