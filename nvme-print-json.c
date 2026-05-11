@@ -548,8 +548,12 @@ static void json_error_log(struct nvme_error_log_page *err_log, int entries,
 		obj_add_uint(error, "nsid", le32_to_cpu(err_log[i].nsid));
 		obj_add_int(error, "vs", err_log[i].vs);
 		obj_add_int(error, "trtype", err_log[i].trtype);
+		obj_add_int(error, "csi", err_log[i].csi);
+		obj_add_int(error, "opcode", err_log[i].opcode);
 		obj_add_uint64(error, "cs", le64_to_cpu(err_log[i].cs));
 		obj_add_int(error, "trtype_spec_info", le16_to_cpu(err_log[i].trtype_spec_info));
+		obj_add_int(error, "log_page_version",
+			    err_log[i].log_page_version);
 
 		array_add_obj(errors, error);
 	}
