@@ -24,3 +24,11 @@
  * optional overrides and platform hooks.
  */
 #define __weak __attribute__((weak))
+
+/**
+ * __unused - Mark a symbol or parameter as intentionally unused.
+ *
+ * Suppresses compiler warnings for symbols or parameters that are unused
+ * by design (e.g. no-op stubs that must match a specific signature).
+ */
+#define __unused __attribute__((__unused__))
