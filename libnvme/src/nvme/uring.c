@@ -68,8 +68,11 @@ int __libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl)
 	}
 
 	err = libnvme_open_uring(hdl->ctx);
-	if (err)
+	if (err) {
+		hdl->ctx->uring_state = LIBNVME_IO_URING_STATE_NOT_AVAILABLE;
 		return err;
+	}
+	hdl->ctx->uring_state = LIBNVME_IO_URING_STATE_AVAILABLE;
 
 uring_enabled:
 	hdl->uring_enabled = true;
