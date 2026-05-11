@@ -104,7 +104,7 @@ __public int libnvme_wait_admin_passthru(struct libnvme_transport_handle *hdl)
 {
 	struct io_uring_cqe *cqe;
 	struct io_uring *ring;
-	int err;
+	int err, ret = 0;
 
 	if (!hdl)
 		return -ENODEV;
@@ -113,13 +113,17 @@ __public int libnvme_wait_admin_passthru(struct libnvme_transport_handle *hdl)
 
 	for (int i = 0; i < hdl->ctx->ring_cmds; i++) {
 		err = io_uring_wait_cqe(ring, &cqe);
-		if (err < 0)
+		if (err < 0) {
+			hdl->ctx->ring_cmds = 0;
 			return -errno;
+		}
+		if (!ret && cqe->res)
+			ret = cqe->res;
 		io_uring_cqe_seen(ring, cqe);
 	}
 
 	hdl->ctx->ring_cmds = 0;
-	return 0;
+	return ret;
 }
 
 int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
