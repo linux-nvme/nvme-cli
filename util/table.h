@@ -2,6 +2,7 @@
 #ifndef _TABLE_H_
 #define _TABLE_H_
 
+#include <stdio.h>
 #include <stdbool.h>
 
 enum fmt_type {
@@ -169,6 +170,7 @@ int table_add_columns_filter(struct table *t, struct table_column *c,
 			void *arg);
 int table_get_row_id(struct table *t);
 void table_add_row(struct table *t, int row);
+void table_print_stream(FILE *stream, struct table *t);
 void table_print(struct table *t);
 void table_free(struct table *t);
 
