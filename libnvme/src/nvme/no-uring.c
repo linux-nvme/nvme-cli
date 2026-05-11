@@ -34,14 +34,14 @@ int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
 	return -ENOTSUP;
 }
 
-__public int libnvme_wait_admin_passthru(
-		__unused struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_wait_admin_passthru(
+		__libnvme_unused struct libnvme_transport_handle *hdl)
 {
 	return 0;
 }
 
-__public int libnvme_wait_io_passthru(
-		__unused struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_wait_io_passthru(
+		__libnvme_unused struct libnvme_transport_handle *hdl)
 {
 	return 0;
 }

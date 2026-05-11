@@ -77,7 +77,7 @@ const char * const trtypes[] = {
 	[NVMF_TRTYPE_LOOP]	= "loop",
 };
 
-__public const char *libnvmf_trtype_str(__u8 trtype)
+__libnvme_public const char *libnvmf_trtype_str(__u8 trtype)
 {
 	return arg_str(trtypes, ARRAY_SIZE(trtypes), trtype);
 }
@@ -90,7 +90,7 @@ static const char * const adrfams[] = {
 	[NVMF_ADDR_FAMILY_FC]	= "fibre-channel",
 };
 
-__public const char *libnvmf_adrfam_str(__u8 adrfam)
+__libnvme_public const char *libnvmf_adrfam_str(__u8 adrfam)
 {
 	return arg_str(adrfams, ARRAY_SIZE(adrfams), adrfam);
 }
@@ -101,7 +101,7 @@ static const char * const subtypes[] = {
 	[NVME_NQN_CURR]		= "current discovery subsystem",
 };
 
-__public const char *libnvmf_subtype_str(__u8 subtype)
+__libnvme_public const char *libnvmf_subtype_str(__u8 subtype)
 {
 	return arg_str(subtypes, ARRAY_SIZE(subtypes), subtype);
 }
@@ -121,7 +121,7 @@ static const char * const treqs[] = {
 				"sq flow control disable supported",
 };
 
-__public const char *libnvmf_treq_str(__u8 treq)
+__libnvme_public const char *libnvmf_treq_str(__u8 treq)
 {
 	return arg_str(treqs, ARRAY_SIZE(treqs), treq);
 }
@@ -147,7 +147,7 @@ static const char * const eflags_strings[] = {
 					  "no cdc connectivity",
 };
 
-__public const char *libnvmf_eflags_str(__u16 eflags)
+__libnvme_public const char *libnvmf_eflags_str(__u16 eflags)
 {
 	return arg_str(eflags_strings, ARRAY_SIZE(eflags_strings), eflags);
 }
@@ -158,7 +158,7 @@ static const char * const sectypes[] = {
 	[NVMF_TCP_SECTYPE_TLS13]	= "tls13",
 };
 
-__public const char *libnvmf_sectype_str(__u8 sectype)
+__libnvme_public const char *libnvmf_sectype_str(__u8 sectype)
 {
 	return arg_str(sectypes, ARRAY_SIZE(sectypes), sectype);
 }
@@ -171,7 +171,7 @@ static const char * const prtypes[] = {
 	[NVMF_RDMA_PRTYPE_IWARP]		= "iwarp",
 };
 
-__public const char *libnvmf_prtype_str(__u8 prtype)
+__libnvme_public const char *libnvmf_prtype_str(__u8 prtype)
 {
 	return arg_str(prtypes, ARRAY_SIZE(prtypes), prtype);
 }
@@ -181,7 +181,7 @@ static const char * const qptypes[] = {
 	[NVMF_RDMA_QPTYPE_DATAGRAM]	= "datagram",
 };
 
-__public const char *libnvmf_qptype_str(__u8 qptype)
+__libnvme_public const char *libnvmf_qptype_str(__u8 qptype)
 {
 	return arg_str(qptypes, ARRAY_SIZE(qptypes), qptype);
 }
@@ -190,7 +190,7 @@ static const char * const cms[] = {
 	[NVMF_RDMA_CMS_RDMA_CM]	= "rdma-cm",
 };
 
-__public const char *libnvmf_cms_str(__u8 cm)
+__libnvme_public const char *libnvmf_cms_str(__u8 cm)
 {
 	return arg_str(cms, ARRAY_SIZE(cms), cm);
 }
@@ -201,7 +201,7 @@ void libnvmf_default_config(struct libnvme_fabrics_config *cfg)
 	cfg->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 }
 
-__public int libnvmf_context_create(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvmf_context_create(struct libnvme_global_ctx *ctx,
 		bool (*decide_retry)(struct libnvmf_context *fctx, int err,
 			void *user_data),
 		void (*connected)(struct libnvmf_context *fctx,
@@ -232,7 +232,7 @@ __public int libnvmf_context_create(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public void libnvmf_context_free(struct libnvmf_context *fctx)
+__libnvme_public void libnvmf_context_free(struct libnvmf_context *fctx)
 {
 	if (!fctx)
 		return;
@@ -241,7 +241,8 @@ __public void libnvmf_context_free(struct libnvmf_context *fctx)
 	free(fctx);
 }
 
-__public int libnvmf_context_set_discovery_cbs(struct libnvmf_context *fctx,
+__libnvme_public int libnvmf_context_set_discovery_cbs(
+		struct libnvmf_context *fctx,
 		void (*discovery_log)(struct libnvmf_context *fctx,
 			bool connect,
 			struct nvmf_discovery_log *log,
@@ -261,8 +262,9 @@ __public int libnvmf_context_set_discovery_cbs(struct libnvmf_context *fctx,
 	return 0;
 }
 
-__public int libnvmf_context_set_discovery_defaults(struct libnvmf_context *fctx,
-		int max_discovery_retries, int keep_alive_timeout)
+__libnvme_public int libnvmf_context_set_discovery_defaults(
+		struct libnvmf_context *fctx, int max_discovery_retries,
+		int keep_alive_timeout)
 {
 	fctx->default_max_discovery_retries = max_discovery_retries;
 	fctx->default_keep_alive_timeout = keep_alive_timeout;
@@ -270,7 +272,8 @@ __public int libnvmf_context_set_discovery_defaults(struct libnvmf_context *fctx
 	return 0;
 }
 
-__public int libnvmf_context_set_fabrics_config(struct libnvmf_context *fctx,
+__libnvme_public int libnvmf_context_set_fabrics_config(
+		struct libnvmf_context *fctx,
 		struct libnvme_fabrics_config *cfg)
 {
 	fctx->cfg.queue_size = cfg->queue_size;
@@ -295,9 +298,9 @@ __public int libnvmf_context_set_fabrics_config(struct libnvmf_context *fctx,
 	return 0;
 }
 
-__public int libnvmf_context_set_connection(struct libnvmf_context *fctx,
-		const char *subsysnqn, const char *transport,
-		const char *traddr, const char *trsvcid,
+__libnvme_public int libnvmf_context_set_connection(
+		struct libnvmf_context *fctx, const char *subsysnqn,
+		const char *transport, const char *traddr, const char *trsvcid,
 		const char *host_traddr, const char *host_iface)
 {
 	fctx->subsysnqn = subsysnqn;
@@ -324,7 +327,7 @@ static const char *hostid_from_hostnqn(const char *hostnqn)
 	return match + strlen("uuid:");
 }
 
-__public int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
+__libnvme_public int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
 		const char *hostnqn, const char *hostid)
 {
 	fctx->hostnqn = hostnqn;
@@ -335,7 +338,7 @@ __public int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
 	return 0;
 }
 
-__public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
+__libnvme_public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		const char *hostkey, const char *ctrlkey,
 		const char *keyring, const char *tls_key,
 		const char *tls_key_identity)
@@ -374,27 +377,29 @@ __public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 	return 0;
 }
 
-__public int libnvmf_context_set_persistent(struct libnvmf_context *fctx, bool persistent)
+__libnvme_public int libnvmf_context_set_persistent(
+		struct libnvmf_context *fctx, bool persistent)
 {
 	fctx->persistent = persistent;
 
 	return 0;
 }
 
-__public int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device)
+__libnvme_public int libnvmf_context_set_device(
+		struct libnvmf_context *fctx, const char *device)
 {
 	fctx->device = device;
 
 	return 0;
 }
 
-__public struct libnvme_fabrics_config *libnvmf_context_get_fabrics_config(
+__libnvme_public struct libnvme_fabrics_config *libnvmf_context_get_fabrics_config(
 		struct libnvmf_context *fctx)
 {
 	return &fctx->cfg;
 }
 
-__public struct libnvme_fabrics_config *libnvmf_ctrl_get_fabrics_config(
+__libnvme_public struct libnvme_fabrics_config *libnvmf_ctrl_get_fabrics_config(
 		libnvme_ctrl_t c)
 {
 	return &c->cfg;
@@ -1089,13 +1094,13 @@ static const char *lookup_context(struct libnvme_global_ctx *ctx, libnvme_ctrl_t
 	return NULL;
 }
 
-__public int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, libnvme_ctrl_t *cp)
 {
 	return _libnvme_create_ctrl(ctx, fctx, cp);
 }
 
-__public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
+__libnvme_public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 {
 	libnvme_subsystem_t s;
 	const char *root_app, *app;
@@ -1191,7 +1196,7 @@ __public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 	return libnvme_init_ctrl(h, c, ret);
 }
 
-__public int libnvmf_connect_ctrl(libnvme_ctrl_t c)
+__libnvme_public int libnvmf_connect_ctrl(libnvme_ctrl_t c)
 {
 	__cleanup_free char *argstr = NULL;
 	int ret;
@@ -1207,7 +1212,7 @@ __public int libnvmf_connect_ctrl(libnvme_ctrl_t c)
 	return 0;
 }
 
-__public int libnvmf_disconnect_ctrl(libnvme_ctrl_t c)
+__libnvme_public int libnvmf_disconnect_ctrl(libnvme_ctrl_t c)
 {
 	struct libnvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
 	int ret;
@@ -1503,7 +1508,7 @@ static void sanitize_discovery_log_entry(struct libnvme_global_ctx *ctx,
 	}
 }
 
-__public int libnvmf_get_discovery_log(libnvme_ctrl_t ctrl,
+__libnvme_public int libnvmf_get_discovery_log(libnvme_ctrl_t ctrl,
 				    const struct libnvmf_discovery_args *args,
 				    struct nvmf_discovery_log **logp)
 {
@@ -1794,7 +1799,7 @@ static int nvme_fetch_cntrltype_dctype_from_id(libnvme_ctrl_t c)
 	return 0;
 }
 
-__public bool libnvmf_is_registration_supported(libnvme_ctrl_t c)
+__libnvme_public bool libnvmf_is_registration_supported(libnvme_ctrl_t c)
 {
 	if (!c->cntrltype || !c->dctype)
 		if (nvme_fetch_cntrltype_dctype_from_id(c))
@@ -1803,7 +1808,8 @@ __public bool libnvmf_is_registration_supported(libnvme_ctrl_t c)
 	return !strcmp(c->dctype, "ddc") || !strcmp(c->dctype, "cdc");
 }
 
-__public int libnvmf_register_ctrl(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result)
+__libnvme_public int libnvmf_register_ctrl(
+		libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result)
 {
 	if (!libnvmf_is_registration_supported(c))
 		return -ENOTSUP;
@@ -1844,7 +1850,8 @@ static char *unescape_uri(const char *str, int len)
 	return dst;
 }
 
-__public int libnvmf_uri_parse(const char *str, struct libnvmf_uri **urip)
+__libnvme_public int libnvmf_uri_parse(
+		const char *str, struct libnvmf_uri **urip)
 {
 	__cleanup_uri struct libnvmf_uri *uri = NULL;
 	__cleanup_free char *scheme = NULL;
@@ -1937,7 +1944,7 @@ __public int libnvmf_uri_parse(const char *str, struct libnvmf_uri **urip)
 	return 0;
 }
 
-__public void libnvmf_uri_free(struct libnvmf_uri *uri)
+__libnvme_public void libnvmf_uri_free(struct libnvmf_uri *uri)
 {
 	char **s;
 
@@ -2161,7 +2168,7 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public const char *libnvmf_get_default_trsvcid(const char *transport,
+__libnvme_public const char *libnvmf_get_default_trsvcid(const char *transport,
 		bool discovery_ctrl)
 {
 	if (!transport)
@@ -2372,8 +2379,9 @@ int _discovery_config_json(struct libnvme_global_ctx *ctx,
 	return ret;
 }
 
-__public int libnvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect, bool force)
+__libnvme_public int libnvmf_discovery_config_json(
+		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
+		bool connect, bool force)
 {
 	const char *hnqn, *hid;
 	struct libnvme_subsystem *s;
@@ -2420,7 +2428,7 @@ __public int libnvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
 	return ret;
 }
 
-__public int libnvmf_connect_config_json(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvmf_connect_config_json(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx)
 {
 	const char *hnqn, *hid;
@@ -2479,8 +2487,9 @@ __public int libnvmf_connect_config_json(struct libnvme_global_ctx *ctx,
 	return ret;
 }
 
-__public int libnvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect, bool force)
+__libnvme_public int libnvmf_discovery_config_file(
+		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
+		bool connect, bool force)
 {
 	struct libnvme_host *h;
 	struct libnvme_ctrl *c;
@@ -2532,7 +2541,7 @@ __public int libnvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx)
 {
 	__cleanup_free char *hnqn = NULL;
@@ -2586,7 +2595,8 @@ static int nbft_filter(const struct dirent *dent)
 	return !fnmatch(NBFT_SYSFS_FILENAME, dent->d_name, FNM_PATHNAME);
 }
 
-__public int libnvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
+__libnvme_public int libnvmf_nbft_read_files(
+		struct libnvme_global_ctx *ctx, char *path,
 		struct nbft_file_entry **head)
 {
 	struct nbft_file_entry *entry = NULL;
@@ -2625,7 +2635,8 @@ __public int libnvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
 	return 0;
 }
 
-__public void libnvmf_nbft_free(struct libnvme_global_ctx *ctx, struct nbft_file_entry *head)
+__libnvme_public void libnvmf_nbft_free(
+		struct libnvme_global_ctx *ctx, struct nbft_file_entry *head)
 {
 	if (!head)
 		return;
@@ -2820,7 +2831,7 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect, char *nbft_path)
 {
 	const char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
@@ -3035,7 +3046,8 @@ out_free:
 	return ret;
 }
 
-__public int libnvmf_discovery(struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
+__libnvme_public int libnvmf_discovery(
+		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
 		bool connect, bool force)
 {
 	struct libnvme_ctrl *c = NULL;
@@ -3130,7 +3142,8 @@ __public int libnvmf_discovery(struct libnvme_global_ctx *ctx, struct libnvmf_co
 	return ret;
 }
 
-__public int libnvmf_connect(struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx)
+__libnvme_public int libnvmf_connect(
+		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx)
 {
 	struct libnvme_host *h;
 	struct libnvme_ctrl *c;

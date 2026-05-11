@@ -181,7 +181,7 @@ static inline __u8 nvme_fabrics_status_to_errno(__u16 status)
 	return EIO;
 }
 
-__public __u8 libnvme_status_to_errno(int status, bool fabrics)
+__libnvme_public __u8 libnvme_status_to_errno(int status, bool fabrics)
 {
 	__u16 sc;
 
@@ -380,7 +380,7 @@ static const char *arg_str(const char * const *strings,
 	return "unrecognized";
 }
 
-__public const char *libnvme_status_to_string(int status, bool fabrics)
+__libnvme_public const char *libnvme_status_to_string(int status, bool fabrics)
 {
 	const char *s = "Unknown status";
 	__u16 sc, sct;
@@ -444,14 +444,14 @@ static const char * const libnvme_status[] = {
 	[ENVME_CONNECT_NOKEY] = "pre-shared TLS key is missing"
 };
 
-__public const char *libnvme_errno_to_string(int status)
+__libnvme_public const char *libnvme_errno_to_string(int status)
 {
 	const char *s = ARGSTR(libnvme_status, status);
 
 	return s;
 }
 
-__public const char *libnvme_strerror(int errnum)
+__libnvme_public const char *libnvme_strerror(int errnum)
 {
 	if (errnum >= ENVME_CONNECT_RESOLVE)
 		return libnvme_errno_to_string(errnum);
@@ -716,7 +716,7 @@ size_t get_entity_version(char *buffer, size_t bufsz)
 	return num_bytes;
 }
 
-__public const char *libnvme_get_version(enum libnvme_version type)
+__libnvme_public const char *libnvme_get_version(enum libnvme_version type)
 {
 	switch(type) {
 	case LIBNVME_VERSION_PROJECT:
@@ -728,7 +728,8 @@ __public const char *libnvme_get_version(enum libnvme_version type)
 	}
 }
 
-__public int libnvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str)
+__libnvme_public int libnvme_uuid_to_string(
+		unsigned char uuid[NVME_UUID_LEN], char *str)
 {
 	int n;
 	n = snprintf(str, NVME_UUID_LEN_STRING,
@@ -740,7 +741,8 @@ __public int libnvme_uuid_to_string(unsigned char uuid[NVME_UUID_LEN], char *str
 	return n != NVME_UUID_LEN_STRING - 1 ? -EINVAL : 0;
 }
 
-__public int libnvme_uuid_from_string(const char *str, unsigned char uuid[NVME_UUID_LEN])
+__libnvme_public int libnvme_uuid_from_string(
+		const char *str, unsigned char uuid[NVME_UUID_LEN])
 {
 	int n;
 
@@ -754,7 +756,7 @@ __public int libnvme_uuid_from_string(const char *str, unsigned char uuid[NVME_U
 
 }
 
-__public int libnvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
+__libnvme_public int libnvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
 {
 	__cleanup_fd int f = -1;
 	ssize_t n;
@@ -779,7 +781,7 @@ __public int libnvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
 	return 0;
 }
 
-__public int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
+__libnvme_public int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
 		const unsigned char uuid[NVME_UUID_LEN])
 {
 	const unsigned char uuid_end[NVME_UUID_LEN] = {0};

@@ -129,7 +129,7 @@ static char *nvme_hostid_from_hostnqn(const char *hostnqn)
 	return strdup(uuid + strlen("uuid:"));
 }
 
-__public int libnvme_host_get_ids(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_host_get_ids(struct libnvme_global_ctx *ctx,
 		      const char *hostnqn_arg, const char *hostid_arg,
 		      char **hostnqn, char **hostid)
 {
@@ -199,7 +199,8 @@ __public int libnvme_host_get_ids(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public int libnvme_get_host(struct libnvme_global_ctx *ctx, const char *hostnqn,
+__libnvme_public int libnvme_get_host(
+		struct libnvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, libnvme_host_t *host)
 {
 	__cleanup_free char *hnqn = NULL;
@@ -284,7 +285,7 @@ static void libnvme_filter_tree(struct libnvme_global_ctx *ctx,
 	}
 }
 
-__public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 		libnvme_scan_filter_t f, void *f_args)
 {
 	__cleanup_dirents struct dirents subsys = {}, ctrls = {};
@@ -338,7 +339,7 @@ __public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public int libnvme_read_config(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_read_config(struct libnvme_global_ctx *ctx,
 		const char *config_file)
 {
 	int err;
@@ -361,22 +362,23 @@ __public int libnvme_read_config(struct libnvme_global_ctx *ctx,
 	return err;
 }
 
-__public int libnvme_dump_config(struct libnvme_global_ctx *ctx, int fd)
+__libnvme_public int libnvme_dump_config(struct libnvme_global_ctx *ctx, int fd)
 {
 	return json_update_config(ctx, fd);
 }
 
-__public int libnvme_dump_tree(struct libnvme_global_ctx *ctx)
+__libnvme_public int libnvme_dump_tree(struct libnvme_global_ctx *ctx)
 {
 	return json_dump_tree(ctx);
 }
 
-__public const char *libnvme_get_application(struct libnvme_global_ctx *ctx)
+__libnvme_public const char *libnvme_get_application(
+		struct libnvme_global_ctx *ctx)
 {
 	return ctx->application;
 }
 
-__public void libnvme_set_application(struct libnvme_global_ctx *ctx,
+__libnvme_public void libnvme_set_application(struct libnvme_global_ctx *ctx,
 		const char *a)
 {
 	free(ctx->application);
@@ -386,53 +388,56 @@ __public void libnvme_set_application(struct libnvme_global_ctx *ctx,
 		ctx->application = strdup(a);
 }
 
-__public void libnvme_skip_namespaces(struct libnvme_global_ctx *ctx)
+__libnvme_public void libnvme_skip_namespaces(struct libnvme_global_ctx *ctx)
 {
 	ctx->create_only = true;
 }
 
-__public libnvme_host_t libnvme_first_host(struct libnvme_global_ctx *ctx)
+__libnvme_public libnvme_host_t libnvme_first_host(
+		struct libnvme_global_ctx *ctx)
 {
 	return list_top(&ctx->hosts, struct libnvme_host, entry);
 }
 
-__public libnvme_host_t libnvme_next_host(struct libnvme_global_ctx *ctx,
-		libnvme_host_t h)
+__libnvme_public libnvme_host_t libnvme_next_host(
+		struct libnvme_global_ctx *ctx, libnvme_host_t h)
 {
 	return h ? list_next(&ctx->hosts, h, entry) : NULL;
 }
 
-__public struct libnvme_global_ctx *libnvme_host_get_global_ctx(
+__libnvme_public struct libnvme_global_ctx *libnvme_host_get_global_ctx(
 		libnvme_host_t h)
 {
 	return h->ctx;
 }
 
-__public void libnvme_host_set_pdc_enabled(libnvme_host_t h, bool enabled)
+__libnvme_public void libnvme_host_set_pdc_enabled(
+		libnvme_host_t h, bool enabled)
 {
 	h->pdc_enabled_valid = true;
 	h->pdc_enabled = enabled;
 }
 
-__public bool libnvme_host_is_pdc_enabled(libnvme_host_t h, bool fallback)
+__libnvme_public bool libnvme_host_is_pdc_enabled(
+		libnvme_host_t h, bool fallback)
 {
 	if (h->pdc_enabled_valid)
 		return h->pdc_enabled;
 	return fallback;
 }
 
-__public libnvme_subsystem_t libnvme_first_subsystem(libnvme_host_t h)
+__libnvme_public libnvme_subsystem_t libnvme_first_subsystem(libnvme_host_t h)
 {
 	return list_top(&h->subsystems, struct libnvme_subsystem, entry);
 }
 
-__public libnvme_subsystem_t libnvme_next_subsystem(libnvme_host_t h,
+__libnvme_public libnvme_subsystem_t libnvme_next_subsystem(libnvme_host_t h,
 		libnvme_subsystem_t s)
 {
 	return s ? list_next(&h->subsystems, s, entry) : NULL;
 }
 
-__public void libnvme_refresh_topology(struct libnvme_global_ctx *ctx)
+__libnvme_public void libnvme_refresh_topology(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
 
@@ -449,23 +454,25 @@ void nvme_root_release_fds(struct libnvme_global_ctx *ctx)
 		libnvme_host_release_fds(h);
 }
 
-__public libnvme_ctrl_t libnvme_subsystem_first_ctrl(libnvme_subsystem_t s)
+__libnvme_public libnvme_ctrl_t libnvme_subsystem_first_ctrl(
+		libnvme_subsystem_t s)
 {
 	return list_top(&s->ctrls, struct libnvme_ctrl, entry);
 }
 
-__public libnvme_ctrl_t libnvme_subsystem_next_ctrl(libnvme_subsystem_t s,
-		libnvme_ctrl_t c)
+__libnvme_public libnvme_ctrl_t libnvme_subsystem_next_ctrl(
+		libnvme_subsystem_t s, libnvme_ctrl_t c)
 {
 	return c ? list_next(&s->ctrls, c, entry) : NULL;
 }
 
-__public libnvme_host_t libnvme_subsystem_get_host(libnvme_subsystem_t s)
+__libnvme_public libnvme_host_t libnvme_subsystem_get_host(
+		libnvme_subsystem_t s)
 {
 	return s->h;
 }
 
-__public char *libnvme_subsystem_get_iopolicy(libnvme_subsystem_t s)
+__libnvme_public char *libnvme_subsystem_get_iopolicy(libnvme_subsystem_t s)
 {
 	__cleanup_free char *iopolicy = NULL;
 
@@ -480,23 +487,23 @@ __public char *libnvme_subsystem_get_iopolicy(libnvme_subsystem_t s)
 	return s->iopolicy;
 }
 
-__public libnvme_ns_t libnvme_subsystem_first_ns(libnvme_subsystem_t s)
+__libnvme_public libnvme_ns_t libnvme_subsystem_first_ns(libnvme_subsystem_t s)
 {
 	return list_top(&s->namespaces, struct libnvme_ns, entry);
 }
 
-__public libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s,
+__libnvme_public libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s,
 		libnvme_ns_t n)
 {
 	return n ? list_next(&s->namespaces, n, entry) : NULL;
 }
 
-__public libnvme_path_t libnvme_namespace_first_path(libnvme_ns_t ns)
+__libnvme_public libnvme_path_t libnvme_namespace_first_path(libnvme_ns_t ns)
 {
 	return list_top(&ns->head->paths, struct libnvme_path, nentry);
 }
 
-__public libnvme_path_t libnvme_namespace_next_path(libnvme_ns_t ns,
+__libnvme_public libnvme_path_t libnvme_namespace_next_path(libnvme_ns_t ns,
 		libnvme_path_t p)
 {
 	return p ? list_next(&ns->head->paths, p, nentry) : NULL;
@@ -522,7 +529,7 @@ static void __nvme_free_ns(struct libnvme_ns *n)
 }
 
 /* Stub for SWIG */
-__public void libnvme_free_ns(struct libnvme_ns *n)
+__libnvme_public void libnvme_free_ns(struct libnvme_ns *n)
 {
 	if (!n)
 		return;
@@ -554,7 +561,7 @@ static void __nvme_free_subsystem(struct libnvme_subsystem *s)
 	free(s);
 }
 
-__public void libnvme_subsystem_release_fds(struct libnvme_subsystem *s)
+__libnvme_public void libnvme_subsystem_release_fds(struct libnvme_subsystem *s)
 {
 	struct libnvme_ctrl *c, *_c;
 	struct libnvme_ns *n, *_n;
@@ -569,7 +576,7 @@ __public void libnvme_subsystem_release_fds(struct libnvme_subsystem *s)
 /*
  * Stub for SWIG
  */
-__public void libnvme_free_subsystem(libnvme_subsystem_t s)
+__libnvme_public void libnvme_free_subsystem(libnvme_subsystem_t s)
 {
 	if (!s)
 		return;
@@ -620,7 +627,7 @@ struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 	return nvme_alloc_subsystem(h, name, subsysnqn);
 }
 
-__public int libnvme_get_subsystem(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_get_subsystem(struct libnvme_global_ctx *ctx,
 		struct libnvme_host *h, const char *name,
 		const char *subsysnqn, struct libnvme_subsystem **subsys)
 {
@@ -649,7 +656,7 @@ void __libnvme_free_host(struct libnvme_host *h)
 	free(h);
 }
 
-__public void libnvme_host_release_fds(struct libnvme_host *h)
+__libnvme_public void libnvme_host_release_fds(struct libnvme_host *h)
 {
 	struct libnvme_subsystem *s, *_s;
 
@@ -658,7 +665,7 @@ __public void libnvme_host_release_fds(struct libnvme_host *h)
 }
 
 /* Stub for SWIG */
-__public void libnvme_free_host(struct libnvme_host *h)
+__libnvme_public void libnvme_free_host(struct libnvme_host *h)
 {
 	if (!h)
 		return;
@@ -833,17 +840,17 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public libnvme_ctrl_t libnvme_path_get_ctrl(libnvme_path_t p)
+__libnvme_public libnvme_ctrl_t libnvme_path_get_ctrl(libnvme_path_t p)
 {
 	return p->c;
 }
 
-__public libnvme_ns_t libnvme_path_get_ns(libnvme_path_t p)
+__libnvme_public libnvme_ns_t libnvme_path_get_ns(libnvme_path_t p)
 {
 	return p->n;
 }
 
-__public int libnvme_path_get_queue_depth(libnvme_path_t p)
+__libnvme_public int libnvme_path_get_queue_depth(libnvme_path_t p)
 {
 	__cleanup_free char *queue_depth = NULL;
 
@@ -855,7 +862,7 @@ __public int libnvme_path_get_queue_depth(libnvme_path_t p)
 	return p->queue_depth;
 }
 
-__public char *libnvme_path_get_ana_state(libnvme_path_t p)
+__libnvme_public char *libnvme_path_get_ana_state(libnvme_path_t p)
 {
 	__cleanup_free char *ana_state = NULL;
 
@@ -870,7 +877,7 @@ __public char *libnvme_path_get_ana_state(libnvme_path_t p)
 	return p->ana_state;
 }
 
-__public char *libnvme_path_get_numa_nodes(libnvme_path_t p)
+__libnvme_public char *libnvme_path_get_numa_nodes(libnvme_path_t p)
 {
 	__cleanup_free char *numa_nodes = NULL;
 
@@ -885,7 +892,8 @@ __public char *libnvme_path_get_numa_nodes(libnvme_path_t p)
 	return p->numa_nodes;
 }
 
-__public long libnvme_path_get_multipath_failover_count(libnvme_path_t p)
+__libnvme_public long libnvme_path_get_multipath_failover_count(
+		libnvme_path_t p)
 {
 	__cleanup_free char *failover_count = NULL;
 
@@ -896,7 +904,7 @@ __public long libnvme_path_get_multipath_failover_count(libnvme_path_t p)
 	return p->multipath_failover_count;
 }
 
-__public long libnvme_path_get_command_retry_count(libnvme_path_t p)
+__libnvme_public long libnvme_path_get_command_retry_count(libnvme_path_t p)
 {
 	__cleanup_free char *retry_count = NULL;
 
@@ -907,7 +915,7 @@ __public long libnvme_path_get_command_retry_count(libnvme_path_t p)
 	return p->command_retry_count;
 }
 
-__public long libnvme_path_get_command_error_count(libnvme_path_t p)
+__libnvme_public long libnvme_path_get_command_error_count(libnvme_path_t p)
 {
 	__cleanup_free char *error_count = NULL;
 
@@ -926,7 +934,7 @@ static libnvme_stat_t libnvme_path_get_stat(libnvme_path_t p, unsigned int idx)
 	return &p->stat[idx];
 }
 
-__public void libnvme_path_reset_stat(libnvme_path_t p)
+__libnvme_public void libnvme_path_reset_stat(libnvme_path_t p)
 {
 	libnvme_stat_t stat = &p->stat[0];
 
@@ -941,7 +949,7 @@ static libnvme_stat_t libnvme_ns_get_stat(libnvme_ns_t n, unsigned int idx)
 	return &n->stat[idx];
 }
 
-__public void libnvme_ns_reset_stat(libnvme_ns_t n)
+__libnvme_public void libnvme_ns_reset_stat(libnvme_ns_t n)
 {
 	libnvme_stat_t stat = &n->stat[0];
 
@@ -1004,7 +1012,7 @@ static int libnvme_update_stat(const char *sysfs_stat_path, libnvme_stat_t stat)
 	return 0;
 }
 
-__public int libnvme_path_update_stat(libnvme_path_t p, bool diffstat)
+__libnvme_public int libnvme_path_update_stat(libnvme_path_t p, bool diffstat)
 {
 	__cleanup_free char *sysfs_stat_path = NULL;
 	libnvme_stat_t stat;
@@ -1022,7 +1030,7 @@ __public int libnvme_path_update_stat(libnvme_path_t p, bool diffstat)
 	return libnvme_update_stat(sysfs_stat_path, stat);
 }
 
-__public int libnvme_ns_update_stat(libnvme_ns_t n, bool diffstat)
+__libnvme_public int libnvme_ns_update_stat(libnvme_ns_t n, bool diffstat)
 {
 	__cleanup_free char *sysfs_stat_path = NULL;
 	libnvme_stat_t stat;
@@ -1045,7 +1053,7 @@ static int libnvme_stat_get_inflights(libnvme_stat_t stat)
 	return stat->inflights;
 }
 
-__public unsigned int libnvme_path_get_inflights(libnvme_path_t p)
+__libnvme_public unsigned int libnvme_path_get_inflights(libnvme_path_t p)
 {
 	libnvme_stat_t curr;
 
@@ -1056,7 +1064,7 @@ __public unsigned int libnvme_path_get_inflights(libnvme_path_t p)
 	return libnvme_stat_get_inflights(curr);
 }
 
-__public unsigned int libnvme_ns_get_inflights(libnvme_ns_t n)
+__libnvme_public unsigned int libnvme_ns_get_inflights(libnvme_ns_t n)
 {
 	libnvme_stat_t curr;
 
@@ -1081,7 +1089,7 @@ static int libnvme_stat_get_io_ticks(libnvme_stat_t curr, libnvme_stat_t prev,
 	return delta;
 }
 
-__public unsigned int libnvme_path_get_io_ticks(libnvme_path_t p)
+__libnvme_public unsigned int libnvme_path_get_io_ticks(libnvme_path_t p)
 {
 	libnvme_stat_t curr, prev;
 
@@ -1094,7 +1102,7 @@ __public unsigned int libnvme_path_get_io_ticks(libnvme_path_t p)
 	return libnvme_stat_get_io_ticks(curr, prev, p->diffstat);
 }
 
-__public unsigned int libnvme_ns_get_io_ticks(libnvme_ns_t n)
+__libnvme_public unsigned int libnvme_ns_get_io_ticks(libnvme_ns_t n)
 {
 	libnvme_stat_t curr, prev;
 
@@ -1135,12 +1143,12 @@ static unsigned int __libnvme_path_get_ticks(libnvme_path_t p,
 	return libnvme_stat_get_ticks(curr, prev, grp, p->diffstat);
 }
 
-__public unsigned int libnvme_path_get_read_ticks(libnvme_path_t p)
+__libnvme_public unsigned int libnvme_path_get_read_ticks(libnvme_path_t p)
 {
 	return __libnvme_path_get_ticks(p, READ);
 }
 
-__public unsigned int libnvme_path_get_write_ticks(libnvme_path_t p)
+__libnvme_public unsigned int libnvme_path_get_write_ticks(libnvme_path_t p)
 {
 	return __libnvme_path_get_ticks(p, WRITE);
 }
@@ -1159,12 +1167,12 @@ static unsigned int __libnvme_ns_get_ticks(libnvme_ns_t n,
 	return libnvme_stat_get_ticks(curr, prev, grp, n->diffstat);
 }
 
-__public unsigned int libnvme_ns_get_read_ticks(libnvme_ns_t n)
+__libnvme_public unsigned int libnvme_ns_get_read_ticks(libnvme_ns_t n)
 {
 	return __libnvme_ns_get_ticks(n, READ);
 }
 
-__public unsigned int libnvme_ns_get_write_ticks(libnvme_ns_t n)
+__libnvme_public unsigned int libnvme_ns_get_write_ticks(libnvme_ns_t n)
 {
 	return __libnvme_ns_get_ticks(n, WRITE);
 }
@@ -1180,7 +1188,7 @@ static double libnvme_stat_get_interval(libnvme_stat_t curr,
 	return delta;
 }
 
-__public double libnvme_path_get_stat_interval(libnvme_path_t p)
+__libnvme_public double libnvme_path_get_stat_interval(libnvme_path_t p)
 {
 	libnvme_stat_t curr, prev;
 
@@ -1193,7 +1201,7 @@ __public double libnvme_path_get_stat_interval(libnvme_path_t p)
 	return libnvme_stat_get_interval(curr, prev);
 }
 
-__public double libnvme_ns_get_stat_interval(libnvme_ns_t n)
+__libnvme_public double libnvme_ns_get_stat_interval(libnvme_ns_t n)
 {
 	libnvme_stat_t curr, prev;
 
@@ -1234,12 +1242,12 @@ static unsigned long __libnvme_path_get_ios(libnvme_path_t p,
 	return libnvme_stat_get_ios(curr, prev, grp, p->diffstat);
 }
 
-__public unsigned long libnvme_path_get_read_ios(libnvme_path_t p)
+__libnvme_public unsigned long libnvme_path_get_read_ios(libnvme_path_t p)
 {
 	return __libnvme_path_get_ios(p, READ);
 }
 
-__public unsigned long libnvme_path_get_write_ios(libnvme_path_t p)
+__libnvme_public unsigned long libnvme_path_get_write_ios(libnvme_path_t p)
 {
 	return __libnvme_path_get_ios(p, WRITE);
 }
@@ -1258,12 +1266,12 @@ static unsigned long __libnvme_ns_get_ios(libnvme_ns_t n,
 	return libnvme_stat_get_ios(curr, prev, grp, n->diffstat);
 }
 
-__public unsigned long libnvme_ns_get_read_ios(libnvme_ns_t n)
+__libnvme_public unsigned long libnvme_ns_get_read_ios(libnvme_ns_t n)
 {
 	return __libnvme_ns_get_ios(n, READ);
 }
 
-__public unsigned long libnvme_ns_get_write_ios(libnvme_ns_t n)
+__libnvme_public unsigned long libnvme_ns_get_write_ios(libnvme_ns_t n)
 {
 	return __libnvme_ns_get_ios(n, WRITE);
 }
@@ -1296,12 +1304,14 @@ static unsigned long long __libnvme_path_get_sectors(libnvme_path_t p,
 	return libnvme_stat_get_sectors(curr, prev, grp, p->diffstat);
 }
 
-__public unsigned long long libnvme_path_get_read_sectors(libnvme_path_t p)
+__libnvme_public unsigned long long libnvme_path_get_read_sectors(
+		libnvme_path_t p)
 {
 	return __libnvme_path_get_sectors(p, READ);
 }
 
-__public unsigned long long libnvme_path_get_write_sectors(libnvme_path_t p)
+__libnvme_public unsigned long long libnvme_path_get_write_sectors(
+		libnvme_path_t p)
 {
 	return __libnvme_path_get_sectors(p, WRITE);
 }
@@ -1320,12 +1330,12 @@ static unsigned long long __libnvme_ns_get_sectors(libnvme_ns_t n,
 	return libnvme_stat_get_sectors(curr, prev, grp, n->diffstat);
 }
 
-__public unsigned long long libnvme_ns_get_read_sectors(libnvme_ns_t n)
+__libnvme_public unsigned long long libnvme_ns_get_read_sectors(libnvme_ns_t n)
 {
 	return __libnvme_ns_get_sectors(n, READ);
 }
 
-__public unsigned long long libnvme_ns_get_write_sectors(libnvme_ns_t n)
+__libnvme_public unsigned long long libnvme_ns_get_write_sectors(libnvme_ns_t n)
 {
 	return __libnvme_ns_get_sectors(n, WRITE);
 }
@@ -1392,7 +1402,7 @@ static int libnvme_ctrl_scan_path(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public struct libnvme_transport_handle *libnvme_ctrl_get_transport_handle(
+__libnvme_public struct libnvme_transport_handle *libnvme_ctrl_get_transport_handle(
 		libnvme_ctrl_t c)
 {
 	if (!c->hdl) {
@@ -1407,7 +1417,7 @@ __public struct libnvme_transport_handle *libnvme_ctrl_get_transport_handle(
 	return c->hdl;
 }
 
-__public void libnvme_ctrl_release_transport_handle(libnvme_ctrl_t c)
+__libnvme_public void libnvme_ctrl_release_transport_handle(libnvme_ctrl_t c)
 {
 	if (!c->hdl)
 		return;
@@ -1416,14 +1426,15 @@ __public void libnvme_ctrl_release_transport_handle(libnvme_ctrl_t c)
 	c->hdl = NULL;
 }
 
-__public libnvme_subsystem_t libnvme_ctrl_get_subsystem(libnvme_ctrl_t c)
+__libnvme_public libnvme_subsystem_t libnvme_ctrl_get_subsystem(
+		libnvme_ctrl_t c)
 {
 	return c->s;
 }
 
 
-__public char *libnvme_ctrl_get_src_addr(libnvme_ctrl_t c, char *src_addr,
-		size_t src_addr_len)
+__libnvme_public char *libnvme_ctrl_get_src_addr(
+		libnvme_ctrl_t c, char *src_addr, size_t src_addr_len)
 {
 	size_t l;
 	char *p;
@@ -1449,7 +1460,7 @@ __public char *libnvme_ctrl_get_src_addr(libnvme_ctrl_t c, char *src_addr,
 	return src_addr;
 }
 
-__public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
+__libnvme_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 {
 	char *state = c->state;
 
@@ -1458,7 +1469,7 @@ __public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 	return c->state;
 }
 
-__public long libnvme_ctrl_get_command_error_count(libnvme_ctrl_t c)
+__libnvme_public long libnvme_ctrl_get_command_error_count(libnvme_ctrl_t c)
 {
 	__cleanup_free char *error_count = NULL;
 
@@ -1469,7 +1480,7 @@ __public long libnvme_ctrl_get_command_error_count(libnvme_ctrl_t c)
 	return c->command_error_count;
 }
 
-__public long libnvme_ctrl_get_reset_count(libnvme_ctrl_t c)
+__libnvme_public long libnvme_ctrl_get_reset_count(libnvme_ctrl_t c)
 {
 	__cleanup_free char *reset_count = NULL;
 
@@ -1480,7 +1491,7 @@ __public long libnvme_ctrl_get_reset_count(libnvme_ctrl_t c)
 	return c->reset_count;
 }
 
-__public long libnvme_ctrl_get_reconnect_count(libnvme_ctrl_t c)
+__libnvme_public long libnvme_ctrl_get_reconnect_count(libnvme_ctrl_t c)
 {
 	__cleanup_free char *reconnect_count = NULL;
 
@@ -1491,7 +1502,8 @@ __public long libnvme_ctrl_get_reconnect_count(libnvme_ctrl_t c)
 	return c->reconnect_count;
 }
 
-__public int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id)
+__libnvme_public int libnvme_ctrl_identify(
+		libnvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
 	struct libnvme_transport_handle *hdl =
 		libnvme_ctrl_get_transport_handle(c);
@@ -1501,22 +1513,23 @@ __public int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id)
 	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
-__public libnvme_ns_t libnvme_ctrl_first_ns(libnvme_ctrl_t c)
+__libnvme_public libnvme_ns_t libnvme_ctrl_first_ns(libnvme_ctrl_t c)
 {
 	return list_top(&c->namespaces, struct libnvme_ns, entry);
 }
 
-__public libnvme_ns_t libnvme_ctrl_next_ns(libnvme_ctrl_t c, libnvme_ns_t n)
+__libnvme_public libnvme_ns_t libnvme_ctrl_next_ns(
+		libnvme_ctrl_t c, libnvme_ns_t n)
 {
 	return n ? list_next(&c->namespaces, n, entry) : NULL;
 }
 
-__public libnvme_path_t libnvme_ctrl_first_path(libnvme_ctrl_t c)
+__libnvme_public libnvme_path_t libnvme_ctrl_first_path(libnvme_ctrl_t c)
 {
 	return list_top(&c->paths, struct libnvme_path, entry);
 }
 
-__public libnvme_path_t libnvme_ctrl_next_path(libnvme_ctrl_t c,
+__libnvme_public libnvme_path_t libnvme_ctrl_next_path(libnvme_ctrl_t c,
 		libnvme_path_t p)
 {
 	return p ? list_next(&c->paths, p, entry) : NULL;
@@ -1548,7 +1561,7 @@ void nvme_deconfigure_ctrl(libnvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->phy_slot);
 }
 
-__public void libnvme_unlink_ctrl(libnvme_ctrl_t c)
+__libnvme_public void libnvme_unlink_ctrl(libnvme_ctrl_t c)
 {
 	list_del_init(&c->entry);
 	c->s = NULL;
@@ -1578,7 +1591,7 @@ static void __libnvme_free_ctrl(libnvme_ctrl_t c)
 	free(c);
 }
 
-__public void libnvme_free_ctrl(libnvme_ctrl_t c)
+__libnvme_public void libnvme_free_ctrl(libnvme_ctrl_t c)
 {
 	if (!c)
 		return;
@@ -2002,7 +2015,7 @@ bool _libnvme_ctrl_match_config(struct libnvme_ctrl *c,
 	return ctrl_match(c, &candidate);
 }
 
-__public bool libnvme_ctrl_match_config(struct libnvme_ctrl *c,
+__libnvme_public bool libnvme_ctrl_match_config(struct libnvme_ctrl *c,
 		const char *transport, const char *traddr, const char *trsvcid,
 		const char *subsysnqn, const char *host_traddr,
 		const char *host_iface)
@@ -2320,7 +2333,8 @@ static int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public int libnvme_init_ctrl(libnvme_host_t h, libnvme_ctrl_t c, int instance)
+__libnvme_public int libnvme_init_ctrl(
+		libnvme_host_t h, libnvme_ctrl_t c, int instance)
 {
 	__cleanup_free char *subsys_name = NULL, *name = NULL, *path = NULL;
 	libnvme_subsystem_t s;
@@ -2467,8 +2481,9 @@ skip_address:
 	return 0;
 }
 
-__public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
-		   libnvme_ctrl_t *cp)
+__libnvme_public int libnvme_scan_ctrl(
+		struct libnvme_global_ctx *ctx, const char *name,
+		libnvme_ctrl_t *cp)
 {
 	__cleanup_free char *subsysnqn = NULL, *subsysname = NULL;
 	__cleanup_free char *hostnqn = NULL, *hostid = NULL;
@@ -2534,7 +2549,7 @@ __public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
 	return 0;
 }
 
-__public void libnvme_rescan_ctrl(struct libnvme_ctrl *c)
+__libnvme_public void libnvme_rescan_ctrl(struct libnvme_ctrl *c)
 {
 	struct libnvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
 	if (!c->s)
@@ -2588,12 +2603,12 @@ void libnvme_ns_release_transport_handle(libnvme_ns_t n)
 	n->hdl = NULL;
 }
 
-__public libnvme_subsystem_t libnvme_ns_get_subsystem(libnvme_ns_t n)
+__libnvme_public libnvme_subsystem_t libnvme_ns_get_subsystem(libnvme_ns_t n)
 {
 	return n->s;
 }
 
-__public libnvme_ctrl_t libnvme_ns_get_ctrl(libnvme_ns_t n)
+__libnvme_public libnvme_ctrl_t libnvme_ns_get_ctrl(libnvme_ns_t n)
 {
 	return n->c;
 }
@@ -2603,28 +2618,28 @@ const char *libnvme_ns_head_get_sysfs_dir(libnvme_ns_head_t head)
 	return head->sysfs_dir;
 }
 
-__public const char *libnvme_ns_get_model(libnvme_ns_t n)
+__libnvme_public const char *libnvme_ns_get_model(libnvme_ns_t n)
 {
 	return n->c ? n->c->model : n->s->model;
 }
 
-__public const char *libnvme_ns_get_serial(libnvme_ns_t n)
+__libnvme_public const char *libnvme_ns_get_serial(libnvme_ns_t n)
 {
 	return n->c ? n->c->serial : n->s->serial;
 }
 
-__public const char *libnvme_ns_get_firmware(libnvme_ns_t n)
+__libnvme_public const char *libnvme_ns_get_firmware(libnvme_ns_t n)
 {
 	return n->c ? n->c->firmware : n->s->firmware;
 }
 
-__public void libnvme_ns_copy_uuid(libnvme_ns_t n,
+__libnvme_public void libnvme_ns_copy_uuid(libnvme_ns_t n,
 		unsigned char out[NVME_UUID_LEN])
 {
 	memcpy(out, n->uuid, NVME_UUID_LEN);
 }
 
-__public long libnvme_ns_get_command_retry_count(libnvme_ns_t n)
+__libnvme_public long libnvme_ns_get_command_retry_count(libnvme_ns_t n)
 {
 	__cleanup_free char *retry_count = NULL;
 
@@ -2635,7 +2650,7 @@ __public long libnvme_ns_get_command_retry_count(libnvme_ns_t n)
 	return n->command_retry_count;
 }
 
-__public long libnvme_ns_get_command_error_count(libnvme_ns_t n)
+__libnvme_public long libnvme_ns_get_command_error_count(libnvme_ns_t n)
 {
 	__cleanup_free char *error_count = NULL;
 
@@ -2646,7 +2661,8 @@ __public long libnvme_ns_get_command_error_count(libnvme_ns_t n)
 	return n->command_error_count;
 }
 
-__public long libnvme_ns_get_requeue_no_usable_path_count(libnvme_ns_t n)
+__libnvme_public long libnvme_ns_get_requeue_no_usable_path_count(
+		libnvme_ns_t n)
 {
 	__cleanup_free char *requeue_count = NULL;
 
@@ -2657,7 +2673,8 @@ __public long libnvme_ns_get_requeue_no_usable_path_count(libnvme_ns_t n)
 	return n->requeue_no_usable_path_count;
 }
 
-__public long libnvme_ns_get_fail_no_available_path_count(libnvme_ns_t n)
+__libnvme_public long libnvme_ns_get_fail_no_available_path_count(
+		libnvme_ns_t n)
 {
 	__cleanup_free char *fail_count = NULL;
 
@@ -2668,7 +2685,7 @@ __public long libnvme_ns_get_fail_no_available_path_count(libnvme_ns_t n)
 	return n->fail_no_available_path_count;
 }
 
-__public int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns)
+__libnvme_public int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns)
 {
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
@@ -2696,7 +2713,8 @@ int libnvme_ns_identify_descs(libnvme_ns_t n, struct nvme_ns_id_desc *descs)
 	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
-__public int libnvme_ns_verify(libnvme_ns_t n, off_t offset, size_t count)
+__libnvme_public int libnvme_ns_verify(
+		libnvme_ns_t n, off_t offset, size_t count)
 {
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
@@ -2717,8 +2735,8 @@ __public int libnvme_ns_verify(libnvme_ns_t n, off_t offset, size_t count)
 	return libnvme_submit_io_passthru(hdl, &cmd);
 }
 
-__public int libnvme_ns_write_uncorrectable(libnvme_ns_t n, off_t offset,
-		size_t count)
+__libnvme_public int libnvme_ns_write_uncorrectable(
+		libnvme_ns_t n, off_t offset, size_t count)
 {
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
@@ -2739,7 +2757,8 @@ __public int libnvme_ns_write_uncorrectable(libnvme_ns_t n, off_t offset,
 	return libnvme_submit_io_passthru(hdl, &cmd);
 }
 
-__public int libnvme_ns_write_zeros(libnvme_ns_t n, off_t offset, size_t count)
+__libnvme_public int libnvme_ns_write_zeros(
+		libnvme_ns_t n, off_t offset, size_t count)
 {
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
@@ -2760,7 +2779,7 @@ __public int libnvme_ns_write_zeros(libnvme_ns_t n, off_t offset, size_t count)
 	return libnvme_submit_io_passthru(hdl, &cmd);
 }
 
-__public int libnvme_ns_write(libnvme_ns_t n, void *buf, off_t offset,
+__libnvme_public int libnvme_ns_write(libnvme_ns_t n, void *buf, off_t offset,
 		size_t count)
 {
 	struct libnvme_transport_handle *hdl;
@@ -2782,7 +2801,7 @@ __public int libnvme_ns_write(libnvme_ns_t n, void *buf, off_t offset,
 	return libnvme_submit_io_passthru(hdl, &cmd);
 }
 
-__public int libnvme_ns_read(libnvme_ns_t n, void *buf, off_t offset,
+__libnvme_public int libnvme_ns_read(libnvme_ns_t n, void *buf, off_t offset,
 		size_t count)
 {
 	struct libnvme_transport_handle *hdl;
@@ -2804,7 +2823,7 @@ __public int libnvme_ns_read(libnvme_ns_t n, void *buf, off_t offset,
 	return libnvme_submit_io_passthru(hdl, &cmd);
 }
 
-__public int libnvme_ns_compare(libnvme_ns_t n, void *buf, off_t offset,
+__libnvme_public int libnvme_ns_compare(libnvme_ns_t n, void *buf, off_t offset,
 		size_t count)
 {
 	struct libnvme_transport_handle *hdl;
@@ -2826,7 +2845,7 @@ __public int libnvme_ns_compare(libnvme_ns_t n, void *buf, off_t offset,
 	return libnvme_submit_io_passthru(hdl, &cmd);
 }
 
-__public int libnvme_ns_flush(libnvme_ns_t n)
+__libnvme_public int libnvme_ns_flush(libnvme_ns_t n)
 {
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
@@ -3139,7 +3158,7 @@ static int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public int libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 		const char *name, libnvme_ns_t *ns)
 {
 	return __libnvme_scan_namespace(ctx, libnvme_ns_sysfs_dir(), name, ns);
@@ -3265,7 +3284,7 @@ static int libnvme_subsystem_scan_namespace(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public struct libnvme_ns *libnvme_subsystem_lookup_namespace(
+__libnvme_public struct libnvme_ns *libnvme_subsystem_lookup_namespace(
 		struct libnvme_subsystem *s, __u32 nsid)
 {
 	struct libnvme_ns *n;

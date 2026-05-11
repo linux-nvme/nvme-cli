@@ -15,7 +15,8 @@
 
 #include "compiler-attributes.h"
 
-__public struct nvmf_ext_attr *libnvmf_exat_ptr_next(struct nvmf_ext_attr *p)
+__libnvme_public struct nvmf_ext_attr *libnvmf_exat_ptr_next(
+		struct nvmf_ext_attr *p)
 {
 	__u16 size = libnvmf_exat_size(le16_to_cpu(p->exatlen));
 

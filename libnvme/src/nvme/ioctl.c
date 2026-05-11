@@ -40,7 +40,8 @@ static int nvme_verify_chr(struct libnvme_transport_handle *hdl)
 	return 0;
 }
 
-__public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_reset_subsystem(
+		struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
@@ -54,7 +55,7 @@ __public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
 	return ret;
 }
 
-__public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
@@ -68,7 +69,7 @@ __public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 	return ret;
 }
 
-__public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
@@ -82,7 +83,8 @@ __public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 	return ret;
 }
 
-__public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
+__libnvme_public int libnvme_get_nsid(
+		struct libnvme_transport_handle *hdl, __u32 *nsid)
 {
 	__u32 tmp;
 
@@ -95,8 +97,8 @@ __public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
 	return 0;
 }
 
-__public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
-		int block_size)
+__libnvme_public int libnvme_update_block_size(
+		struct libnvme_transport_handle *hdl, int block_size)
 {
 	int ret;
 	int fd = libnvme_transport_handle_get_fd(hdl);
@@ -190,7 +192,8 @@ out:
 	return err;
 }
 
-__public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_submit_io_passthru(
+		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl)
@@ -205,7 +208,8 @@ __public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
 	return libnvme_submit_passthru32(hdl, LIBNVME_IOCTL_IO_CMD, cmd);
 }
 
-__public int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_submit_admin_passthru(
+		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl)

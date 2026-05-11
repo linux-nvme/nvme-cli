@@ -32,7 +32,7 @@ static void nvme_init_env(void)
 		force_4k = true;
 }
 
-__public int libnvme_get_log(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, bool rae,
 		__u32 xfer_len)
 {
@@ -167,9 +167,9 @@ static int try_read_ana(struct libnvme_transport_handle *hdl,
 	return 0;
 }
 
-__public int libnvme_get_ana_log_atomic(struct libnvme_transport_handle *hdl,
-		bool rae, bool rgo, struct nvme_ana_log *log, __u32 *len,
-		unsigned int retries)
+__libnvme_public int libnvme_get_ana_log_atomic(
+		struct libnvme_transport_handle *hdl, bool rae, bool rgo,
+		struct nvme_ana_log *log, __u32 *len, unsigned int retries)
 {
 	const enum nvme_log_ana_lsp lsp =
 		rgo ? NVME_LOG_ANA_LSP_RGO_GROUPS_ONLY : 0;
@@ -223,7 +223,8 @@ __public int libnvme_get_ana_log_atomic(struct libnvme_transport_handle *hdl,
 	return -EAGAIN;
 }
 
-__public int libnvme_set_etdas(struct libnvme_transport_handle *hdl, bool *changed)
+__libnvme_public int libnvme_set_etdas(
+		struct libnvme_transport_handle *hdl, bool *changed)
 {
 	struct nvme_feat_host_behavior da4;
 	struct libnvme_passthru_cmd cmd;
@@ -250,7 +251,8 @@ __public int libnvme_set_etdas(struct libnvme_transport_handle *hdl, bool *chang
 	return 0;
 }
 
-__public int libnvme_clear_etdas(struct libnvme_transport_handle *hdl, bool *changed)
+__libnvme_public int libnvme_clear_etdas(
+		struct libnvme_transport_handle *hdl, bool *changed)
 {
 	struct nvme_feat_host_behavior da4;
 	struct libnvme_passthru_cmd cmd;
@@ -276,7 +278,7 @@ __public int libnvme_clear_etdas(struct libnvme_transport_handle *hdl, bool *cha
 	return 0;
 }
 
-__public int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
 		struct nvme_id_uuid_list *uuid_list)
 {
 	struct libnvme_passthru_cmd cmd;
@@ -301,7 +303,8 @@ __public int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
 	return err;
 }
 
-__public int libnvme_get_telemetry_max(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_get_telemetry_max(
+		struct libnvme_transport_handle *hdl,
 		enum nvme_telemetry_da *da, size_t *data_tx)
 {
 	__cleanup_free struct nvme_id_ctrl *id_ctrl = NULL;
@@ -337,10 +340,10 @@ __public int libnvme_get_telemetry_max(struct libnvme_transport_handle *hdl,
 	return err;
 }
 
-__public int libnvme_get_telemetry_log(struct libnvme_transport_handle *hdl, bool create,
-		bool ctrl, bool rae, size_t max_data_tx,
-		enum nvme_telemetry_da da, struct nvme_telemetry_log **buf,
-		size_t *size)
+__libnvme_public int libnvme_get_telemetry_log(
+		struct libnvme_transport_handle *hdl, bool create, bool ctrl,
+		bool rae, size_t max_data_tx, enum nvme_telemetry_da da,
+		struct nvme_telemetry_log **buf, size_t *size)
 {
 	static const __u32 xfer = NVME_LOG_TELEM_BLOCK_SIZE;
 	struct nvme_telemetry_log *telem;
@@ -441,25 +444,28 @@ static int nvme_check_get_telemetry_log(struct libnvme_transport_handle *hdl,
 }
 
 
-__public int libnvme_get_ctrl_telemetry(struct libnvme_transport_handle *hdl, bool rae,
-		struct nvme_telemetry_log **log,
-		enum nvme_telemetry_da da, size_t *size)
+__libnvme_public int libnvme_get_ctrl_telemetry(
+		struct libnvme_transport_handle *hdl, bool rae,
+		struct nvme_telemetry_log **log, enum nvme_telemetry_da da,
+		size_t *size)
 {
 	return nvme_check_get_telemetry_log(hdl, false, true, rae, log,
 		da, size);
 }
 
-__public int libnvme_get_host_telemetry(struct libnvme_transport_handle *hdl,
-		struct nvme_telemetry_log **log,
-		enum nvme_telemetry_da da, size_t *size)
+__libnvme_public int libnvme_get_host_telemetry(
+		struct libnvme_transport_handle *hdl,
+		struct nvme_telemetry_log **log, enum nvme_telemetry_da da,
+		size_t *size)
 {
 	return nvme_check_get_telemetry_log(hdl, false, false, false, log,
 		da, size);
 }
 
-__public int libnvme_get_new_host_telemetry(struct libnvme_transport_handle *hdl,
-		struct nvme_telemetry_log **log,
-		enum nvme_telemetry_da da, size_t *size)
+__libnvme_public int libnvme_get_new_host_telemetry(
+		struct libnvme_transport_handle *hdl,
+		struct nvme_telemetry_log **log, enum nvme_telemetry_da da,
+		size_t *size)
 {
 	return nvme_check_get_telemetry_log(hdl, true, false, false, log,
 		da, size);
@@ -511,8 +517,8 @@ int libnvme_get_lba_status_log(struct libnvme_transport_handle *hdl, bool rae,
 	return 0;
 }
 
-__public size_t libnvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
-					 bool rgo)
+__libnvme_public size_t libnvme_get_ana_log_len_from_id_ctrl(
+		const struct nvme_id_ctrl *id_ctrl, bool rgo)
 {
 	__u32 nanagrpid = le32_to_cpu(id_ctrl->nanagrpid);
 	size_t size = sizeof(struct nvme_ana_log) +
@@ -521,7 +527,8 @@ __public size_t libnvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *
 	return rgo ? size : size + le32_to_cpu(id_ctrl->mnan) * sizeof(__le32);
 }
 
-__public int libnvme_get_ana_log_len(struct libnvme_transport_handle *hdl, size_t *analen)
+__libnvme_public int libnvme_get_ana_log_len(
+		struct libnvme_transport_handle *hdl, size_t *analen)
 {
 	__cleanup_free struct nvme_id_ctrl *ctrl = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -540,8 +547,8 @@ __public int libnvme_get_ana_log_len(struct libnvme_transport_handle *hdl, size_
 	return 0;
 }
 
-__public int libnvme_get_logical_block_size(struct libnvme_transport_handle *hdl,
-		__u32 nsid, int *blksize)
+__libnvme_public int libnvme_get_logical_block_size(
+		struct libnvme_transport_handle *hdl, __u32 nsid, int *blksize)
 {
 	__cleanup_free struct nvme_id_ns *ns = NULL;
 	struct libnvme_passthru_cmd cmd;
@@ -563,8 +570,8 @@ __public int libnvme_get_logical_block_size(struct libnvme_transport_handle *hdl
 	return 0;
 }
 
-__public int libnvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr dir,
-			     __u32 *len)
+__libnvme_public int libnvme_get_feature_length(
+		int fid, __u32 cdw11, enum nvme_data_tfr dir, __u32 *len)
 {
 	switch (fid) {
 	case NVME_FEAT_FID_LBA_RANGE:
@@ -636,7 +643,8 @@ __public int libnvme_get_feature_length(int fid, __u32 cdw11, enum nvme_data_tfr
 	return 0;
 }
 
-__public int libnvme_get_directive_receive_length(enum nvme_directive_dtype dtype,
+__libnvme_public int libnvme_get_directive_receive_length(
+		enum nvme_directive_dtype dtype,
 		enum nvme_directive_receive_doper doper, __u32 *len)
 {
 	switch (dtype) {
