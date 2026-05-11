@@ -4244,16 +4244,17 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 		printf(".................\n");
 		printf("error_count	: %"PRIu64"\n",
 			le64_to_cpu(err_log[i].error_count));
-		printf("sqid		: %d\n", err_log[i].sqid);
-		printf("cmdid		: %#x\n", err_log[i].cmdid);
+		printf("sqid		: %d\n", le16_to_cpu(err_log[i].sqid));
+		printf("cmdid		: %#x\n",
+		       le16_to_cpu(err_log[i].cmdid));
 		printf("status_field	: %#x (%s)\n", status,
 			libnvme_status_to_string(status, false));
 		printf("phase_tag	: %#x\n", le16_to_cpu(err_log[i].status_field) & 0x1);
 		printf("parm_err_loc	: %#x\n",
-			err_log[i].parm_error_location);
+		       le16_to_cpu(err_log[i].parm_error_location));
 		printf("lba		: %#"PRIx64"\n",
 			le64_to_cpu(err_log[i].lba));
-		printf("nsid		: %#x\n", err_log[i].nsid);
+		printf("nsid		: %#x\n", le32_to_cpu(err_log[i].nsid));
 		printf("vs		: %d\n", err_log[i].vs);
 		printf("trtype		: %#x (%s)\n", err_log[i].trtype,
 			nvme_trtype_to_string(err_log[i].trtype));
@@ -4261,7 +4262,8 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 		printf("opcode		: %#x\n", err_log[i].opcode);
 		printf("cs		: %#"PRIx64"\n",
 		       le64_to_cpu(err_log[i].cs));
-		printf("trtype_spec_info: %#x\n", err_log[i].trtype_spec_info);
+		printf("trtype_spec_info: %#x\n",
+		       le16_to_cpu(err_log[i].trtype_spec_info));
 		printf("log_page_version: %d\n", err_log[i].log_page_version);
 		printf(".................\n");
 	}
