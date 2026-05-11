@@ -514,6 +514,7 @@ if want_nvme
             'nvme-rpmb.c',
             'nvme.c',
             'plugin.c',
+            'nvme-top.c',
         ]
 
         if json_c_dep.found()

@@ -3550,6 +3550,45 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 	return 0;
 }
 
+static int top(int argc, char **argv, struct command *acmd,
+		struct plugin *plugin)
+{
+	int err;
+	nvme_print_flags_t flags = 0;
+	const char *desc = "show nvme top output";
+	const char *delay = "refresh interval in seconds";
+
+	struct config {
+		int delay;
+	};
+
+	struct config cfg = {
+		.delay = 1,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_INT("delay", 'd', &cfg.delay, delay));
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0 || flags != NORMAL) {
+		nvme_show_error("Invalid output format");
+		return -EINVAL;
+	}
+
+	if (cfg.delay < 1) {
+		nvme_show_error("delay must be greater than or equal to 1");
+		return -EINVAL;
+	}
+
+	nvme_show_top(flags, cfg.delay);
+
+	return err;
+}
+
 static int list(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve basic information for all NVMe namespaces";
