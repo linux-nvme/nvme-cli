@@ -537,11 +537,14 @@ static void json_error_log(struct nvme_error_log_page *err_log, int entries,
 
 		error = json_create_object();
 
-		obj_add_uint64(error, "error_count", le64_to_cpu(err_log[i].error_count));
+		obj_add_uint64(error, "error_count",
+			       le64_to_cpu(err_log[i].error_count));
 		obj_add_int(error, "sqid", le16_to_cpu(err_log[i].sqid));
 		obj_add_int(error, "cmdid", le16_to_cpu(err_log[i].cmdid));
-		obj_add_int(error, "status_field", le16_to_cpu(err_log[i].status_field) >> 0x1);
-		obj_add_int(error, "phase_tag", le16_to_cpu(err_log[i].status_field) & 0x1);
+		obj_add_int(error, "status_field",
+			    le16_to_cpu(err_log[i].status_field) >> 0x1);
+		obj_add_int(error, "phase_tag",
+			    le16_to_cpu(err_log[i].status_field) & 0x1);
 		obj_add_int(error, "parm_error_location",
 			    le16_to_cpu(err_log[i].parm_error_location));
 		obj_add_uint64(error, "lba", le64_to_cpu(err_log[i].lba));
@@ -551,7 +554,8 @@ static void json_error_log(struct nvme_error_log_page *err_log, int entries,
 		obj_add_int(error, "csi", err_log[i].csi);
 		obj_add_int(error, "opcode", err_log[i].opcode);
 		obj_add_uint64(error, "cs", le64_to_cpu(err_log[i].cs));
-		obj_add_int(error, "trtype_spec_info", le16_to_cpu(err_log[i].trtype_spec_info));
+		obj_add_int(error, "trtype_spec_info",
+			    le16_to_cpu(err_log[i].trtype_spec_info));
 		obj_add_int(error, "log_page_version",
 			    err_log[i].log_page_version);
 
