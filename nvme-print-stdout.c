@@ -4230,7 +4230,7 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 	__u16 status;
 
 	printf("Error Log Entries for device:%s entries:%d\n", devname,
-								entries);
+	       entries);
 	printf(".................\n");
 	for (i = 0; i < entries; i++) {
 		if (nvme_is_error_log_filter(&err_log[i], flt)) {
@@ -4243,21 +4243,22 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 		printf(" Entry[%2d]\n", i);
 		printf(".................\n");
 		printf("error_count	: %"PRIu64"\n",
-			le64_to_cpu(err_log[i].error_count));
+		       le64_to_cpu(err_log[i].error_count));
 		printf("sqid		: %d\n", le16_to_cpu(err_log[i].sqid));
 		printf("cmdid		: %#x\n",
 		       le16_to_cpu(err_log[i].cmdid));
 		printf("status_field	: %#x (%s)\n", status,
-			libnvme_status_to_string(status, false));
-		printf("phase_tag	: %#x\n", le16_to_cpu(err_log[i].status_field) & 0x1);
+		       libnvme_status_to_string(status, false));
+		printf("phase_tag	: %#x\n",
+		       le16_to_cpu(err_log[i].status_field) & 0x1);
 		printf("parm_err_loc	: %#x\n",
 		       le16_to_cpu(err_log[i].parm_error_location));
 		printf("lba		: %#"PRIx64"\n",
-			le64_to_cpu(err_log[i].lba));
+		       le64_to_cpu(err_log[i].lba));
 		printf("nsid		: %#x\n", le32_to_cpu(err_log[i].nsid));
 		printf("vs		: %d\n", err_log[i].vs);
 		printf("trtype		: %#x (%s)\n", err_log[i].trtype,
-			nvme_trtype_to_string(err_log[i].trtype));
+		       nvme_trtype_to_string(err_log[i].trtype));
 		printf("csi		: %d\n", err_log[i].csi);
 		printf("opcode		: %#x\n", err_log[i].opcode);
 		printf("cs		: %#"PRIx64"\n",
