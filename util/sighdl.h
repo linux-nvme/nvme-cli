@@ -3,8 +3,10 @@
 #define __NVME_SIGHDL
 
 #include <stdbool.h>
+#include <signal.h>
 
-extern bool nvme_sigint_received;
+extern volatile sig_atomic_t nvme_sigint_received;
+extern volatile sig_atomic_t nvme_sigwinch_received;
 
 int nvme_install_sigint_handler(void);
 
