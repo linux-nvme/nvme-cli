@@ -146,7 +146,6 @@ __public void libnvme_transport_handle_set_timeout(
 static int __nvme_transport_handle_open_direct(
 		struct libnvme_transport_handle *hdl, const char *devname)
 {
-	struct libnvme_passthru_cmd dummy = { 0 };
 	__cleanup_free char *path = NULL;
 	char *name;
 	int ret, id, ns;
@@ -187,13 +186,20 @@ static int __nvme_transport_handle_open_direct(
 	}
 
 	if (hdl->ctx->ioctl_probing) {
-		/* avoid kernel logging 'cmd does not match nsid' */
-		dummy.nsid = ns;
-		ret = ioctl(hdl->fd, LIBNVME_IOCTL_ADMIN64_CMD, &dummy);
-		if (ret > 0) {
+		/*
+		 * Detect support for the 64-bit ioctl variants without
+		 * submitting an NVMe command.  Passing a NULL argp makes
+		 * nvme_user_cmd64() fail in copy_from_user() with -EFAULT
+		 * before the command is built or routed to the admin queue.
+		 * If the ioctl number itself is unknown, the kernel returns
+		 * -ENOTTY before any handler runs.  We rely only on the
+		 * errno distinction.
+		 */
+		ret = ioctl(hdl->fd, LIBNVME_IOCTL_ADMIN64_CMD, NULL);
+		if (ret == -1 && errno != ENOTTY) {
 			hdl->ioctl_admin64 = true;
-			ret = ioctl(hdl->fd, LIBNVME_IOCTL_IO64_CMD, &dummy);
-			if (ret != -1 || errno != ENOTTY)
+			ret = ioctl(hdl->fd, LIBNVME_IOCTL_IO64_CMD, NULL);
+			if (ret == -1 && errno != ENOTTY)
 				hdl->ioctl_io64 = true;
 		}
 	}
