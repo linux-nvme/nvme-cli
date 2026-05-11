@@ -10,6 +10,8 @@ enum fmt_type {
 	FMT_UNSIGNED,
 	FMT_LONG,
 	FMT_UNSIGNED_LONG,
+	FMT_FLOAT,
+	FMT_DOUBLE,
 };
 
 enum alignment {
@@ -25,6 +27,8 @@ struct value {
 		unsigned int u;
 		long ld;
 		unsigned long lu;
+		float f;
+		double d;
 	};
 	enum alignment align;
 	enum fmt_type type;
@@ -133,6 +137,28 @@ static inline void table_set_value_unsigned_long(struct table *t, int col,
 	v->lu = lu;
 	v->align = align;
 	v->type = FMT_UNSIGNED_LONG;
+}
+
+static inline void table_set_value_float(struct table *t, int col,
+		int row, float f, enum alignment align)
+{
+	struct table_row *r = &t->rows[row];
+	struct value *v = &r->val[col];
+
+	v->f = f;
+	v->align = align;
+	v->type = FMT_FLOAT;
+}
+
+static inline void table_set_value_double(struct table *t, int col,
+		int row, double d, enum alignment align)
+{
+	struct table_row *r = &t->rows[row];
+	struct value *v = &r->val[col];
+
+	v->d = d;
+	v->align = align;
+	v->type = FMT_DOUBLE;
 }
 
 struct table *table_create(void);

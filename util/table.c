@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include "nvme-print.h"
 #include "table.h"
 
 static int table_get_value_width(struct value *v)
@@ -43,8 +44,14 @@ static int table_get_value_width(struct value *v)
 	case FMT_LONG:
 		len = snprintf(buf, sizeof(buf), "%ld", v->ld);
 		break;
+	case FMT_FLOAT:
+		len = snprintf(buf, sizeof(buf), "%.2f", v->f);
+		break;
+	case FMT_DOUBLE:
+		len = snprintf(buf, sizeof(buf), "%.2f", v->d);
+		break;
 	default:
-		printf("Invalid print format!\n");
+		nvme_show_error("Invalid print format!\n");
 		break;
 	}
 	return len;
@@ -81,8 +88,14 @@ static void table_print_centered(struct value *val, int width, enum fmt_type typ
 		break;
 	case FMT_UNSIGNED_LONG:
 		printf("%lu", val->lu);
+	case FMT_FLOAT:
+		printf("%.2f", val->f);
+		break;
+	case FMT_DOUBLE:
+		printf("%.2f", val->d);
 		break;
 	default:
+		nvme_show_error("Invalid print format!\n");
 		break;
 	}
 
@@ -167,9 +180,14 @@ static void table_print_rows(const struct table *t)
 					break;
 				case FMT_UNSIGNED_LONG:
 					printf("%*lu", width, v->lu);
+				case FMT_FLOAT:
+					printf("%*.2f", width, v->f);
+					break;
+				case FMT_DOUBLE:
+					printf("%*.2f", width, v->d);
 					break;
 				default:
-					fprintf(stderr, "Invalid format!\n");
+					nvme_show_error("Invalid format!\n");
 					break;
 				}
 				break;
