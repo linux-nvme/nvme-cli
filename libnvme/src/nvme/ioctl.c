@@ -193,6 +193,9 @@ out:
 __public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
+	if (!hdl)
+		return -ENODEV;
+
 	if (!cmd->timeout_ms && hdl->timeout)
 		cmd->timeout_ms = hdl->timeout;
 
@@ -205,6 +208,9 @@ __public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
 __public int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
+	if (!hdl)
+		return -ENODEV;
+
 	if (hdl->uring_enabled)
 		return libnvme_submit_admin_passthru_async(hdl, cmd);
 

@@ -106,6 +106,9 @@ __public int libnvme_wait_admin_passthru(struct libnvme_transport_handle *hdl)
 	struct io_uring *ring;
 	int err;
 
+	if (!hdl)
+		return -ENODEV;
+
 	ring = hdl->ctx->ring;
 
 	for (int i = 0; i < hdl->ctx->ring_cmds; i++) {
