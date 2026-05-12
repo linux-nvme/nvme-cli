@@ -62,7 +62,7 @@ jobs:
             git clone https://github.com/${{ github.repository }} nvme-cli
             cd nvme-cli
             git checkout ${{ github.sha }}
-            scripts/build.sh -b release -c gcc
+            scripts/build.sh -b release -c gcc -p
             sudo meson install -C .build-ci
             sudo ldconfig /usr/local/lib64
 
@@ -81,7 +81,17 @@ jobs:
             NVMET_TRTYPES="loop rdma tcp"
             EXCLUDE=(nvme/010 nvme/012 nvme/034 nvme/035)
             EF
+            set +e
             sudo ./check nvme md/001
+            blktests_status=$?
+            set -e
+
+            cd -
+            CODECOV_VERSION="v0.8.0"
+            curl -Os "https://uploader.codecov.io/${CODECOV_VERSION}/linux/codecov"
+            chmod +x codecov
+            (cd nvme-cli && ../codecov -t "${{ secrets.CODECOV_TOKEN }}") || true
+            exit "${blktests_status}"
       - name: Run nvme-cli tests in VM
         if: success() || steps.blktests.conclusion == 'failure'
         uses: ./.github/actions/kubevirt-action
@@ -90,6 +100,7 @@ jobs:
           kernel_version: linus-master
           vm_artifact_upload_dir: nvme-cli/tests/nvmetests/
           run_cmds: |
+            export CODECOV_TOKEN="${{ secrets.CODECOV_TOKEN }}"
             #Preventing bash variable expension for the outer cat by using
             #single quotes around EOF
             cat > test.sh << 'EOF'
@@ -113,7 +124,12 @@ jobs:
             EOJ
             cat tests/config.json
 
-            scripts/build.sh -b release -c gcc tests
+            scripts/build.sh -b release -c gcc -p tests
+
+            CODECOV_VERSION="v0.8.0"
+            curl -Os "https://uploader.codecov.io/${CODECOV_VERSION}/linux/codecov"
+            chmod +x codecov
+            ./codecov -t "$CODECOV_TOKEN" || true
             EOF
 
             sudo chmod +x test.sh
@@ -130,6 +146,7 @@ jobs:
             sudo podman run --privileged \
             -v /dev:/dev \
             -e BDEV0 \
+            -e CODECOV_TOKEN \
             -v "${PWD}/test.sh":"/test.sh" \
             -v "${PWD}/nvme-cli":"/nvme-cli":z \
             ghcr.io/linux-nvme/debian:latest /test.sh

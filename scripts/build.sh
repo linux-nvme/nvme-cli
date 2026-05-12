@@ -19,6 +19,7 @@ usage() {
     echo " -b [release]|debug   build type"
     echo " -c [gcc]|clang       compiler to use"
     echo " -m [meson]|muon      use meson or muon"
+    echo " -p                   enable coverage report"
     echo " -t [arm]|ppc64le|s390x  cross compile target"
     echo " -x                   run test with valgrind"
     echo ""
@@ -28,7 +29,6 @@ usage() {
     echo "  fallback            download all dependencies"
     echo "                      and build them as shared libraries"
     echo "  cross               use cross toolchain to build"
-    echo "  coverage            build coverage report"
     echo "  distro              build libnvme and nvme-cli separately"
     echo "  docs                build all documentation"
     echo "  man_docs            build man documentation only"
@@ -49,9 +49,10 @@ BUILDTYPE=release
 CROSS_TARGET=arm
 CC=${CC:-"gcc"}
 
+use_coverage=0
 use_valgrind=0
 
-while getopts "b:c:m:t:x" o; do
+while getopts "b:c:m:pt:x" o; do
     case "${o}" in
         b)
             BUILDTYPE="${OPTARG}"
@@ -61,6 +62,9 @@ while getopts "b:c:m:t:x" o; do
             ;;
         m)
             BUILDTOOL="${OPTARG}"
+            ;;
+        p)
+            use_coverage=1
             ;;
         t)
             CROSS_TARGET="${OPTARG}"
@@ -140,16 +144,6 @@ config_meson_cross() {
         --cross-file=.github/cross/ubuntu-cross-${CROSS_TARGET}.txt \
         -Dpython=disabled               \
         -Dopenssl=disabled              \
-        "${BUILDDIR}"
-}
-
-config_meson_coverage() {
-    CC="${CC}" "${MESON}" setup                 \
-        --werror                                \
-        --buildtype="${BUILDTYPE}"              \
-        --wrap-mode=nofallback                  \
-        -Dlibdbus=enabled                       \
-        -Db_coverage=true                       \
         "${BUILDDIR}"
 }
 
@@ -319,12 +313,6 @@ test_meson_rst_docs() {
 	true
 }
 
-test_meson_coverage() {
-    "${MESON}" test                             \
-        -C "${BUILDDIR}"
-    ninja -C "${BUILDDIR}" coverage --verbose
-}
-
 install_meson_docs() {
     "${MESON}" install                          \
         -C "${BUILDDIR}"
@@ -434,6 +422,11 @@ test_meson_distro() {
     test_meson
 }
 
+if [[ "${use_coverage}" -eq 1 && "${BUILDTOOL}" != "meson" ]]; then
+     echo "error: coverage reporting (-p) is only supported with the meson build tool" >&2
+     exit 1
+fi
+
 if [[ "${BUILDTOOL}" == "muon" ]]; then
     SAMU="$(which samu 2> /dev/null)" || true
     if [[ -z "${SAMU}" ]]; then
@@ -454,6 +447,12 @@ echo "muon: ${MUON}"
 rm -rf "${BUILDDIR}"
 
 config_"${BUILDTOOL}"_"${CONFIG}"
+if [[ "${use_coverage}" -eq 1 ]]; then
+    "${MESON}" setup --reconfigure "${BUILDDIR}" -Db_coverage=true
+fi
 fn_exists "build_${BUILDTOOL}_${CONFIG}" && "build_${BUILDTOOL}_${CONFIG}" || build_"${BUILDTOOL}"
 fn_exists "test_${BUILDTOOL}_${CONFIG}" && "test_${BUILDTOOL}_${CONFIG}" || test_"${BUILDTOOL}"
+if [[ "${use_coverage}" -eq 1 ]]; then
+    ninja -C "${BUILDDIR}" coverage --verbose
+fi
 fn_exists "install_${BUILDTOOL}_${CONFIG}" && "install_${BUILDTOOL}_${CONFIG}" || true;
