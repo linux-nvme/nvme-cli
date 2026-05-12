@@ -15,5 +15,5 @@
 #include <malloc.h>
 
 #if defined(_WIN32)
-#define malloc_usable_size _msize
+#define malloc_usable_size(p) _aligned_msize(p, getpagesize(), 0)
 #endif
