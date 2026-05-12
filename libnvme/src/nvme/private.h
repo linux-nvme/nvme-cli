@@ -437,10 +437,6 @@ int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 bool _libnvme_ctrl_match_config(struct libnvme_ctrl *c,
 		struct libnvmf_context *fctx);
 
-void *__libnvme_alloc(size_t len);
-
-void *__libnvme_realloc(void *p, size_t len);
-
 void nvme_deconfigure_ctrl(struct libnvme_ctrl *c);
 
 struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,

@@ -2,6 +2,7 @@
 
 LIBNVME_3 {
 	global:
+		libnvme_alloc;
 		libnvme_clear_etdas;
 		libnvme_close;
 		libnvme_create_global_ctx;
@@ -178,6 +179,7 @@ LIBNVME_3 {
 		libnvme_read_hostnqn;
 		libnvme_read_key;
 		libnvme_read_nbft;
+		libnvme_realloc;
 		libnvme_refresh_topology;
 		libnvme_rescan_ctrl;
 		libnvme_rescan_ns;

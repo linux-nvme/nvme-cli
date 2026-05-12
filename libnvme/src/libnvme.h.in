@@ -20,6 +20,7 @@ extern "C" {
 #include <nvme/lib-types.h>
 #include <nvme/lib.h>
 #include <nvme/linux.h>
+#include <nvme/mem.h>
 #include <nvme/nvme-cmds.h>
 #include <nvme/nvme-types.h>
 #include <nvme/tree.h>
