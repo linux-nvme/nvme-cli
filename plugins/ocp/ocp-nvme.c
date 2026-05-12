@@ -2649,7 +2649,7 @@ static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 
 		}
 	}
 
-	entry = nvme_alloc(data_len);
+	entry = libnvme_alloc(data_len);
 	if (!entry) {
 		nvme_show_error("malloc: %s", libnvme_strerror(errno));
 		return -ENOMEM;
@@ -2728,7 +2728,7 @@ static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri
 	}
 
 	data_len = cfg->number * sizeof(struct erri_entry);
-	entry = nvme_alloc(data_len);
+	entry = libnvme_alloc(data_len);
 	if (!entry) {
 		nvme_show_error("malloc: %s", libnvme_strerror(errno));
 		return -ENOMEM;
@@ -2975,7 +2975,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	pevent = nvme_alloc(sizeof(*pevent));
+	pevent = libnvme_alloc(sizeof(*pevent));
 	if (!pevent)
 		return -ENOMEM;
 

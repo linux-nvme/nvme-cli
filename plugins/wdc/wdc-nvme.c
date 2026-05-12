@@ -2876,7 +2876,7 @@ static bool wdc_nvme_check_supported_log_page(struct libnvme_global_ctx *ctx,
 	__cleanup_free struct nvme_supported_log_pages *supports = NULL;
 
 	/* Check log page id 0 (supported log pages) first */
-	supports = nvme_alloc(sizeof(*supports));
+	supports = libnvme_alloc(sizeof(*supports));
 	if (!supports)
 		return -ENOMEM;
 
