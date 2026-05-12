@@ -691,7 +691,7 @@ static int ilog_dump_log_page(struct libnvme_transport_handle *hdl, struct ilog 
 	if (!lp->buffer_size)
 		return -EINVAL;
 	if (!buff) {
-		buff = nvme_alloc(lp->buffer_size);
+		buff = libnvme_alloc(lp->buffer_size);
 		if (!buff)
 			return -ENOMEM;
 	}
@@ -792,7 +792,7 @@ static int ilog_dump_pel(struct libnvme_transport_handle *hdl, struct ilog *ilog
 		return err;
 
 
-	pevent = nvme_alloc(sizeof(*pevent));
+	pevent = libnvme_alloc(sizeof(*pevent));
 	if (!pevent)
 		return -ENOMEM;
 
