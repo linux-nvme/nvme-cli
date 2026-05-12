@@ -1547,7 +1547,7 @@ static int get_persistent_event_log(int argc, char **argv,
 
 	__cleanup_free struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
@@ -1617,7 +1617,7 @@ static int get_persistent_event_log(int argc, char **argv,
 	if (cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ)
 		cfg.action = NVME_PEVENT_LOG_READ;
 
-	pevent_log_info = nvme_alloc_huge(cfg.log_len, &mh);
+	pevent_log_info = libnvme_alloc_huge(cfg.log_len, &mh);
 	if (!pevent_log_info) {
 		nvme_show_error("failed to allocate huge memory");
 		return -ENOMEM;
@@ -5128,7 +5128,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	__cleanup_fd int fw_fd = -1;
 	unsigned int fw_size, pos;
 	int err;
@@ -5209,7 +5209,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		nvme_show_error("WARNING: firmware file size %u not conform to FWUG alignment %lu",
 				fw_size, cfg.xfer);
 
-	fw_buf = nvme_alloc_huge(fw_size, &mh);
+	fw_buf = libnvme_alloc_huge(fw_size, &mh);
 	if (!fw_buf) {
 		nvme_show_error("failed to allocate huge memory");
 		return -ENOMEM;
@@ -8325,7 +8325,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	unsigned long long buffer_size = 0, mbuffer_size = 0;
 	__cleanup_free struct nvme_nvm_id_ns *nvm_ns = NULL;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	__cleanup_free struct nvme_id_ns *ns = NULL;
 	unsigned int logical_block_size = 0;
 	struct timeval start_time, end_time;
@@ -8537,7 +8537,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		buffer_size = ((unsigned long long)nblocks + 1) * logical_block_size;
 	}
 
-	buffer = nvme_alloc_huge(buffer_size, &mh);
+	buffer = libnvme_alloc_huge(buffer_size, &mh);
 	if (!buffer) {
 		nvme_show_error("failed to allocate huge memory");
 		return -ENOMEM;
@@ -9279,7 +9279,7 @@ static int passthru(int argc, char **argv, bool admin,
 	const char *wr = "set dataflow direction to send";
 	const char *prefill = "prefill buffers with known byte-value, default 0";
 
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_fd int dfd = -1, mfd = -1;
@@ -9401,7 +9401,7 @@ static int passthru(int argc, char **argv, bool admin,
 	}
 
 	if (cfg.data_len) {
-		data = nvme_alloc_huge(cfg.data_len, &mh);
+		data = libnvme_alloc_huge(cfg.data_len, &mh);
 		if (!data) {
 			nvme_show_error("failed to allocate huge memory");
 			return -ENOMEM;
@@ -10436,7 +10436,7 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 	bool send;
 	__cleanup_fd int fd = -1;
 	int flags;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__u32 result;
@@ -10498,7 +10498,7 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 	}
 
 	if (cfg.data_len) {
-		data = nvme_alloc_huge(cfg.data_len, &mh);
+		data = libnvme_alloc_huge(cfg.data_len, &mh);
 		if (!data) {
 			nvme_show_error("failed to allocate huge memory");
 			return -ENOMEM;

@@ -740,7 +740,7 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	struct nvme_zone_report *report, *buff;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
@@ -851,7 +851,7 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 	log_len = sizeof(struct nvme_zone_report) + ((sizeof(struct nvme_zns_desc) * nr_zones_chunks) + (nr_zones_chunks * zdes));
 	report_size = log_len;
 
-	report = nvme_alloc_huge(report_size, &mh);
+	report = libnvme_alloc_huge(report_size, &mh);
 	if (!report) {
 		perror("alloc");
 		return -ENOMEM;

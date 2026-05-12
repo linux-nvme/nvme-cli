@@ -2937,7 +2937,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 
 	__cleanup_free struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -3011,7 +3011,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	if (cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ)
 		cfg.action = NVME_PEVENT_LOG_READ;
 
-	pevent_log_info = nvme_alloc_huge(cfg.log_len, &mh);
+	pevent_log_info = libnvme_alloc_huge(cfg.log_len, &mh);
 	if (!pevent_log_info) {
 		nvme_show_error("failed to allocate huge memory");
 		return -ENOMEM;
