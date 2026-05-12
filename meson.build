@@ -418,6 +418,14 @@ conf.set('NVME_HAVE_SENDFILE', cc.has_function('sendfile'))
 
 conf.set('NVME_HAVE_MMAP', cc.has_function('mmap'))
 
+conf.set10(
+    'HAVE_REALLOCARRAY',
+    cc.has_function(
+       'reallocarray',
+       prefix : '#include <stdlib.h>'),
+    description: 'Is reallocarray available',
+)
+
 project_config_file = 'nvme-config.h'
 nvme_config_h = configure_file(output: project_config_file, configuration: conf)
 config_dep = declare_dependency(

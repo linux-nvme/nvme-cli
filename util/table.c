@@ -22,6 +22,20 @@
 
 #include "table.h"
 
+#if !HAVE_REALLOCARRAY
+#include <stdint.h>
+
+static void *reallocarray(void *ptr, size_t nmemb, size_t size)
+{
+	if (nmemb != 0 && size > SIZE_MAX / nmemb) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	return realloc(ptr, nmemb * size);
+}
+#endif
+
 static int table_get_value_width(struct value *v)
 {
 	char buf[64];
