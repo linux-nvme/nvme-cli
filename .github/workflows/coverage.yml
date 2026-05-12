@@ -33,4 +33,5 @@ jobs:
         with:
           root_dir: ${{ github.workspace }}
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
           fail_ci_if_error: false

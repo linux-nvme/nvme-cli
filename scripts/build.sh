@@ -453,6 +453,6 @@ fi
 fn_exists "build_${BUILDTOOL}_${CONFIG}" && "build_${BUILDTOOL}_${CONFIG}" || build_"${BUILDTOOL}"
 fn_exists "test_${BUILDTOOL}_${CONFIG}" && "test_${BUILDTOOL}_${CONFIG}" || test_"${BUILDTOOL}"
 if [[ "${use_coverage}" -eq 1 ]]; then
-    ninja -C "${BUILDDIR}" coverage --verbose
+    gcovr -r . "${BUILDDIR}" --xml-pretty -o coverage.xml
 fi
 fn_exists "install_${BUILDTOOL}_${CONFIG}" && "install_${BUILDTOOL}_${CONFIG}" || true;

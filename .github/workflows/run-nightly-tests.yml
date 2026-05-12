@@ -63,8 +63,9 @@ jobs:
             cd nvme-cli
             git checkout ${{ github.sha }}
             scripts/build.sh -b release -c gcc -p
-            sudo meson install -C .build-ci
-            sudo ldconfig /usr/local/lib64
+
+            # IMPORTANT: do NOT install for coverage run
+            export PATH="$PWD/.build-ci:$PATH"
 
             cd -
             git clone https://github.com/linux-blktests/blktests.git blktests
@@ -73,7 +74,7 @@ jobs:
             make
             mkdir -p results
             nvme --version | tee -a results/nvme-cli.version
-            sudo nvme --version | tee -a results/nvme-cli.version
+            sudo env PATH="$PWD/.build-ci:$PATH" nvme --version | tee -a results/nvme-cli.version
 
             # Run blktests nvme and md group
             cat > config << EF
@@ -82,15 +83,16 @@ jobs:
             EXCLUDE=(nvme/010 nvme/012 nvme/034 nvme/035)
             EF
             set +e
-            sudo ./check nvme md/001
+            sudo env PATH="$PWD/.build-ci:$PATH" ./check nvme md/001
             blktests_status=$?
             set -e
 
-            cd -
+            cd nvme-cli
+            gcovr -r . --object-directory .build-ci --xml-pretty -o coverage.xml
             CODECOV_VERSION="v0.8.0"
             curl -Os "https://uploader.codecov.io/${CODECOV_VERSION}/linux/codecov"
             chmod +x codecov
-            (cd nvme-cli && ../codecov -t "${{ secrets.CODECOV_TOKEN }}") || true
+            (cd nvme-cli && ../codecov -t "${{ secrets.CODECOV_TOKEN }}" -f coverage.xml) || true
             exit "${blktests_status}"
       - name: Run nvme-cli tests in VM
         if: success() || steps.blktests.conclusion == 'failure'
@@ -129,7 +131,7 @@ jobs:
             CODECOV_VERSION="v0.8.0"
             curl -Os "https://uploader.codecov.io/${CODECOV_VERSION}/linux/codecov"
             chmod +x codecov
-            ./codecov -t "$CODECOV_TOKEN" || true
+            ./codecov -t "$CODECOV_TOKEN" -f coverage.xml || true
             EOF
 
             sudo chmod +x test.sh
