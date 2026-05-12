@@ -39,6 +39,15 @@ void *libnvme_alloc(size_t len);
 void *libnvme_realloc(void *p, size_t len);
 
 /**
+ * libnvme_free() - Free allocated memory
+ * @p: Memory buffer to free
+ *
+ * Releases memory previously allocated by libnvme_alloc(),
+ * libnvme_realloc(), or related libnvme allocation helpers.
+ */
+void libnvme_free(void *p);
+
+/**
  * struct libnvme_mem_huge - Huge page memory allocation descriptor
  * @len:              Size of the allocated buffer in bytes
  * @libnvme_alloc:    Indicates that @p was allocated using libnvme_alloc()

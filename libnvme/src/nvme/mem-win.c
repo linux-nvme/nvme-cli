@@ -65,6 +65,11 @@ __libnvme_public void *libnvme_realloc(void *p, size_t len)
 	return result;
 }
 
+__libnvme_public void libnvme_free(void *p)
+{
+	_aligned_free(p);
+}
+
 __libnvme_public void *libnvme_alloc_huge(size_t len,
 		struct libnvme_mem_huge *mh)
 {

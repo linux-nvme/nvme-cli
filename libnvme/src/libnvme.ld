@@ -37,6 +37,7 @@ LIBNVME_3 {
 		libnvme_find_uuid;
 		libnvme_first_host;
 		libnvme_first_subsystem;
+		libnvme_free;
 		libnvme_free_ctrl;
 		libnvme_free_global_ctx;
 		libnvme_free_host;
