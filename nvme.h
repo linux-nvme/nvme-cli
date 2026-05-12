@@ -28,7 +28,6 @@
 
 #include "plugin.h"
 #include "util/json.h"
-#include "util/mem.h"
 #include "util/argconfig.h"
 #include "util/cleanup.h"
 #include "util/types.h"

@@ -1202,7 +1202,7 @@ ret:
 static int nvme_dump_evtlog(struct libnvme_transport_handle *hdl, __u32 namespace_id, __u32 storage_medium,
 			    char *file, bool parse, char *output)
 {
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	struct nvme_persistent_event_log *pevent;
 	void *pevent_log_info;
 	__u8  lsp_base, lsp;
@@ -1263,7 +1263,7 @@ static int nvme_dump_evtlog(struct libnvme_transport_handle *hdl, __u32 namespac
 	if (log_len % 4)
 		log_len = (log_len / 4 + 1) * 4;
 
-	pevent_log_info = nvme_alloc_huge(single_len, &mh);
+	pevent_log_info = libnvme_alloc_huge(single_len, &mh);
 	if (!pevent_log_info) {
 		err = -ENOMEM;
 		goto free_pevent;
@@ -1315,8 +1315,8 @@ static int nvme_dump_evtlog(struct libnvme_transport_handle *hdl, __u32 namespac
 	printf("\nDump-evtlog: Success\n");
 
 	if (parse) {
-		nvme_free_huge(&mh);
-		pevent_log_info = nvme_alloc_huge(log_len, &mh);
+		libnvme_free_huge(&mh);
+		pevent_log_info = libnvme_alloc_huge(log_len, &mh);
 		if (!pevent_log_info) {
 			fprintf(stderr, "Failed to alloc enough memory 0x%x to parse evtlog\n", log_len);
 			err = -ENOMEM;

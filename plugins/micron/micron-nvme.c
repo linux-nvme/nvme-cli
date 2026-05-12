@@ -2213,7 +2213,7 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 	struct nvme_firmware_slot fw_log;
 	struct nvme_cmd_effects_log effects;
 	struct nvme_persistent_event_log pevent_log;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	void *pevent_log_info = NULL;
 	__u32 log_len = 0;
 	int err = 0;
@@ -2245,7 +2245,7 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 	}
 
 	log_len = le64_to_cpu(pevent_log.tll);
-	pevent_log_info = nvme_alloc_huge(log_len, &mh);
+	pevent_log_info = libnvme_alloc_huge(log_len, &mh);
 	if (!pevent_log_info) {
 		perror("could not alloc buffer for persistent event log page (ignored)!\n");
 		return;

@@ -3,6 +3,7 @@
 LIBNVME_3 {
 	global:
 		libnvme_alloc;
+		libnvme_alloc_huge;
 		libnvme_clear_etdas;
 		libnvme_close;
 		libnvme_create_global_ctx;
@@ -39,6 +40,7 @@ LIBNVME_3 {
 		libnvme_free_ctrl;
 		libnvme_free_global_ctx;
 		libnvme_free_host;
+		libnvme_free_huge;
 		libnvme_free_nbft;
 		libnvme_free_ns;
 		libnvme_free_subsystem;

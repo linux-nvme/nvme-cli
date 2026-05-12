@@ -11646,7 +11646,7 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *acmd,
 	nvme_print_flags_t fmt;
 	int ret;
 	__u64 capabilities = 0;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	struct wdc_vs_pcie_stats *pcieStatsPtr = NULL;
 	int pcie_stats_size = sizeof(struct wdc_vs_pcie_stats);
 
@@ -11674,7 +11674,7 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *acmd,
 		goto out;
 	}
 
-	pcieStatsPtr = nvme_alloc_huge(pcie_stats_size, &mh);
+	pcieStatsPtr = libnvme_alloc_huge(pcie_stats_size, &mh);
 	if (!pcieStatsPtr) {
 		fprintf(stderr, "ERROR: WDC: PCIE Stats alloc: %s\n", libnvme_strerror(errno));
 		ret = -1;

@@ -63,7 +63,7 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct lba_migration_queue_entry_type_0 *queue = NULL;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	struct libnvme_passthru_cmd cmd;
 	int err = -1;
 
@@ -100,9 +100,9 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 
 	// Not that it really matters, but we setup memory as if the CDQ can be held
 	// in user space regardless.
-	queue = nvme_alloc_huge(cfg.sz << 2, &mh);
+	queue = libnvme_alloc_huge(cfg.sz << 2, &mh);
 	if (!queue) {
-		nvme_show_error("ERROR: nvme_alloc of size %dB failed %s", cfg.sz << 2,
+		nvme_show_error("ERROR: libnvme_alloc of size %dB failed %s", cfg.sz << 2,
 				libnvme_strerror(errno));
 		return -ENOMEM;
 	}
@@ -276,7 +276,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	__cleanup_file FILE *file = NULL;
 	struct libnvme_passthru_cmd cmd;
 	void *data = NULL;
@@ -358,7 +358,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 			return -EINVAL;
 		}
 
-		data = nvme_alloc_huge(cfg.numd << 2, &mh);
+		data = libnvme_alloc_huge(cfg.numd << 2, &mh);
 		if (!data)
 			return -ENOMEM;
 
@@ -408,7 +408,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	__cleanup_file FILE *fd = NULL;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
@@ -477,7 +477,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		}
 	}
 
-	data = nvme_alloc_huge((cfg.numd + 1) << 2, &mh);
+	data = libnvme_alloc_huge((cfg.numd + 1) << 2, &mh);
 	if (!data)
 		return -ENOMEM;
 
