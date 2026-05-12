@@ -282,7 +282,7 @@ static int send_rpmb_req(struct libnvme_transport_handle *hdl, unsigned char tgt
 
 	nvme_init_security_send(&cmd, NVME_NSID_NONE, tgt, RPMB_NVME_SPSP,
 			        RPMB_NVME_SECP, 0, req, size);
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 static int recv_rpmb_rsp(struct libnvme_transport_handle *hdl, int tgt, int size,
@@ -292,7 +292,7 @@ static int recv_rpmb_rsp(struct libnvme_transport_handle *hdl, int tgt, int size
 
 	nvme_init_security_receive(&cmd, 0, tgt, RPMB_NVME_SPSP,
 				   RPMB_NVME_SECP, 0, rsp, size);
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 /* Initialize nonce value in rpmb request frame */

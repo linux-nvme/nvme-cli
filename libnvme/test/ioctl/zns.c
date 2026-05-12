@@ -51,7 +51,7 @@ static void test_zns_append(void)
 	if (elbas)
 		nvme_init_var_size_tags(&cmd, pif, sts, reftag, storage_tag);
 	nvme_init_app_tag(&cmd, lbat, lbatm);
-	err = libnvme_submit_io_passthru(test_hdl, &cmd);
+	err = libnvme_exec_io_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "wrong result");
@@ -82,7 +82,7 @@ static void test_zns_report_zones(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	nvme_init_zns_report_zones(&cmd, TEST_NSID, TEST_SLBA, opts,
 		extended, partial, &data, sizeof(data));
-	err = libnvme_submit_io_passthru(test_hdl, &cmd);
+	err = libnvme_exec_io_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %"PRIu64, (uint64_t)result);
@@ -114,7 +114,7 @@ static void test_zns_mgmt_send(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	nvme_init_zns_mgmt_send(&cmd, TEST_NSID, slba, zsa, select_all, zsaso,
 		false, data, sizeof(data));
-	err = libnvme_submit_io_passthru(test_hdl, &cmd);
+	err = libnvme_exec_io_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %"PRIu64, (uint64_t)result);
@@ -143,7 +143,7 @@ static void test_zns_mgmt_recv(void)
 	set_mock_io_cmds(&mock_io_cmd, 1);
 	nvme_init_zns_mgmt_recv(&cmd, TEST_NSID, 0, zra, zrasf, zras_feat,
 		data, sizeof(data));
-	err = libnvme_submit_io_passthru(test_hdl, &cmd);
+	err = libnvme_exec_io_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %"PRIu64, (uint64_t)result);

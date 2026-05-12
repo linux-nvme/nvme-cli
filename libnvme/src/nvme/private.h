@@ -651,5 +651,4 @@ void libnvme_close_uring(struct libnvme_global_ctx *ctx);
 int __libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl);
 int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
-int libnvme_wait_complete_passthru(struct libnvme_transport_handle *hdl);
 

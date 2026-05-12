@@ -1127,7 +1127,7 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 			munmap_registers(bar);
 		} else {
 			nvme_init_get_property(&cmd, NVME_REG_CAP);
-			err = libnvme_submit_admin_passthru(hdl, &cmd);
+			err = libnvme_exec_admin_passthru(hdl, &cmd);
 			if (err)
 				goto cleanup_list;
 			cap = cmd.result;
@@ -2183,7 +2183,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 	}
 
 	nvme_init_io_mgmt_send(&cmd, cfg.nsid, cfg.mo, cfg.mos, buf, cfg.data_len);
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "io-mgmt-send");
 		return err;
@@ -2246,7 +2246,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 
 	nvme_init_io_mgmt_recv(&cmd, cfg.nsid, cfg.mo, cfg.mos, buf,
 		cfg.data_len);
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "io-mgmt-recv");
 		return err;
@@ -2697,7 +2697,7 @@ static int list_ctrl(int argc, char **argv, struct command *acmd, struct plugin 
 		nvme_init_identify_ns_ctrl_list(&cmd, cfg.namespace_id,
 						cfg.cntid, cntlist);
 
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "id controller list");
 		return err;
@@ -2880,7 +2880,7 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *acmd,
 
 	nvme_init_identify_endurance_group_id(&cmd, cfg.endgrp_id,
 					      endgrp_list);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "Id endurance group list");
 		return err;
@@ -2983,7 +2983,7 @@ static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin 
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	ns_mgmt_show_status(hdl, err, acmd->name, cfg.namespace_id);
 
 	return err;
@@ -3077,7 +3077,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	ns_mgmt_show_status(hdl, err, acmd->name, cfg.nsid);
 
 	return err;
@@ -3444,7 +3444,7 @@ parse_lba:
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	nsid = cmd.result;
 	ns_mgmt_show_status(hdl, err, acmd->name, nsid);
 
@@ -3694,7 +3694,7 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *acmd,
 		return -ENOMEM;
 
 	nvme_init_identify_csi_ctrl(&cmd, NVME_CSI_NVM, ctrl_nvm);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "nvm identify controller");
 		return err;
@@ -3986,7 +3986,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 
 	if (cfg.force) {
 		nvme_init_identify_allocated_ns(&cmd, cfg.namespace_id, ns);
-		err = libnvme_submit_admin_passthru(hdl, &cmd);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 	} else {
 		err = nvme_identify_ns(hdl, cfg.namespace_id, ns);
 	}
@@ -4062,7 +4062,7 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *acmd
 
 	nvme_init_identify_csi_independent_identify_id_ns(&cmd,
 							  cfg.namespace_id, ns);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err,
 			      "I/O command set independent identify namespace");
@@ -4155,7 +4155,7 @@ static int id_nvmset(int argc, char **argv, struct command *acmd, struct plugin 
 
 	nvme_init_identify_nvmset_list(&cmd, NVME_NSID_NONE,
 				       cfg.nvmset_id, nvmset);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify nvm set list");
 		return err;
@@ -4268,7 +4268,7 @@ static int id_iocs(int argc, char **argv, struct command *acmd, struct plugin *p
 		return -ENOMEM;
 
 	nvme_init_identify_command_set_structure(&cmd, cfg.cntid, iocs);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "NVMe Identify I/O Command Set");
 		return err;
@@ -4320,7 +4320,7 @@ static int id_domain(int argc, char **argv, struct command *acmd, struct plugin 
 		return -ENOMEM;
 
 	nvme_init_identify_domain_list(&cmd, cfg.dom_id, id_domain);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "NVMe Identify Domain List");
 		return err;
@@ -4414,7 +4414,7 @@ static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 
 	nvme_init_virtual_mgmt(&cmd, cfg.act, cfg.rt, cfg.cntlid, cfg.nr);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "virt-mgmt");
 		return err;
@@ -4472,7 +4472,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *acmd, struct
 		return -ENOMEM;
 
 	nvme_init_identify_primary_ctrl_cap(&cmd, cfg.cntlid, caps);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify primary controller capabilities");
 		return err;
@@ -4531,7 +4531,7 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *acmd, stru
 		return -ENOMEM;
 
 	nvme_init_identify_secondary_ctrl_list(&cmd, cfg.cntid, sc_list);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "id secondary controller list");
 		return err;
@@ -4633,7 +4633,7 @@ static void abort_self_test(struct libnvme_transport_handle *hdl, bool ish,
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "Device self-test");
 		return;
@@ -4726,7 +4726,7 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "Device self-test");
 		goto check_abort;
@@ -5050,7 +5050,7 @@ static int fw_download_single(struct libnvme_transport_handle *hdl, void *fw_buf
 		if (err)
 			return err;
 
-		err = libnvme_submit_admin_passthru(hdl, &cmd);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (!err)
 			return 0;
 
@@ -5415,7 +5415,7 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		fw_commit_err(err, cfg.action, cfg.slot, cfg.bpid);
 		return err;
@@ -5636,7 +5636,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "sanitize");
 		return err;
@@ -5731,7 +5731,7 @@ static int sanitize_ns_cmd(int argc, char **argv, struct command *acmd,
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_admin_cmd_err("sanitize ns", cmd.opcode, err);
 		return err;
@@ -5747,7 +5747,7 @@ static int nvme_get_single_property(struct libnvme_transport_handle *hdl,
 	int err;
 
 	nvme_init_get_property(&cmd, cfg->offset);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err) {
 		*value = cmd.result;
 		return 0;
@@ -6001,7 +6001,7 @@ static int get_register_properties(struct libnvme_transport_handle *hdl, void **
 			continue;
 
 		nvme_init_get_property(&cmd, offset);
-		err = libnvme_submit_admin_passthru(hdl, &cmd);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INVALID_FIELD)) {
 			value = -1;
 		} else if (err) {
@@ -6201,7 +6201,7 @@ static int nvme_set_single_property(struct libnvme_transport_handle *hdl, int of
 	int err;
 
 	nvme_init_set_property(&cmd, offset, value);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "set-property");
 		return err;
@@ -6807,7 +6807,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "format");
 		return err;
@@ -7105,7 +7105,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "security-send");
 		return err;
@@ -7230,7 +7230,7 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 	nvme_init_directive_send(&cmd, cfg.namespace_id, cfg.doper, cfg.dtype,
 		cfg.dspec, buf, cfg.data_len);
 	cmd.cdw12 = dw12;
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "dir-send");
 		return err;
@@ -7303,7 +7303,7 @@ static int write_uncor(int argc, char **argv, struct command *acmd, struct plugi
 
 	nvme_init_write_uncorrectable(&cmd, cfg.namespace_id, cfg.start_block,
 		cfg.block_count, cfg.dtype << 4, cfg.dspec);
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "write uncorrectable");
 		return err;
@@ -7577,7 +7577,7 @@ static int write_zeroes(int argc, char **argv,
 	if (err && err != -ENAVAIL)
 		return err;
 
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "write-zeroes");
 		return err;
@@ -7701,7 +7701,7 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	nvme_init_dsm_range(dsm, ctx_attrs, nlbs, slbas, nb);
 	nvme_init_dsm(&cmd, cfg.namespace_id, nb, cfg.idr, cfg.idw, cfg.ad, dsm,
 		      sizeof(*dsm) * nb);
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "data-set management");
 		return err;
@@ -7919,7 +7919,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		cfg.lbatm);
 	if (err != 0 && err != -ENAVAIL)
 		return err;
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "NVMe Copy");
 		return err;
@@ -8047,7 +8047,7 @@ static int resv_acquire(int argc, char **argv, struct command *acmd, struct plug
 
 	nvme_init_resv_acquire(&cmd, cfg.namespace_id, cfg.racqa, cfg.iekey,
 			       false, cfg.rtype, cfg.crkey, cfg.prkey, payload);
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "reservation acquire");
 		return err;
@@ -8129,7 +8129,7 @@ static int resv_register(int argc, char **argv, struct command *acmd, struct plu
 	nvme_init_resv_register(&cmd, cfg.namespace_id, cfg.rrega, cfg.iekey,
 				false, cfg.cptpl, cfg.crkey, cfg.nrkey,
 				payload);
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "reservation register");
 		return err;
@@ -8206,7 +8206,7 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 
 	nvme_init_resv_release(&cmd, cfg.nsid, cfg.rrela, cfg.iekey, false,
 		cfg.rtype, cfg.crkey, payload);
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "reservation release");
 		return err;
@@ -8300,7 +8300,7 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 		return -ENOMEM;
 
 	nvme_init_resv_report(&cmd, cfg.nsid, cfg.eds, false, status, size);
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "reservation report");
 		return err;
@@ -8617,7 +8617,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 			return err;
 	}
 	gettimeofday(&start_time, NULL);
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		printf(" latency: %s: %llu us\n", command, elapsed_utime(start_time, end_time));
@@ -8758,7 +8758,7 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		cfg.lbat, cfg.lbatm);
 	if (err != 0 && err != -ENAVAIL)
 		return err;
-	err = libnvme_submit_io_passthru(hdl, &cmd);
+	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "verify");
 		return err;
@@ -8844,7 +8844,7 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 
 	nvme_init_security_receive(&cmd, cfg.namespace_id, cfg.nssf, cfg.spsp,
 				   cfg.secp, cfg.al, sec_buf, cfg.size);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "security receive");
 		return err;
@@ -8934,7 +8934,7 @@ static int get_lba_status(int argc, char **argv, struct command *acmd,
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "get lba status");
 		return err;
@@ -9011,7 +9011,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "capacity management");
 		return err;
@@ -9128,7 +9128,7 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 	nvme_init_directive_recv(&cmd, cfg.namespace_id, cfg.doper, cfg.dtype,
 		cfg.dspec, buf, cfg.data_len);
 	cmd.cdw12 = dw12;
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "dir-receive");
 		return err;
@@ -9220,7 +9220,7 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 
 	nvme_init_lockdown(&cmd, cfg.scp, cfg.prhbt, cfg.ifc, cfg.ofi,
 			   cfg.uuid);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "lockdown");
 		return err;
@@ -9463,9 +9463,9 @@ static int passthru(int argc, char **argv, bool admin,
 		.timeout_ms 	= nvme_args.timeout,
 	};
 	if (admin)
-		err = libnvme_submit_admin_passthru(hdl, &cmd);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 	else
-		err = libnvme_submit_io_passthru(hdl, &cmd);
+		err = libnvme_exec_io_passthru(hdl, &cmd);
 
 	gettimeofday(&end_time, NULL);
 	cmd_name = nvme_cmd_to_string(admin, cfg.opcode);
@@ -10524,7 +10524,7 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 		.data_len	= cfg.data_len,
 	};
 
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "nmi_recv");
 		return err;

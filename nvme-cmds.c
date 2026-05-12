@@ -26,7 +26,7 @@ static int nvme_ns_attachment(struct libnvme_transport_handle *hdl, bool ish,
 	else
 		nvme_init_ns_detach_ctrls(&cmd, nsid, &cntlist);
 
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 int nvme_namespace_attach_ctrls(struct libnvme_transport_handle *hdl, bool ish,

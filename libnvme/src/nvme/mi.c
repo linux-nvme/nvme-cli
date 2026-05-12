@@ -195,7 +195,7 @@ void libnvme_mi_ep_probe(struct libnvme_mi_ep *ep)
 	 */
 	nvme_init_identify_ctrl(&cmd, &id);
 	cmd.data_len = offsetof(struct nvme_id_ctrl, rab);
-	rc = libnvme_submit_admin_passthru(hdl, &cmd);
+	rc = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (rc) {
 		libnvme_msg(ep->ctx, LIBNVME_LOG_WARN,
 			 "Identify Controller failed, no quirks applied\n");

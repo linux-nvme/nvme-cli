@@ -12,6 +12,7 @@
 #include <libnvme.h>
 
 #include "private.h"
+#include "compiler-attributes.h"
 
 int libnvme_open_uring(struct libnvme_global_ctx *ctx)
 {
@@ -33,7 +34,14 @@ int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
 	return -ENOTSUP;
 }
 
-int libnvme_wait_complete_passthru(struct libnvme_transport_handle *hdl)
+__public int libnvme_wait_admin_passthru(
+		__unused struct libnvme_transport_handle *hdl)
 {
-	return -ENOTSUP;
+	return 0;
+}
+
+__public int libnvme_wait_io_passthru(
+		__unused struct libnvme_transport_handle *hdl)
+{
+	return 0;
 }

@@ -429,7 +429,7 @@ static void test_admin_resp_err(libnvme_mi_ep_t ep, struct test_peer *peer)
 	peer->tx_buf_len = 8;
 
 	nvme_init_identify_ctrl(&cmd, &id);
-	rc = libnvme_submit_admin_passthru(hdl, &cmd);
+	rc = libnvme_exec_admin_passthru(hdl, &cmd);
 	assert(nvme_status_get_type(rc) == NVME_STATUS_TYPE_MI);
 	assert(nvme_status_get_value(rc) == NVME_MI_RESP_INTERNAL_ERR);
 }
@@ -456,7 +456,7 @@ static void test_admin_resp_sizes(libnvme_mi_ep_t ep, struct test_peer *peer)
 	for (i = 8; i <= 4096 + 8; i+=4) {
 		peer->tx_buf_len = i;
 		nvme_init_identify_ctrl(&cmd, &id);
-		rc = libnvme_submit_admin_passthru(hdl, &cmd);
+		rc = libnvme_exec_admin_passthru(hdl, &cmd);
 		assert(nvme_status_get_type(rc) == NVME_STATUS_TYPE_MI);
 		assert(nvme_status_get_value(rc) == NVME_MI_RESP_INTERNAL_ERR);
 	}
@@ -581,7 +581,7 @@ static void test_mpr_admin(libnvme_mi_ep_t ep, struct test_peer *peer)
 	hdl = libnvme_mi_init_transport_handle(ep, 1);
 
 	nvme_init_identify_ctrl(&cmd, &id);
-	rc = libnvme_submit_admin_passthru(hdl, &cmd);
+	rc = libnvme_exec_admin_passthru(hdl, &cmd);
 	assert(rc == 0);
 
 	libnvme_close(hdl);
@@ -608,7 +608,7 @@ static void test_mpr_admin_quirked(libnvme_mi_ep_t ep, struct test_peer *peer)
 	hdl = libnvme_mi_init_transport_handle(ep, 1);
 
 	nvme_init_identify_ctrl(&cmd, &id);
-	rc = libnvme_submit_admin_passthru(hdl, &cmd);
+	rc = libnvme_exec_admin_passthru(hdl, &cmd);
 	assert(rc == 0);
 
 	libnvme_close(hdl);

@@ -267,7 +267,7 @@ static __u32 sndk_dump_udui_data(struct libnvme_transport_handle *hdl,
 	admin_cmd.data_len = dataLen;
 	admin_cmd.cdw10 = ((dataLen >> 2) - 1);
 	admin_cmd.cdw12 = offset;
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	if (ret) {
 		fprintf(stderr, "ERROR: SNDK: reading DUI data failed\n");
 		nvme_show_status(ret);
@@ -631,7 +631,7 @@ static int sndk_do_sn861_drive_resize(struct libnvme_transport_handle *hdl,
 	admin_cmd.addr = (__u64)(uintptr_t)buffer;
 	admin_cmd.data_len = SNDK_NVME_SN861_DRIVE_RESIZE_BUFFER_SIZE;
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	if (result)
 		*result = admin_cmd.result;
 	return ret;
