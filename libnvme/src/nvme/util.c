@@ -956,32 +956,6 @@ bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 
 #endif /* HAVE_NETDB || CONFIG_FABRICS */
 
-void *__libnvme_alloc(size_t len)
-{
-	size_t _len = round_up(len, 0x1000);
-	void *p;
-
-	if (posix_memalign((void *)&p, getpagesize(), _len))
-		return NULL;
-
-	memset(p, 0, _len);
-	return p;
-}
-
-void *__libnvme_realloc(void *p, size_t len)
-{
-	size_t old_len = malloc_usable_size(p);
-
-	void *result = __libnvme_alloc(len);
-
-	if (p && result) {
-		memcpy(result, p, min(old_len, len));
-		free(p);
-	}
-
-	return result;
-}
-
 /* This used instead of basename() due to behavioral differences between
  * the POSIX and the GNU version. This is the glibc implementation.
  * Original source: https://github.com/bminor/glibc/blob/master/string/basename.c */

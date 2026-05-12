@@ -1399,7 +1399,7 @@ static int nvme_discovery_log(libnvme_ctrl_t ctrl,
 	hdl = libnvme_ctrl_get_transport_handle(ctrl);
 	struct libnvme_passthru_cmd cmd;
 
-	log = __libnvme_alloc(sizeof(*log));
+	log = libnvme_alloc(sizeof(*log));
 	if (!log) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			 "could not allocate memory for discovery log header\n");
@@ -1428,7 +1428,7 @@ static int nvme_discovery_log(libnvme_ctrl_t ctrl,
 
 		free(log);
 		entries_size = sizeof(*log->entries) * numrec;
-		log = __libnvme_alloc(sizeof(*log) + entries_size);
+		log = libnvme_alloc(sizeof(*log) + entries_size);
 		if (!log) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				 "could not alloc memory for discovery log page\n");
@@ -1775,7 +1775,7 @@ static int nvme_fetch_cntrltype_dctype_from_id(libnvme_ctrl_t c)
 	__cleanup_free struct nvme_id_ctrl *id = NULL;
 	int ret;
 
-	id = __libnvme_alloc(sizeof(*id));
+	id = libnvme_alloc(sizeof(*id));
 	if (!id)
 		return -ENOMEM;
 
@@ -2260,7 +2260,7 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 		return 0;
 	}
 
-	id = __libnvme_alloc(sizeof(*id));
+	id = libnvme_alloc(sizeof(*id));
 	if (!id) {
 		libnvme_free_ctrl(c);
 		return -ENOMEM;
