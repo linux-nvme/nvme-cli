@@ -584,7 +584,8 @@ static int micron_selective_download(int argc, char **argv,
 	struct libnvme_passthru_cmd cmd;
 	int xfer = 4096;
 	struct stat sb;
-	void *fw_buf;
+	__cleanup_libnvme_free void *fw_buf = NULL;
+	unsigned char *fw_ptr;
 
 	struct config {
 		char *fw;
@@ -643,34 +644,36 @@ static int micron_selective_download(int argc, char **argv,
 		goto out;
 	}
 
-	if (posix_memalign(&fw_buf, getpagesize(), fw_size)) {
+	fw_buf = libnvme_alloc(fw_size);
+	if (!fw_buf) {
 		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
 		err = ENOMEM;
 		goto out;
 	}
+	fw_ptr = fw_buf;
 
 	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t) (fw_size))) {
 		err = errno;
-		goto out_free;
+		goto out;
 	}
 
 	while (fw_size > 0) {
 		xfer = min(xfer, fw_size);
 
-		err = nvme_init_fw_download(&cmd, fw_buf, xfer, offset);
+		err = nvme_init_fw_download(&cmd, fw_ptr, xfer, offset);
 		if (err) {
 			perror("fw-download");
-			goto out_free;
+			goto out;
 		}
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (err < 0) {
 			perror("fw-download");
-			goto out_free;
+			goto out;
 		} else if (err) {
 			nvme_show_status(err);
-			goto out_free;
+			goto out;
 		}
-		fw_buf += xfer;
+		fw_ptr += xfer;
 		fw_size -= xfer;
 		offset += xfer;
 	}
@@ -683,8 +686,6 @@ static int micron_selective_download(int argc, char **argv,
 			"Update successful! Power cycle for changes to take effect\n");
 	}
 
-out_free:
-	free(fw_buf);
 out:
 	close(fw_fd);
 	return err;

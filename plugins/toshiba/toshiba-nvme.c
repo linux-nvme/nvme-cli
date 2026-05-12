@@ -65,28 +65,26 @@ static int nvme_sct_op(struct libnvme_transport_handle *hdl, __u32 opcode,
 static int nvme_get_sct_status(struct libnvme_transport_handle *hdl, __u32 device_mask)
 {
 	int err;
-	void *data = NULL;
+	__cleanup_libnvme_free void *data = NULL;
 	size_t data_len = 512;
 	unsigned char *status;
 	__u32 supported = 0;
 
-	if (posix_memalign(&data, getpagesize(), data_len))
+	data = libnvme_alloc(data_len);
+	if (!data)
 		return -ENOMEM;
 
-	memset(data, 0, data_len);
 	err = nvme_sct_op(hdl, OP_SCT_STATUS, DW10_SCT_STATUS_COMMAND, DW11_SCT_STATUS_COMMAND, data, data_len);
 	if (err) {
 		fprintf(stderr, "%s: SCT status failed :%d\n", __func__, err);
-		goto end;
+		return err;
 	}
 
 	status = data;
 	if (status[0] != 1U) {
 		/* Eek, wrong version in status header */
 		fprintf(stderr, "%s: unexpected value in SCT status[0]:(%x)\n", __func__, status[0]);
-		err = -1;
-		errno = EINVAL;
-		goto end;
+		return -EINVAL;
 	}
 
 	/* Check if device is supported */
@@ -104,20 +102,17 @@ static int nvme_get_sct_status(struct libnvme_transport_handle *hdl, __u32 devic
 
 		if (!supported) {
 			fprintf(stderr, "%s: command unsupported on this device: (0x%x)\n", __func__, status[1]);
-			err = -1;
-			errno = EINVAL;
-			goto end;
+			return -EINVAL;
 		}
 	}
-end:
-	free(data);
-	return err;
+
+	return 0;
 }
 
 static int nvme_sct_command_transfer_log(struct libnvme_transport_handle *hdl, bool current)
 {
 	int err;
-	void *data = NULL;
+	__cleanup_libnvme_free void *data = NULL;
 	size_t data_len = 512;
 	__u16 function_code, action_code = INTERNAL_LOG_ACTION_CODE;
 
@@ -126,15 +121,14 @@ static int nvme_sct_command_transfer_log(struct libnvme_transport_handle *hdl, b
 	else
 		function_code = SAVED_LOG_FUNCTION_CODE;
 
-	if (posix_memalign(&data, getpagesize(), data_len))
+	data = libnvme_alloc(data_len);
+	if (!data)
 		return -ENOMEM;
 
-	memset(data, 0, data_len);
 	memcpy(data, &action_code, sizeof(action_code));
 	memcpy(data + 2, &function_code, sizeof(function_code));
 
 	err = nvme_sct_op(hdl, OP_SCT_COMMAND_TRANSFER, DW10_SCT_COMMAND_TRANSFER, DW11_SCT_COMMAND_TRANSFER, data, data_len);
-	free(data);
 	return err;
 }
 
@@ -202,7 +196,7 @@ static int nvme_get_internal_log(struct libnvme_transport_handle *hdl,
 {
 	int err;
 	int o_fd = -1;
-	void *page_data = NULL;
+	__cleanup_libnvme_free void *page_data = NULL;
 	const size_t page_sector_len = 32;
 	const size_t page_data_len = page_sector_len * 512; /* 32 sectors per page */
 	uint32_t *area1_last_page;
@@ -226,11 +220,11 @@ static int nvme_get_internal_log(struct libnvme_transport_handle *hdl,
 		goto end;
 	}
 
-	if (posix_memalign(&page_data, getpagesize(), max_pages * page_data_len)) {
+	page_data = libnvme_alloc(max_pages * page_data_len);
+	if (!page_data) {
 		err = ENOMEM;
 		goto end;
 	}
-	memset(page_data, 0, max_pages * page_data_len);
 
 	/* Read the header to get the last log page - offsets 8->11, 12->15, 16->19 */
 	err = nvme_sct_data_transfer(hdl, page_data, page_data_len, 0);
@@ -314,7 +308,6 @@ static int nvme_get_internal_log(struct libnvme_transport_handle *hdl,
 end:
 	if (o_fd >= 0)
 		close(o_fd);
-	free(page_data);
 	return err;
 }
 
@@ -366,24 +359,24 @@ static int nvme_get_vendor_log(struct libnvme_transport_handle *hdl,
 			       const char *const filename)
 {
 	int err;
-	void *log = NULL;
+	__cleanup_libnvme_free void *log = NULL;
 	size_t log_len = 512;
 
-	if (posix_memalign(&log, getpagesize(), log_len)) {
-		err = ENOMEM;
-		goto end;
-	}
+	log = libnvme_alloc(log_len);
+	if (!log)
+		return -ENOMEM;
 
 	/* Check device supported */
 	err = nvme_get_sct_status(hdl, MASK_0 | MASK_1);
 	if (err)
-		goto end;
+		return err;
+
 	err = nvme_get_nsid_log(hdl, namespace_id, false, log_page,
 				log, log_len);
 	if (err) {
 		fprintf(stderr, "%s: couldn't get log 0x%x\n", __func__,
 			log_page);
-		goto end;
+		return err;
 	}
 	if (filename) {
 		int o_fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
@@ -391,8 +384,7 @@ static int nvme_get_vendor_log(struct libnvme_transport_handle *hdl,
 		if (o_fd < 0) {
 			fprintf(stderr, "%s: couldn't output file %s\n",
 				__func__, filename);
-			err = -EINVAL;
-			goto end;
+			return -EINVAL;
 		}
 		err = d_raw_to_fd(log, log_len, o_fd);
 		if (err) {
@@ -400,18 +392,15 @@ static int nvme_get_vendor_log(struct libnvme_transport_handle *hdl,
 				__func__, filename);
 			/* Attempt following close */
 		}
-		if (close(o_fd)) {
-			err = errno;
-			goto end;
-		}
+		if (close(o_fd))
+			return -errno;
 	} else {
 		if (log_page == 0xc0)
 			default_show_vendor_log_c0(hdl, namespace_id, log);
 		else
 			d(log, log_len, 16, 1);
 	}
-end:
-	free(log);
+
 	return err;
 }
 

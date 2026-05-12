@@ -331,7 +331,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int ffd = STDIN_FILENO, err = -1;
 	struct libnvme_passthru_cmd cmd;
-	void *buf = NULL;
+	__cleanup_libnvme_free void *buf = NULL;
 
 	struct config {
 		__u64	zslba;
@@ -384,17 +384,17 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 			}
 			cfg.data_len = data_len;
 		}
-		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
+		buf = libnvme_alloc(cfg.data_len);
+		if (!buf) {
 			fprintf(stderr, "can not allocate feature payload\n");
 			return -ENOMEM;
 		}
-		memset(buf, 0, cfg.data_len);
 
 		if (cfg.file) {
 			ffd = open(cfg.file, O_RDONLY);
 			if (ffd < 0) {
 				perror(cfg.file);
-				goto free;
+				return -errno;
 			}
 		}
 
@@ -425,8 +425,6 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 close_ffd:
 	if (cfg.file)
 		close(ffd);
-free:
-	free(buf);
 	return err;
 }
 
@@ -919,7 +917,8 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 	int err = -1, dfd = STDIN_FILENO, mfd = STDIN_FILENO;
 	struct timeval start_time, end_time;
 	unsigned int lba_size, meta_size;
-	void *buf = NULL, *mbuf = NULL;
+	__cleanup_libnvme_free void *buf = NULL;
+	__cleanup_libnvme_free void *mbuf = NULL;
 	struct libnvme_passthru_cmd cmd;
 	__u16 nblocks, control = 0;
 	__u16 cev = 0, dspec = 0;
@@ -1010,41 +1009,40 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 		}
 	}
 
-	if (posix_memalign(&buf, getpagesize(), cfg.data_size)) {
+	buf = libnvme_alloc(cfg.data_size);
+	if (!buf) {
 		fprintf(stderr, "No memory for data size:%"PRIx64"\n",
 			(uint64_t)cfg.data_size);
 		goto close_dfd;
 	}
 
-	memset(buf, 0, cfg.data_size);
 	err = read(dfd, buf, cfg.data_size);
 	if (err < 0) {
 		perror("read-data");
-		goto free_data;
+		goto close_dfd;
 	}
 
 	if (cfg.metadata) {
 		mfd = open(cfg.metadata, O_RDONLY);
 		if (mfd < 0) {
 			perror(cfg.metadata);
-			err = -1;
-			goto free_data;
+			goto close_dfd;
 		}
 	}
 
 	if (cfg.metadata_size) {
-		if (posix_memalign(&mbuf, getpagesize(), meta_size)) {
+		mbuf = libnvme_alloc(meta_size);
+		if (!mbuf) {
 			fprintf(stderr, "No memory for metadata size:%d\n",
 				meta_size);
 			err = -1;
 			goto close_mfd;
 		}
 
-		memset(mbuf, 0, cfg.metadata_size);
 		err = read(mfd, mbuf, cfg.metadata_size);
 		if (err < 0) {
 			perror("read-metadata");
-			goto free_meta;
+			goto close_mfd;
 		}
 	}
 
@@ -1075,13 +1073,9 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 	else
 		perror("zns zone-append");
 
-free_meta:
-	free(mbuf);
 close_mfd:
 	if (cfg.metadata)
 		close(mfd);
-free_data:
-	free(buf);
 close_dfd:
 	if (cfg.data)
 		close(dfd);

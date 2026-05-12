@@ -10936,13 +10936,13 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 			free(cbs_data);
 		} else {
 			struct log_page_directory *dir;
-			void *data = NULL;
+			__cleanup_libnvme_free void *data = NULL;
 
-			if (posix_memalign(&data, getpagesize(), 512)) {
+			data = libnvme_alloc(512);
+			if (!data) {
 				fprintf(stderr,
 					"can not allocate log page directory payload\n");
-				ret = ENOMEM;
-				goto out;
+				return -ENOMEM;
 			}
 
 			dir = (struct log_page_directory *)data;

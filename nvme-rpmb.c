@@ -183,7 +183,8 @@ static int read_file(const char *file, unsigned char **data, unsigned int *len)
 	}
 
 	size = sb.st_size;
-	if (posix_memalign((void **)&buf, getpagesize(), size)) {
+	buf = libnvme_alloc(size);
+	if (!buf) {
 		fprintf(stderr, "No memory for reading file :%s\n", file);
 		err = -ENOMEM;
 		goto out;
@@ -194,10 +195,10 @@ static int read_file(const char *file, unsigned char **data, unsigned int *len)
 		err = -errno;
 		fprintf(stderr, "Failed to read data from file"
 				" %s with %s\n", file, libnvme_strerror(errno));
-		free(buf);
+		libnvme_free(buf);
 		goto out;
 	}
-	*data = buf; 
+	*data = buf;
 	*len = err;
 	err = 0;
 out:
@@ -869,8 +870,8 @@ int rpmb_cmd_option(int argc, char **argv, struct command *acmd, struct plugin *
 		OPT_UINT("blocks",    'b', &cfg.blocks,   blocks),
 		OPT_UINT("target",    't', &cfg.target,   target));
 	
-	__cleanup_free unsigned char *key_buf = NULL;
-	__cleanup_free unsigned char *msg_buf = NULL;
+	__cleanup_libnvme_free unsigned char *key_buf = NULL;
+	__cleanup_libnvme_free unsigned char *msg_buf = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	unsigned int write_cntr = 0;
@@ -948,7 +949,7 @@ int rpmb_cmd_option(int argc, char **argv, struct command *acmd, struct plugin *
 		    cfg.opt == RPMB_REQ_AUTH_DATA_WRITE) {
 			if (cfg.msg != NULL) {
 				msg_size = strlen(cfg.msg);
-				msg_buf = (unsigned char *)malloc(msg_size);
+				msg_buf = libnvme_alloc(msg_size);
 				memcpy(msg_buf, cfg.msg, msg_size);
 			} else {
 				err = read_file(cfg.msgfile, &msg_buf, &msg_size);
