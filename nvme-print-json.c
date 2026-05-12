@@ -527,6 +527,7 @@ static void json_error_log(struct nvme_error_log_page *err_log, int entries,
 	struct json_object *r = json_create_object();
 	struct json_object *errors = json_create_array();
 	struct json_object *error;
+	__u16 sts;
 	int i;
 
 	obj_add_array(r, "errors", errors);
@@ -536,15 +537,15 @@ static void json_error_log(struct nvme_error_log_page *err_log, int entries,
 			continue;
 
 		error = json_create_object();
+		sts = le16_to_cpu(err_log[i].status_field);
 
 		obj_add_uint64(error, "error_count",
 			       le64_to_cpu(err_log[i].error_count));
 		obj_add_int(error, "sqid", le16_to_cpu(err_log[i].sqid));
 		obj_add_int(error, "cmdid", le16_to_cpu(err_log[i].cmdid));
 		obj_add_int(error, "status_field",
-			    le16_to_cpu(err_log[i].status_field) >> 0x1);
-		obj_add_int(error, "phase_tag",
-			    le16_to_cpu(err_log[i].status_field) & 0x1);
+			    NVME_ERR_SF_STATUS_FIELD(sts));
+		obj_add_int(error, "phase_tag", NVME_ERR_SF_PHASE_TAG(sts));
 		obj_add_int(error, "parm_error_location",
 			    le16_to_cpu(err_log[i].parm_error_location));
 		obj_add_uint64(error, "lba", le64_to_cpu(err_log[i].lba));

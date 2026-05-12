@@ -4228,6 +4228,7 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 	int filtered = 0;
 	int i;
 	__u16 status;
+	__u16 sts;
 
 	printf("Error Log Entries for device:%s entries:%d\n", devname,
 	       entries);
@@ -4238,7 +4239,8 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 			continue;
 		}
 
-		status = le16_to_cpu(err_log[i].status_field) >> 0x1;
+		sts = le16_to_cpu(err_log[i].status_field);
+		status = NVME_ERR_SF_STATUS_FIELD(sts);
 
 		printf(" Entry[%2d]\n", i);
 		printf(".................\n");
@@ -4249,8 +4251,7 @@ static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
 		       le16_to_cpu(err_log[i].cmdid));
 		printf("status_field	: %#x (%s)\n", status,
 		       libnvme_status_to_string(status, false));
-		printf("phase_tag	: %#x\n",
-		       le16_to_cpu(err_log[i].status_field) & 0x1);
+		printf("phase_tag	: %#x\n", NVME_ERR_SF_PHASE_TAG(sts));
 		printf("parm_err_loc	: %#x\n",
 		       le16_to_cpu(err_log[i].parm_error_location));
 		printf("lba		: %#"PRIx64"\n",
