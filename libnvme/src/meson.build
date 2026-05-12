@@ -5,7 +5,9 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-sources = []
+sources = [
+    'nvme/log.c',
+]
 if host_system == 'windows'
     sources += [
         'nvme/mem-win.c',
@@ -19,7 +21,6 @@ else
         'nvme/ioctl.c',
         'nvme/lib.c',
         'nvme/linux.c',
-        'nvme/log.c',
         'nvme/mem-linux.c',
         'nvme/nvme-cmds.c',
         'nvme/sysfs.c',
