@@ -1836,23 +1836,30 @@ static int uuid_from_dmi_entries(char *system_uuid)
 static int uuid_from_product_uuid(char *system_uuid)
 {
 	__cleanup_file FILE *stream = NULL;
-	ssize_t nread;
-	__cleanup_free char *line = NULL;
-	size_t len = 0;
 
 	stream = fopen(PATH_DMI_PROD_UUID, "re");
 	if (!stream)
 		return -ENXIO;
-	system_uuid[0] = '\0';
 
-	nread = getline(&line, &len, stream);
-	if (nread != NVME_UUID_LEN_STRING)
-		return -ENXIO;
+	system_uuid[0] = '\0';
 
 	/* The kernel is handling the byte swapping according DMTF
 	 * SMBIOS 3.0 Section 7.2.1 System UUID */
 
-	memcpy(system_uuid, line, NVME_UUID_LEN_STRING - 1);
+	/*
+	 * Expect exactly:
+	 * xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+	 */
+	if (!fgets(system_uuid, NVME_UUID_LEN_STRING, stream))
+		return -ENXIO;
+
+	if (strlen(system_uuid) != NVME_UUID_LEN_STRING - 1)
+		return -ENXIO;
+
+	if (system_uuid[8]  != '-' || system_uuid[13] != '-' ||
+	    system_uuid[18] != '-' || system_uuid[23] != '-')
+		return -ENXIO;
+
 	system_uuid[NVME_UUID_LEN_STRING - 1] = '\0';
 
 	return 0;
