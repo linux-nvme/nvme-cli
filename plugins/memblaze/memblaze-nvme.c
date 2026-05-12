@@ -736,7 +736,7 @@ static int memblaze_fw_commit(struct libnvme_transport_handle *hdl, int select)
 		.cdw12		= select,
 	};
 
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 static int mb_selective_download(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -840,7 +840,7 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 			perror("fw-download");
 			goto out_free;
 		}
-		err = libnvme_submit_admin_passthru(hdl, &cmd);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (err < 0) {
 			perror("fw-download");
 			goto out_free;

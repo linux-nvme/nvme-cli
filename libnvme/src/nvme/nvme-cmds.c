@@ -85,10 +85,7 @@ __public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 		cmd->data_len = xfer;
 		cmd->addr = (__u64)(uintptr_t)ptr;
 
-		if (hdl->uring_enabled)
-			ret = libnvme_submit_admin_passthru_async(hdl, cmd);
-		else
-			ret = libnvme_submit_admin_passthru(hdl, cmd);
+		ret = libnvme_submit_admin_passthru(hdl, cmd);
 		if (ret)
 			return ret;
 
@@ -96,13 +93,7 @@ __public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 		ptr += xfer;
 	} while (offset < data_len);
 
-	if (hdl->uring_enabled) {
-		ret = libnvme_wait_complete_passthru(hdl);
-		if (ret)
-			return ret;
-	}
-
-	return 0;
+	return libnvme_wait_admin_passthru(hdl);
 }
 
 static int read_ana_chunk(struct libnvme_transport_handle *hdl,
@@ -239,7 +230,7 @@ __public int libnvme_set_etdas(struct libnvme_transport_handle *hdl, bool *chang
 	int err;
 
 	nvme_init_get_features_host_behavior(&cmd, 0, &da4);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 
@@ -251,7 +242,7 @@ __public int libnvme_set_etdas(struct libnvme_transport_handle *hdl, bool *chang
 	da4.etdas = 1;
 
 	nvme_init_set_features_host_behavior(&cmd, false, &da4);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 
@@ -266,7 +257,7 @@ __public int libnvme_clear_etdas(struct libnvme_transport_handle *hdl, bool *cha
 	int err;
 
 	nvme_init_get_features_host_behavior(&cmd, 0, &da4);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 
@@ -277,7 +268,7 @@ __public int libnvme_clear_etdas(struct libnvme_transport_handle *hdl, bool *cha
 
 	da4.etdas = 0;
 	nvme_init_set_features_host_behavior(&cmd, false, &da4);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 
@@ -294,7 +285,7 @@ __public int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	nvme_init_identify_ctrl(&cmd, &ctrl);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR,
 			 "ERROR: nvme_identify_ctrl() failed 0x%x\n", err);
@@ -304,7 +295,7 @@ __public int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
 	if ((ctrl.ctratt & NVME_CTRL_CTRATT_UUID_LIST) ==
 			NVME_CTRL_CTRATT_UUID_LIST) {
 		nvme_init_identify_uuid_list(&cmd, uuid_list);
-		err = libnvme_submit_admin_passthru(hdl, &cmd);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 	}
 
 	return err;
@@ -322,7 +313,7 @@ __public int libnvme_get_telemetry_max(struct libnvme_transport_handle *hdl,
 		return -ENOMEM;
 
 	nvme_init_identify_ctrl(&cmd, id_ctrl);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 
@@ -541,7 +532,7 @@ __public int libnvme_get_ana_log_len(struct libnvme_transport_handle *hdl, size_
 		return -ENOMEM;
 
 	nvme_init_identify_ctrl(&cmd, ctrl);
-	ret = libnvme_submit_admin_passthru(hdl, &cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (ret)
 		return ret;
 
@@ -562,7 +553,7 @@ __public int libnvme_get_logical_block_size(struct libnvme_transport_handle *hdl
 		return -ENOMEM;
 
 	nvme_init_identify_ns(&cmd, nsid, ns);
-	ret = libnvme_submit_admin_passthru(hdl, &cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (ret)
 		return ret;
 

@@ -411,7 +411,7 @@ static int temp_thresh_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
 	nvme_init_get_features_temp_thresh(&cmd, sel, cfg->tmpsel, cfg->thsel);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err) {
 		nvme_feature_decode_temp_threshold(cmd.result, &tmpth,
 						   &tmpsel, &thsel, &tmpthh);
@@ -423,7 +423,7 @@ static int temp_thresh_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 
 	nvme_init_set_features_temp_thresh(&cmd, sv, cfg->tmpth, cfg->tmpsel,
 					   cfg->thsel, cfg->tmpthh);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "Set %s", temp_thresh_feat);
 		return err;
@@ -493,7 +493,7 @@ static int arbitration_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
 	nvme_init_get_features_arbitration(&cmd, sel);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err) {
 		nvme_feature_decode_arbitration(cmd.result, &ab,
 						&lpw, &mpw, &hpw);
@@ -509,7 +509,7 @@ static int arbitration_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 
 	nvme_init_set_features_arbitration(&cmd, sv, cfg->ab, cfg->lpw,
 					   cfg->mpw, cfg->hpw);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "Set %s", arbitration_feat);
 		return err;
@@ -921,7 +921,7 @@ static int num_queues_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		sel = NVME_GET_FEATURES_SEL_SAVED;
 
 	nvme_init_get_features_num_queues(&cmd, sel);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err) {
 		nvme_feature_decode_number_of_queues(cmd.result, &nsqr, &ncqr);
 		if (!argconfig_parse_seen(opts, "nsqr"))
@@ -999,7 +999,7 @@ static int host_behavior_set(struct libnvme_transport_handle *hdl, __u8 fid,
 		gsel = NVME_GET_FEATURES_SEL_SAVED;
 
 	nvme_init_get_features_host_behavior(&cmd, gsel, &data);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "Get %s", host_behavior_feat);
 		return err;
@@ -1017,7 +1017,7 @@ static int host_behavior_set(struct libnvme_transport_handle *hdl, __u8 fid,
 		data.cdfe = cpu_to_le16(cfg->cdfe);
 
 	nvme_init_set_features_host_behavior(&cmd, sv, &data);
-	err = libnvme_submit_admin_passthru(hdl, &cmd);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "Set %s", host_behavior_feat);
 		return err;

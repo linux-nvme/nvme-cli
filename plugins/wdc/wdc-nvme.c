@@ -2997,7 +2997,7 @@ static int wdc_do_clear_dump(struct libnvme_transport_handle *hdl, __u8 opcode, 
 	memset(&admin_cmd, 0, sizeof(struct libnvme_passthru_cmd));
 	admin_cmd.opcode = opcode;
 	admin_cmd.cdw12 = cdw12;
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	if (ret)
 		fprintf(stdout, "ERROR: WDC: Crash dump erase failed\n");
 	nvme_show_status(ret);
@@ -3019,7 +3019,7 @@ static __u32 wdc_dump_length(struct libnvme_transport_handle *link, __u32 opcode
 	admin_cmd.cdw10 = cdw10;
 	admin_cmd.cdw12 = cdw12;
 
-	ret = libnvme_submit_admin_passthru(link, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(link, &admin_cmd);
 	if (ret) {
 		l->log_size = 0;
 		ret = -1;
@@ -3047,7 +3047,7 @@ static __u32 wdc_dump_length_e6(struct libnvme_transport_handle *hdl, __u32 opco
 	admin_cmd.cdw10 = cdw10;
 	admin_cmd.cdw12 = cdw12;
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	if (ret) {
 		fprintf(stderr, "ERROR: WDC: reading dump length failed\n");
 		nvme_show_status(ret);
@@ -3074,7 +3074,7 @@ static __u32 wdc_dump_dui_data(struct libnvme_transport_handle *hdl, __u32 dataL
 		admin_cmd.cdw14 = WDC_NVME_CAP_DUI_DISABLE_IO;
 
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	if (ret) {
 		fprintf(stderr, "ERROR: WDC: reading DUI data failed\n");
 		nvme_show_status(ret);
@@ -3105,7 +3105,7 @@ static __u32 wdc_dump_dui_data_v2(struct libnvme_transport_handle *hdl, __u32 da
 	else
 		admin_cmd.cdw14 = WDC_NVME_CAP_DUI_DISABLE_IO;
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	if (ret) {
 		fprintf(stderr, "ERROR: WDC: reading DUI data V2 failed\n");
 		nvme_show_status(ret);
@@ -3143,7 +3143,7 @@ static int wdc_do_dump(struct libnvme_transport_handle *hdl, __u32 opcode, __u32
 	admin_cmd.cdw13 = curr_data_offset;
 
 	while (curr_data_offset < data_len) {
-		ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+		ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		if (ret) {
 			nvme_show_status(ret);
 			fprintf(stderr, "%s: ERROR: WDC: Get chunk %d, size = 0x%x, offset = 0x%x, addr = 0x%lx\n",
@@ -3218,7 +3218,7 @@ static int wdc_do_dump_e6(struct libnvme_transport_handle *hdl, __u32 opcode, __
 		admin_cmd.cdw10 = xfer_size >> 2;
 		admin_cmd.cdw13 = curr_data_offset >> 2;
 
-		ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+		ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		if (ret) {
 			nvme_show_status(ret);
 			fprintf(stderr, "%s: ERROR: WDC: Get chunk %d, size = 0x%x, offset = 0x%x, addr = 0x%lx\n",
@@ -3980,7 +3980,7 @@ static int wdc_do_get_sn730_log_len(struct libnvme_transport_handle *hdl, uint32
 	admin_cmd.cdw12 = subopcode;
 	admin_cmd.cdw10 = SN730_LOG_CHUNK_SIZE / 4;
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	if (!ret)
 		*len_buf = *output;
 	free(output);
@@ -4006,7 +4006,7 @@ static int wdc_do_get_sn730_log(struct libnvme_transport_handle *hdl, void *log_
 	admin_cmd.cdw13 = offset;
 	admin_cmd.cdw10 = SN730_LOG_CHUNK_SIZE / 4;
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	if (!ret)
 		memcpy(log_buf, output, SN730_LOG_CHUNK_SIZE);
 	return ret;
@@ -4702,7 +4702,7 @@ static int wdc_do_drive_log(struct libnvme_transport_handle *hdl, const char *fi
 	admin_cmd.cdw12 = ((WDC_NVME_DRIVE_LOG_SUBCMD <<
 				WDC_NVME_SUBCMD_SHIFT) | WDC_NVME_DRIVE_LOG_SIZE_CMD);
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	nvme_show_status(ret);
 	if (!ret)
 		ret = wdc_create_log_file(file, drive_log_data, drive_log_length);
@@ -4914,7 +4914,7 @@ static int wdc_purge(int argc, char **argv,
 		memset(&admin_cmd, 0, sizeof(admin_cmd));
 		admin_cmd.opcode = WDC_NVME_PURGE_CMD_OPCODE;
 
-		ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+		ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		if (ret > 0) {
 			switch (ret) {
 			case WDC_NVME_PURGE_CMD_SEQ_ERR:
@@ -4970,7 +4970,7 @@ static int wdc_purge_monitor(int argc, char **argv,
 		admin_cmd.cdw10 = WDC_NVME_PURGE_MONITOR_CMD_CDW10;
 		admin_cmd.timeout_ms = WDC_NVME_PURGE_MONITOR_TIMEOUT;
 
-		ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+		ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		if (!ret) {
 			mon = (struct wdc_nvme_purge_monitor_data *) output;
 			printf("Purge state = 0x%0"PRIx64"\n",
@@ -8988,7 +8988,7 @@ static int wdc_do_clear_pcie_correctable_errors(struct libnvme_transport_handle 
 	admin_cmd.cdw12 = ((WDC_NVME_CLEAR_PCIE_CORR_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
 			WDC_NVME_CLEAR_PCIE_CORR_CMD);
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	nvme_show_status(ret);
 	return ret;
 }
@@ -9001,7 +9001,7 @@ static int wdc_do_clear_pcie_correctable_errors_vuc(struct libnvme_transport_han
 	memset(&admin_cmd, 0, sizeof(admin_cmd));
 	admin_cmd.opcode = WDC_NVME_CLEAR_PCIE_CORR_OPCODE_VUC;
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	nvme_show_status(ret);
 	return ret;
 }
@@ -9249,7 +9249,7 @@ static int wdc_clear_assert_dump(int argc, char **argv, struct command *acmd,
 		admin_cmd.cdw12 = ((WDC_NVME_CLEAR_ASSERT_DUMP_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
 				WDC_NVME_CLEAR_ASSERT_DUMP_CMD);
 
-		ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+		ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		nvme_show_status(ret);
 	} else
 		fprintf(stderr, "INFO: WDC: No Assert Dump Present\n");
@@ -9496,7 +9496,7 @@ static int wdc_do_clear_fw_activate_history_vuc(struct libnvme_transport_handle 
 	admin_cmd.cdw12 = ((WDC_NVME_CLEAR_FW_ACT_HIST_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
 			WDC_NVME_CLEAR_FW_ACT_HIST_CMD);
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	nvme_show_status(ret);
 
 	return ret;
@@ -9705,7 +9705,7 @@ static int wdc_de_VU_read_size(struct libnvme_transport_handle *hdl, __u32 fileI
 	cmd.cdw13 = fileId << 16;
 	cmd.cdw14 = spiDestn;
 
-	ret = libnvme_submit_admin_passthru(hdl, &cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 
 	if (!ret && logSize)
 		*logSize = cmd.result;
@@ -9742,7 +9742,7 @@ static int wdc_de_VU_read_buffer(struct libnvme_transport_handle *hdl, __u32 fil
 	cmd.addr = (__u64)(__u64)(uintptr_t)dataBuffer;
 	cmd.data_len = *bufferSize;
 
-	ret = libnvme_submit_admin_passthru(hdl, &cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 
 	if (ret != WDC_STATUS_SUCCESS) {
 		fprintf(stderr, "ERROR: WDC: VUReadBuffer() failed, ");
@@ -10411,7 +10411,7 @@ static int wdc_do_drive_resize(struct libnvme_transport_handle *hdl, uint64_t ne
 			    WDC_NVME_DRIVE_RESIZE_CMD);
 	admin_cmd.cdw13 = new_size;
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	return ret;
 }
 
@@ -10425,7 +10425,7 @@ static int wdc_do_namespace_resize(struct libnvme_transport_handle *hdl, __u32 n
 	admin_cmd.nsid = nsid;
 	admin_cmd.cdw10 = op_option;
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	return ret;
 }
 
@@ -10439,7 +10439,7 @@ static int wdc_do_drive_info(struct libnvme_transport_handle *hdl, __u32 *result
 	admin_cmd.cdw12 = ((WDC_NVME_DRIVE_INFO_SUBCMD << WDC_NVME_SUBCMD_SHIFT) |
 			    WDC_NVME_DRIVE_INFO_CMD);
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 
 	if (!ret && result)
 		*result = admin_cmd.result;
@@ -10956,7 +10956,7 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 				.data_len	= 32,
 			};
 
-			ret = libnvme_submit_admin_passthru(hdl, &cmd);
+			ret = libnvme_exec_admin_passthru(hdl, &cmd);
 			if (!ret) {
 				switch (fmt) {
 				case BINARY:
@@ -11634,7 +11634,7 @@ static int wdc_do_vs_pcie_stats(struct libnvme_transport_handle *hdl,
 	admin_cmd.addr = (__u64)(uintptr_t)pcieStatsPtr;
 	admin_cmd.data_len = pcie_stats_size;
 
-	ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 
 	return ret;
 }
@@ -11928,7 +11928,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 				.addr		= (__u64)(uintptr_t)&info,
 				.data_len	= data_len,
 			};
-			ret = libnvme_submit_admin_passthru(hdl, &cmd);
+			ret = libnvme_exec_admin_passthru(hdl, &cmd);
 			if (!ret) {
 				__u16 hw_rev_major, hw_rev_minor;
 
@@ -12432,7 +12432,7 @@ static int wdc_enc_submit_move_data(struct libnvme_transport_handle *hdl, char *
 	       nvme_cmd.timeout_ms, nvme_cmd.result, md, d);
 #endif
 	nvme_cmd.result = 0;
-	err = libnvme_submit_admin_passthru(hdl, &nvme_cmd);
+	err = libnvme_exec_admin_passthru(hdl, &nvme_cmd);
 	if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INTERNAL)) {
 		fprintf(stderr, "%s: WARNING : WDC: No log ID:x%x available\n", __func__, log_id);
 	} else if (err) {
@@ -12457,7 +12457,7 @@ static int wdc_enc_submit_move_data(struct libnvme_transport_handle *hdl, char *
 			nvme_cmd.cdw14 = cdw14;
 			nvme_cmd.cdw15 = cdw15;
 			nvme_cmd.result = 0;  /* returned result !=0 indicates more data available */
-			err = libnvme_submit_admin_passthru(hdl, &nvme_cmd);
+			err = libnvme_exec_admin_passthru(hdl, &nvme_cmd);
 			if (err) {
 				more = 0;
 				fprintf(stderr, "%s: ERROR: WDC: NVMe Rcv Mgmt ", __func__);
@@ -12517,7 +12517,7 @@ static int wdc_enc_get_nic_log(struct libnvme_transport_handle *hdl, __u8 log_id
 			admin_cmd.nsid, admin_cmd.addr, admin_cmd.data_len, admin_cmd.cdw10,
 			admin_cmd.cdw11, admin_cmd.cdw12, admin_cmd.cdw13, admin_cmd.cdw14);
 #endif
-		ret = libnvme_submit_admin_passthru(hdl, &admin_cmd);
+		ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		if (ret) {
 			nvme_show_status(ret);
 			fprintf(stderr, "%s: ERROR: WDC: Get chunk %d, size = 0x%x, offset = 0x%x, addr = 0x%lx\n",

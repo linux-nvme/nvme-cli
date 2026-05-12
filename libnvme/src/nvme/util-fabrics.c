@@ -10,9 +10,10 @@
 
 #include <libnvme.h>
 
-#include "compiler-attributes.h"
 #include "private-fabrics.h"
 #include "util.h"
+
+#include "compiler-attributes.h"
 
 __public struct nvmf_ext_attr *libnvmf_exat_ptr_next(struct nvmf_ext_attr *p)
 {

@@ -1234,7 +1234,7 @@ static int read_entire_cmd(struct libnvme_passthru_cmd *cmd, int total_size,
 
 	dword_tfer = min(max_tfer, total_size);
 	while (total_size > 0) {
-		err = libnvme_submit_admin_passthru(hdl, cmd);
+		err = libnvme_exec_admin_passthru(hdl, cmd);
 		if (err) {
 			fprintf(stderr,
 				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",

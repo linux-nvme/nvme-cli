@@ -44,7 +44,7 @@ jobs:
             bc libnl3-cli cryptsetup sg3_utils pciutils unzip jq git wget \
             meson json-c-devel openssl-devel keyutils-libs-devel dbus-devel \
             swig xz-devel libcurl-devel curl libarchive libarchive-devel json-c \
-            expect
+            expect gcovr
 
             # mdadm has a buffer overflow in v4.3 and was fixed with this commit:
             # https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/commit/?id=7f960c3bd050e76f8bf0a8a0c8fbdcbaa565fc78
@@ -62,9 +62,10 @@ jobs:
             git clone https://github.com/${{ github.repository }} nvme-cli
             cd nvme-cli
             git checkout ${{ github.sha }}
-            scripts/build.sh -b release -c gcc
-            sudo meson install -C .build-ci
-            sudo ldconfig /usr/local/lib64
+            scripts/build.sh -b release -c gcc -p
+
+            # IMPORTANT: do NOT install for coverage run
+            export PATH="$PWD/.build-ci:$PATH"
 
             cd -
             git clone https://github.com/linux-blktests/blktests.git blktests
@@ -73,7 +74,7 @@ jobs:
             make
             mkdir -p results
             nvme --version | tee -a results/nvme-cli.version
-            sudo nvme --version | tee -a results/nvme-cli.version
+            sudo env PATH="$PWD/.build-ci:$PATH" nvme --version | tee -a results/nvme-cli.version
 
             # Run blktests nvme and md group
             cat > config << EF
@@ -81,7 +82,21 @@ jobs:
             NVMET_TRTYPES="loop rdma tcp"
             EXCLUDE=(nvme/010 nvme/012 nvme/034 nvme/035)
             EF
-            sudo ./check nvme md/001
+            set +e
+            sudo env PATH="$PWD/.build-ci:$PATH" ./check nvme md/001
+            blktests_status=$?
+            set -e
+
+            cd ../nvme-cli
+            gcovr -r . --object-directory .build-ci --xml-pretty -o coverage.xml
+
+            CODECOV_VERSION="v0.8.0"
+            curl -Os "https://uploader.codecov.io/${CODECOV_VERSION}/linux/codecov"
+            chmod +x codecov
+            NODE_OPTIONS="--max-old-space-size=4096" ./codecov -t "${{ secrets.CODECOV_TOKEN }}" -f coverage.xml -X search || true
+
+            exit "${blktests_status}"
+
       - name: Run nvme-cli tests in VM
         if: success() || steps.blktests.conclusion == 'failure'
         uses: ./.github/actions/kubevirt-action
@@ -90,6 +105,7 @@ jobs:
           kernel_version: linus-master
           vm_artifact_upload_dir: nvme-cli/tests/nvmetests/
           run_cmds: |
+            export CODECOV_TOKEN="${{ secrets.CODECOV_TOKEN }}"
             #Preventing bash variable expension for the outer cat by using
             #single quotes around EOF
             cat > test.sh << 'EOF'
@@ -113,7 +129,13 @@ jobs:
             EOJ
             cat tests/config.json
 
-            scripts/build.sh -b release -c gcc tests
+            scripts/build.sh -b release -c gcc -p tests
+
+            CODECOV_VERSION="v0.8.0"
+            curl -Os "https://uploader.codecov.io/${CODECOV_VERSION}/linux/codecov"
+            chmod +x codecov
+            NODE_OPTIONS="--max-old-space-size=4096" ./codecov -t "$CODECOV_TOKEN" -f coverage.xml -X search || true
+
             EOF
 
             sudo chmod +x test.sh
@@ -130,6 +152,7 @@ jobs:
             sudo podman run --privileged \
             -v /dev:/dev \
             -e BDEV0 \
+            -e CODECOV_TOKEN="${CODECOV_TOKEN}" \
             -v "${PWD}/test.sh":"/test.sh" \
             -v "${PWD}/nvme-cli":"/nvme-cli":z \
             ghcr.io/linux-nvme/debian:latest /test.sh

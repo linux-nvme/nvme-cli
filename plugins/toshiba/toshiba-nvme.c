@@ -59,7 +59,7 @@ static int nvme_sct_op(struct libnvme_transport_handle *hdl, __u32 opcode,
 		.data_len	= data_len,
 		.addr		= (__u64)(uintptr_t)data,
 	};
-	return libnvme_submit_admin_passthru(hdl, &cmd);
+	return libnvme_exec_admin_passthru(hdl, &cmd);
 }
 
 static int nvme_get_sct_status(struct libnvme_transport_handle *hdl, __u32 device_mask)
