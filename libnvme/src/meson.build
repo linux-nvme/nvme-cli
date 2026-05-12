@@ -9,7 +9,9 @@ sources = [
     'nvme/log.c',
 ]
 if host_system == 'windows'
-    sources += []
+    sources += [
+        'nvme/mem-win.c',
+    ]
 else
     sources += [
         'nvme/accessors.c',
