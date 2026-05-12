@@ -18,6 +18,8 @@ static char *_fmt3 = "/sys/class/nvme/nvme%d/device/vendor";
 static char *_fmt4 = "/sys/class/nvme/nvme%d/device/device";
 static char *_fmt5 = "/sys/class/nvme/nvme%d/device/class";
 
+#define LINE_BUF_SIZE 1024
+
 static char fmt1[78];
 static char fmt2[78];
 static char fmt3[78];
@@ -84,23 +86,23 @@ static void format_and_print(char *save)
 
 	if (!class_mid) {
 		if (device_final)
-			snprintf(save, 1024, "%s %s %s",
+			snprintf(save, LINE_BUF_SIZE, "%s %s %s",
 				 locate_info(device_top, false, false),
 				 locate_info(device_mid, false, false),
 				 locate_info(device_final, true, false));
 		else
-			snprintf(save, 1024, "%s %s",
+			snprintf(save, LINE_BUF_SIZE, "%s %s",
 				 locate_info(device_top, false, false),
 				 locate_info(device_mid, false, false));
 	} else {
 		if (device_final)
-			snprintf(save, 1024, "%s: %s %s %s",
+			snprintf(save, LINE_BUF_SIZE, "%s: %s %s %s",
 				 locate_info(class_mid, false, true),
 				 locate_info(device_top, false, false),
 				 locate_info(device_mid, false, false),
 				 locate_info(device_final, true, false));
 		else
-			snprintf(save, 1024, "%s: %s %s",
+			snprintf(save, LINE_BUF_SIZE, "%s: %s %s",
 				 locate_info(class_mid, false, true),
 				 locate_info(device_top, false, false),
 				 locate_info(device_mid, false, false));
@@ -113,18 +115,18 @@ static void format_all(char *save, char *vendor, char *device)
 		format_and_print(save);
 
 	else if (device_top && !device_mid && class_mid)
-		snprintf(save, 1024, "%s: %s Device %s",
+		snprintf(save, LINE_BUF_SIZE, "%s: %s Device %s",
 			 locate_info(class_mid, false, true),
 			 locate_info(device_top, false, false),
 			 device);
 
 	else if (!device_top && class_mid)
-		snprintf(save, 1024, "%s: Vendor %s Device %s",
+		snprintf(save, LINE_BUF_SIZE, "%s: Vendor %s Device %s",
 			 locate_info(class_mid, false, true),
 			 vendor,
 			 device);
 	else
-		snprintf(save, 1024, "Unknown device");
+		snprintf(save, LINE_BUF_SIZE, "Unknown device");
 }
 
 static int is_final_match(char *line, char *search)
@@ -179,61 +181,59 @@ static inline int is_class_info(char *line)
 	return !memcmp(line, "# C class", 9);
 }
 
-static void parse_vendor_device(char **line, FILE *file,
+static void parse_vendor_device(char *line, FILE *file,
 			       char *device, char *subdev,
 			       char *subven)
 {
 	bool device_single_found = false;
-	size_t amnt = 1024;
-	size_t found = 0;
-	char *newline;
+	size_t len;
 
-	while ((found = getline(line, &amnt, file)) != -1) {
-		newline = *line;
-		if (is_comment(newline))
+	while (fgets(line, LINE_BUF_SIZE, file) != NULL) {
+		len = strlen(line);
+		if (len > 0 && line[len - 1] == '\n')
+			line[len - 1] = '\0';
+		if (is_comment(line))
 			continue;
-		if (!is_tab(newline))
+		if (!is_tab(line))
 			return;
 
-		newline[found - 1] = '\0';
-		if (!device_single_found && is_mid_level_match(newline, device, false)) {
+		if (!device_single_found && is_mid_level_match(line, device, false)) {
 			device_single_found = true;
-			device_mid = strdup(newline);
+			device_mid = strdup(line);
 			continue;
 		}
 
-		if (device_single_found && is_inner_sub_vendev(newline, subven, subdev)) {
-			device_final = strdup(newline);
+		if (device_single_found && is_inner_sub_vendev(line, subven, subdev)) {
+			device_final = strdup(line);
 			break;
 		}
 	}
 }
 
-static void pull_class_info(char **_newline, FILE *file, char *class)
+static void pull_class_info(char *line, FILE *file, char *class)
 {
-	size_t amnt;
-	size_t size = 1024;
 	bool top_found = false;
 	bool mid_found = false;
-	char *newline;
+	size_t len;
 
-	while ((amnt = getline(_newline, &size, file)) != -1) {
-		newline = *_newline;
-		newline[amnt - 1] = '\0';
-		if (!top_found && is_top_level_match(newline, class, true)) {
-			class_top = strdup(newline);
+	while (fgets(line, LINE_BUF_SIZE, file) != NULL) {
+		len = strlen(line);
+		if (len > 0 && line[len - 1] == '\n')
+			line[len - 1] = '\0';
+		if (!top_found && is_top_level_match(line, class, true)) {
+			class_top = strdup(line);
 			top_found = true;
 			continue;
 		}
 		if (!mid_found && top_found &&
-		    is_mid_level_match(newline,  &class[4], true)) {
-			class_mid = strdup(newline);
+		    is_mid_level_match(line, &class[4], true)) {
+			class_mid = strdup(line);
 			mid_found = true;
 			continue;
 		}
 		if (top_found && mid_found &&
-		    is_final_match(newline, &class[6])) {
-			class_final = strdup(newline);
+		    is_final_match(line, &class[6])) {
+			class_final = strdup(line);
 			break;
 		}
 	}
@@ -299,15 +299,15 @@ static FILE *open_pci_ids(void)
 
 char *nvme_product_name(int id)
 {
-	char *line = NULL;
-	ssize_t amnt;
+	char readbuf[LINE_BUF_SIZE];
 	char vendor[7] = { 0 };
 	char device[7] = { 0 };
 	char sub_device[7] = { 0 };
 	char sub_vendor[7] = { 0 };
 	char class[13] = { 0 };
-	size_t size = 1024;
-	char ret;
+	size_t len;
+	int ret = 0;
+	char *result;
 	FILE *file = open_pci_ids();
 
 	if (!file)
@@ -327,31 +327,34 @@ char *nvme_product_name(int id)
 	if (ret)
 		goto error0;
 
-	line = malloc(1024);
-	if (!line) {
-		fprintf(stderr, "malloc: %s\n", libnvme_strerror(errno));
-		goto error0;
-	}
-
-	while ((amnt = getline(&line, &size, file)) != -1) {
-		if (is_comment(line) && !is_class_info(line))
+	while (fgets(readbuf, sizeof(readbuf), file) != NULL) {
+		len = strlen(readbuf);
+		if (len > 0 && readbuf[len - 1] == '\n')
+			readbuf[len - 1] = '\0';
+		if (is_comment(readbuf) && !is_class_info(readbuf))
 			continue;
-		if (is_top_level_match(line, vendor, false)) {
-			line[amnt - 1] = '\0';
+		if (is_top_level_match(readbuf, vendor, false)) {
 			free(device_top);
-			device_top = strdup(line);
-			parse_vendor_device(&line, file,
+			device_top = strdup(readbuf);
+			parse_vendor_device(readbuf, file,
 						device,
 						sub_device,
 						sub_vendor);
 		}
-		if (is_class_info(line))
-			pull_class_info(&line, file, class);
+		if (is_class_info(readbuf))
+			pull_class_info(readbuf, file, class);
 	}
 	fclose(file);
-	format_all(line, vendor, device);
+
+	result = malloc(LINE_BUF_SIZE);
+	if (!result) {
+		fprintf(stderr, "malloc: %s\n", libnvme_strerror(errno));
+		free_all();
+		return strdup("NULL");
+	}
+	format_all(result, vendor, device);
 	free_all();
-	return line;
+	return result;
 error0:
 	fclose(file);
 error1:
