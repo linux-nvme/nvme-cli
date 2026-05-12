@@ -8,9 +8,11 @@
  * This file implements basic logging functionality.
  */
 
+#include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -24,6 +26,36 @@
 #ifndef LOG_CLOCK
 #define LOG_CLOCK CLOCK_MONOTONIC
 #endif
+
+static ssize_t write_all(int fd, const void *buf, size_t count)
+{
+	const char *p = buf;
+	size_t total = 0;
+
+	while (total < count) {
+		ssize_t n = write(fd, p + total, count - total);
+
+		if (n > 0) {
+			total += n;
+			continue;
+		}
+
+		if (n < 0) {
+			if (errno == EINTR)
+				continue;
+
+			if (errno == EAGAIN)
+				continue;
+
+			return -1;
+		}
+
+		errno = EIO;
+		return -1;
+	}
+
+	return total;
+}
 
 void __attribute__((format(printf, 4, 5)))
 __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
@@ -45,6 +77,7 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 	};
 	__cleanup_free char *header = NULL;
 	__cleanup_free char *message = NULL;
+	__cleanup_free char *log = NULL;
 	int idx = 0;
 
 	if (level > l->level)
@@ -78,9 +111,12 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 		message = NULL;
 	va_end(ap);
 
-	dprintf(l->fd, "%s%s",
-		header ? header : "<error>",
-		message ? message : "<error>");
+	if (asprintf(&log, "%s%s", header ? header : "<error>",
+			message ? message : "<error>") == -1)
+		return;
+
+	if (write_all(l->fd, log, strlen(log)) < 0)
+		perror("failed to write log entry");
 }
 
 __libnvme_public void libnvme_set_logging_level(
