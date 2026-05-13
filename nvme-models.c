@@ -245,8 +245,10 @@ static int read_sys_node(char *where, char *save, size_t savesz)
 	int fd, ret = 0, len;
 	fd = open(where, O_RDONLY);
 	if (fd < 0) {
-		fprintf(stderr, "Failed to open %s with errno %s\n",
-			where, libnvme_strerror(errno));
+		if (errno != ENOENT) {
+			fprintf(stderr, "Failed to open %s with errno %s\n",
+				where, libnvme_strerror(errno));
+		}
 		return 1;
 	}
 	/* -1 so we can safely use strstr below */
