@@ -1817,10 +1817,12 @@ static void stdout_status(int status)
 		fprintf(stderr, "NVMe status: %s(%#x)\n",
 			libnvme_status_to_string(val, false), val);
 		break;
+#ifdef CONFIG_MI
 	case NVME_STATUS_TYPE_MI:
 		fprintf(stderr, "NVMe-MI status: %s(%#x)\n",
 			libnvme_mi_status_to_string(val), val);
 		break;
+#endif
 	default:
 		fprintf(stderr, "Unknown status type %d, value %#x\n", type,
 			val);

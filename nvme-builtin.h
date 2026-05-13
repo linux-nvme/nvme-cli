@@ -127,8 +127,10 @@ COMMAND_LIST(
 	ENTRY("show-topology", "Show the topology", show_topology_cmd)
 	ENTRY("io-mgmt-recv", "I/O Management Receive", io_mgmt_recv)
 	ENTRY("io-mgmt-send", "I/O Management Send", io_mgmt_send)
+#ifdef CONFIG_MI
 	ENTRY("nvme-mi-recv", "Submit a NVMe-MI Receive command, return results", nmi_recv)
 	ENTRY("nvme-mi-send", "Submit a NVMe-MI Send command, return results", nmi_send)
+#endif
 );
 
 #endif

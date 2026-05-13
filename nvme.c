@@ -10439,6 +10439,7 @@ static int dim_cmd(int argc, char **argv, struct command *acmd, struct plugin *p
 }
 #endif
 
+#ifdef CONFIG_MI
 static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 {
 	const char *opcode = "opcode (required)";
@@ -10579,6 +10580,7 @@ static int nmi_send(int argc, char **argv, struct command *acmd, struct plugin *
 
 	return libnvme_mi(argc, argv, nvme_admin_nvme_mi_send, desc);
 }
+#endif /* CONFIG_MI */
 
 static int get_mgmt_addr_list_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {

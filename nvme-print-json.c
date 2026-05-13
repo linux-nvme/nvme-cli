@@ -5300,10 +5300,12 @@ static void json_output_status(int status)
 		obj_add_str(r, "error", libnvme_status_to_string(val, false));
 		obj_add_str(r, "type", "nvme");
 		break;
+#ifdef CONFIG_MI
 	case NVME_STATUS_TYPE_MI:
 		obj_add_str(r, "error", libnvme_mi_status_to_string(val));
 		obj_add_str(r, "type", "nvme-mi");
 		break;
+#endif
 	default:
 		obj_add_str(r, "type", "Unknown");
 		break;
@@ -5361,10 +5363,12 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 		obj_add_str(r, "status", libnvme_status_to_string(val, false));
 		obj_add_str(r, "type", "nvme");
 		break;
+#ifdef CONFIG_MI
 	case NVME_STATUS_TYPE_MI:
 		obj_add_str(r, "status", libnvme_mi_status_to_string(val));
 		obj_add_str(r, "type", "nvme-mi");
 		break;
+#endif
 	default:
 		obj_add_str(r, "type", "Unknown");
 		break;
