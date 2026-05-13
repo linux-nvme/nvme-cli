@@ -37,6 +37,7 @@ SRC_DIR = ROOT / 'src' / 'nvme'
 LD_FILES = [
     ROOT / 'src' / 'libnvme.ld',
     ROOT / 'src' / 'libnvmf.ld',
+    ROOT / 'src' / 'libnvme-mi.ld',
     ROOT / 'src' / 'accessors.ld',
     ROOT / 'src' / 'accessors-fabrics.ld',
 ]

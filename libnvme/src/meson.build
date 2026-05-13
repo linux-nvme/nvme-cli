@@ -107,6 +107,7 @@ endif
 
 nvme_ld = meson.current_source_dir() / 'libnvme.ld'
 nvmf_ld = meson.current_source_dir() / 'libnvmf.ld'
+mi_ld = meson.current_source_dir() / 'libnvme-mi.ld'
 accessors_ld = meson.current_source_dir() / 'accessors.ld'
 nvmf_accessors_ld = meson.current_source_dir() / 'accessors-fabrics.ld'
 
@@ -125,6 +126,12 @@ if want_fabrics
                 '#include <nvme/fabrics.h>\n#include <nvme/nbft.h>\n#include <nvme/accessors-fabrics.h>')
 else
     libconf.set('FABRICS_INCLUDE', '')
+endif
+
+if want_mi
+    link_args += [
+        '-Wl,--version-script=@0@'.format(mi_ld),
+    ]
 endif
 
 libnvme_header = configure_file(
