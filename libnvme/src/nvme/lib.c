@@ -152,7 +152,6 @@ __libnvme_public void libnvme_transport_handle_set_timeout(
 static int __nvme_transport_handle_open_direct(
 		struct libnvme_transport_handle *hdl, const char *devname)
 {
-	struct libnvme_passthru_cmd dummy = { 0 };
 	__cleanup_free char *path = NULL;
 	char *name;
 	int ret, id, ns;
@@ -190,18 +189,6 @@ static int __nvme_transport_handle_open_direct(
 		}
 	} else if (!S_ISBLK(hdl->stat.st_mode)) {
 		return -EINVAL;
-	}
-
-	if (hdl->ctx->ioctl_probing) {
-		/* avoid kernel logging 'cmd does not match nsid' */
-		dummy.nsid = ns;
-		ret = ioctl(hdl->fd, LIBNVME_IOCTL_ADMIN64_CMD, &dummy);
-		if (ret > 0) {
-			hdl->ioctl_admin64 = true;
-			ret = ioctl(hdl->fd, LIBNVME_IOCTL_IO64_CMD, &dummy);
-			if (ret != -1 || errno != ENOTTY)
-				hdl->ioctl_io64 = true;
-		}
 	}
 
 	return 0;
@@ -253,7 +240,7 @@ __libnvme_public int libnvme_open(
 		hdl->fd = 0xFD;
 
 		if (!strcmp(name, "NVME_TEST_FD64"))
-			hdl->ioctl_admin64 = true;
+			hdl->ioctl_admin_state = IOCTL_STATE_IOCTL64;
 
 		*hdlp = hdl;
 		return 0;
