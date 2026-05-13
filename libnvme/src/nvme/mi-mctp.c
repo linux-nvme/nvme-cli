@@ -677,8 +677,8 @@ int libnvme_mi_aem_open(libnvme_mi_ep_t ep)
 	return 0;
 }
 
-__public libnvme_mi_ep_t libnvme_mi_open_mctp(struct libnvme_global_ctx *ctx,
-			       unsigned int netid, __u8 eid)
+__libnvme_public libnvme_mi_ep_t libnvme_mi_open_mctp(
+		struct libnvme_global_ctx *ctx, unsigned int netid, __u8 eid)
 {
 	struct libnvme_mi_transport_mctp *mctp;
 	struct libnvme_mi_ep *ep;
@@ -947,7 +947,7 @@ static int handle_mctp_obj(struct libnvme_global_ctx *ctx, DBusMessageIter *obj)
 	return 0;
 }
 
-__public struct libnvme_global_ctx *libnvme_mi_scan_mctp(void)
+__libnvme_public struct libnvme_global_ctx *libnvme_mi_scan_mctp(void)
 {
 	DBusMessage *msg, *resp = NULL;
 	DBusConnection *bus = NULL;
@@ -1041,7 +1041,7 @@ out:
 
 #else /* CONFIG_DBUS */
 
-__public struct libnvme_global_ctx *libnvme_mi_scan_mctp(void)
+__libnvme_public struct libnvme_global_ctx *libnvme_mi_scan_mctp(void)
 {
 	return NULL;
 }

@@ -2,6 +2,7 @@
 #ifndef _TABLE_H_
 #define _TABLE_H_
 
+#include <stdio.h>
 #include <stdbool.h>
 
 enum fmt_type {
@@ -10,6 +11,8 @@ enum fmt_type {
 	FMT_UNSIGNED,
 	FMT_LONG,
 	FMT_UNSIGNED_LONG,
+	FMT_FLOAT,
+	FMT_DOUBLE,
 };
 
 enum alignment {
@@ -25,6 +28,8 @@ struct value {
 		unsigned int u;
 		long ld;
 		unsigned long lu;
+		float f;
+		double d;
 	};
 	enum alignment align;
 	enum fmt_type type;
@@ -135,6 +140,28 @@ static inline void table_set_value_unsigned_long(struct table *t, int col,
 	v->type = FMT_UNSIGNED_LONG;
 }
 
+static inline void table_set_value_float(struct table *t, int col,
+		int row, float f, enum alignment align)
+{
+	struct table_row *r = &t->rows[row];
+	struct value *v = &r->val[col];
+
+	v->f = f;
+	v->align = align;
+	v->type = FMT_FLOAT;
+}
+
+static inline void table_set_value_double(struct table *t, int col,
+		int row, double d, enum alignment align)
+{
+	struct table_row *r = &t->rows[row];
+	struct value *v = &r->val[col];
+
+	v->d = d;
+	v->align = align;
+	v->type = FMT_DOUBLE;
+}
+
 struct table *table_create(void);
 int table_add_columns(struct table *t, struct table_column *c, int num_columns);
 int table_add_columns_filter(struct table *t, struct table_column *c,
@@ -143,6 +170,7 @@ int table_add_columns_filter(struct table *t, struct table_column *c,
 			void *arg);
 int table_get_row_id(struct table *t);
 void table_add_row(struct table *t, int row);
+void table_print_stream(FILE *stream, struct table *t);
 void table_print(struct table *t);
 void table_free(struct table *t);
 

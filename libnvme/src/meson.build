@@ -27,6 +27,7 @@ headers = [
     'nvme/lib.h',
     'nvme/linux.h',
     'nvme/malloc.h',
+    'nvme/mem.h',
     'nvme/mkdir.h',
     'nvme/nvme-cmds.h',
     'nvme/nvme-types.h',
@@ -44,6 +45,7 @@ if host_system == 'windows'
         'nvme/filters-windows.c',  # Windows implementations of filters functions
         'nvme/ioctl-windows.c',  # Windows stubs for Linux-specific ioctl functions
         'nvme/lib-windows.c',  # Windows implementations of lib.h functions
+        'nvme/mem-win.c',
         'nvme/tree-windows.c',  # Windows implementations of tree functions
         'nvme/windows-stubs.c',  # Stubs for excluded functions
     ]
@@ -54,6 +56,7 @@ else
     sources += [
         'nvme/filters.c',
         'nvme/linux.c',
+        'nvme/mem-linux.c',
         'nvme/sysfs.c',
     ]
 endif
@@ -125,6 +128,7 @@ endif
 
 nvme_ld = meson.current_source_dir() / 'libnvme.ld'
 nvmf_ld = meson.current_source_dir() / 'libnvmf.ld'
+mi_ld = meson.current_source_dir() / 'libnvme-mi.ld'
 accessors_ld = meson.current_source_dir() / 'accessors.ld'
 nvmf_accessors_ld = meson.current_source_dir() / 'accessors-fabrics.ld'
 
@@ -143,6 +147,12 @@ if want_fabrics
                 '#include <nvme/fabrics.h>\n#include <nvme/nbft.h>\n#include <nvme/accessors-fabrics.h>')
 else
     libconf.set('FABRICS_INCLUDE', '')
+endif
+
+if want_mi
+    link_args += [
+        '-Wl,--version-script=@0@'.format(mi_ld),
+    ]
 endif
 
 libnvme_header = configure_file(

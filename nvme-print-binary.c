@@ -137,7 +137,7 @@ static void binary_id_ns_descs(void *data, unsigned nsid)
 	d_raw((unsigned char *)data, 0x1000);
 }
 
-static void binary_id_ctrl(struct nvme_id_ctrl *ctrl,
+static void binary_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
 	d_raw((unsigned char *)ctrl, sizeof(*ctrl));
@@ -216,7 +216,7 @@ static void binary_id_domain_list(struct nvme_id_domain_list *id_dom)
 }
 
 static void binary_error_log(struct nvme_error_log_page *err_log, int entries,
-	const char *devname)
+	const char *devname, struct nvme_error_log_filter *flt)
 {
 	d_raw((unsigned char *)err_log, entries * sizeof(*err_log));
 }

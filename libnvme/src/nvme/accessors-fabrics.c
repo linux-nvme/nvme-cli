@@ -29,7 +29,8 @@
  * Accessors for: struct libnvmf_discovery_args
  ****************************************************************************/
 
-__public int libnvmf_discovery_args_new(struct libnvmf_discovery_args **pp)
+__libnvme_public int libnvmf_discovery_args_new(
+		struct libnvmf_discovery_args **pp)
 {
 	if (!pp)
 		return -EINVAL;
@@ -40,12 +41,13 @@ __public int libnvmf_discovery_args_new(struct libnvmf_discovery_args **pp)
 	return 0;
 }
 
-__public void libnvmf_discovery_args_free(struct libnvmf_discovery_args *p)
+__libnvme_public void libnvmf_discovery_args_free(
+		struct libnvmf_discovery_args *p)
 {
 	free(p);
 }
 
-__public void libnvmf_discovery_args_init_defaults(
+__libnvme_public void libnvmf_discovery_args_init_defaults(
 		struct libnvmf_discovery_args *p)
 {
 	if (!p)
@@ -54,27 +56,27 @@ __public void libnvmf_discovery_args_init_defaults(
 	p->lsp = NVMF_LOG_DISC_LSP_NONE;
 }
 
-__public void libnvmf_discovery_args_set_max_retries(
+__libnvme_public void libnvmf_discovery_args_set_max_retries(
 		struct libnvmf_discovery_args *p,
 		int max_retries)
 {
 	p->max_retries = max_retries;
 }
 
-__public int libnvmf_discovery_args_get_max_retries(
+__libnvme_public int libnvmf_discovery_args_get_max_retries(
 		const struct libnvmf_discovery_args *p)
 {
 	return p->max_retries;
 }
 
-__public void libnvmf_discovery_args_set_lsp(
+__libnvme_public void libnvmf_discovery_args_set_lsp(
 		struct libnvmf_discovery_args *p,
 		__u8 lsp)
 {
 	p->lsp = lsp;
 }
 
-__public __u8 libnvmf_discovery_args_get_lsp(
+__libnvme_public __u8 libnvmf_discovery_args_get_lsp(
 		const struct libnvmf_discovery_args *p)
 {
 	return p->lsp;
@@ -84,18 +86,20 @@ __public __u8 libnvmf_discovery_args_get_lsp(
  * Accessors for: struct libnvmf_uri
  ****************************************************************************/
 
-__public void libnvmf_uri_set_scheme(struct libnvmf_uri *p, const char *scheme)
+__libnvme_public void libnvmf_uri_set_scheme(
+		struct libnvmf_uri *p,
+		const char *scheme)
 {
 	free(p->scheme);
 	p->scheme = scheme ? strdup(scheme) : NULL;
 }
 
-__public const char *libnvmf_uri_get_scheme(const struct libnvmf_uri *p)
+__libnvme_public const char *libnvmf_uri_get_scheme(const struct libnvmf_uri *p)
 {
 	return p->scheme;
 }
 
-__public void libnvmf_uri_set_protocol(
+__libnvme_public void libnvmf_uri_set_protocol(
 		struct libnvmf_uri *p,
 		const char *protocol)
 {
@@ -103,12 +107,13 @@ __public void libnvmf_uri_set_protocol(
 	p->protocol = protocol ? strdup(protocol) : NULL;
 }
 
-__public const char *libnvmf_uri_get_protocol(const struct libnvmf_uri *p)
+__libnvme_public const char *libnvmf_uri_get_protocol(
+		const struct libnvmf_uri *p)
 {
 	return p->protocol;
 }
 
-__public void libnvmf_uri_set_userinfo(
+__libnvme_public void libnvmf_uri_set_userinfo(
 		struct libnvmf_uri *p,
 		const char *userinfo)
 {
@@ -116,33 +121,36 @@ __public void libnvmf_uri_set_userinfo(
 	p->userinfo = userinfo ? strdup(userinfo) : NULL;
 }
 
-__public const char *libnvmf_uri_get_userinfo(const struct libnvmf_uri *p)
+__libnvme_public const char *libnvmf_uri_get_userinfo(
+		const struct libnvmf_uri *p)
 {
 	return p->userinfo;
 }
 
-__public void libnvmf_uri_set_host(struct libnvmf_uri *p, const char *host)
+__libnvme_public void libnvmf_uri_set_host(
+		struct libnvmf_uri *p,
+		const char *host)
 {
 	free(p->host);
 	p->host = host ? strdup(host) : NULL;
 }
 
-__public const char *libnvmf_uri_get_host(const struct libnvmf_uri *p)
+__libnvme_public const char *libnvmf_uri_get_host(const struct libnvmf_uri *p)
 {
 	return p->host;
 }
 
-__public void libnvmf_uri_set_port(struct libnvmf_uri *p, int port)
+__libnvme_public void libnvmf_uri_set_port(struct libnvmf_uri *p, int port)
 {
 	p->port = port;
 }
 
-__public int libnvmf_uri_get_port(const struct libnvmf_uri *p)
+__libnvme_public int libnvmf_uri_get_port(const struct libnvmf_uri *p)
 {
 	return p->port;
 }
 
-__public void libnvmf_uri_set_path_segments(
+__libnvme_public void libnvmf_uri_set_path_segments(
 		struct libnvmf_uri *p,
 		const char *const *path_segments)
 {
@@ -174,24 +182,26 @@ __public void libnvmf_uri_set_path_segments(
 	p->path_segments = new_array;
 }
 
-__public const char *const *libnvmf_uri_get_path_segments(
+__libnvme_public const char *const *libnvmf_uri_get_path_segments(
 		const struct libnvmf_uri *p)
 {
 	return (const char *const *)p->path_segments;
 }
 
-__public void libnvmf_uri_set_query(struct libnvmf_uri *p, const char *query)
+__libnvme_public void libnvmf_uri_set_query(
+		struct libnvmf_uri *p,
+		const char *query)
 {
 	free(p->query);
 	p->query = query ? strdup(query) : NULL;
 }
 
-__public const char *libnvmf_uri_get_query(const struct libnvmf_uri *p)
+__libnvme_public const char *libnvmf_uri_get_query(const struct libnvmf_uri *p)
 {
 	return p->query;
 }
 
-__public void libnvmf_uri_set_fragment(
+__libnvme_public void libnvmf_uri_set_fragment(
 		struct libnvmf_uri *p,
 		const char *fragment)
 {
@@ -199,7 +209,8 @@ __public void libnvmf_uri_set_fragment(
 	p->fragment = fragment ? strdup(fragment) : NULL;
 }
 
-__public const char *libnvmf_uri_get_fragment(const struct libnvmf_uri *p)
+__libnvme_public const char *libnvmf_uri_get_fragment(
+		const struct libnvmf_uri *p)
 {
 	return p->fragment;
 }

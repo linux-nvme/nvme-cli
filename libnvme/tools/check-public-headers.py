@@ -9,7 +9,7 @@
 # Verify that every symbol exported in a version script has a prototype
 # declared in one of the installed header files.
 #
-# A __public function that appears in a .ld version script but not in any
+# A __libnvme_public function that appears in a .ld version script but not in any
 # installed header is technically callable by external code, but callers have
 # no declaration to include — they would need to write their own prototype or
 # use dlsym(), which defeats the purpose of a stable public API.

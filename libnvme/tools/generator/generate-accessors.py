@@ -1172,7 +1172,7 @@ def generate_hdr(f, prefix, struct_name, members):
 # Source (*.c) code emitters
 # ---------------------------------------------------------------------------
 
-PUB = '__public '
+PUB = '__libnvme_public '
 
 
 def emit_src_setter_dynstr(f, prefix, sname, mname):

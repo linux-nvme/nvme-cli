@@ -47,10 +47,10 @@ static int help(int argc, char **argv, struct plugin *plugin)
 				continue;
 
 		if (plugin->name)
-			sprintf(man, "%s-%s-%s", prog->name,
+			snprintf(man, sizeof(man), "%s-%s-%s", prog->name,
 				plugin->name, command->name);
 		else
-			sprintf(man, "%s-%s", prog->name, command->name);
+			snprintf(man, sizeof(man), "%s-%s", prog->name, command->name);
 		if (execlp("man", "man", man, (char *)NULL))
 			perror(argv[1]);
 	}
@@ -167,9 +167,9 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	}
 
 	if (!plugin->name)
-		sprintf(use, "%s %s <device> [OPTIONS]", prog->name, str);
+		snprintf(use, sizeof(use), "%s %s <device> [OPTIONS]", prog->name, str);
 	else
-		sprintf(use, "%s %s %s <device> [OPTIONS]", prog->name, plugin->name, str);
+		snprintf(use, sizeof(use), "%s %s %s <device> [OPTIONS]", prog->name, plugin->name, str);
 	argconfig_append_usage(use);
 
 	/* translate --help, -h and --version into commands */
@@ -200,7 +200,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	}
 
 	if (cr && cr_valid) {
-		sprintf(use, "%s %s <device> [OPTIONS]", prog->name, cr->name);
+		snprintf(use, sizeof(use), "%s %s <device> [OPTIONS]", prog->name, cr->name);
 		argconfig_append_usage(use);
 		return cr->fn(argc, argv, cr, plugin);
 	}

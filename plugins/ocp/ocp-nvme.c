@@ -2631,7 +2631,7 @@ static int fw_activation_history_log(int argc, char **argv, struct command *acmd
 
 static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 sel, bool uuid, __u32 nsid)
 {
-	__cleanup_nvme_free struct erri_entry *entry = NULL;
+	__cleanup_libnvme_free struct erri_entry *entry = NULL;
 	struct erri_get_cq_entry cq_entry;
 	const __u8 fid = OCP_FID_ERRI;
 	__u64 result;
@@ -2651,7 +2651,7 @@ static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 
 		}
 	}
 
-	entry = nvme_alloc(data_len);
+	entry = libnvme_alloc(data_len);
 	if (!entry) {
 		nvme_show_error("malloc: %s", libnvme_strerror(errno));
 		return -ENOMEM;
@@ -2714,7 +2714,7 @@ static int get_error_injection(int argc, char **argv, struct command *acmd, stru
 
 static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri_config *cfg, bool uuid, __u32 nsid)
 {
-	__cleanup_nvme_free struct erri_entry *entry = NULL;
+	__cleanup_libnvme_free struct erri_entry *entry = NULL;
 	__cleanup_fd int ffd = -1;
 	__u32 data_len;
 	__u8 uidx = 0;
@@ -2730,7 +2730,7 @@ static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri
 	}
 
 	data_len = cfg->number * sizeof(struct erri_entry);
-	entry = nvme_alloc(data_len);
+	entry = libnvme_alloc(data_len);
 	if (!entry) {
 		nvme_show_error("malloc: %s", libnvme_strerror(errno));
 		return -ENOMEM;
@@ -2937,9 +2937,9 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 		"processing this persistent log page command.";
 	const char *log_len = "number of bytes to retrieve";
 
-	__cleanup_nvme_free struct nvme_persistent_event_log *pevent = NULL;
+	__cleanup_libnvme_free struct nvme_persistent_event_log *pevent = NULL;
 	struct nvme_persistent_event_log *pevent_collected = NULL;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -2978,7 +2978,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	pevent = nvme_alloc(sizeof(*pevent));
+	pevent = libnvme_alloc(sizeof(*pevent));
 	if (!pevent)
 		return -ENOMEM;
 
@@ -3014,7 +3014,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 	if (cfg.action == NVME_PEVENT_LOG_EST_CTX_AND_READ)
 		cfg.action = NVME_PEVENT_LOG_READ;
 
-	pevent_log_info = nvme_alloc_huge(cfg.log_len, &mh);
+	pevent_log_info = libnvme_alloc_huge(cfg.log_len, &mh);
 	if (!pevent_log_info) {
 		nvme_show_error("failed to allocate huge memory");
 		return -ENOMEM;

@@ -7,8 +7,6 @@
 
 #include <libnvme.h>
 
-#include "util/mem.h"
-
 #define __cleanup(fn) __attribute__((cleanup(fn)))
 
 #define DECLARE_CLEANUP_FUNC(name, type) \
@@ -27,13 +25,13 @@ static inline void freep(void *p)
 }
 #define __cleanup_free __cleanup(freep)
 
-static inline void nvme_freep(void *p)
+static inline void libnvme_freep(void *p)
 {
-	nvme_free(*(void **)p);
+	libnvme_free(*(void **)p);
 }
-#define __cleanup_nvme_free __cleanup(nvme_freep)
+#define __cleanup_libnvme_free __cleanup(libnvme_freep)
 
-#define __cleanup_huge __cleanup(nvme_free_huge)
+#define __cleanup_huge __cleanup(libnvme_free_huge)
 
 static inline void cleanup_fd(int *fd)
 {

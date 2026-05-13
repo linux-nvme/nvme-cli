@@ -611,10 +611,13 @@ void nvme_show_id_ns_descs(void *data, unsigned int nsid, nvme_print_flags_t fla
 	nvme_print(id_ns_descs, flags, data, nsid);
 }
 
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, nvme_print_flags_t flags,
-			void (*vendor_show)(__u8 *vs, struct json_object *root))
+void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, const char *devname,
+		       nvme_print_flags_t flags,
+		       void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
-	nvme_print(id_ctrl, flags, ctrl, vendor_show);
+	__cleanup_free char *product_name = nvme_product_name(devname);
+
+	nvme_print(id_ctrl, flags, ctrl, product_name, vendor_show);
 }
 
 void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,
@@ -778,9 +781,32 @@ const char *nvme_trtype_to_string(__u8 trtype)
 }
 
 void nvme_show_error_log(struct nvme_error_log_page *err_log, int entries,
-			 const char *devname, nvme_print_flags_t flags)
+			 const char *devname, struct nvme_error_log_filter *flt,
+			 nvme_print_flags_t flags)
 {
-	nvme_print(error_log, flags, err_log, entries, devname);
+	nvme_print(error_log, flags, err_log, entries, devname, flt);
+}
+
+bool nvme_is_error_log_filter(struct nvme_error_log_page *err_log,
+			      struct nvme_error_log_filter *flt)
+{
+	__u16 sts = le16_to_cpu(err_log->status_field);
+	__u16 status = NVME_ERR_SF_STATUS_FIELD(sts);
+	__u16 sqid = le16_to_cpu(err_log->sqid);
+	__u32 nsid = le32_to_cpu(err_log->nsid);
+	__u64 lba = le64_to_cpu(err_log->lba);
+
+	if (flt && ((flt->valid && !err_log->error_count) ||
+	    (flt->sqid && flt->sqid != sqid) ||
+	    (flt->status && flt->status != status) ||
+	    (flt->lba && flt->lba != lba) ||
+	    (flt->nsid && flt->nsid != nsid) ||
+	    (flt->trtype && flt->trtype != err_log->trtype) ||
+	    (flt->csi && flt->csi != err_log->csi) ||
+	    (flt->opcode && flt->opcode != err_log->opcode)))
+		return true;
+
+	return false;
 }
 
 void nvme_show_resv_report(struct nvme_resv_status *status, int bytes,
@@ -1679,6 +1705,11 @@ void nvme_show_list_item(libnvme_ns_t n, struct table *t)
 void nvme_show_list_items(struct libnvme_global_ctx *ctx, nvme_print_flags_t flags)
 {
 	nvme_print(list_items, flags, ctx);
+}
+
+void nvme_show_top(nvme_print_flags_t flags, int refresh_interval)
+{
+	nvme_print(top, flags, refresh_interval);
 }
 
 void nvme_show_topology(struct libnvme_global_ctx *ctx,

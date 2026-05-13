@@ -103,7 +103,8 @@ static int nvme_submit_uring_cmd(struct io_uring *ring, int fd,
 	return 0;
 }
 
-__public int libnvme_wait_admin_passthru(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_wait_admin_passthru(
+		struct libnvme_transport_handle *hdl)
 {
 	struct io_uring_cqe *cqe;
 	struct io_uring *ring;
@@ -148,8 +149,8 @@ int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
 	return 0;
 }
 
-__public int libnvme_wait_io_passthru(
-		__unused struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_wait_io_passthru(
+		__libnvme_unused struct libnvme_transport_handle *hdl)
 {
 	return 0;
 }

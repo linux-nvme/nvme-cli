@@ -7,7 +7,6 @@
 #include "mock.h"
 #include "util.h"
 
-#define LIBNVME_TEST_FD 0xFD
 #define TEST_NSID 0x12345678
 #define TEST_SLBA 0xffffffff12345678
 

@@ -580,7 +580,7 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 	}
 
 	log_length = le64_to_cpu(pevent_log.tll);
-	pevent_log_info = nvme_alloc(log_length);
+	pevent_log_info = libnvme_alloc(log_length);
 	if (!pevent_log_info) {
 		perror("could not alloc buffer for persistent event log page (ignored)!\n");
 		return err;

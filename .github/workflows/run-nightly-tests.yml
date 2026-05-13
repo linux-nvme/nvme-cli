@@ -13,6 +13,10 @@ on:
   schedule:
     - cron: '0 01 * * *'
 
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   nightly-tests:
     if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
@@ -88,12 +92,9 @@ jobs:
             set -e
 
             cd ../nvme-cli
+            sudo find .build-ci -name '*.gcda' -exec chown "$(id -u):$(id -g)" {} +
             gcovr -r . --object-directory .build-ci --xml-pretty -o coverage.xml
-
-            CODECOV_VERSION="v0.8.0"
-            curl -Os "https://uploader.codecov.io/${CODECOV_VERSION}/linux/codecov"
-            chmod +x codecov
-            NODE_OPTIONS="--max-old-space-size=4096" ./codecov -t "${{ secrets.CODECOV_TOKEN }}" -f coverage.xml -X search || true
+            cp coverage.xml ../blktests/results/coverage-blktests.xml
 
             exit "${blktests_status}"
 
@@ -105,7 +106,6 @@ jobs:
           kernel_version: linus-master
           vm_artifact_upload_dir: nvme-cli/tests/nvmetests/
           run_cmds: |
-            export CODECOV_TOKEN="${{ secrets.CODECOV_TOKEN }}"
             #Preventing bash variable expension for the outer cat by using
             #single quotes around EOF
             cat > test.sh << 'EOF'
@@ -131,10 +131,7 @@ jobs:
 
             scripts/build.sh -b release -c gcc -p tests
 
-            CODECOV_VERSION="v0.8.0"
-            curl -Os "https://uploader.codecov.io/${CODECOV_VERSION}/linux/codecov"
-            chmod +x codecov
-            NODE_OPTIONS="--max-old-space-size=4096" ./codecov -t "$CODECOV_TOKEN" -f coverage.xml -X search || true
+            cp coverage.xml tests/nvmetests/coverage-nvmetests.xml
 
             EOF
 
@@ -152,7 +149,6 @@ jobs:
             sudo podman run --privileged \
             -v /dev:/dev \
             -e BDEV0 \
-            -e CODECOV_TOKEN="${CODECOV_TOKEN}" \
             -v "${PWD}/test.sh":"/test.sh" \
             -v "${PWD}/nvme-cli":"/nvme-cli":z \
             ghcr.io/linux-nvme/debian:latest /test.sh
@@ -163,3 +159,35 @@ jobs:
               nvme-cli/tests/nvmetests 2>/dev/null || true
 
             exit $podman_exit
+
+  codecov-upload:
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
+    needs: nightly-tests
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Download nightly coverage reports
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          pattern: artifact-*
+          path: coverage
+          merge-multiple: true
+
+      - name: Collect nightly coverage reports
+        id: collect-coverage
+        shell: bash
+        run: |
+          files=$(find coverage -type f -name 'coverage-*.xml' -print | sort | paste -sd, -)
+          echo "files=${files}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload nightly coverage to Codecov
+        if: steps.collect-coverage.outputs.files != ''
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        env:
+          CODECOV_WORKING_DIR: ${{ github.workspace }}
+        with:
+          root_dir: ${{ github.workspace }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ steps.collect-coverage.outputs.files }}
+          fail_ci_if_error: false

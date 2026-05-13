@@ -349,8 +349,8 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	json_print(r);
 }
 
-void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
-			void (*vs)(__u8 *vs, struct json_object *r))
+void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
+		       void (*vs)(__u8 *vs, struct json_object *r))
 {
 	struct json_object *r = json_create_object();
 	struct json_object *psds = json_create_array();
@@ -367,6 +367,9 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	snprintf(mn, sizeof(mn), "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
 	snprintf(fr, sizeof(fr), "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
 	snprintf(subnqn, sizeof(subnqn), "%-.*s", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
+
+	if (product_name)
+		obj_add_str(r, "product_name", product_name);
 
 	obj_add_int(r, "vid", le16_to_cpu(ctrl->vid));
 	obj_add_int(r, "ssvid", le16_to_cpu(ctrl->ssvid));
@@ -521,30 +524,44 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 }
 
 static void json_error_log(struct nvme_error_log_page *err_log, int entries,
-			   const char *devname)
+			   const char *devname,
+			   struct nvme_error_log_filter *flt)
 {
 	struct json_object *r = json_create_object();
 	struct json_object *errors = json_create_array();
+	struct json_object *error;
+	__u16 sts;
 	int i;
 
 	obj_add_array(r, "errors", errors);
 
 	for (i = 0; i < entries; i++) {
-		struct json_object *error = json_create_object();
+		if (nvme_is_error_log_filter(&err_log[i], flt))
+			continue;
 
-		obj_add_uint64(error, "error_count", le64_to_cpu(err_log[i].error_count));
+		error = json_create_object();
+		sts = le16_to_cpu(err_log[i].status_field);
+
+		obj_add_uint64(error, "error_count",
+			       le64_to_cpu(err_log[i].error_count));
 		obj_add_int(error, "sqid", le16_to_cpu(err_log[i].sqid));
 		obj_add_int(error, "cmdid", le16_to_cpu(err_log[i].cmdid));
-		obj_add_int(error, "status_field", le16_to_cpu(err_log[i].status_field) >> 0x1);
-		obj_add_int(error, "phase_tag", le16_to_cpu(err_log[i].status_field) & 0x1);
+		obj_add_int(error, "status_field",
+			    NVME_ERR_SF_STATUS_FIELD(sts));
+		obj_add_int(error, "phase_tag", NVME_ERR_SF_PHASE_TAG(sts));
 		obj_add_int(error, "parm_error_location",
 			    le16_to_cpu(err_log[i].parm_error_location));
 		obj_add_uint64(error, "lba", le64_to_cpu(err_log[i].lba));
 		obj_add_uint(error, "nsid", le32_to_cpu(err_log[i].nsid));
 		obj_add_int(error, "vs", err_log[i].vs);
 		obj_add_int(error, "trtype", err_log[i].trtype);
+		obj_add_int(error, "csi", err_log[i].csi);
+		obj_add_int(error, "opcode", err_log[i].opcode);
 		obj_add_uint64(error, "cs", le64_to_cpu(err_log[i].cs));
-		obj_add_int(error, "trtype_spec_info", le16_to_cpu(err_log[i].trtype_spec_info));
+		obj_add_int(error, "trtype_spec_info",
+			    le16_to_cpu(err_log[i].trtype_spec_info));
+		obj_add_int(error, "log_page_version",
+			    err_log[i].log_page_version);
 
 		array_add_obj(errors, error);
 	}
@@ -5283,10 +5300,12 @@ static void json_output_status(int status)
 		obj_add_str(r, "error", libnvme_status_to_string(val, false));
 		obj_add_str(r, "type", "nvme");
 		break;
+#ifdef CONFIG_MI
 	case NVME_STATUS_TYPE_MI:
 		obj_add_str(r, "error", libnvme_mi_status_to_string(val));
 		obj_add_str(r, "type", "nvme-mi");
 		break;
+#endif
 	default:
 		obj_add_str(r, "type", "Unknown");
 		break;
@@ -5344,10 +5363,12 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 		obj_add_str(r, "status", libnvme_status_to_string(val, false));
 		obj_add_str(r, "type", "nvme");
 		break;
+#ifdef CONFIG_MI
 	case NVME_STATUS_TYPE_MI:
 		obj_add_str(r, "status", libnvme_mi_status_to_string(val));
 		obj_add_str(r, "type", "nvme-mi");
 		break;
+#endif
 	default:
 		obj_add_str(r, "type", "Unknown");
 		break;

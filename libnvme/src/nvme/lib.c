@@ -43,7 +43,8 @@ static bool libnvme_mi_probe_enabled_default(void)
 
 }
 
-__public struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_level)
+__libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(
+		FILE *fp, int log_level)
 {
 	struct libnvme_global_ctx *ctx;
 	int fd;
@@ -73,7 +74,7 @@ __public struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_
 	return ctx;
 }
 
-__public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
+__libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
 #ifdef CONFIG_MI
@@ -101,17 +102,20 @@ __public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	free(ctx);
 }
 
-__public void libnvme_set_dry_run(struct libnvme_global_ctx *ctx, bool enable)
+__libnvme_public void libnvme_set_dry_run(
+		struct libnvme_global_ctx *ctx, bool enable)
 {
 	ctx->dry_run = enable;
 }
 
-__public void libnvme_set_ioctl_probing(struct libnvme_global_ctx *ctx, bool enable)
+__libnvme_public void libnvme_set_ioctl_probing(
+		struct libnvme_global_ctx *ctx, bool enable)
 {
 	ctx->ioctl_probing = enable;
 }
 
-__public void libnvme_transport_handle_set_submit_entry(struct libnvme_transport_handle *hdl,
+__libnvme_public void libnvme_transport_handle_set_submit_entry(
+		struct libnvme_transport_handle *hdl,
 		void *(*submit_entry)(struct libnvme_transport_handle *hdl,
 				struct libnvme_passthru_cmd *cmd))
 {
@@ -120,7 +124,8 @@ __public void libnvme_transport_handle_set_submit_entry(struct libnvme_transport
 		hdl->submit_exit = __libnvme_submit_exit;
 }
 
-__public void libnvme_transport_handle_set_submit_exit(struct libnvme_transport_handle *hdl,
+__libnvme_public void libnvme_transport_handle_set_submit_exit(
+		struct libnvme_transport_handle *hdl,
 		void (*submit_exit)(struct libnvme_transport_handle *hdl,
 				struct libnvme_passthru_cmd *cmd,
 				int err, void *user_data))
@@ -130,7 +135,8 @@ __public void libnvme_transport_handle_set_submit_exit(struct libnvme_transport_
 		hdl->submit_exit = __libnvme_submit_exit;
 }
 
-__public void libnvme_transport_handle_set_decide_retry(struct libnvme_transport_handle *hdl,
+__libnvme_public void libnvme_transport_handle_set_decide_retry(
+		struct libnvme_transport_handle *hdl,
 		bool (*decide_retry)(struct libnvme_transport_handle *hdl,
 				struct libnvme_passthru_cmd *cmd, int err))
 {
@@ -139,7 +145,7 @@ __public void libnvme_transport_handle_set_decide_retry(struct libnvme_transport
 		hdl->decide_retry = __libnvme_decide_retry;
 }
 
-__public void libnvme_transport_handle_set_timeout(
+__libnvme_public void libnvme_transport_handle_set_timeout(
 		struct libnvme_transport_handle *hdl, __u32 timeout_ms)
 {
 	hdl->timeout = timeout_ms;
@@ -149,7 +155,6 @@ __public void libnvme_transport_handle_set_timeout(
 static int __nvme_transport_handle_open_direct(
 		struct libnvme_transport_handle *hdl, const char *devname)
 {
-	struct libnvme_passthru_cmd dummy = { 0 };
 	__cleanup_free char *path = NULL;
 	char *name;
 	int ret, id, ns;
@@ -189,18 +194,6 @@ static int __nvme_transport_handle_open_direct(
 		return -EINVAL;
 	}
 
-	if (hdl->ctx->ioctl_probing) {
-		/* avoid kernel logging 'cmd does not match nsid' */
-		dummy.nsid = ns;
-		ret = ioctl(hdl->fd, LIBNVME_IOCTL_ADMIN64_CMD, &dummy);
-		if (ret > 0) {
-			hdl->ioctl_admin64 = true;
-			ret = ioctl(hdl->fd, LIBNVME_IOCTL_IO64_CMD, &dummy);
-			if (ret != -1 || errno != ENOTTY)
-				hdl->ioctl_io64 = true;
-		}
-	}
-
 	return 0;
 }
 
@@ -230,8 +223,9 @@ struct libnvme_transport_handle *__libnvme_create_transport_handle(
 }
 
 #ifndef _WIN32
-__public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
-	      struct libnvme_transport_handle **hdlp)
+__libnvme_public int libnvme_open(
+		struct libnvme_global_ctx *ctx, const char *name,
+		struct libnvme_transport_handle **hdlp)
 {
 	struct libnvme_transport_handle *hdl;
 	int ret;
@@ -248,10 +242,10 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 
 	if (!strncmp(name, "NVME_TEST_FD", 12)) {
 		hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
-		hdl->fd = 0xFD;
+		hdl->fd = LIBNVME_TEST_FD;
 
 		if (!strcmp(name, "NVME_TEST_FD64"))
-			hdl->ioctl_admin64 = true;
+			hdl->ioctl_admin_state = IOCTL_STATE_IOCTL64;
 
 		*hdlp = hdl;
 		return 0;
@@ -272,7 +266,7 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 	return 0;
 }
 
-__public void libnvme_close(struct libnvme_transport_handle *hdl)
+__libnvme_public void libnvme_close(struct libnvme_transport_handle *hdl)
 {
 	if (!hdl)
 		return;
@@ -293,32 +287,38 @@ __public void libnvme_close(struct libnvme_transport_handle *hdl)
 }
 #endif /* !_WIN32 */
 
-__public libnvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl)
+__libnvme_public libnvme_fd_t libnvme_transport_handle_get_fd(
+		struct libnvme_transport_handle *hdl)
 {
 	return hdl->fd;
 }
 
-__public const char *libnvme_transport_handle_get_name(struct libnvme_transport_handle *hdl)
+__libnvme_public const char *libnvme_transport_handle_get_name(
+		struct libnvme_transport_handle *hdl)
 {
 	return basename(hdl->name);
 }
 
-__public bool libnvme_transport_handle_is_ctrl(struct libnvme_transport_handle *hdl)
+__libnvme_public bool libnvme_transport_handle_is_ctrl(
+		struct libnvme_transport_handle *hdl)
 {
 	return S_ISCHR(hdl->stat.st_mode);
 }
 
-__public bool libnvme_transport_handle_is_ns(struct libnvme_transport_handle *hdl)
+__libnvme_public bool libnvme_transport_handle_is_ns(
+		struct libnvme_transport_handle *hdl)
 {
 	return S_ISBLK(hdl->stat.st_mode);
 }
 
-__public bool libnvme_transport_handle_is_direct(struct libnvme_transport_handle *hdl)
+__libnvme_public bool libnvme_transport_handle_is_direct(
+		struct libnvme_transport_handle *hdl)
 {
 	return hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 }
 
-__public bool libnvme_transport_handle_is_mi(struct libnvme_transport_handle *hdl)
+__libnvme_public bool libnvme_transport_handle_is_mi(
+		struct libnvme_transport_handle *hdl)
 {
 	return hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_MI;
 }

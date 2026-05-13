@@ -43,7 +43,8 @@ static int nvme_verify_chr(struct libnvme_transport_handle *hdl)
 	return 0;
 }
 
-__public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_reset_subsystem(
+		struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
@@ -57,7 +58,7 @@ __public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
 	return ret;
 }
 
-__public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
@@ -71,7 +72,7 @@ __public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 	return ret;
 }
 
-__public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
@@ -85,7 +86,8 @@ __public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 	return ret;
 }
 
-__public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
+__libnvme_public int libnvme_get_nsid(
+		struct libnvme_transport_handle *hdl, __u32 *nsid)
 {
 	__u32 tmp;
 
@@ -98,8 +100,8 @@ __public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
 	return 0;
 }
 
-__public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
-		int block_size)
+__libnvme_public int libnvme_update_block_size(
+		struct libnvme_transport_handle *hdl, int block_size)
 {
 	int ret;
 	libnvme_fd_t fd = libnvme_transport_handle_get_fd(hdl);
@@ -195,22 +197,68 @@ out:
 	return err;
 }
 
-__public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_submit_io_passthru(
+		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
+	int err;
+
 	if (!hdl)
 		return -ENODEV;
 
 	if (!cmd->timeout_ms && hdl->timeout)
 		cmd->timeout_ms = hdl->timeout;
 
-	if (hdl->ioctl_io64)
+	if (hdl->ioctl_io_state == IOCTL_STATE_IOCTL64)
 		return libnvme_submit_passthru64(hdl,
 			LIBNVME_IOCTL_IO64_CMD, cmd);
+
+	if (hdl->ioctl_io_state == IOCTL_STATE_IOCTL32 ||
+			!hdl->ctx->ioctl_probing)
+		goto do_ioctl32;
+
+	err = libnvme_submit_passthru64(hdl, LIBNVME_IOCTL_IO64_CMD, cmd);
+	if (err >= 0 || err != -ENOTTY) {
+		hdl->ioctl_io_state = IOCTL_STATE_IOCTL64;
+		return err;
+	}
+
+	hdl->ioctl_io_state = IOCTL_STATE_IOCTL32;
+
+do_ioctl32:
 	return libnvme_submit_passthru32(hdl, LIBNVME_IOCTL_IO_CMD, cmd);
 }
 
-__public int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
+static int submit_admin_passthru(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
+{
+	int err;
+
+	if (hdl->ioctl_admin_state == IOCTL_STATE_IOCTL64)
+		return libnvme_submit_passthru64(hdl,
+				LIBNVME_IOCTL_ADMIN64_CMD, cmd);
+
+	if (hdl->ioctl_admin_state == IOCTL_STATE_IOCTL32 ||
+			!hdl->ctx->ioctl_probing)
+		goto do_ioctl32;
+
+	err = libnvme_submit_passthru64(hdl, LIBNVME_IOCTL_ADMIN64_CMD, cmd);
+	if (err >= 0 || err != -ENOTTY) {
+		hdl->ioctl_admin_state = IOCTL_STATE_IOCTL64;
+		return err;
+	}
+
+	hdl->ioctl_admin_state = IOCTL_STATE_IOCTL32;
+
+do_ioctl32:
+	if (cmd->opcode == nvme_admin_fabrics)
+		return -ENOTSUP;
+
+	return libnvme_submit_passthru32(hdl, LIBNVME_IOCTL_ADMIN_CMD, cmd);
+}
+
+__libnvme_public int libnvme_submit_admin_passthru(
+		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl)
@@ -224,13 +272,7 @@ __public int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
 
 	switch (hdl->type) {
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT:
-		if (hdl->ioctl_admin64)
-			return libnvme_submit_passthru64(hdl,
-				LIBNVME_IOCTL_ADMIN64_CMD, cmd);
-		if (cmd->opcode == nvme_admin_fabrics)
-			return -ENOTSUP;
-		return libnvme_submit_passthru32(hdl,
-				LIBNVME_IOCTL_ADMIN_CMD, cmd);
+		return submit_admin_passthru(hdl, cmd);
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_MI:
 		return libnvme_mi_admin_admin_passthru(hdl, cmd);
 	default:

@@ -9,13 +9,21 @@ SYNOPSIS
 --------
 [verse]
 'nvme error-log' <device> [--log-entries=<entries> | -e <entries>]
-			[--raw-binary | -b]
+			[--raw-binary | -b] [--valid-entry | -V]
+			[--sqid=<sqid> | -S <sqid>]
+			[--status=<status> | -s <status>]
+			[--lba=<lba> | -l <lba>]
+			[--namespace-id=<nsid> | -n <nsid>]
+			[--trtype=<trtype> | -t <trtype>]
+			[--csi=<csi> | -c <csi>]
+			[--opcode=<opcode> | -O <opcode>]
 			[<global-options>]
 
 DESCRIPTION
 -----------
 Retrieves NVMe Error log page from an NVMe device and provides the
-returned structure.
+returned structure. All the returned structure fields including the
+ordering of the entries are described in the spec.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
@@ -36,6 +44,38 @@ OPTIONS
 -b::
 --raw-binary::
 	Print the raw error log buffer to stdout.
+
+-V::
+--valid-entry::
+	Output valid entry only.
+
+-S <sqid>::
+--sqid=<sqid>::
+	Output specified SQID entry only.
+
+-s <status>::
+--status=<status>::
+	Output specified STATUS entry only.
+
+-l <lba>::
+--lba=<lba>::
+	Output specified LBA entry only.
+
+-n <nsid>::
+--namespace-id=<nsid>::
+	Output specified NSID entry only.
+
+-t <trtype>::
+--trtype=<trtype>::
+	Output specified TRTYPE entry only.
+
+-c <csi>::
+--csi=<csi>::
+	Output specified CSI entry only.
+
+-O <opcode>::
+--opcode=<opcode>::
+	Output specified OPC entry only.
 
 include::global-options.txt[]
 
