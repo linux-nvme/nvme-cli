@@ -349,8 +349,8 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	json_print(r);
 }
 
-void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
-			void (*vs)(__u8 *vs, struct json_object *r))
+void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
+		       void (*vs)(__u8 *vs, struct json_object *r))
 {
 	struct json_object *r = json_create_object();
 	struct json_object *psds = json_create_array();
@@ -367,6 +367,9 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl,
 	snprintf(mn, sizeof(mn), "%-.*s", (int)sizeof(ctrl->mn), ctrl->mn);
 	snprintf(fr, sizeof(fr), "%-.*s", (int)sizeof(ctrl->fr), ctrl->fr);
 	snprintf(subnqn, sizeof(subnqn), "%-.*s", (int)sizeof(ctrl->subnqn), ctrl->subnqn);
+
+	if (product_name)
+		obj_add_str(r, "product_name", product_name);
 
 	obj_add_int(r, "vid", le16_to_cpu(ctrl->vid));
 	obj_add_int(r, "ssvid", le16_to_cpu(ctrl->ssvid));

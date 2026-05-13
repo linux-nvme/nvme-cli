@@ -59,7 +59,8 @@ struct print_ops {
 	void (*fdp_usage_log)(struct nvme_fdp_ruhu_log *log, size_t len);
 	void (*fid_supported_effects_log)(struct nvme_fid_supported_effects_log *fid_log, const char *devname);
 	void (*fw_log)(struct nvme_firmware_slot *fw_log, const char *devname);
-	void (*id_ctrl)(struct nvme_id_ctrl *ctrl, void (*vs)(__u8 *vs, struct json_object *root));
+	void (*id_ctrl)(struct nvme_id_ctrl *ctrl, const char *product_name,
+			void (*vs)(__u8 *vs, struct json_object *root));
 	void (*id_ctrl_nvm)(struct nvme_id_ctrl_nvm *ctrl_nvm);
 	void (*id_domain_list)(struct nvme_id_domain_list *id_dom);
 	void (*id_independent_id_ns)(struct nvme_id_independent_id_ns *ns, unsigned int nsid);
@@ -183,8 +184,9 @@ void nvme_show_lba_status_info(__u64 result);
 void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
 
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs, nvme_print_flags_t flags);
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, nvme_print_flags_t flags,
-	void (*vendor_show)(__u8 *vs, struct json_object *root));
+void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, const char *devname,
+	nvme_print_flags_t flags, void (*vendor_show)(__u8 *vs,
+	struct json_object *root));
 void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags);
 void nvme_show_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 		unsigned int lba_index, bool cap_only, nvme_print_flags_t flags);

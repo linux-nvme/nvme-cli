@@ -611,10 +611,13 @@ void nvme_show_id_ns_descs(void *data, unsigned int nsid, nvme_print_flags_t fla
 	nvme_print(id_ns_descs, flags, data, nsid);
 }
 
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, nvme_print_flags_t flags,
-			void (*vendor_show)(__u8 *vs, struct json_object *root))
+void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, const char *devname,
+		       nvme_print_flags_t flags,
+		       void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
-	nvme_print(id_ctrl, flags, ctrl, vendor_show);
+	__cleanup_free char *product_name = nvme_product_name(devname);
+
+	nvme_print(id_ctrl, flags, ctrl, product_name, vendor_show);
 }
 
 void nvme_show_id_ctrl_nvm(struct nvme_id_ctrl_nvm *ctrl_nvm,

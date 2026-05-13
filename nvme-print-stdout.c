@@ -3348,10 +3348,13 @@ static void stdout_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 	}
 }
 
-static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
+static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 			   void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
 	bool human = stdout_print_ops.flags & VERBOSE, vs = stdout_print_ops.flags & VS;
+
+	if (human && product_name)
+		printf("%s\n\n", product_name);
 
 	printf("NVME Identify Controller:\n");
 	printf("vid       : %#x\n", le16_to_cpu(ctrl->vid));
