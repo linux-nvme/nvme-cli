@@ -297,7 +297,7 @@ static FILE *open_pci_ids(void)
 	return NULL;
 }
 
-char *nvme_product_name(int id)
+static char *__nvme_product_name(int id)
 {
 	char readbuf[LINE_BUF_SIZE];
 	char vendor[7] = { 0 };
@@ -350,7 +350,7 @@ char *nvme_product_name(int id)
 	if (!result) {
 		fprintf(stderr, "malloc: %s\n", libnvme_strerror(errno));
 		free_all();
-		return strdup("NULL");
+		return NULL;
 	}
 	format_all(result, vendor, device);
 	free_all();
@@ -358,5 +358,26 @@ char *nvme_product_name(int id)
 error0:
 	fclose(file);
 error1:
-	return strdup("NULL");
+	return NULL;
+}
+
+char *nvme_product_name(const char *devname)
+{
+	const char *base;
+	int id;
+
+	if (!devname)
+		return NULL;
+
+	base = strrchr(devname, '/');
+	if (base) {
+		if (!base[1])
+			return NULL;
+		devname = base + 1;
+	}
+
+	if (sscanf(devname, "nvme%d", &id) != 1)
+		return NULL;
+
+	return __nvme_product_name(id);
 }
