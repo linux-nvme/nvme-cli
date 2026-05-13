@@ -41,7 +41,8 @@ static bool libnvme_mi_probe_enabled_default(void)
 
 }
 
-__public struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_level)
+__libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(
+		FILE *fp, int log_level)
 {
 	struct libnvme_global_ctx *ctx;
 	int fd;
@@ -71,7 +72,7 @@ __public struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_
 	return ctx;
 }
 
-__public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
+__libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
 #ifdef CONFIG_MI
@@ -99,17 +100,20 @@ __public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	free(ctx);
 }
 
-__public void libnvme_set_dry_run(struct libnvme_global_ctx *ctx, bool enable)
+__libnvme_public void libnvme_set_dry_run(
+		struct libnvme_global_ctx *ctx, bool enable)
 {
 	ctx->dry_run = enable;
 }
 
-__public void libnvme_set_ioctl_probing(struct libnvme_global_ctx *ctx, bool enable)
+__libnvme_public void libnvme_set_ioctl_probing(
+		struct libnvme_global_ctx *ctx, bool enable)
 {
 	ctx->ioctl_probing = enable;
 }
 
-__public void libnvme_transport_handle_set_submit_entry(struct libnvme_transport_handle *hdl,
+__libnvme_public void libnvme_transport_handle_set_submit_entry(
+		struct libnvme_transport_handle *hdl,
 		void *(*submit_entry)(struct libnvme_transport_handle *hdl,
 				struct libnvme_passthru_cmd *cmd))
 {
@@ -118,7 +122,8 @@ __public void libnvme_transport_handle_set_submit_entry(struct libnvme_transport
 		hdl->submit_exit = __libnvme_submit_exit;
 }
 
-__public void libnvme_transport_handle_set_submit_exit(struct libnvme_transport_handle *hdl,
+__libnvme_public void libnvme_transport_handle_set_submit_exit(
+		struct libnvme_transport_handle *hdl,
 		void (*submit_exit)(struct libnvme_transport_handle *hdl,
 				struct libnvme_passthru_cmd *cmd,
 				int err, void *user_data))
@@ -128,7 +133,8 @@ __public void libnvme_transport_handle_set_submit_exit(struct libnvme_transport_
 		hdl->submit_exit = __libnvme_submit_exit;
 }
 
-__public void libnvme_transport_handle_set_decide_retry(struct libnvme_transport_handle *hdl,
+__libnvme_public void libnvme_transport_handle_set_decide_retry(
+		struct libnvme_transport_handle *hdl,
 		bool (*decide_retry)(struct libnvme_transport_handle *hdl,
 				struct libnvme_passthru_cmd *cmd, int err))
 {
@@ -137,7 +143,7 @@ __public void libnvme_transport_handle_set_decide_retry(struct libnvme_transport
 		hdl->decide_retry = __libnvme_decide_retry;
 }
 
-__public void libnvme_transport_handle_set_timeout(
+__libnvme_public void libnvme_transport_handle_set_timeout(
 		struct libnvme_transport_handle *hdl, __u32 timeout_ms)
 {
 	hdl->timeout = timeout_ms;
@@ -225,8 +231,9 @@ struct libnvme_transport_handle *__libnvme_create_transport_handle(
 	return hdl;
 }
 
-__public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
-	      struct libnvme_transport_handle **hdlp)
+__libnvme_public int libnvme_open(
+		struct libnvme_global_ctx *ctx, const char *name,
+		struct libnvme_transport_handle **hdlp)
 {
 	struct libnvme_transport_handle *hdl;
 	int ret;
@@ -267,7 +274,7 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 	return 0;
 }
 
-__public void libnvme_close(struct libnvme_transport_handle *hdl)
+__libnvme_public void libnvme_close(struct libnvme_transport_handle *hdl)
 {
 	if (!hdl)
 		return;
@@ -287,32 +294,38 @@ __public void libnvme_close(struct libnvme_transport_handle *hdl)
 	}
 }
 
-__public int libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_transport_handle_get_fd(
+		struct libnvme_transport_handle *hdl)
 {
 	return hdl->fd;
 }
 
-__public const char *libnvme_transport_handle_get_name(struct libnvme_transport_handle *hdl)
+__libnvme_public const char *libnvme_transport_handle_get_name(
+		struct libnvme_transport_handle *hdl)
 {
 	return basename(hdl->name);
 }
 
-__public bool libnvme_transport_handle_is_ctrl(struct libnvme_transport_handle *hdl)
+__libnvme_public bool libnvme_transport_handle_is_ctrl(
+		struct libnvme_transport_handle *hdl)
 {
 	return S_ISCHR(hdl->stat.st_mode);
 }
 
-__public bool libnvme_transport_handle_is_ns(struct libnvme_transport_handle *hdl)
+__libnvme_public bool libnvme_transport_handle_is_ns(
+		struct libnvme_transport_handle *hdl)
 {
 	return S_ISBLK(hdl->stat.st_mode);
 }
 
-__public bool libnvme_transport_handle_is_direct(struct libnvme_transport_handle *hdl)
+__libnvme_public bool libnvme_transport_handle_is_direct(
+		struct libnvme_transport_handle *hdl)
 {
 	return hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 }
 
-__public bool libnvme_transport_handle_is_mi(struct libnvme_transport_handle *hdl)
+__libnvme_public bool libnvme_transport_handle_is_mi(
+		struct libnvme_transport_handle *hdl)
 {
 	return hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_MI;
 }

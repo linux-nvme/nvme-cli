@@ -1817,10 +1817,12 @@ static void stdout_status(int status)
 		fprintf(stderr, "NVMe status: %s(%#x)\n",
 			libnvme_status_to_string(val, false), val);
 		break;
+#ifdef CONFIG_MI
 	case NVME_STATUS_TYPE_MI:
 		fprintf(stderr, "NVMe-MI status: %s(%#x)\n",
 			libnvme_mi_status_to_string(val), val);
 		break;
+#endif
 	default:
 		fprintf(stderr, "Unknown status type %d, value %#x\n", type,
 			val);
@@ -3348,10 +3350,13 @@ static void stdout_id_ctrl_power(struct nvme_id_ctrl *ctrl)
 	}
 }
 
-static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl,
+static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 			   void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
 	bool human = stdout_print_ops.flags & VERBOSE, vs = stdout_print_ops.flags & VS;
+
+	if (human && product_name)
+		printf("%s\n\n", product_name);
 
 	printf("NVME Identify Controller:\n");
 	printf("vid       : %#x\n", le16_to_cpu(ctrl->vid));
@@ -4222,41 +4227,56 @@ static void stdout_id_iocs(struct nvme_id_iocs *iocs)
 }
 
 static void stdout_error_log(struct nvme_error_log_page *err_log, int entries,
-			     const char *devname)
+			     const char *devname,
+			     struct nvme_error_log_filter *flt)
 {
+	int filtered = 0;
 	int i;
+	__u16 status;
+	__u16 sts;
 
 	printf("Error Log Entries for device:%s entries:%d\n", devname,
-								entries);
+	       entries);
 	printf(".................\n");
 	for (i = 0; i < entries; i++) {
-		__u16 status = le16_to_cpu(err_log[i].status_field) >> 0x1;
+		if (nvme_is_error_log_filter(&err_log[i], flt)) {
+			filtered++;
+			continue;
+		}
+
+		sts = le16_to_cpu(err_log[i].status_field);
+		status = NVME_ERR_SF_STATUS_FIELD(sts);
 
 		printf(" Entry[%2d]\n", i);
 		printf(".................\n");
 		printf("error_count	: %"PRIu64"\n",
-			le64_to_cpu(err_log[i].error_count));
-		printf("sqid		: %d\n", err_log[i].sqid);
-		printf("cmdid		: %#x\n", err_log[i].cmdid);
+		       le64_to_cpu(err_log[i].error_count));
+		printf("sqid		: %d\n", le16_to_cpu(err_log[i].sqid));
+		printf("cmdid		: %#x\n",
+		       le16_to_cpu(err_log[i].cmdid));
 		printf("status_field	: %#x (%s)\n", status,
-			libnvme_status_to_string(status, false));
-		printf("phase_tag	: %#x\n", le16_to_cpu(err_log[i].status_field) & 0x1);
+		       libnvme_status_to_string(status, false));
+		printf("phase_tag	: %#x\n", NVME_ERR_SF_PHASE_TAG(sts));
 		printf("parm_err_loc	: %#x\n",
-			err_log[i].parm_error_location);
+		       le16_to_cpu(err_log[i].parm_error_location));
 		printf("lba		: %#"PRIx64"\n",
-			le64_to_cpu(err_log[i].lba));
-		printf("nsid		: %#x\n", err_log[i].nsid);
+		       le64_to_cpu(err_log[i].lba));
+		printf("nsid		: %#x\n", le32_to_cpu(err_log[i].nsid));
 		printf("vs		: %d\n", err_log[i].vs);
 		printf("trtype		: %#x (%s)\n", err_log[i].trtype,
-			nvme_trtype_to_string(err_log[i].trtype));
+		       nvme_trtype_to_string(err_log[i].trtype));
 		printf("csi		: %d\n", err_log[i].csi);
 		printf("opcode		: %#x\n", err_log[i].opcode);
 		printf("cs		: %#"PRIx64"\n",
 		       le64_to_cpu(err_log[i].cs));
-		printf("trtype_spec_info: %#x\n", err_log[i].trtype_spec_info);
+		printf("trtype_spec_info: %#x\n",
+		       le16_to_cpu(err_log[i].trtype_spec_info));
 		printf("log_page_version: %d\n", err_log[i].log_page_version);
 		printf(".................\n");
 	}
+
+	if (entries == filtered)
+		printf("all entries filtered\n");
 }
 
 static void stdout_resv_report(struct nvme_resv_status *status, int bytes,
@@ -4355,36 +4375,36 @@ static void stdout_changed_ns_list_log(struct nvme_ns_list *log, const char *dev
 			NVME_ID_NS_LIST_MAX);
 }
 
-static void stdout_effects_log_human(FILE *stream, __u32 effect)
+static void stdout_effects_log_human(__u32 effect)
 {
 	const char *set = "+";
 	const char *clr = "-";
 
-	fprintf(stream, "  CSUPP+");
-	fprintf(stream, "  LBCC%s", (effect & NVME_CMD_EFFECTS_LBCC) ? set : clr);
-	fprintf(stream, "  NCC%s", (effect & NVME_CMD_EFFECTS_NCC) ? set : clr);
-	fprintf(stream, "  NIC%s", (effect & NVME_CMD_EFFECTS_NIC) ? set : clr);
-	fprintf(stream, "  CCC%s", (effect & NVME_CMD_EFFECTS_CCC) ? set : clr);
-	fprintf(stream, "  USS%s", (effect & NVME_CMD_EFFECTS_UUID_SEL) ? set : clr);
+	printf("  CSUPP+");
+	printf("  LBCC%s", (effect & NVME_CMD_EFFECTS_LBCC) ? set : clr);
+	printf("  NCC%s", (effect & NVME_CMD_EFFECTS_NCC) ? set : clr);
+	printf("  NIC%s", (effect & NVME_CMD_EFFECTS_NIC) ? set : clr);
+	printf("  CCC%s", (effect & NVME_CMD_EFFECTS_CCC) ? set : clr);
+	printf("  USS%s", (effect & NVME_CMD_EFFECTS_UUID_SEL) ? set : clr);
 
 	if ((effect & NVME_CMD_EFFECTS_CSER_MASK) >> 14 == 0)
-		fprintf(stream, "  No CSER defined\n");
+		printf("  No CSER defined\n");
 	else if ((effect & NVME_CMD_EFFECTS_CSER_MASK) >> 14 == 1)
-		fprintf(stream, "  No admin command for any namespace\n");
+		printf("  No admin command for any namespace\n");
 	else
-		fprintf(stream, "  Reserved CSER\n");
+		printf("  Reserved CSER\n");
 
 	if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 0)
-		fprintf(stream, "  No command restriction\n");
+		printf("  No command restriction\n");
 	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 1)
-		fprintf(stream, "  No other command for same namespace\n");
+		printf("  No other command for same namespace\n");
 	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 2)
-		fprintf(stream, "  No other command for any namespace\n");
+		printf("  No other command for any namespace\n");
 	else
-		fprintf(stream, "  Reserved CSE\n");
+		printf("  Reserved CSE\n");
 }
 
-static void stdout_effects_entry(FILE *stream, int admin, int index,
+static void stdout_effects_entry(int admin, int index,
 				 __le32 entry, unsigned int human)
 {
 	__u32 effect;
@@ -4394,12 +4414,12 @@ static void stdout_effects_entry(FILE *stream, int admin, int index,
 
 	effect = le32_to_cpu(entry);
 	if (effect & NVME_CMD_EFFECTS_CSUPP) {
-		fprintf(stream, format_string, index, nvme_cmd_to_string(admin, index),
+		printf(format_string, index, nvme_cmd_to_string(admin, index),
 		       effect);
 		if (human)
-			stdout_effects_log_human(stream, effect);
+			stdout_effects_log_human(effect);
 		else
-			fprintf(stream, "\n");
+			printf("\n");
 	}
 }
 
@@ -4407,32 +4427,28 @@ static void stdout_effects_log_segment(int admin, int a, int b,
 				       struct nvme_cmd_effects_log *effects,
 				       char *header, int human)
 {
-	FILE *stream;
-	char *stream_location;
-	size_t stream_size;
-
-	stream = open_memstream(&stream_location, &stream_size);
-	if (!stream) {
-		perror("Failed to open stream");
-		return;
-	}
+	bool printed_header = false;
 
 	for (int i = a; i < b; i++) {
-		if (admin)
-			stdout_effects_entry(stream, admin, i, effects->acs[i], human);
-		else
-			stdout_effects_entry(stream, admin, i, effects->iocs[i], human);
+		__le32 entry;
+		__u32 effect;
+
+		entry = admin ? effects->acs[i] : effects->iocs[i];
+		effect = le32_to_cpu(entry);
+
+		if (!(effect & NVME_CMD_EFFECTS_CSUPP))
+			continue;
+
+		if (!printed_header && header) {
+			printf("%s\n", header);
+			printed_header = true;
+		}
+
+		stdout_effects_entry(admin, i, entry, human);
 	}
 
-	fclose(stream);
-
-	if (stream_size && header) {
-		printf("%s\n", header);
-		fwrite(stream_location, stream_size, 1, stdout);
+	if (printed_header)
 		printf("\n");
-	}
-
-	free(stream_location);
 }
 
 static void stdout_effects_log_page(enum nvme_csi csi,
@@ -6878,7 +6894,8 @@ static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 		break;
 	case NVME_LOG_LID_ERROR:
 		stdout_error_log((struct nvme_error_log_page *)args->log,
-				 args->len / sizeof(struct nvme_error_log_page), devname);
+				 args->len / sizeof(struct nvme_error_log_page),
+				 devname, NULL);
 		break;
 	case NVME_LOG_LID_SMART:
 		stdout_smart_log((struct nvme_smart_log *)args->log, args->nsid, devname);

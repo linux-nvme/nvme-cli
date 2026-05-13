@@ -177,7 +177,7 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 	const char *human_readable = "show infos in readable format";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	void *buf = NULL;
+	__cleanup_libnvme_free void *buf = NULL;
 	__u64 result;
 	int err;
 
@@ -221,16 +221,16 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 		return -EINVAL;
 	}
 	if (cfg.data_len) {
-		if (posix_memalign(&buf, getpagesize(), cfg.data_len))
+		buf = libnvme_alloc(cfg.data_len);
+		if (!buf)
 			return -ENOMEM;
-		memset(buf, 0, cfg.data_len);
 	}
 
 	err = nvme_get_features(hdl, cfg.namespace_id, cfg.feature_id, cfg.sel,
 			cfg.cdw11, 0, buf, cfg.data_len, &result);
 	if (err > 0)
 		nvme_show_status(err);
-	free(buf);
+
 	return err;
 }
 
@@ -255,7 +255,7 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 	const char *save = "specifies that the controller shall save the attribute";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	__cleanup_free void *buf = NULL;
+	__cleanup_libnvme_free void *buf = NULL;
 	int ffd = STDIN_FILENO;
 	__u64 result;
 	int err;
@@ -296,7 +296,8 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 	}
 
 	if (cfg.data_len) {
-		if (posix_memalign(&buf, getpagesize(), cfg.data_len)) {
+		buf = libnvme_alloc(cfg.data_len);
+		if (!buf) {
 			fprintf(stderr, "can not allocate feature payload\n");
 			return -ENOMEM;
 		}
@@ -337,4 +338,3 @@ static int shannon_id_ctrl(int argc, char **argv, struct command *acmd, struct p
 {
 	return __id_ctrl(argc, argv, acmd, plugin, NULL);
 }
-

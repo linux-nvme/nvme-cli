@@ -5,9 +5,13 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-sources = []
+sources = [
+    'nvme/log.c',
+]
 if host_system == 'windows'
-    sources += []
+    sources += [
+        'nvme/mem-win.c',
+    ]
 else
     sources += [
         'nvme/accessors.c',
@@ -17,7 +21,7 @@ else
         'nvme/ioctl.c',
         'nvme/lib.c',
         'nvme/linux.c',
-        'nvme/log.c',
+        'nvme/mem-linux.c',
         'nvme/nvme-cmds.c',
         'nvme/sysfs.c',
         'nvme/tree.c',
@@ -32,6 +36,7 @@ headers = [
     'nvme/lib-types.h',
     'nvme/lib.h',
     'nvme/linux.h',
+    'nvme/mem.h',
     'nvme/nvme-cmds.h',
     'nvme/nvme-types.h',
     'nvme/tree.h',
@@ -102,6 +107,7 @@ endif
 
 nvme_ld = meson.current_source_dir() / 'libnvme.ld'
 nvmf_ld = meson.current_source_dir() / 'libnvmf.ld'
+mi_ld = meson.current_source_dir() / 'libnvme-mi.ld'
 accessors_ld = meson.current_source_dir() / 'accessors.ld'
 nvmf_accessors_ld = meson.current_source_dir() / 'accessors-fabrics.ld'
 
@@ -120,6 +126,12 @@ if want_fabrics
                 '#include <nvme/fabrics.h>\n#include <nvme/nbft.h>\n#include <nvme/accessors-fabrics.h>')
 else
     libconf.set('FABRICS_INCLUDE', '')
+endif
+
+if want_mi
+    link_args += [
+        '-Wl,--version-script=@0@'.format(mi_ld),
+    ]
 endif
 
 libnvme_header = configure_file(

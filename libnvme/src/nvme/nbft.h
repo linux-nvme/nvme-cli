@@ -246,26 +246,26 @@ struct libnbft_info {
 };
 
 /**
- * libnvme_read_nbft() - Read and parse contents of an ACPI NBFT table
+ * libnvmf_read_nbft() - Read and parse contents of an ACPI NBFT table
  *
  * @ctx:      struct libnvme_global_ctx object
  * @nbft:     Parsed NBFT table data.
  * @filename: Filename of the raw NBFT table to read.
  *
  * Read and parse the specified NBFT file into a struct libnbft_info.
- * Free with libnvme_free_nbft().
+ * Free with libnvmf_free_nbft().
  *
  * Return: 0 on success, errno otherwise.
  */
-int libnvme_read_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info **nbft,
+int libnvmf_read_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info **nbft,
 		const char *filename);
 
 /**
- * libnvme_free_nbft() - Free the struct libnbft_info and its contents
+ * libnvmf_free_nbft() - Free the struct libnbft_info and its contents
  * @ctx: struct libnvme_global_ctx object
  * @nbft: Parsed NBFT table data.
  */
-void libnvme_free_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info *nbft);
+void libnvmf_free_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info *nbft);
 
 /**
  * struct nbft_file_entry - Linked list entry for NBFT files

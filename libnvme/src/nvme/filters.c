@@ -15,7 +15,7 @@
 #include "private.h"
 #include "compiler-attributes.h"
 
-__public int libnvme_filter_namespace(const struct dirent *d)
+__libnvme_public int libnvme_filter_namespace(const struct dirent *d)
 {
 	int i, n;
 
@@ -29,7 +29,7 @@ __public int libnvme_filter_namespace(const struct dirent *d)
 	return 0;
 }
 
-__public int libnvme_filter_paths(const struct dirent *d)
+__libnvme_public int libnvme_filter_paths(const struct dirent *d)
 {
 	int i, c, n;
 
@@ -43,7 +43,7 @@ __public int libnvme_filter_paths(const struct dirent *d)
 	return 0;
 }
 
-__public int libnvme_filter_ctrls(const struct dirent *d)
+__libnvme_public int libnvme_filter_ctrls(const struct dirent *d)
 {
 	int i, c, n;
 
@@ -62,7 +62,7 @@ __public int libnvme_filter_ctrls(const struct dirent *d)
 	return 0;
 }
 
-__public int libnvme_filter_subsys(const struct dirent *d)
+__libnvme_public int libnvme_filter_subsys(const struct dirent *d)
 {
 	int i;
 
@@ -76,7 +76,7 @@ __public int libnvme_filter_subsys(const struct dirent *d)
 	return 0;
 }
 
-__public int libnvme_scan_subsystems(struct dirent ***subsys)
+__libnvme_public int libnvme_scan_subsystems(struct dirent ***subsys)
 {
 	const char *dir = libnvme_subsys_sysfs_dir();
 	int ret;
@@ -88,7 +88,7 @@ __public int libnvme_scan_subsystems(struct dirent ***subsys)
 	return ret;
 }
 
-__public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
+__libnvme_public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
 		struct dirent ***ns)
 {
 	int ret;
@@ -101,7 +101,7 @@ __public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
 	return ret;
 }
 
-__public int libnvme_scan_ctrls(struct dirent ***ctrls)
+__libnvme_public int libnvme_scan_ctrls(struct dirent ***ctrls)
 {
 	const char *dir = libnvme_ctrl_sysfs_dir();
 	int ret;
@@ -113,7 +113,7 @@ __public int libnvme_scan_ctrls(struct dirent ***ctrls)
 	return ret;
 }
 
-__public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
+__libnvme_public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
 		struct dirent ***paths)
 {
 	int ret;
@@ -126,7 +126,8 @@ __public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
 	return ret;
 }
 
-__public int libnvme_scan_ctrl_namespaces(libnvme_ctrl_t c, struct dirent ***ns)
+__libnvme_public int libnvme_scan_ctrl_namespaces(
+		libnvme_ctrl_t c, struct dirent ***ns)
 {
 	int ret;
 
@@ -138,7 +139,7 @@ __public int libnvme_scan_ctrl_namespaces(libnvme_ctrl_t c, struct dirent ***ns)
 	return ret;
 }
 
-__public int libnvme_scan_ns_head_paths(libnvme_ns_head_t head,
+__libnvme_public int libnvme_scan_ns_head_paths(libnvme_ns_head_t head,
 		struct dirent ***paths)
 {
 	int ret;

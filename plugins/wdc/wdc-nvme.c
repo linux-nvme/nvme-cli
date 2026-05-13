@@ -2873,10 +2873,10 @@ static bool wdc_nvme_check_supported_log_page(struct libnvme_global_ctx *ctx,
 	int err = -1;
 	struct wdc_c2_cbs_data *cbs_data = NULL;
 
-	__cleanup_free struct nvme_supported_log_pages *supports = NULL;
+	__cleanup_libnvme_free struct nvme_supported_log_pages *supports = NULL;
 
 	/* Check log page id 0 (supported log pages) first */
-	supports = nvme_alloc(sizeof(*supports));
+	supports = libnvme_alloc(sizeof(*supports));
 	if (!supports)
 		return -ENOMEM;
 
@@ -10936,13 +10936,13 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 			free(cbs_data);
 		} else {
 			struct log_page_directory *dir;
-			void *data = NULL;
+			__cleanup_libnvme_free void *data = NULL;
 
-			if (posix_memalign(&data, getpagesize(), 512)) {
+			data = libnvme_alloc(512);
+			if (!data) {
 				fprintf(stderr,
 					"can not allocate log page directory payload\n");
-				ret = ENOMEM;
-				goto out;
+				return -ENOMEM;
 			}
 
 			dir = (struct log_page_directory *)data;
@@ -11646,7 +11646,7 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *acmd,
 	nvme_print_flags_t fmt;
 	int ret;
 	__u64 capabilities = 0;
-	__cleanup_huge struct nvme_mem_huge mh = { 0, };
+	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	struct wdc_vs_pcie_stats *pcieStatsPtr = NULL;
 	int pcie_stats_size = sizeof(struct wdc_vs_pcie_stats);
 
@@ -11674,7 +11674,7 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *acmd,
 		goto out;
 	}
 
-	pcieStatsPtr = nvme_alloc_huge(pcie_stats_size, &mh);
+	pcieStatsPtr = libnvme_alloc_huge(pcie_stats_size, &mh);
 	if (!pcieStatsPtr) {
 		fprintf(stderr, "ERROR: WDC: PCIE Stats alloc: %s\n", libnvme_strerror(errno));
 		ret = -1;

@@ -1,60 +1,71 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
+/*
+ * This file is part of libnvme.
+ * Copyright (c) 2026 SUSE Software Solutions
+ *
+ * Authors: Daniel Wagner <dwagner@suse.de>
+ */
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <malloc.h>
-#include <string.h>
 #include <sys/mman.h>
 
+#include <ccan/minmax/minmax.h>
+
+#include "compiler-attributes.h"
 #include "mem.h"
+#include "private.h"
 
-#include "common.h"
-
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define HUGE_MIN 0x80000
 
-void *nvme_alloc(size_t len)
+__libnvme_public void *libnvme_alloc(size_t len)
 {
+	size_t _len = round_up(len, 0x1000);
 	void *p;
 
-	len = ROUND_UP(len, 0x1000);
-	if (posix_memalign((void *)&p, getpagesize(), len))
+	if (posix_memalign((void *)&p, getpagesize(), _len))
 		return NULL;
 
-	memset(p, 0, len);
+	memset(p, 0, _len);
 	return p;
 }
 
-void *nvme_realloc(void *p, size_t len)
+__libnvme_public void *libnvme_realloc(void *p, size_t len)
 {
 	size_t old_len = malloc_usable_size(p);
 
-	void *result = nvme_alloc(len);
-	if (!result)
-		return NULL;
+	void *result = libnvme_alloc(len);
 
-	if (p) {
-		memcpy(result, p, min(old_len, len));
+	if (p && result) {
+		memcpy(result, p, min_t(size_t, old_len, len));
 		free(p);
 	}
 
 	return result;
 }
 
-void *nvme_alloc_huge(size_t len, struct nvme_mem_huge *mh)
+__libnvme_public void libnvme_free(void *p)
+{
+	free(p);
+}
+
+__libnvme_public void *libnvme_alloc_huge(size_t len,
+		struct libnvme_mem_huge *mh)
 {
 	memset(mh, 0, sizeof(*mh));
 
-	len = ROUND_UP(len, 0x1000);
+	len = round_up(len, 0x1000);
 
 	/*
 	 * For smaller allocation we just use posix_memalign and hope the kernel
 	 * is able to convert to a contiguous memory region.
 	 */
 	if (len < HUGE_MIN) {
-		mh->p = nvme_alloc(len);
+		mh->p = libnvme_alloc(len);
 		if (!mh->p)
 			return NULL;
-		mh->posix_memalign = true;
+		mh->libnvme_alloc = true;
 		mh->len = len;
 		return mh->p;
 	}
@@ -79,29 +90,29 @@ void *nvme_alloc_huge(size_t len, struct nvme_mem_huge *mh)
 	 * fullfil the request. This gives the kernel a chance to try to claim
 	 * some huge pages. This might still fail though.
 	 */
-	len = ROUND_UP(len, 0x200000);
+	len = round_up(len, 0x200000);
 	if (posix_memalign(&mh->p, 0x200000, len))
 		return NULL;
-	mh->posix_memalign = true;
+	mh->libnvme_alloc = true;
 	mh->len = len;
 
 	memset(mh->p, 0, mh->len);
 
 	if (madvise(mh->p, mh->len, MADV_HUGEPAGE) < 0) {
-		nvme_free_huge(mh);
+		libnvme_free_huge(mh);
 		return NULL;
 	}
 
 	return mh->p;
 }
 
-void nvme_free_huge(struct nvme_mem_huge *mh)
+__libnvme_public void libnvme_free_huge(struct libnvme_mem_huge *mh)
 
 {
 	if (!mh || mh->len == 0)
 		return;
 
-	if (mh->posix_memalign)
+	if (mh->libnvme_alloc)
 		free(mh->p);
 	else
 		munmap(mh->p, mh->len);

@@ -10,6 +10,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
+#include <ifaddrs.h>
+#endif
+
 #include <ccan/list/list.h>
 
 #include "nvme/nvme-types.h"
@@ -436,10 +440,6 @@ int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvme_ctrl **cp);
 bool _libnvme_ctrl_match_config(struct libnvme_ctrl *c,
 		struct libnvmf_context *fctx);
-
-void *__libnvme_alloc(size_t len);
-
-void *__libnvme_realloc(void *p, size_t len);
 
 void nvme_deconfigure_ctrl(struct libnvme_ctrl *c);
 

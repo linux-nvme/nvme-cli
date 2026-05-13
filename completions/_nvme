@@ -1253,12 +1253,26 @@ _nvme () {
 			local _errlog
 			_errlog=(
 			/dev/nvme':supply a device to use (required)'
-			--namespace-id=':get log specific to <nsid> if namespace logs are supported'
-			-n':alias to --namespace-id'
 			--raw-binary':dump infos in binary format'
 			-b':alias to --raw-binary'
 			--log-entries=':request n >= 1 log entries'
 			-e':alias to --log-entries'
+			--valid-entry':output valid entry only'
+			-V':alias to --valid-entry'
+			--sqid=':output specified SQID entry only'
+			-S':alias to --sqid'
+			--status=':output specified STATUS entry only'
+			-s':alias to --status'
+			--lba=':output specified LBA entry only'
+			-l':alias to --lba'
+			--namespace-id=':output specified NSID entry only'
+			-n':alias to --namespace-id'
+			--trtype=':output specified TRTYPE entry only'
+			-t':alias to --trtype'
+			--csi=':output specified CSI entry only'
+			-c':alias to --csi'
+			--opcode=':output specified OPC entry only'
+			-O':alias to --opcode'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme error-log options" _errlog

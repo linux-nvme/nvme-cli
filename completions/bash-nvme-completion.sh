@@ -159,7 +159,9 @@ nvme_list_opts () {
 			;;
 		"error-log")
 		opts+=" --raw-binary -b --log-entries= -e \
-			--output-format= -o"
+			--output-format= -o --valid-entry -V --sqid= -S \
+			--status= -s --lba= -l --namespace-id= -n --trtype= -t \
+			--csi= -c --opcode= -O"
 			;;
 		"effects-log")
 		opts+=" --output-format= -o --human-readable -H \

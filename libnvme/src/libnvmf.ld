@@ -29,6 +29,7 @@ LIBNVMF_3 {
 		libnvmf_discovery_nbft;
 		libnvmf_eflags_str;
 		libnvmf_exat_ptr_next;
+		libnvmf_free_nbft;
 		libnvmf_get_default_trsvcid;
 		libnvmf_get_discovery_log;
 		libnvmf_is_registration_supported;
@@ -36,6 +37,7 @@ LIBNVMF_3 {
 		libnvmf_nbft_read_files;
 		libnvmf_prtype_str;
 		libnvmf_qptype_str;
+		libnvmf_read_nbft;
 		libnvmf_register_ctrl;
 		libnvmf_sectype_str;
 		libnvmf_subtype_str;

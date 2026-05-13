@@ -8,27 +8,27 @@
 #pragma once
 
 /**
- * __public - mark a symbol as part of the public API.
+ * __libnvme_public - mark a symbol as part of the public API.
  *
  * When the library is built with -fvisibility=hidden all symbols are hidden
- * by default.  Annotating a function with __public overrides that and makes
- * the symbol visible in the shared library ABI.
+ * by default.  Annotating a function with __libnvme_public overrides that
+ * and makes the symbol visible in the shared library ABI.
  */
-#define __public __attribute__((visibility("default")))
+#define __libnvme_public __attribute__((visibility("default")))
 
 /**
- * __weak - Declares a symbol as "weak"
+ * __libnvme_weak - Declares a symbol as "weak"
  *
  * A weak symbol provides a default implementation that can be
  * replaced by another (strong) definition during linking. Useful for
  * optional overrides and platform hooks.
  */
-#define __weak __attribute__((weak))
+#define __libnvme_weak __attribute__((weak))
 
 /**
- * __unused - Mark a symbol or parameter as intentionally unused.
+ * __libnvme_unused - Mark a symbol or parameter as intentionally unused.
  *
  * Suppresses compiler warnings for symbols or parameters that are unused
  * by design (e.g. no-op stubs that must match a specific signature).
  */
-#define __unused __attribute__((__unused__))
+#define __libnvme_unused __attribute__((__unused__))
