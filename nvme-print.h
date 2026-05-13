@@ -128,6 +128,9 @@ struct print_ops {
 	void (*topology_multipath)(struct libnvme_global_ctx *ctx);
 	void (*topology_tabular)(struct libnvme_global_ctx *ctx);
 
+	/* nvme top */
+	void (*top)(int refresh_interval);
+
 	/* status and error messages */
 	void (*connect_msg)(libnvme_ctrl_t c);
 	void (*show_message)(bool error, const char *msg, va_list ap);
@@ -174,6 +177,8 @@ static inline struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags
 
 struct print_ops *nvme_get_stdout_print_ops(nvme_print_flags_t flags);
 struct print_ops *nvme_get_binary_print_ops(nvme_print_flags_t flags);
+
+void stdout_top(int refresh_interval);
 
 void nvme_show_status(int status);
 void nvme_show_err(int err, const char *fmt, ...);
@@ -281,9 +286,9 @@ void nvme_show_topology(struct libnvme_global_ctx *ctx,
 			enum nvme_cli_topo_ranking ranking,
 			nvme_print_flags_t flags);
 void nvme_show_topology_tabular(struct libnvme_global_ctx *ctx, nvme_print_flags_t flags);
-
 void nvme_show_feature(enum nvme_features_id fid, int sel, unsigned int result,
 		       void *buf, __u32 data_len, nvme_print_flags_t flags);
+void nvme_show_top(nvme_print_flags_t flags, int refresh_interval);
 void nvme_feature_show_fields(enum nvme_features_id fid, unsigned int result, unsigned char *buf);
 void nvme_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result,
 	void *buf, __u32 len, nvme_print_flags_t flags);

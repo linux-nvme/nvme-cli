@@ -143,6 +143,12 @@ enum libnvme_transport_handle_type {
 	LIBNVME_TRANSPORT_HANDLE_TYPE_MI,
 };
 
+enum ioctl_state {
+	IOCTL_STATE_UNKNOWN = 0,
+	IOCTL_STATE_IOCTL32 = 1,
+	IOCTL_STATE_IOCTL64 = 2,
+};
+
 struct libnvme_transport_handle {
 	struct libnvme_global_ctx *ctx;
 	enum libnvme_transport_handle_type type;
@@ -160,10 +166,10 @@ struct libnvme_transport_handle {
 	__u32 timeout;
 
 	/* direct */
-	int fd;
+	libnvme_fd_t fd;
 	struct stat stat;
-	bool ioctl_admin64;
-	bool ioctl_io64;
+	enum ioctl_state ioctl_admin_state;
+	enum ioctl_state ioctl_io_state;
 	bool uring_enabled;
 
 #ifdef CONFIG_MI

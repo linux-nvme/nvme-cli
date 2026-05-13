@@ -92,6 +92,7 @@ jobs:
             set -e
 
             cd ../nvme-cli
+            sudo find .build-ci -name '*.gcda' -exec chown "$(id -u):$(id -g)" {} +
             gcovr -r . --object-directory .build-ci --xml-pretty -o coverage.xml
             cp coverage.xml ../blktests/results/coverage-blktests.xml
 
@@ -159,34 +160,34 @@ jobs:
 
             exit $podman_exit
 
-      - name: Upload nightly coverage reports
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: nightly-coverage-reports
-          path: |
-            blktests/results/coverage-blktests.xml
-            nvme-cli/tests/nvmetests/coverage-nvmetests.xml
-          if-no-files-found: warn
-
   codecov-upload:
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli') }}
     needs: nightly-tests
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Download nightly coverage reports
         uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
-          name: nightly-coverage-reports
+          pattern: artifact-*
           path: coverage
+          merge-multiple: true
+
+      - name: Collect nightly coverage reports
+        id: collect-coverage
+        shell: bash
+        run: |
+          files=$(find coverage -type f -name 'coverage-*.xml' -print | sort | paste -sd, -)
+          echo "files=${files}" >> "${GITHUB_OUTPUT}"
 
       - name: Upload nightly coverage to Codecov
+        if: steps.collect-coverage.outputs.files != ''
         uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         env:
           CODECOV_WORKING_DIR: ${{ github.workspace }}
         with:
           root_dir: ${{ github.workspace }}
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage/coverage-blktests.xml,coverage/coverage-nvmetests.xml
+          files: ${{ steps.collect-coverage.outputs.files }}
           fail_ci_if_error: false

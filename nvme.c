@@ -3568,6 +3568,51 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 	return 0;
 }
 
+static int top(int argc, char **argv, struct command *acmd,
+		struct plugin *plugin)
+{
+	int err;
+	nvme_print_flags_t flags = 0;
+	const char *desc = "show nvme top output";
+	const char *delay = "refresh interval in seconds";
+
+	struct config {
+		int delay;
+	};
+
+	struct config cfg = {
+		.delay = 1,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_INT("delay", 'd', &cfg.delay, delay));
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0 || flags != NORMAL) {
+		nvme_show_error("Invalid output format");
+		return -EINVAL;
+	}
+
+	if (cfg.delay < 1) {
+		nvme_show_error("delay must be greater than or equal to 1");
+		return -EINVAL;
+	}
+
+	err = nvme_install_sigwinch_handler();
+	if (err) {
+		nvme_show_error("failed to install sig handler for SIGWINCH");
+		return err;
+	}
+
+	nvme_show_top(flags, cfg.delay);
+
+	return err;
+}
+
 static int list(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve basic information for all NVMe namespaces";
@@ -7421,7 +7466,7 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 		 * Keep the I/O commands behavior same as before.
 		 * Since the error returned by drives unsupported.
 		 */
-		return -ENAVAIL;
+		return NVME_SC_INVALID_FIELD;
 
 	pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
 	if (NVME_FLBAS_META_EXT(ns->flbas)) {
@@ -7476,7 +7521,7 @@ static int init_pi_tags(struct libnvme_transport_handle *hdl,
 		 * Keep the I/O commands behavior same as before.
 		 * Since the error returned by drives unsupported.
 		 */
-		return -ENAVAIL;
+		return NVME_SC_INVALID_FIELD;
 
 	if (invalid_tags(lbst, ilbrt, sts, pif))
 		return -EINVAL;
@@ -7592,7 +7637,7 @@ static int write_zeroes(int argc, char **argv,
 
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst, cfg.lbat,
 			   cfg.lbatm);
-	if (err && err != -ENAVAIL)
+	if (err && err != NVME_SC_INVALID_FIELD)
 		return err;
 
 	err = libnvme_exec_io_passthru(hdl, &cmd);
@@ -7935,7 +7980,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		       cfg.fua, cfg.lr, 0, cfg.dspec, copy->f0);
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst, cfg.lbat,
 		cfg.lbatm);
-	if (err != 0 && err != -ENAVAIL)
+	if (err != 0 && err != NVME_SC_INVALID_FIELD)
 		return err;
 	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {
@@ -8774,7 +8819,7 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		cfg.block_count, control, 0, NULL, 0, NULL, 0);
 	err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
 		cfg.lbat, cfg.lbatm);
-	if (err != 0 && err != -ENAVAIL)
+	if (err != 0 && err != NVME_SC_INVALID_FIELD)
 		return err;
 	err = libnvme_exec_io_passthru(hdl, &cmd);
 	if (err) {

@@ -103,6 +103,7 @@ COMMAND_LIST(
 	ENTRY("show-regs", "Shows the controller registers or properties. Requires character device", show_registers)
 	ENTRY("set-reg", "Set a register and show the resulting value", set_register)
 	ENTRY("get-reg", "Get a register and show the resulting value", get_register)
+	ENTRY("top", "nvme top", top)
 #ifdef CONFIG_FABRICS
 	ENTRY("discover", "Discover NVMeoF subsystems", discover_cmd)
 	ENTRY("connect-all", "Discover and Connect to NVMeoF subsystems", connect_all_cmd)

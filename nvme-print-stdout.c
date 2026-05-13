@@ -5951,28 +5951,6 @@ static void stdout_list_items(struct libnvme_global_ctx *ctx)
 		stdout_simple_list(ctx);
 }
 
-static bool subsystem_iopolicy_filter(const char *name, void *arg)
-{
-	libnvme_subsystem_t s = arg;
-	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
-
-	if (!strcmp(iopolicy, "queue-depth")) {
-		/* exclude "Nodes" for iopolicy queue-depth */
-		if (!strcmp(name, "Nodes"))
-			return false;
-	} else if (!strcmp(iopolicy, "numa")) {
-		/* exclude "Qdepth" for iopolicy numa */
-		if (!strcmp(name, "Qdepth"))
-			return false;
-	} else { /* round-robin */
-		/* exclude "Nodes" and "Qdepth" for iopolicy round-robin */
-		if (!strcmp(name, "Nodes") || !strcmp(name, "Qdepth"))
-			return false;
-	}
-
-	return true;
-}
-
 static int subsystem_topology_multipath_add_row(struct table *t,
 		const char *iopolicy, const char *nshead,
 		const char *nsid, const char *nspath,
@@ -7109,6 +7087,8 @@ static struct print_ops stdout_print_ops = {
 	.topology_multipath		= stdout_topology_multipath,
 	.topology_tabular		= stdout_topology_tabular,
 
+	/* nvme top */
+	.top				= stdout_top,
 	/* status and error messages */
 	.connect_msg			= stdout_connect_msg,
 	.show_message			= stdout_message,

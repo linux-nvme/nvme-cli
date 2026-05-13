@@ -13,7 +13,8 @@ else
         'util/suffix.c',
         'util/types.c',
         'util/utils.c',
-        'util/table.c'
+        'util/table.c',
+        'util/dashboard.c',
     ]
 
     if json_c_dep.found()

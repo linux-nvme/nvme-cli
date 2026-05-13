@@ -1705,6 +1705,11 @@ void nvme_show_list_items(struct libnvme_global_ctx *ctx, nvme_print_flags_t fla
 	nvme_print(list_items, flags, ctx);
 }
 
+void nvme_show_top(nvme_print_flags_t flags, int refresh_interval)
+{
+	nvme_print(top, flags, refresh_interval);
+}
+
 void nvme_show_topology(struct libnvme_global_ctx *ctx,
 			enum nvme_cli_topo_ranking ranking,
 			nvme_print_flags_t flags)
