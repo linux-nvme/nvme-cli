@@ -94,9 +94,10 @@ void libnvme_close(struct libnvme_transport_handle *hdl);
  * If the device handle is for a ioctl based device,
  * libnvme_transport_handle_get_fd will return a valid file descriptor.
  *
- * Return: File descriptor for an IOCTL based transport handle, otherwise -1.
+ * Return: File descriptor for an IOCTL based transport handle,
+ * otherwise LIBNVME_INVALID_FD.
  */
-int libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl);
+libnvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl);
 
 /**
  * libnvme_transport_handle_get_name - Return name of the device

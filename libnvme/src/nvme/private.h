@@ -160,7 +160,7 @@ struct libnvme_transport_handle {
 	__u32 timeout;
 
 	/* direct */
-	int fd;
+	libnvme_fd_t fd;
 	struct stat stat;
 	bool ioctl_admin64;
 	bool ioctl_io64;

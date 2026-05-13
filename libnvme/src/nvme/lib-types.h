@@ -101,3 +101,20 @@ struct libnvme_uring_cmd {
 	__u32	timeout_ms;
 	__u32   rsvd2;
 };
+
+#if defined(_WIN32)
+
+#define WIN32_LEAN_AND_MEAN	/* keeps windows.h from including winsock */
+#include <windows.h>
+
+typedef HANDLE libnvme_fd_t;
+#define LIBNVME_INVALID_FD INVALID_HANDLE_VALUE
+#define LIBNVME_TEST_FD ((HANDLE)0xFD)
+
+#else
+
+typedef int libnvme_fd_t;
+#define LIBNVME_INVALID_FD -1
+#define LIBNVME_TEST_FD 0xFD
+
+#endif
