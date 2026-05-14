@@ -15,8 +15,6 @@
 #include <inttypes.h>
 #include <time.h>
 
-#include <nvme/mkdir.h>
-
 #include <libnvme.h>
 
 #include "common.h"

@@ -17,7 +17,6 @@
 #include <time.h>
 
 #include <libnvme.h>
-#include <nvme/fcntl.h>
 
 #include "common.h"
 #include "logging.h"

@@ -31,8 +31,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <nvme/mkdir.h>
-
 #include <libnvme.h>
 
 #include "common.h"

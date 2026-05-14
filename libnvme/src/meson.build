@@ -19,20 +19,17 @@ sources = [
 headers = [
     'nvme/accessors.h',
     'nvme/endian.h',
-    'nvme/fcntl.h',
     'nvme/filters.h',
     'nvme/ioctl.h',
     'nvme/lib-types.h',
     'nvme/lib.h',
     'nvme/linux.h',
     'nvme/mem.h',
-    'nvme/mkdir.h',
     'nvme/nvme-cmds.h',
     'nvme/nvme-types.h',
     'nvme/signal.h',
     'nvme/tree.h',
     'nvme/types.h',
-    'nvme/unistd.h',
     'nvme/util.h',
 ]
 

@@ -28,10 +28,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#if defined(_WIN32)
+#include <winsock2.h>	/* provides gethostname */
+#endif
+
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-
-#include <nvme/unistd.h>
 
 #include <libnvme.h>
 

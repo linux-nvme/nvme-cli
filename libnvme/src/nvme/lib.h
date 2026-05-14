@@ -12,7 +12,6 @@
 #include <stdio.h>
 
 #include <nvme/lib-types.h>
-#include <nvme/unistd.h>
 
 enum libnvme_log_level {
 	LIBNVME_LOG_ERR	  = 0,

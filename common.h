@@ -2,8 +2,15 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#include <fcntl.h>
 #include <string.h>
 #include <stdbool.h>
+
+#if defined(_WIN32)
+#include <direct.h>
+#include <io.h>
+#include <sysinfoapi.h>
+#endif
 
 #include "ccan/endian/endian.h"
 
@@ -21,6 +28,31 @@
 #else /* __packed */
 #define __packed __attribute__((__packed__))
 #endif /* __packed */
+
+/*
+ * O_BINARY is required for Windows to avoid line ending translations.
+ * Define it as 0 on platforms where it is not defined so that it can be used
+ * but will have no effect.
+ */
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
+
+/* Some common functions are implemented or named differently on Windows. */
+#if defined(_WIN32)
+#define mkdir(path, mode) _mkdir(path)
+
+#define fsync _commit
+
+static inline int getpagesize(void)
+{
+	SYSTEM_INFO si;
+
+	GetSystemInfo(&si);
+	return si.dwPageSize;
+}
+#endif
 
 /*
  * VMs on arm64 can only use a subset of instructions for MMIO that provide
