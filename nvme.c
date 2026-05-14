@@ -4932,8 +4932,8 @@ static bool is_get_feature_result_set(enum nvme_features_id feature_id)
 static int get_feature_id_changed(struct libnvme_transport_handle *hdl, struct feat_cfg cfg,
 		nvme_print_flags_t flags)
 {
-	__cleanup_free void *buf_def = NULL;
-	__cleanup_free void *buf = NULL;
+	__cleanup_libnvme_free void *buf_def = NULL;
+	__cleanup_libnvme_free void *buf = NULL;
 	__u64 result_def = 0;
 	__u64 result;
 	int err_def = 0;
@@ -7817,7 +7817,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	__u16 elbatms[256] = { 0 };
 	__u16 elbats[256] = { 0 };
 
-	__cleanup_free union {
+	__cleanup_libnvme_free union {
 		struct nvme_copy_range_f0 f0[256];
 		struct nvme_copy_range_f1 f1[256];
 		struct nvme_copy_range_f2 f2[256];
@@ -10760,7 +10760,7 @@ static int get_dispersed_ns_participating_nss_log(int argc, char **argv, struct 
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	__cleanup_free struct nvme_dispersed_ns_participating_nss_log *log = NULL;
+	__cleanup_libnvme_free struct nvme_dispersed_ns_participating_nss_log *log = NULL;
 
 	struct config {
 		__u32 namespace_id;
@@ -10980,7 +10980,7 @@ static int get_reachability_groups_log(int argc, char **argv, struct command *ac
 	nvme_print_flags_t flags;
 	int err;
 	__u64 len = 0;
-	__cleanup_free struct nvme_reachability_groups_log *log = NULL;
+	__cleanup_libnvme_free struct nvme_reachability_groups_log *log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -11091,7 +11091,7 @@ static int get_reachability_associations_log(int argc, char **argv, struct comma
 	nvme_print_flags_t flags;
 	int err;
 	__u64 len = 0;
-	__cleanup_free struct nvme_reachability_associations_log *log = NULL;
+	__cleanup_libnvme_free struct nvme_reachability_associations_log *log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -11171,7 +11171,7 @@ static int get_host_discovery_log(int argc, char **argv, struct command *acmd, s
 	const char *allhoste = "All Host Entries";
 	nvme_print_flags_t flags;
 	int err;
-	__cleanup_free struct nvme_host_discover_log *log = NULL;
+	__cleanup_libnvme_free struct nvme_host_discover_log *log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -11250,7 +11250,7 @@ static int get_ave_discovery_log(int argc, char **argv, struct command *acmd, st
 	nvme_print_flags_t flags;
 	int err;
 
-	__cleanup_free struct nvme_ave_discover_log *log = NULL;
+	__cleanup_libnvme_free struct nvme_ave_discover_log *log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
@@ -11326,7 +11326,7 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acm
 	nvme_print_flags_t flags;
 	int err;
 
-	__cleanup_free struct nvme_pull_model_ddc_req_log *log = NULL;
+	__cleanup_libnvme_free struct nvme_pull_model_ddc_req_log *log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
