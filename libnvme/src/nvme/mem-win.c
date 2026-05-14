@@ -7,14 +7,10 @@
  */
 
 #include <string.h>
-#include <errno.h>
-#include <limits.h>
 #include <malloc.h>
 
-#include <io.h>
 #include <memoryapi.h>
 #include <sysinfoapi.h>
-#include <winsock2.h>	/* for gethostname */
 
 #include "compiler-attributes.h"
 #include "mem.h"
@@ -22,9 +18,6 @@
 
 #define HUGE_MIN 0x80000 /* policy threshold when large pages unavailable */
 
-/* unistd.h POSIX compatibility */
-
-#define fsync _commit
 static int getpagesize(void)
 {
 	SYSTEM_INFO si;
