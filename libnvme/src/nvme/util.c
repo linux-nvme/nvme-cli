@@ -33,8 +33,6 @@
 
 #include <nvme/unistd.h>
 
-#include <nvme/malloc.h>
-#include <nvme/stdlib.h>
 #include <libnvme.h>
 
 #include "cleanup.h"

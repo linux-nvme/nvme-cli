@@ -18,8 +18,6 @@
 #include <ccan/htable/htable.h>
 #include <ccan/hash/hash.h>
 
-#include <nvme/stdio.h>
-
 #include <libnvme.h>
 
 #include "nvme.h"

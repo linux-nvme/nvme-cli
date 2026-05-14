@@ -120,4 +120,3 @@ __libnvme_public void libnvme_free_huge(struct libnvme_mem_huge *mh)
 	mh->len = 0;
 	mh->p = NULL;
 }
-#endif

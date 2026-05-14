@@ -9,9 +9,15 @@ util_sources = [
     'util/types.c',
     'util/utils.c',
     'util/table.c',
-    'util/dashboard.c',
 ]
 
+if host_system == 'windows'
+    util_sources += []
+else
+    util_sources += [
+        'util/dashboard.c',
+    ]
+endif
 
 if json_c_dep.found()
     util_sources += [

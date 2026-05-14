@@ -17,7 +17,6 @@
 #include <ccan/list/list.h>
 
 #include "nvme/nvme-types.h"
-#include "nvme/lib-compat.h"
 #include "nvme/lib-types.h"
 
 #include <nvme/tree.h>

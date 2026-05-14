@@ -15,6 +15,7 @@
  * GNU General Public License for more details.
  */
 
+#if !defined(_WIN32)
 #define IOPS_UNIT_NONE		""
 #define IOPS_UNIT_KB		"k"
 
@@ -1551,3 +1552,11 @@ wait_for_event:
 
 	dashboard_exit(db_ctx);
 }
+#else
+#include "nvme-print.h"
+
+void stdout_top(int refresh_interval)
+{
+	nvme_show_error("nvme-top is not supported on this platform\n");
+}
+#endif

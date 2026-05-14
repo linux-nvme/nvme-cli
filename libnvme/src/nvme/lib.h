@@ -11,9 +11,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <nvme/lib-compat.h>
 #include <nvme/lib-types.h>
-#include <nvme/stdlib.h>
 #include <nvme/unistd.h>
 
 enum libnvme_log_level {

@@ -97,21 +97,21 @@ static bool get_is_win_pe(void)
 	return false;
 }
 
-__public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
 {
 	(void)hdl;
 	errno = ENOTSUP;
 	return -errno;
 }
 
-__public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	(void)hdl;
 	errno = ENOTSUP;
 	return -errno;
 }
 
-__public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
+__libnvme_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 {
 	/*
 	 * Windows doesn't have a direct equivalent to rescan namespaces,
@@ -126,7 +126,7 @@ __public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 	return 0;
 }
 
-__public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
+__libnvme_public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
 {
 	/* Get the SCSI LUN, which corresponds to NSID - 1. */
 	SCSI_ADDRESS addr = {0};
@@ -148,7 +148,7 @@ __public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
 	return 0;
 }
 
-__public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
 		int block_size)
 {
 	/* Invalidate cached partition table and re-enumerate the device. */
@@ -1666,7 +1666,7 @@ out:
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-__public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl || !cmd)
@@ -1704,7 +1704,7 @@ __public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-__public int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl || !cmd)

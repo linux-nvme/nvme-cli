@@ -71,14 +71,14 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 		(__is_controller_path(device_path) ? S_IFCHR : S_IFBLK) | 0600;
 	hdl->stat.st_nlink = 1;
 
-	/* Windows doesn't distinguish 32/64-bit ioctl, assume 64-bit capable */
-	hdl->ioctl_admin64 = true;
-	hdl->ioctl_io64 = true;
+	/* Windows doesn't distinguish 32/64-bit ioctl, always 64-bit capable */
+	hdl->ioctl_admin_state = IOCTL_STATE_IOCTL64;
+	hdl->ioctl_io_state = IOCTL_STATE_IOCTL64;
 
 	return 0;
 }
 
-__public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
+__libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 	      struct libnvme_transport_handle **hdlp)
 {
 	struct libnvme_transport_handle *hdl;
@@ -115,7 +115,7 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 		hdl->fd = LIBNVME_TEST_FD;
 
 		if (!strcmp(name, "NVME_TEST_FD64"))
-			hdl->ioctl_admin64 = true;
+			hdl->ioctl_admin_state = IOCTL_STATE_IOCTL64;
 
 		*hdlp = hdl;
 		return 0;
@@ -157,7 +157,7 @@ __public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 	return 0;
 }
 
-__public void libnvme_close(struct libnvme_transport_handle *hdl)
+__libnvme_public void libnvme_close(struct libnvme_transport_handle *hdl)
 {
 	bool is_test_fd;
 

@@ -103,7 +103,7 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public int libnvme_get_host(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_get_host(struct libnvme_global_ctx *ctx,
 	const char *hostnqn, const char *hostid, libnvme_host_t *host)
 {
 	__cleanup_free char *hnqn = NULL;
@@ -137,7 +137,7 @@ __public int libnvme_get_host(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
+__libnvme_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 {
 	char *state = c->state;
 
@@ -146,7 +146,7 @@ __public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 	return c->state;
 }
 
-__public int libnvme_init_ctrl(libnvme_host_t h, libnvme_ctrl_t c, int instance)
+__libnvme_public int libnvme_init_ctrl(libnvme_host_t h, libnvme_ctrl_t c, int instance)
 {
 	(void)h;
 	(void)c;
@@ -212,7 +212,7 @@ static libnvme_subsystem_t libnvme_lookup_subsystem_windows(libnvme_host_t h,
 	return s;
 }
 
-__public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
+__libnvme_public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
 			       libnvme_ctrl_t *cp)
 {
 	__cleanup_free char *subsysnqn = NULL, *subsysname = NULL;
@@ -260,35 +260,35 @@ __public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
 	return 0;
 }
 
-__public char *libnvme_get_subsys_attr(libnvme_subsystem_t s, const char *attr)
+__libnvme_public char *libnvme_get_subsys_attr(libnvme_subsystem_t s, const char *attr)
 {
 	(void)s;
 	(void)attr;
 	return NULL;
 }
 
-__public char *libnvme_get_path_attr(libnvme_path_t p, const char *attr)
+__libnvme_public char *libnvme_get_path_attr(libnvme_path_t p, const char *attr)
 {
 	(void)p;
 	(void)attr;
 	return NULL;
 }
 
-__public char *libnvme_get_attr(const char *dir, const char *attr)
+__libnvme_public char *libnvme_get_attr(const char *dir, const char *attr)
 {
 	(void)dir;
 	(void)attr;
 	return NULL;
 }
 
-__public char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr)
+__libnvme_public char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr)
 {
 	(void)c;
 	(void)attr;
 	return NULL;
 }
 
-__public char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr)
+__libnvme_public char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr)
 {
 	(void)n;
 	(void)attr;
@@ -311,7 +311,7 @@ int libnvme_ns_init(const char *path, struct libnvme_ns *ns)
 	uint8_t flbas;
 	int ret;
 
-	id = __libnvme_alloc(sizeof(*id));
+	id = libnvme_alloc(sizeof(*id));
 	if (!id)
 		return -ENOMEM;
 

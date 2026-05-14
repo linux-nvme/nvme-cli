@@ -738,13 +738,13 @@ int libnvme_storageport_nsid_to_drive_path(
 	return -ENODEV;
 }
 
-__public int libnvme_scan_subsystems(struct dirent ***subsys)
+__libnvme_public int libnvme_scan_subsystems(struct dirent ***subsys)
 {
 	(void)subsys;
 	return 0;
 }
 
-__public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
+__libnvme_public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
 		struct dirent ***ns)
 {
 	(void)s;
@@ -752,7 +752,7 @@ __public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
 	return 0;
 }
 
-__public int libnvme_scan_ctrls(struct dirent ***ctrls)
+__libnvme_public int libnvme_scan_ctrls(struct dirent ***ctrls)
 {
 	struct dirent **entries;
 	size_t i;
@@ -797,7 +797,7 @@ enomem:
 	return -ENOMEM;
 }
 
-__public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
+__libnvme_public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
 		struct dirent ***paths)
 {
 	(void)c;
@@ -805,7 +805,7 @@ __public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
 	return 0;
 }
 
-__public int libnvme_scan_ctrl_namespaces(libnvme_ctrl_t c, struct dirent ***ns)
+__libnvme_public int libnvme_scan_ctrl_namespaces(libnvme_ctrl_t c, struct dirent ***ns)
 {
 	struct dirent **entries = NULL;
 	const struct storageport_map_entry *sp_entry;
@@ -861,7 +861,7 @@ enomem:
 	return -ENOMEM;
 }
 
-__public int libnvme_scan_ns_head_paths(libnvme_ns_head_t head,
+__libnvme_public int libnvme_scan_ns_head_paths(libnvme_ns_head_t head,
 		struct dirent ***paths)
 {
 	(void)head;

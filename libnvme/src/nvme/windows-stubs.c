@@ -34,7 +34,7 @@ void libnvme_stubs_set_debug(int enable)
 /*
  * TLS/PSK key management stubs (linux.c functions)
  */
-__public int libnvme_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
 				  unsigned char version, unsigned char hmac,
 				  const unsigned char *key_data,
 				  size_t key_len, char **identity)
@@ -50,7 +50,7 @@ __public int libnvme_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
 	return -1;
 }
 
-__public int libnvme_export_tls_key(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_export_tls_key(struct libnvme_global_ctx *ctx,
 	const unsigned char *key_data, int key_len, char **identity)
 {
 	stub_log(__func__);
@@ -62,7 +62,7 @@ __public int libnvme_export_tls_key(struct libnvme_global_ctx *ctx,
 	return -1;
 }
 
-__public int libnvme_import_tls_key_versioned(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_import_tls_key_versioned(struct libnvme_global_ctx *ctx,
 				  const char *encoded_key,
 				  unsigned char *version,
 				  unsigned char *hmac,
@@ -80,7 +80,7 @@ __public int libnvme_import_tls_key_versioned(struct libnvme_global_ctx *ctx,
 	return -1;
 }
 
-__public int libnvme_import_tls_key(struct libnvme_global_ctx *ctx, const char *encoded_key,
+__libnvme_public int libnvme_import_tls_key(struct libnvme_global_ctx *ctx, const char *encoded_key,
 			int *key_len, unsigned int *hmac, unsigned char **key)
 {
 	stub_log(__func__);
@@ -97,7 +97,7 @@ __public int libnvme_import_tls_key(struct libnvme_global_ctx *ctx, const char *
  * Linux keyring and TLS key management stubs (linux.c)
  * These are used by nvme-cli security commands
  */
-__public int libnvme_read_key(struct libnvme_global_ctx *ctx, long keyring_id,
+__libnvme_public int libnvme_read_key(struct libnvme_global_ctx *ctx, long keyring_id,
 		long key_id, int *len, unsigned char **key)
 {
 	stub_log(__func__);
@@ -110,7 +110,7 @@ __public int libnvme_read_key(struct libnvme_global_ctx *ctx, long keyring_id,
 	return -1;
 }
 
-__public int libnvme_lookup_keyring(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_lookup_keyring(struct libnvme_global_ctx *ctx,
 		const char *keyring, long *key)
 {
 	stub_log(__func__);
@@ -121,7 +121,7 @@ __public int libnvme_lookup_keyring(struct libnvme_global_ctx *ctx,
 	return -1;
 }
 
-__public int libnvme_update_key(struct libnvme_global_ctx *ctx, long keyring_id,
+__libnvme_public int libnvme_update_key(struct libnvme_global_ctx *ctx, long keyring_id,
 		const char *key_type, const char *identity,
 		unsigned char *key_data, int key_len, long *key)
 {
@@ -137,7 +137,7 @@ __public int libnvme_update_key(struct libnvme_global_ctx *ctx, long keyring_id,
 	return -1;
 }
 
-__public int libnvme_revoke_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
+__libnvme_public int libnvme_revoke_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
 		const char *key_type, const char *identity)
 {
 	stub_log(__func__);
@@ -149,7 +149,7 @@ __public int libnvme_revoke_tls_key(struct libnvme_global_ctx *ctx, const char *
 	return -1;
 }
 
-__public int libnvme_scan_tls_keys(struct libnvme_global_ctx *ctx, const char *keyring,
+__libnvme_public int libnvme_scan_tls_keys(struct libnvme_global_ctx *ctx, const char *keyring,
 		libnvme_scan_tls_keys_cb_t cb, void *data)
 {
 	stub_log(__func__);
@@ -161,7 +161,7 @@ __public int libnvme_scan_tls_keys(struct libnvme_global_ctx *ctx, const char *k
 	return -1;
 }
 
-__public char *libnvme_describe_key_serial(struct libnvme_global_ctx *ctx,
+__libnvme_public char *libnvme_describe_key_serial(struct libnvme_global_ctx *ctx,
 		long key_id)
 {
 	stub_log(__func__);
@@ -170,7 +170,7 @@ __public char *libnvme_describe_key_serial(struct libnvme_global_ctx *ctx,
 	return NULL;
 }
 
-__public int libnvme_insert_tls_key_versioned(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_insert_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
 		int version, int hmac,
@@ -192,7 +192,7 @@ __public int libnvme_insert_tls_key_versioned(struct libnvme_global_ctx *ctx,
 	return -1;
 }
 
-__public int libnvme_generate_tls_key_identity_compat(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_generate_tls_key_identity_compat(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *subsysnqn,
 		int version, int hmac, unsigned char *configured_key,
 		int key_len, char **identity)
@@ -210,7 +210,7 @@ __public int libnvme_generate_tls_key_identity_compat(struct libnvme_global_ctx 
 	return -1;
 }
 
-__public int libnvme_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
 		int version, int hmac,
@@ -232,7 +232,7 @@ __public int libnvme_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
 	return -1;
 }
 
-__public int libnvme_generate_tls_key_identity(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_generate_tls_key_identity(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *subsysnqn,
 		int version, int hmac,
 		unsigned char *configured_key, int key_len,
@@ -251,14 +251,14 @@ __public int libnvme_generate_tls_key_identity(struct libnvme_global_ctx *ctx,
 	return -1;
 }
 
-__public char *libnvme_read_hostnqn(void)
+__libnvme_public char *libnvme_read_hostnqn(void)
 {
 	stub_log(__func__);
 	/* No /etc/nvme/hostnqn equivalent on Windows */
 	return NULL;
 }
 
-__public int libnvme_gen_dhchap_key(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_gen_dhchap_key(struct libnvme_global_ctx *ctx,
 		char *hostnqn, enum libnvme_hmac_alg hmac,
 		unsigned int key_len, unsigned char *secret,
 		unsigned char *key)
@@ -274,7 +274,7 @@ __public int libnvme_gen_dhchap_key(struct libnvme_global_ctx *ctx,
 	return -1;
 }
 
-__public int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
 		const char *secret, size_t key_len, unsigned char **raw_secret)
 {
 	stub_log(__func__);
@@ -282,7 +282,7 @@ __public int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
 }
 
 /* Hostnqn generation */
-__public char *libnvme_generate_hostnqn(void)
+__libnvme_public char *libnvme_generate_hostnqn(void)
 {
 	stub_log(__func__);
 	/* Could implement UUID-based generation, but for now just fail */
