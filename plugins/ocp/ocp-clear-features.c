@@ -33,7 +33,7 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 	if (err)
 		return err;
 
-	if (opts[0].seen)
+	if (argconfig_parse_seen(opts, "no-uuid"))
 		uuid = false;
 
 	if (uuid) {
