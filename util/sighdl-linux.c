@@ -3,8 +3,6 @@
 #include <errno.h>
 #include <stddef.h>
 
-#include <nvme/signal.h>
-
 #include "sighdl.h"
 
 volatile sig_atomic_t nvme_sigint_received;
@@ -15,12 +13,10 @@ static void nvme_sigint_handler(int signum)
 	nvme_sigint_received = true;
 }
 
-#if !defined(_WIN32)
 static void nvme_sigwinch_handler(int signum)
 {
 	nvme_sigwinch_received = true;
 }
-#endif
 
 int nvme_install_sigint_handler(void)
 {
@@ -39,9 +35,6 @@ int nvme_install_sigint_handler(void)
 
 int nvme_install_sigwinch_handler(void)
 {
-#if defined(_WIN32)
-	return -ENOTSUP;
-#else
 	struct sigaction act = {0};
 
 	sigemptyset(&act.sa_mask);
@@ -51,6 +44,6 @@ int nvme_install_sigwinch_handler(void)
 	nvme_sigwinch_received = false;
 	if (sigaction(SIGWINCH, &act, NULL) == -1)
 		return -errno;
+
 	return 0;
-#endif
 }
