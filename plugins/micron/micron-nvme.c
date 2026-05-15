@@ -2483,7 +2483,7 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 		return -1;
 	}
 
-	if (strcmp(cfg.fmt, "normal") || strcmp(cfg.fmt, "json")) {
+	if (strcmp(cfg.fmt, "normal") && strcmp(cfg.fmt, "json")) {
 		fprintf(stderr, "Invalid output format\n");
 		return -1;
 	}
