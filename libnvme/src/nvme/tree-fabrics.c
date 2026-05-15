@@ -244,7 +244,7 @@ static bool _tcp_match_ctrl(struct libnvme_ctrl *c,
 	return true;
 }
 
-ctrl_match_t _candidate_init_fabrics(struct libnvme_global_ctx *ctx,
+ctrl_match_t libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 		struct candidate_args *candidate,
 		const struct libnvmf_context *fctx)
 {
@@ -256,7 +256,7 @@ ctrl_match_t _candidate_init_fabrics(struct libnvme_global_ctx *ctx,
 
 	if (streq0(fctx->transport, "rdma")) {
 		candidate->addreq = libnvme_ipaddrs_eq;
-		return _tree_ctrl_match;
+		return libnvme_tree_ctrl_match;
 	}
 
 	return NULL;
@@ -345,4 +345,21 @@ void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
 	libnvmf_read_sysfs_dhchap(ctx, c);
 	libnvmf_read_sysfs_tls(ctx, c);
 	libnvmf_read_sysfs_tls_mode(ctx, c);
+}
+
+bool libnvmf_ctrl_match_config(struct libnvme_ctrl *c,
+		struct libnvmf_context *fctx)
+{
+	struct candidate_args candidate = {};
+	ctrl_match_t ctrl_match;
+
+	ctrl_match = libnvme_candidate_init(c->ctx, &candidate, fctx);
+
+	return ctrl_match(c, &candidate);
+}
+
+libnvme_ctrl_t libnvmf_ctrl_find(libnvme_subsystem_t s,
+		struct libnvmf_context *fctx)
+{
+	return libnvme_ctrl_find(s, fctx, NULL/*p*/);
 }

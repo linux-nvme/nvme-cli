@@ -442,12 +442,9 @@ struct libnvme_transport_handle *__libnvme_create_transport_handle(
 
 struct libnvmf_context;
 
-int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
+int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx,
 		struct libnvme_ctrl **cp);
-bool _libnvme_ctrl_match_config(struct libnvme_ctrl *c,
-		struct libnvmf_context *fctx);
-
 void nvme_deconfigure_ctrl(struct libnvme_ctrl *c);
 
 struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
@@ -456,8 +453,6 @@ struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 		const char *name, const char *subsysnqn);
 struct libnvme_ctrl * libnvme_lookup_ctrl(struct libnvme_subsystem * s,
 		struct libnvmf_context *fctx, struct libnvme_ctrl *p);
-struct libnvme_ctrl * libnvme_ctrl_find(struct libnvme_subsystem *s,
-		struct libnvmf_context *fctx);
 
 void __libnvme_free_host(struct libnvme_host * h);
 

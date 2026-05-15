@@ -1086,7 +1086,7 @@ static const char *lookup_context(struct libnvme_global_ctx *ctx, libnvme_ctrl_t
 				.trsvcid = libnvme_ctrl_get_trsvcid(c),
 				.subsysnqn = NULL,
 			};
-			if (libnvme_ctrl_find(s, &fctx))
+			if (libnvmf_ctrl_find(s, &fctx))
 				return libnvme_subsystem_get_application(s);
 		}
 	}
@@ -1097,7 +1097,7 @@ static const char *lookup_context(struct libnvme_global_ctx *ctx, libnvme_ctrl_t
 __libnvme_public int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, libnvme_ctrl_t *cp)
 {
-	return _libnvme_create_ctrl(ctx, fctx, cp);
+	return libnvme_create_ctrl(ctx, fctx, cp);
 }
 
 __libnvme_public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
@@ -1124,7 +1124,7 @@ __libnvme_public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 			.subsysnqn = NULL,
 		};
 
-		fc = libnvme_ctrl_find(s, &fctx);
+		fc = libnvmf_ctrl_find(s, &fctx);
 		if (fc) {
 			const char *key;
 
@@ -1313,7 +1313,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 		 "(transport: %s, traddr: %s, trsvcid %s)\n",
 		 fctx->transport, fctx->traddr, fctx->trsvcid);
 
-	ret = _libnvme_create_ctrl(h->ctx, fctx, &c);
+	ret = libnvme_create_ctrl(h->ctx, fctx, &c);
 	if (ret) {
 		libnvme_msg(h->ctx, LIBNVME_LOG_DEBUG, "skipping discovery entry, "
 			 "failed to allocate %s controller with traddr %s\n",
@@ -1968,7 +1968,7 @@ static libnvme_ctrl_t lookup_ctrl(libnvme_host_t h, struct libnvmf_context *fctx
 	libnvme_ctrl_t c;
 
 	libnvme_for_each_subsystem(h, s) {
-		c = libnvme_ctrl_find(s, fctx);
+		c = libnvmf_ctrl_find(s, fctx);
 		if (c)
 			return c;
 	}
@@ -2217,7 +2217,7 @@ static int __create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 	libnvme_ctrl_t c;
 	int tmo, ret;
 
-	ret = _libnvme_create_ctrl(ctx, fctx, &c);
+	ret = libnvme_create_ctrl(ctx, fctx, &c);
 	if (ret)
 		return ret;
 
@@ -2695,7 +2695,7 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 	if (c && libnvme_ctrl_get_name(c))
 		return 0;
 
-	ret = _libnvme_create_ctrl(ctx, fctx, &c);
+	ret = libnvme_create_ctrl(ctx, fctx, &c);
 	if (ret)
 		return ret;
 
@@ -3066,7 +3066,7 @@ __libnvme_public int libnvmf_discovery(
 		ret = libnvme_scan_ctrl(ctx, fctx->device, &c);
 		if (!ret) {
 			/* Check if device matches command-line options */
-			if (!_libnvme_ctrl_match_config(c, fctx)) {
+			if (!libnvmf_ctrl_match_config(c, fctx)) {
 				libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				    "ctrl device %s found, ignoring non matching command-line options\n",
 				    fctx->device);
@@ -3165,7 +3165,7 @@ __libnvme_public int libnvmf_connect(
 		return -EALREADY;
 	}
 
-	err = _libnvme_create_ctrl(ctx, fctx, &c);
+	err = libnvme_create_ctrl(ctx, fctx, &c);
 	if (err)
 		return err;
 

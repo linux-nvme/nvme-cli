@@ -488,8 +488,8 @@ static bool ctrl_match(const char *tag,
 	if (reference->address)
 		reference_ctrl->address = (char *)reference->address;
 
-	/* libnvme_ctrl_find() MUST BE RUN BEFORE libnvme_lookup_ctrl() */
-	found_ctrl = libnvme_ctrl_find(s, &candidate->f);
+	/* libnvmf_ctrl_find() MUST BE RUN BEFORE libnvme_lookup_ctrl() */
+	found_ctrl = libnvmf_ctrl_find(s, &candidate->f);
 
 	candidate_ctrl = libnvme_lookup_ctrl(s, &candidate->f, NULL);
 
@@ -1304,7 +1304,7 @@ static bool ctrl_config_match(const char *tag,
 	if (reference->address)
 		reference_ctrl->address = (char *)reference->address;
 
-	match = _libnvme_ctrl_match_config(reference_ctrl, &candidate->f);
+	match = libnvmf_ctrl_match_config(reference_ctrl, &candidate->f);
 
 	if (should_match) {
 		if (!match) {
@@ -1511,7 +1511,7 @@ static bool test_well_known_nqn(void)
 	disc_ctrl->name = "nvme1";
 	libnvme_ctrl_set_discovery_ctrl(disc_ctrl, true);
 
-	found = libnvme_ctrl_find(s_disc, &fctx_wknqn);
+	found = libnvmf_ctrl_find(s_disc, &fctx_wknqn);
 	if (found == disc_ctrl) {
 		printf(" - well-known NQN matches discovery ctrl [PASS]\n");
 	} else {
@@ -1526,7 +1526,7 @@ static bool test_well_known_nqn(void)
 	assert(regular_ctrl);
 	regular_ctrl->name = "nvme2";
 
-	found = libnvme_ctrl_find(s_regular, &fctx_wknqn);
+	found = libnvmf_ctrl_find(s_regular, &fctx_wknqn);
 	if (!found) {
 		printf(" - well-known NQN does not match non-discovery ctrl [PASS]\n");
 	} else {
@@ -1577,7 +1577,7 @@ static bool test_none_normalization(void)
 }
 
 /**
- * test_ctrl_config_match_rdma - Test _libnvme_ctrl_match_config() for RDMA.
+ * test_ctrl_config_match_rdma - Test libnvmf_ctrl_match_config() for RDMA.
  *
  * RDMA uses _tree_ctrl_match() with libnvme_ipaddrs_eq for address
  * comparison.
@@ -1631,7 +1631,7 @@ static bool test_ctrl_config_match_rdma(void)
 }
 
 /**
- * test_ctrl_config_match_fc - Test _libnvme_ctrl_match_config() for FC.
+ * test_ctrl_config_match_fc - Test libnvmf_ctrl_match_config() for FC.
  *
  * FC uses _tree_ctrl_match() with streqcase0 for address comparison
  * (case-insensitive WWN matching), since _candidate_init_fabrics() returns
@@ -1733,7 +1733,7 @@ static bool test_lookup_ctrl_pagination(void)
 	assert(ctrl_b);
 
 	/* p=NULL: search starts from head, finds ctrl_a */
-	found = libnvme_ctrl_find(s, &fctx_a);
+	found = libnvmf_ctrl_find(s, &fctx_a);
 	if (found == ctrl_a) {
 		printf(" - ctrl_find(p=NULL) finds ctrl_a [PASS]\n");
 	} else {

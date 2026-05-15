@@ -1538,7 +1538,7 @@ __libnvme_public void libnvme_free_ctrl(libnvme_ctrl_t c)
 	__libnvme_free_ctrl(c);
 }
 
-int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
+int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, libnvme_ctrl_t *cp)
 {
 	struct libnvme_ctrl *c;
@@ -1589,7 +1589,7 @@ int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 }
 
 /**
- * _tree_ctrl_match() - Check if controller matches candidate (generic matcher)
+ * libnvme_tree_ctrl_match() - Generic controller matcher for non-TCP transports
  * @c:	An existing controller instance
  * @candidate:	Candidate ctrl we're trying to match with @c.
  *
@@ -1599,7 +1599,7 @@ int _libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
  *
  * Return: true if a match is found, false otherwise.
  */
-bool _tree_ctrl_match(struct libnvme_ctrl *c,
+bool libnvme_tree_ctrl_match(struct libnvme_ctrl *c,
 		struct candidate_args *candidate)
 {
 	if (!streq0(c->transport, candidate->transport))
@@ -1631,7 +1631,7 @@ bool _tree_ctrl_match(struct libnvme_ctrl *c,
 }
 
 /**
- * _candidate_init() - Init candidate and get the matching function
+ * libnvme_candidate_init() - Init candidate and get the matching function
  *
  * @candidate:		Candidate struct to initialize
  * @transport:		Transport name
@@ -1648,7 +1648,7 @@ bool _tree_ctrl_match(struct libnvme_ctrl *c,
  * Return: The matching function to use when comparing an existing
  * controller to the candidate controller.
  */
-static ctrl_match_t _candidate_init(struct libnvme_global_ctx *ctx,
+ctrl_match_t libnvme_candidate_init(struct libnvme_global_ctx *ctx,
 		struct candidate_args *candidate, struct libnvmf_context *fctx)
 {
 	ctrl_match_t m;
@@ -1676,16 +1676,16 @@ static ctrl_match_t _candidate_init(struct libnvme_global_ctx *ctx,
 		candidate->well_known_nqn = true;
 	}
 
-	m = _candidate_init_fabrics(ctx, candidate, fctx);
+	m = libnvmf_candidate_init(ctx, candidate, fctx);
 	if (m)
 		return m;
 
 	/* All other transport types */
 	candidate->addreq = streqcase0;
-	return _tree_ctrl_match;
+	return libnvme_tree_ctrl_match;
 }
 
-static libnvme_ctrl_t __nvme_ctrl_find(libnvme_subsystem_t s,
+libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
 		struct libnvmf_context *fctx, libnvme_ctrl_t p)
 {
 	struct candidate_args candidate = {};
@@ -1693,7 +1693,7 @@ static libnvme_ctrl_t __nvme_ctrl_find(libnvme_subsystem_t s,
 	ctrl_match_t ctrl_match;
 
 	/* Init candidate and get the matching function to use */
-	ctrl_match = _candidate_init(s->h->ctx, &candidate, fctx);
+	ctrl_match = libnvme_candidate_init(s->h->ctx, &candidate, fctx);
 
 	c = p ? libnvme_subsystem_next_ctrl(s, p) : libnvme_subsystem_first_ctrl(s);
 	for (; c != NULL; c = libnvme_subsystem_next_ctrl(s, c)) {
@@ -1704,41 +1704,6 @@ static libnvme_ctrl_t __nvme_ctrl_find(libnvme_subsystem_t s,
 	}
 
 	return matching_c;
-}
-
-bool _libnvme_ctrl_match_config(struct libnvme_ctrl *c,
-		struct libnvmf_context *fctx)
-{
-	struct candidate_args candidate = {};
-	ctrl_match_t ctrl_match;
-
-	/* Init candidate and get the matching function to use */
-	ctrl_match = _candidate_init(c->ctx, &candidate, fctx);
-
-	return ctrl_match(c, &candidate);
-}
-
-__libnvme_public bool libnvme_ctrl_match_config(struct libnvme_ctrl *c,
-		const char *transport, const char *traddr, const char *trsvcid,
-		const char *subsysnqn, const char *host_traddr,
-		const char *host_iface)
-{
-	struct libnvmf_context fctx = {
-		.transport = transport,
-		.traddr = traddr,
-		.host_traddr = host_traddr,
-		.host_iface = host_iface,
-		.trsvcid = trsvcid,
-		.subsysnqn = subsysnqn,
-	};
-
-	return _libnvme_ctrl_match_config(c, &fctx);
-}
-
-libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
-		struct libnvmf_context *fctx)
-{
-	return __nvme_ctrl_find(s, fctx, NULL/*p*/);
 }
 
 libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
@@ -1755,7 +1720,7 @@ libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
 
 	/* Clear out subsysnqn; might be different for discovery subsystems */
 	fctx->subsysnqn = NULL;
-	c = __nvme_ctrl_find(s, fctx, p);
+	c = libnvme_ctrl_find(s, fctx, p);
 	if (c) {
 		fctx->subsysnqn = subsysnqn;
 		return c;
@@ -1765,7 +1730,7 @@ libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
 	/* Set the NQN to the subsystem the controller should be created in */
 	fctx->subsysnqn = s->subsysnqn;
 	libnvmf_default_config(&fctx->cfg);
-	ret = _libnvme_create_ctrl(ctx, fctx, &c);
+	ret = libnvme_create_ctrl(ctx, fctx, &c);
 	/* And restore NQN to avoid issues with repetitive calls */
 	fctx->subsysnqn = subsysnqn;
 	if (ret)
