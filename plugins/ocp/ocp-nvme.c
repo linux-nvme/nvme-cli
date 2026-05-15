@@ -830,7 +830,7 @@ static int extract_dump_get_log(struct libnvme_transport_handle *hdl, char *feat
 
 		if (i != total_loop_cnt - 1) {
 			if (!i) {
-				output = open(filepath, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+				output = open(filepath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
 				if (output < 0) {
 					err = -13;
 					goto end;

@@ -924,7 +924,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!",
 				cfg.file_name, libnvme_strerror(errno));
@@ -1901,7 +1901,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 		return -1;
 	}
 
-	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!",
 				cfg.file_name, libnvme_strerror(errno));
@@ -2274,7 +2274,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 	       cfg.nsid);
 
 	if (cfg.file) {
-		dfd = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		dfd = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0644);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.file);
 			return -errno;
@@ -8549,7 +8549,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		flags = O_RDONLY;
 	} else {
 		dfd = mfd = STDOUT_FILENO;
-		flags = O_WRONLY | O_CREAT | O_TRUNC;
+		flags = O_WRONLY | O_CREAT | O_TRUNC | O_BINARY;
 	}
 
 	if (strlen(cfg.data)) {
@@ -9427,7 +9427,7 @@ static int passthru(int argc, char **argv, bool admin,
 
 	if (cfg.opcode & 0x02) {
 		cfg.read = true;
-		flags = O_WRONLY | O_CREAT | O_TRUNC;
+		flags = O_WRONLY | O_CREAT | O_TRUNC | O_BINARY;
 		dfd = mfd = STDOUT_FILENO;
 	}
 
@@ -10548,7 +10548,7 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 		fd = STDIN_FILENO;
 		send = true;
 	} else {
-		flags = O_WRONLY | O_CREAT | O_TRUNC;
+		flags = O_WRONLY | O_CREAT | O_TRUNC | O_BINARY;
 		fd = STDOUT_FILENO;
 		send = false;
 	}
