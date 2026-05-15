@@ -1906,83 +1906,6 @@ static int libnvme_ctrl_lookup_phy_slot(struct libnvme_global_ctx *ctx,
 	return -ENOENT;
 }
 
-static void libnvme_read_sysfs_dhchap(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c)
-{
-	char *host_key, *ctrl_key;
-
-	host_key = libnvme_get_ctrl_attr(c, "dhchap_secret");
-	if (host_key && !strcmp(host_key, "none")) {
-		free(host_key);
-		host_key = NULL;
-	}
-	if (host_key) {
-		libnvme_ctrl_set_dhchap_host_key(c, NULL);
-		c->dhchap_host_key = host_key;
-	}
-
-	ctrl_key = libnvme_get_ctrl_attr(c, "dhchap_ctrl_secret");
-	if (ctrl_key && !strcmp(ctrl_key, "none")) {
-		free(ctrl_key);
-		ctrl_key = NULL;
-	}
-	if (ctrl_key) {
-		libnvme_ctrl_set_dhchap_ctrl_key(c, NULL);
-		c->dhchap_ctrl_key = ctrl_key;
-	}
-}
-
-static void libnvme_read_sysfs_tls(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c)
-{
-	char *endptr;
-	long key_id;
-	char *key, *keyring;
-
-	key = libnvme_get_ctrl_attr(c, "tls_key");
-	if (!key) {
-		/* tls_key is only present if --tls or --concat has been used */
-		return;
-	}
-
-	keyring = libnvme_get_ctrl_attr(c, "tls_keyring");
-	libnvme_ctrl_set_keyring(c, keyring);
-	free(keyring);
-
-	/* the sysfs entry is not prefixing the id but it's in hex */
-	key_id = strtol(key, &endptr, 16);
-	if (endptr != key)
-		c->cfg.tls_key_id = key_id;
-
-	free(key);
-
-	key = libnvme_get_ctrl_attr(c, "tls_configured_key");
-	if (!key)
-		return;
-
-	/* the sysfs entry is not prefixing the id but it's in hex */
-	key_id = strtol(key, &endptr, 16);
-	if (endptr != key)
-		c->cfg.tls_configured_key_id = key_id;
-
-	free(key);
-}
-
-static void libnvme_read_sysfs_tls_mode(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c)
-{
-	__cleanup_free char *mode = NULL;
-
-	mode = libnvme_get_ctrl_attr(c, "tls_mode");
-	if (!mode)
-		return;
-
-	if (!strcmp(mode, "tls"))
-		c->cfg.tls = true;
-	else if (!strcmp(mode, "concat"))
-		c->cfg.concat = true;
-}
-
 static int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c, const char *path, const char *name)
 {
@@ -2029,9 +1952,7 @@ static int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	c->cntlid = libnvme_get_ctrl_attr(c, "cntlid");
 	c->dctype = libnvme_get_ctrl_attr(c, "dctype");
 	libnvme_ctrl_lookup_phy_slot(ctx, c);
-	libnvme_read_sysfs_dhchap(ctx, c);
-	libnvme_read_sysfs_tls(ctx, c);
-	libnvme_read_sysfs_tls_mode(ctx, c);
+	libnvmf_read_sysfs_fabrics_attrs(ctx, c);
 
 	return 0;
 }

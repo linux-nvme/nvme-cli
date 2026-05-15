@@ -195,3 +195,6 @@ bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr);
 
 void libnvmf_default_config(struct libnvme_fabrics_config *cfg);
+
+void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
+		libnvme_ctrl_t c);

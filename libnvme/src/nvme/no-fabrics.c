@@ -24,3 +24,8 @@ ctrl_match_t _candidate_init_fabrics(struct libnvme_global_ctx *ctx,
 {
 	return NULL;
 }
+
+void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
+		libnvme_ctrl_t c)
+{
+}
