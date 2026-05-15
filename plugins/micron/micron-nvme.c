@@ -1836,25 +1836,18 @@ static int micron_nand_stats(int argc, char **argv,
 	if (!strcmp(cfg.fmt, "normal"))
 		is_json = false;
 
-	err = nvme_identify_ctrl(hdl, &ctrl);
-	if (err) {
-		printf("Error %d retrieving controller identification data\n", err);
-		goto out;
-	}
-
 	/* pull log details based on the model name */
 	if (sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx) != 1)
 		ctrlIdx = 0;
 	eModel = GetDriveModel(ctrlIdx);
 	if (eModel == UNKNOWN_MODEL) {
 		printf("Unsupported drive model for vs-nand-stats command\n");
-		err = -1;
-		goto out;
+		return -1;
 	}
 
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err) {
-		fprintf(stderr, "ERROR : identify_ctrl() failed with 0x%x\n", err);
+		nvme_show_err(err, "ERROR : identify_ctrl() failed");
 		return -1;
 	}
 
@@ -1864,13 +1857,13 @@ static int micron_nand_stats(int argc, char **argv,
 			print_hyperscale_nand_stats((__u8 *)logC0, is_json);
 			goto out;
 		} else if (err < 0) {
-			printf("Unable to retrieve extended smart log 0xC0 for the drive\n");
+			nvme_show_err(err, "Unable to retrieve extended smart log 0xC0 for the drive");
 			return -1;
 		}
 	}
 
 	err = nvme_get_log_simple(hdl, 0xD0, extSmartLog, D0_log_size);
-	has_d0_log = (err == 0);
+	has_d0_log = !err;
 
 	/* should check for firmware version if this log is supported or not */
 	if (eModel != M5407 && eModel != M5410) {
@@ -1881,21 +1874,19 @@ static int micron_nand_stats(int argc, char **argv,
 	nsze = (ctrl.vs[987] == 0x12);
 	if (!nsze && nsze_from_oacs)
 		nsze = ((ctrl.oacs >> 3) & 0x1);
-	err = 0;
+
 	if (has_fb_log) {
 		__u8 spec = (eModel == M5410) ? 0 : 1;	/* FB spec version */
 
 		print_nand_stats_fb((__u8 *)logFB, (__u8 *)extSmartLog, nsze, is_json, spec);
+		err = 0;
 	} else if (has_d0_log) {
 		print_nand_stats_d0((__u8 *)extSmartLog, nsze, is_json);
 		err = 0;
-	} else {
-		printf("Unable to retrieve extended smart log for the drive\n");
-		err = -ENOTTY;
 	}
 out:
-	if (err > 0)
-		nvme_show_status(err);
+	if (err)
+		nvme_show_err(err, "Unable to retrieve extended smart log for the drive");
 
 	return err;
 }
