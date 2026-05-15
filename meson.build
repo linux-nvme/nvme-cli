@@ -426,6 +426,14 @@ conf.set10(
     description: 'Is reallocarray available',
 )
 
+conf.set10(
+    'HAVE_SIGACTION',
+    cc.has_function(
+        'sigaction',
+        prefix : '#include <signal.h>'),
+    description: 'Is sigaction available',
+)
+
 project_config_file = 'nvme-config.h'
 nvme_config_h = configure_file(output: project_config_file, configuration: conf)
 config_dep = declare_dependency(

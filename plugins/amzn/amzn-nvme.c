@@ -638,10 +638,15 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 
 	if (interval > 0) {
 		struct amzn_latency_log_page prev, curr, diff;
+
+#if HAVE_SIGACTION
 		struct sigaction sa = { .sa_handler = amzn_sigint_handler };
 
 		sigemptyset(&sa.sa_mask);
 		sigaction(SIGINT, &sa, NULL);
+#else
+		signal(SIGINT, amzn_sigint_handler);
+#endif
 
 		printf("Polling NVMe stats every %u sec(s);"
 		       " press Ctrl+C to stop\n\n",
