@@ -9,8 +9,7 @@
 name: Codecov
 
 on:
-  push:
-    branches: [master]
+  workflow_dispatch:
 
 jobs:
   code-coverage:
