@@ -53,7 +53,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 				       NVME_LOG_CDW14_UUID_MASK);
 	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err)
-		nvme_show_status(err);
+		nvme_show_err(err, "Failed to fetch the log from drive");
 
 	int guid_cmp_res = memcmp(fw_history.log_page_guid, ocp_fw_activation_history_guid,
 				  sizeof(ocp_fw_activation_history_guid));
