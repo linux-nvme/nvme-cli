@@ -89,62 +89,57 @@ void generic_structure_parser(__u8 *buf, struct request_data *req_data, int fiel
 void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t data_size, FILE *fp);
 
 /**
- * @brief prints raw data to the buffer
+ * @brief formats a 16-byte field as a hex string
  *
- * @param offset, intput offset of the param
- * @param sfield, intput field
+ * @param offset, input offset of the param
+ * @param sfield, input field name
  * @param buf, input raw data
- * @param datastr, output data buffer
  *
- * @return 0 success
+ * @return allocated string (caller must free), or NULL on error
  */
-void process_field_size_16(int offset, char *sfield, __u8 *buf, char *datastr);
+char *process_field_size_16(int offset, char *sfield, __u8 *buf);
 
 /**
- * @brief prints raw data to the buffer
+ * @brief formats an 8-byte field as a hex string
  *
- * @param offset, intput offset of the param
- * @param sfield, intput field
+ * @param offset, input offset of the param
+ * @param sfield, input field name
  * @param buf, input raw data
- * @param datastr, output data buffer
  *
- * @return 0 success
+ * @return allocated string (caller must free), or NULL on error
  */
-void process_field_size_8(int offset, char *sfield, __u8 *buf, char *datastr);
+char *process_field_size_8(int offset, char *sfield, __u8 *buf);
 
 /**
- * @brief prints raw data to the buffer
+ * @brief formats a 7-byte field as a hex string
  *
- * @param offset, intput offset of the param
- * @param sfield, intput field
+ * @param offset, input offset of the param
+ * @param sfield, input field name
  * @param buf, input raw data
- * @param datastr, output data buffer
  *
- * @return 0 success
+ * @return allocated string (caller must free), or NULL on error
  */
-void process_field_size_7(int offset, char *sfield, __u8 *buf, char *datastr);
+char *process_field_size_7(int offset, char *sfield, __u8 *buf);
 
 /**
- * @brief prints raw data to the buffer
+ * @brief formats a 6-byte field as a hex string
  *
- * @param offset, intput offset of the param
- * @param sfield, intput field
+ * @param offset, input offset of the param
+ * @param sfield, input field name
  * @param buf, input raw data
- * @param datastr, output data buffer
  *
- * @return 0 success
+ * @return allocated string (caller must free), or NULL on error
  */
-void process_field_size_6(int offset, char *sfield, __u8 *buf, char *datastr);
+char *process_field_size_6(int offset, char *sfield, __u8 *buf);
 
 /**
- * @brief prints raw data to the buffer
+ * @brief formats a variable-size field as a hex string
  *
- * @param offset, intput offset of the param
- * @param sfield, intput field
+ * @param offset, input offset of the param
+ * @param sfield, input field name
  * @param buf, input raw data
  * @param size, input data size
- * @param datastr, output data buffer
  *
- * @return 0 success
+ * @return allocated string (caller must free), or NULL on error
  */
-void process_field_size_default(int offset, char *sfield, __u8 *buf, int size, char *datastr);
+char *process_field_size_default(int offset, char *sfield, __u8 *buf, int size);
