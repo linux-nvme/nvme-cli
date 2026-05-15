@@ -86,7 +86,7 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx, const char *na
 	int ret;
 	const struct storageport_map_entry *sp_entry;
 
-	if (strncmp(name, "/dev/", 5) == 0)
+	if (strstr(name, "/dev/"))
 		name = libnvme_basename(name);
 
 	sp_entry = libnvme_storageport_lookup_entry(name);
