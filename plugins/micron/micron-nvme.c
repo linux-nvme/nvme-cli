@@ -2347,9 +2347,9 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 	if (buffer) {
 		while (!err && offset != *logSize) {
 			if (ctrl_init)
-				err = nvme_get_log_telemetry_ctrl(hdl, true, 0, buffer + offset, *logSize);
+				err = nvme_get_log_telemetry_ctrl(hdl, true, offset, buffer + offset, bs);
 			else
-				err = nvme_get_log_telemetry_host(hdl, 0, buffer + offset, *logSize);
+				err = nvme_get_log_telemetry_host(hdl, offset, buffer + offset, bs);
 			offset += bs;
 		}
 	}
@@ -2357,7 +2357,7 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 	if (!err && buffer) {
 		*data = buffer;
 	} else {
-		fprintf(stderr, "Failed to get telemetry data for 0x%x\n", type);
+		nvme_show_err(err, "Failed to get telemetry data for 0x%x\n", type);
 		libnvme_free(buffer);
 	}
 
