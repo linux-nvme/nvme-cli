@@ -9,6 +9,7 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <string.h>
 
 #if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
 #include <ifaddrs.h>
@@ -484,6 +485,24 @@ static inline char *xstrdup(const char *s)
 	if (!s)
 		return NULL;
 	return strdup(s);
+}
+
+static inline bool streq0(const char *s1, const char *s2)
+{
+	if (s1 == s2)
+		return true;
+	if (!s1 || !s2)
+		return false;
+	return !strcmp(s1, s2);
+}
+
+static inline bool streqcase0(const char *s1, const char *s2)
+{
+	if (s1 == s2)
+		return true;
+	if (!s1 || !s2)
+		return false;
+	return !strcasecmp(s1, s2);
 }
 
 /**

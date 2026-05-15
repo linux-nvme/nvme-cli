@@ -17,3 +17,10 @@ bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 void libnvmf_default_config(struct libnvme_fabrics_config *cfg)
 {
 }
+
+ctrl_match_t _candidate_init_fabrics(struct libnvme_global_ctx *ctx,
+		struct candidate_args *candidate,
+		const struct libnvmf_context *fctx)
+{
+	return NULL;
+}
