@@ -19,7 +19,7 @@
 struct libnvmf_context {
 	struct libnvme_global_ctx *ctx;
 
-	/* common callbacks */
+	/* common hooks */
 	bool (*decide_retry)(struct libnvmf_context *fctx, int err,
 			void *user_data);
 	void (*connected)(struct libnvmf_context *fctx, struct libnvme_ctrl *c,
@@ -29,7 +29,7 @@ struct libnvmf_context {
 			const char *transport, const char *traddr,
 			const char *trsvcid, void *user_data);
 
-	/* discovery callbacks */
+	/* discovery hooks */
 	void (*discovery_log)(struct libnvmf_context *fctx,
 			bool connect,
 			struct nvmf_discovery_log *log,

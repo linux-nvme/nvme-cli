@@ -241,7 +241,7 @@ __libnvme_public void libnvmf_context_free(struct libnvmf_context *fctx)
 	free(fctx);
 }
 
-__libnvme_public int libnvmf_context_set_discovery_cbs(
+__libnvme_public int libnvmf_context_set_discovery_hooks(
 		struct libnvmf_context *fctx,
 		void (*discovery_log)(struct libnvmf_context *fctx,
 			bool connect,
