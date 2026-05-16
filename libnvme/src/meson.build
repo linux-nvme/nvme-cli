@@ -49,6 +49,7 @@ if want_fabrics
         'nvme/accessors-fabrics.c',
         'nvme/fabrics.c',
         'nvme/nbft.c',
+        'nvme/tree-fabrics.c',
         'nvme/util-fabrics.c',
     ]
     headers += [

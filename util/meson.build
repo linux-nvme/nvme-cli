@@ -3,13 +3,15 @@
 util_sources = []
 
 if host_system == 'windows'
-    util_sources += []
+    util_sources += [
+        'util/sighdl-win.c'
+    ]
 else
     util_sources += [
         'util/argconfig.c',
         'util/base64.c',
         'util/crc32.c',
-        'util/sighdl.c',
+        'util/sighdl-linux.c',
         'util/suffix.c',
         'util/types.c',
         'util/utils.c',

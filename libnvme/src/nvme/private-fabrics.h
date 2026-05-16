@@ -158,7 +158,54 @@ static inline __u16 libnvmf_exat_size(size_t val_len)
 const struct ifaddrs *libnvmf_getifaddrs(struct libnvme_global_ctx *ctx);
 #endif /* HAVE_NETDB || CONFIG_FABRICS */
 
+/**
+ * struct candidate_args - Parameters used to match an existing controller
+ * @transport:		Transport type: loop, fc, rdma, tcp
+ * @traddr:		Transport address (destination address)
+ * @trsvcid:		Transport service ID
+ * @subsysnqn:		Subsystem NQN
+ * @host_traddr:	Host transport address (source address)
+ * @host_iface:		Host interface for connection (tcp only)
+ * @iface_list:		Interface list (tcp only)
+ * @addreq:		Address comparison function (for traddr, host_traddr)
+ * @well_known_nqn:	Set to true when @subsysnqn is the well-known NQN
+ */
+struct candidate_args {
+	const char *transport;
+	const char *traddr;
+	const char *trsvcid;
+	const char *subsysnqn;
+	const char *host_traddr;
+	const char *host_iface;
+#if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
+	const struct ifaddrs *iface_list;
+#endif
+	bool (*addreq)(const char *, const char *);
+	bool well_known_nqn;
+};
+typedef bool (*ctrl_match_t)(struct libnvme_ctrl *c,
+		struct candidate_args *candidate);
+
+bool libnvme_tree_ctrl_match(struct libnvme_ctrl *c,
+		struct candidate_args *candidate);
+ctrl_match_t libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
+		struct candidate_args *candidate,
+		const struct libnvmf_context *fctx);
+
 bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr);
 
 void libnvmf_default_config(struct libnvme_fabrics_config *cfg);
+
+void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
+		libnvme_ctrl_t c);
+
+ctrl_match_t libnvme_candidate_init(struct libnvme_global_ctx *ctx,
+		struct candidate_args *candidate, struct libnvmf_context *fctx);
+libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
+		struct libnvmf_context *fctx, libnvme_ctrl_t p);
+
+bool libnvmf_ctrl_match_config(struct libnvme_ctrl *c,
+		struct libnvmf_context *fctx);
+struct libnvme_ctrl *libnvmf_ctrl_find(struct libnvme_subsystem *s,
+		struct libnvmf_context *fctx);

@@ -5,17 +5,45 @@
 #include <string.h>
 #include <stdbool.h>
 
+#if defined(_WIN32)
+#include <direct.h>
+#include <io.h>
+#include <sysinfoapi.h>
+#endif
+
 #include "ccan/endian/endian.h"
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
+#ifndef min
 #define min(x, y) ((x) > (y) ? (y) : (x))
+#endif
+#ifndef max
 #define max(x, y) ((x) > (y) ? (x) : (y))
+#endif
 
 #ifdef __packed
 #else /* __packed */
 #define __packed __attribute__((__packed__))
 #endif /* __packed */
+
+/*
+ * Some common functionality is implemented or named differently on Windows.
+ * Provide compatibility wrappers.
+ */
+#if defined(_WIN32)
+#define mkdir(path, mode) _mkdir(path)
+
+#define fsync _commit
+
+static inline int getpagesize(void)
+{
+	SYSTEM_INFO si;
+
+	GetSystemInfo(&si);
+	return si.dwPageSize;
+}
+#endif
 
 /*
  * VMs on arm64 can only use a subset of instructions for MMIO that provide

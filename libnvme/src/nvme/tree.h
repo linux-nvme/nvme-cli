@@ -293,27 +293,6 @@ libnvme_path_t libnvme_namespace_first_path(libnvme_ns_t ns);
 libnvme_path_t libnvme_namespace_next_path(libnvme_ns_t ns, libnvme_path_t p);
 
 /**
- * libnvme_ctrl_match_config() - Check if ctrl @c matches config params
- * @c:			An existing controller instance
- * @transport:		Transport name
- * @traddr:		Transport address
- * @trsvcid:		Transport service identifier
- * @subsysnqn:		Subsystem NQN
- * @host_traddr:	Host transport address
- * @host_iface:		Host interface name
- *
- * Check that controller @c matches parameters: @transport, @traddr,
- * @trsvcid, @subsysnqn, @host_traddr, and @host_iface. Parameters set
- * to NULL will be ignored.
- *
- * Return: true if there's a match, false otherwise.
- */
-bool libnvme_ctrl_match_config(struct libnvme_ctrl *c, const char *transport,
-			    const char *traddr, const char *trsvcid,
-			    const char *subsysnqn, const char *host_traddr,
-			    const char *host_iface);
-
-/**
  * libnvme_subsystem_first_ns() - Start namespace iterator
  * @s:	&libnvme_subsystem_t object
  *
