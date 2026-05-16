@@ -545,34 +545,6 @@ int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 		char **hostname);
 
 /**
- * get_entity_name - Get Entity Name (ENAME).
- * @buffer: The buffer where the ENAME will be saved as an ASCII string.
- * @bufsz:  The size of @buffer.
- *
- * Per TP8010, ENAME is defined as the name associated with the host (i.e.
- * hostname).
- *
- * Return: Number of characters copied to @buffer.
- */
-size_t get_entity_name(char *buffer, size_t bufsz);
-
-/**
- * get_entity_version - Get Entity Version (EVER).
- * @buffer: The buffer where the EVER will be saved as an ASCII string.
- * @bufsz:  The size of @buffer.
- *
- * EVER is defined as the operating system name and version as an ASCII
- * string. This function reads different files from the file system and
- * builds a string as follows: [os type] [os release] [distro release]
- *
- *     E.g. "Linux 5.17.0-rc1 SLES 15.4"
- *
- * Return: Number of characters copied to @buffer.
- */
-size_t get_entity_version(char *buffer, size_t bufsz);
-
-
-/**
  * startswith - Checks that a string starts with a given prefix.
  * @s:      The string to check
  * @prefix: A string that @s could be starting with

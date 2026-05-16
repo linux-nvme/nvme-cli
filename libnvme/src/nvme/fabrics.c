@@ -1702,7 +1702,7 @@ static int nvmf_dim(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 	memcpy(dim->eid, c->s->h->hostnqn,
 	       MIN(sizeof(dim->eid), strlen(c->s->h->hostnqn)));
 
-	ret = get_entity_name(dim->ename, sizeof(dim->ename));
+	ret = libnvmf_get_entity_name(dim->ename, sizeof(dim->ename));
 	if (ret < 0)
 		libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: Failed to retrieve ENAME. %s.\n",
 			 c->name, libnvme_strerror(-ret));
@@ -1710,7 +1710,7 @@ static int nvmf_dim(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u8 trtype,
 		libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: Failed to retrieve ENAME.\n",
 			 c->name);
 
-	ret = get_entity_version(dim->ever, sizeof(dim->ever));
+	ret = libnvmf_get_entity_version(dim->ever, sizeof(dim->ever));
 	if (ret <= 0)
 		libnvme_msg(ctx, LIBNVME_LOG_INFO, "%s: Failed to retrieve EVER.\n", c->name);
 
