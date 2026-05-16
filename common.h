@@ -16,7 +16,6 @@
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
-/* On Windows, min/max may already be defined */
 #ifndef min
 #define min(x, y) ((x) > (y) ? (y) : (x))
 #endif
@@ -38,8 +37,10 @@
 #define O_BINARY 0
 #endif
 
-
-/* Some common functions are implemented or named differently on Windows. */
+/*
+ * Some common functionality is implemented or named differently on Windows.
+ * Provide compatibility wrappers.
+ */
 #if defined(_WIN32)
 #define mkdir(path, mode) _mkdir(path)
 

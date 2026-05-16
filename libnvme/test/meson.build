@@ -130,6 +130,18 @@ uuid = executable(
 
 test('libnvme - uuid', uuid)
 
+tree = executable(
+    'test-tree',
+    ['tree.c'],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_test_dep,
+    ],
+)
+
+test('libnvme - tree', tree)
+
 if want_fabrics
     uriparser = executable(
         'test-uriparser',
@@ -176,9 +188,10 @@ if host_system != 'windows'
         mock_ifaddrs_env.append('LD_PRELOAD', mock_ifaddrs.full_path())
         mock_ifaddrs_env.set('ASAN_OPTIONS', 'verify_asan_link_order=0')
 
-        tree = executable(
-            'tree',
-            ['tree.c'],
+    if want_fabrics
+        tree_fabrics = executable(
+            'tree-fabrics',
+            ['tree-fabrics.c'],
             dependencies: [
                 config_dep,
                 ccan_dep,
@@ -187,7 +200,8 @@ if host_system != 'windows'
             link_with: mock_ifaddrs,
         )
 
-        test('libnvme - tree', tree, env: mock_ifaddrs_env)
+        test('libnvme - tree-fabrics', tree_fabrics, env: mock_ifaddrs_env)
+    endif
 
         test_util = executable(
             'test-util',
