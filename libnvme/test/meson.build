@@ -175,18 +175,16 @@ if want_fabrics
     test('libnvme - fabrics', test_fabrics)
 endif
 
-if host_system != 'windows'
+if conf.get('HAVE_NETDB')
+    mock_ifaddrs = library(
+        'mock-ifaddrs',
+        ['mock-ifaddrs.c', ],
+    )
 
-    if conf.get('HAVE_NETDB')
-        mock_ifaddrs = library(
-            'mock-ifaddrs',
-            ['mock-ifaddrs.c', ],
-        )
-
-        # See comment in test/ioctl/meson.build explaining how LD_PRELOAD is used
-        mock_ifaddrs_env = environment()
-        mock_ifaddrs_env.append('LD_PRELOAD', mock_ifaddrs.full_path())
-        mock_ifaddrs_env.set('ASAN_OPTIONS', 'verify_asan_link_order=0')
+    # See comment in test/ioctl/meson.build explaining how LD_PRELOAD is used
+    mock_ifaddrs_env = environment()
+    mock_ifaddrs_env.append('LD_PRELOAD', mock_ifaddrs.full_path())
+    mock_ifaddrs_env.set('ASAN_OPTIONS', 'verify_asan_link_order=0')
 
     if want_fabrics
         tree_fabrics = executable(
@@ -203,18 +201,19 @@ if host_system != 'windows'
         test('libnvme - tree-fabrics', tree_fabrics, env: mock_ifaddrs_env)
     endif
 
-        test_util = executable(
-            'test-util',
-            ['test-util.c'],
-            dependencies: [
-                config_dep,
-                ccan_dep,
-                libnvme_test_dep,
-            ],
-        )
-        test('libnvme - util', test_util)
-    endif
+    test_util = executable(
+        'test-util',
+        ['test-util.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+    test('libnvme - util', test_util)
+endif
 
+if host_system != 'windows'
     psk = executable(
         'test-psk',
         ['psk.c'],
@@ -244,7 +243,6 @@ if host_system != 'windows'
             dependencies: openssl_dep,
         )
     endif
-
 endif # host_system != 'windows'
 
 foreach hdr : [
