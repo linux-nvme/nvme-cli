@@ -89,19 +89,19 @@ static void json_parse_port(libnvme_subsystem_t s, struct json_object *port_obj)
 	attr_obj = json_object_object_get(port_obj, "transport");
 	if (!attr_obj)
 		return;
-	fctx.transport = json_object_get_string(attr_obj);
+	fctx.ctrl_params.transport = json_object_get_string(attr_obj);
 	attr_obj = json_object_object_get(port_obj, "traddr");
 	if (attr_obj)
-		fctx.traddr = json_object_get_string(attr_obj);
+		fctx.ctrl_params.traddr = json_object_get_string(attr_obj);
 	attr_obj = json_object_object_get(port_obj, "host_traddr");
 	if (attr_obj)
-		fctx.host_traddr = json_object_get_string(attr_obj);
+		fctx.ctrl_params.host_traddr = json_object_get_string(attr_obj);
 	attr_obj = json_object_object_get(port_obj, "host_iface");
 	if (attr_obj)
-		fctx.host_iface = json_object_get_string(attr_obj);
+		fctx.ctrl_params.host_iface = json_object_get_string(attr_obj);
 	attr_obj = json_object_object_get(port_obj, "trsvcid");
 	if (attr_obj)
-		fctx.trsvcid = json_object_get_string(attr_obj);
+		fctx.ctrl_params.trsvcid = json_object_get_string(attr_obj);
 	c = libnvme_lookup_ctrl(s, &fctx, NULL);
 	if (!c)
 		return;

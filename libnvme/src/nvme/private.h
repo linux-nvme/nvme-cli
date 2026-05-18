@@ -131,6 +131,29 @@ struct libnvme_fabrics_config { // !generate-accessors !generate-dict-table
 	bool concat;
 };
 
+/**
+ * struct libnvme_ctrl_params - Parameters for creating a controller instance
+ * @transport:		Transport type: loop, fc, rdma, tcp, pcie, apple-nvme
+ * @traddr:		Transport address (destination address)
+ * @host_traddr:	Host transport address (source address)
+ * @host_iface:		Host interface for connection (tcp only)
+ * @trsvcid:		Transport service ID
+ * @subsysnqn:		Subsystem NQN
+ * @cfg:		Fabrics tuning parameters
+ */
+struct libnvme_ctrl_params {
+	const char *transport;
+	const char *traddr;
+	const char *host_traddr;
+	const char *host_iface;
+	const char *trsvcid;
+	const char *subsysnqn;
+	struct libnvme_fabrics_config cfg;
+};
+
+void libnvme_fabrics_config_copy(struct libnvme_fabrics_config *dst,
+		const struct libnvme_fabrics_config *src);
+
 struct libnvme_log {
 	int fd;
 	int level;
@@ -443,7 +466,7 @@ struct libnvme_transport_handle *__libnvme_create_transport_handle(
 struct libnvmf_context;
 
 int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx,
+		const struct libnvme_ctrl_params *params,
 		struct libnvme_ctrl **cp);
 void nvme_deconfigure_ctrl(struct libnvme_ctrl *c);
 
