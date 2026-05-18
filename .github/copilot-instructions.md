@@ -12,7 +12,7 @@ nvme-cli is a cross-platform NVMe management utility (Linux/Windows) with an int
 
 - **nvme-cli** (`nvme.c`, `nvme-builtin.h`): Main CLI tool with built-in NVMe commands
 - **libnvme** (`libnvme/src/nvme/`): Cross-platform NVMe library with OS-specific ioctl implementations
-  - `ioctl.c` (Linux), `ioctl-windows.c` (Windows)
+  - `ioctl.c` (Linux), `ioctl-win.c` (Windows)
 - **Plugins** (`plugins/*/`): Vendor-specific extensions (OCP, WDC, Intel, Solidigm, etc.)
 - **Utilities** (`util/`): Shared helpers (argument parsing, formatting, cleanup)
 
@@ -127,7 +127,7 @@ Python-based tests in `tests/`:
 
 ### Windows Development
 
-You're currently working on Windows implementation (`libnvme/src/nvme/ioctl-windows.c`). Key points:
+You're currently working on Windows implementation (`libnvme/src/nvme/ioctl-win.c`). Key points:
 
 - Use Windows API: `DeviceIoControl()`, `CreateFile()`, etc.
 - Convert Windows errors to errno with helper functions

@@ -18,15 +18,15 @@ The Windows port is **substantially functional** as of May 2026. Core device I/O
 
 | Component | Implementation | File(s) |
 |-----------|---------------|---------|
-| Device I/O (Admin + IO commands) | `IOCTL_STORAGE_QUERY/SET_PROPERTY`, `IOCTL_STORAGE_PROTOCOL_COMMAND`, `IOCTL_SCSI_PASS_THROUGH` | `libnvme/src/nvme/ioctl-windows.c` |
-| Device enumeration (`nvme list`) | SetupDI + CFGMGR32 APIs, StoragePort map | `libnvme/src/nvme/filters-windows.c` |
-| Device path translation | `nvmeX`, `nvmeXnY`, `\\.\PhysicalDriveN`, `\\?\...` paths | `libnvme/src/nvme/lib-windows.c` |
-| Topology tree scanning | Controller/subsystem/namespace discovery | `libnvme/src/nvme/tree-windows.c` |
+| Device I/O (Admin + IO commands) | `IOCTL_STORAGE_QUERY/SET_PROPERTY`, `IOCTL_STORAGE_PROTOCOL_COMMAND`, `IOCTL_SCSI_PASS_THROUGH` | `libnvme/src/nvme/ioctl-win.c` |
+| Device enumeration (`nvme list`) | SetupDI + CFGMGR32 APIs, StoragePort map | `libnvme/src/nvme/filters-win.c` |
+| Device path translation | `nvmeX`, `nvmeXnY`, `\\.\PhysicalDriveN`, `\\?\...` paths | `libnvme/src/nvme/lib-win.c` |
+| Topology tree scanning | Controller/subsystem/namespace discovery | `libnvme/src/nvme/tree-win.c` |
 | Global context | `libnvme_create_global_ctx()` | `libnvme/src/nvme/lib.c` (cross-platform) |
 | Dry run mode | `libnvme_set_dry_run()` | `libnvme/src/nvme/lib.c` (cross-platform) |
 | ETDAS telemetry control | `libnvme_set_etdas()` / `libnvme_clear_etdas()` | `libnvme/src/nvme/nvme-cmds.c` (cross-platform) |
 | Large page memory allocation | `VirtualAlloc` + large pages with fallback | `util/mem-windows.c` |
-| Windows error → errno translation | `GetLastError()` mapping | `libnvme/src/nvme/ioctl-windows.c` |
+| Windows error → errno translation | `GetLastError()` mapping | `libnvme/src/nvme/ioctl-win.c` |
 
 ### ✅ Working Admin Commands
 
@@ -262,17 +262,17 @@ The project uses per-header compatibility wrappers in `libnvme/src/nvme/`:
 
 **`localtime_r()`** is provided by MinGW via `-D_POSIX_THREAD_SAFE_FUNCTIONS` (set in meson.build).
 
-**`scandir()`** is not needed for core functionality — `filters-windows.c` reimplements device scanning using native Windows APIs (SetupDI/CFGMGR32). Some excluded plugins still depend on `scandir()`.
+**`scandir()`** is not needed for core functionality — `filters-win.c` reimplements device scanning using native Windows APIs (SetupDI/CFGMGR32). Some excluded plugins still depend on `scandir()`.
 
 ### Windows-Specific Source Files
 
 | File | Description |
 |------|-------------|
-| `libnvme/src/nvme/ioctl-windows.c` | NVMe IOCTL implementation (~1670 lines) |
-| `libnvme/src/nvme/filters-windows.c` | Device enumeration via SetupDI/CFGMGR32 (~870 lines) |
-| `libnvme/src/nvme/filters-windows.h` | StoragePort map API declarations |
-| `libnvme/src/nvme/lib-windows.c` | Device open/close, path translation (~250 lines) |
-| `libnvme/src/nvme/tree-windows.c` | Topology tree scanning (~330 lines) |
+| `libnvme/src/nvme/ioctl-win.c` | NVMe IOCTL implementation (~1670 lines) |
+| `libnvme/src/nvme/filters-win.c` | Device enumeration via SetupDI/CFGMGR32 (~870 lines) |
+| `libnvme/src/nvme/filters-win.h` | StoragePort map API declarations |
+| `libnvme/src/nvme/lib-win.c` | Device open/close, path translation (~250 lines) |
+| `libnvme/src/nvme/tree-win.c` | Topology tree scanning (~330 lines) |
 | `libnvme/src/nvme/windows-stubs.c` | Stubs for Linux-only functions (~290 lines) |
 | `windows-stubs.c` | nvme-cli level stubs (RPMB) |
 | `util/mem-windows.c` | `VirtualAlloc` large page memory allocation |
@@ -341,7 +341,7 @@ All remaining stubs are for Linux-specific functionality with no Windows equival
 |----------|--------|
 | `rpmb_cmd_option` | RPMB not supported on Windows |
 
-### tree-windows.c stubs (return NULL/0)
+### tree-win.c stubs (return NULL/0)
 
 | Function | Reason |
 |----------|--------|

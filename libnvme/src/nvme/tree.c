@@ -28,7 +28,7 @@
 #include "cleanup-linux.h"
 #include "private.h"
 #include "filters.h"
-#include "filters-windows.h"
+#include "filters-win.h"
 #include "private-fabrics.h"
 #include "private-tree.h"
 #include "util.h"

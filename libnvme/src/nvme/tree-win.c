@@ -24,7 +24,7 @@
 #include "cleanup.h"
 #include "private.h"
 #include "private-tree.h"
-#include "filters-windows.h"
+#include "filters-win.h"
 #include "util.h"
 #include "compiler-attributes.h"
 

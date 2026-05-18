@@ -34,15 +34,15 @@ headers = [
 
 if host_system == 'windows'
     sources += [
-        'nvme/filters-windows.c',  # Windows implementations of filters functions
-        'nvme/ioctl-windows.c',  # Windows stubs for Linux-specific ioctl functions
-        'nvme/lib-windows.c',  # Windows implementations of lib.h functions
+        'nvme/filters-win.c',
+        'nvme/ioctl-win.c',
+        'nvme/lib-win.c',
         'nvme/mem-win.c',
-        'nvme/tree-windows.c',  # Windows implementations of tree functions
+        'nvme/tree-win.c',
         'nvme/windows-stubs.c',  # Stubs for excluded functions
     ]
     headers += [
-        'nvme/filters-windows.h',
+        'nvme/filters-win.h',
     ]
 else
     sources += [

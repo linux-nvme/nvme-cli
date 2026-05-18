@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
-#include "filters-windows.h"
+#include "filters-win.h"
 
 #include <cfgmgr32.h>
 #include <setupapi.h>
