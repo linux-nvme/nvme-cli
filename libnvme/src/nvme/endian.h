@@ -8,7 +8,7 @@
 
 #pragma once
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	#define htobe16(x) (x)
 	#define htobe32(x) (x)
