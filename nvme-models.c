@@ -9,7 +9,6 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-
 #include "nvme-models.h"
 #include "nvme.h"
 

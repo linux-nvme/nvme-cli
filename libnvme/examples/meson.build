@@ -5,10 +5,6 @@
 #
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
-
-# Skip examples on Windows for now.
-if host_system != 'windows'
-
 executable(
     'telemetry-listen',
     ['telemetry-listen.c'],
@@ -96,5 +92,3 @@ if want_mi
         )
     endif
 endif
-
-endif # host_system != 'windows'
