@@ -475,6 +475,11 @@ struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 struct libnvme_ctrl *libnvme_lookup_ctrl(struct libnvme_subsystem *s,
 		const struct libnvme_ctrl_params *params,
 		struct libnvme_ctrl *p);
+bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
+		const char *transport, const char *traddr);
+void libnvmf_default_config(struct libnvme_fabrics_config *cfg);
+libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
+		const struct libnvme_ctrl_params *params, libnvme_ctrl_t p);
 void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c);
 
