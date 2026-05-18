@@ -174,17 +174,6 @@ conf.set('LIBNVME_VERSION', '"@0@"'.format(meson.project_version()))
 
 conf.set10('DEFAULT_PDC_ENABLED', get_option('pdc-enabled'))
 
-# Windows-specific compiler flags
-if host_system == 'windows'
-    add_project_arguments(
-        [
-            '-DHAVE_GLIBC_IOCTL=0',
-            '-D_POSIX_THREAD_SAFE_FUNCTIONS',
-        ],
-        language : 'c',
-    )
-endif
-
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
     'HAVE_BUILTIN_TYPES_COMPATIBLE_P',
@@ -490,6 +479,15 @@ if not want_libnvme and not std_prefix
 
     # Allow compiler to find headers in non-standard location
     add_project_arguments('-I' + libnvme_hdr_location, language : 'c')
+endif
+
+if host_system == 'windows'
+    add_project_arguments(
+        [
+            '-D_POSIX_THREAD_SAFE_FUNCTIONS',   # enables gmtime_r support
+        ],
+        language : 'c',
+    )
 endif
 
 ################################################################################
