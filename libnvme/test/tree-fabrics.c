@@ -143,7 +143,7 @@ static struct libnvme_global_ctx *create_tree(void)
 		assert(!libnvme_get_subsystem(ctx, h, d->subsysname,
 			d->f.ctrl_params.subsysnqn, &d->s));
 		assert(d->s);
-		d->c = libnvme_lookup_ctrl(d->s, &d->f, NULL);
+		d->c = libnvme_lookup_ctrl(d->s, &d->f.ctrl_params, NULL);
 		assert(d->c);
 		d->ctrl_id = i;
 
@@ -180,7 +180,7 @@ static bool tcp_ctrl_lookup(libnvme_subsystem_t s, struct test_data *d)
 
 	f.ctrl_params.host_traddr = NULL;
 	f.ctrl_params.host_iface = NULL;
-	c = libnvme_lookup_ctrl(s, &f, NULL);
+	c = libnvme_lookup_ctrl(s, &f.ctrl_params, NULL);
 	printf("%10s %12s %10s -> ", f.ctrl_params.trsvcid, "", "");
 	show_ctrl(c);
 	pass &= match_ctrl(d, c);
@@ -189,7 +189,7 @@ static bool tcp_ctrl_lookup(libnvme_subsystem_t s, struct test_data *d)
 	if (d->f.ctrl_params.host_traddr) {
 		f = d->f;
 		f.ctrl_params.host_iface = NULL;
-		c = libnvme_lookup_ctrl(s, &f, NULL);
+		c = libnvme_lookup_ctrl(s, &f.ctrl_params, NULL);
 		printf("%10s %12s %10s -> ", f.ctrl_params.trsvcid,
 		       f.ctrl_params.host_traddr, "");
 		show_ctrl(c);
@@ -200,7 +200,7 @@ static bool tcp_ctrl_lookup(libnvme_subsystem_t s, struct test_data *d)
 	if (d->f.ctrl_params.host_iface) {
 		f = d->f;
 		f.ctrl_params.host_traddr = NULL;
-		c = libnvme_lookup_ctrl(s, &f, NULL);
+		c = libnvme_lookup_ctrl(s, &f.ctrl_params, NULL);
 		printf("%10s %12s %10s -> ", f.ctrl_params.trsvcid,
 		       "", f.ctrl_params.host_iface);
 		show_ctrl(c);
@@ -210,7 +210,7 @@ static bool tcp_ctrl_lookup(libnvme_subsystem_t s, struct test_data *d)
 
 	if (d->f.ctrl_params.host_iface && d->f.ctrl_params.traddr) {
 		f = d->f;
-		c = libnvme_lookup_ctrl(s, &f, NULL);
+		c = libnvme_lookup_ctrl(s, &f.ctrl_params, NULL);
 		printf("%10s %12s %10s -> ", f.ctrl_params.trsvcid,
 		       f.ctrl_params.host_traddr, f.ctrl_params.host_iface);
 		show_ctrl(c);
@@ -229,7 +229,7 @@ static bool default_ctrl_lookup(libnvme_subsystem_t s, struct test_data *d)
 
 	f.ctrl_params.host_iface = NULL;
 	f.ctrl_params.trsvcid = NULL;
-	c = libnvme_lookup_ctrl(s, &f, NULL);
+	c = libnvme_lookup_ctrl(s, &f.ctrl_params, NULL);
 	printf("%10s %12s %10s -> ", "", "", "");
 	show_ctrl(c);
 	pass &= match_ctrl(d, c);
@@ -311,7 +311,7 @@ static bool test_src_addr(void)
 			      DEFAULT_SUBSYSNQN, &s);
 	assert(s);
 
-	c = libnvme_lookup_ctrl(s, &fctx, NULL);
+	c = libnvme_lookup_ctrl(s, &fctx.ctrl_params, NULL);
 	assert(c);
 
 	c->address = NULL;
@@ -488,7 +488,8 @@ static bool ctrl_match(const char *tag,
 		&s));
 	assert(s);
 
-	reference_ctrl = libnvme_lookup_ctrl(s, &reference->f, NULL);
+	reference_ctrl = libnvme_lookup_ctrl(s,
+				&reference->f.ctrl_params, NULL);
 	assert(reference_ctrl);
 	reference_ctrl->name = "nvme1";  /* fake the device name */
 	if (reference->address)
@@ -497,7 +498,8 @@ static bool ctrl_match(const char *tag,
 	/* libnvmf_ctrl_find() MUST BE RUN BEFORE libnvme_lookup_ctrl() */
 	found_ctrl = libnvmf_ctrl_find(s, &candidate->f);
 
-	candidate_ctrl = libnvme_lookup_ctrl(s, &candidate->f, NULL);
+	candidate_ctrl = libnvme_lookup_ctrl(s,
+				&candidate->f.ctrl_params, NULL);
 
 	if (should_match) {
 		if (candidate_ctrl != reference_ctrl) {
@@ -1301,7 +1303,8 @@ static bool ctrl_config_match(const char *tag,
 		&s));
 	assert(s);
 
-	reference_ctrl = libnvme_lookup_ctrl(s, &reference->f, NULL);
+	reference_ctrl = libnvme_lookup_ctrl(s,
+				&reference->f.ctrl_params, NULL);
 	assert(reference_ctrl);
 	reference_ctrl->name = "nvme1";  /* fake the device name */
 	if (reference->address)
@@ -1511,7 +1514,7 @@ static bool test_well_known_nqn(void)
 	/* Subsystem 1: discovery subsystem with a discovery ctrl */
 	assert(!libnvme_get_subsystem(ctx, h, "disc",
 		NVME_DISC_SUBSYS_NAME, &s_disc));
-	disc_ctrl = libnvme_lookup_ctrl(s_disc, &fctx, NULL);
+	disc_ctrl = libnvme_lookup_ctrl(s_disc, &fctx.ctrl_params, NULL);
 	assert(disc_ctrl);
 	disc_ctrl->name = "nvme1";
 	libnvme_ctrl_set_discovery_ctrl(disc_ctrl, true);
@@ -1527,7 +1530,7 @@ static bool test_well_known_nqn(void)
 	/* Subsystem 2: regular subsystem; discovery_ctrl defaults to false */
 	assert(!libnvme_get_subsystem(ctx, h, "regular",
 		DEFAULT_SUBSYSNQN, &s_regular));
-	regular_ctrl = libnvme_lookup_ctrl(s_regular, &fctx, NULL);
+	regular_ctrl = libnvme_lookup_ctrl(s_regular, &fctx.ctrl_params, NULL);
 	assert(regular_ctrl);
 	regular_ctrl->name = "nvme2";
 
@@ -1736,9 +1739,9 @@ static bool test_lookup_ctrl_pagination(void)
 	assert(s);
 
 	/* Build list: [ctrl_a, ctrl_b] */
-	ctrl_a = libnvme_lookup_ctrl(s, &fctx_a, NULL);
+	ctrl_a = libnvme_lookup_ctrl(s, &fctx_a.ctrl_params, NULL);
 	assert(ctrl_a);
-	ctrl_b = libnvme_lookup_ctrl(s, &fctx_b, NULL);
+	ctrl_b = libnvme_lookup_ctrl(s, &fctx_b.ctrl_params, NULL);
 	assert(ctrl_b);
 
 	/* p=NULL: search starts from head, finds ctrl_a */
@@ -1753,7 +1756,7 @@ static bool test_lookup_ctrl_pagination(void)
 	/* p=ctrl_b: search starts after ctrl_b; ctrl_a is before ctrl_b so
 	 * it is skipped. No match found → a new ctrl is created.
 	 */
-	ctrl_new = libnvme_lookup_ctrl(s, &fctx_a, ctrl_b);
+	ctrl_new = libnvme_lookup_ctrl(s, &fctx_a.ctrl_params, ctrl_b);
 	if (ctrl_new && ctrl_new != ctrl_a) {
 		printf(" - lookup_ctrl(p=ctrl_b) skips ctrl_a, creates new ctrl [PASS]\n");
 	} else {
@@ -1765,7 +1768,7 @@ static bool test_lookup_ctrl_pagination(void)
 	 * p=ctrl_a: search starts after ctrl_a → checks ctrl_b (no match),
 	 * then ctrl_new (match) → returns ctrl_new without creating.
 	 */
-	ctrl_found_again = libnvme_lookup_ctrl(s, &fctx_a, ctrl_a);
+	ctrl_found_again = libnvme_lookup_ctrl(s, &fctx_a.ctrl_params, ctrl_a);
 	if (ctrl_found_again == ctrl_new) {
 		printf(" - lookup_ctrl(p=ctrl_a) finds ctrl_new [PASS]\n");
 	} else {

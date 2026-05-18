@@ -2082,7 +2082,6 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 		nfctx.ctrl_params.transport = libnvmf_trtype_str(e->trtype);
 		nfctx.ctrl_params.traddr = e->traddr;
 		nfctx.ctrl_params.trsvcid = e->trsvcid;
-		nfctx.ctrl_params.cfg = fctx->ctrl_params.cfg;
 
 		/* Already connected ? */
 		cl = lookup_ctrl(h, &nfctx);
@@ -2558,7 +2557,7 @@ __libnvme_public int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
 		return -ENODEV;
 	}
 
-	c = libnvme_lookup_ctrl(s, fctx, NULL);
+	c = libnvme_lookup_ctrl(s, &fctx->ctrl_params, NULL);
 	if (!c) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to lookup controller\n");
 		return -ENODEV;

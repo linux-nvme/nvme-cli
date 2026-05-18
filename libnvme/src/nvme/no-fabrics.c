@@ -20,7 +20,7 @@ void libnvmf_default_config(struct libnvme_fabrics_config *cfg)
 
 ctrl_match_t libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 		struct candidate_args *candidate,
-		const struct libnvmf_context *fctx)
+		const struct libnvme_ctrl_params *params)
 {
 	return NULL;
 }
