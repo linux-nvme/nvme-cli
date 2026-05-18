@@ -462,7 +462,14 @@ void __libnvme_free_host(struct libnvme_host * h);
 #define __libnvme_log_func NULL
 #endif
 
-void __attribute__((format(printf, 4, 5)))
+#if (defined(__MINGW32__) || defined(__MINGW64__)) && defined(__GNUC__)
+/* MinGW GCC requires gnu_printf to correctly validates C99 formats like %zu. */
+#define __libnvme_printf_format(f, a) __attribute__((format(gnu_printf, f, a)))
+#else
+#define __libnvme_printf_format(f, a) __attribute__((format(printf, f, a)))
+#endif
+
+void __libnvme_printf_format(4, 5)
 __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 		const char *func, const char *format, ...);
 
