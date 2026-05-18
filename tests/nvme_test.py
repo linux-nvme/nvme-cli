@@ -167,9 +167,6 @@ class TestNVMe(unittest.TestCase):
             config = json.load(data_file)
             self.ctrl = config['controller']
             self.ns1 = config['ns1']
-            if self.is_windows():
-                self.ctrl = config.get('windows_controller', self.ctrl)
-                self.ns1 = config.get('windows_ns1', self.ns1)
             self.log_dir = config['log_dir']
             self.nvme_bin = config.get('nvme_bin', self.nvme_bin)
             self.do_validate_pci_device = config.get(
