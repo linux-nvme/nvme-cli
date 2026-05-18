@@ -187,20 +187,18 @@ bool libnvme_tree_ctrl_match(struct libnvme_ctrl *c,
 		struct candidate_args *candidate);
 ctrl_match_t libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 		struct candidate_args *candidate,
-		const struct libnvmf_context *fctx);
+		const struct libnvme_ctrl_params *params);
 
 bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr);
 
 void libnvmf_default_config(struct libnvme_fabrics_config *cfg);
 
-void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c);
-
 ctrl_match_t libnvme_candidate_init(struct libnvme_global_ctx *ctx,
-		struct candidate_args *candidate, struct libnvmf_context *fctx);
+		struct candidate_args *candidate,
+		const struct libnvme_ctrl_params *params);
 libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
-		struct libnvmf_context *fctx, libnvme_ctrl_t p);
+		const struct libnvme_ctrl_params *params, libnvme_ctrl_t p);
 
 bool libnvmf_ctrl_match_config(struct libnvme_ctrl *c,
 		struct libnvmf_context *fctx);

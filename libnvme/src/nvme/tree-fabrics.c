@@ -246,15 +246,15 @@ static bool _tcp_match_ctrl(struct libnvme_ctrl *c,
 
 ctrl_match_t libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 		struct candidate_args *candidate,
-		const struct libnvmf_context *fctx)
+		const struct libnvme_ctrl_params *params)
 {
-	if (streq0(fctx->ctrl_params.transport, "tcp")) {
+	if (streq0(params->transport, "tcp")) {
 		candidate->iface_list = libnvmf_getifaddrs(ctx);
 		candidate->addreq = libnvme_ipaddrs_eq;
 		return _tcp_match_ctrl;
 	}
 
-	if (streq0(fctx->ctrl_params.transport, "rdma")) {
+	if (streq0(params->transport, "rdma")) {
 		candidate->addreq = libnvme_ipaddrs_eq;
 		return libnvme_tree_ctrl_match;
 	}
@@ -353,7 +353,8 @@ bool libnvmf_ctrl_match_config(struct libnvme_ctrl *c,
 	struct candidate_args candidate = {};
 	ctrl_match_t ctrl_match;
 
-	ctrl_match = libnvme_candidate_init(c->ctx, &candidate, fctx);
+	ctrl_match = libnvme_candidate_init(c->ctx, &candidate,
+					    &fctx->ctrl_params);
 
 	return ctrl_match(c, &candidate);
 }
@@ -361,5 +362,5 @@ bool libnvmf_ctrl_match_config(struct libnvme_ctrl *c,
 libnvme_ctrl_t libnvmf_ctrl_find(libnvme_subsystem_t s,
 		struct libnvmf_context *fctx)
 {
-	return libnvme_ctrl_find(s, fctx, NULL/*p*/);
+	return libnvme_ctrl_find(s, &fctx->ctrl_params, NULL/*p*/);
 }

@@ -1635,13 +1635,7 @@ bool libnvme_tree_ctrl_match(struct libnvme_ctrl *c,
  * libnvme_candidate_init() - Init candidate and get the matching function
  *
  * @candidate:		Candidate struct to initialize
- * @transport:		Transport name
- * @traddr:		Transport address
- * @trsvcid:		Transport service identifier
- * @subsysnqn:		Subsystem NQN
- * @host_traddr:	Host transport address
- * @host_iface:		Host interface name
- * @host_iface:		Host interface name
+ * @params:		Controller parameters to match against
  *
  * The function _candidate_free() must be called to release resources once
  * the candidate object is not longer required.
@@ -1650,24 +1644,25 @@ bool libnvme_tree_ctrl_match(struct libnvme_ctrl *c,
  * controller to the candidate controller.
  */
 ctrl_match_t libnvme_candidate_init(struct libnvme_global_ctx *ctx,
-		struct candidate_args *candidate, struct libnvmf_context *fctx)
+		struct candidate_args *candidate,
+		const struct libnvme_ctrl_params *params)
 {
 	ctrl_match_t m;
 
 	memset(candidate, 0, sizeof(*candidate));
 
-	candidate->traddr = fctx->ctrl_params.traddr;
-	candidate->trsvcid = fctx->ctrl_params.trsvcid;
-	candidate->transport = fctx->ctrl_params.transport;
-	candidate->subsysnqn = fctx->ctrl_params.subsysnqn;
+	candidate->traddr = params->traddr;
+	candidate->trsvcid = params->trsvcid;
+	candidate->transport = params->transport;
+	candidate->subsysnqn = params->subsysnqn;
 	candidate->host_iface =
-		streqcase0(fctx->ctrl_params.host_iface, "none") ?
-		NULL : fctx->ctrl_params.host_iface;
+		streqcase0(params->host_iface, "none") ?
+		NULL : params->host_iface;
 	candidate->host_traddr =
-		streqcase0(fctx->ctrl_params.host_traddr, "none") ?
-		NULL : fctx->ctrl_params.host_traddr;
+		streqcase0(params->host_traddr, "none") ?
+		NULL : params->host_traddr;
 
-	if (streq0(fctx->ctrl_params.subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+	if (streq0(params->subsysnqn, NVME_DISC_SUBSYS_NAME)) {
 		/* Since TP8013, the NQN of discovery controllers can be the
 		 * well-known NQN (i.e. nqn.2014-08.org.nvmexpress.discovery) or
 		 * a unique NQN. A DC created using the well-known NQN may later
@@ -1679,7 +1674,7 @@ ctrl_match_t libnvme_candidate_init(struct libnvme_global_ctx *ctx,
 		candidate->well_known_nqn = true;
 	}
 
-	m = libnvmf_candidate_init(ctx, candidate, fctx);
+	m = libnvmf_candidate_init(ctx, candidate, params);
 	if (m)
 		return m;
 
@@ -1689,14 +1684,14 @@ ctrl_match_t libnvme_candidate_init(struct libnvme_global_ctx *ctx,
 }
 
 libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
-		struct libnvmf_context *fctx, libnvme_ctrl_t p)
+		const struct libnvme_ctrl_params *params, libnvme_ctrl_t p)
 {
 	struct candidate_args candidate = {};
 	struct libnvme_ctrl *c, *matching_c = NULL;
 	ctrl_match_t ctrl_match;
 
 	/* Init candidate and get the matching function to use */
-	ctrl_match = libnvme_candidate_init(s->h->ctx, &candidate, fctx);
+	ctrl_match = libnvme_candidate_init(s->h->ctx, &candidate, params);
 
 	c = p ? libnvme_subsystem_next_ctrl(s, p) : libnvme_subsystem_first_ctrl(s);
 	for (; c != NULL; c = libnvme_subsystem_next_ctrl(s, c)) {
@@ -1710,32 +1705,32 @@ libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
 }
 
 libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
-			     struct libnvmf_context *fctx,
+			     const struct libnvme_ctrl_params *in,
 			     libnvme_ctrl_t p)
 {
 	struct libnvme_global_ctx *ctx;
+	struct libnvme_ctrl_params search;
 	struct libnvme_ctrl *c;
-	const char *subsysnqn = fctx->ctrl_params.subsysnqn;
-	struct libnvme_ctrl_params params;
 	int ret;
 
-	if (!s || !fctx->ctrl_params.transport)
+	if (!s || !in->transport)
 		return NULL;
 
-	/* Clear out subsysnqn; might be different for discovery subsystems */
-	fctx->ctrl_params.subsysnqn = NULL;
-	c = libnvme_ctrl_find(s, fctx, p);
-	if (c) {
-		fctx->ctrl_params.subsysnqn = subsysnqn;
+	/*
+	 * Clear subsysnqn for the initial search; discovery subsystems
+	 * may report a different NQN than the one used to connect.
+	 */
+	search = *in;
+	libnvme_fabrics_config_copy(&search.cfg, &in->cfg);
+	search.subsysnqn = NULL;
+	c = libnvme_ctrl_find(s, &search, p);
+	if (c)
 		return c;
-	}
 
 	ctx = s->h ? s->h->ctx : NULL;
-	params = fctx->ctrl_params;
-	params.subsysnqn = s->subsysnqn;
-	libnvmf_default_config(&params.cfg);
-	ret = libnvme_create_ctrl(ctx, &params, &c);
-	fctx->ctrl_params.subsysnqn = subsysnqn;
+	search.subsysnqn = s->subsysnqn;
+	libnvmf_default_config(&search.cfg);
+	ret = libnvme_create_ctrl(ctx, &search, &c);
 	if (ret)
 		return NULL;
 
@@ -1969,7 +1964,8 @@ __libnvme_public int libnvme_init_ctrl(
 	return ret;
 }
 
-int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
+static int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx,
+		libnvme_subsystem_t s,
 		const char *path, const char *name, libnvme_ctrl_t *cp)
 {
 	__cleanup_free char *addr = NULL, *address = NULL, *transport = NULL;
@@ -2034,16 +2030,14 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 skip_address:
 	p = NULL;
 	do {
-		struct libnvmf_context fctx = {
-			.ctrl_params = {
-				.transport = transport,
-				.traddr = traddr,
-				.host_traddr = host_traddr,
-				.host_iface = host_iface,
-				.trsvcid = trsvcid,
-			},
+		struct libnvme_ctrl_params params = {
+			.transport = transport,
+			.traddr = traddr,
+			.host_traddr = host_traddr,
+			.host_iface = host_iface,
+			.trsvcid = trsvcid,
 		};
-		c = libnvme_lookup_ctrl(s, &fctx, p);
+		c = libnvme_lookup_ctrl(s, &params, p);
 		if (c) {
 			if (!c->name)
 				break;

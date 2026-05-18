@@ -463,8 +463,6 @@ struct libnvme_transport_handle *__libnvme_open(struct libnvme_global_ctx *ctx,
 struct libnvme_transport_handle *__libnvme_create_transport_handle(
 		struct libnvme_global_ctx *ctx);
 
-struct libnvmf_context;
-
 int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		const struct libnvme_ctrl_params *params,
 		struct libnvme_ctrl **cp);
@@ -474,8 +472,11 @@ struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid);
 struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 		const char *name, const char *subsysnqn);
-struct libnvme_ctrl * libnvme_lookup_ctrl(struct libnvme_subsystem * s,
-		struct libnvmf_context *fctx, struct libnvme_ctrl *p);
+struct libnvme_ctrl *libnvme_lookup_ctrl(struct libnvme_subsystem *s,
+		const struct libnvme_ctrl_params *params,
+		struct libnvme_ctrl *p);
+void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
+		libnvme_ctrl_t c);
 
 void __libnvme_free_host(struct libnvme_host * h);
 
