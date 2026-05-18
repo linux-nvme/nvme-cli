@@ -28,7 +28,6 @@
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"
-#include "private-fabrics.h"
 #include "util.h"
 #include "compiler-attributes.h"
 
@@ -1587,121 +1586,6 @@ int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 
 	*cp = c;
 	return 0;
-}
-
-/**
- * libnvme_tree_ctrl_match() - Generic controller matcher for non-TCP transports
- * @c:	An existing controller instance
- * @candidate:	Candidate ctrl we're trying to match with @c.
- *
- * We want to determine if an existing controller can be re-used
- * for the candidate controller we're trying to instantiate. This function
- * is the generic matcher used for all non-TCP transports.
- *
- * Return: true if a match is found, false otherwise.
- */
-bool libnvme_tree_ctrl_match(struct libnvme_ctrl *c,
-		struct candidate_args *candidate)
-{
-	if (!streq0(c->transport, candidate->transport))
-		return false;
-
-	if (candidate->traddr && c->traddr &&
-	    !candidate->addreq(c->traddr, candidate->traddr))
-		return false;
-
-	if (candidate->host_traddr && c->host_traddr &&
-	    !candidate->addreq(c->host_traddr, candidate->host_traddr))
-		return false;
-
-	if (candidate->host_iface && c->host_iface &&
-	    !streq0(c->host_iface, candidate->host_iface))
-		return false;
-
-	if (candidate->trsvcid && c->trsvcid &&
-	    !streq0(c->trsvcid, candidate->trsvcid))
-		return false;
-
-	if (candidate->well_known_nqn && !libnvme_ctrl_get_discovery_ctrl(c))
-		return false;
-
-	if (candidate->subsysnqn && !streq0(c->subsysnqn, candidate->subsysnqn))
-		return false;
-
-	return true;
-}
-
-/**
- * libnvme_candidate_init() - Init candidate and get the matching function
- *
- * @candidate:		Candidate struct to initialize
- * @params:		Controller parameters to match against
- *
- * The function _candidate_free() must be called to release resources once
- * the candidate object is not longer required.
- *
- * Return: The matching function to use when comparing an existing
- * controller to the candidate controller.
- */
-ctrl_match_t libnvme_candidate_init(struct libnvme_global_ctx *ctx,
-		struct candidate_args *candidate,
-		const struct libnvme_ctrl_params *params)
-{
-	ctrl_match_t m;
-
-	memset(candidate, 0, sizeof(*candidate));
-
-	candidate->traddr = params->traddr;
-	candidate->trsvcid = params->trsvcid;
-	candidate->transport = params->transport;
-	candidate->subsysnqn = params->subsysnqn;
-	candidate->host_iface =
-		streqcase0(params->host_iface, "none") ?
-		NULL : params->host_iface;
-	candidate->host_traddr =
-		streqcase0(params->host_traddr, "none") ?
-		NULL : params->host_traddr;
-
-	if (streq0(params->subsysnqn, NVME_DISC_SUBSYS_NAME)) {
-		/* Since TP8013, the NQN of discovery controllers can be the
-		 * well-known NQN (i.e. nqn.2014-08.org.nvmexpress.discovery) or
-		 * a unique NQN. A DC created using the well-known NQN may later
-		 * display a unique NQN when looked up in the sysfs. Therefore,
-		 * ignore (i.e. set to NULL) the well-known NQN when looking for
-		 * a match.
-		 */
-		candidate->subsysnqn = NULL;
-		candidate->well_known_nqn = true;
-	}
-
-	m = libnvmf_candidate_init(ctx, candidate, params);
-	if (m)
-		return m;
-
-	/* All other transport types */
-	candidate->addreq = streqcase0;
-	return libnvme_tree_ctrl_match;
-}
-
-libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
-		const struct libnvme_ctrl_params *params, libnvme_ctrl_t p)
-{
-	struct candidate_args candidate = {};
-	struct libnvme_ctrl *c, *matching_c = NULL;
-	ctrl_match_t ctrl_match;
-
-	/* Init candidate and get the matching function to use */
-	ctrl_match = libnvme_candidate_init(s->h->ctx, &candidate, params);
-
-	c = p ? libnvme_subsystem_next_ctrl(s, p) : libnvme_subsystem_first_ctrl(s);
-	for (; c != NULL; c = libnvme_subsystem_next_ctrl(s, c)) {
-		if (ctrl_match(c, &candidate)) {
-			matching_c = c;
-			break;
-		}
-	}
-
-	return matching_c;
 }
 
 libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
