@@ -3169,6 +3169,7 @@ __libnvme_public int libnvmf_connect(
 
 	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,
 		fctx->tls_key_identity, &fctx->ctrl_params.cfg, c);
+	update_config(c, &fctx->ctrl_params.cfg);
 
 	/*
 	 * We are connecting to a discovery controller, so let's treat
