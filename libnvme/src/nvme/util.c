@@ -836,3 +836,15 @@ char *libnvme_basename(const char *path)
 	char *p = (char *) strrchr(path, '/');
 	return p ? p + 1 : (char *) path;
 }
+
+/*
+ * libnvme_fabrics_config currently contains only scalar fields, so a
+ * shallow copy is correct. This function exists as a single point of
+ * change: if a string or pointer field is ever added, update only this
+ * function to perform a deep copy rather than patching every call site.
+ */
+void libnvme_fabrics_config_copy(struct libnvme_fabrics_config *dst,
+		const struct libnvme_fabrics_config *src)
+{
+	*dst = *src;
+}

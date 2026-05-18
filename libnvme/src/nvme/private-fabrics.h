@@ -46,6 +46,9 @@ struct libnvmf_context {
 	struct libnvme_global_ctx *ctx;
 	struct libnvmf_hooks hooks;
 
+	/* NVMe controller parameters */
+	struct libnvme_ctrl_params ctrl_params;
+
 	/* discovery defaults */
 	int default_max_discovery_retries;
 	int default_keep_alive_timeout;
@@ -53,15 +56,6 @@ struct libnvmf_context {
 	/* common fabrics configuration */
 	const char *device;
 	bool persistent;
-	struct libnvme_fabrics_config cfg;
-
-	/* connection configuration */
-	const char *subsysnqn;
-	const char *transport;
-	const char *traddr;
-	const char *trsvcid;
-	const char *host_traddr;
-	const char *host_iface;
 
 	/* host configuration */
 	const char *hostnqn;

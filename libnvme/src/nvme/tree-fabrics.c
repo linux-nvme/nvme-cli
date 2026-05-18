@@ -248,13 +248,13 @@ ctrl_match_t libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 		struct candidate_args *candidate,
 		const struct libnvmf_context *fctx)
 {
-	if (streq0(fctx->transport, "tcp")) {
+	if (streq0(fctx->ctrl_params.transport, "tcp")) {
 		candidate->iface_list = libnvmf_getifaddrs(ctx);
 		candidate->addreq = libnvme_ipaddrs_eq;
 		return _tcp_match_ctrl;
 	}
 
-	if (streq0(fctx->transport, "rdma")) {
+	if (streq0(fctx->ctrl_params.transport, "rdma")) {
 		candidate->addreq = libnvme_ipaddrs_eq;
 		return libnvme_tree_ctrl_match;
 	}
