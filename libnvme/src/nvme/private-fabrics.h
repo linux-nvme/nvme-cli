@@ -16,9 +16,7 @@
 
 #include "nvme/private.h"
 
-struct libnvmf_context {
-	struct libnvme_global_ctx *ctx;
-
+struct libnvmf_hooks {
 	/* common hooks */
 	bool (*decide_retry)(struct libnvmf_context *fctx, int err,
 			void *user_data);
@@ -40,6 +38,13 @@ struct libnvmf_context {
 			void *user_data);
 	int (*parser_next_line)(struct libnvmf_context *fctx,
 			void *user_data);
+
+	void *user_data;
+};
+
+struct libnvmf_context {
+	struct libnvme_global_ctx *ctx;
+	struct libnvmf_hooks hooks;
 
 	/* discovery defaults */
 	int default_max_discovery_retries;
@@ -68,8 +73,6 @@ struct libnvmf_context {
 	const char *keyring;
 	char *tls_key;
 	const char *tls_key_identity;
-
-	void *user_data;
 };
 
 

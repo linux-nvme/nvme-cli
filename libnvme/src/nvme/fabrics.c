@@ -222,11 +222,11 @@ __libnvme_public int libnvmf_context_create(struct libnvme_global_ctx *ctx,
 
 	libnvmf_default_config(&fctx->cfg);
 
-	fctx->decide_retry = decide_retry;
-	fctx->connected = connected;
-	fctx->already_connected = already_connected;
+	fctx->hooks.decide_retry = decide_retry;
+	fctx->hooks.connected = connected;
+	fctx->hooks.already_connected = already_connected;
 
-	fctx->user_data = user_data;
+	fctx->hooks.user_data = user_data;
 
 	*fctxp = fctx;
 	return 0;
@@ -254,10 +254,10 @@ __libnvme_public int libnvmf_context_set_discovery_hooks(
 		int (*parser_next_line)(struct libnvmf_context *fctx,
 			void *user_data))
 {
-	fctx->discovery_log = discovery_log;
-	fctx->parser_init = parser_init;
-	fctx->parser_cleanup = parser_cleanup;
-	fctx->parser_next_line = parser_next_line;
+	fctx->hooks.discovery_log = discovery_log;
+	fctx->hooks.parser_init = parser_init;
+	fctx->hooks.parser_cleanup = parser_cleanup;
+	fctx->hooks.parser_next_line = parser_next_line;
 
 	return 0;
 }
@@ -2077,9 +2077,9 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 	}
 
 	numrec = le64_to_cpu(log->numrec);
-	if (fctx->discovery_log)
-		fctx->discovery_log(fctx, connect, log, numrec,
-			fctx->user_data);
+	if (fctx->hooks.discovery_log)
+		fctx->hooks.discovery_log(fctx, connect, log, numrec,
+			fctx->hooks.user_data);
 
 	if (!connect)
 		return 0;
@@ -2159,9 +2159,9 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 		} else if (err == -ENVME_CONNECT_ALREADY) {
 			struct nvmf_disc_log_entry *e = &log->entries[i];
 
-			nfctx.already_connected(&nfctx, h, e->subnqn,
+			nfctx.hooks.already_connected(&nfctx, h, e->subnqn,
 				libnvmf_trtype_str(e->trtype), e->traddr,
-				e->trsvcid, nfctx.user_data);
+				e->trsvcid, nfctx.hooks.user_data);
 		}
 	}
 
@@ -2204,7 +2204,7 @@ retry:
 	err = libnvmf_add_ctrl(h, c);
 	if (!err)
 		return 0;
-	if (fctx->decide_retry(fctx, err, fctx->user_data))
+	if (fctx->hooks.decide_retry(fctx, err, fctx->hooks.user_data))
 		goto retry;
 
 	return err;
@@ -2503,12 +2503,12 @@ __libnvme_public int libnvmf_discovery_config_file(
 	if (err)
 		return err;
 
-	err = fctx->parser_init(fctx, fctx->user_data);
+	err = fctx->hooks.parser_init(fctx, fctx->hooks.user_data);
 	if (err)
 		return err;
 
 	do {
-		err = fctx->parser_next_line(fctx, fctx->user_data);
+		err = fctx->hooks.parser_next_line(fctx, fctx->hooks.user_data);
 		if (err)
 			break;
 
@@ -2533,7 +2533,7 @@ __libnvme_public int libnvmf_discovery_config_file(
 		libnvme_free_ctrl(c);
 	} while (!err);
 
-	fctx->parser_cleanup(fctx, fctx->user_data);
+	fctx->hooks.parser_cleanup(fctx, fctx->hooks.user_data);
 
 	if (err != -EOF)
 		return err;
@@ -2730,8 +2730,8 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 		return ret;
 	}
 
-	if (fctx->connected)
-		fctx->connected(fctx, c, fctx->user_data);
+	if (fctx->hooks.connected)
+		fctx->hooks.connected(fctx, c, fctx->hooks.user_data);
 
 	return 0;
 }
@@ -3159,9 +3159,11 @@ __libnvme_public int libnvmf_connect(
 
 	c = lookup_ctrl(h, fctx);
 	if (c && libnvme_ctrl_get_name(c) && !fctx->cfg.duplicate_connect) {
-		fctx->already_connected(fctx, h, libnvme_ctrl_get_subsysnqn(c),
-			libnvme_ctrl_get_transport(c), libnvme_ctrl_get_traddr(c),
-			libnvme_ctrl_get_trsvcid(c), fctx->user_data);
+		fctx->hooks.already_connected(fctx, h,
+			libnvme_ctrl_get_subsysnqn(c),
+			libnvme_ctrl_get_transport(c),
+			libnvme_ctrl_get_traddr(c),
+			libnvme_ctrl_get_trsvcid(c), fctx->hooks.user_data);
 		return -EALREADY;
 	}
 
@@ -3196,7 +3198,7 @@ __libnvme_public int libnvmf_connect(
 		return err;
 	}
 
-	fctx->connected(fctx, c, fctx->user_data);
+	fctx->hooks.connected(fctx, c, fctx->hooks.user_data);
 
 	return 0;
 }
