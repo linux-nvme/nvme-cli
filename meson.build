@@ -484,6 +484,7 @@ endif
 if host_system == 'windows'
     add_project_arguments(
         [
+            '-DNOMINMAX',   # don't include Windows min/max definitions
             '-D_POSIX_THREAD_SAFE_FUNCTIONS',   # enables gmtime_r support
         ],
         language : 'c',

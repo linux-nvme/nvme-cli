@@ -8,18 +8,20 @@
  * Windows-specific implementations of ioctl-based functions.
  */
 
-#include "ioctl.h"
-#include "private.h"
-#include "types.h"
-
-#include <libnvme.h>
-
 #include <windows.h>
 #include <winioctl.h>
 #include <errno.h>
 #include <ntddscsi.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
+#include <ccan/minmax/minmax.h>
+
+#include <libnvme.h>
+
+#include "ioctl.h"
+#include "private.h"
+#include "types.h"
 
 #include "compiler-attributes.h"
 
@@ -607,7 +609,7 @@ static int submit_io_read(struct libnvme_transport_handle *hdl,
 	if (cmd->addr && cmd->data_len > 0) {
 		memcpy((void *)(uintptr_t)cmd->addr,
 			buffer + pass_through->DataBufferOffset,
-			min(pass_through->DataTransferLength, cmd->data_len));
+			min(pass_through->DataTransferLength, (ULONG)cmd->data_len));
 	}
 
 	cmd->result = 0;
@@ -742,7 +744,7 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 	if (cmd->addr && cmd->data_len > 0) {
 		memcpy((void *)(uintptr_t)cmd->addr,
 			(PUCHAR)protocol_data + protocol_data->ProtocolDataOffset,
-			min(protocol_data->ProtocolDataLength, cmd->data_len));
+			min(protocol_data->ProtocolDataLength, (DWORD)cmd->data_len));
 	}
 
 	/* Only 32-bits of return data. Assuming CQE DW0. */
@@ -846,7 +848,7 @@ static int submit_admin_identify(struct libnvme_transport_handle *hdl,
 	if (cmd->addr && cmd->data_len > 0) {
 		memcpy((void *)(uintptr_t)cmd->addr,
 			(char *)protocol_data + protocol_data->ProtocolDataOffset,
-			min(protocol_data->ProtocolDataLength, cmd->data_len));
+			min(protocol_data->ProtocolDataLength, (DWORD)cmd->data_len));
 	}
 
 	/* Only 32-bits of return data. Assuming CQE DW0. */
@@ -1070,7 +1072,7 @@ static int submit_admin_get_features(struct libnvme_transport_handle *hdl,
 	if (cmd->addr && cmd->data_len > 0) {
 		memcpy((void *)(uintptr_t)cmd->addr,
 			(PUCHAR)protocol_data + protocol_data->ProtocolDataOffset,
-			min(protocol_data->ProtocolDataLength, cmd->data_len));
+			min(protocol_data->ProtocolDataLength, (DWORD)cmd->data_len));
 	}
 
 	/* Only 32-bits of return data. Assuming CQE DW0. */
