@@ -41,9 +41,6 @@ nbft_dump = executable(
     ],
 )
 
-# Shell-based diff tests only work on Linux/Unix systems
-if host_system != 'windows'
-
 helper_data = configuration_data()
 helper_data.set('NBFT_DUMP_PATH', nbft_dump.full_path())
 helper_data.set('TABLES_DIR', meson.current_source_dir()/tables_dir)
@@ -96,5 +93,3 @@ foreach table: tables_bad
         should_fail: true,
     )
 endforeach
-
-endif # Unix-only shell script tests
