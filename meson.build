@@ -484,6 +484,15 @@ if libtype == 'static'
     requires = ''
 endif
 
+if host_system == 'windows'
+    add_project_arguments(
+        [
+            '-DNOMINMAX',   # don't include Windows min/max definitions
+        ],
+        language : 'c',
+    )
+endif
+
 substs = configuration_data()
 substs.set('VERSION', meson.project_version())
 substs.set('NVMECLI_LICENSE', meson.project_license()[0])
