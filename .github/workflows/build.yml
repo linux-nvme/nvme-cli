@@ -200,6 +200,26 @@ jobs:
         run: |
           scripts/build.sh minimal_static
 
+  build-nofabrics:
+    name: no-fabrics build with unit tests
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: build
+        run: |
+          scripts/build.sh nofabrics
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        name: upload logs
+        if: failure()
+        with:
+          name: no-fabrics log files
+          path: |
+            .build-ci/meson-logs/*.txt
+
   build-alpine:
     name: musl libc build on Alpine
     runs-on: ubuntu-latest
