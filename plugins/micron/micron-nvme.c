@@ -2300,7 +2300,7 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 				int *logSize, int da)
 {
 	int err, bs = 512, offset = bs;
-	unsigned short data_area[4];
+	unsigned short data_area[5];
 	unsigned char  ctrl_init = (type == 0x8);
 
 	__u8 *buffer = (unsigned char *)libnvme_alloc(bs);
@@ -2321,8 +2321,10 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 	data_area[1] = buffer[9]  << 8 | buffer[8];
 	data_area[2] = buffer[11] << 8 | buffer[10];
 	data_area[3] = buffer[13] << 8 | buffer[12];
+	data_area[4] = buffer[15] << 8 | buffer[14];
 	data_area[0] = data_area[1] > data_area[2] ? data_area[1] : data_area[2];
 	data_area[0] = data_area[3] > data_area[0] ? data_area[3] : data_area[0];
+	data_area[0] = data_area[4] > data_area[0] ? data_area[4] : data_area[0];
 
 	if (!data_area[da]) {
 		fprintf(stderr, "Requested telemetry data for 0x%X is empty\n", type);
@@ -3627,7 +3629,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	const char *desc = "This retrieves the micron debug log package";
 	const char *package = "Log output data file name (required)";
 	const char *type = "telemetry log type - host or controller";
-	const char *data_area = "telemetry log data area 1, 2 or 3";
+	const char *data_area = "telemetry log data area 1, 2, 3 or 4";
 	unsigned char *dataBuffer = NULL;
 	int bSize = 0;
 	int maxSize = 0;
@@ -3665,8 +3667,8 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 			goto out;
 		}
 
-		if (cfg.data_area <= 0 || cfg.data_area > 3) {
-			printf("data area must be selected using -d option ie --d=1,2,3\n");
+		if (cfg.data_area <= 0 || cfg.data_area > 4) {
+			printf("data area must be selected using -d option ie --d=1,2,3,4\n");
 			goto out;
 		}
 		telemetry_option = 1;
