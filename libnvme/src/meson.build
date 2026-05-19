@@ -38,8 +38,8 @@ if host_system == 'windows'
         'nvme/ioctl-win.c',
         'nvme/lib-win.c',
         'nvme/mem-win.c',
+        'nvme/no-linux.c',
         'nvme/tree-win.c',
-        'nvme/windows-stubs.c',  # Stubs for excluded functions
     ]
     headers += [
         'nvme/filters-win.h',

@@ -273,9 +273,8 @@ The project uses per-header compatibility wrappers in `libnvme/src/nvme/`:
 | `libnvme/src/nvme/filters-win.h` | StoragePort map API declarations |
 | `libnvme/src/nvme/lib-win.c` | Device open/close, path translation (~250 lines) |
 | `libnvme/src/nvme/tree-win.c` | Topology tree scanning (~330 lines) |
-| `libnvme/src/nvme/windows-stubs.c` | Stubs for Linux-only functions (~290 lines) |
+| `libnvme/src/nvme/no-linux.c` | Stubs for Linux-only functions (~290 lines) |
 | `windows-stubs.c` | nvme-cli level stubs (RPMB) |
-| `util/mem-windows.c` | `VirtualAlloc` large page memory allocation |
 
 ### Windows Build Dependencies
 
@@ -324,7 +323,7 @@ The Windows build:
 
 ## Remaining Windows Stubs
 
-### libnvme stubs (`libnvme/src/nvme/windows-stubs.c`)
+### libnvme stubs (`libnvme/src/nvme/no-linux.c`)
 
 All remaining stubs are for Linux-specific functionality with no Windows equivalent:
 
