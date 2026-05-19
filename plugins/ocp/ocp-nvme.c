@@ -1439,7 +1439,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	char sn[21] = {0,};
 	struct nvme_id_ctrl ctrl;
 	bool is_support_telemetry_controller;
-	struct ocp_telemetry_parse_options opt;
+	struct ocp_telemetry_parse_options opt = {0};
 	int tele_type = 0;
 	int tele_area = 0;
 	char file_path_telemetry[PATH_MAX], file_path_string[PATH_MAX];
@@ -1566,8 +1566,11 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		opt.string_log = file_path_string;
 	}
 
+	if (argconfig_parse_seen(opts, "output-format"))
+		opt.output_format = nvme_args.output_format;
+
 	if (!opt.output_format) {
-		nvme_show_result("Missing format. Using default format - JSON.\n");
+		nvme_show_result("Missing output format. Using default format - JSON.\n");
 		opt.output_format = DEFAULT_OUTPUT_FORMAT_JSON;
 	}
 
