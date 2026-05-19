@@ -534,17 +534,13 @@ if want_nvme
         'nvme-print-stdout.c',
         'nvme-print-stdout-top.c',
         'nvme-print.c',
+        'nvme-rpmb.c',
         'nvme.c',
         'plugin.c',
     ]
-    if host_system == 'windows'
-        sources += [
-            'windows-stubs.c',
-        ]
-    else
+    if host_system != 'windows'
         sources += [
             'libnvme-wrap.c',
-            'nvme-rpmb.c',
         ]
     endif
 
@@ -574,6 +570,7 @@ if want_nvme
         link_deps += [
             ws2_32_dep,
             kernel32_dep,
+            bcrypt_dep,
         ]
 
         if is_static

@@ -23,11 +23,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#if !defined(_WIN32)
 #include <linux/if_alg.h>
 #include <linux/socket.h>
 
 #include <sys/socket.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -48,11 +49,70 @@
 #define SOL_ALG 279
 #endif
 
+#if defined(_WIN32)
+#include <bcrypt.h>
+#define HMAC_SHA256_ALGO_NAME		BCRYPT_SHA256_ALGORITHM
+#define MD5_HASH_ALGO_NAME		BCRYPT_MD5_ALGORITHM
+#else
 #define HMAC_SHA256_ALGO_NAME		"hmac(sha256)"
 #define MD5_HASH_ALGO_NAME		"md5"
+#endif
 #define HMAC_SHA256_HASH_SIZE		32
 #define MD5_HASH_HASH_SIZE		16
 
+#if defined(_WIN32)
+/*
+ * Utility function to create hash value of given data (with given key) using
+ * given hash algorithm; this function uses Windows BCrypt services
+ */
+unsigned char *create_hash(LPCWSTR algo,
+			   int hash_size,
+			   unsigned char *data,
+			   int datalen,
+			   unsigned char *key,
+			   int keylen)
+{
+	BCRYPT_ALG_HANDLE alg_handle = NULL;
+	BCRYPT_HASH_HANDLE hash_handle = NULL;
+	unsigned char *hash = NULL;
+	NTSTATUS status;
+	ULONG flags = 0;
+
+	if (key != NULL && keylen > 0)
+		flags = BCRYPT_ALG_HANDLE_HMAC_FLAG;
+
+	status = BCryptOpenAlgorithmProvider(&alg_handle, algo, NULL, flags);
+	if (!BCRYPT_SUCCESS(status))
+		goto out;
+
+	status = BCryptCreateHash(alg_handle, &hash_handle, NULL, 0,
+				  key, keylen, 0);
+	if (!BCRYPT_SUCCESS(status))
+		goto out;
+
+	status = BCryptHashData(hash_handle, data, datalen, 0);
+	if (!BCRYPT_SUCCESS(status))
+		goto out;
+
+	hash = (unsigned char *)calloc(hash_size, 1);
+	if (!hash)
+		goto out;
+
+	status = BCryptFinishHash(hash_handle, hash, hash_size, 0);
+	if (!BCRYPT_SUCCESS(status)) {
+		free(hash);
+		hash = NULL;
+	}
+
+out:
+	if (hash_handle)
+		BCryptDestroyHash(hash_handle);
+	if (alg_handle)
+		BCryptCloseAlgorithmProvider(alg_handle, 0);
+
+	return hash;
+}
+#else
 /*
  * Utility function to create hash value of given data (with given key) using
  * given hash algorithm; this function uses kernel crypto services
@@ -132,6 +192,7 @@ out_close_infd:
 
 	return hash;
 }
+#endif
 
 /* Function that computes hmac-sha256 hash of given data and key pair. Returns
  * byte stream (non-null terminated) upon success, NULL otherwise.
