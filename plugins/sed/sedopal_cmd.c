@@ -822,7 +822,7 @@ void sedopal_print_sid_auth(void *data)
 
 	printf("\nSED Block SID Authentication:\n");
 	printf("\tSID value equal MSID            : %s\n",
-		(sid_auth_d->states & BLOCK_SID_VALUE_STATE) ? "yes" : "no");
+		(sid_auth_d->states & BLOCK_SID_VALUE_STATE) ? "no" : "yes");
 	printf("\tSID auth blocked                : %s\n",
 		(sid_auth_d->states & BLOCK_SID_BLOCKED_STATE) ? "yes" : "no");
 	printf("\tHW reset selected               : %s\n",
