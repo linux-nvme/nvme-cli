@@ -5350,9 +5350,9 @@ static bool fw_commit_support_mud(struct libnvme_transport_handle *hdl)
 	return false;
 }
 
-static void fw_commit_print_mud(struct libnvme_transport_handle *hdl, __u64 result)
+static void fw_commit_print_mud(bool mud_supported, __u64 result)
 {
-	if (!fw_commit_support_mud(hdl))
+	if (!mud_supported)
 		return;
 
 	printf("Multiple Update Detected (MUD) Value: %#" PRIx64 "\n",
@@ -5412,6 +5412,7 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	struct libnvme_passthru_cmd cmd;
 	int err;
 	nvme_print_flags_t flags;
+	bool mud_supported;
 
 	struct config {
 		bool	ish;
@@ -5480,6 +5481,8 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 		return -EINVAL;
 	}
 
+	mud_supported = fw_commit_support_mud(hdl);
+
 	nvme_init_fw_commit(&cmd, cfg.slot, cfg.action, cfg.bpid);
 	if (cfg.ish) {
 		if (libnvme_transport_handle_is_mi(hdl))
@@ -5498,7 +5501,7 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 	if (cfg.action == 6 || cfg.action == 7)
 		printf(" bpid:%d", cfg.bpid);
 	printf("\n");
-	fw_commit_print_mud(hdl, cmd.result);
+	fw_commit_print_mud(mud_supported, cmd.result);
 
 	return err;
 }
