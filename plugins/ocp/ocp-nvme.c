@@ -208,8 +208,7 @@ static int get_c3_log_page(struct libnvme_transport_handle *hdl, char *format)
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output-format. "
-			"Valid values: normal|json|binary|tabular.\n");
+		fprintf(stderr, "ERROR : OCP : invalid output format\n");
 		return ret;
 	}
 
@@ -1402,8 +1401,7 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 
 	status = validate_output_format(options->output_format, &fmt);
 	if (status < 0) {
-		nvme_show_error("ERROR : OCP : invalid output-format. "
-			"Valid values: normal|json|binary|tabular.");
+		nvme_show_error("Invalid output format\n");
 		return status;
 	}
 
@@ -1562,8 +1560,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		opt.output_format = nvme_args.output_format;
 
 	if (!opt.output_format) {
-		nvme_show_result("Missing output-format. Using default - json "
-				 "(valid: normal|json|binary|tabular).\n");
+		nvme_show_result("Missing output format. Using default format - JSON.\n");
 		opt.output_format = DEFAULT_OUTPUT_FORMAT_JSON;
 	}
 
@@ -1632,8 +1629,7 @@ static int get_c5_log_page(struct libnvme_transport_handle *hdl, char *format)
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output-format. "
-			"Valid values: normal|json|binary|tabular.\n");
+		fprintf(stderr, "ERROR : OCP : invalid output format\n");
 		return ret;
 	}
 
@@ -1734,8 +1730,7 @@ static int get_c1_log_page(struct libnvme_transport_handle *hdl, char *format)
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output-format. "
-			"Valid values: normal|json|binary|tabular.\n");
+		fprintf(stderr, "ERROR : OCP : invalid output format\n");
 		return ret;
 	}
 
@@ -1835,8 +1830,7 @@ static int get_c4_log_page(struct libnvme_transport_handle *hdl, char *format)
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output-format. "
-			"Valid values: normal|json|binary|tabular.\n");
+		fprintf(stderr, "ERROR : OCP : invalid output format\n");
 		return ret;
 	}
 
@@ -2429,8 +2423,7 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output-format. "
-			"Valid values: normal|json|binary|tabular.\n");
+		fprintf(stderr, "ERROR : OCP : invalid output format\n");
 		return ret;
 	}
 
@@ -2518,8 +2511,7 @@ static int get_c7_log_page(struct libnvme_transport_handle *hdl, char *format)
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output-format. "
-			"Valid values: normal|json|binary|tabular.\n");
+		fprintf(stderr, "ERROR : OCP : invalid output format\n");
 		return ret;
 	}
 
@@ -2969,8 +2961,7 @@ static int ocp_get_persistent_event_log(int argc, char **argv,
 
 	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
-		nvme_show_error("ERROR : OCP : invalid output-format. "
-			"Valid values: normal|json|binary|tabular.");
+		nvme_show_error("Invalid output format");
 		return err;
 	}
 
