@@ -5,7 +5,9 @@
  * Authors: Broc Going <bgoing@micron.com>
  */
 
- #include <libnvme.h>
+#include <string.h>
+
+#include <libnvme.h>
 
 #include "micron-utils.h"
 #include "util/cleanup.h"
