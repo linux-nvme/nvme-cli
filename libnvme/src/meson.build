@@ -6,10 +6,12 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 sources = [
+    'nvme/ioctl.c',
     'nvme/log.c',
 ]
 if host_system == 'windows'
     sources += [
+        'nvme/ioctl-win.c',
         'nvme/mem-win.c',
     ]
 else
@@ -18,7 +20,7 @@ else
         'nvme/base64.c',
         'nvme/crc32.c',
         'nvme/filters.c',
-        'nvme/ioctl.c',
+        'nvme/ioctl-linux.c',
         'nvme/lib.c',
         'nvme/linux.c',
         'nvme/mem-linux.c',
