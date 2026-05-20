@@ -13,7 +13,6 @@ all_plugins = {
   'intel': ['plugins/intel/intel-nvme.c'],
   'mangoboost': ['plugins/mangoboost/mangoboost-nvme.c'],
   'memblaze': ['plugins/memblaze/memblaze-nvme.c'],
-  'micron': ['plugins/micron/micron-nvme.c'],
   'nvidia': ['plugins/nvidia/nvidia-nvme.c'],
   'seagate': ['plugins/seagate/seagate-nvme.c'],
   'shannon': ['plugins/shannon/shannon-nvme.c'],
@@ -23,16 +22,28 @@ all_plugins = {
   'virtium': ['plugins/virtium/virtium-nvme.c'],
   'ymtc': ['plugins/ymtc/ymtc-nvme.c'],
 }
-
-if host_system != 'windows'
-    all_plugins += {
-      'huawei': ['plugins/huawei/huawei-nvme.c'],
-      'netapp': ['plugins/netapp/netapp-nvme.c'],
-      'sandisk': ['plugins/sandisk/sandisk-nvme.c', 'plugins/sandisk/sandisk-utils.c'],
-      'scaleflux': ['plugins/scaleflux/sfx-nvme.c'],
-      'wdc': ['plugins/wdc/wdc-nvme.c', 'plugins/wdc/wdc-utils.c'],
-      'zns': ['plugins/zns/zns.c'],
-    }
+if host_system == 'windows'
+  all_plugins += {
+    'micron': [
+      'plugins/micron/micron-nvme.c',
+      'plugins/micron/micron-utils.c',
+      'plugins/micron/micron-utils-win.c'
+      ],
+  }
+else
+  all_plugins += {
+    'huawei': ['plugins/huawei/huawei-nvme.c'],
+    'micron': [
+      'plugins/micron/micron-nvme.c',
+      'plugins/micron/micron-utils.c',
+      'plugins/micron/micron-utils-linux.c'
+      ],
+    'netapp': ['plugins/netapp/netapp-nvme.c'],
+    'sandisk': ['plugins/sandisk/sandisk-nvme.c', 'plugins/sandisk/sandisk-utils.c'],
+    'scaleflux': ['plugins/scaleflux/sfx-nvme.c'],
+    'wdc': ['plugins/wdc/wdc-nvme.c', 'plugins/wdc/wdc-utils.c'],
+    'zns': ['plugins/zns/zns.c'],
+  }
 endif
 
 # Get the list of plugins to build
