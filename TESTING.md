@@ -166,3 +166,26 @@ incompatible with `exe_wrapper`-style instrumentation:
 
 The nvme-cli unit tests (`nvme-cli - *`) are pure C binaries and are fully
 compatible with valgrind. Start your triage there.
+
+### AddressSanitizer / UndefinedBehaviourSanitizer (ASan / UBSan)
+
+ASan and UBSan are compiled into the binaries, so they each require a separate
+build directory. They detect different classes of bugs:
+
+- **ASan** (`address`): heap overflows, use-after-free, memory leaks.
+- **UBSan** (`undefined`): signed integer overflow, misaligned pointer access,
+  null dereference, out-of-bounds indexing, and other C undefined behaviour.
+
+Build and run:
+
+```bash
+meson setup .build-asanubsan -Db_sanitize=address,undefined
+meson compile -C .build-asanubsan
+meson test -C .build-asanubsan --setup asanubsan
+```
+
+No wrapper binary is needed — sanitizer reports are emitted directly to stderr
+when a violation is detected.
+
+The same known limitations apply as for Valgrind: Python tests and shell script
+tests may produce false positives. Focus triage on the `nvme-cli - *` unit tests.
