@@ -151,21 +151,20 @@ meson test -C .build --setup valgrind
 
 A dedicated log is written to `.build/meson-logs/testlog-valgrind.txt`.
 
-**Known limitations**
+A suppression file (`valgrind.supp`) is bundled in the repository and loaded
+automatically. It covers three categories of known false positives:
 
-The valgrind setup covers all tests, including some that are structurally
-incompatible with `exe_wrapper`-style instrumentation:
+- **Shell script tests**: Valgrind wraps the shell interpreter, not the C
+  binary under test. Bash's internal allocations are suppressed.
+- **CPython internals**: Import machinery, marshal, and tokenizer code in the
+  Python interpreter generate reports that are not leaks in our code.
+- **SWIG module teardown**: SWIG allocates a varlink object during module
+  initialisation that CPython never releases at shutdown.
 
-- **Shell script tests** (e.g. `libnvme - config-pcie`): Valgrind wraps the
-  shell interpreter, not the binary under test. These will fail and should be
-  ignored when triaging valgrind results.
-- **Python tests** (`libnvme - python-*`): CPython's internal allocator
-  generates false positives. Setting `PYTHONMALLOC=malloc` (already done
-  automatically by meson) reduces noise but does not eliminate all spurious
-  reports.
+If the system provides `/usr/lib/valgrind/python3.supp` it is also loaded
+automatically at configure time.
 
-The nvme-cli unit tests (`nvme-cli - *`) are pure C binaries and are fully
-compatible with valgrind. Start your triage there.
+Any remaining failures after suppression are real issues in our C code.
 
 ### AddressSanitizer / UndefinedBehaviourSanitizer (ASan / UBSan)
 

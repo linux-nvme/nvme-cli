@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Valgrind suppressions for known false positives in the nvme-cli test suite.
+#
+# Used automatically by: meson test --setup valgrind
+#
+# Three categories of suppressions are defined here:
+#
+#   1. Bash interpreter internals — the valgrind exe_wrapper invokes bash
+#      directly for shell-script-based tests. Leaks from bash itself are
+#      not our code.
+#
+#   2. CPython interpreter internals — Python test scripts import our libnvme
+#      Python bindings. CPython's import machinery, marshal, and unicode
+#      internals generate reports that are not leaks in our code.
+#      Two obj: patterns are needed: one for distros where Python is a static
+#      binary (/usr/bin/python3.*) and one for distros where it is dynamically
+#      linked against a shared library (*libpython3*).
+#
+#   3. SWIG module teardown — SWIG allocates a varlink object during module
+#      initialisation that CPython never releases during interpreter shutdown.
+#      This is a known SWIG limitation, not a leak in libnvme.
+
+{
+   bash-interpreter-leak
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   obj:*/bash
+}
+
+{
+   cpython-interpreter-leak
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   obj:*/python3*
+}
+
+{
+   cpython-shared-library-leak
+   Memcheck:Leak
+   match-leak-kinds: all
+   ...
+   obj:*libpython3*
+}
+
+{
+   cpython-interpreter-cond
+   Memcheck:Cond
+   ...
+   obj:*/python3*
+}
+
+{
+   cpython-shared-library-cond
+   Memcheck:Cond
+   ...
+   obj:*libpython3*
+}
+
+{
+   swig-python-module-teardown
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_New
+   fun:SWIG_Python_newvarlink
+   fun:SWIG_globals
+   fun:SWIG_Python_DestroyModule
+   ...
+}
