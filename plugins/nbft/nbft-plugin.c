@@ -2,9 +2,7 @@
 
 #include <errno.h>
 #include <stdio.h>
-#ifndef _WIN32
 #include <fnmatch.h>
-#endif
 
 #include <libnvme.h>
 

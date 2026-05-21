@@ -11,7 +11,6 @@
 #include <libnvme.h>
 
 #include "mock.h"
-#include "nvme/types.h"
 #include "util.h"
 
 #define PDU_SIZE NVME_LOG_PAGE_PDU_SIZE
