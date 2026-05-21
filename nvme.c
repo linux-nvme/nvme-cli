@@ -3507,6 +3507,19 @@ static bool nvme_match_device_filter(libnvme_subsystem_t s,
 	return false;
 }
 
+static int handle_scan_topology_error(int err)
+{
+	/* Do not report an error when nvme_core module is not loaded */
+	if (err == -ENOENT) {
+		if (log_level >= LIBNVME_LOG_INFO)
+			nvme_show_error("nvme modules not loaded");
+		return 0;
+	}
+
+	nvme_show_error("Failed to scan topology: %s", libnvme_strerror(-err));
+	return err;
+}
+
 static int list_subsys(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
@@ -3558,10 +3571,8 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 	}
 
 	err = libnvme_scan_topology(ctx, filter, (void *)devname);
-	if (err) {
-		nvme_show_error("Failed to scan topology: %s", libnvme_strerror(err));
-		return -errno;
-	}
+	if (err)
+		return handle_scan_topology_error(err);
 
 	nvme_show_subsystem_list(ctx, nsid != NVME_NSID_ALL, flags);
 
@@ -3641,10 +3652,8 @@ static int list(int argc, char **argv, struct command *acmd, struct plugin *plug
 		return -ENOMEM;
 	}
 	err = libnvme_scan_topology(ctx, NULL, NULL);
-	if (err < 0) {
-		nvme_show_error("Failed to scan topology: %s", libnvme_strerror(-err));
-		return err;
-	}
+	if (err < 0)
+		return handle_scan_topology_error(err);
 
 	nvme_show_list_items(ctx, flags);
 
@@ -6647,7 +6656,7 @@ static void show_relatives(const char *name, nvme_print_flags_t flags)
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err < 0) {
-		nvme_show_error("Failed to scan topology: %s", libnvme_strerror(-err));
+		handle_scan_topology_error(err);
 		return;
 	}
 
@@ -10418,10 +10427,8 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	}
 
 	err = libnvme_scan_topology(ctx, filter, (void *)devname);
-	if (err < 0) {
-		nvme_show_error("Failed to scan topology: %s", libnvme_strerror(-err));
-		return err;
-	}
+	if (err < 0)
+		return handle_scan_topology_error(err);
 
 	if (flags & TABULAR)
 		nvme_show_topology_tabular(ctx, flags);
