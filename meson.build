@@ -705,6 +705,10 @@ if host_system != 'windows'
         exe_wrapper: valgrind_cmd,
         timeout_multiplier: 5,
     )
+
+    add_test_setup('asanubsan',
+        timeout_multiplier: 2,
+    )
 endif
 
 if doc_tgts.length() == 0
