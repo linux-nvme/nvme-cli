@@ -291,7 +291,6 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 	__u64 result;
 	struct feature_latency_monitor buf = { 0 };
 	__u32  nsid = NVME_NSID_ALL;
-	struct stat nvme_stat;
 	struct nvme_id_ctrl ctrl;
 
 	const char *desc = "Set Latency Monitor feature.";
@@ -348,11 +347,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
-	err = fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat);
-	if (err < 0)
-		return err;
-
-	if (S_ISBLK(nvme_stat.st_mode)) {
+	if (libnvme_transport_handle_is_ns(hdl)) {
 		err = libnvme_get_nsid(hdl, &nsid);
 		if (err < 0) {
 			perror("invalid-namespace-id");
@@ -1435,7 +1430,6 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err = 0;
 	__u32  nsid = NVME_NSID_ALL;
-	struct stat nvme_stat;
 	char sn[21] = {0,};
 	struct nvme_id_ctrl ctrl;
 	bool is_support_telemetry_controller;
@@ -1461,11 +1455,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	if (opt.telemetry_type == 0)
 		opt.telemetry_type = "host";
 
-	err = fstat(libnvme_transport_handle_get_fd(hdl), &nvme_stat);
-	if (err < 0)
-		return err;
-
-	if (S_ISBLK(nvme_stat.st_mode)) {
+	if (libnvme_transport_handle_is_ns(hdl)) {
 		err = libnvme_get_nsid(hdl, &nsid);
 		if (err < 0)
 			return err;
