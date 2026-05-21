@@ -131,3 +131,38 @@ Example: Cross-build for `s390x`:
 ```
 
 The exact supported targets depend on the toolchains installed in the container.
+
+## Memory Testing
+
+### Valgrind
+
+A named Valgrind test setup is registered in `meson.build`. It runs all unit
+tests under `valgrind --leak-check=full` and treats any leak as a test failure.
+
+Prerequisites: Valgrind must be installed (`apt install valgrind` or equivalent).
+
+Build and run:
+
+```bash
+meson setup .build
+meson compile -C .build
+meson test -C .build --setup valgrind
+```
+
+A dedicated log is written to `.build/meson-logs/testlog-valgrind.txt`.
+
+**Known limitations**
+
+The valgrind setup covers all tests, including some that are structurally
+incompatible with `exe_wrapper`-style instrumentation:
+
+- **Shell script tests** (e.g. `libnvme - config-pcie`): Valgrind wraps the
+  shell interpreter, not the binary under test. These will fail and should be
+  ignored when triaging valgrind results.
+- **Python tests** (`libnvme - python-*`): CPython's internal allocator
+  generates false positives. Setting `PYTHONMALLOC=malloc` (already done
+  automatically by meson) reduces noise but does not eliminate all spurious
+  reports.
+
+The nvme-cli unit tests (`nvme-cli - *`) are pure C binaries and are fully
+compatible with valgrind. Start your triage there.
