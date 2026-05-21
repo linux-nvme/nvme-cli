@@ -1745,14 +1745,19 @@ _nvme_subcmds () {
 		[ocp]="smart-add-log latency-monitor-log \
 			set-latency-monitor-feature internal-log \
 			clear-fw-activate-history eol-plp-failure-mode \
-			clear-pcie-correctable-error-counters \
-			vs-fw-activate-history device-capability-log \
+			clear-pcie-correctable-errors \
+			fw-activate-history device-capability-log \
 			set-dssd-power-state-feature get-dssd-power-state-feature \
 			telemetry-string-log set-telemetry-profile \
 			set-dssd-async-event-config get-dssd-async-event-config \
 			get-error-injection set-error-injection \
 			hardware-component-log get-latency-monitor \
-			get-clear-pcie-correctable-errors get-telemetry-profile"
+			get-clear-pcie-correctable-errors get-telemetry-profile \
+			error-recovery-log unsupported-reqs-log \
+			tcg-configuration-log set-plp-health-check-interval \
+			get-plp-health-check-interval get-enable-ieee1667-silo \
+			set-enable-ieee1667-silo persistent-event-log \
+			get-idle-wakeup-time version help"
 		[mangoboost]="id-ctrl"
 	)
 
