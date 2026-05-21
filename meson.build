@@ -150,6 +150,12 @@ if host_system == 'windows'
     cfgmgr32_dep = cc.find_library('cfgmgr32')  # For CM_Get_DevNode_Property* APIs
 endif
 
+conf.set10(
+    'HAVE_BCRYPT',
+    cc.find_library('bcrypt', required: false).found(),
+    description: 'Is bcrypt availabe'
+)
+
 # Check for libjson-c availability
 if not want_json_c
     json_c_dep = dependency('', required: false)
