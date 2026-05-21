@@ -50,7 +50,7 @@ ld_syms = {}   # symbol -> Path of the .ld file that declares it
 for ld_path in LD_FILES:
     if not ld_path.exists():
         continue
-    for line in ld_path.read_text().splitlines():
+    for line in ld_path.read_text(encoding='utf-8').splitlines():
         m = re.match(r'^\s+([a-z]\w+);', line)
         if m:
             ld_syms[m.group(1)] = ld_path
@@ -66,7 +66,7 @@ PUB_RE = re.compile(r'^__libnvme_public\b.*\b([a-z_]\w+)\s*\(', re.MULTILINE)
 pub_syms = {}  # symbol -> Path of the .c file that defines it
 
 for c_path in sorted(SRC_DIR.glob('*.c')):
-    for m in PUB_RE.finditer(c_path.read_text()):
+    for m in PUB_RE.finditer(c_path.read_text(encoding='utf-8')):
         sym = m.group(1)
         pub_syms[sym] = c_path
 
