@@ -1260,6 +1260,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 	char r_bw_str[16], w_bw_str[16];
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
+	char *iopolicy;
 	struct table *t;
 	struct table_column columns[] = {
 		{"Subsystem", LEFT},
@@ -1310,6 +1311,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 		r_bw = w_bw = 0;
 		max_rlat = max_wlat = 0;
 		max_util = 0;
+		iopolicy = libnvme_subsystem_get_iopolicy(s);
 
 		libnvme_subsystem_for_each_ctrl(s, c)
 			num_ctrl++;
@@ -1369,7 +1371,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 		table_set_value_int(t, ++col, row, num_path, LEFT);
 		table_set_value_int(t, ++col, row, num_ctrl, LEFT);
 		table_set_value_str(t, ++col, row,
-				libnvme_subsystem_get_iopolicy(s), LEFT);
+				iopolicy ? iopolicy : "NA", LEFT);
 		table_set_value_str(t, ++col, row, r_iops_str, LEFT);
 		table_set_value_str(t, ++col, row, w_iops_str, LEFT);
 		table_set_value_str(t, ++col, row, r_clat_str, LEFT);
