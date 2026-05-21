@@ -1144,6 +1144,22 @@ static libnvme_subsystem_t *stdout_top_build_subsys_arr(
 	return subsys_arr;
 }
 
+static int stdout_top_find_subsys_by_name(libnvme_subsystem_t *subsys_arr,
+		int num_subsys, const char *subsys_name)
+{
+	int idx;
+	libnvme_subsystem_t s;
+
+	for (idx = 0; idx < num_subsys; idx++) {
+		s = subsys_arr[idx];
+
+		if (!strcmp(libnvme_subsystem_get_name(s), subsys_name))
+			return idx;
+	}
+
+	return -1;
+}
+
 /*
  * Draws subsys topology screen of susbystem @s
  * Returns: 0 if ESC key is pressed or needs to draw subsystem selection screen
@@ -1459,22 +1475,40 @@ wait_for_event:
 			if (quit)
 				break;
 			fallthrough;
-		case EVENT_TYPE_NVME_UEVENT:
-			libnvme_free_global_ctx(ctx);
+		case EVENT_TYPE_NVME_UEVENT: {
+			__cleanup_free char *subsys_name = NULL;
+			libnvme_subsystem_t s;
+
+			s = subsys_arr[subsys_idx];
+			subsys_name = strdup(libnvme_subsystem_get_name(s));
+			if (!subsys_name) {
+				quit = 1;
+				break;
+			}
 			free(subsys_arr);
 			subsys_arr = NULL;
+			libnvme_free_global_ctx(ctx);
+
 			ctx = stdout_top_rescan_topology();
 			if (!ctx) {
 				quit = 1;
 				break;
 			}
+
 			subsys_arr = stdout_top_build_subsys_arr(ctx,
 					&num_subsys);
-			if (!subsys_arr)
+			if (!subsys_arr) {
 				quit = 1;
-			else
+				break;
+			}
+
+			subsys_idx = stdout_top_find_subsys_by_name(subsys_arr,
+					num_subsys, subsys_name);
+			if (subsys_idx < 0)
 				subsys_idx = 0;
+
 			break;
+		}
 		case EVENT_TYPE_KEY_DOWN:
 			/*
 			 * The @num_subsys should be equal to @data_rows, so we
