@@ -2659,7 +2659,7 @@ static void libnvme_subsystem_set_ns_path(libnvme_subsystem_t s, libnvme_ns_t n)
 	struct libnvme_ns_head *head = n->head;
 
 	if (libnvme_ns_head_get_sysfs_dir(head)) {
-		struct dirents paths = {};
+		__cleanup_dirents struct dirents paths = {};
 		int i;
 
 		/*
