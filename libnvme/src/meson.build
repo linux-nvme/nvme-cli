@@ -39,10 +39,8 @@ if host_system == 'windows'
         'nvme/lib-win.c',
         'nvme/mem-win.c',
         'nvme/no-linux.c',
+        'nvme/storageport.c',
         'nvme/tree-win.c',
-    ]
-    headers += [
-        'nvme/filters-win.h',
     ]
 else
     sources += [

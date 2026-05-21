@@ -14,12 +14,47 @@
 #include "nvme-types.h"
 
 struct storageport_map_entry {
-	char *storageport_name;
-	WCHAR *device_path;
+	char *storageport_name;  /* format "nvmeX" */
+	WCHAR *device_path;      /* format "\\?\pci..." */
 	struct nvme_id_ctrl id_ctrl;
 	int subsys_index;
 	char *subsys_name;
 };
+
+/**
+ * libnvme_storageport_map_get_count() - Get number of StoragePort map entries
+ *
+ * Return: Number of entries in the global storageport map
+ */
+size_t libnvme_storageport_map_get_count(void);
+
+/**
+ * libnvme_storageport_map_get_name() - Get StoragePort name by index
+ * @index: Zero-based index into the storageport map
+ *
+ * Return: StoragePort name string (e.g. "nvme0"), or NULL if index
+ * is out of range
+ */
+const char *libnvme_storageport_map_get_name(size_t index);
+
+/**
+ * libnvme_storageport_map_init() - Initialize the StoragePort map
+ *
+ * Enumerates all NVMe controllers via SetupDI and populates the
+ * global storageport map.  Safe to call multiple times; returns
+ * immediately if the map is already populated.
+ *
+ * Return: 0 on success, negative errno on failure
+ */
+int libnvme_storageport_map_init(void);
+
+/**
+ * libnvme_storageport_map_clear() - Free all StoragePort map entries
+ *
+ * Releases all memory associated with the global storageport map
+ * and resets the count to zero.
+ */
+void libnvme_storageport_map_clear(void);
 
 /**
  * libnvme_storageport_lookup_entry() - Resolve StoragePort name to map entry

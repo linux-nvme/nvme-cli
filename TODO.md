@@ -269,8 +269,8 @@ The project uses per-header compatibility wrappers in `libnvme/src/nvme/`:
 | File | Description |
 |------|-------------|
 | `libnvme/src/nvme/ioctl-win.c` | NVMe IOCTL implementation (~1670 lines) |
-| `libnvme/src/nvme/filters-win.c` | Device enumeration via SetupDI/CFGMGR32 (~870 lines) |
-| `libnvme/src/nvme/filters-win.h` | StoragePort map API declarations |
+| `libnvme/src/nvme/filters-win.c` | Device enumeration via SetupDI/CFGMGR32 |
+| `libnvme/src/nvme/storageport.c` | StoragePort map API |
 | `libnvme/src/nvme/lib-win.c` | Device open/close, path translation (~250 lines) |
 | `libnvme/src/nvme/tree-win.c` | Topology tree scanning (~330 lines) |
 | `libnvme/src/nvme/no-linux.c` | Stubs for Linux-only functions (~290 lines) |
