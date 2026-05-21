@@ -1278,7 +1278,7 @@ static int read_header(struct libnvme_passthru_cmd *cmd, __u8 *buf,
 	cmd->cdw10 = 0x400;
 	cmd->cdw12 = dw12;
 	cmd->data_len = 0x1000;
-	cmd->addr = (unsigned long)(void *)buf;
+	cmd->addr = (uintptr_t)(void *)buf;
 	return read_entire_cmd(cmd, 0x400, 0x400, -1, hdl, buf);
 }
 
@@ -1421,7 +1421,7 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 	/* for 1.1 Fultondales will use old nlog, but current assert/event */
 	if ((intel->ver.major < 1 && intel->ver.minor < 1) ||
 	    (intel->ver.major <= 1 && intel->ver.minor <= 1 && cfg.log == 0)) {
-		cmd.addr = (unsigned long)(void *)buf;
+		cmd.addr = (uintptr_t)(void *)buf;
 		err = get_internal_log_old(buf, output, hdl, &cmd);
 		goto out;
 	}
