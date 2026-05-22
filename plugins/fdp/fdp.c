@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <inttypes.h>
-#include <linux/fs.h>
 #include <sys/stat.h>
 
 #include <libnvme.h>
