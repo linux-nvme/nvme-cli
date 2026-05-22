@@ -27,6 +27,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#if HAVE_BCRYPT
+#include <windows.h>
+#include <bcrypt.h>
+#endif
+
 #include <ccan/endian/endian.h>
 
 #include <libnvme.h>
@@ -628,19 +633,39 @@ __libnvme_public int libnvme_uuid_from_string(
 
 }
 
-__libnvme_public int libnvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
+static int random_bytes(void *buf, size_t buflen)
 {
-	__cleanup_fd int f = -1;
+#if HAVE_BCRYPT
+	NTSTATUS status = BCryptGenRandom(NULL, buf, (ULONG)buflen,
+				 BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+
+	if (!BCRYPT_SUCCESS(status))
+		return -EIO;
+#else
+	__cleanup_fd int fd = -1;
 	ssize_t n;
 
-	f = open("/dev/urandom", O_RDONLY);
-	if (f < 0)
+	fd = open("/dev/urandom", O_RDONLY);
+	if (fd < 0)
 		return -errno;
-	n = read(f, uuid, NVME_UUID_LEN);
+
+	n = read(fd, buf, buflen);
 	if (n < 0)
 		return -errno;
-	else if (n != NVME_UUID_LEN)
+	else if ((size_t)n != buflen)
 		return -EIO;
+#endif
+	return 0;
+}
+
+__libnvme_public int libnvme_random_uuid(unsigned char uuid[NVME_UUID_LEN])
+{
+	int ret;
+
+	/* Generate random bytes using platform-specific implementation */
+	ret = random_bytes(uuid, NVME_UUID_LEN);
+	if (ret < 0)
+		return ret;
 
 	/*
 	 * See https://www.rfc-editor.org/rfc/rfc4122#section-4.4
