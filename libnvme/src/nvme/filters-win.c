@@ -97,13 +97,13 @@ __libnvme_public int libnvme_scan_ctrl_namespaces(libnvme_ctrl_t c, struct diren
 
 	*ns = NULL;
 
-	sp_entry = libnvme_storageport_lookup_entry(c->name);
+	sp_entry = libnvme_storageport_map_lookup(c->name);
 	if (!sp_entry)
 		return 0;
 
-	ret = libnvme_storageport_scan_device_numbers(sp_entry,
-						      &device_numbers,
-						      &dev_count);
+	ret = libnvme_storageport_entry_scan_device_numbers(sp_entry,
+							    &device_numbers,
+							    &dev_count);
 	if (ret)
 		return ret;
 

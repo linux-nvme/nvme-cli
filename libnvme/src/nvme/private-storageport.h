@@ -13,13 +13,7 @@
 #include <windows.h>
 #include "nvme-types.h"
 
-struct storageport_map_entry {
-	char *storageport_name;  /* format "nvmeX" */
-	WCHAR *device_path;      /* format "\\?\pci..." */
-	struct nvme_id_ctrl id_ctrl;
-	int subsys_index;
-	char *subsys_name;
-};
+struct storageport_map_entry;
 
 /**
  * libnvme_storageport_map_get_count() - Get number of StoragePort map entries
@@ -57,16 +51,16 @@ int libnvme_storageport_map_init(void);
 void libnvme_storageport_map_clear(void);
 
 /**
- * libnvme_storageport_lookup_entry() - Resolve StoragePort name to map entry
- * @storageport_name: Controller name in nvmeX format
+ * libnvme_storageport_map_lookup() - Resolve StoragePort name to map entry
+ * @ctrl_name: Controller name in nvmeX format
  *
  * Return: StoragePort map entry on Windows, or NULL if unavailable
  */
-const struct storageport_map_entry *
-libnvme_storageport_lookup_entry(const char *storageport_name);
+struct storageport_map_entry *
+libnvme_storageport_map_lookup(const char *ctrl_name);
 
 /**
- * libnvme_storageport_lookup_by_physdrive() - Resolve PhysicalDrive path to
+ * libnvme_storageport_map_lookup_by_physdrive() - Resolve PhysicalDrive path to
  * StoragePort entry
  * @drive_path: Device path in \\.\PhysicalDriveX format
  *
@@ -76,32 +70,43 @@ libnvme_storageport_lookup_entry(const char *storageport_name);
  * Return: StoragePort map entry on match, or NULL if not found
  */
 const struct storageport_map_entry *
-libnvme_storageport_lookup_by_physdrive(const char *drive_path);
+libnvme_storageport_map_lookup_by_physdrive(const char *drive_path);
 
 /**
- * libnvme_storageport_update_id_ctrl() - Update cached id_ctrl for a
- * StoragePort
- * @storageport_name: Controller name in nvmeX format
+ * libnvme_storageport_entry_set_id_ctrl() - Set id_ctrl for a entry
+ * @sp_entry: StoragePort map entry
  * @id: Pointer to the new identify controller data
  *
- * Return: 0 on success, -EINVAL for bad args, -ENOENT if not found
+ * Return: 0 on success, -EINVAL for bad args
  */
-int libnvme_storageport_update_id_ctrl(const char *storageport_name,
-				       const struct nvme_id_ctrl *id);
+int libnvme_storageport_entry_set_id_ctrl(
+	struct storageport_map_entry *sp_entry,
+	const struct nvme_id_ctrl *id);
+
+/**
+ * libnvme_storageport_entry_get_ctrl_name() - Get UTF-8 controller name for
+ * entry
+ * @entry: StoragePort map entry
+ *
+ * Return: UTF-8 controller name string, or NULL if unavailable
+ */
+const char *libnvme_storageport_entry_get_ctrl_name(
+	const struct storageport_map_entry *entry);
 
 /**
  * libnvme_storageport_entry_get_ctrl_path() - Get UTF-8 device path for entry
  * @entry: StoragePort map entry
- * @device_path: Output UTF-8 path string, allocated on success
+ * @ctrl_path: Output UTF-8 path string, allocated on success
  *
  * Return: 0 on success, or a negative error code
  */
 int libnvme_storageport_entry_get_ctrl_path(
 	const struct storageport_map_entry *entry,
-	char **device_path);
+	char **ctrl_path);
 
 /**
- * libnvme_storageport_get_pci_address() - Get PCI BDF address for a StoragePort
+ * libnvme_storageport_entry_get_pci_address() - Get PCI BDF address for a
+ * StoragePort
  * @entry: StoragePort map entry
  * @address: Output BDF string in "DDDD:BB:DD.F" format, allocated on success
  *
@@ -110,12 +115,12 @@ int libnvme_storageport_entry_get_ctrl_path(
  *
  * Return: 0 on success, or a negative error code
  */
-int libnvme_storageport_get_pci_address(
+int libnvme_storageport_entry_get_pci_address(
 	const struct storageport_map_entry *entry,
 	char **address);
 
 /**
- * libnvme_storageport_scan_device_numbers() - Get device numbers for a
+ * libnvme_storageport_entry_scan_device_numbers() - Get device numbers for a
  * StoragePort
  * @entry: StoragePort map entry
  * @device_numbers: Output array of device numbers,
@@ -127,14 +132,14 @@ int libnvme_storageport_get_pci_address(
  *
  * Return: 0 on success, or a negative error code
  */
-int libnvme_storageport_scan_device_numbers(
+int libnvme_storageport_entry_scan_device_numbers(
 	const struct storageport_map_entry *entry,
 	DWORD **device_numbers,
 	int *count);
 
 /**
- * libnvme_storageport_nsid_to_drive_path() - Map namespace ID to PhysicalDrive
- * path
+ * libnvme_storageport_entry_map_nsid_to_drive_path() - Map namespace ID to
+ * PhysicalDrive path
  * @entry: StoragePort map entry for the controller
  * @nsid: NVMe namespace ID (1-based)
  * @drive_path: Output path string in \\.\PhysicalDriveX format (caller frees)
@@ -145,9 +150,57 @@ int libnvme_storageport_scan_device_numbers(
  * Return: 0 on success, -ENODEV if no matching namespace, or a negative error
  * code
  */
-int libnvme_storageport_nsid_to_drive_path(
+int libnvme_storageport_entry_map_nsid_to_drive_path(
 	const struct storageport_map_entry *entry,
 	__u32 nsid,
 	char **drive_path);
+
+/**
+ * libnvme_storageport_entry_get_subsys_name() - Get UTF-8 subsystem name for
+ * entry
+ * @entry: StoragePort map entry
+ *
+ * Return: UTF-8 subsystem name string, or NULL if unavailable
+ */
+char *libnvme_storageport_entry_get_subsys_name(
+	const struct storageport_map_entry *entry);
+
+/**
+ * libnvme_storageport_entry_get_subnqn() - Get UTF-8 subsystem NQN for
+ * entry
+ * @entry: StoragePort map entry
+ *
+ * Return: UTF-8 subsystem NQN string, or NULL if unavailable
+ */
+char *libnvme_storageport_entry_get_subnqn(
+	const struct storageport_map_entry *entry);
+
+/**
+ * libnvme_storageport_entry_get_serial() - Get UTF-8 serial number for entry
+ * @entry: StoragePort map entry
+ *
+ * Return: UTF-8 serial number string, or NULL if unavailable
+ */
+char *libnvme_storageport_entry_get_serial(
+	const struct storageport_map_entry *entry);
+
+/**
+ * libnvme_storageport_entry_get_model() - Get UTF-8 model number for entry
+ * @entry: StoragePort map entry
+ *
+ * Return: UTF-8 model number string, or NULL if unavailable
+ */
+char *libnvme_storageport_entry_get_model(
+	const struct storageport_map_entry *entry);
+
+/**
+ * libnvme_storageport_entry_get_firmware() - Get UTF-8 firmware revision for
+ * entry
+ * @entry: StoragePort map entry
+ *
+ * Return: UTF-8 firmware revision string, or NULL if unavailable
+ */
+char *libnvme_storageport_entry_get_firmware(
+	const struct storageport_map_entry *entry);
 
 #endif /* defined(_WIN32) */

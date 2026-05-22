@@ -82,20 +82,20 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx, const char *na
 	      struct libnvme_transport_handle **hdlp)
 {
 	struct libnvme_transport_handle *hdl;
-	char *mapped_name = NULL;
+	__cleanup_free char *mapped_name = NULL;
 	int ret;
 	const struct storageport_map_entry *sp_entry;
 
 	if (strstr(name, "/dev/"))
 		name = libnvme_basename(name);
 
-	sp_entry = libnvme_storageport_lookup_entry(name);
+	sp_entry = libnvme_storageport_map_lookup(name);
 	if (sp_entry) {
 		const char *n_pos = strchr(name + 4, 'n');
 		__u32 nsid;
 
 		if (n_pos && sscanf(n_pos, "n%u", &nsid) == 1) {
-			ret = libnvme_storageport_nsid_to_drive_path(
+			ret = libnvme_storageport_entry_map_nsid_to_drive_path(
 				sp_entry, nsid, &mapped_name);
 		} else {
 			ret = libnvme_storageport_entry_get_ctrl_path(
@@ -130,22 +130,27 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx, const char *na
 	ret = __libnvme_transport_handle_open_direct(hdl, mapped_name ?
 		mapped_name : name);
 
+	free(mapped_name);
+	mapped_name = NULL;
+
 	if (ret) {
 		libnvme_close(hdl);
 		return ret;
 	}
 
-	/* For PhysicalDrive names, create the nvme0n1-style name. */
-	sp_entry = libnvme_storageport_lookup_by_physdrive(name);
+	/* For PhysicalDrive names, create the nvmeXnY-style name. */
+	sp_entry = libnvme_storageport_map_lookup_by_physdrive(name);
 	if (sp_entry) {
 		__u32 nsid;
 
 		if (libnvme_get_nsid(hdl, &nsid) == 0 &&
-		    asprintf(&mapped_name, "%sn%d", sp_entry->storageport_name, nsid) > 0)
+		    asprintf(&mapped_name, "%sn%d",
+			     libnvme_storageport_entry_get_ctrl_name(sp_entry),
+			     nsid) > 0)
 			name = mapped_name;
 	}
 
-	/* Store the nvme0 or nvme0n1-style name in hdl->name. */
+	/* Store the nvmeX or nvmeXnY-style name in hdl->name. */
 	hdl->name = strdup(name);
 	if (!hdl->name) {
 		free(hdl);

@@ -24,6 +24,14 @@
 #include <initguid.h>
 #include <devpkey.h>
 
+struct storageport_map_entry {
+	char *ctrl_name;   /* format "nvmeX" */
+	WCHAR *ctrl_path;  /* format "\\?\pci..." */
+	struct nvme_id_ctrl id_ctrl;
+	int subsys_index;
+	char *subsys_name;
+};
+
 static struct {
 	struct storageport_map_entry *entries;
 	size_t count;
@@ -39,7 +47,7 @@ const char *libnvme_storageport_map_get_name(size_t index)
 {
 	if (index >= sp_map.count)
 		return NULL;
-	return sp_map.entries[index].storageport_name;
+	return sp_map.entries[index].ctrl_name;
 }
 
 void libnvme_storageport_map_clear(void)
@@ -47,8 +55,8 @@ void libnvme_storageport_map_clear(void)
 	size_t i;
 
 	for (i = 0; i < sp_map.count; i++) {
-		free(sp_map.entries[i].storageport_name);
-		free(sp_map.entries[i].device_path);
+		free(sp_map.entries[i].ctrl_name);
+		free(sp_map.entries[i].ctrl_path);
 		free(sp_map.entries[i].subsys_name);
 	}
 
@@ -74,16 +82,16 @@ static int find_or_create_subsys_index(const struct nvme_id_ctrl *id_ctrl)
 	return max_subsys_index + 1;
 }
 
-static int libnvme_storageport_map_add(const char *storageport_name,
-				       const WCHAR *device_path_w,
+static int libnvme_storageport_map_add(const char *ctrl_name,
+				       const WCHAR *ctrl_path,
 				       const struct nvme_id_ctrl *id_ctrl)
 {
-	char *name_copy;
-	WCHAR *path_copy;
+	char *ctrl_name_copy;
+	WCHAR *ctrl_path_copy;
 	int subsys_index;
 	char *subsys_name;
 
-	if (!storageport_name || !device_path_w)
+	if (!ctrl_name || !ctrl_path)
 		return -EINVAL;
 
 	if (sp_map.count == sp_map.capacity) {
@@ -100,26 +108,26 @@ static int libnvme_storageport_map_add(const char *storageport_name,
 		sp_map.capacity = new_capacity;
 	}
 
-	name_copy = strdup(storageport_name);
-	if (!name_copy)
+	ctrl_name_copy = strdup(ctrl_name);
+	if (!ctrl_name_copy)
 		return -ENOMEM;
 
-	path_copy = _wcsdup(device_path_w);
-	if (!path_copy) {
-		free(name_copy);
+	ctrl_path_copy = _wcsdup(ctrl_path);
+	if (!ctrl_path_copy) {
+		free(ctrl_name_copy);
 		return -ENOMEM;
 	}
 
 	subsys_index = find_or_create_subsys_index(id_ctrl);
 
 	if (asprintf(&subsys_name, "nvme-subsys%d", subsys_index) < 0) {
-		free(name_copy);
-		free(path_copy);
+		free(ctrl_name_copy);
+		free(ctrl_path_copy);
 		return -ENOMEM;
 	}
 
-	sp_map.entries[sp_map.count].storageport_name = name_copy;
-	sp_map.entries[sp_map.count].device_path = path_copy;
+	sp_map.entries[sp_map.count].ctrl_name = ctrl_name_copy;
+	sp_map.entries[sp_map.count].ctrl_path = ctrl_path_copy;
 	sp_map.entries[sp_map.count].id_ctrl = *id_ctrl;
 	sp_map.entries[sp_map.count].subsys_index = subsys_index;
 	sp_map.entries[sp_map.count].subsys_name = subsys_name;
@@ -128,23 +136,33 @@ static int libnvme_storageport_map_add(const char *storageport_name,
 	return 0;
 }
 
-static int storageport_find_index(const char *storageport_name)
+static int storageport_find_index(const char *ctrl_name)
 {
 	size_t i;
-	size_t sp_len;
-	char next_ch;
 
 	for (i = 0; i < sp_map.count; i++) {
-		sp_len = strlen(sp_map.entries[i].storageport_name);
+		size_t sp_len = strlen(sp_map.entries[i].ctrl_name);
+		const char *suffix;
 
 		/* Skip entry if name does not start with nvmeX format */
-		if (strncmp(sp_map.entries[i].storageport_name,
-			    storageport_name, sp_len))
+		if (strncmp(sp_map.entries[i].ctrl_name,
+			    ctrl_name, sp_len))
 			continue;
 
-		next_ch = storageport_name[sp_len];
-		/* Matches either nvmeX or nvmeXnY format */
-		if (next_ch == '\0' || next_ch == 'n')
+		suffix = ctrl_name + sp_len;
+
+		/* Exact match: nvmeX */
+		if (*suffix == '\0')
+			return (int)i;
+
+		/* Namespace match: nvmeXnY (Y is a positive integer) */
+		if (*suffix != 'n' || suffix[1] < '1' || suffix[1] > '9')
+			continue;
+
+		suffix += 2;
+		while (*suffix >= '0' && *suffix <= '9')
+			suffix++;
+		if (*suffix == '\0')
 			return (int)i;
 	}
 
@@ -194,9 +212,9 @@ static int identify_ctrl_from_handle(HANDLE h, struct nvme_id_ctrl *id_ctrl)
 /*
  * Query adapter BusType via IOCTL_STORAGE_QUERY_PROPERTY /
  * StorageAdapterProperty.
- * Returns 1 on success (bus type written to *out_bus_type), 0 on failure.
+ * Returns 0 on success (bus type written to *out_bus_type).
  */
-static int query_adapter_bustype(HANDLE h, STORAGE_BUS_TYPE *out_bus_type)
+static int get_adapter_bus_type(HANDLE h, STORAGE_BUS_TYPE *out_bus_type)
 {
 	STORAGE_PROPERTY_QUERY q = { 0 };
 	STORAGE_DESCRIPTOR_HEADER hdr;
@@ -211,37 +229,37 @@ static int query_adapter_bustype(HANDLE h, STORAGE_BUS_TYPE *out_bus_type)
 	if (!DeviceIoControl(h, IOCTL_STORAGE_QUERY_PROPERTY,
 			     &q, sizeof(q), &hdr, sizeof(hdr),
 			     &bytes, NULL))
-		return 0;
+		return -1;
 
 	buf = calloc(1, hdr.Size);
 	if (!buf)
-		return 0;
+		return -ENOMEM;
 
 	if (!DeviceIoControl(h, IOCTL_STORAGE_QUERY_PROPERTY,
 			     &q, sizeof(q),
 			     buf, hdr.Size,
 			     &bytes, NULL)) {
 		free(buf);
-		return 0;
+		return -1;
 	}
 
 	ad = (STORAGE_ADAPTER_DESCRIPTOR *)buf;
 	*out_bus_type = (STORAGE_BUS_TYPE)ad->BusType;
 	free(buf);
-	return 1;
+	return 0;
 }
 
 /*
  * Enumerate the next device interface and return a wide-string
  * copy of the device path.  Returns:
- *   1  success  (*device_path set, caller must free)
- *   0  non-fatal failure (skip this interface)
- *   ERROR_NOT_ENOUGH_MEMORY  allocation failure
- *   ERROR_NO_MORE_ITEMS  no more items (enumeration complete)
+ *   0  success  (*device_interface_path set, caller must free)
+ *   -1  non-fatal failure (skip this interface)
+ *   -ENOMEM  allocation failure
+ *   -ENOENT  no more items (enumeration complete)
  */
 static int get_device_interface_path(HDEVINFO hdev,
 				     DWORD index,
-				     WCHAR **device_path)
+				     WCHAR **device_interface_path)
 {
 	SP_DEVICE_INTERFACE_DATA if_data = {
 		.cbSize = sizeof(if_data),
@@ -256,39 +274,39 @@ static int get_device_interface_path(HDEVINFO hdev,
 					 &GUID_DEVINTERFACE_STORAGEPORT,
 					 index, &if_data)) {
 		if (GetLastError() == ERROR_NO_MORE_ITEMS)
-			return ERROR_NO_MORE_ITEMS;
-		return 0;
+			return -ENOENT;
+		return -1;
 	}
 
 	SetupDiGetDeviceInterfaceDetailW(hdev, &if_data, NULL, 0,
 					 &required_size, NULL);
 	if (GetLastError() != ERROR_INSUFFICIENT_BUFFER || !required_size)
-		return 0;
+		return -1;
 
 	detail = calloc(1, required_size);
 	if (!detail)
-		return ERROR_NOT_ENOUGH_MEMORY;
+		return -ENOMEM;
 
 	detail->cbSize = sizeof(*detail);
 	if (!SetupDiGetDeviceInterfaceDetailW(hdev, &if_data, detail,
 					      required_size,
 					      NULL, &dev_info_data)) {
 		free(detail);
-		return 0;
+		return -1;
 	}
 
-	*device_path = _wcsdup(detail->DevicePath);
+	*device_interface_path = _wcsdup(detail->DevicePath);
 	free(detail);
-	if (!*device_path)
-		return ERROR_NOT_ENOUGH_MEMORY;
+	if (!*device_interface_path)
+		return -ENOMEM;
 
-	return 1;
+	return 0;
 }
 
 int libnvme_storageport_map_init(void)
 {
 	HDEVINFO hdev;
-	PWSTR device_path_copy = NULL;
+	PWSTR ctrl_path = NULL;
 	HANDLE h = INVALID_HANDLE_VALUE;
 	int ret;
 	DWORD index;
@@ -309,25 +327,25 @@ int libnvme_storageport_map_init(void)
 		char *ctrl_name = NULL;
 
 		h = INVALID_HANDLE_VALUE;
-		device_path_copy = NULL;
+		ctrl_path = NULL;
 
-		ret = get_device_interface_path(hdev, index, &device_path_copy);
-		if (ret == ERROR_NO_MORE_ITEMS)
+		ret = get_device_interface_path(hdev, index, &ctrl_path);
+		if (ret == -ENOENT)
 			break;
-		if (ret == ERROR_NOT_ENOUGH_MEMORY)
+		if (ret == -ENOMEM)
 			goto enomem;
-		if (!ret)
+		if (ret == -1)
 			continue;
 
-		h = CreateFileW(device_path_copy, 0,
-				   FILE_SHARE_READ | FILE_SHARE_WRITE |
-				   FILE_SHARE_DELETE,
-				   NULL, OPEN_EXISTING, 0, NULL);
+		h = CreateFileW(ctrl_path, 0,
+				FILE_SHARE_READ | FILE_SHARE_WRITE |
+				FILE_SHARE_DELETE,
+				NULL, OPEN_EXISTING, 0, NULL);
 
 		if (h == INVALID_HANDLE_VALUE)
 			goto next_entry;
 
-		if (!query_adapter_bustype(h, &bus_type) ||
+		if (get_adapter_bus_type(h, &bus_type) ||
 		    bus_type != BusTypeNvme)
 			goto next_entry;
 
@@ -339,7 +357,7 @@ int libnvme_storageport_map_init(void)
 			goto enomem;
 
 		ret = libnvme_storageport_map_add(ctrl_name,
-						  device_path_copy,
+						  ctrl_path,
 						  &id_ctrl);
 		free(ctrl_name);
 		ctrl_name = NULL;
@@ -348,8 +366,8 @@ int libnvme_storageport_map_init(void)
 		nvme_ctrl_index++;
 
 next_entry:
-		free(device_path_copy);
-		device_path_copy = NULL;
+		free(ctrl_path);
+		ctrl_path = NULL;
 		if (h != INVALID_HANDLE_VALUE)
 			CloseHandle(h);
 	}
@@ -358,7 +376,7 @@ next_entry:
 	return 0;
 
 enomem:
-	free(device_path_copy);
+	free(ctrl_path);
 	if (h != INVALID_HANDLE_VALUE)
 		CloseHandle(h);
 	SetupDiDestroyDeviceInfoList(hdev);
@@ -366,18 +384,18 @@ enomem:
 	return -ENOMEM;
 }
 
-const struct storageport_map_entry *libnvme_storageport_lookup_entry(
-	const char *storageport_name)
+struct storageport_map_entry *libnvme_storageport_map_lookup(
+	const char *ctrl_name)
 {
 	int idx;
 
-	if (!storageport_name)
+	if (!ctrl_name)
 		return NULL;
 
 	if (libnvme_storageport_map_init())
 		return NULL;
 
-	idx = storageport_find_index(storageport_name);
+	idx = storageport_find_index(ctrl_name);
 	if (idx < 0)
 		return NULL;
 
@@ -385,7 +403,7 @@ const struct storageport_map_entry *libnvme_storageport_lookup_entry(
 }
 
 const struct storageport_map_entry *
-libnvme_storageport_lookup_by_physdrive(const char *drive_path)
+libnvme_storageport_map_lookup_by_physdrive(const char *drive_path)
 {
 	DWORD target_num;
 	char *endptr;
@@ -418,7 +436,7 @@ libnvme_storageport_lookup_by_physdrive(const char *drive_path)
 		int ret;
 		int j;
 
-		ret = libnvme_storageport_scan_device_numbers(
+		ret = libnvme_storageport_entry_scan_device_numbers(
 			&sp_map.entries[i],
 			&device_numbers, &dev_count);
 		if (ret)
@@ -437,54 +455,57 @@ libnvme_storageport_lookup_by_physdrive(const char *drive_path)
 	return NULL;
 }
 
-int libnvme_storageport_update_id_ctrl(const char *storageport_name,
-				       const struct nvme_id_ctrl *id)
+int libnvme_storageport_entry_set_id_ctrl(
+	struct storageport_map_entry *sp_entry,
+	const struct nvme_id_ctrl *id)
 {
-	int idx;
-
-	if (!storageport_name || !id)
+	if (!sp_entry || !id)
 		return -EINVAL;
 
-	idx = storageport_find_index(storageport_name);
-	if (idx < 0)
-		return -ENOENT;
-
-	sp_map.entries[idx].id_ctrl = *id;
+	sp_entry->id_ctrl = *id;
 	return 0;
 }
 
+const char *libnvme_storageport_entry_get_ctrl_name(
+	const struct storageport_map_entry *sp_entry)
+{
+	if (!sp_entry || !sp_entry->ctrl_name)
+		return NULL;
+
+	return sp_entry->ctrl_name;
+}
+
 int libnvme_storageport_entry_get_ctrl_path(
-	const struct storageport_map_entry *sp_entry,
-	char **device_path)
+	const struct storageport_map_entry *sp_entry, char **ctrl_path)
 {
 	int path_len;
-	char *path_copy;
+	char *ctrl_path_copy;
 
-	if (!sp_entry || !device_path || !sp_entry->device_path)
+	if (!sp_entry || !ctrl_path || !sp_entry->ctrl_path)
 		return -EINVAL;
 
-	*device_path = NULL;
+	*ctrl_path = NULL;
 
-	path_len = WideCharToMultiByte(CP_UTF8, 0, sp_entry->device_path, -1,
+	path_len = WideCharToMultiByte(CP_UTF8, 0, sp_entry->ctrl_path, -1,
 				       NULL, 0, NULL, NULL);
 	if (path_len <= 0)
 		return -EINVAL;
 
-	path_copy = malloc(path_len);
-	if (!path_copy)
+	ctrl_path_copy = malloc(path_len);
+	if (!ctrl_path_copy)
 		return -ENOMEM;
 
-	if (!WideCharToMultiByte(CP_UTF8, 0, sp_entry->device_path, -1,
-				 path_copy, path_len, NULL, NULL)) {
-		free(path_copy);
+	if (!WideCharToMultiByte(CP_UTF8, 0, sp_entry->ctrl_path, -1,
+				 ctrl_path_copy, path_len, NULL, NULL)) {
+		free(ctrl_path_copy);
 		return -EINVAL;
 	}
 
-	*device_path = path_copy;
+	*ctrl_path = ctrl_path_copy;
 	return 0;
 }
 
-int libnvme_storageport_get_pci_address(
+int libnvme_storageport_entry_get_pci_address(
 	const struct storageport_map_entry *sp_entry,
 	char **address)
 {
@@ -497,7 +518,7 @@ int libnvme_storageport_get_pci_address(
 	unsigned int bus = 0, device = 0, function = 0;
 	char *addr;
 
-	if (!sp_entry || !address || !sp_entry->device_path)
+	if (!sp_entry || !address || !sp_entry->ctrl_path)
 		return -EINVAL;
 
 	*address = NULL;
@@ -505,7 +526,7 @@ int libnvme_storageport_get_pci_address(
 	/* Get the device instance ID from the interface path */
 	size = sizeof(instance_id);
 	cr = CM_Get_Device_Interface_PropertyW(
-		sp_entry->device_path,
+		sp_entry->ctrl_path,
 		&DEVPKEY_Device_InstanceId,
 		&prop_type,
 		(PBYTE)instance_id,
@@ -555,22 +576,22 @@ static int get_device_number(HANDLE h, DWORD *device_number)
 	DWORD bytes_returned = 0;
 
 	if (!device_number)
-		return 0;
+		return -EINVAL;
 
 	*device_number = 0;
 	if (h == INVALID_HANDLE_VALUE)
-		return 0;
+		return -EINVAL;
 
 	if (!DeviceIoControl(h, IOCTL_STORAGE_GET_DEVICE_NUMBER,
 				     NULL, 0, &info, sizeof(info),
 				     &bytes_returned, NULL))
-		return 0;
+		return -1;
 
 	*device_number = info.DeviceNumber;
-	return 1;
+	return 0;
 }
 
-int libnvme_storageport_scan_device_numbers(
+int libnvme_storageport_entry_scan_device_numbers(
 	const struct storageport_map_entry *sp_entry,
 	DWORD **device_numbers,
 	int *count)
@@ -591,7 +612,7 @@ int libnvme_storageport_scan_device_numbers(
 	*count = 0;
 
 	cr = CM_Get_Device_Interface_PropertyW(
-		sp_entry->device_path,
+		sp_entry->ctrl_path,
 		&DEVPKEY_Device_InstanceId,
 		&prop_type,
 		(PBYTE)ctrl_instance_id,
@@ -654,7 +675,7 @@ int libnvme_storageport_scan_device_numbers(
 			h = CreateFileW(iface, 0,
 					FILE_SHARE_READ | FILE_SHARE_WRITE,
 					NULL, OPEN_EXISTING, 0, NULL);
-			if (!get_device_number(h, &device_number)) {
+			if (get_device_number(h, &device_number)) {
 				if (h != INVALID_HANDLE_VALUE)
 					CloseHandle(h);
 				continue;
@@ -696,7 +717,7 @@ enomem:
 	return -ENOMEM;
 }
 
-int libnvme_storageport_nsid_to_drive_path(
+int libnvme_storageport_entry_map_nsid_to_drive_path(
 	const struct storageport_map_entry *sp_entry,
 	__u32 nsid,
 	char **drive_path)
@@ -711,9 +732,9 @@ int libnvme_storageport_nsid_to_drive_path(
 
 	*drive_path = NULL;
 
-	ret = libnvme_storageport_scan_device_numbers(sp_entry,
-						      &device_numbers,
-						      &dev_count);
+	ret = libnvme_storageport_entry_scan_device_numbers(sp_entry,
+							    &device_numbers,
+							    &dev_count);
 	if (ret)
 		return ret;
 
@@ -752,4 +773,55 @@ int libnvme_storageport_nsid_to_drive_path(
 
 	free(device_numbers);
 	return -ENODEV;
+}
+
+char *libnvme_storageport_entry_get_subsys_name(
+	const struct storageport_map_entry *sp_entry)
+{
+	char *subsysname;
+
+	if (!sp_entry || !sp_entry->subsys_name)
+		return NULL;
+
+	subsysname = strdup(sp_entry->subsys_name);
+	if (!subsysname)
+		return NULL;
+
+	return subsysname;
+}
+
+char *libnvme_storageport_entry_get_subnqn(
+	const struct storageport_map_entry *sp_entry)
+{
+	if (!sp_entry)
+		return NULL;
+	return libnvme_copy_and_rtrim(sp_entry->id_ctrl.subnqn,
+				      sizeof(sp_entry->id_ctrl.subnqn));
+}
+
+char *libnvme_storageport_entry_get_serial(
+	const struct storageport_map_entry *sp_entry)
+{
+	if (!sp_entry)
+		return NULL;
+	return libnvme_copy_and_rtrim(sp_entry->id_ctrl.sn,
+				      sizeof(sp_entry->id_ctrl.sn));
+}
+
+char *libnvme_storageport_entry_get_model(
+	const struct storageport_map_entry *sp_entry)
+{
+	if (!sp_entry)
+		return NULL;
+	return libnvme_copy_and_rtrim(sp_entry->id_ctrl.mn,
+				      sizeof(sp_entry->id_ctrl.mn));
+}
+
+char *libnvme_storageport_entry_get_firmware(
+	const struct storageport_map_entry *sp_entry)
+{
+	if (!sp_entry)
+		return NULL;
+	return libnvme_copy_and_rtrim(sp_entry->id_ctrl.fr,
+				      sizeof(sp_entry->id_ctrl.fr));
 }

@@ -35,6 +35,7 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c, const char *path, const char *name)
 {
 	struct nvme_id_ctrl id_ctrl;
+	struct storageport_map_entry *sp_entry;
 	int ret;
 
 	/*
@@ -71,7 +72,15 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 		return -ENODEV;
 	}
 
-	ret = libnvme_storageport_update_id_ctrl(c->name, &id_ctrl);
+	sp_entry = libnvme_storageport_map_lookup(c->name);
+	if (!sp_entry) {
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			"Failed to find storageport map entry for ctrl %s\n",
+			c->name);
+		return -ENODEV;
+	}
+
+	ret = libnvme_storageport_entry_set_id_ctrl(sp_entry, &id_ctrl);
 	if (ret != 0) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"Failed to update storageport map for ctrl %s, error %d\n",
@@ -158,13 +167,16 @@ int libnvme_get_ctrl_transport(const char *path, const char *name,
 		char **transport, char **traddr, char **addr)
 {
 	const struct storageport_map_entry *sp_entry;
+	int ret;
 
 	*transport = strdup("pcie");
 	if (!*transport)
 		return -ENOMEM;
 
-	sp_entry = libnvme_storageport_lookup_entry(name);
-	if (libnvme_storageport_get_pci_address(sp_entry, addr) || !*addr) {
+	sp_entry = libnvme_storageport_map_lookup(name);
+
+	ret = libnvme_storageport_entry_get_pci_address(sp_entry, addr);
+	if (ret || !*addr) {
 		free(*transport);
 		*transport = NULL;
 		return -ENXIO;
@@ -181,12 +193,11 @@ static libnvme_subsystem_t libnvme_lookup_subsystem_windows(libnvme_host_t h,
 	char *subsysnqn;
 	char *subsysname;
 
-	subsysnqn = libnvme_copy_and_rtrim(sp_entry->id_ctrl.subnqn,
-					   sizeof(sp_entry->id_ctrl.subnqn));
+	subsysnqn = libnvme_storageport_entry_get_subnqn(sp_entry);
 	if (!subsysnqn)
 		return NULL;
 
-	subsysname = strdup(sp_entry->subsys_name);
+	subsysname = libnvme_storageport_entry_get_subsys_name(sp_entry);
 	if (!subsysname) {
 		free(subsysnqn);
 		return NULL;
@@ -200,14 +211,11 @@ static libnvme_subsystem_t libnvme_lookup_subsystem_windows(libnvme_host_t h,
 
 	/* Populate subsystem info from first controller */
 	if (!s->serial)
-		s->serial = libnvme_copy_and_rtrim(sp_entry->id_ctrl.sn,
-						  sizeof(sp_entry->id_ctrl.sn));
+		s->serial = libnvme_storageport_entry_get_serial(sp_entry);
 	if (!s->model)
-		s->model = libnvme_copy_and_rtrim(sp_entry->id_ctrl.mn,
-						  sizeof(sp_entry->id_ctrl.mn));
+		s->model = libnvme_storageport_entry_get_model(sp_entry);
 	if (!s->firmware)
-		s->firmware = libnvme_copy_and_rtrim(sp_entry->id_ctrl.fr,
-						  sizeof(sp_entry->id_ctrl.fr));
+		s->firmware = libnvme_storageport_entry_get_firmware(sp_entry);
 
 	return s;
 }
@@ -225,7 +233,7 @@ __libnvme_public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const cha
 	int ret;
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan controller %s\n", name);
-	sp_entry = libnvme_storageport_lookup_entry(name);
+	sp_entry = libnvme_storageport_map_lookup(name);
 	if (!sp_entry)
 		return -ENODEV;
 	ret = libnvme_storageport_entry_get_ctrl_path(sp_entry, &path);
@@ -380,12 +388,14 @@ int libnvme_ns_open(struct libnvme_global_ctx *ctx, const char *sys_path,
 	if (ret)
 		goto free_ns;
 
-	sp_entry = libnvme_storageport_lookup_by_physdrive(name);
+	sp_entry = libnvme_storageport_map_lookup_by_physdrive(name);
 	if (!sp_entry) {
 		ret = -ENODEV;
 		goto free_ns;
 	}
-	ret = asprintf(&n->name, "%sn%d", sp_entry->storageport_name, n->nsid);
+	ret = asprintf(&n->name, "%sn%d",
+		       libnvme_storageport_entry_get_ctrl_name(sp_entry),
+		       n->nsid);
 	if (ret < 0) {
 		ret = -ENOMEM;
 		goto free_ns;
