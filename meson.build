@@ -145,7 +145,14 @@ conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
 
 if host_system == 'windows'
     kernel32_dep = cc.find_library('kernel32', required: true)
+    bcrypt_dep = cc.find_library('bcrypt', required: true)
 endif
+
+conf.set10(
+    'HAVE_BCRYPT',
+    cc.find_library('bcrypt', required: false).found(),
+    description: 'Is bcrypt availabe'
+)
 
 # Check for libjson-c availability
 if not want_json_c
