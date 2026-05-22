@@ -57,7 +57,7 @@ static ssize_t write_all(int fd, const void *buf, size_t count)
 	return total;
 }
 
-void __attribute__((format(LIBNVME_PRINTF_ARCHETYPE, 4, 5)))
+void __libnvme_printf_format(4, 5)
 __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 	   const char *func, const char *format, ...)
 {
