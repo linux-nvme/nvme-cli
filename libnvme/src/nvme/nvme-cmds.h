@@ -317,580 +317,10 @@ enum nvme_cmd_dword_fields {
 #define NVME_FIELD_DECODE(value, shift, mask) \
 	(((value) >> (shift)) & (mask))
 
-/**
- * nvme_init_identify() - Initialize passthru command for
- * NVMe Identify
- * @cmd:	Command data structure to initialize
- * @nsid:	Namespace identifier
- * @csi:	Command Set Identifier
- * @cns:	The Controller or Namespace structure,
- *              see @enum nvme_identify_cns
- * @data:	User space destination address to transfer the data
- * @len:	Length of provided user buffer to hold the data in bytes
- *
- * Prepare the @cmd data structure for the NVMe Identify command.
+
+/*
+ * NVMe Base Specification - Admin Commands
  */
-static inline void
-nvme_init_identify(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, enum nvme_csi csi, enum nvme_identify_cns cns,
-		void *data, __u32 len)
-{
-	__u32 cdw10 = NVME_FIELD_ENCODE(cns,
-					NVME_IDENTIFY_CDW10_CNS_SHIFT,
-					NVME_IDENTIFY_CDW10_CNS_MASK);
-	__u32 cdw11 = NVME_FIELD_ENCODE(csi,
-					NVME_IDENTIFY_CDW11_CSI_SHIFT,
-					NVME_IDENTIFY_CDW11_CSI_MASK);
-
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode	= nvme_admin_identify;
-	cmd->nsid	= nsid;
-	cmd->cdw10	= cdw10;
-	cmd->cdw11	= cdw11;
-	cmd->data_len	= len;
-	cmd->addr	= (__u64)(uintptr_t)data;
-}
-
-/**
- * nvme_init_identify_ns() - Initialize passthru command for
- * NVMe Identify Namespace data structure
- * @cmd:	Command data structure to initialize
- * @nsid:	Namespace identifier
- * @id:		User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_NS.
- */
-static inline void
-nvme_init_identify_ns(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, struct nvme_id_ns *id)
-{
-	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_NS,
-			   id, sizeof(*id));
-}
-
-/**
- * nvme_init_identify_ctrl() - Initialize passthru command for
- * NVMe Identify Controller data structure
- * @cmd:	Command data structure to initialize
- * @id:		User space destination address to transfer the data,
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_CTRL.
- */
-static inline void
-nvme_init_identify_ctrl(struct libnvme_passthru_cmd *cmd,
-		struct nvme_id_ctrl *id)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_CTRL,
-			   id, sizeof(*id));
-}
-
-/**
- * nvme_init_identify_active_ns_list() - Initialize passthru command for
- * Active Namespaces ID list
- * @cmd:	Command data structure to initialize
- * @nsid:	Namespace identifier
- * @list:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_NS_ACTIVE_LIST.
- */
-static inline void
-nvme_init_identify_active_ns_list(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, struct nvme_ns_list *list)
-{
-	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
-			   list, sizeof(*list));
-}
-
-/**
- * nvme_init_identify_ns_descs_list() - Initialize passthru command for
- * Namespace Descriptor list
- * @cmd:	Command data structure to initialize
- * @nsid:	The namespace id to retrieve descriptors
- * @descs:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_NS_DESC_LIST.
- */
-static inline void
-nvme_init_identify_ns_descs_list(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, struct nvme_ns_id_desc *descs)
-{
-	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_NS_DESC_LIST,
-			   descs, NVME_IDENTIFY_DATA_SIZE);
-}
-
-/**
- * nvme_init_identify_nvmset_list() - Initialize passthru command for
- * NVM Set List data structure
- * @cmd:	Command data structure to initialize
- * @nsid:	Namespace identifier
- * @nvmsetid:	NVM Set Identifier
- * @nvmset:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_NS_ACTIVE_LIST.
- */
-static inline void
-nvme_init_identify_nvmset_list(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, __u16 nvmsetid, struct nvme_id_nvmset_list *nvmset)
-{
-	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_NVMSET_LIST,
-			   nvmset, sizeof(*nvmset));
-	cmd->cdw11 |= NVME_FIELD_ENCODE(nvmsetid,
-					NVME_IDENTIFY_CDW11_CNSSPECID_SHIFT,
-					NVME_IDENTIFY_CDW11_CNSSPECID_MASK);
-}
-
-/**
- * nvme_init_identify_csi_ns() - Initialize passthru command for
- * I/O Command Set specific Identify Namespace data structure
- * @cmd:	Command data structure to initialize
- * @nsid:	Namespace identifier
- * @csi:	Command Set Identifier
- * @uidx:	UUID Index for differentiating vendor specific encoding
- * @data:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_CSI_NS.
- */
-static inline void
-nvme_init_identify_csi_ns(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, enum nvme_csi csi, __u8 uidx, void *data)
-{
-	nvme_init_identify(cmd, nsid, csi,
-			   NVME_IDENTIFY_CNS_CSI_NS,
-			   data, NVME_IDENTIFY_DATA_SIZE);
-	cmd->cdw14 |= NVME_FIELD_ENCODE(uidx,
-					NVME_IDENTIFY_CDW14_UUID_SHIFT,
-					NVME_IDENTIFY_CDW14_UUID_MASK);
-}
-
-/**
- * nvme_init_identify_csi_ctrl() - Initialize passthru command for
- * I/O Command Set specific Identify Controller data structure
- * @cmd:	Command data structure to initialize
- * @csi:	Command Set Identifier
- * @data:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_CSI_CTRL.
- */
-static inline void
-nvme_init_identify_csi_ctrl(struct libnvme_passthru_cmd *cmd,
-		enum nvme_csi csi, void *data)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
-			   NVME_IDENTIFY_CNS_CSI_CTRL,
-			   data, NVME_IDENTIFY_DATA_SIZE);
-}
-
-/**
- * nvme_init_identify_csi_active_ns_list() - Initialize passthru command
- * for Active namespace ID list
- * @cmd:	Command data structure to initialize
- * @nsid:	Return namespaces greater than this identifier
- * @csi:	Command Set Identifier
- * @ns_list:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST.
- */
-static inline void
-nvme_init_identify_csi_active_ns_list(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, enum nvme_csi csi, struct nvme_ns_list *ns_list)
-{
-	nvme_init_identify(cmd, nsid, csi,
-			   NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST,
-			   ns_list, sizeof(*ns_list));
-}
-
-/**
- * nvme_init_identify_csi_independent_identify_id_ns() -Initialize passthru
- * command for I/O Command Set Independent Identify Namespace data structure
- * @cmd:	Command data structure to initialize
- * @nsid:	Return namespaces greater than this identifier
- * @ns:		I/O Command Set Independent Identify Namespace data
- *		structure
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS.
- */
-static inline void
-nvme_init_identify_csi_independent_identify_id_ns(
-		struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, struct nvme_id_independent_id_ns *ns)
-{
-	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
-			   ns, sizeof(*ns));
-}
-
-/**
- * nvme_init_identify_ns_user_data_format() - Initialize passthru command
- * for Identify namespace user data format
- * @cmd:	Command data structure to initialize
- * @csi:	Command Set Identifier
- * @fidx:	Format Index
- * @uidx:	UUID selection, if supported
- * @data:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT.
- */
-static inline void
-nvme_init_identify_ns_user_data_format(struct libnvme_passthru_cmd *cmd,
-		enum nvme_csi csi, __u16 fidx, __u8 uidx, void *data)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
-			   NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT,
-			   data, NVME_IDENTIFY_DATA_SIZE);
-	cmd->cdw11 |= NVME_FIELD_ENCODE(fidx,
-					NVME_IDENTIFY_CDW11_FIDX_SHIFT,
-					NVME_IDENTIFY_CDW11_FIDX_MASK);
-	cmd->cdw14 |= NVME_FIELD_ENCODE(uidx,
-					NVME_IDENTIFY_CDW14_UUID_SHIFT,
-					NVME_IDENTIFY_CDW14_UUID_MASK);
-}
-
-/**
- * nvme_init_identify_csi_ns_user_data_format() - Initialize passthru
- * command for Identify namespace user data format
- * @cmd:	Command data structure to initialize
- * @csi:	Command Set Identifier
- * @fidx:	Format Index
- * @uidx:	UUID selection, if supported
- * @data:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT.
- */
-static inline void
-nvme_init_identify_csi_ns_user_data_format(struct libnvme_passthru_cmd *cmd,
-		enum nvme_csi csi, __u16 fidx, __u8 uidx, void *data)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
-			   NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT,
-			   data, NVME_IDENTIFY_DATA_SIZE);
-	cmd->cdw11 |= NVME_FIELD_ENCODE(fidx,
-					NVME_IDENTIFY_CDW11_FIDX_SHIFT,
-					NVME_IDENTIFY_CDW11_FIDX_MASK);
-	cmd->cdw14 |= NVME_FIELD_ENCODE(uidx,
-					NVME_IDENTIFY_CDW14_UUID_SHIFT,
-					NVME_IDENTIFY_CDW14_UUID_MASK);
-}
-
-/**
- * nvme_init_identify_allocated_ns_list() - Initialize passthru command
- * for Allocated namespace ID list
- * @cmd:	Command data structure to initialize
- * @nsid:	Return namespaces greater than this identifier
- * @ns_list:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST.
- */
-static inline void
-nvme_init_identify_allocated_ns_list(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, struct nvme_ns_list *ns_list)
-{
-	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST,
-			   ns_list, sizeof(*ns_list));
-}
-
-/**
- * nvme_init_identify_allocated_ns() - Initialize passthru command
- * for allocated Namespace ID list
- * @cmd:	Command data structure to initialize
- * @nsid:	Namespace to identify
- * @ns:		User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_ALLOCATED_NS.
- */
-static inline void
-nvme_init_identify_allocated_ns(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, struct nvme_id_ns *ns)
-{
-	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
-			  NVME_IDENTIFY_CNS_ALLOCATED_NS,
-			  ns, sizeof(*ns));
-}
-
-/**
- * nvme_init_identify_ns_ctrl_list() - Initialize passhtru command
- * for Controller List
- * @cmd:	Command data structure to initialize
- * @nsid:	Return controllers that are attached to this nsid
- * @cntid:	Starting CNTLID to return in the list
- * @cntlist:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_NS_CTRL_LIST.
- */
-static inline void
-nvme_init_identify_ns_ctrl_list(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, __u16 cntid, struct nvme_ctrl_list *cntlist)
-{
-	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_NS_CTRL_LIST,
-			   cntlist, sizeof(*cntlist));
-	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
-					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
-					NVME_IDENTIFY_CDW10_CNTID_MASK);
-}
-
-/**
- * nvme_init_identify_ctrl_list() - Initialize passthru command for
- * Controller List of controllers
- * @cmd:	Command data structure to initialize
- * @cntid:	Starting CNTLID to return in the list
- * @cntlist:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_CTRL_LIST.
- */
-static inline void
-nvme_init_identify_ctrl_list(struct libnvme_passthru_cmd *cmd,
-		__u16 cntid, struct nvme_ctrl_list *cntlist)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_CTRL_LIST,
-			   cntlist, sizeof(*cntlist));
-	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
-					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
-					NVME_IDENTIFY_CDW10_CNTID_MASK);
-}
-
-/**
- * nvme_init_identify_primary_ctrl_cap() - Initialize passthru command
- * for Primary Controller Capabilities data
- * @cmd:	Command data structure to initialize
- * @cntid:	Return controllers starting at this identifier
- * @cap:	User space destination buffer address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP.
- */
-static inline void
-nvme_init_identify_primary_ctrl_cap(struct libnvme_passthru_cmd *cmd,
-		__u16 cntid, struct nvme_primary_ctrl_cap *cap)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
-			   cap, sizeof(*cap));
-	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
-					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
-					NVME_IDENTIFY_CDW10_CNTID_MASK);
-}
-
-/**
- * nvme_init_identify_secondary_ctrl_list() - Initialize passhru command
- * for Secondary Controller list
- * @cmd:	Command data structure to initialize
- * @cntid:	Return controllers starting at this identifier
- * @sc_list:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST.
- */
-static inline void
-nvme_init_identify_secondary_ctrl_list(struct libnvme_passthru_cmd *cmd,
-		__u16 cntid, struct nvme_secondary_ctrl_list *sc_list)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
-			   sc_list, sizeof(*sc_list));
-	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
-					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
-					NVME_IDENTIFY_CDW10_CNTID_MASK);
-}
-
-
-/**
- * nvme_init_identify_ns_granularity() - Initialize passthru command for
- * Namespace Granularity list
- * @cmd:	Command data structure to initialize
- * @gr_list:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST.
- */
-static inline void
-nvme_init_identify_ns_granularity(struct libnvme_passthru_cmd *cmd,
-		struct nvme_id_ns_granularity_list *gr_list)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_NS_GRANULARITY,
-			   gr_list, sizeof(*gr_list));
-}
-
-/**
- * nvme_init_identify_uuid_list() - Initialize passthru command for
- * UUID list
- * @cmd:	Command data structure to initialize
- * @uuid_list:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_UUID_LIST.
- */
-static inline void
-nvme_init_identify_uuid_list(struct libnvme_passthru_cmd *cmd,
-		struct nvme_id_uuid_list *uuid_list)
-{
-	nvme_init_identify(cmd, NVME_UUID_NONE, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_UUID_LIST,
-			   uuid_list, sizeof(*uuid_list));
-}
-
-/**
- * nvme_init_identify_domain_list() - Initialize passthru command for
- * Domain list
- * @cmd:	Command data structure to initialize
- * @domid:	Domain ID
- * @list:	User space destination address to transfer data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_DOMAIN_LIST.
- */
-static inline void
-nvme_init_identify_domain_list(struct libnvme_passthru_cmd *cmd,
-		__u16 domid, struct nvme_id_domain_list *list)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
-			     NVME_IDENTIFY_CNS_DOMAIN_LIST,
-			     list, sizeof(*list));
-	cmd->cdw11 |= NVME_FIELD_ENCODE(domid,
-					NVME_IDENTIFY_CDW11_DOMID_SHIFT,
-					NVME_IDENTIFY_CDW11_DOMID_MASK);
-}
-
-/**
- * nvme_init_identify_endurance_group_id() - Initialize passthru command for
- * Endurance group list
- * @cmd:	Command data structure to initialize
- * @enggid:	Endurance group identifier
- * @list:	Array of endurance group identifiers
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline void
-nvme_init_identify_endurance_group_id(struct libnvme_passthru_cmd *cmd,
-		__u16 enggid, struct nvme_id_endurance_group_list *list)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
-			     NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID,
-			     list, sizeof(*list));
-	cmd->cdw11 |= NVME_FIELD_ENCODE(enggid,
-					NVME_IDENTIFY_CDW11_ENGGID_SHIFT,
-					NVME_IDENTIFY_CDW11_ENGGID_MASK);
-}
-
-/**
- * nvme_init_identify_csi_allocated_ns_list() - Initialize passthru command for
- * I/O Command Set specific Allocated Namespace Id list
- * @cmd:	Command data structure to initialize
- * @nsid:	Return namespaces greater than this identifier
- * @csi:	Command Set Identifier
- * @ns_list:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST.
- */
-static inline void
-nvme_init_identify_csi_allocated_ns_list(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, enum nvme_csi csi, struct nvme_ns_list *ns_list)
-{
-	nvme_init_identify(cmd, nsid, csi,
-			   NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST,
-			   ns_list, sizeof(*ns_list));
-}
-
-/**
- * nvme_init_identify_csi_id_ns_data_structure() - Initialize passthru command
- * for I/O Command Set specific Identify Namespace data structure
- * @cmd:	Command data structure to initialize
- * @nsid:	Return namespaces greater than this identifier
- * @csi:	Command Set Identifier
- * @data:	User space destination address to transfer the data
- *
- * Initializes the passthru command buffer for the Identify command with
- * CNS value %NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE.
- */
-static inline void
-nvme_init_identify_csi_id_ns_data_structure(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, enum nvme_csi csi, void *data)
-{
-	nvme_init_identify(cmd, nsid, csi,
-			   NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE,
-			   data, NVME_IDENTIFY_DATA_SIZE);
-}
-
-/**
- * nvme_init_identify_command_set_structure() - Initialize passthru command for
- * I/O Command Set data structure
- * @cmd:	Command data structure to initialize
- * @cntid:	Controller ID
- * @iocs:	User space destination address to transfer the data
- *
- * Retrieves list of the controller's supported io command set vectors. See
- * &struct nvme_id_iocs.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
- */
-static inline void
-nvme_init_identify_command_set_structure(struct libnvme_passthru_cmd *cmd,
-		__u16 cntid, struct nvme_id_iocs *iocs)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
-			   NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE,
-			   iocs, sizeof(*iocs));
-	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
-					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
-					NVME_IDENTIFY_CDW10_CNTID_MASK);
-}
-
-/**
- * nvme_init_zns_identify_ns() - Initialize passthru command for
- * ZNS identify namespace data
- * @cmd:	Command data structure to initialize
- * @nsid:	Namespace to identify
- * @data:	User space destination address to transfer the data
- */
-static inline void
-nvme_init_zns_identify_ns(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, struct nvme_zns_id_ns *data)
-{
-	nvme_init_identify(cmd, nsid, NVME_CSI_ZNS,
-			   NVME_IDENTIFY_CNS_CSI_NS,
-			   data, sizeof(*data));
-}
-
-/**
- * nvme_init_zns_identify_ctrl() - Initialize passthru command for
- * ZNS identify controller data
- * @cmd:	Command data structure to initialize
- * @id:	User space destination address to transfer the data
- */
-static inline void
-nvme_init_zns_identify_ctrl(struct libnvme_passthru_cmd *cmd,
-		struct nvme_zns_id_ctrl *id)
-{
-	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_ZNS,
-			   NVME_IDENTIFY_CNS_CSI_CTRL,
-			   id, sizeof(*id));
-}
 
 /**
  * nvme_init_get_log_lpo() - Initializes passthru command with a
@@ -1033,7 +463,6 @@ nvme_init_get_log_changed_ns(struct libnvme_passthru_cmd *cmd,
 	nvme_init_get_log(cmd, NVME_NSID_ALL, NVME_LOG_LID_CHANGED_NS,
 		NVME_CSI_NVM, ns_log, sizeof(*ns_log));
 }
-
 
 /**
  * nvme_init_get_log_cmd_effects() - Initialize passthru command for
@@ -1741,7 +1170,6 @@ nvme_init_get_log_fdp_events(struct libnvme_passthru_cmd *cmd,
 	nvme_init_get_log_lpo(cmd, lpo);
 }
 
-
 /**
  * nvme_init_get_log_discovery() - Initialize passthru command for Discovery
  * @cmd:	Passthru command to use
@@ -1876,6 +1304,580 @@ nvme_init_get_log_zns_changed_zones(struct libnvme_passthru_cmd *cmd,
 	nvme_init_get_log(cmd, nsid,
 		NVME_LOG_LID_ZNS_CHANGED_ZONES, NVME_CSI_ZNS,
 		log, sizeof(*log));
+}
+
+/**
+ * nvme_init_identify() - Initialize passthru command for
+ * NVMe Identify
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace identifier
+ * @csi:	Command Set Identifier
+ * @cns:	The Controller or Namespace structure,
+ *              see @enum nvme_identify_cns
+ * @data:	User space destination address to transfer the data
+ * @len:	Length of provided user buffer to hold the data in bytes
+ *
+ * Prepare the @cmd data structure for the NVMe Identify command.
+ */
+static inline void
+nvme_init_identify(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_csi csi, enum nvme_identify_cns cns,
+		void *data, __u32 len)
+{
+	__u32 cdw10 = NVME_FIELD_ENCODE(cns,
+					NVME_IDENTIFY_CDW10_CNS_SHIFT,
+					NVME_IDENTIFY_CDW10_CNS_MASK);
+	__u32 cdw11 = NVME_FIELD_ENCODE(csi,
+					NVME_IDENTIFY_CDW11_CSI_SHIFT,
+					NVME_IDENTIFY_CDW11_CSI_MASK);
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode	= nvme_admin_identify;
+	cmd->nsid	= nsid;
+	cmd->cdw10	= cdw10;
+	cmd->cdw11	= cdw11;
+	cmd->data_len	= len;
+	cmd->addr	= (__u64)(uintptr_t)data;
+}
+
+/**
+ * nvme_init_identify_ns() - Initialize passthru command for
+ * NVMe Identify Namespace data structure
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace identifier
+ * @id:		User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS.
+ */
+static inline void
+nvme_init_identify_ns(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_id_ns *id)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NS,
+			   id, sizeof(*id));
+}
+
+/**
+ * nvme_init_identify_ctrl() - Initialize passthru command for
+ * NVMe Identify Controller data structure
+ * @cmd:	Command data structure to initialize
+ * @id:		User space destination address to transfer the data,
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CTRL.
+ */
+static inline void
+nvme_init_identify_ctrl(struct libnvme_passthru_cmd *cmd,
+		struct nvme_id_ctrl *id)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_CTRL,
+			   id, sizeof(*id));
+}
+
+/**
+ * nvme_init_identify_active_ns_list() - Initialize passthru command for
+ * Active Namespaces ID list
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace identifier
+ * @list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS_ACTIVE_LIST.
+ */
+static inline void
+nvme_init_identify_active_ns_list(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_ns_list *list)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NS_ACTIVE_LIST,
+			   list, sizeof(*list));
+}
+
+/**
+ * nvme_init_identify_ns_descs_list() - Initialize passthru command for
+ * Namespace Descriptor list
+ * @cmd:	Command data structure to initialize
+ * @nsid:	The namespace id to retrieve descriptors
+ * @descs:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS_DESC_LIST.
+ */
+static inline void
+nvme_init_identify_ns_descs_list(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_ns_id_desc *descs)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NS_DESC_LIST,
+			   descs, NVME_IDENTIFY_DATA_SIZE);
+}
+
+/**
+ * nvme_init_identify_nvmset_list() - Initialize passthru command for
+ * NVM Set List data structure
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace identifier
+ * @nvmsetid:	NVM Set Identifier
+ * @nvmset:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS_ACTIVE_LIST.
+ */
+static inline void
+nvme_init_identify_nvmset_list(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u16 nvmsetid, struct nvme_id_nvmset_list *nvmset)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NVMSET_LIST,
+			   nvmset, sizeof(*nvmset));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(nvmsetid,
+					NVME_IDENTIFY_CDW11_CNSSPECID_SHIFT,
+					NVME_IDENTIFY_CDW11_CNSSPECID_MASK);
+}
+
+/**
+ * nvme_init_identify_csi_ns() - Initialize passthru command for
+ * I/O Command Set specific Identify Namespace data structure
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace identifier
+ * @csi:	Command Set Identifier
+ * @uidx:	UUID Index for differentiating vendor specific encoding
+ * @data:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_NS.
+ */
+static inline void
+nvme_init_identify_csi_ns(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_csi csi, __u8 uidx, void *data)
+{
+	nvme_init_identify(cmd, nsid, csi,
+			   NVME_IDENTIFY_CNS_CSI_NS,
+			   data, NVME_IDENTIFY_DATA_SIZE);
+	cmd->cdw14 |= NVME_FIELD_ENCODE(uidx,
+					NVME_IDENTIFY_CDW14_UUID_SHIFT,
+					NVME_IDENTIFY_CDW14_UUID_MASK);
+}
+
+/**
+ * nvme_init_identify_csi_ctrl() - Initialize passthru command for
+ * I/O Command Set specific Identify Controller data structure
+ * @cmd:	Command data structure to initialize
+ * @csi:	Command Set Identifier
+ * @data:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_CTRL.
+ */
+static inline void
+nvme_init_identify_csi_ctrl(struct libnvme_passthru_cmd *cmd,
+		enum nvme_csi csi, void *data)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
+			   NVME_IDENTIFY_CNS_CSI_CTRL,
+			   data, NVME_IDENTIFY_DATA_SIZE);
+}
+
+/**
+ * nvme_init_identify_csi_active_ns_list() - Initialize passthru command
+ * for Active namespace ID list
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Return namespaces greater than this identifier
+ * @csi:	Command Set Identifier
+ * @ns_list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST.
+ */
+static inline void
+nvme_init_identify_csi_active_ns_list(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_csi csi, struct nvme_ns_list *ns_list)
+{
+	nvme_init_identify(cmd, nsid, csi,
+			   NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST,
+			   ns_list, sizeof(*ns_list));
+}
+
+/**
+ * nvme_init_identify_csi_independent_identify_id_ns() -Initialize passthru
+ * command for I/O Command Set Independent Identify Namespace data structure
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Return namespaces greater than this identifier
+ * @ns:		I/O Command Set Independent Identify Namespace data
+ *		structure
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS.
+ */
+static inline void
+nvme_init_identify_csi_independent_identify_id_ns(
+		struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_id_independent_id_ns *ns)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_CSI_INDEPENDENT_ID_NS,
+			   ns, sizeof(*ns));
+}
+
+/**
+ * nvme_init_identify_ns_user_data_format() - Initialize passthru command
+ * for Identify namespace user data format
+ * @cmd:	Command data structure to initialize
+ * @csi:	Command Set Identifier
+ * @fidx:	Format Index
+ * @uidx:	UUID selection, if supported
+ * @data:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT.
+ */
+static inline void
+nvme_init_identify_ns_user_data_format(struct libnvme_passthru_cmd *cmd,
+		enum nvme_csi csi, __u16 fidx, __u8 uidx, void *data)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
+			   NVME_IDENTIFY_CNS_NS_USER_DATA_FORMAT,
+			   data, NVME_IDENTIFY_DATA_SIZE);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(fidx,
+					NVME_IDENTIFY_CDW11_FIDX_SHIFT,
+					NVME_IDENTIFY_CDW11_FIDX_MASK);
+	cmd->cdw14 |= NVME_FIELD_ENCODE(uidx,
+					NVME_IDENTIFY_CDW14_UUID_SHIFT,
+					NVME_IDENTIFY_CDW14_UUID_MASK);
+}
+
+/**
+ * nvme_init_identify_csi_ns_user_data_format() - Initialize passthru
+ * command for Identify namespace user data format
+ * @cmd:	Command data structure to initialize
+ * @csi:	Command Set Identifier
+ * @fidx:	Format Index
+ * @uidx:	UUID selection, if supported
+ * @data:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT.
+ */
+static inline void
+nvme_init_identify_csi_ns_user_data_format(struct libnvme_passthru_cmd *cmd,
+		enum nvme_csi csi, __u16 fidx, __u8 uidx, void *data)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, csi,
+			   NVME_IDENTIFY_CNS_CSI_NS_USER_DATA_FORMAT,
+			   data, NVME_IDENTIFY_DATA_SIZE);
+	cmd->cdw11 |= NVME_FIELD_ENCODE(fidx,
+					NVME_IDENTIFY_CDW11_FIDX_SHIFT,
+					NVME_IDENTIFY_CDW11_FIDX_MASK);
+	cmd->cdw14 |= NVME_FIELD_ENCODE(uidx,
+					NVME_IDENTIFY_CDW14_UUID_SHIFT,
+					NVME_IDENTIFY_CDW14_UUID_MASK);
+}
+
+/**
+ * nvme_init_identify_allocated_ns_list() - Initialize passthru command
+ * for Allocated namespace ID list
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Return namespaces greater than this identifier
+ * @ns_list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST.
+ */
+static inline void
+nvme_init_identify_allocated_ns_list(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_ns_list *ns_list)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_ALLOCATED_NS_LIST,
+			   ns_list, sizeof(*ns_list));
+}
+
+/**
+ * nvme_init_identify_allocated_ns() - Initialize passthru command
+ * for allocated Namespace ID list
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace to identify
+ * @ns:		User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_ALLOCATED_NS.
+ */
+static inline void
+nvme_init_identify_allocated_ns(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_id_ns *ns)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			  NVME_IDENTIFY_CNS_ALLOCATED_NS,
+			  ns, sizeof(*ns));
+}
+
+/**
+ * nvme_init_identify_ns_ctrl_list() - Initialize passhtru command
+ * for Controller List
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Return controllers that are attached to this nsid
+ * @cntid:	Starting CNTLID to return in the list
+ * @cntlist:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_NS_CTRL_LIST.
+ */
+static inline void
+nvme_init_identify_ns_ctrl_list(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u16 cntid, struct nvme_ctrl_list *cntlist)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NS_CTRL_LIST,
+			   cntlist, sizeof(*cntlist));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
+}
+
+/**
+ * nvme_init_identify_ctrl_list() - Initialize passthru command for
+ * Controller List of controllers
+ * @cmd:	Command data structure to initialize
+ * @cntid:	Starting CNTLID to return in the list
+ * @cntlist:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CTRL_LIST.
+ */
+static inline void
+nvme_init_identify_ctrl_list(struct libnvme_passthru_cmd *cmd,
+		__u16 cntid, struct nvme_ctrl_list *cntlist)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_CTRL_LIST,
+			   cntlist, sizeof(*cntlist));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
+}
+
+/**
+ * nvme_init_identify_primary_ctrl_cap() - Initialize passthru command
+ * for Primary Controller Capabilities data
+ * @cmd:	Command data structure to initialize
+ * @cntid:	Return controllers starting at this identifier
+ * @cap:	User space destination buffer address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP.
+ */
+static inline void
+nvme_init_identify_primary_ctrl_cap(struct libnvme_passthru_cmd *cmd,
+		__u16 cntid, struct nvme_primary_ctrl_cap *cap)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_PRIMARY_CTRL_CAP,
+			   cap, sizeof(*cap));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
+}
+
+/**
+ * nvme_init_identify_secondary_ctrl_list() - Initialize passhru command
+ * for Secondary Controller list
+ * @cmd:	Command data structure to initialize
+ * @cntid:	Return controllers starting at this identifier
+ * @sc_list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST.
+ */
+static inline void
+nvme_init_identify_secondary_ctrl_list(struct libnvme_passthru_cmd *cmd,
+		__u16 cntid, struct nvme_secondary_ctrl_list *sc_list)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST,
+			   sc_list, sizeof(*sc_list));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
+}
+
+/**
+ * nvme_init_identify_ns_granularity() - Initialize passthru command for
+ * Namespace Granularity list
+ * @cmd:	Command data structure to initialize
+ * @gr_list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_SECONDARY_CTRL_LIST.
+ */
+static inline void
+nvme_init_identify_ns_granularity(struct libnvme_passthru_cmd *cmd,
+		struct nvme_id_ns_granularity_list *gr_list)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_NS_GRANULARITY,
+			   gr_list, sizeof(*gr_list));
+}
+
+/**
+ * nvme_init_identify_uuid_list() - Initialize passthru command for
+ * UUID list
+ * @cmd:	Command data structure to initialize
+ * @uuid_list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_UUID_LIST.
+ */
+static inline void
+nvme_init_identify_uuid_list(struct libnvme_passthru_cmd *cmd,
+		struct nvme_id_uuid_list *uuid_list)
+{
+	nvme_init_identify(cmd, NVME_UUID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_UUID_LIST,
+			   uuid_list, sizeof(*uuid_list));
+}
+
+/**
+ * nvme_init_identify_domain_list() - Initialize passthru command for
+ * Domain list
+ * @cmd:	Command data structure to initialize
+ * @domid:	Domain ID
+ * @list:	User space destination address to transfer data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_DOMAIN_LIST.
+ */
+static inline void
+nvme_init_identify_domain_list(struct libnvme_passthru_cmd *cmd,
+		__u16 domid, struct nvme_id_domain_list *list)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			     NVME_IDENTIFY_CNS_DOMAIN_LIST,
+			     list, sizeof(*list));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(domid,
+					NVME_IDENTIFY_CDW11_DOMID_SHIFT,
+					NVME_IDENTIFY_CDW11_DOMID_MASK);
+}
+
+/**
+ * nvme_init_identify_endurance_group_id() - Initialize passthru command for
+ * Endurance group list
+ * @cmd:	Command data structure to initialize
+ * @enggid:	Endurance group identifier
+ * @list:	Array of endurance group identifiers
+ *
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
+ */
+static inline void
+nvme_init_identify_endurance_group_id(struct libnvme_passthru_cmd *cmd,
+		__u16 enggid, struct nvme_id_endurance_group_list *list)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			     NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID,
+			     list, sizeof(*list));
+	cmd->cdw11 |= NVME_FIELD_ENCODE(enggid,
+					NVME_IDENTIFY_CDW11_ENGGID_SHIFT,
+					NVME_IDENTIFY_CDW11_ENGGID_MASK);
+}
+
+/**
+ * nvme_init_identify_csi_allocated_ns_list() - Initialize passthru command for
+ * I/O Command Set specific Allocated Namespace Id list
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Return namespaces greater than this identifier
+ * @csi:	Command Set Identifier
+ * @ns_list:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST.
+ */
+static inline void
+nvme_init_identify_csi_allocated_ns_list(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_csi csi, struct nvme_ns_list *ns_list)
+{
+	nvme_init_identify(cmd, nsid, csi,
+			   NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST,
+			   ns_list, sizeof(*ns_list));
+}
+
+/**
+ * nvme_init_identify_csi_id_ns_data_structure() - Initialize passthru command
+ * for I/O Command Set specific Identify Namespace data structure
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Return namespaces greater than this identifier
+ * @csi:	Command Set Identifier
+ * @data:	User space destination address to transfer the data
+ *
+ * Initializes the passthru command buffer for the Identify command with
+ * CNS value %NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE.
+ */
+static inline void
+nvme_init_identify_csi_id_ns_data_structure(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, enum nvme_csi csi, void *data)
+{
+	nvme_init_identify(cmd, nsid, csi,
+			   NVME_IDENTIFY_CNS_CSI_ID_NS_DATA_STRUCTURE,
+			   data, NVME_IDENTIFY_DATA_SIZE);
+}
+
+/**
+ * nvme_init_identify_command_set_structure() - Initialize passthru command for
+ * I/O Command Set data structure
+ * @cmd:	Command data structure to initialize
+ * @cntid:	Controller ID
+ * @iocs:	User space destination address to transfer the data
+ *
+ * Retrieves list of the controller's supported io command set vectors. See
+ * &struct nvme_id_iocs.
+ *
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
+ */
+static inline void
+nvme_init_identify_command_set_structure(struct libnvme_passthru_cmd *cmd,
+		__u16 cntid, struct nvme_id_iocs *iocs)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_NVM,
+			   NVME_IDENTIFY_CNS_COMMAND_SET_STRUCTURE,
+			   iocs, sizeof(*iocs));
+	cmd->cdw10 |= NVME_FIELD_ENCODE(cntid,
+					NVME_IDENTIFY_CDW10_CNTID_SHIFT,
+					NVME_IDENTIFY_CDW10_CNTID_MASK);
+}
+
+/**
+ * nvme_init_zns_identify_ns() - Initialize passthru command for
+ * ZNS identify namespace data
+ * @cmd:	Command data structure to initialize
+ * @nsid:	Namespace to identify
+ * @data:	User space destination address to transfer the data
+ */
+static inline void
+nvme_init_zns_identify_ns(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, struct nvme_zns_id_ns *data)
+{
+	nvme_init_identify(cmd, nsid, NVME_CSI_ZNS,
+			   NVME_IDENTIFY_CNS_CSI_NS,
+			   data, sizeof(*data));
+}
+
+/**
+ * nvme_init_zns_identify_ctrl() - Initialize passthru command for
+ * ZNS identify controller data
+ * @cmd:	Command data structure to initialize
+ * @id:	User space destination address to transfer the data
+ */
+static inline void
+nvme_init_zns_identify_ctrl(struct libnvme_passthru_cmd *cmd,
+		struct nvme_zns_id_ctrl *id)
+{
+	nvme_init_identify(cmd, NVME_NSID_NONE, NVME_CSI_ZNS,
+			   NVME_IDENTIFY_CNS_CSI_CTRL,
+			   id, sizeof(*id));
 }
 
 /**
@@ -2534,6 +2536,31 @@ nvme_init_set_features_iocs_profile(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_lm_set_features_ctrl_data_queue() - Initialize passthru command for
+ * Set Controller Data Queue feature
+ * @cmd:	Passthru command to use
+ * @cdqid:	Controller Data Queue ID (CDQID)
+ * @hp:		Head Pointer (passed in cdw12)
+ * @tpt:	Tail Pointer Trigger (passed in cdw13)
+ * @etpt:	Enable Tail Pointer Trigger
+ *
+ * Initializes the passthru command buffer for the Set Features command with
+ * FID value %NVME_FEAT_FID_CTRL_DATA_QUEUE.
+ */
+static inline void
+nvme_init_lm_set_features_ctrl_data_queue(struct libnvme_passthru_cmd *cmd,
+	__u16 cdqid, __u32 hp, __u32 tpt, bool etpt)
+{
+	nvme_init_set_features(cmd, NVME_FEAT_FID_CTRL_DATA_QUEUE, false);
+	cmd->cdw11 = cdqid |
+		     NVME_FIELD_ENCODE(etpt,
+			NVME_LM_CTRL_DATA_QUEUE_ETPT_SHIFT,
+			NVME_LM_CTRL_DATA_QUEUE_ETPT_MASK);
+	cmd->cdw12 = hp;
+	cmd->cdw13 = tpt;
+}
+
+/**
  * nvme_init_get_features() - Initialize passthru command for
  * Get Features
  * @cmd:	Passthru command to use
@@ -3141,44 +3168,26 @@ nvme_init_get_features_iocs_profile(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_init_format_nvm() - Initialize passthru command for Format NVM
+ * nvme_init_lm_get_features_ctrl_data_queue() - Initialize passthru command for
+ * Get Controller Data Queue feature
  * @cmd:	Passthru command to use
- * @nsid:	Namespace ID to format
- * @lbaf:	Logical block address format
- * @mset:	Metadata settings (extended or separated)
- * @pi:		Protection information type
- * @pil:	Protection information location (beginning or end)
- * @ses:	Secure erase settings
+ * @sel:	Select which type of attribute to return,
+ *		see &enum nvme_get_features_sel
+ * @cdqid:	Controller Data Queue ID (CDQID)
+ * @qfd:	Get Controller Data Queue feature data buffer
  *
- * Initializes the passthru command buffer for the Format NVM command.
+ * Initializes the passthru command buffer for the Get Features command with
+ * FID value %NVME_FEAT_FID_CTRL_DATA_QUEUE.
  */
 static inline void
-nvme_init_format_nvm(struct libnvme_passthru_cmd *cmd, __u32 nsid, __u8 lbaf,
-		enum nvme_cmd_format_mset mset, enum nvme_cmd_format_pi pi,
-		enum nvme_cmd_format_pil pil, enum nvme_cmd_format_ses ses)
+nvme_init_lm_get_features_ctrl_data_queue(struct libnvme_passthru_cmd *cmd,
+		enum nvme_get_features_sel sel, __u16 cdqid,
+		struct nvme_lm_ctrl_data_queue_fid_data *qfd)
 {
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_format_nvm;
-	cmd->nsid = nsid;
-	cmd->cdw10 = NVME_FIELD_ENCODE(lbaf,
-			NVME_FORMAT_CDW10_LBAFL_SHIFT,
-			NVME_FORMAT_CDW10_LBAFL_MASK) |
-		      NVME_FIELD_ENCODE(mset,
-			NVME_FORMAT_CDW10_MSET_SHIFT,
-			NVME_FORMAT_CDW10_MSET_MASK) |
-		      NVME_FIELD_ENCODE(pi,
-			NVME_FORMAT_CDW10_PI_SHIFT,
-			NVME_FORMAT_CDW10_PI_MASK) |
-		      NVME_FIELD_ENCODE(pil,
-			NVME_FORMAT_CDW10_PIL_SHIFT,
-			NVME_FORMAT_CDW10_PIL_MASK) |
-		      NVME_FIELD_ENCODE(ses,
-			NVME_FORMAT_CDW10_SES_SHIFT,
-			NVME_FORMAT_CDW10_SES_MASK) |
-		      NVME_FIELD_ENCODE((lbaf >> 4),
-			NVME_FORMAT_CDW10_LBAFU_SHIFT,
-			NVME_FORMAT_CDW10_LBAFU_MASK);
+	nvme_init_get_features(cmd, NVME_FEAT_FID_CTRL_DATA_QUEUE, sel);
+	cmd->data_len = sizeof(*qfd);
+	cmd->addr = (__u64)(uintptr_t)qfd;
+	cmd->cdw11 = cdqid;
 }
 
 /**
@@ -3247,6 +3256,93 @@ nvme_init_ns_mgmt_delete(struct libnvme_passthru_cmd *cmd, __u32 nsid)
 }
 
 /**
+ * nvme_init_fw_commit() - Initialize passthru command to commit firmware
+ * using the specified action
+ * @cmd:	Passthru command to use
+ * @fs:		Firmware slot to commit the downloaded image
+ * @ca:		Action to use for the firmware image,
+ *		see &enum nvme_fw_commit_ca
+ * @bpid:	Set to true to select the boot partition id
+ *
+ * Initializes the passthru command buffer for the Firmware Commit command.
+ */
+static inline void
+nvme_init_fw_commit(struct libnvme_passthru_cmd *cmd, __u8 fs,
+		    enum nvme_fw_commit_ca ca, bool bpid)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_fw_commit;
+	cmd->cdw10 = NVME_FIELD_ENCODE(fs,
+			NVME_FW_COMMIT_CDW10_FS_SHIFT,
+			NVME_FW_COMMIT_CDW10_FS_MASK) |
+		      NVME_FIELD_ENCODE(ca,
+			NVME_FW_COMMIT_CDW10_CA_SHIFT,
+			NVME_FW_COMMIT_CDW10_CA_MASK) |
+		      NVME_FIELD_ENCODE(bpid,
+			NVME_FW_COMMIT_CDW10_BPID_SHIFT,
+			NVME_FW_COMMIT_CDW10_BPID_MASK);
+}
+
+/**
+ * nvme_init_fw_download() - Initialize passthru command to download part or
+ * all of a firmware image to the controller
+ * @cmd:	Passthru command to use
+ * @data:	Userspace address of the firmware data buffer
+ * @len:	Length of data in this command in bytes
+ * @offset:	Offset in the firmware data
+ *
+ * Initializes the passthru command buffer for the Firmware Image
+ * Download command.
+ *
+ * Note: Caller must ensure data_len and offset are DWord-aligned (0x4).
+ *
+ * Returns: 0 on success, or error code if arguments are invalid.
+ */
+static inline int
+nvme_init_fw_download(struct libnvme_passthru_cmd *cmd, void *data,
+		__u32 len, __u32 offset)
+{
+	if (len & 0x3 || !len)
+		return -EINVAL;
+
+	if (offset & 0x3)
+		return -EINVAL;
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_fw_download;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = (len >> 2) - 1;
+	cmd->cdw11 = offset >> 2;
+
+	return 0;
+}
+
+/**
+ * nvme_init_dev_self_test() - Initialize passthru command to start or
+ * abort a self test
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to test
+ * @stc:	Self test code, see &enum nvme_dst_stc
+ *
+ * Initializes the passthru command buffer for the Device Self-test command.
+ */
+static inline void
+nvme_init_dev_self_test(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_dst_stc stc)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_dev_self_test;
+	cmd->nsid = nsid;
+	cmd->cdw10 = NVME_FIELD_ENCODE(stc,
+			NVME_DEVICE_SELF_TEST_CDW10_STC_SHIFT,
+			NVME_DEVICE_SELF_TEST_CDW10_STC_MASK);
+}
+
+/**
  * nvme_init_ns_attach() - Initialize passthru command for
  * Namespace Attach/Detach
  * @cmd:	Passthru command to use
@@ -3306,185 +3402,6 @@ nvme_init_ns_detach_ctrls(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 {
 	nvme_init_ns_attach(cmd, nsid, NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
 		ctrlist);
-}
-
-/**
- * nvme_init_fw_download() - Initialize passthru command to download part or
- * all of a firmware image to the controller
- * @cmd:	Passthru command to use
- * @data:	Userspace address of the firmware data buffer
- * @len:	Length of data in this command in bytes
- * @offset:	Offset in the firmware data
- *
- * Initializes the passthru command buffer for the Firmware Image
- * Download command.
- *
- * Note: Caller must ensure data_len and offset are DWord-aligned (0x4).
- *
- * Returns: 0 on success, or error code if arguments are invalid.
- */
-static inline int
-nvme_init_fw_download(struct libnvme_passthru_cmd *cmd, void *data,
-		__u32 len, __u32 offset)
-{
-	if (len & 0x3 || !len)
-		return -EINVAL;
-
-	if (offset & 0x3)
-		return -EINVAL;
-
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_fw_download;
-	cmd->data_len = len;
-	cmd->addr = (__u64)(uintptr_t)data;
-	cmd->cdw10 = (len >> 2) - 1;
-	cmd->cdw11 = offset >> 2;
-
-	return 0;
-}
-
-/**
- * nvme_init_fw_commit() - Initialize passthru command to commit firmware
- * using the specified action
- * @cmd:	Passthru command to use
- * @fs:		Firmware slot to commit the downloaded image
- * @ca:		Action to use for the firmware image,
- *		see &enum nvme_fw_commit_ca
- * @bpid:	Set to true to select the boot partition id
- *
- * Initializes the passthru command buffer for the Firmware Commit command.
- */
-static inline void
-nvme_init_fw_commit(struct libnvme_passthru_cmd *cmd, __u8 fs,
-		    enum nvme_fw_commit_ca ca, bool bpid)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_fw_commit;
-	cmd->cdw10 = NVME_FIELD_ENCODE(fs,
-			NVME_FW_COMMIT_CDW10_FS_SHIFT,
-			NVME_FW_COMMIT_CDW10_FS_MASK) |
-		      NVME_FIELD_ENCODE(ca,
-			NVME_FW_COMMIT_CDW10_CA_SHIFT,
-			NVME_FW_COMMIT_CDW10_CA_MASK) |
-		      NVME_FIELD_ENCODE(bpid,
-			NVME_FW_COMMIT_CDW10_BPID_SHIFT,
-			NVME_FW_COMMIT_CDW10_BPID_MASK);
-}
-
-/**
- * nvme_init_security_send() - Initialize passthru command for Security Send
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID to issue security command on
- * @nssf:	NVMe Security Specific field
- * @spsp:	Security Protocol Specific field
- * @secp:	Security Protocol
- * @tl:		Protocol specific transfer length
- * @data:	Security data payload buffer to send
- * @len:	Data length of the payload in bytes
- *
- * Initializes the passthru command buffer for the Security Send command.
- */
-static inline void
-nvme_init_security_send(struct libnvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
-		__u16 spsp, __u8 secp, __u32 tl, void *data, __u32 len)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_security_send;
-	cmd->nsid = nsid;
-	cmd->data_len = len;
-	cmd->addr = (__u64)(uintptr_t)data;
-	cmd->cdw10 = NVME_FIELD_ENCODE(secp,
-			NVME_SECURITY_SECP_SHIFT,
-			NVME_SECURITY_SECP_MASK) |
-		      NVME_FIELD_ENCODE(spsp,
-			NVME_SECURITY_SPSP0_SHIFT,
-			NVME_SECURITY_SPSP0_MASK) |
-		      NVME_FIELD_ENCODE(spsp >> 8,
-			NVME_SECURITY_SPSP1_SHIFT,
-			NVME_SECURITY_SPSP1_MASK) |
-		      NVME_FIELD_ENCODE(nssf,
-			NVME_SECURITY_NSSF_SHIFT,
-			NVME_SECURITY_NSSF_MASK);
-	cmd->cdw11 = tl;
-}
-
-/**
- * nvme_init_security_receive() - Initialize passthru command for
- * Security Receive
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID to issue security command on
- * @nssf:	NVMe Security Specific field
- * @spsp:	Security Protocol Specific field
- * @secp:	Security Protocol
- * @al:		Protocol specific allocation length
- * @data:	Security data payload buffer to receive data into
- * @len:	Data length of the payload in bytes (must match @al)
- *
- * Initializes the passthru command buffer for the Security Receive command.
- */
-static inline void
-nvme_init_security_receive(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		__u8 nssf, __u16 spsp, __u8 secp, __u32 al, void *data,
-		__u32 len)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_security_recv;
-	cmd->nsid = nsid;
-	cmd->data_len = len;
-	cmd->addr = (__u64)(uintptr_t)data;
-	cmd->cdw10 = NVME_FIELD_ENCODE(secp,
-			NVME_SECURITY_SECP_SHIFT,
-			NVME_SECURITY_SECP_MASK) |
-		     NVME_FIELD_ENCODE(spsp,
-			NVME_SECURITY_SPSP0_SHIFT,
-			NVME_SECURITY_SPSP0_MASK) |
-		     NVME_FIELD_ENCODE(spsp >> 8,
-			NVME_SECURITY_SPSP1_SHIFT,
-			NVME_SECURITY_SPSP1_MASK) |
-		     NVME_FIELD_ENCODE(nssf,
-			NVME_SECURITY_NSSF_SHIFT,
-			NVME_SECURITY_NSSF_MASK);
-	cmd->cdw11 = al;
-}
-
-/**
- * nvme_init_get_lba_status() - Initialize passthru command to retrieve
- * information on possibly unrecoverable LBAs
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID to retrieve LBA status
- * @slba:	Starting logical block address to check statuses
- * @mndw:	Maximum number of dwords to return
- * @atype:	Action type mechanism to determine LBA status descriptors to
- *		return, see &enum nvme_lba_status_atype
- * @rl:		Range length from slba to perform the action
- * @lbas:	Data payload buffer to return status descriptors
- *
- * Initializes the passthru command buffer for the Get LBA Status command.
- */
-static inline void
-nvme_init_get_lba_status(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		__u64 slba, __u32 mndw, enum nvme_lba_status_atype atype,
-		__u16 rl, struct nvme_lba_status *lbas)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_get_lba_status;
-	cmd->nsid = nsid;
-	cmd->data_len = (mndw + 1) << 2;
-	cmd->addr = (__u64)(uintptr_t)lbas;
-	cmd->cdw10 = slba & 0xffffffff;
-	cmd->cdw11 = slba >> 32;
-	cmd->cdw12 = mndw;
-	cmd->cdw13 = NVME_FIELD_ENCODE(rl,
-			NVME_GET_LBA_STATUS_CDW13_RL_SHIFT,
-			NVME_GET_LBA_STATUS_CDW13_RL_MASK) |
-		     NVME_FIELD_ENCODE(atype,
-			NVME_GET_LBA_STATUS_CDW13_ATYPE_SHIFT,
-			NVME_GET_LBA_STATUS_CDW13_ATYPE_MASK);
 }
 
 /**
@@ -3668,6 +3585,26 @@ nvme_init_directive_recv_stream_parameters(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
+ * nvme_init_directive_recv_stream_allocate() - Initialize passthru command for
+ * Directive Receive Stream Allocate
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @nsr:	Namespace Streams Requested
+ *
+ * Initializes the passthru command buffer for the Directive Receive - Stream
+ * Allocate command.
+ */
+static inline void
+nvme_init_directive_recv_stream_allocate(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u16 nsr)
+{
+	nvme_init_directive_recv(cmd, nsid,
+		NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE,
+		NVME_DIRECTIVE_DTYPE_STREAMS, 0, NULL, 0);
+	cmd->cdw12 = nsr;
+}
+
+/**
  * nvme_init_directive_recv_stream_status() - Initialize passthru command for
  * Directive Receive Stream Status
  * @cmd:	Passthru command to use
@@ -3694,231 +3631,6 @@ nvme_init_directive_recv_stream_status(struct libnvme_passthru_cmd *cmd,
 		(__u32)(sizeof(*id) + nr_entries * sizeof(__le16)));
 
 	return 0;
-}
-
-/**
- * nvme_init_directive_recv_stream_allocate() - Initialize passthru command for
- * Directive Receive Stream Allocate
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @nsr:	Namespace Streams Requested
- *
- * Initializes the passthru command buffer for the Directive Receive - Stream
- * Allocate command.
- */
-static inline void
-nvme_init_directive_recv_stream_allocate(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, __u16 nsr)
-{
-	nvme_init_directive_recv(cmd, nsid,
-		NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE,
-		NVME_DIRECTIVE_DTYPE_STREAMS, 0, NULL, 0);
-	cmd->cdw12 = nsr;
-}
-
-/**
- * nvme_init_capacity_mgmt() - Initialize passthru command for
- * Capacity Management
- * @cmd:	Passthru command to use
- * @oper:	Operation to be performed by the controller
- * @elid:	Value specific to the value of the Operation field
- * @cap:	Capacity in bytes of the Endurance Group or NVM Set to
- *		be created
- *
- * Initializes the passthru command buffer for the Capacity Management command.
- */
-static inline void
-nvme_init_capacity_mgmt(struct libnvme_passthru_cmd *cmd,
-		__u8 oper, __u16 elid, __u64 cap)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_capacity_mgmt;
-	cmd->cdw10 = NVME_FIELD_ENCODE(oper,
-			NVME_CAPACITY_MGMT_CDW10_OPER_SHIFT,
-			NVME_CAPACITY_MGMT_CDW10_OPER_MASK) |
-		      NVME_FIELD_ENCODE(elid,
-			NVME_CAPACITY_MGMT_CDW10_ELID_SHIFT,
-			NVME_CAPACITY_MGMT_CDW10_ELID_MASK);
-	cmd->cdw11 = NVME_FIELD_ENCODE(cap,
-			NVME_CAPACITY_MGMT_CDW11_CAPL_SHIFT,
-			NVME_CAPACITY_MGMT_CDW11_CAPL_MASK);
-	cmd->cdw12 = NVME_FIELD_ENCODE(cap >> 32,
-			NVME_CAPACITY_MGMT_CDW12_CAPU_SHIFT,
-			NVME_CAPACITY_MGMT_CDW12_CAPU_MASK);
-}
-
- /**
-  * nvme_init_lockdown() - Initialize passthru command for Lockdown
-  * @cmd:	Passthru command to use
-  * @scp:	Scope of the command
-  * @prhbt:	Prohibit or allow the command opcode or Set Features command
-  * @ifc:	Affected interface
-  * @ofi:	Opcode or Feature Identifier
-  * @uidx:	UUID Index if controller supports this id selection method
-  *
-  * Initializes the passthru command buffer for the Lockdown command.
-  */
-static inline void
-nvme_init_lockdown(struct libnvme_passthru_cmd *cmd, __u8 scp, __u8 prhbt,
-		__u8 ifc, __u8 ofi, __u8 uidx)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_lockdown;
-	cmd->cdw10 = NVME_FIELD_ENCODE(ofi,
-			NVME_LOCKDOWN_CDW10_OFI_SHIFT,
-			NVME_LOCKDOWN_CDW10_OFI_MASK) |
-		      NVME_FIELD_ENCODE(ifc,
-			NVME_LOCKDOWN_CDW10_IFC_SHIFT,
-			NVME_LOCKDOWN_CDW10_IFC_MASK) |
-		      NVME_FIELD_ENCODE(prhbt,
-			NVME_LOCKDOWN_CDW10_PRHBT_SHIFT,
-			NVME_LOCKDOWN_CDW10_PRHBT_MASK) |
-		      NVME_FIELD_ENCODE(scp,
-			NVME_LOCKDOWN_CDW10_SCP_SHIFT,
-			NVME_LOCKDOWN_CDW10_SCP_MASK);
-	cmd->cdw14 = NVME_FIELD_ENCODE(uidx,
-			NVME_LOCKDOWN_CDW14_UIDX_SHIFT,
-			NVME_LOCKDOWN_CDW14_UIDX_MASK);
-}
-
-/**
- * nvme_init_set_property() - Initialize passthru command to set
- * controller property
- * @cmd:	Passthru command to use
- * @offset:	Property offset from the base to set
- * @value:	The value to set the property
- *
- * Initializes the passthru command buffer for the Fabrics Set Property command.
- * This is an NVMe-over-Fabrics specific command.
- */
-static inline void
-nvme_init_set_property(struct libnvme_passthru_cmd *cmd, __u32 offset,
-		__u64 value)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_fabrics;
-	cmd->nsid = nvme_fabrics_type_property_set;
-	cmd->cdw10 = nvme_is_64bit_reg(offset);
-	cmd->cdw11 = (__u32)offset;
-	cmd->cdw12 = (__u32)(value & 0xffffffff);
-	cmd->cdw13 = (__u32)(value >> 32);
-}
-
-/**
- * nvme_init_get_property() - Initialize passthru command to get
- * a controller property
- * @cmd:	Passthru command to use
- * @offset:	Property offset from the base to retrieve
- *
- * Initializes the passthru command buffer for the Fabrics Get Property command.
- * This is an NVMe-over-Fabrics specific command.
- */
-static inline void
-nvme_init_get_property(struct libnvme_passthru_cmd *cmd, __u32 offset)
-{
-
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_fabrics;
-	cmd->nsid = nvme_fabrics_type_property_get;
-	cmd->cdw10 = nvme_is_64bit_reg(offset);
-	cmd->cdw11 = (__u32)offset;
-}
-
-/**
- * nvme_init_sanitize_nvm() - Initialize passthru command to start a
- * sanitize operation
- * @cmd:	Passthru command to use
- * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
- * @ause:	Set to allow unrestricted sanitize exit
- * @owpass:	Overwrite pass count
- * @oipbp:	Set to overwrite invert pattern between passes
- * @ndas:	Set to not deallocate blocks after sanitizing
- * @emvs:	Set to enter media verification state
- * @ovrpat:	Overwrite pattern
- *
- * Initializes the passthru command buffer for the Sanitize NVM command.
- */
-static inline void
-nvme_init_sanitize_nvm(struct libnvme_passthru_cmd *cmd,
-		enum nvme_sanitize_sanact sanact, bool ause, __u8 owpass,
-		bool oipbp, bool ndas, bool emvs, __u32 ovrpat)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_sanitize_nvm;
-	cmd->cdw10 = NVME_FIELD_ENCODE(sanact,
-			NVME_SANITIZE_CDW10_SANACT_SHIFT,
-			NVME_SANITIZE_CDW10_SANACT_MASK) |
-		      NVME_FIELD_ENCODE(ause,
-			NVME_SANITIZE_CDW10_AUSE_SHIFT,
-			NVME_SANITIZE_CDW10_AUSE_MASK) |
-		      NVME_FIELD_ENCODE(owpass,
-			NVME_SANITIZE_CDW10_OWPASS_SHIFT,
-			NVME_SANITIZE_CDW10_OWPASS_MASK) |
-		      NVME_FIELD_ENCODE(oipbp,
-			NVME_SANITIZE_CDW10_OIPBP_SHIFT,
-			NVME_SANITIZE_CDW10_OIPBP_MASK) |
-		      NVME_FIELD_ENCODE(ndas,
-			NVME_SANITIZE_CDW10_NDAS_SHIFT,
-			NVME_SANITIZE_CDW10_NDAS_MASK) |
-		      NVME_FIELD_ENCODE(emvs,
-			NVME_SANITIZE_CDW10_EMVS_SHIFT,
-			NVME_SANITIZE_CDW10_EMVS_MASK);
-	cmd->cdw11 = ovrpat;
-}
-
-/**
- * nvme_init_sanitize_ns() - Initialize passthru command to start a
- * sanitize namespace operation
- * @cmd:	Passthru command to use
- * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
- * @ause:	Set to allow unrestricted sanitize exit
- * @emvs:	Set to enter media verification state
- *
- * Initializes the passthru command buffer for the Sanitize namespace command.
- */
-static inline void
-nvme_init_sanitize_ns(struct libnvme_passthru_cmd *cmd,
-		enum nvme_sanitize_sanact sanact, bool ause, bool emvs)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_sanitize_ns;
-	cmd->cdw10 = NVME_FIELD_ENCODE(sanact,
-			NVME_SANITIZE_CDW10_SANACT_SHIFT,
-			NVME_SANITIZE_CDW10_SANACT_MASK) |
-		      NVME_FIELD_ENCODE(ause,
-			NVME_SANITIZE_CDW10_AUSE_SHIFT,
-			NVME_SANITIZE_CDW10_AUSE_MASK) |
-		      NVME_FIELD_ENCODE(emvs,
-			NVME_SANITIZE_CDW10_EMVS_SHIFT,
-			NVME_SANITIZE_CDW10_EMVS_MASK);
-}
-
-/**
- * nvme_init_dev_self_test() - Initialize passthru command to start or
- * abort a self test
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID to test
- * @stc:	Self test code, see &enum nvme_dst_stc
- *
- * Initializes the passthru command buffer for the Device Self-test command.
- */
-static inline void
-nvme_init_dev_self_test(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		enum nvme_dst_stc stc)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_admin_dev_self_test;
-	cmd->nsid = nsid;
-	cmd->cdw10 = NVME_FIELD_ENCODE(stc,
-			NVME_DEVICE_SELF_TEST_CDW10_STC_SHIFT,
-			NVME_DEVICE_SELF_TEST_CDW10_STC_MASK);
 }
 
 /**
@@ -3955,932 +3667,35 @@ nvme_init_virtual_mgmt(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_init_flush() - Initialize passthru command for Flush command
+ * nvme_init_capacity_mgmt() - Initialize passthru command for
+ * Capacity Management
  * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
+ * @oper:	Operation to be performed by the controller
+ * @elid:	Value specific to the value of the Operation field
+ * @cap:	Capacity in bytes of the Endurance Group or NVM Set to
+ *		be created
  *
- * The Flush command requests that the contents of volatile write cache be made
- * non-volatile.
- *
- * Initializes the passthru command buffer for the Flush command.
+ * Initializes the passthru command buffer for the Capacity Management command.
  */
 static inline void
-nvme_init_flush(struct libnvme_passthru_cmd *cmd, __u32 nsid)
-{
-	memset(cmd, 0, sizeof(*cmd));
-	cmd->opcode = nvme_cmd_flush;
-	cmd->nsid = nsid;
-}
-
-/**
- * nvme_init_dsm() - Initialize passthru command for
- * NVMEe I/O Data Set Management
- * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
- * @nr:		Number of block ranges in the data set management attributes
- * @idr:	DSM Integral Dataset for Read attribute
- * @idw:	DSM Integral Dataset for Write attribute
- * @ad:		DSM Deallocate attribute
- * @data:	User space destination address to transfer the data
- * @len:	Length of provided user buffer to hold the log data in bytes
- */
-static inline void
-nvme_init_dsm(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, __u16 nr, __u8 idr, __u8 idw, __u8 ad, void *data,
-		__u32 len)
+nvme_init_capacity_mgmt(struct libnvme_passthru_cmd *cmd,
+		__u8 oper, __u16 elid, __u64 cap)
 {
 	memset(cmd, 0, sizeof(*cmd));
 
-	cmd->opcode	= nvme_cmd_dsm;
-	cmd->nsid	= nsid;
-	cmd->data_len	= len;
-	cmd->addr	= (__u64)(uintptr_t)data;
-	cmd->cdw10 = NVME_FIELD_ENCODE(nr - 1,
-			NVME_DSM_CDW10_NR_SHIFT,
-			NVME_DSM_CDW10_NR_MASK);
-	cmd->cdw11 = NVME_FIELD_ENCODE(idr,
-			NVME_DSM_CDW11_IDR_SHIFT,
-			NVME_DSM_CDW11_IDR_MASK) |
-		      NVME_FIELD_ENCODE(idw,
-			NVME_DSM_CDW11_IDW_SHIFT,
-			NVME_DSM_CDW11_IDW_MASK) |
-		      NVME_FIELD_ENCODE(ad,
-			NVME_DSM_CDW11_AD_SHIFT,
-			NVME_DSM_CDW11_AD_MASK);
-}
-
-/**
- * nvme_init_var_size_tags() - Initialize Command Dword fields
- * for Extended LBA based on Variable Sized Tags
- * @cmd:	Passthru command to use
- * @pif:	Protection information format, determines tag placement
- * @sts:	Storage tag size in bits
- * @reftag:	Expected Initial Logical Block Reference Tag (EILBRT)
- * @storage_tag: Expected Logical Block Storage Tag (ELBST)
- *
- * Initializes the passthru command buffer fields cdw2, cdw3, and cdw14
- * for commands supporting Extended LBA. This logic is usually called from
- * the command-specific init function (like nvme_init_zns_append).
- */
-static inline int
-nvme_init_var_size_tags(struct libnvme_passthru_cmd *cmd,
-		__u8 pif, __u8 sts, __u64 reftag, __u64 storage_tag)
-{
-	__u32 cdw2 = 0, cdw3 = 0, cdw14 = 0;
-
-	switch (pif) {
-	case NVME_NVM_PIF_16B_GUARD:
-		cdw14 = NVME_FIELD_ENCODE(reftag,
-				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
-				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
-		cdw14 |= NVME_FIELD_ENCODE(storage_tag << (32 - sts),
-				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
-				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
-		break;
-	case NVME_NVM_PIF_32B_GUARD:
-		cdw14 = NVME_FIELD_ENCODE(reftag,
-				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
-				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
-		cdw3 = NVME_FIELD_ENCODE(reftag >> 32,
-				NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
-				NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
-		cdw14 |= NVME_FIELD_ENCODE(
-				(storage_tag << (80 - sts)) & 0xffff0000,
-				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
-				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
-		if (sts >= 48)
-			cdw3 |= NVME_FIELD_ENCODE(storage_tag >> (sts - 48),
-					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
-					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
-		else
-			cdw3 |= NVME_FIELD_ENCODE(storage_tag << (48 - sts),
-					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
-					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
-		cdw2 = NVME_FIELD_ENCODE(storage_tag >> (sts - 16),
-			NVME_IOCS_COMMON_CDW2_ELBTU_SHIFT,
-			NVME_IOCS_COMMON_CDW2_ELBTU_MASK);
-		break;
-	case NVME_NVM_PIF_64B_GUARD:
-		cdw14 = NVME_FIELD_ENCODE(reftag,
-				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
-				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
-		cdw3 = NVME_FIELD_ENCODE((reftag >> 32) & 0xffff,
-				NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
-				NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
-		cdw14 |= NVME_FIELD_ENCODE(storage_tag << (48 - sts),
-				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
-				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
-		if (sts >= 16)
-			cdw3 |= NVME_FIELD_ENCODE(
-					(storage_tag >> (sts - 16)) & 0xffff,
-					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
-					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
-		else
-			cdw3 |= NVME_FIELD_ENCODE(
-					(storage_tag << (16 - sts)) & 0xffff,
-					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
-					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
-		break;
-	default:
-		return -EINVAL;
-	}
-
-	cmd->cdw2 = cdw2;
-	cmd->cdw3 = cdw3;
-	cmd->cdw14 = cdw14;
-
-	return 0;
-}
-
-/**
- * nvme_init_app_tag() - Initialize Command Dword fields for
- * Logical Block Application Tag/Mask
- * @cmd:	Passthru command to use
- * @lbat:	Logical block application tag
- * @lbatm:	Logical block application tag mask
- */
-static inline void
-nvme_init_app_tag(struct libnvme_passthru_cmd *cmd,
-	__u16 lbat, __u16 lbatm)
-{
-	cmd->cdw15 = NVME_FIELD_ENCODE(lbat,
-			NVME_IOCS_COMMON_CDW15_ELBAT_SHIFT,
-			NVME_IOCS_COMMON_CDW15_ELBAT_MASK) |
-		     NVME_FIELD_ENCODE(lbatm,
-			NVME_IOCS_COMMON_CDW15_ELBATM_SHIFT,
-			NVME_IOCS_COMMON_CDW15_ELBATM_MASK);
-}
-
-/**
- * nvme_init_io() - Initialize passthru command for a generic user I/O command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @opcode:	Opcode to execute
- * @slba:	Starting logical block
- * @data:	Pointer to user address of the data buffer
- * @data_len:	Length of user buffer, @data, in bytes
- * @metadata:	Pointer to user address of the metadata buffer
- * @metadata_len:Length of user buffer, @metadata, in bytes
- *
- * Initializes the passthru command buffer for a generic NVM I/O command.
- * Note: If @elbas is true, the caller must ensure the definition/logic for
- * nvme_init_set_var_size_tags is available and that the return value from
- * that function is checked for error.
- */
-static inline void
-nvme_init_io(struct libnvme_passthru_cmd *cmd, __u8 opcode,
-		__u32 nsid, __u64 slba,
-		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = opcode;
-	cmd->nsid = nsid;
-	cmd->metadata = (__u64)(uintptr_t)metadata;
-	cmd->addr = (__u64)(uintptr_t)data;
-	cmd->metadata_len = metadata_len;
-	cmd->data_len = data_len;
-	cmd->cdw10 = NVME_FIELD_ENCODE(slba,
-			NVME_IOCS_COMMON_CDW10_SLBAL_SHIFT,
-			NVME_IOCS_COMMON_CDW10_SLBAL_MASK);
-	cmd->cdw11 = NVME_FIELD_ENCODE(slba >> 32,
-			NVME_IOCS_COMMON_CDW11_SLBAU_SHIFT,
-			NVME_IOCS_COMMON_CDW11_SLBAU_MASK);
-}
-
-/**
- * nvme_init_read() - Initialize passthru command for a user read command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @slba:	Starting logical block
- * @nlb:	Number of logical blocks (0-based)
- * @control:	Upper 16 bits of cdw12
- * @dsm:	Data set management attributes (CETYPE is zero),
- *		see &enum nvme_io_dsm_flags
- * @cev:	Command Extension Value (CETYPE is non-zero)
- * @data:	Pointer to user address of the data buffer
- * @data_len:	Length of user buffer, @data, in bytes
- * @metadata:	Pointer to user address of the metadata buffer
- * @metadata_len:Length of user buffer, @metadata, in bytes
- *
- * Initializes the passthru command buffer for the Read command.
- * Note: Assumes a macro or separate function exists to translate the combined
- * NLB/control/prinfo fields into cdw12/cdw13. This transformation assumes
- * the parameters are used for a generic nvme_init_io wrapper.
- */
-static inline void
-nvme_init_read(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, __u64 slba,
-		__u16 nlb, __u16 control, __u8 dsm, __u16 cev,
-		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
-{
-	nvme_init_io(cmd, nvme_cmd_read, nsid, slba,
-		data, data_len, metadata, metadata_len);
-	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
-			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
-			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
-		      NVME_FIELD_ENCODE(control,
-			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
-			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
-	cmd->cdw13 = NVME_FIELD_ENCODE(dsm,
-			NVME_IOCS_COMMON_CDW13_DSM_SHIFT,
-			NVME_IOCS_COMMON_CDW13_DSM_MASK) |
-		     NVME_FIELD_ENCODE(cev,
-			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
-			NVME_IOCS_COMMON_CDW13_CEV_MASK);
-}
-
-/**
- * nvme_init_write() - Initialize passthru command for a user write command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @slba:	Starting logical block
- * @nlb:	Number of logical blocks (0-based)
- * @control:	Upper 16 bits of cdw12
- * @dspec:	Directive specific value
- * @dsm:	Data set management attributes (CETYPE is zero),
- *		see &enum nvme_io_dsm_flags
- * @cev:	Command Extension Value (CETYPE is non-zero)
- * @data:	Pointer to user address of the data buffer
- * @data_len:	Length of user buffer, @data, in bytes
- * @metadata:	Pointer to user address of the metadata buffer
- * @metadata_len:Length of user buffer, @metadata, in bytes
- *
- * Initializes the passthru command buffer for the Write command.
- */
-static inline void
-nvme_init_write(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, __u64 slba,
-		__u16 nlb, __u16 control, __u16 dspec, __u8 dsm, __u8 cev,
-		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
-{
-	nvme_init_io(cmd, nvme_cmd_write, nsid, slba,
-		data, data_len, metadata, metadata_len);
-	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
-			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
-			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
-		      NVME_FIELD_ENCODE(control,
-			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
-			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
-	cmd->cdw13 = NVME_FIELD_ENCODE(dspec,
-			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
-			NVME_IOCS_COMMON_CDW13_DSPEC_MASK) |
-		     NVME_FIELD_ENCODE(dsm,
-			NVME_IOCS_COMMON_CDW13_DSM_SHIFT,
-			NVME_IOCS_COMMON_CDW13_DSM_MASK) |
-		     NVME_FIELD_ENCODE(cev,
-			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
-			NVME_IOCS_COMMON_CDW13_CEV_MASK);
-}
-/**
- * nvme_init_compare() - Initialize passthru command for a user compare command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @slba:	Starting logical block
- * @nlb:	Number of logical blocks (0-based)
- * @control:	Command control flags, see &enum nvme_io_control_flags.
- * @cev:	Command Extension Value (CETYPE is non-zero)
- * @data:	Pointer to user address of the data buffer
- * @data_len:	Length of user buffer, @data, in bytes
- * @metadata:	Pointer to user address of the metadata buffer
- * @metadata_len:Length of user buffer, @metadata, in bytes
- *
- * Initializes the passthru command buffer for the Compare command.
- */
-static inline void
-nvme_init_compare(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, __u64 slba,
-		__u16 nlb, __u16 control, __u8 cev,
-		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
-{
-	nvme_init_io(cmd, nvme_cmd_compare, nsid, slba,
-		data, data_len, metadata, metadata_len);
-	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
-			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
-			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
-		     NVME_FIELD_ENCODE(control,
-			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
-			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
-	cmd->cdw13 = NVME_FIELD_ENCODE(cev,
-			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
-			NVME_IOCS_COMMON_CDW13_CEV_MASK);
-}
-
-/**
- * nvme_init_write_zeros() - Initialize passthru command for a
- * write zeroes command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @slba:	Starting logical block
- * @nlb:	Number of logical blocks (0-based)
- * @control:	Upper 16 bits of cdw12
- * @dspec:	Directive specific value
- * @dsm:	Data set management attributes (CETYPE is zero),
- *		see &enum nvme_io_dsm_flags
- * @cev:	Command Extension Value (CETYPE is non-zero)
- *
- * Initializes the passthru command buffer for the Write Zeroes command.
- * Note: Write Zeroes command does not transfer data or metadata.
- */
-static inline void
-nvme_init_write_zeros(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, __u64 slba,
-		__u16 nlb, __u16 control, __u16 dspec, __u8 dsm, __u8 cev)
-{
-	nvme_init_io(cmd, nvme_cmd_write_zeroes, nsid, slba, NULL, 0, NULL, 0);
-	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
-			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
-			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
-		      NVME_FIELD_ENCODE(control,
-			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
-			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
-	cmd->cdw13 = NVME_FIELD_ENCODE(dspec,
-			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
-			NVME_IOCS_COMMON_CDW13_DSPEC_MASK) |
-		     NVME_FIELD_ENCODE(dsm,
-			NVME_IOCS_COMMON_CDW13_DSM_SHIFT,
-			NVME_IOCS_COMMON_CDW13_DSM_MASK) |
-		     NVME_FIELD_ENCODE(cev,
-			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
-			NVME_IOCS_COMMON_CDW13_CEV_MASK);
-}
-
-/**
- * nvme_init_write_uncorrectable() - Initialize passthru command for a
- * write uncorrectable command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @slba:	Starting logical block
- * @nlb:	Number of logical blocks (0-based)
- * @control:	Upper 16 bits of cdw12
- * @dspec:	Directive specific value
- *
- * Initializes the passthru command buffer for the Write Uncorrectable command.
- * Note: This command transfers no data or metadata.
- */
-static inline void
-nvme_init_write_uncorrectable(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, __u64 slba, __u16 nlb, __u16 control, __u16 dspec)
-{
-	nvme_init_io(cmd, nvme_cmd_write_uncor, nsid, slba, NULL, 0, NULL, 0);
-	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
-			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
-			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
-		      NVME_FIELD_ENCODE(control,
-			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
-			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
-	cmd->cdw13 = NVME_FIELD_ENCODE(dspec,
-			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
-			NVME_IOCS_COMMON_CDW13_DSPEC_MASK);
-}
-
-/**
- * nvme_init_verify() - Initialize passthru command for a verify command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @slba:	Starting logical block
- * @nlb:	Number of logical blocks (0-based)
- * @control:	Upper 16 bits of cdw12
- * @cev:	Command Extension Value (CETYPE is non-zero)
- * @data:	Pointer to user address of the data buffer
- * @data_len:	Length of user buffer, @data, in bytes
- * @metadata:	Pointer to user address of the metadata buffer
- * @metadata_len:Length of user buffer, @metadata, in bytes
- *
- * Initializes the passthru command buffer for the Verify command.
- * Note: Verify command transfers data or metadata to the controller to perform
- * the verification but not back to the host.
- */
-static inline void
-nvme_init_verify(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, __u64 slba,
-		__u16 nlb, __u16 control, __u8 cev,
-		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
-{
-	nvme_init_io(cmd, nvme_cmd_verify, nsid, slba,
-		data, data_len, metadata, metadata_len);
-	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
-			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
-			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
-		     NVME_FIELD_ENCODE(control,
-			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
-			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
-	cmd->cdw13 = NVME_FIELD_ENCODE(cev,
-			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
-			NVME_IOCS_COMMON_CDW13_CEV_MASK);
-}
-
-/**
- * nvme_init_copy() - Initialize passthru command for Copy command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
- * @sdlba:	Start destination LBA
- * @nr:		Number of ranges (1-based, 0-based in command)
- * @desfmt:	Descriptor format
- * @prinfor:	Protection information field for read
- * @prinfow:	Protection information field for write
- * @cetype:	Command Extension Type
- * @dtype:	Directive Type
- * @stcw:	Storage Tag Check Write
- * @stcr:	Storage Tag Check Read
- * @fua:	Force unit access
- * @lr:		Limited retry
- * @cev:	Command Extension Value
- * @dspec:	Directive specific value
- * @cpydsc:	Range description buffer
- *
- * Initializes the passthru command buffer for the Copy command by calculating
- * the data length and calling the generic I/O initializer.
- */
-static inline void
-nvme_init_copy(struct libnvme_passthru_cmd *cmd, __u32 nsid, __u64 sdlba,
-		__u16 nr, __u8 desfmt, __u8 prinfor, __u8 prinfow,
-		__u8 cetype, __u8 dtype, bool stcw, bool stcr, bool fua,
-		bool lr, __u16 cev, __u16 dspec, void *cpydsc)
-{
-	__u32 data_len;
-
-	switch (desfmt) {
-	case 1:
-		data_len = nr * sizeof(struct nvme_copy_range_f1);
-		break;
-	case 2:
-		data_len = nr * sizeof(struct nvme_copy_range_f2);
-		break;
-	case 3:
-		data_len = nr * sizeof(struct nvme_copy_range_f3);
-		break;
-	default:
-		data_len = nr * sizeof(struct nvme_copy_range_f0);
-		break;
-	}
-
-	nvme_init_io(cmd, nvme_cmd_copy, nsid, sdlba, cpydsc,
-		data_len, NULL, 0);
-	cmd->cdw12 = NVME_FIELD_ENCODE(nr - 1,
-			NVME_COPY_CDW12_NR_SHIFT,
-			NVME_COPY_CDW12_NR_MASK) |
-		     NVME_FIELD_ENCODE(desfmt,
-			NVME_COPY_CDW12_DESFMT_SHIFT,
-			NVME_COPY_CDW12_DESFMT_MASK) |
-		     NVME_FIELD_ENCODE(prinfor,
-			NVME_COPY_CDW12_PRINFOR_SHIFT,
-			NVME_COPY_CDW12_PRINFOR_MASK) |
-		     NVME_FIELD_ENCODE(cetype,
-			NVME_COPY_CDW12_CETYPE_SHIFT,
-			NVME_COPY_CDW12_CETYPE_MASK) |
-		     NVME_FIELD_ENCODE(dtype,
-			NVME_COPY_CDW12_DTYPE_SHIFT,
-			NVME_COPY_CDW12_DTYPE_MASK) |
-		     NVME_FIELD_ENCODE(stcw,
-			NVME_COPY_CDW12_STCW_SHIFT,
-			NVME_COPY_CDW12_STCW_MASK) |
-		     NVME_FIELD_ENCODE(stcr,
-			NVME_COPY_CDW12_STCR_SHIFT,
-			NVME_COPY_CDW12_STCR_MASK) |
-		     NVME_FIELD_ENCODE(prinfow,
-			NVME_COPY_CDW12_PRINFOW_SHIFT,
-			NVME_COPY_CDW12_PRINFOW_MASK) |
-		     NVME_FIELD_ENCODE(fua,
-			NVME_COPY_CDW12_FUA_SHIFT,
-			NVME_COPY_CDW12_FUA_MASK) |
-		     NVME_FIELD_ENCODE(lr,
-			NVME_COPY_CDW12_LR_SHIFT,
-			NVME_COPY_CDW12_LR_MASK);
-	cmd->cdw13 = NVME_FIELD_ENCODE(cev,
-			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
-			NVME_IOCS_COMMON_CDW13_CEV_MASK) |
-		     NVME_FIELD_ENCODE(dspec,
-			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
-			NVME_IOCS_COMMON_CDW13_DSPEC_MASK);
-}
-
-/**
- * nvme_init_resv_acquire() - Initialize passthru command for
- * Reservation Acquire
- * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
- * @racqa:	The action that is performed by the command,
- *		see &enum nvme_resv_racqa
- * @iekey:	Set to ignore the existing key
- * @disnsrs:	Disperse Namespace Reservation Support
- * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
- * @crkey:	The current reservation key associated with the host
- * @prkey:	Preempt Reservation Key
- * @payload:	Data payload buffer to hold crkey and prkey
- *
- * Initializes the passthru command buffer for the Reservation Acquire command.
- */
-static inline void
-nvme_init_resv_acquire(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		enum nvme_resv_racqa racqa, bool iekey, bool disnsrs,
-		enum nvme_resv_rtype rtype, __u64 crkey, __u64 prkey,
-		__le64 *payload)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	payload[0] = htole64(crkey);
-	payload[1] = htole64(prkey);
-
-	cmd->opcode = nvme_cmd_resv_acquire;
-	cmd->nsid = nsid;
-	cmd->data_len = 2 * sizeof(__le64);
-	cmd->addr = (__u64)(uintptr_t)payload;
-	cmd->cdw10 = NVME_FIELD_ENCODE(racqa,
-			NVME_RESV_ACQUIRE_CDW10_RACQA_SHIFT,
-			NVME_RESV_ACQUIRE_CDW10_RACQA_MASK) |
-		     NVME_FIELD_ENCODE(iekey,
-			NVME_RESV_ACQUIRE_CDW10_IEKEY_SHIFT,
-			NVME_RESV_ACQUIRE_CDW10_IEKEY_MASK) |
-		     NVME_FIELD_ENCODE(disnsrs,
-			NVME_RESV_ACQUIRE_CDW10_DISNSRS_SHIFT,
-			NVME_RESV_ACQUIRE_CDW10_DISNSRS_MASK) |
-		     NVME_FIELD_ENCODE(rtype,
-			NVME_RESV_ACQUIRE_CDW10_RTYPE_SHIFT,
-			NVME_RESV_ACQUIRE_CDW10_RTYPE_MASK);
-}
-
-/**
- * nvme_init_resv_register() - Initialize passthru command for
- * Reservation Register
- * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
- * @rrega:	The registration action, see &enum nvme_resv_rrega
- * @iekey:	Set to ignore the existing key
- * @disnsrs:	Disperse Namespace Reservation Support
- * @cptpl:	Change persist through power loss, see &enum nvme_resv_cptpl
- * @crkey:	The current reservation key associated with the host
- * @nrkey:	The new reservation key to be register if action is register or
- *		replace
- * @payload:	Data payload buffer to hold crkey and nrkey
- *
- * Initializes the passthru command buffer for the Reservation Register command.
- */
-static inline void
-nvme_init_resv_register(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		enum nvme_resv_rrega rrega, bool iekey, bool disnsrs,
-		enum nvme_resv_cptpl cptpl, __u64 crkey, __u64 nrkey,
-		__le64 *payload)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	payload[0] = htole64(crkey);
-	payload[1] = htole64(nrkey);
-
-	cmd->opcode = nvme_cmd_resv_register;
-	cmd->nsid = nsid;
-	cmd->data_len = 2 * sizeof(__le64);
-	cmd->addr = (__u64)(uintptr_t)payload;
-	cmd->cdw10 = NVME_FIELD_ENCODE(rrega,
-			NVME_RESV_REGISTER_CDW10_RREGA_SHIFT,
-			NVME_RESV_REGISTER_CDW10_RREGA_MASK) |
-		     NVME_FIELD_ENCODE(iekey,
-			NVME_RESV_REGISTER_CDW10_IEKEY_SHIFT,
-			NVME_RESV_REGISTER_CDW10_IEKEY_MASK) |
-		     NVME_FIELD_ENCODE(disnsrs,
-			NVME_RESV_REGISTER_CDW10_DISNSRS_SHIFT,
-			NVME_RESV_REGISTER_CDW10_DISNSRS_MASK) |
-		     NVME_FIELD_ENCODE(cptpl,
-			NVME_RESV_REGISTER_CDW10_CPTPL_SHIFT,
-			NVME_RESV_REGISTER_CDW10_CPTPL_MASK);
-}
-
-/**
- * nvme_init_resv_release() - Initialize passthru command for
- * Reservation Release
- * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
- * @rrela:	Reservation release action, see &enum nvme_resv_rrela
- * @iekey:	Set to ignore the existing key
- * @disnsrs:	Disperse Namespace Reservation Support
- * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
- * @crkey:	The current reservation key to release
- * @payload:	Data payload buffer to hold crkey
- *
- * Initializes the passthru command buffer for the Reservation Release command.
- */
-static inline void
-nvme_init_resv_release(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		enum nvme_resv_rrela rrela, bool iekey, bool disnsrs,
-		enum nvme_resv_rtype rtype, __u64 crkey, __le64 *payload)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	payload[0] = htole64(crkey);
-
-	cmd->opcode = nvme_cmd_resv_release;
-	cmd->nsid = nsid;
-	cmd->data_len = sizeof(__le64);
-	cmd->addr = (__u64)(uintptr_t)payload;
-	cmd->cdw10 = NVME_FIELD_ENCODE(rrela,
-			NVME_RESV_RELEASE_CDW10_RRELA_SHIFT,
-			NVME_RESV_RELEASE_CDW10_RRELA_MASK) |
-		     NVME_FIELD_ENCODE(iekey,
-			NVME_RESV_RELEASE_CDW10_IEKEY_SHIFT,
-			NVME_RESV_RELEASE_CDW10_IEKEY_MASK) |
-		     NVME_FIELD_ENCODE(disnsrs,
-			NVME_RESV_RELEASE_CDW10_DISNSRS_SHIFT,
-			NVME_RESV_RELEASE_CDW10_DISNSRS_MASK) |
-		     NVME_FIELD_ENCODE(rtype,
-			NVME_RESV_RELEASE_CDW10_RTYPE_SHIFT,
-			NVME_RESV_RELEASE_CDW10_RTYPE_MASK);
-}
-
-/**
- * nvme_init_resv_report() - Initialize passthru command for
- * Reservation Report
- * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
- * @eds:	Request extended Data Structure
- * @disnsrs:	Disperse Namespace Reservation Support
- * @report:	The user space destination address to store the reservation
- *		report buffer
- * @len:	Number of bytes to request transferred with this command
- *
- * Initializes the passthru command buffer for the Reservation Report command.
- */
-static inline void
-nvme_init_resv_report(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		bool eds, bool disnsrs, struct nvme_resv_status *report,
-		__u32 len)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_cmd_resv_report;
-	cmd->nsid = nsid;
-	cmd->data_len = len;
-	cmd->addr = (__u64)(uintptr_t)report;
-	cmd->cdw10 = (len >> 2) - 1;
-	cmd->cdw11 = NVME_FIELD_ENCODE(eds,
-			NVME_RESV_REPORT_CDW11_EDS_SHIFT,
-			NVME_RESV_REPORT_CDW11_EDS_MASK) |
-		     NVME_FIELD_ENCODE(disnsrs,
-			NVME_RESV_REPORT_CDW11_DISNSRS_SHIFT,
-			NVME_RESV_REPORT_CDW11_DISNSRS_MASK);
-}
-
-/**
- * nvme_init_io_mgmt_recv() - Initialize passthru command for
- * I/O Management Receive command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
- * @mo:		Management Operation
- * @mos:	Management Operation Specific
- * @data:	Userspace address of the data buffer
- * @len:	Length of @data
- *
- * Initializes the passthru command buffer for the I/O Management
- * Receive command.
- */
-static inline void
-nvme_init_io_mgmt_recv(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		__u8 mo, __u16 mos, void *data, __u32 len)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_cmd_io_mgmt_recv;
-	cmd->nsid = nsid;
-	cmd->data_len = len;
-	cmd->addr = (__u64)(uintptr_t)data;
-	cmd->cdw10 = NVME_FIELD_ENCODE(mo,
-			NVME_IO_MGMT_RECV_CDW10_MO_SHIFT,
-			NVME_IO_MGMT_RECV_CDW10_MO_MASK) |
-		     NVME_FIELD_ENCODE(mos,
-			NVME_IO_MGMT_RECV_CDW10_MOS_SHIFT,
-			NVME_IO_MGMT_RECV_CDW10_MOS_MASK);
-	cmd->cdw11 = (len >> 2) - 1;
-}
-
-/**
- * nvme_init_fdp_reclaim_unit_handle_status() - Initialize passthru command
- * to get reclaim unit handle status
- * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
- * @data:	Response buffer
- * @len:	Length of response buffer
- *
- * Initializes the passthru command buffer for the I/O Management Receive -
- * Reclaim Unit Handle Status command.
- */
-static inline void
-nvme_init_fdp_reclaim_unit_handle_status(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, void *data, __u32 len)
-{
-	nvme_init_io_mgmt_recv(cmd, nsid, NVME_IO_MGMT_RECV_RUH_STATUS, 0,
-		data, len);
-}
-
-/**
- * nvme_init_io_mgmt_send() - Initialize passthru command for
- * I/O Management Send command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
- * @mo:		Management Operation
- * @mos:	Management Operation Specific
- * @data:	Userspace address of the data buffer
- * @len:	Length of @data
- *
- * Initializes the passthru command buffer for the I/O Management Send command.
- */
-static inline void
-nvme_init_io_mgmt_send(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		__u8 mo, __u16 mos, void *data, __u32 len)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_cmd_io_mgmt_send;
-	cmd->nsid = nsid;
-	cmd->data_len = len;
-	cmd->addr = (__u64)(uintptr_t)data;
-	cmd->cdw10 = NVME_FIELD_ENCODE(mo,
-			NVME_IO_MGMT_SEND_CDW10_MO_SHIFT,
-			NVME_IO_MGMT_SEND_CDW10_MO_MASK) |
-		     NVME_FIELD_ENCODE(mos,
-			NVME_IO_MGMT_SEND_CDW10_MOS_SHIFT,
-			NVME_IO_MGMT_SEND_CDW10_MOS_MASK);
-}
-
-/**
- * nvme_init_fdp_reclaim_unit_handle_update() - Initialize passthru command to
- * update a list of reclaim unit handles
- * @cmd:	Passthru command to use
- * @nsid:	Namespace identifier
- * @pids:	List of placement identifiers buffer
- * @npids:	Number of placement identifiers
- *
- * Initializes the passthru command buffer for the I/O Management Send -
- * Reclaim Unit Handle Update command.
- */
-static inline void
-nvme_init_fdp_reclaim_unit_handle_update(struct libnvme_passthru_cmd *cmd,
-		__u32 nsid, void *pids, unsigned int npids)
-{
-	__u16 mos = npids - 1; /* MOS = NPI - 1 */
-	__u32 len = npids * sizeof(__u16);
-
-	nvme_init_io_mgmt_send(cmd, nsid, NVME_IO_MGMT_SEND_RUH_UPDATE,
-		mos, pids, len);
-}
-
-/**
- * nvme_init_zns_mgmt_send() - Initialize passthru command for
- * ZNS management send command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @slba:	Starting logical block address
- * @zsa:	Zone send action
- * @selall:	Select all flag
- * @zsaso:	Zone Send Action Specific Option
- * @zm:		Zone Management
- * @data:	Userspace address of the data buffer
- * @len:	Length of @data
- *
- * Initializes the passthru command buffer for the ZNS Management Send command.
- */
-static inline void
-nvme_init_zns_mgmt_send(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		__u64 slba, enum nvme_zns_send_action zsa, bool selall,
-		__u8 zsaso, __u8 zm, void *data, __u32 len)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_zns_cmd_mgmt_send;
-	cmd->nsid = nsid;
-	cmd->data_len = len;
-	cmd->addr = (__u64)(uintptr_t)data;
-	cmd->cdw10 = slba & 0xffffffff;
-	cmd->cdw11 = slba >> 32;
-	cmd->cdw13 = NVME_FIELD_ENCODE(zsa,
-			NVME_ZNS_MGMT_SEND_ZSA_SHIFT,
-			NVME_ZNS_MGMT_SEND_ZSA_MASK) |
-		      NVME_FIELD_ENCODE(selall,
-			NVME_ZNS_MGMT_SEND_SEL_SHIFT,
-			NVME_ZNS_MGMT_SEND_SEL_MASK) |
-		      NVME_FIELD_ENCODE(zsaso,
-			NVME_ZNS_MGMT_SEND_ZSASO_SHIFT,
-			NVME_ZNS_MGMT_SEND_ZSASO_MASK) |
-		      NVME_FIELD_ENCODE(zm,
-			NVME_ZNS_MGMT_SEND_ZM_SHIFT,
-			NVME_ZNS_MGMT_SEND_ZM_MASK);
-}
-
-/**
- * nvme_init_zns_mgmt_recv() - Initialize passthru command for
- * ZNS management receive command
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @slba:	Starting logical block address
- * @zra:	zone receive action
- * @zras:	Zone receive action specific field
- * @zraspf:	Zone receive action specific features
- * @data:	Userspace address of the data buffer
- * @len:	Length of @data
- *
- * Initializes the passthru command buffer for the ZNS Management
- * Receive command.
- */
-static inline void
-nvme_init_zns_mgmt_recv(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		__u64 slba, enum nvme_zns_recv_action zra, __u16 zras,
-		bool zraspf, void *data, __u32 len)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_zns_cmd_mgmt_recv;
-	cmd->nsid = nsid;
-	cmd->data_len = len;
-	cmd->addr = (__u64)(uintptr_t)data;
-	cmd->cdw10 = slba & 0xffffffff;
-	cmd->cdw11 = slba >> 32;
-	cmd->cdw12 = (len >> 2) - 1;
-	cmd->cdw13 = NVME_FIELD_ENCODE(zra,
-			NVME_ZNS_MGMT_RECV_ZRA_SHIFT,
-			NVME_ZNS_MGMT_RECV_ZRA_MASK) |
-		     NVME_FIELD_ENCODE(zras,
-			NVME_ZNS_MGMT_RECV_ZRAS_SHIFT,
-			NVME_ZNS_MGMT_RECV_ZRAS_MASK) |
-		     NVME_FIELD_ENCODE(zraspf,
-			NVME_ZNS_MGMT_RECV_ZRASPF_SHIFT,
-			NVME_ZNS_MGMT_RECV_ZRASPF_MASK);
-}
-
-/**
- * nvme_init_zns_report_zones() - Initialize passthru command to return
- * the list of zones
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @slba:	Starting LBA
- * @opts:	Reporting options
- * @extended:	Extended report
- * @partial:	Partial report requested
- * @data:	Userspace address of the report zones data buffer
- * @len:	Length of the data buffer
- *
- * Initializes the passthru command buffer for the ZNS Management Receive -
- * Report Zones command.
- */
-static inline void
-nvme_init_zns_report_zones(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		__u64 slba, enum nvme_zns_report_options opts,
-		bool extended, bool partial,
-		void *data, __u32 len)
-{
-	enum nvme_zns_recv_action zra = extended ?
-		NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES : NVME_ZNS_ZRA_REPORT_ZONES;
-	__u16 zras = (__u16)opts;
-	bool zraspf = partial; /* ZRASPF is Partial Report Requested */
-
-	nvme_init_zns_mgmt_recv(cmd, nsid, slba, zra, zras, zraspf, data, len);
-}
-
-/**
- * nvme_init_zns_append() - Initialize passthru command to append data to a zone
- * @cmd:	Passthru command to use
- * @nsid:	Namespace ID
- * @zslba:	Zone start logical block address
- * @nlb:	Number of logical blocks
- * @control:	Upper 16 bits of cdw12
- * @cev:	Command Extension Value
- * @dspec:	Directive Specific
- * @data:	Userspace address of the data buffer
- * @data_len:	Length of @data
- * @metadata:	Userspace address of the metadata buffer
- * @metadata_len: Length of @metadata
- *
- * Initializes the passthru command buffer for the ZNS Append command.
- */
-static inline void
-nvme_init_zns_append(struct libnvme_passthru_cmd *cmd, __u32 nsid,
-		__u64 zslba, __u16 nlb, __u16 control, __u16 cev, __u16 dspec,
-		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
-{
-	memset(cmd, 0, sizeof(*cmd));
-
-	cmd->opcode = nvme_zns_cmd_append;
-	cmd->nsid = nsid;
-	cmd->metadata = (__u64)(uintptr_t)metadata;
-	cmd->addr = (__u64)(uintptr_t)data;
-	cmd->metadata_len = metadata_len;
-	cmd->data_len = data_len;
-	cmd->cdw10 = NVME_FIELD_ENCODE(zslba,
-			NVME_IOCS_COMMON_CDW10_SLBAL_SHIFT,
-			NVME_IOCS_COMMON_CDW10_SLBAL_MASK);
-	cmd->cdw11 = NVME_FIELD_ENCODE(zslba >> 32,
-			NVME_IOCS_COMMON_CDW11_SLBAU_SHIFT,
-			NVME_IOCS_COMMON_CDW11_SLBAU_MASK);
-	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
-			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
-			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
-		     NVME_FIELD_ENCODE(control,
-			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
-			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
-	cmd->cdw13 = NVME_FIELD_ENCODE(dspec,
-			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
-			NVME_IOCS_COMMON_CDW13_DSPEC_MASK);
-	if (control & NVME_IOCS_COMMON_CDW12_CETYPE_MASK)
-		cmd->cdw13 |= NVME_FIELD_ENCODE(cev,
-			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
-			NVME_IOCS_COMMON_CDW13_CEV_MASK);
+	cmd->opcode = nvme_admin_capacity_mgmt;
+	cmd->cdw10 = NVME_FIELD_ENCODE(oper,
+			NVME_CAPACITY_MGMT_CDW10_OPER_SHIFT,
+			NVME_CAPACITY_MGMT_CDW10_OPER_MASK) |
+		      NVME_FIELD_ENCODE(elid,
+			NVME_CAPACITY_MGMT_CDW10_ELID_SHIFT,
+			NVME_CAPACITY_MGMT_CDW10_ELID_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(cap,
+			NVME_CAPACITY_MGMT_CDW11_CAPL_SHIFT,
+			NVME_CAPACITY_MGMT_CDW11_CAPL_MASK);
+	cmd->cdw12 = NVME_FIELD_ENCODE(cap >> 32,
+			NVME_CAPACITY_MGMT_CDW12_CAPU_SHIFT,
+			NVME_CAPACITY_MGMT_CDW12_CAPU_MASK);
 }
 
 /**
@@ -4910,78 +3725,38 @@ nvme_init_dim_send(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_init_lm_cdq_create() - Initialize passthru command for
- * Controller Data Queue create - Controller Data Queue command
- * @cmd:	Passthru command to use
- * @mos:	Management Operation Specific (MOS): This field is
- *		specific to the SEL type
- * @cntlid:	Controller ID: For Create CDQ, specifies the target
- *		migratable controller
- * @cdqsize:	For Create CDQ, specifies the size of CDQ, in dwords - 4 byte
- * @data:	Pointer to data buffer
- *
- * Initializes the passthru command buffer for the Controller Data Queue
- * command. Note: The result CDQID is returned in the CQE dword0, which the
- * submission function must handle.
- */
+  * nvme_init_lockdown() - Initialize passthru command for Lockdown
+  * @cmd:	Passthru command to use
+  * @scp:	Scope of the command
+  * @prhbt:	Prohibit or allow the command opcode or Set Features command
+  * @ifc:	Affected interface
+  * @ofi:	Opcode or Feature Identifier
+  * @uidx:	UUID Index if controller supports this id selection method
+  *
+  * Initializes the passthru command buffer for the Lockdown command.
+  */
 static inline void
-nvme_init_lm_cdq_create(struct libnvme_passthru_cmd *cmd,
-		__u16 mos, __u16 cntlid, __u32 cdqsize, void *data)
-{
-	__u16 cqs;
-
-	memset(cmd, 0, sizeof(*cmd));
-
-	cqs = NVME_FIELD_ENCODE(cntlid,
-		NVME_LM_CREATE_CDQ_CNTLID_SHIFT,
-		NVME_LM_CREATE_CDQ_CNTLID_MASK);
-
-	cmd->opcode = nvme_admin_ctrl_data_queue;
-	cmd->data_len = cdqsize << 2;
-	cmd->addr = (__u64)(uintptr_t)data;
-	cmd->cdw10 = NVME_FIELD_ENCODE(NVME_LM_SEL_CREATE_CDQ,
-			NVME_LM_CDQ_SEL_SHIFT,
-			NVME_LM_CDQ_SEL_MASK) |
-		      NVME_FIELD_ENCODE(mos,
-			NVME_LM_CDQ_MOS_SHIFT,
-			NVME_LM_CDQ_MOS_MASK);
-	cmd->cdw11 = NVME_FIELD_ENCODE(NVME_LM_CREATE_CDQ_PC,
-			NVME_LM_CREATE_CDQ_PC_SHIFT,
-			NVME_LM_CREATE_CDQ_PC_MASK) |
-		     NVME_FIELD_ENCODE(cqs,
-			NVME_LM_CQS_SHIFT,
-			NVME_LM_CQS_MASK);
-	cmd->cdw12 = cdqsize;
-}
-
-/**
- * nvme_init_lm_cdq_delete() - Initialize passthru command for
- * Controller Data Queue delete - Controller Data Queue command
- * @cmd:	Passthru command to use
- * @mos:	Management Operation Specific (MOS): This field is
- *		specific to the SEL type
- * @cdqid:	Controller Data Queue ID (CDQID): For Delete CDQ, this
- *		field is the CDQID to delete.
- *
- * Initializes the passthru command buffer for the Controller Data Queue delete
- * command.
- */
-static inline void
-nvme_init_lm_cdq_delete(struct libnvme_passthru_cmd *cmd,
-		__u16 mos, __u16 cdqid)
+nvme_init_lockdown(struct libnvme_passthru_cmd *cmd, __u8 scp, __u8 prhbt,
+		__u8 ifc, __u8 ofi, __u8 uidx)
 {
 	memset(cmd, 0, sizeof(*cmd));
 
-	cmd->opcode = nvme_admin_ctrl_data_queue;
-	cmd->cdw10 = NVME_FIELD_ENCODE(NVME_LM_SEL_DELETE_CDQ,
-			NVME_LM_CDQ_SEL_SHIFT,
-			NVME_LM_CDQ_SEL_MASK) |
-		      NVME_FIELD_ENCODE(mos,
-			NVME_LM_CDQ_MOS_SHIFT,
-			NVME_LM_CDQ_MOS_MASK);
-	cmd->cdw11 = NVME_FIELD_ENCODE(cdqid,
-			NVME_LM_DELETE_CDQ_CDQID_SHIFT,
-			NVME_LM_DELETE_CDQ_CDQID_MASK);
+	cmd->opcode = nvme_admin_lockdown;
+	cmd->cdw10 = NVME_FIELD_ENCODE(ofi,
+			NVME_LOCKDOWN_CDW10_OFI_SHIFT,
+			NVME_LOCKDOWN_CDW10_OFI_MASK) |
+		      NVME_FIELD_ENCODE(ifc,
+			NVME_LOCKDOWN_CDW10_IFC_SHIFT,
+			NVME_LOCKDOWN_CDW10_IFC_MASK) |
+		      NVME_FIELD_ENCODE(prhbt,
+			NVME_LOCKDOWN_CDW10_PRHBT_SHIFT,
+			NVME_LOCKDOWN_CDW10_PRHBT_MASK) |
+		      NVME_FIELD_ENCODE(scp,
+			NVME_LOCKDOWN_CDW10_SCP_SHIFT,
+			NVME_LOCKDOWN_CDW10_SCP_MASK);
+	cmd->cdw14 = NVME_FIELD_ENCODE(uidx,
+			NVME_LOCKDOWN_CDW14_UIDX_SHIFT,
+			NVME_LOCKDOWN_CDW14_UIDX_MASK);
 }
 
 /**
@@ -5154,52 +3929,1212 @@ nvme_init_lm_migration_recv(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_init_lm_set_features_ctrl_data_queue() - Initialize passthru command for
- * Set Controller Data Queue feature
+ * nvme_init_lm_cdq_create() - Initialize passthru command for
+ * Controller Data Queue create - Controller Data Queue command
  * @cmd:	Passthru command to use
- * @cdqid:	Controller Data Queue ID (CDQID)
- * @hp:		Head Pointer (passed in cdw12)
- * @tpt:	Tail Pointer Trigger (passed in cdw13)
- * @etpt:	Enable Tail Pointer Trigger
+ * @mos:	Management Operation Specific (MOS): This field is
+ *		specific to the SEL type
+ * @cntlid:	Controller ID: For Create CDQ, specifies the target
+ *		migratable controller
+ * @cdqsize:	For Create CDQ, specifies the size of CDQ, in dwords - 4 byte
+ * @data:	Pointer to data buffer
  *
- * Initializes the passthru command buffer for the Set Features command with
- * FID value %NVME_FEAT_FID_CTRL_DATA_QUEUE.
+ * Initializes the passthru command buffer for the Controller Data Queue
+ * command. Note: The result CDQID is returned in the CQE dword0, which the
+ * submission function must handle.
  */
 static inline void
-nvme_init_lm_set_features_ctrl_data_queue(struct libnvme_passthru_cmd *cmd,
-	__u16 cdqid, __u32 hp, __u32 tpt, bool etpt)
+nvme_init_lm_cdq_create(struct libnvme_passthru_cmd *cmd,
+		__u16 mos, __u16 cntlid, __u32 cdqsize, void *data)
 {
-	nvme_init_set_features(cmd, NVME_FEAT_FID_CTRL_DATA_QUEUE, false);
-	cmd->cdw11 = cdqid |
-		     NVME_FIELD_ENCODE(etpt,
-			NVME_LM_CTRL_DATA_QUEUE_ETPT_SHIFT,
-			NVME_LM_CTRL_DATA_QUEUE_ETPT_MASK);
-	cmd->cdw12 = hp;
-	cmd->cdw13 = tpt;
+	__u16 cqs;
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cqs = NVME_FIELD_ENCODE(cntlid,
+		NVME_LM_CREATE_CDQ_CNTLID_SHIFT,
+		NVME_LM_CREATE_CDQ_CNTLID_MASK);
+
+	cmd->opcode = nvme_admin_ctrl_data_queue;
+	cmd->data_len = cdqsize << 2;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(NVME_LM_SEL_CREATE_CDQ,
+			NVME_LM_CDQ_SEL_SHIFT,
+			NVME_LM_CDQ_SEL_MASK) |
+		      NVME_FIELD_ENCODE(mos,
+			NVME_LM_CDQ_MOS_SHIFT,
+			NVME_LM_CDQ_MOS_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(NVME_LM_CREATE_CDQ_PC,
+			NVME_LM_CREATE_CDQ_PC_SHIFT,
+			NVME_LM_CREATE_CDQ_PC_MASK) |
+		     NVME_FIELD_ENCODE(cqs,
+			NVME_LM_CQS_SHIFT,
+			NVME_LM_CQS_MASK);
+	cmd->cdw12 = cdqsize;
 }
 
 /**
- * nvme_init_lm_get_features_ctrl_data_queue() - Initialize passthru command for
- * Get Controller Data Queue feature
+ * nvme_init_lm_cdq_delete() - Initialize passthru command for
+ * Controller Data Queue delete - Controller Data Queue command
  * @cmd:	Passthru command to use
- * @sel:	Select which type of attribute to return,
- *		see &enum nvme_get_features_sel
- * @cdqid:	Controller Data Queue ID (CDQID)
- * @qfd:	Get Controller Data Queue feature data buffer
+ * @mos:	Management Operation Specific (MOS): This field is
+ *		specific to the SEL type
+ * @cdqid:	Controller Data Queue ID (CDQID): For Delete CDQ, this
+ *		field is the CDQID to delete.
  *
- * Initializes the passthru command buffer for the Get Features command with
- * FID value %NVME_FEAT_FID_CTRL_DATA_QUEUE.
+ * Initializes the passthru command buffer for the Controller Data Queue delete
+ * command.
  */
 static inline void
-nvme_init_lm_get_features_ctrl_data_queue(struct libnvme_passthru_cmd *cmd,
-		enum nvme_get_features_sel sel, __u16 cdqid,
-		struct nvme_lm_ctrl_data_queue_fid_data *qfd)
+nvme_init_lm_cdq_delete(struct libnvme_passthru_cmd *cmd,
+		__u16 mos, __u16 cdqid)
 {
-	nvme_init_get_features(cmd, NVME_FEAT_FID_CTRL_DATA_QUEUE, sel);
-	cmd->data_len = sizeof(*qfd);
-	cmd->addr = (__u64)(uintptr_t)qfd;
-	cmd->cdw11 = cdqid;
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_ctrl_data_queue;
+	cmd->cdw10 = NVME_FIELD_ENCODE(NVME_LM_SEL_DELETE_CDQ,
+			NVME_LM_CDQ_SEL_SHIFT,
+			NVME_LM_CDQ_SEL_MASK) |
+		      NVME_FIELD_ENCODE(mos,
+			NVME_LM_CDQ_MOS_SHIFT,
+			NVME_LM_CDQ_MOS_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(cdqid,
+			NVME_LM_DELETE_CDQ_CDQID_SHIFT,
+			NVME_LM_DELETE_CDQ_CDQID_MASK);
 }
+
+/**
+ * nvme_init_set_property() - Initialize passthru command to set
+ * controller property
+ * @cmd:	Passthru command to use
+ * @offset:	Property offset from the base to set
+ * @value:	The value to set the property
+ *
+ * Initializes the passthru command buffer for the Fabrics Set Property command.
+ * This is an NVMe-over-Fabrics specific command.
+ */
+static inline void
+nvme_init_set_property(struct libnvme_passthru_cmd *cmd, __u32 offset,
+		__u64 value)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_fabrics;
+	cmd->nsid = nvme_fabrics_type_property_set;
+	cmd->cdw10 = nvme_is_64bit_reg(offset);
+	cmd->cdw11 = (__u32)offset;
+	cmd->cdw12 = (__u32)(value & 0xffffffff);
+	cmd->cdw13 = (__u32)(value >> 32);
+}
+
+/**
+ * nvme_init_get_property() - Initialize passthru command to get
+ * a controller property
+ * @cmd:	Passthru command to use
+ * @offset:	Property offset from the base to retrieve
+ *
+ * Initializes the passthru command buffer for the Fabrics Get Property command.
+ * This is an NVMe-over-Fabrics specific command.
+ */
+static inline void
+nvme_init_get_property(struct libnvme_passthru_cmd *cmd, __u32 offset)
+{
+
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_fabrics;
+	cmd->nsid = nvme_fabrics_type_property_get;
+	cmd->cdw10 = nvme_is_64bit_reg(offset);
+	cmd->cdw11 = (__u32)offset;
+}
+
+/**
+ * nvme_init_format_nvm() - Initialize passthru command for Format NVM
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to format
+ * @lbaf:	Logical block address format
+ * @mset:	Metadata settings (extended or separated)
+ * @pi:		Protection information type
+ * @pil:	Protection information location (beginning or end)
+ * @ses:	Secure erase settings
+ *
+ * Initializes the passthru command buffer for the Format NVM command.
+ */
+static inline void
+nvme_init_format_nvm(struct libnvme_passthru_cmd *cmd, __u32 nsid, __u8 lbaf,
+		enum nvme_cmd_format_mset mset, enum nvme_cmd_format_pi pi,
+		enum nvme_cmd_format_pil pil, enum nvme_cmd_format_ses ses)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_format_nvm;
+	cmd->nsid = nsid;
+	cmd->cdw10 = NVME_FIELD_ENCODE(lbaf,
+			NVME_FORMAT_CDW10_LBAFL_SHIFT,
+			NVME_FORMAT_CDW10_LBAFL_MASK) |
+		      NVME_FIELD_ENCODE(mset,
+			NVME_FORMAT_CDW10_MSET_SHIFT,
+			NVME_FORMAT_CDW10_MSET_MASK) |
+		      NVME_FIELD_ENCODE(pi,
+			NVME_FORMAT_CDW10_PI_SHIFT,
+			NVME_FORMAT_CDW10_PI_MASK) |
+		      NVME_FIELD_ENCODE(pil,
+			NVME_FORMAT_CDW10_PIL_SHIFT,
+			NVME_FORMAT_CDW10_PIL_MASK) |
+		      NVME_FIELD_ENCODE(ses,
+			NVME_FORMAT_CDW10_SES_SHIFT,
+			NVME_FORMAT_CDW10_SES_MASK) |
+		      NVME_FIELD_ENCODE((lbaf >> 4),
+			NVME_FORMAT_CDW10_LBAFU_SHIFT,
+			NVME_FORMAT_CDW10_LBAFU_MASK);
+}
+
+/**
+ * nvme_init_security_send() - Initialize passthru command for Security Send
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to issue security command on
+ * @nssf:	NVMe Security Specific field
+ * @spsp:	Security Protocol Specific field
+ * @secp:	Security Protocol
+ * @tl:		Protocol specific transfer length
+ * @data:	Security data payload buffer to send
+ * @len:	Data length of the payload in bytes
+ *
+ * Initializes the passthru command buffer for the Security Send command.
+ */
+static inline void
+nvme_init_security_send(struct libnvme_passthru_cmd *cmd, __u32 nsid, __u8 nssf,
+		__u16 spsp, __u8 secp, __u32 tl, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_security_send;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(secp,
+			NVME_SECURITY_SECP_SHIFT,
+			NVME_SECURITY_SECP_MASK) |
+		      NVME_FIELD_ENCODE(spsp,
+			NVME_SECURITY_SPSP0_SHIFT,
+			NVME_SECURITY_SPSP0_MASK) |
+		      NVME_FIELD_ENCODE(spsp >> 8,
+			NVME_SECURITY_SPSP1_SHIFT,
+			NVME_SECURITY_SPSP1_MASK) |
+		      NVME_FIELD_ENCODE(nssf,
+			NVME_SECURITY_NSSF_SHIFT,
+			NVME_SECURITY_NSSF_MASK);
+	cmd->cdw11 = tl;
+}
+
+/**
+ * nvme_init_security_receive() - Initialize passthru command for
+ * Security Receive
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to issue security command on
+ * @nssf:	NVMe Security Specific field
+ * @spsp:	Security Protocol Specific field
+ * @secp:	Security Protocol
+ * @al:		Protocol specific allocation length
+ * @data:	Security data payload buffer to receive data into
+ * @len:	Data length of the payload in bytes (must match @al)
+ *
+ * Initializes the passthru command buffer for the Security Receive command.
+ */
+static inline void
+nvme_init_security_receive(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u8 nssf, __u16 spsp, __u8 secp, __u32 al, void *data,
+		__u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_security_recv;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(secp,
+			NVME_SECURITY_SECP_SHIFT,
+			NVME_SECURITY_SECP_MASK) |
+		     NVME_FIELD_ENCODE(spsp,
+			NVME_SECURITY_SPSP0_SHIFT,
+			NVME_SECURITY_SPSP0_MASK) |
+		     NVME_FIELD_ENCODE(spsp >> 8,
+			NVME_SECURITY_SPSP1_SHIFT,
+			NVME_SECURITY_SPSP1_MASK) |
+		     NVME_FIELD_ENCODE(nssf,
+			NVME_SECURITY_NSSF_SHIFT,
+			NVME_SECURITY_NSSF_MASK);
+	cmd->cdw11 = al;
+}
+
+/**
+ * nvme_init_sanitize_nvm() - Initialize passthru command to start a
+ * sanitize operation
+ * @cmd:	Passthru command to use
+ * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
+ * @ause:	Set to allow unrestricted sanitize exit
+ * @owpass:	Overwrite pass count
+ * @oipbp:	Set to overwrite invert pattern between passes
+ * @ndas:	Set to not deallocate blocks after sanitizing
+ * @emvs:	Set to enter media verification state
+ * @ovrpat:	Overwrite pattern
+ *
+ * Initializes the passthru command buffer for the Sanitize NVM command.
+ */
+static inline void
+nvme_init_sanitize_nvm(struct libnvme_passthru_cmd *cmd,
+		enum nvme_sanitize_sanact sanact, bool ause, __u8 owpass,
+		bool oipbp, bool ndas, bool emvs, __u32 ovrpat)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_sanitize_nvm;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sanact,
+			NVME_SANITIZE_CDW10_SANACT_SHIFT,
+			NVME_SANITIZE_CDW10_SANACT_MASK) |
+		      NVME_FIELD_ENCODE(ause,
+			NVME_SANITIZE_CDW10_AUSE_SHIFT,
+			NVME_SANITIZE_CDW10_AUSE_MASK) |
+		      NVME_FIELD_ENCODE(owpass,
+			NVME_SANITIZE_CDW10_OWPASS_SHIFT,
+			NVME_SANITIZE_CDW10_OWPASS_MASK) |
+		      NVME_FIELD_ENCODE(oipbp,
+			NVME_SANITIZE_CDW10_OIPBP_SHIFT,
+			NVME_SANITIZE_CDW10_OIPBP_MASK) |
+		      NVME_FIELD_ENCODE(ndas,
+			NVME_SANITIZE_CDW10_NDAS_SHIFT,
+			NVME_SANITIZE_CDW10_NDAS_MASK) |
+		      NVME_FIELD_ENCODE(emvs,
+			NVME_SANITIZE_CDW10_EMVS_SHIFT,
+			NVME_SANITIZE_CDW10_EMVS_MASK);
+	cmd->cdw11 = ovrpat;
+}
+
+/**
+ * nvme_init_get_lba_status() - Initialize passthru command to retrieve
+ * information on possibly unrecoverable LBAs
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID to retrieve LBA status
+ * @slba:	Starting logical block address to check statuses
+ * @mndw:	Maximum number of dwords to return
+ * @atype:	Action type mechanism to determine LBA status descriptors to
+ *		return, see &enum nvme_lba_status_atype
+ * @rl:		Range length from slba to perform the action
+ * @lbas:	Data payload buffer to return status descriptors
+ *
+ * Initializes the passthru command buffer for the Get LBA Status command.
+ */
+static inline void
+nvme_init_get_lba_status(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u64 slba, __u32 mndw, enum nvme_lba_status_atype atype,
+		__u16 rl, struct nvme_lba_status *lbas)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_get_lba_status;
+	cmd->nsid = nsid;
+	cmd->data_len = (mndw + 1) << 2;
+	cmd->addr = (__u64)(uintptr_t)lbas;
+	cmd->cdw10 = slba & 0xffffffff;
+	cmd->cdw11 = slba >> 32;
+	cmd->cdw12 = mndw;
+	cmd->cdw13 = NVME_FIELD_ENCODE(rl,
+			NVME_GET_LBA_STATUS_CDW13_RL_SHIFT,
+			NVME_GET_LBA_STATUS_CDW13_RL_MASK) |
+		     NVME_FIELD_ENCODE(atype,
+			NVME_GET_LBA_STATUS_CDW13_ATYPE_SHIFT,
+			NVME_GET_LBA_STATUS_CDW13_ATYPE_MASK);
+}
+
+/**
+ * nvme_init_sanitize_ns() - Initialize passthru command to start a
+ * sanitize namespace operation
+ * @cmd:	Passthru command to use
+ * @sanact:	Sanitize action, see &enum nvme_sanitize_sanact
+ * @ause:	Set to allow unrestricted sanitize exit
+ * @emvs:	Set to enter media verification state
+ *
+ * Initializes the passthru command buffer for the Sanitize namespace command.
+ */
+static inline void
+nvme_init_sanitize_ns(struct libnvme_passthru_cmd *cmd,
+		enum nvme_sanitize_sanact sanact, bool ause, bool emvs)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_sanitize_ns;
+	cmd->cdw10 = NVME_FIELD_ENCODE(sanact,
+			NVME_SANITIZE_CDW10_SANACT_SHIFT,
+			NVME_SANITIZE_CDW10_SANACT_MASK) |
+		      NVME_FIELD_ENCODE(ause,
+			NVME_SANITIZE_CDW10_AUSE_SHIFT,
+			NVME_SANITIZE_CDW10_AUSE_MASK) |
+		      NVME_FIELD_ENCODE(emvs,
+			NVME_SANITIZE_CDW10_EMVS_SHIFT,
+			NVME_SANITIZE_CDW10_EMVS_MASK);
+}
+
+
+/*
+ * NVM Command Set - I/O Commands
+ */
+
+/**
+ * nvme_init_flush() - Initialize passthru command for Flush command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ *
+ * The Flush command requests that the contents of volatile write cache be made
+ * non-volatile.
+ *
+ * Initializes the passthru command buffer for the Flush command.
+ */
+static inline void
+nvme_init_flush(struct libnvme_passthru_cmd *cmd, __u32 nsid)
+{
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->opcode = nvme_cmd_flush;
+	cmd->nsid = nsid;
+}
+
+/**
+ * nvme_init_app_tag() - Initialize Command Dword fields for
+ * Logical Block Application Tag/Mask
+ * @cmd:	Passthru command to use
+ * @lbat:	Logical block application tag
+ * @lbatm:	Logical block application tag mask
+ */
+static inline void
+nvme_init_app_tag(struct libnvme_passthru_cmd *cmd,
+	__u16 lbat, __u16 lbatm)
+{
+	cmd->cdw15 = NVME_FIELD_ENCODE(lbat,
+			NVME_IOCS_COMMON_CDW15_ELBAT_SHIFT,
+			NVME_IOCS_COMMON_CDW15_ELBAT_MASK) |
+		     NVME_FIELD_ENCODE(lbatm,
+			NVME_IOCS_COMMON_CDW15_ELBATM_SHIFT,
+			NVME_IOCS_COMMON_CDW15_ELBATM_MASK);
+}
+
+/**
+ * nvme_init_io() - Initialize passthru command for a generic user I/O command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @opcode:	Opcode to execute
+ * @slba:	Starting logical block
+ * @data:	Pointer to user address of the data buffer
+ * @data_len:	Length of user buffer, @data, in bytes
+ * @metadata:	Pointer to user address of the metadata buffer
+ * @metadata_len:Length of user buffer, @metadata, in bytes
+ *
+ * Initializes the passthru command buffer for a generic NVM I/O command.
+ * Note: If @elbas is true, the caller must ensure the definition/logic for
+ * nvme_init_set_var_size_tags is available and that the return value from
+ * that function is checked for error.
+ */
+static inline void
+nvme_init_io(struct libnvme_passthru_cmd *cmd, __u8 opcode,
+		__u32 nsid, __u64 slba,
+		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = opcode;
+	cmd->nsid = nsid;
+	cmd->metadata = (__u64)(uintptr_t)metadata;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->metadata_len = metadata_len;
+	cmd->data_len = data_len;
+	cmd->cdw10 = NVME_FIELD_ENCODE(slba,
+			NVME_IOCS_COMMON_CDW10_SLBAL_SHIFT,
+			NVME_IOCS_COMMON_CDW10_SLBAL_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(slba >> 32,
+			NVME_IOCS_COMMON_CDW11_SLBAU_SHIFT,
+			NVME_IOCS_COMMON_CDW11_SLBAU_MASK);
+}
+
+/**
+ * nvme_init_write() - Initialize passthru command for a user write command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting logical block
+ * @nlb:	Number of logical blocks (0-based)
+ * @control:	Upper 16 bits of cdw12
+ * @dspec:	Directive specific value
+ * @dsm:	Data set management attributes (CETYPE is zero),
+ *		see &enum nvme_io_dsm_flags
+ * @cev:	Command Extension Value (CETYPE is non-zero)
+ * @data:	Pointer to user address of the data buffer
+ * @data_len:	Length of user buffer, @data, in bytes
+ * @metadata:	Pointer to user address of the metadata buffer
+ * @metadata_len:Length of user buffer, @metadata, in bytes
+ *
+ * Initializes the passthru command buffer for the Write command.
+ */
+static inline void
+nvme_init_write(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba,
+		__u16 nlb, __u16 control, __u16 dspec, __u8 dsm, __u8 cev,
+		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
+{
+	nvme_init_io(cmd, nvme_cmd_write, nsid, slba,
+		data, data_len, metadata, metadata_len);
+	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
+			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
+			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
+		      NVME_FIELD_ENCODE(control,
+			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
+			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
+	cmd->cdw13 = NVME_FIELD_ENCODE(dspec,
+			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSPEC_MASK) |
+		     NVME_FIELD_ENCODE(dsm,
+			NVME_IOCS_COMMON_CDW13_DSM_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSM_MASK) |
+		     NVME_FIELD_ENCODE(cev,
+			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
+			NVME_IOCS_COMMON_CDW13_CEV_MASK);
+}
+
+/**
+ * nvme_init_read() - Initialize passthru command for a user read command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting logical block
+ * @nlb:	Number of logical blocks (0-based)
+ * @control:	Upper 16 bits of cdw12
+ * @dsm:	Data set management attributes (CETYPE is zero),
+ *		see &enum nvme_io_dsm_flags
+ * @cev:	Command Extension Value (CETYPE is non-zero)
+ * @data:	Pointer to user address of the data buffer
+ * @data_len:	Length of user buffer, @data, in bytes
+ * @metadata:	Pointer to user address of the metadata buffer
+ * @metadata_len:Length of user buffer, @metadata, in bytes
+ *
+ * Initializes the passthru command buffer for the Read command.
+ * Note: Assumes a macro or separate function exists to translate the combined
+ * NLB/control/prinfo fields into cdw12/cdw13. This transformation assumes
+ * the parameters are used for a generic nvme_init_io wrapper.
+ */
+static inline void
+nvme_init_read(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba,
+		__u16 nlb, __u16 control, __u8 dsm, __u16 cev,
+		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
+{
+	nvme_init_io(cmd, nvme_cmd_read, nsid, slba,
+		data, data_len, metadata, metadata_len);
+	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
+			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
+			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
+		      NVME_FIELD_ENCODE(control,
+			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
+			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
+	cmd->cdw13 = NVME_FIELD_ENCODE(dsm,
+			NVME_IOCS_COMMON_CDW13_DSM_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSM_MASK) |
+		     NVME_FIELD_ENCODE(cev,
+			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
+			NVME_IOCS_COMMON_CDW13_CEV_MASK);
+}
+
+/**
+ * nvme_init_write_uncorrectable() - Initialize passthru command for a
+ * write uncorrectable command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting logical block
+ * @nlb:	Number of logical blocks (0-based)
+ * @control:	Upper 16 bits of cdw12
+ * @dspec:	Directive specific value
+ *
+ * Initializes the passthru command buffer for the Write Uncorrectable command.
+ * Note: This command transfers no data or metadata.
+ */
+static inline void
+nvme_init_write_uncorrectable(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba, __u16 nlb, __u16 control, __u16 dspec)
+{
+	nvme_init_io(cmd, nvme_cmd_write_uncor, nsid, slba, NULL, 0, NULL, 0);
+	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
+			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
+			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
+		      NVME_FIELD_ENCODE(control,
+			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
+			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
+	cmd->cdw13 = NVME_FIELD_ENCODE(dspec,
+			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSPEC_MASK);
+}
+
+/**
+ * nvme_init_compare() - Initialize passthru command for a user compare command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting logical block
+ * @nlb:	Number of logical blocks (0-based)
+ * @control:	Command control flags, see &enum nvme_io_control_flags.
+ * @cev:	Command Extension Value (CETYPE is non-zero)
+ * @data:	Pointer to user address of the data buffer
+ * @data_len:	Length of user buffer, @data, in bytes
+ * @metadata:	Pointer to user address of the metadata buffer
+ * @metadata_len:Length of user buffer, @metadata, in bytes
+ *
+ * Initializes the passthru command buffer for the Compare command.
+ */
+static inline void
+nvme_init_compare(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba,
+		__u16 nlb, __u16 control, __u8 cev,
+		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
+{
+	nvme_init_io(cmd, nvme_cmd_compare, nsid, slba,
+		data, data_len, metadata, metadata_len);
+	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
+			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
+			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
+		     NVME_FIELD_ENCODE(control,
+			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
+			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
+	cmd->cdw13 = NVME_FIELD_ENCODE(cev,
+			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
+			NVME_IOCS_COMMON_CDW13_CEV_MASK);
+}
+
+/**
+ * nvme_init_write_zeros() - Initialize passthru command for a
+ * write zeroes command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting logical block
+ * @nlb:	Number of logical blocks (0-based)
+ * @control:	Upper 16 bits of cdw12
+ * @dspec:	Directive specific value
+ * @dsm:	Data set management attributes (CETYPE is zero),
+ *		see &enum nvme_io_dsm_flags
+ * @cev:	Command Extension Value (CETYPE is non-zero)
+ *
+ * Initializes the passthru command buffer for the Write Zeroes command.
+ * Note: Write Zeroes command does not transfer data or metadata.
+ */
+static inline void
+nvme_init_write_zeros(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba,
+		__u16 nlb, __u16 control, __u16 dspec, __u8 dsm, __u8 cev)
+{
+	nvme_init_io(cmd, nvme_cmd_write_zeroes, nsid, slba, NULL, 0, NULL, 0);
+	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
+			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
+			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
+		      NVME_FIELD_ENCODE(control,
+			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
+			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
+	cmd->cdw13 = NVME_FIELD_ENCODE(dspec,
+			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSPEC_MASK) |
+		     NVME_FIELD_ENCODE(dsm,
+			NVME_IOCS_COMMON_CDW13_DSM_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSM_MASK) |
+		     NVME_FIELD_ENCODE(cev,
+			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
+			NVME_IOCS_COMMON_CDW13_CEV_MASK);
+}
+
+/**
+ * nvme_init_dsm() - Initialize passthru command for
+ * NVMEe I/O Data Set Management
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @nr:		Number of block ranges in the data set management attributes
+ * @idr:	DSM Integral Dataset for Read attribute
+ * @idw:	DSM Integral Dataset for Write attribute
+ * @ad:		DSM Deallocate attribute
+ * @data:	User space destination address to transfer the data
+ * @len:	Length of provided user buffer to hold the log data in bytes
+ */
+static inline void
+nvme_init_dsm(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u16 nr, __u8 idr, __u8 idw, __u8 ad, void *data,
+		__u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode	= nvme_cmd_dsm;
+	cmd->nsid	= nsid;
+	cmd->data_len	= len;
+	cmd->addr	= (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(nr - 1,
+			NVME_DSM_CDW10_NR_SHIFT,
+			NVME_DSM_CDW10_NR_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(idr,
+			NVME_DSM_CDW11_IDR_SHIFT,
+			NVME_DSM_CDW11_IDR_MASK) |
+		      NVME_FIELD_ENCODE(idw,
+			NVME_DSM_CDW11_IDW_SHIFT,
+			NVME_DSM_CDW11_IDW_MASK) |
+		      NVME_FIELD_ENCODE(ad,
+			NVME_DSM_CDW11_AD_SHIFT,
+			NVME_DSM_CDW11_AD_MASK);
+}
+
+/**
+ * nvme_init_verify() - Initialize passthru command for a verify command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting logical block
+ * @nlb:	Number of logical blocks (0-based)
+ * @control:	Upper 16 bits of cdw12
+ * @cev:	Command Extension Value (CETYPE is non-zero)
+ * @data:	Pointer to user address of the data buffer
+ * @data_len:	Length of user buffer, @data, in bytes
+ * @metadata:	Pointer to user address of the metadata buffer
+ * @metadata_len:Length of user buffer, @metadata, in bytes
+ *
+ * Initializes the passthru command buffer for the Verify command.
+ * Note: Verify command transfers data or metadata to the controller to perform
+ * the verification but not back to the host.
+ */
+static inline void
+nvme_init_verify(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, __u64 slba,
+		__u16 nlb, __u16 control, __u8 cev,
+		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
+{
+	nvme_init_io(cmd, nvme_cmd_verify, nsid, slba,
+		data, data_len, metadata, metadata_len);
+	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
+			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
+			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
+		     NVME_FIELD_ENCODE(control,
+			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
+			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
+	cmd->cdw13 = NVME_FIELD_ENCODE(cev,
+			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
+			NVME_IOCS_COMMON_CDW13_CEV_MASK);
+}
+
+/**
+ * nvme_init_resv_register() - Initialize passthru command for
+ * Reservation Register
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @rrega:	The registration action, see &enum nvme_resv_rrega
+ * @iekey:	Set to ignore the existing key
+ * @disnsrs:	Disperse Namespace Reservation Support
+ * @cptpl:	Change persist through power loss, see &enum nvme_resv_cptpl
+ * @crkey:	The current reservation key associated with the host
+ * @nrkey:	The new reservation key to be register if action is register or
+ *		replace
+ * @payload:	Data payload buffer to hold crkey and nrkey
+ *
+ * Initializes the passthru command buffer for the Reservation Register command.
+ */
+static inline void
+nvme_init_resv_register(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_resv_rrega rrega, bool iekey, bool disnsrs,
+		enum nvme_resv_cptpl cptpl, __u64 crkey, __u64 nrkey,
+		__le64 *payload)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	payload[0] = htole64(crkey);
+	payload[1] = htole64(nrkey);
+
+	cmd->opcode = nvme_cmd_resv_register;
+	cmd->nsid = nsid;
+	cmd->data_len = 2 * sizeof(__le64);
+	cmd->addr = (__u64)(uintptr_t)payload;
+	cmd->cdw10 = NVME_FIELD_ENCODE(rrega,
+			NVME_RESV_REGISTER_CDW10_RREGA_SHIFT,
+			NVME_RESV_REGISTER_CDW10_RREGA_MASK) |
+		     NVME_FIELD_ENCODE(iekey,
+			NVME_RESV_REGISTER_CDW10_IEKEY_SHIFT,
+			NVME_RESV_REGISTER_CDW10_IEKEY_MASK) |
+		     NVME_FIELD_ENCODE(disnsrs,
+			NVME_RESV_REGISTER_CDW10_DISNSRS_SHIFT,
+			NVME_RESV_REGISTER_CDW10_DISNSRS_MASK) |
+		     NVME_FIELD_ENCODE(cptpl,
+			NVME_RESV_REGISTER_CDW10_CPTPL_SHIFT,
+			NVME_RESV_REGISTER_CDW10_CPTPL_MASK);
+}
+
+/**
+ * nvme_init_resv_report() - Initialize passthru command for
+ * Reservation Report
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @eds:	Request extended Data Structure
+ * @disnsrs:	Disperse Namespace Reservation Support
+ * @report:	The user space destination address to store the reservation
+ *		report buffer
+ * @len:	Number of bytes to request transferred with this command
+ *
+ * Initializes the passthru command buffer for the Reservation Report command.
+ */
+static inline void
+nvme_init_resv_report(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		bool eds, bool disnsrs, struct nvme_resv_status *report,
+		__u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_cmd_resv_report;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)report;
+	cmd->cdw10 = (len >> 2) - 1;
+	cmd->cdw11 = NVME_FIELD_ENCODE(eds,
+			NVME_RESV_REPORT_CDW11_EDS_SHIFT,
+			NVME_RESV_REPORT_CDW11_EDS_MASK) |
+		     NVME_FIELD_ENCODE(disnsrs,
+			NVME_RESV_REPORT_CDW11_DISNSRS_SHIFT,
+			NVME_RESV_REPORT_CDW11_DISNSRS_MASK);
+}
+
+/**
+ * nvme_init_resv_acquire() - Initialize passthru command for
+ * Reservation Acquire
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @racqa:	The action that is performed by the command,
+ *		see &enum nvme_resv_racqa
+ * @iekey:	Set to ignore the existing key
+ * @disnsrs:	Disperse Namespace Reservation Support
+ * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
+ * @crkey:	The current reservation key associated with the host
+ * @prkey:	Preempt Reservation Key
+ * @payload:	Data payload buffer to hold crkey and prkey
+ *
+ * Initializes the passthru command buffer for the Reservation Acquire command.
+ */
+static inline void
+nvme_init_resv_acquire(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_resv_racqa racqa, bool iekey, bool disnsrs,
+		enum nvme_resv_rtype rtype, __u64 crkey, __u64 prkey,
+		__le64 *payload)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	payload[0] = htole64(crkey);
+	payload[1] = htole64(prkey);
+
+	cmd->opcode = nvme_cmd_resv_acquire;
+	cmd->nsid = nsid;
+	cmd->data_len = 2 * sizeof(__le64);
+	cmd->addr = (__u64)(uintptr_t)payload;
+	cmd->cdw10 = NVME_FIELD_ENCODE(racqa,
+			NVME_RESV_ACQUIRE_CDW10_RACQA_SHIFT,
+			NVME_RESV_ACQUIRE_CDW10_RACQA_MASK) |
+		     NVME_FIELD_ENCODE(iekey,
+			NVME_RESV_ACQUIRE_CDW10_IEKEY_SHIFT,
+			NVME_RESV_ACQUIRE_CDW10_IEKEY_MASK) |
+		     NVME_FIELD_ENCODE(disnsrs,
+			NVME_RESV_ACQUIRE_CDW10_DISNSRS_SHIFT,
+			NVME_RESV_ACQUIRE_CDW10_DISNSRS_MASK) |
+		     NVME_FIELD_ENCODE(rtype,
+			NVME_RESV_ACQUIRE_CDW10_RTYPE_SHIFT,
+			NVME_RESV_ACQUIRE_CDW10_RTYPE_MASK);
+}
+
+/**
+ * nvme_init_io_mgmt_recv() - Initialize passthru command for
+ * I/O Management Receive command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @mo:		Management Operation
+ * @mos:	Management Operation Specific
+ * @data:	Userspace address of the data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the I/O Management
+ * Receive command.
+ */
+static inline void
+nvme_init_io_mgmt_recv(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u8 mo, __u16 mos, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_cmd_io_mgmt_recv;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(mo,
+			NVME_IO_MGMT_RECV_CDW10_MO_SHIFT,
+			NVME_IO_MGMT_RECV_CDW10_MO_MASK) |
+		     NVME_FIELD_ENCODE(mos,
+			NVME_IO_MGMT_RECV_CDW10_MOS_SHIFT,
+			NVME_IO_MGMT_RECV_CDW10_MOS_MASK);
+	cmd->cdw11 = (len >> 2) - 1;
+}
+
+/**
+ * nvme_init_fdp_reclaim_unit_handle_status() - Initialize passthru command
+ * to get reclaim unit handle status
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @data:	Response buffer
+ * @len:	Length of response buffer
+ *
+ * Initializes the passthru command buffer for the I/O Management Receive -
+ * Reclaim Unit Handle Status command.
+ */
+static inline void
+nvme_init_fdp_reclaim_unit_handle_status(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, void *data, __u32 len)
+{
+	nvme_init_io_mgmt_recv(cmd, nsid, NVME_IO_MGMT_RECV_RUH_STATUS, 0,
+		data, len);
+}
+
+/**
+ * nvme_init_resv_release() - Initialize passthru command for
+ * Reservation Release
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @rrela:	Reservation release action, see &enum nvme_resv_rrela
+ * @iekey:	Set to ignore the existing key
+ * @disnsrs:	Disperse Namespace Reservation Support
+ * @rtype:	The type of reservation to be create, see &enum nvme_resv_rtype
+ * @crkey:	The current reservation key to release
+ * @payload:	Data payload buffer to hold crkey
+ *
+ * Initializes the passthru command buffer for the Reservation Release command.
+ */
+static inline void
+nvme_init_resv_release(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		enum nvme_resv_rrela rrela, bool iekey, bool disnsrs,
+		enum nvme_resv_rtype rtype, __u64 crkey, __le64 *payload)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	payload[0] = htole64(crkey);
+
+	cmd->opcode = nvme_cmd_resv_release;
+	cmd->nsid = nsid;
+	cmd->data_len = sizeof(__le64);
+	cmd->addr = (__u64)(uintptr_t)payload;
+	cmd->cdw10 = NVME_FIELD_ENCODE(rrela,
+			NVME_RESV_RELEASE_CDW10_RRELA_SHIFT,
+			NVME_RESV_RELEASE_CDW10_RRELA_MASK) |
+		     NVME_FIELD_ENCODE(iekey,
+			NVME_RESV_RELEASE_CDW10_IEKEY_SHIFT,
+			NVME_RESV_RELEASE_CDW10_IEKEY_MASK) |
+		     NVME_FIELD_ENCODE(disnsrs,
+			NVME_RESV_RELEASE_CDW10_DISNSRS_SHIFT,
+			NVME_RESV_RELEASE_CDW10_DISNSRS_MASK) |
+		     NVME_FIELD_ENCODE(rtype,
+			NVME_RESV_RELEASE_CDW10_RTYPE_SHIFT,
+			NVME_RESV_RELEASE_CDW10_RTYPE_MASK);
+}
+
+/**
+ * nvme_init_copy() - Initialize passthru command for Copy command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @sdlba:	Start destination LBA
+ * @nr:		Number of ranges (1-based, 0-based in command)
+ * @desfmt:	Descriptor format
+ * @prinfor:	Protection information field for read
+ * @prinfow:	Protection information field for write
+ * @cetype:	Command Extension Type
+ * @dtype:	Directive Type
+ * @stcw:	Storage Tag Check Write
+ * @stcr:	Storage Tag Check Read
+ * @fua:	Force unit access
+ * @lr:		Limited retry
+ * @cev:	Command Extension Value
+ * @dspec:	Directive specific value
+ * @cpydsc:	Range description buffer
+ *
+ * Initializes the passthru command buffer for the Copy command by calculating
+ * the data length and calling the generic I/O initializer.
+ */
+static inline void
+nvme_init_copy(struct libnvme_passthru_cmd *cmd, __u32 nsid, __u64 sdlba,
+		__u16 nr, __u8 desfmt, __u8 prinfor, __u8 prinfow,
+		__u8 cetype, __u8 dtype, bool stcw, bool stcr, bool fua,
+		bool lr, __u16 cev, __u16 dspec, void *cpydsc)
+{
+	__u32 data_len;
+
+	switch (desfmt) {
+	case 1:
+		data_len = nr * sizeof(struct nvme_copy_range_f1);
+		break;
+	case 2:
+		data_len = nr * sizeof(struct nvme_copy_range_f2);
+		break;
+	case 3:
+		data_len = nr * sizeof(struct nvme_copy_range_f3);
+		break;
+	default:
+		data_len = nr * sizeof(struct nvme_copy_range_f0);
+		break;
+	}
+
+	nvme_init_io(cmd, nvme_cmd_copy, nsid, sdlba, cpydsc,
+		data_len, NULL, 0);
+	cmd->cdw12 = NVME_FIELD_ENCODE(nr - 1,
+			NVME_COPY_CDW12_NR_SHIFT,
+			NVME_COPY_CDW12_NR_MASK) |
+		     NVME_FIELD_ENCODE(desfmt,
+			NVME_COPY_CDW12_DESFMT_SHIFT,
+			NVME_COPY_CDW12_DESFMT_MASK) |
+		     NVME_FIELD_ENCODE(prinfor,
+			NVME_COPY_CDW12_PRINFOR_SHIFT,
+			NVME_COPY_CDW12_PRINFOR_MASK) |
+		     NVME_FIELD_ENCODE(cetype,
+			NVME_COPY_CDW12_CETYPE_SHIFT,
+			NVME_COPY_CDW12_CETYPE_MASK) |
+		     NVME_FIELD_ENCODE(dtype,
+			NVME_COPY_CDW12_DTYPE_SHIFT,
+			NVME_COPY_CDW12_DTYPE_MASK) |
+		     NVME_FIELD_ENCODE(stcw,
+			NVME_COPY_CDW12_STCW_SHIFT,
+			NVME_COPY_CDW12_STCW_MASK) |
+		     NVME_FIELD_ENCODE(stcr,
+			NVME_COPY_CDW12_STCR_SHIFT,
+			NVME_COPY_CDW12_STCR_MASK) |
+		     NVME_FIELD_ENCODE(prinfow,
+			NVME_COPY_CDW12_PRINFOW_SHIFT,
+			NVME_COPY_CDW12_PRINFOW_MASK) |
+		     NVME_FIELD_ENCODE(fua,
+			NVME_COPY_CDW12_FUA_SHIFT,
+			NVME_COPY_CDW12_FUA_MASK) |
+		     NVME_FIELD_ENCODE(lr,
+			NVME_COPY_CDW12_LR_SHIFT,
+			NVME_COPY_CDW12_LR_MASK);
+	cmd->cdw13 = NVME_FIELD_ENCODE(cev,
+			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
+			NVME_IOCS_COMMON_CDW13_CEV_MASK) |
+		     NVME_FIELD_ENCODE(dspec,
+			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSPEC_MASK);
+}
+
+/**
+ * nvme_init_io_mgmt_send() - Initialize passthru command for
+ * I/O Management Send command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @mo:		Management Operation
+ * @mos:	Management Operation Specific
+ * @data:	Userspace address of the data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the I/O Management Send command.
+ */
+static inline void
+nvme_init_io_mgmt_send(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u8 mo, __u16 mos, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_cmd_io_mgmt_send;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(mo,
+			NVME_IO_MGMT_SEND_CDW10_MO_SHIFT,
+			NVME_IO_MGMT_SEND_CDW10_MO_MASK) |
+		     NVME_FIELD_ENCODE(mos,
+			NVME_IO_MGMT_SEND_CDW10_MOS_SHIFT,
+			NVME_IO_MGMT_SEND_CDW10_MOS_MASK);
+}
+
+/**
+ * nvme_init_fdp_reclaim_unit_handle_update() - Initialize passthru command to
+ * update a list of reclaim unit handles
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace identifier
+ * @pids:	List of placement identifiers buffer
+ * @npids:	Number of placement identifiers
+ *
+ * Initializes the passthru command buffer for the I/O Management Send -
+ * Reclaim Unit Handle Update command.
+ */
+static inline void
+nvme_init_fdp_reclaim_unit_handle_update(struct libnvme_passthru_cmd *cmd,
+		__u32 nsid, void *pids, unsigned int npids)
+{
+	__u16 mos = npids - 1; /* MOS = NPI - 1 */
+	__u32 len = npids * sizeof(__u16);
+
+	nvme_init_io_mgmt_send(cmd, nsid, NVME_IO_MGMT_SEND_RUH_UPDATE,
+		mos, pids, len);
+}
+
+
+/*
+ * Zoned Namespace Command Set - I/O Commands
+ */
+
+/**
+ * nvme_init_zns_mgmt_send() - Initialize passthru command for
+ * ZNS management send command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting logical block address
+ * @zsa:	Zone send action
+ * @selall:	Select all flag
+ * @zsaso:	Zone Send Action Specific Option
+ * @zm:		Zone Management
+ * @data:	Userspace address of the data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the ZNS Management Send command.
+ */
+static inline void
+nvme_init_zns_mgmt_send(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u64 slba, enum nvme_zns_send_action zsa, bool selall,
+		__u8 zsaso, __u8 zm, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_zns_cmd_mgmt_send;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = slba & 0xffffffff;
+	cmd->cdw11 = slba >> 32;
+	cmd->cdw13 = NVME_FIELD_ENCODE(zsa,
+			NVME_ZNS_MGMT_SEND_ZSA_SHIFT,
+			NVME_ZNS_MGMT_SEND_ZSA_MASK) |
+		      NVME_FIELD_ENCODE(selall,
+			NVME_ZNS_MGMT_SEND_SEL_SHIFT,
+			NVME_ZNS_MGMT_SEND_SEL_MASK) |
+		      NVME_FIELD_ENCODE(zsaso,
+			NVME_ZNS_MGMT_SEND_ZSASO_SHIFT,
+			NVME_ZNS_MGMT_SEND_ZSASO_MASK) |
+		      NVME_FIELD_ENCODE(zm,
+			NVME_ZNS_MGMT_SEND_ZM_SHIFT,
+			NVME_ZNS_MGMT_SEND_ZM_MASK);
+}
+
+/**
+ * nvme_init_zns_mgmt_recv() - Initialize passthru command for
+ * ZNS management receive command
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting logical block address
+ * @zra:	zone receive action
+ * @zras:	Zone receive action specific field
+ * @zraspf:	Zone receive action specific features
+ * @data:	Userspace address of the data buffer
+ * @len:	Length of @data
+ *
+ * Initializes the passthru command buffer for the ZNS Management
+ * Receive command.
+ */
+static inline void
+nvme_init_zns_mgmt_recv(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u64 slba, enum nvme_zns_recv_action zra, __u16 zras,
+		bool zraspf, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_zns_cmd_mgmt_recv;
+	cmd->nsid = nsid;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = slba & 0xffffffff;
+	cmd->cdw11 = slba >> 32;
+	cmd->cdw12 = (len >> 2) - 1;
+	cmd->cdw13 = NVME_FIELD_ENCODE(zra,
+			NVME_ZNS_MGMT_RECV_ZRA_SHIFT,
+			NVME_ZNS_MGMT_RECV_ZRA_MASK) |
+		     NVME_FIELD_ENCODE(zras,
+			NVME_ZNS_MGMT_RECV_ZRAS_SHIFT,
+			NVME_ZNS_MGMT_RECV_ZRAS_MASK) |
+		     NVME_FIELD_ENCODE(zraspf,
+			NVME_ZNS_MGMT_RECV_ZRASPF_SHIFT,
+			NVME_ZNS_MGMT_RECV_ZRASPF_MASK);
+}
+
+/**
+ * nvme_init_zns_report_zones() - Initialize passthru command to return
+ * the list of zones
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @slba:	Starting LBA
+ * @opts:	Reporting options
+ * @extended:	Extended report
+ * @partial:	Partial report requested
+ * @data:	Userspace address of the report zones data buffer
+ * @len:	Length of the data buffer
+ *
+ * Initializes the passthru command buffer for the ZNS Management Receive -
+ * Report Zones command.
+ */
+static inline void
+nvme_init_zns_report_zones(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u64 slba, enum nvme_zns_report_options opts,
+		bool extended, bool partial,
+		void *data, __u32 len)
+{
+	enum nvme_zns_recv_action zra = extended ?
+		NVME_ZNS_ZRA_EXTENDED_REPORT_ZONES : NVME_ZNS_ZRA_REPORT_ZONES;
+	__u16 zras = (__u16)opts;
+	bool zraspf = partial; /* ZRASPF is Partial Report Requested */
+
+	nvme_init_zns_mgmt_recv(cmd, nsid, slba, zra, zras, zraspf, data, len);
+}
+
+/**
+ * nvme_init_zns_append() - Initialize passthru command to append data to a zone
+ * @cmd:	Passthru command to use
+ * @nsid:	Namespace ID
+ * @zslba:	Zone start logical block address
+ * @nlb:	Number of logical blocks
+ * @control:	Upper 16 bits of cdw12
+ * @cev:	Command Extension Value
+ * @dspec:	Directive Specific
+ * @data:	Userspace address of the data buffer
+ * @data_len:	Length of @data
+ * @metadata:	Userspace address of the metadata buffer
+ * @metadata_len: Length of @metadata
+ *
+ * Initializes the passthru command buffer for the ZNS Append command.
+ */
+static inline void
+nvme_init_zns_append(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+		__u64 zslba, __u16 nlb, __u16 control, __u16 cev, __u16 dspec,
+		void *data, __u32 data_len, void *metadata, __u32 metadata_len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_zns_cmd_append;
+	cmd->nsid = nsid;
+	cmd->metadata = (__u64)(uintptr_t)metadata;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->metadata_len = metadata_len;
+	cmd->data_len = data_len;
+	cmd->cdw10 = NVME_FIELD_ENCODE(zslba,
+			NVME_IOCS_COMMON_CDW10_SLBAL_SHIFT,
+			NVME_IOCS_COMMON_CDW10_SLBAL_MASK);
+	cmd->cdw11 = NVME_FIELD_ENCODE(zslba >> 32,
+			NVME_IOCS_COMMON_CDW11_SLBAU_SHIFT,
+			NVME_IOCS_COMMON_CDW11_SLBAU_MASK);
+	cmd->cdw12 = NVME_FIELD_ENCODE(nlb,
+			NVME_IOCS_COMMON_CDW12_NLB_SHIFT,
+			NVME_IOCS_COMMON_CDW12_NLB_MASK) |
+		     NVME_FIELD_ENCODE(control,
+			NVME_IOCS_COMMON_CDW12_CONTROL_SHIFT,
+			NVME_IOCS_COMMON_CDW12_CONTROL_MASK);
+	cmd->cdw13 = NVME_FIELD_ENCODE(dspec,
+			NVME_IOCS_COMMON_CDW13_DSPEC_SHIFT,
+			NVME_IOCS_COMMON_CDW13_DSPEC_MASK);
+	if (control & NVME_IOCS_COMMON_CDW12_CETYPE_MASK)
+		cmd->cdw13 |= NVME_FIELD_ENCODE(cev,
+			NVME_IOCS_COMMON_CDW13_CEV_SHIFT,
+			NVME_IOCS_COMMON_CDW13_CEV_MASK);
+}
+
+
+/*
+ * Helper Functions
+ */
 
 /**
  * nvme_init_mi_cmd_flags() - Initialize command flags for NVMe-MI
@@ -5380,6 +5315,91 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
 		copy[i].elbat = htobe16(elbats[i]);
 	}
 }
+
+/**
+ * nvme_init_var_size_tags() - Initialize Command Dword fields
+ * for Extended LBA based on Variable Sized Tags
+ * @cmd:	Passthru command to use
+ * @pif:	Protection information format, determines tag placement
+ * @sts:	Storage tag size in bits
+ * @reftag:	Expected Initial Logical Block Reference Tag (EILBRT)
+ * @storage_tag: Expected Logical Block Storage Tag (ELBST)
+ *
+ * Initializes the passthru command buffer fields cdw2, cdw3, and cdw14
+ * for commands supporting Extended LBA. This logic is usually called from
+ * the command-specific init function (like nvme_init_zns_append).
+ */
+static inline int
+nvme_init_var_size_tags(struct libnvme_passthru_cmd *cmd,
+		__u8 pif, __u8 sts, __u64 reftag, __u64 storage_tag)
+{
+	__u32 cdw2 = 0, cdw3 = 0, cdw14 = 0;
+
+	switch (pif) {
+	case NVME_NVM_PIF_16B_GUARD:
+		cdw14 = NVME_FIELD_ENCODE(reftag,
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		cdw14 |= NVME_FIELD_ENCODE(storage_tag << (32 - sts),
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		break;
+	case NVME_NVM_PIF_32B_GUARD:
+		cdw14 = NVME_FIELD_ENCODE(reftag,
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		cdw3 = NVME_FIELD_ENCODE(reftag >> 32,
+				NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+				NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		cdw14 |= NVME_FIELD_ENCODE(
+				(storage_tag << (80 - sts)) & 0xffff0000,
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		if (sts >= 48)
+			cdw3 |= NVME_FIELD_ENCODE(storage_tag >> (sts - 48),
+					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		else
+			cdw3 |= NVME_FIELD_ENCODE(storage_tag << (48 - sts),
+					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		cdw2 = NVME_FIELD_ENCODE(storage_tag >> (sts - 16),
+			NVME_IOCS_COMMON_CDW2_ELBTU_SHIFT,
+			NVME_IOCS_COMMON_CDW2_ELBTU_MASK);
+		break;
+	case NVME_NVM_PIF_64B_GUARD:
+		cdw14 = NVME_FIELD_ENCODE(reftag,
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		cdw3 = NVME_FIELD_ENCODE((reftag >> 32) & 0xffff,
+				NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+				NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		cdw14 |= NVME_FIELD_ENCODE(storage_tag << (48 - sts),
+				NVME_IOCS_COMMON_CDW14_ELBTL_SHIFT,
+				NVME_IOCS_COMMON_CDW14_ELBTL_MASK);
+		if (sts >= 16)
+			cdw3 |= NVME_FIELD_ENCODE(
+					(storage_tag >> (sts - 16)) & 0xffff,
+					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		else
+			cdw3 |= NVME_FIELD_ENCODE(
+					(storage_tag << (16 - sts)) & 0xffff,
+					NVME_IOCS_COMMON_CDW3_ELBTU_SHIFT,
+					NVME_IOCS_COMMON_CDW3_ELBTU_MASK);
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	cmd->cdw2 = cdw2;
+	cmd->cdw3 = cdw3;
+	cmd->cdw14 = cdw14;
+
+	return 0;
+}
+
+
 
 /**
  * libnvme_get_log() - Get log page data
