@@ -323,7 +323,7 @@ enum nvme_cmd_dword_fields {
  */
 
 /**
- * nvme_init_get_log_lpo() - Initializes passthru command with a
+ * nvme_init_get_log_lpo() - Initialize passthru command with a
  * Log Page Offset
  * @cmd:	Passthru command
  * @lpo:	Log Page Offset to set
@@ -378,7 +378,7 @@ nvme_init_get_log(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 }
 
 /**
- * nvme_init_get_log_supported_log_pages() -  Initialize passthru command for
+ * nvme_init_get_log_supported_log_pages() - Initialize passthru command for
  * Supported Log Pages
  * @cmd:	Passthru command to use
  * @csi:	Command set identifier, see &enum nvme_csi for known values
@@ -4542,7 +4542,7 @@ nvme_init_write_zeros(struct libnvme_passthru_cmd *cmd,
 
 /**
  * nvme_init_dsm() - Initialize passthru command for
- * NVMEe I/O Data Set Management
+ * NVMe I/O Data Set Management
  * @cmd:	Passthru command to use
  * @nsid:	Namespace identifier
  * @nr:		Number of block ranges in the data set management attributes
