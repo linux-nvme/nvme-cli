@@ -419,6 +419,22 @@ int libnvmf_context_set_reconnect_policy(struct libnvmf_context *fctx,
 		int ctrl_loss_tmo, int reconnect_delay, int fast_io_fail_tmo);
 
 /**
+ * libnvmf_context_set_owner() - Set the registry owner name for this process
+ * @ctx:	Global context object
+ * @owner:	Owner name string (e.g. "stas", "nbft", "discoverd")
+ *
+ * Sets the owner name stored in @ctx.  When non-NULL, libnvme automatically
+ * calls libnvmf_registry_create() after every successful fabrics connect,
+ * registering the new controller under this owner name.  Call once at
+ * orchestrator startup before any connect operations.
+ *
+ * Passing NULL clears the owner; subsequent connects will not write registry
+ * entries.
+ */
+void libnvmf_context_set_owner(struct libnvme_global_ctx *ctx, const char *owner);
+
+
+/**
  * libnvmf_discovery() - Perform fabrics discovery
  * @ctx: Global context
  * @fctx: Fabrics context

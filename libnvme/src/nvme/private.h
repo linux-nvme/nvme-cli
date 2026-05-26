@@ -435,6 +435,7 @@ struct libnvme_global_ctx { // !generate-python:alias=GlobalCtx
 #ifdef CONFIG_FABRICS
 	struct libnvme_fabric_options *options;
 	struct ifaddrs *ifaddrs_cache; /* init with libnvmf_getifaddrs() */
+	char *owner; /* registry owner name; NULL means unowned */
 #endif
 
 	enum libnvme_io_uring_state uring_state;

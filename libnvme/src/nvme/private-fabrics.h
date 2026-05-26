@@ -214,3 +214,17 @@ size_t libnvmf_get_entity_name(char *buffer, size_t bufsz);
  * Return: Number of characters copied to @buffer.
  */
 size_t libnvmf_get_entity_version(char *buffer, size_t bufsz);
+
+/**
+ * libnvmf_registry_create - Write a registry entry for a newly connected
+ *	controller.
+ * @instance: Kernel device instance number (e.g. 3 for nvme3)
+ * @owner:    Owner name string (e.g. "stas", "nbft", "discoverd")
+ *
+ * Internal; called from __nvmf_add_ctrl() once the kernel returns instance=N.
+ * Always overwrites any pre-existing entry: a recycled instance number means
+ * the old controller is gone.
+ *
+ * Return: 0 on success, negative errno otherwise.
+ */
+int libnvmf_registry_create(int instance, const char *owner);

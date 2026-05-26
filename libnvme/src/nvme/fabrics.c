@@ -376,6 +376,15 @@ __libnvme_public int libnvmf_context_set_reconnect_policy(
 	return 0;
 }
 
+__libnvme_public void libnvmf_context_set_owner(struct libnvme_global_ctx *ctx,
+					    const char *owner)
+{
+	if (!ctx)
+		return;
+	free(ctx->owner);
+	ctx->owner = owner ? strdup(owner) : NULL;
+}
+
 /*
  * Derived from Linux's supported options (the opt_tokens table)
  * when the mechanism to report supported options was added (f18ee3d988157).

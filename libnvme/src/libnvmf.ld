@@ -35,7 +35,12 @@ LIBNVMF_3 {
 		libnvmf_prtype_str;
 		libnvmf_qptype_str;
 		libnvmf_read_nbft;
+		libnvmf_context_set_owner;
 		libnvmf_register_ctrl;
+		libnvmf_registry_delete;
+		libnvmf_registry_for_each;
+		libnvmf_registry_retrieve;
+		libnvmf_registry_update;
 		libnvmf_sectype_str;
 		libnvmf_subtype_str;
 		libnvmf_treq_str;

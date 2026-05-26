@@ -9,6 +9,7 @@
 #include <errno.h>
 
 #include <libnvme.h>
+#include "compiler-attributes.h"
 
 int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file)
 {
@@ -24,3 +25,35 @@ int json_dump_tree(struct libnvme_global_ctx *ctx)
 {
 	return -ENOTSUP;
 }
+
+#ifdef CONFIG_FABRICS
+int libnvmf_registry_create(int instance, const char *owner)
+{
+	return 0;
+}
+
+__libnvme_public int libnvmf_registry_retrieve(const char *device,
+					       const char *key, char **value)
+{
+	return -ENOTSUP;
+}
+
+__libnvme_public int libnvmf_registry_update(const char *device,
+					     const char *key, const char *value)
+{
+	return -ENOTSUP;
+}
+
+__libnvme_public int libnvmf_registry_delete(const char *device)
+{
+	return -ENOTSUP;
+}
+
+__libnvme_public int libnvmf_registry_for_each(
+		void (*cback)(const char *device, const char *owner,
+			      void *user_data),
+		void *user_data)
+{
+	return 0;
+}
+#endif

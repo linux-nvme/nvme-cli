@@ -71,6 +71,7 @@ if want_fabrics
         'nvme/fabrics.h',
         'nvme/nvme-types-nbft.h',
         'nvme/nbft.h',
+        'nvme/registry.h',
     ]
 else
     sources += [
@@ -100,7 +101,10 @@ else
 endif
 
 if json_c_dep.found() and want_fabrics
-    sources += 'nvme/json.c'
+    sources += [
+        'nvme/json.c',
+        'nvme/registry.c',
+    ]
 else
     sources += 'nvme/no-json.c'
 endif
@@ -139,7 +143,7 @@ if want_fabrics
         '-Wl,--version-script=@0@'.format(nvmf_accessors_ld),
     ]
     libconf.set('FABRICS_INCLUDE',
-                '#include <nvme/fabrics.h>\n#include <nvme/nbft.h>\n#include <nvme/accessors-fabrics.h>')
+                '#include <nvme/fabrics.h>\n#include <nvme/nbft.h>\n#include <nvme/accessors-fabrics.h>\n#include <nvme/registry.h>')
 else
     libconf.set('FABRICS_INCLUDE', '')
 endif
