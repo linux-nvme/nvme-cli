@@ -15,7 +15,7 @@
 #include <stdint.h>
 
 #include <nvme/types.h>
-#include <nvme/nvme-types.h>
+#include <nvme/nvme-types-base.h>
 
 /**
  * DOC: nvme-types-fabrics.h

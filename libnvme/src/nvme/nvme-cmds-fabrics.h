@@ -18,7 +18,7 @@
 
 #include <nvme/ioctl.h>
 #include <nvme/nvme-cmds-base.h>
-#include <nvme/nvme-types.h>
+#include <nvme/nvme-types-fabrics.h>
 
 /**
  * nvme_init_get_log_discovery() - Initialize passthru command for Discovery

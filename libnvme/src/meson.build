@@ -43,6 +43,7 @@ headers = [
     'nvme/nvme-cmds-nvm.h',
     'nvme/nvme-cmds-zns.h',
     'nvme/nvme-cmds.h',
+    'nvme/nvme-types-base.h',
     'nvme/nvme-types-fabrics.h',
     'nvme/nvme-types-mi.h',
     'nvme/nvme-types-nvm.h',
