@@ -21,6 +21,7 @@
 
 #include <nvme/endian.h>
 #include <nvme/ioctl.h>
+#include <nvme/nvme-types-nvm.h>
 #include <nvme/nvme-types.h>
 
 #ifndef NVME_FIELD_ENCODE
