@@ -259,6 +259,7 @@ foreach hdr : [
     'nvme-cmds-nvm',
     'nvme-cmds-zns',
     'nvme-types',
+    'nvme-types-base',
     'nvme-types-fabrics',
     'nvme-types-mi',
     'nvme-types-zns',

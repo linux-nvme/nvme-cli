@@ -18,7 +18,7 @@
 
 #include <nvme/ioctl.h>
 #include <nvme/nvme-cmds-base.h>
-#include <nvme/nvme-types.h>
+#include <nvme/nvme-types-mi.h>
 
 /**
  * nvme_init_get_log_mi_cmd_supported_effects() - Initialize passthru command
