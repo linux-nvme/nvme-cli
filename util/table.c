@@ -293,13 +293,13 @@ static int table_add_column(struct table *t, struct table_column *c)
 	if (!new_columns)
 		return -ENOMEM;
 
+	t->num_columns++;
 	t->columns = new_columns;
 	t->columns[col].name = strdup(c->name);
 	if (!t->columns[col].name)
 		return -ENOMEM;
 	t->columns[col].align = c->align;
 	t->columns[col].width = strlen(c->name);
-	t->num_columns++;
 
 	return 0;
 }
@@ -309,7 +309,7 @@ int table_add_columns_filter(struct table *t, struct table_column *c,
 			bool (*filter)(const char *name, void *arg),
 			void *arg)
 {
-	int col;
+	int ret = 0, col;
 
 	if (!filter)
 		return table_add_columns(t, c, num_columns);
@@ -318,12 +318,19 @@ int table_add_columns_filter(struct table *t, struct table_column *c,
 		if (!filter(c[col].name, arg))
 			continue;	/* skip this column */
 
-		if (table_add_column(t, &c[col]))
-			goto out;
+		ret = table_add_column(t, &c[col]);
+		if (ret < 0)
+			goto free_col;
 	}
-	return 0;
-out:
-	return -ENOMEM;
+
+	return ret;
+
+free_col:
+	while (t->num_columns > 0)
+		free(t->columns[--t->num_columns].name);
+	free(t->columns);
+	t->columns = NULL;
+	return ret;
 }
 
 int table_add_columns(struct table *t, struct table_column *c, int num_columns)
