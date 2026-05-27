@@ -18,6 +18,7 @@
 
 #include <nvme/ioctl.h>
 #include <nvme/nvme-cmds-base.h>
+#include <nvme/nvme-types-zns.h>
 
 /**
  * nvme_init_get_log_zns_changed_zones() - Initialize passthru command for

@@ -260,6 +260,7 @@ foreach hdr : [
     'nvme-cmds-zns',
     'nvme-types',
     'nvme-types-fabrics',
+    'nvme-types-zns',
     'tree',
     'util',
 ]
