@@ -16,8 +16,8 @@ if host_system == 'windows'
     ]
 else
     util_sources += [
-        'util/dashboard.c',
         'util/sighdl-linux.c',
+        'util/dashboard.c',
     ]
 endif
 

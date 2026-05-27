@@ -16,22 +16,6 @@ sources = [
     'nvme/tree.c',
     'nvme/util.c',
 ]
-headers = [
-    'nvme/accessors.h',
-    'nvme/endian.h',
-    'nvme/filters.h',
-    'nvme/ioctl.h',
-    'nvme/lib-types.h',
-    'nvme/lib.h',
-    'nvme/linux.h',
-    'nvme/mem.h',
-    'nvme/nvme-cmds.h',
-    'nvme/nvme-types.h',
-    'nvme/tree.h',
-    'nvme/types.h',
-    'nvme/util.h',
-]
-
 if host_system == 'windows'
     sources += [
         'nvme/filters-win.c',
@@ -50,6 +34,21 @@ else
         'nvme/sysfs.c',
     ]
 endif
+headers = [
+    'nvme/accessors.h',
+    'nvme/endian.h',
+    'nvme/filters.h',
+    'nvme/ioctl.h',
+    'nvme/lib-types.h',
+    'nvme/lib.h',
+    'nvme/linux.h',
+    'nvme/mem.h',
+    'nvme/nvme-cmds.h',
+    'nvme/nvme-types.h',
+    'nvme/tree.h',
+    'nvme/types.h',
+    'nvme/util.h',
+]
 
 if want_fabrics
     sources += [
