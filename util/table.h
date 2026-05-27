@@ -4,6 +4,9 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <limits.h>
+
+#define AUTO_WIDTH	INT_MAX
 
 enum fmt_type {
 	FMT_STRING,
@@ -40,9 +43,21 @@ struct table_row {
 };
 
 struct table_column {
-	char *name;
-	enum alignment align;
-	int width;		/* auto populated */
+	char *name;		/* column name */
+	enum alignment align;	/* column value alignment */
+
+	/*
+	 * The table supports both fixed and auto column width. Auto width could
+	 * be specified by setting @width to AUTO_WIDTH. Fixed width must be at-
+	 * least strlen(@name) or more.
+	 */
+	int width;
+	/*
+	 * Controls whether to auto adjust column width or not.
+	 * NOTE: This field is internally used by table APIs and it should not
+	 * be used by the users of table APIs.
+	 */
+	bool auto_adjust;
 };
 
 struct table {
