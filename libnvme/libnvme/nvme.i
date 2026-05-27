@@ -1375,3 +1375,4 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 %rename($ignore, %$isvariable) "";  // ignore all variables
 
 %include "../src/nvme/nvme-types.h"
+%include "../src/nvme/nvme-types-fabrics.h"
