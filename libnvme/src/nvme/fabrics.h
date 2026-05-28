@@ -371,6 +371,54 @@ int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
  */
 int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
 
+/**
+ * libnvmf_context_set_io_queues() - Set I/O queue topology for context
+ * @fctx: Fabrics context
+ * @nr_io_queues: Number of I/O queues
+ * @nr_write_queues: Number of write-only queues
+ * @nr_poll_queues: Number of polling queues
+ * @queue_size: Number of entries per I/O queue (SQSIZE in Connect command)
+ * @disable_sqflow: Disable SQ flow control negotiation
+ *
+ * Convenience setter for the five parameters that together define the I/O
+ * queue structure used when establishing a controller connection. All five
+ * feed directly into the Connect command at queue creation time.
+ * @nr_write_queues and @nr_poll_queues are additive: total I/O queues is
+ * @nr_io_queues + @nr_write_queues + @nr_poll_queues.
+ *
+ * Individual libnvmf_context_set_nr_io_queues(), _set_nr_write_queues(),
+ * _set_nr_poll_queues(), _set_queue_size(), and _set_disable_sqflow()
+ * accessors are also available when only a subset needs to change.
+ *
+ * Return: 0
+ */
+int libnvmf_context_set_io_queues(struct libnvmf_context *fctx,
+		int nr_io_queues, int nr_write_queues, int nr_poll_queues,
+		int queue_size, bool disable_sqflow);
+
+/**
+ * libnvmf_context_set_reconnect_policy() - Set reconnect policy for context
+ * @fctx: Fabrics context
+ * @ctrl_loss_tmo: Controller loss timeout in seconds; negative means retry
+ *                 indefinitely
+ * @reconnect_delay: Delay between reconnect attempts in seconds
+ * @fast_io_fail_tmo: Fast I/O fail timeout in seconds; negative disables it;
+ *                    must not exceed @ctrl_loss_tmo
+ *
+ * Convenience setter for the three coupled reconnect policy parameters.
+ * @ctrl_loss_tmo and @reconnect_delay are coupled: the kernel derives the
+ * maximum reconnect attempt count from their ratio. @fast_io_fail_tmo
+ * controls how quickly outstanding I/O is failed while reconnection is in
+ * progress.
+ *
+ * Individual libnvmf_context_set_ctrl_loss_tmo(), _set_reconnect_delay(),
+ * and _set_fast_io_fail_tmo() accessors are also available when only a
+ * subset needs to change.
+ *
+ * Return: 0
+ */
+int libnvmf_context_set_reconnect_policy(struct libnvmf_context *fctx,
+		int ctrl_loss_tmo, int reconnect_delay, int fast_io_fail_tmo);
 
 
 /**

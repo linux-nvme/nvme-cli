@@ -351,7 +351,30 @@ __libnvme_public int libnvmf_context_set_device(
 	return 0;
 }
 
+__libnvme_public int libnvmf_context_set_io_queues(
+		struct libnvmf_context *fctx, int nr_io_queues,
+		int nr_write_queues, int nr_poll_queues,
+		int queue_size, bool disable_sqflow)
+{
+	fctx->ctrl_params.cfg.nr_io_queues = nr_io_queues;
+	fctx->ctrl_params.cfg.nr_write_queues = nr_write_queues;
+	fctx->ctrl_params.cfg.nr_poll_queues = nr_poll_queues;
+	fctx->ctrl_params.cfg.queue_size = queue_size;
+	fctx->ctrl_params.cfg.disable_sqflow = disable_sqflow;
 
+	return 0;
+}
+
+__libnvme_public int libnvmf_context_set_reconnect_policy(
+		struct libnvmf_context *fctx, int ctrl_loss_tmo,
+		int reconnect_delay, int fast_io_fail_tmo)
+{
+	fctx->ctrl_params.cfg.ctrl_loss_tmo = ctrl_loss_tmo;
+	fctx->ctrl_params.cfg.reconnect_delay = reconnect_delay;
+	fctx->ctrl_params.cfg.fast_io_fail_tmo = fast_io_fail_tmo;
+
+	return 0;
+}
 
 /*
  * Derived from Linux's supported options (the opt_tokens table)

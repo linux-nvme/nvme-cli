@@ -300,20 +300,18 @@ static void hook_parser_cleanup(struct libnvmf_context *fctx, void *user_data)
 static int set_fabrics_options(struct libnvmf_context *fctx,
 		struct nvmf_args *fa)
 {
-	libnvmf_context_set_nr_io_queues(fctx, fa->nr_io_queues);
-	libnvmf_context_set_reconnect_delay(fctx, fa->reconnect_delay);
-	libnvmf_context_set_ctrl_loss_tmo(fctx, fa->ctrl_loss_tmo);
-	libnvmf_context_set_fast_io_fail_tmo(fctx, fa->fast_io_fail_tmo);
+	libnvmf_context_set_io_queues(fctx, fa->nr_io_queues,
+			fa->nr_write_queues, fa->nr_poll_queues,
+			fa->queue_size, fa->disable_sqflow);
+	libnvmf_context_set_reconnect_policy(fctx, fa->ctrl_loss_tmo,
+			fa->reconnect_delay, fa->fast_io_fail_tmo);
 	libnvmf_context_set_keep_alive_tmo(fctx, fa->keep_alive_tmo);
-	libnvmf_context_set_nr_write_queues(fctx, fa->nr_write_queues);
-	libnvmf_context_set_nr_poll_queues(fctx, fa->nr_poll_queues);
 	libnvmf_context_set_tos(fctx, fa->tos);
 	libnvmf_context_set_keyring_id(fctx, fa->keyring_id);
 	libnvmf_context_set_tls_key_id(fctx, fa->tls_key_id);
 	libnvmf_context_set_tls_configured_key_id(fctx,
 			fa->tls_configured_key_id);
 	libnvmf_context_set_duplicate_connect(fctx, fa->duplicate_connect);
-	libnvmf_context_set_disable_sqflow(fctx, fa->disable_sqflow);
 	libnvmf_context_set_hdr_digest(fctx, fa->hdr_digest);
 	libnvmf_context_set_data_digest(fctx, fa->data_digest);
 	libnvmf_context_set_tls(fctx, fa->tls);

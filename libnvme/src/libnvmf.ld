@@ -16,6 +16,8 @@ LIBNVMF_3 {
 		libnvmf_context_set_device;
 		libnvmf_context_set_discovery_hooks;
 		libnvmf_context_set_hostnqn;
+		libnvmf_context_set_io_queues;
+		libnvmf_context_set_reconnect_policy;
 		libnvmf_create_ctrl;
 		libnvmf_disconnect_ctrl;
 		libnvmf_discovery;
