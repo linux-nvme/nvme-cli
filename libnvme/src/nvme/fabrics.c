@@ -262,23 +262,7 @@ __libnvme_public int libnvmf_context_set_discovery_hooks(
 	return 0;
 }
 
-__libnvme_public int libnvmf_context_set_discovery_defaults(
-		struct libnvmf_context *fctx, int max_discovery_retries,
-		int keep_alive_timeout)
-{
-	fctx->default_max_discovery_retries = max_discovery_retries;
-	fctx->default_keep_alive_timeout = keep_alive_timeout;
 
-	return 0;
-}
-
-__libnvme_public int libnvmf_context_set_fabrics_config(
-		struct libnvmf_context *fctx,
-		struct libnvme_fabrics_config *cfg)
-{
-	libnvme_fabrics_config_copy(&fctx->ctrl_params.cfg, cfg);
-	return 0;
-}
 
 __libnvme_public int libnvmf_context_set_connection(
 		struct libnvmf_context *fctx, const char *subsysnqn,
@@ -359,14 +343,6 @@ __libnvme_public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 	return 0;
 }
 
-__libnvme_public int libnvmf_context_set_persistent(
-		struct libnvmf_context *fctx, bool persistent)
-{
-	fctx->persistent = persistent;
-
-	return 0;
-}
-
 __libnvme_public int libnvmf_context_set_device(
 		struct libnvmf_context *fctx, const char *device)
 {
@@ -375,11 +351,6 @@ __libnvme_public int libnvmf_context_set_device(
 	return 0;
 }
 
-__libnvme_public struct libnvme_fabrics_config *libnvmf_context_get_fabrics_config(
-		struct libnvmf_context *fctx)
-{
-	return &fctx->ctrl_params.cfg;
-}
 
 __libnvme_public struct libnvme_fabrics_config *libnvmf_ctrl_get_fabrics_config(
 		libnvme_ctrl_t c)

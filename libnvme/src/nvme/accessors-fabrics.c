@@ -329,6 +329,13 @@ __libnvme_public const char *libnvmf_context_get_device(
 	return p->device;
 }
 
+__libnvme_public void libnvmf_context_set_persistent(
+		struct libnvmf_context *p,
+		bool persistent)
+{
+	p->persistent = persistent;
+}
+
 __libnvme_public bool libnvmf_context_get_persistent(
 		const struct libnvmf_context *p)
 {

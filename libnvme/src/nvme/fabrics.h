@@ -308,18 +308,6 @@ int libnvmf_context_set_discovery_hooks(struct libnvmf_context *fctx,
 		int (*parser_next_line)(struct libnvmf_context *fctx,
 			void *user_data));
 
-/**
- * libnvmf_context_set_discovery_defaults() - Set default discovery parameters
- * @fctx: Fabrics context
- * @max_discovery_retries: Maximum number of discovery retries
- * @keep_alive_timeout: Keep-alive timeout in seconds
- *
- * Sets default values for discovery retries and keep-alive timeout.
- *
- * Return: 0 on success, or a negative error code on failure.
- */
-int libnvmf_context_set_discovery_defaults(struct libnvmf_context *fctx,
-		int max_discovery_retries, int keep_alive_timeout);
 
 /**
  * libnvmf_context_set_connection() - Set connection parameters for context
@@ -371,17 +359,6 @@ int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		const char *keyring, const char *tls_key,
 		const char *tls_key_identity);
 
-/**
- * libnvmf_context_set_persistent() - Set persistence for context
- * @fctx: Fabrics context
- * @persistent: Whether to enable persistent connections
- *
- * Sets whether the context should use persistent connections.
- *
- * Return: 0 on success, or a negative error code on failure.
- */
-
-int libnvmf_context_set_persistent(struct libnvmf_context *fctx, bool persistent);
 
 /**
  * libnvmf_context_set_device() - Set device for context
@@ -394,28 +371,6 @@ int libnvmf_context_set_persistent(struct libnvmf_context *fctx, bool persistent
  */
 int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
 
-/**
- * libnvmf_context_get_fabrics_config() - Fabrics configuration of a fabrics
- * context
- * @fctx: Fabrics context
- *
- * Return: Fabrics configuration of @fctx
- */
-struct libnvme_fabrics_config *libnvmf_context_get_fabrics_config(
-		struct libnvmf_context *fctx);
-
-/**
- * libnvmf_context_set_fabrics_config() - Set fabrics configuration for a
- * fabrics context
- * @fctx: Fabrics context
- * @cfg:  Fabrics configuration to apply
- *
- * Copies the fields of @cfg into the fabrics configuration of @fctx.
- *
- * Return: 0 on success, or a negative error code on failure.
- */
-int libnvmf_context_set_fabrics_config(struct libnvmf_context *fctx,
-		struct libnvme_fabrics_config *cfg);
 
 /**
  * libnvmf_ctrl_get_fabrics_config() - Fabrics configuration of a controller

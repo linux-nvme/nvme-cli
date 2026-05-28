@@ -59,6 +59,7 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_set_nr_io_queues;
 		libnvmf_context_set_nr_poll_queues;
 		libnvmf_context_set_nr_write_queues;
+		libnvmf_context_set_persistent;
 		libnvmf_context_set_queue_size;
 		libnvmf_context_set_reconnect_delay;
 		libnvmf_context_set_tls;

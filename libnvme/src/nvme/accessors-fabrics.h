@@ -422,6 +422,13 @@ int libnvmf_context_get_default_keep_alive_timeout(
 const char *libnvmf_context_get_device(const struct libnvmf_context *p);
 
 /**
+ * libnvmf_context_set_persistent() - Set persistent.
+ * @p: The &struct libnvmf_context instance to update.
+ * @persistent: Value to assign to the persistent field.
+ */
+void libnvmf_context_set_persistent(struct libnvmf_context *p, bool persistent);
+
+/**
  * libnvmf_context_get_persistent() - Get persistent.
  * @p: The &struct libnvmf_context instance to query.
  *
