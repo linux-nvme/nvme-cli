@@ -37,6 +37,7 @@ python3 generate-accessors.py [options] <header-files>
 | `-l`  | `--ld-out` | `<file>` | Full path of the `*.ld` file to generate. Default: `accessors.ld` |
 | `-s`  | `--swig-out`       | `<file>` | Generated SWIG fragment (`*.i`). Omit to skip.           |
 | `-d`  | `--dict-table-out` | `<file>` | Generated dict-table header (`*.h`). Omit to skip.       |
+| `-n`  | `--nested-source`  | `<file> [<file> ...]` | Headers scanned for `// !nested-accessors` structs only; no accessor output is generated from them. Used when a nested struct is defined in a different header than the struct that embeds it. |
 | `-p`  | `--prefix` | `<str>`  | Prefix prepended to every generated function name        |
 | `-v`  | `--verbose`| none     | Verbose output showing which structs are being processed |
 | `-H`  | `--help`   | none     | Show this help message                                   |
@@ -145,6 +146,47 @@ struct libnvme_ctrl { // !generate-accessors:read=generated,write=none
 ### The `const` qualifier
 
 A `const`-qualified member forces `write=none` regardless of what the annotation (or inherited default) says — the generator cannot emit a setter for a member that the C type system forbids from being assigned. `const char *` members are also **never** freed by the destructor; they are assumed to point to externally owned storage.
+
+### Nested struct expansion — `nested-accessors` and `access:nested`
+
+When an opaque struct contains another struct as a member, its fields can be flattened into the parent struct's accessor set using two paired annotations.
+
+**On the nested struct's definition** — `// !nested-accessors`:
+
+```c
+struct libnvme_ctrl_params { // !nested-accessors
+    char *transport;
+    char *traddr;
+    ...
+    struct libnvme_fabrics_config cfg; // !access:nested
+};
+```
+
+Marks the struct as available for nested expansion. It accepts the same `read=M,write=M` metadata as `// !generate-accessors`, setting the default accessor mode for all its members. Individual members may override with `// !access:`. A struct annotated `// !nested-accessors` does **not** itself generate top-level accessor functions.
+
+**On the embedding member** — `// !access:nested`:
+
+```c
+struct libnvmf_context { // !generate-accessors
+    struct libnvme_ctrl_params ctrl_params; // !access:nested
+    ...
+};
+```
+
+Tells the generator to recurse into `libnvme_ctrl_params` and emit flat accessors on `libnvmf_context` for each of its fields. The generated functions use a dotted field path internally (e.g. `p->ctrl_params.traddr`) but are named after the outer struct (e.g. `libnvmf_context_get_traddr()`).
+
+Nesting is resolved to **arbitrary depth** — if `libnvme_ctrl_params` itself contains a nested struct member also annotated `// !access:nested`, that struct is expanded in turn, provided it too carries `// !nested-accessors`.
+
+**Two-pass resolution**: the generator first scans all input headers (including `--nested-source` headers) to collect every `// !nested-accessors` struct into an internal map. It then processes `// !generate-accessors` structs, resolving `// !access:nested` references against that map. This ensures cross-file references always resolve correctly regardless of header ordering.
+
+**Validation**:
+- If `// !access:nested` references a struct type that is not annotated `// !nested-accessors` → **error** (exit non-zero).
+- If a struct annotated `// !nested-accessors` is never referenced by any `// !access:nested` → **warning** (printed to stderr, generation continues).
+- If a cycle is detected in the nesting chain → **error**.
+
+**SWIG**: nested struct expansion is not reflected in the SWIG fragment. The fabrics accessor run does not pass `--swig-out`, so this is not a current concern.
+
+**Lifecycle**: `// !access:nested` members are not included in generated destructors. Hand-written destructors must free nested struct fields explicitly.
 
 ### Struct lifecycle — `generate-lifecycle`
 
@@ -300,12 +342,15 @@ This annotation has no effect on accessor generation. It is independent of `!acc
 | `// !generate-accessors`                               | struct brace | Include struct; defaults: `read=generated, write=generated`                             |
 | `// !generate-accessors:read=M,write=M`                | struct brace | Include struct; set struct-level default for each axis                                  |
 | `// !generate-accessors:read=M`                        | struct brace | Partial metadata; other axis inherits the built-in default (`generated`)                |
+| `// !nested-accessors`                                 | struct brace | Mark struct as available for nested expansion into a parent via `// !access:nested`; defaults: `read=generated, write=generated` |
+| `// !nested-accessors:read=M,write=M`                  | struct brace | Same; set struct-level defaults for expanded members                                    |
 | `// !generate-lifecycle`                               | struct brace | Generate constructor + destructor (no metadata)                                         |
 | `// !generate-python`                                  | struct brace | Include struct in the SWIG fragment output file (no metadata)                           |
 | `// !generate-python:alias=NAME`                       | struct brace | Same, and rename the struct to NAME in Python                                           |
 | `// !generate-dict-table`                              | struct brace | Include struct in the dict-table output file (no metadata)                              |
 | `// !access:read=M,write=M`                            | member line  | Override struct-level defaults for this member                                          |
 | `// !access:read=M`                                    | member line  | Partial metadata; other axis is inherited from the struct-level default                 |
+| `// !access:nested`                                    | member line  | Flatten this nested struct member's fields into the parent struct's accessor set; the nested struct type must be annotated `// !nested-accessors` |
 | `// !lifecycle:none`                                   | member line  | Exclude member from destructor free logic                                               |
 | `// !default:VALUE`                                    | member line  | Set field to VALUE in `init_defaults()`                                                 |
 | `// !python:none`                                      | member line  | Exclude member from SWIG fragment; C accessors unaffected                               |
@@ -593,5 +638,5 @@ LIBNVMF_ACCESSORS_3 {
 ## Limitations
 
 - `typedef struct` is not supported.
-- Nested structs (a `struct` member whose type is also a `struct`) are skipped.
+- Nested struct members annotated `// !access:nested` are not included in generated destructors (`// !generate-lifecycle`). Hand-written destructors must free them explicitly.
 - Only `char *` and `char **` pointer members are supported; other pointer types are skipped.

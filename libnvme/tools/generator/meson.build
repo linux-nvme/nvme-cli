@@ -48,6 +48,7 @@ _tgt_common = run_target(
         '--swig-out', libnvme_swig_dir / 'accessors.i',
         '--dict-table-out', libnvme_swig_dir / 'fctx_field_tables.h',
         libnvme_src_nvme / 'private.h',
+        '--nested-source', libnvme_src_nvme / 'private-fabrics.h',
     ],
 )
 
@@ -63,6 +64,7 @@ _tgt_fabrics = run_target(
     ] + _check_flag + [
         '--swig-out', libnvme_swig_dir / 'accessors-fabrics.i',
         libnvme_src_nvme / 'private-fabrics.h',
+        '--nested-source', libnvme_src_nvme / 'private.h',
     ],
 )
 
