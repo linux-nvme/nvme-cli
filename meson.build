@@ -689,6 +689,28 @@ if want_nvme
     subdir('Documentation')
 endif
 
+if host_system != 'windows'
+    valgrind_cmd = [
+        'valgrind',
+        '--leak-check=full',
+        '--error-exitcode=1',
+        '--suppressions=' + meson.current_source_dir() / 'valgrind.supp',
+    ]
+    python3_supp = '/usr/lib/valgrind/python3.supp'
+    if fs.is_file(python3_supp)
+        valgrind_cmd += ['--suppressions=' + python3_supp]
+    endif
+
+    add_test_setup('valgrind',
+        exe_wrapper: valgrind_cmd,
+        timeout_multiplier: 5,
+    )
+
+    add_test_setup('asanubsan',
+        timeout_multiplier: 2,
+    )
+endif
+
 if doc_tgts.length() == 0
     doc_tgts += custom_target(
         'docs-dummy',

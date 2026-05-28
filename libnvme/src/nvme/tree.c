@@ -622,10 +622,10 @@ static int libnvme_create_host(struct libnvme_global_ctx *ctx,
 		return -ENOMEM;
 
 	h->hostnqn = strdup(hostnqn);
-	if (!hostid)
-		hostid = nvme_hostid_from_hostnqn(hostnqn);
 	if (hostid)
 		h->hostid = strdup(hostid);
+	else
+		h->hostid = nvme_hostid_from_hostnqn(hostnqn);
 	list_head_init(&h->subsystems);
 	list_node_init(&h->entry);
 	h->ctx = ctx;

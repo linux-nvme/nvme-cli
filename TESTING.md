@@ -131,3 +131,60 @@ Example: Cross-build for `s390x`:
 ```
 
 The exact supported targets depend on the toolchains installed in the container.
+
+## Memory Testing
+
+### Valgrind
+
+A named Valgrind test setup is registered in `meson.build`. It runs all unit
+tests under `valgrind --leak-check=full` and treats any leak as a test failure.
+
+Prerequisites: Valgrind must be installed (`apt install valgrind` or equivalent).
+
+Build and run:
+
+```bash
+meson setup .build
+meson compile -C .build
+meson test -C .build --setup valgrind
+```
+
+A dedicated log is written to `.build/meson-logs/testlog-valgrind.txt`.
+
+A suppression file (`valgrind.supp`) is bundled in the repository and loaded
+automatically. It covers three categories of known false positives:
+
+- **Shell script tests**: Valgrind wraps the shell interpreter, not the C
+  binary under test. Bash's internal allocations are suppressed.
+- **CPython internals**: Import machinery, marshal, and tokenizer code in the
+  Python interpreter generate reports that are not leaks in our code.
+- **SWIG module teardown**: SWIG allocates a varlink object during module
+  initialisation that CPython never releases at shutdown.
+
+If the system provides `/usr/lib/valgrind/python3.supp` it is also loaded
+automatically at configure time.
+
+Any remaining failures after suppression are real issues in our C code.
+
+### AddressSanitizer / UndefinedBehaviourSanitizer (ASan / UBSan)
+
+ASan and UBSan are compiled into the binaries, so they each require a separate
+build directory. They detect different classes of bugs:
+
+- **ASan** (`address`): heap overflows, use-after-free, memory leaks.
+- **UBSan** (`undefined`): signed integer overflow, misaligned pointer access,
+  null dereference, out-of-bounds indexing, and other C undefined behaviour.
+
+Build and run:
+
+```bash
+meson setup .build-asanubsan -Db_sanitize=address,undefined
+meson compile -C .build-asanubsan
+meson test -C .build-asanubsan --setup asanubsan
+```
+
+No wrapper binary is needed — sanitizer reports are emitted directly to stderr
+when a violation is detected.
+
+The same known limitations apply as for Valgrind: Python tests and shell script
+tests may produce false positives. Focus triage on the `nvme-cli - *` unit tests.
