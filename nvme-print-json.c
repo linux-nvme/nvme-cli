@@ -1890,7 +1890,7 @@ void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 {
 	__u32 progress = 0;
 	__u16 vsedl;
-	uint i;
+	__u32 i;
 	struct nvme_vs_event_desc *vs_desc;
 	struct json_object *vs_events = json_create_array();
 

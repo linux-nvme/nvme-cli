@@ -145,7 +145,14 @@ conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
 
 if host_system == 'windows'
     kernel32_dep = cc.find_library('kernel32', required: true)
+    bcrypt_dep = cc.find_library('bcrypt', required: true)
 endif
+
+conf.set10(
+    'HAVE_BCRYPT',
+    cc.find_library('bcrypt', required: false).found(),
+    description: 'Is bcrypt availabe'
+)
 
 # Check for libjson-c availability
 if not want_json_c
@@ -482,6 +489,15 @@ endif
 libtype = get_option('default_library')
 if libtype == 'static'
     requires = ''
+endif
+
+if host_system == 'windows'
+    add_project_arguments(
+        [
+            '-DNOMINMAX',   # don't include Windows min/max definitions
+        ],
+        language : 'c',
+    )
 endif
 
 substs = configuration_data()

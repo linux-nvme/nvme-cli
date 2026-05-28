@@ -6,10 +6,12 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 sources = [
+    'nvme/ioctl.c',
     'nvme/log.c',
 ]
 if host_system == 'windows'
     sources += [
+        'nvme/ioctl-win.c',
         'nvme/mem-win.c',
     ]
 else
@@ -18,7 +20,7 @@ else
         'nvme/base64.c',
         'nvme/crc32.c',
         'nvme/filters.c',
-        'nvme/ioctl.c',
+        'nvme/ioctl-linux.c',
         'nvme/lib.c',
         'nvme/linux.c',
         'nvme/mem-linux.c',
@@ -37,7 +39,17 @@ headers = [
     'nvme/lib.h',
     'nvme/linux.h',
     'nvme/mem.h',
+    'nvme/nvme-cmds-base.h',
+    'nvme/nvme-cmds-fabrics.h',
+    'nvme/nvme-cmds-mi.h',
+    'nvme/nvme-cmds-nvm.h',
+    'nvme/nvme-cmds-zns.h',
     'nvme/nvme-cmds.h',
+    'nvme/nvme-types-base.h',
+    'nvme/nvme-types-fabrics.h',
+    'nvme/nvme-types-mi.h',
+    'nvme/nvme-types-nvm.h',
+    'nvme/nvme-types-zns.h',
     'nvme/nvme-types.h',
     'nvme/tree.h',
     'nvme/types.h',

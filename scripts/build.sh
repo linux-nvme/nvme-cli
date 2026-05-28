@@ -36,6 +36,7 @@ usage() {
     echo "  rst_docs            build rst documentation only"
     echo "  static              build a static binary"
     echo "  minimal_static      build a static binary without fabrics support"
+    echo "  nofabrics           build without fabrics support, run unit tests"
     echo "  libnvme             build only libnvme"
     echo "  tests               build for nightly build"
     echo ""
@@ -234,6 +235,20 @@ config_meson_minimal_static() {
         -Djson-c=disabled                       \
         -Dtests=false                           \
         -Dexamples=false                        \
+        "${BUILDDIR}"
+}
+
+config_meson_nofabrics() {
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        -Dfabrics=disabled                      \
+        -Dmi=disabled                           \
+        -Dpython=disabled                       \
+        -Djson-c=disabled                       \
+        -Dlibkmod=disabled                      \
+        -Dopenssl=disabled                      \
+        -Dkeyutils=disabled                     \
         "${BUILDDIR}"
 }
 

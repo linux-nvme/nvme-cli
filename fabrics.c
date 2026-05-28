@@ -196,7 +196,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 static int setup_common_context(struct libnvmf_context *fctx,
 		struct nvmf_args *fa);
 
-struct cb_fabrics_data {
+struct hook_fabrics_data {
 	struct nvmf_args *fa;
 	nvme_print_flags_t flags;
 	bool quiet;
@@ -205,7 +205,7 @@ struct cb_fabrics_data {
 	FILE *f;
 };
 
-static bool cb_decide_retry(struct libnvmf_context *fctx, int err,
+static bool hook_decide_retry(struct libnvmf_context *fctx, int err,
 		void *user_data)
 {
 	if (err == -EAGAIN || (err == -EINTR && !nvme_sigint_received)) {
@@ -216,21 +216,21 @@ static bool cb_decide_retry(struct libnvmf_context *fctx, int err,
 	return false;
 }
 
-static void cb_connected(struct libnvmf_context *fctx,
+static void hook_connected(struct libnvmf_context *fctx,
 		struct libnvme_ctrl *c, void *user_data)
 {
-	struct cb_fabrics_data *cfd = user_data;
+	struct hook_fabrics_data *hfd = user_data;
 
-	if (cfd->quiet)
+	if (hfd->quiet)
 		return;
 
-	if (cfd->flags == NORMAL) {
+	if (hfd->flags == NORMAL) {
 		printf("connecting to device: %s\n", libnvme_ctrl_get_name(c));
 		return;
 	}
 
 #ifdef CONFIG_JSONC
-	if (cfd->flags == JSON) {
+	if (hfd->flags == JSON) {
 		struct json_object *root;
 
 		root = json_create_object();
@@ -245,7 +245,7 @@ static void cb_connected(struct libnvmf_context *fctx,
 #endif
 }
 
-static void cb_already_connected(struct libnvmf_context *fctx,
+static void hook_already_connected(struct libnvmf_context *fctx,
 		struct libnvme_host *host, const char *subsysnqn,
 		const char *transport, const char *traddr,
 		const char *trsvcid, void *user_data)
@@ -258,43 +258,43 @@ static void cb_already_connected(struct libnvmf_context *fctx,
 		transport, traddr, trsvcid);
 }
 
-static void cb_discovery_log(struct libnvmf_context *fctx,
+static void hook_discovery_log(struct libnvmf_context *fctx,
 		bool connect, struct nvmf_discovery_log *log,
 		uint64_t numrec, void *user_data)
 {
-	struct cb_fabrics_data *cfd = user_data;
+	struct hook_fabrics_data *hfd = user_data;
 
-	if (cfd->raw)
-		save_discovery_log(cfd->raw, log);
+	if (hfd->raw)
+		save_discovery_log(hfd->raw, log);
 	else if (!connect)
-		nvme_show_discovery_log(log, numrec, cfd->flags);
+		nvme_show_discovery_log(log, numrec, hfd->flags);
 }
 
-static int cb_parser_init(struct libnvmf_context *dctx, void *user_data)
+static int hook_parser_init(struct libnvmf_context *dctx, void *user_data)
 {
-	struct cb_fabrics_data *cfd = user_data;
+	struct hook_fabrics_data *hfd = user_data;
 
-	cfd->f = fopen(PATH_NVMF_DISC, "r");
-	if (cfd->f == NULL) {
+	hfd->f = fopen(PATH_NVMF_DISC, "r");
+	if (hfd->f == NULL) {
 		fprintf(stderr, "No params given and no %s\n", PATH_NVMF_DISC);
 		return -ENOENT;
 	}
 
-	cfd->argv = calloc(MAX_DISC_ARGS, sizeof(char *));
-	if (!cfd->argv)
+	hfd->argv = calloc(MAX_DISC_ARGS, sizeof(char *));
+	if (!hfd->argv)
 		return -1;
 
-	cfd->argv[0] = "discover";
+	hfd->argv[0] = "discover";
 
 	return 0;
 }
 
-static void cb_parser_cleanup(struct libnvmf_context *fctx, void *user_data)
+static void hook_parser_cleanup(struct libnvmf_context *fctx, void *user_data)
 {
-	struct cb_fabrics_data *cfd = user_data;
+	struct hook_fabrics_data *hfd = user_data;
 
-	free(cfd->argv);
-	fclose(cfd->f);
+	free(hfd->argv);
+	fclose(hfd->f);
 }
 
 static int set_fabrics_options(struct libnvmf_context *fctx,
@@ -327,9 +327,9 @@ static int set_fabrics_options(struct libnvmf_context *fctx,
 	return 0;
 }
 
-static int cb_parser_next_line(struct libnvmf_context *fctx, void *user_data)
+static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 {
-	struct cb_fabrics_data *cfd = user_data;
+	struct hook_fabrics_data *hfd = user_data;
 	struct nvmf_args fa;
 	char *ptr, *p, line[4096];
 	int argc, ret = 0;
@@ -339,9 +339,9 @@ static int cb_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 		  OPT_FLAG("persistent",   'p', &persistent, "persistent discovery connection"),
 		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
 
-	memcpy(&fa, cfd->fa, sizeof(fa));
+	memcpy(&fa, hfd->fa, sizeof(fa));
 next:
-	if (fgets(line, sizeof(line), cfd->f) == NULL)
+	if (fgets(line, sizeof(line), hfd->f) == NULL)
 		return -EOF;
 
 	if (line[0] == '#' || line[0] == '\n')
@@ -350,11 +350,11 @@ next:
 	argc = 1;
 	p = line;
 	while ((ptr = strsep(&p, " =\n")) != NULL)
-		cfd->argv[argc++] = ptr;
-	cfd->argv[argc] = NULL;
+		hfd->argv[argc++] = ptr;
+	hfd->argv[argc] = NULL;
 
 	fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
-	ret = argconfig_parse(argc, cfd->argv, "config", opts);
+	ret = argconfig_parse(argc, hfd->argv, "config", opts);
 	if (ret)
 		goto next;
 	if (!fa.transport && !fa.traddr)
@@ -408,8 +408,8 @@ static int create_common_context(struct libnvme_global_ctx *ctx,
 	struct libnvmf_context *fctx;
 	int err;
 
-	err = libnvmf_context_create(ctx, cb_decide_retry, cb_connected,
-		cb_already_connected, user_data, &fctx);
+	err = libnvmf_context_create(ctx, hook_decide_retry, hook_connected,
+		hook_already_connected, user_data, &fctx);
 	if (err)
 		return err;
 
@@ -458,8 +458,8 @@ static int create_discovery_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		return err;
 
-	err = libnvmf_context_set_discovery_cbs(fctx, cb_discovery_log,
-		cb_parser_init, cb_parser_cleanup, cb_parser_next_line);
+	err = libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log,
+		hook_parser_init, hook_parser_cleanup, hook_parser_next_line);
 	if (err)
 		goto err;
 
@@ -645,7 +645,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 			device += 5;
 	}
 
-	struct cb_fabrics_data dld = {
+	struct hook_fabrics_data dld = {
 		.fa = &fa,
 		.flags = flags,
 		.raw = raw,
@@ -760,12 +760,12 @@ do_connect:
 		return ret;
 	}
 
-	struct cb_fabrics_data cfd = {
+	struct hook_fabrics_data hfd = {
 		.flags = flags,
 		.quiet = dump_config,
 		.raw = raw,
 	};
-	ret = create_common_context(ctx, persistent, &fa, &cfd, &fctx);
+	ret = create_common_context(ctx, persistent, &fa, &hfd, &fctx);
 	if (ret)
 		return ret;
 
