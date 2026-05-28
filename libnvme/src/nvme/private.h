@@ -345,7 +345,7 @@ struct libnvme_ctrl {  // !generate-accessors:read=generated,write=none !generat
 	long command_error_count;	// !access:read=custom
 	long reset_count;		// !access:read=custom
 	long reconnect_count;		// !access:read=custom
-	struct libnvme_fabrics_config cfg;
+	struct libnvme_fabrics_config cfg; // !access:nested:write=none
 };
 
 struct libnvme_subsystem {  // !generate-accessors:read=generated,write=none !generate-python:alias=Subsystem

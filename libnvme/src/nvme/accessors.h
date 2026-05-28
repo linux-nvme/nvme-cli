@@ -535,6 +535,150 @@ void libnvme_ctrl_set_persistent(struct libnvme_ctrl *p, bool persistent);
  */
 bool libnvme_ctrl_get_persistent(const struct libnvme_ctrl *p);
 
+/**
+ * libnvme_ctrl_get_queue_size() - Get queue_size.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the queue_size field.
+ */
+int libnvme_ctrl_get_queue_size(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_nr_io_queues() - Get nr_io_queues.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the nr_io_queues field.
+ */
+int libnvme_ctrl_get_nr_io_queues(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_reconnect_delay() - Get reconnect_delay.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the reconnect_delay field.
+ */
+int libnvme_ctrl_get_reconnect_delay(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_ctrl_loss_tmo() - Get ctrl_loss_tmo.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the ctrl_loss_tmo field.
+ */
+int libnvme_ctrl_get_ctrl_loss_tmo(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_fast_io_fail_tmo() - Get fast_io_fail_tmo.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the fast_io_fail_tmo field.
+ */
+int libnvme_ctrl_get_fast_io_fail_tmo(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_keep_alive_tmo() - Get keep_alive_tmo.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the keep_alive_tmo field.
+ */
+int libnvme_ctrl_get_keep_alive_tmo(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_nr_write_queues() - Get nr_write_queues.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the nr_write_queues field.
+ */
+int libnvme_ctrl_get_nr_write_queues(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_nr_poll_queues() - Get nr_poll_queues.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the nr_poll_queues field.
+ */
+int libnvme_ctrl_get_nr_poll_queues(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_tos() - Get tos.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the tos field.
+ */
+int libnvme_ctrl_get_tos(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_keyring_id() - Get keyring_id.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the keyring_id field.
+ */
+long libnvme_ctrl_get_keyring_id(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_tls_key_id() - Get tls_key_id.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the tls_key_id field.
+ */
+long libnvme_ctrl_get_tls_key_id(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_tls_configured_key_id() - Get tls_configured_key_id.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the tls_configured_key_id field.
+ */
+long libnvme_ctrl_get_tls_configured_key_id(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_duplicate_connect() - Get duplicate_connect.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the duplicate_connect field.
+ */
+bool libnvme_ctrl_get_duplicate_connect(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_disable_sqflow() - Get disable_sqflow.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the disable_sqflow field.
+ */
+bool libnvme_ctrl_get_disable_sqflow(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_hdr_digest() - Get hdr_digest.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the hdr_digest field.
+ */
+bool libnvme_ctrl_get_hdr_digest(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_data_digest() - Get data_digest.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the data_digest field.
+ */
+bool libnvme_ctrl_get_data_digest(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_tls() - Get tls.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the tls field.
+ */
+bool libnvme_ctrl_get_tls(const struct libnvme_ctrl *p);
+
+/**
+ * libnvme_ctrl_get_concat() - Get concat.
+ * @p: The &struct libnvme_ctrl instance to query.
+ *
+ * Return: The value of the concat field.
+ */
+bool libnvme_ctrl_get_concat(const struct libnvme_ctrl *p);
+
 /****************************************************************************
  * Accessors for: struct libnvme_subsystem
  ****************************************************************************/

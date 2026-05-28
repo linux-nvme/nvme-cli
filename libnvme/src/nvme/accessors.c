@@ -418,6 +418,105 @@ __libnvme_public bool libnvme_ctrl_get_persistent(const struct libnvme_ctrl *p)
 	return p->persistent;
 }
 
+__libnvme_public int libnvme_ctrl_get_queue_size(const struct libnvme_ctrl *p)
+{
+	return p->cfg.queue_size;
+}
+
+__libnvme_public int libnvme_ctrl_get_nr_io_queues(const struct libnvme_ctrl *p)
+{
+	return p->cfg.nr_io_queues;
+}
+
+__libnvme_public int libnvme_ctrl_get_reconnect_delay(
+		const struct libnvme_ctrl *p)
+{
+	return p->cfg.reconnect_delay;
+}
+
+__libnvme_public int libnvme_ctrl_get_ctrl_loss_tmo(
+		const struct libnvme_ctrl *p)
+{
+	return p->cfg.ctrl_loss_tmo;
+}
+
+__libnvme_public int libnvme_ctrl_get_fast_io_fail_tmo(
+		const struct libnvme_ctrl *p)
+{
+	return p->cfg.fast_io_fail_tmo;
+}
+
+__libnvme_public int libnvme_ctrl_get_keep_alive_tmo(
+		const struct libnvme_ctrl *p)
+{
+	return p->cfg.keep_alive_tmo;
+}
+
+__libnvme_public int libnvme_ctrl_get_nr_write_queues(
+		const struct libnvme_ctrl *p)
+{
+	return p->cfg.nr_write_queues;
+}
+
+__libnvme_public int libnvme_ctrl_get_nr_poll_queues(
+		const struct libnvme_ctrl *p)
+{
+	return p->cfg.nr_poll_queues;
+}
+
+__libnvme_public int libnvme_ctrl_get_tos(const struct libnvme_ctrl *p)
+{
+	return p->cfg.tos;
+}
+
+__libnvme_public long libnvme_ctrl_get_keyring_id(const struct libnvme_ctrl *p)
+{
+	return p->cfg.keyring_id;
+}
+
+__libnvme_public long libnvme_ctrl_get_tls_key_id(const struct libnvme_ctrl *p)
+{
+	return p->cfg.tls_key_id;
+}
+
+__libnvme_public long libnvme_ctrl_get_tls_configured_key_id(
+		const struct libnvme_ctrl *p)
+{
+	return p->cfg.tls_configured_key_id;
+}
+
+__libnvme_public bool libnvme_ctrl_get_duplicate_connect(
+		const struct libnvme_ctrl *p)
+{
+	return p->cfg.duplicate_connect;
+}
+
+__libnvme_public bool libnvme_ctrl_get_disable_sqflow(
+		const struct libnvme_ctrl *p)
+{
+	return p->cfg.disable_sqflow;
+}
+
+__libnvme_public bool libnvme_ctrl_get_hdr_digest(const struct libnvme_ctrl *p)
+{
+	return p->cfg.hdr_digest;
+}
+
+__libnvme_public bool libnvme_ctrl_get_data_digest(const struct libnvme_ctrl *p)
+{
+	return p->cfg.data_digest;
+}
+
+__libnvme_public bool libnvme_ctrl_get_tls(const struct libnvme_ctrl *p)
+{
+	return p->cfg.tls;
+}
+
+__libnvme_public bool libnvme_ctrl_get_concat(const struct libnvme_ctrl *p)
+{
+	return p->cfg.concat;
+}
+
 /****************************************************************************
  * Accessors for: struct libnvme_subsystem
  ****************************************************************************/
