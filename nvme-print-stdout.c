@@ -6001,16 +6001,16 @@ static void stdout_tabular_subsystem_topology_multipath(libnvme_subsystem_t s)
 	struct table *t;
 	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
 	struct table_column columns[] = {
-		{"NSHead", LEFT, 0},
-		{"NSID", LEFT, 0},
-		{"NSPath", LEFT, 0},
-		{"ANAState", LEFT, 0},
-		{"Nodes", LEFT, 0},
-		{"Qdepth", LEFT, 0},
-		{"Controller", LEFT, 0},
-		{"TrType", LEFT, 0},
-		{"Address", LEFT, 0},
-		{"State", LEFT, 0},
+		{"NSHead",     LEFT, AUTO_WIDTH},
+		{"NSID",       LEFT, AUTO_WIDTH},
+		{"NSPath",     LEFT, AUTO_WIDTH},
+		{"ANAState",   LEFT, AUTO_WIDTH},
+		{"Nodes",      LEFT, AUTO_WIDTH},
+		{"Qdepth",     LEFT, AUTO_WIDTH},
+		{"Controller", LEFT, AUTO_WIDTH},
+		{"TrType",     LEFT, AUTO_WIDTH},
+		{"Address",    LEFT, AUTO_WIDTH},
+		{"State",      LEFT, AUTO_WIDTH},
 	};
 
 	t = table_create();
@@ -6233,12 +6233,12 @@ static void stdout_tabular_subsystem_topology(libnvme_subsystem_t s)
 	int ret, num_ns;
 	struct table *t;
 	struct table_column columns[] = {
-		{"Namespace", LEFT, 0},
-		{"NSID", LEFT, 0},
-		{"Controller", LEFT, 0},
-		{"Trtype", LEFT, 0},
-		{"Address", LEFT, 0},
-		{"State", LEFT, 0},
+		{"Namespace",  LEFT, AUTO_WIDTH},
+		{"NSID",       LEFT, AUTO_WIDTH},
+		{"Controller", LEFT, AUTO_WIDTH},
+		{"Trtype",     LEFT, AUTO_WIDTH},
+		{"Address",    LEFT, AUTO_WIDTH},
+		{"State",      LEFT, AUTO_WIDTH},
 	};
 
 	t = table_create();

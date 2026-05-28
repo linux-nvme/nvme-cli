@@ -256,6 +256,9 @@ void table_add_row(struct table *t, int row_id)
 
 	/* Adjust the column width based on the row value. */
 	for (col = 0; col < t->num_columns; col++) {
+		if (!t->columns[col].auto_adjust)
+			continue;
+
 		max_width = t->columns[col].width;
 		width = table_get_value_width(&row->val[col]);
 		if (width > max_width)
@@ -293,13 +296,23 @@ static int table_add_column(struct table *t, struct table_column *c)
 	if (!new_columns)
 		return -ENOMEM;
 
+	t->num_columns++;
 	t->columns = new_columns;
 	t->columns[col].name = strdup(c->name);
 	if (!t->columns[col].name)
 		return -ENOMEM;
 	t->columns[col].align = c->align;
-	t->columns[col].width = strlen(c->name);
-	t->num_columns++;
+
+	if (c->width == AUTO_WIDTH) {
+		t->columns[col].width = strlen(c->name);
+		t->columns[col].auto_adjust = true;
+	} else {
+		if (c->width < strlen(c->name))
+			return -EINVAL;
+
+		t->columns[col].width = c->width;
+		t->columns[col].auto_adjust = false;
+	}
 
 	return 0;
 }
@@ -309,7 +322,7 @@ int table_add_columns_filter(struct table *t, struct table_column *c,
 			bool (*filter)(const char *name, void *arg),
 			void *arg)
 {
-	int col;
+	int ret = 0, col;
 
 	if (!filter)
 		return table_add_columns(t, c, num_columns);
@@ -318,17 +331,24 @@ int table_add_columns_filter(struct table *t, struct table_column *c,
 		if (!filter(c[col].name, arg))
 			continue;	/* skip this column */
 
-		if (table_add_column(t, &c[col]))
-			goto out;
+		ret = table_add_column(t, &c[col]);
+		if (ret < 0)
+			goto free_col;
 	}
-	return 0;
-out:
-	return -ENOMEM;
+
+	return ret;
+
+free_col:
+	while (t->num_columns > 0)
+		free(t->columns[--t->num_columns].name);
+	free(t->columns);
+	t->columns = NULL;
+	return ret;
 }
 
 int table_add_columns(struct table *t, struct table_column *c, int num_columns)
 {
-	int col;
+	int ret = 0, col;
 
 	t->columns = calloc(num_columns, sizeof(struct table_column));
 	if (!t->columns)
@@ -336,24 +356,36 @@ int table_add_columns(struct table *t, struct table_column *c, int num_columns)
 
 	for (col = 0; col < num_columns; col++) {
 		t->columns[col].name = strdup(c[col].name);
-		if (!t->columns[col].name)
+		if (!t->columns[col].name) {
+			ret = -ENOMEM;
 			goto free_col;
+		}
 
 		t->columns[col].align = c[col].align;
-		if (c[col].width > strlen(t->columns[col].name))
-			t->columns[col].width = c[col].width;
-		else
+
+		if (c[col].width == AUTO_WIDTH) {
 			t->columns[col].width = strlen(t->columns[col].name);
+			t->columns[col].auto_adjust = true;
+		} else {
+			if (c[col].width < strlen(t->columns[col].name)) {
+				ret = -EINVAL;
+				goto free_col;
+			}
+			t->columns[col].width = c[col].width;
+			t->columns[col].auto_adjust = false;
+		}
 	}
 	t->num_columns = num_columns;
 
-	return 0;
+	return ret;
 free_col:
-	while (--col >= 0)
+	while (col >= 0) {
 		free(t->columns[col].name);
+		col--;
+	}
 	free(t->columns);
 	t->columns = NULL;
-	return -ENOMEM;
+	return ret;
 }
 
 void table_free(struct table *t)

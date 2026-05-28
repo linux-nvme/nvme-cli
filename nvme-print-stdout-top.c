@@ -409,11 +409,11 @@ static int stdout_top_print_path_health(FILE *stream, libnvme_subsystem_t s)
 	libnvme_path_t p;
 	struct table *t;
 	struct table_column columns[] = {
-		{"NSPath", LEFT},
-		{"ANAState", LEFT},
-		{"Retries", LEFT},
-		{"Failovers", LEFT},
-		{"Errors", LEFT}
+		{"NSPath",    LEFT, AUTO_WIDTH},
+		{"ANAState",  LEFT, AUTO_WIDTH},
+		{"Retries",   LEFT, AUTO_WIDTH},
+		{"Failovers", LEFT, AUTO_WIDTH},
+		{"Errors",    LEFT, AUTO_WIDTH}
 	};
 
 	t = table_create();
@@ -478,22 +478,22 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 	struct table *t;
 	bool is_fabric = false;
 	struct table_column columns[] = {
-		{"Ctrl", LEFT},
-		{"Paths", LEFT},
-		{"Node", LEFT},
-		{"Trtype", LEFT},
-		{"Address", LEFT},
-		{"State", LEFT},
-		{"Resets", LEFT},
-		{"Reconnects", LEFT},
-		{"Errors", LEFT},
-		{"r_IOPS", LEFT},
-		{"w_IOPS", LEFT},
-		{"r_clat", LEFT},
-		{"w_clat", LEFT},
-		{"r_bw", LEFT},
-		{"w_bw", LEFT},
-		{"Util%", LEFT},
+		{"Ctrl",       LEFT, AUTO_WIDTH},
+		{"Paths",      LEFT, AUTO_WIDTH},
+		{"Node",       LEFT, AUTO_WIDTH},
+		{"Trtype",     LEFT, AUTO_WIDTH},
+		{"Address",    LEFT, AUTO_WIDTH},
+		{"State",      LEFT, AUTO_WIDTH},
+		{"Resets",     LEFT, AUTO_WIDTH},
+		{"Reconnects", LEFT, AUTO_WIDTH},
+		{"Errors",     LEFT, AUTO_WIDTH},
+		{"r_IOPS",     LEFT, 9},
+		{"w_IOPS",     LEFT, 9},
+		{"r_clat",     LEFT, 8},
+		{"w_clat",     LEFT, 8},
+		{"r_bw",       LEFT, 13},
+		{"w_bw",       LEFT, 13},
+		{"Util%",      LEFT, 6},
 	};
 
 	t = table_create();
@@ -614,19 +614,19 @@ static int stdout_top_print_ns_stat(FILE *stream, libnvme_subsystem_t s)
 	char r_clat_str[16], w_clat_str[16];
 	struct table *t;
 	struct table_column columns[] = {
-		{"Namespace", LEFT},
-		{"NSID", LEFT},
-		{"Ctrl", LEFT},
-		{"Retries", LEFT},
-		{"Errors", LEFT},
-		{"r_IOPS", LEFT},
-		{"w_IOPS", LEFT},
-		{"r_clat", LEFT},
-		{"w_clat", LEFT},
-		{"r_bw", LEFT},
-		{"w_bw", LEFT},
-		{"Inflights", LEFT},
-		{"Util%", LEFT},
+		{"Namespace", LEFT, AUTO_WIDTH},
+		{"NSID",      LEFT, AUTO_WIDTH},
+		{"Ctrl",      LEFT, AUTO_WIDTH},
+		{"Retries",   LEFT, AUTO_WIDTH},
+		{"Errors",    LEFT, AUTO_WIDTH},
+		{"r_IOPS",    LEFT, 9},
+		{"w_IOPS",    LEFT, 9},
+		{"r_clat",    LEFT, 8},
+		{"w_clat",    LEFT, 8},
+		{"r_bw",      LEFT, 13},
+		{"w_bw",      LEFT, 13},
+		{"Inflights", LEFT, AUTO_WIDTH},
+		{"Util%",     LEFT, 6},
 	};
 
 	t = table_create();
@@ -717,19 +717,19 @@ static int stdout_top_print_nshead_stat(FILE *stream, libnvme_subsystem_t s)
 	char r_bw_str[16], w_bw_str[16];
 	struct table *t;
 	struct table_column columns[] = {
-			{"NSHead", LEFT},
-			{"NSID", LEFT},
-			{"Paths", LEFT},
-			{"Requeue-IO", LEFT},
-			{"Fail-IO", LEFT},
-			{"r_IOPS", LEFT},
-			{"w_IOPS", LEFT},
-			{"r_clat", LEFT},
-			{"w_clat", LEFT},
-			{"r_bw", LEFT},
-			{"w_bw", LEFT},
-			{"Inflights", LEFT},
-			{"Util%", LEFT},
+			{"NSHead",     LEFT, AUTO_WIDTH},
+			{"NSID",       LEFT, AUTO_WIDTH},
+			{"Paths",      LEFT, AUTO_WIDTH},
+			{"Requeue-IO", LEFT, AUTO_WIDTH},
+			{"Fail-IO",    LEFT, AUTO_WIDTH},
+			{"r_IOPS",     LEFT, 9},
+			{"w_IOPS",     LEFT, 9},
+			{"r_clat",     LEFT, 8},
+			{"w_clat",     LEFT, 8},
+			{"r_bw",       LEFT, 13},
+			{"w_bw",       LEFT, 13},
+			{"Inflights",  LEFT, AUTO_WIDTH},
+			{"Util%",      LEFT, 6},
 	};
 
 	t = table_create();
@@ -739,7 +739,7 @@ static int stdout_top_print_nshead_stat(FILE *stream, libnvme_subsystem_t s)
 	}
 
 	if (table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
-		nvme_show_error("Failed to add columns to shead stat table\n");
+		nvme_show_error("Failed to add columns to nshead stat table\n");
 		ret = 1;
 		goto free_tbl;
 	}
@@ -821,20 +821,20 @@ static int stdout_top_print_path_perf(FILE *stream, libnvme_subsystem_t s)
 	struct table *t;
 	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
 	struct table_column columns[] = {
-		{"NSHead", LEFT},
-		{"NSID", LEFT},
-		{"NSPath", LEFT},
-		{"Nodes", LEFT},
-		{"Qdepth", LEFT},
-		{"Ctrl", LEFT},
-		{"r_IOPS", LEFT},
-		{"w_IOPS", LEFT},
-		{"r_clat", LEFT},
-		{"w_clat", LEFT},
-		{"r_bw", LEFT},
-		{"w_bw", LEFT},
-		{"Inflights", LEFT},
-		{"Util%", LEFT},
+		{"NSHead",    LEFT, AUTO_WIDTH},
+		{"NSID",      LEFT, AUTO_WIDTH},
+		{"NSPath",    LEFT, AUTO_WIDTH},
+		{"Nodes",     LEFT, AUTO_WIDTH},
+		{"Qdepth",    LEFT, AUTO_WIDTH},
+		{"Ctrl",      LEFT, AUTO_WIDTH},
+		{"r_IOPS",    LEFT, 9},
+		{"w_IOPS",    LEFT, 9},
+		{"r_clat",    LEFT, 8},
+		{"w_clat",    LEFT, 8},
+		{"r_bw",      LEFT, 13},
+		{"w_bw",      LEFT, 13},
+		{"Inflights", LEFT, AUTO_WIDTH},
+		{"Util%",     LEFT, 6},
 	};
 
 	t = table_create();
@@ -1145,6 +1145,22 @@ static libnvme_subsystem_t *stdout_top_build_subsys_arr(
 	return subsys_arr;
 }
 
+static int stdout_top_find_subsys_by_name(libnvme_subsystem_t *subsys_arr,
+		int num_subsys, const char *subsys_name)
+{
+	int idx;
+	libnvme_subsystem_t s;
+
+	for (idx = 0; idx < num_subsys; idx++) {
+		s = subsys_arr[idx];
+
+		if (!strcmp(libnvme_subsystem_get_name(s), subsys_name))
+			return idx;
+	}
+
+	return -1;
+}
+
 /*
  * Draws subsys topology screen of susbystem @s
  * Returns: 0 if ESC key is pressed or needs to draw subsystem selection screen
@@ -1261,20 +1277,21 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 	char r_bw_str[16], w_bw_str[16];
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
+	char *iopolicy;
 	struct table *t;
 	struct table_column columns[] = {
-		{"Subsystem", LEFT},
-		{"Namespaces", LEFT},
-		{"Paths", LEFT},
-		{"Ctrls", LEFT},
-		{"IOPolicy", LEFT},
-		{"r_IOPS", LEFT},
-		{"w_IOPS", LEFT},
-		{"r_clat", LEFT},
-		{"w_clat", LEFT},
-		{"r_bw", LEFT},
-		{"w_bw", LEFT},
-		{"Util%", LEFT},
+		{"Subsystem",  LEFT, AUTO_WIDTH},
+		{"Namespaces", LEFT, AUTO_WIDTH},
+		{"Paths",      LEFT, AUTO_WIDTH},
+		{"Ctrls",      LEFT, AUTO_WIDTH},
+		{"IOPolicy",   LEFT, AUTO_WIDTH},
+		{"r_IOPS",     LEFT, 9},
+		{"w_IOPS",     LEFT, 9},
+		{"r_clat",     LEFT, 8},
+		{"w_clat",     LEFT, 8},
+		{"r_bw",       LEFT, 13},
+		{"w_bw",       LEFT, 13},
+		{"Util%",      LEFT, 6},
 	};
 
 	fprintf(stream, "---- nvme-top - Refresh: %d Second ----\n",
@@ -1311,6 +1328,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 		r_bw = w_bw = 0;
 		max_rlat = max_wlat = 0;
 		max_util = 0;
+		iopolicy = libnvme_subsystem_get_iopolicy(s);
 
 		libnvme_subsystem_for_each_ctrl(s, c)
 			num_ctrl++;
@@ -1370,7 +1388,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 		table_set_value_int(t, ++col, row, num_path, LEFT);
 		table_set_value_int(t, ++col, row, num_ctrl, LEFT);
 		table_set_value_str(t, ++col, row,
-				libnvme_subsystem_get_iopolicy(s), LEFT);
+				iopolicy ? iopolicy : "NA", LEFT);
 		table_set_value_str(t, ++col, row, r_iops_str, LEFT);
 		table_set_value_str(t, ++col, row, w_iops_str, LEFT);
 		table_set_value_str(t, ++col, row, r_clat_str, LEFT);
@@ -1460,22 +1478,40 @@ wait_for_event:
 			if (quit)
 				break;
 			fallthrough;
-		case EVENT_TYPE_NVME_UEVENT:
-			libnvme_free_global_ctx(ctx);
+		case EVENT_TYPE_NVME_UEVENT: {
+			__cleanup_free char *subsys_name = NULL;
+			libnvme_subsystem_t s;
+
+			s = subsys_arr[subsys_idx];
+			subsys_name = strdup(libnvme_subsystem_get_name(s));
+			if (!subsys_name) {
+				quit = 1;
+				break;
+			}
 			free(subsys_arr);
 			subsys_arr = NULL;
+			libnvme_free_global_ctx(ctx);
+
 			ctx = stdout_top_rescan_topology();
 			if (!ctx) {
 				quit = 1;
 				break;
 			}
+
 			subsys_arr = stdout_top_build_subsys_arr(ctx,
 					&num_subsys);
-			if (!subsys_arr)
+			if (!subsys_arr) {
 				quit = 1;
-			else
+				break;
+			}
+
+			subsys_idx = stdout_top_find_subsys_by_name(subsys_arr,
+					num_subsys, subsys_name);
+			if (subsys_idx < 0)
 				subsys_idx = 0;
+
 			break;
+		}
 		case EVENT_TYPE_KEY_DOWN:
 			/*
 			 * The @num_subsys should be equal to @data_rows, so we

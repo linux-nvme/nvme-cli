@@ -131,6 +131,29 @@ struct libnvme_fabrics_config { // !generate-accessors !generate-dict-table
 	bool concat;
 };
 
+/**
+ * struct libnvme_ctrl_params - Parameters for creating a controller instance
+ * @transport:		Transport type: loop, fc, rdma, tcp, pcie, apple-nvme
+ * @traddr:		Transport address (destination address)
+ * @host_traddr:	Host transport address (source address)
+ * @host_iface:		Host interface for connection (tcp only)
+ * @trsvcid:		Transport service ID
+ * @subsysnqn:		Subsystem NQN
+ * @cfg:		Fabrics tuning parameters
+ */
+struct libnvme_ctrl_params {
+	const char *transport;
+	const char *traddr;
+	const char *host_traddr;
+	const char *host_iface;
+	const char *trsvcid;
+	const char *subsysnqn;
+	struct libnvme_fabrics_config cfg;
+};
+
+void libnvme_fabrics_config_copy(struct libnvme_fabrics_config *dst,
+		const struct libnvme_fabrics_config *src);
+
 struct libnvme_log {
 	int fd;
 	int level;
@@ -440,10 +463,8 @@ struct libnvme_transport_handle *__libnvme_open(struct libnvme_global_ctx *ctx,
 struct libnvme_transport_handle *__libnvme_create_transport_handle(
 		struct libnvme_global_ctx *ctx);
 
-struct libnvmf_context;
-
 int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx,
+		const struct libnvme_ctrl_params *params,
 		struct libnvme_ctrl **cp);
 void nvme_deconfigure_ctrl(struct libnvme_ctrl *c);
 
@@ -451,8 +472,16 @@ struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid);
 struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 		const char *name, const char *subsysnqn);
-struct libnvme_ctrl * libnvme_lookup_ctrl(struct libnvme_subsystem * s,
-		struct libnvmf_context *fctx, struct libnvme_ctrl *p);
+struct libnvme_ctrl *libnvme_lookup_ctrl(struct libnvme_subsystem *s,
+		const struct libnvme_ctrl_params *params,
+		struct libnvme_ctrl *p);
+bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
+		const char *transport, const char *traddr);
+void libnvmf_default_config(struct libnvme_fabrics_config *cfg);
+libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
+		const struct libnvme_ctrl_params *params, libnvme_ctrl_t p);
+void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
+		libnvme_ctrl_t c);
 
 void __libnvme_free_host(struct libnvme_host * h);
 
@@ -550,34 +579,6 @@ bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 
 int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 		char **hostname);
-
-/**
- * get_entity_name - Get Entity Name (ENAME).
- * @buffer: The buffer where the ENAME will be saved as an ASCII string.
- * @bufsz:  The size of @buffer.
- *
- * Per TP8010, ENAME is defined as the name associated with the host (i.e.
- * hostname).
- *
- * Return: Number of characters copied to @buffer.
- */
-size_t get_entity_name(char *buffer, size_t bufsz);
-
-/**
- * get_entity_version - Get Entity Version (EVER).
- * @buffer: The buffer where the EVER will be saved as an ASCII string.
- * @bufsz:  The size of @buffer.
- *
- * EVER is defined as the operating system name and version as an ASCII
- * string. This function reads different files from the file system and
- * builds a string as follows: [os type] [os release] [distro release]
- *
- *     E.g. "Linux 5.17.0-rc1 SLES 15.4"
- *
- * Return: Number of characters copied to @buffer.
- */
-size_t get_entity_version(char *buffer, size_t bufsz);
-
 
 /**
  * startswith - Checks that a string starts with a given prefix.

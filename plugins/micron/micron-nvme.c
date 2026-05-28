@@ -204,16 +204,16 @@ static enum eDriveModel GetDriveModel(
 static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 {
 	int  err = 0;
-	char strBuffer[4096];
+	char strBuffer[PATH_MAX + 128];	/* cmd + path */
 	int  nRet;
 	bool is_tgz = false;
 	struct stat sb;
 
 	if (strstr(strFileName, ".tar.gz") || strstr(strFileName, ".tgz")) {
-		sprintf(strBuffer, "tar -zcf \"%s\" \"%s\"", strFileName, strDirName);
+		snprintf(strBuffer, sizeof(strBuffer), "tar -zcf \"%s\" \"%s\"", strFileName, strDirName);
 		is_tgz = true;
 	} else {
-		sprintf(strBuffer, "zip -r \"%s\" \"%s\" >temp.txt 2>&1", strFileName,
+		snprintf(strBuffer, sizeof(strBuffer), "zip -r \"%s\" \"%s\" >temp.txt 2>&1", strFileName,
 				strDirName);
 	}
 
@@ -3406,7 +3406,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	const char *desc = "This retrieves the micron debug log package";
 	const char *package = "Log output data file name (required)";
 	const char *type = "telemetry log type - host or controller";
-	const char *data_area = "telemetry log data area 1, 2, 3, or 4";
+	const char *data_area = "telemetry log data area 1, 2, 3 or 4";
 	unsigned char *dataBuffer = NULL;
 	int bSize = 0;
 	int maxSize = 0;

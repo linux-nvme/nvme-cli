@@ -20,8 +20,9 @@ usage() {
     echo " -c [gcc]|clang       compiler to use"
     echo " -m [meson]|muon      use meson or muon"
     echo " -p                   enable coverage report"
+    echo " -s                   run tests with ASan+UBSan (asanubsan setup)"
     echo " -t [arm]|ppc64le|s390x  cross compile target"
-    echo " -x                   run test with valgrind"
+    echo " -x                   run tests with valgrind (valgrind setup)"
     echo ""
     echo "configs with meson:"
     echo "  [default]           default settings"
@@ -36,6 +37,7 @@ usage() {
     echo "  rst_docs            build rst documentation only"
     echo "  static              build a static binary"
     echo "  minimal_static      build a static binary without fabrics support"
+    echo "  nofabrics           build without fabrics support, run unit tests"
     echo "  libnvme             build only libnvme"
     echo "  tests               build for nightly build"
     echo ""
@@ -51,8 +53,9 @@ CC=${CC:-"gcc"}
 
 use_coverage=0
 use_valgrind=0
+use_asan=0
 
-while getopts "b:c:m:pt:x" o; do
+while getopts "b:c:m:pst:x" o; do
     case "${o}" in
         b)
             BUILDTYPE="${OPTARG}"
@@ -65,6 +68,9 @@ while getopts "b:c:m:pt:x" o; do
             ;;
         p)
             use_coverage=1
+            ;;
+        s)
+            use_asan=1
             ;;
         t)
             CROSS_TARGET="${OPTARG}"
@@ -90,9 +96,15 @@ TOOLDIR="$(pwd)/.build-tools"
 fn_exists() { declare -F "$1" > /dev/null; }
 
 config_meson_default() {
+    local extra_args=()
+    if [ "${use_asan:-0}" -eq 1 ]; then
+        extra_args+=(-Db_sanitize=address,undefined)
+    fi
+
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
+        "${extra_args[@]}"                      \
         "${BUILDDIR}"
 }
 
@@ -237,6 +249,20 @@ config_meson_minimal_static() {
         "${BUILDDIR}"
 }
 
+config_meson_nofabrics() {
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        -Dfabrics=disabled                      \
+        -Dmi=disabled                           \
+        -Dpython=disabled                       \
+        -Djson-c=disabled                       \
+        -Dlibkmod=disabled                      \
+        -Dopenssl=disabled                      \
+        -Dkeyutils=disabled                     \
+        "${BUILDDIR}"
+}
+
 config_meson_tests() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
@@ -288,10 +314,12 @@ test_meson() {
 
     if [ "${use_valgrind:-0}" -eq 1 ]; then
         if command -v valgrind >/dev/null 2>&1; then
-            args+=(--wrapper valgrind)
+            args+=(--setup valgrind)
         else
             echo "Warning: valgrind requested but not found; running without it." >&2
         fi
+    elif [ "${use_asan:-0}" -eq 1 ]; then
+        args+=(--setup asanubsan)
     fi
 
     "${MESON}" test "${args[@]}"

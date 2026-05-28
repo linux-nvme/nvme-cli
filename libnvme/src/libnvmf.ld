@@ -15,7 +15,7 @@ LIBNVMF_3 {
 		libnvmf_context_set_connection;
 		libnvmf_context_set_crypto;
 		libnvmf_context_set_device;
-		libnvmf_context_set_discovery_cbs;
+		libnvmf_context_set_discovery_hooks;
 		libnvmf_context_set_discovery_defaults;
 		libnvmf_context_set_fabrics_config;
 		libnvmf_context_set_hostnqn;

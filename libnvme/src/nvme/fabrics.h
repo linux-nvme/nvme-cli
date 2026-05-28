@@ -252,10 +252,10 @@ const char *libnvmf_get_default_trsvcid(const char *transport,
 /**
  * libnvmf_context_create() - Create a new fabrics context for discovery/connect
  * @ctx: Global context
- * @decide_retry: Callback to decide if a retry should be attempted
- * @connected: Callback invoked when a connection is established
- * @already_connected: Callback invoked if already connected
- * @user_data: User data passed to callbacks
+ * @decide_retry: Hook to decide if a retry should be attempted
+ * @connected: Hook invoked when a connection is established
+ * @already_connected: Hook invoked if already connected
+ * @user_data: User data passed to hooks
  * @fctxp: Pointer to store the created context
  *
  * Allocates and initializes a new fabrics context for discovery/connect
@@ -286,18 +286,18 @@ int libnvmf_context_create(struct libnvme_global_ctx *ctx,
 void libnvmf_context_free(struct libnvmf_context *fctx);
 
 /**
- * libnvmf_context_set_discovery_cbs() - Set discovery callbacks for context
+ * libnvmf_context_set_discovery_hooks() - Set discovery hooks for context
  * @fctx: Fabrics context
- * @discovery_log: Callback for discovery log events
- * @parser_init: Callback to initialize parser
- * @parser_cleanup: Callback to cleanup parser
- * @parser_next_line: Callback to parse next line
+ * @discovery_log: Hook for discovery log events
+ * @parser_init: Hook to initialize parser
+ * @parser_cleanup: Hook to cleanup parser
+ * @parser_next_line: Hook to parse next line
  *
- * Sets the callbacks used during discovery operations for the given context.
+ * Sets the hooks used during discovery operations for the given context.
  *
  * Return: 0 on success, or a negative error code on failure.
  */
-int libnvmf_context_set_discovery_cbs(struct libnvmf_context *fctx,
+int libnvmf_context_set_discovery_hooks(struct libnvmf_context *fctx,
 		void (*discovery_log)(struct libnvmf_context *fctx,
 			bool connect, struct nvmf_discovery_log *log,
 			uint64_t numrec, void *user_data),

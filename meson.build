@@ -145,7 +145,7 @@ conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
 if host_system == 'windows'
     ws2_32_dep = cc.find_library('ws2_32', required: true)
     kernel32_dep = cc.find_library('kernel32', required: true)
-    bcrypt_dep = cc.find_library('bcrypt', required: true)  # For BCryptGenRandom in nvme_uuid_random
+    bcrypt_dep = cc.find_library('bcrypt', required: true)
     setupapi_dep = cc.find_library('setupapi')  # For SetupDi* device enumeration APIs
     cfgmgr32_dep = cc.find_library('cfgmgr32')  # For CM_Get_DevNode_Property* APIs
 endif
@@ -503,6 +503,15 @@ if libtype == 'static'
     requires = ''
 endif
 
+if host_system == 'windows'
+    add_project_arguments(
+        [
+            '-DNOMINMAX',   # don't include Windows min/max definitions
+        ],
+        language : 'c',
+    )
+endif
+
 substs = configuration_data()
 substs.set('VERSION', meson.project_version())
 substs.set('NVMECLI_LICENSE', meson.project_license()[0])
@@ -712,6 +721,28 @@ if want_nvme
     )
 
     subdir('Documentation')
+endif
+
+if host_system != 'windows'
+    valgrind_cmd = [
+        'valgrind',
+        '--leak-check=full',
+        '--error-exitcode=1',
+        '--suppressions=' + meson.current_source_dir() / 'valgrind.supp',
+    ]
+    python3_supp = '/usr/lib/valgrind/python3.supp'
+    if fs.is_file(python3_supp)
+        valgrind_cmd += ['--suppressions=' + python3_supp]
+    endif
+
+    add_test_setup('valgrind',
+        exe_wrapper: valgrind_cmd,
+        timeout_multiplier: 5,
+    )
+
+    add_test_setup('asanubsan',
+        timeout_multiplier: 2,
+    )
 endif
 
 if doc_tgts.length() == 0
