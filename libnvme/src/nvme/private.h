@@ -109,7 +109,7 @@ struct linux_passthru_cmd64 {
  * @tls:		Start TLS on the connection (TCP)
  * @concat:		Enable secure concatenation (TCP)
  */
-struct libnvme_fabrics_config { // !generate-accessors !generate-dict-table
+struct libnvme_fabrics_config { // !generate-accessors !generate-dict-table !nested-accessors
 	int queue_size;
 	int nr_io_queues;
 	int reconnect_delay;
@@ -141,14 +141,14 @@ struct libnvme_fabrics_config { // !generate-accessors !generate-dict-table
  * @subsysnqn:		Subsystem NQN
  * @cfg:		Fabrics tuning parameters
  */
-struct libnvme_ctrl_params {
+struct libnvme_ctrl_params { // !nested-accessors
 	const char *transport;
 	const char *traddr;
 	const char *host_traddr;
 	const char *host_iface;
 	const char *trsvcid;
 	const char *subsysnqn;
-	struct libnvme_fabrics_config cfg;
+	struct libnvme_fabrics_config cfg; // !access:nested
 };
 
 void libnvme_fabrics_config_copy(struct libnvme_fabrics_config *dst,
