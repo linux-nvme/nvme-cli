@@ -10,42 +10,6 @@
 
 LIBNVME_ACCESSORS_3 {
 	global:
-		libnvme_fabrics_config_get_queue_size;
-		libnvme_fabrics_config_set_queue_size;
-		libnvme_fabrics_config_get_nr_io_queues;
-		libnvme_fabrics_config_set_nr_io_queues;
-		libnvme_fabrics_config_get_reconnect_delay;
-		libnvme_fabrics_config_set_reconnect_delay;
-		libnvme_fabrics_config_get_ctrl_loss_tmo;
-		libnvme_fabrics_config_set_ctrl_loss_tmo;
-		libnvme_fabrics_config_get_fast_io_fail_tmo;
-		libnvme_fabrics_config_set_fast_io_fail_tmo;
-		libnvme_fabrics_config_get_keep_alive_tmo;
-		libnvme_fabrics_config_set_keep_alive_tmo;
-		libnvme_fabrics_config_get_nr_write_queues;
-		libnvme_fabrics_config_set_nr_write_queues;
-		libnvme_fabrics_config_get_nr_poll_queues;
-		libnvme_fabrics_config_set_nr_poll_queues;
-		libnvme_fabrics_config_get_tos;
-		libnvme_fabrics_config_set_tos;
-		libnvme_fabrics_config_get_keyring_id;
-		libnvme_fabrics_config_set_keyring_id;
-		libnvme_fabrics_config_get_tls_key_id;
-		libnvme_fabrics_config_set_tls_key_id;
-		libnvme_fabrics_config_get_tls_configured_key_id;
-		libnvme_fabrics_config_set_tls_configured_key_id;
-		libnvme_fabrics_config_get_duplicate_connect;
-		libnvme_fabrics_config_set_duplicate_connect;
-		libnvme_fabrics_config_get_disable_sqflow;
-		libnvme_fabrics_config_set_disable_sqflow;
-		libnvme_fabrics_config_get_hdr_digest;
-		libnvme_fabrics_config_set_hdr_digest;
-		libnvme_fabrics_config_get_data_digest;
-		libnvme_fabrics_config_set_data_digest;
-		libnvme_fabrics_config_get_tls;
-		libnvme_fabrics_config_set_tls;
-		libnvme_fabrics_config_get_concat;
-		libnvme_fabrics_config_set_concat;
 		libnvme_path_get_name;
 		libnvme_path_set_name;
 		libnvme_path_get_sysfs_dir;

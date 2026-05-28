@@ -138,7 +138,7 @@ static void set_fctx_fabrics_config(struct libnvmf_context *fctx,
 	const struct fctx_field *fp;
 	PyObject *val;
 
-	cfg = libnvmf_context_get_fabrics_config(fctx);
+	cfg = &fctx->ctrl_params.cfg;
 
 	for (fp = libnvme_fabrics_config_int_fields; fp->key; fp++) {
 		val = PyDict_GetItemString(dict, fp->key);

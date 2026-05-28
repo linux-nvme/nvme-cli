@@ -11,15 +11,11 @@ LIBNVMF_3 {
 		libnvmf_connect_ctrl;
 		libnvmf_context_create;
 		libnvmf_context_free;
-		libnvmf_context_get_fabrics_config;
 		libnvmf_context_set_connection;
 		libnvmf_context_set_crypto;
 		libnvmf_context_set_device;
 		libnvmf_context_set_discovery_hooks;
-		libnvmf_context_set_discovery_defaults;
-		libnvmf_context_set_fabrics_config;
 		libnvmf_context_set_hostnqn;
-		libnvmf_context_set_persistent;
 		libnvmf_create_ctrl;
 		libnvmf_ctrl_get_fabrics_config;
 		libnvmf_disconnect_ctrl;
