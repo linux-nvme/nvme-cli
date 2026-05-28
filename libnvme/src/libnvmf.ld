@@ -17,7 +17,6 @@ LIBNVMF_3 {
 		libnvmf_context_set_discovery_hooks;
 		libnvmf_context_set_hostnqn;
 		libnvmf_create_ctrl;
-		libnvmf_ctrl_get_fabrics_config;
 		libnvmf_disconnect_ctrl;
 		libnvmf_discovery;
 		libnvmf_discovery_config_file;

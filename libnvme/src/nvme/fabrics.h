@@ -372,14 +372,6 @@ int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
 
 
-/**
- * libnvmf_ctrl_get_fabrics_config() - Fabrics configuration of a controller
- * @c:	Controller instance
- *
- * Return: Fabrics configuration of @c
- */
-struct libnvme_fabrics_config *libnvmf_ctrl_get_fabrics_config(
-		libnvme_ctrl_t c);
 
 /**
  * libnvmf_discovery() - Perform fabrics discovery
