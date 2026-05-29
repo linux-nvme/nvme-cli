@@ -66,6 +66,8 @@ enum nvme_mi_cmd_supported_effects {
 	NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NSS	    = 1 << 5,
 };
 
+#define NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE(effects)	NVME_GET(effects, MI_CMD_SUPPORTED_EFFECTS_SCOPE)
+
 /**
  * struct nvme_mi_cmd_supported_effects_log - NVMe-MI Commands Supported and Effects Log
  * @mi_cmd_support:	NVMe-MI Commands Supported
@@ -194,9 +196,58 @@ struct nvme_mi_read_sc_list {
 };
 
 /**
+ * enum nvme_mi_nss - NVM Subsystem Status
+ * @NVME_MI_NSS_NRDY_SHIFT:	Shift amount to get Not Ready
+ * @NVME_MI_NSS_NRDY_MASK:	Mask to get Not Ready
+ * @NVME_MI_NSS_DRV_SHIFT:	Shift amount to get Drive Ready
+ * @NVME_MI_NSS_DRV_MASK:	Mask to get Drive Ready
+ */
+enum nvme_mi_nss {
+	NVME_MI_NSS_NRDY_SHIFT		= 0,
+	NVME_MI_NSS_NRDY_MASK		= 0x1,
+	NVME_MI_NSS_DRV_SHIFT		= 1,
+	NVME_MI_NSS_DRV_MASK		= 0x1,
+};
+
+#define NVME_MI_NSS_NRDY(nss)	NVME_GET(nss, MI_NSS_NRDY)
+#define NVME_MI_NSS_DRV(nss)	NVME_GET(nss, MI_NSS_DRV)
+
+/**
+ * enum nvme_mi_sw - Smart Warnings
+ * @NVME_MI_SW_ST_SHIFT:	Shift amount to get Spare Threshold
+ * @NVME_MI_SW_ST_MASK:		Mask to get Spare Threshold
+ * @NVME_MI_SW_TAUT_SHIFT:	Shift amount to get Temperature Above or Under Threshold
+ * @NVME_MI_SW_TAUT_MASK:	Mask to get Temperature Above or Under Threshold
+ * @NVME_MI_SW_RD_SHIFT:	Shift amount to get Reliability Degraded
+ * @NVME_MI_SW_RD_MASK:		Mask to get Reliability Degraded
+ * @NVME_MI_SW_RO_SHIFT:	Shift amount to get Read Only
+ * @NVME_MI_SW_RO_MASK:		Mask to get Read Only
+ * @NVME_MI_SW_VMBF_SHIFT:	Shift amount to get Volatile Memory Backup Failed
+ * @NVME_MI_SW_VMBF_MASK:	Mask to get Volatile Memory Backup Failed
+ */
+enum nvme_mi_sw {
+	NVME_MI_SW_ST_SHIFT		= 0,
+	NVME_MI_SW_ST_MASK		= 0x1,
+	NVME_MI_SW_TAUT_SHIFT		= 1,
+	NVME_MI_SW_TAUT_MASK		= 0x1,
+	NVME_MI_SW_RD_SHIFT		= 2,
+	NVME_MI_SW_RD_MASK		= 0x1,
+	NVME_MI_SW_RO_SHIFT		= 3,
+	NVME_MI_SW_RO_MASK		= 0x1,
+	NVME_MI_SW_VMBF_SHIFT		= 4,
+	NVME_MI_SW_VMBF_MASK		= 0x1,
+};
+
+#define NVME_MI_SW_ST(sw)	NVME_GET(sw, MI_SW_ST)
+#define NVME_MI_SW_TAUT(sw)	NVME_GET(sw, MI_SW_TAUT)
+#define NVME_MI_SW_RD(sw)	NVME_GET(sw, MI_SW_RD)
+#define NVME_MI_SW_RO(sw)	NVME_GET(sw, MI_SW_RO)
+#define NVME_MI_SW_VMBF(sw)	NVME_GET(sw, MI_SW_VMBF)
+
+/**
  * struct nvme_mi_nvm_ss_health_status - Subsystem Management Data Structure
- * @nss:	NVM Subsystem Status
- * @sw:		Smart Warnings
+ * @nss:	NVM Subsystem Status (see &enum nvme_mi_nss)
+ * @sw:		Smart Warnings (see &enum nvme_mi_sw)
  * @ctemp:	Composite Temperature
  * @pdlu:	Percentage Drive Life Used
  * @ccs:	Composite Controller Status
