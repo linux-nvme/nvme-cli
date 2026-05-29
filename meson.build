@@ -494,6 +494,7 @@ if host_system == 'windows'
     add_project_arguments(
         [
             '-DNOMINMAX',   # don't include Windows min/max definitions
+            '-D_POSIX_THREAD_SAFE_FUNCTIONS',   # enables gmtime_r support
         ],
         language : 'c',
     )
@@ -750,6 +751,7 @@ dep_dict = {
 if host_system == 'windows'
     dep_dict += {
         'kernel32':     kernel32_dep.found(),
+        'bcrypt':       bcrypt_dep.found(),
     }
 endif
 summary(dep_dict, section: 'Dependencies', bool_yn: true)
