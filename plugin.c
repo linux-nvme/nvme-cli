@@ -6,8 +6,10 @@
 
 #include <libnvme.h>
 
+#include "nvme.h"
 #include "plugin.h"
 #include "util/argconfig.h"
+#include "util/cleanup.h"
 
 static int version_cmd(struct plugin *plugin)
 {
@@ -152,19 +154,68 @@ void general_help(struct plugin *plugin, char *str)
 
 int handle_plugin(int argc, char **argv, struct plugin *plugin)
 {
-	char *str = argv[0];
 	char use[0x100];
 	struct plugin *extension;
 	struct program *prog = plugin->parent;
 	struct command **cmd = plugin->commands;
 	struct command *cr = NULL;
+	bool opt_help = false, opt_version = false;
 	bool cr_valid = false;
-	int dash_count = 0;
+	char *str;
+	int err;
 
 	if (!argc) {
 		general_help(plugin, NULL);
 		return 0;
 	}
+
+	/*
+	 * look for global options before the sub command parser and
+	 * pre-fill the global nvme_args variable.
+	 */
+	NVME_ARGS(global_opts,
+		OPT_FLAG("help",     'h', &opt_help,     "show help text"),
+		OPT_FLAG("version",  'V', &opt_version,  "show version"));
+	err = argconfig_parse_global(argc, argv, global_opts);
+	if (err) {
+		general_help(plugin, NULL);
+		return err;
+	}
+
+	argc -= optind;
+	argv += optind;
+
+	if (opt_help) {
+		__cleanup_free char **help_argv = NULL;
+		__cleanup_free char *help_name = NULL;
+
+		if (argc <= 0) {
+			general_help(plugin, NULL);
+			return 0;
+		}
+
+		help_argv = malloc((argc + 1) * sizeof(*help_argv));
+		if (!help_argv)
+			return -ENOMEM;
+
+		help_name = strdup("help");
+		if (!help_name)
+			return -ENOMEM;
+
+		help_argv[0] = help_name;
+		memcpy(&help_argv[1], argv, argc * sizeof(*argv));
+		return help(argc + 1, help_argv, plugin);
+	}
+
+	if (opt_version)
+		return version_cmd(plugin);
+
+	if (!argc) {
+		general_help(plugin, NULL);
+		return 0;
+	}
+
+	str = argv[0];
 
 	if (!plugin->name)
 		snprintf(use, sizeof(use), "%s %s <device> [OPTIONS]", prog->name, str);
@@ -172,14 +223,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 		snprintf(use, sizeof(use), "%s %s %s <device> [OPTIONS]", prog->name, plugin->name, str);
 	argconfig_append_usage(use);
 
-	/* translate --help, -h and --version into commands */
-	while (str[dash_count] == '-')
-		dash_count++;
-
-	if (dash_count)
-		str += dash_count;
-
-	if (!strcmp(str, "help") || (dash_count == 1 && !strcmp(str, "h")))
+	if (!strcmp(str, "help"))
 		return help(argc, argv, plugin);
 	if (!strcmp(str, "version"))
 		return version_cmd(plugin);
@@ -214,7 +258,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	extension = plugin->next;
 	while (extension) {
 		if (!strcmp(str, extension->name))
-			return handle_plugin(argc - 1, &argv[1], extension);
+			return handle_plugin(argc, argv, extension);
 		extension = extension->next;
 	}
 
@@ -225,10 +269,25 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 	extension = plugin->next;
 	while (extension) {
 		if (!strncmp(str, extension->name, strlen(extension->name))) {
+			__cleanup_free char **sub_argv = NULL;
+			__cleanup_free char *name_copy = NULL;
+
+			sub_argv = malloc((argc + 1) * sizeof(*sub_argv));
+			if (!sub_argv)
+				return -ENOMEM;
+
 			argv[0] += strlen(extension->name);
 			while (*argv[0] == '-')
 				argv[0]++;
-			return handle_plugin(argc, &argv[0], extension);
+
+			name_copy = strdup(extension->name);
+			if (!name_copy)
+				return -ENOMEM;
+
+			sub_argv[0] = name_copy;
+			memcpy(&sub_argv[1], argv, argc * sizeof(*argv));
+
+			return handle_plugin(argc + 1, sub_argv, extension);
 		}
 		extension = extension->next;
 	}
