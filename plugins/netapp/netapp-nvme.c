@@ -968,7 +968,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 
 	if (num_smdevices) {
 		if (fmt == NNORMAL || fmt == NCOLUMN) {
-			if (argconfig_parse_seen(opts, "verbose"))
+			if (nvme_args.verbose)
 				netapp_smdevices_print_verbose(smdevices,
 						num_smdevices, fmt, devname);
 			else
@@ -1068,7 +1068,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 
 	if (num_ontapdevices) {
 		if (fmt == NNORMAL || fmt == NCOLUMN) {
-			if (argconfig_parse_seen(opts, "verbose"))
+			if (nvme_args.verbose)
 				netapp_ontapdevices_print_verbose(ontapdevices,
 						num_ontapdevices, fmt, devname);
 			else
