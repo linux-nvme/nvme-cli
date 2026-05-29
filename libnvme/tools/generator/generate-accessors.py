@@ -14,7 +14,8 @@ Parses C header files and produces:
 
 Limitations:
   - Does not support typedef struct.
-  - Does not support struct within struct.
+  - Nested struct members (annotated // !access:nested) are not included
+    in generated destructors (!generate-lifecycle).
 
 Annotations use // line-comment style.  After '//', each '!keyword' token
 (optionally followed by ':metadata') is a command.  The ':metadata' portion
@@ -194,6 +195,12 @@ SCALAR_ARRAY_RE = re.compile(
     r'\s*\[\s*([A-Za-z0-9_]+)\s*\]\s*;'
 )
 
+# Matches:  struct type_name field_name;
+# Used to identify nested struct members annotated with !access:nested.
+NESTED_MEMBER_RE = re.compile(
+    r'^struct\s+([A-Za-z_][A-Za-z0-9_]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*;'
+)
+
 
 # ---------------------------------------------------------------------------
 # Annotation helpers
@@ -329,11 +336,11 @@ class Member:
 
     __slots__ = ('name', 'type', 'read_mode', 'write_mode',
                  'is_char_array', 'is_char_ptr_array', 'is_scalar_array',
-                 'array_size', 'py_visible', 'py_alias')
+                 'array_size', 'py_visible', 'py_alias', 'field_path')
 
     def __init__(self, name, type_str, read_mode, write_mode,
                  is_char_array, is_char_ptr_array, is_scalar_array, array_size,
-                 py_visible=True, py_alias=None):
+                 py_visible=True, py_alias=None, field_path=None):
         self.name = name
         self.type = type_str          # e.g. "const char *", "int", "__u32"
         self.read_mode = read_mode    # 'generated' | 'custom' | 'none'
@@ -344,6 +351,7 @@ class Member:
         self.array_size = array_size  # for fixed-size arrays (char[N] or type[N])
         self.py_visible = py_visible  # False → excluded from SWIG fragment
         self.py_alias = py_alias      # str → rename Python attribute; None → use C name
+        self.field_path = field_path if field_path is not None else name
 
     @property
     def has_accessor(self):
@@ -367,19 +375,32 @@ class Member:
 # Parsing
 # ---------------------------------------------------------------------------
 
-def parse_members(struct_name, raw_body, struct_defaults, verbose):
+def parse_members(struct_name, raw_body, struct_defaults, verbose,
+                  nested_map=None, field_prefix='', visiting=None,
+                  referenced=None, errors=None):
     """Parse *raw_body* and return a list of Member objects.
 
     *struct_defaults* is a (read_mode, write_mode) tuple taken from the
-    struct-level ``!generate-accessors`` annotation.  Each member inherits
-    these defaults and may override one or both axes with
-    ``// !access:read=...,write=...``.
+    struct-level ``!generate-accessors`` or ``!nested-accessors`` annotation.
+    Each member inherits these defaults and may override one or both axes
+    with ``// !access:read=...,write=...``.
 
     Modes: 'generated' | 'custom' | 'none'.
 
     Members where both axes are 'none' are dropped entirely.  Members with
     at least one non-'none' axis are retained so the SWIG fragment emitter
     can see 'custom' axes alongside 'generated' ones.
+
+    *nested_map* maps struct type names to ``(raw_body, defaults)`` tuples
+    for every struct annotated ``// !nested-accessors``.  When a member is
+    annotated ``// !access:nested`` the resolver recurses into the nested
+    struct, prefixing each resolved member's field_path with
+    ``field_prefix + field_name + "."``.
+
+    *visiting* is the set of struct type names currently being expanded
+    (cycle detection).  *referenced* accumulates type names that were
+    successfully looked up, for post-pass unreferenced-struct warnings.
+    *errors* collects error messages; when None errors are printed immediately.
 
     Per-member Python hints:
       ``// !python:none``        → Member.py_visible = False (exclude from SWIG)
@@ -425,15 +446,65 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
 
         if not clean or ';' not in clean:
             continue
-        if 'static' in clean or 'struct' in clean:
+        if 'static' in clean:
+            continue
+
+        # --- nested struct member: struct type_name field_name; ---------
+        if 'struct' in clean:
+            nested_override = parse_nested_annotation(raw_line)
+            if nested_override is not None and nested_map is not None:
+                m = NESTED_MEMBER_RE.match(clean)
+                if m:
+                    nested_type  = m.group(1)
+                    nested_field = m.group(2)
+                    if nested_type not in nested_map:
+                        msg = (f'error: !access:nested references '
+                               f'struct {nested_type} which is not '
+                               f'annotated // !nested-accessors')
+                        if errors is not None:
+                            errors.append(msg)
+                        else:
+                            print(msg, file=sys.stderr)
+                    else:
+                        vis = visiting if visiting is not None else set()
+                        if nested_type in vis:
+                            msg = (f'error: !access:nested cycle '
+                                   f'detected at struct {nested_type}')
+                            if errors is not None:
+                                errors.append(msg)
+                            else:
+                                print(msg, file=sys.stderr)
+                        else:
+                            if referenced is not None:
+                                referenced.add(nested_type)
+                            nested_body, (nd_r, nd_w) = \
+                                nested_map[nested_type]
+                            # Apply any per-usage overrides from
+                            # !access:nested:read=M,write=M
+                            nd_r = nested_override.get('read',  nd_r)
+                            nd_w = nested_override.get('write', nd_w)
+                            sub = parse_members(
+                                struct_name,
+                                nested_body,
+                                (nd_r, nd_w),
+                                verbose,
+                                nested_map=nested_map,
+                                field_prefix=(
+                                    f'{field_prefix}{nested_field}.'),
+                                visiting=vis | {nested_type},
+                                referenced=referenced,
+                                errors=errors,
+                            )
+                            members.extend(sub)
             continue
 
         # --- char array: [const] char name[size]; -----------------------
         m = CHAR_ARRAY_RE.match(clean)
         if m:
             is_const_qual = bool(m.group(1))
+            cname = m.group(2)
             members.append(Member(
-                name=m.group(2),
+                name=cname,
                 type_str='const char *',
                 read_mode=read_mode,
                 # const forces write=none — you cannot generate a setter
@@ -445,6 +516,7 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
                 array_size=m.group(3),
                 py_visible=py_visible,
                 py_alias=py_alias,
+                field_path=f'{field_prefix}{cname}',
             ))
             continue
 
@@ -452,8 +524,9 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
         m = SCALAR_ARRAY_RE.match(clean)
         if m:
             is_const_qual = bool(m.group(1))
+            sname = m.group(3)
             members.append(Member(
-                name=m.group(3),
+                name=sname,
                 type_str=m.group(2),
                 read_mode=read_mode,
                 write_mode='none' if is_const_qual else write_mode,
@@ -463,6 +536,7 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
                 array_size=m.group(4),
                 py_visible=py_visible,
                 py_alias=py_alias,
+                field_path=f'{field_prefix}{sname}',
             ))
             continue
 
@@ -498,6 +572,7 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose):
                 array_size=None,
                 py_visible=py_visible,
                 py_alias=py_alias,
+                field_path=f'{field_prefix}{name}',
             ))
 
     return members
@@ -590,6 +665,9 @@ def parse_access_override(raw_line):
     partial spec yields a dict with only the named axes — missing axes
     are the caller's responsibility to fill in (typically from the
     struct-level default).
+
+    ``!access:nested`` is handled separately by parse_nested_annotation()
+    and is intentionally ignored here.
     """
     comment = _comment_text(raw_line)
     if comment is None:
@@ -597,7 +675,54 @@ def parse_access_override(raw_line):
     m = re.search(r'!access:(\S+)(?=[\s!]|$)', comment)
     if not m:
         return None
-    return parse_access_spec(m.group(1), '!access')
+    spec = m.group(1)
+    if spec == 'nested' or spec.startswith('nested:'):
+        return None
+    return parse_access_spec(spec, '!access')
+
+
+def parse_nested_annotation(raw_line):
+    """Return an override dict from ``!access:nested[:spec]``, or None if absent.
+
+    Bare ``// !access:nested``            → {}   (no overrides)
+    ``// !access:nested:write=none``      → {'write': 'none'}
+    ``// !access:nested:read=M,write=M``  → {'read': M, 'write': M}
+
+    The returned dict is applied on top of the nested struct's own
+    ``!nested-accessors`` defaults at the call site.  Returns None when
+    the annotation is not present on the line.
+    """
+    comment = _comment_text(raw_line)
+    if comment is None:
+        return None
+    m = re.search(r'!access:nested(?::(\S+))?(?=[\s!]|$)', comment)
+    if not m:
+        return None
+    return parse_access_spec(m.group(1), '!access:nested') if m.group(1) else {}
+
+
+_NESTED_ACCESSORS_BARE_RE = re.compile(r'!nested-accessors(?=[\s!]|$)')
+_NESTED_ACCESSORS_SPEC_RE = re.compile(r'!nested-accessors:(\S+)(?=[\s!]|$)')
+
+
+def parse_nested_accessors_annotation(raw_body):
+    """Return (read_mode, write_mode) from ``// !nested-accessors[:spec]``.
+
+    Returns None when the annotation is absent.  Follows the same rules as
+    parse_struct_annotation() — bare form defaults to ('generated', 'generated').
+    """
+    for line in raw_body.splitlines():
+        comment = _comment_text(line)
+        if comment is None:
+            continue
+        m = _NESTED_ACCESSORS_SPEC_RE.search(comment)
+        if m:
+            parsed = parse_access_spec(m.group(1), '!nested-accessors')
+            return (parsed.get('read',  'generated'),
+                    parsed.get('write', 'generated'))
+        if _NESTED_ACCESSORS_BARE_RE.search(comment):
+            return ('generated', 'generated')
+    return None
 
 
 def parse_lifecycle_annotation(raw_body):
@@ -915,7 +1040,28 @@ def parse_members_for_defaults(raw_body):
     return defaults
 
 
-def parse_file(text, verbose):
+def collect_nested_map(text):
+    """Pass 1: collect all ``// !nested-accessors`` struct definitions.
+
+    Returns a dict mapping struct type names to ``(raw_body, defaults)``
+    tuples, where *defaults* is the ``(read_mode, write_mode)`` pair from
+    the ``!nested-accessors`` annotation (bare form → ``('generated',
+    'generated')``).
+
+    Only structs carrying ``// !nested-accessors`` are collected; all others
+    are ignored.
+    """
+    result = {}
+    for match in STRUCT_RE.finditer(text):
+        struct_name = match.group(1)
+        raw_body    = match.group(2)
+        defaults = parse_nested_accessors_annotation(raw_body)
+        if defaults is not None:
+            result[struct_name] = (raw_body, defaults)
+    return result
+
+
+def parse_file(text, verbose, nested_map=None, referenced=None, errors=None):
     """Return list of (struct_name, [Member], [LifecycleMember],
     [DefaultMember], emit_py_fragment) tuples.
 
@@ -924,6 +1070,11 @@ def parse_file(text, verbose):
     inside the opening brace line, are processed.
 
     *emit_py_fragment* is True when the struct also carries ``!generate-python``.
+
+    *nested_map* is the dict produced by ``collect_nested_map()`` across all
+    input headers (Pass 1).  It is forwarded to ``parse_members()`` so that
+    ``// !access:nested`` members can be resolved.  *referenced* and *errors*
+    are also forwarded for validation bookkeeping.
     """
     result = []
 
@@ -945,7 +1096,9 @@ def parse_file(text, verbose):
         acc_defaults = struct_defaults if struct_defaults is not None else ('none', 'none')
         if struct_defaults is not None or emit_py_fragment:
             members = parse_members(
-                struct_name, raw_body, acc_defaults, verbose)
+                struct_name, raw_body, acc_defaults, verbose,
+                nested_map=nested_map, referenced=referenced,
+                errors=errors)
 
         lc_members = None
         if lifecycle_mode:
@@ -1047,11 +1200,14 @@ def emit_hdr_setter_str_array(f, prefix, sname, mname):
 def emit_hdr_setter_val(f, prefix, sname, mname, mtype):
     """Emit a header declaration for a value setter."""
     fn = _set_name(prefix, sname, mname)
+    param = f' * @{mname}: Value to assign to the {mname} field.'
+    if not fits_80(param):
+        param = f' * @{mname}: New value.'
     f.write(
         f'/**\n'
         f'{kdoc_summary(fn, f"Set {mname}.", "Setter.")}\n'
         f' * @p: The &struct {sname} instance to update.\n'
-        f' * @{mname}: Value to assign to the {mname} field.\n'
+        f'{param}\n'
         f' */\n'
     )
 
@@ -1071,12 +1227,15 @@ def emit_hdr_getter(f, prefix, sname, mname, mtype, is_dyn_str):
     """Emit a header declaration for a getter."""
     fn = _get_name(prefix, sname, mname)
     tail = ', or NULL if not set.' if is_dyn_str else '.'
+    ret = f' * Return: The value of the {mname} field{tail}'
+    if not fits_80(ret):
+        ret = f' * Return: Current value{tail}'
     f.write(
         f'/**\n'
         f'{kdoc_summary(fn, f"Get {mname}.", "Getter.")}\n'
         f' * @p: The &struct {sname} instance to query.\n'
         f' *\n'
-        f' * Return: The value of the {mname} field{tail}\n'
+        f'{ret}\n'
         f' */\n'
     )
 
@@ -1175,7 +1334,7 @@ def generate_hdr(f, prefix, struct_name, members):
 PUB = '__libnvme_public '
 
 
-def emit_src_setter_dynstr(f, prefix, sname, mname):
+def emit_src_setter_dynstr(f, prefix, sname, mname, field_path):
     """Emit a dynamic-string setter (free old + strdup new)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
            f'(struct {sname} *p, const char *{mname})')
@@ -1188,16 +1347,16 @@ def emit_src_setter_dynstr(f, prefix, sname, mname):
             f'\t\tconst char *{mname})\n'
         )
 
-    f.write(f'{{\n\tfree(p->{mname});\n')
-    body = f'\tp->{mname} = {mname} ? strdup({mname}) : NULL;'
+    f.write(f'{{\n\tfree(p->{field_path});\n')
+    body = f'\tp->{field_path} = {mname} ? strdup({mname}) : NULL;'
     if fits_80_ntabs(1, body):
         f.write(body + '\n')
     else:
-        f.write(f'\tp->{mname} =\n\t\t{mname} ? strdup({mname}) : NULL;\n')
+        f.write(f'\tp->{field_path} =\n\t\t{mname} ? strdup({mname}) : NULL;\n')
     f.write('}\n\n')
 
 
-def emit_src_setter_chararray(f, prefix, sname, mname, array_size):
+def emit_src_setter_chararray(f, prefix, sname, mname, array_size, field_path):
     """Emit a fixed char-array setter (snprintf)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
            f'(struct {sname} *p, const char *{mname})')
@@ -1211,11 +1370,11 @@ def emit_src_setter_chararray(f, prefix, sname, mname, array_size):
         )
 
     f.write(
-        f'{{\n\tsnprintf(p->{mname}, {array_size}, "%s", {mname});\n}}\n\n'
+        f'{{\n\tsnprintf(p->{field_path}, {array_size}, "%s", {mname});\n}}\n\n'
     )
 
 
-def emit_src_setter_str_array(f, prefix, sname, mname):
+def emit_src_setter_str_array(f, prefix, sname, mname, field_path):
     """Emit a NULL-terminated string-array setter (deep copy)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
            f'(struct {sname} *p, const char *const *{mname})')
@@ -1250,44 +1409,46 @@ def emit_src_setter_str_array(f, prefix, sname, mname):
         '\t\t\t}\n'
         '\t\t}\n'
         '\t}\n\n'
-        f'\tfor (i = 0; p->{mname} && p->{mname}[i]; i++)\n'
-        f'\t\tfree(p->{mname}[i]);\n'
-        f'\tfree(p->{mname});\n'
-        f'\tp->{mname} = new_array;\n'
+        f'\tfor (i = 0; p->{field_path} && p->{field_path}[i]; i++)\n'
+        f'\t\tfree(p->{field_path}[i]);\n'
+        f'\tfree(p->{field_path});\n'
+        f'\tp->{field_path} = new_array;\n'
         '}\n\n'
     )
 
 
-def emit_src_setter_val(f, prefix, sname, mname, mtype):
+def emit_src_setter_val(f, prefix, sname, mname, mtype, field_path):
     """Emit a value setter (direct assignment)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
            f'(struct {sname} *p, {mtype} {mname})')
     if fits_80(sig):
         f.write(
             sig + '\n'
-            f'{{\n\tp->{mname} = {mname};\n}}\n\n'
+            f'{{\n\tp->{field_path} = {mname};\n}}\n\n'
         )
     else:
         f.write(
             f'{PUB}void {_set_name(prefix, sname, mname)}(\n'
             f'\t\tstruct {sname} *p,\n'
             f'\t\t{mtype} {mname})\n'
-            f'{{\n\tp->{mname} = {mname};\n}}\n\n'
+            f'{{\n\tp->{field_path} = {mname};\n}}\n\n'
         )
 
 
-def emit_src_getter(f, prefix, sname, mname, mtype, cast=None):
+def emit_src_getter(f, prefix, sname, mname, mtype, field_path,
+                    cast=None):
     """Emit a getter (return member value).
 
     *cast* is an optional C cast expression (e.g. ``'(const char *const *)'``)
-    inserted before ``p->mname`` in the return statement.  Required when the
-    declared return type differs from the member's raw storage type (e.g. a
+    inserted before ``p->field_path`` in the return statement.  Required when
+    the declared return type differs from the member's raw storage type (e.g. a
     ``char **`` field exposed as ``const char *const *``).
     """
     sep = type_sep(mtype)
     sig = (f'{PUB}{mtype}{sep}{_get_name(prefix, sname, mname)}'
            f'(const struct {sname} *p)')
-    ret = f'\treturn {cast}p->{mname};\n' if cast else f'\treturn p->{mname};\n'
+    ret = (f'\treturn {cast}p->{field_path};\n' if cast
+           else f'\treturn p->{field_path};\n')
     if fits_80(sig):
         f.write(sig + '\n' f'{{\n{ret}}}\n\n')
     else:
@@ -1298,7 +1459,8 @@ def emit_src_getter(f, prefix, sname, mname, mtype, cast=None):
         )
 
 
-def emit_src_setter_scalar_array(f, prefix, sname, mname, elem_type, array_size):
+def emit_src_setter_scalar_array(f, prefix, sname, mname, elem_type,
+                                 array_size, field_path):
     """Emit a fixed-size scalar-array setter (memcpy)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
            f'(struct {sname} *p, const {elem_type} {mname}[{array_size}])')
@@ -1310,10 +1472,14 @@ def emit_src_setter_scalar_array(f, prefix, sname, mname, elem_type, array_size)
             f'\t\tstruct {sname} *p,\n'
             f'\t\tconst {elem_type} {mname}[{array_size}])\n'
         )
-    f.write(f'{{\n\tmemcpy(p->{mname}, {mname}, sizeof(p->{mname}));\n}}\n\n')
+    f.write(
+        f'{{\n\tmemcpy(p->{field_path}, {mname},'
+        f' sizeof(p->{field_path}));\n}}\n\n'
+    )
 
 
-def emit_src_getter_scalar_array(f, prefix, sname, mname, elem_type):
+def emit_src_getter_scalar_array(f, prefix, sname, mname, elem_type,
+                                 field_path):
     """Emit a fixed-size scalar-array getter (return pointer to first element)."""
     ret_type = f'const {elem_type} *'
     sig = (f'{PUB}{ret_type}{_get_name(prefix, sname, mname)}'
@@ -1325,39 +1491,42 @@ def emit_src_getter_scalar_array(f, prefix, sname, mname, elem_type):
             f'{PUB}{ret_type}{_get_name(prefix, sname, mname)}(\n'
             f'\t\tconst struct {sname} *p)\n'
         )
-    f.write(f'{{\n\treturn p->{mname};\n}}\n\n')
+    f.write(f'{{\n\treturn p->{field_path};\n}}\n\n')
 
 
 def generate_src(f, prefix, struct_name, members):
     """Write source implementations for all members of one struct."""
     for member in members:
+        fp = member.field_path
         if member.is_scalar_array:
             if member.write_mode == 'generated':
                 emit_src_setter_scalar_array(f, prefix, struct_name,
                                              member.name, member.type,
-                                             member.array_size)
+                                             member.array_size, fp)
             if member.read_mode == 'generated':
                 emit_src_getter_scalar_array(f, prefix, struct_name,
-                                             member.name, member.type)
+                                             member.name, member.type, fp)
             continue
         is_dyn_str = (not member.is_char_array and
                       not member.is_char_ptr_array and
                       member.type == 'const char *')
         if member.write_mode == 'generated':
             if is_dyn_str:
-                emit_src_setter_dynstr(f, prefix, struct_name, member.name)
+                emit_src_setter_dynstr(f, prefix, struct_name,
+                                       member.name, fp)
             elif member.is_char_ptr_array:
-                emit_src_setter_str_array(f, prefix, struct_name, member.name)
+                emit_src_setter_str_array(f, prefix, struct_name,
+                                          member.name, fp)
             elif member.is_char_array:
                 emit_src_setter_chararray(f, prefix, struct_name,
-                                          member.name, member.array_size)
+                                          member.name, member.array_size, fp)
             else:
                 emit_src_setter_val(f, prefix, struct_name,
-                                    member.name, member.type)
+                                    member.name, member.type, fp)
         if member.read_mode == 'generated':
             cast = '(const char *const *)' if member.is_char_ptr_array else None
             emit_src_getter(f, prefix, struct_name, member.name, member.type,
-                            cast=cast)
+                            fp, cast=cast)
 
 
 # ---------------------------------------------------------------------------
@@ -1628,7 +1797,10 @@ def generate_swig_fragment(f, prefix, struct_name, members, errors,
         f.write(f'%rename({struct_alias}) {struct_name};\n')
 
     # Collect Python-visible members (has accessor AND py_visible flag set).
-    visible = [m for m in members if m.py_visible and m.has_accessor]
+    # Nested members (field_path contains a dot) cannot be accessed as direct
+    # struct fields in SWIG — exclude them from the Python fragment.
+    visible = [m for m in members
+               if m.py_visible and m.has_accessor and m.field_path == m.name]
 
     # Collision detection — report all collisions before emitting anything.
     seen = {}
@@ -1834,6 +2006,10 @@ def main():
     parser.add_argument('-d', '--dict-table-out', default=None,
                         dest='d_fname',   metavar='FILE',
                         help='Generated dict-table header (*.h). Omit to skip.')
+    parser.add_argument('-n', '--nested-source', default=[], nargs='+',
+                        dest='nested_sources', metavar='FILE',
+                        help='Headers scanned for // !nested-accessors structs '
+                             'only; no accessor output is generated from them.')
     parser.add_argument('-p', '--prefix',  default='',
                         dest='prefix',    metavar='STR',
                         help='Prefix prepended to every generated function name.')
@@ -1860,7 +2036,41 @@ def main():
         sys.exit(1)
 
     # -----------------------------------------------------------------------
-    # Pass 1 — parse all header files, accumulate generated fragments.
+    # Pass 1 — collect all !nested-accessors struct definitions across every
+    # input header, building nested_map before any accessor generation starts.
+    # --nested-source headers contribute to nested_map only; no accessor
+    # output is generated from them.
+    # -----------------------------------------------------------------------
+    file_texts = {}
+    nested_map = {}
+
+    nested_source_files = []
+    for pattern in args.nested_sources:
+        expanded = glob_module.glob(pattern)
+        if expanded:
+            nested_source_files.extend(
+                os.path.realpath(p) for p in sorted(expanded))
+        else:
+            print(f"Warning: No match for {pattern}", file=sys.stderr)
+
+    for in_hdr in nested_source_files + header_files:
+        if in_hdr in file_texts:
+            continue  # already read (avoid duplicates if listed in both)
+        try:
+            with open(in_hdr) as f:
+                text = f.read()
+        except OSError as e:
+            print(f"error: cannot read '{in_hdr}': {e}", file=sys.stderr)
+            sys.exit(1)
+        file_texts[in_hdr] = text
+        nested_map.update(collect_nested_map(text))
+
+    if args.verbose and nested_map:
+        print(f"\nPass 1: collected {len(nested_map)} !nested-accessors "
+              f"struct(s): {', '.join(sorted(nested_map))}")
+
+    # -----------------------------------------------------------------------
+    # Pass 2 — parse all header files, accumulate generated fragments.
     # -----------------------------------------------------------------------
     files_to_include = []   # basenames of headers that contributed structs
     forward_declares = []   # struct names needing forward declarations
@@ -1869,7 +2079,32 @@ def main():
     ld_parts  = []          # fragments for accessors.ld
     swig_parts = []         # fragments for accessors.i (if --swig-out given)
     swig_errors = []        # deferred SWIG validation errors
+    nested_errors = []      # deferred !access:nested validation errors
+    referenced_nested = set()  # !nested-accessors types actually resolved
     swig_aliases = set()    # alias names seen so far — uniqueness guard
+
+    # Pre-scan for !access:nested references that Pass 2 will not see:
+    #   - references inside !nested-accessors struct bodies (e.g. the
+    #     transitive libnvme_ctrl_params::cfg -> libnvme_fabrics_config)
+    #   - references inside !generate-accessors struct bodies that live in
+    #     --nested-source files (Pass 2 skips those files entirely)
+    # Both are collected here to suppress false-positive unreferenced warnings.
+    for in_hdr, text in file_texts.items():
+        is_nested_src = in_hdr in nested_source_files
+        for match in STRUCT_RE.finditer(text):
+            raw_body = match.group(2)
+            has_generate = parse_struct_annotation(raw_body) is not None
+            has_nested = parse_nested_accessors_annotation(raw_body) is not None
+            if not (has_nested or (is_nested_src and has_generate)):
+                continue
+            for raw_line in raw_body.splitlines():
+                if parse_nested_annotation(raw_line) is None:
+                    continue
+                clean = strip_inline_comment(
+                    strip_block_comments(raw_line)).strip()
+                m = NESTED_MEMBER_RE.match(clean)
+                if m:
+                    referenced_nested.add(m.group(1))
 
     emit_swig   = args.s_fname is not None
     first_swig  = True      # prelude emitted once, before first struct
@@ -1878,14 +2113,12 @@ def main():
         if args.verbose:
             print(f"\nProcessing {in_hdr}")
 
-        try:
-            with open(in_hdr) as f:
-                text = f.read()
-        except OSError as e:
-            print(f"error: cannot read '{in_hdr}': {e}", file=sys.stderr)
-            sys.exit(1)
+        text = file_texts[in_hdr]
 
-        structs = parse_file(text, args.verbose)
+        structs = parse_file(text, args.verbose,
+                             nested_map=nested_map,
+                             referenced=referenced_nested,
+                             errors=nested_errors)
 
         if not structs:
             if args.verbose:
@@ -1956,6 +2189,18 @@ def main():
                 generate_swig_fragment(swig_buf, args.prefix, struct_name,
                                        members, swig_errors, struct_alias)
                 swig_parts.append(swig_buf.getvalue())
+
+    # Warn about !nested-accessors structs that were never referenced.
+    for type_name in sorted(nested_map):
+        if type_name not in referenced_nested:
+            print(f"warning: struct {type_name} is annotated "
+                  f"// !nested-accessors but is never referenced by "
+                  f"// !access:nested", file=sys.stderr)
+
+    if nested_errors:
+        for msg in nested_errors:
+            print(msg, file=sys.stderr)
+        sys.exit(1)
 
     if swig_errors:
         for msg in swig_errors:

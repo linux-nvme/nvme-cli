@@ -22,12 +22,13 @@ if host_system == 'windows'
         'nvme/ioctl-win.c',
         'nvme/lib-win.c',
         'nvme/mem-win.c',
-        'nvme/no-linux.c',
+        'nvme/no-crypto.c',
         'nvme/storageport.c',
         'nvme/tree-win.c',
     ]
 else
     sources += [
+        'nvme/crypto.c',
         'nvme/filters.c',
         'nvme/ioctl-linux.c',
         'nvme/linux.c',

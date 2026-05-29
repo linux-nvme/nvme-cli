@@ -26,6 +26,365 @@
 #include "compiler-attributes.h"
 
 /****************************************************************************
+ * Accessors for: struct libnvmf_context
+ ****************************************************************************/
+
+__libnvme_public const char *libnvmf_context_get_transport(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.transport;
+}
+
+__libnvme_public const char *libnvmf_context_get_traddr(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.traddr;
+}
+
+__libnvme_public const char *libnvmf_context_get_host_traddr(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.host_traddr;
+}
+
+__libnvme_public const char *libnvmf_context_get_host_iface(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.host_iface;
+}
+
+__libnvme_public const char *libnvmf_context_get_trsvcid(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.trsvcid;
+}
+
+__libnvme_public const char *libnvmf_context_get_subsysnqn(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.subsysnqn;
+}
+
+__libnvme_public void libnvmf_context_set_queue_size(
+		struct libnvmf_context *p,
+		int queue_size)
+{
+	p->ctrl_params.cfg.queue_size = queue_size;
+}
+
+__libnvme_public int libnvmf_context_get_queue_size(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.queue_size;
+}
+
+__libnvme_public void libnvmf_context_set_nr_io_queues(
+		struct libnvmf_context *p,
+		int nr_io_queues)
+{
+	p->ctrl_params.cfg.nr_io_queues = nr_io_queues;
+}
+
+__libnvme_public int libnvmf_context_get_nr_io_queues(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.nr_io_queues;
+}
+
+__libnvme_public void libnvmf_context_set_reconnect_delay(
+		struct libnvmf_context *p,
+		int reconnect_delay)
+{
+	p->ctrl_params.cfg.reconnect_delay = reconnect_delay;
+}
+
+__libnvme_public int libnvmf_context_get_reconnect_delay(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.reconnect_delay;
+}
+
+__libnvme_public void libnvmf_context_set_ctrl_loss_tmo(
+		struct libnvmf_context *p,
+		int ctrl_loss_tmo)
+{
+	p->ctrl_params.cfg.ctrl_loss_tmo = ctrl_loss_tmo;
+}
+
+__libnvme_public int libnvmf_context_get_ctrl_loss_tmo(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.ctrl_loss_tmo;
+}
+
+__libnvme_public void libnvmf_context_set_fast_io_fail_tmo(
+		struct libnvmf_context *p,
+		int fast_io_fail_tmo)
+{
+	p->ctrl_params.cfg.fast_io_fail_tmo = fast_io_fail_tmo;
+}
+
+__libnvme_public int libnvmf_context_get_fast_io_fail_tmo(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.fast_io_fail_tmo;
+}
+
+__libnvme_public void libnvmf_context_set_keep_alive_tmo(
+		struct libnvmf_context *p,
+		int keep_alive_tmo)
+{
+	p->ctrl_params.cfg.keep_alive_tmo = keep_alive_tmo;
+}
+
+__libnvme_public int libnvmf_context_get_keep_alive_tmo(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.keep_alive_tmo;
+}
+
+__libnvme_public void libnvmf_context_set_nr_write_queues(
+		struct libnvmf_context *p,
+		int nr_write_queues)
+{
+	p->ctrl_params.cfg.nr_write_queues = nr_write_queues;
+}
+
+__libnvme_public int libnvmf_context_get_nr_write_queues(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.nr_write_queues;
+}
+
+__libnvme_public void libnvmf_context_set_nr_poll_queues(
+		struct libnvmf_context *p,
+		int nr_poll_queues)
+{
+	p->ctrl_params.cfg.nr_poll_queues = nr_poll_queues;
+}
+
+__libnvme_public int libnvmf_context_get_nr_poll_queues(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.nr_poll_queues;
+}
+
+__libnvme_public void libnvmf_context_set_tos(
+		struct libnvmf_context *p,
+		int tos)
+{
+	p->ctrl_params.cfg.tos = tos;
+}
+
+__libnvme_public int libnvmf_context_get_tos(const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.tos;
+}
+
+__libnvme_public void libnvmf_context_set_keyring_id(
+		struct libnvmf_context *p,
+		long keyring_id)
+{
+	p->ctrl_params.cfg.keyring_id = keyring_id;
+}
+
+__libnvme_public long libnvmf_context_get_keyring_id(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.keyring_id;
+}
+
+__libnvme_public void libnvmf_context_set_tls_key_id(
+		struct libnvmf_context *p,
+		long tls_key_id)
+{
+	p->ctrl_params.cfg.tls_key_id = tls_key_id;
+}
+
+__libnvme_public long libnvmf_context_get_tls_key_id(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.tls_key_id;
+}
+
+__libnvme_public void libnvmf_context_set_tls_configured_key_id(
+		struct libnvmf_context *p,
+		long tls_configured_key_id)
+{
+	p->ctrl_params.cfg.tls_configured_key_id = tls_configured_key_id;
+}
+
+__libnvme_public long libnvmf_context_get_tls_configured_key_id(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.tls_configured_key_id;
+}
+
+__libnvme_public void libnvmf_context_set_duplicate_connect(
+		struct libnvmf_context *p,
+		bool duplicate_connect)
+{
+	p->ctrl_params.cfg.duplicate_connect = duplicate_connect;
+}
+
+__libnvme_public bool libnvmf_context_get_duplicate_connect(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.duplicate_connect;
+}
+
+__libnvme_public void libnvmf_context_set_disable_sqflow(
+		struct libnvmf_context *p,
+		bool disable_sqflow)
+{
+	p->ctrl_params.cfg.disable_sqflow = disable_sqflow;
+}
+
+__libnvme_public bool libnvmf_context_get_disable_sqflow(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.disable_sqflow;
+}
+
+__libnvme_public void libnvmf_context_set_hdr_digest(
+		struct libnvmf_context *p,
+		bool hdr_digest)
+{
+	p->ctrl_params.cfg.hdr_digest = hdr_digest;
+}
+
+__libnvme_public bool libnvmf_context_get_hdr_digest(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.hdr_digest;
+}
+
+__libnvme_public void libnvmf_context_set_data_digest(
+		struct libnvmf_context *p,
+		bool data_digest)
+{
+	p->ctrl_params.cfg.data_digest = data_digest;
+}
+
+__libnvme_public bool libnvmf_context_get_data_digest(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.data_digest;
+}
+
+__libnvme_public void libnvmf_context_set_tls(
+		struct libnvmf_context *p,
+		bool tls)
+{
+	p->ctrl_params.cfg.tls = tls;
+}
+
+__libnvme_public bool libnvmf_context_get_tls(const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.tls;
+}
+
+__libnvme_public void libnvmf_context_set_concat(
+		struct libnvmf_context *p,
+		bool concat)
+{
+	p->ctrl_params.cfg.concat = concat;
+}
+
+__libnvme_public bool libnvmf_context_get_concat(
+		const struct libnvmf_context *p)
+{
+	return p->ctrl_params.cfg.concat;
+}
+
+__libnvme_public void libnvmf_context_set_default_max_discovery_retries(
+		struct libnvmf_context *p,
+		int default_max_discovery_retries)
+{
+	p->default_max_discovery_retries = default_max_discovery_retries;
+}
+
+__libnvme_public int libnvmf_context_get_default_max_discovery_retries(
+		const struct libnvmf_context *p)
+{
+	return p->default_max_discovery_retries;
+}
+
+__libnvme_public void libnvmf_context_set_default_keep_alive_timeout(
+		struct libnvmf_context *p,
+		int default_keep_alive_timeout)
+{
+	p->default_keep_alive_timeout = default_keep_alive_timeout;
+}
+
+__libnvme_public int libnvmf_context_get_default_keep_alive_timeout(
+		const struct libnvmf_context *p)
+{
+	return p->default_keep_alive_timeout;
+}
+
+__libnvme_public const char *libnvmf_context_get_device(
+		const struct libnvmf_context *p)
+{
+	return p->device;
+}
+
+__libnvme_public void libnvmf_context_set_persistent(
+		struct libnvmf_context *p,
+		bool persistent)
+{
+	p->persistent = persistent;
+}
+
+__libnvme_public bool libnvmf_context_get_persistent(
+		const struct libnvmf_context *p)
+{
+	return p->persistent;
+}
+
+__libnvme_public const char *libnvmf_context_get_hostnqn(
+		const struct libnvmf_context *p)
+{
+	return p->hostnqn;
+}
+
+__libnvme_public const char *libnvmf_context_get_hostid(
+		const struct libnvmf_context *p)
+{
+	return p->hostid;
+}
+
+__libnvme_public const char *libnvmf_context_get_hostkey(
+		const struct libnvmf_context *p)
+{
+	return p->hostkey;
+}
+
+__libnvme_public const char *libnvmf_context_get_ctrlkey(
+		const struct libnvmf_context *p)
+{
+	return p->ctrlkey;
+}
+
+__libnvme_public const char *libnvmf_context_get_keyring(
+		const struct libnvmf_context *p)
+{
+	return p->keyring;
+}
+
+__libnvme_public const char *libnvmf_context_get_tls_key(
+		const struct libnvmf_context *p)
+{
+	return p->tls_key;
+}
+
+__libnvme_public const char *libnvmf_context_get_tls_key_identity(
+		const struct libnvmf_context *p)
+{
+	return p->tls_key_identity;
+}
+
+/****************************************************************************
  * Accessors for: struct libnvmf_discovery_args
  ****************************************************************************/
 

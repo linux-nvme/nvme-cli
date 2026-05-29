@@ -2,7 +2,7 @@
 /*
  * This file is part of libnvme.
  * Copyright (c) 2025 Micron Technology, Inc.
- * 
+ *
  * Authors: Brandon Busacker <bbusacker@micron.com>
  */
 
@@ -116,11 +116,6 @@ __libnvme_public int libnvme_generate_tls_key_identity(struct libnvme_global_ctx
 	return -ENOTSUP;
 }
 
-__libnvme_public char *libnvme_read_hostnqn(void)
-{
-	return NULL;
-}
-
 __libnvme_public int libnvme_gen_dhchap_key(struct libnvme_global_ctx *ctx,
 		char *hostnqn, enum libnvme_hmac_alg hmac,
 		unsigned int key_len, unsigned char *secret,
@@ -135,8 +130,27 @@ __libnvme_public int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
 	return -ENOTSUP;
 }
 
-/* Hostnqn generation */
+__libnvme_public char *libnvme_generate_hostid(void)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvme_generate_hostnqn_from_hostid(char *hostid)
+{
+	return NULL;
+}
+
 __libnvme_public char *libnvme_generate_hostnqn(void)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvme_read_hostnqn(void)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvme_read_hostid(void)
 {
 	return NULL;
 }

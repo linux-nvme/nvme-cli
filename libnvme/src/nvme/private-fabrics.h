@@ -42,12 +42,12 @@ struct libnvmf_hooks {
 	void *user_data;
 };
 
-struct libnvmf_context {
+struct libnvmf_context { // !generate-accessors:read=generated,write=generated
 	struct libnvme_global_ctx *ctx;
-	struct libnvmf_hooks hooks;
+	struct libnvmf_hooks hooks; // !access:read=none,write=none
 
 	/* NVMe controller parameters */
-	struct libnvme_ctrl_params ctrl_params;
+	struct libnvme_ctrl_params ctrl_params; // !access:nested
 
 	/* discovery defaults */
 	int default_max_discovery_retries;
@@ -58,15 +58,15 @@ struct libnvmf_context {
 	bool persistent;
 
 	/* host configuration */
-	const char *hostnqn;
-	const char *hostid;
+	const char *hostnqn; // !access:write=custom
+	const char *hostid;  // !access:write=custom
 
 	/* authentication and transport encryption configuration */
-	const char *hostkey;
-	const char *ctrlkey;
-	const char *keyring;
-	char *tls_key;
-	const char *tls_key_identity;
+	const char *hostkey;          // !access:write=custom
+	const char *ctrlkey;          // !access:write=custom
+	const char *keyring;          // !access:write=custom
+	char *tls_key;                // !access:write=custom
+	const char *tls_key_identity; // !access:write=custom
 };
 
 
