@@ -57,7 +57,7 @@ int libnvme_gen_dhchap_key(struct libnvme_global_ctx *ctx,
  *
  * Looks up the serial number of the keyring @keyring.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_lookup_keyring(struct libnvme_global_ctx *ctx,
 		const char *keyring, long *key);
@@ -86,7 +86,7 @@ char *libnvme_describe_key_serial(struct libnvme_global_ctx *ctx,
  * Looks up the serial number of the key @identity
  * with type %type in the current session keyring.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_lookup_key(struct libnvme_global_ctx *ctx, const char *type,
 		const char *identity, long *key);
@@ -99,7 +99,7 @@ int libnvme_lookup_key(struct libnvme_global_ctx *ctx, const char *type,
  * Links @keyring_id into the session keyring such that
  * its keys are available for further key lookups.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_set_keyring(struct libnvme_global_ctx *ctx, long keyring_id);
 
@@ -116,7 +116,7 @@ int libnvme_set_keyring(struct libnvme_global_ctx *ctx, long keyring_id);
  * The generated raw secret can subsequently be passed to libnvme_read_key()
  * or libnvme_update_key().
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
 		const char *secret, size_t key_len, unsigned char **raw_secret);
@@ -134,7 +134,7 @@ int libnvme_create_raw_secret(struct libnvme_global_ctx *ctx,
  * @len holds the size of the returned buffer.
  * If @keyring is 0 the default keyring '.nvme' is used.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_read_key(struct libnvme_global_ctx *ctx, long keyring_id,
 		long key_id, int *len, unsigned char **key);
@@ -154,7 +154,7 @@ int libnvme_read_key(struct libnvme_global_ctx *ctx, long keyring_id,
  * The old key with identity @identity will be revoked to make it
  * inaccessible.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_update_key(struct libnvme_global_ctx *ctx, long keyring_id,
 		const char *key_type, const char *identity,
@@ -207,7 +207,7 @@ int libnvme_scan_tls_keys(struct libnvme_global_ctx *ctx, const char *keyring,
  * Derives a 'retained' TLS key as specified in NVMe TCP 1.0a and
  * stores it as type @key_type in the keyring specified by @keyring.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_insert_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
 		const char *key_type, const char *hostnqn,
@@ -231,7 +231,7 @@ int libnvme_insert_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
  * @version s set to '0') or NVMe TP8028 (if @version is set to '1) and
  * stores it as type @key_type in the keyring specified by @keyring.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_insert_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
@@ -286,7 +286,7 @@ int libnvme_insert_tls_key_compat(struct libnvme_global_ctx *ctx,
  *
  * It is the responsibility of the caller to free the returned string.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_generate_tls_key_identity(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *subsysnqn,
@@ -313,7 +313,7 @@ int libnvme_generate_tls_key_identity(struct libnvme_global_ctx *ctx,
  *
  * It is the responsibility of the caller to free the returned string.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_generate_tls_key_identity_compat(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *subsysnqn,
@@ -327,7 +327,7 @@ int libnvme_generate_tls_key_identity_compat(struct libnvme_global_ctx *ctx,
  * @key_type:    Type of the key to revoke
  * @identity:    Key identity string
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_revoke_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
 		const char *key_type, const char *identity);
@@ -345,7 +345,7 @@ int libnvme_revoke_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
  * It is the responsibility of the caller to free the returned
  * string.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_export_tls_key(struct libnvme_global_ctx *ctx,
 		const unsigned char *key_data, int key_len, char **identity);
@@ -366,7 +366,7 @@ int libnvme_export_tls_key(struct libnvme_global_ctx *ctx,
  * It is the responsibility of the caller to free the returned
  * string.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		unsigned char version, unsigned char hmac,
@@ -386,7 +386,7 @@ int libnvme_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
  *
  * It is the responsibility of the caller to free the returned string.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_import_tls_key(struct libnvme_global_ctx *ctx,
 		const char *encoded_key, int *key_len, unsigned int *hmac,
@@ -407,7 +407,7 @@ int libnvme_import_tls_key(struct libnvme_global_ctx *ctx,
  *
  * It is the responsibility of the caller to free the returned string.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_import_tls_key_versioned(struct libnvme_global_ctx *ctx,
 		const char *encoded_key, unsigned char *version,
@@ -415,7 +415,7 @@ int libnvme_import_tls_key_versioned(struct libnvme_global_ctx *ctx,
 
 /**
  * libnvme_generate_hostnqn() - Generate a machine specific host nqn
- * Returns: An nvm namespace qualified name string based on the machine
+ * Return: An nvm namespace qualified name string based on the machine
  * identifier, or NULL if not successful.
  */
 char *libnvme_generate_hostnqn(void);

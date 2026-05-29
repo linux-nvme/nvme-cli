@@ -1746,9 +1746,6 @@ nvme_init_identify_domain_list(struct libnvme_passthru_cmd *cmd,
  * @cmd:	Command data structure to initialize
  * @enggid:	Endurance group identifier
  * @list:	Array of endurance group identifiers
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 static inline void
 nvme_init_identify_endurance_group_id(struct libnvme_passthru_cmd *cmd,
@@ -1811,9 +1808,6 @@ nvme_init_identify_csi_id_ns_data_structure(struct libnvme_passthru_cmd *cmd,
  *
  * Retrieves list of the controller's supported io command set vectors. See
  * &struct nvme_id_iocs.
- *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
  */
 static inline void
 nvme_init_identify_command_set_structure(struct libnvme_passthru_cmd *cmd,
@@ -3244,7 +3238,7 @@ nvme_init_fw_commit(struct libnvme_passthru_cmd *cmd, __u8 fs,
  *
  * Note: Caller must ensure data_len and offset are DWord-aligned (0x4).
  *
- * Returns: 0 on success, or error code if arguments are invalid.
+ * Return: 0 on success, negative error code otherwise.
  */
 static inline int
 nvme_init_fw_download(struct libnvme_passthru_cmd *cmd, void *data,
@@ -3562,7 +3556,7 @@ nvme_init_directive_recv_stream_allocate(struct libnvme_passthru_cmd *cmd,
  * Initializes the passthru command buffer for the Directive Receive - Stream
  * Status command.
  *
- * Return: 0 on success, or error code if arguments are invalid.
+ * Return: 0 on success, negative error code otherwise.
  */
 static inline int
 nvme_init_directive_recv_stream_status(struct libnvme_passthru_cmd *cmd,

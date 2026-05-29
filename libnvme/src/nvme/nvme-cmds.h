@@ -53,7 +53,7 @@ int libnvme_get_log(struct libnvme_transport_handle *hdl,
  *		behavior support feature had been changed
  *
  * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * &enum nvme_status_field) or negative error code otherwise.
  */
 int libnvme_set_etdas(struct libnvme_transport_handle *hdl, bool *changed);
 
@@ -65,7 +65,7 @@ int libnvme_set_etdas(struct libnvme_transport_handle *hdl, bool *changed);
  *		behavior support feature had been changed
  *
  * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * &enum nvme_status_field) or negative error code otherwise.
  */
 int libnvme_clear_etdas(struct libnvme_transport_handle *hdl, bool *changed);
 
@@ -75,7 +75,7 @@ int libnvme_clear_etdas(struct libnvme_transport_handle *hdl, bool *changed);
  * @uuid_list:	UUID list returned by identify UUID
  *
  * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * &enum nvme_status_field) or negative error code otherwise.
  */
 int libnvme_get_uuid_list(struct libnvme_transport_handle *hdl,
 		struct nvme_id_uuid_list *uuid_list);
@@ -193,7 +193,7 @@ size_t libnvme_get_ana_log_len_from_id_ctrl(const struct nvme_id_ctrl *id_ctrl,
  *
  * Return: If successful, returns 0 and sets *len to the actual log page length.
  * If unsuccessful, returns the nvme command status if a response was received
- * (see &enum nvme_status_field) or -1 with errno set otherwise.
+ * (see &enum nvme_status_field) or negative error code otherwise.
  * Sets errno = EINVAL if retries == 0.
  * Sets errno = EAGAIN if unable to read the log page atomically
  * because chgcnt changed during each of the retries attempts.

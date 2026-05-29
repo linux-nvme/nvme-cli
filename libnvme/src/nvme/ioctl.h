@@ -33,8 +33,8 @@
  *
  * Uses LIBNVME_IOCTL_ADMIN_CMD for the ioctl request.
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field), or negative error code otherwise.
  */
 int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
@@ -49,7 +49,7 @@ int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
  *
  * This is a no-op when io_uring is not available.
  *
- * Return: 0 on success or a negative error code otherwise.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_wait_admin_passthru(struct libnvme_transport_handle *hdl);
 
@@ -63,8 +63,8 @@ int libnvme_wait_admin_passthru(struct libnvme_transport_handle *hdl);
  * for the common case where commands are sent one at a time. Use the
  * split-phase API directly when batching multiple commands with io_uring.
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field), or negative error code otherwise.
  */
 static inline int libnvme_exec_admin_passthru(
 		struct libnvme_transport_handle *hdl,
@@ -81,8 +81,8 @@ static inline int libnvme_exec_admin_passthru(
  *
  * Uses LIBNVME_IOCTL_IO_CMD for the ioctl request.
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field), or negative error code otherwise.
  */
 int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
@@ -94,7 +94,7 @@ int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
  * Counterpart to libnvme_submit_io_passthru() for the split-phase API.
  * Currently a no-op as the IO passthru path does not yet use io_uring.
  *
- * Return: 0 on success or a negative error code otherwise.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_wait_io_passthru(struct libnvme_transport_handle *hdl);
 
@@ -106,8 +106,8 @@ int libnvme_wait_io_passthru(struct libnvme_transport_handle *hdl);
  * Convenience wrapper combining libnvme_submit_io_passthru() and
  * libnvme_wait_io_passthru() into a single synchronous call.
  *
- * Return: 0 on success, the nvme command status if a response was
- * received (see &enum nvme_status_field) or a negative error otherwise.
+ * Return: The nvme command status if a response was received (see
+ * &enum nvme_status_field), or negative error code otherwise.
  */
 static inline int libnvme_exec_io_passthru(
 		struct libnvme_transport_handle *hdl,
@@ -123,7 +123,7 @@ static inline int libnvme_exec_io_passthru(
  *
  * This should only be sent to controller handles, not to namespaces.
  *
- * Return: Zero if a subsystem reset was initiated or -1 with errno set
+ * Return: Zero if a subsystem reset was initiated or negative error code
  * otherwise.
  */
 int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl);
@@ -134,7 +134,7 @@ int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl);
  *
  * This should only be sent to controller handles, not to namespaces.
  *
- * Return: 0 if a reset was initiated or -1 with errno set otherwise.
+ * Return: 0 if a reset was initiated or negative error code otherwise.
  */
 int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl);
 
@@ -144,7 +144,7 @@ int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl);
  *
  * This should only be sent to controller handles, not to namespaces.
  *
- * Return: 0 if a rescan was initiated or -1 with errno set otherwise.
+ * Return: 0 if a rescan was initiated or negative error code otherwise.
  */
 int libnvme_rescan_ns(struct libnvme_transport_handle *hdl);
 
@@ -158,7 +158,7 @@ int libnvme_rescan_ns(struct libnvme_transport_handle *hdl);
  * for many architectures that are incapable of allowing distinguishing a
  * namespace id > 0x80000000 from a negative error number.
  *
- * Return: 0 if @nsid was set successfully or -1 with errno set otherwise.
+ * Return: 0 if @nsid was set successfully or negative error code otherwise.
  */
 int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid);
 
