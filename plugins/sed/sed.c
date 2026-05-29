@@ -54,7 +54,7 @@ OPT_ARGS(lock_opts) = {
 };
 
 OPT_ARGS(discovery_opts) = {
-	OPT_FLAG("verbose", 'v', &sedopal_discovery_verbose,
+	OPT_FLAG("verbose", 'V', &sedopal_discovery_verbose,
 		"Print extended discovery information"),
 	OPT_FLAG("udev", 'u', &sedopal_discovery_udev,
 		"Print locking information in form suitable for udev rules"),

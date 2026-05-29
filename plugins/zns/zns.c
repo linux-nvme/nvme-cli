@@ -187,7 +187,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 
 	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
-		OPT_FLAG("vendor-specific", 'v', &cfg.vendor_specific, vendor_specific),
+		OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
 		OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -348,7 +348,7 @@ static int zone_mgmt_send(int argc, char **argv, struct command *acmd, struct pl
 	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace_id),
 		OPT_SUFFIX("start-lba",  's', &cfg.zslba,         zslba),
-		OPT_FLAG("zsaso",        'o', &cfg.zsaso,         zsaso),
+		OPT_FLAG("zsaso",        'O', &cfg.zsaso,         zsaso),
 		OPT_FLAG("select-all",   'a', &cfg.select_all,    select_all),
 		OPT_BYTE("zsa",          'z', &cfg.zsa,           zsa),
 		OPT_UINT("data-len",     'l', &cfg.data_len,      data_len),
@@ -776,7 +776,7 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 		OPT_SUFFIX("start-lba",   's', &cfg.zslba,          zslba),
 		OPT_UINT("descs",         'd', &cfg.num_descs,      num_descs),
 		OPT_UINT("state",         'S', &cfg.state,          state),
-		OPT_FLAG("verbose",       'v', &cfg.verbose,        verbose),
+		OPT_FLAG("verbose",       'V', &cfg.verbose,        verbose),
 		OPT_FLAG("extended",      'e', &cfg.extended,       ext),
 		OPT_FLAG("partial",       'p', &cfg.partial,        part));
 

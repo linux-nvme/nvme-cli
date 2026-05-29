@@ -428,7 +428,7 @@ static int vendor_log(int argc, char **argv, struct command *acmd, struct plugin
 
 	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
-		OPT_FILE("output-file",  'o', &cfg.output_file,  output_file),
+		OPT_FILE("output-file",  'O', &cfg.output_file,  output_file),
 		OPT_UINT("log",          'l', &cfg.log,          log));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -474,7 +474,7 @@ static int internal_log(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	NVME_ARGS(opts,
-		OPT_FILE("output-file", 'o', &cfg.output_file, output_file),
+		OPT_FILE("output-file", 'O', &cfg.output_file, output_file),
 		OPT_FLAG("prev-log", 'p', &cfg.prev_log, prev_log));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);

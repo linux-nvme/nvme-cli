@@ -319,7 +319,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 		OPT_BYTE("csuuidi",	'U', &cfg.csuuidi, csuuidi),
 		OPT_BYTE("csvi",	'V', &cfg.csvi, csvi),
 		OPT_BYTE("uidx",	'u', &cfg.uidx, uidx),
-		OPT_LONG("offset",	'o', &cfg.offset, offset),
+		OPT_LONG("offset",	'O', &cfg.offset, offset),
 		OPT_UINT("numd",	'n', &cfg.numd, numd),
 		OPT_FILE("input-file",	'f', &cfg.input, input));
 
@@ -446,7 +446,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		OPT_BYTE("csuuidi",		'U', &cfg.csuuidi, csuuidi),
 		OPT_BYTE("csvi",		'V', &cfg.csvi, csvi),
 		OPT_BYTE("uidx",		'u', &cfg.uidx, uidx),
-		OPT_LONG("offset",		'o', &cfg.offset, offset),
+		OPT_LONG("offset",		'O', &cfg.offset, offset),
 		OPT_UINT("numd",		'n', &cfg.numd, numd),
 		OPT_FILE("output-file",		'f', &cfg.output, output),
 		OPT_FLAG("human-readable",	'H', &cfg.human_readable, human_readable_info));
