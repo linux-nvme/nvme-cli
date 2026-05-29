@@ -507,17 +507,3 @@ struct nvme_mi_vpd_hdr {
 	__u8	chchk;
 	__u8	vpd[];
 };
-
-/* backwards compat for old "CCS" definitions */
-#define nvme_mi_css		nvme_mi_ccs
-#define NVME_MI_CSS_CFS		NVME_MI_CCS_CFS
-#define NVME_MI_CSS_SHST	NVME_MI_CCS_SHST
-#define NVME_MI_CSS_NSSRO	NVME_MI_CCS_NSSRO
-#define NVME_MI_CSS_CECO	NVME_MI_CCS_CECO
-#define NVME_MI_CSS_NAC		NVME_MI_CCS_NAC
-#define NVME_MI_CSS_FA		NVME_MI_CCS_FA
-#define NVME_MI_CSS_CSTS	NVME_MI_CCS_CSTS
-#define NVME_MI_CSS_CTEMP	NVME_MI_CCS_CTEMP
-#define NVME_MI_CSS_PDLU	NVME_MI_CCS_PDLU
-#define NVME_MI_CSS_SPARE	NVME_MI_CCS_SPARE
-#define NVME_MI_CSS_CCWARN	NVME_MI_CCS_CCWARN
