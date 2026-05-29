@@ -614,6 +614,8 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	}
 	if (context)
 		libnvme_set_application(ctx, context);
+	if (nbft)
+		libnvmf_context_set_owner(ctx, "nbft");
 
 	if (!nvme_read_config_checked(ctx, config_file))
 		json_config = true;
@@ -904,8 +906,137 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 	return 0;
 }
 
+static void print_registry_entry(const char *device, const char *owner,
+				  void *user_data)
+{
+	printf("%-16s %s\n", device, owner ? owner : "-");
+}
+
+int fabrics_registry_list(const char *desc, int argc, char **argv)
+{
+	printf("%-16s OWNER\n", "DEVICE");
+	return libnvmf_registry_for_each(print_registry_entry, NULL);
+}
+
+int fabrics_registry_retrieve(const char *desc, int argc, char **argv)
+{
+	const char *device_help = "NVMe device name (e.g. nvme3)";
+	const char *key_help = "field name to retrieve (default: owner)";
+	__cleanup_free char *value = NULL;
+	int ret;
+
+	struct config {
+		char *device;
+		char *key;
+	};
+
+	struct config cfg = { .key = "owner" };
+
+	NVME_ARGS(opts,
+		OPT_STRING("device", 'd', "DEV", &cfg.device, device_help),
+		OPT_STRING("key", 'k', "KEY", &cfg.key, key_help));
+
+	ret = argconfig_parse(argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	if (!cfg.device) {
+		fprintf(stderr, "--device required\n");
+		return -EINVAL;
+	}
+	if (!strncmp(cfg.device, "/dev/", 5))
+		cfg.device += 5;
+
+	ret = libnvmf_registry_retrieve(cfg.device, cfg.key, &value);
+	if (ret == -ENOENT) {
+		fprintf(stderr, "%s: not registered or '%s' not found\n",
+			cfg.device, cfg.key);
+		return ret;
+	}
+	if (ret) {
+		fprintf(stderr, "retrieve failed: %s\n",
+			libnvme_strerror(-ret));
+		return ret;
+	}
+	printf("%s\n", value);
+	return 0;
+}
+
+int fabrics_registry_update(const char *desc, int argc, char **argv)
+{
+	const char *device_help = "NVMe device name (e.g. nvme3)";
+	const char *key_help = "field name to update (e.g. owner)";
+	const char *value_help = "new field value";
+	int ret;
+
+	struct config {
+		char *device;
+		char *key;
+		char *value;
+	};
+
+	struct config cfg = { 0 };
+
+	NVME_ARGS(opts,
+		OPT_STRING("device", 'd', "DEV", &cfg.device, device_help),
+		OPT_STRING("key", 'k', "KEY", &cfg.key, key_help),
+		OPT_STRING("value", 'V', "VAL", &cfg.value, value_help));
+
+	ret = argconfig_parse(argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	if (!cfg.device || !cfg.key || !cfg.value) {
+		fprintf(stderr,
+			"--device, --key, and --value are required\n");
+		return -EINVAL;
+	}
+	if (!strncmp(cfg.device, "/dev/", 5))
+		cfg.device += 5;
+
+	ret = libnvmf_registry_update(cfg.device, cfg.key, cfg.value);
+	if (ret)
+		fprintf(stderr, "update failed: %s\n",
+			libnvme_strerror(-ret));
+	return ret;
+}
+
+int fabrics_registry_delete(const char *desc, int argc, char **argv)
+{
+	const char *device_help = "NVMe device name (e.g. nvme3)";
+	int ret;
+
+	struct config {
+		char *device;
+	};
+
+	struct config cfg = { 0 };
+
+	NVME_ARGS(opts,
+		OPT_STRING("device", 'd', "DEV", &cfg.device, device_help));
+
+	ret = argconfig_parse(argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	if (!cfg.device) {
+		fprintf(stderr, "--device required\n");
+		return -EINVAL;
+	}
+	if (!strncmp(cfg.device, "/dev/", 5))
+		cfg.device += 5;
+
+	ret = libnvmf_registry_delete(cfg.device);
+	if (ret)
+		fprintf(stderr, "%s: %s\n", cfg.device,
+			libnvme_strerror(-ret));
+	return ret;
+}
+
 int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 {
+	const char *owner_help = "disconnect controllers owned by NAME";
+	const char *force_help = "disconnect all regardless of ownership";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	libnvme_host_t h;
 	libnvme_subsystem_t s;
@@ -914,16 +1045,39 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 
 	struct config {
 		char *transport;
+		char *owner;
+		bool force;
 	};
 
 	struct config cfg = { 0 };
 
 	NVME_ARGS(opts,
-		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport));
+		OPT_STRING("transport", 'r', "STR",
+			   (char *)&cfg.transport, nvmf_tport),
+		OPT_STRING("owner", 'O', "NAME", &cfg.owner, owner_help),
+		OPT_FLAG("force", 'f', &cfg.force, force_help));
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	if (cfg.force && cfg.owner) {
+		fprintf(stderr, "--force and --owner are mutually exclusive\n");
+		return -EINVAL;
+	}
+
+	if (cfg.force && isatty(STDIN_FILENO)) {
+		char ans[8] = { 0 };
+
+		fprintf(stderr,
+			"WARNING: --force disconnects all NVMeoF controllers\n"
+			"regardless of ownership. Type 'yes' to confirm: ");
+		if (!fgets(ans, sizeof(ans), stdin) ||
+		    strncmp(ans, "yes", 3) != 0) {
+			fprintf(stderr, "Aborted.\n");
+			return -EINVAL;
+		}
+	}
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
@@ -952,17 +1106,38 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s) {
 			libnvme_subsystem_for_each_ctrl(s, c) {
+				const char *tr = libnvme_ctrl_get_transport(c);
+				const char *name;
+				char *reg_owner = NULL;
+				bool do_disconnect = false;
+
 				if (cfg.transport &&
-				    strcmp(cfg.transport,
-					   libnvme_ctrl_get_transport(c)))
+				    strcmp(cfg.transport, tr))
 					continue;
-				else if (!strcmp(libnvme_ctrl_get_transport(c),
-						 "pcie"))
+				if (!strcmp(tr, "pcie"))
 					continue;
-				if (libnvmf_disconnect_ctrl(c))
+
+				name = libnvme_ctrl_get_name(c);
+
+				if (cfg.force) {
+					do_disconnect = true;
+				} else {
+					libnvmf_registry_retrieve(name,
+						"owner", &reg_owner);
+					if (cfg.owner)
+						do_disconnect = reg_owner &&
+							!strcmp(reg_owner,
+								cfg.owner);
+					else
+						do_disconnect = !reg_owner;
+					free(reg_owner);
+				}
+
+				if (do_disconnect &&
+				    libnvmf_disconnect_ctrl(c))
 					fprintf(stderr,
 						"failed to disconnect %s\n",
-						libnvme_ctrl_get_name(c));
+						name);
 			}
 		}
 	}

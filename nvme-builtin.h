@@ -110,6 +110,10 @@ COMMAND_LIST(
 	ENTRY("connect", "Connect to NVMeoF subsystem", connect_cmd)
 	ENTRY("disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd)
 	ENTRY("disconnect-all", "Disconnect from all connected NVMeoF subsystems", disconnect_all_cmd)
+	ENTRY("registry-list", "List NVMeoF controller ownership registry entries", registry_list_cmd)
+	ENTRY("registry-retrieve", "Retrieve a field from a controller's registry entry", registry_retrieve_cmd)
+	ENTRY("registry-update", "Update a field in a controller's registry entry", registry_update_cmd)
+	ENTRY("registry-delete", "Delete a controller's registry entry", registry_delete_cmd)
 	ENTRY("config", "Configuration of NVMeoF subsystems", config_cmd)
 	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller", dim_cmd)
 #endif

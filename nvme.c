@@ -10469,6 +10469,38 @@ static int disconnect_cmd(int argc, char **argv, struct command *acmd, struct pl
 	return fabrics_disconnect(desc, argc, argv);
 }
 
+static int registry_list_cmd(int argc, char **argv, struct command *acmd,
+	struct plugin *plugin)
+{
+	const char *desc = "List NVMeoF controller ownership registry entries";
+
+	return fabrics_registry_list(desc, argc, argv);
+}
+
+static int registry_retrieve_cmd(int argc, char **argv, struct command *acmd,
+	struct plugin *plugin)
+{
+	const char *desc = "Retrieve a field from a controller registry entry";
+
+	return fabrics_registry_retrieve(desc, argc, argv);
+}
+
+static int registry_update_cmd(int argc, char **argv, struct command *acmd,
+	struct plugin *plugin)
+{
+	const char *desc = "Update a field in a controller's registry entry";
+
+	return fabrics_registry_update(desc, argc, argv);
+}
+
+static int registry_delete_cmd(int argc, char **argv, struct command *acmd,
+	struct plugin *plugin)
+{
+	const char *desc = "Delete a controller's registry entry";
+
+	return fabrics_registry_delete(desc, argc, argv);
+}
+
 int disconnect_all_cmd(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin)
 {
