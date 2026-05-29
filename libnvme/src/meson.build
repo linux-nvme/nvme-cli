@@ -69,7 +69,7 @@ if want_fabrics
     headers += [
         'nvme/accessors-fabrics.h',
         'nvme/fabrics.h',
-        'nvme/nbft-types.h',
+        'nvme/nvme-types-nbft.h',
         'nvme/nbft.h',
     ]
 else
