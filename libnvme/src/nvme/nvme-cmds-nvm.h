@@ -724,9 +724,6 @@ nvme_init_app_tag(struct libnvme_passthru_cmd *cmd,
  *
  * Each array must be the same size of size 'nr_ranges'. This is intended to be
  * used with constructing a payload for nvme_dsm().
- *
- * Return: The nvme command status if a response was received or -errno
- * otherwise.
  */
 static inline void
 nvme_init_dsm_range(struct nvme_dsm_range *dsm, __u32 *ctx_attrs,
@@ -871,6 +868,8 @@ nvme_init_copy_range_f3(struct nvme_copy_range_f3 *copy, __u32 *snsids,
  * Initializes the passthru command buffer fields cdw2, cdw3, and cdw14
  * for commands supporting Extended LBA. This logic is usually called from
  * the command-specific init function (like nvme_init_zns_append).
+ *
+ * Return: 0 on success, -EINVAL otherwise.
  */
 static inline int
 nvme_init_var_size_tags(struct libnvme_passthru_cmd *cmd,

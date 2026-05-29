@@ -302,7 +302,7 @@ struct nvme_mi_aem_supported_item {
  * nvme_mi_aem_aesi_get_aese() - return aese from aesi field
  * @aesi: aesi field from @nvme_mi_aem_supported_item
  *
- * Returns: A bool representing the aese value
+ * Return: A bool representing the aese value
  */
 bool nvme_mi_aem_aesi_get_aese(__le16 aesi);
 
@@ -310,7 +310,7 @@ bool nvme_mi_aem_aesi_get_aese(__le16 aesi);
  * nvme_mi_aem_aesi_get_aesid() - return aesid from aesi field
  * @aesi: aesi field from @nvme_mi_aem_supported_item
  *
- * Returns: aesid value
+ * Return: aesid value
  */
 __u8 nvme_mi_aem_aesi_get_aesid(__le16 aesi);
 
@@ -354,7 +354,7 @@ struct nvme_mi_aem_enable_item {
  * nvme_mi_aem_aeei_get_aee() - return aee from aeei field
  * @aeei: aeei field from @nvme_mi_aem_enable_item
  *
- * Returns: aee value
+ * Return: aee value
  */
 bool nvme_mi_aem_aeei_get_aee(__le16 aeei);
 
@@ -362,7 +362,7 @@ bool nvme_mi_aem_aeei_get_aee(__le16 aeei);
  * nvme_mi_aem_aeei_get_aeeid() - return aeeid from aeei field
  * @aeei: aeei field from @nvme_mi_aem_enable_item
  *
- * Returns: aeeid value
+ * Return: aeeid value
  */
 __u8 nvme_mi_aem_aeei_get_aeeid(__le16 aeei);
 
@@ -453,7 +453,7 @@ struct nvme_mi_aem_occ_list_hdr {
  * nvme_mi_aem_aemti_get_aemgn() - return aemgn from aemti field
  * @aemti: aemti field from @nvme_mi_aem_occ_list_hdr
  *
- * Returns: aemgn value
+ * Return: aemgn value
  */
 __u8 nvme_mi_aem_aemti_get_aemgn(__u8 aemti);
 
@@ -461,7 +461,7 @@ __u8 nvme_mi_aem_aemti_get_aemgn(__u8 aemti);
  * nvme_mi_aem_aeolli_get_aeoltl() - return aeoltl from aeolli field
  * @aeolli: Pointer to 3 byte aeolli field from @nvme_mi_aem_occ_list_hdr
  *
- * Returns: aeoltl value
+ * Return: aeoltl value
  */
 __u32 nvme_mi_aem_aeolli_get_aeoltl(__u8 *aeolli);
 

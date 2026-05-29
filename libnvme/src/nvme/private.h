@@ -643,7 +643,7 @@ char *kv_keymatch(const char *kv, const char *key);
  * remain cached until the ns object is deleted or
  * libnvme_ns_release_transport_handle() is called.
  *
- * Return: On success 0, else error code.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_ns_get_transport_handle(struct libnvme_ns *n,
 		struct libnvme_transport_handle **hdl);
@@ -669,7 +669,7 @@ void libnvme_ns_release_transport_handle(struct libnvme_ns *n);
  * so the & data_len parameter must be less than 4097.
  *
  * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field) or -1 with errno set otherwise.
+ * &enum nvme_status_field) or negative error code otherwise.
  */
 int libnvme_mi_admin_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);

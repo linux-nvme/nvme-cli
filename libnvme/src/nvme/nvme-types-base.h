@@ -49,7 +49,7 @@
  * applied after the shift to isolate a specific set of bits that decode to a
  * sub-field.
  *
- * Returns: The 'name' field from 'value'
+ * Return: The 'name' field from 'value'
  */
 #define NVME_GET(value, name) \
 	(((value) >> NVME_##name##_SHIFT) & NVME_##name##_MASK)
@@ -59,7 +59,7 @@
  * @value: The value to be set in its completed position
  * @name: The name of the sub-field within an nvme value
  *
- * Returns: The 'name' field from 'value'
+ * Return: The 'name' field from 'value'
  */
 #define NVME_SET(value, name) \
 	(((__u32)(value) & NVME_##name##_MASK) << NVME_##name##_SHIFT)
@@ -94,7 +94,7 @@
  * @name: The name of the sub-field within an nvme value
  * @check: The sub-field value to check
  *
- * Returns: The result of compare the value and the sub-field value
+ * Return: The result of compare the value and the sub-field value
  */
 #define NVME_CHECK(value, name, check) ((value) == NVME_##name##_##check)
 
@@ -102,7 +102,7 @@
  * NVME_VAL() - get mask value shifted
  * @name: The name of the sub-field within an nvme value
  *
- * Returns: The mask value shifted
+ * Return: The mask value shifted
  */
 #define NVME_VAL(name) (NVME_##name##_MASK << NVME_##name##_SHIFT)
 
@@ -281,7 +281,7 @@ enum nvme_register_offsets {
  * specific transport. For example, BPMBL(Boot Partition Memory Buffer
  * Location) register is not supported by fabrics, but it can be checked here.
  *
- * Returns: true if given offset is 64bit register, otherwise it returns false.
+ * Return: true if given offset is 64bit register, otherwise it returns false.
  */
 static inline bool nvme_is_64bit_reg(__u32 offset)
 {
@@ -685,7 +685,7 @@ enum nvme_cmbsz {
  * nvme_cmb_size() - Calculate size of the controller memory buffer
  * @cmbsz:	Value from controller register %NVME_REG_CMBSZ
  *
- * Returns: size of controller memory buffer in bytes
+ * Return: size of controller memory buffer in bytes
  */
 static inline __u64 nvme_cmb_size(__u32 cmbsz)
 {
@@ -1000,7 +1000,7 @@ enum nvme_pmrebs {
  *		     buffer
  * @pmrebs:	Value from controller register %NVME_REG_PMREBS
  *
- * Returns: size of controller persistent memory buffer in bytes
+ * Return: size of controller persistent memory buffer in bytes
  */
 static inline __u64 nvme_pmr_size(__u32 pmrebs)
 {
@@ -1037,7 +1037,7 @@ enum nvme_pmrswtp {
  * nvme_pmr_throughput() - Calculate throughput of persistent memory buffer
  * @pmrswtp:	Value from controller register %NVME_REG_PMRSWTP
  *
- * Returns: throughput of controller persistent memory buffer in bytes/second
+ * Return: throughput of controller persistent memory buffer in bytes/second
  */
 static inline __u64 nvme_pmr_throughput(__u32 pmrswtp)
 {
@@ -1145,7 +1145,7 @@ enum nvme_power_measurement_action {
  * nvme_psd_power_scale() - power scale occupies the upper 3 bits
  * @ps: power scale value
  *
- * Returns: power scale value
+ * Return: power scale value
  */
 static inline unsigned int nvme_psd_power_scale(__u8 ps)
 {
@@ -6999,7 +6999,7 @@ enum nvme_status_field {
  * @status_field:	The NVMe Completion Queue Entry's Status Field
  *			See &enum nvme_status_field
  *
- * Returns: status code type
+ * Return: status code type
  */
 static inline __u16 nvme_status_code_type(__u16 status_field)
 {
@@ -7011,7 +7011,7 @@ static inline __u16 nvme_status_code_type(__u16 status_field)
  * @status_field:	The NVMe Completion Queue Entry's Status Field
  *			See &enum nvme_status_field
  *
- * Returns: status code
+ * Return: status code
  */
 static inline __u16 nvme_status_code(__u16 status_field)
 {
@@ -7051,7 +7051,7 @@ enum nvme_status_type {
  * nvme_status_get_type() - extract the type from a nvme_* return value
  * @status: the (non-negative) return value from the NVMe API
  *
- * Returns: the type component of the status.
+ * Return: the type component of the status.
  */
 static inline __u32 nvme_status_get_type(int status)
 {
@@ -7063,7 +7063,7 @@ static inline __u32 nvme_status_get_type(int status)
  * value
  * @status: the (non-negative) return value from the NVMe API
  *
- * Returns: the value component of the status; the set of values will depend
+ * Return: the value component of the status; the set of values will depend
  * on the status type.
  */
 static inline __u32 nvme_status_get_value(int status)
@@ -7077,7 +7077,7 @@ static inline __u32 nvme_status_get_value(int status)
  * @type: the status type
  * @value: the status value
  *
- * Returns: true if @status is of the specified type and value
+ * Return: true if @status is of the specified type and value
  */
 static inline __u32 nvme_status_equals(int status, enum nvme_status_type type,
 				       unsigned int value)
