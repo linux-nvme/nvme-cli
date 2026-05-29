@@ -513,7 +513,6 @@ enum nvme_cc {
  * @NVME_CSTS_SHST_NORMAL:	Normal operation
  * @NVME_CSTS_SHST_OCCUR:	Shutdown processing occurring
  * @NVME_CSTS_SHST_CMPLT:	Shutdown processing complete
- * @NVME_CSTS_SHN_MASK:		Deprecated mask to get the shutdown status
  */
 enum nvme_csts {
 	NVME_CSTS_RDY_SHIFT	= 0,
@@ -531,7 +530,6 @@ enum nvme_csts {
 	NVME_CSTS_SHST_NORMAL	= 0,
 	NVME_CSTS_SHST_OCCUR	= 1,
 	NVME_CSTS_SHST_CMPLT	= 2,
-	NVME_CSTS_SHN_MASK	= NVME_CSTS_SHST_MASK, /* Deprecated */
 };
 
 #define NVME_CSTS_RDY(csts)	NVME_GET(csts, CSTS_RDY)
