@@ -54,12 +54,16 @@ enum argconfig_types {
 	CFG_SHORT,
 	CFG_POSITIVE,
 	CFG_INCREMENT,
+	CFG_GROUP_SEPARATOR,
 };
 
 #define OPT_ARGS(n) \
 	struct argconfig_commandline_options n[]
 
 #define OPT_END() { NULL }
+
+#define OPT_GROUP(d) \
+	{"", 0, NULL, CFG_GROUP_SEPARATOR, NULL, no_argument, d, false, NULL}
 
 #define OPT_FLAG(l, s, v, d, ...) \
 	{l, s, NULL, CFG_FLAG, v, no_argument, d, false, __VA_ARGS__}
@@ -175,6 +179,8 @@ void argconfig_print_help(const char *program_desc,
 			  struct argconfig_commandline_options *options);
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options);
+int argconfig_parse_global(int argc, char *argv[],
+			   struct argconfig_commandline_options *options);
 int argconfig_parse_comma_sep_array(char *string, int *ret, unsigned int max_length);
 int argconfig_parse_comma_sep_array_short(char *string, unsigned short *ret,
 					  unsigned int max_length);

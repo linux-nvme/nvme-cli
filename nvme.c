@@ -11390,7 +11390,7 @@ int main(int argc, char **argv)
 	if (err)
 		return err;
 
-	err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
+	err = handle_plugin(argc, argv, nvme.extensions);
 	if (err == -ENOTTY)
 		general_help(&builtin, NULL);
 

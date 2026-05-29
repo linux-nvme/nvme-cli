@@ -69,16 +69,18 @@ struct nvme_args {
 #endif /* CONFIG_JSONC */
 
 /*
- * the ordering of the arguments matters, as the argument parser uses the first match, thus any
- * command which defines -t shorthand will match first.
+ * the ordering of the arguments matters, as the argument parser uses the first
+ * match, thus any command which defines -t shorthand will match first.
  */
 #define NVME_ARGS(n, ...)                                                              \
 	struct argconfig_commandline_options n[] = {                                   \
+		OPT_GROUP("Options"),                                                  \
+		##__VA_ARGS__,                                                         \
+		OPT_GROUP("Global options"),                                           \
 		OPT_INCR("verbose",      'v', &nvme_args.verbose,                      \
                          "Increase output verbosity"),                                 \
 		OPT_FMT("output-format", 'o', &nvme_args.output_format,                \
                          DESC_OUTPUT_FORMAT),                                          \
-		##__VA_ARGS__,                                                         \
 		OPT_UINT("timeout",        0, &nvme_args.timeout,                      \
                          "timeout value, in milliseconds"),                            \
 		OPT_FLAG("dry-run",        0, &nvme_args.dry_run,                      \
