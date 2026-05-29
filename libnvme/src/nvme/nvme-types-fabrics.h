@@ -21,6 +21,21 @@
  * DOC: nvme-types-fabrics.h
  *
  * NVMe over Fabrics type definitions
+ *
+ * Based on:
+ * - NVM Express over RDMA Transport Specification, Revision 1.2,
+ *   August 1, 2025 (Ratified)
+ * - NVM Express over TCP Transport Specification, Revision 1.2,
+ *   August 1, 2025 (Ratified)
+ * - NVM Express Base Specification (Fabrics command set sections)
+ *
+ * This file is organized by functional area:
+ * - Discovery: Discovery log entries and log pages
+ * - Transport Configuration: Transport types, addressing, requirements
+ * - RDMA-Specific: RDMA queue pairs, providers, connection management
+ * - TCP-Specific: TCP security types
+ * - Discovery Information Model (DIM): Extended discovery attributes
+ * - Connection: Connect command data structures
  */
 
 #define NVME_DISC_SUBSYS_NAME	"nqn.2014-08.org.nvmexpress.discovery"

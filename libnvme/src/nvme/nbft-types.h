@@ -11,9 +11,23 @@
 #include <nvme/lib-types.h>
 
 /**
- * DOC: nbft.h
+ * DOC: nvme-types-nbft.h - NVMe Boot Firmware Table (NBFT) type definitions
  *
- * NVM Express Boot Specification, Revision 1.0
+ * This file defines the ACPI table structures for the NVMe Boot Specification.
+ * These types describe the NVMe Boot Firmware Table (NBFT) used for pre-OS
+ * boot configuration and discovery of NVMe-oF boot devices.
+ *
+ * Scope
+ * =====
+ * - ACPI NBFT table structures
+ * - Boot device discovery descriptors
+ * - Host Fabric Interface (HFI) configuration
+ * - Subsystem/Namespace boot information
+ * - Security descriptors for boot
+ * - Discovery service descriptors
+ *
+ * This file is part of the nvme-types-*.h family following the established
+ * naming pattern for NVMe specification type definitions.
  */
 
 /*
