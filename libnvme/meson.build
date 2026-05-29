@@ -41,6 +41,7 @@ if want_libnvme
         subdir('examples')
     endif
 
+    subdir('sysfiles')
     subdir('doc')
 else
     # Fallback to using a pre-installed libnvme (if available)

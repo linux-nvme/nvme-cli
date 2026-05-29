@@ -1,0 +1,5 @@
+# Remove the ownership registry entry when an NVMe-oF controller is removed by
+# the kernel.  The -f flag makes this a no-op for unowned controllers and
+# PCIe/apple-nvme devices that never have registry entries.
+ACTION=="remove", SUBSYSTEM=="nvme", \
+    RUN+="/bin/rm -f /run/nvme/registry/%k.json"
