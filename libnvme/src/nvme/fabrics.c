@@ -262,23 +262,7 @@ __libnvme_public int libnvmf_context_set_discovery_hooks(
 	return 0;
 }
 
-__libnvme_public int libnvmf_context_set_discovery_defaults(
-		struct libnvmf_context *fctx, int max_discovery_retries,
-		int keep_alive_timeout)
-{
-	fctx->default_max_discovery_retries = max_discovery_retries;
-	fctx->default_keep_alive_timeout = keep_alive_timeout;
 
-	return 0;
-}
-
-__libnvme_public int libnvmf_context_set_fabrics_config(
-		struct libnvmf_context *fctx,
-		struct libnvme_fabrics_config *cfg)
-{
-	libnvme_fabrics_config_copy(&fctx->ctrl_params.cfg, cfg);
-	return 0;
-}
 
 __libnvme_public int libnvmf_context_set_connection(
 		struct libnvmf_context *fctx, const char *subsysnqn,
@@ -359,14 +343,6 @@ __libnvme_public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 	return 0;
 }
 
-__libnvme_public int libnvmf_context_set_persistent(
-		struct libnvmf_context *fctx, bool persistent)
-{
-	fctx->persistent = persistent;
-
-	return 0;
-}
-
 __libnvme_public int libnvmf_context_set_device(
 		struct libnvmf_context *fctx, const char *device)
 {
@@ -375,16 +351,29 @@ __libnvme_public int libnvmf_context_set_device(
 	return 0;
 }
 
-__libnvme_public struct libnvme_fabrics_config *libnvmf_context_get_fabrics_config(
-		struct libnvmf_context *fctx)
+__libnvme_public int libnvmf_context_set_io_queues(
+		struct libnvmf_context *fctx, int nr_io_queues,
+		int nr_write_queues, int nr_poll_queues,
+		int queue_size, bool disable_sqflow)
 {
-	return &fctx->ctrl_params.cfg;
+	fctx->ctrl_params.cfg.nr_io_queues = nr_io_queues;
+	fctx->ctrl_params.cfg.nr_write_queues = nr_write_queues;
+	fctx->ctrl_params.cfg.nr_poll_queues = nr_poll_queues;
+	fctx->ctrl_params.cfg.queue_size = queue_size;
+	fctx->ctrl_params.cfg.disable_sqflow = disable_sqflow;
+
+	return 0;
 }
 
-__libnvme_public struct libnvme_fabrics_config *libnvmf_ctrl_get_fabrics_config(
-		libnvme_ctrl_t c)
+__libnvme_public int libnvmf_context_set_reconnect_policy(
+		struct libnvmf_context *fctx, int ctrl_loss_tmo,
+		int reconnect_delay, int fast_io_fail_tmo)
 {
-	return &c->cfg;
+	fctx->ctrl_params.cfg.ctrl_loss_tmo = ctrl_loss_tmo;
+	fctx->ctrl_params.cfg.reconnect_delay = reconnect_delay;
+	fctx->ctrl_params.cfg.fast_io_fail_tmo = fast_io_fail_tmo;
+
+	return 0;
 }
 
 /*
@@ -423,28 +412,25 @@ static const struct libnvme_fabric_options default_supported_options = {
 static void merge_config(libnvme_ctrl_t c,
 		const struct libnvme_fabrics_config *cfg)
 {
-	struct libnvme_fabrics_config *ctrl_cfg =
-		libnvmf_ctrl_get_fabrics_config(c);
-
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_io_queues, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_write_queues, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, nr_poll_queues, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, queue_size, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, keep_alive_tmo, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, reconnect_delay, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, ctrl_loss_tmo,
+	MERGE_CFG_OPTION(&c->cfg, cfg, nr_io_queues, 0);
+	MERGE_CFG_OPTION(&c->cfg, cfg, nr_write_queues, 0);
+	MERGE_CFG_OPTION(&c->cfg, cfg, nr_poll_queues, 0);
+	MERGE_CFG_OPTION(&c->cfg, cfg, queue_size, 0);
+	MERGE_CFG_OPTION(&c->cfg, cfg, keep_alive_tmo, 0);
+	MERGE_CFG_OPTION(&c->cfg, cfg, reconnect_delay, 0);
+	MERGE_CFG_OPTION(&c->cfg, cfg, ctrl_loss_tmo,
 			  NVMF_DEF_CTRL_LOSS_TMO);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, fast_io_fail_tmo, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, tos, -1);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, keyring_id, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, tls_key_id, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, tls_configured_key_id, 0);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, duplicate_connect, false);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, data_digest, false);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, tls, false);
-	MERGE_CFG_OPTION(ctrl_cfg, cfg, concat, false);
+	MERGE_CFG_OPTION(&c->cfg, cfg, fast_io_fail_tmo, 0);
+	MERGE_CFG_OPTION(&c->cfg, cfg, tos, -1);
+	MERGE_CFG_OPTION(&c->cfg, cfg, keyring_id, 0);
+	MERGE_CFG_OPTION(&c->cfg, cfg, tls_key_id, 0);
+	MERGE_CFG_OPTION(&c->cfg, cfg, tls_configured_key_id, 0);
+	MERGE_CFG_OPTION(&c->cfg, cfg, duplicate_connect, false);
+	MERGE_CFG_OPTION(&c->cfg, cfg, disable_sqflow, false);
+	MERGE_CFG_OPTION(&c->cfg, cfg, hdr_digest, false);
+	MERGE_CFG_OPTION(&c->cfg, cfg, data_digest, false);
+	MERGE_CFG_OPTION(&c->cfg, cfg, tls, false);
+	MERGE_CFG_OPTION(&c->cfg, cfg, concat, false);
 }
 
 #define UPDATE_CFG_OPTION(c, n, o, d)			\
@@ -452,28 +438,25 @@ static void merge_config(libnvme_ctrl_t c,
 static void update_config(libnvme_ctrl_t c,
 		const struct libnvme_fabrics_config *cfg)
 {
-	struct libnvme_fabrics_config *ctrl_cfg =
-		libnvmf_ctrl_get_fabrics_config(c);
-
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_io_queues, 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_write_queues, 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, nr_poll_queues, 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, queue_size, 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, keep_alive_tmo, 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, reconnect_delay, 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, ctrl_loss_tmo,
+	UPDATE_CFG_OPTION(&c->cfg, cfg, nr_io_queues, 0);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, nr_write_queues, 0);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, nr_poll_queues, 0);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, queue_size, 0);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, keep_alive_tmo, 0);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, reconnect_delay, 0);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, ctrl_loss_tmo,
 			  NVMF_DEF_CTRL_LOSS_TMO);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, fast_io_fail_tmo, 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tos, -1);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, keyring_id , 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tls_key_id, 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tls_configured_key_id, 0);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, duplicate_connect, false);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, disable_sqflow, false);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, hdr_digest, false);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, data_digest, false);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, tls, false);
-	UPDATE_CFG_OPTION(ctrl_cfg, cfg, concat, false);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, fast_io_fail_tmo, 0);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, tos, -1);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, keyring_id, 0);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, tls_key_id, 0);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, tls_configured_key_id, 0);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, duplicate_connect, false);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, disable_sqflow, false);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, hdr_digest, false);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, data_digest, false);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, tls, false);
+	UPDATE_CFG_OPTION(&c->cfg, cfg, concat, false);
 }
 
 static int __add_bool_argument(char **argstr, char *tok, bool arg)
@@ -763,7 +746,6 @@ bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 
 static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 {
-	struct libnvme_fabrics_config *cfg = libnvmf_ctrl_get_fabrics_config(c);
 	const char *transport = libnvme_ctrl_get_transport(c);
 	const char *hostnqn, *hostid, *hostkey, *ctrlkey = NULL;
 	bool discover = false, discovery_nqn = false;
@@ -808,27 +790,27 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 	if (hostkey)
 		ctrlkey = libnvme_ctrl_get_dhchap_ctrl_key(c);
 
-	if (cfg->tls && cfg->concat) {
+	if (c->cfg.tls && c->cfg.concat) {
 		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "cannot specify --tls and --concat together\n");
 		return -ENVME_CONNECT_INVAL;
 	}
 
-	if (cfg->concat && !hostkey) {
+	if (c->cfg.concat && !hostkey) {
 		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "required argument [--dhchap-secret | -S] not specified with --concat\n");
 		return -ENVME_CONNECT_INVAL;
 	}
 
-	if (cfg->tls) {
+	if (c->cfg.tls) {
 		ret = __libnvme_import_keys_from_config(h, c,
 			&keyring_id, &key_id);
 		if (ret)
 			return ret;
 
 		if (key_id == 0) {
-			if (cfg->tls_configured_key_id)
-				key_id = cfg->tls_configured_key_id;
+			if (c->cfg.tls_configured_key_id)
+				key_id = c->cfg.tls_configured_key_id;
 			else
-				key_id = cfg->tls_key_id;
+				key_id = c->cfg.tls_key_id;
 		}
 	}
 
@@ -851,43 +833,43 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 	     add_argument(ctx, argstr, dhchap_ctrl_secret, ctrlkey)) ||
 	    (!discover &&
 	     add_int_argument(ctx, argstr, nr_io_queues,
-			      cfg->nr_io_queues, false)) ||
+			      c->cfg.nr_io_queues, false)) ||
 	    (!discover &&
 	     add_int_argument(ctx, argstr, nr_write_queues,
-			      cfg->nr_write_queues, false)) ||
+			      c->cfg.nr_write_queues, false)) ||
 	    (!discover &&
 	     add_int_argument(ctx, argstr, nr_poll_queues,
-			      cfg->nr_poll_queues, false)) ||
+			      c->cfg.nr_poll_queues, false)) ||
 	    (!discover &&
 	     add_int_argument(ctx, argstr, queue_size,
-			      cfg->queue_size, false)) ||
+			      c->cfg.queue_size, false)) ||
 	    add_int_argument(ctx, argstr, keep_alive_tmo,
-			     cfg->keep_alive_tmo, false) ||
+			     c->cfg.keep_alive_tmo, false) ||
 	    add_int_argument(ctx, argstr, reconnect_delay,
-			     cfg->reconnect_delay, false) ||
+			     c->cfg.reconnect_delay, false) ||
 	    (strcmp(transport, "loop") &&
 	     add_int_or_minus_one_argument(ctx, argstr, ctrl_loss_tmo,
-			      cfg->ctrl_loss_tmo)) ||
+			      c->cfg.ctrl_loss_tmo)) ||
 	    (strcmp(transport, "loop") &&
 	     add_int_argument(ctx, argstr, fast_io_fail_tmo,
-			      cfg->fast_io_fail_tmo, false)) ||
+			      c->cfg.fast_io_fail_tmo, false)) ||
 	    (strcmp(transport, "loop") &&
-	     add_int_argument(ctx, argstr, tos, cfg->tos, true)) ||
+	     add_int_argument(ctx, argstr, tos, c->cfg.tos, true)) ||
 	    add_hex_argument(ctx, argstr, keyring, keyring_id, false) ||
 	    (!strcmp(transport, "tcp") &&
 	     add_hex_argument(ctx, argstr, tls_key, key_id, false)) ||
 	    add_bool_argument(ctx, argstr, duplicate_connect,
-			      cfg->duplicate_connect) ||
+			      c->cfg.duplicate_connect) ||
 	    add_bool_argument(ctx, argstr, disable_sqflow,
-			      cfg->disable_sqflow) ||
+			      c->cfg.disable_sqflow) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(ctx, argstr, hdr_digest, cfg->hdr_digest)) ||
+	     add_bool_argument(ctx, argstr, hdr_digest, c->cfg.hdr_digest)) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(ctx, argstr, data_digest, cfg->data_digest)) ||
+	     add_bool_argument(ctx, argstr, data_digest, c->cfg.data_digest)) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(ctx, argstr, tls, cfg->tls)) ||
+	     add_bool_argument(ctx, argstr, tls, c->cfg.tls)) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(ctx, argstr, concat, cfg->concat))) {
+	     add_bool_argument(ctx, argstr, concat, c->cfg.concat))) {
 		free(*argstr);
 		return -1;
 	}
@@ -1107,7 +1089,7 @@ __libnvme_public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 		if (fc) {
 			const char *key;
 
-			merge_config(c, libnvmf_ctrl_get_fabrics_config(fc));
+			merge_config(c, &fc->cfg);
 			/*
 			 * An authentication key might already been set
 			 * in @cfg, so ensure to update @c with the correct

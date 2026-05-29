@@ -308,18 +308,6 @@ int libnvmf_context_set_discovery_hooks(struct libnvmf_context *fctx,
 		int (*parser_next_line)(struct libnvmf_context *fctx,
 			void *user_data));
 
-/**
- * libnvmf_context_set_discovery_defaults() - Set default discovery parameters
- * @fctx: Fabrics context
- * @max_discovery_retries: Maximum number of discovery retries
- * @keep_alive_timeout: Keep-alive timeout in seconds
- *
- * Sets default values for discovery retries and keep-alive timeout.
- *
- * Return: 0 on success, or a negative error code on failure.
- */
-int libnvmf_context_set_discovery_defaults(struct libnvmf_context *fctx,
-		int max_discovery_retries, int keep_alive_timeout);
 
 /**
  * libnvmf_context_set_connection() - Set connection parameters for context
@@ -371,17 +359,6 @@ int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		const char *keyring, const char *tls_key,
 		const char *tls_key_identity);
 
-/**
- * libnvmf_context_set_persistent() - Set persistence for context
- * @fctx: Fabrics context
- * @persistent: Whether to enable persistent connections
- *
- * Sets whether the context should use persistent connections.
- *
- * Return: 0 on success, or a negative error code on failure.
- */
-
-int libnvmf_context_set_persistent(struct libnvmf_context *fctx, bool persistent);
 
 /**
  * libnvmf_context_set_device() - Set device for context
@@ -395,36 +372,54 @@ int libnvmf_context_set_persistent(struct libnvmf_context *fctx, bool persistent
 int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
 
 /**
- * libnvmf_context_get_fabrics_config() - Fabrics configuration of a fabrics
- * context
+ * libnvmf_context_set_io_queues() - Set I/O queue topology for context
  * @fctx: Fabrics context
+ * @nr_io_queues: Number of I/O queues
+ * @nr_write_queues: Number of write-only queues
+ * @nr_poll_queues: Number of polling queues
+ * @queue_size: Number of entries per I/O queue (SQSIZE in Connect command)
+ * @disable_sqflow: Disable SQ flow control negotiation
  *
- * Return: Fabrics configuration of @fctx
+ * Convenience setter for the five parameters that together define the I/O
+ * queue structure used when establishing a controller connection. All five
+ * feed directly into the Connect command at queue creation time.
+ * @nr_write_queues and @nr_poll_queues are additive: total I/O queues is
+ * @nr_io_queues + @nr_write_queues + @nr_poll_queues.
+ *
+ * Individual libnvmf_context_set_nr_io_queues(), _set_nr_write_queues(),
+ * _set_nr_poll_queues(), _set_queue_size(), and _set_disable_sqflow()
+ * accessors are also available when only a subset needs to change.
+ *
+ * Return: 0
  */
-struct libnvme_fabrics_config *libnvmf_context_get_fabrics_config(
-		struct libnvmf_context *fctx);
+int libnvmf_context_set_io_queues(struct libnvmf_context *fctx,
+		int nr_io_queues, int nr_write_queues, int nr_poll_queues,
+		int queue_size, bool disable_sqflow);
 
 /**
- * libnvmf_context_set_fabrics_config() - Set fabrics configuration for a
- * fabrics context
+ * libnvmf_context_set_reconnect_policy() - Set reconnect policy for context
  * @fctx: Fabrics context
- * @cfg:  Fabrics configuration to apply
+ * @ctrl_loss_tmo: Controller loss timeout in seconds; negative means retry
+ *                 indefinitely
+ * @reconnect_delay: Delay between reconnect attempts in seconds
+ * @fast_io_fail_tmo: Fast I/O fail timeout in seconds; negative disables it;
+ *                    must not exceed @ctrl_loss_tmo
  *
- * Copies the fields of @cfg into the fabrics configuration of @fctx.
+ * Convenience setter for the three coupled reconnect policy parameters.
+ * @ctrl_loss_tmo and @reconnect_delay are coupled: the kernel derives the
+ * maximum reconnect attempt count from their ratio. @fast_io_fail_tmo
+ * controls how quickly outstanding I/O is failed while reconnection is in
+ * progress.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Individual libnvmf_context_set_ctrl_loss_tmo(), _set_reconnect_delay(),
+ * and _set_fast_io_fail_tmo() accessors are also available when only a
+ * subset needs to change.
+ *
+ * Return: 0
  */
-int libnvmf_context_set_fabrics_config(struct libnvmf_context *fctx,
-		struct libnvme_fabrics_config *cfg);
+int libnvmf_context_set_reconnect_policy(struct libnvmf_context *fctx,
+		int ctrl_loss_tmo, int reconnect_delay, int fast_io_fail_tmo);
 
-/**
- * libnvmf_ctrl_get_fabrics_config() - Fabrics configuration of a controller
- * @c:	Controller instance
- *
- * Return: Fabrics configuration of @c
- */
-struct libnvme_fabrics_config *libnvmf_ctrl_get_fabrics_config(
-		libnvme_ctrl_t c);
 
 /**
  * libnvmf_discovery() - Perform fabrics discovery

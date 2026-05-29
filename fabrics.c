@@ -300,29 +300,22 @@ static void hook_parser_cleanup(struct libnvmf_context *fctx, void *user_data)
 static int set_fabrics_options(struct libnvmf_context *fctx,
 		struct nvmf_args *fa)
 {
-	struct libnvme_fabrics_config *fcfg;
-
-	fcfg = libnvmf_context_get_fabrics_config(fctx);
-	if (!fcfg)
-		return -EINVAL;
-
-	libnvme_fabrics_config_set_nr_io_queues(fcfg, fa->nr_io_queues);
-	libnvme_fabrics_config_set_reconnect_delay(fcfg, fa->reconnect_delay);
-	libnvme_fabrics_config_set_ctrl_loss_tmo(fcfg, fa->ctrl_loss_tmo);
-	libnvme_fabrics_config_set_fast_io_fail_tmo(fcfg, fa->fast_io_fail_tmo);
-	libnvme_fabrics_config_set_keep_alive_tmo(fcfg, fa->keep_alive_tmo);
-	libnvme_fabrics_config_set_nr_write_queues(fcfg, fa->nr_write_queues);
-	libnvme_fabrics_config_set_nr_poll_queues(fcfg, fa->nr_poll_queues);
-	libnvme_fabrics_config_set_tos(fcfg, fa->tos);
-	libnvme_fabrics_config_set_keyring_id(fcfg, fa->keyring_id);
-	libnvme_fabrics_config_set_tls_key_id(fcfg, fa->tls_key_id);
-	libnvme_fabrics_config_set_tls_configured_key_id(fcfg, fa->tls_configured_key_id);
-	libnvme_fabrics_config_set_duplicate_connect(fcfg, fa->duplicate_connect);
-	libnvme_fabrics_config_set_disable_sqflow(fcfg, fa->disable_sqflow);
-	libnvme_fabrics_config_set_hdr_digest(fcfg, fa->hdr_digest);
-	libnvme_fabrics_config_set_data_digest(fcfg, fa->data_digest);
-	libnvme_fabrics_config_set_tls(fcfg, fa->tls);
-	libnvme_fabrics_config_set_concat(fcfg, fa->concat);
+	libnvmf_context_set_io_queues(fctx, fa->nr_io_queues,
+			fa->nr_write_queues, fa->nr_poll_queues,
+			fa->queue_size, fa->disable_sqflow);
+	libnvmf_context_set_reconnect_policy(fctx, fa->ctrl_loss_tmo,
+			fa->reconnect_delay, fa->fast_io_fail_tmo);
+	libnvmf_context_set_keep_alive_tmo(fctx, fa->keep_alive_tmo);
+	libnvmf_context_set_tos(fctx, fa->tos);
+	libnvmf_context_set_keyring_id(fctx, fa->keyring_id);
+	libnvmf_context_set_tls_key_id(fctx, fa->tls_key_id);
+	libnvmf_context_set_tls_configured_key_id(fctx,
+			fa->tls_configured_key_id);
+	libnvmf_context_set_duplicate_connect(fctx, fa->duplicate_connect);
+	libnvmf_context_set_hdr_digest(fctx, fa->hdr_digest);
+	libnvmf_context_set_data_digest(fctx, fa->data_digest);
+	libnvmf_context_set_tls(fctx, fa->tls);
+	libnvmf_context_set_concat(fctx, fa->concat);
 
 	return 0;
 }
@@ -432,9 +425,7 @@ static int create_common_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
-	err = libnvmf_context_set_persistent(fctx, persistent);
-	if (err)
-		goto err;
+	libnvmf_context_set_persistent(fctx, persistent);
 
 	*fctxp = fctx;
 
@@ -463,10 +454,9 @@ static int create_discovery_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
-	err = libnvmf_context_set_discovery_defaults(fctx, MAX_DISC_RETRIES,
-		NVMF_DEF_DISC_TMO);
-	if (err)
-		goto err;
+	libnvmf_context_set_default_max_discovery_retries(fctx,
+			MAX_DISC_RETRIES);
+	libnvmf_context_set_default_keep_alive_timeout(fctx, NVMF_DEF_DISC_TMO);
 
 	err = libnvmf_context_set_device(fctx, device);
 	if (err)
