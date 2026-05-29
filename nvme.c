@@ -298,7 +298,7 @@ static OPT_VALS(feature_name) = {
 	VAL_BYTE("ns-metadata", NVME_FEAT_FID_NS_METADATA),
 	VAL_BYTE("sw-progress", NVME_FEAT_FID_SW_PROGRESS),
 	VAL_BYTE("host-id", NVME_FEAT_FID_HOST_ID),
-	VAL_BYTE("resv-mask", NVME_FEAT_FID_RESV_MASK),
+	VAL_BYTE("resv-nf-mask", NVME_FEAT_FID_RESV_NF_MASK),
 	VAL_BYTE("resv-persist", NVME_FEAT_FID_RESV_PERSIST),
 	VAL_BYTE("write-protect", NVME_FEAT_FID_WRITE_PROTECT),
 	VAL_BYTE("bp-write-protect", NVME_FEAT_FID_BP_WRITE_PROTECT),

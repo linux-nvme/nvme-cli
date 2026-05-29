@@ -5483,7 +5483,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 	case NVME_FEAT_FID_HOST_ID:
 		stdout_feat_host_id(result, buf);
 		break;
-	case NVME_FEAT_FID_RESV_MASK:
+	case NVME_FEAT_FID_RESV_NF_MASK:
 		printf("\tMask Reservation Preempted Notification  (RESPRE): %s\n",
 		       NVME_FEAT_RM_RESPRE(result) ? "True" : "False");
 		printf("\tMask Reservation Released Notification   (RESREL): %s\n",
