@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../util/argconfig.h"
 #include "../util/cleanup.h"
@@ -212,6 +213,206 @@ void comma_sep_array_test(const struct comma_sep_array_test *test)
 	}
 }
 
+struct global_cfg {
+	int verbose;
+	bool dry_run;
+};
+
+static struct global_cfg gcfg;
+
+struct global_parse_test {
+	const char *desc;
+	char *argv[8];
+	int argc;
+	/*
+	 * Expected optind value after argconfig_parse_global() returns.
+	 * This is the index of the first non-option argument (the subcommand)
+	 * in argv, as seen by getopt – i.e. 1-based because getopt always
+	 * skips argv[0] as the program name.
+	 */
+	int expected_optind;
+	int expected_ret;
+	int expected_verbose;
+	bool expected_dry_run;
+	const char *stderr_must_not_contain;
+};
+
+static const struct global_parse_test global_parse_tests[] = {
+	{
+		"no global opts: subcommand only",
+		{"prog", "list"},
+		2, 1, 0, 0, false,
+	},
+	{
+		"short -v before subcommand",
+		{"prog", "-v", "list"},
+		3, 2, 0, 1, false,
+	},
+	{
+		"long --verbose before subcommand",
+		{"prog", "--verbose", "list"},
+		3, 2, 0, 1, false,
+	},
+	{
+		"two -v flags before subcommand",
+		{"prog", "-v", "-v", "list"},
+		4, 3, 0, 2, false,
+	},
+	{
+		"--dry-run before subcommand",
+		{"prog", "--dry-run", "list"},
+		3, 2, 0, 0, true,
+	},
+	{
+		"multiple global opts before subcommand",
+		{"prog", "-v", "--dry-run", "list"},
+		4, 3, 0, 1, true,
+	},
+	{
+		/*
+		 * The '+' prefix in the short-opts string causes getopt to stop
+		 * at the first non-option argument.  Global opts that appear
+		 * *after* the subcommand must be left for the subcommand's own
+		 * argconfig_parse() call to handle.
+		 */
+		"subcommand before option: stop at first non-option",
+		{"prog", "list", "-v"},
+		3, 1, 0, 0, false,
+	},
+	{
+		"only program name",
+		{"prog"},
+		1, 1, 0, 0, false,
+	},
+	{
+		"option with no following subcommand",
+		{"prog", "--verbose"},
+		2, 2, 0, 1, false,
+	},
+ 	{
+ 		"unknown option before subcommand should fail",
+ 		{"prog", "--no-such-opt", "list"},
+ 		3, 0, -EINVAL, 0, false,
+ 	},
+};
+
+static int parse_global_capture_stderr(int argc, char *argv[],
+				       struct argconfig_commandline_options *opts,
+				       char *buf, size_t buf_size)
+{
+	FILE *tmp = NULL;
+	int ret;
+	int saved_stderr;
+	size_t n;
+
+	tmp = tmpfile();
+	if (!tmp) {
+		printf("ERROR: tmpfile failed: %s\n", libnvme_strerror(errno));
+		test_rc = 1;
+		return -errno;
+	}
+
+	saved_stderr = dup(STDERR_FILENO);
+	if (saved_stderr < 0) {
+		printf("ERROR: dup stderr failed: %s\n", libnvme_strerror(errno));
+		test_rc = 1;
+		fclose(tmp);
+		return -errno;
+	}
+
+	fflush(stderr);
+	if (dup2(fileno(tmp), STDERR_FILENO) < 0) {
+		printf("ERROR: redirect stderr failed: %s\n", libnvme_strerror(errno));
+		close(saved_stderr);
+		test_rc = 1;
+		fclose(tmp);
+		return -errno;
+	}
+
+	ret = argconfig_parse_global(argc, argv, opts);
+	fflush(stderr);
+
+	if (fseek(tmp, 0, SEEK_SET) != 0) {
+		printf("ERROR: rewind captured stderr failed: %s\n",
+		       libnvme_strerror(errno));
+		close(saved_stderr);
+		test_rc = 1;
+		fclose(tmp);
+		return -errno;
+	}
+
+	n = fread(buf, 1, buf_size - 1, tmp);
+	buf[n] = '\0';
+
+	if (dup2(saved_stderr, STDERR_FILENO) < 0) {
+		printf("ERROR: restoring stderr failed: %s\n", libnvme_strerror(errno));
+		test_rc = 1;
+		close(saved_stderr);
+		fclose(tmp);
+		return -errno;
+	}
+	close(saved_stderr);
+	fclose(tmp);
+
+	return ret;
+}
+
+static void do_global_parse_test(const struct global_parse_test *test)
+{
+	int ret;
+	char stderr_buf[512] = "";
+
+	OPT_ARGS(opts) = {
+		OPT_INCR("verbose", 'v', &gcfg.verbose, "increase verbosity"),
+		OPT_FLAG("dry-run", 0, &gcfg.dry_run, "dry run mode"),
+		OPT_END()
+	};
+
+	gcfg.verbose = 0;
+	gcfg.dry_run = false;
+
+	if (test->stderr_must_not_contain)
+		ret = parse_global_capture_stderr(test->argc, (char **)test->argv,
+						  opts, stderr_buf, sizeof(stderr_buf));
+	else
+		ret = argconfig_parse_global(test->argc, (char **)test->argv, opts);
+
+	if (ret != test->expected_ret) {
+		printf("ERROR: global_parse {%s}: ret=%d expected=%d\n",
+		       test->desc, ret, test->expected_ret);
+		test_rc = 1;
+		return;
+	}
+
+	if (test->expected_ret == 0 && optind != test->expected_optind) {
+		printf("ERROR: global_parse {%s}: optind=%d expected=%d\n",
+		       test->desc, optind, test->expected_optind);
+		test_rc = 1;
+		return;
+	}
+
+	if (test->stderr_must_not_contain &&
+	    strstr(stderr_buf, test->stderr_must_not_contain)) {
+		printf("ERROR: global_parse {%s}: stderr unexpectedly contains '%s'\n",
+		       test->desc, test->stderr_must_not_contain);
+		test_rc = 1;
+		return;
+	}
+
+	if (gcfg.verbose != test->expected_verbose) {
+		printf("ERROR: global_parse {%s}: verbose=%d expected=%d\n",
+		       test->desc, gcfg.verbose, test->expected_verbose);
+		test_rc = 1;
+		return;
+	}
+
+	if (gcfg.dry_run != test->expected_dry_run) {
+		printf("ERROR: global_parse {%s}: dry_run=%d expected=%d\n",
+		       test->desc, gcfg.dry_run, test->expected_dry_run);
+		test_rc = 1;
+	}
+}
+
 int main(void)
 {
 	unsigned int i;
@@ -228,6 +429,9 @@ int main(void)
 
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)
 		comma_sep_array_test(&comma_sep_array_tests[i]);
+
+	for (i = 0; i < ARRAY_SIZE(global_parse_tests); i++)
+		do_global_parse_test(&global_parse_tests[i]);
 
 	if (f)
 		fclose(f);
