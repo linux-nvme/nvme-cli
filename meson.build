@@ -23,7 +23,6 @@ project(
     default_options: [
         'c_std=gnu99',
         'buildtype=debugoptimized',
-        'prefix=/usr/local',
         'warning_level=1',
         'sysconfdir=etc',
         'wrap_mode=nofallback',
