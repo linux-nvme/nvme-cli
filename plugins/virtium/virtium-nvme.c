@@ -273,8 +273,7 @@ static int vt_add_entry_to_log(struct libnvme_transport_handle *hdl,
 	int ret = 0;
 	unsigned int nsid = 0;
 
-	memset(smart.path, 0, sizeof(smart.path));
-	strncpy(smart.path, path, sizeof(smart.path) - 1);
+	snprintf(smart.path, sizeof(smart.path), "%s", path);
 	if (!cfg->output_file)
 		filename = vt_default_log_file_name;
 	else
