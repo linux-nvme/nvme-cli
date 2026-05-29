@@ -71,11 +71,11 @@ enum nvme_mi_cmd_supported_effects {
 /**
  * struct nvme_mi_cmd_supported_effects_log - NVMe-MI Commands Supported and Effects Log
  * @mi_cmd_support:	NVMe-MI Commands Supported
- * @reserved1:		Reserved
+ * @rsvd128:		Reserved
  */
 struct nvme_mi_cmd_supported_effects_log {
 	__le32	mi_cmd_support[NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX];
-	__le32	reserved1[NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED];
+	__le32	rsvd128[NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED];
 };
 
 /**
