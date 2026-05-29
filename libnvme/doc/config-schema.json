@@ -41,6 +41,10 @@
 			"description": "Enable/disable Persistent Discovery Controller",
 			"type": "boolean"
 		},
+		"supported_persistent_discovery_ctrl": {
+			"description": "Enable/disable persistent discovery for controllers that support it.",
+			"type": "boolean"
+		},
 		"subsystems": {
 		    "description": "Array of NVMe subsystem properties",
 		    "type": "array",

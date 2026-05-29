@@ -189,8 +189,10 @@ Subsystem.__setattr__ = _nvme_guarded_setattr
 /* struct libnvme_host */
 %rename(Host) libnvme_host;
 %rename(libnvme_host_pdc_enabled_set) libnvme_host_set_pdc_enabled;
+%rename(libnvme_host_epcsd_enabled_set) libnvme_host_set_epcsd_enabled;
 %{
 	#define libnvme_host_pdc_enabled_set libnvme_host_set_pdc_enabled
+	#define libnvme_host_epcsd_enabled_set libnvme_host_set_epcsd_enabled
 %}
 struct libnvme_host {
 	%immutable hostnqn;
