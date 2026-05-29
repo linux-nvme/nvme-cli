@@ -954,7 +954,7 @@ static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct p
 	NVME_ARGS(opts,
 		OPT_UINT("namespace-id",		'n',	&cfg.namespace_id,		namespace_id),
 		OPT_UINT("feature-id",			'f',	&cfg.feature_id,		feature_id),
-		OPT_UINT("value",			'v',	&cfg.value,			value),
+		OPT_UINT("value",			'V',	&cfg.value,			value),
 		OPT_FLAG("force",			's',	&cfg.force,			force));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -1379,7 +1379,7 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *acmd, struct p
 		OPT_UINT("namespace_id",	    'n',	&cfg.namespace_id,	namespace_id),
 		OPT_UINT("storage_medium",	    's',	&cfg.storage_medium,    storage_medium),
 		OPT_FLAG("parse",	            'p',	&cfg.parse,             parse),
-		OPT_FILE("output",                  'o',        &cfg.output,            output));
+		OPT_FILE("output",                  'O',        &cfg.output,            output));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)

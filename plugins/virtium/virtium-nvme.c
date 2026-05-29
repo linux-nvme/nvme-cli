@@ -962,7 +962,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 	NVME_ARGS(opts,
 		OPT_DOUBLE("run-time",  'r', &cfg.run_time_hrs,             run_time),
 		OPT_DOUBLE("freq",      'f', &cfg.log_record_frequency_hrs, freq),
-		OPT_FILE("output-file", 'o', &cfg.output_file,              output_file),
+		OPT_FILE("output-file", 'O', &cfg.output_file,              output_file),
 		OPT_STRING("test-name", 'n', "NAME", &cfg.test_name,        test_name));
 
 	vt_generate_vtview_log_file_name(vt_default_log_file_name);
