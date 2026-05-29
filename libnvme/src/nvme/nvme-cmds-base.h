@@ -2399,7 +2399,7 @@ nvme_init_set_features_host_id(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_init_set_features_resv_mask() - Initialize passthru command for
+ * nvme_init_set_features_resv_nf_mask() - Initialize passthru command for
  * Reservation Notification Mask
  * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
@@ -2407,13 +2407,13 @@ nvme_init_set_features_host_id(struct libnvme_passthru_cmd *cmd,
  * @mask:	Reservation Notification Mask Field
  *
  * Initializes the passthru command buffer for the Set Features command with
- * FID value %NVME_FEAT_FID_RESV_MASK
+ * FID value %NVME_FEAT_FID_RESV_NF_MASK
  */
 static inline void
-nvme_init_set_features_resv_mask(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_set_features_resv_nf_mask(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		bool sv, __u32 mask)
 {
-	nvme_init_set_features(cmd, NVME_FEAT_FID_RESV_MASK, sv);
+	nvme_init_set_features(cmd, NVME_FEAT_FID_RESV_NF_MASK, sv);
 	cmd->nsid = nsid;
 	cmd->cdw11 = mask;
 }
@@ -3041,7 +3041,7 @@ nvme_init_get_features_host_id(struct libnvme_passthru_cmd *cmd,
 }
 
 /**
- * nvme_init_get_features_resv_mask() - Initialize passthru command for
+ * nvme_init_get_features_resv_nf_mask() - Initialize passthru command for
  * Get Features - Reservation Notification Mask
  * @cmd:	Passthru command to use
  * @nsid:	Namespace ID
@@ -3049,13 +3049,13 @@ nvme_init_get_features_host_id(struct libnvme_passthru_cmd *cmd,
  *		see &enum nvme_get_features_sel
  *
  * Initializes the passthru command buffer for the Get Features command with
- * FID value %NVME_FEAT_FID_RESV_MASK
+ * FID value %NVME_FEAT_FID_RESV_NF_MASK
  */
 static inline void
-nvme_init_get_features_resv_mask(struct libnvme_passthru_cmd *cmd, __u32 nsid,
+nvme_init_get_features_resv_nf_mask(struct libnvme_passthru_cmd *cmd, __u32 nsid,
 		enum nvme_get_features_sel sel)
 {
-	nvme_init_get_features(cmd, NVME_FEAT_FID_RESV_MASK, sel);
+	nvme_init_get_features(cmd, NVME_FEAT_FID_RESV_NF_MASK, sel);
 	cmd->nsid = nsid;
 }
 

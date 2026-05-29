@@ -7415,7 +7415,7 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_NS_METADATA:		Namespace Metadata
  * @NVME_FEAT_FID_SW_PROGRESS:		Software Progress Marker
  * @NVME_FEAT_FID_HOST_ID:		Host Identifier
- * @NVME_FEAT_FID_RESV_MASK:		Reservation Notification Mask
+ * @NVME_FEAT_FID_RESV_NF_MASK:		Reservation Notification Mask
  * @NVME_FEAT_FID_RESV_PERSIST:		Reservation Persistence
  * @NVME_FEAT_FID_WRITE_PROTECT:	Namespace Write Protection Config
  * @NVME_FEAT_FID_BP_WRITE_PROTECT:	Boot Partition Write Protection Config
@@ -7465,7 +7465,7 @@ enum nvme_features_id {
 	NVME_FEAT_FID_NS_METADATA				= 0x7f,
 	NVME_FEAT_FID_SW_PROGRESS				= 0x80,
 	NVME_FEAT_FID_HOST_ID					= 0x81,
-	NVME_FEAT_FID_RESV_MASK					= 0x82,
+	NVME_FEAT_FID_RESV_NF_MASK				= 0x82,
 	NVME_FEAT_FID_RESV_PERSIST				= 0x83,
 	NVME_FEAT_FID_WRITE_PROTECT				= 0x84,
 	NVME_FEAT_FID_BP_WRITE_PROTECT				= 0x85,

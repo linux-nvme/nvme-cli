@@ -1322,14 +1322,14 @@ static void test_get_host_id_extended(void)
 	cmp(get_hostid, hostid, sizeof(hostid), "incorrect host identifier");
 }
 
-static void test_set_resv_mask(void)
+static void test_set_resv_nf_mask(void)
 {
 	uint32_t MASK = 0x23456789;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
 		.nsid = TEST_NSID,
 		.cdw10 = (uint32_t)1 << 31 /* SAVE */
-		       | NVME_FEAT_FID_RESV_MASK,
+		       | NVME_FEAT_FID_RESV_NF_MASK,
 		.cdw11 = MASK,
 		.result = TEST_RESULT,
 	};
@@ -1337,7 +1337,7 @@ static void test_set_resv_mask(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	nvme_init_set_features_resv_mask(&cmd, TEST_NSID, true, MASK);
+	nvme_init_set_features_resv_nf_mask(&cmd, TEST_NSID, true, MASK);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "set features returned error %d", err);
@@ -1346,19 +1346,19 @@ static void test_set_resv_mask(void)
 	      (uint64_t)cmd.result, TEST_RESULT);
 }
 
-static void test_get_resv_mask(void)
+static void test_get_resv_nf_mask(void)
 {
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_features,
 		.nsid = TEST_NSID,
-		.cdw10 = TEST_SEL << 8 | NVME_FEAT_FID_RESV_MASK,
+		.cdw10 = TEST_SEL << 8 | NVME_FEAT_FID_RESV_NF_MASK,
 		.result = TEST_RESULT,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	nvme_init_get_features_resv_mask(&cmd, TEST_NSID, TEST_SEL);
+	nvme_init_get_features_resv_nf_mask(&cmd, TEST_NSID, TEST_SEL);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == 0, "get features returned error %d", err);
@@ -1491,7 +1491,7 @@ static void test_set_kernel_error(void)
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
 		.nsid = TEST_NSID,
-		.cdw10 = NVME_FEAT_FID_RESV_MASK,
+		.cdw10 = NVME_FEAT_FID_RESV_NF_MASK,
 		.cdw11 = MASK,
 		.result = 0,
 		.err = -EIO,
@@ -1500,7 +1500,7 @@ static void test_set_kernel_error(void)
 	int err;
 
 	set_mock_admin_cmds(&mock_admin_cmd, 1);
-	nvme_init_set_features_resv_mask(&cmd, TEST_NSID, false, MASK);
+	nvme_init_set_features_resv_nf_mask(&cmd, TEST_NSID, false, MASK);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
 	check(err == -EIO, "got error %d, expected -EIO", err);
@@ -1684,8 +1684,8 @@ int main(void)
 	RUN_TEST(set_host_id_extended);
 	RUN_TEST(get_host_id);
 	RUN_TEST(get_host_id_extended);
-	RUN_TEST(set_resv_mask);
-	RUN_TEST(get_resv_mask);
+	RUN_TEST(set_resv_nf_mask);
+	RUN_TEST(get_resv_nf_mask);
 	RUN_TEST(set_resv_persist);
 	RUN_TEST(get_resv_persist);
 	RUN_TEST(set_write_protect);
