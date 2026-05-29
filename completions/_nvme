@@ -234,15 +234,15 @@ _nvme () {
 				_arguments '*:: :->subcmds'
 				_describe -t commands "nvme ocp eol-plp-failure-mode options" _eol_plp_failure_mode
 				;;
-			(clear-pcie-correctable-error-counters)
-				local _clear_pcie_correctable_error_counters
-				_clear_pcie_correctable_error_counters=(
+			(clear-pcie-correctable-errors)
+				local _clear_pcie_correctable_errors
+				_clear_pcie_correctable_errors=(
 				/dev/nvme':supply a device to use (required)'
 				--no-uuid':Skip UUID index search'
 				-n':alias for --no-uuid'
 				)
 				_arguments '*:: :->subcmds'
-				_describe -t commands "nvme ocp clear-pcie-correctable-error-counters options" _clear_pcie_correctable_error_counters
+				_describe -t commands "nvme ocp clear-pcie-correctable-errors options" _clear_pcie_correctable_errors
 				;;
 			(fw-activate-history)
 				local _fw_activate_history
@@ -2862,26 +2862,38 @@ _nvme () {
 		(ocp)
 			local _ocp
 			_ocp=(
-			smart-add-log':Retrieve extended SMART Information'
-			latency-monitor-log':Get Latency Monitor Log Page'
-			set-latency-monitor-feature':Set Latency Monitor feature'
-			internal-log':Retrieve and save internal device telemetry log'
-			clear-fw-activate-history':Clear firmware update history log"'
-			eol-plp-failure-mode':Define EOL or PLP circuitry failure mode'
-			clear-pcie-correctable-error-counters':Clear PCIe correctable error counters'
-			vs-fw-activate-history':Get firmware activation history log'
-			device-capability-log':Get Device capability log'
-			set-dssd-power-state-feature':Set DSSD Power State'
-			get-dssd-power-state-feature':Get DSSD Power State'
-			telemetry-string-log':Retrieve Telemetry string Log Page'
-			set-telemetry-profile':Set Telemetry Profile'
-			tcg-configuration-log':tcg configuration log'
-			get-error-injection':get error injection'
-			set-error-injection':set error injection'
-			hardware-component-log':retrieve hardware component log'
+			smart-add-log':Retrieve Extended SMART Information'
+			latency-monitor-log':Retrieve Latency Monitor Log Page'
+			set-latency-monitor-feature':Set Latency Monitor Feature'
+			internal-log':Retrieve and Save Internal Device Telemetry Log'
+			clear-fw-activate-history':Clear Firmware Update History'
+			eol-plp-failure-mode':Define EOL or PLP Circuitry Failure Mode'
+			clear-pcie-correctable-errors':Clear PCIe Correctable Error Counters'
+			fw-activate-history':Retrieve Firmware Activation History Log Page'
+			unsupported-reqs-log':Retrieve Unsupported Requirements Log Page'
+			error-recovery-log':Retrieve Error Recovery Log Page'
+			device-capability-log':Retrieve Device Capabilities Log Page'
+			set-dssd-power-state-feature':Set DSSD Power State Feature'
+			get-dssd-power-state-feature':Get DSSD Power State Feature'
+			set-plp-health-check-interval':Set PLP Health Check Interval'
+			get-plp-health-check-interval':Get PLP Health Check Interval'
+			telemetry-string-log':Retrieve Telemetry String Log Page'
+			set-telemetry-profile':Set Telemetry Profile Feature'
+			set-dssd-async-event-config':Set DSSD Asynchronous Event Configuration'
+			get-dssd-async-event-config':Get DSSD Asynchronous Event Configuration'
+			tcg-configuration-log':Retrieve TCG Configuration Log Page'
+			get-error-injection':Get Error Injection Feature'
+			set-error-injection':Set Error Injection Feature'
+			get-enable-ieee1667-silo':Get Enable IEEE1667 Silo Feature'
+			set-enable-ieee1667-silo':Set Enable IEEE1667 Silo Feature'
+			hardware-component-log':Retrieve Hardware Component Log Page'
 			get-latency-monitor':Get Latency Monitor Feature'
-			get-clear-pcie-correctable-errors':retrieve clear pcie correctable errors'
-			get-telemetry-profile':retrieve Get Telemetry Profile Feature'
+			get-clear-pcie-correctable-errors':Get Clear PCIe Correctable Error Counters Feature'
+			get-telemetry-profile':Get Telemetry Profile Feature'
+			persistent-event-log':Retrieve Persistent Event Log with OCP Events'
+			get-idle-wakeup-time':Get Idle Wake Up Time Configuration'
+			version':Shows the program version'
+			help':Display this help'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme ocp options" _ocp
