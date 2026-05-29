@@ -7427,10 +7427,10 @@ static void get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
 	elbaf = le32_to_cpu(nvm_ns->elbaf[lba_index]);
-	*sts = elbaf & NVME_NVM_ELBAF_STS_MASK;
-	*pif = (elbaf & NVME_NVM_ELBAF_PIF_MASK) >> 7;
+	*sts = NVME_NVM_ELBAF_STS(elbaf);
+	*pif = NVME_NVM_ELBAF_PIF(elbaf);
 	if (*pif == NVME_NVM_PIF_QTYPE && (nvm_ns->pic & 0x8))
-		*pif = (elbaf & NVME_NVM_ELBAF_QPIF_MASK) >> 9;
+		*pif = NVME_NVM_ELBAF_QPIF(elbaf);
 }
 
 static int get_pi_info(struct libnvme_transport_handle *hdl,
