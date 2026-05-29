@@ -66,6 +66,11 @@ static inline PyObject *Py_NewRef(PyObject *obj)
 %module(docstring=MODULE_DOCSTRING) nvme
 %feature("autodoc", "1");
 
+%pythonbegin %{
+import json
+import os
+%}
+
 %include "exception.i"
 
 %allowexception;
@@ -271,6 +276,28 @@ PyObject *read_hostid()
 	PyObject *obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
 	free(val);
 	return obj;
+}
+
+void registry_update(const char *device, const char *key, const char *value)
+{
+	if (strncmp(device, "nvme", 4)) {
+		PyErr_Format(PyExc_ValueError,
+			     "invalid device '%s': must start with 'nvme'",
+			     device);
+		return;
+	}
+	libnvmf_registry_update(device, key, value);
+}
+
+void registry_delete(const char *device)
+{
+	if (strncmp(device, "nvme", 4)) {
+		PyErr_Format(PyExc_ValueError,
+			     "invalid device '%s': must start with 'nvme'",
+			     device);
+		return;
+	}
+	libnvmf_registry_delete(device);
 }
 
 /*============================================================================*/
@@ -552,6 +579,58 @@ from libnvme._exceptions import (
 	DiscoverError,
 	NotConnectedError,
 )
+
+def registry_retrieve(device):
+    """Retrieve a controller's registry entry as a dict.
+
+    Args:
+        device: Device name (e.g. 'nvme3').  Must start with 'nvme'.
+
+    Returns:
+        dict with the registry entry contents (e.g. {'device': 'nvme3',
+        'owner': 'stas'}), or None if the device is not registered.
+
+    Raises:
+        ValueError: If device does not start with 'nvme'.
+    """
+    if not device.startswith('nvme'):
+        raise ValueError(f"invalid device '{device}': must start with 'nvme'")
+    path = os.path.join('/run/nvme/registry', device + '.json')
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
+
+def registry_entries():
+    """Yield each live registry entry as a dict.
+
+    Scans /run/nvme/registry/ and yields one dict per entry whose
+    corresponding /dev/nvmeX device node exists.  Stale entries
+    (controller removed by the kernel) are silently skipped.
+
+    Each dict contains at minimum 'device' and 'owner' keys, plus
+    any other fields stored in the registry JSON file.
+
+    Yields:
+        dict: Registry entry, e.g. {'device': 'nvme3', 'owner': 'stas'}.
+    """
+    registry_dir = '/run/nvme/registry'
+    try:
+        filenames = os.listdir(registry_dir)
+    except FileNotFoundError:
+        return
+    for filename in sorted(filenames):
+        if not filename.endswith('.json'):
+            continue
+        device = filename[:-5]
+        if not os.path.exists('/dev/' + device):
+            continue
+        try:
+            with open(os.path.join(registry_dir, filename)) as f:
+                yield json.load(f)
+        except (OSError, ValueError):
+            continue
 %}
 
 /*############################################################################*/
@@ -811,6 +890,16 @@ from libnvme._exceptions import (
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
 }
+%exception registry_update {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+void registry_update(const char *device, const char *key, const char *value);
+%exception registry_delete {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+void registry_delete(const char *device);
 
 #include "tree.h"
 #include "fabrics.h"
@@ -846,7 +935,7 @@ struct libnvme_ns *libnvme_ctrl_first_ns(struct libnvme_ctrl *c);
 struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_ns *n);
 
 %extend libnvme_global_ctx {
-	%feature("autodoc", "__init__(self, config_file=None)\n"
+	%feature("autodoc", "__init__(self, owner=None, config_file=None)\n"
 		"\n"
 		"Create the root context for the libnvme device tree.\n"
 		"\n"
@@ -854,13 +943,22 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		"Supports use as a context manager (``with GlobalCtx() as ctx:``).\n"
 		"\n"
 		"Args:\n"
+		"    owner:       Registry owner name for this orchestrator process\n"
+		"                 (e.g. 'stas', 'nbft').  When set, libnvme\n"
+		"                 automatically registers this process as the owner\n"
+		"                 of every controller connected through this context.\n"
+		"                 Pass None (default) to connect without registering.\n"
 		"    config_file: Path to a JSON config file, or None for defaults.") libnvme_global_ctx;
-	libnvme_global_ctx(const char *config_file = NULL) {
+	libnvme_global_ctx(const char *owner = NULL,
+			   const char *config_file = NULL) {
 		struct libnvme_global_ctx *ctx;
 
 		ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
 		if (!ctx)
 			return NULL;
+
+		if (owner)
+			libnvmf_context_set_owner(ctx, owner);
 
 		libnvme_scan_topology(ctx, NULL, NULL);
 		libnvme_read_config(ctx, config_file);
@@ -903,6 +1001,15 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 	void dump_config() {
 		libnvme_dump_config($self, STDERR_FILENO);
 	}
+	const char *_get_owner() {
+		return $self->owner;
+	}
+	%pythoncode %{
+	@property
+	def owner(self):
+	    """Registry owner name for this process, or None if not set."""
+	    return self._get_owner()
+	%}
 }
 
 
