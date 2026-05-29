@@ -398,7 +398,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 static int ocp_get_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 					   struct plugin *plugin)
 {
-	const char *desc = "Define Issue Get Feature command (FID: 0xC5) Latency Monitor";
+	const char *desc = "Issue Get Feature command (FID: 0xC5) Latency Monitor";
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
 
@@ -1977,7 +1977,7 @@ static int ocp_set_telemetry_profile_feature(int argc, char **argv, struct comma
 static int ocp_get_telemetry_profile_feature(int argc, char **argv, struct command *acmd,
 					      struct plugin *plugin)
 {
-	const char *desc = "Define Issue Get Feature command (FID: 0xC8) Telemetry Profile";
+	const char *desc = "Issue Get Feature command (FID: 0xC8) Telemetry Profile";
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
 
@@ -2205,7 +2205,7 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 					 struct plugin *plugin)
 {
 
-	const char *desc = "Define Issue Set Feature command (FID : 0xC6) PLP Health Check Interval";
+	const char *desc = "Issue Set Feature command (FID: 0xC6) PLP Health Check Interval";
 	const char *plp_health_interval = "[31:16]:PLP Health Check Interval";
 	const char *sv = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
@@ -2264,7 +2264,7 @@ static int get_plp_health_check_interval(int argc, char **argv, struct command *
 					 struct plugin *plugin)
 {
 
-	const char *desc = "Define Issue Get Feature command (FID : 0xC6) PLP Health Check Interval";
+	const char *desc = "Issue Get Feature command (FID: 0xC6) PLP Health Check Interval";
 	const __u32 nsid = 0;
 	const __u8 fid = 0xc6;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -2312,7 +2312,7 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *ac
 				       struct plugin *plugin)
 {
 
-	const char *desc = "Issue Set Feature command (FID : 0xC9) DSSD Async Event Config";
+	const char *desc = "Issue Set Feature command (FID: 0xC9) DSSD Async Event Config";
 	const char *epn = "[0]:Enable Panic Notices";
 	const char *sv = "Specifies that the controller shall save the attribute";
 	const __u32 nsid = 0;
@@ -2366,7 +2366,7 @@ static int get_dssd_async_event_config(int argc, char **argv, struct command *ac
 				       struct plugin *plugin)
 {
 
-	const char *desc = "Issue Get Feature command (FID : 0xC9) DSSD Async Event Config";
+	const char *desc = "Issue Get Feature command (FID: 0xC9) DSSD Async Event Config";
 	const char *sel = "[0-3]: current/default/saved/supported";
 	const __u32 nsid = 0;
 	const __u8 fid = OCP_FID_DAEC;
@@ -2672,7 +2672,7 @@ static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 
 
 static int get_error_injection(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Return set of error injection";
+	const char *desc = "Get Error Injection Feature";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	int err;
@@ -2834,7 +2834,7 @@ static int enable_ieee1667_silo_get(struct libnvme_transport_handle *hdl, const 
 static int get_enable_ieee1667_silo(int argc, char **argv, struct command *acmd,
 				    struct plugin *plugin)
 {
-	const char *desc = "return set of enable IEEE1667 silo";
+	const char *desc = "Get Enable IEEE1667 Silo Feature";
 	int err;
 	struct config {
 		__u8 sel;
@@ -3050,7 +3050,7 @@ static int ocp_get_idle_wakeup_time_config_feature(int argc, char **argv,
 						    struct command *acmd,
 						    struct plugin *plugin)
 {
-	const char *desc = "Define Issue Get Feature cmd (FID: 0xCA) IWUT";
+	const char *desc = "Issue Get Feature command (FID: 0xCA) IWUT";
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: NSID Valid/Invalid/Inactive";
 
