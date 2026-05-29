@@ -1,6 +1,12 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-util_sources = []
+util_sources = [
+    'util/argconfig.c',
+    'util/base64.c',
+    'util/crc32.c',
+    'util/suffix.c',
+    'util/types.c',
+]
 
 if host_system == 'windows'
     util_sources += [
@@ -8,20 +14,15 @@ if host_system == 'windows'
     ]
 else
     util_sources += [
-        'util/argconfig.c',
-        'util/base64.c',
-        'util/crc32.c',
         'util/sighdl-linux.c',
-        'util/suffix.c',
-        'util/types.c',
         'util/utils.c',
         'util/table.c',
         'util/dashboard.c',
     ]
+endif
 
-    if json_c_dep.found()
-        util_sources += [
-            'util/json.c',
-        ]
-    endif
+if json_c_dep.found()
+    util_sources += [
+        'util/json.c',
+    ]
 endif

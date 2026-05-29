@@ -6,8 +6,13 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 sources = [
+    'nvme/accessors.c',
+    'nvme/base64.c',
+    'nvme/crc32.c',
     'nvme/ioctl.c',
     'nvme/log.c',
+    'nvme/nvme-cmds.c',
+    'nvme/util.c',
 ]
 if host_system == 'windows'
     sources += [
@@ -17,19 +22,14 @@ if host_system == 'windows'
     ]
 else
     sources += [
-        'nvme/accessors.c',
-        'nvme/base64.c',
-        'nvme/crc32.c',
         'nvme/crypto.c',
         'nvme/filters.c',
         'nvme/ioctl-linux.c',
         'nvme/lib.c',
         'nvme/linux.c',
         'nvme/mem-linux.c',
-        'nvme/nvme-cmds.c',
         'nvme/sysfs.c',
         'nvme/tree.c',
-        'nvme/util.c',
     ]
 endif
 headers = [
@@ -116,7 +116,8 @@ deps = [
 ]
 if host_system == 'windows'
     deps += [
-        kernel32_dep
+        kernel32_dep,
+        bcrypt_dep,
     ]
 endif
 
