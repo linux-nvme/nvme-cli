@@ -137,6 +137,23 @@ union nvmf_tsas {
 	} tcp;
 };
 
+/**
+ * struct nvmf_disc_log_entry - Discovery Log Page Entry
+ * @trtype:	Transport Type (see &enum nvmf_trtype)
+ * @adrfam:	Address Family (see &enum nvmf_addr_family)
+ * @subtype:	Subsystem Type
+ * @treq:	Transport Requirements (see &enum nvmf_treq)
+ * @portid:	Port ID
+ * @cntlid:	Controller ID
+ * @asqsz:	Admin Submission Queue Size
+ * @eflags:	Entry Flags (see &enum nvmf_disc_eflags)
+ * @rsvd12:	Reserved
+ * @trsvcid:	Transport Service Identifier
+ * @rsvd64:	Reserved
+ * @subnqn:	NVM Subsystem Qualified Name
+ * @traddr:	Transport Address
+ * @tsas:	Transport Specific Address Subtype (see &union nvmf_tsas)
+ */
 struct nvmf_disc_log_entry {
 	__u8		trtype;
 	__u8		adrfam;

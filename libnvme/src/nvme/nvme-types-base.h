@@ -3039,6 +3039,13 @@ enum nvme_ns_id_desc_nidt {
 	NVME_NIDT_CSI		= 4,
 };
 
+/**
+ * enum nvme_ns_id_desc_nidt_lens - Namespace Identifier Descriptor Type Lengths
+ * @NVME_NIDT_EUI64_LEN:	IEEE Extended Unique Identifier length (8 bytes)
+ * @NVME_NIDT_NGUID_LEN:	Namespace Globally Unique Identifier length (16 bytes)
+ * @NVME_NIDT_UUID_LEN:		Universally Unique Identifier length (16 bytes)
+ * @NVME_NIDT_CSI_LEN:		Command Set Identifier length (1 byte)
+ */
 enum nvme_ns_id_desc_nidt_lens {
 	NVME_NIDT_EUI64_LEN		= 8,
 	NVME_NIDT_NGUID_LEN		= 16,
@@ -3465,6 +3472,11 @@ struct nvme_error_log_page {
 	__u8	log_page_version;
 };
 
+/**
+ * enum nvme_err_pel - Persistent Error Log Entry masks
+ * @NVME_ERR_PEL_BYTE_MASK:	Byte mask for error location
+ * @NVME_ERR_PEL_BIT_MASK:	Bit mask for error location
+ */
 enum nvme_err_pel {
 	NVME_ERR_PEL_BYTE_MASK	= 0xf,
 	NVME_ERR_PEL_BIT_MASK	= 0x70,
