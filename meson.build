@@ -487,16 +487,6 @@ if not want_libnvme and not std_prefix
     add_project_arguments('-I' + libnvme_hdr_location, language : 'c')
 endif
 
-if host_system == 'windows'
-    add_project_arguments(
-        [
-            '-DNOMINMAX',   # don't include Windows min/max definitions
-            '-D_POSIX_THREAD_SAFE_FUNCTIONS',   # enables gmtime_r support
-        ],
-        language : 'c',
-    )
-endif
-
 ################################################################################
 libtype = get_option('default_library')
 if libtype == 'static'
@@ -507,6 +497,7 @@ if host_system == 'windows'
     add_project_arguments(
         [
             '-DNOMINMAX',   # don't include Windows min/max definitions
+            '-D_POSIX_THREAD_SAFE_FUNCTIONS',   # enables gmtime_r support
         ],
         language : 'c',
     )
