@@ -21,6 +21,19 @@
  * DOC: nvme-types-base.h
  *
  * NVMe Base Specification type definitions
+ *
+ * Based on NVM Express Base Specification,
+ * Revision 2.3, August 1, 2025 (Ratified)
+ *
+ * This file contains core NVMe types organized by functional area:
+ * - Helper Macros: NVME_GET, NVME_SET, NVME_CHECK, NVME_VAL
+ * - Controller Registers: CAP, CC, CSTS, and other BAR0 registers
+ * - Identify Structures: Controller, Namespace, and related data
+ * - Log Pages: SMART, Error, Firmware, and other log structures
+ * - Features: Feature identifiers and feature-specific data
+ * - Commands: Admin and I/O command structures
+ * - Namespace Management: Namespace descriptors and attributes
+ * - Status & Errors: Status codes and error information
  */
 
 

@@ -21,6 +21,19 @@
  * DOC: nvme-types-nvm.h
  *
  * NVM Command Set type definitions
+ *
+ * Based on NVM Express NVM Command Set Specification,
+ * Revision 1.2, August 1, 2025 (Ratified)
+ *
+ * This file is organized into functional groups:
+ * - NVM Namespace Identification: Extended LBA formats and namespace-specific data
+ * - I/O Command Set Support: Command set identification and capabilities
+ * - Reservation Notifications: Log pages for reservation events
+ * - Flexible Data Placement (FDP): Comprehensive FDP feature support including
+ *   configuration, events, statistics, and status reporting
+ * - Data Set Management & Copy: DSM ranges and copy operation formats
+ * - Reservation Support: Controller registration and reservation management
+ * - I/O Management: Control flags and management operations
  */
 
 /**

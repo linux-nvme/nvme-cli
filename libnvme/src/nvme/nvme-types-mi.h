@@ -18,9 +18,20 @@
 #include <nvme/nvme-types-base.h>
 
 /**
- * DOC: nvme-types-mi.h
+ * DOC: nvme-types-mi.h - NVMe-MI data structure type definitions
  *
  * NVMe Management Interface type definitions
+ *
+ * Based on NVM Express Management Interface Specification,
+ * Revision 2.1, August 1, 2025 (Ratified)
+ *
+ * This file contains core NVMe types organized by functional area:
+ * - MI command data structures (controller info, port info, etc.)
+ * - Health status structures (subsystem and controller health)
+ * - VPD (Vital Product Data) structures
+ * - MI log page structures
+ * - Command effects and capabilities
+ * - Spec-defined data payloads
  */
 
 /**
