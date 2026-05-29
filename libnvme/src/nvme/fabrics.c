@@ -984,6 +984,7 @@ static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 {
 	__cleanup_fd int fd = -1;
 	int ret, len = strlen(argstr);
+	int instance;
 	char buf[0x1000], *options, *p;
 
 	fd = open(nvmf_dev, O_RDWR);
@@ -1035,8 +1036,11 @@ static int __nvmf_add_ctrl(struct libnvme_global_ctx *ctx, const char *argstr)
 	while ((p = strsep(&options, ",\n")) != NULL) {
 		if (!*p)
 			continue;
-		if (sscanf(p, "instance=%d", &ret) == 1)
-			return ret;
+		if (sscanf(p, "instance=%d", &instance) == 1) {
+			if (ctx->owner)
+				libnvmf_registry_create(instance, ctx->owner);
+			return instance;
+		}
 	}
 
 	libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to parse ctrl info for \"%s\"\n", argstr);
