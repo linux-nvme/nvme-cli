@@ -32,11 +32,11 @@
  */
 
 /*
- *  ACPI NBFT table structures (TP8012 Boot Specification rev. 1.0)
+ *  ACPI NBFT table structures (Boot Specification rev. 1.3)
  */
 
 /**
- * enum nbft_desc_type - NBFT Elements - Descriptor Types (Figure 5)
+ * enum nbft_desc_type - NBFT Elements - Descriptor Types (Figure 6)
  * @NBFT_DESC_HEADER:	     Header: an ACPI structure header with some additional
  *			     NBFT specific info.
  * @NBFT_DESC_CONTROL:	     Control Descriptor: indicates the location of host,
@@ -55,6 +55,8 @@
  * @NBFT_DESC_RESERVED_8:    Reserved.
  * @NBFT_DESC_SSNS_EXT_INFO: SSNS Extended Info Descriptor: indicated by an SSNS
  *			     Descriptor if required.
+ * @NBFT_DESC_HFI_EXT_INFO:  HFI Extended Info Descriptor: indicated by an HFI Transport
+ *			     Info descriptor (added in revision 1.1+).
  */
 enum nbft_desc_type {
 	NBFT_DESC_HEADER	= 0,
@@ -67,10 +69,11 @@ enum nbft_desc_type {
 	NBFT_DESC_HFI_TRINFO	= 7,
 	NBFT_DESC_RESERVED_8	= 8,
 	NBFT_DESC_SSNS_EXT_INFO	= 9,
+	NBFT_DESC_HFI_EXT_INFO	= 0xA,
 };
 
 /**
- * enum nbft_trtype - NBFT Interface Transport Types (Figure 7)
+ * enum nbft_trtype - NBFT Interface Transport Types (Figure 8)
  * @NBFT_TRTYPE_TCP: NVMe/TCP (802.3 + TCP/IP). String Designator "tcp".
  */
 enum nbft_trtype {
@@ -91,7 +94,7 @@ struct nbft_heap_obj {
 } __attribute__((packed));
 
 /**
- * struct nbft_header - NBFT Table - Header (Figure 8)
+ * struct nbft_header - NBFT Table - Header (Figure 9)
  * @signature:		 Signature: An ASCII string representation of the table
  *			 identifier. This field shall be set to the value 4E424654h
  *			 (i.e. "NBFT", see #NBFT_HEADER_SIG).
@@ -151,7 +154,7 @@ struct nbft_header {
 };
 
 /**
- * struct nbft_control - NBFT Table - Control Descriptor (Figure 8)
+ * struct nbft_control - NBFT Table - Control Descriptor (Figure 9)
  * @structure_id:   Structure ID: This field specifies the element (refer to
  *		    &enum nbft_desc_type). This field shall be set to 1h (i.e.,
  *		    Control, #NBFT_DESC_CONTROL).
@@ -269,7 +272,7 @@ enum nbft_control_flags {
 };
 
 /**
- * struct nbft_host - Host Descriptor (Figure 9)
+ * struct nbft_host - Host Descriptor (Figure 10)
  * @structure_id: Structure ID: This field shall be set to 2h (i.e.,
  *		  Host Descriptor; #NBFT_DESC_HOST).
  * @flags:	  Host Flags, see &enum nbft_host_flags.
@@ -337,7 +340,7 @@ enum nbft_host_flags {
 };
 
 /**
- * struct nbft_hfi - Host Fabric Interface (HFI) Descriptor (Figure 11)
+ * struct nbft_hfi - Host Fabric Interface (HFI) Descriptor (Figure 12)
  * @structure_id: Structure ID: This field shall be set to 3h (i.e., Host Fabric
  *		  Interface Descriptor; #NBFT_DESC_HFI).
  * @index:	  HFI Descriptor Index: This field indicates the number of this
@@ -371,7 +374,7 @@ enum nbft_hfi_flags {
 };
 
 /**
- * struct nbft_hfi_info_tcp - HFI Transport Info Descriptor - NVMe/TCP (Figure 13)
+ * struct nbft_hfi_info_tcp - HFI Transport Info Descriptor - NVMe/TCP (Figure 14)
  * @structure_id:	Structure ID: This field shall be set to 7h (i.e.,
  *			HFI Transport Info; #NBFT_DESC_HFI_TRINFO).
  * @version:		Version: This field shall be set to 1h.
@@ -486,7 +489,7 @@ enum nbft_hfi_info_tcp_flags {
 };
 
 /**
- * struct nbft_ssns - Subsystem Namespace (SSNS) Descriptor (Figure 15)
+ * struct nbft_ssns - Subsystem Namespace (SSNS) Descriptor (Figure 17)
  * @structure_id:		  Structure ID: This field shall be set to 4h
  *				  (i.e., SSNS; #NBFT_DESC_SSNS).
  * @index:			  SSNS Descriptor Index: This field indicates the number
@@ -600,7 +603,7 @@ struct nbft_ssns {
 } __attribute__((packed));
 
 /**
- * enum nbft_ssns_flags - Subsystem and Namespace Specific Flags Field (Figure 16)
+ * enum nbft_ssns_flags - Subsystem and Namespace Specific Flags Field (Figure 18)
  * @NBFT_SSNS_VALID:			 Descriptor Valid: If set to 1h, then this descriptor
  *					 is valid. If cleared to 0h, then this descriptor
  *					 is not valid. A host that supports NVMe-oF Boot,
@@ -677,7 +680,7 @@ enum nbft_ssns_flags {
 };
 
 /**
- * enum nbft_ssns_trflags - SSNS Transport Specific Flags Field (Figure 17)
+ * enum nbft_ssns_trflags - SSNS Transport Specific Flags Field (Figure 19)
  * @NBFT_SSNS_TRFLAG_VALID:	 Transport Specific Flags in Use: If set to 1h, then
  *				 this descriptor is valid. If cleared to 0h, then
  *				 this descriptor is not valid.
@@ -710,7 +713,7 @@ enum nbft_ssns_trflags {
 
 /**
  * struct nbft_ssns_ext_info - Subsystem and Namespace Extended Information
- *			       Descriptor (Figure 19)
+ *			       Descriptor (Figure 21)
  * @structure_id:	    Structure ID: This field shall be set to 9h
  *			    (i.e., SSNS Extended Info; #NBFT_DESC_SSNS_EXT_INFO).
  * @version:		    Version: This field shall be set to 1h.
@@ -764,7 +767,7 @@ enum nbft_ssns_ext_info_flags {
 };
 
 /**
- * struct nbft_security - Security Profile Descriptor (Figure 21)
+ * struct nbft_security - Security Profile Descriptor (Figure 22)
  * @structure_id:      Structure ID: This field shall be set to 5h
  *		       (i.e., Security; #NBFT_DESC_SECURITY).
  * @index:	       Security Profile Descriptor Index: This field indicates
@@ -833,7 +836,7 @@ struct nbft_security {
 };
 
 /**
- * enum nbft_security_flags - Security Profile Descriptor Flags (Figure 22)
+ * enum nbft_security_flags - Security Profile Descriptor Flags (Figure 22/23)
  * @NBFT_SECURITY_VALID:			  Descriptor Valid: If set to 1h, then
  *						  this descriptor is valid. If cleared
  *						  to 0h, then this descriptor is not valid.
@@ -944,7 +947,7 @@ enum nbft_security_secret_type {
 };
 
 /**
- * struct nbft_discovery - Discovery Descriptor (Figure 24)
+ * struct nbft_discovery - Discovery Descriptor (Figure 26)
  * @structure_id:	     Structure ID: This field shall be set to 6h
  *			     (i.e., Discovery Descriptor; #NBFT_DESC_DISCOVERY).
  * @flags:		     Discovery Descriptor Flags, see &enum nbft_discovery_flags.
