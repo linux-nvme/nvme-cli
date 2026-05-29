@@ -1,0 +1,59 @@
+nvme-registry-update(1)
+=======================
+
+NAME
+----
+nvme-registry-update - Update a field in a controller's registry entry
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'registry-update'
+			--device=<DEV> | -d <DEV>
+			--key=<KEY> | -k <KEY>
+			--value=<VAL> | -V <VAL>
+
+DESCRIPTION
+-----------
+Write a key/value pair to the ownership registry entry for an NVMe-oF
+controller.  If the entry does not exist it is created.  The write is
+atomic: a temporary file is created, synced, and renamed over the
+destination.
+
+This command is the primary mechanism for an orchestrator to claim or
+steal ownership of an existing connection.  All orchestrators are
+assumed to be cooperative; there is no OS-level enforcement of ownership.
+
+OPTIONS
+-------
+-d <DEV>::
+--device=<DEV>::
+	NVMe device name (e.g. nvme3).
+
+-k <KEY>::
+--key=<KEY>::
+	Registry field name to update (e.g. owner).
+
+-V <VAL>::
+--value=<VAL>::
+	New value for the field.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Claim ownership of nvme3:
++
+------------
+# nvme registry-update --device nvme3 --key owner --value stas
+------------
+
+SEE ALSO
+--------
+nvme-registry-list(1)
+nvme-registry-retrieve(1)
+nvme-registry-delete(1)
+
+NVME
+----
+Part of the nvme-user suite

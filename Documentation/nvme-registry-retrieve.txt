@@ -1,0 +1,59 @@
+nvme-registry-retrieve(1)
+=========================
+
+NAME
+----
+nvme-registry-retrieve - Retrieve a field from a controller's registry entry
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'registry-retrieve'
+			[--device=<DEV> | -d <DEV>]
+			[--key=<KEY> | -k <KEY>]
+
+DESCRIPTION
+-----------
+Read a single field from the ownership registry entry for an NVMe-oF
+controller.  The registry is stored under /run/nvme/registry/ as one JSON
+file per live controller (e.g. nvme3.json).
+
+If --key is omitted the 'owner' field is retrieved.
+
+OPTIONS
+-------
+-d <DEV>::
+--device=<DEV>::
+	NVMe device name (e.g. nvme3).
+
+-k <KEY>::
+--key=<KEY>::
+	Registry field name to retrieve.  Defaults to 'owner'.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Retrieve the owner of nvme3 (default key):
++
+------------
+# nvme registry-retrieve --device nvme3
+stas
+------------
++
+* Retrieve a specific field by key:
++
+------------
+# nvme registry-retrieve --device nvme3 --key device
+nvme3
+------------
+
+SEE ALSO
+--------
+nvme-registry-list(1)
+nvme-registry-update(1)
+nvme-registry-delete(1)
+
+NVME
+----
+Part of the nvme-user suite
