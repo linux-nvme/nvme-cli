@@ -5,6 +5,7 @@
  *
  * Authors: Stuart Hayes <Stuart_Hayes@Dell.com>
  *
+ * NVMe Boot Firmware Table (NBFT) type definitions
  */
 #pragma once
 

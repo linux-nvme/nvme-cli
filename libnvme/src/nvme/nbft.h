@@ -12,7 +12,7 @@
 
 #include <sys/types.h>
 
-#include <nvme/nbft-types.h>
+#include <nvme/nvme-types-nbft.h>
 
 /**
  * enum libnbft_primary_admin_host_flag - Primary Administrative Host Descriptor Flags
