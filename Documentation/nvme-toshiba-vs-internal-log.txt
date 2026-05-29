@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme toshiba vs-internal-log ' <device>
-			[--output-file=<FILE>, -o <FILE>] (optional)
+			[--output-file=<FILE>, -O <FILE>] (optional)
 			[--saved-log, -s] (optional)
 			[<global-options>]
 
@@ -35,7 +35,7 @@ A progress runner is included when data is written to file and a page count is i
 OPTIONS
 -------
 
--o <FILE>::
+-O <FILE>::
 --output-file=<FILE>::
 	Output binary file. Defaults to text-formatted dump to stdout
 

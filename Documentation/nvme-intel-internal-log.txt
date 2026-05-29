@@ -12,7 +12,7 @@ SYNOPSIS
 		[--region=<NUM>, r <NUM>]
 		[--nlognum=<NUM>, m <NUM>]
 		[--namespace-id=<NUM>, -n <NUM>]
-		[--output-file=<FILE>, -o <FILE>]
+		[--output-file=<FILE>, -O <FILE>]
 			[<global-options>]
 
 DESCRIPTION
@@ -40,7 +40,7 @@ OPTIONS
 --namespace-id=<NUM>::
 	Namespace to use.
 
--o <FILE>::
+-O <FILE>::
 --output-file=<FILE>::
 	Output file; defaults to device name provided
 

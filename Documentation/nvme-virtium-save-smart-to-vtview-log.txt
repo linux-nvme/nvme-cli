@@ -11,7 +11,7 @@ SYNOPSIS
 [verse]
 'nvme virtium save-smart-to-vtview-log' <device> [--run-time=<NUM> | -r <NUM>]
 			[--freq=<NUM> | -f <NUM>]
-			[--output-file=<FILE> | -o <FILE>]
+			[--output-file=<FILE> | -O <FILE>]
 			[--test-name=<NAME> | -n <NAME>]
 			[<global-options>]
 
@@ -49,7 +49,7 @@ OPTIONS
 	(optional) How often you want to log SMART data (0.25 = 15', 0.5 = 30',
 	1 = 1 hour, 2 = 2 hours, etc.). Default = 10 hours.
 
--o <FILE>::
+-O <FILE>::
 --output-file=<FILE>::
 	(optional) Name of the log file (give it a name that easy for you to
 	remember what the test is). You can leave it blank too, the file name

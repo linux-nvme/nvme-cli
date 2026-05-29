@@ -8,7 +8,7 @@ nvme-wdc-drive-log - Retrieve WDC device's drive log and save to file.
 SYNOPSIS
 --------
 [verse]
-'nvme wdc drive-log' <device> [--output-file=<FILE>, -o <FILE>]
+'nvme wdc drive-log' <device> [--output-file=<FILE>, -O <FILE>]
 			[<global-options>]
 
 DESCRIPTION
@@ -25,7 +25,7 @@ Results for any other device are undefined.
 
 OPTIONS
 -------
--o <FILE>::
+-O <FILE>::
 --output-file=<FILE>::
 	Output file; defaults to device serial number followed by "drive_log" suffix
 
@@ -41,12 +41,12 @@ EXAMPLES
 * Gets the drive log from the device and saves to defined file in current directory (e.g. testSTM00019F3F9drive_log.bin):
 +
 ------------
-# nvme wdc drive-log /dev/nvme0 -o test
+# nvme wdc drive-log /dev/nvme0 -O test
 ------------
 * Gets the drive log from the device and saves to defined file with pathname (e.g. /tmp/testSTM00019F3F9drive_log.bin):
 +
 ------------
-# nvme wdc drive-log /dev/nvme0 -o /tmp/test
+# nvme wdc drive-log /dev/nvme0 -O /tmp/test
 ------------
 
 NVME

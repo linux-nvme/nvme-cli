@@ -8,7 +8,7 @@ nvme-wdc-vs-internal-log - Retrieve WDC device's internal firmware log and save 
 SYNOPSIS
 --------
 [verse]
-'nvme wdc vs-internal-log' <device> [--output-file=<FILE>, -o <FILE>]
+'nvme wdc vs-internal-log' <device> [--output-file=<FILE>, -O <FILE>]
 			[--transfer-size=<SIZE>, -s <SIZE>]
 			[--data-area=<DATA AREA>, -d <DATA_AREA>]
 			[--file-size=<FILE SIZE>, -f <FILE SIZE>]
@@ -29,7 +29,7 @@ Results for any other device are undefined.
 
 OPTIONS
 -------
--o <FILE>::
+-O <FILE>::
 --output-file=<FILE>::
 	Output file; defaults to device serial number followed by
 	"_internal_fw_log_<date>_<time>.bin" suffix.
@@ -84,12 +84,12 @@ EXAMPLES
 * Gets the internal firmware log from the device and saves to defined file in current directory (e.g. test.bin):
 +
 ------------
-# nvme wdc vs-internal-log /dev/nvme0 -o test.bin
+# nvme wdc vs-internal-log /dev/nvme0 -O test.bin
 ------------
 * Gets the internal firmware log from the device and saves to defined file with pathname (e.g. /tmp/test):
 +
 ------------
-# nvme wdc vs-internal-log /dev/nvme0 -o /tmp/test
+# nvme wdc vs-internal-log /dev/nvme0 -O /tmp/test
 ------------
 * Gets the internal firmware log from the device transferring the data in 64k chunks and saves to default file in current directory (e.g. STM00019F3F9_internal_fw_log_20171127_100754.bin):
 +
@@ -104,19 +104,19 @@ EXAMPLES
 * Gets the internal firmware log up to data area 3 from the device in 3 files of 0x1000000 bytes:
 +
 ------------
-# nvme wdc vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x0000000 -o /tmp/sn340_dui_data_1.bin
-# nvme wdc vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x1000000 -o /tmp/sn340_dui_data_2.bin
-# nvme wdc vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x2000000 -o /tmp/sn340_dui_data_3.bin
+# nvme wdc vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x0000000 -O /tmp/sn340_dui_data_1.bin
+# nvme wdc vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x1000000 -O /tmp/sn340_dui_data_2.bin
+# nvme wdc vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x2000000 -O /tmp/sn340_dui_data_3.bin
 ------------
 * Gets the host telemetry log page to data area 3 from the device and stores it in file host-telem-log-da3.bin:
 +
 ------------
-# nvme wdc vs-internal-log /dev/nvme1 -t host -o host-telem-log-da3.bin -d 3
+# nvme wdc vs-internal-log /dev/nvme1 -t host -O host-telem-log-da3.bin -d 3
 ------------
 * Gets the controller telemetry log page to data area 3 from the device and stores it in file ctlr-telem-log-da3.bin:
 +
 ------------
-# nvme wdc vs-internal-log /dev/nvme1 -t controller -o ctlr-telem-log-da3.bin -d 3
+# nvme wdc vs-internal-log /dev/nvme1 -t controller -O ctlr-telem-log-da3.bin -d 3
 ------------
 
 NVME
