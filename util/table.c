@@ -23,7 +23,7 @@
 #include "nvme-print.h"
 #include "table.h"
 
-#if !HAVE_REALLOCARRAY
+#if !NVME_HAVE_REALLOCARRAY
 #include <stdint.h>
 
 static void *reallocarray(void *ptr, size_t nmemb, size_t size)

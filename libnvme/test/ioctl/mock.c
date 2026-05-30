@@ -121,7 +121,7 @@ void end_mock_cmds(void)
 	} \
 })
 
-#if defined(HAVE_GLIBC_IOCTL) && HAVE_GLIBC_IOCTL == 1
+#if defined(NVME_HAVE_GLIBC_IOCTL) && NVME_HAVE_GLIBC_IOCTL == 1
 typedef int (*ioctl_func_t)(libnvme_fd_t, unsigned long, void *);
 int ioctl(libnvme_fd_t fd, unsigned long request, ...)
 #else
@@ -154,11 +154,11 @@ int ioctl(libnvme_fd_t fd, int request, ...)
 		result64 = true;
 		break;
 	default:
-#if HAVE_LIBC_LDSYM
+#if NVME_HAVE_LIBC_LDSYM
 		real_ioctl = dlsym(RTLD_NEXT, "ioctl");
 		if (!real_ioctl)
 			fail("Error: dlsym failed to find original ioctl\n");
-#elif defined(HAVE_GLIBC_IOCTL) && HAVE_GLIBC_IOCTL == 1
+#elif defined(NVME_HAVE_GLIBC_IOCTL) && NVME_HAVE_GLIBC_IOCTL == 1
 		fprintf(stderr, "Warning: unhandled ioctl %lx\n", request);
 		return -ENOTTY;
 #else

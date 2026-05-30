@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
+#if defined(NVME_HAVE_NETDB) || defined(CONFIG_FABRICS)
 #include <ifaddrs.h>
 #endif
 
@@ -139,7 +139,7 @@ static inline __u16 libnvmf_exat_size(size_t val_len)
 	return (__u16)(sizeof(struct nvmf_ext_attr) + libnvmf_exat_len(val_len));
 }
 
-#if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
+#if defined(NVME_HAVE_NETDB) || defined(CONFIG_FABRICS)
 /**
  * libnvmf_getifaddrs - Cached wrapper around getifaddrs()
  * @ctx: pointer to the global context
@@ -153,7 +153,7 @@ static inline __u16 libnvmf_exat_size(size_t val_len)
  * Return: Pointer to I/F data, NULL on error.
  */
 const struct ifaddrs *libnvmf_getifaddrs(struct libnvme_global_ctx *ctx);
-#endif /* HAVE_NETDB || CONFIG_FABRICS */
+#endif /* NVME_HAVE_NETDB || CONFIG_FABRICS */
 
 /**
  * struct candidate_args - Parameters used to match an existing controller
@@ -174,7 +174,7 @@ struct candidate_args {
 	const char *subsysnqn;
 	const char *host_traddr;
 	const char *host_iface;
-#if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
+#if defined(NVME_HAVE_NETDB) || defined(CONFIG_FABRICS)
 	const struct ifaddrs *iface_list;
 #endif
 	bool (*addreq)(const char *, const char *);
