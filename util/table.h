@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef _TABLE_H_
-#define _TABLE_H_
+#pragma once
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -200,5 +199,3 @@ void table_free(struct table *t);
  * is responsible to free the table.
  */
 struct table *table_init_with_columns(struct table_column *c, int num_columns);
-
-#endif /* _TABLE_H_ */

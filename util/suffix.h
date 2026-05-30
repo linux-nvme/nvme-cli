@@ -29,8 +29,7 @@
  *     Functions for dealing with number suffixes
  *
  */
-
-#ifndef __ARGCONFIG_SUFFIX_H__
+#pragma once
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -41,5 +40,3 @@ const char *suffix_si_get_ld(long double *value);
 const char *suffix_binary_get(long long *value);
 const char *suffix_dbinary_get(double *value);
 int suffix_binary_parse(const char *str, char **endptr, uint64_t *val);
-
-#endif

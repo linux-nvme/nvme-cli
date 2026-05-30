@@ -1,7 +1,5 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
-
-#ifndef _LIBNVME_TEST_IOCTL_UTIL_H
-#define _LIBNVME_TEST_IOCTL_UTIL_H
+#pragma once
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -24,5 +22,3 @@ static inline void freep(void *p)
 	free(*(void **)p);
 }
 #define __cleanup_free __cleanup(freep)
-
-#endif /* #ifndef _LIBNVME_TEST_IOCTL_UTIL_H */

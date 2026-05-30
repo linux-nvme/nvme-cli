@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef __MEMBLAZE_UTILS_H__
-#define __MEMBLAZE_UTILS_H__
+#pragma once
 
 #define SMART_INFO_OLD_SIZE 	512
 #define SMART_INFO_NEW_SIZE 	4096
@@ -213,5 +212,3 @@ struct nvme_p4_smart_log
 		if (print)				\
 			printf(format, value);		\
 	} while (0)
-
-#endif // __MEMBLAZE_UTILS_H__

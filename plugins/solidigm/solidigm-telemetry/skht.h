@@ -4,8 +4,7 @@
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
-#ifndef __SOLIDIGM_SKHT_H__
-#define __SOLIDIGM_SKHT_H__
+#pragma once
 
 #include "telemetry-log.h"
 #include "util/json.h"
@@ -19,5 +18,3 @@ void sldm_telemetry_sktT_segment_parse(struct telemetry_log *tl,
 					struct json_object *tele_obj_array);
 
 void sldm_telemetry_skhT_parse(struct telemetry_log *tl);
-
-#endif /* __SOLIDIGM_SKHT_H__ */

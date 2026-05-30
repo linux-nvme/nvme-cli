@@ -1,11 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef _CMD_H
-#define _CMD_H
+#pragma once
 
 #undef PLUGIN
 #define PLUGIN(n, c)
 
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...)
-
-#endif

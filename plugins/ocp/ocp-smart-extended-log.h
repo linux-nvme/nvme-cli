@@ -5,13 +5,10 @@
  *          Wei Zhang <wzhang@fb.com>,
  *          Venkat Ramesh <venkatraghavan@fb.com>
  */
+#pragma once
 
 #include <nvme/types.h>
-
 #include "common.h"
-
-#ifndef OCP_SMART_EXTENDED_LOG_H
-#define OCP_SMART_EXTENDED_LOG_H
 
 struct command;
 struct plugin;
@@ -156,5 +153,3 @@ struct ocp_smart_extended_log {
 
 int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin);
-
-#endif

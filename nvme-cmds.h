@@ -7,9 +7,7 @@
  *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  *	    Daniel Wagner <dwagner@suse.de>
  */
-
-#ifndef NVME_CMDS
-#define NVME_CMDS
+#pragma once
 
 #include <nvme/ioctl.h>
 #include <nvme/nvme-cmds.h>
@@ -1770,6 +1768,3 @@ int nvme_namespace_attach_ctrls(struct libnvme_transport_handle *hdl, bool ish,
  */
 int nvme_namespace_detach_ctrls(struct libnvme_transport_handle *hdl, bool ish,
 			__u32 nsid, __u16 num_ctrls, __u16 *ctrlist);
-
-
-#endif /* NVME_CMDS */

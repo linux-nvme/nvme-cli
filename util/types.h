@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef _MISC_H
-#define _MISC_H
+#pragma once
 
 /* type conversion helpers */
 
@@ -70,5 +69,3 @@ int convert_ts(time_t time, char *ts_buf);
  *
  */
 void util_spinner(const char *disp_name, float percent);
-
-#endif /* _MISC_H */

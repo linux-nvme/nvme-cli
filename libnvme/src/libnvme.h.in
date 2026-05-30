@@ -6,9 +6,7 @@
  * Authors: Keith Busch <keith.busch@wdc.com>
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
-
-#ifndef _LIBNVME_H
-#define _LIBNVME_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,5 +29,3 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _LIBNVME_H */

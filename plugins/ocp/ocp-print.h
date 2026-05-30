@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef OCP_PRINT_H
-#define OCP_PRINT_H
+#pragma once
 
 #include "ocp-hardware-component-log.h"
 #include "ocp-fw-activation-history.h"
@@ -54,4 +53,3 @@ void ocp_c9_log(struct telemetry_str_log_format *log_data, __u8 *log_data_buf,
 		int total_log_page_size, nvme_print_flags_t flags);
 void ocp_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configuration_log *log_data,
 		nvme_print_flags_t flags);
-#endif /* OCP_PRINT_H */
