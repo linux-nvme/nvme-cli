@@ -1,7 +1,5 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
-
-#ifndef _MI_MCTP_COMPAT_H
-#define _MI_MCTP_COMPAT_H
+#pragma once
 
 #include <nvme/types.h>
 
@@ -36,5 +34,3 @@ struct sockaddr_mctp {
 
 #define MCTP_TAG_MASK		0x07
 #define MCTP_TAG_OWNER		0x08
-
-#endif /* _MI_MCTP_COMPAT_H */

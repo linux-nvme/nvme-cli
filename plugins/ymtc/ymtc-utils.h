@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef __YMTC_UTILS_H__
-#define __YMTC_UTILS_H__
+#pragma once
 
 #define SMART_INFO_SIZE     4096
 
@@ -76,6 +75,3 @@ struct nvme_ymtc_smart_log
 
     u8 resv[SMART_INFO_SIZE - sizeof(struct nvme_ymtc_smart_log_item) * NR_SMART_ITEMS];
 };
-
-#endif // __YMTC_UTILS_H__
-

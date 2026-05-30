@@ -21,10 +21,7 @@
  * 
  *   Author: Debabrata Bardhan <debabrata.bardhan@seagate.com>
  */
-
-
-#ifndef SEAGATE_NVME_H
-#define SEAGATE_NVME_H
+#pragma once
 
 #define SEAGATE_PLUGIN_VERSION_MAJOR 1
 #define SEAGATE_PLUGIN_VERSION_MINOR 2 
@@ -382,7 +379,4 @@ typedef enum
 
 void seaget_d_raw(unsigned char *buf, int len, int fd);
 
-
 #define DP_CLASS_ID_FULL 0
-
-#endif

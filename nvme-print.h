@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef NVME_PRINT_H
-#define NVME_PRINT_H
+#pragma once
 
 #include <inttypes.h>
 
@@ -461,4 +460,3 @@ void nvme_json_pel_vendor_specific_event(void *pevent_log_info, __u32 offset,
 					 struct json_object *valid_attrs);
 
 extern char *alloc_error;
-#endif /* NVME_PRINT_H */

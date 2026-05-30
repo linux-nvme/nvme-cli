@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef _COMMON_H
-#define _COMMON_H
+#pragma once
 
 #include <string.h>
 #include <stdbool.h>
@@ -118,4 +117,3 @@ static inline void mmio_write64(void *addr, uint64_t value, bool write32)
 
 	__raw_writeq(addr, cpu_to_le64(value));
 }
-#endif

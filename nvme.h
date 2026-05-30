@@ -12,9 +12,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
  */
-
-#ifndef _NVME_H
-#define _NVME_H
+#pragma once
 
 #include <dirent.h>
 #include <stdbool.h>
@@ -176,4 +174,3 @@ static inline int nvme_get_nsid_log(struct libnvme_transport_handle *hdl,
 
 	return libnvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
 }
-#endif /* _NVME_H */

@@ -4,14 +4,10 @@
  *
  * Authors: karl.dedow@solidigm.com
  */
-
-#ifndef SOLIDIGM_LOG_PAGE_DIRECTORY_H
-#define SOLIDIGM_LOG_PAGE_DIRECTORY_H
+#pragma once
 
 struct command;
 struct plugin;
 
 int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *acmd,
 					struct plugin *plugin);
-
-#endif

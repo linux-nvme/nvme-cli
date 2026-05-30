@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef PLUGIN_H
-#define PLUGIN_H
+#pragma once
 
 #include <stdbool.h>
 
@@ -33,5 +32,3 @@ struct command {
 
 void general_help(struct plugin *plugin, char *str);
 int handle_plugin(int argc, char **argv, struct plugin *plugin);
-
-#endif

@@ -6,8 +6,7 @@
  * Authors: Keith Busch <keith.busch@wdc.com>
  *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
  */
-#ifndef _LIBNVME_FABRICS_H
-#define _LIBNVME_FABRICS_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -558,5 +557,3 @@ int libnvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
  */
 void libnvmf_nbft_free(struct libnvme_global_ctx *ctx,
 		struct nbft_file_entry *head);
-
-#endif /* _LIBNVME_FABRICS_H */

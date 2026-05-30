@@ -5,9 +5,7 @@
  *
  * Authors: Jeremy Kerr <jk@codeconstruct.com.au>
  */
-
-#ifndef _LIBNVME_MI_H
-#define _LIBNVME_MI_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,5 +19,3 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _LIBNVME_MI_H */
