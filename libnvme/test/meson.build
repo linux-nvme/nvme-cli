@@ -173,7 +173,7 @@ if want_fabrics
     test('libnvme - fabrics', test_fabrics)
 endif
 
-if conf.get('HAVE_NETDB')
+if conf.get('NVME_HAVE_NETDB')
     mock_ifaddrs = library(
         'mock-ifaddrs',
         ['mock-ifaddrs.c', ],

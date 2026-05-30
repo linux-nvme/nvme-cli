@@ -8,7 +8,7 @@
 mock_conf = configuration_data()
 
 mock_conf.set(
-    'HAVE_GLIBC_IOCTL',
+    'NVME_HAVE_GLIBC_IOCTL',
     cc.compiles(
         '''#include <sys/ioctl.h>
         int ioctl(int fd, unsigned long request, ...);
@@ -27,7 +27,7 @@ mock_ioctl = library(
         libnvme_dep,
         dl_dep,
     ],
-    c_args: ['-DHAVE_GLIBC_IOCTL=' + (mock_conf.get('HAVE_GLIBC_IOCTL') ? '1' : '0')],
+    c_args: ['-DNVME_HAVE_GLIBC_IOCTL=' + (mock_conf.get('NVME_HAVE_GLIBC_IOCTL') ? '1' : '0')],
 )
 
 # Add mock-ioctl to the LD_PRELOAD path so it overrides libc.

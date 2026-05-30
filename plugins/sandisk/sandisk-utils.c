@@ -882,11 +882,11 @@ void sndk_UtilsGetTime(struct SNDK_UtilsTimeInfo *timeInfo)
 	timeInfo->second		=  currTimeInfo.tm_sec;
 	timeInfo->msecs			=  0;
 	timeInfo->isDST			=  currTimeInfo.tm_isdst;
-#ifdef HAVE_TM_GMTOFF
+#ifdef NVME_HAVE_TM_GMTOFF
 	timeInfo->zone			= -currTimeInfo.tm_gmtoff / 60;
-#else /* HAVE_TM_GMTOFF */
+#else /* NVME_HAVE_TM_GMTOFF */
 	timeInfo->zone			= -1 * (timezone / 60);
-#endif /* HAVE_TM_GMTOFF */
+#endif /* NVME_HAVE_TM_GMTOFF */
 }
 
 int sndk_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer,
