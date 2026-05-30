@@ -296,7 +296,7 @@ conf.set(
 )
 
 if cc.has_function_attribute('fallthrough')
-    conf.set('fallthrough', '__attribute__((__fallthrough__))')
+    conf.set('fallthrough', '__attribute__((fallthrough))')
 else
     conf.set('fallthrough', 'do {} while (0) /* fallthrough */')
 endif
