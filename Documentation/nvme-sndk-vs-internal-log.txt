@@ -8,13 +8,12 @@ nvme-sndk-vs-internal-log - Retrieve sndk device's internal firmware log and sav
 SYNOPSIS
 --------
 [verse]
-'nvme sndk vs-internal-log' <device> [--output-file=<FILE>, -O <FILE>]
+'nvme' [<global-options>] 'sndk vs-internal-log' <device> [--output-file=<FILE>, -O <FILE>]
 			[--transfer-size=<SIZE>, -s <SIZE>]
 			[--data-area=<DATA AREA>, -d <DATA_AREA>]
 			[--file-size=<FILE SIZE>, -f <FILE SIZE>]
 			[--offset=<OFFSET>, -e <OFFSET>]
 			[--type=<TYPE>, -t <type>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

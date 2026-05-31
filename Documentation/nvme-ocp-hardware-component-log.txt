@@ -8,9 +8,8 @@ nvme-ocp-hardware-component-log - retrieve hardware component log
 SYNOPSIS
 --------
 [verse]
-'nvme ocp hardware-component-log' <device> [--comp-id=<num> | -i <num>]
+'nvme' [<global-options>] 'ocp hardware-component-log' <device> [--comp-id=<num> | -i <num>]
 			[--list | -l]
-			[<global-options>]
 
 DESCRIPTION
 -----------

@@ -8,8 +8,7 @@ nvme-wdc-cap-diag - Retrieve WDC device's diagnostic log and save to file.
 SYNOPSIS
 --------
 [verse]
-'nvme wdc cap-diag' <device> [--output-file=<FILE>, -O <FILE>] [--transfer-size=<SIZE>, -s <SIZE>]
-			[<global-options>]
+'nvme' [<global-options>] 'wdc cap-diag' <device> [--output-file=<FILE>, -O <FILE>] [--transfer-size=<SIZE>, -s <SIZE>]
 
 DESCRIPTION
 -----------

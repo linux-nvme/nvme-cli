@@ -8,7 +8,7 @@ nvme-dir-receive - Send a directive receive command, returns applicable results
 SYNOPSIS
 --------
 [verse]
-'nvme dir-receive' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'dir-receive' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--data-len=<data-len> | -l <data-len>]
 			[--dir-type=<dtype> | -D <dtype>]
 			[--dir-spec=<dspec> | -S <dspec>]
@@ -16,7 +16,6 @@ SYNOPSIS
 			[--req-resource=<nsr> | -r <nsr>]
 			[--human-readable | -H]
 			[--raw-binary | -b]
-			[<global-options>]
 
 DESCRIPTION
 -----------

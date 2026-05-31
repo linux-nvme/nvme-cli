@@ -8,8 +8,7 @@ nvme-sndk-vs-drive-info - Send the NVMe sndk vs-drive-info command, return resul
 SYNOPSIS
 --------
 [verse]
-'nvme sndk vs-drive-info' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sndk vs-drive-info' <device>
 
 DESCRIPTION
 -----------

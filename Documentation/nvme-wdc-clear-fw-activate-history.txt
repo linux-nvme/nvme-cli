@@ -8,8 +8,7 @@ nvme-wdc-clear-fw-activate-history - Clears the firmware activate history table.
 SYNOPSIS
 --------
 [verse]
-'nvme wdc clear-fw-activate-history' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'wdc clear-fw-activate-history' <device>
 
 DESCRIPTION
 -----------

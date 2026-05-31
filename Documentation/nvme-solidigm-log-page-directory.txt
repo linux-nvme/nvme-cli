@@ -8,8 +8,7 @@ nvme-solidigm-log-page-directory - Retrieve log page directory
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm log-page-directory' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'solidigm log-page-directory' <device>
 
 DESCRIPTION
 -----------

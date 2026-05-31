@@ -8,10 +8,9 @@ nvme-fdp-set-events - Enable or disable FDP events
 SYNOPSIS
 --------
 [verse]
-'nvme fdp set-events' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme' [<global-options>] 'fdp set-events' <device> [--namespace-id=<NUM> | -n <NUM>]
 			[--placement-handle=<NUM> | -p <NUM>] [--enable | -e]
 			[--event-types=<NUM,> | -t <NUM,>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

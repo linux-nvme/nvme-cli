@@ -8,11 +8,10 @@ nvme-zns-set-zone-desc - Set extended descriptor data for a zone
 SYNOPSIS
 --------
 [verse]
-'nvme zns set-zone-desc' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme' [<global-options>] 'zns set-zone-desc' <device> [--namespace-id=<NUM> | -n <NUM>]
 			[--start-lba=<IONUM>, -s <IONUM>]
 			[--zrwaa | -r]
 			[--data=<FILE>, -d <FILE>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

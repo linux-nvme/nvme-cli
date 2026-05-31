@@ -8,8 +8,7 @@ nvme-seagate-clear-pcie-correctable-errors - Clear Seagate PCIe error statistics
 SYNOPSIS
 --------
 [verse]
-'nvme seagate clear-pcie-correctable-errors [<device>] [OPTIONS]'
-			[<global-options>]
+'nvme' [<global-options>] 'seagate clear-pcie-correctable-errors' [<device>] [OPTIONS]
 
 DESCRIPTION
 -----------

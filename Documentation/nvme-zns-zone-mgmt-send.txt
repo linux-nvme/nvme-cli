@@ -8,12 +8,11 @@ nvme-zns-zone-mgmt-send - Zone Management Send command
 SYNOPSIS
 --------
 [verse]
-'nvme zns zone-mgmt-send' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme' [<global-options>] 'zns zone-mgmt-send' <device> [--namespace-id=<NUM> | -n <NUM>]
 			[--start-lba=<IONUM>, -s <IONUM>] [--zsaso, -O]
 			[--select-all, -a] [--zsa=<NUM>, -z <NUM>]
 			[--data-len=<IONUM>, -l <IONUM>]
 			[--data=<FILE>, -d <FILE>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

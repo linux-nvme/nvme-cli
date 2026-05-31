@@ -9,8 +9,7 @@ result
 SYNOPSIS
 --------
 [verse]
-'nvme sndk get-drive-status' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sndk get-drive-status' <device>
 
 DESCRIPTION
 -----------

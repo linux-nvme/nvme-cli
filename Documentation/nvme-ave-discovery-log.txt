@@ -8,8 +8,7 @@ nvme-ave-discovery-log - Retrieve AVE Discovery Log, show it
 SYNOPSIS
 --------
 [verse]
-'nvme ave-discovery-log' <device> [--rae | -r]
-			[<global-options>]
+'nvme' [<global-options>] 'ave-discovery-log' <device> [--rae | -r]
 
 DESCRIPTION
 -----------

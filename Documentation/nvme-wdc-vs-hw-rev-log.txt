@@ -8,9 +8,8 @@ nvme-wdc-vs-hw-rev-log - Send NVMe WDC vs-hw-rev-log Vendor Unique Command, retu
 SYNOPSIS
 --------
 [verse]
-'nvme wdc vs-hw-rev-log' <device>
+'nvme' [<global-options>] 'wdc vs-hw-rev-log' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

@@ -8,8 +8,7 @@ nvme-ocp-get-plp-health-check-interval - Define and print plp-health-check-inter
 SYNOPSIS
 --------
 [verse]
-'nvme ocp get-plp-health-check-interval' <device> [--sel=<select> | -s <select>]
-			[<global-options>]
+'nvme' [<global-options>] 'ocp get-plp-health-check-interval' <device> [--sel=<select> | -s <select>]
 
 DESCRIPTION
 -----------

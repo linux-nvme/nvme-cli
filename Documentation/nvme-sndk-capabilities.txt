@@ -8,8 +8,7 @@ nvme-sndk-capabilities - Display sndk device command capabilities
 SYNOPSIS
 --------
 [verse]
-'nvme sndk capabilities' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sndk capabilities' <device>
 
 DESCRIPTION
 -----------

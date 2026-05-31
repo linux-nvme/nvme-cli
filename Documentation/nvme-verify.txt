@@ -8,7 +8,8 @@ nvme-verify - Send an NVMe Verify command, return results
 SYNOPSIS
 --------
 [verse]
-'nvme-verify' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'verify' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
 			[--start-block=<slba> | -s <slba>]
 			[--block-count=<nlb> | -c <nlb>] [--limited-retry | -l]
 			[--force-unit-access | -f]
@@ -18,7 +19,6 @@ SYNOPSIS
 			[--app-tag=<apptag> | -a <apptag>]
 			[--storage-tag<storage-tag> | -S <storage-tag>]
 			[--storage-tag-check | -C]
-			[<global-options>]
 
 DESCRIPTION
 -----------

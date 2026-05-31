@@ -9,8 +9,7 @@ Controller-Initiated Telemetry in binary
 SYNOPSIS
 --------
 [verse]
-'nvme seagate vs-internal-log <device> [OPTIONS]'
-			[<global-options>]
+'nvme' [<global-options>] 'seagate vs-internal-log' <device> [OPTIONS]
 
 DESCRIPTION
 -----------

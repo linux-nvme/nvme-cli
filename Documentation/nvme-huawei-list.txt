@@ -8,8 +8,7 @@ nvme-huawei-list - List all recognized Huawei NVMe devices
 SYNOPSIS
 --------
 [verse]
-'nvme huawei list'
-			[<global-options>]
+'nvme' [<global-options>] 'huawei list'
 
 DESCRIPTION
 -----------

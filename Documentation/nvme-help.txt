@@ -8,8 +8,7 @@ nvme-help - Help information.
 SYNOPSIS
 --------
 [verse]
-'nvme help' [<command>]
-			[<global-options>]
+'nvme' [<global-options>] 'help' [<command>]
 
 DESCRIPTION
 -----------

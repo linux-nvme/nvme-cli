@@ -8,7 +8,8 @@ nvme-zns-zone-append - Send an NVMe write command, provide results
 SYNOPSIS
 --------
 [verse]
-'nvme-zns-zone-append' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme' [<global-options>] 'zns zone-append' <device>
+			[--namespace-id=<NUM> | -n <NUM>]
 				[--zslba=<IONUM> | -s <IONUM>]
 				[--data-size=<IONUM> | -z <IONUM>]
 				[--metadata-size=<IONUM> | -y <IONUM>]
@@ -20,7 +21,6 @@ SYNOPSIS
 				[--app-tag-mask=<NUM> | -m <NUM>]
 				[--app-tag=<NUM> | -a <NUM>]
 				[--prinfo=<NUM> | -p <NUM>]
-				[<global-options>]
 
 DESCRIPTION
 -----------

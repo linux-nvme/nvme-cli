@@ -8,8 +8,7 @@ nvme-dera-stat - Send NVMe Dera Device status and Additional SMART log page requ
 SYNOPSIS
 --------
 [verse]
-'nvme dera stat' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'dera stat' <device>
 
 DESCRIPTION
 -----------

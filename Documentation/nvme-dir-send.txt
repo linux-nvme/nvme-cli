@@ -8,7 +8,7 @@ nvme-dir-send - Issue a directive send command, returns applicable results
 SYNOPSIS
 --------
 [verse]
-'nvme dir-send' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'dir-send' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--data-len=<data-len> | -l <data-len>]
 			[--dir-type=<dtype> | -D <dtype>]
 			[--dir-spec=<dspec> | -S <dspec>]
@@ -17,7 +17,6 @@ SYNOPSIS
 			[--target-dir=<tdir> | -T <tdir>]
 			[--human-readable | -H]
 			[--raw-binary | -b]
-			[<global-options>]
 
 DESCRIPTION
 -----------

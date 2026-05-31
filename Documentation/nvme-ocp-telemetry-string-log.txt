@@ -8,9 +8,8 @@ nvme-ocp-telemetry-string-log - Retrieve OCP Telemetry String Log page
 SYNOPSIS
 --------
 [verse]
-'nvme ocp telemetry-string-log' <device>
+'nvme' [<global-options>] 'ocp telemetry-string-log' <device>
 			[--output-file=<file> | -f <file>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

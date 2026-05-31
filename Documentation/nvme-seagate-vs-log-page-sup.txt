@@ -9,8 +9,7 @@ Log-pages Information
 SYNOPSIS
 --------
 [verse]
-'nvme seagate vs-log-page-sup <device> [OPTIONS]'
-			[<global-options>]
+'nvme' [<global-options>] 'seagate vs-log-page-sup' <device> [OPTIONS]
 
 DESCRIPTION
 -----------

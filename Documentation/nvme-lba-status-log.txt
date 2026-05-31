@@ -8,8 +8,7 @@ nvme-lba-status-log - Send LBA Status Log Page request returns result and log
 SYNOPSIS
 --------
 [verse]
-'nvme lba-status-log' <device> [--rae | -r]
-			[<global-options>]
+'nvme' [<global-options>] 'lba-status-log' <device> [--rae | -r]
 
 DESCRIPTION
 -----------

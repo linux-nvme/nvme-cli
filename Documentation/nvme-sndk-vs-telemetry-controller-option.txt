@@ -9,9 +9,8 @@ initiated option of the telemetry log page.
 SYNOPSIS
 --------
 [verse]
-'nvme sndk vs-telemetry-controller-option' <device>
+'nvme' [<global-options>] 'sndk vs-telemetry-controller-option' <device>
 			[--disable, -d] [--enable, -e] [--status, -s]
-			[<global-options>]
 
 DESCRIPTION
 -----------

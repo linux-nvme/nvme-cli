@@ -8,8 +8,7 @@ nvme-ocp-device-capability-log - Retrieves OCP Device Capability Log Page
 SYNOPSIS
 --------
 [verse]
-'nvme ocp device-capability-log' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'ocp device-capability-log' <device>
 
 DESCRIPTION
 -----------

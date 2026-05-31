@@ -8,8 +8,7 @@ nvme-mgmt-addr-list-log - Retrieve Management Address List Log, show it
 SYNOPSIS
 --------
 [verse]
-'nvme mgmt-addr-list-log' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'mgmt-addr-list-log' <device>
 
 DESCRIPTION
 -----------

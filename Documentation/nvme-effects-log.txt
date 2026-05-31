@@ -9,9 +9,8 @@ and log
 SYNOPSIS
 --------
 [verse]
-'nvme effects-log' <device> [--raw-binary | -b]
+'nvme' [<global-options>] 'effects-log' <device> [--raw-binary | -b]
 			[--human-readable | -H]
-			[<global-options>]
 
 DESCRIPTION
 -----------

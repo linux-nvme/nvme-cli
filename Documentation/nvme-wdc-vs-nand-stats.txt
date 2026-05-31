@@ -8,8 +8,7 @@ nvme-wdc-vs-nand-stats - Send NVMe WDC vs-nand-stats Vendor Unique Command, retu
 SYNOPSIS
 --------
 [verse]
-'nvme wdc vs-nand-stats' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'wdc vs-nand-stats' <device>
 
 DESCRIPTION
 -----------

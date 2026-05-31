@@ -9,10 +9,9 @@ extended SMART log page contents and either save to file or dump the contents.
 SYNOPSIS
 --------
 [verse]
-'nvme toshiba vs-smart-add-log ' <device> [--log=<NUM>, -l <NUM>]
+'nvme' [<global-options>] 'toshiba vs-smart-add-log' <device> [--log=<NUM>, -l <NUM>]
 	  		[--namespace-id=<NUM>, -n <NUM>]
 			[--output-file=<FILE>, -O <FILE>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

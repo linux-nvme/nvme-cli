@@ -8,8 +8,7 @@ nvme-sndk-get-latency-monitor-log - Display latency monitor log page data in hum
 SYNOPSIS
 --------
 [verse]
-'nvme sndk get-latency-monitor-log' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sndk get-latency-monitor-log' <device>
 
 DESCRIPTION
 -----------

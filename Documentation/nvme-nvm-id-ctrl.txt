@@ -8,8 +8,7 @@ nvme-nvm-id-ctrl - Send NVMe Identify Controller, return NVM command set structu
 SYNOPSIS
 --------
 [verse]
-'nvme nvm-id-ctrl' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'nvm-id-ctrl' <device>
 
 DESCRIPTION
 -----------

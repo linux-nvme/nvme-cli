@@ -8,9 +8,8 @@ nvme-sndk-namespace-resize - Resizes the device's namespace.
 SYNOPSIS
 --------
 [verse]
-'nvme sndk namespace-resize' <device> [--nsid=<NAMESPACE ID>, -n <NAMSPACE ID>]
+'nvme' [<global-options>] 'sndk namespace-resize' <device> [--nsid=<NAMESPACE ID>, -n <NAMSPACE ID>]
 			[--op-option=<OP OPTION>, -O <OP OPTION>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

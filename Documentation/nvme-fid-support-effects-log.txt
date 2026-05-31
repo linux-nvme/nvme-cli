@@ -8,9 +8,8 @@ nvme-fid-support-effects-log - Send NVMe FID Support and Effects log, return res
 SYNOPSIS
 --------
 [verse]
-'nvme fid-support-effects-log' <device>
+'nvme' [<global-options>] 'fid-support-effects-log' <device>
 			[--human-readable | -H]
-			[<global-options>]
 
 DESCRIPTION
 -----------
