@@ -8,9 +8,8 @@ nvme-id-ns-lba-format - Send NVMe Identify Namespace for the specified LBA Forma
 SYNOPSIS
 --------
 [verse]
-'nvme id-ns' <device> [--uuid-index=<uuid-index> | -U <uuid_index>]
+'nvme' [<global-options>] 'id-ns-lba-format' <device> [--uuid-index=<uuid-index> | -U <uuid_index>]
 			[--lba-format-index=<lba_format_index> | -i <lba_format_index>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

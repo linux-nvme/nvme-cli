@@ -8,8 +8,7 @@ nvme-host-discovery-log - Retrieve Host Discovery Log, show it
 SYNOPSIS
 --------
 [verse]
-'nvme host-discovery-log' <device> [--all-host-entries | -a] [--rae | -r]
-			[<global-options>]
+'nvme' [<global-options>] 'host-discovery-log' <device> [--all-host-entries | -a] [--rae | -r]
 
 DESCRIPTION
 -----------

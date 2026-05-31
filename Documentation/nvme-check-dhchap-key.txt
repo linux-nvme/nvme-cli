@@ -8,8 +8,7 @@ nvme-check-dhchap-key - Check a generated host DH-HMAC-CHAP key
 SYNOPSIS
 --------
 [verse]
-'nvme check-dhchap-key' [--key=<key>]
-			[<global-options>]
+'nvme' [<global-options>] 'check-dhchap-key' [--key=<key>]
 
 DESCRIPTION
 -----------

@@ -8,8 +8,7 @@ nvme-intel-market-name - Send NVMe Identify Controller, return result and struct
 SYNOPSIS
 --------
 [verse]
-'nvme intel market-name' <device> [--raw-binary | -b]
-			[<global-options>]
+'nvme' [<global-options>] 'intel market-name' <device> [--raw-binary | -b]
 
 DESCRIPTION
 -----------

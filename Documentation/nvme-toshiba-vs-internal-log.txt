@@ -8,10 +8,9 @@ nvme-toshiba-vs-internal-log - Retrieve a Toshiba device's vendor specific inter
 SYNOPSIS
 --------
 [verse]
-'nvme toshiba vs-internal-log ' <device>
+'nvme' [<global-options>] 'toshiba vs-internal-log' <device>
 			[--output-file=<FILE>, -O <FILE>] (optional)
 			[--saved-log, -s] (optional)
-			[<global-options>]
 
 DESCRIPTION
 -----------

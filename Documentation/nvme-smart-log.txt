@@ -8,9 +8,8 @@ nvme-smart-log - Send NVMe SMART log page request, returns result and log
 SYNOPSIS
 --------
 [verse]
-'nvme smart-log' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'smart-log' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--raw-binary | -b]
-			[<global-options>]
 
 DESCRIPTION
 -----------

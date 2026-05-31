@@ -8,8 +8,7 @@ nvme-solidigm-vs-smart-add-log - Get SMART / health extended log
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm vs-smart-add-log' <device> [OPTIONS]
-			[<global-options>]
+'nvme' [<global-options>] 'solidigm vs-smart-add-log' <device> [OPTIONS]
 
 DESCRIPTION
 -----------

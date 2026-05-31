@@ -8,10 +8,9 @@ nvme-fdp-feature - Show or change Flexible Data Placement (FDP) Feature
 SYNOPSIS
 --------
 [verse]
-'nvme fdp' <device> [--endgrp-id=<NUM> | -e <NUM>]
+'nvme' [<global-options>] 'fdp' <device> [--endgrp-id=<NUM> | -e <NUM>]
 			[--enable-conf-idx=<NUM> | -c <NUM>]
 			[--disable | -d]
-			[<global-options>]
 
 DESCRIPTION
 -----------

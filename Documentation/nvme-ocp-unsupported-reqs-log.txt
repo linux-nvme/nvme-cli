@@ -8,8 +8,7 @@ nvme-ocp-unsupported-reqs-log - Retrieves unsupported requirements log page of g
 SYNOPSIS
 --------
 [verse]
-'nvme ocp unsupported-reqs-log' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'ocp unsupported-reqs-log' <device>
 
 DESCRIPTION
 -----------

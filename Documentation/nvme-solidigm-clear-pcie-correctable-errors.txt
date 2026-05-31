@@ -8,13 +8,12 @@ nvme-solidigm-clear-pcie-correctable-errors - Clear PCIe Correctable Error Count
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm clear-pcie-correctable-errors' <device> [--no-uuid | -n]
-			[<global-options>]
+'nvme' [<global-options>] 'solidigm clear-pcie-correctable-errors' <device> [--no-uuid | -n]
 
 DESCRIPTION
 -----------
 This command is a redirect to the OCP plugin's clear PCIe correctable error counters command.
-For detailed usage and options, please refer to the documentation for 'nvme ocp clear-pcie-correctable-error-counters'.
+For detailed usage and options, please refer to the documentation for 'nvme' [<global-options>] ocp clear-pcie-correctable-error-counters.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).

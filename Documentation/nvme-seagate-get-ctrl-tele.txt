@@ -9,8 +9,7 @@ either hex-dump (default) or binary format
 SYNOPSIS
 --------
 [verse]
-'nvme seagate get-ctrl-tele <device> [OPTIONS]'
-			[<global-options>]
+'nvme' [<global-options>] 'seagate get-ctrl-tele' <device> [OPTIONS]
 
 DESCRIPTION
 -----------

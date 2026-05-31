@@ -8,8 +8,7 @@ nvme-fw-log - Send NVMe Firmware log page request, returns result and log
 SYNOPSIS
 --------
 [verse]
-'nvme fw-log' <device> [--raw-binary | -b]
-			[<global-options>]
+'nvme' [<global-options>] 'fw-log' <device> [--raw-binary | -b]
 
 DESCRIPTION
 -----------

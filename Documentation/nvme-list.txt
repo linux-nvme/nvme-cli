@@ -8,8 +8,7 @@ nvme-list - List all recognized NVMe devices
 SYNOPSIS
 --------
 [verse]
-'nvme list'
-			[<global-options>]
+'nvme' [<global-options>] 'list'
 
 DESCRIPTION
 -----------

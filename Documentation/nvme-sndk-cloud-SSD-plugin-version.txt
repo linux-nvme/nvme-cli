@@ -8,8 +8,7 @@ nvme-sndk-cloud-SSD-plugin-version - Display sndk plugin Cloud SSD Plugin Versio
 SYNOPSIS
 --------
 [verse]
-'nvme sndk cloud-SSD-plugin-version' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sndk cloud-SSD-plugin-version' <device>
 
 DESCRIPTION
 -----------

@@ -8,9 +8,8 @@ nvme-sanitize-log - Send NVMe sanitize-log Command, return result
 SYNOPSIS
 --------
 [verse]
-'nvme sanitize-log' <device> [--rae | -r]
+'nvme' [<global-options>] 'sanitize-log' <device> [--rae | -r]
 			[--raw-binary | -b]
-			[<global-options>]
 
 DESCRIPTION
 -----------

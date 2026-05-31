@@ -8,8 +8,7 @@ nvme-toshiba-clear-pcie-correctable-errors - Reset the PCIe correctable errors c
 SYNOPSIS
 --------
 [verse]
-'nvme toshiba clear-pcie-correctable-errors ' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'toshiba clear-pcie-correctable-errors' <device>
 
 DESCRIPTION
 -----------

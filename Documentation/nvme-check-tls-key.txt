@@ -8,7 +8,7 @@ nvme-check-tls-key - Check a generated NVMe TLS PSK
 SYNOPSIS
 --------
 [verse]
-'nvme check-tls-key' [--keyring=<name> | -k <name>]
+'nvme' [<global-options>] 'check-tls-key' [--keyring=<name> | -k <name>]
 			[--keytype=<type> | -t <type>]
 			[--hostnqn=<nqn> | -n <nqn>]
 			[--subsysnqn=<nqn> | -c <nqn>]
@@ -17,7 +17,6 @@ SYNOPSIS
 			[--insert | -i ]
 			[--compat | -C ]
 			[--keyfile=<keyfile> | -f <keyfile>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

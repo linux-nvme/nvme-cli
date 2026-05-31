@@ -8,8 +8,7 @@ nvme-sed-discover - Discover SED Opal Locking Features
 SYNOPSIS
 --------
 [verse]
-'nvme sed discover' [--udev | -u] <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sed discover' [--udev | -u] <device>
 
 DESCRIPTION
 -----------

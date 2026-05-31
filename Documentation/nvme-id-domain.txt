@@ -8,8 +8,7 @@ nvme-id-domain - Send NVMe Identify Domain List, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme id-domain' <device> [--dom-id=<domain_id> | -d <domain_id>]
-			[<global-options>]
+'nvme' [<global-options>] 'id-domain' <device> [--dom-id=<domain_id> | -d <domain_id>]
 
 DESCRIPTION
 -----------

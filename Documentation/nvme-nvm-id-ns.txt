@@ -8,9 +8,8 @@ nvme-nvm-id-ns - Send NVMe Identify NVM Command Set specific Namespace data stru
 SYNOPSIS
 --------
 [verse]
-'nvme nvm-id-ns' <device> [--uuid-index=<uuid-index> | -U <uuid_index>]
+'nvme' [<global-options>] 'nvm-id-ns' <device> [--uuid-index=<uuid-index> | -U <uuid_index>]
 			[--namespace-id=<NUM> | -n <NUM>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

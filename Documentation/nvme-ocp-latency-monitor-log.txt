@@ -9,8 +9,7 @@ readable format
 SYNOPSIS
 --------
 [verse]
-'nvme ocp latency-monitor-log' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'ocp latency-monitor-log' <device>
 
 DESCRIPTION
 -----------

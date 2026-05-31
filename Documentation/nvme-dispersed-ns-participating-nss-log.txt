@@ -9,9 +9,8 @@ Participating NVM Subsystems Log, show it
 SYNOPSIS
 --------
 [verse]
-'nvme dispersed-ns-participating-nss-log' <device>
+'nvme' [<global-options>] 'dispersed-ns-participating-nss-log' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

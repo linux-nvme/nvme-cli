@@ -8,8 +8,7 @@ nvme-wdc-clear-pcie-correctable-errors - Clears the pcie correctable errors fiel
 SYNOPSIS
 --------
 [verse]
-'nvme wdc clear-pcie-correctable-errors' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'wdc clear-pcie-correctable-errors' <device>
 
 DESCRIPTION
 -----------

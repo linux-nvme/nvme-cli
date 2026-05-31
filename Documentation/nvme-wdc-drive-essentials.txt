@@ -9,8 +9,7 @@ save to a tar file.
 SYNOPSIS
 --------
 [verse]
-'nvme wdc drive-essentials' <device> [--dir-name=<DIRECTORY>, -d <DIRECTORY>]
-			[<global-options>]
+'nvme' [<global-options>] 'wdc drive-essentials' <device> [--dir-name=<DIRECTORY>, -d <DIRECTORY>]
 
 DESCRIPTION
 -----------

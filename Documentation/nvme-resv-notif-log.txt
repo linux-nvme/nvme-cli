@@ -9,8 +9,7 @@ return result and log
 SYNOPSIS
 --------
 [verse]
-'nvme resv-notif-log' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'resv-notif-log' <device>
 
 DESCRIPTION
 -----------

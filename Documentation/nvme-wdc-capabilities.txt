@@ -8,8 +8,7 @@ nvme-wdc-capabilities - Display WDC plugin command capabilities
 SYNOPSIS
 --------
 [verse]
-'nvme wdc capabilities' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'wdc capabilities' <device>
 
 DESCRIPTION
 -----------

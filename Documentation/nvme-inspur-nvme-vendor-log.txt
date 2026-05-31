@@ -8,8 +8,7 @@ nvme-inspur-nvme-vendor-log - Send NVMe Inspur Device Vendor log page request, r
 SYNOPSIS
 --------
 [verse]
-'nvme inspur nvme-vendor-log' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'inspur nvme-vendor-log' <device>
 
 DESCRIPTION
 -----------

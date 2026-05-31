@@ -9,8 +9,7 @@ result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme zns id-ctrl' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'zns id-ctrl' <device>
 
 DESCRIPTION
 -----------

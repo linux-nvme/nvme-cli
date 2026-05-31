@@ -8,9 +8,8 @@ nvme-wdc-cu-smart-log - Send NVMe WDC cu-smart-log Vendor Unique Command, return
 SYNOPSIS
 --------
 [verse]
-'nvme wdc cu-smart-log' <device>
+'nvme' [<global-options>] 'wdc cu-smart-log' <device>
 			[--uuid-index=<uuid-index> | -u <uuid-index>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

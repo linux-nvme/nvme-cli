@@ -8,9 +8,8 @@ nvme-zns-changed-zone-list - Retrieve Changed Zone log for the given device
 SYNOPSIS
 --------
 [verse]
-'nvme zns changed-zone-list' <device>
+'nvme' [<global-options>] 'zns changed-zone-list' <device>
 			[--namespace-id=<NUM> | -n <NUM>] [--rae | -r]
-			[<global-options>]
 
 DESCRIPTION
 -----------

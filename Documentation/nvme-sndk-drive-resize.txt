@@ -9,8 +9,7 @@ return result.
 SYNOPSIS
 --------
 [verse]
-'nvme sndk drive-resize' <device> [--size=<sz> | -s <sz>]
-			[<global-options>]
+'nvme' [<global-options>] 'sndk drive-resize' <device> [--size=<sz> | -s <sz>]
 
 DESCRIPTION
 -----------

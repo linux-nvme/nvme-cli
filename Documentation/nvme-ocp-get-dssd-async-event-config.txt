@@ -8,8 +8,7 @@ nvme-ocp-get-dssd-async-event-config - Get dssd-async-event-config value
 SYNOPSIS
 --------
 [verse]
-'nvme ocp get-dssd-async-event-config' <device> [--sel=<select> | -s <select>]
-			[<global-options>]
+'nvme' [<global-options>] 'ocp get-dssd-async-event-config' <device> [--sel=<select> | -s <select>]
 
 DESCRIPTION
 -----------

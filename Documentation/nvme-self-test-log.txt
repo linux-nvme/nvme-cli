@@ -8,8 +8,7 @@ nvme-self-test-log - Retrieve the log information initiated by device-self-test 
 SYNOPSIS
 --------
 [verse]
-'nvme self-test'-log <device> [--log-entries=<entries> | -e <entries>]
-			[<global-options>]
+'nvme' [<global-options>] 'self-test-log' <device> [--log-entries=<entries> | -e <entries>]
 
 DESCRIPTION
 -----------

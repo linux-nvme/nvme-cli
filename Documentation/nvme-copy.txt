@@ -8,7 +8,8 @@ nvme-copy - Send an NVMe Simple Copy command, provide results
 SYNOPSIS
 --------
 [verse]
-'nvme-copy' <device> [--sdlba=<sdlba> | -d <sdlba>]
+'nvme' [<global-options>] 'copy' <device>
+			[--sdlba=<sdlba> | -d <sdlba>]
 			[--blocks=<nlb-list,> | -b <nlb-list,>]
 			[--slbs=<slbas,> | -s <slbas,>]
 			[--snsids=<snsids,> | -N <snsids,>]
@@ -26,7 +27,6 @@ SYNOPSIS
 			[--dir-type=<type> | -T <type>]
 			[--dir-spec=<spec> | -S <spec>]
 			[--format=<entry-format> | -F <entry-format>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

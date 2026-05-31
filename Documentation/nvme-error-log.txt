@@ -8,7 +8,7 @@ nvme-error-log - Send NVME Error log page request, return result and log
 SYNOPSIS
 --------
 [verse]
-'nvme error-log' <device> [--log-entries=<entries> | -e <entries>]
+'nvme' [<global-options>] 'error-log' <device> [--log-entries=<entries> | -e <entries>]
 			[--raw-binary | -b] [--valid-entry | -V]
 			[--sqid=<sqid> | -S <sqid>]
 			[--status=<status> | -s <status>]
@@ -17,7 +17,6 @@ SYNOPSIS
 			[--trtype=<trtype> | -t <trtype>]
 			[--csi=<csi> | -c <csi>]
 			[--opcode=<opcode> | -O <opcode>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

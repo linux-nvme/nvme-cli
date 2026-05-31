@@ -8,8 +8,7 @@ nvme-get-ns-id - Retrieves the namespace ID for an NVMe block device
 SYNOPSIS
 --------
 [verse]
-'nvme get-ns-id' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'get-ns-id' <device>
 
 DESCRIPTION
 -----------

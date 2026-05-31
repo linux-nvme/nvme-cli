@@ -8,8 +8,7 @@ nvme-seagate-help - Shows the Seagate plugin's help information
 SYNOPSIS
 --------
 [verse]
-'nvme seagate help'
-			[<global-options>]
+'nvme' [<global-options>] 'seagate help'
 
 DESCRIPTION
 -----------

@@ -8,9 +8,8 @@ nvme-fdp-events - Get Flexible Data Placement Events
 SYNOPSIS
 --------
 [verse]
-'nvme fdp events' <device> [--endgrp-id=<NUM> | -e <NUM>] [--host-events | -E]
+'nvme' [<global-options>] 'fdp events' <device> [--endgrp-id=<NUM> | -e <NUM>] [--host-events | -E]
 			[--raw-binary | -b]
-			[<global-options>]
 
 DESCRIPTION
 -----------

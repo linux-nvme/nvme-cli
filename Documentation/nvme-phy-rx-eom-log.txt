@@ -9,9 +9,8 @@ Measurement log page from an NVMe device
 SYNOPSIS
 --------
 [verse]
-'nvme phy-rx-eom-log' <device> [--lsp=<field> | -s <field>]
+'nvme' [<global-options>] 'phy-rx-eom-log' <device> [--lsp=<field> | -s <field>]
 			[--controller=<id> | -c <id>]
-			[<global-options>]
 
 DESCRIPTION
 -----------
