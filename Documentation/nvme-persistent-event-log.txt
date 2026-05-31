@@ -9,8 +9,10 @@ returns result and log
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'persistent-event-log' <device> [--action=<action> | -a <action>]
-			[--log-len=<log-len> | -l <log-len>] [--raw-binary | -b]
+'nvme' [<global-options>] 'persistent-event-log' <device>
+			[--action=<action> | -a <action>]
+			[--log-len=<log-len> | -l <log-len>]
+			[--raw-binary | -b]
 
 DESCRIPTION
 -----------

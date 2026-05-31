@@ -8,7 +8,8 @@ nvme-solidigm-smart-log-add - Retrieve Solidigm SMART Log
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'solidigm smart-log-add' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'solidigm smart-log-add' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
 
 DESCRIPTION
 -----------

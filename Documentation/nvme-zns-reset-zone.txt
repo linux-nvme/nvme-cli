@@ -8,7 +8,8 @@ nvme-zns-reset-zone - Resets one or all zones
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'zns reset-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme' [<global-options>] 'zns reset-zone' <device>
+			[--namespace-id=<NUM> | -n <NUM>]
 			[--start-lba=<LBA> | -s <LBA>]
 			[--select-all | -a]
 

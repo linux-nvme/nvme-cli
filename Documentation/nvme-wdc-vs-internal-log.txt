@@ -8,7 +8,8 @@ nvme-wdc-vs-internal-log - Retrieve WDC device's internal firmware log and save 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'wdc vs-internal-log' <device> [--output-file=<FILE>, -O <FILE>]
+'nvme' [<global-options>] 'wdc vs-internal-log' <device>
+			[--output-file=<FILE>, -O <FILE>]
 			[--transfer-size=<SIZE>, -s <SIZE>]
 			[--data-area=<DATA AREA>, -d <DATA_AREA>]
 			[--file-size=<FILE SIZE>, -f <FILE SIZE>]

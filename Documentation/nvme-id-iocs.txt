@@ -8,7 +8,8 @@ nvme-id-iocs - Send NVMe Identify I/O Command Set, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'id-iocs' <device> [--controller-id=<cntid> | -c <cntid>]
+'nvme' [<global-options>] 'id-iocs' <device>
+			[--controller-id=<cntid> | -c <cntid>]
 			[--human-readable | -H]
 
 DESCRIPTION

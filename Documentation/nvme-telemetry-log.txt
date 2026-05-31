@@ -8,7 +8,8 @@ nvme-telemetry-log - Retrieves a Telemetry Host-Initiated log page from an NVMe 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'telemetry-log' <device> [--output-file=<file> | -O <file>]
+'nvme' [<global-options>] 'telemetry-log' <device>
+			[--output-file=<file> | -O <file>]
 			[--host-generate=<gen> | -g <gen>]
 
 DESCRIPTION

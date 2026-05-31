@@ -8,8 +8,10 @@ nvme-ocp-get-clear-pcie-correctable-errors - Define and print get-clear-pcie-cor
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'ocp get-clear-pcie-correctable-errors' <device> [--sel=<select> | -s <select>]
-			[--namespace-id <nsid> | -n <nsid>] [--no-uuid | -u]
+'nvme' [<global-options>] 'ocp get-clear-pcie-correctable-errors' <device>
+			[--sel=<select> | -s <select>]
+			[--namespace-id <nsid> | -n <nsid>]
+			[--no-uuid | -u]
 
 DESCRIPTION
 -----------

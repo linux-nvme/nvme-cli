@@ -8,7 +8,9 @@ nvme-solidigm-id-ctrl - Send NVMe Identify Controller, return result and structu
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'solidigm id-ctrl' <device> [--raw-binary | -b] [--vendor-specific | -V]
+'nvme' [<global-options>] 'solidigm id-ctrl' <device>
+			[--raw-binary | -b]
+			[--vendor-specific | -V]
 			[--human-readable | -H]
 
 DESCRIPTION

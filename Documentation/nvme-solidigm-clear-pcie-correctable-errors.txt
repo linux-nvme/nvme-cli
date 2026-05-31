@@ -8,7 +8,8 @@ nvme-solidigm-clear-pcie-correctable-errors - Clear PCIe Correctable Error Count
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'solidigm clear-pcie-correctable-errors' <device> [--no-uuid | -n]
+'nvme' [<global-options>] 'solidigm clear-pcie-correctable-errors' <device>
+			[--no-uuid | -n]
 
 DESCRIPTION
 -----------

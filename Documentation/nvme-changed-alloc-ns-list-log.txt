@@ -9,7 +9,8 @@ log page request, returns result and log.
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'changed-alloc-ns-list-log' <device> [--raw-binary | -b]
+'nvme' [<global-options>] 'changed-alloc-ns-list-log' <device>
+			[--raw-binary | -b]
 
 DESCRIPTION
 -----------

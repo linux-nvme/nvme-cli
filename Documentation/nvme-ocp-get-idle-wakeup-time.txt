@@ -8,7 +8,9 @@ nvme-ocp-get-idle-wakeup-time - Define and print idle-wakeup-time value
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'ocp get-idle-wakeup-time' <device> [--sel=<select> | -s <select>] [--namespace-id=<nsid> | -n <namespace-id>]
+'nvme' [<global-options>] 'ocp get-idle-wakeup-time' <device>
+			[--sel=<select> | -s <select>]
+			[--namespace-id=<nsid> | -n <namespace-id>]
 
 DESCRIPTION
 -----------

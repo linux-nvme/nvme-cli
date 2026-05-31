@@ -8,7 +8,8 @@ nvme-ocp-clear-pcie-correctable-error-counters - Clear PCIe correctable error co
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'ocp clear-pcie-correctable-error-counters' <device> [--no-uuid | -n]
+'nvme' [<global-options>] 'ocp clear-pcie-correctable-error-counters' <device>
+			[--no-uuid | -n]
 
 DESCRIPTION
 -----------

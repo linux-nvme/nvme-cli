@@ -8,7 +8,9 @@ nvme-sndk-vs-error-reason-identifier - Retrieve sndk device's telemetry log erro
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'sndk vs-error-reason-identifier' <device> [--log-id=<NUM>, -i <NUM>] [--file=<FILE>, -O <FILE>]
+'nvme' [<global-options>] 'sndk vs-error-reason-identifier' <device>
+			[--log-id=<NUM>, -i <NUM>]
+			[--file=<FILE>, -O <FILE>]
 
 DESCRIPTION
 -----------

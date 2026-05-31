@@ -8,8 +8,10 @@ nvme-resv-report - Send NVMe Reservation Report, parse the result
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'resv-report' <device> [--namespace-id=<nsid> | -n <nsid>]
-			[--numd=<num-dwords> | -d <num-dwords>] [--eds | -e]
+'nvme' [<global-options>] 'resv-report' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
+			[--numd=<num-dwords> | -d <num-dwords>]
+			[--eds | -e]
 			[--raw-binary | -b]
 
 DESCRIPTION

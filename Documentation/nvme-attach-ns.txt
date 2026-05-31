@@ -8,7 +8,8 @@ nvme-attach-ns - Send NVMe attach namespace, return result.
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'attach-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'attach-ns' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
 			[--controllers=<ctrl-list,> | -c <ctrl-list,>]
 
 DESCRIPTION

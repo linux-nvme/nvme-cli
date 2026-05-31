@@ -9,7 +9,8 @@ for NVMe over Fabric
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'set-property' <device> [--offset=<offset> | -O <offset>]
+'nvme' [<global-options>] 'set-property' <device>
+			[--offset=<offset> | -O <offset>]
 			[--value=<val> | -V <val>]
 
 DESCRIPTION

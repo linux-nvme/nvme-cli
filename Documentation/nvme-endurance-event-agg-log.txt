@@ -8,8 +8,10 @@ nvme-endurance-event-agg-log - Send NVMe Endurance log page request, returns res
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'endurance-event-agg-log' <device> [--log-entries=<log_entries> | -e <log_entries>]
-			[--rae | -r] [--raw-binary | -b]
+'nvme' [<global-options>] 'endurance-event-agg-log' <device>
+			[--log-entries=<log_entries> | -e <log_entries>]
+			[--rae | -r]
+			[--raw-binary | -b]
 
 DESCRIPTION
 -----------
