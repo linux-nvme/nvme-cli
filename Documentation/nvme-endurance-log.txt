@@ -8,7 +8,8 @@ nvme-endurance-log - Send NVMe Endurance log page request, returns result and lo
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'endurance-log' <device> [--group-id=<group> | -g <group>]
+'nvme' [<global-options>] 'endurance-log' <device>
+			[--group-id=<group> | -g <group>]
 
 DESCRIPTION
 -----------

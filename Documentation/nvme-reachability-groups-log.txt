@@ -8,7 +8,9 @@ nvme-reachability-groups-log - Retrieve Reachability Groups Log, show it
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'reachability-groups-log' <device> [--groups-only | -g] [--rae | -r]
+'nvme' [<global-options>] 'reachability-groups-log' <device>
+			[--groups-only | -g]
+			[--rae | -r]
 
 DESCRIPTION
 -----------

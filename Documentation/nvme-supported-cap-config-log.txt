@@ -9,7 +9,9 @@ Configuration List Log pages request, returns result and log.
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'supported-cap-config-log' <device> [--dom-id | -d] [--raw-binary | -b]
+'nvme' [<global-options>] 'supported-cap-config-log' <device>
+			[--dom-id | -d]
+			[--raw-binary | -b]
 
 DESCRIPTION
 -----------

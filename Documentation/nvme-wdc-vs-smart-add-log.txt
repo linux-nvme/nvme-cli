@@ -9,7 +9,8 @@ return result
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'wdc vs-smart-add-log' <device> [--interval=<NUM>, -i <NUM>]
+'nvme' [<global-options>] 'wdc vs-smart-add-log' <device>
+			[--interval=<NUM>, -i <NUM>]
 			[--log-page-version=<NUM>, -l <NUM>]
 			[--log-page-mask=<LIST>, -p <LIST>]
 			[--namespace-id=<nsid> | -n <nsid>]

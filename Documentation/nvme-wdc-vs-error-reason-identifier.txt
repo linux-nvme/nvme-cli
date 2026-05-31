@@ -8,7 +8,9 @@ nvme-wdc-vs-error-reason-identifier - Retrieve WDC device's telemetry log error 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'wdc vs-error-reason-identifier' <device> [--log-id=<NUM>, -i <NUM>] [--file=<FILE>, -O <FILE>]
+'nvme' [<global-options>] 'wdc vs-error-reason-identifier' <device>
+			[--log-id=<NUM>, -i <NUM>]
+			[--file=<FILE>, -O <FILE>]
 
 DESCRIPTION
 -----------

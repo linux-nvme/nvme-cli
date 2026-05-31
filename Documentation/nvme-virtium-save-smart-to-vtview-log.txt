@@ -9,7 +9,8 @@ a log file (csv format).
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'virtium save-smart-to-vtview-log' <device> [--run-time=<NUM> | -r <NUM>]
+'nvme' [<global-options>] 'virtium save-smart-to-vtview-log' <device>
+			[--run-time=<NUM> | -r <NUM>]
 			[--freq=<NUM> | -f <NUM>]
 			[--output-file=<FILE> | -O <FILE>]
 			[--test-name=<NAME> | -n <NAME>]

@@ -8,7 +8,9 @@ nvme-reachability-associations-log - Retrieve Reachability Associations Log, sho
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'reachability-associations-log' <device> [--associations-only | -a] [--rae | -r]
+'nvme' [<global-options>] 'reachability-associations-log' <device>
+			[--associations-only | -a]
+			[--rae | -r]
 
 DESCRIPTION
 -----------

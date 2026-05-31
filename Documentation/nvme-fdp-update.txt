@@ -8,7 +8,8 @@ nvme-fdp-update - Reclaim Unit Handle Update
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'fdp update' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme' [<global-options>] 'fdp update' <device>
+			[--namespace-id=<NUM> | -n <NUM>]
 			[--pids=<NUM,> | -p <NUM,>]
 
 DESCRIPTION

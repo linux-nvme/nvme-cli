@@ -9,8 +9,10 @@ mode
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'ocp eol-plp-failure-mode' <device> [--mode=<mode> | -m <mode>]
-			[--no-uuid | -n] [--save | -s]
+'nvme' [<global-options>] 'ocp eol-plp-failure-mode' <device>
+			[--mode=<mode> | -m <mode>]
+			[--no-uuid | -n]
+			[--save | -s]
 			[--sel=<select> | -S <select>]
 
 DESCRIPTION

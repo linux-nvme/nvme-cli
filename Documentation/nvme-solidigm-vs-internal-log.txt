@@ -8,8 +8,9 @@ nvme-solidigm-vs-internal-log - Retrieve Debug log binaries
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'solidigm vs-internal-log' <device> [--log-type=<type> | -t <type>]
- [--output-dir=<dir> | -d <dir>]
+'nvme' [<global-options>] 'solidigm vs-internal-log' <device>
+			[--log-type=<type> | -t <type>]
+			[--output-dir=<dir> | -d <dir>]
 
 DESCRIPTION
 -----------

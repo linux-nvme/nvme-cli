@@ -8,8 +8,10 @@ nvme-device-self-test - Perform the necessary tests to observe the performance a
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'device-self-test' <device> [--namespace-id=<NUM> | -n <NUM>]
-			[--self-test-code=<NUM> | -s <NUM>] [--wait | -w]
+'nvme' [<global-options>] 'device-self-test' <device>
+			[--namespace-id=<NUM> | -n <NUM>]
+			[--self-test-code=<NUM> | -s <NUM>]
+			[--wait | -w]
 
 DESCRIPTION
 -----------

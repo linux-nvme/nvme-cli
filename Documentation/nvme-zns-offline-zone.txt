@@ -8,7 +8,8 @@ nvme-zns-offline-zone - Offlines one or all zones
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'zns offline-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme' [<global-options>] 'zns offline-zone' <device>
+						[--namespace-id=<NUM> | -n <NUM>]
 						[--start-lba=<LBA> | -s <LBA>]
 						[--select-all | -a]
 

@@ -9,7 +9,9 @@ nvme-ns-descs - Send NVMe Identify for a list of Namespace Identification
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'ns-descs' <device> [--namespace-id=<nsid> | -n <nsid>] [--raw-binary | -b]
+'nvme' [<global-options>] 'ns-descs' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
+			[--raw-binary | -b]
 
 DESCRIPTION
 -----------

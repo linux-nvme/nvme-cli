@@ -8,7 +8,8 @@ nvme-delete-ns - Send NVMe Namespace Management delete namespace command, return
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'delete-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'delete-ns' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
 
 DESCRIPTION
 -----------

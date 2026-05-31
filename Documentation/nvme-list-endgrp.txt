@@ -9,7 +9,8 @@ structure
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'list-endgrp' <device> [--endgrp-id=<endgrp-id> | -i <endgrp-id>]
+'nvme' [<global-options>] 'list-endgrp' <device>
+			[--endgrp-id=<endgrp-id> | -i <endgrp-id>]
 
 DESCRIPTION
 -----------
