@@ -221,7 +221,7 @@ const char *nvme_pel_event_to_string(int type)
 {
 	static char str[STR_LEN];
 
-	sprintf(str, "%s(%#x)", pel_event_to_string(type), type);
+	snprintf(str, sizeof(str), "%s(%#x)", pel_event_to_string(type), type);
 
 	return str;
 }
@@ -904,9 +904,9 @@ const char *nvme_degrees_string(long t)
 	long val = kelvin_to_celsius(t);
 
 	if (nvme_is_output_format_json())
-		sprintf(str, "%ld %s", val, "Celsius");
+		snprintf(str, sizeof(str), "%ld %s", val, "Celsius");
 	else
-		sprintf(str, "%ld °%s", val, "C");
+		snprintf(str, sizeof(str), "%ld °%s", val, "C");
 
 	return str;
 }
