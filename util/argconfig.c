@@ -98,25 +98,30 @@ static void show_option(const struct argconfig_commandline_options *option)
 {
 	char buffer[0x1000];
 	char *b = buffer;
+	int rem = sizeof(buffer);
+	int n;
 
-	b += sprintf(b, "  [ ");
+#define BPRINTF(fmt, ...) do { n = snprintf(b, rem, fmt, ##__VA_ARGS__); if (n > 0 && n < rem) { b += n; rem -= n; } } while (0)
+
+	BPRINTF("  [ ");
 	if (option->option) {
-		b += sprintf(b, " --%s", option->option);
+		BPRINTF(" --%s", option->option);
 		if (option->argument_type == optional_argument)
-			b += sprintf(b, "[=<%s>]", option->meta ? option->meta : "arg");
+			BPRINTF("[=<%s>]", option->meta ? option->meta : "arg");
 		if (option->argument_type == required_argument)
-			b += sprintf(b, "=<%s>", option->meta ? option->meta : "arg");
+			BPRINTF("=<%s>", option->meta ? option->meta : "arg");
 		if (option->short_option)
-			b += sprintf(b, ",");
+			BPRINTF(",");
 	}
 	if (option->short_option) {
-		b += sprintf(b, " -%c", option->short_option);
+		BPRINTF(" -%c", option->short_option);
 		if (option->argument_type == optional_argument)
-			b += sprintf(b, " [<%s>]", option->meta ? option->meta : "arg");
+			BPRINTF(" [<%s>]", option->meta ? option->meta : "arg");
 		if (option->argument_type == required_argument)
-			b += sprintf(b, " <%s>", option->meta ? option->meta : "arg");
+			BPRINTF(" <%s>", option->meta ? option->meta : "arg");
 	}
-	b += sprintf(b, " ] ");
+	BPRINTF(" ] ");
+#undef BPRINTF
 
 	fprintf(stderr, "%s", buffer);
 	if (option->help) {
