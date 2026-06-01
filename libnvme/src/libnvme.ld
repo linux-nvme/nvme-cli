@@ -186,6 +186,7 @@ LIBNVME_3 {
 		libnvme_subsystem_next_ns;
 		libnvme_subsystem_release_fds;
 		libnvme_transport_handle_get_fd;
+		libnvme_transport_handle_get_mi_ep;
 		libnvme_transport_handle_get_name;
 		libnvme_transport_handle_is_ctrl;
 		libnvme_transport_handle_is_direct;

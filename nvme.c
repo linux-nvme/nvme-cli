@@ -358,6 +358,17 @@ static void setup_transport_handle(struct libnvme_global_ctx *ctx,
 	libnvme_transport_handle_set_submit_entry(hdl, nvme_submit_entry);
 	libnvme_transport_handle_set_submit_exit(hdl, nvme_submit_exit);
 	libnvme_transport_handle_set_decide_retry(hdl, nvme_decide_retry);
+
+#ifdef CONFIG_MI
+	if (libnvme_transport_handle_is_mi(hdl)) {
+		libnvme_mi_ep_t ep = libnvme_transport_handle_get_mi_ep(hdl);
+		if (ep) {
+			libnvme_mi_ep_set_submit_entry(ep, nvme_mi_submit_entry);
+			libnvme_mi_ep_set_submit_exit(ep, nvme_mi_submit_exit);
+		}
+	}
+#endif
+
 	libnvme_set_dry_run(ctx, nvme_args.dry_run);
 	if (nvme_args.timeout != NVME_DEFAULT_IOCTL_TIMEOUT)
 		libnvme_transport_handle_set_timeout(hdl, nvme_args.timeout);
