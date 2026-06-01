@@ -88,15 +88,15 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 		return -ENODEV;
 	}
 
-	c->firmware = libnvme_copy_and_rtrim(id_ctrl.fr, sizeof(id_ctrl.fr));
+	c->firmware = libnvme_storageport_entry_get_firmware(sp_entry);
 	if (!c->firmware)
 		return -ENOMEM;
 
-	c->model = libnvme_copy_and_rtrim(id_ctrl.mn, sizeof(id_ctrl.mn));
+	c->model = libnvme_storageport_entry_get_model(sp_entry);
 	if (!c->model)
 		return -ENOMEM;
 
-	c->serial = libnvme_copy_and_rtrim(id_ctrl.sn, sizeof(id_ctrl.sn));
+	c->serial = libnvme_storageport_entry_get_serial(sp_entry);
 	if (!c->serial)
 		return -ENOMEM;
 

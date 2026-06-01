@@ -5,6 +5,7 @@
  *
  * Authors: Brandon Capener <bcapener@micron.com>
  */
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -790,13 +791,34 @@ char *libnvme_storageport_entry_get_subsys_name(
 	return subsysname;
 }
 
+static char *copy_and_rtrim(const char *src, size_t src_size)
+{
+	char *dst;
+	size_t len = src_size;
+
+	if (!src)
+		return NULL;
+
+	while (len > 0 && isspace((unsigned char)src[len - 1]))
+		len--;
+
+	dst = malloc(len + 1);
+	if (!dst)
+		return NULL;
+
+	memcpy(dst, src, len);
+	dst[len] = '\0';
+
+	return dst;
+}
+
 char *libnvme_storageport_entry_get_subnqn(
 	const struct storageport_map_entry *sp_entry)
 {
 	if (!sp_entry)
 		return NULL;
-	return libnvme_copy_and_rtrim(sp_entry->id_ctrl.subnqn,
-				      sizeof(sp_entry->id_ctrl.subnqn));
+	return copy_and_rtrim(sp_entry->id_ctrl.subnqn,
+			      sizeof(sp_entry->id_ctrl.subnqn));
 }
 
 char *libnvme_storageport_entry_get_serial(
@@ -804,8 +826,8 @@ char *libnvme_storageport_entry_get_serial(
 {
 	if (!sp_entry)
 		return NULL;
-	return libnvme_copy_and_rtrim(sp_entry->id_ctrl.sn,
-				      sizeof(sp_entry->id_ctrl.sn));
+	return copy_and_rtrim(sp_entry->id_ctrl.sn,
+			      sizeof(sp_entry->id_ctrl.sn));
 }
 
 char *libnvme_storageport_entry_get_model(
@@ -813,8 +835,8 @@ char *libnvme_storageport_entry_get_model(
 {
 	if (!sp_entry)
 		return NULL;
-	return libnvme_copy_and_rtrim(sp_entry->id_ctrl.mn,
-				      sizeof(sp_entry->id_ctrl.mn));
+	return copy_and_rtrim(sp_entry->id_ctrl.mn,
+			      sizeof(sp_entry->id_ctrl.mn));
 }
 
 char *libnvme_storageport_entry_get_firmware(
@@ -822,6 +844,6 @@ char *libnvme_storageport_entry_get_firmware(
 {
 	if (!sp_entry)
 		return NULL;
-	return libnvme_copy_and_rtrim(sp_entry->id_ctrl.fr,
-				      sizeof(sp_entry->id_ctrl.fr));
+	return copy_and_rtrim(sp_entry->id_ctrl.fr,
+			      sizeof(sp_entry->id_ctrl.fr));
 }

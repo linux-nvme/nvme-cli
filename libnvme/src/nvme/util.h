@@ -261,19 +261,6 @@ int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
 		const unsigned char uuid[NVME_UUID_LEN]);
 
 /**
- * libnvme_copy_and_rtrim - Copy a fixed-size buffer,
- * trimming trailing whitespace
- * @src: Source buffer (e.g. NVMe identify field like serial, model, firmware)
- * @src_size: Size of the source buffer
- *
- * Allocates a new null-terminated string with trailing whitespace removed.
- * Useful for NVMe identify data fields that are space-padded to a fixed width.
- *
- * Return: Allocated string on success, NULL on failure or if @src is NULL.
- */
-char *libnvme_copy_and_rtrim(const char *src, size_t src_size);
-
-/**
  * libnvme_basename - Return the final path component (the one
  * after the last '/')
  * @path: A string containing a filesystem path
