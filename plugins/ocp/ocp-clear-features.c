@@ -61,7 +61,7 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 int get_ocp_error_counters(int argc, char **argv, struct command *acmd,
 			   struct plugin *plugin)
 {
-	const char *desc = "Define Issue Get Feature cmd (FID: 0xC3) Clear PCIe Corr Err Counters";
+	const char *desc = "Issue Get Feature command (FID: 0xC3) Clear PCIe Correctable Error Counters";
 	const char *sel = "[0-3]: current/default/saved/supported/";
 	const char *nsid = "Byte[04-07]: Namespace Identifier Valid/Invalid/Inactive";
 	const char *no_uuid = "Do not try to automatically detect UUID index";

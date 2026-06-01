@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef TYPES_H
-#define TYPES_H
+#pragma once
 
 #include <nvme/nvme-types.h>
 
@@ -36,5 +35,3 @@ struct nvme_get_log_args {
 	__u32 len;
 	__u64 *result;
 };
-
-#endif

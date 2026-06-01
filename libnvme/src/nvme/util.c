@@ -16,7 +16,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#if defined(HAVE_NETDB) || defined(CONFIG_FABRICS)
+#if defined(NVME_HAVE_NETDB) || defined(CONFIG_FABRICS)
 #include <ifaddrs.h>
 
 #include <arpa/inet.h>
@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#if HAVE_BCRYPT
+#if NVME_HAVE_BCRYPT
 #include <windows.h>
 #include <bcrypt.h>
 #endif
@@ -473,7 +473,7 @@ __libnvme_public const char *libnvme_strerror(int errnum)
 	return strerror(errnum);
 }
 
-#ifdef HAVE_NETDB
+#ifdef NVME_HAVE_NETDB
 static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *,
 		freeaddrinfo)
 #define __cleanup_addrinfo __cleanup(cleanup_addrinfo)
@@ -522,7 +522,7 @@ int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 
 	return 0;
 }
-#else /* HAVE_NETDB */
+#else /* NVME_HAVE_NETDB */
 int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr, char **hostname)
 {
 	libnvme_msg(ctx, LIBNVME_LOG_ERR, "No support for hostname IP address resolution; " \
@@ -530,7 +530,7 @@ int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr, char **h
 
 	return -ENOTSUP;
 }
-#endif /* HAVE_NETDB */
+#endif /* NVME_HAVE_NETDB */
 
 char *startswith(const char *s, const char *prefix)
 {
@@ -635,7 +635,7 @@ __libnvme_public int libnvme_uuid_from_string(
 
 static int random_bytes(void *buf, size_t buflen)
 {
-#if HAVE_BCRYPT
+#if NVME_HAVE_BCRYPT
 	NTSTATUS status = BCryptGenRandom(NULL, buf, (ULONG)buflen,
 				 BCRYPT_USE_SYSTEM_PREFERRED_RNG);
 
@@ -695,7 +695,7 @@ __libnvme_public int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
 	return -ENOENT;
 }
 
-#ifdef HAVE_NETDB
+#ifdef NVME_HAVE_NETDB
 static bool _nvme_ipaddrs_eq(struct sockaddr *addr1, struct sockaddr *addr2)
 {
 	struct sockaddr_in *sockaddr_v4;
@@ -763,7 +763,7 @@ ipaddrs_eq_fail:
 		freeaddrinfo(info2);
 	return result;
 }
-#else /* HAVE_NETDB */
+#else /* NVME_HAVE_NETDB */
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 {
 	libnvme_msg(NULL, LIBNVME_LOG_ERR, "no support for hostname ip address resolution; " \
@@ -771,9 +771,9 @@ bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 
 	return false;
 }
-#endif /* HAVE_NETDB */
+#endif /* NVME_HAVE_NETDB */
 
-#ifdef HAVE_NETDB
+#ifdef NVME_HAVE_NETDB
 const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
 		const char *addr)
 {
@@ -851,7 +851,7 @@ bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 	return false;
 }
 
-#endif /* HAVE_NETDB || CONFIG_FABRICS */
+#endif /* NVME_HAVE_NETDB || CONFIG_FABRICS */
 
 /* This used instead of basename() due to behavioral differences between
  * the POSIX and the GNU version. This is the glibc implementation.

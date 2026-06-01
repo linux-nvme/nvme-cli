@@ -1,7 +1,5 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
-
-#ifndef _LIBNVME_TEST_IOCTL_MOCK_H
-#define _LIBNVME_TEST_IOCTL_MOCK_H
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
@@ -103,5 +101,3 @@ void set_mock_io_cmds(const struct mock_cmd *cmds, size_t len);
  * Checks that all mock ioctl() invocations were performed.
  */
 void end_mock_cmds(void);
-
-#endif /* #ifndef _LIBNVME_TEST_IOCTL_MOCK_H */

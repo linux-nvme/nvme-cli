@@ -16,41 +16,41 @@
 
 PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 	COMMAND_LIST(
-		ENTRY("smart-add-log", "Retrieve extended SMART Information", smart_add_log)
-		ENTRY("latency-monitor-log", "Get Latency Monitor Log Page", ocp_latency_monitor_log)
-		ENTRY("set-latency-monitor-feature", "Set Latency Monitor feature", ocp_set_latency_monitor_feature)
-		ENTRY("internal-log", "Retrieve and save internal device telemetry log", ocp_telemetry_log)
-		ENTRY("clear-fw-activate-history", "Clear firmware update history log", clear_fw_update_history)
-		ENTRY("eol-plp-failure-mode", "Define EOL or PLP circuitry failure mode.", eol_plp_failure_mode)
-		ENTRY("clear-pcie-correctable-errors", "Clear PCIe correctable error counters", clear_pcie_correctable_error_counters)
-		ENTRY("fw-activate-history", "Get firmware activation history log", fw_activation_history_log)
-		ENTRY("unsupported-reqs-log", "Get Unsupported Requirements Log Page", ocp_unsupported_requirements_log)
+		ENTRY("smart-add-log", "Retrieve Extended SMART Information", smart_add_log)
+		ENTRY("latency-monitor-log", "Retrieve Latency Monitor Log Page", ocp_latency_monitor_log)
+		ENTRY("set-latency-monitor-feature", "Set Latency Monitor Feature", ocp_set_latency_monitor_feature)
+		ENTRY("internal-log", "Retrieve and Save Internal Device Telemetry Log", ocp_telemetry_log)
+		ENTRY("clear-fw-activate-history", "Clear Firmware Update History", clear_fw_update_history)
+		ENTRY("eol-plp-failure-mode", "Define EOL or PLP Circuitry Failure Mode", eol_plp_failure_mode)
+		ENTRY("clear-pcie-correctable-errors", "Clear PCIe Correctable Error Counters", clear_pcie_correctable_error_counters)
+		ENTRY("fw-activate-history", "Retrieve Firmware Activation History Log Page", fw_activation_history_log)
+		ENTRY("unsupported-reqs-log", "Retrieve Unsupported Requirements Log Page", ocp_unsupported_requirements_log)
 		ENTRY("error-recovery-log", "Retrieve Error Recovery Log Page", ocp_error_recovery_log)
-		ENTRY("device-capability-log", "Get Device capabilities Requirements Log Page", ocp_device_capabilities_log)
-		ENTRY("set-dssd-power-state-feature", "Set DSSD Power State feature", set_dssd_power_state_feature)
-		ENTRY("get-dssd-power-state-feature", "Get DSSD Power State feature", get_dssd_power_state_feature)
+		ENTRY("device-capability-log", "Retrieve Device Capabilities Log Page", ocp_device_capabilities_log)
+		ENTRY("set-dssd-power-state-feature", "Set DSSD Power State Feature", set_dssd_power_state_feature)
+		ENTRY("get-dssd-power-state-feature", "Get DSSD Power State Feature", get_dssd_power_state_feature)
 		ENTRY("set-plp-health-check-interval", "Set PLP Health Check Interval", set_plp_health_check_interval)
 		ENTRY("get-plp-health-check-interval", "Get PLP Health Check Interval", get_plp_health_check_interval)
-		ENTRY("telemetry-string-log", "Retrieve Telemetry string Log Page", ocp_telemetry_str_log_format)
+		ENTRY("telemetry-string-log", "Retrieve Telemetry String Log Page", ocp_telemetry_str_log_format)
 		ENTRY("set-telemetry-profile", "Set Telemetry Profile Feature", ocp_set_telemetry_profile_feature)
-		ENTRY("set-dssd-async-event-config", "Set DSSD Async Event Config", set_dssd_async_event_config)
-		ENTRY("get-dssd-async-event-config", "Get DSSD Async Event Config", get_dssd_async_event_config)
+		ENTRY("set-dssd-async-event-config", "Set DSSD Asynchronous Event Configuration", set_dssd_async_event_config)
+		ENTRY("get-dssd-async-event-config", "Get DSSD Asynchronous Event Configuration", get_dssd_async_event_config)
 		ENTRY("tcg-configuration-log", "Retrieve TCG Configuration Log Page", ocp_tcg_configuration_log)
-		ENTRY("get-error-injection", "Return set of error injection", get_error_injection)
-		ENTRY("set-error-injection", "Inject error conditions", set_error_injection)
-		ENTRY("get-enable-ieee1667-silo", "return set of enable IEEE1667 silo",
-		      get_enable_ieee1667_silo)
-		ENTRY("set-enable-ieee1667-silo", "enable IEEE1667 silo", set_enable_ieee1667_silo)
-		ENTRY("hardware-component-log", "retrieve hardware component log", hwcomp_log)
+		ENTRY("get-error-injection", "Get Error Injection Feature", get_error_injection)
+		ENTRY("set-error-injection", "Set Error Injection Feature", set_error_injection)
+		ENTRY("get-enable-ieee1667-silo", "Get Enable IEEE1667 Silo Feature", get_enable_ieee1667_silo)
+		ENTRY("set-enable-ieee1667-silo", "Set Enable IEEE1667 Silo Feature", set_enable_ieee1667_silo)
+		ENTRY("hardware-component-log", "Retrieve Hardware Component Log Page", hwcomp_log)
 		ENTRY("get-latency-monitor", "Get Latency Monitor Feature",
 		      ocp_get_latency_monitor_feature)
-		ENTRY("get-clear-pcie-correctable-errors", "Clear PCIe correctable error counters",
+		ENTRY("get-clear-pcie-correctable-errors",
+		      "Get Clear PCIe Correctable Error Counters Feature",
 		      get_clear_pcie_correctable_error_counters)
 		ENTRY("get-telemetry-profile", "Get Telemetry Profile Feature",
 		      ocp_get_telemetry_profile_feature)
-		ENTRY("persistent-event-log", "Retrieve Persistent Event Log with OCP events",
+		ENTRY("persistent-event-log", "Retrieve Persistent Event Log with OCP Events",
 		      ocp_get_persistent_event_log)
-		ENTRY("get-idle-wakeup-time", "Get Idle Wake Up Time Config",
+		ENTRY("get-idle-wakeup-time", "Get Idle Wake Up Time Configuration",
 		      ocp_get_idle_wakeup_time_config_feature)
 	)
 );

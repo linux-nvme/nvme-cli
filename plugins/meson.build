@@ -62,7 +62,7 @@ if 'ocp' in selected_plugins
   subdir('ocp')
 endif
 
-if 'sed' in selected_plugins and conf.get('HAVE_SED_OPAL') != 0
+if 'sed' in selected_plugins and conf.get('NVME_HAVE_SED_OPAL') != 0
   subdir('sed')
 endif
 

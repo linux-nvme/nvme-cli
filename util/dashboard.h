@@ -1,7 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-
-#ifndef _DASHBOARD_H_
-#define _DASHBOARD_H_
+#pragma once
 
 #include <stdio.h>
 
@@ -51,5 +49,3 @@ enum event_type dashboard_wait_for_event(struct dashboard_ctx *db_ctx);
 FILE *dashboard_init(struct dashboard_ctx **db_ctx, int refresh_interval);
 void dashboard_reset(struct dashboard_ctx *db_ctx);
 void dashboard_exit(struct dashboard_ctx *db_ctx);
-
-#endif /* _DASHBOARD_H_ */

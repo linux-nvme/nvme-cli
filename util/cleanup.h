@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef __CLEANUP_H
-#define __CLEANUP_H
+#pragma once
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -68,5 +67,3 @@ static inline void cleanup_nvmf_context(struct libnvmf_context **fctx)
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
 #define __cleanup_file __cleanup(cleanup_file)
-
-#endif /* __CLEANUP_H */

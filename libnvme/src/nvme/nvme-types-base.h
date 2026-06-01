@@ -4114,11 +4114,11 @@ struct nvme_self_test_log {
 } __attribute__((packed));
 
 /**
- * enum nvme_cmd_get_log_telemetry_host_lsp - Telemetry Host-Initiated log specific field
+ * enum nvme_log_telemetry_host_lsp - Telemetry Host-Initiated log specific field
  * @NVME_LOG_TELEM_HOST_LSP_RETAIN:	Get Telemetry Data Blocks
  * @NVME_LOG_TELEM_HOST_LSP_CREATE:	Create Telemetry Data Blocks
  */
-enum nvme_cmd_get_log_telemetry_host_lsp {
+enum nvme_log_telemetry_host_lsp {
 	NVME_LOG_TELEM_HOST_LSP_RETAIN			= 0,
 	NVME_LOG_TELEM_HOST_LSP_CREATE			= 1,
 };

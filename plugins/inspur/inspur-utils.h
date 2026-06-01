@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef __INSPUR_UTILS_H__
-#define __INSPUR_UTILS_H__
+#pragma once
 
 #define BYTE_OF_64K 65536UL
 #define BYTE_OF_32K 32768UL
@@ -171,5 +170,3 @@ typedef struct r1_vendor_log_s {
     __u8 rsvlkm[176];
 } r1_cli_vendor_log_t;
 #pragma pack(pop)
-
-#endif // __INSPUR_UTILS_H__

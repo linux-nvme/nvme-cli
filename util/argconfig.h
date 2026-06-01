@@ -30,9 +30,7 @@
  *     Header file for argconfig.c
  *
  */
-
-#ifndef argconfig_H
-#define argconfig_H
+#pragma once
 
 #include <getopt.h>
 #include <stdbool.h>
@@ -196,4 +194,3 @@ int argconfig_parse_comma_sep_array_u64(char *string, __u64 *val,
 void print_word_wrapped(const char *s, int indent, int start, FILE *stream);
 bool argconfig_parse_seen(struct argconfig_commandline_options *options,
 			  const char *option);
-#endif

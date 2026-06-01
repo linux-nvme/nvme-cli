@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
-#ifndef __CLEANUP_H
-#define __CLEANUP_H
+#pragma once
 
 #include <stdlib.h>
 
@@ -29,5 +28,3 @@ static inline void libnvme_freep(void *p)
 	libnvme_free(*(void **)p);
 }
 #define __cleanup_libnvme_free __cleanup(libnvme_freep)
-
-#endif

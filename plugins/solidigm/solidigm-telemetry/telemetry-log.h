@@ -4,9 +4,7 @@
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
-
-#ifndef _SOLIDIGM_TELEMETRY_LOG_H
-#define _SOLIDIGM_TELEMETRY_LOG_H
+#pragma once
 
 #include <assert.h>
 #include <stdbool.h>
@@ -27,7 +25,5 @@ struct telemetry_log {
 	struct json_object *root;
 	struct json_object *configuration;
 	bool is_ocp;
-	bool is_skhT;
+	uint32_t skhT_offset;
 };
-
-#endif /* _SOLIDIGM_TELEMETRY_LOG_H */

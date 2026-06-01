@@ -23,7 +23,6 @@ project(
     default_options: [
         'c_std=gnu99',
         'buildtype=debugoptimized',
-        'prefix=/usr/local',
         'warning_level=1',
         'sysconfdir=etc',
         'wrap_mode=nofallback',
@@ -149,7 +148,7 @@ if host_system == 'windows'
 endif
 
 conf.set10(
-    'HAVE_BCRYPT',
+    'NVME_HAVE_BCRYPT',
     cc.find_library('bcrypt', required: false).found(),
     description: 'Is bcrypt availabe'
 )
@@ -180,7 +179,7 @@ conf.set10('DEFAULT_PDC_ENABLED', get_option('pdc-enabled'))
 
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
-    'HAVE_BUILTIN_TYPES_COMPATIBLE_P',
+    'NVME_HAVE_BUILTIN_TYPES_COMPATIBLE_P',
     cc.compiles(
         '''int main(void) {
                return __builtin_types_compatible_p(int, long);
@@ -204,7 +203,7 @@ conf.set10(
     description: 'Is typeof available?'
 )
 conf.set10(
-    'HAVE_BYTESWAP_H',
+    'NVME_HAVE_BYTESWAP_H',
     cc.compiles(
         '''#include <byteswap.h>''',
         name: 'byteswap.h'
@@ -212,7 +211,7 @@ conf.set10(
     description: 'Is byteswap.h include-able?'
 )
 conf.set10(
-    'HAVE_BSWAP_64',
+    'NVME_HAVE_BSWAP_64',
     cc.links(
         '''#include <byteswap.h>
             int main(void) {
@@ -234,7 +233,7 @@ conf.set10(
     description: 'Building for big-endian'
 )
 conf.set10(
-    'HAVE_ISBLANK',
+    'NVME_HAVE_ISBLANK',
     cc.links(
         '''#include <ctype.h>
            int main(int argc, char **argv) {
@@ -246,7 +245,7 @@ conf.set10(
     description: 'Is isblank() available?'
 )
 conf.set10(
-    'HAVE_SYS_RANDOM',
+    'NVME_HAVE_SYS_RANDOM',
     cc.compiles(
         '''#include <sys/random.h>''',
         name: 'sys/random.h'
@@ -259,7 +258,7 @@ conf.set10(
     description: 'Is compiler warning about unused static line function?'
 )
 conf.set10(
-    'HAVE_SED_OPAL',
+    'NVME_HAVE_SED_OPAL',
     cc.compiles(
         '''#include <linux/sed-opal.h>''',
         name: 'linux/sed-opal.h'
@@ -268,7 +267,7 @@ conf.set10(
     description: 'Is linux/sed-opal.h include-able?'
 )
 conf.set10(
-    'HAVE_KEY_TYPE',
+    'NVME_HAVE_KEY_TYPE',
     cc.compiles(
         '''
             #include <linux/sed-opal.h>
@@ -282,7 +281,7 @@ conf.set10(
     description: 'Does struct opal_key have a key_type field?'
 )
 conf.set(
-    'HAVE_TM_GMTOFF',
+    'NVME_HAVE_TM_GMTOFF',
     cc.compiles(
         '''
             #include <time.h>
@@ -297,7 +296,7 @@ conf.set(
 )
 
 if cc.has_function_attribute('fallthrough')
-    conf.set('fallthrough', '__attribute__((__fallthrough__))')
+    conf.set('fallthrough', '__attribute__((fallthrough))')
 else
     conf.set('fallthrough', 'do {} while (0) /* fallthrough */')
 endif
@@ -315,7 +314,7 @@ if not want_libkmod
 else
     libkmod_dep = dependency('libkmod', required: get_option('libkmod'))
 endif
-conf.set('HAVE_LIBKMOD', libkmod_dep.found(), description: 'Is libkmod available?')
+conf.set('NVME_HAVE_LIBKMOD', libkmod_dep.found(), description: 'Is libkmod available?')
 
 if not want_fabrics or get_option('openssl').disabled()
     openssl_dep = dependency('', required: false)
@@ -385,7 +384,7 @@ conf.set10(
     description: 'Can we use a statement as an expression?'
 )
 conf.set10(
-    'HAVE_LINUX_MCTP_H',
+    'NVME_HAVE_LINUX_MCTP_H',
     cc.compiles(
         '''#include <linux/mctp.h>''',
         name: 'linux/mctp.h'
@@ -408,7 +407,7 @@ if not is_static
     )
 endif
 conf.set(
-    'HAVE_NETDB',
+    'NVME_HAVE_NETDB',
     have_netdb,
     description: 'Is network address and service translation available'
 )
@@ -416,7 +415,7 @@ conf.set(
 threads_dep = dependency('threads', required: true)
 dl_dep = dependency('dl', required: false)
 conf.set(
-    'HAVE_LIBC_DLSYM',
+    'NVME_HAVE_LIBC_DLSYM',
     cc.has_function('dlsym', dependencies: dl_dep),
     description: 'Is dlsym function present',
 )
@@ -426,7 +425,7 @@ conf.set('NVME_HAVE_SENDFILE', cc.has_function('sendfile'))
 conf.set('NVME_HAVE_MMAP', cc.has_function('mmap'))
 
 conf.set10(
-    'HAVE_REALLOCARRAY',
+    'NVME_HAVE_REALLOCARRAY',
     cc.has_function(
        'reallocarray',
        prefix : '#include <stdlib.h>'),
@@ -434,7 +433,7 @@ conf.set10(
 )
 
 conf.set10(
-    'HAVE_SIGACTION',
+    'NVME_HAVE_SIGACTION',
     cc.has_function(
         'sigaction',
         prefix : '#include <signal.h>'),
@@ -495,6 +494,7 @@ if host_system == 'windows'
     add_project_arguments(
         [
             '-DNOMINMAX',   # don't include Windows min/max definitions
+            '-D_POSIX_THREAD_SAFE_FUNCTIONS',   # enables gmtime_r support
         ],
         language : 'c',
     )
@@ -751,6 +751,7 @@ dep_dict = {
 if host_system == 'windows'
     dep_dict += {
         'kernel32':     kernel32_dep.found(),
+        'bcrypt':       bcrypt_dep.found(),
     }
 endif
 summary(dep_dict, section: 'Dependencies', bool_yn: true)
