@@ -150,7 +150,7 @@ char *sedopal_get_password(char *prompt)
  */
 int sedopal_set_key(struct opal_key *key)
 {
-#if !HAVE_KEY_TYPE
+#if !NVME_HAVE_KEY_TYPE
 	/*
 	 * If key_type isn't avaialable, force key prompt
 	 */
@@ -177,7 +177,7 @@ int sedopal_set_key(struct opal_key *key)
 		if (pass == NULL)
 			return -EINVAL;
 
-#if HAVE_KEY_TYPE
+#if NVME_HAVE_KEY_TYPE
 		key->key_type = OPAL_INCLUDED;
 #endif
 		key->key_len = strlen(pass);
@@ -196,7 +196,7 @@ int sedopal_set_key(struct opal_key *key)
 			}
 		}
 	} else {
-#if HAVE_KEY_TYPE
+#if NVME_HAVE_KEY_TYPE
 		key->key_type = OPAL_KEYRING;
 #endif
 		key->key_len = 0;
@@ -822,7 +822,7 @@ void sedopal_print_sid_auth(void *data)
 
 	printf("\nSED Block SID Authentication:\n");
 	printf("\tSID value equal MSID            : %s\n",
-		(sid_auth_d->states & BLOCK_SID_VALUE_STATE) ? "yes" : "no");
+		(sid_auth_d->states & BLOCK_SID_VALUE_STATE) ? "no" : "yes");
 	printf("\tSID auth blocked                : %s\n",
 		(sid_auth_d->states & BLOCK_SID_BLOCKED_STATE) ? "yes" : "no");
 	printf("\tHW reset selected               : %s\n",

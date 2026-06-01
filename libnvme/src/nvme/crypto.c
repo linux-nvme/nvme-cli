@@ -15,7 +15,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#if HAVE_SYS_RANDOM
+#if NVME_HAVE_SYS_RANDOM
 #include <sys/random.h>
 #endif
 #include <sys/param.h>
@@ -662,7 +662,7 @@ static int derive_psk_digest(struct libnvme_global_ctx *ctx,
 static ssize_t getrandom_bytes(void *buf, size_t buflen)
 {
 	ssize_t result;
-#if HAVE_SYS_RANDOM
+#if NVME_HAVE_SYS_RANDOM
 	result = getrandom(buf, buflen, GRND_NONBLOCK);
 #else
 	__cleanup_fd int fd = -1;

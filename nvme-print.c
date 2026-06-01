@@ -221,7 +221,7 @@ const char *nvme_pel_event_to_string(int type)
 {
 	static char str[STR_LEN];
 
-	sprintf(str, "%s(%#x)", pel_event_to_string(type), type);
+	snprintf(str, sizeof(str), "%s(%#x)", pel_event_to_string(type), type);
 
 	return str;
 }
@@ -904,9 +904,9 @@ const char *nvme_degrees_string(long t)
 	long val = kelvin_to_celsius(t);
 
 	if (nvme_is_output_format_json())
-		sprintf(str, "%ld %s", val, "Celsius");
+		snprintf(str, sizeof(str), "%ld %s", val, "Celsius");
 	else
-		sprintf(str, "%ld °%s", val, "C");
+		snprintf(str, sizeof(str), "%ld °%s", val, "C");
 
 	return str;
 }
@@ -1137,7 +1137,7 @@ void nvme_show_select_result(enum nvme_features_id fid, __u64 result)
 const char *nvme_feature_lba_type_to_string(__u8 type)
 {
 	switch (type) {
-	case 0:	return "Reserved";
+	case 0:	return "General Purpose";
 	case 1:	return "Filesystem";
 	case 2:	return "RAID";
 	case 3:	return "Cache";

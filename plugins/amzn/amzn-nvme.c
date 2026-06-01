@@ -639,7 +639,7 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 	if (interval > 0) {
 		struct amzn_latency_log_page prev, curr, diff;
 
-#if HAVE_SIGACTION
+#if NVME_HAVE_SIGACTION
 		struct sigaction sa = { .sa_handler = amzn_sigint_handler };
 
 		sigemptyset(&sa.sa_mask);

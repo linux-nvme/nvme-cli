@@ -16,7 +16,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-#if HAVE_LINUX_MCTP_H
+#if NVME_HAVE_LINUX_MCTP_H
 #include <linux/mctp.h>
 #else
 #include "nvme/mi-mctp-compat.h"

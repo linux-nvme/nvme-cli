@@ -361,7 +361,9 @@ static int telemetry_log_data_area_get_offset(const struct telemetry_log *tl,
 	*offset = offset_blocks * NVME_LOG_TELEM_BLOCK_SIZE;
 	last = (last_block + 1) * NVME_LOG_TELEM_BLOCK_SIZE;
 	*size = last - *offset;
-	if ((*offset > tl->log_size) || (last > tl->log_size) || (last <= *offset)) {
+	if (last < *offset)
+		return -1; /* DA is absent or empty, skip silently */
+	if ((*offset > tl->log_size) || (last > tl->log_size)) {
 		SOLIDIGM_LOG_WARNING("Warning: Data Area %d don't fit this Telemetry log.", da);
 		return -1;
 	}
@@ -610,7 +612,8 @@ int solidigm_telemetry_log_data_areas_parse(struct telemetry_log *tl,
 	struct json_object *toc_array = NULL;
 
 	solidigm_telemetry_log_da1_check_ocp(tl);
-	sldm_telemetry_da2_check_skhT(tl);
+	sldm_telemetry_check_for_skhT(tl);
+
 	// if TELEMETRY_CONFIG_META available copy it to the output for better
 	// context in the output data
 	if (tl->configuration) {
@@ -631,7 +634,7 @@ int solidigm_telemetry_log_data_areas_parse(struct telemetry_log *tl,
 		if (tl->is_ocp)
 			first_da = NVME_TELEMETRY_DA_3;
 
-		if (tl->is_skhT) {
+		if (tl->skhT_offset) {
 			if (last_da >= NVME_TELEMETRY_DA_2)
 				sldm_telemetry_skhT_parse(tl);
 			if (last_da >= NVME_TELEMETRY_DA_3)

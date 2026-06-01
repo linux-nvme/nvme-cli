@@ -1,7 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-
-#ifndef DEBUG_H_
-#define DEBUG_H_
+#pragma once
 
 #include <stdbool.h>
 
@@ -33,5 +31,3 @@ bool nvme_decide_retry(struct libnvme_transport_handle *hdl,
 
 bool is_printable_at_level(int level);
 int map_log_level(int verbose, bool quiet);
-
-#endif // DEBUG_H_

@@ -38,7 +38,7 @@
 
 #include <libnvme.h>
 
-#ifdef HAVE_LIBKMOD
+#ifdef NVME_HAVE_LIBKMOD
 #include <libkmod.h>
 #endif
 
@@ -515,7 +515,7 @@ static int nvme_read_config_checked(struct libnvme_global_ctx *ctx,
 
 static void load_nvme_fabrics_module(void)
 {
-#ifdef HAVE_LIBKMOD
+#ifdef NVME_HAVE_LIBKMOD
 	struct kmod_ctx *ctx;
 	struct kmod_module *mod;
 	int err, state;

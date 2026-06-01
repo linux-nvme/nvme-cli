@@ -4,8 +4,7 @@
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
-#ifndef __SOLIDIGM_DATA_AREA_H__
-#define __SOLIDIGM_DATA_AREA_H__
+#pragma once
 
 #include "telemetry-log.h"
 
@@ -19,5 +18,3 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 					 uint64_t parent_offset_bit,
 					 struct json_object *output,
 					 struct json_object *metadata);
-
-#endif /* __SOLIDIGM_DATA_AREA_H__ */

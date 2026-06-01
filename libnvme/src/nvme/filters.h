@@ -5,9 +5,7 @@
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
  */
-
-#ifndef _LIBNVME_FILTERS_H
-#define _LIBNVME_FILTERS_H
+#pragma once
 
 #include <dirent.h>
 
@@ -104,5 +102,3 @@ int libnvme_scan_ctrl_namespaces(libnvme_ctrl_t c, struct dirent ***ns);
  * Return: number of entries in @ents or a negative error code
  */
 int libnvme_scan_ns_head_paths(libnvme_ns_head_t head, struct dirent ***paths);
-
-#endif /* _LIBNVME_FILTERS_H */

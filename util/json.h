@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef __JSON__H
-#define __JSON__H
+#pragma once
 
 #ifdef CONFIG_JSONC
 #include <json.h>
@@ -79,5 +78,3 @@ void json_object_add_nprix64(struct json_object *o, const char *k, uint64_t v);
 void json_object_add_uint_0nx(struct json_object *o, const char *k, __u32 v, int width);
 void json_object_add_0nprix64(struct json_object *o, const char *k, uint64_t v, int width);
 void json_object_add_string(struct json_object *o, const char *k, const char *format, ...);
-
-#endif /* __JSON__H */

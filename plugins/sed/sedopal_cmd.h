@@ -1,7 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-
-#ifndef _SED_OPAL_CMD_H
-#define _SED_OPAL_CMD_H
+#pragma once
 
 #define	SEDOPAL_CURRENT_PW_PROMPT	"Password: "
 #define	SEDOPAL_NEW_PW_PROMPT		"New Password: "
@@ -55,5 +53,3 @@ int sedopal_open_nvme_device(char *device);
 int sedopal_lock_unlock(int fd, int lock_state);
 const char *sedopal_error_to_text(int code);
 int sedopal_locking_state(int fd);
-
-#endif /* _SED_OPAL_CMD_H */
