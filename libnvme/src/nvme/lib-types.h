@@ -12,6 +12,7 @@
 
 struct libnvme_global_ctx;
 struct libnvme_transport_handle;
+struct libnvme_mi_ep;
 
 /**
  * struct libnvme_passthru_cmd - nvme passthrough command structure
