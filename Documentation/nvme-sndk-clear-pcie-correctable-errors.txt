@@ -8,8 +8,7 @@ nvme-sndk-clear-pcie-correctable-errors - Clears the pcie correctable errors fie
 SYNOPSIS
 --------
 [verse]
-'nvme sndk clear-pcie-correctable-errors' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sndk clear-pcie-correctable-errors' <device>
 
 DESCRIPTION
 -----------

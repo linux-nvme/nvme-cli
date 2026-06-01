@@ -3922,7 +3922,7 @@ static int wdc_cap_diag(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_FILE("output-file",   'o', &cfg.file,      file),
+		OPT_FILE("output-file",   'O', &cfg.file,      file),
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -4350,11 +4350,11 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_FILE("output-file",   'o', &cfg.file,      file),
+		OPT_FILE("output-file",   'O', &cfg.file,      file),
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
 		OPT_FILE("type",          't', &cfg.type,      type),
-		OPT_FLAG("verbose",       'v', &cfg.verbose,   verbose),
+		OPT_FLAG("verbose",       'V', &cfg.verbose,   verbose),
 		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
 		OPT_LONG("offset",        'e', &cfg.offset,    offset),
 		OPT_END());
@@ -4727,7 +4727,7 @@ static int wdc_drive_log(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_FILE("output-file", 'o', &cfg.file, file));
+		OPT_FILE("output-file", 'O', &cfg.file, file));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -4773,7 +4773,7 @@ static int wdc_get_crash_dump(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_FILE("output-file", 'o', &cfg.file, file));
+		OPT_FILE("output-file", 'O', &cfg.file, file));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -4814,7 +4814,7 @@ static int wdc_get_pfail_dump(int argc, char **argv, struct command *acmd,
 	};
 
 	NVME_ARGS(opts,
-		OPT_FILE("output-file", 'o', &cfg.file, file));
+		OPT_FILE("output-file", 'O', &cfg.file, file));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -10513,7 +10513,7 @@ static int wdc_namespace_resize(int argc, char **argv,
 
 	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_UINT("op-option", 'o', &cfg.op_option, op_option));
+		OPT_UINT("op-option", 'O', &cfg.op_option, op_option));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
@@ -10573,7 +10573,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 
 	NVME_ARGS(opts,
 		OPT_UINT("log-id", 'i', &cfg.log_id, log_id),
-		OPT_FILE("file",   'o', &cfg.file,   fname));
+		OPT_FILE("file",   'O', &cfg.file,   fname));
 
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 
@@ -12311,7 +12311,7 @@ static int wdc_enc_get_log(int argc, char **argv, struct command *acmd, struct p
 	};
 
 	NVME_ARGS(opts,
-		OPT_FILE("output-file",   'o', &cfg.file,  file),
+		OPT_FILE("output-file",   'O', &cfg.file,  file),
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("log-id",        'l', &cfg.log_id, log));
 

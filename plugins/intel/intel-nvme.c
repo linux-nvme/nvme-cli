@@ -1379,8 +1379,8 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 		OPT_INT("region",        'r', &cfg.core,         core),
 		OPT_INT("nlognum",       'm', &cfg.lnum,         nlognum),
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
-		OPT_FILE("output-file",  'o', &cfg.file,         file),
-		OPT_FLAG("verbose-nlog", 'v', &cfg.verbose,      verbose));
+		OPT_FILE("output-file",  'O', &cfg.file,         file),
+		OPT_FLAG("verbose-nlog", 'V', &cfg.verbose,      verbose));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {

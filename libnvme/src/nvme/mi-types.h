@@ -13,6 +13,41 @@
 #include <nvme/nvme-types.h>
 
 /**
+ * DOC: mi-types.h - NVMe-MI wire protocol and messaging types
+ *
+ * This file defines the wire protocol types for NVMe Management Interface
+ * (NVMe-MI) messaging and transport layer. These are the low-level message
+ * structures used for MCTP/MI communication between a host and NVMe devices.
+ *
+ * Scope
+ * =====
+ * - MCTP message framing and headers
+ * - MI request/response message structures
+ * - MI command opcodes and protocol definitions
+ * - Admin command protocol over MI transport
+ * - Control primitives for MI communication
+ * - Asynchronous Event Messages (AEM)
+ * - Low-level transport and protocol details
+ *
+ * This file is primarily used by the libnvme-mi library implementation and
+ * is **internal to the MI transport layer**.
+ *
+ * Separation from nvme-types-mi.h
+ * ================================
+ * This file is **separate** from nvme-types-mi.h, which serves a different purpose:
+ *
+ * - **mi-types.h** (this file): Wire protocol, messaging, transport layer
+ *   - Used by: mi.h (MI library internals)
+ *   - Focus: How messages are sent/received over MCTP
+ *   - Analogy: TCP/IP headers and framing
+ *
+ * - **nvme-types-mi.h**: NVMe-MI data structures from the MI specification
+ *   - Used by: nvme-types.h (public API), applications
+ *   - Focus: MI data payloads (controller info, health status, VPD)
+ *   - Analogy: HTTP request/response bodies
+ */
+
+/**
  * NVME_MI_MSGTYPE_NVME - MCTP message type for NVMe-MI messages.
  *
  * This is defined by MCTP, but is referenced as part of the NVMe-MI message
@@ -267,7 +302,7 @@ struct nvme_mi_aem_supported_item {
  * nvme_mi_aem_aesi_get_aese() - return aese from aesi field
  * @aesi: aesi field from @nvme_mi_aem_supported_item
  *
- * Returns: A bool representing the aese value
+ * Return: A bool representing the aese value
  */
 bool nvme_mi_aem_aesi_get_aese(__le16 aesi);
 
@@ -275,7 +310,7 @@ bool nvme_mi_aem_aesi_get_aese(__le16 aesi);
  * nvme_mi_aem_aesi_get_aesid() - return aesid from aesi field
  * @aesi: aesi field from @nvme_mi_aem_supported_item
  *
- * Returns: aesid value
+ * Return: aesid value
  */
 __u8 nvme_mi_aem_aesi_get_aesid(__le16 aesi);
 
@@ -319,7 +354,7 @@ struct nvme_mi_aem_enable_item {
  * nvme_mi_aem_aeei_get_aee() - return aee from aeei field
  * @aeei: aeei field from @nvme_mi_aem_enable_item
  *
- * Returns: aee value
+ * Return: aee value
  */
 bool nvme_mi_aem_aeei_get_aee(__le16 aeei);
 
@@ -327,7 +362,7 @@ bool nvme_mi_aem_aeei_get_aee(__le16 aeei);
  * nvme_mi_aem_aeei_get_aeeid() - return aeeid from aeei field
  * @aeei: aeei field from @nvme_mi_aem_enable_item
  *
- * Returns: aeeid value
+ * Return: aeeid value
  */
 __u8 nvme_mi_aem_aeei_get_aeeid(__le16 aeei);
 
@@ -418,7 +453,7 @@ struct nvme_mi_aem_occ_list_hdr {
  * nvme_mi_aem_aemti_get_aemgn() - return aemgn from aemti field
  * @aemti: aemti field from @nvme_mi_aem_occ_list_hdr
  *
- * Returns: aemgn value
+ * Return: aemgn value
  */
 __u8 nvme_mi_aem_aemti_get_aemgn(__u8 aemti);
 
@@ -426,7 +461,7 @@ __u8 nvme_mi_aem_aemti_get_aemgn(__u8 aemti);
  * nvme_mi_aem_aeolli_get_aeoltl() - return aeoltl from aeolli field
  * @aeolli: Pointer to 3 byte aeolli field from @nvme_mi_aem_occ_list_hdr
  *
- * Returns: aeoltl value
+ * Return: aeoltl value
  */
 __u32 nvme_mi_aem_aeolli_get_aeoltl(__u8 *aeolli);
 

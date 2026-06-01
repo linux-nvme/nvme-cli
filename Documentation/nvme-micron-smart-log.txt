@@ -8,8 +8,7 @@ nvme-micron-smart-log - Retrieve SMART/Health log with Micron vendor-specific fi
 SYNOPSIS
 --------
 [verse]
-'nvme micron smart-log' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'micron smart-log' <device>
 
 DESCRIPTION
 -----------

@@ -8,8 +8,9 @@ nvme-intel-id-ctrl - Send NVMe Identify Controller, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme intel id-ctrl' <device> [--vendor-specific | -v] [--raw-binary | -b]
-			[<global-options>]
+'nvme' [<global-options>] 'intel id-ctrl' <device>
+			[--vendor-specific | -v]
+			[--raw-binary | -b]
 
 DESCRIPTION
 -----------

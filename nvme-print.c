@@ -1033,7 +1033,7 @@ const char *nvme_feature_to_string(enum nvme_features_id feature)
 	case NVME_FEAT_FID_NS_METADATA:		return "Namespace Metadata";
 	case NVME_FEAT_FID_SW_PROGRESS:		return "Software Progress";
 	case NVME_FEAT_FID_HOST_ID:		return "Host Identifier";
-	case NVME_FEAT_FID_RESV_MASK:		return "Reservation Notification Mask";
+	case NVME_FEAT_FID_RESV_NF_MASK:	return "Reservation Notification Mask";
 	case NVME_FEAT_FID_RESV_PERSIST:	return "Reservation Persistence";
 	case NVME_FEAT_FID_WRITE_PROTECT:	return "Namespace Write Protect";
 	case NVME_FEAT_FID_BP_WRITE_PROTECT:	return "Boot Partition Write Protection Config";

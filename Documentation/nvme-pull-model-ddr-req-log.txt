@@ -8,8 +8,7 @@ nvme-pull-model-ddr-req-log - Retrieve Pull Model DDC Request Log, show it
 SYNOPSIS
 --------
 [verse]
-'nvme pull-model-ddr-req-log' <device> [--rae | -r]
-			[<global-options>]
+'nvme' [<global-options>] 'pull-model-ddr-req-log' <device> [--rae | -r]
 
 DESCRIPTION
 -----------

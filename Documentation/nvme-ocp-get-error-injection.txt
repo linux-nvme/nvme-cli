@@ -8,9 +8,8 @@ nvme-ocp-get-error-injection - Return set of error injection
 SYNOPSIS
 --------
 [verse]
-'nvme ocp get-error-injection' <device> [--no-uuid | -n]
+'nvme' [<global-options>] 'ocp get-error-injection' <device> [--no-uuid | -n]
 			[--sel=<select> | -s <select>] [--all-ns | -a]
-			[<global-options>]
 
 DESCRIPTION
 -----------

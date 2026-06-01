@@ -21,22 +21,45 @@
  * DOC: nvme-types-nvm.h
  *
  * NVM Command Set type definitions
+ *
+ * Based on NVM Express NVM Command Set Specification,
+ * Revision 1.2, August 1, 2025 (Ratified)
+ *
+ * This file is organized into functional groups:
+ * - NVM Namespace Identification: Extended LBA formats and namespace-specific data
+ * - I/O Command Set Support: Command set identification and capabilities
+ * - Reservation Notifications: Log pages for reservation events
+ * - Flexible Data Placement (FDP): Comprehensive FDP feature support including
+ *   configuration, events, statistics, and status reporting
+ * - Data Set Management & Copy: DSM ranges and copy operation formats
+ * - Reservation Support: Controller registration and reservation management
+ * - I/O Management: Control flags and management operations
  */
 
 /**
  * enum nvme_nvm_id_ns_elbaf - This field indicates the extended LBA format
+ * @NVME_NVM_ELBAF_STS_SHIFT:	Shift to get the storage tag size
  * @NVME_NVM_ELBAF_STS_MASK:	Mask to get the storage tag size used to determine
  *				the variable-sized storage tag/reference tag fields
+ * @NVME_NVM_ELBAF_PIF_SHIFT:	Shift to get the protection information format
  * @NVME_NVM_ELBAF_PIF_MASK:	Mask to get the protection information format for
  *				the extended LBA format.
+ * @NVME_NVM_ELBAF_QPIF_SHIFT:	Shift to get the Qualified Protection Information Format
  * @NVME_NVM_ELBAF_QPIF_MASK:	Mask to get the Qualified Protection Information
  *				Format.
  */
 enum nvme_nvm_id_ns_elbaf {
-	NVME_NVM_ELBAF_STS_MASK		= 127 << 0,
-	NVME_NVM_ELBAF_PIF_MASK		= 3 << 7,
-	NVME_NVM_ELBAF_QPIF_MASK	= 15 << 9,
+	NVME_NVM_ELBAF_STS_SHIFT	= 0,
+	NVME_NVM_ELBAF_STS_MASK		= 0x7f,
+	NVME_NVM_ELBAF_PIF_SHIFT	= 7,
+	NVME_NVM_ELBAF_PIF_MASK		= 0x3,
+	NVME_NVM_ELBAF_QPIF_SHIFT	= 9,
+	NVME_NVM_ELBAF_QPIF_MASK	= 0xf,
 };
+
+#define NVME_NVM_ELBAF_STS(elbaf)	NVME_GET(elbaf, NVM_ELBAF_STS)
+#define NVME_NVM_ELBAF_PIF(elbaf)	NVME_GET(elbaf, NVM_ELBAF_PIF)
+#define NVME_NVM_ELBAF_QPIF(elbaf)	NVME_GET(elbaf, NVM_ELBAF_QPIF)
 
 /**
  * enum nvme_nvm_id_ns_pif - This field indicates the type of the Protection
@@ -55,6 +78,68 @@ enum nvme_nvm_id_ns_pif {
 	NVME_NVM_PIF_64B_GUARD		= 2,
 	NVME_NVM_PIF_QTYPE		= 3,
 };
+
+/**
+ * enum nvme_nvm_id_ns_lbstm - Logical Block Storage Tag Mask
+ * @NVME_NVM_LBSTM_DEALLOCATED_SHIFT:	Shift amount to get Deallocated/Unwritten Logical Block error time
+ * @NVME_NVM_LBSTM_DEALLOCATED_MASK:	Mask to get Deallocated/Unwritten Logical Block error time
+ * @NVME_NVM_LBSTM_WRITTEN_SHIFT:	Shift amount to get Written Logical Block error time
+ * @NVME_NVM_LBSTM_WRITTEN_MASK:	Mask to get Written Logical Block error time
+ */
+enum nvme_nvm_id_ns_lbstm {
+	NVME_NVM_LBSTM_DEALLOCATED_SHIFT	= 0,
+	NVME_NVM_LBSTM_DEALLOCATED_MASK		= 0xffff,
+	NVME_NVM_LBSTM_WRITTEN_SHIFT		= 16,
+	NVME_NVM_LBSTM_WRITTEN_MASK		= 0xffff,
+};
+
+#define NVME_NVM_LBSTM_DEALLOCATED(lbstm)	NVME_GET(lbstm, NVM_LBSTM_DEALLOCATED)
+#define NVME_NVM_LBSTM_WRITTEN(lbstm)		NVME_GET(lbstm, NVM_LBSTM_WRITTEN)
+
+/**
+ * enum nvme_nvm_id_ns_pic - Protection Information Capabilities
+ * @NVME_NVM_PIC_PITPS16B_SHIFT:Shift amount to get 16b Guard Protection Information Storage Tag Support
+ * @NVME_NVM_PIC_PITPS16B_MASK:	Mask to get 16b Guard Protection Information Storage Tag Support
+ * @NVME_NVM_PIC_PISTM16B_SHIFT:Shift amount to get 16b Guard Protection Information Storage Tag Mask
+ * @NVME_NVM_PIC_PISTM16B_MASK:	Mask to get 16b Guard Protection Information Storage Tag Mask
+ * @NVME_NVM_PIC_STCRS_SHIFT:	Shift amount to get Storage Tag Check Read Support
+ * @NVME_NVM_PIC_STCRS_MASK:	Mask to get Storage Tag Check Read Support
+ * @NVME_NVM_PIC_QPIFS_SHIFT:Shift amount to get Qualified Protection Information Format Support
+ * @NVME_NVM_PIC_QPIFS_MASK:	Mask to get Qualified Protection Information Format Support
+ */
+enum nvme_nvm_id_ns_pic {
+	NVME_NVM_PIC_PITPS16B_SHIFT	= 0,
+	NVME_NVM_PIC_PITPS16B_MASK	= 0x1,
+	NVME_NVM_PIC_PISTM16B_SHIFT	= 1,
+	NVME_NVM_PIC_PISTM16B_MASK	= 0x1,
+	NVME_NVM_PIC_STCRS_SHIFT	= 2,
+	NVME_NVM_PIC_STCRS_MASK		= 0x1,
+	NVME_NVM_PIC_QPIFS_SHIFT	= 3,
+	NVME_NVM_PIC_QPIFS_MASK		= 0x1,
+};
+
+#define NVME_NVM_PIC_PITPS16B(pic)	NVME_GET(pic, NVM_PIC_PITPS16B)
+#define NVME_NVM_PIC_PISTM16B(pic)	NVME_GET(pic, NVM_PIC_PISTM16B)
+#define NVME_NVM_PIC_STCRS(pic)		NVME_GET(pic, NVM_PIC_STCRS)
+#define NVME_NVM_PIC_QPIFS(pic)		NVME_GET(pic, NVM_PIC_QPIFS)
+
+/**
+ * enum nvme_nvm_id_ns_pifa - Protection Information Format Attribute
+ * @NVME_NVM_PIFA_STMLA_SHIFT:			Shift amount to get Storage Tag Masking Level Attribute
+ * @NVME_NVM_PIFA_STMLA_MASK:			Mask to get Storage Tag Masking Level Attribute
+ * @NVME_NVM_PIFA_BIT_GRANULARITY_MASKING:	Bit Granularity Masking
+ * @NVME_NVM_PIFA_BYTE_GRANULARITY_MASKING:	Byte Granularity Masking
+ * @NVME_NVM_PIFA_MASKING_NOT_SUPPORTED:	Masking Not Supported
+ */
+enum nvme_nvm_id_ns_pifa {
+	NVME_NVM_PIFA_STMLA_SHIFT		= 0,
+	NVME_NVM_PIFA_STMLA_MASK		= 0xf,
+	NVME_NVM_PIFA_BIT_GRANULARITY_MASKING	= 0x0,
+	NVME_NVM_PIFA_BYTE_GRANULARITY_MASKING	= 0x1,
+	NVME_NVM_PIFA_MASKING_NOT_SUPPORTED	= 0x2,
+};
+
+#define NVME_NVM_PIFA_STMLA(pifa)	NVME_GET(pifa, NVM_PIFA_STMLA)
 
 /**
  * struct nvme_nvm_id_ns - NVME Command Set I/O Command Set Specific Identify Namespace Data Structure
@@ -117,6 +202,12 @@ enum nvme_id_iocs_iocsc {
 	NVME_IOCS_IOCSC_CPNCS_SHIFT	= 4,
 	NVME_IOCS_IOCSC_CPNCS_MASK	= 0x1,
 };
+
+#define NVME_IOCS_IOCSC_NVMCS(iocsc)	NVME_GET(iocsc, IOCS_IOCSC_NVMCS)
+#define NVME_IOCS_IOCSC_KVCS(iocsc)	NVME_GET(iocsc, IOCS_IOCSC_KVCS)
+#define NVME_IOCS_IOCSC_ZNSCS(iocsc)	NVME_GET(iocsc, IOCS_IOCSC_ZNSCS)
+#define NVME_IOCS_IOCSC_SLMCS(iocsc)	NVME_GET(iocsc, IOCS_IOCSC_SLMCS)
+#define NVME_IOCS_IOCSC_CPNCS(iocsc)	NVME_GET(iocsc, IOCS_IOCSC_CPNCS)
 
 /**
  * struct nvme_resv_notification_log - Reservation Notification Log
@@ -188,6 +279,10 @@ enum nvme_fdp_config_fdpa {
 	NVME_FDP_CONFIG_FDPA_VALID_MASK = 0x1,
 };
 
+#define NVME_FDP_CONFIG_FDPA_RGIF(fdpa)		NVME_GET(fdpa, FDP_CONFIG_FDPA_RGIF)
+#define NVME_FDP_CONFIG_FDPA_FDPVWC(fdpa)	NVME_GET(fdpa, FDP_CONFIG_FDPA_FDPVWC)
+#define NVME_FDP_CONFIG_FDPA_VALID(fdpa)	NVME_GET(fdpa, FDP_CONFIG_FDPA_VALID)
+
 /**
  * struct nvme_fdp_config_desc - FDP Configuration Descriptor
  * @size:	Descriptor size
@@ -247,6 +342,9 @@ enum nvme_fdp_ruha {
 	NVME_FDP_RUHA_CTRL_SHIFT	= 1,
 	NVME_FDP_RUHA_CTRL_MASK		= 0x1,
 };
+
+#define NVME_FDP_RUHA_HOST(ruha)	NVME_GET(ruha, FDP_RUHA_HOST)
+#define NVME_FDP_RUHA_CTRL(ruha)	NVME_GET(ruha, FDP_RUHA_CTRL)
 
 /**
  * struct nvme_fdp_ruhu_desc - Reclaim Unit Handle Usage Descriptor
@@ -402,6 +500,8 @@ enum nvme_fdp_supported_event_attributes {
 	NVME_FDP_SUPP_EVENT_ENABLED_SHIFT = 0,
 	NVME_FDP_SUPP_EVENT_ENABLED_MASK  = 0x1,
 };
+
+#define NVME_FDP_SUPP_EVENT_ENABLED(evta)	NVME_GET(evta, FDP_SUPP_EVENT_ENABLED)
 
 /**
  * struct nvme_fdp_supported_event_desc - Supported FDP Event Descriptor

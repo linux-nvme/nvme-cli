@@ -9,8 +9,8 @@ given zip file.
 SYNOPSIS
 --------
 [verse]
-'nvme micron vs-internal-log' <device> [--package=<FILE>, -p <FILE>]
-			[<global-options>]
+'nvme' [<global-options>] 'micron vs-internal-log' <device>
+			[--package=<FILE>, -p <FILE>]
 
 DESCRIPTION
 -----------

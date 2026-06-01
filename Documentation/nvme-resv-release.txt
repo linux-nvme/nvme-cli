@@ -8,11 +8,12 @@ nvme-resv-release - Release an nvme reservation
 SYNOPSIS
 --------
 [verse]
-'nvme resv-release' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'resv-release' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
 			[--crkey=<crkey> | -c <crkey>]
 			[--rtype=<rtype> | -t <rtype>]
-			[--rrela=<rrela> | -a <rrela>] [--iekey | -i]
-			[<global-options>]
+			[--rrela=<rrela> | -a <rrela>]
+			[--iekey | -i]
 
 DESCRIPTION
 -----------

@@ -8,8 +8,7 @@ nvme-sndk-clear-fw-activate-history - Clears the firmware activate history table
 SYNOPSIS
 --------
 [verse]
-'nvme sndk clear-fw-activate-history' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sndk clear-fw-activate-history' <device>
 
 DESCRIPTION
 -----------

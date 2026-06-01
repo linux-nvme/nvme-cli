@@ -8,8 +8,7 @@ nvme-solidigm-cloud-SSDplugin-version - Prints plug-in OCP version
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm cloud-SSDplugin-version'
-			[<global-options>]
+'nvme' [<global-options>] 'solidigm cloud-SSDplugin-version'
 
 DESCRIPTION
 -----------

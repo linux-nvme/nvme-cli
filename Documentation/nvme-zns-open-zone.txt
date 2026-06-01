@@ -8,10 +8,11 @@ nvme-zns-open-zone - Opens one or all zones
 SYNOPSIS
 --------
 [verse]
-'nvme zns open-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
-			[--start-lba=<LBA> | -s <LBA>] [--zrwaa | -r]
+'nvme' [<global-options>] 'zns open-zone' <device>
+			[--namespace-id=<NUM> | -n <NUM>]
+			[--start-lba=<LBA> | -s <LBA>]
+			[--zrwaa | -r]
 			[--select-all | -a]
-			[<global-options>]
 
 DESCRIPTION
 -----------

@@ -8,8 +8,10 @@ nvme-solidigm-workload-tracker - Real-time capture of Workload Tracker samples
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm workload-tracker' <device> [--uuid-index=<id> | -U <id>]
-			[--enable | -e] [--disable | -d]
+'nvme' [<global-options>] 'solidigm workload-tracker' <device>
+			[--uuid-index=<id> | -U <id>]
+			[--enable | -e]
+			[--disable | -d]
 			[--sample-time=<time> | -s <time>]
 			[--type=<type> | -t <type>]
 			[--run-time=<seconds> | -r <seconds>]
@@ -19,7 +21,6 @@ SYNOPSIS
 			[--trigger-threshold=<value> | -V <value>]
 			[--trigger-on-delta | -D]
 			[--trigger-on-latency | -L]
-			[<global-options>]
 
 DESCRIPTION
 -----------

@@ -303,13 +303,13 @@ static int test_ctrl(libnvme_ctrl_t c)
 			(uint64_t)cmd.result);
 	else if (ret > 0)
 		printf("  ERROR: Sanitize:%x\n", ret);
-	nvme_init_get_features_resv_mask(&cmd, 0, sel);
+	nvme_init_get_features_resv_nf_mask(&cmd, 0, sel);
 	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!ret)
-		printf("  Reservation Mask:%" PRIu64 "\n",
+		printf("  Reservation Notification Mask:%" PRIu64 "\n",
 			(uint64_t)cmd.result);
 	else if (ret > 0)
-		printf("  ERROR: Reservation Mask:%x\n", ret);
+		printf("  ERROR: Reservation Notification Mask:%x\n", ret);
 	nvme_init_get_features_resv_persist(&cmd, 0, sel);
 	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!ret)

@@ -8,8 +8,10 @@ nvme-sed-lock - Lock a SED Opal Device
 SYNOPSIS
 --------
 [verse]
-'nvme sed lock' [--read-only | -r] [--ask-key | -k] <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sed lock'
+			[--read-only | -r]
+			[--ask-key | -k]
+			<device>
 
 DESCRIPTION
 -----------

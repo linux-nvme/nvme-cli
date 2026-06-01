@@ -8,7 +8,7 @@ nvme-get-reg - Read and show the defined NVMe controller register
 SYNOPSIS
 --------
 [verse]
-'nvme get-reg' <device> [--offset=<offset>, -O <offset>]
+'nvme' [<global-options>] 'get-reg' <device> [--offset=<offset>, -O <offset>]
 			[--cap] [--vs] [--cmbloc] [--cmbsz] [--bpinfo]
 			[--cmbsts] [--cmbebs] [--cmbswtp] [--crto] [--pmrcap]
 			[--pmrsts] [--pmrebs] [--pmrswtp] [--intms] [--intmc]
@@ -16,7 +16,6 @@ SYNOPSIS
 			[--bprsel] [--bpmbl] [--cmbmsc] [--nssd] [--pmrctl]
 			[--pmrmscl] [--pmrmscu]
 			[--human-readable | -H]
-			[<global-options>]
 
 DESCRIPTION
 -----------

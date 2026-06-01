@@ -8,8 +8,9 @@ nvme-fdp-stats - Get Flexible Data Placement Statistics
 SYNOPSIS
 --------
 [verse]
-'nvme fdp stats' <device> [--endgrp-id=<NUM> | -e <NUM>] [--raw-binary | -b]
-			[<global-options>]
+'nvme' [<global-options>] 'fdp stats' <device>
+			[--endgrp-id=<NUM> | -e <NUM>]
+			[--raw-binary | -b]
 
 DESCRIPTION
 -----------

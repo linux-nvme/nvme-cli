@@ -18,9 +18,20 @@
 #include <nvme/nvme-types-base.h>
 
 /**
- * DOC: nvme-types-mi.h
+ * DOC: nvme-types-mi.h - NVMe-MI data structure type definitions
  *
  * NVMe Management Interface type definitions
+ *
+ * Based on NVM Express Management Interface Specification,
+ * Revision 2.1, August 1, 2025 (Ratified)
+ *
+ * This file contains core NVMe types organized by functional area:
+ * - MI command data structures (controller info, port info, etc.)
+ * - Health status structures (subsystem and controller health)
+ * - VPD (Vital Product Data) structures
+ * - MI log page structures
+ * - Command effects and capabilities
+ * - Spec-defined data payloads
  */
 
 /**
@@ -55,14 +66,16 @@ enum nvme_mi_cmd_supported_effects {
 	NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE_NSS	    = 1 << 5,
 };
 
+#define NVME_MI_CMD_SUPPORTED_EFFECTS_SCOPE(effects)	NVME_GET(effects, MI_CMD_SUPPORTED_EFFECTS_SCOPE)
+
 /**
  * struct nvme_mi_cmd_supported_effects_log - NVMe-MI Commands Supported and Effects Log
  * @mi_cmd_support:	NVMe-MI Commands Supported
- * @reserved1:		Reserved
+ * @rsvd128:		Reserved
  */
 struct nvme_mi_cmd_supported_effects_log {
 	__le32	mi_cmd_support[NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_MAX];
-	__le32	reserved1[NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED];
+	__le32	rsvd128[NVME_LOG_MI_CMD_SUPPORTED_EFFECTS_RESERVED];
 };
 
 /**
@@ -183,9 +196,58 @@ struct nvme_mi_read_sc_list {
 };
 
 /**
+ * enum nvme_mi_nss - NVM Subsystem Status
+ * @NVME_MI_NSS_NRDY_SHIFT:	Shift amount to get Not Ready
+ * @NVME_MI_NSS_NRDY_MASK:	Mask to get Not Ready
+ * @NVME_MI_NSS_DRV_SHIFT:	Shift amount to get Drive Ready
+ * @NVME_MI_NSS_DRV_MASK:	Mask to get Drive Ready
+ */
+enum nvme_mi_nss {
+	NVME_MI_NSS_NRDY_SHIFT		= 0,
+	NVME_MI_NSS_NRDY_MASK		= 0x1,
+	NVME_MI_NSS_DRV_SHIFT		= 1,
+	NVME_MI_NSS_DRV_MASK		= 0x1,
+};
+
+#define NVME_MI_NSS_NRDY(nss)	NVME_GET(nss, MI_NSS_NRDY)
+#define NVME_MI_NSS_DRV(nss)	NVME_GET(nss, MI_NSS_DRV)
+
+/**
+ * enum nvme_mi_sw - Smart Warnings
+ * @NVME_MI_SW_ST_SHIFT:	Shift amount to get Spare Threshold
+ * @NVME_MI_SW_ST_MASK:		Mask to get Spare Threshold
+ * @NVME_MI_SW_TAUT_SHIFT:	Shift amount to get Temperature Above or Under Threshold
+ * @NVME_MI_SW_TAUT_MASK:	Mask to get Temperature Above or Under Threshold
+ * @NVME_MI_SW_RD_SHIFT:	Shift amount to get Reliability Degraded
+ * @NVME_MI_SW_RD_MASK:		Mask to get Reliability Degraded
+ * @NVME_MI_SW_RO_SHIFT:	Shift amount to get Read Only
+ * @NVME_MI_SW_RO_MASK:		Mask to get Read Only
+ * @NVME_MI_SW_VMBF_SHIFT:	Shift amount to get Volatile Memory Backup Failed
+ * @NVME_MI_SW_VMBF_MASK:	Mask to get Volatile Memory Backup Failed
+ */
+enum nvme_mi_sw {
+	NVME_MI_SW_ST_SHIFT		= 0,
+	NVME_MI_SW_ST_MASK		= 0x1,
+	NVME_MI_SW_TAUT_SHIFT		= 1,
+	NVME_MI_SW_TAUT_MASK		= 0x1,
+	NVME_MI_SW_RD_SHIFT		= 2,
+	NVME_MI_SW_RD_MASK		= 0x1,
+	NVME_MI_SW_RO_SHIFT		= 3,
+	NVME_MI_SW_RO_MASK		= 0x1,
+	NVME_MI_SW_VMBF_SHIFT		= 4,
+	NVME_MI_SW_VMBF_MASK		= 0x1,
+};
+
+#define NVME_MI_SW_ST(sw)	NVME_GET(sw, MI_SW_ST)
+#define NVME_MI_SW_TAUT(sw)	NVME_GET(sw, MI_SW_TAUT)
+#define NVME_MI_SW_RD(sw)	NVME_GET(sw, MI_SW_RD)
+#define NVME_MI_SW_RO(sw)	NVME_GET(sw, MI_SW_RO)
+#define NVME_MI_SW_VMBF(sw)	NVME_GET(sw, MI_SW_VMBF)
+
+/**
  * struct nvme_mi_nvm_ss_health_status - Subsystem Management Data Structure
- * @nss:	NVM Subsystem Status
- * @sw:		Smart Warnings
+ * @nss:	NVM Subsystem Status (see &enum nvme_mi_nss)
+ * @sw:		Smart Warnings (see &enum nvme_mi_sw)
  * @ctemp:	Composite Temperature
  * @pdlu:	Percentage Drive Life Used
  * @ccs:	Composite Controller Status
@@ -445,17 +507,3 @@ struct nvme_mi_vpd_hdr {
 	__u8	chchk;
 	__u8	vpd[];
 };
-
-/* backwards compat for old "CCS" definitions */
-#define nvme_mi_css		nvme_mi_ccs
-#define NVME_MI_CSS_CFS		NVME_MI_CCS_CFS
-#define NVME_MI_CSS_SHST	NVME_MI_CCS_SHST
-#define NVME_MI_CSS_NSSRO	NVME_MI_CCS_NSSRO
-#define NVME_MI_CSS_CECO	NVME_MI_CCS_CECO
-#define NVME_MI_CSS_NAC		NVME_MI_CCS_NAC
-#define NVME_MI_CSS_FA		NVME_MI_CCS_FA
-#define NVME_MI_CSS_CSTS	NVME_MI_CCS_CSTS
-#define NVME_MI_CSS_CTEMP	NVME_MI_CCS_CTEMP
-#define NVME_MI_CSS_PDLU	NVME_MI_CCS_PDLU
-#define NVME_MI_CSS_SPARE	NVME_MI_CCS_SPARE
-#define NVME_MI_CSS_CCWARN	NVME_MI_CCS_CCWARN

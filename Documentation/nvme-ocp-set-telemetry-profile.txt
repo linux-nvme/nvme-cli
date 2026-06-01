@@ -8,9 +8,8 @@ nvme-ocp-set-telemetry-profile - Set Telemetry Profile
 SYNOPSIS
 --------
 [verse]
-'nvme ocp set-telemetry-profile' <device>
+'nvme' [<global-options>] 'ocp set-telemetry-profile' <device>
 			[--telemetry-profile-select=<tps> | -t <tps>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

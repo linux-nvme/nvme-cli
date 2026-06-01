@@ -21,6 +21,21 @@
  * DOC: nvme-types-fabrics.h
  *
  * NVMe over Fabrics type definitions
+ *
+ * Based on:
+ * - NVM Express over RDMA Transport Specification, Revision 1.2,
+ *   August 1, 2025 (Ratified)
+ * - NVM Express over TCP Transport Specification, Revision 1.2,
+ *   August 1, 2025 (Ratified)
+ * - NVM Express Base Specification (Fabrics command set sections)
+ *
+ * This file is organized by functional area:
+ * - Discovery: Discovery log entries and log pages
+ * - Transport Configuration: Transport types, addressing, requirements
+ * - RDMA-Specific: RDMA queue pairs, providers, connection management
+ * - TCP-Specific: TCP security types
+ * - Discovery Information Model (DIM): Extended discovery attributes
+ * - Connection: Connect command data structures
  */
 
 #define NVME_DISC_SUBSYS_NAME	"nqn.2014-08.org.nvmexpress.discovery"
@@ -122,6 +137,23 @@ union nvmf_tsas {
 	} tcp;
 };
 
+/**
+ * struct nvmf_disc_log_entry - Discovery Log Page Entry
+ * @trtype:	Transport Type (see &enum nvmf_trtype)
+ * @adrfam:	Address Family (see &enum nvmf_addr_family)
+ * @subtype:	Subsystem Type
+ * @treq:	Transport Requirements (see &enum nvmf_treq)
+ * @portid:	Port ID
+ * @cntlid:	Controller ID
+ * @asqsz:	Admin Submission Queue Size
+ * @eflags:	Entry Flags (see &enum nvmf_disc_eflags)
+ * @rsvd12:	Reserved
+ * @trsvcid:	Transport Service Identifier
+ * @rsvd64:	Reserved
+ * @subnqn:	NVM Subsystem Qualified Name
+ * @traddr:	Transport Address
+ * @tsas:	Transport Specific Address Subtype (see &union nvmf_tsas)
+ */
 struct nvmf_disc_log_entry {
 	__u8		trtype;
 	__u8		adrfam;
@@ -179,17 +211,28 @@ enum nvmf_addr_family {
 
 /**
  * enum nvmf_treq - Transport Requirements codes for Discovery Log Page entry TREQ field
+ * @NVMF_TREQ_SECTYPE_SHIFT:	Shift amount to get Secure Channel requirement
+ * @NVMF_TREQ_SECTYPE_MASK:	Mask to get Secure Channel requirement
  * @NVMF_TREQ_NOT_SPECIFIED:	Not specified
  * @NVMF_TREQ_REQUIRED:		Required
  * @NVMF_TREQ_NOT_REQUIRED:	Not Required
+ * @NVMF_TREQ_DISABLE_SQFLOW_SHIFT: Shift amount to get SQ flow control disable
+ * @NVMF_TREQ_DISABLE_SQFLOW_MASK:  Mask to get SQ flow control disable
  * @NVMF_TREQ_DISABLE_SQFLOW:	SQ flow control disable supported
  */
 enum nvmf_treq {
+	NVMF_TREQ_SECTYPE_SHIFT		= 0,
+	NVMF_TREQ_SECTYPE_MASK		= 0x3,
 	NVMF_TREQ_NOT_SPECIFIED		= 0,
 	NVMF_TREQ_REQUIRED		= 1,
 	NVMF_TREQ_NOT_REQUIRED		= 2,
-	NVMF_TREQ_DISABLE_SQFLOW	= 4,
+	NVMF_TREQ_DISABLE_SQFLOW_SHIFT	= 2,
+	NVMF_TREQ_DISABLE_SQFLOW_MASK	= 0x1,
+	NVMF_TREQ_DISABLE_SQFLOW	= 1 << 2,
 };
+
+#define NVMF_TREQ_SECTYPE(treq)		NVMF_GET(treq, TREQ_SECTYPE)
+#define NVMF_TREQ_DISABLE_SQFLOW_BIT(treq) NVMF_GET(treq, TREQ_DISABLE_SQFLOW)
 
 /**
  * enum nvmf_rdma_qptype - RDMA QP Service Type codes for Discovery Log Page

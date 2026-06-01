@@ -8,8 +8,7 @@ nvme-solidigm-garbage-collect-log - Retrieve Garbage Collection Log
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm garbage-collect-log' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'solidigm garbage-collect-log' <device>
 
 DESCRIPTION
 -----------

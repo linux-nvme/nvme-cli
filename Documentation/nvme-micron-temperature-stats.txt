@@ -8,8 +8,7 @@ nvme-micron-temperature-stats - Retrieves temperature information of given micro
 SYNOPSIS
 --------
 [verse]
-'nvme micron vs-temperature-stats' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'micron vs-temperature-stats' <device>
 
 DESCRIPTION
 -----------

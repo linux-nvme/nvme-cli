@@ -129,6 +129,9 @@ static void show_option(const struct argconfig_commandline_options *option)
 void argconfig_print_help(const char *program_desc,
 			  struct argconfig_commandline_options *s)
 {
+	const char *pending_header = "Options";
+	bool header_printed = false;
+
 	fprintf(stderr, "\033[1mUsage: %s\033[0m\n\n",
 		append_usage_str);
 
@@ -138,9 +141,18 @@ void argconfig_print_help(const char *program_desc,
 	if (!s || !s->option)
 		return;
 
-	fprintf(stderr, "\n\033[1mOptions:\033[0m\n");
-	for (; s->option; s++)
+	for (; s->option; s++) {
+		if (s->config_type == CFG_GROUP_SEPARATOR) {
+			pending_header = s->help;
+			header_printed = false;
+			continue;
+		}
+		if (!header_printed) {
+			fprintf(stderr, "\n\033[1m%s:\033[0m\n", pending_header);
+			header_printed = true;
+		}
 		show_option(s);
+	}
 }
 
 static int argconfig_error(char *type, const char *opt, const char *arg)
@@ -214,6 +226,8 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s)
 	case CFG_FLAG:
 		*(bool *)value = true;
 		break;
+	case CFG_GROUP_SEPARATOR:
+		break;
 	}
 
 	return ret;
@@ -251,6 +265,8 @@ static void argconfig_set_opt_val(enum argconfig_types type, union argconfig_val
 		break;
 	case CFG_STRING:
 		*(char **)val = opt_val->string;
+		break;
+	case CFG_GROUP_SEPARATOR:
 		break;
 	}
 }
@@ -305,8 +321,9 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 {
 	__cleanup_free char *short_opts = NULL;
 	__cleanup_free struct option *long_opts = NULL;
+	__cleanup_free int *long_opt_map = NULL;
 	struct argconfig_commandline_options *s;
-	int c, option_index = 0, short_index = 0, options_count = 0;
+	int c, long_opt_index = 0, opt_index = 0, short_index = 0, options_count = 0;
 	int ret = 0;
 
 	errno = 0;
@@ -315,13 +332,17 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 
 	long_opts = calloc(options_count + 2, sizeof(struct option));
 	short_opts = calloc(options_count * 3 + 3, sizeof(*short_opts));
+	long_opt_map = calloc(options_count + 2, sizeof(*long_opt_map));
 
-	if (!long_opts || !short_opts) {
+	if (!long_opts || !short_opts || !long_opt_map) {
 		fprintf(stderr, "failed to allocate memory for opts: %s\n", libnvme_strerror(errno));
 		return -errno;
 	}
 
-	for (s = options; s->option; s++) {
+	for (s = options, opt_index = 0; s->option; s++, opt_index++) {
+		s->seen = false;
+		if (s->config_type == CFG_GROUP_SEPARATOR)
+			continue;
 		if (s->short_option) {
 			short_opts[short_index++] = s->short_option;
 			if (s->argument_type == required_argument ||
@@ -331,36 +352,38 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 				short_opts[short_index++] = ':';
 		}
 		if (!is_null_or_empty(s->option)) {
-			long_opts[option_index].name = s->option;
-			long_opts[option_index].has_arg = s->argument_type;
+			long_opts[long_opt_index].name = s->option;
+			long_opts[long_opt_index].has_arg = s->argument_type;
+			long_opt_map[long_opt_index] = opt_index;
+			long_opt_index++;
 		}
-		s->seen = false;
-		option_index++;
 	}
 
-	long_opts[option_index].name = "help";
-	long_opts[option_index].val = 'h';
+	long_opts[long_opt_index].name = "help";
+	long_opts[long_opt_index].val = 'h';
 
 	short_opts[short_index++] = '?';
 	short_opts[short_index] = 'h';
 
 	optind = 0;
-	while ((c = getopt_long_only(argc, argv, short_opts, long_opts, &option_index)) != -1) {
+	while ((c = getopt_long_only(argc, argv, short_opts, long_opts, &long_opt_index)) != -1) {
 		if (c) {
 			if (c == '?' || c == 'h') {
 				argconfig_print_help(program_desc, options);
 				ret = -EINVAL;
 				break;
 			}
-			for (option_index = 0; option_index < options_count; option_index++) {
-				if (c == options[option_index].short_option)
+			for (opt_index = 0; opt_index < options_count; opt_index++) {
+				if (c == options[opt_index].short_option)
 					break;
 			}
-			if (option_index == options_count)
+			if (opt_index == options_count)
 				continue;
+		} else {
+			opt_index = long_opt_map[long_opt_index];
 		}
 
-		s = &options[option_index];
+		s = &options[opt_index];
 		s->seen = true;
 
 		if (!s->default_value)
@@ -373,6 +396,97 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 
 	if (!argconfig_check_human_readable(options))
 		setlocale(LC_ALL, "C");
+
+	return ret;
+}
+
+/*
+ * Parse global (pre-subcommand) options from argc/argv. Stops at the first
+ * non-option argument (i.e. the subcommand name) so that subcommand-specific
+ * options are left in place for the subcommand dispatcher. After a successful
+ * call, optind points to the first non-option argument (the subcommand).
+ *
+ * Returns 0 on success, negative errno on failure.
+ */
+int argconfig_parse_global(int argc, char *argv[],
+			   struct argconfig_commandline_options *options)
+{
+	__cleanup_free char *short_opts = NULL;
+	__cleanup_free struct option *long_opts = NULL;
+	__cleanup_free int *long_opt_map = NULL;
+	struct argconfig_commandline_options *s;
+	int c, long_opt_index = 0, opt_index = 0;
+	int short_index = 0, options_count = 0;
+	int ret = 0;
+
+	errno = 0;
+	for (s = options; s->option; s++)
+		options_count++;
+
+	long_opts = calloc(options_count + 2, sizeof(struct option));
+	/* '+' prefix: stop at the first non-option argument (the subcommand) */
+	short_opts = calloc(options_count * 3 + 4, sizeof(*short_opts));
+	long_opt_map = calloc(options_count + 2, sizeof(*long_opt_map));
+
+	if (!long_opts || !short_opts || !long_opt_map) {
+		fprintf(stderr, "failed to allocate memory for opts: %s\n",
+			libnvme_strerror(errno));
+		return -errno;
+	}
+
+	short_opts[short_index++] = '+';
+
+	for (s = options, opt_index = 0; s->option; s++, opt_index++) {
+		s->seen = false;
+		if (s->config_type == CFG_GROUP_SEPARATOR)
+			continue;
+		if (s->short_option) {
+			short_opts[short_index++] = s->short_option;
+			if (s->argument_type == required_argument ||
+			    s->argument_type == optional_argument)
+				short_opts[short_index++] = ':';
+			if (s->argument_type == optional_argument)
+				short_opts[short_index++] = ':';
+		}
+		if (!is_null_or_empty(s->option)) {
+			long_opts[long_opt_index].name = s->option;
+			long_opts[long_opt_index].has_arg = s->argument_type;
+			long_opt_map[long_opt_index] = opt_index;
+			long_opt_index++;
+		}
+	}
+
+	optind = 0;
+	while ((c = getopt_long(argc, argv, short_opts,
+			long_opts, &long_opt_index)) != -1) {
+		 if (c == '?' || c == ':') {
+ 			ret = -EINVAL;
+ 			break;
+ 		}
+		if (c) {
+			for (opt_index = 0; opt_index < options_count;
+					opt_index++) {
+				if (c == options[opt_index].short_option)
+					break;
+			}
+ 			if (opt_index == options_count) {
+ 				ret = -EINVAL;
+ 				break;
+			}
+		} else {
+			opt_index = long_opt_map[long_opt_index];
+		}
+
+		s = &options[opt_index];
+		s->seen = true;
+
+		if (!s->default_value)
+			continue;
+
+		ret = argconfig_parse_val(s);
+		if (ret)
+			break;
+	}
 
 	return ret;
 }

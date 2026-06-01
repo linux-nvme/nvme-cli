@@ -8,11 +8,12 @@ nvme-io-mgmt-recv - I/O Management Receive command
 SYNOPSIS
 --------
 [verse]
-'nvme io-mgmt-recv' <device> [--namespace-id=<NUM> | -n <NUM>]
-			[--mos=<NUM> | -s <NUM>] [--mo=<NUM> | -m <NUM>]
+'nvme' [<global-options>] 'io-mgmt-recv' <device>
+			[--namespace-id=<NUM> | -n <NUM>]
+			[--mos=<NUM> | -s <NUM>]
+			[--mo=<NUM> | -m <NUM>]
 			[--data=<FILE> | -d <FILE>]
 			[--data-len=<NUM> | -l <NUM>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

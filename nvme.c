@@ -298,7 +298,7 @@ static OPT_VALS(feature_name) = {
 	VAL_BYTE("ns-metadata", NVME_FEAT_FID_NS_METADATA),
 	VAL_BYTE("sw-progress", NVME_FEAT_FID_SW_PROGRESS),
 	VAL_BYTE("host-id", NVME_FEAT_FID_HOST_ID),
-	VAL_BYTE("resv-mask", NVME_FEAT_FID_RESV_MASK),
+	VAL_BYTE("resv-nf-mask", NVME_FEAT_FID_RESV_NF_MASK),
 	VAL_BYTE("resv-persist", NVME_FEAT_FID_RESV_PERSIST),
 	VAL_BYTE("write-protect", NVME_FEAT_FID_WRITE_PROTECT),
 	VAL_BYTE("bp-write-protect", NVME_FEAT_FID_BP_WRITE_PROTECT),
@@ -358,9 +358,8 @@ static void setup_transport_handle(struct libnvme_global_ctx *ctx,
 	libnvme_transport_handle_set_submit_entry(hdl, nvme_submit_entry);
 	libnvme_transport_handle_set_submit_exit(hdl, nvme_submit_exit);
 	libnvme_transport_handle_set_decide_retry(hdl, nvme_decide_retry);
-	libnvme_set_dry_run(ctx, argconfig_parse_seen(opts, "dry-run"));
-	if (nvme_args.timeout !=  NVME_DEFAULT_IOCTL_TIMEOUT ||
-			argconfig_parse_seen(opts, "timeout"))
+	libnvme_set_dry_run(ctx, nvme_args.dry_run);
+	if (nvme_args.timeout != NVME_DEFAULT_IOCTL_TIMEOUT)
 		libnvme_transport_handle_set_timeout(hdl, nvme_args.timeout);
 }
 
@@ -381,7 +380,7 @@ int parse_and_open(struct libnvme_global_ctx **ctx,
 		return -ENOMEM;
 
 	libnvme_set_ioctl_probing(ctx_new,
-		!argconfig_parse_seen(opts, "no-ioctl-probing"));
+		!nvme_args.no_ioctl_probing);
 
 	ret = get_transport_handle(ctx_new, argc, argv, O_RDONLY, &hdl_new);
 	if (ret) {
@@ -416,7 +415,7 @@ int open_exclusive(struct libnvme_global_ctx **ctx,
 		return -ENOMEM;
 
 	libnvme_set_ioctl_probing(ctx_new,
-		!argconfig_parse_seen(opts, "no-ioctl-probing"));
+		!nvme_args.no_ioctl_probing);
 
 	ret = get_transport_handle(ctx_new, argc, argv, flags, &hdl_new);
 	if (ret) {
@@ -546,7 +545,7 @@ static int get_smart_log(int argc, char **argv, struct command *acmd, struct plu
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	smart_log = libnvme_alloc(sizeof(*smart_log));
@@ -1109,7 +1108,7 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	list_head_init(&log_pages);
@@ -1181,7 +1180,7 @@ static int get_supported_log_pages(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	supports = libnvme_alloc(sizeof(*supports));
@@ -2496,7 +2495,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 		       libnvme_transport_handle_get_name(hdl), cfg.log_id,
 		       cfg.namespace_id);
 		d(log, cfg.log_len, 16, 1);
-		if (argconfig_parse_seen(opts, "verbose"))
+		if (nvme_args.verbose)
 			nvme_show_log(libnvme_transport_handle_get_name(hdl),
 				      &args, VERBOSE);
 	} else {
@@ -2546,7 +2545,7 @@ static int sanitize_log(int argc, char **argv, struct command *acmd, struct plug
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	sanitize_log = libnvme_alloc(sizeof(*sanitize_log));
@@ -2597,7 +2596,7 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *ac
 		return err;
 	}
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	fid_support_log = libnvme_alloc(sizeof(*fid_support_log));
@@ -2649,7 +2648,7 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 		return err;
 	}
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	mi_cmd_support_log = libnvme_alloc(sizeof(*mi_cmd_support_log));
@@ -2773,7 +2772,7 @@ static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *p
 		return -EINVAL;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	ns_list = libnvme_alloc(sizeof(*ns_list));
@@ -2837,7 +2836,7 @@ static int id_ns_lba_format(int argc, char **argv, struct command *acmd, struct 
 		return err;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	ns = libnvme_alloc(sizeof(*ns));
@@ -3547,7 +3546,7 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	ctx = libnvme_create_global_ctx(stdout, log_level);
@@ -3643,7 +3642,7 @@ static int list(int argc, char **argv, struct command *acmd, struct plugin *plug
 		return -EINVAL;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	ctx = libnvme_create_global_ctx(stdout, log_level);
@@ -3709,7 +3708,7 @@ int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	if (cfg.vendor_specific)
 		flags |= VS;
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	ctrl = libnvme_alloc(sizeof(*ctrl));
@@ -3758,7 +3757,7 @@ static int nvm_id_ctrl(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	ctrl_nvm = libnvme_alloc(sizeof(*ctrl_nvm));
@@ -3815,7 +3814,7 @@ static int nvm_id_ns(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
@@ -3889,7 +3888,7 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *acmd, str
 		return err;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	ns = libnvme_alloc(sizeof(*ns));
@@ -3960,7 +3959,7 @@ static int ns_descs(int argc, char **argv, struct command *acmd, struct plugin *
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
@@ -4041,7 +4040,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	if (cfg.vendor_specific)
 		flags |= VS;
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
@@ -4117,7 +4116,7 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *acmd
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
@@ -4279,7 +4278,7 @@ static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	uuid_list = libnvme_alloc(sizeof(*uuid_list));
@@ -4332,7 +4331,7 @@ static int id_iocs(int argc, char **argv, struct command *acmd, struct plugin *p
 		return err;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	iocs = libnvme_alloc(sizeof(*iocs));
@@ -4536,7 +4535,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *acmd, struct
 		return err;
 	}
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	caps = libnvme_alloc(sizeof(*caps));
@@ -4857,7 +4856,7 @@ static int self_test_log(int argc, char **argv, struct command *acmd, struct plu
 		return err;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	log = libnvme_alloc(sizeof(*log));
@@ -5078,7 +5077,7 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 		return -1;
 	}
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	nvme_show_init();
@@ -5528,7 +5527,7 @@ static int subsystem_reset(int argc, char **argv, struct command *acmd, struct p
 			nvme_show_error("Subsystem-reset: NVM Subsystem Reset not supported.");
 		else
 			nvme_show_error("Subsystem-reset: %s", libnvme_strerror(-err));
-	} else if (argconfig_parse_seen(opts, "verbose"))
+	} else if (nvme_args.verbose)
 		printf("resetting subsystem through %s\n", libnvme_transport_handle_get_name(hdl));
 
 	return err;
@@ -5556,7 +5555,7 @@ static int reset(int argc, char **argv, struct command *acmd, struct plugin *plu
 	err = libnvme_reset_ctrl(hdl);
 	if (err < 0)
 		nvme_show_error("Reset: %s", libnvme_strerror(-err));
-	else if (argconfig_parse_seen(opts, "verbose"))
+	else if (nvme_args.verbose)
 		printf("resetting controller %s\n", libnvme_transport_handle_get_name(hdl));
 
 	return err;
@@ -5591,7 +5590,7 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 	err = libnvme_rescan_ns(hdl);
 	if (err < 0)
 		nvme_show_error("Namespace Rescan: %s\n", libnvme_strerror(-err));
-	else if (argconfig_parse_seen(opts, "verbose"))
+	else if (nvme_args.verbose)
 		printf("rescanning namespaces through %s\n", libnvme_transport_handle_get_name(hdl));
 
 	return err;
@@ -5962,7 +5961,7 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 		return err;
 	}
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	bar = mmap_registers(hdl, false);
@@ -6239,7 +6238,7 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	bar = mmap_registers(hdl, false);
@@ -6590,7 +6589,7 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 		return -EINVAL;
 	}
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 
 	err = nvme_get_single_property(hdl, &cfg, &value);
@@ -7428,10 +7427,10 @@ static void get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
 
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
 	elbaf = le32_to_cpu(nvm_ns->elbaf[lba_index]);
-	*sts = elbaf & NVME_NVM_ELBAF_STS_MASK;
-	*pif = (elbaf & NVME_NVM_ELBAF_PIF_MASK) >> 7;
+	*sts = NVME_NVM_ELBAF_STS(elbaf);
+	*pif = NVME_NVM_ELBAF_PIF(elbaf);
 	if (*pif == NVME_NVM_PIF_QTYPE && (nvm_ns->pic & 0x8))
-		*pif = (elbaf & NVME_NVM_ELBAF_QPIF_MASK) >> 9;
+		*pif = NVME_NVM_ELBAF_QPIF(elbaf);
 }
 
 static int get_pi_info(struct libnvme_transport_handle *hdl,
@@ -7657,7 +7656,7 @@ static int write_zeroes(int argc, char **argv,
 
 	printf("NVME Write Zeroes Success\n");
 
-	if (!cfg.nsz || !argconfig_parse_seen(opts, "verbose"))
+	if (!cfg.nsz || !nvme_args.verbose)
 		return err;
 
 	if (cmd.result & 0x1)
@@ -9151,7 +9150,7 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 	if (err)
 		return err;
 
-	if (cfg.human_readable || argconfig_parse_seen(opts, "verbose"))
+	if (cfg.human_readable || nvme_args.verbose)
 		flags |= VERBOSE;
 	if (cfg.raw_binary)
 		flags = BINARY;
@@ -10325,7 +10324,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 			return err;
 		}
 
-		if (argconfig_parse_seen(opts, "verbose"))
+		if (nvme_args.verbose)
 			printf("exporting to %s\n", cfg.keyfile);
 
 		return 0;
@@ -10337,7 +10336,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 			return err;
 		}
 
-		if (argconfig_parse_seen(opts, "verbose"))
+		if (nvme_args.verbose)
 			printf("importing from %s\n", cfg.keyfile);
 	} else {
 		err = libnvme_revoke_tls_key(ctx, cfg.keyring, cfg.keytype,
@@ -10348,7 +10347,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 			return err;
 		}
 
-		if (argconfig_parse_seen(opts, "verbose"))
+		if (nvme_args.verbose)
 			printf("revoking key\n");
 	}
 
@@ -10392,7 +10391,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 		return err;
 	}
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (!strcmp(cfg.ranking, "namespace")) {
@@ -10839,7 +10838,7 @@ static int get_power_measurement_log(int argc, char **argv, struct command *acmd
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (argconfig_parse_seen(opts, "verbose"))
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	/* First read minimum size to discover the full log size */
@@ -11399,7 +11398,7 @@ int main(int argc, char **argv)
 	if (err)
 		return err;
 
-	err = handle_plugin(argc - 1, &argv[1], nvme.extensions);
+	err = handle_plugin(argc, argv, nvme.extensions);
 	if (err == -ENOTTY)
 		general_help(&builtin, NULL);
 

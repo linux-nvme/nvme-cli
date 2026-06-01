@@ -8,9 +8,8 @@ nvme-list-ctrl - Send NVMe Identify List Controllers, return result and structur
 SYNOPSIS
 --------
 [verse]
-'nvme list-ctrl' <device> [--cntid=<cntid> | -c <cntid>]
+'nvme' [<global-options>] 'list-ctrl' <device> [--cntid=<cntid> | -c <cntid>]
 			[--namespace-id=<nsid> | -n <nsid>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

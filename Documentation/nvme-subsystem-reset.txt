@@ -8,8 +8,7 @@ nvme-subsystem-reset - Reset the nvme subsystem.
 SYNOPSIS
 --------
 [verse]
-'nvme subsystem-reset' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'subsystem-reset' <device>
 
 DESCRIPTION
 -----------

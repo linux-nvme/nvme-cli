@@ -8,8 +8,7 @@ nvme-wdc-clear-assert-dump - Clears the assert dump (if present).
 SYNOPSIS
 --------
 [verse]
-'nvme wdc clear-assert-dump' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'wdc clear-assert-dump' <device>
 
 DESCRIPTION
 -----------

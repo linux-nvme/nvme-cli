@@ -11,13 +11,12 @@ user.
 SYNOPSIS
 --------
 [verse]
-'nvme ocp internal-log' <device>
+'nvme' [<global-options>] 'ocp internal-log' <device>
 			[--telemetry-log=<file> | -l <file>]
 			[--string-log=<file> | -s <file>]
 			[--output-file=<file> | -f <file>]
 			[--data-area=<da> | -a <da>]
 			[--telemetry-type=<type> | -t <type>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

@@ -9,10 +9,9 @@ result.
 SYNOPSIS
 --------
 [verse]
-'nvme wdc enc-get-log' <device> [--log-id=<NUM>, -l <NUM>]
-			[--output-file=<FILE>, -o <FILE>]
+'nvme' [<global-options>] 'wdc enc-get-log' <device> [--log-id=<NUM>, -l <NUM>]
+			[--output-file=<FILE>, -O <FILE>]
 			[--transfer-size=<SIZE>, -s <SIZE>]
-			[<global-options>]
 
 DESCRIPTION
 -----------
@@ -33,7 +32,7 @@ On success it returns the enclosure log data, error code otherwise.
 
 OPTIONS
 -------
--o <FILE>::
+-O <FILE>::
 --output-file=<FILE>::
 	Output file pathname
 
@@ -50,12 +49,12 @@ EXAMPLES
   size(0x2000) and saves to defined file in current directory:
 +
 ------------
-# nvme wdc enc-get-log /dev/nvme0 -l 0xd1 -o d1_log.bin -s 0x2000
+# nvme wdc enc-get-log /dev/nvme0 -l 0xd1 -O d1_log.bin -s 0x2000
 ------------
 * Gets the enclosure log from the device based on the log id(0xd2) with default transfer size(0x1000) and saves to defined file in current directory:
 +
 ------------
-# nvme wdc enc-get-log /dev/nvme0 -l 0xd2 -o d1_log.bin 
+# nvme wdc enc-get-log /dev/nvme0 -l 0xd2 -O d1_log.bin 
 ------------
 
 NVME

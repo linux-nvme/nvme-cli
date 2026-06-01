@@ -8,9 +8,8 @@ nvme-sndk-vs-hw-rev-log - Send NVMe sndk vs-hw-rev-log Vendor Unique Command, re
 SYNOPSIS
 --------
 [verse]
-'nvme sndk vs-hw-rev-log' <device>
+'nvme' [<global-options>] 'sndk vs-hw-rev-log' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

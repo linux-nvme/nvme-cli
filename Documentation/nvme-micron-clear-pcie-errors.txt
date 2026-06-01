@@ -8,8 +8,7 @@ nvme-micron-clear-pcie-errors - Clears correctable PCIe correctable errors of gi
 SYNOPSIS
 --------
 [verse]
-'nvme micron clear-pcie-correctable-errors' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'micron clear-pcie-correctable-errors' <device>
 
 DESCRIPTION
 -----------

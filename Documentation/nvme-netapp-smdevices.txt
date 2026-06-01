@@ -8,8 +8,7 @@ nvme-netapp-smdevices - Display information for each NVMe path to an E-Series vo
 SYNOPSIS
 --------
 [verse]
-'nvme netapp smdevices'
-			[<global-options>]
+'nvme' [<global-options>] 'netapp smdevices'
 
 DESCRIPTION
 -----------

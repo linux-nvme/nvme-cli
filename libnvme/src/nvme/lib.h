@@ -75,7 +75,7 @@ int libnvme_get_logging_level(struct libnvme_global_ctx *ctx, bool *log_pid,
  * This will look for the handle in /dev/ and validate the name and filetype
  * match linux conventions.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
 	      struct libnvme_transport_handle **hdl);

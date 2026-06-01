@@ -8,10 +8,9 @@ nvme-ocp-set-dssd-power-state-feature - Set DSSD Power State
 SYNOPSIS
 --------
 [verse]
-'nvme ocp set-dssd-power-state-feature' <device>
+'nvme' [<global-options>] 'ocp set-dssd-power-state-feature' <device>
 			[--power-state=<fmt> | -p <fmt>] [--no-uuid | -n]
 			[--save | -s]
-			[<global-options>]
 
 DESCRIPTION
 -----------

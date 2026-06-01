@@ -8,8 +8,9 @@ nvme-wdc-cap-diag - Retrieve WDC device's diagnostic log and save to file.
 SYNOPSIS
 --------
 [verse]
-'nvme wdc cap-diag' <device> [--output-file=<FILE>, -o <FILE>] [--transfer-size=<SIZE>, -s <SIZE>]
-			[<global-options>]
+'nvme' [<global-options>] 'wdc cap-diag' <device>
+			[--output-file=<FILE>, -O <FILE>]
+			[--transfer-size=<SIZE>, -s <SIZE>]
 
 DESCRIPTION
 -----------
@@ -24,7 +25,7 @@ Results for any other device are undefined.
 
 OPTIONS
 -------
--o <FILE>::
+-O <FILE>::
 --output-file=<FILE>::
 	Output file; defaults to device serial number followed by "cap_diag" suffix
 
@@ -44,12 +45,12 @@ EXAMPLES
 * Gets the capture diagnostics log from the device and saves to defined file in current directory (e.g. testSTM00019F3F9cap_diag.bin):
 +
 ------------
-# nvme wdc cap-diag /dev/nvme0 -o test
+# nvme wdc cap-diag /dev/nvme0 -O test
 ------------
 * Gets the capture diagnostics log from the device and saves to defined file with pathname (e.g. /tmp/testSTM00019F3F9cap_diag.bin):
 +
 ------------
-# nvme wdc cap-diag /dev/nvme0 -o /tmp/test
+# nvme wdc cap-diag /dev/nvme0 -O /tmp/test
 ------------
 * Gets the capture diagnostics log from the device transferring the data in 64k chunks and saves to default file in current directory (e.g. STM00019F3F9internal_fw_log.bin):
 +

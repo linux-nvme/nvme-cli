@@ -9,10 +9,9 @@ controller
 SYNOPSIS
 --------
 [verse]
-'nvme virt-mgmt' <device> [--cntlid=<cntlid> | -c <cntlid>]
+'nvme' [<global-options>] 'virt-mgmt' <device> [--cntlid=<cntlid> | -c <cntlid>]
 			[--rt=<rt> | -r <rt>] [--act=<act> | -a <act>]
 			[--nr=<nr> | -n <nr>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

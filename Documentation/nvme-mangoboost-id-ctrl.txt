@@ -8,9 +8,10 @@ nvme-mangoboost-id-ctrl - Send NVMe Identify Controller, return result and struc
 SYNOPSIS
 --------
 [verse]
-'nvme mangoboost id-ctrl' <device> [--vendor-specific | -V] [--raw-binary | -b]
+'nvme' [<global-options>] 'mangoboost id-ctrl' <device>
+			[--vendor-specific | -V]
+			[--raw-binary | -b]
 			[--human-readable | -H]
-			[<global-options>]
 
 DESCRIPTION
 -----------

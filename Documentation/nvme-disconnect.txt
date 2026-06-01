@@ -8,9 +8,8 @@ nvme-disconnect - Disconnect one or more Fabrics controller(s).
 SYNOPSIS
 --------
 [verse]
-'nvme disconnect' [--nqn=<subnqn> | -n <subnqn>]
+'nvme' [<global-options>] 'disconnect' [--nqn=<subnqn> | -n <subnqn>]
 			[--device=<device> | -d <device>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

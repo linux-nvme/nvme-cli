@@ -8,9 +8,9 @@ nvme-wdc-namespace-resize - Resizes the device's namespace.
 SYNOPSIS
 --------
 [verse]
-'nvme wdc namespace-resize' <device> [--nsid=<NAMESPACE ID>, -n <NAMSPACE ID>]
-			[--op_option=<OP OPTION>, -o <OP OPTION>]
-			[<global-options>]
+'nvme' [<global-options>] 'wdc namespace-resize' <device>
+			[--nsid=<NAMESPACE ID>, -n <NAMSPACE ID>]
+			[--op-option=<OP OPTION>, -O <OP OPTION>]
 
 DESCRIPTION
 -----------
@@ -29,7 +29,7 @@ OPTIONS
 --namespace-id=<NAMESPACE_ID>::
 	Namespace ID; ID of the namespace to resize
 
--o <OP OPTION>::
+-O <OP OPTION>::
 --op-option=<OP OPTION>::
 	Overprovisioning Option; defaults to 0xF
 	Valid Values:
@@ -46,7 +46,7 @@ EXAMPLES
 * Resizes namespace 1 to 50% of the original TNVMCAP reported value:
 +
 ------------
-# nvme wdc namespace-resize /dev/nvme0 -n 1 -o 3
+# nvme wdc namespace-resize /dev/nvme0 -n 1 -O 3
 ------------
 * Resizes namespace 2 to 7% of the original TNVMCAP reported value:
 +

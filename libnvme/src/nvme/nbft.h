@@ -12,7 +12,7 @@
 
 #include <sys/types.h>
 
-#include <nvme/nbft-types.h>
+#include <nvme/nvme-types-nbft.h>
 
 /**
  * enum libnbft_primary_admin_host_flag - Primary Administrative Host Descriptor Flags
@@ -255,7 +255,7 @@ struct libnbft_info {
  * Read and parse the specified NBFT file into a struct libnbft_info.
  * Free with libnvmf_free_nbft().
  *
- * Return: 0 on success, errno otherwise.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_read_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info **nbft,
 		const char *filename);
