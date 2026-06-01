@@ -9,9 +9,10 @@ Discovery Controllers.
 SYNOPSIS
 --------
 [verse]
-'nvme dim' [--task=<task> | -t <task>] [--nqn=<nqn> | -n <nqn>]
+'nvme' [<global-options>] 'dim'
+			[--task=<task> | -t <task>]
+			[--nqn=<nqn> | -n <nqn>]
 			[--device=<device> | -d <device>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

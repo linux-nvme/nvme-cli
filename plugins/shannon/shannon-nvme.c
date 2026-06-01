@@ -281,7 +281,7 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 	NVME_ARGS(opts,
 		OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id),
 		OPT_UINT("feature-id",	 'f', &cfg.feature_id,	 feature_id),
-		OPT_UINT("value",	 'v', &cfg.value,	 value),
+		OPT_UINT("value",	 'V', &cfg.value,	 value),
 		OPT_UINT("data-len",	 'l', &cfg.data_len,	 data_len),
 		OPT_FILE("data",	 'd', &cfg.file,	 data),
 		OPT_FLAG("save",	 's', &cfg.save,	 save));

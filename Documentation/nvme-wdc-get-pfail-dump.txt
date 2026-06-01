@@ -8,8 +8,8 @@ nvme-wdc-get-pfail-dump - Retrieve WDC device's pfail crash dump.
 SYNOPSIS
 --------
 [verse]
-'nvme wdc get-pfail-dump' <device> [--output-file=<FILE>, -o <FILE>]
-			[<global-options>]
+'nvme' [<global-options>] 'wdc get-pfail-dump' <device>
+			[--output-file=<FILE>, -O <FILE>]
 
 DESCRIPTION
 -----------
@@ -26,7 +26,7 @@ Results for any other device are undefined.
 
 OPTIONS
 -------
--o <FILE>::
+-O <FILE>::
 --output-file=<FILE>::
 	Output file; defaults to device serial number followed by "pfail_dump" suffix
 
@@ -44,12 +44,12 @@ EXAMPLES
 (e.g. testSTM00019F3F9_pfail_dump.bin):
 +
 ------------
-# nvme wdc get-pfail-dump /dev/nvme0 -o test
+# nvme wdc get-pfail-dump /dev/nvme0 -O test
 ------------
 * Gets the pfail crash dump from the device and saves to defined file with pathname (e.g. /tmp/testSTM00019F3F9_pfail_dump.bin):
 +
 ------------
-# nvme wdc get-pfail-dump /dev/nvme0 -o /tmp/test
+# nvme wdc get-pfail-dump /dev/nvme0 -O /tmp/test
 ------------
 
 NVME

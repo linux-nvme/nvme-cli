@@ -8,9 +8,8 @@ nvme-wdc-vs-cloud-log - Send NVMe WDC vs-cloud-log Vendor Unique Command, return
 SYNOPSIS
 --------
 [verse]
-'nvme wdc vs-cloud-log' <device>
+'nvme' [<global-options>] 'wdc vs-cloud-log' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

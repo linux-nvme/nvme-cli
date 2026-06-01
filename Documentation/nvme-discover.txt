@@ -8,16 +8,19 @@ nvme-discover - Send Get Log Page request to Discovery Controller.
 SYNOPSIS
 --------
 [verse]
-'nvme discover'
+'nvme' [<global-options>] 'discover'
 			[--raw=<filename> | -r <filename>]
 			[--device=<device> | -d <device>]
 			[--config=<filename> | -J <filename>]
-			[--persistent | -p] [--quiet]
+			[--persistent | -p]
+			[--quiet]
 			[--dump-config | -O]
-			[--force] [--nbft] [--no-nbft] [--nbft-path=<STR>]
+			[--force]
+			[--nbft]
+			[--no-nbft]
+			[--nbft-path=<STR>]
 			[--context=<STR>]
 			[<fabrics-options>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

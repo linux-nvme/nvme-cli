@@ -9,9 +9,10 @@ returns result and log additional OCP-specific data
 SYNOPSIS
 --------
 [verse]
-'nvme ocp persistent-event-log' <device> [--action=<action> | -a <action>]
-			[--log-len=<log-len> | -l <log-len>] [--raw-binary | -b]
-			[<global-options>]
+'nvme' [<global-options>] 'ocp persistent-event-log' <device>
+			[--action=<action> | -a <action>]
+			[--log-len=<log-len> | -l <log-len>]
+			[--raw-binary | -b]
 
 DESCRIPTION
 -----------

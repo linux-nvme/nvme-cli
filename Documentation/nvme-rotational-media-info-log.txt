@@ -8,8 +8,8 @@ nvme-rotational-media-info-log - Retrieve Rotational Media Information Log, show
 SYNOPSIS
 --------
 [verse]
-'nvme rotational-media-info-log' <device> [--endg-id=<endgid> | -e <endgid>]
-			[<global-options>]
+'nvme' [<global-options>] 'rotational-media-info-log' <device>
+			[--endg-id=<endgid> | -e <endgid>]
 
 DESCRIPTION
 -----------

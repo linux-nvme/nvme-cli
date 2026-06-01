@@ -8,8 +8,7 @@ nvme-solidigm-vs-fw-activate-history - Get firmware activation history log
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm vs-fw-activate-history' <device> [OPTIONS]
-			[<global-options>]
+'nvme' [<global-options>] 'solidigm vs-fw-activate-history' <device> [OPTIONS]
 
 DESCRIPTION
 -----------

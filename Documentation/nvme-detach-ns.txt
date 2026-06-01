@@ -8,9 +8,9 @@ nvme-detach-ns - Send NVMe detach namespace, return result.
 SYNOPSIS
 --------
 [verse]
-'nvme detach-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'detach-ns' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
 			[--controllers=<ctrl-list,> | -c <ctrl-list,>
-			[<global-options>]
 
 DESCRIPTION
 -----------

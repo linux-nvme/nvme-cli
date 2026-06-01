@@ -523,7 +523,7 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *acm
 	};
 
 	NVME_ARGS(opts,
-		OPT_UINT("value",		 'v', &cfg.value,		 value),
+		OPT_UINT("value",		 'V', &cfg.value,		 value),
 		OPT_FLAG("save",		 's', &cfg.save,		 save));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);

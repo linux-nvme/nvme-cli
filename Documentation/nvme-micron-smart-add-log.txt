@@ -9,8 +9,7 @@ or Extended SMART information (OCP complaint models) of given micron device
 SYNOPSIS
 --------
 [verse]
-'nvme micron vs-smart-add-log' <device> -f <json|normal>
-			[<global-options>]
+'nvme' [<global-options>] 'micron vs-smart-add-log' <device> -f <json|normal>
 
 DESCRIPTION
 -----------

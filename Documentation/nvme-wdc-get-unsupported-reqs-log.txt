@@ -9,9 +9,8 @@ nvme-wdc-get-unsupported-reqs-log - Send NVMe WDC get-unsupported-reqs-log
 SYNOPSIS
 --------
 [verse]
-'nvme wdc get-unsupported-reqs-log' <device> [--output-format=<normal|json>
--o <normal|json>]
-			[<global-options>]
+'nvme' [<global-options>] 'wdc get-unsupported-reqs-log' <device>
+			[--output-format=<normal|json> | -o <normal|json>]
 
 DESCRIPTION
 -----------

@@ -139,7 +139,7 @@ const char *libnvmf_cms_str(__u8 cms);
  * into the topology using @h as parent.
  * @c must be initialized and not connected to the topology.
  *
- * Return: 0 on success, or an error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c);
 
@@ -150,7 +150,7 @@ int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c);
  * Issues a 'connect' command to the NVMe-oF controller.
  * @c must be initialized and not connected to the topology.
  *
- * Return: 0 on success, or an error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_connect_ctrl(libnvme_ctrl_t c);
 
@@ -177,7 +177,7 @@ struct libnvmf_uri;
  * Issues the three-phase Get Log Page protocol against @ctrl, validates
  * generation-counter atomicity, and normalises each log entry.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_get_discovery_log(libnvme_ctrl_t ctrl,
 			   const struct libnvmf_discovery_args *args,
@@ -210,7 +210,7 @@ bool libnvmf_is_registration_supported(libnvme_ctrl_t c);
  * Perform registration task with a Discovery Controller (DC). Three
  * tasks are supported: register, deregister, and registration update.
  *
- * Return: 0 on success, or an error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_register_ctrl(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result);
 
@@ -224,7 +224,7 @@ int libnvmf_register_ctrl(libnvme_ctrl_t c, enum nvmf_dim_tas tas, __u32 *result
  *
  *   nvme+tcp://user@host:port/subsys_nqn/nid?query=val#fragment
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_uri_parse(const char *str, struct libnvmf_uri **uri);
 
@@ -261,7 +261,7 @@ const char *libnvmf_get_default_trsvcid(const char *transport,
  * Allocates and initializes a new fabrics context for discovery/connect
  * operations.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_context_create(struct libnvme_global_ctx *ctx,
 		bool (*decide_retry)(struct libnvmf_context *fctx, int err,
@@ -295,7 +295,7 @@ void libnvmf_context_free(struct libnvmf_context *fctx);
  *
  * Sets the hooks used during discovery operations for the given context.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_context_set_discovery_hooks(struct libnvmf_context *fctx,
 		void (*discovery_log)(struct libnvmf_context *fctx,
@@ -307,7 +307,6 @@ int libnvmf_context_set_discovery_hooks(struct libnvmf_context *fctx,
 			void *user_data),
 		int (*parser_next_line)(struct libnvmf_context *fctx,
 			void *user_data));
-
 
 /**
  * libnvmf_context_set_connection() - Set connection parameters for context
@@ -321,7 +320,7 @@ int libnvmf_context_set_discovery_hooks(struct libnvmf_context *fctx,
  *
  * Sets the connection parameters for the context.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_context_set_connection(struct libnvmf_context *fctx,
 		const char *subsysnqn, const char *transport,
@@ -336,7 +335,7 @@ int libnvmf_context_set_connection(struct libnvmf_context *fctx,
  *
  * Sets the host NQN and host ID for the context.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
 		const char *hostnqn, const char *hostid);
@@ -352,13 +351,12 @@ int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
  *
  * Sets cryptographic and TLS parameters for the context.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		const char *hostkey, const char *ctrlkey,
 		const char *keyring, const char *tls_key,
 		const char *tls_key_identity);
-
 
 /**
  * libnvmf_context_set_device() - Set device for context
@@ -367,7 +365,7 @@ int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
  *
  * Sets the device to be used by the context.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
 
@@ -390,7 +388,7 @@ int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device)
  * _set_nr_poll_queues(), _set_queue_size(), and _set_disable_sqflow()
  * accessors are also available when only a subset needs to change.
  *
- * Return: 0
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_context_set_io_queues(struct libnvmf_context *fctx,
 		int nr_io_queues, int nr_write_queues, int nr_poll_queues,
@@ -415,11 +413,10 @@ int libnvmf_context_set_io_queues(struct libnvmf_context *fctx,
  * and _set_fast_io_fail_tmo() accessors are also available when only a
  * subset needs to change.
  *
- * Return: 0
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_context_set_reconnect_policy(struct libnvmf_context *fctx,
 		int ctrl_loss_tmo, int reconnect_delay, int fast_io_fail_tmo);
-
 
 /**
  * libnvmf_discovery() - Perform fabrics discovery
@@ -430,7 +427,7 @@ int libnvmf_context_set_reconnect_policy(struct libnvmf_context *fctx,
  *
  * Performs discovery for fabrics subsystems and optionally connects.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_discovery(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect, bool force);
@@ -444,7 +441,7 @@ int libnvmf_discovery(struct libnvme_global_ctx *ctx,
  *
  * Performs discovery using a JSON configuration.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect, bool force);
@@ -458,7 +455,7 @@ int libnvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
  *
  * Performs discovery using a configuration file.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect, bool force);
@@ -472,7 +469,7 @@ int libnvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
  *
  * Performs discovery using the specified NBFT file.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect, char *nbft_path);
@@ -485,7 +482,7 @@ int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
  *
  * Creates an unconnected controller to be used for libnvme_add_ctrl().
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, libnvme_ctrl_t *c);
@@ -497,7 +494,7 @@ int libnvmf_create_ctrl(struct libnvme_global_ctx *ctx,
  *
  * Connects to the fabrics subsystem using the provided context.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_connect(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx);
@@ -519,7 +516,7 @@ int libnvmf_disconnect_ctrl(libnvme_ctrl_t c);
  *
  * Connects to the fabrics subsystem using a JSON configuration.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_connect_config_json(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx);
@@ -532,7 +529,7 @@ int libnvmf_connect_config_json(struct libnvme_global_ctx *ctx,
  * Update the current configuration by adding the crypto
  * information.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx);
@@ -547,7 +544,7 @@ struct nbft_file_entry;
  *
  * Reads NBFT files from the specified path and populates a linked list.
  *
- * Return: 0 on success, or a negative error code on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_nbft_read_files(struct libnvme_global_ctx *ctx, char *path,
 		struct nbft_file_entry **head);

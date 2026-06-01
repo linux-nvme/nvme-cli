@@ -8,11 +8,10 @@ nvme-gen-dhchap-key - Generate a host DH-HMAC-CHAP key
 SYNOPSIS
 --------
 [verse]
-'nvme gen-dhchap-key' [--hmac=<hmac-id> | -h <hmac-id>]
+'nvme' [<global-options>] 'gen-dhchap-key' [--hmac=<hmac-id> | -h <hmac-id>]
 			[--secret=<secret> | -s <secret>]
 			[--key-length=<len> | -l <len>]
 			[--nqn=<host-nqn> | -n <host-nqn>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

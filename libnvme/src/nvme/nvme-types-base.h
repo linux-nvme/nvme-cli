@@ -21,6 +21,19 @@
  * DOC: nvme-types-base.h
  *
  * NVMe Base Specification type definitions
+ *
+ * Based on NVM Express Base Specification,
+ * Revision 2.3, August 1, 2025 (Ratified)
+ *
+ * This file contains core NVMe types organized by functional area:
+ * - Helper Macros: NVME_GET, NVME_SET, NVME_CHECK, NVME_VAL
+ * - Controller Registers: CAP, CC, CSTS, and other BAR0 registers
+ * - Identify Structures: Controller, Namespace, and related data
+ * - Log Pages: SMART, Error, Firmware, and other log structures
+ * - Features: Feature identifiers and feature-specific data
+ * - Commands: Admin and I/O command structures
+ * - Namespace Management: Namespace descriptors and attributes
+ * - Status & Errors: Status codes and error information
  */
 
 
@@ -36,7 +49,7 @@
  * applied after the shift to isolate a specific set of bits that decode to a
  * sub-field.
  *
- * Returns: The 'name' field from 'value'
+ * Return: The 'name' field from 'value'
  */
 #define NVME_GET(value, name) \
 	(((value) >> NVME_##name##_SHIFT) & NVME_##name##_MASK)
@@ -46,10 +59,34 @@
  * @value: The value to be set in its completed position
  * @name: The name of the sub-field within an nvme value
  *
- * Returns: The 'name' field from 'value'
+ * Return: The 'name' field from 'value'
  */
 #define NVME_SET(value, name) \
 	(((__u32)(value) & NVME_##name##_MASK) << NVME_##name##_SHIFT)
+
+/**
+ * NVMF_GET() - extract field from complex value
+ * @value: The original value of a complex field
+ * @name: The name of the sub-field within an nvme value
+ *
+ * By convention, this library defines _SHIFT and _MASK such that mask can be
+ * applied after the shift to isolate a specific set of bits that decode to a
+ * sub-field.
+ *
+ * Returns: The 'name' field from 'value'
+ */
+#define NVMF_GET(value, name) \
+	(((value) >> NVMF_##name##_SHIFT) & NVMF_##name##_MASK)
+
+/**
+ * NVMF_SET() - set field into complex value
+ * @value: The value to be set in its completed position
+ * @name: The name of the sub-field within an nvme value
+ *
+ * Returns: The 'name' field from 'value'
+ */
+#define NVMF_SET(value, name) \
+	(((__u32)(value) & NVMF_##name##_MASK) << NVMF_##name##_SHIFT)
 
 /**
  * NVME_CHECK() - check value to compare field value
@@ -57,7 +94,7 @@
  * @name: The name of the sub-field within an nvme value
  * @check: The sub-field value to check
  *
- * Returns: The result of compare the value and the sub-field value
+ * Return: The result of compare the value and the sub-field value
  */
 #define NVME_CHECK(value, name, check) ((value) == NVME_##name##_##check)
 
@@ -65,7 +102,7 @@
  * NVME_VAL() - get mask value shifted
  * @name: The name of the sub-field within an nvme value
  *
- * Returns: The mask value shifted
+ * Return: The mask value shifted
  */
 #define NVME_VAL(name) (NVME_##name##_MASK << NVME_##name##_SHIFT)
 
@@ -244,7 +281,7 @@ enum nvme_register_offsets {
  * specific transport. For example, BPMBL(Boot Partition Memory Buffer
  * Location) register is not supported by fabrics, but it can be checked here.
  *
- * Returns: true if given offset is 64bit register, otherwise it returns false.
+ * Return: true if given offset is 64bit register, otherwise it returns false.
  */
 static inline bool nvme_is_64bit_reg(__u32 offset)
 {
@@ -476,7 +513,6 @@ enum nvme_cc {
  * @NVME_CSTS_SHST_NORMAL:	Normal operation
  * @NVME_CSTS_SHST_OCCUR:	Shutdown processing occurring
  * @NVME_CSTS_SHST_CMPLT:	Shutdown processing complete
- * @NVME_CSTS_SHN_MASK:		Deprecated mask to get the shutdown status
  */
 enum nvme_csts {
 	NVME_CSTS_RDY_SHIFT	= 0,
@@ -494,7 +530,6 @@ enum nvme_csts {
 	NVME_CSTS_SHST_NORMAL	= 0,
 	NVME_CSTS_SHST_OCCUR	= 1,
 	NVME_CSTS_SHST_CMPLT	= 2,
-	NVME_CSTS_SHN_MASK	= NVME_CSTS_SHST_MASK, /* Deprecated */
 };
 
 #define NVME_CSTS_RDY(csts)	NVME_GET(csts, CSTS_RDY)
@@ -650,7 +685,7 @@ enum nvme_cmbsz {
  * nvme_cmb_size() - Calculate size of the controller memory buffer
  * @cmbsz:	Value from controller register %NVME_REG_CMBSZ
  *
- * Returns: size of controller memory buffer in bytes
+ * Return: size of controller memory buffer in bytes
  */
 static inline __u64 nvme_cmb_size(__u32 cmbsz)
 {
@@ -965,7 +1000,7 @@ enum nvme_pmrebs {
  *		     buffer
  * @pmrebs:	Value from controller register %NVME_REG_PMREBS
  *
- * Returns: size of controller persistent memory buffer in bytes
+ * Return: size of controller persistent memory buffer in bytes
  */
 static inline __u64 nvme_pmr_size(__u32 pmrebs)
 {
@@ -1002,7 +1037,7 @@ enum nvme_pmrswtp {
  * nvme_pmr_throughput() - Calculate throughput of persistent memory buffer
  * @pmrswtp:	Value from controller register %NVME_REG_PMRSWTP
  *
- * Returns: throughput of controller persistent memory buffer in bytes/second
+ * Return: throughput of controller persistent memory buffer in bytes/second
  */
 static inline __u64 nvme_pmr_throughput(__u32 pmrswtp)
 {
@@ -1110,7 +1145,7 @@ enum nvme_power_measurement_action {
  * nvme_psd_power_scale() - power scale occupies the upper 3 bits
  * @ps: power scale value
  *
- * Returns: power scale value
+ * Return: power scale value
  */
 static inline unsigned int nvme_psd_power_scale(__u8 ps)
 {
@@ -1884,6 +1919,9 @@ enum nvme_id_ctrl_bpcap {
 	NVME_CTRL_BACAP_RPMBBPWPS_SUPPORTED	= 2,
 };
 
+#define NVME_CTRL_BACAP_RPMBBPWPS(bpcap)	NVME_GET(bpcap, CTRL_BACAP_RPMBBPWPS)
+#define NVME_CTRL_BACAP_SFBPWPS(bpcap)		NVME_GET(bpcap, CTRL_BACAP_SFBPWPS)
+
 /**
  * enum nvme_id_ctrl_plsi - Power Loss Signaling Information
  * @NVME_CTRL_PLSI_PLSEPF_SHIFT:	Shift amount to get the PLS Emergency Power Fail from the
@@ -1902,6 +1940,9 @@ enum nvme_id_ctrl_plsi {
 	NVME_CTRL_PLSI_PLSFQ_MASK	= 0x1,
 };
 
+#define NVME_CTRL_PLSI_PLSEPF(plsi)	NVME_GET(plsi, CTRL_PLSI_PLSEPF)
+#define NVME_CTRL_PLSI_PLSFQ(plsi)	NVME_GET(plsi, CTRL_PLSI_PLSFQ)
+
 /**
  * enum nvme_id_ctrl_crcap - Power Loss Signaling Information
  * @NVME_CTRL_CRCAP_RRSUP_SHIFT:	Shift amount to get the Reachability Reporting Supported
@@ -1919,6 +1960,9 @@ enum nvme_id_ctrl_crcap {
 	NVME_CTRL_CRCAP_RRSUP_MASK	= 0x1,
 	NVME_CTRL_CRCAP_RGIDC_MASK	= 0x1,
 };
+
+#define NVME_CTRL_CRCAP_RRSUP(crcap)	NVME_GET(crcap, CTRL_CRCAP_RRSUP)
+#define NVME_CTRL_CRCAP_RGICS(crcap)	NVME_GET(crcap, CTRL_CRCAP_RGICS)
 
 /**
  * enum nvme_id_ctrl_cntrltype - Controller types
@@ -2221,6 +2265,9 @@ enum nvme_id_ctrl_dsto {
 	NVME_CTRL_DSTO_HIRS			= NVME_VAL(CTRL_DSTO_HIRS),
 };
 
+#define NVME_CTRL_DSTO_SDSO(dsto)	NVME_GET(dsto, CTRL_DSTO_SDSO)
+#define NVME_CTRL_DSTO_HIRS(dsto)	NVME_GET(dsto, CTRL_DSTO_HIRS)
+
 /**
  * enum nvme_id_ctrl_hctm - Flags indicate the attributes of the host
  *			    controlled thermal management feature
@@ -2308,6 +2355,9 @@ enum nvme_id_ctrl_kpioc {
 	NVME_CTRL_KPIOC_KPIOSC_MASK	= 0x1,
 };
 
+#define NVME_CTRL_KPIOC_KPIOS(kpioc)	NVME_GET(kpioc, CTRL_KPIOC_KPIOS)
+#define NVME_CTRL_KPIOC_KPIOSC(kpioc)	NVME_GET(kpioc, CTRL_KPIOC_KPIOSC)
+
 /**
  * enum nvme_id_ctrl_cdpa - Configurable Device Personality Attributes
  * @NVME_CTRL_CDPA_HMAC_SHA_384:    If set, then the controller supports
@@ -2334,6 +2384,9 @@ enum nvme_id_ctrl_ipmsr {
 	NVME_CTRL_IPMSR_SRS_MASK	= 0x00FF,
 	NVME_CTRL_IPMSR_SRV_MASK	= 0x00FF,
 };
+
+#define NVME_CTRL_IPMSR_SRS(ipmsr)	NVME_GET(ipmsr, CTRL_IPMSR_SRS)
+#define NVME_CTRL_IPMSR_SRV(ipmsr)	NVME_GET(ipmsr, CTRL_IPMSR_SRV)
 
 /**
  * enum nvme_id_ctrl_sqes - Defines the required and maximum Submission Queue
@@ -2579,6 +2632,10 @@ enum nvme_id_ctrl_trattr {
 	NVME_CTRL_TRATTR_MRTLL_MASK	= 0x1,
 };
 
+#define NVME_CTRL_TRATTR_THMCS(trattr)	NVME_GET(trattr, CTRL_TRATTR_THMCS)
+#define NVME_CTRL_TRATTR_TUDCS(trattr)	NVME_GET(trattr, CTRL_TRATTR_TUDCS)
+#define NVME_CTRL_TRATTR_MRTLL(trattr)	NVME_GET(trattr, CTRL_TRATTR_MRTLL)
+
 /**
  * enum nvme_id_ctrl_fcatt - This field indicates attributes of the controller
  *			     that are specific to NVMe over Fabrics.
@@ -2631,6 +2688,7 @@ enum nvme_lbaf_rp {
 	NVME_LBAF_RP_BETTER	= 1,
 	NVME_LBAF_RP_GOOD	= 2,
 	NVME_LBAF_RP_DEGRADED	= 3,
+	NVME_LBAF_RP_SHIFT	= 0,
 	NVME_LBAF_RP_MASK	= 3,
 };
 
@@ -2820,6 +2878,7 @@ enum nvme_id_nsfeat {
  * enum nvme_id_ns_flbas - This field indicates the LBA data size & metadata
  *			   size combination that the namespace has been
  *			   formatted with
+ * @NVME_NS_FLBAS_LOWER_SHIFT:	Shift to get the lower 4 bits of LBA format index
  * @NVME_NS_FLBAS_LOWER_MASK:	Mask to get the index of one of the supported
  *				LBA Formats's least significant
  *				4bits indicated in
@@ -2830,16 +2889,22 @@ enum nvme_id_nsfeat {
  *				extended data LBA. If cleared, indicates that all
  *				of the metadata for a command is transferred as a
  *				separate contiguous buffer of data.
+ * @NVME_NS_FLBAS_HIGHER_SHIFT:	Shift to get the higher 2 bits of LBA format index
  * @NVME_NS_FLBAS_HIGHER_MASK:	Mask to get the index of one of
  *				the supported LBA Formats's most significant
  *				2bits indicated in
  *				:c:type:`struct nvme_id_ns <nvme_id_ns>`.lbaf.
  */
 enum nvme_id_ns_flbas {
-	NVME_NS_FLBAS_LOWER_MASK	= 15 << 0,
+	NVME_NS_FLBAS_LOWER_SHIFT	= 0,
+	NVME_NS_FLBAS_LOWER_MASK	= 0xf,
 	NVME_NS_FLBAS_META_EXT		= 1 << 4,
-	NVME_NS_FLBAS_HIGHER_MASK	= 3 << 5,
+	NVME_NS_FLBAS_HIGHER_SHIFT	= 5,
+	NVME_NS_FLBAS_HIGHER_MASK	= 0x3,
 };
+
+#define NVME_NS_FLBAS_LOWER(flbas)	NVME_GET(flbas, NS_FLBAS_LOWER)
+#define NVME_NS_FLBAS_HIGHER(flbas)	NVME_GET(flbas, NS_FLBAS_HIGHER)
 
 
 /**
@@ -2896,9 +2961,15 @@ enum nvme_id_ns_dps {
 	NVME_NS_DPS_PI_TYPE1		= 1,
 	NVME_NS_DPS_PI_TYPE2		= 2,
 	NVME_NS_DPS_PI_TYPE3		= 3,
-	NVME_NS_DPS_PI_MASK		= 7 << 0,
+	NVME_NS_DPS_PI_SHIFT		= 0,
+	NVME_NS_DPS_PI_MASK		= 0x7,
 	NVME_NS_DPS_PI_FIRST		= 1 << 3,
+	NVME_NS_DPS_PI_FIRST_SHIFT	= 3,
+	NVME_NS_DPS_PI_FIRST_MASK	= 0x1,
 };
+
+#define NVME_NS_DPS_PI(dps)		NVME_GET(dps, NS_DPS_PI)
+#define NVME_NS_DPS_PI_FIRST(dps)	NVME_GET(dps, NS_DPS_PI_FIRST)
 
 /**
  * enum nvme_id_ns_nmic - This field specifies multi-path I/O and namespace
@@ -3026,6 +3097,13 @@ enum nvme_ns_id_desc_nidt {
 	NVME_NIDT_CSI		= 4,
 };
 
+/**
+ * enum nvme_ns_id_desc_nidt_lens - Namespace Identifier Descriptor Type Lengths
+ * @NVME_NIDT_EUI64_LEN:	IEEE Extended Unique Identifier length (8 bytes)
+ * @NVME_NIDT_NGUID_LEN:	Namespace Globally Unique Identifier length (16 bytes)
+ * @NVME_NIDT_UUID_LEN:		Universally Unique Identifier length (16 bytes)
+ * @NVME_NIDT_CSI_LEN:		Command Set Identifier length (1 byte)
+ */
 enum nvme_ns_id_desc_nidt_lens {
 	NVME_NIDT_EUI64_LEN		= 8,
 	NVME_NIDT_NGUID_LEN		= 16,
@@ -3153,11 +3231,14 @@ struct nvme_id_uuid_list_entry {
  * @NVME_ID_UUID_ASSOCIATION_SUBSYSTEM_VENDOR:
  */
 enum nvme_id_uuid {
+	NVME_ID_UUID_HDR_ASSOCIATION_SHIFT		= 0,
 	NVME_ID_UUID_HDR_ASSOCIATION_MASK		= 0x3,
 	NVME_ID_UUID_ASSOCIATION_NONE			= 0,
 	NVME_ID_UUID_ASSOCIATION_VENDOR			= 1,
 	NVME_ID_UUID_ASSOCIATION_SUBSYSTEM_VENDOR	= 2,
 };
+
+#define NVME_ID_UUID_HDR_ASSOCIATION(uuid)	NVME_GET(uuid, ID_UUID_HDR_ASSOCIATION)
 
 /**
  * struct nvme_id_uuid_list - UUID list
@@ -3452,9 +3533,16 @@ struct nvme_error_log_page {
 	__u8	log_page_version;
 };
 
+/**
+ * enum nvme_err_pel - Persistent Error Log Entry masks
+ * @NVME_ERR_PEL_BYTE_MASK:	Byte mask for error location
+ * @NVME_ERR_PEL_BIT_MASK:	Bit mask for error location
+ */
 enum nvme_err_pel {
+	NVME_ERR_PEL_BYTE_SHIFT	= 0,
 	NVME_ERR_PEL_BYTE_MASK	= 0xf,
-	NVME_ERR_PEL_BIT_MASK	= 0x70,
+	NVME_ERR_PEL_BIT_SHIFT	= 4,
+	NVME_ERR_PEL_BIT_MASK	= 0x7,
 };
 
 /**
@@ -3753,12 +3841,12 @@ enum nvme_smart_crit {
 	NVME_SMART_CRIT_PMR_RO		= NVME_VAL(SMART_CW_PMRRO),
 };
 
-#define NVME_SMART_CW_ASCBT(cw)	NVME_GET(cw, SMART_CW_ASCBT),
-#define NVME_SMART_CW_TTC(cw)	NVME_GET(cw, SMART_CW_TTC),
-#define NVME_SMART_CW_NDR(cw)	NVME_GET(cw, SMART_CW_NDR),
-#define NVME_SMART_CW_AMRO(cw)	NVME_GET(cw, SMART_CW_AMRO),
-#define NVME_SMART_CW_VMBF(cw)	NVME_GET(cw, SMART_CW_VMBF),
-#define NVME_SMART_CW_PMRRO(cw)	NVME_GET(cw, SMART_CW_PMRRO),
+#define NVME_SMART_CW_ASCBT(crit)	NVME_GET(crit, SMART_CW_ASCBT)
+#define NVME_SMART_CW_TTC(crit)		NVME_GET(crit, SMART_CW_TTC)
+#define NVME_SMART_CW_NDR(crit)		NVME_GET(crit, SMART_CW_NDR)
+#define NVME_SMART_CW_AMRO(crit)	NVME_GET(crit, SMART_CW_AMRO)
+#define NVME_SMART_CW_VMBF(crit)	NVME_GET(crit, SMART_CW_VMBF)
+#define NVME_SMART_CW_PMRRO(crit)	NVME_GET(crit, SMART_CW_PMRRO)
 
 /**
  * enum nvme_smart_egcw - Endurance Group Critical Warning Summary
@@ -3817,15 +3905,20 @@ struct nvme_cmd_effects_log {
  * @NVME_CMD_EFFECTS_UUID_SEL:	UUID Selection Supported
  */
 enum nvme_cmd_effects {
-	NVME_CMD_EFFECTS_CSUPP		= 1 << 0,
-	NVME_CMD_EFFECTS_LBCC		= 1 << 1,
-	NVME_CMD_EFFECTS_NCC		= 1 << 2,
-	NVME_CMD_EFFECTS_NIC		= 1 << 3,
-	NVME_CMD_EFFECTS_CCC		= 1 << 4,
-	NVME_CMD_EFFECTS_CSER_MASK	= 3 << 14,
-	NVME_CMD_EFFECTS_CSE_MASK	= 7 << 16,
-	NVME_CMD_EFFECTS_UUID_SEL	= 1 << 19,
+	NVME_CMD_EFFECTS_CSUPP			= 1 << 0,
+	NVME_CMD_EFFECTS_LBCC			= 1 << 1,
+	NVME_CMD_EFFECTS_NCC			= 1 << 2,
+	NVME_CMD_EFFECTS_NIC			= 1 << 3,
+	NVME_CMD_EFFECTS_CCC			= 1 << 4,
+	NVME_CMD_EFFECTS_CSER_SHIFT		= 14,
+	NVME_CMD_EFFECTS_CSER_MASK		= 0x3,
+	NVME_CMD_EFFECTS_CSE_SHIFT		= 16,
+	NVME_CMD_EFFECTS_CSE_MASK		= 0x7,
+	NVME_CMD_EFFECTS_UUID_SEL		= 1 << 19,
 };
+
+#define NVME_CMD_EFFECTS_CSER(effects)	NVME_GET(effects, CMD_EFFECTS_CSER)
+#define NVME_CMD_EFFECTS_CSE(effects)	NVME_GET(effects, CMD_EFFECTS_CSE)
 
 /**
  * struct nvme_st_result - Self-test Result
@@ -3915,8 +4008,11 @@ enum nvme_status_result {
 	NVME_ST_RESULT_ABORTED_UNKNOWN	= 0x8,
 	NVME_ST_RESULT_ABORTED_SANITIZE	= 0x9,
 	NVME_ST_RESULT_NOT_USED		= 0xf,
+	NVME_ST_RESULT_SHIFT		= 0,
 	NVME_ST_RESULT_MASK		= 0xf,
 };
+
+#define NVME_ST_RESULT(result)	NVME_GET(result, ST_RESULT)
 
 /**
  * enum nvme_st_code - Self-test Code value
@@ -3937,7 +4033,10 @@ enum nvme_st_code {
 	NVME_ST_CODE_VS			= 0xe,
 	NVME_ST_CODE_ABORT		= 0xf,
 	NVME_ST_CODE_SHIFT		= 4,
+	NVME_ST_CODE_MASK		= 0xf,
 };
+
+#define NVME_ST_CODE(code)	NVME_GET(code, ST_CODE)
 
 /**
  * enum nvme_st_curr_op - Current Device Self-Test Operation
@@ -3957,9 +4056,14 @@ enum nvme_st_curr_op {
 	NVME_ST_CURR_OP_EXTENDED	= 0x2,
 	NVME_ST_CURR_OP_VS		= 0xe,
 	NVME_ST_CURR_OP_RESERVED	= 0xf,
+	NVME_ST_CURR_OP_SHIFT		= 0,
 	NVME_ST_CURR_OP_MASK		= 0xf,
+	NVME_ST_CURR_OP_CMPL_SHIFT	= 0,
 	NVME_ST_CURR_OP_CMPL_MASK	= 0x7f,
 };
+
+#define NVME_ST_CURR_OP(op)		NVME_GET(op, ST_CURR_OP)
+#define NVME_ST_CURR_OP_CMPL(op)	NVME_GET(op, ST_CURR_OP_CMPL)
 
 /**
  * enum nvme_st_valid_diag_info - Valid Diagnostic Information
@@ -4817,6 +4921,8 @@ enum nvme_fid_supported_effects {
 	NVME_FID_SUPPORTED_EFFECTS_CDQSCP	= 1 << 6,
 };
 
+#define NVME_FID_SUPPORTED_EFFECTS_SCOPE(effects)	NVME_GET(effects, FID_SUPPORTED_EFFECTS_SCOPE)
+
 /**
  * struct nvme_fid_supported_effects_log - Feature Identifiers Supported and Effects
  * @fid_support: Feature Identifier Supported
@@ -5418,6 +5524,11 @@ enum nvme_sanitize_sstat {
 	NVME_SANITIZE_SSTAT_MVCNCLD_MASK		= 0x1,
 };
 
+#define NVME_SANITIZE_SSTAT_STATUS(sstat)		NVME_GET(sstat, SANITIZE_SSTAT_STATUS)
+#define NVME_SANITIZE_SSTAT_COMPLETED_PASSES(sstat)	NVME_GET(sstat, SANITIZE_SSTAT_COMPLETED_PASSES)
+#define NVME_SANITIZE_SSTAT_GLOBAL_DATA_ERASED(sstat)	NVME_GET(sstat, SANITIZE_SSTAT_GLOBAL_DATA_ERASED)
+#define NVME_SANITIZE_SSTAT_MVCNCLD(sstat)		NVME_GET(sstat, SANITIZE_SSTAT_MVCNCLD)
+
 /**
  * enum nvme_sanitize_ssi - Sanitize State Information (SSI)
  * @NVME_SANITIZE_SSI_SANS_SHIFT:		Shift amount to get the value of Sanitize State
@@ -5468,6 +5579,9 @@ enum nvme_sanitize_ssi {
 	NVME_SANITIZE_SSI_MEDIA_VERIFICATION	= 5,
 	NVME_SANITIZE_SSI_POST_VERIF_DEALLOC	= 6,
 };
+
+#define NVME_SANITIZE_SSI_SANS(ssi)	NVME_GET(ssi, SANITIZE_SSI_SANS)
+#define NVME_SANITIZE_SSI_FAILS(ssi)	NVME_GET(ssi, SANITIZE_SSI_FAILS)
 
 /**
  * enum nvme_lockdown_log_scope - lockdown log page scope attributes
@@ -5538,6 +5652,13 @@ enum nvme_pma {
 	NVME_PMA_PHDO_MASK	= 0x1,
 	NVME_PMA_PMT_MASK	= 0xf,
 };
+
+#define NVME_PMA_PME(pma)	NVME_GET(pma, PMA_PME)
+#define NVME_PMA_NCPDF(pma)	NVME_GET(pma, PMA_NCPDF)
+#define NVME_PMA_EPF(pma)	NVME_GET(pma, PMA_EPF)
+#define NVME_PMA_MIPWRTS(pma)	NVME_GET(pma, PMA_MIPWRTS)
+#define NVME_PMA_PHDO(pma)	NVME_GET(pma, PMA_PHDO)
+#define NVME_PMA_PMT(pma)	NVME_GET(pma, PMA_PMT)
 
 /**
  * struct nvme_power_histogram_desc - Power Histogram Descriptor
@@ -6878,7 +6999,7 @@ enum nvme_status_field {
  * @status_field:	The NVMe Completion Queue Entry's Status Field
  *			See &enum nvme_status_field
  *
- * Returns: status code type
+ * Return: status code type
  */
 static inline __u16 nvme_status_code_type(__u16 status_field)
 {
@@ -6890,7 +7011,7 @@ static inline __u16 nvme_status_code_type(__u16 status_field)
  * @status_field:	The NVMe Completion Queue Entry's Status Field
  *			See &enum nvme_status_field
  *
- * Returns: status code
+ * Return: status code
  */
 static inline __u16 nvme_status_code(__u16 status_field)
 {
@@ -6924,11 +7045,13 @@ enum nvme_status_type {
 	NVME_STATUS_TYPE_MI		= 1,
 };
 
+#define NVME_STATUS_TYPE(type)	NVME_GET(type, STATUS_TYPE)
+
 /**
  * nvme_status_get_type() - extract the type from a nvme_* return value
  * @status: the (non-negative) return value from the NVMe API
  *
- * Returns: the type component of the status.
+ * Return: the type component of the status.
  */
 static inline __u32 nvme_status_get_type(int status)
 {
@@ -6940,7 +7063,7 @@ static inline __u32 nvme_status_get_type(int status)
  * value
  * @status: the (non-negative) return value from the NVMe API
  *
- * Returns: the value component of the status; the set of values will depend
+ * Return: the value component of the status; the set of values will depend
  * on the status type.
  */
 static inline __u32 nvme_status_get_value(int status)
@@ -6954,7 +7077,7 @@ static inline __u32 nvme_status_get_value(int status)
  * @type: the status type
  * @value: the status value
  *
- * Returns: true if @status is of the specified type and value
+ * Return: true if @status is of the specified type and value
  */
 static inline __u32 nvme_status_equals(int status, enum nvme_status_type type,
 				       unsigned int value)
@@ -7292,7 +7415,7 @@ enum nvme_cmd_get_log_lid {
  * @NVME_FEAT_FID_NS_METADATA:		Namespace Metadata
  * @NVME_FEAT_FID_SW_PROGRESS:		Software Progress Marker
  * @NVME_FEAT_FID_HOST_ID:		Host Identifier
- * @NVME_FEAT_FID_RESV_MASK:		Reservation Notification Mask
+ * @NVME_FEAT_FID_RESV_NF_MASK:		Reservation Notification Mask
  * @NVME_FEAT_FID_RESV_PERSIST:		Reservation Persistence
  * @NVME_FEAT_FID_WRITE_PROTECT:	Namespace Write Protection Config
  * @NVME_FEAT_FID_BP_WRITE_PROTECT:	Boot Partition Write Protection Config
@@ -7342,7 +7465,7 @@ enum nvme_features_id {
 	NVME_FEAT_FID_NS_METADATA				= 0x7f,
 	NVME_FEAT_FID_SW_PROGRESS				= 0x80,
 	NVME_FEAT_FID_HOST_ID					= 0x81,
-	NVME_FEAT_FID_RESV_MASK					= 0x82,
+	NVME_FEAT_FID_RESV_NF_MASK				= 0x82,
 	NVME_FEAT_FID_RESV_PERSIST				= 0x83,
 	NVME_FEAT_FID_WRITE_PROTECT				= 0x84,
 	NVME_FEAT_FID_BP_WRITE_PROTECT				= 0x85,
@@ -8386,6 +8509,18 @@ enum nvme_lm_cdq_fields {
 	NVME_LM_CREATE_CDQ_CDQID_MASK		= 0xffff,
 };
 
+#define NVME_LM_CDQ_MOS(fields)			NVME_GET(fields, LM_CDQ_MOS)
+#define NVME_LM_CDQ_SEL(fields)		 	NVME_GET(fields, LM_CDQ_SEL)
+
+#define NVME_LM_QT(fields)			NVME_GET(fields, LM_QT)
+#define NVME_LM_CQS(fields)			NVME_GET(fields, LM_CQS)
+
+#define NVME_LM_CREATE_CDQ_PC(fields)		NVME_GET(fields, LM_CREATE_CDQ_PC)
+#define NVME_LM_CREATE_CDQ_CNTLID(fields)	NVME_GET(fields, LM_CREATE_CDQ_CNTLID)
+
+#define NVME_LM_DELETE_CDQ_CDQID(fields)	NVME_GET(fields, LM_DELETE_CDQ_CDQID)
+#define NVME_LM_CREATE_CDQ_CDQID(fields)	NVME_GET(fields, LM_CREATE_CDQ_CDQID)
+
 /**
  * enum nvme_lm_track_send_fields - Track Send command fields
  *
@@ -8421,6 +8556,11 @@ enum nvme_lm_track_send_fields {
 	NVME_LM_LACT_STOP_LOGGING		= 0,
 	NVME_LM_LACT_START_LOGGING		= 1,
 };
+
+#define NVME_LM_TRACK_SEND_MOS(fields)	NVME_GET(fields, LM_TRACK_SEND_MOS)
+#define NVME_LM_TRACK_SEND_SEL(fields)	NVME_GET(fields, LM_TRACK_SEND_SEL)
+
+#define NVME_LM_LACT(fields)		NVME_GET(fields, LM_LACT)
 
 /**
  * enum nvme_lm_migration_send_fields - Migration Send command fields
@@ -8511,6 +8651,21 @@ enum nvme_lm_migration_send_fields {
 	NVME_LM_SET_CONTROLLER_STATE_CNTLID_MASK	= 0xffff,
 };
 
+#define NVME_LM_MIGRATION_SEND_MOS(fields)	NVME_GET(fields, LM_MIGRATION_SEND_MOS)
+#define NVME_LM_MIGRATION_SEND_SEL(fields)	NVME_GET(fields, LM_MIGRATION_SEND_SEL)
+#define NVME_LM_MIGRATION_SEND_UIDX(fields)	NVME_GET(fields, LM_MIGRATION_SEND_UIDX)
+
+#define NVME_LM_STYPE(fields)			NVME_GET(fields, LM_STYPE)
+#define NVME_LM_SUSPEND_CNTLID(fields)		NVME_GET(fields, LM_SUSPEND_CNTLID)
+
+#define NVME_LM_RESUME_CNTLID(fields)		NVME_GET(fields, LM_RESUME_CNTLID)
+
+#define NVME_LM_SEQIND(fields)			NVME_GET(fields, LM_SEQIND)
+
+#define NVME_LM_SET_CONTROLLER_STATE_CSUUIDI(fields)	NVME_GET(fields, LM_SET_CONTROLLER_STATE_CSUUIDI)
+#define NVME_LM_SET_CONTROLLER_STATE_CSVI(fields)	NVME_GET(fields, LM_SET_CONTROLLER_STATE_CSVI)
+#define NVME_LM_SET_CONTROLLER_STATE_CNTLID(fields)	NVME_GET(fields, LM_SET_CONTROLLER_STATE_CNTLID)
+
 /**
  * enum nvme_lm_migration_recv_fields - Migration Receive command fields
  *
@@ -8557,6 +8712,15 @@ enum nvme_lm_migration_recv_fields {
 	/* Migration Receive - Get Controller State - Completion Queue Entry Dword 0 */
 	NVME_LM_GET_CONTROLLER_STATE_CSUP		= 1 << 0,
 };
+
+#define NVME_LM_MIGRATION_RECV_MOS(fields)	NVME_GET(fields, LM_MIGRATION_RECV_MOS)
+#define NVME_LM_MIGRATION_RECV_SEL(fields)	NVME_GET(fields, LM_MIGRATION_RECV_SEL)
+#define NVME_LM_MIGRATION_RECV_UIDX(fields)	NVME_GET(fields, LM_MIGRATION_RECV_UIDX)
+
+#define NVME_LM_GET_CONTROLLER_STATE_CSVI(fields)	NVME_GET(fields, LM_GET_CONTROLLER_STATE_CSVI)
+#define NVME_LM_GET_CONTROLLER_STATE_CSUIDXP(fields)	NVME_GET(fields, LM_GET_CONTROLLER_STATE_CSUIDXP)
+#define NVME_LM_GET_CONTROLLER_STATE_CSUUIDI(fields)	NVME_GET(fields, LM_GET_CONTROLLER_STATE_CSUUIDI)
+#define NVME_LM_GET_CONTROLLER_STATE_CNTLID(fields)	NVME_GET(fields, LM_GET_CONTROLLER_STATE_CNTLID)
 
 /**
  * struct nvme_lm_io_submission_queue_data - I/O Submission Queue data structure. Fields related to
@@ -8704,6 +8868,14 @@ enum nvme_lm_queue_attributes {
 	NVME_LM_IOCQIV_SHIFT	= 16,
 };
 
+#define NVME_LM_IOSQPC(attributes)	NVME_GET(attributes, LM_IOSQPC)
+#define NVME_LM_IOSQPRIO(attributes)	NVME_GET(attributes, LM_IOSQPRIO)
+
+#define NVME_LM_IOCQPC(fid)	NVME_GET(fid, LM_IOCQPC)
+#define NVME_LM_IOCQIEN(fid)	NVME_GET(fid, LM_IOCQIEN)
+#define NVME_LM_S0PT(fid)	NVME_GET(fid, LM_S0PT)
+#define NVME_LM_IOCQIV(fid)	NVME_GET(fid, LM_IOCQIV)
+
 /**
  * enum nvme_lm_ctrl_data_queue_fid - Controller Data Queue - Set Feature
  *
@@ -8714,6 +8886,8 @@ enum nvme_lm_ctrl_data_queue_fid {
 	NVME_LM_CTRL_DATA_QUEUE_ETPT_MASK	= 0x1,
 	NVME_LM_CTRL_DATA_QUEUE_ETPT_SHIFT	= 31,
 };
+
+#define NVME_LM_CTRL_DATA_QUEUE_ETPT(fid)	NVME_GET(fid, LM_CTRL_DATA_QUEUE_ETPT)
 
 /**
  * struct nvme_lm_ctrl_data_queue_fid_data - Get Controller Data Queue feature data

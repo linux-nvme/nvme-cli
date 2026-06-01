@@ -8,8 +8,7 @@ nvme-show-topology - Show topology of all NVMe subsystems
 SYNOPSIS
 --------
 [verse]
-'nvme show-topology'
-			[<global-options>]
+'nvme' [<global-options>] 'show-topology'
 
 DESCRIPTION
 -----------

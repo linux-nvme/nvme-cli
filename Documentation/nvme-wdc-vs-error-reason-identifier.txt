@@ -8,8 +8,9 @@ nvme-wdc-vs-error-reason-identifier - Retrieve WDC device's telemetry log error 
 SYNOPSIS
 --------
 [verse]
-'nvme wdc vs-error-reason-identifier' <device> [--log-id=<NUM>, -i <NUM>] [--file=<FILE>, -o <FILE>]
-			[<global-options>]
+'nvme' [<global-options>] 'wdc vs-error-reason-identifier' <device>
+			[--log-id=<NUM>, -i <NUM>]
+			[--file=<FILE>, -O <FILE>]
 
 DESCRIPTION
 -----------
@@ -33,8 +34,8 @@ OPTIONS
 	Use id 8 for the controller initiated log page. 
 	The default is 7/host generated
 
--o <FILE>::
---output-file=<FILE>::
+-O <FILE>::
+--file=<FILE>::
 	Output file; defaults to "<device serial number>_error_reason_identifier_host_<date>_<time>.bin" for 
 	the host generated log or "<device serial number>_error_reason_identifier_ctlr_<date>_<time>.bin" for 
 	the controller initiated log. 
@@ -46,12 +47,12 @@ EXAMPLES
 * Retrieves the host generated error reason identifier field and save it in file host_gen_error_reason_id.bin. 
 +
 --------
-# nvme wdc vs-error-reason-identifier /dev/nvme0 -i 7 -o host_gen_error_reason_id.bin
+# nvme wdc vs-error-reason-identifier /dev/nvme0 -i 7 -O host_gen_error_reason_id.bin
 --------
 * Retrieves the controller initiated error reason identifier field and save it in file ctlr_init_error_reason_id.bin. 
 +
 --------
-# nvme wdc vs-error-reason-identifier /dev/nvme0 -i 8 -o ctlr_init_error_reason_id.bin
+# nvme wdc vs-error-reason-identifier /dev/nvme0 -i 8 -O ctlr_init_error_reason_id.bin
 --------
 
 NVME

@@ -8,8 +8,7 @@ nvme-sndk-clear-assert-dump - Clears the assert dump (if present).
 SYNOPSIS
 --------
 [verse]
-'nvme sndk clear-assert-dump' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sndk clear-assert-dump' <device>
 
 DESCRIPTION
 -----------

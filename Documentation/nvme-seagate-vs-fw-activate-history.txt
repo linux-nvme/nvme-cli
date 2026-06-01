@@ -9,8 +9,7 @@ Controller-Initiated Telemetry in binary
 SYNOPSIS
 --------
 [verse]
-'nvme seagate vs-fw-activate-history <device> [OPTIONS]'
-			[<global-options>]
+'nvme' [<global-options>] 'seagate vs-fw-activate-history' <device> [OPTIONS]
 
 DESCRIPTION
 -----------

@@ -2790,9 +2790,9 @@ static void stdout_id_ns_nsfeat(__u8 nsfeat)
 static void stdout_id_ns_flbas(__u8 flbas)
 {
 	__u8 rsvd = (flbas & 0x80) >> 7;
-	__u8 msb2_lbaf = (flbas & NVME_NS_FLBAS_HIGHER_MASK) >> 5;
-	__u8 mdedata = (flbas & 0x10) >> 4;
-	__u8 lsb4_lbaf = flbas & NVME_NS_FLBAS_LOWER_MASK;
+	__u8 msb2_lbaf = NVME_FLBAS_HIGHER(flbas);
+	__u8 mdedata = NVME_FLBAS_META_EXT(flbas);
+	__u8 lsb4_lbaf = NVME_FLBAS_LOWER(flbas);
 
 	if (rsvd)
 		printf("  [7:7] : %#x\tReserved\n", rsvd);
@@ -4387,21 +4387,30 @@ static void stdout_effects_log_human(__u32 effect)
 	printf("  CCC%s", (effect & NVME_CMD_EFFECTS_CCC) ? set : clr);
 	printf("  USS%s", (effect & NVME_CMD_EFFECTS_UUID_SEL) ? set : clr);
 
-	if ((effect & NVME_CMD_EFFECTS_CSER_MASK) >> 14 == 0)
+	switch (NVME_CMD_EFFECTS_CSER(effect)) {
+	case 0:
 		printf("  No CSER defined\n");
-	else if ((effect & NVME_CMD_EFFECTS_CSER_MASK) >> 14 == 1)
+		break;
+	case 1:
 		printf("  No admin command for any namespace\n");
-	else
+		break;
+	default:
 		printf("  Reserved CSER\n");
+	}
 
-	if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 0)
+	switch (NVME_CMD_EFFECTS_CSE(effect)) {
+	case 0:
 		printf("  No command restriction\n");
-	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 1)
+		break;
+	case 1:
 		printf("  No other command for same namespace\n");
-	else if ((effect & NVME_CMD_EFFECTS_CSE_MASK) >> 16 == 2)
+		break;
+	case 2:
 		printf("  No other command for any namespace\n");
-	else
+		break;
+	default:
 		printf("  Reserved CSE\n");
+	}
 }
 
 static void stdout_effects_entry(int admin, int index,
@@ -5474,7 +5483,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 	case NVME_FEAT_FID_HOST_ID:
 		stdout_feat_host_id(result, buf);
 		break;
-	case NVME_FEAT_FID_RESV_MASK:
+	case NVME_FEAT_FID_RESV_NF_MASK:
 		printf("\tMask Reservation Preempted Notification  (RESPRE): %s\n",
 		       NVME_FEAT_RM_RESPRE(result) ? "True" : "False");
 		printf("\tMask Reservation Released Notification   (RESREL): %s\n",

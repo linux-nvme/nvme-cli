@@ -9,8 +9,7 @@ result
 SYNOPSIS
 --------
 [verse]
-'nvme sndk vs-pcie-stats' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sndk vs-pcie-stats' <device>
 
 DESCRIPTION
 -----------

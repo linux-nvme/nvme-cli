@@ -125,7 +125,7 @@ bool libnvme_host_is_pdc_enabled(libnvme_host_t h, bool fallback);
  * Returns a host object based on the hostnqn/hostid values or the default if
  * hostnqn/hostid are NULL.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_get_host(struct libnvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, libnvme_host_t *h);
@@ -614,7 +614,7 @@ int libnvme_ns_write_uncorrectable(libnvme_ns_t n, off_t offset, size_t count);
  * libnvme_ns_flush() - Flush data to a namespace
  * @n:	Namespace instance
  *
- * Return: 0 on success, -1 on error.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_ns_flush(libnvme_ns_t n);
 
@@ -626,7 +626,7 @@ int libnvme_ns_flush(libnvme_ns_t n);
  * Writes the data returned by the 'identify namespace' command
  * into @ns.
  *
- * Return: 0 on success, -1 on error.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns);
 
@@ -638,7 +638,7 @@ int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns);
  * Writes the data returned by the 'identify descriptors' command
  * into @descs.
  *
- * Return: 0 on success, -1 on error.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_ns_identify_descs(libnvme_ns_t n, struct nvme_ns_id_desc *descs);
 
@@ -721,7 +721,7 @@ void libnvme_path_reset_stat(libnvme_path_t p);
  * @diffstat:	If set to true then getters return the diff stat otherwise
  *		return the current absolute stat
  *
- * Return:	0 on success, -1 on error
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_path_update_stat(libnvme_path_t p, bool diffstat);
 
@@ -857,7 +857,7 @@ libnvme_subsystem_t libnvme_ctrl_get_subsystem(libnvme_ctrl_t c);
  * libnvme_ns_head_get_sysfs_dir() - sysfs dir of namespave head
  * @head: namespace head instance
  *
- * Returns: sysfs directory name of @head
+ * Return: sysfs directory name of @head
  */
 const char *libnvme_ns_head_get_sysfs_dir(libnvme_ns_head_t head);
 
@@ -867,7 +867,7 @@ const char *libnvme_ns_head_get_sysfs_dir(libnvme_ns_head_t head);
  * @diffstat:	If set to true then getters return the diff stat otherwise
  *		return the current absolute stat
  *
- * Returns:	0 on success, -1 on error
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_ns_update_stat(libnvme_ns_t n, bool diffstat);
 
@@ -987,7 +987,7 @@ long libnvme_ctrl_get_reconnect_count(libnvme_ctrl_t c);
  * Issues an 'identify controller' command to @c and copies the
  * data into @id.
  *
- * Return: 0 on success or -1 on failure.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id);
 
@@ -999,7 +999,7 @@ int libnvme_ctrl_identify(libnvme_ctrl_t c, struct nvme_id_ctrl *id);
  *
  * Scans a controller with sysfs name @name and add it to @r.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
 		libnvme_ctrl_t *c);
@@ -1017,7 +1017,7 @@ void libnvme_rescan_ctrl(libnvme_ctrl_t c);
  * @c:		libnvme_ctrl_t object
  * @instance:	Instance number (e.g. 1 for nvme1)
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_init_ctrl(libnvme_host_t h, libnvme_ctrl_t c, int instance);
 
@@ -1042,7 +1042,7 @@ void libnvme_unlink_ctrl(struct libnvme_ctrl *c);
  * Scans the NVMe topology and filters out the resulting elements
  * by applying @f.
  *
- * Return: 0 on success, or negative error code otherwise.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 		libnvme_scan_filter_t f, void *f_args);
@@ -1071,7 +1071,7 @@ void libnvme_free_host(libnvme_host_t h);
  * Read in the contents of @config_file and merge them with
  * the elements in @r.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_read_config(struct libnvme_global_ctx *ctx,
 		const char *config_file);
@@ -1092,7 +1092,7 @@ void libnvme_refresh_topology(struct libnvme_global_ctx *ctx);
  * Writes the current contents of the JSON configuration
  * to the file descriptor fd.
  *
- * Return: 0 on success, or negative error code otherwise.
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_dump_config(struct libnvme_global_ctx *ctx, int fd);
 
@@ -1103,7 +1103,7 @@ int libnvme_dump_config(struct libnvme_global_ctx *ctx, int fd);
  * Prints the internal object tree in JSON format
  * to stdout.
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_dump_tree(struct libnvme_global_ctx *ctx);
 
@@ -1185,7 +1185,7 @@ char *libnvme_get_path_attr(libnvme_path_t p, const char *attr);
  * @name:	sysfs name of the namespace to scan
  * @ns:		&libnvme_ns_t object to return
  *
- * Return: 0 on success or negative error code otherwise
+ * Return: 0 on success, negative error code otherwise.
  */
 int libnvme_scan_namespace(struct libnvme_global_ctx *ctx, const char *name,
 		libnvme_ns_t *ns);

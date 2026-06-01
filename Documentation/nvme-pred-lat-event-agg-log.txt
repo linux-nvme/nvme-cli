@@ -9,10 +9,9 @@ Page request, returns result and log
 SYNOPSIS
 --------
 [verse]
-'nvme pred-lat-event-agg-log' <device>
+'nvme' [<global-options>] 'pred-lat-event-agg-log' <device>
 			[--log-entries=<log_entries> | -e <log_entries>]
 			[--rae | -r] [--raw-binary | -b]
-			[<global-options>]
 
 DESCRIPTION
 -----------

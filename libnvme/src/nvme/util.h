@@ -254,8 +254,8 @@ int libnvme_random_uuid(unsigned char uuid[NVME_UUID_LEN]);
  * @uuid_list:	UUID list returned by identify UUID
  * @uuid:	Binary encoded input UUID
  *
- * Return: The array position where given UUID is present, or -1 on failure
- *  with errno set.
+ * Return: The array position where given UUID is present, or negative
+ * error code otherwise.
  */
 int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
 		const unsigned char uuid[NVME_UUID_LEN]);

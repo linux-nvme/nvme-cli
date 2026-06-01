@@ -8,14 +8,13 @@ nvme-rpmb - Send RPMB commands to an NVMe device
 SYNOPSIS
 --------
 [verse]
-'nvme rpmb' <device> [--cmd=<command> | -c <command>]
+'nvme' [<global-options>] 'rpmb' <device> [--cmd=<command> | -c <command>]
 			[--msgfile=<data-file> | -f <data-file>]
 			[--keyfile=<key-file> | -g <key-file>]
 			[--key=<key> | -k <key>] [--msg=<data> | -d <data>]
 			[--address=<offset> | -o <offset>]
 			[--blocks=<512 byte sectors> | -b <sectors>]
 			[--target=<target-id> | -t <id>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

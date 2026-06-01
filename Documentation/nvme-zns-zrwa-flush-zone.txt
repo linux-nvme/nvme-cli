@@ -8,9 +8,9 @@ nvme-zns-zrwa-flush-zone - Flush LBAs associated with a ZRWA to a zone
 SYNOPSIS
 --------
 [verse]
-'nvme zns zrwa-flush-zone' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme' [<global-options>] 'zns zrwa-flush-zone' <device>
+			[--namespace-id=<NUM> | -n <NUM>]
 			[--lba=<LBA> | -l <LBA>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

@@ -8,8 +8,7 @@ nvme-micron-nand-stats - Retrieves NAND statistics of given micron device
 SYNOPSIS
 --------
 [verse]
-'nvme micron vs-nand-stats' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'micron vs-nand-stats' <device>
 
 DESCRIPTION
 -----------

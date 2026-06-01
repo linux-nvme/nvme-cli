@@ -4053,7 +4053,7 @@ static void json_feature_show_fields_host_id(struct json_object *r,
 			       le64_to_cpu(*(__le64 *)hostid));
 }
 
-static void json_feature_show_fields_resv_mask(struct json_object *r, unsigned int result)
+static void json_feature_show_fields_resv_nf_mask(struct json_object *r, unsigned int result)
 {
 	obj_add_str(r, "Mask Reservation Preempted Notification (RESPRE)", (result & 8) >> 3 ?
 		     "True" : "False");
@@ -4322,8 +4322,8 @@ static void json_feature_show_fields(enum nvme_features_id fid, unsigned int res
 	case NVME_FEAT_FID_HOST_ID:
 		json_feature_show_fields_host_id(r, result, buf);
 		break;
-	case NVME_FEAT_FID_RESV_MASK:
-		json_feature_show_fields_resv_mask(r, result);
+	case NVME_FEAT_FID_RESV_NF_MASK:
+		json_feature_show_fields_resv_nf_mask(r, result);
 		break;
 	case NVME_FEAT_FID_RESV_PERSIST:
 		json_feature_show_fields_resv_persist(r, result);

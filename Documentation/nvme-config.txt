@@ -8,10 +8,13 @@ nvme-config - NVMe-over-Fabrics configuration.
 SYNOPSIS
 --------
 [verse]
-'nvme config' [--scan | -R] [--modify | -M] [--update | -U] [--dump | -O]
+'nvme' [<global-options>] 'config'
+			[--scan | -R]
+			[--modify | -M]
+			[--update | -U]
+			[--dump | -O]
 			[--config=<cfg> | -J <cfg>]
 			[<fabrics-options>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

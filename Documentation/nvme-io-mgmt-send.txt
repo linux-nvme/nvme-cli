@@ -8,11 +8,12 @@ nvme-io-mgmt-send - I/O Management Send command
 SYNOPSIS
 --------
 [verse]
-'nvme io-mgmt-send' <device> [--namespace-id=<NUM> | -n <NUM>]
-			[--mos=<NUM> | -s <NUM>] [--mo=<NUM> | -m <NUM>]
+'nvme' [<global-options>] 'io-mgmt-send' <device>
+			[--namespace-id=<NUM> | -n <NUM>]
+			[--mos=<NUM> | -s <NUM>]
+			[--mo=<NUM> | -m <NUM>]
 			[--data=<FILE> | -d <FILE>]
 			[--data-len=<NUM> | -l <NUM>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

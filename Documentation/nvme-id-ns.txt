@@ -8,10 +8,12 @@ nvme-id-ns - Send NVMe Identify Namespace, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme id-ns' <device> [--vendor-specific | -V] [--raw-binary | -b]
-			[--namespace-id=<nsid> | -n <nsid>] [--force]
+'nvme' [<global-options>] 'id-ns' <device>
+			[--vendor-specific | -V]
+			[--raw-binary | -b]
+			[--namespace-id=<nsid> | -n <nsid>]
+			[--force]
 			[--human-readable | -H]
-			[<global-options>]
 
 DESCRIPTION
 -----------

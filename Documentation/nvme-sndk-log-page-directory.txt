@@ -8,8 +8,7 @@ nvme-sndk-log-page-directory - Retrieves the list of Log IDs supported by the dr
 SYNOPSIS
 --------
 [verse]
-'nvme sndk log-page-directory' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'sndk log-page-directory' <device>
 
 DESCRIPTION
 -----------

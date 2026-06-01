@@ -8,8 +8,7 @@ nvme-wdc-vs-drive-info - Send the NVMe WDC vs-drive-info command, return result
 SYNOPSIS
 --------
 [verse]
-'nvme wdc vs-drive-info' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'wdc vs-drive-info' <device>
 
 DESCRIPTION
 -----------

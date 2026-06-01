@@ -8,8 +8,7 @@ nvme-seagate-clear-fw-activate-history - Clear the firmware activation history f
 SYNOPSIS
 --------
 [verse]
-'nvme seagate clear-fw-activate-history <device> [OPTIONS]'
-			[<global-options>]
+'nvme' [<global-options>] 'seagate clear-fw-activate-history' <device> [OPTIONS]
 
 DESCRIPTION
 -----------

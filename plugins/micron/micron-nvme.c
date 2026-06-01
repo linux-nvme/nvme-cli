@@ -718,8 +718,8 @@ static int micron_smbus_option(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		OPT_STRING("option", 'o', "option", &opt.option, option),
-		OPT_UINT("value", 'v',	&opt.value, value),
+		OPT_STRING("option", 'O', "option", &opt.option, option),
+		OPT_UINT("value", 'V',	&opt.value, value),
 		OPT_UINT("save", 's', &opt.save, save));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
@@ -2888,7 +2888,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 	};
 
 	NVME_ARGS(opts,
-		OPT_STRING("option", 'o', "option", &opt.option, option),
+		OPT_STRING("option", 'O', "option", &opt.option, option),
 		OPT_STRING("command", 'c', "command", &opt.command, cmdstr),
 		OPT_UINT("threshold", 't', &opt.threshold, thrtime));
 
@@ -3260,7 +3260,7 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		OPT_STRING("option", 'o', "option", &opt.option, option),
+		OPT_STRING("option", 'O', "option", &opt.option, option),
 		OPT_UINT("select", 's', &opt.select, select));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);

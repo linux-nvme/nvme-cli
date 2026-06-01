@@ -273,8 +273,7 @@ static int vt_add_entry_to_log(struct libnvme_transport_handle *hdl,
 	int ret = 0;
 	unsigned int nsid = 0;
 
-	memset(smart.path, 0, sizeof(smart.path));
-	strncpy(smart.path, path, sizeof(smart.path) - 1);
+	snprintf(smart.path, sizeof(smart.path), "%s", path);
 	if (!cfg->output_file)
 		filename = vt_default_log_file_name;
 	else
@@ -962,7 +961,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 	NVME_ARGS(opts,
 		OPT_DOUBLE("run-time",  'r', &cfg.run_time_hrs,             run_time),
 		OPT_DOUBLE("freq",      'f', &cfg.log_record_frequency_hrs, freq),
-		OPT_FILE("output-file", 'o', &cfg.output_file,              output_file),
+		OPT_FILE("output-file", 'O', &cfg.output_file,              output_file),
 		OPT_STRING("test-name", 'n', "NAME", &cfg.test_name,        test_name));
 
 	vt_generate_vtview_log_file_name(vt_default_log_file_name);

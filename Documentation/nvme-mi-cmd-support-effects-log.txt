@@ -9,8 +9,7 @@ returns results and structure
 SYNOPSIS
 --------
 [verse]
-'nvme-mi-cmd-support-effects-log' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'mi-cmd-support-effects-log' <device>
 
 DESCRIPTION
 -----------

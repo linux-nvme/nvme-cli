@@ -19,7 +19,7 @@ api_files = [
     'linux.h',
     'mi-types.h',
     'mi.h',
-    'nbft-types.h',
+    'nvme-types-nbft.h',
     'nbft.h',
     'nvme-cmds.h',
     'nvme-types.h',

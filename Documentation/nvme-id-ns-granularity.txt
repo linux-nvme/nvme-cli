@@ -9,8 +9,7 @@ the specified device
 SYNOPSIS
 --------
 [verse]
-'nvme id-ns-granularity' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'id-ns-granularity' <device>
 
 DESCRIPTION
 -----------

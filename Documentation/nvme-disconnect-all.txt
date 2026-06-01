@@ -8,8 +8,7 @@ nvme-disconnect-all - Disconnect from all connected Fabrics controllers.
 SYNOPSIS
 --------
 [verse]
-'nvme disconnect-all'
-			[<global-options>]
+'nvme' [<global-options>] 'disconnect-all'
 
 DESCRIPTION
 -----------

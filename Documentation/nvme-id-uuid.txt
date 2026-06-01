@@ -8,9 +8,8 @@ nvme-id-uuid - Send a Identify UUID List command to the specified device
 SYNOPSIS
 --------
 [verse]
-'nvme id-uuid' <device> [--raw-binary | -b]
+'nvme' [<global-options>] 'id-uuid' <device> [--raw-binary | -b]
 			[--human-readable | -H]
-			[<global-options>]
 
 DESCRIPTION
 -----------

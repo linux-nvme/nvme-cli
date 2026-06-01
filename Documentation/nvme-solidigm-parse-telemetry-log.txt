@@ -8,8 +8,7 @@ nvme-solidigm-parse-telemetry-log - Parse and display Solidigm Telemetry log
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm parse-telemetry-log' <device> [OPTIONS]
-			[<global-options>]
+'nvme' [<global-options>] 'solidigm parse-telemetry-log' <device> [OPTIONS]
 
 DESCRIPTION
 -----------

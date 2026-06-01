@@ -8,9 +8,8 @@ nvme-sndk-cu-smart-log - Send NVMe Sandisk cu-smart-log Vendor Unique Command, r
 SYNOPSIS
 --------
 [verse]
-'nvme sndk cu-smart-log' <device>
+'nvme' [<global-options>] 'sndk cu-smart-log' <device>
 			[--uuid-index=<uuid-index> | -u <uuid-index>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

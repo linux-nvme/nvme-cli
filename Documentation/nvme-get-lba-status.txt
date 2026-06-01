@@ -8,12 +8,12 @@ nvme-get-lba-status - Get LBA Status from NVMe device
 SYNOPSIS
 --------
 [verse]
-'nvme get-lba-status' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'get-lba-status' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
 			[--start-lba=<slba> | -s <slba>]
 			[--max-dw=<max-dw> | -m <max-dw>]
 			[--action=<action-type> | -a <action-type>]
 			[--range-len=<range-len> | -l <range-len>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

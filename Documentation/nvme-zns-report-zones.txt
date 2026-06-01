@@ -8,13 +8,13 @@ nvme-zns-report-zones - Retrieve and display the Report Zones data structure
 SYNOPSIS
 --------
 [verse]
-'nvme zns report-zones' <device> [--namespace-id=<NUM> | -n <NUM>]
+'nvme' [<global-options>] 'zns report-zones' <device>
+				 [--namespace-id=<NUM> | -n <NUM>]
 				 [--start-lba=<IONUM> | -s <IONUM>]
 				 [--descs=<NUM> | -d <NUM>]
 				 [--state=<NUM> | -S <NUM>]
 				 [--extended | -e]
 				 [--partial | -p]
-				 [<global-options>]
 
 DESCRIPTION
 -----------

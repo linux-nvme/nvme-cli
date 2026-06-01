@@ -21,6 +21,9 @@
  * DOC: nvme-types-zns.h
  *
  * Zoned Namespace Command Set type definitions
+ *
+ * Based on NVM Express Zoned Namespace Command Set Specification,
+ * Revision 1.4, August 1, 2025 (Ratified)
  */
 
 /**

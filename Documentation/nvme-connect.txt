@@ -8,10 +8,9 @@ nvme-connect - Connect to a Fabrics controller.
 SYNOPSIS
 --------
 [verse]
-'nvme connect' [--config=<filename>]
+'nvme' [<global-options>] 'connect' [--config=<filename>]
 	  		[--application=<id>]
 			[<fabrics-options>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

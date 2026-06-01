@@ -8,8 +8,7 @@ nvme-solidigm-market-log - Retrieve Market Log
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm market-log' <device> [--raw-binary | -b]
-			[<global-options>]
+'nvme' [<global-options>] 'solidigm market-log' <device> [--raw-binary | -b]
 
 DESCRIPTION
 -----------

@@ -8,10 +8,10 @@ nvme-fw-download - Download all or a portion of an nvme firmware image.
 SYNOPSIS
 --------
 [verse]
-'nvme fw-download' <device> [--fw=<firmware-file> | -f <firmware-file>]
+'nvme' [<global-options>] 'fw-download' <device>
+			[--fw=<firmware-file> | -f <firmware-file>]
 			[--xfer=<transfer-size> | -x <transfer-size>]
 			[--offset=<offset> | -O <offset>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

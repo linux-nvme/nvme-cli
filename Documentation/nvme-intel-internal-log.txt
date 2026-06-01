@@ -8,12 +8,11 @@ nvme-intel-internal-log - Retrieve Intel device's internal log and save to file.
 SYNOPSIS
 --------
 [verse]
-'nvme intel internal-log ' <device> [--log=<NUM>, -l <NUM>]
+'nvme' [<global-options>] 'intel internal-log' <device> [--log=<NUM>, -l <NUM>]
 		[--region=<NUM>, r <NUM>]
 		[--nlognum=<NUM>, m <NUM>]
 		[--namespace-id=<NUM>, -n <NUM>]
-		[--output-file=<FILE>, -o <FILE>]
-			[<global-options>]
+		[--output-file=<FILE>, -O <FILE>]
 
 DESCRIPTION
 -----------
@@ -40,7 +39,7 @@ OPTIONS
 --namespace-id=<NUM>::
 	Namespace to use.
 
--o <FILE>::
+-O <FILE>::
 --output-file=<FILE>::
 	Output file; defaults to device name provided
 

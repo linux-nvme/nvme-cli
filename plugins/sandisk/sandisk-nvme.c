@@ -428,11 +428,11 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	};
 
 	NVME_ARGS(opts,
-		OPT_FILE("output-file",   'o', &cfg.file,      file),
+		OPT_FILE("output-file",   'O', &cfg.file,      file),
 		OPT_UINT("transfer-size", 's', &cfg.xfer_size, size),
 		OPT_UINT("data-area",     'd', &cfg.data_area, data_area),
 		OPT_FILE("type",          't', &cfg.type,      type),
-		OPT_FLAG("verbose",       'v', &cfg.verbose,   verbose),
+		OPT_FLAG("verbose",       'V', &cfg.verbose,   verbose),
 		OPT_LONG("file-size",     'f', &cfg.file_size, file_size),
 		OPT_LONG("offset",        'e', &cfg.offset,    offset),
 		OPT_END());

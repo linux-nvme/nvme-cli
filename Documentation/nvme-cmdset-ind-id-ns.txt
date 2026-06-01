@@ -8,10 +8,10 @@ nvme-cmdset-ind-id-ns - Send NVMe I/O Command Set Independent Identify Namespace
 SYNOPSIS
 --------
 [verse]
-'nvme cmdset-ind-id-ns' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'cmdset-ind-id-ns' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
 			[--human-readable | -H]
 			[--raw-binary | -b]
-			[<global-options>]
 
 DESCRIPTION
 -----------

@@ -8,9 +8,10 @@ nvme-huawei-id-ctrl - Send NVMe Identify Controller, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme huawei id-ctrl' <device> [--vendor-specific | -v] [--raw-binary | -b]
+'nvme' [<global-options>] 'huawei id-ctrl' <device>
+			[--vendor-specific | -v]
+			[--raw-binary | -b]
 			[--human-readable | -H]
-			[<global-options>]
 
 DESCRIPTION
 -----------

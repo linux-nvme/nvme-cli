@@ -8,8 +8,9 @@ nvme-intel-lat-stats - Send NVMe Identify Controller, return result and structur
 SYNOPSIS
 --------
 [verse]
-'nvme intel lat-stats' <device> [--write | -w] [--raw-binary | -b]
-			[<global-options>]
+'nvme' [<global-options>] 'intel lat-stats' <device>
+			[--write | -w]
+			[--raw-binary | -b]
 
 DESCRIPTION
 -----------

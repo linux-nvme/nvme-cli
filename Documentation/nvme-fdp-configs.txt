@@ -8,10 +8,9 @@ nvme-fdp-configs - Get Flexible Data Placement Configurations
 SYNOPSIS
 --------
 [verse]
-'nvme fdp configs' <device> [--endgrp-id=<NUM> | -e <NUM>]
+'nvme' [<global-options>] 'fdp configs' <device> [--endgrp-id=<NUM> | -e <NUM>]
 			[--human-readable | -H]
 			[--raw-binary | -b]
-			[<global-options>]
 
 DESCRIPTION
 -----------

@@ -8,8 +8,7 @@ nvme-wdc-purge-monitor - Send NVMe WDC Purge-Monitor Vendor Unique Command, retu
 SYNOPSIS
 --------
 [verse]
-'nvme wdc purge-monitor' <device>
-			[<global-options>]
+'nvme' [<global-options>] 'wdc purge-monitor' <device>
 
 DESCRIPTION
 -----------

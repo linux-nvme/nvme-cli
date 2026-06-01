@@ -8,13 +8,12 @@ nvme-format - Format an NVMe device
 SYNOPSIS
 --------
 [verse]
-'nvme format' <device> [--namespace-id=<nsid> | -n <nsid>]
+'nvme' [<global-options>] 'format' <device> [--namespace-id=<nsid> | -n <nsid>]
 			[--lbaf=<lbaf> | -l <lbaf>]
 			[--block-size=<block size | -b <block size>]
 			[--ses=<ses> | -s <ses>] [--pil=<pil> | -p <pil>]
 			[--pi=<pi> | -i <pi>] [--ms=<ms> | -m <ms>]
 			[--reset | -r] [--force]
-			[<global-options>]
 
 DESCRIPTION
 -----------

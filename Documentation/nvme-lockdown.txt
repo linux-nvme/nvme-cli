@@ -8,12 +8,12 @@ nvme-lockdown - Send an NVMe Lockdown command to prohibit or allow the execution
 SYNOPSIS
 --------
 [verse]
-'nvme-lockdown' <device> [--ofi=<ofi> | -O <ofi>]
+'nvme' [<global-options>] 'lockdown' <device>
+			[--ofi=<ofi> | -O <ofi>]
 			[--ifc=<ifc> | -f <ifc>]
 			[--prhbt=<prhbt> | -p <prhbt>]
 			[--scp=<scp> | -s <scp>]
 			[--uuid=<UUID_Index> | -U <UUID_Index>]
-			[<global-options>]
 
 DESCRIPTION
 -----------

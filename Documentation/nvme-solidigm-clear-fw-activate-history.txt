@@ -8,13 +8,14 @@ nvme-solidigm-clear-fw-activate-history - Clear firmware update history log
 SYNOPSIS
 --------
 [verse]
-'nvme solidigm clear-fw-activate-history' <device> [--no-uuid | -n]
-			[<global-options>]
+'nvme' [<global-options>] 'solidigm clear-fw-activate-history' <device>
+			[--no-uuid | -n]
 
 DESCRIPTION
 -----------
-This command is a redirect to the OCP plugin's clear firmware update history log command.
-For detailed usage and options, please refer to the documentation for 'nvme ocp clear-fw-activate-history'.
+This command is a redirect to the OCP plugin's clear firmware update history log
+command. For detailed usage and options, please refer to the documentation for
+'nvme ocp clear-fw-activate-history'.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).

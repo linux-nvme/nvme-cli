@@ -8,8 +8,7 @@ nvme-seagate-cloud-SSD-plugin-version - Shows OCP Seagate plugin's version infor
 SYNOPSIS
 --------
 [verse]
-'nvme seagate cloud-SSD-plugin-version'
-			[<global-options>]
+'nvme' [<global-options>] 'seagate cloud-SSD-plugin-version'
 
 DESCRIPTION
 -----------

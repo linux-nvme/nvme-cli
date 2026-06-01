@@ -9,9 +9,10 @@ returns result and log
 SYNOPSIS
 --------
 [verse]
-'nvme intel smart-log-add' <device> [--namespace-id=<nsid> | -n <nsid>]
-			[--raw-binary | -b] [--json | -j]
-			[<global-options>]
+'nvme' [<global-options>] 'intel smart-log-add' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
+			[--raw-binary | -b]
+			[--json | -j]
 
 DESCRIPTION
 -----------

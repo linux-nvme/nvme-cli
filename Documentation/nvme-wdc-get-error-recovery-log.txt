@@ -9,9 +9,8 @@ command, return parsed log output
 SYNOPSIS
 --------
 [verse]
-'nvme wdc get-error-recovery-log' <device> [--output-format=<normal|json>
--o <normal|json>]
-			[<global-options>]
+'nvme' [<global-options>] 'wdc get-error-recovery-log' <device>
+			[--output-format=<normal|json> | -o <normal|json>]
 
 DESCRIPTION
 -----------

@@ -8,8 +8,9 @@ nvme-fdp-status - Get Reclaim Unit Handle Status
 SYNOPSIS
 --------
 [verse]
-'nvme fdp status' <device> [--namespace-id=<NUM> | -n <NUM>] [--raw-binary | -b]
-			[<global-options>]
+'nvme' [<global-options>] 'fdp status' <device>
+			[--namespace-id=<NUM> | -n <NUM>]
+			[--raw-binary | -b]
 
 DESCRIPTION
 -----------

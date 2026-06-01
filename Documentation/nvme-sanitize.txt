@@ -8,13 +8,13 @@ nvme-sanitize - Send NVMe Sanitize Command, return result
 SYNOPSIS
 --------
 [verse]
-'nvme sanitize' <device> [--no-dealloc | -d] [--oipbp | -i]
-			[--owpass=<overwrite-pass-count> | -n <overwrite-pass-count>]
+'nvme' [<global-options>] 'sanitize' <device> [--no-dealloc | -d] [--oipbp | -i]
+			[--owpass=<overwrite-pass-count> | -n
+			<overwrite-pass-count>]
 			[--ause | -u] [--sanact=<action> | -a <action>]
 			[--ovrpat=<overwrite-pattern> | -p <overwrite-pattern>]
 			[--emvs | -e] [--force]
 			[--human-readable | -H]
-			[<global-options>]
 
 DESCRIPTION
 -----------
