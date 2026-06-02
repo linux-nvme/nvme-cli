@@ -135,9 +135,11 @@ int parse_and_open(struct libnvme_global_ctx **ctx,
 		struct libnvme_transport_handle **hdl, int argc, char **argv,
 		const char *desc, struct argconfig_commandline_options *clo);
 
+void put_transport_handle(struct libnvme_transport_handle *hdl);
+
 // TODO: unsure if we need a double ptr here
-static inline DEFINE_CLEANUP_FUNC(
-	cleanup_nvme_transport_handle, struct libnvme_transport_handle *, libnvme_close)
+static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_transport_handle,
+	struct libnvme_transport_handle *, put_transport_handle)
 #define __cleanup_nvme_transport_handle __cleanup(cleanup_nvme_transport_handle)
 
 extern const char *uuid_index;
