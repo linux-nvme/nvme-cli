@@ -791,8 +791,8 @@ void sedopal_print_sum(void *data)
 		(sumd->flags & SUM_FEATURE_ANY) ? "yes" : "no");
 	printf("\tAll Locking Objects in SUM?     : %s\n",
 		(sumd->flags & SUM_FEATURE_ALL) ? "yes" : "no");
-	printf("\tUser Authority of Objects       : %s\n",
-		(sumd->flags & SUM_FEATURE_POLICY) ? "yes" : "no");
+	printf("\tUser Controls Locking Range     : %s\n",
+		(sumd->flags & SUM_FEATURE_POLICY) ? "no" : "yes");
 }
 
 /*
