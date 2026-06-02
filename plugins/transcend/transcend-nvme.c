@@ -9,6 +9,7 @@
 #include <libnvme.h>
 
 #include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
 
@@ -32,7 +33,7 @@ static int getHealthValue(int argc, char **argv, struct command *acmd, struct pl
 
 	result = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (result) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 	result = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
@@ -65,7 +66,7 @@ static int getBadblock(int argc, char **argv, struct command *acmd, struct plugi
 
 	result = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (result) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 

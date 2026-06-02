@@ -16,6 +16,7 @@
 
 #include "common.h"
 #include "nvme.h"
+#include "nvme-print.h"
 #include "util/cleanup.h"
 
 #define CREATE_CMD
@@ -58,7 +59,7 @@ static bool confirm_owner_change(void)
 	if (!isatty(STDIN_FILENO))
 		return true;
 
-	fprintf(stderr,
+	nvme_show_error(
 		"Changing or removing the owner may prevent NVMe orchestrators from\n"
 		"protecting this controller against accidental removal. Continue? [y/N]: ");
 
@@ -124,11 +125,11 @@ static int registry_retrieve(int argc, char **argv, struct command *acmd,
 
 	device = get_device(argc, argv);
 	if (!device) {
-		fprintf(stderr, "device required\n");
+		nvme_show_error("device required");
 		return -EINVAL;
 	}
 	if (!cfg.attr) {
-		fprintf(stderr, "--attr required\n");
+		nvme_show_error("--attr required");
 		return -EINVAL;
 	}
 
@@ -139,12 +140,12 @@ static int registry_retrieve(int argc, char **argv, struct command *acmd,
 
 	ret = libnvmf_registry_retrieve(ctx, device, cfg.attr, &value);
 	if (ret == -ENOENT) {
-		fprintf(stderr, "%s: not registered or '%s' not found\n",
+		nvme_show_error("%s: not registered or '%s' not found",
 			device, cfg.attr);
 		return ret;
 	}
 	if (ret) {
-		fprintf(stderr, "retrieve failed: %s\n", libnvme_strerror(-ret));
+		nvme_show_error("retrieve failed: %s", libnvme_strerror(-ret));
 		return ret;
 	}
 	printf("%s\n", value);
@@ -178,16 +179,16 @@ static int registry_update(int argc, char **argv, struct command *acmd,
 
 	device = get_device(argc, argv);
 	if (!device) {
-		fprintf(stderr, "device required\n");
+		nvme_show_error("device required");
 		return -EINVAL;
 	}
 	if (!cfg.attr || !cfg.value) {
-		fprintf(stderr, "--attr and --value are required\n");
+		nvme_show_error("--attr and --value are required");
 		return -EINVAL;
 	}
 
 	if (!strcmp(cfg.attr, "owner") && !confirm_owner_change()) {
-		fprintf(stderr, "Aborted.\n");
+		nvme_show_error("Aborted.");
 		return 0;
 	}
 
@@ -198,7 +199,7 @@ static int registry_update(int argc, char **argv, struct command *acmd,
 
 	ret = libnvmf_registry_update(ctx, device, cfg.attr, cfg.value);
 	if (ret)
-		fprintf(stderr, "update failed: %s\n", libnvme_strerror(-ret));
+		nvme_show_error("update failed: %s", libnvme_strerror(-ret));
 	return ret;
 }
 
@@ -226,7 +227,7 @@ static int registry_delete(int argc, char **argv, struct command *acmd,
 
 	device = get_device(argc, argv);
 	if (!device) {
-		fprintf(stderr, "device required\n");
+		nvme_show_error("device required");
 		return -EINVAL;
 	}
 
@@ -237,7 +238,7 @@ static int registry_delete(int argc, char **argv, struct command *acmd,
 	 */
 	if ((!cfg.attr || !strcmp(cfg.attr, "owner")) &&
 	    !confirm_owner_change()) {
-		fprintf(stderr, "Aborted.\n");
+		nvme_show_error("Aborted.");
 		return 0;
 	}
 
@@ -251,6 +252,6 @@ static int registry_delete(int argc, char **argv, struct command *acmd,
 	else
 		ret = libnvmf_registry_delete(ctx, device);
 	if (ret)
-		fprintf(stderr, "%s: %s\n", device, libnvme_strerror(-ret));
+		nvme_show_error("%s: %s", device, libnvme_strerror(-ret));
 	return ret;
 }

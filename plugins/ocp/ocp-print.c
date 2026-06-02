@@ -9,7 +9,7 @@
 		if (ops && ops->name) \
 			ops->name(__VA_ARGS__); \
 		else \
-			fprintf(stderr, "unhandled output format\n"); \
+			nvme_show_error("unhandled output format"); \
 	} while (false)
 
 static struct ocp_print_ops *ocp_print_ops(nvme_print_flags_t flags)

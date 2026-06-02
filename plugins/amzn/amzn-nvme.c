@@ -592,7 +592,7 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 		return rc;
 
 	if (nvme_identify_ctrl(hdl, &ctrl)) {
-		fprintf(stderr, "Failed to get identify controller\n");
+		nvme_show_error("Failed to get identify controller");
 		rc = -errno;
 		goto done;
 	}
@@ -618,14 +618,14 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 			  &log, len);
 	rc = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (rc != 0) {
-		fprintf(stderr, "[ERROR] %s: Failed to get log page, rc = %d\n",
+		nvme_show_error("[ERROR] %s: Failed to get log page, rc = %d",
 			__func__, rc);
 		goto done;
 	}
 
 	if (log.base.magic != AMZN_NVME_EBS_STATS_MAGIC &&
 		log.base.magic != AMZN_NVME_LOCAL_STORAGE_STATS_MAGIC) {
-		fprintf(stderr, "[ERROR] %s: Not an EC2 device\n", __func__);
+		nvme_show_error("[ERROR] %s: Not an EC2 device", __func__);
 		rc = -ENOTSUP;
 		goto done;
 	}

@@ -256,7 +256,7 @@ static int get_ibm_addi_smart_log(int argc, char **argv, struct command *cmd, st
 	} else if (err > 0)
 		nvme_show_status(err);
 	else
-		nvme_show_error("ibm additional smart log: %s\n", libnvme_strerror(errno));
+		nvme_show_error("ibm additional smart log: %s", libnvme_strerror(errno));
 
 	return err;
 }
@@ -387,7 +387,7 @@ static int get_ibm_vpd_log(int argc, char **argv, struct command *cmd, struct pl
 	} else if (err > 0)
 		nvme_show_status(err);
 	else
-		nvme_show_error("ibm vpd log: %s\n", libnvme_strerror(errno));
+		nvme_show_error("ibm vpd log: %s", libnvme_strerror(errno));
 
 	return err;
 }
@@ -575,14 +575,14 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_EST_CTX_AND_READ,
 			&pevent_log, sizeof(pevent_log));
 	if (err) {
-		fprintf(stderr, "Setting persistent event log read ctx failed (ignored)!\n");
+		nvme_show_error("Setting persistent event log read ctx failed (ignored)!");
 		return err;
 	}
 
 	log_length = le64_to_cpu(pevent_log.tll);
 	pevent_log_info = libnvme_alloc(log_length);
 	if (!pevent_log_info) {
-		perror("could not alloc buffer for persistent event log page (ignored)!\n");
+		nvme_show_perror("could not alloc buffer for persistent event log page (ignored)!\n");
 		return err;
 	}
 

@@ -906,7 +906,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 
@@ -1085,7 +1085,7 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 
@@ -1248,7 +1248,7 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 
@@ -1384,7 +1384,7 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err < 0) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 
@@ -1436,7 +1436,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err < 0) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 
@@ -1454,12 +1454,12 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 		err = nvme_set_features(hdl, 0, 0xC1, 0, 0x80000000, 0, 0, 0, 0, NULL,
 				0, &result);
 		if (err)
-			fprintf(stderr, "%s: couldn't clear PCIe correctable errors\n",
+			nvme_show_error("%s: couldn't clear PCIe correctable errors",
 				__func__);
 	}
 
 	if (err < 0) {
-		perror("set-feature");
+		nvme_show_err(err, "set-feature");
 		return errno;
 	}
 
@@ -1494,7 +1494,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 
@@ -1513,13 +1513,13 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 		err = nvme_set_features(hdl, 0, 0xC3, 0, 0x80000000, 0, 0, 0, 0, NULL,
 				0, &result);
 		if (err)
-			fprintf(stderr, "%s: couldn't clear PCIe correctable errors\n", __func__);
+			nvme_show_error("%s: couldn't clear PCIe correctable errors", __func__);
 	}
 
 	err = nvme_set_features_simple(hdl, 0, 0xE1, cfg.save, 0xCB, &result);
 
 	if (err < 0) {
-		perror("set-feature");
+		nvme_show_err(err, "set-feature");
 		return errno;
 	}
 
@@ -1582,10 +1582,8 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 			d((unsigned char *)(&tele_log), sizeof(tele_log), 16, 1);
 		} else
 			seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
-	} else if (err > 0) {
-		nvme_show_status(err);
 	} else {
-		perror("log page");
+		nvme_show_err(err, "log page");
 	}
 
 	blkCnt = 0;
@@ -1604,7 +1602,7 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 		log = malloc(bytesToGet);
 
 		if (!log) {
-			fprintf(stderr, "could not alloc buffer for log\n");
+			nvme_show_error("could not alloc buffer for log");
 
 			return -EINVAL;
 		}
@@ -1624,10 +1622,8 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 				d((unsigned char *)log, bytesToGet, 16, 1);
 			} else
 				seaget_d_raw((unsigned char *)log, bytesToGet, dump_fd);
-		} else if (err > 0) {
-			nvme_show_status(err);
 		} else {
-			perror("log page");
+			nvme_show_err(err, "log page");
 		}
 
 		blkCnt += blksToGet;
@@ -1689,10 +1685,8 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 			d((unsigned char *)(&tele_log), sizeof(tele_log), 16, 1);
 		} else
 			seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
-	} else if (err > 0) {
-		nvme_show_status(err);
 	} else {
-		perror("log page");
+		nvme_show_err(err, "log page");
 	}
 
 	blkCnt = 0;
@@ -1709,7 +1703,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 		log = malloc(bytesToGet);
 
 		if (!log) {
-			fprintf(stderr, "could not alloc buffer for log\n");
+			nvme_show_error("could not alloc buffer for log");
 			return -EINVAL;
 		}
 
@@ -1728,10 +1722,8 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 				d((unsigned char *)log, bytesToGet, 16, 1);
 			} else
 				seaget_d_raw((unsigned char *)log, bytesToGet, dump_fd);
-		} else if (err > 0) {
-			nvme_show_status(err);
 		} else {
-			perror("log page");
+			nvme_show_err(err, "log page");
 		}
 
 		blkCnt += blksToGet;
@@ -1791,7 +1783,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 	if (strlen(cfg.file)) {
 		dump_fd = nvme_open_rawdata(cfg.file, flags, mode);
 		if (dump_fd < 0) {
-			perror(cfg.file);
+			nvme_show_perror("%s", cfg.file);
 			return -EINVAL;
 		}
 	}
@@ -1804,10 +1796,8 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 		offset += 512;
 
 		seaget_d_raw((unsigned char *)(&tele_log), sizeof(tele_log), dump_fd);
-	} else if (err > 0) {
-		nvme_show_status(err);
 	} else {
-		perror("log page");
+		nvme_show_err(err, "log page");
 	}
 
 	blkCnt = 0;
@@ -1824,7 +1814,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 		log = malloc(bytesToGet);
 
 		if (!log) {
-			fprintf(stderr, "could not alloc buffer for log\n");
+			nvme_show_error("could not alloc buffer for log");
 			err = EINVAL;
 			goto out;
 		}
@@ -1841,10 +1831,8 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 
 			seaget_d_raw((unsigned char *)log, bytesToGet, dump_fd);
 
-		} else if (err > 0) {
-			nvme_show_status(err);
 		} else {
-			perror("log page");
+			nvme_show_err(err, "log page");
 		}
 
 		blkCnt += blksToGet;

@@ -259,7 +259,7 @@ static void latency_tracker_parse(struct latency_tracker *lt)
 		latency_tracker_parse_4_0(lt);
 		break;
 	default:
-		printf("Unsupported revision (%u.%u)\n",
+		nvme_show_error("Unsupported revision (%u.%u)",
 		       version_major, version_minor);
 		break;
 	}
@@ -286,21 +286,18 @@ static int latency_tracking_enable(struct latency_tracker *lt)
 		return 0;
 
 	if (lt->cfg.enable && lt->cfg.disable) {
-		fprintf(stderr, "Cannot enable and disable simultaneously.\n");
+		nvme_show_error("Cannot enable and disable simultaneously.");
 		return -EINVAL;
 	}
 
 	err = nvme_set_features(lt->hdl, 0, LATENCY_TRACKING_FID, 0,
 			lt->cfg.enable, 0, 0, lt->uuid_index, 0, NULL,
 			LATENCY_TRACKING_FID_DATA_LEN, &result);
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		perror("Enable latency tracking");
-		fprintf(stderr, "Command failed while parsing.\n");
+	if (err) {
+		nvme_show_err(err, "Enable latency tracking");
 	} else {
 		if (lt->print_flags == NORMAL) {
-			printf("Successfully set enable bit for UUID-idx:%d FID:0x%X, to %i.\n",
+			nvme_show_verbose_result("Successfully set enable bit for UUID-idx:%d FID:0x%X, to %i.",
 				lt->uuid_index, LATENCY_TRACKING_FID, lt->cfg.enable);
 		}
 	}
@@ -316,7 +313,7 @@ static int latency_tracker_get_log(struct latency_tracker *lt)
 	int err;
 
 	if (lt->cfg.read && lt->cfg.write) {
-		fprintf(stderr, "Cannot capture read and write logs simultaneously.\n");
+		nvme_show_error("Cannot capture read and write logs simultaneously.");
 		return -EINVAL;
 	}
 
@@ -376,18 +373,18 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acm
 
 	err = validate_output_format(nvme_args.output_format, &lt.print_flags);
 	if (err < 0) {
-		fprintf(stderr, "Invalid output format '%s'\n",
+		nvme_show_error("Invalid output format '%s'",
 			nvme_args.output_format);
 		return -EINVAL;
 	}
 
 	if (lt.cfg.type > 0xf) {
-		fprintf(stderr, "Invalid Log type value '%d'\n", lt.cfg.type);
+		nvme_show_error("Invalid Log type value '%d'", lt.cfg.type);
 		return -EINVAL;
 	}
 
 	if (lt.cfg.type && !(lt.cfg.read || lt.cfg.write)) {
-		fprintf(stderr, "Log type option valid only when retrieving statistics\n");
+		nvme_show_error("Log type option valid only when retrieving statistics");
 		return -EINVAL;
 	}
 
@@ -421,7 +418,7 @@ int solidigm_get_latency_tracking_log(int argc, char **argv, struct command *acm
 			       (uint64_t)enabled);
 		}
 	} else {
-		fprintf(stderr, "Could not read feature id 0xE2.\n");
+		nvme_show_error("Could not read feature id 0xE2.");
 	}
 	return err;
 }

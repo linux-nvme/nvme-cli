@@ -16,6 +16,7 @@
 
 #include "sedopal_spec.h"
 #include "sedopal_cmd.h"
+#include "nvme-print.h"
 
 /*
  * ask user for key rather than obtaining it from kernel keyring
@@ -131,12 +132,12 @@ char *sedopal_get_password(char *prompt)
 
 	len = strlen(pass);
 	if (len < SEDOPAL_MIN_PASSWORD_LEN) {
-		fprintf(stderr, "Error: password is not long enough\n");
+		nvme_show_error("Error: password is not long enough");
 		return NULL;
 	}
 
 	if (len > SEDOPAL_MAX_PASSWORD_LEN) {
-		fprintf(stderr, "Error: password is too long\n");
+		nvme_show_error("Error: password is too long");
 		return NULL;
 	}
 
@@ -190,7 +191,7 @@ int sedopal_set_key(struct opal_key *key)
 		if (sedopal_ask_new_key) {
 			pass = sedopal_get_password(SEDOPAL_REENTER_PW_PROMPT);
 			if (strncmp((char *)key->key, pass, key->key_len)) {
-				fprintf(stderr,
+				nvme_show_error(
 					"Error: passwords don't match\n");
 				return -EINVAL;
 			}
@@ -222,7 +223,7 @@ int sedopal_cmd_initialize(int fd)
 	locking_state = sedopal_locking_state(fd);
 
 	if (locking_state & OPAL_FEATURE_LOCKING_ENABLED) {
-		fprintf(stderr,
+		nvme_show_error(
 			"Error: cannot initialize an initialized drive\n");
 		return -EOPNOTSUPP;
 	}
@@ -238,7 +239,7 @@ int sedopal_cmd_initialize(int fd)
 	 */
 	rc = ioctl(fd, IOC_OPAL_TAKE_OWNERSHIP, &key);
 	if (rc != 0) {
-		fprintf(stderr,
+		nvme_show_error(
 			"Error: failed to take device ownership - %d\n", rc);
 		return rc;
 	}
@@ -252,7 +253,7 @@ int sedopal_cmd_initialize(int fd)
 
 	rc = ioctl(fd, IOC_OPAL_ACTIVATE_LSP, &lr_act);
 	if (rc != 0) {
-		fprintf(stderr, "Error: failed to activate LSP - %d\n", rc);
+		nvme_show_error("Error: failed to activate LSP - %d", rc);
 		return rc;
 	}
 
@@ -271,7 +272,7 @@ int sedopal_cmd_initialize(int fd)
 
 	rc = ioctl(fd, IOC_OPAL_LR_SETUP, &lr_setup);
 	if (rc != 0) {
-		fprintf(stderr,
+		nvme_show_error(
 			"Error: failed to setup locking range - %d\n", rc);
 		return rc;
 	}
@@ -289,7 +290,7 @@ int sedopal_cmd_initialize(int fd)
 
 	rc = ioctl(fd, IOC_OPAL_SET_PW, &new_pw);
 	if (rc != 0)
-		fprintf(stderr, "Error: failed setting password - %d\n", rc);
+		nvme_show_error("Error: failed setting password - %d", rc);
 
 	return rc;
 }
@@ -326,7 +327,7 @@ int sedopal_cmd_unlock(int fd)
 	 */
 	if (rc == 0) {
 		if (ioctl(fd, BLKRRPART, 0) != 0)
-			fprintf(stderr,
+			nvme_show_error(
 				"Warning: failed re-reading partition\n");
 	}
 
@@ -345,7 +346,7 @@ int sedopal_lock_unlock(int fd, int lock_state)
 	locking_state = sedopal_locking_state(fd);
 
 	if (!(locking_state & OPAL_FEATURE_LOCKING_ENABLED)) {
-		fprintf(stderr,
+		nvme_show_error(
 			"Error: cannot lock/unlock an uninitialized drive\n");
 		return -EOPNOTSUPP;
 	}
@@ -360,7 +361,7 @@ int sedopal_lock_unlock(int fd, int lock_state)
 
 	rc = ioctl(fd, IOC_OPAL_LOCK_UNLOCK, &opal_lu);
 	if (rc != 0)
-		fprintf(stderr,
+		nvme_show_error(
 			"Error: failed locking or unlocking - %d\n", rc);
 	return rc;
 }
@@ -399,7 +400,7 @@ static int sedopal_revert_destructive(int fd)
 	int rc;
 
 	if (!sedopal_confirm_revert()) {
-		fprintf(stderr, "Aborting destructive revert\n");
+		nvme_show_error("Aborting destructive revert");
 		return -1;
 	}
 
@@ -425,7 +426,7 @@ static int sedopal_revert_psid(int fd)
 	int rc;
 
 	if (!sedopal_confirm_revert()) {
-		fprintf(stderr, "Aborting PSID revert\n");
+		nvme_show_error("Aborting PSID revert");
 		return -1;
 	}
 
@@ -434,15 +435,15 @@ static int sedopal_revert_psid(int fd)
 		rc = ioctl(fd, IOC_OPAL_PSID_REVERT_TPR, &key);
 		if (rc != 0) {
 			if (rc == EPERM)
-				fprintf(stderr, "Error: incorrect password\n");
+				nvme_show_error("Error: incorrect password");
 			else
-				fprintf(stderr, "PSID_REVERT_TPR rc %d\n", rc);
+				nvme_show_error("PSID_REVERT_TPR rc %d", rc);
 		}
 	}
 
 	return rc;
 #else
-	fprintf(stderr, "ERROR : PSID revert is not supported\n");
+	nvme_show_error("ERROR : PSID revert is not supported");
 	return -EOPNOTSUPP;
 #endif /* IOC_OPAL_PSID_REVERT_TPR */
 }
@@ -473,13 +474,13 @@ int sedopal_cmd_revert(int fd)
 		locking_state = sedopal_locking_state(fd);
 
 		if (!(locking_state & OPAL_FEATURE_LOCKING_ENABLED)) {
-			fprintf(stderr,
+			nvme_show_error(
 				"Error: can't revert an uninitialized drive\n");
 			return -EOPNOTSUPP;
 		}
 
 		if (locking_state & OPAL_FEATURE_LOCKED) {
-			fprintf(stderr,
+			nvme_show_error(
 				"Error: cannot revert drive while locked\n");
 			return -EOPNOTSUPP;
 		}
@@ -499,14 +500,14 @@ int sedopal_cmd_revert(int fd)
 			 */
 			rc = ioctl(fd, IOC_OPAL_REVERT_TPR, &revert_lsp.key);
 			if (rc != 0)
-				fprintf(stderr, "Error: revert TPR - %d\n", rc);
+				nvme_show_error("Error: revert TPR - %d", rc);
 		}
 
 		if (rc != 0) {
 			if (rc == EPERM)
-				fprintf(stderr, "Error: incorrect password\n");
+				nvme_show_error("Error: incorrect password");
 			else
-				fprintf(stderr, "Error: revert %s - %d\n",
+				nvme_show_error("Error: revert %s - %d",
 					revert, rc);
 		}
 #else
@@ -515,7 +516,7 @@ int sedopal_cmd_revert(int fd)
 	}
 
 	if ((rc != 0) && (rc != EPERM))
-		fprintf(stderr, "Error: failed reverting drive - %d\n", rc);
+		nvme_show_error("Error: failed reverting drive - %d", rc);
 
 	return rc;
 }
@@ -555,9 +556,9 @@ int sedopal_cmd_password(int fd)
 	rc = ioctl(fd, IOC_OPAL_SET_PW, &new_pw);
 	if (rc != 0) {
 		if (rc == EPERM)
-			fprintf(stderr, "Error: incorrect password\n");
+			nvme_show_error("Error: incorrect password");
 		else
-			fprintf(stderr, "Error: setting password - %d\n", rc);
+			nvme_show_error("Error: setting password - %d", rc);
 		return rc;
 	}
 
@@ -568,9 +569,9 @@ int sedopal_cmd_password(int fd)
 	rc = ioctl(fd, IOC_OPAL_SET_SID_PW, &new_pw);
 	if (rc != 0) {
 		if (rc == EPERM)
-			fprintf(stderr, "Error: incorrect password\n");
+			nvme_show_error("Error: incorrect password");
 		else
-			fprintf(stderr, "Error: setting SID pw - %d\n", rc);
+			nvme_show_error("Error: setting SID pw - %d", rc);
 	}
 #endif
 
@@ -586,7 +587,7 @@ void sedopal_print_locking_features(void *data)
 	uint8_t features;
 
 	if (!ld) {
-		fprintf(stderr, "Error retrieving details about locking features\n");
+		nvme_show_error("Error retrieving details about locking features");
 		return;
 	}
 
@@ -1046,7 +1047,7 @@ int sedopal_discover_device(int fd, struct level_0_discovery_features **feat,
 
 	rc = ioctl(fd, IOC_OPAL_DISCOVERY, &discover);
 	if (rc < 0) {
-		fprintf(stderr, "Error: ioctl IOC_OPAL_DISCOVERY failed\n");
+		nvme_show_error("Error: ioctl IOC_OPAL_DISCOVERY failed");
 		return rc;
 	}
 
@@ -1064,7 +1065,7 @@ int sedopal_discover_device(int fd, struct level_0_discovery_features **feat,
 	return 0
 		;
 #else /* IOC_OPAL_DISCOVERY */
-	fprintf(stderr, "ERROR : NVMe device discovery is not supported\n");
+	nvme_show_error("ERROR : NVMe device discovery is not supported");
 	return -EOPNOTSUPP;
 #endif
 }
@@ -1096,7 +1097,7 @@ int sedopal_cmd_discover(int fd)
 
 	rc = 0;
 	if (!(sfp.features & OPAL_SED_LOCKING_SUPPORT)) {
-		fprintf(stderr, "Error: device does not support SED Opal\n");
+		nvme_show_error("Error: device does not support SED Opal");
 		rc = -1;
 	} else
 		sedopal_print_locking_features(sfp.locking_desc);

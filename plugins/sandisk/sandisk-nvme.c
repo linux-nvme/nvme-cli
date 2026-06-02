@@ -53,12 +53,12 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err) {
-		fprintf(stderr, "ERROR: WDC: nvme_identify_ctrl() failed 0x%x\n", err);
+		nvme_show_error("ERROR: WDC: nvme_identify_ctrl() failed 0x%x", err);
 		return err;
 	}
 
 	if (!(ctrl.lpa & 0x8)) {
-		fprintf(stderr, "Telemetry log pages not supported by device\n");
+		nvme_show_error("Telemetry log pages not supported by device");
 		return -EINVAL;
 	}
 
@@ -69,14 +69,14 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 
 	if (data_area == 4) {
 		if (!(ctrl.lpa & 0x40)) {
-			fprintf(stderr, "%s: Telemetry data area 4 not supported by device\n",
+			nvme_show_error("%s: Telemetry data area 4 not supported by device",
 				__func__);
 			return -EINVAL;
 		}
 
 		err = libnvme_set_etdas(hdl, &host_behavior_changed);
 		if (err) {
-			fprintf(stderr, "%s: Failed to set ETDAS bit\n", __func__);
+			nvme_show_error("%s: Failed to set ETDAS bit", __func__);
 			return err;
 		}
 	}
@@ -93,23 +93,23 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 		host_gen = 0;
 		ctrl_init = 1;
 	} else if (type == SNDK_TELEMETRY_TYPE_BOTH) {
-		fprintf(stderr,
+		nvme_show_error(
 			"%s: BOTH type should be handled by sndk_do_cap_both_telemetry_log\n",
 			__func__);
 		return -EINVAL;
 	} else {
-		fprintf(stderr, "%s: Invalid type parameter; type = %d\n", __func__, type);
+		nvme_show_error("%s: Invalid type parameter; type = %d", __func__, type);
 		return -EINVAL;
 	}
 
 	if (!file) {
-		fprintf(stderr, "%s: Please provide an output file!\n", __func__);
+		nvme_show_error("%s: Please provide an output file!", __func__);
 		return -EINVAL;
 	}
 
 	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
-		fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
+		nvme_show_error("%s: Failed to open output file %s: %s!",
 				__func__, file, libnvme_strerror(errno));
 		return output;
 	}
@@ -125,11 +125,11 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 					  &full_size);
 
 	if (err < 0) {
-		perror("get-telemetry-log");
+		nvme_show_err(err, "get-telemetry-log");
 		goto close_output;
 	} else if (err > 0) {
 		nvme_show_status(err);
-		fprintf(stderr, "%s: Failed to acquire telemetry header!\n", __func__);
+		nvme_show_error("%s: Failed to acquire telemetry header!", __func__);
 		goto close_output;
 	}
 
@@ -152,7 +152,7 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 			data_ptr += data_written;
 		} else {
 			/* Unexpected overwrite */
-			fprintf(stderr, "Failure: Unexpected telemetry log overwrite\n" \
+			nvme_show_error("Failure: Unexpected telemetry log overwrite" \
 				"- data_remaining = 0x%x, data_written = 0x%x\n",
 				data_remaining, data_written);
 			break;
@@ -160,7 +160,7 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	}
 
 	if (fsync(output) < 0) {
-		fprintf(stderr, "ERROR: %s: fsync: %s\n", __func__, libnvme_strerror(errno));
+		nvme_show_error("ERROR: %s: fsync: %s", __func__, libnvme_strerror(errno));
 		err = -1;
 	}
 
@@ -168,7 +168,7 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 		host_behavior_changed = false;
 		err = libnvme_clear_etdas(hdl, &host_behavior_changed);
 		if (err) {
-			fprintf(stderr, "%s: Failed to clear ETDAS bit\n", __func__);
+			nvme_show_error("%s: Failed to clear ETDAS bit", __func__);
 			return err;
 		}
 	}
@@ -192,7 +192,7 @@ static int sndk_do_cap_both_telemetry_log(struct libnvme_global_ctx *ctx,
 
 	base_name = strdup(tar_file);
 	if (!base_name) {
-		fprintf(stderr, "%s: Memory allocation failed\n", __func__);
+		nvme_show_error("%s: Memory allocation failed", __func__);
 		return -ENOMEM;
 	}
 	
@@ -207,40 +207,40 @@ static int sndk_do_cap_both_telemetry_log(struct libnvme_global_ctx *ctx,
 	snprintf(controller_file, PATH_MAX, "%s_controller_telemetry.bin",
 		 base_name);
 	
-	fprintf(stderr, "%s: Capturing HOST telemetry to %s\n", __func__,
+	nvme_show_error("%s: Capturing HOST telemetry to %s", __func__,
 		host_file);
 	ret = sndk_do_cap_telemetry_log(ctx, hdl, host_file, bs,
 					SNDK_TELEMETRY_TYPE_HOST, data_area);
 	if (ret) {
-		fprintf(stderr, "%s: Failed to capture HOST telemetry: %d\n",
+		nvme_show_error("%s: Failed to capture HOST telemetry: %d",
 			__func__, ret);
 		goto cleanup;
 	}
 	
-	fprintf(stderr, "%s: Capturing CONTROLLER telemetry to %s\n", __func__,
+	nvme_show_error("%s: Capturing CONTROLLER telemetry to %s", __func__,
 		controller_file);
 	ret = sndk_do_cap_telemetry_log(ctx, hdl, controller_file, bs,
 					SNDK_TELEMETRY_TYPE_CONTROLLER,
 					data_area);
 	if (ret) {
-		fprintf(stderr,
+		nvme_show_error(
 			"%s: Failed to capture CONTROLLER telemetry: %d\n",
 			__func__, ret);
 		goto cleanup_host;
 	}
 	
 	/* Create tar file containing both telemetry files */
-	fprintf(stderr, "%s: Creating tar file %s\n", __func__, tar_file);
+	nvme_show_error("%s: Creating tar file %s", __func__, tar_file);
 	snprintf(tar_cmd, sizeof(tar_cmd), "tar -cf \"%s\" \"%s\" \"%s\"",
 		 tar_file, host_file, controller_file);
 	
 	ret = system(tar_cmd);
 	if (ret) {
-		fprintf(stderr, "%s: Failed to create tar file: %s\n",
+		nvme_show_error("%s: Failed to create tar file: %s",
 			__func__, tar_file);
 		ret = -1;
 	} else {
-		fprintf(stderr, "%s: Successfully created tar file: %s\n",
+		nvme_show_verbose_result("%s: Successfully created tar file: %s",
 			__func__, tar_file);
 		ret = 0;
 	}
@@ -269,7 +269,7 @@ static __u32 sndk_dump_udui_data(struct libnvme_transport_handle *hdl,
 	admin_cmd.cdw12 = offset;
 	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 	if (ret) {
-		fprintf(stderr, "ERROR: SNDK: reading DUI data failed\n");
+		nvme_show_error("ERROR: SNDK: reading DUI data failed");
 		nvme_show_status(ret);
 	}
 
@@ -290,7 +290,7 @@ static int sndk_do_cap_udui(struct libnvme_transport_handle *hdl, char *file,
 
 	log = (struct nvme_telemetry_log *)malloc(udui_log_hdr_size);
 	if (!log) {
-		fprintf(stderr,
+		nvme_show_error(
 			"%s: ERROR: log header malloc failed : status %s, size 0x%x\n",
 			__func__, libnvme_strerror(errno), udui_log_hdr_size);
 		return -1;
@@ -300,7 +300,7 @@ static int sndk_do_cap_udui(struct libnvme_transport_handle *hdl, char *file,
 	/* get the udui telemetry and log headers */
 	ret = sndk_dump_udui_data(hdl, udui_log_hdr_size, 0, (__u8 *)log);
 	if (ret) {
-		fprintf(stderr, "%s: ERROR: SNDK: Get UDUI header failed\n", __func__);
+		nvme_show_error("%s: ERROR: SNDK: Get UDUI header failed", __func__);
 		nvme_show_status(ret);
 		goto out;
 	}
@@ -311,7 +311,7 @@ static int sndk_do_cap_udui(struct libnvme_transport_handle *hdl, char *file,
 
 	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
-		fprintf(stderr, "%s: Failed to open output file %s: %s!\n", __func__, file,
+		nvme_show_error("%s: Failed to open output file %s: %s!", __func__, file,
 			libnvme_strerror(errno));
 		goto out;
 	}
@@ -322,7 +322,7 @@ static int sndk_do_cap_udui(struct libnvme_transport_handle *hdl, char *file,
 		ret = sndk_dump_udui_data(hdl, chunk_size, offset,
 					  ((__u8 *)log));
 		if (ret) {
-			fprintf(stderr,
+			nvme_show_error(
 				"%s: ERROR: Get UDUI failed, offset = 0x%"PRIx64", size = %u\n",
 				__func__, (uint64_t)offset, chunk_size);
 			break;
@@ -331,7 +331,7 @@ static int sndk_do_cap_udui(struct libnvme_transport_handle *hdl, char *file,
 		/* write the dump data into the file */
 		written = write(output, (void *)log, chunk_size);
 		if (written != chunk_size) {
-			fprintf(stderr,
+			nvme_show_error(
 				"%s: ERROR: SNDK: Failed to flush DUI data to file!\n" \
 				"- written = %zd, offset = 0x%"PRIx64", chunk_size = %u\n",
 				__func__, written, (uint64_t)offset, chunk_size);
@@ -345,7 +345,7 @@ static int sndk_do_cap_udui(struct libnvme_transport_handle *hdl, char *file,
 	close(output);
 	nvme_show_status(ret);
 	if (verbose)
-		fprintf(stderr,
+		nvme_show_error(
 			"INFO: SNDK: Capture Device Unit Info log length = 0x%"PRIx64"\n",
 			(uint64_t)total_size);
 
@@ -363,7 +363,7 @@ static int sndk_get_default_telemetry_da(struct libnvme_transport_handle *hdl,
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err) {
-		fprintf(stderr, "ERROR: SNDK: nvme_identify_ctrl() failed 0x%x\n", err);
+		nvme_show_error("ERROR: SNDK: nvme_identify_ctrl() failed 0x%x", err);
 		return err;
 	}
 
@@ -448,7 +448,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 	if (cfg.xfer_size) {
 		xfer_size = cfg.xfer_size;
 	} else {
-		fprintf(stderr, "ERROR: SNDK: Invalid length\n");
+		nvme_show_error("ERROR: SNDK: Invalid length");
 		goto out;
 	}
 
@@ -460,7 +460,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		/* verify file name and path is valid before getting dump data */
 		verify_file = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (verify_file < 0) {
-			fprintf(stderr, "ERROR: SNDK: open: %s\n", libnvme_strerror(errno));
+			nvme_show_error("ERROR: SNDK: open: %s", libnvme_strerror(errno));
 			goto out;
 		}
 		close(verify_file);
@@ -478,24 +478,24 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 
 		ret = sndk_get_serial_name(hdl, f, PATH_MAX-5, fileSuffix);
 		if (ret) {
-			fprintf(stderr, "ERROR: SNDK: failed to generate file name\n");
+			nvme_show_error("ERROR: SNDK: failed to generate file name");
 			goto out;
 		}
 	}
 
 	if (!cfg.file) {
 		if (strlen(f) > PATH_MAX - 5) {
-			fprintf(stderr, "ERROR: SNDK: file name overflow\n");
+			nvme_show_error("ERROR: SNDK: file name overflow");
 			ret = -1;
 			goto out;
 		}
 		strcat(f, ".bin");
 	}
-	fprintf(stderr, "%s: filename = %s\n", __func__, f);
+	nvme_show_error("%s: filename = %s", __func__, f);
 
 	if (cfg.data_area) {
 		if (cfg.data_area > 5 || cfg.data_area < 1) {
-			fprintf(stderr, "ERROR: SNDK: Data area must be 1-5\n");
+			nvme_show_error("ERROR: SNDK: Data area must be 1-5");
 			ret = -1;
 			goto out;
 		}
@@ -514,7 +514,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		telemetry_type = SNDK_TELEMETRY_TYPE_BOTH;
 		telemetry_data_area = cfg.data_area;
 	} else {
-		fprintf(stderr,
+		nvme_show_error(
 			"ERROR: SNDK: Invalid type - Must be NONE, HOST, CONTROLLER, or BOTH\n");
 		ret = -1;
 		goto out;
@@ -527,7 +527,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		/* If no data area specified, get the default value */
 		if (telemetry_data_area == 0) {
 			if (sndk_get_default_telemetry_da(hdl, &telemetry_data_area)) {
-				fprintf(stderr, "%s: Error determining default telemetry data area\n",
+				nvme_show_error("%s: Error determining default telemetry data area",
 						__func__);
 				return -EINVAL;
 			}
@@ -559,7 +559,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 
 	if (capabilities & SNDK_DRIVE_CAP_UDUI) {
 		if (cfg.data_area) {
-			fprintf(stderr,
+			nvme_show_error(
 				"ERROR: SNDK: Data area parameter is not supported when type is NONE\n");
 			ret = -1;
 			goto out;
@@ -676,10 +676,9 @@ static int sndk_drive_resize(int argc, char **argv,
 		ret = sndk_do_sn861_drive_resize(hdl, cfg.size, &result);
 
 		if (!ret) {
-			fprintf(stderr, "The drive-resize command was successful.  A system ");
-			fprintf(stderr, "shutdown is required to complete the operation.\n");
+			nvme_show_error("The drive-resize command was successful.  A system shutdown is required to complete the operation.");
 		} else
-			fprintf(stderr, "ERROR: SNDK: %s failure, ret: %d, result: 0x%"PRIx64"\n",
+			nvme_show_error("ERROR: SNDK: %s failure, ret: %d, result: 0x%"PRIx64"\n",
 					__func__, ret, (uint64_t)result);
 	} else {
 		/* Fallback to WDC plugin command if otherwise not supported */
@@ -794,7 +793,7 @@ static void sndk_print_fw_act_history_log_normal(__u8 *data, int num_entries)
 				entryIdx = 0;
 		}
 	} else
-		fprintf(stderr, "ERROR: SNDK: %s: Unknown log page\n", __func__);
+		nvme_show_error("ERROR: SNDK: %s: Unknown log page", __func__);
 }
 
 static void sndk_print_fw_act_history_log_json(__u8 *data, int num_entries)
@@ -897,7 +896,7 @@ static void sndk_print_fw_act_history_log_json(__u8 *data, int num_entries)
 				entryIdx = 0;
 		}
 	} else
-		fprintf(stderr, "ERROR: SNDK: %s: Unknown log page\n", __func__);
+		nvme_show_error("ERROR: SNDK: %s: Unknown log page", __func__);
 
 	json_free_object(root);
 }
@@ -905,7 +904,7 @@ static void sndk_print_fw_act_history_log_json(__u8 *data, int num_entries)
 static int sndk_print_fw_act_history_log(__u8 *data, int num_entries, int fmt)
 {
 	if (!data) {
-		fprintf(stderr, "ERROR: SNDK: Invalid buffer in print_fw act_history_log\n");
+		nvme_show_error("ERROR: SNDK: Invalid buffer in print_fw act_history_log");
 		return -1;
 	}
 
@@ -935,13 +934,13 @@ static int sndk_get_fw_act_history_C2(struct libnvme_global_ctx *ctx, struct lib
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR: SNDK: invalid output format\n");
+		nvme_show_error("ERROR: SNDK: invalid output format");
 		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * SNDK_FW_ACT_HISTORY_C2_LOG_BUF_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR: SNDK: malloc: %s\n", libnvme_strerror(errno));
+		nvme_show_error("ERROR: SNDK: malloc: %s", libnvme_strerror(errno));
 		return -1;
 	}
 
@@ -972,15 +971,15 @@ static int sndk_get_fw_act_history_C2(struct libnvme_global_ctx *ctx, struct lib
 				ret = sndk_print_fw_act_history_log(data, num_entries,
 					fmt);
 			} else  {
-				fprintf(stderr, "INFO: SNDK: No entries found.\n");
+				nvme_show_error("INFO: SNDK: No entries found.");
 				ret = 0;
 			}
 		} else {
-			fprintf(stderr, "ERROR: SNDK: Invalid C2 log page GUID\n");
+			nvme_show_error("ERROR: SNDK: Invalid C2 log page GUID");
 			ret = -1;
 		}
 	} else {
-		fprintf(stderr, "ERROR: SNDK: Unable to read FW Activate History Log Page data\n");
+		nvme_show_error("ERROR: SNDK: Unable to read FW Activate History Log Page data");
 		ret = -1;
 	}
 
@@ -1022,8 +1021,8 @@ static int sndk_vs_fw_activate_history(int argc, char **argv,
 		ret = sndk_get_fw_act_history_C2(ctx, hdl, cfg.output_format);
 
 		if (ret) {
-			fprintf(stderr, "ERROR: SNDK: Failure reading the FW ");
-			fprintf(stderr, "Activate History, ret = %d\n", ret);
+			nvme_show_error("ERROR: SNDK: Failure reading the FW ");
+			nvme_show_error("Activate History, ret = %d", ret);
 		}
 	} else
 		/* Fall back to the wdc plugin command */
@@ -1070,8 +1069,8 @@ static int sndk_clear_fw_activate_history(int argc, char **argv,
 		ret = sndk_do_clear_fw_activate_history_fid(hdl);
 
 		if (ret) {
-			fprintf(stderr, "ERROR: SNDK: Failure clearing the FW ");
-			fprintf(stderr, "Activate History, ret = %d\n", ret);
+			nvme_show_error("ERROR: SNDK: Failure clearing the FW ");
+			nvme_show_error("Activate History, ret = %d", ret);
 		}
 	} else
 		/* Fall back to the wdc plugin command */

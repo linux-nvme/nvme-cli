@@ -38,13 +38,13 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output format\n");
+		nvme_show_error("ERROR : OCP : invalid output format");
 		return ret;
 	}
 
 	data = malloc(sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
@@ -59,7 +59,7 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 	ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 
 	if (strcmp(format, "json"))
-		fprintf(stderr, "NVMe Status:%s(%x)\n",
+		nvme_show_error("NVMe Status:%s(%x)",
 			libnvme_status_to_string(ret, false), ret);
 
 	if (ret == 0) {
@@ -69,15 +69,15 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 			if (scao_guid[i] != data->log_page_guid[i]) {
 				int j;
 
-				fprintf(stderr, "ERROR : OCP : Unknown GUID in C0 Log Page data\n");
-				fprintf(stderr, "ERROR : OCP : Expected GUID:  0x");
+				nvme_show_error("ERROR : OCP : Unknown GUID in C0 Log Page data");
+				nvme_show_error("ERROR : OCP : Expected GUID:  0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", scao_guid[j]);
+					nvme_show_error("%x", scao_guid[j]);
 
-				fprintf(stderr, "\nERROR : OCP : Actual GUID:    0x");
+				nvme_show_error("\nERROR : OCP : Actual GUID:    0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%x", data->log_page_guid[j]);
-				fprintf(stderr, "\n");
+					nvme_show_error("%x", data->log_page_guid[j]);
+				nvme_show_error("");
 
 				ret = -1;
 				goto out;
@@ -87,7 +87,7 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 		/* print the data */
 		ocp_smart_extended_log(data, format_version, fmt);
 	} else {
-		fprintf(stderr, "ERROR : OCP : Unable to read C0 data from buffer\n");
+		nvme_show_error("ERROR : OCP : Unable to read C0 data from buffer");
 	}
 
 out:
@@ -112,7 +112,7 @@ int ocp_smart_add_log(int argc, char **argv, struct command *acmd,
 	ret = get_c0_log_page(hdl, nvme_args.output_format,
 			      nvme_args.output_format_ver);
 	if (ret)
-		fprintf(stderr, "ERROR : OCP : Failure reading the C0 Log Page, ret = %d\n",
+		nvme_show_error("ERROR : OCP : Failure reading the C0 Log Page, ret = %d",
 			ret);
 	return ret;
 }

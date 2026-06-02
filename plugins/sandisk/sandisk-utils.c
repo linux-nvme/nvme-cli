@@ -60,7 +60,7 @@ int sndk_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_ha
 	} else {
 		ret = libnvme_scan_namespace(ctx, name, &n);
 		if (!ret) {
-			fprintf(stderr, "Unable to find %s\n", name);
+			nvme_show_error("Unable to find %s", name);
 			return ret;
 		}
 
@@ -73,7 +73,7 @@ int sndk_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_ha
 
 	fd = open(vid, O_RDONLY);
 	if (fd < 0) {
-		fprintf(stderr, "ERROR: SNDK: %s : Open vendor file failed\n", __func__);
+		nvme_show_error("ERROR: SNDK: %s : Open vendor file failed", __func__);
 		return -1;
 	}
 
@@ -81,7 +81,7 @@ int sndk_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_ha
 	close(fd);
 
 	if (ret < 0) {
-		fprintf(stderr, "%s: Read of pci vendor id failed\n", __func__);
+		nvme_show_error("%s: Read of pci vendor id failed", __func__);
 		return -1;
 	}
 	id[ret < 32 ? ret : 31] = '\0';
@@ -93,7 +93,7 @@ int sndk_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_ha
 
 	fd = open(did, O_RDONLY);
 	if (fd < 0) {
-		fprintf(stderr, "ERROR: SNDK: %s : Open device file failed\n", __func__);
+		nvme_show_error("ERROR: SNDK: %s : Open device file failed", __func__);
 		return -1;
 	}
 
@@ -101,7 +101,7 @@ int sndk_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_ha
 	close(fd);
 
 	if (ret < 0) {
-		fprintf(stderr, "ERROR: SNDK: %s: Read of pci device id failed\n", __func__);
+		nvme_show_error("ERROR: SNDK: %s: Read of pci device id failed", __func__);
 		return -1;
 	}
 	id[ret < 32 ? ret : 31] = '\0';
@@ -120,7 +120,7 @@ int sndk_get_vendor_id(struct libnvme_transport_handle *hdl, uint32_t *vendor_id
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	ret = nvme_identify_ctrl(hdl, &ctrl);
 	if (ret) {
-		fprintf(stderr, "ERROR: SNDK: nvme_identify_ctrl() failed 0x%x\n", ret);
+		nvme_show_error("ERROR: SNDK: nvme_identify_ctrl() failed 0x%x", ret);
 		return -1;
 	}
 
@@ -149,7 +149,7 @@ bool sndk_check_device(struct libnvme_global_ctx *ctx,
 	    read_vendor_id == SNDK_NVME_WDC_VID)
 		supported = true;
 	else
-		fprintf(stderr,
+		nvme_show_error(
 			"ERROR: SNDK: unsupported Sandisk device, Vendor ID = 0x%x, Device ID = 0x%x\n",
 			read_vendor_id, read_device_id);
 
@@ -204,7 +204,7 @@ bool sndk_parse_dev_mng_log_entry(void *data,
 	log_length = le32_to_cpu(hdr_ptr->length);
 	/* Ensure log data is large enough for common header */
 	if (log_length < sizeof(struct sndk_c2_log_page_header)) {
-		fprintf(stderr,
+		nvme_show_error(
 		    "ERROR: %s: log smaller than header. log_len: 0x%x  HdrSize: %"PRIxPTR"\n",
 		    __func__, log_length, sizeof(struct sndk_c2_log_page_header));
 		return found;
@@ -216,7 +216,7 @@ bool sndk_parse_dev_mng_log_entry(void *data,
 	remaining_len = log_length - offset;
 
 	if (!log_entry) {
-		fprintf(stderr, "ERROR: SNDK - %s: No log entry pointer.\n", __func__);
+		nvme_show_error("ERROR: SNDK - %s: No log entry pointer.", __func__);
 		return found;
 	}
 	*log_entry = NULL;
@@ -232,22 +232,22 @@ bool sndk_parse_dev_mng_log_entry(void *data,
 		 * of the data, we must be at the end of the data
 		 */
 		if (!log_entry_size || log_entry_size > remaining_len) {
-			fprintf(stderr, "ERROR: SNDK: %s: Detected unaligned end of the data. ",
+			nvme_show_error("ERROR: SNDK: %s: Detected unaligned end of the data. ",
 				__func__);
-			fprintf(stderr, "Data Offset: 0x%x Entry Size: 0x%x, ",
+			nvme_show_error("Data Offset: 0x%x Entry Size: 0x%x, ",
 				offset, log_entry_size);
-			fprintf(stderr, "Remaining Log Length: 0x%x Entry Id: 0x%x\n",
+			nvme_show_error("Remaining Log Length: 0x%x Entry Id: 0x%x",
 				remaining_len, log_entry_id);
 
 			/* Force the loop to end */
 			remaining_len = 0;
 		} else if (!log_entry_id || log_entry_id > 200) {
 			/* Invalid entry - fail the search */
-			fprintf(stderr, "ERROR: SNDK: %s: Invalid entry found at offset: 0x%x ",
+			nvme_show_error("ERROR: SNDK: %s: Invalid entry found at offset: 0x%x ",
 				__func__, offset);
-			fprintf(stderr, "Entry Size: 0x%x, Remaining Log Length: 0x%x ",
+			nvme_show_error("Entry Size: 0x%x, Remaining Log Length: 0x%x ",
 				log_entry_size, remaining_len);
-			fprintf(stderr, "Entry Id: 0x%x\n", log_entry_id);
+			nvme_show_error("Entry Id: 0x%x", log_entry_id);
 
 			/* Force the loop to end */
 			remaining_len = 0;
@@ -352,13 +352,13 @@ bool sndk_get_dev_mgment_data(struct libnvme_global_ctx *ctx, struct libnvme_tra
 		if (uuid_index >= 0)
 			found = sndk_get_dev_mgmt_log_page_data(hdl, data, uuid_index);
 		else {
-			fprintf(stderr, "%s: UUID lists are supported but a matching ",
+			nvme_show_error("%s: UUID lists are supported but a matching ",
 				__func__);
-			fprintf(stderr, "uuid was not found\n");
+			nvme_show_error("uuid was not found");
 		}
 	} else {
 		/* UUID lists are not supported, Default to uuid-index 0  */
-		fprintf(stderr, "INFO: SNDK: %s:  UUID Lists not supported\n",
+		nvme_show_error("INFO: SNDK: %s:  UUID Lists not supported",
 				__func__);
 		uuid_index = 0;
 		found = sndk_get_dev_mgmt_log_page_data(hdl, data, uuid_index);
@@ -381,7 +381,7 @@ bool sndk_validate_dev_mng_log(void *data)
 	log_length = le32_to_cpu(hdr_ptr->length);
 	/* Ensure log data is large enough for common header */
 	if (log_length < sizeof(struct sndk_c2_log_page_header)) {
-		fprintf(stderr,
+		nvme_show_error(
 		    "ERROR: %s: log smaller than header. log_len: 0x%x  HdrSize: %"PRIxPTR"\n",
 		    __func__, log_length, sizeof(struct sndk_c2_log_page_header));
 		return valid_log;
@@ -402,22 +402,22 @@ bool sndk_validate_dev_mng_log(void *data)
 		 * of the data, we must be at the end of the data
 		 */
 		if (!log_entry_size || log_entry_size > remaining_len) {
-			fprintf(stderr, "ERROR: SNDK: %s: Detected unaligned end of the data. ",
+			nvme_show_error("ERROR: SNDK: %s: Detected unaligned end of the data. ",
 				__func__);
-			fprintf(stderr, "Data Offset: 0x%x Entry Size: 0x%x, ",
+			nvme_show_error("Data Offset: 0x%x Entry Size: 0x%x, ",
 				offset, log_entry_size);
-			fprintf(stderr, "Remaining Log Length: 0x%x Entry Id: 0x%x\n",
+			nvme_show_error("Remaining Log Length: 0x%x Entry Id: 0x%x",
 				remaining_len, log_entry_id);
 
 			/* Force the loop to end */
 			remaining_len = 0;
 		} else if (!log_entry_id || log_entry_id > 200) {
 			/* Invalid entry - fail the search */
-			fprintf(stderr, "ERROR: SNDK: %s: Invalid entry found at offset: 0x%x ",
+			nvme_show_error("ERROR: SNDK: %s: Invalid entry found at offset: 0x%x ",
 				__func__, offset);
-			fprintf(stderr, "Entry Size: 0x%x, Remaining Log Length: 0x%x ",
+			nvme_show_error("Entry Size: 0x%x, Remaining Log Length: 0x%x ",
 				log_entry_size, remaining_len);
-			fprintf(stderr, "Entry Id: 0x%x\n", log_entry_id);
+			nvme_show_error("Entry Id: 0x%x", log_entry_id);
 
 			/* Force the loop to end */
 			remaining_len = 0;
@@ -452,7 +452,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct libnvme_transport_handle *hdl,
 
 	data = (__u8 *)malloc(sizeof(__u8) * SNDK_DEV_MGMNT_LOG_PAGE_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR: SNDK: malloc: %s\n", libnvme_strerror(errno));
+		nvme_show_error("ERROR: SNDK: malloc: %s", libnvme_strerror(errno));
 		return false;
 	}
 
@@ -467,7 +467,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct libnvme_transport_handle *hdl,
 				       NVME_LOG_CDW14_UUID_MASK);
 	ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (ret) {
-		fprintf(stderr,
+		nvme_show_error(
 			"ERROR: SNDK: Unable to get 0x%x Log Page with uuid %d, ret = 0x%x\n",
 			SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID, uuid_ix, ret);
 		goto end;
@@ -481,7 +481,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct libnvme_transport_handle *hdl,
 		free(data);
 		data = calloc(length, sizeof(__u8));
 		if (!data) {
-			fprintf(stderr, "ERROR: SNDK: malloc: %s\n", libnvme_strerror(errno));
+			nvme_show_error("ERROR: SNDK: malloc: %s", libnvme_strerror(errno));
 			goto end;
 		}
 
@@ -494,7 +494,7 @@ bool sndk_get_dev_mgmt_log_page_data(struct libnvme_transport_handle *hdl,
 				NVME_LOG_CDW14_UUID_MASK);
 		ret = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (ret) {
-			fprintf(stderr,
+			nvme_show_error(
 				"ERROR: SNDK: Unable to read 0x%x Log with uuid %d, ret = 0x%x\n",
 				SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID, uuid_ix, ret);
 			goto end;
@@ -506,13 +506,13 @@ bool sndk_get_dev_mgmt_log_page_data(struct libnvme_transport_handle *hdl,
 		/* Ensure size of log data matches length in log header */
 		*log_data = calloc(length, sizeof(__u8));
 		if (!*log_data) {
-			fprintf(stderr, "ERROR: SNDK: calloc: %s\n", libnvme_strerror(errno));
+			nvme_show_error("ERROR: SNDK: calloc: %s", libnvme_strerror(errno));
 			valid = false;
 			goto end;
 		}
 		memcpy((void *)*log_data, data, length);
 	} else {
-		fprintf(stderr, "ERROR: SNDK: C2 log page not found with uuid index %d\n",
+		nvme_show_error("ERROR: SNDK: C2 log page not found with uuid index %d",
 			uuid_ix);
 	}
 
@@ -743,7 +743,7 @@ __u64 sndk_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
 			}
 		} else {
 			/* UUID Lists not supported, Use default uuid index - 0 */
-			fprintf(stderr, "INFO: SNDK: %s:  UUID Lists not supported\n",
+			nvme_show_error("INFO: SNDK: %s:  UUID Lists not supported",
 					__func__);
 			uuid_index = 0;
 		}
@@ -752,14 +752,14 @@ __u64 sndk_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
 		if (run_wdc_nvme_check_supported_log_page(ctx, hdl,
 				SNDK_NVME_GET_DEV_MGMNT_LOG_PAGE_ID,
 				uuid_index) == false) {
-			fprintf(stderr, "ERROR: SNDK: 0xC2 Log Page not supported, ");
-			fprintf(stderr, "uuid_index: %d\n", uuid_index);
+			nvme_show_error("ERROR: SNDK: 0xC2 Log Page not supported, ");
+			nvme_show_error("uuid_index: %d", uuid_index);
 			ret = -1;
 			goto out;
 		}
 
 		if (!sndk_get_dev_mgment_data(ctx, hdl, &dev_mng_log)) {
-			fprintf(stderr, "ERROR: SNDK: 0xC2 Log Page not found\n");
+			nvme_show_error("ERROR: SNDK: 0xC2 Log Page not found");
 			ret = -1;
 			goto out;
 		}
@@ -768,20 +768,20 @@ __u64 sndk_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
 		if (!sndk_nvme_parse_dev_status_log_entry(dev_mng_log,
 				SNDK_C2_CUSTOMER_ID_ID,
 				(void *)&cust_id))
-			fprintf(stderr, "ERROR: SNDK: Get Customer FW ID Failed\n");
+			nvme_show_error("ERROR: SNDK: Get Customer FW ID Failed");
 
 		/* Get the marketing name */
 		if (!sndk_nvme_parse_dev_status_log_str(dev_mng_log,
 				SNDK_C2_MARKETING_NAME_ID,
 				(char *)marketing_name,
 				&market_name_len))
-			fprintf(stderr, "ERROR: SNDK: Get Marketing Name Failed\n");
+			nvme_show_error("ERROR: SNDK: Get Marketing Name Failed");
 
 		/* Get the drive form factor */
 		if (!sndk_nvme_parse_dev_status_log_entry(dev_mng_log,
 				SNDK_C2_FORM_FACTOR,
 				(void *)&drive_form_factor))
-			fprintf(stderr, "ERROR: SNDK: Getting Form Factor Failed\n");
+			nvme_show_error("ERROR: SNDK: Getting Form Factor Failed");
 
 		/* verify the 0xC0 log page is supported */
 		if (run_wdc_nvme_check_supported_log_page(ctx, hdl,
@@ -863,7 +863,7 @@ int sndk_get_serial_name(struct libnvme_transport_handle *hdl, char *file,
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	ret = nvme_identify_ctrl(hdl, &ctrl);
 	if (ret) {
-		fprintf(stderr, "ERROR: SNDK: nvme_identify_ctrl() failed 0x%x\n", ret);
+		nvme_show_error("ERROR: SNDK: nvme_identify_ctrl() failed 0x%x", ret);
 		return -1;
 	}
 	/* Remove trailing spaces from the name */
@@ -876,7 +876,7 @@ int sndk_get_serial_name(struct libnvme_transport_handle *hdl, char *file,
 
 	res_len = snprintf(file, len, "%s%.*s%s", orig, ctrl_sn_len, ctrl.sn, suffix);
 	if (len <= res_len) {
-		fprintf(stderr,
+		nvme_show_error(
 			"ERROR: SNDK: cannot format SN due to unexpected length\n");
 		return -1;
 	}
@@ -934,13 +934,13 @@ int sndk_check_ctrl_telemetry_option_disabled(struct libnvme_transport_handle *h
 		NULL, 4, &result);
 	if (!err) {
 		if (result) {
-			fprintf(stderr,
+			nvme_show_error(
 				"%s: Controller-initiated option telemetry disabled\n",
 				__func__);
 			return -EINVAL;
 		}
 	} else {
-		fprintf(stderr, "ERROR: SNDK: Get telemetry option feature failed.");
+		nvme_show_error("ERROR: SNDK: Get telemetry option feature failed.");
 		nvme_show_status(err);
 		return -EPERM;
 	}

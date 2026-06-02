@@ -40,7 +40,7 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 		/* OCP 2.0 requires UUID index support */
 		err = ocp_get_uuid_index(hdl, &uuid_index);
 		if (err || !uuid_index) {
-			fprintf(stderr, "ERROR: No OCP UUID index found\n");
+			nvme_show_error("ERROR: No OCP UUID index found");
 			return err;
 		}
 	}
@@ -49,11 +49,11 @@ static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8
 			&result);
 
 	if (err == 0)
-		printf("Success : %s\n", desc);
+		nvme_show_verbose_result("Success : %s", desc);
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		printf("Fail : %s\n", desc);
+		nvme_show_error("Fail : %s", desc);
 
 	return err;
 }

@@ -59,7 +59,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 				  sizeof(ocp_fw_activation_history_guid));
 
 	if (!err && guid_cmp_res) {
-		fprintf(stderr,
+		nvme_show_error(
 			"Error: Unexpected data. Log page guid does not match with expected.\n");
 		err = -EINVAL;
 	}
@@ -70,7 +70,7 @@ int ocp_fw_activation_history_log(int argc, char **argv, struct command *acmd,
 		err = validate_output_format(nvme_args.output_format,
 			&print_flag);
 		if (err < 0) {
-			fprintf(stderr, "Error: Invalid output format.\n");
+			nvme_show_error("Error: Invalid output format.");
 			return err;
 		}
 

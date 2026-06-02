@@ -24,7 +24,7 @@
 #define print_info_error(...) \
 	do { \
 		if (log_level >= LIBNVME_LOG_INFO) \
-			fprintf(stderr, __VA_ARGS__); \
+			nvme_show_error( __VA_ARGS__); \
 	} while (false)
 
 #ifdef HWCOMP_DUMMY
@@ -217,7 +217,7 @@ static int get_hwcomp_log_data(struct libnvme_transport_handle *hdl, struct hwco
 
 	log->desc = calloc(1, len);
 	if (!log->desc) {
-		fprintf(stderr, "error: ocp: calloc: %s\n", libnvme_strerror(errno));
+		nvme_show_error("error: ocp: calloc: %s", libnvme_strerror(errno));
 		return -errno;
 	}
 
@@ -250,7 +250,7 @@ static int get_hwcomp_log(struct libnvme_transport_handle *hdl, __u32 id, bool l
 
 	ret = validate_output_format(nvme_args.output_format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "error: ocp: invalid output format\n");
+		nvme_show_error("error: ocp: invalid output format");
 		return ret;
 	}
 
@@ -307,7 +307,7 @@ int ocp_hwcomp_log(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	ret = get_hwcomp_log(hdl, cfg.id, cfg.list);
 	if (ret)
-		fprintf(stderr, "error: ocp: failed to get hwcomp log: %02X, ret: %d\n",
+		nvme_show_error("error: ocp: failed to get hwcomp log: %02X, ret: %d",
 			OCP_LID_HWCOMP, ret);
 
 	return ret;

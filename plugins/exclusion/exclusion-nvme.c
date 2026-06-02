@@ -20,6 +20,7 @@
 
 #include "common.h"
 #include "nvme.h"
+#include "nvme-print.h"
 #include "util/cleanup.h"
 
 #define CREATE_CMD
@@ -33,7 +34,7 @@
 static int require_root(void)
 {
 	if (geteuid() != 0) {
-		fprintf(stderr, "this command requires root privileges (try sudo)\n");
+		nvme_show_error("this command requires root privileges (try sudo)");
 		return -EPERM;
 	}
 	return 0;
@@ -65,9 +66,9 @@ static int excl_create(int argc, char **argv, struct command *acmd,
 	ctx = libnvme_create_global_ctx();
 	ret = libnvmf_exclusion_create(ctx, cfg.name);
 	if (ret == -EEXIST)
-		fprintf(stderr, "exclusion list '%s' already exists\n", cfg.name);
+		nvme_show_error("exclusion list '%s' already exists", cfg.name);
 	else if (ret)
-		fprintf(stderr, "create failed: %s\n", libnvme_strerror(-ret));
+		nvme_show_error("create failed: %s", libnvme_strerror(-ret));
 	return ret;
 }
 
@@ -97,9 +98,9 @@ static int excl_delete(int argc, char **argv, struct command *acmd,
 	ctx = libnvme_create_global_ctx();
 	ret = libnvmf_exclusion_delete(ctx, cfg.name);
 	if (ret == -ENOENT)
-		fprintf(stderr, "exclusion list '%s' not found\n", cfg.name);
+		nvme_show_error("exclusion list '%s' not found", cfg.name);
 	else if (ret)
-		fprintf(stderr, "delete failed: %s\n", libnvme_strerror(-ret));
+		nvme_show_error("delete failed: %s", libnvme_strerror(-ret));
 	return ret;
 }
 
@@ -137,15 +138,15 @@ static int excl_list(int argc, char **argv, struct command *acmd,
 	if (!cfg.name) {
 		ret = libnvmf_exclusion_list_for_each(ctx, print_list_name, NULL);
 		if (ret)
-			fprintf(stderr, "list failed: %s\n", libnvme_strerror(-ret));
+			nvme_show_error("list failed: %s", libnvme_strerror(-ret));
 		return ret;
 	}
 
 	ret = libnvmf_exclusion_entry_for_each(ctx, cfg.name, print_entry, NULL);
 	if (ret == -ENOENT)
-		fprintf(stderr, "exclusion list '%s' not found\n", cfg.name);
+		nvme_show_error("exclusion list '%s' not found", cfg.name);
 	else if (ret)
-		fprintf(stderr, "list failed: %s\n", libnvme_strerror(-ret));
+		nvme_show_error("list failed: %s", libnvme_strerror(-ret));
 	return ret;
 }
 
@@ -173,7 +174,7 @@ static int excl_add(int argc, char **argv, struct command *acmd,
 		return ret;
 
 	if (!cfg.entry) {
-		fprintf(stderr, "--entry required\n");
+		nvme_show_error("--entry required");
 		return -EINVAL;
 	}
 
@@ -183,15 +184,15 @@ static int excl_add(int argc, char **argv, struct command *acmd,
 
 	ctx = libnvme_create_global_ctx();
 	if (!libnvmf_exclusion_entry_valid(ctx, cfg.entry)) {
-		fprintf(stderr, "invalid entry: %s\n", cfg.entry);
+		nvme_show_error("invalid entry: %s", cfg.entry);
 		return -EINVAL;
 	}
 
 	ret = libnvmf_exclusion_add(ctx, cfg.name, cfg.entry);
 	if (ret == -EINVAL)
-		fprintf(stderr, "invalid list name: %s\n", cfg.name);
+		nvme_show_error("invalid list name: %s", cfg.name);
 	else if (ret)
-		fprintf(stderr, "add failed: %s\n", libnvme_strerror(-ret));
+		nvme_show_error("add failed: %s", libnvme_strerror(-ret));
 	return ret;
 }
 
@@ -253,9 +254,9 @@ static int excl_remove(int argc, char **argv, struct command *acmd,
 	ret = libnvmf_exclusion_entry_for_each(ctx, cfg.name, collect_entry, &ec);
 	if (ret) {
 		if (ret == -ENOENT)
-			fprintf(stderr, "exclusion list '%s' not found\n", cfg.name);
+			nvme_show_error("exclusion list '%s' not found", cfg.name);
 		else
-			fprintf(stderr, "list failed: %s\n", libnvme_strerror(-ret));
+			nvme_show_error("list failed: %s", libnvme_strerror(-ret));
 		return ret;
 	}
 
@@ -284,7 +285,7 @@ static int excl_remove(int argc, char **argv, struct command *acmd,
 
 	ret = libnvmf_exclusion_remove(ctx, cfg.name, ec.entries[choice - 1]);
 	if (ret)
-		fprintf(stderr, "remove failed: %s\n", libnvme_strerror(-ret));
+		nvme_show_error("remove failed: %s", libnvme_strerror(-ret));
 
 out:
 	for (i = 0; i < ec.count; i++)
@@ -354,7 +355,7 @@ static int validate_conf_file(struct libnvme_global_ctx *ctx, const char *path)
 			char *end = strchr(s, ']');
 
 			if (!end) {
-				fprintf(stderr,
+				nvme_show_error(
 					"line %u: malformed section header\n",
 					lineno);
 				errors++;
@@ -387,7 +388,7 @@ static int validate_conf_file(struct libnvme_global_ctx *ctx, const char *path)
 			continue;
 
 		if (!in_excl) {
-			fprintf(stderr,
+			nvme_show_error(
 				"line %u: entry outside the [exclusions] section\n",
 				lineno);
 			errors++;
@@ -404,7 +405,7 @@ static int validate_conf_file(struct libnvme_global_ctx *ctx, const char *path)
 
 		/* Pure check — no filesystem side effects. */
 		if (!libnvmf_exclusion_entry_valid(ctx, val)) {
-			fprintf(stderr, "line %u: invalid entry: %s\n",
+			nvme_show_error("line %u: invalid entry: %s",
 				lineno, val);
 			errors++;
 		}
@@ -513,7 +514,7 @@ static int excl_edit(int argc, char **argv, struct command *acmd,
 	 */
 	ret = libnvmf_exclusion_read(ctx, cfg.name, &text, &version);
 	if (ret) {
-		fprintf(stderr, "cannot read '%s': %s\n",
+		nvme_show_error("cannot read '%s': %s",
 			cfg.name, libnvme_strerror(-ret));
 		return ret;
 	}
@@ -532,7 +533,7 @@ static int excl_edit(int argc, char **argv, struct command *acmd,
 	fd = mkstemp(tmp_path);
 	if (fd < 0) {
 		ret = -errno;
-		fprintf(stderr, "cannot create temp file: %s\n",
+		nvme_show_error("cannot create temp file: %s",
 			libnvme_strerror(-ret));
 		return ret;
 	}
@@ -552,7 +553,7 @@ static int excl_edit(int argc, char **argv, struct command *acmd,
 re_edit:
 	ret = run_editor(tmp_path);
 	if (ret) {
-		fprintf(stderr, "editor failed\n");
+		nvme_show_error("editor failed");
 		unlink(tmp_path);
 		return ret;
 	}
@@ -561,13 +562,13 @@ re_edit:
 	if (ret) {
 		char ans[8];
 
-		fprintf(stderr, "File has errors. Re-edit? [y/N] ");
+		nvme_show_error("File has errors. Re-edit? [y/N] ");
 		fflush(stderr);
 		if (fgets(ans, sizeof(ans), stdin) &&
 		    (ans[0] == 'y' || ans[0] == 'Y'))
 			goto re_edit;
 
-		fprintf(stderr,
+		nvme_show_error(
 			"Discarding changes -- your edits are kept at %s\n",
 			tmp_path);
 		return -EINVAL;
@@ -578,7 +579,7 @@ re_edit:
 
 		if (!edited) {
 			ret = errno ? -errno : -EIO;
-			fprintf(stderr, "cannot read back temp file: %s\n",
+			nvme_show_error("cannot read back temp file: %s",
 				libnvme_strerror(-ret));
 			unlink(tmp_path);
 			return ret;
@@ -587,13 +588,13 @@ re_edit:
 	}
 
 	if (ret == -ESTALE) {
-		fprintf(stderr,
+		nvme_show_error(
 			"the list changed on disk since you opened it; your "
 			"edits were NOT saved -- kept at %s\n", tmp_path);
 		return ret;
 	}
 	if (ret) {
-		fprintf(stderr, "cannot save: %s -- your edits are kept at %s\n",
+		nvme_show_error("cannot save: %s -- your edits are kept at %s",
 			libnvme_strerror(-ret), tmp_path);
 		return ret;
 	}
