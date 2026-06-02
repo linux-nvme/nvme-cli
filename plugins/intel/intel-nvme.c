@@ -1091,7 +1091,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 				0, thresholds, sizeof(thresholds),
 				&result);
 		if (err) {
-			fprintf(stderr, "Querying thresholds failed. ");
+			nvme_show_error("Querying thresholds failed. ");
 			nvme_show_status(err);
 			return err;
 		}
@@ -1240,7 +1240,7 @@ static int read_entire_cmd(struct libnvme_passthru_cmd *cmd, int total_size,
 	while (total_size > 0) {
 		err = libnvme_exec_admin_passthru(hdl, cmd);
 		if (err) {
-			fprintf(stderr,
+			nvme_show_error(
 				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",
 				cmd->data_len, cmd->cdw13, cmd->cdw12,
 				cmd->cdw10, err, total_size);
@@ -1521,7 +1521,7 @@ out:
 		perror("intel log");
 		err = EIO;
 	} else
-		printf("Successfully wrote log to %s\n", cfg.file);
+		nvme_show_verbose_result("Successfully wrote log to %s", cfg.file);
 	close(output);
 out_free:
 	free(intel);
@@ -1603,9 +1603,9 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 			nvme_show_status(err);
 		} else if (err < 0) {
 			perror("Enable latency tracking");
-			fprintf(stderr, "Command failed while parsing.\n");
+			nvme_show_error("Command failed while parsing.");
 		} else {
-			printf("Successfully set enable bit for FID (0x%X) to %i.\n",
+			nvme_show_verbose_result("Successfully set enable bit for FID (0x%X) to %i.",
 				fid, option);
 		}
 		break;
@@ -1659,7 +1659,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 	err = nvme_get_log_simple(hdl, 0xc2,
 				  media_version, sizeof(media_version));
 	if (err) {
-		fprintf(stderr, "Querying media version failed. ");
+		nvme_show_error("Querying media version failed. ");
 		nvme_show_status(err);
 		goto close_dev;
 	}
@@ -1671,7 +1671,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 						      thresholds,
 						      sizeof(thresholds));
 		if (num == -1) {
-			fprintf(stderr, "ERROR: Bucket list is malformed\n");
+			nvme_show_error("ERROR: Bucket list is malformed");
 			goto close_dev;
 
 		}
@@ -1683,10 +1683,10 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 			nvme_show_status(err);
 		} else if (err < 0) {
 			perror("Enable latency tracking");
-			fprintf(stderr, "Command failed while parsing.\n");
+			nvme_show_error("Command failed while parsing.");
 		}
 	} else {
-		fprintf(stderr, "Unsupported command\n");
+		nvme_show_error("Unsupported command");
 	}
 
 close_dev:

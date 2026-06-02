@@ -3,6 +3,7 @@
 #include <inttypes.h>
 
 #include "common.h"
+#include "nvme-print.h"
 #include "lm-print.h"
 #include "util/types.h"
 
@@ -12,7 +13,7 @@ static void stdout_controller_state_data(struct nvme_lm_controller_state_data *d
 					 __u32 offset)
 {
 	if (offset) {
-		fprintf(stderr, "cannot understand non-zero offset\n");
+		nvme_show_error("cannot understand non-zero offset");
 		return;
 	}
 
@@ -32,7 +33,7 @@ static void stdout_controller_state_data(struct nvme_lm_controller_state_data *d
 
 		len -= sizeof(struct nvme_lm_controller_state_data_header);
 	} else {
-		fprintf(stderr, "WARNING: Header truncated\n");
+		nvme_show_error("WARNING: Header truncated");
 		len = 0;
 	}
 
@@ -54,7 +55,7 @@ static void stdout_controller_state_data(struct nvme_lm_controller_state_data *d
 		len -= sizeof(struct nvme_lm_nvme_controller_state_data_header);
 
 		if (len < niosq * sizeof(struct nvme_lm_io_submission_queue_data)) {
-			fprintf(stderr, "WARNING: I/O Submission Queues truncated\n");
+			nvme_show_error("WARNING: I/O Submission Queues truncated");
 			niosq = len / sizeof(struct nvme_lm_io_submission_queue_data);
 		}
 
@@ -88,7 +89,7 @@ static void stdout_controller_state_data(struct nvme_lm_controller_state_data *d
 		len -= niosq * sizeof(struct nvme_lm_io_submission_queue_data);
 
 		if (len < niocq * sizeof(struct nvme_lm_io_completion_queue_data)) {
-			fprintf(stderr, "WARNING: I/O Completion Queues truncated\n");
+			nvme_show_error("WARNING: I/O Completion Queues truncated");
 			niocq = len / sizeof(struct nvme_lm_io_completion_queue_data);
 		}
 
@@ -123,7 +124,7 @@ static void stdout_controller_state_data(struct nvme_lm_controller_state_data *d
 			}
 		}
 	} else
-		fprintf(stderr, "WARNING: NVMe Controller State Data Structure truncated\n");
+		nvme_show_error("WARNING: NVMe Controller State Data Structure truncated");
 }
 
 static void stdout_show_controller_data_queue(struct nvme_lm_ctrl_data_queue_fid_data *data)

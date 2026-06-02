@@ -286,7 +286,7 @@ static int ilog_dump_assert_logs(struct libnvme_transport_handle *hdl, struct il
 		}
 	}
 	close(output);
-	printf("Successfully wrote Assert to %s\n", file_path);
+	nvme_show_verbose_result("Successfully wrote Assert to %s", file_path);
 	return err;
 }
 
@@ -344,7 +344,7 @@ static int ilog_dump_event_logs(struct libnvme_transport_handle *hdl, struct ilo
 		}
 	}
 	close(output);
-	printf("Successfully wrote Events to %s\n", file_path);
+	nvme_show_verbose_result("Successfully wrote Events to %s", file_path);
 	return err;
 }
 
@@ -432,7 +432,7 @@ static int ilog_dump_nlogs(struct libnvme_transport_handle *hdl, struct ilog *il
 	} while (++log_select.selectCore < core_num);
 	if (is_open) {
 		close(output);
-		printf("Successfully wrote Nlog to %s\n", file_path);
+		nvme_show_verbose_result("Successfully wrote Nlog to %s", file_path);
 	}
 	return err;
 }
@@ -489,7 +489,7 @@ static int log_save(struct log *log, const char *parent_dir_name, const char *su
 		bytes_remaining -= bytes_written;
 		buffer += bytes_written;
 	}
-	printf("Successfully wrote %s to %s\n", log->desc, file_path);
+	nvme_show_verbose_result("Successfully wrote %s to %s", log->desc, file_path);
 	return 0;
 }
 
@@ -876,7 +876,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	else if (!strcmp(cfg.type, "EXTENDED"))
 		log_type = EXTENDED;
 	else {
-		fprintf(stderr, "Invalid log type: %s\n", cfg.type);
+		nvme_show_error("Invalid log type: %s", cfg.type);
 		return -EINVAL;
 	}
 

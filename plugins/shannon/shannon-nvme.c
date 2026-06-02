@@ -213,11 +213,11 @@ static int get_additional_feature(int argc, char **argv, struct command *acmd, s
 		return err;
 
 	if (cfg.sel > 7) {
-		fprintf(stderr, "invalid 'select' param:%d\n", cfg.sel);
+		nvme_show_error("invalid 'select' param:%d", cfg.sel);
 		return -EINVAL;
 	}
 	if (!cfg.feature_id) {
-		fprintf(stderr, "feature-id required param\n");
+		nvme_show_error("feature-id required param");
 		return -EINVAL;
 	}
 	if (cfg.data_len) {
@@ -291,14 +291,14 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 		return err;
 
 	if (!cfg.feature_id) {
-		fprintf(stderr, "feature-id required param\n");
+		nvme_show_error("feature-id required param");
 		return -EINVAL;
 	}
 
 	if (cfg.data_len) {
 		buf = libnvme_alloc(cfg.data_len);
 		if (!buf) {
-			fprintf(stderr, "can not allocate feature payload\n");
+			nvme_show_error("can not allocate feature payload");
 			return -ENOMEM;
 		}
 		memset(buf, 0, cfg.data_len);
@@ -308,13 +308,13 @@ static int set_additional_feature(int argc, char **argv, struct command *acmd, s
 		if (strlen(cfg.file)) {
 			ffd = open(cfg.file, O_RDONLY);
 			if (ffd <= 0) {
-				fprintf(stderr, "no firmware file provided\n");
+				nvme_show_error("no firmware file provided");
 				return -EINVAL;
 			}
 		}
 		err = read(ffd, (void *)buf, cfg.data_len);
 		if (err < 0) {
-			fprintf(stderr, "failed to read data buffer from input file\n");
+			nvme_show_error("failed to read data buffer from input file");
 			return -EINVAL;
 		}
 	}

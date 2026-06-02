@@ -277,7 +277,7 @@ int solidigm_get_additional_smart_log(int argc, char **argv, struct command *acm
 
 	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
-		fprintf(stderr, "Invalid output format '%s'\n",
+		nvme_show_error("Invalid output format '%s'",
 			nvme_args.output_format);
 		return err;
 	}

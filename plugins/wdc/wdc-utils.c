@@ -178,7 +178,7 @@ bool wdc_CheckUuidListSupport(struct libnvme_transport_handle *hdl,
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err) {
-		fprintf(stderr, "ERROR: WDC: nvme_identify_ctrl() failed 0x%x\n", err);
+		nvme_show_error("ERROR: WDC: nvme_identify_ctrl() failed 0x%x", err);
 		return false;
 	}
 

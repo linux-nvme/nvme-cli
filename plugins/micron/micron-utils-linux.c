@@ -15,6 +15,7 @@
 #include <libnvme.h>
 
 #include "common.h"
+#include "nvme-print.h"
 #include "micron-utils.h"
 #include "util/cleanup.h"
 
@@ -55,7 +56,7 @@ int micron_get_pci_ids(
 			ctrl_sysfs_dir);
 		ReadSysFile(id_path, did);
 	} else {
-		fprintf(stderr, "Unable to find sysfs dir for %s\n",
+		nvme_show_error("Unable to find sysfs dir for %s",
 			libnvme_transport_handle_get_name(hdl));
 		return -EINVAL;
 	}
@@ -305,7 +306,7 @@ void micron_write_os_config_to_file(const char *file_name)
 					break;
 				pos += n;
 			}
-			fprintf(stderr, "Failed to run \"%s\": %s\n",
+			nvme_show_error("Failed to run \"%s\": %s",
 				cmdline, strerror(-ret));
 		}
 	}

@@ -1454,7 +1454,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 		err = nvme_set_features(hdl, 0, 0xC1, 0, 0x80000000, 0, 0, 0, 0, NULL,
 				0, &result);
 		if (err)
-			fprintf(stderr, "%s: couldn't clear PCIe correctable errors\n",
+			nvme_show_error("%s: couldn't clear PCIe correctable errors",
 				__func__);
 	}
 
@@ -1513,7 +1513,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 		err = nvme_set_features(hdl, 0, 0xC3, 0, 0x80000000, 0, 0, 0, 0, NULL,
 				0, &result);
 		if (err)
-			fprintf(stderr, "%s: couldn't clear PCIe correctable errors\n", __func__);
+			nvme_show_error("%s: couldn't clear PCIe correctable errors", __func__);
 	}
 
 	err = nvme_set_features_simple(hdl, 0, 0xE1, cfg.save, 0xCB, &result);
@@ -1604,7 +1604,7 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 		log = malloc(bytesToGet);
 
 		if (!log) {
-			fprintf(stderr, "could not alloc buffer for log\n");
+			nvme_show_error("could not alloc buffer for log");
 
 			return -EINVAL;
 		}
@@ -1709,7 +1709,7 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 		log = malloc(bytesToGet);
 
 		if (!log) {
-			fprintf(stderr, "could not alloc buffer for log\n");
+			nvme_show_error("could not alloc buffer for log");
 			return -EINVAL;
 		}
 
@@ -1824,7 +1824,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 		log = malloc(bytesToGet);
 
 		if (!log) {
-			fprintf(stderr, "could not alloc buffer for log\n");
+			nvme_show_error("could not alloc buffer for log");
 			err = EINVAL;
 			goto out;
 		}

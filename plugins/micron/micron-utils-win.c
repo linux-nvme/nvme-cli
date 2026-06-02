@@ -133,7 +133,7 @@ void micron_write_os_config_to_file(const char *file_name)
 
 	fp = fopen(file_name, "w+");
 	if (!fp) {
-		fprintf(stderr, "Failed to create %s\n", file_name);
+		nvme_show_error("Failed to create %s", file_name);
 		return;
 	}
 

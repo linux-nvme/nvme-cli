@@ -115,7 +115,7 @@ static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plu
 	else if (err)
 		nvme_show_status(err);
 	else
-		printf("Create CDQ Successful: CDQID=0x%04x\n",
+		nvme_show_verbose_result("Create CDQ Successful: CDQID=0x%04x",
 			NVME_GET((__u32)cmd.result, LM_CREATE_CDQ_CDQID));
 
 	return err;
@@ -153,7 +153,7 @@ static int lm_delete_cdq(int argc, char **argv, struct command *acmd, struct plu
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		printf("Delete CDQ Successful: CDQID=0x%04x\n", cfg.cdqid);
+		nvme_show_verbose_result("Delete CDQ Successful: CDQID=0x%04x", cfg.cdqid);
 
 	return err;
 }
@@ -236,7 +236,7 @@ static int lm_track_send(int argc, char **argv, struct command *acmd, struct plu
 	else if (err)
 		nvme_show_status(err);
 	else
-		printf("Track Send (%s) Successful\n",
+		nvme_show_verbose_result("Track Send (%s) Successful",
 		       ARGSTR(lm_track_send_select_argstr, cfg.sel));
 
 	return err;
@@ -383,7 +383,7 @@ static int lm_migration_send(int argc, char **argv, struct command *acmd, struct
 	else if (err > 0)
 		nvme_show_status(err);
 	else
-		printf("Migration Send (%s) Successful\n",
+		nvme_show_verbose_result("Migration Send (%s) Successful",
 		       ARGSTR(lm_migration_send_select_argstr, cfg.sel));
 
 
@@ -558,7 +558,7 @@ static int lm_set_cdq(int argc, char **argv, struct command *acmd, struct plugin
 	else if (err)
 		nvme_show_status(err);
 	else
-		printf("Success. Head Pointer: %d\n", cfg.hp);
+		nvme_show_verbose_result("Success. Head Pointer: %d", cfg.hp);
 
 	return err;
 }

@@ -208,13 +208,13 @@ static int get_c3_log_page(struct libnvme_transport_handle *hdl, char *format)
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output format\n");
+		nvme_show_error("ERROR : OCP : invalid output format");
 		return ret;
 	}
 
 	data = malloc(sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
@@ -222,7 +222,7 @@ static int get_c3_log_page(struct libnvme_transport_handle *hdl, char *format)
 	ret = ocp_get_log_simple(hdl, OCP_LID_LMLOG, C3_LATENCY_MON_LOG_BUF_LEN, data);
 
 	if (strcmp(format, "json"))
-		fprintf(stderr, "NVMe Status:%s(%x)\n", libnvme_status_to_string(ret, false), ret);
+		nvme_show_error("NVMe Status:%s(%x)", libnvme_status_to_string(ret, false), ret);
 
 	if (!ret) {
 		log_data = (struct ssd_latency_monitor_log *)data;
@@ -235,15 +235,15 @@ static int get_c3_log_page(struct libnvme_transport_handle *hdl, char *format)
 			if (lat_mon_guid[i] != log_data->log_page_guid[i]) {
 				int j;
 
-				fprintf(stderr, "ERROR : OCP : Unknown GUID in C3 Log Page data\n");
-				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
+				nvme_show_error("ERROR : OCP : Unknown GUID in C3 Log Page data");
+				nvme_show_error("ERROR : OCP : Expected GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%02x", lat_mon_guid[j]);
+					nvme_show_error("%02x", lat_mon_guid[j]);
 
-				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
+				nvme_show_error("\nERROR : OCP : Actual GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%02x", log_data->log_page_guid[j]);
-				fprintf(stderr, "\n");
+					nvme_show_error("%02x", log_data->log_page_guid[j]);
+				nvme_show_error("");
 
 				ret = -1;
 				goto out;
@@ -251,7 +251,7 @@ static int get_c3_log_page(struct libnvme_transport_handle *hdl, char *format)
 		}
 		ocp_c3_log(hdl, log_data, fmt);
 	} else {
-		fprintf(stderr, "ERROR : OCP : Unable to read C3 data from buffer\n");
+		nvme_show_error("ERROR : OCP : Unable to read C3 data from buffer");
 	}
 
 out:
@@ -276,7 +276,7 @@ static int ocp_latency_monitor_log(int argc, char **argv,
 
 	ret = get_c3_log_page(hdl, nvme_args.output_format);
 	if (ret)
-		fprintf(stderr,
+		nvme_show_error(
 			"ERROR : OCP : Failure reading the C3 Log Page, ret = %d\n",
 			ret);
 
@@ -389,7 +389,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 		printf("discard debug log: 0x%x\n", buf.discard_debug_log);
 		printf("latency monitor feature enable: 0x%x\n", buf.latency_monitor_feature_enable);
 	} else if (err > 0) {
-		fprintf(stderr, "NVMe Status:%s(%x)\n", libnvme_status_to_string(err, false), err);
+		nvme_show_error("NVMe Status:%s(%x)", libnvme_status_to_string(err, false), err);
 	}
 
 	return err;
@@ -531,7 +531,7 @@ static int eol_plp_failure_mode_set(struct libnvme_transport_handle *hdl, const 
 		nvme_show_status(err);
 	} else if (err < 0) {
 		nvme_show_perror("Define EOL/PLP failure mode");
-		fprintf(stderr, "Command failed while parsing.\n");
+		nvme_show_error("Command failed while parsing.");
 	} else {
 		nvme_show_result("Successfully set mode (feature: %#0*x): %#0*x (%s: %s).",
 				 fid ? 4 : 2, fid, mode ? 10 : 8, mode,
@@ -1180,7 +1180,7 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 	hdr = malloc(bs);
 	telemetry_log = malloc(bs);
 	if (!hdr || !telemetry_log) {
-		fprintf(stderr, "Failed to allocate %zu bytes for log: %s\n",
+		nvme_show_error("Failed to allocate %zu bytes for log: %s",
 			bs, libnvme_strerror(errno));
 		err = -ENOMEM;
 		goto exit_status;
@@ -1189,7 +1189,7 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 
 	fd = nvme_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (fd < 0) {
-		fprintf(stderr, "Failed to open output file %s: %s!\n",
+		nvme_show_error("Failed to open output file %s: %s!",
 				output_file, libnvme_strerror(errno));
 		err = fd;
 		goto exit_status;
@@ -1201,16 +1201,16 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 			NVME_LOG_CDW10_LSP_MASK);
 	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err < 0)
-		nvme_show_error("Failed to fetch the log from drive.\n");
+		nvme_show_error("Failed to fetch the log from drive.");
 	else if (err > 0) {
 		nvme_show_status(err);
-		nvme_show_error("Failed to fetch telemetry-header. Error:%d.\n", err);
+		nvme_show_error("Failed to fetch telemetry-header. Error:%d.", err);
 		goto close_fd;
 	}
 
 	err = write(fd, (void *)hdr, bs);
 	if (err != bs) {
-		nvme_show_error("Failed to write data to file.\n");
+		nvme_show_error("Failed to write data to file.");
 		goto close_fd;
 	}
 
@@ -1238,17 +1238,17 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		nvme_init_get_log_lpo(&cmd, offset);
 		err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (err < 0) {
-			nvme_show_error("Failed to fetch the log from drive.\n");
+			nvme_show_error("Failed to fetch the log from drive.");
 			break;
 		} else if (err > 0) {
-			nvme_show_error("Failed to fetch telemetry-log.\n");
+			nvme_show_error("Failed to fetch telemetry-log.");
 			nvme_show_status(err);
 			break;
 		}
 
 		err = write(fd, (void *)telemetry_log, bs);
 		if (err != bs) {
-			nvme_show_error("Failed to write data to file.\n");
+			nvme_show_error("Failed to write data to file.");
 			break;
 		}
 		err = 0;
@@ -1279,7 +1279,7 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 
 	header_data = (__u8 *)malloc(sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
 	if (!header_data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(header_data, 0, sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
@@ -1321,21 +1321,21 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 
 		pC9_string_buffer = (__u8 *)malloc(sizeof(__u8) * total_log_page_sz);
 		if (!pC9_string_buffer) {
-			fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
+			nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
 			return -1;
 		}
 		memset(pC9_string_buffer, 0, sizeof(__u8) * total_log_page_sz);
 
 		ret = ocp_get_log_simple(hdl, OCP_LID_TELSLG, total_log_page_sz, pC9_string_buffer);
 	} else {
-		fprintf(stderr, "ERROR : OCP : Unable to read C9 data, ret: %d.\n", ret);
+		nvme_show_error("ERROR : OCP : Unable to read C9 data, ret: %d.", ret);
 		return ret;
 	}
 
 	if (save_bin) {
 		fd = nvme_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd < 0) {
-			fprintf(stderr, "Failed to open output file %s: %s!\n", output_file,
+			nvme_show_error("Failed to open output file %s: %s!", output_file,
 				libnvme_strerror(errno));
 			ret = fd;
 			goto free;
@@ -1343,7 +1343,7 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 
 		ret = write(fd, (void *)pC9_string_buffer, total_log_page_sz);
 		if (ret != total_log_page_sz)
-			fprintf(stderr, "Failed to flush all data to file! ret: %d\n", ret);
+			nvme_show_error("Failed to flush all data to file! ret: %d", ret);
 		else
 			/* all data written, set ret = SUCCESS */
 			ret = 0;
@@ -1369,18 +1369,18 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 				read_binary_file(NULL, (const char *)options->telemetry_log,
 						 &telemetry_buffer_size, 1);
 			if (ptelemetry_buffer == NULL) {
-				nvme_show_error("Failed to read telemetry-log.\n");
+				nvme_show_error("Failed to read telemetry-log.");
 				return -1;
 			}
 		}
 	} else {
-		nvme_show_error("telemetry-log is empty.\n");
+		nvme_show_error("telemetry-log is empty.");
 		return -1;
 	}
 
 	log_id = ptelemetry_buffer[0];
 	if ((log_id != NVME_LOG_LID_TELEMETRY_HOST) && (log_id != NVME_LOG_LID_TELEMETRY_CTRL)) {
-		nvme_show_error("Invalid LogPageId [0x%02X]\n", log_id);
+		nvme_show_error("Invalid LogPageId [0x%02X]", log_id);
 		return -1;
 	}
 
@@ -1390,18 +1390,18 @@ int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
 			pstring_buffer = read_binary_file(NULL, (const char *)options->string_log,
 							  &string_buffer_size, 1);
 			if (pstring_buffer == NULL) {
-				nvme_show_error("Failed to read string-log.\n");
+				nvme_show_error("Failed to read string-log.");
 				return -1;
 			}
 		}
 	} else {
-		nvme_show_error("string-log is empty.\n");
+		nvme_show_error("string-log is empty.");
 		return -1;
 	}
 
 	status = validate_output_format(options->output_format, &fmt);
 	if (status < 0) {
-		nvme_show_error("Invalid output format\n");
+		nvme_show_error("Invalid output format");
 		return status;
 	}
 
@@ -1508,13 +1508,13 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 
 		if (tele_area == 4) {
 			if (!(ctrl.lpa & 0x40)) {
-				nvme_show_error("Telemetry data area 4 not supported by device.\n");
+				nvme_show_error("Telemetry data area 4 not supported by device.");
 				goto out;
 			}
 
 			err = libnvme_set_etdas(hdl, &host_behavior_changed);
 			if (err) {
-				fprintf(stderr, "%s: Failed to set ETDAS bit\n", __func__);
+				nvme_show_error("%s: Failed to set ETDAS bit", __func__);
 				return err;
 			}
 		}
@@ -1526,7 +1526,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 				tele_area,
 				(const char *)file_path_telemetry);
 		if (err) {
-			nvme_show_error("Failed to fetch telemetry-log from the drive.\n");
+			nvme_show_error("Failed to fetch telemetry-log from the drive.");
 			goto out;
 		}
 		nvme_show_result("telemetry.bin generated. Proceeding with next steps.\n");
@@ -1537,7 +1537,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			err = libnvme_clear_etdas(hdl, &host_behavior_changed);
 			if (err) {
 				/* Continue on if this fails, it's not a fatal condition */
-				nvme_show_error("Failed to clear ETDAS bit.\n");
+				nvme_show_error("Failed to clear ETDAS bit.");
 			}
 		}
 	}
@@ -1549,7 +1549,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 		sprintf(file_path_string, "%s-%s", opt.output_file, string_suffix);
 		err = get_c9_log_page_data(hdl, 0, 1, (const char *)file_path_string);
 		if (err) {
-			nvme_show_error("Failed to fetch string-log from the drive.\n");
+			nvme_show_error("Failed to fetch string-log from the drive.");
 			goto out;
 		}
 		nvme_show_result("string.bin generated. Proceeding with next steps.\n");
@@ -1588,7 +1588,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 
 		err = get_telemetry_dump(hdl, opt.output_file, sn, tele_type, tele_area, true);
 		if (err)
-			fprintf(stderr, "NVMe Status: %s(%x)\n", libnvme_status_to_string(err, false),
+			nvme_show_error("NVMe Status: %s(%x)", libnvme_status_to_string(err, false),
 				err);
 		break;
 	}
@@ -1629,13 +1629,13 @@ static int get_c5_log_page(struct libnvme_transport_handle *hdl, char *format)
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output format\n");
+		nvme_show_error("ERROR : OCP : invalid output format");
 		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
@@ -1650,14 +1650,14 @@ static int get_c5_log_page(struct libnvme_transport_handle *hdl, char *format)
 		 */
 		for (i = 0; i < 16; i++) {
 			if (unsupported_req_guid[i] != log_data->log_page_guid[i]) {
-				fprintf(stderr, "ERROR : OCP : Unknown GUID in C5 Log Page data\n");
-				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
+				nvme_show_error("ERROR : OCP : Unknown GUID in C5 Log Page data");
+				nvme_show_error("ERROR : OCP : Expected GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%02x", unsupported_req_guid[j]);
-				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
+					nvme_show_error("%02x", unsupported_req_guid[j]);
+				nvme_show_error("\nERROR : OCP : Actual GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%02x", log_data->log_page_guid[j]);
-				fprintf(stderr, "\n");
+					nvme_show_error("%02x", log_data->log_page_guid[j]);
+				nvme_show_error("");
 
 				ret = -1;
 				goto out;
@@ -1665,7 +1665,7 @@ static int get_c5_log_page(struct libnvme_transport_handle *hdl, char *format)
 		}
 		ocp_c5_log(hdl, log_data, fmt);
 	} else {
-		fprintf(stderr, "ERROR : OCP : Unable to read C3 data from buffer\n");
+		nvme_show_error("ERROR : OCP : Unable to read C3 data from buffer");
 	}
 
 out:
@@ -1697,7 +1697,7 @@ static int ocp_unsupported_requirements_log(int argc, char **argv, struct comman
 
 	ret = get_c5_log_page(hdl, cfg.output_format);
 	if (ret)
-		fprintf(stderr, "ERROR : OCP : Failure reading the C5 Log Page, ret = %d\n", ret);
+		nvme_show_error("ERROR : OCP : Failure reading the C5 Log Page, ret = %d", ret);
 
 	return ret;
 }
@@ -1730,13 +1730,13 @@ static int get_c1_log_page(struct libnvme_transport_handle *hdl, char *format)
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output format\n");
+		nvme_show_error("ERROR : OCP : invalid output format");
 		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
@@ -1752,14 +1752,14 @@ static int get_c1_log_page(struct libnvme_transport_handle *hdl, char *format)
 		 */
 		for (i = 0; i < 16; i++) {
 			if (error_recovery_guid[i] != log_data->log_page_guid[i]) {
-				fprintf(stderr, "ERROR : OCP : Unknown GUID in C1 Log Page data\n");
-				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
+				nvme_show_error("ERROR : OCP : Unknown GUID in C1 Log Page data");
+				nvme_show_error("ERROR : OCP : Expected GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%02x", error_recovery_guid[j]);
-				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
+					nvme_show_error("%02x", error_recovery_guid[j]);
+				nvme_show_error("\nERROR : OCP : Actual GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%02x", log_data->log_page_guid[j]);
-				fprintf(stderr, "\n");
+					nvme_show_error("%02x", log_data->log_page_guid[j]);
+				nvme_show_error("");
 
 				ret = -1;
 				goto out;
@@ -1767,7 +1767,7 @@ static int get_c1_log_page(struct libnvme_transport_handle *hdl, char *format)
 		}
 		ocp_c1_log(log_data, fmt);
 	} else {
-		fprintf(stderr, "ERROR : OCP : Unable to read C1 data from buffer\n");
+		nvme_show_error("ERROR : OCP : Unable to read C1 data from buffer");
 	}
 
 out:
@@ -1798,7 +1798,7 @@ static int ocp_error_recovery_log(int argc, char **argv, struct command *acmd, s
 
 	ret = get_c1_log_page(hdl, cfg.output_format);
 	if (ret)
-		fprintf(stderr, "ERROR : OCP : Failure reading the C1h Log Page, ret = %d\n", ret);
+		nvme_show_error("ERROR : OCP : Failure reading the C1h Log Page, ret = %d", ret);
 
 	return ret;
 }
@@ -1830,13 +1830,13 @@ static int get_c4_log_page(struct libnvme_transport_handle *hdl, char *format)
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output format\n");
+		nvme_show_error("ERROR : OCP : invalid output format");
 		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
@@ -1852,14 +1852,14 @@ static int get_c4_log_page(struct libnvme_transport_handle *hdl, char *format)
 		 */
 		for (i = 0; i < 16; i++) {
 			if (dev_cap_req_guid[i] != log_data->log_page_guid[i]) {
-				fprintf(stderr, "ERROR : OCP : Unknown GUID in C4 Log Page data\n");
-				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
+				nvme_show_error("ERROR : OCP : Unknown GUID in C4 Log Page data");
+				nvme_show_error("ERROR : OCP : Expected GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%02x", dev_cap_req_guid[j]);
-				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
+					nvme_show_error("%02x", dev_cap_req_guid[j]);
+				nvme_show_error("\nERROR : OCP : Actual GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%02x", log_data->log_page_guid[j]);
-				fprintf(stderr, "\n");
+					nvme_show_error("%02x", log_data->log_page_guid[j]);
+				nvme_show_error("");
 
 				ret = -1;
 				goto out;
@@ -1867,7 +1867,7 @@ static int get_c4_log_page(struct libnvme_transport_handle *hdl, char *format)
 		}
 		ocp_c4_log(log_data, fmt);
 	} else {
-		fprintf(stderr, "ERROR : OCP : Unable to read C4 data from buffer\n");
+		nvme_show_error("ERROR : OCP : Unable to read C4 data from buffer");
 	}
 
 out:
@@ -1898,7 +1898,7 @@ static int ocp_device_capabilities_log(int argc, char **argv, struct command *ac
 
 	ret = get_c4_log_page(hdl, cfg.output_format);
 	if (ret)
-		fprintf(stderr, "ERROR : OCP : Failure reading the C4h Log Page, ret = %d\n", ret);
+		nvme_show_error("ERROR : OCP : Failure reading the C4h Log Page, ret = %d", ret);
 
 	return ret;
 }
@@ -1928,9 +1928,9 @@ static int ocp_set_telemetry_profile(struct libnvme_transport_handle *hdl, __u8 
 		nvme_show_status(err);
 	} else if (err < 0) {
 		nvme_show_perror("Set Telemetry Profile");
-		fprintf(stderr, "Command failed while parsing.\n");
+		nvme_show_error("Command failed while parsing.");
 	} else {
-		printf("Successfully Set Telemetry Profile (feature: 0xC8) to below values\n");
+		nvme_show_verbose_result("Successfully Set Telemetry Profile (feature: 0xC8) to below values");
 		printf("Telemetry Profile Select: 0x%x\n", tps);
 	}
 
@@ -2065,9 +2065,9 @@ set_dssd_power_state(struct libnvme_transport_handle *hdl,
 		nvme_show_status(err);
 	} else if (err < 0) {
 		nvme_show_perror("Define DSSD Power State");
-		fprintf(stderr, "Command failed while parsing.\n");
+		nvme_show_error("Command failed while parsing.");
 	} else {
-		printf("Successfully set DSSD Power State (feature: 0xC7) to below values\n");
+		nvme_show_verbose_result("Successfully set DSSD Power State (feature: 0xC7) to below values");
 		printf("DSSD Power State: 0x%x\n", power_state);
 		printf("Save bit Value: 0x%x\n", sv);
 	}
@@ -2142,7 +2142,7 @@ static int get_dssd_power_state(struct libnvme_transport_handle *hdl, const __u3
 		if (sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(fid, result);
 	} else {
-		nvme_show_error("Could not get feature: 0xC7 with sel: %d\n", sel);
+		nvme_show_error("Could not get feature: 0xC7 with sel: %d", sel);
 	}
 
 	return err;
@@ -2251,9 +2251,9 @@ static int set_plp_health_check_interval(int argc, char **argv, struct command *
 		nvme_show_status(err);
 	} else if (err < 0) {
 		nvme_show_perror("Define PLP Health Check Interval");
-		fprintf(stderr, "Command failed while parsing.\n");
+		nvme_show_error("Command failed while parsing.");
 	} else {
-		printf("Successfully set the PLP Health Check Interval");
+		nvme_show_verbose_result("Successfully set the PLP Health Check Interval");
 		printf("PLP Health Check Interval: 0x%x\n", cfg.plp_health_interval);
 		printf("Save bit Value: 0x%x\n", cfg.sv);
 	}
@@ -2353,9 +2353,9 @@ static int set_dssd_async_event_config(int argc, char **argv, struct command *ac
 		nvme_show_status(err);
 	} else if (err < 0) {
 		nvme_show_perror("Set DSSD Asynchronous Event Configuration\n");
-		fprintf(stderr, "Command failed while parsing.\n");
+		nvme_show_error("Command failed while parsing.");
 	} else {
-		printf("Successfully set the DSSD Asynchronous Event Configuration\n");
+		nvme_show_verbose_result("Successfully set the DSSD Asynchronous Event Configuration");
 		printf("Enable Panic Notices bit Value: 0x%x\n", cfg.epn);
 		printf("Save bit Value: 0x%x\n", cfg.sv);
 	}
@@ -2398,7 +2398,7 @@ static int get_dssd_async_event_config(int argc, char **argv, struct command *ac
 		if (cfg.sel == NVME_GET_FEATURES_SEL_SUPPORTED)
 			nvme_show_select_result(fid, result);
 	} else {
-		nvme_show_error("Could not get feature: 0xC9\n");
+		nvme_show_error("Could not get feature: 0xC9");
 	}
 
 	return err;
@@ -2423,7 +2423,7 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output format\n");
+		nvme_show_error("ERROR : OCP : invalid output format");
 		return ret;
 	}
 
@@ -2432,7 +2432,7 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 	if ((!ret) && (fmt != BINARY))
 		ocp_c9_log(log_data, pC9_string_buffer, total_log_page_sz, fmt);
 	else if (ret)
-		fprintf(stderr, "ERROR : OCP : Unable to read C9 data from buffer\n");
+		nvme_show_error("ERROR : OCP : Unable to read C9 data from buffer");
 
 	free(header_data);
 	return ret;
@@ -2475,7 +2475,7 @@ static int ocp_telemetry_str_log_format(int argc, char **argv, struct command *a
 
 	ret = get_c9_log_page(hdl, cfg.output_format, file_path);
 	if (ret)
-		fprintf(stderr, "ERROR : OCP : Failure reading the C9 Log Page, ret = %d\n", ret);
+		nvme_show_error("ERROR : OCP : Failure reading the C9 Log Page, ret = %d", ret);
 
 	return ret;
 }
@@ -2511,13 +2511,13 @@ static int get_c7_log_page(struct libnvme_transport_handle *hdl, char *format)
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
-		fprintf(stderr, "ERROR : OCP : invalid output format\n");
+		nvme_show_error("ERROR : OCP : invalid output format");
 		return ret;
 	}
 
 	data = (__u8 *)malloc(sizeof(__u8) * C7_TCG_CONFIGURATION_LEN);
 	if (!data) {
-		fprintf(stderr, "ERROR : OCP : malloc : %s\n", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
 	memset(data, 0, sizeof(__u8) * C7_TCG_CONFIGURATION_LEN);
@@ -2532,14 +2532,14 @@ static int get_c7_log_page(struct libnvme_transport_handle *hdl, char *format)
 		 */
 		for (i = 0; i < 16; i++) {
 			if (tcg_configuration_guid[i] != log_data->log_page_guid[i]) {
-				fprintf(stderr, "ERROR : OCP : Unknown GUID in C7 Log Page data\n");
-				fprintf(stderr, "ERROR : OCP : Expected GUID: 0x");
+				nvme_show_error("ERROR : OCP : Unknown GUID in C7 Log Page data");
+				nvme_show_error("ERROR : OCP : Expected GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%02x", tcg_configuration_guid[j]);
-				fprintf(stderr, "\nERROR : OCP : Actual GUID: 0x");
+					nvme_show_error("%02x", tcg_configuration_guid[j]);
+				nvme_show_error("\nERROR : OCP : Actual GUID: 0x");
 				for (j = 0; j < 16; j++)
-					fprintf(stderr, "%02x", log_data->log_page_guid[j]);
-				fprintf(stderr, "\n");
+					nvme_show_error("%02x", log_data->log_page_guid[j]);
+				nvme_show_error("");
 
 				ret = -1;
 				goto out;
@@ -2547,7 +2547,7 @@ static int get_c7_log_page(struct libnvme_transport_handle *hdl, char *format)
 		}
 		ocp_c7_log(hdl, log_data, fmt);
 	} else {
-		fprintf(stderr, "ERROR : OCP : Unable to read C7 data from buffer\n");
+		nvme_show_error("ERROR : OCP : Unable to read C7 data from buffer");
 	}
 
 out:
@@ -2579,7 +2579,7 @@ static int ocp_tcg_configuration_log(int argc, char **argv, struct command *acmd
 
 	ret = get_c7_log_page(hdl, cfg.output_format);
 	if (ret)
-		fprintf(stderr, "ERROR : OCP : Failure reading the C7 Log Page, ret = %d\n", ret);
+		nvme_show_error("ERROR : OCP : Failure reading the C7 Log Page, ret = %d", ret);
 
 	return ret;
 }
@@ -2884,7 +2884,7 @@ static int enable_ieee1667_silo_set(struct libnvme_transport_handle *hdl,
 		nvme_show_status(err);
 	} else if (err < 0) {
 		nvme_show_perror(enable_ieee1667_silo);
-		fprintf(stderr, "Command failed while parsing.\n");
+		nvme_show_error("Command failed while parsing.");
 	} else {
 		nvme_show_result("Successfully set enable (feature: 0x%02x): %d (%s: %s).", fid,
 				 enable, save ? "Save" : "Not save",

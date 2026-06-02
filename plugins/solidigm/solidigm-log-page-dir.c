@@ -239,7 +239,7 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *a
 
 		err = validate_output_format(nvme_args.output_format, &print_flag);
 		if (err) {
-			nvme_show_error("Error: Invalid output format specified: %s.\n",
+			nvme_show_error("Error: Invalid output format specified: %s.",
 					nvme_args.output_format);
 			return err;
 		}

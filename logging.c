@@ -104,7 +104,7 @@ static void nvme_log_retry(int errnum)
 	if (log_level < LIBNVME_LOG_DEBUG)
 		return;
 
-	printf("passthru command returned '%s'\n", libnvme_strerror(errnum));
+	print_debug("passthru command returned '%s'\n", libnvme_strerror(errnum));
 }
 
 void *nvme_submit_entry(struct libnvme_transport_handle *hdl,
@@ -209,8 +209,8 @@ void *nvme_mi_submit_entry(struct libnvme_mi_ep *ep, __u8 type,
 static void nvme_show_resp_admin(const struct nvme_mi_admin_resp_hdr *hdr, size_t hdr_len,
 				 const void *data, size_t data_len)
 {
-	printf("result       : %08x\n", le32_to_cpu(hdr->cdw0));
-	printf("err          : %d\n", hdr->status);
+	nvme_show_key_value("result       ", "%08x", le32_to_cpu(hdr->cdw0));
+	nvme_show_key_value("err          ", "%d", hdr->status);
 }
 
 static void nvme_show_resp(__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
