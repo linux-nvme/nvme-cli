@@ -32,6 +32,7 @@
 #include "common.h"
 #include "nvme-cmds.h"
 #include "nvme.h"
+#include "nvme-print.h"
 #include "plugin.h"
 
 #include "util/suffix.h"
@@ -339,7 +340,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 
 	list_items = calloc(n, sizeof(*list_items));
 	if (!list_items) {
-		fprintf(stderr, "can not allocate controller list payload\n");
+		nvme_show_error("can not allocate controller list payload");
 		ret = ENOMEM;
 		goto out_free_devices;
 	}
@@ -350,7 +351,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 		snprintf(path, sizeof(path), "/dev/%s", devices[i]->d_name);
 		ret = libnvme_open(ctx, path, &hdl);
 		if (ret) {
-			fprintf(stderr, "Cannot open device %s: %s\n",
+			nvme_show_error("Cannot open device %s: %s",
 				path, libnvme_strerror(-ret));
 			continue;
 		}

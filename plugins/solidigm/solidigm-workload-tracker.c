@@ -312,7 +312,7 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 	content_group = workloadEnable.contentGroup;
 
 	if (cnt == 0) {
-		nvme_show_error("Warning : No valid workload log data\n");
+		nvme_show_error("Warning : No valid workload log data");
 		return 0;
 	}
 

@@ -118,16 +118,16 @@ static void WriteData(__u8 *data, __u32 len, const char *dir, const char *file, 
 	FILE *fpOutFile = NULL;
 
 	if (asprintf(&tempFolder, "%s/%s", dir, file) < 0) {
-		printf("Failed to allocate memory for temp folder path\n");
+		nvme_show_error("Failed to allocate memory for temp folder path");
 		return;
 	}
 	fpOutFile = fopen(tempFolder, "ab+");
 	if (fpOutFile) {
 		if (fwrite(data, 1, len,  fpOutFile) != len)
-			printf("Failed to write %s data to %s\n", msg, tempFolder);
+			nvme_show_error("Failed to write %s data to %s", msg, tempFolder);
 		fclose(fpOutFile);
 	} else	{
-		printf("Failed to open %s file to write %s\n", tempFolder, msg);
+		nvme_show_error("Failed to open %s file to write %s", tempFolder, msg);
 	}
 }
 
@@ -391,15 +391,15 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 	if (nRet || (stat(strFileName, &sb) == -1)) {
 		err = -EINVAL;
 		if (is_tgz)
-			fprintf(stderr, "Failed to create log data package, "
+			nvme_show_error("Failed to create log data package, "
 				"check if tar and gzip commands are installed!\n");
 		else
-			fprintf(stderr, "Failed to create log data package, "
+			nvme_show_error("Failed to create log data package, "
 				"check if zip command is installed!\n");
 	}
 
 	if (RemoveDirRecursive(strDirName) < 0)
-		printf("Failed to remove temporary files!\n");
+		nvme_show_error("Failed to remove temporary files!");
 
 	return err;
 }
@@ -525,13 +525,13 @@ static int GetLogPageSize(struct libnvme_transport_handle *hdl, unsigned char uc
 			struct LogPageHeader_t *pLogHeader1 = (struct LogPageHeader_t *) pLogHeader;
 			*nLogSize = (int)(pLogHeader1->numDwordsInEntireLogPage) * 4;
 			if (!pLogHeader1->logPageHeaderFormatVersion) {
-				printf("Unsupported log page format version %d of log page : 0x%X\n",
+				nvme_show_error("Unsupported log page format version %d of log page : 0x%X",
 					   ucLogID, err);
 				*nLogSize = 0;
 				err = -1;
 			}
 		} else {
-			printf("Getting size of log page : 0x%X failed with %d (ignored)!\n",
+			nvme_show_error("Getting size of log page : 0x%X failed with %d (ignored)!",
 					 ucLogID, err);
 			*nLogSize = 0;
 		}
@@ -656,7 +656,7 @@ static int micron_parse_options(struct libnvme_global_ctx **ctx,
 	int err = parse_and_open(ctx, hdl, argc, argv, desc, opts);
 
 	if (err) {
-		perror("open");
+		nvme_show_err(err, "open");
 		return -1;
 	}
 
@@ -719,7 +719,7 @@ static int micron_selective_download(int argc, char **argv,
 		return err;
 
 	if (strlen(cfg.select) != 3) {
-		fprintf(stderr, "Invalid select flag\n");
+		nvme_show_error("Invalid select flag");
 		return -EINVAL;
 	}
 
@@ -733,33 +733,33 @@ static int micron_selective_download(int argc, char **argv,
 	} else if (!strncmp(cfg.select, "ALL", 3)) {
 		selectNo = 26;
 	} else {
-		fprintf(stderr, "Invalid select flag\n");
+		nvme_show_error("Invalid select flag");
 		return -EINVAL;
 	}
 
 	fw_fd = open(cfg.fw, O_RDONLY);
 	if (fw_fd < 0) {
-		fprintf(stderr, "no firmware file provided\n");
+		nvme_show_error("no firmware file provided");
 		return -EINVAL;
 	}
 
 	err = fstat(fw_fd, &sb);
 	if (err < 0) {
-		perror("fstat");
+		nvme_show_perror("fstat");
 		err = errno;
 		goto out;
 	}
 
 	fw_size = sb.st_size;
 	if (fw_size & 0x3) {
-		fprintf(stderr, "Invalid size:%d for f/w image\n", fw_size);
+		nvme_show_error("Invalid size:%d for f/w image", fw_size);
 		err = EINVAL;
 		goto out;
 	}
 
 	fw_buf = libnvme_alloc(fw_size);
 	if (!fw_buf) {
-		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
+		nvme_show_error("No memory for f/w size:%d", fw_size);
 		err = ENOMEM;
 		goto out;
 	}
@@ -775,15 +775,12 @@ static int micron_selective_download(int argc, char **argv,
 
 		err = nvme_init_fw_download(&cmd, fw_ptr, xfer, offset);
 		if (err) {
-			perror("fw-download");
+			nvme_show_err(err, "fw-download");
 			goto out;
 		}
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
-		if (err < 0) {
-			perror("fw-download");
-			goto out;
-		} else if (err) {
-			nvme_show_status(err);
+		if (err) {
+			nvme_show_err(err, "fw-download");
 			goto out;
 		}
 		fw_ptr += xfer;
@@ -795,7 +792,7 @@ static int micron_selective_download(int argc, char **argv,
 
 	if (err == 0x10B || err == 0x20B) {
 		err = 0;
-		fprintf(stderr,
+		nvme_show_error(
 			"Update successful! Power cycle for changes to take effect\n");
 	}
 
@@ -843,7 +840,7 @@ static int micron_smbus_option(int argc, char **argv,
 		return err;
 
 	if (model != M5407 && model != M5411 && model != M6003 && model != M6004) {
-		printf("This option is not supported for specified drive\n");
+		nvme_show_error("This option is not supported for specified drive");
 		return err;
 	}
 
@@ -852,9 +849,9 @@ static int micron_smbus_option(int argc, char **argv,
 		err = nvme_set_features_simple(hdl, 1, fid, opt.save, cdw11,
 				&result);
 		if (!err)
-			printf("successfully enabled SMBus on drive\n");
+			nvme_show_verbose_result("successfully enabled SMBus on drive");
 		else
-			printf("Failed to enabled SMBus on drive\n");
+			nvme_show_error("Failed to enabled SMBus on drive");
 	} else if (!strcmp(opt.option, "status")) {
 		err = nvme_get_features(hdl, 1, fid, opt.value, 0, 0, NULL, 0, &result);
 		if (!err)
@@ -862,17 +859,17 @@ static int micron_smbus_option(int argc, char **argv,
 				   (result & 1) ? "enabled" : "disabled",
 				   (result & 2) ? "hottest component" : "composite");
 		else
-			printf("Failed to retrieve SMBus status on the drive\n");
+			nvme_show_error("Failed to retrieve SMBus status on the drive");
 	} else if (!strcmp(opt.option, "disable")) {
 		cdw11 = opt.value << 1 | 0;
 		err = nvme_set_features_simple(hdl, 1, fid, opt.save, cdw11,
 				&result);
 		if (!err)
-			printf("Successfully disabled SMBus on drive\n");
+			nvme_show_verbose_result("Successfully disabled SMBus on drive");
 		else
-			printf("Failed to disable SMBus on drive\n");
+			nvme_show_error("Failed to disable SMBus on drive");
 	} else {
-		printf("Invalid option %s, valid values are enable, disable or status\n",
+		nvme_show_error("Invalid option %s, valid values are enable, disable or status",
 			   opt.option);
 		return -1;
 	}
@@ -906,7 +903,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 
@@ -1047,7 +1044,7 @@ static int micron_pcie_stats(int argc, char **argv,
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 
@@ -1060,7 +1057,7 @@ static int micron_pcie_stats(int argc, char **argv,
 	/* pull log details based on the model name */
 	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
-		printf("Unsupported drive model for vs-pcie-stats command\n");
+		nvme_show_error("Unsupported drive model for vs-pcie-stats command");
 		goto out;
 	}
 
@@ -1167,7 +1164,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		if (!err)
 			err = (int)result;
 		if (!err) {
-			printf("Device correctable errors are cleared!\n");
+			nvme_show_verbose_result("Device correctable errors are cleared!");
 			return 0;
 		}
 	} else if (model == M5407) {
@@ -1176,7 +1173,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		admin_cmd.cdw10 = 0;
 		err = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		if (!err) {
-			printf("Device correctable error counters are cleared!\n");
+			nvme_show_verbose_result("Device correctable error counters are cleared!");
 			return 0;
 		}
 	}
@@ -1803,7 +1800,7 @@ static int micron_nand_stats(int argc, char **argv,
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 
@@ -1813,7 +1810,7 @@ static int micron_nand_stats(int argc, char **argv,
 	/* pull log details based on the model name */
 	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
-		printf("Unsupported drive model for vs-nand-stats command\n");
+		nvme_show_error("Unsupported drive model for vs-nand-stats command");
 		return -1;
 	}
 
@@ -1935,7 +1932,7 @@ static int micron_smart_ext_log(int argc, char **argv,
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 	if (!strcmp(cfg.fmt, "normal"))
@@ -1948,7 +1945,7 @@ static int micron_smart_ext_log(int argc, char **argv,
 	} else if (eModel == M6001) {
 		log_id = 0xD0;
 	} else {
-		printf("Unsupported drive model for vs-smart-ext-log command\n");
+		nvme_show_error("Unsupported drive model for vs-smart-ext-log command");
 		err = -1;
 		goto out;
 	}
@@ -1984,7 +1981,7 @@ static int micron_work_load_log(int argc, char **argv, struct command *acmd, str
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 	if (strcmp(cfg.fmt, "normal") == 0)
@@ -1997,7 +1994,7 @@ static int micron_work_load_log(int argc, char **argv, struct command *acmd, str
 		if (!err)
 			print_log((__u8 *)micronWorkLoadLog, is_json, 0xC5);
 	} else {
-		printf("Unsupported drive model for vs-work-load-log command\n");
+		nvme_show_error("Unsupported drive model for vs-work-load-log command");
 		err = -1;
 		goto out;
 	}
@@ -2031,7 +2028,7 @@ static int micron_vendor_telemetry_log(int argc, char **argv,
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("\nDevice not found\n");
+		nvme_show_error("Device not found");
 		return -1;
 	}
 	if (strcmp(cfg.fmt, "normal") == 0)
@@ -2043,7 +2040,7 @@ static int micron_vendor_telemetry_log(int argc, char **argv,
 		if (!err)
 			print_log((__u8 *)vendorTelemetryLog, is_json, 0xC6);
 	} else {
-		printf("Unsupported drive model for vs-vendor-telemetry-log command\n");
+		nvme_show_error("Unsupported drive model for vs-vendor-telemetry-log command");
 		err = -1;
 		goto out;
 	}
@@ -2068,18 +2065,18 @@ static void GetDriveInfo(const char *strOSDirName, int nFD,
 
 	strPDir = strdup(strOSDirName);
 	if (!strPDir) {
-		printf("Failed to allocate memory for directory name\n");
+		nvme_show_error("Failed to allocate memory for directory name");
 		return;
 	}
 	strDest = dirname(strPDir);
 
 	if (asprintf(&tempFile, "%s/%s", strDest, "drive-info.txt") < 0) {
-		printf("Failed to allocate memory for temp file name\n");
+		nvme_show_error("Failed to allocate memory for temp file name");
 		return;
 	}
 	fpOutFile = fopen(tempFile, "w+");
 	if (!fpOutFile) {
-		printf("Failed to create %s\n", tempFile);
+		nvme_show_error("Failed to create %s", tempFile);
 		return;
 	}
 
@@ -2204,14 +2201,14 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_EST_CTX_AND_READ,
 						&pevent_log, sizeof(pevent_log));
 	if (err) {
-		fprintf(stderr, "Setting persistent event log read ctx failed (ignored)!\n");
+		nvme_show_error("Setting persistent event log read ctx failed (ignored)!");
 		return;
 	}
 
 	log_len = le64_to_cpu(pevent_log.tll);
 	pevent_log_info = libnvme_alloc_huge(log_len, &mh);
 	if (!pevent_log_info) {
-		perror("could not alloc buffer for persistent event log page (ignored)!\n");
+		nvme_show_perror("could not alloc buffer for persistent event log page (ignored)!\n");
 		return;
 	}
 
@@ -2258,7 +2255,7 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 	else
 		err = nvme_get_log_telemetry_host(hdl, 0, buffer, bs);
 	if (err) {
-		fprintf(stderr, "Failed to get telemetry log header for 0x%X\n", type);
+		nvme_show_error("Failed to get telemetry log header for 0x%X", type);
 		libnvme_free(buffer);
 		return err;
 	}
@@ -2273,7 +2270,7 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 	data_area[0] = data_area[4] > data_area[0] ? data_area[4] : data_area[0];
 
 	if (!data_area[da]) {
-		fprintf(stderr, "Requested telemetry data for 0x%X is empty\n", type);
+		nvme_show_error("Requested telemetry data for 0x%X is empty", type);
 		libnvme_free(buffer);
 		buffer = NULL;
 		return -1;
@@ -2370,7 +2367,7 @@ static int GetFeatureSettings(struct libnvme_transport_handle *hdl, const char *
 			if (bufp)
 				WriteData(bufp, len, dir, fmap[i].file, msg);
 		} else {
-			fprintf(stderr, "Feature 0x%x data not retrieved, error %d (ignored)!\n",
+			nvme_show_error("Feature 0x%x data not retrieved, error %d (ignored)!",
 					fmap[i].id, err);
 			errcnt++;
 		}
@@ -2418,12 +2415,12 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 		return err;
 
 	if (model == UNKNOWN_MODEL) {
-		fprintf(stderr, "ERROR : Unsupported drive for vs-drive-info cmd");
+		nvme_show_error("ERROR : Unsupported drive for vs-drive-info cmd");
 		return -1;
 	}
 
 	if (strcmp(cfg.fmt, "normal") && strcmp(cfg.fmt, "json")) {
-		fprintf(stderr, "Invalid output format\n");
+		nvme_show_error("Invalid output format");
 		return -1;
 	}
 
@@ -2437,13 +2434,13 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 		admin_cmd.cdw12 = 3;
 		err = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		if (err) {
-			fprintf(stderr, "ERROR : drive-info opcode failed with 0x%x\n", err);
+			nvme_show_error("ERROR : drive-info opcode failed with 0x%x", err);
 			return -1;
 		}
 	} else {
 		err = nvme_identify_ctrl(hdl, &ctrl);
 		if (err) {
-			fprintf(stderr, "ERROR : identify_ctrl() failed with 0x%x\n", err);
+			nvme_show_error("ERROR : identify_ctrl() failed with 0x%x", err);
 			return -1;
 		}
 		dinfo.hw_ver_major = ctrl.vs[820];
@@ -2752,7 +2749,7 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 	err = -EINVAL;
 	if ((eModel != M51CX) && (eModel != M51BY) && (eModel != M51CY)
 				&& (eModel != M6003) && (eModel != M6004)) {
-		fprintf(stderr, "Unsupported drive model for vs-fw-activate-history command\n");
+		nvme_show_error("Unsupported drive model for vs-fw-activate-history command");
 		goto out;
 	}
 
@@ -2768,13 +2765,13 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 
 	/* check version and log page */
 	if (table->log_page != 0xC2 || (table->version != 2 && table->version != 1)) {
-		fprintf(stderr, "Unsupported fw activation history page: %x, version: %x\n",
+		nvme_show_error("Unsupported fw activation history page: %x, version: %x",
 				table->log_page, table->version);
 		goto out;
 	}
 
 	if (!table->num_entries) {
-		fprintf(stderr, "No entries were found in fw activation history log\n");
+		nvme_show_error("No entries were found in fw activation history log");
 		goto out;
 	}
 
@@ -2859,13 +2856,13 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 	} else if (!strcmp(opt.option, "disable")) {
 		enable = 0;
 	} else if (strcmp(opt.option, "status")) {
-		printf("Invalid control option %s specified\n", opt.option);
+		nvme_show_error("Invalid control option %s specified", opt.option);
 		return -1;
 	}
 
 	err = nvme_get_features(hdl, 0, fid, 0, 0, 0, NULL, 0, &result);
 	if (err) {
-		printf("Failed to retrieve latency monitoring feature status\n");
+		nvme_show_error("Failed to retrieve latency monitoring feature status");
 		return err;
 	}
 
@@ -2893,11 +2890,11 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 	/* read and validate threshold values if enable option is specified */
 	if (enable == 1) {
 		if (opt.threshold > 2550) {
-			printf("The maximum threshold value cannot be more than 2550 ms\n");
+			nvme_show_error("The maximum threshold value cannot be more than 2550 ms");
 			return -1;
 		} else if (opt.threshold % 10) {
 			/* timing mask is in terms of 10ms units, so min allowed is 10ms */
-			printf("The threshold value should be multiple of 10 ms\n");
+			nvme_show_error("The threshold value should be multiple of 10 ms");
 			return -1;
 		}
 		opt.threshold /= 10;
@@ -2914,7 +2911,7 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 		command_mask = 0x4;
 		timing_mask = (opt.threshold << 8);
 	} else if (strcmp(opt.command, "all")) {
-		printf("Invalid command %s specified for option %s\n",
+		nvme_show_error("Invalid command %s specified for option %s",
 		opt.command, opt.option);
 		return -1;
 	}
@@ -2922,10 +2919,10 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 	err = nvme_set_features(hdl, 0, MICRON_FID_LATENCY_MONITOR, 1, enable,
 			command_mask, timing_mask, 0, 0, NULL, 0, &result);
 	if (!err) {
-		printf("Successfully %sd latency monitoring for %s commands with %dms threshold\n",
+		nvme_show_verbose_result("Successfully %sd latency monitoring for %s commands with %dms threshold",
 				opt.option, opt.command, !opt.threshold ? 800 : opt.threshold * 10);
 	} else {
-		printf("Failed to %s latency monitoring for %s commands with %dms threshold\n",
+		nvme_show_error("Failed to %s latency monitoring for %s commands with %dms threshold",
 				opt.option, opt.command, !opt.threshold ? 800 : opt.threshold * 10);
 	}
 
@@ -3059,7 +3056,7 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *acmd
 		cmd_stats = &log.trim_cmds[0];
 	cmd_str = "Trim";
 	} else if (strcmp(opt.command, "all")) {
-		printf("Invalid command option %s to display latency stats\n", opt.command);
+		nvme_show_error("Invalid command option %s to display latency stats", opt.command);
 		return -1;
 	}
 
@@ -3145,7 +3142,7 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *a
 	/* check for models that support 0xC0 log */
 	if ((eModel != M51CX) && (eModel != M51BY) && (eModel != M51CY)
 				&& (eModel != M6003) && (eModel != M6004)) {
-		printf("Unsupported drive model for vs-smart-add-log command\n");
+		nvme_show_error("Unsupported drive model for vs-smart-add-log command");
 		err = -1;
 		goto out;
 	}
@@ -3178,7 +3175,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 
 	if ((model != M51CX) && (model != M51BY) && (model != M51CY)
 				&& (model != M6003) && (model != M6004)) {
-		printf("This option is not supported for specified drive\n");
+		nvme_show_error("This option is not supported for specified drive");
 		return err;
 	}
 
@@ -3234,16 +3231,16 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 		err = nvme_set_features(hdl, 1, fid, (opt.select & 0x1), 1, 0, 0, 0, 0,
 				NULL, 0, &result);
 		if (!err)
-			printf("successfully set controller telemetry option\n");
+			nvme_show_verbose_result("successfully set controller telemetry option");
 		else
-			printf("Failed to set controller telemetry option\n");
+			nvme_show_error("Failed to set controller telemetry option");
 	} else if (!strcmp(opt.option, "disable")) {
 		err = nvme_set_features(hdl, 1, fid, (opt.select & 0x1), 0, 0, 0, 0, 0,
 				NULL, 0, &result);
 		if (!err)
-			printf("successfully disabled controller telemetry option\n");
+			nvme_show_verbose_result("successfully disabled controller telemetry option");
 		else
-			printf("Failed to disable controller telemetry option\n");
+			nvme_show_error("Failed to disable controller telemetry option");
 	} else if (!strcmp(opt.option, "status")) {
 		err = nvme_get_features(hdl, 1, fid, opt.select & 0x3, 0, 0, NULL, 0,
 				&result);
@@ -3251,9 +3248,9 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 			printf("Controller telemetry option : %s\n",
 				   (result) ? "enabled" : "disabled");
 		else
-			printf("Failed to retrieve controller telemetry option\n");
+			nvme_show_error("Failed to retrieve controller telemetry option");
 	} else {
-		printf("invalid option %s, valid values are enable,disable or status\n",
+		nvme_show_error("invalid option %s, valid values are enable,disable or status",
 			   opt.option);
 		return -1;
 	}
@@ -3313,13 +3310,13 @@ static int get_common_log(struct libnvme_transport_handle *hdl, uint8_t id, uint
 
 	ret = nvme_get_log_simple(hdl, id, &hdr, sizeof(hdr));
 	if (ret) {
-		fprintf(stderr, "pull hdr failed for  %u with error: 0x%x\n", id, ret);
+		nvme_show_error("pull hdr failed for  %u with error: 0x%x", id, ret);
 		return ret;
 	}
 
 	if (hdr.id != id || !hdr.log_size || !hdr.max_size ||
 		hdr.write_pointer < sizeof(hdr)) {
-		fprintf(stderr,
+		nvme_show_error(
 			"invalid log data for LOG: 0x%X, id: 0x%X, size: %u, max: %u, wp: %u, flags: %u, np: %u\n"
 			, id, hdr.id, hdr.log_size, hdr.max_size, hdr.write_pointer, hdr.flags,
 			hdr.next_pointer);
@@ -3333,7 +3330,7 @@ static int get_common_log(struct libnvme_transport_handle *hdl, uint8_t id, uint
 	if (hdr.log_size == sizeof(hdr)) {
 		buffer = (uint8_t *)libnvme_alloc(sizeof(hdr));
 		if (!buffer) {
-			fprintf(stderr, "malloc of %zu bytes failed for log: 0x%X\n",
+			nvme_show_error("malloc of %zu bytes failed for log: 0x%X",
 				sizeof(hdr), id);
 			return -ENOMEM;
 		}
@@ -3341,7 +3338,7 @@ static int get_common_log(struct libnvme_transport_handle *hdl, uint8_t id, uint
 	} else if (hdr.log_size < hdr.max_size) {
 		buffer = (uint8_t *)libnvme_alloc(sizeof(hdr) + hdr.log_size);
 		if (!buffer) {
-			fprintf(stderr, "malloc of %zu bytes failed for log: 0x%X\n",
+			nvme_show_error("malloc of %zu bytes failed for log: 0x%X",
 				hdr.log_size + sizeof(hdr), id);
 			return -ENOMEM;
 		}
@@ -3359,7 +3356,7 @@ static int get_common_log(struct libnvme_transport_handle *hdl, uint8_t id, uint
 		 */
 		buffer = (uint8_t *)libnvme_alloc(hdr.max_size + sizeof(hdr));
 		if (!buffer) {
-			fprintf(stderr, "malloc of %zu bytes failed for log: 0x%X\n",
+			nvme_show_error("malloc of %zu bytes failed for log: 0x%X",
 				hdr.max_size + sizeof(hdr), id);
 			return -ENOMEM;
 		}
@@ -3373,7 +3370,7 @@ static int get_common_log(struct libnvme_transport_handle *hdl, uint8_t id, uint
 						   buffer + sizeof(hdr));
 			if (ret) {
 				libnvme_free(buffer);
-				fprintf(stderr, "failed to get log: 0x%X\n", id);
+				nvme_show_error("failed to get log: 0x%X", id);
 				return ret;
 			}
 			log_size += first;
@@ -3382,7 +3379,7 @@ static int get_common_log(struct libnvme_transport_handle *hdl, uint8_t id, uint
 			ret = nvme_get_log_lpo(hdl, id, sizeof(hdr), chunk, second,
 						   buffer + sizeof(hdr) + first);
 			if (ret) {
-				fprintf(stderr, "failed to get log: 0x%X\n", id);
+				nvme_show_error("failed to get log: 0x%X", id);
 				libnvme_free(buffer);
 				return ret;
 			}
@@ -3415,13 +3412,13 @@ static int GetOcpEnhancedTelemetryLog(struct libnvme_transport_handle *hdl, cons
 			0, 0, pBuffer, uiBufferSize, &result);
 
 	if (err != 0)
-		printf("Failed to set ETDAS, Data Area 4 won't be avialable >>> ");
+		nvme_show_error("Failed to set ETDAS, Data Area 4 won't be avialable");
 
 	/* Read Telemetry header information */
 	pTelemetryDataHeader = (unsigned char *)libnvme_alloc(512);
 
 	if (!pTelemetryDataHeader) {
-		printf("Unable to allocate buffer of size 0x%X bytes for telemetry header", 512);
+		nvme_show_error("Unable to allocate buffer of size 0x%X bytes for telemetry header", 512);
 		return -1;
 	}
 	err = NVMEGetLogPage(hdl, nLogID, pTelemetryDataHeader, 512, 0);
@@ -3620,34 +3617,32 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		if (!strcmp(cfg.type, "controller")) {
 			cfg.log = 0x08;
 		} else if (strcmp(cfg.type, "host")) {
-			printf("telemetry type (host or controller) should be specified i.e. -t=host\n");
+			nvme_show_error("telemetry type (host or controller) should be specified i.e. -t=host");
 			goto out;
 		}
 
 		if (cfg.data_area <= 0 || cfg.data_area > 4) {
-			printf("data area must be selected using -d option ie --d=1,2,3,4\n");
+			nvme_show_error("data area must be selected using -d option ie --d=1,2,3,4");
 			goto out;
 		}
 		telemetry_option = 1;
 	} else if (cfg.data_area > 0) {
-		printf(
-			"data area option is valid only for telemetry option (i.e --type=host|controller)\n"
-		);
+		nvme_show_error(
+			"data area option is valid only for telemetry option (i.e --type=host|controller)");
 		goto out;
 	}
 
 	if (!strlen(cfg.package)) {
 		if (telemetry_option)
-			printf("Log data file must be specified. ie -p=logfile.bin\n");
+			nvme_show_error("Log data file must be specified. ie -p=logfile.bin");
 		else
-			printf(
-				"Log data file must be specified. ie -p=logfile.zip or -p=logfile.tgz|logfile.tar.gz\n"
-			);
+			nvme_show_error(
+				"Log data file must be specified. ie -p=logfile.zip or -p=logfile.tgz|logfile.tar.gz");
 		goto out;
 	}
 
 	if (!is_safe_path(cfg.package)) {
-		fprintf(stderr,
+		nvme_show_error(
 			"Invalid package path: contains unsafe characters\n");
 		goto out;
 	}
@@ -3655,7 +3650,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	/* pull log details based on the model name */
 	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
-		printf("Unsupported drive model for vs-internal-log collection\n");
+		nvme_show_error("Unsupported drive model for vs-internal-log collection");
 		goto out;
 	}
 
@@ -3669,7 +3664,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	err = -EINVAL;
 	if (telemetry_option) {
 		if ((ctrl.lpa & 0x8) != 0x8) {
-			printf("telemetry option is not supported for specified drive\n");
+			nvme_show_error("telemetry option is not supported for specified drive");
 			goto out;
 		}
 		int logSize = 0; __u8 *buffer = NULL; const char *dir = ".";
@@ -3693,7 +3688,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 			strOSDirName, sizeof(strOSDirName),
 			strCtrlDirName, sizeof(strCtrlDirName));
 	if (err) {
-		fprintf(stderr, "Failed to create debug data directories\n");
+		nvme_show_error("Failed to create debug data directories");
 		goto out;
 	}
 
@@ -3714,12 +3709,12 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 			err = GetOcpEnhancedTelemetryLog(hdl, strCtrlDirName,
 								NVME_LOG_LID_TELEMETRY_HOST);
 			if (err != 0)
-				printf("Failed to fetch the host telemetry log");
+				nvme_show_error("Failed to fetch the host telemetry log");
 
 			err = GetOcpEnhancedTelemetryLog(hdl, strCtrlDirName,
 								NVME_LOG_LID_TELEMETRY_CTRL);
 			if (err != 0)
-				printf("Failed to fetch the controller telemetry log");
+				nvme_show_error("Failed to fetch the controller telemetry log");
 		} else {
 			GetTelemetryData(hdl, strCtrlDirName);
 		}
@@ -3752,16 +3747,15 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 			if (err == 0) {
 				bSize =  stWllHdr.uiLength;
 				if (bSize < (int)sizeof(struct MICRON_WORKLOAD_LOG_HDR)) {
-					printf("Invalid log size for log id : 0x%02X\n",
+					nvme_show_error("Invalid log size for log id : 0x%02X",
 						aVendorLogs[i].ucLogPage);
 					err = -1;
 					break;
 				}
 				dataBuffer = (unsigned char *)libnvme_alloc(bSize);
 				if (!dataBuffer) {
-					printf(
-						" Memory allocation failed for log id : 0x%02X\n"
-						, aVendorLogs[i].ucLogPage);
+					nvme_show_error("Memory allocation failed for log id : 0x%02X",
+						aVendorLogs[i].ucLogPage);
 					continue;
 				}
 				memcpy(dataBuffer, &stWllHdr,
@@ -3774,7 +3768,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 					sizeof(struct MICRON_WORKLOAD_LOG_HDR)),
 					sizeof(struct MICRON_WORKLOAD_LOG_HDR));
 				if (err != 0)
-					printf("Failed to fetch the E9 logs\n");
+					nvme_show_error("Failed to fetch the E9 logs");
 
 			}
 		} else {
@@ -3979,13 +3973,11 @@ static int micron_cloud_boot_SSD_version(int argc, char **argv,
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err == 0) {
 		if (ctrl.vs[536] != MICRON_CUST_ID_GG) {
-			printf(
-				"cloud-boot-SSD-version option is not supported for specified drive\n"
-			);
+			nvme_show_error("cloud-boot-SSD-version option is not supported for specified drive");
 			goto out;
 		}
 	} else {
-		printf("Error %d retrieving controller identification data\n", err);
+		nvme_show_error("Error %d retrieving controller identification data", err);
 		goto out;
 	}
 
@@ -4041,23 +4033,23 @@ static int micron_device_waf(int argc, char **argv, struct command *acmd,
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err == 0) {
 		if (ctrl.vs[536] != MICRON_CUST_ID_GG) {
-			printf("vs-device-waf option is not supported for specified drive\n");
+			nvme_show_error("vs-device-waf option is not supported for specified drive");
 			goto out;
 		}
 	} else {
-		printf("Error %d retrieving controller identification data\n", err);
+		nvme_show_error("Error %d retrieving controller identification data", err);
 		goto out;
 	}
 
 	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
 	if (err != 0) {
-		fprintf(stderr, "nvme_smart_log() failed, err = %d\n", err);
+		nvme_show_error("nvme_smart_log() failed, err = %d", err);
 		goto out;
 	}
 
 	err = nvme_get_log_simple(hdl, 0xC0, logC0, C0_log_size);
 	if (err != 0) {
-		fprintf(stderr, "Failed to get extended smart log, err = %d\n", err);
+		nvme_show_error("Failed to get extended smart log, err = %d", err);
 		goto out;
 	}
 
@@ -4102,7 +4094,7 @@ static int micron_cloud_log(int argc, char **argv, struct command *acmd,
 
 	/* check for models that support 0xC0 log */
 	if (eModel != M51CX) {
-		printf("Unsupported drive model for vs-cloud-log commmand\n");
+		nvme_show_error("Unsupported drive model for vs-cloud-log commmand");
 		err = -1;
 		goto out;
 	}
@@ -4110,11 +4102,11 @@ static int micron_cloud_log(int argc, char **argv, struct command *acmd,
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err == 0) {
 		if (ctrl.vs[536] != MICRON_CUST_ID_GG) {
-			printf("vs-cloud-log option is not supported for specified drive\n");
+			nvme_show_error("vs-cloud-log option is not supported for specified drive");
 			goto out;
 		}
 	} else {
-		printf("Error %d retrieving controller identification data\n", err);
+		nvme_show_error("Error %d retrieving controller identification data", err);
 		goto out;
 	}
 
@@ -4122,7 +4114,7 @@ static int micron_cloud_log(int argc, char **argv, struct command *acmd,
 	if (err == 0)
 		print_hyperscale_cloud_health_log((__u8 *)logC0, is_json);
 	else
-		printf("Unable to retrieve extended smart log 0xC0 for the drive\n");
+		nvme_show_error("Unable to retrieve extended smart log 0xC0 for the drive");
 
 out:
 	if (err > 0)
@@ -4334,14 +4326,14 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 		return err;
 
 	if (eModel == UNKNOWN_MODEL)
-		fprintf(stderr, "WARNING: Unknown drive model\n");
+		nvme_show_error("WARNING: Unknown drive model");
 
 	if (!strcmp(cfg.fmt, "json"))
 		is_json = true;
 
 	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
 	if (err) {
-		fprintf(stderr, "Failed to get SMART log: %s\n",
+		nvme_show_error("Failed to get SMART log: %s",
 			libnvme_strerror(err));
 		return err;
 	}
@@ -4420,19 +4412,19 @@ static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
 		return err;
 
 	if (eModel == UNKNOWN_MODEL) {
-		fprintf(stderr,
+		nvme_show_error(
 			"WARNING: Drive not recognized as Micron, proceeding anyway\n");
 	}
 
 	err = validate_output_format(nvme_args.output_format, &flags);
 	if (err < 0) {
-		fprintf(stderr, "Invalid output format\n");
+		nvme_show_error("Invalid output format");
 		return err;
 	}
 
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err) {
-		fprintf(stderr, "identify controller failed: %s\n",
+		nvme_show_error("identify controller failed: %s",
 			libnvme_strerror(err));
 		return err;
 	}

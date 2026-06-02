@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include "nvme-models.h"
 #include "nvme.h"
+#include "nvme-print.h"
 
 static char *_fmt1 = "/sys/class/nvme/nvme%d/device/subsystem_vendor";
 static char *_fmt2 = "/sys/class/nvme/nvme%d/device/subsystem_device";
@@ -246,7 +247,7 @@ static int read_sys_node(char *where, char *save, size_t savesz)
 	fd = open(where, O_RDONLY);
 	if (fd < 0) {
 		if (errno != ENOENT) {
-			fprintf(stderr, "Failed to open %s with errno %s\n",
+			nvme_show_error("Failed to open %s with errno %s",
 				where, libnvme_strerror(errno));
 		}
 		return 1;
@@ -295,7 +296,7 @@ static FILE *open_pci_ids(void)
 			return fp;
 	}
 
-	fprintf(stderr, "Could not find pci.ids file\n");
+	nvme_show_error("Could not find pci.ids file");
 	return NULL;
 }
 
@@ -350,7 +351,7 @@ static char *__nvme_product_name(int id)
 
 	result = malloc(LINE_BUF_SIZE);
 	if (!result) {
-		fprintf(stderr, "malloc: %s\n", libnvme_strerror(errno));
+		nvme_show_error("malloc: %s", libnvme_strerror(errno));
 		free_all();
 		return NULL;
 	}

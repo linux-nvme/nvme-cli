@@ -1097,7 +1097,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 		parse_ocp_telemetry_string_log(event_fifo_number, 0, 0, EVENT_STRING, description);
 
 	if (status != 0) {
-		nvme_show_error("Failed to get C9 String. status: %d\n", status);
+		nvme_show_error("Failed to get C9 String. status: %d", status);
 		return -1;
 	}
 
@@ -1245,12 +1245,12 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 			}
 
 			if (ret) {
-				fprintf(stderr,
+				nvme_show_error(
 					"ERROR : OCP : Invalid NVMe Event FIFO entry\n");
-				fprintf(stderr,
+				nvme_show_error(
 					"FIFO: %d, offset: 0x%x\n",
 					fifo_num, offset_to_move);
-				fprintf(stderr,
+				nvme_show_error(
 					"Type: 0x%x, ID: 0x%x, Size: 0x%x\n",
 					pevent_descriptor->debug_event_class_type,
 					pevent_descriptor->event_id,
@@ -1392,7 +1392,7 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 						      pstring_buffer, poffsets, fifo_size, fp);
 
 			if (status != 0) {
-				nvme_show_error("Failed to parse Event FIFO. status:%d\n", status);
+				nvme_show_error("Failed to parse Event FIFO. status:%d", status);
 				return -1;
 			}
 		}
@@ -1726,7 +1726,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 
 			status = parse_statistics(NULL, &offsets, fp);
 			if (status != 0) {
-				nvme_show_error("status: %d\n", status);
+				nvme_show_error("status: %d", status);
 				return -1;
 			}
 
@@ -1746,7 +1746,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 				status = parse_statistics(NULL, &offsets, fp);
 
 				if (status != 0) {
-					nvme_show_error("status: %d\n", status);
+					nvme_show_error("status: %d", status);
 					return -1;
 				}
 
@@ -1761,7 +1761,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			fprintf(fp, STR_LINE);
 			fclose(fp);
 		} else {
-			nvme_show_error("Failed to open %s file.\n", file_path);
+			nvme_show_error("Failed to open %s file.", file_path);
 			return -1;
 		}
 	} else {
@@ -1831,7 +1831,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 		printf(STR_LINE);
 		status = parse_statistics(NULL, &offsets, NULL);
 		if (status != 0) {
-			nvme_show_error("status: %d\n", status);
+			nvme_show_error("status: %d", status);
 			return -1;
 		}
 
@@ -1850,7 +1850,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			printf(STR_LINE);
 			status = parse_statistics(NULL, &offsets, NULL);
 			if (status != 0) {
-				nvme_show_error("status: %d\n", status);
+				nvme_show_error("status: %d", status);
 				return -1;
 			}
 
@@ -1936,7 +1936,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 	//Data Area 1 Statistics
 	status = parse_statistics(root, &offsets, NULL);
 	if (status != 0) {
-		nvme_show_error("status: %d\n", status);
+		nvme_show_error("status: %d", status);
 		return -1;
 	}
 
@@ -1951,7 +1951,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 		//Data Area 2 Statistics
 		status = parse_statistics(root, &offsets, NULL);
 		if (status != 0) {
-			nvme_show_error("status: %d\n", status);
+			nvme_show_error("status: %d", status);
 			return -1;
 		}
 
@@ -1970,7 +1970,7 @@ int print_ocp_telemetry_json(struct ocp_telemetry_parse_options *options)
 			fputs(json_string, fp);
 			fclose(fp);
 		} else {
-			nvme_show_error("Failed to open %s file.\n", file_path);
+			nvme_show_error("Failed to open %s file.", file_path);
 			return -1;
 		}
 	} else {

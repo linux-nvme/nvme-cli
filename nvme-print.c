@@ -470,8 +470,8 @@ void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, nvme_print_fla
 	uint64_t value;
 
 	if (fabrics && !nvme_is_fabrics_reg(offset)) {
-		printf("register: %#04x (%s) not fabrics\n", offset,
-		       nvme_register_to_string(offset));
+		nvme_show_error("register: %#04x (%s) not fabrics", offset,
+				nvme_register_to_string(offset));
 		return;
 	}
 

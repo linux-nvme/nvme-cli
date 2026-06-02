@@ -15,6 +15,7 @@
 #include <libnvme.h>
 
 #include "common.h"
+#include "nvme-print.h"
 #include "micron-utils.h"
 #include "util/cleanup.h"
 
@@ -25,14 +26,14 @@ static int ReadSysFile(const char *file, unsigned short *id)
 	int fd = open(file, O_RDONLY);
 
 	if (fd < 0) {
-		perror(file);
+		nvme_show_perror("%s", file);
 		return fd;
 	}
 
 	ret = read(fd, idstr, sizeof(idstr) - 1);
 	close(fd);
 	if (ret < 0)
-		perror("read");
+		nvme_show_perror("read");
 	else
 		*id = strtol(idstr, NULL, 16);
 
@@ -55,7 +56,7 @@ int micron_get_pci_ids(
 			ctrl_sysfs_dir);
 		ReadSysFile(id_path, did);
 	} else {
-		fprintf(stderr, "Unable to find sysfs dir for %s\n",
+		nvme_show_error("Unable to find sysfs dir for %s",
 			libnvme_transport_handle_get_name(hdl));
 		return -EINVAL;
 	}
@@ -77,13 +78,13 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 
 	devicename = micron_get_ns_name(hdl);
 	if (!devicename || !strstr(devicename, "nvme")) {
-		printf("Invalid device specified!\n");
+		nvme_show_error("Invalid device specified!");
 		return -EINVAL;
 	}
 	snprintf(strTempFile, sizeof(strTempFile), "/sys/block/%s/device", devicename);
 	sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
 	if (sLinkSize < 0) {
-		printf("Failed to read device\n");
+		nvme_show_error("Failed to read device");
 		return -errno;
 	}
 	strTempFile2[sLinkSize] = '\0';
@@ -91,7 +92,7 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 		snprintf(strTempFile, sizeof(strTempFile), "/sys/block/%s/device/device", devicename);
 		sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
 		if (sLinkSize < 0) {
-			printf("Failed to read device\n");
+			nvme_show_error("Failed to read device");
 			return -errno;
 		}
 		strTempFile2[sLinkSize] = '\0';
@@ -103,12 +104,12 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 		function);
 	fp = popen(cmdbuf, "r");
 	if (!fp) {
-		printf("Failed to retrieve error count\n");
+		nvme_show_error("Failed to retrieve error count");
 		return -EIO;
 	}
 	res = fgets(buf, sizeof(buf), fp);
 	if (!res) {
-		printf("Failed to retrieve error count\n");
+		nvme_show_error("Failed to retrieve error count");
 		pclose(fp);
 		return -EIO;
 	}
@@ -119,12 +120,12 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 		function);
 	fp = popen(cmdbuf, "r");
 	if (!fp) {
-		printf("Failed to retrieve error count\n");
+		nvme_show_error("Failed to retrieve error count");
 		return -EIO;
 	}
 	res = fgets(buf, sizeof(buf), fp);
 	if (!res) {
-		printf("Failed to retrieve error count\n");
+		nvme_show_error("Failed to retrieve error count");
 		pclose(fp);
 		return -EIO;
 	}
@@ -148,7 +149,7 @@ int micron_clear_pcie_aer_correctable_errors(
 
 	devicename = micron_get_ns_name(hdl);
 	if (!devicename || !strstr(devicename, "nvme")) {
-		printf("Invalid device specified!\n");
+		nvme_show_error("Invalid device specified!");
 		return -EINVAL;
 	}
 	err = snprintf(strTempFile, sizeof(strTempFile),
@@ -158,7 +159,7 @@ int micron_clear_pcie_aer_correctable_errors(
 
 	sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
 	if (sLinkSize < 0) {
-		printf("Failed to read device\n");
+		nvme_show_error("Failed to read device");
 		return -errno;
 	}
 	strTempFile2[sLinkSize] = '\0';
@@ -169,7 +170,7 @@ int micron_clear_pcie_aer_correctable_errors(
 			return err;
 		sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
 		if (sLinkSize < 0) {
-			printf("Failed to read device\n");
+			nvme_show_error("Failed to read device");
 			return -errno;
 		}
 		strTempFile2[sLinkSize] = '\0';
@@ -181,7 +182,7 @@ int micron_clear_pcie_aer_correctable_errors(
 			device, function);
 	fp = popen(cmdbuf, "r");
 	if (!fp) {
-		printf("Failed to clear error count\n");
+		nvme_show_error("Failed to clear error count");
 		return -1;
 	}
 	pclose(fp);
@@ -190,18 +191,18 @@ int micron_clear_pcie_aer_correctable_errors(
 			function);
 	fp = popen(cmdbuf, "r");
 	if (!fp) {
-		printf("Failed to retrieve error count\n");
+		nvme_show_error("Failed to retrieve error count");
 		return -1;
 	}
 	res = fgets(correctable, sizeof(correctable), fp);
 	if (!res) {
-		printf("Failed to retrieve error count\n");
+		nvme_show_error("Failed to retrieve error count");
 		pclose(fp);
 		return -1;
 	}
 	pclose(fp);
-	printf("Device correctable errors cleared!\n");
-	printf("Device correctable errors detected: %s\n", correctable);
+	nvme_show_verbose_result("Device correctable errors cleared!");
+	nvme_show_result("Device correctable errors detected: %s", correctable);
 	return 0;
 }
 
@@ -305,7 +306,7 @@ void micron_write_os_config_to_file(const char *file_name)
 					break;
 				pos += n;
 			}
-			fprintf(stderr, "Failed to run \"%s\": %s\n",
+			nvme_show_error("Failed to run \"%s\": %s",
 				cmdline, strerror(-ret));
 		}
 	}

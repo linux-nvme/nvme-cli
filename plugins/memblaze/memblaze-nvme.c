@@ -488,14 +488,12 @@ static int mb_get_powermanager_status(int argc, char **argv, struct command *acm
 		return err;
 
 	err = nvme_get_features(hdl, 0, feature_id, 0, 0, 0, NULL, 0, &result);
-	if (err < 0)
-		perror("get-feature");
 	if (!err)
 		printf("get-feature:0x%02x (%s), %s value: %#016" PRIx64 "\n",
 			feature_id, mb_feature_to_string(feature_id),
 			nvme_select_to_string(0), (uint64_t)result);
-	else if (err > 0)
-		nvme_show_status(err);
+	else
+		nvme_show_err(err, "get-feature");
 	return err;
 }
 
@@ -532,13 +530,11 @@ static int mb_set_powermanager_status(int argc, char **argv, struct command *acm
 
 	err = nvme_set_features(hdl, 0, cfg.feature_id, cfg.save, cfg.value, 0, 0, 0,
 			0, NULL, 0, &result);
-	if (err < 0)
-		perror("set-feature");
 	if (!err)
 		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
 		       mb_feature_to_string(cfg.feature_id), cfg.value);
-	else if (err > 0)
-		nvme_show_status(err);
+	else
+		nvme_show_err(err, "set-feature");
 
 	return err;
 }
@@ -581,24 +577,22 @@ static int mb_set_high_latency_log(int argc, char **argv, struct command *acmd,
 		return err;
 
 	if (parse_params(cfg.param, 2, &param1, &param2)) {
-		printf("setfeature: invalid formats %s\n", cfg.param);
+		nvme_show_error("setfeature: invalid formats %s", cfg.param);
 		return -EINVAL;
 	}
 	if ((param1 == 1) && (param2 < P2MIN || param2 > P2MAX)) {
-		printf("setfeature: invalid high io latency threshold %d\n", param2);
+		nvme_show_error("setfeature: invalid high io latency threshold %d", param2);
 		return -EINVAL;
 	}
 	cfg.value = (param1 << MB_FEAT_HIGH_LATENCY_VALUE_SHIFT) | param2;
 
 	err = nvme_set_features(hdl, 0, cfg.feature_id, false, cfg.value, 0, 0, 0,
 			0, NULL, 0, &result);
-	if (err < 0)
-		perror("set-feature");
 	if (!err)
 		printf("set-feature:0x%02X (%s), value:%#08x\n", cfg.feature_id,
 		       mb_feature_to_string(cfg.feature_id), cfg.value);
-	else if (err > 0)
-		nvme_show_status(err);
+	else
+		nvme_show_err(err, "set-feature");
 
 	return err;
 }
@@ -781,7 +775,7 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 		return err;
 
 	if (strlen(cfg.select) != 3) {
-		fprintf(stderr, "Invalid select flag\n");
+		nvme_show_error("Invalid select flag");
 		err = EINVAL;
 		goto out;
 	}
@@ -796,35 +790,35 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 	} else if (!strncmp(cfg.select, "ALL", 3)) {
 		selectNo = 26;
 	} else {
-		fprintf(stderr, "Invalid select flag\n");
+		nvme_show_error("Invalid select flag");
 		err = EINVAL;
 		goto out;
 	}
 
 	fw_fd = open(cfg.fw, O_RDONLY);
 	if (fw_fd < 0) {
-		fprintf(stderr, "no firmware file provided\n");
+		nvme_show_error("no firmware file provided");
 		err = EINVAL;
 		goto out;
 	}
 
 	err = fstat(fw_fd, &sb);
 	if (err < 0) {
-		perror("fstat");
+		nvme_show_perror("fstat");
 		err = errno;
 		goto out_close;
 	}
 
 	fw_size = sb.st_size;
 	if (fw_size & 0x3) {
-		fprintf(stderr, "Invalid size:%d for f/w image\n", fw_size);
+		nvme_show_error("Invalid size:%d for f/w image", fw_size);
 		err = EINVAL;
 		goto out_close;
 	}
 
 	fw_buf = libnvme_alloc(fw_size);
 	if (!fw_buf) {
-		fprintf(stderr, "No memory for f/w size:%d\n", fw_size);
+		nvme_show_error("No memory for f/w size:%d", fw_size);
 		err = ENOMEM;
 		goto out_close;
 	}
@@ -840,15 +834,12 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 
 		err = nvme_init_fw_download(&cmd, fw_ptr, xfer, offset);
 		if (err) {
-			perror("fw-download");
+			nvme_show_err(err, "fw-download");
 			goto out_close;
 		}
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
-		if (err < 0) {
-			perror("fw-download");
-			goto out_close;
-		} else if (err != 0) {
-			nvme_show_status(err);
+		if (err) {
+			nvme_show_err(err, "fw-download");
 			goto out_close;
 		}
 		fw_ptr	   += xfer;
@@ -860,7 +851,7 @@ static int mb_selective_download(int argc, char **argv, struct command *acmd, st
 
 	if (err == 0x10B || err == 0x20B) {
 		err = 0;
-		fprintf(stderr, "Update successful! Please power cycle for changes to take effect\n");
+		nvme_show_verbose_result("Update successful! Please power cycle for changes to take effect");
 	}
 
 out_close:
@@ -1023,13 +1014,11 @@ static int memblaze_clear_error_log(int argc, char **argv, struct command *acmd,
 
 	err = nvme_set_features(hdl, 0, cfg.feature_id, cfg.save, cfg.value, 0, 0, 0,
 			0, NULL, 0, &result);
-	if (err < 0)
-		perror("set-feature");
 	if (!err)
 		printf("set-feature:%02x (%s), value:%#08x\n", cfg.feature_id,
 		       mb_feature_to_string(cfg.feature_id), cfg.value);
-	else if (err > 0)
-		nvme_show_status(err);
+	else
+		nvme_show_err(err, "set-feature");
 
 	return err;
 }
@@ -1080,7 +1069,7 @@ static int mb_set_lat_stats(int argc, char **argv, struct command *acmd, struct 
 	enum Option option = None;
 
 	if (cfg.enable && cfg.disable)
-		printf("Cannot enable and disable simultaneously.");
+		nvme_show_error("Cannot enable and disable simultaneously.");
 	else if (cfg.enable || cfg.disable)
 		option = cfg.enable;
 
@@ -1094,7 +1083,7 @@ static int mb_set_lat_stats(int argc, char **argv, struct command *acmd, struct 
 			printf("Latency Statistics Tracking (FID 0x%X) is currently (%"PRIu64").\n",
 				fid, (uint64_t)result);
 		} else {
-			printf("Could not read feature id 0xE2.\n");
+			nvme_show_error("Could not read feature id 0xE2.");
 			return err;
 		}
 		break;
@@ -1102,17 +1091,14 @@ static int mb_set_lat_stats(int argc, char **argv, struct command *acmd, struct 
 	case False:
 		err = nvme_set_features(hdl, nsid, fid, save, option, cdw12, 0, 0,
 				0, buf, data_len, &result);
-		if (err > 0) {
-			nvme_show_status(err);
-		} else if (err < 0) {
-			perror("Enable latency tracking");
-			fprintf(stderr, "Command failed while parsing.\n");
+		if (err) {
+			nvme_show_err(err, "Enable latency tracking");
 		} else {
-			printf("Successfully set enable bit for FID (0x%X) to %i.\n", 0xe2, option);
+			nvme_show_verbose_result("Successfully set enable bit for FID (0x%X) to %i.", 0xe2, option);
 		}
 		break;
 	default:
-		printf("%d not supported.\n", option);
+		nvme_show_error("%d not supported.", option);
 		err = EINVAL;
 	}
 	return err;
@@ -1529,10 +1515,10 @@ static void smart_log_add_print(struct smart_log_add *log, const char *devname)
 			sizeof(struct smart_log_add_v3) / sizeof(struct smart_log_add_item_10));
 
 	case 1:
-		fprintf(stderr, "Version %d: N/A\n", version);
+		nvme_show_error("Version %d: N/A", version);
 		break;
 	default:
-		fprintf(stderr, "Version %d: Not supported yet\n", version);
+		nvme_show_error("Version %d: Not supported yet", version);
 		break;
 	}
 }
@@ -1733,7 +1719,7 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *acmd, s
 			((cfg.de_allocate_trim_threshold & 0xff) << 16),
 			0, 0, NULL, 0, &result);
 	if (!err)
-		printf("%s have done successfully. result = %#" PRIx64 ".\n",
+		nvme_show_verbose_result("%s have done successfully. result = %#" PRIx64 ".",
 			acmd->name, (uint64_t)result);
 	else if (err > 0)
 		nvme_show_status(err);
@@ -1765,7 +1751,7 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, s
 			NVME_GET_FEATURES_SEL_CURRENT, &res);
 	if (!err) {
 		uint32_t result = res;
-		printf("%s have done successfully. result = %#" PRIx32 ".\n", acmd->name, result);
+		nvme_show_verbose_result("%s have done successfully. result = %#" PRIx32 ".", acmd->name, result);
 
 		printf("latency statistics enable status = %d\n", (result & (0x01 << 0)) >> 0);
 		printf("high latency enable status = %d\n", (result & (0x01 << 1)) >> 1);
@@ -1875,14 +1861,14 @@ static void latency_stats_print(struct latency_stats *log, const char *devname)
 			latency_stats_v2_0_print(log, sizeof(struct latency_stats));
 			break;
 		default:
-			fprintf(stderr, "Major Version %u, Minor Version %u: Not supported yet\n",
+			nvme_show_error("Major Version %u, Minor Version %u: Not supported yet",
 				major_version, minor_version);
 			break;
 		}
 		break;
 
 	default:
-		fprintf(stderr, "Major Version %u: Not supported yet\n", major_version);
+		nvme_show_error("Major Version %u: Not supported yet", major_version);
 		break;
 	}
 }
@@ -1986,7 +1972,7 @@ static void high_latency_log_print(struct high_latency_log *log, const char *dev
 		break;
 
 	default:
-		fprintf(stderr, "Version %u: Not supported yet\n", version);
+		nvme_show_error("Version %u: Not supported yet", version);
 		break;
 	}
 }
@@ -2227,7 +2213,7 @@ static void performance_stats_print(struct performance_stats *log, const char *d
 		performance_stats_v2_print(log, duration);
 		break;
 	default:
-		fprintf(stderr, "Version %u: Not supported yet\n", version);
+		nvme_show_error("Version %u: Not supported yet", version);
 		break;
 	}
 }
@@ -2264,7 +2250,7 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *acmd,
 
 	// Check parameters
 	if (cfg.duration < 1 || cfg.duration > 24) {
-		fprintf(stderr, "duration must be between 1 and 24.\n");
+		nvme_show_error("duration must be between 1 and 24.");
 		exit(1);
 	}
 

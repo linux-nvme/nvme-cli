@@ -176,7 +176,7 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 
 	fd = open(raw, O_CREAT | O_RDWR | O_TRUNC, 0600);
 	if (fd < 0) {
-		fprintf(stderr, "failed to open %s: %s\n", raw, libnvme_strerror(errno));
+		nvme_show_error("failed to open %s: %s", raw, libnvme_strerror(errno));
 		return;
 	}
 
@@ -184,10 +184,10 @@ static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 
 	ret = write(fd, log, len);
 	if (ret < 0)
-		fprintf(stderr, "failed to write to %s: %s\n",
+		nvme_show_error("failed to write to %s: %s",
 			raw, libnvme_strerror(errno));
 	else
-		printf("Discovery log is saved to %s\n", raw);
+		nvme_show_verbose_info("Discovery log is saved to %s", raw);
 
 	close(fd);
 }
@@ -224,7 +224,7 @@ static void hook_connected(struct libnvmf_context *fctx,
 		return;
 
 	if (hfd->flags == NORMAL) {
-		printf("connecting to device: %s\n", libnvme_ctrl_get_name(c));
+		nvme_show_verbose_info("connecting to device: %s", libnvme_ctrl_get_name(c));
 		return;
 	}
 
@@ -252,7 +252,7 @@ static void hook_already_connected(struct libnvmf_context *fctx,
 	if (quiet)
 		return;
 
-	fprintf(stderr,	"already connected to hostnqn=%s,nqn=%s,transport=%s,traddr=%s,trsvcid=%s\n",
+	nvme_show_error("already connected to hostnqn=%s,nqn=%s,transport=%s,traddr=%s,trsvcid=%s",
 		libnvme_host_get_hostnqn(host), subsysnqn,
 		transport, traddr, trsvcid);
 }
@@ -275,7 +275,7 @@ static int hook_parser_init(struct libnvmf_context *dctx, void *user_data)
 
 	hfd->f = fopen(PATH_NVMF_DISC, "r");
 	if (hfd->f == NULL) {
-		fprintf(stderr, "No params given and no %s\n", PATH_NVMF_DISC);
+		nvme_show_error("No params given and no %s", PATH_NVMF_DISC);
 		return -ENOENT;
 	}
 
@@ -540,7 +540,7 @@ unref:
 	kmod_unref(ctx);
 
 	if (err)
-		fprintf(stderr, "Couldn't load the nvme-fabrics module\n");
+		nvme_show_error("Couldn't load the nvme-fabrics module");
 #endif
 }
 
@@ -595,7 +595,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
-		fprintf(stderr, "Failed to create topology root: %s\n",
+		nvme_show_error("Failed to create topology root: %s",
 			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
@@ -609,7 +609,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	if (owner || nbft) {
 		ret = libnvme_set_owner(ctx, owner ? owner : "nbft");
 		if (ret) {
-			fprintf(stderr, "failed to set owner: %s\n",
+			nvme_show_error("failed to set owner: %s",
 				libnvme_strerror(-ret));
 			return ret;
 		}
@@ -623,7 +623,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	libnvme_skip_namespaces(ctx);
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to scan topology: %s\n",
+		nvme_show_error("Failed to scan topology: %s",
 			libnvme_strerror(-ret));
 		return ret;
 	}
@@ -707,20 +707,20 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		goto do_connect;
 
 	if (!fa.subsysnqn) {
-		fprintf(stderr,
+		nvme_show_error(
 			"required argument [--nqn | -n] not specified\n");
 		return -EINVAL;
 	}
 
 	if (!fa.transport) {
-		fprintf(stderr,
+		nvme_show_error(
 			"required argument [--transport | -t] not specified\n");
 		return -EINVAL;
 	}
 
 	if (strcmp(fa.transport, "loop")) {
 		if (!fa.traddr) {
-			fprintf(stderr,
+			nvme_show_error(
 				"required argument [--traddr | -a] not specified for transport %s\n",
 				fa.transport);
 			return -EINVAL;
@@ -732,7 +732,7 @@ do_connect:
 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
-		fprintf(stderr, "Failed to create topology root: %s\n",
+		nvme_show_error("Failed to create topology root: %s",
 			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
@@ -741,7 +741,7 @@ do_connect:
 	if (owner) {
 		ret = libnvme_set_owner(ctx, owner);
 		if (ret) {
-			fprintf(stderr, "failed to set owner: %s\n",
+			nvme_show_error("failed to set owner: %s",
 				libnvme_strerror(-ret));
 			return ret;
 		}
@@ -753,7 +753,7 @@ do_connect:
 	libnvme_skip_namespaces(ctx);
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to scan topology: %s\n",
+		nvme_show_error("Failed to scan topology: %s",
 			libnvme_strerror(-ret));
 		return ret;
 	}
@@ -784,7 +784,7 @@ do_connect:
 					      fa.host_traddr, fa.host_iface,
 					      fa.hostnqn, fa.hostid);
 		if (tid && libnvmf_exclusion_match(ctx, tid))
-			fprintf(stderr,
+			nvme_show_error(
 				"Note: %s is on the exclusion list; connecting anyway\n",
 				fa.subsysnqn ? fa.subsysnqn : "this controller");
 		libnvmf_tid_free(tid);
@@ -792,7 +792,7 @@ do_connect:
 
 	ret = libnvmf_connect(ctx, fctx);
 	if (ret) {
-		fprintf(stderr, "failed to connect: %s\n",
+		nvme_show_error("failed to connect: %s",
 			libnvme_strerror(-ret));
 		return ret;
 	}
@@ -844,7 +844,7 @@ static void nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
 			}
 		}
 	}
-	printf("NQN:%s disconnected %d controller(s)\n", nqn, i);
+	nvme_show_verbose_result("NQN:%s disconnected %d controller(s)", nqn, i);
 }
 
 int fabrics_disconnect(const char *desc, int argc, char **argv)
@@ -874,12 +874,12 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 		return ret;
 
 	if (cfg.nqn && cfg.device) {
-		fprintf(stderr,
+		nvme_show_error(
 			"Both device name [--device | -d] and NQN [--nqn | -n] are specified\n");
 		return -EINVAL;
 	}
 	if (!cfg.nqn && !cfg.device) {
-		fprintf(stderr,
+		nvme_show_error(
 			"Neither device name [--device | -d] nor NQN [--nqn | -n] provided\n");
 		return -EINVAL;
 	}
@@ -888,7 +888,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
-		fprintf(stderr, "Failed to create topology root: %s\n",
+		nvme_show_error("Failed to create topology root: %s",
 			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
@@ -905,7 +905,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 		if (ret == -ENOENT)
 			return 0;
 
-		fprintf(stderr, "Failed to scan topology: %s\n",
+		nvme_show_error("Failed to scan topology: %s",
 			libnvme_strerror(-ret));
 		return ret;
 	}
@@ -921,7 +921,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 			ret = libnvmf_exclusion_add_subsysnqn(ctx, NULL,
 							      cfg.nqn);
 			if (ret)
-				fprintf(stderr,
+				nvme_show_error(
 					"Warning: failed to write exclusion entry: %s\n",
 					libnvme_strerror(-ret));
 		}
@@ -937,7 +937,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 				p += 5;
 			c = lookup_nvme_ctrl(ctx, p);
 			if (!c) {
-				fprintf(stderr,
+				nvme_show_error(
 					"Did not find device %s\n", p);
 				return -ENODEV;
 			}
@@ -950,13 +950,13 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 				ret = libnvmf_exclusion_add_ctrl(ctx, NULL,
 								 c);
 				if (ret)
-					fprintf(stderr,
+					nvme_show_error(
 						"Warning: failed to write exclusion entry: %s\n",
 						libnvme_strerror(-ret));
 			}
 			ret = libnvmf_disconnect_ctrl(c);
 			if (ret)
-				fprintf(stderr,
+				nvme_show_error(
 					"Failed to disconnect %s: %s\n",
 					p, libnvme_strerror(-ret));
 		}
@@ -1013,7 +1013,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 		return ret;
 
 	if (cfg.force && cfg.owner) {
-		fprintf(stderr, "--force and --owner are mutually exclusive\n");
+		nvme_show_error("--force and --owner are mutually exclusive");
 		return -EINVAL;
 	}
 
@@ -1030,12 +1030,12 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 				"owned by '%s'. Type 'yes' to confirm: ",
 				cfg.owner);
 		if (!fgets(ans, sizeof(ans), stdin)) {
-			fprintf(stderr, "Aborted.\n");
+			nvme_show_error("Aborted.");
 			return -EINVAL;
 		}
 		ans[strcspn(ans, "\n")] = '\0';
 		if (strcmp(ans, "yes") != 0) {
-			fprintf(stderr, "Aborted.\n");
+			nvme_show_error("Aborted.");
 			return -EINVAL;
 		}
 	}
@@ -1044,7 +1044,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
-		fprintf(stderr, "Failed to create topology root: %s\n",
+		nvme_show_error("Failed to create topology root: %s",
 			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
@@ -1061,7 +1061,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 		if (ret == -ENOENT)
 			return 0;
 
-		fprintf(stderr, "Failed to scan topology: %s\n",
+		nvme_show_error("Failed to scan topology: %s",
 			libnvme_strerror(-ret));
 		return ret;
 	}
@@ -1073,7 +1073,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 							  cfg.owner, cfg.force))
 					continue;
 				if (libnvmf_disconnect_ctrl(c))
-					fprintf(stderr,
+					nvme_show_error(
 						"failed to disconnect %s\n",
 						libnvme_ctrl_get_name(c));
 			}
@@ -1111,7 +1111,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
-		fprintf(stderr, "Failed to create topology root: %s\n",
+		nvme_show_error("Failed to create topology root: %s",
 			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
@@ -1123,7 +1123,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 		libnvme_skip_namespaces(ctx);
 		ret = libnvme_scan_topology(ctx, NULL, NULL);
 		if (ret < 0) {
-			fprintf(stderr, "Failed to scan topology: %s\n",
+			nvme_show_error("Failed to scan topology: %s",
 				libnvme_strerror(-ret));
 			return -ret;
 		}
@@ -1133,13 +1133,13 @@ int fabrics_config(const char *desc, int argc, char **argv)
 		__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 
 		if (!fa.subsysnqn) {
-			fprintf(stderr,
+			nvme_show_error(
 				"required argument [--nqn | -n] needed with --modify\n");
 			return -EINVAL;
 		}
 
 		if (!fa.transport) {
-			fprintf(stderr,
+			nvme_show_error(
 				"required argument [--transport | -t] needed with --modify\n");
 			return -EINVAL;
 		}
@@ -1150,7 +1150,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 
 		ret = libnvmf_config_modify(ctx, fctx);
 		if (ret) {
-			fprintf(stderr, "failed to update config\n");
+			nvme_show_error("failed to update config");
 			return ret;
 		}
 	}
@@ -1182,12 +1182,12 @@ static int dim_operation(libnvme_ctrl_t c, enum nvmf_dim_tas tas, const char *na
 	t = (tas > NVMF_DIM_TAS_DEREGISTER || !task[tas]) ? "reserved" : task[tas];
 	status = libnvmf_register_ctrl(c, tas, &result);
 	if (status == NVME_SC_SUCCESS) {
-		printf("%s DIM %s command success\n", name, t);
+		nvme_show_verbose_result("%s DIM %s command success", name, t);
 	} else if (status < NVME_SC_SUCCESS) {
-		fprintf(stderr, "%s DIM %s command error. Status:0x%04x - %s\n",
+		nvme_show_error("%s DIM %s command error. Status:0x%04x - %s",
 			name, t, status, libnvme_status_to_string(status, false));
 	} else {
-		fprintf(stderr, "%s DIM %s command error. Result:0x%04x, Status:0x%04x - %s\n",
+		nvme_show_error("%s DIM %s command error. Result:0x%04x, Status:0x%04x - %s",
 			name, t, result, status, libnvme_status_to_string(status, false));
 	}
 
@@ -1218,13 +1218,13 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		return ret;
 
 	if (!cfg.nqn && !cfg.device) {
-		fprintf(stderr,
+		nvme_show_error(
 			"Neither device name [--device | -d] nor NQN [--nqn | -n] provided\n");
 		return -EINVAL;
 	}
 
 	if (!cfg.tas) {
-		fprintf(stderr,
+		nvme_show_error(
 			"Task [--task | -t] must be specified\n");
 		return -EINVAL;
 	}
@@ -1235,7 +1235,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 	} else if (strstarts("deregister", cfg.tas)) {
 		tas = NVMF_DIM_TAS_DEREGISTER;
 	} else {
-		fprintf(stderr, "Invalid --task: %s\n", cfg.tas);
+		nvme_show_error("Invalid --task: %s", cfg.tas);
 		return -EINVAL;
 	}
 
@@ -1243,7 +1243,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
-		fprintf(stderr, "Failed to create topology root: %s\n",
+		nvme_show_error("Failed to create topology root: %s",
 			libnvme_strerror(errno));
 		return -ENODEV;
 	}
@@ -1252,7 +1252,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 	libnvme_skip_namespaces(ctx);
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to scan topology: %s\n",
+		nvme_show_error("Failed to scan topology: %s",
 			libnvme_strerror(-ret));
 		return ret;
 	}
@@ -1284,7 +1284,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 				p += 5;
 			ret = libnvme_scan_ctrl(ctx, p, &c);
 			if (ret) {
-				fprintf(stderr,
+				nvme_show_error(
 					"Did not find device %s: %s\n",
 					p, libnvme_strerror(ret));
 				return ret;

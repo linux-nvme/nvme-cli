@@ -192,7 +192,7 @@ static int cmd_dump_repeat(struct libnvme_passthru_cmd *cmd, __u32 total_dw_size
 		if (out_fd > 0) {
 			err = write(out_fd, (const void *)(uintptr_t)cmd->addr, cmd->data_len);
 			if (err < 0) {
-				perror("write failure");
+				nvme_show_perror("write failure");
 				return err;
 			}
 			err = 0;
@@ -261,7 +261,7 @@ static int ilog_dump_assert_logs(struct libnvme_transport_handle *hdl, struct il
 		return -errno;
 	err = write_header((__u8 *)ad, output, ad->header.header_size * DWORD_SIZE);
 	if (err) {
-		perror("write failure");
+		nvme_show_perror("write failure");
 		close(output);
 		return err;
 	}
@@ -286,7 +286,7 @@ static int ilog_dump_assert_logs(struct libnvme_transport_handle *hdl, struct il
 		}
 	}
 	close(output);
-	printf("Successfully wrote Assert to %s\n", file_path);
+	nvme_show_verbose_result("Successfully wrote Assert to %s", file_path);
 	return err;
 }
 
@@ -344,7 +344,7 @@ static int ilog_dump_event_logs(struct libnvme_transport_handle *hdl, struct ilo
 		}
 	}
 	close(output);
-	printf("Successfully wrote Events to %s\n", file_path);
+	nvme_show_verbose_result("Successfully wrote Events to %s", file_path);
 	return err;
 }
 
@@ -432,7 +432,7 @@ static int ilog_dump_nlogs(struct libnvme_transport_handle *hdl, struct ilog *il
 	} while (++log_select.selectCore < core_num);
 	if (is_open) {
 		close(output);
-		printf("Successfully wrote Nlog to %s\n", file_path);
+		nvme_show_verbose_result("Successfully wrote Nlog to %s", file_path);
 	}
 	return err;
 }
@@ -447,7 +447,7 @@ int ensure_dir(const char *parent_dir_name, const char *name)
 
 	if (!(stat(file_path, &sb) == 0 && S_ISDIR(sb.st_mode))) {
 		if (mkdir(file_path, 777) != 0) {
-			perror(file_path);
+			nvme_show_perror("%s", file_path);
 			return -errno;
 		}
 	}
@@ -489,7 +489,7 @@ static int log_save(struct log *log, const char *parent_dir_name, const char *su
 		bytes_remaining -= bytes_written;
 		buffer += bytes_written;
 	}
-	printf("Successfully wrote %s to %s\n", log->desc, file_path);
+	nvme_show_verbose_result("Successfully wrote %s to %s", log->desc, file_path);
 	return 0;
 }
 
@@ -876,7 +876,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	else if (!strcmp(cfg.type, "EXTENDED"))
 		log_type = EXTENDED;
 	else {
-		fprintf(stderr, "Invalid log type: %s\n", cfg.type);
+		nvme_show_error("Invalid log type: %s", cfg.type);
 		return -EINVAL;
 	}
 
@@ -884,7 +884,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	if (dir)
 		closedir(dir);
 	else  {
-		perror(cfg.out_dir);
+		nvme_show_perror("%s", cfg.out_dir);
 		return -errno;
 	}
 
@@ -902,7 +902,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 		return -errno;
 
 	if (mkdir(full_folder, 0755) !=  0) {
-		perror("mkdir");
+		nvme_show_perror("mkdir");
 		return -errno;
 	}
 
@@ -915,48 +915,48 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 		if (err == 0)
 			ilog.count++;
 		else if (err < 0)
-			perror("Error retrieving Host Initiated Telemetry");
+			nvme_show_err(err, "Error retrieving Host Initiated Telemetry");
 	}
 	if (log_type == ALL || log_type == NLOG || log_type == EXTENDED) {
 		err = ilog_dump_nlogs(hdl, &ilog, -1);
 		if (err == 0)
 			ilog.count++;
 		else if (err < 0)
-			perror("Error retrieving Nlog");
+			nvme_show_err(err, "Error retrieving Nlog");
 	}
 	if (log_type == ALL || log_type == CIT || log_type == EXTENDED) {
 		err = ilog_dump_telemetry(hdl, &ilog, CIT);
 		if (err == 0)
 			ilog.count++;
 		else if (err < 0)
-			perror("Error retrieving Controller Initiated Telemetry");
+			nvme_show_err(err, "Error retrieving Controller Initiated Telemetry");
 	}
 	if (log_type == ALL || log_type == ASSERTLOG || log_type == EXTENDED) {
 		err = ilog_dump_assert_logs(hdl, &ilog);
 		if (err == 0)
 			ilog.count++;
 		else if (err < 0)
-			perror("Error retrieving Assert log");
+			nvme_show_err(err, "Error retrieving Assert log");
 	}
 	if (log_type == ALL || log_type == EVENTLOG || log_type == EXTENDED) {
 		err = ilog_dump_event_logs(hdl, &ilog);
 		if (err == 0)
 			ilog.count++;
 		else if (err < 0)
-			perror("Error retrieving Event log");
+			nvme_show_err(err, "Error retrieving Event log");
 	}
 	if (log_type == ALL || log_type == EXTENDED) {
 		err = ilog_dump_identify_pages(hdl, &ilog);
 		if (err < 0)
-			perror("Error retrieving Identify pages");
+			nvme_show_err(err, "Error retrieving Identify pages");
 
 		err = ilog_dump_pel(hdl, &ilog);
 		if (err < 0)
-			perror("Error retrieving Persistent Event Log page");
+			nvme_show_err(err, "Error retrieving Persistent Event Log page");
 
 		err = ilog_dump_no_lsp_log_pages(hdl, &ilog);
 		if (err < 0)
-			perror("Error retrieving no LSP Log pages");
+			nvme_show_err(err, "Error retrieving no LSP Log pages");
 	}
 
 	if (ilog.count > 0) {
@@ -970,22 +970,22 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 		if (asprintf(&cmd, "cd \"%s\" && zip -MM -r \"../%s\" ./* %s", cfg.out_dir,
 			     zip_name, quiet) < 0) {
 			err = errno;
-			perror("Can't allocate string for zip command");
+			nvme_show_perror("Can't allocate string for zip command");
 			goto out;
 		}
 		printf("Compressing logs to %s\n", zip_name);
 		ret_cmd = system(cmd);
 		if (ret_cmd)
-			perror(cmd);
+			nvme_show_perror("%s", cmd);
 		else {
 			output_path = zip_name;
 			if (asprintf(&cmd, "rm -rf %s", cfg.out_dir) < 0) {
 				err = errno;
-				perror("Can't allocate string for cleanup");
+				nvme_show_perror("Can't allocate string for cleanup");
 				goto out;
 			}
 			if (system(cmd) != 0)
-				perror("Failed removing logs folder");
+				nvme_show_perror("Failed removing logs folder");
 		}
 	}
 

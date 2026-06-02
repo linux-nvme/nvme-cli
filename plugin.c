@@ -251,7 +251,7 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 
 	/* Check extensions only if this is running the built-in plugin */
 	if (plugin->name) {
-		printf("ERROR: Invalid sub-command '%s' for plugin %s\n", str, plugin->name);
+		fprintf(stderr, "ERROR: Invalid sub-command '%s' for plugin %s\n", str, plugin->name);
 		return -ENOTTY;
 	}
 
@@ -291,6 +291,6 @@ int handle_plugin(int argc, char **argv, struct plugin *plugin)
 		}
 		extension = extension->next;
 	}
-	printf("ERROR: Invalid sub-command '%s'\n", str);
+	fprintf(stderr, "ERROR: Invalid sub-command '%s'\n", str);
 	return -ENOTTY;
 }

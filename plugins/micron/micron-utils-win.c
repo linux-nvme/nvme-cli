@@ -11,6 +11,7 @@
 
 #include <libnvme.h>
 
+#include "nvme-print.h"
 #include "micron-utils.h"
 #include "util/cleanup.h"
 
@@ -103,14 +104,14 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 {
 	*correctable_errors = 0;
 	*uncorrectable_errors = 0;
-	printf("register reads not supported on the current platform\n");
+	nvme_show_error("register reads not supported on the current platform");
 	return -ENOTSUP;
 }
 
 int micron_clear_pcie_aer_correctable_errors(
 	struct libnvme_transport_handle *hdl)
 {
-	printf("register writes not supported on the current platform\n");
+	nvme_show_error("register writes not supported on the current platform");
 	return -ENOTSUP;
 }
 
@@ -133,7 +134,7 @@ void micron_write_os_config_to_file(const char *file_name)
 
 	fp = fopen(file_name, "w+");
 	if (!fp) {
-		fprintf(stderr, "Failed to create %s\n", file_name);
+		nvme_show_error("Failed to create %s", file_name);
 		return;
 	}
 
