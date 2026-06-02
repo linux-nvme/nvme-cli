@@ -458,6 +458,18 @@ void __libnvme_submit_exit(struct libnvme_transport_handle *hdl,
 bool __libnvme_decide_retry(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, int err);
 
+#ifdef CONFIG_MI
+struct nvme_mi_msg_hdr;
+
+void *__libnvme_mi_submit_entry(struct libnvme_mi_ep *ep,
+		__u8 type, const struct nvme_mi_msg_hdr *hdr,
+		size_t hdr_len, const void *data, size_t data_len);
+void __libnvme_mi_submit_exit(struct libnvme_mi_ep *ep,
+		__u8 type, const struct nvme_mi_msg_hdr *hdr,
+		size_t hdr_len, const void *data, size_t data_len,
+		void *user_data);
+#endif
+
 struct libnvme_transport_handle *__libnvme_open(struct libnvme_global_ctx *ctx,
 		const char *name);
 struct libnvme_transport_handle *__libnvme_create_transport_handle(

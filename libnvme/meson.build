@@ -48,7 +48,7 @@ else
         # When prefix points to a standard location, meson can use
         # standard methods (e.g. pkg-config) to find the library.
         libnvme_dep = dependency(
-            'libnvme',
+            libnvme_api_name,
             version: '>=@0@'.format(libnvme_so_version),
             required: want_nvme,
         )
@@ -56,10 +56,9 @@ else
         # When prefix points to a non-standard location
         # let's ask the C compiler to find the library for us.
         libnvme_dep = cc.find_library(
-            'nvme',
+            libnvme_link_name,
             dirs: prefixdir / get_option('libdir'),
             required: want_nvme,
         )
     endif
 endif
-

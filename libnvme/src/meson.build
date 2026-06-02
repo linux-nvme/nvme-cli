@@ -166,7 +166,7 @@ libnvme_header = configure_file(
 )
 
 libnvme = library(
-    'nvme', # produces libnvme.so
+    libnvme_link_name, # produces libnvme<major>.so
     sources,
     version: libnvme_so_version,
     c_args: ['-fvisibility=hidden'],
@@ -177,8 +177,8 @@ libnvme = library(
 
 pkg = import('pkgconfig')
 pkg.generate(libnvme,
-    filebase: 'libnvme',
-    name: 'libnvme',
+    filebase: libnvme_api_name,
+    name: libnvme_api_name,
     version: libnvme_so_version,
     description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
     url: 'https://github.com/linux-nvme/nvme-cli/',
