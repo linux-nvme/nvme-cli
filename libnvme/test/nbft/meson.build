@@ -85,12 +85,23 @@ if diffcmd.found()
 endif
 
 foreach table: tables_bad
-    test(
-        'libnvme - @0@'.format(table),
-        nbft_dump,
-        args: [
-            files(tables_bad_dir/table),
-        ],
-        should_fail: true,
-    )
+    if meson.version().version_compare('>=1.11.0')
+        test(
+            'libnvme - @0@'.format(table),
+            nbft_dump,
+            args: [
+                files(tables_bad_dir/table),
+            ],
+            expected_fail: true,
+        )
+    else
+        test(
+            'libnvme - @0@'.format(table),
+            nbft_dump,
+            args: [
+                files(tables_bad_dir/table),
+            ],
+            should_fail: true,
+        )
+    endif
 endforeach
