@@ -48,12 +48,22 @@ root@host# nvme list-subsys -o json
         {
           "Name" : "nvme0",
           "Transport" : "rdma",
-          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.1"
+          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.1",
+          "AddressDetails" : {
+            "traddr" : "1.1.1.3",
+            "host_traddr" : "1.1.1.1",
+            "trsvcid" : "4420"
+          }
         },
         {
           "Name" : "nvme1",
           "Transport" : "rdma",
-          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.2"
+          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.2",
+          "AddressDetails" : {
+            "traddr" : "1.1.1.3",
+            "host_traddr" : "1.1.1.2",
+            "trsvcid" : "4420"
+          }
         }
       ]
     },
@@ -66,12 +76,22 @@ root@host# nvme list-subsys -o json
         {
           "Name" : "nvme2",
           "Transport" : "rdma",
-          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.2"
+          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.2",
+          "AddressDetails" : {
+            "traddr" : "1.1.1.3",
+            "host_traddr" : "1.1.1.2",
+            "trsvcid" : "4420"
+          }
         },
         {
           "Name" : "nvme3",
           "Transport" : "rdma",
-          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.1"
+          "Address" : "traddr=1.1.1.3,trsvcid=4420,host_traddr=1.1.1.1",
+          "AddressDetails" : {
+            "traddr" : "1.1.1.3",
+            "host_traddr" : "1.1.1.1",
+            "trsvcid" : "4420"
+          }
         }
       ]
     }
