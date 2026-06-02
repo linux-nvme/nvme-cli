@@ -68,6 +68,14 @@ struct libnvme_mi_ep {
 	bool last_resp_time_valid;
 
 	struct libnvme_mi_aem_ctx *aem_ctx;
+
+	void *(*mi_submit_entry)(struct libnvme_mi_ep *ep,
+			__u8 type, const struct nvme_mi_msg_hdr *hdr,
+			size_t hdr_len, const void *data, size_t data_len);
+	void  (*mi_submit_exit)(struct libnvme_mi_ep *ep,
+			__u8 type, const struct nvme_mi_msg_hdr *hdr,
+			size_t hdr_len, const void *data, size_t data_len,
+			void *user_data);
 };
 
 struct libnvme_mi_transport {

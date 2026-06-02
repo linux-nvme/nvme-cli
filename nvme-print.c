@@ -1137,7 +1137,7 @@ void nvme_show_select_result(enum nvme_features_id fid, __u64 result)
 const char *nvme_feature_lba_type_to_string(__u8 type)
 {
 	switch (type) {
-	case 0:	return "Reserved";
+	case 0:	return "General Purpose";
 	case 1:	return "Filesystem";
 	case 2:	return "RAID";
 	case 3:	return "Cache";

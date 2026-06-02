@@ -372,6 +372,49 @@ __u16 libnvme_mi_ctrl_id(struct libnvme_transport_handle *hdl);
  */
 char *libnvme_mi_endpoint_desc(libnvme_mi_ep_t ep);
 
+/**
+ * libnvme_mi_ep_set_submit_entry() - Install MI submit-entry callback
+ * @ep: endpoint to configure
+ * @mi_submit_entry: After input validation the callback is invoked before an MI
+ *		command is submitted. The function receives the endpoint,
+ *		message type, header, and data about to be sent, and may return
+ *		an opaque pointer representing per-command context. This pointer
+ *		is later passed unmodified to the mi_submit_exit callback.
+ *		Implementations typically use this hook for logging, tracing, or
+ *		allocating per-command state.
+ *
+ * Installs a callback invoked at the moment an MI command enters the submission
+ * path. This applies to all MI operations through this endpoint (both endpoint-
+ * level MI commands and controller admin commands). Passing NULL removes any
+ * previously installed callback.
+ */
+void libnvme_mi_ep_set_submit_entry(
+	libnvme_mi_ep_t ep,
+	void *(*mi_submit_entry)(struct libnvme_mi_ep *ep, __u8 type,
+				 const struct nvme_mi_msg_hdr *hdr,
+				 size_t hdr_len, const void *data,
+				 size_t data_len));
+
+/**
+ * libnvme_mi_ep_set_submit_exit() - Install MI submit-exit callback
+ * @ep: endpoint to configure
+ * @mi_submit_exit: Callback invoked after an MI command completes callback
+ *		(i.e., after a response has been received and passed basic
+ *		validation). The function receives the endpoint, message type,
+ *		header, data, and the @user_data pointer returned earlier by the
+ *		mi_submit_entry callback. Implementations typically use this
+ *		hook for logging, tracing, or freeing per-command state.
+ *
+ * Installs a callback invoked when an MI command completes. This applies to all
+ * MI operations through this endpoint. Passing NULL removes any previously
+ * installed callback.
+ */
+void libnvme_mi_ep_set_submit_exit(libnvme_mi_ep_t ep,
+		void (*mi_submit_exit)(struct libnvme_mi_ep *ep,
+				__u8 type, const struct nvme_mi_msg_hdr *hdr,
+				size_t hdr_len, const void *data,
+				size_t data_len, void *user_data));
+
 /* MI Command API: libnvme_mi_mi_ prefix */
 
 /**

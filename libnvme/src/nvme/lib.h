@@ -100,6 +100,19 @@ void libnvme_close(struct libnvme_transport_handle *hdl);
 libnvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl);
 
 /**
+ * libnvme_transport_handle_get_mi_ep() - get the MI endpoint from a
+ * transport handle
+ * @hdl: transport handle
+ *
+ * Retrieve the MI endpoint associated with this transport handle. Only valid
+ * for MI-type transport handles (check with libnvme_transport_handle_is_mi
+ * first).
+ *
+ * Return: the MI endpoint, or NULL if the handle is not an MI handle.
+ */
+struct libnvme_mi_ep *libnvme_transport_handle_get_mi_ep(struct libnvme_transport_handle *hdl);
+
+/**
  * libnvme_transport_handle_get_name - Return name of the device
  * transport handle
  * @hdl:	Transport handle

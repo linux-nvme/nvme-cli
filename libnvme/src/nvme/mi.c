@@ -293,6 +293,9 @@ struct libnvme_mi_ep *libnvme_mi_init_ep(struct libnvme_global_ctx *ctx)
 	ep->mprt_max = 0;
 	list_head_init(&ep->controllers);
 
+	ep->mi_submit_entry = __libnvme_mi_submit_entry;
+	ep->mi_submit_exit = __libnvme_mi_submit_exit;
+
 	list_add(&ctx->endpoints, &ep->root_entry);
 
 	return ep;
@@ -322,6 +325,28 @@ __libnvme_public unsigned int libnvme_mi_ep_get_timeout(libnvme_mi_ep_t ep)
 	return ep->timeout;
 }
 
+__libnvme_public void libnvme_mi_ep_set_submit_entry(libnvme_mi_ep_t ep,
+		void *(*mi_submit_entry)(struct libnvme_mi_ep *ep,
+				__u8 type, const struct nvme_mi_msg_hdr *hdr,
+				size_t hdr_len, const void *data,
+				size_t data_len))
+{
+	ep->mi_submit_entry = mi_submit_entry;
+	if (!ep->mi_submit_entry)
+		ep->mi_submit_entry = __libnvme_mi_submit_entry;
+}
+
+__libnvme_public void libnvme_mi_ep_set_submit_exit(libnvme_mi_ep_t ep,
+		void (*mi_submit_exit)(struct libnvme_mi_ep *ep,
+				__u8 type, const struct nvme_mi_msg_hdr *hdr,
+				size_t hdr_len, const void *data,
+				size_t data_len, void *user_data))
+{
+	ep->mi_submit_exit = mi_submit_exit;
+	if (!ep->mi_submit_exit)
+		ep->mi_submit_exit = __libnvme_mi_submit_exit;
+}
+
 static bool libnvme_mi_ep_has_quirk(libnvme_mi_ep_t ep, unsigned long quirk)
 {
 	return ep->quirks & quirk;
@@ -349,6 +374,15 @@ __libnvme_public struct libnvme_transport_handle *libnvme_mi_init_transport_hand
 __libnvme_public __u16 libnvme_mi_ctrl_id(struct libnvme_transport_handle *hdl)
 {
 	return hdl->id;
+}
+
+__libnvme_public struct libnvme_mi_ep *libnvme_transport_handle_get_mi_ep(
+		struct libnvme_transport_handle *hdl)
+{
+	if (!hdl || !libnvme_transport_handle_is_mi(hdl))
+		return NULL;
+
+	return hdl->ep;
 }
 
 __libnvme_public int libnvme_mi_scan_ep(libnvme_mi_ep_t ep, bool force_rescan)
@@ -424,19 +458,19 @@ static int libnvme_mi_verify_resp_mic(struct libnvme_mi_resp *resp)
 	return resp->mic != ~crc;
 }
 
-__libnvme_public __libnvme_weak void *libnvme_mi_submit_entry(
-		__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
-		const void *data, size_t data_len)
+void *__libnvme_mi_submit_entry(struct libnvme_mi_ep *ep,
+		__u8 type, const struct nvme_mi_msg_hdr *hdr,
+		size_t hdr_len, const void *data, size_t data_len)
 {
 	return NULL;
 }
 
-__libnvme_public __libnvme_weak void libnvme_mi_submit_exit(
-		__u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len,
-		const void *data, size_t data_len, void *user_data)
+void __libnvme_mi_submit_exit(struct libnvme_mi_ep *ep,
+		__u8 type, const struct nvme_mi_msg_hdr *hdr,
+		size_t hdr_len, const void *data, size_t data_len,
+		void *user_data)
 {
 }
-
 
 int libnvme_mi_async_read(libnvme_mi_ep_t ep, struct libnvme_mi_resp *resp)
 {
@@ -496,13 +530,10 @@ int libnvme_mi_async_read(libnvme_mi_ep_t ep, struct libnvme_mi_resp *resp)
 
 
 int libnvme_mi_submit(libnvme_mi_ep_t ep, struct libnvme_mi_req *req,
-		   struct libnvme_mi_resp *resp)
+		struct libnvme_mi_resp *resp)
 {
 	int rc;
 	void *user_data;
-
-	user_data = libnvme_mi_submit_entry(req->hdr->type, req->hdr, req->hdr_len, req->data,
-					 req->data_len);
 
 	if (req->hdr_len < sizeof(struct nvme_mi_msg_hdr))
 		return -EINVAL;
@@ -515,6 +546,9 @@ int libnvme_mi_submit(libnvme_mi_ep_t ep, struct libnvme_mi_req *req,
 
 	if (resp->hdr_len & 0x3)
 		return -EINVAL;
+
+	user_data = ep->mi_submit_entry(ep, req->hdr->type, req->hdr,
+		req->hdr_len, req->data, req->data_len);
 
 	libnvme_mi_ep_probe(ep);
 
@@ -569,8 +603,8 @@ int libnvme_mi_submit(libnvme_mi_ep_t ep, struct libnvme_mi_req *req,
 		return -EIO;
 	}
 
-	libnvme_mi_submit_exit(resp->hdr->type, resp->hdr, resp->hdr_len, resp->data, resp->data_len,
-			    user_data);
+	ep->mi_submit_exit(ep, resp->hdr->type, resp->hdr, resp->hdr_len,
+		resp->data, resp->data_len, user_data);
 
 	return 0;
 }

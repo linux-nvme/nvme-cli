@@ -14,6 +14,8 @@ LIBNVME_MI_3 {
 		libnvme_mi_ctrl_id;
 		libnvme_mi_endpoint_desc;
 		libnvme_mi_ep_get_timeout;
+		libnvme_mi_ep_set_submit_entry;
+		libnvme_mi_ep_set_submit_exit;
 		libnvme_mi_ep_set_timeout;
 		libnvme_mi_first_endpoint;
 		libnvme_mi_init_transport_handle;
@@ -31,8 +33,6 @@ LIBNVME_MI_3 {
 		libnvme_mi_scan_mctp;
 		libnvme_mi_set_csi;
 		libnvme_mi_status_to_string;
-		libnvme_mi_submit_entry;
-		libnvme_mi_submit_exit;
 	local:
 		*;
 };
