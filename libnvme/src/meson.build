@@ -18,12 +18,12 @@ sources = [
 ]
 if host_system == 'windows'
     sources += [
+        'nvme/ctrl-map.c',
         'nvme/filters-win.c',
         'nvme/ioctl-win.c',
         'nvme/lib-win.c',
         'nvme/mem-win.c',
         'nvme/no-crypto.c',
-        'nvme/storageport.c',
         'nvme/tree-win.c',
     ]
 else

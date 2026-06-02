@@ -19,7 +19,7 @@ The Windows port is **substantially functional** as of May 2026. Core device I/O
 | Component | Implementation | File(s) |
 |-----------|---------------|---------|
 | Device I/O (Admin + IO commands) | `IOCTL_STORAGE_QUERY/SET_PROPERTY`, `IOCTL_STORAGE_PROTOCOL_COMMAND`, `IOCTL_SCSI_PASS_THROUGH` | `libnvme/src/nvme/ioctl-win.c` |
-| Device enumeration (`nvme list`) | SetupDI + CFGMGR32 APIs, StoragePort map | `libnvme/src/nvme/filters-win.c` |
+| Device enumeration (`nvme list`) | SetupDI + CFGMGR32 APIs | `libnvme/src/nvme/filters-win.c` |
 | Device path translation | `nvmeX`, `nvmeXnY`, `\\.\PhysicalDriveN`, `\\?\...` paths | `libnvme/src/nvme/lib-win.c` |
 | Topology tree scanning | Controller/subsystem/namespace discovery | `libnvme/src/nvme/tree-win.c` |
 | Global context | `libnvme_create_global_ctx()` | `libnvme/src/nvme/lib.c` (cross-platform) |
@@ -270,7 +270,7 @@ The project uses per-header compatibility wrappers in `libnvme/src/nvme/`:
 |------|-------------|
 | `libnvme/src/nvme/ioctl-win.c` | NVMe IOCTL implementation (~1670 lines) |
 | `libnvme/src/nvme/filters-win.c` | Device enumeration via SetupDI/CFGMGR32 |
-| `libnvme/src/nvme/storageport.c` | StoragePort map API |
+| `libnvme/src/nvme/ctrl-map.c` | NVME controller map API |
 | `libnvme/src/nvme/lib-win.c` | Device open/close, path translation (~250 lines) |
 | `libnvme/src/nvme/tree-win.c` | Topology tree scanning (~330 lines) |
 | `libnvme/src/nvme/no-linux.c` | Stubs for Linux-only functions (~290 lines) |

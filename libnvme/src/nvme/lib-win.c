@@ -11,7 +11,7 @@
 #include "ioctl.h"
 #include "lib.h"
 #include "private.h"
-#include "private-storageport.h"
+#include "private-ctrl-map.h"
 #include "util.h"
 
 
@@ -84,22 +84,22 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx, const char *na
 	struct libnvme_transport_handle *hdl;
 	__cleanup_free char *mapped_name = NULL;
 	int ret;
-	const struct storageport_map_entry *sp_entry;
+	const struct ctrl_map_entry *ctrl_entry;
 
 	if (strstr(name, "/dev/"))
 		name = libnvme_basename(name);
 
-	sp_entry = libnvme_storageport_map_lookup(name);
-	if (sp_entry) {
+	ctrl_entry = libnvme_ctrl_map_lookup(name);
+	if (ctrl_entry) {
 		const char *n_pos = strchr(name + 4, 'n');
 		__u32 nsid;
 
 		if (n_pos && sscanf(n_pos, "n%u", &nsid) == 1) {
-			ret = libnvme_storageport_entry_map_nsid_to_drive_path(
-				sp_entry, nsid, &mapped_name);
+			ret = libnvme_ctrl_map_entry_map_nsid_to_drive_path(
+				ctrl_entry, nsid, &mapped_name);
 		} else {
-			ret = libnvme_storageport_entry_get_ctrl_path(
-				sp_entry, &mapped_name);
+			ret = libnvme_ctrl_map_entry_get_ctrl_path(
+				ctrl_entry, &mapped_name);
 		}
 		if (ret)
 			return ret;
@@ -139,13 +139,13 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx, const char *na
 	}
 
 	/* For PhysicalDrive names, create the nvmeXnY-style name. */
-	sp_entry = libnvme_storageport_map_lookup_by_physdrive(name);
-	if (sp_entry) {
+	ctrl_entry = libnvme_ctrl_map_lookup_by_physdrive(name);
+	if (ctrl_entry) {
 		__u32 nsid;
 
 		if (libnvme_get_nsid(hdl, &nsid) == 0 &&
 		    asprintf(&mapped_name, "%sn%d",
-			     libnvme_storageport_entry_get_ctrl_name(sp_entry),
+			     libnvme_ctrl_map_entry_get_ctrl_name(ctrl_entry),
 			     nsid) > 0)
 			name = mapped_name;
 	}

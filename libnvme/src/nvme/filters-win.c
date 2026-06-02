@@ -12,7 +12,7 @@
 #include <libnvme.h>
 
 #include "private.h"
-#include "private-storageport.h"
+#include "private-ctrl-map.h"
 #include "compiler-attributes.h"
 
 __libnvme_public int libnvme_scan_subsystems(struct dirent ***subsys)
@@ -40,12 +40,12 @@ __libnvme_public int libnvme_scan_ctrls(struct dirent ***ctrls)
 
 	*ctrls = NULL;
 
-	libnvme_storageport_map_clear();
-	ret = libnvme_storageport_map_init();
+	libnvme_ctrl_map_clear();
+	ret = libnvme_ctrl_map_init();
 	if (ret)
 		return ret;
 
-	count = libnvme_storageport_map_get_count();
+	count = libnvme_ctrl_map_get_count();
 	if (!count)
 		return 0;
 
@@ -59,14 +59,14 @@ __libnvme_public int libnvme_scan_ctrls(struct dirent ***ctrls)
 			goto enomem;
 		snprintf(entries[i]->d_name,
 			 sizeof(entries[i]->d_name), "%s",
-			 libnvme_storageport_map_get_name(i));
+			 libnvme_ctrl_map_get_name(i));
 	}
 
 	*ctrls = entries;
 	return (int)count;
 
 enomem:
-	libnvme_storageport_map_clear();
+	libnvme_ctrl_map_clear();
 	if (entries) {
 		while (i > 0)
 			free(entries[--i]);
@@ -83,10 +83,11 @@ __libnvme_public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
 	return 0;
 }
 
-__libnvme_public int libnvme_scan_ctrl_namespaces(libnvme_ctrl_t c, struct dirent ***ns)
+__libnvme_public int libnvme_scan_ctrl_namespaces(libnvme_ctrl_t c,
+						  struct dirent ***ns)
 {
 	struct dirent **entries = NULL;
-	const struct storageport_map_entry *sp_entry;
+	const struct ctrl_map_entry *ctrl_entry;
 	DWORD *device_numbers = NULL;
 	int dev_count = 0;
 	int ret;
@@ -97,13 +98,13 @@ __libnvme_public int libnvme_scan_ctrl_namespaces(libnvme_ctrl_t c, struct diren
 
 	*ns = NULL;
 
-	sp_entry = libnvme_storageport_map_lookup(c->name);
-	if (!sp_entry)
+	ctrl_entry = libnvme_ctrl_map_lookup(c->name);
+	if (!ctrl_entry)
 		return 0;
 
-	ret = libnvme_storageport_entry_scan_device_numbers(sp_entry,
-							    &device_numbers,
-							    &dev_count);
+	ret = libnvme_ctrl_map_entry_scan_device_numbers(ctrl_entry,
+							 &device_numbers,
+							 &dev_count);
 	if (ret)
 		return ret;
 
