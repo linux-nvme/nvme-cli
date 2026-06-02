@@ -102,6 +102,10 @@ if get_option('pypi')
     libnvme_so_version = libnvme_so_version.split('.')[0]
 endif
 
+libnvme_so_major = libnvme_so_version.split('.')[0]
+libnvme_api_name = 'libnvme@0@'.format(libnvme_so_major)
+libnvme_link_name = 'nvme@0@'.format(libnvme_so_major)
+
 ################################################################################
 prefixdir      = get_option('prefix')
 datadir        = join_paths(prefixdir, get_option('datadir'))
@@ -516,7 +520,7 @@ substs.set('SYSTEMDDIR', systemddir)
 substs.set('SYSTEMCTL', get_option('systemctl'))
 substs.set('PREFIX', prefixdir)
 substs.set('URL', 'https://github.com/linux-nvme/nvme-cli/')
-substs.set('VERSION_MAJOR', libnvme_so_version.split('.')[0])
+substs.set('VERSION_MAJOR', libnvme_so_major)
 
 
 ################################################################################
