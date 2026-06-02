@@ -337,6 +337,14 @@ static int get_transport_handle(struct libnvme_global_ctx *ctx, int argc,
 	return ret;
 }
 
+void put_transport_handle(struct libnvme_transport_handle *hdl)
+{
+	libnvme_close(hdl);
+
+	if (log_level >= LIBNVME_LOG_DEBUG)
+		nvme_show_finish();
+}
+
 static int parse_args(int argc, char *argv[], const char *desc,
 		      struct argconfig_commandline_options *opts)
 {
