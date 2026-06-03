@@ -504,6 +504,34 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char *filename)
 	libnvmf_free_nbft(ctx, nbft);
 	return output;
 }
+void registry_update(const char *device, const char *attr, const char *value)
+{
+	int ret;
+
+	ret = libnvmf_registry_update(device, attr, value);
+	if (ret == -EINVAL)
+		PyErr_SetString(PyExc_ValueError,
+				"invalid device or attribute name");
+	else if (ret < 0)
+		PyErr_Format(PyExc_OSError,
+			     "registry_update failed: %s", strerror(-ret));
+}
+
+void registry_delete(const char *device)
+{
+	int ret;
+
+	ret = libnvmf_registry_delete(device);
+	if (ret == -EINVAL)
+		PyErr_SetString(PyExc_ValueError, "invalid device name");
+	else if (ret == -ENOENT)
+		PyErr_Format(PyExc_FileNotFoundError,
+			     "registry entry not found: %s", device);
+	else if (ret < 0)
+		PyErr_Format(PyExc_OSError,
+			     "registry_delete(%s) failed: %s",
+			     device, strerror(-ret));
+}
 %} /* --------- end C implementation block --------- */
 
 /*============================================================================*/
@@ -545,6 +573,8 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char *filename)
 %}
 
 %pythoncode %{
+import os
+
 from libnvme._exceptions import (
 	NvmeError,
 	ConnectError,
@@ -552,6 +582,62 @@ from libnvme._exceptions import (
 	DiscoverError,
 	NotConnectedError,
 )
+
+_registry_dir = os.environ.get('NVME_REGISTRY_DIR', '/run/nvme/registry')
+
+def registry_retrieve(device, attr):
+	"""Return the value of attr for device, or None if not registered.
+
+	Args:
+		device: Kernel device name (e.g. 'nvme3').
+		attr:   Attribute name (e.g. 'owner').
+
+	Returns:
+		The attribute value as a string, or None if the device is not
+		registered or the attribute is not present.
+	"""
+	path = os.path.join(_registry_dir, device, attr)
+	try:
+		with open(path) as f:
+			return f.read().strip()
+	except OSError:
+		return None
+
+def registry_entries():
+	"""Yield (device, attrs) for each live registry entry.
+
+	Scans the registry directory and yields one tuple per entry whose
+	corresponding /dev/nvmeN device node exists.  Stale entries are
+	silently skipped.
+
+	Yields:
+		tuple: (device, attrs) where device is the kernel device name
+		(e.g. 'nvme3') and attrs is a dict of attribute name to value.
+	"""
+	base = _registry_dir
+	try:
+		names = os.listdir(base)
+	except FileNotFoundError:
+		return
+	for device in sorted(names):
+		dev_path = os.path.join(base, device)
+		if not os.path.isdir(dev_path):
+			continue
+		if not os.path.exists('/dev/' + device):
+			continue
+		attrs = {}
+		try:
+			for attr in os.listdir(dev_path):
+				if attr.startswith('.') or '.tmp.' in attr:
+					continue
+				try:
+					with open(os.path.join(dev_path, attr)) as f:
+						attrs[attr] = f.read().strip()
+				except OSError:
+					continue
+		except OSError:
+			continue
+		yield device, attrs
 %}
 
 /*############################################################################*/
@@ -823,6 +909,17 @@ from libnvme._exceptions import (
 		"Returns:\n"
 		"    A dict containing the NBFT data, or None on failure.") nbft_get;
 PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char *filename);
+
+%exception registry_update {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+void registry_update(const char *device, const char *attr, const char *value);
+%exception registry_delete {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+void registry_delete(const char *device);
 
 %rename(_libnvme_first_host)        libnvme_first_host;
 %rename(_libnvme_next_host)         libnvme_next_host;
