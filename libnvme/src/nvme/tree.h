@@ -857,6 +857,18 @@ const char *libnvme_ctrl_get_state(libnvme_ctrl_t c);
 bool libnvme_ctrl_is_transport_fabric(libnvme_ctrl_t c);
 
 /**
+ * libnvme_ctrl_owner() - Registered orchestrator owner of a controller
+ * @c:	Controller instance
+ *
+ * Looks up the controller's "owner" entry in the ownership registry.  In a
+ * build without fabrics support this always returns NULL.
+ *
+ * Return: a newly allocated owner string (the caller frees), or NULL if the
+ * controller is unowned, local (non-fabrics), or the registry is unreadable.
+ */
+char *libnvme_ctrl_owner(libnvme_ctrl_t c);
+
+/**
  * libnvme_ctrl_get_subsystem() - Parent subsystem of a controller
  * @c:	Controller instance
  *

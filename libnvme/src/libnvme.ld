@@ -23,6 +23,7 @@ LIBNVME_3 {
 		libnvme_ctrl_is_transport_fabric;
 		libnvme_ctrl_next_ns;
 		libnvme_ctrl_next_path;
+		libnvme_ctrl_owner;
 		libnvme_ctrl_release_transport_handle;
 		libnvme_describe_key_serial;
 		libnvme_dump_config;
