@@ -50,6 +50,10 @@ if want_fabrics and 'nbft' in selected_plugins
     plugin_sources += ['plugins/nbft/nbft-plugin.c']
 endif
 
+if want_fabrics and 'registry' in selected_plugins
+    plugin_sources += ['plugins/registry/registry-nvme.c']
+endif
+
 if 'feat' in selected_plugins
   subdir('feat')
 endif
