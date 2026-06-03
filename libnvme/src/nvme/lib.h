@@ -26,10 +26,13 @@ enum libnvme_log_level {
  * libnvme_create_global_ctx() - Initialize global context object
  * @fp:		File descriptor for logging messages
  * @log_level:	Logging level to use
+ * @owner:	Orchestrator identity string (e.g. "stas", "nbft").
+ *		Pass NULL if this process does not participate in the registry.
  *
  * Return: Initialized &struct libnvme_global_ctx object
  */
-struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_level);
+struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_level,
+						      const char *owner);
 
 /**
  * libnvme_free_global_ctx() - Free global context object

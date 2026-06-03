@@ -59,7 +59,7 @@ int main()
 	int ret;
 	struct libnvmf_discovery_args *args;
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL, NULL);
 	if (!ctx)
 		return 1;
 

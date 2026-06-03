@@ -23,7 +23,7 @@
 #include <nvme/registry.h>
 
 /* Internal — not in registry.h; called from the connect path in production. */
-int libnvmf_registry_create(int instance, const char *owner);
+int libnvmf_registry_create_instance(int instance, const char *owner);
 
 static char tmpdir[256];
 
@@ -64,7 +64,7 @@ static bool test_create(void)
 
 	printf("test_create:\n");
 
-	ret = libnvmf_registry_create(3, "stas");
+	ret = libnvmf_registry_create_instance(3, "stas");
 	if (ret) {
 		printf(" - create returned %d [FAIL]\n", ret);
 		return false;

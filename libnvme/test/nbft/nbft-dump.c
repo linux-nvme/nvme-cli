@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	ctx = libnvme_create_global_ctx(stderr, false);
+	ctx = libnvme_create_global_ctx(stderr, false, NULL);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create global context");
 		return 1;

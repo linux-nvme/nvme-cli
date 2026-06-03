@@ -894,7 +894,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 			    struct plugin *plugin)
 {
 	const char *desc = "Display information about E-Series volumes.";
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL, NULL);
 	struct dirent **devices;
 	int num, i, ret, fmt;
 	struct smdevice_info *smdevices;
@@ -992,7 +992,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL, NULL);
 	const char *desc = "Display information about ONTAP devices.";
 	struct dirent **devices;
 	int num, i, ret, fmt;

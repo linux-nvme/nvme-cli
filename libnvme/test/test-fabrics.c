@@ -529,7 +529,7 @@ int main(int argc, char *argv[])
 	 * on error paths (inet6_pton, traddr_is_hostname).  Use LOG_ERR
 	 * so test output stays clean during normal runs.
 	 */
-	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR, NULL);
 	if (!ctx) {
 		fprintf(stderr, "failed to create libnvme context\n");
 		return EXIT_FAILURE;

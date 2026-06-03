@@ -181,18 +181,27 @@ err:
 }
 
 /*
- * libnvmf_registry_create - Write a registry entry for a freshly connected
+ * libnvmf_registry_create_instance - Write a registry entry for a freshly connected
  * controller.  Internal; called from the connect path in fabrics.c once the
  * kernel returns instance=N.  Always overwrites any pre-existing entry:
  * instance recycling means an old nvmeN/ directory is stale by definition.
  */
-int libnvmf_registry_create(int instance, const char *owner)
+int libnvmf_registry_create_instance(int instance, const char *owner)
 {
 	char device[32];
 	char dir_path[256];
 	int dir_fd, ret;
 
 	snprintf(device, sizeof(device), "nvme%d", instance);
+
+	/*
+	 * Delete any stale entry unconditionally before creating the new one.
+	 * Instance recycling means an old nvmeN/ directory is stale by
+	 * definition — any attributes left over from the previous owner (e.g.
+	 * a private attribute written via libnvmf_registry_update()) must not
+	 * leak into the new entry.  Ignore errors: ENOENT is the common case.
+	 */
+	libnvmf_registry_delete(device);
 
 	ret = ensure_device_dir(device);
 	if (ret)
@@ -209,6 +218,16 @@ int libnvmf_registry_create(int instance, const char *owner)
 	ret = write_attr_atomic(dir_fd, dir_path, "owner", owner);
 	close(dir_fd);
 	return ret;
+}
+
+int libnvmf_registry_delete_instance(int instance)
+{
+	char device[32];
+	int ret;
+
+	snprintf(device, sizeof(device), "nvme%d", instance);
+	ret = libnvmf_registry_delete(device);
+	return (ret == -ENOENT) ? 0 : ret;
 }
 
 __libnvme_public int libnvmf_registry_retrieve(const char *device,

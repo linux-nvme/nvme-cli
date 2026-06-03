@@ -41,7 +41,7 @@ static bool test_host_dedup(void)
 
 	printf("test_host_dedup:\n");
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR, NULL);
 	assert(ctx);
 
 	h1 = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
@@ -84,7 +84,7 @@ static bool test_hostid_from_hostnqn(void)
 
 	printf("test_hostid_from_hostnqn:\n");
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR, NULL);
 	assert(ctx);
 
 	h = libnvme_lookup_host(ctx, HOSTNQN_1, NULL);
@@ -115,7 +115,7 @@ static bool test_host_attrs(void)
 
 	printf("test_host_attrs:\n");
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR, NULL);
 	assert(ctx);
 
 	h = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
@@ -154,7 +154,7 @@ static bool test_host_iteration(void)
 
 	printf("test_host_iteration:\n");
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR, NULL);
 	assert(ctx);
 
 	libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
@@ -189,7 +189,7 @@ static bool test_subsystem_dedup(void)
 
 	printf("test_subsystem_dedup:\n");
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR, NULL);
 	assert(ctx);
 
 	h = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
@@ -235,7 +235,7 @@ static bool test_subsystem_attrs(void)
 
 	printf("test_subsystem_attrs:\n");
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR, NULL);
 	assert(ctx);
 
 	h = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
@@ -278,7 +278,7 @@ static bool test_subsystem_iteration(void)
 
 	printf("test_subsystem_iteration:\n");
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_ERR, NULL);
 	assert(ctx);
 
 	h = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);

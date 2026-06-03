@@ -559,7 +559,7 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	if (ret < 0)
 		return ret;
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level, NULL);
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return -ENOMEM;

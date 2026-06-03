@@ -1081,7 +1081,7 @@ static struct libnvme_global_ctx *stdout_top_rescan_topology(void)
 {
 	struct libnvme_global_ctx *ctx;
 
-	ctx = libnvme_create_global_ctx(stdout, log_level);
+	ctx = libnvme_create_global_ctx(stdout, log_level, NULL);
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return NULL;

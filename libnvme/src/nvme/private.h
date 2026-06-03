@@ -376,7 +376,6 @@ struct libnvme_subsystem {  // !generate-accessors:read=generated,write=none !ge
 	char *serial;
 	char *firmware;
 	char *subsystype;
-	char *application;		// !access:write=generated
 	char *iopolicy;			// !access:read=custom
 };
 
@@ -433,7 +432,7 @@ struct libnvme_fabric_options { // !generate-accessors
 
 struct libnvme_global_ctx { // !generate-python:alias=GlobalCtx
 	char *config_file;
-	char *application;
+	char *owner; /* orchestrator identity; NULL = unowned */
 	struct list_head endpoints; /* MI endpoints */
 	struct list_head hosts;
 	struct libnvme_log log;

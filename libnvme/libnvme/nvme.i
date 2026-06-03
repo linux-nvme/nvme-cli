@@ -943,7 +943,7 @@ struct libnvme_ns *libnvme_ctrl_first_ns(struct libnvme_ctrl *c);
 struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_ns *n);
 
 %extend libnvme_global_ctx {
-	%feature("autodoc", "__init__(self, config_file=None)\n"
+	%feature("autodoc", "__init__(self, owner=None, config_file=None)\n"
 		"\n"
 		"Create the root context for the libnvme device tree.\n"
 		"\n"
@@ -951,11 +951,14 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		"Supports use as a context manager (``with GlobalCtx() as ctx:``).\n"
 		"\n"
 		"Args:\n"
+		"    owner:       Orchestrator identity (e.g. 'stas', 'nbft').\n"
+		"                 Pass None if this process does not participate\n"
+		"                 in the ownership registry.\n"
 		"    config_file: Path to a JSON config file, or None for defaults.") libnvme_global_ctx;
-	libnvme_global_ctx(const char *config_file = NULL) {
+	libnvme_global_ctx(const char *owner = NULL, const char *config_file = NULL) {
 		struct libnvme_global_ctx *ctx;
 
-		ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+		ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL, owner);
 		if (!ctx)
 			return NULL;
 
