@@ -10297,7 +10297,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		  OPT_FLAG("export",	'e', &cfg.export,	export),
 		  OPT_STR("revoke",	'r', &cfg.revoke,	revoke));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
@@ -10403,7 +10403,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	NVME_ARGS(opts,
 		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
 
-	err = argconfig_parse(argc, argv, desc, opts);
+	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
