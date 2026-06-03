@@ -41,6 +41,23 @@ struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_level);
 void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx);
 
 /**
+ * libnvme_set_owner() - Set the orchestrator identity for the registry
+ * @ctx:	&struct libnvme_global_ctx object
+ * @owner:	Orchestrator identity string (e.g. "stas", "nbft").
+ *
+ * Records the orchestrator identity used when claiming registry ownership of
+ * connections made through @ctx.  A later call overwrites the previous value;
+ * treating the identity as immutable is a policy decision left to the caller.
+ * A process that does not participate in the registry simply never calls this.
+ *
+ * This is the supported way to record the registry owner;
+ * libnvme_create_global_ctx() deliberately takes no owner parameter.
+ *
+ * Return: 0 on success, -EINVAL or -ENOMEM on error.
+ */
+int libnvme_set_owner(struct libnvme_global_ctx *ctx, const char *owner);
+
+/**
  * libnvme_set_logging_level() - Set current logging level
  * @ctx:	struct libnvme_global_ctx object
  * @log_level:	Logging level to set

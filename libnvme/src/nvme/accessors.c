@@ -563,20 +563,6 @@ __libnvme_public const char *libnvme_subsystem_get_subsystype(
 	return p->subsystype;
 }
 
-__libnvme_public void libnvme_subsystem_set_application(
-		struct libnvme_subsystem *p,
-		const char *application)
-{
-	free(p->application);
-	p->application = application ? strdup(application) : NULL;
-}
-
-__libnvme_public const char *libnvme_subsystem_get_application(
-		const struct libnvme_subsystem *p)
-{
-	return p->application;
-}
-
 /****************************************************************************
  * Accessors for: struct libnvme_host
  ****************************************************************************/

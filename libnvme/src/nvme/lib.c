@@ -70,6 +70,21 @@ __libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(
 	return ctx;
 }
 
+__libnvme_public int libnvme_set_owner(struct libnvme_global_ctx *ctx,
+				       const char *owner)
+{
+	char *dup;
+
+	if (!ctx || !owner)
+		return -EINVAL;
+	dup = strdup(owner);
+	if (!dup)
+		return -ENOMEM;
+	free(ctx->owner);
+	ctx->owner = dup;
+	return 0;
+}
+
 __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
@@ -93,7 +108,7 @@ __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 		libnvme_mi_close(ep);
 #endif
 	free(ctx->config_file);
-	free(ctx->application);
+	free(ctx->owner);
 	free(ctx);
 }
 

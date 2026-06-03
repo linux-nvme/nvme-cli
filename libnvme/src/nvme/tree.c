@@ -203,22 +203,6 @@ __libnvme_public int libnvme_dump_tree(struct libnvme_global_ctx *ctx)
 	return json_dump_tree(ctx);
 }
 
-__libnvme_public const char *libnvme_get_application(
-		struct libnvme_global_ctx *ctx)
-{
-	return ctx->application;
-}
-
-__libnvme_public void libnvme_set_application(struct libnvme_global_ctx *ctx,
-		const char *a)
-{
-	free(ctx->application);
-	ctx->application = NULL;
-
-	if (a)
-		ctx->application = strdup(a);
-}
-
 __libnvme_public void libnvme_skip_namespaces(struct libnvme_global_ctx *ctx)
 {
 	ctx->create_only = true;
@@ -387,7 +371,6 @@ static void __nvme_free_subsystem(struct libnvme_subsystem *s)
 	free(s->serial);
 	free(s->firmware);
 	free(s->subsystype);
-	free(s->application);
 	free(s->iopolicy);
 	free(s);
 }
@@ -447,12 +430,6 @@ struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 		if (name && s->name &&
 		    strcmp(s->name, name))
 			continue;
-		if (h->ctx->application) {
-			if (!s->application)
-				continue;
-			if (strcmp(h->ctx->application, s->application))
-				continue;
-		}
 		return s;
 	}
 	return nvme_alloc_subsystem(h, name, subsysnqn);
@@ -607,8 +584,6 @@ static int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name)
 	}
 	s->name = strdup(name);
 	s->sysfs_dir = (char *)path;
-	if (s->h->ctx->application)
-		s->application = strdup(s->h->ctx->application);
 	s->iopolicy = libnvme_get_attr(path, "iopolicy");
 
 	return 0;
