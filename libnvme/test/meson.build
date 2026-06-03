@@ -141,6 +141,18 @@ tree = executable(
 test('libnvme - tree', tree)
 
 if want_fabrics
+    registry = executable(
+        'test-registry',
+        ['registry.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+
+    test('libnvme - registry', registry)
+
     uriparser = executable(
         'test-uriparser',
         ['uriparser.c'],

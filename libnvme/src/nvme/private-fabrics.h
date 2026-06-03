@@ -214,3 +214,9 @@ size_t libnvmf_get_entity_name(char *buffer, size_t bufsz);
  * Return: Number of characters copied to @buffer.
  */
 size_t libnvmf_get_entity_version(char *buffer, size_t bufsz);
+
+/**
+ * libnvmf_registry_create - Write a registry entry for a freshly connected
+ * controller.  Called from the connect path once the kernel returns instance=N.
+ */
+int libnvmf_registry_create(int instance, const char *owner);
