@@ -1455,6 +1455,9 @@ out_free_log:
 static void sanitize_discovery_log_entry(struct libnvme_global_ctx *ctx,
 		struct nvmf_disc_log_entry *e)
 {
+	if (!e)
+		return;
+
 	strchomp(e->trsvcid, sizeof(e->trsvcid));
 	strchomp(e->traddr, sizeof(e->traddr));
 
