@@ -14,6 +14,7 @@
 #include "cleanup.h"
 #include "private.h"
 #include "private-fabrics.h"
+#include "compiler-attributes.h"
 
 /**
  * _tcp_ctrl_match_host_traddr_no_src_addr() - Match host_traddr w/o src_addr
@@ -436,6 +437,14 @@ static ctrl_match_t _libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 	/* All other transport types */
 	candidate->addreq = streqcase0;
 	return _libnvmf_tree_ctrl_match;
+}
+
+__libnvme_public char *libnvme_ctrl_owner(libnvme_ctrl_t c)
+{
+	char *owner = NULL;
+
+	libnvmf_registry_retrieve(libnvme_ctrl_get_name(c), "owner", &owner);
+	return owner;
 }
 
 libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,

@@ -7,6 +7,7 @@
  */
 
 #include "private.h"
+#include "compiler-attributes.h"
 
 bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr)
@@ -40,5 +41,10 @@ libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
 		return c;
 	}
 #endif
+	return NULL;
+}
+
+__libnvme_public char *libnvme_ctrl_owner(libnvme_ctrl_t c)
+{
 	return NULL;
 }
