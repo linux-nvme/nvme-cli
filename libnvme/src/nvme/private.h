@@ -22,6 +22,9 @@
 
 #include <nvme/tree.h>
 
+struct libnvme_passthru_completion;
+struct libnvme_async_req;
+
 const char *libnvme_subsys_sysfs_dir(void);
 const char *libnvme_ctrl_sysfs_dir(void);
 const char *libnvme_ns_sysfs_dir(void);
@@ -173,6 +176,12 @@ enum ioctl_state {
 	IOCTL_STATE_IOCTL64 = 2,
 };
 
+enum libnvme_io_uring_state {
+	LIBNVME_IO_URING_STATE_UNKNOWN = 0,
+	LIBNVME_IO_URING_STATE_NOT_AVAILABLE,
+	LIBNVME_IO_URING_STATE_AVAILABLE,
+};
+
 struct libnvme_transport_handle {
 	struct libnvme_global_ctx *ctx;
 	enum libnvme_transport_handle_type type;
@@ -194,7 +203,13 @@ struct libnvme_transport_handle {
 	struct stat stat;
 	enum ioctl_state ioctl_admin_state;
 	enum ioctl_state ioctl_io_state;
-	bool uring_enabled;
+	enum libnvme_io_uring_state uring_state;
+#ifdef CONFIG_LIBURING
+	unsigned int uring_pending;
+	struct io_uring *ring;
+	struct libnvme_async_req *dry_run_head;
+	struct libnvme_async_req *dry_run_tail;
+#endif
 
 #ifdef CONFIG_MI
 	/* mi */
@@ -416,12 +431,6 @@ struct libnvme_fabric_options { // !generate-accessors
 	bool trsvcid;
 };
 
-enum libnvme_io_uring_state {
-	LIBNVME_IO_URING_STATE_UNKNOWN = 0,
-	LIBNVME_IO_URING_STATE_NOT_AVAILABLE,
-	LIBNVME_IO_URING_STATE_AVAILABLE,
-};
-
 struct libnvme_global_ctx { // !generate-python:alias=GlobalCtx
 	char *config_file;
 	char *application;
@@ -435,12 +444,6 @@ struct libnvme_global_ctx { // !generate-python:alias=GlobalCtx
 #ifdef CONFIG_FABRICS
 	struct libnvme_fabric_options *options;
 	struct ifaddrs *ifaddrs_cache; /* init with libnvmf_getifaddrs() */
-#endif
-
-	enum libnvme_io_uring_state uring_state;
-#ifdef CONFIG_LIBURING
-	int ring_cmds;
-	struct io_uring *ring;
 #endif
 };
 int libnvme_set_attr(const char *dir, const char *attr, const char *value);
@@ -686,9 +689,6 @@ void libnvme_ns_release_transport_handle(struct libnvme_ns *n);
 int libnvme_mi_admin_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
 
-int libnvme_open_uring(struct libnvme_global_ctx *ctx);
-void libnvme_close_uring(struct libnvme_global_ctx *ctx);
+int libnvme_open_uring(struct libnvme_transport_handle *hdl);
+void libnvme_close_uring(struct libnvme_transport_handle *hdl);
 int __libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl);
-int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd);
-

@@ -40,39 +40,45 @@ int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
 
 /**
- * libnvme_wait_admin_passthru() - Wait for pending admin passthru completions
- * @hdl:	Transport handle
+ * struct libnvme_passthru_completion - Async passthru completion record
+ * @cmd:	Command that completed
+ * @cookie:	User cookie provided to libnvme_submit_*_passthru_async()
+ * @status:	Completion status (NVMe status or negative errno)
  *
- * When io_uring is enabled, libnvme_submit_admin_passthru() queues commands
- * asynchronously. Call this function after one or more submits to drain all
- * pending completions before inspecting response data.
- *
- * This is a no-op when io_uring is not available.
- *
- * Return: 0 on success, negative error code otherwise.
+ * Used for both admin and IO passthru command completions.
  */
-int libnvme_wait_admin_passthru(struct libnvme_transport_handle *hdl);
+struct libnvme_passthru_completion {
+	struct libnvme_passthru_cmd *cmd;
+	void *cookie;
+	int status;
+};
+
+/**
+ * libnvme_submit_admin_passthru_async() - Queue admin passthru command
+ * @hdl:	Transport handle
+ * @cmd:	The nvme admin command to send
+ * @cookie:	User-defined opaque value returned at completion
+ *
+ * Queues @cmd for asynchronous execution. Completion is reported via
+ * libnvme_reap_admin_passthru_async().
+ *
+ * Return: 0 on successful queueing, negative error code otherwise.
+ */
+int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd, void *cookie);
 
 /**
  * libnvme_exec_admin_passthru() - Submit an admin passthru command and wait
  * @hdl:	Transport handle
  * @cmd:	The nvme admin command to send
  *
- * Convenience wrapper that combines libnvme_submit_admin_passthru() and
- * libnvme_wait_admin_passthru() into a single synchronous call. Use this
- * for the common case where commands are sent one at a time. Use the
- * split-phase API directly when batching multiple commands with io_uring.
+ * Synchronous command execution.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field), or negative error code otherwise.
  */
-static inline int libnvme_exec_admin_passthru(
-		struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd)
-{
-	int err = libnvme_submit_admin_passthru(hdl, cmd);
-	return err ? err : libnvme_wait_admin_passthru(hdl);
-}
+int libnvme_exec_admin_passthru(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd);
 
 /**
  * libnvme_submit_io_passthru() - Submit an nvme passthrough command
@@ -88,34 +94,59 @@ int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
 
 /**
- * libnvme_wait_io_passthru() - Wait for pending IO passthru completions
+ * libnvme_submit_io_passthru_async() - Queue IO passthru command
  * @hdl:	Transport handle
+ * @cmd:	The nvme IO command to send
+ * @cookie:	User-defined opaque value returned at completion
  *
- * Counterpart to libnvme_submit_io_passthru() for the split-phase API.
- * Currently a no-op as the IO passthru path does not yet use io_uring.
+ * Queues @cmd for asynchronous execution. Completion is reported via
+ * libnvme_reap_io_passthru_async().
  *
- * Return: 0 on success, negative error code otherwise.
+ * Return: 0 on successful queueing, negative error code otherwise.
  */
-int libnvme_wait_io_passthru(struct libnvme_transport_handle *hdl);
+int libnvme_submit_io_passthru_async(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd, void *cookie);
 
 /**
  * libnvme_exec_io_passthru() - Submit an IO passthru command and wait
  * @hdl:	Transport handle
  * @cmd:	The nvme IO command to send
  *
- * Convenience wrapper combining libnvme_submit_io_passthru() and
- * libnvme_wait_io_passthru() into a single synchronous call.
+ * Synchronous command execution. Note: when io_uring is enabled, this shares
+ * the async queue. Avoid mixing this with direct async API usage on the same
+ * handle. For batching, use the async API exclusively.
  *
  * Return: The nvme command status if a response was received (see
  * &enum nvme_status_field), or negative error code otherwise.
  */
-static inline int libnvme_exec_io_passthru(
-		struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd)
-{
-	int err = libnvme_submit_io_passthru(hdl, cmd);
-	return err ? err : libnvme_wait_io_passthru(hdl);
-}
+int libnvme_exec_io_passthru(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd);
+
+/**
+ * libnvme_reap_passthru_async() - Reap one async completion
+ * @hdl:	Transport handle
+ * @completion: Completion output structure
+ *
+ * Waits for one queued passthru command to complete and stores the
+ * completed command pointer, associated cookie, and completion status in
+ * @completion.
+ *
+ * Return: 0 on success, negative error code otherwise.
+ */
+int libnvme_reap_passthru_async(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_completion *completion);
+
+/**
+ * libnvme_wait_passthru() - Wait for all pending passthru completions
+ * @hdl:	Transport handle
+ *
+ * Drains all pending passthru commands from the async queue. Use this
+ * after batching multiple libnvme_submit_admin_passthru() calls when io_uring
+ * is enabled.
+ *
+ * Return: 0 on success, or the first non-zero status encountered.
+ */
+int libnvme_wait_passthru(struct libnvme_transport_handle *hdl);
 
 /**
  * libnvme_reset_subsystem() - Initiate a subsystem reset
