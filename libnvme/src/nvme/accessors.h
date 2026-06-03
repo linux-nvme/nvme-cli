@@ -739,24 +739,6 @@ const char *libnvme_subsystem_get_firmware(const struct libnvme_subsystem *p);
  */
 const char *libnvme_subsystem_get_subsystype(const struct libnvme_subsystem *p);
 
-/**
- * libnvme_subsystem_set_application() - Set application.
- * @p: The &struct libnvme_subsystem instance to update.
- * @application: New string; a copy is stored. Pass NULL to clear.
- */
-void libnvme_subsystem_set_application(
-		struct libnvme_subsystem *p,
-		const char *application);
-
-/**
- * libnvme_subsystem_get_application() - Get application.
- * @p: The &struct libnvme_subsystem instance to query.
- *
- * Return: The value of the application field, or NULL if not set.
- */
-const char *libnvme_subsystem_get_application(
-		const struct libnvme_subsystem *p);
-
 /****************************************************************************
  * Accessors for: struct libnvme_host
  ****************************************************************************/

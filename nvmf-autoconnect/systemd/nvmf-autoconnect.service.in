@@ -21,7 +21,7 @@ MemoryDenyWriteExecute=yes
 RemoveIPC=yes
 RestrictAddressFamilies=AF_INET AF_INET6
 Type=oneshot
-ExecStart=@SBINDIR@/nvme connect-all --context=autoconnect
+ExecStart=@SBINDIR@/nvme connect-all
 
 [Install]
 WantedBy=default.target
