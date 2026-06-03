@@ -32,6 +32,32 @@ static void nvme_init_env(void)
 		force_4k = true;
 }
 
+static int submit_get_log_cmd(struct libnvme_transport_handle *hdl,
+	struct libnvme_passthru_cmd *cmd)
+{
+	int err;
+
+	if (hdl->uring_state == LIBNVME_IO_URING_STATE_NOT_AVAILABLE)
+		goto no_uring;
+
+	err = libnvme_submit_admin_passthru_async(hdl, cmd, NULL);
+	if (err && err == -ENOTSUP)
+		goto no_uring;
+
+	return err;
+
+no_uring:
+	return libnvme_submit_admin_passthru(hdl, cmd);
+}
+
+static int wait_get_log_cmd(struct libnvme_transport_handle *hdl)
+{
+	if (hdl->uring_state == LIBNVME_IO_URING_STATE_NOT_AVAILABLE)
+		return 0;
+
+	return libnvme_wait_passthru(hdl);
+}
+
 __libnvme_public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, bool rae,
 		__u32 xfer_len)
@@ -85,7 +111,7 @@ __libnvme_public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 		cmd->data_len = xfer;
 		cmd->addr = (__u64)(uintptr_t)ptr;
 
-		ret = libnvme_submit_admin_passthru(hdl, cmd);
+		ret = submit_get_log_cmd(hdl, cmd);
 		if (ret)
 			return ret;
 
@@ -93,7 +119,7 @@ __libnvme_public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 		ptr += xfer;
 	} while (offset < data_len);
 
-	return libnvme_wait_admin_passthru(hdl);
+	return wait_get_log_cmd(hdl);
 }
 
 static int read_ana_chunk(struct libnvme_transport_handle *hdl,
