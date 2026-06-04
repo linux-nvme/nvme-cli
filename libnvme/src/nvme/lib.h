@@ -115,7 +115,8 @@ void libnvme_close(struct libnvme_transport_handle *hdl);
  * Return: File descriptor for an IOCTL based transport handle,
  * otherwise LIBNVME_INVALID_FD.
  */
-libnvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl);
+libnvme_fd_t libnvme_transport_handle_get_fd(
+		struct libnvme_transport_handle *hdl);
 
 /**
  * libnvme_transport_handle_get_mi_ep() - get the MI endpoint from a
@@ -128,7 +129,8 @@ libnvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hd
  *
  * Return: the MI endpoint, or NULL if the handle is not an MI handle.
  */
-struct libnvme_mi_ep *libnvme_transport_handle_get_mi_ep(struct libnvme_transport_handle *hdl);
+struct libnvme_mi_ep *libnvme_transport_handle_get_mi_ep(
+		struct libnvme_transport_handle *hdl);
 
 /**
  * libnvme_transport_handle_get_name - Return name of the device
