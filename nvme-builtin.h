@@ -117,11 +117,13 @@ COMMAND_LIST(
 #endif
 	ENTRY("gen-hostnqn", "Generate NVMeoF host NQN", gen_hostnqn_cmd)
 	ENTRY("show-hostnqn", "Show NVMeoF host NQN", show_hostnqn_cmd)
+#ifdef CONFIG_FABRICS
 	ENTRY("gen-dhchap-key", "Generate NVMeoF DH-HMAC-CHAP host key", gen_dhchap_key)
 	ENTRY("check-dhchap-key", "Validate NVMeoF DH-HMAC-CHAP host key", check_dhchap_key)
 	ENTRY("gen-tls-key", "Generate NVMeoF TLS PSK", gen_tls_key)
 	ENTRY("check-tls-key", "Validate NVMeoF TLS PSK", check_tls_key)
 	ENTRY("tls-key", "Manipulate NVMeoF TLS PSK", tls_key)
+#endif
 	ENTRY("dir-receive", "Submit a Directive Receive command, return results", dir_receive)
 	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
 	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller", virtual_mgmt)

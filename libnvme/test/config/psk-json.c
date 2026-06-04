@@ -22,20 +22,20 @@ static bool import_export_key(struct libnvme_global_ctx *ctx, libnvme_ctrl_t c)
 	size_t len;
 	int ret;
 
-	ret = libnvme_import_tls_key_versioned(ctx, libnvme_ctrl_get_tls_key(c),
+	ret = libnvmf_import_tls_key_versioned(ctx, libnvme_ctrl_get_tls_key(c),
 					    &version, &hmac, &len, &key);
 	if (ret) {
-		printf("ERROR: libnvme_import_tls_key_versioned failed with %d\n",
+		printf("ERROR: libnvmf_import_tls_key_versioned failed with %d\n",
 		       ret);
 		return false;
 
 	}
 
-	ret = libnvme_export_tls_key_versioned(ctx, version, hmac, key, len,
+	ret = libnvmf_export_tls_key_versioned(ctx, version, hmac, key, len,
 					    &encoded_key);
 	free(key);
 	if (ret) {
-		printf("ERROR: libnvme_export_tls_key_versioned failed with %d\n",
+		printf("ERROR: libnvmf_export_tls_key_versioned failed with %d\n",
 		       ret);
 		return false;
 	}

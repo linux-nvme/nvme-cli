@@ -327,12 +327,12 @@ __libnvme_public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		__cleanup_free char *encoded_key = NULL;
 		int key_len = 32;
 
-		err = libnvme_create_raw_secret(fctx->ctx, tls_key,
+		err = libnvmf_create_raw_secret(fctx->ctx, tls_key,
 			key_len, &raw_secret);
 		if (err)
 			return err;
 
-		err = libnvme_export_tls_key(fctx->ctx, raw_secret,
+		err = libnvmf_export_tls_key(fctx->ctx, raw_secret,
 			key_len, &encoded_key);
 		if (err)
 			return err;
@@ -804,7 +804,7 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 	}
 
 	if (c->cfg.tls) {
-		ret = __libnvme_import_keys_from_config(h, c,
+		ret = __libnvmf_import_keys_from_config(h, c,
 			&keyring_id, &key_id);
 		if (ret)
 			return ret;

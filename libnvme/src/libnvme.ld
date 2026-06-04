@@ -7,7 +7,6 @@ LIBNVME_3 {
 		libnvme_clear_etdas;
 		libnvme_close;
 		libnvme_create_global_ctx;
-		libnvme_create_raw_secret;
 		libnvme_ctrl_first_ns;
 		libnvme_ctrl_first_path;
 		libnvme_ctrl_get_command_error_count;
@@ -25,14 +24,11 @@ LIBNVME_3 {
 		libnvme_ctrl_next_path;
 		libnvme_ctrl_owner;
 		libnvme_ctrl_release_transport_handle;
-		libnvme_describe_key_serial;
 		libnvme_dump_config;
 		libnvme_dump_tree;
 		libnvme_errno_to_string;
 		libnvme_exec_admin_passthru;
 		libnvme_exec_io_passthru;
-		libnvme_export_tls_key;
-		libnvme_export_tls_key_versioned;
 		libnvme_filter_ctrls;
 		libnvme_filter_namespace;
 		libnvme_filter_paths;
@@ -47,12 +43,9 @@ LIBNVME_3 {
 		libnvme_free_huge;
 		libnvme_free_ns;
 		libnvme_free_subsystem;
-		libnvme_gen_dhchap_key;
 		libnvme_generate_hostid;
 		libnvme_generate_hostnqn;
 		libnvme_generate_hostnqn_from_hostid;
-		libnvme_generate_tls_key_identity;
-		libnvme_generate_tls_key_identity_compat;
 		libnvme_get_ana_log_atomic;
 		libnvme_get_ana_log_len;
 		libnvme_get_ana_log_len_from_id_ctrl;
@@ -82,14 +75,7 @@ LIBNVME_3 {
 		libnvme_host_is_pdc_enabled;
 		libnvme_host_release_fds;
 		libnvme_host_set_pdc_enabled;
-		libnvme_import_tls_key;
-		libnvme_import_tls_key_versioned;
 		libnvme_init_ctrl;
-		libnvme_insert_tls_key;
-		libnvme_insert_tls_key_compat;
-		libnvme_insert_tls_key_versioned;
-		libnvme_lookup_key;
-		libnvme_lookup_keyring;
 		libnvme_namespace_first_path;
 		libnvme_namespace_next_path;
 		libnvme_next_host;
@@ -151,7 +137,6 @@ LIBNVME_3 {
 		libnvme_read_config;
 		libnvme_read_hostid;
 		libnvme_read_hostnqn;
-		libnvme_read_key;
 		libnvme_realloc;
 		libnvme_reap_passthru;
 		libnvme_refresh_topology;
@@ -159,7 +144,6 @@ LIBNVME_3 {
 		libnvme_rescan_ns;
 		libnvme_reset_ctrl;
 		libnvme_reset_subsystem;
-		libnvme_revoke_tls_key;
 		libnvme_scan_ctrl;
 		libnvme_scan_ctrl_namespace_paths;
 		libnvme_scan_ctrl_namespaces;
@@ -168,12 +152,10 @@ LIBNVME_3 {
 		libnvme_scan_ns_head_paths;
 		libnvme_scan_subsystem_namespaces;
 		libnvme_scan_subsystems;
-		libnvme_scan_tls_keys;
 		libnvme_scan_topology;
 		libnvme_set_dry_run;
 		libnvme_set_etdas;
 		libnvme_set_ioctl_probing;
-		libnvme_set_keyring;
 		libnvme_set_logging_level;
 		libnvme_set_owner;
 		libnvme_skip_namespaces;
@@ -203,7 +185,6 @@ LIBNVME_3 {
 		libnvme_transport_handle_set_timeout;
 		libnvme_unlink_ctrl;
 		libnvme_update_block_size;
-		libnvme_update_key;
 		libnvme_uuid_from_string;
 		libnvme_uuid_to_string;
 		libnvme_wait_passthru;

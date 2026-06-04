@@ -522,7 +522,7 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 #define SECTOR_SIZE	512
 #define SECTOR_SHIFT	9
 
-int __libnvme_import_keys_from_config(struct libnvme_host *h,
+int __libnvmf_import_keys_from_config(struct libnvme_host *h,
 		struct libnvme_ctrl *c, long *keyring_id, long *key_id);
 
 static inline char *xstrdup(const char *s)
