@@ -1607,7 +1607,10 @@ power scale value
     __le16 crdt2;
     __le16 crdt3;
     __u8 crcap;
-    __u8 rsvd135[118];
+    __u8 ciu;
+    __u8 cirn[8];
+    __u8 rsvd144[96];
+    __u8 rsvd240[13];
     __u8 nvmsr;
     __u8 vwci;
     __u8 mec;
@@ -1810,8 +1813,17 @@ power scale value
   Controller Reachability Capabilities (CRCAP), see
   :c:type:`enum nvme_id_ctrl_crcap <nvme_id_ctrl_crcap>`
 
-``rsvd135``
+``ciu``
+  Controller Instance Uniquifier (CIU)
+
+``cirn``
+  Controller Instance Random Number (CIRN)
+
+``rsvd144``
   Reserved
+
+``rsvd240``
+  Reserved for the NVMe Management Interface specification
 
 ``nvmsr``
   NVM Subsystem Report, see :c:type:`enum nvme_id_ctrl_nvmsr <nvme_id_ctrl_nvmsr>`
