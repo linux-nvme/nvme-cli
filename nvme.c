@@ -9854,7 +9854,7 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 	return 0;
 }
 
-
+#ifdef CONFIG_FABRICS
 static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
@@ -9941,7 +9941,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		cfg.key_len = 32;
 	}
 
-	err = libnvme_create_raw_secret(ctx, cfg.secret, cfg.key_len, &raw_secret);
+	err = libnvmf_create_raw_secret(ctx, cfg.secret, cfg.key_len, &raw_secret);
 	if (err)
 		return err;
 
@@ -9953,7 +9953,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		}
 	}
 
-	err = libnvme_gen_dhchap_key(ctx, cfg.nqn, cfg.hmac,
+	err = libnvmf_gen_dhchap_key(ctx, cfg.nqn, cfg.hmac,
 		cfg.key_len, raw_secret, key);
 	if (err)
 		return err;
@@ -10072,14 +10072,14 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 	long kr_id;
 	char type;
 
-	err = libnvme_lookup_keyring(ctx, keyring, &kr_id);
+	err = libnvmf_lookup_keyring(ctx, keyring, &kr_id);
 	if (err) {
 		nvme_show_error("Failed to lookup keyring '%s', %s",
 				keyring, libnvme_strerror(-err));
 		return err;
 	}
 
-	identity = libnvme_describe_key_serial(ctx, id);
+	identity = libnvmf_describe_key_serial(ctx, id);
 	if (!identity) {
 		nvme_show_error("Failed to get identity info");
 		return -EINVAL;
@@ -10090,14 +10090,14 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 		return -EINVAL;
 	}
 
-	err = libnvme_read_key(ctx, kr_id, id, &key_len, &key_data);
+	err = libnvmf_read_key(ctx, kr_id, id, &key_len, &key_data);
 	if (err) {
 		nvme_show_error("Failed to read back derive TLS PSK, %s",
 			libnvme_strerror(-err));
 		return err;
 	}
 
-	err = libnvme_export_tls_key_versioned(ctx, ver, hmac, key_data,
+	err = libnvmf_export_tls_key_versioned(ctx, ver, hmac, key_data,
 					    key_len, &exported_key);
 	if (err) {
 		nvme_show_error("Failed to export key, %s",
@@ -10226,11 +10226,11 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 		return -ENOMEM;
 	}
 
-	err = libnvme_create_raw_secret(ctx, cfg.secret, key_len, &raw_secret);
+	err = libnvmf_create_raw_secret(ctx, cfg.secret, key_len, &raw_secret);
 	if (err)
 		return err;
 
-	err = libnvme_export_tls_key(ctx, raw_secret, key_len, &encoded_key);
+	err = libnvmf_export_tls_key(ctx, raw_secret, key_len, &encoded_key);
 	if (err) {
 		nvme_show_error("Failed to export key, %s", libnvme_strerror(-err));
 		return err;
@@ -10239,12 +10239,12 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 
 	if (cfg.insert) {
 		if (cfg.compat)
-			err = libnvme_insert_tls_key_compat(ctx, cfg.keyring,
+			err = libnvmf_insert_tls_key_compat(ctx, cfg.keyring,
 				cfg.keytype, cfg.hostnqn,
 				cfg.subsysnqn, cfg.version,
 				cfg.hmac, raw_secret, key_len, &tls_key);
 		else
-			err = libnvme_insert_tls_key_versioned(ctx, cfg.keyring,
+			err = libnvmf_insert_tls_key_versioned(ctx, cfg.keyring,
 				cfg.keytype, cfg.hostnqn,
 				cfg.subsysnqn, cfg.version,
 				cfg.hmac, raw_secret, key_len, &tls_key);
@@ -10340,7 +10340,7 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 		return -ENOMEM;
 	}
 
-	err = libnvme_import_tls_key(ctx, cfg.keydata, &decoded_len,
+	err = libnvmf_import_tls_key(ctx, cfg.keydata, &decoded_len,
 		&hmac, &decoded_key);
 	if (err) {
 		nvme_show_error("Key decoding failed, error %d\n");
@@ -10362,13 +10362,13 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.insert) {
 		if (cfg.compat)
-			err = libnvme_insert_tls_key_compat(ctx, cfg.keyring,
+			err = libnvmf_insert_tls_key_compat(ctx, cfg.keyring,
 				cfg.keytype, cfg.hostnqn,
 				cfg.subsysnqn, cfg.identity,
 				hmac, decoded_key, decoded_len,
 				&tls_key);
 		else
-			err = libnvme_insert_tls_key_versioned(ctx, cfg.keyring,
+			err = libnvmf_insert_tls_key_versioned(ctx, cfg.keyring,
 				cfg.keytype, cfg.hostnqn,
 				cfg.subsysnqn, cfg.identity,
 				hmac, decoded_key, decoded_len,
@@ -10389,12 +10389,12 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 		__cleanup_free char *tls_id = NULL;
 
 		if (cfg.compat)
-			err = libnvme_generate_tls_key_identity_compat(ctx,
+			err = libnvmf_generate_tls_key_identity_compat(ctx,
 				cfg.hostnqn, cfg.subsysnqn, cfg.identity,
 				hmac, decoded_key, decoded_len,
 				&tls_id);
 		else
-			err = libnvme_generate_tls_key_identity(ctx,
+			err = libnvmf_generate_tls_key_identity(ctx,
 				cfg.hostnqn, cfg.subsysnqn, cfg.identity,
 				hmac, decoded_key, decoded_len,
 				&tls_id);
@@ -10419,14 +10419,14 @@ static void __scan_tls_key(struct libnvme_global_ctx *ctx, long keyring_id,
 	char type;
 	int err;
 
-	err = libnvme_read_key(ctx, keyring_id, key_id, &key_len, &key_data);
+	err = libnvmf_read_key(ctx, keyring_id, key_id, &key_len, &key_data);
 	if (err)
 		return;
 
 	if (sscanf(desc, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3)
 		return;
 
-	err = libnvme_export_tls_key_versioned(ctx, ver, hmac, key_data, key_len,
+	err = libnvmf_export_tls_key_versioned(ctx, ver, hmac, key_data, key_len,
 		&encoded_key);
 	if (err)
 		return;
@@ -10444,7 +10444,7 @@ static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 	int linenum = -1, key_len;
 	int err;
 
-	err = libnvme_lookup_keyring(ctx, keyring, &keyring_id);
+	err = libnvmf_lookup_keyring(ctx, keyring, &keyring_id);
 	if (err) {
 		nvme_show_error("Invalid keyring '%s'", keyring);
 		return err;
@@ -10461,13 +10461,13 @@ static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 		*tls_key = '\0';
 		tls_key++;
 		tls_key[strcspn(tls_key, "\n")] = 0;
-		err = libnvme_import_tls_key(ctx, tls_key, &key_len, &hmac, &psk);
+		err = libnvmf_import_tls_key(ctx, tls_key, &key_len, &hmac, &psk);
 		if (err) {
 			nvme_show_error("Failed to import key in line %d",
 					linenum);
 			continue;
 		}
-		err = libnvme_update_key(ctx, keyring_id, "psk", tls_str,
+		err = libnvmf_update_key(ctx, keyring_id, "psk", tls_str,
 				psk, key_len, &key);
 		if (err)
 			continue;
@@ -10561,7 +10561,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		nvme_show_error("Must specify either --import, --export or --revoke");
 		return -EINVAL;
 	} else if (cfg.export) {
-		err = libnvme_scan_tls_keys(ctx, cfg.keyring, __scan_tls_key, fd);
+		err = libnvmf_scan_tls_keys(ctx, cfg.keyring, __scan_tls_key, fd);
 		if (err < 0) {
 			nvme_show_error("Export of TLS keys failed with '%s'",
 				libnvme_strerror(-err));
@@ -10583,7 +10583,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		if (nvme_args.verbose)
 			printf("importing from %s\n", cfg.keyfile);
 	} else {
-		err = libnvme_revoke_tls_key(ctx, cfg.keyring, cfg.keytype,
+		err = libnvmf_revoke_tls_key(ctx, cfg.keyring, cfg.keytype,
 			cfg.revoke);
 		if (err) {
 			nvme_show_error("Failed to revoke key '%s'",
@@ -10602,6 +10602,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	return err;
 }
+#endif /* CONFIG_FABRICS */
 
 static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {

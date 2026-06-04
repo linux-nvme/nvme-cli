@@ -183,6 +183,18 @@ if want_fabrics
     )
 
     test('libnvme - fabrics', test_fabrics)
+
+    psk = executable(
+        'test-psk',
+        ['psk.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+
+    test('libnvme - psk', psk)
 endif
 
 if conf.get('NVME_HAVE_NETDB')
@@ -222,18 +234,6 @@ if conf.get('NVME_HAVE_NETDB')
     )
     test('libnvme - util', test_util)
 endif
-
-psk = executable(
-    'test-psk',
-    ['psk.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-)
-
-test('libnvme - psk', psk)
 
 subdir('ioctl')
 if want_fabrics
