@@ -58,7 +58,13 @@ struct nvme_id_ctrl {
 .br
 .BI "    __u8 crcap;"
 .br
-.BI "    __u8 rsvd135[118];"
+.BI "    __u8 ciu;"
+.br
+.BI "    __u8 cirn[8];"
+.br
+.BI "    __u8 rsvd144[96];"
+.br
+.BI "    __u8 rsvd240[13];"
 .br
 .BI "    __u8 nvmsr;"
 .br
@@ -333,8 +339,14 @@ field is 3
 .IP "crcap" 12
 Controller Reachability Capabilities (CRCAP), see
 \fIenum nvme_id_ctrl_crcap\fP
-.IP "rsvd135" 12
+.IP "ciu" 12
+Controller Instance Uniquifier (CIU)
+.IP "cirn" 12
+Controller Instance Random Number (CIRN)
+.IP "rsvd144" 12
 Reserved
+.IP "rsvd240" 12
+Reserved for the NVMe Management Interface specification
 .IP "nvmsr" 12
 NVM Subsystem Report, see \fIenum nvme_id_ctrl_nvmsr\fP
 .IP "vwci" 12
