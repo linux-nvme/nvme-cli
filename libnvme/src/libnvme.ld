@@ -27,6 +27,8 @@ LIBNVME_3 {
 		libnvme_dump_config;
 		libnvme_dump_tree;
 		libnvme_errno_to_string;
+		libnvme_exec_admin_passthru;
+		libnvme_exec_io_passthru;
 		libnvme_export_tls_key;
 		libnvme_export_tls_key_versioned;
 		libnvme_filter_ctrls;
@@ -149,6 +151,7 @@ LIBNVME_3 {
 		libnvme_read_hostnqn;
 		libnvme_read_key;
 		libnvme_realloc;
+		libnvme_reap_passthru_async;
 		libnvme_refresh_topology;
 		libnvme_rescan_ctrl;
 		libnvme_rescan_ns;
@@ -176,7 +179,9 @@ LIBNVME_3 {
 		libnvme_status_to_string;
 		libnvme_strerror;
 		libnvme_submit_admin_passthru;
+		libnvme_submit_admin_passthru_async;
 		libnvme_submit_io_passthru;
+		libnvme_submit_io_passthru_async;
 		libnvme_subsystem_first_ctrl;
 		libnvme_subsystem_first_ns;
 		libnvme_subsystem_get_host;
@@ -201,8 +206,7 @@ LIBNVME_3 {
 		libnvme_update_key;
 		libnvme_uuid_from_string;
 		libnvme_uuid_to_string;
-		libnvme_wait_admin_passthru;
-		libnvme_wait_io_passthru;
+		libnvme_wait_passthru;
 	local:
 		*;
 };
