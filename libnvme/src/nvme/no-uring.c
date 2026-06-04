@@ -29,7 +29,7 @@ int __libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl)
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvme_submit_admin_passthru_async(
+__libnvme_public int libnvme_submit_admin_passthru(
 		__libnvme_unused struct libnvme_transport_handle *hdl,
 		__libnvme_unused struct libnvme_passthru_cmd *cmd,
 		__libnvme_unused void *cookie)
@@ -43,7 +43,7 @@ __libnvme_public int libnvme_submit_admin_passthru_async(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvme_submit_io_passthru_async(
+__libnvme_public int libnvme_submit_io_passthru(
 		__libnvme_unused struct libnvme_transport_handle *hdl,
 		__libnvme_unused struct libnvme_passthru_cmd *cmd,
 		__libnvme_unused void *cookie)
@@ -57,7 +57,7 @@ __libnvme_public int libnvme_submit_io_passthru_async(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvme_reap_passthru_async(
+__libnvme_public int libnvme_reap_passthru(
 		__libnvme_unused struct libnvme_transport_handle *hdl,
 		__libnvme_unused struct libnvme_passthru_completion *completion)
 {

@@ -216,7 +216,7 @@ int do_identify(libnvme_mi_ep_t ep, int argc, char **argv)
 	if (partial)
 		cmd.data_len = offsetof(struct nvme_id_ctrl, rab);
 
-	rc = libnvme_submit_admin_passthru(hdl, &cmd);
+	rc = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (rc) {
 		warn("can't perform Admin Identify command");
 		return -1;
@@ -566,7 +566,7 @@ int do_security_info(libnvme_mi_ep_t ep, int argc, char **argv)
 	}
 
 	nvme_init_security_receive(&cmd, 0, 0, 0, 0, 0, data, data_len);
-	rc = libnvme_submit_admin_passthru(hdl, &cmd);
+	rc = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (rc) {
 		warnx("can't perform Security Receive command: rc %d", rc);
 		return -1;
