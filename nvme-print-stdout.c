@@ -1635,12 +1635,7 @@ static void stdout_ctrl_register_human(int offset, uint64_t value, bool support)
 {
 	switch (offset) {
 	case NVME_REG_CAP: {
-		union {
-			uint64_t raw;
-			struct nvme_bar_cap cap;
-		} u = {};
-		u.raw = value;
-		stdout_registers_cap(&u.cap);
+		stdout_registers_cap((struct nvme_bar_cap *)&value);
 		break;
 	}
 	case NVME_REG_VS:
