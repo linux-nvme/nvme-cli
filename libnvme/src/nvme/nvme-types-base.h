@@ -1298,7 +1298,10 @@ struct nvme_id_psd {
  *	       field is 3
  * @crcap:     Controller Reachability Capabilities (CRCAP), see
  *	       &enum nvme_id_ctrl_crcap
- * @rsvd135:   Reserved
+ * @ciu:       Controller Instance Uniquifier (CIU)
+ * @cirn:      Controller Instance Random Number (CIRN)
+ * @rsvd144:   Reserved
+ * @rsvd240:   Reserved for the NVMe Management Interface specification
  * @nvmsr:     NVM Subsystem Report, see &enum nvme_id_ctrl_nvmsr
  * @vwci:      VPD Write Cycle Information, see &enum nvme_id_ctrl_vwci
  * @mec:       Management Endpoint Capabilities, see &enum nvme_id_ctrl_mec
@@ -1573,7 +1576,10 @@ struct nvme_id_ctrl {
 	__le16			crdt2;
 	__le16			crdt3;
 	__u8			crcap;
-	__u8			rsvd135[118];
+	__u8			ciu;
+	__u8			cirn[8];
+	__u8			rsvd144[96];
+	__u8			rsvd240[13];
 	__u8			nvmsr;
 	__u8			vwci;
 	__u8			mec;
