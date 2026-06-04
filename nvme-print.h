@@ -152,7 +152,7 @@ struct nvme_bar_cap {
 	__u16	nssrs:1;
 	__u16	css:8;
 	__u16	bps:1;
-	__u8	cps:2;
+	__u16	cps:2;
 	__u8	mpsmin:4;
 	__u8	mpsmax:4;
 	__u8	pmrs:1;
