@@ -153,7 +153,7 @@ LIBNVME_3 {
 		libnvme_read_hostnqn;
 		libnvme_read_key;
 		libnvme_realloc;
-		libnvme_reap_passthru_async;
+		libnvme_reap_passthru;
 		libnvme_refresh_topology;
 		libnvme_rescan_ctrl;
 		libnvme_rescan_ns;
@@ -181,9 +181,7 @@ LIBNVME_3 {
 		libnvme_status_to_string;
 		libnvme_strerror;
 		libnvme_submit_admin_passthru;
-		libnvme_submit_admin_passthru_async;
 		libnvme_submit_io_passthru;
-		libnvme_submit_io_passthru_async;
 		libnvme_subsystem_first_ctrl;
 		libnvme_subsystem_first_ns;
 		libnvme_subsystem_get_host;

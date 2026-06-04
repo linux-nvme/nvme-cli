@@ -5,6 +5,7 @@
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
  *	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+ *	    Daniel Wagner <dwagner@suse.de>
  */
 
 #pragma once
@@ -27,22 +28,9 @@
 #define NVME_LOG_PAGE_PDU_SIZE 4096
 
 /**
- * libnvme_submit_admin_passthru() - Submit an nvme passthrough admin command
- * @hdl:	Transport handle
- * @cmd:	The nvme admin command to send
- *
- * Uses LIBNVME_IOCTL_ADMIN_CMD for the ioctl request.
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field), or negative error code otherwise.
- */
-int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd);
-
-/**
  * struct libnvme_passthru_completion - Async passthru completion record
  * @cmd:	Command that completed
- * @cookie:	User cookie provided to libnvme_submit_*_passthru_async()
+ * @cookie:	User cookie provided to libnvme_submit_*_passthru()
  * @status:	Completion status (NVMe status or negative errno)
  *
  * Used for both admin and IO passthru command completions.
@@ -54,17 +42,17 @@ struct libnvme_passthru_completion {
 };
 
 /**
- * libnvme_submit_admin_passthru_async() - Queue admin passthru command
+ * libnvme_submit_admin_passthru() - Queue admin passthru command
  * @hdl:	Transport handle
  * @cmd:	The nvme admin command to send
  * @cookie:	User-defined opaque value returned at completion
  *
  * Queues @cmd for asynchronous execution. Completion is reported via
- * libnvme_reap_admin_passthru_async().
+ * libnvme_reap_passthru().
  *
  * Return: 0 on successful queueing, negative error code otherwise.
  */
-int libnvme_submit_admin_passthru_async(struct libnvme_transport_handle *hdl,
+int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, void *cookie);
 
 /**
@@ -81,30 +69,17 @@ int libnvme_exec_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
 
 /**
- * libnvme_submit_io_passthru() - Submit an nvme passthrough command
- * @hdl:	Transport handle
- * @cmd:	The nvme io command to send
- *
- * Uses LIBNVME_IOCTL_IO_CMD for the ioctl request.
- *
- * Return: The nvme command status if a response was received (see
- * &enum nvme_status_field), or negative error code otherwise.
- */
-int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd);
-
-/**
- * libnvme_submit_io_passthru_async() - Queue IO passthru command
+ * libnvme_submit_io_passthru() - Queue IO passthru command
  * @hdl:	Transport handle
  * @cmd:	The nvme IO command to send
  * @cookie:	User-defined opaque value returned at completion
  *
  * Queues @cmd for asynchronous execution. Completion is reported via
- * libnvme_reap_io_passthru_async().
+ * libnvme_reap_passthru().
  *
  * Return: 0 on successful queueing, negative error code otherwise.
  */
-int libnvme_submit_io_passthru_async(struct libnvme_transport_handle *hdl,
+int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, void *cookie);
 
 /**
@@ -123,7 +98,7 @@ int libnvme_exec_io_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
 
 /**
- * libnvme_reap_passthru_async() - Reap one async completion
+ * libnvme_reap_passthru() - Reap one async completion
  * @hdl:	Transport handle
  * @completion: Completion output structure
  *
@@ -133,7 +108,7 @@ int libnvme_exec_io_passthru(struct libnvme_transport_handle *hdl,
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvme_reap_passthru_async(struct libnvme_transport_handle *hdl,
+int libnvme_reap_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_completion *completion);
 
 /**

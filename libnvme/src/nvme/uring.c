@@ -115,7 +115,7 @@ void libnvme_close_uring(struct libnvme_transport_handle *hdl)
 
 	/* Drain any pending completions */
 	while (hdl->uring_pending) {
-		if (libnvme_reap_passthru_async(hdl, &completion))
+		if (libnvme_reap_passthru(hdl, &completion))
 			break;
 	}
 
@@ -154,7 +154,7 @@ no_uring:
 	return err;
 }
 
-static int libnvme_submit_passthru_async(
+static int libnvme_submit_passthru(
 		struct libnvme_transport_handle *hdl,
 		unsigned long ioctl_cmd,
 		struct libnvme_passthru_cmd *cmd, void *cookie)
@@ -212,23 +212,23 @@ static int libnvme_submit_passthru_async(
 	return 0;
 }
 
-__libnvme_public int libnvme_submit_admin_passthru_async(
+__libnvme_public int libnvme_submit_admin_passthru(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, void *cookie)
 {
-	return libnvme_submit_passthru_async(hdl, LIBNVME_URING_CMD_ADMIN,
+	return libnvme_submit_passthru(hdl, LIBNVME_URING_CMD_ADMIN,
 		cmd, cookie);
 }
 
-__libnvme_public int libnvme_submit_io_passthru_async(
+__libnvme_public int libnvme_submit_io_passthru(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, void *cookie)
 {
-	return libnvme_submit_passthru_async(hdl, LIBNVME_URING_CMD_IO,
+	return libnvme_submit_passthru(hdl, LIBNVME_URING_CMD_IO,
 		cmd, cookie);
 }
 
-__libnvme_public int libnvme_reap_passthru_async(
+__libnvme_public int libnvme_reap_passthru(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_completion *completion)
 {
@@ -298,7 +298,7 @@ __libnvme_public int libnvme_wait_passthru(
 		return -ENOTSUP;
 
 	while (hdl->uring_pending) {
-		err = libnvme_reap_passthru_async(hdl, &completion);
+		err = libnvme_reap_passthru(hdl, &completion);
 		if (err)
 			return err;
 		if (!ret && completion.status)
