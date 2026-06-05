@@ -1757,7 +1757,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int err, dump_fd;
-	int flags = O_WRONLY | O_CREAT;
+	int flags = O_NVME_WRONLY | O_CREAT;
 	int mode = 0664;
 	struct nvme_temetry_log_hdr tele_log;
 	__le64  offset = 0;

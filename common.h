@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
+#include <fcntl.h>
 #include <string.h>
 #include <stdbool.h>
 
@@ -21,6 +22,13 @@
 #else /* __packed */
 #define __packed __attribute__((__packed__))
 #endif /* __packed */
+
+#ifdef O_BINARY
+/* O_BINARY is required on Windows to avoid line ending translations. */
+#define O_NVME_WRONLY (O_WRONLY | O_BINARY)
+#else
+#define O_NVME_WRONLY O_WRONLY
+#endif
 
 /*
  * Some common functionality is implemented or named differently on Windows.
