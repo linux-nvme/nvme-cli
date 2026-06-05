@@ -33,13 +33,21 @@ bool is_printable_at_level(int level)
 
 int map_log_level(int verbose, bool quiet)
 {
-	if (verbose == 0 || quiet)
+	if (quiet)
 		return LIBNVME_LOG_ERR;
 
-	if (verbose == 1)
+	switch (verbose) {
+	case 0:
+		return LIBNVME_LOG_ERR;
+	case 1:
 		return LIBNVME_LOG_INFO;
+	case 2:
+		return LIBNVME_LOG_DEBUG;
+	default:
+		break;
+	}
 
-	return LIBNVME_LOG_DEBUG;
+	return LIBNVME_LOG_DEBUG_VERBOSE;
 }
 
 static void nvme_show_common(struct libnvme_passthru_cmd *cmd)

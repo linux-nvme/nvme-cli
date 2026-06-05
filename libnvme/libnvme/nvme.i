@@ -879,10 +879,11 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 	%feature("autodoc", "Set the libnvme logging verbosity.\n"
 		"\n"
 		"Args:\n"
-		"    level: One of 'debug', 'info', 'warning', or 'err'.") log_level;
+		"    level: One of 'debug-verbose', 'debug', 'info', 'warning', or 'err'.") log_level;
 	void log_level(const char *level) {
 		int log_level = LIBNVME_DEFAULT_LOGLEVEL;
-		if (!strcmp(level, "debug")) log_level = LIBNVME_LOG_DEBUG;
+		if (!strcmp(level, "debug-verbose")) log_level = LIBNVME_LOG_DEBUG_VERBOSE;
+		else if (!strcmp(level, "debug")) log_level = LIBNVME_LOG_DEBUG;
 		else if (!strcmp(level, "info")) log_level = LIBNVME_LOG_INFO;
 		else if (!strcmp(level, "warning")) log_level = LIBNVME_LOG_WARN;
 		else if (!strcmp(level, "err")) log_level = LIBNVME_LOG_ERR;
