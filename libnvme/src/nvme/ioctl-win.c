@@ -1288,6 +1288,12 @@ static int submit_admin_fw_download(struct libnvme_transport_handle *hdl,
 	firmware_download->BufferSize = (DWORDLONG)(cmd->cdw10 + 1) << 2;
 	firmware_download->Offset = (DWORDLONG)cmd->cdw11 << 2;
 
+	/*
+	 * Assuming we need the CONTROLLER flag.
+	 * TODO: Do we need to use the LAST_SEGMENT flag?
+	 * If so, we will need a way to communicate in the cmd struct
+	 * whether this is the last segment.
+	 */
 	firmware_download->Flags = STORAGE_HW_FIRMWARE_REQUEST_FLAG_CONTROLLER;
 
 	if (cmd->addr && cmd->data_len > 0) {
@@ -1481,6 +1487,12 @@ static int submit_admin_format_nvm(struct libnvme_transport_handle *hdl,
 	/* For WinPE, use storage protocol command. */
 	if (get_is_win_pe())
 		return submit_storage_protocol_command(hdl, cmd);
+
+	if (libnvme_transport_handle_is_ctrl(hdl)) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "Windows only supports "
+			"format on namespace devices (e.g. nvme0n1)\n");
+		return -ENOTSUP;
+	}
 
 	/*
 	 * Extract the Secure Erase Settings (SES) from CDW10 and call the
