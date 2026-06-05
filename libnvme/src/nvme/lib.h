@@ -14,10 +14,11 @@
 #include <nvme/lib-types.h>
 
 enum libnvme_log_level {
-	LIBNVME_LOG_ERR	  = 0,
-	LIBNVME_LOG_WARN  = 1,
-	LIBNVME_LOG_INFO  = 2,
-	LIBNVME_LOG_DEBUG = 3,
+	LIBNVME_LOG_ERR     = 0,
+	LIBNVME_LOG_WARN    = 1,
+	LIBNVME_LOG_INFO    = 2,
+	LIBNVME_LOG_DEBUG   = 3,
+	LIBNVME_LOG_VERBOSE = 4,
 };
 
 #define LIBNVME_DEFAULT_LOGLEVEL LIBNVME_LOG_WARN
