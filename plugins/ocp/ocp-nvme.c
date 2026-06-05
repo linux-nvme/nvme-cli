@@ -829,7 +829,7 @@ static int extract_dump_get_log(struct libnvme_transport_handle *hdl, char *feat
 
 		if (i != total_loop_cnt - 1) {
 			if (!i) {
-				output = open(filepath, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+				output = nvme_open_rawdata(filepath, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 				if (output < 0) {
 					err = -13;
 					goto end;
@@ -1187,7 +1187,7 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 	}
 	memset(hdr, 0, bs);
 
-	fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	fd = nvme_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (fd < 0) {
 		fprintf(stderr, "Failed to open output file %s: %s!\n",
 				output_file, libnvme_strerror(errno));
@@ -1333,7 +1333,7 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 	}
 
 	if (save_bin) {
-		fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		fd = nvme_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd < 0) {
 			fprintf(stderr, "Failed to open output file %s: %s!\n", output_file,
 				libnvme_strerror(errno));
