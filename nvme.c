@@ -942,7 +942,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = nvme_open_rawdata(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!",
 				cfg.file_name, libnvme_strerror(errno));
@@ -1919,7 +1919,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 		return -1;
 	}
 
-	output = open(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = nvme_open_rawdata(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!",
 				cfg.file_name, libnvme_strerror(errno));
@@ -2292,7 +2292,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 	       cfg.nsid);
 
 	if (cfg.file) {
-		dfd = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		dfd = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.file);
 			return -errno;
@@ -8845,7 +8845,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	}
 
 	if (strlen(cfg.data)) {
-		dfd = open(cfg.data, flags, mode);
+		dfd = nvme_open_rawdata(cfg.data, flags, mode);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.data);
 			return -EINVAL;
@@ -8853,7 +8853,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	}
 
 	if (strlen(cfg.metadata)) {
-		mfd = open(cfg.metadata, flags, mode);
+		mfd = nvme_open_rawdata(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			nvme_show_perror(cfg.metadata);
 			return -EINVAL;
@@ -9724,7 +9724,7 @@ static int passthru(int argc, char **argv, bool admin,
 	}
 
 	if (strlen(cfg.input_file)) {
-		dfd = open(cfg.input_file, flags, mode);
+		dfd = nvme_open_rawdata(cfg.input_file, flags, mode);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.input_file);
 			return -EINVAL;
@@ -9732,7 +9732,7 @@ static int passthru(int argc, char **argv, bool admin,
 	}
 
 	if (cfg.metadata && strlen(cfg.metadata)) {
-		mfd = open(cfg.metadata, flags, mode);
+		mfd = nvme_open_rawdata(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			nvme_show_perror(cfg.metadata);
 			return -EINVAL;
@@ -10844,7 +10844,7 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 	}
 
 	if (strlen(cfg.input_file)) {
-		fd = open(cfg.input_file, flags, mode);
+		fd = nvme_open_rawdata(cfg.input_file, flags, mode);
 		if (fd < 0) {
 			nvme_show_perror(cfg.input_file);
 			return -EINVAL;

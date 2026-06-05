@@ -107,7 +107,7 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 		return -EINVAL;
 	}
 
-	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
 				__func__, file, libnvme_strerror(errno));
@@ -309,7 +309,7 @@ static int sndk_do_cap_udui(struct libnvme_transport_handle *hdl, char *file,
 
 	log = (struct nvme_telemetry_log *)realloc(log, chunk_size);
 
-	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "%s: Failed to open output file %s: %s!\n", __func__, file,
 			libnvme_strerror(errno));
@@ -458,7 +458,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		int verify_file;
 
 		/* verify file name and path is valid before getting dump data */
-		verify_file = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		verify_file = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (verify_file < 0) {
 			fprintf(stderr, "ERROR: SNDK: open: %s\n", libnvme_strerror(errno));
 			goto out;

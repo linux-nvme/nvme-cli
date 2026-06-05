@@ -1785,7 +1785,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 
 	dump_fd = STDOUT_FILENO;
 	if (strlen(cfg.file)) {
-		dump_fd = open(cfg.file, flags, mode);
+		dump_fd = nvme_open_rawdata(cfg.file, flags, mode);
 		if (dump_fd < 0) {
 			perror(cfg.file);
 			return -EINVAL;

@@ -256,7 +256,7 @@ static int ilog_dump_assert_logs(struct libnvme_transport_handle *hdl, struct il
 		 (int) (sizeof(file_path) - sizeof(file_name) - 1),
 		 ilog->cfg->out_dir, file_name) < 0)
 		return -errno;
-	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
+	output = nvme_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
 	err = write_header((__u8 *)ad, output, ad->header.header_size * DWORD_SIZE);
@@ -311,7 +311,7 @@ static int ilog_dump_event_logs(struct libnvme_transport_handle *hdl, struct ilo
 		return err;
 	if (asprintf(&file_path, "%s/EventLog.bin", ilog->cfg->out_dir))
 		return -errno;
-	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
+	output = nvme_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
 	err = write_header(head_buf, output, INTERNAL_LOG_MAX_BYTE_TRANSFER);
@@ -407,7 +407,7 @@ static int ilog_dump_nlogs(struct libnvme_transport_handle *hdl, struct ilog *il
 			core_num = core < 0 ? nlog_header->corecount : 0;
 			if (!header_size) {
 				if (asprintf(&file_path, "%s/NLog.bin", ilog->cfg->out_dir) >= 0) {
-					output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC,
+					output = nvme_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC,
 							LOG_FILE_PERMISSION);
 					if (output < 0)
 						return -errno;
@@ -474,7 +474,7 @@ static int log_save(struct log *log, const char *parent_dir_name, const char *su
 	if (asprintf(&file_path, "%s/%s/%s", parent_dir_name, subdir_name, file_name) < 0)
 		return -errno;
 
-	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
+	output = nvme_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
 
