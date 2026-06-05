@@ -11662,6 +11662,15 @@ int main(int argc, char **argv)
 {
 	int err;
 
+#ifdef _WIN32
+	/*
+	 * Set stdout and stderr to binary mode to prevent Windows text-mode
+	 * translation from converting LF to CRLF and corrupting binary output.
+	 */
+	_setmode(_fileno(stdout), O_BINARY);
+	_setmode(_fileno(stderr), O_BINARY);
+#endif
+
 	nvme.extensions->parent = &nvme;
 	if (argc < 2) {
 		general_help(&builtin, NULL);
