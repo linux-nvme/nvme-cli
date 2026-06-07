@@ -30,19 +30,20 @@
 
 PLUGIN(NAME("feat", "NVMe feature extensions", FEAT_PLUGIN_VERSION),
 	COMMAND_LIST(
-		ENTRY("power-mgmt", POWER_MGMT_DESC, feat_power_mgmt)
-		ENTRY("perf-characteristics", PERFC_DESC, feat_perfc)
-		ENTRY("hctm", HCTM_DESC, feat_hctm)
-		ENTRY("timestamp", TIMESTAMP_DESC, feat_timestamp)
-		ENTRY("temp-thresh", TEMP_THRESH_DESC, feat_temp_thresh)
 		ENTRY("arbitration", ARBITRATION_DESC, feat_arbitration)
+		ENTRY("power-mgmt", POWER_MGMT_DESC, feat_power_mgmt)
+		ENTRY("temp-thresh", TEMP_THRESH_DESC, feat_temp_thresh)
 		ENTRY("volatile-wc", VOLATILE_WC_DESC, feat_volatile_wc)
+		ENTRY("num-queues", NUM_QUEUES_DESC, feat_num_queues)
+		ENTRY("timestamp", TIMESTAMP_DESC, feat_timestamp)
+		ENTRY("hctm", HCTM_DESC, feat_hctm)
+		ENTRY("host-behavior-support", HOST_BEHAVIOR_DESC,
+		      feat_host_behavior_support)
+		ENTRY("perf-characteristics", PERFC_DESC, feat_perfc)
 		ENTRY("power-limit", POWER_LIMIT_DESC, feat_power_limit)
 		ENTRY("power-thresh", POWER_THRESH_DESC, feat_power_thresh)
 		ENTRY("power-meas", POWER_MEAS_DESC, feat_power_meas)
 		ENTRY("err-recovery", ERR_RECOVERY_DESC, feat_err_recovery)
-		ENTRY("num-queues", NUM_QUEUES_DESC, feat_num_queues)
-		ENTRY("host-behavior-support", HOST_BEHAVIOR_DESC, feat_host_behavior_support)
 	)
 );
 #endif /* !FEAT_NVME || CMD_HEADER_MULTI_READ */
