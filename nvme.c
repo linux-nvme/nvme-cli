@@ -3597,6 +3597,7 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 	return 0;
 }
 
+#ifdef CONFIG_TOP
 static int top(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
@@ -3641,6 +3642,7 @@ static int top(int argc, char **argv, struct command *acmd,
 
 	return err;
 }
+#endif
 
 static int list(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
