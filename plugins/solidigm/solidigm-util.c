@@ -57,6 +57,7 @@ int sldgm_dynamic_telemetry(struct libnvme_transport_handle *hdl, bool create,
 					     log_buffer, log_buffer_size);
 		max_data_tx /= 2;
 		create = false;
-	} while (err == -EPERM && max_data_tx >= NVME_LOG_PAGE_PDU_SIZE);
+	} while ((err == -EPERM || err == -EINVAL) &&
+		 max_data_tx >= NVME_LOG_PAGE_PDU_SIZE);
 	return err;
 }
