@@ -7708,9 +7708,9 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free struct nvme_dsm_range *dsm = NULL;
 	struct libnvme_passthru_cmd cmd;
-	__u32 ctx_attrs[256] = {0,};
-	__u32 nlbs[256] = {0,};
-	__u64 slbas[256] = {0,};
+	__u32 ctx_attrs[NVME_DSM_MAX_RANGES] = {0,};
+	__u32 nlbs[NVME_DSM_MAX_RANGES] = {0,};
+	__u64 slbas[NVME_DSM_MAX_RANGES] = {0,};
 	nvme_print_flags_t flags;
 	uint16_t nc, nb, ns;
 	int err;
@@ -7769,7 +7769,7 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 		nvme_show_error("No valid range definition provided");
 		return -EINVAL;
 	}
-	if (!nb || nb > 256) {
+	if (!nb || nb > NVME_DSM_MAX_RANGES) {
 		nvme_show_error("No range definition provided");
 		return -EINVAL;
 	}
