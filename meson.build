@@ -150,8 +150,8 @@ if host_system == 'windows'
     ws2_32_dep = cc.find_library('ws2_32', required: true)
     kernel32_dep = cc.find_library('kernel32', required: true)
     bcrypt_dep = cc.find_library('bcrypt', required: true)
-    setupapi_dep = cc.find_library('setupapi')  # For SetupDi* device enumeration APIs
-    cfgmgr32_dep = cc.find_library('cfgmgr32')  # For CM_Get_DevNode_Property* APIs
+    setupapi_dep = cc.find_library('setupapi', required: true)
+    cfgmgr32_dep = cc.find_library('cfgmgr32', required: true)
 endif
 
 conf.set10(

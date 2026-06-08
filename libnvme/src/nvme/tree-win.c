@@ -155,35 +155,46 @@ __libnvme_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 	return c->state;
 }
 
-__libnvme_public int libnvme_init_ctrl(libnvme_host_t h, libnvme_ctrl_t c, int instance)
+__libnvme_public int libnvme_init_ctrl(__libnvme_unused libnvme_host_t h,
+				       __libnvme_unused libnvme_ctrl_t c,
+				       __libnvme_unused int instance)
 {
-	(void)h;
-	(void)c;
-	(void)instance;
 	return -ENOTSUP;
 }
 
-int libnvme_get_ctrl_transport(const char *path, const char *name,
-		char **transport, char **traddr, char **addr)
+int libnvme_get_ctrl_transport(__libnvme_unused const char *path,
+			       const char *name, char **transport,
+			       char **traddr, char **addr)
 {
 	const struct ctrl_map_entry *ctrl_entry;
 	int ret;
+
+	*transport = NULL;
+	*traddr = NULL;
+	*addr = NULL;
+
+	ctrl_entry = libnvme_ctrl_map_lookup(name);
+	if (!ctrl_entry)
+		return -ENODEV;
 
 	*transport = strdup("pcie");
 	if (!*transport)
 		return -ENOMEM;
 
-	ctrl_entry = libnvme_ctrl_map_lookup(name);
-
 	ret = libnvme_ctrl_map_entry_get_pci_address(ctrl_entry, addr);
 	if (ret || !*addr) {
-		free(*transport);
-		*transport = NULL;
-		return -ENXIO;
+		ret = -ENXIO;
+		goto free_transport;
 	}
 
 	*traddr = *addr;
 	return 0;
+free_transport:
+	free(*transport);
+	*transport = NULL;
+	free(*addr);
+	*addr = NULL;
+	return ret;
 }
 
 static libnvme_subsystem_t libnvme_lookup_subsystem_windows(libnvme_host_t h,
@@ -220,11 +231,9 @@ static libnvme_subsystem_t libnvme_lookup_subsystem_windows(libnvme_host_t h,
 	return s;
 }
 
-__libnvme_public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const char *name,
-			       libnvme_ctrl_t *cp)
+__libnvme_public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx,
+				       const char *name, libnvme_ctrl_t *cp)
 {
-	__cleanup_free char *subsysnqn = NULL, *subsysname = NULL;
-	__cleanup_free char *hostnqn = NULL, *hostid = NULL;
 	__cleanup_free char *path = NULL;
 	const struct ctrl_map_entry *ctrl_entry;
 	libnvme_host_t h;
@@ -240,7 +249,7 @@ __libnvme_public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const cha
 	if (ret)
 		return ret;
 
-	ret = libnvme_get_host(ctx, hostnqn, hostid, &h);
+	ret = libnvme_get_host(ctx, NULL, NULL, &h);
 	if (ret)
 		return ret;
 
@@ -268,38 +277,38 @@ __libnvme_public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx, const cha
 	return 0;
 }
 
-__libnvme_public char *libnvme_get_subsys_attr(libnvme_subsystem_t s, const char *attr)
+__libnvme_public char *libnvme_get_subsys_attr(
+	__libnvme_unused libnvme_subsystem_t s,
+	__libnvme_unused const char *attr)
 {
-	(void)s;
-	(void)attr;
 	return NULL;
 }
 
-__libnvme_public char *libnvme_get_path_attr(libnvme_path_t p, const char *attr)
+__libnvme_public char *libnvme_get_path_attr(
+	__libnvme_unused libnvme_path_t p,
+	__libnvme_unused const char *attr)
 {
-	(void)p;
-	(void)attr;
 	return NULL;
 }
 
-__libnvme_public char *libnvme_get_attr(const char *dir, const char *attr)
+__libnvme_public char *libnvme_get_attr(
+	__libnvme_unused const char *dir,
+	__libnvme_unused const char *attr)
 {
-	(void)dir;
-	(void)attr;
 	return NULL;
 }
 
-__libnvme_public char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr)
+__libnvme_public char *libnvme_get_ctrl_attr(
+	__libnvme_unused libnvme_ctrl_t c,
+	__libnvme_unused const char *attr)
 {
-	(void)c;
-	(void)attr;
 	return NULL;
 }
 
-__libnvme_public char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr)
+__libnvme_public char *libnvme_get_ns_attr(
+	__libnvme_unused libnvme_ns_t n,
+	__libnvme_unused const char *attr)
 {
-	(void)n;
-	(void)attr;
 	return NULL;
 }
 
@@ -336,8 +345,9 @@ int libnvme_ns_init(const char *path, struct libnvme_ns *ns)
 	return 0;
 }
 
-int libnvme_ns_open(struct libnvme_global_ctx *ctx, const char *sys_path,
-		const char *name, libnvme_ns_t *ns)
+int libnvme_ns_open(struct libnvme_global_ctx *ctx,
+		    __libnvme_unused const char *sys_path,
+		    const char *name, libnvme_ns_t *ns)
 {
 	const struct ctrl_map_entry *ctrl_entry;
 	struct libnvme_transport_handle *hdl;
@@ -345,7 +355,6 @@ int libnvme_ns_open(struct libnvme_global_ctx *ctx, const char *sys_path,
 	struct libnvme_ns *n;
 	HANDLE h;
 	int ret;
-	(void)sys_path;
 
 	n = calloc(1, sizeof(*n));
 	if (!n)
@@ -400,7 +409,12 @@ int libnvme_ns_open(struct libnvme_global_ctx *ctx, const char *sys_path,
 		ret = -ENOMEM;
 		goto free_ns;
 	}
+
 	n->generic_name = strdup(name);
+	if (!n->generic_name) {
+		ret = -ENOMEM;
+		goto free_ns;
+	}
 
 	ret = libnvme_ns_init(NULL, n);
 	if (ret)
@@ -415,17 +429,18 @@ int libnvme_ns_open(struct libnvme_global_ctx *ctx, const char *sys_path,
 
 free_ns:
 	free(n->name);
+	free(n->generic_name);
 	free(head);
 	free(n);
 	return ret;
 }
 
 int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
-		const char *sysfs_dir, const char *name, libnvme_ns_t *ns)
+			     __libnvme_unused const char *sysfs_dir,
+			     const char *name, libnvme_ns_t *ns)
 {
 	struct libnvme_ns *n = NULL;
 	int ret;
-	(void)sysfs_dir;
 
 	ret = libnvme_ns_open(ctx, NULL, name, &n);
 	if (ret)

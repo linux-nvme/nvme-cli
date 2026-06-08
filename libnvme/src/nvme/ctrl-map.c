@@ -37,6 +37,7 @@ static struct {
 	struct ctrl_map_entry *entries;
 	size_t count;
 	size_t capacity;
+	bool initialized;
 } ctrl_map;
 
 size_t libnvme_ctrl_map_get_count(void)
@@ -65,6 +66,7 @@ void libnvme_ctrl_map_clear(void)
 	ctrl_map.entries = NULL;
 	ctrl_map.count = 0;
 	ctrl_map.capacity = 0;
+	ctrl_map.initialized = false;
 }
 
 static int find_or_create_subsys_index(const struct nvme_id_ctrl *id_ctrl)
@@ -314,14 +316,13 @@ int libnvme_ctrl_map_init(void)
 	DWORD nvme_ctrl_index = 0;
 	STORAGE_BUS_TYPE bus_type;
 
-	if (ctrl_map.count > 0)
-		/* map already initialized */
+	if (ctrl_map.initialized)
 		return 0;
 
 	hdev = SetupDiGetClassDevsW(&GUID_DEVINTERFACE_STORAGEPORT, NULL, NULL,
 				    DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 	if (hdev == INVALID_HANDLE_VALUE)
-		return 0;
+		return -ENODEV;
 
 	for (index = 0;; index++) {
 		struct nvme_id_ctrl id_ctrl;
@@ -342,7 +343,6 @@ int libnvme_ctrl_map_init(void)
 				FILE_SHARE_READ | FILE_SHARE_WRITE |
 				FILE_SHARE_DELETE,
 				NULL, OPEN_EXISTING, 0, NULL);
-
 		if (h == INVALID_HANDLE_VALUE)
 			goto next_entry;
 
@@ -372,6 +372,7 @@ next_entry:
 	}
 
 	SetupDiDestroyDeviceInfoList(hdev);
+	ctrl_map.initialized = true;
 	return 0;
 
 enomem:

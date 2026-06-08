@@ -6,6 +6,10 @@
  * Authors: Brandon Capener <bcapener@micron.com>
  */
 
+#include <errno.h>
+#include <stdio.h>
+#include <strings.h>
+
 #include "compiler-attributes.h"
 #include "cleanup.h"
 #include "ioctl.h"
@@ -25,9 +29,11 @@ static bool __is_controller_path(const char *device_path)
 	return strncasecmp(device_path, "\\\\?\\pci", 7) == 0;
 }
 
-static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handle *hdl, const char *name)
+static int __libnvme_transport_handle_open_direct(
+	struct libnvme_transport_handle *hdl, const char *name)
 {
-	char device_path[MAX_PATH];
+	__cleanup_free char *device_path = NULL;
+	size_t len;
 
 	/* Parse and open direct device */
 	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
@@ -36,11 +42,19 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 	if (strncmp(name, "\\\\.\\", 4) == 0
 	    || strncmp(name, "\\\\?\\", 4) == 0) {
 		/* Already a Windows device path */
-		snprintf(device_path, sizeof(device_path), "%s", name);
+		len = strlen(name) + 1;
+		device_path = malloc(len);
+		if (!device_path)
+			return -ENOMEM;
+		memcpy(device_path, name, len);
 	} else {
 		/* Assume it's a device name, prepend Windows device prefix */
 		/* PhysicalDriveN format */
-		snprintf(device_path, sizeof(device_path), "\\\\.\\%s", name);
+		len = strlen(name) + 5;
+		device_path = malloc(len);
+		if (!device_path)
+			return -ENOMEM;
+		snprintf(device_path, len, "\\\\.\\%s", name);
 	}
 
 	hdl->fd = CreateFile(device_path,
@@ -78,8 +92,9 @@ static int __libnvme_transport_handle_open_direct(struct libnvme_transport_handl
 	return 0;
 }
 
-__libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
-	      struct libnvme_transport_handle **hdlp)
+__libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx,
+				  const char *name,
+				  struct libnvme_transport_handle **hdlp)
 {
 	struct libnvme_transport_handle *hdl;
 	__cleanup_free char *mapped_name = NULL;
@@ -171,7 +186,7 @@ __libnvme_public void libnvme_close(struct libnvme_transport_handle *hdl)
 
 	is_test_fd = hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT &&
 		hdl->fd == LIBNVME_TEST_FD &&
-		!strncmp(hdl->name, "NVME_TEST_FD", 12);
+		hdl->name && !strncmp(hdl->name, "NVME_TEST_FD", 12);
 
 	free(hdl->name);
 
