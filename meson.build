@@ -447,6 +447,22 @@ conf.set10(
     description: 'Is sigaction available',
 )
 
+conf.set10(
+    'HAVE_STORAGE_REINITIALIZE_MEDIA',
+    host_system == 'windows' and cc.compiles(
+        '''
+            #include <winioctl.h>
+            int main(void) {
+                struct STORAGE_REINITIALIZE_MEDIA media;
+
+                return (int)sizeof(media);
+            }
+        ''',
+        name: 'STORAGE_REINITIALIZE_MEDIA'
+    ),
+    description: 'Does winioctl.h define struct STORAGE_REINITIALIZE_MEDIA'
+)
+
 project_config_file = 'nvme-config.h'
 nvme_config_h = configure_file(output: project_config_file, configuration: conf)
 config_dep = declare_dependency(
