@@ -149,6 +149,8 @@ conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
 if host_system == 'windows'
     kernel32_dep = cc.find_library('kernel32', required: true)
     bcrypt_dep = cc.find_library('bcrypt', required: true)
+    setupapi_dep = cc.find_library('setupapi', required: true)
+    cfgmgr32_dep = cc.find_library('cfgmgr32', required: true)
 endif
 
 conf.set10(
@@ -756,6 +758,8 @@ if host_system == 'windows'
     dep_dict += {
         'kernel32':     kernel32_dep.found(),
         'bcrypt':       bcrypt_dep.found(),
+        'setupapi':     setupapi_dep.found(),
+        'cfgmgr32':     cfgmgr32_dep.found(),
     }
 endif
 summary(dep_dict, section: 'Dependencies', bool_yn: true)
