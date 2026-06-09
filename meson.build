@@ -53,6 +53,7 @@ want_nvme = get_option('nvme').disabled() == false
 want_libnvme = get_option('libnvme').disabled() == false
 want_fabrics = get_option('fabrics').disabled() == false and host_system != 'windows'
 want_mi = get_option('mi').disabled() == false and host_system != 'windows'
+want_top = get_option('top').disabled() == false and host_system != 'windows'
 want_json_c = get_option('json-c').disabled() == false
 want_libkmod = get_option('libkmod').disabled() == false and host_system != 'windows'
 want_tests = get_option('tests') and host_system != 'windows'
@@ -145,6 +146,7 @@ conf.set('RUNDIR', '"@0@"'.format(rundir))
 
 conf.set('CONFIG_FABRICS', want_fabrics, description: 'Is fabrics enabled')
 conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
+conf.set('CONFIG_TOP', want_top, description: 'Is nvme top enabled')
 
 if host_system == 'windows'
     kernel32_dep = cc.find_library('kernel32', required: true)
@@ -550,7 +552,6 @@ if want_nvme
             'nvme-rpmb.c',
             'nvme.c',
             'plugin.c',
-            'nvme-print-stdout-top.c',
         ]
 
         if json_c_dep.found()
@@ -562,6 +563,10 @@ if want_nvme
 
     if want_fabrics
         sources += 'fabrics.c'
+    endif
+
+    if want_top
+        sources += 'nvme-print-stdout-top.c'
     endif
 
     sources += plugin_sources

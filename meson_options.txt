@@ -24,6 +24,12 @@ option(
   description : 'MI support'
 )
 option(
+  'top',
+  type : 'feature',
+  value: 'enabled',
+  description : 'nvme top support'
+)
+option(
   'python',
   type : 'feature',
   value: 'auto',
