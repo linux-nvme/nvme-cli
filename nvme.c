@@ -5708,6 +5708,36 @@ static int wait_sanitize(struct libnvme_transport_handle *hdl)
 	return 0;
 }
 
+static bool is_sanitized(struct libnvme_transport_handle *hdl)
+{
+	__cleanup_libnvme_free struct nvme_sanitize_log_page *log = NULL;
+	int err;
+
+	log = libnvme_alloc(sizeof(*log));
+	if (!log)
+		return -ENOMEM;
+
+	err = nvme_get_log_sanitize(hdl, false, log);
+	if (err) {
+		nvme_show_err(err, "sanitize status log");
+		return err;
+	}
+
+	switch (NVME_GET(le16_to_cpu(log->sstat), SANITIZE_SSTAT_STATUS)) {
+	case NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED:
+		break;
+	case NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS:
+		return true;
+	case NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS:
+	case NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED:
+	case NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS:
+	default:
+		break;
+	}
+
+	return false;
+}
+
 static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Send a sanitize command.";
@@ -5720,6 +5750,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 				"3 = Start overwrite, 4 = Start crypto erase, 5 = Exit media verification";
 	const char *ovrpat_desc = "Overwrite pattern.";
 	const char *wait = "Wait for the sanitize to finish";
+	const char *repeat = "Repeat for the multi cycle sanitization";
 
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -5737,6 +5768,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		__u32	ovrpat;
 		bool	emvs;
 		bool	wait;
+		__u32	repeat;
 	};
 
 	struct config cfg = {
@@ -5748,6 +5780,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		.sanact		= 0,
 		.ovrpat		= 0,
 		.emvs		= false,
+		.repeat		= 1,
 	};
 
 	OPT_VALS(sanact) = {
@@ -5768,7 +5801,8 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		  OPT_BYTE("sanact",     'a', &cfg.sanact,     sanact_desc, sanact),
 		  OPT_UINT("ovrpat",     'p', &cfg.ovrpat,     ovrpat_desc),
 		  OPT_FLAG("emvs",       'e', &cfg.emvs,       emvs_desc),
-		  OPT_FLAG("wait",       'w', &cfg.wait,       wait));
+		  OPT_FLAG("wait",       'w', &cfg.wait,       wait),
+		  OPT_UINT("repeat",     'r', &cfg.repeat,     repeat));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -5822,14 +5856,17 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		else
 			printf("ISH is supported only for NVMe-MI\n");
 	}
-	err = libnvme_exec_admin_passthru(hdl, &cmd);
-	if (err) {
-		nvme_show_err(err, "sanitize");
-		return err;
-	}
 
-	if (cfg.wait)
-		err = wait_sanitize(hdl);
+	do {
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
+		if (err) {
+			nvme_show_err(err, "sanitize");
+			return err;
+		}
+
+		if (cfg.wait)
+			err = wait_sanitize(hdl);
+	} while (--cfg.repeat && !err && is_sanitized(hdl));
 
 	return err;
 }
