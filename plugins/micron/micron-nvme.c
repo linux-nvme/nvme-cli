@@ -24,6 +24,7 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <dirent.h>
 
 #include <libnvme.h>
 
@@ -201,6 +202,101 @@ static enum eDriveModel GetDriveModel(
 	return eModel;
 }
 
+/*
+ * Recursively remove a directory and its contents.
+ * Since this is only used for temporary directories that we create that
+ * have no symlinks, it is safe to not check for and handle symlinks here.
+ */
+static int RemoveDirRecursive(const char *path)
+{
+	DIR *dir = NULL;
+	struct dirent *entry;
+	char child[PATH_MAX];
+
+	dir = opendir(path);
+	if (!dir) {
+		if (errno == ENOENT)
+			return 0;
+		return -1;
+	}
+
+	while ((entry = readdir(dir))) {
+		if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
+			continue;
+
+		if (snprintf(child, sizeof(child), "%s/%s", path, entry->d_name) >=
+		    (int)sizeof(child)) {
+			errno = ENAMETOOLONG;
+			closedir(dir);
+			return -1;
+		}
+
+		if (unlink(child) == 0 || errno == ENOENT)
+			continue;
+
+		if (errno != EISDIR && errno != EPERM) {
+			closedir(dir);
+			return -1;
+		}
+
+		if (RemoveDirRecursive(child) < 0) {
+			if (errno == ENOENT)
+				continue;
+			closedir(dir);
+			return -1;
+		}
+	}
+
+	closedir(dir);
+
+	if (rmdir(path) < 0 && errno != ENOENT)
+		return -1;
+
+	return 0;
+}
+
+/*
+ * bsdtar-based versions of tar support creating zip archives when -a is used
+ * with a .zip extension. Check if bsdtar is available and use it to create the
+ * requested zip archive.
+ *
+ * Returns 0 on success, or a negative errno value if tar is not bsdtar
+ * or if the command fails.
+ */
+static int ZipWithBsdTar(char *strDirName, char *strFileName)
+{
+	__cleanup_free char *cmd_buf = NULL;
+	FILE *fpVersion = NULL;
+	char version_buf[256] = { 0 };
+	bool is_bsdtar = false;
+
+	fpVersion = popen("tar --version 2>&1", "r");
+	if (!fpVersion)
+		return -EINVAL;
+
+	while (fgets(version_buf, sizeof(version_buf), fpVersion)) {
+		if (strstr(version_buf, "bsdtar")) {
+			is_bsdtar = true;
+			break;
+		}
+	}
+
+	if (pclose(fpVersion))
+		return -EINVAL;
+	fpVersion = NULL;
+
+	if (!is_bsdtar)
+		return -EINVAL;
+
+	if (asprintf(&cmd_buf, "tar -caf \"%s\" \"%s\"",
+			strFileName, strDirName) < 0)
+		return -ENOMEM;
+
+	if (system(cmd_buf))
+		return -EIO;
+	return 0;
+}
+
 static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 {
 	int  err = 0;
@@ -217,11 +313,14 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 				strDirName);
 	}
 
-	err = EINVAL;
 	nRet = system(strBuffer);
+	if (nRet && !is_tgz)
+		/* if zip is not available, see if tar can be used instead */
+		nRet = ZipWithBsdTar(strDirName, strFileName);
 
 	/* check if log file is created, if not print error message */
-	if (nRet < 0 || (stat(strFileName, &sb) == -1)) {
+	if (nRet || (stat(strFileName, &sb) == -1)) {
+		err = -EINVAL;
 		if (is_tgz)
 			snprintf(strBuffer, sizeof(strBuffer), "check if tar and gzip commands are installed");
 		else
@@ -230,12 +329,11 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 		fprintf(stderr, "Failed to create log data package, %s!\n", strBuffer);
 	}
 
-	snprintf(strBuffer, sizeof(strBuffer), "rm -f -R \"%s\" >temp.txt 2>&1", strDirName);
-	nRet = system(strBuffer);
-	if (nRet < 0)
+	if (RemoveDirRecursive(strDirName) < 0)
 		printf("Failed to remove temporary files!\n");
 
-	err = system("rm -f temp.txt");
+	if (unlink("temp.txt") < 0 && errno != ENOENT)
+		printf("Failed to remove temporary file temp.txt!\n");
 	return err;
 }
 
