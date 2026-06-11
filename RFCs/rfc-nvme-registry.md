@@ -104,14 +104,7 @@ This is a cooperative arrangement, not a general arbitration mechanism. nvme-dis
 
 ## 4. Automatic Cleanup
 
-A udev rule fires on `KOBJ_REMOVE` for NVMe controller devices and removes the corresponding registry directory:
-
-```
-ACTION=="remove", SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", \
-    RUN+="/bin/rm -rf /run/nvme/registry/%k"
-```
-
-`%k` is the kernel device name (e.g. `nvme3`). For `SUBSYSTEM=="nvme"` the kernel always produces names of the form `nvme[0-9]*`, so path traversal via `%k` is not possible. The `KERNEL==` match makes this constraint explicit and provides defense-in-depth. The rule is safe when no entry exists (unowned controllers, PCIe devices, etc.).
+A udev rule fires on `KOBJ_REMOVE` for NVMe controller devices and removes the corresponding registry directory. `%k` is the kernel device name (e.g. `nvme3`). For `SUBSYSTEM=="nvme"` the kernel always produces names of the form `nvme[0-9]*`, so path traversal via `%k` is not possible; the `KERNEL==` match makes this constraint explicit and provides defense-in-depth. The rule is safe when no entry exists (unowned controllers, PCIe devices, etc.).
 
 The udev rule ships with `libnvme`, so the cleanup mechanism is present whenever libnvme is installed — independent of whether `nvme-cli` is installed.
 
@@ -121,11 +114,11 @@ The udev rule ships with `libnvme`, so the cleanup mechanism is present whenever
 
 **`owner=nbft` protects boot-path controllers from all orchestrator policy enforcement.** NBFT controllers carry `owner=nbft` for their entire lifecycle: set by `nvme connect-all --nbft` at initial connect and preserved by nvme-discoverd on every subsequent reconnect (it passes `--owner nbft` rather than `--owner discoverd` for NBFT-sourced controllers). nvme-stas respects the registry unconditionally — `owner=nbft` means nvme-stas never disconnects them regardless of CDC fabric zoning requests, by the same rule that applies to any other orchestrator's controllers. nvme-discoverd additionally ignores exclusion list entries that match NBFT-sourced controllers, reconnecting unconditionally. In both cases the orchestrator logs a warning when it would otherwise have enforced policy against a boot device — the protection is visible, not silent.
 
-**Daemons track device presence independently.** Neither nvme-stas nor nvme-discoverd relies on the registry to determine whether a controller is present. Both monitor device removal directly through the uevent stream, and on startup both perform a full audit of the current device tree. The registry is orthogonal to device presence — it records ownership, not existence. A stale registry entry for a removed controller is a minor inconsistency to be cleaned up by the udev rule, not a correctness problem for the daemons. As a belt-and-suspenders measure, nvme-discoverd may perform an aperiodic audit that cross-checks registry entries against the live device tree, removing any entries that refer to controllers no longer present.
+**Daemons track device presence independently.** Neither nvme-stas nor nvme-discoverd relies on the registry to determine whether a controller is present. Both monitor device removal directly through the uevent stream, and on startup both perform a full audit of the current device tree. The registry is orthogonal to device presence — it records ownership, not existence. A stale registry entry for a removed controller is a minor inconsistency to be cleaned up by the udev rule, not a correctness problem for the daemons. As a belt-and-suspenders measure, nvme-discoverd may perform an aperiodic audit that cross-checks the live device tree against the registry in both directions: removing stale entries (registry directory present but device absent) and re-asserting ownership for live controllers it manages (device present but registry entry absent or stale). The bidirectional audit ensures the registry converges to the correct state even after rare cleanup races.
 
 **Instance recycling safety.** The kernel allocates NVMe controller instance numbers using `ida_alloc()` (`nvme_init_ctrl()` in `drivers/nvme/host/core.c`), which returns the **lowest available** ID. When `nvme4` is removed, its instance number is freed immediately and the very next connected controller may receive the same number.
 
-This creates a potential race: the udev `rm -rf` cleanup rule for the old `nvme4` may run after a new controller has already claimed the same ID and written its registry entry, silently deleting a live entry. To close this window, the udev rule guards the removal with a device existence check:
+This creates a potential race: the cleanup rule for the old `nvme4` may run after a new controller has already claimed the same ID and written its registry entry, silently deleting a live entry. The rule therefore guards the removal with a device existence check:
 
 ```
 ACTION=="remove", SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", \
@@ -137,7 +130,9 @@ NVMe controller devices (`nvme0`, `nvme4`, etc.) are char devices — `-e` (exis
 - **New controller has already appeared**: its char device `/dev/nvme4` exists at the time the remove rule fires; the test is true and `||` short-circuits — `rm` is skipped and the new registry entry is preserved.
 - **New controller has not appeared yet**: `/dev/nvme4` is absent; the test is false and `rm` runs, removing the stale old entry.
 
-There is a harmless false-positive case: if devtmpfs has not yet removed the old `/dev/nvme4` node by the time the rule fires (devtmpfs operates asynchronously via a kthread), the test sees the old node and skips the `rm`, leaving the stale entry on disk. This is safe — `libnvmf_registry_create()` always overwrites on connect, so the new controller's write replaces any stale entry. Any remaining orphan is caught by nvme-discoverd's aperiodic audit, which cross-checks registry entries against the live device tree and removes those without a corresponding sysfs device.
+There is a harmless false-positive case: if devtmpfs has not yet removed the old `/dev/nvme4` node by the time the rule fires (devtmpfs operates asynchronously via a kthread), the test sees the old node and skips the `rm`, leaving the stale entry on disk. This is safe — `libnvmf_registry_create()` always overwrites on connect, so the new controller's write replaces any stale entry. Any remaining orphan is caught by nvme-discoverd's aperiodic audit (see above), which also re-asserts ownership for live controllers it manages — restoring any entry deleted while the device was alive.
+
+There is also a residual race in the dangerous direction: the shell evaluates `[ -e /dev/nvme4 ]` as false, but between the check and the `rm -rf` a new controller claims instance 4 and libnvme writes its registry entry — `rm -rf` then deletes a live entry. The new controller is temporarily unowned until the next audit cycle re-asserts its entry.
 
 ---
 

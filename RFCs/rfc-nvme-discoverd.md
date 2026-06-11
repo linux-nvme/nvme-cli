@@ -22,7 +22,7 @@ It ships inside `nvme-cli` (not a separate package), is default-on, and targets 
 
 **Some design choices in the initial release:** the exclusion list mechanism, the `zeroconf` config knob, and the `zeroconf=false` default — are deliberately shaped by the anticipated future mDNS support, even though mDNS itself is not yet implemented.
 
-nvme-discoverd is **connect-only by design**. It never issues disconnects. This eliminates the entire connect/disconnect ordering complexity at the cost of TP8010 Fabric Zoning support, which belongs to nvme-stas.
+nvme-discoverd is **connect-only by design**. It never disconnects a live controller during steady-state operation; disconnects occur only via systemd unit stop at shutdown (`ExecStop=`), and `StopUnit` is invoked only for devices already removed by the kernel. This eliminates the entire connect/disconnect ordering complexity at the cost of TP8010 Fabric Zoning support, which belongs to nvme-stas.
 
 ---
 
@@ -51,7 +51,7 @@ The source lives in a new `nvme-discoverd/` directory under the nvme-cli root.
 
 Every write to `/dev/nvme-fabrics` blocks the calling process in uninterruptible D state until the kernel completes or times out the connection. To prevent this from stalling the event loop, nvme-discoverd never writes to `/dev/nvme-fabrics` directly. Instead, it delegates all connections — both DC and IOC — to child processes managed by systemd transient units.
 
-A transient unit is created via the varlink interface `io.systemd.Unit.StartTransient`. No unit file is written to disk and no daemon-reload is required; the unit exists only in systemd's memory. `Type=oneshot` is used because the connection process exits immediately after writing to `/dev/nvme-fabrics` — the kernel maintains the connection afterwards. `RemainAfterExit=yes` keeps the unit active after the process exits so that systemd continues to consider it part of the ordering graph at shutdown time.
+A transient unit is created via the D-Bus method `org.freedesktop.systemd1.Manager.StartTransientUnit`. No unit file is written to disk and no daemon-reload is required; the unit exists only in systemd's memory. `Type=oneshot` is used because the connection process exits immediately after writing to `/dev/nvme-fabrics` — the kernel maintains the connection afterwards. `RemainAfterExit=yes` keeps the unit active after the process exits so that systemd continues to consider it part of the ordering graph at shutdown time.
 
 systemd reverses `After=` ordering at shutdown, so `After=network.target` on a TCP or RDMA unit means: start after `network.target` at boot, stop before `network.target` at shutdown. With `RemainAfterExit=yes` keeping the unit active, this reversal is enforced. Units are transport-aware: TCP and RDMA units include `After=network.target`; FC units omit it entirely since Fibre Channel is independent of the IP network stack. All RDMA variants — pure InfiniBand, RoCEv1, RoCEv2, and iWARP — are treated uniformly. For pure InfiniBand (dedicated IB HCA with no `net_device`) the dependency is satisfied trivially with no practical effect on ordering, but distinguishing it from RoCEv2/iWARP at unit generation time would add implementation complexity for no real benefit. This transport-aware approach solves the shutdown ordering problem described in [issue #3309](https://github.com/linux-nvme/nvme-cli/issues/3309), which cannot be fixed with `nvme connect-all` since it mixes all transport types in a single invocation.
 
@@ -68,9 +68,11 @@ RoCEv2 is the primary NVMe-oF RDMA variant. It uses UDP rather than TCP because 
 
 The actual disconnect is performed by `ExecStop=`, which runs `nvme disconnect -d <device>` before systemd proceeds to deactivate `network.target`. Without `ExecStop=`, stopping the unit would be a no-op — there is no process to kill in a `Type=oneshot` unit, and the kernel connection would remain alive when the network interface tears down, causing I/O errors on in-flight NVMe requests.
 
-The device name is not known at unit creation time; it is assigned by the kernel when `/dev/nvme-fabrics` is written and returned synchronously to `nvme connect` on success. A new `--devid-file` option allows `nvme connect --devid-file FILE` to capture it: on success, `nvme connect` writes the assigned `nvmeX` name to `FILE`; `ExecStop=` reads it back. The path uses systemd specifiers — `%t` (runtime directory, `/run` for system services) and `%N` (unit name without the `.service` suffix) — so the same literal string works in both `--devid-file` and `ExecStop=` without discoverd needing to embed anything at unit creation time.
+The device name is not known at unit creation time; it is assigned by the kernel when `/dev/nvme-fabrics` is written and returned synchronously to `nvme connect` on success. For idempotent connections (`--idempotent`), libnvme detects the existing connection via sysfs scan before writing to `/dev/nvme-fabrics`, so the device name is already known from sysfs. A new `--devid-file` option allows `nvme connect --devid-file FILE` to capture it in both cases: on success, `nvme connect` writes the `nvmeX` name to `FILE`; `ExecStartPost=`, `ExecStop=`, and `ExecStopPost=` all read it back. The path uses systemd specifiers — `%t` (runtime directory, `/run` for system services) and `%N` (unit name without the `.service` suffix) — so the same literal string works across all four lines without discoverd needing to embed anything at unit creation time.
 
-`ExecStopPost=` runs after `ExecStop=` regardless of whether `ExecStop=` succeeded. It reads the devid from the `.devid` file, removes the file, then removes the corresponding controller state directory (`/run/nvme/discoverd/controllers/<devid>/`, described in §3.6) — handling both cleanup steps atomically from within the unit, with no need for discoverd to track them. `TimeoutStopSec=10` bounds the shutdown wait: `nvme disconnect` on an unresponsive target typically takes 1–3 s; without a bound, systemd's 90 s default would apply. `CollectMode=inactive-or-failed` tells systemd to garbage-collect failed transient units automatically once no job is pending — without it, units whose initial `nvme connect` failed would linger in the unit table until discoverd explicitly called `ResetFailedUnit`.
+`ExecStartPost=` runs immediately after `ExecStart=` succeeds. It reads the device name from the `.devid` file, creates the controller state directory (`/run/nvme/discoverd/controllers/<devid>/`, described in §3.6), and writes the unit name (`%n`) to `unit` within that directory. `ExecStartPost=` only runs when `ExecStart=` succeeds — if `nvme connect` fails, no state directory is created, which is the correct behaviour. systemd specifier `%n` expands to the full unit name (e.g. `nvme-discoverd-a3f2.service`) before the shell sees it.
+
+`ExecStopPost=` runs after `ExecStop=` regardless of whether `ExecStop=` succeeded. It reads the devid from the `.devid` file, removes the file, then removes the controller state directory — handling both cleanup steps atomically from within the unit. Together with `ExecStartPost=`, the entire state directory lifecycle is self-contained inside the unit: discoverd does not create or delete state directories. `TimeoutStopSec=10` bounds the shutdown wait: `nvme disconnect` on an unresponsive target typically takes 1–3 s; without a bound, systemd's 90 s default would apply. `CollectMode=inactive-or-failed` tells systemd to garbage-collect failed transient units automatically once no job is pending — without it, units whose initial `nvme connect` failed would linger in the unit table until discoverd explicitly called `ResetFailedUnit`.
 
 The transient unit's `ExecStart=` line contains the full `nvme connect` invocation with all parameters baked in. Because transient units belong to systemd (not to discoverd), they **survive a discoverd crash or restart** — they remain `active (exited)` in systemd until explicitly stopped. While the unit is alive, `RestartUnit` is sufficient to reconnect using the original parameters without re-fetching anything from any source. If the unit has been garbage-collected (e.g. after a failed connect attempt), discoverd falls back to `StartTransient` using parameters from its in-memory caches.
 
@@ -81,7 +83,8 @@ For DC connections, the transient unit runs `nvme connect --keep-alive-tmo=30`:
 ```ini
 [Unit]
 Description=NVMe Discovery Controller connection to <subnqn>
-After=network.target  # TCP and RDMA — omit for FC
+# TCP and RDMA connections only — omit for FC units
+After=network.target
 
 [Service]
 Type=oneshot
@@ -97,6 +100,7 @@ ExecStart=/usr/sbin/nvme connect \
   --keep-alive-tmo=30 \
   --owner discoverd \
   --devid-file=%t/nvme/discoverd/units/%N.devid
+ExecStartPost=-/bin/sh -c 'DEV=$(cat %t/nvme/discoverd/units/%N.devid 2>/dev/null) && mkdir -p %t/nvme/discoverd/controllers/$DEV && echo %n > %t/nvme/discoverd/controllers/$DEV/unit'
 ExecStop=-/bin/sh -c 'DEV=$(cat %t/nvme/discoverd/units/%N.devid 2>/dev/null) && nvme disconnect -d $DEV'
 ExecStopPost=-/bin/sh -c 'DEV=$(cat %t/nvme/discoverd/units/%N.devid 2>/dev/null); rm -f %t/nvme/discoverd/units/%N.devid; [ -n "$DEV" ] && rm -rf %t/nvme/discoverd/controllers/$DEV'
 TimeoutStopSec=10
@@ -109,7 +113,7 @@ CollectMode=inactive-or-failed
 
 Each DLPE in the DLP is processed based on its `subtype`:
 - `NVME_NQN_NVME` — I/O Controller: create a transient IOC unit.
-- `NVME_NQN_DISC` — Referral to another DC: create a transient DC unit for the referred DC. When that DC's device appears, its DLP is fetched and processed identically. Referral chains of arbitrary depth are followed naturally through the event loop — no explicit recursion is needed. Note: `nvme connect-all` traverses referrals the same way; `nvme discover` does not (it only fetches one level).
+- `NVME_NQN_DISC` — Referral to another DC: create a transient DC unit for the referred DC. When that DC's device appears, its DLP is fetched and processed identically. Referral chains of arbitrary depth are followed naturally through the event loop — no explicit recursion is needed. Note: `nvme connect-all` traverses referrals the same way; `nvme discover` does not (it only fetches one level). If a referral DC becomes permanently unreachable, its per-DC DLP cache entry is eventually evicted; IOCs reachable exclusively through that referral chain fizzle out naturally as their connections drop and are not reconnected. This is intentional — the desired set is derived from current cache state. See §11 (Open Questions) for a proposed stale-cache aging mechanism.
 - `DUPRETINFO` flag set — duplicate information: skip.
 
 Future AENs from the DC arrive as udev events and trigger a DLP re-fetch.
@@ -125,7 +129,8 @@ IOC connections use the same transient unit design:
 ```ini
 [Unit]
 Description=NVMe I/O Controller connection to <subnqn>
-After=network.target  # TCP and RDMA — omit for FC
+# TCP and RDMA connections only — omit for FC units
+After=network.target
 
 [Service]
 Type=oneshot
@@ -140,6 +145,7 @@ ExecStart=/usr/sbin/nvme connect \
   [--host-iface=<host_iface>] \
   --owner discoverd \
   --devid-file=%t/nvme/discoverd/units/%N.devid
+ExecStartPost=-/bin/sh -c 'DEV=$(cat %t/nvme/discoverd/units/%N.devid 2>/dev/null) && mkdir -p %t/nvme/discoverd/controllers/$DEV && echo %n > %t/nvme/discoverd/controllers/$DEV/unit'
 ExecStop=-/bin/sh -c 'DEV=$(cat %t/nvme/discoverd/units/%N.devid 2>/dev/null) && nvme disconnect -d $DEV'
 ExecStopPost=-/bin/sh -c 'DEV=$(cat %t/nvme/discoverd/units/%N.devid 2>/dev/null); rm -f %t/nvme/discoverd/units/%N.devid; [ -n "$DEV" ] && rm -rf %t/nvme/discoverd/controllers/$DEV'
 TimeoutStopSec=10
@@ -173,7 +179,7 @@ All transport parameters (transport, traddr, trsvcid, subnqn, hostnqn, host-trad
 
 Discovery Log Page caches are **not** persisted to disk. They are in-memory only and rebuilt by re-fetching DLPs from each DC as it reconnects at startup. See §4. In-Memory Caches.
 
-State directories are created when the device name is known. For normal connections (StartTransient at runtime), the device name is not yet known when the unit starts — discoverd holds an in-memory pending-connections table keyed by TID, and writes the state directory when the `device add` event arrives (up to ~3 seconds later). For adopted pre-existing connections (startup sysfs scan), the device name is already known — the state directory is written immediately after `StartTransient` completes, without waiting for any udev event.
+State directories are created by `ExecStartPost=` inside the transient unit itself (see §3.2), not by discoverd. For normal connections, `nvme connect` writes the kernel-assigned device name to `--devid-file`; `ExecStartPost=` reads it and creates the state directory. For pre-existing connections (idempotent path), libnvme finds the matching device via sysfs scan before returning, so `--devid-file` is populated from the sysfs-known name — `ExecStartPost=` then creates the state directory identically. In both cases, discoverd knows the state directory exists as soon as the `JobRemoved` signal arrives with a success result.
 
 At startup, discoverd cross-references state files against sysfs. This serves three purposes:
 
@@ -187,10 +193,7 @@ At startup, discoverd cross-references state files against sysfs. This serves th
 | no | yes | Pre-existing connection (e.g. initramfs) | Create transient unit; write state file ¹ |
 | yes | no | Device removed while discoverd was down | ² |
 
-**¹ Pre-existing connection (no state file):** all connection parameters are read from sysfs. discoverd calls `StartTransient` with `--idempotent` added to the `ExecStart=` line — `--idempotent` makes `nvme connect` exit 0 when the controller is already connected, so the unit succeeds regardless of whether this invocation did the connecting or a previous one did. This is more precise than the `-` prefix on `ExecStart=` (which suppresses all errors): genuine failures — wrong transport, unreachable target, TLS key missing — still mark the unit as failed. After calling `StartTransient`, discoverd arms a ~5 s `sd_event` timer — long enough to cover the kernel's ~3 s connection timeout. When the timer fires, discoverd checks sysfs:
-
-- **Device still present** — write the state file immediately using the device name already known from the sysfs scan and the unit name returned by `StartTransient`. No `device add` event is needed.
-- **Device gone** — a genuine failure occurred between the sysfs scan and `StartTransient`. Do not write a state file; the normal reconnect logic will handle it when the device reappears.
+**¹ Pre-existing connection (no state file):** all connection parameters are read from sysfs. Before proceeding, discoverd checks the ownership registry. If the controller already has a registry entry and the owner is neither `discoverd` nor `nbft`, discoverd logs a warning and skips this controller — leaving it in the hands of the orchestrator that owns it. This prevents discoverd from inadvertently claiming ownership of a controller managed by nvme-stas or another tool. If no entry exists, or the owner is `discoverd` or `nbft`, discoverd calls `StartTransient` with `--idempotent` added to the `ExecStart=` line — `--idempotent` makes `nvme connect` exit 0 when the controller is already connected, so the unit succeeds regardless of whether this invocation did the connecting or a previous one did. This is more precise than the `-` prefix on `ExecStart=` (which suppresses all errors): genuine failures — wrong transport, unreachable target, TLS key missing — still mark the unit as failed. `nvme connect --idempotent` detects the existing connection via libnvme's sysfs scan without writing to `/dev/nvme-fabrics`; since the device name is known from that scan, it is written to `--devid-file` before returning. `ExecStartPost=` then creates the state directory identically to the normal connect path. discoverd waits for the `JobRemoved` signal: success → the unit is adopted with its state directory in place; failure → the normal reconnect logic handles recovery.
 
 **² Device removed while discoverd was down:** the reconnect decision is origin-aware:
 
@@ -201,7 +204,7 @@ Adoption of pre-existing connections is described further in §7. Discovery Sour
 
 ### 3.7 IPC
 
-This section describes nvme-discoverd's own IPC interface — the mechanism by which external clients (CLI plugins, monitoring tools) communicate with the running daemon. This is distinct from the varlink interface discoverd uses internally to communicate with systemd (`io.systemd.Unit.StartTransient` etc.).
+This section describes nvme-discoverd's own IPC interface — the mechanism by which external clients (CLI plugins, monitoring tools) communicate with the running daemon. This is distinct from the D-Bus interface discoverd uses internally to communicate with systemd (`org.freedesktop.systemd1.Manager.StartTransientUnit` etc.).
 
 nvme-discoverd exposes a varlink interface over `/run/nvme/discoverd.socket`. Compile-time optional. Initial scope: a CLI status plugin (`nvme discoverd status`) — request/reply only, no pub/sub needed.
 
@@ -217,6 +220,7 @@ Type=notify-reload
 ExecStart=/usr/sbin/nvme-discoverd
 Restart=on-failure
 RuntimeDirectory=nvme/discoverd
+RuntimeDirectoryPreserve=yes
 
 [Install]
 WantedBy=multi-user.target
@@ -225,6 +229,8 @@ WantedBy=multi-user.target
 `Type=notify-reload` — extends `Type=notify` with integrated reload signalling. On startup, nvme-discoverd calls `sd_notify("READY=1")` once its event loop is running and two fast synchronous steps have completed — parsing the config file and reading the NBFT table — the prerequisites before the daemon is considered operational. NVMe-oF connections themselves are not complete at this point (they are initiated asynchronously after `READY=1`). On `systemctl reload`, systemd sends SIGHUP directly to the main process — no `ExecReload=` line is needed. nvme-discoverd calls `sd_notify("RELOADING=1")` when it begins processing the reload and `sd_notify("READY=1")` when done; `systemctl reload` blocks until that final `READY=1` arrives, giving callers a proper synchronization point. `sd_notify` uses a plain Unix domain socket (SOCK_DGRAM), not varlink and not D-Bus, so there is no additional IPC dependency. Requires systemd v253 or later.
 
 `Before=remote-fs.target` — the daemon is running before systemd attempts to mount remote filesystems. This is necessary but not sufficient: `READY=1` fires when the event loop is up, not when NVMe-oF connections are complete. The full discovery path — connecting to a DC, retrieving its Discovery Log Page, and connecting each IOC — takes significant time after the daemon signals ready. Services that need specific NVMe-oF block devices must not rely on `remote-fs.target` alone. They should use the `_netdev` option in `/etc/fstab` or explicit `After=dev-nvmeXnY.device` dependencies to wait for the actual block device node to appear via udev.
+
+`RuntimeDirectoryPreserve=yes` — prevents systemd from removing `/run/nvme/discoverd` when the service stops. Without it, systemd deletes the runtime directory on every stop, restart, or crash (`no` is the default), which would destroy the devid files still needed by active transient units' `ExecStop=` lines and eliminate the state directories that the startup audit relies on for warm-restart and crash recovery.
 
 No `After=network.target` or `After=network-online.target` for the daemon itself — nvme-discoverd does not perform network I/O directly. Only the forked transient units do, and they declare their own network ordering individually. `DefaultDependencies=yes` (the default) implicitly covers `After=sysinit.target` and `After=basic.target`.
 
@@ -254,7 +260,7 @@ The **desired connection set** is the union of all caches: NBFT cache ∪ config
 
 **Sysfs race on device-add:** the kernel sends the `add` uevent slightly before sysfs attributes are fully populated. Discoverd waits ~1 s (soak timer) before reading `cntrltype`, `transport`, `traddr`, etc. from a newly appeared device. This is the same workaround used by nvme-stas.
 
-**Failure detection (initial connect):** discoverd sets a ~5 s `sd_event` timer when each unit starts. If a `device-add` event arrives before the timer expires, the state file is written and the timer is cancelled — the connection succeeded. If the timer fires with no state file written, the connection failed; the unit goes to `failed` and `CollectMode=inactive-or-failed` garbage-collects it. discoverd schedules a `StartTransient` call with exponential backoff (1 s, 2 s, 4 s … capped at a configurable maximum). The exclusion list is checked before each retry.
+**Failure detection (initial connect):** discoverd subscribes to the `org.freedesktop.systemd1.Manager.JobRemoved` D-Bus signal for each unit it starts. When the job completes with `done`, the connection succeeded — `ExecStartPost=` has already written the state directory. When the job completes with `failed`, the connection failed; `CollectMode=inactive-or-failed` garbage-collects the unit. discoverd schedules a `StartTransient` call with exponential backoff (1 s, 2 s, 4 s … capped at a configurable maximum). The exclusion list is checked before each retry. No timer is needed — `JobRemoved` is the authoritative completion signal for both new and idempotent connections.
 
 **Retry policy:** discoverd retries indefinitely for all controller types. Manually-configured and DLP-sourced controllers represent deliberate intent — there is no give-up horizon. For mDNS-discovered DCs, `zeroconf-stale-timeout` handles the natural expiry once both the mDNS advertisement and the connection are lost (see §4. In-Memory Caches).
 
@@ -282,7 +288,7 @@ The reconnect mechanism therefore depends on unit state:
 
 `/etc/nvme/discoverd.conf` — INI-style `key=value`, same format convention as nvme-stas. Reloaded on SIGHUP. INI is chosen over JSON to reduce dependencies and maximize portability, including to minimal and embedded platforms where json-c may not be available.
 
-The config parser follows systemd conventions. Boolean values accept `1`/`yes`/`y`/`true`/`t`/`on` and `0`/`no`/`n`/`false`/`f`/`off` (all case-insensitive), matching the behavior of systemd's `parse_boolean()`. The implementation can be lifted directly from `src/basic/parse-util.c` in the systemd source tree (LGPL-2.1-or-later — compatible with nvme-cli's GPL-2.0-or-later, provided the SPDX header and copyright notice are preserved).
+The config parser follows systemd conventions. Boolean values accept `1`/`yes`/`y`/`true`/`t`/`on` and `0`/`no`/`n`/`false`/`f`/`off` (all case-insensitive), matching the behavior of systemd's `parse_boolean()`. The implementation can be lifted directly from `src/basic/parse-util.c` in the systemd source tree (LGPL-2.1-or-later — compatible with nvme-cli's GPL-2.0-only, provided the SPDX header and copyright notice are preserved).
 
 **Initial release:**
 
@@ -315,7 +321,7 @@ Discovery sources for the initial release include:
 | `SUBSYSTEM=="nvme"`, `NVME_AEN=="0x70f002"` | DC Discovery Log Page changed; re-fetch DLP and create units for new IOCs |
 | `SUBSYSTEM=="nvme"`, `NVME_EVENT=="rediscover"`, `cntrltype=="discovery"` | DC reconnected; re-read its DLP |
 | Device add (`nvmeX`, `cntrltype=="discovery"`) | DC connection completed; after ~1 s sysfs soak, fetch DLP; IOC entries → create IOC units; referral entries (`subtype=NVME_NQN_DISC`) → create new DC units (followed naturally through the event loop) |
-| Device add (`nvmeX`, `cntrltype=="io"`) | IOC connection completed; write `controllers/nvmeX/unit` state file |
+| Device add (`nvmeX`, `cntrltype=="io"`) | IOC connection confirmed in sysfs; state directory already written by `ExecStartPost=` |
 | Device remove (`nvmeX`) | Remove state dir and in-memory entry; if not excluded, leave unit `active (exited)` and schedule `RestartUnit` with backoff |
 | NBFT (`/sys/firmware/acpi/tables/NBFT`) | Read at startup; adopt already-connected boot controllers or connect missing ones (both DCs and IOCs). Also reconnects NBFT-listed controllers that drop mid-run — the NBFT table is static firmware data, so no re-fetch is ever needed. Controlled by `nbft = true|false` (default `true`). Note: discoverd detects NBFT-sourced controllers (they are in its NBFT cache) and passes `--owner nbft` rather than `--owner discoverd` for those reconnects, preserving the original ownership label. Without this, `owner=nbft` would be overwritten with `owner=discoverd`: nvme-stas would be unaffected (it skips any controller it does not own), but `nvme disconnect-all --owner discoverd` would target the controller — and disconnecting a boot-path controller can cause I/O errors or an unbootable system. |
 | `/etc/nvme/discoverd.conf` `[Discovery Controllers]` and `[I/O Controllers]` | Both DCs (`controller=` in `[Discovery Controllers]`) and IOCs (`controller=` in `[I/O Controllers]`) entries are reconnected at startup. No legacy `discovery.conf` support |
@@ -349,7 +355,7 @@ nvme-discoverd's role in this framework:
 
 **`nvme connect --owner <name>`** — new option. Since nvme-discoverd forks `nvme connect` rather than calling libnvme directly, it cannot register ownership in the registry without this option. Both generated DC and IOC units include `--owner discoverd`.
 
-**`nvme connect --devid-file FILE`** — new option. On successful connection, writes the kernel-assigned device name (e.g. `nvme3`) to `FILE`. Used by transient unit `ExecStop=` lines to identify the device to disconnect at shutdown — the device name is not known at unit creation time, but is returned synchronously by the kernel when `/dev/nvme-fabrics` is written. The path uses systemd specifiers (`%t/nvme/discoverd/units/%N.devid`) so the same literal string works in both `--devid-file` and `ExecStop=` without discoverd embedding anything at unit creation time. Files land in `/run/nvme/discoverd/units/` (tmpfs — does not survive reboot).
+**`nvme connect --devid-file FILE`** — new option. On successful connection, writes the device name (e.g. `nvme3`) to `FILE`. For new connections, the name is returned synchronously by the kernel when `/dev/nvme-fabrics` is written. For idempotent connections (`--idempotent`), libnvme detects the existing connection via sysfs scan without writing to `/dev/nvme-fabrics`; since the device name is known from that scan, it is written to `FILE` before returning. Used by `ExecStartPost=` (to create the state directory), `ExecStop=` (to identify the device to disconnect), and `ExecStopPost=` (to clean up). The path uses systemd specifiers (`%t/nvme/discoverd/units/%N.devid`) so the same literal string works across all four lines without discoverd embedding anything at unit creation time. Files land in `/run/nvme/discoverd/units/` (tmpfs — does not survive reboot).
 
 ---
 
@@ -412,6 +418,12 @@ To `[I/O Controllers]`:
 ## 11. Open Questions
 
 1. **Kernel uevents vs udev events** — Reading kernel uevents directly avoids the udevd dependency but requires custom filtering and large receive buffers. udev event monitoring is more comfortable but adds latency. Not yet resolved. Note: if udev monitoring is chosen, `nvme-discoverd.service` must add `After=systemd-udevd.service` to ensure udevd is ready before the daemon starts listening for events.
+
+2. **Referral DC and stale DLP cache aging** — If a referral DC (or any configured DC) becomes permanently unreachable, IOCs reachable exclusively through it stop being reconnected once their connections drop and the per-DC DLP cache entry is evicted. A configurable stale-timeout — similar to `zeroconf-stale-timeout` planned for mDNS DCs — applied to all per-DC caches would provide a grace period before dropping the DLP of a defunct DC. Worth considering whether this should be a global DC stale-timeout rather than mDNS-specific.
+
+3. **Shutdown ordering vs. mounted filesystems** — Transient connection units carry only `After=network.target`. This does not guarantee they stop after filesystems mounted from those controllers are unmounted. The standard systemd pattern is `Before=remote-fs-pre.target` on the connection units: at shutdown (ordering reverses), units stop after `remote-fs-pre.target`; `_netdev` mount units have `After=remote-fs-pre.target` and therefore stop before it, ensuring unmount before disconnect. Needs verification and testing before adding to the unit templates.
+
+4. **NBFT root controller at shutdown** — NBFT connection units carry `ExecStop=nvme disconnect`. For a controller backing the root filesystem, this disconnect at shutdown can cause a hang or data loss, since the root filesystem is never unmounted. Standard mitigations include omitting `ExecStop=` from NBFT units, or adding ordering constraints to prevent their stop at shutdown. Design decision needed.
 
 ---
 

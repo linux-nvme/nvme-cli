@@ -26,7 +26,7 @@ Orchestrators monitor this directory via inotify and rebuild their effective exc
 
 Three common use cases, in decreasing order of frequency:
 
-- **Exclude a network interface** — a single `host-iface=<iface>` entry prevents any NVMe-oF connection over that interface, regardless of what is discovered. Useful to ensure connections never happen over a management NIC.
+- **Exclude a network interface** — a single `host-iface=<iface>` entry prevents NVMe-oF connections where the orchestrator pins the connection to that interface. nvme-stas applies interface pinning to all auto-discovered controllers: for DLP responses, it pins IOC connections to the interface used to reach the DC; for mDNS-discovered DCs, it pins to the interface where the advertisement arrived. nvme-discoverd applies the same pinning for mDNS-discovered connections when `iface-pinning=true` (the default). The limitation is manually configured `controller=` entries that omit `host-iface=` — those connections are not matched by a host-iface-only exclusion entry, since no interface is specified in their connection parameters. Useful to ensure connections never happen over a management NIC.
 - **Exclude a Discovery Controller** (CDC or DDC) — a single DC entry blocks all IOCs behind it, since orchestrators never fetch the DLP of an excluded DC. Particularly useful when mDNS discovery is active, since mDNS-discovered DCs have no per-entry config option to suppress them.
 - **Exclude an individual IOC** — for finer-grained control; supported but rarely needed in practice.
 
@@ -108,6 +108,15 @@ bool libnvmf_exclusion_match(const char *transport, const char *traddr,
                              const char *subsysnqn, const char *trsvcid,
                              const char *host_traddr, const char *host_iface,
                              const char *host_nqn);
+
+/**
+ * Address comparison note: `traddr` and `host_traddr` values are compared
+ * after normalization — addresses are parsed via `inet_pton()` and
+ * reformatted via `inet_ntop()` before comparison. This handles equivalent
+ * representations (e.g. `fe80::1` and `fe80:0:0:0:0:0:0:1` compare equal)
+ * and IPv4-mapped IPv6 addresses (`::ffff:192.168.1.10` matches
+ * `192.168.1.10`). Raw string comparison of IP addresses is never used.
+ */
 
 /*
  * Iterate over the names of all exclusion lists in the directory.
@@ -213,7 +222,7 @@ nvme.exclusion_remove('user', 'a3f2c1b0')
 nvme.exclusion_delete('site-policy')
 ```
 
-`exclusion_match()` implements the same minimal-match semantics as the C `libnvmf_exclusion_match()`: an exclusion entry matches when every key=value pair in the entry is present in the kwargs. `None` values in kwargs are ignored, so callers may pass the full set of controller parameters and let the matcher skip fields absent from a given entry.
+`exclusion_match()` implements the same minimal-match semantics as the C `libnvmf_exclusion_match()`: for each field present in the exclusion entry, the caller's corresponding parameter must either be `None` (comparison skipped) or equal the entry's value. `None` caller parameters do not prevent a match — they leave that field unconstrained from the caller's side. Callers may pass the full set of controller parameters; any that are `None` are simply not consulted during matching.
 
 The directory path defaults to `/etc/nvme/exclusions` but can be overridden via the `NVME_EXCLUSION_DIR` environment variable, enabling tests to run without root access.
 
@@ -246,6 +255,8 @@ void libnvme_key_value_list_free(struct list_head *list);
 Enforcement is cooperative: each orchestrator reads the exclusion list at startup and on inotify change, and skips connecting any controller that matches an exclusion rule. libnvme does not enforce the exclusion list — it is a local administrator policy, not a system-level enforcement mechanism.
 
 **NBFT controllers are exempt.** nvme-discoverd does not honor exclusion list entries that match NBFT-sourced controllers. Boot-path controllers are firmware-defined connections required for the host's own operation; an exclusion entry targeting a boot device represents a misconfiguration. nvme-discoverd logs a warning and reconnects unconditionally — the override is explicit and visible, not silent.
+
+`nvme connect-all --nbft` is also exempt: when the `--nbft` flag is present, the exclusion list is not consulted. NBFT connections are firmware-defined and required for the host's own operation; an exclusion entry cannot veto them.
 
 **Exclusions are forward-only.** When an exclusion is added, orchestrators stop connecting matching controllers in the future. Controllers that were already connected are not disturbed. To also disconnect an existing controller, use `nvme disconnect --exclude`, which writes the exclusion entry to `/etc/nvme/exclusions/user.conf` first, then disconnects. Writing the exclusion first ensures it is in place before the device removal event triggers orchestrator reconnect logic.
 
