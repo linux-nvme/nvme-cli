@@ -5740,6 +5740,26 @@ static bool is_sanitized(struct libnvme_transport_handle *hdl)
 	return false;
 }
 
+struct nvme_id_ctrl *identify_ctrl(struct libnvme_transport_handle *hdl)
+{
+	struct nvme_id_ctrl *ctrl = libnvme_alloc(sizeof(*ctrl));
+	int err = 0;
+
+	if (!ctrl) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	err = nvme_identify_ctrl(hdl, ctrl);
+	if (err) {
+		nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
+		libnvme_free(ctrl);
+		return NULL;
+	}
+
+	return ctrl;
+}
+
 static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Send a sanitize command.";
@@ -5756,6 +5776,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_libnvme_free struct nvme_id_ctrl *ctrl = NULL;
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;
@@ -5816,15 +5837,40 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
+	ctrl = identify_ctrl(hdl);
+	if (!ctrl)
+		return -errno;
+
 	switch (cfg.sanact) {
 	case NVME_SANITIZE_SANACT_EXIT_FAILURE:
+		break;
 	case NVME_SANITIZE_SANACT_START_BLOCK_ERASE:
+		if (!NVME_CTRL_SANICAP_BES(le32_to_cpu(ctrl->sanicap))) {
+			nvme_show_error("block erase action unsupported");
+			return -EINVAL;
+		}
+		break;
 	case NVME_SANITIZE_SANACT_START_OVERWRITE:
+		if (!NVME_CTRL_SANICAP_OWS(le32_to_cpu(ctrl->sanicap))) {
+			nvme_show_error("overwrite action unsupported");
+			return -EINVAL;
+		}
+		break;
 	case NVME_SANITIZE_SANACT_START_CRYPTO_ERASE:
+		if (!NVME_CTRL_SANICAP_CES(le32_to_cpu(ctrl->sanicap))) {
+			nvme_show_error("crypto erase action unsupported");
+			return -EINVAL;
+		}
+		break;
 	case NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF:
 		break;
 	default:
 		nvme_show_error("Invalid Sanitize Action");
+		return -EINVAL;
+	}
+
+	if (cfg.emvs && !NVME_CTRL_SANICAP_VERS(le32_to_cpu(ctrl->sanicap))) {
+		nvme_show_error("media verification unsupported");
 		return -EINVAL;
 	}
 
