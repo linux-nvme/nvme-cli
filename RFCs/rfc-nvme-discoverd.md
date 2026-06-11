@@ -35,7 +35,7 @@ nvme-discoverd is **connect-only by design**. It never disconnects a live contro
 | NCC bit, DIM registration | CDC-specific; TP8010 only |
 | nvme-stas third-party callback model | Registry + exclusion list achieve the same coordination without coupling |
 | Legacy `discovery.conf` | New project; `discoverd.conf` only |
-| D-Bus as primary IPC | Varlink is the direction |
+| D-Bus for discoverd's own client-facing IPC | discoverd's socket uses varlink (§3.7); systemd unit management currently requires D-Bus — see §3.9 for rationale |
 
 ---
 
@@ -234,6 +234,24 @@ WantedBy=multi-user.target
 
 No `After=network.target` or `After=network-online.target` for the daemon itself — nvme-discoverd does not perform network I/O directly. Only the forked transient units do, and they declare their own network ordering individually. `DefaultDependencies=yes` (the default) implicitly covers `After=sysinit.target` and `After=basic.target`.
 
+### 3.9 Systemd Interface: D-Bus
+
+**Design intent — varlink.** Not depending on D-Bus was a design wish: systemd has been steadily replacing D-Bus interfaces with varlink, and new code should follow that trajectory. However, the varlink interface is incomplete as of today — therefore nvme-discoverd communicates with systemd over D-Bus.
+
+**What systemd varlink provides today.** systemd v260 (released March 2026) added `io.systemd.Unit.StartTransient` on the `io.systemd.Unit` varlink interface, accessible at `/run/systemd/io.systemd.Manager`. This method creates transient units and, via streaming mode (`notifyJobChanges`), delivers job-completion notifications equivalent to the D-Bus `JobRemoved` signal.
+
+**Why varlink is not sufficient yet.** `StopUnit`, `RestartUnit`, and `ResetFailedUnit` have no varlink equivalent as of v260. nvme-discoverd needs all three:
+
+- `RestartUnit` — reconnect after a device loss when the unit is still `active (exited)` and its parameters are baked in
+- `StopUnit` — stop a unit when the desired-set check determines a DLP-sourced IOC should not be reconnected
+- `ResetFailedUnit` — clean up failed units not automatically collected by `CollectMode=inactive-or-failed`
+
+A hybrid approach — varlink for unit creation, D-Bus for stop/restart — would require maintaining two separate IPC connections to systemd. On top of that, `io.systemd.Unit.StartTransient` was only added in v260, which is unlikely to be available in the target distributions at the time of the nvme-cli 3.0 / sl16.2 release. The minimum systemd version would jump from v253 (for `Type=notify-reload`) to v260 with no practical benefit in the initial release.
+
+**Current implementation.** nvme-discoverd uses the `org.freedesktop.systemd1.Manager` D-Bus interface for all unit lifecycle operations (`StartTransientUnit`, `StopUnit`, `RestartUnit`, `ResetFailedUnit`, and the `JobRemoved` signal). The D-Bus calls go through `sd-bus`, systemd's own D-Bus implementation, which is part of `libsystemd` — a library nvme-discoverd already depends on for `sd_event`. No additional library dependency is introduced. The D-Bus usage is scoped exclusively to the systemd interface; discoverd's own client-facing IPC (§3.7) remains varlink-only.
+
+**Path forward.** Once `StopUnit`, `RestartUnit`, and `ResetFailedUnit` are available over varlink, discoverd should migrate away from D-Bus entirely. See §11 Open Questions item 5.
+
 ---
 
 ## 4. In-Memory Caches
@@ -424,6 +442,8 @@ To `[I/O Controllers]`:
 3. **Shutdown ordering vs. mounted filesystems** — Transient connection units carry only `After=network.target`. This does not guarantee they stop after filesystems mounted from those controllers are unmounted. The standard systemd pattern is `Before=remote-fs-pre.target` on the connection units: at shutdown (ordering reverses), units stop after `remote-fs-pre.target`; `_netdev` mount units have `After=remote-fs-pre.target` and therefore stop before it, ensuring unmount before disconnect. Needs verification and testing before adding to the unit templates.
 
 4. **NBFT root controller at shutdown** — NBFT connection units carry `ExecStop=nvme disconnect`. For a controller backing the root filesystem, this disconnect at shutdown can cause a hang or data loss, since the root filesystem is never unmounted. Standard mitigations include omitting `ExecStop=` from NBFT units, or adding ordering constraints to prevent their stop at shutdown. Design decision needed.
+
+5. **Systemd unit management: migrate to varlink** — discoverd currently uses `org.freedesktop.systemd1.Manager` D-Bus for all unit lifecycle operations. systemd v260 (March 2026) added `io.systemd.Unit.StartTransient` over varlink with streaming job-completion notifications, but `StopUnit`, `RestartUnit`, and `ResetFailedUnit` have no varlink equivalent yet. When the full unit lifecycle API is available over varlink, discoverd should migrate away from D-Bus. See §3.9.
 
 ---
 
