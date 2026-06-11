@@ -11,6 +11,7 @@
 
 #include <winsock2.h>
 #include <windows.h>
+#include <setupapi.h>
 #include "nvme-types.h"
 
 struct ctrl_map_entry;
@@ -196,5 +197,31 @@ char *libnvme_ctrl_map_entry_get_model(const struct ctrl_map_entry *entry);
  * Return: UTF-8 firmware revision string, or NULL if unavailable
  */
 char *libnvme_ctrl_map_entry_get_firmware(const struct ctrl_map_entry *entry);
+
+/**
+ * libnvme_ctrl_map_entry_get_devinfo() - Look up the SP_DEVINFO_DATA for a
+ * controller entry
+ * @entry: controller map entry whose interface path is matched
+ * @dev_info_data: output SP_DEVINFO_DATA populated on success
+ *
+ * Enumerates all GUID_DEVINTERFACE_STORAGEPORT interfaces and populates
+ * @dev_info_data for the interface whose device path matches
+ * @entry->ctrl_path (case-insensitive).
+ *
+ * Return: a valid HDEVINFO handle on success, which the caller must release
+ * with libnvme_ctrl_map_entry_free_devinfo(); INVALID_HANDLE_VALUE on
+ * failure.
+ */
+HDEVINFO libnvme_ctrl_map_entry_get_devinfo(
+	const struct ctrl_map_entry *entry,
+	SP_DEVINFO_DATA *dev_info_data);
+
+/**
+ * libnvme_ctrl_map_entry_free_devinfo() - Release a device information set
+ * @hdev: Device information set handle returned by
+ *        libnvme_ctrl_map_entry_get_devinfo().  Safe to call with
+ *        INVALID_HANDLE_VALUE (no-op).
+ */
+void libnvme_ctrl_map_entry_free_devinfo(HDEVINFO hdev);
 
 #endif /* defined(_WIN32) */
