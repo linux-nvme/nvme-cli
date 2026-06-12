@@ -3649,6 +3649,7 @@ static int list(int argc, char **argv, struct command *acmd, struct plugin *plug
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int err = 0;
 
+
 	NVME_ARGS(opts);
 
 	err = parse_args(argc, argv, desc, opts);
@@ -9376,7 +9377,7 @@ static int passthru(int argc, char **argv, bool admin,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_fd int dfd = -1, mfd = -1;
-	int flags;
+	int flags = 0;
 	int mode = 0644;
 	void *data = NULL;
 	__cleanup_free void *mdata = NULL;
