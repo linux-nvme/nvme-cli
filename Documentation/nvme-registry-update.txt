@@ -1,0 +1,70 @@
+nvme-registry-update(1)
+=======================
+
+NAME
+----
+nvme-registry-update - Write an attribute to a controller's registry entry
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'registry update'
+			--device=<DEV> | -d <DEV>
+			--attr=<ATTR> | -a <ATTR>
+			--value=<VAL> | -V <VAL>
+
+DESCRIPTION
+-----------
+Write an attribute to the ownership registry entry for an NVMe-oF
+controller.  The registry is stored under /run/nvme/registry/ as one
+directory per live controller, with one plain-text file per attribute.
+The entry directory is created if it does not already exist.
+
+This command is primarily used by orchestrators to claim or transfer
+ownership of an existing connection.  An orchestrator with greater
+management authority (e.g. nvme-stas with CDC/fabric-zoning knowledge)
+may call this command to take ownership from one that connected first.
+
+Writes are atomic: a temporary file is written and synced, then renamed
+into place, preventing corruption under concurrent access.
+
+OPTIONS
+-------
+-d <DEV>::
+--device=<DEV>::
+	NVMe device name (e.g. nvme3).  The /dev/ prefix is optional.
+
+-a <ATTR>::
+--attr=<ATTR>::
+	Attribute name to write (e.g. owner).
+
+-V <VAL>::
+--value=<VAL>::
+	New attribute value.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Claim ownership of nvme3:
++
+------------
+# nvme registry update --device nvme3 --attr owner --value stas
+------------
+
+* Transfer ownership to a different orchestrator:
++
+------------
+# nvme registry update --device nvme3 --attr owner --value nbft
+------------
+
+SEE ALSO
+--------
+nvme-registry-list(1)
+nvme-registry-retrieve(1)
+nvme-registry-delete(1)
+nvme-disconnect-all(1)
+
+NVME
+----
+Part of the nvme-user suite
