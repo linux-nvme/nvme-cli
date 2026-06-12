@@ -9,30 +9,69 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'disconnect-all'
+			[--transport=<STR> | -r <STR>]
+			[--owner=<NAME> | -O <NAME>]
+			[--force]
 
 DESCRIPTION
 -----------
-Disconnects and removes all existing NVMe over Fabrics controllers.
+Disconnects and removes NVMe over Fabrics controllers.  The default
+behavior is ownership-aware: only controllers with no entry in the
+ownership registry are disconnected.  Controllers registered to an
+orchestrator (e.g. nvme-stas, nbft) are left untouched.
+
+Use --owner to target a specific orchestrator's controllers, or --force
+to disconnect all controllers regardless of ownership.  --force and
+--owner are mutually exclusive.  When either flag is used interactively
+a confirmation prompt is shown; non-interactive invocations proceed
+without prompting.
 
 See the documentation for the nvme-disconnect(1) command for further
 background.
 
 OPTIONS
 -------
+-r <STR>::
+--transport=<STR>::
+	Limit disconnection to controllers using the specified transport
+	(e.g. tcp, rdma, fc).
+
+-O <NAME>::
+--owner=<NAME>::
+	Disconnect only controllers owned by NAME in the registry.
+	Requires interactive confirmation when stdin is a terminal.
+
+--force::
+	Disconnect all controllers regardless of ownership.  Requires
+	interactive confirmation when stdin is a terminal.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Disconnect all existing nvme controllers:
+* Disconnect all unowned controllers (safe default):
 +
 ------------
 # nvme disconnect-all
 ------------
 
+* Disconnect all controllers owned by nvme-stas:
++
+------------
+# nvme disconnect-all --owner stas
+------------
+
+* Disconnect all controllers regardless of ownership:
++
+------------
+# nvme disconnect-all --force
+------------
+
 SEE ALSO
 --------
 nvme-disconnect(1)
+nvme-registry-list(1)
+nvme-registry-delete(1)
 
 NVME
 ----
