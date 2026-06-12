@@ -72,19 +72,27 @@ Multiple `.conf` files in `/etc/nvme/exclusions/` allow different administrative
 
 The ownership registry and the exclusion list each address one side of the coexistence problem. Putting them together gives a clear picture of how all NVMe-oF tools relate to each other.
 
-Not all tools are equal. They fall into three tiers based on how much policy enforcement they perform:
+Not all tools are equal. They fall into three tiers based on how much policy enforcement they perform.
 
-**Tier 1 — Raw commands** (`nvme connect`, `nvme disconnect`): targeted, explicit, and unconditional. The caller specifies a single controller and the command executes without consulting any policy mechanism. `nvme connect` ignores the exclusion list; `nvme disconnect` ignores the ownership registry. These are power tools: the caller's intent is unambiguous. Note however that if a user manually disconnects a controller that a daemon orchestrator manages, that daemon may reconnect it — the controller is in its desired set. A `nvme disconnect` alone cannot achieve a persistent disconnect against an active daemon. To keep the controller disconnected, add an exclusion entry with `nvme disconnect --exclude` (a single atomic step that writes the entry then disconnects) or separately with `nvme exclusion add` followed by `nvme disconnect`. Without an exclusion entry, the daemon will reconnect at its next retry interval.
+### 5.1 Tier 1 — Raw commands
 
-**Tier 2 — Manually-triggered orchestrators** (`nvme connect-all`, `nvme disconnect-all`): policy-aware, broad-scope commands that the user invokes directly. They operate across many controllers at once; the caller does not necessarily know which controllers are managed by a running daemon. Guardrails are appropriate at this scope. `nvme connect-all` respects the exclusion list before connecting; `nvme disconnect-all` respects the ownership registry before disconnecting.
+`nvme connect` and `nvme disconnect` are targeted, explicit, and unconditional. The caller specifies a single controller and the command executes without consulting any policy mechanism. `nvme connect` ignores the exclusion list; `nvme disconnect` ignores the ownership registry. These are power tools: the caller's intent is unambiguous.
+
+Note however that if a user manually disconnects a controller that a daemon orchestrator manages, that daemon may reconnect it — the controller is in its desired set. A `nvme disconnect` alone cannot achieve a persistent disconnect against an active daemon. To keep the controller disconnected, add an exclusion entry with `nvme disconnect --exclude` (a single atomic step that writes the entry then disconnects) or separately with `nvme exclusion add` followed by `nvme disconnect`. Without an exclusion entry, the daemon will reconnect at its next retry interval.
+
+### 5.2 Tier 2 — Manually-triggered orchestrators
+
+`nvme connect-all` and `nvme disconnect-all` are policy-aware, broad-scope commands that the user invokes directly. They operate across many controllers at once; the caller does not necessarily know which controllers are managed by a running daemon. Guardrails are appropriate at this scope. `nvme connect-all` respects the exclusion list before connecting; `nvme disconnect-all` respects the ownership registry before disconnecting.
 
 `connect-all` deliberately uses a NULL owner (no registry participation), with one exception: `connect-all --nbft` registers `owner=nbft` to protect firmware boot volumes. `connect-all --nbft` is also exempt from the exclusion list: NBFT connections are firmware-defined and required for the host's own operation; an exclusion entry cannot veto them. Plain `connect-all` leaves connections unowned so that `disconnect-all` can always undo its work — unowned controllers are always safe to disconnect.
 
 This may raise a concern for FC environments where dracut uses `nvme connect-all` to connect FC controllers before `switch_root`: those connections would be unowned and vulnerable to an accidental `disconnect-all`. The protection comes from nvme-discoverd: as part of its startup reconciliation, discoverd repeats the FC Kickstart (writing to `/sys/class/fc/fc_udev_device/nvme_discovery`) and claims ownership of all FC-discovered controllers by passing `--owner discoverd`. By the time the system is fully up and a user could run `disconnect-all`, discoverd has already registered ownership and those controllers are protected. See `rfc-nvme-discoverd.md` §7. Discovery Sources for the FC Kickstart details.
 
-**Tier 3 — Daemon orchestrators** (`nvme-discoverd`, `nvme-stas`): persistent, event-driven, and fully policy-enforcing. They register ownership on connect and respect both the ownership registry and the exclusion list. nvme-stas additionally enforces CDC fabric zoning (TP8010): before any CDC-driven disconnect, nvme-stas checks the registry and skips any controller owned by another orchestrator. NBFT and discoverd-managed controllers are automatically protected against CDC-driven disconnects by this same rule, with no special-case disconnect logic required in nvme-stas (see [§7. TP8010 Fabric Zoning Conflicts](#7-tp8010-fabric-zoning-conflicts)).
+### 5.3 Tier 3 — Daemon orchestrators
 
-**Summary table:**
+`nvme-discoverd` and `nvme-stas` are persistent, event-driven, and fully policy-enforcing. They register ownership on connect and respect both the ownership registry and the exclusion list. nvme-stas additionally enforces CDC fabric zoning (TP8010): before any CDC-driven disconnect, nvme-stas checks the registry and skips any controller owned by another orchestrator. NBFT and discoverd-managed controllers are automatically protected against CDC-driven disconnects by this same rule, with no special-case disconnect logic required in nvme-stas (see [§7. TP8010 Fabric Zoning Conflicts](#7-tp8010-fabric-zoning-conflicts)).
+
+### 5.4 Summary
 
 | Command / Daemon | Checks exclusion list | Checks ownership registry | Registers ownership |
 |---|---|---|---|
@@ -115,7 +123,9 @@ This is correct by design: these are one-shot or user-driven connections not man
 In most deployments, nvme-stas and nvme-discoverd naturally partition work by discovery mechanism, without requiring explicit coordination:
 
 - **nvme-stas** owns mDNS-discovered TCP controllers. According to TP8009, NVMe-oF controllers are advertised via mDNS using the `_nvme-disc._tcp` DNS-SD service type, so controllers discovered through mDNS are always NVMe/TCP. Auto-discovery is nvme-stas' core feature.
-- **nvme-discoverd** manages NBFT-defined controllers and manually-configured controllers (any transport — TCP, FC, RDMA) through its own configuration file. FC and RDMA environments are almost never mDNS-discovered; their controllers reach discoverd through static config or FC Kickstart PDUs. NBFT controllers start with `owner=nbft` in the registry (set by `nvme connect-all --nbft` during boot). nvme-discoverd handles reconnection and preserves the `owner=nbft` label for NBFT-sourced controllers: the transient unit passes `--owner nbft` rather than `--owner discoverd`, ensuring `nvme disconnect-all --owner discoverd` never targets a firmware-defined boot volume. See `rfc-nvme-discoverd.md` §7. Discovery Sources for details.
+- **nvme-discoverd** manages NBFT-defined controllers and manually-configured controllers (any transport — TCP, FC, RDMA) through its own configuration file. FC and RDMA environments are almost never mDNS-discovered; their controllers reach discoverd through static config or FC Kickstart PDUs.
+
+NBFT controllers start with `owner=nbft` in the registry (set by `nvme connect-all --nbft` during boot). nvme-discoverd handles reconnection and preserves the `owner=nbft` label for NBFT-sourced controllers: the transient unit passes `--owner nbft` rather than `--owner discoverd`, ensuring `nvme disconnect-all --owner discoverd` never targets a firmware-defined boot volume. See `rfc-nvme-discoverd.md` §7. Discovery Sources for details.
 
 Note: NBFT can contain TCP controllers (NVMe-oF boot over TCP is common), so nvme-discoverd will handle TCP too in that case — but these are firmware-defined, not mDNS-discovered, so there is no overlap with nvme-stas.
 
@@ -135,7 +145,7 @@ Before any CDC-driven disconnect, nvme-stas checks the ownership registry and sk
 - An NBFT boot-path controller carries `owner=nbft` — nvme-stas never disconnects it.
 - Since nvme-stas never disconnects a controller owned by another orchestrator, there is nothing for nvme-discoverd to reconnect — a bounce loop cannot occur.
 
-**NBFT controllers are also immune to nvme-discoverd's exclusion list.** nvme-discoverd reconnects NBFT-sourced controllers unconditionally, regardless of any matching exclusion list entry. An exclusion entry targeting a boot device is a misconfiguration; nvme-discoverd logs a warning and reconnects. See `rfc-nvme-registry.md` §4 for the `owner=nbft` semantics.
+**NBFT controllers are also immune to nvme-discoverd's exclusion list.** nvme-discoverd reconnects NBFT-sourced controllers unconditionally, regardless of any matching exclusion list entry. An exclusion entry targeting a boot device is a misconfiguration; nvme-discoverd logs a warning and reconnects. See `rfc-nvme-registry.md` §4.4 for the `owner=nbft` semantics.
 
 Note that NBFT immunity has two distinct sources: **disconnect immunity** is emergent from the registry-check rule — nvme-stas skips any controller it does not own, so `owner=nbft` controllers are protected without any NBFT-specific logic in nvme-stas; **exclusion-list immunity** is a deliberate special case implemented in nvme-discoverd itself, which overrides its own exclusion list check for controllers present in its NBFT cache.
 
@@ -143,7 +153,9 @@ Note that NBFT immunity has two distinct sources: **disconnect immunity** is eme
 
 ## 8. mDNS Discovery (TP8009) — One Orchestrator at a Time
 
-At most one orchestrator must have mDNS discovery enabled at a time. If both nvme-stas and nvme-discoverd browse `_nvme-disc._tcp` simultaneously, they race to connect to the same mDNS-discovered DCs. The kernel prevents true duplicate connections — the first to connect wins and the other gets `EALREADY`. The real problem is the operational noise: duplicate Get Log Page commands to the same DCs, duplicate AEN reactions, ownership ambiguity in the registry, and duplicated journal entries. The ownership ambiguity also undermines CDC fabric zoning (TP8010): nvme-stas can only enforce zoning on controllers it owns — if nvme-discoverd wins the connection race for an mDNS-discovered controller, that controller carries `owner=discoverd` and nvme-stas cannot disconnect it even if the CDC's zone policy demands it.
+At most one orchestrator must have mDNS discovery enabled at a time. If both nvme-stas and nvme-discoverd browse `_nvme-disc._tcp` simultaneously, they race to connect to the same mDNS-discovered DCs. The kernel prevents true duplicate connections — the first to connect wins and the other gets `EALREADY`. The real problem is the operational noise: duplicate Get Log Page commands to the same DCs, duplicate AEN reactions, ownership ambiguity in the registry, and duplicated journal entries.
+
+The ownership ambiguity also undermines CDC fabric zoning (TP8010): nvme-stas can only enforce zoning on controllers it owns — if nvme-discoverd wins the connection race for an mDNS-discovered controller, that controller carries `owner=discoverd` and nvme-stas cannot disconnect it even if the CDC's zone policy demands it.
 
 nvme-stas actively detects this misconfiguration: at startup it reads `/etc/nvme/discoverd.conf` and emits an error-level journal entry if `zeroconf=true` is set, prompting the administrator to disable mDNS in one of the two daemons. The defaults already avoid the conflict in most deployments: nvme-stas enables mDNS by default; nvme-discoverd disables it by default (`zeroconf=false`). The administrator must make a deliberate choice to enable mDNS in nvme-discoverd, and should do so only when nvme-stas is not installed on the same host.
 
