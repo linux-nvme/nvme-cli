@@ -1,0 +1,52 @@
+nvme-registry-list(1)
+=====================
+
+NAME
+----
+nvme-registry-list - List NVMe-oF controller ownership registry entries
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'registry list'
+
+DESCRIPTION
+-----------
+List all live entries in the NVMe-oF controller ownership registry.  The
+registry records which orchestrator (e.g. nvme-stas, nbft) owns each
+connected NVMe-oF controller.  It is stored under /run/nvme/registry/ as
+one directory per live controller containing one plain-text file per
+attribute (e.g. /run/nvme/registry/nvme3/owner).
+
+One entry is printed per live registered controller.  Controllers with no
+registry entry (unowned) and non-fabrics (PCIe) controllers (which are never
+registered) are not shown.  Stale entries whose corresponding /dev/nvmeN
+device node no longer exists are silently skipped.
+
+OPTIONS
+-------
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* List all owned controllers:
++
+------------
+# nvme registry list
+nvme1
+  owner        stas
+nvme3
+  owner        nbft
+------------
+
+SEE ALSO
+--------
+nvme-registry-retrieve(1)
+nvme-registry-update(1)
+nvme-registry-delete(1)
+nvme-disconnect-all(1)
+
+NVME
+----
+Part of the nvme-user suite

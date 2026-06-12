@@ -1,0 +1,60 @@
+nvme-registry-retrieve(1)
+=========================
+
+NAME
+----
+nvme-registry-retrieve - Read an attribute from a controller's registry entry
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'registry retrieve'
+			--device=<DEV> | -d <DEV>
+			[--attr=<ATTR> | -a <ATTR>]
+
+DESCRIPTION
+-----------
+Read a single attribute from the ownership registry entry for an NVMe-oF
+controller.  The registry is stored under /run/nvme/registry/ as one
+directory per live controller, with one plain-text file per attribute
+(e.g. /run/nvme/registry/nvme3/owner).
+
+If --attr is omitted the 'owner' attribute is retrieved.
+
+OPTIONS
+-------
+-d <DEV>::
+--device=<DEV>::
+	NVMe device name (e.g. nvme3).  The /dev/ prefix is optional.
+
+-a <ATTR>::
+--attr=<ATTR>::
+	Attribute name to retrieve.  Defaults to 'owner'.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Retrieve the owner of nvme3 (default attribute):
++
+------------
+# nvme registry retrieve --device nvme3
+stas
+------------
+
+* Retrieve a specific attribute:
++
+------------
+# nvme registry retrieve --device nvme3 --attr owner
+stas
+------------
+
+SEE ALSO
+--------
+nvme-registry-list(1)
+nvme-registry-update(1)
+nvme-registry-delete(1)
+
+NVME
+----
+Part of the nvme-user suite

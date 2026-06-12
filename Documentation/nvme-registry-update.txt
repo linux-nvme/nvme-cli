@@ -1,0 +1,71 @@
+nvme-registry-update(1)
+=======================
+
+NAME
+----
+nvme-registry-update - Write an attribute to a controller's registry entry
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'registry update'
+			--device=<DEV> | -d <DEV>
+			--attr=<ATTR> | -a <ATTR>
+			--value=<VAL> | -V <VAL>
+
+DESCRIPTION
+-----------
+Write a non-owner attribute to the ownership registry entry for an
+NVMe-oF controller.  The registry is stored under /run/nvme/registry/ as
+one directory per live controller, with one plain-text file per
+attribute.  The entry directory is created if it does not already exist.
+
+The 'owner' attribute is immutable: it is recorded when the connection is
+created (e.g. by 'nvme connect --owner') and cannot be changed by this
+command.  Attempting to update 'owner' is rejected.  Use this command for
+auxiliary attributes such as a free-form 'note'.
+
+Writes are atomic: a temporary file is written and synced, then renamed
+into place, preventing corruption under concurrent access.
+
+OPTIONS
+-------
+-d <DEV>::
+--device=<DEV>::
+	NVMe device name (e.g. nvme3).  The /dev/ prefix is optional.
+
+-a <ATTR>::
+--attr=<ATTR>::
+	Attribute name to write (e.g. note).  The reserved 'owner'
+	attribute is immutable and cannot be written with this command.
+
+-V <VAL>::
+--value=<VAL>::
+	New attribute value.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Attach a free-form note to nvme3:
++
+------------
+# nvme registry update --device nvme3 --attr note --value "maintenance 2026-07"
+------------
+
+* Update a previously written note:
++
+------------
+# nvme registry update --device nvme3 --attr note --value "released"
+------------
+
+SEE ALSO
+--------
+nvme-registry-list(1)
+nvme-registry-retrieve(1)
+nvme-registry-delete(1)
+nvme-disconnect-all(1)
+
+NVME
+----
+Part of the nvme-user suite
