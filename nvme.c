@@ -4963,7 +4963,7 @@ static int get_feature_id_changed(struct libnvme_transport_handle *hdl, struct f
 	__cleanup_libnvme_free void *buf_def = NULL;
 	__cleanup_libnvme_free void *buf = NULL;
 	__u64 result_def = 0;
-	__u64 result;
+	__u64 result = 0;
 	int err_def = 0;
 	int err;
 
