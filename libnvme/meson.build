@@ -41,6 +41,13 @@ if want_libnvme
         subdir('examples')
     endif
 
+    if want_fabrics
+        install_data(
+            'sysfiles/udev/rules.d/70-nvmf-registry.rules',
+            install_dir: udevrulesdir,
+        )
+    endif
+
     subdir('doc')
 else
     # Fallback to using a pre-installed libnvme (if available)

@@ -42,7 +42,7 @@ static bool libnvme_mi_probe_enabled_default(void)
 }
 
 __libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(
-		FILE *fp, int log_level)
+		FILE *fp, int log_level, const char *owner)
 {
 	struct libnvme_global_ctx *ctx;
 	int fd;
@@ -62,6 +62,14 @@ __libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(
 
 	ctx->log.fd = fd;
 	ctx->log.level = log_level;
+
+	if (owner) {
+		ctx->owner = strdup(owner);
+		if (!ctx->owner) {
+			free(ctx);
+			return NULL;
+		}
+	}
 
 	list_head_init(&ctx->hosts);
 	list_head_init(&ctx->endpoints);
@@ -95,7 +103,7 @@ __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 		libnvme_mi_close(ep);
 #endif
 	free(ctx->config_file);
-	free(ctx->application);
+	free(ctx->owner);
 	free(ctx);
 }
 

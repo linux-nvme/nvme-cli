@@ -584,7 +584,7 @@ if want_nvme
         link_args_list = ['-ldl']
     endif
 
-    executable(
+    nvme_exe = executable(
         'nvme',
         sources,
         dependencies: link_deps,
@@ -595,6 +595,16 @@ if want_nvme
 
     if host_system != 'windows'
         subdir('unit')
+    endif
+
+    if want_fabrics and 'registry' in selected_plugins
+        _py3 = find_program('python3', required: false)
+        if _py3.found()
+            test('nvme-cli - registry-cli',
+                 _py3,
+                 args: [files('tests/nvme_registry_test.py'), nvme_exe],
+                 depends: nvme_exe)
+        endif
     endif
     if get_option('nvme-tests')
         subdir('tests')

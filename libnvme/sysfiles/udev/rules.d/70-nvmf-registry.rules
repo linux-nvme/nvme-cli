@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+#
+# Remove the registry entry when an NVMe controller is removed by the kernel.
+# %k expands to the kernel device name (e.g. nvme3).
+#
+# The kernel allocates controller instance numbers with ida_alloc(), which
+# returns the lowest available ID.  A freed instance number can therefore be
+# reassigned to a new controller before this rule runs for the old one.  The
+# [ -e /dev/%k ] guard detects that case: devtmpfs removes the old node
+# before KOBJ_REMOVE fires, so if the node exists again a new controller has
+# already claimed the name and its registry entry must not be deleted.
+ACTION=="remove", SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", \
+    RUN+="/bin/sh -c '[ -e /dev/%k ] || rm -rf /run/nvme/registry/%k'"

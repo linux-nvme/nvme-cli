@@ -94,7 +94,6 @@ static const char *nvmf_data_digest	= "enable transport protocol data digest (TC
 static const char *nvmf_tls		= "enable TLS";
 static const char *nvmf_concat		= "enable secure concatenation";
 static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
-static const char *nvmf_context		= "execution context identification string";
 
 struct nvmf_args {
 	const char *subsysnqn;
@@ -562,7 +561,6 @@ unref:
 int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 {
 	char *config_file = PATH_NVMF_CONFIG;
-	char *context = NULL;
 	nvme_print_flags_t flags;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
@@ -584,8 +582,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		  OPT_FLAG("force",          0, &force,               "Force persistent discovery controller creation"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
 		  OPT_FLAG("no-nbft",        0, &nonbft,              "Do not look at NBFT tables"),
-		  OPT_STRING("nbft-path",    0, "STR", &nbft_path,    "user-defined path for NBFT tables"),
-		  OPT_STRING("context",      0, "STR", &context,       nvmf_context));
+		  OPT_STRING("nbft-path",    0, "STR", &nbft_path,    "user-defined path for NBFT tables"));
 
 	nvmf_default_args(&fa);
 
@@ -606,14 +603,13 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 	log_level = map_log_level(nvme_args.verbose, quiet);
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level,
+					nbft ? "nbft" : NULL);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
-	if (context)
-		libnvme_set_application(ctx, context);
 
 	if (!nvme_read_config_checked(ctx, config_file))
 		json_config = true;
@@ -676,7 +672,6 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	__cleanup_free char *hnqn = NULL;
 	__cleanup_free char *hid = NULL;
 	char *config_file = NULL;
-	char *context = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	__cleanup_nvme_ctrl libnvme_ctrl_t c = NULL;
@@ -686,8 +681,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 
 	NVMF_ARGS(opts, fa,
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
-		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"),
-		  OPT_STRING("context",              0, "STR", &context,  nvmf_context));
+		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"));
 
 	nvmf_default_args(&fa);
 
@@ -730,14 +724,12 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 do_connect:
 	log_level = map_log_level(nvme_args.verbose, quiet);
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level, NULL);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
-	if (context)
-		libnvme_set_application(ctx, context);
 
 	libnvme_read_config(ctx, config_file);
 	nvme_read_volatile_config(ctx);
@@ -855,7 +847,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level, NULL);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			libnvme_strerror(errno));
@@ -906,6 +898,8 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 {
+	const char *owner_help = "disconnect only controllers owned by NAME";
+	const char *force_help = "disconnect all controllers regardless of ownership";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	libnvme_host_t h;
 	libnvme_subsystem_t s;
@@ -914,20 +908,48 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 
 	struct config {
 		char *transport;
+		char *owner;
+		bool force;
 	};
 
 	struct config cfg = { 0 };
 
 	NVME_ARGS(opts,
-		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport));
+		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport),
+		OPT_STRING("owner", 'O', "NAME", &cfg.owner, owner_help),
+		OPT_FLAG("force", 0, &cfg.force, force_help));
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
+	if (cfg.force && cfg.owner) {
+		fprintf(stderr, "--force and --owner are mutually exclusive\n");
+		return -EINVAL;
+	}
+
+	if ((cfg.force || cfg.owner) && isatty(STDIN_FILENO)) {
+		char ans[8] = { 0 };
+
+		if (cfg.force)
+			fprintf(stderr,
+				"WARNING: --force disconnects all NVMeoF controllers\n"
+				"regardless of ownership. Type 'yes' to confirm: ");
+		else
+			fprintf(stderr,
+				"WARNING: --owner disconnects all NVMeoF controllers\n"
+				"owned by '%s'. Type 'yes' to confirm: ",
+				cfg.owner);
+		if (!fgets(ans, sizeof(ans), stdin) ||
+		    strncmp(ans, "yes", 3) != 0) {
+			fprintf(stderr, "Aborted.\n");
+			return -EINVAL;
+		}
+	}
+
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level, NULL);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			libnvme_strerror(errno));
@@ -952,17 +974,39 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s) {
 			libnvme_subsystem_for_each_ctrl(s, c) {
+				const char *tr = libnvme_ctrl_get_transport(c);
+				const char *name;
+				char *reg_owner = NULL;
+				bool do_disconnect = false;
+
 				if (cfg.transport &&
-				    strcmp(cfg.transport,
-					   libnvme_ctrl_get_transport(c)))
+				    strcmp(cfg.transport, tr))
 					continue;
-				else if (!strcmp(libnvme_ctrl_get_transport(c),
-						 "pcie"))
+				if (!strcmp(tr, "pcie") ||
+				    !strcmp(tr, "apple-nvme"))
 					continue;
-				if (libnvmf_disconnect_ctrl(c))
+
+				name = libnvme_ctrl_get_name(c);
+
+				if (cfg.force) {
+					do_disconnect = true;
+				} else {
+					libnvmf_registry_retrieve(name,
+						"owner", &reg_owner);
+					if (cfg.owner)
+						do_disconnect = reg_owner &&
+							!strcmp(reg_owner,
+								cfg.owner);
+					else
+						do_disconnect = !reg_owner;
+					free(reg_owner);
+				}
+
+				if (do_disconnect &&
+				    libnvmf_disconnect_ctrl(c))
 					fprintf(stderr,
 						"failed to disconnect %s\n",
-						libnvme_ctrl_get_name(c));
+						name);
 			}
 		}
 	}
@@ -996,7 +1040,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, quiet);
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level, NULL);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			libnvme_strerror(errno));
@@ -1127,7 +1171,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx(stderr, log_level, NULL);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			libnvme_strerror(errno));

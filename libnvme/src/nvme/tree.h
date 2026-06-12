@@ -32,23 +32,6 @@ typedef bool (*libnvme_scan_filter_t)(libnvme_subsystem_t, libnvme_ctrl_t,
 				   libnvme_ns_t, void *);
 
 /**
- * libnvme_set_application - Specify managing application
- * @ctx:	struct libnvme_global_ctx object
- * @a:	Application string
- *
- * Sets the managing application string for @r.
- */
-void libnvme_set_application(struct libnvme_global_ctx *ctx, const char *a);
-
-/**
- * libnvme_get_application - Get managing application
- * @ctx:	struct libnvme_global_ctx object
- *
- * Returns the managing application string for @r or NULL if not set.
- */
-const char *libnvme_get_application(struct libnvme_global_ctx *ctx);
-
-/**
  * libnvme_skip_namespaces - Skip namespace scanning
  * @ctx:	struct libnvme_global_ctx object
  *
