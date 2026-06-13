@@ -149,7 +149,7 @@ DC units whose TID is present in the NBFT cache carry `--owner nbft` instead of 
 
 Each DLPE in the DLP is processed based on its `subtype`:
 - `NVME_NQN_NVME` — I/O Controller: create a transient IOC unit.
-- `NVME_NQN_DISC` — Referral to another DC: create a transient DC unit for the referred DC. When that DC's device appears, its DLP is fetched and processed identically. Referral chains of arbitrary depth are followed naturally through the event loop — no explicit recursion is needed. Note: `nvme connect-all` traverses referrals the same way; `nvme discover` does not (it only fetches one level). If a referral DC becomes permanently unreachable, its per-DC DLP cache entry is eventually evicted; IOCs reachable exclusively through that referral chain fizzle out naturally as their connections drop and are not reconnected. This is intentional — the desired set is derived from current cache state. See §11 (Open Questions) for a proposed stale-cache aging mechanism.
+- `NVME_NQN_DISC` — Referral to another DC: create a transient DC unit for the referred DC. When that DC's device appears, its DLP is fetched and processed identically. Referral chains of arbitrary depth are followed naturally through the event loop — no explicit recursion is needed. Note: `nvme connect-all` traverses referrals the same way; `nvme discover` does not (it only fetches one level). If a referral DC becomes permanently unreachable, its per-DC DLP cache entry is eventually evicted; IOCs reachable exclusively through that referral chain fizzle out naturally as their connections drop and are not reconnected. This is intentional — the desired set is derived from current cache state. See §11 (DC Retention Policy) for the planned design.
 - `DUPRETINFO` flag set — duplicate information: skip.
 
 Future AENs from the DC arrive as udev events and trigger a DLP re-fetch.
@@ -301,7 +301,7 @@ A hybrid approach — varlink for unit creation, D-Bus for stop/restart — woul
 
 **Current implementation.** nvme-discoverd uses the `org.freedesktop.systemd1.Manager` D-Bus interface for all unit lifecycle operations (`StartTransientUnit`, `StopUnit`, `RestartUnit`, `ResetFailedUnit`, and the `JobRemoved` signal). The D-Bus calls go through `sd-bus`, systemd's own D-Bus implementation, which is part of `libsystemd` — a library nvme-discoverd already depends on for `sd_event`. No additional library dependency is introduced. The D-Bus usage is scoped exclusively to the systemd interface; discoverd's own client-facing IPC (§3.7) remains varlink-only.
 
-**Path forward.** Once `StopUnit`, `RestartUnit`, and `ResetFailedUnit` are available over varlink, discoverd should migrate away from D-Bus entirely. See §11 Open Questions item 5.
+**Path forward.** Once `StopUnit`, `RestartUnit`, and `ResetFailedUnit` are available over varlink, discoverd should migrate away from D-Bus entirely. See §12 Open Questions item 4.
 
 ---
 
@@ -312,11 +312,11 @@ Discoverd maintains three in-memory caches in the initial release; a fourth is a
 - **NBFT cache** — populated at startup from the NBFT ACPI table; static for the daemon's lifetime.
 - **Config cache** — populated at startup from `discoverd.conf`; rebuilt on SIGHUP.
 - **Per-DC DLP cache** — a map from DC TID to the set of IOC TIDs in that DC's last-fetched Discovery Log Page. Populated as each DC connects and its DLP is fetched. Updated on each AEN via clean per-DC replacement: `dc_cache[dc_tid] = new_dlp`. No origin tag is needed on individual entries — the per-DC structure provides that naturally.
-- **mDNS DC cache** *(future release)* — the set of DC TIDs discovered via mDNS/DNS-SD. Populated dynamically as mDNS advertisements are received; entries age out per `zeroconf-stale-timeout`. See §10. Future Release.
+- **mDNS DC cache** *(future release)* — the set of DC TIDs discovered via mDNS/DNS-SD. Populated dynamically as mDNS advertisements are received; entries age out per `discovery-retention-time`. See §10 and §11. Future Releases.
 
 The **desired connection set** is the union of all caches: NBFT cache ∪ config cache ∪ union of all per-DC DLP caches ∪ mDNS DC cache *(future)*. This is a derived view, not a separate data structure; at reconnect time discoverd checks the caches directly.
 
-**FC kickstart has no corresponding cache.** FC-NVMe targets are discovered by writing `add` to `/sys/class/fc/fc_udev_device/nvme_discovery`, which causes the FC HBA firmware to probe all reachable targets and fire `FC_EVENT=="nvmediscovery"` uevents for each. Discoverd creates a transient unit per event without caching the discovered TIDs. The kickstart is re-issued at startup and again whenever an FC controller drops — the fabric's current response is authoritative each time. FC kickstart is to FC what mDNS is to TCP: event-driven, no stale-cache problem, no TID list to maintain. The desired set for FC connections is implicitly defined by what the kickstart currently discovers.
+**FC kickstart has no corresponding cache in the initial release.** FC-NVMe targets are discovered by writing `add` to `/sys/class/fc/fc_udev_device/nvme_discovery`, which causes the FC HBA firmware to probe all reachable targets and fire `FC_EVENT=="nvmediscovery"` uevents for each. Discoverd creates a transient unit per event without caching the discovered TIDs. The kickstart is re-issued at startup and again whenever an FC controller drops — the fabric's current response is authoritative each time. The desired set for FC connections is implicitly defined by what the kickstart currently discovers. Note: the DC retention policy (§11.3) will require tracking which FC DC TIDs appeared in the last kickstart response in order to start the retention timer when a TID stops appearing.
 
 **Origin classification heuristic at startup:** a TID found in a state file that is absent from both the NBFT cache and the config cache is assumed to be DLP-sourced. This is correct in practice — the same TID can appear in both a DLP and the config cache, but NBFT and config entries are checked first; a TID absent from both is classified as DLP-sourced.
 
@@ -333,7 +333,7 @@ The **desired connection set** is the union of all caches: NBFT cache ∪ config
 
 **Failure detection (initial connect):** discoverd subscribes to the `org.freedesktop.systemd1.Manager.JobRemoved` D-Bus signal for each unit it starts. When the job completes with `done`, the connection succeeded — `ExecStartPost=` has already written the state directory. When the job completes with `failed`, the connection failed; `CollectMode=inactive-or-failed` garbage-collects the unit. discoverd schedules a `StartTransient` call with exponential backoff (1 s, 2 s, 4 s … capped at a configurable maximum). The exclusion list is checked before each retry. No timer is needed — `JobRemoved` is the authoritative completion signal for both new and idempotent connections.
 
-**Retry policy:** discoverd retries indefinitely for all controller types. Manually-configured and DLP-sourced controllers represent deliberate intent — there is no give-up horizon. For mDNS-discovered DCs, `zeroconf-stale-timeout` handles the natural expiry once both the mDNS advertisement and the connection are lost (see §4. In-Memory Caches).
+**Retry policy:** discoverd retries indefinitely for statically configured and NBFT-derived controllers — they represent deliberate intent and have no give-up horizon. For dynamically discovered DCs (mDNS, referrals, FC kickstart), `discovery-retention-time` handles the natural expiry once the discovery source becomes unavailable and the connection is lost (see §11. DC Retention Policy).
 
 **Device removal:** when `device remove` fires, discoverd removes the state dir and in-memory entry, then makes two checks before deciding to reconnect:
 
@@ -405,7 +405,7 @@ Discovery sources for the initial release include:
 | Device remove (`nvmeX`) | Remove state dir and in-memory entry; apply exclusion check, then desired-set check (DLP-sourced IOCs only); if both pass: TCP/RDMA leaves unit `active (exited)` and schedules `RestartUnit`; FC calls `StopUnit` then re-issues kickstart |
 | NBFT (`/sys/firmware/acpi/tables/NBFT`) | Read at startup; adopt already-connected boot controllers or connect missing ones (both DCs and IOCs). Also reconnects NBFT-listed controllers that drop mid-run — the NBFT table is static firmware data, so no re-fetch is ever needed. Controlled by `nbft = true|false` (default `true`). Note: discoverd detects NBFT-sourced controllers (they are in its NBFT cache) and passes `--owner nbft` rather than `--owner discoverd` for those reconnects, preserving the original ownership label. Without this, `owner=nbft` would be overwritten with `owner=discoverd`: nvme-stas would be unaffected (it skips any controller it does not own), but `nvme disconnect-all --owner discoverd` would target the controller — and disconnecting a boot-path controller can cause I/O errors or an unbootable system. |
 | `/etc/nvme/discoverd.conf` `[Discovery Controllers]` and `[I/O Controllers]` | Both DCs (`controller=` in `[Discovery Controllers]`) and IOCs (`controller=` in `[I/O Controllers]`) entries are reconnected at startup. No legacy `discovery.conf` support |
-| FC Kickstart PDUs | Both at startup and on every FC controller drop: write `add` to `/sys/class/fc/fc_udev_device/nvme_discovery` (idempotent), then handle `SUBSYSTEM=="fc"`, `FC_EVENT=="nvmediscovery"` uevents — each event represents one currently reachable FC-NVMe target. Kickstart is the FC reconnect mechanism: the fabric's current response after each re-issue is authoritative, so no TID cache is needed (see §4). Replaces `nvmefc-boot-connections.service` and the FC udev rules; neither is installed when nvme-discoverd is built (see §1. What it is). dracut (`95nvmf`) continues to do the FC Kickstart in the initramfs unchanged |
+| FC Kickstart PDUs | Both at startup and on every FC controller drop: write `add` to `/sys/class/fc/fc_udev_device/nvme_discovery` (idempotent), then handle `SUBSYSTEM=="fc"`, `FC_EVENT=="nvmediscovery"` uevents — each event represents one currently reachable FC-NVMe target. Kickstart is the FC reconnect mechanism: the fabric's current response after each re-issue is authoritative. No TID cache is needed in the initial release (see §4); the future DC retention policy (§11.3) will add one. Replaces `nvmefc-boot-connections.service` and the FC udev rules; neither is installed when nvme-discoverd is built (see §1. What it is). dracut (`95nvmf`) continues to do the FC Kickstart in the initramfs unchanged |
 
 ### 7.2 Planned for a future release
 
@@ -462,7 +462,7 @@ To `[Global]`:
 | Option | Default | Description |
 |--------|---------|-------------|
 | `zeroconf-ip-family` | ipv4+ipv6 | Address family selector for mDNS-discovered DCs (`ipv4`, `ipv6`, or `ipv4+ipv6`). Per spec, a service publisher must advertise all IP addresses of the interface, so receiving both IPv4 and IPv6 for the same DC is common. This option selects which to use, preventing duplicate connections to the same DC. Has no effect on manual `controller=` entries or NBFT entries. |
-| `zeroconf-stale-timeout` | 72hours | How long to retain a mDNS-discovered DC after it stops advertising and its connection fails. Without this, auto-discovered DCs that disappear from the network would accumulate as stale entries until the daemon restarts. Values: `-1` (retain forever), `0` (remove immediately), or a time span — a unit-less integer in seconds, or a string such as `72hours`, `3days 5hours`. |
+| `discovery-retention-time` | 72hours | How long to retain a dynamically-discovered DC after its discovery source becomes unavailable and its connection fails. Applies to mDNS-discovered DCs; also applies to referral DCs and FC kickstart DCs (see §11. DC Retention Policy for the full design). Values: `infinity` (retain forever), `0` (remove immediately on source loss), or a time span — a unit-less integer in seconds, or a string such as `72hours`, `3days 5hours`. |
 
 To `[Discovery Controllers]`:
 
@@ -497,21 +497,69 @@ To `[I/O Controllers]`:
 
 ---
 
-## 11. Open Questions
+## 11. Future Release: DC Retention Policy
 
-1. **Kernel uevents vs udev events** — Reading kernel uevents directly avoids the udevd dependency but requires custom filtering and large receive buffers. udev event monitoring is more comfortable but adds latency. Not yet resolved. Note: if udev monitoring is chosen, `nvme-discoverd.service` must add `After=systemd-udevd.service` to ensure udevd is ready before the daemon starts listening for events.
+Discovery Controllers fall into two categories with fundamentally different lifetime semantics.
 
-2. **Referral DC and stale DLP cache aging** — If a referral DC (or any configured DC) becomes permanently unreachable, IOCs reachable exclusively through it stop being reconnected once their connections drop and the per-DC DLP cache entry is evicted. A configurable stale-timeout — similar to `zeroconf-stale-timeout` planned for mDNS DCs — applied to all per-DC caches would provide a grace period before dropping the DLP of a defunct DC. Worth considering whether this should be a global DC stale-timeout rather than mDNS-specific.
+**Statically configured DCs** — those declared in `[Discovery Controllers]` entries in `discoverd.conf`, and those derived from NBFT — represent explicit administrator or firmware intent. If a statically configured DC is unreachable, discoverd retries indefinitely. The admin put it there on purpose; a maintenance window, firmware update, or fabric reconfiguration should not silently evict a configured target. The correct way to stop reconnecting to a static DC is to remove it from the configuration. NBFT-derived DCs are similarly permanent: the NBFT is written by firmware and does not change at runtime.
 
-3. **Shutdown ordering vs. mounted filesystems** — Transient connection units carry only `After=network.target`. This does not guarantee they stop after filesystems mounted from those controllers are unmounted. The standard systemd pattern is `Before=remote-fs-pre.target` on the connection units: at shutdown (ordering reverses), units stop after `remote-fs-pre.target`; `_netdev` mount units have `After=remote-fs-pre.target` and therefore stop before it, ensuring unmount before disconnect. Needs verification and testing before adding to the unit templates.
+**Dynamically discovered DCs** — those found via mDNS advertisements, referral entries in a DLP, or FC kickstart responses — are ephemeral by nature. They were not declared by an administrator; they were found. When their discovery source goes silent, the absence is a meaningful signal that the topology has changed. Retrying indefinitely toward a DC that has been gone for days accumulates phantom cache state and keeps otherwise-idle IOC reconnect timers running.
 
-4. **NBFT root controller at shutdown** — NBFT connection units carry `ExecStop=nvme disconnect`. For a controller backing the root filesystem, this disconnect at shutdown can cause a hang or data loss, since the root filesystem is never unmounted. Standard mitigations include omitting `ExecStop=` from NBFT units, or adding ordering constraints to prevent their stop at shutdown. Design decision needed.
+`discovery-retention-time` specifies how long discovery-derived configuration is retained after the discovery source becomes unavailable. Expiration removes the retained discovery information but does not disconnect existing controllers. Controllers that subsequently disconnect are not reconnected unless rediscovered through an active discovery source. They fizzle out naturally over time as their keep-alive sessions expire.
 
-5. **Systemd unit management: migrate to varlink** — discoverd currently uses `org.freedesktop.systemd1.Manager` D-Bus for all unit lifecycle operations. systemd v261 (in development) adds `io.systemd.Unit.StartTransient` over varlink with streaming job-completion notifications, but `StopUnit`, `RestartUnit`, and `ResetFailedUnit` have no varlink equivalent yet. When the full unit lifecycle API is available over varlink, discoverd should migrate away from D-Bus. See §3.9.
+The default is 72 hours — long enough to survive transient outages and maintenance windows without operator intervention, short enough to prevent indefinite accumulation of phantom entries.
+
+Values: `infinity` (retain forever), `0` (remove immediately on source loss), or a time span — a unit-less integer in seconds, or a string such as `72hours`, `3days 5hours`.
+
+**Interaction with `ctrl-loss-tmo`:** The fizzle-out behavior relies on the kernel eventually removing the device once `ctrl-loss-tmo` expires, firing a `device remove` uevent that gives discoverd the opportunity to decide not to reconnect. If `ctrl-loss-tmo=-1` is set on IOC connections, the kernel retries indefinitely and never removes the device — discoverd therefore never receives the `device remove` uevent. Setting `ctrl-loss-tmo=-1` for IOCs reachable through dynamic discovery sources effectively bypasses `discovery-retention-time` for those connections; they persist indefinitely regardless of cache expiry.
+
+### 11.1 mDNS-discovered DCs
+
+The discovery source is the mDNS advertisement. The timer starts when the advertisement disappears from the systemd-resolved service browser, regardless of whether the DC connection is still alive at that point. A live connection is left undisturbed; the expiry is only felt when the connection later drops and is not reconnected. If the DC re-advertises while the timer is still running, the timer is cancelled and the cache entry is refreshed. This is the passive model: the DC announces its own presence, and its silence is the expiry signal.
+
+### 11.2 Referral DCs
+
+The discovery source is the DLPE in a parent DC's Discovery Log Page. The timer starts when the referral entry disappears from the parent DC's DLP (detected immediately when the DC's AEN triggers a DLP re-fetch), regardless of whether the referral DC's connection is still alive at that point. A live connection is left undisturbed; the expiry is only felt when the connection later drops and is not reconnected. If the referral entry reappears in a later DLP before the timer expires, the timer is cancelled. Like mDNS, this is passive: the parent DC's DLP is the authoritative signal for whether the referral is still known.
+
+One asymmetry with mDNS: if the parent DC itself becomes unreachable, its DLP cannot be refreshed, so the disappearance of a referral entry may not be detected until the parent DC reconnects. This is acceptable — the parent DC's own connection will time out and eventually cause a cache eviction, which drags the unreachable referral DC with it.
+
+Whether the referral disappeared because the upstream administrator intentionally removed it from the parent DC's DLP, or because the parent DC or referral DC simply became unreachable, the handling is identical. The connect-only design makes the distinction irrelevant: no live connections are touched regardless of cause, so there is no scenario where a more aggressive response would be warranted.
+
+### 11.3 FC kickstart DCs
+
+FC kickstart is an active mechanism: discoverd writes to `/sys/class/fc/fc_udev_device/nvme_discovery` to trigger a fabric probe; the FC HBA firmware responds with `FC_EVENT=="nvmediscovery"` uevents, one per currently reachable target. Unlike mDNS or DLP referrals, an FC DC does not announce its own presence — it only appears when discoverd explicitly asks. The NVMe Boot Specification characterizes FC as "self-discovering" — the HBA is always aware of what is reachable on the fabric; kickstart is simply asking it to report.
+
+**The equipment replacement scenario.** Consider an FC DC that fails and is replaced. The replacement unit may have a different address and a different subsystem NQN — in that case it looks like an entirely new DC from the host's perspective. Two things must happen for the host to reconnect correctly: the old DC's TID must eventually be evicted (it is dead and will never come back), and the new DC's TID must be discovered. `discovery-retention-time` handles the first; periodic kickstart handles the second. Without periodic kickstart, the new DC would only be discovered if something else happened to trigger a kickstart — daemon restart, SIGHUP, or an unrelated FC controller drop — which is not acceptable in a production environment.
+
+**Connection loss as the primary trigger.** When an FC DC's connection drops and ctrl-loss-tmo expires, discoverd re-issues kickstart as part of its normal FC reconnect path (§5). If the DC's TID appears in the response, discoverd reconnects. If not, discoverd starts the retention timer. If the TID reappears in a subsequent kickstart response before the timer expires, the timer is cancelled and the DC is reconnected. If the timer expires without the TID reappearing, the cache entry is evicted.
+
+**Periodic kickstart.** Relying solely on connection loss as the kickstart trigger has a gap: a DC that disappears while its connection is still alive is not detected until ctrl-loss-tmo expires. More importantly, a new replacement DC would not be found until an existing connection drops and triggers kickstart. A periodic kickstart — `fc-kickstart-interval-minutes` — closes this gap by probing the fabric on a schedule, independently of connection events.
+
+The minimum value is 1; `0` is invalid. `infinity` disables periodic kickstart (connection-loss-triggered kickstart still applies). A value of 1 minute means a replacement DC is typically discovered within a minute of the replacement being completed.
+
+The `fc-kickstart-interval-minutes` and `discovery-retention-time` are orthogonal knobs: the kickstart interval governs how quickly topology changes are detected; the retention time governs how long to tolerate a DC's absence before evicting it. Setting `fc-kickstart-interval-minutes=infinity` while relying on `discovery-retention-time` is valid — the replacement scenario above would then depend on an unrelated connection drop to trigger kickstart, which may be acceptable in some environments.
+
+**Config addition** (to `[Global]`):
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `fc-kickstart-interval-minutes` | 1 | Periodic FC kickstart interval in minutes. Discoverd re-issues kickstart on this schedule, independently of connection events, to detect topology changes such as equipment replacement. Minimum: 1 (one minute). `infinity` disables periodic kickstart; connection-loss-triggered kickstart (§5) still applies. `0` is invalid. |
 
 ---
 
-## 12. Glossary
+## 12. Open Questions
+
+1. **Kernel uevents vs udev events** — Reading kernel uevents directly avoids the udevd dependency but requires custom filtering and large receive buffers. udev event monitoring is more comfortable but adds latency. Not yet resolved. Note: if udev monitoring is chosen, `nvme-discoverd.service` must add `After=systemd-udevd.service` to ensure udevd is ready before the daemon starts listening for events.
+
+2. **Shutdown ordering vs. mounted filesystems** — Transient connection units carry only `After=network.target`. This does not guarantee they stop after filesystems mounted from those controllers are unmounted. The standard systemd pattern is `Before=remote-fs-pre.target` on the connection units: at shutdown (ordering reverses), units stop after `remote-fs-pre.target`; `_netdev` mount units have `After=remote-fs-pre.target` and therefore stop before it, ensuring unmount before disconnect. Needs verification and testing before adding to the unit templates.
+
+3. **NBFT root controller at shutdown** — NBFT connection units carry `ExecStop=nvme disconnect`. For a controller backing the root filesystem, this disconnect at shutdown can cause a hang or data loss, since the root filesystem is never unmounted. Standard mitigations include omitting `ExecStop=` from NBFT units, or adding ordering constraints to prevent their stop at shutdown. Design decision needed.
+
+4. **Systemd unit management: migrate to varlink** — discoverd currently uses `org.freedesktop.systemd1.Manager` D-Bus for all unit lifecycle operations. systemd v261 (in development) adds `io.systemd.Unit.StartTransient` over varlink with streaming job-completion notifications, but `StopUnit`, `RestartUnit`, and `ResetFailedUnit` have no varlink equivalent yet. When the full unit lifecycle API is available over varlink, discoverd should migrate away from D-Bus. See §3.9.
+
+---
+
+## 13. Glossary
 
 | Term | Definition |
 |------|------------|
