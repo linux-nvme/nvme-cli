@@ -366,7 +366,8 @@ nvme_list_opts () {
 			;;
 		"sanitize")
 		opts+=" --no-dealloc -d --oipbp -i --owpass= -n \
-			--ause -u --sanact= -a --ovrpat= -p --emvs= -e"
+			--ause -u --sanact= -a --ovrpat= -p --emvs= -e \
+			--wait -w --repeat= -r"
 		case $opt in
 			--sanact|-a)
 			vals+=" exit-failure start-block-erase start-overwrite \
