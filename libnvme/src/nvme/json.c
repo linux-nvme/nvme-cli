@@ -130,13 +130,12 @@ static void json_parse_subsys(libnvme_host_t h, struct json_object *subsys_obj)
 {
 	struct json_object *nqn_obj, *app_obj, *port_array;
 	libnvme_subsystem_t s;
-	const char *nqn;
+	const char *nqn = "";
 	int p;
 
 	nqn_obj = json_object_object_get(subsys_obj, "nqn");
-	if (!nqn_obj)
-		return;
-	nqn = json_object_get_string(nqn_obj);
+	if (nqn_obj)
+		nqn = json_object_get_string(nqn_obj);
 	s = libnvme_lookup_subsystem(h, NULL, nqn);
 	if (!s)
 		return;
