@@ -1644,6 +1644,10 @@ _nvme () {
 			-p':alias of --ovrpat'
 			--emvs=':Enter media verification state'
 			-e':alias of --emvs'
+			--wait':Wait for the sanitize to finish'
+			-w':alias of --wait'
+			--repeat=':Repeat for the multi cycle sanitization'
+			-r':alias of --repeat'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme sanitize options" _sanitize
