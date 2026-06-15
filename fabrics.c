@@ -360,10 +360,6 @@ next:
 	if (ret)
 		return ret;
 
-	ret = set_fabrics_options(fctx, &fa);
-	if (ret)
-		return ret;
-
 	libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log,
 		hook_parser_init, hook_parser_cleanup, hook_parser_next_line);
 
@@ -394,7 +390,7 @@ static int setup_common_context(struct libnvmf_context *fctx,
 	if (err)
 		return err;
 
-	return 0;
+	return set_fabrics_options(fctx, fa);
 }
 
 static int create_common_context(struct libnvme_global_ctx *ctx,
@@ -409,17 +405,7 @@ static int create_common_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		return err;
 
-	err = libnvmf_context_set_connection(fctx, fa->subsysnqn,
-		fa->transport, fa->traddr, fa->trsvcid,
-		fa->host_traddr, fa->host_iface);
-	if (err)
-		goto err;
-
-	err = libnvmf_context_set_hostnqn(fctx, fa->hostnqn, fa->hostid);
-	if (err)
-		goto err;
-
-	err = set_fabrics_options(fctx, fa);
+	err = setup_common_context(fctx, fa);
 	if (err)
 		goto err;
 
