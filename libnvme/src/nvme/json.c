@@ -160,17 +160,16 @@ static void json_parse_host(struct libnvme_global_ctx *ctx, struct json_object *
 {
 	struct json_object *attr_obj, *subsys_array, *subsys_obj;
 	libnvme_host_t h;
-	const char *hostnqn, *hostid = NULL;
+	const char *hostnqn = NULL, *hostid = NULL;
 	int s;
 
 	attr_obj = json_object_object_get(host_obj, "hostnqn");
-	if (!attr_obj)
-		return;
-	hostnqn = json_object_get_string(attr_obj);
+	if (attr_obj)
+		hostnqn = json_object_get_string(attr_obj);
 	attr_obj = json_object_object_get(host_obj, "hostid");
 	if (attr_obj)
 		hostid = json_object_get_string(attr_obj);
-	h = libnvme_lookup_host(ctx, hostnqn, hostid);
+	libnvme_get_host(ctx, hostnqn, hostid, &h);
 	attr_obj = json_object_object_get(host_obj, "dhchap_key");
 	if (attr_obj)
 		libnvme_host_set_dhchap_host_key(h, json_object_get_string(attr_obj));
