@@ -16,6 +16,7 @@ usage() {
     echo ""
     echo "CI build script."
     echo ""
+    echo " -a                   run static analysis with clang analyzer"
     echo " -b [release]|debug   build type"
     echo " -c [gcc]|clang       compiler to use"
     echo " -m [meson]|muon      use meson or muon"
@@ -50,13 +51,30 @@ MESON=meson
 BUILDTYPE=release
 CROSS_TARGET=arm
 CC=${CC:-"gcc"}
+SCAN_BUILD=""
 
 use_coverage=0
 use_valgrind=0
 use_asan=0
+use_analyzer=0
 
-while getopts "b:c:m:pst:x" o; do
+while getopts "ab:c:m:pst:x" o; do
     case "${o}" in
+        a)
+            if ! command -v clang > /dev/null 2>&1; then
+                echo "Error: clang is not found; please install clang."
+                exit 1
+            fi
+
+            if ! command -v scan-build >/dev/null 2>&1; then
+                echo "Error: scan-build is not found; please install clang-analyzer."
+                exit 1
+            fi
+
+            use_analyzer=1
+            CC=clang
+            SCAN_BUILD=scan-build
+            ;;
         b)
             BUILDTYPE="${OPTARG}"
             ;;
@@ -101,7 +119,7 @@ config_meson_default() {
         extra_args+=(-Db_sanitize=address,undefined)
     fi
 
-    CC="${CC}" "${MESON}" setup                 \
+    CC="${CC}" ${SCAN_BUILD} "${MESON}" setup \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
         "${extra_args[@]}"                      \
@@ -281,8 +299,16 @@ config_meson_libnvme() {
 }
 
 build_meson() {
-    "${MESON}" compile                          \
-        -C "${BUILDDIR}"
+    if [ "${use_analyzer:-0}" -eq 1 ]; then
+        "${SCAN_BUILD}" -o "${BUILDDIR}/scan-results" \
+            -analyze-headers                          \
+            --force-analyze-debug-code                \
+            --status-bugs                             \
+            "${MESON}" compile -C "${BUILDDIR}"
+    else
+        "${MESON}" compile                            \
+            -C "${BUILDDIR}"
+    fi
 }
 
 build_meson_docs() {
