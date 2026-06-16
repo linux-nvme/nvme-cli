@@ -1421,26 +1421,27 @@ free_tbl:
 
 void stdout_top(int refresh_interval)
 {
-	FILE *stream;
+	FILE *stream = NULL;
 	enum event_type event;
-	struct dashboard_ctx *db_ctx;
+	struct dashboard_ctx *db_ctx = NULL;
 	libnvme_host_t h;
 	libnvme_subsystem_t s;
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_free libnvme_subsystem_t *subsys_arr = NULL;
+	struct libnvme_global_ctx *ctx = NULL;
+	libnvme_subsystem_t *subsys_arr = NULL;
 	int data_start, frame_rows, quit = 0, scroll = 0;
 	int num_subsys = 0, subsys_idx = 0;
 
 	ctx = stdout_top_rescan_topology();
 	if (!ctx)
-		return;
+		goto out;
+
 	subsys_arr = stdout_top_build_subsys_arr(ctx, &num_subsys);
 	if (!subsys_arr)
-		return;
+		goto out;
 
 	stream = dashboard_init(&db_ctx, refresh_interval);
 	if (!stream)
-		return;
+		goto out;
 
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s)
@@ -1478,8 +1479,7 @@ wait_for_event:
 				break;
 			fallthrough;
 		case EVENT_TYPE_NVME_UEVENT: {
-			__cleanup_free char *subsys_name = NULL;
-			libnvme_subsystem_t s;
+			char *subsys_name = NULL;
 
 			s = subsys_arr[subsys_idx];
 			subsys_name = strdup(libnvme_subsystem_get_name(s));
@@ -1487,19 +1487,22 @@ wait_for_event:
 				quit = 1;
 				break;
 			}
+
 			free(subsys_arr);
 			subsys_arr = NULL;
 			libnvme_free_global_ctx(ctx);
+			ctx = NULL;
 
 			ctx = stdout_top_rescan_topology();
 			if (!ctx) {
+				free(subsys_name);
 				quit = 1;
 				break;
 			}
 
-			subsys_arr = stdout_top_build_subsys_arr(ctx,
-					&num_subsys);
+			subsys_arr = stdout_top_build_subsys_arr(ctx, &num_subsys);
 			if (!subsys_arr) {
+				free(subsys_name);
 				quit = 1;
 				break;
 			}
@@ -1509,6 +1512,7 @@ wait_for_event:
 			if (subsys_idx < 0)
 				subsys_idx = 0;
 
+			free(subsys_name);
 			break;
 		}
 		case EVENT_TYPE_KEY_DOWN:
@@ -1584,6 +1588,10 @@ wait_for_event:
 			continue;
 		}
 	}
-
+out:
+	if (db_ctx)
 	dashboard_exit(db_ctx);
+	free(subsys_arr);
+	if (ctx)
+	libnvme_free_global_ctx(ctx);
 }
