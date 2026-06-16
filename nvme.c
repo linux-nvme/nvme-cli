@@ -7622,6 +7622,78 @@ static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 	return result;
 }
 
+static int check_lbstm_byte_granularity(__u64 lbstm, __u8 sts)
+{
+	__u8 nr_full_bytes = sts / 8;
+	__u8 nr_rem_bits = sts % 8;
+	__u8 rem_mask, byte;
+	__u8 i;
+
+	if (sts > 64)
+		return -EINVAL;
+
+	if (sts < 64)
+		lbstm &= (1ULL << sts) - 1;
+
+	for (i = 0; i < nr_full_bytes; i++) {
+		byte = (lbstm >> (i * 8)) & 0xff;
+		if (byte != 0x00 && byte != 0xff)
+			return -EINVAL;
+	}
+
+	if (nr_rem_bits) {
+		rem_mask = (1u << nr_rem_bits) - 1;
+		byte = (lbstm >> (nr_full_bytes * 8)) & rem_mask;
+		if (byte != 0x00 && byte != rem_mask)
+			return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int check_lbstm_masking_not_supported(__u64 lbstm, __u8 sts)
+{
+	__u64 stm_mask;
+
+	if (sts > 64)
+		return -EINVAL;
+
+	stm_mask = (sts < 64) ? ((1ULL << sts) - 1) : ~0ULL;
+	if ((lbstm & stm_mask) != stm_mask)
+		return -EINVAL;
+
+	return 0;
+}
+
+static int get_pif_sts_via_qpif(struct nvme_nvm_id_ns *nvm_ns, __u32 elbaf,
+		__u8 sts, __u8 *pif)
+{
+	__u64 lbstm;
+	int err = 0;
+
+	*pif = NVME_NVM_ELBAF_QPIF(elbaf);
+
+	lbstm = le64_to_cpu(nvm_ns->lbstm);
+	switch (NVME_NVM_PIFA_STMLA(nvm_ns->pifa)) {
+	case NVME_NVM_PIFA_BIT_GRANULARITY_MASKING:
+		break;
+	case NVME_NVM_PIFA_BYTE_GRANULARITY_MASKING:
+		err = check_lbstm_byte_granularity(lbstm, sts);
+		break;
+	case NVME_NVM_PIFA_MASKING_NOT_SUPPORTED:
+		err = check_lbstm_masking_not_supported(lbstm, sts);
+		break;
+	default:
+		err = -EINVAL;
+		break;
+	}
+
+	if (err)
+		nvme_show_error("Logical Block Storage Tag Mask is inconsistent with the Storage Tag Masking Level Attribute");
+
+	return err;
+}
+
 static int get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
 		__u8 *pif, __u8 *sts)
 {
@@ -7632,8 +7704,9 @@ static int get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
 	elbaf = le32_to_cpu(nvm_ns->elbaf[lba_index]);
 	*sts = NVME_NVM_ELBAF_STS(elbaf);
 	*pif = NVME_NVM_ELBAF_PIF(elbaf);
-	if (*pif == NVME_NVM_PIF_QTYPE && (nvm_ns->pic & 0x8))
-		*pif = NVME_NVM_ELBAF_QPIF(elbaf);
+
+	if (*pif == NVME_NVM_PIF_QTYPE && NVME_NVM_PIC_QPIFS(nvm_ns->pic))
+		return get_pif_sts_via_qpif(nvm_ns, elbaf, *sts, pif);
 
 	return 0;
 }
