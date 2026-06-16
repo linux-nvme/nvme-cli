@@ -42,6 +42,15 @@ class TestNVMeIO(TestNVMe):
     def setUp(self):
         """ Pre Section for TestNVMeIO """
         super().setUp()
+        self._init_io_params()
+
+    def _init_io_params(self):
+        """ (Re)compute the IO parameters (metadata size, prinfo, data size and
+            the data/metadata file basenames) for the namespace currently under
+            test. This is also called after a testcase reformats the namespace
+            to a different LBA format so that the parameters match the new
+            format.
+        """
         # common code used in various testcases.
         (ds, ms) = self.get_lba_format_size()
         self.ms = ms
