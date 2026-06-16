@@ -333,25 +333,23 @@ static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
 
 	memcpy(&fa, hfd->fa, sizeof(fa));
-next:
-	if (fgets(line, sizeof(line), hfd->f) == NULL)
-		return -EOF;
+	do {
+		if (fgets(line, sizeof(line), hfd->f) == NULL)
+			return -EOF;
 
-	if (line[0] == '#' || line[0] == '\n')
-		goto next;
+		if (line[0] == '#' || line[0] == '\n')
+			continue;
 
-	argc = 1;
-	p = line;
-	while ((ptr = strsep(&p, " =\n")) != NULL)
-		hfd->argv[argc++] = ptr;
-	hfd->argv[argc] = NULL;
+		argc = 1;
+		p = line;
+		while ((ptr = strsep(&p, " =\n")) != NULL)
+			hfd->argv[argc++] = ptr;
+		hfd->argv[argc] = NULL;
 
-	fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
-	ret = argconfig_parse(argc, hfd->argv, "config", opts);
-	if (ret)
-		goto next;
-	if (!fa.transport && !fa.traddr)
-		goto next;
+		fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
+		if (argconfig_parse(argc, hfd->argv, "config", opts))
+			continue;
+	} while (!fa.transport && !fa.traddr);
 
 	if (!fa.trsvcid)
 		fa.trsvcid = libnvmf_get_default_trsvcid(fa.transport, true);
