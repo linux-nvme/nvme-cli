@@ -2461,46 +2461,18 @@ __libnvme_public int libnvmf_discovery_config_file(
 		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
 		bool connect, bool force)
 {
-	struct libnvme_host *h;
-	struct libnvme_ctrl *c;
 	int err;
-
-	err = lookup_host(ctx, fctx, &h);
-	if (err)
-		return err;
-
-	err = setup_connection(fctx, h, false);
-	if (err)
-		return err;
 
 	err = fctx->hooks.parser_init(fctx, fctx->hooks.user_data);
 	if (err)
 		return err;
 
 	do {
-		err = fctx->hooks.parser_next_line(fctx, fctx->hooks.user_data);
+		struct libnvmf_context nfctx = *fctx;
+		err = fctx->hooks.parser_next_line(&nfctx, fctx->hooks.user_data);
 		if (err)
 			break;
-
-		struct libnvmf_context nfctx = *fctx;
-
-		if (!force) {
-			c = lookup_ctrl(h, &nfctx);
-			if (c) {
-				_nvmf_discovery(ctx, &nfctx, connect, c);
-				continue;
-			}
-		}
-
-		err = nvmf_create_discovery_ctrl(ctx, &nfctx, h, &c);
-		if (err)
-			continue;
-
-		_nvmf_discovery(ctx, &nfctx, connect, c);
-		if (!(nfctx.persistent ||
-		      is_persistent_discovery_ctrl(h, c)))
-			err = libnvmf_disconnect_ctrl(c);
-		libnvme_free_ctrl(c);
+		libnvmf_discovery(ctx, &nfctx, connect, force);
 	} while (!err);
 
 	fctx->hooks.parser_cleanup(fctx, fctx->hooks.user_data);
