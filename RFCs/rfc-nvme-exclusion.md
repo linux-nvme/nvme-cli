@@ -96,11 +96,11 @@ The lock file is `/etc/nvme/exclusions/<name>.lock` and contains the PID of the 
 | Command | Effect |
 |---------|--------|
 | `nvme exclusion list` | Lists all exclusion list names (files) in the directory |
-| `nvme exclusion list <name>` | Lists all entries in `<name>.conf` with a stable ID per entry |
+| `nvme exclusion list <name>` | Lists all entries in `<name>.conf` |
 | `nvme exclusion add <name> <entry>` | Appends one entry to `<name>.conf` (atomic write) |
-| `nvme exclusion remove <name> <id>` | Removes the entry with the given ID (atomic write) |
+| `nvme exclusion remove <name>` | Interactive: lists entries with a throwaway sequential number, prompts for which to remove, then removes by exact content match (atomic write) |
 
-Entry IDs are short hashes of the entry string — stable across adds and removes, independent of line order.
+`remove` has no non-interactive form and entries have no persistent ID — nothing in the system removes entries programmatically (orchestrators never write to the exclusion list; see §1), so a numbered prompt scoped to a single command invocation is sufficient and avoids any need for a stable identifier.
 
 ---
 
@@ -154,17 +154,16 @@ int libnvmf_exclusion_list_for_each(
 
 /*
  * Iterate over all entries in a named exclusion list.
- * Invokes cback for each entry with its stable ID and the raw
- * semicolon-separated key=value entry string (e.g.
- * "transport=tcp;traddr=192.168.1.10"). The raw string is the
- * stable, ABI-safe representation; callers that need structured
- * access can use libnvme_key_value_list_parse().
+ * Invokes cback for each entry with the raw semicolon-separated
+ * key=value entry string (e.g. "transport=tcp;traddr=192.168.1.10").
+ * The raw string is the stable, ABI-safe representation; callers
+ * that need structured access can use libnvme_key_value_list_parse().
  * Returns 0 on success, -ENOENT if the list does not exist,
  * negative errno otherwise.
  */
 int libnvmf_exclusion_entry_for_each(
         const char *name,
-        void (*cback)(const char *id, const char *entry, void *user_data),
+        void (*cback)(const char *entry, void *user_data),
         void *user_data);
 
 /*
@@ -193,29 +192,20 @@ int libnvmf_exclusion_delete(const char *name);
 int libnvmf_exclusion_add(const char *name, const char *entry);
 
 /*
- * Remove the entry with the given ID from a named exclusion list.
- * Writes atomically. IDs are short hashes of the entry string,
- * as returned by libnvmf_exclusion_entry_for_each().
+ * Remove an entry from a named exclusion list by exact content match.
+ * entry must match, byte-for-byte, a string as returned by
+ * libnvmf_exclusion_entry_for_each(). Writes atomically.
  * Returns 0 on success, -ENOENT if the entry or list does not exist,
  * negative errno otherwise.
  */
-int libnvmf_exclusion_remove(const char *name, const char *id);
+int libnvmf_exclusion_remove(const char *name, const char *entry);
 ```
 
 ### 6.2 Python Bindings
 
-The exclusion bindings follow the same pattern as the registry bindings in `nvme.i`: write operations are C functions wrapped normally by SWIG, while read operations are pure Python added via `%pythoncode`. Both land in the `nvme` module (`from libnvme import nvme`) — no separate module is needed.
+The Python bindings expose only the read-only surface — `exclusion_match()`, `exclusion_lists()`, `exclusion_entries()` — as pure Python in a `%pythoncode` block in `nvme.i`. There is no Python `exclusion_add()`/`exclusion_remove()`/`exclusion_create()`/`exclusion_delete()`. Management of the exclusion list is human-only, and that's exactly what the `nvme exclusion` command family is for (§5); a Python API for add/remove/create/delete would imply those operations are meant to be driven programmatically, which contradicts the human-administered design (§1). The same reasoning extends to shell scripts calling `nvme exclusion`: a one-shot `nvme exclusion add` during initial host provisioning is reasonable, but any other operation — and certainly `remove` — needs an informed human, not automation.
 
-| Operation | Implementation |
-|-----------|---------------|
-| `exclusion_match()`, `exclusion_lists()`, `exclusion_entries()` | Pure Python in `%pythoncode` block — parse files directly |
-| `exclusion_add()` | Python wrapper in `%pythoncode` — converts dict to entry string, then calls SWIG-wrapped `libnvmf_exclusion_add()` |
-| `exclusion_remove()` | SWIG-wrapped C — `libnvmf_exclusion_remove()` |
-| `exclusion_create()`, `exclusion_delete()` | SWIG-wrapped C — `libnvmf_exclusion_create()` / `libnvmf_exclusion_delete()` |
-
-`exclusion_entries(name)` is a generator that yields `(entry_id, entry)` tuples where `entry` is a `dict` — each key=value pair of the semicolon-separated entry string becomes a dict item. Python callers get structured access with no extra parsing step.
-
-`exclusion_add(name, entry)` accepts a dict and converts it to the semicolon-separated string expected by the C API before calling the SWIG-wrapped `libnvmf_exclusion_add()`. This keeps the dict ↔ string conversion in one place inside the Python layer.
+`exclusion_entries(name)` is a generator that yields an `entry` `dict` per entry — each key=value pair of the semicolon-separated entry string becomes a dict item. Python callers get structured access with no extra parsing step. It does not expose an entry ID — there is no entry ID concept anywhere in the system. `nvme exclusion remove <name>` is interactive only: it lists entries with a throwaway sequential number scoped to that one invocation and removes by exact content match (§5.3).
 
 ```python
 from libnvme import nvme
@@ -228,21 +218,15 @@ if nvme.exclusion_match(host_iface='enp0s8'):
 if nvme.exclusion_match(transport='tcp', traddr='192.168.1.10', subsysnqn='nqn.2014-08...'):
     return  # this controller is excluded
 
-# --- Management operations ---------------------------------------------------
+# --- Read-only inspection -----------------------------------------------------
 
 # Iterate over all lists and their entries
 for name in nvme.exclusion_lists():
-    for entry_id, entry in nvme.exclusion_entries(name):
-        print(f'{name}  {entry_id}  {entry["transport"]}  {entry.get("traddr", "*")}')
+    for entry in nvme.exclusion_entries(name):
+        print(f'{name}  {entry["transport"]}  {entry.get("traddr", "*")}')
 
-# Add an entry to the user list (entry is a dict)
-nvme.exclusion_add('user', {'transport': 'tcp', 'traddr': '192.168.1.10'})
-
-# Remove by ID
-nvme.exclusion_remove('user', 'a3f2c1b0')
-
-# Delete an entire list
-nvme.exclusion_delete('site-policy')
+# Managing entries (add/remove/create/delete) is not exposed in Python —
+# use the `nvme exclusion` command family instead.
 ```
 
 `exclusion_match()` implements the same minimal-match semantics as the C `libnvmf_exclusion_match()`: for each field present in the exclusion entry, the caller's corresponding parameter must equal the entry's value. If the caller's parameter for an entry field is `None`, the entry does not match — `None` means "this connection has no value for this parameter" (e.g. no interface pinning), not "match any value". Fields absent from the exclusion entry are not checked regardless of what the caller passes. Callers should pass the full set of connection parameters; unset parameters are passed as `None`.
