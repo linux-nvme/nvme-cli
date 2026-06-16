@@ -7622,7 +7622,7 @@ static int invalid_tags(__u64 storage_tag, __u64 ref_tag, __u8 sts, __u8 pif)
 	return result;
 }
 
-static void get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
+static int get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
 		__u8 *pif, __u8 *sts)
 {
 	__u8 lba_index;
@@ -7634,6 +7634,8 @@ static void get_pif_sts(struct nvme_id_ns *ns, struct nvme_nvm_id_ns *nvm_ns,
 	*pif = NVME_NVM_ELBAF_PIF(elbaf);
 	if (*pif == NVME_NVM_PIF_QTYPE && (nvm_ns->pic & 0x8))
 		*pif = NVME_NVM_ELBAF_QPIF(elbaf);
+
+	return 0;
 }
 
 static int get_pi_info(struct libnvme_transport_handle *hdl,
@@ -7668,16 +7670,19 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 		return -ENOMEM;
 
 	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0, nvm_ns);
-	if (!err)
-		get_pif_sts(ns, nvm_ns, &pif, &sts);
-	else if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
-				     NVME_SC_INVALID_FIELD))
+	if (!err) {
+		err = get_pif_sts(ns, nvm_ns, &pif, &sts);
+		if (err)
+			return err;
+	} else if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+				       NVME_SC_INVALID_FIELD)) {
 		/*
 		 * Ignore the invalid field error and skip get_pif_sts().
 		 * Keep the I/O commands behavior same as before.
 		 * Since the error returned by drives unsupported.
 		 */
 		return NVME_SC_INVALID_FIELD;
+	}
 
 	pi_size = (pif == NVME_NVM_PIF_16B_GUARD) ? 8 : 16;
 	if (NVME_FLBAS_META_EXT(ns->flbas)) {
@@ -7723,16 +7728,19 @@ static int init_pi_tags(struct libnvme_transport_handle *hdl,
 		return -ENOMEM;
 
 	err = nvme_identify_csi_ns(hdl, nsid, NVME_CSI_NVM, 0, nvm_ns);
-	if (!err)
-		get_pif_sts(ns, nvm_ns, &pif, &sts);
-	else if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
-				     NVME_SC_INVALID_FIELD))
+	if (!err) {
+		err = get_pif_sts(ns, nvm_ns, &pif, &sts);
+		if (err)
+			return err;
+	} else if (!nvme_status_equals(err, NVME_STATUS_TYPE_NVME,
+				       NVME_SC_INVALID_FIELD)) {
 		/*
 		 * Ignore the invalid field error and skip get_pif_sts().
 		 * Keep the I/O commands behavior same as before.
 		 * Since the error returned by drives unsupported.
 		 */
 		return NVME_SC_INVALID_FIELD;
+	}
 
 	if (invalid_tags(lbst, ilbrt, sts, pif))
 		return -EINVAL;
