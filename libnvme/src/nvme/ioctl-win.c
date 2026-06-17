@@ -14,8 +14,8 @@
 #include <errno.h>
 #include <ntddscsi.h>
 #include <setupapi.h>
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -1738,7 +1738,7 @@ static int submit_admin_format_nvm(struct libnvme_transport_handle *hdl,
 	if (get_is_win_pe())
 		return submit_storage_protocol_command(hdl, cmd);
 
-	if (libnvme_transport_handle_is_ctrl(hdl)) {
+	if (!libnvme_transport_handle_is_ns(hdl)) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "Windows only supports "
 			"format on namespace devices (e.g. nvme0n1)\n");
 		return -ENOTSUP;
