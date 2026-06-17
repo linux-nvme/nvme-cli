@@ -51,6 +51,16 @@ static inline int getpagesize(void)
 #endif
 
 /*
+ * Open file for reading or writing raw data with no line-ending translations
+ * or other interpretation or decoding.
+ */
+#ifdef O_BINARY
+#define nvme_open_rawdata(path, flags, ...) open((path), (flags) | O_BINARY, ##__VA_ARGS__)
+#else
+#define nvme_open_rawdata(path, flags, ...) open((path), (flags), ##__VA_ARGS__)
+#endif
+
+/*
  * VMs on arm64 can only use a subset of instructions for MMIO that provide
  * the hypervisor with a complete instruction decode. Provide assembly MMIO
  * accessors to prevent the compiler from using a possibly unsupported

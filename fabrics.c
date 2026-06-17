@@ -324,7 +324,8 @@ static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 {
 	struct hook_fabrics_data *hfd = user_data;
 	struct nvmf_args fa;
-	char *ptr, *p, line[4096];
+	char *ptr, *p;
+	static char line[4096];
 	int argc, ret = 0;
 	bool force = false;
 
@@ -363,6 +364,9 @@ next:
 	ret = set_fabrics_options(fctx, &fa);
 	if (ret)
 		return ret;
+
+	libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log,
+		hook_parser_init, hook_parser_cleanup, hook_parser_next_line);
 
 	return 0;
 }

@@ -1298,7 +1298,10 @@ struct nvme_id_psd {
  *	       field is 3
  * @crcap:     Controller Reachability Capabilities (CRCAP), see
  *	       &enum nvme_id_ctrl_crcap
- * @rsvd135:   Reserved
+ * @ciu:       Controller Instance Uniquifier (CIU)
+ * @cirn:      Controller Instance Random Number (CIRN)
+ * @rsvd144:   Reserved
+ * @rsvd240:   Reserved for the NVMe Management Interface specification
  * @nvmsr:     NVM Subsystem Report, see &enum nvme_id_ctrl_nvmsr
  * @vwci:      VPD Write Cycle Information, see &enum nvme_id_ctrl_vwci
  * @mec:       Management Endpoint Capabilities, see &enum nvme_id_ctrl_mec
@@ -1573,7 +1576,10 @@ struct nvme_id_ctrl {
 	__le16			crdt2;
 	__le16			crdt3;
 	__u8			crcap;
-	__u8			rsvd135[118];
+	__u8			ciu;
+	__u8			cirn[8];
+	__u8			rsvd144[96];
+	__u8			rsvd240[13];
 	__u8			nvmsr;
 	__u8			vwci;
 	__u8			mec;
@@ -2297,12 +2303,37 @@ enum nvme_id_ctrl_hctm {
  *			       mask to extract value.
  */
 enum nvme_id_ctrl_sanicap {
-	NVME_CTRL_SANICAP_CES			= 1 << 0,
-	NVME_CTRL_SANICAP_BES			= 1 << 1,
-	NVME_CTRL_SANICAP_OWS			= 1 << 2,
-	NVME_CTRL_SANICAP_NDI			= 1 << 29,
-	NVME_CTRL_SANICAP_NODMMAS		= 3 << 30,
+	NVME_CTRL_SANICAP_CES_SHIFT	= 0,
+	NVME_CTRL_SANICAP_BES_SHIFT	= 1,
+	NVME_CTRL_SANICAP_OWS_SHIFT	= 2,
+	NVME_CTRL_SANICAP_VERS_SHIFT	= 4,
+	NVME_CTRL_SANICAP_NVERS_SHIFT	= 5,
+	NVME_CTRL_SANICAP_NDI_SHIFT	= 29,
+	NVME_CTRL_SANICAP_NODMMAS_SHIFT	= 30,
+	NVME_CTRL_SANICAP_CES_MASK	= 0x1,
+	NVME_CTRL_SANICAP_BES_MASK	= 0x1,
+	NVME_CTRL_SANICAP_OWS_MASK	= 0x1,
+	NVME_CTRL_SANICAP_VERS_MASK	= 0x1,
+	NVME_CTRL_SANICAP_NVERS_MASK	= 0x1,
+	NVME_CTRL_SANICAP_NDI_MASK	= 0x1,
+	NVME_CTRL_SANICAP_NODMMAS_MASK	= 0x3,
+	NVME_CTRL_SANICAP_CES		= NVME_VAL(CTRL_SANICAP_CES),
+	NVME_CTRL_SANICAP_BES		= NVME_VAL(CTRL_SANICAP_BES),
+	NVME_CTRL_SANICAP_OWS		= NVME_VAL(CTRL_SANICAP_OWS),
+	NVME_CTRL_SANICAP_VERS		= NVME_VAL(CTRL_SANICAP_VERS),
+	NVME_CTRL_SANICAP_NVERS		= NVME_VAL(CTRL_SANICAP_NVERS),
+	NVME_CTRL_SANICAP_NDI		= NVME_VAL(CTRL_SANICAP_NDI),
+	NVME_CTRL_SANICAP_NODMMAS	= NVME_VAL(CTRL_SANICAP_NODMMAS),
 };
+
+#define NVME_CTRL_SANICAP_CES(sanicap)     NVME_GET(sanicap, CTRL_SANICAP_CES)
+#define NVME_CTRL_SANICAP_BES(sanicap)     NVME_GET(sanicap, CTRL_SANICAP_BES)
+#define NVME_CTRL_SANICAP_OWS(sanicap)     NVME_GET(sanicap, CTRL_SANICAP_OWS)
+#define NVME_CTRL_SANICAP_VERS(sanicap)    NVME_GET(sanicap, CTRL_SANICAP_VERS)
+#define NVME_CTRL_SANICAP_NVERS(sanicap)   NVME_GET(sanicap, CTRL_SANICAP_NVERS)
+#define NVME_CTRL_SANICAP_NDI(sanicap)     NVME_GET(sanicap, CTRL_SANICAP_NDI)
+#define NVME_CTRL_SANICAP_NODMMAS(sanicap) \
+	NVME_GET(sanicap, CTRL_SANICAP_NODMMAS)
 
 /**
  * enum nvme_id_ctrl_anacap - This field indicates the capabilities associated

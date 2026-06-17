@@ -26,6 +26,7 @@
 
 #include <libnvme.h>
 
+#include "common.h"
 #include "nvme/tree.h"
 
 struct events {
@@ -63,7 +64,7 @@ static void save_telemetry(libnvme_ctrl_t c)
 		return;
 	}
 
-	fd = open(buf, O_CREAT|O_WRONLY, S_IRUSR|S_IRGRP);
+	fd = nvme_open_rawdata(buf, O_CREAT|O_WRONLY, S_IRUSR|S_IRGRP);
 	if (fd < 0) {
 		free(log);
 		return;

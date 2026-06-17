@@ -7098,7 +7098,12 @@ static struct print_ops stdout_print_ops = {
 	.topology_tabular		= stdout_topology_tabular,
 
 	/* nvme top */
+#ifdef CONFIG_TOP
 	.top				= stdout_top,
+#else
+	.top				= NULL,
+#endif
+
 	/* status and error messages */
 	.connect_msg			= stdout_connect_msg,
 	.show_message			= stdout_message,

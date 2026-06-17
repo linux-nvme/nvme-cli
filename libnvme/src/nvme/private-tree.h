@@ -7,7 +7,27 @@
  */
 #pragma once
 
+#include "cleanup.h"
 #include <nvme/tree.h>
+
+struct dirents {
+	struct dirent **ents;
+	int num;
+};
+
+static inline void cleanup_dirents(struct dirents *ents)
+{
+	while (ents->num > 0)
+		free(ents->ents[--ents->num]);
+	free(ents->ents);
+}
+
+#define __cleanup_dirents __cleanup(cleanup_dirents)
+
+#define FREE_CTRL_ATTR(a) \
+	do { free(a); (a) = NULL; } while (0)
+
+char *libnvme_hostid_from_hostnqn(const char *hostnqn);
 
 int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 		const char *path, const char *name, libnvme_ctrl_t *cp);
@@ -28,11 +48,15 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
  * @transport:		Pointer to store the transport type
  * @traddr:		Pointer to store the transport address
  * @addr:		Pointer to store the address
+ * @trsvcid:		Pointer to store the transport service ID (optional)
+ * @host_traddr:	Pointer to store the host transport address (optional)
+ * @host_iface:		Pointer to store the host interface (optional)
  *
  * Return: 0 on success or negative error code otherwise
  */
 int libnvme_get_ctrl_transport(const char *path, const char *name,
-		char **transport, char **traddr, char **addr);
+		char **transport, char **traddr, char **addr, char **trsvcid,
+		char **host_traddr, char **host_iface);
 
 int libnvme_ns_init(const char *path, struct libnvme_ns *ns);
 

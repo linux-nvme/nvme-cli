@@ -1242,7 +1242,7 @@ static int nvme_dump_evtlog(struct libnvme_transport_handle *hdl, __u32 namespac
 	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err) {
 		fprintf(stderr, "Unable to get evtlog lsp=0x%x, ret = 0x%x\n",
-		        lsp, err);
+				lsp, err);
 		goto free_pevent;
 	}
 
@@ -1291,8 +1291,8 @@ static int nvme_dump_evtlog(struct libnvme_transport_handle *hdl, __u32 namespac
 				  NVME_LOG_LID_PERSISTENT_EVENT,
 				  NVME_CSI_NVM, log, len);
 		cmd.cdw10 |= NVME_FIELD_ENCODE(lsp,
-					       NVME_LOG_CDW10_LSP_SHIFT,
-		 			       NVME_LOG_CDW10_LSP_MASK);
+							NVME_LOG_CDW10_LSP_SHIFT,
+							NVME_LOG_CDW10_LSP_MASK);
 		nvme_init_get_log_lpo(&cmd, lpo);
 		err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 		if (err) {
@@ -1548,6 +1548,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	unsigned int pcie_correctable, pcie_fatal, pcie_nonfatal;
 	unsigned long long capacity;
 	bool capacity_valid = false;
+	bool pcie_cor_valid, pcie_fatal_valid, pcie_nonfatal_valid;
 	int err, fd, len, sector_size;
 	char pci_vid[7], pci_did[7], pci_ssvid[7], link_speed[20], link_width[5], link_string[40];
 	char path[512], numa_node[5], vendor[10], form_factor[15], temperature[10], io_speed[15];
@@ -1721,66 +1722,81 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 
 	//Populate PCIe AER errors from /sys/
 	snprintf(path, 512, "/sys/class/nvme/%s/device/aer_dev_correctable", chr_dev);
+	pcie_cor_valid = true;
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		perror("Could not open PCIe AER Correctable errors in /sys/");
-		return -errno;
+		pcie_cor_valid = false;
 	}
-	len = read(fd, path, 512);
-	if (len < 1) {
-		perror("Could not read PCIe AER Correctable errors in /sys/");
+
+	if (pcie_cor_valid) {
+		len = read(fd, path, 512);
+		if (len < 1) {
+			perror("Could not read PCIe AER Correctable errors in /sys/");
+			pcie_cor_valid = false;
+		}
 		close(fd);
-		return -errno;
 	}
-	close(fd);
-	len = sscanf(path, "%*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d TOTAL_ERR_COR %d", &pcie_correctable);
-	len = 1;
-	if (len < 1 || len == EOF) {
-		perror("Could not parse PCIe AER Correctable errors in /sys/");
-		return -1;
+	if (pcie_cor_valid) {
+		len = sscanf(path, "%*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d TOTAL_ERR_COR %d", &pcie_correctable);
+		if (len < 1 || len == EOF) {
+			perror("Could not parse PCIe AER Correctable errors in /sys/");
+			pcie_cor_valid = false;
+		}
 	}
 
 	snprintf(path, 512, "/sys/class/nvme/%s/device/aer_dev_nonfatal", chr_dev);
+	pcie_nonfatal_valid = true;
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		perror("Could not open PCIe AER Non-Fatal errors in /sys/");
-		return -errno;
+		pcie_nonfatal_valid = false;
 	}
 
-	len = read(fd, path, 512);
-	if (len < 1) {
-		perror("Could not read PCIe AER Non-Fatal errors in /sys/");
-		return -errno;
+	if (pcie_nonfatal_valid) {
+		len = read(fd, path, 512);
+		if (len < 1) {
+			perror("Could not read PCIe AER Non-Fatal errors in /sys/");
+			pcie_nonfatal_valid = false;
+		}
+		close(fd);
 	}
-	close(fd);
-	len = sscanf(path, "%*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d TOTAL_ERR_NONFATAL %d", &pcie_nonfatal);
-	if (len < 1) {
-		perror("Could not parse PCIe AER Non-Fatal errors in /sys/");
-		return -1;
+	if (pcie_nonfatal_valid) {
+		len = sscanf(path, "%*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d TOTAL_ERR_NONFATAL %d", &pcie_nonfatal);
+		if (len < 1) {
+			perror("Could not parse PCIe AER Non-Fatal errors in /sys/");
+			pcie_nonfatal_valid = false;
+		}
 	}
-
 	snprintf(path, 512, "/sys/class/nvme/%s/device/aer_dev_fatal", chr_dev);
+	pcie_fatal_valid = true;
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		perror("Could not open PCIe AER Fatal errors in /sys/");
-		return -errno;
+		pcie_fatal_valid = false;
 	}
 
-	len = read(fd, path, 512);
-	if (len < 1) {
-		perror("Could not read PCIe AER Fatal errors in /sys/");
+	if (pcie_fatal_valid) {
+		len = read(fd, path, 512);
+		if (len < 1) {
+			perror("Could not read PCIe AER Fatal errors in /sys/");
+			pcie_fatal_valid = false;
+		}
 		close(fd);
-		return -errno;
 	}
-	close(fd);
-	len = sscanf(path, "%*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d TOTAL_ERR_FATAL %d", &pcie_fatal);
-	if (len < 1) {
-		perror("Could not parse PCIe AER Fatal errors in /sys/");
-		close(fd);
-		return -1;
+	if (pcie_fatal_valid) {
+		len = sscanf(path, "%*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d %*s %*d TOTAL_ERR_FATAL %d", &pcie_fatal);
+		if (len < 1) {
+			perror("Could not parse PCIe AER Fatal errors in /sys/");
+			close(fd);
+			pcie_fatal_valid = false;
+		}
 	}
 
-	snprintf(pcie_status, 9, "%s", (pcie_fatal != 0 || pcie_nonfatal != 0 || pcie_correctable != 0) ? "Warning":"Good");
+	if (pcie_cor_valid && pcie_nonfatal_valid && pcie_fatal_valid)
+		snprintf(pcie_status, 9, "%s", (pcie_fatal != 0 || pcie_nonfatal != 0 || pcie_correctable != 0) ? "Warning":"Good");
+	else
+		snprintf(pcie_status, 9, "%s", "Unknown");
 
 	//Populate id-ctrl
 	err = nvme_identify_ctrl(hdl, &id_ctrl);
@@ -1927,9 +1943,12 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		json_object_add_value_int(dev_stats, "Uncorrectable Error Count", sfx_smart.pcie_rx_uncorrect_errs);
 		json_object_add_value_string(link_stats, "PCIe Link Width", link_width);
 		json_object_add_value_string(link_stats, "PCIe Link Speed", link_speed);
-		json_object_add_value_int(link_stats, "PCIe Link Fatal Errors", pcie_fatal);
-		json_object_add_value_int(link_stats, "PCIe Link Non-Fatal Errors", pcie_nonfatal);
-		json_object_add_value_int(link_stats, "PCIe Link Correctable Errors", pcie_correctable);
+		if (pcie_fatal_valid)
+			json_object_add_value_int(link_stats, "PCIe Link Fatal Errors", pcie_fatal);
+		if (pcie_nonfatal_valid)
+			json_object_add_value_int(link_stats, "PCIe Link Non-Fatal Errors", pcie_nonfatal);
+		if (pcie_cor_valid)
+			json_object_add_value_int(link_stats, "PCIe Link Correctable Errors", pcie_correctable);
 		json_object_add_value_string(link_stats, "PCIe Device Status", pcie_status);
 		json_object_add_value_object(dev_stats, "PCIe Link Status",	link_stats);
 		if (sfx_smart.friendly_changecap_support) {

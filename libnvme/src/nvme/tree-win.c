@@ -164,7 +164,8 @@ __libnvme_public int libnvme_init_ctrl(__libnvme_unused libnvme_host_t h,
 
 int libnvme_get_ctrl_transport(__libnvme_unused const char *path,
 			       const char *name, char **transport,
-			       char **traddr, char **addr)
+			       char **traddr, char **addr, char **trsvcid,
+			       char **host_traddr, char **host_iface)
 {
 	const struct ctrl_map_entry *ctrl_entry;
 	int ret;
