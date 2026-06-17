@@ -319,9 +319,9 @@ static bool argconfig_check_human_readable(struct argconfig_commandline_options 
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options)
 {
-	__cleanup_free char *short_opts = NULL;
-	__cleanup_free struct option *long_opts = NULL;
-	__cleanup_free int *long_opt_map = NULL;
+	char *short_opts = NULL;
+	struct option *long_opts = NULL;
+	int *long_opt_map = NULL;
 	struct argconfig_commandline_options *s;
 	int c, long_opt_index = 0, opt_index = 0, short_index = 0, options_count = 0;
 	int ret = 0;
@@ -336,6 +336,9 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 
 	if (!long_opts || !short_opts || !long_opt_map) {
 		fprintf(stderr, "failed to allocate memory for opts: %s\n", libnvme_strerror(errno));
+		free(long_opts);
+		free(short_opts);
+		free(long_opt_map);
 		return -errno;
 	}
 
@@ -397,6 +400,9 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	if (!argconfig_check_human_readable(options))
 		setlocale(LC_ALL, "C");
 
+	free(long_opts);
+	free(short_opts);
+	free(long_opt_map);
 	return ret;
 }
 
