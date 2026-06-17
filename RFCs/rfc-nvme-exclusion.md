@@ -74,16 +74,18 @@ Multiple `.conf` files are allowed — one per administrative boundary (e.g. `ad
 
 Two interaction modes are supported:
 
-- **`nvme exclusion edit <name>`** — interactive (`vipw`-style): opens `<name>.conf` in `$EDITOR` with a file lock held. Best for multi-entry changes in a single editing session.
+- **`nvme exclusion edit --name <NAME>`** — interactive (`vipw`-style): opens `<NAME>.conf` in `$EDITOR` with a file lock held. Best for multi-entry changes in a single editing session.
 - **`nvme exclusion add/remove`** — scripted: each command writes atomically. Best for automation, scripts, and `nvme disconnect --exclude`.
 
 ### 5.1 List-level operations
 
 | Command | Effect |
 |---------|--------|
-| `nvme exclusion create <name>` | Creates `/etc/nvme/exclusions/<name>.conf` |
-| `nvme exclusion delete <name>` | Removes the named exclusion list entirely |
-| `nvme exclusion edit <name>` | Opens `<name>.conf` in `$EDITOR` with a lock; validates and commits atomically on close |
+| `nvme exclusion create --name <NAME>` | Creates `/etc/nvme/exclusions/<NAME>.conf` |
+| `nvme exclusion delete --name <NAME>` | Removes the named exclusion list entirely |
+| `nvme exclusion edit --name <NAME>` | Opens `<NAME>.conf` in `$EDITOR` with a lock; validates and commits atomically on close |
+
+(All commands take `--name`/`-N`; `add` also takes `--entry`/`-e`.)
 
 ### 5.2 Interactive editing (`nvme exclusion edit`)
 
@@ -96,9 +98,9 @@ The lock file is `/etc/nvme/exclusions/<name>.lock` and contains the PID of the 
 | Command | Effect |
 |---------|--------|
 | `nvme exclusion list` | Lists all exclusion list names (files) in the directory |
-| `nvme exclusion list <name>` | Lists all entries in `<name>.conf` |
-| `nvme exclusion add <name> <entry>` | Appends one entry to `<name>.conf` (atomic write) |
-| `nvme exclusion remove <name>` | Interactive: lists entries with a throwaway sequential number, prompts for which to remove, then removes by exact content match (atomic write) |
+| `nvme exclusion list --name <NAME>` | Lists all entries in `<NAME>.conf` |
+| `nvme exclusion add --name <NAME> --entry <ENTRY>` | Appends one entry to `<NAME>.conf` (atomic write) |
+| `nvme exclusion remove --name <NAME>` | Interactive: lists entries with a throwaway sequential number, prompts for which to remove, then removes by exact content match (atomic write) |
 
 `remove` has no non-interactive form and entries have no persistent ID — nothing in the system removes entries programmatically (orchestrators never write to the exclusion list; see §1), so a numbered prompt scoped to a single command invocation is sufficient and avoids any need for a stable identifier.
 
@@ -112,20 +114,27 @@ Declared in `<nvme/exclusion.h>`, following the same convention as `<nvme/regist
 
 ```c
 /*
- * Check whether a controller's transport parameters match any entry in the
- * system-wide exclusion list. Called by orchestrators before connecting.
- * Any parameter may be NULL. A NULL caller parameter for a field that IS
- * present in an entry causes that entry not to match — NULL means "this
- * connection has no value for this field" (e.g. no interface pinning), not
- * "match any value". Fields absent from the entry are not checked regardless
- * of what the caller passes.
+ * Check whether a controller matches any entry in the system-wide exclusion
+ * list. Called by orchestrators before connecting. @tid carries the
+ * controller's transport parameters; any field within it may be NULL. A NULL
+ * field that IS present in an entry causes that entry not to match — NULL means
+ * "this connection has no value for this field" (e.g. no interface pinning), not
+ * "match any value". Fields absent from the entry are not checked.
  * Returns true if the controller is excluded, false otherwise.
  * Returns false (not excluded) if the exclusion directory cannot be read.
+ *
+ * Note: takes a &struct libnvmf_tid (the same TID object used throughout the
+ * fabrics API) rather than seven separate string arguments — fewer call-site
+ * mistakes and no positional-argument confusion.
  */
-bool libnvmf_exclusion_match(const char *transport, const char *traddr,
-                             const char *subsysnqn, const char *trsvcid,
-                             const char *host_traddr, const char *host_iface,
-                             const char *host_nqn);
+bool libnvmf_exclusion_match(const struct libnvmf_tid *tid);
+
+/*
+ * Validate an exclusion entry string ("key=value;...") without touching the
+ * filesystem: returns true when every key is known and at least one recognized
+ * field is present, false otherwise. Use to pre-check hand-edited files.
+ */
+bool libnvmf_exclusion_entry_valid(const char *entry);
 
 /**
  * Address comparison: `traddr` and `host_traddr` values are compared using
@@ -157,7 +166,8 @@ int libnvmf_exclusion_list_for_each(
  * Invokes cback for each entry with the raw semicolon-separated
  * key=value entry string (e.g. "transport=tcp;traddr=192.168.1.10").
  * The raw string is the stable, ABI-safe representation; callers
- * that need structured access can use libnvme_key_value_list_parse().
+ * that need structured access can parse it themselves (e.g. with
+ * libnvmf_tid_parse() for controller TIDs).
  * Returns 0 on success, -ENOENT if the list does not exist,
  * negative errno otherwise.
  */
@@ -235,25 +245,12 @@ The directory path defaults to `/etc/nvme/exclusions` but can be overridden via 
 
 ### 6.3 Key-Value Utilities
 
-General-purpose utilities declared in `<nvme/util.h>`, usable wherever key=value string parsing is needed — exclusion list entries, nvme-discoverd `controller=` config lines, or similar formats.
-
-```c
-/*
- * Parse a sep-separated key=value string into a ccan linked list of
- * struct key_value pairs:
- *
- *   struct key_value { const char *key; const char *value; };
- *
- * sep identifies the field separator (e.g. ';' for exclusion list
- * entries, ',' for other formats). The struct is intentionally
- * minimal — two string pointers are as elemental as it gets and
- * present no ABI versioning risk.
- * The caller frees the entire list with libnvme_key_value_list_free().
- * Memory management details are deferred to implementation time.
- */
-struct list_head *libnvme_key_value_list_parse(const char *str, char sep);
-void libnvme_key_value_list_free(struct list_head *list);
-```
+*Intentionally not provided.* An earlier draft proposed general-purpose
+`libnvme_key_value_list_parse()` / `libnvme_key_value_list_free()` helpers in
+`<nvme/util.h>`. They were dropped: `libnvmf_tid_parse()` already converts a
+semicolon-separated key=value string into a controller TID — which covers the
+actual need — and the exclusion matcher parses entries internally. A standalone
+key-value API can be added later if a third consumer appears.
 
 ---
 
