@@ -1482,6 +1482,12 @@ static int submit_admin_format_nvm(struct libnvme_transport_handle *hdl,
 	if (get_is_win_pe())
 		return submit_storage_protocol_command(hdl, cmd);
 
+	if (!libnvme_transport_handle_is_ns(hdl)) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "Windows only supports "
+			"format on namespace devices (e.g. nvme0n1)\n");
+		return -ENOTSUP;
+	}
+
 	/*
 	 * Extract the Secure Erase Settings (SES) from CDW10 and call the
 	 * appropriate implementation based on the requested erase type.
