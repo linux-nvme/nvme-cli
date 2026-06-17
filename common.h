@@ -24,15 +24,6 @@
 #endif /* __packed */
 
 /*
- * O_BINARY is required for Windows to avoid line ending translations.
- * Define it as 0 on platforms where it is not defined so that it can be used
- * but will have no effect.
- */
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
-
-/*
  * Some common functionality is implemented or named differently on Windows.
  * Provide compatibility wrappers.
  */
