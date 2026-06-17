@@ -196,6 +196,10 @@ nvme_list_opts () {
 		opts+=" --lsp -s --output-file= -f \
 			--output-format= -o"
 			;;
+		"power-measurement-log")
+		opts+=" --raw-binary -b --output-format= -o \
+			--verbose -v --timeout="
+			;;
 		"media-unit-stat-log")
 		opts+=" --dom-id= -d --output-format= -o \
 			--raw-binary -b"
@@ -1799,7 +1803,7 @@ _nvme_subcmds () {
 		error-log effects-log endurance-log \
 		predictable-lat-log pred-lat-event-agg-log \
 		persistent-event-log endurance-agg-log \
-		lba-status-log resv-notif-log get-feature \
+		lba-status-log resv-notif-log power-measurement-log get-feature \
 		device-self-test self-test-log set-feature \
 		set-property get-property format fw-commit \
 		fw-download admin-passthru io-passthru \
