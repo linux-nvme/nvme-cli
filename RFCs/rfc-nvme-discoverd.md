@@ -18,7 +18,7 @@ It ships inside `nvme-cli` (not a separate package), is default-on, and targets 
 
 **Why it cannot be a separate package:** nvme-discoverd replaces components that are already part of the nvme-cli package — specifically the NVMe-oF udev rules and `nvmefc-boot-connections.service`. Additionally, nvme-discoverd invokes `nvme connect` at runtime, so nvme-cli must be installed for the daemon to function. The two are inseparable: nvme-discoverd is nvme-cli's built-in connectivity manager.
 
-**Build option — static replacement, not dynamic masking:** nvme-discoverd is controlled by a meson build option (`-Dnvme-discoverd=enabled|disabled`). When enabled, `nvme-discoverd.service` is installed and the NVMe-oF udev rules, `nvmefc-boot-connections.service`, `nvmf-autoconnect.service`, and the FC udev rules are **not** installed — discoverd handles all of that. When disabled, those components are installed as before and nvme-discoverd is absent. There is no dynamic switching: the choice is made at package build time, and the replaced components are simply not installed rather than masked. This avoids any ambiguity during daemon restarts, crashes, or maintenance windows.
+**Build option — static replacement, not dynamic masking:** nvme-discoverd is controlled by a meson build option (`-Dnvme-discoverd=enabled|disabled`). When enabled, `nvme-discoverd.service` is installed and the legacy autoconnect components — the NVMe-oF autoconnect udev rules, `nvmefc-boot-connections.service`, `nvmf-autoconnect.service`, `nvmf-connect-nbft.service`, and its NetworkManager dispatcher script — are **not** installed; discoverd handles all of that (see §12 for the full inventory). When disabled, those components are installed as before and nvme-discoverd is absent. There is no dynamic switching: the choice is made at package build time, and the replaced components are simply not installed rather than masked. This avoids any ambiguity during daemon restarts, crashes, or maintenance windows.
 
 **Some design choices in the initial release:** the exclusion list mechanism, the `zeroconf` config knob, and the `zeroconf=false` default — are deliberately shaped by the anticipated future mDNS support, even though mDNS itself is not yet implemented.
 
@@ -301,7 +301,7 @@ A hybrid approach — varlink for unit creation, D-Bus for stop/restart — woul
 
 **Current implementation.** nvme-discoverd uses the `org.freedesktop.systemd1.Manager` D-Bus interface for all unit lifecycle operations (`StartTransientUnit`, `StopUnit`, `RestartUnit`, `ResetFailedUnit`, and the `JobRemoved` signal). The D-Bus calls go through `sd-bus`, systemd's own D-Bus implementation, which is part of `libsystemd` — a library nvme-discoverd already depends on for `sd_event`. No additional library dependency is introduced. The D-Bus usage is scoped exclusively to the systemd interface; discoverd's own client-facing IPC (§3.7) remains varlink-only.
 
-**Path forward.** Once `StopUnit`, `RestartUnit`, and `ResetFailedUnit` are available over varlink, discoverd should migrate away from D-Bus entirely. See §12 Open Questions item 4.
+**Path forward.** Once `StopUnit`, `RestartUnit`, and `ResetFailedUnit` are available over varlink, discoverd should migrate away from D-Bus entirely. See §13 Open Questions item 4.
 
 ---
 
@@ -547,7 +547,73 @@ The `fc-kickstart-interval-minutes` and `discovery-retention-time` are orthogona
 
 ---
 
-## 12. Open Questions
+## 12. Legacy Autoconnect Mechanisms Replaced
+
+nvme-cli currently ships a collection of udev rules, systemd units, a dracut config snippet, and a NetworkManager dispatcher script that together implement NVMe-oF autoconnect. These accreted over years, are difficult to reason about as a whole, and have transport- and network-manager-specific gaps. This section inventories every component, states when it fires, and describes how nvme-discoverd subsumes it. The guiding distinction is between components that *establish connections* — which discoverd replaces — and components that perform *orthogonal tuning, key provisioning, or interface naming* — which discoverd leaves in place. The disposition column reflects the static-replacement build model of §1: replaced components are simply not installed when nvme-discoverd is built.
+
+### 12.1 Inventory
+
+| Component | Kind | Fires when | Disposition |
+|-----------|------|-----------|-------------|
+| `70-nvmf-autoconnect.rules` | udev rule | DC Discovery Log Page Change AEN (`0x70f002`), DC `rediscover`, and FC `nvmediscovery` uevents | **Replaced** — discoverd's event loop handles all three (§7.1) |
+| `nvmf-connect@.service` | systemd template | Instantiated per-TID by the rule above | **Replaced** — discoverd creates its own transient units (§3.2) |
+| `nvmf-connect.target` | systemd target | Groups `nvmf-connect@` instances | **Replaced** — n/a under discoverd |
+| `nvmefc-boot-connections.service` | systemd oneshot | Once at boot, if an FC HBA is present | **Replaced** — discoverd does the FC kickstart at startup and on every FC drop (§7.1, §11.3) |
+| `nvmf-autoconnect.service` | systemd oneshot | Once at boot, if `config.json`/`discovery.conf` exists | **Replaced** — discoverd reconnects configured controllers from `discoverd.conf` at startup (§7.1) |
+| `nvmf-connect-nbft.service` | systemd oneshot | On demand, started by the NM dispatcher on NBFT-interface up | **Replaced** — discoverd adopts/reconnects NBFT controllers from its NBFT cache (§7.1); see §12.5 |
+| `80-nvmf-connect-nbft.sh` | NM dispatcher | NetworkManager interface-up for `nbft*`/HFI connections | **Replaced** — discoverd's retry loop, manager-agnostic (§12.5) |
+| `70-nvmf-autoconnect.conf` | dracut conf | Installs the autoconnect rule into the initramfs | **Replaced** — moot once the rule is gone; initramfs connect stays dracut `95nvmf`'s job |
+| `65-persistent-net-nbft.rules` | udev rule | Naming of `nbft*` interfaces | **Kept** — interface naming, not connect logic |
+| `70-nvmf-keys.rules` | udev rule | `nvme_tcp` module load; imports TLS PSK into the keyring | **Kept** — key provisioning, orthogonal to connect |
+| `71-nvmf-{hpe,netapp,vastdata}.rules` | udev rules | `nvme-subsystem`/`nvme` add; set `iopolicy` & `ctrl_loss_tmo` | **Kept** — vendor device tuning, orthogonal |
+| `70-nvmf-registry.rules` (new) | udev rule | `nvme` controller remove; prunes `/run/nvme/registry/` | **Kept** — part of this work, complementary |
+
+### 12.2 The core autoconnect rules (replaced)
+
+`70-nvmf-autoconnect.rules` is the heart of the legacy mechanism. It has three match clauses, each of which runs `systemctl --no-block restart nvmf-connect@<TID>.service`: a DC raised a **Discovery Log Page Change** notification (AEN type Notice, information F0h, log page 70h — i.e. `NVME_AEN=="0x70f002"`), a discovery controller reconnected (`NVME_EVENT=="rediscover"`, `cntrltype=="discovery"`), and an FC discovery event (`SUBSYSTEM=="fc"`, `FC_EVENT=="nvmediscovery"`). The templated `nvmf-connect@.service` then runs `nvme connect-all --context=autoconnect` for that one TID, with the TID encoded into the unit instance name as a tab-separated, hex-escaped argument string.
+
+Two structural weaknesses motivate discoverd. First, there is **no retry**: if `connect-all` fails because the target is momentarily unreachable, the triggering uevent is already consumed and nothing reconnects until the next fabric event happens to fire — which may be never. Second, the **TID-in-unit-name encoding** is fragile and opaque. discoverd replaces both with a long-lived event loop that owns the desired set and retries on its own schedule (§5), so a transient failure is recovered without waiting for another fabric event, and connection state lives in the registry and state files rather than in escaped systemd unit names.
+
+### 12.3 FC boot kickstart (replaced)
+
+`nvmefc-boot-connections.service` writes `add` to `/sys/class/fc/fc_udev_device/nvme_discovery` exactly once at boot, gated by `ConditionPathExists=` on that same path so it is a silent no-op on hosts without an FC HBA. discoverd performs the identical kickstart at startup — self-gated at runtime: the write returns `ENOENT` on FC-less hosts and discoverd treats that as success, the programmatic equivalent of `ConditionPathExists=`, so the startup kickstart is harmless on a plain laptop. discoverd additionally re-issues the kickstart on every FC controller drop and, optionally, on a timer (§11.3), closing the equipment-replacement gap that a one-shot boot service structurally cannot cover.
+
+### 12.4 Config-file boot connect (replaced)
+
+`nvmf-autoconnect.service` runs `nvme connect-all --context=autoconnect` once at boot when `config.json` or the legacy `discovery.conf` exists, ordered `After=network-online.target`. discoverd reconnects the same statically configured controllers from `discoverd.conf` at startup and then keeps retrying them — static entries retry indefinitely (§11), unlike the one-shot service which gets a single attempt. discoverd does not consume the legacy `discovery.conf` (§2).
+
+### 12.5 NBFT late-connect and the network-manager problem
+
+This is the most tangled piece of the legacy set, and the immediate reason for inventorying the whole collection.
+
+The normal NBFT boot path does not involve any of these units: NBFT-listed controllers are connected inside the initramfs by dracut's `95nvmf` module, before `switch_root`. The only case left for the real root is an NBFT interface that **could not** be brought up during initramfs and comes up later. `nvmf-connect-nbft.service` exists to cover that late case: it runs `nvme connect-all --nbft`, gated by `ConditionPathExists=` on the NBFT ACPI table.
+
+But that unit has **no `[Install]` section** — it is never enabled, and systemd never starts it on its own. Its `After=network-online.target` is therefore inert ordering that only takes effect if something else pulls the unit in. What pulls it in is the NetworkManager dispatcher script `80-nvmf-connect-nbft.sh`: on interface-up, if the interface name matches `nbft*` or NetworkManager's `CONNECTION_ID` begins with `"NBFT connection HFI"`, it runs `systemctl --no-block start nvmf-connect-nbft.service`.
+
+This has two problems:
+
+1. **NetworkManager-specific.** The `dispatcher.d` callout mechanism belongs to NetworkManager. On a host running systemd-networkd, ifupdown, netplan-over-networkd, connman, or no network manager at all, the script is never invoked and the late NBFT connect simply never happens. (Confirmed against the systemd source tree: systemd-networkd has no dispatcher / per-link up-script callout — this is deliberate.) The legacy late-NBFT path therefore silently does nothing outside NetworkManager.
+2. **Fragile matching.** Even under NetworkManager it depends on interface naming (`nbft*`, preserved by `65-persistent-net-nbft.rules`) or an exact connection-id prefix string.
+
+**How discoverd is better — and what it actually needs.** discoverd already maintains a desired set and a retry loop (§5) that the legacy mechanism lacks entirely. Every NBFT-listed controller is in that desired set (from discoverd's NBFT cache, §7.1). A controller that could not be connected because its interface was not yet up is just a desired-set member whose connect currently fails; the retry loop reconnects it once the interface appears — with no interface matching, no name pattern, and no network-manager hook. This is manager-agnostic by construction: it behaves identically under NetworkManager, systemd-networkd, or no manager.
+
+Kernel link-up monitoring is therefore an **optimization, not a correctness requirement**. If lower latency than the retry interval is wanted, discoverd can subscribe to link-up events (netlink / `sd_device`) and use them to "kick" the retry immediately instead of waiting for the next tick. Crucially, such an event carries no semantics discoverd must interpret: it does **not** need to match the interface against the NBFT table, because the retry loop already knows the desired set. The design is one connect path with two triggers — the periodic timer and an optional event-kick — both idempotent. The initial release can ship retry-only and later add the event-kick as a one-line trigger into the same retry entry point.
+
+Note that discoverd deliberately does **not** order itself `After=network-online.target`: that target is coarse and best-effort — it does not mean every interface is up — and if the network never came up at all, ordering discoverd behind it would prevent discoverd from ever starting, which is exactly when it needs to be running so it can retry. The udev-vs-netlink question for the event source is tracked in §13 Open Questions item 1.
+
+### 12.6 Components kept (orthogonal)
+
+Three classes are not connection mechanisms and discoverd leaves them installed:
+
+- `65-persistent-net-nbft.rules` pins `nbft*` interface names — a naming concern, unrelated to who connects.
+- `70-nvmf-keys.rules` imports TLS pre-shared keys into the kernel keyring when `nvme_tcp` loads — key provisioning that any connect path depends on.
+- `71-nvmf-{hpe,netapp,vastdata}.rules` set per-model `iopolicy` and `ctrl_loss_tmo` — device tuning applied after a namespace appears, independent of who established the connection.
+
+The new `70-nvmf-registry.rules` (part of this work) prunes the ownership registry on controller removal and is likewise complementary, not a connect mechanism.
+
+---
+
+## 13. Open Questions
 
 1. **Kernel uevents vs udev events** — Reading kernel uevents directly avoids the udevd dependency but requires custom filtering and large receive buffers. udev event monitoring is more comfortable but adds latency. Not yet resolved. Note: if udev monitoring is chosen, `nvme-discoverd.service` must add `After=systemd-udevd.service` to ensure udevd is ready before the daemon starts listening for events.
 
@@ -559,7 +625,7 @@ The `fc-kickstart-interval-minutes` and `discovery-retention-time` are orthogona
 
 ---
 
-## 13. Glossary
+## 14. Glossary
 
 | Term | Definition |
 |------|------------|
