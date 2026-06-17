@@ -546,7 +546,7 @@ nvme_list_opts () {
 			;;
 	esac
 
-	opts+=" -h --help -j --json"
+	opts+=" -h --help"
 
 	if [[ $vals == " " ]]; then
 		COMPREPLY+=( $( compgen $compargs -W "$opts" -- $cur ) )
