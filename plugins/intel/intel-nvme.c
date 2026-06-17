@@ -1406,7 +1406,7 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 	cdlog.u.fields.selectCore = cfg.core < 0 ? 0 : cfg.core;
 	cdlog.u.fields.selectNlog = cfg.lnum < 0 ? 0 : cfg.lnum;
 
-	output = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		err = output;
 		goto out_free;

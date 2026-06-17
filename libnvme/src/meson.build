@@ -10,26 +10,31 @@ sources = [
     'nvme/base64.c',
     'nvme/crc32.c',
     'nvme/ioctl.c',
+    'nvme/lib.c',
     'nvme/log.c',
     'nvme/nvme-cmds.c',
+    'nvme/tree.c',
     'nvme/util.c',
 ]
 if host_system == 'windows'
     sources += [
+        'nvme/filters-win.c',
         'nvme/ioctl-win.c',
+        'nvme/lib-win.c',
         'nvme/mem-win.c',
         'nvme/no-crypto.c',
+        'nvme/tree-win.c',
     ]
 else
     sources += [
         'nvme/crypto.c',
-        'nvme/filters.c',
+        'nvme/filters-linux.c',
         'nvme/ioctl-linux.c',
-        'nvme/lib.c',
+        'nvme/lib-linux.c',
         'nvme/linux.c',
         'nvme/mem-linux.c',
         'nvme/sysfs.c',
-        'nvme/tree.c',
+        'nvme/tree-linux.c',
     ]
 endif
 headers = [

@@ -10,6 +10,7 @@
 
 #include <libnvme.h>
 
+#include "common.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
@@ -252,7 +253,7 @@ static int nvme_get_internal_log(struct libnvme_transport_handle *hdl,
 		d(page_data, page_data_len, 16, 1);
 	} else {
 		progress_runner(progress);
-		o_fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		o_fd = nvme_open_rawdata(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (o_fd < 0) {
 			fprintf(stderr, "%s: couldn't output file %s\n", __func__, filename);
 			err = -EINVAL;
@@ -379,7 +380,7 @@ static int nvme_get_vendor_log(struct libnvme_transport_handle *hdl,
 		return err;
 	}
 	if (filename) {
-		int o_fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		int o_fd = nvme_open_rawdata(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 
 		if (o_fd < 0) {
 			fprintf(stderr, "%s: couldn't output file %s\n",

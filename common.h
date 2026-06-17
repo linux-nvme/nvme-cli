@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
+#include <fcntl.h>
 #include <string.h>
 #include <stdbool.h>
 
@@ -38,6 +39,16 @@ static inline int getpagesize(void)
 	GetSystemInfo(&si);
 	return si.dwPageSize;
 }
+#endif
+
+/*
+ * Open file for reading or writing raw data with no line-ending translations
+ * or other interpretation or decoding.
+ */
+#ifdef O_BINARY
+#define nvme_open_rawdata(path, flags, ...) open((path), (flags) | O_BINARY, ##__VA_ARGS__)
+#else
+#define nvme_open_rawdata(path, flags, ...) open((path), (flags), ##__VA_ARGS__)
 #endif
 
 /*
