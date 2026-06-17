@@ -27,8 +27,6 @@
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"
-#include "filters.h"
-#include "private-ctrl-map.h"
 #include "private-tree.h"
 #include "util.h"
 #include "compiler-attributes.h"

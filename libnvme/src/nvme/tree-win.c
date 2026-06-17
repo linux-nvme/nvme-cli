@@ -29,8 +29,6 @@
 #include "compiler-attributes.h"
 
 
-#define FREE_CTRL_ATTR(a) \
-	do { free(a); (a) = NULL; } while (0)
 int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c, const char *path, const char *name)
 {
@@ -173,6 +171,9 @@ int libnvme_get_ctrl_transport(__libnvme_unused const char *path,
 	*transport = NULL;
 	*traddr = NULL;
 	*addr = NULL;
+	*trsvcid = NULL;
+	*host_traddr = NULL;
+	*host_iface = NULL;
 
 	ctrl_entry = libnvme_ctrl_map_lookup(name);
 	if (!ctrl_entry)
@@ -188,7 +189,11 @@ int libnvme_get_ctrl_transport(__libnvme_unused const char *path,
 		goto free_transport;
 	}
 
-	*traddr = *addr;
+	*traddr = strdup(*addr);
+	if (!*traddr) {
+		ret = -ENOMEM;
+		goto free_transport;
+	}
 	return 0;
 free_transport:
 	free(*transport);
