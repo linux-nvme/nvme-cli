@@ -170,6 +170,7 @@ struct argconfig_commandline_options {
 	const char *help;
 	bool seen;
 	struct argconfig_opt_val *opt_val;
+	bool hidden;
 };
 
 void argconfig_append_usage(const char *str);
