@@ -1552,6 +1552,17 @@ int libnvme_ctrl_scan_namespaces(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
+/*
+ * Fabrics = any transport that is not a known local one (pcie/apple-nvme).
+ * Testing by exclusion means a newly added transport defaults to fabrics.
+ */
+__libnvme_public bool libnvme_ctrl_is_transport_fabric(libnvme_ctrl_t c)
+{
+	return c && c->transport &&
+	       strcmp(c->transport, "pcie") &&
+	       strcmp(c->transport, "apple-nvme");
+}
+
 int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 		const char *path, const char *name, libnvme_ctrl_t *cp)
 {

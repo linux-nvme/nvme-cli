@@ -846,6 +846,17 @@ char *libnvme_ctrl_get_src_addr(libnvme_ctrl_t c, char *src_addr,
 const char *libnvme_ctrl_get_state(libnvme_ctrl_t c);
 
 /**
+ * libnvme_ctrl_is_transport_fabric() - True for a fabrics transport
+ * @c:	Controller instance
+ *
+ * A controller is reachable either over a local transport (pcie,
+ * apple-nvme) or over NVMe-over-Fabrics (tcp, rdma, fc, loop).
+ *
+ * Return: true if @c uses a fabrics transport, false if local.
+ */
+bool libnvme_ctrl_is_transport_fabric(libnvme_ctrl_t c);
+
+/**
  * libnvme_ctrl_get_subsystem() - Parent subsystem of a controller
  * @c:	Controller instance
  *
