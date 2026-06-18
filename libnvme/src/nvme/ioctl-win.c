@@ -13,12 +13,14 @@
 #include <errno.h>
 #include <ntddscsi.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <ccan/minmax/minmax.h>
 
 #include <libnvme.h>
 
+#include "cleanup.h"
 #include "ioctl.h"
 #include "private.h"
 #include "types.h"
@@ -97,6 +99,29 @@ static bool get_is_win_pe(void)
 		return true;
 	}
 	return false;
+}
+
+/**
+ * get_ns_handle_from_ctrl() - Open the default namespace handle for a controller
+ * @hdl: Controller transport handle
+ *
+ * Return: Namespace transport handle on success, or NULL on failure.
+ *
+ * The caller owns the returned handle and must call libnvme_close() when it
+ * is no longer needed.
+ */
+static struct libnvme_transport_handle *get_ns_handle_from_ctrl(
+		struct libnvme_transport_handle *hdl)
+{
+	struct libnvme_transport_handle *ns_hdl = NULL;
+	const char *ctrl_name;
+	__cleanup_free char *ns_name;
+
+	ctrl_name = libnvme_transport_handle_get_name(hdl);
+	if (asprintf(&ns_name, "%sn1", ctrl_name) >= 0)
+		libnvme_open(hdl->ctx, ns_name, &ns_hdl);
+
+	return ns_hdl;
 }
 
 __libnvme_public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
@@ -1324,6 +1349,177 @@ out:
 	return err;
 }
 
+#if !HAVE_STORAGE_REINITIALIZE_MEDIA
+/*
+ * Definitions for values and types not yet included in mingw's winioctl.h.
+ * Values found in the 10.0.26100.0 Windows SDK winioctl.h.
+ */
+
+typedef enum _STORAGE_SANITIZE_METHOD {
+	StorageSanitizeMethodDefault = 0,
+	StorageSanitizeMethodBlockErase,
+	StorageSanitizeMethodCryptoErase
+} STORAGE_SANITIZE_METHOD, *PSTORAGE_SANITIZE_METHOD;
+
+typedef struct _STORAGE_REINITIALIZE_MEDIA {
+	DWORD Version;
+	DWORD Size;
+	DWORD TimeoutInSeconds;
+	struct {
+		DWORD SanitizeMethod : 4;
+		DWORD DisallowUnrestrictedSanitizeExit : 1;
+		DWORD Reserved : 27;
+	} SanitizeOption;
+} STORAGE_REINITIALIZE_MEDIA, *PSTORAGE_REINITIALIZE_MEDIA;
+#endif
+
+static int submit_admin_sanitize_reinit_media(
+		struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
+{
+	struct libnvme_transport_handle *ns_hdl = NULL;
+	STORAGE_REINITIALIZE_MEDIA reinit_media = {0};
+	STORAGE_SANITIZE_METHOD sanitize_method = StorageSanitizeMethodDefault;
+	ULONG returned_len = 0;
+	void *user_data = NULL;
+	BOOL lock_succeeded = FALSE;
+	BOOL result = FALSE;
+	int err = 0;
+	__u8 sanact;
+	__u8 ause;
+
+	/*
+	 * IOCTL_STORAGE_REINITIALIZE_MEDIA requires a handle to a disk (ns).
+	 * If the provided handle is a controller, get a handle to the default
+	 * namespace and issue the command on that handle instead.
+	 */
+	if (libnvme_transport_handle_is_ns(hdl)) {
+		ns_hdl = hdl;
+	} else {
+		ns_hdl = get_ns_handle_from_ctrl(hdl);
+		if (!ns_hdl) {
+			err = -ENODEV;
+			goto out;
+		}
+	}
+
+	user_data = hdl->submit_entry(hdl, cmd);
+	if (hdl->ctx->dry_run)
+		goto out;
+
+	if (ns_hdl->fd == INVALID_HANDLE_VALUE || ns_hdl->fd == NULL) {
+		err = -EBADF;
+		goto out;
+	}
+
+	sanact = NVME_FIELD_DECODE(cmd->cdw10,
+			NVME_SANITIZE_CDW10_SANACT_SHIFT,
+			NVME_SANITIZE_CDW10_SANACT_MASK);
+	ause = NVME_FIELD_DECODE(cmd->cdw10,
+			NVME_SANITIZE_CDW10_AUSE_SHIFT,
+			NVME_SANITIZE_CDW10_AUSE_MASK);
+
+	switch (sanact) {
+	case NVME_SANITIZE_SANACT_START_BLOCK_ERASE:
+		sanitize_method = StorageSanitizeMethodBlockErase;
+		break;
+	case NVME_SANITIZE_SANACT_START_CRYPTO_ERASE:
+		sanitize_method = StorageSanitizeMethodCryptoErase;
+		break;
+	case NVME_SANITIZE_SANACT_START_OVERWRITE:
+	case NVME_SANITIZE_SANACT_EXIT_FAILURE:
+	case NVME_SANITIZE_SANACT_EXIT_MEDIA_VERIF:
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR,
+			"SANACT=%u is not supported on Windows.\n", sanact);
+		err = -ENOTSUP;
+		goto out;
+	default:
+		err = create_nvme_status_code(NVME_SC_INVALID_FIELD,
+					NVME_SCT_GENERIC, false);
+		goto out;
+	}
+
+	/*
+	 * Attempt to lock the volume before reinitializing media as documented
+	 * in the Windows Storage documentationto flush cached data.
+	 * If locking fails, the sanitize can still proceed.
+	 */
+	lock_succeeded = DeviceIoControl(ns_hdl->fd, FSCTL_LOCK_VOLUME,
+				NULL, 0, NULL, 0, &returned_len, NULL);
+
+	reinit_media.Version = sizeof(STORAGE_REINITIALIZE_MEDIA);
+	reinit_media.Size = sizeof(STORAGE_REINITIALIZE_MEDIA);
+	reinit_media.TimeoutInSeconds = (cmd->timeout_ms > 0) ?
+		((cmd->timeout_ms + 999) / 1000) : 0;
+	reinit_media.SanitizeOption.SanitizeMethod = sanitize_method;
+	reinit_media.SanitizeOption.DisallowUnrestrictedSanitizeExit = !ause;
+
+	do {
+		err = 0;
+		result = DeviceIoControl(ns_hdl->fd,
+				IOCTL_STORAGE_REINITIALIZE_MEDIA,
+				&reinit_media,
+				sizeof(reinit_media),
+				NULL,
+				0,
+				&returned_len,
+				NULL);
+		if (result)
+			break;
+
+		err = -get_errno_from_error(GetLastError());
+	} while (hdl->decide_retry(hdl, cmd, err));
+
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
+			"GetLastError=%lu, err=%d\n",
+			__func__, GetLastError(), err);
+		goto out;
+	}
+
+	cmd->result = 0;
+
+out:
+	if (lock_succeeded)
+		DeviceIoControl(ns_hdl->fd, FSCTL_UNLOCK_VOLUME,
+				NULL, 0, NULL, 0, &returned_len, NULL);
+
+	if (ns_hdl && !libnvme_transport_handle_is_ns(hdl))
+		libnvme_close(ns_hdl);
+
+	hdl->submit_exit(hdl, cmd, err, user_data);
+	return err;
+}
+
+static int submit_admin_sanitize(
+		struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd)
+{
+	int err;
+
+	/*
+	 * Windows documentation says IOCTL_STORAGE_PROTOCOL_COMMAND
+	 * should work for sanitize commands, but in practice the command
+	 * returns a failing result and a pending status, and the command
+	 * never gets passed to the controller.
+	 *
+	 * Run sanitize using IOCTL_STORAGE_REINITIALIZE_MEDIA instead.
+	 * For controller handles, this will be run on the default namespace
+	 * handle if available. If not available, -ENODEV will be returned.
+	 */
+
+	err = submit_admin_sanitize_reinit_media(hdl, cmd);
+	if (err == -ENODEV) {
+		/*
+		 * Default namespace handle not available,
+		 * fall back to IOCTL_STORAGE_PROTOCOL_COMMAND.
+		 */
+		err = submit_storage_protocol_command(hdl, cmd);
+	}
+
+	return err;
+}
+
 /* SCSI operation code for sanitize command - from ddk/scsi.h */
 #define SCSIOP_SANITIZE 0x48
 
@@ -1481,6 +1677,12 @@ static int submit_admin_format_nvm(struct libnvme_transport_handle *hdl,
 	/* For WinPE, use storage protocol command. */
 	if (get_is_win_pe())
 		return submit_storage_protocol_command(hdl, cmd);
+
+	if (!libnvme_transport_handle_is_ns(hdl)) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_ERR, "Windows only supports "
+			"format on namespace devices (e.g. nvme0n1)\n");
+		return -ENOTSUP;
+	}
 
 	/*
 	 * Extract the Secure Erase Settings (SES) from CDW10 and call the
@@ -1719,7 +1921,7 @@ __libnvme_public int libnvme_submit_admin_passthru(struct libnvme_transport_hand
 	case nvme_admin_security_recv:
 		return submit_admin_security_send_receive(hdl, cmd);
 	case nvme_admin_sanitize_nvm:
-		return submit_storage_protocol_command(hdl, cmd);
+		return submit_admin_sanitize(hdl, cmd);
 	case 0xC0 ... 0xFF: /* vendor-specific commands */
 		return submit_storage_protocol_command(hdl, cmd);
 	default:

@@ -33,13 +33,21 @@ bool is_printable_at_level(int level)
 
 int map_log_level(int verbose, bool quiet)
 {
-	if (verbose == 0 || quiet)
+	if (quiet)
 		return LIBNVME_LOG_ERR;
 
-	if (verbose == 1)
+	switch (verbose) {
+	case 0:
+		return LIBNVME_LOG_ERR;
+	case 1:
 		return LIBNVME_LOG_INFO;
+	case 2:
+		return LIBNVME_LOG_DEBUG;
+	default:
+		break;
+	}
 
-	return LIBNVME_LOG_DEBUG;
+	return LIBNVME_LOG_DEBUG_VERBOSE;
 }
 
 static void nvme_show_common(struct libnvme_passthru_cmd *cmd)
@@ -77,6 +85,20 @@ static void nvme_show_latency(struct timeval start, struct timeval end)
 						 (end.tv_usec - start.tv_usec)));
 }
 
+static void nvme_show_data(const char *data, uintptr_t addr, int len)
+{
+	if (len) {
+		nvme_show_key_value(data, "%lu bytes", len);
+		d((unsigned char *)addr, len, 16, 1);
+	}
+}
+
+static void nvme_show_datum(struct libnvme_passthru_cmd *cmd)
+{
+	nvme_show_data("data", (uintptr_t)cmd->addr, cmd->data_len);
+	nvme_show_data("metadata", (uintptr_t)cmd->metadata, cmd->metadata_len);
+}
+
 static void nvme_log_retry(int errnum)
 {
 	if (log_level < LIBNVME_LOG_DEBUG)
@@ -105,6 +127,7 @@ void nvme_submit_exit(struct libnvme_transport_handle *hdl,
 		gettimeofday(&sb->end, NULL);
 		nvme_show_command(cmd, err);
 		nvme_show_latency(sb->start, sb->end);
+		nvme_show_datum(cmd);
 	}
 }
 
