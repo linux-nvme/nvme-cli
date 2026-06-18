@@ -20,6 +20,7 @@ LIBNVME_3 {
 		libnvme_ctrl_get_subsystem;
 		libnvme_ctrl_get_transport_handle;
 		libnvme_ctrl_identify;
+		libnvme_ctrl_is_transport_fabric;
 		libnvme_ctrl_next_ns;
 		libnvme_ctrl_next_path;
 		libnvme_ctrl_release_transport_handle;
