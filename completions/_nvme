@@ -84,6 +84,7 @@ _nvme () {
 	'ns-rescan:rescan the NVMe namespaces'
 	'show-regs:show the controller registers; require admin character device'
 	'boot-part-log:retrieve boot partition log'
+	'power-measurement-log:retrieve power measurement log'
 	'fid-support-effects-log:retrieve fid support and effects log'
 	'supported-log-pages:retrieve support log pages details'
 	'lockdown:submit a lockdown command'
@@ -1349,6 +1350,21 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme boot-part-log options" _bootpartlog
+			;;
+		(power-measurement-log)
+			local _powermeaslog
+			_powermeaslog=(
+			/dev/nvme':supply a device to use (required)'
+			--raw-binary':output in binary format'
+			-b':alias for --raw-binary'
+			--output-format=':output format: normal|json|binary'
+			-o':alias for --output-format'
+			--verbose':increase output verbosity'
+			-v':alias for --verbose'
+			--timeout=':timeout value, in milliseconds'
+			)
+			_arguments '*:: :->subcmds'
+			_describe -t commands "nvme power-measurement-log options" _powermeaslog
 			;;
 		(get-feature)
 			local _getf

@@ -106,6 +106,15 @@ static bool get_is_win_pe(void)
 	return false;
 }
 
+/**
+ * get_ns_handle_from_ctrl() - Open the default namespace handle for a controller
+ * @hdl: Controller transport handle
+ *
+ * Return: Namespace transport handle on success, or NULL on failure.
+ *
+ * The caller owns the returned handle and must call libnvme_close() when it
+ * is no longer needed.
+ */
 static struct libnvme_transport_handle *get_ns_handle_from_ctrl(
 		struct libnvme_transport_handle *hdl)
 {
