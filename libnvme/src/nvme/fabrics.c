@@ -985,9 +985,10 @@ static void registry_update_on_connect(struct libnvme_global_ctx *ctx,
 	int ret;
 
 	if (ctx->owner)
-		ret = libnvmf_registry_create_instance(instance, ctx->owner);
+		ret = libnvmf_registry_create_instance(ctx, instance,
+						       ctx->owner);
 	else
-		ret = libnvmf_registry_delete_instance(instance);
+		ret = libnvmf_registry_delete_instance(ctx, instance);
 	if (ret)
 		libnvme_msg(ctx, LIBNVME_LOG_WARN,
 			    "nvme%d: registry update failed: %s\n",

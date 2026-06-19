@@ -20,10 +20,12 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <nvme/lib.h>
 #include <nvme/registry.h>
 
 /* Internal — not in registry.h; called from the connect path in production. */
-int libnvmf_registry_create_instance(int instance, const char *owner);
+int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
+				     int instance, const char *owner);
 
 static char tmpdir[256];
 
@@ -38,7 +40,7 @@ static void setup_tmpdir(void)
 	setenv("NVME_REGISTRY_DIR", tmpdir, 1);
 }
 
-static void cleanup_tmpdir(void)
+static void cleanup_tmpdir(struct libnvme_global_ctx *ctx)
 {
 	/*
 	 * Remove any remaining device directories, then the tmpdir itself.
@@ -52,13 +54,13 @@ static void cleanup_tmpdir(void)
 		return;
 	while ((de = readdir(d)) != NULL) {
 		if (de->d_name[0] != '.')
-			libnvmf_registry_delete(de->d_name);
+			libnvmf_registry_delete(ctx, de->d_name);
 	}
 	closedir(d);
 	rmdir(tmpdir);
 }
 
-static bool test_create(void)
+static bool test_create(struct libnvme_global_ctx *ctx)
 {
 	char *value = NULL;
 	bool pass = true;
@@ -66,13 +68,13 @@ static bool test_create(void)
 
 	printf("test_create:\n");
 
-	ret = libnvmf_registry_create_instance(3, "stas");
+	ret = libnvmf_registry_create_instance(ctx, 3, "stas");
 	if (ret) {
 		printf(" - create returned %d [FAIL]\n", ret);
 		return false;
 	}
 
-	ret = libnvmf_registry_retrieve("nvme3", "owner", &value);
+	ret = libnvmf_registry_retrieve(ctx, "nvme3", "owner", &value);
 	if (ret || !value) {
 		printf(" - retrieve after create returned %d [FAIL]\n", ret);
 		pass = false;
@@ -87,11 +89,12 @@ static bool test_create(void)
 
 out:
 	free(value);
-	libnvmf_registry_delete("nvme3");
+	libnvmf_registry_delete(ctx, "nvme3");
+
 	return pass;
 }
 
-static bool test_update_and_retrieve(void)
+static bool test_update_and_retrieve(struct libnvme_global_ctx *ctx)
 {
 	char *value = NULL;
 	bool pass = true;
@@ -100,13 +103,13 @@ static bool test_update_and_retrieve(void)
 	printf("test_update_and_retrieve:\n");
 
 	/* Create entry via update (no prior entry). */
-	ret = libnvmf_registry_update("nvme5", "owner", "nbft");
+	ret = libnvmf_registry_update(ctx, "nvme5", "owner", "nbft");
 	if (ret) {
 		printf(" - initial update returned %d [FAIL]\n", ret);
 		return false;
 	}
 
-	ret = libnvmf_registry_retrieve("nvme5", "owner", &value);
+	ret = libnvmf_registry_retrieve(ctx, "nvme5", "owner", &value);
 	if (ret || !value || strcmp(value, "nbft") != 0) {
 		printf(" - expected 'nbft', got '%s' ret=%d [FAIL]\n",
 		       value ? value : "(null)", ret);
@@ -118,14 +121,14 @@ static bool test_update_and_retrieve(void)
 	value = NULL;
 
 	/* Steal ownership. */
-	ret = libnvmf_registry_update("nvme5", "owner", "stas");
+	ret = libnvmf_registry_update(ctx, "nvme5", "owner", "stas");
 	if (ret) {
 		printf(" - steal update returned %d [FAIL]\n", ret);
 		pass = false;
 		goto out;
 	}
 
-	ret = libnvmf_registry_retrieve("nvme5", "owner", &value);
+	ret = libnvmf_registry_retrieve(ctx, "nvme5", "owner", &value);
 	if (ret || !value || strcmp(value, "stas") != 0) {
 		printf(" - expected 'stas' after steal, got '%s' ret=%d [FAIL]\n",
 		       value ? value : "(null)", ret);
@@ -136,11 +139,11 @@ static bool test_update_and_retrieve(void)
 
 out:
 	free(value);
-	libnvmf_registry_delete("nvme5");
+	libnvmf_registry_delete(ctx, "nvme5");
 	return pass;
 }
 
-static bool test_delete(void)
+static bool test_delete(struct libnvme_global_ctx *ctx)
 {
 	char *value = NULL;
 	bool pass = true;
@@ -148,19 +151,19 @@ static bool test_delete(void)
 
 	printf("test_delete:\n");
 
-	ret = libnvmf_registry_update("nvme7", "owner", "stas");
+	ret = libnvmf_registry_update(ctx, "nvme7", "owner", "stas");
 	if (ret) {
 		printf(" - setup update failed: %d [FAIL]\n", ret);
 		return false;
 	}
 
-	ret = libnvmf_registry_delete("nvme7");
+	ret = libnvmf_registry_delete(ctx, "nvme7");
 	if (ret) {
 		printf(" - delete returned %d [FAIL]\n", ret);
 		return false;
 	}
 
-	ret = libnvmf_registry_retrieve("nvme7", "owner", &value);
+	ret = libnvmf_registry_retrieve(ctx, "nvme7", "owner", &value);
 	if (ret != -ENOENT) {
 		printf(" - expected -ENOENT after delete, got %d [FAIL]\n", ret);
 		pass = false;
@@ -171,7 +174,7 @@ static bool test_delete(void)
 	free(value);
 
 	/* Deleting a non-existent entry must return -ENOENT. */
-	ret = libnvmf_registry_delete("nvme7");
+	ret = libnvmf_registry_delete(ctx, "nvme7");
 	if (ret != -ENOENT) {
 		printf(" - double-delete expected -ENOENT, got %d [FAIL]\n", ret);
 		pass = false;
@@ -182,14 +185,14 @@ static bool test_delete(void)
 	return pass;
 }
 
-static bool test_retrieve_missing(void)
+static bool test_retrieve_missing(struct libnvme_global_ctx *ctx)
 {
 	char *value = NULL;
 	int ret;
 
 	printf("test_retrieve_missing:\n");
 
-	ret = libnvmf_registry_retrieve("nvme99", "owner", &value);
+	ret = libnvmf_registry_retrieve(ctx, "nvme99", "owner", &value);
 	free(value);
 
 	if (ret != -ENOENT) {
@@ -214,7 +217,7 @@ static void collect_device(const char *device, void *user_data)
 			 "%s", device);
 }
 
-static bool test_device_for_each(void)
+static bool test_device_for_each(struct libnvme_global_ctx *ctx)
 {
 	struct for_each_result result = { .count = 0 };
 	bool pass = true;
@@ -227,13 +230,13 @@ static bool test_device_for_each(void)
 	 * node is absent, so both will be skipped here — we are only testing
 	 * that the function runs without error and skips gracefully.
 	 */
-	if (libnvmf_registry_update("nvme1", "owner", "stas") ||
-	    libnvmf_registry_update("nvme2", "owner", "nbft")) {
+	if (libnvmf_registry_update(ctx, "nvme1", "owner", "stas") ||
+	    libnvmf_registry_update(ctx, "nvme2", "owner", "nbft")) {
 		printf(" - setup update failed [FAIL]\n");
 		return false;
 	}
 
-	ret = libnvmf_registry_device_for_each(collect_device, &result);
+	ret = libnvmf_registry_device_for_each(ctx, collect_device, &result);
 	if (ret) {
 		printf(" - for_each returned %d [FAIL]\n", ret);
 		pass = false;
@@ -242,8 +245,8 @@ static bool test_device_for_each(void)
 		       result.count);
 	}
 
-	libnvmf_registry_delete("nvme1");
-	libnvmf_registry_delete("nvme2");
+	libnvmf_registry_delete(ctx, "nvme1");
+	libnvmf_registry_delete(ctx, "nvme2");
 	return pass;
 }
 
@@ -264,7 +267,7 @@ static void collect_attr(const char *attr, const char *value, void *user_data)
 	}
 }
 
-static bool test_attr_for_each(void)
+static bool test_attr_for_each(struct libnvme_global_ctx *ctx)
 {
 	struct attr_result result = { .count = 0 };
 	bool pass = true;
@@ -272,14 +275,15 @@ static bool test_attr_for_each(void)
 
 	printf("test_attr_for_each:\n");
 
-	if (libnvmf_registry_update("nvme4", "owner", "stas") ||
-	    libnvmf_registry_update("nvme4", "extra", "hello")) {
+	if (libnvmf_registry_update(ctx, "nvme4", "owner", "stas") ||
+	    libnvmf_registry_update(ctx, "nvme4", "extra", "hello")) {
 		printf(" - setup update failed [FAIL]\n");
 		pass = false;
 		goto out;
 	}
 
-	ret = libnvmf_registry_attr_for_each("nvme4", collect_attr, &result);
+	ret = libnvmf_registry_attr_for_each(ctx, "nvme4", collect_attr,
+					     &result);
 	if (ret) {
 		printf(" - attr_for_each returned %d [FAIL]\n", ret);
 		pass = false;
@@ -293,7 +297,8 @@ static bool test_attr_for_each(void)
 	}
 
 	/* attr_for_each on non-existent device must return -ENOENT. */
-	ret = libnvmf_registry_attr_for_each("nvme99", collect_attr, &result);
+	ret = libnvmf_registry_attr_for_each(ctx, "nvme99", collect_attr,
+					     &result);
 	if (ret != -ENOENT) {
 		printf(" - missing device expected -ENOENT, got %d [FAIL]\n", ret);
 		pass = false;
@@ -302,11 +307,12 @@ static bool test_attr_for_each(void)
 	}
 
 out:
-	libnvmf_registry_delete("nvme4");
+	libnvmf_registry_delete(ctx, "nvme4");
+
 	return pass;
 }
 
-static bool test_null_args(void)
+static bool test_null_args(struct libnvme_global_ctx *ctx)
 {
 	char *value = NULL;
 	bool pass = true;
@@ -325,32 +331,46 @@ static bool test_null_args(void)
 	}								\
 } while (0)
 
+	/* NULL ctx is rejected by every public API */
+	CHECK(libnvmf_registry_retrieve(NULL, "nvme3", "owner", &value),
+	      -EINVAL, "retrieve(NULL ctx)");
+	CHECK(libnvmf_registry_attr_equal(NULL, "nvme3", "owner", "stas"),
+	      -EINVAL, "attr_equal(NULL ctx)");
+	CHECK(libnvmf_registry_update(NULL, "nvme3", "owner", "stas"),
+	      -EINVAL, "update(NULL ctx)");
+	CHECK(libnvmf_registry_delete(NULL, "nvme3"),
+	      -EINVAL, "delete(NULL ctx)");
+	CHECK(libnvmf_registry_device_for_each(NULL, collect_device, NULL),
+	      -EINVAL, "device_for_each(NULL ctx)");
+	CHECK(libnvmf_registry_attr_for_each(NULL, "nvme3", collect_attr, NULL),
+	      -EINVAL, "attr_for_each(NULL ctx)");
+
 	/* retrieve: any NULL parameter */
-	CHECK(libnvmf_registry_retrieve(NULL, "owner", &value),
+	CHECK(libnvmf_registry_retrieve(ctx, NULL, "owner", &value),
 	      -EINVAL, "retrieve(NULL, attr, &value)");
-	CHECK(libnvmf_registry_retrieve("nvme3", NULL, &value),
+	CHECK(libnvmf_registry_retrieve(ctx, "nvme3", NULL, &value),
 	      -EINVAL, "retrieve(device, NULL, &value)");
-	CHECK(libnvmf_registry_retrieve("nvme3", "owner", NULL),
+	CHECK(libnvmf_registry_retrieve(ctx, "nvme3", "owner", NULL),
 	      -EINVAL, "retrieve(device, attr, NULL)");
 
 	/* update: NULL device or NULL attr; NULL value is remove-attr, not an error */
-	CHECK(libnvmf_registry_update(NULL, "owner", "stas"),
+	CHECK(libnvmf_registry_update(ctx, NULL, "owner", "stas"),
 	      -EINVAL, "update(NULL, attr, value)");
-	CHECK(libnvmf_registry_update("nvme3", NULL, "stas"),
+	CHECK(libnvmf_registry_update(ctx, "nvme3", NULL, "stas"),
 	      -EINVAL, "update(device, NULL, value)");
 
 	/* delete: NULL device */
-	CHECK(libnvmf_registry_delete(NULL),
+	CHECK(libnvmf_registry_delete(ctx, NULL),
 	      -EINVAL, "delete(NULL)");
 
 	/* device_for_each: NULL callback */
-	CHECK(libnvmf_registry_device_for_each(NULL, NULL),
+	CHECK(libnvmf_registry_device_for_each(ctx, NULL, NULL),
 	      -EINVAL, "device_for_each(NULL, user_data)");
 
 	/* attr_for_each: NULL device or NULL callback */
-	CHECK(libnvmf_registry_attr_for_each(NULL, collect_attr, NULL),
+	CHECK(libnvmf_registry_attr_for_each(ctx, NULL, collect_attr, NULL),
 	      -EINVAL, "attr_for_each(NULL, cback, user_data)");
-	CHECK(libnvmf_registry_attr_for_each("nvme3", NULL, NULL),
+	CHECK(libnvmf_registry_attr_for_each(ctx, "nvme3", NULL, NULL),
 	      -EINVAL, "attr_for_each(device, NULL, user_data)");
 
 #undef CHECK
@@ -365,7 +385,7 @@ static bool test_null_args(void)
  * concurrently.  The value read after all exit must be one of the written
  * values — never a partial or garbled string.
  */
-static bool test_parallel_writes(void)
+static bool test_parallel_writes(struct libnvme_global_ctx *ctx)
 {
 	char *value = NULL;
 	int status;
@@ -374,7 +394,7 @@ static bool test_parallel_writes(void)
 
 	printf("test_parallel_writes:\n");
 
-	libnvmf_registry_update("nvme10", "owner", "parent");
+	libnvmf_registry_update(ctx, "nvme10", "owner", "parent");
 
 #define NPROCS 10
 	pid_t pids[NPROCS];
@@ -386,7 +406,8 @@ static bool test_parallel_writes(void)
 		if (pids[i] == 0) {
 			snprintf(owner, sizeof(owner), "child%d", i);
 			for (int j = 0; j < 200; j++)
-				libnvmf_registry_update("nvme10", "owner", owner);
+				libnvmf_registry_update(ctx, "nvme10", "owner",
+							owner);
 			exit(0);
 		}
 	}
@@ -394,7 +415,7 @@ static bool test_parallel_writes(void)
 	for (i = 0; i < NPROCS; i++)
 		waitpid(pids[i], &status, 0);
 
-	libnvmf_registry_retrieve("nvme10", "owner", &value);
+	libnvmf_registry_retrieve(ctx, "nvme10", "owner", &value);
 
 	pass = false;
 	for (i = 0; i < NPROCS; i++) {
@@ -412,26 +433,31 @@ static bool test_parallel_writes(void)
 		       value ? value : "(null)");
 
 	free(value);
-	libnvmf_registry_delete("nvme10");
+	libnvmf_registry_delete(ctx, "nvme10");
 	return pass;
 }
 
 int main(int argc, char *argv[])
 {
+	struct libnvme_global_ctx *ctx;
 	bool pass = true;
+
+	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_DEBUG_VERBOSE);
 
 	setup_tmpdir();
 
-	pass &= test_create();
-	pass &= test_update_and_retrieve();
-	pass &= test_delete();
-	pass &= test_retrieve_missing();
-	pass &= test_device_for_each();
-	pass &= test_attr_for_each();
-	pass &= test_null_args();
-	pass &= test_parallel_writes();
+	pass &= test_create(ctx);
+	pass &= test_update_and_retrieve(ctx);
+	pass &= test_delete(ctx);
+	pass &= test_retrieve_missing(ctx);
+	pass &= test_device_for_each(ctx);
+	pass &= test_attr_for_each(ctx);
+	pass &= test_null_args(ctx);
+	pass &= test_parallel_writes(ctx);
 
-	cleanup_tmpdir();
+	cleanup_tmpdir(ctx);
+
+	libnvme_free_global_ctx(ctx);
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

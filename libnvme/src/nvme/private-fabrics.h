@@ -220,7 +220,8 @@ size_t libnvmf_get_entity_version(char *buffer, size_t bufsz);
  * connected controller.  Called from the connect path once the kernel returns
  * instance=N.
  */
-int libnvmf_registry_create_instance(int instance, const char *owner);
+int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
+				     int instance, const char *owner);
 
 /**
  * libnvmf_registry_delete_instance - Remove the registry entry for a
@@ -229,4 +230,5 @@ int libnvmf_registry_create_instance(int instance, const char *owner);
  * held the same instance number before it was recycled.  ENOENT is silently
  * ignored.
  */
-int libnvmf_registry_delete_instance(int instance);
+int libnvmf_registry_delete_instance(struct libnvme_global_ctx *ctx,
+				     int instance);
