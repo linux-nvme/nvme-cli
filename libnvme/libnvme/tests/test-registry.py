@@ -18,8 +18,16 @@ _under_valgrind = 'VALGRIND_OPTS' in os.environ
 
 # dir='/tmp' is required: libnvme confines NVME_REGISTRY_DIR to /tmp, so the
 # test directory must live there (not under an arbitrary $TMPDIR).
-_tmpdir = tempfile.mkdtemp(prefix='nvme-registry-test-', dir='/tmp')
-os.environ['NVME_REGISTRY_DIR'] = _tmpdir
+#
+# Reuse an inherited /tmp directory instead of always creating a new one: with
+# the spawn/forkserver start methods (the default on Linux as of Python 3.14)
+# each child re-imports this module.  The child inherits NVME_REGISTRY_DIR from
+# the parent, so it must reuse that path rather than create a second, unrelated
+# registry directory it would then write into alone.
+_tmpdir = os.environ.get('NVME_REGISTRY_DIR', '')
+if not _tmpdir.startswith('/tmp/'):
+    _tmpdir = tempfile.mkdtemp(prefix='nvme-registry-test-', dir='/tmp')
+    os.environ['NVME_REGISTRY_DIR'] = _tmpdir
 
 from libnvme import nvme  # noqa: E402  (import after env var set intentionally)
 
@@ -120,8 +128,15 @@ class TestRegistryEntries(unittest.TestCase):
             self.assertTrue(os.path.exists('/dev/' + device))
 
 
-def _writer(ctx, device, owner, iterations):
-    """Child process: repeatedly update the owner attribute."""
+def _writer(device, owner, iterations):
+    """Child process: repeatedly update the owner attribute.
+
+    Each process creates its own GlobalCtx.  A libnvme context must not be
+    shared across a process boundary: passing it as a Process argument is not
+    picklable under the spawn/forkserver start methods, and even under fork a
+    context is not designed to be used concurrently from two processes.
+    """
+    ctx = nvme.GlobalCtx()
     for _ in range(iterations):
         nvme.registry_update(ctx, device, 'owner', owner)
 
@@ -143,7 +158,7 @@ class TestRegistryParallelWrites(unittest.TestCase):
 
         nvme.registry_update(self.ctx, 'nvme10', 'owner', 'parent')
 
-        procs = [multiprocessing.Process(target=_writer, args=(self.ctx, 'nvme10', owner, 200))
+        procs = [multiprocessing.Process(target=_writer, args=('nvme10', owner, 200))
                  for owner in owners]
         for p in procs:
             p.start()
