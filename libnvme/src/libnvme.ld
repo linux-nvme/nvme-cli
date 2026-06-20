@@ -20,8 +20,10 @@ LIBNVME_3 {
 		libnvme_ctrl_get_subsystem;
 		libnvme_ctrl_get_transport_handle;
 		libnvme_ctrl_identify;
+		libnvme_ctrl_is_transport_fabric;
 		libnvme_ctrl_next_ns;
 		libnvme_ctrl_next_path;
+		libnvme_ctrl_owner;
 		libnvme_ctrl_release_transport_handle;
 		libnvme_describe_key_serial;
 		libnvme_dump_config;
@@ -54,7 +56,6 @@ LIBNVME_3 {
 		libnvme_get_ana_log_atomic;
 		libnvme_get_ana_log_len;
 		libnvme_get_ana_log_len_from_id_ctrl;
-		libnvme_get_application;
 		libnvme_get_attr;
 		libnvme_get_ctrl_attr;
 		libnvme_get_ctrl_telemetry;
@@ -168,12 +169,12 @@ LIBNVME_3 {
 		libnvme_scan_subsystems;
 		libnvme_scan_tls_keys;
 		libnvme_scan_topology;
-		libnvme_set_application;
 		libnvme_set_dry_run;
 		libnvme_set_etdas;
 		libnvme_set_ioctl_probing;
 		libnvme_set_keyring;
 		libnvme_set_logging_level;
+		libnvme_set_owner;
 		libnvme_skip_namespaces;
 		libnvme_status_to_errno;
 		libnvme_status_to_string;

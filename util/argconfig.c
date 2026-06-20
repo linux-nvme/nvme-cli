@@ -151,7 +151,8 @@ void argconfig_print_help(const char *program_desc,
 			fprintf(stderr, "\n\033[1m%s:\033[0m\n", pending_header);
 			header_printed = true;
 		}
-		show_option(s);
+		if (!s->hidden)
+			show_option(s);
 	}
 }
 

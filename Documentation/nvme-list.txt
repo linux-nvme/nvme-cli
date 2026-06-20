@@ -44,9 +44,9 @@ Subsystem        Subsystem-NQN                                                  
 ---------------- ------------------------------------------------------------------------------------------------ ----------------
 nvme-subsys0     nqn.2019-22.com.intel:nvm-subsystem-sn-btnh922508ps1p0b                                          nvme0
 
-Device           Cntlid SN                   MN                                       FR       TxPort Address        Slot   Subsystem    Namespaces
----------------- ------ -------------------- ---------------------------------------- -------- ------ -------------- ------ ------------ ----------------
-nvme0    1      BTNH922508PS1P0B     INTEL SSDPEKNW010T8                      002C     pcie   0000:0d:00.0          nvme-subsys0 nvme0n1
+Device           Orchestrator Cntlid SN                   MN                                       FR       TxPort Address        Slot   Subsystem    Namespaces
+---------------- ------------ ------ -------------------- ---------------------------------------- -------- ------ -------------- ------ ------------ ----------------
+nvme0            kernel       1      BTNH922508PS1P0B     INTEL SSDPEKNW010T8                      002C     pcie   0000:0d:00.0          nvme-subsys0 nvme0n1
 
 Device            Generic           NSID       Usage                      Format           Controllers
 ----------------- ----------------- ---------- -------------------------- ---------------- ----------------

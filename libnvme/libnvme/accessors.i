@@ -176,7 +176,6 @@ struct libnvme_subsystem {
 	const char * firmware;
 	%immutable subsystype;
 	const char * subsystype;
-	const char * application;
 	%extend {
 		%immutable iopolicy;
 		const char * iopolicy;

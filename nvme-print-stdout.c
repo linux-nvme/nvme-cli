@@ -5856,16 +5856,27 @@ static bool stdout_detailed_ctrl(const char *name, void *arg)
 	c = htable_ctrl_get(&res->ht_c, name);
 	assert(c);
 
-	printf("%-16s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s ",
-	       libnvme_ctrl_get_name(c),
-	       libnvme_ctrl_get_cntlid(c),
-	       libnvme_ctrl_get_serial(c),
-	       libnvme_ctrl_get_model(c),
-	       libnvme_ctrl_get_firmware(c),
-	       libnvme_ctrl_get_transport(c),
-	       libnvme_ctrl_get_traddr(c),
-	       libnvme_ctrl_get_phy_slot(c),
-	       libnvme_subsystem_get_name(libnvme_ctrl_get_subsystem(c)));
+	{
+		const char *tr = libnvme_ctrl_get_transport(c);
+		__cleanup_free char *reg_owner = libnvme_ctrl_owner(c);
+		const char *owner_str;
+
+		if (!libnvme_ctrl_is_transport_fabric(c))
+			owner_str = "kernel";
+		else
+			owner_str = reg_owner ? reg_owner : "-";
+		printf("%-16s %-12s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s ",
+		       libnvme_ctrl_get_name(c),
+		       owner_str,
+		       libnvme_ctrl_get_cntlid(c),
+		       libnvme_ctrl_get_serial(c),
+		       libnvme_ctrl_get_model(c),
+		       libnvme_ctrl_get_firmware(c),
+		       tr,
+		       libnvme_ctrl_get_traddr(c),
+		       libnvme_ctrl_get_phy_slot(c),
+		       libnvme_subsystem_get_name(libnvme_ctrl_get_subsystem(c)));
+	}
 
 	strset_init(&namespaces);
 
@@ -5937,11 +5948,11 @@ static void stdout_detailed_list(struct libnvme_global_ctx *ctx)
 	strset_iterate(&res.subsystems, stdout_detailed_subsys, &res);
 	printf("\n");
 
-	printf("%-16s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s %-16s\n", "Device",
-		"Cntlid", "SN", "MN", "FR", "TxPort", "Address", "Slot", "Subsystem",
-		"Namespaces");
-	printf("%-.16s %-.6s %-.20s %-.40s %-.8s %-.6s %-.14s %-.6s %-.12s %-.16s\n",
-			dash, dash, dash, dash, dash, dash, dash, dash, dash, dash);
+	printf("%-16s %-12s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s %-16s\n",
+		"Device", "Orchestrator", "Cntlid", "SN", "MN", "FR", "TxPort",
+		"Address", "Slot", "Subsystem", "Namespaces");
+	printf("%-.16s %-.12s %-.6s %-.20s %-.40s %-.8s %-.6s %-.14s %-.6s %-.12s %-.16s\n",
+		dash, dash, dash, dash, dash, dash, dash, dash, dash, dash, dash);
 	strset_iterate(&res.ctrls, stdout_detailed_ctrl, &res);
 	printf("\n");
 
