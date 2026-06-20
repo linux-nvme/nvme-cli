@@ -94,7 +94,6 @@ static const char *nvmf_data_digest	= "enable transport protocol data digest (TC
 static const char *nvmf_tls		= "enable TLS";
 static const char *nvmf_concat		= "enable secure concatenation";
 static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
-static const char *nvmf_context		= "execution context identification string";
 
 struct nvmf_args {
 	const char *subsysnqn;
@@ -566,7 +565,6 @@ unref:
 int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 {
 	char *config_file = PATH_NVMF_CONFIG;
-	char *context = NULL;
 	nvme_print_flags_t flags;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
@@ -588,8 +586,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		  OPT_FLAG("force",          0, &force,               "Force persistent discovery controller creation"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
 		  OPT_FLAG("no-nbft",        0, &nonbft,              "Do not look at NBFT tables"),
-		  OPT_STRING("nbft-path",    0, "STR", &nbft_path,    "user-defined path for NBFT tables"),
-		  OPT_STRING("context",      0, "STR", &context,       nvmf_context));
+		  OPT_STRING("nbft-path",    0, "STR", &nbft_path,    "user-defined path for NBFT tables"));
 
 	nvmf_default_args(&fa);
 
@@ -616,8 +613,8 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
-	if (context)
-		libnvme_set_application(ctx, context);
+	if (nbft)
+		libnvme_set_owner(ctx, "nbft");
 
 	if (!nvme_read_config_checked(ctx, config_file))
 		json_config = true;
@@ -680,7 +677,6 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	__cleanup_free char *hnqn = NULL;
 	__cleanup_free char *hid = NULL;
 	char *config_file = NULL;
-	char *context = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	__cleanup_nvme_ctrl libnvme_ctrl_t c = NULL;
@@ -690,8 +686,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 
 	NVMF_ARGS(opts, fa,
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
-		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"),
-		  OPT_STRING("context",              0, "STR", &context,  nvmf_context));
+		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"));
 
 	nvmf_default_args(&fa);
 
@@ -740,8 +735,6 @@ do_connect:
 			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
-	if (context)
-		libnvme_set_application(ctx, context);
 
 	libnvme_read_config(ctx, config_file);
 	nvme_read_volatile_config(ctx);
@@ -908,8 +901,24 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 	return 0;
 }
 
+/* disconnect-all policy: should controller @c be torn down? */
+static bool disconnect_all_match(libnvme_ctrl_t c, const char *transport,
+				 const char *owner, bool force)
+{
+	if (transport && strcmp(transport, libnvme_ctrl_get_transport(c)))
+		return false;
+	if (!libnvme_ctrl_is_transport_fabric(c))
+		return false;
+	if (force)
+		return true;
+	return libnvmf_registry_attr_equal(libnvme_ctrl_get_name(c),
+					   "owner", owner) == 0;
+}
+
 int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 {
+	const char *owner_help = "disconnect only controllers owned by NAME";
+	const char *force_help = "disconnect all controllers regardless of ownership";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	libnvme_host_t h;
 	libnvme_subsystem_t s;
@@ -918,16 +927,48 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 
 	struct config {
 		char *transport;
+		char *owner;
+		bool force;
 	};
 
 	struct config cfg = { 0 };
 
 	NVME_ARGS(opts,
-		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport));
+		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport),
+		OPT_STRING("owner", 'O', "NAME", &cfg.owner, owner_help),
+		OPT_FLAG("force", 0, &cfg.force, force_help));
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	if (cfg.force && cfg.owner) {
+		fprintf(stderr, "--force and --owner are mutually exclusive\n");
+		return -EINVAL;
+	}
+
+	if ((cfg.force || cfg.owner) && isatty(STDIN_FILENO)) {
+		char ans[8] = { 0 };
+
+		if (cfg.force)
+			fprintf(stderr,
+				"WARNING: --force disconnects all NVMeoF controllers\n"
+				"regardless of ownership. Type 'yes' to confirm: ");
+		else
+			fprintf(stderr,
+				"WARNING: --owner disconnects all NVMeoF controllers\n"
+				"owned by '%s'. Type 'yes' to confirm: ",
+				cfg.owner);
+		if (!fgets(ans, sizeof(ans), stdin)) {
+			fprintf(stderr, "Aborted.\n");
+			return -EINVAL;
+		}
+		ans[strcspn(ans, "\n")] = '\0';
+		if (strcmp(ans, "yes") != 0) {
+			fprintf(stderr, "Aborted.\n");
+			return -EINVAL;
+		}
+	}
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
@@ -956,12 +997,8 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s) {
 			libnvme_subsystem_for_each_ctrl(s, c) {
-				if (cfg.transport &&
-				    strcmp(cfg.transport,
-					   libnvme_ctrl_get_transport(c)))
-					continue;
-				else if (!strcmp(libnvme_ctrl_get_transport(c),
-						 "pcie"))
+				if (!disconnect_all_match(c, cfg.transport,
+							  cfg.owner, cfg.force))
 					continue;
 				if (libnvmf_disconnect_ctrl(c))
 					fprintf(stderr,

@@ -40,6 +40,12 @@ LIBNVMF_3 {
 		libnvmf_subtype_str;
 		libnvmf_treq_str;
 		libnvmf_trtype_str;
+		libnvmf_registry_attr_equal;
+		libnvmf_registry_attr_for_each;
+		libnvmf_registry_delete;
+		libnvmf_registry_device_for_each;
+		libnvmf_registry_retrieve;
+		libnvmf_registry_update;
 		libnvmf_uri_free;
 		libnvmf_uri_parse;
 	local:

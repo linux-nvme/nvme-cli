@@ -89,6 +89,7 @@ struct nvme_args {
 			 "disable 64-bit IOCTL support probing"),                      \
 		OPT_UINT("output-format-version", 0, &nvme_args.output_format_ver,     \
 			 "output format version: 1|2"),                                \
+		OPT_FLAG("human-readable", 'H', &nvme_args.verbose, NULL, NULL, true), \
 		OPT_END()                                                              \
 	}
 

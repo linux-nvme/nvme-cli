@@ -605,7 +605,7 @@ if want_nvme
         link_args_list = ['-ldl']
     endif
 
-    executable(
+    nvme_exe = executable(
         'nvme',
         sources,
         dependencies: link_deps,
@@ -617,6 +617,7 @@ if want_nvme
     if host_system != 'windows'
         subdir('unit')
     endif
+
     if get_option('nvme-tests')
         subdir('tests')
     endif

@@ -18,7 +18,7 @@
 #include "private.h"
 #include "private-mi.h"
 
-static int __nvme_transport_handle_open_direct(
+static int __libnvme_transport_handle_open_direct(
 		struct libnvme_transport_handle *hdl, const char *devname)
 {
 	__cleanup_free char *path = NULL;
@@ -102,7 +102,7 @@ __libnvme_public int libnvme_open(
 	if (!strncmp(name, "mctp:", strlen("mctp:")))
 		ret = __libnvme_transport_handle_open_mi(hdl, name);
 	else
-		ret = __nvme_transport_handle_open_direct(hdl, name);
+		ret = __libnvme_transport_handle_open_direct(hdl, name);
 
 	if (ret) {
 		libnvme_close(hdl);

@@ -32,23 +32,6 @@ typedef bool (*libnvme_scan_filter_t)(libnvme_subsystem_t, libnvme_ctrl_t,
 				   libnvme_ns_t, void *);
 
 /**
- * libnvme_set_application - Specify managing application
- * @ctx:	struct libnvme_global_ctx object
- * @a:	Application string
- *
- * Sets the managing application string for @r.
- */
-void libnvme_set_application(struct libnvme_global_ctx *ctx, const char *a);
-
-/**
- * libnvme_get_application - Get managing application
- * @ctx:	struct libnvme_global_ctx object
- *
- * Returns the managing application string for @r or NULL if not set.
- */
-const char *libnvme_get_application(struct libnvme_global_ctx *ctx);
-
-/**
  * libnvme_skip_namespaces - Skip namespace scanning
  * @ctx:	struct libnvme_global_ctx object
  *
@@ -844,6 +827,29 @@ char *libnvme_ctrl_get_src_addr(libnvme_ctrl_t c, char *src_addr,
  * Return: String indicating the running state of @c
  */
 const char *libnvme_ctrl_get_state(libnvme_ctrl_t c);
+
+/**
+ * libnvme_ctrl_is_transport_fabric() - True for a fabrics transport
+ * @c:	Controller instance
+ *
+ * A controller is reachable either over a local transport (pcie,
+ * apple-nvme) or over NVMe-over-Fabrics (tcp, rdma, fc, loop).
+ *
+ * Return: true if @c uses a fabrics transport, false if local.
+ */
+bool libnvme_ctrl_is_transport_fabric(libnvme_ctrl_t c);
+
+/**
+ * libnvme_ctrl_owner() - Registered orchestrator owner of a controller
+ * @c:	Controller instance
+ *
+ * Looks up the controller's "owner" entry in the ownership registry.  In a
+ * build without fabrics support this always returns NULL.
+ *
+ * Return: a newly allocated owner string (the caller frees), or NULL if the
+ * controller is unowned, local (non-fabrics), or the registry is unreadable.
+ */
+char *libnvme_ctrl_owner(libnvme_ctrl_t c);
 
 /**
  * libnvme_ctrl_get_subsystem() - Parent subsystem of a controller

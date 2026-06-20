@@ -1,0 +1,50 @@
+nvme-registry-delete(1)
+=======================
+
+NAME
+----
+nvme-registry-delete - Remove a controller's ownership registry entry
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'registry delete'
+			--device=<DEV> | -d <DEV>
+
+DESCRIPTION
+-----------
+Remove the ownership registry entry for an NVMe-oF controller.  The
+registry entry is the directory /run/nvme/registry/<device>/ and all
+attribute files it contains.
+
+Under normal operation registry entries are removed automatically: a
+udev rule fires on the kernel REMOVE event and deletes the entry.  This
+command is provided for manual cleanup or for orchestrators that want to
+explicitly release ownership before disconnecting.
+
+OPTIONS
+-------
+-d <DEV>::
+--device=<DEV>::
+	NVMe device name (e.g. nvme3).  The /dev/ prefix is optional.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Remove the registry entry for nvme3:
++
+------------
+# nvme registry delete --device nvme3
+------------
+
+SEE ALSO
+--------
+nvme-registry-list(1)
+nvme-registry-retrieve(1)
+nvme-registry-update(1)
+nvme-disconnect-all(1)
+
+NVME
+----
+Part of the nvme-user suite

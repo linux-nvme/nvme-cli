@@ -9,7 +9,6 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'connect' [--config=<filename>]
-	  		[--application=<id>]
 			[<fabrics-options>]
 
 DESCRIPTION
@@ -22,10 +21,6 @@ OPTIONS
 -------
 --config=<filename>::
 	Use the specified JSON configuration file instead of the default.
-
---context <STR>::
-	Set the execution context to <STR>. This allows to coordinate
-	the management of the global resources.
 
 include::fabrics-options.txt[]
 

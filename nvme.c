@@ -74,7 +74,6 @@ struct feat_cfg {
 	__u8 uuid_index;
 	__u32 data_len;
 	bool raw_binary;
-	bool human_readable;
 	bool changed;
 };
 
@@ -105,7 +104,6 @@ struct passthru_config {
 
 struct get_reg_config {
 	int offset;
-	bool human_readable;
 	bool cap;
 	bool vs;
 	bool intms;
@@ -188,17 +186,12 @@ static const char *block_count = "number of blocks (zeroes based) on device to a
 static const char *crkey = "current reservation key";
 static const char *csi = "command set identifier";
 static const char *buf_len = "buffer len (if) data is sent or received";
-static const char *deprecated = "deprecated; does nothing";
 static const char *domainid = "Domain Identifier";
 static const char *doper = "directive operation";
 static const char *dspec_w_dtype = "directive specification associated with directive type";
 static const char *dtype = "directive type";
 static const char *endgid = "Endurance Group Identifier (ENDGID)";
 static const char *force_unit_access = "force device to commit data before command completes";
-static const char *human_readable_directive = "show directive in readable format";
-static const char *human_readable_identify = "show identify in readable format";
-static const char *human_readable_info = "show info in readable format";
-static const char *human_readable_log = "show log in readable format";
 static const char *iekey = "ignore existing res. key";
 static const char *latency = "output latency statistics";
 static const char *lba_format_index = "The index into the LBA Format list\n"
@@ -537,19 +530,16 @@ static int get_smart_log(int argc, char **argv, struct command *acmd, struct plu
 	struct config {
 		__u32	namespace_id;
 		bool	raw_binary;
-		bool	human_readable;
 	};
 
 	struct config cfg = {
 		.namespace_id	= NVME_NSID_ALL,
 		.raw_binary	= false,
-		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",   'n', &cfg.namespace_id,   namespace),
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_output),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_output));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -564,7 +554,7 @@ static int get_smart_log(int argc, char **argv, struct command *acmd, struct plu
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	smart_log = libnvme_alloc(sizeof(*smart_log));
@@ -1097,19 +1087,16 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 	nvme_print_flags_t flags;
 
 	struct config {
-		bool	human_readable;
 		bool	raw_binary;
 		int	csi;
 	};
 
 	struct config cfg = {
-		.human_readable	= false,
 		.raw_binary	= false,
 		.csi		= -1,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log),
 		  OPT_INT("csi",             'c', &cfg.csi,            csi));
 
@@ -1127,7 +1114,7 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	list_head_init(&log_pages);
@@ -2536,19 +2523,16 @@ static int sanitize_log(int argc, char **argv, struct command *acmd, struct plug
 
 	struct config {
 		bool	rae;
-		bool	human_readable;
 		bool	raw_binary;
 	};
 
 	struct config cfg = {
 		.rae		= false,
-		.human_readable	= false,
 		.raw_binary	= false,
 	};
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("rae",            'r', &cfg.rae,            rae),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_log));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -2564,7 +2548,7 @@ static int sanitize_log(int argc, char **argv, struct command *acmd, struct plug
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	sanitize_log = libnvme_alloc(sizeof(*sanitize_log));
@@ -2594,16 +2578,7 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *ac
 	nvme_print_flags_t flags;
 	int err = -1;
 
-	struct config {
-		bool	human_readable;
-	};
-
-	struct config cfg = {
-		.human_readable	= false,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log));
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -2615,7 +2590,7 @@ static int get_fid_support_effects_log(int argc, char **argv, struct command *ac
 		return err;
 	}
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	fid_support_log = libnvme_alloc(sizeof(*fid_support_log));
@@ -2646,16 +2621,7 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 	nvme_print_flags_t flags;
 	int err = -1;
 
-	struct config {
-		bool	human_readable;
-	};
-
-	struct config cfg = {
-		.human_readable	= false,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_log));
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -2667,7 +2633,7 @@ static int get_mi_cmd_support_effects_log(int argc, char **argv, struct command 
 		return err;
 	}
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	mi_cmd_support_log = libnvme_alloc(sizeof(*mi_cmd_support_log));
@@ -3699,19 +3665,16 @@ int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	struct config {
 		bool	vendor_specific;
 		bool	raw_binary;
-		bool	human_readable;
 	};
 
 	struct config cfg = {
 		.vendor_specific	= false,
 		.raw_binary		= false,
-		.human_readable		= false,
 	};
 
 	NVME_ARGS(opts,
 		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
-		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
+		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -3729,7 +3692,7 @@ int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	if (cfg.vendor_specific)
 		flags |= VS;
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	ctrl = libnvme_alloc(sizeof(*ctrl));
@@ -4027,7 +3990,6 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 		bool	force;
 		bool	vendor_specific;
 		bool	raw_binary;
-		bool	human_readable;
 	};
 
 	struct config cfg = {
@@ -4035,15 +3997,13 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 		.force			= false,
 		.vendor_specific	= false,
 		.raw_binary		= false,
-		.human_readable		= false,
 	};
 
 	NVME_ARGS(opts,
 		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
 		  OPT_FLAG("force",             0, &cfg.force,           force),
 		  OPT_FLAG("vendor-specific", 'V', &cfg.vendor_specific, vendor_specific),
-		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
+		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -4061,7 +4021,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	if (cfg.vendor_specific)
 		flags |= VS;
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
@@ -4110,19 +4070,16 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *acmd
 	struct config {
 		__u32	namespace_id;
 		bool	raw_binary;
-		bool	human_readable;
 	};
 
 	struct config cfg = {
 		.namespace_id	= 0,
 		.raw_binary	= false,
-		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",    'n', &cfg.namespace_id,    namespace_id_desired),
-		  OPT_FLAG("raw-binary",      'b', &cfg.raw_binary,      raw_identify),
-		  OPT_FLAG("human-readable",  'H', &cfg.human_readable,  human_readable_identify));
+		  OPT_UINT("namespace-id", 'n', &cfg.namespace_id, namespace_id_desired),
+		  OPT_FLAG("raw-binary",   'b', &cfg.raw_binary,   raw_identify));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -4137,7 +4094,7 @@ static int cmd_set_independent_id_ns(int argc, char **argv, struct command *acmd
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	if (!cfg.namespace_id) {
@@ -4264,7 +4221,6 @@ static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *p
 		"given device, returns list of supported Vendor Specific UUIDs "
 		"in either human-readable or binary format.";
 	const char *raw = "show uuid in binary format";
-	const char *human_readable = "show uuid in readable format";
 
 	__cleanup_libnvme_free struct nvme_id_uuid_list *uuid_list = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -4274,17 +4230,14 @@ static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	struct config {
 		bool	raw_binary;
-		bool	human_readable;
 	};
 
 	struct config cfg = {
 		.raw_binary	= false,
-		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
+		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -4299,7 +4252,7 @@ static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (cfg.raw_binary)
 		flags = BINARY;
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	uuid_list = libnvme_alloc(sizeof(*uuid_list));
@@ -4534,17 +4487,14 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *acmd, struct
 
 	struct config {
 		__u16	cntlid;
-		bool	human_readable;
 	};
 
 	struct config cfg = {
 		.cntlid		= 0,
-		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("cntlid",         'c', &cfg.cntlid, cntlid),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_info));
+		  OPT_UINT("cntlid",         'c', &cfg.cntlid, cntlid));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -4556,7 +4506,7 @@ static int primary_ctrl_caps(int argc, char **argv, struct command *acmd, struct
 		return err;
 	}
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	caps = libnvme_alloc(sizeof(*caps));
@@ -5037,7 +4987,6 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 	const char *feature_id = "feature identifier";
 	const char *sel = "[0-3]: current/default/saved/supported";
 	const char *cdw11 = "feature specific dword 11";
-	const char *human_readable = "show feature in readable format";
 	const char *changed = "show feature changed";
 	nvme_print_flags_t flags = NORMAL;
 
@@ -5053,7 +5002,6 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 		.raw_binary	= false,
 		.cdw11		= 0,
 		.uuid_index	= 0,
-		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts,
@@ -5064,7 +5012,6 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw),
 		  OPT_UINT("cdw11",          'c', &cfg.cdw11,          cdw11),
 		  OPT_BYTE("uuid-index",     'U', &cfg.uuid_index,     uuid_index_specify),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
 		  OPT_FLAG("changed",        'C', &cfg.changed,        changed));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -5098,7 +5045,7 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 		return -1;
 	}
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	nvme_show_init();
@@ -6132,8 +6079,6 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 {
 	const char *desc = "Reads and shows the defined NVMe controller registers\n"
 		"in binary or human-readable format";
-	const char *human_readable =
-	    "show info in readable format in case of output_format == normal";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -6142,12 +6087,10 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 	int err;
 
 	struct get_reg_config cfg = {
-		.human_readable	= false,
 		.fabrics = false,
 	};
 
-	NVME_ARGS(opts,
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
+	NVME_ARGS(opts);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -6164,7 +6107,7 @@ static int show_registers(int argc, char **argv, struct command *acmd, struct pl
 		return err;
 	}
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	bar = mmap_registers(hdl, false);
@@ -6365,7 +6308,6 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 		"CMBSZ=0x3c, BPINFO=0x40, BPRSEL=0x44, BPMBL=0x48, CMBMSC=0x50,\n"
 		"CMBSTS=0x58, CRTO=0x68, PMRCAP=0xe00, PMRCTL=0xe04,\n"
 		"PMRSTS=0xe08, PMREBS=0xe0c, PMRSWTP=0xe10, PMRMSCL=0xe14, PMRMSCU=0xe18";
-	const char *human_readable = "show register in readable format";
 	const char *cap = "CAP=0x0 register offset";
 	const char *vs = "VS=0x8 register offset";
 	const char *cmbloc = "CMBLOC=0x38 register offset";
@@ -6396,7 +6338,6 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 
 	NVME_ARGS(opts,
 		  OPT_UINT("offset",         'O', &cfg.offset,         offset),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable),
 		  OPT_FLAG("cap",              0, &cfg.cap,            cap),
 		  OPT_FLAG("vs",               0, &cfg.vs,             vs),
 		  OPT_FLAG("cmbloc",           0, &cfg.cmbloc,         cmbloc),
@@ -6441,7 +6382,7 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	bar = mmap_registers(hdl, false);
@@ -6759,7 +6700,6 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 		"for NVMe over Fabric. Property offset must be one of:\n"
 		"CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20, NSSD=0x64, CRTO=0x68";
 	const char *offset = "offset of the requested property";
-	const char *human_readable = "show property in readable format";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -6769,13 +6709,11 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 
 	struct get_reg_config cfg = {
 		.offset		= -1,
-		.human_readable	= false,
 		.fabrics	= true,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_UINT("offset",         'O', &cfg.offset,         offset),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable));
+		  OPT_UINT("offset",         'O', &cfg.offset,         offset));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -6792,7 +6730,7 @@ static int get_property(int argc, char **argv, struct command *acmd, struct plug
 		return -EINVAL;
 	}
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
 	err = nvme_get_single_property(hdl, &cfg, &value);
@@ -7413,7 +7351,6 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 		__u16	dspec;
 		__u8	doper;
 		__u16	endir;
-		bool	human_readable;
 		bool	raw_binary;
 		char	*file;
 	};
@@ -7426,7 +7363,6 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 		.dspec		= 0,
 		.doper		= 0,
 		.endir		= 1,
-		.human_readable	= false,
 		.raw_binary	= false,
 		.file		= "",
 	};
@@ -7439,7 +7375,6 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
 		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
 		  OPT_SHRT("endir",          'e', &cfg.endir,          endir),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, deprecated),
 		  OPT_FLAG("raw-binary",     'b', &cfg.raw_binary,     raw_directive),
 		  OPT_FILE("input-file",     'i', &cfg.file,           input));
 
@@ -9406,7 +9341,6 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 		__u16	dspec;
 		__u8	doper;
 		__u16	nsr; /* dw12 for NVME_DIR_ST_RCVOP_STATUS */
-		bool	human_readable;
 	};
 
 	struct config cfg = {
@@ -9417,7 +9351,6 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 		.dspec		= 0,
 		.doper		= 0,
 		.nsr		= 0,
-		.human_readable	= false,
 	};
 
 	NVME_ARGS(opts,
@@ -9427,14 +9360,13 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 		  OPT_BYTE("dir-type",       'D', &cfg.dtype,          dtype),
 		  OPT_SHRT("dir-spec",       'S', &cfg.dspec,          dspec_w_dtype),
 		  OPT_BYTE("dir-oper",       'O', &cfg.doper,          doper),
-		  OPT_SHRT("req-resource",   'r', &cfg.nsr,            nsr),
-		  OPT_FLAG("human-readable", 'H', &cfg.human_readable, human_readable_directive));
+		  OPT_SHRT("req-resource",   'r', &cfg.nsr,            nsr));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	if (cfg.human_readable || nvme_args.verbose)
+	if (nvme_args.verbose)
 		flags |= VERBOSE;
 	if (cfg.raw_binary)
 		flags = BINARY;

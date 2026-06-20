@@ -504,6 +504,128 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char *filename)
 	libnvmf_free_nbft(ctx, nbft);
 	return output;
 }
+void registry_update(const char *device, const char *attr, const char *value)
+{
+	int ret;
+
+	ret = libnvmf_registry_update(device, attr, value);
+	if (ret == -EINVAL)
+		PyErr_SetString(PyExc_ValueError,
+				"invalid device or attribute name");
+	else if (ret < 0)
+		PyErr_Format(PyExc_OSError,
+			     "registry_update failed: %s", strerror(-ret));
+}
+
+void registry_delete(const char *device)
+{
+	int ret;
+
+	ret = libnvmf_registry_delete(device);
+	if (ret == -EINVAL)
+		PyErr_SetString(PyExc_ValueError, "invalid device name");
+	else if (ret == -ENOENT)
+		PyErr_Format(PyExc_FileNotFoundError,
+			     "registry entry not found: %s", device);
+	else if (ret < 0)
+		PyErr_Format(PyExc_OSError,
+			     "registry_delete(%s) failed: %s",
+			     device, strerror(-ret));
+}
+
+PyObject *registry_retrieve(const char *device, const char *attr)
+{
+	char *value = NULL;
+	PyObject *str;
+	int ret;
+
+	ret = libnvmf_registry_retrieve(device, attr, &value);
+	if (ret == -ENOENT)
+		Py_RETURN_NONE;
+	if (ret == -EINVAL) {
+		PyErr_SetString(PyExc_ValueError,
+				"invalid device or attribute name");
+		return NULL;
+	}
+	if (ret < 0) {
+		PyErr_Format(PyExc_OSError,
+			     "registry_retrieve failed: %s", strerror(-ret));
+		return NULL;
+	}
+	str = PyUnicode_FromString(value);
+	free(value);
+	return str;
+}
+
+static void _registry_collect_device(const char *device, void *user_data)
+{
+	PyObject *str = PyUnicode_FromString(device);
+
+	if (str) {
+		PyList_Append((PyObject *)user_data, str);
+		Py_DECREF(str);
+	}
+}
+
+PyObject *registry_devices(void)
+{
+	PyObject *list = PyList_New(0);
+	int ret;
+
+	if (!list)
+		return NULL;
+	ret = libnvmf_registry_device_for_each(_registry_collect_device, list);
+	if (ret < 0) {
+		Py_DECREF(list);
+		PyErr_Format(PyExc_OSError,
+			     "registry_devices failed: %s", strerror(-ret));
+		return NULL;
+	}
+	if (PyErr_Occurred()) {
+		Py_DECREF(list);
+		return NULL;
+	}
+	return list;
+}
+
+static void _registry_collect_attr(const char *attr, const char *value,
+				   void *user_data)
+{
+	PyObject *val = PyUnicode_FromString(value);
+
+	if (val) {
+		PyDict_SetItemString((PyObject *)user_data, attr, val);
+		Py_DECREF(val);
+	}
+}
+
+PyObject *registry_device_attrs(const char *device)
+{
+	PyObject *dict = PyDict_New();
+	int ret;
+
+	if (!dict)
+		return NULL;
+	ret = libnvmf_registry_attr_for_each(device, _registry_collect_attr,
+					     dict);
+	if (ret == -EINVAL) {
+		Py_DECREF(dict);
+		PyErr_SetString(PyExc_ValueError, "invalid device name");
+		return NULL;
+	}
+	if (ret < 0 && ret != -ENOENT) {
+		Py_DECREF(dict);
+		PyErr_Format(PyExc_OSError,
+			     "registry_device_attrs failed: %s",
+			     strerror(-ret));
+		return NULL;
+	}
+	if (PyErr_Occurred()) {
+		Py_DECREF(dict);
+		return NULL;
+	}
+	return dict;
+}
 %} /* --------- end C implementation block --------- */
 
 /*============================================================================*/
@@ -552,6 +674,20 @@ from libnvme._exceptions import (
 	DiscoverError,
 	NotConnectedError,
 )
+
+def registry_entries():
+	"""Yield (device, attrs) for each live registry entry.
+
+	Wraps the C registry iterators: registry_devices() applies the /dev
+	stale-entry check and registry_device_attrs() reads each entry's
+	attributes -- all file access happens in libnvme.
+
+	Yields:
+		tuple: (device, attrs) where device is the kernel device name
+		(e.g. 'nvme3') and attrs is a dict of attribute name to value.
+	"""
+	for device in registry_devices():
+		yield device, registry_device_attrs(device)
 %}
 
 /*############################################################################*/
@@ -824,6 +960,32 @@ from libnvme._exceptions import (
 		"    A dict containing the NBFT data, or None on failure.") nbft_get;
 PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char *filename);
 
+%exception registry_update {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+void registry_update(const char *device, const char *attr, const char *value);
+%exception registry_delete {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+void registry_delete(const char *device);
+%exception registry_retrieve {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+PyObject *registry_retrieve(const char *device, const char *attr);
+%exception registry_devices {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+PyObject *registry_devices(void);
+%exception registry_device_attrs {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+PyObject *registry_device_attrs(const char *device);
+
 %rename(_libnvme_first_host)        libnvme_first_host;
 %rename(_libnvme_next_host)         libnvme_next_host;
 %rename(_libnvme_first_subsystem)   libnvme_first_subsystem;
@@ -846,7 +1008,7 @@ struct libnvme_ns *libnvme_ctrl_first_ns(struct libnvme_ctrl *c);
 struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_ns *n);
 
 %extend libnvme_global_ctx {
-	%feature("autodoc", "__init__(self, config_file=None)\n"
+	%feature("autodoc", "__init__(self, owner=None, config_file=None)\n"
 		"\n"
 		"Create the root context for the libnvme device tree.\n"
 		"\n"
@@ -854,13 +1016,18 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		"Supports use as a context manager (``with GlobalCtx() as ctx:``).\n"
 		"\n"
 		"Args:\n"
+		"    owner:       Orchestrator identity (e.g. 'stas', 'nbft').\n"
+		"                 Pass None if this process does not participate\n"
+		"                 in the ownership registry.\n"
 		"    config_file: Path to a JSON config file, or None for defaults.") libnvme_global_ctx;
-	libnvme_global_ctx(const char *config_file = NULL) {
+	libnvme_global_ctx(const char *owner = NULL, const char *config_file = NULL) {
 		struct libnvme_global_ctx *ctx;
 
 		ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
 		if (!ctx)
 			return NULL;
+		if (owner)
+			libnvme_set_owner(ctx, owner);
 
 		libnvme_scan_topology(ctx, NULL, NULL);
 		libnvme_read_config(ctx, config_file);
