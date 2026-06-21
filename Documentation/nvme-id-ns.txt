@@ -13,7 +13,6 @@ SYNOPSIS
 			[--raw-binary | -b]
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--force]
-			[--human-readable | -H]
 
 DESCRIPTION
 -----------
@@ -58,11 +57,6 @@ OPTIONS
 	In addition to parsing known fields, this option will dump
 	the vendor specific region of the structure in hex with ascii
 	interpretation.
-
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
 
 include::global-options.txt[]
 

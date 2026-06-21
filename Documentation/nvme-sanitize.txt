@@ -13,8 +13,7 @@ SYNOPSIS
 			<overwrite-pass-count>]
 			[--ause | -u] [--sanact=<action> | -a <action>]
 			[--ovrpat=<overwrite-pattern> | -p <overwrite-pattern>]
-			[--emvs | -e] [--force]
-			[--human-readable | -H] [--wait | -w]
+			[--emvs | -e] [--force] [--wait | -w]
 			[--repeat=<repeat-count> | -r <repeat-count>]
 
 DESCRIPTION
@@ -98,11 +97,6 @@ OPTIONS
 --force::
 	Ignore namespace is currently busy and performed the operation
 	even though.
-
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
 
 -w::
 --wait::

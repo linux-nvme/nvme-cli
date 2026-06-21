@@ -10,7 +10,6 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'cmdset-ind-id-ns' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
-			[--human-readable | -H]
 			[--raw-binary | -b]
 
 DESCRIPTION
@@ -41,11 +40,6 @@ OPTIONS
 --raw-binary::
 	Print the raw buffer to stdout. Structure is not parsed by
 	program. This overrides the vendor specific and human readable options.
-
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
 
 include::global-options.txt[]
 
