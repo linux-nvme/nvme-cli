@@ -79,6 +79,7 @@ static int feat_get_nsid(struct libnvme_transport_handle *hdl, __u32 nsid,
 	__u64 result;
 	int err;
 	__u32 len = 0;
+	nvme_print_flags_t flags = NORMAL;
 
 	__cleanup_libnvme_free void *buf = NULL;
 
@@ -98,9 +99,18 @@ static int feat_get_nsid(struct libnvme_transport_handle *hdl, __u32 nsid,
 		return err;
 	}
 
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (nvme_args.verbose)
+		flags |= VERBOSE;
+
 	nvme_show_init();
 
-	nvme_show_feature(fid, sel, result, buf, len, NORMAL);
+	nvme_show_feature(fid, sel, result, buf, len, flags);
 
 	nvme_show_finish();
 
