@@ -777,8 +777,6 @@ _nvme () {
 			/dev/nvme':supply a device to use (required)'
 			--raw-binary':dump infos in binary format'
 			-b':alias of --raw-binary'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			--vendor-specific':also dump binary vendor infos'
 			-V':alias of --vendor-specific'
 			)
@@ -793,8 +791,6 @@ _nvme () {
 			-n':alias of --namespace-id'
 			--raw-binary':dump infos in binary format'
 			-b':alias of --raw-binary'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			--vendor-specific':also dump binary vendor infos'
 			-V':alias of --vendor-specific'
 			)
@@ -852,8 +848,6 @@ _nvme () {
 			-n':alias of --namespace-id'
 			--raw-binary':dump infos in binary format'
 			-b':alias of --raw-binary'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme cmdset-ind-id-ns options" _cmdset_ind_idns
@@ -926,8 +920,6 @@ _nvme () {
 			-c':alias of --cntlid'
 			--output-format=':Output format: normal|json|binary'
 			-o':alias for --output-format'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme primary-ctrl-caps options" _primary_ctrl_caps
@@ -982,8 +974,6 @@ _nvme () {
 			-o':alias for --output-format'
 			--raw-binary':dump infos in binary format'
 			-b':alias of --raw-binary'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme id-uuid options" _id_uuid
@@ -1284,8 +1274,6 @@ _nvme () {
 			/dev/nvme':supply a device to use (required)'
 			--output-format=':Output format: normal|json|binary'
 			-o':alias for --output-format'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			--raw-binary':dump infos in binary format'
 			-b':alias to --raw-binary'
 			--csi=':command set identifier'
@@ -1384,8 +1372,6 @@ _nvme () {
 			--raw-binary':dump infos in binary format'
 			-b':alias to --raw-binary'
 			--timeout=':value for timeout'
-			--human-readable':show feature in readable format'
-			-H':alias of --human-readable'
 			--changed':show feature changed'
 			-C':alias of --changed'
 			)
@@ -1480,8 +1466,6 @@ _nvme () {
 			/dev/nvme':supply a device to use (required)'
 			--offset=':the offset of the property'
 			-O':alias to --offset'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
@@ -1676,8 +1660,6 @@ _nvme () {
 			-r':alias of --rae'
 			--output-format=':Output format: normal|json|binary'
 			-o':alias for --output-format'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			--raw-binary':dump infos in binary format'
 			-b':alias of --raw-binary'
 			)
@@ -1712,8 +1694,6 @@ _nvme () {
 			local _support
 			_support=(
 			/dev/nvme':supply a device to use (required)'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme supported-log-pages options" _support
@@ -2475,8 +2455,6 @@ _nvme () {
 			-O':alias of --dir-oper'
 			--req-resource=':namespace stream requested'
 			-r':alias of --req-resource'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			--timeout=':value for timeout'
 			)
 			_arguments '*:: :->subcmds'
@@ -2500,8 +2478,6 @@ _nvme () {
 			-O':alias of --dir-oper'
 			--endir=':directive enable'
 			-e':alias of --endir'
-			--human-readable':show infos in readable format'
-			-H':alias of --human-readable'
 			--raw-binary':dump output in binary format'
 			-b':alias for --raw-binary'
 			--input-file=':write/send file (default stdin)'
@@ -2615,8 +2591,6 @@ _nvme () {
 			/dev/nvme':supply a device to use (required)'
 			--offset=':offset of the requested register'
 			-O':alias for --offset'
-			--human-readable':show register in readable format'
-			-H':alias for --human-readable'
 			--cap':CAP=0x0 register offset'
 			--vs':VS=0x8 register offset'
 			--cmbloc':CMBLOC=0x38 register offset'
