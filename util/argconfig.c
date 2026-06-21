@@ -307,10 +307,11 @@ static int argconfig_parse_val(struct argconfig_commandline_options *s)
 	return 0;
 }
 
-static bool argconfig_check_human_readable(struct argconfig_commandline_options *s)
+static bool argconfig_check_verbose(struct argconfig_commandline_options *s)
 {
 	for (; s && s->option; s++) {
-		if (!strcmp(s->option, "human-readable") && s->config_type == CFG_FLAG)
+		if (!strcmp(s->option, "verbose") &&
+		    s->config_type == CFG_INCREMENT)
 			return s->seen;
 	}
 
@@ -395,7 +396,7 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 			break;
 	}
 
-	if (!argconfig_check_human_readable(options))
+	if (!argconfig_check_verbose(options))
 		setlocale(LC_ALL, "C");
 
 	return ret;
