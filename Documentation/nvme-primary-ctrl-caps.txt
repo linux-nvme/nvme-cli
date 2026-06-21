@@ -9,7 +9,6 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'primary-ctrl-caps' <device>
-			[--human-readable | -H]
 
 DESCRIPTION
 -----------
@@ -25,11 +24,6 @@ raw buffer may be printed to stdout.
 
 OPTIONS
 -------
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
-
 include::global-options.txt[]
 
 EXAMPLES
@@ -43,8 +37,8 @@ EXAMPLES
 fields in a human readable format:
 +
 ------------
-# nvme primary-ctrl-caps /dev/nvme0 --human-readable
-# nvme primary-ctrl-caps /dev/nvme0 -H
+# nvme primary-ctrl-caps /dev/nvme0 --verbose
+# nvme primary-ctrl-caps /dev/nvme0 -v
 ------------
 NVME
 ----

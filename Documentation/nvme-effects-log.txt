@@ -10,7 +10,6 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'effects-log' <device> [--raw-binary | -b]
-			[--human-readable | -H]
 
 DESCRIPTION
 -----------
@@ -28,12 +27,7 @@ OPTIONS
 -b::
 --raw-binary::
 	This option will print the raw buffer to stdout. Structure is not
-	parsed by program. This overrides the human-readable option.
-
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
+	parsed by program. This overrides the verbose option.
 
 include::global-options.txt[]
 
