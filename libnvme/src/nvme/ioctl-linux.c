@@ -118,7 +118,7 @@ __libnvme_public int libnvme_update_block_size(
  * The 64 bit version is the preferred version to use, but for backwards
  * compatibility keep a 32 version.
  */
-static int libnvme_submit_passthru32(struct libnvme_transport_handle *hdl,
+static int ioctl_passthru32(struct libnvme_transport_handle *hdl,
 		unsigned long ioctl_cmd, struct libnvme_passthru_cmd *cmd)
 {
 	struct linux_passthru_cmd32 cmd32;
@@ -149,7 +149,7 @@ out:
  * supported since kernel 5.4, see
  * 65e68edce0db ("nvme: allow 64-bit results in passthru commands")
  */
-static int libnvme_submit_passthru64(struct libnvme_transport_handle *hdl,
+static int ioctl_passthru64(struct libnvme_transport_handle *hdl,
 		unsigned long ioctl_cmd, struct libnvme_passthru_cmd *cmd)
 {
 	void *user_data;
@@ -175,26 +175,20 @@ out:
 	return err;
 }
 
-static int __libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
+static int ioctl_io_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	int err;
 
-	if (!hdl)
-		return -ENODEV;
-
-	if (!cmd->timeout_ms && hdl->timeout)
-		cmd->timeout_ms = hdl->timeout;
-
 	if (hdl->ioctl_io_state == IOCTL_STATE_IOCTL64)
-		return libnvme_submit_passthru64(hdl,
+		return ioctl_passthru64(hdl,
 			LIBNVME_IOCTL_IO64_CMD, cmd);
 
 	if (hdl->ioctl_io_state == IOCTL_STATE_IOCTL32 ||
 			!hdl->ctx->ioctl_probing)
 		goto do_ioctl32;
 
-	err = libnvme_submit_passthru64(hdl, LIBNVME_IOCTL_IO64_CMD, cmd);
+	err = ioctl_passthru64(hdl, LIBNVME_IOCTL_IO64_CMD, cmd);
 	if (err >= 0 || err != -ENOTTY) {
 		hdl->ioctl_io_state = IOCTL_STATE_IOCTL64;
 		return err;
@@ -203,23 +197,23 @@ static int __libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
 	hdl->ioctl_io_state = IOCTL_STATE_IOCTL32;
 
 do_ioctl32:
-	return libnvme_submit_passthru32(hdl, LIBNVME_IOCTL_IO_CMD, cmd);
+	return ioctl_passthru32(hdl, LIBNVME_IOCTL_IO_CMD, cmd);
 }
 
-static int submit_admin_passthru(struct libnvme_transport_handle *hdl,
+static int ioctl_admin_passthru(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	int err;
 
 	if (hdl->ioctl_admin_state == IOCTL_STATE_IOCTL64)
-		return libnvme_submit_passthru64(hdl,
+		return ioctl_passthru64(hdl,
 				LIBNVME_IOCTL_ADMIN64_CMD, cmd);
 
 	if (hdl->ioctl_admin_state == IOCTL_STATE_IOCTL32 ||
 			!hdl->ctx->ioctl_probing)
 		goto do_ioctl32;
 
-	err = libnvme_submit_passthru64(hdl, LIBNVME_IOCTL_ADMIN64_CMD, cmd);
+	err = ioctl_passthru64(hdl, LIBNVME_IOCTL_ADMIN64_CMD, cmd);
 	if (err >= 0 || err != -ENOTTY) {
 		hdl->ioctl_admin_state = IOCTL_STATE_IOCTL64;
 		return err;
@@ -231,28 +225,7 @@ do_ioctl32:
 	if (cmd->opcode == nvme_admin_fabrics)
 		return -ENOTSUP;
 
-	return libnvme_submit_passthru32(hdl, LIBNVME_IOCTL_ADMIN_CMD, cmd);
-}
-
-static int __libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd)
-{
-	if (!hdl)
-		return -ENODEV;
-
-	if (!cmd->timeout_ms && hdl->timeout)
-		cmd->timeout_ms = hdl->timeout;
-
-	switch (hdl->type) {
-	case LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT:
-		return submit_admin_passthru(hdl, cmd);
-	case LIBNVME_TRANSPORT_HANDLE_TYPE_MI:
-		return libnvme_mi_admin_admin_passthru(hdl, cmd);
-	default:
-		break;
-	}
-
-	return -ENOTSUP;
+	return ioctl_passthru32(hdl, LIBNVME_IOCTL_ADMIN_CMD, cmd);
 }
 
 __libnvme_public int libnvme_exec_admin_passthru(
@@ -264,6 +237,9 @@ __libnvme_public int libnvme_exec_admin_passthru(
 
 	if (!hdl)
 		return -ENODEV;
+
+	if (!cmd->timeout_ms && hdl->timeout)
+		cmd->timeout_ms = hdl->timeout;
 
 	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
 		goto no_uring;
@@ -286,7 +262,16 @@ __libnvme_public int libnvme_exec_admin_passthru(
 	return completion.status;
 
 no_uring:
-	return __libnvme_submit_admin_passthru(hdl, cmd);
+	switch (hdl->type) {
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT:
+		return ioctl_admin_passthru(hdl, cmd);
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_MI:
+		return libnvme_mi_admin_admin_passthru(hdl, cmd);
+	default:
+		break;
+	}
+
+	return -ENOTSUP;
 }
 
 __libnvme_public int libnvme_exec_io_passthru(
@@ -298,6 +283,9 @@ __libnvme_public int libnvme_exec_io_passthru(
 
 	if (!hdl)
 		return -ENODEV;
+
+	if (!cmd->timeout_ms && hdl->timeout)
+		cmd->timeout_ms = hdl->timeout;
 
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_NOT_AVAILABLE)
 		goto no_uring;
@@ -317,5 +305,5 @@ __libnvme_public int libnvme_exec_io_passthru(
 	return completion.status;
 
 no_uring:
-	return __libnvme_submit_io_passthru(hdl, cmd);
+	return ioctl_io_passthru(hdl, cmd);
 }
