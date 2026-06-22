@@ -2394,7 +2394,7 @@ _nvme () {
 			local _disconnect_all
 			_disconnect_all=(
 			--transport=':transport type'
-			-r':alias for --transport'
+			-t':alias for --transport'
 			--verbose':Increase logging verbosity'
 			-v':alias for --verbose'
 			)
