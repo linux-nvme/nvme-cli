@@ -924,7 +924,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 	struct config cfg = { 0 };
 
 	NVME_ARGS(opts,
-		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport),
+		OPT_STRING("transport", 't', "STR", &cfg.transport, nvmf_tport),
 		OPT_STRING("owner", 'O', "NAME", &cfg.owner, owner_help),
 		OPT_FLAG("force", 0, &cfg.force, force_help));
 

@@ -9,7 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'disconnect-all'
-			[--transport=<STR> | -r <STR>]
+			[--transport=<STR> | -t <STR>]
 			[--owner=<NAME> | -O <NAME>]
 			[--force]
 
@@ -31,7 +31,7 @@ background.
 
 OPTIONS
 -------
--r <STR>::
+-t <STR>::
 --transport=<STR>::
 	Limit disconnection to controllers using the specified transport
 	(e.g. tcp, rdma, fc).
