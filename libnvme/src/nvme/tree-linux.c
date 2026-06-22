@@ -24,82 +24,13 @@
 
 #include <libnvme.h>
 
-#include "cleanup.h"
 #include "cleanup-linux.h"
-#include "private.h"
-#include "private-tree.h"
-#include "util.h"
+#include "cleanup.h"
 #include "compiler-attributes.h"
-
-__libnvme_public int libnvme_host_get_ids(struct libnvme_global_ctx *ctx,
-		      const char *hostnqn_arg, const char *hostid_arg,
-		      char **hostnqn, char **hostid)
-{
-	__cleanup_free char *nqn = NULL;
-	__cleanup_free char *hid = NULL;
-	__cleanup_free char *hnqn = NULL;
-	libnvme_host_t h;
-
-	/* command line argumments */
-	if (hostid_arg)
-		hid = strdup(hostid_arg);
-	if (hostnqn_arg)
-		hnqn = strdup(hostnqn_arg);
-
-	/* JSON config: assume the first entry is the default host */
-	h = libnvme_first_host(ctx);
-	if (h) {
-		if (!hid)
-			hid = xstrdup(libnvme_host_get_hostid(h));
-		if (!hnqn)
-			hnqn = xstrdup(libnvme_host_get_hostnqn(h));
-	}
-
-	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */
-	if (!hid)
-		hid = libnvme_read_hostid();
-	if (!hnqn)
-		hnqn = libnvme_read_hostnqn();
-
-	/* incomplete configuration, thus derive hostid from hostnqn */
-	if (!hid && hnqn)
-		hid = libnvme_hostid_from_hostnqn(hnqn);
-
-	/*
-	 * fallback to use either DMI information or device-tree. If all
-	 * fails generate one
-	 */
-	if (!hid) {
-		hid = libnvme_generate_hostid();
-		if (!hid)
-			return -ENOMEM;
-
-		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
-			 "warning: using auto generated hostid and hostnqn\n");
-	}
-
-	/* incomplete configuration, thus derive hostnqn from hostid */
-	if (!hnqn) {
-		hnqn = libnvme_generate_hostnqn_from_hostid(hid);
-		if (!hnqn)
-			return -ENOMEM;
-	}
-
-	/* sanity checks */
-	nqn = libnvme_hostid_from_hostnqn(hnqn);
-	if (nqn && strcmp(nqn, hid)) {
-		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
-			 "warning: use hostid '%s' which does not match uuid in hostnqn '%s'\n",
-			 hid, hnqn);
-	}
-
-	*hostid = hid;
-	*hostnqn = hnqn;
-	hid = NULL;
-	hnqn = NULL;
-
-	return 0;
-}
+#include "private-fabrics.h"
+#include "private-tree.h"
+#include "private.h"
+#include "util.h"
 
 __libnvme_public int libnvme_get_host(
 		struct libnvme_global_ctx *ctx, const char *hostnqn,
@@ -110,7 +41,7 @@ __libnvme_public int libnvme_get_host(
 	struct libnvme_host *h;
 	int err;
 
-	err = libnvme_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
+	err = libnvmf_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
 	if (err)
 		return err;
 

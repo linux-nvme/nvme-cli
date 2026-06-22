@@ -232,3 +232,38 @@ int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
  */
 int libnvmf_registry_delete_instance(struct libnvme_global_ctx *ctx,
 				     int instance);
+
+/**
+ * libnvmf_host_get_ids - Retrieve host ids from various sources
+ *
+ * @ctx:		struct libnvme_global_ctx object
+ * @hostnqn_arg:	Input hostnqn (command line) argument
+ * @hostid_arg:		Input hostid (command line) argument
+ * @hostnqn:		Output hostnqn
+ * @hostid:		Output hostid
+ *
+ * libnvmf_host_get_ids figures out which hostnqn/hostid is to be used.
+ * There are several sources where this information can be retrieved.
+ *
+ * The order is:
+ *
+ *  - Start with informartion from DMI or device-tree
+ *  - Override hostnqn and hostid from /etc/nvme files
+ *  - Override hostnqn or hostid with values from JSON
+ *    configuration file. The first host entry in the file is
+ *    considered the default host.
+ *  - Override hostnqn or hostid with values from the command line
+ *    (@hostnqn_arg, @hostid_arg).
+ *
+ *  If the IDs are still NULL after the lookup algorithm, the function
+ *  will generate random IDs.
+ *
+ *  The function also verifies that hostnqn and hostid matches. The Linux
+ *  NVMe implementation expects a 1:1 matching between the IDs.
+ *
+ *  Return: 0 on success (@hostnqn and @hostid contain valid strings
+ *  which the caller needs to free), or negative error code otherwise.
+ */
+int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
+		      const char *hostnqn_arg, const char *hostid_arg,
+		      char **hostnqn, char **hostid);

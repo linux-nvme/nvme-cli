@@ -11,6 +11,9 @@
 
 #include <libnvme.h>
 
+#include "nvme/private.h"
+#include "nvme/private-fabrics.h"
+
 static bool command_line(void)
 {
 	struct libnvme_global_ctx *ctx;
@@ -30,7 +33,7 @@ static bool command_line(void)
 	hostnqn = "nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6";
 	hostid = "ce4fee3e-c02c-11ee-8442-830d068a36c6";
 
-	err = libnvme_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
+	err = libnvmf_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
 	if (err)
 		goto out;
 
@@ -80,7 +83,7 @@ static bool json_config(char *file)
 	hostnqn = "nqn.2014-08.org.nvmexpress:uuid:2cd2c43b-a90a-45c1-a8cd-86b33ab273b5";
 	hostid = "2cd2c43b-a90a-45c1-a8cd-86b33ab273b5";
 
-	err = libnvme_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
+	err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
 	if (err)
 		goto out;
 
@@ -125,7 +128,7 @@ static bool from_file(void)
 	if (err && err != ENOENT)
 		goto out;
 
-	err = libnvme_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
+	err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, &hid);
 	if (err)
 		goto out;
 

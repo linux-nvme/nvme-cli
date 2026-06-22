@@ -42,7 +42,10 @@ if diff.found()
     test_hostnqn_order = executable(
         'test-hostnqn-order',
         ['hostnqn-order.c'],
-        dependencies: libnvme_dep,
+        dependencies: [
+            ccan_dep,
+            libnvme_test_dep,
+        ]
     )
 
     test(
