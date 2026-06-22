@@ -25,12 +25,14 @@ enum libnvme_log_level {
 
 /**
  * libnvme_create_global_ctx() - Initialize global context object
- * @fp:		File descriptor for logging messages
- * @log_level:	Logging level to use
+ *
+ * Creates a global context with default settings: logging to stderr at
+ * LIBNVME_DEFAULT_LOGLEVEL.  Use libnvme_set_logging_file() and
+ * libnvme_set_logging_level() to adjust these after creation.
  *
  * Return: Initialized &struct libnvme_global_ctx object
  */
-struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_level);
+struct libnvme_global_ctx *libnvme_create_global_ctx(void);
 
 /**
  * libnvme_free_global_ctx() - Free global context object
@@ -83,6 +85,16 @@ void libnvme_set_logging_level(struct libnvme_global_ctx *ctx, int log_level,
  */
 int libnvme_get_logging_level(struct libnvme_global_ctx *ctx, bool *log_pid,
 		bool *log_tstamp);
+
+/**
+ * libnvme_set_logging_file() - Set the log output file for the global context
+ * @ctx:	struct libnvme_global_ctx object
+ * @fp:		File stream to write log messages to, or NULL to use stderr
+ *
+ * Sets the file descriptor used for log output.  Passing NULL reverts to the
+ * default (stderr).
+ */
+void libnvme_set_logging_file(struct libnvme_global_ctx *ctx, FILE *fp);
 
 /**
  * libnvme_open() - Open an nvme controller or namespace device

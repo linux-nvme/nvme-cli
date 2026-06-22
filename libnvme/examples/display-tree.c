@@ -24,9 +24,10 @@ int main()
 	libnvme_ns_t n, _n;
 	int err;
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return 1;
+	libnvme_set_logging_file(ctx, stdout);
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err) {

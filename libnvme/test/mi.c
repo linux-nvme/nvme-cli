@@ -2132,8 +2132,9 @@ int main(void)
 
 	fd = test_setup_log();
 
-	ctx = libnvme_create_global_ctx(fd, LIBNVME_DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx();
 	assert(ctx);
+	libnvme_set_logging_file(ctx, fd);
 
 	ep = libnvme_mi_open_test(ctx);
 	assert(ep);

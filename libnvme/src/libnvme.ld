@@ -156,6 +156,7 @@ LIBNVME_3 {
 		libnvme_set_dry_run;
 		libnvme_set_etdas;
 		libnvme_set_ioctl_probing;
+		libnvme_set_logging_file;
 		libnvme_set_logging_level;
 		libnvme_set_owner;
 		libnvme_skip_namespaces;

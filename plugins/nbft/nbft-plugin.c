@@ -559,11 +559,12 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	if (ret < 0)
 		return ret;
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return -ENOMEM;
 	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (!(show_subsys || show_hfi || show_discovery))
 		show_subsys = show_hfi = show_discovery = true;
