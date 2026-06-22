@@ -64,6 +64,7 @@ LIBNVME_3 {
 		libnvme_get_host;
 		libnvme_get_host_telemetry;
 		libnvme_get_log;
+		libnvme_get_log_dynamic_chunk;
 		libnvme_get_logging_level;
 		libnvme_get_logical_block_size;
 		libnvme_get_new_host_telemetry;

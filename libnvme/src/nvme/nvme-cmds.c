@@ -122,6 +122,83 @@ __libnvme_public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 	return wait_get_log_cmd(hdl);
 }
 
+__libnvme_public int libnvme_get_log_dynamic_chunk(
+			      struct libnvme_transport_handle *hdl,
+			      struct libnvme_passthru_cmd *cmd, bool rae,
+			      __u32 xfer_len)
+{
+	__u64 offset = 0, xfer, data_len = cmd->data_len;
+	__u64 start = (__u64)cmd->cdw13 << 32 | cmd->cdw12;
+	__u64 lpo;
+	void *ptr = (void *)(uintptr_t)cmd->addr;
+	int ret;
+	bool _rae;
+	__u32 numd;
+	__u16 numdu, numdl;
+	__u32 cdw10 = cmd->cdw10 & (NVME_VAL(LOG_CDW10_LID) |
+				    NVME_VAL(LOG_CDW10_LSP));
+	__u32 cdw11 = cmd->cdw11 & NVME_VAL(LOG_CDW11_LSI);
+
+
+	if (force_4k)
+		xfer_len = NVME_LOG_PAGE_PDU_SIZE;
+
+	do {
+		xfer = data_len - offset;
+		if (xfer > xfer_len)
+			xfer  = xfer_len;
+
+		/*
+		 * Always retain regardless of the RAE parameter until the very
+		 * last portion of this log page so the data remains latched
+		 * during the fetch sequence.
+		 */
+		lpo = start + offset;
+		numd = (xfer >> 2) - 1;
+		numdu = numd >> 16;
+		numdl = numd & 0xffff;
+		_rae = offset + xfer < data_len || rae;
+
+		cmd->cdw10 = cdw10 |
+			NVME_SET(!!_rae, LOG_CDW10_RAE) |
+			NVME_SET(numdl, LOG_CDW10_NUMDL);
+		cmd->cdw11 = cdw11 |
+			NVME_SET(numdu, LOG_CDW11_NUMDU);
+		cmd->cdw12 = lpo & 0xffffffff;
+		cmd->cdw13 = lpo >> 32;
+		cmd->data_len = xfer;
+		cmd->addr = (__u64)(uintptr_t)ptr;
+
+		ret = submit_get_log_cmd(hdl, cmd);
+		if (!ret)
+			ret = wait_get_log_cmd(hdl);
+		/*
+		 * Retry with a smaller chunk on OS errors (negative errno,
+		 * e.g. the kernel rejecting an oversized transfer) and on
+		 * NVMe command errors (positive status) with Generic (SCT=0)
+		 * or Command Specific (SCT=1) status types. Path errors
+		 * (SCT=3) and media errors (SCT=2) are not recoverable by
+		 * reducing the transfer size.
+		 */
+		if (ret < 0 ||
+		    (ret > 0 &&
+		     (ret >> NVME_SCT_SHIFT) <= NVME_SCT_CMD_SPECIFIC)) {
+			xfer_len = (xfer_len / 2) &
+				   ~(__u32)(NVME_LOG_PAGE_PDU_SIZE - 1);
+			if (xfer_len < NVME_LOG_PAGE_PDU_SIZE)
+				return ret;
+			continue;
+		}
+		if (ret)
+			return ret;
+
+		offset += xfer;
+		ptr += xfer;
+	} while (offset < data_len);
+
+	return 0;
+}
+
 static int read_ana_chunk(struct libnvme_transport_handle *hdl,
 		enum nvme_log_ana_lsp lsp, bool rae,
 		__u8 *log, __u8 **read, __u8 *to_read, __u8 *log_end)

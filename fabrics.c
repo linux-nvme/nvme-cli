@@ -333,34 +333,28 @@ static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
 
 	memcpy(&fa, hfd->fa, sizeof(fa));
-next:
-	if (fgets(line, sizeof(line), hfd->f) == NULL)
-		return -EOF;
+	do {
+		if (fgets(line, sizeof(line), hfd->f) == NULL)
+			return -EOF;
 
-	if (line[0] == '#' || line[0] == '\n')
-		goto next;
+		if (line[0] == '#' || line[0] == '\n')
+			continue;
 
-	argc = 1;
-	p = line;
-	while ((ptr = strsep(&p, " =\n")) != NULL)
-		hfd->argv[argc++] = ptr;
-	hfd->argv[argc] = NULL;
+		argc = 1;
+		p = line;
+		while ((ptr = strsep(&p, " =\n")) != NULL)
+			hfd->argv[argc++] = ptr;
+		hfd->argv[argc] = NULL;
 
-	fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
-	ret = argconfig_parse(argc, hfd->argv, "config", opts);
-	if (ret)
-		goto next;
-	if (!fa.transport && !fa.traddr)
-		goto next;
+		fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
+		if (argconfig_parse(argc, hfd->argv, "config", opts))
+			continue;
+	} while (!fa.transport && !fa.traddr);
 
 	if (!fa.trsvcid)
 		fa.trsvcid = libnvmf_get_default_trsvcid(fa.transport, true);
 
 	ret = setup_common_context(fctx, &fa);
-	if (ret)
-		return ret;
-
-	ret = set_fabrics_options(fctx, &fa);
 	if (ret)
 		return ret;
 
@@ -394,7 +388,7 @@ static int setup_common_context(struct libnvmf_context *fctx,
 	if (err)
 		return err;
 
-	return 0;
+	return set_fabrics_options(fctx, fa);
 }
 
 static int create_common_context(struct libnvme_global_ctx *ctx,
@@ -409,17 +403,7 @@ static int create_common_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		return err;
 
-	err = libnvmf_context_set_connection(fctx, fa->subsysnqn,
-		fa->transport, fa->traddr, fa->trsvcid,
-		fa->host_traddr, fa->host_iface);
-	if (err)
-		goto err;
-
-	err = libnvmf_context_set_hostnqn(fctx, fa->hostnqn, fa->hostid);
-	if (err)
-		goto err;
-
-	err = set_fabrics_options(fctx, fa);
+	err = setup_common_context(fctx, fa);
 	if (err)
 		goto err;
 

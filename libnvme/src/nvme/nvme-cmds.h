@@ -47,6 +47,26 @@ int libnvme_get_log(struct libnvme_transport_handle *hdl,
 		 __u32 xfer_len);
 
 /**
+ * libnvme_get_log_dynamic_chunk() - Get log page data with dynamic chunk size
+ * @hdl:	Transport handle
+ * @cmd:	Passthru command
+ * @rae:	Retain asynchronous events
+ * @xfer_len:	Initial max log transfer size per request to split the total.
+ *	 Dynamically divide chunk size by 2 when any error is encountered,
+ *	 and retry until the chunk size is down to 4k or the command
+ *	 succeeds. This allows for successful retrieval of log pages that
+ *	 may have a smaller maximum transfer size than the controller's
+ *	 MDTS value, without requiring the caller to know the optimal
+ *	 chunk size in advance.
+ *
+ * Return: 0 on success, the nvme command status if a response was
+ * received (see &enum nvme_status_field) or a negative error otherwise.
+ */
+int libnvme_get_log_dynamic_chunk(struct libnvme_transport_handle *hdl,
+		struct libnvme_passthru_cmd *cmd, bool rae,
+		__u32 xfer_len);
+
+/**
  * libnvme_set_etdas() - Set the Extended Telemetry Data Area 4 Supported bit
  * @hdl:	Transport handle
  * @changed:	boolean to indicate whether or not the host

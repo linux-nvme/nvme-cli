@@ -1531,7 +1531,7 @@ nvme_get_log_persistent_event(struct libnvme_transport_handle *hdl,
 	 * Call the generic log execution function.
 	 * The data length is determined by the 'len' parameter.
 	 */
-	return libnvme_get_log(hdl, &cmd, false, len);
+	return libnvme_get_log_dynamic_chunk(hdl, &cmd, false, len);
 }
 
 /**

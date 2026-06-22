@@ -3,30 +3,42 @@ nvme-registry-delete(1)
 
 NAME
 ----
-nvme-registry-delete - Remove a controller's ownership registry entry
+nvme-registry-delete - Remove a controller's registry entry or attribute
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'registry delete'
-			--device=<DEV> | -d <DEV>
+'nvme' [<global-options>] 'registry delete' <device>
+			[--attr=<ATTR> | -a <ATTR>]
 
 DESCRIPTION
 -----------
-Remove the ownership registry entry for an NVMe-oF controller.  The
-registry entry is the directory /run/nvme/registry/<device>/ and all
-attribute files it contains.
+Remove the ownership registry entry for an NVMe-oF controller, or a single
+attribute from it.  The registry entry is the directory
+/run/nvme/registry/<device>/ and all attribute files it contains.
+
+The <device> is the NVMe controller name (e.g. nvme3), given as a
+positional argument; the /dev/ prefix is optional.
+
+Without --attr the whole entry is removed.  With --attr only that one
+attribute file is removed, leaving the rest of the entry in place.
 
 Under normal operation registry entries are removed automatically: a
 udev rule fires on the kernel REMOVE event and deletes the entry.  This
 command is provided for manual cleanup or for orchestrators that want to
 explicitly release ownership before disconnecting.
 
+Removing the whole entry, or the 'owner' attribute specifically, drops
+ownership and can stop an orchestrator from protecting the controller, so
+it prompts for confirmation when run interactively; non-interactive callers
+(scripts) proceed without prompting.  Removing any other attribute does not
+affect ownership and proceeds silently.
+
 OPTIONS
 -------
--d <DEV>::
---device=<DEV>::
-	NVMe device name (e.g. nvme3).  The /dev/ prefix is optional.
+-a <ATTR>::
+--attr=<ATTR>::
+	Attribute to remove.  If omitted, the whole entry is removed.
 
 include::global-options.txt[]
 
@@ -35,7 +47,13 @@ EXAMPLES
 * Remove the registry entry for nvme3:
 +
 ------------
-# nvme registry delete --device nvme3
+# nvme registry delete nvme3
+------------
+
+* Remove a single attribute, leaving the rest of the entry:
++
+------------
+# nvme registry delete nvme3 --attr note
 ------------
 
 SEE ALSO
