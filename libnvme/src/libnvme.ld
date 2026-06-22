@@ -29,10 +29,6 @@ LIBNVME_3 {
 		libnvme_errno_to_string;
 		libnvme_exec_admin_passthru;
 		libnvme_exec_io_passthru;
-		libnvme_filter_ctrls;
-		libnvme_filter_namespace;
-		libnvme_filter_paths;
-		libnvme_filter_subsys;
 		libnvme_find_uuid;
 		libnvme_first_host;
 		libnvme_first_subsystem;

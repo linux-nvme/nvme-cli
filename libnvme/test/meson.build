@@ -256,7 +256,6 @@ endif
 foreach hdr : [
     'endian',
     'fabrics',
-    'filters',
     'ioctl',
     'lib',
     'lib-types',
@@ -276,6 +275,7 @@ foreach hdr : [
     'nvme-types-nbft',
     'nvme-types-nvm',
     'nvme-types-zns',
+    'scan',
     'tree',
     'util',
 ]

@@ -124,7 +124,7 @@ __libnvme_public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 	if (!ctx)
 		return 0;
 
-	ctrls.num = libnvme_scan_ctrls(&ctrls.ents);
+	ctrls.num = libnvme_scan_ctrls(ctx, &ctrls.ents);
 	if (ctrls.num < 0) {
 		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "failed to scan ctrls: %s\n",
 			 libnvme_strerror(-ctrls.num));
@@ -143,7 +143,7 @@ __libnvme_public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 		}
 	}
 
-	subsys.num = libnvme_scan_subsystems(&subsys.ents);
+	subsys.num = libnvme_scan_subsystems(ctx, &subsys.ents);
 	if (subsys.num < 0) {
 		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "failed to scan subsystems: %s\n",
 			libnvme_strerror(-subsys.num));
