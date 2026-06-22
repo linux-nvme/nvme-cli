@@ -691,3 +691,5 @@ int libnvme_mi_admin_admin_passthru(struct libnvme_transport_handle *hdl,
 int libnvme_open_uring(struct libnvme_transport_handle *hdl);
 void libnvme_close_uring(struct libnvme_transport_handle *hdl);
 int __libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl);
+
+char *libnvme_hostid_from_hostnqn(const char *hostnqn);
