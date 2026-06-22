@@ -18,8 +18,16 @@ _under_valgrind = 'VALGRIND_OPTS' in os.environ
 
 # dir='/tmp' is required: libnvme confines NVME_REGISTRY_DIR to /tmp, so the
 # test directory must live there (not under an arbitrary $TMPDIR).
-_tmpdir = tempfile.mkdtemp(prefix='nvme-registry-test-', dir='/tmp')
-os.environ['NVME_REGISTRY_DIR'] = _tmpdir
+#
+# Reuse an inherited /tmp directory instead of always creating a new one: with
+# the spawn/forkserver start methods (the default on Linux as of Python 3.14)
+# each child re-imports this module.  The child inherits NVME_REGISTRY_DIR from
+# the parent, so it must reuse that path rather than create a second, unrelated
+# registry directory it would then write into alone.
+_tmpdir = os.environ.get('NVME_REGISTRY_DIR', '')
+if not _tmpdir.startswith('/tmp/'):
+    _tmpdir = tempfile.mkdtemp(prefix='nvme-registry-test-', dir='/tmp')
+    os.environ['NVME_REGISTRY_DIR'] = _tmpdir
 
 from libnvme import nvme  # noqa: E402  (import after env var set intentionally)
 
@@ -35,51 +43,64 @@ def _teardown_tmpdir():
 
 
 class TestRegistryUpdate(unittest.TestCase):
+    def setUp(self):
+        self.ctx = nvme.GlobalCtx()
 
     def tearDown(self):
-        nvme.registry_delete('nvme5')
+        nvme.registry_delete(self.ctx, 'nvme5')
+        self.ctx = None
 
     def test_update_creates_entry(self):
-        nvme.registry_update('nvme5', 'owner', 'stas')
-        value = nvme.registry_retrieve('nvme5', 'owner')
+        nvme.registry_update(self.ctx, 'nvme5', 'owner', 'stas')
+        value = nvme.registry_retrieve(self.ctx, 'nvme5', 'owner')
         self.assertEqual(value, 'stas')
 
     def test_update_steals_ownership(self):
-        nvme.registry_update('nvme5', 'owner', 'nbft')
-        nvme.registry_update('nvme5', 'owner', 'stas')
-        value = nvme.registry_retrieve('nvme5', 'owner')
+        nvme.registry_update(self.ctx, 'nvme5', 'owner', 'nbft')
+        nvme.registry_update(self.ctx, 'nvme5', 'owner', 'stas')
+        value = nvme.registry_retrieve(self.ctx, 'nvme5', 'owner')
         self.assertEqual(value, 'stas')
 
     def test_update_multiple_attrs(self):
-        nvme.registry_update('nvme5', 'owner', 'stas')
-        nvme.registry_update('nvme5', 'extra', 'hello')
-        self.assertEqual(nvme.registry_retrieve('nvme5', 'owner'), 'stas')
-        self.assertEqual(nvme.registry_retrieve('nvme5', 'extra'), 'hello')
+        nvme.registry_update(self.ctx, 'nvme5', 'owner', 'stas')
+        nvme.registry_update(self.ctx, 'nvme5', 'extra', 'hello')
+        self.assertEqual(nvme.registry_retrieve(self.ctx, 'nvme5', 'owner'), 'stas')
+        self.assertEqual(nvme.registry_retrieve(self.ctx, 'nvme5', 'extra'), 'hello')
 
 
 class TestRegistryRetrieve(unittest.TestCase):
+    def setUp(self):
+        self.ctx = nvme.GlobalCtx()
+
+    def tearDown(self):
+        self.ctx = None
 
     def test_retrieve_unregistered_returns_none(self):
-        value = nvme.registry_retrieve('nvme99', 'owner')
+        value = nvme.registry_retrieve(self.ctx, 'nvme99', 'owner')
         self.assertIsNone(value)
 
     def test_retrieve_missing_attr_returns_none(self):
-        nvme.registry_update('nvme6', 'owner', 'stas')
-        value = nvme.registry_retrieve('nvme6', 'nosuchattr')
-        nvme.registry_delete('nvme6')
+        nvme.registry_update(self.ctx, 'nvme6', 'owner', 'stas')
+        value = nvme.registry_retrieve(self.ctx, 'nvme6', 'nosuchattr')
+        nvme.registry_delete(self.ctx, 'nvme6')
         self.assertIsNone(value)
 
 
 class TestRegistryDelete(unittest.TestCase):
+    def setUp(self):
+        self.ctx = nvme.GlobalCtx()
+
+    def tearDown(self):
+        self.ctx = None
 
     def test_delete_removes_entry(self):
-        nvme.registry_update('nvme7', 'owner', 'stas')
-        nvme.registry_delete('nvme7')
-        self.assertIsNone(nvme.registry_retrieve('nvme7', 'owner'))
+        nvme.registry_update(self.ctx, 'nvme7', 'owner', 'stas')
+        nvme.registry_delete(self.ctx, 'nvme7')
+        self.assertIsNone(nvme.registry_retrieve(self.ctx, 'nvme7', 'owner'))
 
     def test_delete_nonexistent_raises(self):
         with self.assertRaises(FileNotFoundError):
-            nvme.registry_delete('nvme99')
+            nvme.registry_delete(self.ctx, 'nvme99')
 
 
 class TestRegistryEntries(unittest.TestCase):
@@ -88,40 +109,54 @@ class TestRegistryEntries(unittest.TestCase):
     an iterable."""
 
     def setUp(self):
-        nvme.registry_update('nvme1', 'owner', 'stas')
-        nvme.registry_update('nvme2', 'owner', 'nbft')
+        self.ctx = nvme.GlobalCtx()
+        nvme.registry_update(self.ctx, 'nvme1', 'owner', 'stas')
+        nvme.registry_update(self.ctx, 'nvme2', 'owner', 'nbft')
 
     def tearDown(self):
-        nvme.registry_delete('nvme1')
-        nvme.registry_delete('nvme2')
+        nvme.registry_delete(self.ctx, 'nvme1')
+        nvme.registry_delete(self.ctx, 'nvme2')
+        self.ctx = None
 
     def test_entries_returns_iterable(self):
-        entries = list(nvme.registry_entries())
+        entries = list(nvme.registry_entries(self.ctx))
         # All entries are stale (no /dev/nvme* in test environment) — list is empty.
         self.assertIsInstance(entries, list)
 
     def test_entries_skips_stale(self):
-        for device, attrs in nvme.registry_entries():
+        for device, attrs in nvme.registry_entries(self.ctx):
             self.assertTrue(os.path.exists('/dev/' + device))
 
 
 def _writer(device, owner, iterations):
-    """Child process: repeatedly update the owner attribute."""
+    """Child process: repeatedly update the owner attribute.
+
+    Each process creates its own GlobalCtx.  A libnvme context must not be
+    shared across a process boundary: passing it as a Process argument is not
+    picklable under the spawn/forkserver start methods, and even under fork a
+    context is not designed to be used concurrently from two processes.
+    """
+    ctx = nvme.GlobalCtx()
     for _ in range(iterations):
-        nvme.registry_update(device, 'owner', owner)
+        nvme.registry_update(ctx, device, 'owner', owner)
 
 
 class TestRegistryParallelWrites(unittest.TestCase):
     """Verify that concurrent writes from multiple processes do not corrupt
     the registry.  The atomic tmp->rename write protocol must ensure the
     final value is always one of the two written strings."""
+    def setUp(self):
+        self.ctx = nvme.GlobalCtx()
+
+    def tearDown(self):
+        self.ctx = None
 
     @unittest.skipIf(_under_valgrind, "skipped under valgrind — covered by C test")
     def test_parallel_writes_no_corruption(self):
         nprocs = 10
         owners = [f'proc{i}' for i in range(nprocs)]
 
-        nvme.registry_update('nvme10', 'owner', 'parent')
+        nvme.registry_update(self.ctx, 'nvme10', 'owner', 'parent')
 
         procs = [multiprocessing.Process(target=_writer, args=('nvme10', owner, 200))
                  for owner in owners]
@@ -130,8 +165,8 @@ class TestRegistryParallelWrites(unittest.TestCase):
         for p in procs:
             p.join()
 
-        value = nvme.registry_retrieve('nvme10', 'owner')
-        nvme.registry_delete('nvme10')
+        value = nvme.registry_retrieve(self.ctx, 'nvme10', 'owner')
+        nvme.registry_delete(self.ctx, 'nvme10')
 
         self.assertIn(value, owners, f'corrupted value: {value!r}')
 

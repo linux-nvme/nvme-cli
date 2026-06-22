@@ -443,7 +443,8 @@ __libnvme_public char *libnvme_ctrl_owner(libnvme_ctrl_t c)
 {
 	char *owner = NULL;
 
-	libnvmf_registry_retrieve(libnvme_ctrl_get_name(c), "owner", &owner);
+	libnvmf_registry_retrieve(c->ctx,
+				  libnvme_ctrl_get_name(c), "owner", &owner);
 	return owner;
 }
 

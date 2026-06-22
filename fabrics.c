@@ -902,7 +902,8 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 }
 
 /* disconnect-all policy: should controller @c be torn down? */
-static bool disconnect_all_match(libnvme_ctrl_t c, const char *transport,
+static bool disconnect_all_match(struct libnvme_global_ctx *ctx,
+				 libnvme_ctrl_t c, const char *transport,
 				 const char *owner, bool force)
 {
 	if (transport && strcmp(transport, libnvme_ctrl_get_transport(c)))
@@ -911,7 +912,12 @@ static bool disconnect_all_match(libnvme_ctrl_t c, const char *transport,
 		return false;
 	if (force)
 		return true;
-	return libnvmf_registry_attr_equal(libnvme_ctrl_get_name(c),
+
+	/*
+	 * attr_equal() returns 0 only on an exact match; a read error (<0)
+	 * compares as "not a match", so we never disconnect on error.
+	 */
+	return libnvmf_registry_attr_equal(ctx, libnvme_ctrl_get_name(c),
 					   "owner", owner) == 0;
 }
 
@@ -997,7 +1003,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s) {
 			libnvme_subsystem_for_each_ctrl(s, c) {
-				if (!disconnect_all_match(c, cfg.transport,
+				if (!disconnect_all_match(ctx, c, cfg.transport,
 							  cfg.owner, cfg.force))
 					continue;
 				if (libnvmf_disconnect_ctrl(c))

@@ -14,9 +14,7 @@ SYNOPSIS
 			[--dir-type=<dtype> | -D <dtype>]
 			[--dir-spec=<dspec> | -S <dspec>]
 			[--dir-oper=<doper> | -O <doper>]
-			[--req-resource=<nsr> | -r <nsr>]
-			[--human-readable | -H]
-			[--raw-binary | -b]
+			[--req-resource=<nsr> | -r <nsr>] [--raw-binary | -b]
 
 DESCRIPTION
 -----------
@@ -77,11 +75,6 @@ OPTIONS
 	Print the raw receive buffer to stdout if the command returns
 	a structure.
 
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
-
 include::global-options.txt[]
 
 EXAMPLES
@@ -89,28 +82,28 @@ EXAMPLES
 * Identify directive type supported :
 +
 ------------
-# nvme dir-receive /dev/nvme0 --dir-type 0 --dir-oper 1 --human-readable
+# nvme dir-receive /dev/nvme0 --dir-type 0 --dir-oper 1 --verbose
 ------------
 +
 
 * Get stream directive parameters : 
 +
 ------------
-# nvme dir-receive /dev/nvme0 --dir-type 1 --dir-oper 1 --human-readable 
+# nvme dir-receive /dev/nvme0 --dir-type 1 --dir-oper 1 --verbose
 ------------
 +
 
 * Allocate 3 streams for namespace 1
 +
 ------------
-# nvme dir-receive /dev/nvme0n1 --dir-type 1 --dir-oper 3 --req-resource 3 --human-readable 
+# nvme dir-receive /dev/nvme0n1 --dir-type 1 --dir-oper 3 --req-resource 3 --verbose
 ------------
 +
 
 * Get streams directive status :
 +
 ------------
-# nvme dir-receive /dev/nvme0 --dir-type 1 --dir-oper 2 --human-readable 
+# nvme dir-receive /dev/nvme0 --dir-type 1 --dir-oper 2 --verbose
 ------------
 +
 It is probably a bad idea to not redirect stdout when using this mode.

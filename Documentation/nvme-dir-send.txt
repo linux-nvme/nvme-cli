@@ -15,9 +15,7 @@ SYNOPSIS
 			[--dir-spec=<dspec> | -S <dspec>]
 			[--dir-oper=<doper> | -O <doper>]
 			[--endir=<endir> | -e <endir>]
-			[--target-dir=<tdir> | -T <tdir>]
-			[--human-readable | -H]
-			[--raw-binary | -b]
+			[--target-dir=<tdir> | -T <tdir>] [--raw-binary | -b]
 
 DESCRIPTION
 -----------
@@ -81,11 +79,6 @@ OPTIONS
 --raw-binary::
 	Print the raw receive buffer to stdout if the command returns
 	a structure.
-
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
 
 include::global-options.txt[]
 

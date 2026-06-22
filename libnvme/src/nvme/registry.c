@@ -349,7 +349,8 @@ static int write_device_attr(const char *device, const char *attr,
  * entry: instance recycling means an old nvmeN/ directory is stale by
  * definition.
  */
-int libnvmf_registry_create_instance(int instance, const char *owner)
+int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
+				     int instance, const char *owner)
 {
 	char device[32];
 
@@ -362,27 +363,31 @@ int libnvmf_registry_create_instance(int instance, const char *owner)
 	 * a private attribute written via libnvmf_registry_update()) must not
 	 * leak into the new entry.  Ignore errors: ENOENT is the common case.
 	 */
-	libnvmf_registry_delete(device);
+	libnvmf_registry_delete(ctx, device);
 
 	return write_device_attr(device, "owner", owner);
 }
 
-int libnvmf_registry_delete_instance(int instance)
+int libnvmf_registry_delete_instance(struct libnvme_global_ctx *ctx,
+				     int instance)
 {
 	char device[32];
 	int ret;
 
 	snprintf(device, sizeof(device), "nvme%d", instance);
-	ret = libnvmf_registry_delete(device);
+	ret = libnvmf_registry_delete(ctx, device);
 	return (ret == -ENOENT) ? 0 : ret;
 }
 
-__libnvme_public int libnvmf_registry_retrieve(const char *device,
+__libnvme_public int libnvmf_registry_retrieve(struct libnvme_global_ctx *ctx,
+					       const char *device,
 					       const char *attr, char **value)
 {
 	__cleanup_free char *path = NULL;
 	int fd, ret;
 
+	if (!ctx)
+		return -EINVAL;
 	if (!device || !attr || !value)
 		return -EINVAL;
 	if (!valid_device(device))
@@ -401,14 +406,18 @@ __libnvme_public int libnvmf_registry_retrieve(const char *device,
 	return ret;
 }
 
-__libnvme_public int libnvmf_registry_attr_equal(const char *device,
+__libnvme_public int libnvmf_registry_attr_equal(struct libnvme_global_ctx *ctx,
+						 const char *device,
 						 const char *attr,
 						 const char *value)
 {
 	char *stored = NULL;
 	int rc;
 
-	rc = libnvmf_registry_retrieve(device, attr, &stored);
+	if (!ctx)
+		return -EINVAL;
+
+	rc = libnvmf_registry_retrieve(ctx, device, attr, &stored);
 	if (rc < 0 && rc != -ENOENT)
 		return rc;
 	if (!stored)
@@ -419,22 +428,28 @@ __libnvme_public int libnvmf_registry_attr_equal(const char *device,
 	return rc;
 }
 
-__libnvme_public int libnvmf_registry_update(const char *device,
+__libnvme_public int libnvmf_registry_update(struct libnvme_global_ctx *ctx,
+					     const char *device,
 					     const char *attr, const char *value)
 {
+	if (!ctx)
+		return -EINVAL;
 	if (!device || !valid_device(device))
 		return -EINVAL;
 
 	return write_device_attr(device, attr, value);
 }
 
-__libnvme_public int libnvmf_registry_delete(const char *device)
+__libnvme_public int libnvmf_registry_delete(struct libnvme_global_ctx *ctx,
+					     const char *device)
 {
 	__cleanup_free char *path = NULL;
 	struct dirent *de;
 	int dir_fd, ret = 0;
 	DIR *d;
 
+	if (!ctx)
+		return -EINVAL;
 	if (!device || !valid_device(device))
 		return -EINVAL;
 
@@ -464,6 +479,7 @@ __libnvme_public int libnvmf_registry_delete(const char *device)
 }
 
 __libnvme_public int libnvmf_registry_device_for_each(
+		struct libnvme_global_ctx *ctx,
 		void (*callback)(const char *device, void *user_data),
 		void *user_data)
 {
@@ -471,6 +487,8 @@ __libnvme_public int libnvmf_registry_device_for_each(
 	struct dirent *de;
 	DIR *d;
 
+	if (!ctx)
+		return -EINVAL;
 	if (!callback)
 		return -EINVAL;
 
@@ -516,6 +534,7 @@ __libnvme_public int libnvmf_registry_device_for_each(
 }
 
 __libnvme_public int libnvmf_registry_attr_for_each(
+		struct libnvme_global_ctx *ctx,
 		const char *device,
 		void (*callback)(const char *attr, const char *value,
 				 void *user_data),
@@ -526,6 +545,8 @@ __libnvme_public int libnvmf_registry_attr_for_each(
 	int dir_fd;
 	DIR *d;
 
+	if (!ctx)
+		return -EINVAL;
 	if (!device || !callback)
 		return -EINVAL;
 	if (!valid_device(device))
