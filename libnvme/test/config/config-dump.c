@@ -18,9 +18,10 @@ static bool config_dump(const char *file)
 	bool pass = false;
 	int err;
 
-	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return false;
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err < 0 && err != -ENOENT)

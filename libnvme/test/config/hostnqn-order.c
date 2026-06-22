@@ -18,9 +18,10 @@ static bool command_line(void)
 	int err;
 	char *hostnqn, *hostid, *hnqn, *hid;
 
-	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return false;
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err && err != ENOENT)
@@ -62,9 +63,10 @@ static bool json_config(char *file)
 	setenv("LIBNVME_HOSTNQN", "", 1);
 	setenv("LIBNVME_HOSTID", "", 1);
 
-	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return false;
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
 	/* We need to read the config in before we scan */
 	err = libnvme_read_config(ctx, file);
@@ -114,9 +116,10 @@ static bool from_file(void)
 	setenv("LIBNVME_HOSTNQN", hostnqn, 1);
 	setenv("LIBNVME_HOSTID", hostid, 1);
 
-	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return false;
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err && err != ENOENT)

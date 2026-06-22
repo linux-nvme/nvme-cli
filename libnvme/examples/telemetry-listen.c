@@ -140,9 +140,10 @@ int main()
 	libnvme_ctrl_t c;
 	libnvme_host_t h;
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return 1;
+	libnvme_set_logging_file(ctx, stdout);
 
 	if (libnvme_scan_topology(ctx, NULL, NULL)) {
 		libnvme_free_global_ctx(ctx);

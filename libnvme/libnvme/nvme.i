@@ -1036,9 +1036,11 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 	libnvme_global_ctx(const char *owner = NULL, const char *config_file = NULL) {
 		struct libnvme_global_ctx *ctx;
 
-		ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+		ctx = libnvme_create_global_ctx();
 		if (!ctx)
 			return NULL;
+		libnvme_set_logging_file(ctx, stdout);
+
 		if (owner)
 			libnvme_set_owner(ctx, owner);
 
