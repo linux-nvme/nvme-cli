@@ -1400,6 +1400,20 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *acmd, struct p
 	return 0;
 }
 
+static int filter_namespace(const struct dirent *d)
+{
+	int i, n;
+
+	if (d->d_name[0] == '.')
+		return 0;
+
+	if (strstr(d->d_name, "nvme"))
+		if (sscanf(d->d_name, "nvme%dn%d", &i, &n) == 2)
+			return 1;
+
+	return 0;
+}
+
 static int nvme_expand_cap(struct libnvme_transport_handle *hdl, __u32 namespace_id, __u64 namespace_size,
 			   __u64 namespace_cap, __u32 lbaf, __u32 units)
 {
@@ -1422,7 +1436,7 @@ static int nvme_expand_cap(struct libnvme_transport_handle *hdl, __u32 namespace
 	else
 		strcpy(dev_name, libnvme_transport_handle_get_name(hdl));
 
-	num = scandir("/dev", &devices, libnvme_filter_namespace, alphasort);
+	num = scandir("/dev", &devices, filter_namespace, alphasort);
 	if (num <= 0) {
 		err = num;
 		goto ret;

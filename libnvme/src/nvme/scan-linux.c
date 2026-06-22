@@ -5,6 +5,7 @@
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
  * 	    Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+ *	    Daniel Wagner <dwagner@suse.de>
  */
 #include <dirent.h>
 #include <stdio.h>
@@ -15,7 +16,7 @@
 #include "private.h"
 #include "compiler-attributes.h"
 
-__libnvme_public int libnvme_filter_namespace(const struct dirent *d)
+static int filter_namespace(const struct dirent *d)
 {
 	int i, n;
 
@@ -29,7 +30,7 @@ __libnvme_public int libnvme_filter_namespace(const struct dirent *d)
 	return 0;
 }
 
-__libnvme_public int libnvme_filter_paths(const struct dirent *d)
+static int filter_paths(const struct dirent *d)
 {
 	int i, c, n;
 
@@ -43,7 +44,7 @@ __libnvme_public int libnvme_filter_paths(const struct dirent *d)
 	return 0;
 }
 
-__libnvme_public int libnvme_filter_ctrls(const struct dirent *d)
+static int filter_ctrls(const struct dirent *d)
 {
 	int i, c, n;
 
@@ -62,7 +63,7 @@ __libnvme_public int libnvme_filter_ctrls(const struct dirent *d)
 	return 0;
 }
 
-__libnvme_public int libnvme_filter_subsys(const struct dirent *d)
+static int filter_subsys(const struct dirent *d)
 {
 	int i;
 
@@ -76,12 +77,13 @@ __libnvme_public int libnvme_filter_subsys(const struct dirent *d)
 	return 0;
 }
 
-__libnvme_public int libnvme_scan_subsystems(struct dirent ***subsys)
+__libnvme_public int libnvme_scan_subsystems(struct libnvme_global_ctx *ctx,
+		struct dirent ***subsys)
 {
 	const char *dir = libnvme_subsys_sysfs_dir();
 	int ret;
 
-	ret = scandir(dir, subsys, libnvme_filter_subsys, alphasort);
+	ret = scandir(dir, subsys, filter_subsys, alphasort);
 	if (ret < 0)
 		return -errno;
 
@@ -94,19 +96,20 @@ __libnvme_public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
 	int ret;
 
 	ret = scandir(libnvme_subsystem_get_sysfs_dir(s), ns,
-		       libnvme_filter_namespace, alphasort);
+		       filter_namespace, alphasort);
 	if (ret < 0)
 		return -errno;
 
 	return ret;
 }
 
-__libnvme_public int libnvme_scan_ctrls(struct dirent ***ctrls)
+__libnvme_public int libnvme_scan_ctrls(struct libnvme_global_ctx *ctx,
+		struct dirent ***ctrls)
 {
 	const char *dir = libnvme_ctrl_sysfs_dir();
 	int ret;
 
-	ret = scandir(dir, ctrls, libnvme_filter_ctrls, alphasort);
+	ret = scandir(dir, ctrls, filter_ctrls, alphasort);
 	if (ret < 0)
 		return -errno;
 
@@ -119,7 +122,7 @@ __libnvme_public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
 	int ret;
 
 	ret = scandir(libnvme_ctrl_get_sysfs_dir(c), paths,
-		       libnvme_filter_paths, alphasort);
+		       filter_paths, alphasort);
 	if (ret < 0)
 		return -errno;
 
@@ -132,7 +135,7 @@ __libnvme_public int libnvme_scan_ctrl_namespaces(
 	int ret;
 
 	ret = scandir(libnvme_ctrl_get_sysfs_dir(c), ns,
-		       libnvme_filter_namespace, alphasort);
+		       filter_namespace, alphasort);
 	if (ret < 0)
 		return -errno;
 
@@ -145,7 +148,7 @@ __libnvme_public int libnvme_scan_ns_head_paths(libnvme_ns_head_t head,
 	int ret;
 
 	ret = scandir(libnvme_ns_head_get_sysfs_dir(head), paths,
-		       libnvme_filter_paths, alphasort);
+		       filter_paths, alphasort);
 	if (ret < 0)
 		return -errno;
 

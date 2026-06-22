@@ -293,6 +293,20 @@ static void huawei_print_list_items(struct huawei_list_item *list_items, unsigne
 		huawei_print_list_item(&list_items[i], element_len);
 }
 
+static int filter_namespace(const struct dirent *d)
+{
+	int i, n;
+
+	if (d->d_name[0] == '.')
+		return 0;
+
+	if (strstr(d->d_name, "nvme"))
+		if (sscanf(d->d_name, "nvme%dn%d", &i, &n) == 2)
+			return 1;
+
+	return 0;
+}
+
 static int huawei_list(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
@@ -319,7 +333,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 	if (ret < 0 || (fmt != JSON && fmt != NORMAL))
 		return ret;
 
-	n = scandir("/dev", &devices, libnvme_filter_namespace, alphasort);
+	n = scandir("/dev", &devices, filter_namespace, alphasort);
 	if (n <= 0)
 		return n;
 

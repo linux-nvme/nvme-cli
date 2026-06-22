@@ -140,7 +140,7 @@ static int libnvme_ctrl_lookup_subsystem_name(struct libnvme_global_ctx *ctx,
 	__cleanup_dirents struct dirents subsys = {};
 	int i;
 
-	subsys.num = libnvme_scan_subsystems(&subsys.ents);
+	subsys.num = libnvme_scan_subsystems(ctx, &subsys.ents);
 	if (subsys.num < 0)
 		return subsys.num;
 

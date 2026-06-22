@@ -18,19 +18,19 @@ sources = [
 ]
 if host_system == 'windows'
     sources += [
-        'nvme/filters-win.c',
         'nvme/ioctl-win.c',
         'nvme/lib-win.c',
         'nvme/mem-win.c',
+        'nvme/scan-win.c',
         'nvme/tree-win.c',
     ]
 else
     sources += [
-        'nvme/filters-linux.c',
         'nvme/ioctl-linux.c',
         'nvme/lib-linux.c',
         'nvme/linux.c',
         'nvme/mem-linux.c',
+        'nvme/scan-linux.c',
         'nvme/sysfs.c',
         'nvme/tree-linux.c',
     ]
@@ -38,7 +38,6 @@ endif
 headers = [
     'nvme/accessors.h',
     'nvme/endian.h',
-    'nvme/filters.h',
     'nvme/ioctl.h',
     'nvme/lib-types.h',
     'nvme/lib.h',
@@ -56,6 +55,7 @@ headers = [
     'nvme/nvme-types-nvm.h',
     'nvme/nvme-types-zns.h',
     'nvme/nvme-types.h',
+    'nvme/scan.h',
     'nvme/tree.h',
     'nvme/types.h',
     'nvme/util.h',
