@@ -10,7 +10,6 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'id-iocs' <device>
 			[--controller-id=<cntid> | -c <cntid>]
-			[--human-readable | -H]
 
 DESCRIPTION
 -----------
@@ -26,11 +25,6 @@ OPTIONS
 --controller-id=<cntid>::
 	Retrieve the identify I/O Command set data structure for the given
 	cntid. If this value is not given, cntid will be 0xffff.
-
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
 
 include::global-options.txt[]
 

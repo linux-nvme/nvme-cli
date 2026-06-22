@@ -15,7 +15,6 @@ SYNOPSIS
 			[--cc] [--csts] [--nssr] [--aqa] [--asq] [--acq]
 			[--bprsel] [--bpmbl] [--cmbmsc] [--nssd] [--pmrctl]
 			[--pmrmscl] [--pmrmscu]
-			[--human-readable | -H]
 
 DESCRIPTION
 -----------
@@ -113,11 +112,6 @@ OPTIONS
 
 --pmrmscu::
 	PMRMSCU=0xe18 register offset
-
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
 
 include::global-options.txt[]
 

@@ -504,11 +504,12 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char *filename)
 	libnvmf_free_nbft(ctx, nbft);
 	return output;
 }
-void registry_update(const char *device, const char *attr, const char *value)
+void registry_update(struct libnvme_global_ctx *ctx,
+		     const char *device, const char *attr, const char *value)
 {
 	int ret;
 
-	ret = libnvmf_registry_update(device, attr, value);
+	ret = libnvmf_registry_update(ctx, device, attr, value);
 	if (ret == -EINVAL)
 		PyErr_SetString(PyExc_ValueError,
 				"invalid device or attribute name");
@@ -517,11 +518,11 @@ void registry_update(const char *device, const char *attr, const char *value)
 			     "registry_update failed: %s", strerror(-ret));
 }
 
-void registry_delete(const char *device)
+void registry_delete(struct libnvme_global_ctx *ctx, const char *device)
 {
 	int ret;
 
-	ret = libnvmf_registry_delete(device);
+	ret = libnvmf_registry_delete(ctx, device);
 	if (ret == -EINVAL)
 		PyErr_SetString(PyExc_ValueError, "invalid device name");
 	else if (ret == -ENOENT)
@@ -533,13 +534,14 @@ void registry_delete(const char *device)
 			     device, strerror(-ret));
 }
 
-PyObject *registry_retrieve(const char *device, const char *attr)
+PyObject *registry_retrieve(struct libnvme_global_ctx *ctx,
+			    const char *device, const char *attr)
 {
 	char *value = NULL;
 	PyObject *str;
 	int ret;
 
-	ret = libnvmf_registry_retrieve(device, attr, &value);
+	ret = libnvmf_registry_retrieve(ctx, device, attr, &value);
 	if (ret == -ENOENT)
 		Py_RETURN_NONE;
 	if (ret == -EINVAL) {
@@ -567,14 +569,14 @@ static void _registry_collect_device(const char *device, void *user_data)
 	}
 }
 
-PyObject *registry_devices(void)
+PyObject *registry_devices(struct libnvme_global_ctx *ctx)
 {
 	PyObject *list = PyList_New(0);
 	int ret;
 
 	if (!list)
 		return NULL;
-	ret = libnvmf_registry_device_for_each(_registry_collect_device, list);
+	ret = libnvmf_registry_device_for_each(ctx, _registry_collect_device, list);
 	if (ret < 0) {
 		Py_DECREF(list);
 		PyErr_Format(PyExc_OSError,
@@ -599,15 +601,16 @@ static void _registry_collect_attr(const char *attr, const char *value,
 	}
 }
 
-PyObject *registry_device_attrs(const char *device)
+PyObject *registry_device_attrs(struct libnvme_global_ctx *ctx,
+				const char *device)
 {
 	PyObject *dict = PyDict_New();
 	int ret;
 
 	if (!dict)
 		return NULL;
-	ret = libnvmf_registry_attr_for_each(device, _registry_collect_attr,
-					     dict);
+	ret = libnvmf_registry_attr_for_each(ctx, device,
+					     _registry_collect_attr, dict);
 	if (ret == -EINVAL) {
 		Py_DECREF(dict);
 		PyErr_SetString(PyExc_ValueError, "invalid device name");
@@ -675,19 +678,21 @@ from libnvme._exceptions import (
 	NotConnectedError,
 )
 
-def registry_entries():
+def registry_entries(ctx):
 	"""Yield (device, attrs) for each live registry entry.
 
 	Wraps the C registry iterators: registry_devices() applies the /dev
 	stale-entry check and registry_device_attrs() reads each entry's
 	attributes -- all file access happens in libnvme.
 
+	ctx: nvme.GlobalCtx instance
+
 	Yields:
 		tuple: (device, attrs) where device is the kernel device name
 		(e.g. 'nvme3') and attrs is a dict of attribute name to value.
 	"""
-	for device in registry_devices():
-		yield device, registry_device_attrs(device)
+	for device in registry_devices(ctx):
+		yield device, registry_device_attrs(ctx, device)
 %}
 
 /*############################################################################*/
@@ -964,27 +969,35 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char *filename);
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
 }
-void registry_update(const char *device, const char *attr, const char *value);
+void registry_update(struct libnvme_global_ctx *ctx,
+		     const char *device, const char *attr, const char *value);
+
 %exception registry_delete {
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
 }
-void registry_delete(const char *device);
+void registry_delete(struct libnvme_global_ctx *ctx,
+		     const char *device);
+
 %exception registry_retrieve {
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
 }
-PyObject *registry_retrieve(const char *device, const char *attr);
+PyObject *registry_retrieve(struct libnvme_global_ctx *ctx,
+			    const char *device, const char *attr);
+
 %exception registry_devices {
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
 }
-PyObject *registry_devices(void);
+PyObject *registry_devices(struct libnvme_global_ctx *ctx);
+
 %exception registry_device_attrs {
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
 }
-PyObject *registry_device_attrs(const char *device);
+PyObject *registry_device_attrs(struct libnvme_global_ctx *ctx,
+				const char *device);
 
 %rename(_libnvme_first_host)        libnvme_first_host;
 %rename(_libnvme_next_host)         libnvme_next_host;

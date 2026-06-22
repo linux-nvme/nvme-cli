@@ -13,11 +13,8 @@ SYNOPSIS
 			[--feature-id=<fid> | -f <fid>]
 			[--uuid-index=<uuid-index> | -U <uuid_index>]
 			[--data-len=<data-len> | -l <data-len>]
-			[--sel=<select> | -s <select>]
-			[--raw-binary | -b]
-			[--cdw11=<cdw11> | -c <cdw11>]
-			[--human-readable | -H]
-			[--changed | -C]
+			[--sel=<select> | -s <select>] [--raw-binary | -b]
+			[--cdw11=<cdw11> | -c <cdw11>] [--changed | -C]
 
 DESCRIPTION
 -----------
@@ -128,11 +125,6 @@ OPTIONS
 --raw-binary::
 	Print the raw feature buffer to stdout if the feature returns
 	a structure.
-
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
 
 -C::
 --changed::

@@ -150,7 +150,7 @@ if want_fabrics
         '-Wl,--version-script=@0@'.format(nvmf_accessors_ld),
     ]
     libconf.set('FABRICS_INCLUDE',
-                '#include <nvme/fabrics.h>\n#include <nvme/nbft.h>\n#include <nvme/accessors-fabrics.h>\n#include <nvme/registry.h>')
+                fs.read('fabrics-includes.h.in').strip())
 else
     libconf.set('FABRICS_INCLUDE', '')
 endif

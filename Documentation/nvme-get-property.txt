@@ -11,7 +11,6 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'get-property' <device>
 			[--offset=<offset> | -O <offset>]
-			[--human-readable | -H]
 
 DESCRIPTION
 -----------
@@ -23,11 +22,6 @@ OPTIONS
 --offset=<offset>::
 	The offset of the property. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20
 
--H::
---human-readable::
-	Display values in a human-readable format where possible.
-	(deprecated, use --verbose)
-
 include::global-options.txt[]
 
 EXAMPLES
@@ -35,7 +29,7 @@ EXAMPLES
 * The following will run the get-property command with offset 0
 +
 ------------
-# nvme get-property /dev/nvme0 --offset=0x0 --human-readable
+# nvme get-property /dev/nvme0 --offset=0x0 --verbose
 ------------
 
 BUGS
