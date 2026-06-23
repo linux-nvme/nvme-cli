@@ -92,3 +92,12 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
  */
 int micron_clear_pcie_aer_correctable_errors(
 		struct libnvme_transport_handle *hdl);
+
+/**
+ * micron_write_os_config_to_file() - Dump OS configuration to a file
+ * @file_name:	Path of the output file
+ *
+ * Writes platform-appropriate system configuration details (kernel version,
+ * modules, memory, interrupts, CPU info, dmesg, etc.) to the specified file.
+ */
+void micron_write_os_config_to_file(const char *file_name);
