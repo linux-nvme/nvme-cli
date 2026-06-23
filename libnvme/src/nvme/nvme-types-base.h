@@ -6563,7 +6563,6 @@ struct nvme_pull_model_ddc_req_log {
  *				      Maximum Time for Firmware Activation
  *				      (MTFA) value reported in Identify
  *				      Controller.
- * @NVME_SC_EXCEEDS_MAX_NS_SANITIZE:  Exceeds Max NS Sanitize Operations
  * @NVME_SC_FW_ACTIVATE_PROHIBITED:   Firmware Activation Prohibited: The image
  *				      specified is being prohibited from
  *				      activation by the controller for vendor
@@ -6669,6 +6668,7 @@ struct nvme_pull_model_ddc_req_log {
  *				      suspended.
  * @NVME_SC_CONTROLLER_DATA_QUEUE_FULL: The controller detected that a
  *				      Controller Data Queue became full.
+ * @NVME_SC_EXCEEDS_MAX_NS_SANITIZE:  Exceeds Max NS Sanitize Operations
  * @NVME_SC_INVALID_POWER_LIMIT:      Invalid Power Limit: The power limit
  *				      specified for the Power Limit feature is
  *				      invalid because that power limit prohibits
@@ -6898,7 +6898,6 @@ enum nvme_status_field {
 	NVME_SC_FW_NEEDS_SUBSYS_RESET		= 0x10,
 	NVME_SC_FW_NEEDS_RESET			= 0x11,
 	NVME_SC_FW_NEEDS_MAX_TIME		= 0x12,
-	NVME_SC_EXCEEDS_MAX_NS_SANITIZE		= 0x12,
 	NVME_SC_FW_ACTIVATE_PROHIBITED		= 0x13,
 	NVME_SC_OVERLAPPING_RANGE		= 0x14,
 	NVME_SC_NS_INSUFFICIENT_CAP		= 0x15,
@@ -6949,6 +6948,11 @@ enum nvme_status_field {
 	NVME_SC_CONTROLLER_SUSPENDED		= 0x39,
 	NVME_SC_CONTROLLER_NOT_SUSPENDED	= 0x3A,
 	NVME_SC_CONTROLLER_DATA_QUEUE_FULL	= 0x3B,
+
+	/*
+	 * Command Set Specific
+	 */
+	NVME_SC_EXCEEDS_MAX_NS_SANITIZE		= 0x3c,
 
 	/*
 	 * Command Set Specific - Set Features
