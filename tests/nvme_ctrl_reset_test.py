@@ -27,8 +27,6 @@ class TestNVMeCtrlReset(TestNVMe):
     def setUp(self):
         """ Pre Section for TestNVMeCtrlReset """
         super().setUp()
-        if self.is_windows():
-            self.skipTest("Controller reset not supported by Windows")
         self.setup_log_dir(self.__class__.__name__)
 
     def tearDown(self):

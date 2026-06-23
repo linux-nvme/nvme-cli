@@ -48,6 +48,7 @@ These commands are fully implemented and verified working on Windows.
 | `write` | Submit a write command, return results | |
 | `sanitize-log` | Retrieve sanitize log, show it | |
 | `ns-rescan` | Rescans the NVME namespaces | |
+| `reset` | Resets the controller | |
 | `show-topology` | Show the topology | |
 
 ### Supported on Windows but Not Supported by Current Test Device (Log Pages)
@@ -166,7 +167,6 @@ These commands are not supported by Windows NVMe drivers or are Linux-specific.
 
 | Command | Description |
 |---------|-------------|
-| `reset` | Resets the controller |
 | `subsystem-reset` | Resets the subsystem |
 | `lockdown` | Submit a Lockdown command, return result |
 | `virt-mgmt` | Manage Flexible Resources between Primary and Secondary Controller |
