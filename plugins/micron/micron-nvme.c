@@ -37,6 +37,7 @@
 
 #define CREATE_CMD
 #include "micron-nvme.h"
+#include "micron-utils.h"
 
 /* Supported Vendor specific feature ids */
 #define MICRON_FEATURE_CLEAR_PCI_CORRECTABLE_ERRORS    0xC3
@@ -89,10 +90,6 @@ enum eDriveModel {
 
 #define MICRON_VENDOR_ID 0x1344
 
-static char *fvendorid1 = "/sys/class/nvme/nvme%d/device/vendor";
-static char *fvendorid2 = "/sys/class/misc/nvme%d/device/vendor";
-static char *fdeviceid1 = "/sys/class/nvme/nvme%d/device/device";
-static char *fdeviceid2 = "/sys/class/misc/nvme%d/device/device";
 static unsigned short vendor_id;
 static unsigned short device_id;
 
@@ -130,42 +127,14 @@ static void WriteData(__u8 *data, __u32 len, const char *dir, const char *file, 
 	}
 }
 
-static int ReadSysFile(const char *file, unsigned short *id)
-{
-	int ret = 0;
-	char idstr[32] = { '\0' };
-	int fd = open(file, O_RDONLY);
-
-	if (fd < 0) {
-		perror(file);
-		return fd;
-	}
-
-	ret = read(fd, idstr, sizeof(idstr));
-	close(fd);
-	if (ret < 0)
-		perror("read");
-	else
-		*id = strtol(idstr, NULL, 16);
-
-	return ret;
-}
-
-static enum eDriveModel GetDriveModel(int idx)
+static enum eDriveModel GetDriveModel(
+	struct libnvme_global_ctx *ctx,
+	struct libnvme_transport_handle *hdl)
 {
 	enum eDriveModel eModel = UNKNOWN_MODEL;
-	char path[512];
 
-	sprintf(path, fvendorid1, idx);
-	if (ReadSysFile(path, &vendor_id) < 0) {
-		sprintf(path, fvendorid2, idx);
-		ReadSysFile(path, &vendor_id);
-	}
-	sprintf(path, fdeviceid1, idx);
-	if (ReadSysFile(path, &device_id) < 0) {
-		sprintf(path, fdeviceid2, idx);
-		ReadSysFile(path, &device_id);
-	}
+	micron_get_pci_ids(ctx, hdl, &vendor_id, &device_id);
+
 	if (vendor_id == MICRON_VENDOR_ID) {
 		switch (device_id) {
 		case 0x5196:
@@ -515,7 +484,6 @@ static int GetCommonLogPage(struct libnvme_transport_handle *hdl, unsigned char 
 	pTempPtr = (unsigned char *)libnvme_alloc(nBuffSize);
 	if (!pTempPtr)
 		goto exit_status;
-	memset(pTempPtr, 0, nBuffSize);
 	err = nvme_get_log_simple(hdl, ucLogID, pTempPtr, nBuffSize);
 	*pBuffer = pTempPtr;
 
@@ -532,7 +500,6 @@ static int micron_parse_options(struct libnvme_global_ctx **ctx,
 				struct argconfig_commandline_options *opts,
 				enum eDriveModel *modelp)
 {
-	int idx;
 	int err = parse_and_open(ctx, hdl, argc, argv, desc, opts);
 
 	if (err) {
@@ -540,11 +507,8 @@ static int micron_parse_options(struct libnvme_global_ctx **ctx,
 		return -1;
 	}
 
-	if (modelp) {
-		if (sscanf(argv[optind], "/dev/nvme%d", &idx) != 1)
-			idx = 0;
-		*modelp = GetDriveModel(idx);
-	}
+	if (modelp)
+		*modelp = GetDriveModel(*ctx, *hdl);
 
 	return 0;
 }
@@ -905,7 +869,7 @@ struct {
 static int micron_pcie_stats(int argc, char **argv,
 				 struct command *command, struct plugin *plugin)
 {
-	int  i, err = 0, bus = 0, domain = 0, device = 0, function = 0, ctrlIdx;
+	int  i, err = 0, bus = 0, domain = 0, device = 0, function = 0;
 	char strTempFile[1024], strTempFile2[1024], cmdbuf[1024];
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -950,9 +914,7 @@ static int micron_pcie_stats(int argc, char **argv,
 	}
 
 	/* pull log details based on the model name */
-	if (sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx) != 1)
-		ctrlIdx = 0;
-	eModel = GetDriveModel(ctrlIdx);
+	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
 		printf("Unsupported drive model for vs-pcie-stats command\n");
 		goto out;
@@ -1809,7 +1771,7 @@ static int micron_nand_stats(int argc, char **argv,
 	struct nvme_id_ctrl ctrl;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	int err, ctrlIdx;
+	int err;
 	__u8 nsze;
 	bool has_d0_log = true;
 	bool has_fb_log = false;
@@ -1836,9 +1798,7 @@ static int micron_nand_stats(int argc, char **argv,
 		is_json = false;
 
 	/* pull log details based on the model name */
-	if (sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx) != 1)
-		ctrlIdx = 0;
-	eModel = GetDriveModel(ctrlIdx);
+	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
 		printf("Unsupported drive model for vs-nand-stats command\n");
 		return -1;
@@ -1945,7 +1905,7 @@ static int micron_smart_ext_log(int argc, char **argv,
 	const char *desc = "Retrieve extended SMART logs for the given device ";
 	unsigned int extSmartLog[E1_log_size/sizeof(int)] = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
-	int err = 0, ctrlIdx = 0;
+	int err = 0;
 	__u8 log_id;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -1968,9 +1928,7 @@ static int micron_smart_ext_log(int argc, char **argv,
 	if (!strcmp(cfg.fmt, "normal"))
 		is_json = false;
 
-	if (sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx) != 1)
-		ctrlIdx = 0;
-	eModel = GetDriveModel(ctrlIdx);
+	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == M51CX || eModel == M51BY || eModel == M51CY || eModel == M6003 ||
 								eModel == M6004) {
 		log_id = 0xE1;
@@ -1999,7 +1957,7 @@ static int micron_work_load_log(int argc, char **argv, struct command *acmd, str
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
-	int err = 0, ctrlIdx = 0;
+	int err = 0;
 	bool is_json = true;
 	struct format {
 		char *fmt;
@@ -2019,10 +1977,7 @@ static int micron_work_load_log(int argc, char **argv, struct command *acmd, str
 	if (strcmp(cfg.fmt, "normal") == 0)
 		is_json = false;
 
-	err = sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
-	if (err)
-		ctrlIdx = 0;
-	eModel = GetDriveModel(ctrlIdx);
+	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == M6001 || eModel == M6004 || eModel == M6003) {
 		err =  nvme_get_log_simple(hdl, 0xC5,
 		micronWorkLoadLog, C5_MicronWorkLoad_log_size);
@@ -2046,7 +2001,7 @@ static int micron_vendor_telemetry_log(int argc, char **argv,
 	const char *desc = "Retrieve Vendor Telemetry logs for the given device ";
 	unsigned int vendorTelemetryLog[C6_log_size/sizeof(int)] = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
-	int err = 0, ctrlIdx = 0;
+	int err = 0;
 	bool is_json = true;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -2069,11 +2024,7 @@ static int micron_vendor_telemetry_log(int argc, char **argv,
 	if (strcmp(cfg.fmt, "normal") == 0)
 		is_json = false;
 
-	err = sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx);
-	if (err)
-		ctrlIdx = 0;
-
-	eModel = GetDriveModel(ctrlIdx);
+	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == M6001 || eModel == M6004 || eModel == M6003) {
 		err =  nvme_get_log_simple(hdl, 0xC6, vendorTelemetryLog, C6_log_size);
 		if (!err)
@@ -3689,13 +3640,14 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	}
 
 	/* pull log details based on the model name */
-	if (sscanf(argv[optind], "/dev/nvme%d", &ctrlIdx) != 1)
-		ctrlIdx = 0;
-	eModel = GetDriveModel(ctrlIdx);
+	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
 		printf("Unsupported drive model for vs-internal-log collection\n");
 		goto out;
 	}
+
+	if (sscanf(libnvme_transport_handle_get_name(hdl), "nvme%d", &ctrlIdx) != 1)
+		ctrlIdx = 0;
 
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err)
