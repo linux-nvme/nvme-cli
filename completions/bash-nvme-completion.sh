@@ -405,7 +405,7 @@ nvme_list_opts () {
 			--nr-io-queues= -i --nr-write-queues= -W \
 			--nr-poll-queues= -P --queue-size= -Q \
 			--persistent -p --quiet \
-			--output-format= -o"
+			--owner= --output-format= -o"
 			;;
 		"connect-all")
 		opts+=" --transport= -t -traddr= -a -trsvcid= -s \
@@ -417,7 +417,7 @@ nvme_list_opts () {
 			--nr-io-queues= -i --nr-write-queues= -W \
 			--nr-poll-queues= -P --queue-size= -Q \
 			--persistent -p --quiet \
-			--output-format= -o"
+			--owner= --output-format= -o"
 			;;
 		"connect")
 		opts+=" --transport= -t --nqn= -n --traddr= -a --trsvcid -s \
@@ -426,7 +426,8 @@ nvme_list_opts () {
 			--keep-alive-tmo= -k --reconnect-delay= -r \
 			--ctrl-loss-tmo= -l --fast-io-fail-tmo= -f \
 			--tos= -T --duplicate-connect -D --disable-sqflow \
-			--hdr-digest -g --data-digest -G --output-format= -o"
+			--hdr-digest -g --data-digest -G --owner= \
+			--output-format= -o"
 			;;
 		"dim")
 		opts+=" --task -t --nqn -n --device -d"

@@ -779,7 +779,6 @@ static int ilog_dump_pel(struct libnvme_transport_handle *hdl, struct ilog *ilog
 	__cleanup_libnvme_free struct nvme_persistent_event_log *pevent = NULL;
 	__cleanup_huge struct libnvme_mem_huge mh = {0};
 	void *pevent_log_full;
-	size_t max_data_tx;
 	struct log lp = {
 		NVME_LOG_LID_PERSISTENT_EVENT,
 		nvme_log_to_string(NVME_LOG_LID_PERSISTENT_EVENT)
@@ -802,20 +801,12 @@ static int ilog_dump_pel(struct libnvme_transport_handle *hdl, struct ilog *ilog
 		return err;
 
 	lp.buffer_size = le64_to_cpu(pevent->tll);
-
 	pevent_log_full = libnvme_alloc_huge(lp.buffer_size, &mh);
 	if (!pevent_log_full)
 		return -ENOMEM;
 
 	err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_READ,
 						pevent_log_full, lp.buffer_size);
-	max_data_tx = (1 << ilog->id_ctrl.mdts) * NVME_LOG_PAGE_PDU_SIZE;
-	do {
-		err = nvme_get_log_persistent_event(hdl, NVME_PEVENT_LOG_READ,
-			pevent_log_full, lp.buffer_size);
-		max_data_tx /= 2;
-	} while (err == -EPERM && max_data_tx >= NVME_LOG_PAGE_PDU_SIZE);
-
 	if (err)
 		return err;
 

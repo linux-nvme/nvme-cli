@@ -2227,6 +2227,7 @@ _nvme () {
 			--nbft':Only look at NBFT tables'
 			--no-nbft':Do not look at NBFT tables'
 			--nbft-patch=':user-defined path for NBFT tables'
+			--owner=':record this owner in the registry'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme discover options" _discover
@@ -2297,6 +2298,7 @@ _nvme () {
 			--nbft':Only look at NBFT tables'
 			--no-nbft':Do not look at NBFT tables'
 			--nbft-patch=':user-defined path for NBFT tables'
+			--owner=':record this owner in the registry'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme connect-all options" _connect_all
@@ -2358,6 +2360,7 @@ _nvme () {
 			-O':alias for --dump-config'
 			--output-format=':Output format: normal|json'
 			-o':alias for --output-format'
+			--owner=':record this owner in the registry'
 			)
 			_arguments '*:: :->subcmds'
 			_describe -t commands "nvme connect options" _connect
@@ -2394,7 +2397,7 @@ _nvme () {
 			local _disconnect_all
 			_disconnect_all=(
 			--transport=':transport type'
-			-r':alias for --transport'
+			-t':alias for --transport'
 			--verbose':Increase logging verbosity'
 			-v':alias for --verbose'
 			)

@@ -143,6 +143,41 @@ out:
 	return pass;
 }
 
+static bool test_special_chars(struct libnvme_global_ctx *ctx)
+{
+	/*
+	 * Attribute values are free-form text -- only device and attribute
+	 * names are validated, never the value.  Verify a value with spaces,
+	 * double quotes, an apostrophe and punctuation round-trips
+	 * byte-for-byte.
+	 */
+	const char *special = "ACME Corp \"prod\" team's box !@#%";
+	char *value = NULL;
+	bool pass = true;
+	int ret;
+
+	printf("test_special_chars:\n");
+
+	ret = libnvmf_registry_update(ctx, "nvme5", "owner", special);
+	if (ret) {
+		printf(" - update returned %d [FAIL]\n", ret);
+		return false;
+	}
+
+	ret = libnvmf_registry_retrieve(ctx, "nvme5", "owner", &value);
+	if (ret || !value || strcmp(value, special) != 0) {
+		printf(" - expected '%s', got '%s' ret=%d [FAIL]\n",
+		       special, value ? value : "(null)", ret);
+		pass = false;
+	} else {
+		printf(" - round-trip '%s' [PASS]\n", value);
+	}
+
+	free(value);
+	libnvmf_registry_delete(ctx, "nvme5");
+	return pass;
+}
+
 static bool test_delete(struct libnvme_global_ctx *ctx)
 {
 	char *value = NULL;
@@ -448,6 +483,7 @@ int main(int argc, char *argv[])
 
 	pass &= test_create(ctx);
 	pass &= test_update_and_retrieve(ctx);
+	pass &= test_special_chars(ctx);
 	pass &= test_delete(ctx);
 	pass &= test_retrieve_missing(ctx);
 	pass &= test_device_for_each(ctx);

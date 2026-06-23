@@ -333,34 +333,28 @@ static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
 
 	memcpy(&fa, hfd->fa, sizeof(fa));
-next:
-	if (fgets(line, sizeof(line), hfd->f) == NULL)
-		return -EOF;
+	do {
+		if (fgets(line, sizeof(line), hfd->f) == NULL)
+			return -EOF;
 
-	if (line[0] == '#' || line[0] == '\n')
-		goto next;
+		if (line[0] == '#' || line[0] == '\n')
+			continue;
 
-	argc = 1;
-	p = line;
-	while ((ptr = strsep(&p, " =\n")) != NULL)
-		hfd->argv[argc++] = ptr;
-	hfd->argv[argc] = NULL;
+		argc = 1;
+		p = line;
+		while ((ptr = strsep(&p, " =\n")) != NULL)
+			hfd->argv[argc++] = ptr;
+		hfd->argv[argc] = NULL;
 
-	fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
-	ret = argconfig_parse(argc, hfd->argv, "config", opts);
-	if (ret)
-		goto next;
-	if (!fa.transport && !fa.traddr)
-		goto next;
+		fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
+		if (argconfig_parse(argc, hfd->argv, "config", opts))
+			continue;
+	} while (!fa.transport && !fa.traddr);
 
 	if (!fa.trsvcid)
 		fa.trsvcid = libnvmf_get_default_trsvcid(fa.transport, true);
 
 	ret = setup_common_context(fctx, &fa);
-	if (ret)
-		return ret;
-
-	ret = set_fabrics_options(fctx, &fa);
 	if (ret)
 		return ret;
 
@@ -394,7 +388,7 @@ static int setup_common_context(struct libnvmf_context *fctx,
 	if (err)
 		return err;
 
-	return 0;
+	return set_fabrics_options(fctx, fa);
 }
 
 static int create_common_context(struct libnvme_global_ctx *ctx,
@@ -409,17 +403,7 @@ static int create_common_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		return err;
 
-	err = libnvmf_context_set_connection(fctx, fa->subsysnqn,
-		fa->transport, fa->traddr, fa->trsvcid,
-		fa->host_traddr, fa->host_iface);
-	if (err)
-		goto err;
-
-	err = libnvmf_context_set_hostnqn(fctx, fa->hostnqn, fa->hostid);
-	if (err)
-		goto err;
-
-	err = set_fabrics_options(fctx, fa);
+	err = setup_common_context(fctx, fa);
 	if (err)
 		goto err;
 
@@ -575,6 +559,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	bool json_config = false;
 	bool nbft = false, nonbft = false;
 	char *nbft_path = NBFT_SYSFS_PATH;
+	char *owner = NULL;
 
 	NVMF_ARGS(opts, fa,
 		  OPT_STRING("device",     'd', "DEV", &device,       "use existing discovery controller device"),
@@ -586,6 +571,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		  OPT_FLAG("force",          0, &force,               "Force persistent discovery controller creation"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
 		  OPT_FLAG("no-nbft",        0, &nonbft,              "Do not look at NBFT tables"),
+		  OPT_STRING("owner",        0, "NAME", &owner,       "record this owner in the registry"),
 		  OPT_STRING("nbft-path",    0, "STR", &nbft_path,    "user-defined path for NBFT tables"));
 
 	nvmf_default_args(&fa);
@@ -613,8 +599,19 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 			libnvme_strerror(errno));
 		return -ENOMEM;
 	}
-	if (nbft)
-		libnvme_set_owner(ctx, "nbft");
+	/*
+	 * --nbft defaults the owner to "nbft" so legacy boot scripts that
+	 * call "connect-all --nbft" record ownership unchanged.  An explicit
+	 * --owner overrides that default.
+	 */
+	if (owner || nbft) {
+		ret = libnvme_set_owner(ctx, owner ? owner : "nbft");
+		if (ret) {
+			fprintf(stderr, "failed to set owner: %s\n",
+				libnvme_strerror(-ret));
+			return ret;
+		}
+	}
 
 	if (!nvme_read_config_checked(ctx, config_file))
 		json_config = true;
@@ -677,6 +674,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	__cleanup_free char *hnqn = NULL;
 	__cleanup_free char *hid = NULL;
 	char *config_file = NULL;
+	char *owner = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	__cleanup_nvme_ctrl libnvme_ctrl_t c = NULL;
@@ -686,6 +684,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 
 	NVMF_ARGS(opts, fa,
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
+		  OPT_STRING("owner",                0, "NAME", &owner,           "record this owner in the registry"),
 		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"));
 
 	nvmf_default_args(&fa);
@@ -734,6 +733,14 @@ do_connect:
 		fprintf(stderr, "Failed to create topology root: %s\n",
 			libnvme_strerror(errno));
 		return -ENOMEM;
+	}
+	if (owner) {
+		ret = libnvme_set_owner(ctx, owner);
+		if (ret) {
+			fprintf(stderr, "failed to set owner: %s\n",
+				libnvme_strerror(-ret));
+			return ret;
+		}
 	}
 
 	libnvme_read_config(ctx, config_file);
@@ -940,8 +947,8 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 	struct config cfg = { 0 };
 
 	NVME_ARGS(opts,
-		OPT_STRING("transport", 'r', "STR", (char *)&cfg.transport, nvmf_tport),
-		OPT_STRING("owner", 'O', "NAME", &cfg.owner, owner_help),
+		OPT_STRING("transport", 't', "STR", &cfg.transport, nvmf_tport),
+		OPT_STRING("owner", 0, "NAME", &cfg.owner, owner_help),
 		OPT_FLAG("force", 0, &cfg.force, force_help));
 
 	ret = argconfig_parse(argc, argv, desc, opts);

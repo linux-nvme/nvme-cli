@@ -18,6 +18,7 @@ SYNOPSIS
 			[--nbft]
 			[--no-nbft]
 			[--nbft-path=<STR>]
+			[--owner=<NAME>]
 			[<fabrics-options>]
 			[<global-options>]
 
@@ -81,6 +82,12 @@ OPTIONS
 
 --nbft-path=<STR>::
 	Use a user-defined path to the NBFT tables
+
+--owner=<NAME>::
+	Record NAME as the owner of connected controllers in the NVMe
+	ownership registry, so other orchestrators (and nvme-disconnect-all)
+	leave them alone.  See nvme-disconnect-all(1).  When --nbft is also
+	given, --owner takes precedence over its default owner of 'nbft'.
 
 include::fabrics-options.txt[]
 
