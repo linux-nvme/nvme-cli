@@ -44,3 +44,19 @@ int micron_get_pci_ids(struct libnvme_global_ctx *ctx,
 
 	return 0;
 }
+
+int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
+	__u32 *correctable_errors, __u32 *uncorrectable_errors)
+{
+	*correctable_errors = 0;
+	*uncorrectable_errors = 0;
+	printf("register reads not supported on the current platform\n");
+	return -ENOTSUP;
+}
+
+int micron_clear_pcie_aer_correctable_errors(
+	struct libnvme_transport_handle *hdl)
+{
+	printf("register writes not supported on the current platform\n");
+	return -ENOTSUP;
+}
