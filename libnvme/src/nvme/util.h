@@ -119,7 +119,7 @@ libnvme_set_features_status_to_string(__u16 sc)
 		break;
 	case NVME_SC_OVERLAPPING_RANGE:
 		return "Overlapping Range: LBA range type data structure";
-	case NVME_SC_FEAT_IOCS_COMBINATION_REJECTED:
+	case NVME_SC_IOCS_COMBINATION_REJECTED:
 		return "I/O Command Set Combination Rejected";
 	case NVME_SC_INVALID_CONTROLER_DATA_QUEUE:
 		break;

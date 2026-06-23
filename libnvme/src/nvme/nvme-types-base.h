@@ -6572,11 +6572,6 @@ struct nvme_pull_model_ddc_req_log {
  * @NVME_SC_NS_INSUFFICIENT_CAP:      Namespace Insufficient Capacity: Creating
  *				      the namespace requires more free space
  *				      than is currently available.
- * @NVME_SC_FEAT_IOCS_COMBINATION_REJECTED: Set Features - I/O Command Set
- *				      Combination Rejected: This error indicates
- *				      that the controller did not accept the
- *				      request to select the requested I/O
- *				      Command Set Combination.
  * @NVME_SC_NS_ID_UNAVAILABLE:	      Namespace Identifier Unavailable: The
  *				      number of namespaces supported has been
  *				      exceeded.
@@ -6901,7 +6896,6 @@ enum nvme_status_field {
 	NVME_SC_FW_ACTIVATE_PROHIBITED		= 0x13,
 	NVME_SC_OVERLAPPING_RANGE		= 0x14,
 	NVME_SC_NS_INSUFFICIENT_CAP		= 0x15,
-	NVME_SC_FEAT_IOCS_COMBINATION_REJECTED	= 0x15,
 	NVME_SC_NS_ID_UNAVAILABLE		= 0x16,
 	NVME_SC_NS_ALREADY_ATTACHED		= 0x18,
 	NVME_SC_NS_IS_PRIVATE			= 0x19,
