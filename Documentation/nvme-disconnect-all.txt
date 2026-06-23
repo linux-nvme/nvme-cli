@@ -9,8 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'disconnect-all'
-			[--transport=<STR> | -r <STR>]
-			[--owner=<NAME> | -O <NAME>]
+			[--transport=<STR> | -t <STR>]
+			[--owner=<NAME>]
 			[--force]
 
 DESCRIPTION
@@ -31,12 +31,11 @@ background.
 
 OPTIONS
 -------
--r <STR>::
+-t <STR>::
 --transport=<STR>::
 	Limit disconnection to controllers using the specified transport
 	(e.g. tcp, rdma, fc).
 
--O <NAME>::
 --owner=<NAME>::
 	Disconnect only controllers owned by NAME in the registry.
 	Requires interactive confirmation when stdin is a terminal.

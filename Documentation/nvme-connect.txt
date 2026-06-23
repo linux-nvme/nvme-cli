@@ -9,6 +9,7 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'connect' [--config=<filename>]
+			[--owner=<NAME>]
 			[<fabrics-options>]
 
 DESCRIPTION
@@ -21,6 +22,11 @@ OPTIONS
 -------
 --config=<filename>::
 	Use the specified JSON configuration file instead of the default.
+
+--owner=<NAME>::
+	Record NAME as the owner of the connected controller in the NVMe
+	ownership registry, so other orchestrators (and nvme-disconnect-all)
+	leave it alone.  See nvme-disconnect-all(1).
 
 include::fabrics-options.txt[]
 
