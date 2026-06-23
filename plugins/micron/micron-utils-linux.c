@@ -203,3 +203,40 @@ int micron_clear_pcie_aer_correctable_errors(
 	printf("Device correctable errors detected: %s\n", correctable);
 	return 0;
 }
+
+void micron_write_os_config_to_file(const char *file_name)
+{
+	FILE *fpOSConfig = NULL;
+	char strBuffer[1024];
+	int i;
+
+	struct {
+		const char *strcmdHeader;
+		const char *strCommand;
+	} cmdArray[] = {
+		{ "SYSTEM INFORMATION", "uname -a >> %s" },
+		{ "LINUX KERNEL MODULE INFORMATION", "lsmod >> %s" },
+		{ "LINUX SYSTEM MEMORY INFORMATION", "cat /proc/meminfo >> %s" },
+		{ "SYSTEM INTERRUPT INFORMATION", "cat /proc/interrupts >> %s" },
+		{ "CPU INFORMATION", "cat /proc/cpuinfo >> %s" },
+		{ "IO MEMORY MAP INFORMATION", "cat /proc/iomem >> %s" },
+		{ "MAJOR NUMBER AND DEVICE GROUP", "cat /proc/devices >> %s" },
+		{ "KERNEL DMESG", "dmesg >> %s" },
+		{ "/VAR/LOG/MESSAGES", "cat /var/log/messages >> %s" }
+	};
+
+	for (i = 0; i < (int)(ARRAY_SIZE(cmdArray)); i++) {
+		fpOSConfig = fopen(file_name, "a+");
+		if (fpOSConfig) {
+			fprintf(fpOSConfig,
+				"\n\n\n\n%s\n-----------------------------------------------\n",
+				cmdArray[i].strcmdHeader);
+			fclose(fpOSConfig);
+			fpOSConfig = NULL;
+		}
+		snprintf(strBuffer, sizeof(strBuffer) - 1,
+				 cmdArray[i].strCommand, file_name);
+		if (system(strBuffer))
+			fprintf(stderr, "Failed to send \"%s\"\n", strBuffer);
+	}
+}

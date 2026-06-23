@@ -2068,49 +2068,16 @@ static void GetNSIDDInfo(struct libnvme_transport_handle *hdl, const char *dir, 
 
 static void GetOSConfig(const char *strOSDirName)
 {
-	FILE *fpOSConfig = NULL;
-	char strBuffer[1024];
-	char strFileName[PATH_MAX];
-	int i;
-
-	struct {
-		char *strcmdHeader;
-		char *strCommand;
-	} cmdArray[] = {
-		{ (char *)"SYSTEM INFORMATION", (char *)"uname -a >> %s" },
-		{ (char *)"LINUX KERNEL MODULE INFORMATION", (char *)"lsmod >> %s" },
-		{ (char *)"LINUX SYSTEM MEMORY INFORMATION", (char *)"cat /proc/meminfo >> %s" },
-		{ (char *)"SYSTEM INTERRUPT INFORMATION", (char *)"cat /proc/interrupts >> %s" },
-		{ (char *)"CPU INFORMATION", (char *)"cat /proc/cpuinfo >> %s" },
-		{ (char *)"IO MEMORY MAP INFORMATION", (char *)"cat /proc/iomem >> %s" },
-		{ (char *)"MAJOR NUMBER AND DEVICE GROUP", (char *)"cat /proc/devices >> %s" },
-		{ (char *)"KERNEL DMESG", (char *)"dmesg >> %s" },
-		{ (char *)"/VAR/LOG/MESSAGES", (char *)"cat /var/log/messages >> %s" }
-	};
-
+	char strFileName[4096];
 	sprintf(strFileName, "%s/%s", strOSDirName, "os_config.txt");
-
-	for (i = 0; i < 7; i++) {
-		fpOSConfig = fopen(strFileName, "a+");
-		if (fpOSConfig) {
-			fprintf(fpOSConfig,
-				"\n\n\n\n%s\n-----------------------------------------------\n",
-				cmdArray[i].strcmdHeader);
-			fclose(fpOSConfig);
-			fpOSConfig = NULL;
-		}
-		snprintf(strBuffer, sizeof(strBuffer) - 1,
-				 cmdArray[i].strCommand, strFileName);
-		if (system(strBuffer))
-			fprintf(stderr, "Failed to send \"%s\"\n", strBuffer);
-	}
+	micron_write_os_config_to_file(strFileName);
 }
 
 static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type, __u8 **data,
 				int *logSize, int da)
 {
 	int err, bs = 512, offset = bs;
-	unsigned short data_area[5];
+	unsigned short data_area[5] = { 0 };
 	unsigned char  ctrl_init = (type == 0x8);
 
 	__u8 *buffer = (unsigned char *)libnvme_alloc(bs);
