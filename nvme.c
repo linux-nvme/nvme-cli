@@ -2899,7 +2899,7 @@ static bool is_ns_mgmt_support(struct libnvme_transport_handle *hdl)
 
 	__cleanup_libnvme_free struct nvme_id_ctrl *ctrl = libnvme_alloc(sizeof(*ctrl));
 
-	if (ctrl)
+	if (!ctrl)
 		return false;
 
 	err = nvme_identify_ctrl(hdl, ctrl);
