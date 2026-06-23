@@ -41,11 +41,11 @@
 #include "micron-utils.h"
 
 /* Supported Vendor specific feature ids */
-#define MICRON_FEATURE_CLEAR_PCI_CORRECTABLE_ERRORS	0xC3
-#define MICRON_FEATURE_CLEAR_FW_ACTIVATION_HISTORY	0xC1
-#define MICRON_FEATURE_TELEMETRY_CONTROL_OPTION		0xCF
-#define MICRON_FEATURE_SMBUS_OPTION					0xD5
-#define MICRON_FEATURE_OCP_ENHANCED_TELEMETRY		0x16
+#define MICRON_FEATURE_CLEAR_PCI_CORRECTABLE_ERRORS    0xC3
+#define MICRON_FEATURE_CLEAR_FW_ACTIVATION_HISTORY     0xC1
+#define MICRON_FEATURE_TELEMETRY_CONTROL_OPTION        0xCF
+#define MICRON_FEATURE_SMBUS_OPTION                    0xD5
+#define MICRON_FEATURE_OCP_ENHANCED_TELEMETRY          0x16
 
 /* Micron Supported Customer ID*/
 #define MICRON_CUST_ID_GENERAL 0x10
@@ -2063,7 +2063,7 @@ static void GetTimestampInfo(const char *strOSDirName)
 		return;
 
 	num = strftime((char *)outstr, sizeof(outstr),
-				   "Timestamp (UTC): %a, %d %b %Y %H:%M:%S %z", tmp);
+			"Timestamp (UTC): %a, %d %b %Y %H:%M:%S %z", tmp);
 	num += sprintf((char *)(outstr + num), "\nPackage Version: 1.4");
 	if (num) {
 		strPDir = strdup(strOSDirName);
@@ -2900,7 +2900,7 @@ static int micron_latency_stats_logs(int argc, char **argv, struct command *acmd
 	memset(&log, 0, sizeof(log));
 	err = nvme_get_log_simple(hdl, 0xD1, &log, sizeof(log));
 	if (err) {
-		nvme_show_err(err, "Unable to retrieve latency stats log for the drive");
+		nvme_show_err(err, "Unable to retrieve the latency stats log");
 		return err;
 	}
 	/* print header and each log entry */
