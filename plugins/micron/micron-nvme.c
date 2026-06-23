@@ -869,21 +869,12 @@ struct {
 static int micron_pcie_stats(int argc, char **argv,
 				 struct command *command, struct plugin *plugin)
 {
-	int  i, err = 0, bus = 0, domain = 0, device = 0, function = 0;
-	char strTempFile[1024], strTempFile2[1024], cmdbuf[1024];
+	int  i, err = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	nvme_print_flags_t flags;
-	char *businfo = NULL;
-	char *devicename = NULL;
-	char tdevice[NAME_MAX] = { 0 };
-	ssize_t sLinkSize = 0;
-	FILE *fp;
-	char correctable[8] = { 0 };
-	char uncorrectable[8] = { 0 };
 	struct libnvme_passthru_cmd admin_cmd = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
-	char *res;
 	bool is_json = true;
 	bool counters = false;
 	struct format {
@@ -895,8 +886,8 @@ static int micron_pcie_stats(int argc, char **argv,
 		.fmt = "json",
 	};
 
-	__u32 correctable_errors;
-	__u32 uncorrectable_errors;
+	__u32 correctable_errors = 0;
+	__u32 uncorrectable_errors = 0;
 
 	NVME_ARGS(opts,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
@@ -937,70 +928,10 @@ static int micron_pcie_stats(int argc, char **argv,
 		}
 	}
 
-	if (strstr(argv[optind], "/dev/nvme") && strstr(argv[optind], "n1")) {
-		devicename = strrchr(argv[optind], '/');
-	} else if (strstr(argv[optind], "/dev/nvme")) {
-		devicename = strrchr(argv[optind], '/');
-		sprintf(tdevice, "%s%s", devicename, "n1");
-		devicename = tdevice;
-	} else {
-		printf("Invalid device specified!\n");
+	err = micron_get_pcie_aer_errors(hdl, &correctable_errors,
+					&uncorrectable_errors);
+	if (err)
 		goto out;
-	}
-	sprintf(strTempFile, "/sys/block/%s/device", devicename);
-	memset(strTempFile2, 0x0, 1024);
-	sLinkSize = readlink(strTempFile, strTempFile2, 1023);
-	if (sLinkSize < 0) {
-		err = -errno;
-		printf("Failed to read device\n");
-		goto out;
-	}
-	if (strstr(strTempFile2, "../../nvme")) {
-		sprintf(strTempFile, "/sys/block/%s/device/device", devicename);
-		memset(strTempFile2, 0x0, 1024);
-		sLinkSize = readlink(strTempFile, strTempFile2, 1023);
-		if (sLinkSize < 0) {
-			err = -errno;
-			printf("Failed to read device\n");
-			goto out;
-		}
-	}
-	businfo = strrchr(strTempFile2, '/');
-	if (sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device, &function) != 4)
-		domain = bus = device = function = 0;
-	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+10.L", bus, device,
-			function);
-	fp = popen(cmdbuf, "r");
-	if (!fp) {
-		printf("Failed to retrieve error count\n");
-		goto out;
-	}
-	res = fgets(correctable, sizeof(correctable), fp);
-	if (!res) {
-		printf("Failed to retrieve error count\n");
-		pclose(fp);
-		goto out;
-	}
-	pclose(fp);
-
-	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+0x4.L", bus, device,
-			function);
-	fp = popen(cmdbuf, "r");
-	if (!fp) {
-		printf("Failed to retrieve error count\n");
-		goto out;
-	}
-	res = fgets(uncorrectable, sizeof(uncorrectable), fp);
-	if (!res) {
-		printf("Failed to retrieve error count\n");
-		pclose(fp);
-		goto out;
-	}
-	pclose(fp);
-
-	correctable_errors = (__u32)strtol(correctable, NULL, 16);
-	uncorrectable_errors = (__u32)strtol(uncorrectable, NULL, 16);
-
 print_stats:
 	if (is_json) {
 		struct json_object *root = json_create_object();
@@ -1044,8 +975,10 @@ print_stats:
 				   pcie_uncorrectable_errors[i].bit) & 1));
 	} else {
 		printf("PCIE Stats:\n");
-		printf("Device correctable errors detected: %s\n", correctable);
-		printf("Device uncorrectable errors detected: %s\n", uncorrectable);
+		printf("Device correctable errors detected: 0x%x\n",
+		       correctable_errors);
+		printf("Device uncorrectable errors detected: 0x%x\n",
+		       uncorrectable_errors);
 	}
 
 out:
@@ -1056,19 +989,11 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		struct command *command,
 		struct plugin *plugin)
 {
-	int err = -EINVAL, bus, domain, device, function;
-	char strTempFile[1024], strTempFile2[1024], cmdbuf[1024];
+	int err = -EINVAL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	char *businfo = NULL;
-	char *devicename = NULL;
-	char tdevice[PATH_MAX] = { 0 };
-	ssize_t sLinkSize = 0;
 	enum eDriveModel model = UNKNOWN_MODEL;
 	struct libnvme_passthru_cmd admin_cmd = { 0 };
-	char correctable[8] = { 0 };
-	FILE *fp;
-	char *res;
 	const char *desc = "Clear PCIe Device Correctable Errors";
 	__u64 result = 0;
 	__u8 fid = MICRON_FEATURE_CLEAR_PCI_CORRECTABLE_ERRORS;
@@ -1090,7 +1015,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 			err = (int)result;
 		if (!err) {
 			printf("Device correctable errors are cleared!\n");
-			goto out;
+			return 0;
 		}
 	} else if (model == M5407) {
 		admin_cmd.opcode = 0xD6;
@@ -1099,78 +1024,13 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		err = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		if (!err) {
 			printf("Device correctable error counters are cleared!\n");
-			goto out;
-		} else {
-			/* proceed to clear status bits using sysfs interface */
+			return 0;
 		}
 	}
 
-	if (strstr(argv[optind], "/dev/nvme") && strstr(argv[optind], "n1")) {
-		devicename = strrchr(argv[optind], '/');
-	} else if (strstr(argv[optind], "/dev/nvme")) {
-		devicename = strrchr(argv[optind], '/');
-		sprintf(tdevice, "%s%s", devicename, "n1");
-		devicename = tdevice;
-	} else {
-		printf("Invalid device specified!\n");
-		goto out;
-	}
-	err = snprintf(strTempFile, sizeof(strTempFile),
-				   "/sys/block/%s/device", devicename);
-	if (err < 0)
-		goto out;
+	/* clear status bits using system commands */
+	err = micron_clear_pcie_aer_correctable_errors(hdl);
 
-	memset(strTempFile2, 0x0, 1024);
-	sLinkSize = readlink(strTempFile, strTempFile2, 1023);
-	if (sLinkSize < 0) {
-		err = -errno;
-		printf("Failed to read device\n");
-		goto out;
-	}
-	if (strstr(strTempFile2, "../../nvme")) {
-		err = snprintf(strTempFile, sizeof(strTempFile),
-					   "/sys/block/%s/device/device", devicename);
-		if (err < 0)
-			goto out;
-		memset(strTempFile2, 0x0, 1024);
-		sLinkSize = readlink(strTempFile, strTempFile2, 1023);
-		if (sLinkSize < 0) {
-			err = -errno;
-			printf("Failed to read device\n");
-			goto out;
-		}
-	}
-	businfo = strrchr(strTempFile2, '/');
-	if (sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device, &function) != 4)
-		domain = bus = device = function = 0;
-	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+0x10.L=0xffffffff", bus,
-			device, function);
-	err = -1;
-	fp = popen(cmdbuf, "r");
-	if (!fp) {
-		printf("Failed to clear error count\n");
-		goto out;
-	}
-	pclose(fp);
-
-	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+0x10.L", bus, device,
-			function);
-	fp = popen(cmdbuf, "r");
-	if (!fp) {
-		printf("Failed to retrieve error count\n");
-		goto out;
-	}
-	res = fgets(correctable, sizeof(correctable), fp);
-	if (!res) {
-		printf("Failed to retrieve error count\n");
-		pclose(fp);
-		goto out;
-	}
-	pclose(fp);
-	printf("Device correctable errors cleared!\n");
-	printf("Device correctable errors detected: %s\n", correctable);
-	err = 0;
-out:
 	return err;
 }
 

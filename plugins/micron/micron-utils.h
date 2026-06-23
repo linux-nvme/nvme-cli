@@ -65,3 +65,30 @@ char *micron_get_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx,
 int micron_get_pci_ids(struct libnvme_global_ctx *ctx,
 			struct libnvme_transport_handle *hdl,
 			unsigned short *vid, unsigned short *did);
+
+/**
+ * micron_get_pcie_aer_errors() - Retrieve PCIe AER error counts
+ * @hdl:			Transport handle
+ * @correctable_errors:		Output correctable error register value
+ * @uncorrectable_errors:	Output uncorrectable error register value
+ *
+ * Reads the PCIe Advanced Error Reporting (AER) correctable and
+ * uncorrectable error registers for the device associated with @hdl using
+ * setpci.
+ *
+ * Return: 0 on success, negative errno on failure.
+ */
+int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
+		__u32 *correctable_errors, __u32 *uncorrectable_errors);
+
+/**
+ * micron_clear_pcie_aer_correctable_errors() - Clear PCIe correctable errors
+ * @hdl:	Transport handle
+ *
+ * Clears the PCIe AER correctable error register for the device
+ * associated with @hdl by writing all ones to the register via setpci.
+ *
+ * Return: 0 on success, negative error code on failure.
+ */
+int micron_clear_pcie_aer_correctable_errors(
+		struct libnvme_transport_handle *hdl);
