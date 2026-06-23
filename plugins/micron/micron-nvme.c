@@ -39,11 +39,11 @@
 #include "micron-nvme.h"
 
 /* Supported Vendor specific feature ids */
-#define MICRON_FEATURE_CLEAR_PCI_CORRECTABLE_ERRORS	0xC3
-#define MICRON_FEATURE_CLEAR_FW_ACTIVATION_HISTORY	0xC1
-#define MICRON_FEATURE_TELEMETRY_CONTROL_OPTION		0xCF
-#define MICRON_FEATURE_SMBUS_OPTION					0xD5
-#define MICRON_FEATURE_OCP_ENHANCED_TELEMETRY		0x16
+#define MICRON_FEATURE_CLEAR_PCI_CORRECTABLE_ERRORS    0xC3
+#define MICRON_FEATURE_CLEAR_FW_ACTIVATION_HISTORY     0xC1
+#define MICRON_FEATURE_TELEMETRY_CONTROL_OPTION        0xCF
+#define MICRON_FEATURE_SMBUS_OPTION                    0xD5
+#define MICRON_FEATURE_OCP_ENHANCED_TELEMETRY          0x16
 
 /* Micron Supported Customer ID*/
 #define MICRON_CUST_ID_GENERAL 0x10
@@ -61,7 +61,6 @@
 #define C6_log_size 512
 #define C5_MicronWorkLoad_log_size 256
 
-#define min(x, y) ((x) > (y) ? (y) : (x))
 #define SensorCount 8
 
 /* Plugin version major_number.minor_number.patch */
@@ -843,29 +842,29 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 }
 
 struct pcie_error_counters {
-		__u16 receiver_error;
-		__u16 bad_tlp;
-		__u16 bad_dllp;
-		__u16 replay_num_rollover;
-		__u16 replay_timer_timeout;
-		__u16 advisory_non_fatal_error;
-		__u16 DLPES;
-		__u16 poisoned_tlp;
-		__u16 FCPC;
-		__u16 completion_timeout;
-		__u16 completion_abort;
-		__u16 unexpected_completion;
-		__u16 receiver_overflow;
-		__u16 malformed_tlp;
-		__u16 ecrc_error;
-		__u16 unsupported_request_error;
-	} pcie_error_counters = { 0 };
+	__u16 receiver_error;
+	__u16 bad_tlp;
+	__u16 bad_dllp;
+	__u16 replay_num_rollover;
+	__u16 replay_timer_timeout;
+	__u16 advisory_non_fatal_error;
+	__u16 DLPES;
+	__u16 poisoned_tlp;
+	__u16 FCPC;
+	__u16 completion_timeout;
+	__u16 completion_abort;
+	__u16 unexpected_completion;
+	__u16 receiver_overflow;
+	__u16 malformed_tlp;
+	__u16 ecrc_error;
+	__u16 unsupported_request_error;
+} pcie_error_counters = { 0 };
 
-	struct {
-		const char *err;
-		int  bit;
-		int  val;
-	} pcie_correctable_errors[] = {
+struct {
+	const char *err;
+	int  bit;
+	int  val;
+} pcie_correctable_errors[] = {
 		{ (char *)"Unsupported Request Error Status (URES)", 20,
 		offsetof(struct pcie_error_counters, unsupported_request_error)},
 		{ (char *)"ECRC Error Status (ECRCES)", 19,
@@ -2155,7 +2154,7 @@ static void GetTimestampInfo(const char *strOSDirName)
 		return;
 
 	num = strftime((char *)outstr, sizeof(outstr),
-				   "Timestamp (UTC): %a, %d %b %Y %T %z", tmp);
+			"Timestamp (UTC): %a, %d %b %Y %H:%M:%S %z", tmp);
 	num += sprintf((char *)(outstr + num), "\nPackage Version: 1.4");
 	if (num) {
 		strPDir = strdup(strOSDirName);
@@ -3025,7 +3024,7 @@ static int micron_latency_stats_logs(int argc, char **argv, struct command *acmd
 	memset(&log, 0, sizeof(log));
 	err = nvme_get_log_simple(hdl, 0xD1, &log, sizeof(log));
 	if (err) {
-		nvme_show_err(err, "Unable to retrieve latency stats log the drive");
+		nvme_show_err(err, "Unable to retrieve the latency stats log");
 		return err;
 	}
 	/* print header and each log entry */
