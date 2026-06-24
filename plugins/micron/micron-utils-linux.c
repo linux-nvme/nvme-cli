@@ -29,7 +29,7 @@ static int ReadSysFile(const char *file, unsigned short *id)
 		return fd;
 	}
 
-	ret = read(fd, idstr, sizeof(idstr));
+	ret = read(fd, idstr, sizeof(idstr) - 1);
 	close(fd);
 	if (ret < 0)
 		perror("read");
@@ -80,27 +80,27 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 		printf("Invalid device specified!\n");
 		return -EINVAL;
 	}
-	sprintf(strTempFile, "/sys/block/%s/device", devicename);
-	memset(strTempFile2, 0x0, 1024);
-	sLinkSize = readlink(strTempFile, strTempFile2, 1023);
+	snprintf(strTempFile, sizeof(strTempFile), "/sys/block/%s/device", devicename);
+	sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
 	if (sLinkSize < 0) {
 		printf("Failed to read device\n");
 		return -errno;
 	}
+	strTempFile2[sLinkSize] = '\0';
 	if (strstr(strTempFile2, "../../nvme")) {
-		sprintf(strTempFile, "/sys/block/%s/device/device", devicename);
-		memset(strTempFile2, 0x0, 1024);
-		sLinkSize = readlink(strTempFile, strTempFile2, 1023);
+		snprintf(strTempFile, sizeof(strTempFile), "/sys/block/%s/device/device", devicename);
+		sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
 		if (sLinkSize < 0) {
 			printf("Failed to read device\n");
 			return -errno;
 		}
+		strTempFile2[sLinkSize] = '\0';
 	}
 	businfo = strrchr(strTempFile2, '/');
 	if (sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device,
 		   &function) != 4)
 		domain = bus = device = function = 0;
-	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+10.L", bus, device,
+	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %x:%x.%x ECAP_AER+10.L", bus, device,
 		function);
 	fp = popen(cmdbuf, "r");
 	if (!fp) {
@@ -116,7 +116,7 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 	pclose(fp);
 	*correctable_errors = (__u32)strtol(buf, NULL, 16);
 
-	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+0x4.L", bus, device,
+	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %x:%x.%x ECAP_AER+0x4.L", bus, device,
 		function);
 	fp = popen(cmdbuf, "r");
 	if (!fp) {
@@ -157,28 +157,28 @@ int micron_clear_pcie_aer_correctable_errors(
 	if (err < 0)
 		return err;
 
-	memset(strTempFile2, 0x0, 1024);
-	sLinkSize = readlink(strTempFile, strTempFile2, 1023);
+	sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
 	if (sLinkSize < 0) {
 		printf("Failed to read device\n");
 		return -errno;
 	}
+	strTempFile2[sLinkSize] = '\0';
 	if (strstr(strTempFile2, "../../nvme")) {
 		err = snprintf(strTempFile, sizeof(strTempFile),
 					   "/sys/block/%s/device/device", devicename);
 		if (err < 0)
 			return err;
-		memset(strTempFile2, 0x0, 1024);
-		sLinkSize = readlink(strTempFile, strTempFile2, 1023);
+		sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
 		if (sLinkSize < 0) {
 			printf("Failed to read device\n");
 			return -errno;
 		}
+		strTempFile2[sLinkSize] = '\0';
 	}
 	businfo = strrchr(strTempFile2, '/');
 	if (sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device, &function) != 4)
 		domain = bus = device = function = 0;
-	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+0x10.L=0xffffffff", bus,
+	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %x:%x.%x ECAP_AER+0x10.L=0xffffffff", bus,
 			device, function);
 	fp = popen(cmdbuf, "r");
 	if (!fp) {
@@ -187,7 +187,7 @@ int micron_clear_pcie_aer_correctable_errors(
 	}
 	pclose(fp);
 
-	sprintf(cmdbuf, "setpci -s %x:%x.%x ECAP_AER+0x10.L", bus, device,
+	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %x:%x.%x ECAP_AER+0x10.L", bus, device,
 			function);
 	fp = popen(cmdbuf, "r");
 	if (!fp) {
