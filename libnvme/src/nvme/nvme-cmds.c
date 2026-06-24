@@ -587,7 +587,7 @@ int libnvme_get_lba_status_log(struct libnvme_transport_handle *hdl, bool rae,
 	if (!buf)
 		return -ENOMEM;
 
-	nvme_init_get_log_lba_status(&cmd, 0, log, sizeof(*buf));
+	nvme_init_get_log_lba_status(&cmd, 0, buf, sizeof(*buf));
 	err = libnvme_get_log(hdl, &cmd, true, sizeof(*buf));
 	if (err) {
 		*log = NULL;

@@ -708,7 +708,8 @@ __libnvme_public long libnvme_path_get_multipath_failover_count(
 {
 	__cleanup_free char *failover_count = NULL;
 
-	failover_count = libnvme_get_path_attr(p, "multipath_failover_count");
+	failover_count = libnvme_get_path_attr(p,
+				"diag/multipath_failover_count");
 	if (failover_count)
 		sscanf(failover_count, "%ld", &p->multipath_failover_count);
 
@@ -719,7 +720,7 @@ __libnvme_public long libnvme_path_get_command_retry_count(libnvme_path_t p)
 {
 	__cleanup_free char *retry_count = NULL;
 
-	retry_count = libnvme_get_path_attr(p, "command_retry_count");
+	retry_count = libnvme_get_path_attr(p, "diag/command_retry_count");
 	if (retry_count)
 		sscanf(retry_count, "%ld", &p->command_retry_count);
 
@@ -730,7 +731,7 @@ __libnvme_public long libnvme_path_get_command_error_count(libnvme_path_t p)
 {
 	__cleanup_free char *error_count = NULL;
 
-	error_count = libnvme_get_path_attr(p, "command_error_count");
+	error_count = libnvme_get_path_attr(p, "diag/command_error_count");
 	if (error_count)
 		sscanf(error_count, "%ld", &p->command_error_count);
 
@@ -1275,7 +1276,7 @@ __libnvme_public long libnvme_ctrl_get_command_error_count(libnvme_ctrl_t c)
 {
 	__cleanup_free char *error_count = NULL;
 
-	error_count = libnvme_get_ctrl_attr(c, "command_error_count");
+	error_count = libnvme_get_ctrl_attr(c, "diag/command_error_count");
 	if (error_count)
 		sscanf(error_count, "%ld", &c->command_error_count);
 
@@ -1286,7 +1287,7 @@ __libnvme_public long libnvme_ctrl_get_reset_count(libnvme_ctrl_t c)
 {
 	__cleanup_free char *reset_count = NULL;
 
-	reset_count = libnvme_get_ctrl_attr(c, "reset_count");
+	reset_count = libnvme_get_ctrl_attr(c, "diag/reset_count");
 	if (reset_count)
 		sscanf(reset_count, "%ld", &c->reset_count);
 
@@ -1297,7 +1298,7 @@ __libnvme_public long libnvme_ctrl_get_reconnect_count(libnvme_ctrl_t c)
 {
 	__cleanup_free char *reconnect_count = NULL;
 
-	reconnect_count = libnvme_get_ctrl_attr(c, "reconnect_count");
+	reconnect_count = libnvme_get_ctrl_attr(c, "diag/reconnect_count");
 	if (reconnect_count)
 		sscanf(reconnect_count, "%ld", &c->reconnect_count);
 
@@ -1692,7 +1693,7 @@ __libnvme_public long libnvme_ns_get_command_retry_count(libnvme_ns_t n)
 {
 	__cleanup_free char *retry_count = NULL;
 
-	retry_count = libnvme_get_ns_attr(n, "command_retry_count");
+	retry_count = libnvme_get_ns_attr(n, "diag/command_retry_count");
 	if (retry_count)
 		sscanf(retry_count, "%ld", &n->command_retry_count);
 
@@ -1703,35 +1704,38 @@ __libnvme_public long libnvme_ns_get_command_error_count(libnvme_ns_t n)
 {
 	__cleanup_free char *error_count = NULL;
 
-	error_count = libnvme_get_ns_attr(n, "command_error_count");
+	error_count = libnvme_get_ns_attr(n, "diag/command_error_count");
 	if (error_count)
 		sscanf(error_count, "%ld", &n->command_error_count);
 
 	return n->command_error_count;
 }
 
-__libnvme_public long libnvme_ns_get_requeue_no_usable_path_count(
+__libnvme_public long libnvme_ns_get_io_requeue_no_usable_path_count(
 		libnvme_ns_t n)
 {
 	__cleanup_free char *requeue_count = NULL;
 
-	requeue_count = libnvme_get_ns_attr(n, "requeue_no_usable_path_count");
+	requeue_count = libnvme_get_ns_attr(n,
+			"diag/io_requeue_no_usable_path_count");
 	if (requeue_count)
-		sscanf(requeue_count, "%ld", &n->requeue_no_usable_path_count);
+		sscanf(requeue_count, "%ld",
+			&n->io_requeue_no_usable_path_count);
 
-	return n->requeue_no_usable_path_count;
+	return n->io_requeue_no_usable_path_count;
 }
 
-__libnvme_public long libnvme_ns_get_fail_no_available_path_count(
+__libnvme_public long libnvme_ns_get_io_fail_no_available_path_count(
 		libnvme_ns_t n)
 {
 	__cleanup_free char *fail_count = NULL;
 
-	fail_count = libnvme_get_ns_attr(n, "fail_no_available_path_count");
+	fail_count = libnvme_get_ns_attr(n,
+			"diag/io_fail_no_available_path_count");
 	if (fail_count)
-		sscanf(fail_count, "%ld", &n->fail_no_available_path_count);
+		sscanf(fail_count, "%ld", &n->io_fail_no_available_path_count);
 
-	return n->fail_no_available_path_count;
+	return n->io_fail_no_available_path_count;
 }
 
 __libnvme_public int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns)

@@ -67,7 +67,7 @@
 
 /* Plugin version major_number.minor_number.patch */
 static const char *__version_major = "2";
-static const char *__version_minor = "0";
+static const char *__version_minor = "1";
 static const char *__version_patch = "0";
 
 /*
@@ -135,7 +135,7 @@ static enum eDriveModel GetDriveModel(
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 
 	micron_get_pci_ids(ctx, hdl, &vendor_id, &device_id);
-	
+
 	if (vendor_id == MICRON_VENDOR_ID) {
 		switch (device_id) {
 		case 0x5196:

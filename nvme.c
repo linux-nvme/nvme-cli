@@ -4914,7 +4914,7 @@ static int get_feature_id_changed(struct libnvme_transport_handle *hdl, struct f
 	__cleanup_libnvme_free void *buf_def = NULL;
 	__cleanup_libnvme_free void *buf = NULL;
 	__u64 result_def = 0;
-	__u64 result;
+	__u64 result = 0;
 	int err_def = 0;
 	int err;
 
@@ -7007,7 +7007,10 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 			"WARNING: Format may irrevocably delete this device's data.\n"
 			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"
 			"Use the force [--force] option to suppress this warning.\n");
+		nvme_sigint_received = false;
 		sleep(10);
+		if (nvme_sigint_received)
+			return -EINTR;
 		fprintf(stderr, "Sending format operation ...\n");
 	}
 
@@ -9570,7 +9573,7 @@ static int passthru(int argc, char **argv, bool admin,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_fd int dfd = -1, mfd = -1;
-	int flags;
+	int flags = 0;
 	int mode = 0644;
 	void *data = NULL;
 	__cleanup_free void *mdata = NULL;
