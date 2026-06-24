@@ -519,7 +519,7 @@ static void read_hfi_descriptors(struct libnvme_global_ctx *ctx,
 {
 	int i, cnt;
 
-	nbft->hfi_list = calloc(num_hfi + 1, sizeof(struct libnbft_hfi));
+	nbft->hfi_list = calloc(num_hfi + 1, sizeof(struct libnbft_hfi *));
 	for (i = 0, cnt = 0; i < num_hfi; i++) {
 		if (read_hfi(ctx, nbft, &raw_hfi_array[i],
 				&nbft->hfi_list[cnt]) == 0)
@@ -534,7 +534,7 @@ static void read_security_descriptors(struct libnvme_global_ctx *ctx,
 	int i, cnt;
 
 	nbft->security_list = calloc(num_sec + 1,
-		sizeof(struct libnbft_security));
+		sizeof(struct libnbft_security *));
 	for (i = 0, cnt = 0; i < num_sec; i++) {
 		if (read_security(ctx, nbft, &raw_sec_array[i],
 				&nbft->security_list[cnt]) == 0)
@@ -549,7 +549,7 @@ static void read_discovery_descriptors(struct libnvme_global_ctx *ctx,
 	int i, cnt;
 
 	nbft->discovery_list =
-		calloc(num_disc + 1, sizeof(struct libnbft_discovery));
+		calloc(num_disc + 1, sizeof(struct libnbft_discovery *));
 	for (i = 0, cnt = 0; i < num_disc; i++) {
 		if (read_discovery(ctx, nbft, &raw_disc_array[i],
 				&nbft->discovery_list[cnt]) == 0)
@@ -564,7 +564,7 @@ static void read_ssns_descriptors(struct libnvme_global_ctx *ctx,
 	int i, cnt;
 
 	nbft->subsystem_ns_list =
-		 calloc(num_ssns + 1, sizeof(struct libnbft_subsystem_ns));
+		 calloc(num_ssns + 1, sizeof(struct libnbft_subsystem_ns *));
 	for (i = 0, cnt = 0; i < num_ssns; i++) {
 		if (read_ssns(ctx, nbft, &raw_ssns_array[i],
 				&nbft->subsystem_ns_list[cnt]) == 0)
