@@ -7007,7 +7007,10 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 			"WARNING: Format may irrevocably delete this device's data.\n"
 			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"
 			"Use the force [--force] option to suppress this warning.\n");
+		nvme_sigint_received = false;
 		sleep(10);
+		if (nvme_sigint_received)
+			return -EINTR;
 		fprintf(stderr, "Sending format operation ...\n");
 	}
 
