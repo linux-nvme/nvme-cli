@@ -2100,11 +2100,11 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 
 		nfctx.ctrl_params.cfg.keep_alive_tmo = tmo;
 
-		if (!child) {
+		if (child) {
 			if (discover)
 				_nvmf_discovery(ctx, &nfctx, true, child);
 
-			if (child && disconnect) {
+			if (disconnect) {
 				libnvmf_disconnect_ctrl(child);
 				libnvme_free_ctrl(child);
 			}
