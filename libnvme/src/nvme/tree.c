@@ -1570,7 +1570,7 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 __libnvme_public void libnvme_rescan_ctrl(struct libnvme_ctrl *c)
 {
 	struct libnvme_global_ctx *ctx = c->s && c->s->h ? c->s->h->ctx : NULL;
-	if (!c->s)
+	if (!ctx)
 		return;
 	libnvme_ctrl_scan_namespaces(ctx, c);
 	libnvme_ctrl_scan_paths(ctx, c);
