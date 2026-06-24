@@ -34,7 +34,6 @@
 static void __libnvme_free_ctrl(libnvme_ctrl_t c);
 static int libnvme_subsystem_scan_namespace(struct libnvme_global_ctx *ctx,
 		struct libnvme_subsystem *s, char *name);
-static int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name);
 static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 	 	const char *name);
 static int libnvme_ctrl_scan_namespace(struct libnvme_global_ctx *ctx,
@@ -559,34 +558,6 @@ static int nvme_subsystem_scan_namespaces(struct libnvme_global_ctx *ctx,
 				namespaces.ents[i]->d_name,
 				libnvme_strerror(-ret));
 	}
-
-	return 0;
-}
-
-static int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name)
-{
-	char *path = NULL;
-	const char *sysfs_dir = libnvme_subsys_sysfs_dir();
-
-	if (sysfs_dir)
-		if (asprintf(&path, "%s/%s", sysfs_dir, name) < 0)
-			return -ENOMEM;
-
-	s->model = libnvme_get_attr(path, "model");
-	if (path && !s->model)
-		s->model = strdup("undefined");
-	s->serial = libnvme_get_attr(path, "serial");
-	s->firmware = libnvme_get_attr(path, "firmware_rev");
-	s->subsystype = libnvme_get_attr(path, "subsystype");
-	if (!s->subsystype) {
-		if (!strcmp(s->subsysnqn, NVME_DISC_SUBSYS_NAME))
-			s->subsystype = strdup("discovery");
-		else
-			s->subsystype = strdup("nvm");
-	}
-	s->name = strdup(name);
-	s->sysfs_dir = (char *)path;
-	s->iopolicy = libnvme_get_attr(path, "iopolicy");
 
 	return 0;
 }

@@ -58,6 +58,8 @@ int libnvme_get_ctrl_transport(const char *path, const char *name,
 		char **transport, char **traddr, char **addr, char **trsvcid,
 		char **host_traddr, char **host_iface);
 
+int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name);
+
 int libnvme_ns_init(const char *path, struct libnvme_ns *ns);
 
 int libnvme_ns_open(struct libnvme_global_ctx *ctx, const char *sys_path,
