@@ -9,7 +9,7 @@ Subscribe to linux-nvme@lists.infradead.org for Linux NVMe discussions and
 development. The list is archived at
 https://lists.infradead.org/mailman/listinfo/linux-nvme
 
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)](https://scan.coverity.com/projects/linux-nvme-nvme-cli)
+[Clang Analyzer Scan Report](https://monom.org/linux-nvme/upload/)
 [![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli)
 ![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)
 
