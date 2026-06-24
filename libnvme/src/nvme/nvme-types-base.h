@@ -8825,6 +8825,7 @@ struct nvme_lm_nvme_controller_state_data {
 	union {
 		struct nvme_lm_io_submission_queue_data sqs[0];
 		struct nvme_lm_io_completion_queue_data cqs[0];
+		__u8 queue_data_buf[4088];
 	};
 };
 
