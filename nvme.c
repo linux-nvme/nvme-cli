@@ -11129,7 +11129,7 @@ static int get_log_offset(struct libnvme_transport_handle *hdl,
 			NVME_LOG_CDW14_OT_MASK);
 
 	err = libnvme_get_log(hdl, &cmd, args->rae, NVME_LOG_PAGE_PDU_SIZE);
-	if (*args->result)
+	if (args->result)
 		*args->result = cmd.result;
 	return err;
 }
