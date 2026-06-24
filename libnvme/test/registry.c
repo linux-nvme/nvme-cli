@@ -87,6 +87,51 @@ static bool test_create(struct libnvme_global_ctx *ctx)
 		printf(" - owner='%s' [PASS]\n", value);
 	}
 
+	/*
+	 * create_instance also stamps the entry with /sys/kernel/uevent_seqnum
+	 * for the udev cleanup rule.  It is best-effort, so only verify
+	 * it looks like a number when present rather than requiring it.
+	 */
+	free(value);
+	value = NULL;
+	ret = libnvmf_registry_retrieve(ctx, "nvme3", "seqnum", &value);
+	if (ret == 0 && value) {
+		char *end;
+
+		strtoull(value, &end, 10);
+		if (*value && *end == '\0') {
+			printf(" - seqnum='%s' [PASS]\n", value);
+		} else {
+			printf(" - seqnum='%s' not numeric [FAIL]\n", value);
+			pass = false;
+		}
+	}
+
+	/*
+	 * The entry is built in a temp dir and rename()'d into place; confirm
+	 * no leftover ".nvmeN.tmp.*" dir remains after a successful create.
+	 */
+	{
+		struct dirent *de;
+		bool leftover = false;
+		DIR *d = opendir(tmpdir);
+
+		if (d) {
+			while ((de = readdir(d)) != NULL) {
+				if (strstr(de->d_name, ".tmp.")) {
+					printf(" - leftover '%s' [FAIL]\n",
+					       de->d_name);
+					leftover = true;
+				}
+			}
+			closedir(d);
+		}
+		if (leftover)
+			pass = false;
+		else
+			printf(" - no leftover temp dir [PASS]\n");
+	}
+
 out:
 	free(value);
 	libnvmf_registry_delete(ctx, "nvme3");
