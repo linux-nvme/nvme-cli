@@ -316,8 +316,8 @@ struct libnvme_ns {  // !generate-accessors:read=generated,write=none !generate-
 
 	long command_retry_count;	     // !access:read=custom
 	long command_error_count;	     // !access:read=custom
-	long requeue_no_usable_path_count;   // !access:read=custom
-	long fail_no_available_path_count;   // !access:read=custom
+	long io_requeue_no_usable_path_count;// !access:read=custom
+	long io_fail_no_available_path_count;// !access:read=custom
 };
 
 struct libnvme_ctrl {  // !generate-accessors:read=generated,write=none !generate-python:alias=Ctrl

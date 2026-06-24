@@ -783,9 +783,9 @@ static int stdout_top_print_nshead_stat(FILE *stream, libnvme_subsystem_t s)
 				LEFT);
 		table_set_value_int(t, ++col, row, npaths, LEFT);
 		table_set_value_long(t, ++col, row,
-			libnvme_ns_get_requeue_no_usable_path_count(n), LEFT);
+		    libnvme_ns_get_io_requeue_no_usable_path_count(n), LEFT);
 		table_set_value_long(t, ++col, row,
-			libnvme_ns_get_fail_no_available_path_count(n), LEFT);
+		    libnvme_ns_get_io_fail_no_available_path_count(n), LEFT);
 		table_set_value_str(t, ++col, row, r_iops_str, LEFT);
 		table_set_value_str(t, ++col, row, w_iops_str, LEFT);
 		table_set_value_str(t, ++col, row, r_clat_str, LEFT);
