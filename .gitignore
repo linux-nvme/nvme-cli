@@ -25,3 +25,5 @@ tests/*.pyc
 dist/
 
 .vscode/
+*.save
+*.save.1

@@ -758,13 +758,21 @@ __libnvme_public int libnvmf_read_nbft(
 
 	i = fseek(raw_nbft_fp, 0L, SEEK_END);
 	if (i) {
+		int saved_errno = errno;
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to read from %s: %s\n",
-			 filename, libnvme_strerror(errno));
+			 filename, libnvme_strerror(saved_errno));
 		fclose(raw_nbft_fp);
 		return -EINVAL;
 	}
 
 	raw_nbft_size = ftell(raw_nbft_fp);
+	if (raw_nbft_size == (size_t)-1L) {
+		int saved_errno = errno;
+		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to get file size for %s: %s\n",
+			filename, libnvme_strerror(saved_errno));
+		fclose(raw_nbft_fp);
+		return -EINVAL;
+	}
 	rewind(raw_nbft_fp);
 
 	raw_nbft = malloc(raw_nbft_size);
@@ -777,8 +785,9 @@ __libnvme_public int libnvmf_read_nbft(
 
 	i = fread(raw_nbft, sizeof(*raw_nbft), raw_nbft_size, raw_nbft_fp);
 	if (i != raw_nbft_size) {
+		int saved_errno = errno;
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Failed to read from %s: %s\n",
-			 filename, libnvme_strerror(errno));
+			 filename, libnvme_strerror(saved_errno));
 		fclose(raw_nbft_fp);
 		free(raw_nbft);
 		return -EINVAL;
