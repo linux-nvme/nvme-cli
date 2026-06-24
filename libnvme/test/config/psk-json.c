@@ -12,7 +12,6 @@
 
 #include <libnvme.h>
 
-#include "nvme/linux.h"
 #include "nvme/tree.h"
 
 static bool import_export_key(struct libnvme_global_ctx *ctx, libnvme_ctrl_t c)

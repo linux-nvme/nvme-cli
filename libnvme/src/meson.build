@@ -41,7 +41,6 @@ headers = [
     'nvme/ioctl.h',
     'nvme/lib-types.h',
     'nvme/lib.h',
-    'nvme/linux.h',
     'nvme/mem.h',
     'nvme/nvme-cmds-base.h',
     'nvme/nvme-cmds-fabrics.h',

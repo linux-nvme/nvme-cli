@@ -259,7 +259,7 @@ static int set_fctx_from_dict(struct libnvmf_context *fctx, PyObject *dict)
 
 PyObject *read_hostnqn()
 {
-	char *val = libnvme_read_hostnqn();
+	char *val = libnvmf_read_hostnqn();
 	PyObject *obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
 	free(val);
 	return obj;
@@ -267,7 +267,7 @@ PyObject *read_hostnqn()
 
 PyObject *read_hostid()
 {
-	char *val = libnvme_read_hostid();
+	char *val = libnvmf_read_hostid();
 	PyObject *obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
 	free(val);
 	return obj;

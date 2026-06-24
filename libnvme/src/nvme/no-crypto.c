@@ -129,28 +129,3 @@ __libnvme_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 {
 	return -ENOTSUP;
 }
-
-__libnvme_public char *libnvme_generate_hostid(void)
-{
-	return NULL;
-}
-
-__libnvme_public char *libnvme_generate_hostnqn_from_hostid(char *hostid)
-{
-	return NULL;
-}
-
-__libnvme_public char *libnvme_generate_hostnqn(void)
-{
-	return NULL;
-}
-
-__libnvme_public char *libnvme_read_hostnqn(void)
-{
-	return NULL;
-}
-
-__libnvme_public char *libnvme_read_hostid(void)
-{
-	return NULL;
-}

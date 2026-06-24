@@ -32,6 +32,9 @@ LIBNVMF_3 {
 		libnvmf_export_tls_key_versioned;
 		libnvmf_free_nbft;
 		libnvmf_gen_dhchap_key;
+		libnvmf_generate_hostid;
+		libnvmf_generate_hostnqn;
+		libnvmf_generate_hostnqn_from_hostid;
 		libnvmf_generate_tls_key_identity;
 		libnvmf_generate_tls_key_identity_compat;
 		libnvmf_get_default_trsvcid;
@@ -48,6 +51,8 @@ LIBNVMF_3 {
 		libnvmf_nbft_read_files;
 		libnvmf_prtype_str;
 		libnvmf_qptype_str;
+		libnvmf_read_hostid;
+		libnvmf_read_hostnqn;
 		libnvmf_read_key;
 		libnvmf_read_nbft;
 		libnvmf_register_ctrl;

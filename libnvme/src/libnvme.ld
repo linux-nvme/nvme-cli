@@ -39,9 +39,6 @@ LIBNVME_3 {
 		libnvme_free_huge;
 		libnvme_free_ns;
 		libnvme_free_subsystem;
-		libnvme_generate_hostid;
-		libnvme_generate_hostnqn;
-		libnvme_generate_hostnqn_from_hostid;
 		libnvme_get_ana_log_atomic;
 		libnvme_get_ana_log_len;
 		libnvme_get_ana_log_len_from_id_ctrl;
@@ -130,8 +127,6 @@ LIBNVME_3 {
 		libnvme_path_update_stat;
 		libnvme_random_uuid;
 		libnvme_read_config;
-		libnvme_read_hostid;
-		libnvme_read_hostnqn;
 		libnvme_realloc;
 		libnvme_reap_passthru;
 		libnvme_refresh_topology;

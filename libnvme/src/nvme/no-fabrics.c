@@ -12,6 +12,31 @@
 #include "private.h"
 #include "compiler-attributes.h"
 
+__libnvme_public char *libnvmf_generate_hostid(void)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvmf_generate_hostnqn_from_hostid(char *hostid)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvmf_generate_hostnqn(void)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvmf_read_hostnqn(void)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvmf_read_hostid(void)
+{
+	return NULL;
+}
+
 int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 		      const char *hostnqn_arg, const char *hostid_arg,
 		      char **hostnqn, char **hostid)
