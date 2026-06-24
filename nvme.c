@@ -4914,7 +4914,7 @@ static int get_feature_id_changed(struct libnvme_transport_handle *hdl, struct f
 	__cleanup_libnvme_free void *buf_def = NULL;
 	__cleanup_libnvme_free void *buf = NULL;
 	__u64 result_def = 0;
-	__u64 result = 0;
+	__u64 result = -EINVAL;
 	int err_def = 0;
 	int err;
 
@@ -7086,7 +7086,6 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 	__cleanup_libnvme_free void *buf = NULL;
 	__cleanup_fd int ffd = STDIN_FILENO;
 	int err;
-	__u64 result;
 	nvme_print_flags_t flags;
 
 	struct config {
