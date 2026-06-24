@@ -9830,11 +9830,12 @@ static int admin_passthru(int argc, char **argv, struct command *acmd, struct pl
 	return passthru(argc, argv, true, desc, acmd);
 }
 
+#ifdef CONFIG_FABRICS
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *hostnqn;
 
-	hostnqn = libnvme_generate_hostnqn();
+	hostnqn = libnvmf_generate_hostnqn();
 	if (!hostnqn) {
 		nvme_show_error("\"%s\" not supported. Install lib uuid and rebuild.",
 				acmd->name);
@@ -9849,9 +9850,9 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 {
 	char *hostnqn;
 
-	hostnqn = libnvme_read_hostnqn();
+	hostnqn = libnvmf_read_hostnqn();
 	if (!hostnqn)
-		hostnqn =  libnvme_generate_hostnqn();
+		hostnqn =  libnvmf_generate_hostnqn();
 
 	if (!hostnqn) {
 		nvme_show_error("hostnqn is not available -- use nvme gen-hostnqn");
@@ -9864,7 +9865,6 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 	return 0;
 }
 
-#ifdef CONFIG_FABRICS
 static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
@@ -9957,7 +9957,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		return err;
 
 	if (!cfg.nqn) {
-		cfg.nqn = hnqn = libnvme_read_hostnqn();
+		cfg.nqn = hnqn = libnvmf_read_hostnqn();
 		if (!cfg.nqn) {
 			nvme_show_error("Could not read host NQN");
 			return -ENOENT;
@@ -10221,7 +10221,7 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 			return -EINVAL;
 		}
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = libnvme_read_hostnqn();
+			cfg.hostnqn = hnqn = libnvmf_read_hostnqn();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;
@@ -10362,7 +10362,7 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.subsysnqn) {
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = libnvme_read_hostnqn();
+			cfg.hostnqn = hnqn = libnvmf_read_hostnqn();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;

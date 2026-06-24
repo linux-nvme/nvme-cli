@@ -259,7 +259,6 @@ foreach hdr : [
     'ioctl',
     'lib',
     'lib-types',
-    'linux',
     'mi',
     'nbft',
     'nvme-cmds',

@@ -15,7 +15,6 @@ api_files = [
     'ioctl.h',
     'lib-types.h',
     'lib.h',
-    'linux.h',
     'mi-types.h',
     'mi.h',
     'nbft.h',
