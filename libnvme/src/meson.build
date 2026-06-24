@@ -18,6 +18,7 @@ sources = [
 ]
 if host_system == 'windows'
     sources += [
+        'nvme/ctrl-map.c',
         'nvme/ioctl-win.c',
         'nvme/lib-win.c',
         'nvme/mem-win.c',
@@ -123,6 +124,8 @@ if host_system == 'windows'
     deps += [
         kernel32_dep,
         bcrypt_dep,
+        setupapi_dep,
+        cfgmgr32_dep,
     ]
 endif
 
