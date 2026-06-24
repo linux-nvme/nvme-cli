@@ -89,7 +89,6 @@ int sndk_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_ha
 		id[strlen(id) - 1] = '\0';
 
 	*vendor_id = strtol(id, NULL, 0);
-	ret = 0;
 
 	fd = open(did, O_RDONLY);
 	if (fd < 0) {

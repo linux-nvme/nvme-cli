@@ -809,7 +809,6 @@ static int netapp_ontapdevices_get_info(struct libnvme_transport_handle *hdl,
 		/* not the right controller model */
 		return 0;
 
-	err = libnvme_get_nsid(hdl, &item->nsid);
 
 	err = nvme_identify_ns(hdl, item->nsid, &item->ns);
 	if (err) {

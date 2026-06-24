@@ -961,8 +961,6 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	data_written = 0;
-	data_remaining = total_size;
 	data_ptr = (__u8 *)log;
 
 	while (data_remaining) {
@@ -8852,6 +8850,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		if (err < 0) {
 			err = -errno;
 			nvme_show_error("failed to read data buffer from input file %s", libnvme_strerror(errno));
+			free(mbuffer);
 			return err;
 		}
 	}
@@ -8861,6 +8860,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		if (err < 0) {
 			err = -errno;
 			nvme_show_error("failed to read meta-data buffer from input file %s", libnvme_strerror(errno));
+			free(mbuffer);
 			return err;
 		}
 	}
@@ -8903,8 +8903,11 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	if (pi_available) {
 		err = init_pi_tags(hdl, &cmd, cfg.nsid, cfg.ilbrt, cfg.lbst,
 			cfg.lbat, cfg.lbatm);
-		if (err)
+		if (err) { {
+			free(mbuffer);
 			return err;
+		}
+		}
 	}
 	gettimeofday(&start_time, NULL);
 	err = libnvme_exec_io_passthru(hdl, &cmd);
@@ -9918,7 +9921,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		return err;
 
 	if (!cfg.nqn) {
-		cfg.nqn = hnqn = libnvme_read_hostnqn();
+		cfg.nqn = libnvme_read_hostnqn();
 		if (!cfg.nqn) {
 			nvme_show_error("Could not read host NQN");
 			return -ENOENT;
@@ -10121,7 +10124,6 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free unsigned char *raw_secret = NULL;
 	__cleanup_free char *encoded_key = NULL;
-	__cleanup_free char *hnqn = NULL;
 	int key_len = 32;
 	int err;
 	long tls_key;
@@ -10182,7 +10184,7 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 			return -EINVAL;
 		}
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = libnvme_read_hostnqn();
+			cfg.hostnqn = libnvme_read_hostnqn();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;
@@ -10321,7 +10323,7 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.subsysnqn) {
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = libnvme_read_hostnqn();
+			cfg.hostnqn = libnvme_read_hostnqn();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;

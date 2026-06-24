@@ -87,7 +87,6 @@ static int huawei_get_nvme_info(struct libnvme_transport_handle *hdl,
 	}
 
 	item->huawei_device = true;
-	err = libnvme_get_nsid(hdl, &item->nsid);
 	err = nvme_identify_ns(hdl, item->nsid, &item->ns);
 	if (err)
 		return err;
