@@ -8630,7 +8630,6 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	void *buffer;
 	__u16 ms = 0;
 	int err = 0;
-	int flags;
 
 	const char *start_block_addr = "64-bit addr of first block to access";
 	const char *block_size = "if specified, logical block size in bytes;\n"
@@ -9570,7 +9569,7 @@ static int passthru(int argc, char **argv, bool admin,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_fd int dfd = -1, mfd = -1;
-	int flags;
+	int flags = -1;
 	int mode = 0644;
 	void *data = NULL;
 	__cleanup_free void *mdata = NULL;
@@ -9655,7 +9654,26 @@ static int passthru(int argc, char **argv, bool admin,
 		dfd = mfd = STDOUT_FILENO;
 	}
 
+	/*
+	 * Fallback to user specified data direction in case from opcode
+	 * we can't decode direction.
+	 */
+	if (cfg.write && flags < 0) {
+		flags = O_RDONLY;
+		dfd = mfd = STDIN_FILENO;
+	}
+
+	if (cfg.read && flags < 0) {
+		flags = O_WRONLY | O_CREAT | O_TRUNC;
+		dfd = mfd = STDOUT_FILENO;
+	}
+
 	if (strlen(cfg.input_file)) {
+		if (flags < 0) {
+			nvme_show_error("input file specified for opcode 0x%x without a data transfer direction",
+					cfg.opcode);
+			return -EINVAL;
+		}
 		dfd = nvme_open_rawdata(cfg.input_file, flags, mode);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.input_file);
@@ -9664,6 +9682,11 @@ static int passthru(int argc, char **argv, bool admin,
 	}
 
 	if (cfg.metadata && strlen(cfg.metadata)) {
+		if (flags < 0) {
+			nvme_show_error("metadata file specified for opcode 0x%x without a data transfer direction",
+					cfg.opcode);
+			return -EINVAL;
+		}
 		mfd = nvme_open_rawdata(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			nvme_show_perror(cfg.metadata);
@@ -10721,7 +10744,6 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 	int err = 0;
 	bool send;
 	__cleanup_fd int fd = -1;
-	int flags;
 	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
