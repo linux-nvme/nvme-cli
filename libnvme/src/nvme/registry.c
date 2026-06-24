@@ -343,29 +343,184 @@ static int write_device_attr(const char *device, const char *attr,
 }
 
 /*
+ * Read the kernel's global uevent sequence number from
+ * /sys/kernel/uevent_seqnum.  This monotonic counter is used to stamp a
+ * registry entry at connect time so the udev REMOVE rule can tell a stale
+ * entry apart from a recycled-and-live one without relying on event ordering
+ * (see 70-nvmf-registry.rules).  Returns a newly allocated decimal string the
+ * caller must free, or NULL on any failure -- the stamp is best-effort, and a
+ * missing stamp simply makes the rule fall back to its device-existence guard.
+ */
+static char *read_uevent_seqnum(void)
+{
+	char buf[32];
+	ssize_t n;
+	int fd;
+
+	fd = open("/sys/kernel/uevent_seqnum", O_RDONLY | O_CLOEXEC);
+	if (fd < 0)
+		return NULL;
+	n = read_full(fd, buf, sizeof(buf) - 1);
+	close(fd);
+	if (n <= 0)
+		return NULL;
+
+	/* Strip the trailing newline the kernel appends. */
+	while (n > 0 && (buf[n - 1] == '\n' || buf[n - 1] == '\r'))
+		n--;
+	if (n == 0)
+		return NULL;
+	buf[n] = '\0';
+
+	return strdup(buf);
+}
+
+/*
+ * Remove a registry entry directory and its (flat) attribute files.  Shared by
+ * libnvmf_registry_delete() and the create_instance() error/cleanup paths.
+ * Returns 0 on success, -ENOENT if @path does not exist, or a negative errno.
+ */
+static int delete_dir(const char *path)
+{
+	struct dirent *de;
+	int dir_fd, ret = 0;
+	DIR *d;
+
+	d = opendir(path);
+	if (!d)
+		return -errno;
+
+	dir_fd = dirfd(d);
+	while ((de = readdir(d)) != NULL) {
+		if (de->d_name[0] == '.')
+			continue;
+		if (unlinkat(dir_fd, de->d_name, 0) < 0 && errno != ENOENT)
+			ret = -errno;
+	}
+	closedir(d);
+
+	if (ret)
+		return ret;
+
+	if (rmdir(path) < 0 && errno != ENOENT)
+		return -errno;
+	return 0;
+}
+
+/*
+ * Atomically remove a *visible* registry entry: rename it to a hidden sibling
+ * so it vanishes from observers in a single step, then purge the renamed copy
+ * at leisure.  This keeps a reader (nvme registry list, another orchestrator)
+ * from ever seeing a half-emptied entry.  Returns 0 on success, -ENOENT if
+ * @path does not exist, or a negative errno.
+ *
+ * The udev REMOVE rule deletes entries with a plain "rm -rf", which is not
+ * atomic; this guarantee therefore covers only library-driven deletes.
+ */
+static int delete_dir_atomic(const char *path)
+{
+	__cleanup_free char *trash = NULL;
+
+	if (asprintf(&trash, "%s/.trash.XXXXXX", registry_dir()) < 0)
+		return -ENOMEM;
+	if (!mkdtemp(trash))
+		return -errno;
+
+	/*
+	 * rename() is the atomic check-and-act: don't pre-check existence (a
+	 * TOCTOU on @path) — just attempt the move.  If @path is absent (the
+	 * common case, e.g. no stale entry to replace) it fails with ENOENT and
+	 * we drop the empty temp dir we created.
+	 */
+	if (rename(path, trash) < 0) {
+		int ret = -errno;
+
+		rmdir(trash);
+		return ret;
+	}
+	return delete_dir(trash);
+}
+
+/*
  * libnvmf_registry_create_instance - Write a registry entry for a freshly
  * connected controller.  Internal; called from the connect path in fabrics.c
  * once the kernel returns instance=N.  Always overwrites any pre-existing
  * entry: instance recycling means an old nvmeN/ directory is stale by
  * definition.
+ *
+ * The entry is built in a temporary directory and rename()'d into place, so it
+ * is only ever observed complete or absent — never as a directory that exists
+ * but is missing its seqnum stamp.  Without this, the udev REMOVE rule could
+ * read a just-created entry between the mkdir and the seqnum write, see no
+ * stamp, and delete the live entry the library is still populating.
  */
 int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
 				     int instance, const char *owner)
 {
+	__cleanup_free char *tmp_dir = NULL;
+	__cleanup_free char *final_path = NULL;
+	__cleanup_free char *seqnum = NULL;
 	char device[32];
+	int dir_fd, ret;
 
 	snprintf(device, sizeof(device), "nvme%d", instance);
 
-	/*
-	 * Delete any stale entry unconditionally before creating the new one.
-	 * Instance recycling means an old nvmeN/ directory is stale by
-	 * definition — any attributes left over from the previous owner (e.g.
-	 * a private attribute written via libnvmf_registry_update()) must not
-	 * leak into the new entry.  Ignore errors: ENOENT is the common case.
-	 */
-	libnvmf_registry_delete(ctx, device);
+	final_path = registry_path(device, NULL);
+	if (!final_path)
+		return -ENOMEM;
 
-	return write_device_attr(device, "owner", owner);
+	/* The registry root must exist before mkdtemp() can run inside it. */
+	ret = mkdir_p(registry_dir(), 0755);
+	if (ret)
+		return ret;
+
+	if (asprintf(&tmp_dir, "%s/.%s.tmp.XXXXXX", registry_dir(), device) < 0)
+		return -ENOMEM;
+	if (!mkdtemp(tmp_dir))
+		return -errno;
+
+	/* mkdtemp() creates it 0700; widen to the registry world. */
+	if (chmod(tmp_dir, 0755) < 0) {
+		ret = -errno;
+		goto err;
+	}
+
+	dir_fd = open(tmp_dir, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+	if (dir_fd < 0) {
+		ret = -errno;
+		goto err;
+	}
+
+	/*
+	 * Stamp the entry with the current uevent sequence number for the udev
+	 * REMOVE rule (see read_uevent_seqnum()).  Best-effort: a missing stamp
+	 * just makes the rule fall back to its device-existence guard, so don't
+	 * fail the create over it.
+	 */
+	seqnum = read_uevent_seqnum();
+	if (seqnum)
+		write_attr_atomic(dir_fd, tmp_dir, "seqnum", seqnum);
+
+	ret = write_attr_atomic(dir_fd, tmp_dir, "owner", owner);
+	close(dir_fd);
+	if (ret)
+		goto err;
+
+	/*
+	 * Reveal the fully-populated entry atomically.  Instance recycling
+	 * means any pre-existing nvmeN/ is stale, so remove it first: rename()
+	 * onto a non-empty directory fails.
+	 */
+	delete_dir_atomic(final_path);
+	if (rename(tmp_dir, final_path) < 0) {
+		ret = -errno;
+		goto err;
+	}
+	return 0;
+
+err:
+	delete_dir(tmp_dir);	/* best-effort: don't leak the temp directory */
+	return ret;
 }
 
 int libnvmf_registry_delete_instance(struct libnvme_global_ctx *ctx,
@@ -444,9 +599,6 @@ __libnvme_public int libnvmf_registry_delete(struct libnvme_global_ctx *ctx,
 					     const char *device)
 {
 	__cleanup_free char *path = NULL;
-	struct dirent *de;
-	int dir_fd, ret = 0;
-	DIR *d;
 
 	if (!ctx)
 		return -EINVAL;
@@ -457,25 +609,7 @@ __libnvme_public int libnvmf_registry_delete(struct libnvme_global_ctx *ctx,
 	if (!path)
 		return -ENOMEM;
 
-	d = opendir(path);
-	if (!d)
-		return -errno;
-
-	dir_fd = dirfd(d);
-	while ((de = readdir(d)) != NULL) {
-		if (de->d_name[0] == '.')
-			continue;
-		if (unlinkat(dir_fd, de->d_name, 0) < 0 && errno != ENOENT)
-			ret = -errno;
-	}
-	closedir(d);
-
-	if (ret)
-		return ret;
-
-	if (rmdir(path) < 0 && errno != ENOENT)
-		return -errno;
-	return 0;
+	return delete_dir_atomic(path);
 }
 
 __libnvme_public int libnvmf_registry_device_for_each(
