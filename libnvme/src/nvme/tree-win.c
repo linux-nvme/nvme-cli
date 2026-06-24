@@ -126,3 +126,18 @@ int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 {
 	return -ENOTSUP;
 }
+
+int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name)
+{
+	s->subsystype = strdup("nvm");
+	if (!s->subsystype)
+		return -ENOMEM;
+
+	s->name = strdup(name);
+	if (!s->name) {
+		free(s->subsystype);
+		return -ENOMEM;
+	}
+
+	return 0;
+}
