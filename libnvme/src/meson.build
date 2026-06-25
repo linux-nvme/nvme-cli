@@ -28,10 +28,8 @@ else
     sources += [
         'nvme/ioctl-linux.c',
         'nvme/lib-linux.c',
-        'nvme/linux.c',
         'nvme/mem-linux.c',
         'nvme/scan-linux.c',
-        'nvme/sysfs.c',
         'nvme/tree-linux.c',
     ]
 endif

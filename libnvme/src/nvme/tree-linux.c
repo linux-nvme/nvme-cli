@@ -32,6 +32,176 @@
 #include "private.h"
 #include "util.h"
 
+#define PATH_UUID_IBM			"/proc/device-tree/ibm,partition-uuid"
+#define PATH_SYSFS_BLOCK		"/sys/block"
+#define PATH_SYSFS_SLOTS		"/sys/bus/pci/slots"
+#define PATH_SYSFS_NVME_SUBSYSTEM	"/sys/class/nvme-subsystem"
+#define PATH_SYSFS_NVME			"/sys/class/nvme"
+#define PATH_DMI_ENTRIES		"/sys/firmware/dmi/entries"
+
+static const char *make_sysfs_dir(const char *path)
+{
+	char *basepath = getenv("LIBNVME_SYSFS_PATH");
+	char *str;
+
+	if (!basepath)
+		return path;
+
+	if (asprintf(&str, "%s%s", basepath, path) < 0)
+		return NULL;
+
+	return str;
+}
+
+const char *libnvme_subsys_sysfs_dir(void)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(PATH_SYSFS_NVME_SUBSYSTEM);
+}
+
+const char *libnvme_ctrl_sysfs_dir(void)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(PATH_SYSFS_NVME);
+}
+
+const char *libnvme_ns_sysfs_dir(void)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(PATH_SYSFS_BLOCK);
+}
+
+const char *libnvme_slots_sysfs_dir(void)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(PATH_SYSFS_SLOTS);
+}
+
+const char *libnvme_uuid_ibm_filename(void)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(PATH_UUID_IBM);
+}
+
+const char *libnvme_dmi_entries_dir(void)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(PATH_DMI_ENTRIES);
+}
+
+static int __nvme_set_attr(const char *path, const char *value)
+{
+	__cleanup_fd int fd = -1;
+
+	fd = open(path, O_WRONLY);
+	if (fd < 0) {
+#if 0
+		libnvme_msg(LIBNVME_LOG_DEBUG, "Failed to open %s: %s\n", path,
+			 strerror(errno));
+#endif
+		return -errno;
+	}
+	return write(fd, value, strlen(value));
+}
+
+int libnvme_set_attr(const char *dir, const char *attr, const char *value)
+{
+	__cleanup_free char *path = NULL;
+	int ret;
+
+	ret = asprintf(&path, "%s/%s", dir, attr);
+	if (ret < 0)
+		return -ENOMEM;
+
+	return __nvme_set_attr(path, value);
+}
+
+static char *__nvme_get_attr(const char *path)
+{
+	char value[4096] = { 0 };
+	int ret, fd;
+	int saved_errno;
+
+	fd = open(path, O_RDONLY);
+	if (fd < 0)
+		return NULL;
+
+	ret = read(fd, value, sizeof(value) - 1);
+	saved_errno = errno;
+	close(fd);
+	if (ret < 0) {
+		errno = saved_errno;
+		return NULL;
+	}
+	errno = 0;
+	if (!strlen(value))
+		return NULL;
+
+	if (value[strlen(value) - 1] == '\n')
+		value[strlen(value) - 1] = '\0';
+	while (strlen(value) > 0 && value[strlen(value) - 1] == ' ')
+		value[strlen(value) - 1] = '\0';
+
+	return strlen(value) ? strdup(value) : NULL;
+}
+
+__libnvme_public char *libnvme_get_attr(const char *dir, const char *attr)
+{
+	__cleanup_free char *path = NULL;
+	int ret;
+
+	ret = asprintf(&path, "%s/%s", dir, attr);
+	if (ret < 0)
+		return NULL;
+
+	return __nvme_get_attr(path);
+}
+
+__libnvme_public char *libnvme_get_subsys_attr(
+		libnvme_subsystem_t s, const char *attr)
+{
+	return libnvme_get_attr(libnvme_subsystem_get_sysfs_dir(s), attr);
+}
+
+__libnvme_public char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr)
+{
+	return libnvme_get_attr(libnvme_ctrl_get_sysfs_dir(c), attr);
+}
+
+__libnvme_public char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr)
+{
+	return libnvme_get_attr(libnvme_ns_get_sysfs_dir(n), attr);
+}
+
+__libnvme_public char *libnvme_get_path_attr(libnvme_path_t p, const char *attr)
+{
+	return libnvme_get_attr(libnvme_path_get_sysfs_dir(p), attr);
+}
+
 __libnvme_public int libnvme_get_host(
 		struct libnvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, libnvme_host_t *host)
