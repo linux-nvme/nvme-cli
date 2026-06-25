@@ -5,18 +5,17 @@
 #if !defined(YMTC_NVME) || defined(CMD_HEADER_MULTI_READ)
 #define YMTC_NVME
 
-#include <ctype.h>
-#include <unistd.h>
-
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include "cmd.h"
 #include "common.h"
 
-PLUGIN(NAME("ymtc", "Ymtc vendor specific extensions", NVME_VERSION),
+#include <ctype.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+PLUGIN(NAME("ymtc", "YMTC vendor specific extensions", NVME_VERSION),
     COMMAND_LIST(
-        ENTRY("smart-log-add", "Retrieve Ymtc SMART Log, show it", get_additional_smart_log)
+        ENTRY("smart-log-add", "Retrieve YMTC SMART Log, show it", get_additional_smart_log)
     )
 );
 
