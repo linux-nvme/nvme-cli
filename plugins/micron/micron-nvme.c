@@ -203,6 +203,71 @@ static enum eDriveModel GetDriveModel(
 }
 
 /*
+ * sanitize_serial - trim trailing spaces, null-terminate, and replace any
+ * characters that are not alphanumeric, hyphen, or underscore with underscores.
+ */
+static void sanitize_serial(char *sn, size_t len)
+{
+	size_t i;
+	size_t end;
+
+	if (!sn || len == 0)
+		return;
+
+	end = len - 1;
+	while (end > 0 && isblank((unsigned char)sn[end - 1]))
+		end--;
+	sn[end] = '\0';
+
+	for (i = 0; i < end; i++) {
+		if (!((sn[i] >= 'A' && sn[i] <= 'Z') ||
+		      (sn[i] >= 'a' && sn[i] <= 'z') ||
+		      (sn[i] >= '0' && sn[i] <= '9') ||
+		      sn[i] == '-' || sn[i] == '_'))
+			sn[i] = '_';
+	}
+}
+
+/*
+ * is_safe_path - validate that a path string is safe for use as a filename.
+ *
+ * Rejects control characters (0x00-0x1F), characters invalid on Windows
+ * filesystems (<>"|?*), paths starting with '-' which could be
+ * misinterpreted as flags by tar/zip, and trailing backslashes which
+ * would escape the closing quote in Windows command-line argument parsing.
+ */
+static bool is_safe_path(const char *path)
+{
+	/* Lookup table: 1 = rejected character */
+	static const unsigned char rejected[256] = {
+		[0x01 ... 0x1F] = 1,	/* control characters */
+		['<']  = 1,
+		['>']  = 1,
+		['"']  = 1,
+		['|']  = 1,
+		['?']  = 1,
+		['*']  = 1,
+	};
+	const unsigned char *p = (const unsigned char *)path;
+
+	if (!path || !*path)
+		return false;
+
+	if (path[0] == '-')
+		return false;
+
+	for (; *p; p++) {
+		if (rejected[*p])
+			return false;
+	}
+
+	if (p > (const unsigned char *)path && p[-1] == '\\')
+		return false;
+
+	return true;
+}
+
+/*
  * Recursively remove a directory and its contents.
  * Since this is only used for temporary directories that we create that
  * have no symlinks, it is safe to not check for and handle symlinks here.
@@ -234,7 +299,12 @@ static int RemoveDirRecursive(const char *path)
 		if (unlink(child) == 0 || errno == ENOENT)
 			continue;
 
-		if (errno != EISDIR && errno != EPERM) {
+		/*
+		 * On Linux, unlinking a directory fails with EISDIR or EPERM.
+		 * On Windows, it fails with EACCES. In all cases, fall through
+		 * to attempt recursive removal.
+		 */
+		if (errno != EISDIR && errno != EPERM && errno != EACCES) {
 			closedir(dir);
 			return -1;
 		}
@@ -265,7 +335,6 @@ static int RemoveDirRecursive(const char *path)
  */
 static int ZipWithBsdTar(char *strDirName, char *strFileName)
 {
-	__cleanup_free char *cmd_buf = NULL;
 	FILE *fpVersion = NULL;
 	char version_buf[256] = { 0 };
 	bool is_bsdtar = false;
@@ -288,32 +357,29 @@ static int ZipWithBsdTar(char *strDirName, char *strFileName)
 	if (!is_bsdtar)
 		return -EINVAL;
 
-	if (asprintf(&cmd_buf, "tar -caf \"%s\" \"%s\"",
-			strFileName, strDirName) < 0)
-		return -ENOMEM;
+	char *argv[] = {"tar", "-caf", strFileName, "--", strDirName, NULL};
 
-	if (system(cmd_buf))
-		return -EIO;
-	return 0;
+	return micron_run_spawn(argv, NULL, false);
 }
 
 static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 {
 	int  err = 0;
-	char strBuffer[PATH_MAX + 128];	/* cmd + path */
 	int  nRet;
 	bool is_tgz = false;
 	struct stat sb;
 
 	if (strstr(strFileName, ".tar.gz") || strstr(strFileName, ".tgz")) {
-		snprintf(strBuffer, sizeof(strBuffer), "tar -zcf \"%s\" \"%s\"", strFileName, strDirName);
+		char *argv[] = {"tar", "-zcf", strFileName, "--", strDirName, NULL};
+
 		is_tgz = true;
+		nRet = micron_run_spawn(argv, NULL, false);
 	} else {
-		snprintf(strBuffer, sizeof(strBuffer), "zip -r \"%s\" \"%s\" >temp.txt 2>&1", strFileName,
-				strDirName);
+		char *argv[] = {"zip", "-r", strFileName, "--", strDirName, NULL};
+
+		nRet = micron_run_spawn(argv, NULL, false);
 	}
 
-	nRet = system(strBuffer);
 	if (nRet && !is_tgz)
 		/* if zip is not available, see if tar can be used instead */
 		nRet = ZipWithBsdTar(strDirName, strFileName);
@@ -322,18 +388,16 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 	if (nRet || (stat(strFileName, &sb) == -1)) {
 		err = -EINVAL;
 		if (is_tgz)
-			snprintf(strBuffer, sizeof(strBuffer), "check if tar and gzip commands are installed");
+			fprintf(stderr, "Failed to create log data package, "
+				"check if tar and gzip commands are installed!\n");
 		else
-			snprintf(strBuffer, sizeof(strBuffer), "check if zip command is installed");
-
-		fprintf(stderr, "Failed to create log data package, %s!\n", strBuffer);
+			fprintf(stderr, "Failed to create log data package, "
+				"check if zip command is installed!\n");
 	}
 
 	if (RemoveDirRecursive(strDirName) < 0)
 		printf("Failed to remove temporary files!\n");
 
-	if (unlink("temp.txt") < 0 && errno != ENOENT)
-		printf("Failed to remove temporary file temp.txt!\n");
 	return err;
 }
 
@@ -3442,7 +3506,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	unsigned int *puiIDDBuf;
 	unsigned int uiMask;
 	struct nvme_id_ctrl ctrl;
-	char sn[20] = { 0 };
+	char safe_sn[sizeof(ctrl.sn) + 1] = { 0 };
 	char msg[256] = { 0 };
 	int  c_logs_index = 8; /* should be current size of aVendorLogs */
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -3564,6 +3628,12 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		goto out;
 	}
 
+	if (!is_safe_path(cfg.package)) {
+		fprintf(stderr,
+			"Invalid package path: contains unsafe characters\n");
+		goto out;
+	}
+
 	/* pull log details based on the model name */
 	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
@@ -3598,19 +3668,10 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 
 	printf("Preparing log package. This will take a few seconds...\n");
 
-	/* trim spaces out of serial number string */
-	int i, j = 0;
-
-	for (i = 0; i < sizeof(ctrl.sn); i++) {
-		if (isblank((int)ctrl.sn[i]))
-			continue;
-		sn[j++] = ctrl.sn[i];
-	}
-	sn[j] = '\0';
-	strcpy(ctrl.sn, sn);
-
-	SetupDebugDataDirectories(ctrl.sn, cfg.package, strMainDirName, strOSDirName,
-										strCtrlDirName);
+	strncpy(safe_sn, ctrl.sn, sizeof(safe_sn) - 1);
+	sanitize_serial(safe_sn, sizeof(safe_sn));
+	SetupDebugDataDirectories(safe_sn, cfg.package,
+			strMainDirName, strOSDirName, strCtrlDirName);
 
 	GetTimestampInfo(strOSDirName);
 	GetCtrlIDDInfo(strCtrlDirName, &ctrl);
