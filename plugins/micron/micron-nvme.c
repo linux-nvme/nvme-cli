@@ -633,8 +633,10 @@ static int GetCommonLogPage(struct libnvme_transport_handle *hdl, unsigned char 
 	int err = 0;
 
 	pTempPtr = (unsigned char *)libnvme_alloc(nBuffSize);
-	if (!pTempPtr)
+	if (!pTempPtr) {
+		err = -ENOMEM;
 		goto exit_status;
+	}
 	err = nvme_get_log_simple(hdl, ucLogID, pTempPtr, nBuffSize);
 	*pBuffer = pTempPtr;
 
@@ -2061,8 +2063,15 @@ static void GetDriveInfo(const char *strOSDirName, int nFD,
 	char model[41] = { 0 };
 	char serial[21] = { 0 };
 	char fwrev[9] = { 0 };
-	__cleanup_free char *strPDir = strdup(strOSDirName);
-	char *strDest = dirname(strPDir);
+	__cleanup_free char *strPDir = NULL;
+	char *strDest = NULL;
+
+	strPDir = strdup(strOSDirName);
+	if (!strPDir) {
+		printf("Failed to allocate memory for directory name\n");
+		return;
+	}
+	strDest = dirname(strPDir);
 
 	if (asprintf(&tempFile, "%s/%s", strDest, "drive-info.txt") < 0) {
 		printf("Failed to allocate memory for temp file name\n");
@@ -2110,8 +2119,8 @@ static void GetTimestampInfo(const char *strOSDirName)
 	size_t num;
 	size_t remaining;
 	int n;
-	char *strPDir;
-	char *strDest;
+	__cleanup_free char *strPDir = NULL;
+	char *strDest = NULL;
 
 	t = time(NULL);
 	tmp = localtime(&t);
@@ -2126,9 +2135,10 @@ static void GetTimestampInfo(const char *strOSDirName)
 		num += (size_t)n < remaining ? (size_t)n : remaining - 1;
 	if (num) {
 		strPDir = strdup(strOSDirName);
+		if (!strPDir)
+			return;
 		strDest = dirname(strPDir);
 		WriteData(outstr, num, strDest, "timestamp_info.txt", "timestamp");
-		free(strPDir);
 	}
 }
 
@@ -3741,14 +3751,18 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 					sizeof(struct MICRON_WORKLOAD_LOG_HDR), 0);
 			if (err == 0) {
 				bSize =  stWllHdr.uiLength;
-				if (bSize > 0) {
-					dataBuffer = (unsigned char *)libnvme_alloc(bSize);
-					if (!dataBuffer) {
-						printf(
-							" Memory allocation failed for log id : 0x%02X\n"
-							, aVendorLogs[i].ucLogPage);
-						continue;
-					}
+				if (bSize < (int)sizeof(struct MICRON_WORKLOAD_LOG_HDR)) {
+					printf("Invalid log size for log id : 0x%02X\n",
+						aVendorLogs[i].ucLogPage);
+					err = -1;
+					break;
+				}
+				dataBuffer = (unsigned char *)libnvme_alloc(bSize);
+				if (!dataBuffer) {
+					printf(
+						" Memory allocation failed for log id : 0x%02X\n"
+						, aVendorLogs[i].ucLogPage);
+					continue;
 				}
 				memcpy(dataBuffer, &stWllHdr,
 					sizeof(struct MICRON_WORKLOAD_LOG_HDR));
