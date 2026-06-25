@@ -246,6 +246,19 @@ jobs:
         run: |
           scripts/build.sh distro
 
+  build-liburing:
+    name: build with liburing support enabled
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/debian:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: build
+        run: |
+          scripts/build.sh liburing
+
   windows-msys2-ucrt64:
     runs-on: windows-latest
     timeout-minutes: 60

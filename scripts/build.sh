@@ -28,6 +28,7 @@ usage() {
     echo "configs with meson:"
     echo "  [default]           default settings"
     echo "  libdbus             build with libdbus"
+    echo "  liburing            build with liburing"
     echo "  fallback            download all dependencies"
     echo "                      and build them as shared libraries"
     echo "  cross               use cross toolchain to build"
@@ -151,6 +152,15 @@ config_meson_libdbus() {
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
         -Dlibdbus=enabled                       \
+        --prefix="${BUILDDIR}/usr"              \
+        "${BUILDDIR}"
+}
+
+config_meson_liburing() {
+    CC="${CC}" "${MESON}" setup                 \
+        --werror                                \
+        --buildtype="${BUILDTYPE}"              \
+        -Dliburing=enabled                      \
         --prefix="${BUILDDIR}/usr"              \
         "${BUILDDIR}"
 }
