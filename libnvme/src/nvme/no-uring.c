@@ -34,6 +34,9 @@ __libnvme_public int libnvme_submit_admin_passthru_async(
 		__libnvme_unused struct libnvme_passthru_cmd *cmd,
 		__libnvme_unused void *cookie)
 {
+	if (!hdl)
+		return -ENODEV;
+
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_UNKNOWN)
 		return __libnvme_transport_handle_open_uring(hdl);
 
@@ -45,6 +48,9 @@ __libnvme_public int libnvme_submit_io_passthru_async(
 		__libnvme_unused struct libnvme_passthru_cmd *cmd,
 		__libnvme_unused void *cookie)
 {
+	if (!hdl)
+		return -ENODEV;
+
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_UNKNOWN)
 		return __libnvme_transport_handle_open_uring(hdl);
 
