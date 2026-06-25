@@ -27,7 +27,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/${{ matrix.distro }}:latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -70,6 +70,40 @@ jobs:
           path: |
             .build-ci/meson-logs/*.txt
 
+  # Second test pass: the build matrix above runs the suite under valgrind,
+  # which skips the fork-based tests (e.g. the python multiprocessing registry
+  # test is skipIf(_under_valgrind)).  Run the suite once more WITHOUT valgrind
+  # so those tests actually execute.  fedora:latest tracks the newest Python,
+  # where interpreter-default changes (e.g. the 3.14 forkserver default that
+  # broke a fork-based test) surface before the other CI distros.
+  nvme-cli-no-valgrind:
+    name: nvme-cli unit tests without valgrind
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/fedora:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Report interpreter/toolchain versions
+        run: |
+          grep -E '^(NAME|VERSION)=' /etc/os-release
+          python3 --version
+          gcc --version | head -1
+          meson --version
+      - name: build
+        # No -x: scripts/build.sh runs plain "meson test" (default setup, no
+        # valgrind), so the fork-based tests valgrind skips actually run.
+        run: |
+          scripts/build.sh -b release -c gcc
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        name: upload logs
+        if: failure()
+        with:
+          name: no-valgrind logs files
+          path: |
+            .build-ci/meson-logs/*.txt
+
   libnvme:
     runs-on: ubuntu-latest
     strategy:
@@ -80,7 +114,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/${{ matrix.distro }}:latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -103,7 +137,7 @@ jobs:
           - arch: s390x
           - arch: ppc64le
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: enable foreign arch
         uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4.1.0
       - name: Login to GitHub Container Registry
@@ -135,7 +169,7 @@ jobs:
       image: ghcr.io/linux-nvme/debian:latest
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/mingw'
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -154,7 +188,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -167,7 +201,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -180,7 +214,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -193,7 +227,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -206,7 +240,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -226,7 +260,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/alpine:latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -239,7 +273,7 @@ jobs:
     container:
       image: ghcr.io/linux-nvme/debian:latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Mark repo as safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: build
@@ -250,7 +284,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0
         with:
           msystem: UCRT64

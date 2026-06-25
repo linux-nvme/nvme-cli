@@ -22,7 +22,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
     runs-on: arc-vm-nvme-cli
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: "linux-blktests/blktests-ci"
       #We don't have to build the kernel here, as we have a cron job running on
@@ -166,7 +166,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Download nightly coverage reports
         uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
