@@ -2899,7 +2899,7 @@ static bool is_ns_mgmt_support(struct libnvme_transport_handle *hdl)
 
 	__cleanup_libnvme_free struct nvme_id_ctrl *ctrl = libnvme_alloc(sizeof(*ctrl));
 
-	if (ctrl)
+	if (!ctrl)
 		return false;
 
 	err = nvme_identify_ctrl(hdl, ctrl);
@@ -7007,7 +7007,10 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 			"WARNING: Format may irrevocably delete this device's data.\n"
 			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"
 			"Use the force [--force] option to suppress this warning.\n");
+		nvme_sigint_received = false;
 		sleep(10);
+		if (nvme_sigint_received)
+			return -EINTR;
 		fprintf(stderr, "Sending format operation ...\n");
 	}
 

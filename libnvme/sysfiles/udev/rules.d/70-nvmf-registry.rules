@@ -5,9 +5,21 @@
 #
 # The kernel allocates controller instance numbers with ida_alloc(), which
 # returns the lowest available ID.  A freed instance number can therefore be
-# reassigned to a new controller before this rule runs for the old one.  The
-# [ -e /dev/%k ] guard detects that case: devtmpfs removes the old node
-# before KOBJ_REMOVE fires, so if the node exists again a new controller has
-# already claimed the name and its registry entry must not be deleted.
+# reassigned to a new controller before this rule runs for the old one, so the
+# entry is guarded by two checks before it is removed:
+#
+#   1. [ -e /dev/%k ] -- devtmpfs removes the old node before KOBJ_REMOVE
+#      fires, so if the node exists again a new controller has already claimed
+#      the name and its entry must not be deleted.  Catches the common case.
+#
+#   2. SEQNUM vs the entry's stamp -- libnvme stamps each entry at connect with
+#      /sys/kernel/uevent_seqnum.  A stale REMOVE for the old controller was
+#      emitted before the new controller's ADD, so its SEQNUM is lower than the
+#      new entry's stamp; removing only when SEQNUM is greater closes the
+#      sub-shell race between the [ -e ] test and rm.  A missing stamp reads as
+#      0, falling back to check 1 alone.
+#
+# $$ yields a literal '$' for the shell; $env{SEQNUM} is the REMOVE event's
+# sequence number, substituted by udev.
 ACTION=="remove", SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", \
-    RUN+="/bin/sh -c '[ -e /dev/%k ] || rm -rf /run/nvme/registry/%k'"
+    RUN+="/bin/sh -c '[ -e /dev/%k ] || [ $env{SEQNUM} -le $$(cat /run/nvme/registry/%k/seqnum 2>/dev/null || echo 0) ] || rm -rf /run/nvme/registry/%k'"

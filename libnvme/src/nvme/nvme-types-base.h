@@ -6563,7 +6563,6 @@ struct nvme_pull_model_ddc_req_log {
  *				      Maximum Time for Firmware Activation
  *				      (MTFA) value reported in Identify
  *				      Controller.
- * @NVME_SC_EXCEEDS_MAX_NS_SANITIZE:  Exceeds Max NS Sanitize Operations
  * @NVME_SC_FW_ACTIVATE_PROHIBITED:   Firmware Activation Prohibited: The image
  *				      specified is being prohibited from
  *				      activation by the controller for vendor
@@ -6573,11 +6572,6 @@ struct nvme_pull_model_ddc_req_log {
  * @NVME_SC_NS_INSUFFICIENT_CAP:      Namespace Insufficient Capacity: Creating
  *				      the namespace requires more free space
  *				      than is currently available.
- * @NVME_SC_FEAT_IOCS_COMBINATION_REJECTED: Set Features - I/O Command Set
- *				      Combination Rejected: This error indicates
- *				      that the controller did not accept the
- *				      request to select the requested I/O
- *				      Command Set Combination.
  * @NVME_SC_NS_ID_UNAVAILABLE:	      Namespace Identifier Unavailable: The
  *				      number of namespaces supported has been
  *				      exceeded.
@@ -6669,6 +6663,7 @@ struct nvme_pull_model_ddc_req_log {
  *				      suspended.
  * @NVME_SC_CONTROLLER_DATA_QUEUE_FULL: The controller detected that a
  *				      Controller Data Queue became full.
+ * @NVME_SC_EXCEEDS_MAX_NS_SANITIZE:  Exceeds Max NS Sanitize Operations
  * @NVME_SC_INVALID_POWER_LIMIT:      Invalid Power Limit: The power limit
  *				      specified for the Power Limit feature is
  *				      invalid because that power limit prohibits
@@ -6898,11 +6893,9 @@ enum nvme_status_field {
 	NVME_SC_FW_NEEDS_SUBSYS_RESET		= 0x10,
 	NVME_SC_FW_NEEDS_RESET			= 0x11,
 	NVME_SC_FW_NEEDS_MAX_TIME		= 0x12,
-	NVME_SC_EXCEEDS_MAX_NS_SANITIZE		= 0x12,
 	NVME_SC_FW_ACTIVATE_PROHIBITED		= 0x13,
 	NVME_SC_OVERLAPPING_RANGE		= 0x14,
 	NVME_SC_NS_INSUFFICIENT_CAP		= 0x15,
-	NVME_SC_FEAT_IOCS_COMBINATION_REJECTED	= 0x15,
 	NVME_SC_NS_ID_UNAVAILABLE		= 0x16,
 	NVME_SC_NS_ALREADY_ATTACHED		= 0x18,
 	NVME_SC_NS_IS_PRIVATE			= 0x19,
@@ -6949,6 +6942,11 @@ enum nvme_status_field {
 	NVME_SC_CONTROLLER_SUSPENDED		= 0x39,
 	NVME_SC_CONTROLLER_NOT_SUSPENDED	= 0x3A,
 	NVME_SC_CONTROLLER_DATA_QUEUE_FULL	= 0x3B,
+
+	/*
+	 * Command Set Specific
+	 */
+	NVME_SC_EXCEEDS_MAX_NS_SANITIZE		= 0x3c,
 
 	/*
 	 * Command Set Specific - Set Features
@@ -8827,6 +8825,7 @@ struct nvme_lm_nvme_controller_state_data {
 	union {
 		struct nvme_lm_io_submission_queue_data sqs[0];
 		struct nvme_lm_io_completion_queue_data cqs[0];
+		__u8 queue_data_buf[4088];
 	};
 };
 

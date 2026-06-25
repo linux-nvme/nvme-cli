@@ -102,7 +102,7 @@ LIBNVME_3 {
 		libnvme_ns_get_csi;
 		libnvme_ns_get_ctrl;
 		libnvme_ns_get_eui64;
-		libnvme_ns_get_fail_no_available_path_count;
+		libnvme_ns_get_io_fail_no_available_path_count;
 		libnvme_ns_get_firmware;
 		libnvme_ns_get_generic_name;
 		libnvme_ns_get_inflights;
@@ -112,7 +112,7 @@ LIBNVME_3 {
 		libnvme_ns_get_read_ios;
 		libnvme_ns_get_read_sectors;
 		libnvme_ns_get_read_ticks;
-		libnvme_ns_get_requeue_no_usable_path_count;
+		libnvme_ns_get_io_requeue_no_usable_path_count;
 		libnvme_ns_get_serial;
 		libnvme_ns_get_stat_interval;
 		libnvme_ns_get_subsystem;

@@ -9,8 +9,6 @@ Subscribe to linux-nvme@lists.infradead.org for Linux NVMe discussions and
 development. The list is archived at
 https://lists.infradead.org/mailman/listinfo/linux-nvme
 
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)](https://scan.coverity.com/projects/linux-nvme-nvme-cli)
-[![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli)
 ![MesonBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/build.yml/badge.svg)
 
 nvme-cli:
@@ -23,6 +21,15 @@ libnvme:
 ![PyBuild](https://github.com/linux-nvme/nvme-cli/actions/workflows/libnvme-release-python.yml/badge.svg)
 [![PyPI](https://img.shields.io/pypi/v/libnvme)](https://pypi.org/project/libnvme/)
 [![PyPI - Wheel](https://img.shields.io/pypi/wheel/libnvme)](https://pypi.org/project/libnvme/)
+
+
+## Reports
+
+- **Static analysis**
+  - [[clang-analyzer]](https://monom.org/linux-nvme/clang-analyze/current/)
+
+- **Test coverage**
+  - [![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli)
 
 ## Build from source
 

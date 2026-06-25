@@ -14,7 +14,11 @@ all_plugins = {
   'intel': ['plugins/intel/intel-nvme.c'],
   'mangoboost': ['plugins/mangoboost/mangoboost-nvme.c'],
   'memblaze': ['plugins/memblaze/memblaze-nvme.c'],
-  'micron': ['plugins/micron/micron-nvme.c'],
+  'micron': [
+      'plugins/micron/micron-nvme.c',
+      'plugins/micron/micron-utils.c',
+      'plugins/micron/micron-utils-linux.c'
+    ],
   'netapp': ['plugins/netapp/netapp-nvme.c'],
   'nvidia': ['plugins/nvidia/nvidia-nvme.c'],
   'sandisk': ['plugins/sandisk/sandisk-nvme.c', 'plugins/sandisk/sandisk-utils.c'],

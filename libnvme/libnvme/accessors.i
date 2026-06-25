@@ -37,13 +37,13 @@ def _nvme_guarded_setattr(self, name, value):
 %rename(Namespace) libnvme_ns;
 %rename(libnvme_ns_command_retry_count_get) libnvme_ns_get_command_retry_count;
 %rename(libnvme_ns_command_error_count_get) libnvme_ns_get_command_error_count;
-%rename(libnvme_ns_requeue_no_usable_path_count_get) libnvme_ns_get_requeue_no_usable_path_count;
-%rename(libnvme_ns_fail_no_available_path_count_get) libnvme_ns_get_fail_no_available_path_count;
+%rename(libnvme_ns_io_requeue_no_usable_path_count_get) libnvme_ns_get_io_requeue_no_usable_path_count;
+%rename(libnvme_ns_io_fail_no_available_path_count_get) libnvme_ns_get_io_fail_no_available_path_count;
 %{
 	#define libnvme_ns_command_retry_count_get libnvme_ns_get_command_retry_count
 	#define libnvme_ns_command_error_count_get libnvme_ns_get_command_error_count
-	#define libnvme_ns_requeue_no_usable_path_count_get libnvme_ns_get_requeue_no_usable_path_count
-	#define libnvme_ns_fail_no_available_path_count_get libnvme_ns_get_fail_no_available_path_count
+	#define libnvme_ns_io_requeue_no_usable_path_count_get libnvme_ns_get_io_requeue_no_usable_path_count
+	#define libnvme_ns_io_fail_no_available_path_count_get libnvme_ns_get_io_fail_no_available_path_count
 %}
 struct libnvme_ns {
 	__u32 nsid;
@@ -68,10 +68,10 @@ struct libnvme_ns {
 		long command_retry_count;
 		%immutable command_error_count;
 		long command_error_count;
-		%immutable requeue_no_usable_path_count;
-		long requeue_no_usable_path_count;
-		%immutable fail_no_available_path_count;
-		long fail_no_available_path_count;
+		%immutable io_requeue_no_usable_path_count;
+		long io_requeue_no_usable_path_count;
+		%immutable io_fail_no_available_path_count;
+		long io_fail_no_available_path_count;
 	}
 };
 
