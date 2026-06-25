@@ -70,6 +70,40 @@ jobs:
           path: |
             .build-ci/meson-logs/*.txt
 
+  # Second test pass: the build matrix above runs the suite under valgrind,
+  # which skips the fork-based tests (e.g. the python multiprocessing registry
+  # test is skipIf(_under_valgrind)).  Run the suite once more WITHOUT valgrind
+  # so those tests actually execute.  fedora:latest tracks the newest Python,
+  # where interpreter-default changes (e.g. the 3.14 forkserver default that
+  # broke a fork-based test) surface before the other CI distros.
+  nvme-cli-no-valgrind:
+    name: nvme-cli unit tests without valgrind
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/linux-nvme/fedora:latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Mark repo as safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Report interpreter/toolchain versions
+        run: |
+          grep -E '^(NAME|VERSION)=' /etc/os-release
+          python3 --version
+          gcc --version | head -1
+          meson --version
+      - name: build
+        # No -x: scripts/build.sh runs plain "meson test" (default setup, no
+        # valgrind), so the fork-based tests valgrind skips actually run.
+        run: |
+          scripts/build.sh -b release -c gcc
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        name: upload logs
+        if: failure()
+        with:
+          name: no-valgrind logs files
+          path: |
+            .build-ci/meson-logs/*.txt
+
   libnvme:
     runs-on: ubuntu-latest
     strategy:
