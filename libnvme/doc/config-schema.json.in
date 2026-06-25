@@ -37,13 +37,13 @@
 			"description": "Enable/disable Persistent Discovery Controller",
 			"type": "boolean"
 		},
-		"required": [ "hostnqn" ],
 		"subsystems": {
 		    "description": "Array of NVMe subsystem properties",
 		    "type": "array",
 		    "items": { "$ref": "#/$defs/subsystem" }
 		}
-	    }
+	    },
+	    "required": [ "hostnqn" ]
 	},
 	"subsystem": {
 	    "description": "NVMe subsystem properties",
@@ -58,9 +58,9 @@
 		    "description": "Array of NVMe subsystem ports",
 		    "type": "array",
 		    "items": { "$ref": "#/$defs/port" }
-		},
-		"required": [ "nqn" ]
-	    }
+		}
+	    },
+	    "required": [ "nqn" ]
 	},
 	"port": {
 	    "description": "NVMe subsystem port",
