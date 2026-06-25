@@ -267,6 +267,9 @@ __libnvme_public int libnvme_exec_admin_passthru(
 	if (!hdl)
 		return -ENODEV;
 
+	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
+		goto no_uring;
+
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_NOT_AVAILABLE)
 		goto no_uring;
 
