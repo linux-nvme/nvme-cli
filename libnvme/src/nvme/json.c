@@ -354,8 +354,10 @@ static void json_update_subsys(struct json_object *subsys_array,
 	struct json_object *port_array;
 
 	/* Skip discovery subsystems as the nqn is not unique */
-	if (!strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME))
+	if (!strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+		json_object_put(subsys_obj);
 		return;
+	}
 
 	json_object_object_add(subsys_obj, "nqn",
 			       json_object_new_string(subsysnqn));
