@@ -43,7 +43,10 @@ class RegistryCLITest(unittest.TestCase):
 
     def _run(self, *args, expect_fail=False):
         cmd = [_NVME_BIN] + list(args)
+        # stdin is /dev/null so the owner-change confirmation prompt sees a
+        # non-interactive caller and proceeds without asking.
         result = subprocess.run(cmd, env=self.env,
+                                stdin=subprocess.DEVNULL,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 encoding='utf-8')
@@ -64,26 +67,27 @@ class RegistryCLITest(unittest.TestCase):
 
     def test_retrieve_returns_value(self):
         self._populate('nvme3', 'owner', 'stas')
-        result = self._run('registry', 'retrieve', '-d', 'nvme3', '-a', 'owner')
+        result = self._run('registry', 'retrieve', 'nvme3', '-a', 'owner')
         self.assertEqual(result.stdout.strip(), 'stas')
 
-    def test_retrieve_default_attr_is_owner(self):
+    def test_retrieve_requires_attr(self):
         self._populate('nvme3', 'owner', 'nbft')
-        result = self._run('registry', 'retrieve', '-d', 'nvme3')
-        self.assertEqual(result.stdout.strip(), 'nbft')
+        result = self._run('registry', 'retrieve', 'nvme3', expect_fail=True)
+        self.assertNotEqual(result.returncode, 0)
 
     def test_retrieve_strips_dev_prefix(self):
         self._populate('nvme3', 'owner', 'stas')
-        result = self._run('registry', 'retrieve', '-d', '/dev/nvme3')
+        result = self._run('registry', 'retrieve', '/dev/nvme3', '-a', 'owner')
         self.assertEqual(result.stdout.strip(), 'stas')
 
     def test_retrieve_missing_device_fails(self):
-        result = self._run('registry', 'retrieve', '-d', 'nvme99',
+        result = self._run('registry', 'retrieve', 'nvme99', '-a', 'owner',
                            expect_fail=True)
         self.assertNotEqual(result.returncode, 0)
 
     def test_retrieve_missing_device_arg_fails(self):
-        result = self._run('registry', 'retrieve', expect_fail=True)
+        result = self._run('registry', 'retrieve', '-a', 'owner',
+                           expect_fail=True)
         self.assertNotEqual(result.returncode, 0)
 
     # ------------------------------------------------------------------ #
@@ -91,26 +95,27 @@ class RegistryCLITest(unittest.TestCase):
     # ------------------------------------------------------------------ #
 
     def test_update_creates_entry(self):
-        self._run('registry', 'update', '-d', 'nvme5',
+        self._run('registry', 'update', 'nvme5',
                   '-a', 'note', '-V', 'boot-path SAN connection')
-        result = self._run('registry', 'retrieve', '-d', 'nvme5', '-a', 'note')
+        result = self._run('registry', 'retrieve', 'nvme5', '-a', 'note')
         self.assertEqual(result.stdout.strip(), 'boot-path SAN connection')
 
     def test_update_overwrites_entry(self):
         self._populate('nvme5', 'note', 'old note')
-        self._run('registry', 'update', '-d', 'nvme5',
+        self._run('registry', 'update', 'nvme5',
                   '-a', 'note', '-V', 'new note')
-        result = self._run('registry', 'retrieve', '-d', 'nvme5', '-a', 'note')
+        result = self._run('registry', 'retrieve', 'nvme5', '-a', 'note')
         self.assertEqual(result.stdout.strip(), 'new note')
 
-    def test_update_owner_is_rejected(self):
-        result = self._run('registry', 'update', '-d', 'nvme5',
-                           '-a', 'owner', '-V', 'stas', expect_fail=True)
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn('immutable', result.stderr)
+    def test_update_owner_succeeds_noninteractive(self):
+        # Writing the owner attribute is gated by a confirmation prompt, but a
+        # non-interactive caller proceeds without asking.
+        self._run('registry', 'update', 'nvme5', '-a', 'owner', '-V', 'stas')
+        result = self._run('registry', 'retrieve', 'nvme5', '-a', 'owner')
+        self.assertEqual(result.stdout.strip(), 'stas')
 
     def test_update_missing_args_fails(self):
-        result = self._run('registry', 'update', '-d', 'nvme5',
+        result = self._run('registry', 'update', 'nvme5',
                            expect_fail=True)
         self.assertNotEqual(result.returncode, 0)
 
@@ -120,13 +125,13 @@ class RegistryCLITest(unittest.TestCase):
 
     def test_delete_removes_entry(self):
         self._populate('nvme5', 'owner', 'stas')
-        self._run('registry', 'delete', '-d', 'nvme5')
-        result = self._run('registry', 'retrieve', '-d', 'nvme5',
+        self._run('registry', 'delete', 'nvme5')
+        result = self._run('registry', 'retrieve', 'nvme5', '-a', 'owner',
                            expect_fail=True)
         self.assertNotEqual(result.returncode, 0)
 
     def test_delete_nonexistent_fails(self):
-        result = self._run('registry', 'delete', '-d', 'nvme99',
+        result = self._run('registry', 'delete', 'nvme99',
                            expect_fail=True)
         self.assertNotEqual(result.returncode, 0)
 
