@@ -480,7 +480,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 	nIndex = strlen(strMainDirName);
 
 	j = 1;
-	while (mkdir(strMainDirName, 0777) < 0) {
+	while (mkdir(strMainDirName, 0700) < 0) {
 		if (errno != EEXIST) {
 			err = -1;
 			goto exit_status;
@@ -492,7 +492,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 
 	if (strOSDirName) {
 		snprintf(strOSDirName, osDirSize, "%s/%s", strMainDirName, "OS");
-		if (mkdir(strOSDirName, 0777) < 0) {
+		if (mkdir(strOSDirName, 0700) < 0) {
 			rmdir(strMainDirName);
 			err = -1;
 			goto exit_status;
@@ -500,7 +500,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 	}
 	if (strCtrlDirName) {
 		snprintf(strCtrlDirName, ctrlDirSize, "%s/%s", strMainDirName, "Controller");
-		if (mkdir(strCtrlDirName, 0777) < 0) {
+		if (mkdir(strCtrlDirName, 0700) < 0) {
 			if (strOSDirName)
 				rmdir(strOSDirName);
 			rmdir(strMainDirName);
