@@ -76,7 +76,7 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 	char *res;
 
 	devicename = micron_get_ns_name(hdl);
-	if (!strstr(devicename, "nvme")) {
+	if (!devicename || !strstr(devicename, "nvme")) {
 		printf("Invalid device specified!\n");
 		return -EINVAL;
 	}
@@ -97,8 +97,7 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 		strTempFile2[sLinkSize] = '\0';
 	}
 	businfo = strrchr(strTempFile2, '/');
-	if (sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device,
-		   &function) != 4)
+	if (!businfo || sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device, &function) != 4)
 		domain = bus = device = function = 0;
 	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %x:%x.%x ECAP_AER+10.L", bus, device,
 		function);
@@ -148,7 +147,7 @@ int micron_clear_pcie_aer_correctable_errors(
 	char *res;
 
 	devicename = micron_get_ns_name(hdl);
-	if (!strstr(devicename, "nvme")) {
+	if (!devicename || !strstr(devicename, "nvme")) {
 		printf("Invalid device specified!\n");
 		return -EINVAL;
 	}
@@ -176,7 +175,7 @@ int micron_clear_pcie_aer_correctable_errors(
 		strTempFile2[sLinkSize] = '\0';
 	}
 	businfo = strrchr(strTempFile2, '/');
-	if (sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device, &function) != 4)
+	if (!businfo || sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device, &function) != 4)
 		domain = bus = device = function = 0;
 	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %x:%x.%x ECAP_AER+0x10.L=0xffffffff", bus,
 			device, function);
