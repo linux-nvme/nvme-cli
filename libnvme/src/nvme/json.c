@@ -227,7 +227,7 @@ static struct json_object *parse_json(struct libnvme_global_ctx *ctx, int fd)
 
 int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file)
 {
-	struct json_object *json_root, *host_obj;
+	struct json_object *json_root, *host_array, *host_obj;
 	int fd, h;
 
 	fd = open(config_file, O_RDONLY);
@@ -240,13 +240,31 @@ int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file)
 	close(fd);
 	if (!json_root)
 		return -EPROTO;
-	if (!json_object_is_type(json_root, json_type_array)) {
-		libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "Wrong format, expected array\n");
+	if (json_object_is_type(json_root, json_type_object)) {
+		/* Current format: { "hosts": [ ... ] } */
+		host_array = json_object_object_get(json_root, "hosts");
+		if (!host_array ||
+		    !json_object_is_type(host_array, json_type_array)) {
+			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+				 "Wrong format, expected 'hosts' array\n");
+			json_object_put(json_root);
+			return -EPROTO;
+		}
+	} else if (json_object_is_type(json_root, json_type_array)) {
+		/*
+		 * Legacy pre-3.0 format: a bare top-level array of hosts.
+		 * Accept it for reading; libnvme_dump_config() always writes
+		 * the object form, so the file is migrated on the next write.
+		 */
+		host_array = json_root;
+	} else {
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			 "Wrong format, expected object or array\n");
 		json_object_put(json_root);
 		return -EPROTO;
 	}
-	for (h = 0; h < json_object_array_length(json_root); h++) {
-		host_obj = json_object_array_get_idx(json_root, h);
+	for (h = 0; h < json_object_array_length(host_array); h++) {
+		host_obj = json_object_array_get_idx(host_array, h);
 		if (host_obj)
 			json_parse_host(ctx, host_obj);
 	}
@@ -377,11 +395,12 @@ static void json_update_subsys(struct json_object *subsys_array,
 int json_update_config(struct libnvme_global_ctx *ctx, int fd)
 {
 	libnvme_host_t h;
-	struct json_object *json_root, *host_obj;
+	struct json_object *json_root, *host_array, *host_obj;
 	struct json_object *subsys_array;
 	int ret = 0;
 
-	json_root = json_object_new_array();
+	json_root = json_object_new_object();
+	host_array = json_object_new_array();
 	libnvme_for_each_host(ctx, h) {
 		libnvme_subsystem_t s;
 		const char *hostnqn, *hostid, *dhchap_key, *hostsymname;
@@ -414,12 +433,13 @@ int json_update_config(struct libnvme_global_ctx *ctx, int fd)
 		if (json_object_array_length(subsys_array)) {
 			json_object_object_add(host_obj, "subsystems",
 					       subsys_array);
-			json_object_array_add(json_root, host_obj);
+			json_object_array_add(host_array, host_obj);
 		} else {
 			json_object_put(subsys_array);
 			json_object_put(host_obj);
 		}
 	}
+	json_object_object_add(json_root, "hosts", host_array);
 	ret = json_object_to_fd(fd, json_root,
 				JSON_C_TO_STRING_PRETTY |
 				JSON_C_TO_STRING_NOSLASHESCAPE);
