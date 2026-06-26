@@ -137,3 +137,9 @@ __libnvme_public int libnvme_get_logging_level(struct libnvme_global_ctx *ctx,
 		*log_tstamp = ctx->log.timestamp;
 	return ctx->log.level;
 }
+
+__libnvme_public void libnvme_set_logging_file(struct libnvme_global_ctx *ctx,
+		FILE *fp)
+{
+	ctx->log.fd = fp ? fileno(fp) : STDERR_FILENO;
+}

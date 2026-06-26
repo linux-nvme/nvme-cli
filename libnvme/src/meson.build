@@ -18,33 +18,27 @@ sources = [
 ]
 if host_system == 'windows'
     sources += [
-        'nvme/filters-win.c',
         'nvme/ioctl-win.c',
         'nvme/lib-win.c',
         'nvme/mem-win.c',
-        'nvme/no-crypto.c',
+        'nvme/scan-win.c',
         'nvme/tree-win.c',
     ]
 else
     sources += [
-        'nvme/crypto.c',
-        'nvme/filters-linux.c',
         'nvme/ioctl-linux.c',
         'nvme/lib-linux.c',
-        'nvme/linux.c',
         'nvme/mem-linux.c',
-        'nvme/sysfs.c',
+        'nvme/scan-linux.c',
         'nvme/tree-linux.c',
     ]
 endif
 headers = [
     'nvme/accessors.h',
     'nvme/endian.h',
-    'nvme/filters.h',
     'nvme/ioctl.h',
     'nvme/lib-types.h',
     'nvme/lib.h',
-    'nvme/linux.h',
     'nvme/mem.h',
     'nvme/nvme-cmds-base.h',
     'nvme/nvme-cmds-fabrics.h',
@@ -58,6 +52,7 @@ headers = [
     'nvme/nvme-types-nvm.h',
     'nvme/nvme-types-zns.h',
     'nvme/nvme-types.h',
+    'nvme/scan.h',
     'nvme/tree.h',
     'nvme/types.h',
     'nvme/util.h',
@@ -66,6 +61,7 @@ headers = [
 if want_fabrics
     sources += [
         'nvme/accessors-fabrics.c',
+        'nvme/crypto.c',
         'nvme/fabrics.c',
         'nvme/nbft.c',
         'nvme/registry.c',
@@ -74,6 +70,7 @@ if want_fabrics
     ]
     headers += [
         'nvme/accessors-fabrics.h',
+        'nvme/crypto.h',
         'nvme/fabrics.h',
         'nvme/nvme-types-nbft.h',
         'nvme/nbft.h',
@@ -81,6 +78,7 @@ if want_fabrics
     ]
 else
     sources += [
+        'nvme/no-crypto.c',
         'nvme/no-fabrics.c',
     ]
 endif

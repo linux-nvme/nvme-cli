@@ -91,7 +91,11 @@ static int registry_list(int argc, char **argv, struct command *acmd,
 	if (argconfig_parse(argc, argv, desc, opts))
 		return -EINVAL;
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx();
+	if (!ctx)
+		return -ENOMEM;
+	libnvme_set_logging_file(ctx, stdout);
+
 	return libnvmf_registry_device_for_each(ctx, print_device, ctx);
 }
 
@@ -128,7 +132,11 @@ static int registry_retrieve(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx();
+	if (!ctx)
+		return -ENOMEM;
+	libnvme_set_logging_file(ctx, stdout);
+
 	ret = libnvmf_registry_retrieve(ctx, device, cfg.attr, &value);
 	if (ret == -ENOENT) {
 		fprintf(stderr, "%s: not registered or '%s' not found\n",
@@ -183,7 +191,11 @@ static int registry_update(int argc, char **argv, struct command *acmd,
 		return 0;
 	}
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx();
+	if (!ctx)
+		return -ENOMEM;
+	libnvme_set_logging_file(ctx, stdout);
+
 	ret = libnvmf_registry_update(ctx, device, cfg.attr, cfg.value);
 	if (ret)
 		fprintf(stderr, "update failed: %s\n", libnvme_strerror(-ret));
@@ -229,7 +241,11 @@ static int registry_delete(int argc, char **argv, struct command *acmd,
 		return 0;
 	}
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx();
+	if (!ctx)
+		return -ENOMEM;
+	libnvme_set_logging_file(ctx, stdout);
+
 	if (cfg.attr)
 		ret = libnvmf_registry_update(ctx, device, cfg.attr, NULL);
 	else

@@ -39,27 +39,16 @@ static bool libnvme_mi_probe_enabled_default(void)
 
 }
 
-__libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(
-		FILE *fp, int log_level)
+__libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(void)
 {
 	struct libnvme_global_ctx *ctx;
-	int fd;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx)
 		return NULL;
 
-	if (fp) {
-		fd = fileno(fp);
-		if (fd < 0) {
-			free(ctx);
-			return NULL;
-		}
-	} else
-		fd = STDERR_FILENO;
-
-	ctx->log.fd = fd;
-	ctx->log.level = log_level;
+	ctx->log.fd = STDERR_FILENO;
+	ctx->log.level = LIBNVME_DEFAULT_LOGLEVEL;
 
 	list_head_init(&ctx->hosts);
 	list_head_init(&ctx->endpoints);

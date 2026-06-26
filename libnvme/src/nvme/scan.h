@@ -4,6 +4,7 @@
  * Copyright (c) 2020 Western Digital Corporation or its affiliates.
  *
  * Authors: Keith Busch <keith.busch@wdc.com>
+ *	    Daniel Wagner <dwagner@suse.de>
  */
 #pragma once
 
@@ -12,50 +13,18 @@
 #include <nvme/tree.h>
 
 /**
- * DOC: filters.h
- *
- * libnvme directory filter
+ * DOC: scan.h
  */
-
-/**
- * libnvme_filter_namespace() - Filter for namespaces
- * @d: dirent to check
- *
- * Return: 1 if @d matches, 0 otherwise
- */
-int libnvme_filter_namespace(const struct dirent *d);
-
-/**
- * libnvme_filter_paths() - Filter for paths
- * @d: dirent to check
- *
- * Return: 1 if @d matches, 0 otherwise
- */
-int libnvme_filter_paths(const struct dirent *d);
-
-/**
- * libnvme_filter_ctrls() - Filter for controllers
- * @d: dirent to check
- *
- * Return: 1 if @d matches, 0 otherwise
- */
-int libnvme_filter_ctrls(const struct dirent *d);
-
-/**
- * libnvme_filter_subsys() - Filter for subsystems
- * @d: dirent to check
- *
- * Return: 1 if @d matches, 0 otherwise
- */
-int libnvme_filter_subsys(const struct dirent *d);
 
 /**
  * libnvme_scan_subsystems() - Scan for subsystems
+ * @ctx: &struct libnvme_global_ctx object
  * @subsys: Pointer to array of dirents
  *
  * Return: number of entries in @subsys or a negative error code
  */
-int libnvme_scan_subsystems(struct dirent ***subsys);
+int libnvme_scan_subsystems(struct libnvme_global_ctx *ctx,
+		struct dirent ***subsys);
 
 /**
  * libnvme_scan_subsystem_namespaces() - Scan for namespaces in a subsystem
@@ -69,11 +38,13 @@ int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
 
 /**
  * libnvme_scan_ctrls() - Scan for controllers
+ * @ctx: &struct libnvme_global_ctx object
  * @ctrls: Pointer to array of dirents
  *
  * Return: number of entries in @ctrls or a negative error code
  */
-int libnvme_scan_ctrls(struct dirent ***ctrls);
+int libnvme_scan_ctrls(struct libnvme_global_ctx *ctx,
+		struct dirent ***ctrls);
 
 /**
  * libnvme_scan_ctrl_namespace_paths() - Scan for namespace paths in

@@ -391,9 +391,10 @@ int main(int argc, char **argv)
 	const char *nqn_match = "testnqn";
 
 	printf("Test filter for common loop back target\n");
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return 1;
+	libnvme_set_logging_file(ctx, stdout);
 
 	err = libnvme_scan_topology(ctx, nvme_match_subsysnqn_filter,
 		(void *)nqn_match);

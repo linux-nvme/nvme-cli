@@ -387,9 +387,11 @@ int parse_and_open(struct libnvme_global_ctx **ctx,
 	if (ret)
 		return ret;
 
-	ctx_new = libnvme_create_global_ctx(stdout, log_level);
+	ctx_new = libnvme_create_global_ctx();
 	if (!ctx_new)
 		return -ENOMEM;
+	libnvme_set_logging_file(ctx_new, stdout);
+	libnvme_set_logging_level(ctx_new, log_level, false, false);
 
 	libnvme_set_ioctl_probing(ctx_new,
 		!nvme_args.no_ioctl_probing);
@@ -422,9 +424,11 @@ int open_exclusive(struct libnvme_global_ctx **ctx,
 	if (!ignore_exclusive)
 		flags |= O_EXCL;
 
-	ctx_new = libnvme_create_global_ctx(stdout, log_level);
+	ctx_new = libnvme_create_global_ctx();
 	if (!ctx_new)
 		return -ENOMEM;
+	libnvme_set_logging_file(ctx_new, stdout);
+	libnvme_set_logging_level(ctx_new, log_level, false, false);
 
 	libnvme_set_ioctl_probing(ctx_new,
 		!nvme_args.no_ioctl_probing);
@@ -3534,7 +3538,7 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
-	ctx = libnvme_create_global_ctx(stdout, log_level);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
 		if (devname)
 			nvme_show_error("Failed to scan nvme subsystem for %s", devname);
@@ -3542,6 +3546,8 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 			nvme_show_error("Failed to scan nvme subsystem");
 		return -ENOMEM;
 	}
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (devname) {
 		int subsys_num;
@@ -3632,11 +3638,14 @@ static int list(int argc, char **argv, struct command *acmd, struct plugin *plug
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
-	ctx = libnvme_create_global_ctx(stdout, log_level);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return -ENOMEM;
 	}
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, log_level, false, false);
+
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err < 0)
 		return handle_scan_topology_error(err);
@@ -6788,11 +6797,12 @@ static void show_relatives(const char *name, nvme_print_flags_t flags)
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx;
 	int err;
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return;
 	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err < 0) {
@@ -9573,7 +9583,7 @@ static int passthru(int argc, char **argv, bool admin,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_fd int dfd = -1, mfd = -1;
-	int flags = 0;
+	int flags = -1;
 	int mode = 0644;
 	void *data = NULL;
 	__cleanup_free void *mdata = NULL;
@@ -9658,7 +9668,26 @@ static int passthru(int argc, char **argv, bool admin,
 		dfd = mfd = STDOUT_FILENO;
 	}
 
+	/*
+	 * Fallback to user specified data direction in case from opcode
+	 * we can't decode direction.
+	 */
+	if (cfg.write && flags < 0) {
+		flags = O_RDONLY;
+		dfd = mfd = STDIN_FILENO;
+	}
+
+	if (cfg.read && flags < 0) {
+		flags = O_WRONLY | O_CREAT | O_TRUNC;
+		dfd = mfd = STDOUT_FILENO;
+	}
 	if (strlen(cfg.input_file)) {
+		if (flags < 0) {
+			nvme_show_error("input file specified for opcode 0x%x "
+				"without a data transfer direction",
+					cfg.opcode);
+			return -EINVAL;
+		}
 		dfd = nvme_open_rawdata(cfg.input_file, flags, mode);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.input_file);
@@ -9667,6 +9696,12 @@ static int passthru(int argc, char **argv, bool admin,
 	}
 
 	if (cfg.metadata && strlen(cfg.metadata)) {
+		if (flags < 0) {
+			nvme_show_error("metadata file specified for opcode 0x%x "
+				"without a data transfer direction",
+					cfg.opcode);
+			return -EINVAL;
+		}
 		mfd = nvme_open_rawdata(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			nvme_show_perror(cfg.metadata);
@@ -9795,11 +9830,12 @@ static int admin_passthru(int argc, char **argv, struct command *acmd, struct pl
 	return passthru(argc, argv, true, desc, acmd);
 }
 
+#ifdef CONFIG_FABRICS
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	char *hostnqn;
 
-	hostnqn = libnvme_generate_hostnqn();
+	hostnqn = libnvmf_generate_hostnqn();
 	if (!hostnqn) {
 		nvme_show_error("\"%s\" not supported. Install lib uuid and rebuild.",
 				acmd->name);
@@ -9814,9 +9850,9 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 {
 	char *hostnqn;
 
-	hostnqn = libnvme_read_hostnqn();
+	hostnqn = libnvmf_read_hostnqn();
 	if (!hostnqn)
-		hostnqn =  libnvme_generate_hostnqn();
+		hostnqn =  libnvmf_generate_hostnqn();
 
 	if (!hostnqn) {
 		nvme_show_error("hostnqn is not available -- use nvme gen-hostnqn");
@@ -9828,7 +9864,6 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 
 	return 0;
 }
-
 
 static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
@@ -9873,11 +9908,12 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	if (err)
 		return err;
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return -ENOMEM;
 	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (cfg.hmac > 3) {
 		nvme_show_error("Invalid HMAC identifier %u", cfg.hmac);
@@ -9916,19 +9952,19 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		cfg.key_len = 32;
 	}
 
-	err = libnvme_create_raw_secret(ctx, cfg.secret, cfg.key_len, &raw_secret);
+	err = libnvmf_create_raw_secret(ctx, cfg.secret, cfg.key_len, &raw_secret);
 	if (err)
 		return err;
 
 	if (!cfg.nqn) {
-		cfg.nqn = hnqn = libnvme_read_hostnqn();
+		cfg.nqn = hnqn = libnvmf_read_hostnqn();
 		if (!cfg.nqn) {
 			nvme_show_error("Could not read host NQN");
 			return -ENOENT;
 		}
 	}
 
-	err = libnvme_gen_dhchap_key(ctx, cfg.nqn, cfg.hmac,
+	err = libnvmf_gen_dhchap_key(ctx, cfg.nqn, cfg.hmac,
 		cfg.key_len, raw_secret, key);
 	if (err)
 		return err;
@@ -10047,14 +10083,14 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 	long kr_id;
 	char type;
 
-	err = libnvme_lookup_keyring(ctx, keyring, &kr_id);
+	err = libnvmf_lookup_keyring(ctx, keyring, &kr_id);
 	if (err) {
 		nvme_show_error("Failed to lookup keyring '%s', %s",
 				keyring, libnvme_strerror(-err));
 		return err;
 	}
 
-	identity = libnvme_describe_key_serial(ctx, id);
+	identity = libnvmf_describe_key_serial(ctx, id);
 	if (!identity) {
 		nvme_show_error("Failed to get identity info");
 		return -EINVAL;
@@ -10065,14 +10101,14 @@ static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
 		return -EINVAL;
 	}
 
-	err = libnvme_read_key(ctx, kr_id, id, &key_len, &key_data);
+	err = libnvmf_read_key(ctx, kr_id, id, &key_len, &key_data);
 	if (err) {
 		nvme_show_error("Failed to read back derive TLS PSK, %s",
 			libnvme_strerror(-err));
 		return err;
 	}
 
-	err = libnvme_export_tls_key_versioned(ctx, ver, hmac, key_data,
+	err = libnvmf_export_tls_key_versioned(ctx, ver, hmac, key_data,
 					    key_len, &exported_key);
 	if (err) {
 		nvme_show_error("Failed to export key, %s",
@@ -10185,7 +10221,7 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 			return -EINVAL;
 		}
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = libnvme_read_hostnqn();
+			cfg.hostnqn = hnqn = libnvmf_read_hostnqn();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;
@@ -10195,17 +10231,18 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 	if (cfg.hmac == 2)
 		key_len = 48;
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return -ENOMEM;
 	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
 
-	err = libnvme_create_raw_secret(ctx, cfg.secret, key_len, &raw_secret);
+	err = libnvmf_create_raw_secret(ctx, cfg.secret, key_len, &raw_secret);
 	if (err)
 		return err;
 
-	err = libnvme_export_tls_key(ctx, raw_secret, key_len, &encoded_key);
+	err = libnvmf_export_tls_key(ctx, raw_secret, key_len, &encoded_key);
 	if (err) {
 		nvme_show_error("Failed to export key, %s", libnvme_strerror(-err));
 		return err;
@@ -10214,12 +10251,12 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 
 	if (cfg.insert) {
 		if (cfg.compat)
-			err = libnvme_insert_tls_key_compat(ctx, cfg.keyring,
+			err = libnvmf_insert_tls_key_compat(ctx, cfg.keyring,
 				cfg.keytype, cfg.hostnqn,
 				cfg.subsysnqn, cfg.version,
 				cfg.hmac, raw_secret, key_len, &tls_key);
 		else
-			err = libnvme_insert_tls_key_versioned(ctx, cfg.keyring,
+			err = libnvmf_insert_tls_key_versioned(ctx, cfg.keyring,
 				cfg.keytype, cfg.hostnqn,
 				cfg.subsysnqn, cfg.version,
 				cfg.hmac, raw_secret, key_len, &tls_key);
@@ -10309,13 +10346,14 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 		return -EINVAL;
 	}
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return -ENOMEM;
 	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
 
-	err = libnvme_import_tls_key(ctx, cfg.keydata, &decoded_len,
+	err = libnvmf_import_tls_key(ctx, cfg.keydata, &decoded_len,
 		&hmac, &decoded_key);
 	if (err) {
 		nvme_show_error("Key decoding failed, error %d\n");
@@ -10324,7 +10362,7 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.subsysnqn) {
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = libnvme_read_hostnqn();
+			cfg.hostnqn = hnqn = libnvmf_read_hostnqn();
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;
@@ -10337,13 +10375,13 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.insert) {
 		if (cfg.compat)
-			err = libnvme_insert_tls_key_compat(ctx, cfg.keyring,
+			err = libnvmf_insert_tls_key_compat(ctx, cfg.keyring,
 				cfg.keytype, cfg.hostnqn,
 				cfg.subsysnqn, cfg.identity,
 				hmac, decoded_key, decoded_len,
 				&tls_key);
 		else
-			err = libnvme_insert_tls_key_versioned(ctx, cfg.keyring,
+			err = libnvmf_insert_tls_key_versioned(ctx, cfg.keyring,
 				cfg.keytype, cfg.hostnqn,
 				cfg.subsysnqn, cfg.identity,
 				hmac, decoded_key, decoded_len,
@@ -10364,12 +10402,12 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 		__cleanup_free char *tls_id = NULL;
 
 		if (cfg.compat)
-			err = libnvme_generate_tls_key_identity_compat(ctx,
+			err = libnvmf_generate_tls_key_identity_compat(ctx,
 				cfg.hostnqn, cfg.subsysnqn, cfg.identity,
 				hmac, decoded_key, decoded_len,
 				&tls_id);
 		else
-			err = libnvme_generate_tls_key_identity(ctx,
+			err = libnvmf_generate_tls_key_identity(ctx,
 				cfg.hostnqn, cfg.subsysnqn, cfg.identity,
 				hmac, decoded_key, decoded_len,
 				&tls_id);
@@ -10394,14 +10432,14 @@ static void __scan_tls_key(struct libnvme_global_ctx *ctx, long keyring_id,
 	char type;
 	int err;
 
-	err = libnvme_read_key(ctx, keyring_id, key_id, &key_len, &key_data);
+	err = libnvmf_read_key(ctx, keyring_id, key_id, &key_len, &key_data);
 	if (err)
 		return;
 
 	if (sscanf(desc, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3)
 		return;
 
-	err = libnvme_export_tls_key_versioned(ctx, ver, hmac, key_data, key_len,
+	err = libnvmf_export_tls_key_versioned(ctx, ver, hmac, key_data, key_len,
 		&encoded_key);
 	if (err)
 		return;
@@ -10419,7 +10457,7 @@ static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 	int linenum = -1, key_len;
 	int err;
 
-	err = libnvme_lookup_keyring(ctx, keyring, &keyring_id);
+	err = libnvmf_lookup_keyring(ctx, keyring, &keyring_id);
 	if (err) {
 		nvme_show_error("Invalid keyring '%s'", keyring);
 		return err;
@@ -10436,13 +10474,13 @@ static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 		*tls_key = '\0';
 		tls_key++;
 		tls_key[strcspn(tls_key, "\n")] = 0;
-		err = libnvme_import_tls_key(ctx, tls_key, &key_len, &hmac, &psk);
+		err = libnvmf_import_tls_key(ctx, tls_key, &key_len, &hmac, &psk);
 		if (err) {
 			nvme_show_error("Failed to import key in line %d",
 					linenum);
 			continue;
 		}
-		err = libnvme_update_key(ctx, keyring_id, "psk", tls_str,
+		err = libnvmf_update_key(ctx, keyring_id, "psk", tls_str,
 				psk, key_len, &key);
 		if (err)
 			continue;
@@ -10498,11 +10536,12 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (err)
 		return err;
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return -ENOMEM;
 	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (cfg.keyfile) {
 		const char *mode;
@@ -10536,7 +10575,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		nvme_show_error("Must specify either --import, --export or --revoke");
 		return -EINVAL;
 	} else if (cfg.export) {
-		err = libnvme_scan_tls_keys(ctx, cfg.keyring, __scan_tls_key, fd);
+		err = libnvmf_scan_tls_keys(ctx, cfg.keyring, __scan_tls_key, fd);
 		if (err < 0) {
 			nvme_show_error("Export of TLS keys failed with '%s'",
 				libnvme_strerror(-err));
@@ -10558,7 +10597,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		if (nvme_args.verbose)
 			printf("importing from %s\n", cfg.keyfile);
 	} else {
-		err = libnvme_revoke_tls_key(ctx, cfg.keyring, cfg.keytype,
+		err = libnvmf_revoke_tls_key(ctx, cfg.keyring, cfg.keytype,
 			cfg.revoke);
 		if (err) {
 			nvme_show_error("Failed to revoke key '%s'",
@@ -10577,6 +10616,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	return err;
 }
+#endif /* CONFIG_FABRICS */
 
 static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
@@ -10624,11 +10664,12 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 		return -EINVAL;
 	}
 
-	ctx = libnvme_create_global_ctx(stderr, log_level);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
 		nvme_show_error("Failed to create global context");
 		return -ENOMEM;
 	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (optind < argc)
 		devname = basename(argv[optind++]);

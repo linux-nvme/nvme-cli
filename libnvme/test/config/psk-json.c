@@ -12,7 +12,6 @@
 
 #include <libnvme.h>
 
-#include "nvme/linux.h"
 #include "nvme/tree.h"
 
 static bool import_export_key(struct libnvme_global_ctx *ctx, libnvme_ctrl_t c)
@@ -22,20 +21,20 @@ static bool import_export_key(struct libnvme_global_ctx *ctx, libnvme_ctrl_t c)
 	size_t len;
 	int ret;
 
-	ret = libnvme_import_tls_key_versioned(ctx, libnvme_ctrl_get_tls_key(c),
+	ret = libnvmf_import_tls_key_versioned(ctx, libnvme_ctrl_get_tls_key(c),
 					    &version, &hmac, &len, &key);
 	if (ret) {
-		printf("ERROR: libnvme_import_tls_key_versioned failed with %d\n",
+		printf("ERROR: libnvmf_import_tls_key_versioned failed with %d\n",
 		       ret);
 		return false;
 
 	}
 
-	ret = libnvme_export_tls_key_versioned(ctx, version, hmac, key, len,
+	ret = libnvmf_export_tls_key_versioned(ctx, version, hmac, key, len,
 					    &encoded_key);
 	free(key);
 	if (ret) {
-		printf("ERROR: libnvme_export_tls_key_versioned failed with %d\n",
+		printf("ERROR: libnvmf_export_tls_key_versioned failed with %d\n",
 		       ret);
 		return false;
 	}
@@ -56,9 +55,10 @@ static bool psk_json_test(char *file)
 	libnvme_ctrl_t c;
 	int err;
 
-	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return false;
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
 	err = libnvme_read_config(ctx, file);
 	if (err)

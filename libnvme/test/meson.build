@@ -183,6 +183,18 @@ if want_fabrics
     )
 
     test('libnvme - fabrics', test_fabrics)
+
+    psk = executable(
+        'test-psk',
+        ['psk.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+
+    test('libnvme - psk', psk)
 endif
 
 if conf.get('NVME_HAVE_NETDB')
@@ -223,18 +235,6 @@ if conf.get('NVME_HAVE_NETDB')
     test('libnvme - util', test_util)
 endif
 
-psk = executable(
-    'test-psk',
-    ['psk.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-)
-
-test('libnvme - psk', psk)
-
 subdir('ioctl')
 if want_fabrics
     subdir('nbft')
@@ -256,11 +256,9 @@ endif
 foreach hdr : [
     'endian',
     'fabrics',
-    'filters',
     'ioctl',
     'lib',
     'lib-types',
-    'linux',
     'mi',
     'nbft',
     'nvme-cmds',
@@ -276,6 +274,7 @@ foreach hdr : [
     'nvme-types-nbft',
     'nvme-types-nvm',
     'nvme-types-zns',
+    'scan',
     'tree',
     'util',
 ]

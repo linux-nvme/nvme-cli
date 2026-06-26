@@ -42,7 +42,10 @@ if diff.found()
     test_hostnqn_order = executable(
         'test-hostnqn-order',
         ['hostnqn-order.c'],
-        dependencies: libnvme_dep,
+        dependencies: [
+            ccan_dep,
+            libnvme_test_dep,
+        ]
     )
 
     test(
@@ -82,4 +85,25 @@ if diff.found()
             depends : test_psk_json,
         )
     endforeach
+endif
+
+# Validate the dumped config fixtures against the published JSON schema.  The
+# config-diff tests above assert the dump matches these .out fixtures; this
+# asserts the fixtures conform to doc/config-schema.json, so a drift between the
+# dump format and the schema fails CI.  Skips when python3-jsonschema is absent.
+python3 = find_program('python3', required : false)
+if python3.found()
+    schema_file = meson.project_source_root() / 'libnvme' / 'doc' / 'config-schema.json'
+    test(
+        'libnvme - config-schema-validate',
+        python3,
+        args : [
+            files('schema-validate.py'),
+            schema_file,
+            srcdir + '/data/config-pcie.out',
+            srcdir + '/data/config-pcie-with-tcp-config.out',
+            srcdir + '/data/tls_key-1.out',
+            srcdir + '/data/tls_key-2.out',
+        ],
+    )
 endif

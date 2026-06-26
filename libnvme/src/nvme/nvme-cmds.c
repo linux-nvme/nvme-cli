@@ -37,21 +37,27 @@ static int submit_get_log_cmd(struct libnvme_transport_handle *hdl,
 {
 	int err;
 
+	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
+		goto no_uring;
+
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_NOT_AVAILABLE)
 		goto no_uring;
 
-	err = libnvme_submit_admin_passthru_async(hdl, cmd, NULL);
+	err = libnvme_submit_admin_passthru(hdl, cmd, NULL);
 	if (err && err == -ENOTSUP)
 		goto no_uring;
 
 	return err;
 
 no_uring:
-	return libnvme_submit_admin_passthru(hdl, cmd);
+	return libnvme_exec_admin_passthru(hdl, cmd);
 }
 
 static int wait_get_log_cmd(struct libnvme_transport_handle *hdl)
 {
+	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
+		return 0;
+
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_NOT_AVAILABLE)
 		return 0;
 

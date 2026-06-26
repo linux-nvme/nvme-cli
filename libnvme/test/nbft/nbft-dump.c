@@ -112,11 +112,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	ctx = libnvme_create_global_ctx(stderr, false);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx) {
 		fprintf(stderr, "Failed to create global context");
 		return 1;
 	}
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
 	if (libnvmf_read_nbft(ctx, &table, argv[1]) != 0) {
 		fprintf(stderr, "Error parsing the NBFT table %s: %m\n",
