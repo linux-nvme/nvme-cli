@@ -227,7 +227,7 @@ static struct json_object *parse_json(struct libnvme_global_ctx *ctx, int fd)
 
 int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file)
 {
-	struct json_object *json_root, *host_array, *host_obj;
+	struct json_object *json_root, *host_array, *host_obj, *owner_obj;
 	int fd, h;
 
 	fd = open(config_file, O_RDONLY);
@@ -250,6 +250,14 @@ int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file)
 			json_object_put(json_root);
 			return -EPROTO;
 		}
+		/*
+		 * A CLI --owner is set on the context before the config is
+		 * read, so only adopt the config's owner when none was given.
+		 */
+		owner_obj = json_object_object_get(json_root, "owner");
+		if (owner_obj && !ctx->owner)
+			libnvme_set_owner(ctx,
+					  json_object_get_string(owner_obj));
 	} else if (json_object_is_type(json_root, json_type_array)) {
 		/*
 		 * Legacy pre-3.0 format: a bare top-level array of hosts.
@@ -400,6 +408,9 @@ int json_update_config(struct libnvme_global_ctx *ctx, int fd)
 	int ret = 0;
 
 	json_root = json_object_new_object();
+	if (ctx->owner)
+		json_object_object_add(json_root, "owner",
+				       json_object_new_string(ctx->owner));
 	host_array = json_object_new_array();
 	libnvme_for_each_host(ctx, h) {
 		libnvme_subsystem_t s;
