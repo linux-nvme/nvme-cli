@@ -53,10 +53,11 @@ echo "Running command:"
 printf '%q ' "${cmd[@]}"
 printf '> %q\n' "$output"
 
-if ! "${cmd[@]}" > "$output"; then
-    rc=$?
+"${cmd[@]}" > "$output"
+rc=$?
+if [ "$rc" -ne 0 ]; then
     echo "test failed (exit code $rc)"
-    exit $rc
+    exit "$rc"
 fi
 
 diff -u "${expected_output}" "${output}"
