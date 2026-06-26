@@ -74,8 +74,8 @@ Multiple `.conf` files are allowed — one per administrative boundary (e.g. `ad
 
 Two interaction modes are supported:
 
-- **`nvme exclusion edit --name <NAME>`** — interactive (`vipw`-style): opens `<NAME>.conf` in `$EDITOR` with a file lock held. Best for multi-entry changes in a single editing session.
-- **`nvme exclusion add/remove`** — scripted: each command writes atomically. Best for automation, scripts, and `nvme disconnect --exclude`.
+- **`nvme exclusion edit --name <NAME>`** — interactive: opens the list in `$EDITOR` for multi-entry changes in a single editing session. The plugin never touches the exclusion directory directly — it reads and writes the list *by name* through libnvme (§5.2). Requires root.
+- **`nvme exclusion add/remove`** — scripted: each command writes atomically. Best for automation, scripts, and `nvme disconnect --exclude`. Requires root.
 
 ### 5.1 List-level operations
 
@@ -83,15 +83,20 @@ Two interaction modes are supported:
 |---------|--------|
 | `nvme exclusion create --name <NAME>` | Creates `/etc/nvme/exclusions/<NAME>.conf` |
 | `nvme exclusion delete --name <NAME>` | Removes the named exclusion list entirely |
-| `nvme exclusion edit --name <NAME>` | Opens `<NAME>.conf` in `$EDITOR` with a lock; validates and commits atomically on close |
+| `nvme exclusion edit --name <NAME>` | Opens the list in `$EDITOR`; validates and commits atomically on close (optimistic concurrency, no lock held during editing) |
 
 (All commands take `--name`/`-N`; `add` also takes `--entry`/`-e`.)
 
 ### 5.2 Interactive editing (`nvme exclusion edit`)
 
-Mirrors `vipw`/`vigr`: copy `<name>.conf` to a temp file, acquire a lock, launch `$EDITOR` (fall back to `vi` if `$EDITOR` is unset), and on editor close validate the file syntax. If valid, atomically rename the temp over the original — inotify fires exactly once at that point, after the complete edited file is in place. If invalid, report the errors and offer to re-edit; the original file is untouched.
+The plugin works entirely in terms of the list *name*; it never constructs paths under `/etc/nvme/exclusions/` or learns where lists are stored. The flow:
 
-The lock file is `/etc/nvme/exclusions/<name>.lock` and contains the PID of the editing process. A stale lock (PID no longer alive) is broken automatically. This prevents two concurrent interactive editors on the same list. CRUD commands do not acquire the lock — their individual atomic writes are inherently safe without it.
+1. Read the current list through libnvme (`libnvmf_exclusion_read()`), which returns the raw file text plus an opaque *version token* identifying the contents read. A missing list reads as empty, so `edit` can create one.
+2. Write that text to a private scratch file under `$TMPDIR` (**not** the exclusion directory; created `0600` via `mkstemp`) and launch `$EDITOR` on it (falling back to `vi` if `$EDITOR` is unset).
+3. On editor close, validate the syntax. If invalid, report the errors and offer to re-edit; on giving up, the edited scratch file is left in place and its path is reported so no work is lost.
+4. If valid, write the edited text back by name (`libnvmf_exclusion_write()`), passing the version token from step 1. libnvme installs it atomically (temp file + `rename()`, mode `0644`), so inotify fires exactly once, after the complete edited file is in place.
+
+**Concurrency — optimistic, no lock held during editing.** No lock is taken across the (arbitrarily long) editor session, so an administrator who opens an editor and is called away blocks nobody. Instead, `libnvmf_exclusion_write()` only commits if the on-disk list still matches the version token read in step 1; if a second editor saved in the meantime, the write is refused with `-ESTALE`, the original file is left untouched, and the rejected edits are preserved in the `$TMPDIR` scratch file (its path is reported) so the user can reconcile and retry. This is strictly safer than a `vipw`-style held lock, which serializes editors and can be held indefinitely by an idle session. The compare-and-swap (re-check the version, then `rename()`) is serialized internally by libnvme for the brief commit window only; the scripted `add`/`remove` paths are likewise individually atomic.
 
 ### 5.3 Entry-level operations
 
@@ -209,6 +214,31 @@ int libnvmf_exclusion_add(const char *name, const char *entry);
  * negative errno otherwise.
  */
 int libnvmf_exclusion_remove(const char *name, const char *entry);
+
+/*
+ * Read a list's raw text and a concurrency token. On success *text is the
+ * file's full contents (caller frees) and *version is an opaque token
+ * identifying those contents (0 means the list did not exist; a missing
+ * list reads as an empty string). Pass *version back to
+ * libnvmf_exclusion_write() to detect concurrent modification.
+ * Intended for read-modify-write editors: the caller works only in terms
+ * of list names and never needs to know the storage location.
+ * Returns 0 on success, negative errno otherwise.
+ */
+int libnvmf_exclusion_read(const char *name, char **text, uint64_t *version);
+
+/*
+ * Atomically replace a list's contents. Every "exclusion = ..." line in
+ * text is validated (invalid entries -> -EINVAL, no write). The write
+ * commits only if the on-disk list still matches version (from a prior
+ * libnvmf_exclusion_read()); otherwise it returns -ESTALE and leaves the
+ * file untouched, so a concurrent editor's changes are never clobbered.
+ * Installed atomically (temp + rename) with mode 0644.
+ * Returns 0 on success, -ESTALE on version mismatch, -EINVAL on an invalid
+ * entry or name, negative errno otherwise.
+ */
+int libnvmf_exclusion_write(const char *name, const char *text,
+			    uint64_t version);
 ```
 
 ### 6.2 Python Bindings
@@ -271,6 +301,8 @@ When an exclusion is added, orchestrators stop connecting matching controllers i
 To also disconnect an existing controller, use `nvme disconnect --exclude`, which derives an exclusion entry from the controller's sysfs attributes — transport, traddr, trsvcid, and subsystem NQN are always included; host-iface is included when the connection is pinned to an interface — writes it to `/etc/nvme/exclusions/user.conf` first, then disconnects. Writing the exclusion first ensures it is in place before the device removal event triggers orchestrator reconnect logic.
 
 **Soak-timer race.** Orchestrators debounce rapid inotify changes to the exclusion directory with a short soak timer. If `nvme disconnect --exclude` writes an exclusion entry and a device removal event fires before the soak timer expires, an orchestrator may attempt a reconnect before it has processed the new exclusion. To close this window, orchestrators must re-read the exclusion list from disk on *every* connect decision — not only after the soak timer fires. The in-memory exclusion set (rebuilt after the soak timer) is used for proactive filtering (e.g. skipping DLP entries); the on-disk re-read is the definitive check immediately before writing to `/dev/nvme-fabrics`.
+
+**Excluding a boot (NBFT) controller is confirmed.** The exclusion list applies to NBFT-sourced controllers as well — nvme-discoverd honours a matching entry and stops reconnecting (see `rfc-nvme-registry.md`), which is the supported way to take a boot path out of service for testing or maintenance. Because excluding a controller that backs the boot/root path is a foot-cannon, when an entry added via `nvme exclusion add` would match a controller currently recorded in the registry with `owner=nbft`, the command prompts an interactive "are you sure?" confirmation before writing, skippable with `--force` for automation. (`nvme disconnect --exclude` targets a specific operator-named device, so it proceeds without the prompt, consistent with `nvme disconnect` being the explicit no-checks path.) `owner=nbft` continues to protect the controller from *other* orchestrators via the registry; the host administrator's own explicit exclusion is deliberately allowed to override discoverd's reconnect.
 
 ### 7.3 Raw commands bypass the exclusion list
 

@@ -104,17 +104,17 @@ This may raise a concern for FC environments where dracut uses `nvme connect-all
 | `nvme-stas` | Yes + CDC authority | Yes — skips if owned by another | Yes (`owner=stas`) |
 
 ¹ Exception: `connect-all --nbft` registers `owner=nbft`.
-² Exception: nvme-discoverd always reconnects NBFT-sourced controllers regardless of any exclusion list entry.
+² The exclusion list applies to NBFT-sourced controllers too: nvme-discoverd reconnects them by default but honours an explicit matching exclusion entry (the administrator's deliberate override). `owner=nbft` still protects them from *other* orchestrators via the ownership registry.
 
 **Manual operations and daemon orchestrators.** If a user manually `nvme disconnect`s a controller that nvme-stas owns, nvme-stas may reconnect it — the controller is in its desired set. If a user manually `nvme connect`s a controller, no registry entry is written; the connection is unowned. nvme-discoverd leaves it alone — discoverd never disconnects. nvme-stas may still disconnect it if CDC fabric zoning demands: nvme-stas skips only controllers owned by *another* orchestrator; unowned controllers are fair game for fabric zoning (TP8010) enforcement.
 
-**Tools that bypass libnvme or use NULL owner** produce unowned connections — no registry entry is written, and `disconnect-all` treats them as freely disconnectable. The most common sources are:
+**Tools that connect outside registry ownership** produce connections that, while unowned, `disconnect-all` treats as freely disconnectable. The libnvme-based storage tools here are actively evolving toward registry participation:
 
-- **UDisks**: a D-Bus daemon that provides block-device management to desktop environments; it calls libblockdev (`bd_nvme_connect`), which calls libnvme internally, but neither participates in registry ownership.
-- **libblockdev**: a C library used by storage tools including UDisks; calls `nvmf_add_ctrl()` directly with no plans for registry ownership participation.
+- **libblockdev**: a C library used by storage tools including UDisks; it connects through libnvme. Its nvme API is planned to gain an optional `owner` argument (default NULL, supplied by the caller), and it follows the common libnvme exclusion semantics. Unless a caller supplies an owner it produces unowned connections. It is a Tier 1 participant — a thin connect/disconnect wrapper with no discovery of its own.
+- **UDisks**: a D-Bus daemon that provides block-device management to desktop environments; it calls libblockdev (`bd_nvme_connect`). UDisks plans to always supply owner information (e.g. `owner='udisks'`, overridable to an arbitrary string) and, as a high-level layer, to actively respect the exclusion list — refusing a matching connection unless forced. It currently provides only simple connect/disconnect (Tier 1).
 - **Direct `/dev/nvme-fabrics` writes**: any process writing connection parameters to the fabrics interface without going through libnvme (embedded systems, kdump environments, custom scripts); always unowned.
 
-This is correct by design: these are one-shot or user-driven connections not managed by a running daemon. All unowned connections — including those made by plain `connect-all` — are freely disconnectable; that invariant is what makes the `connect-all` → `disconnect-all` workflow reliable.
+For unowned connections this is correct by design: they are one-shot or user-driven and not managed by a participating orchestrator, so `disconnect-all` may reclaim them — the same invariant that makes the `connect-all` → `disconnect-all` workflow reliable. As the libnvme-based tools above adopt the optional owner argument, their connections become owned and are protected like any other orchestrator's.
 
 ---
 
@@ -157,7 +157,11 @@ At most one orchestrator must have mDNS discovery enabled at a time. If both nvm
 
 The ownership ambiguity also undermines CDC fabric zoning (TP8010): nvme-stas can only enforce zoning on controllers it owns — if nvme-discoverd wins the connection race for an mDNS-discovered controller, that controller carries `owner=discoverd` and nvme-stas cannot disconnect it even if the CDC's zone policy demands it.
 
-nvme-stas actively detects this misconfiguration: at startup it reads `/etc/nvme/discoverd.conf` and emits an error-level journal entry if `zeroconf=true` is set, prompting the administrator to disable mDNS in one of the two daemons. The defaults already avoid the conflict in most deployments: nvme-stas enables mDNS by default; nvme-discoverd disables it by default (`zeroconf=false`). The administrator must make a deliberate choice to enable mDNS in nvme-discoverd, and should do so only when nvme-stas is not installed on the same host.
+nvme-stas actively detects this misconfiguration, but it does **not** read discoverd's configuration file to do so. Parsing `/etc/nvme/discoverd.conf` would couple nvme-stas to discoverd's config-file *format*: any change to that format would silently break the check, leaving the conflict undetected. Instead, nvme-stas queries discoverd's **runtime** mDNS/zeroconf state over discoverd's varlink interface (§3.7 of `rfc-nvme-discoverd.md`) and emits an error-level journal entry if discoverd reports mDNS enabled, prompting the administrator to disable it in one of the two daemons. Querying runtime state rather than configuration also means the check reflects what discoverd is *actually* doing, not merely what its config file requests.
+
+The query is best-effort and loosely coupled: it is a periodic poll, the warning is edge-triggered (logged only on transition into the conflicting state, not on every poll), and a failed query is simply skipped — if discoverd is not running or its socket is unavailable, there is no conflict to report and no harm done.
+
+The defaults already avoid the conflict in most deployments: nvme-stas enables mDNS by default; nvme-discoverd disables it by default (`zeroconf=false`). The administrator must make a deliberate choice to enable mDNS in nvme-discoverd, and should do so only when nvme-stas is not installed on the same host.
 
 A future architecture could designate a single mDNS listener that publishes discovered DCs to other orchestrators, eliminating independent mDNS stacks entirely. That design is out of scope for the current release cycle.
 

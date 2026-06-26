@@ -41,10 +41,13 @@ One directory per live controller, named after the kernel device, with one plain
 /run/nvme/registry/
     nvme1/
         owner
+        seqnum
     nvme3/
         owner
+        seqnum
     nvme5/
         owner
+        seqnum
 ```
 
 **Absence means unowned.** A controller with no registry directory is not managed by any orchestrator. There is no explicit "unowned" marker — a missing directory is the signal.
@@ -64,8 +67,9 @@ nvme1  nvme3  nvme5
 | Attribute | Written by | Description |
 |-----------|------------|-------------|
 | `owner` | libnvme automatically on connect (when `ctx->owner` is non-NULL) | Orchestrator identity string (e.g. `"stas"`, `"nbft"`, `"discoverd"`). A registry entry without an `owner` file has no meaningful ownership. |
+| `seqnum` | libnvme automatically on connect (best-effort) | Kernel uevent sequence number, read from `/sys/kernel/uevent_seqnum` and stamped on the entry at connect time. The cleanup udev rule (`70-nvmf-registry.rules`) removes an entry on a `remove` event only when the event's `SEQNUM` is greater than this stamp, so a controller that is removed and immediately re-created under the same device name keeps its fresh entry instead of having it deleted by the stale `remove`. A missing stamp makes the rule fall back to its device-existence guard. |
 
-Unknown attributes are ignored by all registry consumers. Orchestrators may write additional private attributes using the same API.
+These two attributes are the minimum every registry entry carries: `owner` records *who* owns the controller, and `seqnum` makes cleanup race-free. Unknown attributes are ignored by all registry consumers. Orchestrators may write additional private attributes using the same API.
 
 Directories are created with mode `0755`; attribute files with mode `0644`. The registry is world-readable — any process may inspect ownership — but only root-writable. Both the `/run/nvme/registry/` root and per-device subdirectories are created on demand by libnvme when a registry entry is first written.
 
@@ -120,14 +124,14 @@ A udev rule fires on `KOBJ_REMOVE` for NVMe controller devices and removes the c
 
 ```
 ACTION=="remove", SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", \
-    RUN+="/bin/sh -c '[ -e /dev/%k ] || rm -rf /run/nvme/registry/%k'"
+    RUN+="/bin/sh -c '[ -e /dev/%k ] || [ $env{SEQNUM} -le $$(cat /run/nvme/registry/%k/seqnum 2>/dev/null || echo 0) ] || rm -rf /run/nvme/registry/%k'"
 ```
 
 The rule ships with `libnvme`, so the cleanup mechanism is present whenever libnvme is installed — independent of whether `nvme-cli` is installed.
 
 **Why `%k` is safe.** `%k` expands to the kernel device name (e.g. `nvme3`). For `SUBSYSTEM=="nvme"` the kernel always produces names of the form `nvme[0-9]*`, so path traversal via `%k` is not possible; the `KERNEL==` match makes this constraint explicit and provides defense-in-depth. The rule is also safe when no registry entry exists (unowned controllers, PCIe devices, etc.).
 
-### 4.1 Instance recycling and the `[ -e /dev/%k ]` guard
+### 4.1 Instance recycling and the cleanup guards
 
 The kernel allocates NVMe controller instance numbers using `ida_alloc()` (`nvme_init_ctrl()` in `drivers/nvme/host/core.c`), which returns the **lowest available** ID. When `nvme4` is removed, its instance number is freed immediately and the very next connected controller may receive the same number. This creates a potential race: the cleanup rule for the old `nvme4` may run after a new controller has already claimed the same ID and written its registry entry, silently deleting a live entry. The guard works as follows:
 
@@ -135,6 +139,8 @@ The kernel allocates NVMe controller instance numbers using `ida_alloc()` (`nvme
 - **New controller has not appeared yet**: `/dev/nvme4` is absent; the test is false and `rm` runs, removing the stale old entry.
 
 NVMe controller devices (`nvme0`, `nvme4`, etc.) are char devices — `-e` (exists) is the correct test; `-b` (block device) would never match.
+
+A **second guard** closes a narrower race. The `[ -e /dev/%k ]` test and the `rm` run in the same `/bin/sh -c` sub-shell, so an owned connect could in principle complete in the gap between them. To close that, libnvme stamps each entry at connect time with the kernel's global uevent sequence number (`/sys/kernel/uevent_seqnum`, the `seqnum` attribute — §2.1). A stale `remove` for the *old* controller was emitted before the *new* controller's `add`, so its `SEQNUM` is lower than the new entry's stamp; the rule deletes only when the remove event's `SEQNUM` is **greater** than the stamped value (`[ $env{SEQNUM} -le <stamp> ] || rm`). A missing stamp reads as `0`, falling back to the `[ -e ]` check alone.
 
 ### 4.2 Why the guard is race-free
 
@@ -146,7 +152,7 @@ First, the kernel creates the device node in devtmpfs synchronously before the c
 
 Second, when owner is NULL, libnvme explicitly deletes any stale entry for the assigned instance on every successful connect (see §5). So for unowned connections the rule and libnvme both delete the same stale entry — whichever runs first, the result is the same.
 
-The remaining theoretical window — an owned connect completing and its registry entry being written in the exact interval between the `[ -e ]` check returning false and `rm -rf` executing — is negligible. The shell gap between those two operations is measured in microseconds; a live NVMe-oF connect ioctl would need to complete at exactly that clock instant. No transport can guarantee this, so the probability of hitting this window is vanishingly small.
+The one remaining window — an owned connect completing and writing its entry in the interval between the `[ -e ]` check returning false and `rm -rf` executing — is **closed by the `seqnum` guard** (§4.1, §2.1), not merely improbable: the recycled controller's entry carries a stamp higher than the stale `remove` event's `SEQNUM`, so the rule skips the `rm`. The `[ -e ]` test handles the common case; the `seqnum` comparison handles this sub-shell race. Together they make the cleanup race-free.
 
 ### 4.3 Kernel reconnect behavior
 
@@ -156,9 +162,9 @@ During a reconnect within `ctrl-loss-tmo`, the kernel reuses the same `struct nv
 
 Controllers connected during the initramfs stage are automatically protected. The dracut nvmf module invokes `nvme connect-all --nbft`, which goes through libnvme and writes registry entries with `owner=nbft`. `switch_root(8)` explicitly moves `/run` to the new root — *"switch_root moves already mounted /proc, /dev, /sys and /run to newroot"* ([switch_root(8), util-linux](https://man7.org/linux/man-pages/man8/switch_root.8.html)) — so these entries are present in the runtime system with no special handling. No dracut changes are needed beyond using the updated nvme-cli in the initramfs. Boot devices are a first-class case, not a special one.
 
-**`owner=nbft` protects boot-path controllers from all orchestrator policy enforcement.** NBFT controllers carry `owner=nbft` for their entire lifecycle: set by `nvme connect-all --nbft` at initial connect and preserved by nvme-discoverd on every subsequent reconnect (it passes `--owner nbft` rather than `--owner discoverd` for NBFT-sourced controllers). nvme-stas respects the registry unconditionally — `owner=nbft` means nvme-stas never disconnects them regardless of CDC fabric zoning requests, by the same rule that applies to any other orchestrator's controllers. nvme-discoverd additionally ignores exclusion list entries that match NBFT-sourced controllers, reconnecting unconditionally. In both cases the orchestrator logs a warning when it would otherwise have enforced policy against a boot device — the protection is visible, not silent.
+**`owner=nbft` protects boot-path controllers from all orchestrator policy enforcement.** NBFT controllers carry `owner=nbft` for their entire lifecycle: set by `nvme connect-all --nbft` at initial connect and preserved by nvme-discoverd on every subsequent reconnect (it passes `--owner nbft` rather than `--owner discoverd` for NBFT-sourced controllers). nvme-stas respects the registry unconditionally — `owner=nbft` means nvme-stas never disconnects them regardless of CDC fabric zoning requests, by the same rule that applies to any other orchestrator's controllers — and it logs a warning when it would otherwise have enforced policy against a boot device, so the protection is visible, not silent. The local exclusion list, however, still applies to NBFT controllers: it is the host administrator's explicit, root-only instruction, so nvme-discoverd honours an exclusion entry that matches an NBFT-sourced controller and stops reconnecting it — the supported way to take a boot path out of service for testing or maintenance. `owner=nbft` therefore protects boot devices from *other* orchestrators' policy enforcement, not from the administrator's own deliberate exclusion. Because excluding a boot device can be hazardous, `nvme exclusion add` warns when an entry would match an `owner=nbft` controller (overridable with `--force`).
 
-**FC boot controllers follow a different path.** NBFT is one of two initramfs connection mechanisms; the other is the FC kickstart, issued by dracut's nvmf module (`95nvmf`), whose resulting `FC_EVENT` udev events trigger `nvme connect-all` for FC boot controllers. These connections are made with a NULL owner and are therefore initially unprotected. nvme-discoverd closes this window shortly after startup: it re-issues the kickstart and adopts all FC-discovered controllers via idempotent connects carrying `--owner discoverd`, after which they are protected like any other owned controller. See `rfc-nvme-orchestrator-coexistence.md` §5.2 for the full discussion.
+**FC boot controllers follow a different path.** NBFT is one of three initramfs connection mechanisms; the others are the FC kickstart — issued by dracut's nvmf module (`95nvmf`), whose resulting `FC_EVENT` udev events trigger `nvme connect-all` for FC boot controllers — and the manual `rd.nvmf.*` kernel-command-line arguments parsed by dracut's `74nvmf` module (whose real-world adoption is uncertain). Both the FC-kickstart and `rd.nvmf` connections are made with a NULL owner and are therefore initially unprotected. nvme-discoverd closes this window shortly after startup by adopting the already-connected controllers via idempotent connects carrying `--owner discoverd` (and, for FC, re-issuing the kickstart to pick up any it missed), after which they are protected like any other owned controller. See `rfc-nvme-orchestrator-coexistence.md` §5.2 for the full discussion.
 
 ### 4.5 Daemons track device presence independently
 
