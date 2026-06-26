@@ -30,7 +30,7 @@ __libnvme_public int libnvme_scan_subsystem_namespaces(
 }
 
 __libnvme_public int libnvme_scan_ctrls(
-	__libnvme_unused struct libnvme_global_ctx *ctx,
+	struct libnvme_global_ctx *ctx,
 	__libnvme_unused struct dirent ***ctrls)
 {
 	struct dirent **entries;
@@ -43,7 +43,7 @@ __libnvme_public int libnvme_scan_ctrls(
 	*ctrls = NULL;
 
 	libnvme_ctrl_map_clear();
-	ret = libnvme_ctrl_map_init();
+	ret = libnvme_ctrl_map_init(ctx);
 	if (ret)
 		return ret;
 
@@ -100,7 +100,7 @@ __libnvme_public int libnvme_scan_ctrl_namespaces(
 
 	*ns = NULL;
 
-	ctrl_entry = libnvme_ctrl_map_lookup(c->name);
+	ctrl_entry = libnvme_ctrl_map_lookup(c->ctx, c->name);
 	if (!ctrl_entry)
 		return 0;
 

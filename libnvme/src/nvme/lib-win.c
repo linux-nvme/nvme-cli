@@ -105,7 +105,7 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx,
 	if (strstr(name, "/dev/"))
 		name = libnvme_basename(name);
 
-	ctrl_entry = libnvme_ctrl_map_lookup(name);
+	ctrl_entry = libnvme_ctrl_map_lookup(ctx, name);
 	if (ctrl_entry) {
 		const char *n_pos = strchr(name + 4, 'n');
 		__u32 nsid;
@@ -161,7 +161,7 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx,
 	}
 
 	/* For PhysicalDrive names, create the nvmeXnY-style name. */
-	ctrl_entry = libnvme_ctrl_map_lookup_by_physdrive(name);
+	ctrl_entry = libnvme_ctrl_map_lookup_by_physdrive(ctx, name);
 	if (ctrl_entry) {
 		__u32 nsid;
 

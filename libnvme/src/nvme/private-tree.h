@@ -43,6 +43,7 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 
 /**
  * libnvme_get_ctrl_transport - Get transport type and address for a controller
+ * @ctx:		libnvme global context
  * @path:		Path to the controller
  * @name:		Name of the controller
  * @transport:		Pointer to store the transport type
@@ -54,7 +55,8 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
  *
  * Return: 0 on success or negative error code otherwise
  */
-int libnvme_get_ctrl_transport(const char *path, const char *name,
+int libnvme_get_ctrl_transport(struct libnvme_global_ctx *ctx,
+		const char *path, const char *name,
 		char **transport, char **traddr, char **addr, char **trsvcid,
 		char **host_traddr, char **host_iface);
 

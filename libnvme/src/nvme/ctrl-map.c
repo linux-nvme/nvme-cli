@@ -174,25 +174,21 @@ static int ctrl_map_find_index(const char *ctrl_name)
 
 /*
  * Issue an Identify Controller command on the given handle.
- * Creates a temporary transport context and handle internally.
+ * Creates a temporary transport handle internally using the caller's
+ * global context.
  * Returns 0 on success with id_ctrl filled in, negative errno on failure.
  */
-static int identify_ctrl_from_handle(libnvme_fd_t h, struct nvme_id_ctrl *id_ctrl)
+static int identify_ctrl_from_handle(struct libnvme_global_ctx *ctx,
+				     libnvme_fd_t h,
+				     struct nvme_id_ctrl *id_ctrl)
 {
-	struct libnvme_global_ctx *ctx;
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
 	int ret;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx)
-		return -ENOMEM;
-
 	hdl = __libnvme_create_transport_handle(ctx);
-	if (!hdl) {
-		libnvme_free_global_ctx(ctx);
+	if (!hdl)
 		return -ENOMEM;
-	}
 
 	hdl->fd = h;
 	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
@@ -207,7 +203,6 @@ static int identify_ctrl_from_handle(libnvme_fd_t h, struct nvme_id_ctrl *id_ctr
 	 */
 	hdl->fd = INVALID_HANDLE_VALUE;
 	free(hdl);
-	libnvme_free_global_ctx(ctx);
 
 	return ret;
 }
@@ -306,7 +301,7 @@ static int get_device_interface_path(HDEVINFO hdev,
 	return 0;
 }
 
-int libnvme_ctrl_map_init(void)
+int libnvme_ctrl_map_init(struct libnvme_global_ctx *ctx)
 {
 	HDEVINFO hdev;
 	PWSTR ctrl_path = NULL;
@@ -349,7 +344,7 @@ int libnvme_ctrl_map_init(void)
 		    bus_type != BusTypeNvme)
 			goto next_entry;
 
-		ret = identify_ctrl_from_handle(h, &id_ctrl);
+		ret = identify_ctrl_from_handle(ctx, h, &id_ctrl);
 		if (ret)
 			goto next_entry;
 
@@ -378,14 +373,15 @@ enomem:
 	return -ENOMEM;
 }
 
-struct ctrl_map_entry *libnvme_ctrl_map_lookup(const char *ctrl_name)
+struct ctrl_map_entry *libnvme_ctrl_map_lookup(struct libnvme_global_ctx *ctx,
+					       const char *ctrl_name)
 {
 	int idx;
 
 	if (!ctrl_name)
 		return NULL;
 
-	if (libnvme_ctrl_map_init())
+	if (libnvme_ctrl_map_init(ctx))
 		return NULL;
 
 	idx = ctrl_map_find_index(ctrl_name);
@@ -396,7 +392,8 @@ struct ctrl_map_entry *libnvme_ctrl_map_lookup(const char *ctrl_name)
 }
 
 const struct ctrl_map_entry *
-libnvme_ctrl_map_lookup_by_physdrive(const char *drive_path)
+libnvme_ctrl_map_lookup_by_physdrive(struct libnvme_global_ctx *ctx,
+				     const char *drive_path)
 {
 	DWORD target_num;
 	char *endptr;
@@ -420,7 +417,7 @@ libnvme_ctrl_map_lookup_by_physdrive(const char *drive_path)
 	if (endptr == num_str || *endptr != '\0')
 		return NULL;
 
-	if (libnvme_ctrl_map_init())
+	if (libnvme_ctrl_map_init(ctx))
 		return NULL;
 
 	for (i = 0; i < ctrl_map.count; i++) {
