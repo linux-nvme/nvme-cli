@@ -6319,7 +6319,6 @@ static int nvme_get_print_ocp_cloud_smart_log(struct libnvme_transport_handle *h
 		__u32 namespace_id,
 		int fmt)
 {
-	__u32 length = WDC_NVME_SMART_CLOUD_ATTR_LEN;
 	struct ocp_cloud_smart_log *log_ptr = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int ret, i;
