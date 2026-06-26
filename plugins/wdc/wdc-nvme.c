@@ -2695,7 +2695,7 @@ static bool get_dev_mgmt_log_page_lid_data(struct libnvme_transport_handle *hdl,
 	hdr_ptr = (struct wdc_c2_log_page_header *)data;
 	sph = (struct wdc_c2_log_subpage_header *)(data + length);
 	found = wdc_get_dev_mng_log_entry(le32_to_cpu(hdr_ptr->length), log_id, hdr_ptr, &sph);
-	if (found) {
+	if (found && sph) {
 		*cbs_data = calloc(le32_to_cpu(sph->length), sizeof(__u8));
 		if (!*cbs_data) {
 			fprintf(stderr, "ERROR: WDC: calloc: %s\n", libnvme_strerror(errno));
@@ -2703,6 +2703,9 @@ static bool get_dev_mgmt_log_page_lid_data(struct libnvme_transport_handle *hdl,
 			goto end;
 		}
 		memcpy((void *)*cbs_data, (void *)&sph->data, le32_to_cpu(sph->length));
+	} else if(found && !sph) {
+		fprintf(stderr, "ERROR: WDC: C2 log id 0x%x not present in log page with uuid index %d\n",log_id, uuid_ix);
+		found = false;
 	} else {
 		fprintf(stderr, "ERROR: WDC: C2 log id 0x%x not found with uuid index %d\n",
 			log_id, uuid_ix);
