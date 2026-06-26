@@ -8,7 +8,7 @@
 #          Nilay Shroff <nilay@linux.ibm.com>
 
 
-name: Clang Analyzer
+name: Analyzers
 
 on:
   workflow_dispatch:
@@ -21,7 +21,7 @@ on:
     - cron: '0 01 * * *'
 
 jobs:
-  build-with-clang-analyzer:
+  clang-analyzer:
     if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
     name: build with clang analyzer
     runs-on: ubuntu-latest
@@ -81,7 +81,7 @@ jobs:
           echo "put ${REPORT}" >> "$SFTP_BATCH"
           sftp -b "$SFTP_BATCH" "${SFTP_USERNAME}@${SFTP_SERVER}"
 
-  coverity-scan:
+  coverity:
     if: github.repository == 'linux-nvme/nvme-cli'
     name: coverity scan
     runs-on: ubuntu-latest
@@ -106,11 +106,11 @@ jobs:
 
       - name: Download Coverity Build Tool
         run: |
-          wget -q https://scan.coverity.com/download/linux64 \
-            --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=linux-nvme%2Fnvme-cli" \
-            -O coverity_tool.tgz
+          curl -fsSL https://scan.coverity.com/download/linux64 \
+            --data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=linux-nvme%2Fnvme-cli" \
+            --output coverity_tool.tgz
           mkdir coverity-tools
-          tar xzf coverity_tool.tgz --strip 1 -C coverity-tools
+          tar xzf coverity_tool.tgz --strip-components=1 -C coverity-tools
 
       - name: Configure build
         run: |
