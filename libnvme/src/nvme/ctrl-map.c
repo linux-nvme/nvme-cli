@@ -11,17 +11,17 @@
 #include <string.h>
 #include <wchar.h>
 
-#include <windows.h>
-#include <cfgmgr32.h>
-#include <setupapi.h>
-#include <winioctl.h>
-#include <ntddscsi.h>
-
 #include <libnvme.h>
 
 #include "private.h"
 #include "private-ctrl-map.h"
 #include "compiler-attributes.h"
+
+#include <windows.h>
+#include <cfgmgr32.h>
+#include <setupapi.h>
+#include <winioctl.h>
+#include <ntddscsi.h>
 
 #include <initguid.h>
 #include <devpkey.h>
