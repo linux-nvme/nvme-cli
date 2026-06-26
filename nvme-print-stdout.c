@@ -1634,10 +1634,9 @@ static void stdout_registers_pmrmscu(uint32_t pmrmscu)
 static void stdout_ctrl_register_human(int offset, uint64_t value, bool support)
 {
 	switch (offset) {
-	case NVME_REG_CAP: {
+	case NVME_REG_CAP:
 		stdout_registers_cap((struct nvme_bar_cap *)&value);
 		break;
-	}
 	case NVME_REG_VS:
 		stdout_registers_version(value);
 		break;
