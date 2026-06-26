@@ -2,12 +2,12 @@
 .\"     Title: nvme-toshiba-vs-smart-add-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-TOSHIBA\-VS\-S" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-TOSHIBA\-VS\-S" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,10 +32,10 @@ nvme-toshiba-vs-smart-add-log \- Retrieve a Toshiba device\*(Aqs vendor specific
 .SH "SYNOPSIS"
 .sp
 .nf
-\*(Aqnvme toshiba vs\-smart\-add\-log \*(Aq <device> [\-\-log=<NUM>, \-l <NUM>]
+\fInvme\fR [<global\-options>] \fItoshiba vs\-smart\-add\-log\fR <device>
+                        [\-\-log=<NUM>, \-l <NUM>]
                         [\-\-namespace\-id=<NUM>, \-n <NUM>]
-                        [\-\-output\-file=<FILE>, \-o <FILE>]
-                        [<global\-options>]
+                        [\-\-output\-file=<FILE>, \-O <FILE>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -55,7 +55,7 @@ This will only work on Toshiba devices supporting this feature\&.
 Log page: 0xC0 or 0xCA (defaults to 0xCA)
 .RE
 .PP
-\-n <NUM>, \-\-namespace\-id=<NUM>, \-o <FILE>, \-\-output\-file=<FILE>
+\-n <NUM>, \-\-namespace\-id=<NUM>, \-O <FILE>, \-\-output\-file=<FILE>
 .RS 4
 Output binary file\&. Defaults to text\-formatted dump to stdout
 .RE

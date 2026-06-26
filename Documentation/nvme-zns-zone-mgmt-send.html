@@ -749,12 +749,14 @@ nvme-zns-zone-mgmt-send(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme zns zone-mgmt-send</em> &lt;device&gt; [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
-                        [--start-lba=&lt;IONUM&gt;, -s &lt;IONUM&gt;] [--zsaso, -o]
-                        [--select-all, -a] [--zsa=&lt;NUM&gt;, -z &lt;NUM&gt;]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>zns zone-mgmt-send</em> &lt;device&gt;
+                        [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
+                        [--start-lba=&lt;IONUM&gt;, -s &lt;IONUM&gt;]
+                        [--zsaso, -O]
+                        [--select-all, -a]
+                        [--zsa=&lt;NUM&gt;, -z &lt;NUM&gt;]
                         [--data-len=&lt;IONUM&gt;, -l &lt;IONUM&gt;]
-                        [--data=&lt;FILE&gt;, -d &lt;FILE&gt;]
-                        [&lt;global-options&gt;]</pre>
+                        [--data=&lt;FILE&gt;, -d &lt;FILE&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -808,7 +810,7 @@ Alternatively, the data may come from a file that can be specified.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--o
+-O
 </dt>
 <dt class="hdlist1">
 --zsaso
@@ -979,7 +981,7 @@ Write "hello world" into the zone descriptor for namespace 1&#8217;s first zone
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

@@ -2,12 +2,12 @@
 .\"     Title: nvme-effects-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-EFFECTS\-LOG" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-EFFECTS\-LOG" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,7 @@ nvme-effects-log \- Send NVMe Command Effects log page request, returns result a
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme effects\-log\fR <device> [\-\-raw\-binary | \-b]
-                        [\-\-human\-readable | \-H]
-                        [<global\-options>]
+\fInvme\fR [<global\-options>] \fIeffects\-log\fR <device> [\-\-raw\-binary | \-b]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -47,12 +45,7 @@ On success, the returned command effects log structure will be printed for each 
 .PP
 \-b, \-\-raw\-binary
 .RS 4
-This option will print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the human\-readable option\&.
-.RE
-.PP
-\-H, \-\-human\-readable
-.RS 4
-Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
+This option will print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the verbose option\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp

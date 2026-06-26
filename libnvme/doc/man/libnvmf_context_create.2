@@ -1,4 +1,4 @@
-.TH "libnvmf_context_create" 9 "libnvmf_context_create" "April 2026" "libnvme API manual" LINUX
+.TH "libnvmf_context_create" 9 "libnvmf_context_create" "June 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvmf_context_create \- Create a new fabrics context for discovery/connect
 .SH SYNOPSIS
@@ -13,17 +13,17 @@ libnvmf_context_create \- Create a new fabrics context for discovery/connect
 .IP "ctx" 12
 Global context
 .IP "decide_retry" 12
-Callback to decide if a retry should be attempted
+Hook to decide if a retry should be attempted
 .IP "connected" 12
-Callback invoked when a connection is established
+Hook invoked when a connection is established
 .IP "already_connected" 12
-Callback invoked if already connected
+Hook invoked if already connected
 .IP "user_data" 12
-User data passed to callbacks
+User data passed to hooks
 .IP "fctxp" 12
 Pointer to store the created context
 .SH "DESCRIPTION"
 Allocates and initializes a new fabrics context for discovery/connect
 operations.
 .SH "RETURN"
-0 on success, or a negative error code on failure.
+0 on success, negative error code otherwise.

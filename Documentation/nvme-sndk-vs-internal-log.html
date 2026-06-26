@@ -749,13 +749,13 @@ nvme-sndk-vs-internal-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme sndk vs-internal-log</em> &lt;device&gt; [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>sndk vs-internal-log</em> &lt;device&gt;
+                        [--output-file=&lt;FILE&gt;, -O &lt;FILE&gt;]
                         [--transfer-size=&lt;SIZE&gt;, -s &lt;SIZE&gt;]
                         [--data-area=&lt;DATA AREA&gt;, -d &lt;DATA_AREA&gt;]
                         [--file-size=&lt;FILE SIZE&gt;, -f &lt;FILE SIZE&gt;]
                         [--offset=&lt;OFFSET&gt;, -e &lt;OFFSET&gt;]
-                        [--type=&lt;TYPE&gt;, -t &lt;type&gt;]
-                        [&lt;global-options&gt;]</pre>
+                        [--type=&lt;TYPE&gt;, -t &lt;type&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -775,7 +775,7 @@ Results for any other device are undefined.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o &lt;FILE&gt;
+-O &lt;FILE&gt;
 </dt>
 <dt class="hdlist1">
 --output-file=&lt;FILE&gt;
@@ -959,7 +959,7 @@ Gets the internal firmware log from the device and saves to defined file in curr
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme sndk vs-internal-log /dev/nvme0 -o test.bin</code></pre>
+<pre><code># nvme sndk vs-internal-log /dev/nvme0 -O test.bin</code></pre>
 </div></div>
 </li>
 <li>
@@ -968,7 +968,7 @@ Gets the internal firmware log from the device and saves to defined file with pa
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme sndk vs-internal-log /dev/nvme0 -o /tmp/test</code></pre>
+<pre><code># nvme sndk vs-internal-log /dev/nvme0 -O /tmp/test</code></pre>
 </div></div>
 </li>
 <li>
@@ -995,9 +995,9 @@ Gets the internal firmware log up to data area 3 from the device in 3 files of 0
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme sndk vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x0000000 -o /tmp/sn340_dui_data_1.bin
-# nvme sndk vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x1000000 -o /tmp/sn340_dui_data_2.bin
-# nvme sndk vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x2000000 -o /tmp/sn340_dui_data_3.bin</code></pre>
+<pre><code># nvme sndk vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x0000000 -O /tmp/sn340_dui_data_1.bin
+# nvme sndk vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x1000000 -O /tmp/sn340_dui_data_2.bin
+# nvme sndk vs-internal-log /dev/nvme0 -d 3 -f 0x1000000 -t 0x2000000 -O /tmp/sn340_dui_data_3.bin</code></pre>
 </div></div>
 </li>
 <li>
@@ -1006,7 +1006,7 @@ Gets the host telemetry log page to data area 3 from the device and stores it in
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme sndk vs-internal-log /dev/nvme1 -t host -o host-telem-log-da3.bin -d 3</code></pre>
+<pre><code># nvme sndk vs-internal-log /dev/nvme1 -t host -O host-telem-log-da3.bin -d 3</code></pre>
 </div></div>
 </li>
 <li>
@@ -1015,7 +1015,7 @@ Gets the controller telemetry log page to data area 3 from the device and stores
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme sndk vs-internal-log /dev/nvme1 -t controller -o ctlr-telem-log-da3.bin -d 3</code></pre>
+<pre><code># nvme sndk vs-internal-log /dev/nvme1 -t controller -O ctlr-telem-log-da3.bin -d 3</code></pre>
 </div></div>
 </li>
 <li>
@@ -1024,7 +1024,7 @@ Gets both host and controller telemetry log pages to data area 3 from the device
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme sndk vs-internal-log /dev/nvme1 -t both -o both-telem-log-da3.tar -d 3</code></pre>
+<pre><code># nvme sndk vs-internal-log /dev/nvme1 -t both -O both-telem-log-da3.tar -d 3</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -1041,7 +1041,7 @@ Gets both host and controller telemetry log pages to data area 3 from the device
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

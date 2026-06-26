@@ -1,0 +1,28 @@
+.TH "libnvme_mi_submit_exit" 9 "libnvme_mi_submit_exit" "June 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_mi_submit_exit \- Weak hook called after an MI message completes.
+.SH SYNOPSIS
+.B "void" libnvme_mi_submit_exit
+.BI "(__u8 type "  ","
+.BI "const struct nvme_mi_msg_hdr *hdr "  ","
+.BI "size_t hdr_len "  ","
+.BI "const void *data "  ","
+.BI "size_t data_len "  ","
+.BI "void *user_data "  ");"
+.SH ARGUMENTS
+.IP "type" 12
+MCTP message type
+.IP "hdr" 12
+Pointer to the MI response message header
+.IP "hdr_len" 12
+Length of the response message header in bytes
+.IP "data" 12
+Pointer to response payload data
+.IP "data_len" 12
+Length of response payload data in bytes
+.IP "user_data" 12
+Value returned by the matching \fBlibnvme_mi_submit_entry\fP call
+.SH "DESCRIPTION"
+This is a weak symbol that can be overridden by an application to intercept
+completed MI transactions.  Called with the opaque pointer returned by the
+corresponding \fBlibnvme_mi_submit_entry\fP call.

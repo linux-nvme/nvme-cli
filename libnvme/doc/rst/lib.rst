@@ -1,14 +1,18 @@
-.. c:function:: struct libnvme_global_ctx * libnvme_create_global_ctx (FILE *fp, int log_level)
+.. c:function:: struct libnvme_global_ctx * libnvme_create_global_ctx (void)
 
    Initialize global context object
 
 **Parameters**
 
-``FILE *fp``
-  File descriptor for logging messages
+``void``
+  no arguments
 
-``int log_level``
-  Logging level to use
+**Description**
+
+
+Creates a global context with default settings: logging to stderr at
+LIBNVME_DEFAULT_LOGLEVEL.  Use libnvme_set_logging_file() and
+libnvme_set_logging_level() to adjust these after creation.
 
 **Return**
 
@@ -27,6 +31,33 @@ Initialized :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object
 **Description**
 
 Free an :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object and all attached objects
+
+
+.. c:function:: int libnvme_set_owner (struct libnvme_global_ctx *ctx, const char *owner)
+
+   Set the orchestrator identity for the registry
+
+**Parameters**
+
+``struct libnvme_global_ctx *ctx``
+  :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object
+
+``const char *owner``
+  Orchestrator identity string (e.g. "stas", "nbft").
+
+**Description**
+
+Records the orchestrator identity used when claiming registry ownership of
+connections made through **ctx**.  A later call overwrites the previous value;
+treating the identity as immutable is a policy decision left to the caller.
+A process that does not participate in the registry simply never calls this.
+
+This is the supported way to record the registry owner;
+libnvme_create_global_ctx() deliberately takes no owner parameter.
+
+**Return**
+
+0 on success, -EINVAL or -ENOMEM on error.
 
 
 .. c:function:: void libnvme_set_logging_level (struct libnvme_global_ctx *ctx, int log_level, bool log_pid, bool log_tstamp)
@@ -78,6 +109,24 @@ Retrieves current values of logging variables.
 current log level value or LIBNVME_DEFAULT_LOGLEVEL if not initialized.
 
 
+.. c:function:: void libnvme_set_logging_file (struct libnvme_global_ctx *ctx, FILE *fp)
+
+   Set the log output file for the global context
+
+**Parameters**
+
+``struct libnvme_global_ctx *ctx``
+  struct libnvme_global_ctx object
+
+``FILE *fp``
+  File stream to write log messages to, or NULL to use stderr
+
+**Description**
+
+Sets the file descriptor used for log output.  Passing NULL reverts to the
+default (stderr).
+
+
 .. c:function:: int libnvme_open (struct libnvme_global_ctx *ctx, const char *name, struct libnvme_transport_handle **hdl)
 
    Open an nvme controller or namespace device
@@ -100,7 +149,7 @@ match linux conventions.
 
 **Return**
 
-0 on success or negative error code otherwise
+0 on success, negative error code otherwise.
 
 
 .. c:function:: void libnvme_close (struct libnvme_transport_handle *hdl)
@@ -113,7 +162,7 @@ match linux conventions.
   Transport handle
 
 
-.. c:function:: int libnvme_transport_handle_get_fd (struct libnvme_transport_handle *hdl)
+.. c:function:: libnvme_fd_t libnvme_transport_handle_get_fd (struct libnvme_transport_handle *hdl)
 
    Return file descriptor from the transport handle
 
@@ -129,7 +178,28 @@ libnvme_transport_handle_get_fd will return a valid file descriptor.
 
 **Return**
 
-File descriptor for an IOCTL based transport handle, otherwise -1.
+File descriptor for an IOCTL based transport handle,
+otherwise LIBNVME_INVALID_FD.
+
+
+.. c:function:: struct libnvme_mi_ep * libnvme_transport_handle_get_mi_ep (struct libnvme_transport_handle *hdl)
+
+   get the MI endpoint from a transport handle
+
+**Parameters**
+
+``struct libnvme_transport_handle *hdl``
+  transport handle
+
+**Description**
+
+Retrieve the MI endpoint associated with this transport handle. Only valid
+for MI-type transport handles (check with libnvme_transport_handle_is_mi
+first).
+
+**Return**
+
+the MI endpoint, or NULL if the handle is not an MI handle.
 
 
 .. c:function:: const char * libnvme_transport_handle_get_name (struct libnvme_transport_handle *hdl)
@@ -291,6 +361,26 @@ default behavior (no retries).
 **Return**
 
 None.
+
+
+.. c:function:: void libnvme_transport_handle_set_timeout (struct libnvme_transport_handle *hdl, __u32 timeout_ms)
+
+   Set the default command timeout
+
+**Parameters**
+
+``struct libnvme_transport_handle *hdl``
+  Transport handle to configure
+
+``__u32 timeout_ms``
+  Timeout in milliseconds. A value of 0 means use the kernel
+  default (NVME_DEFAULT_IOCTL_TIMEOUT).
+
+**Description**
+
+Sets a default timeout that is applied to every passthrough command
+submitted through **hdl** when the command's own timeout_ms field is 0.
+Commands that set a non-zero timeout_ms override this default.
 
 
 .. c:function:: void libnvme_set_probe_enabled (struct libnvme_global_ctx *ctx, bool enabled)

@@ -749,12 +749,18 @@ nvme-admin-passthru(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-admin-passthru</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -O &lt;opcode&gt;]
-                        [--flags=&lt;flags&gt; | -f &lt;flags&gt;] [-rsvd=&lt;rsvd&gt; | -R &lt;rsvd&gt;]
-                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;] [--cdw2=&lt;cdw2&gt; | -2 &lt;cdw2&gt;]
-                        [--cdw3=&lt;cdw3&gt; | -3 &lt;cdw3&gt;] [--cdw10=&lt;cdw10&gt; | -4 &lt;cdw10&gt;]
-                        [--cdw11=&lt;cdw11&gt; | -5 &lt;cdw11&gt;] [--cdw12=&lt;cdw12&gt; | -6 &lt;cdw12&gt;]
-                        [--cdw13=&lt;cdw13&gt; | -7 &lt;cdw13&gt;] [--cdw14=&lt;cdw14&gt; | -8 &lt;cdw14&gt;]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>admin-passthru</em> &lt;device&gt;
+                        [--opcode=&lt;opcode&gt; | -O &lt;opcode&gt;]
+                        [--flags=&lt;flags&gt; | -f &lt;flags&gt;]
+                        [-rsvd=&lt;rsvd&gt; | -R &lt;rsvd&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--cdw2=&lt;cdw2&gt; | -2 &lt;cdw2&gt;]
+                        [--cdw3=&lt;cdw3&gt; | -3 &lt;cdw3&gt;]
+                        [--cdw10=&lt;cdw10&gt; | -4 &lt;cdw10&gt;]
+                        [--cdw11=&lt;cdw11&gt; | -5 &lt;cdw11&gt;]
+                        [--cdw12=&lt;cdw12&gt; | -6 &lt;cdw12&gt;]
+                        [--cdw13=&lt;cdw13&gt; | -7 &lt;cdw13&gt;]
+                        [--cdw14=&lt;cdw14&gt; | -8 &lt;cdw14&gt;]
                         [--cdw15=&lt;cdw15&gt; | -9 &lt;cdw15&gt;]
                         [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
                         [--metadata-len=&lt;len&gt; | -m &lt;len&gt;]
@@ -764,8 +770,7 @@ nvme-admin-passthru(1) Manual Page
                         [--dry-run | -d]
                         [--raw-binary | -b]
                         [--prefill=&lt;prefill&gt; | -p &lt;prefill&gt;]
-                        [--latency | -T]
-                        [&lt;global-options&gt;]</pre>
+                        [--latency | -T]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -1080,7 +1085,7 @@ Or if you want to save that structure to a file:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:45:59 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

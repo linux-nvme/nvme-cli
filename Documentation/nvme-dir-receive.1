@@ -2,12 +2,12 @@
 .\"     Title: nvme-dir-receive
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DIR\-RECEIVE" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-DIR\-RECEIVE" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,15 +32,13 @@ nvme-dir-receive \- Send a directive receive command, returns applicable results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme dir\-receive\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+\fInvme\fR [<global\-options>] \fIdir\-receive\fR <device>
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-data\-len=<data\-len> | \-l <data\-len>]
                         [\-\-dir\-type=<dtype> | \-D <dtype>]
                         [\-\-dir\-spec=<dspec> | \-S <dspec>]
                         [\-\-dir\-oper=<doper> | \-O <doper>]
-                        [\-\-req\-resource=<nsr> | \-r <nsr>]
-                        [\-\-human\-readable | \-H]
-                        [\-\-raw\-binary | \-b]
-                        [<global\-options>]
+                        [\-\-req\-resource=<nsr> | \-r <nsr>] [\-\-raw\-binary | \-b]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -125,11 +123,6 @@ The data length for the buffer returned for this feature\&. Most known features 
 .RS 4
 Print the raw receive buffer to stdout if the command returns a structure\&.
 .RE
-.PP
-\-H, \-\-human\-readable
-.RS 4
-Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
-.RE
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:
@@ -191,7 +184,7 @@ Identify directive type supported :
 .RS 4
 .\}
 .nf
-# nvme dir\-receive /dev/nvme0 \-\-dir\-type 0 \-\-dir\-oper 1 \-\-human\-readable
+# nvme dir\-receive /dev/nvme0 \-\-dir\-type 0 \-\-dir\-oper 1 \-\-verbose
 .fi
 .if n \{\
 .RE
@@ -212,7 +205,7 @@ Get stream directive parameters :
 .RS 4
 .\}
 .nf
-# nvme dir\-receive /dev/nvme0 \-\-dir\-type 1 \-\-dir\-oper 1 \-\-human\-readable
+# nvme dir\-receive /dev/nvme0 \-\-dir\-type 1 \-\-dir\-oper 1 \-\-verbose
 .fi
 .if n \{\
 .RE
@@ -233,7 +226,7 @@ Allocate 3 streams for namespace 1
 .RS 4
 .\}
 .nf
-# nvme dir\-receive /dev/nvme0n1 \-\-dir\-type 1 \-\-dir\-oper 3 \-\-req\-resource 3 \-\-human\-readable
+# nvme dir\-receive /dev/nvme0n1 \-\-dir\-type 1 \-\-dir\-oper 3 \-\-req\-resource 3 \-\-verbose
 .fi
 .if n \{\
 .RE
@@ -254,7 +247,7 @@ Get streams directive status :
 .RS 4
 .\}
 .nf
-# nvme dir\-receive /dev/nvme0 \-\-dir\-type 1 \-\-dir\-oper 2 \-\-human\-readable
+# nvme dir\-receive /dev/nvme0 \-\-dir\-type 1 \-\-dir\-oper 2 \-\-verbose
 .fi
 .if n \{\
 .RE

@@ -2,12 +2,12 @@
 .\"     Title: nvme-intel-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-INTEL\-INTERNA" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-INTEL\-INTERNA" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,12 +32,11 @@ nvme-intel-internal-log \- Retrieve Intel device\*(Aqs internal log and save to 
 .SH "SYNOPSIS"
 .sp
 .nf
-\*(Aqnvme intel internal\-log \*(Aq <device> [\-\-log=<NUM>, \-l <NUM>]
+\fInvme\fR [<global\-options>] \fIintel internal\-log\fR <device> [\-\-log=<NUM>, \-l <NUM>]
                 [\-\-region=<NUM>, r <NUM>]
                 [\-\-nlognum=<NUM>, m <NUM>]
                 [\-\-namespace\-id=<NUM>, \-n <NUM>]
-                [\-\-output\-file=<FILE>, \-o <FILE>]
-                        [<global\-options>]
+                [\-\-output\-file=<FILE>, \-O <FILE>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -58,7 +57,7 @@ Log type: 0, 1, or 2 for nlog, event log, and assert log, respectively\&.
 Namespace to use\&.
 .RE
 .PP
-\-o <FILE>, \-\-output\-file=<FILE>
+\-O <FILE>, \-\-output\-file=<FILE>
 .RS 4
 Output file; defaults to device name provided
 .RE

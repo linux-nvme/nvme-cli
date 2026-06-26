@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-iocs
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-IOCS" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-IOCS" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,8 @@ nvme-id-iocs \- Send NVMe Identify I/O Command Set, return result and structure
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme id\-iocs\fR <device> [\-\-controller\-id=<cntid> | \-c <cntid>]
-                        [\-\-human\-readable | \-H]
-                        [<global\-options>]
+\fInvme\fR [<global\-options>] \fIid\-iocs\fR <device>
+                        [\-\-controller\-id=<cntid> | \-c <cntid>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -46,11 +45,6 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 \-c <cntid>, \-\-controller\-id=<cntid>
 .RS 4
 Retrieve the identify I/O Command set data structure for the given cntid\&. If this value is not given, cntid will be 0xffff\&.
-.RE
-.PP
-\-H, \-\-human\-readable
-.RS 4
-Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
 .RE
 .SH "GLOBAL OPTIONS"
 .sp

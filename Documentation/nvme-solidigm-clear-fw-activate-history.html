@@ -749,8 +749,8 @@ nvme-solidigm-clear-fw-activate-history(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme solidigm clear-fw-activate-history</em> &lt;device&gt; [--no-uuid | -n]
-                        [&lt;global-options&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>solidigm clear-fw-activate-history</em> &lt;device&gt;
+                        [--no-uuid | -n]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -758,8 +758,9 @@ nvme-solidigm-clear-fw-activate-history(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>This command is a redirect to the OCP plugin&#8217;s clear firmware update history log command.
-For detailed usage and options, please refer to the documentation for <em>nvme ocp clear-fw-activate-history</em>.</p></div>
+<div class="paragraph"><p>This command is a redirect to the OCP plugin&#8217;s clear firmware update history log
+command. For detailed usage and options, please refer to the documentation for
+<em>nvme ocp clear-fw-activate-history</em>.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).</p></div>
 </div>
@@ -901,7 +902,7 @@ Clear the firmware update history log for an OCP 1.0 device:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

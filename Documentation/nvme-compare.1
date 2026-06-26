@@ -2,12 +2,12 @@
 .\"     Title: nvme-compare
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-COMPARE" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-COMPARE" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,8 @@ nvme-compare \- Send an NVMe Compare command, provide results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\-compare\fR <device> [\-\-start\-block=<slba> | \-s <slba>]
+\fInvme\fR [<global\-options>] \fIcompare\fR <device>
+                        [\-\-start\-block=<slba> | \-s <slba>]
                         [\-\-block\-count=<nlb> | \-c <nlb>]
                         [\-\-block\-size=<size> | \-b <size>]
                         [\-\-data\-size=<size> | \-z <size>]
@@ -54,7 +55,6 @@ nvme-compare \- Send an NVMe Compare command, provide results
                         [\-\-storage\-tag<storage\-tag> | \-g <storage\-tag>]
                         [\-\-storage\-tag\-check | \-C]
                         [\-\-force]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp

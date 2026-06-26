@@ -309,8 +309,8 @@ Returns error code if generating of random number fails.
 
 **Return**
 
-The array position where given UUID is present, or -1 on failure
- with errno set.
+The array position where given UUID is present, or negative
+error code otherwise.
 
 
 .. c:function:: char * libnvme_basename (const char *path)

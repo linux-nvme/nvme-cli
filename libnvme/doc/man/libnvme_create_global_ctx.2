@@ -1,14 +1,16 @@
-.TH "libnvme_create_global_ctx" 9 "libnvme_create_global_ctx" "April 2026" "libnvme API manual" LINUX
+.TH "libnvme_create_global_ctx" 9 "libnvme_create_global_ctx" "June 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvme_create_global_ctx \- Initialize global context object
 .SH SYNOPSIS
 .B "struct libnvme_global_ctx *" libnvme_create_global_ctx
-.BI "(FILE *fp "  ","
-.BI "int log_level "  ");"
+.BI "(void "  ");"
 .SH ARGUMENTS
-.IP "fp" 12
-File descriptor for logging messages
-.IP "log_level" 12
-Logging level to use
+.IP "void" 12
+no arguments
+.SH "DESCRIPTION"
+
+Creates a global context with default settings: logging to stderr at
+LIBNVME_DEFAULT_LOGLEVEL.  Use \fBlibnvme_set_logging_file\fP and
+\fBlibnvme_set_logging_level\fP to adjust these after creation.
 .SH "RETURN"
 Initialized \fIstruct libnvme_global_ctx\fP object

@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,7 @@ nvme-show-regs \- Reads and shows the defined NVMe controller registers for NVMe
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme show\-regs\fR <device>
-                        [\-\-human\-readable | \-H]
-                        [<global\-options>]
+\fInvme\fR [<global\-options>] \fIshow\-regs\fR <device>
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -42,11 +40,6 @@ For the NVMe over PCIe device given, sends an identify namespace command and pro
 .sp
 The <device> parameter is mandatory and must be the nvme admin character device (ex: /dev/nvme0)\&. For NVMe over PCIe, the program uses knowledge of the sysfs layout to map the device to the pci resource stored there and mmaps the memory to get access to the registers\&. For NVMe over Fabrics, the programs sends a fabric command to get the properties of the target NVMe controller\&. Only the supported properties are displayed\&.
 .SH "OPTIONS"
-.PP
-\-H, \-\-human\-readable
-.RS 4
-Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
-.RE
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:

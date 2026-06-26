@@ -2,12 +2,12 @@
 .\"     Title: nvme-wdc-enc-get-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WDC\-ENC\-GET\" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-WDC\-ENC\-GET\" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,10 +32,9 @@ nvme-wdc-enc-get-log \- Send NVMe WDC enc\-get\-log Vendor Unique Command, retur
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme wdc enc\-get\-log\fR <device> [\-\-log\-id=<NUM>, \-l <NUM>]
-                        [\-\-output\-file=<FILE>, \-o <FILE>]
+\fInvme\fR [<global\-options>] \fIwdc enc\-get\-log\fR <device> [\-\-log\-id=<NUM>, \-l <NUM>]
+                        [\-\-output\-file=<FILE>, \-O <FILE>]
                         [\-\-transfer\-size=<SIZE>, \-s <SIZE>]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -50,7 +49,7 @@ This will only work on WDC devices supporting this feature\&. Results for any ot
 On success it returns the enclosure log data, error code otherwise\&.
 .SH "OPTIONS"
 .PP
-\-o <FILE>, \-\-output\-file=<FILE>
+\-O <FILE>, \-\-output\-file=<FILE>
 .RS 4
 Output file pathname
 .RE
@@ -120,7 +119,7 @@ Gets the enclosure log from the device based on the log id(0xd1) with transfer s
 .RS 4
 .\}
 .nf
-# nvme wdc enc\-get\-log /dev/nvme0 \-l 0xd1 \-o d1_log\&.bin \-s 0x2000
+# nvme wdc enc\-get\-log /dev/nvme0 \-l 0xd1 \-O d1_log\&.bin \-s 0x2000
 .fi
 .if n \{\
 .RE
@@ -141,7 +140,7 @@ Gets the enclosure log from the device based on the log id(0xd2) with default tr
 .RS 4
 .\}
 .nf
-# nvme wdc enc\-get\-log /dev/nvme0 \-l 0xd2 \-o d1_log\&.bin
+# nvme wdc enc\-get\-log /dev/nvme0 \-l 0xd2 \-O d1_log\&.bin
 .fi
 .if n \{\
 .RE

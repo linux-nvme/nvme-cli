@@ -749,8 +749,10 @@ nvme-disconnect-all(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme disconnect-all</em>
-                        [&lt;global-options&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>disconnect-all</em>
+                        [--transport=&lt;STR&gt; | -t &lt;STR&gt;]
+                        [--owner=&lt;NAME&gt;]
+                        [--force]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -758,7 +760,15 @@ nvme-disconnect-all(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Disconnects and removes all existing NVMe over Fabrics controllers.</p></div>
+<div class="paragraph"><p>Disconnects and removes NVMe over Fabrics controllers.  The default
+behavior is ownership-aware: only controllers with no entry in the
+ownership registry are disconnected.  Controllers registered to an
+orchestrator (e.g. nvme-stas, nbft) are left untouched.</p></div>
+<div class="paragraph"><p>Use --owner to target a specific orchestrator&#8217;s controllers, or --force
+to disconnect all controllers regardless of ownership.  --force and
+--owner are mutually exclusive.  When either flag is used interactively
+a confirmation prompt is shown; non-interactive invocations proceed
+without prompting.</p></div>
 <div class="paragraph"><p>See the documentation for the nvme-disconnect(1) command for further
 background.</p></div>
 </div>
@@ -766,6 +776,38 @@ background.</p></div>
 <div class="sect1">
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-t &lt;STR&gt;
+</dt>
+<dt class="hdlist1">
+--transport=&lt;STR&gt;
+</dt>
+<dd>
+<p>
+        Limit disconnection to controllers using the specified transport
+        (e.g. tcp, rdma, fc).
+</p>
+</dd>
+<dt class="hdlist1">
+--owner=&lt;NAME&gt;
+</dt>
+<dd>
+<p>
+        Disconnect only controllers owned by NAME in the registry.
+        Requires interactive confirmation when stdin is a terminal.
+</p>
+</dd>
+<dt class="hdlist1">
+--force
+</dt>
+<dd>
+<p>
+        Disconnect all controllers regardless of ownership.  Requires
+        interactive confirmation when stdin is a terminal.
+</p>
+</dd>
+</dl></div>
 </div>
 </div>
 <div class="sect1">
@@ -850,11 +892,29 @@ and are available to this subcommand:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Disconnect all existing nvme controllers:
+Disconnect all unowned controllers (safe default):
 </p>
 <div class="listingblock">
 <div class="content">
 <pre><code># nvme disconnect-all</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Disconnect all controllers owned by nvme-stas:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme disconnect-all --owner stas</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Disconnect all controllers regardless of ownership:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme disconnect-all --force</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -863,7 +923,9 @@ Disconnect all existing nvme controllers:
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>nvme-disconnect(1)</p></div>
+<div class="paragraph"><p>nvme-disconnect(1)
+nvme-registry-list(1)
+nvme-registry-delete(1)</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -877,7 +939,7 @@ Disconnect all existing nvme controllers:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

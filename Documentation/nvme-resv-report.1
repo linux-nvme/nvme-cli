@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-report
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-REPORT" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-REPORT" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,10 +32,11 @@ nvme-resv-report \- Send NVMe Reservation Report, parse the result
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme resv\-report\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                        [\-\-numd=<num\-dwords> | \-d <num\-dwords>] [\-\-eds | \-e]
+\fInvme\fR [<global\-options>] \fIresv\-report\fR <device>
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-numd=<num\-dwords> | \-d <num\-dwords>]
+                        [\-\-eds | \-e]
                         [\-\-raw\-binary | \-b]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp

@@ -2,12 +2,12 @@
 .\"     Title: nvme-primary-ctrl-caps
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-PRIMARY\-CTRL\" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-PRIMARY\-CTRL\" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,7 @@ nvme-primary-ctrl-caps \- Send identify Primary Controller Caps, return result a
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme primary\-ctrl\-caps\fR <device>
-                        [\-\-human\-readable | \-H]
-                        [<global\-options>]
+\fInvme\fR [<global\-options>] \fIprimary\-ctrl\-caps\fR <device>
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,11 +42,6 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 .sp
 On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
 .SH "OPTIONS"
-.PP
-\-H, \-\-human\-readable
-.RS 4
-Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
-.RE
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:
@@ -131,8 +124,8 @@ Has the program interpret the returned buffer and display the known fields in a 
 .RS 4
 .\}
 .nf
-# nvme primary\-ctrl\-caps /dev/nvme0 \-\-human\-readable
-# nvme primary\-ctrl\-caps /dev/nvme0 \-H
+# nvme primary\-ctrl\-caps /dev/nvme0 \-\-verbose
+# nvme primary\-ctrl\-caps /dev/nvme0 \-v
 .fi
 .if n \{\
 .RE

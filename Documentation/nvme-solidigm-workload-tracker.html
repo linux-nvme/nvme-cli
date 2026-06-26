@@ -749,8 +749,10 @@ nvme-solidigm-workload-tracker(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme solidigm workload-tracker</em> &lt;device&gt; [--uuid-index=&lt;id&gt; | -U &lt;id&gt;]
-                        [--enable | -e] [--disable | -d]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>solidigm workload-tracker</em> &lt;device&gt;
+                        [--uuid-index=&lt;id&gt; | -U &lt;id&gt;]
+                        [--enable | -e]
+                        [--disable | -d]
                         [--sample-time=&lt;time&gt; | -s &lt;time&gt;]
                         [--type=&lt;type&gt; | -t &lt;type&gt;]
                         [--run-time=&lt;seconds&gt; | -r &lt;seconds&gt;]
@@ -759,8 +761,7 @@ nvme-solidigm-workload-tracker(1) Manual Page
                         [--trigger-field=&lt;field&gt; | -T &lt;field&gt;]
                         [--trigger-threshold=&lt;value&gt; | -V &lt;value&gt;]
                         [--trigger-on-delta | -D]
-                        [--trigger-on-latency | -L]
-                        [&lt;global-options&gt;]</pre>
+                        [--trigger-on-latency | -L]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -1025,7 +1026,7 @@ Capture Power tracker samples with a 10-second interval for 5 minutes:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

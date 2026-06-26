@@ -749,8 +749,9 @@ nvme-wdc-cap-diag(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc cap-diag</em> &lt;device&gt; [--output-file=&lt;FILE&gt;, -o &lt;FILE&gt;] [--transfer-size=&lt;SIZE&gt;, -s &lt;SIZE&gt;]
-                        [&lt;global-options&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>wdc cap-diag</em> &lt;device&gt;
+                        [--output-file=&lt;FILE&gt;, -O &lt;FILE&gt;]
+                        [--transfer-size=&lt;SIZE&gt;, -s &lt;SIZE&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -770,7 +771,7 @@ Results for any other device are undefined.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--o &lt;FILE&gt;
+-O &lt;FILE&gt;
 </dt>
 <dt class="hdlist1">
 --output-file=&lt;FILE&gt;
@@ -889,7 +890,7 @@ Gets the capture diagnostics log from the device and saves to defined file in cu
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme wdc cap-diag /dev/nvme0 -o test</code></pre>
+<pre><code># nvme wdc cap-diag /dev/nvme0 -O test</code></pre>
 </div></div>
 </li>
 <li>
@@ -898,7 +899,7 @@ Gets the capture diagnostics log from the device and saves to defined file with 
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme wdc cap-diag /dev/nvme0 -o /tmp/test</code></pre>
+<pre><code># nvme wdc cap-diag /dev/nvme0 -O /tmp/test</code></pre>
 </div></div>
 </li>
 <li>
@@ -933,7 +934,7 @@ Gets the capture diagnostics log from the device transferring the data in 16k ch
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

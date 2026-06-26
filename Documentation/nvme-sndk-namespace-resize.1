@@ -2,12 +2,12 @@
 .\"     Title: nvme-sndk-namespace-resize
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SNDK\-NAMESPAC" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SNDK\-NAMESPAC" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,9 @@ nvme-sndk-namespace-resize \- Resizes the device\*(Aqs namespace\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme sndk namespace\-resize\fR <device> [\-\-nsid=<NAMESPACE ID>, \-n <NAMSPACE ID>]
-                        [\-\-op_option=<OP OPTION>, \-o <OP OPTION>]
-                        [<global\-options>]
+\fInvme\fR [<global\-options>] \fIsndk namespace\-resize\fR <device>
+                        [\-\-nsid=<NAMESPACE ID>, \-n <NAMSPACE ID>]
+                        [\-\-op\-option=<OP OPTION>, \-O <OP OPTION>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -50,7 +50,7 @@ This will only work on Sandisk devices supporting this feature\&. Results for an
 Namespace ID; ID of the namespace to resize
 .RE
 .PP
-\-o <OP OPTION>, \-\-op\-option=<OP OPTION>
+\-O <OP OPTION>, \-\-op\-option=<OP OPTION>
 .RS 4
 Overprovisioning Option; defaults to 0xF Valid Values: 0x1 \- 7% of Original TNVMCAP reported value 0x2 \- 28% of Original TNVMCAP reported value 0x3 \- 50% of Original TNVMCAP reported value 0xF \- 0% of Original TNVMCAP reported value (original config) All other values \- reserved
 .RE
@@ -115,7 +115,7 @@ Resizes namespace 1 to 50% of the original TNVMCAP reported value:
 .RS 4
 .\}
 .nf
-# nvme sndk namespace\-resize /dev/nvme0 \-n 1 \-o 3
+# nvme sndk namespace\-resize /dev/nvme0 \-n 1 \-O 3
 .fi
 .if n \{\
 .RE

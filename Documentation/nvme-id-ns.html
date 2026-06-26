@@ -749,10 +749,11 @@ nvme-id-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme id-ns</em> &lt;device&gt; [--vendor-specific | -V] [--raw-binary | -b]
-                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;] [--force]
-                        [--human-readable | -H]
-                        [&lt;global-options&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>id-ns</em> &lt;device&gt;
+                        [--vendor-specific | -V]
+                        [--raw-binary | -b]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--force]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -827,18 +828,6 @@ raw buffer may be printed to stdout.</p></div>
         In addition to parsing known fields, this option will dump
         the vendor specific region of the structure in hex with ascii
         interpretation.
-</p>
-</dd>
-<dt class="hdlist1">
--H
-</dt>
-<dt class="hdlist1">
---human-readable
-</dt>
-<dd>
-<p>
-        Display values in a human-readable format where possible.
-        (deprecated, use --verbose)
 </p>
 </dd>
 </dl></div>
@@ -1019,7 +1008,7 @@ int main(int argc, char **argv)
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>
