@@ -14,6 +14,59 @@
 #include "micron-utils.h"
 #include "util/cleanup.h"
 
+int micron_run_spawn(char *const argv[], const char *outfile, bool append)
+{
+	STARTUPINFOA si = { .cb = sizeof(si) };
+	PROCESS_INFORMATION pi = { 0 };
+	HANDLE hFile = INVALID_HANDLE_VALUE;
+	char cmdline[MAX_PATH + 256] = { 0 };
+	int i, off = 0;
+	DWORD exit_code;
+
+	for (i = 0; argv[i]; i++) {
+		int ret = snprintf(cmdline + off, sizeof(cmdline) - off,
+				   "%s\"%s\"", i ? " " : "", argv[i]);
+		if (ret < 0 || (size_t)ret >= sizeof(cmdline) - off)
+			return -ENOMEM;
+		off += ret;
+	}
+
+	if (outfile) {
+		SECURITY_ATTRIBUTES sa = {
+			.nLength = sizeof(sa),
+			.bInheritHandle = TRUE,
+		};
+
+		hFile = CreateFileA(outfile, GENERIC_WRITE, 0, &sa,
+				    append ? OPEN_ALWAYS : CREATE_ALWAYS,
+				    FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hFile == INVALID_HANDLE_VALUE)
+			return -EIO;
+		if (append)
+			SetFilePointer(hFile, 0, NULL, FILE_END);
+		si.dwFlags = STARTF_USESTDHANDLES;
+		si.hStdOutput = hFile;
+		si.hStdError = hFile;
+		si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+	}
+
+	if (!CreateProcessA(NULL, cmdline, NULL, NULL, outfile ? TRUE : FALSE,
+			    0, NULL, NULL, &si, &pi)) {
+		if (hFile != INVALID_HANDLE_VALUE)
+			CloseHandle(hFile);
+		return -EIO;
+	}
+
+	WaitForSingleObject(pi.hProcess, INFINITE);
+	GetExitCodeProcess(pi.hProcess, &exit_code);
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+	if (hFile != INVALID_HANDLE_VALUE)
+		CloseHandle(hFile);
+
+	return exit_code == 0 ? 0 : -EIO;
+}
+
 int micron_get_pci_ids(struct libnvme_global_ctx *ctx,
 			struct libnvme_transport_handle *hdl,
 			unsigned short *vid, unsigned short *did)

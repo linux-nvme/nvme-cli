@@ -94,6 +94,20 @@ int micron_clear_pcie_aer_correctable_errors(
 		struct libnvme_transport_handle *hdl);
 
 /**
+ * micron_run_spawn() - Run a command without invoking a shell
+ * @argv:	NULL-terminated argument vector (argv[0] is the program)
+ * @outfile:	If non-NULL, redirect stdout and stderr to this file
+ * @append:	If true, append to outfile; if false, truncate it
+ *
+ * Executes the program specified by argv[0] with the given arguments.
+ * The program is searched in PATH. No shell is invoked, preventing
+ * command injection via metacharacters in arguments.
+ *
+ * Return: 0 on success, negative errno on failure.
+ */
+int micron_run_spawn(char *const argv[], const char *outfile, bool append);
+
+/**
  * micron_write_os_config_to_file() - Dump OS configuration to a file
  * @file_name:	Path of the output file
  *
