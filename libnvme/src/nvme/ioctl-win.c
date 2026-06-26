@@ -1915,7 +1915,8 @@ out:
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-__libnvme_public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_exec_io_passthru(
+		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl || !cmd)
@@ -1953,7 +1954,8 @@ __libnvme_public int libnvme_submit_io_passthru(struct libnvme_transport_handle 
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-__libnvme_public int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_exec_admin_passthru(
+		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl || !cmd)
@@ -1998,18 +2000,4 @@ __libnvme_public int libnvme_submit_admin_passthru(struct libnvme_transport_hand
 			__func__, cmd->opcode);
 		return -ENOTSUP;
 	}
-}
-
-__libnvme_public int libnvme_exec_admin_passthru(
-		struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd)
-{
-	return libnvme_submit_admin_passthru(hdl, cmd);
-}
-
-__libnvme_public int libnvme_exec_io_passthru(
-		struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd)
-{
-	return libnvme_submit_io_passthru(hdl, cmd);
 }

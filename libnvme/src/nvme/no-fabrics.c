@@ -6,8 +6,63 @@
  * Authors: Daniel Wagner <dwagner@suse.de>
  */
 
+#include <errno.h>
+#include <stdlib.h>
+
 #include "private.h"
 #include "compiler-attributes.h"
+
+__libnvme_public char *libnvmf_generate_hostid(void)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvmf_generate_hostnqn_from_hostid(char *hostid)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvmf_generate_hostnqn(void)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvmf_read_hostnqn(void)
+{
+	return NULL;
+}
+
+__libnvme_public char *libnvmf_read_hostid(void)
+{
+	return NULL;
+}
+
+int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
+		      const char *hostnqn_arg, const char *hostid_arg,
+		      char **hostnqn, char **hostid)
+{
+	char *hnqn = NULL;
+	char *hid = NULL;
+
+	if (hostnqn_arg) {
+		hnqn = strdup(hostnqn_arg);
+		if (!hnqn)
+			return -ENOMEM;
+	}
+
+	if (hostid_arg) {
+		hid = strdup(hostid_arg);
+		if (!hid) {
+			free(hnqn);
+			return -ENOMEM;
+		}
+	}
+
+	*hostnqn = hnqn;
+	*hostid = hid;
+
+	return 0;
+}
 
 bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr)

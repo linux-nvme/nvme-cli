@@ -259,7 +259,7 @@ static int set_fctx_from_dict(struct libnvmf_context *fctx, PyObject *dict)
 
 PyObject *read_hostnqn()
 {
-	char *val = libnvme_read_hostnqn();
+	char *val = libnvmf_read_hostnqn();
 	PyObject *obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
 	free(val);
 	return obj;
@@ -267,7 +267,7 @@ PyObject *read_hostnqn()
 
 PyObject *read_hostid()
 {
-	char *val = libnvme_read_hostid();
+	char *val = libnvmf_read_hostid();
 	PyObject *obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
 	free(val);
 	return obj;
@@ -1036,9 +1036,11 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 	libnvme_global_ctx(const char *owner = NULL, const char *config_file = NULL) {
 		struct libnvme_global_ctx *ctx;
 
-		ctx = libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+		ctx = libnvme_create_global_ctx();
 		if (!ctx)
 			return NULL;
+		libnvme_set_logging_file(ctx, stdout);
+
 		if (owner)
 			libnvme_set_owner(ctx, owner);
 

@@ -522,7 +522,7 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 #define SECTOR_SIZE	512
 #define SECTOR_SHIFT	9
 
-int __libnvme_import_keys_from_config(struct libnvme_host *h,
+int __libnvmf_import_keys_from_config(struct libnvme_host *h,
 		struct libnvme_ctrl *c, long *keyring_id, long *key_id);
 
 static inline char *xstrdup(const char *s)
@@ -691,3 +691,5 @@ int libnvme_mi_admin_admin_passthru(struct libnvme_transport_handle *hdl,
 int libnvme_open_uring(struct libnvme_transport_handle *hdl);
 void libnvme_close_uring(struct libnvme_transport_handle *hdl);
 int __libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl);
+
+char *libnvme_hostid_from_hostnqn(const char *hostnqn);

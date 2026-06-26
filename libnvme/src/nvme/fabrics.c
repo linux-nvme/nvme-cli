@@ -73,6 +73,326 @@ const char *arg_str(const char * const *strings,
 	return "unrecognized";
 }
 
+#define NVMF_HOSTID_SIZE	37
+
+#define NVMF_HOSTNQN_FILE	SYSCONFDIR "/nvme/hostnqn"
+#define NVMF_HOSTID_FILE	SYSCONFDIR "/nvme/hostid"
+
+static int uuid_from_device_tree(char *system_uuid)
+{
+	__cleanup_fd int f = -1;
+	ssize_t len;
+
+	f = open(libnvme_uuid_ibm_filename(), O_RDONLY);
+	if (f < 0)
+		return -ENXIO;
+
+	memset(system_uuid, 0, NVME_UUID_LEN_STRING);
+	len = read(f, system_uuid, NVME_UUID_LEN_STRING - 1);
+	if (len < 0)
+		return -ENXIO;
+
+	return strlen(system_uuid) ? 0 : -ENXIO;
+}
+
+/*
+ * See System Management BIOS (SMBIOS) Reference Specification
+ * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.2.0.pdf
+ */
+#define DMI_SYSTEM_INFORMATION	1
+
+static bool is_dmi_uuid_valid(const char *buf, size_t len)
+{
+	int i;
+
+	/* UUID bytes are from byte 8 to 23 */
+	if (len < 24)
+		return false;
+
+	/* Test it's a invalid UUID with all zeros */
+	for (i = 8; i < 24; i++) {
+		if (buf[i])
+			break;
+	}
+	if (i == 24)
+		return false;
+
+	return true;
+}
+
+static int uuid_from_dmi_entries(char *system_uuid)
+{
+	__cleanup_dir DIR *d = NULL;
+	const char *entries_dir = libnvme_dmi_entries_dir();
+	int f;
+	struct dirent *de;
+	char buf[512] = {0};
+
+	system_uuid[0] = '\0';
+	d = opendir(entries_dir);
+	if (!d)
+		return -ENXIO;
+	while ((de = readdir(d))) {
+		char filename[PATH_MAX];
+		int len, type;
+
+		if (de->d_name[0] == '.')
+			continue;
+		sprintf(filename, "%s/%s/type", entries_dir, de->d_name);
+		f = open(filename, O_RDONLY);
+		if (f < 0)
+			continue;
+		len = read(f, buf, 512);
+		close(f);
+		if (len <= 0)
+			continue;
+		if (sscanf(buf, "%d", &type) != 1)
+			continue;
+		if (type != DMI_SYSTEM_INFORMATION)
+			continue;
+		sprintf(filename, "%s/%s/raw", entries_dir, de->d_name);
+		f = open(filename, O_RDONLY);
+		if (f < 0)
+			continue;
+		len = read(f, buf, 512);
+		close(f);
+		if (len <= 0)
+			continue;
+
+		if (!is_dmi_uuid_valid(buf, len))
+			continue;
+
+		/* Sigh. https://en.wikipedia.org/wiki/Overengineering */
+		/* DMTF SMBIOS 3.0 Section 7.2.1 System UUID */
+		sprintf(system_uuid,
+			"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-"
+			"%02x%02x%02x%02x%02x%02x",
+			(uint8_t)buf[8 + 3], (uint8_t)buf[8 + 2],
+			(uint8_t)buf[8 + 1], (uint8_t)buf[8 + 0],
+			(uint8_t)buf[8 + 5], (uint8_t)buf[8 + 4],
+			(uint8_t)buf[8 + 7], (uint8_t)buf[8 + 6],
+			(uint8_t)buf[8 + 8], (uint8_t)buf[8 + 9],
+			(uint8_t)buf[8 + 10], (uint8_t)buf[8 + 11],
+			(uint8_t)buf[8 + 12], (uint8_t)buf[8 + 13],
+			(uint8_t)buf[8 + 14], (uint8_t)buf[8 + 15]);
+		break;
+	}
+	return strlen(system_uuid) ? 0 : -ENXIO;
+}
+
+#define PATH_DMI_PROD_UUID  "/sys/class/dmi/id/product_uuid"
+
+/**
+ * uuid_from_product_uuid() - Get system UUID from product_uuid
+ * @system_uuid: Where to save the system UUID.
+ *
+ * Return: 0 on success, -ENXIO otherwise.
+ */
+static int uuid_from_product_uuid(char *system_uuid)
+{
+	__cleanup_file FILE *stream = NULL;
+
+	stream = fopen(PATH_DMI_PROD_UUID, "re");
+	if (!stream)
+		return -ENXIO;
+
+	system_uuid[0] = '\0';
+
+	/* The kernel is handling the byte swapping according DMTF
+	 * SMBIOS 3.0 Section 7.2.1 System UUID */
+
+	/*
+	 * Expect exactly:
+	 * xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+	 */
+	if (!fgets(system_uuid, NVME_UUID_LEN_STRING, stream))
+		return -ENXIO;
+
+	if (strlen(system_uuid) != NVME_UUID_LEN_STRING - 1)
+		return -ENXIO;
+
+	if (system_uuid[8]  != '-' || system_uuid[13] != '-' ||
+	    system_uuid[18] != '-' || system_uuid[23] != '-')
+		return -ENXIO;
+
+	system_uuid[NVME_UUID_LEN_STRING - 1] = '\0';
+
+	return 0;
+}
+
+/**
+ * uuid_from_dmi() - read system UUID
+ * @system_uuid: buffer for the UUID
+ *
+ * The system UUID can be read from two different locations:
+ *
+ *     1) /sys/class/dmi/id/product_uuid
+ *     2) /sys/firmware/dmi/entries
+ *
+ * Note that the second location is not present on Debian-based systems.
+ *
+ * Return: 0 on success, negative errno otherwise.
+ */
+static int uuid_from_dmi(char *system_uuid)
+{
+	int ret = uuid_from_product_uuid(system_uuid);
+	if (ret != 0)
+		ret = uuid_from_dmi_entries(system_uuid);
+	return ret;
+}
+
+__libnvme_public char *libnvmf_generate_hostid(void)
+{
+	int ret;
+	char uuid_str[NVME_UUID_LEN_STRING];
+	unsigned char uuid[NVME_UUID_LEN];
+
+	ret = uuid_from_dmi(uuid_str);
+	if (ret < 0)
+		ret = uuid_from_device_tree(uuid_str);
+	if (ret < 0) {
+		if (libnvme_random_uuid(uuid) < 0)
+			memset(uuid, 0, NVME_UUID_LEN);
+		libnvme_uuid_to_string(uuid, uuid_str);
+	}
+
+	return strdup(uuid_str);
+}
+
+__libnvme_public char *libnvmf_generate_hostnqn_from_hostid(char *hostid)
+{
+	char *hid = NULL;
+	char *hostnqn;
+	int ret;
+
+	if (!hostid)
+		hostid = hid = libnvmf_generate_hostid();
+
+	ret = asprintf(&hostnqn, "nqn.2014-08.org.nvmexpress:uuid:%s", hostid);
+	free(hid);
+
+	return (ret < 0) ? NULL : hostnqn;
+}
+
+__libnvme_public char *libnvmf_generate_hostnqn(void)
+{
+	return libnvmf_generate_hostnqn_from_hostid(NULL);
+}
+
+static char *nvmf_read_file(const char *f, int len)
+{
+	char buf[len];
+	__cleanup_fd int fd = -1;
+	int ret;
+
+	fd = open(f, O_RDONLY);
+	if (fd < 0)
+		return NULL;
+
+	memset(buf, 0, len);
+	ret = read(fd, buf, len - 1);
+
+	if (ret < 0 || !strlen(buf))
+		return NULL;
+	return strndup(buf, strcspn(buf, "\n"));
+}
+
+__libnvme_public char *libnvmf_read_hostnqn(void)
+{
+	char *hostnqn = getenv("LIBNVME_HOSTNQN");
+
+	if (hostnqn) {
+		if (!strcmp(hostnqn, ""))
+			return NULL;
+		return strdup(hostnqn);
+	}
+
+	return nvmf_read_file(NVMF_HOSTNQN_FILE, NVMF_NQN_SIZE);
+}
+
+__libnvme_public char *libnvmf_read_hostid(void)
+{
+	char *hostid = getenv("LIBNVME_HOSTID");
+
+	if (hostid) {
+		if (!strcmp(hostid, ""))
+			return NULL;
+		return strdup(hostid);
+	}
+
+	return nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
+}
+
+int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
+		      const char *hostnqn_arg, const char *hostid_arg,
+		      char **hostnqn, char **hostid)
+{
+	__cleanup_free char *nqn = NULL;
+	__cleanup_free char *hid = NULL;
+	__cleanup_free char *hnqn = NULL;
+	libnvme_host_t h;
+
+	/* command line argumments */
+	if (hostid_arg)
+		hid = strdup(hostid_arg);
+	if (hostnqn_arg)
+		hnqn = strdup(hostnqn_arg);
+
+	/* JSON config: assume the first entry is the default host */
+	h = libnvme_first_host(ctx);
+	if (h) {
+		if (!hid)
+			hid = xstrdup(libnvme_host_get_hostid(h));
+		if (!hnqn)
+			hnqn = xstrdup(libnvme_host_get_hostnqn(h));
+	}
+
+	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */
+	if (!hid)
+		hid = libnvmf_read_hostid();
+	if (!hnqn)
+		hnqn = libnvmf_read_hostnqn();
+
+	/* incomplete configuration, thus derive hostid from hostnqn */
+	if (!hid && hnqn)
+		hid = libnvme_hostid_from_hostnqn(hnqn);
+
+	/*
+	 * fallback to use either DMI information or device-tree. If all
+	 * fails generate one
+	 */
+	if (!hid) {
+		hid = libnvmf_generate_hostid();
+		if (!hid)
+			return -ENOMEM;
+
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			 "warning: using auto generated hostid and hostnqn\n");
+	}
+
+	/* incomplete configuration, thus derive hostnqn from hostid */
+	if (!hnqn) {
+		hnqn = libnvmf_generate_hostnqn_from_hostid(hid);
+		if (!hnqn)
+			return -ENOMEM;
+	}
+
+	/* sanity checks */
+	nqn = libnvme_hostid_from_hostnqn(hnqn);
+	if (nqn && strcmp(nqn, hid)) {
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			 "warning: use hostid '%s' which does not match uuid in hostnqn '%s'\n",
+			 hid, hnqn);
+	}
+
+	*hostid = hid;
+	*hostnqn = hnqn;
+	hid = NULL;
+	hnqn = NULL;
+
+	return 0;
+}
+
 const char * const trtypes[] = {
 	[NVMF_TRTYPE_RDMA]	= "rdma",
 	[NVMF_TRTYPE_FC]	= "fc",
@@ -327,12 +647,12 @@ __libnvme_public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		__cleanup_free char *encoded_key = NULL;
 		int key_len = 32;
 
-		err = libnvme_create_raw_secret(fctx->ctx, tls_key,
+		err = libnvmf_create_raw_secret(fctx->ctx, tls_key,
 			key_len, &raw_secret);
 		if (err)
 			return err;
 
-		err = libnvme_export_tls_key(fctx->ctx, raw_secret,
+		err = libnvmf_export_tls_key(fctx->ctx, raw_secret,
 			key_len, &encoded_key);
 		if (err)
 			return err;
@@ -804,7 +1124,7 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 	}
 
 	if (c->cfg.tls) {
-		ret = __libnvme_import_keys_from_config(h, c,
+		ret = __libnvmf_import_keys_from_config(h, c,
 			&keyring_id, &key_id);
 		if (ret)
 			return ret;
@@ -1934,7 +2254,8 @@ static int lookup_host(struct libnvme_global_ctx *ctx,
 	struct libnvme_host *h;
 	int err;
 
-	err = libnvme_host_get_ids(ctx, fctx->hostnqn, fctx->hostid, &hnqn, &hid);
+	err = libnvmf_host_get_ids(ctx, fctx->hostnqn, fctx->hostid,
+		&hnqn, &hid);
 	if (err < 0)
 		return err;
 
@@ -2100,11 +2421,11 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 
 		nfctx.ctrl_params.cfg.keep_alive_tmo = tmo;
 
-		if (!child) {
+		if (child) {
 			if (discover)
 				_nvmf_discovery(ctx, &nfctx, true, child);
 
-			if (child && disconnect) {
+			if (disconnect) {
 				libnvmf_disconnect_ctrl(child);
 				libnvme_free_ctrl(child);
 			}
@@ -2478,9 +2799,9 @@ __libnvme_public int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
 	struct libnvme_ctrl *c;
 
 	if (!fctx->hostnqn)
-		fctx->hostnqn = hnqn = libnvme_read_hostnqn();
+		fctx->hostnqn = hnqn = libnvmf_read_hostnqn();
 	if (!fctx->hostid && hnqn)
-		fctx->hostid = hid = libnvme_read_hostid();
+		fctx->hostid = hid = libnvmf_read_hostid();
 
 	h = libnvme_lookup_host(ctx, fctx->hostnqn, fctx->hostid);
 	if (!h) {

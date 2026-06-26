@@ -184,7 +184,7 @@ static int identify_ctrl_from_handle(HANDLE h, struct nvme_id_ctrl *id_ctrl)
 	struct libnvme_passthru_cmd cmd;
 	int ret;
 
-	ctx = libnvme_create_global_ctx(NULL, LIBNVME_DEFAULT_LOGLEVEL);
+	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return -ENOMEM;
 
@@ -199,7 +199,7 @@ static int identify_ctrl_from_handle(HANDLE h, struct nvme_id_ctrl *id_ctrl)
 
 	memset(id_ctrl, 0, sizeof(*id_ctrl));
 	nvme_init_identify_ctrl(&cmd, id_ctrl);
-	ret = libnvme_submit_admin_passthru(hdl, &cmd);
+	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 
 	/*
 	 * Detach the handle before freeing the transport

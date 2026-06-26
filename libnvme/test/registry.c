@@ -522,7 +522,9 @@ int main(int argc, char *argv[])
 	struct libnvme_global_ctx *ctx;
 	bool pass = true;
 
-	ctx = libnvme_create_global_ctx(stdout, LIBNVME_LOG_DEBUG_VERBOSE);
+	ctx = libnvme_create_global_ctx();
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_DEBUG_VERBOSE, false, false);
 
 	setup_tmpdir();
 

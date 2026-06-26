@@ -13,14 +13,13 @@ extern "C" {
 #endif
 
 #include <nvme/accessors.h>
-#include <nvme/filters.h>
 #include <nvme/ioctl.h>
 #include <nvme/lib-types.h>
 #include <nvme/lib.h>
-#include <nvme/linux.h>
 #include <nvme/mem.h>
 #include <nvme/nvme-cmds.h>
 #include <nvme/nvme-types.h>
+#include <nvme/scan.h>
 #include <nvme/tree.h>
 #include <nvme/types.h>
 #include <nvme/util.h>

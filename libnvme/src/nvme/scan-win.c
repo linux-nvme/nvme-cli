@@ -16,6 +16,7 @@
 #include "compiler-attributes.h"
 
 __libnvme_public int libnvme_scan_subsystems(
+	__libnvme_unused struct libnvme_global_ctx *ctx,
 	__libnvme_unused struct dirent ***subsys)
 {
 	return 0;
@@ -28,7 +29,9 @@ __libnvme_public int libnvme_scan_subsystem_namespaces(
 	return 0;
 }
 
-__libnvme_public int libnvme_scan_ctrls(struct dirent ***ctrls)
+__libnvme_public int libnvme_scan_ctrls(
+	__libnvme_unused struct libnvme_global_ctx *ctx,
+	__libnvme_unused struct dirent ***ctrls)
 {
 	struct dirent **entries;
 	size_t i, count;
@@ -81,8 +84,9 @@ __libnvme_public int libnvme_scan_ctrl_namespace_paths(
 	return 0;
 }
 
-__libnvme_public int libnvme_scan_ctrl_namespaces(libnvme_ctrl_t c,
-						  struct dirent ***ns)
+__libnvme_public int libnvme_scan_ctrl_namespaces(
+	__libnvme_unused libnvme_ctrl_t c,
+	__libnvme_unused struct dirent ***ns)
 {
 	struct dirent **entries = NULL;
 	const struct ctrl_map_entry *ctrl_entry;
