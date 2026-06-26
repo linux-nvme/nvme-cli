@@ -5,6 +5,10 @@
     "description": "libnvme JSON configuration",
     "type": "object",
     "properties": {
+	"owner": {
+	    "description": "Orchestrator identity recorded in the controller ownership registry",
+	    "type": "string"
+	},
 	"hosts": {
 	    "description": "Array of NVMe Host properties",
 	    "type": "array",

@@ -20,6 +20,7 @@ if diff.found()
     config_data = [
         'config-pcie',
         'config-pcie-with-tcp-config',
+        'config-owner',
     ]
 
     config_diff = find_program('config-diff.sh')
@@ -102,6 +103,7 @@ if python3.found()
             schema_file,
             srcdir + '/data/config-pcie.out',
             srcdir + '/data/config-pcie-with-tcp-config.out',
+            srcdir + '/data/config-owner.out',
             srcdir + '/data/tls_key-1.out',
             srcdir + '/data/tls_key-2.out',
         ],
