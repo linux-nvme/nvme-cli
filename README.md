@@ -27,6 +27,7 @@ libnvme:
 
 - **Static analysis**
   - [[clang-analyzer]](https://monom.org/linux-nvme/clang-analyze/current/)
+  - [![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)](https://scan.coverity.com/projects/linux-nvme-nvme-cli)
 
 - **Test coverage**
   - [![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli)
