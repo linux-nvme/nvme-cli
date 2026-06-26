@@ -149,7 +149,6 @@ conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
 conf.set('CONFIG_TOP', want_top, description: 'Is nvme top enabled')
 
 if host_system == 'windows'
-    ws2_32_dep = cc.find_library('ws2_32', required: true)
     kernel32_dep = cc.find_library('kernel32', required: true)
     bcrypt_dep = cc.find_library('bcrypt', required: true)
     setupapi_dep = cc.find_library('setupapi', required: true)
@@ -599,7 +598,6 @@ if want_nvme
 
     if host_system == 'windows'
         link_deps += [
-            ws2_32_dep,
             kernel32_dep,
             bcrypt_dep,
         ]
@@ -801,7 +799,6 @@ dep_dict = {
 }
 if host_system == 'windows'
     dep_dict += {
-        'ws2_32':       ws2_32_dep.found(),
         'kernel32':     kernel32_dep.found(),
         'bcrypt':       bcrypt_dep.found(),
         'setupapi':     setupapi_dep.found(),

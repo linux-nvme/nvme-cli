@@ -34,6 +34,7 @@ const char *libnvme_ctrl_map_get_name(size_t index);
 
 /**
  * libnvme_ctrl_map_init() - Initialize the controller map
+ * @ctx: libnvme global context used for transient Identify commands
  *
  * Enumerates all NVMe controllers via SetupDI and populates the
  * global controller map.  Safe to call multiple times; returns
@@ -41,7 +42,7 @@ const char *libnvme_ctrl_map_get_name(size_t index);
  *
  * Return: 0 on success, negative errno on failure
  */
-int libnvme_ctrl_map_init(void);
+int libnvme_ctrl_map_init(struct libnvme_global_ctx *ctx);
 
 /**
  * libnvme_ctrl_map_clear() - Free all controller map entries
@@ -53,16 +54,18 @@ void libnvme_ctrl_map_clear(void);
 
 /**
  * libnvme_ctrl_map_lookup() - Resolve controller name to map entry
+ * @ctx: libnvme global context used to initialize the map if needed
  * @ctrl_name: Controller name in nvmeX format
  *
  * Return: controller map entry on Windows, or NULL if unavailable
  */
 struct ctrl_map_entry *
-libnvme_ctrl_map_lookup(const char *ctrl_name);
+libnvme_ctrl_map_lookup(struct libnvme_global_ctx *ctx, const char *ctrl_name);
 
 /**
  * libnvme_ctrl_map_lookup_by_physdrive() - Resolve PhysicalDrive path to
  * controller entry
+ * @ctx: libnvme global context used to initialize the map if needed
  * @drive_path: Device path in \\.\PhysicalDriveX format
  *
  * Scans all NVMe controllers and returns the controller map entry whose
@@ -71,7 +74,8 @@ libnvme_ctrl_map_lookup(const char *ctrl_name);
  * Return: controller map entry on match, or NULL if not found
  */
 const struct ctrl_map_entry *
-libnvme_ctrl_map_lookup_by_physdrive(const char *drive_path);
+libnvme_ctrl_map_lookup_by_physdrive(struct libnvme_global_ctx *ctx,
+				     const char *drive_path);
 
 /**
  * libnvme_ctrl_map_entry_set_id_ctrl() - Set id_ctrl for a entry

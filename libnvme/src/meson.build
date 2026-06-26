@@ -122,7 +122,6 @@ deps = [
 ]
 if host_system == 'windows'
     deps += [
-        ws2_32_dep,
         kernel32_dep,
         bcrypt_dep,
         setupapi_dep,

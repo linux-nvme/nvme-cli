@@ -567,20 +567,17 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 {
 	struct libnvme_subsystem *s = NULL, *_s;
 	__cleanup_free char *path = NULL, *subsysnqn = NULL;
-	const char *sysfs_dir = libnvme_subsys_sysfs_dir();
 	libnvme_host_t h = NULL;
 	int ret;
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan subsystem %s\n", name);
-	if (sysfs_dir) {
-		ret = asprintf(&path, "%s/%s", sysfs_dir, name);
-		if (ret < 0)
-			return -ENOMEM;
+	ret = asprintf(&path, "%s/%s", libnvme_subsys_sysfs_dir(), name);
+	if (ret < 0)
+		return -ENOMEM;
 
-		subsysnqn = libnvme_get_attr(path, "subsysnqn");
-		if (!subsysnqn)
-			return -ENODEV;
-	}
+	subsysnqn = libnvme_get_attr(path, "subsysnqn");
+	if (!subsysnqn)
+		return -ENODEV;
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, _s) {
 			/*
@@ -1524,8 +1521,9 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 	libnvme_ctrl_t c, p;
 	int ret;
 
-	ret = libnvme_get_ctrl_transport(path, name, &transport, &traddr, &addr,
-					 &trsvcid, &host_traddr, &host_iface);
+	ret = libnvme_get_ctrl_transport(ctx, path, name, &transport, &traddr,
+					 &addr, &trsvcid, &host_traddr,
+					 &host_iface);
 	if (ret)
 		return ret;
 

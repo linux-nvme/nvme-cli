@@ -187,7 +187,8 @@ __libnvme_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 	if (!libnvme_transport_handle_is_ctrl(hdl))
 		return -EINVAL;
 
-	entry = libnvme_ctrl_map_lookup(libnvme_transport_handle_get_name(hdl));
+	entry = libnvme_ctrl_map_lookup(hdl->ctx,
+					libnvme_transport_handle_get_name(hdl));
 	if (!entry)
 		return -ENODEV;
 

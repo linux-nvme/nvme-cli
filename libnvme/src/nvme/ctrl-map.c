@@ -10,17 +10,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
-#include "private-ctrl-map.h"
-
-#include <cfgmgr32.h>
-#include <setupapi.h>
-#include <winioctl.h>
-#include <ntddscsi.h>
 
 #include <libnvme.h>
 
 #include "private.h"
+#include "private-ctrl-map.h"
 #include "compiler-attributes.h"
+
+#include <cfgmgr32.h>
+#include <winioctl.h>
+#include <ntddscsi.h>
 
 #include <initguid.h>
 #include <devpkey.h>
@@ -85,7 +84,7 @@ static int find_or_create_subsys_index(const struct nvme_id_ctrl *id_ctrl)
 	return max_subsys_index + 1;
 }
 
-static int libnvme_ctrl_map_add(const char *ctrl_name,
+static int libnvme_ctrl_map_add(DWORD ctrl_index,
 				const WCHAR *ctrl_path,
 				const struct nvme_id_ctrl *id_ctrl)
 {
@@ -94,7 +93,7 @@ static int libnvme_ctrl_map_add(const char *ctrl_name,
 	int subsys_index;
 	char *subsys_name;
 
-	if (!ctrl_name || !ctrl_path)
+	if (!ctrl_path)
 		return -EINVAL;
 
 	if (ctrl_map.count == ctrl_map.capacity) {
@@ -111,8 +110,7 @@ static int libnvme_ctrl_map_add(const char *ctrl_name,
 		ctrl_map.capacity = new_capacity;
 	}
 
-	ctrl_name_copy = strdup(ctrl_name);
-	if (!ctrl_name_copy)
+	if (asprintf(&ctrl_name_copy, "nvme%lu", ctrl_index) < 0)
 		return -ENOMEM;
 
 	ctrl_path_copy = _wcsdup(ctrl_path);
@@ -174,25 +172,21 @@ static int ctrl_map_find_index(const char *ctrl_name)
 
 /*
  * Issue an Identify Controller command on the given handle.
- * Creates a temporary transport context and handle internally.
+ * Creates a temporary transport handle internally using the caller's
+ * global context.
  * Returns 0 on success with id_ctrl filled in, negative errno on failure.
  */
-static int identify_ctrl_from_handle(HANDLE h, struct nvme_id_ctrl *id_ctrl)
+static int identify_ctrl_from_handle(struct libnvme_global_ctx *ctx,
+				     libnvme_fd_t h,
+				     struct nvme_id_ctrl *id_ctrl)
 {
-	struct libnvme_global_ctx *ctx;
 	struct libnvme_transport_handle *hdl;
 	struct libnvme_passthru_cmd cmd;
 	int ret;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx)
-		return -ENOMEM;
-
 	hdl = __libnvme_create_transport_handle(ctx);
-	if (!hdl) {
-		libnvme_free_global_ctx(ctx);
+	if (!hdl)
 		return -ENOMEM;
-	}
 
 	hdl->fd = h;
 	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
@@ -207,7 +201,6 @@ static int identify_ctrl_from_handle(HANDLE h, struct nvme_id_ctrl *id_ctrl)
 	 */
 	hdl->fd = INVALID_HANDLE_VALUE;
 	free(hdl);
-	libnvme_free_global_ctx(ctx);
 
 	return ret;
 }
@@ -217,7 +210,7 @@ static int identify_ctrl_from_handle(HANDLE h, struct nvme_id_ctrl *id_ctrl)
  * StorageAdapterProperty.
  * Returns 0 on success (bus type written to *out_bus_type).
  */
-static int get_adapter_bus_type(HANDLE h, STORAGE_BUS_TYPE *out_bus_type)
+static int get_adapter_bus_type(libnvme_fd_t h, STORAGE_BUS_TYPE *out_bus_type)
 {
 	STORAGE_PROPERTY_QUERY q = { 0 };
 	STORAGE_DESCRIPTOR_HEADER hdr;
@@ -310,14 +303,14 @@ static int get_device_interface_path(HDEVINFO hdev,
 	return 0;
 }
 
-int libnvme_ctrl_map_init(void)
+int libnvme_ctrl_map_init(struct libnvme_global_ctx *ctx)
 {
 	HDEVINFO hdev;
 	PWSTR ctrl_path = NULL;
 	HANDLE h = INVALID_HANDLE_VALUE;
 	int ret;
 	DWORD index;
-	DWORD nvme_ctrl_index = 0;
+	DWORD ctrl_index = 0;
 	STORAGE_BUS_TYPE bus_type;
 
 	if (ctrl_map.initialized)
@@ -330,7 +323,6 @@ int libnvme_ctrl_map_init(void)
 
 	for (index = 0;; index++) {
 		struct nvme_id_ctrl id_ctrl;
-		char *ctrl_name = NULL;
 
 		h = INVALID_HANDLE_VALUE;
 		ctrl_path = NULL;
@@ -354,19 +346,14 @@ int libnvme_ctrl_map_init(void)
 		    bus_type != BusTypeNvme)
 			goto next_entry;
 
-		ret = identify_ctrl_from_handle(h, &id_ctrl);
+		ret = identify_ctrl_from_handle(ctx, h, &id_ctrl);
 		if (ret)
 			goto next_entry;
 
-		if (asprintf(&ctrl_name, "nvme%lu", nvme_ctrl_index) < 0)
-			goto enomem;
-
-		ret = libnvme_ctrl_map_add(ctrl_name, ctrl_path, &id_ctrl);
-		free(ctrl_name);
-		ctrl_name = NULL;
+		ret = libnvme_ctrl_map_add(ctrl_index, ctrl_path, &id_ctrl);
 		if (ret < 0)
 			goto enomem;
-		nvme_ctrl_index++;
+		ctrl_index++;
 
 next_entry:
 		free(ctrl_path);
@@ -388,14 +375,15 @@ enomem:
 	return -ENOMEM;
 }
 
-struct ctrl_map_entry *libnvme_ctrl_map_lookup(const char *ctrl_name)
+struct ctrl_map_entry *libnvme_ctrl_map_lookup(struct libnvme_global_ctx *ctx,
+					       const char *ctrl_name)
 {
 	int idx;
 
 	if (!ctrl_name)
 		return NULL;
 
-	if (libnvme_ctrl_map_init())
+	if (libnvme_ctrl_map_init(ctx))
 		return NULL;
 
 	idx = ctrl_map_find_index(ctrl_name);
@@ -406,7 +394,8 @@ struct ctrl_map_entry *libnvme_ctrl_map_lookup(const char *ctrl_name)
 }
 
 const struct ctrl_map_entry *
-libnvme_ctrl_map_lookup_by_physdrive(const char *drive_path)
+libnvme_ctrl_map_lookup_by_physdrive(struct libnvme_global_ctx *ctx,
+				     const char *drive_path)
 {
 	DWORD target_num;
 	char *endptr;
@@ -430,7 +419,7 @@ libnvme_ctrl_map_lookup_by_physdrive(const char *drive_path)
 	if (endptr == num_str || *endptr != '\0')
 		return NULL;
 
-	if (libnvme_ctrl_map_init())
+	if (libnvme_ctrl_map_init(ctx))
 		return NULL;
 
 	for (i = 0; i < ctrl_map.count; i++) {
@@ -571,7 +560,7 @@ int libnvme_ctrl_map_entry_get_pci_address(const struct ctrl_map_entry *entry,
 }
 
 
-static int get_device_number(HANDLE h, DWORD *device_number)
+static int get_device_number(libnvme_fd_t h, DWORD *device_number)
 {
 	STORAGE_DEVICE_NUMBER info = { 0 };
 	DWORD bytes_returned = 0;

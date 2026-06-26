@@ -58,6 +58,11 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	c->hdl = NULL;
 	c->name = xstrdup(name);
 	c->sysfs_dir = xstrdup(path);
+	if (!c->name || !c->sysfs_dir) {
+		FREE_CTRL_ATTR(c->name);
+		FREE_CTRL_ATTR(c->sysfs_dir);
+		return -ENOMEM;
+	}
 
 	if (!libnvme_ctrl_get_transport_handle(c))
 		return -ENODEV;
@@ -70,7 +75,7 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 		return -ENODEV;
 	}
 
-	ctrl_entry = libnvme_ctrl_map_lookup(c->name);
+	ctrl_entry = libnvme_ctrl_map_lookup(ctx, c->name);
 	if (!ctrl_entry) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"Failed to find ctrl map entry for ctrl %s\n",
@@ -160,7 +165,8 @@ __libnvme_public int libnvme_init_ctrl(__libnvme_unused libnvme_host_t h,
 	return -ENOTSUP;
 }
 
-int libnvme_get_ctrl_transport(__libnvme_unused const char *path,
+int libnvme_get_ctrl_transport(struct libnvme_global_ctx *ctx,
+			       __libnvme_unused const char *path,
 			       const char *name, char **transport,
 			       char **traddr, char **addr, char **trsvcid,
 			       char **host_traddr, char **host_iface)
@@ -175,7 +181,7 @@ int libnvme_get_ctrl_transport(__libnvme_unused const char *path,
 	*host_traddr = NULL;
 	*host_iface = NULL;
 
-	ctrl_entry = libnvme_ctrl_map_lookup(name);
+	ctrl_entry = libnvme_ctrl_map_lookup(ctx, name);
 	if (!ctrl_entry)
 		return -ENODEV;
 
@@ -248,7 +254,7 @@ __libnvme_public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx,
 	int ret;
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan controller %s\n", name);
-	ctrl_entry = libnvme_ctrl_map_lookup(name);
+	ctrl_entry = libnvme_ctrl_map_lookup(ctx, name);
 	if (!ctrl_entry)
 		return -ENODEV;
 	ret = libnvme_ctrl_map_entry_get_ctrl_path(ctrl_entry, &path);
@@ -403,7 +409,7 @@ int libnvme_ns_open(struct libnvme_global_ctx *ctx,
 	if (ret)
 		goto free_ns;
 
-	ctrl_entry = libnvme_ctrl_map_lookup_by_physdrive(name);
+	ctrl_entry = libnvme_ctrl_map_lookup_by_physdrive(ctx, name);
 	if (!ctrl_entry) {
 		ret = -ENODEV;
 		goto free_ns;
@@ -453,6 +459,10 @@ int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 		return ret;
 
 	n->sysfs_dir = strdup(name); /* \\\\.\\PhysicalDriveX */
+	if (!n->sysfs_dir) {
+		libnvme_free_ns(n);
+		return -ENOMEM;
+	}
 
 	*ns = n;
 	return 0;
