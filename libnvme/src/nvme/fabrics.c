@@ -126,7 +126,7 @@ static int uuid_from_dmi_entries(char *system_uuid)
 	const char *entries_dir = libnvme_dmi_entries_dir();
 	int f;
 	struct dirent *de;
-	char buf[512] = {0};
+	char buf[513] = {0};
 
 	system_uuid[0] = '\0';
 	d = opendir(entries_dir);
@@ -142,10 +142,11 @@ static int uuid_from_dmi_entries(char *system_uuid)
 		f = open(filename, O_RDONLY);
 		if (f < 0)
 			continue;
-		len = read(f, buf, 512);
+		len = read(f, buf, sizeof(buf) - 1);
 		close(f);
 		if (len <= 0)
 			continue;
+		buf[len] = 0;
 		if (sscanf(buf, "%d", &type) != 1)
 			continue;
 		if (type != DMI_SYSTEM_INFORMATION)
@@ -154,10 +155,11 @@ static int uuid_from_dmi_entries(char *system_uuid)
 		f = open(filename, O_RDONLY);
 		if (f < 0)
 			continue;
-		len = read(f, buf, 512);
+		len = read(f, buf, sizeof(buf) - 1);
 		close(f);
 		if (len <= 0)
 			continue;
+		buf[len] = 0;
 
 		if (!is_dmi_uuid_valid(buf, len))
 			continue;
