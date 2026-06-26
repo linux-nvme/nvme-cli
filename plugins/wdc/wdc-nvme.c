@@ -2257,7 +2257,7 @@ static int wdc_create_log_file(const char *file, const __u8 *drive_log_data,
 		return -1;
 	}
 
-	fd = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (fd < 0) {
 		fprintf(stderr, "ERROR: WDC: open: %s\n", libnvme_strerror(errno));
 		return -1;
@@ -3319,7 +3319,7 @@ static int wdc_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 		return -EINVAL;
 	}
 
-	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
 				__func__, file, libnvme_strerror(errno));
@@ -3497,7 +3497,7 @@ static int wdc_do_cap_dui_v1(struct libnvme_transport_handle *hdl, char *file, _
 	}
 	memset(dump_data, 0, sizeof(__u8) * xfer_size);
 
-	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "%s: Failed to open output file %s: %s!\n", __func__, file,
 			libnvme_strerror(errno));
@@ -3631,7 +3631,7 @@ static int wdc_do_cap_dui_v2_v3(struct libnvme_transport_handle *hdl, char *file
 	}
 	memset(dump_data, 0, sizeof(__u8) * xfer_size_long);
 
-	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "%s: Failed to open output file %s: %s!\n",
 				__func__, file, libnvme_strerror(errno));
@@ -3772,7 +3772,7 @@ static int wdc_do_cap_dui_v4(struct libnvme_transport_handle *hdl, char *file, _
 	}
 	memset(dump_data, 0, sizeof(__u8) * xfer_size_long);
 
-	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "%s: Failed to open output file %s: %s!\n", __func__, file,
 			libnvme_strerror(errno));
@@ -4214,7 +4214,7 @@ static int dump_internal_logs(struct libnvme_transport_handle *hdl, const char *
 	memset(hdr, 0, bs);
 
 	sprintf(file_path, "%s/telemetry.bin", dir_name);
-	output = nvme_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		fprintf(stderr, "Failed to open output file %s: %s!\n", file_path, libnvme_strerror(errno));
 		err = output;
@@ -4381,7 +4381,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 			int verify_file;
 
 			/* verify file name and path is valid before getting dump data */
-			verify_file = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+			verify_file = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 			if (verify_file < 0) {
 				fprintf(stderr, "ERROR: WDC: open: %s\n", libnvme_strerror(errno));
 				goto out;
@@ -6319,12 +6319,11 @@ static int nvme_get_print_ocp_cloud_smart_log(struct libnvme_transport_handle *h
 		__u32 namespace_id,
 		int fmt)
 {
-	__u32 length = WDC_NVME_SMART_CLOUD_ATTR_LEN;
 	struct ocp_cloud_smart_log *log_ptr = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int ret, i;
 
-	log_ptr = (struct ocp_cloud_smart_log *)malloc(sizeof(__u8) * length);
+	log_ptr = malloc(sizeof(*log_ptr));
 	if (!log_ptr) {
 		fprintf(stderr, "ERROR: WDC: malloc: %s\n", libnvme_strerror(errno));
 		return -1;
@@ -6339,7 +6338,7 @@ static int nvme_get_print_ocp_cloud_smart_log(struct libnvme_transport_handle *h
 	/* Get the 0xC0 log data */
 	nvme_init_get_log(&cmd, namespace_id,
 			  WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID, NVME_CSI_NVM,
-			  log_ptr, length);
+			  log_ptr, sizeof(*log_ptr));
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
@@ -6478,7 +6477,7 @@ static int nvme_get_hw_rev_log(struct libnvme_transport_handle *hdl, __u8 **data
 	struct libnvme_passthru_cmd cmd;
 	int ret, i;
 
-	log_ptr = (struct wdc_nvme_hw_rev_log *)malloc(sizeof(__u8) * WDC_NVME_HW_REV_LOG_PAGE_LEN);
+	log_ptr = malloc(sizeof(*log_ptr));
 	if (!log_ptr) {
 		fprintf(stderr, "ERROR: WDC: malloc: %s\n", libnvme_strerror(errno));
 		return -1;
@@ -6487,7 +6486,7 @@ static int nvme_get_hw_rev_log(struct libnvme_transport_handle *hdl, __u8 **data
 	/* Get the 0xC0 log data */
 	nvme_init_get_log(&cmd, namespace_id,
 			  WDC_NVME_GET_HW_REV_LOG_OPCODE, NVME_CSI_NVM,
-			  log_ptr, WDC_NVME_HW_REV_LOG_PAGE_LEN);
+			  log_ptr, sizeof(*log_ptr));
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
@@ -10594,7 +10593,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 		int verify_file;
 
 		/* verify the passed in file name and path is valid before getting the dump data */
-		verify_file = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		verify_file = open(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (verify_file < 0) {
 			fprintf(stderr, "ERROR: WDC: open: %s\n", libnvme_strerror(errno));
 			return -1;
@@ -11067,7 +11066,7 @@ static int wdc_clear_reason_id(struct libnvme_transport_handle *hdl)
 		return -ENOMEM;
 
 	/* verify the drive reason id file name and path is valid */
-	verify_file = nvme_open_rawdata(reason_id_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	verify_file = open(reason_id_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (verify_file < 0) {
 		ret = -1;
 		goto free;
@@ -12389,7 +12388,7 @@ static int wdc_enc_submit_move_data(struct libnvme_transport_handle *hdl, char *
 	uint32_t offset = 0;
 	char *buf;
 
-	buf = (char *)malloc(sizeof(__u8) * xfer_size);
+	buf = malloc(xfer_size);
 	if (!buf) {
 		fprintf(stderr, "%s: ERROR: malloc: %s\n", __func__, libnvme_strerror(errno));
 		return -1;
