@@ -21,7 +21,7 @@ on:
     - cron: '0 01 * * *'
 
 jobs:
-  clang-analyzer:
+  build-with-clang-analyzer:
     if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'linux-nvme/nvme-cli' }}
     name: build with clang analyzer
     runs-on: ubuntu-latest
