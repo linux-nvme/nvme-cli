@@ -2,12 +2,12 @@
 .\"     Title: nvme-wdc-vs-error-reason-identifier
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WDC\-VS\-ERROR" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-WDC\-VS\-ERROR" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,9 @@ nvme-wdc-vs-error-reason-identifier \- Retrieve WDC device\*(Aqs telemetry log e
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme wdc vs\-error\-reason\-identifier\fR <device> [\-\-log\-id=<NUM>, \-i <NUM>] [\-\-file=<FILE>, \-o <FILE>]
-                        [<global\-options>]
+\fInvme\fR [<global\-options>] \fIwdc vs\-error\-reason\-identifier\fR <device>
+                        [\-\-log\-id=<NUM>, \-i <NUM>]
+                        [\-\-file=<FILE>, \-O <FILE>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -51,7 +52,7 @@ On success it returns 0, error code otherwise\&.
 Specifies the telemetry log id of the error reason identifier to retrieve\&. Use id 7 for the host generated log page\&. Use id 8 for the controller initiated log page\&. The default is 7/host generated
 .RE
 .PP
-\-o <FILE>, \-\-output\-file=<FILE>
+\-O <FILE>, \-\-file=<FILE>
 .RS 4
 Output file; defaults to "<device serial number>_error_reason_identifier_host_<date>_<time>\&.bin" for the host generated log or "<device serial number>_error_reason_identifier_ctlr_<date>_<time>\&.bin" for the controller initiated log\&.
 .RE
@@ -116,7 +117,7 @@ Retrieves the host generated error reason identifier field and save it in file h
 .RS 4
 .\}
 .nf
-# nvme wdc vs\-error\-reason\-identifier /dev/nvme0 \-i 7 \-o host_gen_error_reason_id\&.bin
+# nvme wdc vs\-error\-reason\-identifier /dev/nvme0 \-i 7 \-O host_gen_error_reason_id\&.bin
 .fi
 .if n \{\
 .RE
@@ -137,7 +138,7 @@ Retrieves the controller initiated error reason identifier field and save it in 
 .RS 4
 .\}
 .nf
-# nvme wdc vs\-error\-reason\-identifier /dev/nvme0 \-i 8 \-o ctlr_init_error_reason_id\&.bin
+# nvme wdc vs\-error\-reason\-identifier /dev/nvme0 \-i 8 \-O ctlr_init_error_reason_id\&.bin
 .fi
 .if n \{\
 .RE

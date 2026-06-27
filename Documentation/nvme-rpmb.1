@@ -2,12 +2,12 @@
 .\"     Title: nvme-rpmb
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RPMB" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-RPMB" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,14 +32,13 @@ nvme-rpmb \- Send RPMB commands to an NVMe device
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme rpmb\fR <device> [\-\-cmd=<command> | \-c <command>]
+\fInvme\fR [<global\-options>] \fIrpmb\fR <device> [\-\-cmd=<command> | \-c <command>]
                         [\-\-msgfile=<data\-file> | \-f <data\-file>]
                         [\-\-keyfile=<key\-file> | \-g <key\-file>]
                         [\-\-key=<key> | \-k <key>] [\-\-msg=<data> | \-d <data>]
                         [\-\-address=<offset> | \-o <offset>]
                         [\-\-blocks=<512 byte sectors> | \-b <sectors>]
                         [\-\-target=<target\-id> | \-t <id>]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp

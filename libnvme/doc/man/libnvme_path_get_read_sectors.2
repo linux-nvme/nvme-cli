@@ -1,0 +1,11 @@
+.TH "libnvme_path_get_read_sectors" 9 "libnvme_path_get_read_sectors" "June 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_path_get_read_sectors \- Get read I/O sectors
+.SH SYNOPSIS
+.B "unsigned long long" libnvme_path_get_read_sectors
+.BI "(libnvme_path_t p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+\fIlibnvme_path_t\fP object
+.SH "RETURN"
+Number of sectors read from the device between two stat samples

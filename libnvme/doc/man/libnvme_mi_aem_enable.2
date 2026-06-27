@@ -1,4 +1,4 @@
-.TH "libnvme_mi_aem_enable" 9 "libnvme_mi_aem_enable" "April 2026" "libnvme API manual" LINUX
+.TH "libnvme_mi_aem_enable" 9 "libnvme_mi_aem_enable" "June 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvme_mi_aem_enable \- Enable AE on the provided endpoint
 .SH SYNOPSIS
@@ -25,4 +25,4 @@ A call to \fBlibnvme_mi_aem_process\fP will grab AEM data and call the aem_handl
 At this point the application can call \fBlibnvme_mi_aem_get_next_event\fP to get information for
 each triggered event.
 .SH "RETURN"
-0 is a success, nonzero is an error and errno may be read for further details
+0 on success, negative error code otherwise.

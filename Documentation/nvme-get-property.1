@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-property
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-PROPERTY" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-PROPERTY" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,8 @@ nvme-get-property \- Reads and shows the defined NVMe controller property for NV
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme get\-property\fR <device> [\-\-offset=<offset> | \-O <offset>]
-                        [\-\-human\-readable | \-H]
-                        [<global\-options>]
+\fInvme\fR [<global\-options>] \fIget\-property\fR <device>
+                        [\-\-offset=<offset> | \-O <offset>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,11 +43,6 @@ Reads and shows the defined NVMe controller property for NVMe over Fabric\&.
 \-O <offset>, \-\-offset=<offset>
 .RS 4
 The offset of the property\&. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20
-.RE
-.PP
-\-H, \-\-human\-readable
-.RS 4
-Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
 .RE
 .SH "GLOBAL OPTIONS"
 .sp
@@ -111,7 +105,7 @@ The following will run the get\-property command with offset 0
 .RS 4
 .\}
 .nf
-# nvme get\-property /dev/nvme0 \-\-offset=0x0 \-\-human\-readable
+# nvme get\-property /dev/nvme0 \-\-offset=0x0 \-\-verbose
 .fi
 .if n \{\
 .RE

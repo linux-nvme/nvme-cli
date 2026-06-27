@@ -2,12 +2,12 @@
 .\"     Title: nvme-security-send
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SECURITY\-SEND" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SECURITY\-SEND" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,13 +32,12 @@ nvme-security-send \- Security Send command
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme security\-send\fR <device> [\-\-file=<file> | \-f <file>]
+\fInvme\fR [<global\-options>] \fIsecurity\-send\fR <device> [\-\-file=<file> | \-f <file>]
                         [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
                         [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
                         [\-\-tl=<transfer\-length> | \-t <transfer\-length>]
                         [\-\-nssf=<nvme\-specific> | \-N <nvme\-specific>]
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp

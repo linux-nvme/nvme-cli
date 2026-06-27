@@ -565,7 +565,7 @@ nvme_get_log_telemetry_host(struct libnvme_transport_handle *hdl,
 
 	nvme_init_get_log_telemetry_host(&cmd, lpo, log, len);
 
-	return libnvme_get_log(hdl, &cmd, false, len);
+	return libnvme_get_log_dynamic_chunk(hdl, &cmd, false, len);
 }
 
 /**
@@ -595,7 +595,7 @@ nvme_get_log_telemetry_ctrl(struct libnvme_transport_handle *hdl, bool rae,
 
 	nvme_init_get_log_telemetry_ctrl(&cmd, lpo, log, len);
 
-	return libnvme_get_log(hdl, &cmd, rae, len);
+	return libnvme_get_log_dynamic_chunk(hdl, &cmd, rae, len);
 }
 
 /**

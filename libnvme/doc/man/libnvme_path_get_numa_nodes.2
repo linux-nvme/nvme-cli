@@ -1,11 +1,11 @@
-.TH "libnvme_path_get_numa_nodes" 9 "libnvme_path_get_numa_nodes" "April 2026" "libnvme API manual" LINUX
+.TH "libnvme_path_get_numa_nodes" 9 "libnvme_path_get_numa_nodes" "June 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvme_path_get_numa_nodes \- Get numa_nodes.
+libnvme_path_get_numa_nodes \- Numa nodes of an nvme_path_t object
 .SH SYNOPSIS
-.B "const char *" libnvme_path_get_numa_nodes
-.BI "(const struct libnvme_path *p "  ");"
+.B "char *" libnvme_path_get_numa_nodes
+.BI "(libnvme_path_t p "  ");"
 .SH ARGUMENTS
 .IP "p" 12
-The \fIstruct libnvme_path\fP instance to query.
+\fIlibnvme_path_t\fP object
 .SH "RETURN"
-The value of the numa_nodes field, or NULL if not set.
+Numa nodes of \fIp\fP

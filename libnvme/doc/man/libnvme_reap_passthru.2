@@ -1,0 +1,18 @@
+.TH "libnvme_reap_passthru" 9 "libnvme_reap_passthru" "June 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_reap_passthru \- Reap one async completion
+.SH SYNOPSIS
+.B "int" libnvme_reap_passthru
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "struct libnvme_passthru_completion *completion "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "completion" 12
+Completion output structure
+.SH "DESCRIPTION"
+Waits for one queued passthru command to complete and stores the
+completed command pointer, associated cookie, and completion status in
+\fIcompletion\fP.
+.SH "RETURN"
+0 on success, negative error code otherwise.

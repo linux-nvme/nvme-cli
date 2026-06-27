@@ -749,10 +749,9 @@ nvme-cmdset-ind-id-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme cmdset-ind-id-ns</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--human-readable | -H]
-                        [--raw-binary | -b]
-                        [&lt;global-options&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>cmdset-ind-id-ns</em> &lt;device&gt;
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--raw-binary | -b]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -800,18 +799,6 @@ raw buffer may be printed to stdout.</p></div>
 <p>
         Print the raw buffer to stdout. Structure is not parsed by
         program. This overrides the vendor specific and human readable options.
-</p>
-</dd>
-<dt class="hdlist1">
--H
-</dt>
-<dt class="hdlist1">
---human-readable
-</dt>
-<dd>
-<p>
-        Display values in a human-readable format where possible.
-        (deprecated, use --verbose)
 </p>
 </dd>
 </dl></div>
@@ -943,7 +930,7 @@ Have the program return the raw structure in binary:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:45:59 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

@@ -1,3 +1,39 @@
+.. _mi-types.h - NVMe-MI wire protocol and messaging types:
+
+**mi-types.h - NVMe-MI wire protocol and messaging types**
+
+
+This file defines the wire protocol types for NVMe Management Interface
+(NVMe-MI) messaging and transport layer. These are the low-level message
+structures used for MCTP/MI communication between a host and NVMe devices.
+
+Scope
+=====
+- MCTP message framing and headers
+- MI request/response message structures
+- MI command opcodes and protocol definitions
+- Admin command protocol over MI transport
+- Control primitives for MI communication
+- Asynchronous Event Messages (AEM)
+- Low-level transport and protocol details
+
+This file is primarily used by the libnvme-mi library implementation and
+is **internal to the MI transport layer**.
+
+Separation from nvme-types-mi.h
+================================
+This file is **separate** from nvme-types-mi.h, which serves a different purpose:
+
+- **mi-types.h** (this file): Wire protocol, messaging, transport layer
+  - Used by: mi.h (MI library internals)
+  - Focus: How messages are sent/received over MCTP
+  - Analogy: TCP/IP headers and framing
+
+- **nvme-types-mi.h**: NVMe-MI data structures from the MI specification
+  - Used by: nvme-types.h (public API), applications
+  - Focus: MI data payloads (controller info, health status, VPD)
+  - Analogy: HTTP request/response bodies
+
 .. c:macro:: NVME_MI_MSGTYPE_NVME
 
 ``NVME_MI_MSGTYPE_NVME ()``

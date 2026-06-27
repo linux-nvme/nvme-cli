@@ -2,12 +2,12 @@
 .\"     Title: nvme-fid-support-effects-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FID\-SUPPORT\-" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-FID\-SUPPORT\-" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,9 +32,7 @@ nvme-fid-support-effects-log \- Send NVMe FID Support and Effects log, return re
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme fid\-support\-effects\-log\fR <device>
-                        [\-\-human\-readable | \-H]
-                        [<global\-options>]
+\fInvme\fR [<global\-options>] \fIfid\-support\-effects\-log\fR <device>
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,11 +42,6 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 .sp
 On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
 .SH "OPTIONS"
-.PP
-\-H, \-\-human\-readable
-.RS 4
-Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
-.RE
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:

@@ -749,13 +749,15 @@ nvme-set-feature(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme set-feature</em> &lt;device&gt; [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;] [--value=&lt;value&gt; | -V &lt;value&gt;]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>set-feature</em> &lt;device&gt;
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--feature-id=&lt;fid&gt; | -f &lt;fid&gt;]
+                        [--value=&lt;value&gt; | -V &lt;value&gt;]
                         [--uuid-index=&lt;uuid-index&gt; | -U &lt;uuid_index&gt;]
                         [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
-                        [--data=&lt;data-file&gt; | -d &lt;data-file&gt;] [--save | -s]
-                        [--cdw12=&lt;cdw12&gt; | -c &lt;cdw12&gt;]
-                        [&lt;global-options&gt;]</pre>
+                        [--data=&lt;data-file&gt; | -d &lt;data-file&gt;]
+                        [--save | -s]
+                        [--cdw12=&lt;cdw12&gt; | -c &lt;cdw12&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -1178,7 +1180,7 @@ Sets the host id to the ascii string.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

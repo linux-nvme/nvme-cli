@@ -749,8 +749,7 @@ nvme-list(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme list</em>
-                        [&lt;global-options&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>list</em></pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -877,9 +876,9 @@ Subsystem        Subsystem-NQN                                                  
 ---------------- ------------------------------------------------------------------------------------------------ ----------------
 nvme-subsys0     nqn.2019-22.com.intel:nvm-subsystem-sn-btnh922508ps1p0b                                          nvme0
 
-Device           Cntlid SN                   MN                                       FR       TxPort Address        Slot   Subsystem    Namespaces
----------------- ------ -------------------- ---------------------------------------- -------- ------ -------------- ------ ------------ ----------------
-nvme0    1      BTNH922508PS1P0B     INTEL SSDPEKNW010T8                      002C     pcie   0000:0d:00.0          nvme-subsys0 nvme0n1
+Device           Orchestrator Cntlid SN                   MN                                       FR       TxPort Address        Slot   Subsystem    Namespaces
+---------------- ------------ ------ -------------------- ---------------------------------------- -------- ------ -------------- ------ ------------ ----------------
+nvme0            kernel       1      BTNH922508PS1P0B     INTEL SSDPEKNW010T8                      002C     pcie   0000:0d:00.0          nvme-subsys0 nvme0n1
 
 Device            Generic           NSID       Usage                      Format           Controllers
 ----------------- ----------------- ---------- -------------------------- ---------------- ----------------
@@ -900,7 +899,7 @@ Device            Generic           NSID       Usage                      Format
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

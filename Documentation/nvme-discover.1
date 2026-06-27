@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,16 +32,19 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme discover\fR
+\fInvme\fR [<global\-options>] \fIdiscover\fR
                         [\-\-raw=<filename> | \-r <filename>]
                         [\-\-device=<device> | \-d <device>]
                         [\-\-config=<filename> | \-J <filename>]
-                        [\-\-persistent | \-p] [\-\-quiet]
+                        [\-\-persistent | \-p]
+                        [\-\-quiet]
                         [\-\-dump\-config | \-O]
-                        [\-\-force] [\-\-nbft] [\-\-no\-nbft] [\-\-nbft\-path=<STR>]
-                        [\-\-context=<STR>]
+                        [\-\-force]
+                        [\-\-nbft]
+                        [\-\-no\-nbft]
+                        [\-\-nbft\-path=<STR>]
+                        [\-\-owner=<NAME>]
                         [<fabrics\-options>]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -116,9 +119,10 @@ Do not look at NBFT tables
 Use a user\-defined path to the NBFT tables
 .RE
 .PP
-\-\-context <STR>
+\-\-owner=<NAME>
 .RS 4
-Set the execution context to <STR>\&. This allows to coordinate the management of the global resources\&.
+Record NAME as the owner of connected controllers in the NVMe ownership registry, so other orchestrators (and nvme\-disconnect\-all) leave them alone\&. See nvme\-disconnect\-all(1)\&. When \-\-nbft is also given, \-\-owner takes precedence over its default owner of
+\fInbft\fR\&.
 .RE
 .SH "FABRICS OPTIONS"
 .sp

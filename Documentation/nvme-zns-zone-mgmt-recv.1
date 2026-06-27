@@ -2,12 +2,12 @@
 .\"     Title: nvme-zns-zone-mgmt-recv
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ZNS\-ZONE\-MGM" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-ZNS\-ZONE\-MGM" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,12 +32,13 @@ nvme-zns-zone-mgmt-recv \- Zone Management Receive command
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme zns zone\-mgmt\-recv\fR <device> [\-\-namespace\-id=<NUM> | \-n <NUM>]
+\fInvme\fR [<global\-options>] \fIzns zone\-mgmt\-recv\fR <device>
+                        [\-\-namespace\-id=<NUM> | \-n <NUM>]
                         [\-\-start\-lba=<LBA> | \-s <LBA>]
                         [\-\-data\-len=<IONUM>, \-l <IONUM>]
-                        [\-\-zra=<NUM>, \-z <NUM>] [\-\-zrasf=<NUM>, \-a <NUM>]
+                        [\-\-zra=<NUM>, \-z <NUM>]
+                        [\-\-zrasf=<NUM>, \-a <NUM>]
                         [\-\-zra\-spec\-feat, \-f]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp

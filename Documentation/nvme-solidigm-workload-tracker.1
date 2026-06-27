@@ -2,12 +2,12 @@
 .\"     Title: nvme-solidigm-workload-tracker
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SOLIDIGM\-WORK" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SOLIDIGM\-WORK" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,10 @@ nvme-solidigm-workload-tracker \- Real\-time capture of Workload Tracker samples
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme solidigm workload\-tracker\fR <device> [\-\-uuid\-index=<id> | \-U <id>]
-                        [\-\-enable | \-e] [\-\-disable | \-d]
+\fInvme\fR [<global\-options>] \fIsolidigm workload\-tracker\fR <device>
+                        [\-\-uuid\-index=<id> | \-U <id>]
+                        [\-\-enable | \-e]
+                        [\-\-disable | \-d]
                         [\-\-sample\-time=<time> | \-s <time>]
                         [\-\-type=<type> | \-t <type>]
                         [\-\-run\-time=<seconds> | \-r <seconds>]
@@ -43,7 +45,6 @@ nvme-solidigm-workload-tracker \- Real\-time capture of Workload Tracker samples
                         [\-\-trigger\-threshold=<value> | \-V <value>]
                         [\-\-trigger\-on\-delta | \-D]
                         [\-\-trigger\-on\-latency | \-L]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp

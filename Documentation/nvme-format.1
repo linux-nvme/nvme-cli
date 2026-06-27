@@ -2,12 +2,12 @@
 .\"     Title: nvme-format
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FORMAT" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-FORMAT" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,13 +32,12 @@ nvme-format \- Format an NVMe device
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme format\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+\fInvme\fR [<global\-options>] \fIformat\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-lbaf=<lbaf> | \-l <lbaf>]
                         [\-\-block\-size=<block size | \-b <block size>]
                         [\-\-ses=<ses> | \-s <ses>] [\-\-pil=<pil> | \-p <pil>]
                         [\-\-pi=<pi> | \-i <pi>] [\-\-ms=<ms> | \-m <ms>]
                         [\-\-reset | \-r] [\-\-force]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp

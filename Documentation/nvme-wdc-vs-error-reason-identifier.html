@@ -749,8 +749,9 @@ nvme-wdc-vs-error-reason-identifier(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme wdc vs-error-reason-identifier</em> &lt;device&gt; [--log-id=&lt;NUM&gt;, -i &lt;NUM&gt;] [--file=&lt;FILE&gt;, -o &lt;FILE&gt;]
-                        [&lt;global-options&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>wdc vs-error-reason-identifier</em> &lt;device&gt;
+                        [--log-id=&lt;NUM&gt;, -i &lt;NUM&gt;]
+                        [--file=&lt;FILE&gt;, -O &lt;FILE&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -786,10 +787,10 @@ Results for any other device are undefined.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
--o &lt;FILE&gt;
+-O &lt;FILE&gt;
 </dt>
 <dt class="hdlist1">
---output-file=&lt;FILE&gt;
+--file=&lt;FILE&gt;
 </dt>
 <dd>
 <p>
@@ -887,7 +888,7 @@ Retrieves the host generated error reason identifier field and save it in file h
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme wdc vs-error-reason-identifier /dev/nvme0 -i 7 -o host_gen_error_reason_id.bin</code></pre>
+<pre><code># nvme wdc vs-error-reason-identifier /dev/nvme0 -i 7 -O host_gen_error_reason_id.bin</code></pre>
 </div></div>
 </li>
 <li>
@@ -896,7 +897,7 @@ Retrieves the controller initiated error reason identifier field and save it in 
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme wdc vs-error-reason-identifier /dev/nvme0 -i 8 -o ctlr_init_error_reason_id.bin</code></pre>
+<pre><code># nvme wdc vs-error-reason-identifier /dev/nvme0 -i 8 -O ctlr_init_error_reason_id.bin</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -913,7 +914,7 @@ Retrieves the controller initiated error reason identifier field and save it in 
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

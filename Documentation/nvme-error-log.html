@@ -749,9 +749,17 @@ nvme-error-log(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme error-log</em> &lt;device&gt; [--log-entries=&lt;entries&gt; | -e &lt;entries&gt;]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>error-log</em> &lt;device&gt;
+                        [--log-entries=&lt;entries&gt; | -e &lt;entries&gt;]
                         [--raw-binary | -b]
-                        [&lt;global-options&gt;]</pre>
+                        [--valid-entry | -V]
+                        [--sqid=&lt;sqid&gt; | -S &lt;sqid&gt;]
+                        [--status=&lt;status&gt; | -s &lt;status&gt;]
+                        [--lba=&lt;lba&gt; | -l &lt;lba&gt;]
+                        [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
+                        [--trtype=&lt;trtype&gt; | -t &lt;trtype&gt;]
+                        [--csi=&lt;csi&gt; | -c &lt;csi&gt;]
+                        [--opcode=&lt;opcode&gt; | -O &lt;opcode&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -760,7 +768,8 @@ nvme-error-log(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Retrieves NVMe Error log page from an NVMe device and provides the
-returned structure.</p></div>
+returned structure. All the returned structure fields including the
+ordering of the entries are described in the spec.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
 <div class="paragraph"><p>On success, the returned error log structure may be returned in one of
@@ -795,6 +804,94 @@ printed to stdout for another program to parse.</p></div>
 <dd>
 <p>
         Print the raw error log buffer to stdout.
+</p>
+</dd>
+<dt class="hdlist1">
+-V
+</dt>
+<dt class="hdlist1">
+--valid-entry
+</dt>
+<dd>
+<p>
+        Output valid entry only.
+</p>
+</dd>
+<dt class="hdlist1">
+-S &lt;sqid&gt;
+</dt>
+<dt class="hdlist1">
+--sqid=&lt;sqid&gt;
+</dt>
+<dd>
+<p>
+        Output specified SQID entry only.
+</p>
+</dd>
+<dt class="hdlist1">
+-s &lt;status&gt;
+</dt>
+<dt class="hdlist1">
+--status=&lt;status&gt;
+</dt>
+<dd>
+<p>
+        Output specified STATUS entry only.
+</p>
+</dd>
+<dt class="hdlist1">
+-l &lt;lba&gt;
+</dt>
+<dt class="hdlist1">
+--lba=&lt;lba&gt;
+</dt>
+<dd>
+<p>
+        Output specified LBA entry only.
+</p>
+</dd>
+<dt class="hdlist1">
+-n &lt;nsid&gt;
+</dt>
+<dt class="hdlist1">
+--namespace-id=&lt;nsid&gt;
+</dt>
+<dd>
+<p>
+        Output specified NSID entry only.
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;trtype&gt;
+</dt>
+<dt class="hdlist1">
+--trtype=&lt;trtype&gt;
+</dt>
+<dd>
+<p>
+        Output specified TRTYPE entry only.
+</p>
+</dd>
+<dt class="hdlist1">
+-c &lt;csi&gt;
+</dt>
+<dt class="hdlist1">
+--csi=&lt;csi&gt;
+</dt>
+<dd>
+<p>
+        Output specified CSI entry only.
+</p>
+</dd>
+<dt class="hdlist1">
+-O &lt;opcode&gt;
+</dt>
+<dt class="hdlist1">
+--opcode=&lt;opcode&gt;
+</dt>
+<dd>
+<p>
+        Output specified OPC entry only.
 </p>
 </dd>
 </dl></div>
@@ -913,7 +1010,7 @@ Print the raw output to a file:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

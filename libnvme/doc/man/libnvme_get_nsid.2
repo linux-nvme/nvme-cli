@@ -1,4 +1,4 @@
-.TH "libnvme_get_nsid" 9 "libnvme_get_nsid" "April 2026" "libnvme API manual" LINUX
+.TH "libnvme_get_nsid" 9 "libnvme_get_nsid" "June 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvme_get_nsid \- Retrieve the NSID from a namespace file descriptor
 .SH SYNOPSIS
@@ -16,4 +16,4 @@ kernel's interface returns the nsid as the return value. This is unfortunate
 for many architectures that are incapable of allowing distinguishing a
 namespace id > 0x80000000 from a negative error number.
 .SH "RETURN"
-0 if \fInsid\fP was set successfully or -1 with errno set otherwise.
+0 if \fInsid\fP was set successfully or negative error code otherwise.

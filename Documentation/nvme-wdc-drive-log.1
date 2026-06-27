@@ -2,12 +2,12 @@
 .\"     Title: nvme-wdc-drive-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-WDC\-DRIVE\-LO" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-WDC\-DRIVE\-LO" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,8 @@ nvme-wdc-drive-log \- Retrieve WDC device\*(Aqs drive log and save to file\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme wdc drive\-log\fR <device> [\-\-output\-file=<FILE>, \-o <FILE>]
-                        [<global\-options>]
+\fInvme\fR [<global\-options>] \fIwdc drive\-log\fR <device>
+                        [\-\-output\-file=<FILE>, \-O <FILE>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -44,7 +44,7 @@ The <device> parameter is mandatory and may be either the NVMe character device 
 This will only work on WDC devices supporting this feature\&. Results for any other device are undefined\&.
 .SH "OPTIONS"
 .PP
-\-o <FILE>, \-\-output\-file=<FILE>
+\-O <FILE>, \-\-output\-file=<FILE>
 .RS 4
 Output file; defaults to device serial number followed by "drive_log" suffix
 .RE
@@ -130,7 +130,7 @@ Gets the drive log from the device and saves to defined file in current director
 .RS 4
 .\}
 .nf
-# nvme wdc drive\-log /dev/nvme0 \-o test
+# nvme wdc drive\-log /dev/nvme0 \-O test
 .fi
 .if n \{\
 .RE
@@ -151,7 +151,7 @@ Gets the drive log from the device and saves to defined file with pathname (e\&.
 .RS 4
 .\}
 .nf
-# nvme wdc drive\-log /dev/nvme0 \-o /tmp/test
+# nvme wdc drive\-log /dev/nvme0 \-O /tmp/test
 .fi
 .if n \{\
 .RE
