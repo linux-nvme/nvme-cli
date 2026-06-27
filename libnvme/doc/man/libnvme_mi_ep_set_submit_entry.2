@@ -1,0 +1,23 @@
+.TH "libnvme_mi_ep_set_submit_entry" 9 "libnvme_mi_ep_set_submit_entry" "June 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_mi_ep_set_submit_entry \- Install MI submit-entry callback
+.SH SYNOPSIS
+.B "void" libnvme_mi_ep_set_submit_entry
+.BI "(libnvme_mi_ep_t ep "  ","
+.BI "void *(*mi_submit_entry)(struct libnvme_mi_ep *ep, __u8 type, const struct nvme_mi_msg_hdr *hdr, size_t hdr_len, const void *data, size_t data_len) "  ");"
+.SH ARGUMENTS
+.IP "ep" 12
+endpoint to configure
+.IP "mi_submit_entry" 12
+After input validation the callback is invoked before an MI
+command is submitted. The function receives the endpoint,
+message type, header, and data about to be sent, and may return
+an opaque pointer representing per-command context. This pointer
+is later passed unmodified to the mi_submit_exit callback.
+Implementations typically use this hook for logging, tracing, or
+allocating per-command state.
+.SH "DESCRIPTION"
+Installs a callback invoked at the moment an MI command enters the submission
+path. This applies to all MI operations through this endpoint (both endpoint-
+level MI commands and controller admin commands). Passing NULL removes any
+previously installed callback.

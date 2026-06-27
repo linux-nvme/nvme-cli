@@ -1,6 +1,6 @@
-.TH "libnvme" 9 "enum nbft_desc_type" "April 2026" "API Manual" LINUX
+.TH "libnvme" 9 "enum nbft_desc_type" "June 2026" "API Manual" LINUX
 .SH NAME
-enum nbft_desc_type \- NBFT Elements - Descriptor Types (Figure 5)
+enum nbft_desc_type \- NBFT Elements - Descriptor Types (Figure 6)
 .SH SYNOPSIS
 enum nbft_desc_type {
 .br
@@ -41,6 +41,10 @@ enum nbft_desc_type {
 .br
 .br
 .BI "    NBFT_DESC_SSNS_EXT_INFO"
+, 
+.br
+.br
+.BI "    NBFT_DESC_HFI_EXT_INFO"
 
 };
 .SH Constants
@@ -72,3 +76,6 @@ Reserved.
 .IP "NBFT_DESC_SSNS_EXT_INFO" 12
 SSNS Extended Info Descriptor: indicated by an SSNS
 Descriptor if required.
+.IP "NBFT_DESC_HFI_EXT_INFO" 12
+HFI Extended Info Descriptor: indicated by an HFI Transport
+Info descriptor (added in revision 1.1+).

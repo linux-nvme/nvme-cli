@@ -749,10 +749,9 @@ nvme-connect(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme connect</em> [--config=&lt;filename&gt;]
-                        [--application=&lt;id&gt;]
-                        [&lt;fabrics-options&gt;]
-                        [&lt;global-options&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>connect</em> [--config=&lt;filename&gt;]
+                        [--owner=&lt;NAME&gt;]
+                        [&lt;fabrics-options&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -778,12 +777,13 @@ specified by the --nqn option.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
---context &lt;STR&gt;
+--owner=&lt;NAME&gt;
 </dt>
 <dd>
 <p>
-        Set the execution context to &lt;STR&gt;. This allows to coordinate
-        the management of the global resources.
+        Record NAME as the owner of the connected controller in the NVMe
+        ownership registry, so other orchestrators (and nvme-disconnect-all)
+        leave it alone.  See nvme-disconnect-all(1).
 </p>
 </dd>
 </dl></div>
@@ -1237,7 +1237,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:45:59 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

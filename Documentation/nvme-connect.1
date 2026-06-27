@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,10 +32,9 @@ nvme-connect \- Connect to a Fabrics controller\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme connect\fR [\-\-config=<filename>]
-                        [\-\-application=<id>]
+\fInvme\fR [<global\-options>] \fIconnect\fR [\-\-config=<filename>]
+                        [\-\-owner=<NAME>]
                         [<fabrics\-options>]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -47,9 +46,9 @@ Create a transport connection to a remote system (specified by \-\-traddr and \-
 Use the specified JSON configuration file instead of the default\&.
 .RE
 .PP
-\-\-context <STR>
+\-\-owner=<NAME>
 .RS 4
-Set the execution context to <STR>\&. This allows to coordinate the management of the global resources\&.
+Record NAME as the owner of the connected controller in the NVMe ownership registry, so other orchestrators (and nvme\-disconnect\-all) leave it alone\&. See nvme\-disconnect\-all(1)\&.
 .RE
 .SH "FABRICS OPTIONS"
 .sp

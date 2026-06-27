@@ -749,7 +749,8 @@ nvme-read(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme-read</em> &lt;device&gt; [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>read</em> &lt;device&gt;
+                        [--start-block=&lt;slba&gt; | -s &lt;slba&gt;]
                         [--block-count=&lt;nlb&gt; | -c &lt;nlb&gt;]
                         [--block-size=&lt;size&gt; | -b &lt;size&gt;]
                         [--data-size=&lt;size&gt; | -z &lt;size&gt;]
@@ -765,8 +766,7 @@ nvme-read(1) Manual Page
                         [--dir-spec=&lt;spec&gt; | -S &lt;spec&gt;] [--dsm=&lt;dsm&gt; | -D &lt;dsm&gt;]
                         [--show-command | -V] [--dry-run | -w] [--latency | -t]
                         [--storage-tag&lt;storage-tag&gt; | -g &lt;storage-tag&gt;]
-                        [--storage-tag-check | -C] [--force]
-                        [&lt;global-options&gt;]</pre>
+                        [--storage-tag-check | -C] [--force]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -1154,7 +1154,7 @@ and are available to this subcommand:</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

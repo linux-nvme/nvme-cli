@@ -1,0 +1,15 @@
+.TH "libnvme_ctrl_owner" 9 "libnvme_ctrl_owner" "June 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_owner \- Registered orchestrator owner of a controller
+.SH SYNOPSIS
+.B "char *" libnvme_ctrl_owner
+.BI "(libnvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.SH "DESCRIPTION"
+Looks up the controller's "owner" entry in the ownership registry.  In a
+build without fabrics support this always returns NULL.
+.SH "RETURN"
+a newly allocated owner string (the caller frees), or NULL if the
+controller is unowned, local (non-fabrics), or the registry is unreadable.

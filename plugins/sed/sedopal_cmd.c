@@ -583,7 +583,14 @@ int sedopal_cmd_password(int fd)
 void sedopal_print_locking_features(void *data)
 {
 	struct locking_desc *ld = (struct locking_desc *)data;
-	uint8_t features = ld->features;
+	uint8_t features;
+
+	if (!ld) {
+		fprintf(stderr, "Error retrieving details about locking features\n");
+		return;
+	}
+
+	features = ld->features;
 
 	if (!sedopal_discovery_udev) {
 		printf("Locking Features:\n");

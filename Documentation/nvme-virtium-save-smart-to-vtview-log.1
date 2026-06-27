@@ -2,12 +2,12 @@
 .\"     Title: nvme-virtium-save-smart-to-vtview-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-VIRTIUM\-SAVE\" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-VIRTIUM\-SAVE\" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,11 +32,11 @@ nvme-virtium-save-smart-to-vtview-log \- Periodically save smart attributes into
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme virtium save\-smart\-to\-vtview\-log\fR <device> [\-\-run\-time=<NUM> | \-r <NUM>]
+\fInvme\fR [<global\-options>] \fIvirtium save\-smart\-to\-vtview\-log\fR <device>
+                        [\-\-run\-time=<NUM> | \-r <NUM>]
                         [\-\-freq=<NUM> | \-f <NUM>]
-                        [\-\-output\-file=<FILE> | \-o <FILE>]
+                        [\-\-output\-file=<FILE> | \-O <FILE>]
                         [\-\-test\-name=<NAME> | \-n <NAME>]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -61,7 +61,7 @@ If the test\-name option is specified, it will be recorded in the log file and b
 (optional) How often you want to log SMART data (0\&.25 = 15\*(Aq, 0\&.5 = 30\*(Aq, 1 = 1 hour, 2 = 2 hours, etc\&.)\&. Default = 10 hours\&.
 .RE
 .PP
-\-o <FILE>, \-\-output\-file=<FILE>
+\-O <FILE>, \-\-output\-file=<FILE>
 .RS 4
 (optional) Name of the log file (give it a name that easy for you to remember what the test is)\&. You can leave it blank too, the file name will be generated as <model string>\-<serial number>\-<test name>\&.txt\&.
 .RE

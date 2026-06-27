@@ -1,10 +1,13 @@
-.TH "libnvme_scan_subsystems" 9 "libnvme_scan_subsystems" "April 2026" "libnvme API manual" LINUX
+.TH "libnvme_scan_subsystems" 9 "libnvme_scan_subsystems" "June 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvme_scan_subsystems \- Scan for subsystems
 .SH SYNOPSIS
 .B "int" libnvme_scan_subsystems
-.BI "(struct dirent ***subsys "  ");"
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct dirent ***subsys "  ");"
 .SH ARGUMENTS
+.IP "ctx" 12
+\fIstruct libnvme_global_ctx\fP object
 .IP "subsys" 12
 Pointer to array of dirents
 .SH "RETURN"

@@ -1,4 +1,4 @@
-.TH "libnvme_mi_control" 9 "libnvme_mi_control" "April 2026" "libnvme API manual" LINUX
+.TH "libnvme_mi_control" 9 "libnvme_mi_control" "June 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvme_mi_control \- Perform a Control Primitive command
 .SH SYNOPSIS
@@ -22,4 +22,4 @@ Stores the result from the CPSR field in \fIresult_cpsr\fP if set.
 
 See: \fIenum nvme_mi_control_opcode\fP
 .SH "RETURN"
-0 on success, non-zero on failure
+0 on success, negative error code otherwise.

@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-feature
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-FEATURE" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-FEATURE" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,15 +32,13 @@ nvme-get-feature \- Gets an NVMe feature, returns applicable results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme get\-feature\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+\fInvme\fR [<global\-options>] \fIget\-feature\fR <device>
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-feature\-id=<fid> | \-f <fid>]
                         [\-\-uuid\-index=<uuid\-index> | \-U <uuid_index>]
                         [\-\-data\-len=<data\-len> | \-l <data\-len>]
-                        [\-\-sel=<select> | \-s <select>]
-                        [\-\-raw\-binary | \-b] [\-\-cdw11=<cdw11> | \-c <cdw11>]
-                        [\-\-human\-readable | \-H]
-                        [\-\-changed | \-C]
-                        [<global\-options>]
+                        [\-\-sel=<select> | \-s <select>] [\-\-raw\-binary | \-b]
+                        [\-\-cdw11=<cdw11> | \-c <cdw11>] [\-\-changed | \-C]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -442,11 +440,6 @@ The value for command dword 11, if applicable\&.
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw feature buffer to stdout if the feature returns a structure\&.
-.RE
-.PP
-\-H, \-\-human\-readable
-.RS 4
-Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
 .RE
 .PP
 \-C, \-\-changed

@@ -2,12 +2,12 @@
 .\"     Title: nvme-cmdset-ind-id-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CMDSET\-IND\-I" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CMDSET\-IND\-I" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,10 +32,9 @@ nvme-cmdset-ind-id-ns \- Send NVMe I/O Command Set Independent Identify Namespac
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme cmdset\-ind\-id\-ns\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
-                        [\-\-human\-readable | \-H]
+\fInvme\fR [<global\-options>] \fIcmdset\-ind\-id\-ns\fR <device>
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-raw\-binary | \-b]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -54,11 +53,6 @@ Retrieve the identify namespace structure for the given nsid\&. This is required
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the vendor specific and human readable options\&.
-.RE
-.PP
-\-H, \-\-human\-readable
-.RS 4
-Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
 .RE
 .SH "GLOBAL OPTIONS"
 .sp

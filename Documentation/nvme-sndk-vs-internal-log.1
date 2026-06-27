@@ -2,12 +2,12 @@
 .\"     Title: nvme-sndk-vs-internal-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SNDK\-VS\-INTE" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SNDK\-VS\-INTE" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,13 +32,13 @@ nvme-sndk-vs-internal-log \- Retrieve sndk device\*(Aqs internal firmware log an
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme sndk vs\-internal\-log\fR <device> [\-\-output\-file=<FILE>, \-o <FILE>]
+\fInvme\fR [<global\-options>] \fIsndk vs\-internal\-log\fR <device>
+                        [\-\-output\-file=<FILE>, \-O <FILE>]
                         [\-\-transfer\-size=<SIZE>, \-s <SIZE>]
                         [\-\-data\-area=<DATA AREA>, \-d <DATA_AREA>]
                         [\-\-file\-size=<FILE SIZE>, \-f <FILE SIZE>]
                         [\-\-offset=<OFFSET>, \-e <OFFSET>]
                         [\-\-type=<TYPE>, \-t <type>]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -49,7 +49,7 @@ The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0)\&.
 This will only work on Sandisk devices supporting this feature\&. Results for any other device are undefined\&.
 .SH "OPTIONS"
 .PP
-\-o <FILE>, \-\-output\-file=<FILE>
+\-O <FILE>, \-\-output\-file=<FILE>
 .RS 4
 Output file; defaults to device serial number followed by "\fIinternal_fw_log\fR<date>_<time>\&.bin" suffix
 .RE
@@ -160,7 +160,7 @@ Gets the internal firmware log from the device and saves to defined file in curr
 .RS 4
 .\}
 .nf
-# nvme sndk vs\-internal\-log /dev/nvme0 \-o test\&.bin
+# nvme sndk vs\-internal\-log /dev/nvme0 \-O test\&.bin
 .fi
 .if n \{\
 .RE
@@ -181,7 +181,7 @@ Gets the internal firmware log from the device and saves to defined file with pa
 .RS 4
 .\}
 .nf
-# nvme sndk vs\-internal\-log /dev/nvme0 \-o /tmp/test
+# nvme sndk vs\-internal\-log /dev/nvme0 \-O /tmp/test
 .fi
 .if n \{\
 .RE
@@ -244,9 +244,9 @@ Gets the internal firmware log up to data area 3 from the device in 3 files of 0
 .RS 4
 .\}
 .nf
-# nvme sndk vs\-internal\-log /dev/nvme0 \-d 3 \-f 0x1000000 \-t 0x0000000 \-o /tmp/sn340_dui_data_1\&.bin
-# nvme sndk vs\-internal\-log /dev/nvme0 \-d 3 \-f 0x1000000 \-t 0x1000000 \-o /tmp/sn340_dui_data_2\&.bin
-# nvme sndk vs\-internal\-log /dev/nvme0 \-d 3 \-f 0x1000000 \-t 0x2000000 \-o /tmp/sn340_dui_data_3\&.bin
+# nvme sndk vs\-internal\-log /dev/nvme0 \-d 3 \-f 0x1000000 \-t 0x0000000 \-O /tmp/sn340_dui_data_1\&.bin
+# nvme sndk vs\-internal\-log /dev/nvme0 \-d 3 \-f 0x1000000 \-t 0x1000000 \-O /tmp/sn340_dui_data_2\&.bin
+# nvme sndk vs\-internal\-log /dev/nvme0 \-d 3 \-f 0x1000000 \-t 0x2000000 \-O /tmp/sn340_dui_data_3\&.bin
 .fi
 .if n \{\
 .RE
@@ -267,7 +267,7 @@ Gets the host telemetry log page to data area 3 from the device and stores it in
 .RS 4
 .\}
 .nf
-# nvme sndk vs\-internal\-log /dev/nvme1 \-t host \-o host\-telem\-log\-da3\&.bin \-d 3
+# nvme sndk vs\-internal\-log /dev/nvme1 \-t host \-O host\-telem\-log\-da3\&.bin \-d 3
 .fi
 .if n \{\
 .RE
@@ -288,7 +288,7 @@ Gets the controller telemetry log page to data area 3 from the device and stores
 .RS 4
 .\}
 .nf
-# nvme sndk vs\-internal\-log /dev/nvme1 \-t controller \-o ctlr\-telem\-log\-da3\&.bin \-d 3
+# nvme sndk vs\-internal\-log /dev/nvme1 \-t controller \-O ctlr\-telem\-log\-da3\&.bin \-d 3
 .fi
 .if n \{\
 .RE
@@ -309,7 +309,7 @@ Gets both host and controller telemetry log pages to data area 3 from the device
 .RS 4
 .\}
 .nf
-# nvme sndk vs\-internal\-log /dev/nvme1 \-t both \-o both\-telem\-log\-da3\&.tar \-d 3
+# nvme sndk vs\-internal\-log /dev/nvme1 \-t both \-O both\-telem\-log\-da3\&.tar \-d 3
 .fi
 .if n \{\
 .RE

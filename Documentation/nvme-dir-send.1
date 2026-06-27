@@ -2,12 +2,12 @@
 .\"     Title: nvme-dir-send
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DIR\-SEND" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-DIR\-SEND" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,16 +32,14 @@ nvme-dir-send \- Issue a directive send command, returns applicable results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme dir\-send\fR <device> [\-\-namespace\-id=<nsid> | \-n <nsid>]
+\fInvme\fR [<global\-options>] \fIdir\-send\fR <device>
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-data\-len=<data\-len> | \-l <data\-len>]
                         [\-\-dir\-type=<dtype> | \-D <dtype>]
                         [\-\-dir\-spec=<dspec> | \-S <dspec>]
                         [\-\-dir\-oper=<doper> | \-O <doper>]
                         [\-\-endir=<endir> | \-e <endir>]
-                        [\-\-target\-dir=<tdir> | \-T <tdir>]
-                        [\-\-human\-readable | \-H]
-                        [\-\-raw\-binary | \-b]
-                        [<global\-options>]
+                        [\-\-target\-dir=<tdir> | \-T <tdir>] [\-\-raw\-binary | \-b]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -130,11 +128,6 @@ The data length for the buffer returned for this feature\&. Most known features 
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw receive buffer to stdout if the command returns a structure\&.
-.RE
-.PP
-\-H, \-\-human\-readable
-.RS 4
-Display values in a human\-readable format where possible\&. (deprecated, use \-\-verbose)
 .RE
 .SH "GLOBAL OPTIONS"
 .sp

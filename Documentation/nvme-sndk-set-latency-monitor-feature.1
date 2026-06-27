@@ -2,12 +2,12 @@
 .\"     Title: nvme-sndk-set-latency-monitor-feature
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SNDK\-SET\-LAT" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SNDK\-SET\-LAT" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-sndk-set-latency-monitor-feature \- Set NVMe sndk latency monitor feature o
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme sndk set\-latency\-monitor\-feature\fR <device>
+\fInvme\fR [<global\-options>] \fIsndk set\-latency\-monitor\-feature\fR <device>
                         [\-\-active_bucket_timer_threshold=<NUM> | \-t <NUM>]
                         [\-\-active_threshold_a=<NUM> | \-a <NUM>]
                         [\-\-active_threshold_b=<NUM> | \-b <NUM>]
@@ -43,7 +43,6 @@ nvme-sndk-set-latency-monitor-feature \- Set NVMe sndk latency monitor feature o
                         [\-\-debug_log_trigger_enable=<NUM> | \-r <NUM>]
                         [\-\-discard_debug_log=<NUM> | \-l <NUM>]
                         [\-\-latency_monitor_feature_enable=<NUM> | \-e <NUM>]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp

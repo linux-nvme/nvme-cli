@@ -2,12 +2,12 @@
 .\"     Title: nvme-disconnect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCONNECT\-AL" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCONNECT\-AL" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,15 +32,34 @@ nvme-disconnect-all \- Disconnect from all connected Fabrics controllers\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme disconnect\-all\fR
-                        [<global\-options>]
+\fInvme\fR [<global\-options>] \fIdisconnect\-all\fR
+                        [\-\-transport=<STR> | \-t <STR>]
+                        [\-\-owner=<NAME>]
+                        [\-\-force]
 .fi
 .SH "DESCRIPTION"
 .sp
-Disconnects and removes all existing NVMe over Fabrics controllers\&.
+Disconnects and removes NVMe over Fabrics controllers\&. The default behavior is ownership\-aware: only controllers with no entry in the ownership registry are disconnected\&. Controllers registered to an orchestrator (e\&.g\&. nvme\-stas, nbft) are left untouched\&.
+.sp
+Use \-\-owner to target a specific orchestrator\(cqs controllers, or \-\-force to disconnect all controllers regardless of ownership\&. \-\-force and \-\-owner are mutually exclusive\&. When either flag is used interactively a confirmation prompt is shown; non\-interactive invocations proceed without prompting\&.
 .sp
 See the documentation for the nvme\-disconnect(1) command for further background\&.
 .SH "OPTIONS"
+.PP
+\-t <STR>, \-\-transport=<STR>
+.RS 4
+Limit disconnection to controllers using the specified transport (e\&.g\&. tcp, rdma, fc)\&.
+.RE
+.PP
+\-\-owner=<NAME>
+.RS 4
+Disconnect only controllers owned by NAME in the registry\&. Requires interactive confirmation when stdin is a terminal\&.
+.RE
+.PP
+\-\-force
+.RS 4
+Disconnect all controllers regardless of ownership\&. Requires interactive confirmation when stdin is a terminal\&.
+.RE
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:
@@ -96,7 +115,7 @@ Increase the level of detail in the output\&. May be specified multiple times to
 .sp -1
 .IP \(bu 2.3
 .\}
-Disconnect all existing nvme controllers:
+Disconnect all unowned controllers (safe default):
 .sp
 .if n \{\
 .RS 4
@@ -108,9 +127,51 @@ Disconnect all existing nvme controllers:
 .RE
 .\}
 .RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Disconnect all controllers owned by nvme\-stas:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme disconnect\-all \-\-owner stas
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Disconnect all controllers regardless of ownership:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme disconnect\-all \-\-force
+.fi
+.if n \{\
+.RE
+.\}
+.RE
 .SH "SEE ALSO"
 .sp
-nvme\-disconnect(1)
+nvme\-disconnect(1) nvme\-registry\-list(1) nvme\-registry\-delete(1)
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

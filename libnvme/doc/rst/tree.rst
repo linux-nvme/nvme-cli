@@ -5,37 +5,6 @@
 
 libnvme tree object interface
 
-.. c:function:: void libnvme_set_application (struct libnvme_global_ctx *ctx, const char *a)
-
-   Specify managing application
-
-**Parameters**
-
-``struct libnvme_global_ctx *ctx``
-  struct libnvme_global_ctx object
-
-``const char *a``
-  Application string
-
-**Description**
-
-Sets the managing application string for **r**.
-
-
-.. c:function:: const char * libnvme_get_application (struct libnvme_global_ctx *ctx)
-
-   Get managing application
-
-**Parameters**
-
-``struct libnvme_global_ctx *ctx``
-  struct libnvme_global_ctx object
-
-**Description**
-
-Returns the managing application string for **r** or NULL if not set.
-
-
 .. c:function:: void libnvme_skip_namespaces (struct libnvme_global_ctx *ctx)
 
    Skip namespace scanning
@@ -174,55 +143,7 @@ hostnqn/hostid are NULL.
 
 **Return**
 
-0 on success or negative error code otherwise
-
-
-.. c:function:: int libnvme_host_get_ids (struct libnvme_global_ctx *ctx, const char *hostnqn_arg, const char *hostid_arg, char **hostnqn, char **hostid)
-
-   Retrieve host ids from various sources
-
-**Parameters**
-
-``struct libnvme_global_ctx *ctx``
-  struct libnvme_global_ctx object
-
-``const char *hostnqn_arg``
-  Input hostnqn (command line) argument
-
-``const char *hostid_arg``
-  Input hostid (command line) argument
-
-``char **hostnqn``
-  Output hostnqn
-
-``char **hostid``
-  Output hostid
-
-**Description**
-
-libnvme_host_get_ids figures out which hostnqn/hostid is to be used.
-There are several sources where this information can be retrieved.
-
-The order is:
-
- - Start with informartion from DMI or device-tree
- - Override hostnqn and hostid from /etc/nvme files
- - Override hostnqn or hostid with values from JSON
-   configuration file. The first host entry in the file is
-   considered the default host.
- - Override hostnqn or hostid with values from the command line
-   (**hostnqn_arg**, **hostid_arg**).
-
- If the IDs are still NULL after the lookup algorithm, the function
- will generate random IDs.
-
- The function also verifies that hostnqn and hostid matches. The Linux
- NVMe implementation expects a 1:1 matching between the IDs.
-
-**Return**
-
-0 on success (**hostnqn** and **hostid** contain valid strings
- which the caller needs to free), or negative error code otherwise.
+0 on success, negative error code otherwise.
 
 
 .. c:function:: libnvme_subsystem_t libnvme_first_subsystem (libnvme_host_t h)
@@ -309,6 +230,20 @@ Frees **s** and all related objects.
 **Return**
 
 :c:type:`libnvme_host_t` object from **s**
+
+
+.. c:function:: char * libnvme_subsystem_get_iopolicy (libnvme_subsystem_t s)
+
+   Get subsystem iopolicy name
+
+**Parameters**
+
+``libnvme_subsystem_t s``
+  subsystem
+
+**Return**
+
+The iopolicy configured in subsystem **s**
 
 
 .. c:function:: libnvme_ns_t libnvme_ctrl_first_ns (libnvme_ctrl_t c)
@@ -433,44 +368,6 @@ First :c:type:`libnvme_path_t` object of an **ns** iterator
 **Return**
 
 Next :c:type:`libnvme_path_t` object of an **ns** iterator
-
-
-.. c:function:: bool libnvme_ctrl_match_config (struct libnvme_ctrl *c, const char *transport, const char *traddr, const char *trsvcid, const char *subsysnqn, const char *host_traddr, const char *host_iface)
-
-   Check if ctrl **c** matches config params
-
-**Parameters**
-
-``struct libnvme_ctrl *c``
-  An existing controller instance
-
-``const char *transport``
-  Transport name
-
-``const char *traddr``
-  Transport address
-
-``const char *trsvcid``
-  Transport service identifier
-
-``const char *subsysnqn``
-  Subsystem NQN
-
-``const char *host_traddr``
-  Host transport address
-
-``const char *host_iface``
-  Host interface name
-
-**Description**
-
-Check that controller **c** matches parameters: **transport**, **traddr**,
-**trsvcid**, **subsysnqn**, **host_traddr**, and **host_iface**. Parameters set
-to NULL will be ignored.
-
-**Return**
-
-true if there's a match, false otherwise.
 
 
 .. c:function:: libnvme_ns_t libnvme_subsystem_first_ns (libnvme_subsystem_t s)
@@ -735,51 +632,9 @@ Next :c:type:`libnvme_ns_t` object of an **s** iterator
   :c:type:`libnvme_path_t` object
 
 
-.. c:function:: enum nvme_csi libnvme_ns_get_csi (libnvme_ns_t n)
+.. c:function:: void libnvme_ns_copy_uuid (libnvme_ns_t n, unsigned char out[NVME_UUID_LEN])
 
-   Command set identifier of a namespace
-
-**Parameters**
-
-``libnvme_ns_t n``
-  Namespace instance
-
-**Return**
-
-The namespace's command set identifier in use
-
-
-.. c:function:: const uint8_t * libnvme_ns_get_eui64 (libnvme_ns_t n)
-
-   64-bit eui of a namespace
-
-**Parameters**
-
-``libnvme_ns_t n``
-  Namespace instance
-
-**Return**
-
-A pointer to the 64-bit eui
-
-
-.. c:function:: const uint8_t * libnvme_ns_get_nguid (libnvme_ns_t n)
-
-   128-bit nguid of a namespace
-
-**Parameters**
-
-``libnvme_ns_t n``
-  Namespace instance
-
-**Return**
-
-A pointer to the 128-bit nguid
-
-
-.. c:function:: void libnvme_ns_get_uuid (libnvme_ns_t n, unsigned char out[NVME_UUID_LEN])
-
-   UUID of a namespace
+   Copy UUID of a namespace into a caller buffer
 
 **Parameters**
 
@@ -794,18 +649,62 @@ A pointer to the 128-bit nguid
 Copies the namespace's uuid into **out**
 
 
-.. c:function:: const char * libnvme_ns_get_generic_name (libnvme_ns_t n)
+.. c:function:: long libnvme_ns_get_command_retry_count (libnvme_ns_t n)
 
-   Returns name of generic namespace chardev.
+   Get command retry count
 
 **Parameters**
 
 ``libnvme_ns_t n``
-  Namespace instance
+  :c:type:`libnvme_ns_t` object
 
 **Return**
 
-Name of generic namespace chardev
+Number of times any command issued to namespace **n** has to be retried
+
+
+.. c:function:: long libnvme_ns_get_command_error_count (libnvme_ns_t n)
+
+   Get command error count
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Number of times command issued to namespace **n** returns non-zero
+status or error
+
+
+.. c:function:: long libnvme_ns_get_io_requeue_no_usable_path_count (libnvme_ns_t n)
+
+   Get I/Os requeue count
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Number of I/Os which are re-queued due to the unavalibility of
+any usable path (maybe path is currently experiencing transinet link failure)
+
+
+.. c:function:: long libnvme_ns_get_io_fail_no_available_path_count (libnvme_ns_t n)
+
+   Get I/Os failed count
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Number of I/Os which are forced to fail due to no path available
 
 
 .. c:function:: const char * libnvme_ns_get_firmware (libnvme_ns_t n)
@@ -1032,7 +931,7 @@ Number of sectors written
 
 **Return**
 
-0 on success, -1 on error.
+0 on success, negative error code otherwise.
 
 
 .. c:function:: int libnvme_ns_identify (libnvme_ns_t n, struct nvme_id_ns *ns)
@@ -1054,7 +953,7 @@ into **ns**.
 
 **Return**
 
-0 on success, -1 on error.
+0 on success, negative error code otherwise.
 
 
 .. c:function:: int libnvme_ns_identify_descs (libnvme_ns_t n, struct nvme_ns_id_desc *descs)
@@ -1076,7 +975,7 @@ into **descs**.
 
 **Return**
 
-0 on success, -1 on error.
+0 on success, negative error code otherwise.
 
 
 .. c:function:: int libnvme_path_get_queue_depth (libnvme_path_t p)
@@ -1091,6 +990,79 @@ into **descs**.
 **Return**
 
 Queue depth of **p**
+
+
+.. c:function:: char * libnvme_path_get_ana_state (libnvme_path_t p)
+
+   ANA state of an nvme_path_t object
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+ANA state of **p**
+
+
+.. c:function:: char * libnvme_path_get_numa_nodes (libnvme_path_t p)
+
+   Numa nodes of an nvme_path_t object
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Numa nodes of **p**
+
+
+.. c:function:: long libnvme_path_get_multipath_failover_count (libnvme_path_t p)
+
+   Get multipath failover count
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Number of times I/Os have to be failed over to another active path
+from path **p** maybe due to any transient error observed on path **p**
+
+
+.. c:function:: long libnvme_path_get_command_retry_count (libnvme_path_t p)
+
+   Get command retry count
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Number of times any command issued to the namespace represented by
+path **p** has to be retried
+
+
+.. c:function:: long libnvme_path_get_command_error_count (libnvme_path_t p)
+
+   Get command error count
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Number of times command issued to the namespace represented by path
+**p** returns non-zero status or error
 
 
 .. c:function:: libnvme_ctrl_t libnvme_path_get_ctrl (libnvme_path_t p)
@@ -1119,6 +1091,164 @@ Parent controller if present
 **Return**
 
 Parent namespace if present
+
+
+.. c:function:: void libnvme_path_reset_stat (libnvme_path_t p)
+
+   Resets namespace path nvme stat
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+
+.. c:function:: int libnvme_path_update_stat (libnvme_path_t p, bool diffstat)
+
+   Update stat of an nvme_path_t object
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+``bool diffstat``
+  If set to true then getters return the diff stat otherwise
+  return the current absolute stat
+
+**Return**
+
+0 on success, negative error code otherwise.
+
+
+.. c:function:: unsigned long libnvme_path_get_read_ios (libnvme_path_t p)
+
+   Calculate and return read IOs
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Num of read IOs processed between two stat samples
+
+
+.. c:function:: unsigned long libnvme_path_get_write_ios (libnvme_path_t p)
+
+   Get write I/Os
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Num of write I/Os processed between two stat samples
+
+
+.. c:function:: unsigned int libnvme_path_get_read_ticks (libnvme_path_t p)
+
+   Get read I/O ticks
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Time, in milliseconds, sepnt processing read I/O requests
+             between two stat samples
+
+
+.. c:function:: unsigned long long libnvme_path_get_read_sectors (libnvme_path_t p)
+
+   Get read I/O sectors
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Number of sectors read from the device between two stat samples
+
+
+.. c:function:: unsigned long long libnvme_path_get_write_sectors (libnvme_path_t p)
+
+   Get write I/O sectors
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Num of sectors written to the device between two stat samples
+
+
+.. c:function:: unsigned int libnvme_path_get_write_ticks (libnvme_path_t p)
+
+   Get write I/O ticks
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Time, in milliseconds, sepnt processing write I/O requests
+             between two stat samples
+
+
+.. c:function:: double libnvme_path_get_stat_interval (libnvme_path_t p)
+
+   Get interval between two stat samples
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Interval, in milliseconds between collection of two consecutive
+             stat samples
+
+
+.. c:function:: unsigned int libnvme_path_get_io_ticks (libnvme_path_t p)
+
+   Get I/O ticks
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Time consumed, in milliseconds, processing I/O requests between
+             two stat samples
+
+
+.. c:function:: unsigned int libnvme_path_get_inflights (libnvme_path_t p)
+
+   Inflight IOs for nvme_path_t object
+
+**Parameters**
+
+``libnvme_path_t p``
+  :c:type:`libnvme_path_t` object
+
+**Return**
+
+Inflight number of IOs
 
 
 .. c:function:: struct libnvme_transport_handle * libnvme_ctrl_get_transport_handle (libnvme_ctrl_t c)
@@ -1189,6 +1319,45 @@ src_addr.
 String indicating the running state of **c**
 
 
+.. c:function:: bool libnvme_ctrl_is_transport_fabric (libnvme_ctrl_t c)
+
+   True for a fabrics transport
+
+**Parameters**
+
+``libnvme_ctrl_t c``
+  Controller instance
+
+**Description**
+
+A controller is reachable either over a local transport (pcie,
+apple-nvme) or over NVMe-over-Fabrics (tcp, rdma, fc, loop).
+
+**Return**
+
+true if **c** uses a fabrics transport, false if local.
+
+
+.. c:function:: char * libnvme_ctrl_owner (libnvme_ctrl_t c)
+
+   Registered orchestrator owner of a controller
+
+**Parameters**
+
+``libnvme_ctrl_t c``
+  Controller instance
+
+**Description**
+
+Looks up the controller's "owner" entry in the ownership registry.  In a
+build without fabrics support this always returns NULL.
+
+**Return**
+
+a newly allocated owner string (the caller frees), or NULL if the
+controller is unowned, local (non-fabrics), or the registry is unreadable.
+
+
 .. c:function:: libnvme_subsystem_t libnvme_ctrl_get_subsystem (libnvme_ctrl_t c)
 
    Parent subsystem of a controller
@@ -1217,6 +1386,207 @@ Parent libnvme_subsystem_t object
 sysfs directory name of **head**
 
 
+.. c:function:: int libnvme_ns_update_stat (libnvme_ns_t n, bool diffstat)
+
+   update the nvme namespace stat
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+``bool diffstat``
+  If set to true then getters return the diff stat otherwise
+  return the current absolute stat
+
+**Return**
+
+0 on success, negative error code otherwise.
+
+
+.. c:function:: void libnvme_ns_reset_stat (libnvme_ns_t n)
+
+   Resets nvme namespace stat
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+
+.. c:function:: unsigned int libnvme_ns_get_inflights (libnvme_ns_t n)
+
+   Inflight IOs for nvme_ns_t object
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Inflight number of IOs
+
+
+.. c:function:: unsigned int libnvme_ns_get_io_ticks (libnvme_ns_t n)
+
+   Get IO ticks
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Time consumed, in milliseconds, processing I/O requests between
+             two stat samples
+
+
+.. c:function:: unsigned int libnvme_ns_get_read_ticks (libnvme_ns_t n)
+
+   Get read I/O ticks
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Time, in milliseconds, sepnt processing read I/O requests
+             between two stat samples
+
+
+.. c:function:: unsigned int libnvme_ns_get_write_ticks (libnvme_ns_t n)
+
+   Get write I/O ticks
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Time, in milliseconds, sepnt processing write I/O requests
+             between two stat samples
+
+
+.. c:function:: double libnvme_ns_get_stat_interval (libnvme_ns_t n)
+
+   Get interval between two stat samples
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Interval, in milliseconds, between collection of two consecutive
+             stat samples
+
+
+.. c:function:: unsigned long libnvme_ns_get_read_ios (libnvme_ns_t n)
+
+   Get num of read I/Os
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Num of read IOs processed between two stat samples
+
+
+.. c:function:: unsigned long libnvme_ns_get_write_ios (libnvme_ns_t n)
+
+   Get num of write I/Os
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Num of write IOs processed between two consecutive stat samples
+
+
+.. c:function:: unsigned long long libnvme_ns_get_read_sectors (libnvme_ns_t n)
+
+   Get num of read sectors
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Num of sectors read from the device between two stat samples
+
+
+.. c:function:: unsigned long long libnvme_ns_get_write_sectors (libnvme_ns_t n)
+
+   Get num of write sectors
+
+**Parameters**
+
+``libnvme_ns_t n``
+  :c:type:`libnvme_ns_t` object
+
+**Return**
+
+Num of sectors written to the device between two stat samples
+
+
+.. c:function:: long libnvme_ctrl_get_command_error_count (libnvme_ctrl_t c)
+
+   Get admin command error count
+
+**Parameters**
+
+``libnvme_ctrl_t c``
+  Controller instance
+
+**Return**
+
+Number of times admin command issued to controller **c** failed or
+returned error status
+
+
+.. c:function:: long libnvme_ctrl_get_reset_count (libnvme_ctrl_t c)
+
+   Get controller reset count
+
+**Parameters**
+
+``libnvme_ctrl_t c``
+  Controller instance
+
+**Return**
+
+Number of timer controller **c** is reset
+
+
+.. c:function:: long libnvme_ctrl_get_reconnect_count (libnvme_ctrl_t c)
+
+   Get controller reconnect count
+
+**Parameters**
+
+``libnvme_ctrl_t c``
+  Controller instance
+
+**Return**
+
+Number of times controller has to reconnect to the target
+
+
 .. c:function:: int libnvme_ctrl_identify (libnvme_ctrl_t c, struct nvme_id_ctrl *id)
 
    Issues an 'identify controller' command
@@ -1236,7 +1606,7 @@ data into **id**.
 
 **Return**
 
-0 on success or -1 on failure.
+0 on success, negative error code otherwise.
 
 
 .. c:function:: int libnvme_scan_ctrl (struct libnvme_global_ctx *ctx, const char *name, libnvme_ctrl_t *c)
@@ -1260,7 +1630,7 @@ Scans a controller with sysfs name **name** and add it to **r**.
 
 **Return**
 
-0 on success or negative error code otherwise
+0 on success, negative error code otherwise.
 
 
 .. c:function:: void libnvme_rescan_ctrl (libnvme_ctrl_t c)
@@ -1290,7 +1660,7 @@ Scans a controller with sysfs name **name** and add it to **r**.
 
 **Return**
 
-0 on success or negative error code otherwise
+0 on success, negative error code otherwise.
 
 
 .. c:function:: void libnvme_free_ctrl (struct libnvme_ctrl *c)
@@ -1335,7 +1705,7 @@ by applying **f**.
 
 **Return**
 
-0 on success, or negative error code otherwise.
+0 on success, negative error code otherwise.
 
 
 .. c:function:: void libnvme_host_release_fds (struct libnvme_host *h)
@@ -1383,7 +1753,7 @@ the elements in **r**.
 
 **Return**
 
-0 on success or negative error code otherwise
+0 on success, negative error code otherwise.
 
 
 .. c:function:: void libnvme_refresh_topology (struct libnvme_global_ctx *ctx)
@@ -1419,7 +1789,7 @@ to the file descriptor fd.
 
 **Return**
 
-0 on success, or negative error code otherwise.
+0 on success, negative error code otherwise.
 
 
 .. c:function:: int libnvme_dump_tree (struct libnvme_global_ctx *ctx)
@@ -1438,7 +1808,7 @@ to stdout.
 
 **Return**
 
-0 on success or negative error code otherwise
+0 on success, negative error code otherwise.
 
 
 .. c:function:: char * libnvme_get_attr (const char *d, const char *attr)
@@ -1581,6 +1951,6 @@ String with the contents of **attr** or ``NULL`` in case of an empty value
 
 **Return**
 
-0 on success or negative error code otherwise
+0 on success, negative error code otherwise.
 
 

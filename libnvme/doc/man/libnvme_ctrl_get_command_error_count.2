@@ -1,0 +1,12 @@
+.TH "libnvme_ctrl_get_command_error_count" 9 "libnvme_ctrl_get_command_error_count" "June 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ctrl_get_command_error_count \- Get admin command error count
+.SH SYNOPSIS
+.B "long" libnvme_ctrl_get_command_error_count
+.BI "(libnvme_ctrl_t c "  ");"
+.SH ARGUMENTS
+.IP "c" 12
+Controller instance
+.SH "RETURN"
+Number of times admin command issued to controller \fIc\fP failed or
+returned error status

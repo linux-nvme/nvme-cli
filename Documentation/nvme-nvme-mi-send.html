@@ -749,13 +749,14 @@ nvme-nvme-mi-send(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme nvme-mi-send</em> &lt;device&gt; [--opcode=&lt;opcode&gt; | -O &lt;opcode&gt;]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>nvme-mi-send</em> &lt;device&gt;
+                        [--opcode=&lt;opcode&gt; | -O &lt;opcode&gt;]
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                         [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
                         [--nmimt=&lt;nmimt&gt; | -m &lt;nmimt&gt;]
-                        [--nmd0=&lt;nmd0&gt; | -0 &lt;nmd0&gt;] [--nmd1=&lt;nmd1&gt; | -1 &lt;nmd1&gt;]
-                        [--input-file=&lt;file&gt; | -i &lt;file&gt;]
-                        [&lt;global-options&gt;]</pre>
+                        [--nmd0=&lt;nmd0&gt; | -0 &lt;nmd0&gt;]
+                        [--nmd1=&lt;nmd1&gt; | -1 &lt;nmd1&gt;]
+                        [--input-file=&lt;file&gt; | -i &lt;file&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -959,7 +960,7 @@ Has the program issue a nvme-mi-send to execute the VPD write.
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>

@@ -1,0 +1,14 @@
+.TH "libnvmf_discovery_args_init_defaults" 9 "libnvmf_discovery_args_init_defaults" "June 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_discovery_args_init_defaults \- Set fields to their defaults.
+.SH SYNOPSIS
+.B "void" libnvmf_discovery_args_init_defaults
+.BI "(struct libnvmf_discovery_args *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_discovery_args\fP instance to initialise.
+.SH "DESCRIPTION"
+Sets each field that carries a default annotation to its
+compile-time default value.  Called automatically by
+\fBlibnvmf_discovery_args_new\fP but may also be called directly to reset an
+instance to its defaults without reallocating it.

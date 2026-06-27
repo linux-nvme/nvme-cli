@@ -1,11 +1,11 @@
-.TH "libnvme_ns_get_eui64" 9 "libnvme_ns_get_eui64" "April 2026" "libnvme API manual" LINUX
+.TH "libnvme_ns_get_eui64" 9 "libnvme_ns_get_eui64" "June 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvme_ns_get_eui64 \- 64-bit eui of a namespace
+libnvme_ns_get_eui64 \- Get eui64.
 .SH SYNOPSIS
 .B "const uint8_t *" libnvme_ns_get_eui64
-.BI "(libnvme_ns_t n "  ");"
+.BI "(const struct libnvme_ns *p "  ");"
 .SH ARGUMENTS
-.IP "n" 12
-Namespace instance
+.IP "p" 12
+The \fIstruct libnvme_ns\fP instance to query.
 .SH "RETURN"
-A pointer to the 64-bit eui
+Pointer to the eui64 array of 8 uint8_t elements.

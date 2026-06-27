@@ -2,12 +2,12 @@
 .\"     Title: nvme-error-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ERROR\-LOG" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-ERROR\-LOG" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,13 +32,21 @@ nvme-error-log \- Send NVME Error log page request, return result and log
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme error\-log\fR <device> [\-\-log\-entries=<entries> | \-e <entries>]
+\fInvme\fR [<global\-options>] \fIerror\-log\fR <device>
+                        [\-\-log\-entries=<entries> | \-e <entries>]
                         [\-\-raw\-binary | \-b]
-                        [<global\-options>]
+                        [\-\-valid\-entry | \-V]
+                        [\-\-sqid=<sqid> | \-S <sqid>]
+                        [\-\-status=<status> | \-s <status>]
+                        [\-\-lba=<lba> | \-l <lba>]
+                        [\-\-namespace\-id=<nsid> | \-n <nsid>]
+                        [\-\-trtype=<trtype> | \-t <trtype>]
+                        [\-\-csi=<csi> | \-c <csi>]
+                        [\-\-opcode=<opcode> | \-O <opcode>]
 .fi
 .SH "DESCRIPTION"
 .sp
-Retrieves NVMe Error log page from an NVMe device and provides the returned structure\&.
+Retrieves NVMe Error log page from an NVMe device and provides the returned structure\&. All the returned structure fields including the ordering of the entries are described in the spec\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
@@ -53,6 +61,46 @@ Specifies how many log entries the program should request from the device\&. Thi
 \-b, \-\-raw\-binary
 .RS 4
 Print the raw error log buffer to stdout\&.
+.RE
+.PP
+\-V, \-\-valid\-entry
+.RS 4
+Output valid entry only\&.
+.RE
+.PP
+\-S <sqid>, \-\-sqid=<sqid>
+.RS 4
+Output specified SQID entry only\&.
+.RE
+.PP
+\-s <status>, \-\-status=<status>
+.RS 4
+Output specified STATUS entry only\&.
+.RE
+.PP
+\-l <lba>, \-\-lba=<lba>
+.RS 4
+Output specified LBA entry only\&.
+.RE
+.PP
+\-n <nsid>, \-\-namespace\-id=<nsid>
+.RS 4
+Output specified NSID entry only\&.
+.RE
+.PP
+\-t <trtype>, \-\-trtype=<trtype>
+.RS 4
+Output specified TRTYPE entry only\&.
+.RE
+.PP
+\-c <csi>, \-\-csi=<csi>
+.RS 4
+Output specified CSI entry only\&.
+.RE
+.PP
+\-O <opcode>, \-\-opcode=<opcode>
+.RS 4
+Output specified OPC entry only\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp

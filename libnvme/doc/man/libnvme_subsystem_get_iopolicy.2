@@ -1,11 +1,11 @@
-.TH "libnvme_subsystem_get_iopolicy" 9 "libnvme_subsystem_get_iopolicy" "April 2026" "libnvme API manual" LINUX
+.TH "libnvme_subsystem_get_iopolicy" 9 "libnvme_subsystem_get_iopolicy" "June 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvme_subsystem_get_iopolicy \- Get iopolicy.
+libnvme_subsystem_get_iopolicy \- Get subsystem iopolicy name
 .SH SYNOPSIS
-.B "const char *" libnvme_subsystem_get_iopolicy
-.BI "(const struct libnvme_subsystem *p "  ");"
+.B "char *" libnvme_subsystem_get_iopolicy
+.BI "(libnvme_subsystem_t s "  ");"
 .SH ARGUMENTS
-.IP "p" 12
-The \fIstruct libnvme_subsystem\fP instance to query.
+.IP "s" 12
+subsystem
 .SH "RETURN"
-The value of the iopolicy field, or NULL if not set.
+The iopolicy configured in subsystem \fIs\fP

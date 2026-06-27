@@ -1,11 +1,11 @@
-.TH "libnvme_ns_get_nguid" 9 "libnvme_ns_get_nguid" "April 2026" "libnvme API manual" LINUX
+.TH "libnvme_ns_get_nguid" 9 "libnvme_ns_get_nguid" "June 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvme_ns_get_nguid \- 128-bit nguid of a namespace
+libnvme_ns_get_nguid \- Get nguid.
 .SH SYNOPSIS
 .B "const uint8_t *" libnvme_ns_get_nguid
-.BI "(libnvme_ns_t n "  ");"
+.BI "(const struct libnvme_ns *p "  ");"
 .SH ARGUMENTS
-.IP "n" 12
-Namespace instance
+.IP "p" 12
+The \fIstruct libnvme_ns\fP instance to query.
 .SH "RETURN"
-A pointer to the 128-bit nguid
+Pointer to the nguid array of 16 uint8_t elements.

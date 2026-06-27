@@ -2,12 +2,12 @@
 .\"     Title: nvme-capacity-mgmt
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/17/2026
+.\"      Date: 06/26/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CAPACITY\-MGMT" "1" "04/17/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CAPACITY\-MGMT" "1" "06/26/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,11 +32,11 @@ nvme-capacity-mgmt \- Send capacity management command to configure/create/delet
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme capacity\-mgmt\fR <device> [\-\-operation=<operation> | \-O <operation>]
+\fInvme\fR [<global\-options>] \fIcapacity\-mgmt\fR <device>
+                        [\-\-operation=<operation> | \-O <operation>]
                         [\-\-element\-id=<element\-id> | \-i <element\-id>]
                         [\-\-cap\-lower=<cap\-lower> | \-l <cap\-lower>]
                         [\-\-cap\-upper=<cap\-upper> | \-u <cap\-upper>]
-                        [<global\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp

@@ -1,4 +1,4 @@
-.TH "libnvme_set_etdas" 9 "libnvme_set_etdas" "April 2026" "libnvme API manual" LINUX
+.TH "libnvme_set_etdas" 9 "libnvme_set_etdas" "June 2026" "libnvme API manual" LINUX
 .SH NAME
 libnvme_set_etdas \- Set the Extended Telemetry Data Area 4 Supported bit
 .SH SYNOPSIS
@@ -13,4 +13,4 @@ boolean to indicate whether or not the host
 behavior support feature had been changed
 .SH "RETURN"
 The nvme command status if a response was received (see
-\fIenum nvme_status_field\fP) or -1 with errno set otherwise.
+\fIenum nvme_status_field\fP) or negative error code otherwise.

@@ -749,9 +749,8 @@ nvme-get-property(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme get-property</em> &lt;device&gt; [--offset=&lt;offset&gt; | -O &lt;offset&gt;]
-                        [--human-readable | -H]
-                        [&lt;global-options&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>get-property</em> &lt;device&gt;
+                        [--offset=&lt;offset&gt; | -O &lt;offset&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -775,18 +774,6 @@ nvme-get-property(1) Manual Page
 <dd>
 <p>
         The offset of the property. One of CAP=0x0, VS=0x8, CC=0x14, CSTS=0x1c, NSSR=0x20
-</p>
-</dd>
-<dt class="hdlist1">
--H
-</dt>
-<dt class="hdlist1">
---human-readable
-</dt>
-<dd>
-<p>
-        Display values in a human-readable format where possible.
-        (deprecated, use --verbose)
 </p>
 </dd>
 </dl></div>
@@ -878,7 +865,7 @@ The following will run the get-property command with offset 0
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme get-property /dev/nvme0 --offset=0x0 --human-readable</code></pre>
+<pre><code># nvme get-property /dev/nvme0 --offset=0x0 --verbose</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -923,7 +910,7 @@ Then look for NVMe Fabrics command (0x7f) at trace
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-04-17 09:46:00 CEST
+ 2026-06-26 17:10:11 CEST
 </div>
 </div>
 </body>
