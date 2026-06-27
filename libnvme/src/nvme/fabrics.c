@@ -120,46 +120,52 @@ static bool is_dmi_uuid_valid(const char *buf, size_t len)
 	return true;
 }
 
+static int read_file(char *filename, char *buf, size_t size)
+{
+	__cleanup_fd int f = -1;
+	int len;
+
+	f = open(filename, O_RDONLY);
+	if (f < 0)
+		return -errno;
+	len = read(f, buf, size - 1);
+	if (len < 0)
+		return -errno;
+	buf[len] = 0;
+
+	return len;
+}
+
 static int uuid_from_dmi_entries(char *system_uuid)
 {
 	__cleanup_dir DIR *d = NULL;
 	const char *entries_dir = libnvme_dmi_entries_dir();
-	int f;
+	char filename[PATH_MAX];
 	struct dirent *de;
 	char buf[513] = {0};
+	int len, type;
 
 	system_uuid[0] = '\0';
 	d = opendir(entries_dir);
 	if (!d)
 		return -ENXIO;
 	while ((de = readdir(d))) {
-		char filename[PATH_MAX];
-		int len, type;
-
 		if (de->d_name[0] == '.')
 			continue;
-		sprintf(filename, "%s/%s/type", entries_dir, de->d_name);
-		f = open(filename, O_RDONLY);
-		if (f < 0)
-			continue;
-		len = read(f, buf, sizeof(buf) - 1);
-		close(f);
+		snprintf(filename, sizeof(filename), "%s/%s/type", entries_dir,
+			 de->d_name);
+		len = read_file(filename, buf, sizeof(buf));
 		if (len <= 0)
 			continue;
-		buf[len] = 0;
 		if (sscanf(buf, "%d", &type) != 1)
 			continue;
 		if (type != DMI_SYSTEM_INFORMATION)
 			continue;
-		sprintf(filename, "%s/%s/raw", entries_dir, de->d_name);
-		f = open(filename, O_RDONLY);
-		if (f < 0)
-			continue;
-		len = read(f, buf, sizeof(buf) - 1);
-		close(f);
+		snprintf(filename, sizeof(filename), "%s/%s/raw", entries_dir,
+			 de->d_name);
+		len = read_file(filename, buf, sizeof(buf));
 		if (len <= 0)
 			continue;
-		buf[len] = 0;
 
 		if (!is_dmi_uuid_valid(buf, len))
 			continue;
