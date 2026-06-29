@@ -10,6 +10,7 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'disconnect' [--nqn=<subnqn> | -n <subnqn>]
 			[--device=<device> | -d <device>]
+			[--exclude | -x]
 
 DESCRIPTION
 -----------
@@ -17,6 +18,12 @@ Disconnects and removes one or more existing NVMe over Fabrics controllers.
 If the --nqn option is specified all controllers connecting to the Subsystem
 identified by subnqn will be removed. If the --device option is specified
 the controller specified by the --device option will be removed.
+
+With --exclude, a matching entry is written to the system-wide NVMe-oF
+exclusion list before the controller (or subsystem) is torn down, so that a
+cooperating orchestrator sees the exclusion in place before the removal event
+fires and does not immediately reconnect. See nvme-exclusion-add(1) and the
+exclusion list overview for details.
 
 OPTIONS
 -------
@@ -29,6 +36,13 @@ OPTIONS
 --device <device>::
 	Indicates that the controller with the specified name should be
 	removed.
+
+-x::
+--exclude::
+	Write a matching entry to the 'user' exclusion list before
+	disconnecting, so orchestrators do not auto-reconnect the
+	controller. The entry is built from the controller's transport
+	parameters (or, with --nqn, from the subsystem NQN).
 
 include::global-options.txt[]
 
@@ -47,9 +61,16 @@ nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432:
 # nvme disconnect --device=nvme4
 ------------
 
+* Disconnect nvme4 and exclude it so orchestrators do not reconnect it:
++
+------------
+# nvme disconnect --device=nvme4 --exclude
+------------
+
 SEE ALSO
 --------
 nvme-connect(1)
+nvme-exclusion-add(1)
 
 NVME
 ----

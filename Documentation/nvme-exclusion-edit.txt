@@ -1,0 +1,60 @@
+nvme-exclusion-edit(1)
+======================
+
+NAME
+----
+nvme-exclusion-edit - Edit an NVMe-oF exclusion list in an editor
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'exclusion edit' --name=<NAME> | -N <NAME>
+
+DESCRIPTION
+-----------
+Open the NVMe-oF exclusion list named <NAME> in the editor named by the
+$EDITOR environment variable, in the same spirit as 'visudo' or
+'crontab -e'.  A missing list is created.
+
+The list is edited through a private scratch copy and installed by name
+only when the editor exits.  On save the result is validated; if it
+contains a bad entry you are offered the chance to re-open the editor and
+fix it.  If the list changed on disk while you were editing, the save is
+refused so a concurrent editor's changes are never silently overwritten.
+Whenever the changes are not saved, the scratch copy is kept and its path
+printed so your edits are recoverable.
+
+This command requires root.
+
+OPTIONS
+-------
+-N <NAME>::
+--name=<NAME>::
+	Name of the exclusion list to edit.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Edit the 'user' list:
++
+------------
+# nvme exclusion edit --name user
+------------
+
+* Use a specific editor:
++
+------------
+# EDITOR=vi nvme exclusion edit --name user
+------------
+
+SEE ALSO
+--------
+nvme-exclusion-add(1)
+nvme-exclusion-remove(1)
+nvme-exclusion-list(1)
+nvme-disconnect(1)
+
+NVME
+----
+Part of the nvme-user suite

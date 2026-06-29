@@ -1,0 +1,46 @@
+nvme-exclusion-delete(1)
+========================
+
+NAME
+----
+nvme-exclusion-delete - Delete an NVMe-oF exclusion list
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'exclusion delete' --name=<NAME> | -N <NAME>
+
+DESCRIPTION
+-----------
+Delete the NVMe-oF exclusion list named <NAME> in its entirety, removing
+/etc/nvme/exclusions.conf.d/<NAME>.conf and every entry it contains.  To
+drop a single entry instead, use 'nvme exclusion remove'.
+
+This command requires root.
+
+OPTIONS
+-------
+-N <NAME>::
+--name=<NAME>::
+	Name of the exclusion list to delete.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Remove the maintenance list once the work is done:
++
+------------
+# nvme exclusion delete --name maintenance
+------------
+
+SEE ALSO
+--------
+nvme-exclusion-remove(1)
+nvme-exclusion-list(1)
+nvme-exclusion-create(1)
+nvme-disconnect(1)
+
+NVME
+----
+Part of the nvme-user suite

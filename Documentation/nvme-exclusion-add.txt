@@ -1,0 +1,67 @@
+nvme-exclusion-add(1)
+=====================
+
+NAME
+----
+nvme-exclusion-add - Add an entry to an NVMe-oF exclusion list
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'exclusion add' --name=<NAME> | -N <NAME>
+			--entry=<ENTRY> | -e <ENTRY>
+
+DESCRIPTION
+-----------
+Append an entry to the NVMe-oF exclusion list named <NAME>, creating the
+list if it does not exist.  The entry is a semicolon-separated list of
+key=value fields; a controller is excluded when it matches every field
+present in the entry.
+
+The recognized field keys are the 'nvme connect' option names: transport,
+traddr, trsvcid, nqn, host-traddr, host-iface, hostnqn and hostid.  Only
+the fields given are matched, so a single key excludes broadly and more
+keys narrow the match.  See the exclusion list overview (EXCLUSIONS.md)
+for the full match semantics.
+
+The entry is validated before it is written; an entry with an unknown
+key, or with no recognized field, is rejected.  This command requires
+root.
+
+OPTIONS
+-------
+-N <NAME>::
+--name=<NAME>::
+	Name of the exclusion list to add to.
+
+-e <ENTRY>::
+--entry=<ENTRY>::
+	The entry to add, e.g. "transport=tcp;traddr=192.0.2.10;nqn=...".
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Exclude a single path to a subsystem:
++
+------------
+# nvme exclusion add --name user \
+	--entry "transport=tcp;traddr=192.0.2.10;trsvcid=4420;nqn=nqn.2024-01.com.example:vol1"
+------------
+
+* Exclude a whole subsystem on every transport and address:
++
+------------
+# nvme exclusion add --name user --entry "nqn=nqn.2024-01.com.example:retired"
+------------
+
+SEE ALSO
+--------
+nvme-exclusion-remove(1)
+nvme-exclusion-list(1)
+nvme-exclusion-edit(1)
+nvme-disconnect(1)
+
+NVME
+----
+Part of the nvme-user suite
