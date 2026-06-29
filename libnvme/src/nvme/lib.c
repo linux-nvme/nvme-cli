@@ -39,9 +39,20 @@ static bool libnvme_mi_probe_enabled_default(void)
 
 }
 
+/*
+ * A test base directory is accepted only when it is confined to /tmp and free
+ * of ".." components, so it can never redirect libnvme onto a production or
+ * system path (/etc, /usr, ...).  Shared by ctx creation and the setter.
+ */
+static bool is_valid_test_base_dir(const char *path)
+{
+	return path && !strncmp(path, "/tmp/", 5) && !strstr(path, "..");
+}
+
 __libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(void)
 {
 	struct libnvme_global_ctx *ctx;
+	const char *base;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx)
@@ -55,6 +66,16 @@ __libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(void)
 
 	ctx->ioctl_probing = true;
 	ctx->mi_probe_enabled = libnvme_mi_probe_enabled_default();
+
+	/*
+	 * Optional test sandbox: LIBNVME_TEST_BASE_DIR reroots libnvme's
+	 * on-disk files (exclusion list, registry, ...) under a throwaway
+	 * directory.  This is the injection point for the shell-invoked nvme
+	 * binary's functional tests; code should prefer the setter below.
+	 */
+	base = getenv("LIBNVME_TEST_BASE_DIR");
+	if (is_valid_test_base_dir(base))
+		ctx->test_base_dir = strdup(base); /* NULL on OOM = prod */
 
 	return ctx;
 }
@@ -71,6 +92,25 @@ __libnvme_public int libnvme_set_owner(struct libnvme_global_ctx *ctx,
 		return -ENOMEM;
 	free(ctx->owner);
 	ctx->owner = dup;
+	return 0;
+}
+
+__libnvme_public int libnvme_set_test_base_dir(struct libnvme_global_ctx *ctx,
+					       const char *path)
+{
+	char *dup = NULL;
+
+	if (!ctx)
+		return -EINVAL;
+	if (path) {
+		if (!is_valid_test_base_dir(path))
+			return -EINVAL;
+		dup = strdup(path);
+		if (!dup)
+			return -ENOMEM;
+	}
+	free(ctx->test_base_dir);
+	ctx->test_base_dir = dup;
 	return 0;
 }
 
@@ -98,6 +138,7 @@ __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 #endif
 	free(ctx->config_file);
 	free(ctx->owner);
+	free(ctx->test_base_dir);
 	free(ctx);
 }
 

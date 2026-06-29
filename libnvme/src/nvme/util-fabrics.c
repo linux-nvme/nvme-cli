@@ -6,6 +6,12 @@
  * Authors: Martin Belanger <Martin.Belanger@dell.com>
  */
 
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <ccan/endian/endian.h>
@@ -175,4 +181,77 @@ size_t libnvmf_get_entity_version(char *buffer, size_t bufsz)
 	memset(&buffer[num_bytes], '\0', bufsz);
 
 	return num_bytes;
+}
+
+/*
+ * File-access helpers shared by the registry and exclusion-list code.
+ */
+
+int libnvmf_mkdir_p(const char *path, mode_t mode)
+{
+	char tmp[PATH_MAX];
+	size_t len;
+	char *p;
+
+	len = strlen(path);
+	if (len >= sizeof(tmp))
+		return -ENAMETOOLONG;
+	memcpy(tmp, path, len + 1);
+	if (len && tmp[len - 1] == '/')
+		tmp[len - 1] = '\0';
+
+	for (p = tmp + 1; *p; p++) {
+		if (*p != '/')
+			continue;
+		*p = '\0';
+		if (mkdir(tmp, mode) < 0 && errno != EEXIST)
+			return -errno;
+		*p = '/';
+	}
+	if (mkdir(tmp, mode) < 0 && errno != EEXIST)
+		return -errno;
+	return 0;
+}
+
+int libnvmf_mkstemp(char *template)
+{
+	int fd;
+
+	/*
+	 * mkostemp() sets O_CLOEXEC atomically but its glibc declaration is
+	 * gated behind _GNU_SOURCE; fall back to mkstemp() + fcntl() where
+	 * _GNU_SOURCE is not defined (e.g. the musl-style CI build).
+	 */
+#ifdef _GNU_SOURCE
+	fd = mkostemp(template, O_CLOEXEC);
+	if (fd < 0)
+		return -errno;
+#else
+	fd = mkstemp(template);
+	if (fd < 0)
+		return -errno;
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+		int e = -errno;
+
+		close(fd);
+		unlink(template);
+		return e;
+	}
+#endif
+	return fd;
+}
+
+/*
+ * Used to set validate unit test directory. Takes an environment variable
+ * (envar) containing the test directory to be used. If envar is defined
+ * validated to make sure it is confined to /tmp and free of ".." traversal.
+ * This is to prevent an attacker who can inject it into a privileged
+ * process must not be able to redirect those to an arbitrary location
+ */
+const char *libnvmf_validate_test_dir(const char *envar)
+{
+	const char *env = getenv(envar);
+
+	return (env && !strncmp(env, "/tmp/", 5) && !strstr(env, "..")) ?
+		env : NULL;
 }

@@ -28,35 +28,38 @@ int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
 				     int instance, const char *owner);
 
 static char tmpdir[256];
+static char regdir[280]; /* <tmpdir>/registry -- where entries actually live */
 
-static void setup_tmpdir(void)
+static void setup_tmpdir(struct libnvme_global_ctx *ctx)
 {
 	/*
-	 * /tmp is required: libnvme confines NVME_REGISTRY_DIR to /tmp, so the
+	 * /tmp is required: libnvme confines the test base dir to /tmp, so the
 	 * test directory must live there (not under an arbitrary $TMPDIR).
 	 */
 	snprintf(tmpdir, sizeof(tmpdir), "/tmp/nvme-registry-test-XXXXXX");
 	assert(mkdtemp(tmpdir) != NULL);
-	setenv("NVME_REGISTRY_DIR", tmpdir, 1);
+	snprintf(regdir, sizeof(regdir), "%s/registry", tmpdir);
+	assert(libnvme_set_test_base_dir(ctx, tmpdir) == 0);
 }
 
 static void cleanup_tmpdir(struct libnvme_global_ctx *ctx)
 {
 	/*
-	 * Remove any remaining device directories, then the tmpdir itself.
+	 * Remove any remaining device directories, then the dirs themselves.
 	 * Best-effort: test isolation matters more than perfect cleanup.
 	 */
 	struct dirent *de;
 	DIR *d;
 
-	d = opendir(tmpdir);
-	if (!d)
-		return;
-	while ((de = readdir(d)) != NULL) {
-		if (de->d_name[0] != '.')
-			libnvmf_registry_delete(ctx, de->d_name);
+	d = opendir(regdir);
+	if (d) {
+		while ((de = readdir(d)) != NULL) {
+			if (de->d_name[0] != '.')
+				libnvmf_registry_delete(ctx, de->d_name);
+		}
+		closedir(d);
 	}
-	closedir(d);
+	rmdir(regdir);
 	rmdir(tmpdir);
 }
 
@@ -114,7 +117,7 @@ static bool test_create(struct libnvme_global_ctx *ctx)
 	{
 		struct dirent *de;
 		bool leftover = false;
-		DIR *d = opendir(tmpdir);
+		DIR *d = opendir(regdir);
 
 		if (d) {
 			while ((de = readdir(d)) != NULL) {
@@ -526,7 +529,7 @@ int main(int argc, char *argv[])
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_DEBUG_VERBOSE, false, false);
 
-	setup_tmpdir();
+	setup_tmpdir(ctx);
 
 	pass &= test_create(ctx);
 	pass &= test_update_and_retrieve(ctx);
