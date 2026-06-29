@@ -843,6 +843,7 @@ __u64 sndk_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
 	}
 
 out:
+	free(dev_mng_log);
 	return capabilities;
 }
 

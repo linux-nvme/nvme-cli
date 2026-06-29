@@ -114,10 +114,13 @@ struct MICRON_WORKLOAD_LOG_HDR {
 
 static void WriteData(__u8 *data, __u32 len, const char *dir, const char *file, const char *msg)
 {
-	char tempFolder[8192] = { 0 };
+	__cleanup_free char *tempFolder = NULL;
 	FILE *fpOutFile = NULL;
 
-	sprintf(tempFolder, "%s/%s", dir, file);
+	if (asprintf(&tempFolder, "%s/%s", dir, file) < 0) {
+		printf("Failed to allocate memory for temp folder path\n");
+		return;
+	}
 	fpOutFile = fopen(tempFolder, "ab+");
 	if (fpOutFile) {
 		if (fwrite(data, 1, len,  fpOutFile) != len)
@@ -203,6 +206,71 @@ static enum eDriveModel GetDriveModel(
 }
 
 /*
+ * sanitize_serial - trim trailing spaces, null-terminate, and replace any
+ * characters that are not alphanumeric, hyphen, or underscore with underscores.
+ */
+static void sanitize_serial(char *sn, size_t len)
+{
+	size_t i;
+	size_t end;
+
+	if (!sn || len == 0)
+		return;
+
+	end = len - 1;
+	while (end > 0 && isblank((unsigned char)sn[end - 1]))
+		end--;
+	sn[end] = '\0';
+
+	for (i = 0; i < end; i++) {
+		if (!((sn[i] >= 'A' && sn[i] <= 'Z') ||
+		      (sn[i] >= 'a' && sn[i] <= 'z') ||
+		      (sn[i] >= '0' && sn[i] <= '9') ||
+		      sn[i] == '-' || sn[i] == '_'))
+			sn[i] = '_';
+	}
+}
+
+/*
+ * is_safe_path - validate that a path string is safe for use as a filename.
+ *
+ * Rejects control characters (0x00-0x1F), characters invalid on Windows
+ * filesystems (<>"|?*), paths starting with '-' which could be
+ * misinterpreted as flags by tar/zip, and trailing backslashes which
+ * would escape the closing quote in Windows command-line argument parsing.
+ */
+static bool is_safe_path(const char *path)
+{
+	/* Lookup table: 1 = rejected character */
+	static const unsigned char rejected[256] = {
+		[0x01 ... 0x1F] = 1,	/* control characters */
+		['<']  = 1,
+		['>']  = 1,
+		['"']  = 1,
+		['|']  = 1,
+		['?']  = 1,
+		['*']  = 1,
+	};
+	const unsigned char *p = (const unsigned char *)path;
+
+	if (!path || !*path)
+		return false;
+
+	if (path[0] == '-')
+		return false;
+
+	for (; *p; p++) {
+		if (rejected[*p])
+			return false;
+	}
+
+	if (p > (const unsigned char *)path && p[-1] == '\\')
+		return false;
+
+	return true;
+}
+
+/*
  * Recursively remove a directory and its contents.
  * Since this is only used for temporary directories that we create that
  * have no symlinks, it is safe to not check for and handle symlinks here.
@@ -234,7 +302,12 @@ static int RemoveDirRecursive(const char *path)
 		if (unlink(child) == 0 || errno == ENOENT)
 			continue;
 
-		if (errno != EISDIR && errno != EPERM) {
+		/*
+		 * On Linux, unlinking a directory fails with EISDIR or EPERM.
+		 * On Windows, it fails with EACCES. In all cases, fall through
+		 * to attempt recursive removal.
+		 */
+		if (errno != EISDIR && errno != EPERM && errno != EACCES) {
 			closedir(dir);
 			return -1;
 		}
@@ -265,7 +338,6 @@ static int RemoveDirRecursive(const char *path)
  */
 static int ZipWithBsdTar(char *strDirName, char *strFileName)
 {
-	__cleanup_free char *cmd_buf = NULL;
 	FILE *fpVersion = NULL;
 	char version_buf[256] = { 0 };
 	bool is_bsdtar = false;
@@ -288,32 +360,29 @@ static int ZipWithBsdTar(char *strDirName, char *strFileName)
 	if (!is_bsdtar)
 		return -EINVAL;
 
-	if (asprintf(&cmd_buf, "tar -caf \"%s\" \"%s\"",
-			strFileName, strDirName) < 0)
-		return -ENOMEM;
+	char *argv[] = {"tar", "-caf", strFileName, "--", strDirName, NULL};
 
-	if (system(cmd_buf))
-		return -EIO;
-	return 0;
+	return micron_run_spawn(argv, NULL, false);
 }
 
 static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 {
 	int  err = 0;
-	char strBuffer[PATH_MAX + 128];	/* cmd + path */
 	int  nRet;
 	bool is_tgz = false;
 	struct stat sb;
 
 	if (strstr(strFileName, ".tar.gz") || strstr(strFileName, ".tgz")) {
-		snprintf(strBuffer, sizeof(strBuffer), "tar -zcf \"%s\" \"%s\"", strFileName, strDirName);
+		char *argv[] = {"tar", "-zcf", strFileName, "--", strDirName, NULL};
+
 		is_tgz = true;
+		nRet = micron_run_spawn(argv, NULL, false);
 	} else {
-		snprintf(strBuffer, sizeof(strBuffer), "zip -r \"%s\" \"%s\" >temp.txt 2>&1", strFileName,
-				strDirName);
+		char *argv[] = {"zip", "-r", strFileName, "--", strDirName, NULL};
+
+		nRet = micron_run_spawn(argv, NULL, false);
 	}
 
-	nRet = system(strBuffer);
 	if (nRet && !is_tgz)
 		/* if zip is not available, see if tar can be used instead */
 		nRet = ZipWithBsdTar(strDirName, strFileName);
@@ -322,27 +391,25 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 	if (nRet || (stat(strFileName, &sb) == -1)) {
 		err = -EINVAL;
 		if (is_tgz)
-			snprintf(strBuffer, sizeof(strBuffer), "check if tar and gzip commands are installed");
+			fprintf(stderr, "Failed to create log data package, "
+				"check if tar and gzip commands are installed!\n");
 		else
-			snprintf(strBuffer, sizeof(strBuffer), "check if zip command is installed");
-
-		fprintf(stderr, "Failed to create log data package, %s!\n", strBuffer);
+			fprintf(stderr, "Failed to create log data package, "
+				"check if zip command is installed!\n");
 	}
 
 	if (RemoveDirRecursive(strDirName) < 0)
 		printf("Failed to remove temporary files!\n");
 
-	if (unlink("temp.txt") < 0 && errno != ENOENT)
-		printf("Failed to remove temporary file temp.txt!\n");
 	return err;
 }
 
 static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
-					 char *strMainDirName, char *strOSDirName,
-					 char *strCtrlDirName)
+					 char *strMainDirName, size_t mainDirSize,
+					 char *strOSDirName, size_t osDirSize,
+					 char *strCtrlDirName, size_t ctrlDirSize)
 {
 	int err = 0;
-	char strAppend[250];
 	struct stat st;
 	char *fileLocation = NULL;
 	char *fileName;
@@ -351,7 +418,6 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 	char *strTemp = NULL;
 	int j;
 	int k = 0;
-	int i = 0;
 
 	if (strchr(strFilePath, '/')) {
 		fileName = strrchr(strFilePath, '\\');
@@ -388,24 +454,16 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 			length = (int)strlen(fileLocation);
 
 			if (':' == fileLocation[length - 1]) {
-				strTemp = (char *)malloc(length + 2);
+				strTemp = realloc(fileLocation, length + 2);
+
 				if (!strTemp) {
 					free(fileLocation);
 					goto exit_status;
 				}
-				strcpy(strTemp, fileLocation);
-				strcat(strTemp, "/");
-				free(fileLocation);
-
-				length = (int)strlen(strTemp);
-				fileLocation = (char *)malloc(length + 1);
-				if (!fileLocation) {
-					free(strTemp);
-					goto exit_status;
-				}
-
-				memcpy(fileLocation, strTemp, length + 1);
-				free(strTemp);
+				fileLocation = strTemp;
+				fileLocation[length] = '/';
+				fileLocation[length + 1] = '\0';
+				length++;
 			}
 
 			if (stat(fileLocation, &st)) {
@@ -418,36 +476,31 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 		}
 	}
 
-	nIndex = 0;
-	for (i = 0; i < (int)strlen(strSN); i++) {
-		if (strSN[i] != ' ' && strSN[i] != '\n' && strSN[i] != '\t' && strSN[i] != '\r')
-			strMainDirName[nIndex++] = strSN[i];
-	}
-	strMainDirName[nIndex] = '\0';
+	snprintf(strMainDirName, mainDirSize, "%s", strSN);
+	nIndex = strlen(strMainDirName);
 
 	j = 1;
-	while (mkdir(strMainDirName, 0777) < 0) {
+	while (mkdir(strMainDirName, 0700) < 0) {
 		if (errno != EEXIST) {
 			err = -1;
 			goto exit_status;
 		}
 		strMainDirName[nIndex] = '\0';
-		sprintf(strAppend, "-%d", j);
-		strcat(strMainDirName, strAppend);
+		snprintf(strMainDirName + nIndex, mainDirSize - nIndex, "-%d", j);
 		j++;
 	}
 
 	if (strOSDirName) {
-		sprintf(strOSDirName, "%s/%s", strMainDirName, "OS");
-		if (mkdir(strOSDirName, 0777) < 0) {
+		snprintf(strOSDirName, osDirSize, "%s/%s", strMainDirName, "OS");
+		if (mkdir(strOSDirName, 0700) < 0) {
 			rmdir(strMainDirName);
 			err = -1;
 			goto exit_status;
 		}
 	}
 	if (strCtrlDirName) {
-		sprintf(strCtrlDirName, "%s/%s", strMainDirName, "Controller");
-		if (mkdir(strCtrlDirName, 0777) < 0) {
+		snprintf(strCtrlDirName, ctrlDirSize, "%s/%s", strMainDirName, "Controller");
+		if (mkdir(strCtrlDirName, 0700) < 0) {
 			if (strOSDirName)
 				rmdir(strOSDirName);
 			rmdir(strMainDirName);
@@ -580,8 +633,10 @@ static int GetCommonLogPage(struct libnvme_transport_handle *hdl, unsigned char 
 	int err = 0;
 
 	pTempPtr = (unsigned char *)libnvme_alloc(nBuffSize);
-	if (!pTempPtr)
+	if (!pTempPtr) {
+		err = -ENOMEM;
 		goto exit_status;
+	}
 	err = nvme_get_log_simple(hdl, ucLogID, pTempPtr, nBuffSize);
 	*pBuffer = pTempPtr;
 
@@ -2003,19 +2058,28 @@ static void GetDriveInfo(const char *strOSDirName, int nFD,
 						 struct nvme_id_ctrl *ctrlp)
 {
 	FILE *fpOutFile = NULL;
-	char tempFile[256] = { 0 };
+	__cleanup_free char *tempFile = NULL;
 	char strBuffer[1024] = { 0 };
 	char model[41] = { 0 };
 	char serial[21] = { 0 };
 	char fwrev[9] = { 0 };
-	char *strPDir = strdup(strOSDirName);
-	char *strDest = dirname(strPDir);
+	__cleanup_free char *strPDir = NULL;
+	char *strDest = NULL;
 
-	sprintf(tempFile, "%s/%s", strDest, "drive-info.txt");
+	strPDir = strdup(strOSDirName);
+	if (!strPDir) {
+		printf("Failed to allocate memory for directory name\n");
+		return;
+	}
+	strDest = dirname(strPDir);
+
+	if (asprintf(&tempFile, "%s/%s", strDest, "drive-info.txt") < 0) {
+		printf("Failed to allocate memory for temp file name\n");
+		return;
+	}
 	fpOutFile = fopen(tempFile, "w+");
 	if (!fpOutFile) {
 		printf("Failed to create %s\n", tempFile);
-		free(strPDir);
 		return;
 	}
 
@@ -2023,11 +2087,11 @@ static void GetDriveInfo(const char *strOSDirName, int nFD,
 	strncpy(serial, ctrlp->sn, 20);
 	strncpy(fwrev, ctrlp->fr, 8);
 
-	sprintf(strBuffer,
+	snprintf(strBuffer, sizeof(strBuffer),
 			"********************\nDrive Info\n********************\n");
 
 	fprintf(fpOutFile, "%s", strBuffer);
-	sprintf(strBuffer,
+	snprintf(strBuffer, sizeof(strBuffer),
 			"%-20s : /dev/nvme%d\n%-20s : %s\n%-20s : %-20s\n%-20s : %-20s\n",
 			"Device Name", nFD,
 			"Model No", (char *)model,
@@ -2035,17 +2099,16 @@ static void GetDriveInfo(const char *strOSDirName, int nFD,
 
 	fprintf(fpOutFile, "%s", strBuffer);
 
-	sprintf(strBuffer,
+	snprintf(strBuffer, sizeof(strBuffer),
 			"\n********************\nPCI Info\n********************\n");
 
 	fprintf(fpOutFile, "%s", strBuffer);
 
-	sprintf(strBuffer,
+	snprintf(strBuffer, sizeof(strBuffer),
 			"%-22s : %04X\n%-22s : %04X\n",
 			"VendorId", vendor_id, "DeviceId", device_id);
 	fprintf(fpOutFile, "%s", strBuffer);
 	fclose(fpOutFile);
-	free(strPDir);
 }
 
 static void GetTimestampInfo(const char *strOSDirName)
@@ -2054,8 +2117,10 @@ static void GetTimestampInfo(const char *strOSDirName)
 	time_t t;
 	struct tm *tmp;
 	size_t num;
-	char *strPDir;
-	char *strDest;
+	size_t remaining;
+	int n;
+	__cleanup_free char *strPDir = NULL;
+	char *strDest = NULL;
 
 	t = time(NULL);
 	tmp = localtime(&t);
@@ -2064,12 +2129,16 @@ static void GetTimestampInfo(const char *strOSDirName)
 
 	num = strftime((char *)outstr, sizeof(outstr),
 			"Timestamp (UTC): %a, %d %b %Y %H:%M:%S %z", tmp);
-	num += sprintf((char *)(outstr + num), "\nPackage Version: 1.4");
+	remaining = sizeof(outstr) - num;
+	n = snprintf((char *)(outstr + num), remaining, "\nPackage Version: 1.4");
+	if (n > 0)
+		num += (size_t)n < remaining ? (size_t)n : remaining - 1;
 	if (num) {
 		strPDir = strdup(strOSDirName);
+		if (!strPDir)
+			return;
 		strDest = dirname(strPDir);
 		WriteData(outstr, num, strDest, "timestamp_info.txt", "timestamp");
-		free(strPDir);
 	}
 }
 
@@ -2159,15 +2228,17 @@ static void GetNSIDDInfo(struct libnvme_transport_handle *hdl, const char *dir, 
 	struct nvme_id_ns ns;
 
 	if (!nvme_identify_ns(hdl, nsid, &ns)) {
-		sprintf(file, "identify_namespace_%d_data.bin", nsid);
+		snprintf(file, sizeof(file), "identify_namespace_%d_data.bin", nsid);
 		WriteData((__u8 *)&ns, sizeof(ns), dir, file, "id-ns");
 	}
 }
 
 static void GetOSConfig(const char *strOSDirName)
 {
-	char strFileName[4096];
-	sprintf(strFileName, "%s/%s", strOSDirName, "os_config.txt");
+	__cleanup_free char *strFileName = NULL;
+
+	if (asprintf(&strFileName, "%s/%s", strOSDirName, "os_config.txt") < 0)
+		return;
 	micron_write_os_config_to_file(strFileName);
 }
 
@@ -2248,7 +2319,7 @@ static int GetTelemetryData(struct libnvme_transport_handle *hdl, const char *di
 	for (i = 0; i < (int)(ARRAY_SIZE(tmap)); i++) {
 		err = micron_telemetry_log(hdl, tmap[i].log, &buffer, &logSize, 0);
 		if (!err && logSize > 0 && buffer) {
-			sprintf(msg, "telemetry log: 0x%X", tmap[i].log);
+			snprintf(msg, sizeof(msg), "telemetry log: 0x%X", tmap[i].log);
 			WriteData(buffer, logSize, dir, tmap[i].file, msg);
 		}
 		libnvme_free(buffer);
@@ -2294,7 +2365,7 @@ static int GetFeatureSettings(struct libnvme_transport_handle *hdl, const char *
 		err = nvme_get_features(hdl, 1, fmap[i].id, 0, 0x0, 0, bufp, len,
 				&attrVal);
 		if (!err) {
-			sprintf(msg, "feature: 0x%X", fmap[i].id);
+			snprintf(msg, sizeof(msg), "feature: 0x%X", fmap[i].id);
 			WriteData((__u8 *)&attrVal, sizeof(attrVal), dir, fmap[i].file, msg);
 			if (bufp)
 				WriteData(bufp, len, dir, fmap[i].file, msg);
@@ -2528,7 +2599,8 @@ struct __packed micron_fw_activation_history_table {
 };
 
 static int display_fw_activate_entry(int entry_count, struct fw_activation_history_entry *entry,
-					 char *formatted_entry, struct json_object *stats)
+					 char *formatted_entry, size_t buf_size,
+					 struct json_object *stats)
 {
 	time_t timestamp, hours;
 	char buffer[32];
@@ -2536,6 +2608,7 @@ static int display_fw_activate_entry(int entry_count, struct fw_activation_histo
 	static const char * const ca[] = {"000b", "001b", "010b", "011b"};
 	char *ptr = formatted_entry;
 	int index = 0, entry_size = 82;
+	int remaining;
 	bool      is_json = false;
 
 	if ((entry->version != 1 && entry->version != 2) || entry->length != 64)
@@ -2544,7 +2617,8 @@ static int display_fw_activate_entry(int entry_count, struct fw_activation_histo
 	if (stats)
 		is_json = true;
 
-	sprintf(ptr, "%d", entry_count);
+	remaining = buf_size - (ptr - formatted_entry);
+	snprintf(ptr, remaining, "%d", entry_count);
 	if (is_json)
 		json_object_add_value_int(stats, "Entry Number", le32_to_cpu(entry_count));
 
@@ -2554,13 +2628,15 @@ static int display_fw_activate_entry(int entry_count, struct fw_activation_histo
 	hours = timestamp / 3600;
 	minutes = (timestamp % 3600) / 60;
 	seconds = (timestamp % 3600) % 60;
-	sprintf(ptr, "|%"PRIu64":%hhu:%hhu", (uint64_t)hours, minutes, seconds);
+	remaining = buf_size - (ptr - formatted_entry);
+	snprintf(ptr, remaining, "|%"PRIu64":%hhu:%hhu", (uint64_t)hours, minutes, seconds);
 	if (is_json)
 		json_object_add_value_string(stats, "Power On Hour", ptr+1);
 
 	ptr += 16;
 
-	sprintf(ptr, "| %"PRIu64, le64_to_cpu(entry->power_cycle_count));
+	remaining = buf_size - (ptr - formatted_entry);
+	snprintf(ptr, remaining, "| %"PRIu64, le64_to_cpu(entry->power_cycle_count));
 	if (is_json)
 		json_object_add_value_int(stats, "Power cycle count",
 			le32_to_cpu(entry->power_cycle_count));
@@ -2570,7 +2646,8 @@ static int display_fw_activate_entry(int entry_count, struct fw_activation_histo
 	/* firmware details */
 	memset(buffer, 0, sizeof(buffer));
 	memcpy(buffer, entry->previous_fw, sizeof(entry->previous_fw));
-	sprintf(ptr, "| %s", buffer);
+	remaining = buf_size - (ptr - formatted_entry);
+	snprintf(ptr, remaining, "| %s", buffer);
 	if (is_json)
 		json_object_add_value_string(stats, "Previous firmware", buffer);
 
@@ -2578,23 +2655,26 @@ static int display_fw_activate_entry(int entry_count, struct fw_activation_histo
 
 	memset(buffer, 0, sizeof(buffer));
 	memcpy(buffer, entry->activated_fw, sizeof(entry->activated_fw));
-	sprintf(ptr, "| %s", buffer);
+	remaining = buf_size - (ptr - formatted_entry);
+	snprintf(ptr, remaining, "| %s", buffer);
 	if (is_json)
 		json_object_add_value_string(stats, "New FW activated", buffer);
 
 	ptr += 12;
 
 	/* firmware slot and commit action*/
-	sprintf(ptr, "| %d", entry->slot);
+	remaining = buf_size - (ptr - formatted_entry);
+	snprintf(ptr, remaining, "| %d", entry->slot);
 	if (is_json)
 		json_object_add_value_int(stats, "Slot number", entry->slot);
 
 	ptr += 9;
 
+	remaining = buf_size - (ptr - formatted_entry);
 	if (entry->commit_action_type <= 3)
-		sprintf(ptr, "| %s", ca[entry->commit_action_type]);
+		snprintf(ptr, remaining, "| %s", ca[entry->commit_action_type]);
 	else
-		sprintf(ptr, "| xxxb");
+		snprintf(ptr, remaining, "| xxxb");
 
 	if (is_json)
 		json_object_add_value_string(stats, "Commit Action Type", ptr+2);
@@ -2602,10 +2682,11 @@ static int display_fw_activate_entry(int entry_count, struct fw_activation_histo
 	ptr += 9;
 
 	/* result */
+	remaining = buf_size - (ptr - formatted_entry);
 	if (entry->result)
-		sprintf(ptr, "| Fail #%d", entry->result);
+		snprintf(ptr, remaining, "| Fail #%d", entry->result);
 	else
-		sprintf(ptr, "| pass");
+		snprintf(ptr, remaining, "| pass");
 
 	if (is_json) {
 		json_object_add_value_string(stats, "Result", ptr+2);
@@ -2707,10 +2788,10 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 			json_object_add_value_array(fw_act, "Entry", entry);
 			for (count = 0; count < table->num_entries; count++) {
 				element = json_create_object();
-				if (display_fw_activate_entry(count, &table->entries[count],
-					formatted_output, element) == 0) {
+				if (!display_fw_activate_entry(count, &table->entries[count],
+						formatted_output, sizeof(formatted_output),
+						element))
 					json_array_add_value_object(entry, element);
-				}
 			}
 			json_print_object(root, NULL);
 			printf("\n");
@@ -2720,7 +2801,8 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 		for (count = 0; count < table->num_entries; count++) {
 			memset(formatted_output, '\0', 100);
 			if (!display_fw_activate_entry(count, &table->entries[count],
-						formatted_output, NULL))
+						formatted_output,
+						sizeof(formatted_output), NULL))
 				printf("%s\n", formatted_output);
 		}
 	}
@@ -3403,7 +3485,7 @@ static int GetOcpEnhancedTelemetryLog(struct libnvme_transport_handle *hdl, cons
 			char strBuffer[256] = { 0 };
 
 			if (nLogID == NVME_LOG_LID_TELEMETRY_HOST) {
-				sprintf(strBuffer, "%s", "nvme_host_telemetry_log.bin");
+				snprintf(strBuffer, sizeof(strBuffer), "%s", "nvme_host_telemetry_log.bin");
 				if (bTeleheaderWrite) {
 					WriteData(pTelemetryDataHeader, 512, dir,
 						"nvme_host_telemetry_log.bin", strBuffer);
@@ -3412,7 +3494,7 @@ static int GetOcpEnhancedTelemetryLog(struct libnvme_transport_handle *hdl, cons
 				WriteData(pTelemetryBuffer, nallocSize, dir,
 					"nvme_host_telemetry_log.bin", strBuffer);
 			} else if (nLogID == NVME_LOG_LID_TELEMETRY_CTRL) {
-				sprintf(strBuffer, "%s", "nvme_controller_telemetry_log.bin");
+				snprintf(strBuffer, sizeof(strBuffer), "%s", "nvme_controller_telemetry_log.bin");
 				if (bTeleheaderWrite) {
 					WriteData(pTelemetryDataHeader, 512, dir,
 						"nvme_controller_telemetry_log.bin", strBuffer);
@@ -3442,7 +3524,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	unsigned int *puiIDDBuf;
 	unsigned int uiMask;
 	struct nvme_id_ctrl ctrl;
-	char sn[20] = { 0 };
+	char safe_sn[sizeof(ctrl.sn) + 1] = { 0 };
 	char msg[256] = { 0 };
 	int  c_logs_index = 8; /* should be current size of aVendorLogs */
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -3564,6 +3646,12 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		goto out;
 	}
 
+	if (!is_safe_path(cfg.package)) {
+		fprintf(stderr,
+			"Invalid package path: contains unsafe characters\n");
+		goto out;
+	}
+
 	/* pull log details based on the model name */
 	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
@@ -3589,7 +3677,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		err = micron_telemetry_log(hdl, cfg.log,  &buffer, &logSize,
 				   cfg.data_area);
 		if (!err && logSize > 0 && buffer) {
-			sprintf(msg, "telemetry log: 0x%X", cfg.log);
+			snprintf(msg, sizeof(msg), "telemetry log: 0x%X", cfg.log);
 			WriteData(buffer, logSize, dir, cfg.package, msg);
 			libnvme_free(buffer);
 		}
@@ -3598,19 +3686,16 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 
 	printf("Preparing log package. This will take a few seconds...\n");
 
-	/* trim spaces out of serial number string */
-	int i, j = 0;
-
-	for (i = 0; i < sizeof(ctrl.sn); i++) {
-		if (isblank((int)ctrl.sn[i]))
-			continue;
-		sn[j++] = ctrl.sn[i];
+	strncpy(safe_sn, ctrl.sn, sizeof(safe_sn) - 1);
+	sanitize_serial(safe_sn, sizeof(safe_sn));
+	err = SetupDebugDataDirectories(safe_sn, cfg.package,
+			strMainDirName, sizeof(strMainDirName),
+			strOSDirName, sizeof(strOSDirName),
+			strCtrlDirName, sizeof(strCtrlDirName));
+	if (err) {
+		fprintf(stderr, "Failed to create debug data directories\n");
+		goto out;
 	}
-	sn[j] = '\0';
-	strcpy(ctrl.sn, sn);
-
-	SetupDebugDataDirectories(ctrl.sn, cfg.package, strMainDirName, strOSDirName,
-										strCtrlDirName);
 
 	GetTimestampInfo(strOSDirName);
 	GetCtrlIDDInfo(strCtrlDirName, &ctrl);
@@ -3666,14 +3751,18 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 					sizeof(struct MICRON_WORKLOAD_LOG_HDR), 0);
 			if (err == 0) {
 				bSize =  stWllHdr.uiLength;
-				if (bSize > 0) {
-					dataBuffer = (unsigned char *)libnvme_alloc(bSize);
-					if (!dataBuffer) {
-						printf(
-							" Memory allocation failed for log id : 0x%02X\n"
-							, aVendorLogs[i].ucLogPage);
-						continue;
-					}
+				if (bSize < (int)sizeof(struct MICRON_WORKLOAD_LOG_HDR)) {
+					printf("Invalid log size for log id : 0x%02X\n",
+						aVendorLogs[i].ucLogPage);
+					err = -1;
+					break;
+				}
+				dataBuffer = (unsigned char *)libnvme_alloc(bSize);
+				if (!dataBuffer) {
+					printf(
+						" Memory allocation failed for log id : 0x%02X\n"
+						, aVendorLogs[i].ucLogPage);
+					continue;
 				}
 				memcpy(dataBuffer, &stWllHdr,
 					sizeof(struct MICRON_WORKLOAD_LOG_HDR));
@@ -3770,7 +3859,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 					  dataBuffer, bSize);
 			maxSize = aVendorLogs[i].nMaxSize - bSize;
 			while (!err && maxSize > 0 && ((unsigned int *)dataBuffer)[0] != 0xdeadbeef) {
-				sprintf(msg, "log 0x%x", aVendorLogs[i].ucLogPage);
+				snprintf(msg, sizeof(msg), "log 0x%x", aVendorLogs[i].ucLogPage);
 				WriteData(dataBuffer, bSize, strCtrlDirName, aVendorLogs[i].strFileName, msg);
 				err = nvme_get_log_simple(hdl,
 					  aVendorLogs[i].ucLogPage,
@@ -3783,7 +3872,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		}
 
 		if (!err && dataBuffer && ((unsigned int *)dataBuffer)[0] != 0xdeadbeef) {
-			sprintf(msg, "log 0x%x", aVendorLogs[i].ucLogPage);
+			snprintf(msg, sizeof(msg), "log 0x%x", aVendorLogs[i].ucLogPage);
 			WriteData(dataBuffer, bSize, strCtrlDirName, aVendorLogs[i].strFileName, msg);
 		}
 

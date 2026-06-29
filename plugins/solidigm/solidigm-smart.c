@@ -163,7 +163,7 @@ static void smart_log_item_print(struct nvme_additional_smart_log_item *item,
 			le32_to_cpu(item->thermal_throttle.count));
 		return;
 	case 0xF3:
-		printf("gain0: %u, loss0: %u, gain1: %u, loss1: %u, legacy:%lu\n",
+		printf("gain0: %u, loss0: %u, gain1: %u, loss1: %u, legacy:%"PRIu64"\n",
 			le16_to_cpu(pll_item->gainCount0),
 			le16_to_cpu(pll_item->lossCount0),
 			le16_to_cpu(pll_item->gainCount1),
