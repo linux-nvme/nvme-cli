@@ -1,0 +1,48 @@
+nvme-exclusion-create(1)
+========================
+
+NAME
+----
+nvme-exclusion-create - Create a new NVMe-oF exclusion list
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'exclusion create' --name=<NAME> | -N <NAME>
+
+DESCRIPTION
+-----------
+Create a new, empty NVMe-oF exclusion list named <NAME>, stored as
+/etc/nvme/exclusions.conf.d/<NAME>.conf.  The exclusion list names controllers
+that no orchestrator may auto-connect; see the exclusion list overview
+in the libnvme documentation (EXCLUSIONS.md) for the format, the field
+keys, and the match semantics.
+
+This command requires root.
+
+OPTIONS
+-------
+-N <NAME>::
+--name=<NAME>::
+	Name of the exclusion list to create.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Create a list for controllers under maintenance:
++
+------------
+# nvme exclusion create --name maintenance
+------------
+
+SEE ALSO
+--------
+nvme-exclusion-add(1)
+nvme-exclusion-list(1)
+nvme-exclusion-delete(1)
+nvme-disconnect(1)
+
+NVME
+----
+Part of the nvme-user suite

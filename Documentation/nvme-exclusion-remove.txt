@@ -1,0 +1,47 @@
+nvme-exclusion-remove(1)
+========================
+
+NAME
+----
+nvme-exclusion-remove - Remove an entry from an NVMe-oF exclusion list
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'exclusion remove' --name=<NAME> | -N <NAME>
+
+DESCRIPTION
+-----------
+Interactively remove a single entry from the NVMe-oF exclusion list named
+<NAME>.  The current entries are shown and one is selected for removal;
+the rest of the list is left untouched.  To delete a whole list at once,
+use 'nvme exclusion delete'.
+
+This command requires root.
+
+OPTIONS
+-------
+-N <NAME>::
+--name=<NAME>::
+	Name of the exclusion list to remove an entry from.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Remove an entry from the 'user' list:
++
+------------
+# nvme exclusion remove --name user
+------------
+
+SEE ALSO
+--------
+nvme-exclusion-add(1)
+nvme-exclusion-edit(1)
+nvme-exclusion-delete(1)
+nvme-disconnect(1)
+
+NVME
+----
+Part of the nvme-user suite

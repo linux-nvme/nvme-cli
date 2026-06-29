@@ -1,0 +1,53 @@
+nvme-exclusion-list(1)
+======================
+
+NAME
+----
+nvme-exclusion-list - List NVMe-oF exclusion lists or their entries
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'exclusion list' [--name=<NAME> | -N <NAME>]
+
+DESCRIPTION
+-----------
+Without --name, print the name of every named exclusion list under
+/etc/nvme/exclusions.conf.d/.  With --name, print the entries contained
+in that one list.
+
+This command is read-only and does not require root.
+
+OPTIONS
+-------
+-N <NAME>::
+--name=<NAME>::
+	List the entries in the named exclusion list.  Omit to list all
+	exclusion lists instead.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Show every exclusion list:
++
+------------
+# nvme exclusion list
+------------
+
+* Show the entries in the 'user' list:
++
+------------
+# nvme exclusion list --name user
+------------
+
+SEE ALSO
+--------
+nvme-exclusion-add(1)
+nvme-exclusion-remove(1)
+nvme-exclusion-create(1)
+nvme-disconnect(1)
+
+NVME
+----
+Part of the nvme-user suite
