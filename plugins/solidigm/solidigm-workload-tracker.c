@@ -244,10 +244,8 @@ static void wltracker_print_header(struct wltracker *wlt)
 	printf("%-24s %u.%u\n", "Log page version:", le16_to_cpu(log->majorVersion),
 	       le16_to_cpu(log->minorVersion));
 	printf("%-24s %u\n", "Sample period(ms):", le32_to_cpu(log->samplePeriodInMilliseconds));
-	printf("%-24s %llu\n", "timestamp_lastChange:",
-	       (unsigned long long)le64_to_cpu(log->timestamp_lastEntry));
-	printf("%-24s %llu\n", "timestamp_triggered:",
-	       (unsigned long long)le64_to_cpu(log->timestamp_triggered));
+	printf("%-24s %"PRIu64"\n", "timestamp_lastChange:", le64_to_cpu(log->timestamp_lastEntry));
+	printf("%-24s %"PRIu64"\n", "timestamp_triggered:", le64_to_cpu(log->timestamp_triggered));
 	printf("%-24s 0x%x\n", "config:", le32_to_cpu(log->config.dword));
 	printf("%-24s %u\n", "Triggerthreshold:", le32_to_cpu(log->triggerthreshold));
 	printf("%-24s %u\n", "ValueTriggered:", le32_to_cpu(log->triggeredValue));
