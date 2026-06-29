@@ -433,6 +433,7 @@ struct libnvme_fabric_options { // !generate-accessors
 struct libnvme_global_ctx { // !generate-python:alias=GlobalCtx
 	char *config_file;
 	char *owner; /* orchestrator identity; NULL = unowned */
+	char *test_base_dir; /* test sandbox under /tmp; NULL = prod */
 	struct list_head endpoints; /* MI endpoints */
 	struct list_head hosts;
 	struct libnvme_log log;
@@ -524,6 +525,9 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 
 int __libnvmf_import_keys_from_config(struct libnvme_host *h,
 		struct libnvme_ctrl *c, long *keyring_id, long *key_id);
+
+/* write() may return short; loop until the whole buffer is written (util.c). */
+int write_all(int fd, const void *buf, size_t len);
 
 static inline char *xstrdup(const char *s)
 {

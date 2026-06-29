@@ -215,6 +215,19 @@ size_t libnvmf_get_entity_name(char *buffer, size_t bufsz);
  */
 size_t libnvmf_get_entity_version(char *buffer, size_t bufsz);
 
+/*
+ * File-access helpers shared across the fabrics layer (util-fabrics.c).
+ *
+ * libnvmf_mkdir_p()           - mkdir -p; returns 0 or -errno.
+ * libnvmf_mkstemp()           - mkstemp() with close-on-exec (always);
+ *                               returns fd or -errno.
+ * libnvmf_validate_test_dir() - Ensure test dir override is confined to /tmp
+ *                               and has no "..".
+ */
+int libnvmf_mkdir_p(const char *path, mode_t mode);
+int libnvmf_mkstemp(char *template);
+const char *libnvmf_validate_test_dir(const char *envar);
+
 /**
  * libnvmf_registry_create_instance - Write a registry entry for a freshly
  * connected controller.  Called from the connect path once the kernel returns

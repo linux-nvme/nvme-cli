@@ -149,6 +149,7 @@ LIBNVME_3 {
 		libnvme_set_logging_file;
 		libnvme_set_logging_level;
 		libnvme_set_owner;
+		libnvme_set_test_base_dir;
 		libnvme_skip_namespaces;
 		libnvme_status_to_errno;
 		libnvme_status_to_string;

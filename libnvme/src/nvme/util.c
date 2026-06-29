@@ -58,6 +58,29 @@
 #define ERESTART  EAGAIN
 #endif
 
+/* write() may return a short count; loop until the whole buffer is written. */
+int write_all(int fd, const void *buf, size_t len)
+{
+	const char *p = buf;
+
+	while (len) {
+		ssize_t w = write(fd, p, len);
+
+		if (w < 0) {
+			if (errno == EINTR || errno == EAGAIN)
+				continue;
+			return -errno;
+		}
+		if (w == 0) {
+			errno = EIO;
+			return -EIO;
+		}
+		p += w;
+		len -= w;
+	}
+	return 0;
+}
+
 /* Source Code Control System, query version of binary with 'what' */
 const char sccsid[] = "@(#)libnvme " GIT_VERSION;
 

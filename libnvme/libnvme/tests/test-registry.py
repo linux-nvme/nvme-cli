@@ -2,49 +2,57 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """Unit tests for the registry Python bindings.
 
-NVME_REGISTRY_DIR must be set before importing libnvme so that _registry_dir
-is cached with the test path at module load time.  This module sets it at the
-top level before the import.
+All tests share a single /tmp sandbox directory, applied to each GlobalCtx via
+ctx.set_test_base_dir().  This mirrors production, where there is exactly one
+registry directory.
 """
 import multiprocessing
 import os
 import tempfile
 import unittest
 
+from libnvme import nvme
+
 # meson sets VALGRIND_OPTS when running under valgrind.  Forked child
 # processes under valgrind can behave unexpectedly; the parallel write
 # test is already covered by the C test suite (libnvme/test/registry.c).
 _under_valgrind = 'VALGRIND_OPTS' in os.environ
 
-# dir='/tmp' is required: libnvme confines NVME_REGISTRY_DIR to /tmp, so the
-# test directory must live there (not under an arbitrary $TMPDIR).
-#
-# Reuse an inherited /tmp directory instead of always creating a new one: with
-# the spawn/forkserver start methods (the default on Linux as of Python 3.14)
-# each child re-imports this module.  The child inherits NVME_REGISTRY_DIR from
-# the parent, so it must reuse that path rather than create a second, unrelated
-# registry directory it would then write into alone.
-_tmpdir = os.environ.get('NVME_REGISTRY_DIR', '')
-if not _tmpdir.startswith('/tmp/'):
+# A single sandbox shared by every test (one registry dir, as in production).
+# dir='/tmp' is required: libnvme confines the test base dir to /tmp.
+_tmpdir = None
+_regdir = None
+
+
+def setUpModule():
+    global _tmpdir, _regdir
     _tmpdir = tempfile.mkdtemp(prefix='nvme-registry-test-', dir='/tmp')
-    os.environ['NVME_REGISTRY_DIR'] = _tmpdir
-
-from libnvme import nvme  # noqa: E402  (import after env var set intentionally)
+    _regdir = os.path.join(_tmpdir, 'registry')
 
 
-def _teardown_tmpdir():
+def tearDownModule():
     """Remove the test registry directory tree."""
-    for entry in os.scandir(_tmpdir):
-        if entry.is_dir():
-            for attr in os.scandir(entry.path):
-                os.unlink(attr.path)
-            os.rmdir(entry.path)
-    os.rmdir(_tmpdir)
+    if _regdir and os.path.isdir(_regdir):
+        for entry in os.scandir(_regdir):
+            if entry.is_dir():
+                for attr in os.scandir(entry.path):
+                    os.unlink(attr.path)
+                os.rmdir(entry.path)
+        os.rmdir(_regdir)
+    if _tmpdir:
+        os.rmdir(_tmpdir)
+
+
+def _new_ctx(tmpdir):
+    """Create a GlobalCtx pointed at the shared /tmp sandbox."""
+    ctx = nvme.GlobalCtx()
+    assert ctx.set_test_base_dir(tmpdir) == 0
+    return ctx
 
 
 class TestRegistryUpdate(unittest.TestCase):
     def setUp(self):
-        self.ctx = nvme.GlobalCtx()
+        self.ctx = _new_ctx(_tmpdir)
 
     def tearDown(self):
         nvme.registry_delete(self.ctx, 'nvme5')
@@ -70,7 +78,7 @@ class TestRegistryUpdate(unittest.TestCase):
 
 class TestRegistryRetrieve(unittest.TestCase):
     def setUp(self):
-        self.ctx = nvme.GlobalCtx()
+        self.ctx = _new_ctx(_tmpdir)
 
     def tearDown(self):
         self.ctx = None
@@ -88,7 +96,7 @@ class TestRegistryRetrieve(unittest.TestCase):
 
 class TestRegistryDelete(unittest.TestCase):
     def setUp(self):
-        self.ctx = nvme.GlobalCtx()
+        self.ctx = _new_ctx(_tmpdir)
 
     def tearDown(self):
         self.ctx = None
@@ -109,7 +117,7 @@ class TestRegistryEntries(unittest.TestCase):
     an iterable."""
 
     def setUp(self):
-        self.ctx = nvme.GlobalCtx()
+        self.ctx = _new_ctx(_tmpdir)
         nvme.registry_update(self.ctx, 'nvme1', 'owner', 'stas')
         nvme.registry_update(self.ctx, 'nvme2', 'owner', 'nbft')
 
@@ -120,7 +128,8 @@ class TestRegistryEntries(unittest.TestCase):
 
     def test_entries_returns_iterable(self):
         entries = list(nvme.registry_entries(self.ctx))
-        # All entries are stale (no /dev/nvme* in test environment) — list is empty.
+        # All entries are stale (no /dev/nvme* in test environment) — list
+        # is empty.
         self.assertIsInstance(entries, list)
 
     def test_entries_skips_stale(self):
@@ -128,15 +137,17 @@ class TestRegistryEntries(unittest.TestCase):
             self.assertTrue(os.path.exists('/dev/' + device))
 
 
-def _writer(device, owner, iterations):
+def _writer(device, owner, iterations, tmpdir):
     """Child process: repeatedly update the owner attribute.
 
-    Each process creates its own GlobalCtx.  A libnvme context must not be
-    shared across a process boundary: passing it as a Process argument is not
-    picklable under the spawn/forkserver start methods, and even under fork a
-    context is not designed to be used concurrently from two processes.
+    Each process creates its own GlobalCtx pointed at the shared sandbox.  A
+    libnvme context must not be shared across a process boundary: passing it as
+    a Process argument is not picklable under the spawn/forkserver start
+    methods, and even under fork a context is not designed to be used
+    concurrently from two processes.  The sandbox path is passed explicitly so
+    the child writes into the same registry directory as the parent.
     """
-    ctx = nvme.GlobalCtx()
+    ctx = _new_ctx(tmpdir)
     for _ in range(iterations):
         nvme.registry_update(ctx, device, 'owner', owner)
 
@@ -146,7 +157,7 @@ class TestRegistryParallelWrites(unittest.TestCase):
     the registry.  The atomic tmp->rename write protocol must ensure the
     final value is always one of the two written strings."""
     def setUp(self):
-        self.ctx = nvme.GlobalCtx()
+        self.ctx = _new_ctx(_tmpdir)
 
     def tearDown(self):
         self.ctx = None
@@ -158,7 +169,8 @@ class TestRegistryParallelWrites(unittest.TestCase):
 
         nvme.registry_update(self.ctx, 'nvme10', 'owner', 'parent')
 
-        procs = [multiprocessing.Process(target=_writer, args=('nvme10', owner, 200))
+        procs = [multiprocessing.Process(target=_writer,
+                                         args=('nvme10', owner, 200, _tmpdir))
                  for owner in owners]
         for p in procs:
             p.start()
@@ -172,7 +184,4 @@ class TestRegistryParallelWrites(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    try:
-        unittest.main()
-    finally:
-        _teardown_tmpdir()
+    unittest.main()

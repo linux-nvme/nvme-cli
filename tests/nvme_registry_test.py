@@ -7,8 +7,8 @@
 # Authors: Martin Belanger <martin.belanger@dell.com>
 """CLI integration tests for the 'nvme registry' plugin.
 
-Tests invoke the nvme binary directly with NVME_REGISTRY_DIR pointing at a
-temporary directory, so no real NVMe hardware is needed.
+Tests invoke the nvme binary directly with LIBNVME_TEST_BASE_DIR pointing at a
+temporary sandbox, so no real NVMe hardware is needed.
 
 Usage: python3 nvme_registry_test.py <path-to-nvme-binary>
 """
@@ -28,17 +28,21 @@ _NVME_BIN = sys.argv[1] \
 class RegistryCLITest(unittest.TestCase):
 
     def setUp(self):
-        # dir='/tmp' is required: nvme confines NVME_REGISTRY_DIR to /tmp.
+        # dir='/tmp' is required: nvme confines the test base dir to /tmp.
         self.tmpdir = tempfile.mkdtemp(prefix='nvme-registry-cli-test-', dir='/tmp')
+        # The registry lives under <base>/registry within the sandbox.
+        self.regdir = os.path.join(self.tmpdir, 'registry')
         self.env = os.environ.copy()
-        self.env['NVME_REGISTRY_DIR'] = self.tmpdir
+        self.env['LIBNVME_TEST_BASE_DIR'] = self.tmpdir
 
     def tearDown(self):
-        for entry in os.scandir(self.tmpdir):
-            if entry.is_dir(follow_symlinks=False):
-                for attr in os.scandir(entry.path):
-                    os.unlink(attr.path)
-                os.rmdir(entry.path)
+        if os.path.isdir(self.regdir):
+            for entry in os.scandir(self.regdir):
+                if entry.is_dir(follow_symlinks=False):
+                    for attr in os.scandir(entry.path):
+                        os.unlink(attr.path)
+                    os.rmdir(entry.path)
+            os.rmdir(self.regdir)
         os.rmdir(self.tmpdir)
 
     def _run(self, *args, expect_fail=False):
@@ -56,7 +60,7 @@ class RegistryCLITest(unittest.TestCase):
         return result
 
     def _populate(self, device, attr, value):
-        dev_dir = os.path.join(self.tmpdir, device)
+        dev_dir = os.path.join(self.regdir, device)
         os.makedirs(dev_dir, exist_ok=True)
         with open(os.path.join(dev_dir, attr), 'w') as f:
             f.write(value + '\n')
