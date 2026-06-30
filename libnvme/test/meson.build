@@ -141,6 +141,18 @@ tree = executable(
 test('libnvme - tree', tree)
 
 if want_fabrics
+    test_tid = executable(
+        'test-tid',
+        ['test-tid.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+
+    test('libnvme - tid', test_tid)
+
     registry = executable(
         'test-registry',
         ['registry.c'],

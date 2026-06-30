@@ -73,6 +73,16 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_discovery_args_new;
 		libnvmf_discovery_args_set_lsp;
 		libnvmf_discovery_args_set_max_retries;
+		libnvmf_tid_free;
+		libnvmf_tid_get_host_iface;
+		libnvmf_tid_get_hostnqn;
+		libnvmf_tid_get_hostid;
+		libnvmf_tid_get_host_traddr;
+		libnvmf_tid_get_subsysnqn;
+		libnvmf_tid_get_traddr;
+		libnvmf_tid_get_transport;
+		libnvmf_tid_get_trsvcid;
+		libnvmf_tid_new;
 		libnvmf_uri_get_fragment;
 		libnvmf_uri_get_host;
 		libnvmf_uri_get_path_segments;

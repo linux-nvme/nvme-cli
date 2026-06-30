@@ -3,3 +3,4 @@
 #include <nvme/fabrics.h>
 #include <nvme/nbft.h>
 #include <nvme/registry.h>
+#include <nvme/tid.h>

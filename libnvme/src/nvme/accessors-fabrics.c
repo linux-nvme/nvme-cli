@@ -385,6 +385,82 @@ __libnvme_public const char *libnvmf_context_get_tls_key_identity(
 }
 
 /****************************************************************************
+ * Accessors for: struct libnvmf_tid
+ ****************************************************************************/
+
+__libnvme_public int libnvmf_tid_new(struct libnvmf_tid **pp)
+{
+	if (!pp)
+		return -EINVAL;
+	*pp = calloc(1, sizeof(struct libnvmf_tid));
+	return *pp ? 0 : -ENOMEM;
+}
+
+__libnvme_public void libnvmf_tid_free(struct libnvmf_tid *p)
+{
+	if (!p)
+		return;
+	free(p->transport);
+	free(p->traddr);
+	free(p->trsvcid);
+	free(p->subsysnqn);
+	free(p->host_traddr);
+	free(p->host_iface);
+	free(p->hostnqn);
+	free(p->hostid);
+	free(p->_canonical);
+	free(p->_hash);
+	free(p->_str);
+	free(p);
+}
+
+__libnvme_public const char *libnvmf_tid_get_transport(
+		const struct libnvmf_tid *p)
+{
+	return p->transport;
+}
+
+__libnvme_public const char *libnvmf_tid_get_traddr(const struct libnvmf_tid *p)
+{
+	return p->traddr;
+}
+
+__libnvme_public const char *libnvmf_tid_get_trsvcid(
+		const struct libnvmf_tid *p)
+{
+	return p->trsvcid;
+}
+
+__libnvme_public const char *libnvmf_tid_get_subsysnqn(
+		const struct libnvmf_tid *p)
+{
+	return p->subsysnqn;
+}
+
+__libnvme_public const char *libnvmf_tid_get_host_traddr(
+		const struct libnvmf_tid *p)
+{
+	return p->host_traddr;
+}
+
+__libnvme_public const char *libnvmf_tid_get_host_iface(
+		const struct libnvmf_tid *p)
+{
+	return p->host_iface;
+}
+
+__libnvme_public const char *libnvmf_tid_get_hostnqn(
+		const struct libnvmf_tid *p)
+{
+	return p->hostnqn;
+}
+
+__libnvme_public const char *libnvmf_tid_get_hostid(const struct libnvmf_tid *p)
+{
+	return p->hostid;
+}
+
+/****************************************************************************
  * Accessors for: struct libnvmf_discovery_args
  ****************************************************************************/
 

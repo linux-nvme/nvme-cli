@@ -6,9 +6,11 @@
  * Authors: Martin Belanger <Martin.Belanger@dell.com>
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -24,6 +26,20 @@
 #include "util.h"
 
 #include "compiler-attributes.h"
+
+/* FNV-1a 64-bit over a byte range: fast and dependency-free. */
+uint64_t libnvmf_fnv1a_64(const void *buf, size_t len)
+{
+	const unsigned char *p = buf;
+	uint64_t hash = 14695981039346656037ULL;
+	size_t i;
+
+	for (i = 0; i < len; i++) {
+		hash ^= p[i];
+		hash *= 1099511628211ULL;
+	}
+	return hash;
+}
 
 __libnvme_public struct nvmf_ext_attr *libnvmf_exat_ptr_next(
 		struct nvmf_ext_attr *p)
@@ -241,17 +257,39 @@ int libnvmf_mkstemp(char *template)
 	return fd;
 }
 
-/*
- * Used to set validate unit test directory. Takes an environment variable
- * (envar) containing the test directory to be used. If envar is defined
- * validated to make sure it is confined to /tmp and free of ".." traversal.
- * This is to prevent an attacker who can inject it into a privileged
- * process must not be able to redirect those to an arbitrary location
- */
-const char *libnvmf_validate_test_dir(const char *envar)
+void libnvmf_fsync_dir(const char *path)
 {
-	const char *env = getenv(envar);
+	int fd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
 
-	return (env && !strncmp(env, "/tmp/", 5) && !strstr(env, "..")) ?
-		env : NULL;
+	if (fd >= 0) {
+		fsync(fd);
+		close(fd);
+	}
+}
+
+bool libnvmf_valid_name(const char *s)
+{
+	const char *p;
+
+	if (!s || !*s)
+		return false;
+	for (p = s; *p; p++) {
+		if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') ||
+		    (*p >= '0' && *p <= '9') || *p == '_' || *p == '-')
+			continue;
+		return false;
+	}
+	return true;
+}
+
+char *libnvmf_trim(char *s)
+{
+	char *end;
+
+	s += strspn(s, " \t\n\r\v\f");  // trim leading spaces
+	end = s + strlen(s);
+	while (end > s && isspace((unsigned char)end[-1]))
+		end--;
+	*end = '\0';
+	return s;
 }
