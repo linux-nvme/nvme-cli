@@ -66,6 +66,7 @@ if want_fabrics
         'nvme/fabrics.c',
         'nvme/nbft.c',
         'nvme/registry.c',
+        'nvme/tid.c',
         'nvme/tree-fabrics.c',
         'nvme/util-fabrics.c',
     ]
@@ -76,6 +77,7 @@ if want_fabrics
         'nvme/nvme-types-nbft.h',
         'nvme/nbft.h',
         'nvme/registry.h',
+        'nvme/tid.h',
     ]
 else
     sources += [

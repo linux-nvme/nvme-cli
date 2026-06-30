@@ -69,7 +69,6 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
 	const char *tls_key_identity; // !access:write=custom
 };
 
-
 /**
  * NVMe-oF private struct definitions.
  *
@@ -78,6 +77,54 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
  * file and its generated accessors (accessors-fabrics.{h,c}) along with the
  * rest of the fabrics layer.
  */
+
+/**
+ * struct libnvmf_tid - Transport ID: identifies a full path between a host and
+ * an NVMe-oF controller (an NVMe-oF *association*).
+ *
+ * The identity is the NVMe Transport tuple (transport, traddr, trsvcid, and
+ * the host-side host_traddr / host_iface) plus the subsysnqn and the host's
+ * hostnqn and hostid. The host identity matters: the same physical machine
+ * connecting to the same target under a different Host NQN -- or a different
+ * Host Identifier -- is a different host, hence a different path.
+ *
+ * Both hostnqn AND hostid are part of the identity. The NVMe Base
+ * Specification (revision 2.3, section 6.3 "Connect Command") allows a single
+ * Host NQN to present multiple Host Identifiers as independent "elements" of a
+ * host, each a separate association -- so the pair, not the Host NQN alone, is
+ * the host identity. The Linux kernel agrees: nvmf_ctlr_matches_baseopts()
+ * compares subsysnqn, host nqn and host id. Linux currently enforces a 1:1
+ * Host NQN <-> Host Identifier mapping (nvmf_host_add() rejects a mismatch), so
+ * the multi-hostid case is unreachable there today, but that is kernel policy
+ * rather than a spec guarantee; carrying hostid keeps the TID correct anyway.
+ *
+ * This is deliberately a separate type from struct libnvme_ctrl_params, not a
+ * reuse of it. libnvmf_tid is a pure, owned, hashable *identity*: it owns its
+ * strings, caches derived values (canonical form, hash, string rendering), and
+ * carries hostnqn/hostid, which libnvme_ctrl_params does not.
+ * libnvme_ctrl_params is a controller-*creation* parameter bag: borrowed
+ * pointers, no hashing, and it carries the fabrics tuning config (struct
+ * libnvme_fabrics_config) that the TID intentionally excludes. Merging them
+ * would force one role onto the other.
+ *
+ * All string fields are owned (strdup'd) by the struct. The leading-underscore
+ * members cache derived values (canonical form, hash, string rendering),
+ * recomputed lazily and cleared by any setter.
+ */
+struct libnvmf_tid { // !generate-accessors !generate-lifecycle
+	char *transport;    // !access:write=custom
+	char *traddr;       // !access:write=custom
+	char *trsvcid;      // !access:write=custom
+	char *subsysnqn;    // !access:write=custom
+	char *host_traddr;  // !access:write=custom
+	char *host_iface;   // !access:write=custom
+	char *hostnqn;      // !access:write=custom
+	char *hostid;       // !access:write=custom
+	/* cached derived values — recomputed lazily, cleared by any setter */
+	char *_canonical;   // !access:read=none,write=none
+	char *_hash;        // !access:read=none,write=none
+	char *_str;         // !access:read=none,write=none
+};
 
 struct libnvmf_discovery_args { // !generate-accessors !generate-lifecycle
 	int max_retries; // !default:6
@@ -215,18 +262,18 @@ size_t libnvmf_get_entity_name(char *buffer, size_t bufsz);
  */
 size_t libnvmf_get_entity_version(char *buffer, size_t bufsz);
 
-/*
- * File-access helpers shared across the fabrics layer (util-fabrics.c).
- *
- * libnvmf_mkdir_p()           - mkdir -p; returns 0 or -errno.
- * libnvmf_mkstemp()           - mkstemp() with close-on-exec (always);
- *                               returns fd or -errno.
- * libnvmf_validate_test_dir() - Ensure test dir override is confined to /tmp
- *                               and has no "..".
- */
+/* File-access and misc helpers (util-fabrics.c). */
 int libnvmf_mkdir_p(const char *path, mode_t mode);
 int libnvmf_mkstemp(char *template);
-const char *libnvmf_validate_test_dir(const char *envar);
+void libnvmf_fsync_dir(const char *path);
+bool libnvmf_valid_name(const char *s);
+uint64_t libnvmf_fnv1a_64(const void *buf, size_t len);
+
+/*
+ * libnvmf_trim() - strip leading/trailing whitespace in place; returns a
+ * pointer into @s.
+ */
+char *libnvmf_trim(char *s);
 
 /**
  * libnvmf_registry_create_instance - Write a registry entry for a freshly

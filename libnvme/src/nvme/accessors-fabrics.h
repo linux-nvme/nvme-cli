@@ -30,6 +30,7 @@
 
 /* Forward declarations. These are internal (opaque) structs. */
 struct libnvmf_context;
+struct libnvmf_tid;
 struct libnvmf_discovery_args;
 struct libnvmf_uri;
 
@@ -492,6 +493,93 @@ const char *libnvmf_context_get_tls_key(const struct libnvmf_context *p);
  */
 const char *libnvmf_context_get_tls_key_identity(
 		const struct libnvmf_context *p);
+
+/****************************************************************************
+ * Accessors for: struct libnvmf_tid
+ ****************************************************************************/
+
+/**
+ * libnvmf_tid_new() - Allocate and initialise a libnvmf_tid object.
+ * @pp: On success, *pp is set to the newly allocated object.
+ *
+ * Allocates a zeroed &struct libnvmf_tid on the heap.
+ * The caller must release it with libnvmf_tid_free().
+ *
+ * Return: 0 on success, -EINVAL if @pp is NULL,
+ *         -ENOMEM if allocation fails.
+ */
+int libnvmf_tid_new(struct libnvmf_tid **pp);
+
+/**
+ * libnvmf_tid_free() - Release a libnvmf_tid object.
+ * @p: Object previously returned by libnvmf_tid_new().
+ *     A NULL pointer is silently ignored.
+ */
+void libnvmf_tid_free(struct libnvmf_tid *p);
+
+/**
+ * libnvmf_tid_get_transport() - Get transport.
+ * @p: The &struct libnvmf_tid instance to query.
+ *
+ * Return: The value of the transport field, or NULL if not set.
+ */
+const char *libnvmf_tid_get_transport(const struct libnvmf_tid *p);
+
+/**
+ * libnvmf_tid_get_traddr() - Get traddr.
+ * @p: The &struct libnvmf_tid instance to query.
+ *
+ * Return: The value of the traddr field, or NULL if not set.
+ */
+const char *libnvmf_tid_get_traddr(const struct libnvmf_tid *p);
+
+/**
+ * libnvmf_tid_get_trsvcid() - Get trsvcid.
+ * @p: The &struct libnvmf_tid instance to query.
+ *
+ * Return: The value of the trsvcid field, or NULL if not set.
+ */
+const char *libnvmf_tid_get_trsvcid(const struct libnvmf_tid *p);
+
+/**
+ * libnvmf_tid_get_subsysnqn() - Get subsysnqn.
+ * @p: The &struct libnvmf_tid instance to query.
+ *
+ * Return: The value of the subsysnqn field, or NULL if not set.
+ */
+const char *libnvmf_tid_get_subsysnqn(const struct libnvmf_tid *p);
+
+/**
+ * libnvmf_tid_get_host_traddr() - Get host_traddr.
+ * @p: The &struct libnvmf_tid instance to query.
+ *
+ * Return: The value of the host_traddr field, or NULL if not set.
+ */
+const char *libnvmf_tid_get_host_traddr(const struct libnvmf_tid *p);
+
+/**
+ * libnvmf_tid_get_host_iface() - Get host_iface.
+ * @p: The &struct libnvmf_tid instance to query.
+ *
+ * Return: The value of the host_iface field, or NULL if not set.
+ */
+const char *libnvmf_tid_get_host_iface(const struct libnvmf_tid *p);
+
+/**
+ * libnvmf_tid_get_hostnqn() - Get hostnqn.
+ * @p: The &struct libnvmf_tid instance to query.
+ *
+ * Return: The value of the hostnqn field, or NULL if not set.
+ */
+const char *libnvmf_tid_get_hostnqn(const struct libnvmf_tid *p);
+
+/**
+ * libnvmf_tid_get_hostid() - Get hostid.
+ * @p: The &struct libnvmf_tid instance to query.
+ *
+ * Return: The value of the hostid field, or NULL if not set.
+ */
+const char *libnvmf_tid_get_hostid(const struct libnvmf_tid *p);
 
 /****************************************************************************
  * Accessors for: struct libnvmf_discovery_args
