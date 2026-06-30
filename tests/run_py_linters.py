@@ -72,9 +72,8 @@ def get_all_python_files() -> List[Path]:
 
     for python_module in all_python_modules:
         if python_module.is_dir():
-            for a_file in python_module.iterdir():
-                if a_file.suffix == '.py':
-                    python_files.append(a_file)
+            for a_file in python_module.rglob('*.py'):
+                python_files.append(a_file)
         else:
             python_files.append(python_module)
 
