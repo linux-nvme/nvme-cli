@@ -6322,12 +6322,11 @@ static int nvme_get_print_ocp_cloud_smart_log(struct libnvme_transport_handle *h
 		__u32 namespace_id,
 		int fmt)
 {
-	__u32 length = WDC_NVME_SMART_CLOUD_ATTR_LEN;
 	struct ocp_cloud_smart_log *log_ptr = NULL;
 	struct libnvme_passthru_cmd cmd;
 	int ret, i;
 
-	log_ptr = (struct ocp_cloud_smart_log *)malloc(sizeof(__u8) * length);
+	log_ptr = malloc(sizeof(*log_ptr));
 	if (!log_ptr) {
 		fprintf(stderr, "ERROR: WDC: malloc: %s\n", libnvme_strerror(errno));
 		return -1;
@@ -6342,7 +6341,7 @@ static int nvme_get_print_ocp_cloud_smart_log(struct libnvme_transport_handle *h
 	/* Get the 0xC0 log data */
 	nvme_init_get_log(&cmd, namespace_id,
 			  WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID, NVME_CSI_NVM,
-			  log_ptr, length);
+			  log_ptr, sizeof(*log_ptr));
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
@@ -6481,7 +6480,7 @@ static int nvme_get_hw_rev_log(struct libnvme_transport_handle *hdl, __u8 **data
 	struct libnvme_passthru_cmd cmd;
 	int ret, i;
 
-	log_ptr = (struct wdc_nvme_hw_rev_log *)malloc(sizeof(__u8) * WDC_NVME_HW_REV_LOG_PAGE_LEN);
+	log_ptr = malloc(sizeof(*log_ptr));
 	if (!log_ptr) {
 		fprintf(stderr, "ERROR: WDC: malloc: %s\n", libnvme_strerror(errno));
 		return -1;
@@ -6490,7 +6489,7 @@ static int nvme_get_hw_rev_log(struct libnvme_transport_handle *hdl, __u8 **data
 	/* Get the 0xC0 log data */
 	nvme_init_get_log(&cmd, namespace_id,
 			  WDC_NVME_GET_HW_REV_LOG_OPCODE, NVME_CSI_NVM,
-			  log_ptr, WDC_NVME_HW_REV_LOG_PAGE_LEN);
+			  log_ptr, sizeof(*log_ptr));
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uuid_index,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
@@ -12395,7 +12394,7 @@ static int wdc_enc_submit_move_data(struct libnvme_transport_handle *hdl, char *
 	uint32_t offset = 0;
 	char *buf;
 
-	buf = (char *)malloc(sizeof(__u8) * xfer_size);
+	buf = malloc(xfer_size);
 	if (!buf) {
 		fprintf(stderr, "%s: ERROR: malloc: %s\n", __func__, libnvme_strerror(errno));
 		return -1;
