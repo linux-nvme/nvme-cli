@@ -770,6 +770,26 @@ do_connect:
 	if (config_file)
 		return libnvmf_connect_config_json(ctx, fctx);
 
+	/*
+	 * The exclusion list governs auto-connecting orchestrators, not an
+	 * explicit "nvme connect", so we never block it here. But under
+	 * --verbose, note when the target matches an exclusion entry so the
+	 * operator knows they are overriding their own opt-out.
+	 */
+	if (nvme_args.verbose) {
+		struct libnvmf_tid *tid;
+
+		tid = libnvmf_tid_from_fields(fa.transport, fa.traddr,
+					      fa.trsvcid, fa.subsysnqn,
+					      fa.host_traddr, fa.host_iface,
+					      fa.hostnqn, fa.hostid);
+		if (tid && libnvmf_exclusion_match(ctx, tid))
+			fprintf(stderr,
+				"Note: %s is on the exclusion list; connecting anyway\n",
+				fa.subsysnqn ? fa.subsysnqn : "this controller");
+		libnvmf_tid_free(tid);
+	}
+
 	ret = libnvmf_connect(ctx, fctx);
 	if (ret) {
 		fprintf(stderr, "failed to connect: %s\n",

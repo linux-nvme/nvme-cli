@@ -94,9 +94,9 @@ if (libnvmf_exclusion_match(ctx, tid))
         continue;   /* administrator excluded this controller */
 ```
 
-`libnvmf_exclusion_match()` re-reads the directory on every call (no caching), so an edit takes effect on the next connection attempt without restarting anything. This is the only API an orchestrator needs; the create/add/remove calls are for the management tooling.
+`libnvmf_exclusion_match()` re-reads the files on every call (no caching), so an edit takes effect on the next connection attempt without restarting anything. This is the only API an orchestrator needs; the create/add/remove calls are for the management tooling.
 
-The match is by design *not* applied to `nvme connect <args>` or `nvme disconnect <device>`: those are single, targeted human actions where the operator's intent is explicit. The list governs the *orchestrating* paths that decide on their own.
+The match is by design *not* allowed to **block** `nvme connect <args>` or `nvme disconnect <device>`: those are single, targeted human actions where the operator's intent is explicit. The list governs the *orchestrating* paths that decide on their own. As a courtesy, `nvme connect --verbose` does *consult* the list and prints a note when the target matches — a heads-up that you are overriding your own opt-out — but it still connects.
 
 ## Managing the list
 
