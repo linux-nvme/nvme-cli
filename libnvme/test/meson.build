@@ -165,6 +165,18 @@ if want_fabrics
 
     test('libnvme - registry', registry)
 
+    exclusion = executable(
+        'test-exclusion',
+        ['exclusion.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+
+    test('libnvme - exclusion', exclusion)
+
     uriparser = executable(
         'test-uriparser',
         ['uriparser.c'],
