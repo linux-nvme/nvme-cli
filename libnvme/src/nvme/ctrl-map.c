@@ -11,11 +11,15 @@
 #include <string.h>
 #include <wchar.h>
 
+#include <ccan/hash/hash.h>
+#include <ccan/htable/htable_type.h>
+
 #include <libnvme.h>
 
 #include "private.h"
 #include "private-ctrl-map.h"
 #include "compiler-attributes.h"
+#include "cleanup.h"
 
 #include <windows.h>
 #include <cfgmgr32.h>
@@ -30,87 +34,217 @@ struct ctrl_map_entry {
 	char *ctrl_name;   /* format "nvmeX" */
 	WCHAR *ctrl_path;  /* format "\\\\?\\pci..." */
 	struct nvme_id_ctrl id_ctrl;
-	int subsys_index;
+	char *subsys_name; /* borrowed from subsys_map */
+};
+
+static const char *ctrl_map_entry_keyof(const struct ctrl_map_entry *entry)
+{
+	return entry->ctrl_name;
+}
+
+static size_t ctrl_map_entry_hash(const char *ctrl_name)
+{
+	return hash_string(ctrl_name);
+}
+
+static bool ctrl_map_entry_eq(const struct ctrl_map_entry *entry,
+			      const char *ctrl_name)
+{
+	return strcmp(entry->ctrl_name, ctrl_name) == 0;
+}
+
+HTABLE_DEFINE_TYPE(struct ctrl_map_entry, ctrl_map_entry_keyof,
+		   ctrl_map_entry_hash, ctrl_map_entry_eq, ctrl_map);
+
+/*
+ * Maps a subsystem NQN to its subsystem name.  The subnqn is a
+ * fixed-length, space-padded buffer (not necessarily NUL-terminated),
+ * so it is hashed and compared over its full NVME_NQN_LENGTH bytes.
+ */
+struct subsys_entry {
+	char subnqn[NVME_NQN_LENGTH];
 	char *subsys_name;
 };
 
-static struct {
-	struct ctrl_map_entry *entries;
-	size_t count;
-	size_t capacity;
-	bool initialized;
-} ctrl_map;
-
-size_t libnvme_ctrl_map_get_count(void)
+static const char *subsys_entry_keyof(const struct subsys_entry *entry)
 {
-	return ctrl_map.count;
+	return entry->subnqn;
 }
 
-const char *libnvme_ctrl_map_get_name(size_t index)
+static size_t subsys_entry_hash(const char *subnqn)
 {
-	if (index >= ctrl_map.count)
+	return hash(subnqn, NVME_NQN_LENGTH, 0);
+}
+
+static bool subsys_entry_eq(const struct subsys_entry *entry,
+			    const char *subnqn)
+{
+	return memcmp(entry->subnqn, subnqn, NVME_NQN_LENGTH) == 0;
+}
+
+HTABLE_DEFINE_TYPE(struct subsys_entry, subsys_entry_keyof,
+		   subsys_entry_hash, subsys_entry_eq, subsys_map);
+
+static struct ctrl_map ctrl_map;
+static bool ctrl_map_initialized = false;
+static struct subsys_map subsys_map;
+static bool htables_ready = false;  /* ccan hash tables have been initialized */
+
+/*
+ * Compare two controller names numerically.  Names share a common
+ * textual prefix ("nvme") followed by an integer index, so a plain
+ * strcmp() would order "nvme10" before "nvme2".  Walk both strings
+ * together and, whenever a run of digits begins in both, compare the
+ * runs by numeric value; otherwise fall back to byte comparison.
+ */
+static int ctrl_name_cmp(const void *a, const void *b)
+{
+	const char *const *ka = a;
+	const char *const *kb = b;
+	const char *sa = *ka;
+	const char *sb = *kb;
+
+	while (*sa && *sb) {
+		if (isdigit((unsigned char)*sa) &&
+		    isdigit((unsigned char)*sb)) {
+			char *enda, *endb;
+			unsigned long va = strtoul(sa, &enda, 10);
+			unsigned long vb = strtoul(sb, &endb, 10);
+
+			if (va != vb)
+				return va < vb ? -1 : 1;
+
+			sa = enda;
+			sb = endb;
+			continue;
+		}
+
+		if (*sa != *sb)
+			return (unsigned char)*sa - (unsigned char)*sb;
+
+		sa++;
+		sb++;
+	}
+
+	return (unsigned char)*sa - (unsigned char)*sb;
+}
+
+const char **libnvme_ctrl_map_get_ctrl_names(size_t *count)
+{
+	struct ctrl_map_iter iter;
+	struct ctrl_map_entry *entry;
+	const char **keys;
+	size_t n = ctrl_map_count(&ctrl_map);
+	size_t i = 0;
+
+	if (count)
+		*count = 0;
+
+	if (!n)
 		return NULL;
-	return ctrl_map.entries[index].ctrl_name;
+
+	keys = calloc(n + 1, sizeof(*keys));
+	if (!keys)
+		return NULL;
+
+	for (entry = ctrl_map_first(&ctrl_map, &iter); entry;
+	     entry = ctrl_map_next(&ctrl_map, &iter)) {
+		if (i >= n)
+			break;
+
+		keys[i++] = ctrl_map_entry_keyof(entry);
+	}
+
+	qsort(keys, i, sizeof(*keys), ctrl_name_cmp);
+	keys[i] = NULL;
+
+	if (count)
+		*count = i;
+
+	return keys;
 }
 
 void libnvme_ctrl_map_clear(void)
 {
-	size_t i;
+	struct ctrl_map_entry *entry;
+	struct ctrl_map_iter ctrl_iter;
+	struct subsys_entry *subsys;
+	struct subsys_map_iter subsys_iter;
 
-	for (i = 0; i < ctrl_map.count; i++) {
-		free(ctrl_map.entries[i].ctrl_name);
-		free(ctrl_map.entries[i].ctrl_path);
-		free(ctrl_map.entries[i].subsys_name);
+	if (!htables_ready)
+		return;
+
+	for (entry = ctrl_map_first(&ctrl_map, &ctrl_iter); entry;
+	     entry = ctrl_map_next(&ctrl_map, &ctrl_iter)) {
+		free(entry->ctrl_name);
+		free(entry->ctrl_path);
+		/* subsys_name is owned by subsys_map, freed below */
+		free(entry);
 	}
+	ctrl_map_clear(&ctrl_map);
 
-	free(ctrl_map.entries);
-	ctrl_map.entries = NULL;
-	ctrl_map.count = 0;
-	ctrl_map.capacity = 0;
-	ctrl_map.initialized = false;
+	for (subsys = subsys_map_first(&subsys_map, &subsys_iter); subsys;
+	     subsys = subsys_map_next(&subsys_map, &subsys_iter)) {
+		free(subsys->subsys_name);
+		free(subsys);
+	}
+	subsys_map_clear(&subsys_map);
+
+	ctrl_map_initialized = false;
+	htables_ready = false;
 }
 
-static int find_or_create_subsys_index(const struct nvme_id_ctrl *id_ctrl)
+/*
+ * Resolve the subsystem name for a controller's subnqn.  Looks the
+ * subnqn up in subsys_map; if present, returns the cached name.
+ * Otherwise generates the next "nvme-subsysN" name, inserts it, and
+ * returns it.  The returned string is owned by subsys_map (borrowed by
+ * the caller).  Returns NULL on allocation failure.
+ */
+static char *find_or_create_subsys_name(const struct nvme_id_ctrl *id_ctrl)
 {
-	int max_subsys_index = -1;
-	size_t i;
+	struct subsys_entry *entry;
+	char *subsys_name;
+	int next_subsys_index;
 
-	for (i = 0; i < ctrl_map.count; i++) {
-		if (!memcmp(ctrl_map.entries[i].id_ctrl.subnqn,
-			    id_ctrl->subnqn, NVME_NQN_LENGTH))
-			return ctrl_map.entries[i].subsys_index;
-		if (ctrl_map.entries[i].subsys_index > max_subsys_index)
-			max_subsys_index = ctrl_map.entries[i].subsys_index;
+	entry = subsys_map_get(&subsys_map, id_ctrl->subnqn);
+	if (entry)
+		return entry->subsys_name;
+
+	next_subsys_index = subsys_map_count(&subsys_map);
+	if (asprintf(&subsys_name, "nvme-subsys%d", next_subsys_index) < 0)
+		return NULL;
+
+	entry = calloc(1, sizeof(*entry));
+	if (!entry) {
+		free(subsys_name);
+		return NULL;
 	}
 
-	return max_subsys_index + 1;
+	memcpy(entry->subnqn, id_ctrl->subnqn, NVME_NQN_LENGTH);
+	entry->subsys_name = subsys_name;
+
+	/* Key is derived from entry->subnqn via subsys_entry_keyof() */
+	if (!subsys_map_add(&subsys_map, entry)) {
+		free(subsys_name);
+		free(entry);
+		return NULL;
+	}
+
+	return subsys_name;
 }
 
 static int libnvme_ctrl_map_add(DWORD ctrl_index,
 				const WCHAR *ctrl_path,
 				const struct nvme_id_ctrl *id_ctrl)
 {
+	struct ctrl_map_entry *entry;
 	char *ctrl_name_copy;
 	WCHAR *ctrl_path_copy;
-	int subsys_index;
 	char *subsys_name;
 
 	if (!ctrl_path)
 		return -EINVAL;
-
-	if (ctrl_map.count == ctrl_map.capacity) {
-		size_t new_capacity = ctrl_map.capacity ?
-			ctrl_map.capacity * 2 : 8;
-		struct ctrl_map_entry *new_map;
-
-		new_map = realloc(ctrl_map.entries,
-				  new_capacity * sizeof(*ctrl_map.entries));
-		if (!new_map)
-			return -ENOMEM;
-
-		ctrl_map.entries = new_map;
-		ctrl_map.capacity = new_capacity;
-	}
 
 	if (asprintf(&ctrl_name_copy, "nvme%lu", ctrl_index) < 0)
 		return -ENOMEM;
@@ -121,55 +255,76 @@ static int libnvme_ctrl_map_add(DWORD ctrl_index,
 		return -ENOMEM;
 	}
 
-	subsys_index = find_or_create_subsys_index(id_ctrl);
-
-	if (asprintf(&subsys_name, "nvme-subsys%d", subsys_index) < 0) {
+	subsys_name = find_or_create_subsys_name(id_ctrl);
+	if (!subsys_name) {
 		free(ctrl_name_copy);
 		free(ctrl_path_copy);
 		return -ENOMEM;
 	}
 
-	ctrl_map.entries[ctrl_map.count].ctrl_name = ctrl_name_copy;
-	ctrl_map.entries[ctrl_map.count].ctrl_path = ctrl_path_copy;
-	ctrl_map.entries[ctrl_map.count].id_ctrl = *id_ctrl;
-	ctrl_map.entries[ctrl_map.count].subsys_index = subsys_index;
-	ctrl_map.entries[ctrl_map.count].subsys_name = subsys_name;
-	ctrl_map.count++;
+	entry = calloc(1, sizeof(*entry));
+	if (!entry) {
+		free(ctrl_name_copy);
+		free(ctrl_path_copy);
+		return -ENOMEM;
+	}
+
+	entry->ctrl_name = ctrl_name_copy;
+	entry->ctrl_path = ctrl_path_copy;
+	entry->id_ctrl = *id_ctrl;
+	entry->subsys_name = subsys_name;
+
+	/* Key is derived from entry->ctrl_name via ctrl_map_entry_keyof() */
+	if (!ctrl_map_add(&ctrl_map, entry)) {
+		free(ctrl_name_copy);
+		free(ctrl_path_copy);
+		free(entry);
+		return -ENOMEM;
+	}
 
 	return 0;
 }
 
-static int ctrl_map_find_index(const char *ctrl_name)
+/*
+ * Extract the "nvmeX" controller portion from a controller or namespace
+ * name (e.g. "nvme0" or "nvme0n1"), where X is one or more digits, and
+ * return it as a newly allocated string.  Returns NULL if the name does
+ * not begin with "nvme" followed by a digit, or on allocation failure.
+ * Any trailing characters after the controller index are ignored; the
+ * caller must free the result.
+ */
+static char *ctrl_name_extract(const char *ctrl_name)
 {
-	size_t i;
+	const char *p = ctrl_name;
+	const char *ctrl_end;
+	char *ctrl;
+	size_t len;
 
-	for (i = 0; i < ctrl_map.count; i++) {
-		size_t sp_len = strlen(ctrl_map.entries[i].ctrl_name);
-		const char *suffix;
+	if (!ctrl_name)
+		return NULL;
 
-		/* Skip entry if name does not start with nvmeX format */
-		if (strncmp(ctrl_map.entries[i].ctrl_name,
-			    ctrl_name, sp_len))
-			continue;
+	/* ctrl_name must start with "nvme" */
+	if (strncmp(p, "nvme", 4))
+		return NULL;
+	p += 4;
 
-		suffix = ctrl_name + sp_len;
+	/* X: one or more digits */
+	if (!isdigit((unsigned char)*p))
+		return NULL;
+	while (isdigit((unsigned char)*p))
+		p++;
 
-		/* Exact match: nvmeX */
-		if (*suffix == '\0')
-			return (int)i;
+	ctrl_end = p;
 
-		/* Namespace match: nvmeXnY (Y is a positive integer) */
-		if (*suffix != 'n' || suffix[1] < '1' || suffix[1] > '9')
-			continue;
+	len = ctrl_end - ctrl_name;
+	ctrl = malloc(len + 1);
+	if (!ctrl)
+		return NULL;
 
-		suffix += 2;
-		while (*suffix >= '0' && *suffix <= '9')
-			suffix++;
-		if (*suffix == '\0')
-			return (int)i;
-	}
+	memcpy(ctrl, ctrl_name, len);
+	ctrl[len] = '\0';
 
-	return -1;
+	return ctrl;
 }
 
 /*
@@ -311,8 +466,12 @@ int libnvme_ctrl_map_init(struct libnvme_global_ctx *ctx)
 	DWORD ctrl_index = 0;
 	STORAGE_BUS_TYPE bus_type;
 
-	if (ctrl_map.initialized)
+	if (ctrl_map_initialized)
 		return 0;
+
+	ctrl_map_init(&ctrl_map);
+	subsys_map_init(&subsys_map);
+	htables_ready = true;
 
 	hdev = SetupDiGetClassDevsW(&GUID_DEVINTERFACE_STORAGEPORT, NULL, NULL,
 				    DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
@@ -361,7 +520,7 @@ next_entry:
 	}
 
 	SetupDiDestroyDeviceInfoList(hdev);
-	ctrl_map.initialized = true;
+	ctrl_map_initialized = true;
 	return 0;
 
 enomem:
@@ -376,19 +535,19 @@ enomem:
 struct ctrl_map_entry *libnvme_ctrl_map_lookup(struct libnvme_global_ctx *ctx,
 					       const char *ctrl_name)
 {
-	int idx;
+	__cleanup_free char *ctrl_name_copy = NULL;
 
 	if (!ctrl_name)
+		return NULL;
+
+	ctrl_name_copy = ctrl_name_extract(ctrl_name);
+	if (!ctrl_name_copy)
 		return NULL;
 
 	if (libnvme_ctrl_map_init(ctx))
 		return NULL;
 
-	idx = ctrl_map_find_index(ctrl_name);
-	if (idx < 0)
-		return NULL;
-
-	return &ctrl_map.entries[idx];
+	return ctrl_map_get(&ctrl_map, ctrl_name_copy);
 }
 
 const struct ctrl_map_entry *
@@ -398,7 +557,8 @@ libnvme_ctrl_map_lookup_by_physdrive(struct libnvme_global_ctx *ctx,
 	DWORD target_num;
 	char *endptr;
 	const char *num_str;
-	size_t i;
+	struct ctrl_map_entry *entry;
+	struct ctrl_map_iter iter;
 
 	if (!drive_path)
 		return NULL;
@@ -420,22 +580,22 @@ libnvme_ctrl_map_lookup_by_physdrive(struct libnvme_global_ctx *ctx,
 	if (libnvme_ctrl_map_init(ctx))
 		return NULL;
 
-	for (i = 0; i < ctrl_map.count; i++) {
+	for (entry = ctrl_map_first(&ctrl_map, &iter); entry;
+	     entry = ctrl_map_next(&ctrl_map, &iter)) {
 		DWORD *device_numbers = NULL;
 		int dev_count = 0;
 		int ret;
 		int j;
 
 		ret = libnvme_ctrl_map_entry_scan_device_numbers(
-			&ctrl_map.entries[i],
-			&device_numbers, &dev_count);
+			entry, &device_numbers, &dev_count);
 		if (ret)
 			continue;
 
 		for (j = 0; j < dev_count; j++) {
 			if (device_numbers[j] == target_num) {
 				free(device_numbers);
-				return &ctrl_map.entries[i];
+				return entry;
 			}
 		}
 

@@ -14,20 +14,19 @@
 struct ctrl_map_entry;
 
 /**
- * libnvme_ctrl_map_get_count() - Get number of controller map entries
+ * libnvme_ctrl_map_get_ctrl_names() - Get all controller names, sorted
+ * @count: Optional output for the number of names returned (may be NULL)
  *
- * Return: Number of entries in the global controller map
- */
-size_t libnvme_ctrl_map_get_count(void);
-
-/**
- * libnvme_ctrl_map_get_name() - Get controller name by index
- * @index: Zero-based index into the controller map
+ * Collects the controller names from the map and returns them in ascending
+ * numeric order (e.g. "nvme2" before "nvme10").  The returned array is
+ * NULL-terminated; the caller frees the array but not the name strings,
+ * which remain owned by the controller map and are valid until the next
+ * libnvme_ctrl_map_clear().
  *
- * Return: controller name string (e.g. "nvme0"), or NULL if index
- * is out of range
+ * Return: NULL-terminated array of controller names, or NULL on allocation
+ * failure or when the map is empty
  */
-const char *libnvme_ctrl_map_get_name(size_t index);
+const char **libnvme_ctrl_map_get_ctrl_names(size_t *count);
 
 /**
  * libnvme_ctrl_map_init() - Initialize the controller map

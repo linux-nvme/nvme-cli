@@ -11,6 +11,7 @@
 
 #include <libnvme.h>
 
+#include "cleanup.h"
 #include "private.h"
 #include "private-ctrl-map.h"
 #include "compiler-attributes.h"
@@ -34,6 +35,7 @@ __libnvme_public int libnvme_scan_ctrls(
 	__libnvme_unused struct dirent ***ctrls)
 {
 	struct dirent **entries;
+	__cleanup_free const char **names = NULL;
 	size_t i, count;
 	int ret;
 
@@ -47,8 +49,8 @@ __libnvme_public int libnvme_scan_ctrls(
 	if (ret)
 		return ret;
 
-	count = libnvme_ctrl_map_get_count();
-	if (!count)
+	names = libnvme_ctrl_map_get_ctrl_names(&count);
+	if (!names)
 		return 0;
 
 	entries = calloc(count, sizeof(*entries));
@@ -61,7 +63,7 @@ __libnvme_public int libnvme_scan_ctrls(
 			goto enomem;
 		snprintf(entries[i]->d_name,
 			 sizeof(entries[i]->d_name), "%s",
-			 libnvme_ctrl_map_get_name(i));
+			 names[i]);
 	}
 
 	*ctrls = entries;
