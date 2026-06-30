@@ -95,6 +95,8 @@ else
 endif
 
 
+subdir('plugins')
+
 autopep8 = find_program(
     'autopep8',
     required : false,
