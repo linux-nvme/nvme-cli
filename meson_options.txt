@@ -183,3 +183,10 @@ option(
             'transcend', 'virtium', 'wdc', 'ymtc', 'zns'],
   description : 'comma-separated list of plugins to build (all plugins are included if unset, [] = no plugins)'
 )
+option(
+  'plugin-tests',
+  type : 'array',
+  choices : ['micron', 'ocp'],
+  value : [],
+  description : 'comma-separated list of plugin test suites to run against real hardware ([] = none)'
+)

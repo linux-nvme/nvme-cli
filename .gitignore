@@ -13,9 +13,9 @@ subprojects/*
 cscope.*
 compile_commands.json
 
-tests/__pycache__
+tests/**/__pycache__
 tests/nvmetests
-tests/*.pyc
+tests/**/*.pyc
 
 .build
 .build-ci
