@@ -28,6 +28,18 @@ LIBNVMF_3 {
 		libnvmf_discovery_nbft;
 		libnvmf_eflags_str;
 		libnvmf_exat_ptr_next;
+		libnvmf_exclusion_add;
+		libnvmf_exclusion_add_ctrl;
+		libnvmf_exclusion_add_subsysnqn;
+		libnvmf_exclusion_create;
+		libnvmf_exclusion_delete;
+		libnvmf_exclusion_entry_for_each;
+		libnvmf_exclusion_entry_valid;
+		libnvmf_exclusion_list_for_each;
+		libnvmf_exclusion_match;
+		libnvmf_exclusion_read;
+		libnvmf_exclusion_remove;
+		libnvmf_exclusion_write;
 		libnvmf_export_tls_key;
 		libnvmf_export_tls_key_versioned;
 		libnvmf_free_nbft;

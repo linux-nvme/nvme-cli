@@ -1,5 +1,6 @@
 #include <nvme/accessors-fabrics.h>
 #include <nvme/crypto.h>
+#include <nvme/exclusion.h>
 #include <nvme/fabrics.h>
 #include <nvme/nbft.h>
 #include <nvme/registry.h>

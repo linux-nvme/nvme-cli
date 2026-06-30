@@ -629,6 +629,95 @@ PyObject *registry_device_attrs(struct libnvme_global_ctx *ctx,
 	}
 	return dict;
 }
+
+static void _exclusion_collect_name(const char *name, void *user_data)
+{
+	PyObject *str = PyUnicode_FromString(name);
+
+	if (str) {
+		PyList_Append((PyObject *)user_data, str);
+		Py_DECREF(str);
+	}
+}
+
+PyObject *exclusion_lists(struct libnvme_global_ctx *ctx)
+{
+	PyObject *list = PyList_New(0);
+	int ret;
+
+	if (!list)
+		return NULL;
+	ret = libnvmf_exclusion_list_for_each(ctx, _exclusion_collect_name, list);
+	if (ret < 0) {
+		Py_DECREF(list);
+		PyErr_Format(PyExc_OSError,
+			     "exclusion_lists failed: %s", strerror(-ret));
+		return NULL;
+	}
+	if (PyErr_Occurred()) {
+		Py_DECREF(list);
+		return NULL;
+	}
+	return list;
+}
+
+static void _exclusion_collect_entry(const char *entry, void *user_data)
+{
+	PyObject *str = PyUnicode_FromString(entry);
+
+	if (str) {
+		PyList_Append((PyObject *)user_data, str);
+		Py_DECREF(str);
+	}
+}
+
+PyObject *exclusion_entries(struct libnvme_global_ctx *ctx, const char *name)
+{
+	PyObject *list = PyList_New(0);
+	int ret;
+
+	if (!list)
+		return NULL;
+	ret = libnvmf_exclusion_entry_for_each(ctx, name,
+					       _exclusion_collect_entry, list);
+	if (ret == -ENOENT)
+		return list;	/* no such list -> empty result */
+	if (ret < 0) {
+		Py_DECREF(list);
+		PyErr_Format(PyExc_OSError,
+			     "exclusion_entries failed: %s", strerror(-ret));
+		return NULL;
+	}
+	if (PyErr_Occurred()) {
+		Py_DECREF(list);
+		return NULL;
+	}
+	return list;
+}
+
+/*
+ * NOTE: SWIG exposes this to Python as _exclusion_match() -- see the
+ * "%rename(_exclusion_match)" in the declarations section below.  The
+ * public exclusion_match() is the keyword-default wrapper in %pythoncode,
+ * which forwards here.
+ */
+PyObject *exclusion_match(struct libnvme_global_ctx *ctx,
+			  const char *transport, const char *traddr,
+			  const char *trsvcid, const char *subsysnqn,
+			  const char *host_traddr, const char *host_iface,
+			  const char *hostnqn, const char *hostid)
+{
+	struct libnvmf_tid *tid;
+	bool matched;
+
+	tid = libnvmf_tid_from_fields(transport, traddr, trsvcid, subsysnqn,
+				      host_traddr, host_iface, hostnqn, hostid);
+	if (!tid)
+		return PyErr_NoMemory();
+	matched = libnvmf_exclusion_match(ctx, tid);
+	libnvmf_tid_free(tid);
+	return PyBool_FromLong(matched);
+}
 %} /* --------- end C implementation block --------- */
 
 /*============================================================================*/
@@ -693,6 +782,26 @@ def registry_entries(ctx):
 	"""
 	for device in registry_devices(ctx):
 		yield device, registry_device_attrs(ctx, device)
+
+def exclusion_match(ctx, transport=None, traddr=None, trsvcid=None,
+		    subsysnqn=None, host_traddr=None, host_iface=None,
+		    hostnqn=None, hostid=None):
+	"""Return True if any exclusion entry matches the given parameters.
+
+	Thin wrapper over the C libnvmf_exclusion_match(): the connection's
+	transport ID is built and matched entirely inside libnvme, so the
+	directory scan, minimal-match and address-equality semantics all live
+	in one place.
+
+	ctx: nvme.GlobalCtx instance.
+	transport, traddr, trsvcid, subsysnqn, host_traddr, host_iface,
+	hostnqn, hostid: connection parameters (all optional, default None).
+
+	Returns:
+		True if excluded, False otherwise.
+	"""
+	return _exclusion_match(ctx, transport, traddr, trsvcid, subsysnqn,
+				host_traddr, host_iface, hostnqn, hostid)
 %}
 
 /*############################################################################*/
@@ -999,6 +1108,34 @@ PyObject *registry_devices(struct libnvme_global_ctx *ctx);
 PyObject *registry_device_attrs(struct libnvme_global_ctx *ctx,
 				const char *device);
 
+%exception exclusion_lists {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+PyObject *exclusion_lists(struct libnvme_global_ctx *ctx);
+
+%exception exclusion_entries {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+PyObject *exclusion_entries(struct libnvme_global_ctx *ctx, const char *name);
+
+/*
+ * Wrap the C exclusion_match() (defined in the %{ %} block above) as
+ * _exclusion_match(); the public exclusion_match() in %pythoncode wraps that
+ * to give the connection fields optional keyword defaults.
+ */
+%rename(_exclusion_match) exclusion_match;
+%exception exclusion_match {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+PyObject *exclusion_match(struct libnvme_global_ctx *ctx,
+			  const char *transport, const char *traddr,
+			  const char *trsvcid, const char *subsysnqn,
+			  const char *host_traddr, const char *host_iface,
+			  const char *hostnqn, const char *hostid);
+
 %rename(_libnvme_first_host)        libnvme_first_host;
 %rename(_libnvme_next_host)         libnvme_next_host;
 %rename(_libnvme_first_subsystem)   libnvme_first_subsystem;
@@ -1085,6 +1222,17 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 	}
 	void dump_config() {
 		libnvme_dump_config($self, STDERR_FILENO);
+	}
+	%feature("autodoc", "Redirect libnvme's on-disk files (registry, exclusion "
+		"list, ...) under a /tmp sandbox, for testing.\n"
+		"\n"
+		"Args:\n"
+		"    path: Sandbox directory under /tmp (must contain no '..').\n"
+		"\n"
+		"Returns:\n"
+		"    0 on success, or a negative errno if the path is rejected.") set_test_base_dir;
+	int set_test_base_dir(const char *path) {
+		return libnvme_set_test_base_dir($self, path);
 	}
 }
 
