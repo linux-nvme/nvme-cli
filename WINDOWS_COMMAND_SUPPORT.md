@@ -41,14 +41,17 @@ These commands are fully implemented and verified working on Windows.
 | `changed-alloc-ns-list-log` | Retrieve Changed Allocated Namespace List, show it | |
 | `set-feature` | Set a feature and show the resulting value | |
 | `format` | Format namespace with new block format | |
+| `fw-commit` | Verify and commit firmware to a specific slot | |
+| `fw-download` | Download new firmware | |
 | `admin-passthru` | Submit an arbitrary admin command, return results | |
 | `io-passthru` | Submit an arbitrary IO command, return results | |
 | `flush` | Submit a Flush command, return results | |
 | `read` | Submit a read command, return results | |
 | `write` | Submit a write command, return results | |
+| `sanitize` | Submit a sanitize command | Requires a namespace handle on Windows |
 | `sanitize-log` | Retrieve sanitize log, show it | |
-| `ns-rescan` | Rescans the NVME namespaces | |
 | `reset` | Resets the controller | |
+| `ns-rescan` | Rescans the NVME namespaces | |
 | `show-topology` | Show the topology | |
 
 ### Supported on Windows but Not Supported by Current Test Device (Log Pages)
@@ -81,18 +84,10 @@ corresponding log page identifiers.
 These commands are implemented on Windows but have known issues or have not yet
 been fully tested.
 
-### Known Issues
-
-| Command | Description | Issue |
-|---------|-------------|-------|
-| `sanitize` | Submit a sanitize command | Failing with `STORAGE_PROTOCOL_STATUS_PENDING` |
-
 ### Needs Testing
 
 | Command | Description | Notes |
 |---------|-------------|-------|
-| `fw-commit` | Verify and commit firmware to a specific slot | Needs testing |
-| `fw-download` | Download new firmware | Needs testing |
 | `security-send` | Submit a Security Send command, return results | Needs testing |
 | `security-recv` | Submit a Security Receive command, return results | Needs testing |
 | `compare` | Submit a Compare command, return results | Only supported in WinPE |

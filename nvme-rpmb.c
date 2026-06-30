@@ -232,7 +232,7 @@ static int read_file(const char *file, unsigned char **data, unsigned int *len)
 
 	if (file == NULL) return err;
 
-	if ((fd = open(file, O_RDONLY)) < 0) {
+	if ((fd = nvme_open_rawdata(file, O_RDONLY)) < 0) {
 		fprintf(stderr, "Failed to open %s: %s\n", file, libnvme_strerror(errno));
 		return fd;
 	}
