@@ -2196,7 +2196,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 	}
 
 	if (cfg.file) {
-		dfd = open(cfg.file, O_RDONLY);
+		dfd = nvme_open_rawdata(cfg.file, O_RDONLY);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.file);
 			return -errno;
@@ -5221,7 +5221,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		return err;
 	}
 
-	fw_fd = open(cfg.fw, O_RDONLY);
+	fw_fd = nvme_open_rawdata(cfg.fw, O_RDONLY);
 	cfg.offset <<= 2;
 	if (fw_fd < 0) {
 		nvme_show_error("Failed to open firmware file %s: %s", cfg.fw, libnvme_strerror(errno));
@@ -7184,7 +7184,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 			memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
 		} else {
 			if (strlen(cfg.file))
-				ffd = open(cfg.file, O_RDONLY);
+				ffd = nvme_open_rawdata(cfg.file, O_RDONLY);
 
 			if (ffd < 0) {
 				nvme_show_error("Failed to open file %s: %s",
@@ -7296,7 +7296,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 		sec_fd = STDIN_FILENO;
 		sec_size = cfg.tl;
 	} else {
-		sec_fd = open(cfg.file, O_RDONLY);
+		sec_fd = nvme_open_rawdata(cfg.file, O_RDONLY);
 		if (sec_fd < 0) {
 			nvme_show_error("Failed to open %s: %s", cfg.file, libnvme_strerror(errno));
 			return -EINVAL;
@@ -7433,7 +7433,7 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 
 	if (buf) {
 		if (strlen(cfg.file)) {
-			ffd = open(cfg.file, O_RDONLY);
+			ffd = nvme_open_rawdata(cfg.file, O_RDONLY);
 			if (ffd <= 0) {
 				nvme_show_error("Failed to open file %s: %s",
 						cfg.file, libnvme_strerror(errno));
