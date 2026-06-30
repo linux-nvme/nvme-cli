@@ -10867,6 +10867,9 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 
 
 		ret = wdc_get_pci_ids(ctx, hdl, &device_id, &read_vendor_id);
+		if (ret) 
+			return ret;
+		
 		log_id = wdc_is_zn350(device_id) ?
 			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID_C8 :
 			WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID;
