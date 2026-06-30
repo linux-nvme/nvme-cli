@@ -407,7 +407,12 @@ struct libnvme_subsystem *nvme_alloc_subsystem(struct libnvme_host *h,
 		return NULL;
 
 	s->h = h;
-	s->subsysnqn = strdup(subsysnqn);
+	s->subsysnqn = xstrdup(subsysnqn);
+	if (!s->subsysnqn) {
+		free(s);
+		return NULL;
+	}
+
 	if (name)
 		libnvme_init_subsystem(s, name);
 	list_head_init(&s->ctrls);
