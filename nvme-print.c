@@ -1743,6 +1743,25 @@ void nvme_show_message(bool error, const char *msg, ...)
 	va_end(ap);
 }
 
+void nvme_show_verbose_message(const char *msg, ...)
+{
+	struct print_ops *ops = nvme_print_ops(NORMAL);
+	va_list ap;
+
+	if (!nvme_args.verbose)
+		return;
+
+	va_start(ap, msg);
+
+	if (nvme_is_output_format_json())
+		ops = nvme_print_ops(JSON);
+
+	if (ops && ops->show_message)
+		ops->show_message(true, msg, ap);
+
+	va_end(ap);
+}
+
 void nvme_show_perror(const char *msg, ...)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);

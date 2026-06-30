@@ -508,6 +508,16 @@ int validate_output_format(const char *format, nvme_print_flags_t *flags)
 	return 0;
 }
 
+bool nvme_is_output_format_normal(void)
+{
+	nvme_print_flags_t flags;
+
+	if (validate_output_format(nvme_args.output_format, &flags))
+		return false;
+
+	return flags == NORMAL;
+}
+
 bool nvme_is_output_format_json(void)
 {
 	nvme_print_flags_t flags;
@@ -2216,8 +2226,8 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	printf("io-mgmt-send: Success, mos:%u mo:%u nsid:%d\n", cfg.mos, cfg.mo,
-	       cfg.nsid);
+	nvme_show_verbose_result("io-mgmt-send: Success, mos:%u mo:%u nsid:%d",
+				 cfg.mos, cfg.mo, cfg.nsid);
 
 	return err;
 }
@@ -2279,8 +2289,8 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	printf("io-mgmt-recv: Success, mos:%u mo:%u nsid:%d\n", cfg.mos, cfg.mo,
-	       cfg.nsid);
+	nvme_show_verbose_result("io-mgmt-recv: Success, mos:%u mo:%u nsid:%d",
+				 cfg.mos, cfg.mo, cfg.nsid);
 
 	if (cfg.file) {
 		dfd = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -2919,6 +2929,9 @@ static void ns_mgmt_show_status(struct libnvme_transport_handle *hdl, int err, c
 		nvme_show_error("%s: %s", cmd, libnvme_strerror(-err));
 		return;
 	}
+
+	if (!err && !nvme_args.verbose && nvme_is_output_format_normal())
+		return;
 
 	nvme_show_init();
 
@@ -4380,8 +4393,8 @@ static int id_domain(int argc, char **argv, struct command *acmd, struct plugin 
 		return err;
 	}
 
-	printf("NVMe Identify command for Domain List is successful:\n");
-	printf("NVMe Identify Domain List:\n");
+	nvme_show_verbose_result("NVMe Identify command for Domain List is successful:");
+	nvme_show_verbose_result("NVMe Identify Domain List:");
 	nvme_show_id_domain_list(id_domain, flags);
 
 	return err;
@@ -4474,8 +4487,9 @@ static int virtual_mgmt(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	printf("success, Number of Controller Resources Modified (NRM):%"
-	       PRIu64 "\n", (uint64_t)cmd.result);
+	nvme_show_verbose_result(
+		"success, Number of Controller Resources Modified (NRM):%" PRIu64,
+		(uint64_t)cmd.result);
 
 	return err;
 }
@@ -5287,7 +5301,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		/* end the progress output */
 		if (cfg.progress)
 			printf("\n");
-		printf("Firmware download success\n");
+		nvme_show_verbose_result("Firmware download success");
 	}
 
 	return err;
@@ -5472,11 +5486,12 @@ static int fw_commit(int argc, char **argv, struct command *acmd, struct plugin 
 		return err;
 	}
 
-	printf("Success committing firmware action:%d slot:%d",
-	       cfg.action, cfg.slot);
 	if (cfg.action == 6 || cfg.action == 7)
-		printf(" bpid:%d", cfg.bpid);
-	printf("\n");
+		nvme_show_verbose_result("Success committing firmware action:%d slot:%d bpid:%d",
+					 cfg.action, cfg.slot, cfg.bpid);
+	else
+		nvme_show_verbose_result("Success committing firmware action:%d slot:%d",
+					 cfg.action, cfg.slot);
 	fw_commit_print_mud(mud_supported, cmd.result);
 
 	return err;
@@ -5507,8 +5522,10 @@ static int subsystem_reset(int argc, char **argv, struct command *acmd, struct p
 			nvme_show_error("Subsystem-reset: NVM Subsystem Reset not supported.");
 		else
 			nvme_show_error("Subsystem-reset: %s", libnvme_strerror(-err));
-	} else if (nvme_args.verbose)
-		printf("resetting subsystem through %s\n", libnvme_transport_handle_get_name(hdl));
+	} else {
+		nvme_show_verbose_info("resetting subsystem through %s",
+				       libnvme_transport_handle_get_name(hdl));
+	}
 
 	return err;
 }
@@ -5535,8 +5552,9 @@ static int reset(int argc, char **argv, struct command *acmd, struct plugin *plu
 	err = libnvme_reset_ctrl(hdl);
 	if (err < 0)
 		nvme_show_error("Reset: %s", libnvme_strerror(-err));
-	else if (nvme_args.verbose)
-		printf("resetting controller %s\n", libnvme_transport_handle_get_name(hdl));
+	else
+		nvme_show_verbose_info("resetting controller %s",
+				       libnvme_transport_handle_get_name(hdl));
 
 	return err;
 }
@@ -5570,8 +5588,9 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 	err = libnvme_rescan_ns(hdl);
 	if (err < 0)
 		nvme_show_error("Namespace Rescan: %s\n", libnvme_strerror(-err));
-	else if (nvme_args.verbose)
-		printf("rescanning namespaces through %s\n", libnvme_transport_handle_get_name(hdl));
+	else
+		nvme_show_verbose_info("rescanning namespaces through %s",
+				       libnvme_transport_handle_get_name(hdl));
 
 	return err;
 }
@@ -7038,7 +7057,7 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		return err;
 	}
 
-	printf("Success formatting namespace:%x\n", cfg.namespace_id);
+	nvme_show_verbose_result("Success formatting namespace:%x", cfg.namespace_id);
 	if (libnvme_transport_handle_is_direct(hdl) && cfg.lbaf != prev_lbaf) {
 		if (libnvme_transport_handle_is_ctrl(hdl)) {
 			if (libnvme_rescan_ns(hdl) < 0) {
@@ -7336,7 +7355,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 		return err;
 	}
 
-	printf("NVME Security Send Command Success\n");
+	nvme_show_verbose_result("NVME Security Send Command Success");
 
 	return err;
 }
@@ -7531,7 +7550,7 @@ static int write_uncor(int argc, char **argv, struct command *acmd, struct plugi
 		return err;
 	}
 
-	printf("NVME Write Uncorrectable Success\n");
+	nvme_show_verbose_result("NVME Write Uncorrectable Success");
 
 	return err;
 }
@@ -7886,7 +7905,7 @@ static int write_zeroes(int argc, char **argv,
 		return err;
 	}
 
-	printf("NVME Write Zeroes Success\n");
+	nvme_show_verbose_result("NVME Write Zeroes Success");
 
 	if (!cfg.nsz || !nvme_args.verbose)
 		return err;
@@ -8010,7 +8029,7 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 		return err;
 	}
 
-	printf("NVMe DSM: success\n");
+	nvme_show_verbose_result("NVMe DSM: success");
 
 	return err;
 }
@@ -8228,7 +8247,7 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 		return err;
 	}
 
-	nvme_show_key_value("NVMe Copy", "success");
+	nvme_show_verbose_result("NVMe Copy: success");
 
 	return err;
 }
@@ -8278,7 +8297,7 @@ static int flush_cmd(int argc, char **argv, struct command *acmd, struct plugin 
 		return err;
 	}
 
-	printf("NVMe Flush: success\n");
+	nvme_show_verbose_result("NVMe Flush: success");
 
 	return err;
 }
@@ -8356,7 +8375,7 @@ static int resv_acquire(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	printf("NVME Reservation Acquire success\n");
+	nvme_show_verbose_result("NVME Reservation Acquire success");
 
 	return err;
 }
@@ -8438,7 +8457,7 @@ static int resv_register(int argc, char **argv, struct command *acmd, struct plu
 		return err;
 	}
 
-	printf("NVME Reservation  success\n");
+	nvme_show_verbose_result("NVME Reservation success");
 
 	return err;
 }
@@ -8515,7 +8534,7 @@ static int resv_release(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	printf("NVME Reservation Release success\n");
+	nvme_show_verbose_result("NVME Reservation Release success");
 
 	return err;
 }
@@ -8941,7 +8960,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 		    libnvme_strerror(errno));
 		err = -EINVAL;
 	} else {
-		fprintf(stderr, "%s: Success\n", command);
+		nvme_show_verbose_result("%s: Success", command);
 	}
 
 	return err;
@@ -9067,7 +9086,7 @@ static int verify_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		return err;
 	}
 
-	printf("NVME Verify Success\n");
+	nvme_show_verbose_result("NVME Verify Success");
 
 	return err;
 }
@@ -9153,7 +9172,7 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 		return err;
 	}
 
-	printf("NVME Security Receive Command Success\n");
+	nvme_show_verbose_result("NVME Security Receive Command Success");
 	if (!cfg.raw_binary)
 		d(sec_buf, cfg.size, 16, 1);
 	else if (cfg.size)
@@ -9320,7 +9339,7 @@ static int capacity_mgmt(int argc, char **argv, struct command *acmd, struct plu
 		return err;
 	}
 
-	printf("Capacity Management Command is Success\n");
+	nvme_show_verbose_result("Capacity Management Command is Success");
 
 	if (cfg.operation == 1)
 		printf("Created Element Identifier for Endurance Group is: %"
@@ -9526,7 +9545,7 @@ static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	printf("Lockdown Command is Successful\n");
+	nvme_show_verbose_result("Lockdown Command is Successful");
 
 	return err;
 }
@@ -9804,10 +9823,10 @@ static int passthru(int argc, char **argv, bool admin,
 		return err;
 	}
 
-	fprintf(stderr, "%s Command %s is Success and result: 0x%" PRIx64 "\n",
-		admin ? "Admin" : "IO",
-		strcmp(cmd_name, "Unknown") ?
-		cmd_name : "Vendor Specific", (uint64_t)cmd.result);
+	nvme_show_verbose_result("%s Command %s is Success and result: 0x%" PRIx64,
+				 admin ? "Admin" : "IO",
+				 strcmp(cmd_name, "Unknown") ?
+				 cmd_name : "Vendor Specific", (uint64_t)cmd.result);
 	if (cfg.read)
 		passthru_print_read_output(cfg, data, dfd, mdata, mfd, err);
 
@@ -10582,8 +10601,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 			return err;
 		}
 
-		if (nvme_args.verbose)
-			printf("exporting to %s\n", cfg.keyfile);
+		nvme_show_verbose_info("exporting to %s", cfg.keyfile);
 
 		return 0;
 	} else if (cfg.import) {
@@ -10594,8 +10612,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 			return err;
 		}
 
-		if (nvme_args.verbose)
-			printf("importing from %s\n", cfg.keyfile);
+		nvme_show_verbose_info("importing from %s", cfg.keyfile);
 	} else {
 		err = libnvmf_revoke_tls_key(ctx, cfg.keyring, cfg.keytype,
 			cfg.revoke);
@@ -10605,8 +10622,7 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 			return err;
 		}
 
-		if (nvme_args.verbose)
-			printf("revoking key\n");
+		nvme_show_verbose_info("revoking key");
 	}
 
 	if (old_umask != 0 && fd) {
@@ -10861,12 +10877,13 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 	}
 
 	result = cmd.result;
-	printf(
-	    "%s Command is Success and result: 0x%08x (status: 0x%02x, response: 0x%06x)\n",
-	    nvme_cmd_to_string(true, admin_opcode), result, result & 0xff,
-	    result >> 8);
+	nvme_show_verbose_result(
+		"%s Command is Success and result: 0x%08x (status: 0x%02x, response: 0x%06x)",
+		nvme_cmd_to_string(true, admin_opcode), result,
+		result & 0xff, result >> 8);
 	if (result & 0xff)
-		printf("status: %s\n", libnvme_mi_status_to_string(result & 0xff));
+		nvme_show_verbose_result("status: %s",
+					 libnvme_mi_status_to_string(result & 0xff));
 	if (!send && strlen(cfg.input_file)) {
 		if (write(fd, (void *)data, cfg.data_len) < 0)
 			perror("failed to write data buffer");
