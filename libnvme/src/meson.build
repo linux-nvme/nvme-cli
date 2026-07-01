@@ -160,7 +160,7 @@ libnvme_header = configure_file(
     output: 'libnvme.h',
     configuration: libconf,
     install: true,
-    install_dir: prefixdir / get_option('includedir')
+    install_dir: prefixdir / get_option('includedir') / libnvme_api_name
 )
 
 libnvme = library(
@@ -180,6 +180,7 @@ pkg.generate(libnvme,
     version: libnvme_so_version,
     description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
     url: 'https://github.com/linux-nvme/nvme-cli/',
+    subdirs: libnvme_api_name,
 )
 
 libnvme_dep = declare_dependency(
@@ -207,7 +208,7 @@ libnvme_test_dep = declare_dependency(
 mode = 'rw-r--r--'
 install_headers(
     headers,
-    subdir: 'nvme',
+    subdir: libnvme_api_name / 'nvme',
     install_mode: mode,
 )
 if want_mi
@@ -215,6 +216,7 @@ if want_mi
         [
            'libnvme-mi.h',
         ],
+        subdir: libnvme_api_name,
         install_mode: mode,
     )
 endif

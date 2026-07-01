@@ -496,7 +496,7 @@ add_project_arguments(
 # which only supports relative paths, while the libnvme include path is
 # absolute.
 if not want_libnvme and not std_prefix
-    libnvme_hdr_location = prefixdir / get_option('includedir')
+    libnvme_hdr_location = prefixdir / get_option('includedir') / libnvme_api_name
     message(
         'Using non-standard libnvme headers location: ',
         libnvme_hdr_location
