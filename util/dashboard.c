@@ -463,6 +463,16 @@ again:
 					if (errno == EINTR)
 						continue;
 
+					/*
+					 * We may have missed some netlink
+					 * uevents from kernel. This is not a
+					 * fatal error and we may synthesize it
+					 * as an NVME kobject change event and
+					 * force a topology rescan.
+					 */
+					if (errno == ENOBUFS)
+						return EVENT_TYPE_NVME_UEVENT;
+
 					nvme_show_perror("read from uevent fd");
 					return n;
 				}
