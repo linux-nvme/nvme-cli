@@ -553,19 +553,23 @@ static int read_security(struct libnvme_global_ctx *ctx, struct libnbft_info *nb
 	security->flags = flags;
 	security->secret_type = raw_security->secret_type;
 
-	/* policy lists point into the raw NBFT heap */
-	ret = get_heap_obj_raw(raw_security, sec_chan_alg_obj,
-			       &security->sec_chan_alg, &security->sec_chan_alg_len);
-	if (!ret)
+	/* policy lists point into the raw NBFT heap (only when indicated by flags) */
+	ret = 0;
+	if ((flags & NBFT_SECURITY_SEC_POLICY_LIST_MASK) !=
+	    NBFT_SECURITY_SEC_POLICY_LIST_NOT_SUPPORTED)
+		ret = get_heap_obj_raw(raw_security, sec_chan_alg_obj,
+				       &security->sec_chan_alg, &security->sec_chan_alg_len);
+	if (!ret && (flags & NBFT_SECURITY_AUTH_POLICY_LIST_MASK) !=
+	    NBFT_SECURITY_AUTH_POLICY_LIST_NOT_SUPPORTED)
 		ret = get_heap_obj_raw(raw_security, auth_proto_obj,
 				       &security->auth_proto, &security->auth_proto_len);
-	if (!ret)
+	if (!ret && (flags & NBFT_SECURITY_CIPHER_RESTRICTED))
 		ret = get_heap_obj_raw(raw_security, cipher_suite_obj,
 				       &security->cipher_suite, &security->cipher_suite_len);
-	if (!ret)
+	if (!ret && (flags & NBFT_SECURITY_AUTH_DH_GROUPS_RESTRICTED))
 		ret = get_heap_obj_raw(raw_security, dh_grp_obj,
 				       &security->dh_grp, &security->dh_grp_len);
-	if (!ret)
+	if (!ret && (flags & NBFT_SECURITY_SEC_HASH_FUNC_POLICY_LIST))
 		ret = get_heap_obj_raw(raw_security, sec_hash_func_obj,
 				       &security->sec_hash_func, &security->sec_hash_func_len);
 	if (ret) {
