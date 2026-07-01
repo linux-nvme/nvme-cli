@@ -509,6 +509,48 @@ again:
 	}
 }
 
+static enum event_type wait_for_esc_seq(struct dashboard_ctx *db_ctx)
+{
+	unsigned char c;
+	enum event_type event;
+
+	event = wait_for_event(db_ctx, &c, 1);
+	switch (event) {
+	case EVENT_TYPE_ERROR:		/* fall through */
+	case EVENT_TYPE_KEY_QUIT:	/* fall through */
+	case EVENT_TYPE_TIMEOUT:
+		return event;
+	default:
+		if (c == 65)
+			return EVENT_TYPE_KEY_UP;
+		else if (c == 66)
+			return EVENT_TYPE_KEY_DOWN;
+		else if (c == 53 || c == 54) {
+			char prev = c;
+
+			event = wait_for_event(db_ctx, &c, 1);
+			switch (event) {
+			case EVENT_TYPE_ERROR:		/* fall through */
+			case EVENT_TYPE_KEY_QUIT:	/* fall through */
+			case EVENT_TYPE_TIMEOUT:
+				return event;
+			default:
+				if (c == 126) {
+					if (prev == 53)
+						return EVENT_TYPE_KEY_PAGE_UP;
+					else
+						return EVENT_TYPE_KEY_PAGE_DOWN;
+				}
+				/* else ignore */
+				break;
+			}
+		}
+		/* else ignore */
+		break;
+	}
+	return EVENT_TYPE_IGNORE;
+}
+
 enum event_type dashboard_wait_for_event(struct dashboard_ctx *db_ctx)
 {
 	int event;
@@ -538,21 +580,12 @@ enum event_type dashboard_wait_for_event(struct dashboard_ctx *db_ctx)
 					return EVENT_TYPE_KEY_ESC;
 				default:
 					if (c == 91) {	/* '[' key */
-						event = wait_for_event(db_ctx, &c, 1);
-						switch (event) {
-						case EVENT_TYPE_ERROR:	/* fall through */
-						case EVENT_TYPE_KEY_QUIT:
-							return event;
-						case EVENT_TYPE_TIMEOUT:
+						event = wait_for_esc_seq(db_ctx);
+						if (event == EVENT_TYPE_TIMEOUT ||
+						    event == EVENT_TYPE_IGNORE)
 							break;
-						default:
-							if (c == 65)
-								return EVENT_TYPE_KEY_UP;
-							else if (c == 66)
-								return EVENT_TYPE_KEY_DOWN;
-							/* else ignore */
-							break;
-						}
+
+						return event;
 					} /* else ignore */
 					break;
 				}
