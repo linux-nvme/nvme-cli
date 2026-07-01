@@ -12293,7 +12293,8 @@ static int wdc_enc_get_log(int argc, char **argv, struct command *acmd, struct p
 	const char *log = "Enclosure Log Page ID.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	FILE *output_fd;
+	__cleanup_file FILE *output_fd = NULL;
+	FILE *fd;
 	int xfer_size = 0;
 	int len;
 	int err = 0;
@@ -12349,8 +12350,9 @@ static int wdc_enc_get_log(int argc, char **argv, struct command *acmd, struct p
 					libnvme_strerror(errno));
 				return -EINVAL;
 			}
+			fd = output_fd;
 		} else {
-			output_fd = stdout;
+			fd = stdout;
 		}
 		if (cfg.log_id == WDC_ENC_NIC_CRASH_DUMP_ID_SLOT_1 ||
 		    cfg.log_id == WDC_ENC_NIC_CRASH_DUMP_ID_SLOT_2 ||
@@ -12359,11 +12361,11 @@ static int wdc_enc_get_log(int argc, char **argv, struct command *acmd, struct p
 			fprintf(stderr, "args - sz:%x logid:%x of:%s\n", xfer_size, cfg.log_id,
 				cfg.file);
 			err = wdc_enc_get_nic_log(hdl, cfg.log_id, xfer_size,
-						  WDC_NVME_ENC_NIC_LOG_SIZE, output_fd);
+						  WDC_NVME_ENC_NIC_LOG_SIZE, fd);
 		} else {
 			fprintf(stderr, "args - sz:%x logid:%x of:%s\n", xfer_size, cfg.log_id,
 				cfg.file);
-			err = wdc_enc_submit_move_data(hdl, NULL, 0, xfer_size, output_fd,
+			err = wdc_enc_submit_move_data(hdl, NULL, 0, xfer_size, fd,
 						       cfg.log_id, 0, 0);
 		}
 
