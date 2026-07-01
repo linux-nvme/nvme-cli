@@ -1475,20 +1475,43 @@ wait_for_event:
 			s = subsys_arr[subsys_idx];
 			quit = stdout_top_draw_subsys_topology_screen(db_ctx,
 					stream, s);
-			scroll = 0;
 			if (quit)
 				break;
-			fallthrough;
+
+			scroll = 0;
+			free(subsys_arr);
+			subsys_arr = NULL;
+			libnvme_free_global_ctx(ctx);
+
+			ctx = stdout_top_rescan_topology();
+			if (!ctx) {
+				quit = 1;
+				break;
+			}
+
+			/*
+			 * The topology may have changed while the subsystem
+			 * dashboard was active. Restart from the first
+			 * subsystem instead of trying to restore the previous
+			 * screen position.
+			 */
+			subsys_idx = 0;
+			subsys_arr = stdout_top_build_subsys_arr(ctx,
+					&num_subsys);
+			if (!subsys_arr)
+				quit = 1;
+
+			break;
 		case EVENT_TYPE_NVME_UEVENT: {
 			__cleanup_free char *subsys_name = NULL;
-			libnvme_subsystem_t s;
+			libnvme_subsystem_t s = subsys_arr[subsys_idx];
 
-			s = subsys_arr[subsys_idx];
 			subsys_name = strdup(libnvme_subsystem_get_name(s));
 			if (!subsys_name) {
 				quit = 1;
 				break;
 			}
+
 			free(subsys_arr);
 			subsys_arr = NULL;
 			libnvme_free_global_ctx(ctx);
@@ -1511,6 +1534,7 @@ wait_for_event:
 			if (subsys_idx < 0)
 				subsys_idx = 0;
 
+			scroll = 0;
 			break;
 		}
 		case EVENT_TYPE_KEY_DOWN:
