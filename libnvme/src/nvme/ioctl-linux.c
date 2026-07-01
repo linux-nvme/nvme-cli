@@ -121,7 +121,7 @@ __libnvme_public int libnvme_update_block_size(
 static int ioctl_passthru32(struct libnvme_transport_handle *hdl,
 		unsigned long ioctl_cmd, struct libnvme_passthru_cmd *cmd)
 {
-	struct linux_passthru_cmd32 cmd32;
+	struct linux_passthru_cmd32 cmd32 = {};
 	void *user_data;
 	int err = 0;
 
