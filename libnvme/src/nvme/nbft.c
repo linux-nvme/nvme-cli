@@ -124,6 +124,31 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 		       descriptor->obj, is_string,		\
 		       output)
 
+/* Point at a raw (non-string) heap object and return its length. */
+static int __get_heap_obj_raw(struct libnvme_global_ctx *ctx,
+		struct nbft_header *header, const char *filename,
+		const char *descriptorname, const char *fieldname,
+		struct nbft_heap_obj obj, unsigned char **output, __u16 *length)
+{
+	*output = NULL;
+	*length = le16_to_cpu(obj.length);
+	if (*length == 0)
+		return 0;
+	if (!in_heap(header, obj)) {
+		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
+			"file %s: field '%s' in descriptor '%s' has invalid offset or length\n",
+			filename, fieldname, descriptorname);
+		return -EINVAL;
+	}
+	*output = (unsigned char *)header + le32_to_cpu(obj.offset);
+	return 0;
+}
+
+#define get_heap_obj_raw(descriptor, obj, output, length)	\
+	__get_heap_obj_raw(ctx, header, nbft->filename,		\
+			   stringify(descriptor), stringify(obj),	\
+			   descriptor->obj, output, length)
+
 static struct libnbft_discovery *discovery_from_index(struct libnbft_info *nbft,
 		int i)
 {
@@ -510,7 +535,54 @@ static int read_security(struct libnvme_global_ctx *ctx, struct libnbft_info *nb
 		struct nbft_security *raw_security,
 		struct libnbft_security **s)
 {
-	return -EINVAL;
+	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
+	struct libnbft_security *security;
+	__u16 flags = le16_to_cpu(raw_security->flags);
+	int ret;
+
+	if (!(flags & NBFT_SECURITY_VALID))
+		return -EINVAL;
+	verify(ctx, raw_security->structure_id == NBFT_DESC_SECURITY,
+	       "invalid ID in security descriptor");
+
+	security = calloc(1, sizeof(*security));
+	if (!security)
+		return -ENOMEM;
+
+	security->index = raw_security->index;
+	security->flags = flags;
+	security->secret_type = raw_security->secret_type;
+
+	/* policy lists point into the raw NBFT heap */
+	ret = get_heap_obj_raw(raw_security, sec_chan_alg_obj,
+			       &security->sec_chan_alg, &security->sec_chan_alg_len);
+	if (!ret)
+		ret = get_heap_obj_raw(raw_security, auth_proto_obj,
+				       &security->auth_proto, &security->auth_proto_len);
+	if (!ret)
+		ret = get_heap_obj_raw(raw_security, cipher_suite_obj,
+				       &security->cipher_suite, &security->cipher_suite_len);
+	if (!ret)
+		ret = get_heap_obj_raw(raw_security, dh_grp_obj,
+				       &security->dh_grp, &security->dh_grp_len);
+	if (!ret)
+		ret = get_heap_obj_raw(raw_security, sec_hash_func_obj,
+				       &security->sec_hash_func, &security->sec_hash_func_len);
+	if (ret) {
+		free(security);
+		return ret;
+	}
+
+	/* keypath URI also points into the heap; absent is fine */
+	ret = get_heap_obj(ctx, raw_security, sec_keypath_obj, 1,
+			   &security->sec_keypath);
+	if (ret && ret != -ENOENT) {
+		free(security);
+		return ret;
+	}
+
+	*s = security;
+	return 0;
 }
 
 static void read_hfi_descriptors(struct libnvme_global_ctx *ctx,
