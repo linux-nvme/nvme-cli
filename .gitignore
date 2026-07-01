@@ -25,4 +25,5 @@ tests/*.pyc
 dist/
 
 .vscode/
+.claude/
 .github/
