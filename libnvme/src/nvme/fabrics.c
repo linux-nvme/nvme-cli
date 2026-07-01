@@ -2652,7 +2652,7 @@ int _discovery_config_json(struct libnvme_global_ctx *ctx,
 	nfctx.ctrl_params.host_traddr = libnvme_ctrl_get_host_traddr(c);
 	nfctx.ctrl_params.host_iface = libnvme_ctrl_get_host_iface(c);
 
-	if (!nfctx.ctrl_params.transport && !nfctx.ctrl_params.traddr)
+	if (!nfctx.ctrl_params.transport || !nfctx.ctrl_params.traddr)
 		return 0;
 
 	/* ignore none fabric transports */
