@@ -147,7 +147,20 @@ struct libnbft_discovery {
  */
 struct libnbft_security {
 	int index;
-	/* TODO add fields */
+	__u16 flags;
+	__u8 secret_type;
+	/* list fields point into the raw NBFT; not separately freed */
+	unsigned char *sec_chan_alg;
+	__u16 sec_chan_alg_len;
+	unsigned char *auth_proto;
+	__u16 auth_proto_len;
+	unsigned char *cipher_suite;
+	__u16 cipher_suite_len;
+	unsigned char *dh_grp;
+	__u16 dh_grp_len;
+	unsigned char *sec_hash_func;
+	__u16 sec_hash_func_len;
+	char *sec_keypath;
 };
 
 /**
