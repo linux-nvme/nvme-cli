@@ -412,6 +412,12 @@ struct libnvme_subsystem *nvme_alloc_subsystem(struct libnvme_host *h,
 		free(s);
 		return NULL;
 	}
+	/*
+	 * Use the default from the host.
+	 * Any value from the 'subsystem' json configuration
+	 * will override it.
+	 */
+	s->pdc_enabled = libnvme_host_is_pdc_enabled(h, DEFAULT_PDC_ENABLED);
 
 	if (name)
 		libnvme_init_subsystem(s, name);
@@ -503,6 +509,7 @@ static int libnvme_create_host(struct libnvme_global_ctx *ctx,
 	list_head_init(&h->subsystems);
 	list_node_init(&h->entry);
 	h->ctx = ctx;
+	h->pdc_enabled = DEFAULT_PDC_ENABLED;
 
 	list_add_tail(&ctx->hosts, &h->entry);
 

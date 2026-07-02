@@ -176,6 +176,7 @@ struct libnvme_subsystem {
 	const char * firmware;
 	%immutable subsystype;
 	const char * subsystype;
+	bool pdc_enabled;
 	%extend {
 		%immutable iopolicy;
 		const char * iopolicy;

@@ -377,6 +377,7 @@ struct libnvme_subsystem {  // !generate-accessors:read=generated,write=none !ge
 	char *firmware;
 	char *subsystype;
 	char *iopolicy;			// !access:read=custom
+	bool pdc_enabled;		// !access:read=generated,write=generated
 };
 
 struct libnvme_host {  // !generate-accessors:read=generated,write=none !generate-python:alias=Host
