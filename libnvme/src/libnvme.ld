@@ -163,10 +163,12 @@ LIBNVME_3 {
 		libnvme_subsystem_first_ns;
 		libnvme_subsystem_get_host;
 		libnvme_subsystem_get_iopolicy;
+		libnvme_subsystem_get_pdc_enabled;
 		libnvme_subsystem_lookup_namespace;
 		libnvme_subsystem_next_ctrl;
 		libnvme_subsystem_next_ns;
 		libnvme_subsystem_release_fds;
+		libnvme_subsystem_set_pdc_enabled;
 		libnvme_transport_handle_get_fd;
 		libnvme_transport_handle_get_mi_ep;
 		libnvme_transport_handle_get_name;

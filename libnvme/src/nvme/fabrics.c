@@ -2519,9 +2519,8 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 				if (!(eflags & NVMF_DISC_EFLAGS_EPCSD))
 					disconnect = true;
 				else
-					disconnect = false;
+					disconnect = libnvme_subsystem_get_pdc_enabled(s);
 			}
-
 			set_discovery_kato(&nfctx);
 		} else {
 			/* NVME_NQN_NVME */

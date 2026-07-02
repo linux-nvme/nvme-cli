@@ -97,6 +97,8 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_subsystem_get_serial;
 		libnvme_subsystem_get_firmware;
 		libnvme_subsystem_get_subsystype;
+		libnvme_subsystem_get_pdc_enabled;
+		libnvme_subsystem_set_pdc_enabled;
 		libnvme_host_get_hostnqn;
 		libnvme_host_get_hostid;
 		libnvme_host_get_dhchap_host_key;

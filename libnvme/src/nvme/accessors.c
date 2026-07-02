@@ -563,6 +563,19 @@ __libnvme_public const char *libnvme_subsystem_get_subsystype(
 	return p->subsystype;
 }
 
+__libnvme_public void libnvme_subsystem_set_pdc_enabled(
+		struct libnvme_subsystem *p,
+		bool pdc_enabled)
+{
+	p->pdc_enabled = pdc_enabled;
+}
+
+__libnvme_public bool libnvme_subsystem_get_pdc_enabled(
+		const struct libnvme_subsystem *p)
+{
+	return p->pdc_enabled;
+}
+
 /****************************************************************************
  * Accessors for: struct libnvme_host
  ****************************************************************************/
