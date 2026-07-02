@@ -43,13 +43,14 @@ static struct tostr_test tostr_tests[] = {
 		U128(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff),
 		"340282366920938463463374607431768211455"
 	},
-	{ "fr_FR.utf-8", U128(0, 0, 0, 1000), "1\u202f000" },
+	{ "fr_FR.utf-8", U128(0, 0, 0, 1000), "1%s000" },
 };
 
 void tostr_test(struct tostr_test *test)
 {
 	char *str;
 	const char *exp = test->exp;
+	char exp_buf[64];
 
 	if (!setlocale(LC_NUMERIC, test->locale))
 		return;
@@ -66,6 +67,11 @@ void tostr_test(struct tostr_test *test)
 				"this system's %s locale! Skipping test...\n",
 				test->locale);
 			return;
+		}
+
+		if (strstr(test->exp, "%s")) {
+			snprintf(exp_buf, sizeof(exp_buf), test->exp, sep);
+			exp = exp_buf;
 		}
 		str = uint128_t_to_l10n_string(test->val);
 	} else {
