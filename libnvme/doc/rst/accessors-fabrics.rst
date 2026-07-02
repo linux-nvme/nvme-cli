@@ -761,6 +761,149 @@ The value of the tls_key field, or NULL if not set.
 The value of the tls_key_identity field, or NULL if not set.
 
 
+.. c:function:: int libnvmf_tid_new (struct libnvmf_tid **pp)
+
+   Allocate and initialise a libnvmf_tid object.
+
+**Parameters**
+
+``struct libnvmf_tid **pp``
+  On success, *pp is set to the newly allocated object.
+
+**Description**
+
+Allocates a zeroed :c:type:`struct libnvmf_tid <libnvmf_tid>` on the heap.
+The caller must release it with libnvmf_tid_free().
+
+**Return**
+
+0 on success, -EINVAL if **pp** is NULL,
+        -ENOMEM if allocation fails.
+
+
+.. c:function:: void libnvmf_tid_free (struct libnvmf_tid *p)
+
+   Release a libnvmf_tid object.
+
+**Parameters**
+
+``struct libnvmf_tid *p``
+  Object previously returned by libnvmf_tid_new().
+  A NULL pointer is silently ignored.
+
+
+.. c:function:: const char * libnvmf_tid_get_transport (const struct libnvmf_tid *p)
+
+   Get transport.
+
+**Parameters**
+
+``const struct libnvmf_tid *p``
+  The :c:type:`struct libnvmf_tid <libnvmf_tid>` instance to query.
+
+**Return**
+
+The value of the transport field, or NULL if not set.
+
+
+.. c:function:: const char * libnvmf_tid_get_traddr (const struct libnvmf_tid *p)
+
+   Get traddr.
+
+**Parameters**
+
+``const struct libnvmf_tid *p``
+  The :c:type:`struct libnvmf_tid <libnvmf_tid>` instance to query.
+
+**Return**
+
+The value of the traddr field, or NULL if not set.
+
+
+.. c:function:: const char * libnvmf_tid_get_trsvcid (const struct libnvmf_tid *p)
+
+   Get trsvcid.
+
+**Parameters**
+
+``const struct libnvmf_tid *p``
+  The :c:type:`struct libnvmf_tid <libnvmf_tid>` instance to query.
+
+**Return**
+
+The value of the trsvcid field, or NULL if not set.
+
+
+.. c:function:: const char * libnvmf_tid_get_subsysnqn (const struct libnvmf_tid *p)
+
+   Get subsysnqn.
+
+**Parameters**
+
+``const struct libnvmf_tid *p``
+  The :c:type:`struct libnvmf_tid <libnvmf_tid>` instance to query.
+
+**Return**
+
+The value of the subsysnqn field, or NULL if not set.
+
+
+.. c:function:: const char * libnvmf_tid_get_host_traddr (const struct libnvmf_tid *p)
+
+   Get host_traddr.
+
+**Parameters**
+
+``const struct libnvmf_tid *p``
+  The :c:type:`struct libnvmf_tid <libnvmf_tid>` instance to query.
+
+**Return**
+
+The value of the host_traddr field, or NULL if not set.
+
+
+.. c:function:: const char * libnvmf_tid_get_host_iface (const struct libnvmf_tid *p)
+
+   Get host_iface.
+
+**Parameters**
+
+``const struct libnvmf_tid *p``
+  The :c:type:`struct libnvmf_tid <libnvmf_tid>` instance to query.
+
+**Return**
+
+The value of the host_iface field, or NULL if not set.
+
+
+.. c:function:: const char * libnvmf_tid_get_hostnqn (const struct libnvmf_tid *p)
+
+   Get hostnqn.
+
+**Parameters**
+
+``const struct libnvmf_tid *p``
+  The :c:type:`struct libnvmf_tid <libnvmf_tid>` instance to query.
+
+**Return**
+
+The value of the hostnqn field, or NULL if not set.
+
+
+.. c:function:: const char * libnvmf_tid_get_hostid (const struct libnvmf_tid *p)
+
+   Get hostid.
+
+**Parameters**
+
+``const struct libnvmf_tid *p``
+  The :c:type:`struct libnvmf_tid <libnvmf_tid>` instance to query.
+
+**Return**
+
+The value of the hostid field, or NULL if not set.
+
+
 .. c:function:: int libnvmf_discovery_args_new (struct libnvmf_discovery_args **pp)
 
    Allocate and initialise a new instance.

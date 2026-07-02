@@ -1,0 +1,20 @@
+.TH "libnvme_submit_io_passthru" 9 "libnvme_submit_io_passthru" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_submit_io_passthru \- Queue IO passthru command
+.SH SYNOPSIS
+.B "int" libnvme_submit_io_passthru
+.BI "(struct libnvme_transport_handle *hdl "  ","
+.BI "struct libnvme_passthru_cmd *cmd "  ","
+.BI "void *cookie "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+Transport handle
+.IP "cmd" 12
+The nvme IO command to send
+.IP "cookie" 12
+User-defined opaque value returned at completion
+.SH "DESCRIPTION"
+Queues \fIcmd\fP for asynchronous execution. Completion is reported via
+\fBlibnvme_reap_passthru\fP.
+.SH "RETURN"
+0 on successful queueing, negative error code otherwise.

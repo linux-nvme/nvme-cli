@@ -60,6 +60,32 @@ libnvme_create_global_ctx() deliberately takes no owner parameter.
 0 on success, -EINVAL or -ENOMEM on error.
 
 
+.. c:function:: int libnvme_set_test_base_dir (struct libnvme_global_ctx *ctx, const char *path)
+
+   Reroot libnvme's on-disk files for testing
+
+**Parameters**
+
+``struct libnvme_global_ctx *ctx``
+  :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object
+
+``const char *path``
+  Sandbox directory under /tmp, or NULL to restore defaults
+
+**Description**
+
+Redirects the files libnvme reads and writes (the exclusion list, the
+ownership registry, ...) under **path** instead of their production locations,
+so a test can run against a throwaway directory.  For safety **path** must be
+confined to /tmp and contain no ".." component; anything else is rejected.
+Passing NULL clears a previously set override.
+
+**Return**
+
+0 on success, -EINVAL if **ctx** is NULL or **path** is not a valid
+        sandbox path, -ENOMEM on allocation failure.
+
+
 .. c:function:: void libnvme_set_logging_level (struct libnvme_global_ctx *ctx, int log_level, bool log_pid, bool log_tstamp)
 
    Set current logging level

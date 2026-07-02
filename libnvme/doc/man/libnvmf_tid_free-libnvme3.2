@@ -1,0 +1,10 @@
+.TH "libnvmf_tid_free" 9 "libnvmf_tid_free" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_free \- Release a libnvmf_tid object.
+.SH SYNOPSIS
+.B "void" libnvmf_tid_free
+.BI "(struct libnvmf_tid *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+Object previously returned by \fBlibnvmf_tid_new\fP.
+A NULL pointer is silently ignored.

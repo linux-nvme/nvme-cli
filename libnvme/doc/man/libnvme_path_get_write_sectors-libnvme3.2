@@ -1,0 +1,11 @@
+.TH "libnvme_path_get_write_sectors" 9 "libnvme_path_get_write_sectors" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_path_get_write_sectors \- Get write I/O sectors
+.SH SYNOPSIS
+.B "unsigned long long" libnvme_path_get_write_sectors
+.BI "(libnvme_path_t p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+\fIlibnvme_path_t\fP object
+.SH "RETURN"
+Num of sectors written to the device between two stat samples

@@ -2,12 +2,12 @@
 .\"     Title: nvme-disconnect
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/26/2026
+.\"      Date: 07/02/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCONNECT" "1" "06/26/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCONNECT" "1" "07/02/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,10 +34,13 @@ nvme-disconnect \- Disconnect one or more Fabrics controller(s)\&.
 .nf
 \fInvme\fR [<global\-options>] \fIdisconnect\fR [\-\-nqn=<subnqn> | \-n <subnqn>]
                         [\-\-device=<device> | \-d <device>]
+                        [\-\-exclude | \-x]
 .fi
 .SH "DESCRIPTION"
 .sp
 Disconnects and removes one or more existing NVMe over Fabrics controllers\&. If the \-\-nqn option is specified all controllers connecting to the Subsystem identified by subnqn will be removed\&. If the \-\-device option is specified the controller specified by the \-\-device option will be removed\&.
+.sp
+With \-\-exclude, a matching entry is written to the system\-wide NVMe\-oF exclusion list before the controller (or subsystem) is torn down, so that a cooperating orchestrator sees the exclusion in place before the removal event fires and does not immediately reconnect\&. See nvme\-exclusion\-add(1) and the exclusion list overview for details\&.
 .SH "OPTIONS"
 .PP
 \-n <subnqn>, \-\-nqn <subnqn>
@@ -48,6 +51,13 @@ Indicates that all controllers for the NVMe subsystems specified should be remov
 \-d <device>, \-\-device <device>
 .RS 4
 Indicates that the controller with the specified name should be removed\&.
+.RE
+.PP
+\-x, \-\-exclude
+.RS 4
+Write a matching entry to the
+\fIuser\fR
+exclusion list before disconnecting, so orchestrators do not auto\-reconnect the controller\&. The entry is built from the controller\(cqs transport parameters (or, with \-\-nqn, from the subsystem NQN)\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp
@@ -137,9 +147,30 @@ Disconnect the controller nvme4
 .RE
 .\}
 .RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Disconnect nvme4 and exclude it so orchestrators do not reconnect it:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme disconnect \-\-device=nvme4 \-\-exclude
+.fi
+.if n \{\
+.RE
+.\}
+.RE
 .SH "SEE ALSO"
 .sp
-nvme\-connect(1)
+nvme\-connect(1) nvme\-exclusion\-add(1)
 .SH "NVME"
 .sp
 Part of the nvme\-user suite

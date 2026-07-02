@@ -1,0 +1,122 @@
+'\" t
+.\"     Title: nvme-exclusion-remove
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/02/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-EXCLUSION\-REM" "1" "07/02/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-exclusion-remove \- Remove an entry from an NVMe\-oF exclusion list
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR [<global\-options>] \fIexclusion remove\fR \-\-name=<NAME> | \-N <NAME>
+.fi
+.SH "DESCRIPTION"
+.sp
+Interactively remove a single entry from the NVMe\-oF exclusion list named <NAME>\&. The current entries are shown and one is selected for removal; the rest of the list is left untouched\&. To delete a whole list at once, use \fInvme exclusion delete\fR\&.
+.sp
+This command requires root\&.
+.SH "OPTIONS"
+.PP
+\-N <NAME>, \-\-name=<NAME>
+.RS 4
+Name of the exclusion list to remove an entry from\&.
+.RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Remove an entry from the
+\fIuser\fR
+list:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme exclusion remove \-\-name user
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "SEE ALSO"
+.sp
+nvme\-exclusion\-add(1) nvme\-exclusion\-edit(1) nvme\-exclusion\-delete(1) nvme\-disconnect(1)
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

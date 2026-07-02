@@ -1,0 +1,11 @@
+.TH "libnvme_ns_get_generic_name" 9 "libnvme_ns_get_generic_name" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_generic_name \- Get generic_name.
+.SH SYNOPSIS
+.B "const char *" libnvme_ns_get_generic_name
+.BI "(const struct libnvme_ns *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ns\fP instance to query.
+.SH "RETURN"
+The value of the generic_name field, or NULL if not set.

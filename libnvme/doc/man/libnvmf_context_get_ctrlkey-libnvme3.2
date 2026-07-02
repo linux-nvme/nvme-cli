@@ -1,0 +1,11 @@
+.TH "libnvmf_context_get_ctrlkey" 9 "libnvmf_context_get_ctrlkey" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_get_ctrlkey \- Get ctrlkey.
+.SH SYNOPSIS
+.B "const char *" libnvmf_context_get_ctrlkey
+.BI "(const struct libnvmf_context *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_context\fP instance to query.
+.SH "RETURN"
+The value of the ctrlkey field, or NULL if not set.

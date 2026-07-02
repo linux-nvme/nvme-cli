@@ -1,0 +1,11 @@
+.TH "libnvme_ns_get_nguid" 9 "libnvme_ns_get_nguid" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_nguid \- Get nguid.
+.SH SYNOPSIS
+.B "const uint8_t *" libnvme_ns_get_nguid
+.BI "(const struct libnvme_ns *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_ns\fP instance to query.
+.SH "RETURN"
+Pointer to the nguid array of 16 uint8_t elements.

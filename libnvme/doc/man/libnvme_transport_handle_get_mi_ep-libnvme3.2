@@ -1,0 +1,15 @@
+.TH "libnvme_transport_handle_get_mi_ep" 9 "libnvme_transport_handle_get_mi_ep" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_transport_handle_get_mi_ep \- get the MI endpoint from a transport handle
+.SH SYNOPSIS
+.B "struct libnvme_mi_ep *" libnvme_transport_handle_get_mi_ep
+.BI "(struct libnvme_transport_handle *hdl "  ");"
+.SH ARGUMENTS
+.IP "hdl" 12
+transport handle
+.SH "DESCRIPTION"
+Retrieve the MI endpoint associated with this transport handle. Only valid
+for MI-type transport handles (check with libnvme_transport_handle_is_mi
+first).
+.SH "RETURN"
+the MI endpoint, or NULL if the handle is not an MI handle.

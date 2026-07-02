@@ -750,7 +750,8 @@ nvme-disconnect(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>disconnect</em> [--nqn=&lt;subnqn&gt; | -n &lt;subnqn&gt;]
-                        [--device=&lt;device&gt; | -d &lt;device&gt;]</pre>
+                        [--device=&lt;device&gt; | -d &lt;device&gt;]
+                        [--exclude | -x]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -762,6 +763,11 @@ nvme-disconnect(1) Manual Page
 If the --nqn option is specified all controllers connecting to the Subsystem
 identified by subnqn will be removed. If the --device option is specified
 the controller specified by the --device option will be removed.</p></div>
+<div class="paragraph"><p>With --exclude, a matching entry is written to the system-wide NVMe-oF
+exclusion list before the controller (or subsystem) is torn down, so that a
+cooperating orchestrator sees the exclusion in place before the removal event
+fires and does not immediately reconnect. See nvme-exclusion-add(1) and the
+exclusion list overview for details.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -790,6 +796,20 @@ the controller specified by the --device option will be removed.</p></div>
 <p>
         Indicates that the controller with the specified name should be
         removed.
+</p>
+</dd>
+<dt class="hdlist1">
+-x
+</dt>
+<dt class="hdlist1">
+--exclude
+</dt>
+<dd>
+<p>
+        Write a matching entry to the <em>user</em> exclusion list before
+        disconnecting, so orchestrators do not auto-reconnect the
+        controller. The entry is built from the controller&#8217;s transport
+        parameters (or, with --nqn, from the subsystem NQN).
 </p>
 </dd>
 </dl></div>
@@ -894,13 +914,23 @@ Disconnect the controller nvme4
 <pre><code># nvme disconnect --device=nvme4</code></pre>
 </div></div>
 </li>
+<li>
+<p>
+Disconnect nvme4 and exclude it so orchestrators do not reconnect it:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme disconnect --device=nvme4 --exclude</code></pre>
+</div></div>
+</li>
 </ul></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>nvme-connect(1)</p></div>
+<div class="paragraph"><p>nvme-connect(1)
+nvme-exclusion-add(1)</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -914,7 +944,7 @@ Disconnect the controller nvme4
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-06-26 17:10:11 CEST
+ 2026-07-02 19:35:30 CEST
 </div>
 </div>
 </body>
