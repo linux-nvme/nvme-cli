@@ -42,9 +42,11 @@ if want_libnvme
     endif
 
     if want_fabrics
-        install_data(
-            'sysfiles/udev/rules.d/70-nvmf-registry.rules',
-            install_dir: udevrulesdir,
+        configure_file(
+            input:         'sysfiles/udev/rules.d/70-nvmf-registry.rules.in',
+            output:        '70-nvmf-registry.rules',
+            configuration: substs,
+            install_dir:   udevrulesdir,
         )
     endif
 
