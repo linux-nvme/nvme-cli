@@ -739,6 +739,23 @@ const char *libnvme_subsystem_get_firmware(const struct libnvme_subsystem *p);
  */
 const char *libnvme_subsystem_get_subsystype(const struct libnvme_subsystem *p);
 
+/**
+ * libnvme_subsystem_set_pdc_enabled() - Set pdc_enabled.
+ * @p: The &struct libnvme_subsystem instance to update.
+ * @pdc_enabled: Value to assign to the pdc_enabled field.
+ */
+void libnvme_subsystem_set_pdc_enabled(
+		struct libnvme_subsystem *p,
+		bool pdc_enabled);
+
+/**
+ * libnvme_subsystem_get_pdc_enabled() - Get pdc_enabled.
+ * @p: The &struct libnvme_subsystem instance to query.
+ *
+ * Return: The value of the pdc_enabled field.
+ */
+bool libnvme_subsystem_get_pdc_enabled(const struct libnvme_subsystem *p);
+
 /****************************************************************************
  * Accessors for: struct libnvme_host
  ****************************************************************************/

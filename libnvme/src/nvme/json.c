@@ -128,7 +128,7 @@ static void json_parse_port(libnvme_subsystem_t s, struct json_object *port_obj)
 
 static void json_parse_subsys(libnvme_host_t h, struct json_object *subsys_obj)
 {
-	struct json_object *nqn_obj, *port_array;
+	struct json_object *nqn_obj, *port_array, *attr_obj;
 	libnvme_subsystem_t s;
 	const char *nqn = "";
 	int p;
@@ -139,6 +139,10 @@ static void json_parse_subsys(libnvme_host_t h, struct json_object *subsys_obj)
 	s = libnvme_lookup_subsystem(h, NULL, nqn);
 	if (!s)
 		return;
+
+	attr_obj = json_object_object_get(subsys_obj, "persistent_discovery_ctrl");
+	if (attr_obj)
+		libnvme_subsystem_set_pdc_enabled(s, json_object_get_boolean(attr_obj));
 
 	port_array = json_object_object_get(subsys_obj, "ports");
 	if (!port_array)
@@ -378,6 +382,7 @@ static void json_update_subsys(struct json_object *subsys_array,
 	const char *subsysnqn = libnvme_subsystem_get_subsysnqn(s);
 	struct json_object *subsys_obj = json_object_new_object();
 	struct json_object *port_array;
+	bool pdc_enabled = libnvme_subsystem_get_pdc_enabled(s);
 
 	/* Skip discovery subsystems as the nqn is not unique */
 	if (!strcmp(subsysnqn, NVME_DISC_SUBSYS_NAME)) {
@@ -387,6 +392,10 @@ static void json_update_subsys(struct json_object *subsys_array,
 
 	json_object_object_add(subsys_obj, "nqn",
 			       json_object_new_string(subsysnqn));
+	if (pdc_enabled != libnvme_host_is_pdc_enabled(s->h, DEFAULT_PDC_ENABLED))
+		json_object_object_add(subsys_obj, "persistent_discovery_ctrl",
+				       json_object_new_boolean(pdc_enabled));
+
 	port_array = json_object_new_array();
 	libnvme_subsystem_for_each_ctrl(s, c) {
 		json_update_port(port_array, c);
@@ -620,11 +629,15 @@ static void json_dump_subsys(struct json_object *subsys_array,
 {
 	struct json_object *subsys_obj = json_object_new_object();
 	struct json_object *ns_array;
+	bool pdc_enabled = libnvme_subsystem_get_pdc_enabled(s);
 
 	json_object_object_add(subsys_obj, "name",
 			       json_object_new_string(libnvme_subsystem_get_name(s)));
 	json_object_object_add(subsys_obj, "nqn",
 			       json_object_new_string(libnvme_subsystem_get_subsysnqn(s)));
+	if (pdc_enabled != libnvme_host_is_pdc_enabled(s->h, DEFAULT_PDC_ENABLED))
+		json_object_object_add(subsys_obj, "persistent_discovery_ctrl",
+				       json_object_new_boolean(pdc_enabled));
 
 	ns_array = json_object_new_array();
 	if (!json_dump_subsys_multipath(s, ns_array))
