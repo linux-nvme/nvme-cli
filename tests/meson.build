@@ -42,6 +42,9 @@ python_module = import('python')
 
 python = python_module.find_installation('python3')
 
+test_env = environment()
+test_env.prepend('PATH', meson.project_build_root())
+
 foreach t : tests
     t_name = t.split('.')[0]
     test(
@@ -52,7 +55,7 @@ foreach t : tests
             '--start-dir', meson.current_source_dir(),
             t_name,
         ],
-        env: ['PATH=' + meson.project_build_root() + ':/usr/bin:/usr/sbin'],
+        env: test_env,
         timeout: 500,
         protocol: 'tap',
         is_parallel: false,
