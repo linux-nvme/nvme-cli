@@ -8,7 +8,7 @@ nvme-exclusion-create - Create a new NVMe-oF exclusion list
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'exclusion create' --name=<NAME> | -N <NAME>
+'nvme' [<global-options>] 'exclusion create' [--name=<NAME> | -N <NAME>]
 
 DESCRIPTION
 -----------
@@ -24,7 +24,8 @@ OPTIONS
 -------
 -N <NAME>::
 --name=<NAME>::
-	Name of the exclusion list to create.
+	Name of the exclusion list to create.  Omit to create the
+	default list (/etc/nvme/exclusions.conf).
 
 include::global-options.txt[]
 

@@ -8,7 +8,7 @@ nvme-exclusion-add - Add an entry to an NVMe-oF exclusion list
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'exclusion add' --name=<NAME> | -N <NAME>
+'nvme' [<global-options>] 'exclusion add' [--name=<NAME> | -N <NAME>]
 			--entry=<ENTRY> | -e <ENTRY>
 
 DESCRIPTION
@@ -32,7 +32,8 @@ OPTIONS
 -------
 -N <NAME>::
 --name=<NAME>::
-	Name of the exclusion list to add to.
+	Name of the exclusion list to add to.  Omit to add to the
+	default list (/etc/nvme/exclusions.conf).
 
 -e <ENTRY>::
 --entry=<ENTRY>::

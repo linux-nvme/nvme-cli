@@ -442,6 +442,73 @@ static bool test_section_semantics(struct libnvme_global_ctx *ctx)
 	return pass;
 }
 
+
+/*
+ * The default (main) list: name == NULL addresses exclusions.conf itself.
+ * This is the path "nvme exclusion <cmd>" without --name and
+ * "nvme disconnect --exclude" rely on.
+ */
+static bool test_default_list(struct libnvme_global_ctx *ctx)
+{
+	char path[512];
+	struct libnvmf_tid *tid;
+	struct stat st;
+	bool pass = true;
+	int ret;
+
+	printf("test_default_list:\n");
+
+	/* create(NULL) makes the main file at 0644 with the header. */
+	ret = libnvmf_exclusion_create(ctx, NULL);
+	snprintf(path, sizeof(path), "%s/exclusions.conf", tmpdir);
+	if (ret || stat(path, &st) < 0 || (st.st_mode & 07777) != 0644) {
+		printf(" - create(NULL) ret=%d [FAIL]\n", ret);
+		pass = false;
+	} else {
+		printf(" - create(NULL) -> exclusions.conf at 0644 [PASS]\n");
+	}
+
+	ret = libnvmf_exclusion_add(ctx, NULL, "transport=tcp;traddr=7.7.7.7");
+	if (ret || entry_count(ctx, NULL) != 1) {
+		printf(" - add(NULL) ret=%d count=%d [FAIL]\n",
+		       ret, entry_count(ctx, NULL));
+		pass = false;
+	} else {
+		printf(" - add(NULL) -> 1 entry in the default list [PASS]\n");
+	}
+
+	tid = libnvmf_tid_from_fields("tcp", "7.7.7.7", "4420", "nqn.x",
+				      NULL, NULL, NULL, NULL);
+	if (libnvmf_exclusion_match(ctx, tid)) {
+		printf(" - default-list entry matches [PASS]\n");
+	} else {
+		printf(" - default-list entry matches [FAIL]\n");
+		pass = false;
+	}
+	libnvmf_tid_free(tid);
+
+	ret = libnvmf_exclusion_remove(ctx, NULL,
+				       "transport=tcp;traddr=7.7.7.7");
+	if (ret || entry_count(ctx, NULL) != 0) {
+		printf(" - remove(NULL) ret=%d count=%d [FAIL]\n",
+		       ret, entry_count(ctx, NULL));
+		pass = false;
+	} else {
+		printf(" - remove(NULL) -> default list empty again [PASS]\n");
+	}
+
+	/* delete(NULL) removes the main file itself. */
+	ret = libnvmf_exclusion_delete(ctx, NULL);
+	if (ret || stat(path, &st) == 0) {
+		printf(" - delete(NULL) ret=%d [FAIL]\n", ret);
+		pass = false;
+	} else {
+		printf(" - delete(NULL) removes exclusions.conf [PASS]\n");
+	}
+
+	return pass;
+}
+
 int main(void)
 {
 	struct libnvme_global_ctx *ctx;
@@ -458,6 +525,7 @@ int main(void)
 	pass &= test_invalid_entry_rejected(ctx);
 	pass &= test_missing_then_create(ctx);
 	pass &= test_section_semantics(ctx);
+	pass &= test_default_list(ctx);
 	pass &= test_null_args(ctx);
 
 	cleanup_tmpdir(ctx);
