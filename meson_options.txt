@@ -96,6 +96,12 @@ option(
   description : 'set default Persistent Discovery Controllers behavior'
 )
 option(
+  'default-epcsd-enabled',
+  type: 'boolean',
+  value : true,
+  description : 'by default set Supported Persistent Discovery Controllers to be persistent'
+)
+option(
   'rundir',
   type: 'string',
   value: 'run',

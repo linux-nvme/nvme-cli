@@ -182,6 +182,8 @@ conf.set('NVME_VERSION', '"@0@"'.format(meson.project_version()))
 conf.set('LIBNVME_VERSION', '"@0@"'.format(meson.project_version()))
 
 conf.set10('DEFAULT_PDC_ENABLED', get_option('pdc-enabled'))
+conf.set10('DEFAULT_EPCSD_ENABLED', get_option('default-epcsd-enabled'))
+
 
 # local (cross-compilable) implementations of ccan configure steps
 conf.set10(
