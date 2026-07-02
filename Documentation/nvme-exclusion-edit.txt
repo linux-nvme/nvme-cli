@@ -8,7 +8,7 @@ nvme-exclusion-edit - Edit an NVMe-oF exclusion list in an editor
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'exclusion edit' --name=<NAME> | -N <NAME>
+'nvme' [<global-options>] 'exclusion edit' [--name=<NAME> | -N <NAME>]
 
 DESCRIPTION
 -----------
@@ -30,7 +30,8 @@ OPTIONS
 -------
 -N <NAME>::
 --name=<NAME>::
-	Name of the exclusion list to edit.
+	Name of the exclusion list to edit.  Omit to edit the default
+	list (/etc/nvme/exclusions.conf).
 
 include::global-options.txt[]
 

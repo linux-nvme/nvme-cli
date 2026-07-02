@@ -8,7 +8,7 @@ nvme-exclusion-remove - Remove an entry from an NVMe-oF exclusion list
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'exclusion remove' --name=<NAME> | -N <NAME>
+'nvme' [<global-options>] 'exclusion remove' [--name=<NAME> | -N <NAME>]
 
 DESCRIPTION
 -----------
@@ -23,7 +23,8 @@ OPTIONS
 -------
 -N <NAME>::
 --name=<NAME>::
-	Name of the exclusion list to remove an entry from.
+	Name of the exclusion list to remove an entry from.  Omit to
+	remove from the default list (/etc/nvme/exclusions.conf).
 
 include::global-options.txt[]
 

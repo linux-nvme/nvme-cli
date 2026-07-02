@@ -43,7 +43,7 @@ static int excl_create(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
 	const char *desc = "Create a new NVMeoF exclusion list.";
-	const char *name_help = "exclusion list name";
+	const char *name_help = "exclusion list name (omit for the default list)";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int ret;
 
@@ -57,11 +57,6 @@ static int excl_create(int argc, char **argv, struct command *acmd,
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
-
-	if (!cfg.name) {
-		fprintf(stderr, "--name required\n");
-		return -EINVAL;
-	}
 
 	ret = require_root();
 	if (ret)
@@ -80,7 +75,7 @@ static int excl_delete(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
 	const char *desc = "Delete an NVMeoF exclusion list entirely.";
-	const char *name_help = "exclusion list name";
+	const char *name_help = "exclusion list name (omit for the default list)";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int ret;
 
@@ -94,11 +89,6 @@ static int excl_delete(int argc, char **argv, struct command *acmd,
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
-
-	if (!cfg.name) {
-		fprintf(stderr, "--name required\n");
-		return -EINVAL;
-	}
 
 	ret = require_root();
 	if (ret)
@@ -163,7 +153,7 @@ static int excl_add(int argc, char **argv, struct command *acmd,
 		    struct plugin *plugin)
 {
 	const char *desc = "Add an entry to an NVMeoF exclusion list.";
-	const char *name_help = "exclusion list name";
+	const char *name_help = "exclusion list name (omit for the default list)";
 	const char *entry_help = "semicolon-separated key=value entry "
 		"(e.g. \"transport=tcp;traddr=192.168.1.1\")";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -182,8 +172,8 @@ static int excl_add(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
-	if (!cfg.name || !cfg.entry) {
-		fprintf(stderr, "--name and --entry required\n");
+	if (!cfg.entry) {
+		fprintf(stderr, "--entry required\n");
 		return -EINVAL;
 	}
 
@@ -192,9 +182,14 @@ static int excl_add(int argc, char **argv, struct command *acmd,
 		return ret;
 
 	ctx = libnvme_create_global_ctx();
+	if (!libnvmf_exclusion_entry_valid(ctx, cfg.entry)) {
+		fprintf(stderr, "invalid entry: %s\n", cfg.entry);
+		return -EINVAL;
+	}
+
 	ret = libnvmf_exclusion_add(ctx, cfg.name, cfg.entry);
 	if (ret == -EINVAL)
-		fprintf(stderr, "invalid entry (unknown key): %s\n", cfg.entry);
+		fprintf(stderr, "invalid list name: %s\n", cfg.name);
 	else if (ret)
 		fprintf(stderr, "add failed: %s\n", libnvme_strerror(-ret));
 	return ret;
@@ -232,7 +227,7 @@ static int excl_remove(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
 	const char *desc = "Interactively remove an entry from an NVMeoF exclusion list.";
-	const char *name_help = "exclusion list name";
+	const char *name_help = "exclusion list name (omit for the default list)";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct entry_collection ec = { 0 };
 	char answer[32];
@@ -249,11 +244,6 @@ static int excl_remove(int argc, char **argv, struct command *acmd,
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
-
-	if (!cfg.name) {
-		fprintf(stderr, "--name required\n");
-		return -EINVAL;
-	}
 
 	ret = require_root();
 	if (ret)
@@ -490,7 +480,7 @@ static int excl_edit(int argc, char **argv, struct command *acmd,
 		     struct plugin *plugin)
 {
 	const char *desc = "Interactively edit an NVMeoF exclusion list.";
-	const char *name_help = "exclusion list name";
+	const char *name_help = "exclusion list name (omit for the default list)";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free char *text = NULL;
 	const char *tmpdir;
@@ -508,11 +498,6 @@ static int excl_edit(int argc, char **argv, struct command *acmd,
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
-
-	if (!cfg.name) {
-		fprintf(stderr, "--name required\n");
-		return -EINVAL;
-	}
 
 	ret = require_root();
 	if (ret)
