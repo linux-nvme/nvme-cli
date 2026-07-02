@@ -298,3 +298,525 @@ __libnvme_public void libnvmf_params_for_each(const struct libnvmf_params *p,
 	list_for_each(&p->list, e, entry)
 		callback(e->key, e->value, user_data);
 }
+
+/*
+ * File -> raw model.  One pass over the INI events, faithfully recording
+ * sections and lines; nothing is resolved here.  See config-ini.h for the
+ * Tier 1 (fail the file) vs Tier 2 (warn and continue) split.
+ */
+
+enum sect {
+	SECT_NONE,	/* before the first section header */
+	SECT_IGNORED,	/* an unknown section, reserved for the future */
+	SECT_DC_DEFAULTS,
+	SECT_IOC_DEFAULTS,
+	SECT_HOST,
+	SECT_DC,
+	SECT_SUBSYS,
+};
+
+struct conf_parse {
+	struct libnvme_global_ctx *ctx;
+	const char *path;
+	struct libnvmf_conf_file *f;
+	enum sect sect;
+	struct libnvmf_conf_endpoint *ep; /* current, when sect is DC/SUBSYS */
+	int err;
+};
+
+#define conf_err(pc, line, fmt, ...) do {				\
+	libnvme_msg((pc)->ctx, LIBNVME_LOG_ERR, "%s:%u: " fmt "\n",	\
+		    (pc)->path, line, ##__VA_ARGS__);			\
+	(pc)->err = -EINVAL;						\
+} while (0)
+
+#define conf_warn(pc, line, fmt, ...)					\
+	libnvme_msg((pc)->ctx, LIBNVME_LOG_WARN, "%s:%u: " fmt "\n",	\
+		    (pc)->path, line, ##__VA_ARGS__)
+
+static void free_path(struct libnvmf_conf_path *p)
+{
+	if (!p)
+		return;
+	free(p->transport);
+	free(p->traddr);
+	free(p->trsvcid);
+	free(p->host_traddr);
+	free(p->host_iface);
+	libnvmf_params_free(p->overrides);
+	free(p);
+}
+
+static void free_paths(struct list_head *paths)
+{
+	struct libnvmf_conf_path *p, *next;
+
+	list_for_each_safe(paths, p, next, entry)
+		free_path(p);
+}
+
+void libnvmf_conf_file_free(struct libnvmf_conf_file *f)
+{
+	struct libnvmf_conf_endpoint *e, *next;
+
+	if (!f)
+		return;
+	list_for_each_safe(&f->endpoints, e, next, entry) {
+		free(e->nqn);
+		libnvmf_params_free(e->params);
+		free_paths(&e->paths);
+		free(e);
+	}
+	libnvmf_params_free(f->dc_defaults);
+	libnvmf_params_free(f->ioc_defaults);
+	libnvmf_params_free(f->host_params);
+	free(f->hostnqn);
+	free(f->hostid);
+	free(f->hostsymname);
+	free(f->path);
+	free(f);
+}
+
+static int new_endpoint(struct conf_parse *pc, bool is_dc, unsigned int line)
+{
+	struct libnvmf_conf_endpoint *ep;
+
+	ep = calloc(1, sizeof(*ep));
+	if (!ep)
+		return -ENOMEM;
+	ep->is_dc = is_dc;
+	ep->line = line;
+	ep->params = libnvmf_params_new();
+	if (!ep->params) {
+		free(ep);
+		return -ENOMEM;
+	}
+	list_head_init(&ep->paths);
+
+	list_add_tail(&pc->f->endpoints, &ep->entry);
+	pc->ep = ep;
+
+	return 0;
+}
+
+static int enter_section(struct conf_parse *pc, const char *name,
+			 unsigned int line)
+{
+	struct libnvmf_conf_file *f = pc->f;
+
+	pc->ep = NULL;
+
+	if (!strcmp(name, "Discovery Controller Defaults")) {
+		if (f->dc_defaults)
+			conf_warn(pc, line, "repeated [%s] section", name);
+		else
+			f->dc_defaults = libnvmf_params_new();
+		pc->sect = f->dc_defaults ? SECT_DC_DEFAULTS : SECT_IGNORED;
+		return f->dc_defaults ? 0 : -ENOMEM;
+	}
+	if (!strcmp(name, "I/O Controller Defaults")) {
+		if (f->ioc_defaults)
+			conf_warn(pc, line, "repeated [%s] section", name);
+		else
+			f->ioc_defaults = libnvmf_params_new();
+		pc->sect = f->ioc_defaults ? SECT_IOC_DEFAULTS :
+					     SECT_IGNORED;
+		return f->ioc_defaults ? 0 : -ENOMEM;
+	}
+	if (!strcmp(name, "Host")) {
+		/* Hard singleton: personas never merge (CONFIG.md). */
+		if (f->has_host) {
+			conf_err(pc, line,
+				 "second [Host] section; one persona, one file");
+			return -EINVAL;
+		}
+		f->has_host = true;
+		f->host_params = libnvmf_params_new();
+		if (!f->host_params)
+			return -ENOMEM;
+		pc->sect = SECT_HOST;
+		return 0;
+	}
+	if (!strcmp(name, "Discovery Controller")) {
+		pc->sect = SECT_DC;
+		return new_endpoint(pc, true, line);
+	}
+	if (!strcmp(name, "Subsystem")) {
+		pc->sect = SECT_SUBSYS;
+		return new_endpoint(pc, false, line);
+	}
+
+	conf_warn(pc, line, "unknown section [%s] ignored", name);
+	pc->sect = SECT_IGNORED;
+
+	return 0;
+}
+
+/* The five addressing keys a controller= line may carry (CONFIG.md). */
+struct path_addr {
+	const char *transport;
+	const char *traddr;
+	const char *trsvcid;
+	const char *host_traddr;
+	const char *host_iface;
+};
+
+static const char **addr_slot(struct path_addr *a, const char *key)
+{
+	if (!strcmp(key, "transport"))
+		return &a->transport;
+	if (!strcmp(key, "traddr"))
+		return &a->traddr;
+	if (!strcmp(key, "trsvcid"))
+		return &a->trsvcid;
+	if (!strcmp(key, "host-traddr"))
+		return &a->host_traddr;
+	if (!strcmp(key, "host-iface"))
+		return &a->host_iface;
+
+	return NULL;
+}
+
+/*
+ * Split one "controller =" value: addressing keys become the path's raw
+ * addressing strings, tunables become per-path overrides.  Strict on
+ * purpose -- a typo in an address must not silently connect somewhere
+ * else, so unknown keys are errors here even though section keys only warn.
+ *
+ * The "key=value;..." tokenizing below mirrors libnvmf_tid_parse() (tid.c)
+ * rather than calling it: tid_parse builds a TID, and TID construction
+ * rejects a hostname traddr, which a config file must still accept.
+ */
+static int add_path(struct conf_parse *pc, char *value, unsigned int line)
+{
+	struct libnvmf_conf_path *path;
+	struct path_addr addr = { 0 };
+	struct libnvmf_params *overrides;
+	char *save = NULL, *tok;
+	int ret = -EINVAL;
+
+	overrides = libnvmf_params_new();
+	if (!overrides)
+		return -ENOMEM;
+
+	for (tok = strtok_r(value, ";", &save); tok;
+	     tok = strtok_r(NULL, ";", &save)) {
+		const struct libnvmf_key *k;
+		const char **slot;
+		char *eq, *key, *val;
+
+		key = libnvmf_trim(tok);
+		if (!*key)
+			continue; /* ";;" and a trailing ';' are benign */
+		eq = strchr(key, '=');
+		if (!eq || eq == key) {
+			conf_err(pc, line, "malformed token \"%s\"", key);
+			goto fail;
+		}
+		*eq = '\0';
+		key = libnvmf_trim(key);
+		val = libnvmf_trim(eq + 1);
+
+		slot = addr_slot(&addr, key);
+		if (slot) {
+			if (!*val) {
+				conf_err(pc, line, "empty %s", key);
+				goto fail;
+			}
+			if (*slot) {
+				conf_err(pc, line, "repeated %s", key);
+				goto fail;
+			}
+			*slot = val;
+			continue;
+		}
+
+		k = libnvmf_key_lookup(key);
+		if (!k) {
+			conf_err(pc, line,
+				 "unknown key \"%s\" on a controller line",
+				 key);
+			goto fail;
+		}
+		switch (k->class) {
+		case LIBNVMF_KEY_TUNABLE:
+			if (libnvmf_key_check_value(k, val)) {
+				conf_err(pc, line, "invalid %s value \"%s\"",
+					 key, val);
+				goto fail;
+			}
+			if (libnvmf_params_set(overrides, key, val)) {
+				ret = -ENOMEM;
+				goto fail;
+			}
+			break;
+		case LIBNVMF_KEY_SECURITY:
+			conf_err(pc, line,
+				 "%s is bound to the (hostnqn, subsysnqn) pair; set it on the section, not per path",
+				 key);
+			goto fail;
+		default:
+			conf_err(pc, line, "%s does not belong on a controller line",
+				 key);
+			goto fail;
+		}
+	}
+
+	if (!addr.transport || !addr.traddr) {
+		conf_err(pc, line,
+			 "controller line needs transport and traddr");
+		goto fail;
+	}
+
+	path = calloc(1, sizeof(*path));
+	if (!path) {
+		ret = -ENOMEM;
+		goto fail;
+	}
+	path->transport = xstrdup(addr.transport);
+	path->traddr = xstrdup(addr.traddr);
+	path->trsvcid = xstrdup(addr.trsvcid);
+	path->host_traddr = xstrdup(addr.host_traddr);
+	path->host_iface = xstrdup(addr.host_iface);
+	if (!path->transport || !path->traddr ||
+	    (addr.trsvcid && !path->trsvcid) ||
+	    (addr.host_traddr && !path->host_traddr) ||
+	    (addr.host_iface && !path->host_iface)) {
+		free_path(path);
+		ret = -ENOMEM;
+		goto fail;
+	}
+	path->overrides = overrides;
+	path->line = line;
+
+	list_add_tail(&pc->ep->paths, &path->entry);
+
+	return 0;
+
+fail:
+	libnvmf_params_free(overrides);
+	return ret;
+}
+
+/*
+ * NQN syntax (Base 2.3 SS4.7): "nqn." + a 4-digit year + '-' + a 2-digit
+ * month (01-12) + '.' + a non-empty reverse-domain-name, optionally
+ * followed by ':' and a unique suffix.  This checks the structural grammar
+ * a typo would break, not whether the domain is registered.
+ */
+static bool nqn_valid(const char *nqn)
+{
+	size_t len = strlen(nqn);
+	const char *p = nqn + 4;
+	int month;
+
+	if (!len || len > NVMF_NQN_SIZE || strncmp(nqn, "nqn.", 4))
+		return false;
+	if (!isdigit((unsigned char)p[0]) || !isdigit((unsigned char)p[1]) ||
+	    !isdigit((unsigned char)p[2]) || !isdigit((unsigned char)p[3]) ||
+	    p[4] != '-' || !isdigit((unsigned char)p[5]) ||
+	    !isdigit((unsigned char)p[6]) || p[7] != '.' || !p[8])
+		return false;
+
+	month = (p[5] - '0') * 10 + (p[6] - '0');
+	if (month < 1 || month > 12)
+		return false;
+
+	for (p = nqn; *p; p++) {
+		if ((unsigned char)*p < 0x21 || (unsigned char)*p > 0x7e)
+			return false;
+	}
+
+	return true;
+}
+
+/*
+ * HostID syntax (Base 2.3 SS5.2.26.1.32.2): a 128-bit value, spelled as a
+ * UUID string.  All-zero forfeits host association (CONFIG.md), so a
+ * configuration treats it as invalid alongside a malformed string.
+ */
+static bool hostid_valid(const char *hostid)
+{
+	unsigned char uuid[NVME_UUID_LEN];
+	int i;
+
+	if (libnvme_uuid_from_string(hostid, uuid))
+		return false;
+	for (i = 0; i < NVME_UUID_LEN; i++) {
+		if (uuid[i])
+			return true;
+	}
+
+	return false;
+}
+
+static int set_identity(struct conf_parse *pc, char **field, const char *value)
+{
+	free(*field);
+	*field = xstrdup(value);
+
+	return *field ? 0 : -ENOMEM;
+}
+
+/* A "key = value" line, routed by the current section. */
+static int conf_kv(struct conf_parse *pc, const char *key, char *value,
+		   unsigned int line)
+{
+	const struct libnvmf_key *k;
+	struct libnvmf_params *dest = NULL;
+
+	if (pc->sect == SECT_IGNORED)
+		return 0;
+	if (pc->sect == SECT_NONE) {
+		conf_err(pc, line, "\"%s\" before any section", key);
+		return -EINVAL;
+	}
+
+	k = libnvmf_key_lookup(key);
+	if (!k) {
+		conf_warn(pc, line, "unknown key \"%s\" ignored", key);
+		return 0;
+	}
+
+	switch (k->class) {
+	case LIBNVMF_KEY_CONTROLLER:
+		if (pc->sect != SECT_DC && pc->sect != SECT_SUBSYS)
+			break;
+		return add_path(pc, value, line);
+	case LIBNVMF_KEY_NQN:
+		if (pc->sect != SECT_DC && pc->sect != SECT_SUBSYS)
+			break;
+		if (!*value) {
+			/* Tier 1: nqn is reqd, there is no kernel default. */
+			conf_err(pc, line, "empty nqn");
+			return -EINVAL;
+		}
+		if (!nqn_valid(value)) {
+			conf_err(pc, line, "\"%s\" is not a valid NQN", value);
+			return -EINVAL;
+		}
+		return set_identity(pc, &pc->ep->nqn, value);
+	case LIBNVMF_KEY_IDENTITY:
+		if (pc->sect != SECT_HOST)
+			break;
+		if (!strcmp(key, "hostnqn")) {
+			if (*value && !nqn_valid(value)) {
+				conf_err(pc, line,
+					 "hostnqn \"%s\" is not a valid NQN",
+					 value);
+				return -EINVAL;
+			}
+			return set_identity(pc, &pc->f->hostnqn, value);
+		}
+		if (!strcmp(key, "hostid")) {
+			if (*value && !hostid_valid(value)) {
+				conf_err(pc, line,
+					 "hostid \"%s\" is not a valid, non-zero 128-bit UUID",
+					 value);
+				return -EINVAL;
+			}
+			return set_identity(pc, &pc->f->hostid, value);
+		}
+		return set_identity(pc, &pc->f->hostsymname, value);
+	case LIBNVMF_KEY_TUNABLE:
+	case LIBNVMF_KEY_SECURITY:
+		if (libnvmf_key_check_value(k, value)) {
+			conf_err(pc, line, "invalid %s value \"%s\"", key,
+				 value);
+			return -EINVAL;
+		}
+		switch (pc->sect) {
+		case SECT_DC_DEFAULTS:
+			dest = pc->f->dc_defaults;
+			break;
+		case SECT_IOC_DEFAULTS:
+			dest = pc->f->ioc_defaults;
+			break;
+		case SECT_HOST:
+			dest = pc->f->host_params;
+			break;
+		case SECT_DC:
+		case SECT_SUBSYS:
+			dest = pc->ep->params;
+			break;
+		default:
+			break;
+		}
+		return libnvmf_params_set(dest, key, value);
+	}
+
+	/* A known key in a section where it has no meaning is a real bug. */
+	conf_err(pc, line, "\"%s\" is not valid in this section", key);
+
+	return -EINVAL;
+}
+
+static int conf_event(enum libnvmf_ini_event event, const char *section,
+		      const char *key, const char *value, unsigned int line,
+		      void *user_data)
+{
+	struct conf_parse *pc = user_data;
+
+	switch (event) {
+	case LIBNVMF_INI_SECTION:
+		return enter_section(pc, key, line);
+	case LIBNVMF_INI_KV:
+		return conf_kv(pc, key, (char *)value, line);
+	case LIBNVMF_INI_JUNK:
+		conf_err(pc, line, "malformed line \"%s\"", key);
+		return -EINVAL;
+	}
+
+	return -EINVAL;
+}
+
+int libnvmf_conf_file_parse(struct libnvme_global_ctx *ctx, const char *path,
+		struct libnvmf_conf_file **file)
+{
+	struct libnvmf_conf_endpoint *ep;
+	struct conf_parse pc = { .ctx = ctx, .path = path };
+	int ret;
+
+	if (!file)
+		return -EINVAL;
+	*file = NULL;
+
+	if (!ctx || !path)
+		return -EINVAL;
+
+	pc.f = calloc(1, sizeof(*pc.f));
+	if (!pc.f)
+		goto nomem;
+	list_head_init(&pc.f->endpoints);
+	pc.f->path = xstrdup(path);
+	if (!pc.f->path)
+		goto nomem;
+
+	ret = libnvmf_ini_parse_file(ctx, path, conf_event, &pc);
+	if (ret) {
+		/* Prefer the classified error a callback recorded. */
+		if (pc.err)
+			ret = pc.err;
+		goto fail;
+	}
+
+	/* Per-file structural checks that need the whole file. */
+	ret = -EINVAL;
+	list_for_each(&pc.f->endpoints, ep, entry) {
+		if (!ep->is_dc && !ep->nqn) {
+			conf_err(&pc, ep->line, "[Subsystem] without an nqn");
+			goto fail;
+		}
+	}
+
+	*file = pc.f;
+
+	return 0;
+
+nomem:
+	ret = -ENOMEM;
+fail:
+	libnvmf_conf_file_free(pc.f);
+
+	return ret;
+}

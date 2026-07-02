@@ -9,6 +9,8 @@
 
 #include <stdbool.h>
 
+#include <ccan/list/list.h>
+
 /*
  * Internal building blocks for the INI connection config
  * (libnvme/design/CONFIG.md): the connection-parameter bag with its
@@ -87,3 +89,74 @@ int libnvmf_key_check_value(const struct libnvmf_key *key, const char *value);
 
 /* The boolean spellings the config format accepts (case-insensitive). */
 int libnvmf_parse_bool(const char *value, bool *out);
+
+/*
+ * The raw model of ONE parsed file -- sections and lines faithfully
+ * recorded, nothing resolved.  The cascade resolver (which merges the
+ * top-level file with the drop-ins and expands endpoints into connections)
+ * consumes a list of these.  Struct members are open because this is an
+ * internal type; nothing here crosses the public API boundary.
+ */
+
+struct libnvme_global_ctx;
+
+/*
+ * One parsed file -- the top-level nvme-fabrics.conf or one drop-in under
+ * nvme-fabrics.conf.d/; both use this same representation.
+ */
+struct libnvmf_conf_file {
+	char *path;			/* provenance, diagnostics */
+	struct libnvmf_params *dc_defaults;
+	struct libnvmf_params *ioc_defaults;
+	bool has_host;			/* file carries a [Host] section */
+	char *hostnqn;
+	char *hostid;
+	char *hostsymname;
+	struct libnvmf_params *host_params;  /* [Host] non-identity keys */
+	struct list_head endpoints;	/* libnvmf_conf_endpoint, file order */
+};
+
+/* One [Discovery Controller] or [Subsystem] section, identified by is_dc. */
+struct libnvmf_conf_endpoint {
+	struct list_node entry;
+	bool is_dc;
+	char *nqn;			/* NULL on a DC = well-known NQN */
+	struct libnvmf_params *params;	/* section keys incl. security */
+	struct list_head paths;		/* struct libnvmf_conf_path */
+	unsigned int line;
+};
+
+/* One controller= line: one path to an endpoint (see CONFIG.md Multipath). */
+struct libnvmf_conf_path {
+	struct list_node entry;
+	/*
+	 * Addressing as the file spelled it: traddr/host_traddr are raw
+	 * strings, not a TID (see libnvme/design/TID.md for why).
+	 * subsysnqn and the host identity are filled in at resolve time.
+	 */
+	char *transport;
+	char *traddr;
+	char *trsvcid;
+	char *host_traddr;
+	char *host_iface;
+	/* per-path tunables; never security */
+	struct libnvmf_params *overrides;
+	unsigned int line;	/* for diagnostics */
+};
+
+/*
+ * Parse one file into its raw configuration model.
+ *
+ * Structural errors, such as keys in invalid sections, invalid values, or
+ * malformed controller= lines, cause the entire file to fail parsing.
+ *
+ * On success, the output file pointer is initialized.
+ *
+ * Returns:
+ *   0 on success;
+ *   a negative error code on failure.
+ */
+int libnvmf_conf_file_parse(
+		struct libnvme_global_ctx *ctx,
+		const char *path, struct libnvmf_conf_file **file);
+void libnvmf_conf_file_free(struct libnvmf_conf_file *f);

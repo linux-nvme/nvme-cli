@@ -16,6 +16,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <unistd.h>
+
+#include <ccan/array_size/array_size.h>
+
+#include <nvme/lib.h>
+#include <nvme/tid.h>
+#include <nvme/accessors-fabrics.h>
+
 #include "nvme/config-ini.h"
 
 static bool test_params_tristate(void)
@@ -143,7 +151,7 @@ static bool test_key_table(void)
 
 	printf("test_key_table:\n");
 
-	for (i = 0; i < sizeof(expect) / sizeof(expect[0]); i++) {
+	for (i = 0; i < ARRAY_SIZE(expect); i++) {
 		const struct libnvmf_key *k = libnvmf_key_lookup(expect[i].name);
 
 		if (!k || k->class != expect[i].class) {
@@ -210,7 +218,7 @@ static bool test_value_check(void)
 	}
 
 	/* Booleans: the systemd spellings, case-insensitive. */
-	for (n = 0; n < sizeof(good_bools) / sizeof(good_bools[0]); n++) {
+	for (n = 0; n < ARRAY_SIZE(good_bools); n++) {
 		if (libnvmf_key_check_value(b, good_bools[n])) {
 			printf(" - bool %s rejected [FAIL]\n", good_bools[n]);
 			pass = false;
@@ -236,14 +244,296 @@ static bool test_value_check(void)
 	return pass;
 }
 
+
+/* Write @text to a temp file and parse it into the raw model. */
+static struct libnvmf_conf_file *parse_text(struct libnvme_global_ctx *ctx,
+					    const char *text, int *err)
+{
+	char path[] = "/tmp/nvme-config-ini-XXXXXX";
+	struct libnvmf_conf_file *f;
+	size_t len = strlen(text);
+	int fd;
+
+	fd = mkstemp(path);
+	assert(fd >= 0);
+	assert(write(fd, text, len) == (ssize_t)len);
+	close(fd);
+	*err = libnvmf_conf_file_parse(ctx, path, &f);
+	unlink(path);
+
+	return f;
+}
+
+static bool test_parse_model(struct libnvme_global_ctx *ctx)
+{
+	static const char text[] =
+		"# a complete single-persona file\n"
+		"[Discovery Controller Defaults]\n"
+		"keep-alive-tmo = 30\n"
+		"ctrl-loss-tmo = 600\n"
+		"\n"
+		"[I/O Controller Defaults]\n"
+		"keep-alive-tmo = 5\n"
+		"ctrl-loss-tmo = 600\n"
+		"\n"
+		"[Host]\n"
+		"hostnqn = nqn.2014-08.org.nvmexpress:host\n"
+		"hostid = 46ba5037-7ce5-41fa-9452-48477bf00080\n"
+		"dhchap-secret = DHHC-1:00:abc\n"
+		"\n"
+		"[Discovery Controller]\n"
+		"controller = transport=tcp;traddr=10.0.0.5;trsvcid=8009\n"
+		"\n"
+		"[Subsystem]\n"
+		"nqn           = nqn.2014-08.org.nvmexpress:vol1\n"
+		"tls           = true\n"
+		"ctrl-loss-tmo = 1800\n"
+		"controller    = transport=tcp;traddr=10.0.0.9;trsvcid=4420;host-iface=eth0\n"
+		"controller    = transport=tcp;traddr=10.0.0.10;trsvcid=4420;keep-alive-tmo=10\n";
+	struct libnvmf_conf_file *f;
+	struct libnvmf_conf_endpoint *dc, *ss;
+	struct libnvmf_conf_path *p1, *p2;
+	bool pass = true;
+	int err;
+
+	printf("test_parse_model:\n");
+
+	f = parse_text(ctx, text, &err);
+	if (!f) {
+		printf(" - parse failed: %d [FAIL]\n", err);
+		return false;
+	}
+
+	if (strcmp(libnvmf_params_get(f->dc_defaults, "keep-alive-tmo"),
+		   "30") ||
+	    strcmp(libnvmf_params_get(f->dc_defaults, "ctrl-loss-tmo"),
+		   "600") ||
+	    strcmp(libnvmf_params_get(f->ioc_defaults, "keep-alive-tmo"),
+		   "5") ||
+	    strcmp(libnvmf_params_get(f->ioc_defaults, "ctrl-loss-tmo"),
+		   "600")) {
+		printf(" - defaults sections [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - per-type defaults recorded, in both [PASS]\n");
+	}
+
+	if (!f->has_host || strcmp(f->hostnqn, "nqn.2014-08.org.nvmexpress:host") ||
+	    strcmp(f->hostid, "46ba5037-7ce5-41fa-9452-48477bf00080") ||
+	    strcmp(libnvmf_params_get(f->host_params, "dhchap-secret"),
+		   "DHHC-1:00:abc")) {
+		printf(" - [Host] identity + params [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - [Host] identity and host-level params [PASS]\n");
+	}
+
+	dc = list_top(&f->endpoints, struct libnvmf_conf_endpoint, entry);
+	ss = dc ? list_next(&f->endpoints, dc, entry) : NULL;
+	if (!dc || !ss || list_next(&f->endpoints, ss, entry) || !dc->is_dc ||
+	    dc->nqn || ss->is_dc ||
+	    strcmp(ss->nqn, "nqn.2014-08.org.nvmexpress:vol1")) {
+		printf(" - endpoint list [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - one DC (default NQN) + one [Subsystem] [PASS]\n");
+	}
+
+	if (!ss || !ss->params ||
+	    strcmp(libnvmf_params_get(ss->params, "tls"), "true") ||
+	    strcmp(libnvmf_params_get(ss->params, "ctrl-loss-tmo"), "1800")) {
+		printf(" - endpoint section params [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - endpoint params (security + tunable) [PASS]\n");
+	}
+
+	p1 = ss ? list_top(&ss->paths, struct libnvmf_conf_path, entry) : NULL;
+	p2 = p1 ? list_next(&ss->paths, p1, entry) : NULL;
+	if (!p1 || !p2 || list_next(&ss->paths, p2, entry) ||
+	    strcmp(p1->traddr, "10.0.0.9") ||
+	    strcmp(p1->host_iface, "eth0") ||
+	    libnvmf_params_get(p1->overrides, "keep-alive-tmo") ||
+	    strcmp(p2->traddr, "10.0.0.10") ||
+	    strcmp(libnvmf_params_get(p2->overrides, "keep-alive-tmo"),
+		   "10")) {
+		printf(" - multipath + per-path override [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - 2 paths: raw addressing + per-path override [PASS]\n");
+	}
+
+	libnvmf_conf_file_free(f);
+	return pass;
+}
+
+/*
+ * A config file is a human interface: a hostname traddr is legitimate
+ * (libnvme/design/INTEGRATION.md's worked example) even though TID
+ * construction rejects one.  The raw model must not resolve or reject it --
+ * that is the consumer's job.
+ */
+static bool test_parse_hostname(struct libnvme_global_ctx *ctx)
+{
+	static const char text[] =
+		"[Subsystem]\n"
+		"nqn = nqn.2014-08.org.nvmexpress:vol1\n"
+		"controller = transport=tcp;traddr=storage.example.com;trsvcid=4420\n";
+	struct libnvmf_conf_file *f;
+	struct libnvmf_conf_endpoint *ep;
+	struct libnvmf_conf_path *p;
+	bool pass = true;
+	int err;
+
+	printf("test_parse_hostname:\n");
+
+	f = parse_text(ctx, text, &err);
+	if (!f) {
+		printf(" - hostname traddr rejected: %d [FAIL]\n", err);
+		return false;
+	}
+
+	ep = list_top(&f->endpoints, struct libnvmf_conf_endpoint, entry);
+	p = ep ? list_top(&ep->paths, struct libnvmf_conf_path, entry) : NULL;
+	if (!p || strcmp(p->traddr, "storage.example.com")) {
+		printf(" - hostname traddr not stored verbatim [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - hostname traddr parses, stored raw [PASS]\n");
+	}
+
+	libnvmf_conf_file_free(f);
+	return pass;
+}
+
+static bool test_parse_errors(struct libnvme_global_ctx *ctx)
+{
+	static const struct {
+		const char *name;
+		const char *text;
+	} cases[] = {
+		{ "second [Host]", "[Host]\n[Host]\n" },
+		{ "key before any section", "ctrl-loss-tmo = 5\n" },
+		{ "identity key in [Discovery Controller Defaults]",
+		  "[Discovery Controller Defaults]\nhostnqn = x\n" },
+		{ "security key per-path",
+		  "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:test\ncontroller = transport=tcp;traddr=1.2.3.4;tls-key=k\n" },
+		{ "unknown key on a controller line",
+		  "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:test\ncontroller = transport=tcp;traddr=1.2.3.4;bogus=1\n" },
+		{ "controller line without traddr",
+		  "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:test\ncontroller = transport=tcp\n" },
+		{ "repeated addressing key on a controller line",
+		  "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:test\n"
+		  "controller = transport=tcp;traddr=1.2.3.4;traddr=5.6.7.8\n" },
+		{ "empty nqn", "[Subsystem]\nnqn =\n" },
+		{ "junk line",
+		  "[Discovery Controller Defaults]\nwhat is this\n" },
+		{ "[Subsystem] without an nqn",
+		  "[Subsystem]\ncontroller = transport=tcp;traddr=1.2.3.4\n" },
+		{ "bad integer value",
+		  "[Discovery Controller Defaults]\nctrl-loss-tmo = ten\n" },
+		{ "bad boolean value", "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:test\ntls = maybe\n" },
+		{ "malformed nqn (no date component)",
+		  "[Subsystem]\nnqn = not-an-nqn\n" },
+		{ "malformed nqn (bad month)",
+		  "[Subsystem]\nnqn = nqn.2014-13.org.nvmexpress:test\n" },
+		{ "malformed hostnqn",
+		  "[Host]\nhostnqn = not-an-nqn\n" },
+		{ "zero hostid",
+		  "[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:h\n"
+		  "hostid = 00000000-0000-0000-0000-000000000000\n" },
+		{ "malformed hostid",
+		  "[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:h\n"
+		  "hostid = not-a-uuid\n" },
+	};
+	bool pass = true;
+	size_t i;
+
+	printf("test_parse_errors:\n");
+
+	for (i = 0; i < ARRAY_SIZE(cases); i++) {
+		struct libnvmf_conf_file *f;
+		int err = 0;
+
+		f = parse_text(ctx, cases[i].text, &err);
+		if (f || err != -EINVAL) {
+			printf(" - %s: not rejected (err=%d) [FAIL]\n",
+			       cases[i].name, err);
+			libnvmf_conf_file_free(f);
+			pass = false;
+		}
+	}
+	if (pass)
+		printf(" - every Tier 1 case rejected with -EINVAL [PASS]\n");
+
+	return pass;
+}
+
+static bool test_parse_hygiene(struct libnvme_global_ctx *ctx)
+{
+	static const char text[] =
+		"[Discovery Controller Defaults]\n"
+		"unknown-knob = 7\n"		/* Tier 2: warn, ignore */
+		"[SomeFutureSection]\n"	/* Tier 2: warn, ignore content */
+		"whatever = x\n"
+		"[Discovery Controller Defaults]\n"	/* Tier 2: warn+merge */
+		"reconnect-delay = 20\n"
+		"[Host]\n"
+		"hostid =\n";			/* explicit reset, recorded as "" */
+	struct libnvmf_conf_file *f;
+	bool pass = true;
+	int err;
+
+	printf("test_parse_hygiene:\n");
+
+	f = parse_text(ctx, text, &err);
+	if (!f) {
+		printf(" - hygiene file rejected: %d [FAIL]\n", err);
+		return false;
+	}
+
+	if (libnvmf_params_get(f->dc_defaults, "unknown-knob")) {
+		printf(" - unknown key ignored [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - unknown key warned + ignored [PASS]\n");
+	}
+	if (strcmp(libnvmf_params_get(f->dc_defaults, "reconnect-delay"),
+		   "20")) {
+		printf(" - repeated [DC Defaults] section merged [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - repeated section merges into one bag [PASS]\n");
+	}
+	if (!f->hostid || strcmp(f->hostid, "")) {
+		printf(" - hostid reset [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - \"hostid =\" recorded as an explicit reset [PASS]\n");
+	}
+
+	libnvmf_conf_file_free(f);
+	return pass;
+}
+
 int main(void)
 {
+	struct libnvme_global_ctx *ctx;
 	bool pass = true;
+
+	ctx = libnvme_create_global_ctx();
+	assert(ctx);
 
 	pass &= test_params_tristate();
 	pass &= test_params_merge();
 	pass &= test_key_table();
 	pass &= test_value_check();
+	pass &= test_parse_model(ctx);
+	pass &= test_parse_hostname(ctx);
+	pass &= test_parse_errors(ctx);
+	pass &= test_parse_hygiene(ctx);
+
+	libnvme_free_global_ctx(ctx);
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
