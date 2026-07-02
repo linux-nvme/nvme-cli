@@ -22,4 +22,4 @@
 # $$ yields a literal '$' for the shell; $env{SEQNUM} is the REMOVE event's
 # sequence number, substituted by udev.
 ACTION=="remove", SUBSYSTEM=="nvme", KERNEL=="nvme[0-9]*", \
-    RUN+="/bin/sh -c '[ -e /dev/%k ] || [ $env{SEQNUM} -le $$(cat /run/nvme/registry/%k/seqnum 2>/dev/null || echo 0) ] || rm -rf /run/nvme/registry/%k'"
+    RUN+="/bin/sh -c '[ -e /dev/%k ] || [ $env{SEQNUM} -le $$(cat @RUNDIR@/nvme/registry/%k/seqnum 2>/dev/null || echo 0) ] || rm -rf @RUNDIR@/nvme/registry/%k'"
