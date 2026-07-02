@@ -408,8 +408,10 @@ static int get_adapter_bus_type(libnvme_fd_t h, STORAGE_BUS_TYPE *out_bus_type)
  *   -ENOMEM  allocation failure
  *   -ENOENT  no more items (enumeration complete)
  */
-static int get_device_interface_path(HDEVINFO hdev, DWORD index,
-		WCHAR **device_interface_path)
+static int get_device_interface_path(HDEVINFO hdev,
+		DWORD index,
+		WCHAR **device_interface_path,
+		SP_DEVINFO_DATA *devinfo_data_out)
 {
 	SP_DEVICE_INTERFACE_DATA if_data = {
 		.cbSize = sizeof(if_data),
@@ -450,6 +452,9 @@ static int get_device_interface_path(HDEVINFO hdev, DWORD index,
 	if (!*device_interface_path)
 		return -ENOMEM;
 
+	if (devinfo_data_out)
+		*devinfo_data_out = dev_info_data;
+
 	return 0;
 }
 
@@ -481,7 +486,7 @@ int libnvme_ctrl_map_init(struct libnvme_global_ctx *ctx)
 		h = INVALID_HANDLE_VALUE;
 		ctrl_path = NULL;
 
-		ret = get_device_interface_path(hdev, index, &ctrl_path);
+		ret = get_device_interface_path(hdev, index, &ctrl_path, NULL);
 		if (ret == -ENOENT)
 			break;
 		if (ret == -ENOMEM)
@@ -983,4 +988,44 @@ char *libnvme_ctrl_map_entry_get_firmware(const struct ctrl_map_entry *entry)
 	if (!entry)
 		return NULL;
 	return copy_and_rtrim(entry->id_ctrl.fr, sizeof(entry->id_ctrl.fr));
+}
+
+HDEVINFO libnvme_ctrl_map_entry_get_devinfo(
+	const struct ctrl_map_entry *entry,
+	SP_DEVINFO_DATA *dev_info_data)
+{
+	HDEVINFO hdev;
+	DWORD index;
+	PWSTR ctrl_path = NULL;
+
+	if (!dev_info_data || !entry || !entry->ctrl_path)
+		return INVALID_HANDLE_VALUE;
+
+	dev_info_data->cbSize = sizeof(*dev_info_data);
+
+	hdev = SetupDiGetClassDevsW(&GUID_DEVINTERFACE_STORAGEPORT, NULL, NULL,
+				    DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+	if (hdev == INVALID_HANDLE_VALUE)
+		return INVALID_HANDLE_VALUE;
+
+	for (index = 0;; index++) {
+		get_device_interface_path(hdev, index, &ctrl_path,
+			dev_info_data);
+
+		if (_wcsicmp(ctrl_path, entry->ctrl_path) == 0) {
+			free(ctrl_path);
+			return hdev;
+		}
+		free(ctrl_path);
+		ctrl_path = NULL;
+	}
+
+	SetupDiDestroyDeviceInfoList(hdev);
+	return INVALID_HANDLE_VALUE;
+}
+
+void libnvme_ctrl_map_entry_free_devinfo(HDEVINFO hdev)
+{
+	if (hdev != INVALID_HANDLE_VALUE)
+		SetupDiDestroyDeviceInfoList(hdev);
 }
