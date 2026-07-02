@@ -96,6 +96,8 @@ if (libnvmf_exclusion_match(ctx, tid))
 
 `libnvmf_exclusion_match()` re-reads the files on every call (no caching), so an edit takes effect on the next connection attempt without restarting anything. This is the only API an orchestrator needs; the create/add/remove calls are for the management tooling.
 
+`nvme connect-all` is itself such an orchestrating path, and libnvme's discovery-connect code consults the list on its behalf: before connecting anything it *enumerated* — a Discovery Log Page entry (including referral DCs), an NBFT record, or a controller listed in `discovery.conf` / `config.json` — it checks for a match and skips with an INFO-level "skipping excluded controller" note. A Discovery Controller named explicitly on the command line (`nvme discover` / `connect-all` with an address) is a targeted human action and is not checked — though the entries *it* enumerates still are.
+
 The match is by design *not* allowed to **block** `nvme connect <args>` or `nvme disconnect <device>`: those are single, targeted human actions where the operator's intent is explicit. The list governs the *orchestrating* paths that decide on their own. As a courtesy, `nvme connect --verbose` does *consult* the list and prints a note when the target matches — a heads-up that you are overriding your own opt-out — but it still connects.
 
 ## Managing the list

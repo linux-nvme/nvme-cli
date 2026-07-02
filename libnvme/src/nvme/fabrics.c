@@ -1538,6 +1538,50 @@ static void nvmf_update_tls_concat(struct nvmf_disc_log_entry *e,
 	}
 }
 
+/*
+ * Enumerated-connect gate: consult the exclusion list before connecting a
+ * controller that was enumerated from a Discovery Log Page, the NBFT table,
+ * or a configuration file.  Controllers named explicitly by the user
+ * ("nvme connect", "nvme discover" with an address) are deliberately not
+ * checked -- a targeted human action overrides the list.
+ */
+static bool nvmf_excluded(struct libnvme_global_ctx *ctx,
+			  const char *transport, const char *traddr,
+			  const char *trsvcid, const char *subsysnqn,
+			  const char *host_traddr, const char *host_iface,
+			  const char *hostnqn, const char *hostid)
+{
+	struct libnvmf_tid *tid;
+	const char *canonical;
+	bool excluded;
+
+	tid = libnvmf_tid_from_fields(transport, traddr, trsvcid, subsysnqn,
+				      host_traddr, host_iface, hostnqn,
+				      hostid);
+	if (!tid)
+		return false; /* fail-safe: never block on allocation failure */
+
+	excluded = libnvmf_exclusion_match(ctx, tid);
+	if (excluded) {
+		canonical = libnvmf_tid_get_canonical(tid);
+		libnvme_msg(ctx, LIBNVME_LOG_INFO,
+			 "skipping excluded controller %s\n",
+			 canonical ? canonical : subsysnqn);
+	}
+	libnvmf_tid_free(tid);
+
+	return excluded;
+}
+
+static bool nvmf_ctrl_excluded(struct libnvme_global_ctx *ctx,
+			       struct libnvme_host *h, struct libnvme_ctrl *c)
+{
+	return nvmf_excluded(ctx, c->transport, c->traddr, c->trsvcid,
+			     c->subsysnqn, c->host_traddr, c->host_iface,
+			     libnvme_host_get_hostnqn(h),
+			     libnvme_host_get_hostid(h));
+}
+
 static int nvmf_connect_disc_entry(libnvme_host_t h,
 		struct nvmf_disc_log_entry *e,
 		struct libnvmf_context *fctx,
@@ -1590,6 +1634,15 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 		 "lookup ctrl (transport: %s, traddr: %s, trsvcid %s)\n",
 		 fctx->ctrl_params.transport, fctx->ctrl_params.traddr,
 		 fctx->ctrl_params.trsvcid);
+
+	if (nvmf_excluded(h->ctx, fctx->ctrl_params.transport,
+			  fctx->ctrl_params.traddr, fctx->ctrl_params.trsvcid,
+			  fctx->ctrl_params.subsysnqn,
+			  fctx->ctrl_params.host_traddr,
+			  fctx->ctrl_params.host_iface,
+			  libnvme_host_get_hostnqn(h),
+			  libnvme_host_get_hostid(h)))
+		return -EPERM;
 
 	ret = libnvme_create_ctrl(h->ctx, &fctx->ctrl_params, &c);
 	if (ret) {
@@ -2642,6 +2695,15 @@ int _discovery_config_json(struct libnvme_global_ctx *ctx,
 	if (libnvme_ctrl_get_persistent(c))
 		nfctx.persistent = true;
 
+	if (nvmf_excluded(ctx, nfctx.ctrl_params.transport,
+			  nfctx.ctrl_params.traddr, nfctx.ctrl_params.trsvcid,
+			  nfctx.ctrl_params.subsysnqn,
+			  nfctx.ctrl_params.host_traddr,
+			  nfctx.ctrl_params.host_iface,
+			  libnvme_host_get_hostnqn(h),
+			  libnvme_host_get_hostid(h)))
+		return 0;
+
 	if (!force) {
 		cn = lookup_ctrl(h, &nfctx);
 		if (cn) {
@@ -2750,6 +2812,9 @@ __libnvme_public int libnvmf_connect_config_json(struct libnvme_global_ctx *ctx,
 				    strcmp(transport, "fc"))
 					continue;
 
+				if (nvmf_ctrl_excluded(ctx, h, c))
+					continue;
+
 				err = libnvmf_connect_ctrl(c);
 				if (err) {
 					if (err == -ENVME_CONNECT_ALREADY)
@@ -2786,6 +2851,14 @@ __libnvme_public int libnvmf_discovery_config_file(
 		err = fctx->hooks.parser_next_line(&nfctx, fctx->hooks.user_data);
 		if (err)
 			break;
+		if (nvmf_excluded(ctx, nfctx.ctrl_params.transport,
+				  nfctx.ctrl_params.traddr,
+				  nfctx.ctrl_params.trsvcid,
+				  nfctx.ctrl_params.subsysnqn,
+				  nfctx.ctrl_params.host_traddr,
+				  nfctx.ctrl_params.host_iface,
+				  nfctx.hostnqn, nfctx.hostid))
+			continue;
 		libnvmf_discovery(ctx, &nfctx, connect, force);
 	} while (!err);
 
@@ -2949,6 +3022,15 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 
 	c = lookup_ctrl(h, fctx);
 	if (c && libnvme_ctrl_get_name(c))
+		return 0;
+
+	if (nvmf_excluded(ctx, fctx->ctrl_params.transport,
+			  fctx->ctrl_params.traddr, fctx->ctrl_params.trsvcid,
+			  fctx->ctrl_params.subsysnqn,
+			  fctx->ctrl_params.host_traddr,
+			  fctx->ctrl_params.host_iface,
+			  libnvme_host_get_hostnqn(h),
+			  libnvme_host_get_hostid(h)))
 		return 0;
 
 	ret = libnvme_create_ctrl(ctx, &fctx->ctrl_params, &c);
