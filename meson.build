@@ -602,6 +602,7 @@ if want_nvme
     if host_system == 'windows'
         link_deps += [
             kernel32_dep,
+            bcrypt_dep,
         ]
     else
         link_args_list = ['-ldl']
