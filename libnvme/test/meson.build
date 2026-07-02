@@ -179,6 +179,18 @@ if want_fabrics
 
     test('libnvme - exclusion', exclusion)
 
+    ini = executable(
+        'test-ini',
+        ['ini.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+
+    test('libnvme - ini', ini)
+
     uriparser = executable(
         'test-uriparser',
         ['uriparser.c'],
