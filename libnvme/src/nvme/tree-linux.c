@@ -779,7 +779,8 @@ int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-int libnvme_get_ctrl_transport(const char *path, const char *name,
+int libnvme_get_ctrl_transport(__libnvme_unused struct libnvme_global_ctx *ctx,
+		const char *path, const char *name,
 		char **transport, char **traddr, char **addr, char **trsvcid,
 		char **host_traddr, char **host_iface)
 {

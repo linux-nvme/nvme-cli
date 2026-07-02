@@ -1526,8 +1526,9 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 	libnvme_ctrl_t c, p;
 	int ret;
 
-	ret = libnvme_get_ctrl_transport(path, name, &transport, &traddr, &addr,
-					 &trsvcid, &host_traddr, &host_iface);
+	ret = libnvme_get_ctrl_transport(ctx, path, name, &transport, &traddr,
+					 &addr, &trsvcid, &host_traddr,
+					 &host_iface);
 	if (ret)
 		return ret;
 
