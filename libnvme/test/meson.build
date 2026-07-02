@@ -70,25 +70,27 @@ if cxx_available
 
 endif
 
-register = executable(
-    'test-register',
-    ['register.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-)
+if host_system != 'windows'
+    register = executable(
+        'test-register',
+        ['register.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
 
-zns = executable(
-    'test-zns',
-    ['zns.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_test_dep,
-    ],
-)
+    zns = executable(
+        'test-zns',
+        ['zns.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+endif # host_system != 'windows'
 
 if want_mi
     mi = executable(
@@ -259,22 +261,24 @@ if conf.get('NVME_HAVE_NETDB')
     test('libnvme - util', test_util)
 endif
 
-subdir('ioctl')
-if want_fabrics
-    subdir('nbft')
-endif
+if host_system != 'windows'
+    subdir('ioctl')
+    if want_fabrics
+        subdir('nbft')
+    endif
 
-if json_c_dep.found()
-    subdir('sysfs')
-    subdir('config')
-endif
+    if json_c_dep.found()
+        subdir('sysfs')
+        subdir('config')
+    endif
 
-if openssl_dep.found()
-    hkdf_add1 = executable(
-        'hkdf_add1',
-        ['hkdf_add1.c'],
-        dependencies: openssl_dep,
-    )
+    if openssl_dep.found()
+        hkdf_add1 = executable(
+            'hkdf_add1',
+            ['hkdf_add1.c'],
+            dependencies: openssl_dep,
+        )
+    endif
 endif
 
 foreach hdr : [
