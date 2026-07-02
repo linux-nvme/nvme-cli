@@ -65,6 +65,7 @@ if want_fabrics
         'nvme/crypto.c',
         'nvme/exclusion.c',
         'nvme/fabrics.c',
+        'nvme/ini.c',
         'nvme/nbft.c',
         'nvme/registry.c',
         'nvme/tid.c',
