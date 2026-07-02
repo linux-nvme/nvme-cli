@@ -16,13 +16,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
 
 #include <nvme/lib.h>
-#include <nvme/tid.h>
-#include <nvme/accessors-fabrics.h>
+#include <nvme/nvme-types-fabrics.h>
 
 #include "nvme/config-ini.h"
 
@@ -516,6 +516,340 @@ static bool test_parse_hygiene(struct libnvme_global_ctx *ctx)
 	return pass;
 }
 
+
+/* --- resolver fixtures: a config tree under a throwaway directory --- */
+
+static void write_file(const char *dir, const char *name, const char *text)
+{
+	char path[512];
+	FILE *fp;
+
+	snprintf(path, sizeof(path), "%s/%s", dir, name);
+	fp = fopen(path, "w");
+	assert(fp);
+	assert(fputs(text, fp) >= 0);
+	fclose(fp);
+}
+
+static void rm_tree(const char *dir)
+{
+	char cmd[600];
+
+	snprintf(cmd, sizeof(cmd), "rm -rf %s", dir);
+	assert(system(cmd) == 0);
+}
+
+static bool test_resolve_empty(struct libnvme_global_ctx *ctx)
+{
+	char dir[] = "/tmp/nvme-conf-XXXXXX";
+	char main_path[512];
+	struct libnvmf_conf *conf;
+	bool pass = true;
+	int err;
+
+	printf("test_resolve_empty:\n");
+	assert(mkdtemp(dir));
+	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
+
+	/* Nothing on disk: an empty configuration, not an error. */
+	conf = libnvmf_conf_load(ctx, main_path, &err);
+	if (!conf || err || conf->conns) {
+		printf(" - absent config err=%d [FAIL]\n", err);
+		pass = false;
+	} else {
+		printf(" - absent main + absent .d/ -> empty config [PASS]\n");
+	}
+
+	libnvmf_conf_free(conf);
+	rm_tree(dir);
+	return pass;
+}
+
+/*
+ * A hostname traddr must resolve into the connection list verbatim: the
+ * resolver builds no TID (which would reject it), it only merges the
+ * cascade -- resolving the name is the consumer's job.
+ */
+static bool test_resolve_hostname(struct libnvme_global_ctx *ctx)
+{
+	char dir[] = "/tmp/nvme-conf-XXXXXX";
+	char main_path[512];
+	struct libnvmf_conf *conf;
+	struct libnvmf_conf_conn *conn;
+	bool pass = true;
+	int err;
+
+	printf("test_resolve_hostname:\n");
+	assert(mkdtemp(dir));
+	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
+	write_file(dir, "nvme-fabrics.conf",
+		   "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:vol1\n"
+		   "controller = transport=tcp;traddr=storage.example.com\n");
+
+	conf = libnvmf_conf_load(ctx, main_path, &err);
+	conn = conf ? conf->conns : NULL;
+	if (!conf || !conn || conn->next ||
+	    strcmp(conn->traddr, "storage.example.com")) {
+		printf(" - hostname traddr resolved err=%d [FAIL]\n", err);
+		pass = false;
+	} else {
+		printf(" - hostname traddr survives the cascade raw [PASS]\n");
+	}
+
+	libnvmf_conf_free(conf);
+	rm_tree(dir);
+	return pass;
+}
+
+static bool test_resolve_cascade(struct libnvme_global_ctx *ctx)
+{
+	static const char main_text[] =
+		"[Discovery Controller Defaults]\n"
+		"keep-alive-tmo = 30\n"
+		"ctrl-loss-tmo = 600\n"
+		"reconnect-delay = 10\n"
+		"tos = 1\n"
+		"[I/O Controller Defaults]\n"
+		"keep-alive-tmo = 5\n"
+		"ctrl-loss-tmo = 600\n"
+		"reconnect-delay = 10\n"
+		"tos = 1\n"
+		"[Host]\n"
+		"hostnqn = nqn.2014-08.org.nvmexpress:main-host\n"
+		"[Subsystem]\n"
+		"nqn = nqn.2014-08.org.nvmexpress:main-vol\n"
+		"controller = transport=tcp;traddr=192.0.2.1;trsvcid=4420\n";
+	static const char prod_text[] =
+		"[Discovery Controller Defaults]\n"
+		"tos = 7\n"
+		"[I/O Controller Defaults]\n"
+		"tos = 7\n"
+		"[Host]\n"
+		"hostnqn = nqn.2014-08.org.nvmexpress:prod-host\n"
+		"hostid = 46ba5037-7ce5-41fa-9452-48477bf00080\n"
+		"dhchap-secret = DHHC-1:00:abc\n"
+		"[Discovery Controller]\n"
+		"controller = transport=tcp;traddr=10.0.0.5;trsvcid=8009\n"
+		"[Subsystem]\n"
+		"nqn = nqn.2014-08.org.nvmexpress:prod-vol\n"
+		"ctrl-loss-tmo = 1800\n"
+		"reconnect-delay =\n"
+		"controller = transport=tcp;traddr=10.0.0.9;keep-alive-tmo=99\n"
+		"controller = transport=tcp;traddr=10.0.0.10\n";
+	char dir[] = "/tmp/nvme-conf-XXXXXX";
+	char main_path[512], dropin_dir[512];
+	struct libnvmf_conf *conf;
+	struct libnvmf_conf_conn *mv, *dc, *p1, *p2;
+	bool pass = true;
+	int err;
+
+	printf("test_resolve_cascade:\n");
+	assert(mkdtemp(dir));
+	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
+	snprintf(dropin_dir, sizeof(dropin_dir), "%s/nvme-fabrics.conf.d",
+		 dir);
+	assert(mkdir(dropin_dir, 0755) == 0);
+	write_file(dir, "nvme-fabrics.conf", main_text);
+	write_file(dropin_dir, "10-prod.conf", prod_text);
+
+	conf = libnvmf_conf_load(ctx, main_path, &err);
+	if (!conf) {
+		printf(" - load failed: %d [FAIL]\n", err);
+		rm_tree(dir);
+		return false;
+	}
+
+	/* Order: main file first, then the drop-in; paths in file order. */
+	mv = conf->conns;
+	dc = mv ? mv->next : NULL;
+	p1 = dc ? dc->next : NULL;
+	p2 = p1 ? p1->next : NULL;
+	if (!p2 || p2->next) {
+		printf(" - expected exactly 4 connections [FAIL]\n");
+		libnvmf_conf_free(conf);
+		rm_tree(dir);
+		return false;
+	}
+	printf(" - 4 connections, main first then sorted drop-ins [PASS]\n");
+
+	/* Main-file subsystem: main scope only. */
+	if (mv->is_dc ||
+	    strcmp(mv->subsysnqn, "nqn.2014-08.org.nvmexpress:main-vol") ||
+	    strcmp(mv->hostnqn, "nqn.2014-08.org.nvmexpress:main-host") ||
+	    mv->hostid ||
+	    strcmp(libnvmf_params_get(mv->params, "ctrl-loss-tmo"), "600") ||
+	    strcmp(libnvmf_params_get(mv->params, "keep-alive-tmo"), "5") ||
+	    strcmp(libnvmf_params_get(mv->params, "tos"), "1")) {
+		printf(" - main-file subsystem [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - main persona + IOC defaults [PASS]\n");
+	}
+
+	/* Drop-in DC: default NQN, prod persona, overlaid tos, DC kato. */
+	if (!dc->is_dc ||
+	    strcmp(dc->subsysnqn, NVME_DISC_SUBSYS_NAME) ||
+	    strcmp(dc->hostnqn, "nqn.2014-08.org.nvmexpress:prod-host") ||
+	    strcmp(dc->hostid,
+		   "46ba5037-7ce5-41fa-9452-48477bf00080") ||
+	    strcmp(libnvmf_params_get(dc->params, "keep-alive-tmo"), "30") ||
+	    strcmp(libnvmf_params_get(dc->params, "tos"), "7") ||
+	    strcmp(libnvmf_params_get(dc->params, "dhchap-secret"),
+		   "DHHC-1:00:abc")) {
+		printf(" - drop-in DC [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - DC: well-known NQN, persona, defaults [PASS]\n");
+	}
+
+	/* DLP blocks: what a controller discovered via this DC would get. */
+	if (!dc->dlp_ioc_params ||
+	    strcmp(libnvmf_params_get(dc->dlp_ioc_params, "keep-alive-tmo"),
+		   "5") ||
+	    strcmp(libnvmf_params_get(dc->dlp_ioc_params, "tos"), "7") ||
+	    strcmp(libnvmf_params_get(dc->dlp_dc_params, "keep-alive-tmo"),
+		   "30")) {
+		printf(" - DC discovered-defaults blocks [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - discovered-controller defaults ride the DC [PASS]\n");
+	}
+
+	/* Paths: endpoint > defaults; per-path override; explicit reset. */
+	if (strcmp(libnvmf_params_get(p1->params, "ctrl-loss-tmo"), "1800") ||
+	    strcmp(libnvmf_params_get(p1->params, "keep-alive-tmo"), "99") ||
+	    strcmp(libnvmf_params_get(p2->params, "keep-alive-tmo"), "5") ||
+	    strcmp(libnvmf_params_get(p1->params, "reconnect-delay"), "") ||
+	    strcmp(p1->subsysnqn, "nqn.2014-08.org.nvmexpress:prod-vol")) {
+		printf(" - path cascade [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - endpoint override, per-path override, reset [PASS]\n");
+	}
+
+	/* Top-level scope blocks: main file only, no drop-in leakage. */
+	if (strcmp(libnvmf_params_get(conf->top_ioc_params, "tos"), "1") ||
+	    strcmp(libnvmf_params_get(conf->top_dc_params, "keep-alive-tmo"),
+		   "30")) {
+		printf(" - top-level discovered defaults [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - top-level scope stays main-file-only [PASS]\n");
+	}
+
+	/* Provenance. */
+	if (!strstr(dc->source, "10-prod.conf") ||
+	    !strstr(mv->source, "nvme-fabrics.conf")) {
+		printf(" - provenance [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - per-connection source file recorded [PASS]\n");
+	}
+
+	libnvmf_conf_free(conf);
+	rm_tree(dir);
+	return pass;
+}
+
+static bool resolve_expect_fail(struct libnvme_global_ctx *ctx,
+				const char *name, const char *dropin1,
+				const char *dropin2)
+{
+	char dir[] = "/tmp/nvme-conf-XXXXXX";
+	char main_path[512], dropin_dir[512];
+	struct libnvmf_conf *conf;
+	int err = 0;
+
+	assert(mkdtemp(dir));
+	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
+	snprintf(dropin_dir, sizeof(dropin_dir), "%s/nvme-fabrics.conf.d",
+		 dir);
+	assert(mkdir(dropin_dir, 0755) == 0);
+	write_file(dropin_dir, "10-a.conf", dropin1);
+	if (dropin2)
+		write_file(dropin_dir, "20-b.conf", dropin2);
+
+	conf = libnvmf_conf_load(ctx, main_path, &err);
+	libnvmf_conf_free(conf);
+	rm_tree(dir);
+	if (conf || err != -EINVAL) {
+		printf(" - %s: not rejected (err=%d) [FAIL]\n", name, err);
+		return false;
+	}
+
+	return true;
+}
+
+static bool test_resolve_personas(struct libnvme_global_ctx *ctx)
+{
+	bool pass = true;
+	char dir[] = "/tmp/nvme-conf-XXXXXX";
+	char main_path[512], dropin_dir[512];
+	struct libnvmf_conf *conf;
+	struct libnvmf_conf_conn *conn;
+	int err;
+
+	printf("test_resolve_personas:\n");
+
+	pass &= resolve_expect_fail(ctx, "drop-in [Host] without hostnqn",
+		"[Host]\nhostid = 46ba5037-7ce5-41fa-9452-48477bf00080\n",
+		NULL);
+	pass &= resolve_expect_fail(ctx, "same hostid, two personas",
+		"[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:a\nhostid = 46ba5037-7ce5-41fa-9452-48477bf00080\n",
+		"[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:b\nhostid = 46ba5037-7ce5-41fa-9452-48477bf00080\n");
+	pass &= resolve_expect_fail(ctx, "one hostnqn, two explicit hostids",
+		"[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:a\nhostid = 46ba5037-7ce5-41fa-9452-48477bf00080\n",
+		"[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:a\nhostid = ffffffff-7ce5-41fa-9452-48477bf00080\n");
+	pass &= resolve_expect_fail(ctx, "one hostnqn, only one file sets a hostid",
+		"[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:a\nhostid = 46ba5037-7ce5-41fa-9452-48477bf00080\n",
+		"[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:a\n");
+	if (pass)
+		printf(" - relational Tier 1 rules rejected [PASS]\n");
+
+	/* A hostnqn reused between the top-level file and a drop-in. */
+	assert(mkdtemp(dir));
+	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
+	snprintf(dropin_dir, sizeof(dropin_dir), "%s/nvme-fabrics.conf.d",
+		 dir);
+	assert(mkdir(dropin_dir, 0755) == 0);
+	write_file(dir, "nvme-fabrics.conf", "[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:a\n");
+	write_file(dropin_dir, "10-a.conf", "[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:a\n");
+	err = libnvmf_config_load(ctx, main_path, &conf);
+	if (conf || err != -EINVAL) {
+		printf(" - drop-in reuses top-level hostnqn err=%d [FAIL]\n",
+		       err);
+		pass = false;
+	} else {
+		printf(" - drop-in reusing the top-level hostnqn rejected [PASS]\n");
+	}
+	libnvmf_config_free(conf);
+	rm_tree(dir);
+
+	/* A drop-in with no [Host] is the default persona: legal. */
+	strcpy(dir, "/tmp/nvme-conf-XXXXXX");
+	assert(mkdtemp(dir));
+	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
+	snprintf(dropin_dir, sizeof(dropin_dir), "%s/nvme-fabrics.conf.d",
+		 dir);
+	assert(mkdir(dropin_dir, 0755) == 0);
+	write_file(dropin_dir, "10-a.conf",
+		   "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:x\n"
+		   "controller = transport=tcp;traddr=192.0.2.9\n");
+	conf = libnvmf_conf_load(ctx, main_path, &err);
+	conn = conf ? conf->conns : NULL;
+	if (!conf || !conn || conn->next ||
+	    conn->hostnqn) {
+		printf(" - default-persona drop-in err=%d [FAIL]\n", err);
+		pass = false;
+	} else {
+		printf(" - drop-in without [Host] = default persona [PASS]\n");
+	}
+	libnvmf_conf_free(conf);
+	rm_tree(dir);
+
+	return pass;
+}
+
 int main(void)
 {
 	struct libnvme_global_ctx *ctx;
@@ -532,6 +866,10 @@ int main(void)
 	pass &= test_parse_hostname(ctx);
 	pass &= test_parse_errors(ctx);
 	pass &= test_parse_hygiene(ctx);
+	pass &= test_resolve_empty(ctx);
+	pass &= test_resolve_hostname(ctx);
+	pass &= test_resolve_cascade(ctx);
+	pass &= test_resolve_personas(ctx);
 
 	libnvme_free_global_ctx(ctx);
 

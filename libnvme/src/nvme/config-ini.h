@@ -160,3 +160,58 @@ int libnvmf_conf_file_parse(
 		struct libnvme_global_ctx *ctx,
 		const char *path, struct libnvmf_conf_file **file);
 void libnvmf_conf_file_free(struct libnvmf_conf_file *f);
+
+/*
+ * The resolved configuration: the flat list of connections the files add up
+ * to, every cascade applied.  This is what CONFIG.md means by "the grouping
+ * evaporates" -- consumers see (role, addressing, identity, params), never
+ * files or sections.
+ */
+
+struct libnvmf_conf_conn {
+	struct libnvmf_conf_conn *next;
+	bool is_dc;
+	/*
+	 * Complete addressing and identity information.
+	 *
+	 * Address and identity fields are stored as raw strings. TID
+	 * construction is deferred to the consumer.
+	 */
+	char *transport;
+	char *traddr;
+	char *trsvcid;
+	char *host_traddr;
+	char *host_iface;
+	char *subsysnqn;
+	char *hostnqn;
+	char *hostid;
+	struct libnvmf_params *params;
+	/* the Discovery Information Entry (DIE) symbolic name */
+	char *hostsymname;
+	char *source;		       /* originating file */
+	unsigned int line;	       /* its controller= line */
+	/*
+	 * DC only: the resolved defaults for controllers *discovered* via this
+	 * DC (referral DCs / DLP IOCs), i.e. its file scope minus any endpoint
+	 * level.
+	 */
+	struct libnvmf_params *dlp_dc_params;
+	struct libnvmf_params *dlp_ioc_params;
+};
+
+struct libnvmf_conf {
+	struct libnvmf_conf_conn *conns; /* main file first, then sorted drop-ins */
+	/* Top-level scope defaults for discovered controllers with no via-DC
+	 * (an mDNS-found DC). */
+	struct libnvmf_params *top_dc_params;
+	struct libnvmf_params *top_ioc_params;
+};
+
+/*
+ * Load and resolve @path plus the .conf drop-ins under <path>.d.  A missing
+ * main file or drop-in directory is not an error (an absent configuration is
+ * empty); any Tier 1 problem in any file fails the load as a unit.
+ */
+struct libnvmf_conf *libnvmf_conf_load(struct libnvme_global_ctx *ctx,
+		const char *path, int *err);
+void libnvmf_conf_free(struct libnvmf_conf *conf);
