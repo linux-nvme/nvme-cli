@@ -26,6 +26,7 @@ import json
 import logging
 import mmap
 import os
+import platform
 import re
 import shutil
 import stat
@@ -69,6 +70,9 @@ class TestNVMe(unittest.TestCase):
             - config_file : configuration file.
             - clear_log_dir : default log directory.
     """
+
+    def is_windows(self):
+        return platform.system() == 'Windows'
 
     def setUp(self):
         """ Pre Section for TestNVMe. """
@@ -119,6 +123,7 @@ class TestNVMe(unittest.TestCase):
         """
         self.dps = 0
         self.flbas = 0
+
         (ds, ms) = self.get_lba_format_size()
         ncap = int(self.get_ncap() / (ds+ms))
         self.nsze = ncap
@@ -140,6 +145,9 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - None
         """
+        if self.is_windows():
+            return
+
         x1, x2, dev = self.ctrl.split('/')
         cmd = "find /sys/devices -name \\*" + dev + " | grep -i pci"
         err = self.run_cmd(cmd).returncode
@@ -250,9 +258,11 @@ class TestNVMe(unittest.TestCase):
         nvme_reset_cmd = f"{self.nvme_bin} reset {self.ctrl}"
         err = self.run_cmd(nvme_reset_cmd).returncode
         self.assertEqual(err, 0, "ERROR : nvme reset failed")
-        rescan_cmd = "echo 1 > /sys/bus/pci/rescan"
-        result = self.run_cmd(rescan_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : pci rescan failed")
+
+        if not self.is_windows():   # Rescan occurs during reset on Windows
+            rescan_cmd = "echo 1 > /sys/bus/pci/rescan"
+            result = self.run_cmd(rescan_cmd)
+            self.assertEqual(result.returncode, 0, "ERROR : pci rescan failed")
 
     def get_ctrl_id(self):
         """ Wrapper for extracting the first controller id.
@@ -295,6 +305,9 @@ class TestNVMe(unittest.TestCase):
             bool: True if both Namespace Management and Namespace Attachment
             are supported, False otherwise.
         """
+        if self.is_windows():
+            return False    # Namespace management not supported on Windows
+
         oacs = to_decimal(self.get_id_ctrl_field_value("oacs"))
 
         ns_mgmt_supported = bool(oacs & (1 << 3))

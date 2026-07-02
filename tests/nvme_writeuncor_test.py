@@ -46,6 +46,8 @@ class TestNVMeUncor(TestNVMeIO):
     def setUp(self):
         """ Constructor TestNVMeUncor """
         super().setUp()
+        if self.is_windows():
+            self.skipTest("Write Uncorrectable command not supported by Windows")
         self.start_block = 1023
         self.setup_log_dir(self.__class__.__name__)
         self.write_file = self.test_log_dir + "/" + self.write_file
