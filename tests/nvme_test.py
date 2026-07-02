@@ -679,6 +679,87 @@ class TestNVMe(unittest.TestCase):
 
         return 0 if err_log_entry_count == entry_count else 1
 
+    def _get_rw_io_params_per_lba(self, lba_size=None, update_cache=False):
+        """Return (ms, prinfo, data_size_per_lba).
+
+        ms: metadata size per LBA.
+        prinfo: NVMe Protection Information setting (0 or 8).
+        data_size_per_lba: data payload per LBA (block_size + metadata if extended).
+
+        Args:
+            lba_size:     Optional LBA data size in bytes. If 0 or None, uses
+                          namespace's default LBA data size.
+            update_cache: If True, refresh cached namespace parameters
+                          from the device. Defaults to False.
+
+        PI type occupies bits 2:0 of the DPS field; bits 5:3 are PIF.
+        """
+        # Update cached values in case they were changed by a previous action.
+        if update_cache:
+            self.ns_dps = self._get_ns_dps()
+            self.ns_meta_ext = self._is_metadata_ext()
+            self.flbas = self._get_active_lbaf_index()
+        (ds, ms) = self.get_lba_format_size()
+
+        # Determine block size from provided size, or use namespace default.
+        block_size = ds if lba_size in (None, 0) else int(lba_size)
+
+        pi_type = self.ns_dps & 0x7
+
+        if pi_type != 0 and ms != 0 and self.ns_meta_ext:
+            # PI active + extended LBA (metadata appended to data buffer).
+            # Use PRACT=1 (--prinfo=8) so the controller inserts and strips PI
+            # automatically. With PRACT=1 the PI bytes are not transferred
+            # over the host interface, so data_size equals the logical block
+            # data size only (block_size), not block_size+ms. This works for all PI sizes
+            # (8 bytes for PIF 0/2, 16 bytes for PIF 1) and all guard widths
+            # (16-bit, 32-bit, 64-bit CRC) because the controller handles
+            # the PI entirely.
+            prinfo = 8
+            data_size = block_size
+        elif pi_type != 0 and ms != 0 and not self.ns_meta_ext:
+            # PI active + separate metadata (flbas bit 4 clear). PRACT=1
+            # (--prinfo=8) is invalid for the Compare command on this format
+            # (NVMe spec: PRACT=1 for Compare requires PI in the host data
+            # buffer, which only applies to the extended-LBA layout). Use
+            # prinfo=0 (PRACT=0, PRCHK=0) for all operations and supply an
+            # explicit zero-filled metadata buffer of ms bytes so that the
+            # stored metadata and the compared metadata are both known zeros.
+            # PRCHK=0 skips PI validation, so the zero PI bytes are accepted
+            # by the controller on write and matched exactly on compare. This
+            # is PI-format and guard-width agnostic: the entire ms-byte
+            # metadata slot (whether holding an 8-byte PI with 16-bit or
+            # 32-bit guard, or a 16-byte PI with 64-bit guard) is zeroed.
+            prinfo = 0
+            data_size = block_size
+        else:
+            # No PI. For extended LBA format (metadata appended to the data
+            # buffer) include the metadata bytes so that the controller sees
+            # a consistent data+metadata unit. For separate metadata format
+            # (flbas bit 4 clear) metadata is transferred via a different
+            # pointer and must NOT be folded into the data buffer; use block_size only
+            # so that the data transfer length matches exactly one LBA.
+            prinfo = 0
+            data_size = block_size + ms if self.ns_meta_ext else block_size
+
+        return ms, prinfo, data_size
+
+    def _build_nvme_rw_cmd(self, opcode, ns_path, start_block, block_count,
+                           data_size, data_file, prinfo=0,
+                           metadata_size=0, metadata_file=None):
+        """Build nvme read/write command with optional PI/metadata options."""
+        cmd = f'{self.nvme_bin} {opcode} {ns_path} ' + \
+            f'--start-block={str(start_block)} ' + \
+            f'--block-count={str(block_count)} ' + \
+            f'--data-size={str(data_size)} --data="{data_file}"'
+
+        if prinfo:
+            cmd += f" --prinfo={prinfo}"
+        if metadata_size > 0 and metadata_file is not None:
+            cmd += f' --metadata-size={metadata_size} --metadata="{metadata_file}"'
+
+        return cmd
+
     def run_ns_io(self, nsid, lbads, count=10):
         """ Wrapper to run ios on namespace under test.
             - Args:
@@ -686,12 +767,39 @@ class TestNVMe(unittest.TestCase):
             - Returns:
                 - None
         """
-        (ds, _) = self.get_lba_format_size()
-        block_size = ds if int(lbads) < 9 else 2 ** int(lbads)
-        ns_path = self.ctrl + "n" + str(nsid)
-        io_cmd = "dd if=" + ns_path + " of=/dev/null" + " bs=" + \
-                 str(block_size) + " count=" + str(count)
-        self.assertEqual(self.run_cmd(io_cmd).returncode, 0)
-        io_cmd = "dd if=/dev/zero of=" + ns_path + " bs=" + \
-                 str(block_size) + " count=" + str(count)
-        self.assertEqual(self.run_cmd(io_cmd).returncode, 0)
+        count = int(count)
+        lbads = 0 if lbads is None else int(lbads)
+        lba_size = 0 if lbads < 9 else 2 ** lbads
+        ms, prinfo, data_size_per_lba = self._get_rw_io_params_per_lba(lba_size, True)
+        ns_path = self.ns1 if int(nsid) == int(self.default_nsid) else self.ctrl + "n" + str(nsid)
+        block_count = count - 1
+        data_size = data_size_per_lba * count
+        metadata_size = ms * count if ms > 0 and not self.ns_meta_ext else 0
+
+        log_root = self.test_log_dir if self.test_log_dir != "XXX" else self.log_dir
+        if not os.path.exists(log_root):
+            os.makedirs(log_root)
+
+        write_file = os.path.join(log_root, f"run_ns_io_write_{nsid}.bin")
+        read_file = os.path.join(log_root, f"run_ns_io_read_{nsid}.bin")
+        write_meta_file = os.path.join(log_root, f"run_ns_io_write_meta_{nsid}.bin")
+        read_meta_file = os.path.join(log_root, f"run_ns_io_read_meta_{nsid}.bin")
+
+        with open(write_file, "wb") as out_file:
+            out_file.write(bytes(data_size))
+        open(read_file, 'a').close()
+
+        if metadata_size > 0:
+            with open(write_meta_file, "wb") as meta_out:
+                meta_out.write(bytes(metadata_size))
+            open(read_meta_file, 'a').close()
+
+        read_cmd = self._build_nvme_rw_cmd("read", ns_path, 0, block_count,
+                                           data_size, read_file, prinfo,
+                                           metadata_size, read_meta_file)
+        self.assertEqual(self.run_cmd(read_cmd).returncode, 0)
+
+        write_cmd = self._build_nvme_rw_cmd("write", ns_path, 0, block_count,
+                                            data_size, write_file, prinfo,
+                                            metadata_size, write_meta_file)
+        self.assertEqual(self.run_cmd(write_cmd).returncode, 0)
