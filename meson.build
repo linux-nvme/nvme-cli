@@ -560,7 +560,6 @@ if want_nvme
         ]
     else
         sources += [
-            'libnvme-wrap.c',
             'logging.c',
             'nvme-cmds.c',
             'nvme-models.c',
