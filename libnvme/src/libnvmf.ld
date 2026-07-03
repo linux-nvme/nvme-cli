@@ -24,6 +24,7 @@ LIBNVMF_3 {
 		libnvmf_config_resolve_discovered;
 		libnvmf_config_validate;
 		libnvmf_connect;
+		libnvmf_connect_args_emit;
 		libnvmf_connect_config_json;
 		libnvmf_connect_ctrl;
 		libnvmf_context_create;
