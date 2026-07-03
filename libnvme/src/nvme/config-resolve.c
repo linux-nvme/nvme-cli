@@ -298,7 +298,7 @@ static int check_personas(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-static int dropin_filter(const struct dirent *d)
+int libnvmf_conf_dropin_filter(const struct dirent *d)
 {
 	const char *dot = strrchr(d->d_name, '.');
 
@@ -327,7 +327,7 @@ int libnvmf_config_load(struct libnvme_global_ctx *ctx, const char *path,
 		goto out;
 	}
 
-	n = scandir(dirname, &entries, dropin_filter, alphasort);
+	n = scandir(dirname, &entries, libnvmf_conf_dropin_filter, alphasort);
 	if (n < 0) {
 		if (errno != ENOENT) {
 			ret = -errno;

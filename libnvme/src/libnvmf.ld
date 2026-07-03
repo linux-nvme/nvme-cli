@@ -18,6 +18,10 @@ LIBNVMF_3 {
 		libnvmf_config_conn_get_transport;
 		libnvmf_config_conn_get_trsvcid;
 		libnvmf_config_conn_is_dc;
+		libnvmf_config_emit_add;
+		libnvmf_config_emit_free;
+		libnvmf_config_emit_install;
+		libnvmf_config_emit_new;
 		libnvmf_config_free;
 		libnvmf_config_modify;
 		libnvmf_config_read;
@@ -81,7 +85,10 @@ LIBNVMF_3 {
 		libnvmf_nbft_free;
 		libnvmf_nbft_read_files;
 		libnvmf_params_for_each;
+		libnvmf_params_free;
 		libnvmf_params_get;
+		libnvmf_params_new;
+		libnvmf_params_set;
 		libnvmf_prtype_str;
 		libnvmf_qptype_str;
 		libnvmf_read_hostid;

@@ -27,20 +27,13 @@
  *   value == ""     -> reset: stop inheriting and use the kernel default;
  *   value == "..."  -> set to the specified value.
  *
- * Keeping these states separate allows the precedence rules and the
- * reset-to-kernel-default form ("key =") to be represented without ambiguity.
- *
  * Values are stored as strings from the configuration file. They are
  * validated when added (libnvmf_key_check_value) and interpreted when
  * emitted. Iteration order follows the order in which keys were inserted.
+ * The store itself is public (new/set/get/for_each/free live in
+ * <nvme/config.h>); only the whole-store operations below stay internal.
  */
-struct libnvmf_params *libnvmf_params_new(void);
 struct libnvmf_params *libnvmf_params_dup(const struct libnvmf_params *p);
-void libnvmf_params_free(struct libnvmf_params *p);
-
-/* Set @key to @value (replacing an earlier value); "" records a reset. */
-int libnvmf_params_set(struct libnvmf_params *p, const char *key,
-		const char *value);
 
 /* Overlay @src onto @dst: every key present in @src wins. */
 int libnvmf_params_merge(struct libnvmf_params *dst,
@@ -212,3 +205,7 @@ struct libnvmf_config {
  */
 int libnvmf_config_load(struct libnvme_global_ctx *ctx, const char *path,
 		struct libnvmf_config **out);
+
+/* The scandir() filter selecting *.conf drop-ins. */
+struct dirent;
+int libnvmf_conf_dropin_filter(const struct dirent *d);

@@ -304,6 +304,119 @@ int libnvmf_connect_args_emit(const struct libnvmf_tid *tid,
 		void *user_data);
 
 /**
+ * struct libnvmf_config_emitter - Configuration emitter.
+ *
+ * Opaque type used to build and write an NVMe Fabrics configuration.
+ */
+struct libnvmf_config_emitter;
+
+/**
+ * libnvmf_config_emit_new() - Create a configuration emitter.
+ * @ctx: libnvme global context. Must not be NULL.
+ *
+ * Return: A new emitter on success, or NULL on failure.
+ * Free the emitter with libnvmf_config_emit_free().
+ */
+struct libnvmf_config_emitter *libnvmf_config_emit_new(
+		struct libnvme_global_ctx *ctx);
+
+/**
+ * libnvmf_config_emit_free() - Free a configuration emitter.
+ * @emitter: Emitter to free. NULL is ignored.
+ */
+void libnvmf_config_emit_free(struct libnvmf_config_emitter *emitter);
+
+/**
+ * libnvmf_config_emit_add() - Add a connection to a configuration emitter.
+ * @emitter:     Configuration emitter.
+ * @is_dc:       Discovery controller if true, I/O controller if false.
+ * @transport:   Transport type. Required.
+ * @traddr:      Transport address. Required. Written verbatim, even if a
+ *               hostname; resolution happens at connect time, not here.
+ * @trsvcid:     Transport service ID, or NULL.
+ * @subsysnqn:   Subsystem NQN. Required unless @is_dc is true.
+ * @host_traddr: Host transport address, or NULL.
+ * @host_iface:  Host interface, or NULL.
+ * @hostnqn:     Host NQN, or NULL.
+ * @hostid:      Host identifier, or NULL.
+ * @params:      Connection parameters, or NULL.
+ * @hostsymname: Host symbolic name, or NULL.
+ *
+ * The parameter set is copied by the emitter.
+ *
+ * Return:
+ * * 0 on success.
+ * * -EINVAL if a required parameter is missing or if @hostsymname
+ *   conflicts with an existing persona.
+ * * -ENOMEM if memory allocation fails.
+ */
+int libnvmf_config_emit_add(struct libnvmf_config_emitter *emitter,
+		bool is_dc, const char *transport, const char *traddr,
+		const char *trsvcid, const char *subsysnqn,
+		const char *host_traddr, const char *host_iface,
+		const char *hostnqn, const char *hostid,
+		const struct libnvmf_params *params, const char *hostsymname);
+
+/**
+ * libnvmf_config_emit_install() - Write a configuration to disk.
+ * @emitter: Configuration emitter.
+ * @file:  Destination configuration file, or NULL to use the default
+ *         configuration file.
+ * @force: Overwrite an existing configuration if true.
+ *
+ * The default persona is written to the main configuration file. Each
+ * named persona is written to a separate drop-in file.
+ *
+ * The generated configuration is validated by reading it back through the
+ * standard parser before it is installed. Files are written atomically
+ * (temporary file followed by rename). If any step fails, no configuration
+ * is installed.
+ *
+ * Return:
+ * * 0 on success.
+ * * -EEXIST if a configuration already exists and @force is false.
+ * * -EINVAL if @emitter is NULL.
+ * * A negative errno value on other failures.
+ */
+int libnvmf_config_emit_install(struct libnvmf_config_emitter *emitter,
+		const char *file, bool force);
+
+/**
+ * libnvmf_params_new() - Create a connection parameter set.
+ *
+ * Return: A new parameter set on success, or NULL on failure.
+ * Free the parameter set with libnvmf_params_free().
+ */
+struct libnvmf_params *libnvmf_params_new(void);
+
+/**
+ * libnvmf_params_free() - Free a connection parameter set.
+ * @params: Parameter set to free. NULL is ignored.
+ *
+ * Only free a set obtained from libnvmf_params_new(); never call this on
+ * a set borrowed from a configuration.
+ */
+void libnvmf_params_free(struct libnvmf_params *params);
+
+/**
+ * libnvmf_params_set() - Set a connection parameter.
+ * @params: Caller-owned parameter set.
+ * @key:   Parameter name.
+ * @value: Parameter value as a string. An empty string restores the
+ *         kernel default for the parameter.
+ *
+ * If the parameter already exists, its value is replaced.
+ *
+ * Return:
+ * * 0 on success.
+ * * -EINVAL if @key is unknown, is not a connection parameter,
+ *   or if @value is invalid for the parameter type.
+ * * -ENOMEM if memory allocation fails.
+ */
+int libnvmf_params_set(struct libnvmf_params *params, const char *key,
+		const char *value);
+
+/**
  * libnvmf_params_get() - look up one connection parameter.
  * @params: a resolved parameter set
  * @key:    the configuration key name (the "nvme connect" long-option name,

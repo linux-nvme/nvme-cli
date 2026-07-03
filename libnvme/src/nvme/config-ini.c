@@ -128,6 +128,10 @@ int libnvmf_key_check_value(const struct libnvmf_key *key, const char *value)
 	if (!*value)
 		return 0;
 
+	/* A value must survive a round trip through a line-based file. */
+	if (strpbrk(value, "\n\r"))
+		return -EINVAL;
+
 	switch (key->type) {
 	case LIBNVMF_KEY_INT:
 		return check_int(value);
@@ -150,7 +154,7 @@ struct libnvmf_params {
 	struct list_head list;
 };
 
-struct libnvmf_params *libnvmf_params_new(void)
+__libnvme_public struct libnvmf_params *libnvmf_params_new(void)
 {
 	struct libnvmf_params *p = calloc(1, sizeof(*p));
 
@@ -161,7 +165,7 @@ struct libnvmf_params *libnvmf_params_new(void)
 	return p;
 }
 
-void libnvmf_params_free(struct libnvmf_params *p)
+__libnvme_public void libnvmf_params_free(struct libnvmf_params *p)
 {
 	struct kv *e, *next;
 
@@ -205,13 +209,27 @@ static int kv_append(struct libnvmf_params *p, const char *key, char *value)
 	return 0;
 }
 
-int libnvmf_params_set(struct libnvmf_params *p, const char *key,
-		const char *value)
+__libnvme_public int libnvmf_params_set(struct libnvmf_params *p,
+		const char *key, const char *value)
 {
+	const struct libnvmf_key *k;
 	struct kv *e;
 	char *copy;
 
 	if (!p || !key || !value)
+		return -EINVAL;
+
+	/*
+	 * Only connection parameters live in the store.  Addressing and
+	 * identity belong to the TID (and hostsymname to the persona), so
+	 * their keys are rejected here along with unknown keys and
+	 * type-invalid values.
+	 */
+	k = libnvmf_key_lookup(key);
+	if (!k || (k->class != LIBNVMF_KEY_TUNABLE &&
+		   k->class != LIBNVMF_KEY_SECURITY))
+		return -EINVAL;
+	if (libnvmf_key_check_value(k, value))
 		return -EINVAL;
 
 	copy = strdup(value);
