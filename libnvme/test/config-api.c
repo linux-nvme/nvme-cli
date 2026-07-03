@@ -19,10 +19,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <ccan/array_size/array_size.h>
+
 #include <nvme/lib.h>
 #include <nvme/config.h>
 #include <nvme/nvme-types-fabrics.h>
-#include <nvme/accessors-fabrics.h>
+#include <nvme/tid.h>
 
 static void write_file(const char *dir, const char *name, const char *text)
 {
@@ -60,6 +62,7 @@ static const char main_text[] =
 	"[Subsystem]\n"
 	"nqn = nqn.2014-08.org.nvmexpress:main-vol\n"
 	"tls = true\n"
+	"data-digest = no\n"
 	"controller = transport=tcp;traddr=10.0.0.9;trsvcid=4420\n";
 
 static const char prod_text[] =
@@ -69,6 +72,7 @@ static const char prod_text[] =
 	"hostsymname = prod\n"
 	"[Subsystem]\n"
 	"nqn = nqn.2014-08.org.nvmexpress:prod-vol\n"
+	"reconnect-delay =\n"
 	"controller = transport=tcp;traddr=10.0.0.7;trsvcid=4420;ctrl-loss-tmo=1800\n";
 
 struct fixture {
@@ -321,6 +325,150 @@ static bool test_validate(struct libnvme_global_ctx *ctx,
 	return pass;
 }
 
+struct arg_list {
+	char args[16][96];
+	size_t n;
+};
+
+static void collect_arg(const char *arg, void *user_data)
+{
+	struct arg_list *list = user_data;
+
+	assert(list->n < 16);
+	snprintf(list->args[list->n++], sizeof(list->args[0]), "%s", arg);
+}
+
+static bool args_match(const struct arg_list *list,
+		       const char * const *expect, size_t n)
+{
+	size_t i;
+
+	if (list->n != n)
+		return false;
+	for (i = 0; i < n; i++) {
+		if (strcmp(list->args[i], expect[i]))
+			return false;
+	}
+
+	return true;
+}
+
+/*
+ * A connection's addressing is raw strings, not a TID (see config.h) -- an
+ * emitter caller resolves (traddr here is already numeric) and builds the
+ * TID itself, exactly like this.
+ */
+static struct libnvmf_tid *build_tid(const struct libnvmf_config_conn *conn)
+{
+	return libnvmf_tid_from_fields(
+			libnvmf_config_conn_get_transport(conn),
+			libnvmf_config_conn_get_traddr(conn),
+			libnvmf_config_conn_get_trsvcid(conn),
+			libnvmf_config_conn_get_subsysnqn(conn),
+			libnvmf_config_conn_get_host_traddr(conn),
+			libnvmf_config_conn_get_host_iface(conn),
+			libnvmf_config_conn_get_hostnqn(conn),
+			libnvmf_config_conn_get_hostid(conn));
+}
+
+static bool test_emit(struct libnvme_global_ctx *ctx, const struct fixture *fx)
+{
+	static const char * const mv_expect[] = {
+		"--transport=tcp",
+		"--traddr=10.0.0.9",
+		"--trsvcid=4420",
+		"--nqn=nqn.2014-08.org.nvmexpress:main-vol",
+		"--ctrl-loss-tmo=600",
+		"--keep-alive-tmo=5",
+		"--tls",
+	};
+	static const char * const pv_expect[] = {
+		"--transport=tcp",
+		"--traddr=10.0.0.7",
+		"--trsvcid=4420",
+		"--nqn=nqn.2014-08.org.nvmexpress:prod-vol",
+		"--hostnqn=nqn.2014-08.org.nvmexpress:prod-host",
+		"--hostid=46ba5037-7ce5-41fa-9452-48477bf00080",
+		"--ctrl-loss-tmo=1800",
+		"--keep-alive-tmo=5",
+	};
+	const struct libnvmf_config_conn *mv, *pv;
+	struct conn_list conns = { 0 };
+	struct arg_list args = { 0 };
+	struct libnvmf_config *config;
+	struct libnvmf_tid *mv_tid, *pv_tid;
+	bool pass = true;
+
+	printf("test_emit:\n");
+
+	assert(!libnvmf_config_read(ctx, fx->main_path, &config));
+	libnvmf_config_conn_for_each(config, collect, &conns);
+	assert(conns.n == 3);
+	mv = conns.conn[1];
+	pv = conns.conn[2];
+
+	mv_tid = build_tid(mv);
+	pv_tid = build_tid(pv);
+	assert(mv_tid && pv_tid);
+
+	/* TID fields in fixed order, then params; true bool = bare flag. */
+	if (libnvmf_connect_args_emit(mv_tid,
+				      libnvmf_config_conn_get_params(mv),
+				      collect_arg, &args) ||
+	    !args_match(&args, mv_expect, ARRAY_SIZE(mv_expect))) {
+		printf(" - main subsystem args [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - TID first, params after; bool flags bare [PASS]\n");
+	}
+
+	/* Persona identity emitted; per-path override wins; reset skipped. */
+	memset(&args, 0, sizeof(args));
+	if (libnvmf_connect_args_emit(pv_tid,
+				      libnvmf_config_conn_get_params(pv),
+				      collect_arg, &args) ||
+	    !args_match(&args, pv_expect, ARRAY_SIZE(pv_expect))) {
+		printf(" - drop-in subsystem args [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - persona identity kept, reset skipped [PASS]\n");
+	}
+
+	/* Each half is optional. */
+	memset(&args, 0, sizeof(args));
+	if (libnvmf_connect_args_emit(NULL,
+				      libnvmf_config_conn_get_params(pv),
+				      collect_arg, &args) ||
+	    !args_match(&args, &pv_expect[6], 2)) {
+		printf(" - params-only emission [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - params-only emission (NULL TID) [PASS]\n");
+	}
+
+	memset(&args, 0, sizeof(args));
+	if (libnvmf_connect_args_emit(mv_tid, NULL, collect_arg, &args) ||
+	    !args_match(&args, mv_expect, 4)) {
+		printf(" - TID-only emission [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - TID-only emission (NULL params) [PASS]\n");
+	}
+
+	if (libnvmf_connect_args_emit(NULL, NULL, NULL, NULL) != -EINVAL) {
+		printf(" - NULL callback [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - NULL callback rejected [PASS]\n");
+	}
+
+	libnvmf_tid_free(mv_tid);
+	libnvmf_tid_free(pv_tid);
+	libnvmf_config_free(config);
+
+	return pass;
+}
+
 static bool test_edge_cases(struct libnvme_global_ctx *ctx,
 			    const struct fixture *fx)
 {
@@ -396,6 +544,7 @@ int main(void)
 	pass &= test_read(ctx, &fx);
 	pass &= test_resolve_discovered(ctx, &fx);
 	pass &= test_validate(ctx, &fx);
+	pass &= test_emit(ctx, &fx);
 	pass &= test_edge_cases(ctx, &fx);
 
 	fixture_destroy(&fx);

@@ -16,8 +16,11 @@
 
 #include <errno.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <nvme/config.h>
+#include <nvme/tid.h>
 
 #include <ccan/list/list.h>
 
@@ -151,4 +154,102 @@ __libnvme_public const struct libnvmf_params *libnvmf_config_resolve_discovered(
 		return is_dc ? via_dc->dlp_dc_params : via_dc->dlp_ioc_params;
 
 	return is_dc ? config->top_dc_params : config->top_ioc_params;
+}
+
+struct emit_state {
+	void (*callback)(const char *arg, void *user_data);
+	void *user_data;
+	int err;
+};
+
+/* Format one "--key=value" (or bare "--key" when @value is NULL). */
+static void emit_arg(struct emit_state *state, const char *key,
+		     const char *value)
+{
+	char *arg;
+	int len;
+
+	if (state->err)
+		return;
+
+	if (value)
+		len = asprintf(&arg, "--%s=%s", key, value);
+	else
+		len = asprintf(&arg, "--%s", key);
+	if (len < 0) {
+		state->err = -ENOMEM;
+		return;
+	}
+	state->callback(arg, state->user_data);
+	free(arg);
+}
+
+/* Like emit_arg(), but an absent TID field is simply not emitted. */
+static void emit_tid_arg(struct emit_state *state, const char *key,
+			 const char *value)
+{
+	if (value)
+		emit_arg(state, key, value);
+}
+
+static void emit_param(const char *key, const char *value, void *user_data)
+{
+	struct emit_state *state = user_data;
+	const struct libnvmf_key *k;
+
+	/* A reset parameter is not emitted: the kernel default applies. */
+	if (state->err || !*value)
+		return;
+
+	k = libnvmf_key_lookup(key);
+	if (!k)	/* only known keys are ever stored */
+		return;
+
+	if (k->type == LIBNVMF_KEY_BOOL) {
+		bool set;
+
+		/*
+		 * Validated at parse time; a false flag is skipped,
+		 * same as unset -- every boolean key's kernel default
+		 * is off.
+		 */
+		if (libnvmf_parse_bool(value, &set) || !set)
+			return;
+		emit_arg(state, key, NULL);
+		return;
+	}
+
+	emit_arg(state, key, value);
+}
+
+__libnvme_public int libnvmf_connect_args_emit(const struct libnvmf_tid *tid,
+		const struct libnvmf_params *params,
+		void (*callback)(const char *arg, void *user_data),
+		void *user_data)
+{
+	struct emit_state state = {
+		.callback = callback,
+		.user_data = user_data,
+	};
+
+	if (!callback)
+		return -EINVAL;
+
+	if (tid) {
+		emit_tid_arg(&state, "transport",
+			     libnvmf_tid_get_transport(tid));
+		emit_tid_arg(&state, "traddr", libnvmf_tid_get_traddr(tid));
+		emit_tid_arg(&state, "trsvcid", libnvmf_tid_get_trsvcid(tid));
+		emit_tid_arg(&state, "nqn", libnvmf_tid_get_subsysnqn(tid));
+		emit_tid_arg(&state, "host-traddr",
+			     libnvmf_tid_get_host_traddr(tid));
+		emit_tid_arg(&state, "host-iface",
+			     libnvmf_tid_get_host_iface(tid));
+		emit_tid_arg(&state, "hostnqn", libnvmf_tid_get_hostnqn(tid));
+		emit_tid_arg(&state, "hostid", libnvmf_tid_get_hostid(tid));
+	}
+	if (params)
+		libnvmf_params_for_each(params, emit_param, &state);
+
+	return state.err;
 }

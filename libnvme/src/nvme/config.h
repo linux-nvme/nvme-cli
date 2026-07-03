@@ -275,6 +275,35 @@ const struct libnvmf_params *libnvmf_config_resolve_discovered(
 		bool is_dc);
 
 /**
+ * libnvmf_connect_args_emit() - render a connection as "nvme connect"
+ * options.
+ * @tid:       addressing + identity, or NULL to emit the parameters only
+ * @params:    connection parameters, or NULL to emit the TID only
+ * @callback:  called once per formatted option, e.g. "--transport=tcp";
+ *             the string is only valid for the duration of the call
+ * @user_data: caller context passed to @callback
+ *
+ * Emits the TID's set fields first, in fixed order (--transport, --traddr,
+ * --trsvcid, --nqn, --host-traddr, --host-iface, --hostnqn, --hostid),
+ * then the parameters in their iteration order.  Unset and reset
+ * parameters are skipped so the kernel default applies; a boolean
+ * parameter is emitted as a bare "--flag" when true and skipped when
+ * false.  Consumer-private options are the caller's to append.
+ *
+ * This is the consumption path for the resolved configuration: each
+ * connection becomes the option list of one "nvme connect" invocation.
+ * It also renders a connection as a human-readable, copy-pasteable
+ * command line for "config show" style output.
+ *
+ * Return: 0 on success, -EINVAL when @callback is NULL, -ENOMEM when
+ * formatting an option fails (the emission stops there).
+ */
+int libnvmf_connect_args_emit(const struct libnvmf_tid *tid,
+		const struct libnvmf_params *params,
+		void (*callback)(const char *arg, void *user_data),
+		void *user_data);
+
+/**
  * libnvmf_params_get() - look up one connection parameter.
  * @params: a resolved parameter set
  * @key:    the configuration key name (the "nvme connect" long-option name,
