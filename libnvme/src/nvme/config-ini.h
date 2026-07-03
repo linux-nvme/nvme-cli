@@ -11,27 +11,29 @@
 
 #include <ccan/list/list.h>
 
+#include <nvme/config.h>
+
 /*
- * Internal building blocks for the INI connection config
- * (libnvme/design/CONFIG.md): the connection-parameter bag with its
- * three-state values, and the table of recognized keys.
+ * Internal building blocks for the INI connection configuration:
+ * the connection-parameter store that tracks unset, reset, and explicit
+ * values, and the table of recognized keys.
  */
 
 /*
- * A connection-parameter bag.  Every cascade-able parameter is in one of
- * three states, which is what makes the precedence cascade and the
- * reset-to-kernel-default form ("key =") expressible:
+ * Stores connection parameters used during configuration cascading.
+ * Each cascadeable parameter has one of three states:
  *
- *   key absent      ->  unset: inherit from the next cascade level;
- *   value == ""     ->  reset: stop inheriting, let the kernel default apply;
- *   value == "..."  ->  set to that value.
+ *   key absent      -> unset: inherit from the next cascade level;
+ *   value == ""     -> reset: stop inheriting and use the kernel default;
+ *   value == "..."  -> set to the specified value.
  *
- * Values are kept as the strings the file spelled; they are validated on the
- * way in (libnvmf_key_check_value) and interpreted on the way out (the
- * emitter).  Iteration preserves first-insertion order.
+ * Keeping these states separate allows the precedence rules and the
+ * reset-to-kernel-default form ("key =") to be represented without ambiguity.
+ *
+ * Values are stored as strings from the configuration file. They are
+ * validated when added (libnvmf_key_check_value) and interpreted when
+ * emitted. Iteration order follows the order in which keys were inserted.
  */
-struct libnvmf_params;
-
 struct libnvmf_params *libnvmf_params_new(void);
 struct libnvmf_params *libnvmf_params_dup(const struct libnvmf_params *p);
 void libnvmf_params_free(struct libnvmf_params *p);
@@ -40,18 +42,9 @@ void libnvmf_params_free(struct libnvmf_params *p);
 int libnvmf_params_set(struct libnvmf_params *p, const char *key,
 		const char *value);
 
-/* NULL = unset; "" = reset; anything else = the set value. */
-const char *libnvmf_params_get(const struct libnvmf_params *p,
-		const char *key);
-
 /* Overlay @src onto @dst: every key present in @src wins. */
 int libnvmf_params_merge(struct libnvmf_params *dst,
 		const struct libnvmf_params *src);
-
-typedef void (*libnvmf_params_fn)(const char *key, const char *value,
-		void *user_data);
-void libnvmf_params_for_each(const struct libnvmf_params *p,
-		libnvmf_params_fn callback, void *user_data);
 
 /*
  * The recognized configuration keys.  The key class encodes where a key may
@@ -163,13 +156,13 @@ void libnvmf_conf_file_free(struct libnvmf_conf_file *f);
 
 /*
  * The resolved configuration: the flat list of connections the files add up
- * to, every cascade applied.  This is what CONFIG.md means by "the grouping
- * evaporates" -- consumers see (role, addressing, identity, params), never
- * files or sections.
+ * to, every cascade applied -- consumers see (role, addressing, identity,
+ * params), never files or sections.  These are the definitions behind
+ * <nvme/config.h>'s opaque public types; the members stay internal.
  */
 
-struct libnvmf_conf_conn {
-	struct libnvmf_conf_conn *next;
+struct libnvmf_config_conn {
+	struct list_node entry;
 	bool is_dc;
 	/*
 	 * Complete addressing and identity information.
@@ -186,10 +179,9 @@ struct libnvmf_conf_conn {
 	char *hostnqn;
 	char *hostid;
 	struct libnvmf_params *params;
-	/* the Discovery Information Entry (DIE) symbolic name */
-	char *hostsymname;
-	char *source;		       /* originating file */
-	unsigned int line;	       /* its controller= line */
+	char *hostsymname; /* Discovery Information Entry (DIE) symbolic name */
+	char *source;      /* originating file */
+	unsigned int line; /* its controller= line */
 	/*
 	 * DC only: the resolved defaults for controllers *discovered* via this
 	 * DC (referral DCs / DLP IOCs), i.e. its file scope minus any endpoint
@@ -199,19 +191,29 @@ struct libnvmf_conf_conn {
 	struct libnvmf_params *dlp_ioc_params;
 };
 
-struct libnvmf_conf {
-	struct libnvmf_conf_conn *conns; /* main file first, then sorted drop-ins */
-	/* Top-level scope defaults for discovered controllers with no via-DC
-	 * (an mDNS-found DC). */
+struct libnvmf_config {
+	/* Main file's connections first, then the sorted drop-ins'. */
+	struct list_head conns;		/* struct libnvmf_config_conn */
+	/*
+	 * Top-level scope defaults for discovered controllers with no
+	 * via-DC (an mDNS-found DC).
+	 */
 	struct libnvmf_params *top_dc_params;
 	struct libnvmf_params *top_ioc_params;
 };
 
 /*
- * Load and resolve @path plus the .conf drop-ins under <path>.d.  A missing
- * main file or drop-in directory is not an error (an absent configuration is
- * empty); any Tier 1 problem in any file fails the load as a unit.
+ * Load and resolve the configuration file at @path and any drop-in files
+ * under <path>.d.
+ *
+ * A missing configuration file or drop-in directory is not an error; in that
+ * case an empty configuration is returned.  A fatal validation or parsing
+ * error in any file fails the load as a unit, leaving *@out NULL.
+ *
+ * The public libnvmf_config_read()/libnvmf_config_validate() wrap this with
+ * the default-path handling; libnvmf_config_free() releases the result.
+ *
+ * Returns 0 on success, a negative error code on failure.
  */
-struct libnvmf_conf *libnvmf_conf_load(struct libnvme_global_ctx *ctx,
-		const char *path, int *err);
-void libnvmf_conf_free(struct libnvmf_conf *conf);
+int libnvmf_config_load(struct libnvme_global_ctx *ctx, const char *path,
+		struct libnvmf_config **out);

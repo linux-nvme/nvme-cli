@@ -543,7 +543,7 @@ static bool test_resolve_empty(struct libnvme_global_ctx *ctx)
 {
 	char dir[] = "/tmp/nvme-conf-XXXXXX";
 	char main_path[512];
-	struct libnvmf_conf *conf;
+	struct libnvmf_config *conf;
 	bool pass = true;
 	int err;
 
@@ -552,15 +552,15 @@ static bool test_resolve_empty(struct libnvme_global_ctx *ctx)
 	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
 
 	/* Nothing on disk: an empty configuration, not an error. */
-	conf = libnvmf_conf_load(ctx, main_path, &err);
-	if (!conf || err || conf->conns) {
+	err = libnvmf_config_load(ctx, main_path, &conf);
+	if (!conf || err || !list_empty(&conf->conns)) {
 		printf(" - absent config err=%d [FAIL]\n", err);
 		pass = false;
 	} else {
 		printf(" - absent main + absent .d/ -> empty config [PASS]\n");
 	}
 
-	libnvmf_conf_free(conf);
+	libnvmf_config_free(conf);
 	rm_tree(dir);
 	return pass;
 }
@@ -574,8 +574,8 @@ static bool test_resolve_hostname(struct libnvme_global_ctx *ctx)
 {
 	char dir[] = "/tmp/nvme-conf-XXXXXX";
 	char main_path[512];
-	struct libnvmf_conf *conf;
-	struct libnvmf_conf_conn *conn;
+	struct libnvmf_config *conf;
+	struct libnvmf_config_conn *conn;
 	bool pass = true;
 	int err;
 
@@ -586,9 +586,11 @@ static bool test_resolve_hostname(struct libnvme_global_ctx *ctx)
 		   "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:vol1\n"
 		   "controller = transport=tcp;traddr=storage.example.com\n");
 
-	conf = libnvmf_conf_load(ctx, main_path, &err);
-	conn = conf ? conf->conns : NULL;
-	if (!conf || !conn || conn->next ||
+	err = libnvmf_config_load(ctx, main_path, &conf);
+	conn = conf ?
+	       list_top(&conf->conns, struct libnvmf_config_conn, entry) :
+	       NULL;
+	if (!conf || !conn || list_next(&conf->conns, conn, entry) ||
 	    strcmp(conn->traddr, "storage.example.com")) {
 		printf(" - hostname traddr resolved err=%d [FAIL]\n", err);
 		pass = false;
@@ -596,7 +598,7 @@ static bool test_resolve_hostname(struct libnvme_global_ctx *ctx)
 		printf(" - hostname traddr survives the cascade raw [PASS]\n");
 	}
 
-	libnvmf_conf_free(conf);
+	libnvmf_config_free(conf);
 	rm_tree(dir);
 	return pass;
 }
@@ -638,8 +640,8 @@ static bool test_resolve_cascade(struct libnvme_global_ctx *ctx)
 		"controller = transport=tcp;traddr=10.0.0.10\n";
 	char dir[] = "/tmp/nvme-conf-XXXXXX";
 	char main_path[512], dropin_dir[512];
-	struct libnvmf_conf *conf;
-	struct libnvmf_conf_conn *mv, *dc, *p1, *p2;
+	struct libnvmf_config *conf;
+	struct libnvmf_config_conn *mv, *dc, *p1, *p2;
 	bool pass = true;
 	int err;
 
@@ -652,7 +654,7 @@ static bool test_resolve_cascade(struct libnvme_global_ctx *ctx)
 	write_file(dir, "nvme-fabrics.conf", main_text);
 	write_file(dropin_dir, "10-prod.conf", prod_text);
 
-	conf = libnvmf_conf_load(ctx, main_path, &err);
+	err = libnvmf_config_load(ctx, main_path, &conf);
 	if (!conf) {
 		printf(" - load failed: %d [FAIL]\n", err);
 		rm_tree(dir);
@@ -660,13 +662,13 @@ static bool test_resolve_cascade(struct libnvme_global_ctx *ctx)
 	}
 
 	/* Order: main file first, then the drop-in; paths in file order. */
-	mv = conf->conns;
-	dc = mv ? mv->next : NULL;
-	p1 = dc ? dc->next : NULL;
-	p2 = p1 ? p1->next : NULL;
-	if (!p2 || p2->next) {
+	mv = list_top(&conf->conns, struct libnvmf_config_conn, entry);
+	dc = mv ? list_next(&conf->conns, mv, entry) : NULL;
+	p1 = dc ? list_next(&conf->conns, dc, entry) : NULL;
+	p2 = p1 ? list_next(&conf->conns, p1, entry) : NULL;
+	if (!p2 || list_next(&conf->conns, p2, entry)) {
 		printf(" - expected exactly 4 connections [FAIL]\n");
-		libnvmf_conf_free(conf);
+		libnvmf_config_free(conf);
 		rm_tree(dir);
 		return false;
 	}
@@ -746,7 +748,7 @@ static bool test_resolve_cascade(struct libnvme_global_ctx *ctx)
 		printf(" - per-connection source file recorded [PASS]\n");
 	}
 
-	libnvmf_conf_free(conf);
+	libnvmf_config_free(conf);
 	rm_tree(dir);
 	return pass;
 }
@@ -757,7 +759,7 @@ static bool resolve_expect_fail(struct libnvme_global_ctx *ctx,
 {
 	char dir[] = "/tmp/nvme-conf-XXXXXX";
 	char main_path[512], dropin_dir[512];
-	struct libnvmf_conf *conf;
+	struct libnvmf_config *conf;
 	int err = 0;
 
 	assert(mkdtemp(dir));
@@ -769,8 +771,8 @@ static bool resolve_expect_fail(struct libnvme_global_ctx *ctx,
 	if (dropin2)
 		write_file(dropin_dir, "20-b.conf", dropin2);
 
-	conf = libnvmf_conf_load(ctx, main_path, &err);
-	libnvmf_conf_free(conf);
+	err = libnvmf_config_load(ctx, main_path, &conf);
+	libnvmf_config_free(conf);
 	rm_tree(dir);
 	if (conf || err != -EINVAL) {
 		printf(" - %s: not rejected (err=%d) [FAIL]\n", name, err);
@@ -785,8 +787,8 @@ static bool test_resolve_personas(struct libnvme_global_ctx *ctx)
 	bool pass = true;
 	char dir[] = "/tmp/nvme-conf-XXXXXX";
 	char main_path[512], dropin_dir[512];
-	struct libnvmf_conf *conf;
-	struct libnvmf_conf_conn *conn;
+	struct libnvmf_config *conf;
+	struct libnvmf_config_conn *conn;
 	int err;
 
 	printf("test_resolve_personas:\n");
@@ -835,16 +837,18 @@ static bool test_resolve_personas(struct libnvme_global_ctx *ctx)
 	write_file(dropin_dir, "10-a.conf",
 		   "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:x\n"
 		   "controller = transport=tcp;traddr=192.0.2.9\n");
-	conf = libnvmf_conf_load(ctx, main_path, &err);
-	conn = conf ? conf->conns : NULL;
-	if (!conf || !conn || conn->next ||
+	err = libnvmf_config_load(ctx, main_path, &conf);
+	conn = conf ?
+	       list_top(&conf->conns, struct libnvmf_config_conn, entry) :
+	       NULL;
+	if (!conf || !conn || list_next(&conf->conns, conn, entry) ||
 	    conn->hostnqn) {
 		printf(" - default-persona drop-in err=%d [FAIL]\n", err);
 		pass = false;
 	} else {
 		printf(" - drop-in without [Host] = default persona [PASS]\n");
 	}
-	libnvmf_conf_free(conf);
+	libnvmf_config_free(conf);
 	rm_tree(dir);
 
 	return pass;

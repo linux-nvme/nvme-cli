@@ -20,7 +20,12 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
 
+#include "compiler-attributes.h"
 #include "config-ini.h"
+#include "ini.h"
+#include "lib.h"
+#include "private-fabrics.h"
+#include "util.h"
 
 /*
  * The recognized keys.  One row per key the format accepts; the CLI option

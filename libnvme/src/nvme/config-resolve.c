@@ -7,20 +7,18 @@
  */
 
 /*
- * The cascade resolver: turn the raw models of the main file and its
- * drop-ins into the flat connection list (libnvme/design/CONFIG.md).  The
- * precedence, most-specific last in merge order:
+ * Resolve the raw configuration models of the main file and its drop-ins
+ * into the final connection list.
  *
- *   [Global] (top-level, overlaid by the file's own)
- *   < per-type defaults (top-level, overlaid by the file's own)
+ * Configuration is applied from least to most specific:
+ *
+ *   per-type defaults
  *   < [Host]
  *   < endpoint section
  *   < controller= line overrides
  *
- * Identity is per file: a drop-in's [Host] must name its hostnqn (a persona
- * without a name would silently conflate with the default persona); the
- * relational Tier 1 rules reject a hostid shared by two personas and one
- * hostnqn appearing with two hostids.
+ * The resolver merges inherited parameters, validates the configuration, and
+ * produces the flat list of resolved connections.
  */
 
 #include <dirent.h>
@@ -29,9 +27,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/list/list.h>
+
 #include <nvme/nvme-types-fabrics.h>
 
 #include "cleanup.h"
+#include "compiler-attributes.h"
 #include "config-ini.h"
 #include "lib.h"
 #include "private-fabrics.h"
@@ -42,8 +43,8 @@
 
 /* One file's merged cascade levels: everything below the endpoint rung. */
 struct scope {
-	struct libnvmf_params *dc_base;  /* global + DC defaults + [Host] */
-	struct libnvmf_params *ioc_base; /* global + IOC defaults + [Host] */
+	struct libnvmf_params *dc_base;  /* DC defaults + [Host] */
+	struct libnvmf_params *ioc_base; /* IOC defaults + [Host] */
 };
 
 static void scope_reset(struct scope *s)
@@ -61,9 +62,9 @@ static int merge_maybe(struct libnvmf_params *dst,
 }
 
 /*
- * base(kind) = top [Global] + file [Global] + top defaults(kind) +
- * file defaults(kind) + file [Host] params.  When @f is the top-level file
- * itself the overlays coincide, so the file terms are skipped.
+ * base(kind) = top defaults(kind) + file defaults(kind) + file [Host]
+ * params.  When @f is the top-level file itself the overlays coincide, so
+ * the file term is skipped.
  */
 static struct libnvmf_params *build_base(const struct libnvmf_conf_file *top,
 					 const struct libnvmf_conf_file *f,
@@ -74,9 +75,7 @@ static struct libnvmf_params *build_base(const struct libnvmf_conf_file *top,
 	if (!base)
 		return NULL;
 
-	if (merge_maybe(base, top->global) ||
-	    (f != top && merge_maybe(base, f->global)) ||
-	    merge_maybe(base, dc ? top->dc_defaults : top->ioc_defaults) ||
+	if (merge_maybe(base, dc ? top->dc_defaults : top->ioc_defaults) ||
 	    (f != top && merge_maybe(base, dc ? f->dc_defaults :
 						f->ioc_defaults)) ||
 	    merge_maybe(base, f->host_params)) {
@@ -100,34 +99,39 @@ static int build_scope(struct scope *s, const struct libnvmf_conf_file *top,
 	return 0;
 }
 
-static void free_conns(struct libnvmf_conf_conn *c)
+static void free_conn(struct libnvmf_config_conn *c)
 {
-	struct libnvmf_conf_conn *next;
-
-	for (; c; c = next) {
-		next = c->next;
-		free(c->transport);
-		free(c->traddr);
-		free(c->trsvcid);
-		free(c->host_traddr);
-		free(c->host_iface);
-		free(c->subsysnqn);
-		free(c->hostnqn);
-		free(c->hostid);
-		libnvmf_params_free(c->params);
-		libnvmf_params_free(c->dlp_dc_params);
-		libnvmf_params_free(c->dlp_ioc_params);
-		free(c->hostsymname);
-		free(c->source);
-		free(c);
-	}
+	if (!c)
+		return;
+	free(c->transport);
+	free(c->traddr);
+	free(c->trsvcid);
+	free(c->host_traddr);
+	free(c->host_iface);
+	free(c->subsysnqn);
+	free(c->hostnqn);
+	free(c->hostid);
+	libnvmf_params_free(c->params);
+	libnvmf_params_free(c->dlp_dc_params);
+	libnvmf_params_free(c->dlp_ioc_params);
+	free(c->hostsymname);
+	free(c->source);
+	free(c);
 }
 
-void libnvmf_conf_free(struct libnvmf_conf *conf)
+static void free_conns(struct list_head *conns)
+{
+	struct libnvmf_config_conn *c, *next;
+
+	list_for_each_safe(conns, c, next, entry)
+		free_conn(c);
+}
+
+__libnvme_public void libnvmf_config_free(struct libnvmf_config *conf)
 {
 	if (!conf)
 		return;
-	free_conns(conf->conns);
+	free_conns(&conf->conns);
 	libnvmf_params_free(conf->top_dc_params);
 	libnvmf_params_free(conf->top_ioc_params);
 	free(conf);
@@ -144,9 +148,9 @@ static int resolve_path(struct libnvme_global_ctx *ctx,
 			const struct scope *scope,
 			const struct libnvmf_conf_endpoint *ep,
 			const struct libnvmf_conf_path *path,
-			struct libnvmf_conf_conn ***tail)
+			struct list_head *conns)
 {
-	struct libnvmf_conf_conn *conn;
+	struct libnvmf_config_conn *conn;
 	const char *hostnqn = real_value(f->hostnqn) ? f->hostnqn : NULL;
 	const char *hostid = real_value(f->hostid) ? f->hostid : NULL;
 	const char *nqn = ep->nqn ? ep->nqn : NVME_DISC_SUBSYS_NAME;
@@ -195,20 +199,19 @@ static int resolve_path(struct libnvme_global_ctx *ctx,
 			goto fail;
 	}
 
-	**tail = conn;
-	*tail = &conn->next;
+	list_add_tail(conns, &conn->entry);
 
 	return 0;
 
 fail:
-	free_conns(conn);
+	free_conn(conn);
 	return -ENOMEM;
 }
 
 static int resolve_file(struct libnvme_global_ctx *ctx,
 			const struct libnvmf_conf_file *top,
 			const struct libnvmf_conf_file *f,
-			struct libnvmf_conf_conn ***tail)
+			struct list_head *conns)
 {
 	const struct libnvmf_conf_endpoint *ep;
 	const struct libnvmf_conf_path *path;
@@ -219,9 +222,9 @@ static int resolve_file(struct libnvme_global_ctx *ctx,
 	if (ret)
 		return ret;
 
-	for (ep = f->endpoints; ep; ep = ep->next) {
-		for (path = ep->paths; path; path = path->next) {
-			ret = resolve_path(ctx, f, &scope, ep, path, tail);
+	list_for_each(&f->endpoints, ep, entry) {
+		list_for_each(&ep->paths, path, entry) {
+			ret = resolve_path(ctx, f, &scope, ep, path, conns);
 			if (ret)
 				goto out;
 		}
@@ -295,21 +298,21 @@ static int dropin_filter(const struct dirent *d)
 	return dot && dot != d->d_name && !strcmp(dot, ".conf");
 }
 
-struct libnvmf_conf *libnvmf_conf_load(struct libnvme_global_ctx *ctx,
-		const char *path, int *err)
+int libnvmf_config_load(struct libnvme_global_ctx *ctx, const char *path,
+		struct libnvmf_config **out)
 {
 	struct libnvmf_conf_file **files = NULL;
-	struct libnvmf_conf *conf = NULL;
-	struct libnvmf_conf_conn **tail;
+	struct libnvmf_config *conf = NULL;
 	struct dirent **entries = NULL;
 	__cleanup_free char *dirname = NULL;
 	size_t nfiles = 0, i;
 	int ret, n = 0;
 
-	if (err)
-		*err = -EINVAL;
+	if (!out)
+		return -EINVAL;
+	*out = NULL;
 	if (!ctx || !path)
-		return NULL;
+		return -EINVAL;
 
 	if (asprintf(&dirname, "%s.d", path) < 0) {
 		dirname = NULL;
@@ -341,8 +344,10 @@ struct libnvmf_conf *libnvmf_conf_load(struct libnvme_global_ctx *ctx,
 		if (ret != -ENOENT)
 			goto out;
 		files[0] = calloc(1, sizeof(*files[0]));
-		if (files[0])
+		if (files[0]) {
+			list_head_init(&files[0]->endpoints);
 			files[0]->path = xstrdup(path);
+		}
 		if (!files[0] || !files[0]->path) {
 			libnvmf_conf_file_free(files[0]);
 			ret = -ENOMEM;
@@ -375,9 +380,9 @@ struct libnvmf_conf *libnvmf_conf_load(struct libnvme_global_ctx *ctx,
 		goto out;
 	}
 
-	tail = &conf->conns;
+	list_head_init(&conf->conns);
 	for (i = 0; i < nfiles; i++) {
-		ret = resolve_file(ctx, files[0], files[i], &tail);
+		ret = resolve_file(ctx, files[0], files[i], &conf->conns);
 		if (ret)
 			goto out;
 	}
@@ -399,12 +404,10 @@ out:
 	while (n > 0)
 		free(entries[--n]);
 	free(entries);
-	if (ret) {
-		libnvmf_conf_free(conf);
-		conf = NULL;
-	}
-	if (err)
-		*err = ret;
+	if (ret)
+		libnvmf_config_free(conf);
+	else
+		*out = conf;
 
-	return conf;
+	return ret;
 }
