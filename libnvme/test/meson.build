@@ -215,6 +215,18 @@ if want_fabrics
 
     test('libnvme - config-api', config_api)
 
+    config_emit = executable(
+        'test-config-emit',
+        ['config-emit.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+
+    test('libnvme - config-emit', config_emit)
+
     uriparser = executable(
         'test-uriparser',
         ['uriparser.c'],
