@@ -324,8 +324,6 @@ static int get_transport_handle(struct libnvme_global_ctx *ctx, int argc,
 	ret = libnvme_open(ctx, devname, hdl);
 	if (ret)
 		nvme_show_err(ret, devname);
-	else if (log_level >= LIBNVME_LOG_DEBUG)
-		nvme_show_init();
 
 	return ret;
 }
@@ -333,9 +331,6 @@ static int get_transport_handle(struct libnvme_global_ctx *ctx, int argc,
 void put_transport_handle(struct libnvme_transport_handle *hdl)
 {
 	libnvme_close(hdl);
-
-	if (log_level >= LIBNVME_LOG_DEBUG)
-		nvme_show_finish();
 }
 
 static int parse_args(int argc, char *argv[], const char *desc,
@@ -348,6 +343,7 @@ static int parse_args(int argc, char *argv[], const char *desc,
 		return ret;
 
 	log_level = map_log_level(nvme_args.verbose, false);
+	nvme_show_init();
 
 	return 0;
 }
@@ -2920,8 +2916,6 @@ static void ns_mgmt_show_status(struct libnvme_transport_handle *hdl, int err, c
 		return;
 	}
 
-	nvme_show_init();
-
 	if (!err) {
 		nvme_show_key_value(cmd, "success");
 		nvme_show_key_value("nsid", "%d", nsid);
@@ -2930,8 +2924,6 @@ static void ns_mgmt_show_status(struct libnvme_transport_handle *hdl, int err, c
 		if (!is_ns_mgmt_support(hdl))
 			nvme_show_error("NS management and attachment not supported");
 	}
-
-	nvme_show_finish();
 }
 
 static int delete_ns(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -5057,11 +5049,7 @@ static int get_feature(int argc, char **argv, struct command *acmd,
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
-	nvme_show_init();
-
 	err = get_feature_ids(hdl, cfg, flags);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -6402,14 +6390,10 @@ static int get_register(int argc, char **argv, struct command *acmd, struct plug
 		fabrics = true;
 	}
 
-	nvme_show_init();
-
 	if (!get_register_offset(bar, fabrics, &cfg, flags)) {
 		nvme_show_error("offset required param");
 		err = -EINVAL;
 	}
-
-	nvme_show_finish();
 
 	if (fabrics)
 		free(bar);
@@ -11661,6 +11645,8 @@ int main(int argc, char **argv)
 	err = handle_plugin(argc, argv, nvme.extensions);
 	if (err == -ENOTTY)
 		general_help(&builtin, NULL);
+
+	nvme_show_finish();
 
 	return err ? 1 : 0;
 }

@@ -108,11 +108,7 @@ static int feat_get_nsid(struct libnvme_transport_handle *hdl, __u32 nsid,
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
-	nvme_show_init();
-
 	nvme_show_feature(fid, sel, result, buf, len, flags);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -138,13 +134,9 @@ static int power_mgmt_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: 0x%04x (%s)", power_mgmt_feat, cdw11,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, cdw11, NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -229,13 +221,9 @@ static int perfc_set(struct libnvme_transport_handle *hdl, __u8 fid, __u32 cdw11
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: 0x%04x (%s)", perfc_feat, cdw11,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, cdw11, NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -299,13 +287,9 @@ static int hctm_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: 0x%04x (%s)", hctm_feat, cdw11,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, cdw11, NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -361,13 +345,9 @@ static int timestamp_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: (%s)", timestamp_feat,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, 0, (unsigned char *)&ts);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -439,16 +419,12 @@ static int temp_thresh_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: (%s)", temp_thresh_feat,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, NVME_SET(cfg->tmpth, FEAT_TT_TMPTH) |
 				 NVME_SET(cfg->tmpsel, FEAT_TT_TMPSEL) |
 				 NVME_SET(cfg->thsel, FEAT_TT_THSEL) |
 				 NVME_SET(cfg->tmpthh, FEAT_TT_TMPTHH), NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -525,8 +501,6 @@ static int arbitration_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: (%s)", arbitration_feat,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid,
@@ -535,8 +509,6 @@ static int arbitration_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 				 NVME_SET(cfg->mpw, FEAT_ARBITRATION_MPW) |
 				 NVME_SET(cfg->hpw, FEAT_ARBITRATION_HPW),
 				 NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -585,13 +557,9 @@ static int volatile_wc_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: 0x%04x (%s)", volatile_wc_feat, cdw11,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, cdw11, NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -642,13 +610,9 @@ static int power_limit_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: 0x%04x (%s)", power_limit_feat, cdw13,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, cdw13, NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -712,13 +676,9 @@ static int power_thresh_set(struct libnvme_transport_handle *hdl, const __u8 fid
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: 0x%04x (%s)", power_thresh_feat,
 			 cdw11, sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, cdw11, NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -790,13 +750,9 @@ static int power_meas_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: 0x%04x (%s)", power_meas_feat, cdw11,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, cdw11, NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -862,13 +818,9 @@ static int err_recovery_set(struct libnvme_transport_handle *hdl, const __u8 fid
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: 0x%04x (%s)", err_recovery_feat, cdw11,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, cdw11, NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -947,13 +899,9 @@ static int num_queues_set(struct libnvme_transport_handle *hdl, const __u8 fid,
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: 0x%04x (%s)", num_queues_feat, cdw11,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, cdw11, NULL);
-
-	nvme_show_finish();
 
 	return err;
 }
@@ -1033,13 +981,9 @@ static int host_behavior_set(struct libnvme_transport_handle *hdl, __u8 fid,
 		return err;
 	}
 
-	nvme_show_init();
-
 	nvme_show_result("Set %s: (%s)", host_behavior_feat,
 			 sv ? "Save" : "Not save");
 	nvme_feature_show_fields(fid, 0, (unsigned char *)&data);
-
-	nvme_show_finish();
 
 	return err;
 }
