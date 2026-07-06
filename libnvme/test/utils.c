@@ -37,7 +37,10 @@ void test_print_log_buf(FILE *logfd)
 	if (!ftell(logfd))
 		return;
 
-	rewind(logfd);
+	if (fseek(logfd, 0, SEEK_SET)) {
+		printf("failed to rewind log buf\n");
+		return;
+	}
 
 	printf("--- begin test output\n");
 
@@ -60,7 +63,11 @@ void test_print_log_buf(FILE *logfd)
 	}
 
 	printf("--- end test output\n");
-	rewind(logfd);
+	if (fseek(logfd, 0, SEEK_SET)) {
+		printf("failed to rewind log buf; "
+		       "further output may be invalid\n");
+		return;
+	}
 	rc = ftruncate(fileno(logfd), 0);
 	if (rc)
 		printf("failed to truncate log buf; further output may be invalid\n");
