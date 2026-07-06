@@ -409,7 +409,6 @@ __libnvme_public void libnvmf_tid_free(struct libnvmf_tid *p)
 	free(p->hostnqn);
 	free(p->hostid);
 	free(p->_canonical);
-	free(p->_hash);
 	free(p->_str);
 	free(p);
 }
