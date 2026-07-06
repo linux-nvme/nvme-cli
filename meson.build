@@ -596,6 +596,16 @@ if want_nvme
             kernel32_dep,
             bcrypt_dep,
         ]
+
+        if is_static
+            # Keep these MinGW runtime dependencies in-process to avoid
+            # requiring extra DLLs in PATH for static Windows builds.
+            link_args_list += ['-Wl,-Bstatic']
+            if json_c_dep.found()
+                link_args_list += ['-ljson-c']
+            endif
+            link_args_list += ['-lwinpthread', '-Wl,-Bdynamic']
+        endif
     else
         link_args_list = ['-ldl']
     endif
