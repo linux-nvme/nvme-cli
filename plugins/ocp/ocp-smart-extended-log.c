@@ -17,7 +17,6 @@
 #include "ocp-utils.h"
 
 /* C0 SCAO Log Page */
-#define C0_SMART_CLOUD_ATTR_LEN			0x200
 
 static __u8 scao_guid[GUID_LEN] = {
 	0xC5, 0xAF, 0x10, 0x28,
@@ -42,17 +41,17 @@ static int get_c0_log_page(struct libnvme_transport_handle *hdl, char *format,
 		return ret;
 	}
 
-	data = malloc(sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
+	data = malloc(sizeof(*data));
 	if (!data) {
 		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
-	memset(data, 0, sizeof(__u8) * C0_SMART_CLOUD_ATTR_LEN);
+	memset(data, 0, sizeof(*data));
 
 	ocp_get_uuid_index(hdl, &uidx);
 	nvme_init_get_log(&cmd, NVME_NSID_ALL,
 			  (enum nvme_cmd_get_log_lid)OCP_LID_SMART,
-			  NVME_CSI_NVM, data, C0_SMART_CLOUD_ATTR_LEN);
+			  NVME_CSI_NVM, data, sizeof(*data));
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
 				       NVME_LOG_CDW14_UUID_SHIFT,
 				       NVME_LOG_CDW14_UUID_MASK);
