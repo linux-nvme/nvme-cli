@@ -256,6 +256,7 @@ show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_object_add_value_object(root, "Device stats", dev_stats);
 
 	json_print_object(root, NULL);
+	printf("\n");
 	json_free_object(root);
 }
 
@@ -787,6 +788,7 @@ static void json_lat_stats_3_0(struct intel_lat_stats *stats, int write)
 	json_lat_stats_linear(stats, bucket_list, 388, 391, 4, 32, true);
 
 	json_print_object(root, NULL);
+	printf("\n");
 	json_free_object(root);
 }
 
@@ -814,6 +816,7 @@ static void json_lat_stats_4_0(struct intel_lat_stats *stats, int write)
 			end ? POSINF : NOINF, stats->data[i]);
 	}
 	json_print_object(root, NULL);
+	printf("\n");
 	json_free_object(root);
 }
 
@@ -891,6 +894,7 @@ static void json_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 	json_object_add_value_uint(subroot, "value in us", stats->data[8]);
 
 	json_print_object(root, NULL);
+	printf("\n");
 	json_free_object(root);
 
 }

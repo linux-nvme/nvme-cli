@@ -143,6 +143,7 @@ static void json_log_pages_supp(log_page_map *logPageMap)
 		json_array_add_value_object(logPages, lbaf);
 	}
 	json_print_object(root, NULL);
+	printf("\n");
 	json_free_object(root);
 }
 
@@ -968,6 +969,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 				}
 			} else if (flags & JSON) {
 				json_print_object(root, NULL);
+				printf("\n");
 				json_free_object(root);
 			}
 		} else if (err > 0) {
@@ -987,6 +989,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 				json_array_add_value_object(lbafs, lbafs_ExtSmart);
 
 				json_print_object(root, NULL);
+				printf("\n");
 				json_free_object(root);
 			}
 		}
@@ -1363,6 +1366,7 @@ static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActi
 	}
 
 	json_print_object(root, NULL);
+	printf("\n");
 	json_free_object(root);
 }
 
