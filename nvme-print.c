@@ -1727,18 +1727,38 @@ void nvme_show_topology_tabular(struct libnvme_global_ctx *ctx, nvme_print_flags
 	nvme_print(topology_tabular, flags, ctx);
 }
 
-void nvme_show_message(bool error, const char *msg, ...)
+static void show_message(bool error, const char *msg, va_list ap)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
-	va_list ap;
-
-	va_start(ap, msg);
 
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
 
 	if (ops && ops->show_message)
 		ops->show_message(error, msg, ap);
+}
+
+void nvme_show_message(bool error, const char *msg, ...)
+{
+	va_list ap;
+
+	va_start(ap, msg);
+
+	show_message(error, msg, ap);
+
+	va_end(ap);
+}
+
+void nvme_show_verbose_message(const char *msg, ...)
+{
+	va_list ap;
+
+	if (!nvme_args.verbose)
+		return;
+
+	va_start(ap, msg);
+
+	show_message(true, msg, ap);
 
 	va_end(ap);
 }
@@ -1759,18 +1779,37 @@ void nvme_show_perror(const char *msg, ...)
 	va_end(ap);
 }
 
-void nvme_show_key_value(const char *key, const char *val, ...)
+static void show_key_value(const char *key, const char *val, va_list ap)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
-	va_list ap;
-
-	va_start(ap, val);
 
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
 
 	if (ops && ops->show_key_value)
 		ops->show_key_value(key, val, ap);
+}
+
+void nvme_show_key_value(const char *key, const char *val, ...)
+{
+	va_list ap;
+
+	va_start(ap, val);
+
+	show_key_value(key, val, ap);
+
+	va_end(ap);
+}
+void nvme_show_verbose_key_value(const char *key, const char *val, ...)
+{
+	va_list ap;
+
+	if (!nvme_args.verbose)
+		return;
+
+	va_start(ap, val);
+
+	show_key_value(key, val, ap);
 
 	va_end(ap);
 }
