@@ -5503,13 +5503,30 @@ void json_show_init(void)
 		json_r = json_create_object();
 }
 
+bool json_empty(struct json_object *obj)
+{
+	if (!obj)
+		return true;
+
+	switch (json_object_get_type(obj)) {
+	case json_type_object:
+		return json_object_object_length(obj) == 0;
+	case json_type_array:
+		return json_object_array_length(obj) == 0;
+	default:
+		return false; /* scalars always have something to print */
+	}
+}
+
 void json_show_finish(void)
 {
 	if (--json_init)
 		return;
 
-	if (json_r)
+	if (!json_empty(json_r))
 		json_output_object(json_r);
+	else
+		json_free_object(json_r);
 
 	json_r = NULL;
 }
