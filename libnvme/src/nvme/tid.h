@@ -13,19 +13,28 @@
 struct libnvme_global_ctx;
 
 /**
- * Custom setters for struct libnvmf_tid.
+ * libnvmf_tid_set_identity() - Set the subsystem and host identity together.
+ * @tid:       The transport ID.
+ * @subsysnqn: Subsystem NQN, or NULL to leave it unchanged.
+ * @hostnqn:   Host NQN, or NULL to leave it unchanged.
+ * @hostid:    Host Identifier, or NULL to leave it unchanged (or derive it).
  *
- * Each setter strdup()s the new value, frees the previous one, and invalidates
- * the cached canonical string and hash.  NULL is accepted and stored as NULL.
+ * Identity is applied after addressing -- which subsystem, and which host
+ * persona, are decided by context.  A NULL argument leaves that field as-is,
+ * which is why the three are set through one call rather than per-field
+ * setters (addressing has none: it is construction-only).
+ *
+ * hostid is never left to chance: when no hostid is set but the resulting
+ * hostnqn carries a UUID (nqn.2014-08.org.nvmexpress:uuid:<X>), the hostid is
+ * derived from it -- the deterministic, per-host value (TP4126), never a
+ * random one.  A hostid without a hostnqn is rejected: one host is one
+ * (hostnqn, hostid) pair.
+ *
+ * Return: 0 on success; -EINVAL for a NULL @tid or a hostid without a hostnqn;
+ * -ENOMEM on allocation failure.
  */
-void libnvmf_tid_set_transport(struct libnvmf_tid *p, const char *val);
-void libnvmf_tid_set_traddr(struct libnvmf_tid *p, const char *val);
-void libnvmf_tid_set_trsvcid(struct libnvmf_tid *p, const char *val);
-void libnvmf_tid_set_subsysnqn(struct libnvmf_tid *p, const char *val);
-void libnvmf_tid_set_host_traddr(struct libnvmf_tid *p, const char *val);
-void libnvmf_tid_set_host_iface(struct libnvmf_tid *p, const char *val);
-void libnvmf_tid_set_hostnqn(struct libnvmf_tid *p, const char *val);
-void libnvmf_tid_set_hostid(struct libnvmf_tid *p, const char *val);
+int libnvmf_tid_set_identity(struct libnvmf_tid *tid, const char *subsysnqn,
+			     const char *hostnqn, const char *hostid);
 
 /**
  * libnvmf_tid_dup() - Allocate a copy of an existing TID.
@@ -132,7 +141,7 @@ struct libnvmf_tid *libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx,
  * Returns a deterministic, fixed-field-order semicolon-separated key=value
  * string (e.g. "transport=tcp;traddr=1.2.3.4;trsvcid=8009").  Only non-NULL
  * fields are included.  The string is lazily computed and cached; it is
- * invalidated by any setter call.
+ * invalidated by any identity change.
  *
  * The fixed field order makes the output independent of the order fields
  * were set, so the same logical TID always yields the same canonical string.

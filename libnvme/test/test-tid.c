@@ -7,13 +7,14 @@
  *
  * Unit tests for the libnvmf_tid API — libnvmf_tid_parse() (valid input,
  * rejected aliases, garbage tokens, duplicate keys, whitespace), plus dup(),
- * get_canonical(), setter cache invalidation, numeric-only address
- * sanitization, and traddr_is_numeric().
+ * get_canonical(), numeric-only address sanitization, traddr_is_numeric(),
+ * and set_identity() (including cache invalidation).
  *
  * Note: garbage-input tests intentionally trigger error messages on stderr;
  * that output is expected and does not indicate a test failure.
  */
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -375,7 +376,7 @@ static bool test_tid_canonical(void)
 }
 
 /* -------------------------------------------------------------------------
- * Setters invalidate the canonical cache
+ * set_identity() invalidates the canonical cache
  * -------------------------------------------------------------------------
  */
 static bool test_tid_setter_invalidates_cache(void)
@@ -392,18 +393,78 @@ static bool test_tid_setter_invalidates_cache(void)
 
 	t = libnvmf_tid_parse(ctx, "transport=tcp;traddr=1.2.3.4");
 
-	/* Prime the cache, mutate, then confirm it was rebuilt. */
+	/* Prime the cache, mutate via set_identity, confirm it rebuilt. */
 	snprintf(before, sizeof(before), "%s", libnvmf_tid_get_canonical(t));
 
-	libnvmf_tid_set_traddr(t, "5.6.7.8");
+	libnvmf_tid_set_identity(t, "nqn.sub", NULL, NULL);
 
 	after = libnvmf_tid_get_canonical(t);
-	p = after && !streq(before, after) && strstr(after, "traddr=5.6.7.8");
-	CHECK(p, "setter invalidates canonical cache");
+	p = after && !streq(before, after) && strstr(after, "nqn=nqn.sub");
+	CHECK(p, "set_identity invalidates canonical cache");
 	pass &= p;
 
 	libnvmf_tid_free(t);
 	libnvme_free_global_ctx(ctx);
+	return pass;
+}
+
+/* -------------------------------------------------------------------------
+ * libnvmf_tid_set_identity()
+ * -------------------------------------------------------------------------
+ */
+static bool test_tid_set_identity(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvmf_tid *t;
+	bool pass = true, p;
+
+	ctx = libnvme_create_global_ctx();
+
+	printf("\ntest_tid_set_identity:\n");
+
+	/* Sets the triplet. */
+	t = libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", NULL,
+				    NULL, NULL, NULL, NULL);
+	p = t && libnvmf_tid_set_identity(t, "nqn.sub", "nqn.host",
+		"46ba5037-7ce5-41fa-9452-48477bf00080") == 0 &&
+	    streq(libnvmf_tid_get_subsysnqn(t), "nqn.sub") &&
+	    streq(libnvmf_tid_get_hostnqn(t), "nqn.host") &&
+	    streq(libnvmf_tid_get_hostid(t),
+		  "46ba5037-7ce5-41fa-9452-48477bf00080");
+	CHECK(p, "set_identity sets the triplet");
+	pass &= p;
+
+	/* A NULL argument leaves that field unchanged. */
+	p = t && libnvmf_tid_set_identity(t, "nqn.sub2", NULL, NULL) == 0 &&
+	    streq(libnvmf_tid_get_subsysnqn(t), "nqn.sub2") &&
+	    streq(libnvmf_tid_get_hostnqn(t), "nqn.host");
+	CHECK(p, "NULL args leave fields unchanged");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	/* hostid derived from a UUID-format hostnqn when none is given. */
+	t = libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", NULL,
+				    NULL, NULL, NULL, NULL);
+	p = t && libnvmf_tid_set_identity(t, "nqn.sub",
+		"nqn.2014-08.org.nvmexpress:uuid:46ba5037-7ce5-41fa-9452-48477bf00080",
+		NULL) == 0 &&
+	    streq(libnvmf_tid_get_hostid(t),
+		  "46ba5037-7ce5-41fa-9452-48477bf00080");
+	CHECK(p, "hostid derived from a UUID hostnqn");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	/* A hostid without any hostnqn is rejected. */
+	t = libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", NULL,
+				    NULL, NULL, NULL, NULL);
+	p = t && libnvmf_tid_set_identity(t, "nqn.sub", NULL,
+		"46ba5037-7ce5-41fa-9452-48477bf00080") == -EINVAL;
+	CHECK(p, "hostid without hostnqn rejected");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	libnvme_free_global_ctx(ctx);
+
 	return pass;
 }
 
@@ -623,6 +684,7 @@ int main(int argc, char *argv[])
 	test_tid_traddr_is_numeric();
 	test_tid_canonical();
 	test_tid_setter_invalidates_cache();
+	test_tid_set_identity();
 
 	if (test_rc == EXIT_SUCCESS)
 		printf("\nAll tests passed.\n");

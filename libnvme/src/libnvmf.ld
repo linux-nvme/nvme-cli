@@ -85,14 +85,7 @@ LIBNVMF_3 {
 		libnvmf_tid_get_canonical;
 		libnvmf_tid_parse;
 		libnvmf_tid_parse_strict;
-		libnvmf_tid_set_host_iface;
-		libnvmf_tid_set_hostnqn;
-		libnvmf_tid_set_hostid;
-		libnvmf_tid_set_host_traddr;
-		libnvmf_tid_set_subsysnqn;
-		libnvmf_tid_set_traddr;
-		libnvmf_tid_set_transport;
-		libnvmf_tid_set_trsvcid;
+		libnvmf_tid_set_identity;
 		libnvmf_tid_str;
 		libnvmf_traddr_is_numeric;
 		libnvmf_treq_str;
