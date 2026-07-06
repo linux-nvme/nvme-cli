@@ -26,70 +26,75 @@ static void invalidate_cache(struct libnvmf_tid *p)
 	p->_str = NULL;
 }
 
-// Custom setters: strdup the new value and invalidate the derived-value cache
-
-__libnvme_public void libnvmf_tid_set_transport(
-		struct libnvmf_tid *p, const char *val)
+/*
+ * Set the subsysnqn/hostnqn/hostid identity in one call (a NULL argument
+ * leaves that field unchanged).  There are no per-field setters -- addressing
+ * is construction-only -- so this is the sole post-construction mutator.
+ */
+__libnvme_public int libnvmf_tid_set_identity(struct libnvmf_tid *tid,
+					      const char *subsysnqn,
+					      const char *hostnqn,
+					      const char *hostid)
 {
-	invalidate_cache(p);
-	free(p->transport);
-	p->transport = xstrdup(val);
-}
+	char *new_subsysnqn, *new_hostnqn, *new_hostid;
+	const char *eff_hostnqn, *eff_hostid;
+	char *derived = NULL;
 
-__libnvme_public void libnvmf_tid_set_traddr(
-		struct libnvmf_tid *p, const char *val)
-{
-	invalidate_cache(p);
-	free(p->traddr);
-	p->traddr = xstrdup(val);
-}
+	if (!tid)
+		return -EINVAL;
 
-__libnvme_public void libnvmf_tid_set_trsvcid(
-		struct libnvmf_tid *p, const char *val)
-{
-	invalidate_cache(p);
-	free(p->trsvcid);
-	p->trsvcid = xstrdup(val);
-}
+	/* The hostnqn/hostid this call will end up with (before deriving). */
+	eff_hostnqn = hostnqn ? hostnqn : tid->hostnqn;
+	eff_hostid  = hostid ? hostid : tid->hostid;
 
-__libnvme_public void libnvmf_tid_set_subsysnqn(
-		struct libnvmf_tid *p, const char *val)
-{
-	invalidate_cache(p);
-	free(p->subsysnqn);
-	p->subsysnqn = xstrdup(val);
-}
+	/*
+	 * No hostid but a UUID-format hostnqn: derive the hostid from it
+	 * (TP4126) -- deterministic and unique per host, never random.
+	 */
+	if (!eff_hostid && eff_hostnqn) {
+		derived = libnvme_hostid_from_hostnqn(eff_hostnqn);
+		eff_hostid = derived;
+	}
 
-__libnvme_public void libnvmf_tid_set_host_traddr(
-		struct libnvmf_tid *p, const char *val)
-{
-	invalidate_cache(p);
-	free(p->host_traddr);
-	p->host_traddr = xstrdup(val);
-}
+	/* One host is one (hostnqn, hostid) pair. */
+	if (eff_hostid && !eff_hostnqn) {
+		free(derived);
+		return -EINVAL;
+	}
 
-__libnvme_public void libnvmf_tid_set_host_iface(
-		struct libnvmf_tid *p, const char *val)
-{
-	invalidate_cache(p);
-	free(p->host_iface);
-	p->host_iface = xstrdup(val);
-}
+	/* Stage every copy up front so a failure leaves the TID untouched. */
+	new_subsysnqn = xstrdup(subsysnqn);
+	new_hostnqn   = xstrdup(hostnqn);
+	new_hostid    = xstrdup(hostid);
+	if ((subsysnqn && !new_subsysnqn) || (hostnqn && !new_hostnqn) ||
+	    (hostid && !new_hostid)) {
+		free(new_subsysnqn);
+		free(new_hostnqn);
+		free(new_hostid);
+		free(derived);
+		return -ENOMEM;
+	}
 
-__libnvme_public void libnvmf_tid_set_hostnqn(
-		struct libnvmf_tid *p, const char *val)
-{
-	invalidate_cache(p);
-	free(p->hostnqn);
-	p->hostnqn = xstrdup(val);
-}
+	invalidate_cache(tid);
+	if (new_subsysnqn) {
+		free(tid->subsysnqn);
+		tid->subsysnqn = new_subsysnqn;
+	}
+	if (new_hostnqn) {
+		free(tid->hostnqn);
+		tid->hostnqn = new_hostnqn;
+	}
+	if (new_hostid) {
+		free(tid->hostid);
+		tid->hostid = new_hostid;
+	} else if (derived) {
+		free(tid->hostid);
+		tid->hostid = derived;	/* transfer ownership */
+		derived = NULL;
+	}
+	free(derived);
 
-__libnvme_public void libnvmf_tid_set_hostid(
-		struct libnvmf_tid *p, const char *val)
-{
-	invalidate_cache(p);
-	free(p->hostid);
-	p->hostid = xstrdup(val);
+	return 0;
 }
 
 /*
