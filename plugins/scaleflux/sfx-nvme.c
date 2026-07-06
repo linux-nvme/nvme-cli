@@ -1217,7 +1217,7 @@ static int nvme_dump_evtlog(struct libnvme_transport_handle *hdl, __u32 namespac
 		single_len = 32 * 1024;
 	}
 
-	pevent = calloc(sizeof(*pevent), sizeof(__u8));
+	pevent = calloc(1, sizeof(*pevent));
 	if (!pevent) {
 		err = -ENOMEM;
 		goto ret;
