@@ -1683,7 +1683,9 @@ void nvme_generic_full_path(libnvme_ns_t n, char *path, size_t len)
 	if (strncmp(path, "/dev/spdk/", 10) == 0 && stat(path, &st) == 0)
 		return;
 
-	sscanf(libnvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance);
+	if (sscanf(libnvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance) != 2)
+		return;
+
 	snprintf(path, len, "/dev/ng%dn%d", instance, head_instance);
 
 	if (stat(path, &st) == 0)
@@ -1692,7 +1694,7 @@ void nvme_generic_full_path(libnvme_ns_t n, char *path, size_t len)
 	 * We could start trying to search for it but let's make
 	 * it simple and just don't show the path at all.
 	 */
-	snprintf(path, len, "ng%dn%d", instance, head_instance);
+	snprintf(path, len, "%s", libnvme_ns_get_generic_name(n));
 }
 
 void nvme_show_list_item(libnvme_ns_t n, struct table *t)
