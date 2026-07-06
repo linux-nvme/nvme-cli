@@ -13,6 +13,33 @@
 struct libnvme_global_ctx;
 
 /**
+ * libnvmf_tid_from_fields() - Allocate a TID from individual field strings.
+ * @transport:   Transport type (e.g. "tcp", "rdma", "fc").
+ * @traddr:      Transport address.
+ * @trsvcid:     Transport service ID (e.g. "8009").
+ * @subsysnqn:   Subsystem NQN.
+ * @host_traddr: Host transport address, or NULL.
+ * @host_iface:  Host interface name, or NULL.
+ * @hostnqn:     Host NQN, or NULL.
+ * @hostid:      Host Identifier, or NULL.
+ *
+ * Convenience constructor.  NULL fields are stored as NULL.  For an IP
+ * transport (tcp, rdma) a numeric traddr/host_traddr is canonicalized; a
+ * hostname is rejected -- resolving it is the caller's job, not libnvme's.
+ *
+ * Return: Allocated TID, or NULL if traddr/host_traddr is not numeric on an
+ * IP transport, or on allocation failure.
+ */
+struct libnvmf_tid *libnvmf_tid_from_fields(const char *transport,
+					    const char *traddr,
+					    const char *trsvcid,
+					    const char *subsysnqn,
+					    const char *host_traddr,
+					    const char *host_iface,
+					    const char *hostnqn,
+					    const char *hostid);
+
+/**
  * libnvmf_tid_set_identity() - Set the subsystem and host identity together.
  * @tid:       The transport ID.
  * @subsysnqn: Subsystem NQN, or NULL to leave it unchanged.
@@ -43,56 +70,6 @@ int libnvmf_tid_set_identity(struct libnvmf_tid *tid, const char *subsysnqn,
  * Return: Allocated copy, or NULL if @tid is NULL or on allocation failure.
  */
 struct libnvmf_tid *libnvmf_tid_dup(const struct libnvmf_tid *tid);
-
-/**
- * libnvmf_tid_is_empty() - Test whether a TID sets no fields.
- * @tid: The transport ID, or NULL.
- *
- * Return: true if @tid is NULL or every field is unset, false otherwise.
- */
-bool libnvmf_tid_is_empty(const struct libnvmf_tid *tid);
-
-/**
- * libnvmf_tid_from_fields() - Allocate a TID from individual field strings.
- * @transport:   Transport type (e.g. "tcp", "rdma", "fc").
- * @traddr:      Transport address.
- * @trsvcid:     Transport service ID (e.g. "8009").
- * @subsysnqn:   Subsystem NQN.
- * @host_traddr: Host transport address, or NULL.
- * @host_iface:  Host interface name, or NULL.
- * @hostnqn:     Host NQN, or NULL.
- * @hostid:      Host Identifier, or NULL.
- *
- * Convenience constructor.  NULL fields are stored as NULL.  For an IP
- * transport (tcp, rdma) a numeric traddr/host_traddr is canonicalized; a
- * hostname is rejected -- resolving it is the caller's job, not libnvme's.
- *
- * Return: Allocated TID, or NULL if traddr/host_traddr is not numeric on an
- * IP transport, or on allocation failure.
- */
-struct libnvmf_tid *libnvmf_tid_from_fields(const char *transport,
-					    const char *traddr,
-					    const char *trsvcid,
-					    const char *subsysnqn,
-					    const char *host_traddr,
-					    const char *host_iface,
-					    const char *hostnqn,
-					    const char *hostid);
-
-/**
- * libnvmf_traddr_is_numeric() - Would this address survive TID construction?
- * @traddr: A candidate traddr/host_traddr, or NULL.
- *
- * The TID constructors accept a numeric IP only and reject a hostname; this
- * lets a caller check a candidate address -- and decide whether it must
- * resolve it first -- before building the TID, using the same definition of
- * "numeric" the constructors use internally (including an IPv6 scope
- * suffix, which is numeric).
- *
- * Return: true if @traddr is a numeric address, false otherwise (including a
- * NULL @traddr or an allocation failure while checking).
- */
-bool libnvmf_traddr_is_numeric(const char *traddr);
 
 /**
  * libnvmf_tid_parse() - Allocate a TID from a semicolon-separated key=value
@@ -133,6 +110,29 @@ struct libnvmf_tid *libnvmf_tid_parse(struct libnvme_global_ctx *ctx,
  */
 struct libnvmf_tid *libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx,
 					     const char *str);
+
+/**
+ * libnvmf_traddr_is_numeric() - Would this address survive TID construction?
+ * @traddr: A candidate traddr/host_traddr, or NULL.
+ *
+ * The TID constructors accept a numeric IP only and reject a hostname; this
+ * lets a caller check a candidate address -- and decide whether it must
+ * resolve it first -- before building the TID, using the same definition of
+ * "numeric" the constructors use internally (including an IPv6 scope
+ * suffix, which is numeric).
+ *
+ * Return: true if @traddr is a numeric address, false otherwise (including a
+ * NULL @traddr or an allocation failure while checking).
+ */
+bool libnvmf_traddr_is_numeric(const char *traddr);
+
+/**
+ * libnvmf_tid_is_empty() - Test whether a TID sets no fields.
+ * @tid: The transport ID, or NULL.
+ *
+ * Return: true if @tid is NULL or every field is unset, false otherwise.
+ */
+bool libnvmf_tid_is_empty(const struct libnvmf_tid *tid);
 
 /**
  * libnvmf_tid_get_canonical() - Return the canonical string form of a TID.
