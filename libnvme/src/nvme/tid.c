@@ -6,6 +6,8 @@
  * Authors: Martin Belanger <martin.belanger@dell.com>
  */
 
+#include <arpa/inet.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -218,13 +220,28 @@ __libnvme_public const char *libnvmf_tid_str(const struct libnvmf_tid *tid)
 __libnvme_public struct libnvmf_tid *libnvmf_tid_dup(
 		const struct libnvmf_tid *tid)
 {
+	struct libnvmf_tid *t;
+
 	if (!tid)
 		return NULL;
+	if (libnvmf_tid_new(&t) < 0)
+		return NULL;
 
-	return libnvmf_tid_from_fields(tid->transport, tid->traddr,
-				       tid->trsvcid, tid->subsysnqn,
-				       tid->host_traddr, tid->host_iface,
-				       tid->hostnqn, tid->hostid);
+	/*
+	 * Copy verbatim: the source is already sanitized, so re-running it
+	 * through from_fields() would only re-canonicalize and re-allocate
+	 * addresses that are already in their canonical form.
+	 */
+	t->transport   = xstrdup(tid->transport);
+	t->traddr      = xstrdup(tid->traddr);
+	t->trsvcid     = xstrdup(tid->trsvcid);
+	t->subsysnqn   = xstrdup(tid->subsysnqn);
+	t->host_traddr = xstrdup(tid->host_traddr);
+	t->host_iface  = xstrdup(tid->host_iface);
+	t->hostnqn     = xstrdup(tid->hostnqn);
+	t->hostid      = xstrdup(tid->hostid);
+
+	return t;
 }
 
 __libnvme_public bool libnvmf_tid_equal(
@@ -255,6 +272,94 @@ __libnvme_public bool libnvmf_tid_is_empty(const struct libnvmf_tid *tid)
 	       !tid->hostnqn && !tid->hostid;
 }
 
+/*
+ * Canonicalize a numeric IP so one endpoint always spells the same way (a
+ * compressed vs. expanded IPv6, an IPv4-mapped form, ... all collapse to one
+ * string).  Non-blocking: inet_pton()/inet_ntop() only, never DNS.
+ *
+ * Returns 0 and stores a malloc'd canonical form in *out when @in is numeric;
+ * -EINVAL (with *out = NULL) when @in is not numeric -- i.e. a hostname;
+ * -ENOMEM on allocation failure.  An IPv6 scope suffix ("fe80::1%eth0") is
+ * kept verbatim -- as a name, not an interface index -- so the result stays
+ * reproducible.  (That verbatim scope is why inet_pton_with_scope() is not
+ * reused here: it numericizes the scope via if_nametoindex() and yields a
+ * sockaddr, not a stable string.)
+ */
+static int canon_ip(const char *in, char **out)
+{
+	char host[INET6_ADDRSTRLEN];
+	char canon[INET6_ADDRSTRLEN];
+	unsigned char addr6[16];
+	struct in_addr addr4;
+	const char *scope;
+	size_t hostlen;
+
+	*out = NULL;
+
+	scope = strchr(in, '%');
+	hostlen = scope ? (size_t)(scope - in) : strlen(in);
+	if (hostlen >= sizeof(host))
+		return -EINVAL;
+	memcpy(host, in, hostlen);
+	host[hostlen] = '\0';
+
+	if (inet_pton(AF_INET, host, &addr4) == 1) {
+		if (!inet_ntop(AF_INET, &addr4, canon, sizeof(canon)))
+			return -EINVAL;
+		*out = strdup(canon);	/* IPv4 has no scope */
+		return *out ? 0 : -ENOMEM;
+	}
+
+	if (inet_pton(AF_INET6, host, addr6) == 1) {
+		if (!inet_ntop(AF_INET6, addr6, canon, sizeof(canon)))
+			return -EINVAL;
+		if (asprintf(out, "%s%s", canon, scope ? scope : "") < 0) {
+			*out = NULL;
+			return -ENOMEM;
+		}
+		return 0;
+	}
+
+	return -EINVAL;
+}
+
+/*
+ * Sanitize the addressing fields once the transport is known: canonicalize a
+ * numeric traddr/host_traddr via canon_ip(); a hostname is rejected outright
+ * -- resolving one is the caller's job, not libnvme's.  IP addressing
+ * applies only to the IP transports; fc and loop are left untouched.
+ *
+ * Return: 0 on success; -EINVAL if traddr or host_traddr is set but not
+ * numeric; -ENOMEM on allocation failure.
+ */
+static int tid_sanitize_addr(struct libnvmf_tid *t)
+{
+	char *canon;
+	int rc;
+
+	if (!t->transport ||
+	    (strcmp(t->transport, "tcp") && strcmp(t->transport, "rdma")))
+		return 0;
+
+	if (t->traddr) {
+		rc = canon_ip(t->traddr, &canon);
+		if (rc)
+			return rc;
+		free(t->traddr);
+		t->traddr = canon;
+	}
+
+	if (t->host_traddr) {
+		rc = canon_ip(t->host_traddr, &canon);
+		if (rc)
+			return rc;
+		free(t->host_traddr);
+		t->host_traddr = canon;
+	}
+
+	return 0;
+}
+
 __libnvme_public struct libnvmf_tid *libnvmf_tid_from_fields(
 		const char *transport, const char *traddr,
 		const char *trsvcid, const char *subsysnqn,
@@ -275,7 +380,38 @@ __libnvme_public struct libnvmf_tid *libnvmf_tid_from_fields(
 	t->hostnqn     = xstrdup(hostnqn);
 	t->hostid      = xstrdup(hostid);
 
+	if (tid_sanitize_addr(t)) {
+		libnvmf_tid_free(t);
+		return NULL;
+	}
+
 	return t;
+}
+
+/*
+ * libnvmf_traddr_is_numeric() - Would this address survive TID construction?
+ * @traddr: A candidate traddr/host_traddr, or NULL.
+ *
+ * The TID constructors accept a numeric IP only and reject a hostname; this
+ * lets a caller check a candidate address before resolving it, using the same
+ * definition of "numeric" the constructors use internally (including an IPv6
+ * scope suffix, which is numeric).
+ *
+ * Return: true if @traddr is a numeric address, false otherwise (including a
+ * NULL @traddr or an allocation failure while checking).
+ */
+__libnvme_public bool libnvmf_traddr_is_numeric(const char *traddr)
+{
+	char *canon;
+	int rc;
+
+	if (!traddr)
+		return false;
+
+	rc = canon_ip(traddr, &canon);
+	free(canon);
+
+	return rc == 0;
 }
 
 /*
@@ -361,7 +497,7 @@ static struct libnvmf_tid *tid_parse(struct libnvme_global_ctx *ctx,
 	}
 
 	free(buf);
-	if (bad) {
+	if (bad || tid_sanitize_addr(t)) {
 		libnvmf_tid_free(t);
 		return NULL;
 	}

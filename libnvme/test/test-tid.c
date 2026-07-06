@@ -7,7 +7,8 @@
  *
  * Unit tests for the libnvmf_tid API — libnvmf_tid_parse() (valid input,
  * rejected aliases, garbage tokens, duplicate keys, whitespace), plus equal(),
- * dup(), get_canonical(), get_hash(), and setter cache invalidation.
+ * dup(), get_canonical(), get_hash(), setter cache invalidation, numeric-only
+ * address sanitization, and traddr_is_numeric().
  *
  * Note: garbage-input tests intentionally trigger error messages on stderr;
  * that output is expected and does not indicate a test failure.
@@ -598,6 +599,114 @@ static bool test_tid_is_empty(void)
 	return pass;
 }
 
+/* -------------------------------------------------------------------------
+ * Address sanitization by the constructors, and rejection of a hostname
+ * -------------------------------------------------------------------------
+ */
+static bool test_tid_sanitize(void)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvmf_tid *t;
+	bool pass = true, p;
+
+	ctx = libnvme_create_global_ctx();
+
+	printf("\ntest_tid_sanitize:\n");
+	printf("  (error messages on stderr below are expected)\n");
+
+	/* An expanded IPv6 traddr is canonicalized to its compressed form. */
+	t = libnvmf_tid_from_fields("tcp", "2001:db8:0:0:0:0:0:1", "4420",
+				    "nqn.t", NULL, NULL, NULL, NULL);
+	p = t && streq(libnvmf_tid_get_traddr(t), "2001:db8::1");
+	CHECK(p, "expanded IPv6 traddr → compressed");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	/* A numeric host_traddr is canonicalized too. */
+	t = libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", "nqn.t",
+				    "2001:db8:0:0:0:0:0:2", NULL, NULL, NULL);
+	p = t && streq(libnvmf_tid_get_host_traddr(t), "2001:db8::2");
+	CHECK(p, "host_traddr IPv6 canonicalized");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	/* An IPv6 scope suffix is kept verbatim after the canonical address. */
+	t = libnvmf_tid_from_fields("tcp", "fe80:0:0:0:0:0:0:1%eth0", "4420",
+				    "nqn.t", NULL, NULL, NULL, NULL);
+	p = t && streq(libnvmf_tid_get_traddr(t), "fe80::1%eth0");
+	CHECK(p, "IPv6 scope preserved: fe80::1%%eth0");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	/* A hostname traddr is rejected outright: construction fails. */
+	t = libnvmf_tid_from_fields("tcp", "dc.example.com", "8009", "nqn.t",
+				    NULL, NULL, NULL, NULL);
+	p = (t == NULL);
+	CHECK(p, "hostname traddr rejected by from_fields()");
+	libnvmf_tid_free(t);
+	pass &= p;
+
+	/* A hostname host_traddr is rejected too. */
+	t = libnvmf_tid_from_fields("tcp", "1.2.3.4", "8009", "nqn.t",
+				    "dc.example.com", NULL, NULL, NULL);
+	p = (t == NULL);
+	CHECK(p, "hostname host_traddr rejected by from_fields()");
+	libnvmf_tid_free(t);
+	pass &= p;
+
+	/* parse() rejects the same way. */
+	t = libnvmf_tid_parse(ctx, "transport=tcp;traddr=dc.example.com");
+	p = (t == NULL);
+	CHECK(p, "parse() rejects a hostname traddr");
+	libnvmf_tid_free(t);
+	pass &= p;
+
+	/* Non-IP transports are untouched: no canonicalize, no rejection. */
+	t = libnvmf_tid_from_fields("fc", "nn-0x1:pn-0x2", NULL, "nqn.t",
+				    NULL, NULL, NULL, NULL);
+	p = t && streq(libnvmf_tid_get_traddr(t), "nn-0x1:pn-0x2");
+	CHECK(p, "fc traddr untouched");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	libnvme_free_global_ctx(ctx);
+
+	return pass;
+}
+
+/* -------------------------------------------------------------------------
+ * libnvmf_traddr_is_numeric()
+ * -------------------------------------------------------------------------
+ */
+static bool test_tid_traddr_is_numeric(void)
+{
+	bool pass = true, p;
+
+	printf("\ntest_tid_traddr_is_numeric:\n");
+
+	p = libnvmf_traddr_is_numeric("1.2.3.4");
+	CHECK(p, "dotted IPv4 is numeric");
+	pass &= p;
+
+	p = libnvmf_traddr_is_numeric("2001:db8::1");
+	CHECK(p, "IPv6 is numeric");
+	pass &= p;
+
+	p = libnvmf_traddr_is_numeric("fe80::1%eth0");
+	CHECK(p, "IPv6 with scope is numeric");
+	pass &= p;
+
+	p = !libnvmf_traddr_is_numeric("dc.example.com");
+	CHECK(p, "hostname is not numeric");
+	pass &= p;
+
+	p = !libnvmf_traddr_is_numeric(NULL);
+	CHECK(p, "NULL is not numeric");
+	pass &= p;
+
+	return pass;
+}
+
 int main(int argc, char *argv[])
 {
 	test_rc = EXIT_SUCCESS;
@@ -612,6 +721,8 @@ int main(int argc, char *argv[])
 	test_tid_equal();
 	test_tid_is_empty();
 	test_tid_dup();
+	test_tid_sanitize();
+	test_tid_traddr_is_numeric();
 	test_tid_canonical();
 	test_tid_hash();
 	test_tid_setter_invalidates_cache();
