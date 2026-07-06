@@ -17,6 +17,8 @@ typedef struct nvme_effects_log_node {
 
 #define nvme_show_error(msg, ...) nvme_show_message(true, msg, ##__VA_ARGS__)
 #define nvme_show_result(msg, ...) nvme_show_message(false, msg, ##__VA_ARGS__)
+#define nvme_show_verbose_result(msg, ...) nvme_show_verbose_message(msg, ##__VA_ARGS__)
+#define nvme_show_verbose_info(msg, ...) nvme_show_verbose_message(msg, ##__VA_ARGS__)
 
 #define POWER_OF_TWO(exponent) (1 << (exponent))
 
@@ -373,11 +375,13 @@ const char *nvme_ipmsr_srs_to_string(__u8 srs);
 void nvme_dev_full_path(libnvme_ns_t n, char *path, size_t len);
 void nvme_generic_full_path(libnvme_ns_t n, char *path, size_t len);
 void nvme_show_message(bool error, const char *msg, ...);
+void nvme_show_verbose_message(const char *msg, ...);
 void nvme_show_perror(const char *msg, ...);
 void nvme_show_error_status(int status, const char *msg, ...);
 void nvme_show_init(void);
 void nvme_show_finish(void);
 void nvme_show_key_value(const char *key, const char *value, ...);
+void nvme_show_verbose_key_value(const char *key, const char *value, ...);
 bool nvme_is_fabrics_reg(int offset);
 bool nvme_is_fabrics_optional_reg(int offset);
 bool nvme_registers_cmbloc_support(__u32 cmbsz);
