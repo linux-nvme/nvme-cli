@@ -6,9 +6,9 @@
  * Authors: Martin Belanger <martin.belanger@dell.com>
  *
  * Unit tests for the libnvmf_tid API — libnvmf_tid_parse() (valid input,
- * rejected aliases, garbage tokens, duplicate keys, whitespace), plus equal(),
- * dup(), get_canonical(), get_hash(), setter cache invalidation, numeric-only
- * address sanitization, and traddr_is_numeric().
+ * rejected aliases, garbage tokens, duplicate keys, whitespace), plus dup(),
+ * get_canonical(), setter cache invalidation, numeric-only address
+ * sanitization, and traddr_is_numeric().
  *
  * Note: garbage-input tests intentionally trigger error messages on stderr;
  * that output is expected and does not indicate a test failure.
@@ -304,52 +304,6 @@ static bool test_tid_parse_whitespace(void)
 }
 
 /* -------------------------------------------------------------------------
- * libnvmf_tid_equal() — including NULL handling (regression for the NULL crash)
- * -------------------------------------------------------------------------
- */
-static bool test_tid_equal(void)
-{
-	struct libnvme_global_ctx *ctx;
-	struct libnvmf_tid *a, *b;
-	bool pass = true, p;
-
-	ctx = libnvme_create_global_ctx();
-
-	printf("\ntest_tid_equal:\n");
-
-	p = libnvmf_tid_equal(NULL, NULL);
-	CHECK(p, "equal(NULL, NULL) → true");
-	pass &= p;
-
-	a = libnvmf_tid_parse(ctx,
-			      "transport=tcp;traddr=1.2.3.4;trsvcid=4420");
-
-	p = !libnvmf_tid_equal(a, NULL) && !libnvmf_tid_equal(NULL, a);
-	CHECK(p, "equal(t, NULL) and equal(NULL, t) → false (no crash)");
-	pass &= p;
-
-	p = libnvmf_tid_equal(a, a);
-	CHECK(p, "equal(t, t) → true");
-	pass &= p;
-
-	b = libnvmf_tid_parse(ctx,
-			      "transport=tcp;traddr=1.2.3.4;trsvcid=4420");
-	p = libnvmf_tid_equal(a, b);
-	CHECK(p, "identical TIDs → equal");
-	pass &= p;
-
-	libnvmf_tid_set_traddr(b, "5.6.7.8");
-	p = !libnvmf_tid_equal(a, b);
-	CHECK(p, "differing field → not equal");
-	pass &= p;
-
-	libnvmf_tid_free(a);
-	libnvmf_tid_free(b);
-	libnvme_free_global_ctx(ctx);
-	return pass;
-}
-
-/* -------------------------------------------------------------------------
  * libnvmf_tid_dup()
  * -------------------------------------------------------------------------
  */
@@ -370,8 +324,9 @@ static bool test_tid_dup(void)
 	t = libnvmf_tid_parse(ctx,
 			      "transport=tcp;traddr=1.2.3.4;nqn=nqn.test");
 	d = libnvmf_tid_dup(t);
-	p = d && libnvmf_tid_equal(t, d) && d != t;
-	CHECK(p, "dup is a distinct but equal copy");
+	p = d && d != t &&
+	    streq(libnvmf_tid_get_canonical(t), libnvmf_tid_get_canonical(d));
+	CHECK(p, "dup is a distinct copy with the same canonical form");
 	pass &= p;
 
 	libnvmf_tid_free(t);
@@ -420,65 +375,15 @@ static bool test_tid_canonical(void)
 }
 
 /* -------------------------------------------------------------------------
- * libnvmf_tid_get_hash() — format, stability, caching
- * -------------------------------------------------------------------------
- */
-static bool test_tid_hash(void)
-{
-	struct libnvme_global_ctx *ctx;
-	struct libnvmf_tid *a, *b, *c;
-	const char *h1, *h2;
-	bool pass = true, p;
-
-	ctx = libnvme_create_global_ctx();
-
-	printf("\ntest_tid_hash:\n");
-
-	p = (libnvmf_tid_get_hash(NULL) == NULL);
-	CHECK(p, "hash(NULL) → NULL");
-	pass &= p;
-
-	a = libnvmf_tid_parse(ctx,
-			      "transport=tcp;traddr=1.2.3.4;trsvcid=4420");
-	h1 = libnvmf_tid_get_hash(a);
-	p = h1 && strlen(h1) == 12 && strspn(h1, "0123456789abcdef") == 12;
-	CHECK(p, "hash is 12 lowercase hex chars");
-	pass &= p;
-
-	h2 = libnvmf_tid_get_hash(a);
-	p = (h1 == h2);
-	CHECK(p, "hash is cached (same pointer on 2nd call)");
-	pass &= p;
-
-	b = libnvmf_tid_parse(ctx,
-			      "transport=tcp;traddr=1.2.3.4;trsvcid=4420");
-	p = streq(libnvmf_tid_get_hash(a), libnvmf_tid_get_hash(b));
-	CHECK(p, "equal TIDs → equal hash");
-	pass &= p;
-
-	c = libnvmf_tid_parse(ctx,
-			      "transport=tcp;traddr=9.9.9.9;trsvcid=4420");
-	p = !streq(libnvmf_tid_get_hash(a), libnvmf_tid_get_hash(c));
-	CHECK(p, "different TIDs → different hash");
-	pass &= p;
-
-	libnvmf_tid_free(a);
-	libnvmf_tid_free(b);
-	libnvmf_tid_free(c);
-	libnvme_free_global_ctx(ctx);
-	return pass;
-}
-
-/* -------------------------------------------------------------------------
- * Setters invalidate the canonical/hash caches
+ * Setters invalidate the canonical cache
  * -------------------------------------------------------------------------
  */
 static bool test_tid_setter_invalidates_cache(void)
 {
 	struct libnvme_global_ctx *ctx;
 	struct libnvmf_tid *t;
-	char before[64], h_before[32];
-	const char *after, *h_after;
+	char before[64];
+	const char *after;
 	bool pass = true, p;
 
 	ctx = libnvme_create_global_ctx();
@@ -487,20 +392,14 @@ static bool test_tid_setter_invalidates_cache(void)
 
 	t = libnvmf_tid_parse(ctx, "transport=tcp;traddr=1.2.3.4");
 
-	/* Prime the caches, mutate, then confirm they were rebuilt. */
+	/* Prime the cache, mutate, then confirm it was rebuilt. */
 	snprintf(before, sizeof(before), "%s", libnvmf_tid_get_canonical(t));
-	snprintf(h_before, sizeof(h_before), "%s", libnvmf_tid_get_hash(t));
 
 	libnvmf_tid_set_traddr(t, "5.6.7.8");
 
 	after = libnvmf_tid_get_canonical(t);
 	p = after && !streq(before, after) && strstr(after, "traddr=5.6.7.8");
 	CHECK(p, "setter invalidates canonical cache");
-	pass &= p;
-
-	h_after = libnvmf_tid_get_hash(t);
-	p = h_after && !streq(h_before, h_after);
-	CHECK(p, "setter invalidates hash cache");
 	pass &= p;
 
 	libnvmf_tid_free(t);
@@ -718,13 +617,11 @@ int main(int argc, char *argv[])
 	test_tid_parse_garbage();
 	test_tid_parse_duplicate_key();
 	test_tid_parse_whitespace();
-	test_tid_equal();
 	test_tid_is_empty();
 	test_tid_dup();
 	test_tid_sanitize();
 	test_tid_traddr_is_numeric();
 	test_tid_canonical();
-	test_tid_hash();
 	test_tid_setter_invalidates_cache();
 
 	if (test_rc == EXIT_SUCCESS)

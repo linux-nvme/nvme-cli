@@ -99,13 +99,12 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
  * rather than a spec guarantee; carrying hostid keeps the TID correct anyway.
  *
  * This is deliberately a separate type from struct libnvme_ctrl_params, not a
- * reuse of it. libnvmf_tid is a pure, owned, hashable *identity*: it owns its
- * strings, caches derived values (canonical form, hash, string rendering), and
- * carries hostnqn/hostid, which libnvme_ctrl_params does not.
- * libnvme_ctrl_params is a controller-*creation* parameter bag: borrowed
- * pointers, no hashing, and it carries the fabrics tuning config (struct
- * libnvme_fabrics_config) that the TID intentionally excludes. Merging them
- * would force one role onto the other.
+ * reuse of it. libnvmf_tid is a pure, owned *identity*: it owns its strings,
+ * caches derived values (canonical form, string rendering), and carries
+ * hostnqn/hostid, which libnvme_ctrl_params does not. libnvme_ctrl_params is a
+ * controller-*creation* parameter bag: borrowed pointers and it carries the
+ * fabrics tuning config (struct libnvme_fabrics_config) that the TID
+ * intentionally excludes. Merging them would force one role onto the other.
  *
  * Addressing is numeric-only: a traddr/host_traddr must be a numeric IP (the
  * constructors reject a hostname). Resolving a name can block on DNS and is a
@@ -114,8 +113,8 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
  * TID a numeric address.
  *
  * All string fields are owned (strdup'd) by the struct. The leading-underscore
- * members cache derived values (canonical form, hash, string rendering),
- * recomputed lazily and cleared by any setter.
+ * members cache derived values (canonical form, string rendering), recomputed
+ * lazily and cleared by any setter.
  */
 struct libnvmf_tid { // !generate-accessors !generate-lifecycle
 	char *transport;    // !access:write=custom
@@ -128,7 +127,6 @@ struct libnvmf_tid { // !generate-accessors !generate-lifecycle
 	char *hostid;       // !access:write=custom
 	/* cached derived values — recomputed lazily, cleared by any setter */
 	char *_canonical;   // !access:read=none,write=none
-	char *_hash;        // !access:read=none,write=none
 	char *_str;         // !access:read=none,write=none
 };
 

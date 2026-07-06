@@ -36,19 +36,6 @@ void libnvmf_tid_set_hostid(struct libnvmf_tid *p, const char *val);
 struct libnvmf_tid *libnvmf_tid_dup(const struct libnvmf_tid *tid);
 
 /**
- * libnvmf_tid_equal() - Compare two TIDs for equality.
- * @a: First TID, or NULL.
- * @b: Second TID, or NULL.
- *
- * Compares all eight fields with exact string equality.  Two NULL TIDs are
- * considered equal.
- *
- * Return: true if all fields match, false otherwise.
- */
-bool libnvmf_tid_equal(const struct libnvmf_tid *a,
-		       const struct libnvmf_tid *b);
-
-/**
  * libnvmf_tid_is_empty() - Test whether a TID sets no fields.
  * @tid: The transport ID, or NULL.
  *
@@ -147,50 +134,24 @@ struct libnvmf_tid *libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx,
  * fields are included.  The string is lazily computed and cached; it is
  * invalidated by any setter call.
  *
- * Stability is the whole point of this form, because the hash returned by
- * libnvmf_tid_get_hash() is computed directly from this string.  The fixed
- * field order makes the output independent of the order fields were set, so
- * the same logical TID always yields the same canonical string and therefore
- * the same hash.  Conversely, *any* difference in the bytes here -- a field
- * present vs. absent, or the same field spelled differently -- changes the
- * hash.  Two producers (e.g. discoverd and a udev helper) only agree on a
- * TID's hash if they build the TID with byte-identical field values.
+ * The fixed field order makes the output independent of the order fields
+ * were set, so the same logical TID always yields the same canonical string.
+ * This is the stable primitive libnvme provides for naming a connection; a
+ * caller that wants a compact hash (e.g. for a systemd unit name) derives it
+ * from this string itself -- libnvme does not hash it.
  *
  * IMPORTANT -- address text is a known foot-gun here.  This function does no
- * normalization: it hashes the address exactly as stored.  The same endpoint
- * can be written several ways that are semantically equal but textually
- * different, e.g. a hostname vs. its resolved IP, an IPv4-mapped IPv6 address
- * ("::ffff:1.2.3.4") vs. dotted IPv4 ("1.2.3.4"), or a compressed vs.
- * fully-expanded IPv6 address.  Each spelling produces a different canonical
- * string and hash.
- *
- * This variation comes from *user space*, not the kernel.  The nvme fabrics
- * driver stores traddr/host_traddr verbatim and reports them back through
- * sysfs unchanged; it parses numeric addresses only (inet_pton) and never
- * resolves hostnames.  So a value read from sysfs matches exactly what was
- * written to /dev/nvme-fabrics -- the divergence is strictly between producers
- * that spell the same endpoint differently (e.g. a daemon that resolves a
- * hostname, or normalizes IPv6) before handing it to the kernel.  Callers that
- * rely on hashes matching across producers (or across a connect/reconnect)
- * must build the TID from the same textual form that is handed to the kernel.
+ * normalization beyond what the constructors already applied: the address is
+ * numeric (constructors reject a hostname), but a compressed vs.
+ * fully-expanded IPv6 address, or an IPv4-mapped IPv6 address
+ * ("::ffff:1.2.3.4") vs. dotted IPv4 ("1.2.3.4"), can still spell the same
+ * endpoint differently and yield different canonical strings.  Two producers
+ * only agree on a TID's canonical form if they build the TID from
+ * byte-identical field values.
  *
  * Return: Cached canonical string, or NULL on allocation failure.
  */
 const char *libnvmf_tid_get_canonical(const struct libnvmf_tid *tid);
-
-/**
- * libnvmf_tid_get_hash() - Return a stable hash string for a TID.
- * @tid: The transport ID.
- *
- * Returns a 12-character lowercase hex string derived from the FNV-1a 64-bit
- * hash (truncated to 48 bits) of the canonical TID string.  The hash is lazily
- * computed and cached; it is invalidated by any setter call.
- *
- * Suitable for use as a dictionary key or compact log identifier.
- *
- * Return: Cached hash string, or NULL on allocation failure.
- */
-const char *libnvmf_tid_get_hash(const struct libnvmf_tid *tid);
 
 /**
  * libnvmf_tid_str() - Human-readable string form of a TID, for logging.

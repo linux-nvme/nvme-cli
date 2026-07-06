@@ -8,8 +8,6 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
-#include <inttypes.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,8 +22,6 @@ static void invalidate_cache(struct libnvmf_tid *p)
 {
 	free(p->_canonical);
 	p->_canonical = NULL;
-	free(p->_hash);
-	p->_hash = NULL;
 	free(p->_str);
 	p->_str = NULL;
 }
@@ -139,37 +135,6 @@ __libnvme_public const char *libnvmf_tid_get_canonical(
 	return p->_canonical;
 }
 
-__libnvme_public const char *libnvmf_tid_get_hash(
-		const struct libnvmf_tid *tid)
-{
-	struct libnvmf_tid *p = (struct libnvmf_tid *)tid;
-	const char *canon;
-	uint64_t h;
-
-	if (!tid)
-		return NULL;
-
-	if (p->_hash)
-		return p->_hash;
-
-	canon = libnvmf_tid_get_canonical(tid);
-	if (!canon)
-		return NULL;
-
-	/*
-	 * Truncate the 64-bit FNV-1a value to 48 bits / 12 hex chars.  This
-	 * keeps the derived unit name short while keeping collisions negligible
-	 * at realistic scale: for ~200 concurrently-connected controllers the
-	 * birthday-bound collision probability is on the order of 1 in 1e10.
-	 */
-	h = libnvmf_fnv1a_64(canon, strlen(canon)) & 0xffffffffffffULL;
-	if (asprintf(&p->_hash, "%012" PRIx64, h) < 0) {
-		p->_hash = NULL;
-		return NULL;
-	}
-	return p->_hash;
-}
-
 /*
  * Human-readable, log-friendly rendering of a TID:
  * "(transport, traddr, trsvcid[, subsysnqn][, host_iface][, host_traddr])".
@@ -242,24 +207,6 @@ __libnvme_public struct libnvmf_tid *libnvmf_tid_dup(
 	t->hostid      = xstrdup(tid->hostid);
 
 	return t;
-}
-
-__libnvme_public bool libnvmf_tid_equal(
-		const struct libnvmf_tid *a, const struct libnvmf_tid *b)
-{
-	if (a == b)
-		return true;
-	if (!a || !b)
-		return false;
-
-	return streq0(a->transport, b->transport) &&
-	       streq0(a->traddr, b->traddr) &&
-	       streq0(a->trsvcid, b->trsvcid) &&
-	       streq0(a->subsysnqn, b->subsysnqn) &&
-	       streq0(a->host_traddr, b->host_traddr) &&
-	       streq0(a->host_iface, b->host_iface) &&
-	       streq0(a->hostnqn, b->hostnqn) &&
-	       streq0(a->hostid, b->hostid);
 }
 
 __libnvme_public bool libnvmf_tid_is_empty(const struct libnvmf_tid *tid)
