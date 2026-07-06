@@ -619,6 +619,19 @@ if want_nvme
         install_dir: sbindir,
     )
 
+    if host_system == 'windows' and want_libnvme and not is_static
+        # Copy libnvme DLL next to nvme.exe so it can be found at
+        # runtime without modifying PATH.
+        cp = find_program('cp')
+        custom_target('copy-libnvme-dll',
+            input: libnvme,
+            output: fs.name(libnvme.full_path()),
+            command: [cp, '@INPUT@', '@OUTPUT@'],
+            depends: [libnvme, nvme_exe],
+            build_by_default: true,
+        )
+    endif
+
     if host_system != 'windows'
         subdir('unit')
     endif
