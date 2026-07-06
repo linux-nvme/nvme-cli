@@ -96,6 +96,7 @@ LIBNVMF_3 {
 		libnvmf_tid_set_transport;
 		libnvmf_tid_set_trsvcid;
 		libnvmf_tid_str;
+		libnvmf_traddr_is_numeric;
 		libnvmf_treq_str;
 		libnvmf_trtype_str;
 		libnvmf_update_key;

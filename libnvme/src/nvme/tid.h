@@ -67,9 +67,12 @@ bool libnvmf_tid_is_empty(const struct libnvmf_tid *tid);
  * @hostnqn:     Host NQN, or NULL.
  * @hostid:      Host Identifier, or NULL.
  *
- * Convenience constructor.  NULL fields are stored as NULL.
+ * Convenience constructor.  NULL fields are stored as NULL.  For an IP
+ * transport (tcp, rdma) a numeric traddr/host_traddr is canonicalized; a
+ * hostname is rejected -- resolving it is the caller's job, not libnvme's.
  *
- * Return: Allocated TID, or NULL on allocation failure.
+ * Return: Allocated TID, or NULL if traddr/host_traddr is not numeric on an
+ * IP transport, or on allocation failure.
  */
 struct libnvmf_tid *libnvmf_tid_from_fields(const char *transport,
 					    const char *traddr,
@@ -79,6 +82,21 @@ struct libnvmf_tid *libnvmf_tid_from_fields(const char *transport,
 					    const char *host_iface,
 					    const char *hostnqn,
 					    const char *hostid);
+
+/**
+ * libnvmf_traddr_is_numeric() - Would this address survive TID construction?
+ * @traddr: A candidate traddr/host_traddr, or NULL.
+ *
+ * The TID constructors accept a numeric IP only and reject a hostname; this
+ * lets a caller check a candidate address -- and decide whether it must
+ * resolve it first -- before building the TID, using the same definition of
+ * "numeric" the constructors use internally (including an IPv6 scope
+ * suffix, which is numeric).
+ *
+ * Return: true if @traddr is a numeric address, false otherwise (including a
+ * NULL @traddr or an allocation failure while checking).
+ */
+bool libnvmf_traddr_is_numeric(const char *traddr);
 
 /**
  * libnvmf_tid_parse() - Allocate a TID from a semicolon-separated key=value
@@ -94,8 +112,11 @@ struct libnvmf_tid *libnvmf_tid_from_fields(const char *transport,
  * C-identifier convention.)  Unknown keys, bare keys (no '='), and empty
  * values are logged at WARN level (when @ctx is non-NULL) and skipped.
  * Whitespace around keys and values is trimmed.  NULL input returns NULL.
+ * Like libnvmf_tid_from_fields(), a traddr/host-traddr that is not numeric on
+ * an IP transport fails the whole parse.
  *
- * Return: Allocated TID, or NULL on allocation failure.
+ * Return: Allocated TID, or NULL on a non-numeric address or allocation
+ * failure.
  */
 struct libnvmf_tid *libnvmf_tid_parse(struct libnvme_global_ctx *ctx,
 				      const char *str);

@@ -107,6 +107,12 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
  * libnvme_fabrics_config) that the TID intentionally excludes. Merging them
  * would force one role onto the other.
  *
+ * Addressing is numeric-only: a traddr/host_traddr must be a numeric IP (the
+ * constructors reject a hostname). Resolving a name can block on DNS and is a
+ * policy choice about which address to use, so it belongs to the caller, not
+ * the library (see design/INTEGRATION.md). The caller resolves and hands the
+ * TID a numeric address.
+ *
  * All string fields are owned (strdup'd) by the struct. The leading-underscore
  * members cache derived values (canonical form, hash, string rendering),
  * recomputed lazily and cleared by any setter.
