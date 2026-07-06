@@ -1743,6 +1743,20 @@ void nvme_show_message(bool error, const char *msg, ...)
 	va_end(ap);
 }
 
+void nvme_show_verbose_message(const char *msg, ...)
+{
+	va_list ap;
+
+	if (!nvme_args.verbose)
+		return;
+
+	va_start(ap, msg);
+
+	nvme_show_message(true, msg, ap);
+
+	va_end(ap);
+}
+
 void nvme_show_perror(const char *msg, ...)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
@@ -1771,6 +1785,19 @@ void nvme_show_key_value(const char *key, const char *val, ...)
 
 	if (ops && ops->show_key_value)
 		ops->show_key_value(key, val, ap);
+
+	va_end(ap);
+}
+void nvme_show_verbose_key_value(const char *key, const char *val, ...)
+{
+	va_list ap;
+
+	if (!nvme_args.verbose)
+		return;
+
+	va_start(ap, val);
+
+	nvme_show_key_value(key, val, ap);
 
 	va_end(ap);
 }
