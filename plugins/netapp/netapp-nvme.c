@@ -775,8 +775,12 @@ static int netapp_smdevices_get_info(struct libnvme_transport_handle *hdl,
 		return 0; /* not the right model of controller */
 
 	err = libnvme_get_nsid(hdl, &item->nsid);
-	if (err)
-		return err;
+	if (err) {
+		nvme_show_error("Unable to get nsid for %s (%s)",
+			dev, err < 0 ? libnvme_strerror(-err) :
+			libnvme_status_to_string(err, false));
+		return 0;
+	}
 
 	err = nvme_identify_ns(hdl, item->nsid, &item->ns);
 	if (err) {
@@ -811,6 +815,12 @@ static int netapp_ontapdevices_get_info(struct libnvme_transport_handle *hdl,
 		return 0;
 
 	err = libnvme_get_nsid(hdl, &item->nsid);
+	if (err) {
+		nvme_show_error("Unable to get nsid for %s (%s)",
+			dev, err < 0 ? libnvme_strerror(-err) :
+			libnvme_status_to_string(err, false));
+		return 0;
+	}
 
 	err = nvme_identify_ns(hdl, item->nsid, &item->ns);
 	if (err) {
