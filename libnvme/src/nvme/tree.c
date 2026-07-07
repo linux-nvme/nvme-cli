@@ -1407,14 +1407,8 @@ int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 	c->subsysnqn = strdup(params->subsysnqn);
 	if (params->traddr)
 		c->traddr = strdup(params->traddr);
-	if (params->host_traddr) {
-		if (traddr_is_hostname(ctx, params->transport,
-				params->host_traddr))
-			hostname2traddr(ctx, params->host_traddr,
-					&c->host_traddr);
-		if (!c->host_traddr)
-			c->host_traddr = strdup(params->host_traddr);
-	}
+	if (params->host_traddr)
+		c->host_traddr = strdup(params->host_traddr);
 	if (params->host_iface)
 		c->host_iface = strdup(params->host_iface);
 	if (params->trsvcid)
