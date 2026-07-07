@@ -223,7 +223,7 @@ if want_fabrics
     test('libnvme - psk', psk)
 endif
 
-if conf.get('NVME_HAVE_NETDB')
+if want_fabrics
     mock_ifaddrs = library(
         'mock-ifaddrs',
         ['mock-ifaddrs.c', ],
@@ -234,20 +234,18 @@ if conf.get('NVME_HAVE_NETDB')
     mock_ifaddrs_env.append('LD_PRELOAD', mock_ifaddrs.full_path())
     mock_ifaddrs_env.set('ASAN_OPTIONS', 'verify_asan_link_order=0')
 
-    if want_fabrics
-        tree_fabrics = executable(
-            'tree-fabrics',
-            ['tree-fabrics.c'],
-            dependencies: [
-                config_dep,
-                ccan_dep,
-                libnvme_test_dep,
-            ],
-            link_with: mock_ifaddrs,
-        )
+    tree_fabrics = executable(
+        'tree-fabrics',
+        ['tree-fabrics.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+        link_with: mock_ifaddrs,
+    )
 
-        test('libnvme - tree-fabrics', tree_fabrics, env: mock_ifaddrs_env)
-    endif
+    test('libnvme - tree-fabrics', tree_fabrics, env: mock_ifaddrs_env)
 
     test_util = executable(
         'test-util',
