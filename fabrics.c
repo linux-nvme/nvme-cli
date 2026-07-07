@@ -36,6 +36,13 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#ifdef NVME_HAVE_NETDB
+#include <netdb.h>
+
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#endif
+
 #include <libnvme.h>
 
 #ifdef NVME_HAVE_LIBKMOD
@@ -296,6 +303,95 @@ static void hook_parser_cleanup(struct libnvmf_context *fctx, void *user_data)
 	fclose(hfd->f);
 }
 
+/*
+ * Resolve *addr in place if it names a tcp/rdma hostname; left untouched for
+ * any other transport, a NULL/"none" address, or one that is already
+ * numeric. Resolution is the caller's job, not libnvme's -- this is where
+ * that happens.
+ *
+ * Deliberately crude and sequential: one blocking getaddrinfo() call at a
+ * time, no threads. nvme-cli is a one-shot tool, so multiple discovery.conf
+ * lines simply resolve one after another.
+ */
+static int nvmf_resolve_addr(const char *transport, const char **addr)
+{
+#ifdef NVME_HAVE_NETDB
+	struct addrinfo hints = { .ai_family = AF_UNSPEC };
+	struct addrinfo *host_info = NULL;
+	char addrstr[NVMF_TRADDR_SIZE];
+	const char *p = NULL;
+	char *resolved;
+	int ret;
+#endif
+
+	if (!*addr || !transport)
+		return 0;
+	if (strcmp(transport, "tcp") && strcmp(transport, "rdma"))
+		return 0;
+	if (!strcmp(*addr, "none"))
+		return 0;
+	if (libnvmf_traddr_is_numeric(*addr))
+		return 0;
+
+#ifdef NVME_HAVE_NETDB
+	ret = getaddrinfo(*addr, NULL, &hints, &host_info);
+	if (ret) {
+		nvme_show_error("failed to resolve host '%s': %s",
+			*addr, gai_strerror(ret));
+		return -EINVAL;
+	}
+
+	switch (host_info->ai_family) {
+	case AF_INET:
+		p = inet_ntop(host_info->ai_family,
+			&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
+			addrstr, NVMF_TRADDR_SIZE);
+		break;
+	case AF_INET6:
+		p = inet_ntop(host_info->ai_family,
+			&(((struct sockaddr_in6 *)
+				host_info->ai_addr)->sin6_addr),
+			addrstr, NVMF_TRADDR_SIZE);
+		break;
+	default:
+		break;
+	}
+
+	if (!p) {
+		nvme_show_error(
+			"failed to resolve host '%s': unrecognized address family",
+			*addr);
+		freeaddrinfo(host_info);
+		return -EINVAL;
+	}
+
+	freeaddrinfo(host_info);
+
+	resolved = strdup(addrstr);
+	if (!resolved)
+		return -ENOMEM;
+
+	*addr = resolved;
+
+	return 0;
+#else /* NVME_HAVE_NETDB */
+	nvme_show_error(
+		"hostname resolution is not available in this build; use a numeric address");
+	return -ENOTSUP;
+#endif /* NVME_HAVE_NETDB */
+}
+
+static int nvmf_resolve_args(struct nvmf_args *fa)
+{
+	int ret;
+
+	ret = nvmf_resolve_addr(fa->transport, &fa->traddr);
+	if (ret)
+		return ret;
+
+	return nvmf_resolve_addr(fa->transport, &fa->host_traddr);
+}
+
 static int set_fabrics_options(struct libnvmf_context *fctx,
 		struct nvmf_args *fa)
 {
@@ -334,25 +430,33 @@ static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 
 	memcpy(&fa, hfd->fa, sizeof(fa));
 	do {
-		if (fgets(line, sizeof(line), hfd->f) == NULL)
-			return -EOF;
+		do {
+			if (fgets(line, sizeof(line), hfd->f) == NULL)
+				return -EOF;
 
-		if (line[0] == '#' || line[0] == '\n')
-			continue;
+			if (line[0] == '#' || line[0] == '\n')
+				continue;
 
-		argc = 1;
-		p = line;
-		while ((ptr = strsep(&p, " =\n")) != NULL)
-			hfd->argv[argc++] = ptr;
-		hfd->argv[argc] = NULL;
+			argc = 1;
+			p = line;
+			while ((ptr = strsep(&p, " =\n")) != NULL)
+				hfd->argv[argc++] = ptr;
+			hfd->argv[argc] = NULL;
 
-		fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
-		if (argconfig_parse(argc, hfd->argv, "config", opts))
-			continue;
-	} while (!fa.transport && !fa.traddr);
+			fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
+			if (argconfig_parse(argc, hfd->argv, "config", opts))
+				continue;
+		} while (!fa.transport && !fa.traddr);
 
-	if (!fa.trsvcid)
-		fa.trsvcid = libnvmf_get_default_trsvcid(fa.transport, true);
+		if (!fa.trsvcid)
+			fa.trsvcid = libnvmf_get_default_trsvcid(fa.transport,
+								 true);
+
+		/*
+		 * An unresolvable hostname fails only its own line; keep
+		 * connecting the remaining ones.
+		 */
+	} while (nvmf_resolve_args(&fa));
 
 	ret = setup_common_context(fctx, &fa);
 	if (ret)
@@ -635,6 +739,10 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 			device += 5;
 	}
 
+	ret = nvmf_resolve_args(&fa);
+	if (ret)
+		return ret;
+
 	struct hook_fabrics_data dld = {
 		.fa = &fa,
 		.flags = flags,
@@ -726,6 +834,10 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 			return -EINVAL;
 		}
 	}
+
+	ret = nvmf_resolve_args(&fa);
+	if (ret)
+		return ret;
 
 do_connect:
 	log_level = map_log_level(nvme_args.verbose, quiet);
