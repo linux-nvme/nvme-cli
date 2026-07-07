@@ -175,6 +175,9 @@ static void json_parse_host(struct libnvme_global_ctx *ctx, struct json_object *
 	attr_obj = json_object_object_get(host_obj, "persistent_discovery_ctrl");
 	if (attr_obj)
 		libnvme_host_set_pdc_enabled(h, json_object_get_boolean(attr_obj));
+	attr_obj = json_object_object_get(host_obj, "supported_persistent_discovery_ctrl");
+	if (attr_obj)
+		libnvme_host_set_epcsd_enabled(h, json_object_get_boolean(attr_obj));
 	subsys_array = json_object_object_get(host_obj, "subsystems");
 	if (!subsys_array)
 		return;
@@ -437,6 +440,9 @@ int json_update_config(struct libnvme_global_ctx *ctx, int fd)
 		if (h->pdc_enabled_valid)
 			json_object_object_add(host_obj, "persistent_discovery_ctrl",
 					       json_object_new_boolean(h->pdc_enabled));
+		if (h->epcsd_enabled_valid)
+			json_object_object_add(host_obj, "supported_persistent_discovery_ctrl",
+					       json_object_new_boolean(h->epcsd_enabled));
 		subsys_array = json_object_new_array();
 		libnvme_for_each_subsystem(h, s) {
 			json_update_subsys(subsys_array, s);
@@ -664,6 +670,9 @@ int json_dump_tree(struct libnvme_global_ctx *ctx)
 		if (h->pdc_enabled_valid)
 			json_object_object_add(host_obj, "persistent_discovery_ctrl",
 					       json_object_new_boolean(h->pdc_enabled));
+		if (h->epcsd_enabled_valid)
+			json_object_object_add(host_obj, "supported_persistent_discovery_ctrl",
+					       json_object_new_boolean(h->epcsd_enabled));
 		subsys_array = json_object_new_array();
 		libnvme_for_each_subsystem(h, s) {
 			json_dump_subsys(subsys_array, s);

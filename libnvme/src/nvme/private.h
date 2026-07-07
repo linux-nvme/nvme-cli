@@ -395,6 +395,13 @@ struct libnvme_host {  // !generate-accessors:read=generated,write=none !generat
 	 */
 	bool pdc_enabled;		// !access:read=none,write=custom
 	bool pdc_enabled_valid;		// !access:read=none
+
+	/* epcsd_enabled and epcsd_enabled_valid work together. epcsd_enabled_valid,
+	 * when true, indicates that epcsd_enabled has been explicitly defined.
+	 * epcsd_enabled_valid is internal meta-data for epcsd_enabled.
+	 */
+	bool epcsd_enabled;		// !access:read=none,write=custom
+	bool epcsd_enabled_valid;	// !access:read=none
 };
 
 struct libnvme_fabric_options { // !generate-accessors

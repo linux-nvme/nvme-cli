@@ -77,6 +77,28 @@ libnvme_host_t libnvme_next_host(struct libnvme_global_ctx *ctx,
 struct libnvme_global_ctx *libnvme_host_get_global_ctx(libnvme_host_t h);
 
 /**
+ * libnvme_host_set_epcsd_enabled() - Set Explicit Persistent Discovery Controller flag
+ * @h:		Host for which the falg should be set
+ * @enabled:	The bool to set the enabled flag
+ *
+ * When libnvme_host_set_epcsd_enabled() is not used to set the PDC flag,
+ * libnvme_host_is_epcsd_enabled() will return the default value which was
+ * passed into the function and not the undefined flag value.
+ */
+void libnvme_host_set_epcsd_enabled(libnvme_host_t h, bool enabled);
+
+/**
+ * libnvme_host_is_epcsd_enabled() - Is Persistenct Discovery Controller enabled
+ * @h: 		Host which to check if PDC is enabled
+ * @fallback:	The fallback default value of the flag when
+ * 		@libnvme_host_set_epcsd_enabled has not be used
+ * 		to set the flag.
+ *
+ * Return: true if PDC is enabled for @h, else false
+ */
+bool libnvme_host_is_epcsd_enabled(libnvme_host_t h, bool fallback);
+
+/**
  * libnvme_host_set_pdc_enabled() - Set Persistent Discovery Controller flag
  * @h:		Host for which the falg should be set
  * @enabled:	The bool to set the enabled flag

@@ -225,6 +225,21 @@ __libnvme_public struct libnvme_global_ctx *libnvme_host_get_global_ctx(
 	return h->ctx;
 }
 
+__libnvme_public void libnvme_host_set_epcsd_enabled(
+		libnvme_host_t h, bool enabled)
+{
+	h->epcsd_enabled_valid = true;
+	h->epcsd_enabled = enabled;
+}
+
+__libnvme_public bool libnvme_host_is_epcsd_enabled(
+		libnvme_host_t h, bool fallback)
+{
+	if (h->epcsd_enabled_valid)
+		return h->epcsd_enabled;
+	return fallback;
+}
+
 __libnvme_public void libnvme_host_set_pdc_enabled(
 		libnvme_host_t h, bool enabled)
 {

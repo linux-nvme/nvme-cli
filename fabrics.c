@@ -58,6 +58,14 @@
 
 #define NVMF_DEF_DISC_TMO	30
 
+#if DEFAULT_EPCSD_ENABLED
+#define EPCSD_DISABLED_DEFAULT_STR
+#define EPCSD_ENABLED_DEFAULT_STR " (default)"
+#else
+#define EPCSD_ENABLED_DEFAULT_STR
+#define EPCSD_DISABLED_DEFAULT_STR " (default)"
+#endif
+
 /* Name of file to output log pages in their raw format */
 static char *raw;
 static bool persistent;
@@ -197,6 +205,7 @@ static int setup_common_context(struct libnvmf_context *fctx,
 
 struct hook_fabrics_data {
 	struct nvmf_args *fa;
+	struct libnvme_global_ctx *ctx;
 	nvme_print_flags_t flags;
 	bool quiet;
 	char *raw;
@@ -322,6 +331,8 @@ static int set_fabrics_options(struct libnvmf_context *fctx,
 static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 {
 	struct hook_fabrics_data *hfd = user_data;
+	bool epcsd_enabled = false, epcsd_disabled = false;
+	struct libnvme_host *h = NULL;
 	struct nvmf_args fa;
 	char *ptr, *p;
 	static char line[4096];
@@ -329,6 +340,8 @@ static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 	bool force = false;
 
 	NVMF_ARGS(opts, fa,
+		  OPT_FLAG("epcsd",          0, &epcsd_enabled,       "Enable persistent discovery for controllers that support it"),
+		  OPT_FLAG("no-epcsd",       0, &epcsd_disabled,      "Disable persistent discovery for controllers that support it"),
 		  OPT_FLAG("persistent",   'p', &persistent, "persistent discovery connection"),
 		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
 
@@ -349,6 +362,11 @@ static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 		fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
 		if (argconfig_parse(argc, hfd->argv, "config", opts))
 			continue;
+
+		if (epcsd_enabled && epcsd_disabled) {
+			fprintf(stderr, "--epcsd and --no-epcsd are mutually exclusive\n");
+			continue;
+		}
 	} while (!fa.transport && !fa.traddr);
 
 	if (!fa.trsvcid)
@@ -360,6 +378,13 @@ static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 
 	libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log,
 		hook_parser_init, hook_parser_cleanup, hook_parser_next_line);
+
+	libnvme_get_host(hfd->ctx, fa.hostnqn, fa.hostid, &h);
+	if (epcsd_enabled)
+		libnvme_host_set_epcsd_enabled(h, true);
+
+	if (epcsd_disabled)
+		libnvme_host_set_epcsd_enabled(h, false);
 
 	return 0;
 }
@@ -557,13 +582,17 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	char *device = NULL;
 	bool force = false;
 	bool json_config = false;
+	bool epcsd_enabled = false, epcsd_disabled = false;
 	bool nbft = false, nonbft = false;
 	char *nbft_path = NBFT_SYSFS_PATH;
 	char *owner = NULL;
+	struct libnvme_host *h = NULL;
 
 	NVMF_ARGS(opts, fa,
 		  OPT_STRING("device",     'd', "DEV", &device,       "use existing discovery controller device"),
 		  OPT_FILE("raw",          'r', &raw,                 "save raw output to file"),
+		  OPT_FLAG("epcsd",          0, &epcsd_enabled,       "Enable persistent discovery for controllers that support it." EPCSD_ENABLED_DEFAULT_STR),
+		  OPT_FLAG("no-epcsd",       0, &epcsd_disabled,      "Disable persistent discovery for controllers that support it." EPCSD_DISABLED_DEFAULT_STR),
 		  OPT_FLAG("persistent",   'p', &persistent,          "persistent discovery connection"),
 		  OPT_FLAG("quiet",          0, &quiet,               "suppress already connected errors"),
 		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
@@ -586,6 +615,11 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	if (ret < 0) {
 		nvme_show_error("Invalid output format");
 		return ret;
+	}
+
+	if (epcsd_enabled && epcsd_disabled) {
+		fprintf(stderr, "--epcsd and --no-epcsd options are mutually exclusive\n");
+		return -EINVAL;
 	}
 
 	if (!strcmp(config_file, "none"))
@@ -637,6 +671,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 	struct hook_fabrics_data dld = {
 		.fa = &fa,
+		.ctx = ctx,
 		.flags = flags,
 		.raw = raw,
 	};
@@ -662,6 +697,12 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		goto out_free;
 	}
 
+	libnvme_get_host(ctx, fa.hostnqn, fa.hostid, &h);
+	if (epcsd_enabled)
+		libnvme_host_set_epcsd_enabled(h, true);
+
+	if (epcsd_disabled)
+		libnvme_host_set_epcsd_enabled(h, false);
 	ret = libnvmf_discovery(ctx, fctx, connect, force);
 
 out_free:

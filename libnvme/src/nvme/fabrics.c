@@ -2411,6 +2411,20 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 	}
 
 	numrec = le64_to_cpu(log->numrec);
+
+	for (int i = 0; i < numrec; i++) {
+		struct nvmf_disc_log_entry *e = &log->entries[i];
+		uint16_t eflags = le16_to_cpu(e->eflags);
+
+		if ((e->subtype == NVME_NQN_DISC ||
+		    e->subtype == NVME_NQN_CURR) &&
+		    (eflags & NVMF_DISC_EFLAGS_EPCSD) &&
+		    libnvme_host_is_epcsd_enabled(h, DEFAULT_EPCSD_ENABLED)) {
+			libnvmf_context_set_persistent(fctx, true);
+			break;
+		}
+	}
+
 	if (fctx->hooks.discovery_log)
 		fctx->hooks.discovery_log(fctx, connect, log, numrec,
 			fctx->hooks.user_data);
