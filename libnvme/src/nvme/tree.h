@@ -1052,8 +1052,10 @@ int libnvme_read_config(struct libnvme_global_ctx *ctx,
  * @ctx:		&struct libnvme_global_ctx object
  *
  * Removes all elements in @r and rescans the existing topology.
+ *
+ * Returns: 0 on success, negative error code otherwise.
  */
-void libnvme_refresh_topology(struct libnvme_global_ctx *ctx);
+int libnvme_refresh_topology(struct libnvme_global_ctx *ctx);
 
 /**
  * libnvme_dump_config() - Print the JSON configuration
