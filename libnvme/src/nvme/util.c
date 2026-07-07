@@ -16,14 +16,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#if defined(NVME_HAVE_NETDB) || defined(CONFIG_FABRICS)
+#ifdef CONFIG_FABRICS
 #include <ifaddrs.h>
 
 #include <arpa/inet.h>
-#include <netdb.h>
-#endif
-
-#ifdef CONFIG_FABRICS
 #include <net/if.h>
 #endif
 
@@ -499,65 +495,6 @@ __libnvme_public const char *libnvme_strerror(int errnum)
 		return libnvme_errno_to_string(errnum);
 	return strerror(errnum);
 }
-
-#ifdef NVME_HAVE_NETDB
-static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *,
-		freeaddrinfo)
-#define __cleanup_addrinfo __cleanup(cleanup_addrinfo)
-
-int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
-		    char **hostname)
-{
-	__cleanup_addrinfo struct addrinfo *host_info = NULL;
-	struct addrinfo hints = {.ai_family = AF_UNSPEC};
-	char addrstr[NVMF_TRADDR_SIZE];
-	const char *p;
-	int ret;
-
-	ret = getaddrinfo(traddr, NULL, &hints, &host_info);
-	if (ret) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to resolve host %s info\n",
-			 traddr);
-		return -errno;
-	}
-
-	switch (host_info->ai_family) {
-	case AF_INET:
-		p = inet_ntop(host_info->ai_family,
-			&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
-			addrstr, NVMF_TRADDR_SIZE);
-		break;
-	case AF_INET6:
-		p = inet_ntop(host_info->ai_family,
-			&(((struct sockaddr_in6 *)host_info->ai_addr)->sin6_addr),
-			addrstr, NVMF_TRADDR_SIZE);
-		break;
-	default:
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "unrecognized address family (%d) %s\n",
-			 host_info->ai_family, traddr);
-		return -EINVAL;
-	}
-
-	if (!p) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to get traddr for %s\n",
-			 traddr);
-		return -EIO;
-	}
-	*hostname = strdup(addrstr);
-	if (!*hostname)
-		return -ENOMEM;
-
-	return 0;
-}
-#else /* NVME_HAVE_NETDB */
-int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr, char **hostname)
-{
-	libnvme_msg(ctx, LIBNVME_LOG_ERR, "No support for hostname IP address resolution; " \
-		"recompile with libnss support.\n");
-
-	return -ENOTSUP;
-}
-#endif /* NVME_HAVE_NETDB */
 
 char *startswith(const char *s, const char *prefix)
 {

@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <string.h>
 
-#if defined(NVME_HAVE_NETDB) || defined(CONFIG_FABRICS)
+#ifdef CONFIG_FABRICS
 #include <ifaddrs.h>
 #endif
 
@@ -594,9 +594,6 @@ const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
 bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr);
 #endif /* CONFIG_FABRICS */
-
-int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
-		char **hostname);
 
 /**
  * startswith - Checks that a string starts with a given prefix.

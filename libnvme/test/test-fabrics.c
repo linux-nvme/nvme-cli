@@ -461,6 +461,104 @@ static bool test_traddr_is_hostname(struct libnvme_global_ctx *ctx)
 }
 
 /* -------------------------------------------------------------------------
+ * nvmf_sanitize_addrs — reject hostnames, canonicalize numeric addresses
+ * -------------------------------------------------------------------------
+ */
+static bool test_nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx)
+{
+	struct libnvme_ctrl_params params = { .transport = "tcp" };
+	libnvme_ctrl_t c;
+	bool pass = true, p;
+	int ret;
+
+	printf("\ntest_nvmf_sanitize_addrs:\n");
+
+	/*
+	 * Creation never resolves and never rejects -- a hostname host_traddr
+	 * is stored verbatim; rejection happens at connect (single policy
+	 * point).
+	 */
+	params.subsysnqn = "nqn.2024-01.com.example:test";
+	params.traddr = "192.168.1.10";
+	params.host_traddr = "storage.example.com";
+	ret = libnvme_create_ctrl(ctx, &params, &c);
+	p = !ret && c && !strcmp(libnvme_ctrl_get_host_traddr(c),
+			"storage.example.com");
+	CHECK(p, "hostname host_traddr stored verbatim at creation");
+	pass &= p;
+
+	ret = nvmf_sanitize_addrs(ctx, c);
+	p = ret == -ENVME_CONNECT_TRADDR;
+	CHECK(p, "hostname host_traddr rejected at connect: %d", ret);
+	pass &= p;
+
+	libnvme_free_ctrl(c);
+
+	/* A hostname traddr is rejected the same way. */
+	params.traddr = "storage.example.com";
+	params.host_traddr = NULL;
+	ret = libnvme_create_ctrl(ctx, &params, &c);
+	p = !ret && c != NULL;
+	CHECK(p, "ctrl created with hostname traddr");
+	pass &= p;
+
+	ret = nvmf_sanitize_addrs(ctx, c);
+	p = ret == -ENVME_CONNECT_TRADDR;
+	CHECK(p, "hostname traddr rejected at connect: %d", ret);
+	pass &= p;
+
+	libnvme_free_ctrl(c);
+
+	/* An uncompressed IPv6 traddr is canonicalized. */
+	params.traddr = "2001:0db8:0000:0000:0000:0000:0000:0001";
+	ret = libnvme_create_ctrl(ctx, &params, &c);
+	p = !ret && c != NULL;
+	CHECK(p, "ctrl created with uncompressed IPv6 traddr");
+	pass &= p;
+
+	ret = nvmf_sanitize_addrs(ctx, c);
+	p = !ret && !strcmp(libnvme_ctrl_get_traddr(c), "2001:db8::1");
+	CHECK(p, "uncompressed IPv6 traddr canonicalized: %s",
+	      libnvme_ctrl_get_traddr(c));
+	pass &= p;
+
+	libnvme_free_ctrl(c);
+
+	/* fc: a WWN traddr is left untouched (not an IP transport). */
+	params.transport = "fc";
+	params.traddr = "nn-0x1:pn-0x2";
+	ret = libnvme_create_ctrl(ctx, &params, &c);
+	p = !ret && c != NULL;
+	CHECK(p, "ctrl created with fc WWN traddr");
+	pass &= p;
+
+	ret = nvmf_sanitize_addrs(ctx, c);
+	p = !ret && !strcmp(libnvme_ctrl_get_traddr(c), "nn-0x1:pn-0x2");
+	CHECK(p, "fc WWN traddr left untouched: %s",
+	      libnvme_ctrl_get_traddr(c));
+	pass &= p;
+
+	libnvme_free_ctrl(c);
+
+	/* loop: no traddr at all -- nothing to sanitize. */
+	params.transport = "loop";
+	params.traddr = NULL;
+	ret = libnvme_create_ctrl(ctx, &params, &c);
+	p = !ret && c != NULL;
+	CHECK(p, "ctrl created for loop transport");
+	pass &= p;
+
+	ret = nvmf_sanitize_addrs(ctx, c);
+	p = ret == 0;
+	CHECK(p, "loop transport (no traddr) sanitizes cleanly: %d", ret);
+	pass &= p;
+
+	libnvme_free_ctrl(c);
+
+	return pass;
+}
+
+/* -------------------------------------------------------------------------
  * unescape_uri — decode percent-encoded characters in a URI fragment
  * -------------------------------------------------------------------------
  */
@@ -546,6 +644,7 @@ int main(int argc, char *argv[])
 	test_inet4_pton();
 	test_inet_pton_with_scope(ctx);
 	test_traddr_is_hostname(ctx);
+	test_nvmf_sanitize_addrs(ctx);
 	test_unescape_uri();
 
 	libnvme_free_global_ctx(ctx);
