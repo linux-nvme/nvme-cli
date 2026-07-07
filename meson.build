@@ -558,6 +558,7 @@ if want_nvme
         'logging.c',
         'nvme-cmds.c',
         'nvme-models.c',
+        'nvme-pci-ids.c',
         'nvme-print-binary.c',
         'nvme-print-stdout.c',
         'nvme-print.c',
@@ -565,6 +566,15 @@ if want_nvme
         'nvme.c',
         'plugin.c',
     ]
+    if host_system == 'windows'
+        sources += [
+            'nvme-pci-ids-win.c',
+        ]
+    else
+        sources += [
+            'nvme-pci-ids-linux.c',
+        ]
+    endif
 
     if json_c_dep.found()
         sources += [
