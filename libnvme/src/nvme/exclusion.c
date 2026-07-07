@@ -917,7 +917,7 @@ __libnvme_public int libnvmf_exclusion_read(struct libnvme_global_ctx *ctx,
 {
 	char pathbuf[PATH_MAX];
 	const char *path;
-	size_t len;
+	size_t len = 0;
 	int ret;
 
 	if (!ctx)
