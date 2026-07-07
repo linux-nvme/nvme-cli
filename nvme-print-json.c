@@ -5211,7 +5211,7 @@ static void json_output_status(int status)
 	r = obj_create(json_str);
 
 	if (status < 0) {
-		obj_add_str(r, "error", libnvme_strerror(errno));
+		obj_add_str(r, "error", libnvme_strerror(-status));
 		obj_print(r);
 		return;
 	}
@@ -5274,7 +5274,7 @@ static void json_output_error_status(int status, const char *msg, va_list ap)
 	r = obj_create(json_str);
 
 	if (status < 0) {
-		obj_add_str(r, "error", libnvme_strerror(errno));
+		obj_add_str(r, "error", libnvme_strerror(-status));
 		obj_print(r);
 		return;
 	}

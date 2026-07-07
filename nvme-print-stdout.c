@@ -1805,7 +1805,7 @@ static void stdout_status(int status)
 	 * sensible fallback anyway
 	 */
 	if (status < 0) {
-		fprintf(stderr, "Error: %s\n", libnvme_strerror(errno));
+		fprintf(stderr, "Error: %s\n", libnvme_strerror(-status));
 		return;
 	}
 
