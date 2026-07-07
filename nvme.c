@@ -3815,7 +3815,7 @@ int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		return err;
 	}
 
-	nvme_show_id_ctrl(ctrl, libnvme_transport_handle_get_name(hdl), flags, vs);
+	nvme_show_id_ctrl(ctx, hdl, ctrl, flags, vs);
 
 	return err;
 }

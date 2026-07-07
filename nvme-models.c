@@ -7,25 +7,14 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include "nvme-models.h"
+#include <nvme/lib-types.h>
+
 #include "nvme.h"
+#include "nvme-models.h"
+#include "nvme-pci-ids.h"
 #include "nvme-print.h"
 
-static char *_fmt1 = "/sys/class/nvme/nvme%d/device/subsystem_vendor";
-static char *_fmt2 = "/sys/class/nvme/nvme%d/device/subsystem_device";
-static char *_fmt3 = "/sys/class/nvme/nvme%d/device/vendor";
-static char *_fmt4 = "/sys/class/nvme/nvme%d/device/device";
-static char *_fmt5 = "/sys/class/nvme/nvme%d/device/class";
-
 #define LINE_BUF_SIZE 1024
-
-static char fmt1[78];
-static char fmt2[78];
-static char fmt3[78];
-static char fmt4[78];
-static char fmt5[78];
 
 static char *device_top;
 static char *device_mid;
@@ -33,7 +22,6 @@ static char *device_final;
 static char *class_top;
 static char *class_mid;
 static char *class_final;
-
 
 
 static void free_all(void)
@@ -240,32 +228,6 @@ static void pull_class_info(char *line, FILE *file, char *class)
 	}
 }
 
-static int read_sys_node(char *where, char *save, size_t savesz)
-{
-	char *new;
-	int fd, ret = 0, len;
-	fd = open(where, O_RDONLY);
-	if (fd < 0) {
-		if (errno != ENOENT) {
-			nvme_show_error("Failed to open %s with errno %s",
-				where, libnvme_strerror(errno));
-		}
-		return 1;
-	}
-	/* -1 so we can safely use strstr below */
-	len = read(fd, save, savesz - 1);
-	if (!len)
-		ret = 1;
-	else {
-		save[len] = '\0';
-		new = strstr(save, "\n");
-		if (new)
-			new[0] = '\0';
-	}
-	close(fd);
-	return ret;
-}
-
 static FILE *open_pci_ids(void)
 {
 	int i;
@@ -273,7 +235,7 @@ static FILE *open_pci_ids(void)
 	FILE *fp;
 
 	const char* pci_ids[] = {
-		"/usr/share/hwdata/pci.ids",  /* RHEL */
+		"/usr/share/hwdata/pci.ids",	  /* RHEL */
 		"/usr/share/pci.ids",		  /* SLES */
 		"/usr/share/misc/pci.ids",	  /* Ubuntu */
 		NULL
@@ -296,39 +258,30 @@ static FILE *open_pci_ids(void)
 			return fp;
 	}
 
-	nvme_show_error("Could not find pci.ids file");
 	return NULL;
 }
 
-static char *__nvme_product_name(int id)
+static char *__nvme_product_name(__u32 *vid, __u32 *did,
+		__u32 *subsys_vid, __u32 *subsys_did, __u32 *class_code)
 {
 	char readbuf[LINE_BUF_SIZE];
 	char vendor[7] = { 0 };
 	char device[7] = { 0 };
 	char sub_device[7] = { 0 };
 	char sub_vendor[7] = { 0 };
-	char class[13] = { 0 };
+	char class[9] = { 0 };
 	size_t len;
-	int ret = 0;
 	char *result;
 	FILE *file = open_pci_ids();
 
 	if (!file)
 		goto error1;
 
-	snprintf(fmt1, 78, _fmt1, id);
-	snprintf(fmt2, 78, _fmt2, id);
-	snprintf(fmt3, 78, _fmt3, id);
-	snprintf(fmt4, 78, _fmt4, id);
-	snprintf(fmt5, 78, _fmt5, id);
-
-	ret = read_sys_node(fmt1, sub_vendor, 7);
-	ret |= read_sys_node(fmt2, sub_device, 7);
-	ret |= read_sys_node(fmt3, vendor, 7);
-	ret |= read_sys_node(fmt4, device, 7);
-	ret |= read_sys_node(fmt5, class, 13);
-	if (ret)
-		goto error0;
+	sprintf(vendor, "0x%04x", *vid & 0xFFFF);
+	sprintf(device, "0x%04x", *did & 0xFFFF);
+	sprintf(sub_vendor, "0x%04x", *subsys_vid & 0xFFFF);
+	sprintf(sub_device, "0x%04x", *subsys_did & 0xFFFF);
+	sprintf(class, "0x%06x", *class_code & 0xFFFFFF);
 
 	while (fgets(readbuf, sizeof(readbuf), file) != NULL) {
 		len = strlen(readbuf);
@@ -358,29 +311,19 @@ static char *__nvme_product_name(int id)
 	format_all(result, vendor, device);
 	free_all();
 	return result;
-error0:
-	fclose(file);
 error1:
 	return NULL;
 }
 
-char *nvme_product_name(const char *devname)
+char *nvme_product_name(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl)
 {
-	const char *base;
-	int id;
+	__u32 vid = 0, did = 0, subsys_vid = 0, subsys_did = 0, class_code = 0;
 
-	if (!devname)
+	if (nvme_get_pci_ids(ctx, hdl, &vid, &did, &subsys_vid,
+			&subsys_did, &class_code) < 0)
 		return NULL;
 
-	base = strrchr(devname, '/');
-	if (base) {
-		if (!base[1])
-			return NULL;
-		devname = base + 1;
-	}
-
-	if (sscanf(devname, "nvme%d", &id) != 1)
-		return NULL;
-
-	return __nvme_product_name(id);
+	return __nvme_product_name(&vid, &did, &subsys_vid, &subsys_did,
+				&class_code);
 }

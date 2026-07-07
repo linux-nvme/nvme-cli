@@ -4429,8 +4429,7 @@ static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	nvme_show_id_ctrl(&ctrl, libnvme_transport_handle_get_name(hdl),
-			  flags, micron_id_ctrl_vs);
+	nvme_show_id_ctrl(ctx, hdl, &ctrl, flags, micron_id_ctrl_vs);
 
 	return 0;
 }

@@ -190,7 +190,8 @@ void nvme_show_lba_status_info(__u64 result);
 void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
 
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs, nvme_print_flags_t flags);
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, const char *devname,
+void nvme_show_id_ctrl(struct libnvme_global_ctx *ctx,
+	struct libnvme_transport_handle *hdl, struct nvme_id_ctrl *ctrl,
 	nvme_print_flags_t flags, void (*vendor_show)(__u8 *vs,
 	struct json_object *root));
 void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags);
