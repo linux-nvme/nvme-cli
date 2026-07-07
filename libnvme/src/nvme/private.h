@@ -563,7 +563,7 @@ static inline bool streqcase0(const char *s1, const char *s2)
  */
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2);
 
-#if defined(NVME_HAVE_NETDB) || defined(CONFIG_FABRICS)
+#ifdef CONFIG_FABRICS
 /**
  * libnvme_iface_matching_addr - Get interface matching @addr
  * @iface_list: Interface list returned by getifaddrs()
@@ -593,7 +593,7 @@ const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
  */
 bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr);
-#endif /* NVME_HAVE_NETDB || CONFIG_FABRICS */
+#endif /* CONFIG_FABRICS */
 
 int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
 		char **hostname);
