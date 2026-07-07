@@ -860,7 +860,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 	int err = 0;
 	size_t total_size = 0;
 	__u8 *data_ptr = NULL;
-	int data_written = 0, data_remaining = 0;
+	int data_written, data_remaining = 0;
 	nvme_print_flags_t flags;
 	bool da4_support = false,
 	host_behavior_changed = false;
@@ -970,7 +970,6 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	data_written = 0;
 	data_remaining = total_size;
 	data_ptr = (__u8 *)log;
 
