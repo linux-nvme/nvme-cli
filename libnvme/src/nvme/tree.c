@@ -251,13 +251,13 @@ __libnvme_public libnvme_subsystem_t libnvme_next_subsystem(libnvme_host_t h,
 	return s ? list_next(&h->subsystems, s, entry) : NULL;
 }
 
-__libnvme_public void libnvme_refresh_topology(struct libnvme_global_ctx *ctx)
+__libnvme_public int libnvme_refresh_topology(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
 
 	libnvme_for_each_host_safe(ctx, h, _h)
 		__libnvme_free_host(h);
-	libnvme_scan_topology(ctx, NULL, NULL);
+	return libnvme_scan_topology(ctx, NULL, NULL);
 }
 
 void nvme_root_release_fds(struct libnvme_global_ctx *ctx)
