@@ -1077,27 +1077,6 @@ static void stdout_top_print_subsys_topology_footer(
 	dashboard_set_footer_row_reverse(db_ctx, 2);
 }
 
-static struct libnvme_global_ctx *stdout_top_rescan_topology(void)
-{
-	struct libnvme_global_ctx *ctx;
-
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
-		nvme_show_error("Failed to create global context");
-		return NULL;
-	}
-	libnvme_set_logging_file(ctx, stdout);
-	libnvme_set_logging_level(ctx, log_level, false, false);
-
-	if (libnvme_scan_topology(ctx, NULL, NULL)) {
-		libnvme_free_global_ctx(ctx);
-		nvme_show_error("Failed to scan topology");
-		return NULL;
-	}
-
-	return ctx;
-}
-
 static libnvme_subsystem_t stdout_top_search_subsystem(
 		struct libnvme_global_ctx *ctx, const char *subsys_name)
 {
@@ -1218,22 +1197,19 @@ static int handle_event_page_up(struct dashboard_ctx *db_ctx)
  * Returns: 0 if ESC key is pressed or needs to draw subsystem selection screen
  *          1 if 'q' is pressed or in case of error
  */
-static int stdout_top_draw_subsys_topology_screen(struct dashboard_ctx *db_ctx,
-			FILE *stream, libnvme_subsystem_t _s)
+static int stdout_top_draw_subsys_topology_screen(
+		struct libnvme_global_ctx *ctx, struct dashboard_ctx *db_ctx,
+		FILE *stream, libnvme_subsystem_t _s)
 {
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	enum event_type event;
 	int ret, scroll = 0;
 	int data_start, data_rows;
-	libnvme_subsystem_t s = NULL;
+	__cleanup_free const char *subsys_name;
+	libnvme_subsystem_t s = _s;
 
-	ctx = stdout_top_rescan_topology();
-	if (!ctx)
+	subsys_name = strdup(libnvme_subsystem_get_name(s));
+	if (!subsys_name)
 		return 1; /* force quit */
-
-	s = stdout_top_search_subsystem(ctx, libnvme_subsystem_get_name(_s));
-	if (!s)
-		return 0; /* draw subsys selection screen */
 
 	while (1) {
 		stdout_top_print_subsys_topology_header(db_ctx, stream);
@@ -1287,16 +1263,13 @@ wait_for_event:
 			ret = 1;
 			break;
 		} else if (event == EVENT_TYPE_NVME_UEVENT) {
-			/* free old ctx */
-			libnvme_free_global_ctx(ctx);
-			ctx = stdout_top_rescan_topology();
-			if (!ctx) {
+
+			if (libnvme_refresh_topology(ctx)) {
 				ret = 1; /* force quit */
 				break;
 			}
 
-			s = stdout_top_search_subsystem(ctx,
-					libnvme_subsystem_get_name(_s));
+			s = stdout_top_search_subsystem(ctx, subsys_name);
 			if (!s) {
 				ret = 0; /* draw subsys selection screen */
 				break;
@@ -1499,9 +1472,17 @@ void stdout_top(int refresh_interval)
 	int data_start, frame_rows, quit = 0, scroll = 0;
 	int num_subsys = 0, subsys_idx = 0;
 
-	ctx = stdout_top_rescan_topology();
-	if (!ctx)
+	ctx = libnvme_create_global_ctx();
+	if (!ctx) {
+		nvme_show_error("Failed to create global context");
 		return;
+	}
+
+	if (libnvme_scan_topology(ctx, NULL, NULL)) {
+		nvme_show_error("Failed to scan topology");
+		return;
+	}
+
 	subsys_arr = stdout_top_build_subsys_arr(ctx, &num_subsys);
 	if (!subsys_arr)
 		return;
@@ -1535,22 +1516,20 @@ wait_for_event:
 		case EVENT_TYPE_ERROR:
 			quit = 1;
 			break;
-		case EVENT_TYPE_KEY_RETURN:
+		case EVENT_TYPE_KEY_RETURN: {
 			dashboard_reset(db_ctx);
-
 			s = subsys_arr[subsys_idx];
-			quit = stdout_top_draw_subsys_topology_screen(db_ctx,
-					stream, s);
+
+			quit = stdout_top_draw_subsys_topology_screen(ctx,
+					db_ctx, stream, s);
 			if (quit)
 				break;
 
 			scroll = 0;
 			free(subsys_arr);
 			subsys_arr = NULL;
-			libnvme_free_global_ctx(ctx);
 
-			ctx = stdout_top_rescan_topology();
-			if (!ctx) {
+			if (libnvme_refresh_topology(ctx)) {
 				quit = 1;
 				break;
 			}
@@ -1568,6 +1547,7 @@ wait_for_event:
 				quit = 1;
 
 			break;
+		}
 		case EVENT_TYPE_NVME_UEVENT: {
 			__cleanup_free char *subsys_name = NULL;
 			libnvme_subsystem_t s = subsys_arr[subsys_idx];
@@ -1580,10 +1560,8 @@ wait_for_event:
 
 			free(subsys_arr);
 			subsys_arr = NULL;
-			libnvme_free_global_ctx(ctx);
 
-			ctx = stdout_top_rescan_topology();
-			if (!ctx) {
+			if (libnvme_refresh_topology(ctx)) {
 				quit = 1;
 				break;
 			}
