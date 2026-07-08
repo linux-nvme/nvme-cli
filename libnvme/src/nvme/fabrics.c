@@ -1059,19 +1059,14 @@ static int inet_pton_with_scope(struct libnvme_global_ctx *ctx, int af,
 bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr)
 {
-	struct sockaddr_storage addr;
-
 	if (!traddr || !transport)
 		return false;
 	if (!strcmp(traddr, "none"))
 		return false;
 	if (strcmp(transport, "tcp") && strcmp(transport, "rdma"))
 		return false;
-	if (inet_pton_with_scope(ctx, AF_UNSPEC,
-			traddr, NULL, &addr) == 0)  /* scope-aware */
-		return false;
 
-	return true;
+	return !libnvmf_traddr_is_numeric(traddr);
 }
 
 /*
