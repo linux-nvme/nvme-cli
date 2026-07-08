@@ -3,7 +3,7 @@
 
 
 import gc
-from libnvme import nvme
+from libnvme3 import nvme
 
 ctx = nvme.GlobalCtx()
 ctx.log_level('debug')

@@ -11,9 +11,9 @@ Scans the NVMe subsystem and prints out all found hosts,
 subsystems, and controllers
 '''
 
-import libnvme
+from libnvme3 import nvme
 
-r = libnvme.nvme_root()
+r = nvme.nvme_root()
 for h in r.hosts():
     print (h)
     for s in h.subsystems():

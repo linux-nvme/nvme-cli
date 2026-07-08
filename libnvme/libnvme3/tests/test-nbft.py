@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 import os
 import unittest
-from libnvme import nvme
+from libnvme3 import nvme
 from argparse import ArgumentParser
 
 

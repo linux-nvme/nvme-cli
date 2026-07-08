@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: LGPL-2.1-or-later -->
-# Python bindings for libnvme
+# Python bindings for libnvme3
 
-We use [SWIG](http://www.swig.org/) to generate Python bindings for libnvme.
+We use [SWIG](http://www.swig.org/) to generate Python bindings for libnvme3.
 
 ## Classes
 
@@ -53,8 +53,7 @@ Topology can be traversed with iterators: `ctx.hosts()`, `host.subsystems()`,
 | `registration_control(tas)` | method | Register / deregister / update with the DIM service |
 
 ## Exceptions
-
-All libnvme errors are reported through a small exception hierarchy:
+All libnvme3 errors are reported through a small exception hierarchy:
 
 ```
 NvmeError                  base class — carries .errno (int) and .message (str)
@@ -68,7 +67,7 @@ NvmeError                  base class — carries .errno (int) and .message (str
 Import them directly from the `nvme` module:
 
 ```python
-from libnvme import nvme
+from libnvme3 import nvme
 
 try:
     ctrl.connect(host)
@@ -87,7 +86,7 @@ except nvme.NotConnectedError:
 #!/usr/bin/env python3
 import sys
 import pprint
-from libnvme import nvme
+from libnvme3 import nvme
 
 def disc_supp_str(dlp_supp_opts):
     bitmap = {
@@ -147,22 +146,22 @@ The package is available from most Linux distribution repositories and on PyPI.
 
 ```bash
 # Debian / Ubuntu
-apt-get install python3-libnvme
+apt-get install python3-libnvme3
 
 # Fedora
-dnf install python3-libnvme
+dnf install python3-libnvme3
 
 # openSUSE
-zypper install python3-libnvme
+zypper install python3-libnvme3
 ```
 
 **From PyPI:**
 
 ```bash
-pip install libnvme
+pip install libnvme3
 ```
 
-> **Note:** The PyPI package is a source distribution — it builds libnvme and
+> **Note:** The PyPI package is a source distribution — it builds libnvme3 and
 > the Python bindings directly on your machine. Build dependencies (a C
 > compiler, Meson, Ninja, SWIG, and the libnvme C dependencies) must be
 > present. If any are missing, `pip install` will fail. Installing from your

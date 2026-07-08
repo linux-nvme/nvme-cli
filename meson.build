@@ -79,23 +79,8 @@ else
     want_python = want_libnvme and py3_dep.found() and swig.found() and header_found
 endif
 
-
-# Determine the libnvme.so version number from the project version. The version
-# for libnvme.so has to be a 3 digit number such as 3.0.1. We expect the project
-# version to be composed of 2 or 3 digits after stripping trailing identifiers
-# such as "-rc.*". If the project version is composed of only two digits, then
-# we append '.0' to it.
-ver = meson.project_version()
-ver_digits = ver.split('-')[0]
-ver_digits = ver_digits.split('.dev')[0]
-num_digits = ver_digits.split('.').length()
-if num_digits < 2 or num_digits > 3
-    error('Invalid version: ', meson.project_version())
-elif num_digits == 3
-    libnvme_so_version = ver_digits
-else
-    libnvme_so_version = ver_digits + '.0'
-endif
+# Bump this only when making an ABI-incompatible change.
+libnvme_so_version = '1.0.0'
 
 # For PyPI builds, use only the major version (e.g., '3' instead of '3.0.0').
 # This avoids the need for symbolic links which pip/wheel doesn't preserve.
@@ -104,8 +89,8 @@ if get_option('pypi')
 endif
 
 libnvme_so_major = libnvme_so_version.split('.')[0]
-libnvme_api_name = 'libnvme@0@'.format(libnvme_so_major)
-libnvme_link_name = 'nvme@0@'.format(libnvme_so_major)
+libnvme_api_name = 'libnvme3'
+libnvme_link_name = 'nvme3'
 
 ################################################################################
 prefixdir      = get_option('prefix')
@@ -540,7 +525,8 @@ substs.set('SYSTEMDDIR', systemddir)
 substs.set('SYSTEMCTL', get_option('systemctl'))
 substs.set('PREFIX', prefixdir)
 substs.set('URL', 'https://github.com/linux-nvme/nvme-cli/')
-substs.set('VERSION_MAJOR', libnvme_so_major)
+substs.set('LIBNVME_API_NAME', libnvme_api_name)
+substs.set('LIBNVME_SO_VERSION', libnvme_so_major)
 
 
 ################################################################################

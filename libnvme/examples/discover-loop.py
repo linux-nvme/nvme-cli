@@ -6,7 +6,7 @@ Example script for nvme discovery
 
 import sys
 import pprint
-from libnvme import nvme
+from libnvme3 import nvme
 
 def disc_supp_str(dlp_supp_opts):
     d = {

@@ -5,7 +5,7 @@
 """Tests that __setattr__ guards on SWIG-generated classes raise on bad names."""
 
 import unittest
-from libnvme import nvme
+from libnvme3 import nvme
 
 
 class TestCtrlSetattr(unittest.TestCase):
