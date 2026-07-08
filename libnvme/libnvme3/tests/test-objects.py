@@ -7,7 +7,7 @@ They do not require real NVMe hardware to run.
 """
 import gc
 import unittest
-from libnvme import nvme
+from libnvme3 import nvme
 
 
 class TestConstants(unittest.TestCase):

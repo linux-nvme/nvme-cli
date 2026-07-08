@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-Name:		libnvme
+Name:		@LIBNVME_API_NAME@
 Version:	@VERSION@
 Release:	0
 Summary:	Linux-native nvme device management library
 
 License:	@LIBNVME_LICENSE@
-Source:		libnvme.tar.gz
+Source:		@LIBNVME_API_NAME@.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-root
 URL:		@URL@
 
@@ -16,8 +16,8 @@ system.
 
 %package devel
 Summary: Development files for Linux-native nvme
-Requires: libnvme
-Provides: libnvme.so.@VERSION_MAJOR@
+Requires: @LIBNVME_API_NAME@
+Provides: @LIBNVME_API_NAME@.so.@LIBNVME_SO_VERSION@
 
 %description devel
 This package provides header files to include and libraries to link with

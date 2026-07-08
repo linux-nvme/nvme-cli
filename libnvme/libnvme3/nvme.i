@@ -27,10 +27,11 @@ static inline PyObject *Py_NewRef(PyObject *obj)
 	return obj;
 }
 #endif
+
 %}
 
 %define MODULE_DOCSTRING
-"Python bindings for libnvme — the Linux NVMe management library.\n"
+"Python bindings for libnvme3 — the Linux NVMe management library.\n"
 "\n"
 "Classes\n"
 "-------\n"
@@ -723,13 +724,33 @@ PyObject *exclusion_match(struct libnvme_global_ctx *ctx,
 /*============================================================================*/
 
 %init %{
-	PyObject *_exc = PyImport_ImportModule("libnvme._exceptions");
-	NvmeError             = PyObject_GetAttrString(_exc, "NvmeError");
-	NvmeConnectError      = PyObject_GetAttrString(_exc, "ConnectError");
-	NvmeDisconnectError   = PyObject_GetAttrString(_exc, "DisconnectError");
-	NvmeDiscoverError     = PyObject_GetAttrString(_exc, "DiscoverError");
-	NvmeNotConnectedError = PyObject_GetAttrString(_exc, "NotConnectedError");
-	Py_DECREF(_exc);
+	PyObject *_exc = PyImport_ImportModule("libnvme3._exceptions");
+	if (_exc == NULL) {
+		PyErr_SetString(PyExc_ImportError,
+				"failed to import libnvme3._exceptions");
+	} else {
+		NvmeError             = PyObject_GetAttrString(_exc,
+							       "NvmeError");
+		NvmeConnectError      = PyObject_GetAttrString(_exc,
+							       "ConnectError");
+		NvmeDisconnectError   = PyObject_GetAttrString(_exc,
+							       "DisconnectError");
+		NvmeDiscoverError     = PyObject_GetAttrString(_exc,
+							       "DiscoverError");
+		NvmeNotConnectedError = PyObject_GetAttrString(_exc,
+							       "NotConnectedError");
+
+		Py_DECREF(_exc);
+
+		if (NvmeError == NULL ||
+		    NvmeConnectError == NULL ||
+		    NvmeDisconnectError == NULL ||
+		    NvmeDiscoverError == NULL ||
+		    NvmeNotConnectedError == NULL) {
+			PyErr_SetString(PyExc_ImportError,
+					"failed to initialize libnvme3 exceptions");
+		}
+	}
 
 	/* Build the frozenset of all known ctrl config dict keys. */
 	static const char * const _hand_written_keys[] = {
@@ -759,7 +780,7 @@ PyObject *exclusion_match(struct libnvme_global_ctx *ctx,
 %}
 
 %pythoncode %{
-from libnvme._exceptions import (
+from libnvme3._exceptions import (
 	NvmeError,
 	ConnectError,
 	DisconnectError,

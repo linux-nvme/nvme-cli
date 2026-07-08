@@ -30,7 +30,7 @@ if want_python
             'fctx_field_tables.h',
         ],
         install: true,
-        install_dir: [python3.get_install_dir(pure: false, subdir: 'libnvme'), false],
+        install_dir: [python3.get_install_dir(pure: false, subdir: libnvme_api_name), false],
     )
     nvme_py = pymod_swig[0]
     nvme_wrap_c = pymod_swig[1]
@@ -41,7 +41,7 @@ if want_python
         dependencies: [config_dep, ccan_dep, libnvme_dep, py3_dep],
         include_directories: include_directories('.'),
         install: true,
-        subdir: 'libnvme',
+        subdir: libnvme_api_name,
     )
 
     # Declare python3_libnvme_dep so that parent meson projects can use
@@ -75,7 +75,8 @@ if want_python
             input:  file,
             output: file,
             configuration: conf,
-            install_dir: python3.get_install_dir(pure: false, subdir: 'libnvme'),
+            install_dir: python3.get_install_dir(pure: false,
+                                                 subdir: libnvme_api_name),
         )
     endforeach
 
@@ -87,7 +88,7 @@ if want_python
     test_env.set('PYTHONMALLOC', 'malloc')
 
     # Test section
-    test('libnvme - python-import-libnvme', python3, args: ['-c', 'from libnvme import nvme'], env: test_env, depends: pynvme_clib)
+    test('libnvme - python-import-libnvme', python3, args: ['-c', 'from libnvme3 import nvme'], env: test_env, depends: pynvme_clib)
 
     py_tests = [
         [ 'create-ctrl-object', [ files('tests/create-ctrl-obj.py'), ] ],

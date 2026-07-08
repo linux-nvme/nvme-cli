@@ -11,7 +11,7 @@ import os
 import tempfile
 import unittest
 
-from libnvme import nvme
+from libnvme3 import nvme
 
 # meson sets VALGRIND_OPTS when running under valgrind.  Forked child
 # processes under valgrind can behave unexpectedly; the parallel write

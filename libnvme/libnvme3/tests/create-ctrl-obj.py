@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 
-from libnvme import nvme
+from libnvme3 import nvme
 
 ctx = nvme.GlobalCtx()
 ctx.log_level('debug')
