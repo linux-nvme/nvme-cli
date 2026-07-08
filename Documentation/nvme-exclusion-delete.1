@@ -2,12 +2,12 @@
 .\"     Title: nvme-exclusion-delete
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/02/2026
+.\"      Date: 07/08/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-EXCLUSION\-DEL" "1" "07/02/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-EXCLUSION\-DEL" "1" "07/08/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-exclusion-delete \- Delete an NVMe\-oF exclusion list
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIexclusion delete\fR \-\-name=<NAME> | \-N <NAME>
+\fInvme\fR [<global\-options>] \fIexclusion delete\fR [\-\-name=<NAME> | \-N <NAME>]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -43,7 +43,7 @@ This command requires root\&.
 .PP
 \-N <NAME>, \-\-name=<NAME>
 .RS 4
-Name of the exclusion list to delete\&.
+Name of the exclusion list to delete\&. Omit to delete the default list (/etc/nvme/exclusions\&.conf)\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp

@@ -2,12 +2,12 @@
 .\"     Title: nvme-exclusion-add
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/02/2026
+.\"      Date: 07/08/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-EXCLUSION\-ADD" "1" "07/02/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-EXCLUSION\-ADD" "1" "07/08/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-exclusion-add \- Add an entry to an NVMe\-oF exclusion list
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIexclusion add\fR \-\-name=<NAME> | \-N <NAME>
+\fInvme\fR [<global\-options>] \fIexclusion add\fR [\-\-name=<NAME> | \-N <NAME>]
                         \-\-entry=<ENTRY> | \-e <ENTRY>
 .fi
 .SH "DESCRIPTION"
@@ -46,7 +46,7 @@ The entry is validated before it is written; an entry with an unknown key, or wi
 .PP
 \-N <NAME>, \-\-name=<NAME>
 .RS 4
-Name of the exclusion list to add to\&.
+Name of the exclusion list to add to\&. Omit to add to the default list (/etc/nvme/exclusions\&.conf)\&.
 .RE
 .PP
 \-e <ENTRY>, \-\-entry=<ENTRY>

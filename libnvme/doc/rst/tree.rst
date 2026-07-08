@@ -1756,7 +1756,7 @@ the elements in **r**.
 0 on success, negative error code otherwise.
 
 
-.. c:function:: void libnvme_refresh_topology (struct libnvme_global_ctx *ctx)
+.. c:function:: int libnvme_refresh_topology (struct libnvme_global_ctx *ctx)
 
    Refresh libnvme_root_t object contents
 
@@ -1768,6 +1768,10 @@ the elements in **r**.
 **Description**
 
 Removes all elements in **r** and rescans the existing topology.
+
+**Return**
+
+0 on success, negative error code otherwise.
 
 
 .. c:function:: int libnvme_dump_config (struct libnvme_global_ctx *ctx, int fd)

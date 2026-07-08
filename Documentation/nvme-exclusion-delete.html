@@ -749,7 +749,7 @@ nvme-exclusion-delete(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>exclusion delete</em> --name=&lt;NAME&gt; | -N &lt;NAME&gt;</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>exclusion delete</em> [--name=&lt;NAME&gt; | -N &lt;NAME&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -775,7 +775,8 @@ drop a single entry instead, use <em>nvme exclusion remove</em>.</p></div>
 </dt>
 <dd>
 <p>
-        Name of the exclusion list to delete.
+        Name of the exclusion list to delete.  Omit to delete the
+        default list (/etc/nvme/exclusions.conf).
 </p>
 </dd>
 </dl></div>
@@ -893,7 +894,7 @@ nvme-disconnect(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-07-02 19:35:30 CEST
+ 2026-07-08 15:06:29 CEST
 </div>
 </div>
 </body>
