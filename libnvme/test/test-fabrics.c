@@ -438,6 +438,13 @@ static bool test_traddr_is_hostname(struct libnvme_global_ctx *ctx)
 	TRADDR_TEST("tcp",  "fe80::1%lo", false, "scoped IPv6 (lo, exists)");
 	TRADDR_TEST("rdma", "fe80::1%lo", false, "scoped IPv6 (lo, rdma)");
 
+	/*
+	 * A zone naming a nonexistent interface is still numeric; zone
+	 * validity is the kernel's call, same as host_iface.
+	 */
+	TRADDR_TEST("tcp", "fe80::1%nonexistent0", false,
+		    "scoped IPv6 (bad zone)");
+
 	/* Hostnames */
 	TRADDR_TEST("tcp",  "storage.example.com", true, "FQDN hostname");
 	TRADDR_TEST("tcp",  "nvme-target",         true, "short hostname");
@@ -519,6 +526,25 @@ static bool test_nvmf_sanitize_addrs(struct libnvme_global_ctx *ctx)
 	ret = nvmf_sanitize_addrs(ctx, c);
 	p = !ret && !strcmp(libnvme_ctrl_get_traddr(c), "2001:db8::1");
 	CHECK(p, "uncompressed IPv6 traddr canonicalized: %s",
+	      libnvme_ctrl_get_traddr(c));
+	pass &= p;
+
+	libnvme_free_ctrl(c);
+
+	/*
+	 * A scoped IPv6 traddr passes through verbatim even when the zone
+	 * names a nonexistent interface -- zone validity is the kernel's
+	 * call, same as host_iface.
+	 */
+	params.traddr = "fe80::1%nonexistent0";
+	ret = libnvme_create_ctrl(ctx, &params, &c);
+	p = !ret && c != NULL;
+	CHECK(p, "ctrl created with bad-zone scoped IPv6 traddr");
+	pass &= p;
+
+	ret = nvmf_sanitize_addrs(ctx, c);
+	p = !ret && !strcmp(libnvme_ctrl_get_traddr(c), "fe80::1%nonexistent0");
+	CHECK(p, "bad-zone scoped IPv6 traddr accepted verbatim: %s",
 	      libnvme_ctrl_get_traddr(c));
 	pass &= p;
 
