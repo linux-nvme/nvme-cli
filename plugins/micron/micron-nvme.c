@@ -3616,6 +3616,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
+	err = -EINVAL;
 	/* if telemetry type is specified, check for data area */
 	if (strlen(cfg.type)) {
 		if (!strcmp(cfg.type, "controller")) {
@@ -3655,6 +3656,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
 		nvme_show_error("Unsupported drive model for vs-internal-log collection");
+		err = -ENOTSUP;
 		goto out;
 	}
 
