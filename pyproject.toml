@@ -12,9 +12,9 @@ requires-python = ">=3.6"
 license = { text = "LGPL-2.1-or-later" }
 
 authors = [
-    { name = "Hannes Reinecke", email = "hare@suse.de" }
-    { name = "Daniel Wagner", email = "dwagner@suse.de" }
-    { name = "Martin Belanger", email = "martin.belanger@dell.com" }
+    { name = "Hannes Reinecke", email = "hare@suse.de" },
+    { name = "Daniel Wagner", email = "dwagner@suse.de" },
+    { name = "Martin Belanger", email = "martin.belanger@dell.com" },
 ]
 
 keywords = ["nvme", "storage", "bindings"]
