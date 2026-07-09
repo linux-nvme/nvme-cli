@@ -780,7 +780,7 @@ int parse_time_stamp_event(
 			 SIZE_OF_VU_EVENT_ID));
 
 		ptime_stamp_event_vu_data =
-			(struct nvme_ocp_common_dbg_evt_class_vu_data *)((__u64)ptime_stamp_event +
+			(struct nvme_ocp_common_dbg_evt_class_vu_data *)((char *)ptime_stamp_event +
 			sizeof(struct nvme_ocp_time_stamp_dbg_evt_class_format));
 		vu_event_id = le16_to_cpu(ptime_stamp_event_vu_data->vu_event_identifier);
 		pdata = (__u8 *)&(ptime_stamp_event_vu_data->data);
@@ -850,7 +850,7 @@ int parse_pcie_event(
 			SIZE_OF_VU_EVENT_ID));
 
 		ppcie_event_vu_data =
-			(struct nvme_ocp_common_dbg_evt_class_vu_data *)((__u64)ppcie_event +
+			(struct nvme_ocp_common_dbg_evt_class_vu_data *)((char *)ppcie_event +
 			sizeof(struct nvme_ocp_pcie_dbg_evt_class_format));
 		vu_event_id = le16_to_cpu(ppcie_event_vu_data->vu_event_identifier);
 		pdata = (__u8 *)&(ppcie_event_vu_data->data);
@@ -919,7 +919,7 @@ int parse_nvme_event(
 			(sizeof(struct nvme_ocp_nvme_dbg_evt_class_format) +
 			SIZE_OF_VU_EVENT_ID));
 		pnvme_event_vu_data =
-			(struct nvme_ocp_common_dbg_evt_class_vu_data *)((__u64)pnvme_event +
+			(struct nvme_ocp_common_dbg_evt_class_vu_data *)((char *)pnvme_event +
 			sizeof(struct nvme_ocp_nvme_dbg_evt_class_format));
 
 		vu_event_id = le16_to_cpu(pnvme_event_vu_data->vu_event_identifier);
@@ -1032,7 +1032,7 @@ int parse_media_wear_event(
 			SIZE_OF_VU_EVENT_ID));
 
 		pmedia_wear_event_vu_data =
-			(struct nvme_ocp_common_dbg_evt_class_vu_data *)((__u64)pmedia_wear_event +
+			(struct nvme_ocp_common_dbg_evt_class_vu_data *)((char *)pmedia_wear_event +
 			sizeof(struct nvme_ocp_media_wear_dbg_evt_class_format));
 		vu_event_id = le16_to_cpu(pmedia_wear_event_vu_data->vu_event_identifier);
 		pdata = (__u8 *)&(pmedia_wear_event_vu_data->data);
