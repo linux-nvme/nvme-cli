@@ -3,6 +3,7 @@
 # Micron plugin tests
 
 micron_tests = [
+    'micron_clear_pcie_correctable_errors_test.py',
     'micron_vs_drive_info_test.py',
     'micron_vs_internal_log_test.py',
     'micron_vs_pcie_stats_test.py',

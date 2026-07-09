@@ -660,7 +660,7 @@ static int micron_parse_options(struct libnvme_global_ctx **ctx,
 	int err = parse_and_open(ctx, hdl, argc, argv, desc, opts);
 
 	if (err) {
-		nvme_show_err(err, "open");
+		nvme_show_err(err, "open failed");
 		return -1;
 	}
 
@@ -1175,7 +1175,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		if (!err)
 			err = (int)result;
 		if (!err) {
-			nvme_show_verbose_result("Device correctable errors are cleared!");
+			nvme_show_verbose_result("Device correctable errors cleared!");
 			return 0;
 		}
 	} else if (model == M5407) {
@@ -1184,7 +1184,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		admin_cmd.cdw10 = 0;
 		err = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		if (!err) {
-			nvme_show_verbose_result("Device correctable error counters are cleared!");
+			nvme_show_verbose_result("Device correctable errors cleared!");
 			return 0;
 		}
 	}
