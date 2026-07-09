@@ -886,7 +886,8 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 {
 
 	struct nvme_smart_log smart_log;
-	unsigned int temperature = 0, i = 0, err = 0;
+	int err = 0;
+	unsigned int temperature = 0, i = 0;
 	unsigned int tempSensors[SensorCount] = { 0 };
 	const char *desc = "Retrieve Micron temperature info for the given device ";
 	const char *fmt = "output format normal|json";
@@ -912,7 +913,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	}
 
 	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
+	if (err) {
 		nvme_show_error("Invalid output format");
 		return err;
 	}
@@ -924,7 +925,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	if (!err) {
 		temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]);
 		temperature = temperature ? temperature - 273 : 0;
-		for (i = 0; i < SensorCount && tempSensors[i]; i++) {
+		for (i = 0; i < SensorCount; i++) {
 			tempSensors[i] = le16_to_cpu(smart_log.temp_sensor[i]);
 			tempSensors[i] = tempSensors[i] ? tempSensors[i] - 273 : 0;
 		}
@@ -937,10 +938,12 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 			json_object_add_value_array(root, "Micron temperature information", logPages);
 			sprintf(tempstr, "%u C", temperature);
 			json_object_add_value_string(stats, "Current Composite Temperature", tempstr);
-			for (i = 0; i < SensorCount && tempSensors[i]; i++) {
+			for (i = 0; i < SensorCount; i++) {
 				char sensor_str[256] = { 0 };
 				char datastr[64] = { 0 };
 
+				if (!smart_log.temp_sensor[i])
+					continue;
 				sprintf(sensor_str, "Temperature Sensor #%d", (i + 1));
 				sprintf(datastr, "%u C", tempSensors[i]);
 				json_object_add_value_string(stats, sensor_str, datastr);
@@ -952,8 +955,11 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 		} else {
 			printf("Micron temperature information:\n");
 			printf("%-10s : %u C\n", "Current Composite Temperature", temperature);
-			for (i = 0; i < SensorCount && tempSensors[i]; i++)
+			for (i = 0; i < SensorCount; i++) {
+				if (!smart_log.temp_sensor[i])
+					continue;
 				printf("%-10s%d : %u C\n", "Temperature Sensor #", i + 1, tempSensors[i]);
+			}
 		}
 	}
 	return err;
