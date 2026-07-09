@@ -5,12 +5,15 @@
  * Authors: Broc Going <bgoing@micron.com>
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <spawn.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
@@ -19,74 +22,286 @@
 #include "micron-utils.h"
 #include "util/cleanup.h"
 
+extern char **environ;
+
+/*
+ * Validates that a string is a canonical PCI address in the
+ * "DDDD:BB:DD.F" form (domain:bus:device.function), e.g. "0000:03:00.0".
+ *
+ * Return: true if valid, false otherwise.
+ */
+static bool pcie_bdf_is_valid(const char *bdf)
+{
+	int i;
+
+	if (!bdf)
+		return false;
+
+	/* DDDD:BB:DD.F — exactly 12 characters */
+	if (strlen(bdf) != 12)
+		return false;
+
+	for (i = 0; i < 4; i++)
+		if (!isxdigit((unsigned char)bdf[i]))
+			return false;
+	if (bdf[4] != ':')
+		return false;
+	for (i = 5; i < 7; i++)
+		if (!isxdigit((unsigned char)bdf[i]))
+			return false;
+	if (bdf[7] != ':')
+		return false;
+	for (i = 8; i < 10; i++)
+		if (!isxdigit((unsigned char)bdf[i]))
+			return false;
+	if (bdf[10] != '.')
+		return false;
+	/* PCI function is a single digit 0-7 */
+	if (bdf[11] < '0' || bdf[11] > '7')
+		return false;
+
+	return true;
+}
+
+/*
+ * Retrieves the PCI BDF string (e.g. "0000:03:00.0") for the NVMe controller.
+ * Tries /sys/class/nvme/<ctrl>/address first (kernel >= 4.13), then falls back
+ * to resolving the /sys/class/nvme/<ctrl>/device symlink.
+ */
+static int get_pcie_bdf(struct libnvme_transport_handle *hdl,
+	char *bdf, size_t bdf_len)
+{
+	__cleanup_free char *ctrl_name = micron_get_ctrl_name(hdl);
+	char path[512];
+	char target[512];
+	ssize_t n;
+	int fd;
+	int err;
+	char *slash;
+
+	if (!ctrl_name)
+		return -EINVAL;
+
+	/*
+	 * If possible, use /sys/class/nvme/<ctrl>/address (kernel >= 4.13).
+	 * On failure, fall back to using the /device symlink.
+	 */
+	snprintf(path, sizeof(path), "/sys/class/nvme/%s/address", ctrl_name);
+	fd = open(path, O_RDONLY);
+	if (fd >= 0) {
+		n = read(fd, target, sizeof(target) - 1);
+		close(fd);
+		if (n > 0) {
+			size_t len;
+
+			target[n] = '\0';
+			len = strcspn(target, "\n");
+
+			if (len > 0 && len < bdf_len) {
+				snprintf(bdf, bdf_len, "%.*s", (int)len, target);
+				if (pcie_bdf_is_valid(bdf))
+					return 0;
+			}
+		}
+	}
+
+	/*
+	 * If unable to use the address file, use the last component of the
+	 * /sys/class/nvme/<ctrl>/device symlink.
+	 */
+	snprintf(path, sizeof(path), "/sys/class/nvme/%s/device", ctrl_name);
+	n = readlink(path, target, sizeof(target) - 1);
+	if (n < 0) {
+		err = -errno;
+		nvme_show_perror("%s", path);
+		return err;
+	}
+	target[n] = '\0';
+
+	slash = strrchr(target, '/');
+	if (!slash) {
+		nvme_show_error("Unexpected sysfs path: %s", target);
+		return -EINVAL;
+	}
+
+	slash++;
+	if (strlen(slash) >= bdf_len) {
+		nvme_show_error("PCI address too long: %s", slash);
+		return -EINVAL;
+	}
+
+	memcpy(bdf, slash, strlen(slash) + 1);
+	if (!pcie_bdf_is_valid(bdf)) {
+		nvme_show_error("Invalid PCI address: %s", bdf);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+/*
+ * Waits for a spawned child, retrying across signal interruptions, and maps its
+ * termination to a return code.
+ *
+ * @pid: PID of the child to wait for.
+ *
+ * Return: 0 if the child exited with status 0, negative errno on a wait
+ * failure, or -EIO if the child did not exit cleanly with status 0.
+ */
+static int wait_for_child(pid_t pid)
+{
+	int status;
+
+	while (waitpid(pid, &status, 0) == -1) {
+		if (errno != EINTR)
+			return -errno;
+	}
+	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+		return -EIO;
+
+	return 0;
+}
+
+/*
+ * Reads all data from @fd into @out (NUL-terminated), keeping at most
+ * @out_len - 1 bytes and discarding any excess. Always reads to EOF so the
+ * writer never blocks on a full pipe, which would otherwise hang.
+ *
+ * @fd:      File descriptor to read from.
+ * @out:     Buffer to receive up to @out_len - 1 bytes (NUL-terminated).
+ * @out_len: Size of @out; must be at least 1.
+ *
+ * Return: 0 on success, negative errno on a read failure.
+ */
+static int read_to_eof(int fd, char *out, size_t out_len)
+{
+	size_t total = 0;
+	ssize_t n = 1; /* non-zero to ensure drain loop runs */
+	char discard[512];
+
+	out[0] = '\0';
+
+	/* Fill the output buffer with up to out_len - 1 bytes. */
+	while (total < out_len - 1) {
+		n = read(fd, out + total, out_len - 1 - total);
+
+		if (n == -1) {
+			if (errno == EINTR)
+				continue;
+			return -errno;
+		}
+		if (n == 0)
+			break;
+		total += (size_t)n;
+	}
+	out[total] = '\0';
+
+	/* Drain any remaining output so the writer never blocks on a full pipe. */
+	while (n > 0) {
+		n = read(fd, discard, sizeof(discard));
+		if (n == -1) {
+			if (errno == EINTR)
+				continue;
+			return -errno;
+		}
+		if (n == 0)
+			break;
+	}
+
+	return 0;
+}
+
+/*
+ * Runs a command (given as an argv vector) without a shell and captures its
+ * standard output into @out.
+ *
+ * @argv:    NULL-terminated argument vector; argv[0] is the program name.
+ * @out:     Buffer to receive up to @out_len - 1 bytes of stdout (NUL-terminated).
+ * @out_len: Size of @out; must be at least 1.
+ *
+ * Return: 0 on success, negative errno on failure.
+ */
+static int spawn_and_capture(char *const argv[], char *out, size_t out_len)
+{
+	posix_spawn_file_actions_t actions;
+	int pipefd[2];
+	pid_t pid;
+	int ret;
+	int err = 0;
+
+	if (!out || out_len == 0)
+		return -EINVAL;
+
+	out[0] = '\0';
+
+	if (pipe(pipefd) == -1)
+		return -errno;
+
+	err = posix_spawn_file_actions_init(&actions);
+	if (err) {
+		close(pipefd[0]);
+		close(pipefd[1]);
+		return -err;
+	}
+
+	/* Child: redirect stdout to the pipe write end, close both raw fds. */
+	err = posix_spawn_file_actions_adddup2(&actions, pipefd[1], STDOUT_FILENO);
+	if (!err)
+		err = posix_spawn_file_actions_addclose(&actions, pipefd[0]);
+	if (!err)
+		err = posix_spawn_file_actions_addclose(&actions, pipefd[1]);
+	if (err) {
+		posix_spawn_file_actions_destroy(&actions);
+		close(pipefd[0]);
+		close(pipefd[1]);
+		return -err;
+	}
+
+	err = posix_spawnp(&pid, argv[0], &actions, NULL, argv, environ);
+	posix_spawn_file_actions_destroy(&actions);
+	close(pipefd[1]);
+	if (err) {
+		close(pipefd[0]);
+		return -err;
+	}
+
+	/* Parent: read the child's output, always draining to EOF. */
+	err = read_to_eof(pipefd[0], out, out_len);
+	close(pipefd[0]);
+
+	ret = wait_for_child(pid);
+	return err ? err : ret;
+}
 
 int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 	__u32 *correctable_errors, __u32 *uncorrectable_errors)
 {
-	int bus = 0, domain = 0, device = 0, function = 0;
-	char strTempFile[1024], strTempFile2[1024], cmdbuf[1024];
-	char buf[8] = { 0 };
-	char *businfo = NULL;
-	__cleanup_free char *devicename = NULL;
-	ssize_t sLinkSize = 0;
-	FILE *fp;
-	char *res;
+	char bdf[64], buf[16] = { 0 };
+	int ret;
 
-	devicename = micron_get_ns_name(hdl);
-	if (!devicename || !strstr(devicename, "nvme")) {
-		nvme_show_error("Invalid device specified!");
-		return -EINVAL;
+	ret = get_pcie_bdf(hdl, bdf, sizeof(bdf));
+	if (ret) {
+		nvme_show_error("Failed to get PCI address");
+		return ret;
 	}
-	snprintf(strTempFile, sizeof(strTempFile), "/sys/block/%s/device", devicename);
-	sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
-	if (sLinkSize < 0) {
-		nvme_show_error("Failed to read device");
-		return -errno;
-	}
-	strTempFile2[sLinkSize] = '\0';
-	if (strstr(strTempFile2, "../../nvme")) {
-		snprintf(strTempFile, sizeof(strTempFile), "/sys/block/%s/device/device", devicename);
-		sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
-		if (sLinkSize < 0) {
-			nvme_show_error("Failed to read device");
-			return -errno;
-		}
-		strTempFile2[sLinkSize] = '\0';
-	}
-	businfo = strrchr(strTempFile2, '/');
-	if (!businfo || sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device, &function) != 4)
-		domain = bus = device = function = 0;
-	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %x:%x.%x ECAP_AER+10.L", bus, device,
-		function);
-	fp = popen(cmdbuf, "r");
-	if (!fp) {
-		nvme_show_error("Failed to retrieve error count");
-		return -EIO;
-	}
-	res = fgets(buf, sizeof(buf), fp);
-	if (!res) {
-		nvme_show_error("Failed to retrieve error count");
-		pclose(fp);
-		return -EIO;
-	}
-	pclose(fp);
-	*correctable_errors = (__u32)strtol(buf, NULL, 16);
 
-	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %x:%x.%x ECAP_AER+0x4.L", bus, device,
-		function);
-	fp = popen(cmdbuf, "r");
-	if (!fp) {
+	ret = spawn_and_capture(
+		(char *const []){"setpci", "-s", bdf, "ECAP_AER+0x10.L", NULL},
+		buf, sizeof(buf));
+	if (ret) {
 		nvme_show_error("Failed to retrieve error count");
-		return -EIO;
+		return ret;
 	}
-	res = fgets(buf, sizeof(buf), fp);
-	if (!res) {
+	*correctable_errors = (__u32)strtoul(buf, NULL, 16);
+
+	ret = spawn_and_capture(
+		(char *const []){"setpci", "-s", bdf, "ECAP_AER+0x4.L", NULL},
+		buf, sizeof(buf));
+	if (ret) {
 		nvme_show_error("Failed to retrieve error count");
-		pclose(fp);
-		return -EIO;
+		return ret;
 	}
-	pclose(fp);
-	*uncorrectable_errors = (__u32)strtol(buf, NULL, 16);
+	*uncorrectable_errors = (__u32)strtoul(buf, NULL, 16);
 
 	return 0;
 }
@@ -94,82 +309,43 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 int micron_clear_pcie_aer_correctable_errors(
 	struct libnvme_transport_handle *hdl)
 {
-	int err, bus = 0, domain = 0, device = 0, function = 0;
-	char strTempFile[1024], strTempFile2[1024], cmdbuf[1024];
-	char *businfo = NULL;
-	__cleanup_free char *devicename = NULL;
-	ssize_t sLinkSize = 0;
-	char correctable[8] = { 0 };
-	FILE *fp;
-	char *res;
+	char bdf[64], correctable[16] = { 0 };
+	int ret;
 
-	devicename = micron_get_ns_name(hdl);
-	if (!devicename || !strstr(devicename, "nvme")) {
-		nvme_show_error("Invalid device specified!");
-		return -EINVAL;
+	ret = get_pcie_bdf(hdl, bdf, sizeof(bdf));
+	if (ret) {
+		nvme_show_error("Failed to get PCI address");
+		return ret;
 	}
-	err = snprintf(strTempFile, sizeof(strTempFile),
-				   "/sys/block/%s/device", devicename);
-	if (err < 0)
-		return err;
 
-	sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
-	if (sLinkSize < 0) {
-		nvme_show_error("Failed to read device");
-		return -errno;
-	}
-	strTempFile2[sLinkSize] = '\0';
-	if (strstr(strTempFile2, "../../nvme")) {
-		err = snprintf(strTempFile, sizeof(strTempFile),
-					   "/sys/block/%s/device/device", devicename);
-		if (err < 0)
-			return err;
-		sLinkSize = readlink(strTempFile, strTempFile2, sizeof(strTempFile2) - 1);
-		if (sLinkSize < 0) {
-			nvme_show_error("Failed to read device");
-			return -errno;
-		}
-		strTempFile2[sLinkSize] = '\0';
-	}
-	businfo = strrchr(strTempFile2, '/');
-	if (!businfo || sscanf(businfo, "/%x:%x:%x.%x", &domain, &bus, &device, &function) != 4)
-		domain = bus = device = function = 0;
-	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %x:%x.%x ECAP_AER+0x10.L=0xffffffff", bus,
-			device, function);
-	fp = popen(cmdbuf, "r");
-	if (!fp) {
+	/* Writing all 1s clears the errors. */
+	ret = spawn_and_capture(
+		(char *const []){"setpci", "-s", bdf,
+			"ECAP_AER+0x10.L=0xffffffff", NULL},
+		correctable, sizeof(correctable));
+	if (ret) {
 		nvme_show_error("Failed to clear error count");
-		return -1;
+		return ret;
 	}
-	pclose(fp);
 
-	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %x:%x.%x ECAP_AER+0x10.L", bus, device,
-			function);
-	fp = popen(cmdbuf, "r");
-	if (!fp) {
+	ret = spawn_and_capture(
+		(char *const []){"setpci", "-s", bdf, "ECAP_AER+0x10.L", NULL},
+		correctable, sizeof(correctable));
+	if (ret) {
 		nvme_show_error("Failed to retrieve error count");
-		return -1;
+		return ret;
 	}
-	res = fgets(correctable, sizeof(correctable), fp);
-	if (!res) {
-		nvme_show_error("Failed to retrieve error count");
-		pclose(fp);
-		return -1;
-	}
-	pclose(fp);
 	nvme_show_verbose_result("Device correctable errors cleared!");
 	nvme_show_result("Device correctable errors detected: %s", correctable);
 	return 0;
 }
-
-extern char **environ;
 
 int micron_run_spawn(char *const argv[], const char *outfile, bool append)
 {
 	posix_spawn_file_actions_t actions;
 	posix_spawn_file_actions_t *actionsp = NULL;
 	pid_t pid;
-	int status, ret;
+	int ret;
 	int oflags = O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC);
 
 	if (outfile) {
@@ -196,13 +372,8 @@ int micron_run_spawn(char *const argv[], const char *outfile, bool append)
 
 	if (ret)
 		return -ret;
-	while (waitpid(pid, &status, 0) == -1) {
-		if (errno != EINTR)
-			return -errno;
-	}
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-		return -EIO;
-	return 0;
+
+	return wait_for_child(pid);
 
 out_destroy:
 	posix_spawn_file_actions_destroy(actionsp);

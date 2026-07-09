@@ -1068,6 +1068,7 @@ static int micron_pcie_stats(int argc, char **argv,
 	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
 		nvme_show_error("Unsupported drive model for vs-pcie-stats command");
+		err = -ENOTSUP;
 		goto out;
 	}
 
