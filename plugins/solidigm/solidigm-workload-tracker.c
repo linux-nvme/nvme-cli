@@ -378,7 +378,7 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 			timestamp += log->samplePeriodInMilliseconds * WLT2MS;
 			continue;
 		}
-		printf("%-16llu", timestamp);
+		printf("%-16" PRIu64, (uint64_t)timestamp);
 		for (int j = 0; j < MAX_FIELDS; j++) {
 			__u32 val = 0;
 			struct field f = group_fields[content_group][j];
@@ -433,7 +433,7 @@ void wltracker_run_time_update(struct wltracker *wlt)
 {
 	wlt->run_time_us = micros() - wlt->start_time_us;
 	if (nvme_args.verbose > 0)
-		printf("run_time: %lluus\n", wlt->run_time_us);
+		printf("run_time: %" PRIu64 "us\n", (uint64_t)wlt->run_time_us);
 }
 
 static int sldgm_stricmp(char const *a, char const *b)
@@ -656,7 +656,8 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 			__u64 period_us = min(next_sample_us - wlt.run_time_us,
 					      stop_time_us - wlt.run_time_us);
 			if (nvme_args.verbose > 1)
-				printf("Sleeping %lluus..\n", period_us);
+				printf("Sleeping %" PRIu64 "us..\n",
+					(uint64_t)period_us);
 			usleep(period_us);
 			wltracker_run_time_update(&wlt);
 		}
