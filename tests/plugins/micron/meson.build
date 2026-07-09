@@ -5,6 +5,7 @@
 micron_tests = [
     'micron_vs_drive_info_test.py',
     'micron_vs_internal_log_test.py',
+    'micron_vs_temperature_stats_test.py',
 ]
 
 python_module = import('python')
