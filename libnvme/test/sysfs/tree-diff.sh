@@ -6,7 +6,7 @@ TREE_DUMP=$2
 SYSFS_INPUT=$3
 EXPECTED_OUTPUT=$4
 
-TEST_NAME="$(basename -s .tar.xz ${SYSFS_INPUT})"
+TEST_NAME="$(basename -s .tar.xz "$SYSFS_INPUT")"
 TEST_DIR="${BUILD_DIR}/${TEST_NAME}"
 ACTUAL_OUTPUT="${TEST_DIR}.out"
 
@@ -15,21 +15,23 @@ mkdir "${TEST_DIR}"
 tar -x -f "${SYSFS_INPUT}" -C "${TEST_DIR}"
 
 cmd=(
-  env
-  LIBNVME_SYSFS_PATH="$TEST_DIR"
-  LIBNVME_HOSTNQN="nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6"
-  LIBNVME_HOSTID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
-  "$TREE_DUMP"
+	env
+	LIBNVME_HOSTNQN="nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6"
+	LIBNVME_HOSTID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
+	"${TREE_DUMP}"
+	--set-options "test-sysfs-dir=${TEST_DIR}"
 )
 
 echo "Running command:"
 printf '%q ' "${cmd[@]}"
 printf '> %q\n' "$ACTUAL_OUTPUT"
 
-if ! "${cmd[@]}" > "$ACTUAL_OUTPUT"; then
-    rc=$?
-    echo "test failed (exit code $rc)"
-    exit $rc
+if "${cmd[@]}" > "$ACTUAL_OUTPUT"; then
+	:
+else
+	rc=$?
+	echo "test failed (exit code $rc)"
+	exit "$rc"
 fi
 
 diff -u "${EXPECTED_OUTPUT}" "${ACTUAL_OUTPUT}"

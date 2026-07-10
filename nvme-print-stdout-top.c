@@ -1471,9 +1471,10 @@ void stdout_top(int refresh_interval)
 	__cleanup_free libnvme_subsystem_t *subsys_arr = NULL;
 	int data_start, frame_rows, quit = 0, scroll = 0;
 	int num_subsys = 0, subsys_idx = 0;
+	int err;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
 		nvme_show_error("Failed to create global context");
 		return;
 	}

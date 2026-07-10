@@ -71,9 +71,19 @@ int libnvme_set_owner(struct libnvme_global_ctx *ctx, const char *owner);
  * Passing NULL clears a previously set override.
  *
  * Return: 0 on success, -EINVAL if @ctx is NULL or @path is not a valid
- *         sandbox path, -ENOMEM on allocation failure.
+ * sandbox path, -ENOMEM on allocation failure.
  */
 int libnvme_set_test_base_dir(struct libnvme_global_ctx *ctx, const char *path);
+
+/**
+ * libnvme_set_test_sysfs_dir() - Set libnvme's lookup sysfs path for testing
+ * @ctx:	&struct libnvme_global_ctx object
+ * @path:	Directory with sysfs or NULL to restore defaults
+ *
+ * Return: 0 on success, -EINVAL if @ctx is NULL, -ENOMEM on allocation
+ * failure.
+ */
+int libnvme_set_test_sysfs_dir(struct libnvme_global_ctx *ctx, const char *path);
 
 /**
  * libnvme_set_logging_level() - Set current logging level
@@ -323,3 +333,14 @@ void libnvme_set_dry_run(struct libnvme_global_ctx *ctx, bool enable);
  * IOCTL probing is enabled per default.
  */
 void libnvme_set_ioctl_probing(struct libnvme_global_ctx *ctx, bool enable);
+
+/**
+ * libnvme_set_force_4k() - Force 4k transfer size for log page retrieval
+ * @ctx:	&struct libnvme_global_ctx object
+ * @enable:	Enable/disable 4k-forced transfer size
+ *
+ * When enabled, all Get Log Page commands are issued in 4k chunks regardless
+ * of the controller's MDTS.  Useful for controllers that misbehave with larger
+ * transfers.
+ */
+void libnvme_set_force_4k(struct libnvme_global_ctx *ctx, bool enable);

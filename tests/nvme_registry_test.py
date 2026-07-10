@@ -7,10 +7,11 @@
 # Authors: Martin Belanger <martin.belanger@dell.com>
 """CLI integration tests for the 'nvme registry' plugin.
 
-Tests invoke the nvme binary directly with LIBNVME_TEST_BASE_DIR pointing at a
-temporary sandbox, so no real NVMe hardware is needed.
+Tests invoke the nvme binary directly with --set-options test-base-dir pointing
+at a temporary sandbox, so no real NVMe hardware is needed.
 
 Usage: python3 nvme_registry_test.py <path-to-nvme-binary>
+
 """
 import os
 import subprocess
@@ -33,7 +34,6 @@ class RegistryCLITest(unittest.TestCase):
         # The registry lives under <base>/registry within the sandbox.
         self.regdir = os.path.join(self.tmpdir, 'registry')
         self.env = os.environ.copy()
-        self.env['LIBNVME_TEST_BASE_DIR'] = self.tmpdir
 
     def tearDown(self):
         if os.path.isdir(self.regdir):
@@ -46,7 +46,7 @@ class RegistryCLITest(unittest.TestCase):
         os.rmdir(self.tmpdir)
 
     def _run(self, *args, expect_fail=False):
-        cmd = [_NVME_BIN] + list(args)
+        cmd = [_NVME_BIN, '--set-options', f'test-base-dir={self.tmpdir}'] + list(args)
         # stdin is /dev/null so the owner-change confirmation prompt sees a
         # non-interactive caller and proceeds without asking.
         result = subprocess.run(cmd, env=self.env,

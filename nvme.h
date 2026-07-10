@@ -58,6 +58,7 @@ struct nvme_args {
 	bool no_retries;
 	bool no_ioctl_probing;
 	unsigned int output_format_ver;
+	const char *set_options;
 };
 
 #ifdef CONFIG_JSONC
@@ -90,6 +91,9 @@ struct nvme_args {
 		OPT_UINT("output-format-version", 0, &nvme_args.output_format_ver,     \
 			 "output format version: 1|2"),                                \
 		OPT_FLAG("human-readable", 'H', &nvme_args.verbose, NULL, NULL, true), \
+		OPT_STRING("set-options",    0, "KEY=VALUE",                           \
+			 &nvme_args.set_options,                                       \
+			 "set a libnvme library option (key=value[,key=value,...]);"), \
 		OPT_END()                                                              \
 	}
 
@@ -146,6 +150,17 @@ static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_transport_handle,
 extern const char *uuid_index;
 extern const char *namespace_id_desired;
 extern struct nvme_args nvme_args;
+
+/*
+ * nvme_create_global_ctx() - Create a global context and apply --set-options
+ *
+ * Wrapper around libnvme_create_global_ctx() that additionally applies any
+ * key=value pairs passed via --set-options.  All code in nvme-cli that creates
+ * a context should call this instead of libnvme_create_global_ctx() directly.
+ *
+ * This function has to be called after @parse_args.
+ */
+int nvme_create_global_ctx(struct libnvme_global_ctx **ctx);
 
 int validate_output_format(const char *format, nvme_print_flags_t *flags);
 bool nvme_is_output_format_json(void);

@@ -84,17 +84,18 @@ static void print_device(const char *device, void *user_data)
 static int registry_list(int argc, char **argv, struct command *acmd,
 			  struct plugin *plugin)
 {
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	const char *desc = "List all live NVMeoF controller ownership registry entries.";
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	int ret;
 
 	NVME_ARGS(opts);
 
 	if (argconfig_parse(argc, argv, desc, opts))
 		return -EINVAL;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx)
-		return -ENOMEM;
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
 	libnvme_set_logging_file(ctx, stdout);
 
 	return libnvmf_registry_device_for_each(ctx, print_device, ctx);
@@ -133,9 +134,9 @@ static int registry_retrieve(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx)
-		return -ENOMEM;
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
 	libnvme_set_logging_file(ctx, stdout);
 
 	ret = libnvmf_registry_retrieve(ctx, device, cfg.attr, &value);
@@ -192,9 +193,9 @@ static int registry_update(int argc, char **argv, struct command *acmd,
 		return 0;
 	}
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx)
-		return -ENOMEM;
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
 	libnvme_set_logging_file(ctx, stdout);
 
 	ret = libnvmf_registry_update(ctx, device, cfg.attr, cfg.value);
@@ -242,9 +243,9 @@ static int registry_delete(int argc, char **argv, struct command *acmd,
 		return 0;
 	}
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx)
-		return -ENOMEM;
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
 	libnvme_set_logging_file(ctx, stdout);
 
 	if (cfg.attr)

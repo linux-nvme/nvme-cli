@@ -63,7 +63,9 @@ static int excl_create(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
-	ctx = libnvme_create_global_ctx();
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
 	ret = libnvmf_exclusion_create(ctx, cfg.name);
 	if (ret == -EEXIST)
 		nvme_show_error("exclusion list '%s' already exists", cfg.name);
@@ -95,7 +97,9 @@ static int excl_delete(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
-	ctx = libnvme_create_global_ctx();
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
 	ret = libnvmf_exclusion_delete(ctx, cfg.name);
 	if (ret == -ENOENT)
 		nvme_show_error("exclusion list '%s' not found", cfg.name);
@@ -133,7 +137,9 @@ static int excl_list(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
-	ctx = libnvme_create_global_ctx();
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
 
 	if (!cfg.name) {
 		ret = libnvmf_exclusion_list_for_each(ctx, print_list_name, NULL);
@@ -182,7 +188,9 @@ static int excl_add(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
-	ctx = libnvme_create_global_ctx();
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
 	if (!libnvmf_exclusion_entry_valid(ctx, cfg.entry)) {
 		nvme_show_error("invalid entry: %s", cfg.entry);
 		return -EINVAL;
@@ -250,7 +258,9 @@ static int excl_remove(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
-	ctx = libnvme_create_global_ctx();
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
 	ret = libnvmf_exclusion_entry_for_each(ctx, cfg.name, collect_entry, &ec);
 	if (ret) {
 		if (ret == -ENOENT)
@@ -504,7 +514,9 @@ static int excl_edit(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
-	ctx = libnvme_create_global_ctx();
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
 
 	/*
 	 * Read the current list through libnvme: the plugin never needs to know

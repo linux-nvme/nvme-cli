@@ -287,6 +287,21 @@ conf.set(
     ),
     description: 'Does struct tm have a tm_gmtoff field?'
 )
+conf.set('HAVE_STRSEP',
+    cc.compiles(
+        '''
+            #include <string.h>
+
+            int main(void) {
+                char *s = NULL;
+                char *p = strsep(&s, ",");
+                return p != NULL;
+            }
+        ''',
+        name: 'strsep'
+    ),
+    description: 'Is strsep available?'
+)
 
 if cc.has_function_attribute('fallthrough')
     conf.set('fallthrough', '__attribute__((fallthrough))')

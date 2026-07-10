@@ -25,10 +25,10 @@
 struct libnvme_passthru_completion;
 struct libnvme_async_req;
 
-const char *libnvme_subsys_sysfs_dir(void);
-const char *libnvme_ctrl_sysfs_dir(void);
-const char *libnvme_ns_sysfs_dir(void);
-const char *libnvme_slots_sysfs_dir(void);
+const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx);
+const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx);
+const char *libnvme_ns_sysfs_dir(struct libnvme_global_ctx *ctx);
+const char *libnvme_slots_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_uuid_ibm_filename(void);
 const char *libnvme_dmi_entries_dir(void);
 
@@ -433,14 +433,19 @@ struct libnvme_fabric_options { // !generate-accessors
 struct libnvme_global_ctx { // !generate-python:alias=GlobalCtx
 	char *config_file;
 	char *owner; /* orchestrator identity; NULL = unowned */
-	char *test_base_dir; /* test sandbox under /tmp; NULL = prod */
 	struct list_head endpoints; /* MI endpoints */
 	struct list_head hosts;
 	struct libnvme_log log;
-	bool mi_probe_enabled;
-	bool ioctl_probing;
 	bool create_only;
 	bool dry_run;
+
+	/* global options to steer libnvme behavior or overwrite defaults */
+	bool force_4k;
+	bool mi_probe_enabled;
+	bool ioctl_probing;
+	char *test_base_dir;
+	char *test_sysfs_dir;
+
 #ifdef CONFIG_FABRICS
 	struct libnvme_fabric_options *options;
 	struct ifaddrs *ifaddrs_cache; /* init with libnvmf_getifaddrs() */
