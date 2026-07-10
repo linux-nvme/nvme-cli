@@ -209,6 +209,7 @@ struct hook_fabrics_data {
 	char *raw;
 	char **argv;
 	FILE *f;
+	bool idempotent; /* nvme connect only, false when unused */
 };
 
 static bool hook_decide_retry(struct libnvmf_context *fctx, int err,
@@ -256,8 +257,23 @@ static void hook_already_connected(struct libnvmf_context *fctx,
 		const char *transport, const char *traddr,
 		const char *trsvcid, void *user_data)
 {
+	struct hook_fabrics_data *hfd = user_data;
+
 	if (quiet)
 		return;
+
+	/*
+	 * Under --idempotent this is the success path (libnvmf_connect()
+	 * already wrote the devid file, if requested) -- downgrade from an
+	 * error to an informational note.
+	 */
+	if (hfd->idempotent) {
+		nvme_show_verbose_info(
+			"already connected to hostnqn=%s,nqn=%s,transport=%s,traddr=%s,trsvcid=%s",
+			libnvme_host_get_hostnqn(host), subsysnqn,
+			transport, traddr, trsvcid);
+		return;
+	}
 
 	nvme_show_error("already connected to hostnqn=%s,nqn=%s,transport=%s,traddr=%s,trsvcid=%s",
 		libnvme_host_get_hostnqn(host), subsysnqn,
@@ -785,6 +801,8 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	__cleanup_free char *hid = NULL;
 	char *config_file = NULL;
 	char *owner = NULL;
+	char *devid_file = NULL;
+	bool idempotent = false;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	__cleanup_nvme_ctrl libnvme_ctrl_t c = NULL;
@@ -795,6 +813,10 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	NVMF_ARGS(opts, fa,
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_STRING("owner",                0, "NAME", &owner,           "record this owner in the registry"),
+		  OPT_STRING("devid-file", 0, "FILE", &devid_file,
+			     "write connected device name to FILE"),
+		  OPT_FLAG("idempotent", 0, &idempotent,
+			   "exit 0 if already connected"),
 		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"));
 
 	nvmf_default_args(&fa);
@@ -874,10 +896,14 @@ do_connect:
 		.flags = flags,
 		.quiet = dump_config,
 		.raw = raw,
+		.idempotent = idempotent,
 	};
 	ret = create_common_context(ctx, persistent, &fa, &hfd, &fctx);
 	if (ret)
 		return ret;
+
+	if (devid_file)
+		libnvmf_context_set_devid_file(fctx, devid_file);
 
 	if (config_file)
 		return libnvmf_connect_config_json(ctx, fctx);
@@ -903,6 +929,16 @@ do_connect:
 	}
 
 	ret = libnvmf_connect(ctx, fctx);
+	/*
+	 * -EALREADY is libnvmf_connect()'s own pre-check against the topology
+	 * we already scanned above; -ENVME_CONNECT_ALREADY is the kernel
+	 * itself reporting a race. Either way libnvmf_connect() has already
+	 * written the devid file (if requested) before returning -- it owns
+	 * the controller matching logic (including the kernel-race rescan),
+	 * so there is nothing left to resolve here.
+	 */
+	if (idempotent && (ret == -EALREADY || ret == -ENVME_CONNECT_ALREADY))
+		ret = 0;
 	if (ret) {
 		nvme_show_error("failed to connect: %s",
 			libnvme_strerror(-ret));
