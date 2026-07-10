@@ -298,6 +298,27 @@ static OPT_VALS(feature_name) = {
 	VAL_END()
 };
 
+#ifndef HAVE_STRSEP
+static char *strsep(char **stringp, const char *delim)
+{
+	char *s, *end;
+
+	if (!stringp || !*stringp)
+		return NULL;
+
+	s = *stringp;
+	end = s + strcspn(s, delim);
+
+	if (*end)
+		*end++ = '\0';
+	else
+		end = NULL;
+
+	*stringp = end;
+	return s;
+}
+#endif
+
 static int check_arg_dev(int argc, char **argv)
 {
 	if (optind >= argc) {
@@ -371,6 +392,91 @@ static void setup_transport_handle(struct libnvme_global_ctx *ctx,
 		libnvme_transport_handle_set_timeout(hdl, nvme_args.timeout);
 }
 
+static bool is_true(const char *val)
+{
+	return !strcmp(val, "1") ||
+		!strcasecmp(val, "true") ||
+		!strncasecmp(val, "enable", 6);
+}
+
+/*
+ * nvme_apply_option() - apply a single "key=value" pair to @ctx.
+ *
+ * Returns 0 on success, -EINVAL for unknown keys or missing '='.
+ */
+static int nvme_apply_option(struct libnvme_global_ctx *ctx, const char *kv)
+{
+	__cleanup_free char *str = NULL;
+	char *key, *val;
+	int ret = 0;
+
+	str = strdup(kv);
+	if (!str)
+		return -ENOMEM;
+
+	val = strchr(str, '=');
+	if (!val) {
+		nvme_show_error("--set-options: missing '=' in '%s'", kv);
+		return -EINVAL;
+	}
+	*val++ = '\0';
+	key = str;
+
+	if (!strcmp(key, "force-4k")) {
+		libnvme_set_force_4k(ctx, is_true(val));
+	} else if (!strcmp(key, "mi-probe-enabled")) {
+		libnvme_set_probe_enabled(ctx, is_true(val));
+	} else if (!strcmp(key, "test-base-dir")) {
+		ret = libnvme_set_test_base_dir(ctx, val);
+	} else if (!strcmp(key, "test-sysfs-dir")) {
+		ret = libnvme_set_test_sysfs_dir(ctx, val);
+	} else {
+		nvme_show_error("--set-options: unknown key '%s'", key);
+		return -EINVAL;
+	}
+
+	if (ret)
+ 		nvme_show_error("--set-options: failed to set '%s=%s': %s",
+			key, val, libnvme_strerror(-ret));
+
+	return ret;
+}
+
+int nvme_create_global_ctx(struct libnvme_global_ctx **pctx)
+{
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_free char *buf = NULL;
+	const char *opt;
+	char *p;
+	int err;
+
+	ctx = libnvme_create_global_ctx();
+	if (!ctx)
+		return -ENOMEM;
+
+	if (!nvme_args.set_options)
+		goto out;
+
+	buf = strdup(nvme_args.set_options);
+	if (!buf)
+		return -ENOMEM;
+
+	p = buf;
+	while ((opt = strsep(&p, ",")) != NULL) {
+		if (!*opt)
+			continue;
+		err = nvme_apply_option(ctx, opt);
+		if (err)
+			return err;
+	}
+
+out:
+	*pctx = ctx;
+	ctx = NULL;
+
+	return 0;
+}
+
 int parse_and_open(struct libnvme_global_ctx **ctx,
 		   struct libnvme_transport_handle **hdl, int argc, char **argv,
 		   const char *desc, struct argconfig_commandline_options *opts)
@@ -383,9 +489,9 @@ int parse_and_open(struct libnvme_global_ctx **ctx,
 	if (ret)
 		return ret;
 
-	ctx_new = libnvme_create_global_ctx();
-	if (!ctx_new)
-		return -ENOMEM;
+	ret = nvme_create_global_ctx(&ctx_new);
+	if (ret)
+		return ret;
 	libnvme_set_logging_file(ctx_new, stdout);
 	libnvme_set_logging_level(ctx_new, log_level, false, false);
 
@@ -420,9 +526,9 @@ int open_exclusive(struct libnvme_global_ctx **ctx,
 	if (!ignore_exclusive)
 		flags |= O_EXCL;
 
-	ctx_new = libnvme_create_global_ctx();
-	if (!ctx_new)
-		return -ENOMEM;
+	ret = nvme_create_global_ctx(&ctx_new);
+	if (ret)
+		return ret;
 	libnvme_set_logging_file(ctx_new, stdout);
 	libnvme_set_logging_level(ctx_new, log_level, false, false);
 
@@ -3533,13 +3639,13 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
 		if (devname)
 			nvme_show_error("Failed to scan nvme subsystem for %s", devname);
 		else
 			nvme_show_error("Failed to scan nvme subsystem");
-		return -ENOMEM;
+		return err;
 	}
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, log_level, false, false);
@@ -3633,10 +3739,10 @@ static int list(int argc, char **argv, struct command *acmd, struct plugin *plug
 	if (nvme_args.verbose)
 		flags |= VERBOSE;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
 		nvme_show_error("Failed to create global context");
-		return -ENOMEM;
+		return err;
 	}
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, log_level, false, false);
@@ -6800,8 +6906,8 @@ static void show_relatives(const char *name, nvme_print_flags_t flags)
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx;
 	int err;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
 		nvme_show_error("Failed to create global context");
 		return;
 	}
@@ -9910,10 +10016,10 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	if (err)
 		return err;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
 		nvme_show_error("Failed to create global context");
-		return -ENOMEM;
+		return err;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
@@ -10233,10 +10339,10 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 	if (cfg.hmac == 2)
 		key_len = 48;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
 		nvme_show_error("Failed to create global context");
-		return -ENOMEM;
+		return err;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
@@ -10348,10 +10454,10 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 		return -EINVAL;
 	}
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
 		nvme_show_error("Failed to create global context");
-		return -ENOMEM;
+		return err;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
@@ -10538,10 +10644,10 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (err)
 		return err;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
 		nvme_show_error("Failed to create global context");
-		return -ENOMEM;
+		return err;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
@@ -10663,10 +10769,10 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 		return -EINVAL;
 	}
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
 		nvme_show_error("Failed to create global context");
-		return -ENOMEM;
+		return err;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 

@@ -118,7 +118,7 @@ nvme exclusion delete -N maintenance      # remove a whole list
 
 The C API mirrors the commands (`libnvmf_exclusion_create` / `_delete` / `_add` / `_add_ctrl` / `_add_subsysnqn` / `_remove` / `_list_for_each` / `_entry_for_each` / `_match`, plus `_read` / `_write` for the read-modify-write editor), and SWIG exposes `exclusion_lists()`, `exclusion_entries()`, and `exclusion_match()` to Python. `libnvmf_exclusion_add_ctrl()` and `libnvmf_exclusion_add_subsysnqn()` build the entry inside libnvme so callers never encode the on-disk format themselves.
 
-For testing, `libnvme_set_test_base_dir()` reroots the exclusion files (and the registry) under a throwaway `/tmp` sandbox; the shell-invoked `nvme` binary uses the `LIBNVME_TEST_BASE_DIR` environment variable for the same purpose. Both are confined to `/tmp` so a test can never redirect writes onto a production path.
+   * [ ] For testing, `libnvme_set_test_base_dir()` reroots the exclusion files (and the registry) under a throwaway `/tmp` sandbox; the shell-invoked `nvme` binary uses `--set-options test-base-dir=/tmp/<sandbox>` for the same purpose. Both are confined to `/tmp` so a test can never redirect writes onto a production path.
 
 ## Relationship to the registry
 

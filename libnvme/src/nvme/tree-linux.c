@@ -39,58 +39,58 @@
 #define PATH_SYSFS_NVME			"/sys/class/nvme"
 #define PATH_DMI_ENTRIES		"/sys/firmware/dmi/entries"
 
-static const char *make_sysfs_dir(const char *path)
+static const char *make_sysfs_dir(struct libnvme_global_ctx *ctx,
+		const char *path)
 {
-	char *basepath = getenv("LIBNVME_SYSFS_PATH");
 	char *str;
 
-	if (!basepath)
+	if (!ctx || !ctx->test_sysfs_dir)
 		return path;
 
-	if (asprintf(&str, "%s%s", basepath, path) < 0)
+	if (asprintf(&str, "%s%s", ctx->test_sysfs_dir, path) < 0)
 		return NULL;
 
 	return str;
 }
 
-const char *libnvme_subsys_sysfs_dir(void)
+const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx)
 {
 	static const char *str;
 
 	if (str)
 		return str;
 
-	return str = make_sysfs_dir(PATH_SYSFS_NVME_SUBSYSTEM);
+	return str = make_sysfs_dir(ctx, PATH_SYSFS_NVME_SUBSYSTEM);
 }
 
-const char *libnvme_ctrl_sysfs_dir(void)
+const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx)
 {
 	static const char *str;
 
 	if (str)
 		return str;
 
-	return str = make_sysfs_dir(PATH_SYSFS_NVME);
+	return str = make_sysfs_dir(ctx, PATH_SYSFS_NVME);
 }
 
-const char *libnvme_ns_sysfs_dir(void)
+const char *libnvme_ns_sysfs_dir(struct libnvme_global_ctx *ctx)
 {
 	static const char *str;
 
 	if (str)
 		return str;
 
-	return str = make_sysfs_dir(PATH_SYSFS_BLOCK);
+	return str = make_sysfs_dir(ctx, PATH_SYSFS_BLOCK);
 }
 
-const char *libnvme_slots_sysfs_dir(void)
+const char *libnvme_slots_sysfs_dir(struct libnvme_global_ctx *ctx)
 {
 	static const char *str;
 
 	if (str)
 		return str;
 
-	return str = make_sysfs_dir(PATH_SYSFS_SLOTS);
+	return str = make_sysfs_dir(ctx, PATH_SYSFS_SLOTS);
 }
 
 const char *libnvme_uuid_ibm_filename(void)
@@ -100,7 +100,7 @@ const char *libnvme_uuid_ibm_filename(void)
 	if (str)
 		return str;
 
-	return str = make_sysfs_dir(PATH_UUID_IBM);
+	return str = make_sysfs_dir(NULL, PATH_UUID_IBM);
 }
 
 const char *libnvme_dmi_entries_dir(void)
@@ -110,7 +110,7 @@ const char *libnvme_dmi_entries_dir(void)
 	if (str)
 		return str;
 
-	return str = make_sysfs_dir(PATH_DMI_ENTRIES);
+	return str = make_sysfs_dir(NULL, PATH_DMI_ENTRIES);
 }
 
 static int __nvme_set_attr(const char *path, const char *value)
@@ -237,7 +237,7 @@ __libnvme_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 static int libnvme_ctrl_lookup_subsystem_name(struct libnvme_global_ctx *ctx,
 		const char *ctrl_name, char **name)
 {
-	const char *subsys_dir = libnvme_subsys_sysfs_dir();
+	const char *subsys_dir = libnvme_subsys_sysfs_dir(ctx);
 	__cleanup_dirents struct dirents subsys = {};
 	int i;
 
@@ -269,7 +269,7 @@ static int libnvme_ctrl_lookup_subsystem_name(struct libnvme_global_ctx *ctx,
 static int libnvme_ctrl_lookup_phy_slot(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c)
 {
-	const char *slots_sysfs_dir = libnvme_slots_sysfs_dir();
+	const char *slots_sysfs_dir = libnvme_slots_sysfs_dir(ctx);
 	__cleanup_free char *target_addr = NULL;
 	__cleanup_dir DIR *slots_dir = NULL;
 	struct dirent *entry;
@@ -379,7 +379,7 @@ __libnvme_public int libnvme_init_ctrl(
 	if (ret < 0)
 		return -ENOMEM;
 
-	ret = asprintf(&path, "%s/%s", libnvme_ctrl_sysfs_dir(), name);
+	ret = asprintf(&path, "%s/%s", libnvme_ctrl_sysfs_dir(h->ctx), name);
 	if (ret < 0)
 		return -ENOMEM;
 
@@ -426,7 +426,7 @@ __libnvme_public int libnvme_scan_ctrl(
 	int ret;
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan controller %s\n", name);
-	ret = asprintf(&path, "%s/%s", libnvme_ctrl_sysfs_dir(), name);
+	ret = asprintf(&path, "%s/%s", libnvme_ctrl_sysfs_dir(ctx), name);
 	if (ret < 0)
 		return -ENOMEM;
 
@@ -851,7 +851,8 @@ int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name)
 {
 	char *path;
 
-	if (asprintf(&path, "%s/%s", libnvme_subsys_sysfs_dir(), name) < 0)
+	if (asprintf(&path, "%s/%s",
+			libnvme_subsys_sysfs_dir(s->h->ctx), name) < 0)
 		return -ENOMEM;
 
 	s->model = libnvme_get_attr(path, "model");

@@ -106,10 +106,10 @@ static int list(int argc, char **argv, struct command *acmd,
 	};
 	struct table *t = table_init_with_columns(columns, ARRAY_SIZE(columns));
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
 		nvme_show_error("Failed to create root object");
-		return -ENOMEM;
+		return err;
 	}
 	libnvme_set_logging_file(ctx, stdout);
 

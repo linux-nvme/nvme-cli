@@ -576,7 +576,7 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 	int ret;
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan subsystem %s\n", name);
-	ret = asprintf(&path, "%s/%s", libnvme_subsys_sysfs_dir(), name);
+	ret = asprintf(&path, "%s/%s", libnvme_subsys_sysfs_dir(ctx), name);
 	if (ret < 0)
 		return -ENOMEM;
 
@@ -1883,7 +1883,8 @@ __libnvme_public int libnvme_ns_flush(libnvme_ns_t n)
 __libnvme_public int libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 		const char *name, libnvme_ns_t *ns)
 {
-	return __libnvme_scan_namespace(ctx, libnvme_ns_sysfs_dir(), name, ns);
+	return __libnvme_scan_namespace(ctx,
+		libnvme_ns_sysfs_dir(ctx), name, ns);
 }
 
 

@@ -697,11 +697,11 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 	log_level = map_log_level(nvme_args.verbose, quiet);
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret) {
 		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(errno));
-		return -ENOMEM;
+			libnvme_strerror(-ret));
+		return ret;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
@@ -842,11 +842,11 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 do_connect:
 	log_level = map_log_level(nvme_args.verbose, quiet);
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret) {
 		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(errno));
-		return -ENOMEM;
+			libnvme_strerror(-ret));
+		return ret;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
@@ -998,11 +998,11 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret) {
 		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(errno));
-		return -ENOMEM;
+			libnvme_strerror(-ret));
+		return ret;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
@@ -1154,11 +1154,11 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret) {
 		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(errno));
-		return -ENOMEM;
+			libnvme_strerror(-ret));
+		return ret;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
@@ -1221,11 +1221,11 @@ int fabrics_config(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, quiet);
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret) {
 		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(errno));
-		return -ENOMEM;
+			libnvme_strerror(-ret));
+		return ret;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
@@ -1237,7 +1237,7 @@ int fabrics_config(const char *desc, int argc, char **argv)
 		if (ret < 0) {
 			nvme_show_error("Failed to scan topology: %s",
 				libnvme_strerror(-ret));
-			return -ret;
+			return ret;
 		}
 	}
 
@@ -1353,11 +1353,11 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 
 	log_level = map_log_level(nvme_args.verbose, false);
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx) {
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret) {
 		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(errno));
-		return -ENODEV;
+			libnvme_strerror(-ret));
+		return ret;
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 

@@ -311,20 +311,16 @@ static int filter_namespace(const struct dirent *d)
 static int huawei_list(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
+	const char *desc = "Retrieve basic information for the given huawei device";
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	char path[264];
 	struct dirent **devices;
 	struct huawei_list_item *list_items;
 	unsigned int i, n, ret;
 	unsigned int huawei_num = 0;
 	nvme_print_flags_t fmt;
-	const char *desc = "Retrieve basic information for the given huawei device";
 
 	NVME_ARGS(opts);
-
-	if (!ctx)
-		return -ENOMEM;
-	libnvme_set_logging_file(ctx, stdout);
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -333,6 +329,12 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 	ret = validate_output_format(nvme_args.output_format, &fmt);
 	if (ret < 0 || (fmt != JSON && fmt != NORMAL))
 		return ret;
+
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
+
+	libnvme_set_logging_file(ctx, stdout);
 
 	n = scandir("/dev", &devices, filter_namespace, alphasort);
 	if (n <= 0)

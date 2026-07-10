@@ -6,23 +6,28 @@ sysfs_tar=""
 config_json=""
 
 while [[ $# -gt 0 ]]; do
-    case $1 in
+	case "$1" in
 	--sysfs-tar)
-	    sysfs_tar=$2
-	    shift 1
-	    ;;
+		sysfs_tar=$2
+		shift 2
+		;;
 	--config-json)
-	    config_json=$2
-	    shift 1
-	    ;;
-    *)
-        positional_args+=("$1")
-        shift
-        ;;
-    esac
+		config_json=$2
+		shift 2
+		;;
+	*)
+		positional_args+=("$1")
+		shift
+		;;
+	esac
 done
 
 set -- "${positional_args[@]}"
+
+if [[ $# -lt 3 ]]; then
+	echo "usage: $0 [--sysfs-tar file] [--config-json file] <test-binary> <build-dir> <expected-output>"
+	exit 1
+fi
 
 test_binary="$1"
 build_dir="$2"
@@ -30,34 +35,41 @@ expected_output="$3"
 
 sysfs_path=""
 if [[ -n "${sysfs_tar}" ]]; then
-   test_name="$(basename -s .tar.xz ${sysfs_tar})"
-   sysfs_path="${build_dir}/${test_name}"
+	test_name="$(basename -s .tar.xz "${sysfs_tar}")"
+	sysfs_path="${build_dir}/${test_name}"
 
-   rm -rf "${sysfs_path}"
-   mkdir "${sysfs_path}"
-   tar -x -f "${sysfs_tar}" -C "${sysfs_path}"
+	rm -rf "${sysfs_path}"
+	mkdir -p "${sysfs_path}"
+	tar -x -f "${sysfs_tar}" -C "${sysfs_path}"
 fi
 
-output="${build_dir}"/$(basename "${expected_output}")
+output="${build_dir}/$(basename "${expected_output}")"
 
 cmd=(
-  env
-  LIBNVME_SYSFS_PATH="$sysfs_path"
-  LIBNVME_HOSTNQN="nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6"
-  LIBNVME_HOSTID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
-  "$test_binary"
-  "$config_json"
+	env
+	LIBNVME_HOSTNQN="nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6"
+	LIBNVME_HOSTID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
+	"$test_binary"
 )
+
+if [[ -n "${sysfs_path}" ]]; then
+	cmd+=(--set-options "test-sysfs-dir=${sysfs_path}")
+fi
+
+if [[ -n "${config_json}" ]]; then
+	cmd+=("${config_json}")
+fi
 
 echo "Running command:"
 printf '%q ' "${cmd[@]}"
 printf '> %q\n' "$output"
 
-"${cmd[@]}" > "$output"
-rc=$?
-if [ "$rc" -ne 0 ]; then
-    echo "test failed (exit code $rc)"
-    exit "$rc"
+if "${cmd[@]}" > "$output"; then
+	:
+else
+	rc=$?
+	echo "test failed (exit code $rc)"
+	exit "$rc"
 fi
 
 diff -u "${expected_output}" "${output}"

@@ -80,7 +80,7 @@ static int filter_subsys(const struct dirent *d)
 __libnvme_public int libnvme_scan_subsystems(struct libnvme_global_ctx *ctx,
 		struct dirent ***subsys)
 {
-	const char *dir = libnvme_subsys_sysfs_dir();
+	const char *dir = libnvme_subsys_sysfs_dir(ctx);
 	int ret;
 
 	ret = scandir(dir, subsys, filter_subsys, alphasort);
@@ -106,7 +106,7 @@ __libnvme_public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
 __libnvme_public int libnvme_scan_ctrls(struct libnvme_global_ctx *ctx,
 		struct dirent ***ctrls)
 {
-	const char *dir = libnvme_ctrl_sysfs_dir();
+	const char *dir = libnvme_ctrl_sysfs_dir(ctx);
 	int ret;
 
 	ret = scandir(dir, ctrls, filter_ctrls, alphasort);

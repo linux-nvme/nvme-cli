@@ -324,12 +324,14 @@ __libnvme_public char *libnvme_get_ns_attr(
 	return NULL;
 }
 
-const char *libnvme_subsys_sysfs_dir(void)
+const char *libnvme_subsys_sysfs_dir(
+		__libnvme_unused struct libnvme_global_ctx *ctx)
 {
 	return NULL;
 }
 
-const char *libnvme_ns_sysfs_dir(void)
+const char *libnvme_ns_sysfs_dir(
+		__libnvme_unused struct libnvme_global_ctx *ctx)
 {
 	return NULL;
 }
