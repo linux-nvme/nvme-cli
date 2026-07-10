@@ -102,7 +102,15 @@ udevrulesdir   = join_paths(prefixdir, get_option('udevrulesdir'))
 dracutrulesdir = join_paths(prefixdir, get_option('dracutrulesdir'))
 systemddir     = join_paths(prefixdir, get_option('systemddir'))
 nmdispatchdir  = join_paths(prefixdir, get_option('nmdispatchdir'))
-rundir         = join_paths(prefixdir, get_option('rundir'))
+
+# /run is normally a kernel-mounted tmpfs whose location the FHS fixes
+# system-wide, but some distributions still only provide the legacy
+# /var/run path, so this is a configurable option -- unlike the dirs
+# above, it must never scale with --prefix (a build under
+# --prefix=/usr/local still runs against the one real runtime directory
+# on the machine). Test isolation is a separate, runtime concern already
+# handled by libnvme_set_test_base_dir()/LIBNVME_TEST_BASE_DIR.
+rundir         = get_option('rundir')
 
 std_prefix = prefixdir == '/usr' or prefixdir == '/usr/local'
 
