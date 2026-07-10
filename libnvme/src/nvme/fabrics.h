@@ -421,6 +421,33 @@ int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
 
 /**
+ * libnvmf_context_set_devid_file() - Set devid file for context
+ * @fctx: Fabrics context
+ * @devid_file: Path to write the kernel-assigned device name to on connect
+ *
+ * When set, libnvmf_connect() writes the kernel-assigned device name (e.g.
+ * "nvme0") to @devid_file once a controller is connected -- whether newly
+ * connected or already connected (including the rare case where the kernel
+ * itself reports the target as already connected due to a race). This lets
+ * a caller that manages the connection as a supervised process (e.g. a
+ * systemd transient unit) recover the device name later, e.g. to disconnect.
+ *
+ * libnvmf_connect() opens (creates) the file BEFORE attempting the
+ * connection and fails the connect if it cannot -- a supervised connection
+ * whose device name was never recorded cannot be found again at stop time,
+ * so a bad path is refused up front rather than discovered after the
+ * connection is live. The containing directory must already exist. The file
+ * is opened with O_NOFOLLOW (a symlink at the final path component is not
+ * followed) and is truncated only when a device name is actually written,
+ * so a name recorded by an earlier successful connect survives a failed
+ * attempt.
+ *
+ * Return: 0 on success, negative error code otherwise.
+ */
+int libnvmf_context_set_devid_file(struct libnvmf_context *fctx,
+		const char *devid_file);
+
+/**
  * libnvmf_context_set_io_queues() - Set I/O queue topology for context
  * @fctx: Fabrics context
  * @nr_io_queues: Number of I/O queues

@@ -681,6 +681,67 @@ __libnvme_public int libnvmf_context_set_device(
 	return 0;
 }
 
+__libnvme_public int libnvmf_context_set_devid_file(
+		struct libnvmf_context *fctx, const char *devid_file)
+{
+	fctx->devid_file = devid_file;
+
+	return 0;
+}
+
+/*
+ * Open fctx->devid_file for a later write_devid_file(). Called by
+ * libnvmf_connect() BEFORE the connect is attempted, so a bad path refuses
+ * the connection up front: the flag exists for supervised use (systemd
+ * transient units), where a connection whose device name was never recorded
+ * cannot be found again at stop time -- worse than no connection at all.
+ *
+ * The path is the caller's choice and the caller's responsibility, like
+ * every other file-writing option (--raw, --dump-config, ...); connecting
+ * already requires root. O_NOFOLLOW guards the one hazard the caller cannot
+ * see: a symlink planted at the final component of an otherwise-sane path.
+ * O_TRUNC is deliberately absent: if this connect attempt fails, a device
+ * name recorded by an earlier successful start must survive -- the file is
+ * truncated only when there is a new name to write.
+ *
+ * Return: an open fd, or -errno.
+ */
+static int open_devid_file(struct libnvmf_context *fctx)
+{
+	int fd;
+
+	fd = open(fctx->devid_file,
+		O_WRONLY | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 0644);
+	if (fd < 0) {
+		libnvme_msg(fctx->ctx, LIBNVME_LOG_ERR,
+			"failed to open devid-file %s: %s\n",
+			fctx->devid_file, libnvme_strerror(errno));
+		return -errno;
+	}
+
+	return fd;
+}
+
+/*
+ * Write @c's kernel-assigned device name through the fd from
+ * open_devid_file(). Used on every path out of libnvmf_connect() that ends
+ * with a live, connected controller -- freshly connected, found already
+ * connected in the topology we already had, or found already connected
+ * after a kernel-race rescan.
+ */
+static void write_devid_file(struct libnvmf_context *fctx, int fd,
+		libnvme_ctrl_t c)
+{
+	if (fd < 0 || !c)
+		return;
+
+	if (ftruncate(fd, 0) < 0 ||
+	    dprintf(fd, "%s\n", libnvme_ctrl_get_name(c)) < 0)
+		libnvme_msg(fctx->ctx, LIBNVME_LOG_WARN,
+			"failed to write devid-file %s: %s\n",
+			fctx->devid_file, libnvme_strerror(errno));
+}
+
 __libnvme_public int libnvmf_context_set_io_queues(
 		struct libnvmf_context *fctx, int nr_io_queues,
 		int nr_write_queues, int nr_poll_queues,
@@ -3620,9 +3681,20 @@ __libnvme_public int libnvmf_discovery(
 __libnvme_public int libnvmf_connect(
 		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx)
 {
+	__cleanup_fd int devid_fd = -1;
 	struct libnvme_host *h;
 	struct libnvme_ctrl *c;
 	int err;
+
+	/*
+	 * Fail fast on a bad devid-file path, before any kernel state
+	 * changes -- see open_devid_file().
+	 */
+	if (fctx->devid_file) {
+		devid_fd = open_devid_file(fctx);
+		if (devid_fd < 0)
+			return devid_fd;
+	}
 
 	err = lookup_host(ctx, fctx, &h);
 	if (err)
@@ -3635,6 +3707,7 @@ __libnvme_public int libnvmf_connect(
 	c = lookup_ctrl(h, fctx);
 	if (c && libnvme_ctrl_get_name(c) &&
 	    !fctx->ctrl_params.cfg.duplicate_connect) {
+		write_devid_file(fctx, devid_fd, c);
 		fctx->hooks.already_connected(fctx, h,
 			libnvme_ctrl_get_subsysnqn(c),
 			libnvme_ctrl_get_transport(c),
@@ -3669,12 +3742,23 @@ __libnvme_public int libnvmf_connect(
 
 	err = libnvme_add_ctrl(fctx, h, c);
 	if (err) {
+		/*
+		 * A genuine kernel-level race: some other connect beat us to
+		 * it between our topology scan above and this ioctl. @c is
+		 * only our own unconnected draft, not the winning
+		 * controller, so rescan and re-resolve to find it.
+		 */
+		if (err == -ENVME_CONNECT_ALREADY &&
+		    libnvme_scan_topology(ctx, NULL, NULL) == 0)
+			write_devid_file(fctx, devid_fd, lookup_ctrl(h, fctx));
+
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "could not add new controller: %s\n",
 			libnvme_strerror(-err));
 		libnvme_free_ctrl(c);
 		return err;
 	}
 
+	write_devid_file(fctx, devid_fd, c);
 	fctx->hooks.connected(fctx, c, fctx->hooks.user_data);
 
 	return 0;
