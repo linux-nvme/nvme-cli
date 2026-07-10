@@ -383,6 +383,10 @@
 #define WDC_FORMAT_CORRUPT_UNKNOWN			cpu_to_le32(0x000000FF)
 #define WDC_SN861_MARKETING_NAME_1			"Ultrastar DC SN861"
 #define WDC_SN861_MARKETING_NAME_2			"ULTRASTAR DC SN861"
+#define WDC_SN655_MARKETING_NAME_1			"Ultrastar DC SN655"
+#define WDC_SN655_MARKETING_NAME_2			"ULTRASTAR DC SN655"
+#define WDC_SN655_MARKETING_NAME_3			"SanDisk DC SN655"
+#define WDC_SN655_MARKETING_NAME_4			"SANDISK DC SN655"
 
 /* CA Log Page */
 #define WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE		0xCA
@@ -770,15 +774,21 @@ static __u8 scao_guid[WDC_C0_GUID_LENGTH] = {
 	0x9C, 0x4F, 0x6F, 0x7C, 0xC9, 0x14, 0xD5, 0xAF
 };
 
-enum {
-	EOL_RBC                 = 76,	/* Realloc Block Count */
-	EOL_ECCR                = 80,	/* ECC Rate */
-	EOL_WRA                 = 84,	/* Write Amp */
-	EOL_PLR                 = 88,	/* Percent Life Remaining */
-	EOL_RSVBC               = 92,	/* Reserved Block Count */
-	EOL_PFC                 = 96,	/* Program Fail Count */
-	EOL_EFC                 = 100,	/* Erase Fail Count */
-	EOL_RRER                = 108,	/* Raw Read Error Rate */
+struct __packed wdc_nvme_c0_eol_log_page {
+	__u8 rsvd1[76];
+	__u32 eol_rbc;
+	__u32 eol_rsvd2;
+	__u32 eol_wra;
+	__u32 eol_plr;
+	__u32 eol_rsvd3;
+	__u32 eol_pfc;
+	__u32 eol_efc;
+	__u32 eol_rsvd4;
+	__u32 eol_rrer;
+	__u16 eol_cp_status;
+	__u16 eol_ip_status;
+	__u8  eol_cp_state;
+	__u8  eol_ip_state;
 };
 
 #define WDC_NVME_C6_GUID_LENGTH         16
@@ -1813,6 +1823,11 @@ static __u64 wdc_get_drive_capabilities(struct libnvme_global_ctx *ctx, struct l
 					WDC_UNSUPPORTED_REQS_LOG_ID, 0))
 				capabilities |= WDC_DRIVE_CAP_OCP_C5_LOG_PAGE;
 
+			/* verify the 0xCA log page is supported */
+			if (wdc_nvme_check_supported_log_page(ctx, hdl,
+					WDC_NVME_GET_DEVICE_INFO_LOG_OPCODE, 0) == true)
+				capabilities |= WDC_DRIVE_CAP_CA_LOG_PAGE;
+
 			capabilities |= (WDC_DRIVE_CAP_CAP_DIAG | WDC_DRIVE_CAP_INTERNAL_LOG |
 					 WDC_DRIVE_CAP_DRIVE_STATUS | WDC_DRIVE_CAP_CLEAR_ASSERT |
 					 WDC_DRIVE_CAP_RESIZE | WDC_DRIVE_CAP_FW_ACTIVATE_HISTORY |
@@ -2091,6 +2106,11 @@ static __u64 wdc_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
 				(char *)marketing_name,
 				&market_name_len))
 			nvme_show_error("ERROR: SNDK: Get Marketing Name Failed");
+
+		/* verify the 0xC0 log page is supported */
+		if (wdc_nvme_check_supported_log_page(ctx, hdl,
+				WDC_NVME_GET_SMART_CLOUD_ATTR_LOG_ID, 0))
+			capabilities |= WDC_DRIVE_CAP_C0_LOG_PAGE;
 
 		/* verify the 0xC3 log page is supported */
 		if (wdc_nvme_check_supported_log_page(ctx, hdl,
@@ -7011,50 +7031,44 @@ static void wdc_print_ext_smart_cloud_log_json(void *data, int mask)
 	json_free_object(root);
 }
 
-
 static void wdc_print_eol_c0_normal(void *data)
 {
-
-	__u8 *log_data = (__u8 *)data;
+	struct wdc_nvme_c0_eol_log_page *eol_log_page_ptr =
+			(struct wdc_nvme_c0_eol_log_page *)data;
 
 	printf("  End of Life Log Page 0xC0 :-\n");
-
 	printf("  Realloc Block Count			%"PRIu32"\n",
-			(uint32_t)le32_to_cpu(log_data[EOL_RBC]));
-	printf("  ECC Rate				%"PRIu32"\n",
-			(uint32_t)le32_to_cpu(log_data[EOL_ECCR]));
+			le32_to_cpu(eol_log_page_ptr->eol_rbc));
 	printf("  Write Amp				%"PRIu32"\n",
-			(uint32_t)le32_to_cpu(log_data[EOL_WRA]));
+			le32_to_cpu(eol_log_page_ptr->eol_wra));
 	printf("  Percent Life Remaining		%"PRIu32"\n",
-			(uint32_t)le32_to_cpu(log_data[EOL_PLR]));
+			le32_to_cpu(eol_log_page_ptr->eol_plr));
 	printf("  Program Fail Count			%"PRIu32"\n",
-			(uint32_t)le32_to_cpu(log_data[EOL_PFC]));
+			le32_to_cpu(eol_log_page_ptr->eol_pfc));
 	printf("  Erase Fail Count			%"PRIu32"\n",
-			(uint32_t)le32_to_cpu(log_data[EOL_EFC]));
+			le32_to_cpu(eol_log_page_ptr->eol_efc));
 	printf("  Raw Read Error Rate			%"PRIu32"\n",
-			(uint32_t)le32_to_cpu(log_data[EOL_RRER]));
-
+			le32_to_cpu(eol_log_page_ptr->eol_rrer));
 }
 
 static void wdc_print_eol_c0_json(void *data)
 {
-	__u8 *log_data = (__u8 *)data;
+	struct wdc_nvme_c0_eol_log_page *eol_log_page_ptr =
+			(struct wdc_nvme_c0_eol_log_page *)data;
 	struct json_object *root = json_create_object();
 
 	json_object_add_value_uint(root, "Realloc Block Count",
-			(uint32_t)le32_to_cpu(log_data[EOL_RBC]));
-	json_object_add_value_uint(root, "ECC Rate",
-			(uint32_t)le32_to_cpu(log_data[EOL_ECCR]));
+		le32_to_cpu(eol_log_page_ptr->eol_rbc));
 	json_object_add_value_uint(root, "Write Amp",
-			(uint32_t)le32_to_cpu(log_data[EOL_WRA]));
+		le32_to_cpu(eol_log_page_ptr->eol_wra));
 	json_object_add_value_uint(root, "Percent Life Remaining",
-			(uint32_t)le32_to_cpu(log_data[EOL_PLR]));
+		le32_to_cpu(eol_log_page_ptr->eol_plr));
 	json_object_add_value_uint(root, "Program Fail Count",
-			(uint32_t)le32_to_cpu(log_data[EOL_PFC]));
+		le32_to_cpu(eol_log_page_ptr->eol_pfc));
 	json_object_add_value_uint(root, "Erase Fail Count",
-			(uint32_t)le32_to_cpu(log_data[EOL_EFC]));
+		le32_to_cpu(eol_log_page_ptr->eol_efc));
 	json_object_add_value_uint(root, "Raw Read Error Rate",
-			(uint32_t)le32_to_cpu(log_data[EOL_RRER]));
+		le32_to_cpu(eol_log_page_ptr->eol_rrer));
 
 	json_print_object(root, NULL);
 	printf("\n");
@@ -7179,6 +7193,11 @@ static int wdc_get_c0_log_page(struct libnvme_global_ctx *ctx, struct libnvme_tr
 	nvme_print_flags_t fmt;
 	int ret;
 	__u8 *data;
+	void *dev_mng_log = NULL;
+	__u32 market_name_len = 0;
+	char marketing_name[64];
+
+	memset(marketing_name, 0, 64);
 
 	if (!wdc_check_device(ctx, hdl))
 		return -1;
@@ -7257,12 +7276,45 @@ static int wdc_get_c0_log_page(struct libnvme_global_ctx *ctx, struct libnvme_tr
 		free(data);
 		break;
 	default:
-		nvme_show_error("ERROR: WDC: Unknown device id - 0x%x", device_id);
-		ret = -1;
-		break;
+		if (!get_dev_mgment_data(ctx, hdl, &dev_mng_log)) {
+			nvme_show_error("ERROR: SNDK: 0xC2 Log Page not found");
+			ret = -1;
+			goto out;
+		}
 
+		if (!wdc_nvme_parse_dev_status_log_str(dev_mng_log,
+				WDC_C2_MARKETING_NAME_ID,
+				(char *)marketing_name,
+				&market_name_len)) {
+			nvme_show_error("ERROR: SNDK: Get Marketing Name Failed");
+			ret = -1;
+			goto out;
+		}
+
+		if ((!strncmp(marketing_name, WDC_SN655_MARKETING_NAME_1, market_name_len)) ||
+			(!strncmp(marketing_name, WDC_SN655_MARKETING_NAME_2, market_name_len)) ||
+			(!strncmp(marketing_name, WDC_SN655_MARKETING_NAME_3, market_name_len)) ||
+			(!strncmp(marketing_name, WDC_SN655_MARKETING_NAME_4, market_name_len))) {
+			if (uuid_index == 0) {
+				ret = nvme_get_print_ocp_cloud_smart_log(hdl,
+						uuid_index,
+						namespace_id,
+						fmt);
+			} else {
+				ret = nvme_get_print_c0_eol_log(hdl,
+						uuid_index,
+						namespace_id,
+						fmt);
+			}
+		} else {
+			nvme_show_error("ERROR: WDC: Unknown device id: 0x%x or marketing name: %s",
+					device_id, marketing_name);
+			ret = -1;
+		}
+		break;
 	}
 
+out:
 	return ret;
 }
 
