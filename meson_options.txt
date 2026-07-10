@@ -97,9 +97,9 @@ option(
 )
 option(
   'rundir',
-  type: 'string',
-  value: 'run',
-  description: 'directory for volatile configuration files',
+  type : 'string',
+  value : '/run',
+  description : 'absolute path to the runtime directory (e.g. /run or /var/run)'
 )
 option(
   'systemctl',
