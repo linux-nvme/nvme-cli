@@ -161,10 +161,13 @@ static struct libnbft_security *security_from_index(struct libnbft_info *nbft,
 
 static int read_ssns_exended_info(struct libnvme_global_ctx *ctx,
 		struct libnbft_info *nbft, struct libnbft_subsystem_ns *ssns,
-		struct nbft_ssns_ext_info *raw_ssns_ei)
+		struct nbft_ssns_ext_info *raw_ssns_ei, __u16 descriptor_len)
 {
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
 
+	/* Verify minimum size of the NBFT rev. 1.0 ssns_ext_info structure */
+	verify(ctx, descriptor_len >= offsetof(struct nbft_ssns_ext_info, naed),
+	       "SSNS extended info descriptor too short");
 	verify(ctx, raw_ssns_ei->structure_id == NBFT_DESC_SSNS_EXT_INFO,
 	       "invalid ID in SSNS extended info descriptor");
 	verify(ctx, raw_ssns_ei->version == 1,
@@ -180,6 +183,14 @@ static int read_ssns_exended_info(struct libnvme_global_ctx *ctx,
 	ssns->controller_id = le16_to_cpu(raw_ssns_ei->cntlid);
 	get_heap_obj(ctx, raw_ssns_ei, dhcp_root_path_str_obj, 1,
 		&ssns->dhcp_root_path_string);
+
+	/* NBFT rev. 1.1 structure fields */
+	if (descriptor_len >= sizeof(struct nbft_ssns_ext_info)) {
+		ssns->naed = raw_ssns_ei->naed;
+		ssns->cipeec = raw_ssns_ei->cipeec;
+		ssns->cto = le16_to_cpu(raw_ssns_ei->cto);
+		ssns->nceec = raw_ssns_ei->nceec;
+	}
 
 	return 0;
 }
@@ -337,7 +348,8 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 		if (!get_heap_obj(ctx, raw_ssns, ssns_extended_info_desc_obj,
 				0, (char **)&ssns_extended_info)) {
 			read_ssns_exended_info(ctx, nbft, ssns,
-				ssns_extended_info);
+				ssns_extended_info,
+				le16_to_cpu(raw_ssns->ssns_extended_info_desc_obj.length));
 		}
 	}
 
@@ -347,6 +359,35 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 fail:
 	free(ssns);
 	return ret;
+}
+
+static void read_hfi_info_dhcp(struct libnvme_global_ctx *ctx,
+		struct libnbft_info *nbft,
+		struct nbft_hfi_info_ext *hfi_ext_info,
+		struct libnbft_hfi *hfi)
+{
+	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
+	char *iaid_raw = NULL;
+	char *duid_raw = NULL;
+	__u16 duid_len;
+
+	if (hfi_ext_info->structure_id != NBFT_DESC_HFI_EXT_INFO ||
+	    hfi_ext_info->version != 1)
+		return;
+	if (!(le32_to_cpu(hfi_ext_info->flags) & NBFT_HFI_INFO_EXT_VALID))
+		return;
+	if (!(le32_to_cpu(hfi_ext_info->flags) & NBFT_HFI_INFO_EXT_DCI))
+		return;
+
+	if (!get_heap_obj(ctx, hfi_ext_info, dhcp_iaid_obj, 0, &iaid_raw))
+		hfi->tcp_info.dhcp_iaid = le32_to_cpu(*(__le32 *)iaid_raw);
+	if (!get_heap_obj(ctx, hfi_ext_info, dhcp_duid_obj, 0, &duid_raw)) {
+		duid_len = le16_to_cpu(hfi_ext_info->dhcp_duid_obj.length);
+		if (duid_len > sizeof(hfi->tcp_info.dhcp_duid))
+			duid_len = sizeof(hfi->tcp_info.dhcp_duid);
+		memcpy(hfi->tcp_info.dhcp_duid, duid_raw, duid_len);
+		hfi->tcp_info.dhcp_duid_len = duid_len;
+	}
 }
 
 static int read_hfi_info_tcp(struct libnvme_global_ctx *ctx,
@@ -396,6 +437,18 @@ static int read_hfi_info_tcp(struct libnvme_global_ctx *ctx,
 		1, &hfi->tcp_info.host_name);
 	if (raw_hfi_info_tcp->flags & NBFT_HFI_INFO_TCP_GLOBAL_ROUTE)
 		hfi->tcp_info.this_hfi_is_default_route = true;
+	if (raw_hfi_info_tcp->flags & NBFT_HFI_INFO_TCP_IPADDR_AUTOCONF)
+		hfi->tcp_info.ipaddr_autoconf = true;
+
+	if (raw_hfi_info_tcp->trinfo_version >= 2) {
+		struct nbft_hfi_info_ext *hfi_ext_info;
+
+		hfi->tcp_info.pcie_seg_num = raw_hfi_info_tcp->pcie_seg_num;
+
+		if (!get_heap_obj(ctx, raw_hfi_info_tcp, hfi_ext_info_obj,
+				0, (char **)&hfi_ext_info))
+			read_hfi_info_dhcp(ctx, nbft, hfi_ext_info, hfi);
+	}
 
 	return 0;
 }
@@ -603,7 +656,7 @@ static int parse_raw_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info *n
 		"length in header exceeds table length");
 	verify(ctx, header->major_revision == 1,
 		"unsupported major revision");
-	verify(ctx, header->minor_revision == 0,
+	verify(ctx, header->minor_revision <= 1,
 		"unsupported minor revision");
 	verify(ctx, le32_to_cpu(header->heap_length) +
 		le32_to_cpu(header->heap_offset) <= le32_to_cpu(header->length),
