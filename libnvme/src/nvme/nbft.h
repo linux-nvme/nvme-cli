@@ -17,18 +17,18 @@
 /**
  * enum libnbft_primary_admin_host_flag - Primary Administrative Host Descriptor Flags
  * @LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED: Not Indicated by Driver: The driver
- *						     that created this NBFT provided no
- *						     administrative priority hint for
- *						     this NBFT.
+ *						   that created this NBFT provided no
+ *						   administrative priority hint for
+ *						   this NBFT.
  * @LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_UNSELECTED:    Unselected: The driver that created
- *						     this NBFT explicitly indicated that
- *						     this NBFT should not be prioritized
- *						     over any other NBFT.
- * @LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_SELECTED:	     Selected: The driver that created
- *						     this NBFT explicitly indicated that
- *						     this NBFT should be prioritized over
- *						     any other NBFT.
- * @LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_RESERVED:	     Reserved.
+ *						   this NBFT explicitly indicated that
+ *						   this NBFT should not be prioritized
+ *						   over any other NBFT.
+ * @LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_SELECTED:	   Selected: The driver that created
+ *						   this NBFT explicitly indicated that
+ *						   this NBFT should be prioritized over
+ *						   any other NBFT.
+ * @LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_RESERVED:	   Reserved.
  */
 enum libnbft_primary_admin_host_flag {
 	LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED,
@@ -90,6 +90,43 @@ struct libnbft_host {
  *			       then the HFI information was set administratively
  *			       by a configuration interface to the driver and
  *			       pre-OS envrionment.
+ * @ipaddr_autoconf:	       If True, then the IP Address, Subnet Mask Prefix,
+ *			       and IP Gateway fields were populated by an advanced
+ *			       stateless mechanism (e.g., IPv6-SLAAC or IPv6-ND).
+ *			       If True, @dhcp_override is always False and
+ *			       @ip_origin is always zero. NBFT rev. 1.1+,
+ *			       otherwise False.
+ * @pcie_seg_num:	       The PCIe Segment Number for the HFI Transport
+ *			       Function when the PCI Express Link is in Flit mode.
+ *			       Zero if not in Flit mode, not supported, or the NBFT
+ *			       data originates from a pre-NBFT rev. 1.1 driver.
+ * @dhcp_iaid:		       The DHCP Identity Association Identifier (IAID)
+ *			       as defined in RFC 4361. The IAID is a 32-bit value
+ *			       that uniquely identifies the client's network
+ *			       interface for DHCP purposes. NBFT rev. 1.1+;
+ *			       meaningful when @dhcp_duid_len is non-zero.
+ * @dhcp_duid:		       The raw DHCP Unique Identifier (DUID) as defined
+ *			       in RFC 8415 section 11 (NBFT rev. 1.1+).
+ *			       This is the complete DUID including its
+ *			       leading 2-byte type code followed by up to 128
+ *			       bytes of type-specific identifier data.
+ *			       Known DUID type codes are: 1 (DUID-LLT, link-layer
+ *			       address plus time), 2 (DUID-EN, vendor-assigned
+ *			       based on enterprise number), 3 (DUID-LL, link-layer
+ *			       address), 4 (DUID-UUID, universally unique
+ *			       identifier). Multi-byte fields within the DUID are
+ *			       stored in little-endian byte order as specified by
+ *			       the NVMe Boot Specification. The consumer is
+ *			       responsible for parsing the type code and the
+ *			       type-specific data. This is a local copy of the
+ *			       data from the NBFT heap. This array is zero-filled
+ *			       when the DUID is not present; check @dhcp_duid_len.
+ * @dhcp_duid_len:	       The number of valid bytes in @dhcp_duid, ranging
+ *			       from 3 (minimum: 2-byte type code plus at least
+ *			       1 byte of data) to 130 (maximum per RFC 8415).
+ *			       NBFT rev. 1.1+. A value of zero indicates that
+ *			       no DUID is present and both @dhcp_duid and
+ *			       @dhcp_iaid should be ignored.
  */
 struct libnbft_hfi_info_tcp {
 	__u32 pci_sbdf;
@@ -106,6 +143,11 @@ struct libnbft_hfi_info_tcp {
 	char *host_name;
 	bool this_hfi_is_default_route;
 	bool dhcp_override;
+	bool ipaddr_autoconf;
+	__u8 pcie_seg_num;
+	__u32 dhcp_iaid;
+	__u8 dhcp_duid[130];
+	__u8 dhcp_duid_len;
 };
 
 /**
@@ -158,10 +200,10 @@ struct libnbft_security {
  * @LIBNBFT_NID_TYPE_NS_UUID:	The UUID identifier.
  */
 enum libnbft_nid_type {
-	LIBNBFT_NID_TYPE_NONE		= 0,
-	LIBNBFT_NID_TYPE_EUI64	= 1,
-	LIBNBFT_NID_TYPE_NGUID	= 2,
-	LIBNBFT_NID_TYPE_NS_UUID	= 3,
+	LIBNBFT_NID_TYPE_NONE	 = 0,
+	LIBNBFT_NID_TYPE_EUI64	 = 1,
+	LIBNBFT_NID_TYPE_NGUID	 = 2,
+	LIBNBFT_NID_TYPE_NS_UUID = 3,
 };
 
 /**
@@ -195,6 +237,34 @@ enum libnbft_nid_type {
  *				Descriptor) or 0 if not supported.
  * @dhcp_root_path_string:	DHCP Root Path Override string (SSNS Extended
  *				Information Descriptor).
+ * @naed:			Namespace Availability Enhanced Diagnostic
+ *				(SSNS Extended Information Descriptor). Provides
+ *				additional status codes from the pre-OS driver when
+ *				the namespace is unavailable (@unavailable is True).
+ *				See &enum nbft_ssns_ext_info_naed for values.
+ *				Zero indicates no additional information.
+ *				Only present in NBFT rev. 1.1+, zero otherwise.
+ * @cipeec:			Connect Invalid Parameters Extended Error Code
+ *				(SSNS Extended Information Descriptor). Provides
+ *				additional error detail when the pre-OS driver
+ *				received a Connect Invalid Parameters status.
+ *				See &enum nbft_ssns_ext_info_cipeec for values.
+ *				Zero indicates no extended error.
+ *				Only present in NBFT rev. 1.1+, zero otherwise.
+ * @cto:			Connection Timeout in seconds (SSNS Extended
+ *				Information Descriptor). The timeout value used
+ *				by the pre-OS driver for connecting to the object
+ *				specified with this SSNS descriptor. A value of
+ *				0xFFFF indicates that no timeout was specified.
+ *				Zero indicates either a timeout of zero seconds
+ *				or that the field is not present (NBFT rev. 1.0).
+ * @nceec:			Network and Connection Extended Error Code
+ *				(SSNS Extended Information Descriptor). Provides
+ *				error codes specific to network and connection
+ *				errors encountered by the pre-OS driver.
+ *				See &enum nbft_ssns_ext_info_nceec for values.
+ *				Zero indicates no extended error.
+ *				Only present in NBFT rev. 1.1+, zero otherwise.
  * @discovered:			Indicates that this namespace was acquired
  *				through discovery.
  * @unavailable:		Namespace is unavailable as indicated by
@@ -219,6 +289,10 @@ struct libnbft_subsystem_ns {
 	int controller_id;
 	int asqsz;
 	char *dhcp_root_path_string;
+	__u8 naed;
+	__u8 cipeec;
+	__u16 cto;
+	__u8 nceec;
 	bool discovered;
 	bool unavailable;
 };
