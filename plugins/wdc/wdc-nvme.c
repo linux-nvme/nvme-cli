@@ -2390,11 +2390,6 @@ bool wdc_get_dev_mng_log_entry(__u32 log_length, __u32 entry_id,
 	__u32 offset = 0;
 	struct wdc_c2_log_subpage_header *p_next_log_entry = NULL;
 
-	if (!*p_p_found_log_entry) {
-		nvme_show_error("ERROR: WDC - %s: No ppLogEntry pointer.", __func__);
-		return false;
-	}
-
 	*p_p_found_log_entry = NULL;
 
 	/* Ensure log data is large enough for common header */
@@ -2623,7 +2618,7 @@ static bool get_dev_mgmt_log_page_lid_data(struct libnvme_transport_handle *hdl,
 	/* Check the log data to see if the WD version of log page ID's is found */
 	length = sizeof(struct wdc_c2_log_page_header);
 	hdr_ptr = (struct wdc_c2_log_page_header *)data;
-	sph = (struct wdc_c2_log_subpage_header *)(data + length);
+	sph = NULL;
 	found = wdc_get_dev_mng_log_entry(le32_to_cpu(hdr_ptr->length), log_id, hdr_ptr, &sph);
 	if (found && sph) {
 		*cbs_data = calloc(le32_to_cpu(sph->length), sizeof(__u8));
