@@ -19,50 +19,6 @@
 #include "micron-utils.h"
 #include "util/cleanup.h"
 
-static int ReadSysFile(const char *file, unsigned short *id)
-{
-	int ret = 0;
-	char idstr[32] = { '\0' };
-	int fd = open(file, O_RDONLY);
-
-	if (fd < 0) {
-		nvme_show_perror("%s", file);
-		return fd;
-	}
-
-	ret = read(fd, idstr, sizeof(idstr) - 1);
-	close(fd);
-	if (ret < 0)
-		nvme_show_perror("read");
-	else
-		*id = strtol(idstr, NULL, 16);
-
-	return ret;
-}
-
-int micron_get_pci_ids(
-	struct libnvme_global_ctx *ctx, struct libnvme_transport_handle *hdl,
-	unsigned short *vid, unsigned short *did)
-{
-	char id_path[512];
-	__cleanup_free char *ctrl_sysfs_dir = micron_get_ctrl_sysfs_dir(ctx, hdl);
-
-	if (ctrl_sysfs_dir) {
-		snprintf(id_path, sizeof(id_path), "%s/device/vendor",
-			ctrl_sysfs_dir);
-		ReadSysFile(id_path, vid);
-
-		snprintf(id_path, sizeof(id_path), "%s/device/device",
-			ctrl_sysfs_dir);
-		ReadSysFile(id_path, did);
-	} else {
-		nvme_show_error("Unable to find sysfs dir for %s",
-			libnvme_transport_handle_get_name(hdl));
-		return -EINVAL;
-	}
-
-	return 0;
-}
 
 int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 	__u32 *correctable_errors, __u32 *uncorrectable_errors)

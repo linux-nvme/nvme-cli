@@ -68,37 +68,6 @@ int micron_run_spawn(char *const argv[], const char *outfile, bool append)
 	return exit_code == 0 ? 0 : -EIO;
 }
 
-int micron_get_pci_ids(struct libnvme_global_ctx *ctx,
-			struct libnvme_transport_handle *hdl,
-			unsigned short *vid, unsigned short *did)
-{
-	const char *p;
-	unsigned int val;
-
-	/* Windows sysfs dir for controller contains VID and DID */
-	__cleanup_free char *ctrl_sysfs_dir = micron_get_ctrl_sysfs_dir(ctx, hdl);
-
-	*vid = 0;
-	*did = 0;
-
-	if (!ctrl_sysfs_dir)
-		return -EINVAL;
-
-	p = strstr(ctrl_sysfs_dir, "ven_");
-	if (p && sscanf(p, "ven_%x", &val) == 1)
-		*vid = (unsigned short)val;
-	else
-		return -EINVAL;
-
-	p = strstr(ctrl_sysfs_dir, "dev_");
-	if (p && sscanf(p, "dev_%x", &val) == 1)
-		*did = (unsigned short)val;
-	else
-		return -EINVAL;
-
-	return 0;
-}
-
 int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 	__u32 *correctable_errors, __u32 *uncorrectable_errors)
 {
