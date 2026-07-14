@@ -34,9 +34,7 @@ static void print_nbft(struct libnbft_info *table)
 	print_hex(table->host.id, NVME_UUID_LEN);
 	printf("\n");
 	printf("host.nqn=%s\n", table->host.nqn);
-	printf("host.host_id_configured=%d\n", table->host.host_id_configured);
-	printf("host.host_nqn_configured=%d\n", table->host.host_nqn_configured);
-	printf("host.primary=%d\n", table->host.primary);
+	printf("host.flags=0x%02x\n", table->host.flags);
 
 	for (hfi = table->hfi_list, i = 0; hfi && *hfi; hfi++, i++) {
 		printf("hfi_list[%u]->index=%d\n", i, (*hfi)->index);
@@ -55,8 +53,13 @@ static void print_nbft(struct libnbft_info *table)
 		printf("hfi_list[%u]->tcp_info.secondary_dns_ipaddr=%s\n", i, (*hfi)->tcp_info.secondary_dns_ipaddr);
 		printf("hfi_list[%u]->tcp_info.dhcp_server_ipaddr=%s\n", i, (*hfi)->tcp_info.dhcp_server_ipaddr);
 		printf("hfi_list[%u]->tcp_info.host_name=%s\n", i, (*hfi)->tcp_info.host_name);
-		printf("hfi_list[%u]->tcp_info.this_hfi_is_default_route=%d\n", i, (*hfi)->tcp_info.this_hfi_is_default_route);
-		printf("hfi_list[%u]->tcp_info.dhcp_override=%d\n", i, (*hfi)->tcp_info.dhcp_override);
+		printf("hfi_list[%u]->tcp_info.flags=0x%02x\n", i, (*hfi)->tcp_info.flags);
+		printf("hfi_list[%u]->tcp_info.pcie_seg_num=%u\n", i, (*hfi)->tcp_info.pcie_seg_num);
+		printf("hfi_list[%u]->tcp_info.dhcp_iaid=%"PRIu32"\n", i, (*hfi)->tcp_info.dhcp_iaid);
+		printf("hfi_list[%u]->tcp_info.dhcp_duid=", i);
+		print_hex((*hfi)->tcp_info.dhcp_duid, (*hfi)->tcp_info.dhcp_duid_len);
+		printf("\n");
+		printf("hfi_list[%u]->tcp_info.dhcp_duid_len=%u\n", i, (*hfi)->tcp_info.dhcp_duid_len);
 	}
 
 	for (sec = table->security_list, i = 0; sec && *sec; sec++, i++) {
@@ -92,13 +95,15 @@ static void print_nbft(struct libnbft_info *table)
 		print_hex((*ssns)->nid, 16);
 		printf("\n");
 		printf("subsystem_ns_list[%u]->subsys_nqn=%s\n", i, (*ssns)->subsys_nqn);
-		printf("subsystem_ns_list[%u]->pdu_header_digest_required=%d\n", i, (*ssns)->pdu_header_digest_required);
-		printf("subsystem_ns_list[%u]->data_digest_required=%d\n", i, (*ssns)->data_digest_required);
+		printf("subsystem_ns_list[%u]->trflags=0x%04x\n", i, (*ssns)->trflags);
 		printf("subsystem_ns_list[%u]->controller_id=%d\n", i, (*ssns)->controller_id);
 		printf("subsystem_ns_list[%u]->asqsz=%d\n", i, (*ssns)->asqsz);
 		printf("subsystem_ns_list[%u]->dhcp_root_path_string=%s\n", i, (*ssns)->dhcp_root_path_string);
-		printf("subsystem_ns_list[%u]->discovered=%d\n", i, (*ssns)->discovered);
-		printf("subsystem_ns_list[%u]->unavailable=%d\n", i, (*ssns)->unavailable);
+		printf("subsystem_ns_list[%u]->naed=0x%02x\n", i, (*ssns)->naed);
+		printf("subsystem_ns_list[%u]->cipeec=0x%02x\n", i, (*ssns)->cipeec);
+		printf("subsystem_ns_list[%u]->cto=%"PRIu16"\n", i, (*ssns)->cto);
+		printf("subsystem_ns_list[%u]->nceec=0x%02x\n", i, (*ssns)->nceec);
+		printf("subsystem_ns_list[%u]->flags=0x%04x\n", i, (*ssns)->flags);
 	}
 }
 
