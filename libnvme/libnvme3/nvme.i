@@ -399,8 +399,12 @@ static PyObject *ssns_to_dict(struct libnbft_subsystem_ns *ss)
 	if (ss->dhcp_root_path_string)
 		PyDict_SetItemStringDecRef(output, "dhcp_root_path_string", PyUnicode_FromString(ss->dhcp_root_path_string));
 
-	PyDict_SetItemStringDecRef(output, "pdu_header_digest_required", PyBool_FromLong(ss->pdu_header_digest_required));
-	PyDict_SetItemStringDecRef(output, "data_digest_required", PyBool_FromLong(ss->data_digest_required));
+	PyDict_SetItemStringDecRef(output, "trflags", PyLong_FromLong(ss->trflags));
+	PyDict_SetItemStringDecRef(output, "naed", PyLong_FromLong(ss->naed));
+	PyDict_SetItemStringDecRef(output, "cipeec", PyLong_FromLong(ss->cipeec));
+	PyDict_SetItemStringDecRef(output, "cto", PyLong_FromLong(ss->cto));
+	PyDict_SetItemStringDecRef(output, "nceec", PyLong_FromLong(ss->nceec));
+	PyDict_SetItemStringDecRef(output, "flags", PyLong_FromLong(ss->flags));
 
 	return output;
 }
@@ -441,8 +445,15 @@ static PyObject *hfi_to_dict(struct libnbft_hfi *hfi)
 		if (hfi->tcp_info.host_name)
 			PyDict_SetItemStringDecRef(output, "host_name", PyUnicode_FromString(hfi->tcp_info.host_name));
 
-		PyDict_SetItemStringDecRef(output, "this_hfi_is_default_route", PyBool_FromLong(hfi->tcp_info.this_hfi_is_default_route));
-		PyDict_SetItemStringDecRef(output, "dhcp_override", PyBool_FromLong(hfi->tcp_info.dhcp_override));
+		PyDict_SetItemStringDecRef(output, "flags", PyLong_FromLong(hfi->tcp_info.flags));
+		PyDict_SetItemStringDecRef(output, "pcie_seg_num", PyLong_FromLong(hfi->tcp_info.pcie_seg_num));
+		PyDict_SetItemStringDecRef(output, "dhcp_iaid", PyLong_FromLong(hfi->tcp_info.dhcp_iaid));
+		{
+			PyObject *duid = PyBytes_FromStringAndSize((const char *)hfi->tcp_info.dhcp_duid,
+								   hfi->tcp_info.dhcp_duid_len);
+			PyDict_SetItemStringDecRef(output, "dhcp_duid", duid);
+		}
+		PyDict_SetItemStringDecRef(output, "dhcp_duid_len", PyLong_FromLong(hfi->tcp_info.dhcp_duid_len));
 	}
 
 	return output;
@@ -466,7 +477,6 @@ static PyObject *discovery_to_dict(struct libnbft_discovery *disc)
 
 static PyObject *nbft_to_pydict(struct libnbft_info *nbft)
 {
-	PyObject *val;
 	PyObject *output = PyDict_New();
 
 	{
@@ -480,13 +490,7 @@ static PyObject *nbft_to_pydict(struct libnbft_info *nbft)
 			PyDict_SetItemStringDecRef(host, "id", PyUnicode_FromString(uuid_str));
 		}
 
-		PyDict_SetItemStringDecRef(host, "host_id_configured", PyBool_FromLong(nbft->host.host_id_configured));
-		PyDict_SetItemStringDecRef(host, "host_nqn_configured", PyBool_FromLong(nbft->host.host_nqn_configured));
-
-		val = PyUnicode_FromString(nbft->host.primary == LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED ? "not indicated" :
-					   nbft->host.primary == LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_UNSELECTED ? "unselected" :
-					   nbft->host.primary == LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_SELECTED ? "selected" : "reserved");
-		PyDict_SetItemStringDecRef(host, "primary_admin_host_flag", val);
+		PyDict_SetItemStringDecRef(host, "flags", PyLong_FromLong(nbft->host.flags));
 
 		PyDict_SetItemStringDecRef(output, "host", host);
 	}

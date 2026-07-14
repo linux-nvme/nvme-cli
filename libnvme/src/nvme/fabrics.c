@@ -3138,7 +3138,7 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 		return ret;
 
 	/* Pause logging for unavailable SSNSs */
-	if (ss && ss->unavailable && saved_log_level < 1)
+	if (ss && (ss->flags & NBFT_SSNS_UNAVAIL_NAMESPACE_UNAVAIL) && saved_log_level < 1)
 		libnvme_set_logging_level(ctx, -1, false, false);
 
 	/* Update tls or concat */
@@ -3147,7 +3147,7 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 	ret = libnvmf_add_ctrl(h, c);
 
 	/* Resume logging */
-	if (ss && ss->unavailable && saved_log_level < 1)
+	if (ss && (ss->flags & NBFT_SSNS_UNAVAIL_NAMESPACE_UNAVAIL) && saved_log_level < 1)
 		libnvme_set_logging_level(ctx,
 				  saved_log_level,
 				  saved_log_pid,
@@ -3159,7 +3159,7 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 		 * In case this SSNS was marked as 'unavailable' and
 		 * our connection attempt has failed, ignore it.
 		 */
-		if (ss && ss->unavailable) {
+		if (ss && (ss->flags & NBFT_SSNS_UNAVAIL_NAMESPACE_UNAVAIL)) {
 			libnvme_msg(ctx, LIBNVME_LOG_INFO,
 				"SSNS %d reported as unavailable, skipping\n",
 				ss->index);

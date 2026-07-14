@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <fnmatch.h>
 
@@ -48,6 +49,18 @@ static char *mac_addr_to_string(unsigned char mac_addr[6])
 }
 
 #ifdef CONFIG_JSONC
+static const char *hex_str(const __u8 *data, int len, char *buf, size_t bufsz)
+{
+	int i, pos = 0;
+
+	for (i = 0; i < len && pos + 3 < bufsz; i++)
+		pos += snprintf(buf + pos, bufsz - pos, "%s%02x",
+				i ? ":" : "", data[i]);
+	if (!len && bufsz > 0)
+		buf[0] = '\0';
+	return buf;
+}
+
 static json_object *hfi_to_json(struct libnbft_hfi *hfi)
 {
 	struct json_object *hfi_json;
@@ -87,12 +100,107 @@ static json_object *hfi_to_json(struct libnbft_hfi *hfi)
 			&& json_object_add_value_string(hfi_json, "host_name",
 							hfi->tcp_info.host_name))
 		    || json_object_add_value_int(hfi_json, "this_hfi_is_default_route",
-						 hfi->tcp_info.this_hfi_is_default_route)
+						 !!(hfi->tcp_info.flags & NBFT_HFI_INFO_TCP_GLOBAL_ROUTE))
 		    || json_object_add_value_int(hfi_json, "dhcp_override",
-						 hfi->tcp_info.dhcp_override))
+						 !!(hfi->tcp_info.flags & NBFT_HFI_INFO_TCP_DHCP_OVERRIDE))
+		    || json_object_add_value_int(hfi_json, "ipaddr_autoconf",
+						 !!(hfi->tcp_info.flags & NBFT_HFI_INFO_TCP_IPADDR_AUTOCONF)))
 			goto fail;
-		else
-			return hfi_json;
+
+		if (hfi->tcp_info.pcie_seg_num > 0
+		    && json_object_add_value_int(hfi_json, "pcie_seg_num",
+						 hfi->tcp_info.pcie_seg_num))
+			goto fail;
+
+		if (hfi->tcp_info.dhcp_duid_len > 0) {
+			const __u8 *duid = hfi->tcp_info.dhcp_duid;
+			__u8 dlen = hfi->tcp_info.dhcp_duid_len;
+			__u16 duid_type = dlen >= 2 ? duid[0] | (duid[1] << 8) : 0;
+			char hexbuf[400];
+
+			if (json_object_add_value_uint(hfi_json, "dhcp_iaid",
+						       hfi->tcp_info.dhcp_iaid))
+				goto fail;
+
+			switch (duid_type) {
+			case 1: {
+				if (json_object_add_value_string(hfi_json, "dhcp_duid_type", "DUID-LLT"))
+					goto fail;
+				if (dlen >= 4
+				    && json_object_add_value_int(hfi_json, "dhcp_duid_hwtype",
+								 duid[2] | (duid[3] << 8)))
+					goto fail;
+				if (dlen >= 8
+				    && json_object_add_value_uint(hfi_json, "dhcp_duid_time",
+								  duid[4] | (duid[5] << 8) |
+								  (duid[6] << 16) | ((__u32)duid[7] << 24)))
+					goto fail;
+				if (dlen > 8
+				    && json_object_add_value_string(hfi_json, "dhcp_duid_lladdr",
+								    hex_str(duid + 8, dlen - 8,
+									    hexbuf, sizeof(hexbuf))))
+					goto fail;
+				break;
+			}
+			case 2: {
+				if (json_object_add_value_string(hfi_json, "dhcp_duid_type", "DUID-EN"))
+					goto fail;
+				if (dlen >= 6
+				    && json_object_add_value_uint(hfi_json, "dhcp_duid_enterprise",
+								  duid[2] | (duid[3] << 8) |
+								  (duid[4] << 16) | ((__u32)duid[5] << 24)))
+					goto fail;
+				if (dlen > 6
+				    && json_object_add_value_string(hfi_json, "dhcp_duid_id",
+								    hex_str(duid + 6, dlen - 6,
+									    hexbuf, sizeof(hexbuf))))
+					goto fail;
+				break;
+			}
+			case 3: {
+				if (json_object_add_value_string(hfi_json, "dhcp_duid_type", "DUID-LL"))
+					goto fail;
+				if (dlen >= 4
+				    && json_object_add_value_int(hfi_json, "dhcp_duid_hwtype",
+								 duid[2] | (duid[3] << 8)))
+					goto fail;
+				if (dlen > 4
+				    && json_object_add_value_string(hfi_json, "dhcp_duid_lladdr",
+								    hex_str(duid + 4, dlen - 4,
+									    hexbuf, sizeof(hexbuf))))
+					goto fail;
+				break;
+			}
+			case 4: {
+				char uuid_str[NVME_UUID_LEN_STRING];
+				unsigned char uuid[NVME_UUID_LEN];
+
+				if (json_object_add_value_string(hfi_json, "dhcp_duid_type", "DUID-UUID"))
+					goto fail;
+				if (dlen >= 18) {
+					memcpy(uuid, duid + 2, NVME_UUID_LEN);
+					libnvme_uuid_to_string(uuid, uuid_str);
+					if (json_object_add_value_string(hfi_json, "dhcp_duid_uuid",
+									 uuid_str))
+						goto fail;
+				}
+				break;
+			}
+			default: {
+				char type_str[16];
+
+				snprintf(type_str, sizeof(type_str), "unknown(%u)", duid_type);
+				if (json_object_add_value_string(hfi_json, "dhcp_duid_type", type_str)
+				    || json_object_add_value_string(hfi_json, "dhcp_duid_raw",
+								    hex_str(duid, dlen,
+									    hexbuf, sizeof(hexbuf))))
+					goto fail;
+				break;
+			}
+			}
+		}
+
+		return hfi_json;
 	}
 fail:
 	json_free_object(hfi_json);
@@ -168,13 +276,26 @@ static json_object *ssns_to_json(struct libnbft_subsystem_ns *ss)
 		&& json_object_add_value_string(ss_json, "dhcp_root_path_string",
 						ss->dhcp_root_path_string))
 	    || json_object_add_value_int(ss_json, "pdu_header_digest_required",
-					 ss->pdu_header_digest_required)
+					 !!(ss->trflags & NBFT_SSNS_PDU_HEADER_DIGEST))
 	    || json_object_add_value_int(ss_json, "data_digest_required",
-					 ss->data_digest_required)
+					 !!(ss->trflags & NBFT_SSNS_DATA_DIGEST))
 	    || json_object_add_value_int(ss_json, "discovered",
-					 ss->discovered)
+					 !!(ss->flags & NBFT_SSNS_DISCOVERED_NAMESPACE))
 	    || json_object_add_value_int(ss_json, "unavailable",
-					 ss->unavailable))
+					 !!(ss->flags & NBFT_SSNS_UNAVAIL_NAMESPACE_UNAVAIL)))
+		goto fail;
+
+	if (ss->naed
+	    && json_object_add_value_int(ss_json, "naed", ss->naed))
+		goto fail;
+	if (ss->cipeec
+	    && json_object_add_value_int(ss_json, "cipeec", ss->cipeec))
+		goto fail;
+	if (ss->cto != 0xffff
+	    && json_object_add_value_int(ss_json, "connection_timeout", ss->cto))
+		goto fail;
+	if (ss->nceec
+	    && json_object_add_value_int(ss_json, "nceec", ss->nceec))
 		goto fail;
 
 	return ss_json;
@@ -206,18 +327,18 @@ static json_object *discovery_to_json(struct libnbft_discovery *disc)
 		return disc_json;
 }
 
-static const char *primary_admin_host_flag_to_str(unsigned int primary)
+static const char *primary_admin_host_flag_to_str(__u8 host_flags)
 {
-	static const char * const str[] = {
-		[LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_NOT_INDICATED] =	"not indicated",
-		[LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_UNSELECTED] =	"unselected",
-		[LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_SELECTED] =		"selected",
-		[LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_RESERVED] =		"reserved",
-	};
-
-	if (primary > LIBNBFT_PRIMARY_ADMIN_HOST_FLAG_RESERVED)
-		return "INVALID";
-	return str[primary];
+	switch (host_flags & NBFT_HOST_PRIMARY_ADMIN_MASK) {
+	case NBFT_HOST_PRIMARY_ADMIN_NOT_INDICATED:
+		return "not indicated";
+	case NBFT_HOST_PRIMARY_ADMIN_UNSELECTED:
+		return "unselected";
+	case NBFT_HOST_PRIMARY_ADMIN_SELECTED:
+		return "selected";
+	default:
+		return "reserved";
+	}
 }
 
 static struct json_object *nbft_to_json(struct libnbft_info *nbft, bool show_subsys,
@@ -242,11 +363,11 @@ static struct json_object *nbft_to_json(struct libnbft_info *nbft, bool show_sub
 						util_uuid_to_string(nbft->host.id))))
 		goto fail;
 	json_object_add_value_int(host_json, "host_id_configured",
-				  nbft->host.host_id_configured);
+				  !!(nbft->host.flags & NBFT_HOST_HOSTID_CONFIGURED));
 	json_object_add_value_int(host_json, "host_nqn_configured",
-				  nbft->host.host_nqn_configured);
+				  !!(nbft->host.flags & NBFT_HOST_HOSTNQN_CONFIGURED));
 	json_object_add_value_string(host_json, "primary_admin_host_flag",
-				     primary_admin_host_flag_to_str(nbft->host.primary));
+				     primary_admin_host_flag_to_str(nbft->host.flags));
 	if (json_object_object_add(nbft_json, "host", host_json)) {
 		json_free_object(host_json);
 		goto fail;
@@ -391,7 +512,8 @@ static void print_nbft_hfi_info(struct libnbft_info *nbft)
 		       (*hfi)->transport,
 		       pci_sbdf_to_string((*hfi)->tcp_info.pci_sbdf),
 		       mac_addr_to_string((*hfi)->tcp_info.mac_addr),
-		       (*hfi)->tcp_info.dhcp_override ? "yes" : "no",
+		       ((*hfi)->tcp_info.flags &
+			NBFT_HFI_INFO_TCP_DHCP_OVERRIDE) ? "yes" : "no",
 		       ip_width, ip_width, (*hfi)->tcp_info.ipaddr,
 		       (*hfi)->tcp_info.subnet_mask_prefix,
 		       gw_width, gw_width, (*hfi)->tcp_info.gateway_ipaddr,

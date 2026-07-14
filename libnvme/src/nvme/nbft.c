@@ -224,14 +224,7 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 		sizeof(ssns->transport));
 
 	/* transport specific flags */
-	if (raw_ssns->trtype == NBFT_TRTYPE_TCP) {
-		if (le16_to_cpu(raw_ssns->trflags) &
-				NBFT_SSNS_PDU_HEADER_DIGEST)
-			ssns->pdu_header_digest_required = true;
-		if (le16_to_cpu(raw_ssns->trflags) &
-				NBFT_SSNS_DATA_DIGEST)
-			ssns->data_digest_required = true;
-	}
+	ssns->trflags = le16_to_cpu(raw_ssns->trflags);
 
 	/* primary discovery controller */
 	if (raw_ssns->primary_discovery_ctrl_index) {
@@ -265,10 +258,7 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 	ssns->nid = raw_ssns->nid;
 
 	/* flags */
-	ssns->unavailable = !!(le16_to_cpu(raw_ssns->flags) &
-			       NBFT_SSNS_UNAVAIL_NAMESPACE_UNAVAIL);
-	ssns->discovered = !!(le16_to_cpu(raw_ssns->flags) &
-			      NBFT_SSNS_DISCOVERED_NAMESPACE);
+	ssns->flags = le16_to_cpu(raw_ssns->flags);
 
 	/* security profile */
 	if (raw_ssns->security_desc_index) {
@@ -427,18 +417,13 @@ static int read_hfi_info_tcp(struct libnvme_global_ctx *ctx,
 	format_ip_addr(hfi->tcp_info.secondary_dns_ipaddr,
 		sizeof(hfi->tcp_info.secondary_dns_ipaddr),
 		raw_hfi_info_tcp->secondary_dns);
-	if (raw_hfi_info_tcp->flags & NBFT_HFI_INFO_TCP_DHCP_OVERRIDE) {
-		hfi->tcp_info.dhcp_override = true;
+	hfi->tcp_info.flags = raw_hfi_info_tcp->flags;
+	if (raw_hfi_info_tcp->flags & NBFT_HFI_INFO_TCP_DHCP_OVERRIDE)
 		format_ip_addr(hfi->tcp_info.dhcp_server_ipaddr,
 			sizeof(hfi->tcp_info.dhcp_server_ipaddr),
 			raw_hfi_info_tcp->dhcp_server);
-	}
 	get_heap_obj(ctx, raw_hfi_info_tcp, host_name_obj,
 		1, &hfi->tcp_info.host_name);
-	if (raw_hfi_info_tcp->flags & NBFT_HFI_INFO_TCP_GLOBAL_ROUTE)
-		hfi->tcp_info.this_hfi_is_default_route = true;
-	if (raw_hfi_info_tcp->flags & NBFT_HFI_INFO_TCP_IPADDR_AUTOCONF)
-		hfi->tcp_info.ipaddr_autoconf = true;
 
 	if (raw_hfi_info_tcp->trinfo_version >= 2) {
 		struct nbft_hfi_info_ext *hfi_ext_info;
@@ -690,10 +675,7 @@ static int parse_raw_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info *n
 	nbft->host.id = (unsigned char *) &(host->host_id);
 	if (get_heap_obj(ctx, host, host_nqn_obj, 1, &nbft->host.nqn) != 0)
 		return -EINVAL;
-	nbft->host.host_id_configured =
-		host->flags & NBFT_HOST_HOSTID_CONFIGURED;
-	nbft->host.host_nqn_configured =
-		host->flags & NBFT_HOST_HOSTNQN_CONFIGURED;
+	nbft->host.flags = host->flags;
 
 	/*
 	 * HFI
