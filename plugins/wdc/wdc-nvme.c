@@ -8571,6 +8571,8 @@ static int wdc_vs_cloud_log(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
+	cfg.output_format = nvme_args.output_format;
+
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
 		return ret;
@@ -8637,6 +8639,8 @@ static int wdc_vs_hw_rev_log(int argc, char **argv, struct command *acmd,
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	cfg.output_format = nvme_args.output_format;
 
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
@@ -8725,6 +8729,8 @@ static int wdc_vs_device_waf(int argc, char **argv, struct command *acmd,
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	cfg.output_format = nvme_args.output_format;
 
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
@@ -8830,6 +8836,8 @@ static int wdc_get_latency_monitor_log(int argc, char **argv, struct command *ac
 	if (ret)
 		return ret;
 
+	cfg.output_format = nvme_args.output_format;
+
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
 		return ret;
@@ -8871,6 +8879,8 @@ static int wdc_get_error_recovery_log(int argc, char **argv, struct command *acm
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	cfg.output_format = nvme_args.output_format;
 
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
@@ -8915,6 +8925,8 @@ static int wdc_get_dev_capabilities_log(int argc, char **argv, struct command *a
 	if (ret)
 		return ret;
 
+	cfg.output_format = nvme_args.output_format;
+
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
 		return ret;
@@ -8957,6 +8969,8 @@ static int wdc_get_unsupported_reqs_log(int argc, char **argv, struct command *a
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	cfg.output_format = nvme_args.output_format;
 
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
@@ -9446,6 +9460,8 @@ static int wdc_vs_fw_activate_history(int argc, char **argv, struct command *acm
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	cfg.output_format = nvme_args.output_format;
 
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
@@ -10839,6 +10855,8 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
+	cfg.output_format = nvme_args.output_format;
+
 	ret = validate_output_format(cfg.output_format, &fmt);
 	if (ret < 0) {
 		nvme_show_error("%s: ERROR: WDC: invalid output format", __func__);
@@ -11592,6 +11610,8 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
+	cfg.output_format = nvme_args.output_format;
+
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
 		return ret;
@@ -11668,6 +11688,8 @@ static int wdc_vs_pcie_stats(int argc, char **argv, struct command *acmd,
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	cfg.output_format = nvme_args.output_format;
 
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
@@ -11755,6 +11777,8 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	cfg.output_format = nvme_args.output_format;
 
 	ret = validate_output_format(cfg.output_format, &fmt);
 	if (ret < 0) {
@@ -12005,6 +12029,8 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	ret = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	cfg.output_format = nvme_args.output_format;
 
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret)
