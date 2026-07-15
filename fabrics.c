@@ -58,8 +58,6 @@
 #include "logging.h"
 #include "util/sighdl.h"
 
-#define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
-#define PATH_NVMF_CONFIG	SYSCONFDIR "/nvme/config.json"
 #define PATH_NVMF_RUNDIR	RUNDIR "/nvme"
 #define MAX_DISC_ARGS		32
 #define MAX_DISC_RETRIES	10

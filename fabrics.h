@@ -36,14 +36,25 @@ struct nvmf_args {
 	bool concat;
 };
 
-struct libnvmf_config_emitter;
-
 int fabrics_discovery(const char *desc, int argc, char **argv, bool connect);
 int fabrics_connect(const char *desc, int argc, char **argv);
 int fabrics_disconnect(const char *desc, int argc, char **argv);
 int fabrics_disconnect_all(const char *desc, int argc, char **argv);
 int fabrics_config(const char *desc, int argc, char **argv);
 int fabrics_dim(const char *desc, int argc, char **argv);
+
+/*
+ * Legacy config.json/discovery.conf support -- both the explicit converter
+ * ("nvme config-convert", config-convert.c/.h) and the implicit fallback
+ * (fabrics_discovery()/fabrics_config() reading these files directly) go
+ * away together when legacy config support is eventually dropped; this
+ * section (and nvmf_convert_discovery_line() in fabrics.c) goes with them.
+ */
+struct libnvmf_config_emitter;
+
+#define PATH_NVMF_DISC		SYSCONFDIR "/nvme/discovery.conf"
+#define PATH_NVMF_CONFIG	SYSCONFDIR "/nvme/config.json"
+#define PATH_NVMF_INI		SYSCONFDIR "/nvme/nvme-fabrics.conf"
 
 /*
  * Parse one discovery.conf line (the argv-style syntax 'nvme discover'

@@ -587,8 +587,10 @@ if want_nvme
     endif
 
     if want_fabrics
-        sources += 'fabrics.c'
-        sources += 'config-convert.c'
+        sources += [
+            'fabrics.c',
+            'config-convert.c',
+        ]
     endif
 
     if want_top

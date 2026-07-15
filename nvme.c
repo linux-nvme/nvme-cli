@@ -48,6 +48,7 @@
 #include <libnvme.h>
 
 #include "common.h"
+#include "config-convert.h"
 #include "fabrics.h"
 #include "logging.h"
 #include "nvme-cmds.h"
@@ -10844,6 +10845,14 @@ static int config_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	const char *desc = "Configuration of NVMeoF subsystems";
 
 	return fabrics_config(desc, argc, argv);
+}
+
+static int config_convert_cmd(int argc, char **argv, struct command *acmd,
+		struct plugin *plugin)
+{
+	const char *desc = "Convert config.json/discovery.conf to INI";
+
+	return nvme_config_convert(desc, argc, argv);
 }
 
 static int dim_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
