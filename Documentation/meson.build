@@ -10,6 +10,7 @@ adoc_sources = [
     'nvme-changed-ns-list-log',
     'nvme-cmdset-ind-id-ns',
     'nvme-compare',
+    'nvme-config-convert',
     'nvme-connect',
     'nvme-connect-all',
     'nvme-copy',
