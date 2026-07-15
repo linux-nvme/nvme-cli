@@ -13,6 +13,8 @@
 
 #include <nvme/config.h>
 
+#define CONFIG_MAIN_PATH SYSCONFDIR "/nvme/nvme-fabrics.conf"
+
 /*
  * Internal building blocks for the INI connection configuration:
  * the connection-parameter store that tracks unset, reset, and explicit

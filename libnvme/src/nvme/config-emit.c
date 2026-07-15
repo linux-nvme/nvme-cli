@@ -36,8 +36,6 @@
 #include "private.h"
 #include "private-fabrics.h"
 
-#define CONFIG_MAIN_PATH SYSCONFDIR "/nvme/nvme-fabrics.conf"
-
 #define emit_err(ctx, fmt, ...) \
 	libnvme_msg(ctx, LIBNVME_LOG_ERR, fmt "\n", ##__VA_ARGS__)
 

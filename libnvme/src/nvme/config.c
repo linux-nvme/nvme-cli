@@ -27,8 +27,6 @@
 #include "compiler-attributes.h"
 #include "config-ini.h"
 
-#define CONFIG_MAIN_PATH SYSCONFDIR "/nvme/nvme-fabrics.conf"
-
 __libnvme_public int libnvmf_config_read(struct libnvme_global_ctx *ctx,
 		const char *file, struct libnvmf_config **out)
 {
