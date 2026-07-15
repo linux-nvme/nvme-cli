@@ -75,7 +75,7 @@ if diff.found()
 
     foreach t_file : config_data
         test(
-            'libvnme - psk-json-@0@'.format(t_file),
+            'libnvme - psk-json-@0@'.format(t_file),
             config_diff,
             args : [
                 test_psk_json.full_path(),
