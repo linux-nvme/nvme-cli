@@ -421,6 +421,30 @@ int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
 
 /**
+ * libnvmf_context_set_devid_file() - Set devid file for context
+ * @fctx: Fabrics context
+ * @devid_file: Path to the output file
+ *
+ * Configure a file that libnvmf_connect() uses to record the
+ * kernel-assigned device name (for example, "nvme0").
+ *
+ * If the controller is already connected, the existing device name is
+ * written. Otherwise, the device name is written after the controller is
+ * connected.
+ *
+ * The output file is created before attempting the connection. If the
+ * file cannot be created, for example because the parent directory does
+ * not exist, libnvmf_connect() fails without attempting the connection.
+ *
+ * This is intended for applications that need to identify the device
+ * associated with a connection, for example to disconnect it later.
+ *
+ * Return: 0 on success, negative error code otherwise.
+ */
+int libnvmf_context_set_devid_file(struct libnvmf_context *fctx,
+		const char *devid_file);
+
+/**
  * libnvmf_context_set_io_queues() - Set I/O queue topology for context
  * @fctx: Fabrics context
  * @nr_io_queues: Number of I/O queues

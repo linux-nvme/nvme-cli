@@ -32,6 +32,7 @@ LIBNVMF_3 {
 		libnvmf_context_set_connection;
 		libnvmf_context_set_crypto;
 		libnvmf_context_set_device;
+		libnvmf_context_set_devid_file;
 		libnvmf_context_set_discovery_hooks;
 		libnvmf_context_set_hostnqn;
 		libnvmf_context_set_io_queues;

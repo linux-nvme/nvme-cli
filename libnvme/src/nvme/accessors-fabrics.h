@@ -438,6 +438,14 @@ void libnvmf_context_set_persistent(struct libnvmf_context *p, bool persistent);
 bool libnvmf_context_get_persistent(const struct libnvmf_context *p);
 
 /**
+ * libnvmf_context_get_devid_file() - Get devid_file.
+ * @p: The &struct libnvmf_context instance to query.
+ *
+ * Return: The value of the devid_file field, or NULL if not set.
+ */
+const char *libnvmf_context_get_devid_file(const struct libnvmf_context *p);
+
+/**
  * libnvmf_context_get_hostnqn() - Get hostnqn.
  * @p: The &struct libnvmf_context instance to query.
  *
