@@ -59,7 +59,7 @@ The drop-in directory name is derived mechanically from whatever file you point 
 - `--config /etc/nvme/nvme-fabrics.conf` → reads that file **and** `/etc/nvme/nvme-fabrics.conf.d/`.
 - `--config /home/bob/nvme-for-bob.conf` → reads that file **and** `/home/bob/nvme-for-bob.conf.d/` — rerooted to any base directory for free.
 - Omitting `--config` → the default `/etc/nvme/nvme-fabrics.conf` (+ its `.d/`).
-- `--config /etc/nvme/config.json` (a legacy JSON file, recognized by its `.json` extension) → a hard error naming `nvme config convert`; libnvme's reader never reads JSON.
+- `--config /etc/nvme/config.json` (a legacy JSON file, recognized by its `.json` extension) → a hard error naming `nvme config-convert`; libnvme's reader never reads JSON.
 
 Because the config is reached by an explicit path (`--config FILE`, or `libnvmf_config_read(ctx, file)` at the API level), unit testing is straightforward: point at a throwaway file under `/tmp` (and its derived `.d/`) instead of the default `/etc/nvme/nvme-fabrics.conf`.
 
@@ -357,7 +357,7 @@ Specification documents this design cites (section numbers refer to the revision
 
 nvme-cli has historically stored saved connections in `/etc/nvme/config.json`, via the optional `json-c` library. That format is superseded by the INI format described here: it removes libnvme's dependency on `json-c`, it supports comments (JSON does not), and it matches the hand-edit style of systemd's own `.conf` / `.network` / `.service` files.
 
-libnvme itself never reads `config.json` — INI is the only format it understands. The transition is staged entirely in nvme-cli, above the library: `nvme config convert` reads the legacy `config.json` / `discovery.conf` once and writes the INI equivalent; the legacy files are left in place, untouched, but never read again. Routine operation only reads the INI — the tool never rewrites it.
+libnvme itself never reads `config.json` — INI is the only format it understands. The transition is staged entirely in nvme-cli, above the library: `nvme config-convert` reads the legacy `config.json` / `discovery.conf` once and writes the INI equivalent, then renames each converted legacy file to `<name>.converted` so a repeat run does not read it again. Routine operation only reads the INI — the tool never rewrites it.
 
 `discovery.conf` is also superseded. By its own man page it is "a list of connect-all commands to run": limited to Discovery Controllers by construction, with no way to express an I/O Controller or global defaults, and no `[Host]`-style persona (the hostnqn/hostid pair has to be repeated on every line for one identity, with nothing validating the result). The format here covers the full set, so it replaces `discovery.conf` too.
 
