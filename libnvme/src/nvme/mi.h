@@ -302,7 +302,7 @@ void libnvme_mi_close(libnvme_mi_ep_t ep);
  * Description: This function queries the system MCTP daemon ("mctpd") over
  * D-Bus, to find MCTP endpoints that report support for NVMe-MI over MCTP.
  *
- * This requires libvnme-mi to be compiled with D-Bus support; if not, this
+ * This requires libnvme-mi to be compiled with D-Bus support; if not, this
  * will return NULL.
  *
  * Return: A @struct libnvme_global_ctx populated with a set of
