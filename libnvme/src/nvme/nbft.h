@@ -135,12 +135,55 @@ struct libnbft_discovery {
 
 /**
  * struct libnbft_security - Security Profile Descriptor
- * @index: The number of this Security Profile Descriptor in the Security
- *	   Profile Descriptor List.
+ * @index:              The number of this Security Profile Descriptor in the
+ *                      Security Profile Descriptor List.
+ * @flags:              Security Profile Descriptor Flags bitmask,
+ *                      see &enum nbft_security_flags.
+ * @secret_type:        Secret Type, see &enum nbft_security_secret_type.
+ * @sec_chan_algs:      Secure Channel Algorithm list: an array of bytes
+ *                      whose values are the Security Type (SECTYPE) field,
+ *                      see &enum nvmf_tcp_sectype. NULL if not present
+ *                      in the NBFT heap.
+ * @sec_chan_algs_len:  Length in bytes of @sec_chan_algs.
+ * @auth_protocols:     Authentication Protocol identifier list. Values
+ *                      are Authentication Protocol Identifiers as defined
+ *                      in the NVM Express Base Specification. NULL if not
+ *                      present in the NBFT heap.
+ * @auth_protocols_len: Length in bytes of @auth_protocols.
+ * @cipher_suites:      Cipher Suite identifier list: raw byte data containing
+ *                      cipher suite identifiers as defined in the IANA TLS
+ *                      Parameters Registry. Each entry is a 16-bit value;
+ *                      the number of entries is @cipher_suites_len / 2.
+ *                      NULL if not present in the NBFT heap.
+ * @cipher_suites_len:  Length in bytes of @cipher_suites.
+ * @dh_groups:          DH-HMAC-CHAP Diffie-Hellman group identifier list.
+ *                      Values are DH Group Identifiers as defined in the
+ *                      NVM Express Base Specification. NULL if not present
+ *                      in the NBFT heap.
+ * @dh_groups_len:      Length in bytes of @dh_groups.
+ * @sec_hash_funcs:     DH-HMAC-CHAP hash function identifier list,
+ *                      see &enum libnvmf_hmac_alg. NULL if not present
+ *                      in the NBFT heap.
+ * @sec_hash_funcs_len: Length in bytes of @sec_hash_funcs.
+ * @secret_keypath:     URI string for the secret key path. The type of
+ *                      the URI is specified by @secret_type.
+ *                      NULL if not present.
  */
 struct libnbft_security {
 	int index;
-	/* TODO add fields */
+	__u16 flags;
+	__u8 secret_type;
+	__u8 *sec_chan_algs;
+	__u16 sec_chan_algs_len;
+	__u8 *auth_protocols;
+	__u16 auth_protocols_len;
+	__u8 *cipher_suites;
+	__u16 cipher_suites_len;
+	__u8 *dh_groups;
+	__u16 dh_groups_len;
+	__u8 *sec_hash_funcs;
+	__u16 sec_hash_funcs_len;
+	char *secret_keypath;
 };
 
 /**
