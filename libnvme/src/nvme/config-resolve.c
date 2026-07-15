@@ -41,7 +41,9 @@
 	libnvme_msg(ctx, LIBNVME_LOG_ERR, "%s: " fmt "\n", src,	\
 		    ##__VA_ARGS__)
 
-/* One file's merged cascade levels: everything below the endpoint rung. */
+/*
+ * Configuration scope for one file before endpoint-specific overrides.
+ */
 struct scope {
 	struct libnvmf_params *dc_base;  /* DC defaults + [Host] */
 	struct libnvmf_params *ioc_base; /* IOC defaults + [Host] */
@@ -62,9 +64,12 @@ static int merge_maybe(struct libnvmf_params *dst,
 }
 
 /*
- * base(kind) = top defaults(kind) + file defaults(kind) + file [Host]
- * params.  When @f is the top-level file itself the overlays coincide, so
- * the file term is skipped.
+ * Build the base parameters for a connection type.
+ *
+ * The result is the merge of top-level defaults, file-specific defaults,
+ * and the file's [Host] parameters. When @f is the top-level configuration
+ * file, the file-specific defaults are already included and are not applied
+ * again.
  */
 static struct libnvmf_params *build_base(const struct libnvmf_conf_file *top,
 					 const struct libnvmf_conf_file *f,
@@ -236,8 +241,10 @@ out:
 }
 
 /*
- * The relational identity rules (CONFIG.md Tier 1).  @files is the top-level
- * file followed by the drop-ins; index 0 is the top.
+ * Validate identity relationships between personas.
+ *
+ * @files contains the top-level configuration file followed by its drop-ins;
+ * index 0 refers to the top-level file.
  */
 static int check_personas(struct libnvme_global_ctx *ctx,
 			  struct libnvmf_conf_file **files, size_t nfiles)

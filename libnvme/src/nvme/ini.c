@@ -7,10 +7,11 @@
  */
 
 /*
- * Internal INI reader -- see ini.h for the contract.  The reader works on a
- * private copy of the whole text rather than line-sized stdio reads, so there
- * is no line-length limit to enforce and line numbers stay exact; only the
- * total file size is capped.
+ * Internal INI reader.
+ *
+ * The reader operates on a private copy of the complete input text instead of
+ * fixed-size line buffers. This avoids line-length limits and keeps line
+ * numbers accurate. Only the total input size is limited.
  */
 
 #include <errno.h>
@@ -169,7 +170,9 @@ int libnvmf_ini_parse_file(struct libnvme_global_ctx *ctx, const char *path,
 		return -EIO;
 	text[len] = '\0';
 
-	/* An embedded NUL means this is not the text file we expect. */
+	/*
+	 * Embedded NUL bytes make the input ambiguous; reject non-text content.
+	 */
 	if (memchr(text, '\0', len))
 		return -EINVAL;
 
