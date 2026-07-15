@@ -439,7 +439,8 @@ conf.set10(
     'NVME_HAVE_REALLOCARRAY',
     cc.has_function(
        'reallocarray',
-       prefix : '#include <stdlib.h>'),
+       prefix : '#include <stdlib.h>',
+       args : '-D_GNU_SOURCE'),
     description: 'Is reallocarray available',
 )
 
