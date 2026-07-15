@@ -31,3 +31,15 @@ int nvme_config_convert_discovery(struct libnvmf_config_emitter *emitter,
  */
 int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
 		const struct nvmf_args *fa);
+
+/*
+ * Implement the "nvme config-convert" command.
+ *
+ * Convert the legacy config.json and/or discovery.conf configuration files
+ * to the INI format, matching "nvme connect-all"'s own default behavior:
+ * discovery.conf is always converted when it exists, regardless of whether
+ * --config points at a non-default config.json. Write the result to
+ * --output or, if omitted, to the default location. Refuse to overwrite an
+ * existing target unless --force is used.
+ */
+int nvme_config_convert(const char *desc, int argc, char **argv);

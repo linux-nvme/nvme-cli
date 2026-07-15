@@ -8,13 +8,16 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
 #include "common.h"
 #include "config-convert.h"
 #include "fabrics.h"
+#include "logging.h"
 #include "nvme-print.h"
+#include "util/argconfig.h"
 #include "util/cleanup.h"
 
 #ifdef CONFIG_JSONC
@@ -418,4 +421,151 @@ int nvme_config_convert_discovery(struct libnvmf_config_emitter *emitter,
 	}
 
 	return 0;
+}
+
+/* Best effort. The configuration has already been installed. */
+static void rename_to_converted(const char *path)
+{
+	__cleanup_free char *dst = NULL;
+
+	if (asprintf(&dst, "%s.converted", path) < 0)
+		return;
+
+	if (rename(path, dst))
+		nvme_show_error(
+			"converted %s but failed to rename it to %s: %s",
+			path, dst, strerror(errno));
+}
+
+/* True if @path is gone because a prior run already renamed it away. */
+static bool already_converted(const char *path)
+{
+	__cleanup_free char *converted = NULL;
+
+	if (asprintf(&converted, "%s.converted", path) < 0)
+		return false;
+
+	return !access(converted, F_OK);
+}
+
+static int install_converted(struct libnvmf_config_emitter *emitter,
+		const char *output_file, const char *json_path,
+		const char *disc_path, bool converted_json,
+		bool converted_disc, bool force)
+{
+	int ret;
+
+	ret = libnvmf_config_emit_install(emitter, output_file, force);
+	if (ret == -EEXIST) {
+		nvme_show_error("%s already exists; refusing to overwrite",
+				 output_file);
+		return ret;
+	}
+	if (ret) {
+		nvme_show_error("failed to write %s: %s", output_file,
+				 libnvme_strerror(-ret));
+		return ret;
+	}
+
+	if (converted_json)
+		rename_to_converted(json_path);
+	if (converted_disc)
+		rename_to_converted(disc_path);
+
+	return 0;
+}
+
+int nvme_config_convert(const char *desc, int argc, char **argv)
+{
+	char *config_file = NULL;
+	char *output_file = NULL;
+	const char *target;
+	const char *json_path;
+	bool verbose = false;
+	bool force = false;
+	bool converted_json = false, converted_disc = false;
+	bool json_already_done = false, disc_already_done = false;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	struct libnvmf_config_emitter *emitter = NULL;
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_STRING("config", 'J', "FILE", &config_file,
+			   "convert this JSON file (default: config.json)"),
+		OPT_STRING("output", 'o', "FILE", &output_file,
+			   "write result here (default: nvme-fabrics.conf)"),
+		OPT_FLAG("force", 0, &force,
+			 "overwrite an existing target"),
+		OPT_FLAG("verbose", 'v', &verbose, "increase output verbosity"),
+		OPT_END()
+	};
+
+	ret = argconfig_parse(argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	log_level = map_log_level(verbose ? 1 : 0, false);
+
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret) {
+		nvme_show_error("Failed to create topology root: %s",
+				 libnvme_strerror(-ret));
+		return ret;
+	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
+
+	emitter = libnvmf_config_emit_new(ctx);
+	if (!emitter)
+		return -ENOMEM;
+
+	json_path = config_file ? config_file : PATH_NVMF_CONFIG;
+	if (!access(json_path, F_OK)) {
+		ret = nvme_config_convert_json(emitter, json_path);
+		if (ret)
+			goto out;
+		converted_json = true;
+	} else if (already_converted(json_path)) {
+		json_already_done = true;
+	} else if (config_file) {
+		/*
+		 * An explicit --config to a file that neither exists nor was
+		 * ever converted: let the JSON parser produce its own
+		 * "failed to parse" error instead of silently no-op'ing,
+		 * since this was an explicit ask.
+		 */
+		ret = nvme_config_convert_json(emitter, json_path);
+		if (ret)
+			goto out;
+		converted_json = true;
+	}
+
+	if (!access(PATH_NVMF_DISC, F_OK)) {
+		ret = nvme_config_convert_discovery(emitter, PATH_NVMF_DISC);
+		if (ret)
+			goto out;
+		converted_disc = true;
+	} else if (already_converted(PATH_NVMF_DISC)) {
+		disc_already_done = true;
+	}
+
+	if (!converted_json && !converted_disc) {
+		if (json_already_done || disc_already_done) {
+			nvme_show_result("already converted; nothing to do");
+			ret = 0;
+			goto out;
+		}
+		nvme_show_error("nothing to convert: neither %s nor %s exists",
+				 json_path, PATH_NVMF_DISC);
+		ret = -ENOENT;
+		goto out;
+	}
+
+	target = output_file ? output_file : PATH_NVMF_INI;
+	ret = install_converted(emitter, target, json_path, PATH_NVMF_DISC,
+				 converted_json, converted_disc, force);
+
+out:
+	libnvmf_config_emit_free(emitter);
+
+	return ret;
 }
