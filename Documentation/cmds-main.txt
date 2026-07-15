@@ -169,6 +169,9 @@ linknvme:nvme-disconnect[1]::
 linknvme:nvme-disconnect-all[1]::
 	Disconnect from all NVMe-over-Fabrics subsystems
 
+linknvme:nvme-config-convert[1]::
+	Convert a legacy NVMe-oF configuration to the INI format
+
 linknvme:nvme-get-property[1]::
 	Reads and shows NVMe-over-Fabrics controller property
 

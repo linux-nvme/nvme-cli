@@ -1,0 +1,95 @@
+nvme-config-convert(1)
+======================
+
+NAME
+----
+nvme-config-convert - Convert a legacy NVMe-oF configuration to the INI format
+
+SYNOPSIS
+--------
+[verse]
+'nvme' 'config-convert'
+			[--config=<file> | -J <file>]
+			[--output=<file> | -o <file>]
+			[--force]
+			[--verbose | -v]
+
+DESCRIPTION
+-----------
+Converts a pre-3.0 NVMe-oF configuration from the legacy 'config.json'
+JSON store and/or the 'discovery.conf' argv-style file to the INI
+configuration format used by 'nvme connect-all' and 'nvme discover'. The
+INI format is documented at
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
+
+By default, the command looks for the legacy files
+@SYSCONFDIR@/nvme/config.json and @SYSCONFDIR@/nvme/discovery.conf and
+converts any that exist into a single configuration, matching the behavior
+of 'nvme connect-all'. Use --config to convert a config.json at a
+non-default path instead; as with 'nvme connect-all', discovery.conf
+conversion is not gated by --config — @SYSCONFDIR@/nvme/discovery.conf is
+always converted when it exists, whether or not --config is given.
+
+The converted configuration is written to the file specified by
+--output. If --output is not specified, the default location,
+@SYSCONFDIR@/nvme/nvme-fabrics.conf, is used. Unless --force is specified,
+the command refuses to overwrite an existing configuration. On success,
+the converted legacy file(s) are renamed to '<name>.converted' to prevent
+conversion on subsequent runs. Running the command again is safe: a source
+file that is missing only because a prior run already converted and
+renamed it is treated as already done, not as an error.
+
+Malformed entries (for example, invalid addressing or an unreadable port)
+are skipped with a log message. Conversion continues unless a memory
+allocation failure occurs.
+
+OPTIONS
+-------
+-J <file>::
+--config=<file>::
+	Convert this JSON file instead of the default
+	@SYSCONFDIR@/nvme/config.json.
+
+-o <file>::
+--output=<file>::
+	Write the converted configuration here instead of the default
+	@SYSCONFDIR@/nvme/nvme-fabrics.conf.
+
+--force::
+	Overwrite an existing configuration at the target. Any manual changes
+	are lost.
+
+-v::
+--verbose::
+	Increase the level of detail in the output.
+
+EXAMPLES
+--------
+* Convert the system's legacy configuration in place:
++
+------------
+# nvme config-convert
+------------
+
+* Convert one specific configuration file for testing, without touching
+  the system configuration:
++
+------------
+# nvme config-convert --config /tmp/config.json --output /tmp/nvme-fabrics.conf
+------------
++
+Note: unlike config.json, discovery.conf has no --config-style override —
+its path is always @SYSCONFDIR@/nvme/discovery.conf. If that file exists on
+the system, this command still converts it and renames it to
+'discovery.conf.converted', even though --config points elsewhere.
+
+SEE ALSO
+--------
+nvme-config(1)
+nvme-connect-all(1)
+nvme-discover(1)
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
+
+NVME
+----
+Part of the nvme-user suite
