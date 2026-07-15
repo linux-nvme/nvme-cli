@@ -40,6 +40,7 @@
 #include "plugin.h"
 #include "util/cleanup.h"
 #include "util/types.h"
+#include "nvme-pci-ids.h"
 
 #define CREATE_CMD
 #include "wdc-nvme.h"
@@ -1474,77 +1475,6 @@ static double calc_percent(uint64_t numerator, uint64_t denominator)
 		(uint64_t)(((double)numerator / (double)denominator) * 100) : 0;
 }
 
-static int wdc_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_handle *hdl,
-			   uint32_t *device_id, uint32_t *vendor_id)
-{
-	const char *name = libnvme_transport_handle_get_name(hdl);
-	char vid[256], did[256], id[32];
-	libnvme_ctrl_t c = NULL;
-	libnvme_ns_t n = NULL;
-	int fd, ret;
-
-	ret = libnvme_scan_ctrl(ctx, name, &c);
-	if (!ret) {
-		snprintf(vid, sizeof(vid), "%s/device/vendor",
-			libnvme_ctrl_get_sysfs_dir(c));
-		snprintf(did, sizeof(did), "%s/device/device",
-			libnvme_ctrl_get_sysfs_dir(c));
-		libnvme_free_ctrl(c);
-	} else {
-		ret = libnvme_scan_namespace(ctx, name, &n);
-		if (ret) {
-			nvme_show_error("Unable to find %s", name);
-			return ret;
-		}
-
-		snprintf(vid, sizeof(vid), "%s/device/device/vendor",
-			libnvme_ns_get_sysfs_dir(n));
-		snprintf(did, sizeof(did), "%s/device/device/device",
-			libnvme_ns_get_sysfs_dir(n));
-		libnvme_free_ns(n);
-	}
-
-	fd = open(vid, O_RDONLY);
-	if (fd < 0) {
-		nvme_show_error("ERROR: WDC: %s : Open vendor file failed", __func__);
-		return -1;
-	}
-
-	ret = read(fd, id, 32);
-	close(fd);
-
-	if (ret < 0) {
-		nvme_show_error("%s: Read of pci vendor id failed", __func__);
-		return -1;
-	}
-	id[ret < 32 ? ret : 31] = '\0';
-	if (id[strlen(id) - 1] == '\n')
-		id[strlen(id) - 1] = '\0';
-
-	*vendor_id = strtol(id, NULL, 0);
-	ret = 0;
-
-	fd = open(did, O_RDONLY);
-	if (fd < 0) {
-		nvme_show_error("ERROR: WDC: %s : Open device file failed", __func__);
-		return -1;
-	}
-
-	ret = read(fd, id, 32);
-	close(fd);
-
-	if (ret < 0) {
-		nvme_show_error("%s: Read of pci device id failed", __func__);
-		return -1;
-	}
-	id[ret < 32 ? ret : 31] = '\0';
-	if (id[strlen(id) - 1] == '\n')
-		id[strlen(id) - 1] = '\0';
-
-	*device_id = strtol(id, NULL, 0);
-	return 0;
-}
-
 static int wdc_get_vendor_id(struct libnvme_transport_handle *hdl, uint32_t *vendor_id)
 {
 	struct nvme_id_ctrl ctrl;
@@ -1647,7 +1577,7 @@ static bool wdc_check_device(struct libnvme_global_ctx *ctx, struct libnvme_tran
 	bool supported;
 	uint32_t read_device_id = -1, read_vendor_id = -1;
 
-	ret = wdc_get_pci_ids(ctx, hdl, &read_device_id, &read_vendor_id);
+	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id, NULL, NULL, NULL);
 	if (ret < 0) {
 		/* Use the identify nvme command to get vendor id due to NVMeOF device. */
 		if (wdc_get_vendor_id(hdl, &read_vendor_id) < 0)
@@ -1695,7 +1625,7 @@ static __u64 wdc_get_drive_capabilities(struct libnvme_global_ctx *ctx, struct l
 	__u64 capabilities = 0;
 	__u32 cust_id;
 
-	ret = wdc_get_pci_ids(ctx, hdl, &read_device_id, &read_vendor_id);
+	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id, NULL, NULL, NULL);
 	if (ret < 0) {
 		if (wdc_get_vendor_id(hdl, &read_vendor_id) < 0)
 			return capabilities;
@@ -2726,13 +2656,13 @@ static bool get_dev_mgment_data(struct libnvme_global_ctx *ctx, struct libnvme_t
 
 	*data = NULL;
 
-	/* The wdc_get_pci_ids function could fail when drives are connected
+	/* The nvme_get_pci_ids() function could fail when drives are connected
 	 * via a PCIe switch.  Therefore, the return code is intentionally
 	 * being ignored.  The device_id and vendor_id variables have been
 	 * initialized to 0 so the code can continue on without issue for
-	 * both cases: wdc_get_pci_ids successful or failed.
+	 * both cases: successful or failed.
 	 */
-	wdc_get_pci_ids(ctx, hdl, &device_id, &vendor_id);
+	nvme_get_pci_ids(ctx, hdl, &vendor_id, &device_id, NULL, NULL, NULL);
 
 	memset(&uuid_list, 0, sizeof(struct nvme_id_uuid_list));
 	if (wdc_CheckUuidListSupport(hdl, &uuid_list)) {
@@ -2793,13 +2723,13 @@ static bool get_dev_mgment_cbs_data(struct libnvme_global_ctx *ctx, struct libnv
 
 	*cbs_data = NULL;
 
-	/* The wdc_get_pci_ids function could fail when drives are connected
+	/* The nvme_get_pci_ids function could fail when drives are connected
 	 * via a PCIe switch.  Therefore, the return code is intentionally
 	 * being ignored.  The device_id and vendor_id variables have been
 	 * initialized to 0 so the code can continue on without issue for
-	 * both cases: wdc_get_pci_ids successful or failed.
+	 * both cases: successful or failed.
 	 */
-	wdc_get_pci_ids(ctx, hdl, &device_id, &vendor_id);
+	nvme_get_pci_ids(ctx, hdl, &vendor_id, &device_id, NULL, NULL, NULL);
 
 	lid = WDC_NVME_GET_DEV_MGMNT_LOG_PAGE_ID;
 
@@ -4377,7 +4307,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 		goto out;
 	}
 
-	ret = wdc_get_pci_ids(ctx, hdl, &device_id, &read_vendor_id);
+	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &device_id, NULL, NULL, NULL);
 
 	if (!wdc_is_sn861(device_id)) {
 		if (cfg.file) {
@@ -7263,7 +7193,7 @@ static int wdc_get_c0_log_page(struct libnvme_global_ctx *ctx, struct libnvme_tr
 		return ret;
 	}
 
-	ret = wdc_get_pci_ids(ctx, hdl, &device_id, &read_vendor_id);
+	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &device_id, NULL, NULL, NULL);
 
 	switch (device_id) {
 	case WDC_NVME_SN640_DEV_ID:
@@ -7518,7 +7448,7 @@ static int wdc_get_ca_log_page(struct libnvme_global_ctx *ctx, struct libnvme_tr
 		return -1;
 	}
 
-	ret = wdc_get_pci_ids(ctx, hdl, &read_device_id, &read_vendor_id);
+	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id, NULL, NULL, NULL);
 
 	switch (read_device_id) {
 	case WDC_NVME_SN200_DEV_ID:
@@ -8371,7 +8301,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *acmd,
 	if (!page_mask)
 		nvme_show_error("ERROR: WDC: Unknown log page mask - %s", cfg.log_page_mask);
 
-	ret = wdc_get_pci_ids(ctx, hdl, &device_id, &read_vendor_id);
+	ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &device_id, NULL, NULL, NULL);
 
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 	if (!(capabilities & WDC_DRIVE_CAP_SMART_LOG_MASK)) {
@@ -8492,7 +8422,7 @@ static int wdc_cu_smart_log(int argc, char **argv, struct command *acmd,
 			return -1;
 		}
 
-		ret = wdc_get_pci_ids(ctx, hdl, &read_device_id, &read_vendor_id);
+		ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id, NULL, NULL, NULL);
 
 		switch (read_device_id) {
 		case WDC_NVME_SN861_DEV_ID:
@@ -9375,7 +9305,7 @@ static int wdc_get_fw_act_history_C2(struct libnvme_global_ctx *ctx, struct libn
 		return ret;
 	}
 
-	ret = wdc_get_pci_ids(ctx, hdl, &device_id, &vendor_id);
+	ret = nvme_get_pci_ids(ctx, hdl, &vendor_id, &device_id, NULL, NULL, NULL);
 
 	data = (__u8 *)malloc(sizeof(__u8) * WDC_FW_ACT_HISTORY_C2_LOG_BUF_LEN);
 	if (!data) {
@@ -10883,7 +10813,7 @@ static int wdc_log_page_directory(int argc, char **argv, struct command *acmd,
 			nvme_show_error("WDC: UUID lists NOT supported");
 
 
-		ret = wdc_get_pci_ids(ctx, hdl, &device_id, &read_vendor_id);
+		ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &device_id, NULL, NULL, NULL);
 		if (ret) 
 			return ret;
 		
@@ -11622,7 +11552,7 @@ static int wdc_vs_nand_stats(int argc, char **argv, struct command *acmd,
 		nvme_show_error("ERROR: WDC: unsupported device for this command");
 		ret = -1;
 	} else {
-		ret = wdc_get_pci_ids(ctx, hdl, &read_device_id, &read_vendor_id);
+		ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id, NULL, NULL, NULL);
 		if (ret < 0) {
 			nvme_show_error("ERROR: WDC: %s: failure to get pci ids, ret = %d", __func__, ret);
 			return -1;
@@ -11800,7 +11730,7 @@ static int wdc_vs_drive_info(int argc, char **argv,
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
 	if ((capabilities & WDC_DRIVE_CAP_INFO) == WDC_DRIVE_CAP_INFO) {
-		ret = wdc_get_pci_ids(ctx, hdl, &read_device_id, &read_vendor_id);
+		ret = nvme_get_pci_ids(ctx, hdl, &read_vendor_id, &read_device_id, NULL, NULL, NULL);
 		if (ret < 0) {
 			nvme_show_error("ERROR: WDC: %s: failure to get pci ids, ret = %d", __func__, ret);
 			goto out;
