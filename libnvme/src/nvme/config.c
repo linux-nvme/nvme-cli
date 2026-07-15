@@ -7,11 +7,11 @@
  */
 
 /*
- * The public face of the NVMe-oF connection configuration
- * (libnvme/design/CONFIG.md).  Parsing and cascade resolution live in
- * config-ini.c and config-resolve.c; nothing about files, sections or
- * drop-ins crosses this boundary -- consumers see the resolved connection
- * list only.
+ * Public API for NVMe-oF connection configuration.
+ *
+ * Parsing and cascade resolution are internal implementation details.
+ * Files, sections, and drop-ins are not exposed through this interface;
+ * consumers access only the resolved connection list.
  */
 
 #include <errno.h>
@@ -162,7 +162,6 @@ struct emit_state {
 	int err;
 };
 
-/* Format one "--key=value" (or bare "--key" when @value is NULL). */
 static void emit_arg(struct emit_state *state, const char *key,
 		     const char *value)
 {
@@ -184,7 +183,6 @@ static void emit_arg(struct emit_state *state, const char *key,
 	free(arg);
 }
 
-/* Like emit_arg(), but an absent TID field is simply not emitted. */
 static void emit_tid_arg(struct emit_state *state, const char *key,
 			 const char *value)
 {
@@ -202,17 +200,12 @@ static void emit_param(const char *key, const char *value, void *user_data)
 		return;
 
 	k = libnvmf_key_lookup(key);
-	if (!k)	/* only known keys are ever stored */
+	if (!k)
 		return;
 
 	if (k->type == LIBNVMF_KEY_BOOL) {
 		bool set;
 
-		/*
-		 * Validated at parse time; a false flag is skipped,
-		 * same as unset -- every boolean key's kernel default
-		 * is off.
-		 */
 		if (libnvmf_parse_bool(value, &set) || !set)
 			return;
 		emit_arg(state, key, NULL);

@@ -7,8 +7,7 @@
  */
 
 /*
- * Building blocks for the INI connection config -- see config-ini.h for the
- * contracts and libnvme/design/CONFIG.md for the format they implement.
+ * Building blocks for the INI configuration parser.
  */
 
 #include <errno.h>
@@ -27,11 +26,6 @@
 #include "private-fabrics.h"
 #include "util.h"
 
-/*
- * The recognized keys.  One row per key the format accepts; the CLI option
- * name is the only spelling (CONFIG.md "Parser conventions").  See
- * enum libnvmf_key_class for what the third column means.
- */
 static const struct libnvmf_key keys[] = {
 	/* connection tunables; only class overridable per controller= line */
 	{ "nr-io-queues",		LIBNVMF_KEY_INT,	LIBNVMF_KEY_TUNABLE },
@@ -152,11 +146,6 @@ struct kv {
 	char *value;
 };
 
-/*
- * One member on purpose: this is the public opaque type (config.h), kept a
- * distinct struct so ccan/list stays an internal implementation choice
- * rather than leaking into the ABI.
- */
 struct libnvmf_params {
 	struct list_head list;
 };
@@ -303,12 +292,6 @@ __libnvme_public void libnvmf_params_for_each(const struct libnvmf_params *p,
 	list_for_each(&p->list, e, entry)
 		callback(e->key, e->value, user_data);
 }
-
-/*
- * File -> raw model.  One pass over the INI events, faithfully recording
- * sections and lines; nothing is resolved here.  See config-ini.h for the
- * Tier 1 (fail the file) vs Tier 2 (warn and continue) split.
- */
 
 enum sect {
 	SECT_NONE,	/* before the first section header */
@@ -457,7 +440,6 @@ static int enter_section(struct conf_parse *pc, const char *name,
 	return 0;
 }
 
-/* The five addressing keys a controller= line may carry (CONFIG.md). */
 struct path_addr {
 	const char *transport;
 	const char *traddr;
@@ -483,14 +465,17 @@ static const char **addr_slot(struct path_addr *a, const char *key)
 }
 
 /*
- * Split one "controller =" value: addressing keys become the path's raw
- * addressing strings, tunables become per-path overrides.  Strict on
- * purpose -- a typo in an address must not silently connect somewhere
- * else, so unknown keys are errors here even though section keys only warn.
+ * Parse one "controller =" value.
  *
- * The "key=value;..." tokenizing below mirrors libnvmf_tid_parse() (tid.c)
- * rather than calling it: tid_parse builds a TID, and TID construction
- * rejects a hostname traddr, which a config file must still accept.
+ * Addressing keys are stored as raw path addressing fields. Tunable keys are
+ * stored as per-path overrides.
+ *
+ * Unknown keys are rejected intentionally. A misspelled addressing option
+ * must not silently result in a different connection.
+ *
+ * The parser accepts hostnames in addressing fields, so it tokenizes the
+ * value directly instead of constructing a TID here. TID construction is
+ * performed later by the consumer.
  */
 static int add_path(struct conf_parse *pc, char *value, unsigned int line)
 {
@@ -604,10 +589,20 @@ fail:
 }
 
 /*
- * NQN syntax (Base 2.3 SS4.7): "nqn." + a 4-digit year + '-' + a 2-digit
- * month (01-12) + '.' + a non-empty reverse-domain-name, optionally
- * followed by ':' and a unique suffix.  This checks the structural grammar
- * a typo would break, not whether the domain is registered.
+ * Validate the basic NQN syntax defined by the NVMe Base specification,
+ * section 4.7.
+ *
+ * The expected format starts with "nqn.", followed by a four-digit year,
+ * a two-digit month (01-12), and a non-empty suffix after the domain
+ * separator.
+ *
+ * Examples of valid NQNs:
+ *
+ *   nqn.2014-08.org.nvmexpress
+ *   nqn.2014-08.org.example:subsystem1
+ *
+ * This function checks only the structural format. It does not validate the
+ * reverse domain name, domain ownership, or uniqueness requirements.
  */
 static bool nqn_valid(const char *nqn)
 {
@@ -636,9 +631,11 @@ static bool nqn_valid(const char *nqn)
 }
 
 /*
- * HostID syntax (Base 2.3 SS5.2.26.1.32.2): a 128-bit value, spelled as a
- * UUID string.  All-zero forfeits host association (CONFIG.md), so a
- * configuration treats it as invalid alongside a malformed string.
+ * Validate the HostID syntax defined by the NVMe Base specification,
+ * section 5.2.26.1.32.2.
+ *
+ * A HostID is a 128-bit value represented as a UUID string. The all-zero UUID
+ * is not a valid HostID because it does not identify a host.
  */
 static bool hostid_valid(const char *hostid)
 {
@@ -692,7 +689,6 @@ static int conf_kv(struct conf_parse *pc, const char *key, char *value,
 		if (pc->sect != SECT_DC && pc->sect != SECT_SUBSYS)
 			break;
 		if (!*value) {
-			/* Tier 1: nqn is reqd, there is no kernel default. */
 			conf_err(pc, line, "empty nqn");
 			return -EINVAL;
 		}
@@ -750,7 +746,6 @@ static int conf_kv(struct conf_parse *pc, const char *key, char *value,
 		return libnvmf_params_set(dest, key, value);
 	}
 
-	/* A known key in a section where it has no meaning is a real bug. */
 	conf_err(pc, line, "\"%s\" is not valid in this section", key);
 
 	return -EINVAL;
@@ -799,13 +794,11 @@ int libnvmf_conf_file_parse(struct libnvme_global_ctx *ctx, const char *path,
 
 	ret = libnvmf_ini_parse_file(ctx, path, conf_event, &pc);
 	if (ret) {
-		/* Prefer the classified error a callback recorded. */
 		if (pc.err)
 			ret = pc.err;
 		goto fail;
 	}
 
-	/* Per-file structural checks that need the whole file. */
 	ret = -EINVAL;
 	list_for_each(&pc.f->endpoints, ep, entry) {
 		if (!ep->is_dc && !ep->nqn) {

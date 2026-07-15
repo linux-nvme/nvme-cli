@@ -61,7 +61,7 @@ struct libnvmf_params;
 
 /**
  * libnvmf_config_read() - read and resolve a connection configuration.
- * @ctx:  libnvme global context; must not be NULL
+ * @ctx:  libnvme global context
  * @file: main configuration file, or NULL for the default
  *        (/etc/nvme/nvme-fabrics.conf).  The drop-in directory is always
  *        derived from the file name: the .conf files under <file>.d/.
@@ -89,7 +89,7 @@ void libnvmf_config_free(struct libnvmf_config *config);
 
 /**
  * libnvmf_config_validate() - dry-run a connection configuration.
- * @ctx:  libnvme global context; must not be NULL
+ * @ctx:  libnvme global context
  * @file: main configuration file, or NULL for the default.
  *
  * Reads and resolves like libnvmf_config_read(), reporting every

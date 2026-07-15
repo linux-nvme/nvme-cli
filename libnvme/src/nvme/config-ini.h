@@ -84,18 +84,21 @@ int libnvmf_key_check_value(const struct libnvmf_key *key, const char *value);
 int libnvmf_parse_bool(const char *value, bool *out);
 
 /*
- * The raw model of ONE parsed file -- sections and lines faithfully
- * recorded, nothing resolved.  The cascade resolver (which merges the
- * top-level file with the drop-ins and expands endpoints into connections)
- * consumes a list of these.  Struct members are open because this is an
- * internal type; nothing here crosses the public API boundary.
+ * Raw configuration model for a single parsed file.
+ *
+ * The parser records the file contents without applying precedence or
+ * inheritance rules. The resolver combines the main file and any drop-ins
+ * to produce the resolved connection list.
+ *
+ * This is an internal type. Its members are not part of the public API.
  */
 
 struct libnvme_global_ctx;
 
 /*
- * One parsed file -- the top-level nvme-fabrics.conf or one drop-in under
- * nvme-fabrics.conf.d/; both use this same representation.
+ * Raw configuration model for one parsed configuration file.
+ *
+ * Used for both the main configuration file and individual drop-in files.
  */
 struct libnvmf_conf_file {
 	char *path;			/* provenance, diagnostics */
@@ -119,14 +122,9 @@ struct libnvmf_conf_endpoint {
 	unsigned int line;
 };
 
-/* One controller= line: one path to an endpoint (see CONFIG.md Multipath). */
+/* One controller= line: one path to an endpoint. */
 struct libnvmf_conf_path {
 	struct list_node entry;
-	/*
-	 * Addressing as the file spelled it: traddr/host_traddr are raw
-	 * strings, not a TID (see libnvme/design/TID.md for why).
-	 * subsysnqn and the host identity are filled in at resolve time.
-	 */
 	char *transport;
 	char *traddr;
 	char *trsvcid;
@@ -134,7 +132,7 @@ struct libnvmf_conf_path {
 	char *host_iface;
 	/* per-path tunables; never security */
 	struct libnvmf_params *overrides;
-	unsigned int line;	/* for diagnostics */
+	unsigned int line;
 };
 
 /*
@@ -155,21 +153,18 @@ int libnvmf_conf_file_parse(
 void libnvmf_conf_file_free(struct libnvmf_conf_file *f);
 
 /*
- * The resolved configuration: the flat list of connections the files add up
- * to, every cascade applied -- consumers see (role, addressing, identity,
- * params), never files or sections.  These are the definitions behind
- * <nvme/config.h>'s opaque public types; the members stay internal.
+ * Resolved configuration.
+ *
+ * Contains the flat list of connections produced from the configuration
+ * files after all precedence rules have been applied. Consumers see only
+ * resolved connections; files and sections remain internal.
+ *
+ * These are the definitions behind the opaque public types declared in
+ * <nvme/config.h>. Their members are not part of the public API.
  */
-
 struct libnvmf_config_conn {
 	struct list_node entry;
 	bool is_dc;
-	/*
-	 * Complete addressing and identity information.
-	 *
-	 * Address and identity fields are stored as raw strings. TID
-	 * construction is deferred to the consumer.
-	 */
 	char *transport;
 	char *traddr;
 	char *trsvcid;
