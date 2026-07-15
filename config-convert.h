@@ -4,6 +4,7 @@
 #include <libnvme.h>
 
 struct libnvmf_config_emitter;
+struct nvmf_args;
 
 /*
  * Parse @json_file in the legacy config.json format and add each connection
@@ -13,3 +14,20 @@ struct libnvmf_config_emitter;
  */
 int nvme_config_convert_json(struct libnvmf_config_emitter *emitter,
 		const char *json_file);
+
+/*
+ * Parse @disc_file in the legacy discovery.conf format and add each entry
+ * to @emitter. This function does not install the generated configuration.
+ * Malformed entries are logged and skipped.
+ */
+int nvme_config_convert_discovery(struct libnvmf_config_emitter *emitter,
+		const char *disc_file);
+
+/*
+ * Add one parsed discovery.conf entry to @emitter.
+ *
+ * The caller is responsible for parsing the input line into @fa. Invalid
+ * entries are logged and skipped. Only -ENOMEM is treated as a fatal error.
+ */
+int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
+		const struct nvmf_args *fa);

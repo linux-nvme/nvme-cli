@@ -50,6 +50,7 @@
 #endif
 
 #include "common.h"
+#include "config-convert.h"
 #include "nvme.h"
 #include "nvme-print.h"
 #include "fabrics.h"
@@ -101,40 +102,6 @@ static const char *nvmf_data_digest	= "enable transport protocol data digest (TC
 static const char *nvmf_tls		= "enable TLS";
 static const char *nvmf_concat		= "enable secure concatenation";
 static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
-
-struct nvmf_args {
-	const char *subsysnqn;
-	const char *transport;
-	const char *traddr;
-	const char *host_traddr;
-	const char *host_iface;
-	const char *trsvcid;
-	const char *hostnqn;
-	const char *hostid;
-	const char *hostkey;
-	const char *ctrlkey;
-	const char *keyring;
-	const char *tls_key;
-	const char *tls_key_identity;
-	int queue_size;
-	int nr_io_queues;
-	int reconnect_delay;
-	int ctrl_loss_tmo;
-	int fast_io_fail_tmo;
-	int keep_alive_tmo;
-	int nr_write_queues;
-	int nr_poll_queues;
-	int tos;
-	long keyring_id;
-	long tls_key_id;
-	long tls_configured_key_id;
-	bool duplicate_connect;
-	bool disable_sqflow;
-	bool hdr_digest;
-	bool data_digest;
-	bool tls;
-	bool concat;
-};
 
 #define NVMF_ARGS(n, f, ...)                                                                  \
 	NVME_ARGS(n,                                                                              \
@@ -477,6 +444,51 @@ static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
 		hook_parser_init, hook_parser_cleanup, hook_parser_next_line);
 
 	return 0;
+}
+
+/*
+ * Parse one discovery.conf line -- the same argv-style syntax 'nvme
+ * discover'/'connect-all' accept, reusing NVMF_ARGS so every short and long
+ * form works identically to real usage -- and hand the parsed arguments to
+ * nvme_config_convert_discovery_args(). @line is modified in place (strsep()).
+ *
+ * A blank line, a comment, or one with neither transport nor traddr is
+ * silently skipped (0, nothing added): matches hook_parser_next_line()'s
+ * own tolerance for a discovery.conf that mixes real entries with commentary.
+ */
+int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
+		char *line)
+{
+	struct nvmf_args fa = { 0 };
+	char *argv[MAX_DISC_ARGS] = { "discovery.conf" };
+	char *ptr, *p = line;
+	int argc = 1;
+	bool line_persistent = false, line_force = false;
+
+	NVMF_ARGS(opts, fa,
+		  OPT_FLAG("persistent", 'p', &line_persistent,
+			   "persistent discovery connection"),
+		  OPT_FLAG("force",        0, &line_force,
+			   "Force persistent discovery controller creation"));
+
+	if (line[0] == '#' || line[0] == '\n' || line[0] == '\0')
+		return 0;
+
+	fa.tos = -1;
+	fa.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
+
+	while ((ptr = strsep(&p, " =\n")) != NULL && argc < MAX_DISC_ARGS - 1)
+		argv[argc++] = ptr;
+	argv[argc] = NULL;
+
+	fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
+	if (argconfig_parse(argc, argv, "discovery.conf", opts))
+		return 0;
+
+	if (!fa.transport && !fa.traddr)
+		return 0;
+
+	return nvme_config_convert_discovery_args(emitter, &fa);
 }
 
 static int setup_common_context(struct libnvmf_context *fctx,
