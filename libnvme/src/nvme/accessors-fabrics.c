@@ -342,6 +342,12 @@ __libnvme_public bool libnvmf_context_get_persistent(
 	return p->persistent;
 }
 
+__libnvme_public const char *libnvmf_context_get_devid_file(
+		const struct libnvmf_context *p)
+{
+	return p->devid_file;
+}
+
 __libnvme_public const char *libnvmf_context_get_hostnqn(
 		const struct libnvmf_context *p)
 {

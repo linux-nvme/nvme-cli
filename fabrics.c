@@ -796,6 +796,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	__cleanup_free char *hid = NULL;
 	char *config_file = NULL;
 	char *owner = NULL;
+	char *devid_file = NULL;
 	bool idempotent = false;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
@@ -807,6 +808,8 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 	NVMF_ARGS(opts, fa,
 		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_STRING("owner",                0, "NAME", &owner,           "record this owner in the registry"),
+		  OPT_STRING("devid-file", 0, "FILE", &devid_file,
+			     "write connected device name to FILE"),
 		  OPT_FLAG("idempotent", 0, &idempotent,
 			   "exit 0 if already connected"),
 		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"));
@@ -893,6 +896,9 @@ do_connect:
 	ret = create_common_context(ctx, persistent, &fa, &hfd, &fctx);
 	if (ret)
 		return ret;
+
+	if (devid_file)
+		libnvmf_context_set_devid_file(fctx, devid_file);
 
 	if (config_file)
 		return libnvmf_connect_config_json(ctx, fctx);

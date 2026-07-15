@@ -17,6 +17,7 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_get_default_keep_alive_timeout;
 		libnvmf_context_get_default_max_discovery_retries;
 		libnvmf_context_get_device;
+		libnvmf_context_get_devid_file;
 		libnvmf_context_get_disable_sqflow;
 		libnvmf_context_get_duplicate_connect;
 		libnvmf_context_get_fast_io_fail_tmo;
