@@ -3369,8 +3369,17 @@ __libnvme_public int libnvmf_discovery(
 
 	if (!c && !force) {
 		c = lookup_ctrl(h, fctx);
-		if (c)
+		if (c) {
 			fctx->persistent = true;
+			if (!libnvme_ctrl_get_transport_handle(c)) {
+				ret = libnvme_open(ctx, c->name, &c->hdl);
+				if (ret) {
+					libnvme_msg(ctx, LIBNVME_LOG_ERR,
+						"failed to open %s\n", c->name);
+					return ret;
+				}
+			}
+		}
 	}
 	if (!c) {
 		/* No device or non-matching device, create a new controller */
