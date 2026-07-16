@@ -85,6 +85,7 @@ PyObject *read_hostid();
 #include <ccan/list/list.h>
 #include <ccan/endian/endian.h>
 #include <libnvme.h>
+#include "nvme/cleanup.h"
 #include "nvme/private.h"
 #include "nvme/private-fabrics.h"
 #include "fctx_field_tables.h"
@@ -505,6 +506,136 @@ PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char *filename)
 	libnvmf_free_nbft(ctx, nbft);
 	return output;
 }
+
+/* ---- Config ---- */
+static void _config_collect_param(const char *key, const char *value,
+				  void *user_data)
+{
+	PyObject *val = PyUnicode_FromString(value);
+
+	if (val) {
+		PyDict_SetItemString((PyObject *)user_data, key, val);
+		Py_DECREF(val);
+	}
+}
+
+static PyObject *_config_conn_to_dict(const struct libnvmf_config_conn *conn)
+{
+	const struct libnvmf_params *params;
+	PyObject *params_dict;
+	PyObject *dict = PyDict_New();
+	const char *val;
+
+	if (!dict)
+		return NULL;
+
+	PyDict_SetItemStringDecRef(dict, "is_dc",
+				   PyBool_FromLong(libnvmf_config_conn_is_dc(conn)));
+	PyDict_SetItemStringDecRef(dict, "transport",
+				   PyUnicode_FromString(libnvmf_config_conn_get_transport(conn)));
+	PyDict_SetItemStringDecRef(dict, "traddr",
+				   PyUnicode_FromString(libnvmf_config_conn_get_traddr(conn)));
+	PyDict_SetItemStringDecRef(dict, "subsysnqn",
+				   PyUnicode_FromString(libnvmf_config_conn_get_subsysnqn(conn)));
+	PyDict_SetItemStringDecRef(dict, "source",
+				   PyUnicode_FromString(libnvmf_config_conn_get_source(conn)));
+
+	val = libnvmf_config_conn_get_trsvcid(conn);
+	if (val)
+		PyDict_SetItemStringDecRef(dict, "trsvcid", PyUnicode_FromString(val));
+
+	val = libnvmf_config_conn_get_host_traddr(conn);
+	if (val)
+		PyDict_SetItemStringDecRef(dict, "host_traddr", PyUnicode_FromString(val));
+
+	val = libnvmf_config_conn_get_host_iface(conn);
+	if (val)
+		PyDict_SetItemStringDecRef(dict, "host_iface", PyUnicode_FromString(val));
+
+	val = libnvmf_config_conn_get_hostnqn(conn);
+	if (val)
+		PyDict_SetItemStringDecRef(dict, "hostnqn", PyUnicode_FromString(val));
+
+	val = libnvmf_config_conn_get_hostid(conn);
+	if (val)
+		PyDict_SetItemStringDecRef(dict, "hostid", PyUnicode_FromString(val));
+
+	val = libnvmf_config_conn_get_hostsymname(conn);
+	if (val)
+		PyDict_SetItemStringDecRef(dict, "hostsymname", PyUnicode_FromString(val));
+
+	params = libnvmf_config_conn_get_params(conn);
+	if (params) {
+		params_dict = PyDict_New();
+		if (params_dict) {
+			libnvmf_params_for_each(params, _config_collect_param,
+						params_dict);
+			if (PyDict_Size(params_dict) > 0)
+				PyDict_SetItemStringDecRef(dict, "params", params_dict);
+			else
+				Py_DECREF(params_dict);
+		}
+	}
+
+	return dict;
+}
+
+static void _config_collect_conn(const struct libnvmf_config_conn *conn,
+				 void *user_data)
+{
+	PyObject *list = (PyObject *)user_data;
+	PyObject *dict;
+
+	if (PyErr_Occurred())
+		return;
+
+	dict = _config_conn_to_dict(conn);
+	if (dict) {
+		PyList_Append(list, dict);
+		Py_DECREF(dict);
+	}
+}
+
+static DEFINE_CLEANUP_FUNC(cleanup_libnvmf_config, struct libnvmf_config *,
+			   libnvmf_config_free)
+#define __cleanup_config __cleanup(cleanup_libnvmf_config)
+
+PyObject *config_read(struct libnvme_global_ctx *ctx, const char *file)
+{
+	__cleanup_config struct libnvmf_config *config = NULL;
+	PyObject *list;
+	int ret;
+
+	ret = libnvmf_config_read(ctx, file, &config);
+	if (ret < 0) {
+		PyErr_Format(PyExc_OSError, "config_read failed: %s",
+			     strerror(-ret));
+		return NULL;
+	}
+
+	list = PyList_New(0);
+	if (!list)
+		return NULL;
+
+	libnvmf_config_conn_for_each(config, _config_collect_conn, list);
+
+	if (PyErr_Occurred()) {
+		Py_DECREF(list);
+		return NULL;
+	}
+	return list;
+}
+
+void config_validate(struct libnvme_global_ctx *ctx, const char *file)
+{
+	int ret;
+
+	ret = libnvmf_config_validate(ctx, file);
+	if (ret < 0)
+		PyErr_Format(PyExc_OSError, "config_validate failed: %s",
+			     strerror(-ret));
+}
+
 void registry_update(struct libnvme_global_ctx *ctx,
 		     const char *device, const char *attr, const char *value)
 {
@@ -1094,6 +1225,18 @@ def exclusion_match(ctx, transport=None, traddr=None, trsvcid=None,
 		"Returns:\n"
 		"    A dict containing the NBFT data, or None on failure.") nbft_get;
 PyObject *nbft_get(struct libnvme_global_ctx *ctx, const char *filename);
+
+%exception config_read {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+PyObject *config_read(struct libnvme_global_ctx *ctx, const char *file = NULL);
+
+%exception config_validate {
+	$action
+	if (PyErr_Occurred()) SWIG_fail;
+}
+void config_validate(struct libnvme_global_ctx *ctx, const char *file = NULL);
 
 %exception registry_update {
 	$action

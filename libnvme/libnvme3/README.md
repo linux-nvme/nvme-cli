@@ -52,6 +52,37 @@ Topology can be traversed with iterators: `ctx.hosts()`, `host.subsystems()`,
 | `rescan()` | method | Rescan the controller and refresh its namespace list |
 | `registration_control(tas)` | method | Register / deregister / update with the DIM service |
 
+## Connection configuration
+
+`nvme.config_read(ctx, file=None)` reads and resolves the NVMe-oF connection configuration (`/etc/nvme/nvme-fabrics.conf` plus its `.d/` drop-ins, or `file` plus `<file>.d/`) and returns a list of dicts, one per resolved connection, in file order. An absent configuration is not an error — it yields an empty list.
+
+`trsvcid`, `host_traddr`, `host_iface`, `hostnqn`, `hostid`, `hostsymname`, and `params` are omitted from the dict entirely when unset, rather than set to `None` or an empty dict — use `.get()` or `in` to check for them.
+
+| Key | Description |
+|---|---|
+| `is_dc` | `True` for a Discovery Controller, `False` for an I/O Controller |
+| `transport`, `traddr`, `trsvcid` | Addressing. `traddr` may be a hostname — resolve before connecting |
+| `subsysnqn` | Subsystem NQN (the well-known discovery NQN for a DC with none configured) |
+| `host_traddr`, `host_iface` | Per-path host binding |
+| `hostnqn`, `hostid` | Host identity (the connect path's usual fallback applies when absent) |
+| `hostsymname` | The persona's symbolic name |
+| `source` | The file this connection came from |
+| `params` | dict of resolved connection parameters, e.g. `{'ctrl-loss-tmo': '600'}` |
+
+`nvme.config_validate(ctx, file=None)` dry-runs the same read, raising on the first error without returning a configuration. Diagnostics (file:line) are logged through `ctx`; raise `ctx.log_level('debug')` beforehand to see them.
+
+Both functions raise `OSError` on failure. This is a read-only API — there is no binding to write a configuration.
+
+```python
+from libnvme3 import nvme
+
+ctx = nvme.GlobalCtx()
+for conn in nvme.config_read(ctx):
+    kind = 'DC' if conn['is_dc'] else 'IOC'
+    print(f"{kind} {conn['transport']} {conn['traddr']}:{conn['trsvcid']} "
+          f"({conn['subsysnqn']})")
+```
+
 ## Exceptions
 All libnvme3 errors are reported through a small exception hierarchy:
 
@@ -77,8 +108,7 @@ except nvme.NotConnectedError:
     print("not connected")
 ```
 
-`NvmeError` is also raised by `get_supported_log_pages()` and
-`registration_control()` on failure.
+`NvmeError` is also raised by `get_supported_log_pages()` and `registration_control()` on failure.
 
 ## How to use
 
