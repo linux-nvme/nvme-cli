@@ -96,6 +96,7 @@ if want_python
         [ 'read-nbft-file', [ files('tests/test-nbft.py'), '--filename', join_paths(meson.current_source_dir(), 'tests', 'NBFT') ] ],
         [ 'object-properties-and-errors', [ files('tests/test-objects.py'), ] ],
         [ 'registry', [ files('tests/test-registry.py'), ] ],
+        [ 'config', [ files('tests/test-config.py'), ] ],
         [ 'setattr-guards', [ files('tests/test-setattr.py'), ] ],
     ]
     foreach test: py_tests
