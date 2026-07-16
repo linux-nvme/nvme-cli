@@ -12,7 +12,10 @@ all_plugins = {
   'inspur': ['plugins/inspur/inspur-nvme.c'],
   'intel': ['plugins/intel/intel-nvme.c'],
   'mangoboost': ['plugins/mangoboost/mangoboost-nvme.c'],
-  'memblaze': ['plugins/memblaze/memblaze-nvme.c'],
+  'memblaze': [
+    'plugins/memblaze/memblaze-nvme.c',
+    'plugins/memblaze/memblaze-smart-log-add-x.c',
+  ],
   'nvidia': ['plugins/nvidia/nvidia-nvme.c'],
   'seagate': ['plugins/seagate/seagate-nvme.c'],
   'shannon': ['plugins/shannon/shannon-nvme.c'],
