@@ -186,7 +186,7 @@ static int sndk_do_cap_both_telemetry_log(struct libnvme_global_ctx *ctx,
 {
 	char host_file[PATH_MAX] = {0};
 	char controller_file[PATH_MAX] = {0};
-	char tar_cmd[PATH_MAX * 3] = {0};
+	__cleanup_free char *tar_cmd = NULL;
 	char *base_name;
 	int ret = 0;
 
@@ -231,9 +231,12 @@ static int sndk_do_cap_both_telemetry_log(struct libnvme_global_ctx *ctx,
 	
 	/* Create tar file containing both telemetry files */
 	nvme_show_error("%s: Creating tar file %s", __func__, tar_file);
-	snprintf(tar_cmd, sizeof(tar_cmd), "tar -cf \"%s\" \"%s\" \"%s\"",
-		 tar_file, host_file, controller_file);
-	
+	if (asprintf(&tar_cmd, "tar -cf \"%s\" \"%s\" \"%s\"",
+		     tar_file, host_file, controller_file) < 0) {
+		ret = -ENOMEM;
+		goto cleanup_host;
+	}
+
 	ret = system(tar_cmd);
 	if (ret) {
 		nvme_show_error("%s: Failed to create tar file: %s",
