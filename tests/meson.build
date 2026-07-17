@@ -75,6 +75,19 @@ if want_fabrics and 'registry' in selected_plugins
     endif
 endif
 
+# Standalone CLI end-to-end test for "nvme config-convert". Needs no device;
+# uses an explicit --config/--output pair under /tmp instead. Requires
+# json-c since the legacy config.json reader is a no-op without it.
+if want_fabrics and json_c_dep.found()
+    _py3 = find_program('python3', required: false)
+    if _py3.found()
+        test('nvme-cli - config-convert-cli',
+             _py3,
+             args: [files('nvme_config_convert_test.py'), nvme_exe],
+             depends: nvme_exe)
+    endif
+endif
+
 mypy = find_program(
     'mypy',
     required : false,
