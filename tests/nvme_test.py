@@ -55,7 +55,43 @@ def to_decimal(value):
     return val
 
 
-class TestNVMe(unittest.TestCase):
+class TestNVMeBase(unittest.TestCase):
+
+    """
+    Shared command-execution and logging setup for nvme-cli Python tests.
+    Requires no real device -- see TestNVMe below for the hardware-backed
+    subclass that layers device setup, controller/namespace discovery, and
+    PCI validation on top.
+    """
+
+    def setUp(self):
+        self.nvme_bin = "nvme"
+        if not logging.getLogger().handlers:
+            logging.basicConfig(format='%(message)s', stream=sys.stdout)
+
+    def run_cmd(self, cmd, stdin_data=None, shell=True):
+        """ Run a command using subprocess.run, log the command and its
+            output, and return the CompletedProcess result.
+            - Args:
+                - cmd : shell command string to execute when shell=True
+                  (the default); an argv list when shell=False.
+                - stdin_data : optional string to pass as stdin input.
+                - shell : passed straight through to subprocess.run().
+            - Returns:
+                - CompletedProcess result.
+        """
+        logger.debug(f"Running: {cmd}")
+        result = subprocess.run(cmd, shell=shell, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, encoding='utf-8',
+                                input=stdin_data)
+        if result.stdout:
+            logger.debug(result.stdout)
+        if result.stderr:
+            logger.debug(result.stderr)
+        return result
+
+
+class TestNVMe(TestNVMeBase):
 
     """
     Represents a testcase, each testcase should inherit this
@@ -76,11 +112,11 @@ class TestNVMe(unittest.TestCase):
 
     def setUp(self):
         """ Pre Section for TestNVMe. """
+        super().setUp()
         # common code used in various testcases.
         self.ctrl = "XXX"
         self.ns1 = "XXX"
         self.test_log_dir = "XXX"
-        self.nvme_bin = "nvme"
         self.do_validate_pci_device = True
         self.default_nsid = 0x1
         self.flbas = 0
@@ -173,8 +209,6 @@ class TestNVMe(unittest.TestCase):
             log_level_str = config.get('log_level',
                                        'DEBUG' if config.get('debug', False) else 'WARNING')
             log_level = getattr(logging, log_level_str.upper(), logging.WARNING)
-            if not logging.getLogger().handlers:
-                logging.basicConfig(format='%(message)s', stream=sys.stdout)
             logging.getLogger().setLevel(log_level)
             logger.debug("Using nvme binary '%s'", self.nvme_bin)
 
@@ -196,25 +230,6 @@ class TestNVMe(unittest.TestCase):
             os.makedirs(self.test_log_dir)
         sys.stdout = TestNVMeLogger(self.test_log_dir + "/" + "stdout.log")
         sys.stderr = TestNVMeLogger(self.test_log_dir + "/" + "stderr.log")
-
-    def run_cmd(self, cmd, stdin_data=None):
-        """ Run a shell command using subprocess.run, log the command and its
-            output, and return the CompletedProcess result.
-            - Args:
-                - cmd : shell command string to execute.
-                - stdin_data : optional string to pass as stdin input.
-            - Returns:
-                - CompletedProcess result.
-        """
-        logger.debug(f"Running: {cmd}")
-        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, encoding='utf-8',
-                                input=stdin_data)
-        if result.stdout:
-            logger.debug(result.stdout)
-        if result.stderr:
-            logger.debug(result.stderr)
-        return result
 
     def parse_json_output(self, output, context, expected_type=dict):
         """Parse JSON output and fail test clearly on malformed or wrong-typed data.
