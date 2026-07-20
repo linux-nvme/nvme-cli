@@ -664,14 +664,6 @@ if want_nvme
         configuration: substs,
     )
 
-    disc = configure_file(
-        input: 'etc/discovery.conf.in',
-        output: 'discovery.conf',
-        configuration: substs,
-        install: true,
-        install_dir: join_paths(sysconfdir, 'nvme'),
-    )
-
     dracut_files = [
         '70-nvmf-autoconnect.conf',
     ]
