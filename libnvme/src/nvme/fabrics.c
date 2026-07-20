@@ -567,6 +567,8 @@ __libnvme_public void libnvmf_context_free(struct libnvmf_context *fctx)
 	if (!fctx)
 		return;
 
+	free(fctx->hostnqn);
+	free(fctx->hostid);
 	free(fctx->tls_key);
 	free(fctx);
 }
@@ -626,10 +628,34 @@ static const char *hostid_from_hostnqn(const char *hostnqn)
 __libnvme_public int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
 		const char *hostnqn, const char *hostid)
 {
-	fctx->hostnqn = hostnqn;
+	char *hnqn;
+	char *hid;
+
+	if (!hostnqn)
+		return -EINVAL;
+
+	hnqn = strdup(hostnqn);
+	if (!hnqn)
+		return -ENOMEM;
+
 	if (!hostid)
 		hostid = hostid_from_hostnqn(hostnqn);
-	fctx->hostid = hostid;
+
+	if (!hostid) {
+		free(hnqn);
+		return -EINVAL;
+	}
+
+	hid = strdup(hostid);
+	if (!hid) {
+		free(hnqn);
+		return -ENOMEM;
+	}
+
+	free(fctx->hostnqn);
+	free(fctx->hostid);
+	fctx->hostnqn = hnqn;
+	fctx->hostid = hid;
 
 	return 0;
 }
