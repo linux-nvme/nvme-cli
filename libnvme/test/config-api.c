@@ -23,6 +23,7 @@
 
 #include <nvme/lib.h>
 #include <nvme/config.h>
+#include <nvme/fabrics.h>
 #include <nvme/nvme-types-fabrics.h>
 #include <nvme/tid.h>
 
@@ -469,6 +470,100 @@ static bool test_emit(struct libnvme_global_ctx *ctx, const struct fixture *fx)
 	return pass;
 }
 
+/* Built ad hoc, not from the fixture files, to cover every key class in
+ * one pass: ints, bools, an explicit reset, and the five crypto keys
+ * that share one setter.
+ */
+static bool test_apply_params(struct libnvme_global_ctx *ctx)
+{
+	struct libnvmf_context *fctx;
+	struct libnvmf_params *params;
+	bool pass = true;
+
+	printf("test_apply_params:\n");
+
+	params = libnvmf_params_new();
+	assert(params);
+	/* Hex, matching check_int()'s own base-0 parsing (config-ini.c). */
+	assert(!libnvmf_params_set(params, "nr-io-queues", "0x10"));
+	assert(!libnvmf_params_set(params, "keep-alive-tmo", "30"));
+	assert(!libnvmf_params_set(params, "tls", "true"));
+	assert(!libnvmf_params_set(params, "hdr-digest", "false"));
+	/* Explicit resets: must be skipped, not applied as "0". */
+	assert(!libnvmf_params_set(params, "tos", ""));
+	assert(!libnvmf_params_set(params, "ctrl-loss-tmo", ""));
+	/* The five crypto keys: one shared setter, must not clobber. */
+	assert(!libnvmf_params_set(params, "keyring", "my-keyring"));
+	assert(!libnvmf_params_set(params, "tls-key", "deadbeef"));
+	assert(!libnvmf_params_set(params, "tls-key-identity",
+				    "NVMe1R02 my-id"));
+	assert(!libnvmf_params_set(params, "dhchap-secret", "DHHC-1:00:host:"));
+	assert(!libnvmf_params_set(params, "dhchap-ctrl-secret",
+				    "DHHC-1:00:ctrl:"));
+
+	assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
+
+	if (libnvmf_context_apply_params(fctx, params)) {
+		printf(" - apply failed [FAIL]\n");
+		pass = false;
+		goto out;
+	}
+
+	if (libnvmf_context_get_nr_io_queues(fctx) != 0x10 ||
+	    libnvmf_context_get_keep_alive_tmo(fctx) != 30) {
+		printf(" - int fields (hex + decimal) [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - int fields applied (hex + decimal) [PASS]\n");
+	}
+
+	if (!libnvmf_context_get_tls(fctx) ||
+	    libnvmf_context_get_hdr_digest(fctx)) {
+		printf(" - bool fields [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - bool fields applied [PASS]\n");
+	}
+
+	/* A fresh context starts at tos=-1, ctrl-loss-tmo=600 (see
+	 * libnvmf_default_config()); a reset must leave both untouched,
+	 * not overwrite them with 0.
+	 */
+	if (libnvmf_context_get_tos(fctx) != -1 ||
+	    libnvmf_context_get_ctrl_loss_tmo(fctx) != NVMF_DEF_CTRL_LOSS_TMO) {
+		printf(" - reset skipped, library default kept [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - reset skipped, library default kept [PASS]\n");
+	}
+
+	if (strcmp(libnvmf_context_get_keyring(fctx), "my-keyring") ||
+	    strcmp(libnvmf_context_get_tls_key(fctx), "deadbeef") ||
+	    strcmp(libnvmf_context_get_tls_key_identity(fctx),
+		   "NVMe1R02 my-id") ||
+	    strcmp(libnvmf_context_get_hostkey(fctx), "DHHC-1:00:host:") ||
+	    strcmp(libnvmf_context_get_ctrlkey(fctx), "DHHC-1:00:ctrl:")) {
+		printf(" - crypto fields (shared setter, no clobber) [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - crypto fields (shared setter, no clobber) [PASS]\n");
+	}
+
+out:
+	if (libnvmf_context_apply_params(NULL, params) != -EINVAL ||
+	    libnvmf_context_apply_params(fctx, NULL) != -EINVAL) {
+		printf(" - NULL rejected [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - NULL rejected [PASS]\n");
+	}
+
+	libnvmf_context_free(fctx);
+	libnvmf_params_free(params);
+
+	return pass;
+}
+
 static bool test_edge_cases(struct libnvme_global_ctx *ctx,
 			    const struct fixture *fx)
 {
@@ -545,6 +640,7 @@ int main(void)
 	pass &= test_resolve_discovered(ctx, &fx);
 	pass &= test_validate(ctx, &fx);
 	pass &= test_emit(ctx, &fx);
+	pass &= test_apply_params(ctx);
 	pass &= test_edge_cases(ctx, &fx);
 
 	fixture_destroy(&fx);

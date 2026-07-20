@@ -10,6 +10,7 @@
 #include <stdbool.h>
 
 struct libnvme_global_ctx;
+struct libnvmf_context;
 struct libnvmf_tid;
 
 /**
@@ -302,6 +303,21 @@ int libnvmf_connect_args_emit(const struct libnvmf_tid *tid,
 		const struct libnvmf_params *params,
 		void (*callback)(const char *arg, void *user_data),
 		void *user_data);
+
+/**
+ * libnvmf_context_apply_params() - apply a parameter set to a connect
+ * context.
+ * @fctx:   fabrics context to update
+ * @params: a resolved parameter set
+ *
+ * Applies every set key via its typed setter. An unset key is left
+ * untouched, and an explicit reset (empty string) is skipped, since
+ * @fctx already carries the kernel default either way.
+ *
+ * Return: 0 on success, -EINVAL if @fctx or @params is NULL.
+ */
+int libnvmf_context_apply_params(struct libnvmf_context *fctx,
+		const struct libnvmf_params *params);
 
 /**
  * struct libnvmf_config_emitter - Configuration emitter.
