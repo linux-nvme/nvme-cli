@@ -607,7 +607,7 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 		 */
 		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 			"creating detached subsystem '%s'\n", name);
-		ret = libnvme_get_host(ctx, NULL, NULL, &h);
+		ret = libnvme_get_host(ctx, ctx->hostnqn, ctx->hostid, &h);
 		if (ret)
 			return ret;
 		s = nvme_alloc_subsystem(h, name, subsysnqn);

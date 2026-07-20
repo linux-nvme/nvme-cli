@@ -10071,11 +10071,10 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		return err;
 
 	if (!cfg.nqn) {
-		cfg.nqn = hnqn = libnvmf_read_hostnqn(ctx);
-		if (!cfg.nqn) {
-			nvme_show_error("Could not read host NQN");
-			return -ENOENT;
-		}
+		err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, NULL);
+		if (err)
+			return err;
+		cfg.nqn = hnqn;
 	}
 
 	err = libnvmf_gen_dhchap_key(ctx, cfg.nqn, cfg.hmac,
@@ -10334,13 +10333,6 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 			nvme_show_error("No subsystem NQN specified");
 			return -EINVAL;
 		}
-		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = libnvmf_read_hostnqn(ctx);
-			if (!cfg.hostnqn) {
-				nvme_show_error("Failed to read host NQN");
-				return -EINVAL;
-			}
-		}
 	}
 	if (cfg.hmac == 2)
 		key_len = 48;
@@ -10364,6 +10356,13 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 	nvme_show_result("%s", encoded_key);
 
 	if (cfg.insert) {
+		if (!cfg.hostnqn) {
+			err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, NULL);
+			if (err)
+				return err;
+			cfg.hostnqn = hnqn;
+		}
+
 		if (cfg.compat)
 			err = libnvmf_insert_tls_key_compat(ctx, cfg.keyring,
 				cfg.keytype, cfg.hostnqn,
@@ -10476,11 +10475,10 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.subsysnqn) {
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = libnvmf_read_hostnqn(ctx);
-			if (!cfg.hostnqn) {
-				nvme_show_error("Failed to read host NQN");
-				return -EINVAL;
-			}
+			err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, NULL);
+			if (err)
+				return err;
+			cfg.hostnqn = hnqn;
 		}
 	} else {
 		nvme_show_error("Need to specify a subsystem NQN");

@@ -206,16 +206,9 @@ __libnvme_public int libnvme_get_host(
 		struct libnvme_global_ctx *ctx, const char *hostnqn,
 		const char *hostid, libnvme_host_t *host)
 {
-	__cleanup_free char *hnqn = NULL;
-	__cleanup_free char *hid = NULL;
 	struct libnvme_host *h;
-	int err;
 
-	err = libnvmf_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
-	if (err)
-		return err;
-
-	h = libnvme_lookup_host(ctx, hnqn, hid);
+	h = libnvme_lookup_host(ctx, hostnqn, hostid);
 	if (!h)
 		return -ENOMEM;
 
@@ -432,6 +425,10 @@ __libnvme_public int libnvme_scan_ctrl(
 
 	hostnqn = libnvme_get_attr(path, "hostnqn");
 	hostid = libnvme_get_attr(path, "hostid");
+	if (!hostnqn)
+		hostnqn = xstrdup(ctx->hostnqn);
+	if (!hostid)
+		hostid = xstrdup(ctx->hostid);
 	ret = libnvme_get_host(ctx, hostnqn, hostid, &h);
 	if (ret)
 		return ret;
