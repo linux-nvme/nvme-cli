@@ -464,8 +464,7 @@ static void consume_conn(const struct libnvmf_config_conn *conn,
 	if (st->mode == CONSUME_CONNECT_ONLY) {
 		err = libnvmf_connect(st->ctx, fctx);
 	} else if (is_dc) {
-		libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log,
-				NULL, NULL, NULL);
+		libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log);
 		libnvmf_context_set_default_max_discovery_retries(fctx,
 				MAX_DISC_RETRIES);
 		libnvmf_context_set_default_keep_alive_timeout(fctx,
@@ -493,8 +492,8 @@ record_err:
  * nvme_config_convert_discovery_args(). @line is modified in place (strsep()).
  *
  * A blank line, a comment, or one with neither transport nor traddr is
- * silently skipped (0, nothing added): matches hook_parser_next_line()'s
- * own tolerance for a discovery.conf that mixes real entries with commentary.
+ * silently skipped (0, nothing added), tolerating a discovery.conf that
+ * mixes real entries with commentary.
  */
 int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 		char *line)
@@ -603,8 +602,7 @@ static int create_discovery_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		return err;
 
-	err = libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log,
-		NULL, NULL, NULL);
+	err = libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log);
 	if (err)
 		goto err;
 

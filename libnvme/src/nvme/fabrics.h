@@ -377,9 +377,6 @@ void libnvmf_context_free(struct libnvmf_context *fctx);
  * libnvmf_context_set_discovery_hooks() - Set discovery hooks for context
  * @fctx: Fabrics context
  * @discovery_log: Hook for discovery log events
- * @parser_init: Hook to initialize parser
- * @parser_cleanup: Hook to cleanup parser
- * @parser_next_line: Hook to parse next line
  *
  * Sets the hooks used during discovery operations for the given context.
  *
@@ -388,13 +385,7 @@ void libnvmf_context_free(struct libnvmf_context *fctx);
 int libnvmf_context_set_discovery_hooks(struct libnvmf_context *fctx,
 		void (*discovery_log)(struct libnvmf_context *fctx,
 			bool connect, struct nvmf_discovery_log *log,
-			uint64_t numrec, void *user_data),
-		int (*parser_init)(struct libnvmf_context *fctx,
-			void *user_data),
-		void (*parser_cleanup)(struct libnvmf_context *fctx,
-			void *user_data),
-		int (*parser_next_line)(struct libnvmf_context *fctx,
-			void *user_data));
+			uint64_t numrec, void *user_data));
 
 /**
  * libnvmf_context_set_connection() - Set connection parameters for context
@@ -559,34 +550,6 @@ int libnvmf_discovery(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect, bool force);
 
 /**
- * libnvmf_discovery_config_json() - Perform discovery using JSON config
- * @ctx: Global context
- * @fctx: Fabrics context
- * @connect: Whether to connect discovered subsystems
- * @force: Force discovery even if already connected
- *
- * Performs discovery using a JSON configuration.
- *
- * Return: 0 on success, negative error code otherwise.
- */
-int libnvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect, bool force);
-
-/**
- * libnvmf_discovery_config_file() - Perform discovery using config file
- * @ctx: Global context
- * @fctx: Fabrics context
- * @connect: Whether to connect discovered subsystems
- * @force: Force discovery even if already connected
- *
- * Performs discovery using a configuration file.
- *
- * Return: 0 on success, negative error code otherwise.
- */
-int libnvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect, bool force);
-
-/**
  * libnvmf_discovery_nbft() - Perform discovery using NBFT
  * @ctx: Global context
  * @fctx: Fabrics context
@@ -634,18 +597,6 @@ int libnvmf_connect(struct libnvme_global_ctx *ctx,
  * Return: 0 on success, -1 on failure.
  */
 int libnvmf_disconnect_ctrl(libnvme_ctrl_t c);
-
-/**
- * libnvmf_connect_config_json() - Connect using JSON config
- * @ctx: Global context
- * @fctx: Fabrics context
- *
- * Connects to the fabrics subsystem using a JSON configuration.
- *
- * Return: 0 on success, negative error code otherwise.
- */
-int libnvmf_connect_config_json(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx);
 
 /**
  * libnvmf_config_modify() - Modify and update the configurtion
