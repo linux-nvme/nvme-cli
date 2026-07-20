@@ -392,10 +392,14 @@ __libnvme_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 			 hid, hnqn);
 	}
 
-	*hostid = hid;
-	*hostnqn = hnqn;
-	hid = NULL;
-	hnqn = NULL;
+	if (hostid) {
+		*hostid = hid;
+		hid = NULL;
+	}
+	if (hostnqn) {
+		*hostnqn = hnqn;
+		hnqn = NULL;
+	}
 
 	return 0;
 }
