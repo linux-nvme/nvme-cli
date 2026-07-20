@@ -14,7 +14,6 @@ SYNOPSIS
 			[--config=<filename> | -J <cfg>]
 			[--persistent | -p]
 			[--quiet]
-			[--dump-config | -O]
 			[--nbft]
 			[--no-nbft]
 			[--nbft-path=<STR>]
@@ -69,10 +68,6 @@ OPTIONS
 
 --quiet::
 	Suppress error messages.
-
--O::
---dump-config::
-	Print out resulting JSON configuration file to stdout.
 
 --nbft::
 	Only look at NBFT tables
