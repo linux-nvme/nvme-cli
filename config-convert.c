@@ -475,6 +475,89 @@ static int install_converted(struct libnvmf_config_emitter *emitter,
 	return 0;
 }
 
+int nvme_config_convert_auto(struct libnvme_global_ctx *ctx,
+		const char *config_file, char **ini_path)
+{
+	struct libnvmf_config_emitter *emitter;
+	const char *json_path = config_file;
+	const char *ext;
+	bool is_default;
+	bool have_json, have_disc;
+	bool converted_json = false, converted_disc = false;
+	int ret;
+
+	*ini_path = NULL;
+
+	is_default = !strcmp(config_file, PATH_NVMF_INI);
+	if (is_default) {
+		json_path = PATH_NVMF_CONFIG;
+		*ini_path = strdup(PATH_NVMF_INI);
+	} else {
+		ext = strrchr(config_file, '.');
+		if (!ext || strcmp(ext, ".json")) {
+			*ini_path = strdup(config_file);
+			return *ini_path ? 0 : -ENOMEM;
+		}
+
+		if (asprintf(ini_path, "%.*s.conf",
+			     (int)(ext - config_file), config_file) < 0)
+			return -ENOMEM;
+	}
+	if (!*ini_path)
+		return -ENOMEM;
+
+	if (!access(*ini_path, F_OK))
+		return 0;
+
+	have_json = !access(json_path, F_OK);
+	have_disc = is_default && !access(PATH_NVMF_DISC, F_OK);
+	if (!have_json && !have_disc) {
+		/* Default path: nothing to convert is fine, proceed empty.
+		 * Custom path: never existed and never converted is a
+		 * real error, not silent-empty.
+		 */
+		if (!is_default && !already_converted(json_path)) {
+			nvme_show_error("%s: no such file", json_path);
+			return -ENOENT;
+		}
+		return 0;
+	}
+
+	emitter = libnvmf_config_emit_new(ctx);
+	if (!emitter)
+		return -ENOMEM;
+
+	if (have_json) {
+		ret = nvme_config_convert_json(emitter, json_path);
+		if (ret)
+			goto out;
+		converted_json = true;
+	}
+
+	if (have_disc) {
+		ret = nvme_config_convert_discovery(emitter, PATH_NVMF_DISC);
+		if (ret)
+			goto out;
+		converted_disc = true;
+	}
+
+	ret = install_converted(emitter, *ini_path, json_path, PATH_NVMF_DISC,
+				 converted_json, converted_disc, false);
+	if (ret)
+		goto out;
+
+	nvme_show_error(
+		"no %s found; converted legacy %s%s%s to it -- the original is renamed to *.converted, use %s from now on",
+		*ini_path, converted_json ? json_path : "",
+		(converted_json && converted_disc) ? " and " : "",
+		converted_disc ? PATH_NVMF_DISC : "", *ini_path);
+
+out:
+	libnvmf_config_emit_free(emitter);
+
+	return ret;
+}
+
 int nvme_config_convert(const char *desc, int argc, char **argv)
 {
 	char *config_file = NULL;

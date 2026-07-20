@@ -2,6 +2,8 @@
 Description=Connect NVMe-oF subsystems automatically during boot
 ConditionPathExists=|@SYSCONFDIR@/nvme/config.json
 ConditionPathExists=|@SYSCONFDIR@/nvme/discovery.conf
+ConditionPathExists=|@SYSCONFDIR@/nvme/nvme-fabrics.conf
+ConditionDirectoryNotEmpty=|@SYSCONFDIR@/nvme/nvme-fabrics.conf.d
 Wants=modprobe@nvme_fabrics.service
 After=modprobe@nvme_fabrics.service
 After=network-online.target

@@ -33,6 +33,23 @@ int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
 		const struct nvmf_args *fa);
 
 /*
+ * Auto-convert on first use, called by connect-all/discover/connect
+ * before reading @config_file.
+ *
+ * @ini_path is always a fresh, caller-owned allocation, even when
+ * nothing converted. No-op if @config_file isn't a legacy ".json" or
+ * the destination already exists.
+ *
+ * The default path (@config_file == PATH_NVMF_INI) converts config.json
+ * and discovery.conf together; any other (an explicit "--config
+ * x.json") converts only that file, leaving discovery.conf alone.
+ *
+ * Prints a notice to stderr on success; stdout stays silent.
+ */
+int nvme_config_convert_auto(struct libnvme_global_ctx *ctx,
+		const char *config_file, char **ini_path);
+
+/*
  * Implement the "nvme config-convert" command.
  *
  * Convert the legacy config.json and/or discovery.conf configuration files

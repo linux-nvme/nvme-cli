@@ -564,6 +564,67 @@ out:
 	return pass;
 }
 
+static bool test_set_connection_from_tid(struct libnvme_global_ctx *ctx)
+{
+	struct libnvmf_context *fctx;
+	struct libnvmf_tid *tid;
+	bool pass = true;
+
+	printf("test_set_connection_from_tid:\n");
+
+	tid = libnvmf_tid_from_fields("tcp", "10.0.0.9", "4420",
+			"nqn.2014-08.org.nvmexpress:subsys",
+			"10.0.0.1", "eth0",
+			"nqn.2014-08.org.nvmexpress:host",
+			"2cd2c43b-a90a-45c1-a8cd-86b33ab273b5");
+	assert(tid);
+
+	assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
+
+	if (libnvmf_context_set_connection_from_tid(fctx, tid)) {
+		printf(" - set failed [FAIL]\n");
+		pass = false;
+		goto out;
+	}
+
+	if (strcmp(libnvmf_context_get_transport(fctx), "tcp") ||
+	    strcmp(libnvmf_context_get_traddr(fctx), "10.0.0.9") ||
+	    strcmp(libnvmf_context_get_trsvcid(fctx), "4420") ||
+	    strcmp(libnvmf_context_get_subsysnqn(fctx),
+		   "nqn.2014-08.org.nvmexpress:subsys") ||
+	    strcmp(libnvmf_context_get_host_traddr(fctx), "10.0.0.1") ||
+	    strcmp(libnvmf_context_get_host_iface(fctx), "eth0")) {
+		printf(" - addressing fields [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - addressing fields applied [PASS]\n");
+	}
+
+	if (strcmp(libnvmf_context_get_hostnqn(fctx),
+		   "nqn.2014-08.org.nvmexpress:host") ||
+	    strcmp(libnvmf_context_get_hostid(fctx),
+		   "2cd2c43b-a90a-45c1-a8cd-86b33ab273b5")) {
+		printf(" - identity fields [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - identity fields applied [PASS]\n");
+	}
+
+out:
+	if (libnvmf_context_set_connection_from_tid(NULL, tid) != -EINVAL ||
+	    libnvmf_context_set_connection_from_tid(fctx, NULL) != -EINVAL) {
+		printf(" - NULL rejected [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - NULL rejected [PASS]\n");
+	}
+
+	libnvmf_context_free(fctx);
+	libnvmf_tid_free(tid);
+
+	return pass;
+}
+
 static bool test_edge_cases(struct libnvme_global_ctx *ctx,
 			    const struct fixture *fx)
 {
@@ -641,6 +702,7 @@ int main(void)
 	pass &= test_validate(ctx, &fx);
 	pass &= test_emit(ctx, &fx);
 	pass &= test_apply_params(ctx);
+	pass &= test_set_connection_from_tid(ctx);
 	pass &= test_edge_cases(ctx, &fx);
 
 	fixture_destroy(&fx);

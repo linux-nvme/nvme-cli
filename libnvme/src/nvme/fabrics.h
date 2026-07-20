@@ -29,6 +29,7 @@
  * operations.
  */
 struct libnvmf_context;
+struct libnvmf_tid;
 
 /**
  * libnvmf_generate_hostnqn() - Generate a machine specific host nqn
@@ -426,6 +427,20 @@ int libnvmf_context_set_connection(struct libnvmf_context *fctx,
  */
 int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
 		const char *hostnqn, const char *hostid);
+
+/**
+ * libnvmf_context_set_connection_from_tid() - Set connection and identity
+ * from a TID
+ * @fctx: Fabrics context
+ * @tid:  Transport ID to copy from
+ *
+ * Equivalent to libnvmf_context_set_connection() followed by
+ * libnvmf_context_set_hostnqn(), reading every field from @tid.
+ *
+ * Return: 0 on success, -EINVAL if @fctx or @tid is NULL.
+ */
+int libnvmf_context_set_connection_from_tid(struct libnvmf_context *fctx,
+		const struct libnvmf_tid *tid);
 
 /**
  * libnvmf_context_set_crypto() - Set cryptographic parameters for context

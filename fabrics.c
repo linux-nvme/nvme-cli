@@ -19,7 +19,6 @@
  * Fabrics specification standard.
  */
 
-#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -58,7 +57,6 @@
 #include "logging.h"
 #include "util/sighdl.h"
 
-#define PATH_NVMF_RUNDIR	RUNDIR "/nvme"
 #define MAX_DISC_ARGS		32
 #define MAX_DISC_RETRIES	10
 
@@ -99,7 +97,7 @@ static const char *nvmf_hdr_digest	= "enable transport protocol header digest (T
 static const char *nvmf_data_digest	= "enable transport protocol data digest (TCP transport)";
 static const char *nvmf_tls		= "enable TLS";
 static const char *nvmf_concat		= "enable secure concatenation";
-static const char *nvmf_config_file	= "Use specified JSON configuration file or 'none' to disable";
+static const char *nvmf_config_file	= "Use specified INI configuration file (auto-converts a legacy .json) or 'none' to disable";
 
 #define NVMF_ARGS(n, f, ...)                                                                  \
 	NVME_ARGS(n,                                                                              \
@@ -168,12 +166,9 @@ static int setup_common_context(struct libnvmf_context *fctx,
 		struct nvmf_args *fa);
 
 struct hook_fabrics_data {
-	struct nvmf_args *fa;
 	nvme_print_flags_t flags;
 	bool quiet;
 	char *raw;
-	char **argv;
-	FILE *f;
 	bool idempotent;
 };
 
@@ -250,33 +245,6 @@ static void hook_discovery_log(struct libnvmf_context *fctx,
 		save_discovery_log(hfd->raw, log);
 	else if (!connect)
 		nvme_show_discovery_log(log, numrec, hfd->flags);
-}
-
-static int hook_parser_init(struct libnvmf_context *dctx, void *user_data)
-{
-	struct hook_fabrics_data *hfd = user_data;
-
-	hfd->f = fopen(PATH_NVMF_DISC, "r");
-	if (hfd->f == NULL) {
-		nvme_show_error("No params given and no %s", PATH_NVMF_DISC);
-		return -ENOENT;
-	}
-
-	hfd->argv = calloc(MAX_DISC_ARGS, sizeof(char *));
-	if (!hfd->argv)
-		return -1;
-
-	hfd->argv[0] = "discover";
-
-	return 0;
-}
-
-static void hook_parser_cleanup(struct libnvmf_context *fctx, void *user_data)
-{
-	struct hook_fabrics_data *hfd = user_data;
-
-	free(hfd->argv);
-	fclose(hfd->f);
 }
 
 /*
@@ -391,57 +359,131 @@ static int set_fabrics_options(struct libnvmf_context *fctx,
 	return 0;
 }
 
-static int hook_parser_next_line(struct libnvmf_context *fctx, void *user_data)
+enum consume_mode {
+	/* connect-all/discover: DC entries discover; IOC entries connect,
+	 * but only for connect-all.
+	 */
+	CONSUME_ROLE_BASED,
+	/* nvme connect -J: every entry connects directly, no discovery. */
+	CONSUME_CONNECT_ONLY,
+};
+
+struct consume_state {
+	struct libnvme_global_ctx *ctx;
+	enum consume_mode mode;
+	bool connect;
+	bool force;
+	nvme_print_flags_t flags;
+	char *raw;
+	const char *hostnqn;
+	const char *hostid;
+	int err;
+};
+
+/*
+ * Resolve traddr (if it's a hostname), settle host identity (falling back
+ * to @default_hostnqn/@default_hostid when @conn's own persona doesn't set
+ * one), then build the TID -- which doubles as validator/sanitizer:
+ * rejects a non-numeric traddr or host_traddr on tcp/rdma, canonicalizes a
+ * numeric one.
+ */
+static int build_conn_tid(const struct libnvmf_config_conn *conn,
+		const char *default_hostnqn, const char *default_hostid,
+		struct libnvmf_tid **tid)
 {
-	struct hook_fabrics_data *hfd = user_data;
-	struct nvmf_args fa;
-	char *ptr, *p;
-	static char line[4096];
-	int argc, ret = 0;
-	bool force = false;
+	const char *transport, *traddr, *hostnqn, *hostid;
+	int err;
 
-	NVMF_ARGS(opts, fa,
-		  OPT_FLAG("persistent",   'p', &persistent, "persistent discovery connection"),
-		  OPT_FLAG("force",          0, &force,      "Force persistent discovery controller creation"));
+	transport = libnvmf_config_conn_get_transport(conn);
+	traddr = libnvmf_config_conn_get_traddr(conn);
 
-	memcpy(&fa, hfd->fa, sizeof(fa));
-	do {
-		do {
-			if (fgets(line, sizeof(line), hfd->f) == NULL)
-				return -EOF;
+	/* Only traddr (remote target) may be a hostname (not host_traddr) */
+	err = nvmf_resolve_addr(transport, &traddr);
+	if (err)
+		return err;
 
-			if (line[0] == '#' || line[0] == '\n')
-				continue;
+	hostnqn = libnvmf_config_conn_get_hostnqn(conn);
+	if (!hostnqn)
+		hostnqn = default_hostnqn;
+	hostid = libnvmf_config_conn_get_hostid(conn);
+	if (!hostid)
+		hostid = default_hostid;
 
-			argc = 1;
-			p = line;
-			while ((ptr = strsep(&p, " =\n")) != NULL)
-				hfd->argv[argc++] = ptr;
-			hfd->argv[argc] = NULL;
+	*tid = libnvmf_tid_from_fields(transport, traddr,
+			libnvmf_config_conn_get_trsvcid(conn),
+			libnvmf_config_conn_get_subsysnqn(conn),
+			libnvmf_config_conn_get_host_traddr(conn),
+			libnvmf_config_conn_get_host_iface(conn),
+			hostnqn, hostid);
 
-			fa.subsysnqn = NVME_DISC_SUBSYS_NAME;
-			if (argconfig_parse(argc, hfd->argv, "config", opts))
-				continue;
-		} while (!fa.transport && !fa.traddr);
+	return *tid ? 0 : -EINVAL;
+}
 
-		if (!fa.trsvcid)
-			fa.trsvcid = libnvmf_get_default_trsvcid(fa.transport,
-								 true);
+/* libnvmf_config_conn_for_each() callback: settle addressing/identity,
+ * check exclusion, then discover or connect.
+ */
+static void consume_conn(const struct libnvmf_config_conn *conn,
+		void *user_data)
+{
+	struct consume_state *st = user_data;
+	bool is_dc = libnvmf_config_conn_is_dc(conn);
+	struct hook_fabrics_data hfd = { .flags = st->flags, .raw = st->raw };
+	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
+	__cleanup_nvmf_tid struct libnvmf_tid *tid = NULL;
+	int err;
 
-		/*
-		 * An unresolvable hostname fails only its own line; keep
-		 * connecting the remaining ones.
-		 */
-	} while (nvmf_resolve_args(&fa));
+	if (st->mode == CONSUME_ROLE_BASED && !is_dc && !st->connect)
+		return;
 
-	ret = setup_common_context(fctx, &fa);
-	if (ret)
-		return ret;
+	err = build_conn_tid(conn, st->hostnqn, st->hostid, &tid);
+	if (err)
+		goto record_err;
 
-	libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log,
-		hook_parser_init, hook_parser_cleanup, hook_parser_next_line);
+	/* Auto-connect (both modes) enforces exclusion, unlike a single
+	 * explicit "nvme connect" (see fabrics_connect()'s exempt-with-note
+	 * case).
+	 */
+	if (libnvmf_exclusion_match(st->ctx, tid)) {
+		nvme_show_verbose_info("%s: on the exclusion list, skipping",
+				libnvmf_config_conn_get_source(conn));
+		return;
+	}
 
-	return 0;
+	err = libnvmf_context_create(st->ctx, hook_decide_retry, hook_connected,
+			hook_already_connected, &hfd, &fctx);
+	if (err)
+		goto record_err;
+
+	err = libnvmf_context_set_connection_from_tid(fctx, tid);
+	if (!err)
+		err = libnvmf_context_apply_params(fctx,
+				libnvmf_config_conn_get_params(conn));
+	if (err)
+		goto record_err;
+
+	if (st->mode == CONSUME_CONNECT_ONLY) {
+		err = libnvmf_connect(st->ctx, fctx);
+	} else if (is_dc) {
+		libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log,
+				NULL, NULL, NULL);
+		libnvmf_context_set_default_max_discovery_retries(fctx,
+				MAX_DISC_RETRIES);
+		libnvmf_context_set_default_keep_alive_timeout(fctx,
+				NVMF_DEF_DISC_TMO);
+		err = libnvmf_discovery(st->ctx, fctx, st->connect, st->force);
+	} else {
+		err = libnvmf_connect(st->ctx, fctx);
+	}
+	if (err == -ENVME_CONNECT_ALREADY)
+		err = 0;
+
+record_err:
+	if (err) {
+		nvme_show_error("%s: %s", libnvmf_config_conn_get_source(conn),
+				libnvme_strerror(-err));
+		if (!st->err)
+			st->err = err;
+	}
 }
 
 /*
@@ -562,7 +604,7 @@ static int create_discovery_context(struct libnvme_global_ctx *ctx,
 		return err;
 
 	err = libnvmf_context_set_discovery_hooks(fctx, hook_discovery_log,
-		hook_parser_init, hook_parser_cleanup, hook_parser_next_line);
+		NULL, NULL, NULL);
 	if (err)
 		goto err;
 
@@ -580,49 +622,6 @@ static int create_discovery_context(struct libnvme_global_ctx *ctx,
 err:
 	libnvmf_context_free(fctx);
 	return err;
-}
-
-static int nvme_read_volatile_config(struct libnvme_global_ctx *ctx)
-{
-	char *filename, *ext;
-	struct dirent *dir;
-	DIR *d;
-	int ret = -ENOENT;
-
-	d = opendir(PATH_NVMF_RUNDIR);
-	if (!d)
-		return -ENOTDIR;
-
-	while ((dir = readdir(d))) {
-		if (dir->d_type != DT_REG)
-			continue;
-
-		ext = strchr(dir->d_name, '.');
-		if (!ext || strcmp("json", ext + 1))
-			continue;
-
-		if (asprintf(&filename, "%s/%s", PATH_NVMF_RUNDIR, dir->d_name) < 0) {
-			ret = -ENOMEM;
-			break;
-		}
-
-		if (libnvme_read_config(ctx, filename))
-			ret = 0;
-
-		free(filename);
-	}
-	closedir(d);
-
-	return ret;
-}
-
-static int nvme_read_config_checked(struct libnvme_global_ctx *ctx,
-				    const char *filename)
-{
-	if (access(filename, F_OK))
-		return -errno;
-
-	return libnvme_read_config(ctx, filename);
 }
 
 static void load_nvme_fabrics_module(void)
@@ -669,21 +668,82 @@ unref:
 #endif
 }
 
+/*
+ * The config-driven half of a bare "connect-all"/"discover": auto-convert
+ * a legacy file if needed, settle host identity once, then discover or
+ * connect every resolved connection in @config_file.
+ */
+static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
+		char *config_file, const char *hostnqn_arg,
+		const char *hostid_arg, bool connect, bool force,
+		nvme_print_flags_t flags)
+{
+	__cleanup_free char *ini_path = NULL;
+	__cleanup_free char *hostnqn = NULL;
+	__cleanup_free char *hostid = NULL;
+	struct libnvmf_config *cfg;
+	struct consume_state st;
+	bool is_default_config;
+	int ret;
+
+	/* Custom --config failing is fatal (explicit ask). Default path
+	 * failing isn't: boot-time connect-all must keep going.
+	 */
+	is_default_config = !strcmp(config_file, PATH_NVMF_INI);
+
+	ret = nvme_config_convert_auto(ctx, config_file, &ini_path);
+	if (ret) {
+		nvme_show_error("auto-conversion failed: %s",
+			libnvme_strerror(-ret));
+		if (!is_default_config)
+			return ret;
+	}
+	config_file = ini_path;
+
+	ret = libnvmf_host_get_ids(ctx, hostnqn_arg, hostid_arg,
+		&hostnqn, &hostid);
+	if (ret) {
+		nvme_show_error("failed to determine host identity: %s",
+			libnvme_strerror(-ret));
+		return ret;
+	}
+
+	ret = libnvmf_config_read(ctx, config_file, &cfg);
+	if (ret) {
+		nvme_show_error("failed to read %s: %s", config_file,
+			libnvme_strerror(-ret));
+		return ret;
+	}
+
+	st = (struct consume_state){
+		.ctx = ctx,
+		.mode = CONSUME_ROLE_BASED,
+		.connect = connect,
+		.force = force,
+		.flags = flags,
+		.raw = raw,
+		.hostnqn = hostnqn,
+		.hostid = hostid,
+	};
+	libnvmf_config_conn_for_each(cfg, consume_conn, &st);
+	libnvmf_config_free(cfg);
+
+	return st.err;
+}
+
 #define NBFT_SYSFS_PATH		"/sys/firmware/acpi/tables"
 
 int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 {
 	__cleanup_free char *hnqn = NULL;
 	__cleanup_free char *hid = NULL;
-	char *config_file = PATH_NVMF_CONFIG;
+	char *config_file = PATH_NVMF_INI;
 	nvme_print_flags_t flags;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	int ret;
 	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
 	char *device = NULL;
 	bool force = false;
-	bool json_config = false;
 	bool nbft = false, nonbft = false;
 	char *nbft_path = NBFT_SYSFS_PATH;
 	char *owner = NULL;
@@ -742,11 +802,6 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		}
 	}
 
-	if (!nvme_read_config_checked(ctx, config_file))
-		json_config = true;
-	if (!nvme_read_volatile_config(ctx))
-		json_config = true;
-
 	libnvme_skip_namespaces(ctx);
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret < 0) {
@@ -776,39 +831,98 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	fa.hostid = hid;
 
 	struct hook_fabrics_data dld = {
-		.fa = &fa,
 		.flags = flags,
 		.raw = raw,
 	};
-	ret = create_discovery_context(ctx, persistent, device, &fa,
-		&dld, &fctx);
-	if (ret)
-		return ret;
 
 	if (!device && !fa.transport && !fa.traddr) {
-		if (!nonbft)
-			ret = libnvmf_discovery_nbft(ctx, fctx,
-				connect, nbft_path);
-		if (nbft)
-			goto out_free;
+		if (!nonbft) {
+			__cleanup_nvmf_context
+				struct libnvmf_context *fctx = NULL;
 
-		if (json_config)
-			ret = libnvmf_discovery_config_json(ctx, fctx,
-				connect, force);
-		if (ret || access(PATH_NVMF_DISC, F_OK))
-			goto out_free;
+			ret = create_discovery_context(ctx, persistent, NULL,
+				&fa, &dld, &fctx);
+			if (ret)
+				return ret;
+			ret = libnvmf_discovery_nbft(ctx, fctx, connect,
+				nbft_path);
+		}
+		if (!nbft && config_file)
+			ret = fabrics_discovery_config(ctx, config_file,
+				fa.hostnqn, fa.hostid, connect, force, flags);
+	} else {
+		__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 
-		ret = libnvmf_discovery_config_file(ctx, fctx, connect, force);
-		goto out_free;
+		ret = create_discovery_context(ctx, persistent, device, &fa,
+			&dld, &fctx);
+		if (ret)
+			return ret;
+		ret = libnvmf_discovery(ctx, fctx, connect, force);
 	}
 
-	ret = libnvmf_discovery(ctx, fctx, connect, force);
-
-out_free:
 	if (dump_config)
 		libnvme_dump_config(ctx, STDOUT_FILENO);
 
 	return ret;
+}
+
+/*
+ * The config-driven half of "nvme connect -J": auto-convert a legacy file
+ * if needed, settle host identity once, then connect every resolved
+ * connection in @config_file.
+ */
+static int fabrics_connect_config(struct libnvme_global_ctx *ctx,
+		char *config_file, const char *hostnqn_arg,
+		const char *hostid_arg, nvme_print_flags_t flags)
+{
+	__cleanup_free char *ini_path = NULL;
+	__cleanup_free char *hostnqn = NULL;
+	__cleanup_free char *hostid = NULL;
+	struct libnvmf_config *cfg;
+	struct consume_state st;
+	int ret;
+
+	/* Always explicit here (no implicit default read), so a
+	 * conversion failure is always fatal.
+	 */
+	ret = nvme_config_convert_auto(ctx, config_file, &ini_path);
+	if (ret) {
+		nvme_show_error("auto-conversion failed: %s",
+			libnvme_strerror(-ret));
+		return ret;
+	}
+	config_file = ini_path;
+
+	ret = libnvmf_host_get_ids(ctx, hostnqn_arg, hostid_arg,
+		&hostnqn, &hostid);
+	if (ret) {
+		nvme_show_error("failed to determine host identity: %s",
+			libnvme_strerror(-ret));
+		return ret;
+	}
+
+	ret = libnvmf_config_read(ctx, config_file, &cfg);
+	if (ret) {
+		nvme_show_error("failed to read %s: %s", config_file,
+			libnvme_strerror(-ret));
+		return ret;
+	}
+
+	st = (struct consume_state){
+		.ctx = ctx,
+		.mode = CONSUME_CONNECT_ONLY,
+		.flags = flags,
+		.raw = raw,
+		.hostnqn = hostnqn,
+		.hostid = hostid,
+	};
+	libnvmf_config_conn_for_each(cfg, consume_conn, &st);
+	libnvmf_config_free(cfg);
+
+	if (dump_config)
+		libnvme_dump_config(ctx, STDOUT_FILENO);
+
+	return st.err;
 }
 
 int fabrics_connect(const char *desc, int argc, char **argv)
@@ -849,7 +963,10 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		return ret;
 	}
 
-	if (config_file && strcmp(config_file, "none"))
+	if (config_file && !strcmp(config_file, "none"))
+		config_file = NULL;
+
+	if (config_file)
 		goto do_connect;
 
 	if (!fa.subsysnqn) {
@@ -897,9 +1014,6 @@ do_connect:
 		}
 	}
 
-	libnvme_read_config(ctx, config_file);
-	nvme_read_volatile_config(ctx);
-
 	libnvme_skip_namespaces(ctx);
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
 	if (ret < 0) {
@@ -907,6 +1021,10 @@ do_connect:
 			libnvme_strerror(-ret));
 		return ret;
 	}
+
+	if (config_file)
+		return fabrics_connect_config(ctx, config_file, fa.hostnqn,
+			fa.hostid, flags);
 
 	ret = libnvmf_host_get_ids(ctx, fa.hostnqn, fa.hostid, &hnqn, &hid);
 	if (ret) {
@@ -929,9 +1047,6 @@ do_connect:
 
 	if (devid_file)
 		libnvmf_context_set_devid_file(fctx, devid_file);
-
-	if (config_file)
-		return libnvmf_connect_config_json(ctx, fctx);
 
 	/*
 	 * The exclusion list governs auto-connecting orchestrators, not an
