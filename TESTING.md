@@ -4,7 +4,7 @@
 ## Pre-built binary
 
 For quick testing, an x86_64 static build from the current HEAD is available
-[here](https://monom.org/linux-nvme/upload/nvme-cli-latest-x86_64).
+[here](https://oxygen.monom.org/linux-nvme/bin/nvme-cli-latest-x86_64).
 
 ## Container-Based Debugging and CI Build Reproduction
 
