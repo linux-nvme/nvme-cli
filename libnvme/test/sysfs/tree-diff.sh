@@ -14,12 +14,12 @@ rm -rf "${TEST_DIR}"
 mkdir "${TEST_DIR}"
 tar -x -f "${SYSFS_INPUT}" -C "${TEST_DIR}"
 
+HOSTNQN="nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6"
+HOSTID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
+
 cmd=(
-	env
-	LIBNVME_HOSTNQN="nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6"
-	LIBNVME_HOSTID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
 	"${TREE_DUMP}"
-	--set-options "test-sysfs-dir=${TEST_DIR}"
+	--set-options "test-sysfs-dir=${TEST_DIR},hostnqn=${HOSTNQN},hostid=${HOSTID}"
 )
 
 echo "Running command:"

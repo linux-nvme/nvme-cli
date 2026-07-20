@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 /**
  * This file is part of libnvme.
- * Copyright (c) 2024 Daniel Wagner, SUSE LLC
+ * Copyright (c) 2026 Daniel Wagner, SUSE LLC
  */
+
+#include "options.h"
 
 #include <errno.h>
 #include <getopt.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <libnvme.h>
+
+struct host_info hosts[MAX_HOSTS];
 
 enum {
 	OPT_SET_OPTIONS = 1000,
@@ -20,27 +23,49 @@ enum {
 static void usage(const char *prog)
 {
 	fprintf(stderr,
-		"Usage: %s [OPTIONS]\n"
+		"Usage: %s [OPTIONS] [config-file]\n"
 		"\n"
 		"Options:\n"
 		"  --set-options key=value[,key=value...]\n",
 		prog);
 }
 
-static int set_options(struct libnvme_global_ctx *ctx,
+static int set_option(struct libnvme_global_ctx *ctx,
 		      const char *key, const char *value)
 {
+	unsigned int idx;
+
 	if (!strcmp(key, "test-sysfs-dir"))
 		return libnvme_set_test_sysfs_dir(ctx, value);
 
+	for (idx = 0; idx < MAX_HOSTS; idx++) {
+		char name[16];
+
+		snprintf(name, sizeof(name), "hostnqn_%u", idx + 1);
+		if (!strcmp(key, name)) {
+			free(hosts[idx].hostnqn);
+			hosts[idx].hostnqn = strdup(value);
+			return hosts[idx].hostnqn ? 0 : -ENOMEM;
+		}
+
+		snprintf(name, sizeof(name), "hostid_%u", idx + 1);
+		if (!strcmp(key, name)) {
+			free(hosts[idx].hostid);
+			hosts[idx].hostid = strdup(value);
+			return hosts[idx].hostid ? 0 : -ENOMEM;
+		}
+	}
+
 	if (!strcmp(key, "hostnqn")) {
-		libnvme_global_ctx_set_hostnqn(ctx, value);
-		return 0;
+		free(hosts[0].hostnqn);
+		hosts[0].hostnqn = strdup(value);
+		return hosts[0].hostnqn ? 0 : -ENOMEM;
 	}
 
 	if (!strcmp(key, "hostid")) {
-		libnvme_global_ctx_set_hostid(ctx, value);
-		return 0;
+		free(hosts[0].hostid);
+		hosts[0].hostid = strdup(value);
+		return hosts[0].hostid ? 0 : -ENOMEM;
 	}
 
 	fprintf(stderr, "Unknown option '%s'\n", key);
@@ -66,7 +91,7 @@ static int parse_set_options(struct libnvme_global_ctx *ctx, char *arg)
 
 		*val++ = '\0';
 
-		err = set_options(ctx, tok, val);
+		err = set_option(ctx, tok, val);
 		if (err)
 			return err;
 	}
@@ -74,65 +99,27 @@ static int parse_set_options(struct libnvme_global_ctx *ctx, char *arg)
 	return 0;
 }
 
-static bool tree_dump(struct libnvme_global_ctx *ctx)
-{
-	bool pass = false;
-	int err;
-
-	err = libnvme_scan_topology(ctx, NULL, NULL);
-	if (err && err != -ENOENT && err != -EACCES) {
-		fprintf(stderr, "libnvme_scan_topology failed: %d\n", err);
-		goto out;
-	}
-
-	if (libnvme_dump_tree(ctx))
-		goto out;
-
-	printf("\n");
-	pass = true;
-
-out:
-	return pass;
-}
-
-int main(int argc, char *argv[])
+int parse_args(struct libnvme_global_ctx *ctx, int argc, char *argv[])
 {
 	static const struct option long_options[] = {
 		{ "set-options", required_argument, NULL, OPT_SET_OPTIONS },
 		{ NULL, 0, NULL, 0 }
 	};
-
-	struct libnvme_global_ctx *ctx;
-	bool pass;
-	int c;
-
-	ctx = libnvme_create_global_ctx();
-	if (!ctx)
-		return EXIT_FAILURE;
-
-	libnvme_set_logging_file(ctx, stdout);
-	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+	int err, c;
 
 	while ((c = getopt_long(argc, argv, "", long_options, NULL)) != -1) {
 		switch (c) {
 		case OPT_SET_OPTIONS:
-			if (parse_set_options(ctx, optarg)) {
-				libnvme_free_global_ctx(ctx);
-				return EXIT_FAILURE;
-			}
+			err = parse_set_options(ctx, optarg);
+			if (err)
+				return err;
 			break;
 
 		default:
 			usage(argv[0]);
-			libnvme_free_global_ctx(ctx);
-			return EXIT_FAILURE;
+			return -EINVAL;
 		}
 	}
 
-	pass = tree_dump(ctx);
-
-	libnvme_free_global_ctx(ctx);
-	fflush(stdout);
-
-	return pass ? EXIT_SUCCESS : EXIT_FAILURE;
+	return 0;
 }

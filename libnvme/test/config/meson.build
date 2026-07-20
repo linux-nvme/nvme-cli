@@ -13,7 +13,10 @@ if diff.found()
 
     config_dump = executable(
         'test-config-dump',
-        ['config-dump.c'],
+        [
+            'config-dump.c',
+            'options.c'
+        ],
         dependencies: libnvme_dep,
     )
 
@@ -42,7 +45,10 @@ if diff.found()
 
     test_hostnqn_order = executable(
         'test-hostnqn-order',
-        ['hostnqn-order.c'],
+        [
+            'hostnqn-order.c',
+            'options.c'
+        ],
         dependencies: [
             ccan_dep,
             libnvme_test_dep,
@@ -64,7 +70,10 @@ if diff.found()
 
     test_psk_json = executable(
         'test-psk-json',
-        ['psk-json.c'],
+        [
+            'psk-json.c',
+            'options.c'
+        ],
         dependencies: libnvme_dep,
     )
 
