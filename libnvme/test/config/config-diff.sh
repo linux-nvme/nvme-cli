@@ -45,11 +45,29 @@ fi
 
 output="${build_dir}/$(basename "${expected_output}")"
 
+DEFAULT_HOSTUUID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
+AUX_HOSTUUID="2cd2c43b-a90a-45c1-a8cd-86b33ab273b5"
+
+hosts=(
+	"$DEFAULT_HOSTUUID"
+	"$AUX_HOSTUUID"
+	"$DEFAULT_HOSTUUID"
+)
+
+set_options=""
+for i in "${!hosts[@]}"; do
+	nqn="nqn.2014-08.org.nvmexpress:uuid:${hosts[$i]}"
+
+	if [ -n "$set_options" ]; then
+		set_options+=","
+	fi
+
+	set_options+="hostnqn_$((i + 1))=${nqn},hostid_$((i + 1))=${hosts[$i]}"
+done
+
 cmd=(
-	env
-	LIBNVME_HOSTNQN="nqn.2014-08.org.nvmexpress:uuid:ce4fee3e-c02c-11ee-8442-830d068a36c6"
-	LIBNVME_HOSTID="ce4fee3e-c02c-11ee-8442-830d068a36c6"
 	"$test_binary"
+	--set-options "$set_options"
 )
 
 if [[ -n "${sysfs_path}" ]]; then

@@ -136,6 +136,9 @@ static struct libnvme_global_ctx *create_tree(void)
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_DEBUG, false, false);
+	libnvme_global_ctx_set_hostnqn(ctx, DEFAULT_HOSTNQN);
+	libnvme_global_ctx_set_hostid(ctx, DEFAULT_HOSTID);
+
 	libnvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 

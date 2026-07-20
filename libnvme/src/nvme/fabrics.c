@@ -306,14 +306,6 @@ static char *nvmf_read_file(const char *f, int len)
 
 __libnvme_public char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx)
 {
-	char *hostnqn = getenv("LIBNVME_HOSTNQN");
-
-	if (hostnqn) {
-		if (!strcmp(hostnqn, ""))
-			return NULL;
-		return strdup(hostnqn);
-	}
-
 	if (ctx->hostnqn) {
 		if (!strcmp(ctx->hostnqn, ""))
 			return NULL;
@@ -325,14 +317,6 @@ __libnvme_public char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx)
 
 __libnvme_public char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx)
 {
-	char *hostid = getenv("LIBNVME_HOSTID");
-
-	if (hostid) {
-		if (!strcmp(hostid, ""))
-			return NULL;
-		return strdup(hostid);
-	}
-
 	if (ctx->hostid) {
 		if (!strcmp(ctx->hostid, ""))
 			return NULL;

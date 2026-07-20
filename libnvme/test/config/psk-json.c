@@ -4,7 +4,10 @@
  * Copyright (c) 2024 Daniel Wagner, SUSE LLC
  */
 
+#include "options.h"
+
 #include <errno.h>
+#include <getopt.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,47 +49,44 @@ static bool import_export_key(struct libnvme_global_ctx *ctx, libnvme_ctrl_t c)
 	return true;
 }
 
-static bool psk_json_test(char *file)
+static bool psk_json_test(struct libnvme_global_ctx *ctx, const char *file)
 {
-	struct libnvme_global_ctx *ctx;
-	bool pass = false;
 	libnvme_host_t h;
 	libnvme_subsystem_t s;
 	libnvme_ctrl_t c;
-	int err;
 
-	ctx = libnvme_create_global_ctx();
-	if (!ctx)
+	if (libnvme_read_config(ctx, file))
 		return false;
-	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
-
-	err = libnvme_read_config(ctx, file);
-	if (err)
-		goto out;
-
 
 	libnvme_for_each_host(ctx, h)
 		libnvme_for_each_subsystem(h, s)
 			libnvme_subsystem_for_each_ctrl(s, c)
 				if (!import_export_key(ctx, c))
-					goto out;
+					return false;
 
-	err = libnvme_dump_config(ctx, STDOUT_FILENO);
-	if (err)
-		goto out;
-
-	pass = true;
-
-out:
-	libnvme_free_global_ctx(ctx);
-	return pass;
+	return !libnvme_dump_config(ctx, STDOUT_FILENO);
 }
 
 int main(int argc, char *argv[])
 {
+	struct libnvme_global_ctx *ctx;
+	const char *config_file = NULL;
 	bool pass;
 
-	pass = psk_json_test(argv[1]);
+	ctx = libnvme_create_global_ctx();
+	if (!ctx)
+		return EXIT_FAILURE;
+
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	if (parse_args(ctx, argc, argv)) {
+		libnvme_free_global_ctx(ctx);
+		return EXIT_FAILURE;
+	}
+
+	config_file = argv[optind];
+
+	pass = psk_json_test(ctx, config_file);
 	fflush(stdout);
 
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
