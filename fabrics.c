@@ -167,7 +167,6 @@ static int setup_common_context(struct libnvmf_context *fctx,
 
 struct hook_fabrics_data {
 	nvme_print_flags_t flags;
-	bool quiet;
 	char *raw;
 	bool idempotent;
 };
@@ -187,9 +186,6 @@ static void hook_connected(struct libnvmf_context *fctx,
 		struct libnvme_ctrl *c, void *user_data)
 {
 	struct hook_fabrics_data *hfd = user_data;
-
-	if (hfd->quiet)
-		return;
 
 	if (hfd->flags == NORMAL) {
 		nvme_show_verbose_info("connecting to device: %s", libnvme_ctrl_get_name(c));
@@ -752,7 +748,6 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		  OPT_FLAG("persistent",   'p', &persistent,          "persistent discovery connection"),
 		  OPT_FLAG("quiet",          0, &quiet,               "suppress already connected errors"),
 		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
-		  OPT_FLAG("dump-config",  'O', &dump_config,         "Dump configuration file to stdout"),
 		  OPT_FLAG("force",          0, &force,               "Force persistent discovery controller creation"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
 		  OPT_FLAG("no-nbft",        0, &nonbft,              "Do not look at NBFT tables"),
@@ -858,9 +853,6 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		ret = libnvmf_discovery(ctx, fctx, connect, force);
 	}
 
-	if (dump_config)
-		libnvme_dump_config(ctx, STDOUT_FILENO);
-
 	return ret;
 }
 
@@ -917,9 +909,6 @@ static int fabrics_connect_config(struct libnvme_global_ctx *ctx,
 	libnvmf_config_conn_for_each(cfg, consume_conn, &st);
 	libnvmf_config_free(cfg);
 
-	if (dump_config)
-		libnvme_dump_config(ctx, STDOUT_FILENO);
-
 	return st.err;
 }
 
@@ -944,8 +933,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		  OPT_STRING("devid-file", 0, "FILE", &devid_file,
 			     "write connected device name to FILE"),
 		  OPT_FLAG("idempotent", 0, &idempotent,
-			   "exit 0 if already connected"),
-		  OPT_FLAG("dump-config",          'O', &dump_config,             "Dump JSON configuration to stdout"));
+			   "exit 0 if already connected"));
 
 	nvmf_default_args(&fa);
 
@@ -1035,7 +1023,6 @@ do_connect:
 
 	struct hook_fabrics_data hfd = {
 		.flags = flags,
-		.quiet = dump_config,
 		.raw = raw,
 		.idempotent = idempotent,
 	};
@@ -1074,9 +1061,6 @@ do_connect:
 			libnvme_strerror(-ret));
 		return ret;
 	}
-
-	if (dump_config)
-		libnvme_dump_config(ctx, STDOUT_FILENO);
 
 	return 0;
 }
