@@ -9957,9 +9957,14 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 
 static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	char *hostnqn;
 
-	hostnqn = libnvmf_read_hostnqn();
+	ctx = libnvme_create_global_ctx();
+	if (!ctx)
+		return -ENOMEM;
+
+	hostnqn = libnvmf_read_hostnqn(ctx);
 	if (!hostnqn)
 		hostnqn =  libnvmf_generate_hostnqn();
 
@@ -10066,7 +10071,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		return err;
 
 	if (!cfg.nqn) {
-		cfg.nqn = hnqn = libnvmf_read_hostnqn();
+		cfg.nqn = hnqn = libnvmf_read_hostnqn(ctx);
 		if (!cfg.nqn) {
 			nvme_show_error("Could not read host NQN");
 			return -ENOENT;
@@ -10330,7 +10335,7 @@ static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugi
 			return -EINVAL;
 		}
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = libnvmf_read_hostnqn();
+			cfg.hostnqn = hnqn = libnvmf_read_hostnqn(ctx);
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;
@@ -10471,7 +10476,7 @@ static int check_tls_key(int argc, char **argv, struct command *acmd, struct plu
 
 	if (cfg.subsysnqn) {
 		if (!cfg.hostnqn) {
-			cfg.hostnqn = hnqn = libnvmf_read_hostnqn();
+			cfg.hostnqn = hnqn = libnvmf_read_hostnqn(ctx);
 			if (!cfg.hostnqn) {
 				nvme_show_error("Failed to read host NQN");
 				return -EINVAL;

@@ -304,7 +304,7 @@ static char *nvmf_read_file(const char *f, int len)
 	return strndup(buf, strcspn(buf, "\n"));
 }
 
-__libnvme_public char *libnvmf_read_hostnqn(void)
+__libnvme_public char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx)
 {
 	char *hostnqn = getenv("LIBNVME_HOSTNQN");
 
@@ -314,10 +314,16 @@ __libnvme_public char *libnvmf_read_hostnqn(void)
 		return strdup(hostnqn);
 	}
 
+	if (ctx->hostnqn) {
+		if (!strcmp(ctx->hostnqn, ""))
+			return NULL;
+		return strdup(ctx->hostnqn);
+	}
+
 	return nvmf_read_file(NVMF_HOSTNQN_FILE, NVMF_NQN_SIZE);
 }
 
-__libnvme_public char *libnvmf_read_hostid(void)
+__libnvme_public char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx)
 {
 	char *hostid = getenv("LIBNVME_HOSTID");
 
@@ -325,6 +331,12 @@ __libnvme_public char *libnvmf_read_hostid(void)
 		if (!strcmp(hostid, ""))
 			return NULL;
 		return strdup(hostid);
+	}
+
+	if (ctx->hostid) {
+		if (!strcmp(ctx->hostid, ""))
+			return NULL;
+		return strdup(ctx->hostid);
 	}
 
 	return nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
@@ -356,9 +368,9 @@ __libnvme_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 
 	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */
 	if (!hid)
-		hid = libnvmf_read_hostid();
+		hid = libnvmf_read_hostid(ctx);
 	if (!hnqn)
-		hnqn = libnvmf_read_hostnqn();
+		hnqn = libnvmf_read_hostnqn(ctx);
 
 	/* incomplete configuration, thus derive hostid from hostnqn */
 	if (!hid && hnqn)
@@ -2978,9 +2990,9 @@ __libnvme_public int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
 	struct libnvme_ctrl *c;
 
 	if (!fctx->hostnqn)
-		fctx->hostnqn = hnqn = libnvmf_read_hostnqn();
+		fctx->hostnqn = hnqn = libnvmf_read_hostnqn(ctx);
 	if (!fctx->hostid && hnqn)
-		fctx->hostid = hid = libnvmf_read_hostid();
+		fctx->hostid = hid = libnvmf_read_hostid(ctx);
 
 	h = libnvme_lookup_host(ctx, fctx->hostnqn, fctx->hostid);
 	if (!h) {
