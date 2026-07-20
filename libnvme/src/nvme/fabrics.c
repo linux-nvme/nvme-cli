@@ -330,7 +330,7 @@ __libnvme_public char *libnvmf_read_hostid(void)
 	return nvmf_read_file(NVMF_HOSTID_FILE, NVMF_HOSTID_SIZE);
 }
 
-int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 		      const char *hostnqn_arg, const char *hostid_arg,
 		      char **hostnqn, char **hostid)
 {
