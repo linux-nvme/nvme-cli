@@ -73,6 +73,9 @@ static inline PyObject *Py_NewRef(PyObject *obj)
 
 PyObject *read_hostnqn();
 PyObject *read_hostid();
+PyObject *host_get_ids(struct libnvme_global_ctx *ctx,
+		       const char *hostnqn_arg = NULL,
+		       const char *hostid_arg = NULL);
 
 /*******************************************************************************
  * This is the single C implementation block. All pure C code — headers,
@@ -272,6 +275,47 @@ PyObject *read_hostid()
 	char *val = libnvmf_read_hostid();
 	PyObject *obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
 	free(val);
+	return obj;
+}
+
+PyObject *host_get_ids(struct libnvme_global_ctx *ctx,
+		       const char *hostnqn_arg,
+		       const char *hostid_arg)
+{
+	char *hostnqn = NULL, *hostid = NULL;
+	PyObject *hostnqn_obj = NULL, *hostid_obj = NULL;
+	PyObject *obj;
+	int err;
+
+	err = libnvmf_host_get_ids(ctx, hostnqn_arg, hostid_arg,
+				   &hostnqn, &hostid);
+	if (err) {
+		raise_nvme(NvmeError, err);
+		return NULL;
+	}
+
+	hostnqn_obj = hostnqn ? PyUnicode_FromString(hostnqn) : Py_NewRef(Py_None);
+	hostid_obj = hostid ? PyUnicode_FromString(hostid) : Py_NewRef(Py_None);
+	if (!hostnqn_obj || !hostid_obj) {
+		Py_XDECREF(hostnqn_obj);
+		Py_XDECREF(hostid_obj);
+		free(hostnqn);
+		free(hostid);
+		return NULL;
+	}
+
+	obj = PyTuple_New(2);
+	if (!obj) {
+		Py_DECREF(hostnqn_obj);
+		Py_DECREF(hostid_obj);
+		free(hostnqn);
+		free(hostid);
+		return NULL;
+	}
+	PyTuple_SET_ITEM(obj, 0, hostnqn_obj);
+	PyTuple_SET_ITEM(obj, 1, hostid_obj);
+	free(hostnqn);
+	free(hostid);
 	return obj;
 }
 

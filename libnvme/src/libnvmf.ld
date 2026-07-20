@@ -70,6 +70,7 @@ LIBNVMF_3 {
 		libnvmf_generate_hostid;
 		libnvmf_generate_hostnqn;
 		libnvmf_generate_hostnqn_from_hostid;
+		libnvmf_host_get_ids;
 		libnvmf_generate_tls_key_identity;
 		libnvmf_generate_tls_key_identity_compat;
 		libnvmf_get_default_trsvcid;
