@@ -31,6 +31,7 @@ LIBNVMF_3 {
 		libnvmf_connect_args_emit;
 		libnvmf_connect_config_json;
 		libnvmf_connect_ctrl;
+		libnvmf_context_apply_params;
 		libnvmf_context_create;
 		libnvmf_context_free;
 		libnvmf_context_set_connection;
