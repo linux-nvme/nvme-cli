@@ -32,12 +32,6 @@ struct libnvmf_hooks {
 			bool connect,
 			struct nvmf_discovery_log *log,
 			uint64_t numrec, void *user_data);
-	int (*parser_init)(struct libnvmf_context *fctx,
-			void *user_data);
-	void (*parser_cleanup)(struct libnvmf_context *fctx,
-			void *user_data);
-	int (*parser_next_line)(struct libnvmf_context *fctx,
-			void *user_data);
 
 	void *user_data;
 };

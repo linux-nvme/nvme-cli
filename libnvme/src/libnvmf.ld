@@ -29,7 +29,6 @@ LIBNVMF_3 {
 		libnvmf_config_validate;
 		libnvmf_connect;
 		libnvmf_connect_args_emit;
-		libnvmf_connect_config_json;
 		libnvmf_connect_ctrl;
 		libnvmf_context_apply_params;
 		libnvmf_context_create;
@@ -48,8 +47,6 @@ LIBNVMF_3 {
 		libnvmf_describe_key_serial;
 		libnvmf_disconnect_ctrl;
 		libnvmf_discovery;
-		libnvmf_discovery_config_file;
-		libnvmf_discovery_config_json;
 		libnvmf_discovery_nbft;
 		libnvmf_eflags_str;
 		libnvmf_exat_ptr_next;
