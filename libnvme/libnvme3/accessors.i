@@ -208,6 +208,8 @@ Host.__setattr__ = _nvme_guarded_setattr
 /* struct libnvme_global_ctx */
 %rename(GlobalCtx) libnvme_global_ctx;
 struct libnvme_global_ctx {
+	const char * hostnqn;
+	const char * hostid;
 };
 
 %pythoncode %{

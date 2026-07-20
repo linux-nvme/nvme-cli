@@ -430,7 +430,7 @@ struct libnvme_fabric_options { // !generate-accessors
 	bool trsvcid;
 };
 
-struct libnvme_global_ctx { // !generate-python:alias=GlobalCtx
+struct libnvme_global_ctx { // !generate-accessors:read=none,write=none !generate-python:alias=GlobalCtx
 	char *config_file;
 	char *owner; /* orchestrator identity; NULL = unowned */
 	struct list_head endpoints; /* MI endpoints */
@@ -450,6 +450,8 @@ struct libnvme_global_ctx { // !generate-python:alias=GlobalCtx
 	struct libnvme_fabric_options *options;
 	struct ifaddrs *ifaddrs_cache; /* init with libnvmf_getifaddrs() */
 #endif
+	char *hostnqn;		// !access:read=none,write=generated
+	char *hostid;		// !access:read=none,write=generated
 };
 int libnvme_set_attr(const char *dir, const char *attr, const char *value);
 
