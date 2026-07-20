@@ -29,8 +29,8 @@ touch %{buildroot}@SYSCONFDIR@/nvme/hostid
 %dir @SYSCONFDIR@/nvme
 @SYSCONFDIR@/nvme/hostnqn
 @SYSCONFDIR@/nvme/hostid
-@SYSCONFDIR@/nvme/discovery.conf
 %ghost @SYSCONFDIR@/nvme/config.json
+%ghost @SYSCONFDIR@/nvme/discovery.conf
 @UDEVRULESDIR@/65-persistent-net-nbft.rules
 @UDEVRULESDIR@/70-nvmf-autoconnect.rules
 @UDEVRULESDIR@/70-nvmf-keys.rules
