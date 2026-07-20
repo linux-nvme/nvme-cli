@@ -660,6 +660,22 @@ __libnvme_public int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
 	return 0;
 }
 
+__libnvme_public int libnvmf_context_set_connection_from_tid(
+		struct libnvmf_context *fctx, const struct libnvmf_tid *tid)
+{
+	if (!fctx || !tid)
+		return -EINVAL;
+
+	fctx->ctrl_params.subsysnqn = tid->subsysnqn;
+	fctx->ctrl_params.transport = tid->transport;
+	fctx->ctrl_params.traddr = tid->traddr;
+	fctx->ctrl_params.trsvcid = tid->trsvcid;
+	fctx->ctrl_params.host_traddr = tid->host_traddr;
+	fctx->ctrl_params.host_iface = tid->host_iface;
+
+	return libnvmf_context_set_hostnqn(fctx, tid->hostnqn, tid->hostid);
+}
+
 __libnvme_public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		const char *hostkey, const char *ctrlkey,
 		const char *keyring, const char *tls_key,

@@ -63,6 +63,12 @@ static inline void cleanup_nvmf_context(struct libnvmf_context **fctx)
 	libnvmf_context_free(*fctx);
 }
 #define __cleanup_nvmf_context __cleanup(cleanup_nvmf_context)
+
+static inline void cleanup_nvmf_tid(struct libnvmf_tid **tid)
+{
+	libnvmf_tid_free(*tid);
+}
+#define __cleanup_nvmf_tid __cleanup(cleanup_nvmf_tid)
 #endif
 
 static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)

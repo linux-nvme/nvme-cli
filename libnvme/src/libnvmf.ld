@@ -35,6 +35,7 @@ LIBNVMF_3 {
 		libnvmf_context_create;
 		libnvmf_context_free;
 		libnvmf_context_set_connection;
+		libnvmf_context_set_connection_from_tid;
 		libnvmf_context_set_crypto;
 		libnvmf_context_set_device;
 		libnvmf_context_set_devid_file;
@@ -71,11 +72,11 @@ LIBNVMF_3 {
 		libnvmf_generate_hostid;
 		libnvmf_generate_hostnqn;
 		libnvmf_generate_hostnqn_from_hostid;
-		libnvmf_host_get_ids;
 		libnvmf_generate_tls_key_identity;
 		libnvmf_generate_tls_key_identity_compat;
 		libnvmf_get_default_trsvcid;
 		libnvmf_get_discovery_log;
+		libnvmf_host_get_ids;
 		libnvmf_import_tls_key;
 		libnvmf_import_tls_key_versioned;
 		libnvmf_insert_tls_key;
