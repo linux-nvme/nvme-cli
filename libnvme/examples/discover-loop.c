@@ -23,6 +23,9 @@
 
 #include <libnvme.h>
 
+#define DEFAULT_HOSTID "9ba1651a-ed36-11f0-9858-6c1ff71ba506"
+#define DEFAULT_HOSTNQN "nqn.2014-08.org.nvmexpress:uuid:9ba1651a-ed36-11f0-9858-6c1ff71ba506"
+
 static void print_discover_log(struct nvmf_discovery_log *log)
 {
 	int i, numrec = le64_to_cpu(log->numrec);
@@ -64,6 +67,9 @@ int main()
 		return 1;
 	libnvme_set_logging_file(ctx, stdout);
 
+	libnvme_global_ctx_set_hostnqn(ctx, DEFAULT_HOSTNQN);
+	libnvme_global_ctx_set_hostid(ctx, DEFAULT_HOSTID);
+
 	ret = libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx);
 	if (ret)
 		goto free_ctx;
@@ -77,7 +83,7 @@ int main()
 	if (ret)
 		goto free_fctx;
 
-	ret = libnvme_get_host(ctx, NULL, NULL, &h);
+	ret = libnvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	if (ret) {
 		fprintf(stderr, "Failed to allocated memory\n");
 		goto free_fctx;
