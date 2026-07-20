@@ -60,9 +60,11 @@ static void json_update_attributes(libnvme_ctrl_t c,
 		JSON_UPDATE_BOOL_OPTION(cfg, key_str,
 					concat, val_obj);
 		if (!strcmp("persistent", key_str) &&
+		    json_object_get_boolean(val_obj) &&
 		    !libnvme_ctrl_get_persistent(c))
 			libnvme_ctrl_set_persistent(c, true);
 		if (!strcmp("discovery", key_str) &&
+		    json_object_get_boolean(val_obj) &&
 		    !libnvme_ctrl_get_discovery_ctrl(c))
 			libnvme_ctrl_set_discovery_ctrl(c, true);
 		if (!strcmp("keyring", key_str))
