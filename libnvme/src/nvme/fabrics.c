@@ -2812,7 +2812,7 @@ int _discovery_config_json(struct libnvme_global_ctx *ctx,
 		return 0;
 
 	_nvmf_discovery(ctx, &nfctx, connect, cn);
-	if (!(fctx->persistent || is_persistent_discovery_ctrl(h, cn)))
+	if (!(nfctx.persistent || is_persistent_discovery_ctrl(h, cn)))
 		ret = libnvmf_disconnect_ctrl(cn);
 	libnvme_free_ctrl(cn);
 
