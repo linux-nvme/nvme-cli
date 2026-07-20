@@ -1001,3 +1001,23 @@ __libnvme_public bool libnvme_fabric_options_get_trsvcid(
 	return p->trsvcid;
 }
 
+/****************************************************************************
+ * Accessors for: struct libnvme_global_ctx
+ ****************************************************************************/
+
+__libnvme_public void libnvme_global_ctx_set_hostnqn(
+		struct libnvme_global_ctx *p,
+		const char *hostnqn)
+{
+	free(p->hostnqn);
+	p->hostnqn = hostnqn ? strdup(hostnqn) : NULL;
+}
+
+__libnvme_public void libnvme_global_ctx_set_hostid(
+		struct libnvme_global_ctx *p,
+		const char *hostid)
+{
+	free(p->hostid);
+	p->hostid = hostid ? strdup(hostid) : NULL;
+}
+

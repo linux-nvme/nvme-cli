@@ -139,6 +139,8 @@ __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	ctx->ifaddrs_cache = NULL;
 	free(ctx->options);
 #endif
+	free(ctx->hostnqn);
+	free(ctx->hostid);
 
 	libnvme_for_each_host_safe(ctx, h, _h)
 		__libnvme_free_host(h);
