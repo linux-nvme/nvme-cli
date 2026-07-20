@@ -173,11 +173,15 @@ typedef struct { const char *key; const char **val; } str_fields_t;
  * flag — fields that require higher-level libnvmf_context_set_*() helpers
  * rather than direct struct assignment.
  */
-static void set_fctx_host_params(struct libnvmf_context *fctx, PyObject *dict)
+static int set_fctx_host_params(struct libnvme_global_ctx *ctx,
+				struct libnvmf_context *fctx,
+				PyObject *dict)
 {
 	const char *hostnqn = NULL, *hostid = NULL;
+	char *hnqn = NULL, *hid = NULL;
 	const char *hostkey = NULL, *ctrlkey = NULL;
 	const char *keyring = NULL, *tls_key = NULL, *tls_key_identity = NULL;
+	int err;
 	str_fields_t tbl[] = {
 		{"hostnqn",          &hostnqn},
 		{"hostid",           &hostid},
@@ -198,13 +202,22 @@ static void set_fctx_host_params(struct libnvmf_context *fctx, PyObject *dict)
 	for (p = tbl; p->key; p++)
 		*p->val = dict_get_str(dict, p->key);
 
-	/* hostnqn and hostid are passed together to a single setter */
-	if (hostnqn || hostid)
-		libnvmf_context_set_hostnqn(fctx, hostnqn, hostid);
+	err = libnvmf_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
+	if (err) {
+		raise_nvme(NvmeError, err);
+		return -1;
+	}
+
+	libnvmf_context_set_hostnqn(fctx, hnqn, hid);
+
+	free(hnqn);
+	free(hid);
 
 	if (hostkey || ctrlkey || keyring || tls_key || tls_key_identity)
 		libnvmf_context_set_crypto(fctx, hostkey, ctrlkey, keyring,
 					   tls_key, tls_key_identity);
+
+	return 0;
 }
 
 /*
@@ -218,7 +231,8 @@ static void set_fctx_host_params(struct libnvmf_context *fctx, PyObject *dict)
  * Returns 0 on success, -1 with a Python exception set on error.
  * Unknown keys are rejected via fctx_known_keys (built at module init).
  */
-static int set_fctx_from_dict(struct libnvmf_context *fctx, PyObject *dict)
+static int set_fctx_from_dict(struct libnvme_global_ctx *ctx,
+			      struct libnvmf_context *fctx, PyObject *dict)
 {
 	const char *subsysnqn, *transport;
 
@@ -237,7 +251,8 @@ static int set_fctx_from_dict(struct libnvmf_context *fctx, PyObject *dict)
 				       dict_get_str(dict, "host_traddr"),
 				       dict_get_str(dict, "host_iface"));
 
-	set_fctx_host_params(fctx, dict);
+	if (set_fctx_host_params(ctx, fctx, dict))
+		return -1;
 	set_fctx_fabrics_config(fctx, dict);
 
 	/* Reject any key not present in fctx_known_keys (built at module init).
@@ -1034,7 +1049,7 @@ def exclusion_match(ctx, transport=None, traddr=None, trsvcid=None,
 				"failed to create fabrics context");
 		SWIG_fail;
 	}
-	if (set_fctx_from_dict(temp, $input)) {
+	if (set_fctx_from_dict(arg1, temp, $input)) {
 		libnvmf_context_free(temp);
 		temp = NULL;
 		SWIG_fail;
@@ -1471,9 +1486,17 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		     const char *hostkey = NULL,
 		     const char *hostsymname = NULL) {
 		libnvme_host_t h;
+		int err;
 
-		if (libnvme_get_host(ctx, hostnqn, hostid, &h))
+		if (!hostnqn)
+			hostnqn = ctx->hostnqn;
+		if (!hostid)
+			hostid = ctx->hostid;
+
+		err = libnvme_get_host(ctx, hostnqn, hostid, &h);
+		if (err)
 			return NULL;
+
 		if (hostsymname)
 			libnvme_host_set_hostsymname(h, hostsymname);
 		if (hostkey)

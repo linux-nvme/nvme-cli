@@ -673,6 +673,8 @@ unref:
 
 int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 {
+	__cleanup_free char *hnqn = NULL;
+	__cleanup_free char *hid = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	nvme_print_flags_t flags;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -763,6 +765,15 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	ret = nvmf_resolve_args(&fa);
 	if (ret)
 		return ret;
+
+	ret = libnvmf_host_get_ids(ctx, fa.hostnqn, fa.hostid, &hnqn, &hid);
+	if (ret) {
+		nvme_show_error("failed to determine hostnqn/hostid: %s",
+			libnvme_strerror(-ret));
+		return ret;
+	}
+	fa.hostnqn = hnqn;
+	fa.hostid = hid;
 
 	struct hook_fabrics_data dld = {
 		.fa = &fa,
@@ -896,6 +907,15 @@ do_connect:
 			libnvme_strerror(-ret));
 		return ret;
 	}
+
+	ret = libnvmf_host_get_ids(ctx, fa.hostnqn, fa.hostid, &hnqn, &hid);
+	if (ret) {
+		nvme_show_error("failed to determine hostnqn/hostid: %s",
+			libnvme_strerror(-ret));
+		return ret;
+	}
+	fa.hostnqn = hnqn;
+	fa.hostid = hid;
 
 	struct hook_fabrics_data hfd = {
 		.flags = flags,
@@ -1231,6 +1251,8 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 int fabrics_config(const char *desc, int argc, char **argv)
 {
 	bool scan_tree = false, modify_config = false, update_config = false;
+	__cleanup_free char *hnqn = NULL;
+	__cleanup_free char *hid = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	char *config_file = PATH_NVMF_CONFIG;
 	struct nvmf_args fa = { };
@@ -1288,6 +1310,16 @@ int fabrics_config(const char *desc, int argc, char **argv)
 				"required argument [--transport | -t] needed with --modify\n");
 			return -EINVAL;
 		}
+
+		ret = libnvmf_host_get_ids(ctx, fa.hostnqn, fa.hostid,
+				&hnqn, &hid);
+		if (ret) {
+			nvme_show_error("failed to determine hostnqn/hostid: %s",
+				libnvme_strerror(-ret));
+			return ret;
+		}
+		fa.hostnqn = hnqn;
+		fa.hostid = hid;
 
 		ret = create_common_context(ctx, persistent, &fa, NULL, &fctx);
 		if (ret)

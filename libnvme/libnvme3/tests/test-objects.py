@@ -59,6 +59,9 @@ class TestHost(unittest.TestCase):
 
     def setUp(self):
         self.ctx = nvme.GlobalCtx()
+        (hostnqn, hostid) = nvme.host_get_ids(self.ctx)
+        self.ctx.hostnqn = hostnqn
+        self.ctx.hostid = hostid
 
     def tearDown(self):
         self.ctx = None
