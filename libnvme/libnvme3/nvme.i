@@ -71,8 +71,8 @@ static inline PyObject *Py_NewRef(PyObject *obj)
 
 %allowexception;
 
-PyObject *read_hostnqn();
-PyObject *read_hostid();
+PyObject *read_hostnqn(struct libnvme_global_ctx *ctx);
+PyObject *read_hostid(struct libnvme_global_ctx *ctx);
 PyObject *host_get_ids(struct libnvme_global_ctx *ctx,
 		       const char *hostnqn_arg = NULL,
 		       const char *hostid_arg = NULL);
@@ -262,17 +262,17 @@ static int set_fctx_from_dict(struct libnvmf_context *fctx, PyObject *dict)
 
 /*============================================================================*/
 
-PyObject *read_hostnqn()
+PyObject *read_hostnqn(struct libnvme_global_ctx *ctx)
 {
-	char *val = libnvmf_read_hostnqn();
+	char *val = libnvmf_read_hostnqn(ctx);
 	PyObject *obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
 	free(val);
 	return obj;
 }
 
-PyObject *read_hostid()
+PyObject *read_hostid(struct libnvme_global_ctx *ctx)
 {
-	char *val = libnvmf_read_hostid();
+	char *val = libnvmf_read_hostid(ctx);
 	PyObject *obj = val ? PyUnicode_FromString(val) : Py_NewRef(Py_None);
 	free(val);
 	return obj;

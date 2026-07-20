@@ -27,12 +27,12 @@ __libnvme_public char *libnvmf_generate_hostnqn(void)
 	return NULL;
 }
 
-__libnvme_public char *libnvmf_read_hostnqn(void)
+__libnvme_public char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx)
 {
 	return NULL;
 }
 
-__libnvme_public char *libnvmf_read_hostid(void)
+__libnvme_public char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx)
 {
 	return NULL;
 }

@@ -61,6 +61,7 @@ char *libnvmf_generate_hostid(void);
 /**
  * libnvmf_read_hostnqn() - Reads the host nvm qualified name from the config
  *			      default location
+ * @ctx:		struct libnvme_global_ctx object
  *
  * Retrieve the qualified name from the config file located in $SYSCONFDIR/nvme.
  * $SYSCONFDIR is usually /etc.
@@ -68,11 +69,12 @@ char *libnvmf_generate_hostid(void);
  * Return: The host nqn, or NULL if unsuccessful. If found, the caller
  * is responsible to free the string.
  */
-char *libnvmf_read_hostnqn(void);
+char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx);
 
 /**
  * libnvmf_read_hostid() - Reads the host identifier from the config default
  *			     location
+ * @ctx:		struct libnvme_global_ctx object
  *
  * Retrieve the host idenditifer from the config file located in
  * $SYSCONFDIR/nvme/. $SYSCONFDIR is usually /etc.
@@ -80,7 +82,7 @@ char *libnvmf_read_hostnqn(void);
  * Return: The host identifier, or NULL if unsuccessful. If found, the caller
  *	   is responsible to free the string.
  */
-char *libnvmf_read_hostid(void);
+char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx);
 
 /**
  * libnvmf_host_get_ids() - Retrieve host ids from various sources

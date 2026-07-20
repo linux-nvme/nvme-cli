@@ -307,12 +307,15 @@ class TestCtrlErrorHandling(unittest.TestCase):
 class TestHelperFunctions(unittest.TestCase):
     """Module-level helper functions exposed by the bindings."""
 
+    def setUp(self):
+        self.ctx = nvme.GlobalCtx()
+
     def test_read_hostnqn_returns_string_or_none(self):
-        hostnqn = nvme.read_hostnqn()
+        hostnqn = nvme.read_hostnqn(self.ctx)
         self.assertIsInstance(hostnqn, (str, type(None)))
 
     def test_read_hostid_returns_string_or_none(self):
-        hostid = nvme.read_hostid()
+        hostid = nvme.read_hostid(self.ctx)
         self.assertIsInstance(hostid, (str, type(None)))
 
 
