@@ -58,6 +58,10 @@
 		    "type": "string",
 		    "maxLength": 223
 		},
+		"persistent_discovery_ctrl": {
+		    "description": "Enable/disable Persistent Discovery Controller",
+		    "type": "boolean"
+		},
 		"ports": {
 		    "description": "Array of NVMe subsystem ports",
 		    "type": "array",
