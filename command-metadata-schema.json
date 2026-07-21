@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/linux-nvme/nvme-cli/command-metadata-schema.json",
+  "title": "nvme-cli command metadata",
+  "description": "Schema for the JSON emitted by `nvme dump-command-metadata`, which describes every command and its accepted options for tooling such as shell-completion generators, documentation, and drift checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "name", "commands", "plugins"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "description": "Bumped on any breaking change to the output structure. Consumers should reject a major version they do not understand.",
+      "minimum": 1
+    },
+    "name": {
+      "type": "string",
+      "description": "Program name (\"nvme\")."
+    },
+    "version": {
+      "type": "string",
+      "description": "Program version string. Omitted if unknown."
+    },
+    "description": {
+      "type": "string",
+      "description": "Program description. Omitted if unset."
+    },
+    "commands": {
+      "type": "array",
+      "description": "Top-level (builtin) commands.",
+      "items": { "$ref": "#/$defs/command" }
+    },
+    "plugins": {
+      "type": "array",
+      "description": "Named plugins, each grouping its own commands.",
+      "items": { "$ref": "#/$defs/plugin" }
+    }
+  },
+  "$defs": {
+    "plugin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "commands"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Plugin name, used as the first argument to dispatch its commands."
+        },
+        "description": {
+          "type": "string",
+          "description": "Plugin description. Omitted if unset."
+        },
+        "commands": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/command" }
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "options"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Command name as typed on the command line."
+        },
+        "alias": {
+          "type": "string",
+          "description": "Alternate name accepted for the command. Omitted if none."
+        },
+        "description": {
+          "type": "string",
+          "description": "Command description (the command-list one-liner). Omitted if unset."
+        },
+        "options": {
+          "type": "array",
+          "description": "Options the command accepts. Empty for commands that take no options.",
+          "items": { "$ref": "#/$defs/option" }
+        }
+      }
+    },
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["long", "argument"],
+      "properties": {
+        "long": {
+          "type": "string",
+          "description": "Long option name, without the leading \"--\"."
+        },
+        "short": {
+          "type": "string",
+          "description": "Single-character short option name, without the leading \"-\". Omitted if none.",
+          "minLength": 1,
+          "maxLength": 1
+        },
+        "argument": {
+          "type": "string",
+          "description": "Whether the option consumes an argument.",
+          "enum": ["none", "required", "optional"]
+        },
+        "metavar": {
+          "type": "string",
+          "description": "Placeholder name for the option's value (e.g. \"NUM\", \"FMT\"). Present only for options that take a value."
+        },
+        "description": {
+          "type": "string",
+          "description": "Option help text. Omitted if unset."
+        },
+        "global": {
+          "type": "boolean",
+          "description": "True for the shared global options appended to every command (verbose, output-format, timeout, ...). Absent otherwise.",
+          "const": true
+        },
+        "hidden": {
+          "type": "boolean",
+          "description": "True for options accepted on the command line but suppressed from --help. Absent otherwise.",
+          "const": true
+        },
+        "values": {
+          "type": "array",
+          "description": "The set of values the parser enforces for this option, when it constrains them to a fixed set. Absent when the value is unconstrained.",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

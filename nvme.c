@@ -47,6 +47,7 @@
 
 #include <libnvme.h>
 
+#include "command-metadata.h"
 #include "common.h"
 #include "fabrics.h"
 #include "logging.h"
@@ -10726,6 +10727,18 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 	return err;
 }
 #endif /* CONFIG_FABRICS */
+
+#ifdef CONFIG_JSONC
+static int dump_command_metadata_cmd(int argc, char **argv, struct command *acmd,
+				     struct plugin *plugin)
+{
+	(void)argc;
+	(void)argv;
+	(void)acmd;
+
+	return dump_command_metadata(plugin->parent);
+}
+#endif /* CONFIG_JSONC */
 
 static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {

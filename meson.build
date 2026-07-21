@@ -583,6 +583,7 @@ if want_nvme
     if json_c_dep.found()
         sources += [
             'nvme-print-json.c',
+            'command-metadata.c',
         ]
     endif
 
@@ -653,6 +654,7 @@ if want_nvme
     if host_system != 'windows'
         subdir('unit')
     endif
+    subdir('unit-py')
 
     if get_option('nvme-tests')
         subdir('tests')

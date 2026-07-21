@@ -133,6 +133,9 @@ COMMAND_LIST(
 	ENTRY("nvme-mi-recv", "Submit a NVMe-MI Receive command, return results", nmi_recv)
 	ENTRY("nvme-mi-send", "Submit a NVMe-MI Send command, return results", nmi_send)
 #endif
+#ifdef CONFIG_JSONC
+	ENTRY("dump-command-metadata", "Dump all commands and their options as JSON", dump_command_metadata_cmd)
+#endif
 );
 
 #endif
