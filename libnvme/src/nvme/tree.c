@@ -534,6 +534,32 @@ struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 	return h;
 }
 
+__libnvme_public int libnvme_get_host(
+		struct libnvme_global_ctx *ctx, const char *hostnqn,
+		const char *hostid, libnvme_host_t *host)
+{
+	struct libnvme_host *h;
+
+	/*
+	 * No sysfs identity (e.g. PCIe) and no ctx default: use a fixed
+	 * placeholder rather than resolving/generating one -- that's a
+	 * policy call for the caller, not us.
+	 */
+	if (!hostnqn)
+		hostnqn = NVME_DEFAULT_HOSTNQN;
+	if (!hostid)
+		hostid = NVME_DEFAULT_HOSTID;
+
+	h = libnvme_lookup_host(ctx, hostnqn, hostid);
+	if (!h)
+		return -ENOMEM;
+
+	libnvme_host_set_hostsymname(h, NULL);
+
+	*host = h;
+	return 0;
+}
+
 static int nvme_subsystem_scan_namespaces(struct libnvme_global_ctx *ctx,
 		libnvme_subsystem_t s)
 {

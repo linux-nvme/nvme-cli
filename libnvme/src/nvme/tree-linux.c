@@ -202,32 +202,6 @@ __libnvme_public char *libnvme_get_path_attr(libnvme_path_t p, const char *attr)
 	return libnvme_get_attr(libnvme_path_get_sysfs_dir(p), attr);
 }
 
-__libnvme_public int libnvme_get_host(
-		struct libnvme_global_ctx *ctx, const char *hostnqn,
-		const char *hostid, libnvme_host_t *host)
-{
-	struct libnvme_host *h;
-
-	/*
-	 * No sysfs identity (e.g. PCIe) and no ctx default: use a fixed
-	 * placeholder rather than resolving/generating one -- that's a
-	 * policy call for the caller, not us. Matches tree-win.c.
-	 */
-	if (!hostnqn)
-		hostnqn = NVME_DEFAULT_HOSTNQN;
-	if (!hostid)
-		hostid = NVME_DEFAULT_HOSTID;
-
-	h = libnvme_lookup_host(ctx, hostnqn, hostid);
-	if (!h)
-		return -ENOMEM;
-
-	libnvme_host_set_hostsymname(h, NULL);
-
-	*host = h;
-	return 0;
-}
-
 __libnvme_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 {
 	char *state = c->state;
