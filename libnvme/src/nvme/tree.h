@@ -794,6 +794,19 @@ char *libnvme_ctrl_get_src_addr(libnvme_ctrl_t c, char *src_addr,
 const char *libnvme_ctrl_get_state(libnvme_ctrl_t c);
 
 /**
+ * libnvme_transport_is_fabric() - True for a fabrics transport string
+ * @transport:	Transport name, e.g. "tcp", "pcie"
+ *
+ * A transport is either local (pcie, apple-nvme) or NVMe-over-Fabrics
+ * (tcp, rdma, fc, loop). Use this when only the transport string is
+ * available, e.g. before a controller exists to ask
+ * libnvme_ctrl_is_transport_fabric() instead.
+ *
+ * Return: true if @transport is a fabrics transport, false if local.
+ */
+bool libnvme_transport_is_fabric(const char *transport);
+
+/**
  * libnvme_ctrl_is_transport_fabric() - True for a fabrics transport
  * @c:	Controller instance
  *

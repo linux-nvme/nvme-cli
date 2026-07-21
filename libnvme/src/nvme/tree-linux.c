@@ -208,6 +208,16 @@ __libnvme_public int libnvme_get_host(
 {
 	struct libnvme_host *h;
 
+	/*
+	 * No sysfs identity (e.g. PCIe) and no ctx default: use a fixed
+	 * placeholder rather than resolving/generating one -- that's a
+	 * policy call for the caller, not us. Matches tree-win.c.
+	 */
+	if (!hostnqn)
+		hostnqn = NVME_DEFAULT_HOSTNQN;
+	if (!hostid)
+		hostid = NVME_DEFAULT_HOSTID;
+
 	h = libnvme_lookup_host(ctx, hostnqn, hostid);
 	if (!h)
 		return -ENOMEM;

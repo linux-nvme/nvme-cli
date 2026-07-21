@@ -27,6 +27,13 @@ static inline void cleanup_dirents(struct dirents *ents)
 #define FREE_CTRL_ATTR(a) \
 	do { free(a); (a) = NULL; } while (0)
 
+/* Placeholder identity for a controller with none of its own (e.g.
+ * PCIe) -- fixed, not resolved/generated, so it's deterministic.
+ */
+#define NVME_DEFAULT_HOSTNQN \
+	"nqn.2014-08.org.nvmexpress:uuid:00000000-0000-0000-0000-000000000000"
+#define NVME_DEFAULT_HOSTID "00000000-0000-0000-0000-000000000000"
+
 char *libnvme_hostid_from_hostnqn(const char *hostnqn);
 
 int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,

@@ -306,6 +306,9 @@ static char *nvmf_read_file(const char *f, int len)
 
 __libnvme_public char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx)
 {
+	if (!ctx)
+		return NULL;
+
 	if (ctx->hostnqn) {
 		if (!strcmp(ctx->hostnqn, ""))
 			return NULL;
@@ -317,6 +320,9 @@ __libnvme_public char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx)
 
 __libnvme_public char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx)
 {
+	if (!ctx)
+		return NULL;
+
 	if (ctx->hostid) {
 		if (!strcmp(ctx->hostid, ""))
 			return NULL;
@@ -334,6 +340,9 @@ __libnvme_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 	__cleanup_free char *hid = NULL;
 	__cleanup_free char *hnqn = NULL;
 	libnvme_host_t h;
+
+	if (!ctx)
+		return -EINVAL;
 
 	/* command line argumments */
 	if (hostid_arg)
