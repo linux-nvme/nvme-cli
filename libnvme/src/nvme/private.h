@@ -493,6 +493,12 @@ struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 struct libnvme_ctrl *libnvme_lookup_ctrl(struct libnvme_subsystem *s,
 		const struct libnvme_ctrl_params *params,
 		struct libnvme_ctrl *p);
+int libnvme_create_subsystem(struct libnvme_host *h,
+		const char *name, const char *subsysnqn,
+		struct libnvme_subsystem **s);
+int libnvme_subsystem_create_ctrl(libnvme_subsystem_t s,
+		const struct libnvme_ctrl_params *in,
+		libnvme_ctrl_t *p);
 bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr);
 void libnvmf_default_config(struct libnvme_fabrics_config *cfg);

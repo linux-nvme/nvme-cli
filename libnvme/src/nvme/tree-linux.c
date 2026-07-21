@@ -376,9 +376,13 @@ __libnvme_public int libnvme_init_ctrl(
 		return ENVME_CONNECT_LOOKUP_SUBSYS_NAME;
 	}
 
-	s = libnvme_lookup_subsystem(h, subsys_name, c->subsysnqn);
-	if (!s)
+	ret = libnvme_get_subsystem(h->ctx, h, subsys_name, c->subsysnqn, &s);
+	if (ret) {
+		libnvme_msg(h->ctx, LIBNVME_LOG_ERR,
+			 "Failed to lookup subsystem %s\n",
+			 subsys_name);
 		return -ENVME_CONNECT_LOOKUP_SUBSYS;
+	}
 
 	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
 		c->discovery_ctrl = true;
@@ -437,9 +441,9 @@ __libnvme_public int libnvme_scan_ctrl(
 		return ret;
 	}
 
-	s = libnvme_lookup_subsystem(h, subsysname, subsysnqn);
-	if (!s)
-		return -ENOMEM;
+	ret = libnvme_get_subsystem(h->ctx, h, subsysname, subsysnqn, &s);
+	if (ret)
+		return ret;
 
 	ret = libnvme_ctrl_alloc(ctx, s, path, name, &c);
 	if (ret)
