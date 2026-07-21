@@ -273,6 +273,12 @@ adoc_sources = [
     'nvme-mangoboost-id-ctrl',
 ]
 
+# File-format references (man section 5), installed separately from the
+# man1 command pages above.
+adoc_sources_man5 = [
+    'nvme-fabrics.conf',
+]
+
 adoc_includes = [
     'cmd-plugins.txt',
     'cmds-main.txt',
@@ -282,6 +288,7 @@ adoc_includes = [
 
 if want_docs != 'false'
     mandir = join_paths(prefixdir, get_option('mandir'), 'man1')
+    man5dir = join_paths(prefixdir, get_option('mandir'), 'man5')
     htmldir = join_paths(prefixdir, get_option('htmldir'), 'nvme')
 
     asciidoctor = find_program('asciidoc', required: want_docs_build)
@@ -295,48 +302,55 @@ if want_docs != 'false'
         if want_docs == 'all' or want_docs == 'man'
             xmlto = find_program('xmlto', required: false)
             if xmlto.found()
-                foreach adoc : adoc_sources
-                    input = adoc + '.txt'
-                    subst = configure_file(
-                        input: adoc + '.txt',
-                        output: adoc + '.msubst',
-                        configuration: substs
-                    )
-                    xml = custom_target(
-                        adoc.underscorify() + '_xml',
-                        input: subst,
-                        output: '@BASENAME@.xml',
-                        command: [
-                            asciidoctor,
-                            '-f', files('asciidoc.conf'),
-                            '-b', 'docbook',
-                            '-d', 'manpage',
-                            '-o', '@OUTPUT@',
-                            '@INPUT@',
-                        ],
-                    )
-                    doc_tgts += custom_target(
-                        adoc.underscorify() + '_man',
-                        input: xml,
-                        output: '@BASENAME@.1',
-                        command: [
-                            xmlto,
-                            '-m', files('manpage-normal.xsl'),
-                            '-o', '@OUTDIR@',
-                            '--skip-validation',
-                            'man',
-                            '@INPUT@',
-                        ],
-                        install: true,
-                        install_dir: mandir,
-                    )
+                man_sets = [
+                    {'sources': adoc_sources, 'section': '1', 'dir': mandir},
+                    {'sources': adoc_sources_man5, 'section': '5', 'dir': man5dir},
+                ]
+                foreach man_set : man_sets
+                    section = man_set['section']
+                    foreach adoc : man_set['sources']
+                        input = adoc + '.txt'
+                        subst = configure_file(
+                            input: adoc + '.txt',
+                            output: adoc + '.m' + section + 'subst',
+                            configuration: substs
+                        )
+                        xml = custom_target(
+                            adoc.underscorify() + '_xml' + section,
+                            input: subst,
+                            output: '@BASENAME@.xml',
+                            command: [
+                                asciidoctor,
+                                '-f', files('asciidoc.conf'),
+                                '-b', 'docbook',
+                                '-d', 'manpage',
+                                '-o', '@OUTPUT@',
+                                '@INPUT@',
+                            ],
+                        )
+                        doc_tgts += custom_target(
+                            adoc.underscorify() + '_man' + section,
+                            input: xml,
+                            output: '@BASENAME@.' + section,
+                            command: [
+                                xmlto,
+                                '-m', files('manpage-normal.xsl'),
+                                '-o', '@OUTDIR@',
+                                '--skip-validation',
+                                'man',
+                                '@INPUT@',
+                            ],
+                            install: true,
+                            install_dir: man_set['dir'],
+                        )
+                    endforeach
                 endforeach
             endif
         endif
 
         # html
         if want_docs == 'all' or want_docs == 'html'
-            foreach adoc : adoc_sources
+            foreach adoc : adoc_sources + adoc_sources_man5
                 input = adoc + '.txt'
                 subst = configure_file(
                     input: adoc + '.txt',
@@ -361,15 +375,22 @@ if want_docs != 'false'
         endif
     else
         # asciidoctor not found, install pre compiled documetationx
-        foreach adoc : adoc_sources
-            if want_docs == 'all' or want_docs == 'man'
-                man = files(adoc + '.1')
-                install_data(man, install_dir: mandir)
-            endif
-            if want_docs == 'all' or want_docs == 'html'
-                html = files(adoc + '.html')
-                install_data(html, install_dir: htmldir)
-            endif
+        man_sets = [
+            {'sources': adoc_sources, 'section': '1', 'dir': mandir},
+            {'sources': adoc_sources_man5, 'section': '5', 'dir': man5dir},
+        ]
+        foreach man_set : man_sets
+            section = man_set['section']
+            foreach adoc : man_set['sources']
+                if want_docs == 'all' or want_docs == 'man'
+                    man = files(adoc + '.' + section)
+                    install_data(man, install_dir: man_set['dir'])
+                endif
+                if want_docs == 'all' or want_docs == 'html'
+                    html = files(adoc + '.html')
+                    install_data(html, install_dir: htmldir)
+                endif
+            endforeach
         endforeach
     endif
 endif

@@ -664,6 +664,14 @@ if want_nvme
         configuration: substs,
     )
 
+    configure_file(
+        input: 'etc/nvme-fabrics.conf.sample.in',
+        output: 'nvme-fabrics.conf.sample',
+        configuration: substs,
+        install: true,
+        install_dir: join_paths(sysconfdir, 'nvme'),
+    )
+
     dracut_files = [
         '70-nvmf-autoconnect.conf',
     ]
