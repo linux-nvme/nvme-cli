@@ -521,8 +521,6 @@ __libnvme_public int libnvme_get_host(
 	if (!h)
 		return -ENOMEM;
 
-	libnvme_host_set_hostsymname(h, NULL);
-
 	*host = h;
 	return 0;
 }
