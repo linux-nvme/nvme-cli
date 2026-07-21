@@ -364,20 +364,21 @@ __libnvme_public void libnvme_free_subsystem(libnvme_subsystem_t s)
 	__nvme_free_subsystem(s);
 }
 
-struct libnvme_subsystem *libnvme_create_subsystem(struct libnvme_host *h,
-		const char *name, const char *subsysnqn)
+int libnvme_create_subsystem(struct libnvme_host *h,
+		const char *name, const char *subsysnqn,
+		struct libnvme_subsystem **ps)
 {
 	struct libnvme_subsystem *s;
 
 	s = calloc(1, sizeof(*s));
 	if (!s)
-		return NULL;
+		return -ENOMEM;
 
 	s->h = h;
 	s->subsysnqn = xstrdup(subsysnqn);
 	if (!s->subsysnqn) {
 		free(s);
-		return NULL;
+		return -ENOMEM;
 	}
 
 	if (name)
@@ -386,7 +387,10 @@ struct libnvme_subsystem *libnvme_create_subsystem(struct libnvme_host *h,
 	list_head_init(&s->namespaces);
 	list_node_init(&s->entry);
 	list_add_tail(&h->subsystems, &s->entry);
-	return s;
+
+	*ps = s;
+
+	return 0;
 }
 
 struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
@@ -403,7 +407,8 @@ struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 			continue;
 		return s;
 	}
-	return libnvme_create_subsystem(h, name, subsysnqn);
+
+	return NULL;
 }
 
 __libnvme_public int libnvme_get_subsystem(struct libnvme_global_ctx *ctx,
@@ -411,11 +416,17 @@ __libnvme_public int libnvme_get_subsystem(struct libnvme_global_ctx *ctx,
 		const char *subsysnqn, struct libnvme_subsystem **subsys)
 {
 	struct libnvme_subsystem *s;
+	int err;
 
 	s = libnvme_lookup_subsystem(h, name, subsysnqn);
-	if (!s)
-		return -ENOMEM;
+	if (s)
+		goto found;
 
+	err = libnvme_create_subsystem(h, name, subsysnqn, &s);
+	if (err)
+		return err;
+
+found:
 	*subsys = s;
 
 	return 0;
@@ -621,9 +632,9 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 		ret = libnvme_get_host(ctx, ctx->hostnqn, ctx->hostid, &h);
 		if (ret)
 			return ret;
-		s = libnvme_create_subsystem(h, name, subsysnqn);
-		if (!s)
-			return -ENOMEM;
+		ret = libnvme_create_subsystem(h, name, subsysnqn, &s);
+		if (ret)
+			return ret;
 		if (nvme_subsystem_scan_namespaces(ctx, s))
 			return -EINVAL;
 	} else if (strcmp(s->subsysnqn, subsysnqn)) {

@@ -251,8 +251,9 @@ static bool ctrl_lookups(struct libnvme_global_ctx *ctx)
 	bool pass = true;
 
 	h = libnvme_first_host(ctx);
-	libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
-			      DEFAULT_SUBSYSNQN, &s);
+	assert(!libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
+			      DEFAULT_SUBSYSNQN, &s));
+	assert(s);
 
 	printf("  lookup controller:\n");
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++) {
@@ -316,8 +317,8 @@ static bool test_src_addr(void)
 	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
 	assert(h);
 
-	libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
-			      DEFAULT_SUBSYSNQN, &s);
+	assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
+			      DEFAULT_SUBSYSNQN, &s));
 	assert(s);
 
 	c = libnvme_lookup_ctrl(s, &fctx.ctrl_params, NULL);
@@ -495,9 +496,8 @@ static bool ctrl_match(const char *tag,
 	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
 	assert(h);
 
-	assert(!libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
-		 rp->subsysnqn ? rp->subsysnqn : DEFAULT_SUBSYSNQN,
-		&s));
+	assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
+		rp->subsysnqn ? rp->subsysnqn : DEFAULT_SUBSYSNQN, &s));
 	assert(s);
 
 	reference_ctrl = libnvme_lookup_ctrl(s,
@@ -1313,9 +1313,8 @@ static bool ctrl_config_match(const char *tag,
 	libnvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
 	assert(h);
 
-	assert(!libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
-		 rp->subsysnqn ? rp->subsysnqn : DEFAULT_SUBSYSNQN,
-		&s));
+	assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
+		 rp->subsysnqn ? rp->subsysnqn : DEFAULT_SUBSYSNQN, &s));
 	assert(s);
 
 	reference_ctrl = libnvme_lookup_ctrl(s,
@@ -1530,7 +1529,7 @@ static bool test_well_known_nqn(void)
 	assert(h);
 
 	/* Subsystem 1: discovery subsystem with a discovery ctrl */
-	assert(!libnvme_get_subsystem(ctx, h, "disc",
+	assert(!libnvme_create_subsystem(h, "disc",
 		NVME_DISC_SUBSYS_NAME, &s_disc));
 	disc_ctrl = libnvme_lookup_ctrl(s_disc, &fctx.ctrl_params, NULL);
 	assert(disc_ctrl);
@@ -1546,8 +1545,8 @@ static bool test_well_known_nqn(void)
 	}
 
 	/* Subsystem 2: regular subsystem; discovery_ctrl defaults to false */
-	assert(!libnvme_get_subsystem(ctx, h, "regular",
-		DEFAULT_SUBSYSNQN, &s_regular));
+	assert(!libnvme_create_subsystem(h, "regular", DEFAULT_SUBSYSNQN,
+		&s_regular));
 	regular_ctrl = libnvme_lookup_ctrl(s_regular, &fctx.ctrl_params, NULL);
 	assert(regular_ctrl);
 	regular_ctrl->name = "nvme2";
@@ -1755,8 +1754,8 @@ static bool test_lookup_ctrl_pagination(void)
 
 	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
 	assert(h);
-	assert(!libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
-				      DEFAULT_SUBSYSNQN, &s));
+	assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
+		DEFAULT_SUBSYSNQN, &s));
 	assert(s);
 
 	/* Build list: [ctrl_a, ctrl_b] */

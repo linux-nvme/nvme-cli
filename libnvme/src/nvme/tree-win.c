@@ -175,12 +175,13 @@ free_transport:
 	return ret;
 }
 
-static libnvme_subsystem_t libnvme_lookup_subsystem_windows(libnvme_host_t h,
+static libnvme_subsystem_t libnvme_get_subsystem_windows(libnvme_host_t h,
 		const struct ctrl_map_entry *ctrl_entry)
 {
 	libnvme_subsystem_t s;
 	char *subsysnqn;
 	char *subsysname;
+	int ret;
 
 	subsysnqn = libnvme_ctrl_map_entry_get_subnqn(ctrl_entry);
 	if (!subsysnqn)
@@ -192,10 +193,10 @@ static libnvme_subsystem_t libnvme_lookup_subsystem_windows(libnvme_host_t h,
 		return NULL;
 	}
 
-	s = libnvme_lookup_subsystem(h, subsysname, subsysnqn);
+	ret = libnvme_get_subsystem(h->ctx, h, subsysname, subsysnqn, &s);
 	free(subsysnqn);
 	free(subsysname);
-	if (!s)
+	if (ret)
 		return NULL;
 
 	/* Populate subsystem info from first controller */
@@ -231,7 +232,7 @@ __libnvme_public int libnvme_scan_ctrl(struct libnvme_global_ctx *ctx,
 	if (ret)
 		return ret;
 
-	s = libnvme_lookup_subsystem_windows(h, ctrl_entry);
+	s = libnvme_get_subsystem_windows(h, ctrl_entry);
 	if (!s)
 		return -ENOMEM;
 

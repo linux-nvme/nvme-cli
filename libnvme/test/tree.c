@@ -191,7 +191,7 @@ static bool test_host_iteration(void)
 }
 
 /**
- * test_subsystem_dedup - libnvme_lookup_subsystem() must return the same
+ * test_subsystem_dedup - libnvme_get_subsystem() must return the same
  * pointer for the same name+subsysnqn, and a different pointer for different
  * ones.
  */
@@ -213,10 +213,10 @@ static bool test_subsystem_dedup(void)
 	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
 	assert(h);
 
-	s1 = libnvme_lookup_subsystem(h, SUBSYSNAME_1, SUBSYSNQN_1);
+	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s1));
 	assert(s1);
 
-	s2 = libnvme_lookup_subsystem(h, SUBSYSNAME_1, SUBSYSNQN_1);
+	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s2));
 	assert(s2);
 
 	if (s1 != s2) {
@@ -226,7 +226,7 @@ static bool test_subsystem_dedup(void)
 		printf(" - same name+subsysnqn returns same pointer [PASS]\n");
 	}
 
-	s3 = libnvme_lookup_subsystem(h, SUBSYSNAME_2, SUBSYSNQN_2);
+	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_2, SUBSYSNQN_2, &s3));
 	assert(s3);
 
 	if (s1 == s3) {
@@ -262,7 +262,7 @@ static bool test_subsystem_attrs(void)
 	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
 	assert(h);
 
-	s = libnvme_lookup_subsystem(h, SUBSYSNAME_1, SUBSYSNQN_1);
+	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s));
 	assert(s);
 
 	if (!libnvme_subsystem_get_name(s) ||
@@ -308,8 +308,8 @@ static bool test_subsystem_iteration(void)
 	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
 	assert(h);
 
-	libnvme_lookup_subsystem(h, SUBSYSNAME_1, SUBSYSNQN_1);
-	libnvme_lookup_subsystem(h, SUBSYSNAME_2, SUBSYSNQN_2);
+	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s));
+	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_2, SUBSYSNQN_2, &s));
 
 	libnvme_for_each_subsystem(h, s)
 		count++;
