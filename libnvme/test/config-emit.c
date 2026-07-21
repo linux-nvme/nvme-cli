@@ -264,11 +264,14 @@ static bool test_refuse_existing(struct libnvme_global_ctx *ctx,
 	struct libnvmf_config_emitter *e;
 	char path[600];
 	int ret;
+	FILE *f;
 
 	printf("test_refuse_existing:\n");
 
 	/* An empty main file alone is enough to occupy the target. */
-	assert(fclose(fopen(fx->main_path, "w")) == 0);
+	f = fopen(fx->main_path, "w");
+	assert(f);
+	assert(fclose(f) == 0);
 
 	e = libnvmf_config_emit_new(ctx);
 	assert(e);
@@ -288,7 +291,9 @@ static bool test_refuse_existing(struct libnvme_global_ctx *ctx,
 	/* A lone .conf drop-in also counts as an existing configuration. */
 	assert(mkdir(fx->dropin_dir, 0755) == 0);
 	snprintf(path, sizeof(path), "%s/10-x.conf", fx->dropin_dir);
-	assert(fclose(fopen(path, "w")) == 0);
+	f = fopen(path, "w");
+	assert(f);
+	assert(fclose(f) == 0);
 
 	e = libnvmf_config_emit_new(ctx);
 	assert(e);
@@ -314,11 +319,14 @@ static bool test_force_overwrite(struct libnvme_global_ctx *ctx,
 	struct conn_list list = { 0 };
 	struct libnvmf_config *config;
 	bool pass = true;
+	FILE *f;
 
 	printf("test_force_overwrite:\n");
 
 	/* A stale configuration occupies the target. */
-	assert(fclose(fopen(fx->main_path, "w")) == 0);
+	f = fopen(fx->main_path, "w");
+	assert(f);
+	assert(fclose(f) == 0);
 
 	e = libnvmf_config_emit_new(ctx);
 	assert(e);
