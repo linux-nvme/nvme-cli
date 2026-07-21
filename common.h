@@ -28,6 +28,7 @@
  * Provide compatibility wrappers.
  */
 #if defined(_WIN32)
+#define DEV_NULL "NUL"
 #define mkdir(path, mode) _mkdir(path)
 
 #define fsync _commit
@@ -39,6 +40,8 @@ static inline int getpagesize(void)
 	GetSystemInfo(&si);
 	return si.dwPageSize;
 }
+#else
+#define DEV_NULL "/dev/null"
 #endif
 
 /*
