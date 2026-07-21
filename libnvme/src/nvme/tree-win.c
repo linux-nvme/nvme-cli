@@ -118,28 +118,15 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 __libnvme_public int libnvme_get_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid, libnvme_host_t *host)
 {
-	__cleanup_free char *hnqn = NULL;
-	__cleanup_free char *hid = NULL;
 	struct libnvme_host *h;
 
-	/* Use provided values or generate defaults */
-	if (hostnqn)
-		hnqn = strdup(hostnqn);
-	else
-		hnqn = strdup("nqn.2014-08.org.nvmexpress:uuid:00000000-0000-0000-0000-000000000000");
+	/* Same fallback as tree-linux.c's libnvme_get_host(). */
+	if (!hostnqn)
+		hostnqn = NVME_DEFAULT_HOSTNQN;
+	if (!hostid)
+		hostid = NVME_DEFAULT_HOSTID;
 
-	if (!hnqn)
-		return -ENOMEM;
-
-	if (hostid)
-		hid = strdup(hostid);
-	else
-		hid = strdup("00000000-0000-0000-0000-000000000000");
-
-	if (!hid)
-		return -ENOMEM;
-
-	h = libnvme_lookup_host(ctx, hnqn, hid);
+	h = libnvme_lookup_host(ctx, hostnqn, hostid);
 	if (!h)
 		return -ENOMEM;
 

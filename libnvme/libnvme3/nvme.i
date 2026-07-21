@@ -175,10 +175,10 @@ typedef struct { const char *key; const char **val; } str_fields_t;
  */
 static int set_fctx_host_params(struct libnvme_global_ctx *ctx,
 				struct libnvmf_context *fctx,
+				const char *transport,
 				PyObject *dict)
 {
 	const char *hostnqn = NULL, *hostid = NULL;
-	char *hnqn = NULL, *hid = NULL;
 	const char *hostkey = NULL, *ctrlkey = NULL;
 	const char *keyring = NULL, *tls_key = NULL, *tls_key_identity = NULL;
 	int err;
@@ -202,16 +202,52 @@ static int set_fctx_host_params(struct libnvme_global_ctx *ctx,
 	for (p = tbl; p->key; p++)
 		*p->val = dict_get_str(dict, p->key);
 
-	err = libnvmf_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
-	if (err) {
-		raise_nvme(NvmeError, err);
+	/* Fall back to the ctx default only when the dict supplies neither
+	 * field. Never splice a dict-given hostnqn with a ctx-default
+	 * hostid (or vice versa) -- that pairing was never validated
+	 * together. This mirrors the Host() constructor's use of the ctx
+	 * default; neither does the full lookup-and-generate chain here:
+	 * unlike scan_topology(), constructing a fabrics context is exactly
+	 * the caller-facing policy decision libnvmf_host_get_ids() exists
+	 * to keep out of the library.
+	 */
+	if (!hostnqn && !hostid) {
+		hostnqn = ctx->hostnqn;
+		hostid = ctx->hostid;
+	}
+
+	/* PCIe (and apple-nvme) have no host identity concept -- a fabrics
+	 * transport is a policy decision the caller must have already made
+	 * by the time it constructs a Ctrl, not something to discover only
+	 * when connect()/discover() is later called on it.
+	 */
+	if (!hostnqn && libnvme_transport_is_fabric(transport)) {
+		PyErr_Format(PyExc_ValueError,
+			"transport '%s' requires a hostnqn (set it in the "
+			"dict, or as GlobalCtx.hostnqn)", transport);
 		return -1;
 	}
 
-	libnvmf_context_set_hostnqn(fctx, hnqn, hid);
+	if (hostnqn || hostid) {
+		bool hostid_missing = !hostid;
 
-	free(hnqn);
-	free(hid);
+		err = libnvmf_context_set_hostnqn(fctx, hostnqn, hostid);
+		if (err) {
+			/* The only way this specific combination fails is a
+			 * hostid that can't be derived from hostnqn (it's
+			 * only derivable from a uuid:-form hostnqn) -- say so,
+			 * instead of surfacing the bare errno from below.
+			 */
+			if (hostid_missing && hostnqn)
+				PyErr_Format(PyExc_ValueError,
+					"hostid not given and could not be "
+					"derived from hostnqn '%s' (expected "
+					"a uuid: suffix)", hostnqn);
+			else
+				raise_nvme(NvmeError, err);
+			return -1;
+		}
+	}
 
 	if (hostkey || ctrlkey || keyring || tls_key || tls_key_identity)
 		libnvmf_context_set_crypto(fctx, hostkey, ctrlkey, keyring,
@@ -251,7 +287,7 @@ static int set_fctx_from_dict(struct libnvme_global_ctx *ctx,
 				       dict_get_str(dict, "host_traddr"),
 				       dict_get_str(dict, "host_iface"));
 
-	if (set_fctx_host_params(ctx, fctx, dict))
+	if (set_fctx_host_params(ctx, fctx, transport, dict))
 		return -1;
 	set_fctx_fabrics_config(fctx, dict);
 

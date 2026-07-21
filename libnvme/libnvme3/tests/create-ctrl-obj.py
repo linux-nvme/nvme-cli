@@ -6,6 +6,9 @@ from libnvme3 import nvme
 
 ctx = nvme.GlobalCtx()
 ctx.log_level('debug')
+(hostnqn, hostid) = nvme.host_get_ids(ctx)
+ctx.hostnqn = hostnqn
+ctx.hostid = hostid
 
 ctrl = nvme.Ctrl(ctx, {
     'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME,

@@ -178,6 +178,7 @@ LIBNVME_3 {
 		libnvme_transport_handle_set_submit_entry;
 		libnvme_transport_handle_set_submit_exit;
 		libnvme_transport_handle_set_timeout;
+		libnvme_transport_is_fabric;
 		libnvme_unlink_ctrl;
 		libnvme_update_block_size;
 		libnvme_uuid_from_string;

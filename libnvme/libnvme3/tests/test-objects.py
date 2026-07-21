@@ -125,6 +125,9 @@ class TestCtrl(unittest.TestCase):
 
     def setUp(self):
         self.ctx = nvme.GlobalCtx()
+        (hostnqn, hostid) = nvme.host_get_ids(self.ctx)
+        self.ctx.hostnqn = hostnqn
+        self.ctx.hostid = hostid
         self.subsysnqn = nvme.NVME_DISC_SUBSYS_NAME
 
     def tearDown(self):
@@ -288,6 +291,9 @@ class TestCtrlErrorHandling(unittest.TestCase):
 
     def setUp(self):
         self.ctx = nvme.GlobalCtx()
+        (hostnqn, hostid) = nvme.host_get_ids(self.ctx)
+        self.ctx.hostnqn = hostnqn
+        self.ctx.hostid = hostid
         self.ctrl = nvme.Ctrl(self.ctx, {
             'subsysnqn': nvme.NVME_DISC_SUBSYS_NAME,
             'transport': 'loop',
