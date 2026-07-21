@@ -139,7 +139,7 @@ static struct libnvme_global_ctx *create_tree(void)
 	libnvme_global_ctx_set_hostnqn(ctx, DEFAULT_HOSTNQN);
 	libnvme_global_ctx_set_hostid(ctx, DEFAULT_HOSTID);
 
-	libnvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
 	assert(h);
 
 	printf("  ctrls created:\n");
@@ -313,7 +313,7 @@ static bool test_src_addr(void)
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_DEBUG, false, false);
 
-	libnvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
 	assert(h);
 
 	libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
@@ -492,7 +492,7 @@ static bool ctrl_match(const char *tag,
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_INFO, false, false);
 
-	libnvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
 	assert(h);
 
 	assert(!libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
@@ -511,7 +511,7 @@ static bool ctrl_match(const char *tag,
 	found_ctrl = libnvmf_ctrl_find(s, &candidate->f);
 
 	candidate_ctrl = libnvme_lookup_ctrl(s,
-				&candidate->f.ctrl_params, NULL);
+		&candidate->f.ctrl_params, NULL);
 
 	if (should_match) {
 		if (candidate_ctrl != reference_ctrl) {
@@ -1526,7 +1526,7 @@ static bool test_well_known_nqn(void)
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_INFO, false, false);
 
-	libnvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
 	assert(h);
 
 	/* Subsystem 1: discovery subsystem with a discovery ctrl */
@@ -1753,7 +1753,7 @@ static bool test_lookup_ctrl_pagination(void)
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_INFO, false, false);
 
-	libnvme_get_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h);
+	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
 	assert(h);
 	assert(!libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
 				      DEFAULT_SUBSYSNQN, &s));
