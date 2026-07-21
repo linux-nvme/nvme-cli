@@ -66,7 +66,6 @@
 static char *raw;
 static bool persistent;
 static bool quiet;
-static bool dump_config;
 
 static const char *nvmf_tport		= "transport type";
 static const char *nvmf_traddr		= "transport address";
@@ -98,6 +97,7 @@ static const char *nvmf_data_digest	= "enable transport protocol data digest (TC
 static const char *nvmf_tls		= "enable TLS";
 static const char *nvmf_concat		= "enable secure concatenation";
 static const char *nvmf_config_file	= "Use specified INI configuration file (auto-converts a legacy .json) or 'none' to disable";
+static const char *nvmf_config_file_ro	= "INI configuration file (default: " PATH_NVMF_INI ")";
 
 #define NVMF_ARGS(n, f, ...)                                                                  \
 	NVME_ARGS(n,                                                                              \
@@ -1345,33 +1345,24 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 	return 0;
 }
 
-int fabrics_config(const char *desc, int argc, char **argv)
+int fabrics_config_validate(const char *desc, int argc, char **argv)
 {
-	bool scan_tree = false, modify_config = false, update_config = false;
-	__cleanup_free char *hnqn = NULL;
-	__cleanup_free char *hid = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	char *config_file = PATH_NVMF_CONFIG;
-	struct nvmf_args fa = { };
+	char *config_file = PATH_NVMF_INI;
+	bool verbose = false;
 	int ret;
 
-	NVMF_ARGS(opts, fa,
-		  OPT_STRING("config",             'J', "FILE", &config_file, nvmf_config_file),
-		  OPT_FLAG("scan",                 'R', &scan_tree,           "Scan current NVMeoF topology"),
-		  OPT_FLAG("modify",               'M', &modify_config,       "Modify JSON configuration file"),
-		  OPT_FLAG("dump",                 'O', &dump_config,         "Dump JSON configuration to stdout"),
-		  OPT_FLAG("update",               'U', &update_config,       "Update JSON configuration file"));
-
-	nvmf_default_args(&fa);
+	OPT_ARGS(opts) = {
+		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file_ro),
+		OPT_FLAG("verbose", 'v', &verbose, "increase output verbosity"),
+		OPT_END()
+	};
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
-	if (!strcmp(config_file, "none"))
-		config_file = NULL;
-
-	log_level = map_log_level(nvme_args.verbose, quiet);
+	log_level = map_log_level(verbose ? 1 : 0, false);
 
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret) {
@@ -1381,64 +1372,141 @@ int fabrics_config(const char *desc, int argc, char **argv)
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
-	libnvme_read_config(ctx, config_file);
+	ret = libnvmf_config_validate(ctx, config_file);
+	if (ret)
+		nvme_show_error("%s: invalid configuration", config_file);
+	else
+		nvme_show_result("%s: OK", config_file);
 
-	if (scan_tree) {
-		libnvme_skip_namespaces(ctx);
-		ret = libnvme_scan_topology(ctx, NULL, NULL);
-		if (ret < 0) {
-			nvme_show_error("Failed to scan topology: %s",
-				libnvme_strerror(-ret));
-			return ret;
-		}
+	return ret;
+}
+
+/*
+ * libnvmf_connect_args_emit() callback for "nvme config-show": print each
+ * formatted "--option=value" straight to stdout as part of the running
+ * "nvme connect" line.
+ */
+static void print_conn_arg(const char *arg, void *user_data)
+{
+	printf(" %s", arg);
+}
+
+static void print_conn_field(const char *name, const char *value)
+{
+	if (value)
+		printf(" --%s=%s", name, value);
+}
+
+/*
+ * libnvmf_config_conn_for_each() callback for "nvme config-show": render
+ * one resolved connection as its equivalent "nvme connect" command line.
+ *
+ * Identity is deliberately left unresolved here (unlike build_conn_tid()'s
+ * connect-time callers): a persona with no hostnqn/hostid falls back to the
+ * system default at connect time, not parse time, so showing the concrete
+ * value here would suggest a fixed identity the config doesn't actually pin.
+ *
+ * Addressing is not resolved either, and no TID is built for a hostname:
+ * "show" must never touch the network, and a hostname traddr is legitimate
+ * INI content a TID (numeric-only) can't represent. The canonicalized TID
+ * rendering is used when the address is already numeric; a raw hostname
+ * falls back to printing the field as configured.
+ */
+static void show_conn(const struct libnvmf_config_conn *conn, void *user_data)
+{
+	bool is_dc = libnvmf_config_conn_is_dc(conn);
+	const char *hostnqn = libnvmf_config_conn_get_hostnqn(conn);
+	const char *hostid = libnvmf_config_conn_get_hostid(conn);
+	const struct libnvmf_params *params =
+		libnvmf_config_conn_get_params(conn);
+	__cleanup_nvmf_tid struct libnvmf_tid *tid = NULL;
+
+	printf("# %s: %s\n", libnvmf_config_conn_get_source(conn),
+		is_dc ? "Discovery Controller" : "I/O Controller");
+
+	tid = libnvmf_tid_from_fields(
+			libnvmf_config_conn_get_transport(conn),
+			libnvmf_config_conn_get_traddr(conn),
+			libnvmf_config_conn_get_trsvcid(conn),
+			libnvmf_config_conn_get_subsysnqn(conn),
+			libnvmf_config_conn_get_host_traddr(conn),
+			libnvmf_config_conn_get_host_iface(conn),
+			hostnqn, hostid);
+
+	/*
+	 * A DC entry is consumed via libnvmf_discovery() (log in, fetch the
+	 * discovery log, connect everything returned) -- "nvme connect-all"
+	 * is its real equivalent, not a bare "nvme connect" (which would
+	 * only open the admin queue, matching just the niche "connect -J"
+	 * mode instead of the primary discover/connect-all consumption
+	 * path this command documents).
+	 */
+	printf("nvme %s", is_dc ? "connect-all" : "connect");
+	if (tid) {
+		libnvmf_connect_args_emit(tid, params, print_conn_arg, NULL);
+	} else {
+		const char *transport = libnvmf_config_conn_get_transport(conn);
+		const char *traddr = libnvmf_config_conn_get_traddr(conn);
+		const char *trsvcid = libnvmf_config_conn_get_trsvcid(conn);
+		const char *subsysnqn = libnvmf_config_conn_get_subsysnqn(conn);
+		const char *host_traddr =
+			libnvmf_config_conn_get_host_traddr(conn);
+		const char *host_iface =
+			libnvmf_config_conn_get_host_iface(conn);
+
+		print_conn_field("transport", transport);
+		print_conn_field("traddr", traddr);
+		print_conn_field("trsvcid", trsvcid);
+		print_conn_field("nqn", subsysnqn);
+		print_conn_field("host-traddr", host_traddr);
+		print_conn_field("host-iface", host_iface);
+		print_conn_field("hostnqn", hostnqn);
+		print_conn_field("hostid", hostid);
+		libnvmf_connect_args_emit(NULL, params, print_conn_arg, NULL);
+	}
+	printf("\n");
+	if (!hostnqn || !hostid)
+		printf("    (hostnqn/hostid: system default)\n");
+	printf("\n");
+}
+
+int fabrics_config_show(const char *desc, int argc, char **argv)
+{
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	struct libnvmf_config *cfg;
+	char *config_file = PATH_NVMF_INI;
+	bool verbose = false;
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file_ro),
+		OPT_FLAG("verbose", 'v', &verbose, "increase output verbosity"),
+		OPT_END()
+	};
+
+	ret = argconfig_parse(argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	log_level = map_log_level(verbose ? 1 : 0, false);
+
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret) {
+		nvme_show_error("Failed to create topology root: %s",
+			libnvme_strerror(-ret));
+		return ret;
+	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
+
+	ret = libnvmf_config_read(ctx, config_file, &cfg);
+	if (ret) {
+		nvme_show_error("failed to read %s: %s", config_file,
+			libnvme_strerror(-ret));
+		return ret;
 	}
 
-	if (modify_config) {
-		__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
-
-		if (!fa.subsysnqn) {
-			nvme_show_error(
-				"required argument [--nqn | -n] needed with --modify\n");
-			return -EINVAL;
-		}
-
-		if (!fa.transport) {
-			nvme_show_error(
-				"required argument [--transport | -t] needed with --modify\n");
-			return -EINVAL;
-		}
-
-		ret = libnvmf_host_get_ids(ctx, fa.hostnqn, fa.hostid,
-				&hnqn, &hid);
-		if (ret) {
-			nvme_show_error("failed to determine hostnqn/hostid: %s",
-				libnvme_strerror(-ret));
-			return ret;
-		}
-		fa.hostnqn = hnqn;
-		fa.hostid = hid;
-
-		ret = create_common_context(ctx, persistent, &fa, NULL, &fctx);
-		if (ret)
-			return ret;
-
-		ret = libnvmf_config_modify(ctx, fctx);
-		if (ret) {
-			nvme_show_error("failed to update config");
-			return ret;
-		}
-	}
-
-	if (update_config) {
-		__cleanup_fd int fd = -1;
-
-		fd = open(config_file, O_RDONLY, 0);
-		if (fd != -1)
-			libnvme_dump_config(ctx, fd);
-	}
-
-	if (dump_config)
-		libnvme_dump_config(ctx, STDOUT_FILENO);
+	libnvmf_config_conn_for_each(cfg, show_conn, NULL);
+	libnvmf_config_free(cfg);
 
 	return 0;
 }
