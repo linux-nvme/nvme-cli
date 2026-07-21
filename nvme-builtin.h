@@ -112,7 +112,10 @@ COMMAND_LIST(
 	ENTRY("connect", "Connect to NVMeoF subsystem", connect_cmd)
 	ENTRY("disconnect", "Disconnect from NVMeoF subsystem", disconnect_cmd)
 	ENTRY("disconnect-all", "Disconnect from all connected NVMeoF subsystems", disconnect_all_cmd)
-	ENTRY("config", "Configuration of NVMeoF subsystems", config_cmd)
+	ENTRY("config-validate", "Validate an NVMeoF connection configuration",
+	      config_validate_cmd)
+	ENTRY("config-show", "Show the resolved connection configuration",
+	      config_show_cmd)
 	ENTRY("config-convert", "Convert config to INI", config_convert_cmd)
 	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller", dim_cmd)
 	ENTRY("gen-hostnqn", "Generate NVMeoF host NQN", gen_hostnqn_cmd)

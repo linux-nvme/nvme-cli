@@ -10843,11 +10843,20 @@ int disconnect_all_cmd(int argc, char **argv, struct command *acmd,
 	return fabrics_disconnect_all(desc, argc, argv);
 }
 
-static int config_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+static int config_validate_cmd(int argc, char **argv, struct command *acmd,
+		struct plugin *plugin)
 {
-	const char *desc = "Configuration of NVMeoF subsystems";
+	const char *desc = "Validate an NVMeoF connection configuration";
 
-	return fabrics_config(desc, argc, argv);
+	return fabrics_config_validate(desc, argc, argv);
+}
+
+static int config_show_cmd(int argc, char **argv, struct command *acmd,
+		struct plugin *plugin)
+{
+	const char *desc = "Show the resolved NVMeoF connection configuration";
+
+	return fabrics_config_show(desc, argc, argv);
 }
 
 static int config_convert_cmd(int argc, char **argv, struct command *acmd,
