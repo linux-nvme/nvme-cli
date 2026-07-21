@@ -30,7 +30,7 @@
 #define SUBSYSNQN_2  "nqn.2022-01.com.example:subsys2"
 
 /**
- * test_host_dedup - libnvme_lookup_host() must return the same pointer for
+ * test_host_dedup - libnvme_get_host() must return the same pointer for
  * the same hostnqn+hostid, and a different pointer for different credentials.
  */
 static bool test_host_dedup(void)
@@ -47,10 +47,10 @@ static bool test_host_dedup(void)
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	h1 = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
+	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h1));
 	assert(h1);
 
-	h2 = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
+	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h2));
 	assert(h2);
 
 	if (h1 != h2) {
@@ -60,7 +60,7 @@ static bool test_host_dedup(void)
 		printf(" - same hostnqn+hostid returns same pointer [PASS]\n");
 	}
 
-	h3 = libnvme_lookup_host(ctx, HOSTNQN_2, HOSTID_2);
+	assert(!libnvme_get_host(ctx, HOSTNQN_2, HOSTID_2, &h3));
 	assert(h3);
 
 	if (h1 == h3) {
@@ -75,7 +75,7 @@ static bool test_host_dedup(void)
 }
 
 /**
- * test_hostid_from_hostnqn - When hostid is NULL, libnvme_lookup_host()
+ * test_hostid_from_hostnqn - When hostid is NULL, libnvme_create_host()
  * must derive the hostid from the UUID embedded in the hostnqn.
  */
 static bool test_hostid_from_hostnqn(void)
@@ -93,7 +93,7 @@ static bool test_hostid_from_hostnqn(void)
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	h = libnvme_lookup_host(ctx, HOSTNQN_1, NULL);
+	libnvme_create_host(ctx, HOSTNQN_1, NULL, &h);
 	assert(h);
 
 	hostid = libnvme_host_get_hostid(h);
@@ -127,7 +127,7 @@ static bool test_host_attrs(void)
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	h = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
+	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
 	assert(h);
 
 	if (!libnvme_host_get_hostnqn(h) ||
@@ -169,9 +169,12 @@ static bool test_host_iteration(void)
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
-	libnvme_lookup_host(ctx, HOSTNQN_2, HOSTID_2);
-	libnvme_lookup_host(ctx, HOSTNQN_3, HOSTID_3);
+	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	assert(h);
+	assert(!libnvme_get_host(ctx, HOSTNQN_2, HOSTID_2, &h));
+	assert(h);
+	assert(!libnvme_get_host(ctx, HOSTNQN_3, HOSTID_3, &h));
+	assert(h);
 
 	libnvme_for_each_host(ctx, h)
 		count++;
@@ -207,7 +210,7 @@ static bool test_subsystem_dedup(void)
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	h = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
+	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
 	assert(h);
 
 	s1 = libnvme_lookup_subsystem(h, SUBSYSNAME_1, SUBSYSNQN_1);
@@ -256,7 +259,7 @@ static bool test_subsystem_attrs(void)
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	h = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
+	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
 	assert(h);
 
 	s = libnvme_lookup_subsystem(h, SUBSYSNAME_1, SUBSYSNQN_1);
@@ -302,7 +305,7 @@ static bool test_subsystem_iteration(void)
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	h = libnvme_lookup_host(ctx, HOSTNQN_1, HOSTID_1);
+	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
 	assert(h);
 
 	libnvme_lookup_subsystem(h, SUBSYSNAME_1, SUBSYSNQN_1);

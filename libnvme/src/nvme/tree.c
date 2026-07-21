@@ -452,21 +452,34 @@ __libnvme_public void libnvme_free_host(struct libnvme_host *h)
 	__libnvme_free_host(h);
 }
 
-static int libnvme_create_host(struct libnvme_global_ctx *ctx,
+int libnvme_create_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid,
 		struct libnvme_host **host)
 {
 	struct libnvme_host *h;
+	char *hnqn, *hid;
+
+	if (!hostnqn)
+		return -EINVAL;
+
+	hnqn = strdup(hostnqn);
+	if (hostid)
+		hid = strdup(hostid);
+	else
+		hid = libnvme_hostid_from_hostnqn(hostnqn);
+
+	if (!hid) {
+		free(hnqn);
+		return -EINVAL;
+	}
 
 	h = calloc(1, sizeof(*h));
 	if (!h)
 		return -ENOMEM;
 
-	h->hostnqn = strdup(hostnqn);
-	if (hostid)
-		h->hostid = strdup(hostid);
-	else
-		h->hostid = libnvme_hostid_from_hostnqn(hostnqn);
+	h->hostnqn = hnqn;
+	h->hostid = hid;
+
 	list_head_init(&h->subsystems);
 	list_node_init(&h->entry);
 	h->ctx = ctx;
@@ -495,10 +508,7 @@ struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 		return h;
 	}
 
-	if (libnvme_create_host(ctx, hostnqn, hostid, &h))
-		return NULL;
-
-	return h;
+	return NULL;
 }
 
 __libnvme_public int libnvme_get_host(
@@ -506,6 +516,7 @@ __libnvme_public int libnvme_get_host(
 		const char *hostid, libnvme_host_t *host)
 {
 	struct libnvme_host *h;
+	int err;
 
 	/*
 	 * No sysfs identity (e.g. PCIe) and no ctx default: use a fixed
@@ -518,9 +529,18 @@ __libnvme_public int libnvme_get_host(
 		hostid = NVME_DEFAULT_HOSTID;
 
 	h = libnvme_lookup_host(ctx, hostnqn, hostid);
-	if (!h)
-		return -ENOMEM;
+	if (h)
+		goto found;
 
+	err = libnvme_create_host(ctx, hostnqn, hostid, &h);
+	if (err) {
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			"Failed to create host '%s'\n",
+			hostnqn ? hostnqn : "<unset>");
+		return err;
+	}
+
+found:
 	*host = h;
 	return 0;
 }
