@@ -483,7 +483,7 @@ __shr_public const char *libnvmf_tid_get_canonical(
 		const struct libnvmf_tid *tid)
 {
 	struct libnvmf_tid *p = (struct libnvmf_tid *)tid;
-	char buf[CANONICAL_MAX];
+	char buf[CANONICAL_MAX] = "";
 	int n = 0;
 
 	if (!tid)
