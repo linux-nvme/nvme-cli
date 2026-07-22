@@ -3120,7 +3120,7 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 	struct libnvme_host *h;
 	int ret, rr, i;
 
-	h = libnvme_lookup_host(ctx, hostnqn, hostid);
+	h = libnvme_lookup_host(ctx, fctx->hostnqn, fctx->hostid);
 	if (!h) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"Failed to lookup host '%s'\n",
