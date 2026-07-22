@@ -175,7 +175,7 @@ option(
 option(
   'plugins',
   type : 'array',
-  choices: ['amzn', 'dapustor', 'dell', 'dera',
+  choices: ['amzn', 'config', 'dapustor', 'dell', 'dera',
             'exclusion', 'fdp', 'feat', 'huawei', 'ibm', 'innogrit', 'inspur',
             'intel', 'lm', 'mangoboost', 'memblaze', 'micron', 'nbft',
             'netapp', 'nvidia', 'ocp', 'registry', 'sandisk', 'scaleflux',

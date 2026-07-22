@@ -73,6 +73,10 @@ if want_fabrics and 'registry' in selected_plugins
     plugin_sources += ['plugins/registry/registry-nvme.c']
 endif
 
+if want_fabrics and 'config' in selected_plugins
+    plugin_sources += ['plugins/config/config-nvme.c']
+endif
+
 if 'feat' in selected_plugins
   subdir('feat')
 endif
