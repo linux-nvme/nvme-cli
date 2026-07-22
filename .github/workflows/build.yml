@@ -310,6 +310,7 @@ jobs:
             mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-ccache
             mingw-w64-ucrt-x86_64-json-c
+            mingw-w64-ucrt-x86_64-python-jsonschema
 
       - name: Build nvme-cli
         shell: msys2 {0}
