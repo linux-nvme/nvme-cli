@@ -48,7 +48,6 @@
 #include <libnvme.h>
 
 #include "common.h"
-#include "config-convert.h"
 #include "fabrics.h"
 #include "logging.h"
 #include "nvme-cmds.h"
@@ -10841,30 +10840,6 @@ int disconnect_all_cmd(int argc, char **argv, struct command *acmd,
 	const char *desc = "Disconnect from all connected NVMeoF subsystems";
 
 	return fabrics_disconnect_all(desc, argc, argv);
-}
-
-static int config_validate_cmd(int argc, char **argv, struct command *acmd,
-		struct plugin *plugin)
-{
-	const char *desc = "Validate an NVMeoF connection configuration";
-
-	return fabrics_config_validate(desc, argc, argv);
-}
-
-static int config_show_cmd(int argc, char **argv, struct command *acmd,
-		struct plugin *plugin)
-{
-	const char *desc = "Show the resolved NVMeoF connection configuration";
-
-	return fabrics_config_show(desc, argc, argv);
-}
-
-static int config_convert_cmd(int argc, char **argv, struct command *acmd,
-		struct plugin *plugin)
-{
-	const char *desc = "Convert config.json/discovery.conf to INI";
-
-	return nvme_config_convert(desc, argc, argv);
 }
 
 static int dim_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)

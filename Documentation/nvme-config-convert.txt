@@ -8,7 +8,7 @@ nvme-config-convert - Convert a legacy NVMe-oF configuration to the INI format
 SYNOPSIS
 --------
 [verse]
-'nvme' 'config-convert'
+'nvme' [<global-options>] 'config convert'
 			[--config=<file> | -J <file>]
 			[--output=<file> | -o <file>]
 			[--force]
@@ -68,14 +68,14 @@ EXAMPLES
 * Convert the system's legacy configuration in place:
 +
 ------------
-# nvme config-convert
+# nvme config convert
 ------------
 
 * Convert one specific configuration file for testing, without touching
   the system configuration:
 +
 ------------
-# nvme config-convert --config /tmp/config.json --output /tmp/nvme-fabrics.conf
+# nvme config convert --config /tmp/config.json --output /tmp/nvme-fabrics.conf
 ------------
 +
 Note: unlike config.json, discovery.conf has no --config-style override —
@@ -85,7 +85,6 @@ the system, this command still converts it and renames it to
 
 SEE ALSO
 --------
-nvme-config(1)
 nvme-connect-all(1)
 nvme-discover(1)
 https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
