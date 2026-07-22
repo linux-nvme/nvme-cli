@@ -171,7 +171,7 @@ const char *libnvmf_config_conn_get_subsysnqn(
  * address.
  * @conn: the resolved connection
  *
- * May be a hostname; see libnvmf_config_conn_get_transport().
+ * Never a hostname -- always one of the host's own local addresses.
  *
  * Return: borrowed string, or NULL when the path left it unset.
  */
