@@ -309,6 +309,7 @@ endif
 
 if host_system != 'windows'
     subdir('ioctl')
+    subdir('sysfs')
     if want_fabrics
         subdir('nbft')
     endif
