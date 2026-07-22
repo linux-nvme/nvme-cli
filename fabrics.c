@@ -321,17 +321,6 @@ static int nvmf_resolve_addr(const char *transport, const char **addr)
 #endif /* NVME_HAVE_NETDB */
 }
 
-static int nvmf_resolve_args(struct nvmf_args *fa)
-{
-	int ret;
-
-	ret = nvmf_resolve_addr(fa->transport, &fa->traddr);
-	if (ret)
-		return ret;
-
-	return nvmf_resolve_addr(fa->transport, &fa->host_traddr);
-}
-
 static int set_fabrics_options(struct libnvmf_context *fctx,
 		struct nvmf_args *fa)
 {
@@ -810,7 +799,8 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 			device += 5;
 	}
 
-	ret = nvmf_resolve_args(&fa);
+	/* Only traddr may be a hostname; host_traddr never is. */
+	ret = nvmf_resolve_addr(fa.transport, &fa.traddr);
 	if (ret)
 		return ret;
 
@@ -976,7 +966,8 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		}
 	}
 
-	ret = nvmf_resolve_args(&fa);
+	/* Only traddr may be a hostname; host_traddr never is. */
+	ret = nvmf_resolve_addr(fa.transport, &fa.traddr);
 	if (ret)
 		return ret;
 
