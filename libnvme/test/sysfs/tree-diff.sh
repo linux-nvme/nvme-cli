@@ -6,7 +6,7 @@ TREE_DUMP=$2
 SYSFS_INPUT=$3
 EXPECTED_OUTPUT=$4
 
-TEST_NAME="$(basename -s .tar.xz "$SYSFS_INPUT")"
+TEST_NAME="$(basename -s .out "$EXPECTED_OUTPUT")"
 TEST_DIR="${BUILD_DIR}/${TEST_NAME}"
 ACTUAL_OUTPUT="${TEST_DIR}.out"
 
