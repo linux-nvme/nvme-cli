@@ -33,4 +33,26 @@ if diff.found()
             depends : tree_scan,
         )
     endforeach
+
+    if want_fabrics
+        tree_scan_hostnqn = executable(
+            'test-tree-scan-hostnqn',
+            ['tree-scan-hostnqn.c'],
+            dependencies: libnvme_dep,
+        )
+
+        foreach t_file : tree_data
+            test(
+                'libnvme - @0@-hostnqn'.format(t_file),
+                tree_diff,
+                args : [
+                    meson.current_build_dir(),
+                    tree_scan_hostnqn.full_path(),
+                    files('data'/t_file + '.tar.xz'),
+                    files('data'/t_file + '-hostnqn.out'),
+                ],
+                depends : tree_scan_hostnqn,
+            )
+        endforeach
+    endif
 endif
