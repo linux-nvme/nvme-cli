@@ -16,6 +16,8 @@ compile_commands.json
 tests/**/__pycache__
 tests/nvmetests
 tests/**/*.pyc
+unit-py/**/__pycache__
+unit-py/**/*.pyc
 
 .build
 .build-ci
