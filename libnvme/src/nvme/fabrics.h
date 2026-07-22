@@ -598,19 +598,6 @@ int libnvmf_connect(struct libnvme_global_ctx *ctx,
  */
 int libnvmf_disconnect_ctrl(libnvme_ctrl_t c);
 
-/**
- * libnvmf_config_modify() - Modify and update the configurtion
- * @ctx: Global context
- * @fctx: Fabrics context
- *
- * Update the current configuration by adding the crypto
- * information.
- *
- * Return: 0 on success, negative error code otherwise.
- */
-int libnvmf_config_modify(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx);
-
 struct nbft_file_entry;
 
 /**

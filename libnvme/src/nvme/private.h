@@ -431,7 +431,6 @@ struct libnvme_fabric_options { // !generate-accessors
 };
 
 struct libnvme_global_ctx { // !generate-accessors:read=none,write=none !generate-python:alias=GlobalCtx
-	char *config_file;
 	char *owner; /* orchestrator identity; NULL = unowned */
 	struct list_head endpoints; /* MI endpoints */
 	struct list_head hosts;
@@ -454,12 +453,6 @@ struct libnvme_global_ctx { // !generate-accessors:read=none,write=none !generat
 	char *hostid;		// !access:read=none,write=generated
 };
 int libnvme_set_attr(const char *dir, const char *attr, const char *value);
-
-int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file);
-
-int json_update_config(struct libnvme_global_ctx *ctx, int fd);
-
-int json_dump_tree(struct libnvme_global_ctx *ctx);
 
 void *__libnvme_submit_entry(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);

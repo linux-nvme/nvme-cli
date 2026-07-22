@@ -313,11 +313,6 @@ if host_system != 'windows'
         subdir('nbft')
     endif
 
-    if json_c_dep.found()
-        subdir('sysfs')
-        subdir('config')
-    endif
-
     if openssl_dep.found()
         hkdf_add1 = executable(
             'hkdf_add1',
