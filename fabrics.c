@@ -1362,6 +1362,8 @@ int fabrics_config_validate(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
+	nvme_show_init();
+
 	log_level = map_log_level(verbose ? 1 : 0, false);
 
 	ret = nvme_create_global_ctx(&ctx);
@@ -1492,6 +1494,8 @@ int fabrics_config_show(const char *desc, int argc, char **argv)
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
 		return ret;
+
+	nvme_show_init();
 
 	log_level = map_log_level(verbose ? 1 : 0, false);
 
