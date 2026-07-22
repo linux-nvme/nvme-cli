@@ -78,21 +78,52 @@ static int canon_ip(const char *in, char **out)
 }
 
 /*
- * Sanitize the addressing fields once the transport is known: canonicalize a
- * numeric traddr/host_traddr via canon_ip(); a hostname is rejected outright
- * -- resolving one is the caller's job, not libnvme's.  IP addressing
- * applies only to the IP transports; fc and loop are left untouched.
+ * A lightweight structural check for FC addressing: "nn-0x<hex>:pn-0x<hex>"
+ * (node name + port name, each up to a 64-bit WWN in hex) -- the same shape
+ * sanitize_discovery_log_entry() already normalizes discovery-log traddr
+ * into.  Not a deep WWN semantic check (OUI bits etc.), the same spirit as
+ * canon_ip() below for tcp/rdma: catch a malformed value, not police it.
+ */
+static bool fc_wwn_is_valid(const char *in)
+{
+	char nn[17], pn[17];
+	int len = 0;
+
+	if (sscanf(in, "nn-0x%16[0-9a-fA-F]:pn-0x%16[0-9a-fA-F]%n",
+		   nn, pn, &len) != 2)
+		return false;
+
+	return (size_t)len == strlen(in);
+}
+
+/*
+ * Sanitize the addressing fields once the transport is known.  IP
+ * transports: canonicalize a numeric traddr/host_traddr via canon_ip(); a
+ * hostname is rejected outright -- resolving one is the caller's job, not
+ * libnvme's.  FC: validate the "nn-0x:pn-0x" shape via fc_wwn_is_valid();
+ * left as-is on success, since it's already in canonical form once it
+ * matches. loop is left untouched.
  *
- * Return: 0 on success; -EINVAL if traddr or host_traddr is set but not
- * numeric; -ENOMEM on allocation failure.
+ * Return: 0 on success; -EINVAL if traddr or host_traddr is set but
+ * malformed for the transport; -ENOMEM on allocation failure.
  */
 static int tid_sanitize_addr(struct libnvmf_tid *t)
 {
 	char *canon;
 	int rc;
 
-	if (!t->transport ||
-	    (strcmp(t->transport, "tcp") && strcmp(t->transport, "rdma")))
+	if (!t->transport)
+		return 0;
+
+	if (!strcmp(t->transport, "fc")) {
+		if (t->traddr && !fc_wwn_is_valid(t->traddr))
+			return -EINVAL;
+		if (t->host_traddr && !fc_wwn_is_valid(t->host_traddr))
+			return -EINVAL;
+		return 0;
+	}
+
+	if (strcmp(t->transport, "tcp") && strcmp(t->transport, "rdma"))
 		return 0;
 
 	if (t->traddr) {
