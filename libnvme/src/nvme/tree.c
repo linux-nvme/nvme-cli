@@ -1444,10 +1444,7 @@ libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
 			     const struct libnvme_ctrl_params *in,
 			     libnvme_ctrl_t p)
 {
-	struct libnvme_global_ctx *ctx;
 	struct libnvme_ctrl_params search;
-	struct libnvme_ctrl *c;
-	int ret;
 
 	if (!s || !in->transport)
 		return NULL;
@@ -1459,21 +1456,42 @@ libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
 	search = *in;
 	libnvme_fabrics_config_copy(&search.cfg, &in->cfg);
 	search.subsysnqn = NULL;
-	c = libnvme_ctrl_find(s, &search, p);
-	if (c)
-		return c;
+
+	return libnvme_ctrl_find(s, &search, p);
+}
+
+int libnvme_subsystem_create_ctrl(libnvme_subsystem_t s,
+		const struct libnvme_ctrl_params *in,
+		libnvme_ctrl_t *pc)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_ctrl_params params;
+	struct libnvme_ctrl *c;
+	int ret;
+
+	if (!s)
+		return -EINVAL;
+
+	if (in->subsysnqn && strcmp(in->subsysnqn, s->subsysnqn))
+		return -EINVAL;
 
 	ctx = s->h ? s->h->ctx : NULL;
-	search.subsysnqn = s->subsysnqn;
-	libnvmf_default_config(&search.cfg);
-	ret = libnvme_create_ctrl(ctx, &search, &c);
+
+	params = *in;
+	libnvme_fabrics_config_copy(&params.cfg, &in->cfg);
+	params.subsysnqn = s->subsysnqn;
+	libnvmf_default_config(&params.cfg);
+
+	ret = libnvme_create_ctrl(ctx, &params, &c);
 	if (ret)
-		return NULL;
+		return ret;
 
 	c->s = s;
 	list_add_tail(&s->ctrls, &c->entry);
 
-	return c;
+	*pc = c;
+
+	return 0;
 }
 
 int libnvme_ctrl_scan_paths(struct libnvme_global_ctx *ctx,
@@ -1553,15 +1571,16 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 	if (ret)
 		return ret;
 
+	struct libnvme_ctrl_params params = {
+		.transport = transport,
+		.traddr = traddr,
+		.host_traddr = host_traddr,
+		.host_iface = host_iface,
+		.trsvcid = trsvcid,
+	};
+
 	p = NULL;
 	do {
-		struct libnvme_ctrl_params params = {
-			.transport = transport,
-			.traddr = traddr,
-			.host_traddr = host_traddr,
-			.host_iface = host_iface,
-			.trsvcid = trsvcid,
-		};
 		c = libnvme_lookup_ctrl(s, &params, p);
 		if (c) {
 			if (!c->name)
@@ -1576,12 +1595,20 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 			p = c;
 		}
 	} while (c);
+
 	if (!c)
 		c = p;
-	if (!c && !p) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to lookup ctrl\n");
-		return -ENODEV;
+
+	if (!c) {
+		ret = libnvme_subsystem_create_ctrl(s, &params, &c);
+		if (ret) {
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
+				"failed to created ctrl: %s\n",
+				libnvme_strerror(-ret));
+			return ret;
+		}
 	}
+
 	FREE_CTRL_ATTR(c->address);
 	c->address = xstrdup(addr);
 	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
