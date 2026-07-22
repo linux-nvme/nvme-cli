@@ -587,6 +587,8 @@ int nvme_config_convert(const char *desc, int argc, char **argv)
 	if (ret)
 		return ret;
 
+	nvme_show_init();
+
 	log_level = map_log_level(verbose ? 1 : 0, false);
 
 	ret = nvme_create_global_ctx(&ctx);
