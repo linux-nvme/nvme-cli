@@ -1372,6 +1372,11 @@ int fabrics_config_validate(const char *desc, int argc, char **argv)
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
+	if (access(config_file, F_OK)) {
+		nvme_show_error("%s: no such file", config_file);
+		return -ENOENT;
+	}
+
 	ret = libnvmf_config_validate(ctx, config_file);
 	if (ret)
 		nvme_show_error("%s: invalid configuration", config_file);
