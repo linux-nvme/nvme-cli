@@ -169,39 +169,6 @@ __libnvme_public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public int libnvme_read_config(struct libnvme_global_ctx *ctx,
-		const char *config_file)
-{
-	int err;
-
-	if (!ctx || !config_file)
-		return -ENODEV;
-
-	ctx->config_file = strdup(config_file);
-	if (!ctx->config_file)
-		return -ENOMEM;
-
-	err = json_read_config(ctx, config_file);
-	/*
-	 * The json configuration file is optional,
-	 * so ignore errors when opening the file.
-	 */
-	if (err < 0 && err != -EPROTO)
-		return 0;
-
-	return err;
-}
-
-__libnvme_public int libnvme_dump_config(struct libnvme_global_ctx *ctx, int fd)
-{
-	return json_update_config(ctx, fd);
-}
-
-__libnvme_public int libnvme_dump_tree(struct libnvme_global_ctx *ctx)
-{
-	return json_dump_tree(ctx);
-}
-
 __libnvme_public void libnvme_skip_namespaces(struct libnvme_global_ctx *ctx)
 {
 	ctx->create_only = true;

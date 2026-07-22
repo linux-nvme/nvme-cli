@@ -148,7 +148,6 @@ __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	libnvme_mi_for_each_endpoint_safe(ctx, ep, tmp)
 		libnvme_mi_close(ep);
 #endif
-	free(ctx->config_file);
 	free(ctx->owner);
 	free(ctx->test_base_dir);
 	free(ctx->test_sysfs_dir);

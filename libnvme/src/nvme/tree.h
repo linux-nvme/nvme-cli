@@ -1048,19 +1048,6 @@ void libnvme_host_release_fds(struct libnvme_host *h);
 void libnvme_free_host(libnvme_host_t h);
 
 /**
- * libnvme_read_config() - Read NVMe JSON configuration file
- * @ctx:		&struct libnvme_global_ctx object
- * @config_file:	JSON configuration file
- *
- * Read in the contents of @config_file and merge them with
- * the elements in @r.
- *
- * Return: 0 on success, negative error code otherwise.
- */
-int libnvme_read_config(struct libnvme_global_ctx *ctx,
-		const char *config_file);
-
-/**
  * libnvme_refresh_topology() - Refresh libnvme_root_t object contents
  * @ctx:		&struct libnvme_global_ctx object
  *
@@ -1069,29 +1056,6 @@ int libnvme_read_config(struct libnvme_global_ctx *ctx,
  * Returns: 0 on success, negative error code otherwise.
  */
 int libnvme_refresh_topology(struct libnvme_global_ctx *ctx);
-
-/**
- * libnvme_dump_config() - Print the JSON configuration
- * @ctx:		&struct libnvme_global_ctx object
- * @fd:			File descriptor to write the JSON configuration.
- *
- * Writes the current contents of the JSON configuration
- * to the file descriptor fd.
- *
- * Return: 0 on success, negative error code otherwise.
- */
-int libnvme_dump_config(struct libnvme_global_ctx *ctx, int fd);
-
-/**
- * libnvme_dump_tree() - Dump internal object tree
- * @ctx:		&struct libnvme_global_ctx object
- *
- * Prints the internal object tree in JSON format
- * to stdout.
- *
- * Return: 0 on success, negative error code otherwise.
- */
-int libnvme_dump_tree(struct libnvme_global_ctx *ctx);
 
 /**
  * libnvme_get_attr() - Read sysfs attribute

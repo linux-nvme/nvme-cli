@@ -361,4 +361,4 @@ libnvme itself never reads `config.json` — INI is the only format it understan
 
 `discovery.conf` is also superseded. By its own man page it is "a list of connect-all commands to run": limited to Discovery Controllers by construction, with no way to express an I/O Controller or global defaults, and no `[Host]`-style persona (the hostnqn/hostid pair has to be repeated on every line for one identity, with nothing validating the result). The format here covers the full set, so it replaces `discovery.conf` too.
 
-A JSON dump of the live topology remains available as a debugging/testing convenience in nvme-cli, which already links `json-c` for its other output. libnvme itself needs no `json-c` dependency to read connection config.
+libnvme's own JSON dump of the live topology (`libnvme_dump_tree()`) was retired, not ported: `nvme list -vvv -o json` already walks the same host/subsystem/controller/namespace tree and renders it as JSON.

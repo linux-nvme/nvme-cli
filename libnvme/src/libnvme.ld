@@ -24,8 +24,6 @@ LIBNVME_3 {
 		libnvme_ctrl_next_path;
 		libnvme_ctrl_owner;
 		libnvme_ctrl_release_transport_handle;
-		libnvme_dump_config;
-		libnvme_dump_tree;
 		libnvme_errno_to_string;
 		libnvme_exec_admin_passthru;
 		libnvme_exec_io_passthru;
@@ -126,7 +124,6 @@ LIBNVME_3 {
 		libnvme_path_reset_stat;
 		libnvme_path_update_stat;
 		libnvme_random_uuid;
-		libnvme_read_config;
 		libnvme_realloc;
 		libnvme_reap_passthru;
 		libnvme_refresh_topology;

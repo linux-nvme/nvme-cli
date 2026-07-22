@@ -38,7 +38,6 @@ sphinx_sources = [
     'quickstart.rst',
     'installation.rst',
     'mi.rst',
-    'config-schema.json'
 ]
 
 static_sources = []
