@@ -41,4 +41,5 @@ pacman $PACMAN_CMD --noconfirm --needed \
     mingw-w64-ucrt-x86_64-meson \
     mingw-w64-ucrt-x86_64-ninja \
     mingw-w64-ucrt-x86_64-ccache \
-    mingw-w64-ucrt-x86_64-json-c
+    mingw-w64-ucrt-x86_64-json-c \
+    mingw-w64-ucrt-x86_64-python-jsonschema
