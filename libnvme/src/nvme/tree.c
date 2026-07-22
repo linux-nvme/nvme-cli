@@ -364,7 +364,7 @@ __libnvme_public void libnvme_free_subsystem(libnvme_subsystem_t s)
 	__nvme_free_subsystem(s);
 }
 
-struct libnvme_subsystem *nvme_alloc_subsystem(struct libnvme_host *h,
+struct libnvme_subsystem *libnvme_create_subsystem(struct libnvme_host *h,
 		const char *name, const char *subsysnqn)
 {
 	struct libnvme_subsystem *s;
@@ -403,7 +403,7 @@ struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 			continue;
 		return s;
 	}
-	return nvme_alloc_subsystem(h, name, subsysnqn);
+	return libnvme_create_subsystem(h, name, subsysnqn);
 }
 
 __libnvme_public int libnvme_get_subsystem(struct libnvme_global_ctx *ctx,
@@ -601,7 +601,7 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 		ret = libnvme_get_host(ctx, ctx->hostnqn, ctx->hostid, &h);
 		if (ret)
 			return ret;
-		s = nvme_alloc_subsystem(h, name, subsysnqn);
+		s = libnvme_create_subsystem(h, name, subsysnqn);
 		if (!s)
 			return -ENOMEM;
 		if (nvme_subsystem_scan_namespaces(ctx, s))
