@@ -485,8 +485,11 @@ int libnvme_create_host(struct libnvme_global_ctx *ctx,
 	}
 
 	h = calloc(1, sizeof(*h));
-	if (!h)
+	if (!h) {
+		free(hnqn);
+		free(hid);
 		return -ENOMEM;
+	}
 
 	h->hostnqn = hnqn;
 	h->hostid = hid;
