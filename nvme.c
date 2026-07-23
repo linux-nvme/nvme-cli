@@ -245,6 +245,7 @@ struct nvme_args nvme_args = {
 	.output_format = "normal",
 	.output_format_ver = 2,
 	.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
+	.supported_output_formats = DEFAULT_OUTPUT_FORMATS,
 };
 
 static void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable);
@@ -584,10 +585,10 @@ static int open_fallback_chardev(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-
 int validate_output_format(const char *format, nvme_print_flags_t *flags)
 {
 	nvme_print_flags_t f;
+	nvme_print_flags_t supported_formats = nvme_args.supported_output_formats;
 
 	if (!format)
 		return -EINVAL;
@@ -595,12 +596,12 @@ int validate_output_format(const char *format, nvme_print_flags_t *flags)
 	if (!strcmp(format, "normal"))
 		f = NORMAL;
 #ifdef CONFIG_JSONC
-	else if (!strcmp(format, "json"))
+	else if (!strcmp(format, "json") && (supported_formats & JSON))
 		f = JSON;
 #endif /* CONFIG_JSONC */
-	else if (!strcmp(format, "binary"))
+	else if (!strcmp(format, "binary") && (supported_formats & BINARY))
 		f = BINARY;
-	else if (!strcmp(format, "tabular"))
+	else if (!strcmp(format, "tabular") && (supported_formats & TABULAR))
 		f = TABULAR;
 	else
 		return -EINVAL;
@@ -10737,6 +10738,14 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	enum nvme_cli_topo_ranking rank;
 	int err;
 
+#ifdef CONFIG_JSONC
+	nvme_print_flags_t supported_formats = (NORMAL | JSON | TABULAR);
+	const char *supported_formats_desc = "Output format: normal|json|tabular";
+#else /* CONFIG_JSONC */
+	nvme_print_flags_t supported_formats = (NORMAL | TABULAR);
+	const char *supported_formats_desc = "Output format: normal|tabular";
+#endif /* CONFIG_JSONC */
+
 	struct config {
 		char	*ranking;
 	};
@@ -10745,7 +10754,7 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 		.ranking	= "namespace",
 	};
 
-	NVME_ARGS(opts,
+	NVME_ARGS_OUTPUT_FORMATS(opts, supported_formats, supported_formats_desc,
 		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
 
 	err = parse_args(argc, argv, desc, opts);

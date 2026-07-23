@@ -58,28 +58,31 @@ struct nvme_args {
 	bool no_retries;
 	bool no_ioctl_probing;
 	unsigned int output_format_ver;
+	nvme_print_flags_t supported_output_formats;
 	const char *set_options;
 };
 
 #ifdef CONFIG_JSONC
-#define DESC_OUTPUT_FORMAT "Output format: normal|json|binary|tabular"
+#define DEFAULT_OUTPUT_FORMATS (NORMAL | JSON | BINARY)
+#define DEFAULT_OUTPUT_FORMAT_DESC "Output format: normal|json|binary"
 #else /* CONFIG_JSONC */
-#define DESC_OUTPUT_FORMAT "Output format: normal|binary|tabular"
+#define DEFAULT_OUTPUT_FORMATS (NORMAL | BINARY)
+#define DEFAULT_OUTPUT_FORMAT_DESC "Output format: normal|binary"
 #endif /* CONFIG_JSONC */
 
 /*
  * the ordering of the arguments matters, as the argument parser uses the first
  * match, thus any command which defines -t shorthand will match first.
  */
-#define NVME_ARGS(n, ...)                                                              \
+#define NVME_ARGS_OUTPUT_FORMATS(n, of_mask, of_desc, ...)                             \
+	nvme_args.supported_output_formats = of_mask;                                  \
 	struct argconfig_commandline_options n[] = {                                   \
 		OPT_GROUP("Options"),                                                  \
 		##__VA_ARGS__,                                                         \
 		OPT_GROUP("Global options"),                                           \
 		OPT_INCR("verbose",      'v', &nvme_args.verbose,                      \
                          "Increase output verbosity"),                                 \
-		OPT_FMT("output-format", 'o', &nvme_args.output_format,                \
-                         DESC_OUTPUT_FORMAT),                                          \
+		OPT_FMT("output-format", 'o', &nvme_args.output_format, of_desc),      \
 		OPT_UINT("timeout",        0, &nvme_args.timeout,                      \
                          "timeout value, in milliseconds"),                            \
 		OPT_FLAG("dry-run",        0, &nvme_args.dry_run,                      \
@@ -96,6 +99,12 @@ struct nvme_args {
 			 "set a libnvme library option (key=value[,key=value,...]);"), \
 		OPT_END()                                                              \
 	}
+
+#define NVME_ARGS(n, ...)                   \
+	NVME_ARGS_OUTPUT_FORMATS(n,         \
+		DEFAULT_OUTPUT_FORMATS,     \
+		DEFAULT_OUTPUT_FORMAT_DESC, \
+		##__VA_ARGS__)
 
 static inline bool nvme_is_multipath(libnvme_subsystem_t s)
 {
