@@ -345,6 +345,7 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 	return 0;
 
 fail:
+	free(ssns->hfis);
 	free(ssns);
 	return ret;
 }
