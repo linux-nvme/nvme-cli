@@ -9,6 +9,9 @@
 discoverd_sources = files(
     'src/cache.c',
     'src/config.c',
+    'src/dlp.c',
+    'src/events.c',
+    'src/fc.c',
     'src/log.c',
     'src/main.c',
     'src/state.c',

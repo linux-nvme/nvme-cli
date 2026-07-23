@@ -9,13 +9,48 @@
 
 #include <stdbool.h>
 
+#include <nvme/config.h>
+
 #include "tid.h"
 
+struct libnvme_global_ctx;
 struct cache;
 
 /* Allocate an empty cache. */
 struct cache *cache_new(void);
 void cache_free(struct cache *c);
+
+/*
+ * Populate the NBFT DC/IOC sets from the firmware NBFT ACPI table. Call
+ * once at startup; the NBFT itself does not change at runtime, so unlike
+ * cache_load_config() this never needs a rebuild. A missing/absent NBFT is
+ * not an error.
+ * Returns 0 on success, negative errno on failure.
+ */
+int cache_load_nbft(struct cache *c, struct libnvme_global_ctx *nvme_ctx);
+
+/*
+ * Rebuild the config DC/IOC sets from the resolved fabrics configuration
+ * (libnvmf_config_read()). Call at startup and again on every SIGHUP —
+ * this always fully replaces the previous sets, never merges. A hostname
+ * traddr is resolved here, blocking, one connection at a time — this is a
+ * rare, small, startup/SIGHUP-only path, not the daemon's steady-state
+ * event loop, so no worker thread is warranted. A connection whose traddr
+ * cannot be resolved is skipped and logged.
+ * @fabrics_cfg may be NULL (equivalent to an empty configuration).
+ */
+void cache_load_config(struct cache *c,
+		       const struct libnvmf_config *fabrics_cfg);
+
+/*
+ * The libnvmf_config_conn that produced @t via cache_load_config(), or NULL
+ * if @t is not a statically configured connection (i.e. it was learned via
+ * NBFT, a Discovery Log Page, or FC kickstart). Used to choose between
+ * libnvmf_config_conn_get_params() and libnvmf_config_resolve_discovered()
+ * when resolving the connect parameters for @t.
+ */
+const struct libnvmf_config_conn *cache_config_conn_for(
+		const struct cache *c, const struct libnvmf_tid *t);
 
 /*
  * Update the per-DC DLP cache when a DC's log page is refreshed.
