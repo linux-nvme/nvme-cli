@@ -42,6 +42,8 @@
 #include <sys/socket.h>
 #endif
 
+#include <ccan/str/str.h>
+
 #include <libnvme.h>
 
 #ifdef NVME_HAVE_LIBKMOD
@@ -716,6 +718,43 @@ static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
 
 #define NBFT_SYSFS_PATH		"/sys/firmware/acpi/tables"
 
+/*
+ * A controller's ownership extends to everything done through it, so the
+ * caller's operation may not proceed unless the invoking owner matches
+ * (mirrors disconnect_all_match()'s registry check). No ownerless
+ * exemption -- a mismatched or missing --owner is skipped the same way;
+ * the escape hatch is passing the owner's own identity.
+ *
+ * --force skips the check entirely: it means the caller will never reuse
+ * an existing controller, so there is nothing to check ownership against.
+ *
+ * Returns 0 to proceed, 1 to skip, or a negative errno on a registry
+ * read failure.
+ */
+static int check_ctrl_owner(struct libnvme_global_ctx *ctx,
+			     struct libnvmf_context *fctx,
+			     const char *owner, bool force)
+{
+	__cleanup_free char *reg_owner = NULL;
+	int ret;
+
+	if (force)
+		return 0;
+
+	ret = libnvmf_get_owner_from_fctx(ctx, fctx, &reg_owner);
+	if (ret)
+		return ret;
+	if (!reg_owner)   /* no owner in registry */
+		return 0;
+
+	if (owner && streq(reg_owner, owner))
+		return 0;
+
+	nvme_show_error("owned by '%s'; skipping -- owner handles discovery",
+			 reg_owner);
+	return 1;
+}
+
 int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 {
 	__cleanup_free char *hnqn = NULL;
@@ -840,6 +879,17 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 			&dld, &fctx);
 		if (ret)
 			return ret;
+
+		ret = check_ctrl_owner(ctx, fctx,
+				owner ? owner : (nbft ? "nbft" : NULL), force);
+		if (ret < 0) {
+			nvme_show_error("failed to check owner: %s",
+					libnvme_strerror(-ret));
+			return ret;
+		}
+		if (ret)
+			return 0;
+
 		ret = libnvmf_discovery(ctx, fctx, connect, force);
 	}
 
