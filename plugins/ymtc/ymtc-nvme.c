@@ -46,23 +46,23 @@ static unsigned short device_id;
  */
 static int ReadSysFile(const char *file, unsigned short *id)
 {
-    int ret = 0;
-    char idstr[32] = { '\0' };
-    int fd = open(file, O_RDONLY);
+	int ret = 0;
+	char idstr[32] = { '\0' };
+	int fd = open(file, O_RDONLY);
 
-    if (fd < 0) {
-        perror(file);
-        return fd;
-    }
+	if (fd < 0) {
+		perror(file);
+		return fd;
+	}
 
-    ret = read(fd, idstr, sizeof(idstr));
-    close(fd);
-    if (ret < 0)
-        perror("read");
-    else
-        *id = strtol(idstr, NULL, 16);
+	ret = read(fd, idstr, sizeof(idstr));
+	close(fd);
+	if (ret < 0)
+		perror("read");
+	else
+		*id = strtol(idstr, NULL, 16);
 
-    return ret;
+	return ret;
 }
 
 /**
@@ -72,42 +72,42 @@ static int ReadSysFile(const char *file, unsigned short *id)
  */
 static enum ySSDModel GetSSDModel(int idx)
 {
-    enum ySSDModel model = UNKNOWN_SSD;
-    char path[512];
+	enum ySSDModel model = UNKNOWN_SSD;
+	char path[512];
 
-    sprintf(path, vendor_id_path1, idx);
-    if (ReadSysFile(path, &vendor_id) < 0) {
-        sprintf(path, vendor_id_path2, idx);
-        ReadSysFile(path, &vendor_id);
-    }
-    sprintf(path, device_id_path1, idx);
-    if (ReadSysFile(path, &device_id) < 0) {
-        sprintf(path, device_id_path2, idx);
-        ReadSysFile(path, &device_id);
-    }
-    if (vendor_id == YMTC_VENDOR_ID) {
-        switch (device_id) {
-        case 0x1058:
-            model = PE310;
-            break;
-        case 0x1078:
-            model = PE321;
-            break;
-        case 0x1a28:
-            model = PE511;
-            break;
-        case 0x1a38:
-            model = PE501;
-            break;
-        case 0x1a48:
-            model = PE522;
-            break;
-        default:
-            model = UNKNOWN_SSD;
-            break;
-        }
-    }
-    return model;
+	sprintf(path, vendor_id_path1, idx);
+	if (ReadSysFile(path, &vendor_id) < 0) {
+		sprintf(path, vendor_id_path2, idx);
+		ReadSysFile(path, &vendor_id);
+	}
+	sprintf(path, device_id_path1, idx);
+	if (ReadSysFile(path, &device_id) < 0) {
+		sprintf(path, device_id_path2, idx);
+		ReadSysFile(path, &device_id);
+	}
+	if (vendor_id == YMTC_VENDOR_ID) {
+		switch (device_id) {
+		case 0x1058:
+			model = PE310;
+			break;
+		case 0x1078:
+			model = PE321;
+			break;
+		case 0x1a28:
+			model = PE511;
+			break;
+		case 0x1a38:
+			model = PE501;
+			break;
+		case 0x1a48:
+			model = PE522;
+			break;
+		default:
+			model = UNKNOWN_SSD;
+			break;
+		}
+	}
+	return model;
 }
 
 /**
@@ -121,25 +121,25 @@ static enum ySSDModel GetSSDModel(int idx)
  * Return: 0 on success, -1 on failure
  */
 static int ymtc_parse_options(struct nvme_dev **dev, int argc, char **argv,
-                const char *desc,
-                struct argconfig_commandline_options *opts,
-                enum ySSDModel *model)
+				const char *desc,
+				struct argconfig_commandline_options *opts,
+				enum ySSDModel *model)
 {
-    int idx;
-    int err = parse_and_open(dev, argc, argv, desc, opts);
+	int idx;
+	int err = parse_and_open(dev, argc, argv, desc, opts);
 
-    if (err) {
-        perror("open");
-        return -1;
-    }
+	if (err) {
+		perror("open");
+		return -1;
+	}
 
-    if (model) {
-        if (sscanf(argv[optind], "/dev/nvme%d", &idx) != 1)
-            idx = 0;
-        *model = GetSSDModel(idx);
-    }
+	if (model) {
+		if (sscanf(argv[optind], "/dev/nvme%d", &idx) != 1)
+			idx = 0;
+		*model = GetSSDModel(idx);
+	}
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -152,185 +152,185 @@ static int ymtc_parse_options(struct nvme_dev **dev, int argc, char **argv,
  *       raw value (it->rawVal) contains the raw counter value (format varies by type).
  */
 static void print_ymtc_smart_item(const struct nvme_ymtc_smart_log_item *it,
-                                  enum ySSDModel model)
+								  enum ySSDModel model)
 {
-    const u8 *nm = it->nmVal;
-    const u8 *raw = it->rawVal;
-    u8 feature_id = it->id[0];
+	const u8 *nm = it->nmVal;
+	const u8 *raw = it->rawVal;
+	u8 feature_id = it->id[0];
 
-    switch (feature_id) {
-    case SI_VD_PROGRAM_FAIL_ID:
-        printf("program_fail_count              : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	switch (feature_id) {
+	case SI_VD_PROGRAM_FAIL_ID:
+		printf("program_fail_count              : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_ERASE_FAIL_ID:
-        printf("erase_fail_count                : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_ERASE_FAIL_ID:
+		printf("erase_fail_count                : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_WEARLEVELING_COUNT_ID:
-        printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
-               *nm, *(uint16_t *)raw, *(uint16_t *)(raw + 2), *(uint16_t *)(raw + 4));
-        break;
+	case SI_VD_WEARLEVELING_COUNT_ID:
+		printf("wear_leveling                   : %3d%%       min: %u, max: %u, avg: %u\n",
+			   *nm, *(uint16_t *)raw, *(uint16_t *)(raw + 2), *(uint16_t *)(raw + 4));
+		break;
 
-    case SI_VD_TEMPT_SINCE_BOOTUP_ID:
-        printf("tempt_since_bootup              : %3d%%       max: %u, min: %u, curr: %u\n",
-               *nm, *(uint16_t *)raw - 273, *(uint16_t *)(raw + 2) - 273,
-               *(uint16_t *)(raw + 4) - 273);
-        break;
+	case SI_VD_TEMPT_SINCE_BOOTUP_ID:
+		printf("tempt_since_bootup              : %3d%%       max: %u, min: %u, curr: %u\n",
+			   *nm, *(uint16_t *)raw - 273, *(uint16_t *)(raw + 2) - 273,
+			   *(uint16_t *)(raw + 4) - 273);
+		break;
 
-    case SI_VD_E2E_DECTECTION_COUNT_ID:
-        printf("e2e_error_count                 : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_E2E_DECTECTION_COUNT_ID:
+		printf("e2e_error_count                 : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_PCIE_CRC_ERR_COUNT_ID:
-        printf("crc_error_count                 : %3d%%       %"PRIu32"\n",
-               *nm, *(uint32_t *)raw);
-        break;
+	case SI_VD_PCIE_CRC_ERR_COUNT_ID:
+		printf("crc_error_count                 : %3d%%       %"PRIu32"\n",
+			   *nm, *(uint32_t *)raw);
+		break;
 
-    case SI_VD_TIMED_WORKLOAD_MEDIA_WEAR_ID:
-        printf("timed_workload_media_wear       : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_TIMED_WORKLOAD_MEDIA_WEAR_ID:
+		printf("timed_workload_media_wear       : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_TIMED_WORKLOAD_HOST_READ_ID:
-        printf("timed_workload_host_read        : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_TIMED_WORKLOAD_HOST_READ_ID:
+		printf("timed_workload_host_read        : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_TIMED_WORKLOAD_TIMER_ID:
-        printf("timed_workload_timer            : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_TIMED_WORKLOAD_TIMER_ID:
+		printf("timed_workload_timer            : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_IN_FLIGHT_READ_IO_COUNT_ID:
-        printf("in_flight_read_IO_count         : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_IN_FLIGHT_READ_IO_COUNT_ID:
+		printf("in_flight_read_IO_count         : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_IN_FLIGHT_WRITE_IO_COUNT_ID:
-        printf("in_flight_write_IO_count        : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_IN_FLIGHT_WRITE_IO_COUNT_ID:
+		printf("in_flight_write_IO_count        : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_TEMPT_SINCE_BORN_ID:
-        printf("tempt_since_born                : %3d%%       max: %u, min: %u, curr: %u\n",
-               *nm, *(uint16_t *)raw - 273, *(uint16_t *)(raw + 2) - 273,
-               *(int16_t *)(raw + 4) - 273);
-        break;
+	case SI_VD_TEMPT_SINCE_BORN_ID:
+		printf("tempt_since_born                : %3d%%       max: %u, min: %u, curr: %u\n",
+			   *nm, *(uint16_t *)raw - 273, *(uint16_t *)(raw + 2) - 273,
+			   *(int16_t *)(raw + 4) - 273);
+		break;
 
-    case SI_VD_POWER_CONSUMPTION_ID:
-        printf("power_consumption               : %3d%%       max: %u, min: %u, curr: %u\n",
-               *nm, *(uint16_t *)raw, *(uint16_t *)(raw + 2), *(uint16_t *)(raw + 4));
-        break;
+	case SI_VD_POWER_CONSUMPTION_ID:
+		printf("power_consumption               : %3d%%       max: %u, min: %u, curr: %u\n",
+			   *nm, *(uint16_t *)raw, *(uint16_t *)(raw + 2), *(uint16_t *)(raw + 4));
+		break;
 
-    case SI_VD_THERMAL_THROTTLE_STATUS_ID:
-        printf("thermal_throttle_status         : %3d%%       %d%%, cnt: %"PRIu32"\n",
-               *nm, *raw, *(uint32_t *)(raw + 1));
-        break;
+	case SI_VD_THERMAL_THROTTLE_STATUS_ID:
+		printf("thermal_throttle_status         : %3d%%       %d%%, cnt: %"PRIu32"\n",
+			   *nm, *raw, *(uint32_t *)(raw + 1));
+		break;
 
-    case SI_VD_THERMAL_THROTTLE_TIME_ID:
-        printf("thermal_throttle_time           : %3d%%       %u, time: %"PRIu32"\n",
-               *nm, *raw, *(uint32_t *)(raw + 1));
-        break;
+	case SI_VD_THERMAL_THROTTLE_TIME_ID:
+		printf("thermal_throttle_time           : %3d%%       %u, time: %"PRIu32"\n",
+			   *nm, *raw, *(uint32_t *)(raw + 1));
+		break;
 
-    case SI_VD_FEATURE_EC_ID:
-        if (model == PE511 || model == PE310)
-            printf("power_loss_protection           : %3d%%       %"PRIu64"\n",
-                   *nm, int48_to_long(raw));
-        else if (model == PE501 || model == PE522)
-            printf("capacitor_capacitance           : %3d%%       current: %u, nominal: %u, threshold: %u\n",
-                   *nm, *(uint16_t *)raw, *(uint16_t *)(raw + 2), *(uint16_t *)(raw + 4));
-        break;
+	case SI_VD_FEATURE_EC_ID:
+		if (model == PE511 || model == PE310)
+			printf("power_loss_protection           : %3d%%       %"PRIu64"\n",
+				   *nm, int48_to_long(raw));
+		else if (model == PE501 || model == PE522)
+			printf("capacitor_capacitance           : %3d%%       current: %u, nominal: %u, threshold: %u\n",
+				   *nm, *(uint16_t *)raw, *(uint16_t *)(raw + 2), *(uint16_t *)(raw + 4));
+		break;
 
-    case SI_VD_FEATURE_ED_ID:
-        if ((model == PE511) || (model == PE310))
-            printf("flash_error_media_count         : %3d%%       %"PRIu64"\n",
-                   *nm, int48_to_long(raw));
-        else if (model == PE501 || model == PE522)
-            printf("free_xblock_status              : %3d%%       %"PRIu64"\n",
-                   *nm, int48_to_long(raw));
-        break;
+	case SI_VD_FEATURE_ED_ID:
+		if ((model == PE511) || (model == PE310))
+			printf("flash_error_media_count         : %3d%%       %"PRIu64"\n",
+				   *nm, int48_to_long(raw));
+		else if (model == PE501 || model == PE522)
+			printf("free_xblock_status              : %3d%%       %"PRIu64"\n",
+				   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_FEATURE_F0_ID:
-        if (model == PE511 || model == PE501 || model == PE522)
-            printf("lifetime_write_aplification     : %3d%%       %"PRIu64"\n",
-                   *nm, int48_to_long(raw));
-        else if (model == PE310 || model == PE321)
-            printf("retry_buffer_overflow_count     : %3d%%       %"PRIu64"\n",
-                   *nm, int48_to_long(raw));
-        break;
+	case SI_VD_FEATURE_F0_ID:
+		if (model == PE511 || model == PE501 || model == PE522)
+			printf("lifetime_write_aplification     : %3d%%       %"PRIu64"\n",
+				   *nm, int48_to_long(raw));
+		else if (model == PE310 || model == PE321)
+			printf("retry_buffer_overflow_count     : %3d%%       %"PRIu64"\n",
+				   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_READ_FAIL_ID:
-        printf("read_fail                       : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_READ_FAIL_ID:
+		printf("read_fail                       : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_PLL_LOCK_LOSS_COUNT_ID:
-        printf("pll_lock_loss_count             : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_PLL_LOCK_LOSS_COUNT_ID:
+		printf("pll_lock_loss_count             : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_TOTAL_WRITE_ID:
-        printf("nand_bytes_written              : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_TOTAL_WRITE_ID:
+		printf("nand_bytes_written              : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_HOST_WRITE_ID:
-        printf("host_bytes_written              : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_HOST_WRITE_ID:
+		printf("host_bytes_written              : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_SYSTEM_AREA_LIFE_LEFT_ID:
-        printf("system_area_life_remaining      : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_SYSTEM_AREA_LIFE_LEFT_ID:
+		printf("system_area_life_remaining      : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_NAND_BYTES_READ_ID:
-        printf("nand_bytes_read                 : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_NAND_BYTES_READ_ID:
+		printf("nand_bytes_read                 : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_FIRMWARE_UPDATE_COUNT_ID:
-        printf("firmware_update_count           : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_FIRMWARE_UPDATE_COUNT_ID:
+		printf("firmware_update_count           : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_FEATURE_FA_ID:
-        if (model == PE511 || model == PE501 || model == PE522)
-            printf("dram_CECC_count                 : %3d%%       %"PRIu64"\n",
-                   *nm, int48_to_long(raw));
-        else if (model == PE310)
-            printf("nand_bytes_read                 : %3d%%       %"PRIu64"\n",
-                   *nm, int48_to_long(raw));
-        break;
+	case SI_VD_FEATURE_FA_ID:
+		if (model == PE511 || model == PE501 || model == PE522)
+			printf("dram_CECC_count                 : %3d%%       %"PRIu64"\n",
+				   *nm, int48_to_long(raw));
+		else if (model == PE310)
+			printf("nand_bytes_read                 : %3d%%       %"PRIu64"\n",
+				   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_DRAM_UECC_COUNT_ID:
-        printf("dram_UECC_count                 : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_DRAM_UECC_COUNT_ID:
+		printf("dram_UECC_count                 : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_XOR_PASS_COUNT_ID:
-        printf("xor_pass_count                  : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_XOR_PASS_COUNT_ID:
+		printf("xor_pass_count                  : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_XOR_FAIL_COUNT_ID:
-        printf("xor_fail_count                  : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_XOR_FAIL_COUNT_ID:
+		printf("xor_fail_count                  : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    case SI_VD_XOR_INVOKED_COUNT_ID:
-        printf("xor_invoked_count               : %3d%%       %"PRIu64"\n",
-               *nm, int48_to_long(raw));
-        break;
+	case SI_VD_XOR_INVOKED_COUNT_ID:
+		printf("xor_invoked_count               : %3d%%       %"PRIu64"\n",
+			   *nm, int48_to_long(raw));
+		break;
 
-    default:
-        // skip
-        break;
-    }
+	default:
+		// skip
+		break;
+	}
 }
 
 /**
@@ -342,34 +342,34 @@ static void print_ymtc_smart_item(const struct nvme_ymtc_smart_log_item *it,
  * Return: 0 on success, error code on failure
  */
 static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
-                               struct nvme_ymtc_smart_log *smart, enum ySSDModel model)
+							   struct nvme_ymtc_smart_log *smart, enum ySSDModel model)
 {
-    struct nvme_id_ctrl ctrl;
-    char fw_ver[10];
-    int err = 0;
-    const u8 *base = (const u8 *)smart;
-    err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
-    if (err)
-        return err;
+	struct nvme_id_ctrl ctrl;
+	char fw_ver[10];
+	int err = 0;
+	const u8 *base = (const u8 *)smart;
+	err = nvme_identify_ctrl(dev_fd(dev), &ctrl);
+	if (err)
+		return err;
 
-    snprintf(fw_ver, sizeof(fw_ver), "%c.%c%c.%c%c%c%c",
-             ctrl.fr[0], ctrl.fr[1], ctrl.fr[2], ctrl.fr[3],
-             ctrl.fr[4], ctrl.fr[5], ctrl.fr[6]);
+	snprintf(fw_ver, sizeof(fw_ver), "%c.%c%c.%c%c%c%c",
+			 ctrl.fr[0], ctrl.fr[1], ctrl.fr[2], ctrl.fr[3],
+			 ctrl.fr[4], ctrl.fr[5], ctrl.fr[6]);
 
-    printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
-           dev->name, nsid);
-    printf("key                               normalized raw\n");
+	printf("Additional Smart Log for NVME device:%s namespace-id:%x\n",
+		   dev->name, nsid);
+	printf("key                               normalized raw\n");
 
-    for (int i = 0; i < YMTC_MAX_ITEMS; i++) {
-        const struct nvme_ymtc_smart_log_item *it =
-            (const struct nvme_ymtc_smart_log_item *)(base + (size_t)i * YMTC_SMART_ITEM_SIZE);
+	for (int i = 0; i < YMTC_MAX_ITEMS; i++) {
+		const struct nvme_ymtc_smart_log_item *it =
+			(const struct nvme_ymtc_smart_log_item *)(base + (size_t)i * YMTC_SMART_ITEM_SIZE);
 
-        if (it->id[0] == 0x00 || it->id[0] == 0xFF )
-            continue;
-        print_ymtc_smart_item(it, model);
-    }
+		if (it->id[0] == 0x00 || it->id[0] == 0xFF )
+			continue;
+		print_ymtc_smart_item(it, model);
+	}
 
-    return 0;
+	return 0;
 }
 
 /**
@@ -387,50 +387,50 @@ static int show_ymtc_smart_log(struct nvme_dev *dev, __u32 nsid,
  */
 static int get_additional_smart_log(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-    struct nvme_ymtc_smart_log smart_log;
-    memset(&smart_log, 0 , sizeof(smart_log));
-    char *desc =
-        "Get Ymtc vendor specific additional smart log (optionally, for the specified namespace), and show it.";
-    const char *namespace = "(optional) desired namespace";
-    const char *raw = "dump output in binary format";
-    struct nvme_dev *dev;
-    enum ySSDModel model = UNKNOWN_SSD;
-    struct config {
-        __u32 namespace_id;
-        bool  raw_binary;
-    };
-    int err;
+	struct nvme_ymtc_smart_log smart_log;
+	memset(&smart_log, 0 , sizeof(smart_log));
+	char *desc =
+		"Get Ymtc vendor specific additional smart log (optionally, for the specified namespace), and show it.";
+	const char *namespace = "(optional) desired namespace";
+	const char *raw = "dump output in binary format";
+	struct nvme_dev *dev;
+	enum ySSDModel model = UNKNOWN_SSD;
+	struct config {
+		__u32 namespace_id;
+		bool  raw_binary;
+	};
+	int err;
 
-    struct config cfg = {
-        .namespace_id = NVME_NSID_ALL,
-    };
+	struct config cfg = {
+		.namespace_id = NVME_NSID_ALL,
+	};
 
-    OPT_ARGS(opts) = {
-        OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace),
-        OPT_FLAG("raw-binary",  'b', &cfg.raw_binary,    raw),
-        OPT_END()
-    };
+	OPT_ARGS(opts) = {
+		OPT_UINT("namespace-id", 'n', &cfg.namespace_id,  namespace),
+		OPT_FLAG("raw-binary",  'b', &cfg.raw_binary,    raw),
+		OPT_END()
+	};
 
-    err = ymtc_parse_options(&dev, argc, argv, desc, opts,&model);
-    if (err)
-        return err;
-    err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
-                sizeof(smart_log), &smart_log);
-    if (!err) {
-        if (model == UNKNOWN_SSD){
-            printf("Not support for parsing current product log!\n");
-        }
-        else{
-            if (!cfg.raw_binary){
-                err = show_ymtc_smart_log(dev, cfg.namespace_id, &smart_log, model);
-            }
-            else
-                d_raw((unsigned char *)&smart_log, sizeof(smart_log));
-        }
-    }
-    if (err > 0)
-        nvme_show_status(err);
+	err = ymtc_parse_options(&dev, argc, argv, desc, opts,&model);
+	if (err)
+		return err;
+	err = nvme_get_nsid_log(dev_fd(dev), false, 0xca, cfg.namespace_id,
+				sizeof(smart_log), &smart_log);
+	if (!err) {
+		if (model == UNKNOWN_SSD){
+			printf("Not support for parsing current product log!\n");
+		}
+		else{
+			if (!cfg.raw_binary){
+				err = show_ymtc_smart_log(dev, cfg.namespace_id, &smart_log, model);
+			}
+			else
+				d_raw((unsigned char *)&smart_log, sizeof(smart_log));
+		}
+	}
+	if (err > 0)
+		nvme_show_status(err);
 
-    dev_close(dev);
-    return err;
+	dev_close(dev);
+	return err;
 }

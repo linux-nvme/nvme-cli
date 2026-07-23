@@ -21,11 +21,11 @@ typedef unsigned char           u8;
  */
 enum ySSDModel {
 	UNKNOWN_SSD = 0,
-    PE310,
-    PE321,
-    PE511,
-    PE501,
-    PE522,
+	PE310,
+	PE321,
+	PE511,
+	PE501,
+	PE522,
 };
 
 
@@ -67,19 +67,19 @@ enum ySSDModel {
 
 struct nvme_ymtc_smart_log_item
 {
-    /* Item identifier */
-    u8 id[ID_SIZE];
-    /* Normalized value or percentage. In the range from 0 to 100. */
-    u8 nmVal[NM_SIZE];
-    /* raw value */
-    u8 rawVal[RAW_SIZE];
+	/* Item identifier */
+	u8 id[ID_SIZE];
+	/* Normalized value or percentage. In the range from 0 to 100. */
+	u8 nmVal[NM_SIZE];
+	/* raw value */
+	u8 rawVal[RAW_SIZE];
 }__attribute__((packed));
 
 struct nvme_ymtc_smart_log
 {
-    struct nvme_ymtc_smart_log_item itemArr[YMTC_MAX_ITEMS];
+	struct nvme_ymtc_smart_log_item itemArr[YMTC_MAX_ITEMS];
 
-    u8 resv[SMART_INFO_SIZE - sizeof(struct nvme_ymtc_smart_log_item) * YMTC_MAX_ITEMS];
+	u8 resv[SMART_INFO_SIZE - sizeof(struct nvme_ymtc_smart_log_item) * YMTC_MAX_ITEMS];
 };
 
 #endif // __YMTC_UTILS_H__
