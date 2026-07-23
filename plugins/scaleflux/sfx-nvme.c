@@ -1389,7 +1389,7 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *acmd, struct p
 
 	err = nvme_dump_evtlog(hdl, cfg.namespace_id, cfg.storage_medium, cfg.file, cfg.parse, cfg.output);
 
-	return 0;
+	return err;
 }
 
 static int filter_namespace(const struct dirent *d)
