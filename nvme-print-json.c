@@ -4594,6 +4594,7 @@ static void json_print_detail_list_multipath(libnvme_subsystem_t s,
 		libnvme_namespace_for_each_path(n, p) {
 			libnvme_ctrl_t c;
 			struct json_object *jpath = json_create_object();
+			const char *slot;
 
 			obj_add_str(jpath, "Path", libnvme_path_get_name(p));
 			obj_add_str(jpath, "ANAState", libnvme_path_get_ana_state(p));
@@ -4604,6 +4605,7 @@ static void json_print_detail_list_multipath(libnvme_subsystem_t s,
 			 * controller  attributes.
 			 */
 			c = libnvme_path_get_ctrl(p);
+			slot = libnvme_ctrl_get_phy_slot(c);
 			obj_add_str(jpath, "Controller", libnvme_ctrl_get_name(c));
 			obj_add_str(jpath, "Cntlid", libnvme_ctrl_get_cntlid(c));
 			obj_add_str(jpath, "SerialNumber", libnvme_ctrl_get_serial(c));
@@ -4612,7 +4614,7 @@ static void json_print_detail_list_multipath(libnvme_subsystem_t s,
 			obj_add_str(jpath, "Transport", libnvme_ctrl_get_transport(c));
 			obj_add_str(jpath, "Address", libnvme_ctrl_get_traddr(c));
 			obj_add_ctrl_address_details(jpath, "AddressDetails", c);
-			obj_add_str(jpath, "Slot", libnvme_ctrl_get_phy_slot(c));
+			obj_add_str(jpath, "Slot", slot ? slot : "");
 
 			array_add_obj(jpaths, jpath);
 		}
@@ -4632,6 +4634,7 @@ static void json_print_detail_list(libnvme_subsystem_t s, struct json_object *js
 	libnvme_subsystem_for_each_ctrl(s, c) {
 		struct json_object *jctrl = json_create_object();
 		struct json_object *jnss = json_create_array();
+		const char *slot = libnvme_ctrl_get_phy_slot(c);
 
 		obj_add_str(jctrl, "Controller", libnvme_ctrl_get_name(c));
 		obj_add_str(jctrl, "Cntlid", libnvme_ctrl_get_cntlid(c));
@@ -4641,7 +4644,7 @@ static void json_print_detail_list(libnvme_subsystem_t s, struct json_object *js
 		obj_add_str(jctrl, "Transport", libnvme_ctrl_get_transport(c));
 		obj_add_str(jctrl, "Address", libnvme_ctrl_get_traddr(c));
 		obj_add_ctrl_address_details(jctrl, "AddressDetails", c);
-		obj_add_str(jctrl, "Slot", libnvme_ctrl_get_phy_slot(c));
+		obj_add_str(jctrl, "Slot", slot ? slot : "");
 
 		libnvme_ctrl_for_each_ns(c, n) {
 			struct json_object *jns = json_create_object();
