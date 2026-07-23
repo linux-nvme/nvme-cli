@@ -91,6 +91,10 @@ int __libnvme_transport_handle_open_mi(struct libnvme_transport_handle *hdl, con
 	if (!ep)
 		return -EINVAL;
 
+	hdl->ep = ep;
+	hdl->id = ctrl_id;
+	list_add_tail(&ep->controllers, &hdl->ep_entry);
+
 	return 0;
 }
 
