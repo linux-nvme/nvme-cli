@@ -1441,6 +1441,22 @@ static int __nvmf_supported_options(struct libnvme_global_ctx *ctx)
 	return 0;
 }
 
+/* Parse the kernel instance number out of a ctrl's name ("nvme3" -> 3). */
+static int ctrl_instance(libnvme_ctrl_t c)
+{
+	int instance = -1;
+	const char *name;
+
+	if (!c)
+		return instance;
+
+	name = libnvme_ctrl_get_name(c);
+	if (name)
+		sscanf(name, "nvme%d", &instance);
+
+	return instance;
+}
+
 /*
  * Best-effort registry update after a successful connect: record ownership
  * when an owner is set, otherwise clear any stale entry for a recycled
@@ -3427,7 +3443,11 @@ __libnvme_public int libnvmf_connect(
 	c = lookup_ctrl(h, fctx);
 	if (c && libnvme_ctrl_get_name(c) &&
 	    !fctx->ctrl_params.cfg.duplicate_connect) {
+		int instance = ctrl_instance(c);
+
 		write_devid_file(fctx, devid_fd, c);
+		if (instance >= 0)
+			registry_update_on_connect(ctx, instance);
 		fctx->hooks.already_connected(fctx, h,
 			libnvme_ctrl_get_subsysnqn(c),
 			libnvme_ctrl_get_transport(c),
@@ -3468,8 +3488,14 @@ __libnvme_public int libnvmf_connect(
 		 * the winner -- rescan to find it.
 		 */
 		if (err == -ENVME_CONNECT_ALREADY &&
-		    libnvme_scan_topology(ctx, NULL, NULL) == 0)
-			write_devid_file(fctx, devid_fd, lookup_ctrl(h, fctx));
+		    libnvme_scan_topology(ctx, NULL, NULL) == 0) {
+			libnvme_ctrl_t winner = lookup_ctrl(h, fctx);
+			int instance = ctrl_instance(winner);
+
+			write_devid_file(fctx, devid_fd, winner);
+			if (instance >= 0)
+				registry_update_on_connect(ctx, instance);
+		}
 
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "could not add new controller: %s\n",
 			libnvme_strerror(-err));
