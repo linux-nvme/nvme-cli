@@ -24,13 +24,15 @@ touch %{buildroot}@SYSCONFDIR@/nvme/hostid
 %defattr(-,root,root)
 @SBINDIR@/nvme
 @MANDIR@/man1/nvme*.1*
+@MANDIR@/man5/nvme*.5*
 @DATADIR@/bash-completion/completions/nvme
 @DATADIR@/zsh/site-functions/_nvme
 %dir @SYSCONFDIR@/nvme
 @SYSCONFDIR@/nvme/hostnqn
 @SYSCONFDIR@/nvme/hostid
-@SYSCONFDIR@/nvme/discovery.conf
+@SYSCONFDIR@/nvme/nvme-fabrics.conf.sample
 %ghost @SYSCONFDIR@/nvme/config.json
+%ghost @SYSCONFDIR@/nvme/discovery.conf
 @UDEVRULESDIR@/65-persistent-net-nbft.rules
 @UDEVRULESDIR@/70-nvmf-autoconnect.rules
 @UDEVRULESDIR@/70-nvmf-keys.rules

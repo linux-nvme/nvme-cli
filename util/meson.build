@@ -6,18 +6,20 @@ util_sources = [
     'util/crc32.c',
     'util/suffix.c',
     'util/types.c',
+    'util/utils.c',
+    'util/table.c',
 ]
 
 if host_system == 'windows'
     util_sources += [
-        'util/sighdl-win.c'
+        'util/sighdl-win.c',
+        'util/hash-win.c',
     ]
 else
     util_sources += [
         'util/sighdl-linux.c',
-        'util/utils.c',
-        'util/table.c',
         'util/dashboard.c',
+        'util/hash-linux.c',
     ]
 endif
 

@@ -27,6 +27,7 @@ libnvme:
 
 - **Static analysis**
   - [[clang-analyzer]](https://monom.org/linux-nvme/clang-analyze/current/)
+  - [![Coverity Scan Build Status](https://scan.coverity.com/projects/24883/badge.svg)](https://scan.coverity.com/projects/linux-nvme-nvme-cli)
 
 - **Test coverage**
   - [![codecov](https://codecov.io/gh/linux-nvme/nvme-cli/branch/master/graph/badge.svg)](https://codecov.io/gh/linux-nvme/nvme-cli)
@@ -49,6 +50,13 @@ to build the project using [samurai](https://github.com/michaelforney/samurai)
 and [muon](https://github.com/annacrombie/muon). Both build tools have only a
 minimal dependency on the build environment. To ease this step, there is a build
 script which helps to setup a build environment.
+
+### Building on Windows
+
+nvme-cli can be built on Windows using the [msys2](https://www.msys2.org/)
+UCRT64 environment. After installing MSYS2 (`winget install MSYS2.MSYS2`), the
+`win-ucrt64-setup.sh` script can be run within the UCRT64 environment to install
+the required build system and nvme-cli dependencies.
 
 ### nvme-cli dependencies (3.x and later):
 
@@ -304,8 +312,11 @@ introduced in Linux kernel v4.15. nvme-cli requires kernel v4.15 or later.
 ## Contributing
 
 For information on adding commands, adding plugins, API naming conventions,
-commit guidelines, and the pull request workflow, see
-[CONTRIBUTING.md](CONTRIBUTING.md).
+commit guidelines, the pull request workflow, and optional AI-assisted
+development resources, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+These AI-assisted resources live in the companion repository
+[nvme-cli-ai](https://github.com/linux-nvme/nvme-cli-ai).
 
 ## Persistent and volatile configuration
 

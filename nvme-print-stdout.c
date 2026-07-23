@@ -1805,7 +1805,7 @@ static void stdout_status(int status)
 	 * sensible fallback anyway
 	 */
 	if (status < 0) {
-		fprintf(stderr, "Error: %s\n", libnvme_strerror(errno));
+		fprintf(stderr, "Error: %s\n", libnvme_strerror(-status));
 		return;
 	}
 
@@ -5646,7 +5646,7 @@ static void stdout_generic_full_path(libnvme_ns_t n, char *path, size_t len)
 	 * We could start trying to search for it but let's make
 	 * it simple and just don't show the path at all.
 	 */
-	snprintf(path, len, "ng%dn%d", instance, head_instance);
+	snprintf(path, len, "%s", libnvme_ns_get_generic_name(n));
 }
 
 static void list_item(libnvme_ns_t n, struct table *t)
@@ -5797,7 +5797,7 @@ static void stdout_ns_details(libnvme_ns_t n)
 	nvme_dev_full_path(n, devname, sizeof(devname));
 	nvme_generic_full_path(n, genname, sizeof(genname));
 
-	printf("%-17s %-17s %#-10x %-21s %-25s %-16s ", devname,
+	printf("%-17s %-20s %#-10x %-21s %-25s %-16s ", devname,
 		genname, libnvme_ns_get_nsid(n), usage, usage_binary, format);
 }
 
@@ -5955,9 +5955,9 @@ static void stdout_detailed_list(struct libnvme_global_ctx *ctx)
 	strset_iterate(&res.ctrls, stdout_detailed_ctrl, &res);
 	printf("\n");
 
-	printf("%-17s %-17s %-10s %-49s %-16s %-16s\n", "Device", "Generic",
+	printf("%-17s %-20s %-10s %-49s %-16s %-16s\n", "Device", "Generic",
 		"NSID", "Usage", "Format", "Controllers");
-	printf("%-.17s %-.17s %-.10s %-.49s %-.16s %-.16s\n", dash, dash, dash,
+	printf("%-.17s %-.20s %-.10s %-.49s %-.16s %-.16s\n", dash, dash, dash,
 		dash, dash, dash);
 	strset_iterate(&res.namespaces, stdout_detailed_ns, &res);
 

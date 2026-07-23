@@ -37,36 +37,6 @@ char *micron_get_ctrl_name(struct libnvme_transport_handle *hdl);
 char *micron_get_ns_name(struct libnvme_transport_handle *hdl);
 
 /**
- * micron_get_ctrl_sysfs_dir() - Get the sysfs directory path for a controller
- * @ctx:	struct libnvme_global_ctx object
- * @hdl:	Transport handle
- *
- * Looks up the sysfs directory for the controller associated with @hdl
- * by scanning the NVMe subsystem.
- *
- * Return: Allocated string containing the sysfs directory path on
- * success, or NULL on failure. The caller is responsible for freeing
- * the returned string.
- */
-char *micron_get_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx,
-				struct libnvme_transport_handle *hdl);
-
-/**
- * micron_get_pci_ids() - Read PCI vendor and device IDs for a controller
- * @ctx:	struct libnvme_global_ctx object
- * @hdl:	Transport handle
- * @vid:	Output PCI vendor ID
- * @did:	Output PCI device ID
- *
- * Gets the PCI vendor and device IDs for the controller associated with @hdl.
- *
- * Return: 0 on success, negative errno on failure.
- */
-int micron_get_pci_ids(struct libnvme_global_ctx *ctx,
-			struct libnvme_transport_handle *hdl,
-			unsigned short *vid, unsigned short *did);
-
-/**
  * micron_get_pcie_aer_errors() - Retrieve PCIe AER error counts
  * @hdl:			Transport handle
  * @correctable_errors:		Output correctable error register value
@@ -92,6 +62,20 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
  */
 int micron_clear_pcie_aer_correctable_errors(
 		struct libnvme_transport_handle *hdl);
+
+/**
+ * micron_run_spawn() - Run a command without invoking a shell
+ * @argv:	NULL-terminated argument vector (argv[0] is the program)
+ * @outfile:	If non-NULL, redirect stdout and stderr to this file
+ * @append:	If true, append to outfile; if false, truncate it
+ *
+ * Executes the program specified by argv[0] with the given arguments.
+ * The program is searched in PATH. No shell is invoked, preventing
+ * command injection via metacharacters in arguments.
+ *
+ * Return: 0 on success, negative errno on failure.
+ */
+int micron_run_spawn(char *const argv[], const char *outfile, bool append);
 
 /**
  * micron_write_os_config_to_file() - Dump OS configuration to a file

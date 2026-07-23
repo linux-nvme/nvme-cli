@@ -103,7 +103,7 @@ static int getvsc_eventlog(struct libnvme_transport_handle *hdl, FILE *fp)
 		}
 
 		if (ret == -1) {
-			printf("(error)\n");
+			nvme_show_error("(error)");
 			return IG_ERROR;
 		}
 
@@ -112,7 +112,7 @@ static int getvsc_eventlog(struct libnvme_transport_handle *hdl, FILE *fp)
 		} else {
 			errcnt++;
 			if (errcnt > 16) {
-				printf("(invalid data error)\n");
+				nvme_show_error("(invalid data error)");
 				return IG_ERROR;
 			}
 		}
@@ -160,7 +160,7 @@ int getlogpage_eventlog(struct libnvme_transport_handle *hdl, FILE *fp)
 		printf("\rget eventlog   : %d.%d MB ", i / SIZE_MB,
 			(i % SIZE_MB) * 100 / SIZE_MB);
 		if (ret) {
-			printf("(error)\n");
+			nvme_show_error("(error)");
 			return IG_ERROR;
 		}
 		fwrite(data, 1, 4096, fp);

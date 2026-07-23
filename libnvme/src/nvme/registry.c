@@ -21,44 +21,35 @@
 #include "cleanup.h"
 #include "compiler-attributes.h"
 #include "private.h"
+#include "private-fabrics.h"
 #include "registry.h"
 
+#define REGISTRY_DIR_DEFAULT RUNDIR "/nvme/registry"
+
 /*
- * Return the root directory of the registry.  In production this is always
- * "/run/nvme/registry".  The NVME_REGISTRY_DIR override exists solely for unit
- * testing: it lets the test suite run against a throwaway directory under /tmp
- * instead of the production location.  The result is cached on first use.
+ * Root directory of the registry.  In production this is REGISTRY_DIR_DEFAULT.
+ * A ctx test sandbox (libnvme_set_test_base_dir())
+ * reroots it to <test_base_dir>/registry; that path is built once and cached in
+ * a static.  The cache is safe because the sandbox is a single-process test
+ * feature (see the matching note in exclusion.c): a process is either
+ * all-production or all-test, so the first call fixes the value for the run.
  */
-static const char *registry_dir(void)
+static const char *registry_dir(struct libnvme_global_ctx *ctx)
 {
-	static char buf[256];
-	static const char *dir;
+	static const char *cache;
+	static char buf[PATH_MAX];
+	int n;
 
-	if (!dir) {
-		const char *env = getenv("NVME_REGISTRY_DIR");
-
-		/*
-		 * NVME_REGISTRY_DIR is a test-only override.  The registry
-		 * path drives mkdir, writes and a recursive delete, so an
-		 * attacker who can inject it into a privileged process must
-		 * not redirect those to an arbitrary location.  Confine the
-		 * override to /tmp and reject ".." traversal; anything else
-		 * falls back to the production directory.
-		 *
-		 * Copy into a static buffer: getenv()'s pointer can be
-		 * invalidated by a later setenv()/putenv().  Truncation is
-		 * harmless -- a too-long test path simply won't resolve, and a
-		 * malicious value is both truncated and rejected above.
-		 */
-		if (env && strncmp(env, "/tmp/", 5) == 0 &&
-		    !strstr(env, "..")) {
-			snprintf(buf, sizeof(buf), "%s", env);
-			dir = buf;
-		} else {
-			dir = "/run/nvme/registry";
-		}
+	if (cache)
+		return cache;
+	if (!ctx->test_base_dir) {
+		cache = REGISTRY_DIR_DEFAULT;
+		return cache;
 	}
-	return dir;
+	/* Sandbox: test_base_dir is a validated /tmp path; always fits. */
+	n = snprintf(buf, sizeof(buf), "%s/registry", ctx->test_base_dir);
+	cache = (n > 0 && (size_t)n < sizeof(buf)) ? buf : REGISTRY_DIR_DEFAULT;
+	return cache;
 }
 
 /*
@@ -66,54 +57,30 @@ static const char *registry_dir(void)
  * "<registry_dir>/<device>/<attr>".  Returns a newly allocated string the
  * caller must free, or NULL on allocation failure.
  */
-static char *registry_path(const char *device, const char *attr)
+static char *registry_path(struct libnvme_global_ctx *ctx, const char *device,
+			   const char *attr)
 {
 	char *path = NULL;
 	int n;
 
 	if (attr)
-		n = asprintf(&path, "%s/%s/%s", registry_dir(), device, attr);
+		n = asprintf(&path, "%s/%s/%s", registry_dir(ctx),
+			     device, attr);
 	else
-		n = asprintf(&path, "%s/%s", registry_dir(), device);
+		n = asprintf(&path, "%s/%s", registry_dir(ctx), device);
 	return n < 0 ? NULL : path;
 }
 
-/* mkdir -p: create @path and any missing parents. */
-static int mkdir_p(const char *path, mode_t mode)
-{
-	__cleanup_free char *tmp = strdup(path);
-	size_t len;
-	char *p;
-
-	if (!tmp)
-		return -ENOMEM;
-	len = strlen(tmp);
-	if (len && tmp[len - 1] == '/')
-		tmp[len - 1] = '\0';
-
-	for (p = tmp + 1; *p; p++) {
-		if (*p != '/')
-			continue;
-		*p = '\0';
-		if (mkdir(tmp, mode) < 0 && errno != EEXIST)
-			return -errno;
-		*p = '/';
-	}
-	if (mkdir(tmp, mode) < 0 && errno != EEXIST)
-		return -errno;
-	return 0;
-}
-
-static int ensure_device_dir(const char *device)
+static int ensure_device_dir(struct libnvme_global_ctx *ctx, const char *device)
 {
 	__cleanup_free char *path = NULL;
 	int ret;
 
-	ret = mkdir_p(registry_dir(), 0755);
+	ret = libnvmf_mkdir_p(registry_dir(ctx), 0755);
 	if (ret)
 		return ret;
 
-	path = registry_path(device, NULL);
+	path = registry_path(ctx, device, NULL);
 	if (!path)
 		return -ENOMEM;
 
@@ -152,24 +119,6 @@ static bool valid_attr(const char *attr)
 		return false;
 	}
 	return true;
-}
-
-static int write_all(int fd, const char *buf, size_t len)
-{
-	while (len) {
-		ssize_t w = write(fd, buf, len);
-
-		if (w < 0) {
-			if (errno == EINTR)
-				continue;
-			return -errno;
-		}
-		if (w == 0)
-			return -EIO;
-		buf += w;
-		len -= w;
-	}
-	return 0;
 }
 
 /*
@@ -230,19 +179,20 @@ static int read_attr_fd(int fd, char **out)
 }
 
 /*
- * Write @value atomically to the attribute file @attr inside @dir_path.
- *
- * Protocol:
- *   mkostemp ->  <dir_path>/<attr>.tmp.XXXXXX  (random name, O_CLOEXEC)
- *   fchmod   ->  0644
- *   write    ->  value + newline
- *   rename   ->  <dir_path>/<attr>
- *   fsync    ->  directory
- *
- * mkostemp() atomically creates the tmp file with a random suffix, preventing
- * both name prediction and TOCTOU races on the tmp file itself.  Builds without
- * _GNU_SOURCE fall back to mkstemp() + fcntl(FD_CLOEXEC) (see below).  A NULL
+ * Write @value atomically to the attribute file @attr inside @dir_path; a NULL
  * @value removes the attribute.
+ *
+ * Atomicity comes from never mutating the live file in place: @value is
+ * written to a temp file that is then rename(2)'d onto @attr. rename(2) is an
+ * atomic replace within a filesystem, so a concurrent reader always sees
+ * either the complete old file or the complete new one -- never a half-written
+ * value, and with no locking. The directory fsync makes the rename durable
+ * across a crash. The random temp name and O_CLOEXEC from libnvmf_mkstemp() are
+ * secondary: they prevent name prediction / TOCTOU on the temp file and avoid
+ * leaking the fd across an exec.
+ *
+ * Steps: mkstemp <attr>.tmp.XXXXXX -> fchmod 0644 -> write @value -> rename
+ * onto <attr> -> fsync directory.
  */
 static int write_attr_atomic(int dir_fd, const char *dir_path,
 			     const char *attr, const char *value)
@@ -266,24 +216,9 @@ static int write_attr_atomic(int dir_fd, const char *dir_path,
 	if (asprintf(&tmp_path, "%s/%s.tmp.XXXXXX", dir_path, attr) < 0)
 		return -ENOMEM;
 
-	/*
-	 * mkostemp() sets O_CLOEXEC atomically but its glibc declaration is
-	 * gated behind _GNU_SOURCE; fall back to mkstemp() + fcntl() where
-	 * _GNU_SOURCE is not defined (e.g. the musl-style CI build).
-	 */
-#ifdef _GNU_SOURCE
-	fd = mkostemp(tmp_path, O_CLOEXEC);
+	fd = libnvmf_mkstemp(tmp_path);
 	if (fd < 0)
-		return -errno;
-#else
-	fd = mkstemp(tmp_path);
-	if (fd < 0)
-		return -errno;
-	if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
-		ret = -errno;
-		goto err;
-	}
-#endif
+		return fd;
 
 	/* the temp file is created with 0600; open it to the registry world. */
 	if (fchmod(fd, 0644) < 0) {
@@ -319,17 +254,17 @@ err:
  * Open the directory for @device (creating it if needed) and write @attr=@value
  * atomically.  Shared by the create and update paths.
  */
-static int write_device_attr(const char *device, const char *attr,
-			     const char *value)
+static int write_device_attr(struct libnvme_global_ctx *ctx, const char *device,
+			     const char *attr, const char *value)
 {
 	__cleanup_free char *dir_path = NULL;
 	int dir_fd, ret;
 
-	ret = ensure_device_dir(device);
+	ret = ensure_device_dir(ctx, device);
 	if (ret)
 		return ret;
 
-	dir_path = registry_path(device, NULL);
+	dir_path = registry_path(ctx, device, NULL);
 	if (!dir_path)
 		return -ENOMEM;
 
@@ -417,11 +352,11 @@ static int delete_dir(const char *path)
  * The udev REMOVE rule deletes entries with a plain "rm -rf", which is not
  * atomic; this guarantee therefore covers only library-driven deletes.
  */
-static int delete_dir_atomic(const char *path)
+static int delete_dir_atomic(struct libnvme_global_ctx *ctx, const char *path)
 {
 	__cleanup_free char *trash = NULL;
 
-	if (asprintf(&trash, "%s/.trash.XXXXXX", registry_dir()) < 0)
+	if (asprintf(&trash, "%s/.trash.XXXXXX", registry_dir(ctx)) < 0)
 		return -ENOMEM;
 	if (!mkdtemp(trash))
 		return -errno;
@@ -465,16 +400,17 @@ int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
 
 	snprintf(device, sizeof(device), "nvme%d", instance);
 
-	final_path = registry_path(device, NULL);
+	final_path = registry_path(ctx, device, NULL);
 	if (!final_path)
 		return -ENOMEM;
 
 	/* The registry root must exist before mkdtemp() can run inside it. */
-	ret = mkdir_p(registry_dir(), 0755);
+	ret = libnvmf_mkdir_p(registry_dir(ctx), 0755);
 	if (ret)
 		return ret;
 
-	if (asprintf(&tmp_dir, "%s/.%s.tmp.XXXXXX", registry_dir(), device) < 0)
+	if (asprintf(&tmp_dir, "%s/.%s.tmp.XXXXXX",
+		     registry_dir(ctx), device) < 0)
 		return -ENOMEM;
 	if (!mkdtemp(tmp_dir))
 		return -errno;
@@ -511,7 +447,7 @@ int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
 	 * means any pre-existing nvmeN/ is stale, so remove it first: rename()
 	 * onto a non-empty directory fails.
 	 */
-	delete_dir_atomic(final_path);
+	delete_dir_atomic(ctx, final_path);
 	if (rename(tmp_dir, final_path) < 0) {
 		ret = -errno;
 		goto err;
@@ -548,7 +484,7 @@ __libnvme_public int libnvmf_registry_retrieve(struct libnvme_global_ctx *ctx,
 	if (!valid_device(device))
 		return -EINVAL;
 
-	path = registry_path(device, attr);
+	path = registry_path(ctx, device, attr);
 	if (!path)
 		return -ENOMEM;
 
@@ -592,7 +528,7 @@ __libnvme_public int libnvmf_registry_update(struct libnvme_global_ctx *ctx,
 	if (!device || !valid_device(device))
 		return -EINVAL;
 
-	return write_device_attr(device, attr, value);
+	return write_device_attr(ctx, device, attr, value);
 }
 
 __libnvme_public int libnvmf_registry_delete(struct libnvme_global_ctx *ctx,
@@ -605,11 +541,11 @@ __libnvme_public int libnvmf_registry_delete(struct libnvme_global_ctx *ctx,
 	if (!device || !valid_device(device))
 		return -EINVAL;
 
-	path = registry_path(device, NULL);
+	path = registry_path(ctx, device, NULL);
 	if (!path)
 		return -ENOMEM;
 
-	return delete_dir_atomic(path);
+	return delete_dir_atomic(ctx, path);
 }
 
 __libnvme_public int libnvmf_registry_device_for_each(
@@ -626,7 +562,7 @@ __libnvme_public int libnvmf_registry_device_for_each(
 	if (!callback)
 		return -EINVAL;
 
-	d = opendir(registry_dir());
+	d = opendir(registry_dir(ctx));
 	if (!d) {
 		if (errno == ENOENT)
 			return 0;
@@ -686,7 +622,7 @@ __libnvme_public int libnvmf_registry_attr_for_each(
 	if (!valid_device(device))
 		return -EINVAL;
 
-	dir_path = registry_path(device, NULL);
+	dir_path = registry_path(ctx, device, NULL);
 	if (!dir_path)
 		return -ENOMEM;
 

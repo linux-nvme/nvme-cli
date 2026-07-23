@@ -33,7 +33,7 @@ if want_libnvme
     libnvme_srcroot = meson.current_source_dir() # needed by tools/generator
     subdir('tools/generator')  # generate code needed by src below
     subdir('src')              # declares: libnvme_dep
-    subdir('libnvme')
+    subdir('libnvme3')
     if want_tests
         subdir('test')
     endif
@@ -42,9 +42,11 @@ if want_libnvme
     endif
 
     if want_fabrics
-        install_data(
-            'sysfiles/udev/rules.d/70-nvmf-registry.rules',
-            install_dir: udevrulesdir,
+        configure_file(
+            input:         'sysfiles/udev/rules.d/70-nvmf-registry.rules.in',
+            output:        '70-nvmf-registry.rules',
+            configuration: substs,
+            install_dir:   udevrulesdir,
         )
     endif
 

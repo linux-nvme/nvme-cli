@@ -286,6 +286,40 @@ $ git rebase master
 $ git push -u origin fix-something
 ```
 
+## AI-assisted development (optional)
+
+The [nvme-cli-ai](https://github.com/linux-nvme/nvme-cli-ai) companion
+repository provides optional AI workflow resources for contributors who use
+AI coding assistants. It contains shared project context, coding rules,
+reusable skills, and assistant configuration files for the nvme-cli and
+libnvme ecosystem.
+
+Using nvme-cli-ai is entirely optional. The nvme-cli project has no dependency
+on any AI tooling.
+
+### Setup
+
+Clone both repositories side-by-side under the same parent directory:
+
+    workspace/
+    ├── nvme-cli/
+    └── nvme-cli-ai/
+
+### Claude Code
+
+Claude Code searches for configuration by walking up the directory tree from
+the current working directory. Because nvme-cli-ai is a sibling repository,
+use the --add-dir flag to include it when starting a session:
+
+    $ claude --add-dir ../nvme-cli-ai
+
+Skills under .claude/skills/ (such as the /nvme-spec verifier) are discovered
+automatically from the added directory. The shared CLAUDE.md project context,
+however, is not loaded from an --add-dir directory by default; to load it as
+well, also set CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1:
+
+    $ CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1 claude --add-dir ../nvme-cli-ai
+
 ## Bug Reports
 
 Bugs for the NVM Library project are tracked in our [GitHub Issues Database](https://github.com/linux-nvme/nvme-cli/issues).

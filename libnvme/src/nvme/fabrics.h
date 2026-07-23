@@ -29,6 +29,95 @@
  * operations.
  */
 struct libnvmf_context;
+struct libnvmf_tid;
+
+/**
+ * libnvmf_generate_hostnqn() - Generate a machine specific host nqn
+ * Return: An nvm namespace qualified name string based on the machine
+ * identifier, or NULL if not successful.
+ */
+char *libnvmf_generate_hostnqn(void);
+
+/**
+ * libnvmf_generate_hostnqn_from_hostid() - Generate a host nqn from
+ * host identifier
+ * @hostid:		Host identifier
+ *
+ * If @hostid is NULL, the function generates it based on the machine
+ * identifier.
+ *
+ * Return: On success, an NVMe Qualified Name for host identification. This
+ * name is based on the given host identifier. On failure, NULL.
+ */
+char *libnvmf_generate_hostnqn_from_hostid(char *hostid);
+
+/**
+ * libnvmf_generate_hostid() - Generate a machine specific host identifier
+ *
+ * Return: On success, an identifier string based on the machine identifier to
+ * be used as NVMe Host Identifier, or NULL on failure.
+ */
+char *libnvmf_generate_hostid(void);
+
+/**
+ * libnvmf_read_hostnqn() - Reads the host nvm qualified name from the config
+ *			      default location
+ * @ctx:		struct libnvme_global_ctx object
+ *
+ * Retrieve the qualified name from the config file located in $SYSCONFDIR/nvme.
+ * $SYSCONFDIR is usually /etc.
+ *
+ * Return: The host nqn, or NULL if unsuccessful. If found, the caller
+ * is responsible to free the string.
+ */
+char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx);
+
+/**
+ * libnvmf_read_hostid() - Reads the host identifier from the config default
+ *			     location
+ * @ctx:		struct libnvme_global_ctx object
+ *
+ * Retrieve the host idenditifer from the config file located in
+ * $SYSCONFDIR/nvme/. $SYSCONFDIR is usually /etc.
+ *
+ * Return: The host identifier, or NULL if unsuccessful. If found, the caller
+ *	   is responsible to free the string.
+ */
+char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx);
+
+/**
+ * libnvmf_host_get_ids() - Retrieve host ids from various sources
+ * @ctx:		struct libnvme_global_ctx object
+ * @hostnqn_arg:	Input hostnqn (command line) argument
+ * @hostid_arg:		Input hostid (command line) argument
+ * @hostnqn:		Output hostnqn; may be NULL if the caller does not need it
+ * @hostid:		Output hostid; may be NULL if the caller does not need it
+ *
+ * libnvmf_host_get_ids figures out which hostnqn/hostid is to be used.
+ * There are several sources where this information can be retrieved.
+ *
+ * The order is:
+ *
+ *  - Start with information from DMI or device-tree
+ *  - Override hostnqn and hostid from /etc/nvme files
+ *  - Override hostnqn or hostid with values from JSON
+ *    configuration file. The first host entry in the file is
+ *    considered the default host.
+ *  - Override hostnqn or hostid with values from the command line
+ *    (@hostnqn_arg, @hostid_arg).
+ *
+ *  If the IDs are still NULL after the lookup algorithm, the function
+ *  will generate random IDs.
+ *
+ *  The function also verifies that hostnqn and hostid matches. The Linux
+ *  NVMe implementation expects a 1:1 matching between the IDs.
+ *
+ *  Return: 0 on success (@hostnqn and @hostid contain valid strings
+ *  which the caller needs to free), or negative error code otherwise.
+ */
+int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
+		      const char *hostnqn_arg, const char *hostid_arg,
+		      char **hostnqn, char **hostid);
 
 /**
  * libnvmf_trtype_str() - Decode TRTYPE field
@@ -288,9 +377,6 @@ void libnvmf_context_free(struct libnvmf_context *fctx);
  * libnvmf_context_set_discovery_hooks() - Set discovery hooks for context
  * @fctx: Fabrics context
  * @discovery_log: Hook for discovery log events
- * @parser_init: Hook to initialize parser
- * @parser_cleanup: Hook to cleanup parser
- * @parser_next_line: Hook to parse next line
  *
  * Sets the hooks used during discovery operations for the given context.
  *
@@ -299,13 +385,7 @@ void libnvmf_context_free(struct libnvmf_context *fctx);
 int libnvmf_context_set_discovery_hooks(struct libnvmf_context *fctx,
 		void (*discovery_log)(struct libnvmf_context *fctx,
 			bool connect, struct nvmf_discovery_log *log,
-			uint64_t numrec, void *user_data),
-		int (*parser_init)(struct libnvmf_context *fctx,
-			void *user_data),
-		void (*parser_cleanup)(struct libnvmf_context *fctx,
-			void *user_data),
-		int (*parser_next_line)(struct libnvmf_context *fctx,
-			void *user_data));
+			uint64_t numrec, void *user_data));
 
 /**
  * libnvmf_context_set_connection() - Set connection parameters for context
@@ -340,6 +420,20 @@ int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
 		const char *hostnqn, const char *hostid);
 
 /**
+ * libnvmf_context_set_connection_from_tid() - Set connection and identity
+ * from a TID
+ * @fctx: Fabrics context
+ * @tid:  Transport ID to copy from
+ *
+ * Equivalent to libnvmf_context_set_connection() followed by
+ * libnvmf_context_set_hostnqn(), reading every field from @tid.
+ *
+ * Return: 0 on success, -EINVAL if @fctx or @tid is NULL.
+ */
+int libnvmf_context_set_connection_from_tid(struct libnvmf_context *fctx,
+		const struct libnvmf_tid *tid);
+
+/**
  * libnvmf_context_set_crypto() - Set cryptographic parameters for context
  * @fctx: Fabrics context
  * @hostkey: Host key
@@ -367,6 +461,30 @@ int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_context_set_device(struct libnvmf_context *fctx, const char *device);
+
+/**
+ * libnvmf_context_set_devid_file() - Set devid file for context
+ * @fctx: Fabrics context
+ * @devid_file: Path to the output file
+ *
+ * Configure a file that libnvmf_connect() uses to record the
+ * kernel-assigned device name (for example, "nvme0").
+ *
+ * If the controller is already connected, the existing device name is
+ * written. Otherwise, the device name is written after the controller is
+ * connected.
+ *
+ * The output file is created before attempting the connection. If the
+ * file cannot be created, for example because the parent directory does
+ * not exist, libnvmf_connect() fails without attempting the connection.
+ *
+ * This is intended for applications that need to identify the device
+ * associated with a connection, for example to disconnect it later.
+ *
+ * Return: 0 on success, negative error code otherwise.
+ */
+int libnvmf_context_set_devid_file(struct libnvmf_context *fctx,
+		const char *devid_file);
 
 /**
  * libnvmf_context_set_io_queues() - Set I/O queue topology for context
@@ -432,34 +550,6 @@ int libnvmf_discovery(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect, bool force);
 
 /**
- * libnvmf_discovery_config_json() - Perform discovery using JSON config
- * @ctx: Global context
- * @fctx: Fabrics context
- * @connect: Whether to connect discovered subsystems
- * @force: Force discovery even if already connected
- *
- * Performs discovery using a JSON configuration.
- *
- * Return: 0 on success, negative error code otherwise.
- */
-int libnvmf_discovery_config_json(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect, bool force);
-
-/**
- * libnvmf_discovery_config_file() - Perform discovery using config file
- * @ctx: Global context
- * @fctx: Fabrics context
- * @connect: Whether to connect discovered subsystems
- * @force: Force discovery even if already connected
- *
- * Performs discovery using a configuration file.
- *
- * Return: 0 on success, negative error code otherwise.
- */
-int libnvmf_discovery_config_file(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect, bool force);
-
-/**
  * libnvmf_discovery_nbft() - Perform discovery using NBFT
  * @ctx: Global context
  * @fctx: Fabrics context
@@ -507,18 +597,6 @@ int libnvmf_connect(struct libnvme_global_ctx *ctx,
  * Return: 0 on success, -1 on failure.
  */
 int libnvmf_disconnect_ctrl(libnvme_ctrl_t c);
-
-/**
- * libnvmf_connect_config_json() - Connect using JSON config
- * @ctx: Global context
- * @fctx: Fabrics context
- *
- * Connects to the fabrics subsystem using a JSON configuration.
- *
- * Return: 0 on success, negative error code otherwise.
- */
-int libnvmf_connect_config_json(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx);
 
 /**
  * libnvmf_config_modify() - Modify and update the configurtion

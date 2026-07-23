@@ -19,7 +19,7 @@ project(
         'GPL-2.0-only',         # nvme-cli
         'LGPL-2.1-or-later',    # libnvme
     ],
-    version: '3.0-a.5',
+    version: '3.0-b.3',
     default_options: [
         'c_std=gnu99',
         'buildtype=debugoptimized',
@@ -56,7 +56,7 @@ want_mi = get_option('mi').disabled() == false and host_system != 'windows'
 want_top = get_option('top').disabled() == false and host_system != 'windows'
 want_json_c = get_option('json-c').disabled() == false
 want_libkmod = get_option('libkmod').disabled() == false and host_system != 'windows'
-want_tests = get_option('tests') and host_system != 'windows'
+want_tests = get_option('tests')
 want_examples = get_option('examples') and host_system != 'windows'
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
@@ -79,23 +79,8 @@ else
     want_python = want_libnvme and py3_dep.found() and swig.found() and header_found
 endif
 
-
-# Determine the libnvme.so version number from the project version. The version
-# for libnvme.so has to be a 3 digit number such as 3.0.1. We expect the project
-# version to be composed of 2 or 3 digits after stripping trailing identifiers
-# such as "-rc.*". If the project version is composed of only two digits, then
-# we append '.0' to it.
-ver = meson.project_version()
-ver_digits = ver.split('-')[0]
-ver_digits = ver_digits.split('.dev')[0]
-num_digits = ver_digits.split('.').length()
-if num_digits < 2 or num_digits > 3
-    error('Invalid version: ', meson.project_version())
-elif num_digits == 3
-    libnvme_so_version = ver_digits
-else
-    libnvme_so_version = ver_digits + '.0'
-endif
+# Bump this only when making an ABI-incompatible change.
+libnvme_so_version = '1.0.0'
 
 # For PyPI builds, use only the major version (e.g., '3' instead of '3.0.0').
 # This avoids the need for symbolic links which pip/wheel doesn't preserve.
@@ -104,8 +89,8 @@ if get_option('pypi')
 endif
 
 libnvme_so_major = libnvme_so_version.split('.')[0]
-libnvme_api_name = 'libnvme@0@'.format(libnvme_so_major)
-libnvme_link_name = 'nvme@0@'.format(libnvme_so_major)
+libnvme_api_name = 'libnvme3'
+libnvme_link_name = 'nvme3'
 
 ################################################################################
 prefixdir      = get_option('prefix')
@@ -117,7 +102,10 @@ udevrulesdir   = join_paths(prefixdir, get_option('udevrulesdir'))
 dracutrulesdir = join_paths(prefixdir, get_option('dracutrulesdir'))
 systemddir     = join_paths(prefixdir, get_option('systemddir'))
 nmdispatchdir  = join_paths(prefixdir, get_option('nmdispatchdir'))
-rundir         = join_paths(prefixdir, get_option('rundir'))
+
+# /run's location is fixed by the FHS -- unlike the dirs above, it must
+# never scale with --prefix.
+rundir         = get_option('rundir')
 
 std_prefix = prefixdir == '/usr' or prefixdir == '/usr/local'
 
@@ -151,6 +139,8 @@ conf.set('CONFIG_TOP', want_top, description: 'Is nvme top enabled')
 if host_system == 'windows'
     kernel32_dep = cc.find_library('kernel32', required: true)
     bcrypt_dep = cc.find_library('bcrypt', required: true)
+    setupapi_dep = cc.find_library('setupapi', required: true)
+    cfgmgr32_dep = cc.find_library('cfgmgr32', required: true)
 endif
 
 conf.set10(
@@ -300,6 +290,21 @@ conf.set(
     ),
     description: 'Does struct tm have a tm_gmtoff field?'
 )
+conf.set('HAVE_STRSEP',
+    cc.compiles(
+        '''
+            #include <string.h>
+
+            int main(void) {
+                char *s = NULL;
+                char *p = strsep(&s, ",");
+                return p != NULL;
+            }
+        ''',
+        name: 'strsep'
+    ),
+    description: 'Is strsep available?'
+)
 
 if cc.has_function_attribute('fallthrough')
     conf.set('fallthrough', '__attribute__((fallthrough))')
@@ -434,7 +439,8 @@ conf.set10(
     'NVME_HAVE_REALLOCARRAY',
     cc.has_function(
        'reallocarray',
-       prefix : '#include <stdlib.h>'),
+       prefix : '#include <stdlib.h>',
+       args : '-D_GNU_SOURCE'),
     description: 'Is reallocarray available',
 )
 
@@ -496,7 +502,7 @@ add_project_arguments(
 # which only supports relative paths, while the libnvme include path is
 # absolute.
 if not want_libnvme and not std_prefix
-    libnvme_hdr_location = prefixdir / get_option('includedir')
+    libnvme_hdr_location = prefixdir / get_option('includedir') / libnvme_api_name
     message(
         'Using non-standard libnvme headers location: ',
         libnvme_hdr_location
@@ -538,7 +544,8 @@ substs.set('SYSTEMDDIR', systemddir)
 substs.set('SYSTEMCTL', get_option('systemctl'))
 substs.set('PREFIX', prefixdir)
 substs.set('URL', 'https://github.com/linux-nvme/nvme-cli/')
-substs.set('VERSION_MAJOR', libnvme_so_major)
+substs.set('LIBNVME_API_NAME', libnvme_api_name)
+substs.set('LIBNVME_SO_VERSION', libnvme_so_major)
 
 
 ################################################################################
@@ -551,34 +558,39 @@ if want_nvme
     subdir('plugins')   # declares: plugin_sources
     subdir('util')      # declares: util_sources
 
-    sources = []
+    sources = [
+        'logging.c',
+        'nvme-cmds.c',
+        'nvme-models.c',
+        'nvme-pci-ids.c',
+        'nvme-print-binary.c',
+        'nvme-print-stdout.c',
+        'nvme-print.c',
+        'nvme-rpmb.c',
+        'nvme.c',
+        'plugin.c',
+    ]
     if host_system == 'windows'
         sources += [
-            'nvme-dummy.c', # Dummy source file for Windows port bring up.
+            'nvme-pci-ids-win.c',
         ]
     else
         sources += [
-            'libnvme-wrap.c',
-            'logging.c',
-            'nvme-cmds.c',
-            'nvme-models.c',
-            'nvme-print-binary.c',
-            'nvme-print-stdout.c',
-            'nvme-print.c',
-            'nvme-rpmb.c',
-            'nvme.c',
-            'plugin.c',
+            'nvme-pci-ids-linux.c',
         ]
+    endif
 
-        if json_c_dep.found()
-            sources += [
-                'nvme-print-json.c',
-            ]
-        endif
+    if json_c_dep.found()
+        sources += [
+            'nvme-print-json.c',
+        ]
     endif
 
     if want_fabrics
-        sources += 'fabrics.c'
+        sources += [
+            'fabrics.c',
+            'config-convert.c',
+        ]
     endif
 
     if want_top
@@ -600,7 +612,18 @@ if want_nvme
     if host_system == 'windows'
         link_deps += [
             kernel32_dep,
+            bcrypt_dep,
         ]
+
+        if is_static
+            # Keep these MinGW runtime dependencies in-process to avoid
+            # requiring extra DLLs in PATH for static Windows builds.
+            link_args_list += ['-Wl,-Bstatic']
+            if json_c_dep.found()
+                link_args_list += ['-ljson-c']
+            endif
+            link_args_list += ['-lwinpthread', '-Wl,-Bdynamic']
+        endif
     else
         link_args_list = ['-ldl']
     endif
@@ -613,6 +636,19 @@ if want_nvme
         install: true,
         install_dir: sbindir,
     )
+
+    if host_system == 'windows' and want_libnvme and not is_static
+        # Copy libnvme DLL next to nvme.exe so it can be found at
+        # runtime without modifying PATH.
+        cp = find_program('cp')
+        custom_target('copy-libnvme-dll',
+            input: libnvme,
+            output: fs.name(libnvme.full_path()),
+            command: [cp, '@INPUT@', '@OUTPUT@'],
+            depends: [libnvme, nvme_exe],
+            build_by_default: true,
+        )
+    endif
 
     if host_system != 'windows'
         subdir('unit')
@@ -628,9 +664,9 @@ if want_nvme
         configuration: substs,
     )
 
-    disc = configure_file(
-        input: 'etc/discovery.conf.in',
-        output: 'discovery.conf',
+    configure_file(
+        input: 'etc/nvme-fabrics.conf.sample.in',
+        output: 'nvme-fabrics.conf.sample',
         configuration: substs,
         install: true,
         install_dir: join_paths(sysconfdir, 'nvme'),
@@ -778,6 +814,8 @@ if host_system == 'windows'
     dep_dict += {
         'kernel32':     kernel32_dep.found(),
         'bcrypt':       bcrypt_dep.found(),
+        'setupapi':     setupapi_dep.found(),
+        'cfgmgr32':     cfgmgr32_dep.found(),
     }
 endif
 summary(dep_dict, section: 'Dependencies', bool_yn: true)

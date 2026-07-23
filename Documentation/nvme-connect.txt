@@ -9,6 +9,8 @@ SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'connect' [--config=<filename>]
+			[--devid-file=<filename>]
+			[--idempotent]
 			[--owner=<NAME>]
 			[<fabrics-options>]
 
@@ -22,6 +24,26 @@ OPTIONS
 -------
 --config=<filename>::
 	Use the specified JSON configuration file instead of the default.
+
+--devid-file=<filename>::
+	Write the kernel-assigned device name (for example, nvme0) to
+	<filename>. If the controller is already connected, the existing
+	device name is written. Otherwise, the device name is written
+	after the controller is connected.
+
+	When used with --idempotent, the existing device name is written
+	before the command exits successfully. This allows a supervising
+	process, such as a systemd service, to identify the device for a
+	later disconnect operation.
+
+	The output file is created before attempting the connection. If
+	the file cannot be created, for example because the parent
+	directory does not exist, the command fails without attempting
+	the connection.
+
+--idempotent::
+	Exit with status 0 if the requested controller is already
+	connected instead of reporting an error.
 
 --owner=<NAME>::
 	Record NAME as the owner of the connected controller in the NVMe

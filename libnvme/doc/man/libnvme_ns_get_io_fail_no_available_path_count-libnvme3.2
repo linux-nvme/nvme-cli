@@ -1,0 +1,11 @@
+.TH "libnvme_ns_get_io_fail_no_available_path_count" 9 "libnvme_ns_get_io_fail_no_available_path_count" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_io_fail_no_available_path_count \- Get I/Os failed count
+.SH SYNOPSIS
+.B "long" libnvme_ns_get_io_fail_no_available_path_count
+.BI "(libnvme_ns_t n "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+\fIlibnvme_ns_t\fP object
+.SH "RETURN"
+Number of I/Os which are forced to fail due to no path available

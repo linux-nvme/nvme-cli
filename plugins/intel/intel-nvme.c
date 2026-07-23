@@ -256,6 +256,7 @@ show_intel_smart_log_jsn(struct nvme_additional_smart_log *smart,
 	json_object_add_value_object(root, "Device stats", dev_stats);
 
 	json_print_object(root, NULL);
+	printf("\n");
 	json_free_object(root);
 }
 
@@ -787,6 +788,7 @@ static void json_lat_stats_3_0(struct intel_lat_stats *stats, int write)
 	json_lat_stats_linear(stats, bucket_list, 388, 391, 4, 32, true);
 
 	json_print_object(root, NULL);
+	printf("\n");
 	json_free_object(root);
 }
 
@@ -814,6 +816,7 @@ static void json_lat_stats_4_0(struct intel_lat_stats *stats, int write)
 			end ? POSINF : NOINF, stats->data[i]);
 	}
 	json_print_object(root, NULL);
+	printf("\n");
 	json_free_object(root);
 }
 
@@ -891,6 +894,7 @@ static void json_lat_stats_v1000_0(struct optane_lat_stats *stats, int write)
 	json_object_add_value_uint(subroot, "value in us", stats->data[8]);
 
 	json_print_object(root, NULL);
+	printf("\n");
 	json_free_object(root);
 
 }
@@ -944,7 +948,7 @@ static void json_lat_stats(int write)
 			json_lat_stats_4_0(&stats, write);
 			break;
 		default:
-			printf("Unsupported minor revision (%u.%u)\n",
+			nvme_show_error("Unsupported minor revision (%u.%u)",
 				stats.maj, stats.min);
 			break;
 		}
@@ -955,13 +959,13 @@ static void json_lat_stats(int write)
 			json_lat_stats_v1000_0(&v1000_stats, write);
 			break;
 		default:
-			printf("Unsupported minor revision (%u.%u)\n",
+			nvme_show_error("Unsupported minor revision (%u.%u)",
 				stats.maj, stats.min);
 			break;
 		}
 		break;
 	default:
-		printf("Unsupported revision (%u.%u)\n",
+		nvme_show_error("Unsupported revision (%u.%u)",
 			stats.maj, stats.min);
 		break;
 	}
@@ -1004,7 +1008,7 @@ static void show_lat_stats(int write)
 			show_lat_stats_4_0(&stats);
 			break;
 		default:
-			printf("Unsupported minor revision (%u.%u)\n",
+			nvme_show_error("Unsupported minor revision (%u.%u)",
 				stats.maj, stats.min);
 			break;
 		}
@@ -1015,13 +1019,13 @@ static void show_lat_stats(int write)
 			show_lat_stats_v1000_0(&v1000_stats, write);
 			break;
 		default:
-			printf("Unsupported minor revision (%u.%u)\n",
+			nvme_show_error("Unsupported minor revision (%u.%u)",
 				stats.maj, stats.min);
 			break;
 		}
 		break;
 	default:
-		printf("Unsupported revision (%u.%u)\n",
+		nvme_show_error("Unsupported revision (%u.%u)",
 				stats.maj, stats.min);
 		break;
 	}
@@ -1087,7 +1091,7 @@ static int get_lat_stats_log(int argc, char **argv, struct command *acmd, struct
 				0, thresholds, sizeof(thresholds),
 				&result);
 		if (err) {
-			fprintf(stderr, "Querying thresholds failed. ");
+			nvme_show_error("Querying thresholds failed. ");
 			nvme_show_status(err);
 			return err;
 		}
@@ -1236,7 +1240,7 @@ static int read_entire_cmd(struct libnvme_passthru_cmd *cmd, int total_size,
 	while (total_size > 0) {
 		err = libnvme_exec_admin_passthru(hdl, cmd);
 		if (err) {
-			fprintf(stderr,
+			nvme_show_error(
 				"failed on cmd.data_len %u cmd.cdw13 %u cmd.cdw12 %x cmd.cdw10 %u err %x remaining size %d\n",
 				cmd->data_len, cmd->cdw13, cmd->cdw12,
 				cmd->cdw10, err, total_size);
@@ -1246,7 +1250,7 @@ static int read_entire_cmd(struct libnvme_passthru_cmd *cmd, int total_size,
 		if (out_fd > 0) {
 			err = write(out_fd, buf, cmd->data_len);
 			if (err < 0) {
-				perror("write failure");
+				nvme_show_perror("write failure");
 				goto out;
 			}
 			err = 0;
@@ -1319,7 +1323,7 @@ static int get_internal_log_old(__u8 *buf, int output,
 
 	err = write(output, buf, 0x1000);
 	if (err < 0) {
-		perror("write failure");
+		nvme_show_perror("write failure");
 		goto out;
 	}
 	intel->size -= 0x400;
@@ -1434,7 +1438,7 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 
 		err = write_header(buf, output, 0x1000);
 		if (err) {
-			perror("write failure");
+			nvme_show_perror("write failure");
 			goto out;
 		}
 
@@ -1511,13 +1515,10 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 	}
 	err = 0;
 out:
-	if (err > 0) {
-		nvme_show_status(err);
-	} else if (err < 0) {
-		perror("intel log");
-		err = EIO;
-	} else
-		printf("Successfully wrote log to %s\n", cfg.file);
+	if (err)
+		nvme_show_err(err, "intel log");
+	else
+		nvme_show_verbose_result("Successfully wrote log to %s", cfg.file);
 	close(output);
 out_free:
 	free(intel);
@@ -1571,7 +1572,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	enum Option option = None;
 
 	if (cfg.enable && cfg.disable)
-		printf("Cannot enable and disable simultaneously.");
+		nvme_show_error("Cannot enable and disable simultaneously.");
 	else if (cfg.enable || cfg.disable)
 		option = cfg.enable;
 
@@ -1587,7 +1588,7 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 				"Latency Statistics Tracking (FID 0x%X) is currently (%"PRIu64").\n",
 				fid, (uint64_t)result);
 		} else {
-			printf("Could not read feature id 0xE2.\n");
+			nvme_show_error("Could not read feature id 0xE2.");
 			return err;
 		}
 		break;
@@ -1595,18 +1596,15 @@ static int enable_lat_stats_tracking(int argc, char **argv,
 	case False:
 		err = nvme_set_features(hdl, nsid, fid, sv, option, cdw12, 0, 0, 0, buf,
 				data_len, &result);
-		if (err > 0) {
-			nvme_show_status(err);
-		} else if (err < 0) {
-			perror("Enable latency tracking");
-			fprintf(stderr, "Command failed while parsing.\n");
+		if (err) {
+			nvme_show_err(err, "Enable latency tracking");
 		} else {
-			printf("Successfully set enable bit for FID (0x%X) to %i.\n",
+			nvme_show_verbose_result("Successfully set enable bit for FID (0x%X) to %i.",
 				fid, option);
 		}
 		break;
 	default:
-		printf("%d not supported.\n", option);
+		nvme_show_error("%d not supported.", option);
 		return -EINVAL;
 	}
 	return err;
@@ -1655,7 +1653,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 	err = nvme_get_log_simple(hdl, 0xc2,
 				  media_version, sizeof(media_version));
 	if (err) {
-		fprintf(stderr, "Querying media version failed. ");
+		nvme_show_error("Querying media version failed. ");
 		nvme_show_status(err);
 		goto close_dev;
 	}
@@ -1667,7 +1665,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 						      thresholds,
 						      sizeof(thresholds));
 		if (num == -1) {
-			fprintf(stderr, "ERROR: Bucket list is malformed\n");
+			nvme_show_error("ERROR: Bucket list is malformed");
 			goto close_dev;
 
 		}
@@ -1675,14 +1673,10 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 		err = nvme_set_features(hdl, nsid, fid, sv, cfg.write ? 0x1 : 0x0, cdw12,
 				0, 0, 0, thresholds, sizeof(thresholds), &result);
 
-		if (err > 0) {
-			nvme_show_status(err);
-		} else if (err < 0) {
-			perror("Enable latency tracking");
-			fprintf(stderr, "Command failed while parsing.\n");
-		}
+		if (err)
+			nvme_show_err(err, "Enable latency tracking");
 	} else {
-		fprintf(stderr, "Unsupported command\n");
+		nvme_show_error("Unsupported command");
 	}
 
 close_dev:

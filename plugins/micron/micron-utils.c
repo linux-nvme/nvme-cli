@@ -42,20 +42,3 @@ char *micron_get_ns_name(struct libnvme_transport_handle *hdl)
 
 	return ns_name;
 }
-
-char *micron_get_ctrl_sysfs_dir(
-	struct libnvme_global_ctx *ctx,
-	struct libnvme_transport_handle *hdl)
-{
-	libnvme_ctrl_t c = NULL;
-	__cleanup_free char *ctrl_name = NULL;
-	char *sysfs_dir = NULL;
-
-	ctrl_name = micron_get_ctrl_name(hdl);
-	if (ctrl_name && libnvme_scan_ctrl(ctx, ctrl_name, &c) == 0) {
-		sysfs_dir = strdup(libnvme_ctrl_get_sysfs_dir(c));
-		libnvme_free_ctrl(c);
-	}
-
-	return sysfs_dir;
-}

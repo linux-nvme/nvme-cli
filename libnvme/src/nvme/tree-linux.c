@@ -24,104 +24,182 @@
 
 #include <libnvme.h>
 
-#include "cleanup.h"
 #include "cleanup-linux.h"
-#include "private.h"
-#include "private-tree.h"
-#include "util.h"
+#include "cleanup.h"
 #include "compiler-attributes.h"
+#include "private-fabrics.h"
+#include "private-tree.h"
+#include "private.h"
+#include "util.h"
 
-__libnvme_public int libnvme_host_get_ids(struct libnvme_global_ctx *ctx,
-		      const char *hostnqn_arg, const char *hostid_arg,
-		      char **hostnqn, char **hostid)
+#define PATH_UUID_IBM			"/proc/device-tree/ibm,partition-uuid"
+#define PATH_SYSFS_BLOCK		"/sys/block"
+#define PATH_SYSFS_SLOTS		"/sys/bus/pci/slots"
+#define PATH_SYSFS_NVME_SUBSYSTEM	"/sys/class/nvme-subsystem"
+#define PATH_SYSFS_NVME			"/sys/class/nvme"
+#define PATH_DMI_ENTRIES		"/sys/firmware/dmi/entries"
+
+static const char *make_sysfs_dir(struct libnvme_global_ctx *ctx,
+		const char *path)
 {
-	__cleanup_free char *nqn = NULL;
-	__cleanup_free char *hid = NULL;
-	__cleanup_free char *hnqn = NULL;
-	libnvme_host_t h;
+	char *str;
 
-	/* command line argumments */
-	if (hostid_arg)
-		hid = strdup(hostid_arg);
-	if (hostnqn_arg)
-		hnqn = strdup(hostnqn_arg);
+	if (!ctx || !ctx->test_sysfs_dir)
+		return path;
 
-	/* JSON config: assume the first entry is the default host */
-	h = libnvme_first_host(ctx);
-	if (h) {
-		if (!hid)
-			hid = xstrdup(libnvme_host_get_hostid(h));
-		if (!hnqn)
-			hnqn = xstrdup(libnvme_host_get_hostnqn(h));
-	}
+	if (asprintf(&str, "%s%s", ctx->test_sysfs_dir, path) < 0)
+		return NULL;
 
-	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */
-	if (!hid)
-		hid = libnvme_read_hostid();
-	if (!hnqn)
-		hnqn = libnvme_read_hostnqn();
-
-	/* incomplete configuration, thus derive hostid from hostnqn */
-	if (!hid && hnqn)
-		hid = libnvme_hostid_from_hostnqn(hnqn);
-
-	/*
-	 * fallback to use either DMI information or device-tree. If all
-	 * fails generate one
-	 */
-	if (!hid) {
-		hid = libnvme_generate_hostid();
-		if (!hid)
-			return -ENOMEM;
-
-		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
-			 "warning: using auto generated hostid and hostnqn\n");
-	}
-
-	/* incomplete configuration, thus derive hostnqn from hostid */
-	if (!hnqn) {
-		hnqn = libnvme_generate_hostnqn_from_hostid(hid);
-		if (!hnqn)
-			return -ENOMEM;
-	}
-
-	/* sanity checks */
-	nqn = libnvme_hostid_from_hostnqn(hnqn);
-	if (nqn && strcmp(nqn, hid)) {
-		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
-			 "warning: use hostid '%s' which does not match uuid in hostnqn '%s'\n",
-			 hid, hnqn);
-	}
-
-	*hostid = hid;
-	*hostnqn = hnqn;
-	hid = NULL;
-	hnqn = NULL;
-
-	return 0;
+	return str;
 }
 
-__libnvme_public int libnvme_get_host(
-		struct libnvme_global_ctx *ctx, const char *hostnqn,
-		const char *hostid, libnvme_host_t *host)
+const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx)
 {
-	__cleanup_free char *hnqn = NULL;
-	__cleanup_free char *hid = NULL;
-	struct libnvme_host *h;
-	int err;
+	static const char *str;
 
-	err = libnvme_host_get_ids(ctx, hostnqn, hostid, &hnqn, &hid);
-	if (err)
-		return err;
+	if (str)
+		return str;
 
-	h = libnvme_lookup_host(ctx, hnqn, hid);
-	if (!h)
+	return str = make_sysfs_dir(ctx, PATH_SYSFS_NVME_SUBSYSTEM);
+}
+
+const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(ctx, PATH_SYSFS_NVME);
+}
+
+const char *libnvme_ns_sysfs_dir(struct libnvme_global_ctx *ctx)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(ctx, PATH_SYSFS_BLOCK);
+}
+
+const char *libnvme_slots_sysfs_dir(struct libnvme_global_ctx *ctx)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(ctx, PATH_SYSFS_SLOTS);
+}
+
+const char *libnvme_uuid_ibm_filename(void)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(NULL, PATH_UUID_IBM);
+}
+
+const char *libnvme_dmi_entries_dir(void)
+{
+	static const char *str;
+
+	if (str)
+		return str;
+
+	return str = make_sysfs_dir(NULL, PATH_DMI_ENTRIES);
+}
+
+static int __nvme_set_attr(const char *path, const char *value)
+{
+	__cleanup_fd int fd = -1;
+
+	fd = open(path, O_WRONLY);
+	if (fd < 0) {
+#if 0
+		libnvme_msg(LIBNVME_LOG_DEBUG, "Failed to open %s: %s\n", path,
+			 strerror(errno));
+#endif
+		return -errno;
+	}
+	return write(fd, value, strlen(value));
+}
+
+int libnvme_set_attr(const char *dir, const char *attr, const char *value)
+{
+	__cleanup_free char *path = NULL;
+	int ret;
+
+	ret = asprintf(&path, "%s/%s", dir, attr);
+	if (ret < 0)
 		return -ENOMEM;
 
-	libnvme_host_set_hostsymname(h, NULL);
+	return __nvme_set_attr(path, value);
+}
 
-	*host = h;
-	return 0;
+static char *__nvme_get_attr(const char *path)
+{
+	char value[4096] = { 0 };
+	int ret, fd;
+	int saved_errno;
+
+	fd = open(path, O_RDONLY);
+	if (fd < 0)
+		return NULL;
+
+	ret = read(fd, value, sizeof(value) - 1);
+	saved_errno = errno;
+	close(fd);
+	if (ret < 0) {
+		errno = saved_errno;
+		return NULL;
+	}
+	errno = 0;
+	if (!strlen(value))
+		return NULL;
+
+	if (value[strlen(value) - 1] == '\n')
+		value[strlen(value) - 1] = '\0';
+	while (strlen(value) > 0 && value[strlen(value) - 1] == ' ')
+		value[strlen(value) - 1] = '\0';
+
+	return strlen(value) ? strdup(value) : NULL;
+}
+
+__libnvme_public char *libnvme_get_attr(const char *dir, const char *attr)
+{
+	__cleanup_free char *path = NULL;
+	int ret;
+
+	ret = asprintf(&path, "%s/%s", dir, attr);
+	if (ret < 0)
+		return NULL;
+
+	return __nvme_get_attr(path);
+}
+
+__libnvme_public char *libnvme_get_subsys_attr(
+		libnvme_subsystem_t s, const char *attr)
+{
+	return libnvme_get_attr(libnvme_subsystem_get_sysfs_dir(s), attr);
+}
+
+__libnvme_public char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr)
+{
+	return libnvme_get_attr(libnvme_ctrl_get_sysfs_dir(c), attr);
+}
+
+__libnvme_public char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr)
+{
+	return libnvme_get_attr(libnvme_ns_get_sysfs_dir(n), attr);
+}
+
+__libnvme_public char *libnvme_get_path_attr(libnvme_path_t p, const char *attr)
+{
+	return libnvme_get_attr(libnvme_path_get_sysfs_dir(p), attr);
 }
 
 __libnvme_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
@@ -136,11 +214,11 @@ __libnvme_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 static int libnvme_ctrl_lookup_subsystem_name(struct libnvme_global_ctx *ctx,
 		const char *ctrl_name, char **name)
 {
-	const char *subsys_dir = libnvme_subsys_sysfs_dir();
+	const char *subsys_dir = libnvme_subsys_sysfs_dir(ctx);
 	__cleanup_dirents struct dirents subsys = {};
 	int i;
 
-	subsys.num = libnvme_scan_subsystems(&subsys.ents);
+	subsys.num = libnvme_scan_subsystems(ctx, &subsys.ents);
 	if (subsys.num < 0)
 		return subsys.num;
 
@@ -168,7 +246,7 @@ static int libnvme_ctrl_lookup_subsystem_name(struct libnvme_global_ctx *ctx,
 static int libnvme_ctrl_lookup_phy_slot(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c)
 {
-	const char *slots_sysfs_dir = libnvme_slots_sysfs_dir();
+	const char *slots_sysfs_dir = libnvme_slots_sysfs_dir(ctx);
 	__cleanup_free char *target_addr = NULL;
 	__cleanup_dir DIR *slots_dir = NULL;
 	struct dirent *entry;
@@ -278,7 +356,7 @@ __libnvme_public int libnvme_init_ctrl(
 	if (ret < 0)
 		return -ENOMEM;
 
-	ret = asprintf(&path, "%s/%s", libnvme_ctrl_sysfs_dir(), name);
+	ret = asprintf(&path, "%s/%s", libnvme_ctrl_sysfs_dir(h->ctx), name);
 	if (ret < 0)
 		return -ENOMEM;
 
@@ -325,12 +403,16 @@ __libnvme_public int libnvme_scan_ctrl(
 	int ret;
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan controller %s\n", name);
-	ret = asprintf(&path, "%s/%s", libnvme_ctrl_sysfs_dir(), name);
+	ret = asprintf(&path, "%s/%s", libnvme_ctrl_sysfs_dir(ctx), name);
 	if (ret < 0)
 		return -ENOMEM;
 
 	hostnqn = libnvme_get_attr(path, "hostnqn");
 	hostid = libnvme_get_attr(path, "hostid");
+	if (!hostnqn)
+		hostnqn = xstrdup(ctx->hostnqn);
+	if (!hostid)
+		hostid = xstrdup(ctx->hostid);
 	ret = libnvme_get_host(ctx, hostnqn, hostid, &h);
 	if (ret)
 		return ret;
@@ -447,7 +529,12 @@ static int libnvme_strtoeuid(const char *str, void *res)
 
 static int libnvme_strtouuid(const char *str, void *res)
 {
-	memcpy(res, str, NVME_UUID_LEN);
+	unsigned char uuid[NVME_UUID_LEN];
+
+	if (libnvme_uuid_from_string(str, uuid))
+		return -EINVAL;
+
+	memcpy(res, uuid, NVME_UUID_LEN);
 	return 0;
 }
 
@@ -678,7 +765,8 @@ int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-int libnvme_get_ctrl_transport(const char *path, const char *name,
+int libnvme_get_ctrl_transport(__libnvme_unused struct libnvme_global_ctx *ctx,
+		const char *path, const char *name,
 		char **transport, char **traddr, char **addr, char **trsvcid,
 		char **host_traddr, char **host_iface)
 {
@@ -749,7 +837,8 @@ int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name)
 {
 	char *path;
 
-	if (asprintf(&path, "%s/%s", libnvme_subsys_sysfs_dir(), name) < 0)
+	if (asprintf(&path, "%s/%s",
+			libnvme_subsys_sysfs_dir(s->h->ctx), name) < 0)
 		return -ENOMEM;
 
 	s->model = libnvme_get_attr(path, "model");

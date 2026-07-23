@@ -12,17 +12,16 @@ api_files = [
     'accessors-fabrics.h',
     'accessors.h',
     'fabrics.h',
-    'filters.h',
     'ioctl.h',
     'lib-types.h',
     'lib.h',
-    'linux.h',
     'mi-types.h',
     'mi.h',
-    'nvme-types-nbft.h',
     'nbft.h',
     'nvme-cmds.h',
+    'nvme-types-nbft.h',
     'nvme-types.h',
+    'scan.h',
     'tree.h',
     'util.h',
 ]
@@ -74,7 +73,7 @@ if want_docs != 'false'
                     doc_tgts += custom_target(
                         page.underscorify() + '_man',
                         input: apif,
-                        output: page + '.2',
+                        output: page + '-' + libnvme_api_name + '.2',
                         capture: true,
                         command: [
                             kernel_doc,
@@ -100,7 +99,7 @@ if want_docs != 'false'
     endif
 
     if want_docs == 'all' or want_docs == 'html'
-        htmldir = join_paths(get_option('htmldir'), 'nvme')
+        htmldir = join_paths(get_option('htmldir'), libnvme_api_name, 'nvme')
         sphinx_build = find_program('sphinx-build-3', 'sphinx-build')
         if sphinx_build.found() and want_docs_build
             doc_tgts += custom_target(

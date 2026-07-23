@@ -1,0 +1,12 @@
+.TH "libnvme_path_get_write_ticks" 9 "libnvme_path_get_write_ticks" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_path_get_write_ticks \- Get write I/O ticks
+.SH SYNOPSIS
+.B "unsigned int" libnvme_path_get_write_ticks
+.BI "(libnvme_path_t p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+\fIlibnvme_path_t\fP object
+.SH "RETURN"
+Time, in milliseconds, sepnt processing write I/O requests
+between two stat samples

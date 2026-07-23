@@ -38,7 +38,7 @@ jobs:
           cd libnvme
           pypi-cleanup \
             --repository-url https://test.pypi.org/legacy/ \
-            --package libnvme \
+            --package libnvme3 \
             --keep ${{ github.event.inputs.keep-last }} \
             --version-regex '.*\.dev[0-9]+' \
             $([ "${{ github.event.inputs.dry-run }}" == "true" ] && echo "--dry-run")

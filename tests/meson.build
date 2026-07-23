@@ -42,6 +42,9 @@ python_module = import('python')
 
 python = python_module.find_installation('python3')
 
+test_env = environment()
+test_env.prepend('PATH', meson.project_build_root())
+
 foreach t : tests
     t_name = t.split('.')[0]
     test(
@@ -52,7 +55,7 @@ foreach t : tests
             '--start-dir', meson.current_source_dir(),
             t_name,
         ],
-        env: ['PATH=' + meson.project_build_root() + ':/usr/bin:/usr/sbin'],
+        env: test_env,
         timeout: 500,
         protocol: 'tap',
         is_parallel: false,
@@ -68,6 +71,19 @@ if want_fabrics and 'registry' in selected_plugins
         test('nvme-cli - registry-cli',
              _py3,
              args: [files('nvme_registry_test.py'), nvme_exe],
+             depends: nvme_exe)
+    endif
+endif
+
+# Standalone CLI end-to-end test for "nvme config-convert". Needs no device;
+# uses an explicit --config/--output pair under /tmp instead. Requires
+# json-c since the legacy config.json reader is a no-op without it.
+if want_fabrics and json_c_dep.found()
+    _py3 = find_program('python3', required: false)
+    if _py3.found()
+        test('nvme-cli - config-convert-cli',
+             _py3,
+             args: [files('nvme_config_convert_test.py'), nvme_exe],
              depends: nvme_exe)
     endif
 endif
@@ -91,6 +107,8 @@ else
     message('Mypy or Flake8 not found. Python linting disabled')
 endif
 
+
+subdir('plugins')
 
 autopep8 = find_program(
     'autopep8',

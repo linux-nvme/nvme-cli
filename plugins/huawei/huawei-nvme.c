@@ -32,6 +32,7 @@
 #include "common.h"
 #include "nvme-cmds.h"
 #include "nvme.h"
+#include "nvme-print.h"
 #include "plugin.h"
 
 #include "util/suffix.h"
@@ -293,23 +294,33 @@ static void huawei_print_list_items(struct huawei_list_item *list_items, unsigne
 		huawei_print_list_item(&list_items[i], element_len);
 }
 
+static int filter_namespace(const struct dirent *d)
+{
+	int i, n;
+
+	if (d->d_name[0] == '.')
+		return 0;
+
+	if (strstr(d->d_name, "nvme"))
+		if (sscanf(d->d_name, "nvme%dn%d", &i, &n) == 2)
+			return 1;
+
+	return 0;
+}
+
 static int huawei_list(int argc, char **argv, struct command *acmd,
 		       struct plugin *plugin)
 {
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx =
-		libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	const char *desc = "Retrieve basic information for the given huawei device";
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	char path[264];
 	struct dirent **devices;
 	struct huawei_list_item *list_items;
 	unsigned int i, n, ret;
 	unsigned int huawei_num = 0;
 	nvme_print_flags_t fmt;
-	const char *desc = "Retrieve basic information for the given huawei device";
 
 	NVME_ARGS(opts);
-
-	if (!ctx)
-		return -ENOMEM;
 
 	ret = argconfig_parse(argc, argv, desc, opts);
 	if (ret)
@@ -319,13 +330,19 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 	if (ret < 0 || (fmt != JSON && fmt != NORMAL))
 		return ret;
 
-	n = scandir("/dev", &devices, libnvme_filter_namespace, alphasort);
+	ret = nvme_create_global_ctx(&ctx);
+	if (ret)
+		return ret;
+
+	libnvme_set_logging_file(ctx, stdout);
+
+	n = scandir("/dev", &devices, filter_namespace, alphasort);
 	if (n <= 0)
 		return n;
 
 	list_items = calloc(n, sizeof(*list_items));
 	if (!list_items) {
-		fprintf(stderr, "can not allocate controller list payload\n");
+		nvme_show_error("can not allocate controller list payload");
 		ret = ENOMEM;
 		goto out_free_devices;
 	}
@@ -336,7 +353,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 		snprintf(path, sizeof(path), "/dev/%s", devices[i]->d_name);
 		ret = libnvme_open(ctx, path, &hdl);
 		if (ret) {
-			fprintf(stderr, "Cannot open device %s: %s\n",
+			nvme_show_error("Cannot open device %s: %s",
 				path, libnvme_strerror(-ret));
 			continue;
 		}

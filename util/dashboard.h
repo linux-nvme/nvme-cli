@@ -6,18 +6,22 @@
 struct dashboard_ctx;
 
 enum event_type {
-	EVENT_TYPE_ERROR = -1,	/* error waiting for event */
-	EVENT_TYPE_TIMEOUT,	/* timed out waiting for event */
+	EVENT_TYPE_ERROR = -1,		/* error waiting for event */
+	EVENT_TYPE_TIMEOUT,		/* timed out waiting for event */
 
-	EVENT_TYPE_KEY_PRESS,	/* key pressed event */
-	EVENT_TYPE_KEY_ESC,	/* ESC key is pressed*/
-	EVENT_TYPE_KEY_UP,	/* UP arrow key is pressed */
-	EVENT_TYPE_KEY_DOWN,	/* DOWN arrow key is pressed */
-	EVENT_TYPE_KEY_RETURN,	/* Return/Enter key is pressed */
-	EVENT_TYPE_KEY_QUIT,	/* q is pressed */
+	EVENT_TYPE_KEY_PRESS,		/* key pressed event */
+	EVENT_TYPE_KEY_ESC,		/* ESC key is pressed*/
+	EVENT_TYPE_KEY_UP,		/* UP arrow key is pressed */
+	EVENT_TYPE_KEY_DOWN,		/* DOWN arrow key is pressed */
+	EVENT_TYPE_KEY_PAGE_UP,		/* Page UP key is pressed*/
+	EVENT_TYPE_KEY_PAGE_DOWN,	/* Page DOWN key is pressed */
+	EVENT_TYPE_KEY_RETURN,		/* Return/Enter key is pressed */
+	EVENT_TYPE_KEY_QUIT,		/* q is pressed */
 
-	EVENT_TYPE_NVME_UEVENT,	/* kobject uevent received; rescan topology */
-	EVENT_TYPE_SIGWINCH,	/* SIGWINCH received */
+	EVENT_TYPE_NVME_UEVENT,		/* kobject uevent received; rescan topology */
+	EVENT_TYPE_SIGWINCH,		/* SIGWINCH received */
+
+	EVENT_TYPE_IGNORE,		/* ignore event */
 };
 
 int dashboard_get_interval(struct dashboard_ctx *db_ctx);

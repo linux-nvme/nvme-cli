@@ -4,23 +4,22 @@
  * Copyright (c) 2024 Daniel Wagner, SUSE LLC
  */
 
+#include "options.h"
+
 #include <errno.h>
+#include <getopt.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include <libnvme.h>
 
-static bool config_dump(const char *file)
+static bool config_dump(struct libnvme_global_ctx *ctx, const char *file)
 {
-	struct libnvme_global_ctx *ctx;
 	bool pass = false;
 	int err;
-
-	ctx = libnvme_create_global_ctx(stderr, LIBNVME_LOG_ERR);
-	if (!ctx)
-		return false;
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err < 0 && err != -ENOENT)
@@ -37,15 +36,31 @@ static bool config_dump(const char *file)
 	pass = true;
 
 out:
-	libnvme_free_global_ctx(ctx);
 	return pass;
 }
 
 int main(int argc, char *argv[])
 {
+	struct libnvme_global_ctx *ctx;
+	const char *config_file = NULL;
 	bool pass;
 
-	pass = config_dump(argv[1]);
+	ctx = libnvme_create_global_ctx();
+	if (!ctx)
+		return EXIT_FAILURE;
+
+	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
+
+	if (parse_args(ctx, argc, argv)) {
+		libnvme_free_global_ctx(ctx);
+		return EXIT_FAILURE;
+	}
+
+	config_file = argv[optind];
+
+	pass = config_dump(ctx, config_file);
+
+	libnvme_free_global_ctx(ctx);
 	fflush(stdout);
 
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

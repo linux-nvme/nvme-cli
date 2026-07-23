@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <string.h>
 
-#if defined(NVME_HAVE_NETDB) || defined(CONFIG_FABRICS)
+#ifdef CONFIG_FABRICS
 #include <ifaddrs.h>
 #endif
 
@@ -25,10 +25,10 @@
 struct libnvme_passthru_completion;
 struct libnvme_async_req;
 
-const char *libnvme_subsys_sysfs_dir(void);
-const char *libnvme_ctrl_sysfs_dir(void);
-const char *libnvme_ns_sysfs_dir(void);
-const char *libnvme_slots_sysfs_dir(void);
+const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx);
+const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx);
+const char *libnvme_ns_sysfs_dir(struct libnvme_global_ctx *ctx);
+const char *libnvme_slots_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_uuid_ibm_filename(void);
 const char *libnvme_dmi_entries_dir(void);
 
@@ -430,20 +430,28 @@ struct libnvme_fabric_options { // !generate-accessors
 	bool trsvcid;
 };
 
-struct libnvme_global_ctx { // !generate-python:alias=GlobalCtx
+struct libnvme_global_ctx { // !generate-accessors:read=none,write=none !generate-python:alias=GlobalCtx
 	char *config_file;
 	char *owner; /* orchestrator identity; NULL = unowned */
 	struct list_head endpoints; /* MI endpoints */
 	struct list_head hosts;
 	struct libnvme_log log;
-	bool mi_probe_enabled;
-	bool ioctl_probing;
 	bool create_only;
 	bool dry_run;
+
+	/* global options to steer libnvme behavior or overwrite defaults */
+	bool force_4k;
+	bool mi_probe_enabled;
+	bool ioctl_probing;
+	char *test_base_dir;
+	char *test_sysfs_dir;
+
 #ifdef CONFIG_FABRICS
 	struct libnvme_fabric_options *options;
 	struct ifaddrs *ifaddrs_cache; /* init with libnvmf_getifaddrs() */
 #endif
+	char *hostnqn;		// !access:read=none,write=generated
+	char *hostid;		// !access:read=none,write=generated
 };
 int libnvme_set_attr(const char *dir, const char *attr, const char *value);
 
@@ -522,8 +530,11 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 #define SECTOR_SIZE	512
 #define SECTOR_SHIFT	9
 
-int __libnvme_import_keys_from_config(struct libnvme_host *h,
+int __libnvmf_import_keys_from_config(struct libnvme_host *h,
 		struct libnvme_ctrl *c, long *keyring_id, long *key_id);
+
+/* write() may return short; loop until the whole buffer is written (util.c). */
+int write_all(int fd, const void *buf, size_t len);
 
 static inline char *xstrdup(const char *s)
 {
@@ -559,7 +570,7 @@ static inline bool streqcase0(const char *s1, const char *s2)
  */
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2);
 
-#if defined(NVME_HAVE_NETDB) || defined(CONFIG_FABRICS)
+#ifdef CONFIG_FABRICS
 /**
  * libnvme_iface_matching_addr - Get interface matching @addr
  * @iface_list: Interface list returned by getifaddrs()
@@ -589,10 +600,7 @@ const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
  */
 bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr);
-#endif /* NVME_HAVE_NETDB || CONFIG_FABRICS */
-
-int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
-		char **hostname);
+#endif /* CONFIG_FABRICS */
 
 /**
  * startswith - Checks that a string starts with a given prefix.
@@ -691,3 +699,5 @@ int libnvme_mi_admin_admin_passthru(struct libnvme_transport_handle *hdl,
 int libnvme_open_uring(struct libnvme_transport_handle *hdl);
 void libnvme_close_uring(struct libnvme_transport_handle *hdl);
 int __libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl);
+
+char *libnvme_hostid_from_hostnqn(const char *hostnqn);

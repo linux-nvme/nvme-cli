@@ -6,6 +6,14 @@
  * Authors: Martin Belanger <Martin.Belanger@dell.com>
  */
 
+#include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <ccan/endian/endian.h>
@@ -18,6 +26,20 @@
 #include "util.h"
 
 #include "compiler-attributes.h"
+
+/* FNV-1a 64-bit over a byte range: fast and dependency-free. */
+uint64_t libnvmf_fnv1a_64(const void *buf, size_t len)
+{
+	const unsigned char *p = buf;
+	uint64_t hash = 14695981039346656037ULL;
+	size_t i;
+
+	for (i = 0; i < len; i++) {
+		hash ^= p[i];
+		hash *= 1099511628211ULL;
+	}
+	return hash;
+}
 
 __libnvme_public struct nvmf_ext_attr *libnvmf_exat_ptr_next(
 		struct nvmf_ext_attr *p)
@@ -175,4 +197,99 @@ size_t libnvmf_get_entity_version(char *buffer, size_t bufsz)
 	memset(&buffer[num_bytes], '\0', bufsz);
 
 	return num_bytes;
+}
+
+/*
+ * File-access helpers shared by the registry and exclusion-list code.
+ */
+
+int libnvmf_mkdir_p(const char *path, mode_t mode)
+{
+	char tmp[PATH_MAX];
+	size_t len;
+	char *p;
+
+	len = strlen(path);
+	if (len >= sizeof(tmp))
+		return -ENAMETOOLONG;
+	memcpy(tmp, path, len + 1);
+	if (len && tmp[len - 1] == '/')
+		tmp[len - 1] = '\0';
+
+	for (p = tmp + 1; *p; p++) {
+		if (*p != '/')
+			continue;
+		*p = '\0';
+		if (mkdir(tmp, mode) < 0 && errno != EEXIST)
+			return -errno;
+		*p = '/';
+	}
+	if (mkdir(tmp, mode) < 0 && errno != EEXIST)
+		return -errno;
+	return 0;
+}
+
+int libnvmf_mkstemp(char *template)
+{
+	int fd;
+
+	/*
+	 * mkostemp() sets O_CLOEXEC atomically but its glibc declaration is
+	 * gated behind _GNU_SOURCE; fall back to mkstemp() + fcntl() where
+	 * _GNU_SOURCE is not defined (e.g. the musl-style CI build).
+	 */
+#ifdef _GNU_SOURCE
+	fd = mkostemp(template, O_CLOEXEC);
+	if (fd < 0)
+		return -errno;
+#else
+	fd = mkstemp(template);
+	if (fd < 0)
+		return -errno;
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+		int e = -errno;
+
+		close(fd);
+		unlink(template);
+		return e;
+	}
+#endif
+	return fd;
+}
+
+void libnvmf_fsync_dir(const char *path)
+{
+	int fd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+
+	if (fd >= 0) {
+		fsync(fd);
+		close(fd);
+	}
+}
+
+bool libnvmf_valid_name(const char *s)
+{
+	const char *p;
+
+	if (!s || !*s)
+		return false;
+	for (p = s; *p; p++) {
+		if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') ||
+		    (*p >= '0' && *p <= '9') || *p == '_' || *p == '-')
+			continue;
+		return false;
+	}
+	return true;
+}
+
+char *libnvmf_trim(char *s)
+{
+	char *end;
+
+	s += strspn(s, " \t\n\r\v\f");  // trim leading spaces
+	end = s + strlen(s);
+	while (end > s && isspace((unsigned char)end[-1]))
+		end--;
+	*end = '\0';
+	return s;
 }

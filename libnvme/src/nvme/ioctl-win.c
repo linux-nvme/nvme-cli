@@ -8,13 +8,17 @@
  * Windows-specific implementations of ioctl-based functions.
  */
 
+#include <winsock2.h>
 #include <windows.h>
 #include <winioctl.h>
 #include <errno.h>
 #include <ntddscsi.h>
+#include <setupapi.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include <ccan/minmax/minmax.h>
 
@@ -23,6 +27,7 @@
 #include "cleanup.h"
 #include "ioctl.h"
 #include "private.h"
+#include "private-ctrl-map.h"
 #include "types.h"
 
 #include "compiler-attributes.h"
@@ -131,11 +136,70 @@ __libnvme_public int libnvme_reset_subsystem(struct libnvme_transport_handle *hd
 	return -errno;
 }
 
+static int reset_ctrl_device(HDEVINFO hdev, SP_DEVINFO_DATA *devinfo)
+{
+	/*
+	 * Windows doesn't have a direct equivalent to resetting an NVMe
+	 * controller, but we can cause a PnP-level reset by disabling, then
+	 * re-enabling the device.
+	 */
+	SP_PROPCHANGE_PARAMS params = {
+		.ClassInstallHeader = {
+			.cbSize = sizeof(SP_CLASSINSTALL_HEADER),
+			.InstallFunction = DIF_PROPERTYCHANGE
+		},
+		.StateChange = DICS_DISABLE,
+		.Scope = DICS_FLAG_CONFIGSPECIFIC,
+		.HwProfile = 0
+	};
+
+	if (!SetupDiSetClassInstallParamsW(hdev, devinfo,
+			&params.ClassInstallHeader, sizeof(params))) {
+		errno = get_errno_from_error(GetLastError());
+		return -errno;
+	}
+	if (!SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, hdev, devinfo)) {
+		errno = get_errno_from_error(GetLastError());
+		return -errno;
+	}
+
+	params.StateChange = DICS_ENABLE;
+	if (!SetupDiSetClassInstallParamsW(hdev, devinfo,
+			&params.ClassInstallHeader, sizeof(params))) {
+		errno = get_errno_from_error(GetLastError());
+		return -errno;
+	}
+	if (!SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, hdev, devinfo)) {
+		errno = get_errno_from_error(GetLastError());
+		return -errno;
+	}
+
+	return 0;
+}
+
 __libnvme_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
-	(void)hdl;
-	errno = ENOTSUP;
-	return -errno;
+	const struct ctrl_map_entry *entry;
+	SP_DEVINFO_DATA dev_info_data = { 0 };
+	HDEVINFO hdev;
+	int ret;
+
+	if (!libnvme_transport_handle_is_ctrl(hdl))
+		return -EINVAL;
+
+	entry = libnvme_ctrl_map_lookup(hdl->ctx,
+					libnvme_transport_handle_get_name(hdl));
+	if (!entry)
+		return -ENODEV;
+
+	hdev = libnvme_ctrl_map_entry_get_devinfo(entry, &dev_info_data);
+	if (hdev == INVALID_HANDLE_VALUE)
+		return -EIO;
+
+	ret = reset_ctrl_device(hdev, &dev_info_data);
+	libnvme_ctrl_map_entry_free_devinfo(hdev);
+
+	return ret;
 }
 
 __libnvme_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
@@ -1846,7 +1910,8 @@ out:
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-__libnvme_public int libnvme_submit_io_passthru(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_exec_io_passthru(
+		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl || !cmd)
@@ -1884,7 +1949,8 @@ __libnvme_public int libnvme_submit_io_passthru(struct libnvme_transport_handle 
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-__libnvme_public int libnvme_submit_admin_passthru(struct libnvme_transport_handle *hdl,
+__libnvme_public int libnvme_exec_admin_passthru(
+		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	if (!hdl || !cmd)
@@ -1929,18 +1995,4 @@ __libnvme_public int libnvme_submit_admin_passthru(struct libnvme_transport_hand
 			__func__, cmd->opcode);
 		return -ENOTSUP;
 	}
-}
-
-__libnvme_public int libnvme_exec_admin_passthru(
-		struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd)
-{
-	return libnvme_submit_admin_passthru(hdl, cmd);
-}
-
-__libnvme_public int libnvme_exec_io_passthru(
-		struct libnvme_transport_handle *hdl,
-		struct libnvme_passthru_cmd *cmd)
-{
-	return libnvme_submit_io_passthru(hdl, cmd);
 }

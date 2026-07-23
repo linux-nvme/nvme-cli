@@ -64,7 +64,7 @@ static int fdp_configs(int argc, char **argv, struct command *acmd,
 		flags |= VERBOSE;
 
 	if (!cfg.egid) {
-		fprintf(stderr, "endurance group identifier required\n");
+		nvme_show_error("endurance group identifier required");
 		return -EINVAL;
 	}
 
@@ -194,7 +194,7 @@ static int fdp_stats(int argc, char **argv, struct command *acmd, struct plugin 
 		flags = BINARY;
 
 	if (!cfg.egid) {
-		fprintf(stderr, "endurance group identifier required\n");
+		nvme_show_error("endurance group identifier required");
 		return -EINVAL;
 	}
 
@@ -253,7 +253,7 @@ static int fdp_events(int argc, char **argv, struct command *acmd, struct plugin
 		flags = BINARY;
 
 	if (!cfg.egid) {
-		fprintf(stderr, "endurance group identifier required\n");
+		nvme_show_error("endurance group identifier required");
 		return -EINVAL;
 	}
 
@@ -313,7 +313,7 @@ static int fdp_status(int argc, char **argv, struct command *acmd, struct plugin
 	if (!cfg.nsid) {
 		err = libnvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
-			perror("get-namespace-id");
+			nvme_show_err(err, "get-namespace-id");
 			return err;
 		}
 	}
@@ -377,17 +377,17 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 
 	npids = argconfig_parse_comma_sep_array_short(cfg.pids, pids, ARRAY_SIZE(pids));
 	if (npids < 0) {
-		perror("could not parse pids");
+		nvme_show_error("could not parse pids");
 		return -EINVAL;
 	} else if (npids == 0) {
-		fprintf(stderr, "no placement identifiers set\n");
+		nvme_show_error("no placement identifiers set");
 		return -EINVAL;
 	}
 
 	if (!cfg.nsid) {
 		err = libnvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
-			perror("get-namespace-id");
+			nvme_show_err(err, "get-namespace-id");
 			return err;
 		}
 	}
@@ -402,7 +402,7 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 		return err;
 	}
 
-	printf("update: Success\n");
+	nvme_show_verbose_result("update: Success");
 
 	return 0;
 }
@@ -449,13 +449,13 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 
 	nev = argconfig_parse_comma_sep_array_short(cfg.event_types, evts, ARRAY_SIZE(evts));
 	if (nev < 0) {
-		perror("could not parse event types");
+		nvme_show_error("could not parse event types");
 		return -EINVAL;
 	} else if (nev == 0) {
-		fprintf(stderr, "no event types set\n");
+		nvme_show_error("no event types set");
 		return -EINVAL;
 	} else if (nev > 255) {
-		fprintf(stderr, "too many event types (max 255)\n");
+		nvme_show_error("too many event types (max 255)");
 		return -EINVAL;
 	}
 
@@ -463,7 +463,7 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 		err = libnvme_get_nsid(hdl, &cfg.nsid);
 		if (err < 0) {
 			if (errno != ENOTTY) {
-				fprintf(stderr, "get-namespace-id: %s\n", libnvme_strerror(errno));
+				nvme_show_error("get-namespace-id: %s", libnvme_strerror(errno));
 				return err;
 			}
 
@@ -482,7 +482,7 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 		return err;;
 	}
 
-	printf("set-events: Success\n");
+	nvme_show_verbose_result("set-events: Success");
 
 	return 0;
 }

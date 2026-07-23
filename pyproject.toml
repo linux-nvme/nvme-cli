@@ -4,15 +4,17 @@ build-backend = 'mesonpy'
 requires = ['meson-python', 'meson', 'ninja', 'swig']
 
 [project]
-name = "libnvme"
+name = "libnvme3"
 dynamic = ["version"]
-description = "Python bindings for libnvme"
+description = "Python bindings for libnvme3"
 readme = "README.md"
 requires-python = ">=3.6"
 license = { text = "LGPL-2.1-or-later" }
 
 authors = [
-    { name = "Hannes Reinecke", email = "hare@suse.de" }
+    { name = "Hannes Reinecke", email = "hare@suse.de" },
+    { name = "Daniel Wagner", email = "dwagner@suse.de" },
+    { name = "Martin Belanger", email = "martin.belanger@dell.com" },
 ]
 
 keywords = ["nvme", "storage", "bindings"]

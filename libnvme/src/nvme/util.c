@@ -16,11 +16,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#if defined(NVME_HAVE_NETDB) || defined(CONFIG_FABRICS)
+#ifdef CONFIG_FABRICS
 #include <ifaddrs.h>
 
 #include <arpa/inet.h>
-#include <netdb.h>
+#include <net/if.h>
 #endif
 
 #include <sys/param.h>
@@ -57,6 +57,29 @@
 #ifndef ERESTART
 #define ERESTART  EAGAIN
 #endif
+
+/* write() may return a short count; loop until the whole buffer is written. */
+int write_all(int fd, const void *buf, size_t len)
+{
+	const char *p = buf;
+
+	while (len) {
+		ssize_t w = write(fd, p, len);
+
+		if (w < 0) {
+			if (errno == EINTR || errno == EAGAIN)
+				continue;
+			return -errno;
+		}
+		if (w == 0) {
+			errno = EIO;
+			return -EIO;
+		}
+		p += w;
+		len -= w;
+	}
+	return 0;
+}
 
 /* Source Code Control System, query version of binary with 'what' */
 const char sccsid[] = "@(#)libnvme " GIT_VERSION;
@@ -473,65 +496,6 @@ __libnvme_public const char *libnvme_strerror(int errnum)
 	return strerror(errnum);
 }
 
-#ifdef NVME_HAVE_NETDB
-static inline DEFINE_CLEANUP_FUNC(cleanup_addrinfo, struct addrinfo *,
-		freeaddrinfo)
-#define __cleanup_addrinfo __cleanup(cleanup_addrinfo)
-
-int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr,
-		    char **hostname)
-{
-	__cleanup_addrinfo struct addrinfo *host_info = NULL;
-	struct addrinfo hints = {.ai_family = AF_UNSPEC};
-	char addrstr[NVMF_TRADDR_SIZE];
-	const char *p;
-	int ret;
-
-	ret = getaddrinfo(traddr, NULL, &hints, &host_info);
-	if (ret) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to resolve host %s info\n",
-			 traddr);
-		return -errno;
-	}
-
-	switch (host_info->ai_family) {
-	case AF_INET:
-		p = inet_ntop(host_info->ai_family,
-			&(((struct sockaddr_in *)host_info->ai_addr)->sin_addr),
-			addrstr, NVMF_TRADDR_SIZE);
-		break;
-	case AF_INET6:
-		p = inet_ntop(host_info->ai_family,
-			&(((struct sockaddr_in6 *)host_info->ai_addr)->sin6_addr),
-			addrstr, NVMF_TRADDR_SIZE);
-		break;
-	default:
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "unrecognized address family (%d) %s\n",
-			 host_info->ai_family, traddr);
-		return -EINVAL;
-	}
-
-	if (!p) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to get traddr for %s\n",
-			 traddr);
-		return -EIO;
-	}
-	*hostname = strdup(addrstr);
-	if (!*hostname)
-		return -ENOMEM;
-
-	return 0;
-}
-#else /* NVME_HAVE_NETDB */
-int hostname2traddr(struct libnvme_global_ctx *ctx, const char *traddr, char **hostname)
-{
-	libnvme_msg(ctx, LIBNVME_LOG_ERR, "No support for hostname IP address resolution; " \
-		"recompile with libnss support.\n");
-
-	return -ENOTSUP;
-}
-#endif /* NVME_HAVE_NETDB */
-
 char *startswith(const char *s, const char *prefix)
 {
 	size_t l;
@@ -695,7 +659,52 @@ __libnvme_public int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
 	return -ENOENT;
 }
 
-#ifdef NVME_HAVE_NETDB
+#ifdef CONFIG_FABRICS
+/*
+ * Parse @addr as a numeric IPv4 or IPv6 address into @ss.  An IPv6 address
+ * may carry a "%<iface>" zone suffix (e.g. "fe80::1%eth0"); the interface
+ * name is resolved to a scope id via if_nametoindex().  Never touches DNS --
+ * inet_pton()/if_nametoindex() only.  Mirrors fabrics.c's
+ * inet_pton_with_scope() family, but this one has no port/trsvcid concept
+ * (a pure address parser for comparison), so it is kept separate rather
+ * than merged with it.
+ *
+ * Return: 0 on success; -EINVAL if @addr is not numeric; -ENOMEM on
+ * allocation failure.
+ */
+static int nvme_parse_numeric_addr(const char *addr,
+		struct sockaddr_storage *ss)
+{
+	struct sockaddr_in *addr4 = (struct sockaddr_in *)ss;
+	struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)ss;
+	__cleanup_free char *tmp = NULL;
+	char *scope;
+
+	memset(ss, 0, sizeof(*ss));
+
+	if (inet_pton(AF_INET, addr, &addr4->sin_addr) == 1) {
+		addr4->sin_family = AF_INET;
+		return 0;
+	}
+
+	tmp = strdup(addr);
+	if (!tmp)
+		return -ENOMEM;
+
+	scope = strchr(tmp, '%');
+	if (scope)
+		*scope++ = '\0';
+
+	if (inet_pton(AF_INET6, tmp, &addr6->sin6_addr) != 1)
+		return -EINVAL;
+
+	addr6->sin6_family = AF_INET6;
+	if (scope && IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr))
+		addr6->sin6_scope_id = if_nametoindex(scope);
+
+	return 0;
+}
+
 static bool _nvme_ipaddrs_eq(struct sockaddr *addr1, struct sockaddr *addr2)
 {
 	struct sockaddr_in *sockaddr_v4;
@@ -738,9 +747,7 @@ static bool _nvme_ipaddrs_eq(struct sockaddr *addr1, struct sockaddr *addr2)
 
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 {
-	bool result = false;
-	struct addrinfo *info1 = NULL, hint1 = { .ai_flags=AI_NUMERICHOST, .ai_family=AF_UNSPEC };
-	struct addrinfo *info2 = NULL, hint2 = { .ai_flags=AI_NUMERICHOST, .ai_family=AF_UNSPEC };
+	struct sockaddr_storage ss1, ss2;
 
 	if (addr1 == addr2)
 		return true;
@@ -748,40 +755,31 @@ bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 	if (!addr1 || !addr2)
 		return false;
 
-	if (getaddrinfo(addr1, 0, &hint1, &info1) || !info1)
-		goto ipaddrs_eq_fail;
+	if (nvme_parse_numeric_addr(addr1, &ss1))
+		return false;
 
-	if (getaddrinfo(addr2, 0, &hint2, &info2) || !info2)
-		goto ipaddrs_eq_fail;
+	if (nvme_parse_numeric_addr(addr2, &ss2))
+		return false;
 
-	result = _nvme_ipaddrs_eq(info1->ai_addr, info2->ai_addr);
-
-ipaddrs_eq_fail:
-	if (info1)
-		freeaddrinfo(info1);
-	if (info2)
-		freeaddrinfo(info2);
-	return result;
+	return _nvme_ipaddrs_eq((struct sockaddr *)&ss1,
+			(struct sockaddr *)&ss2);
 }
-#else /* NVME_HAVE_NETDB */
+#else /* CONFIG_FABRICS */
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 {
-	libnvme_msg(NULL, LIBNVME_LOG_ERR, "no support for hostname ip address resolution; " \
-		"recompile with libnss support.\n");
-
 	return false;
 }
-#endif /* NVME_HAVE_NETDB */
+#endif /* CONFIG_FABRICS */
 
-#ifdef NVME_HAVE_NETDB
+#ifdef CONFIG_FABRICS
 const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
 		const char *addr)
 {
 	const struct ifaddrs *iface_it;
-	struct addrinfo *info = NULL, hint = { .ai_flags = AI_NUMERICHOST, .ai_family = AF_UNSPEC };
+	struct sockaddr_storage ss;
 	const char *iface_name = NULL;
 
-	if (!iface_list || !addr || getaddrinfo(addr, 0, &hint, &info) || !info)
+	if (!iface_list || !addr || nvme_parse_numeric_addr(addr, &ss))
 		return NULL;
 
 	/* Walk through the linked list */
@@ -789,13 +787,11 @@ const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
 		struct sockaddr *ifaddr = iface_it->ifa_addr;
 
 		if (ifaddr && (ifaddr->sa_family == AF_INET || ifaddr->sa_family == AF_INET6) &&
-		    _nvme_ipaddrs_eq(info->ai_addr, ifaddr)) {
+		    _nvme_ipaddrs_eq((struct sockaddr *)&ss, ifaddr)) {
 			iface_name = iface_it->ifa_name;
 			break;
 		}
 	}
-
-	freeaddrinfo(info);
 
 	return iface_name;
 }
@@ -804,10 +800,10 @@ bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr)
 {
 	const struct ifaddrs *iface_it;
-	struct addrinfo *info = NULL, hint = { .ai_flags = AI_NUMERICHOST, .ai_family = AF_UNSPEC };
+	struct sockaddr_storage ss;
 	bool match_found = false;
 
-	if (!iface_list || !addr || getaddrinfo(addr, 0, &hint, &info) || !info)
+	if (!iface_list || !addr || nvme_parse_numeric_addr(addr, &ss))
 		return false;
 
 	/* Walk through the linked list */
@@ -820,38 +816,17 @@ bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		 * matches the family of the address we're looking for, we
 		 * have found the primary address for that family.
 		 */
-		if (iface_it->ifa_addr && (iface_it->ifa_addr->sa_family == info->ai_addr->sa_family)) {
-			match_found = _nvme_ipaddrs_eq(info->ai_addr, iface_it->ifa_addr);
+		if (iface_it->ifa_addr &&
+		    (iface_it->ifa_addr->sa_family == ss.ss_family)) {
+			match_found = _nvme_ipaddrs_eq((struct sockaddr *)&ss,
+					iface_it->ifa_addr);
 			break;
 		}
 	}
 
-	freeaddrinfo(info);
-
 	return match_found;
 }
-
-#elif defined(CONFIG_FABRICS)
-
-const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
-		const char *addr)
-{
-	libnvme_msg(NULL, LIBNVME_LOG_ERR, "no support for interface lookup; "
-		"recompile with libnss support.\n");
-
-	return NULL;
-}
-
-bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
-		const char *iface, const char *addr)
-{
-	libnvme_msg(NULL, LIBNVME_LOG_ERR, "no support for interface lookup; "
-		"recompile with libnss support.\n");
-
-	return false;
-}
-
-#endif /* NVME_HAVE_NETDB || CONFIG_FABRICS */
+#endif /* CONFIG_FABRICS */
 
 /* This used instead of basename() due to behavioral differences between
  * the POSIX and the GNU version. This is the glibc implementation.

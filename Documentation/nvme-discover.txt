@@ -14,7 +14,6 @@ SYNOPSIS
 			[--config=<filename> | -J <filename>]
 			[--persistent | -p]
 			[--quiet]
-			[--dump-config | -O]
 			[--force]
 			[--nbft]
 			[--no-nbft]
@@ -90,10 +89,6 @@ OPTIONS
 
 --quiet::
 	Suppress already connected errors.
-
--O::
---dump-config::
-	Print out resulting JSON configuration file to stdout.
 
 --force::
 	Disable the built-in persistent discover connection rules.

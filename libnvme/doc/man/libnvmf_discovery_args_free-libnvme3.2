@@ -1,0 +1,10 @@
+.TH "libnvmf_discovery_args_free" 9 "libnvmf_discovery_args_free" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_discovery_args_free \- Release a libnvmf_discovery_args object.
+.SH SYNOPSIS
+.B "void" libnvmf_discovery_args_free
+.BI "(struct libnvmf_discovery_args *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+Object previously returned by \fBlibnvmf_discovery_args_new\fP.
+A NULL pointer is silently ignored.

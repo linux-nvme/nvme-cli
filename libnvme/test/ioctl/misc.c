@@ -1460,8 +1460,8 @@ static void run_test(const char *test_name, void (*test_fn)(void))
 
 int main(void)
 {
-	struct libnvme_global_ctx *ctx =
-		libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
+	libnvme_set_logging_file(ctx, stdout);
 
 	set_mock_fd(LIBNVME_TEST_FD);
 	check(!libnvme_open(ctx, "NVME_TEST_FD64", &test_hdl),

@@ -16,42 +16,32 @@
 #include "private.h"
 #include "compiler-attributes.h"
 
-static bool force_4k;
-
-__attribute__((constructor))
-static void nvme_init_env(void)
-{
-	char *val;
-
-	val = getenv("LIBNVME_FORCE_4K");
-	if (!val)
-		return;
-	if (!strcmp(val, "1") ||
-	    !strcasecmp(val, "true") ||
-	    !strncasecmp(val, "enable", 6))
-		force_4k = true;
-}
-
 static int submit_get_log_cmd(struct libnvme_transport_handle *hdl,
 	struct libnvme_passthru_cmd *cmd)
 {
 	int err;
 
+	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
+		goto no_uring;
+
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_NOT_AVAILABLE)
 		goto no_uring;
 
-	err = libnvme_submit_admin_passthru_async(hdl, cmd, NULL);
+	err = libnvme_submit_admin_passthru(hdl, cmd, NULL);
 	if (err && err == -ENOTSUP)
 		goto no_uring;
 
 	return err;
 
 no_uring:
-	return libnvme_submit_admin_passthru(hdl, cmd);
+	return libnvme_exec_admin_passthru(hdl, cmd);
 }
 
 static int wait_get_log_cmd(struct libnvme_transport_handle *hdl)
 {
+	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
+		return 0;
+
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_NOT_AVAILABLE)
 		return 0;
 
@@ -74,7 +64,7 @@ __libnvme_public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 				    NVME_VAL(LOG_CDW10_LSP));
 	__u32 cdw11 = cmd->cdw11 & NVME_VAL(LOG_CDW11_LSI);
 
-	if (force_4k)
+	if (hdl->ctx->force_4k)
 		xfer_len = NVME_LOG_PAGE_PDU_SIZE;
 
 	/*
@@ -82,7 +72,7 @@ __libnvme_public int libnvme_get_log(struct libnvme_transport_handle *hdl,
 	 * avoids having to check the MDTS value of the controller.
 	 */
 	do {
-		if (!force_4k) {
+		if (!hdl->ctx->force_4k) {
 			xfer = data_len - offset;
 			if (xfer > xfer_len)
 				xfer  = xfer_len;
@@ -140,7 +130,7 @@ __libnvme_public int libnvme_get_log_dynamic_chunk(
 	__u32 cdw11 = cmd->cdw11 & NVME_VAL(LOG_CDW11_LSI);
 
 
-	if (force_4k)
+	if (hdl->ctx->force_4k)
 		xfer_len = NVME_LOG_PAGE_PDU_SIZE;
 
 	do {

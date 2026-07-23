@@ -1069,31 +1069,12 @@ static void stdout_top_print_subsys_topology_footer(
 		struct dashboard_ctx *db_ctx, FILE *stream)
 {
 	fprintf(stream, "\n--------------------------------------\n");
-	fprintf(stream, "[ESC to go back to the previous screen, q to quit]\n");
+	fprintf(stream, "[up/down keys to navigate, ESC to go back to the previous screen, q to quit]\n");
 
 	dashboard_set_footer_rows(db_ctx, 3);
 
 	/* hightligh the last footer row */
 	dashboard_set_footer_row_reverse(db_ctx, 2);
-}
-
-static struct libnvme_global_ctx *stdout_top_rescan_topology(void)
-{
-	struct libnvme_global_ctx *ctx;
-
-	ctx = libnvme_create_global_ctx(stdout, log_level);
-	if (!ctx) {
-		nvme_show_error("Failed to create global context");
-		return NULL;
-	}
-
-	if (libnvme_scan_topology(ctx, NULL, NULL)) {
-		libnvme_free_global_ctx(ctx);
-		nvme_show_error("Failed to scan topology");
-		return NULL;
-	}
-
-	return ctx;
 }
 
 static libnvme_subsystem_t stdout_top_search_subsystem(
@@ -1160,27 +1141,75 @@ static int stdout_top_find_subsys_by_name(libnvme_subsystem_t *subsys_arr,
 	return -1;
 }
 
+static int handle_event_page_down(struct dashboard_ctx *db_ctx)
+{
+	int data_start, data_rows, frame_rows;
+	int scroll_down, scroll = 0;
+
+	data_start = dashboard_get_data_start(db_ctx);
+	data_rows = dashboard_get_data_rows(db_ctx);
+	frame_rows = dashboard_get_frame_data_rows(db_ctx);
+
+	/*
+	 * Scroll down max up to one page frame from current data_start index.
+	 * While scrolling down, ensure we don't move past the max available
+	 * data rows. If we are already on the last page frame or there's no
+	 * data if move past the current page frame then ignore the key press.
+	 */
+	scroll_down = data_start + frame_rows;
+
+	if (scroll_down < data_rows) {
+		dashboard_set_data_start(db_ctx, scroll_down);
+		scroll = 1;
+	}
+
+	return scroll;
+}
+
+static int handle_event_page_up(struct dashboard_ctx *db_ctx)
+{
+	int data_start, frame_rows, off;
+	int scroll_up, scroll = 0;
+
+	data_start = dashboard_get_data_start(db_ctx);
+	frame_rows = dashboard_get_frame_data_rows(db_ctx);
+
+	/*
+	 * Scroll back up max up to one page frame. Determine the num of data
+	 * rows we can scroll back up based on current data start index and max
+	 * num of rows which could be drawn in one page frame. If we're already
+	 * on the first page frame and hence we can't scroll back then ignore
+	 * the key press.
+	 */
+	off = min(data_start, frame_rows);
+	scroll_up = data_start - off;
+
+	if (scroll_up != data_start) {
+		dashboard_set_data_start(db_ctx, scroll_up);
+		scroll = 1;
+	}
+
+	return scroll;
+}
+
 /*
  * Draws subsys topology screen of susbystem @s
  * Returns: 0 if ESC key is pressed or needs to draw subsystem selection screen
  *          1 if 'q' is pressed or in case of error
  */
-static int stdout_top_draw_subsys_topology_screen(struct dashboard_ctx *db_ctx,
-			FILE *stream, libnvme_subsystem_t _s)
+static int stdout_top_draw_subsys_topology_screen(
+		struct libnvme_global_ctx *ctx, struct dashboard_ctx *db_ctx,
+		FILE *stream, libnvme_subsystem_t _s)
 {
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	enum event_type event;
 	int ret, scroll = 0;
 	int data_start, data_rows;
-	libnvme_subsystem_t s = NULL;
+	__cleanup_free const char *subsys_name;
+	libnvme_subsystem_t s = _s;
 
-	ctx = stdout_top_rescan_topology();
-	if (!ctx)
+	subsys_name = strdup(libnvme_subsystem_get_name(s));
+	if (!subsys_name)
 		return 1; /* force quit */
-
-	s = stdout_top_search_subsystem(ctx, libnvme_subsystem_get_name(_s));
-	if (!s)
-		return 0; /* draw subsys selection screen */
 
 	while (1) {
 		stdout_top_print_subsys_topology_header(db_ctx, stream);
@@ -1234,16 +1263,13 @@ wait_for_event:
 			ret = 1;
 			break;
 		} else if (event == EVENT_TYPE_NVME_UEVENT) {
-			/* free old ctx */
-			libnvme_free_global_ctx(ctx);
-			ctx = stdout_top_rescan_topology();
-			if (!ctx) {
+
+			if (libnvme_refresh_topology(ctx)) {
 				ret = 1; /* force quit */
 				break;
 			}
 
-			s = stdout_top_search_subsystem(ctx,
-					libnvme_subsystem_get_name(_s));
+			s = stdout_top_search_subsystem(ctx, subsys_name);
 			if (!s) {
 				ret = 0; /* draw subsys selection screen */
 				break;
@@ -1255,7 +1281,22 @@ wait_for_event:
 			 * topology screen.
 			 */
 			scroll = 0;
-		} /* else unknown event, ignore */
+		} else if (event == EVENT_TYPE_KEY_PAGE_DOWN) {
+
+			scroll = handle_event_page_down(db_ctx);
+			if (scroll)
+				goto draw;
+
+			goto wait_for_event;
+
+		} else if (event == EVENT_TYPE_KEY_PAGE_UP) {
+
+			scroll = handle_event_page_up(db_ctx);
+			if (scroll)
+				goto draw;
+
+			goto wait_for_event;
+		} /* else ignore */
 	}
 
 	return ret;
@@ -1402,7 +1443,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 	table_print_stream(stream, t);
 
 	fprintf(stream, "\n--------------------------------------\n");
-	fprintf(stream, "[up/down arrow keys to navigate, Enter to view, q to quit]\n");
+	fprintf(stream, "[up/down keys to navigate, Enter to view, q to quit]\n");
 
 	/*
 	 * Footer rows are calculated manually.
@@ -1430,10 +1471,19 @@ void stdout_top(int refresh_interval)
 	__cleanup_free libnvme_subsystem_t *subsys_arr = NULL;
 	int data_start, frame_rows, quit = 0, scroll = 0;
 	int num_subsys = 0, subsys_idx = 0;
+	int err;
 
-	ctx = stdout_top_rescan_topology();
-	if (!ctx)
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
+		nvme_show_error("Failed to create global context");
 		return;
+	}
+
+	if (libnvme_scan_topology(ctx, NULL, NULL)) {
+		nvme_show_error("Failed to scan topology");
+		return;
+	}
+
 	subsys_arr = stdout_top_build_subsys_arr(ctx, &num_subsys);
 	if (!subsys_arr)
 		return;
@@ -1467,32 +1517,52 @@ wait_for_event:
 		case EVENT_TYPE_ERROR:
 			quit = 1;
 			break;
-		case EVENT_TYPE_KEY_RETURN:
+		case EVENT_TYPE_KEY_RETURN: {
 			dashboard_reset(db_ctx);
-
 			s = subsys_arr[subsys_idx];
-			quit = stdout_top_draw_subsys_topology_screen(db_ctx,
-					stream, s);
-			scroll = 0;
+
+			quit = stdout_top_draw_subsys_topology_screen(ctx,
+					db_ctx, stream, s);
 			if (quit)
 				break;
-			fallthrough;
+
+			scroll = 0;
+			free(subsys_arr);
+			subsys_arr = NULL;
+
+			if (libnvme_refresh_topology(ctx)) {
+				quit = 1;
+				break;
+			}
+
+			/*
+			 * The topology may have changed while the subsystem
+			 * dashboard was active. Restart from the first
+			 * subsystem instead of trying to restore the previous
+			 * screen position.
+			 */
+			subsys_idx = 0;
+			subsys_arr = stdout_top_build_subsys_arr(ctx,
+					&num_subsys);
+			if (!subsys_arr)
+				quit = 1;
+
+			break;
+		}
 		case EVENT_TYPE_NVME_UEVENT: {
 			__cleanup_free char *subsys_name = NULL;
-			libnvme_subsystem_t s;
+			libnvme_subsystem_t s = subsys_arr[subsys_idx];
 
-			s = subsys_arr[subsys_idx];
 			subsys_name = strdup(libnvme_subsystem_get_name(s));
 			if (!subsys_name) {
 				quit = 1;
 				break;
 			}
+
 			free(subsys_arr);
 			subsys_arr = NULL;
-			libnvme_free_global_ctx(ctx);
 
-			ctx = stdout_top_rescan_topology();
-			if (!ctx) {
+			if (libnvme_refresh_topology(ctx)) {
 				quit = 1;
 				break;
 			}
@@ -1509,6 +1579,7 @@ wait_for_event:
 			if (subsys_idx < 0)
 				subsys_idx = 0;
 
+			scroll = 0;
 			break;
 		}
 		case EVENT_TYPE_KEY_DOWN:
@@ -1580,6 +1651,22 @@ wait_for_event:
 			 */
 			scroll = 0;
 			break;
+		case EVENT_TYPE_KEY_PAGE_DOWN:
+			scroll = handle_event_page_down(db_ctx);
+			if (scroll) {
+				subsys_idx = dashboard_get_data_start(db_ctx);
+				goto draw;
+			}
+
+			goto wait_for_event;
+		case EVENT_TYPE_KEY_PAGE_UP:
+			scroll = handle_event_page_up(db_ctx);
+			if (scroll) {
+				subsys_idx = dashboard_get_data_start(db_ctx);
+				goto draw;
+			}
+
+			goto wait_for_event;
 		default: /* unknown event, ignore */
 			continue;
 		}

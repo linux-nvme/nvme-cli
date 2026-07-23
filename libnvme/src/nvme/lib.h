@@ -25,12 +25,14 @@ enum libnvme_log_level {
 
 /**
  * libnvme_create_global_ctx() - Initialize global context object
- * @fp:		File descriptor for logging messages
- * @log_level:	Logging level to use
+ *
+ * Creates a global context with default settings: logging to stderr at
+ * LIBNVME_DEFAULT_LOGLEVEL.  Use libnvme_set_logging_file() and
+ * libnvme_set_logging_level() to adjust these after creation.
  *
  * Return: Initialized &struct libnvme_global_ctx object
  */
-struct libnvme_global_ctx *libnvme_create_global_ctx(FILE *fp, int log_level);
+struct libnvme_global_ctx *libnvme_create_global_ctx(void);
 
 /**
  * libnvme_free_global_ctx() - Free global context object
@@ -58,6 +60,32 @@ void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx);
 int libnvme_set_owner(struct libnvme_global_ctx *ctx, const char *owner);
 
 /**
+ * libnvme_set_test_base_dir() - Reroot libnvme's on-disk files for testing
+ * @ctx:	&struct libnvme_global_ctx object
+ * @path:	Sandbox directory under /tmp, or NULL to restore defaults
+ *
+ * Redirects the files libnvme reads and writes (the exclusion list, the
+ * ownership registry, ...) under @path instead of their production locations,
+ * so a test can run against a throwaway directory.  For safety @path must be
+ * confined to /tmp and contain no ".." component; anything else is rejected.
+ * Passing NULL clears a previously set override.
+ *
+ * Return: 0 on success, -EINVAL if @ctx is NULL or @path is not a valid
+ * sandbox path, -ENOMEM on allocation failure.
+ */
+int libnvme_set_test_base_dir(struct libnvme_global_ctx *ctx, const char *path);
+
+/**
+ * libnvme_set_test_sysfs_dir() - Set libnvme's lookup sysfs path for testing
+ * @ctx:	&struct libnvme_global_ctx object
+ * @path:	Directory with sysfs or NULL to restore defaults
+ *
+ * Return: 0 on success, -EINVAL if @ctx is NULL, -ENOMEM on allocation
+ * failure.
+ */
+int libnvme_set_test_sysfs_dir(struct libnvme_global_ctx *ctx, const char *path);
+
+/**
  * libnvme_set_logging_level() - Set current logging level
  * @ctx:	struct libnvme_global_ctx object
  * @log_level:	Logging level to set
@@ -83,6 +111,16 @@ void libnvme_set_logging_level(struct libnvme_global_ctx *ctx, int log_level,
  */
 int libnvme_get_logging_level(struct libnvme_global_ctx *ctx, bool *log_pid,
 		bool *log_tstamp);
+
+/**
+ * libnvme_set_logging_file() - Set the log output file for the global context
+ * @ctx:	struct libnvme_global_ctx object
+ * @fp:		File stream to write log messages to, or NULL to use stderr
+ *
+ * Sets the file descriptor used for log output.  Passing NULL reverts to the
+ * default (stderr).
+ */
+void libnvme_set_logging_file(struct libnvme_global_ctx *ctx, FILE *fp);
 
 /**
  * libnvme_open() - Open an nvme controller or namespace device
@@ -115,7 +153,8 @@ void libnvme_close(struct libnvme_transport_handle *hdl);
  * Return: File descriptor for an IOCTL based transport handle,
  * otherwise LIBNVME_INVALID_FD.
  */
-libnvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hdl);
+libnvme_fd_t libnvme_transport_handle_get_fd(
+		struct libnvme_transport_handle *hdl);
 
 /**
  * libnvme_transport_handle_get_mi_ep() - get the MI endpoint from a
@@ -128,7 +167,8 @@ libnvme_fd_t libnvme_transport_handle_get_fd(struct libnvme_transport_handle *hd
  *
  * Return: the MI endpoint, or NULL if the handle is not an MI handle.
  */
-struct libnvme_mi_ep *libnvme_transport_handle_get_mi_ep(struct libnvme_transport_handle *hdl);
+struct libnvme_mi_ep *libnvme_transport_handle_get_mi_ep(
+		struct libnvme_transport_handle *hdl);
 
 /**
  * libnvme_transport_handle_get_name - Return name of the device
@@ -293,3 +333,14 @@ void libnvme_set_dry_run(struct libnvme_global_ctx *ctx, bool enable);
  * IOCTL probing is enabled per default.
  */
 void libnvme_set_ioctl_probing(struct libnvme_global_ctx *ctx, bool enable);
+
+/**
+ * libnvme_set_force_4k() - Force 4k transfer size for log page retrieval
+ * @ctx:	&struct libnvme_global_ctx object
+ * @enable:	Enable/disable 4k-forced transfer size
+ *
+ * When enabled, all Get Log Page commands are issued in 4k chunks regardless
+ * of the controller's MDTS.  Useful for controllers that misbehave with larger
+ * transfers.
+ */
+void libnvme_set_force_4k(struct libnvme_global_ctx *ctx, bool enable);

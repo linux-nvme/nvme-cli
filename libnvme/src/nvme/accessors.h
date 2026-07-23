@@ -35,6 +35,7 @@ struct libnvme_ctrl;
 struct libnvme_subsystem;
 struct libnvme_host;
 struct libnvme_fabric_options;
+struct libnvme_global_ctx;
 
 /****************************************************************************
  * Accessors for: struct libnvme_path
@@ -1319,5 +1320,27 @@ void libnvme_fabric_options_set_trsvcid(
  * Return: The value of the trsvcid field.
  */
 bool libnvme_fabric_options_get_trsvcid(const struct libnvme_fabric_options *p);
+
+/****************************************************************************
+ * Accessors for: struct libnvme_global_ctx
+ ****************************************************************************/
+
+/**
+ * libnvme_global_ctx_set_hostnqn() - Set hostnqn.
+ * @p: The &struct libnvme_global_ctx instance to update.
+ * @hostnqn: New string; a copy is stored. Pass NULL to clear.
+ */
+void libnvme_global_ctx_set_hostnqn(
+		struct libnvme_global_ctx *p,
+		const char *hostnqn);
+
+/**
+ * libnvme_global_ctx_set_hostid() - Set hostid.
+ * @p: The &struct libnvme_global_ctx instance to update.
+ * @hostid: New string; a copy is stored. Pass NULL to clear.
+ */
+void libnvme_global_ctx_set_hostid(
+		struct libnvme_global_ctx *p,
+		const char *hostid);
 
 #endif /* _ACCESSORS_H_ */

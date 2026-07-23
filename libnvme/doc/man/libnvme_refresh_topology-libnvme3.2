@@ -1,0 +1,13 @@
+.TH "libnvme_refresh_topology" 9 "libnvme_refresh_topology" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_refresh_topology \- Refresh libnvme_root_t object contents
+.SH SYNOPSIS
+.B "int" libnvme_refresh_topology
+.BI "(struct libnvme_global_ctx *ctx "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+\fIstruct libnvme_global_ctx\fP object
+.SH "DESCRIPTION"
+Removes all elements in \fIr\fP and rescans the existing topology.
+.SH "RETURN"
+0 on success, negative error code otherwise.

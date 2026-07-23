@@ -26,7 +26,7 @@
 # nvme.i.
 libnvme_src = libnvme_srcroot / 'src'
 libnvme_src_nvme = libnvme_src / 'nvme'
-libnvme_swig_dir = libnvme_srcroot / 'libnvme'
+libnvme_swig_dir = libnvme_srcroot / 'libnvme3'
 
 _py3 = find_program('python3', required: true)
 

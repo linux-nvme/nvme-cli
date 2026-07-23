@@ -70,25 +70,27 @@ if cxx_available
 
 endif
 
-register = executable(
-    'test-register',
-    ['register.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-)
+if host_system != 'windows'
+    register = executable(
+        'test-register',
+        ['register.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
 
-zns = executable(
-    'test-zns',
-    ['zns.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_test_dep,
-    ],
-)
+    zns = executable(
+        'test-zns',
+        ['zns.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+endif # host_system != 'windows'
 
 if want_mi
     mi = executable(
@@ -141,6 +143,18 @@ tree = executable(
 test('libnvme - tree', tree)
 
 if want_fabrics
+    test_tid = executable(
+        'test-tid',
+        ['test-tid.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+
+    test('libnvme - tid', test_tid)
+
     registry = executable(
         'test-registry',
         ['registry.c'],
@@ -152,6 +166,66 @@ if want_fabrics
     )
 
     test('libnvme - registry', registry)
+
+    exclusion = executable(
+        'test-exclusion',
+        ['exclusion.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+
+    test('libnvme - exclusion', exclusion)
+
+    ini = executable(
+        'test-ini',
+        ['ini.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+
+    test('libnvme - ini', ini)
+
+    config_ini = executable(
+        'test-config-ini',
+        ['config-ini.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+    )
+
+    test('libnvme - config-ini', config_ini)
+
+    config_api = executable(
+        'test-config-api',
+        ['config-api.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+
+    test('libnvme - config-api', config_api)
+
+    config_emit = executable(
+        'test-config-emit',
+        ['config-emit.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+
+    test('libnvme - config-emit', config_emit)
 
     uriparser = executable(
         'test-uriparser',
@@ -183,9 +257,21 @@ if want_fabrics
     )
 
     test('libnvme - fabrics', test_fabrics)
+
+    psk = executable(
+        'test-psk',
+        ['psk.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+
+    test('libnvme - psk', psk)
 endif
 
-if conf.get('NVME_HAVE_NETDB')
+if want_fabrics
     mock_ifaddrs = library(
         'mock-ifaddrs',
         ['mock-ifaddrs.c', ],
@@ -196,20 +282,18 @@ if conf.get('NVME_HAVE_NETDB')
     mock_ifaddrs_env.append('LD_PRELOAD', mock_ifaddrs.full_path())
     mock_ifaddrs_env.set('ASAN_OPTIONS', 'verify_asan_link_order=0')
 
-    if want_fabrics
-        tree_fabrics = executable(
-            'tree-fabrics',
-            ['tree-fabrics.c'],
-            dependencies: [
-                config_dep,
-                ccan_dep,
-                libnvme_test_dep,
-            ],
-            link_with: mock_ifaddrs,
-        )
+    tree_fabrics = executable(
+        'tree-fabrics',
+        ['tree-fabrics.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_test_dep,
+        ],
+        link_with: mock_ifaddrs,
+    )
 
-        test('libnvme - tree-fabrics', tree_fabrics, env: mock_ifaddrs_env)
-    endif
+    test('libnvme - tree-fabrics', tree_fabrics, env: mock_ifaddrs_env)
 
     test_util = executable(
         'test-util',
@@ -223,44 +307,32 @@ if conf.get('NVME_HAVE_NETDB')
     test('libnvme - util', test_util)
 endif
 
-psk = executable(
-    'test-psk',
-    ['psk.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-    ],
-)
+if host_system != 'windows'
+    subdir('ioctl')
+    if want_fabrics
+        subdir('nbft')
+    endif
 
-test('libnvme - psk', psk)
+    if json_c_dep.found()
+        subdir('sysfs')
+        subdir('config')
+    endif
 
-subdir('ioctl')
-if want_fabrics
-    subdir('nbft')
-endif
-
-if json_c_dep.found()
-    subdir('sysfs')
-    subdir('config')
-endif
-
-if openssl_dep.found()
-    hkdf_add1 = executable(
-        'hkdf_add1',
-        ['hkdf_add1.c'],
-        dependencies: openssl_dep,
-    )
+    if openssl_dep.found()
+        hkdf_add1 = executable(
+            'hkdf_add1',
+            ['hkdf_add1.c'],
+            dependencies: openssl_dep,
+        )
+    endif
 endif
 
 foreach hdr : [
     'endian',
     'fabrics',
-    'filters',
     'ioctl',
     'lib',
     'lib-types',
-    'linux',
     'mi',
     'nbft',
     'nvme-cmds',
@@ -276,6 +348,7 @@ foreach hdr : [
     'nvme-types-nbft',
     'nvme-types-nvm',
     'nvme-types-zns',
+    'scan',
     'tree',
     'util',
 ]

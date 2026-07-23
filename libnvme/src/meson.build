@@ -18,33 +18,28 @@ sources = [
 ]
 if host_system == 'windows'
     sources += [
-        'nvme/filters-win.c',
+        'nvme/ctrl-map.c',
         'nvme/ioctl-win.c',
         'nvme/lib-win.c',
         'nvme/mem-win.c',
-        'nvme/no-crypto.c',
+        'nvme/scan-win.c',
         'nvme/tree-win.c',
     ]
 else
     sources += [
-        'nvme/crypto.c',
-        'nvme/filters-linux.c',
         'nvme/ioctl-linux.c',
         'nvme/lib-linux.c',
-        'nvme/linux.c',
         'nvme/mem-linux.c',
-        'nvme/sysfs.c',
+        'nvme/scan-linux.c',
         'nvme/tree-linux.c',
     ]
 endif
 headers = [
     'nvme/accessors.h',
     'nvme/endian.h',
-    'nvme/filters.h',
     'nvme/ioctl.h',
     'nvme/lib-types.h',
     'nvme/lib.h',
-    'nvme/linux.h',
     'nvme/mem.h',
     'nvme/nvme-cmds-base.h',
     'nvme/nvme-cmds-fabrics.h',
@@ -58,6 +53,7 @@ headers = [
     'nvme/nvme-types-nvm.h',
     'nvme/nvme-types-zns.h',
     'nvme/nvme-types.h',
+    'nvme/scan.h',
     'nvme/tree.h',
     'nvme/types.h',
     'nvme/util.h',
@@ -66,21 +62,34 @@ headers = [
 if want_fabrics
     sources += [
         'nvme/accessors-fabrics.c',
+        'nvme/crypto.c',
+        'nvme/config.c',
+        'nvme/config-emit.c',
+        'nvme/config-ini.c',
+        'nvme/config-resolve.c',
+        'nvme/exclusion.c',
         'nvme/fabrics.c',
+        'nvme/ini.c',
         'nvme/nbft.c',
         'nvme/registry.c',
+        'nvme/tid.c',
         'nvme/tree-fabrics.c',
         'nvme/util-fabrics.c',
     ]
     headers += [
         'nvme/accessors-fabrics.h',
+        'nvme/config.h',
+        'nvme/crypto.h',
+        'nvme/exclusion.h',
         'nvme/fabrics.h',
         'nvme/nvme-types-nbft.h',
         'nvme/nbft.h',
         'nvme/registry.h',
+        'nvme/tid.h',
     ]
 else
     sources += [
+        'nvme/no-crypto.c',
         'nvme/no-fabrics.c',
     ]
 endif
@@ -125,6 +134,8 @@ if host_system == 'windows'
     deps += [
         kernel32_dep,
         bcrypt_dep,
+        setupapi_dep,
+        cfgmgr32_dep,
     ]
 endif
 
@@ -162,7 +173,7 @@ libnvme_header = configure_file(
     output: 'libnvme.h',
     configuration: libconf,
     install: true,
-    install_dir: prefixdir / get_option('includedir')
+    install_dir: prefixdir / get_option('includedir') / libnvme_api_name
 )
 
 libnvme = library(
@@ -182,6 +193,7 @@ pkg.generate(libnvme,
     version: libnvme_so_version,
     description: 'Manage "libnvme" subsystem devices (Non-volatile Memory Express)',
     url: 'https://github.com/linux-nvme/nvme-cli/',
+    subdirs: libnvme_api_name,
 )
 
 libnvme_dep = declare_dependency(
@@ -195,7 +207,7 @@ libnvme_dep = declare_dependency(
 # test library with all symbols visible, to use for MI unit tests. Should
 # match libnvme above, but with no version script, and install: false.
 libnvme_test = library(
-    'nvme-test', # produces libnvme-test.so
+    libnvme_link_name + '-test',
     sources,
     dependencies: deps,
     install: false,
@@ -209,7 +221,7 @@ libnvme_test_dep = declare_dependency(
 mode = 'rw-r--r--'
 install_headers(
     headers,
-    subdir: 'nvme',
+    subdir: libnvme_api_name / 'nvme',
     install_mode: mode,
 )
 if want_mi
@@ -217,6 +229,7 @@ if want_mi
         [
            'libnvme-mi.h',
         ],
+        subdir: libnvme_api_name,
         install_mode: mode,
     )
 endif

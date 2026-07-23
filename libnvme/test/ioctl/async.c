@@ -15,41 +15,41 @@
 
 static struct libnvme_transport_handle *test_hdl;
 
-static void test_admin_async_submit_not_supported(void)
+static void test_submit_admin_not_supported(void)
 {
 	struct nvme_id_ctrl id = {};
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	nvme_init_identify_ctrl(&cmd, &id);
-	err = libnvme_submit_admin_passthru_async(test_hdl, &cmd,
+	err = libnvme_submit_admin_passthru(test_hdl, &cmd,
 			(void *)(uintptr_t)0x1234);
 	check(err == -ENOTSUP, "submit async returned %d, expected %d",
 	      err, -ENOTSUP);
 }
 
-static void test_io_async_submit_not_supported(void)
+static void test_submit_io_not_supported(void)
 {
 	struct libnvme_passthru_cmd cmd = {};
 	int err;
 
-	err = libnvme_submit_io_passthru_async(test_hdl, &cmd,
+	err = libnvme_submit_io_passthru(test_hdl, &cmd,
 			(void *)(uintptr_t)0x5678);
 	check(err == -ENOTSUP, "IO submit async returned %d, expected %d",
 	      err, -ENOTSUP);
 }
 
-static void test_async_reap_not_supported(void)
+static void test_reap_not_supported(void)
 {
 	struct libnvme_passthru_completion completion = {};
 	int err;
 
-	err = libnvme_reap_passthru_async(test_hdl, &completion);
+	err = libnvme_reap_passthru(test_hdl, &completion);
 	check(err == -ENOTSUP, "reap async returned %d, expected %d",
 	      err, -ENOTSUP);
 }
 
-static void test_sync_path_fallback(void)
+static void test_exec_admin(void)
 {
 	struct nvme_id_ctrl expected_id = {}, id = {};
 	struct mock_cmd mock_admin_cmd = {
@@ -70,7 +70,7 @@ static void test_sync_path_fallback(void)
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
 
-static void test_io_sync_path_fallback(void)
+static void test_exec_io(void)
 {
 	struct libnvme_passthru_cmd cmd = {};
 	struct mock_cmd mock_io_cmd = {
@@ -86,48 +86,6 @@ static void test_io_sync_path_fallback(void)
 	check(err == 0, "IO sync fallback returned %d", err);
 }
 
-static void test_batched_submit_wait_pattern(void)
-{
-	struct nvme_id_ctrl id1 = {}, id2 = {};
-	struct mock_cmd mock_cmds[] = {
-		{
-			.opcode = nvme_admin_identify,
-			.data_len = sizeof(id1),
-			.cdw10 = NVME_IDENTIFY_CNS_CTRL,
-			.out_data = &id1,
-		},
-		{
-			.opcode = nvme_admin_identify,
-			.data_len = sizeof(id2),
-			.cdw10 = NVME_IDENTIFY_CNS_CTRL,
-			.out_data = &id2,
-		},
-	};
-	struct libnvme_passthru_cmd cmd1, cmd2;
-	int err;
-
-	/* Test the batching pattern: submit multiple, then wait */
-	arbitrary(&id1, sizeof(id1));
-	arbitrary(&id2, sizeof(id2));
-	set_mock_admin_cmds(mock_cmds, 2);
-
-	nvme_init_identify_ctrl(&cmd1, &id1);
-	nvme_init_identify_ctrl(&cmd2, &id2);
-
-	/* When io_uring is unavailable, submit falls back to exec */
-	err = libnvme_submit_admin_passthru(test_hdl, &cmd1);
-	check(err == 0, "batched submit 1 returned %d", err);
-
-	err = libnvme_submit_admin_passthru(test_hdl, &cmd2);
-	check(err == 0, "batched submit 2 returned %d", err);
-
-	/* wait is a no-op when io_uring is not available */
-	err = libnvme_wait_passthru(test_hdl);
-	check(err == -ENOTSUP, "batched wait returned %d", err);
-
-	end_mock_cmds();
-}
-
 static void run_test(const char *test_name, void (*test_fn)(void))
 {
 	printf("Running test %s...", test_name);
@@ -140,19 +98,18 @@ static void run_test(const char *test_name, void (*test_fn)(void))
 
 int main(void)
 {
-	struct libnvme_global_ctx *ctx =
-		libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
+	libnvme_set_logging_file(ctx, stdout);
 
 	set_mock_fd(LIBNVME_TEST_FD);
 	check(!libnvme_open(ctx, "NVME_TEST_FD", &test_hdl),
 	      "opening test link failed");
 
-	RUN_TEST(admin_async_submit_not_supported);
-	RUN_TEST(io_async_submit_not_supported);
-	RUN_TEST(async_reap_not_supported);
-	RUN_TEST(sync_path_fallback);
-	RUN_TEST(io_sync_path_fallback);
-	RUN_TEST(batched_submit_wait_pattern);
+	RUN_TEST(submit_admin_not_supported);
+	RUN_TEST(submit_io_not_supported);
+	RUN_TEST(reap_not_supported);
+	RUN_TEST(exec_admin);
+	RUN_TEST(exec_io);
 
 	libnvme_free_global_ctx(ctx);
 }

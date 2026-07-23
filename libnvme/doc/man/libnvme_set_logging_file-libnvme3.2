@@ -1,0 +1,15 @@
+.TH "libnvme_set_logging_file" 9 "libnvme_set_logging_file" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_set_logging_file \- Set the log output file for the global context
+.SH SYNOPSIS
+.B "void" libnvme_set_logging_file
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "FILE *fp "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "fp" 12
+File stream to write log messages to, or NULL to use stderr
+.SH "DESCRIPTION"
+Sets the file descriptor used for log output.  Passing NULL reverts to the
+default (stderr).

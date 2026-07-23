@@ -56,7 +56,7 @@
  * @NBFT_DESC_SSNS_EXT_INFO: SSNS Extended Info Descriptor: indicated by an SSNS
  *			     Descriptor if required.
  * @NBFT_DESC_HFI_EXT_INFO:  HFI Extended Info Descriptor: indicated by an HFI Transport
- *			     Info descriptor (added in revision 1.1+).
+ *			     Info descriptor (since rev. 1.1).
  */
 enum nbft_desc_type {
 	NBFT_DESC_HEADER	= 0,
@@ -380,8 +380,8 @@ enum nbft_hfi_flags {
  * @version:		Version: This field shall be set to 1h.
  * @trtype:		HFI Transport Type, see &enum nbft_trtype: This field
  *			shall be set to 03h (i.e., NVMe/TCP; #NBFT_TRTYPE_TCP).
- * @trinfo_version:	Transport Info Version: Implementations compliant to this
- *			specification shall set this field to 1h.
+ * @trinfo_version:	Transport Info Version: This field shall be set to 2h,
+ *			supported values include 1h (Boot Spec rev. 1.0).
  * @hfi_index:		HFI Descriptor Index: The value of the HFI Descriptor Index
  *			field of the HFI Descriptor (see &struct nbft_hfi.index)
  *			whose HFI Transport Info Descriptor Heap Object Reference
@@ -440,6 +440,16 @@ enum nbft_hfi_flags {
  * @host_name_obj:	Host Name Heap Object Reference: If this field is set
  *			to a non-zero value, then this field indicates the location
  *			and size of a heap object containing a Host Name string.
+ * @hfi_ext_info_obj:	HFI Transport Info Extended Information Descriptor Object
+ *			Reference (since rev. 1.1): If this field is set to a
+ *			non-zero value, then this field indicates the location and
+ *			size of a heap object containing a HFI Transport Info
+ *			Extended Information Descriptor (see &struct nbft_hfi_info_ext).
+ * @pcie_seg_num:	PCIe Segment Number (since rev. 1.1): The Segment
+ *			Number for the specified Controller when the PCI Express Link
+ *			is in Flit mode. If the PCI Express interface is not in Flit
+ *			mode, or if the pre-OS driver does not support Flit mode,
+ *			then this field should be cleared to 0h.
  * @reserved2:		Reserved.
  */
 struct nbft_hfi_info_tcp {
@@ -462,7 +472,9 @@ struct nbft_hfi_info_tcp {
 	__u8 secondary_dns[16];
 	__u8 dhcp_server[16];
 	struct nbft_heap_obj host_name_obj;
-	__u8 reserved2[18];
+	struct nbft_heap_obj hfi_ext_info_obj;
+	__u8 pcie_seg_num;
+	__u8 reserved2[11];
 } __attribute__((packed));
 
 /**
@@ -481,11 +493,72 @@ struct nbft_hfi_info_tcp {
  *				     information was set administratively by
  *				     a configuration interface to the driver and
  *				     pre-OS envrionment.
+ * @NBFT_HFI_INFO_TCP_IPADDR_AUTOCONF: Interface Address Autoconfigured (since rev.
+ *				     1.1): if set to 1h, then the IP Address,
+ *				     Subnet Mask Prefix, and IP Gateway fields are
+ *				     populated by an advanced stateless mechanism
+ *				     (e.g., IPv6-SLAAC or IPv6-ND); in addition,
+ *				     the DHCP Override bit shall be cleared to 0h,
+ *				     and the IP Origin field shall be cleared to 0h.
+ *				     If cleared to 0h, then the HFI information
+ *				     was not set by such a mechanism.
  */
 enum nbft_hfi_info_tcp_flags {
-	NBFT_HFI_INFO_TCP_VALID		= 1 << 0,
-	NBFT_HFI_INFO_TCP_GLOBAL_ROUTE	= 1 << 1,
-	NBFT_HFI_INFO_TCP_DHCP_OVERRIDE	= 1 << 2,
+	NBFT_HFI_INFO_TCP_VALID		  = 1 << 0,
+	NBFT_HFI_INFO_TCP_GLOBAL_ROUTE	  = 1 << 1,
+	NBFT_HFI_INFO_TCP_DHCP_OVERRIDE	  = 1 << 2,
+	NBFT_HFI_INFO_TCP_IPADDR_AUTOCONF = 1 << 3,
+};
+
+/**
+ * struct nbft_hfi_info_ext - HFI Transport Info Extended Information
+ *			      Descriptor (Figure 15, since rev. 1.1)
+ * @structure_id:    Structure ID: This field shall be set to Ah
+ *		     (i.e., HFI Ext Info; #NBFT_DESC_HFI_EXT_INFO).
+ * @version:	     Version: This field shall be set to 1h.
+ * @hfi_trinfo_index: HFI Transport Info Descriptor Index: This field shall
+ *		     be set to the same value as the HFI Transport Info
+ *		     Descriptor Index field of the referencing HFI Transport
+ *		     Info Descriptor.
+ * @flags:	     Flags, see &enum nbft_hfi_info_ext_flags.
+ * @dhcp_iaid_obj:   IPv4 and IPv6 DHCP Client Identifier Heap IAID Object
+ *		     Reference: If the DHCP Client Identifier bit is set to 1h,
+ *		     then this heap object references the Identity Association
+ *		     Identifier (IAID). This identifier shall be constructed
+ *		     conformant to RFC4361. The IAID is stored in little endian
+ *		     format within the heap object.
+ * @dhcp_duid_obj:   IPv4 and IPv6 DHCP Client Identifier Heap DUID Object
+ *		     Reference: If the DHCP Client Identifier bit is set to 1h,
+ *		     then this heap object references the DHCP Unique Identifier
+ *		     (DUID). This identifier shall be constructed conformant
+ *		     to RFC4361. The DUID is stored in little endian format
+ *		     within the heap object.
+ */
+struct nbft_hfi_info_ext {
+	__u8 structure_id;
+	__u8 version;
+	__le16 hfi_trinfo_index;
+	__le32 flags;
+	struct nbft_heap_obj dhcp_iaid_obj;
+	struct nbft_heap_obj dhcp_duid_obj;
+} __attribute__((packed));
+
+/**
+ * enum nbft_hfi_info_ext_flags - HFI Transport Info Extended Information
+ *				  Descriptor Flags (since rev. 1.1)
+ * @NBFT_HFI_INFO_EXT_VALID: Descriptor Valid: If set to 1h, then this
+ *			      descriptor is valid. If cleared to 0h, then
+ *			      this descriptor is reserved.
+ * @NBFT_HFI_INFO_EXT_DCI:   DHCP Client Identifier: If set to 1h, then the
+ *			      IPv4 and IPv6 DHCP Client Identifier Heap Object
+ *			      Reference fields are valid and the IP Origin field
+ *			      shall be set to 3h. If cleared to 0h, then the
+ *			      DHCP Client Identifier Heap Object References
+ *			      are reserved.
+ */
+enum nbft_hfi_info_ext_flags {
+	NBFT_HFI_INFO_EXT_VALID	= 1 << 0,
+	NBFT_HFI_INFO_EXT_DCI	= 1 << 1,
 };
 
 /**
@@ -737,6 +810,25 @@ enum nbft_ssns_trflags {
  *			    an DHCP Root Path String used by the driver. If the
  *			    SNSS DHCP Root Path Override flag bit is cleared to 0h,
  *			    then this field is reserved.
+ * @naed:		    Namespace Availability Enhanced Diagnostic (since
+ *			    rev. 1.1): If the Unavailable Namespace Flag bit
+ *			    is set to 1h (i.e., Unavailable) in the Subsystem
+ *			    Namespace Descriptor, this field may provide additional
+ *			    status codes provided by the pre-OS driver,
+ *			    see &enum nbft_ssns_ext_info_naed.
+ * @cipeec:		    Connect Invalid Parameters Extended Error Codes (since
+ *			    rev, 1.1): Connect Invalid Parameters may be returned
+ *			    with additional status details,
+ *			    see &enum nbft_ssns_ext_info_cipeec.
+ * @cto:		    Connection Timeout (since rev. 1.1): Specifies
+ *			    in seconds the timeout value used by the pre-OS driver
+ *			    for connecting to the object specified with this SSNS
+ *			    descriptor. If cleared to 0h, this indicates a timeout
+ *			    of 0 seconds. If set to FFFFh, this indicates that no
+ *			    timeout was specified.
+ * @nceec:		    Network and Connection Extended Error Codes (since
+ *			    rev, 1.1): Error codes specific to network and connectio
+ *			    errors, see &enum nbft_ssns_ext_info_nceec.
  */
 struct nbft_ssns_ext_info {
 	__u8 structure_id;
@@ -746,7 +838,96 @@ struct nbft_ssns_ext_info {
 	__le16 cntlid;
 	__le16 asqsz;
 	struct nbft_heap_obj dhcp_root_path_str_obj;
+	__u8 naed;
+	__u8 cipeec;
+	__le16 cto;
+	__u8 nceec;
 } __attribute__((packed));
+
+/**
+ * enum nbft_ssns_ext_info_naed - SSNS Extended Info Namespace Availability
+ *				  Enhanced Diagnostic values (since rev. 1.1)
+ * @NBFT_SSNS_EXT_INFO_NAED_NO_INFO:	     No additional information.
+ * @NBFT_SSNS_EXT_INFO_NAED_NETWORK_ERR:     Network Error: The network HFI or
+ *					     SSNS destination was invalid.
+ * @NBFT_SSNS_EXT_INFO_NAED_CONN_FAILURE:    Connection Failure: The connection
+ *					     to the controller was invalid.
+ * @NBFT_SSNS_EXT_INFO_NAED_CONN_INV_PARAMS: Connect Invalid Parameters.
+ * @NBFT_SSNS_EXT_INFO_NAED_CONN_INV_HOST:   Connect Invalid Host.
+ * @NBFT_SSNS_EXT_INFO_NAED_CONN_TIMEOUT:    Connection Timeout.
+ * @NBFT_SSNS_EXT_INFO_NAED_DLP_TIMEOUT:     Discovery Log Page Traversal Timeout.
+ * @NBFT_SSNS_EXT_INFO_NAED_NS_MISSING:	     Namespace Missing: The referenced
+ *					     NID or NSID is missing.
+ * @NBFT_SSNS_EXT_INFO_NAED_NS_NOT_READY:    Namespace Not Ready.
+ * @NBFT_SSNS_EXT_INFO_NAED_REDFISH_FAILURE: Redfish Secret Keypath Object: The
+ *					     pre-OS driver encountered a failure
+ *					     interacting with the Redfish Secret
+ *					     Keypath Object.
+ * @NBFT_SSNS_EXT_INFO_NAED_SEC_CHAN_NEG:    Secure Channel Negotiation error.
+ * @NBFT_SSNS_EXT_INFO_NAED_AUTH_FAILURE:    Authentication Failure.
+ * @NBFT_SSNS_EXT_INFO_NAED_AUTH_REQUIRED:   Authentication Required.
+ * @NBFT_SSNS_EXT_INFO_NAED_DHCP_FAILURE:    DHCP Failure.
+ * @NBFT_SSNS_EXT_INFO_NAED_DHCP_ROOT_PATH:  SSNS DHCP Root-Path.
+ */
+enum nbft_ssns_ext_info_naed {
+	NBFT_SSNS_EXT_INFO_NAED_NO_INFO		= 0x00,
+	NBFT_SSNS_EXT_INFO_NAED_NETWORK_ERR	= 0x01,
+	NBFT_SSNS_EXT_INFO_NAED_CONN_FAILURE	= 0x02,
+	NBFT_SSNS_EXT_INFO_NAED_CONN_INV_PARAMS	= 0x03,
+	NBFT_SSNS_EXT_INFO_NAED_CONN_INV_HOST	= 0x04,
+	NBFT_SSNS_EXT_INFO_NAED_CONN_TIMEOUT	= 0x05,
+	NBFT_SSNS_EXT_INFO_NAED_DLP_TIMEOUT	= 0x06,
+	NBFT_SSNS_EXT_INFO_NAED_NS_MISSING	= 0x07,
+	NBFT_SSNS_EXT_INFO_NAED_NS_NOT_READY	= 0x08,
+	NBFT_SSNS_EXT_INFO_NAED_REDFISH_FAILURE	= 0x09,
+	NBFT_SSNS_EXT_INFO_NAED_SEC_CHAN_NEG	= 0x10,
+	NBFT_SSNS_EXT_INFO_NAED_AUTH_FAILURE	= 0x11,
+	NBFT_SSNS_EXT_INFO_NAED_AUTH_REQUIRED	= 0x12,
+	NBFT_SSNS_EXT_INFO_NAED_DHCP_FAILURE	= 0x13,
+	NBFT_SSNS_EXT_INFO_NAED_DHCP_ROOT_PATH	= 0x14,
+};
+
+/**
+ * enum nbft_ssns_ext_info_cipeec - Connect Invalid Parameters Extended Error Codes
+ *				    (since rev. 1.1)
+ * @NBFT_SSNS_EXT_INFO_CIPEEC_NO_ERROR:	   No Extended Error Known.
+ * @NBFT_SSNS_EXT_INFO_CIPEEC_GENERAL:	   General Parameters Failure.
+ * @NBFT_SSNS_EXT_INFO_CIPEEC_INV_ATTR:	   Invalid Attributes in Connect Response.
+ * @NBFT_SSNS_EXT_INFO_CIPEEC_DH_MISMATCH: Diffie-Hellman Mismatch.
+ * @NBFT_SSNS_EXT_INFO_CIPEEC_INV_CTRLID:  Invalid Controller ID.
+ * @NBFT_SSNS_EXT_INFO_CIPEEC_IO_CTRL_DIS: I/O Controller Disabled.
+ */
+enum nbft_ssns_ext_info_cipeec {
+	NBFT_SSNS_EXT_INFO_CIPEEC_NO_ERROR	= 0x00,
+	NBFT_SSNS_EXT_INFO_CIPEEC_GENERAL	= 0x01,
+	NBFT_SSNS_EXT_INFO_CIPEEC_INV_ATTR	= 0x02,
+	NBFT_SSNS_EXT_INFO_CIPEEC_DH_MISMATCH	= 0x03,
+	NBFT_SSNS_EXT_INFO_CIPEEC_INV_CTRLID	= 0x04,
+	NBFT_SSNS_EXT_INFO_CIPEEC_IO_CTRL_DIS	= 0x05,
+};
+
+/**
+ * enum nbft_ssns_ext_info_nceec - Network and Connection Extended Error Codes
+ *				   (since rev. 1.1)
+ * @NBFT_SSNS_EXT_INFO_NCEEC_NO_ERROR:	   No Extended Error Known.
+ * @NBFT_SSNS_EXT_INFO_NCEEC_LINK_ERR:	   Link Error.
+ * @NBFT_SSNS_EXT_INFO_NCEEC_CARRIER_ERR:  Carrier Error.
+ * @NBFT_SSNS_EXT_INFO_NCEEC_CONN_REFUSED: Connection Refused.
+ * @NBFT_SSNS_EXT_INFO_NCEEC_NO_ROUTE:	   No Route to Host.
+ * @NBFT_SSNS_EXT_INFO_NCEEC_FRAG_ERR:	   Packet Fragmentation Error.
+ * @NBFT_SSNS_EXT_INFO_NCEEC_MTU_MISMATCH: MTU Mismatch.
+ * @NBFT_SSNS_EXT_INFO_NCEEC_NAME_RES:	   Name Resolution Failure.
+ */
+enum nbft_ssns_ext_info_nceec {
+	NBFT_SSNS_EXT_INFO_NCEEC_NO_ERROR	= 0x00,
+	NBFT_SSNS_EXT_INFO_NCEEC_LINK_ERR	= 0x01,
+	NBFT_SSNS_EXT_INFO_NCEEC_CARRIER_ERR	= 0x02,
+	NBFT_SSNS_EXT_INFO_NCEEC_CONN_REFUSED	= 0x03,
+	NBFT_SSNS_EXT_INFO_NCEEC_NO_ROUTE	= 0x04,
+	NBFT_SSNS_EXT_INFO_NCEEC_FRAG_ERR	= 0x05,
+	NBFT_SSNS_EXT_INFO_NCEEC_MTU_MISMATCH	= 0x06,
+	NBFT_SSNS_EXT_INFO_NCEEC_NAME_RES	= 0x07,
+};
 
 /**
  * enum nbft_ssns_ext_info_flags - Subsystem and Namespace Extended Information
@@ -767,7 +948,7 @@ enum nbft_ssns_ext_info_flags {
 };
 
 /**
- * struct nbft_security - Security Profile Descriptor (Figure 22)
+ * struct nbft_security - Security Profile Descriptor (Figure 23)
  * @structure_id:      Structure ID: This field shall be set to 5h
  *		       (i.e., Security; #NBFT_DESC_SECURITY).
  * @index:	       Security Profile Descriptor Index: This field indicates
@@ -836,7 +1017,7 @@ struct nbft_security {
 };
 
 /**
- * enum nbft_security_flags - Security Profile Descriptor Flags (Figure 22/23)
+ * enum nbft_security_flags - Security Profile Descriptor Flags (Figure 24)
  * @NBFT_SECURITY_VALID:			  Descriptor Valid: If set to 1h, then
  *						  this descriptor is valid. If cleared
  *						  to 0h, then this descriptor is not valid.

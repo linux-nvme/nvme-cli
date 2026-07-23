@@ -1,0 +1,12 @@
+.TH "libnvme_ns_get_read_ticks" 9 "libnvme_ns_get_read_ticks" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_ns_get_read_ticks \- Get read I/O ticks
+.SH SYNOPSIS
+.B "unsigned int" libnvme_ns_get_read_ticks
+.BI "(libnvme_ns_t n "  ");"
+.SH ARGUMENTS
+.IP "n" 12
+\fIlibnvme_ns_t\fP object
+.SH "RETURN"
+Time, in milliseconds, sepnt processing read I/O requests
+between two stat samples

@@ -1,0 +1,11 @@
+.TH "libnvmf_tid_get_hostid" 9 "libnvmf_tid_get_hostid" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_get_hostid \- Get hostid.
+.SH SYNOPSIS
+.B "const char *" libnvmf_tid_get_hostid
+.BI "(const struct libnvmf_tid *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_tid\fP instance to query.
+.SH "RETURN"
+The value of the hostid field, or NULL if not set.

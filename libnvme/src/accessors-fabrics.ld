@@ -17,6 +17,7 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_get_default_keep_alive_timeout;
 		libnvmf_context_get_default_max_discovery_retries;
 		libnvmf_context_get_device;
+		libnvmf_context_get_devid_file;
 		libnvmf_context_get_disable_sqflow;
 		libnvmf_context_get_duplicate_connect;
 		libnvmf_context_get_fast_io_fail_tmo;
@@ -73,6 +74,16 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_discovery_args_new;
 		libnvmf_discovery_args_set_lsp;
 		libnvmf_discovery_args_set_max_retries;
+		libnvmf_tid_free;
+		libnvmf_tid_get_host_iface;
+		libnvmf_tid_get_hostnqn;
+		libnvmf_tid_get_hostid;
+		libnvmf_tid_get_host_traddr;
+		libnvmf_tid_get_subsysnqn;
+		libnvmf_tid_get_traddr;
+		libnvmf_tid_get_transport;
+		libnvmf_tid_get_trsvcid;
+		libnvmf_tid_new;
 		libnvmf_uri_get_fragment;
 		libnvmf_uri_get_host;
 		libnvmf_uri_get_path_segments;

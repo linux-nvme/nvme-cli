@@ -17,6 +17,8 @@ typedef struct nvme_effects_log_node {
 
 #define nvme_show_error(msg, ...) nvme_show_message(true, msg, ##__VA_ARGS__)
 #define nvme_show_result(msg, ...) nvme_show_message(false, msg, ##__VA_ARGS__)
+#define nvme_show_verbose_result(msg, ...) nvme_show_verbose_message(msg, ##__VA_ARGS__)
+#define nvme_show_verbose_info(msg, ...) nvme_show_verbose_message(msg, ##__VA_ARGS__)
 
 #define POWER_OF_TWO(exponent) (1 << (exponent))
 
@@ -188,7 +190,8 @@ void nvme_show_lba_status_info(__u64 result);
 void nvme_show_relatives(struct libnvme_global_ctx *ctx, const char *name, nvme_print_flags_t flags);
 
 void nvme_show_id_iocs(struct nvme_id_iocs *iocs, nvme_print_flags_t flags);
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, const char *devname,
+void nvme_show_id_ctrl(struct libnvme_global_ctx *ctx,
+	struct libnvme_transport_handle *hdl, struct nvme_id_ctrl *ctrl,
 	nvme_print_flags_t flags, void (*vendor_show)(__u8 *vs,
 	struct json_object *root));
 void nvme_show_id_ctrl_rpmbs(__le32 ctrl_rpmbs, nvme_print_flags_t flags);
@@ -373,11 +376,13 @@ const char *nvme_ipmsr_srs_to_string(__u8 srs);
 void nvme_dev_full_path(libnvme_ns_t n, char *path, size_t len);
 void nvme_generic_full_path(libnvme_ns_t n, char *path, size_t len);
 void nvme_show_message(bool error, const char *msg, ...);
+void nvme_show_verbose_message(const char *msg, ...);
 void nvme_show_perror(const char *msg, ...);
 void nvme_show_error_status(int status, const char *msg, ...);
 void nvme_show_init(void);
 void nvme_show_finish(void);
 void nvme_show_key_value(const char *key, const char *value, ...);
+void nvme_show_verbose_key_value(const char *key, const char *value, ...);
 bool nvme_is_fabrics_reg(int offset);
 bool nvme_is_fabrics_optional_reg(int offset);
 bool nvme_registers_cmbloc_support(__u32 cmbsz);

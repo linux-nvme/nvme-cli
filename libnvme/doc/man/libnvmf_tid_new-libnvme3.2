@@ -1,0 +1,15 @@
+.TH "libnvmf_tid_new" 9 "libnvmf_tid_new" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_tid_new \- Allocate and initialise a libnvmf_tid object.
+.SH SYNOPSIS
+.B "int" libnvmf_tid_new
+.BI "(struct libnvmf_tid **pp "  ");"
+.SH ARGUMENTS
+.IP "pp" 12
+On success, *pp is set to the newly allocated object.
+.SH "DESCRIPTION"
+Allocates a zeroed \fIstruct libnvmf_tid\fP on the heap.
+The caller must release it with \fBlibnvmf_tid_free\fP.
+.SH "RETURN"
+0 on success, -EINVAL if \fIpp\fP is NULL,
+-ENOMEM if allocation fails.

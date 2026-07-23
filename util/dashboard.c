@@ -382,10 +382,18 @@ static int wait_for_event(struct dashboard_ctx *db_ctx,
 			interval_nsec = 0;
 		}
 	}
+
+	/*
+	 * While parsing an escape sequence, only wait for the remaining escape
+	 * bytes and thus exclude montioring kobject uevent and sigwinch.
+	 * Deferring uevents and SIGWINCH avoids treating non-key events as
+	 * escape-sequence bytes.
+	 */
 	while (1) {
 		FD_ZERO(&set);
 		FD_SET(term_fd, &set);
-		FD_SET(uevent_fd, &set);
+		if (!esc_seq)
+			FD_SET(uevent_fd, &set);
 again:
 		ts.tv_sec = interval_sec;
 		ts.tv_nsec = interval_nsec;
@@ -399,7 +407,7 @@ again:
 		clock_gettime(CLOCK_MONOTONIC, &t0);
 
 		ret = pselect(max_fd + 1, &set, NULL, NULL, &ts,
-				&db_ctx->orig_set);
+				esc_seq ? NULL : &db_ctx->orig_set);
 		if (ret < 0) {
 			if (errno == EINTR) {
 				/* Interrupted, signal is received ? */
@@ -463,6 +471,16 @@ again:
 					if (errno == EINTR)
 						continue;
 
+					/*
+					 * We may have missed some netlink
+					 * uevents from kernel. This is not a
+					 * fatal error and we may synthesize it
+					 * as an NVME kobject change event and
+					 * force a topology rescan.
+					 */
+					if (errno == ENOBUFS)
+						return EVENT_TYPE_NVME_UEVENT;
+
 					nvme_show_perror("read from uevent fd");
 					return n;
 				}
@@ -509,6 +527,61 @@ again:
 	}
 }
 
+static enum event_type wait_for_esc_seq(struct dashboard_ctx *db_ctx)
+{
+	unsigned char c;
+	enum event_type event;
+
+	event = wait_for_event(db_ctx, &c, 1);
+	switch (event) {
+	case EVENT_TYPE_ERROR:	/* fall through */
+	case EVENT_TYPE_KEY_QUIT:
+		return event;
+	case EVENT_TYPE_TIMEOUT:
+		return EVENT_TYPE_KEY_ESC;
+	default:
+		if (c == 91) { /* '[' key */
+			event = wait_for_event(db_ctx, &c, 1);
+			switch (event) {
+			case EVENT_TYPE_ERROR:		/* fall through */
+			case EVENT_TYPE_KEY_QUIT:	/* fall through */
+				return event;
+			case EVENT_TYPE_TIMEOUT:
+				/* ignore */
+				break;
+			default:
+				if (c == 65)
+					return EVENT_TYPE_KEY_UP;
+				else if (c == 66)
+					return EVENT_TYPE_KEY_DOWN;
+				else if (c == 53 || c == 54) {
+					char prev = c;
+
+					event = wait_for_event(db_ctx, &c, 1);
+					switch (event) {
+					case EVENT_TYPE_ERROR:	/* fall through */
+					case EVENT_TYPE_KEY_QUIT:
+						return event;
+					case EVENT_TYPE_TIMEOUT:
+						/* ignore */
+						break;
+					default:
+						if (c == 126 && prev == 53)
+							return EVENT_TYPE_KEY_PAGE_UP;
+						else if (c == 126 && prev == 54)
+							return EVENT_TYPE_KEY_PAGE_DOWN;
+						/* else ignore */
+						break;
+					}
+				}
+				/* else ignore */
+				break;
+			}
+		}
+	}
+	return EVENT_TYPE_IGNORE;
+}
+
 enum event_type dashboard_wait_for_event(struct dashboard_ctx *db_ctx)
 {
 	int event;
@@ -529,33 +602,9 @@ enum event_type dashboard_wait_for_event(struct dashboard_ctx *db_ctx)
 		default:
 			if (c == 27) {	/* 'ESC' key */
 				/* read escape sequence */
-				event = wait_for_event(db_ctx, &c, 1);
-				switch (event) {
-				case EVENT_TYPE_ERROR:	/* fall through */
-				case EVENT_TYPE_KEY_QUIT:
+				event = wait_for_esc_seq(db_ctx);
+				if (event != EVENT_TYPE_IGNORE)
 					return event;
-				case EVENT_TYPE_TIMEOUT:
-					return EVENT_TYPE_KEY_ESC;
-				default:
-					if (c == 91) {	/* '[' key */
-						event = wait_for_event(db_ctx, &c, 1);
-						switch (event) {
-						case EVENT_TYPE_ERROR:	/* fall through */
-						case EVENT_TYPE_KEY_QUIT:
-							return event;
-						case EVENT_TYPE_TIMEOUT:
-							break;
-						default:
-							if (c == 65)
-								return EVENT_TYPE_KEY_UP;
-							else if (c == 66)
-								return EVENT_TYPE_KEY_DOWN;
-							/* else ignore */
-							break;
-						}
-					} /* else ignore */
-					break;
-				}
 			} else if (c == '\n' || c == '\r') {
 				return EVENT_TYPE_KEY_RETURN;
 			} else if (c == 'q') {

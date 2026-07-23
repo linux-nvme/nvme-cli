@@ -97,9 +97,9 @@ option(
 )
 option(
   'rundir',
-  type: 'string',
-  value: 'run',
-  description: 'directory for volatile configuration files',
+  type : 'string',
+  value : '/run',
+  description : 'absolute path to the runtime directory (e.g. /run or /var/run)'
 )
 option(
   'systemctl',
@@ -175,11 +175,18 @@ option(
 option(
   'plugins',
   type : 'array',
-  choices: ['amzn', 'dapustor', 'dell', 'dera',
-            'fdp', 'feat', 'huawei', 'ibm', 'innogrit', 'inspur', 'intel',
-            'lm', 'mangoboost', 'memblaze', 'micron', 'nbft',
+  choices: ['amzn', 'config', 'dapustor', 'dell', 'dera',
+            'exclusion', 'fdp', 'feat', 'huawei', 'ibm', 'innogrit', 'inspur',
+            'intel', 'lm', 'mangoboost', 'memblaze', 'micron', 'nbft',
             'netapp', 'nvidia', 'ocp', 'registry', 'sandisk', 'scaleflux',
             'seagate', 'sed', 'shannon', 'solidigm', 'ssstc', 'toshiba',
             'transcend', 'virtium', 'wdc', 'ymtc', 'zns'],
   description : 'comma-separated list of plugins to build (all plugins are included if unset, [] = no plugins)'
+)
+option(
+  'plugin-tests',
+  type : 'array',
+  choices : ['micron', 'ocp'],
+  value : [],
+  description : 'comma-separated list of plugin test suites to run against real hardware ([] = none)'
 )

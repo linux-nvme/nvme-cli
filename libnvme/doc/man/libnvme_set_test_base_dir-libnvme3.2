@@ -1,0 +1,21 @@
+.TH "libnvme_set_test_base_dir" 9 "libnvme_set_test_base_dir" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_set_test_base_dir \- Reroot libnvme's on-disk files for testing
+.SH SYNOPSIS
+.B "int" libnvme_set_test_base_dir
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *path "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+\fIstruct libnvme_global_ctx\fP object
+.IP "path" 12
+Sandbox directory under /tmp, or NULL to restore defaults
+.SH "DESCRIPTION"
+Redirects the files libnvme reads and writes (the exclusion list, the
+ownership registry, ...) under \fIpath\fP instead of their production locations,
+so a test can run against a throwaway directory.  For safety \fIpath\fP must be
+confined to /tmp and contain no ".." component; anything else is rejected.
+Passing NULL clears a previously set override.
+.SH "RETURN"
+0 on success, -EINVAL if \fIctx\fP is NULL or \fIpath\fP is not a valid
+sandbox path, -ENOMEM on allocation failure.

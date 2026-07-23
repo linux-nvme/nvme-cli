@@ -108,9 +108,8 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		cfg.data_area = argconfig_parse_seen(opts, "config-file") ? 3 : 1;
 
 	if (cfg.data_area < 1 || cfg.data_area > 4) {
-		errno = EINVAL;
-		nvme_show_perror("data-area = '%d'", cfg.data_area);
-		return -errno;
+		nvme_show_error("data-area = '%d'", cfg.data_area);
+		return -EINVAL;
 	}
 
 	has_binary_file = argconfig_parse_seen(opts, "source-file");
@@ -119,26 +118,22 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		// GNU getopt() permutes the contents of argv as it scans,
 		// so that eventually all the nonoptions are at the end.
 		if (argc > optind) {
-			errno = EINVAL;
-			nvme_show_perror(
+			nvme_show_error(
 			"Device path not allowed when using --source-file");
-			return -errno;
+			return -EINVAL;
 		}
 		err = read_file2buffer(cfg.binary_file, (char **)&tlog, &tl.log_size);
 	} else {
 		err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	}
-	if (err < 0) {
-		errno = -err;
-		nvme_show_perror("Error");
-	}
+	if (err < 0)
+		nvme_show_err(err, "Error");
 	if (err)
 		return err;
 
 	if (cfg.host_gen > 1) {
-		errno = EINVAL;
-		nvme_show_perror("host-generate = '%d'", cfg.host_gen);
-		return -errno;
+		nvme_show_error("host-generate = '%d'", cfg.host_gen);
+		return -EINVAL;
 	}
 
 	if (argconfig_parse_seen(opts, "config-file")) {
@@ -221,15 +216,13 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 					err = -ENOENT;
 				}
 			} else {
-				errno = EINVAL;
-				nvme_show_perror(
+				nvme_show_error(
 					"jq filter entry '%s' is not a valid string",
 					cfg.jq_filter);
 				err = -EINVAL;
 			}
 		} else {
-			errno = ENOENT;
-			nvme_show_perror(
+			nvme_show_error(
 				"jq filter entry '%s' not found in configuration file",
 				cfg.jq_filter);
 			err = -ENOENT;

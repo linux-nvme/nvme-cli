@@ -14,7 +14,6 @@
  * the libnvme.so.
  */
 
-#include <netdb.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,6 +54,25 @@ static bool test_ipaddrs_eq() {
 		{"192.168.56.101", "!@#$", false},
 		{"2001:0db8:0001:0000:0000:ff00:0042:8329", "2001:0db8::ff00:0042:8329", false},
 		{"2001:0db8:0001:0000:0000:ff00:0042:8329", NULL, false},
+		/*
+		 * scoped link-local IPv6: "lo" always exists, so its ifindex
+		 * is stable across machines without depending on a specific
+		 * value.
+		 */
+		{"fe80::1%lo", "fe80::1%lo", true},
+		{"fe80::1%lo", "fe80::2%lo", false},
+		/*
+		 * the comparator (_nvme_ipaddrs_eq) matches on address bytes
+		 * only, never sin6_scope_id -- a scoped and unscoped spelling
+		 * of the same address are still "equal" by its definition.
+		 */
+		{"fe80::1%lo", "fe80::1", true},
+		/*
+		 * legacy getaddrinfo(AI_NUMERICHOST) shortforms no longer
+		 * parse -- inet_pton() is strict dotted-quad; sysfs never
+		 * emits shortforms.
+		 */
+		{"127.1", "127.0.0.1", false},
 	};
 
 	size_t i;

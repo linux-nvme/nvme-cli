@@ -58,6 +58,8 @@ class TestNVMeCompareCmd(TestNVMeIO):
     def setUp(self):
         """ Pre Section for TestNVMeCompareCmd """
         super().setUp()
+        if self.is_windows():
+            self.skipTest("Compare command not supported by Windows")
         if not self.compare_cmd_supported():
             self.skipTest("because: Optional NVM Command 'Compare' (NVMCMPS) not supported")
         self.start_block = 1023

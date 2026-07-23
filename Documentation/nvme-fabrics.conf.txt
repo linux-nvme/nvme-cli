@@ -1,0 +1,149 @@
+nvme-fabrics.conf(5)
+=====================
+
+NAME
+----
+nvme-fabrics.conf - NVMe-oF connection configuration file format
+
+SYNOPSIS
+--------
+[verse]
+'@SYSCONFDIR@/nvme/nvme-fabrics.conf'
+'@SYSCONFDIR@/nvme/nvme-fabrics.conf.d/*.conf'
+
+DESCRIPTION
+-----------
+An INI-format file describing which NVMe over Fabrics (NVMe-oF)
+controllers a host should connect to, and with what parameters. It is
+read by 'nvme connect-all', 'nvme discover' and 'nvme connect', by the
+nvme-discoverd daemon, and (through the Python bindings) by nvme-stas.
+
+A configuration is a main file plus an optional drop-in directory,
+the same 'foo.conf' + 'foo.conf.d/' pattern systemd uses. Both parts
+are read independently, and either may be absent; an absent
+configuration is not an error; it simply yields no connections.
+
+--config FILE (on 'connect-all'/'discover'/'connect') names the main
+file; its drop-in directory is always 'FILE.d/'. Omitting --config
+uses the default path above.
+
+SECTIONS
+--------
+Each section is one or more 'key = value' lines. An empty value
+('key =') resets the key to the kernel default, overriding whatever an
+outer scope set (see RESETTING A KEY below). Unknown keys are ignored.
+Boolean values accept '1'/'yes'/'y'/'true'/'t'/'on' and
+'0'/'no'/'n'/'false'/'f'/'off' (case-insensitive).
+
+'[Host]'::
+	Optional, at most one per file. The identity used by every
+	connection in that file: 'hostnqn', 'hostid', 'hostsymname',
+	plus any SECURITY key below. A file with no '[Host]' connects
+	as the system default identity ('@SYSCONFDIR@/nvme/hostnqn' /
+	'hostid'). A drop-in that defines '[Host]' must set 'hostnqn'
+	explicitly.
+
+'[Discovery Controller Defaults]', '[I/O Controller Defaults]'::
+	Optional, at most one of each per file. Default TUNABLE values
+	for connections of that class, drawn from below. A drop-in's
+	copy overlays the top-level file's, for that drop-in's own
+	connections only.
+
+'[Discovery Controller]'::
+	One Discovery Controller to connect to. Repeatable. 'nqn ='
+	defaults to the well-known discovery NQN if omitted.
+
+'[Subsystem]'::
+	One I/O subsystem to connect to, named by 'nqn ='. Repeatable.
+
+Both endpoint sections accept any TUNABLE or SECURITY key as a
+per-section override, plus one or more 'controller =' lines (below).
+
+CONTROLLER LINES
+-----------------
+Each 'controller =' line under a '[Discovery Controller]' or
+'[Subsystem]' section is one path to that endpoint; repeating the key
+expresses multipath (native NVMe multipath groups all paths sharing a
+subsysnqn). The value is a ';'-separated 'key=value' list:
+
+	controller = transport=tcp;traddr=10.0.0.9;trsvcid=4420;host-iface=eth0
+
+'transport' and 'traddr' are required; 'trsvcid', 'host-traddr' and
+'host-iface' are optional. Any TUNABLE key may also appear on the line
+as a per-path override -- SECURITY keys may not, since they are bound
+to the (host, subsystem) pair, not to a single path.
+
+KEYS
+----
+TUNABLE (type default, '[Host]', endpoint section, or 'controller =' line):
+
+	nr-io-queues, nr-write-queues, nr-poll-queues, queue-size,
+	keep-alive-tmo, reconnect-delay, ctrl-loss-tmo, fast-io-fail-tmo,
+	tos, duplicate-connect, disable-sqflow, hdr-digest, data-digest
+
+SECURITY ('[Host]' or endpoint section only, never a 'controller =' line):
+
+	tls, tls-key, tls-key-identity, keyring, concat, dhchap-secret,
+	dhchap-ctrl-secret
+
+IDENTITY ('[Host]' only):
+
+	hostnqn, hostid, hostsymname
+
+Every key here is the same name as its 'nvme connect' long option
+(hyphenated). See linknvme:nvme-connect[1] for what each one means.
+
+RESETTING A KEY
+----------------
+An empty assignment ('key =') resets that key to the kernel default,
+undoing whatever an outer scope (a '*Defaults' section or '[Host]')
+set. This differs from simply not writing the key, which instead
+inherits through the cascade below.
+
+PRECEDENCE
+----------
+A key resolves most-specific first:
+
+	controller = line > endpoint section > [Host] > type defaults > kernel default
+
+The type-defaults level is chosen by the connection's class: a
+Discovery Controller draws from '[Discovery Controller Defaults]', an
+I/O Controller from '[I/O Controller Defaults]'.
+
+EXAMPLE
+-------
+------------
+# @SYSCONFDIR@/nvme/nvme-fabrics.conf
+
+[Discovery Controller Defaults]
+keep-alive-tmo = 30
+
+[I/O Controller Defaults]
+keep-alive-tmo = 5
+
+[Host]
+hostsymname = lab-host-01
+
+[Discovery Controller]
+controller = transport=tcp;traddr=192.168.1.10;trsvcid=8009
+
+[Subsystem]
+nqn        = nqn.2024-01.com.example:data.vol1
+controller = transport=tcp;traddr=192.168.1.20;trsvcid=4420
+controller = transport=tcp;traddr=192.168.1.21;trsvcid=4420
+------------
+
+See '@SYSCONFDIR@/nvme/nvme-fabrics.conf.sample' for a longer,
+commented example.
+
+SEE ALSO
+--------
+nvme-connect-all(1)
+nvme-discover(1)
+nvme-connect(1)
+nvme-config-convert(1)
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
+
+NVME
+----
+Part of the nvme-user suite

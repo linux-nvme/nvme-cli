@@ -13,13 +13,17 @@ if diff.found()
 
     config_dump = executable(
         'test-config-dump',
-        ['config-dump.c'],
+        [
+            'config-dump.c',
+            'options.c'
+        ],
         dependencies: libnvme_dep,
     )
 
     config_data = [
         'config-pcie',
         'config-pcie-with-tcp-config',
+        'config-owner',
     ]
 
     config_diff = find_program('config-diff.sh')
@@ -41,8 +45,14 @@ if diff.found()
 
     test_hostnqn_order = executable(
         'test-hostnqn-order',
-        ['hostnqn-order.c'],
-        dependencies: libnvme_dep,
+        [
+            'hostnqn-order.c',
+            'options.c'
+        ],
+        dependencies: [
+            ccan_dep,
+            libnvme_test_dep,
+        ]
     )
 
     test(
@@ -60,7 +70,10 @@ if diff.found()
 
     test_psk_json = executable(
         'test-psk-json',
-        ['psk-json.c'],
+        [
+            'psk-json.c',
+            'options.c'
+        ],
         dependencies: libnvme_dep,
     )
 
@@ -71,7 +84,7 @@ if diff.found()
 
     foreach t_file : config_data
         test(
-            'libvnme - psk-json-@0@'.format(t_file),
+            'libnvme - psk-json-@0@'.format(t_file),
             config_diff,
             args : [
                 test_psk_json.full_path(),
@@ -82,4 +95,26 @@ if diff.found()
             depends : test_psk_json,
         )
     endforeach
+endif
+
+# Validate the dumped config fixtures against the published JSON schema.  The
+# config-diff tests above assert the dump matches these .out fixtures; this
+# asserts the fixtures conform to doc/config-schema.json, so a drift between the
+# dump format and the schema fails CI.  Skips when python3-jsonschema is absent.
+python3 = find_program('python3', required : false)
+if python3.found()
+    schema_file = meson.project_source_root() / 'libnvme' / 'doc' / 'config-schema.json'
+    test(
+        'libnvme - config-schema-validate',
+        python3,
+        args : [
+            files('schema-validate.py'),
+            schema_file,
+            srcdir + '/data/config-pcie.out',
+            srcdir + '/data/config-pcie-with-tcp-config.out',
+            srcdir + '/data/config-owner.out',
+            srcdir + '/data/tls_key-1.out',
+            srcdir + '/data/tls_key-2.out',
+        ],
+    )
 endif

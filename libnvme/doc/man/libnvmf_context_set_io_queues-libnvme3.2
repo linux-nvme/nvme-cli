@@ -1,0 +1,36 @@
+.TH "libnvmf_context_set_io_queues" 9 "libnvmf_context_set_io_queues" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_set_io_queues \- Set I/O queue topology for context
+.SH SYNOPSIS
+.B "int" libnvmf_context_set_io_queues
+.BI "(struct libnvmf_context *fctx "  ","
+.BI "int nr_io_queues "  ","
+.BI "int nr_write_queues "  ","
+.BI "int nr_poll_queues "  ","
+.BI "int queue_size "  ","
+.BI "bool disable_sqflow "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context
+.IP "nr_io_queues" 12
+Number of I/O queues
+.IP "nr_write_queues" 12
+Number of write-only queues
+.IP "nr_poll_queues" 12
+Number of polling queues
+.IP "queue_size" 12
+Number of entries per I/O queue (SQSIZE in Connect command)
+.IP "disable_sqflow" 12
+Disable SQ flow control negotiation
+.SH "DESCRIPTION"
+Convenience setter for the five parameters that together define the I/O
+queue structure used when establishing a controller connection. All five
+feed directly into the Connect command at queue creation time.
+\fInr_write_queues\fP and \fInr_poll_queues\fP are additive: total I/O queues is
+\fInr_io_queues\fP + \fInr_write_queues\fP + \fInr_poll_queues\fP.
+
+Individual \fBlibnvmf_context_set_nr_io_queues\fP, \fB_set_nr_write_queues\fP,
+\fB_set_nr_poll_queues\fP, \fB_set_queue_size\fP, and \fB_set_disable_sqflow\fP
+accessors are also available when only a subset needs to change.
+.SH "RETURN"
+0 on success, negative error code otherwise.

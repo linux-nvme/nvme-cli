@@ -437,8 +437,8 @@ static void run_test(struct libnvme_global_ctx *ctx, const char *test_name,
 
 int main(void)
 {
-	struct libnvme_global_ctx *ctx =
-		libnvme_create_global_ctx(stdout, LIBNVME_DEFAULT_LOGLEVEL);
+	struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
+	libnvme_set_logging_file(ctx, stdout);
 
 	set_mock_fd(LIBNVME_TEST_FD);
 	check(!libnvme_open(ctx, "NVME_TEST_FD", &test_hdl),

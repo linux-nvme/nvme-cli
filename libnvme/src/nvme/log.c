@@ -27,36 +27,6 @@
 #define LOG_CLOCK CLOCK_MONOTONIC
 #endif
 
-static ssize_t write_all(int fd, const void *buf, size_t count)
-{
-	const char *p = buf;
-	size_t total = 0;
-
-	while (total < count) {
-		ssize_t n = write(fd, p + total, count - total);
-
-		if (n > 0) {
-			total += n;
-			continue;
-		}
-
-		if (n < 0) {
-			if (errno == EINTR)
-				continue;
-
-			if (errno == EAGAIN)
-				continue;
-
-			return -1;
-		}
-
-		errno = EIO;
-		return -1;
-	}
-
-	return total;
-}
-
 void __libnvme_printf_format(4, 5)
 __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 	   const char *func, const char *format, ...)
@@ -136,4 +106,10 @@ __libnvme_public int libnvme_get_logging_level(struct libnvme_global_ctx *ctx,
 	if (log_tstamp)
 		*log_tstamp = ctx->log.timestamp;
 	return ctx->log.level;
+}
+
+__libnvme_public void libnvme_set_logging_file(struct libnvme_global_ctx *ctx,
+		FILE *fp)
+{
+	ctx->log.fd = fp ? fileno(fp) : STDERR_FILENO;
 }

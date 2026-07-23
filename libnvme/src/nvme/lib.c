@@ -25,47 +25,32 @@
 #include "private-mi.h"
 #include "compiler-attributes.h"
 
-static bool libnvme_mi_probe_enabled_default(void)
+/*
+ * A test base directory is accepted only when it is confined to /tmp and free
+ * of ".." components, so it can never redirect libnvme onto a production or
+ * system path (/etc, /usr, ...).  Shared by ctx creation and the setter.
+ */
+static bool is_valid_test_base_dir(const char *path)
 {
-	char *val;
-
-	val = getenv("LIBNVME_MI_PROBE_ENABLED");
-	if (!val)
-		return true;
-
-	return strcmp(val, "0") &&
-		strcasecmp(val, "false") &&
-		strncasecmp(val, "disable", 7);
-
+	return path && !strncmp(path, "/tmp/", 5) && !strstr(path, "..");
 }
 
-__libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(
-		FILE *fp, int log_level)
+__libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(void)
 {
 	struct libnvme_global_ctx *ctx;
-	int fd;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx)
 		return NULL;
 
-	if (fp) {
-		fd = fileno(fp);
-		if (fd < 0) {
-			free(ctx);
-			return NULL;
-		}
-	} else
-		fd = STDERR_FILENO;
-
-	ctx->log.fd = fd;
-	ctx->log.level = log_level;
+	ctx->log.fd = STDERR_FILENO;
+	ctx->log.level = LIBNVME_DEFAULT_LOGLEVEL;
 
 	list_head_init(&ctx->hosts);
 	list_head_init(&ctx->endpoints);
 
 	ctx->ioctl_probing = true;
-	ctx->mi_probe_enabled = libnvme_mi_probe_enabled_default();
+	ctx->mi_probe_enabled = true;
 
 	return ctx;
 }
@@ -85,6 +70,60 @@ __libnvme_public int libnvme_set_owner(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
+__libnvme_public int libnvme_set_test_base_dir(struct libnvme_global_ctx *ctx,
+					       const char *path)
+{
+	char *dup = NULL;
+
+	if (!ctx)
+		return -EINVAL;
+	if (path) {
+		if (!is_valid_test_base_dir(path))
+			return -EINVAL;
+		dup = strdup(path);
+		if (!dup)
+			return -ENOMEM;
+	}
+	free(ctx->test_base_dir);
+	ctx->test_base_dir = dup;
+	return 0;
+}
+
+__libnvme_public int libnvme_set_test_sysfs_dir(struct libnvme_global_ctx *ctx,
+					       const char *path)
+{
+	char *dup = NULL;
+
+	if (!ctx)
+		return -EINVAL;
+	if (path) {
+		dup = strdup(path);
+		if (!dup)
+			return -ENOMEM;
+	}
+	free(ctx->test_sysfs_dir);
+	ctx->test_sysfs_dir = dup;
+	return 0;
+}
+
+__libnvme_public void libnvme_set_force_4k(struct libnvme_global_ctx *ctx,
+					   bool enable)
+{
+	if (!ctx)
+		return;
+
+	ctx->force_4k = enable;
+}
+
+__libnvme_public void libnvme_set_probe_enabled(struct libnvme_global_ctx *ctx,
+						bool enabled)
+{
+	if (!ctx)
+		return;
+
+	ctx->mi_probe_enabled = enabled;
+}
+
 __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
@@ -100,6 +139,8 @@ __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	ctx->ifaddrs_cache = NULL;
 	free(ctx->options);
 #endif
+	free(ctx->hostnqn);
+	free(ctx->hostid);
 
 	libnvme_for_each_host_safe(ctx, h, _h)
 		__libnvme_free_host(h);
@@ -109,6 +150,8 @@ __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 #endif
 	free(ctx->config_file);
 	free(ctx->owner);
+	free(ctx->test_base_dir);
+	free(ctx->test_sysfs_dir);
 	free(ctx);
 }
 

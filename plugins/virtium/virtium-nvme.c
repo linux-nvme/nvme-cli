@@ -14,6 +14,7 @@
 
 #include "common.h"
 #include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
 #include "util/types.h"
@@ -121,7 +122,7 @@ static void vt_convert_smart_data_to_human_readable_format(struct vtview_smart_l
 	templocale = strdup(curlocale);
 
 	if (!templocale)
-		printf("Cannot malloc buffer\n");
+		nvme_show_error("Cannot malloc buffer");
 
 	setlocale(LC_ALL, "C");
 
@@ -225,7 +226,7 @@ static int vt_append_text_file(const char *text, const char *filename)
 
 	f = fopen(filename, "a");
 	if (!f) {
-		printf("Cannot open %s\n", filename);
+		nvme_show_error("Cannot open %s", filename);
 		return -1;
 	}
 
@@ -283,25 +284,25 @@ static int vt_add_entry_to_log(struct libnvme_transport_handle *hdl,
 	ret = libnvme_get_nsid(hdl, &nsid);
 
 	if (ret < 0) {
-		printf("Cannot read namespace-id\n");
+		nvme_show_error("Cannot read namespace-id");
 		return -1;
 	}
 
 	ret = nvme_identify_ns(hdl, nsid, &smart.raw_ns);
 	if (ret) {
-		printf("Cannot read namespace identify\n");
+		nvme_show_error("Cannot read namespace identify");
 		return -1;
 	}
 
 	ret = nvme_identify_ctrl(hdl, &smart.raw_ctrl);
 	if (ret) {
-		printf("Cannot read device identify controller\n");
+		nvme_show_error("Cannot read device identify controller");
 		return -1;
 	}
 
 	ret = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart.raw_smart);
 	if (ret) {
-		printf("Cannot read device SMART log\n");
+		nvme_show_error("Cannot read device SMART log");
 		return -1;
 	}
 
@@ -322,7 +323,7 @@ vt_update_vtview_log_header(struct libnvme_transport_handle *hdl, const char *pa
 
 	vt_initialize_header_buffer(&header);
 	if (strlen(path) > sizeof(header.path)) {
-		printf("filename too long\n");
+		nvme_show_error("filename too long");
 		errno = EINVAL;
 		return -1;
 	}
@@ -332,7 +333,7 @@ vt_update_vtview_log_header(struct libnvme_transport_handle *hdl, const char *pa
 		strcpy(header.test_name, DEFAULT_TEST_NAME);
 	} else {
 		if (strlen(cfg->test_name) > sizeof(header.test_name)) {
-			printf("test name too long\n");
+			nvme_show_error("test name too long");
 			errno = EINVAL;
 			return -1;
 		}
@@ -344,18 +345,18 @@ vt_update_vtview_log_header(struct libnvme_transport_handle *hdl, const char *pa
 	else
 		filename = cfg->output_file;
 
-	printf("Log file: %s\n", filename);
+	nvme_show_verbose_info("Log file: %s", filename);
 	header.time_stamp = time(NULL);
 
 	ret = nvme_identify_ctrl(hdl, &header.raw_ctrl);
 	if (ret) {
-		printf("Cannot read identify device\n");
+		nvme_show_error("Cannot read identify device");
 		return -1;
 	}
 
 	ret = nvme_get_log_fw_slot(hdl, false, &header.raw_fw);
 	if (ret) {
-		printf("Cannot read device firmware log\n");
+		nvme_show_error("Cannot read device firmware log");
 		return -1;
 	}
 
@@ -968,7 +969,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 
 	if (argc >= 2) {
 		if (strlen(argv[1]) > sizeof(path) - 1) {
-			printf("Filename too long\n");
+			nvme_show_error("Filename too long");
 			return -1;
 		}
 		strcpy(path, argv[1]);
@@ -976,14 +977,14 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("Error parse and open (err = %d)\n", err);
+		nvme_show_error("Error parse and open (err = %d)", err);
 		return err;
 	}
 
-	printf("Running...\n");
-	printf("Collecting data for device %s\n", path);
-	printf("Running for %lf hour(s)\n", cfg.run_time_hrs);
-	printf("Logging SMART data for every %lf hour(s)\n", cfg.log_record_frequency_hrs);
+	nvme_show_verbose_info("Running...");
+	nvme_show_verbose_info("Collecting data for device %s", path);
+	nvme_show_verbose_info("Running for %lf hour(s)", cfg.run_time_hrs);
+	nvme_show_verbose_info("Logging SMART data for every %lf hour(s)", cfg.log_record_frequency_hrs);
 
 	ret = vt_update_vtview_log_header(hdl, path, &cfg);
 	if (ret)
@@ -1007,7 +1008,7 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 
 		ret = vt_add_entry_to_log(hdl, path, &cfg);
 		if (ret) {
-			printf("Cannot update driver log\n");
+			nvme_show_error("Cannot update driver log");
 			break;
 		}
 
@@ -1034,13 +1035,13 @@ static int vt_show_identify(int argc, char **argv, struct command *acmd, struct 
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err) {
-		printf("Error parse and open (err = %d)\n", err);
+		nvme_show_error("Error parse and open (err = %d)", err);
 		return err;
 	}
 
 	ret = nvme_identify_ctrl(hdl, &ctrl);
 	if (ret) {
-		printf("Cannot read identify device\n");
+		nvme_show_error("Cannot read identify device");
 		return -1;
 	}
 

@@ -11,38 +11,61 @@
 
 #include <libnvme.h>
 
+#include "nvme-print.h"
 #include "micron-utils.h"
 #include "util/cleanup.h"
 
-int micron_get_pci_ids(struct libnvme_global_ctx *ctx,
-			struct libnvme_transport_handle *hdl,
-			unsigned short *vid, unsigned short *did)
+int micron_run_spawn(char *const argv[], const char *outfile, bool append)
 {
-	const char *p;
-	unsigned int val;
+	STARTUPINFOA si = { .cb = sizeof(si) };
+	PROCESS_INFORMATION pi = { 0 };
+	HANDLE hFile = INVALID_HANDLE_VALUE;
+	char cmdline[MAX_PATH + 256] = { 0 };
+	int i, off = 0;
+	DWORD exit_code;
 
-	/* Windows sysfs dir for controller contains VID and DID */
-	__cleanup_free char *ctrl_sysfs_dir = micron_get_ctrl_sysfs_dir(ctx, hdl);
+	for (i = 0; argv[i]; i++) {
+		int ret = snprintf(cmdline + off, sizeof(cmdline) - off,
+				   "%s\"%s\"", i ? " " : "", argv[i]);
+		if (ret < 0 || (size_t)ret >= sizeof(cmdline) - off)
+			return -ENOMEM;
+		off += ret;
+	}
 
-	*vid = 0;
-	*did = 0;
+	if (outfile) {
+		SECURITY_ATTRIBUTES sa = {
+			.nLength = sizeof(sa),
+			.bInheritHandle = TRUE,
+		};
 
-	if (!ctrl_sysfs_dir)
-		return -EINVAL;
+		hFile = CreateFileA(outfile, GENERIC_WRITE, 0, &sa,
+				    append ? OPEN_ALWAYS : CREATE_ALWAYS,
+				    FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hFile == INVALID_HANDLE_VALUE)
+			return -EIO;
+		if (append)
+			SetFilePointer(hFile, 0, NULL, FILE_END);
+		si.dwFlags = STARTF_USESTDHANDLES;
+		si.hStdOutput = hFile;
+		si.hStdError = hFile;
+		si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+	}
 
-	p = strstr(ctrl_sysfs_dir, "ven_");
-	if (p && sscanf(p, "ven_%x", &val) == 1)
-		*vid = (unsigned short)val;
-	else
-		return -EINVAL;
+	if (!CreateProcessA(NULL, cmdline, NULL, NULL, outfile ? TRUE : FALSE,
+			    0, NULL, NULL, &si, &pi)) {
+		if (hFile != INVALID_HANDLE_VALUE)
+			CloseHandle(hFile);
+		return -EIO;
+	}
 
-	p = strstr(ctrl_sysfs_dir, "dev_");
-	if (p && sscanf(p, "dev_%x", &val) == 1)
-		*did = (unsigned short)val;
-	else
-		return -EINVAL;
+	WaitForSingleObject(pi.hProcess, INFINITE);
+	GetExitCodeProcess(pi.hProcess, &exit_code);
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+	if (hFile != INVALID_HANDLE_VALUE)
+		CloseHandle(hFile);
 
-	return 0;
+	return exit_code == 0 ? 0 : -EIO;
 }
 
 int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
@@ -50,14 +73,14 @@ int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
 {
 	*correctable_errors = 0;
 	*uncorrectable_errors = 0;
-	printf("register reads not supported on the current platform\n");
+	nvme_show_error("register reads not supported on the current platform");
 	return -ENOTSUP;
 }
 
 int micron_clear_pcie_aer_correctable_errors(
 	struct libnvme_transport_handle *hdl)
 {
-	printf("register writes not supported on the current platform\n");
+	nvme_show_error("register writes not supported on the current platform");
 	return -ENOTSUP;
 }
 
@@ -80,7 +103,7 @@ void micron_write_os_config_to_file(const char *file_name)
 
 	fp = fopen(file_name, "w+");
 	if (!fp) {
-		fprintf(stderr, "Failed to create %s\n", file_name);
+		nvme_show_error("Failed to create %s", file_name);
 		return;
 	}
 

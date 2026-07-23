@@ -470,8 +470,8 @@ void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, nvme_print_fla
 	uint64_t value;
 
 	if (fabrics && !nvme_is_fabrics_reg(offset)) {
-		printf("register: %#04x (%s) not fabrics\n", offset,
-		       nvme_register_to_string(offset));
+		nvme_show_error("register: %#04x (%s) not fabrics", offset,
+				nvme_register_to_string(offset));
 		return;
 	}
 
@@ -611,11 +611,12 @@ void nvme_show_id_ns_descs(void *data, unsigned int nsid, nvme_print_flags_t fla
 	nvme_print(id_ns_descs, flags, data, nsid);
 }
 
-void nvme_show_id_ctrl(struct nvme_id_ctrl *ctrl, const char *devname,
-		       nvme_print_flags_t flags,
-		       void (*vendor_show)(__u8 *vs, struct json_object *root))
+void nvme_show_id_ctrl(struct libnvme_global_ctx *ctx,
+		struct libnvme_transport_handle *hdl, struct nvme_id_ctrl *ctrl,
+		nvme_print_flags_t flags,
+		void (*vendor_show)(__u8 *vs, struct json_object *root))
 {
-	__cleanup_free char *product_name = nvme_product_name(devname);
+	__cleanup_free char *product_name = nvme_product_name(ctx, hdl);
 
 	nvme_print(id_ctrl, flags, ctrl, product_name, vendor_show);
 }
@@ -1683,7 +1684,9 @@ void nvme_generic_full_path(libnvme_ns_t n, char *path, size_t len)
 	if (strncmp(path, "/dev/spdk/", 10) == 0 && stat(path, &st) == 0)
 		return;
 
-	sscanf(libnvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance);
+	if (sscanf(libnvme_ns_get_name(n), "nvme%dn%d", &instance, &head_instance) != 2)
+		return;
+
 	snprintf(path, len, "/dev/ng%dn%d", instance, head_instance);
 
 	if (stat(path, &st) == 0)
@@ -1692,7 +1695,7 @@ void nvme_generic_full_path(libnvme_ns_t n, char *path, size_t len)
 	 * We could start trying to search for it but let's make
 	 * it simple and just don't show the path at all.
 	 */
-	snprintf(path, len, "ng%dn%d", instance, head_instance);
+	snprintf(path, len, "%s", libnvme_ns_get_generic_name(n));
 }
 
 void nvme_show_list_item(libnvme_ns_t n, struct table *t)
@@ -1727,18 +1730,38 @@ void nvme_show_topology_tabular(struct libnvme_global_ctx *ctx, nvme_print_flags
 	nvme_print(topology_tabular, flags, ctx);
 }
 
-void nvme_show_message(bool error, const char *msg, ...)
+static void show_message(bool error, const char *msg, va_list ap)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
-	va_list ap;
-
-	va_start(ap, msg);
 
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
 
 	if (ops && ops->show_message)
 		ops->show_message(error, msg, ap);
+}
+
+void nvme_show_message(bool error, const char *msg, ...)
+{
+	va_list ap;
+
+	va_start(ap, msg);
+
+	show_message(error, msg, ap);
+
+	va_end(ap);
+}
+
+void nvme_show_verbose_message(const char *msg, ...)
+{
+	va_list ap;
+
+	if (!nvme_args.verbose)
+		return;
+
+	va_start(ap, msg);
+
+	show_message(true, msg, ap);
 
 	va_end(ap);
 }
@@ -1759,18 +1782,37 @@ void nvme_show_perror(const char *msg, ...)
 	va_end(ap);
 }
 
-void nvme_show_key_value(const char *key, const char *val, ...)
+static void show_key_value(const char *key, const char *val, va_list ap)
 {
 	struct print_ops *ops = nvme_print_ops(NORMAL);
-	va_list ap;
-
-	va_start(ap, val);
 
 	if (nvme_is_output_format_json())
 		ops = nvme_print_ops(JSON);
 
 	if (ops && ops->show_key_value)
 		ops->show_key_value(key, val, ap);
+}
+
+void nvme_show_key_value(const char *key, const char *val, ...)
+{
+	va_list ap;
+
+	va_start(ap, val);
+
+	show_key_value(key, val, ap);
+
+	va_end(ap);
+}
+void nvme_show_verbose_key_value(const char *key, const char *val, ...)
+{
+	va_list ap;
+
+	if (!nvme_args.verbose)
+		return;
+
+	va_start(ap, val);
+
+	show_key_value(key, val, ap);
 
 	va_end(ap);
 }
