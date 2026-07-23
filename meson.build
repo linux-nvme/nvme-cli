@@ -54,6 +54,7 @@ want_libnvme = get_option('libnvme').disabled() == false
 want_fabrics = get_option('fabrics').disabled() == false and host_system != 'windows'
 want_mi = get_option('mi').disabled() == false and host_system != 'windows'
 want_top = get_option('top').disabled() == false and host_system != 'windows'
+want_discoverd = get_option('nvme-discoverd').disabled() == false and want_fabrics and host_system != 'windows'
 want_json_c = get_option('json-c').disabled() == false
 want_libkmod = get_option('libkmod').disabled() == false and host_system != 'windows'
 want_tests = get_option('tests')
@@ -363,6 +364,16 @@ else
 endif
 conf.set('CONFIG_KEYUTILS', keyutils_dep.found(), description: 'Is libkeyutils available?')
 
+if not want_discoverd
+    libsystemd_dep = dependency('', required: false)
+else
+    # v253 for Type=notify-reload (nvme-discoverd.service).
+    libsystemd_dep = dependency('libsystemd', version: '>=253',
+                                 required: get_option('nvme-discoverd'))
+endif
+want_discoverd = want_discoverd and libsystemd_dep.found()
+conf.set('CONFIG_DISCOVERD', want_discoverd, description: 'Is nvme-discoverd enabled')
+
 if not want_mi or get_option('libdbus').disabled()
     libdbus_dep = dependency('', required: false)
 else
@@ -654,6 +665,10 @@ if want_nvme
         subdir('unit')
     endif
 
+    if want_discoverd
+        subdir('discoverd')
+    endif
+
     if get_option('nvme-tests')
         subdir('tests')
     endif
@@ -809,6 +824,7 @@ dep_dict = {
     'python3':          py3_dep.found(),
     'liburing':         liburing_dep.found(),
     'libkmod':          libkmod_dep.found(),
+    'libsystemd':       libsystemd_dep.found(),
 }
 if host_system == 'windows'
     dep_dict += {
@@ -824,6 +840,7 @@ wanted_dict = {
     'nvme':             want_nvme,
     'libnvme':          want_libnvme,
     'fabrics':          want_fabrics,
+    'nvme-discoverd':   want_discoverd,
     'python bindings ': want_python,
     'build docs':       want_docs_build,
 }

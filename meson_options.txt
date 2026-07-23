@@ -24,6 +24,12 @@ option(
   description : 'MI support'
 )
 option(
+  'nvme-discoverd',
+  type : 'feature',
+  value: 'auto',
+  description : 'nvme-discoverd daemon (requires fabrics and libsystemd >=253)'
+)
+option(
   'top',
   type : 'feature',
   value: 'enabled',
