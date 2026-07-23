@@ -648,39 +648,17 @@ exit_status:
 	return err;
 }
 
-static int micron_validate_output_format(const char *format,
-	nvme_print_flags_t supported_formats,
-	nvme_print_flags_t *output_format)
-{
-	nvme_print_flags_t f;
-	int err = validate_output_format(format, &f);
-
-	if (err)
-		return err;
-
-	/* NORMAL is 0, so it is always supported and handled separately */
-	if (f == NORMAL || (f & supported_formats)) {
-		*output_format = f;
-		return 0;
-	}
-
-	return -ENOTSUP;
-}
-
 static int micron_get_output_format(struct argconfig_commandline_options *opts,
 	const char *global_format, const char *local_format,
-	nvme_print_flags_t supported_formats, nvme_print_flags_t default_format,
-	nvme_print_flags_t *format)
+	nvme_print_flags_t default_format, nvme_print_flags_t *format)
 {
 	if (!format)
 		return -EINVAL;
 
 	if (global_format && argconfig_parse_seen(opts, "output-format"))
-		return micron_validate_output_format(global_format,
-			supported_formats, format);
+		return validate_output_format(global_format, format);
 	else if (local_format && argconfig_parse_seen(opts, "format"))
-		return micron_validate_output_format(local_format,
-			supported_formats, format);
+		return validate_output_format(local_format, format);
 
 	*format = default_format;
 	return 0;
@@ -928,7 +906,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	unsigned int temperature = 0, i = 0;
 	unsigned int tempSensors[SensorCount] = { 0 };
 	const char *desc = "Retrieve Micron temperature info for the given device ";
-	const char *fmt = "output format normal|json";
+	const char *fmt = "Output format: normal|json";
 	nvme_print_flags_t format = NORMAL;
 	struct format {
 		char *fmt;
@@ -941,7 +919,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	struct json_object *logPages;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	NVME_ARGS(opts,
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -951,7 +929,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	}
 
 	err = micron_get_output_format(opts, nvme_args.output_format, cfg.fmt,
-		JSON | NORMAL, NORMAL, &format);
+		NORMAL, &format);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
@@ -1077,7 +1055,7 @@ static int micron_pcie_stats(int argc, char **argv,
 		char *fmt;
 	};
 	const char *desc = "Retrieve PCIe event counters";
-	const char *fmt = "output format json|normal";
+	const char *fmt = "Output format: json|normal";
 	struct format cfg = {
 		.fmt = "json",
 	};
@@ -1085,7 +1063,7 @@ static int micron_pcie_stats(int argc, char **argv,
 	__u32 correctable_errors = 0;
 	__u32 uncorrectable_errors = 0;
 
-	NVME_ARGS(opts,
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -1095,7 +1073,7 @@ static int micron_pcie_stats(int argc, char **argv,
 	}
 
 	err = micron_get_output_format(opts, nvme_args.output_format, cfg.fmt,
-		JSON | NORMAL, JSON, &format);
+		JSON, &format);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
