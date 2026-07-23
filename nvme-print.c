@@ -1828,6 +1828,12 @@ void nvme_show_connect_msg(libnvme_ctrl_t c, nvme_print_flags_t flags)
 	nvme_print(connect_msg, flags, c);
 }
 
+void nvme_show_config_conn_list(struct libnvmf_config *config,
+				 nvme_print_flags_t flags)
+{
+	nvme_print(config_conn_list, flags, config);
+}
+
 void nvme_show_init(void)
 {
 	nvme_print_output_format(show_init);

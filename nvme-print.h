@@ -36,6 +36,11 @@ struct nvme_error_log_filter {
 	__u8 opcode;
 };
 
+/* config.h is fabrics-only; forward-declare so this header stays valid in a
+ * -Dfabrics=disabled build.
+ */
+struct libnvmf_config;
+
 struct print_ops {
 	/* libnvme types.h print functions */
 	void (*ana_log)(struct nvme_ana_log *ana_log, const char *devname, size_t len);
@@ -128,6 +133,9 @@ struct print_ops {
 	void (*topology_namespace)(struct libnvme_global_ctx *ctx);
 	void (*topology_multipath)(struct libnvme_global_ctx *ctx);
 	void (*topology_tabular)(struct libnvme_global_ctx *ctx);
+
+	/* config show */
+	void (*config_conn_list)(struct libnvmf_config *config);
 
 	/* nvme top */
 	void (*top)(int refresh_interval);
@@ -333,6 +341,8 @@ void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
 void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
 			     nvme_print_flags_t flags);
 void nvme_show_connect_msg(libnvme_ctrl_t c, nvme_print_flags_t flags);
+void nvme_show_config_conn_list(struct libnvmf_config *config,
+				 nvme_print_flags_t flags);
 
 const char *nvme_ana_state_to_string(enum nvme_ana_state state);
 const char *nvme_cmd_to_string(int admin, __u8 opcode);
