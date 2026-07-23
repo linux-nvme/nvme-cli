@@ -30,6 +30,12 @@ option(
   description : 'nvme-discoverd daemon (requires fabrics and libsystemd >=253)'
 )
 option(
+  'nvmf-autoconnect',
+  type : 'feature',
+  value: 'enabled',
+  description : 'legacy udev/systemd NVMe-oF autoconnect (independent of nvme-discoverd; both may be installed side by side)'
+)
+option(
   'top',
   type : 'feature',
   value: 'enabled',

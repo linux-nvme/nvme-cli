@@ -55,6 +55,7 @@ want_fabrics = get_option('fabrics').disabled() == false and host_system != 'win
 want_mi = get_option('mi').disabled() == false and host_system != 'windows'
 want_top = get_option('top').disabled() == false and host_system != 'windows'
 want_discoverd = get_option('nvme-discoverd').disabled() == false and want_fabrics and host_system != 'windows'
+want_nvmf_autoconnect = get_option('nvmf-autoconnect').disabled() == false
 want_json_c = get_option('json-c').disabled() == false
 want_libkmod = get_option('libkmod').disabled() == false and host_system != 'windows'
 want_tests = get_option('tests')
@@ -687,46 +688,52 @@ if want_nvme
         install_dir: join_paths(sysconfdir, 'nvme'),
     )
 
-    dracut_files = [
-        '70-nvmf-autoconnect.conf',
-    ]
+    if want_nvmf_autoconnect
+        dracut_files = [
+            '70-nvmf-autoconnect.conf',
+        ]
 
-    foreach file : dracut_files
-        configure_file(
-            input: 'nvmf-autoconnect/dracut-conf/' + file + '.in',
-            output: file,
-            configuration: substs,
-            install: true,
-            install_dir: dracutrulesdir,
-        )
-    endforeach
+        foreach file : dracut_files
+            configure_file(
+                input: 'nvmf-autoconnect/dracut-conf/' + file + '.in',
+                output: file,
+                configuration: substs,
+                install: true,
+                install_dir: dracutrulesdir,
+            )
+        endforeach
 
-    systemd_files = [
-        'nvmefc-boot-connections.service',
-        'nvmf-autoconnect.service',
-        'nvmf-connect-nbft.service',
-        'nvmf-connect.target',
-        'nvmf-connect@.service',
-    ]
+        systemd_files = [
+            'nvmefc-boot-connections.service',
+            'nvmf-autoconnect.service',
+            'nvmf-connect-nbft.service',
+            'nvmf-connect.target',
+            'nvmf-connect@.service',
+        ]
 
-    foreach file : systemd_files
-        configure_file(
-            input: 'nvmf-autoconnect/systemd/' + file + '.in',
-            output: file,
-            configuration: substs,
-            install: true,
-            install_dir: systemddir,
-        )
-    endforeach
+        foreach file : systemd_files
+            configure_file(
+                input: 'nvmf-autoconnect/systemd/' + file + '.in',
+                output: file,
+                configuration: substs,
+                install: true,
+                install_dir: systemddir,
+            )
+        endforeach
+    endif
 
+    # These rules provision keys and tune vendor devices; kept regardless of
+    # which NVMe-oF autoconnect mechanism (if any) is in use.
     udev_files = [
         '65-persistent-net-nbft.rules',
-        '70-nvmf-autoconnect.rules',
         '70-nvmf-keys.rules',
         '71-nvmf-hpe.rules',
         '71-nvmf-netapp.rules',
         '71-nvmf-vastdata.rules',
     ]
+    if want_nvmf_autoconnect
+        udev_files += '70-nvmf-autoconnect.rules'
+    endif
 
     foreach file : udev_files
         configure_file(
@@ -738,20 +745,22 @@ if want_nvme
         )
     endforeach
 
-    nm_dispatcher_files = [
-        '80-nvmf-connect-nbft.sh'
-    ]
+    if want_nvmf_autoconnect
+        nm_dispatcher_files = [
+            '80-nvmf-connect-nbft.sh'
+        ]
 
-    foreach file : nm_dispatcher_files
-        configure_file(
-            input: 'nvmf-autoconnect/nm-dispatcher/' + file + '.in',
-            output: file,
-            configuration: substs,
-            install: true,
-            install_mode: 'rwxr-xr-x',
-            install_dir: nmdispatchdir
-        )
-    endforeach
+        foreach file : nm_dispatcher_files
+            configure_file(
+                input: 'nvmf-autoconnect/nm-dispatcher/' + file + '.in',
+                output: file,
+                configuration: substs,
+                install: true,
+                install_mode: 'rwxr-xr-x',
+                install_dir: nmdispatchdir
+            )
+        endforeach
+    endif
 
     install_data(
         'completions/bash-nvme-completion.sh',
@@ -841,6 +850,7 @@ wanted_dict = {
     'libnvme':          want_libnvme,
     'fabrics':          want_fabrics,
     'nvme-discoverd':   want_discoverd,
+    'nvmf-autoconnect': want_nvmf_autoconnect,
     'python bindings ': want_python,
     'build docs':       want_docs_build,
 }
