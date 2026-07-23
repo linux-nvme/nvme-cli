@@ -1,0 +1,67 @@
+nvme-config-validate(1)
+========================
+
+NAME
+----
+nvme-config-validate - Validate an NVMe-oF INI connection configuration file
+
+SYNOPSIS
+--------
+[verse]
+'nvme' 'config validate'
+			[--config=<file> | -J <file>]
+			[--verbose | -v]
+
+DESCRIPTION
+-----------
+Parses and validates the NVMe-oF INI connection configuration file used by
+'nvme connect-all' and 'nvme discover'. The INI format is documented at
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
+
+By default, the file at @SYSCONFDIR@/nvme/nvme-fabrics.conf is validated.
+Use --config to validate a file at a different path instead, for example
+before installing it as the system configuration.
+
+On success, '<file>: OK' is printed and the command exits with status 0.
+If the file is malformed, '<file>: invalid configuration' is printed
+along with diagnostic details, and the command exits with a non-zero
+status. A missing file is also reported as an error, not treated as an
+empty, valid configuration.
+
+OPTIONS
+-------
+-J <file>::
+--config=<file>::
+	Validate this INI file instead of the default
+	@SYSCONFDIR@/nvme/nvme-fabrics.conf.
+
+-v::
+--verbose::
+	Increase the level of detail in the output.
+
+EXAMPLES
+--------
+* Validate the system's configuration:
++
+------------
+# nvme config validate
+------------
+
+* Validate a configuration file before installing it as the system
+  configuration:
++
+------------
+$ nvme config validate --config /tmp/nvme-fabrics.conf
+------------
+
+SEE ALSO
+--------
+nvme-config-show(1)
+nvme-config-convert(1)
+nvme-connect-all(1)
+nvme-discover(1)
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
+
+NVME
+----
+Part of the nvme-user suite

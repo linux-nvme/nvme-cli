@@ -1,0 +1,80 @@
+nvme-config-show(1)
+====================
+
+NAME
+----
+nvme-config-show - Show the resolved NVMe-oF INI connection configuration
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'config show'
+			[--config=<file> | -J <file>]
+
+DESCRIPTION
+-----------
+Reads the NVMe-oF INI connection configuration file used by
+'nvme connect-all' and 'nvme discover', and prints every configured
+connection entry. The INI format is documented at
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
+
+By default, the file at @SYSCONFDIR@/nvme/nvme-fabrics.conf is read. Use
+--config to show a file at a different path instead.
+
+In the default and 'tabular' output formats, each entry is rendered as the
+equivalent command line that would establish it: 'nvme connect-all' for a
+Discovery Controller entry, 'nvme connect' for an I/O Controller entry,
+preceded by a comment naming the entry's source (which file/section it came
+from). The 'json' output format instead reports each entry's fields
+individually (transport, address, NQN, host identity, and any extra
+connect parameters).
+
+This command never touches the network: addressing is shown exactly as
+configured, with no hostname resolution attempted. A persona with no
+'hostnqn'/'hostid' set is shown without those fields rather than the system
+default it would resolve to at connect time, since showing a concrete value
+here would suggest a fixed identity the configuration doesn't actually pin.
+
+OPTIONS
+-------
+-J <file>::
+--config=<file>::
+	Show this INI file instead of the default
+	@SYSCONFDIR@/nvme/nvme-fabrics.conf.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Show the system's resolved configuration:
++
+------------
+# nvme config show
+------------
++
+------------
+# nvme0: Discovery Controller
+nvme connect-all --transport=tcp --traddr=192.168.1.10 --trsvcid=8009
+
+# nvme1: I/O Controller
+nvme connect --transport=tcp --traddr=192.168.1.10 --trsvcid=4420 \
+	--nqn=nqn.2014-08.org.nvmexpress:uuid:6a4f5e3e-...
+------------
+
+* Show a configuration file at a non-default path, as JSON:
++
+------------
+$ nvme config show --config /tmp/nvme-fabrics.conf -o json
+------------
+
+SEE ALSO
+--------
+nvme-config-validate(1)
+nvme-config-convert(1)
+nvme-connect-all(1)
+nvme-discover(1)
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
+
+NVME
+----
+Part of the nvme-user suite
