@@ -509,7 +509,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 		}
 	}
 
-	return 0;
+	return err;
 }
 
 enum lm_controller_data_queue_feature_id {
