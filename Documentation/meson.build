@@ -281,6 +281,11 @@ adoc_sources_man5 = [
     'nvme-fabrics.conf',
 ]
 
+# Daemon references (man section 8), installed separately from man1/man5.
+adoc_sources_man8 = [
+    'nvme-discoverd',
+]
+
 adoc_includes = [
     'cmd-plugins.txt',
     'cmds-main.txt',
@@ -291,6 +296,7 @@ adoc_includes = [
 if want_docs != 'false'
     mandir = join_paths(prefixdir, get_option('mandir'), 'man1')
     man5dir = join_paths(prefixdir, get_option('mandir'), 'man5')
+    man8dir = join_paths(prefixdir, get_option('mandir'), 'man8')
     htmldir = join_paths(prefixdir, get_option('htmldir'), 'nvme')
 
     asciidoctor = find_program('asciidoc', required: want_docs_build)
@@ -307,6 +313,7 @@ if want_docs != 'false'
                 man_sets = [
                     {'sources': adoc_sources, 'section': '1', 'dir': mandir},
                     {'sources': adoc_sources_man5, 'section': '5', 'dir': man5dir},
+                    {'sources': adoc_sources_man8, 'section': '8', 'dir': man8dir},
                 ]
                 foreach man_set : man_sets
                     section = man_set['section']
@@ -352,7 +359,7 @@ if want_docs != 'false'
 
         # html
         if want_docs == 'all' or want_docs == 'html'
-            foreach adoc : adoc_sources + adoc_sources_man5
+            foreach adoc : adoc_sources + adoc_sources_man5 + adoc_sources_man8
                 input = adoc + '.txt'
                 subst = configure_file(
                     input: adoc + '.txt',
@@ -380,6 +387,7 @@ if want_docs != 'false'
         man_sets = [
             {'sources': adoc_sources, 'section': '1', 'dir': mandir},
             {'sources': adoc_sources_man5, 'section': '5', 'dir': man5dir},
+            {'sources': adoc_sources_man8, 'section': '8', 'dir': man8dir},
         ]
         foreach man_set : man_sets
             section = man_set['section']

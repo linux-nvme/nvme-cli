@@ -38,3 +38,23 @@ executable(
     install: true,
     install_dir: sbindir,
 )
+
+configure_file(
+    input: 'systemd/nvme-discoverd.service.in',
+    output: 'nvme-discoverd.service',
+    configuration: substs,
+    install: true,
+    install_dir: systemddir,
+)
+
+# Unlike nvme-fabrics.conf (re-read on every connect/connect-all/discover,
+# and holding host-specific connections an admin customizes), discoverd.conf
+# is read once at daemon startup and holds only generic daemon knobs, so it
+# installs directly as the live file rather than a .sample a user must copy.
+configure_file(
+    input: 'etc/nvme/discoverd.conf.in',
+    output: 'discoverd.conf',
+    configuration: substs,
+    install: true,
+    install_dir: sysconfdir / 'nvme',
+)

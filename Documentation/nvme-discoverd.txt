@@ -1,0 +1,128 @@
+nvme-discoverd(8)
+=================
+
+NAME
+----
+nvme-discoverd - NVMe-oF discovery and connectivity daemon
+
+SYNOPSIS
+--------
+[verse]
+'nvme-discoverd' [--config=<FILE>] [--nvme-path=<PATH>] [--debug] [--help]
+
+DESCRIPTION
+-----------
+nvme-discoverd is a persistent daemon that connects the host's NVMe-oF
+controllers and keeps them connected. It reads three sources to build its
+set of desired connections: the NBFT ACPI table (boot-time controllers),
+the shared NVMe-oF fabrics configuration (nvme-fabrics.conf(5)), and the
+Discovery Log Pages of any Discovery Controllers it connects to (including
+FC targets found via FC kickstart). It never disconnects a live controller
+in response to a discovery change; the only disconnects it causes are a
+side effect of stopping its own systemd units, at shutdown or on request.
+
+Every connection attempt is delegated to 'nvme connect', which runs inside
+a systemd transient unit instead of writing directly to /dev/nvme-fabrics.
+As a result, a stuck connect attempt never blocks the daemon's event loop.
+Each unit is named after a hash of the controller's transport identity and
+tracked by nvme-discoverd for retry with exponential backoff. A Discovery
+Controller found only through a referral or FC kickstart -- never one
+from NBFT or the fabrics config, which represent explicit intent and
+always retry forever -- gives up after 72 hours of unbroken failure and
+is dropped from tracking.
+
+nvme-discoverd registers ownership of every controller it connects
+(--owner discoverd, or --owner nbft for an NBFT-sourced controller) in the
+NVMe-oF ownership registry, and honors the system-wide exclusion list
+before connecting or reconnecting anything. See nvme-registry-list(1) and
+nvme-exclusion-add(1).
+
+nvme-discoverd is one of two ways this host can autoconnect NVMe-oF
+controllers -- the other is the older udev-rule/systemd-unit mechanism
+built when the 'nvmf-autoconnect' meson option is enabled. Both can be
+built and installed side by side; enabling one over the other on a given
+host is a deliberate administrator choice ('systemctl enable --now
+nvme-discoverd', alongside disabling the legacy units), not something
+either package or daemon decides automatically.
+
+OPTIONS
+-------
+-c <FILE>::
+--config=<FILE>::
+	Path to the daemon's own configuration file. Default:
+	@SYSCONFDIR@/nvme/discoverd.conf; see CONFIGURATION below. A
+	missing file is not an error -- every knob keeps its default.
+
+--nvme-path=<PATH>::
+	Absolute or relative path to the 'nvme' binary that transient
+	connection units exec. Default: @SBINDIR@/nvme. Mainly useful for
+	running nvme-discoverd against a locally built 'nvme' instead of
+	the installed one.
+
+-d::
+--debug::
+	Enable debug-level logging for both nvme-discoverd and the
+	libnvme calls it makes, overriding the configured debug-level.
+
+-h::
+--help::
+	Print usage and exit.
+
+CONFIGURATION
+-------------
+nvme-discoverd.conf holds only the daemon's own knobs, in a single
+'[Global]' section:
+
+	[Global]
+	nbft = true
+	debug-level = info
+	fc-kickstart-interval-minutes = 0
+
+'nbft' (boolean, default true) controls whether NBFT-listed controllers
+are adopted and reconnected. 'debug-level' (err, warn, info, or debug;
+default info) sets the log threshold; '--debug' on the command line
+overrides it. 'fc-kickstart-interval-minutes' (default 0, disabled)
+additionally re-probes the FC fabric on a timer, independent of the
+kickstart nvme-discoverd already issues at startup and on every FC
+controller drop -- useful for detecting FC equipment replacement sooner
+than the next connection event.
+
+The connections nvme-discoverd manages -- which Discovery Controllers and
+subsystems to connect, host identity, per-connection parameters -- come
+entirely from the shared fabrics configuration, not from this file. See
+nvme-fabrics.conf(5).
+
+SIGNALS
+-------
+SIGHUP;;
+	Reload both discoverd.conf and the shared fabrics configuration.
+	Newly desired connections are started; nothing already connected
+	is ever disconnected by a reload. If the fabrics configuration
+	fails to reload (e.g. a syntax error), the previous one is kept
+	and the failure is logged.
+
+SIGTERM, SIGINT;;
+	Shut down gracefully.
+
+FILES
+-----
+@SYSCONFDIR@/nvme/discoverd.conf::
+	The daemon's own configuration; see CONFIGURATION.
+
+@SYSCONFDIR@/nvme/nvme-fabrics.conf, @SYSCONFDIR@/nvme/nvme-fabrics.conf.d/*.conf::
+	The connections nvme-discoverd manages; see nvme-fabrics.conf(5).
+
+@RUNDIR@/nvme/discoverd/::
+	Runtime state linking each connected controller to the systemd
+	transient unit that owns it. Does not survive a reboot.
+
+SEE ALSO
+--------
+nvme-fabrics.conf(5)
+nvme-connect(1)
+nvme-registry-list(1)
+nvme-exclusion-add(1)
+
+NVME
+----
+Part of the nvme-user suite
