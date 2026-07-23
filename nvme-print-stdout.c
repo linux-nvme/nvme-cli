@@ -5859,12 +5859,14 @@ static bool stdout_detailed_ctrl(const char *name, void *arg)
 	{
 		const char *tr = libnvme_ctrl_get_transport(c);
 		__cleanup_free char *reg_owner = libnvme_ctrl_owner(c);
+		const char *slot = libnvme_ctrl_get_phy_slot(c);
 		const char *owner_str;
 
 		if (!libnvme_ctrl_is_transport_fabric(c))
 			owner_str = "kernel";
 		else
 			owner_str = reg_owner ? reg_owner : "-";
+
 		printf("%-16s %-12s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s ",
 		       libnvme_ctrl_get_name(c),
 		       owner_str,
@@ -5874,7 +5876,7 @@ static bool stdout_detailed_ctrl(const char *name, void *arg)
 		       libnvme_ctrl_get_firmware(c),
 		       tr,
 		       libnvme_ctrl_get_traddr(c),
-		       libnvme_ctrl_get_phy_slot(c),
+		       slot ? slot : "",
 		       libnvme_subsystem_get_name(libnvme_ctrl_get_subsystem(c)));
 	}
 
