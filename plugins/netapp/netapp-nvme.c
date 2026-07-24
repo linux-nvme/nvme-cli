@@ -916,7 +916,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
@@ -1016,7 +1016,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
