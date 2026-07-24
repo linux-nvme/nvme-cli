@@ -181,6 +181,8 @@ int nvme_create_global_ctx_hostnqn(struct libnvme_global_ctx **ctx,
 
 int nvme_create_global_ctx(struct libnvme_global_ctx **ctx);
 
+int parse_args(int argc, char *argv[], const char *desc,
+	       struct argconfig_commandline_options *opts);
 int validate_output_format(const char *format, nvme_print_flags_t *flags);
 bool nvme_is_output_format_json(void);
 int __id_ctrl(int argc, char **argv, struct command *acmd,
