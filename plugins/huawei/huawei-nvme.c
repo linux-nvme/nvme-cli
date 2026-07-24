@@ -334,8 +334,6 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 	if (ret)
 		return ret;
 
-	libnvme_set_logging_file(ctx, stdout);
-
 	n = scandir("/dev", &devices, filter_namespace, alphasort);
 	if (n <= 0)
 		return n;

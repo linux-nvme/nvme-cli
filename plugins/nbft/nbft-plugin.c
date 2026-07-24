@@ -675,18 +675,13 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	if (ret)
 		return ret;
 
-	log_level = map_log_level(nvme_args.verbose, false /* quiet */);
-
 	ret = validate_output_format(nvme_args.output_format, &flags);
 	if (ret < 0)
 		return ret;
 
 	ret = nvme_create_global_ctx(&ctx);
-	if (ret) {
-		nvme_show_error("Failed to create global context");
+	if (ret)
 		return ret;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (!(show_subsys || show_hfi || show_discovery))
 		show_subsys = show_hfi = show_discovery = true;
