@@ -32,6 +32,7 @@ executable(
         '-DNVME_PATH="@0@"'.format(nvme_bin_path),
     ],
     dependencies: [
+        ccan_dep,
         libnvme_dep,
         libsystemd_dep,
     ],

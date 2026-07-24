@@ -14,6 +14,8 @@
 #include <string.h>
 #include <systemd/sd-bus.h>
 
+#include <ccan/list/list.h>
+
 #include "log.h"
 #include "state.h"
 #include "units.h"
@@ -56,7 +58,7 @@ static int unit_devid_path(char *buf, size_t len, const char *unit_name)
 
 /* Tracked pending systemd job. */
 struct pending_job {
-	struct pending_job *next;
+	struct list_node entry;
 	char *job_path;
 	char *unit_name;
 };
@@ -66,7 +68,7 @@ struct unit_mgr {
 	sd_event *event;
 	unit_job_cback cback;
 	void *user_data;
-	struct pending_job *jobs;
+	struct list_head jobs;
 	sd_bus_slot *job_removed_slot;
 	/* nvme binary the transient units exec; borrowed (lives for argv's life). */
 	const char *nvme_path;
@@ -260,8 +262,7 @@ static int track_job(struct unit_mgr *mgr, const char *job_path,
 		free(j);
 		return -ENOMEM;
 	}
-	j->next = mgr->jobs;
-	mgr->jobs = j;
+	list_add(&mgr->jobs, &j->entry);
 	return 0;
 }
 
@@ -269,7 +270,7 @@ static int job_removed_handler(sd_bus_message *m, void *user_data,
 				sd_bus_error *ret_err __attribute__((unused)))
 {
 	struct unit_mgr *mgr = user_data;
-	struct pending_job **ep, *e;
+	struct pending_job *e;
 	uint32_t id;
 	const char *job_path, *unit_name, *result;
 	int r;
@@ -278,12 +279,11 @@ static int job_removed_handler(sd_bus_message *m, void *user_data,
 	if (r < 0)
 		return 0;
 
-	for (ep = &mgr->jobs; *ep; ep = &(*ep)->next) {
-		e = *ep;
+	list_for_each(&mgr->jobs, e, entry) {
 		if (!streq(e->job_path, job_path))
 			continue;
 
-		*ep = e->next;
+		list_del_init(&e->entry);
 		if (mgr->cback)
 			mgr->cback(e->unit_name,
 				   streq(result, "done"),
@@ -312,6 +312,7 @@ struct unit_mgr *unit_mgr_new(sd_bus *bus, sd_event *event,
 	mgr->cback = cback;
 	mgr->user_data = user_data;
 	mgr->nvme_path = (nvme_path && *nvme_path) ? nvme_path : NVME_PATH;
+	list_head_init(&mgr->jobs);
 
 	/*
 	 * Subscribe to JobRemoved before any units are created.  The bus must
@@ -338,8 +339,7 @@ void unit_mgr_free(struct unit_mgr *mgr)
 	if (!mgr)
 		return;
 	sd_bus_slot_unref(mgr->job_removed_slot);
-	for (e = mgr->jobs; e; e = next) {
-		next = e->next;
+	list_for_each_safe(&mgr->jobs, e, next, entry) {
 		free(e->job_path);
 		free(e->unit_name);
 		free(e);

@@ -20,6 +20,8 @@
 #include <systemd/sd-device.h>
 #include <systemd/sd-event.h>
 
+#include <ccan/list/list.h>
+
 #include <nvme/config.h>
 #include <nvme/exclusion.h>
 #include <nvme/lib.h>
@@ -47,7 +49,7 @@
 #define DC_GIVEUP_USEC          (UINT64_C(72) * 3600 * UINT64_C(1000000))
 
 struct active_ctrl {
-	struct active_ctrl *next;
+	struct list_node entry;
 	char *unit_name;    // "nvme-discoverd-<12hex>.service"
 	char *devname;      // "nvmeX"; NULL until confirmed in sysfs
 	struct libnvmf_tid *tid;
@@ -57,14 +59,14 @@ struct active_ctrl {
 	sd_event_source *retry_timer; // NULL when no retry pending
 };
 
-static struct active_ctrl *g_ctrls;
+static LIST_HEAD(g_ctrls);
 static struct discoverd_ctx ctx;
 
 static struct active_ctrl *ctrl_find_by_unit(const char *unit_name)
 {
 	struct active_ctrl *e;
 
-	for (e = g_ctrls; e; e = e->next) {
+	list_for_each(&g_ctrls, e, entry) {
 		if (streq(e->unit_name, unit_name))
 			return e;
 	}
@@ -75,7 +77,7 @@ static struct active_ctrl *ctrl_find_by_devname(const char *devname)
 {
 	struct active_ctrl *e;
 
-	for (e = g_ctrls; e; e = e->next) {
+	list_for_each(&g_ctrls, e, entry) {
 		if (streq0(e->devname, devname))
 			return e;
 	}
@@ -113,22 +115,14 @@ static int ctrl_add(const char *unit_name, const struct libnvmf_tid *t,
 		return -ENOMEM;
 	}
 
-	e->next = g_ctrls;
-	g_ctrls = e;
+	list_add(&g_ctrls, &e->entry);
 	return 0;
 }
 
 static void ctrl_remove(struct active_ctrl *entry)
 {
-	struct active_ctrl **ep;
-
-	for (ep = &g_ctrls; *ep; ep = &(*ep)->next) {
-		if (*ep == entry) {
-			*ep = entry->next;
-			ctrl_free(entry);
-			return;
-		}
-	}
+	list_del_init(&entry->entry);
+	ctrl_free(entry);
 }
 
 static char *find_devname_for_tid(const struct libnvmf_tid *t);

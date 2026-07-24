@@ -11,15 +11,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-/*
- * String equality, for the common case where both s1 and s2 are already
- * known to be non-NULL - reads better than strcmp(...) == 0 at the call
- * site. Like strcmp() itself, passing NULL is undefined; use streq0()
- * below if either side might be NULL.
- */
-#define streq(s1, s2) (strcmp((s1), (s2)) == 0)
-
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#include <ccan/array_size/array_size.h>
+#include <ccan/str/str.h>
 
 /*
  * NULL-safe string equality: two NULLs are equal, one NULL and one

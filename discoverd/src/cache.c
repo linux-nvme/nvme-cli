@@ -17,6 +17,8 @@
 #include <sys/socket.h>
 #endif
 
+#include <ccan/list/list.h>
+
 #include <nvme/lib.h>
 #include <nvme/nbft.h>
 
@@ -32,7 +34,7 @@ struct tid_list {
 
 /* Per-DC DLP cache entry. */
 struct dlp_entry {
-	struct dlp_entry *next;
+	struct list_node entry;
 	struct libnvmf_tid *dc_tid; // key
 	struct tid_list iocs;       // value: IOC TIDs from last DLP fetch
 };
@@ -45,7 +47,7 @@ struct dlp_entry {
  * cache_load_config() stays alive.
  */
 struct cfg_conn_entry {
-	struct cfg_conn_entry *next;
+	struct list_node entry;
 	struct libnvmf_tid *tid;
 	const struct libnvmf_config_conn *conn;
 };
@@ -55,8 +57,8 @@ struct cache {
 	struct tid_list nbft_iocs;
 	struct tid_list cfg_dcs;
 	struct tid_list cfg_iocs;
-	struct dlp_entry *dlp;
-	struct cfg_conn_entry *cfg_conns;
+	struct list_head dlp;
+	struct list_head cfg_conns;
 };
 
 /*
@@ -101,7 +103,13 @@ static void tlist_free_items(struct tid_list *l)
  */
 struct cache *cache_new(void)
 {
-	return calloc(1, sizeof(struct cache));
+	struct cache *c = calloc(1, sizeof(*c));
+
+	if (!c)
+		return NULL;
+	list_head_init(&c->dlp);
+	list_head_init(&c->cfg_conns);
+	return c;
 }
 
 /*
@@ -119,14 +127,12 @@ void cache_free(struct cache *c)
 	tlist_free_items(&c->nbft_iocs);
 	tlist_free_items(&c->cfg_dcs);
 	tlist_free_items(&c->cfg_iocs);
-	for (e = c->dlp; e; e = next) {
-		next = e->next;
+	list_for_each_safe(&c->dlp, e, next, entry) {
 		tid_free(e->dc_tid);
 		tlist_free_items(&e->iocs);
 		free(e);
 	}
-	for (ce = c->cfg_conns; ce; ce = cnext) {
-		cnext = ce->next;
+	list_for_each_safe(&c->cfg_conns, ce, cnext, entry) {
 		tid_free(ce->tid);
 		free(ce);
 	}
@@ -142,13 +148,15 @@ void cache_free(struct cache *c)
 void cache_update_dlp(struct cache *c, const struct libnvmf_tid *dc_tid,
 		      struct libnvmf_tid **ioc_tids)
 {
-	struct dlp_entry *e;
+	struct dlp_entry *e = NULL, *it;
 	size_t i;
 
 	/* Find the existing per-DC entry, if any. */
-	for (e = c->dlp; e; e = e->next) {
-		if (tid_same(e->dc_tid, dc_tid))
+	list_for_each(&c->dlp, it, entry) {
+		if (tid_same(it->dc_tid, dc_tid)) {
+			e = it;
 			break;
+		}
 	}
 
 	if (!e) {
@@ -164,8 +172,7 @@ void cache_update_dlp(struct cache *c, const struct libnvmf_tid *dc_tid,
 			free(e);
 			return;
 		}
-		e->next = c->dlp;
-		c->dlp = e;
+		list_add(&c->dlp, &e->entry);
 	} else {
 		/*
 		 * DLP refresh for a DC we already track: drop the
@@ -194,12 +201,11 @@ void cache_update_dlp(struct cache *c, const struct libnvmf_tid *dc_tid,
  */
 void cache_remove_dlp(struct cache *c, const struct libnvmf_tid *dc_tid)
 {
-	struct dlp_entry **ep, *e;
+	struct dlp_entry *e;
 
-	for (ep = &c->dlp; *ep; ep = &(*ep)->next) {
-		e = *ep;
+	list_for_each(&c->dlp, e, entry) {
 		if (tid_same(e->dc_tid, dc_tid)) {
-			*ep = e->next;
+			list_del_init(&e->entry);
 			tid_free(e->dc_tid);
 			tlist_free_items(&e->iocs);
 			free(e);
@@ -242,7 +248,7 @@ bool cache_is_desired(const struct cache *c, const struct libnvmf_tid *t)
 	    tlist_contains(&c->cfg_iocs, t))
 		return true;
 
-	for (e = c->dlp; e; e = e->next) {
+	list_for_each(&c->dlp, e, entry) {
 		if (tid_same(e->dc_tid, t))
 			return true;
 		if (tlist_contains(&e->iocs, t))
@@ -528,8 +534,7 @@ static void load_config_conn_cback(const struct libnvmf_config_conn *conn,
 	}
 	ce->tid = t;
 	ce->conn = conn;
-	ce->next = c->cfg_conns;
-	c->cfg_conns = ce;
+	list_add(&c->cfg_conns, &ce->entry);
 }
 
 void cache_load_config(struct cache *c,
@@ -539,12 +544,11 @@ void cache_load_config(struct cache *c,
 
 	tlist_free_items(&c->cfg_dcs);
 	tlist_free_items(&c->cfg_iocs);
-	for (ce = c->cfg_conns; ce; ce = next) {
-		next = ce->next;
+	list_for_each_safe(&c->cfg_conns, ce, next, entry) {
 		tid_free(ce->tid);
 		free(ce);
 	}
-	c->cfg_conns = NULL;
+	list_head_init(&c->cfg_conns);
 
 	if (fabrics_cfg)
 		libnvmf_config_conn_for_each(fabrics_cfg,
@@ -559,7 +563,7 @@ const struct libnvmf_config_conn *cache_config_conn_for(
 {
 	struct cfg_conn_entry *ce;
 
-	for (ce = c->cfg_conns; ce; ce = ce->next) {
+	list_for_each(&c->cfg_conns, ce, entry) {
 		if (tid_same(ce->tid, t))
 			return ce->conn;
 	}
