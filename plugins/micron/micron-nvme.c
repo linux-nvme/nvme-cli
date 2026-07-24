@@ -648,6 +648,22 @@ exit_status:
 	return err;
 }
 
+static int micron_get_output_format(struct argconfig_commandline_options *opts,
+	const char *global_format, const char *local_format,
+	nvme_print_flags_t default_format, nvme_print_flags_t *format)
+{
+	if (!format)
+		return -EINVAL;
+
+	if (global_format && argconfig_parse_seen(opts, "output-format"))
+		return validate_output_format(global_format, format);
+	else if (local_format && argconfig_parse_seen(opts, "format"))
+		return validate_output_format(local_format, format);
+
+	*format = default_format;
+	return 0;
+}
+
 /*
  * Plugin Commands
  */
@@ -660,7 +676,7 @@ static int micron_parse_options(struct libnvme_global_ctx **ctx,
 	int err = parse_and_open(ctx, hdl, argc, argv, desc, opts);
 
 	if (err) {
-		nvme_show_err(err, "open");
+		nvme_show_err(err, "open failed");
 		return -1;
 	}
 
@@ -886,11 +902,12 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 {
 
 	struct nvme_smart_log smart_log;
-	unsigned int temperature = 0, i = 0, err = 0;
+	int err = 0;
+	unsigned int temperature = 0, i = 0;
 	unsigned int tempSensors[SensorCount] = { 0 };
 	const char *desc = "Retrieve Micron temperature info for the given device ";
-	const char *fmt = "output format normal|json";
-	nvme_print_flags_t flags;
+	const char *fmt = "Output format: normal|json";
+	nvme_print_flags_t format = NORMAL;
 	struct format {
 		char *fmt;
 	};
@@ -902,7 +919,7 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	struct json_object *logPages;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	NVME_ARGS(opts,
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -911,20 +928,19 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 		return -1;
 	}
 
-	err = validate_output_format(nvme_args.output_format, &flags);
+	err = micron_get_output_format(opts, nvme_args.output_format, cfg.fmt,
+		NORMAL, &format);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
 	}
-
-	if (!strcmp(cfg.fmt, "json") || flags & JSON)
-		is_json = true;
+	is_json = format == JSON;
 
 	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
 	if (!err) {
 		temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]);
 		temperature = temperature ? temperature - 273 : 0;
-		for (i = 0; i < SensorCount && tempSensors[i]; i++) {
+		for (i = 0; i < SensorCount; i++) {
 			tempSensors[i] = le16_to_cpu(smart_log.temp_sensor[i]);
 			tempSensors[i] = tempSensors[i] ? tempSensors[i] - 273 : 0;
 		}
@@ -937,10 +953,12 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 			json_object_add_value_array(root, "Micron temperature information", logPages);
 			sprintf(tempstr, "%u C", temperature);
 			json_object_add_value_string(stats, "Current Composite Temperature", tempstr);
-			for (i = 0; i < SensorCount && tempSensors[i]; i++) {
+			for (i = 0; i < SensorCount; i++) {
 				char sensor_str[256] = { 0 };
 				char datastr[64] = { 0 };
 
+				if (!smart_log.temp_sensor[i])
+					continue;
 				sprintf(sensor_str, "Temperature Sensor #%d", (i + 1));
 				sprintf(datastr, "%u C", tempSensors[i]);
 				json_object_add_value_string(stats, sensor_str, datastr);
@@ -952,8 +970,11 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 		} else {
 			printf("Micron temperature information:\n");
 			printf("%-10s : %u C\n", "Current Composite Temperature", temperature);
-			for (i = 0; i < SensorCount && tempSensors[i]; i++)
+			for (i = 0; i < SensorCount; i++) {
+				if (!smart_log.temp_sensor[i])
+					continue;
 				printf("%-10s%d : %u C\n", "Temperature Sensor #", i + 1, tempSensors[i]);
+			}
 		}
 	}
 	return err;
@@ -1019,14 +1040,13 @@ struct {
 		offsetof(struct pcie_error_counters, receiver_error)},
 	};
 
-
 static int micron_pcie_stats(int argc, char **argv,
 				 struct command *command, struct plugin *plugin)
 {
 	int  i, err = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	nvme_print_flags_t flags;
+	nvme_print_flags_t format = JSON;
 	struct libnvme_passthru_cmd admin_cmd = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	bool is_json = true;
@@ -1035,7 +1055,7 @@ static int micron_pcie_stats(int argc, char **argv,
 		char *fmt;
 	};
 	const char *desc = "Retrieve PCIe event counters";
-	const char *fmt = "output format json|normal";
+	const char *fmt = "Output format: json|normal";
 	struct format cfg = {
 		.fmt = "json",
 	};
@@ -1043,7 +1063,7 @@ static int micron_pcie_stats(int argc, char **argv,
 	__u32 correctable_errors = 0;
 	__u32 uncorrectable_errors = 0;
 
-	NVME_ARGS(opts,
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
@@ -1052,21 +1072,21 @@ static int micron_pcie_stats(int argc, char **argv,
 		return -1;
 	}
 
-	err = validate_output_format(nvme_args.output_format, &flags);
+	err = micron_get_output_format(opts, nvme_args.output_format, cfg.fmt,
+		JSON, &format);
 	if (err < 0) {
 		nvme_show_error("Invalid output format");
 		return err;
 	}
+	is_json = format == JSON;
 
 	/* pull log details based on the model name */
 	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
 		nvme_show_error("Unsupported drive model for vs-pcie-stats command");
+		err = -ENOTSUP;
 		goto out;
 	}
-
-	if (!strcmp(cfg.fmt, "normal") || flags & NORMAL)
-		is_json = false;
 
 	if (eModel == M5407) {
 		admin_cmd.opcode = 0xD6;
@@ -1168,7 +1188,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		if (!err)
 			err = (int)result;
 		if (!err) {
-			nvme_show_verbose_result("Device correctable errors are cleared!");
+			nvme_show_verbose_result("Device correctable errors cleared!");
 			return 0;
 		}
 	} else if (model == M5407) {
@@ -1177,7 +1197,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 		admin_cmd.cdw10 = 0;
 		err = libnvme_exec_admin_passthru(hdl, &admin_cmd);
 		if (!err) {
-			nvme_show_verbose_result("Device correctable error counters are cleared!");
+			nvme_show_verbose_result("Device correctable errors cleared!");
 			return 0;
 		}
 	}
@@ -3616,6 +3636,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	if (err)
 		return err;
 
+	err = -EINVAL;
 	/* if telemetry type is specified, check for data area */
 	if (strlen(cfg.type)) {
 		if (!strcmp(cfg.type, "controller")) {
@@ -3655,6 +3676,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
 		nvme_show_error("Unsupported drive model for vs-internal-log collection");
+		err = -ENOTSUP;
 		goto out;
 	}
 
