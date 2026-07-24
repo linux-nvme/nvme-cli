@@ -11,6 +11,8 @@ adoc_sources = [
     'nvme-cmdset-ind-id-ns',
     'nvme-compare',
     'nvme-config-convert',
+    'nvme-config-show',
+    'nvme-config-validate',
     'nvme-connect',
     'nvme-connect-all',
     'nvme-copy',

@@ -1421,19 +1421,18 @@ struct libnvme_ns *libnvme_ctrl_first_ns(struct libnvme_ctrl *c);
 struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_ns *n);
 
 %extend libnvme_global_ctx {
-	%feature("autodoc", "__init__(self, owner=None, config_file=None)\n"
+	%feature("autodoc", "__init__(self, owner=None)\n"
 		"\n"
 		"Create the root context for the libnvme device tree.\n"
 		"\n"
-		"Scans the NVMe topology and loads configuration on creation.\n"
+		"Scans the NVMe topology on creation.\n"
 		"Supports use as a context manager (``with GlobalCtx() as ctx:``).\n"
 		"\n"
 		"Args:\n"
-		"    owner:       Orchestrator identity (e.g. 'stas', 'nbft').\n"
-		"                 Pass None if this process does not participate\n"
-		"                 in the ownership registry.\n"
-		"    config_file: Path to a JSON config file, or None for defaults.") libnvme_global_ctx;
-	libnvme_global_ctx(const char *owner = NULL, const char *config_file = NULL) {
+		"    owner: Orchestrator identity (e.g. 'stas', 'nbft').\n"
+		"           Pass None if this process does not participate\n"
+		"           in the ownership registry.") libnvme_global_ctx;
+	libnvme_global_ctx(const char *owner = NULL) {
 		struct libnvme_global_ctx *ctx;
 
 		ctx = libnvme_create_global_ctx();
@@ -1445,7 +1444,6 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 			libnvme_set_owner(ctx, owner);
 
 		libnvme_scan_topology(ctx, NULL, NULL);
-		libnvme_read_config(ctx, config_file);
 
 		return ctx;
 	}
@@ -1482,9 +1480,6 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 	%feature("autodoc", "Rescan the NVMe topology and update the device tree.") refresh_topology;
 	void refresh_topology() {
 		libnvme_refresh_topology($self);
-	}
-	void dump_config() {
-		libnvme_dump_config($self, STDERR_FILENO);
 	}
 	%feature("autodoc", "Redirect libnvme's on-disk files (registry, exclusion "
 		"list, ...) under a /tmp sandbox, for testing.\n"

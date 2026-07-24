@@ -318,6 +318,13 @@ static bool argconfig_check_verbose(struct argconfig_commandline_options *s)
 	return false;
 }
 
+static argconfig_parse_hook_fn argconfig_parse_hook;
+
+void argconfig_set_parse_hook(argconfig_parse_hook_fn hook)
+{
+	argconfig_parse_hook = hook;
+}
+
 int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options)
 {
@@ -327,6 +334,9 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 	struct argconfig_commandline_options *s;
 	int c, long_opt_index = 0, opt_index = 0, short_index = 0, options_count = 0;
 	int ret = 0;
+
+	if (argconfig_parse_hook)
+		return argconfig_parse_hook(argc, argv, program_desc, options);
 
 	errno = 0;
 	for (s = options; s->option; s++)

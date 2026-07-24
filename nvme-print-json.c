@@ -34,6 +34,7 @@
 #define array_add_str json_array_add_value_string
 
 #define obj_add_array json_object_add_value_array
+#define obj_add_bool json_object_add_value_bool
 #define obj_add_int json_object_add_value_int
 #define obj_add_obj json_object_add_value_object
 #define obj_add_uint json_object_add_value_uint
@@ -4593,6 +4594,7 @@ static void json_print_detail_list_multipath(libnvme_subsystem_t s,
 		libnvme_namespace_for_each_path(n, p) {
 			libnvme_ctrl_t c;
 			struct json_object *jpath = json_create_object();
+			const char *slot;
 
 			obj_add_str(jpath, "Path", libnvme_path_get_name(p));
 			obj_add_str(jpath, "ANAState", libnvme_path_get_ana_state(p));
@@ -4603,6 +4605,7 @@ static void json_print_detail_list_multipath(libnvme_subsystem_t s,
 			 * controller  attributes.
 			 */
 			c = libnvme_path_get_ctrl(p);
+			slot = libnvme_ctrl_get_phy_slot(c);
 			obj_add_str(jpath, "Controller", libnvme_ctrl_get_name(c));
 			obj_add_str(jpath, "Cntlid", libnvme_ctrl_get_cntlid(c));
 			obj_add_str(jpath, "SerialNumber", libnvme_ctrl_get_serial(c));
@@ -4611,7 +4614,7 @@ static void json_print_detail_list_multipath(libnvme_subsystem_t s,
 			obj_add_str(jpath, "Transport", libnvme_ctrl_get_transport(c));
 			obj_add_str(jpath, "Address", libnvme_ctrl_get_traddr(c));
 			obj_add_ctrl_address_details(jpath, "AddressDetails", c);
-			obj_add_str(jpath, "Slot", libnvme_ctrl_get_phy_slot(c));
+			obj_add_str(jpath, "Slot", slot ? slot : "");
 
 			array_add_obj(jpaths, jpath);
 		}
@@ -4631,6 +4634,7 @@ static void json_print_detail_list(libnvme_subsystem_t s, struct json_object *js
 	libnvme_subsystem_for_each_ctrl(s, c) {
 		struct json_object *jctrl = json_create_object();
 		struct json_object *jnss = json_create_array();
+		const char *slot = libnvme_ctrl_get_phy_slot(c);
 
 		obj_add_str(jctrl, "Controller", libnvme_ctrl_get_name(c));
 		obj_add_str(jctrl, "Cntlid", libnvme_ctrl_get_cntlid(c));
@@ -4640,7 +4644,7 @@ static void json_print_detail_list(libnvme_subsystem_t s, struct json_object *js
 		obj_add_str(jctrl, "Transport", libnvme_ctrl_get_transport(c));
 		obj_add_str(jctrl, "Address", libnvme_ctrl_get_traddr(c));
 		obj_add_ctrl_address_details(jctrl, "AddressDetails", c);
-		obj_add_str(jctrl, "Slot", libnvme_ctrl_get_phy_slot(c));
+		obj_add_str(jctrl, "Slot", slot ? slot : "");
 
 		libnvme_ctrl_for_each_ns(c, n) {
 			struct json_object *jns = json_create_object();
@@ -5186,6 +5190,55 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 }
 #else
 static void json_discovery_log(struct nvmf_discovery_log *log, int numrec) {}
+#endif
+
+#ifdef CONFIG_FABRICS
+static void json_add_param(const char *key, const char *value, void *user_data)
+{
+	obj_add_str(user_data, key, value);
+}
+
+/*
+ * libnvmf_config_conn_for_each() callback for "nvme config show -o json".
+ * Reports fields as configured, not canonicalized through a TID (which has
+ * no per-field accessors). hostnqn/hostid are null when a persona falls
+ * back to the system default, not the value it would resolve to.
+ */
+static void json_add_conn(const struct libnvmf_config_conn *c, void *user_data)
+{
+	struct json_object *entries = user_data;
+	struct json_object *entry = json_create_object();
+	struct json_object *params_obj = json_create_object();
+	const struct libnvmf_params *params = libnvmf_config_conn_get_params(c);
+
+	obj_add_str(entry, "source", libnvmf_config_conn_get_source(c));
+	obj_add_bool(entry, "is_dc", libnvmf_config_conn_is_dc(c));
+	obj_add_str(entry, "transport", libnvmf_config_conn_get_transport(c));
+	obj_add_str(entry, "traddr", libnvmf_config_conn_get_traddr(c));
+	obj_add_str(entry, "trsvcid", libnvmf_config_conn_get_trsvcid(c));
+	obj_add_str(entry, "nqn", libnvmf_config_conn_get_subsysnqn(c));
+	obj_add_str(entry, "host-traddr",
+		    libnvmf_config_conn_get_host_traddr(c));
+	obj_add_str(entry, "host-iface", libnvmf_config_conn_get_host_iface(c));
+	obj_add_str(entry, "hostnqn", libnvmf_config_conn_get_hostnqn(c));
+	obj_add_str(entry, "hostid", libnvmf_config_conn_get_hostid(c));
+
+	libnvmf_params_for_each(params, json_add_param, params_obj);
+	obj_add_obj(entry, "params", params_obj);
+
+	array_add_obj(entries, entry);
+}
+
+static void json_config_conn_list(struct libnvmf_config *config)
+{
+	struct json_object *r = json_r;
+	struct json_object *entries = json_create_array();
+
+	obj_add_array(r, "connections", entries);
+	libnvmf_config_conn_for_each(config, json_add_conn, entries);
+}
+#else
+static void json_config_conn_list(struct libnvmf_config *config) {}
 #endif
 
 static void json_connect_msg(libnvme_ctrl_t c)
@@ -5805,6 +5858,9 @@ static struct print_ops json_print_ops = {
 	.topology_ctrl			= json_simple_topology,
 	.topology_namespace		= json_simple_topology,
 	.topology_multipath		= json_simple_topology,
+
+	/* config show */
+	.config_conn_list		= json_config_conn_list,
 
 	/* status and error messages */
 	.connect_msg			= json_connect_msg,

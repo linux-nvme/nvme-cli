@@ -115,16 +115,9 @@ else
     sources += 'nvme/no-uring.c'
 endif
 
-if json_c_dep.found() and want_fabrics
-    sources += 'nvme/json.c'
-else
-    sources += 'nvme/no-json.c'
-endif
-
 deps = [
     ccan_dep,
     config_dep,
-    json_c_dep,
     keyutils_dep,
     libdbus_dep,
     liburing_dep,
@@ -197,9 +190,6 @@ pkg.generate(libnvme,
 )
 
 libnvme_dep = declare_dependency(
-    dependencies: [
-        json_c_dep.partial_dependency(compile_args: true, includes: true),
-    ],
     link_with: libnvme,
     include_directories: '.',
 )

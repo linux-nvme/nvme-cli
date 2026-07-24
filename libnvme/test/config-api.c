@@ -564,6 +564,91 @@ out:
 	return pass;
 }
 
+/*
+ * The public API leaves hostnqn/hostid resolution to the caller (see
+ * libnvmf_config_conn_get_hostnqn()'s kdoc) -- this drives that fallback the
+ * same way a caller (e.g. nvme-cli's build_conn_tid()) does: a connection's
+ * own value wins, else a caller-supplied default. mv leaves its identity to
+ * the system default (see test_read()); pv sets its own. Exercises the real
+ * public-API precedence, not a copy of any one caller's logic.
+ */
+static bool test_hostnqn_precedence(struct libnvme_global_ctx *ctx,
+				    const struct fixture *fx)
+{
+	static const char default_hostnqn[] =
+	"nqn.2014-08.org.nvmexpress:uuid:00000000-0000-0000-0000-000000000000";
+	static const char default_hostid[] =
+	"00000000-0000-0000-0000-000000000000";
+	const struct libnvmf_config_conn *mv, *pv;
+	struct conn_list conns = { 0 };
+	struct libnvmf_config *config;
+	struct libnvmf_tid *mv_tid, *pv_tid;
+	const char *hostnqn, *hostid;
+	bool pass = true;
+
+	printf("test_hostnqn_precedence:\n");
+
+	assert(!libnvmf_config_read(ctx, fx->main_path, &config));
+	libnvmf_config_conn_for_each(config, collect, &conns);
+	assert(conns.n == 3);
+	mv = conns.conn[1];
+	pv = conns.conn[2];
+
+	hostnqn = libnvmf_config_conn_get_hostnqn(mv);
+	assert(!hostnqn);
+	hostnqn = default_hostnqn;
+	hostid = libnvmf_config_conn_get_hostid(mv);
+	assert(!hostid);
+	hostid = default_hostid;
+	mv_tid = libnvmf_tid_from_fields(
+			libnvmf_config_conn_get_transport(mv),
+			libnvmf_config_conn_get_traddr(mv),
+			libnvmf_config_conn_get_trsvcid(mv),
+			libnvmf_config_conn_get_subsysnqn(mv),
+			libnvmf_config_conn_get_host_traddr(mv),
+			libnvmf_config_conn_get_host_iface(mv),
+			hostnqn, hostid);
+	assert(mv_tid);
+
+	if (strcmp(libnvmf_tid_get_hostnqn(mv_tid), default_hostnqn) ||
+	    strcmp(libnvmf_tid_get_hostid(mv_tid), default_hostid)) {
+		printf(" - unset identity inherits caller default [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - unset identity inherits caller default [PASS]\n");
+	}
+
+	hostnqn = libnvmf_config_conn_get_hostnqn(pv);
+	assert(hostnqn);
+	hostid = libnvmf_config_conn_get_hostid(pv);
+	assert(hostid);
+	pv_tid = libnvmf_tid_from_fields(
+			libnvmf_config_conn_get_transport(pv),
+			libnvmf_config_conn_get_traddr(pv),
+			libnvmf_config_conn_get_trsvcid(pv),
+			libnvmf_config_conn_get_subsysnqn(pv),
+			libnvmf_config_conn_get_host_traddr(pv),
+			libnvmf_config_conn_get_host_iface(pv),
+			hostnqn, hostid);
+	assert(pv_tid);
+
+	if (strcmp(libnvmf_tid_get_hostnqn(pv_tid),
+		   "nqn.2014-08.org.nvmexpress:prod-host") ||
+	    strcmp(libnvmf_tid_get_hostid(pv_tid),
+		   "46ba5037-7ce5-41fa-9452-48477bf00080")) {
+		printf(" - own identity overrides caller default [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - own identity overrides caller default [PASS]\n");
+	}
+
+	libnvmf_tid_free(mv_tid);
+	libnvmf_tid_free(pv_tid);
+	libnvmf_config_free(config);
+
+	return pass;
+}
+
 static bool test_set_connection_from_tid(struct libnvme_global_ctx *ctx)
 {
 	struct libnvmf_context *fctx;
@@ -701,6 +786,7 @@ int main(void)
 	pass &= test_resolve_discovered(ctx, &fx);
 	pass &= test_validate(ctx, &fx);
 	pass &= test_emit(ctx, &fx);
+	pass &= test_hostnqn_precedence(ctx, &fx);
 	pass &= test_apply_params(ctx);
 	pass &= test_set_connection_from_tid(ctx);
 	pass &= test_edge_cases(ctx, &fx);

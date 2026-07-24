@@ -621,11 +621,35 @@ static bool test_tid_sanitize(void)
 	libnvmf_tid_free(t);
 	pass &= p;
 
-	/* Non-IP transports are untouched: no canonicalize, no rejection. */
+	/* A well-formed FC WWN pair passes through unchanged. */
 	t = libnvmf_tid_from_fields("fc", "nn-0x1:pn-0x2", NULL, "nqn.t",
 				    NULL, NULL, NULL, NULL);
 	p = t && streq(libnvmf_tid_get_traddr(t), "nn-0x1:pn-0x2");
 	CHECK(p, "fc traddr untouched");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	/* A malformed FC traddr is rejected, same as a bad tcp/rdma one. */
+	t = libnvmf_tid_from_fields("fc", "21:00:00:e0:8b:05:05:01", NULL,
+				    "nqn.t", NULL, NULL, NULL, NULL);
+	p = (t == NULL);
+	CHECK(p, "malformed fc traddr rejected");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	/* A malformed FC host_traddr is rejected too. */
+	t = libnvmf_tid_from_fields("fc", "nn-0x1:pn-0x2", NULL, "nqn.t",
+				    "not-a-wwn", NULL, NULL, NULL);
+	p = (t == NULL);
+	CHECK(p, "malformed fc host_traddr rejected");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	/* loop has no addressing shape at all: truly untouched. */
+	t = libnvmf_tid_from_fields("loop", "anything goes", NULL, "nqn.t",
+				    NULL, NULL, NULL, NULL);
+	p = t && streq(libnvmf_tid_get_traddr(t), "anything goes");
+	CHECK(p, "loop traddr untouched");
 	pass &= p;
 	libnvmf_tid_free(t);
 

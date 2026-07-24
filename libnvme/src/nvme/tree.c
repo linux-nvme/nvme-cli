@@ -169,39 +169,6 @@ __libnvme_public int libnvme_scan_topology(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public int libnvme_read_config(struct libnvme_global_ctx *ctx,
-		const char *config_file)
-{
-	int err;
-
-	if (!ctx || !config_file)
-		return -ENODEV;
-
-	ctx->config_file = strdup(config_file);
-	if (!ctx->config_file)
-		return -ENOMEM;
-
-	err = json_read_config(ctx, config_file);
-	/*
-	 * The json configuration file is optional,
-	 * so ignore errors when opening the file.
-	 */
-	if (err < 0 && err != -EPROTO)
-		return 0;
-
-	return err;
-}
-
-__libnvme_public int libnvme_dump_config(struct libnvme_global_ctx *ctx, int fd)
-{
-	return json_update_config(ctx, fd);
-}
-
-__libnvme_public int libnvme_dump_tree(struct libnvme_global_ctx *ctx)
-{
-	return json_dump_tree(ctx);
-}
-
 __libnvme_public void libnvme_skip_namespaces(struct libnvme_global_ctx *ctx)
 {
 	ctx->create_only = true;
@@ -397,20 +364,21 @@ __libnvme_public void libnvme_free_subsystem(libnvme_subsystem_t s)
 	__nvme_free_subsystem(s);
 }
 
-struct libnvme_subsystem *nvme_alloc_subsystem(struct libnvme_host *h,
-		const char *name, const char *subsysnqn)
+int libnvme_create_subsystem(struct libnvme_host *h,
+		const char *name, const char *subsysnqn,
+		struct libnvme_subsystem **ps)
 {
 	struct libnvme_subsystem *s;
 
 	s = calloc(1, sizeof(*s));
 	if (!s)
-		return NULL;
+		return -ENOMEM;
 
 	s->h = h;
 	s->subsysnqn = xstrdup(subsysnqn);
 	if (!s->subsysnqn) {
 		free(s);
-		return NULL;
+		return -ENOMEM;
 	}
 
 	if (name)
@@ -419,7 +387,10 @@ struct libnvme_subsystem *nvme_alloc_subsystem(struct libnvme_host *h,
 	list_head_init(&s->namespaces);
 	list_node_init(&s->entry);
 	list_add_tail(&h->subsystems, &s->entry);
-	return s;
+
+	*ps = s;
+
+	return 0;
 }
 
 struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
@@ -436,7 +407,8 @@ struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 			continue;
 		return s;
 	}
-	return nvme_alloc_subsystem(h, name, subsysnqn);
+
+	return NULL;
 }
 
 __libnvme_public int libnvme_get_subsystem(struct libnvme_global_ctx *ctx,
@@ -444,11 +416,17 @@ __libnvme_public int libnvme_get_subsystem(struct libnvme_global_ctx *ctx,
 		const char *subsysnqn, struct libnvme_subsystem **subsys)
 {
 	struct libnvme_subsystem *s;
+	int err;
 
 	s = libnvme_lookup_subsystem(h, name, subsysnqn);
-	if (!s)
-		return -ENOMEM;
+	if (s)
+		goto found;
 
+	err = libnvme_create_subsystem(h, name, subsysnqn, &s);
+	if (err)
+		return err;
+
+found:
 	*subsys = s;
 
 	return 0;
@@ -485,21 +463,34 @@ __libnvme_public void libnvme_free_host(struct libnvme_host *h)
 	__libnvme_free_host(h);
 }
 
-static int libnvme_create_host(struct libnvme_global_ctx *ctx,
+int libnvme_create_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid,
 		struct libnvme_host **host)
 {
 	struct libnvme_host *h;
+	char *hnqn, *hid;
+
+	if (!hostnqn)
+		return -EINVAL;
+
+	hnqn = strdup(hostnqn);
+	if (hostid)
+		hid = strdup(hostid);
+	else
+		hid = libnvme_hostid_from_hostnqn(hostnqn);
+
+	if (!hid) {
+		free(hnqn);
+		return -EINVAL;
+	}
 
 	h = calloc(1, sizeof(*h));
 	if (!h)
 		return -ENOMEM;
 
-	h->hostnqn = strdup(hostnqn);
-	if (hostid)
-		h->hostid = strdup(hostid);
-	else
-		h->hostid = libnvme_hostid_from_hostnqn(hostnqn);
+	h->hostnqn = hnqn;
+	h->hostid = hid;
+
 	list_head_init(&h->subsystems);
 	list_node_init(&h->entry);
 	h->ctx = ctx;
@@ -528,10 +519,7 @@ struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 		return h;
 	}
 
-	if (libnvme_create_host(ctx, hostnqn, hostid, &h))
-		return NULL;
-
-	return h;
+	return NULL;
 }
 
 __libnvme_public int libnvme_get_host(
@@ -539,6 +527,7 @@ __libnvme_public int libnvme_get_host(
 		const char *hostid, libnvme_host_t *host)
 {
 	struct libnvme_host *h;
+	int err;
 
 	/*
 	 * No sysfs identity (e.g. PCIe) and no ctx default: use a fixed
@@ -551,11 +540,18 @@ __libnvme_public int libnvme_get_host(
 		hostid = NVME_DEFAULT_HOSTID;
 
 	h = libnvme_lookup_host(ctx, hostnqn, hostid);
-	if (!h)
-		return -ENOMEM;
+	if (h)
+		goto found;
 
-	libnvme_host_set_hostsymname(h, NULL);
+	err = libnvme_create_host(ctx, hostnqn, hostid, &h);
+	if (err) {
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			"Failed to create host '%s'\n",
+			hostnqn ? hostnqn : "<unset>");
+		return err;
+	}
 
+found:
 	*host = h;
 	return 0;
 }
@@ -636,9 +632,9 @@ static int libnvme_scan_subsystem(struct libnvme_global_ctx *ctx,
 		ret = libnvme_get_host(ctx, ctx->hostnqn, ctx->hostid, &h);
 		if (ret)
 			return ret;
-		s = nvme_alloc_subsystem(h, name, subsysnqn);
-		if (!s)
-			return -ENOMEM;
+		ret = libnvme_create_subsystem(h, name, subsysnqn, &s);
+		if (ret)
+			return ret;
 		if (nvme_subsystem_scan_namespaces(ctx, s))
 			return -EINVAL;
 	} else if (strcmp(s->subsysnqn, subsysnqn)) {
@@ -1448,10 +1444,7 @@ libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
 			     const struct libnvme_ctrl_params *in,
 			     libnvme_ctrl_t p)
 {
-	struct libnvme_global_ctx *ctx;
 	struct libnvme_ctrl_params search;
-	struct libnvme_ctrl *c;
-	int ret;
 
 	if (!s || !in->transport)
 		return NULL;
@@ -1463,21 +1456,42 @@ libnvme_ctrl_t libnvme_lookup_ctrl(libnvme_subsystem_t s,
 	search = *in;
 	libnvme_fabrics_config_copy(&search.cfg, &in->cfg);
 	search.subsysnqn = NULL;
-	c = libnvme_ctrl_find(s, &search, p);
-	if (c)
-		return c;
+
+	return libnvme_ctrl_find(s, &search, p);
+}
+
+int libnvme_subsystem_create_ctrl(libnvme_subsystem_t s,
+		const struct libnvme_ctrl_params *in,
+		libnvme_ctrl_t *pc)
+{
+	struct libnvme_global_ctx *ctx;
+	struct libnvme_ctrl_params params;
+	struct libnvme_ctrl *c;
+	int ret;
+
+	if (!s)
+		return -EINVAL;
+
+	if (in->subsysnqn && strcmp(in->subsysnqn, s->subsysnqn))
+		return -EINVAL;
 
 	ctx = s->h ? s->h->ctx : NULL;
-	search.subsysnqn = s->subsysnqn;
-	libnvmf_default_config(&search.cfg);
-	ret = libnvme_create_ctrl(ctx, &search, &c);
+
+	params = *in;
+	libnvme_fabrics_config_copy(&params.cfg, &in->cfg);
+	params.subsysnqn = s->subsysnqn;
+	libnvmf_default_config(&params.cfg);
+
+	ret = libnvme_create_ctrl(ctx, &params, &c);
 	if (ret)
-		return NULL;
+		return ret;
 
 	c->s = s;
 	list_add_tail(&s->ctrls, &c->entry);
 
-	return c;
+	*pc = c;
+
+	return 0;
 }
 
 int libnvme_ctrl_scan_paths(struct libnvme_global_ctx *ctx,
@@ -1557,15 +1571,16 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 	if (ret)
 		return ret;
 
+	struct libnvme_ctrl_params params = {
+		.transport = transport,
+		.traddr = traddr,
+		.host_traddr = host_traddr,
+		.host_iface = host_iface,
+		.trsvcid = trsvcid,
+	};
+
 	p = NULL;
 	do {
-		struct libnvme_ctrl_params params = {
-			.transport = transport,
-			.traddr = traddr,
-			.host_traddr = host_traddr,
-			.host_iface = host_iface,
-			.trsvcid = trsvcid,
-		};
 		c = libnvme_lookup_ctrl(s, &params, p);
 		if (c) {
 			if (!c->name)
@@ -1580,12 +1595,20 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 			p = c;
 		}
 	} while (c);
+
 	if (!c)
 		c = p;
-	if (!c && !p) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to lookup ctrl\n");
-		return -ENODEV;
+
+	if (!c) {
+		ret = libnvme_subsystem_create_ctrl(s, &params, &c);
+		if (ret) {
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
+				"failed to created ctrl: %s\n",
+				libnvme_strerror(-ret));
+			return ret;
+		}
 	}
+
 	FREE_CTRL_ATTR(c->address);
 	c->address = xstrdup(addr);
 	if (s->subsystype && !strcmp(s->subsystype, "discovery"))

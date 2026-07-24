@@ -40,9 +40,11 @@ int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
  * nothing converted. No-op if @config_file isn't a legacy ".json" or
  * the destination already exists.
  *
- * The default path (@config_file == PATH_NVMF_INI) converts config.json
- * and discovery.conf together; any other (an explicit "--config
- * x.json") converts only that file, leaving discovery.conf alone.
+ * The default path (@config_file == PATH_NVMF_INI, or an explicit
+ * "--config" pointing at the legacy default PATH_NVMF_CONFIG) converts
+ * config.json and discovery.conf together; any other explicit
+ * "--config x.json" converts only that file, leaving discovery.conf
+ * alone.
  *
  * Prints a notice to stderr on success; stdout stays silent.
  */

@@ -309,13 +309,9 @@ endif
 
 if host_system != 'windows'
     subdir('ioctl')
+    subdir('sysfs')
     if want_fabrics
         subdir('nbft')
-    endif
-
-    if json_c_dep.found()
-        subdir('sysfs')
-        subdir('config')
     endif
 
     if openssl_dep.found()

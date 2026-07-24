@@ -180,6 +180,12 @@ int argconfig_parse(int argc, char *argv[], const char *program_desc,
 		    struct argconfig_commandline_options *options);
 int argconfig_parse_global(int argc, char *argv[],
 			   struct argconfig_commandline_options *options);
+
+typedef int (*argconfig_parse_hook_fn)(int argc, char *argv[],
+				       const char *program_desc,
+				       struct argconfig_commandline_options *options);
+void argconfig_set_parse_hook(argconfig_parse_hook_fn hook);
+
 int argconfig_parse_comma_sep_array(char *string, int *ret, unsigned int max_length);
 int argconfig_parse_comma_sep_array_short(char *string, unsigned short *ret,
 					  unsigned int max_length);

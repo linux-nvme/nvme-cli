@@ -431,7 +431,6 @@ struct libnvme_fabric_options { // !generate-accessors
 };
 
 struct libnvme_global_ctx { // !generate-accessors:read=none,write=none !generate-python:alias=GlobalCtx
-	char *config_file;
 	char *owner; /* orchestrator identity; NULL = unowned */
 	struct list_head endpoints; /* MI endpoints */
 	struct list_head hosts;
@@ -454,12 +453,6 @@ struct libnvme_global_ctx { // !generate-accessors:read=none,write=none !generat
 	char *hostid;		// !access:read=none,write=generated
 };
 int libnvme_set_attr(const char *dir, const char *attr, const char *value);
-
-int json_read_config(struct libnvme_global_ctx *ctx, const char *config_file);
-
-int json_update_config(struct libnvme_global_ctx *ctx, int fd);
-
-int json_dump_tree(struct libnvme_global_ctx *ctx);
 
 void *__libnvme_submit_entry(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd);
@@ -490,6 +483,9 @@ int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvme_ctrl **cp);
 void nvme_deconfigure_ctrl(struct libnvme_ctrl *c);
 
+int libnvme_create_host(struct libnvme_global_ctx *ctx,
+		const char *hostnqn, const char *hostid,
+		struct libnvme_host **host);
 struct libnvme_host *libnvme_lookup_host(struct libnvme_global_ctx *ctx,
 		const char *hostnqn, const char *hostid);
 struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
@@ -497,6 +493,12 @@ struct libnvme_subsystem *libnvme_lookup_subsystem(struct libnvme_host *h,
 struct libnvme_ctrl *libnvme_lookup_ctrl(struct libnvme_subsystem *s,
 		const struct libnvme_ctrl_params *params,
 		struct libnvme_ctrl *p);
+int libnvme_create_subsystem(struct libnvme_host *h,
+		const char *name, const char *subsysnqn,
+		struct libnvme_subsystem **s);
+int libnvme_subsystem_create_ctrl(libnvme_subsystem_t s,
+		const struct libnvme_ctrl_params *in,
+		libnvme_ctrl_t *p);
 bool traddr_is_hostname(struct libnvme_global_ctx *ctx,
 		const char *transport, const char *traddr);
 void libnvmf_default_config(struct libnvme_fabrics_config *cfg);
