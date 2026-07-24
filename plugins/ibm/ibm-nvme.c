@@ -214,6 +214,7 @@ static void show_ibm_smart_log(struct nvme_ibm_additional_smart_log *smart, cons
 				le32_to_cpu(smart->device_pcie_received_errors.split_raw2.upper));
 			printf("PCIe Recd Transitions to Recoveries : %"PRIu32"\n",
 				le32_to_cpu(smart->device_pcie_received_errors.split_raw2.lower));
+			break;
 		default:
 			break;
 		}
