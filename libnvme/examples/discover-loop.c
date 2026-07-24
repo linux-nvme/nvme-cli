@@ -67,8 +67,8 @@ int main()
 		return 1;
 	libnvme_set_logging_file(ctx, stdout);
 
-	libnvme_global_ctx_set_hostnqn(ctx, DEFAULT_HOSTNQN);
-	libnvme_global_ctx_set_hostid(ctx, DEFAULT_HOSTID);
+	libnvme_set_hostnqn(ctx, DEFAULT_HOSTNQN);
+	libnvme_set_hostid(ctx, DEFAULT_HOSTID);
 
 	ret = libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx);
 	if (ret)

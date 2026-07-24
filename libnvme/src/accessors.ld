@@ -125,8 +125,6 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_fabric_options_set_traddr;
 		libnvme_fabric_options_set_transport;
 		libnvme_fabric_options_set_trsvcid;
-		libnvme_global_ctx_set_hostid;
-		libnvme_global_ctx_set_hostnqn;
 		libnvme_host_get_dhchap_host_key;
 		libnvme_host_get_hostid;
 		libnvme_host_get_hostnqn;
@@ -158,6 +156,8 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_path_set_grpid;
 		libnvme_path_set_name;
 		libnvme_path_set_sysfs_dir;
+		libnvme_set_hostid;
+		libnvme_set_hostnqn;
 		libnvme_subsystem_get_firmware;
 		libnvme_subsystem_get_model;
 		libnvme_subsystem_get_name;

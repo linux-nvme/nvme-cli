@@ -114,6 +114,18 @@ Only structs carrying this annotation are processed. All other structs in the he
 
 Individual members can always override the struct-level default using a per-member annotation (see below).
 
+**Naming override — `prefix=NAME`.** By default, generated function names are `<struct_name>_set_<member>`/`<struct_name>_get_<member>`. A `prefix=NAME` key in the spec overrides just that naming segment, without changing the C struct tag used in signatures and doc comments:
+
+```c
+struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=libnvme
+    char *hostnqn;    // !access:read=none,write=generated
+    /* generates libnvme_set_hostnqn(struct libnvme_global_ctx *p, ...),
+       not the mechanical libnvme_global_ctx_set_hostnqn() */
+};
+```
+
+Use this when a struct already has hand-written accessors under a shorter name (e.g. `libnvme_set_owner()`) and newly generated accessors need to match that existing naming, rather than introducing a second scheme on the same struct.
+
 ### Member-level override — `access`
 
 Place the annotation on a member's declaration line to override the struct-level default for this field:
@@ -342,6 +354,7 @@ This annotation has no effect on accessor generation. It is independent of `!acc
 | `// !generate-accessors`                               | struct brace | Include struct; defaults: `read=generated, write=generated`                             |
 | `// !generate-accessors:read=M,write=M`                | struct brace | Include struct; set struct-level default for each axis                                  |
 | `// !generate-accessors:read=M`                        | struct brace | Partial metadata; other axis inherits the built-in default (`generated`)                |
+| `// !generate-accessors:...,prefix=NAME`               | struct brace | Override the naming segment in generated function names; struct tag in signatures/doc comments is unaffected |
 | `// !nested-accessors`                                 | struct brace | Mark struct as available for nested expansion into a parent via `// !access:nested`; defaults: `read=generated, write=generated` |
 | `// !nested-accessors:read=M,write=M`                  | struct brace | Same; set struct-level defaults for expanded members                                    |
 | `// !generate-lifecycle`                               | struct brace | Generate constructor + destructor (no metadata)                                         |

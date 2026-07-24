@@ -430,7 +430,7 @@ struct libnvme_fabric_options { // !generate-accessors
 	bool trsvcid;
 };
 
-struct libnvme_global_ctx { // !generate-accessors:read=none,write=none !generate-python:alias=GlobalCtx
+struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=libnvme !generate-python:alias=GlobalCtx
 	char *owner; /* orchestrator identity; NULL = unowned */
 	struct list_head endpoints; /* MI endpoints */
 	struct list_head hosts;

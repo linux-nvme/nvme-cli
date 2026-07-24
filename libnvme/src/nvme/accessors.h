@@ -1326,21 +1326,17 @@ bool libnvme_fabric_options_get_trsvcid(const struct libnvme_fabric_options *p);
  ****************************************************************************/
 
 /**
- * libnvme_global_ctx_set_hostnqn() - Set hostnqn.
+ * libnvme_set_hostnqn() - Set hostnqn.
  * @p: The &struct libnvme_global_ctx instance to update.
  * @hostnqn: New string; a copy is stored. Pass NULL to clear.
  */
-void libnvme_global_ctx_set_hostnqn(
-		struct libnvme_global_ctx *p,
-		const char *hostnqn);
+void libnvme_set_hostnqn(struct libnvme_global_ctx *p, const char *hostnqn);
 
 /**
- * libnvme_global_ctx_set_hostid() - Set hostid.
+ * libnvme_set_hostid() - Set hostid.
  * @p: The &struct libnvme_global_ctx instance to update.
  * @hostid: New string; a copy is stored. Pass NULL to clear.
  */
-void libnvme_global_ctx_set_hostid(
-		struct libnvme_global_ctx *p,
-		const char *hostid);
+void libnvme_set_hostid(struct libnvme_global_ctx *p, const char *hostid);
 
 #endif /* _ACCESSORS_H_ */
