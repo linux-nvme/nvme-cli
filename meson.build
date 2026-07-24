@@ -653,6 +653,7 @@ if want_nvme
     if host_system != 'windows'
         subdir('unit')
     endif
+    subdir('unit-py')
 
     if get_option('nvme-tests')
         subdir('tests')
