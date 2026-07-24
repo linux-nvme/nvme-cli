@@ -8131,6 +8131,8 @@ static void wdc_show_cloud_smart_log_json(struct ocp_cloud_smart_log *log)
 	if (smart_log_ver >= 3)
 		json_object_add_value_object(root, "dssd_specific_ver",
 				     dssd_specific_ver);
+	else
+		json_free_object(dssd_specific_ver);
 	json_object_add_value_uint(root, "pcie_correctable_error_count",
 				   le64_to_cpu(log->pcie_correctable_error_count));
 	json_object_add_value_uint(root, "incomplete_shutdowns",
