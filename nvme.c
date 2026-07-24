@@ -2460,7 +2460,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 		.raw_binary	= false,
 		.csi		= NVME_CSI_NVM,
 		.ot		= false,
-		.xfer_len	= 4096,
+		.xfer_len	= NVME_LOG_PAGE_PDU_SIZE,
 	};
 
 	OPT_VALS(log_name) = {
@@ -2601,7 +2601,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 			NVME_LOG_CDW14_OT_SHIFT,
 			NVME_LOG_CDW14_OT_MASK);
 
-	err = libnvme_get_log(hdl, &cmd, cfg.rae, NVME_LOG_PAGE_PDU_SIZE);
+	err = libnvme_get_log(hdl, &cmd, cfg.rae, cfg.xfer_len);
 	if (err) {
 		nvme_show_err(err, "log page");
 		return err;
