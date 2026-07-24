@@ -671,7 +671,7 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 		OPT_FLAG("discovery", 'd', &show_discovery, "show NBFT discovery controllers"),
 		OPT_STRING("nbft-path", 0, "STR", &nbft_path, "user-defined path for NBFT tables"));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 

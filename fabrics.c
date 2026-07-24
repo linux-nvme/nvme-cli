@@ -782,7 +782,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 	nvmf_default_args(&fa);
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -963,7 +963,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 
 	nvmf_default_args(&fa);
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -1146,7 +1146,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 		OPT_STRING("device",     'd', "DEV",  &cfg.device,  device),
 		OPT_FLAG("exclude", 'x', &cfg.exclude, exclude_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -1279,7 +1279,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 		OPT_STRING("owner", 0, "NAME", &cfg.owner, owner_help),
 		OPT_FLAG("force", 0, &cfg.force, force_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -1361,11 +1361,9 @@ int fabrics_config_validate(const char *desc, int argc, char **argv)
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
-
-	nvme_show_init();
 
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)
@@ -1397,11 +1395,9 @@ int fabrics_config_show(const char *desc, int argc, char **argv)
 		OPT_STRING("config", 'J', "FILE", &config_file,
 			   nvmf_config_file_ro));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
-
-	nvme_show_init();
 
 	ret = validate_output_format(nvme_args.output_format, &flags);
 	if (ret < 0) {
@@ -1470,7 +1466,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		OPT_STRING("device", 'd', "DEV",  &cfg.device, "Comma-separated list of DC nvme device handle."),
 		OPT_STRING("task",   't', "TASK", &cfg.tas,    "[register|deregister]"));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 

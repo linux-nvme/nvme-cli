@@ -584,11 +584,9 @@ int nvme_config_convert(const char *desc, int argc, char **argv)
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
-
-	nvme_show_init();
 
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)

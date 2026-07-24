@@ -98,7 +98,7 @@ int solidigm_get_telemetry_log(int argc, char **argv, struct command *acmd, stru
 		OPT_FILE("source-file",     's', &cfg.binary_file, sfile),
 		OPT_STR("jq-filter",        'q', &cfg.jq_filter, jqfilt));
 
-	int err = argconfig_parse(argc, argv, desc, opts);
+	int err = parse_args(argc, argv, desc, opts);
 
 	if (err) {
 		return err;
