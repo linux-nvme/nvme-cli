@@ -436,12 +436,12 @@ struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=l
 	struct list_head hosts;
 	struct libnvme_log log;
 	bool create_only;
-	bool dry_run;
+	bool dry_run;		// !access:read=generated,write=generated
 
 	/* global options to steer libnvme behavior or overwrite defaults */
-	bool force_4k;
-	bool mi_probe_enabled;
-	bool ioctl_probing;
+	bool force_4k;		// !access:read=generated,write=generated
+	bool mi_probe_enabled;	// !access:read=generated,write=generated
+	bool ioctl_probing;	// !access:read=generated,write=generated
 	char *test_base_dir;
 	char *test_sysfs_dir;
 

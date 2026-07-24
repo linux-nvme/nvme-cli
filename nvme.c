@@ -426,7 +426,7 @@ static int nvme_apply_option(struct libnvme_global_ctx *ctx, const char *kv)
 	if (!strcmp(key, "force-4k")) {
 		libnvme_set_force_4k(ctx, is_true(val));
 	} else if (!strcmp(key, "mi-probe-enabled")) {
-		libnvme_set_probe_enabled(ctx, is_true(val));
+		libnvme_set_mi_probe_enabled(ctx, is_true(val));
 	} else if (!strcmp(key, "test-base-dir")) {
 		ret = libnvme_set_test_base_dir(ctx, val);
 	} else if (!strcmp(key, "test-sysfs-dir")) {
