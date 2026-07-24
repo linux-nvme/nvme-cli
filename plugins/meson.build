@@ -22,6 +22,7 @@ all_plugins = {
   'ssstc': ['plugins/ssstc/ssstc-nvme.c'],
   'toshiba': ['plugins/toshiba/toshiba-nvme.c'],
   'transcend': ['plugins/transcend/transcend-nvme.c'],
+  'utils': ['plugins/utils/utils.c'],
   'virtium': ['plugins/virtium/virtium-nvme.c'],
   'ymtc': ['plugins/ymtc/ymtc-nvme.c'],
 }
