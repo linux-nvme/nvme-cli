@@ -90,13 +90,12 @@ static int registry_list(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	if (argconfig_parse(argc, argv, desc, opts))
+	if (parse_args(argc, argv, desc, opts))
 		return -EINVAL;
 
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)
 		return ret;
-	libnvme_set_logging_file(ctx, stdout);
 
 	return libnvmf_registry_device_for_each(ctx, print_device, ctx);
 }
@@ -120,7 +119,7 @@ static int registry_retrieve(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts,
 		OPT_STRING("attr", 'a', "ATTR", &cfg.attr, attr_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -137,7 +136,6 @@ static int registry_retrieve(int argc, char **argv, struct command *acmd,
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)
 		return ret;
-	libnvme_set_logging_file(ctx, stdout);
 
 	ret = libnvmf_registry_retrieve(ctx, device, cfg.attr, &value);
 	if (ret == -ENOENT) {
@@ -174,7 +172,7 @@ static int registry_update(int argc, char **argv, struct command *acmd,
 		OPT_STRING("attr",  'a', "ATTR", &cfg.attr,  attr_help),
 		OPT_STRING("value", 'V', "VAL",  &cfg.value, value_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -196,7 +194,6 @@ static int registry_update(int argc, char **argv, struct command *acmd,
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)
 		return ret;
-	libnvme_set_logging_file(ctx, stdout);
 
 	ret = libnvmf_registry_update(ctx, device, cfg.attr, cfg.value);
 	if (ret)
@@ -222,7 +219,7 @@ static int registry_delete(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts,
 		OPT_STRING("attr", 'a', "ATTR", &cfg.attr, attr_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -246,7 +243,6 @@ static int registry_delete(int argc, char **argv, struct command *acmd,
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)
 		return ret;
-	libnvme_set_logging_file(ctx, stdout);
 
 	if (cfg.attr)
 		ret = libnvmf_registry_update(ctx, device, cfg.attr, NULL);

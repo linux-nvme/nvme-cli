@@ -584,21 +584,13 @@ int nvme_config_convert(const char *desc, int argc, char **argv)
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
-	nvme_show_init();
-
-	log_level = map_log_level(verbose ? 1 : 0, false);
-
 	ret = nvme_create_global_ctx(&ctx);
-	if (ret) {
-		nvme_show_error("Failed to create topology root: %s",
-				 libnvme_strerror(-ret));
+	if (ret)
 		return ret;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	emitter = libnvmf_config_emit_new(ctx);
 	if (!emitter)

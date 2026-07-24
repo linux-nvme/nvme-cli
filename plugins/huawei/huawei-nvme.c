@@ -322,7 +322,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -333,8 +333,6 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)
 		return ret;
-
-	libnvme_set_logging_file(ctx, stdout);
 
 	n = scandir("/dev", &devices, filter_namespace, alphasort);
 	if (n <= 0)

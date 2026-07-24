@@ -1474,10 +1474,8 @@ void stdout_top(int refresh_interval)
 	int err;
 
 	err = nvme_create_global_ctx(&ctx);
-	if (err) {
-		nvme_show_error("Failed to create global context");
+	if (err)
 		return;
-	}
 
 	if (libnvme_scan_topology(ctx, NULL, NULL)) {
 		nvme_show_error("Failed to scan topology");

@@ -53,6 +53,7 @@ enum nvme_cli_topo_ranking {
 struct nvme_args {
 	char *output_format;
 	int verbose;
+	bool quiet;
 	__u32 timeout;
 	bool dry_run;
 	bool no_retries;
@@ -82,6 +83,8 @@ struct nvme_args {
 		OPT_GROUP("Global options"),                                           \
 		OPT_INCR("verbose",      'v', &nvme_args.verbose,                      \
                          "Increase output verbosity"),                                 \
+		OPT_FLAG("quiet",        0, &nvme_args.quiet,                          \
+                         "suppress output messages, overwrites verbose mode"),         \
 		OPT_FMT("output-format", 'o', &nvme_args.output_format, of_desc),      \
 		OPT_UINT("timeout",        0, &nvme_args.timeout,                      \
                          "timeout value, in milliseconds"),                            \
@@ -161,16 +164,25 @@ extern const char *namespace_id_desired;
 extern struct nvme_args nvme_args;
 
 /*
- * nvme_create_global_ctx() - Create a global context and apply --set-options
+ * nvme_create_global_ctx_hostnqn() - Create context and resolve host identity
+ * @ctx: output global context
+ * @hostnqn_arg: optional hostnqn override
+ * @hostid_arg: optional hostid override
+ * @hostnqn: optional output resolved hostnqn (caller owns/frees when provided)
+ * @hostid: optional output resolved hostid (caller owns/frees when provided)
  *
- * Wrapper around libnvme_create_global_ctx() that additionally applies any
- * key=value pairs passed via --set-options.  All code in nvme-cli that creates
- * a context should call this instead of libnvme_create_global_ctx() directly.
- *
+ * Creates a global context, applies --set-options, resolves hostnqn/hostid
+ * via libnvmf_host_get_ids(), and stores the resolved values in the context.
  * This function has to be called after @parse_args.
  */
+int nvme_create_global_ctx_hostnqn(struct libnvme_global_ctx **ctx,
+		const char *hostnqn_arg, const char *hostid_arg,
+		char **hostnqn, char **hostid);
+
 int nvme_create_global_ctx(struct libnvme_global_ctx **ctx);
 
+int parse_args(int argc, char *argv[], const char *desc,
+	       struct argconfig_commandline_options *opts);
 int validate_output_format(const char *format, nvme_print_flags_t *flags);
 bool nvme_is_output_format_json(void);
 int __id_ctrl(int argc, char **argv, struct command *acmd,
