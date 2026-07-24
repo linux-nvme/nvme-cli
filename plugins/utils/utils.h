@@ -12,6 +12,9 @@
 
 PLUGIN(NAME("utils", "General purpose utilities", NVME_VERSION),
 	COMMAND_LIST(
+#ifdef CONFIG_JSONC
+		ENTRY("dump-command-metadata", "Dump all commands and their options as JSON", dump_command_metadata_cmd)
+#endif
 	)
 );
 

@@ -33,8 +33,8 @@
 
 /*
  * The whole command is JSON-only, so it is compiled out entirely without
- * json-c support: nvme-builtin.h does not register it and nvme.c does not
- * define its handler, so dump_command_metadata() is never referenced.
+ * json-c support: the utils plugin does not register it and does not define
+ * its handler, so dump_command_metadata() is never referenced.
  */
 #ifdef CONFIG_JSONC
 

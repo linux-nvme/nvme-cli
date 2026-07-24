@@ -583,7 +583,6 @@ if want_nvme
     if json_c_dep.found()
         sources += [
             'nvme-print-json.c',
-            'command-metadata.c',
         ]
     endif
 

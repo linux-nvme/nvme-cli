@@ -16,7 +16,7 @@ if py3.found()
             args: [
                 files('test_command_metadata_schema.py'),
                 nvme_exe,
-                meson.project_source_root() / 'command-metadata-schema.json',
+                meson.project_source_root() / 'plugins' / 'utils' / 'command-metadata-schema.json',
             ],
             depends: nvme_exe,
             timeout: 120,
