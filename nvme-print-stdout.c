@@ -5875,7 +5875,7 @@ static bool stdout_detailed_ctrl(const char *name, void *arg)
 		       libnvme_ctrl_get_model(c),
 		       libnvme_ctrl_get_firmware(c),
 		       tr,
-		       libnvme_ctrl_get_traddr(c),
+		       libnvme_ctrl_get_address(c),
 		       slot ? slot : "",
 		       libnvme_subsystem_get_name(libnvme_ctrl_get_subsystem(c)));
 	}
@@ -6080,7 +6080,7 @@ static void stdout_tabular_subsystem_topology_multipath(libnvme_subsystem_t s)
 						    iopolicy_info,
 						    libnvme_ctrl_get_name(c),
 						    libnvme_ctrl_get_transport(c),
-						    libnvme_ctrl_get_traddr(c),
+						    libnvme_ctrl_get_address(c),
 						    libnvme_ctrl_get_state(c));
 			if (ret < 0)
 				goto free_tbl;
@@ -6106,7 +6106,7 @@ static void stdout_tabular_subsystem_topology_multipath(libnvme_subsystem_t s)
 					"--", /* Nodes/Qdepth */
 					libnvme_ctrl_get_name(c),
 					libnvme_ctrl_get_transport(c),
-					libnvme_ctrl_get_traddr(c),
+					libnvme_ctrl_get_address(c),
 					libnvme_ctrl_get_state(c));
 			if (ret < 0)
 				goto free_tbl;
@@ -6140,7 +6140,7 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 				printf("  +- %s %s %s %s %s\n",
 				       libnvme_ctrl_get_name(c),
 				       libnvme_ctrl_get_transport(c),
-				       libnvme_ctrl_get_traddr(c),
+				       libnvme_ctrl_get_address(c),
 				       libnvme_ctrl_get_state(c),
 				       libnvme_path_get_ana_state(p));
 			}
@@ -6151,7 +6151,7 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 			printf(" +- %s %s %s\n",
 			       libnvme_ctrl_get_name(c),
 			       libnvme_ctrl_get_transport(c),
-			       libnvme_ctrl_get_traddr(c));
+			       libnvme_ctrl_get_address(c));
 			printf(" \\\n");
 
 			libnvme_subsystem_for_each_ns(s, n) {
@@ -6187,7 +6187,7 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 						libnvme_path_get_numa_nodes(p),
 						libnvme_ctrl_get_name(c),
 						libnvme_ctrl_get_transport(c),
-						libnvme_ctrl_get_traddr(c),
+						libnvme_ctrl_get_address(c),
 						libnvme_ctrl_get_state(c));
 
 				} else if (!strcmp(iopolicy, "queue-depth")) {
@@ -6201,7 +6201,7 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 						libnvme_path_get_queue_depth(p),
 						libnvme_ctrl_get_name(c),
 						libnvme_ctrl_get_transport(c),
-						libnvme_ctrl_get_traddr(c),
+						libnvme_ctrl_get_address(c),
 						libnvme_ctrl_get_state(c));
 
 				} else { /* round-robin */
@@ -6214,7 +6214,7 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 						libnvme_path_get_ana_state(p),
 						libnvme_ctrl_get_name(c),
 						libnvme_ctrl_get_transport(c),
-						libnvme_ctrl_get_traddr(c),
+						libnvme_ctrl_get_address(c),
 						libnvme_ctrl_get_state(c));
 				}
 			}
@@ -6282,7 +6282,7 @@ static void stdout_tabular_subsystem_topology(libnvme_subsystem_t s)
 					"--",	/* NSID */
 					libnvme_ctrl_get_name(c),
 					libnvme_ctrl_get_transport(c),
-					libnvme_ctrl_get_traddr(c),
+					libnvme_ctrl_get_address(c),
 					libnvme_ctrl_get_state(c));
 			if (ret < 0)
 				goto free_tbl;
@@ -6298,7 +6298,7 @@ static void stdout_tabular_subsystem_topology(libnvme_subsystem_t s)
 						(const char *)nsid,
 						libnvme_ctrl_get_name(c),
 						libnvme_ctrl_get_transport(c),
-						libnvme_ctrl_get_traddr(c),
+						libnvme_ctrl_get_address(c),
 						libnvme_ctrl_get_state(c));
 				if (ret < 0)
 					goto free_tbl;
@@ -6324,7 +6324,7 @@ static void stdout_subsystem_topology(libnvme_subsystem_t s,
 				printf("  +- %s %s %s %s\n",
 				       libnvme_ctrl_get_name(c),
 				       libnvme_ctrl_get_transport(c),
-				       libnvme_ctrl_get_traddr(c),
+				       libnvme_ctrl_get_address(c),
 				       libnvme_ctrl_get_state(c));
 			}
 		}
@@ -6334,7 +6334,7 @@ static void stdout_subsystem_topology(libnvme_subsystem_t s,
 			printf(" +- %s %s %s\n",
 			       libnvme_ctrl_get_name(c),
 			       libnvme_ctrl_get_transport(c),
-			       libnvme_ctrl_get_traddr(c));
+			       libnvme_ctrl_get_address(c));
 			printf(" \\\n");
 			libnvme_ctrl_for_each_ns(c, n) {
 				printf("  +- ns %d %s\n",
@@ -6355,7 +6355,7 @@ static void stdout_subsystem_topology(libnvme_subsystem_t s,
 				printf("  +- %s %s %s %s\n",
 						libnvme_ctrl_get_name(c),
 						libnvme_ctrl_get_transport(c),
-						libnvme_ctrl_get_traddr(c),
+						libnvme_ctrl_get_address(c),
 						libnvme_ctrl_get_state(c));
 			}
 		}
