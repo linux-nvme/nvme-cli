@@ -105,24 +105,29 @@ static int list(int argc, char **argv, struct command *acmd,
 		{ "FW Rev", LEFT, 8 },
 	};
 	struct table *t = table_init_with_columns(columns, ARRAY_SIZE(columns));
+	if (!t) {
+		nvme_show_error("Failed to init table");
+		return -ENOMEM;
+	}
 
 	err = nvme_create_global_ctx(&ctx);
 	if (err) {
 		nvme_show_error("Failed to create root object");
-		return err;
+		goto free_table;
 	}
 	libnvme_set_logging_file(ctx, stdout);
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err) {
 		nvme_show_error("Failed to scan nvme subsystems");
-		return err;
+		goto free_table;
 	}
 
 	err = print_zns_list(ctx, t);
 
 	table_print(t);
 
+free_table:
 	table_free(t);
 
 	return err;
