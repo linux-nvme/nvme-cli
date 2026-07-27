@@ -50,6 +50,7 @@
 
 #include "common.h"
 #include "fabrics.h"
+#include "global-config.h"
 #include "logging.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
@@ -11779,6 +11780,10 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	setlocale(LC_ALL, "");
+
+	err = nvme_load_global_config();
+	if (err)
+		return err;
 
 	err = nvme_install_sigint_handler();
 	if (err)
