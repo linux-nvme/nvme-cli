@@ -19,6 +19,7 @@
 #include <ccan/hash/hash.h>
 
 #include <libnvme.h>
+#include <libnvme-mi.h>
 
 #include "nvme.h"
 #include "nvme-print.h"
