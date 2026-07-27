@@ -23,22 +23,12 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include "args.h"
 #include "plugin.h"
 #include "util/json.h"
 #include "util/argconfig.h"
 #include "util/cleanup.h"
 #include "util/types.h"
-
-enum nvme_print_flags {
-	NORMAL		= 0,
-	VERBOSE		= 1 << 0,	/* verbosely decode complex values for humans */
-	JSON		= 1 << 1,	/* display in json format */
-	VS		= 1 << 2,	/* hex dump vendor specific data areas */
-	BINARY		= 1 << 3,	/* binary dump raw bytes */
-	TABULAR		= 1 << 4,	/* prints aligned columns for easy reading */
-};
-
-typedef uint32_t nvme_print_flags_t;
 
 enum nvme_cli_topo_ranking {
 	NVME_CLI_TOPO_NAMESPACE,
@@ -47,65 +37,6 @@ enum nvme_cli_topo_ranking {
 };
 
 #define SYS_NVME "/sys/class/nvme"
-
-struct nvme_args {
-	char *output_format;
-	unsigned int verbose;
-	bool quiet;
-	__u32 timeout;
-	bool dry_run;
-	bool no_retries;
-	bool no_ioctl_probing;
-	unsigned int output_format_ver;
-	nvme_print_flags_t supported_output_formats;
-	const char *set_options;
-};
-
-#ifdef CONFIG_JSONC
-#define DEFAULT_OUTPUT_FORMATS (NORMAL | JSON | BINARY)
-#define DEFAULT_OUTPUT_FORMAT_DESC "Output format: normal|json|binary"
-#else /* CONFIG_JSONC */
-#define DEFAULT_OUTPUT_FORMATS (NORMAL | BINARY)
-#define DEFAULT_OUTPUT_FORMAT_DESC "Output format: normal|binary"
-#endif /* CONFIG_JSONC */
-
-/*
- * the ordering of the arguments matters, as the argument parser uses the first
- * match, thus any command which defines -t shorthand will match first.
- */
-#define NVME_ARGS_OUTPUT_FORMATS(n, of_mask, of_desc, ...)                             \
-	nvme_args.supported_output_formats = of_mask;                                  \
-	struct argconfig_commandline_options n[] = {                                   \
-		OPT_GROUP("Options"),                                                  \
-		##__VA_ARGS__,                                                         \
-		OPT_GROUP("Global options"),                                           \
-		OPT_INCR("verbose",      'v', &nvme_args.verbose,                      \
-                         "Increase output verbosity"),                                 \
-		OPT_FLAG("quiet",        0, &nvme_args.quiet,                          \
-                         "suppress output messages, overwrites verbose mode"),         \
-		OPT_FMT("output-format", 'o', &nvme_args.output_format, of_desc),      \
-		OPT_UINT("timeout",        0, &nvme_args.timeout,                      \
-                         "timeout value, in milliseconds"),                            \
-		OPT_FLAG("dry-run",        0, &nvme_args.dry_run,                      \
-                         "show command instead of executing"),                         \
-		OPT_FLAG("no-retries",     0, &nvme_args.no_retries,                   \
-			 "disable retry logic on errors"),                             \
-		OPT_FLAG("no-ioctl-probing", 0, &nvme_args.no_ioctl_probing,           \
-			 "disable 64-bit IOCTL support probing"),                      \
-		OPT_UINT("output-format-version", 0, &nvme_args.output_format_ver,     \
-			 "output format version: 1|2"),                                \
-		OPT_FLAG("human-readable", 'H', &nvme_args.verbose, NULL, NULL, true), \
-		OPT_STRING("set-options",    0, "KEY=VALUE",                           \
-			 &nvme_args.set_options,                                       \
-			 "set a libnvme library option (key=value[,key=value,...]);"), \
-		OPT_END()                                                              \
-	}
-
-#define NVME_ARGS(n, ...)                   \
-	NVME_ARGS_OUTPUT_FORMATS(n,         \
-		DEFAULT_OUTPUT_FORMATS,     \
-		DEFAULT_OUTPUT_FORMAT_DESC, \
-		##__VA_ARGS__)
 
 static inline bool nvme_is_multipath(libnvme_subsystem_t s)
 {
@@ -159,7 +90,6 @@ static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_transport_handle,
 
 extern const char *uuid_index;
 extern const char *namespace_id_desired;
-extern struct nvme_args nvme_args;
 
 /*
  * nvme_create_global_ctx_hostnqn() - Create context and resolve host identity
