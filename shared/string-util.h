@@ -16,7 +16,7 @@
  * NULL-safe string equality: two NULLs are equal, one NULL and one
  * non-NULL are never equal, otherwise this is strcmp() == 0.
  */
-static inline bool streq0(const char *s1, const char *s2)
+static inline bool shr_streq0(const char *s1, const char *s2)
 {
 	if (s1 == s2)
 		return true;
@@ -25,8 +25,8 @@ static inline bool streq0(const char *s1, const char *s2)
 	return !strcmp(s1, s2);
 }
 
-/* Case-insensitive sibling of streq0(). */
-static inline bool streqcase0(const char *s1, const char *s2)
+/* Case-insensitive sibling of shr_streq0(). */
+static inline bool shr_streqcase0(const char *s1, const char *s2)
 {
 	if (s1 == s2)
 		return true;
@@ -36,7 +36,7 @@ static inline bool streqcase0(const char *s1, const char *s2)
 }
 
 /* Allocation-checking strdup() that returns NULL for a NULL input. */
-static inline char *xstrdup(const char *s)
+static inline char *shr_xstrdup(const char *s)
 {
 	return s ? strdup(s) : NULL;
 }
@@ -47,7 +47,7 @@ static inline char *xstrdup(const char *s)
  * the byte after the last non-whitespace character is overwritten with
  * '\0'.
  */
-static inline char *trim(char *s)
+static inline char *shr_trim(char *s)
 {
 	char *end;
 
@@ -60,7 +60,7 @@ static inline char *trim(char *s)
 }
 
 /* True if s is non-empty and every character is alphanumeric, '_', or '-'. */
-static inline bool valid_name(const char *s)
+static inline bool shr_valid_name(const char *s)
 {
 	const char *p;
 
@@ -79,7 +79,7 @@ static inline bool valid_name(const char *s)
  * If s starts with prefix, return a pointer within s just past the match.
  * NULL otherwise.
  */
-static inline char *startswith(const char *s, const char *prefix)
+static inline char *shr_startswith(const char *s, const char *prefix)
 {
 	size_t l = strlen(prefix);
 
@@ -93,7 +93,7 @@ static inline char *startswith(const char *s, const char *prefix)
  * Strip leading/trailing blanks and a trailing "# comment" from the
  * key=value line kv, in place. Return a pointer to the stripped string.
  */
-static inline char *kv_strip(char *kv)
+static inline char *shr_kv_strip(char *kv)
 {
 	char *s;
 
@@ -125,11 +125,11 @@ static inline char *kv_strip(char *kv)
  * return a pointer to the first character of value (past spaces/tabs/'=').
  * NULL otherwise.
  */
-static inline char *kv_keymatch(const char *kv, const char *key)
+static inline char *shr_kv_keymatch(const char *kv, const char *key)
 {
 	char *value;
 
-	value = startswith(kv, key);
+	value = shr_startswith(kv, key);
 	if (value && (*value == ' ' || *value == '\t' || *value == '='))
 		return value + strspn(value, " \t=");
 

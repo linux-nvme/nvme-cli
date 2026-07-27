@@ -105,7 +105,7 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx,
 	const struct ctrl_map_entry *ctrl_entry;
 
 	if (strstr(name, "/dev/"))
-		name = path_basename(name);
+		name = shr_basename(name);
 
 	ctrl_entry = libnvme_ctrl_map_lookup(ctx, name);
 	if (ctrl_entry) {

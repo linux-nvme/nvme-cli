@@ -87,7 +87,7 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 			message ? message : "<error>") == -1)
 		return;
 
-	if (write_all(l->fd, log, strlen(log)) < 0)
+	if (shr_write_all(l->fd, log, strlen(log)) < 0)
 		perror("failed to write log entry");
 }
 

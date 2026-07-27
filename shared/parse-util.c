@@ -14,7 +14,7 @@
 
 #include "parse-util.h"
 
-int parse_bool(const char *value, bool *out)
+int shr_parse_bool(const char *value, bool *out)
 {
 	static const char * const yes[] = {
 		"1", "yes", "y", "true", "t", "on"

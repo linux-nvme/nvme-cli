@@ -107,7 +107,7 @@ static bool sockaddrs_eq(struct sockaddr *addr1, struct sockaddr *addr2)
 	return false;
 }
 
-bool ipaddrs_eq(const char *addr1, const char *addr2)
+bool shr_ipaddrs_eq(const char *addr1, const char *addr2)
 {
 	struct sockaddr_storage ss1, ss2;
 
@@ -126,7 +126,7 @@ bool ipaddrs_eq(const char *addr1, const char *addr2)
 	return sockaddrs_eq((struct sockaddr *)&ss1, (struct sockaddr *)&ss2);
 }
 
-const char *iface_matching_addr(const struct ifaddrs *iface_list,
+const char *shr_iface_matching_addr(const struct ifaddrs *iface_list,
 		const char *addr)
 {
 	const struct ifaddrs *iface_it;
@@ -151,7 +151,7 @@ const char *iface_matching_addr(const struct ifaddrs *iface_list,
 	return iface_name;
 }
 
-bool iface_primary_addr_matches(const struct ifaddrs *iface_list,
+bool shr_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr)
 {
 	const struct ifaddrs *iface_it;

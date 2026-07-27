@@ -354,9 +354,9 @@ __libnvme_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 	h = libnvme_first_host(ctx);
 	if (h) {
 		if (!hid)
-			hid = xstrdup(libnvme_host_get_hostid(h));
+			hid = shr_xstrdup(libnvme_host_get_hostid(h));
 		if (!hnqn)
-			hnqn = xstrdup(libnvme_host_get_hostnqn(h));
+			hnqn = shr_xstrdup(libnvme_host_get_hostnqn(h));
 	}
 
 	/* /etc/nvme/hostid and/or /etc/nvme/hostnqn */

@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 /* FNV-1a 64-bit over a byte range: fast and dependency-free. */
-static inline uint64_t fnv1a_64(const void *buf, size_t len)
+static inline uint64_t shr_fnv1a_64(const void *buf, size_t len)
 {
 	const unsigned char *p = buf;
 	uint64_t hash = 14695981039346656037ULL;

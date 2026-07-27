@@ -11,7 +11,7 @@
 
 #include "array-util.h"
 
-int ptrarray_append(struct ptrarray *a, void *item)
+int shr_ptrarray_append(struct shr_ptrarray *a, void *item)
 {
 	if (a->len == a->cap) {
 		size_t newcap = a->cap ? a->cap * 2 : 8;
@@ -26,7 +26,7 @@ int ptrarray_append(struct ptrarray *a, void *item)
 	return 0;
 }
 
-void ptrarray_free(struct ptrarray *a)
+void shr_ptrarray_free(struct shr_ptrarray *a)
 {
 	free(a->items);
 	a->items = NULL;

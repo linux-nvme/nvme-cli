@@ -15,6 +15,8 @@
 
 #include <libnvme.h>
 
+#include <string-util.h>
+
 #include "cleanup-linux.h"
 #include "private-fabrics.h"
 #include "util.h"
@@ -139,17 +141,17 @@ size_t libnvmf_get_entity_version(char *buffer, size_t bufsz)
 			 * and new line characters. Also eliminate trailing
 			 * comments, if any.
 			 */
-			p = kv_strip(p);
+			p = shr_kv_strip(p);
 
 			 /* Empty string? */
 			if (*p == '\0')
 				continue;
 
-			s = kv_keymatch(p, "NAME");
+			s = shr_kv_keymatch(p, "NAME");
 			if (s)
 				name_len = copy_value(name, sizeof(name), s);
 
-			s = kv_keymatch(p, "VERSION_ID");
+			s = shr_kv_keymatch(p, "VERSION_ID");
 			if (s)
 				ver_id_len = copy_value(ver_id, sizeof(ver_id), s);
 		}

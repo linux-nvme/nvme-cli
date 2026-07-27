@@ -28,7 +28,7 @@ static int __libnvme_transport_handle_open_direct(
 	int ret, id, ns;
 	bool c = true;
 
-	name = path_basename(devname);
+	name = shr_basename(devname);
 
 	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 

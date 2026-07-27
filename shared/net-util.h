@@ -11,16 +11,16 @@
 #include <stdbool.h>
 
 /*
- * ipaddrs_eq - Check if 2 IP addresses are equal.
+ * shr_ipaddrs_eq - Check if 2 IP addresses are equal.
  * @addr1: IP address (can be IPv4 or IPv6)
  * @addr2: IP address (can be IPv4 or IPv6)
  *
  * Return: true if addr1 == addr2. false otherwise.
  */
-bool ipaddrs_eq(const char *addr1, const char *addr2);
+bool shr_ipaddrs_eq(const char *addr1, const char *addr2);
 
 /*
- * iface_matching_addr - Get interface matching @addr
+ * shr_iface_matching_addr - Get interface matching @addr
  * @iface_list: Interface list returned by getifaddrs()
  * @addr: Address to match
  *
@@ -30,11 +30,11 @@ bool ipaddrs_eq(const char *addr1, const char *addr2);
  *
  * Return: The name of the interface that owns @addr or NULL.
  */
-const char *iface_matching_addr(const struct ifaddrs *iface_list,
+const char *shr_iface_matching_addr(const struct ifaddrs *iface_list,
 		const char *addr);
 
 /*
- * iface_primary_addr_matches - Check that interface's primary
+ * shr_iface_primary_addr_matches - Check that interface's primary
  * address matches
  * @iface_list: Interface list returned by getifaddrs()
  * @iface: Interface to match
@@ -46,5 +46,5 @@ const char *iface_matching_addr(const struct ifaddrs *iface_list,
  *
  * Return: true if a match is found, false otherwise.
  */
-bool iface_primary_addr_matches(const struct ifaddrs *iface_list,
+bool shr_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr);

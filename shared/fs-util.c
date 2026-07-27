@@ -21,7 +21,7 @@
 
 #include "fs-util.h"
 
-int mkdir_p(const char *path, mode_t mode)
+int shr_mkdir_p(const char *path, mode_t mode)
 {
 	char buf[PATH_MAX];
 	char *p;
@@ -46,12 +46,12 @@ int mkdir_p(const char *path, mode_t mode)
 }
 
 #if defined(_WIN32)
-int mkstemp_cloexec(char *template)
+int shr_mkstemp(char *template)
 {
 	return -ENOSYS;
 }
 #else
-int mkstemp_cloexec(char *template)
+int shr_mkstemp(char *template)
 {
 	int fd;
 
@@ -81,11 +81,11 @@ int mkstemp_cloexec(char *template)
 #endif
 
 #if defined(_WIN32)
-void fsync_dir(const char *path)
+void shr_fsync_dir(const char *path)
 {
 }
 #else
-void fsync_dir(const char *path)
+void shr_fsync_dir(const char *path)
 {
 	int fd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
 
@@ -96,7 +96,7 @@ void fsync_dir(const char *path)
 }
 #endif
 
-char *path_basename(const char *path)
+char *shr_basename(const char *path)
 {
 	char *p = (char *)strrchr(path, '/');
 

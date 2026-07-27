@@ -14,4 +14,4 @@
  * 1/yes/y/true/t/on, 0/no/n/false/f/off (case-insensitive).
  * Return: 0 on success (*out set), -EINVAL if value matches neither list.
  */
-int parse_bool(const char *value, bool *out);
+int shr_parse_bool(const char *value, bool *out);

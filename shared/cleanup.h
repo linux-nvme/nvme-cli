@@ -21,8 +21,8 @@ DECLARE_CLEANUP_FUNC(name, type)		\
 		free_fn(*__p);			\
 }
 
-static inline void freep(void *p)
+static inline void shr_freep(void *p)
 {
 	free(*(void **)p);
 }
-#define __cleanup_free __cleanup(freep)
+#define __cleanup_free __cleanup(shr_freep)

@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 /* write() may return a short count; loop until the whole buffer is written. */
-static inline int write_all(int fd, const void *buf, size_t len)
+static inline int shr_write_all(int fd, const void *buf, size_t len)
 {
 	const char *p = buf;
 
