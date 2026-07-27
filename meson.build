@@ -560,6 +560,7 @@ if want_nvme
     subdir('util')      # declares: util_sources
 
     sources = [
+        'args.c',
         'logging.c',
         'nvme-cmds.c',
         'nvme-models.c',
