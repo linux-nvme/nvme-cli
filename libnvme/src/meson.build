@@ -69,7 +69,6 @@ if want_fabrics
         'nvme/config-resolve.c',
         'nvme/exclusion.c',
         'nvme/fabrics.c',
-        'nvme/ini.c',
         'nvme/nbft.c',
         'nvme/registry.c',
         'nvme/tid.c',
@@ -122,6 +121,7 @@ deps = [
     libdbus_dep,
     liburing_dep,
     openssl_dep,
+    shared_dep,
 ]
 if host_system == 'windows'
     deps += [

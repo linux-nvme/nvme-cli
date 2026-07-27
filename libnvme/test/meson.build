@@ -179,24 +179,13 @@ if want_fabrics
 
     test('libnvme - exclusion', exclusion)
 
-    ini = executable(
-        'test-ini',
-        ['ini.c'],
-        dependencies: [
-            config_dep,
-            ccan_dep,
-            libnvme_test_dep,
-        ],
-    )
-
-    test('libnvme - ini', ini)
-
     config_ini = executable(
         'test-config-ini',
         ['config-ini.c'],
         dependencies: [
             config_dep,
             ccan_dep,
+            shared_dep,
             libnvme_test_dep,
         ],
     )
