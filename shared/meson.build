@@ -13,6 +13,7 @@
 sources = [
     'array-util.c',
     'fs-util.c',
+    'ini.c',
     'parse-util.c',
 ]
 

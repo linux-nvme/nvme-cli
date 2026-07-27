@@ -17,14 +17,12 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <nvme/lib.h>
-
-#include "nvme/ini.h"
+#include <ini.h>
 
 #define MAX_EVENTS 32
 
 struct ev {
-	enum libnvmf_ini_event event;
+	enum ini_event event;
 	char section[128];
 	bool section_null;
 	char key[256];
@@ -36,7 +34,7 @@ struct ev {
 static struct ev got[MAX_EVENTS];
 static int ngot;
 
-static int record(enum libnvmf_ini_event event, const char *section,
+static int record(enum ini_event event, const char *section,
 		  const char *key, const char *value, unsigned int line,
 		  void *user_data)
 {
@@ -57,21 +55,21 @@ static int record(enum libnvmf_ini_event event, const char *section,
 }
 
 struct expect {
-	enum libnvmf_ini_event event;
+	enum ini_event event;
 	const char *section; /* NULL = expect no section */
 	const char *key;
 	const char *value;   /* NULL for SECTION / JUNK events */
 	unsigned int line;
 };
 
-static bool check(struct libnvme_global_ctx *ctx, const char *name,
-		  const char *text, const struct expect *want, int nwant)
+static bool check(const char *name, const char *text,
+		  const struct expect *want, int nwant)
 {
 	bool pass = true;
 	int ret, i;
 
 	ngot = 0;
-	ret = libnvmf_ini_parse_buf(ctx, text, record, NULL);
+	ret = ini_parse_buf(text, record, NULL);
 	if (ret) {
 		printf(" - %s: parse ret=%d [FAIL]\n", name, ret);
 		return false;
@@ -105,7 +103,7 @@ static bool check(struct libnvme_global_ctx *ctx, const char *name,
 	return pass;
 }
 
-static bool test_golden(struct libnvme_global_ctx *ctx)
+static bool test_golden(void)
 {
 	static const char text[] =
 		"# top comment\n"
@@ -117,22 +115,22 @@ static bool test_golden(struct libnvme_global_ctx *ctx)
 		"hostnqn=nqn.x\n"
 		"controller = transport=tcp;traddr=1.2.3.4;trsvcid=8009\n";
 	static const struct expect want[] = {
-		{ LIBNVMF_INI_SECTION, "Global", "Global", NULL, 3 },
-		{ LIBNVMF_INI_KV, "Global", "ctrl-loss-tmo", "600", 4 },
-		{ LIBNVMF_INI_KV, "Global", "empty", "", 5 },
-		{ LIBNVMF_INI_SECTION, "Host", "Host", NULL, 6 },
-		{ LIBNVMF_INI_KV, "Host", "hostnqn", "nqn.x", 7 },
-		{ LIBNVMF_INI_KV, "Host", "controller",
+		{ INI_SECTION, "Global", "Global", NULL, 3 },
+		{ INI_KV, "Global", "ctrl-loss-tmo", "600", 4 },
+		{ INI_KV, "Global", "empty", "", 5 },
+		{ INI_SECTION, "Host", "Host", NULL, 6 },
+		{ INI_KV, "Host", "hostnqn", "nqn.x", 7 },
+		{ INI_KV, "Host", "controller",
 		  "transport=tcp;traddr=1.2.3.4;trsvcid=8009", 8 },
 	};
 
 	printf("test_golden:\n");
 
-	return check(ctx, "sections, keys, empty value, '=' in value",
+	return check("sections, keys, empty value, '=' in value",
 		     text, want, 6);
 }
 
-static bool test_junk(struct libnvme_global_ctx *ctx)
+static bool test_junk(void)
 {
 	static const char text[] =
 		"before = any section\n"
@@ -146,37 +144,37 @@ static bool test_junk(struct libnvme_global_ctx *ctx)
 		"[ok]\n"
 		"k = v\n";
 	static const struct expect want[] = {
-		{ LIBNVMF_INI_KV, NULL, "before", "any section", 1 },
-		{ LIBNVMF_INI_SECTION, "exclusions", "exclusions", NULL, 2 },
-		{ LIBNVMF_INI_JUNK, "exclusions", "noequals", NULL, 3 },
-		{ LIBNVMF_INI_JUNK, "exclusions", "= value", NULL, 4 },
-		{ LIBNVMF_INI_JUNK, NULL, "[broken", NULL, 5 },
-		{ LIBNVMF_INI_KV, NULL, "key", "lost", 6 },
-		{ LIBNVMF_INI_JUNK, NULL, "[]", NULL, 7 },
-		{ LIBNVMF_INI_JUNK, NULL, "[ok] trailing", NULL, 8 },
-		{ LIBNVMF_INI_SECTION, "ok", "ok", NULL, 9 },
-		{ LIBNVMF_INI_KV, "ok", "k", "v", 10 },
+		{ INI_KV, NULL, "before", "any section", 1 },
+		{ INI_SECTION, "exclusions", "exclusions", NULL, 2 },
+		{ INI_JUNK, "exclusions", "noequals", NULL, 3 },
+		{ INI_JUNK, "exclusions", "= value", NULL, 4 },
+		{ INI_JUNK, NULL, "[broken", NULL, 5 },
+		{ INI_KV, NULL, "key", "lost", 6 },
+		{ INI_JUNK, NULL, "[]", NULL, 7 },
+		{ INI_JUNK, NULL, "[ok] trailing", NULL, 8 },
+		{ INI_SECTION, "ok", "ok", NULL, 9 },
+		{ INI_KV, "ok", "k", "v", 10 },
 	};
 
 	printf("test_junk:\n");
 
-	return check(ctx, "junk reporting and fail-safe section reset",
+	return check("junk reporting and fail-safe section reset",
 		     text, want, 10);
 }
 
-static bool test_crlf(struct libnvme_global_ctx *ctx)
+static bool test_crlf(void)
 {
 	static const struct expect want[] = {
-		{ LIBNVMF_INI_SECTION, "s", "s", NULL, 1 },
-		{ LIBNVMF_INI_KV, "s", "k", "v", 2 },
+		{ INI_SECTION, "s", "s", NULL, 1 },
+		{ INI_KV, "s", "k", "v", 2 },
 	};
 
 	printf("test_crlf:\n");
 
-	return check(ctx, "CRLF line endings", "[s]\r\nk = v\r\n", want, 2);
+	return check("CRLF line endings", "[s]\r\nk = v\r\n", want, 2);
 }
 
-static int abort_second(enum libnvmf_ini_event event, const char *section,
+static int abort_second(enum ini_event event, const char *section,
 			const char *key, const char *value, unsigned int line,
 			void *user_data)
 {
@@ -189,15 +187,15 @@ static int abort_second(enum libnvmf_ini_event event, const char *section,
 	return 0;
 }
 
-static bool test_abort(struct libnvme_global_ctx *ctx)
+static bool test_abort(void)
 {
 	int count = 0;
 	int ret;
 
 	printf("test_abort:\n");
 
-	ret = libnvmf_ini_parse_buf(ctx, "[a]\nk = v\nnever = seen\n",
-				    abort_second, &count);
+	ret = ini_parse_buf("[a]\nk = v\nnever = seen\n", abort_second,
+			     &count);
 	if (ret != -EPROTO || count != 2) {
 		printf(" - callback abort ret=%d count=%d [FAIL]\n",
 		       ret, count);
@@ -208,11 +206,11 @@ static bool test_abort(struct libnvme_global_ctx *ctx)
 	return true;
 }
 
-static bool test_file(struct libnvme_global_ctx *ctx)
+static bool test_file(void)
 {
 	static const struct expect want[] = {
-		{ LIBNVMF_INI_SECTION, "f", "f", NULL, 2 },
-		{ LIBNVMF_INI_KV, "f", "key", "val", 3 },
+		{ INI_SECTION, "f", "f", NULL, 2 },
+		{ INI_KV, "f", "key", "val", 3 },
 	};
 	char path[] = "/tmp/nvme-ini-test-XXXXXX";
 	bool pass = true;
@@ -226,7 +224,7 @@ static bool test_file(struct libnvme_global_ctx *ctx)
 	close(fd);
 
 	ngot = 0;
-	ret = libnvmf_ini_parse_file(ctx, path, record, NULL);
+	ret = ini_parse_file(path, record, NULL);
 	unlink(path);
 	if (ret || ngot != 2) {
 		printf(" - parse_file ret=%d events=%d [FAIL]\n", ret, ngot);
@@ -242,7 +240,7 @@ static bool test_file(struct libnvme_global_ctx *ctx)
 	if (pass)
 		printf(" - parse_file round-trip [PASS]\n");
 
-	ret = libnvmf_ini_parse_file(ctx, "/nonexistent/ini", record, NULL);
+	ret = ini_parse_file("/nonexistent/ini", record, NULL);
 	if (ret != -ENOENT) {
 		printf(" - missing file ret=%d (want -ENOENT) [FAIL]\n", ret);
 		pass = false;
@@ -251,7 +249,7 @@ static bool test_file(struct libnvme_global_ctx *ctx)
 	}
 
 	/* A directory must be rejected, not silently read as empty. */
-	ret = libnvmf_ini_parse_file(ctx, "/tmp", record, NULL);
+	ret = ini_parse_file("/tmp", record, NULL);
 	if (ret != -EISDIR) {
 		printf(" - directory path ret=%d (want -EISDIR) [FAIL]\n", ret);
 		pass = false;
@@ -262,16 +260,15 @@ static bool test_file(struct libnvme_global_ctx *ctx)
 	return pass;
 }
 
-static bool test_null_args(struct libnvme_global_ctx *ctx)
+static bool test_null_args(void)
 {
 	bool pass = true;
 
 	printf("test_null_args:\n");
 
-	if (libnvmf_ini_parse_buf(NULL, "", record, NULL) != -EINVAL ||
-	    libnvmf_ini_parse_buf(ctx, NULL, record, NULL) != -EINVAL ||
-	    libnvmf_ini_parse_buf(ctx, "", NULL, NULL) != -EINVAL ||
-	    libnvmf_ini_parse_file(ctx, NULL, record, NULL) != -EINVAL) {
+	if (ini_parse_buf(NULL, record, NULL) != -EINVAL ||
+	    ini_parse_buf("", NULL, NULL) != -EINVAL ||
+	    ini_parse_file(NULL, record, NULL) != -EINVAL) {
 		printf(" - NULL arguments rejected [FAIL]\n");
 		pass = false;
 	} else {
@@ -283,20 +280,14 @@ static bool test_null_args(struct libnvme_global_ctx *ctx)
 
 int main(void)
 {
-	struct libnvme_global_ctx *ctx;
 	bool pass = true;
 
-	ctx = libnvme_create_global_ctx();
-	assert(ctx);
-
-	pass &= test_golden(ctx);
-	pass &= test_junk(ctx);
-	pass &= test_crlf(ctx);
-	pass &= test_abort(ctx);
-	pass &= test_file(ctx);
-	pass &= test_null_args(ctx);
-
-	libnvme_free_global_ctx(ctx);
+	pass &= test_golden();
+	pass &= test_junk();
+	pass &= test_crlf();
+	pass &= test_abort();
+	pass &= test_file();
+	pass &= test_null_args();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
