@@ -52,7 +52,7 @@ enum nvme_cli_topo_ranking {
 
 struct nvme_args {
 	char *output_format;
-	int verbose;
+	unsigned int verbose;
 	bool quiet;
 	__u32 timeout;
 	bool dry_run;
