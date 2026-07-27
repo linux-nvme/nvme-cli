@@ -31,6 +31,12 @@ tables_bad = [
     'NBFT-random-noise',
 ]
 
+tables_rejected = [
+    'NBFT-bad-control',
+    'NBFT-bad-discovery-list-offset',
+    'NBFT-bad-security-list-offset',
+]
+
 nbft_dump = executable(
     'nbft-dump',
     ['nbft-dump.c'],
@@ -104,4 +110,15 @@ foreach table: tables_bad
             should_fail: true,
         )
     endif
+endforeach
+
+foreach table: tables_rejected
+    test(
+        'libnvme - @0@'.format(table),
+        files('nbft-reject.sh'),
+        args: [
+            nbft_dump,
+            files(tables_bad_dir/table),
+        ],
+    )
 endforeach
