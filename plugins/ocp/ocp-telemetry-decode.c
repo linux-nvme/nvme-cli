@@ -1727,6 +1727,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			status = parse_statistics(NULL, &offsets, fp);
 			if (status != 0) {
 				nvme_show_error("status: %d", status);
+				fclose(fp);
 				return -1;
 			}
 
@@ -1734,8 +1735,10 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 			fprintf(fp, "%s\n", STR_DA_1_EVENT_FIFO_INFO);
 			fprintf(fp, STR_LINE);
 			status = parse_event_fifos(NULL, &offsets, fp);
-			if (status != 0)
+			if (status != 0) {
+				fclose(fp);
 				return -1;
+			}
 
 			//Set the DA to 2
 			if (options->data_area == 2) {
@@ -1747,6 +1750,7 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 
 				if (status != 0) {
 					nvme_show_error("status: %d", status);
+					fclose(fp);
 					return -1;
 				}
 
@@ -1754,8 +1758,10 @@ int print_ocp_telemetry_normal(struct ocp_telemetry_parse_options *options)
 				fprintf(fp, "%s\n", STR_DA_2_EVENT_FIFO_INFO);
 				fprintf(fp, STR_LINE);
 				status = parse_event_fifos(NULL, &offsets, fp);
-				if (status != 0)
+				if (status != 0) {
+					fclose(fp);
 					return -1;
+				}
 			}
 
 			fprintf(fp, STR_LINE);
