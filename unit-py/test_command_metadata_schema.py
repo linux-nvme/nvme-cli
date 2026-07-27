@@ -63,8 +63,8 @@ def json_c_available():
 
 
 def dump_metadata():
-    """Run `nvme utils dump-command-metadata` and return parsed JSON, or None if
-    it produced no usable output."""
+    """Run `nvme utils dump-command-metadata` and return (parsed JSON, stderr).
+    Returns (None, stderr) if it produced no usable output."""
     proc = subprocess.run(
         [NVME_BIN, "utils", "dump-command-metadata"],
         stdout=subprocess.PIPE,
@@ -73,8 +73,8 @@ def dump_metadata():
     )
     text = proc.stdout.strip()
     if proc.returncode != 0 or not text:
-        return None
-    return json.loads(text)
+        return None, proc.stderr
+    return json.loads(text), proc.stderr
 
 
 def iter_commands(data):
@@ -128,10 +128,12 @@ class TestCommandMetadataSchema(unittest.TestCase):
     def setUpClass(cls):
         if not json_c_available():
             raise unittest.SkipTest("nvme built without json-c")
-        cls.data = dump_metadata()
+        cls.data, stderr = dump_metadata()
         if cls.data is None:
-            raise AssertionError(
-                "dump-command-metadata produced no output (built with json-c)")
+            msg = "dump-command-metadata produced no output (built with json-c)"
+            if stderr:
+                msg += "\nstderr: " + stderr.rstrip()
+            raise AssertionError(msg)
         with open(SCHEMA_PATH) as f:
             cls.schema = json.load(f)
 
