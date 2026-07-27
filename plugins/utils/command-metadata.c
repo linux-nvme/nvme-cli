@@ -21,10 +21,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "command-metadata.h"
 #include "common.h"
@@ -63,6 +67,134 @@ static struct command_metadata_command *command_metadata_cur_command;
  * for the parser-unwind sentinel; checked after each command fn returns.
  */
 static int command_metadata_capture_error;
+
+/*
+ * capture_saved_stderr_fd holds a dup of stderr from before the NUL redirect,
+ * so crash messages still reach the user.
+ */
+static const char *capture_current_command;
+static int capture_saved_stderr_fd = -1;
+
+/*
+ * (void)write() does not suppress GCC's warn_unused_result under
+ * _FORTIFY_SOURCE; assigning to a discarded variable does.
+ */
+static void write_raw(int fd, const char *buf, size_t len)
+{
+	ssize_t ret = write(fd, buf, len);
+	(void)ret;
+}
+
+static void write_str(int fd, const char *s)
+{
+	size_t n = 0;
+	if (!s)
+		return;
+
+	while (s[n])
+		n++;
+
+	write_raw(fd, s, n);
+}
+
+static void write_uint(int fd, unsigned int n)
+{
+	char buf[16];
+	int i = sizeof(buf);
+
+	do {
+		buf[--i] = '0' + (n % 10);
+		n /= 10;
+	} while (n && i);
+
+	write_raw(fd, buf + i, sizeof(buf) - i);
+}
+
+static void capture_crash_handler(int sig)
+{
+	int fd = capture_saved_stderr_fd >= 0 ? capture_saved_stderr_fd : STDERR_FILENO;
+
+	write_str(fd, "dump-command-metadata: fatal: '");
+	write_str(fd, capture_current_command ? capture_current_command : "(unknown)");
+	write_str(fd, "' crashed during option capture (signal ");
+	write_uint(fd, sig);
+	write_str(fd, ")\n");
+
+	signal(sig, SIG_DFL);
+	raise(sig);
+}
+
+/*
+ * On Windows, OS-level exceptions (stack overflow, access violations) bypass
+ * the C signal() mechanism entirely and terminate the process silently.
+ * SetUnhandledExceptionFilter intercepts these so we can print the same
+ * diagnostic before dying.
+ */
+#ifdef _WIN32
+static char hex_digit(unsigned int n)
+{
+	return n < 10 ? '0' + n : 'a' + (n - 10);
+}
+
+static void write_hex(int fd, unsigned int n)
+{
+	char buf[8];
+	int i = sizeof(buf);
+
+	do {
+		buf[--i] = hex_digit(n & 0xf);
+		n >>= 4;
+	} while (n && i);
+
+	write_raw(fd, buf + i, sizeof(buf) - i);
+}
+
+static LONG WINAPI capture_exception_filter(EXCEPTION_POINTERS *ep)
+{
+	int fd = capture_saved_stderr_fd >= 0 ? capture_saved_stderr_fd : STDERR_FILENO;
+
+	write_str(fd, "dump-command-metadata: fatal: '");
+	write_str(fd, capture_current_command ? capture_current_command : "(unknown)");
+	write_str(fd, "' crashed during option capture (exception 0x");
+	write_hex(fd, ep->ExceptionRecord->ExceptionCode);
+	write_str(fd, ")\n");
+
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
+static LPTOP_LEVEL_EXCEPTION_FILTER capture_prev_filter;
+#endif
+
+static void (*capture_prev_sigsegv)(int);
+static void (*capture_prev_sigabrt)(int);
+#ifdef SIGBUS
+static void (*capture_prev_sigbus)(int);
+#endif
+
+static void install_crash_handlers(void)
+{
+	capture_prev_sigsegv = signal(SIGSEGV, capture_crash_handler);
+	capture_prev_sigabrt = signal(SIGABRT, capture_crash_handler);
+#ifdef SIGBUS
+	capture_prev_sigbus = signal(SIGBUS, capture_crash_handler);
+#endif
+#ifdef _WIN32
+	capture_prev_filter = SetUnhandledExceptionFilter(capture_exception_filter);
+#endif
+}
+
+static void remove_crash_handlers(void)
+{
+	signal(SIGSEGV, capture_prev_sigsegv);
+	signal(SIGABRT, capture_prev_sigabrt);
+#ifdef SIGBUS
+	signal(SIGBUS, capture_prev_sigbus);
+#endif
+#ifdef _WIN32
+	SetUnhandledExceptionFilter(capture_prev_filter);
+	capture_prev_filter = NULL;
+#endif
+}
 
 /* ------------------------------------------------------------------ */
 /* Pass 1: capture                                                    */
@@ -215,7 +347,9 @@ static int capture_command(struct command_metadata_command *mc, struct command *
 
 	command_metadata_capture_error = 0;
 	command_metadata_cur_command = mc;
+	capture_current_command = cmd->name;
 	(void)cmd->fn(2, argv, cmd, plugin);
+	capture_current_command = NULL;
 	command_metadata_cur_command = NULL;
 
 	/*
@@ -281,12 +415,14 @@ static struct command_metadata_program *build_model(struct program *prog)
 	if (devnull >= 0) {
 		saved_stdout = dup(STDOUT_FILENO);
 		saved_stderr = dup(STDERR_FILENO);
+		capture_saved_stderr_fd = saved_stderr;
 		if (saved_stdout >= 0)
 			dup2(devnull, STDOUT_FILENO);
 		if (saved_stderr >= 0)
 			dup2(devnull, STDERR_FILENO);
 	}
 
+	install_crash_handlers();
 	argconfig_set_parse_hook(metadata_capture_hook);
 
 	for (pi = 0, plugin = prog->extensions; plugin; plugin = plugin->next, pi++) {
@@ -316,6 +452,8 @@ static struct command_metadata_program *build_model(struct program *prog)
 	}
 
 	argconfig_set_parse_hook(NULL);
+	remove_crash_handlers();
+	capture_saved_stderr_fd = -1;
 
 	fflush(stdout);
 	fflush(stderr);
