@@ -45,6 +45,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <base64.h>
+#include <crc32.h>
 #include <libnvme.h>
 #include <libnvme-mi.h>
 
@@ -57,9 +59,7 @@
 #include "nvme.h"
 #include "plugin.h"
 #include "util/argconfig.h"
-#include "util/base64.h"
 #include "util/cleanup.h"
-#include "util/crc32.h"
 #include "util/sighdl.h"
 #include "util/suffix.h"
 

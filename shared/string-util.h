@@ -58,3 +58,80 @@ static inline char *trim(char *s)
 	*end = '\0';
 	return s;
 }
+
+/* True if s is non-empty and every character is alphanumeric, '_', or '-'. */
+static inline bool valid_name(const char *s)
+{
+	const char *p;
+
+	if (!s || !*s)
+		return false;
+	for (p = s; *p; p++) {
+		if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') ||
+		    (*p >= '0' && *p <= '9') || *p == '_' || *p == '-')
+			continue;
+		return false;
+	}
+	return true;
+}
+
+/*
+ * If s starts with prefix, return a pointer within s just past the match.
+ * NULL otherwise.
+ */
+static inline char *startswith(const char *s, const char *prefix)
+{
+	size_t l = strlen(prefix);
+
+	if (!strncmp(s, prefix, l))
+		return (char *)s + l;
+
+	return NULL;
+}
+
+/*
+ * Strip leading/trailing blanks and a trailing "# comment" from the
+ * key=value line kv, in place. Return a pointer to the stripped string.
+ */
+static inline char *kv_strip(char *kv)
+{
+	char *s;
+
+	kv[strcspn(kv, "\n\r")] = '\0';
+
+	/* Remove leading newline and spaces */
+	kv += strspn(kv, " \t\n\r");
+
+	/* Skip comments and empty lines */
+	if (*kv == '#' || *kv == '\0') {
+		*kv = '\0';
+		return kv;
+	}
+
+	/* Remove trailing newline chars */
+	kv[strcspn(kv, "\n\r")] = '\0';
+
+	/* Delete trailing comments (including spaces/tabs that precede the #)*/
+	s = &kv[strcspn(kv, "#")];
+	*s-- = '\0';
+	while (s >= kv && (*s == ' ' || *s == '\t'))
+		*s-- = '\0';
+
+	return kv;
+}
+
+/*
+ * If kv is a whole-word match for "key" at the start of a key=value line,
+ * return a pointer to the first character of value (past spaces/tabs/'=').
+ * NULL otherwise.
+ */
+static inline char *kv_keymatch(const char *kv, const char *key)
+{
+	char *value;
+
+	value = startswith(kv, key);
+	if (value && (*value == ' ' || *value == '\t' || *value == '='))
+		return value + strspn(value, " \t=");
+
+	return NULL;
+}

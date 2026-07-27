@@ -26,6 +26,7 @@
 
 #include <ccan/list/list.h>
 
+#include <fs-util.h>
 #include <nvme/config.h>
 #include <nvme/nvme-types-fabrics.h>
 
@@ -339,7 +340,7 @@ static int emit_tmpfile(struct libnvme_global_ctx *ctx, const char *final,
 	if (asprintf(&tmp, "%s.XXXXXX", final) < 0)
 		return -ENOMEM;
 
-	fd = libnvmf_mkstemp(tmp);
+	fd = mkstemp_cloexec(tmp);
 	if (fd < 0) {
 		ret = fd;
 		goto err_free;

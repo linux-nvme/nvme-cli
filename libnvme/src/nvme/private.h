@@ -17,6 +17,8 @@
 
 #include <ccan/list/list.h>
 
+#include <string-util.h>
+
 #include "nvme/nvme-types.h"
 #include "nvme/lib-types.h"
 
@@ -535,34 +537,6 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 int __libnvmf_import_keys_from_config(struct libnvme_host *h,
 		struct libnvme_ctrl *c, long *keyring_id, long *key_id);
 
-/* write() may return short; loop until the whole buffer is written (util.c). */
-int write_all(int fd, const void *buf, size_t len);
-
-static inline char *xstrdup(const char *s)
-{
-	if (!s)
-		return NULL;
-	return strdup(s);
-}
-
-static inline bool streq0(const char *s1, const char *s2)
-{
-	if (s1 == s2)
-		return true;
-	if (!s1 || !s2)
-		return false;
-	return !strcmp(s1, s2);
-}
-
-static inline bool streqcase0(const char *s1, const char *s2)
-{
-	if (s1 == s2)
-		return true;
-	if (!s1 || !s2)
-		return false;
-	return !strcasecmp(s1, s2);
-}
-
 /**
  * libnvme_ipaddrs_eq - Check if 2 IP addresses are equal.
  * @addr1: IP address (can be IPv4 or IPv6)
@@ -603,46 +577,6 @@ const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
 bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr);
 #endif /* CONFIG_FABRICS */
-
-/**
- * startswith - Checks that a string starts with a given prefix.
- * @s:      The string to check
- * @prefix: A string that @s could be starting with
- *
- * Return: If @s starts with @prefix, then return a pointer within @s at
- * the first character after the matched @prefix. NULL otherwise.
- */
-char *startswith(const char *s, const char *prefix);
-
-/**
- * kv_strip - Strip blanks from key value string
- * @kv: The key-value string to strip
- *
- * Strip leading/trailing blanks as well as trailing comments from the
- * Key=Value string pointed to by @kv.
- *
- * Return: A pointer to the stripped string. Note that the original string,
- * @kv, gets modified.
- */
-char *kv_strip(char *kv);
-
-/**
- * kv_keymatch - Look for key in key value string
- * @kv:  The key=value string to search for the presence of @key
- * @key: The key to look for
- *
- * Look for @key in the Key=Value pair pointed to by @k and return a
- * pointer to the Value if @key is found.
- *
- * Check if @kv starts with @key. If it does then make sure that we
- * have a whole-word match on the @key, and if we do, return a pointer
- * to the first character of value (i.e. skip leading spaces, tabs,
- * and equal sign)
- *
- * Return: A pointer to the first character of "value" if a match is found.
- * NULL otherwise.
- */
-char *kv_keymatch(const char *kv, const char *key);
 
 #define __round_mask(val, mult) ((__typeof__(val))((mult)-1))
 

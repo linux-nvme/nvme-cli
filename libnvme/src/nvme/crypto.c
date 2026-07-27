@@ -37,10 +37,10 @@
 
 #include <ccan/endian/endian.h>
 
+#include <base64.h>
+#include <crc32.h>
 #include <libnvme.h>
 
-#include "crc32.h"
-#include "base64.h"
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"

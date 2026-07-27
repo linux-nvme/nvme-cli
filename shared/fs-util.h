@@ -15,3 +15,19 @@
  * -errno otherwise.
  */
 int mkdir_p(const char *path, mode_t mode);
+
+/*
+ * mkstemp(), with O_CLOEXEC set atomically where possible.
+ * Return: an open fd on success, -errno otherwise.
+ */
+int mkstemp_cloexec(char *template);
+
+/* fsync() path, to make a preceding rename()/unlink() inside it durable. */
+void fsync_dir(const char *path);
+
+/*
+ * The final path component (the part after the last '/'), or path itself
+ * if there's no '/'. Unlike POSIX basename(), never modifies path and
+ * never returns a pointer to static storage.
+ */
+char *path_basename(const char *path);
