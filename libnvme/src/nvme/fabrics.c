@@ -3193,6 +3193,7 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 	}
 
 	for (; entry; entry = entry->next) {
+		hostid = fctx->hostid;
 		if (fctx->hostnqn)
 			hostnqn = fctx->hostnqn;
 		else {
@@ -3201,14 +3202,10 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 				hostnqn = fctx->hostnqn;
 		}
 
-		if (fctx->hostid)
-			hostid = fctx->hostid;
-		else if (*entry->nbft->host.id) {
+		if (!hostid && entry->nbft->host.id && *entry->nbft->host.id) {
 			ret = libnvme_uuid_to_string(entry->nbft->host.id, uuid);
 			if (!ret)
 				hostid = uuid;
-			else
-				hostid = fctx->hostid;
 		}
 
 		ret = libnvme_get_host(ctx, hostnqn, hostid, &h);
@@ -3221,6 +3218,13 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 				struct libnvmf_context nfctx = *fctx;
 
 				hfi = (*ss)->hfis[i];
+				if (!hfi) {
+					libnvme_msg(ctx, LIBNVME_LOG_ERR,
+						"SSNS %d has no HFI at position %d\n",
+						(*ss)->index, i);
+					ret = -EINVAL;
+					continue;
+				}
 
 				/* Skip discovery NQN records */
 				if (strcmp((*ss)->subsys_nqn,
@@ -3312,6 +3316,13 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 				continue;
 
 			hfi = (*dd)->hfi;
+			if (!hfi) {
+				libnvme_msg(ctx, LIBNVME_LOG_ERR,
+					"Discovery Descriptor %d has no HFI\n",
+					(*dd)->index);
+				ret = -EINVAL;
+				continue;
+			}
 			ret = libnvmf_uri_parse((*dd)->uri, &uri);
 			if (ret)
 				continue;
@@ -3340,8 +3351,8 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 			nfctx.ctrl_params.host_iface = nbft_find_hfi_iface(hfi);
 			if (!nfctx.ctrl_params.host_iface)
 				libnvme_msg(ctx, LIBNVME_LOG_INFO,
-					"SSNS %d: could not find host interface for HFI %d\n",
-					(*ss)->index, hfi->index);
+					"Discovery Descriptor %d: could not find host interface for HFI %d\n",
+					(*dd)->index, hfi->index);
 
 			/* Lookup existing discovery controller */
 			c = lookup_ctrl(h, &nfctx);

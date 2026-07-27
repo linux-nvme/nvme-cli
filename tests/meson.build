@@ -88,6 +88,22 @@ if want_fabrics and json_c_dep.found()
     endif
 endif
 
+if want_fabrics
+    _py3 = find_program('python3', required: false)
+    if _py3.found()
+        test('nvme-cli - nbft-interface-references',
+             _py3,
+             args: [
+                 files('nvme_nbft_test.py'),
+                 nvme_exe,
+                 files('nbft/NBFT-secondary-hfi-gap'),
+                 files('nbft/NBFT-unresolved-discovery-hfi'),
+                 files('nbft/NBFT-unlinked-discovery'),
+             ],
+             depends: nvme_exe)
+    endif
+endif
+
 mypy = find_program(
     'mypy',
     required : false,
