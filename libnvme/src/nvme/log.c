@@ -18,6 +18,8 @@
 
 #include <libnvme.h>
 
+#include <io-util.h>
+
 #include "cleanup.h"
 #define LOG_FUNCNAME 1
 #include "private.h"

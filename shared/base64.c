@@ -2,6 +2,7 @@
 /*
  * base64.c - RFC4648-compliant base64 encoding
  *
+ * This file is part of nvme-cli.
  * Copyright (c) 2020 SUSE LLC
  *
  * Author: Hannes Reinecke <hare@suse.de>
@@ -10,6 +11,8 @@
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
+
+#include "base64.h"
 
 static const char base64_table[65] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

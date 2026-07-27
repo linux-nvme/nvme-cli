@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <string-util.h>
+
 #include "compiler-attributes.h"
 #include "nvme/accessors-fabrics.h"
 #include "nvme/lib.h"
@@ -301,7 +303,7 @@ static struct libnvmf_tid *tid_parse(struct libnvme_global_ctx *ctx,
 		char *eq = strchr(tok, '=');
 
 		if (!eq) {
-			if (*libnvmf_trim(tok)) {
+			if (*trim(tok)) {
 				libnvme_msg(ctx, LIBNVME_LOG_WARN,
 					    "tid_parse: ignoring \"%s\": missing '='\n",
 					    tok);
@@ -311,8 +313,8 @@ static struct libnvmf_tid *tid_parse(struct libnvme_global_ctx *ctx,
 			const char *key, *val;
 
 			*eq = '\0';
-			key = libnvmf_trim(tok);
-			val = libnvmf_trim(eq + 1);
+			key = trim(tok);
+			val = trim(eq + 1);
 
 			if (!*val) {
 				libnvme_msg(ctx, LIBNVME_LOG_WARN,

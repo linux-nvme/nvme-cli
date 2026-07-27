@@ -1,6 +1,9 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 /*
- * This file is part of libnvme.
+ * This file is part of nvme-cli.
+ * Copyright (c) 2020 SUSE LLC
+ *
+ * Author: Hannes Reinecke <hare@suse.de>
  */
 #pragma once
 

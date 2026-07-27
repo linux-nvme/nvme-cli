@@ -19,6 +19,8 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
 #include <ini.h>
+#include <parse-util.h>
+#include <string-util.h>
 
 #include "compiler-attributes.h"
 #include "config-ini.h"
@@ -75,35 +77,6 @@ const struct libnvmf_key *libnvmf_key_lookup(const char *name)
 	return NULL;
 }
 
-int libnvmf_parse_bool(const char *value, bool *out)
-{
-	static const char * const yes[] = {
-		"1", "yes", "y", "true", "t", "on"
-	};
-	static const char * const no[] = {
-		"0", "no", "n", "false", "f", "off"
-	};
-	size_t i;
-
-	if (!value || !out)
-		return -EINVAL;
-
-	for (i = 0; i < ARRAY_SIZE(yes); i++) {
-		if (!strcasecmp(value, yes[i])) {
-			*out = true;
-			return 0;
-		}
-	}
-	for (i = 0; i < ARRAY_SIZE(no); i++) {
-		if (!strcasecmp(value, no[i])) {
-			*out = false;
-			return 0;
-		}
-	}
-
-	return -EINVAL;
-}
-
 static int check_int(const char *value)
 {
 	char *end;
@@ -136,7 +109,7 @@ int libnvmf_key_check_value(const struct libnvmf_key *key, const char *value)
 	case LIBNVMF_KEY_INT:
 		return check_int(value);
 	case LIBNVMF_KEY_BOOL:
-		return libnvmf_parse_bool(value, &b);
+		return shr_parse_bool(value, &b);
 	case LIBNVMF_KEY_STRING:
 		return 0;
 	}
@@ -513,7 +486,7 @@ static int add_path(struct conf_parse *pc, char *value, unsigned int line)
 		const char **slot;
 		char *eq, *key, *val;
 
-		key = libnvmf_trim(tok);
+		key = trim(tok);
 		if (!*key)
 			continue; /* ";;" and a trailing ';' are benign */
 		eq = strchr(key, '=');
@@ -522,8 +495,8 @@ static int add_path(struct conf_parse *pc, char *value, unsigned int line)
 			goto fail;
 		}
 		*eq = '\0';
-		key = libnvmf_trim(key);
-		val = libnvmf_trim(eq + 1);
+		key = trim(key);
+		val = trim(eq + 1);
 
 		slot = addr_slot(&addr, key);
 		if (slot) {

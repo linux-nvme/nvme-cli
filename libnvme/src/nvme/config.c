@@ -25,6 +25,7 @@
 #include <nvme/tid.h>
 
 #include <ccan/list/list.h>
+#include <parse-util.h>
 
 #include "compiler-attributes.h"
 #include "config-ini.h"
@@ -207,7 +208,7 @@ static void emit_param(const char *key, const char *value, void *user_data)
 	if (k->type == LIBNVMF_KEY_BOOL) {
 		bool set;
 
-		if (libnvmf_parse_bool(value, &set) || !set)
+		if (shr_parse_bool(value, &set) || !set)
 			return;
 		emit_arg(state, key, NULL);
 		return;
@@ -291,22 +292,22 @@ static void apply_param(const char *key, const char *value, void *user_data)
 	else if (!strcmp(key, "tos"))
 		cfg->tos = strtol(value, NULL, 0);
 	else if (!strcmp(key, "duplicate-connect")) {
-		if (!libnvmf_parse_bool(value, &bval))
+		if (!shr_parse_bool(value, &bval))
 			cfg->duplicate_connect = bval;
 	} else if (!strcmp(key, "disable-sqflow")) {
-		if (!libnvmf_parse_bool(value, &bval))
+		if (!shr_parse_bool(value, &bval))
 			cfg->disable_sqflow = bval;
 	} else if (!strcmp(key, "hdr-digest")) {
-		if (!libnvmf_parse_bool(value, &bval))
+		if (!shr_parse_bool(value, &bval))
 			cfg->hdr_digest = bval;
 	} else if (!strcmp(key, "data-digest")) {
-		if (!libnvmf_parse_bool(value, &bval))
+		if (!shr_parse_bool(value, &bval))
 			cfg->data_digest = bval;
 	} else if (!strcmp(key, "tls")) {
-		if (!libnvmf_parse_bool(value, &bval))
+		if (!shr_parse_bool(value, &bval))
 			cfg->tls = bval;
 	} else if (!strcmp(key, "concat")) {
-		if (!libnvmf_parse_bool(value, &bval))
+		if (!shr_parse_bool(value, &bval))
 			cfg->concat = bval;
 	}
 	/* Identity/addressing and crypto keys never reach here -- only

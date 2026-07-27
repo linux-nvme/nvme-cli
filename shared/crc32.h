@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: LicenseRef-Gary-S-Brown-CRC32 */
 /*
- * This file is part of libnvme.
+ * This file is part of nvme-cli.
  */
 #pragma once
 
