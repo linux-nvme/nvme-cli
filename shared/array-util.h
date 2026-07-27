@@ -9,6 +9,8 @@
 
 #include <stddef.h>
 
+#include <ccan/build_assert/build_assert.h>
+
 /*
  * A growable array of untyped pointers, doubling capacity (starting at 8)
  * as items are appended. Neither owns nor frees the pointed-to items --
@@ -36,3 +38,37 @@ int ptrarray_append(struct ptrarray *a, void *item);
  * for freeing each item first if the array owns them.
  */
 void ptrarray_free(struct ptrarray *a);
+
+/*
+ * PTRARRAY_DEFINE(name, type) declares a type-checked growable array of
+ * `type *`, built on top of struct ptrarray:
+ *
+ *   PTRARRAY_DEFINE(tid_list, struct libnvmf_tid);
+ *
+ * generates:
+ *
+ *   struct tid_list { struct libnvmf_tid **items; size_t len, cap; };
+ *   int tid_list_append(struct tid_list *a, struct libnvmf_tid *item);
+ *   void tid_list_free(struct tid_list *a);
+ *
+ * struct name is defined here with the same field order/types as struct
+ * ptrarray, so name##_append()/name##_free() can reinterpret-cast between
+ * the two -- one macro invocation both defines the layout and generates
+ * the casts, so the two can never drift apart the way two independently
+ * hand-written structs could.
+ */
+#define PTRARRAY_DEFINE(name, type)					\
+	struct name {							\
+		type **items;						\
+		size_t len;						\
+		size_t cap;						\
+	};								\
+	static inline int name##_append(struct name *a, type *item)	\
+	{								\
+		BUILD_ASSERT(sizeof(struct name) == sizeof(struct ptrarray)); \
+		return ptrarray_append((struct ptrarray *)a, item);	\
+	}								\
+	static inline void name##_free(struct name *a)			\
+	{								\
+		ptrarray_free((struct ptrarray *)a);			\
+	}
