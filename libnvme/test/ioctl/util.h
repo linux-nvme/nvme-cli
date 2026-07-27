@@ -2,8 +2,9 @@
 #pragma once
 
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdnoreturn.h>
+
+#include <cleanup.h>
 
 noreturn void fail(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
@@ -14,11 +15,3 @@ void cmp(const void *actual, const void *expected, size_t len, const char *msg);
 void arbitrary(void *buf, size_t len);
 
 size_t arbitrary_range(size_t max);
-
-#define __cleanup(fn) __attribute__((cleanup(fn)))
-
-static inline void freep(void *p)
-{
-	free(*(void **)p);
-}
-#define __cleanup_free __cleanup(freep)
