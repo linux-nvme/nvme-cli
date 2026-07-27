@@ -1813,19 +1813,22 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *acmd,
 
 	// Get log
 
-	struct performance_stats log = {0};
+	__cleanup_free struct performance_stats *log = calloc(1, sizeof(*log));
+
+	if (!log)
+		return -ENOMEM;
 
 	int log_size = 4 + cfg.duration * sizeof(struct performance_stats_timestamp);
 	// Get one more timestamp if duration is odd number to avoid non-dw alignment issues
 	int xfer_size = (cfg.duration % 2) > 0 ?
 		(4 + (cfg.duration + 1) * sizeof(struct performance_stats_timestamp)) : log_size;
 
-	err = nvme_get_log_simple(hdl, LID_PERFORMANCE_STATISTICS, &log, xfer_size);
+	err = nvme_get_log_simple(hdl, LID_PERFORMANCE_STATISTICS, log, xfer_size);
 	if (!err) {
 		if (!cfg.raw_binary)
-			performance_stats_print(&log, libnvme_transport_handle_get_name(hdl), cfg.duration);
+			performance_stats_print(log, libnvme_transport_handle_get_name(hdl), cfg.duration);
 		else
-			d_raw((unsigned char *)&log, log_size);
+			d_raw((unsigned char *)log, log_size);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	} else {
