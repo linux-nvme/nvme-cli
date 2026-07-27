@@ -40,3 +40,7 @@ shared_dep = declare_dependency(
     include_directories: '.',
     link_with: libshared,
 )
+
+if want_tests
+    subdir('test')
+endif
