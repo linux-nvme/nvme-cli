@@ -258,7 +258,8 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 
 	ssns->index = le16_to_cpu(raw_ssns->index);
 	strncpy(ssns->transport, trtype_to_string(raw_ssns->trtype),
-		sizeof(ssns->transport));
+		sizeof(ssns->transport) - 1);
+	ssns->transport[sizeof(ssns->transport) - 1] = '\0';
 
 	/* transport specific flags */
 	ssns->trflags = le16_to_cpu(raw_ssns->trflags);
@@ -508,7 +509,8 @@ static int read_hfi(struct libnvme_global_ctx *ctx, struct libnbft_info *nbft,
 		struct nbft_hfi_info_tcp *raw_hfi_info_tcp;
 
 		strncpy(hfi->transport, trtype_to_string(raw_hfi->trtype),
-			sizeof(hfi->transport));
+			sizeof(hfi->transport) - 1);
+		hfi->transport[sizeof(hfi->transport) - 1] = '\0';
 
 		ret = get_heap_obj(ctx, raw_hfi, trinfo_obj,
 			0, (char **)&raw_hfi_info_tcp);
