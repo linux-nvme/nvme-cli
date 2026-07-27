@@ -561,6 +561,7 @@ if want_nvme
 
     sources = [
         'args.c',
+        'global-config.c',
         'logging.c',
         'nvme-cmds.c',
         'nvme-models.c',
@@ -607,6 +608,7 @@ if want_nvme
         config_dep,
         ccan_dep,
         libnvme_dep,
+        shared_dep,
         json_c_dep,
         libkmod_dep,
     ]

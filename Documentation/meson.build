@@ -278,6 +278,7 @@ adoc_sources = [
 # File-format references (man section 5), installed separately from the
 # man1 command pages above.
 adoc_sources_man5 = [
+    'nvme-cli.conf',
     'nvme-fabrics.conf',
 ]
 

@@ -1,0 +1,66 @@
+nvme-cli.conf(5)
+================
+
+NAME
+----
+nvme-cli.conf - nvme-cli global option defaults file format
+
+SYNOPSIS
+--------
+[verse]
+'@SYSCONFDIR@/nvme/nvme-cli.conf'
+
+DESCRIPTION
+-----------
+An INI-format file that sets machine-wide defaults for the global
+options accepted by every 'nvme' subcommand (see GLOBAL OPTIONS in
+linknvme:nvme[1]) -- for example, always disabling IOCTL probing
+without passing '--no-ioctl-probing' on every invocation.
+
+The file is read once, before command-line parsing, and only sets
+*defaults*: an explicit command-line flag always overrides whatever
+this file set. A missing file is not an error; it simply changes
+nothing.
+
+There is no '--config' override and no drop-in directory for this
+file; it always lives at the path above.
+
+SECTIONS
+--------
+The file has a single recognized section, '[Global]'. Keys outside
+'[Global]' (including an unrecognized section) are ignored with a
+warning. Boolean values accept '1'/'yes'/'y'/'true'/'t'/'on' and
+'0'/'no'/'n'/'false'/'f'/'off' (case-insensitive). Unknown keys and
+malformed values are ignored with a warning; they do not stop the
+rest of the file from being applied.
+
+KEYS
+----
+Every key here is the same name as its 'nvme' long option (hyphenated);
+see GLOBAL OPTIONS in linknvme:nvme[1] for what each one means.
+
+	verbose, quiet, output-format, timeout, dry-run, no-retries,
+	no-ioctl-probing, output-format-version, set-options
+
+'verbose' takes the desired verbosity level directly (e.g. 'verbose = 2'
+is equivalent to '-vv'), rather than the increment-per-flag behavior of
+'-v' on the command line.
+
+EXAMPLE
+-------
+------------
+# @SYSCONFDIR@/nvme/nvme-cli.conf
+
+[Global]
+no-ioctl-probing = true
+output-format = json
+timeout = 5000
+------------
+
+SEE ALSO
+--------
+nvme(1)
+
+NVME
+----
+Part of the nvme-user suite
