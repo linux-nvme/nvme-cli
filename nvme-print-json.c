@@ -13,6 +13,7 @@
 #include <ccan/compiler/compiler.h>
 
 #include <libnvme.h>
+#include <libnvme-mi.h>
 
 #include "nvme-print.h"
 

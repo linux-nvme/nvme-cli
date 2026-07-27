@@ -46,6 +46,7 @@
 #include <sys/types.h>
 
 #include <libnvme.h>
+#include <libnvme-mi.h>
 
 #include "common.h"
 #include "fabrics.h"

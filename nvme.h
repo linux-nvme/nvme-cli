@@ -23,8 +23,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
-#include <libnvme-mi.h>
-
 #include "plugin.h"
 #include "util/json.h"
 #include "util/argconfig.h"
