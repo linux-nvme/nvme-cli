@@ -7,7 +7,7 @@
  */
 
 #include <errno.h>
-#include <stdio.h>
+#include <limits.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -20,21 +20,24 @@
 
 int mkdir_p(const char *path, mode_t mode)
 {
-	char buf[256];
+	char buf[PATH_MAX];
 	char *p;
 	size_t len;
 
-	snprintf(buf, sizeof(buf), "%s", path);
-	len = strlen(buf);
+	len = strlen(path);
+	if (len >= sizeof(buf))
+		return -ENAMETOOLONG;
+	memcpy(buf, path, len + 1);
 	if (len && buf[len - 1] == '/')
 		buf[len - 1] = '\0';
 
 	for (p = buf + 1; *p; p++) {
-		if (*p == '/') {
-			*p = '\0';
-			mkdir(buf, mode);
-			*p = '/';
-		}
+		if (*p != '/')
+			continue;
+		*p = '\0';
+		if (mkdir(buf, mode) < 0 && errno != EEXIST)
+			return -errno;
+		*p = '/';
 	}
 	return mkdir(buf, mode) == 0 || errno == EEXIST ? 0 : -errno;
 }
