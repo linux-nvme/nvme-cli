@@ -75,12 +75,12 @@ uint64_t util_json_object_get_uint64(struct json_object *obj)
 	return val;
 }
 
-void json_object_add_uint_02x(struct json_object *o, const char *k, __u32 v)
+void json_object_add_uint_02x(struct json_object *o, const char *k, uint32_t v)
 {
 	json_object_add_uint_0nx(o, k, v, 2);
 }
 
-void json_object_add_uint_0x(struct json_object *o, const char *k, __u32 v)
+void json_object_add_uint_0x(struct json_object *o, const char *k, uint32_t v)
 {
 	char str[STR_LEN];
 
@@ -121,7 +121,7 @@ void json_object_add_nprix64(struct json_object *o, const char *k, uint64_t v)
 	json_object_add_value_string(o, k, str);
 }
 
-void json_object_add_uint_0nx(struct json_object *o, const char *k, __u32 v, int width)
+void json_object_add_uint_0nx(struct json_object *o, const char *k, uint32_t v, int width)
 {
 	char str[STR_LEN];
 
