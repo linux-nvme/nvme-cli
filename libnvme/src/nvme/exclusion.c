@@ -132,7 +132,7 @@ static const char *excl_dir(struct libnvme_global_ctx *ctx, const char *name)
 /*
  * Path of a list file.  @name == NULL is the main hand-edited list; a non-NULL
  * name is a managed drop-in (<base>/exclusions.conf.d/<name>.conf).  Validating
- * the name here (with the shared valid_name()) guards every public entry
+ * the name here (with the shared shr_valid_name()) guards every public entry
  * point uniformly against unsafe characters and path traversal.  The named path
  * varies with @name so it is built into @buf; the main path is a fixed literal.
  * Returns NULL on an invalid name or truncation.
@@ -145,7 +145,7 @@ static const char *excl_path(struct libnvme_global_ctx *ctx,
 	if (!name)
 		return excl_main_path(ctx);
 
-	if (!valid_name(name))
+	if (!shr_valid_name(name))
 		return NULL;
 
 	n = snprintf(buf, len, "%s/%s.conf", excl_dropin_dir(ctx), name);
@@ -158,7 +158,7 @@ static int ensure_excl_dir(struct libnvme_global_ctx *ctx, const char *name)
 
 	if (!dir)
 		return -ENAMETOOLONG;
-	return mkdir_p(dir, 0755);
+	return shr_mkdir_p(dir, 0755);
 }
 
 /* Build the atomic-write temp template "<dir>/.excl.tmp.XXXXXX" in @tmp. */
@@ -172,11 +172,11 @@ static int excl_tmp(const char *dir, char *tmp, size_t len)
 static bool addr_equal(const char *entry_val, const char *caller_val,
 		       const char *transport)
 {
-	if (streq0(transport, "fc"))
-		return streqcase0(entry_val, caller_val);
+	if (shr_streq0(transport, "fc"))
+		return shr_streqcase0(entry_val, caller_val);
 
 	return libnvme_ipaddrs_eq(entry_val, caller_val) ||
-	       streq0(entry_val, caller_val);
+	       shr_streq0(entry_val, caller_val);
 }
 
 /*
@@ -187,25 +187,25 @@ static bool addr_equal(const char *entry_val, const char *caller_val,
 static bool tid_subset_match(const struct libnvmf_tid *e,
 			     const struct libnvmf_tid *tid)
 {
-	if (e->transport && !streq0(e->transport, tid->transport))
+	if (e->transport && !shr_streq0(e->transport, tid->transport))
 		return false;
 	if (e->traddr &&
 	    !(tid->traddr &&
 	      addr_equal(e->traddr, tid->traddr, tid->transport)))
 		return false;
-	if (e->trsvcid && !streq0(e->trsvcid, tid->trsvcid))
+	if (e->trsvcid && !shr_streq0(e->trsvcid, tid->trsvcid))
 		return false;
-	if (e->subsysnqn && !streq0(e->subsysnqn, tid->subsysnqn))
+	if (e->subsysnqn && !shr_streq0(e->subsysnqn, tid->subsysnqn))
 		return false;
 	if (e->host_traddr &&
 	    !(tid->host_traddr &&
 	      addr_equal(e->host_traddr, tid->host_traddr, tid->transport)))
 		return false;
-	if (e->host_iface && !streq0(e->host_iface, tid->host_iface))
+	if (e->host_iface && !shr_streq0(e->host_iface, tid->host_iface))
 		return false;
-	if (e->hostnqn && !streq0(e->hostnqn, tid->hostnqn))
+	if (e->hostnqn && !shr_streq0(e->hostnqn, tid->hostnqn))
 		return false;
-	if (e->hostid && !streq0(e->hostid, tid->hostid))
+	if (e->hostid && !shr_streq0(e->hostid, tid->hostid))
 		return false;
 	return true;
 }
@@ -291,7 +291,7 @@ static enum excl_line_type classify_line(char *s, bool *in_excl, char **val)
 			return EXCL_LINE_JUNK;
 		}
 		*end = '\0';
-		*in_excl = !strcmp(trim(s + 1), EXCL_SECTION);
+		*in_excl = !strcmp(shr_trim(s + 1), EXCL_SECTION);
 		return EXCL_LINE_SECTION;
 	}
 
@@ -299,13 +299,13 @@ static enum excl_line_type classify_line(char *s, bool *in_excl, char **val)
 	if (!eq)
 		return EXCL_LINE_IGNORE;
 	*eq = '\0';
-	key = trim(s);
+	key = shr_trim(s);
 	if (strcmp(key, EXCL_LINE_KEY))
 		return EXCL_LINE_IGNORE;
 	if (!*in_excl)
 		return EXCL_LINE_STRAY;
 
-	*val = trim(eq + 1);
+	*val = shr_trim(eq + 1);
 	return EXCL_LINE_ENTRY;
 }
 
@@ -323,7 +323,7 @@ static bool scan_conf_file(const char *path, scan_fn fn, void *ctx)
 		return false;
 
 	while (fgets(line, sizeof(line), f)) {
-		char *s = trim(line);
+		char *s = shr_trim(line);
 		char *val;
 
 		if (classify_line(s, &in_excl, &val) != EXCL_LINE_ENTRY)
@@ -551,7 +551,7 @@ __libnvme_public int libnvmf_exclusion_add(struct libnvme_global_ctx *ctx,
 	if (!dir || excl_tmp(dir, tmp, sizeof(tmp)))
 		return -ENAMETOOLONG;
 
-	fd = mkstemp_cloexec(tmp);
+	fd = shr_mkstemp(tmp);
 	if (fd < 0)
 		return fd;
 
@@ -585,7 +585,7 @@ __libnvme_public int libnvmf_exclusion_add(struct libnvme_global_ctx *ctx,
 			/* Classify a scratch copy; "line" must stay intact. */
 			strncpy(parsebuf, line, sizeof(parsebuf) - 1);
 			parsebuf[sizeof(parsebuf) - 1] = '\0';
-			classify_line(trim(parsebuf), &in_excl, &val);
+			classify_line(shr_trim(parsebuf), &in_excl, &val);
 			has_section |= in_excl;
 		}
 		fclose(fin);
@@ -621,7 +621,7 @@ __libnvme_public int libnvmf_exclusion_add(struct libnvme_global_ctx *ctx,
 		unlink(tmp);
 		return ret;
 	}
-	fsync_dir(dir); /* make the rename durable */
+	shr_fsync_dir(dir); /* make the rename durable */
 	return ret;
 }
 
@@ -719,7 +719,7 @@ __libnvme_public int libnvmf_exclusion_remove(struct libnvme_global_ctx *ctx,
 		return -ENAMETOOLONG;
 	}
 
-	fd = mkstemp_cloexec(tmp);
+	fd = shr_mkstemp(tmp);
 	if (fd < 0) {
 		ret = fd;
 		fclose(fin);
@@ -748,7 +748,7 @@ __libnvme_public int libnvmf_exclusion_remove(struct libnvme_global_ctx *ctx,
 		char parsebuf[EXCL_LINE_MAX];
 		char *val;
 
-		/* Classify a scratch copy; trim() mutates in place and
+		/* Classify a scratch copy; shr_trim() mutates in place and
 		 * would otherwise clobber the trailing newline in "line" before
 		 * it gets passed through to fout.
 		 */
@@ -756,7 +756,7 @@ __libnvme_public int libnvmf_exclusion_remove(struct libnvme_global_ctx *ctx,
 		parsebuf[sizeof(parsebuf) - 1] = '\0';
 
 		/* Everything except the entry being removed passes through. */
-		if (classify_line(trim(parsebuf), &in_excl,
+		if (classify_line(shr_trim(parsebuf), &in_excl,
 				  &val) == EXCL_LINE_ENTRY &&
 		    !removed && !strcmp(val, entry))
 			removed = true; /* skip this line */
@@ -788,7 +788,7 @@ __libnvme_public int libnvmf_exclusion_remove(struct libnvme_global_ctx *ctx,
 		unlink(tmp);
 		return ret;
 	}
-	fsync_dir(dir); /* make the rename durable */
+	shr_fsync_dir(dir); /* make the rename durable */
 	return ret;
 }
 
@@ -800,7 +800,7 @@ __libnvme_public int libnvmf_exclusion_remove(struct libnvme_global_ctx *ctx,
  */
 static uint64_t content_hash(const char *buf, size_t len)
 {
-	uint64_t h = fnv1a_64(buf, len);
+	uint64_t h = shr_fnv1a_64(buf, len);
 
 	return h ? h : 1;
 }
@@ -896,7 +896,7 @@ static int validate_conf_buf(struct libnvme_global_ctx *ctx, const char *text)
 
 	for (line = strtok_r(copy, "\n", &save); line;
 	     line = strtok_r(NULL, "\n", &save)) {
-		char *s = trim(line), *val;
+		char *s = shr_trim(line), *val;
 
 		switch (classify_line(s, &in_excl, &val)) {
 		case EXCL_LINE_ENTRY:
@@ -1001,7 +1001,7 @@ __libnvme_public int libnvmf_exclusion_write(struct libnvme_global_ctx *ctx,
 		goto out;
 	}
 
-	fd = mkstemp_cloexec(tmp);
+	fd = shr_mkstemp(tmp);
 	if (fd < 0) {
 		ret = fd;
 		goto out;
@@ -1012,7 +1012,7 @@ __libnvme_public int libnvmf_exclusion_write(struct libnvme_global_ctx *ctx,
 		ret = -errno;
 		goto err_tmp;
 	}
-	ret = write_all(fd, text, strlen(text));
+	ret = shr_write_all(fd, text, strlen(text));
 	if (ret)
 		goto err_tmp;
 	if (fsync(fd) < 0) {
@@ -1026,7 +1026,7 @@ __libnvme_public int libnvmf_exclusion_write(struct libnvme_global_ctx *ctx,
 		unlink(tmp);
 		goto out;
 	}
-	fsync_dir(dir); /* make the rename durable */
+	shr_fsync_dir(dir); /* make the rename durable */
 	ret = 0;
 	goto out;
 

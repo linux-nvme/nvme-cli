@@ -165,17 +165,17 @@ static int resolve_path(struct libnvme_global_ctx *ctx,
 		return -ENOMEM;
 
 	conn->is_dc = ep->is_dc;
-	conn->source = xstrdup(f->path);
+	conn->source = shr_xstrdup(f->path);
 	conn->line = path->line;
 
-	conn->transport = xstrdup(path->transport);
-	conn->traddr = xstrdup(path->traddr);
-	conn->trsvcid = xstrdup(path->trsvcid);
-	conn->host_traddr = xstrdup(path->host_traddr);
-	conn->host_iface = xstrdup(path->host_iface);
-	conn->subsysnqn = xstrdup(nqn);
-	conn->hostnqn = xstrdup(hostnqn);
-	conn->hostid = xstrdup(hostid);
+	conn->transport = shr_xstrdup(path->transport);
+	conn->traddr = shr_xstrdup(path->traddr);
+	conn->trsvcid = shr_xstrdup(path->trsvcid);
+	conn->host_traddr = shr_xstrdup(path->host_traddr);
+	conn->host_iface = shr_xstrdup(path->host_iface);
+	conn->subsysnqn = shr_xstrdup(nqn);
+	conn->hostnqn = shr_xstrdup(hostnqn);
+	conn->hostid = shr_xstrdup(hostid);
 	if (!conn->source || !conn->transport || !conn->traddr ||
 	    !conn->subsysnqn ||
 	    (path->trsvcid && !conn->trsvcid) ||
@@ -185,7 +185,7 @@ static int resolve_path(struct libnvme_global_ctx *ctx,
 	    (hostid && !conn->hostid))
 		goto fail;
 	if (real_value(f->hostsymname)) {
-		conn->hostsymname = xstrdup(f->hostsymname);
+		conn->hostsymname = shr_xstrdup(f->hostsymname);
 		if (!conn->hostsymname)
 			goto fail;
 	}
@@ -353,7 +353,7 @@ int libnvmf_config_load(struct libnvme_global_ctx *ctx, const char *path,
 		files[0] = calloc(1, sizeof(*files[0]));
 		if (files[0]) {
 			list_head_init(&files[0]->endpoints);
-			files[0]->path = xstrdup(path);
+			files[0]->path = shr_xstrdup(path);
 		}
 		if (!files[0] || !files[0]->path) {
 			libnvmf_conf_file_free(files[0]);

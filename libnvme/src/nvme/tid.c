@@ -158,14 +158,14 @@ __libnvme_public struct libnvmf_tid *libnvmf_tid_from_fields(
 	if (libnvmf_tid_new(&t) < 0)
 		return NULL;
 
-	t->transport   = xstrdup(transport);
-	t->traddr      = xstrdup(traddr);
-	t->trsvcid     = xstrdup(trsvcid);
-	t->subsysnqn   = xstrdup(subsysnqn);
-	t->host_traddr = xstrdup(host_traddr);
-	t->host_iface  = xstrdup(host_iface);
-	t->hostnqn     = xstrdup(hostnqn);
-	t->hostid      = xstrdup(hostid);
+	t->transport   = shr_xstrdup(transport);
+	t->traddr      = shr_xstrdup(traddr);
+	t->trsvcid     = shr_xstrdup(trsvcid);
+	t->subsysnqn   = shr_xstrdup(subsysnqn);
+	t->host_traddr = shr_xstrdup(host_traddr);
+	t->host_iface  = shr_xstrdup(host_iface);
+	t->hostnqn     = shr_xstrdup(hostnqn);
+	t->hostid      = shr_xstrdup(hostid);
 
 	if (tid_sanitize_addr(t)) {
 		libnvmf_tid_free(t);
@@ -212,9 +212,9 @@ __libnvme_public int libnvmf_tid_set_identity(struct libnvmf_tid *tid,
 	}
 
 	/* Stage every copy up front so a failure leaves the TID untouched. */
-	new_subsysnqn = xstrdup(subsysnqn);
-	new_hostnqn   = xstrdup(hostnqn);
-	new_hostid    = xstrdup(hostid);
+	new_subsysnqn = shr_xstrdup(subsysnqn);
+	new_hostnqn   = shr_xstrdup(hostnqn);
+	new_hostid    = shr_xstrdup(hostid);
 	if ((subsysnqn && !new_subsysnqn) || (hostnqn && !new_hostnqn) ||
 	    (hostid && !new_hostid)) {
 		free(new_subsysnqn);
@@ -261,14 +261,14 @@ __libnvme_public struct libnvmf_tid *libnvmf_tid_dup(
 	 * through from_fields() would only re-canonicalize and re-allocate
 	 * addresses that are already in their canonical form.
 	 */
-	t->transport   = xstrdup(tid->transport);
-	t->traddr      = xstrdup(tid->traddr);
-	t->trsvcid     = xstrdup(tid->trsvcid);
-	t->subsysnqn   = xstrdup(tid->subsysnqn);
-	t->host_traddr = xstrdup(tid->host_traddr);
-	t->host_iface  = xstrdup(tid->host_iface);
-	t->hostnqn     = xstrdup(tid->hostnqn);
-	t->hostid      = xstrdup(tid->hostid);
+	t->transport   = shr_xstrdup(tid->transport);
+	t->traddr      = shr_xstrdup(tid->traddr);
+	t->trsvcid     = shr_xstrdup(tid->trsvcid);
+	t->subsysnqn   = shr_xstrdup(tid->subsysnqn);
+	t->host_traddr = shr_xstrdup(tid->host_traddr);
+	t->host_iface  = shr_xstrdup(tid->host_iface);
+	t->hostnqn     = shr_xstrdup(tid->hostnqn);
+	t->hostid      = shr_xstrdup(tid->hostid);
 
 	return t;
 }
@@ -303,7 +303,7 @@ static struct libnvmf_tid *tid_parse(struct libnvme_global_ctx *ctx,
 		char *eq = strchr(tok, '=');
 
 		if (!eq) {
-			if (*trim(tok)) {
+			if (*shr_trim(tok)) {
 				libnvme_msg(ctx, LIBNVME_LOG_WARN,
 					    "tid_parse: ignoring \"%s\": missing '='\n",
 					    tok);
@@ -313,8 +313,8 @@ static struct libnvmf_tid *tid_parse(struct libnvme_global_ctx *ctx,
 			const char *key, *val;
 
 			*eq = '\0';
-			key = trim(tok);
-			val = trim(eq + 1);
+			key = shr_trim(tok);
+			val = shr_trim(eq + 1);
 
 			if (!*val) {
 				libnvme_msg(ctx, LIBNVME_LOG_WARN,

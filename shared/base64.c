@@ -18,7 +18,7 @@ static const char base64_table[65] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /**
- * base64_encode() - base64-encode some bytes
+ * shr_base64_encode() - base64-encode some bytes
  * @src: the bytes to encode
  * @srclen: number of bytes to encode
  * @dst: (output) the base64-encoded string.  Not NUL-terminated.
@@ -28,7 +28,7 @@ static const char base64_table[65] =
  *
  * Return: length of the encoded string
  */
-int base64_encode(const unsigned char *src, int srclen, char *dst)
+int shr_base64_encode(const unsigned char *src, int srclen, char *dst)
 {
 	int i, bits = 0;
 	uint32_t ac = 0;
@@ -55,7 +55,7 @@ int base64_encode(const unsigned char *src, int srclen, char *dst)
 }
 
 /**
- * base64_decode() - base64-decode some bytes
+ * shr_base64_decode() - base64-decode some bytes
  * @src: the base64-encoded string to decode
  * @len: number of bytes to decode
  * @dst: (output) the decoded bytes.
@@ -64,7 +64,7 @@ int base64_encode(const unsigned char *src, int srclen, char *dst)
  *
  * Return: number of decoded bytes
  */
-int base64_decode(const char *src, int srclen, unsigned char *dst)
+int shr_base64_decode(const char *src, int srclen, unsigned char *dst)
 {
 	uint32_t ac = 0;
 	int i, bits = 0;

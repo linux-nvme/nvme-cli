@@ -579,7 +579,7 @@ __libnvme_public int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
 #ifdef CONFIG_FABRICS
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 {
-	return ipaddrs_eq(addr1, addr2);
+	return shr_ipaddrs_eq(addr1, addr2);
 }
 #else /* CONFIG_FABRICS */
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
@@ -592,13 +592,13 @@ bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
 		const char *addr)
 {
-	return iface_matching_addr(iface_list, addr);
+	return shr_iface_matching_addr(iface_list, addr);
 }
 
 bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr)
 {
-	return iface_primary_addr_matches(iface_list, iface, addr);
+	return shr_iface_primary_addr_matches(iface_list, iface, addr);
 }
 #endif /* CONFIG_FABRICS */
 

@@ -79,7 +79,7 @@ static int ensure_device_dir(struct libnvme_global_ctx *ctx, const char *device)
 	__cleanup_free char *path = NULL;
 	int ret;
 
-	ret = mkdir_p(registry_dir(ctx), 0755);
+	ret = shr_mkdir_p(registry_dir(ctx), 0755);
 	if (ret)
 		return ret;
 
@@ -190,9 +190,9 @@ static int read_attr_fd(int fd, char **out)
  * atomic replace within a filesystem, so a concurrent reader always sees
  * either the complete old file or the complete new one -- never a half-written
  * value, and with no locking. The directory fsync makes the rename durable
- * across a crash. The random temp name and O_CLOEXEC from mkstemp_cloexec() are
- * secondary: they prevent name prediction / TOCTOU on the temp file and avoid
- * leaking the fd across an exec.
+ * across a crash. The random temp name and O_CLOEXEC from
+ * shr_mkstemp() are secondary: they prevent name prediction / TOCTOU
+ * on the temp file and avoid leaking the fd across an exec.
  *
  * Steps: mkstemp <attr>.tmp.XXXXXX -> fchmod 0644 -> write @value -> rename
  * onto <attr> -> fsync directory.
@@ -219,7 +219,7 @@ static int write_attr_atomic(int dir_fd, const char *dir_path,
 	if (asprintf(&tmp_path, "%s/%s.tmp.XXXXXX", dir_path, attr) < 0)
 		return -ENOMEM;
 
-	fd = mkstemp_cloexec(tmp_path);
+	fd = shr_mkstemp(tmp_path);
 	if (fd < 0)
 		return fd;
 
@@ -229,10 +229,10 @@ static int write_attr_atomic(int dir_fd, const char *dir_path,
 		goto err;
 	}
 
-	ret = write_all(fd, value, strlen(value));
+	ret = shr_write_all(fd, value, strlen(value));
 	if (ret)
 		goto err;
-	ret = write_all(fd, "\n", 1);
+	ret = shr_write_all(fd, "\n", 1);
 	if (ret)
 		goto err;
 	close(fd);
@@ -408,7 +408,7 @@ int libnvmf_registry_create_instance(struct libnvme_global_ctx *ctx,
 		return -ENOMEM;
 
 	/* The registry root must exist before mkdtemp() can run inside it. */
-	ret = mkdir_p(registry_dir(ctx), 0755);
+	ret = shr_mkdir_p(registry_dir(ctx), 0755);
 	if (ret)
 		return ret;
 
