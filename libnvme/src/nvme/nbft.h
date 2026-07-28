@@ -168,6 +168,9 @@ struct libnbft_discovery {
  * @secret_keypath:     URI string for the secret key path. The type of
  *                      the URI is specified by @secret_type.
  *                      NULL if not present.
+ *
+ * All pointer fields refer to storage owned by the parent
+ * &struct libnbft_info. They must not be freed separately.
  */
 struct libnbft_security {
 	int index;
