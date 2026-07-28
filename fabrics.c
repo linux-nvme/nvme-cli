@@ -76,8 +76,8 @@ static const char *nvmf_htraddr		= "host traddr (e.g. FC WWN's)";
 static const char *nvmf_hiface		= "host interface (for tcp transport)";
 static const char *nvmf_hostnqn		= "user-defined hostnqn";
 static const char *nvmf_hostid		= "user-defined hostid (if default not used)";
-static const char *nvmf_hostkey		= "user-defined dhchap key (if default not used)";
-static const char *nvmf_ctrlkey		= "user-defined dhchap controller key (for bi-directional authentication)";
+static const char *nvmf_hostkey		= "user-defined kxchap key (if default not used)";
+static const char *nvmf_ctrlkey		= "user-defined kxchap controller key (for bi-directional authentication)";
 static const char *nvmf_nr_io_queues	= "number of io queues to use (default is core count)";
 static const char *nvmf_nr_write_queues	= "number of write queues to use (default 0)";
 static const char *nvmf_nr_poll_queues	= "number of poll queues to use (default 0)";
@@ -110,8 +110,10 @@ static const char *nvmf_config_file_ro	= "INI configuration file (default: " PAT
 		OPT_STRING("host-iface",      'f', "STR", &f.host_iface,    nvmf_hiface),        \
 		OPT_STRING("hostnqn",         'q', "STR", &f.hostnqn,       nvmf_hostnqn),       \
 		OPT_STRING("hostid",          'I', "STR", &f.hostid,        nvmf_hostid),        \
-		OPT_STRING("dhchap-secret",   'S', "STR", &f.hostkey,       nvmf_hostkey),       \
-		OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &f.ctrlkey,    nvmf_ctrlkey),       \
+		OPT_STRING("kxchap-secret",   'S', "STR", &f.hostkey,       nvmf_hostkey),       \
+		OPT_STRING("kxchap-ctrl-secret", 'C', "STR", &f.ctrlkey,    nvmf_ctrlkey),       \
+		OPT_STRING("dhchap-secret",   'S', "STR", &f.hostkey,       nvmf_hostkey, NULL, true), \
+		OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &f.ctrlkey,    nvmf_ctrlkey, NULL, true), \
 		OPT_STRING("keyring",          0,  "STR", &f.keyring,       nvmf_keyring),       \
 		OPT_STRING("tls-key",          0,  "STR", &f.tls_key,       nvmf_tls_key),       \
 		OPT_STRING("tls-key-identity", 0,  "STR", &f.tls_key_identity, nvmf_tls_key_identity), \

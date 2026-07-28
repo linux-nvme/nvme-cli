@@ -18,14 +18,26 @@ The following options are common to NVMe over Fabrics commands such as
 	connection loss.
 
 -C <secret>::
+--kxchap-ctrl-secret=<secret>::
+	Controller authentication secret for bi-directional authentication.
+	If not specified, bi-directional authentication is not attempted.
+
+-S <secret>::
+--kxchap-secret=<secret>::
+	Host authentication secret (KX-HMAC-CHAP). Must be provided in ASCII
+	format as defined in the NVMe specification.
+
+-C <secret>::
 --dhchap-ctrl-secret=<secret>::
 	Controller authentication secret for bi-directional authentication.
 	If not specified, bi-directional authentication is not attempted.
+	(deprecated, see --kxchap-ctrl-secret)
 
 -S <secret>::
 --dhchap-secret=<secret>::
 	Host authentication secret (DH-HMAC-CHAP). Must be provided in ASCII
 	format as defined in the NVMe specification.
+	(deprecated, see --kxchap-secret)
 
 --disable-sqflow::
 	Disable submission queue flow control.
