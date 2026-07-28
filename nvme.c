@@ -5808,7 +5808,7 @@ static int wait_sanitize(struct libnvme_transport_handle *hdl)
 	return 0;
 }
 
-static bool is_sanitized(struct libnvme_transport_handle *hdl)
+static int check_sanitize(struct libnvme_transport_handle *hdl, bool *sanitized)
 {
 	__cleanup_libnvme_free struct nvme_sanitize_log_page *log = NULL;
 	int err;
@@ -5827,7 +5827,8 @@ static bool is_sanitized(struct libnvme_transport_handle *hdl)
 	case NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED:
 		break;
 	case NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS:
-		return true;
+		*sanitized = true;
+		break;
 	case NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS:
 	case NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED:
 	case NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS:
@@ -5835,7 +5836,7 @@ static bool is_sanitized(struct libnvme_transport_handle *hdl)
 		break;
 	}
 
-	return false;
+	return 0;
 }
 
 struct nvme_id_ctrl *identify_ctrl(struct libnvme_transport_handle *hdl)
@@ -5878,6 +5879,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;
+	bool sanitized;
 
 	struct config {
 		bool	ish;
@@ -6012,7 +6014,11 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 
 		if (cfg.wait)
 			err = wait_sanitize(hdl);
-	} while (--cfg.repeat && !err && is_sanitized(hdl));
+
+		sanitized = false;
+		if (!err && --cfg.repeat)
+			err = check_sanitize(hdl, &sanitized);
+	} while (!err && sanitized);
 
 	return err;
 }
