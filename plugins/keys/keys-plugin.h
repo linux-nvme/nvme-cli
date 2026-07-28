@@ -14,14 +14,14 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("keys", "Manage NVMeoF DH-HMAC-CHAP and TLS keys", NVME_VERSION),
+PLUGIN(NAME("keys", "Manage NVMeoF KX-HMAC-CHAP and TLS keys", NVME_VERSION),
 	COMMAND_LIST(
-		ENTRY("gen-dhchap", "Generate NVMeoF DH-HMAC-CHAP host key", gen_dhchap)
-		ENTRY("check-dhchap", "Validate NVMeoF DH-HMAC-CHAP host key format or check if loaded", check_dhchap)
+		ENTRY("gen-kxchap", "Generate NVMeoF KX-HMAC-CHAP host key", gen_kxchap)
+		ENTRY("check-kxchap", "Validate NVMeoF KX-HMAC-CHAP host key format or check if loaded", check_kxchap)
 		ENTRY("gen-tls", "Generate NVMeoF TLS PSK", gen_tls)
 		ENTRY("check-tls", "Validate NVMeoF TLS PSK format or check if loaded", check_tls)
 		ENTRY("insert-tls", "Insert NVMeoF TLS PSK into a keyring", insert_tls)
-		ENTRY("import", "Import NVMeoF TLS PSKs and DH-HMAC-CHAP keys into a keyring", key_import)
+		ENTRY("import", "Import NVMeoF TLS PSKs and KX-HMAC-CHAP keys into a keyring", key_import)
 		ENTRY("export", "Export NVMeoF TLS PSKs from a keyring", key_export)
 		ENTRY("revoke", "Revoke an NVMeoF TLS PSK from a keyring", key_revoke)
 	)

@@ -54,7 +54,7 @@ static unsigned char default_hmac(size_t key_len)
 	return LIBNVMF_HMAC_ALG_NONE;
 }
 
-__libnvme_public int libnvmf_gen_dhchap_key(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvmf_gen_kxchap_key(struct libnvme_global_ctx *ctx,
 		char *hostnqn, enum libnvmf_hmac_alg hmac,
 		unsigned int key_len, unsigned char *secret,
 		unsigned char *key)
@@ -507,7 +507,7 @@ static DEFINE_CLEANUP_FUNC(cleanup_evp_mac_ctx, EVP_MAC_CTX *, EVP_MAC_CTX_free)
 static DEFINE_CLEANUP_FUNC(cleanup_evp_mac, EVP_MAC *, EVP_MAC_free)
 #define __cleanup_evp_mac __cleanup(cleanup_evp_mac)
 
-__libnvme_public int libnvmf_gen_dhchap_key(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvmf_gen_kxchap_key(struct libnvme_global_ctx *ctx,
 		char *hostnqn, enum libnvmf_hmac_alg hmac,
 		unsigned int key_len, unsigned char *secret,
 		unsigned char *key)

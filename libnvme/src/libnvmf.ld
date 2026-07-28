@@ -64,7 +64,7 @@ LIBNVMF_3 {
 		libnvmf_export_tls_key;
 		libnvmf_export_tls_key_versioned;
 		libnvmf_free_nbft;
-		libnvmf_gen_dhchap_key;
+		libnvmf_gen_kxchap_key;
 		libnvmf_generate_hostid;
 		libnvmf_generate_hostnqn;
 		libnvmf_generate_hostnqn_from_hostid;

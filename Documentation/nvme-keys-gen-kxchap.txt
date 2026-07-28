@@ -1,21 +1,21 @@
-nvme-keys-gen-dhchap(1)
+nvme-keys-gen-kxchap(1)
 =======================
 
 NAME
 ----
-nvme-keys-gen-dhchap - Generate a host DH-HMAC-CHAP key
+nvme-keys-gen-kxchap - Generate a host KX-HMAC-CHAP key
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'keys gen-dhchap' [--hmac=<hmac-id> | -m <hmac-id>]
+'nvme' [<global-options>] 'keys gen-kxchap' [--hmac=<hmac-id> | -m <hmac-id>]
 			[--secret=<secret> | -s <secret>]
 			[--key-length=<len> | -l <len>]
 			[--nqn=<host-nqn> | -n <host-nqn>]
 
 DESCRIPTION
 -----------
-Generate a base64-encoded DH-HMAC-CHAP host key in the form:
+Generate a base64-encoded KX-HMAC-CHAP host key in the form:
 DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
 and prints it to stdout.
 

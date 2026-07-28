@@ -116,7 +116,7 @@ __libnvme_public int libnvmf_generate_tls_key_identity(struct libnvme_global_ctx
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvmf_gen_dhchap_key(struct libnvme_global_ctx *ctx,
+__libnvme_public int libnvmf_gen_kxchap_key(struct libnvme_global_ctx *ctx,
 		char *hostnqn, enum libnvmf_hmac_alg hmac,
 		unsigned int key_len, unsigned char *secret,
 		unsigned char *key)
