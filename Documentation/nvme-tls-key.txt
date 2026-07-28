@@ -1,0 +1,84 @@
+nvme-tls-key(1)
+===============
+
+NAME
+----
+nvme-tls-key - Manage NVMe TLS PSKs (deprecated)
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'tls-key' [--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			[--keyfile=<file> | -f <file>]
+			[--import | -i] [--export | -e]
+			[--revoke=<description> | -r <description>]
+
+DESCRIPTION
+-----------
+Deprecated command kept for scripts written against nvme-cli versions older
+than 3.0. Exactly one of '--import', '--export', or '--revoke' must be
+given; based on which mode is selected, this alias translates the command
+into the equivalent new 'keys' plugin subcommand and forwards to it:
+
+* '--import' translates to linknvme-keys-import[1], forwarding
+  '--keyring' and '--keyfile'.
+* '--export' translates to linknvme-keys-export[1], forwarding
+  '--keyring' and '--keyfile'.
+* '--revoke=<description>' translates to linknvme-keys-revoke[1],
+  forwarding '--keyring' and '--keytype', with '<description>' passed as
+  '--identity'.
+
+Only the options relevant to the selected mode are meaningful; e.g.
+'--keytype' has no effect with '--import' or '--export' since the new
+'import'/'export' subcommands no longer take a key type. This command does
+not derive or insert a 'retained' TLS key from raw secret material -- use
+linknvme-keys-gen-tls[1] or linknvme-keys-insert-tls[1] for that.
+
+New scripts should call 'nvme keys import', 'nvme keys export', or
+'nvme keys revoke' directly instead. This alias prints a deprecation
+warning on stderr and may be removed in a future release.
+
+OPTIONS
+-------
+-k <name>::
+--keyring=<name>::
+	Name of the keyring to import into, export from, or revoke from.
+	Default is '.nvme'.
+
+-t <type>::
+--keytype=<type>::
+	Type of the key to revoke. Only used with '--revoke'.
+	Default is 'psk'.
+
+-f <file>::
+--keyfile=<file>::
+	File to read the keys from ('--import') or write the keys to
+	('--export') instead of stdin/stdout.
+
+-i::
+--import::
+	Import keys in bulk; see linknvme-keys-import[1].
+
+-e::
+--export::
+	Export all keys from the keyring; see linknvme-keys-export[1].
+
+-r <description>::
+--revoke=<description>::
+	Revoke the key stored under '<description>' from the keyring; see
+	linknvme-keys-revoke[1].
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-keys-import[1], linknvme-keys-export[1], linknvme-keys-revoke[1]

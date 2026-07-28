@@ -56,6 +56,7 @@ want_mi = get_option('mi').disabled() == false and host_system != 'windows'
 want_top = get_option('top').disabled() == false and host_system != 'windows'
 want_discoverd = get_option('nvme-discoverd').disabled() == false and want_fabrics and host_system != 'windows'
 want_nvmf_autoconnect = get_option('nvmf-autoconnect').disabled() == false
+want_deprecated_cmds = get_option('deprecated-cmds').disabled() == false
 want_json_c = get_option('json-c').disabled() == false
 want_libkmod = get_option('libkmod').disabled() == false and host_system != 'windows'
 want_tests = get_option('tests')
@@ -137,6 +138,8 @@ conf.set('RUNDIR', '"@0@"'.format(rundir))
 conf.set('CONFIG_FABRICS', want_fabrics, description: 'Is fabrics enabled')
 conf.set('CONFIG_MI', want_mi, description: 'Is MI enabled')
 conf.set('CONFIG_TOP', want_top, description: 'Is nvme top enabled')
+conf.set('CONFIG_DEPRECATED_CMDS', want_deprecated_cmds,
+    description: 'Deprecated commands enabled')
 
 if host_system == 'windows'
     kernel32_dep = cc.find_library('kernel32', required: true)
@@ -856,6 +859,7 @@ wanted_dict = {
     'fabrics':          want_fabrics,
     'nvme-discoverd':   want_discoverd,
     'nvmf-autoconnect': want_nvmf_autoconnect,
+    'deprecated-cmds':  want_deprecated_cmds,
     'python bindings ': want_python,
     'build docs':       want_docs_build,
 }

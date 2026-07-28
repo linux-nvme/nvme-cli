@@ -10138,7 +10138,177 @@ static int dim_cmd(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	return fabrics_dim(desc, argc, argv);
 }
-#endif
+
+#ifdef CONFIG_DEPRECATED_CMDS
+static struct plugin *find_keys_plugin(void)
+{
+	struct plugin *keys = nvme.extensions->next;
+
+	while (keys && (!keys->name || strcmp(keys->name, "keys")))
+		keys = keys->next;
+
+	return keys;
+}
+
+static int forward_to_keys_plugin(const char *old_name, const char *subcmd,
+		int argc, char **argv)
+{
+	struct plugin *keys = find_keys_plugin();
+	__cleanup_free char **sub_argv = NULL;
+
+	if (!keys) {
+		fprintf(stderr, "ERROR: '%s' is deprecated and requires the 'keys' plugin, which is not available in this build; use 'nvme keys %s'\n",
+			old_name, subcmd);
+		return -ENOTTY;
+	}
+
+	fprintf(stderr, "WARNING: '%s' is deprecated, use 'nvme keys %s' instead\n",
+		old_name, subcmd);
+
+	/*
+	 * handle_plugin() expects argv[0] to be a throwaway name (its own
+	 * global-option parsing skips it like a program name) and argv[1]
+	 * to be the subcommand it dispatches on, so forwarding into the
+	 * 'keys' plugin needs both slots, not just a renamed argv[0].
+	 */
+	sub_argv = calloc(argc + 1, sizeof(*sub_argv));
+	if (!sub_argv)
+		return -ENOMEM;
+
+	sub_argv[0] = (char *)keys->name;
+	sub_argv[1] = (char *)subcmd;
+	memcpy(&sub_argv[2], &argv[1], (argc - 1) * sizeof(*argv));
+
+	return handle_plugin(argc + 1, sub_argv, keys);
+}
+
+static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	return forward_to_keys_plugin("gen-dhchap-key", "gen-kxchap", argc, argv);
+}
+
+static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	return forward_to_keys_plugin("check-dhchap-key", "check-kxchap", argc, argv);
+}
+
+static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	return forward_to_keys_plugin("gen-tls-key", "gen-tls", argc, argv);
+}
+
+static int check_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	return forward_to_keys_plugin("check-tls-key", "check-tls", argc, argv);
+}
+
+/*
+ * The old 'tls-key' command bundled import/export/revoke behind
+ * -i/-e/-r mode flags sharing -k/-t/-f; the 'keys' plugin split these
+ * into separate subcommands with their own option sets, so unlike the
+ * other legacy aliases this one has to translate argv instead of just
+ * renaming argv[0].
+ */
+static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	static const struct option opts[] = {
+		{ "keyring",	required_argument,	NULL, 'k' },
+		{ "keytype",	required_argument,	NULL, 't' },
+		{ "keyfile",	required_argument,	NULL, 'f' },
+		{ "import",	no_argument,		NULL, 'i' },
+		{ "export",	no_argument,		NULL, 'e' },
+		{ "revoke",	required_argument,	NULL, 'r' },
+		{ NULL, 0, NULL, 0 },
+	};
+	__cleanup_free char *keyring_opt = NULL;
+	__cleanup_free char *keytype_opt = NULL;
+	__cleanup_free char *keyfile_opt = NULL;
+	__cleanup_free char *identity_opt = NULL;
+	__cleanup_free char **sub_argv = NULL;
+	const char *keyring = NULL, *keytype = NULL, *keyfile = NULL, *revoke = NULL;
+	const char *subcmd = NULL;
+	struct plugin *keys;
+	int nsub = 0, c;
+
+	optind = 1;
+	while ((c = getopt_long(argc, argv, "k:t:f:ier:", opts, NULL)) != -1) {
+		switch (c) {
+		case 'k':
+			keyring = optarg;
+			break;
+		case 't':
+			keytype = optarg;
+			break;
+		case 'f':
+			keyfile = optarg;
+			break;
+		case 'i':
+		case 'e':
+			if (subcmd) {
+				fprintf(stderr, "ERROR: only one of --import, --export, or --revoke may be given\n");
+				return -EINVAL;
+			}
+			subcmd = c == 'i' ? "import" : "export";
+			break;
+		case 'r':
+			if (subcmd) {
+				fprintf(stderr, "ERROR: only one of --import, --export, or --revoke may be given\n");
+				return -EINVAL;
+			}
+			subcmd = "revoke";
+			revoke = optarg;
+			break;
+		default:
+			return -EINVAL;
+		}
+	}
+
+	if (!subcmd) {
+		fprintf(stderr, "ERROR: 'tls-key' requires one of --import, --export, or --revoke\n");
+		return -EINVAL;
+	}
+
+	keys = find_keys_plugin();
+	if (!keys) {
+		fprintf(stderr, "ERROR: 'tls-key' is deprecated and requires the 'keys' plugin, which is not available in this build; use 'nvme keys %s'\n",
+			subcmd);
+		return -ENOTTY;
+	}
+
+	sub_argv = calloc(6, sizeof(*sub_argv));
+	if (!sub_argv)
+		return -ENOMEM;
+
+	sub_argv[nsub++] = (char *)keys->name;
+	sub_argv[nsub++] = (char *)subcmd;
+
+	if (keyring) {
+		if (asprintf(&keyring_opt, "--keyring=%s", keyring) < 0)
+			return -ENOMEM;
+		sub_argv[nsub++] = keyring_opt;
+	}
+
+	if (!strcmp(subcmd, "revoke")) {
+		if (keytype) {
+			if (asprintf(&keytype_opt, "--keytype=%s", keytype) < 0)
+				return -ENOMEM;
+			sub_argv[nsub++] = keytype_opt;
+		}
+		if (asprintf(&identity_opt, "--identity=%s", revoke) < 0)
+			return -ENOMEM;
+		sub_argv[nsub++] = identity_opt;
+	} else if (keyfile) {
+		if (asprintf(&keyfile_opt, "--keyfile=%s", keyfile) < 0)
+			return -ENOMEM;
+		sub_argv[nsub++] = keyfile_opt;
+	}
+
+	fprintf(stderr, "WARNING: 'tls-key' is deprecated, use 'nvme keys %s' instead\n", subcmd);
+
+	return handle_plugin(nsub, sub_argv, keys);
+}
+#endif /* CONFIG_DEPRECATED_CMDS */
+#endif /* CONFIG_FABRICS */
 
 #ifdef CONFIG_MI
 static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)

@@ -193,6 +193,12 @@ linknvme:nvme-boot-part-log[1]::
 linknvme:nvme-capacity-mgmt[1]::
 	Capacity Management Command
 
+linknvme:nvme-check-dhchap-key[1]::
+	Check a host DH-HMAC-CHAP key (deprecated, see nvme-keys-check-kxchap)
+
+linknvme:nvme-check-tls-key[1]::
+	Check a NVMe TLS PSK (deprecated, see nvme-keys-check-tls)
+
 linknvme:nvme-cmdset-ind-id-ns[1]::
 	I/O Command Set Independent Identify Namespace
 
@@ -202,8 +208,14 @@ linknvme:nvme-endurance-event-agg-log[1]::
 linknvme:nvme-fid-support-effects-log[1]::
 	Retrieve FID Support and Effects log
 
+linknvme:nvme-gen-dhchap-key[1]::
+	Generate a host DH-HMAC-CHAP key (deprecated, see nvme-keys-gen-kxchap)
+
 linknvme:nvme-gen-hostnqn[1]::
 	Generate NVMeoF host NQN
+
+linknvme:nvme-gen-tls-key[1]::
+	Generate a NVMe TLS PSK (deprecated, see nvme-keys-gen-tls)
 
 linknvme:nvme-get-lba-status[1]::
 	Get LBA Status command
@@ -264,6 +276,9 @@ linknvme:nvme-subsystem-reset[1]::
 
 linknvme:nvme-supported-log-pages[1]::
 	Retrieve the Supported Log pages details
+
+linknvme:nvme-tls-key[1]::
+	Manage NVMe TLS PSKs (deprecated, see nvme-keys-import/export/revoke)
 
 linknvme:nvme-verify[1]::
 	verify command
