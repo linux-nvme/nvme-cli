@@ -97,46 +97,46 @@ unsigned char *read_binary_file(char *data_dir_path, const char *bin_path,
 
 	if (!bin_file) {
 		nvme_show_error("\nFailed to open %s", file_path);
-		if (file_path != bin_path)
-			free(file_path);
-		return NULL;
+		goto out;
 	}
 
 	/* get size */
 	fseek(bin_file, 0, SEEK_END);
 	*buffer_size = ftell(bin_file);
+	if (*buffer_size <= 0)
+		goto out_close;
+
 	fseek(bin_file, 0, SEEK_SET);
-	if (*buffer_size <= 0) {
-		fclose(bin_file);
-		return NULL;
-	}
+
+	if (*buffer_size <= 0)
+		goto out;
 
 	/* allocate buffer */
 	buffer = (unsigned char *)malloc(*buffer_size);
 	if (!buffer) {
 		nvme_show_result("\nFailed to allocate %ld bytes!", *buffer_size);
-		fclose(bin_file);
-		return NULL;
+		goto out_close;
 	}
+
 	memset(buffer, 0, *buffer_size);
 
 	/* Read data */
 	n_data = fread(buffer, 1, *buffer_size, bin_file);
 
-	/* Close file */
-	fclose(bin_file);
-
 	/* Validate we read data */
 	if (n_data != (size_t)*buffer_size) {
 		nvme_show_result("\nFailed to read %ld bytes from %s", *buffer_size, file_path);
-		return NULL;
+		free(buffer);
+		buffer = NULL;
 	}
 
+out_close:
+	fclose(bin_file);
+out:
 	if (file_path != bin_path)
 		free(file_path);
 	return buffer;
 }
-
 void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t data_size, FILE *fp)
 {
 	char *description_str = NULL;
