@@ -10,8 +10,8 @@
 Tests invoke the nvme binary directly and need no real NVMe hardware.
 
 They are deliberately restricted to the commands (and option combinations)
-that only generate or validate key material: 'gen-dhchap', 'gen-tls',
-'check-dhchap' and 'check-tls' without '--identity'/'--subsysnqn'. Those
+that only generate or validate key material: 'gen-kxchap', 'gen-tls',
+'check-kxchap' and 'check-tls' without '--identity'/'--subsysnqn'. Those
 never touch a kernel keyring. The remaining commands ('insert-tls',
 'import', 'export', 'revoke', and check-*/--identity or --subsysnqn) look
 up or modify a real '.nvme' keyring via keyctl, whose presence and contents
@@ -37,7 +37,7 @@ _NVME_BIN = sys.argv[1] \
     if len(sys.argv) > 1 and not sys.argv[1].startswith('-') \
     else 'nvme'
 
-_PIN_DHCHAP_KEY = 'DHHC-1:00:9wCYVQqDvADjGIZo6q/v2SfmXZqqkNa9TcvYu97Ly3Q/gajh:'
+_PIN_KXCHAP_KEY = 'DHHC-1:00:9wCYVQqDvADjGIZo6q/v2SfmXZqqkNa9TcvYu97Ly3Q/gajh:'
 _PIN_TLS_KEY = 'NVMeTLSkey-1:01:9wCYVQqDvADjGIZo6q/v2SfmXZqqkNa9TcvYu97Ly3Q/gajh:'
 
 
@@ -60,38 +60,38 @@ class KeysCLITest(unittest.TestCase):
         return result
 
     # ------------------------------------------------------------------ #
-    # gen-dhchap                                                          #
+    # gen-kxchap                                                          #
     # ------------------------------------------------------------------ #
 
-    def test_gen_dhchap_default_is_hmac_none(self):
-        result = self._run('gen-dhchap', '--secret=pin:1234')
-        self.assertEqual(result.stdout.strip(), _PIN_DHCHAP_KEY)
+    def test_gen_kxchap_default_is_hmac_none(self):
+        result = self._run('gen-kxchap', '--secret=pin:1234')
+        self.assertEqual(result.stdout.strip(), _PIN_KXCHAP_KEY)
 
-    def test_gen_dhchap_same_pin_is_deterministic(self):
-        first = self._run('gen-dhchap', '--secret=pin:1234')
-        second = self._run('gen-dhchap', '--secret=pin:1234')
+    def test_gen_kxchap_same_pin_is_deterministic(self):
+        first = self._run('gen-kxchap', '--secret=pin:1234')
+        second = self._run('gen-kxchap', '--secret=pin:1234')
         self.assertEqual(first.stdout, second.stdout)
 
-    def test_gen_dhchap_hmac_selects_key_length(self):
+    def test_gen_kxchap_hmac_selects_key_length(self):
         # HMAC 1/2/3 map to SHA-256/384/512 and thus 32/48/64-byte keys,
         # encoded as DHHC-1:<hmac>:<base64 of key+crc>:
         for hmac, key_len in ((1, 32), (2, 48), (3, 64)):
             with self.subTest(hmac=hmac):
-                result = self._run('gen-dhchap', f'--hmac={hmac}')
+                result = self._run('gen-kxchap', f'--hmac={hmac}')
                 self.assertTrue(result.stdout.startswith(f'DHHC-1:0{hmac}:'))
 
-    def test_gen_dhchap_nqn_changes_transformed_key(self):
-        one = self._run('gen-dhchap', '--secret=pin:1234', '--hmac=1',
+    def test_gen_kxchap_nqn_changes_transformed_key(self):
+        one = self._run('gen-kxchap', '--secret=pin:1234', '--hmac=1',
                         '--nqn=nqn.2014-08.org.nvmexpress:uuid:abc')
-        two = self._run('gen-dhchap', '--secret=pin:1234', '--hmac=1',
+        two = self._run('gen-kxchap', '--secret=pin:1234', '--hmac=1',
                         '--nqn=nqn.2014-08.org.nvmexpress:uuid:xyz')
         self.assertNotEqual(one.stdout, two.stdout)
 
-    def test_gen_dhchap_invalid_hmac_fails(self):
-        self._run('gen-dhchap', '--hmac=9', expect_fail=True)
+    def test_gen_kxchap_invalid_hmac_fails(self):
+        self._run('gen-kxchap', '--hmac=9', expect_fail=True)
 
-    def test_gen_dhchap_mismatched_key_length_for_hmac_fails(self):
-        self._run('gen-dhchap', '--hmac=1', '--key-length=48',
+    def test_gen_kxchap_mismatched_key_length_for_hmac_fails(self):
+        self._run('gen-kxchap', '--hmac=1', '--key-length=48',
                   expect_fail=True)
 
     # ------------------------------------------------------------------ #
@@ -121,29 +121,29 @@ class KeysCLITest(unittest.TestCase):
                   expect_fail=True)
 
     # ------------------------------------------------------------------ #
-    # check-dhchap                                                        #
+    # check-kxchap                                                        #
     # ------------------------------------------------------------------ #
 
-    def test_check_dhchap_accepts_generated_key(self):
-        result = self._run('check-dhchap', f'--keydata={_PIN_DHCHAP_KEY}')
+    def test_check_kxchap_accepts_generated_key(self):
+        result = self._run('check-kxchap', f'--keydata={_PIN_KXCHAP_KEY}')
         self.assertIn('Key is valid', result.stdout)
         self.assertIn('HMAC 0', result.stdout)
         self.assertIn('length 32', result.stdout)
 
-    def test_check_dhchap_reads_from_stdin(self):
-        result = self._run('check-dhchap', stdin_data=_PIN_DHCHAP_KEY + '\n')
+    def test_check_kxchap_reads_from_stdin(self):
+        result = self._run('check-kxchap', stdin_data=_PIN_KXCHAP_KEY + '\n')
         self.assertIn('Key is valid', result.stdout)
 
-    def test_check_dhchap_rejects_malformed_key(self):
-        result = self._run('check-dhchap', '--keydata=not-a-key',
+    def test_check_kxchap_rejects_malformed_key(self):
+        result = self._run('check-kxchap', '--keydata=not-a-key',
                            expect_fail=True)
         self.assertIn('Invalid key header', result.stdout + result.stderr)
 
-    def test_check_dhchap_rejects_tampered_key(self):
+    def test_check_kxchap_rejects_tampered_key(self):
         # Flip the last character before the CRC to corrupt it while
         # keeping the string a valid-looking base64 header/length.
-        tampered = _PIN_DHCHAP_KEY.replace('gajh:', 'gajj:')
-        result = self._run('check-dhchap', f'--keydata={tampered}',
+        tampered = _PIN_KXCHAP_KEY.replace('gajh:', 'gajj:')
+        result = self._run('check-kxchap', f'--keydata={tampered}',
                            expect_fail=True)
         self.assertIn('CRC mismatch', result.stdout + result.stderr)
 

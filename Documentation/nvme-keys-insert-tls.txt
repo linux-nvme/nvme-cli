@@ -33,7 +33,7 @@ This command is for deriving a *new* retained-key identity from raw PSK
 material; it always needs a subsystem NQN (and, if not given, will look up
 the host NQN) to compute that identity. If the identity under which a key
 should be stored is already known -- for example a key previously exported
-by linknvme-keys-export[1], or a DH-HMAC-CHAP key -- use
+by linknvme-keys-export[1], or a KX-HMAC-CHAP key -- use
 linknvme-keys-import[1] instead, which inserts a key under an explicit
 identity without deriving one.
 

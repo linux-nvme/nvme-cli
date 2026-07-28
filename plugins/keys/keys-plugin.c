@@ -40,10 +40,10 @@ static int read_key_value(const char *inline_value, char **out)
 	return *out ? 0 : -ENOMEM;
 }
 
-static int gen_dhchap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
-	    "Generate a DH-HMAC-CHAP host key usable for NVMe In-Band Authentication.";
+	    "Generate a KX-HMAC-CHAP host key usable for NVMe In-Band Authentication.";
 	const char *secret =
 	    "Optional secret (in hexadecimal characters) to be used to initialize the host key.";
 	const char *key_len = "Length of the resulting key (32, 48, or 64 bytes).";
@@ -135,7 +135,7 @@ static int gen_dhchap(int argc, char **argv, struct command *acmd, struct plugin
 		cfg.nqn = hnqn;
 	}
 
-	err = libnvmf_gen_dhchap_key(ctx, cfg.nqn, cfg.hmac,
+	err = libnvmf_gen_kxchap_key(ctx, cfg.nqn, cfg.hmac,
 		cfg.key_len, raw_secret, key);
 	if (err)
 		return err;
@@ -153,7 +153,7 @@ static int gen_dhchap(int argc, char **argv, struct command *acmd, struct plugin
 	return 0;
 }
 
-static int validate_dhchap_key(const char *key, int *hmac_out,
+static int validate_kxchap_key(const char *key, int *hmac_out,
 		unsigned char *decoded_key, int *decoded_len_out, uint32_t *crc_out)
 {
 	uint32_t crc = shr_crc32(0L, NULL, 0);
@@ -221,12 +221,12 @@ static int validate_dhchap_key(const char *key, int *hmac_out,
 	return 0;
 }
 
-static int check_dhchap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+static int check_kxchap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
-	    "Check a DH-HMAC-CHAP host key for usability for NVMe In-Band Authentication,\n"
+	    "Check a KX-HMAC-CHAP host key for usability for NVMe In-Band Authentication,\n"
 	    "and, if --identity is given, check whether it is already loaded into a keyring.";
-	const char *keydata = "DH-HMAC-CHAP key (in DHHC-1 interchange format) to be validated. Reads from stdin if not given.";
+	const char *keydata = "KX-HMAC-CHAP key (in DHHC-1 interchange format) to be validated. Reads from stdin if not given.";
 	const char *keyring = "Keyring to check for an already loaded key.";
 	const char *keytype = "Key type of the key to look up.";
 	const char *identity = "Identity to look up in the keyring to check if the key is already loaded.";
@@ -248,7 +248,7 @@ static int check_dhchap(int argc, char **argv, struct command *acmd, struct plug
 	struct config cfg = {
 		.keydata	= NULL,
 		.keyring	= ".nvme",
-		.keytype	= "dhchap",
+		.keytype	= "kxchap",
 		.identity	= NULL,
 	};
 
@@ -268,7 +268,7 @@ static int check_dhchap(int argc, char **argv, struct command *acmd, struct plug
 		return err;
 	}
 
-	err = validate_dhchap_key(key, &hmac, decoded_key, &decoded_len, &crc);
+	err = validate_kxchap_key(key, &hmac, decoded_key, &decoded_len, &crc);
 	if (err)
 		return err;
 
@@ -854,7 +854,7 @@ static int key_export(int argc, char **argv, struct command *acmd, struct plugin
 	return 0;
 }
 
-static bool is_dhchap_key(const char *key)
+static bool is_kxchap_key(const char *key)
 {
 	return !strncmp(key, "DHHC-1:", 7);
 }
@@ -865,17 +865,17 @@ static int import_one_key(struct libnvme_global_ctx *ctx, long keyring_id,
 	__cleanup_free unsigned char *psk = NULL;
 	unsigned char decoded_key[128];
 	long key_serial;
-	int decoded_len, dhchap_hmac, err;
+	int decoded_len, kxchap_hmac, err;
 	unsigned int tls_hmac;
 	uint32_t crc;
 
-	if (is_dhchap_key(key_str)) {
-		err = validate_dhchap_key(key_str, &dhchap_hmac, decoded_key,
+	if (is_kxchap_key(key_str)) {
+		err = validate_kxchap_key(key_str, &kxchap_hmac, decoded_key,
 				&decoded_len, &crc);
 		if (err)
 			return err;
 
-		return libnvmf_update_key(ctx, keyring_id, "dhchap", identity,
+		return libnvmf_update_key(ctx, keyring_id, "kxchap", identity,
 				(unsigned char *)key_str, strlen(key_str),
 				&key_serial);
 	}
@@ -926,7 +926,7 @@ static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 
 static int key_import(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Import NVMeoF TLS PSKs and DH-HMAC-CHAP keys into a keyring.\n";
+	const char *desc = "Import NVMeoF TLS PSKs and KX-HMAC-CHAP keys into a keyring.\n";
 	const char *keyring = "Keyring to import the keys into.";
 	const char *keyfile = "File to read the keys from (default: stdin).";
 	const char *keydata = "Key to insert directly under --identity. Reads from stdin if not given.";
