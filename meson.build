@@ -552,6 +552,7 @@ substs.set('LIBNVME_SO_VERSION', libnvme_so_major)
 doc_tgts = []
 
 subdir('ccan')      # declares: ccan_dep
+subdir('shared')    # declares: shared_dep
 subdir('libnvme')   # declares: libnvme_dep
 
 if want_nvme
@@ -559,6 +560,8 @@ if want_nvme
     subdir('util')      # declares: util_sources
 
     sources = [
+        'args.c',
+        'global-config.c',
         'logging.c',
         'nvme-cmds.c',
         'nvme-models.c',
@@ -605,6 +608,7 @@ if want_nvme
         config_dep,
         ccan_dep,
         libnvme_dep,
+        shared_dep,
         json_c_dep,
         libkmod_dep,
     ]

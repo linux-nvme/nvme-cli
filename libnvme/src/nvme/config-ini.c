@@ -18,10 +18,10 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
+#include <ini.h>
 
 #include "compiler-attributes.h"
 #include "config-ini.h"
-#include "ini.h"
 #include "lib.h"
 #include "private-fabrics.h"
 #include "util.h"
@@ -769,18 +769,18 @@ static int conf_kv(struct conf_parse *pc, const char *key, char *value,
 	return -EINVAL;
 }
 
-static int conf_event(enum libnvmf_ini_event event, const char *section,
+static int conf_event(enum ini_event event, const char *section,
 		      const char *key, const char *value, unsigned int line,
 		      void *user_data)
 {
 	struct conf_parse *pc = user_data;
 
 	switch (event) {
-	case LIBNVMF_INI_SECTION:
+	case INI_SECTION:
 		return enter_section(pc, key, line);
-	case LIBNVMF_INI_KV:
+	case INI_KV:
 		return conf_kv(pc, key, (char *)value, line);
-	case LIBNVMF_INI_JUNK:
+	case INI_JUNK:
 		conf_err(pc, line, "malformed line \"%s\"", key);
 		return -EINVAL;
 	}
@@ -810,7 +810,7 @@ int libnvmf_conf_file_parse(struct libnvme_global_ctx *ctx, const char *path,
 	if (!pc.f->path)
 		goto nomem;
 
-	ret = libnvmf_ini_parse_file(ctx, path, conf_event, &pc);
+	ret = ini_parse_file(path, conf_event, &pc);
 	if (ret) {
 		if (pc.err)
 			ret = pc.err;

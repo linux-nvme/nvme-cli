@@ -536,6 +536,47 @@ int libnvmf_context_set_reconnect_policy(struct libnvmf_context *fctx,
 		int ctrl_loss_tmo, int reconnect_delay, int fast_io_fail_tmo);
 
 /**
+ * libnvmf_get_owner_from_tid() - Get the registry owner of a transport ID
+ *
+ * @ctx: Global context
+ * @tid: Transport ID identifying the connection to check
+ * @owner: Returned owner, NULL if no matching controller exists or it is
+ *         unowned
+ *
+ * Resolves the controller, if any, matching @tid and reports its registry
+ * owner. Does not connect, disconnect, or otherwise modify controller
+ * state.
+ *
+ * When a matching owned controller exists, @owner is set to a newly
+ * allocated string that the caller must free(). Otherwise, @owner is set
+ * to NULL. A negative errno return indicates the lookup failed; it is
+ * never used to report that no owner exists.
+ *
+ * Return: 0 on success (check @owner), negative errno on failure.
+ */
+int libnvmf_get_owner_from_tid(struct libnvme_global_ctx *ctx,
+		const struct libnvmf_tid *tid, char **owner);
+
+/**
+ * libnvmf_get_owner_from_fctx() - Get the registry owner of a fabrics context
+ *
+ * @ctx: Global context
+ * @fctx: Fabrics context describing the connection to check
+ * @owner: Returned owner, NULL if no matching controller exists or it is
+ *         unowned
+ *
+ * Convenience wrapper around libnvmf_get_owner_from_tid() for callers that
+ * already have a libnvmf_context rather than a bare TID. If @fctx names an
+ * explicit device, its registry entry is checked directly. Otherwise, a
+ * controller is resolved from @fctx's connection parameters. The @owner
+ * contract is identical to libnvmf_get_owner_from_tid().
+ *
+ * Return: 0 on success (check @owner), negative errno on failure.
+ */
+int libnvmf_get_owner_from_fctx(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx, char **owner);
+
+/**
  * libnvmf_discovery() - Perform fabrics discovery
  * @ctx: Global context
  * @fctx: Fabrics context

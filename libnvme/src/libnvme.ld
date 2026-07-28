@@ -140,14 +140,10 @@ LIBNVME_3 {
 		libnvme_scan_subsystem_namespaces;
 		libnvme_scan_subsystems;
 		libnvme_scan_topology;
-		libnvme_set_dry_run;
 		libnvme_set_etdas;
-		libnvme_set_force_4k;
-		libnvme_set_ioctl_probing;
 		libnvme_set_logging_file;
 		libnvme_set_logging_level;
 		libnvme_set_owner;
-		libnvme_set_probe_enabled;
 		libnvme_set_test_base_dir;
 		libnvme_set_test_sysfs_dir;
 		libnvme_skip_namespaces;

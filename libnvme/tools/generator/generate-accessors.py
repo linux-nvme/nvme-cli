@@ -61,6 +61,17 @@ of the struct:
 Only structs carrying this annotation are processed.  Members of other
 structs are ignored.
 
+Naming override — a 'prefix=' key in the spec overrides the naming
+segment used in generated function names, without changing the C
+struct tag itself:
+  struct libnvme_global_ctx { // !generate-accessors:read=none,write=none,prefix=libnvme
+    — a member with write=generated (e.g. via !access:) gets
+      libnvme_set_<member>() instead of the mechanical
+      libnvme_global_ctx_set_<member>(); the generated function
+      signatures and doc comments still say 'struct libnvme_global_ctx'.
+Use this when a struct already has hand-written accessors under a
+shorter name and new generated accessors need to match them.
+
 Member-level override — annotate the member declaration line.  Any axis
 not named in the spec is inherited from the struct-level default:
   char *state;     // !access:read=custom,write=none
@@ -581,13 +592,18 @@ def parse_members(struct_name, raw_body, struct_defaults, verbose,
 _VALID_MODES = frozenset(('generated', 'custom', 'none'))
 
 
-def parse_access_spec(spec, origin):
+def parse_access_spec(spec, origin, extra_keys=()):
     """Parse a spec body like ``read=generated,write=custom``.
 
     Returns a dict mapping axis names ('read', 'write') to mode strings.
     Partial specs are allowed — any axis not named in the spec is absent
     from the returned dict.  Unknown axes or modes trigger a warning and
     are dropped from the result.
+
+    *extra_keys* names additional keys accepted alongside 'read'/'write'
+    whose value is taken verbatim (not checked against _VALID_MODES) —
+    used for the struct-level 'prefix' key, which takes a naming string
+    rather than an access mode.
 
     *origin* is a human-readable description of where the spec came from,
     used only for warning messages (e.g. "!generate-accessors" or
@@ -606,6 +622,9 @@ def parse_access_spec(spec, origin):
         key, value = part.split('=', 1)
         key   = key.strip()
         value = value.strip()
+        if key in extra_keys:
+            result[key] = value
+            continue
         if key not in ('read', 'write'):
             print(f"warning: {origin} spec axis '{key}' is unknown; "
                   f"expected 'read' or 'write'.",
@@ -622,18 +641,24 @@ def parse_access_spec(spec, origin):
 
 
 def parse_struct_annotation(raw_body):
-    """Return the (read_mode, write_mode) defaults for a struct.
+    """Return the (read_mode, write_mode, name_prefix) defaults for a struct.
 
     Recognises::
 
       // !generate-accessors
-          → ('generated', 'generated')  [shorthand]
+          → ('generated', 'generated', None)  [shorthand]
       // !generate-accessors:read=X,write=Y
-          → (X, Y)                      [explicit, both axes]
+          → (X, Y, None)                      [explicit, both axes]
       // !generate-accessors:read=X
-          → (X, 'generated')            [partial — write inherits built-in]
+          → (X, 'generated', None)            [partial — write inherits built-in]
       // !generate-accessors:write=Y
-          → ('generated', Y)            [partial — read inherits built-in]
+          → ('generated', Y, None)            [partial — read inherits built-in]
+      // !generate-accessors:...,prefix=NAME
+          → (..., NAME)                       [override the naming segment
+                                                used in generated function
+                                                names; the real struct tag
+                                                is still used for C types
+                                                and doc comments]
 
     Returns None when the annotation is absent.
 
@@ -647,12 +672,14 @@ def parse_struct_annotation(raw_body):
 
     m = spec_re.search(raw_body)
     if m:
-        parsed = parse_access_spec(m.group(1), '!generate-accessors')
+        parsed = parse_access_spec(m.group(1), '!generate-accessors',
+                                    extra_keys=('prefix',))
         return (parsed.get('read',  'generated'),
-                parsed.get('write', 'generated'))
+                parsed.get('write', 'generated'),
+                parsed.get('prefix'))
 
     if bare_re.search(raw_body):
-        return ('generated', 'generated')
+        return ('generated', 'generated', None)
 
     return None
 
@@ -1063,13 +1090,18 @@ def collect_nested_map(text):
 
 def parse_file(text, verbose, nested_map=None, referenced=None, errors=None):
     """Return list of (struct_name, [Member], [LifecycleMember],
-    [DefaultMember], emit_py_fragment) tuples.
+    [DefaultMember], emit_py_fragment, struct_alias, name_prefix) tuples.
 
     Only structs annotated with ``// !generate-accessors`` as the first token
     inside the opening brace, or with ``// !generate-lifecycle`` anywhere
     inside the opening brace line, are processed.
 
     *emit_py_fragment* is True when the struct also carries ``!generate-python``.
+
+    *name_prefix* is the struct-level ``prefix=`` override (see
+    ``parse_struct_annotation()``), or None when not specified. It overrides
+    only the naming segment used in generated function names; callers must
+    keep using *struct_name* itself for C type references and doc comments.
 
     *nested_map* is the dict produced by ``collect_nested_map()`` across all
     input headers (Pass 1).  It is forwarded to ``parse_members()`` so that
@@ -1082,12 +1114,19 @@ def parse_file(text, verbose, nested_map=None, referenced=None, errors=None):
         struct_name = match.group(1)
         raw_body    = match.group(2)
 
-        struct_defaults             = parse_struct_annotation(raw_body)
+        struct_annotation           = parse_struct_annotation(raw_body)
         lifecycle_mode              = parse_lifecycle_annotation(raw_body)
         emit_py_fragment, struct_alias = parse_generate_python(raw_body)
 
-        if struct_defaults is None and lifecycle_mode is None and not emit_py_fragment:
+        if struct_annotation is None and lifecycle_mode is None and not emit_py_fragment:
             continue
+
+        if struct_annotation is not None:
+            struct_read, struct_write, name_prefix = struct_annotation
+            struct_defaults = (struct_read, struct_write)
+        else:
+            struct_defaults = None
+            name_prefix = None
 
         # If the struct has !generate-python but no !generate-accessors, parse
         # members with default mode (none, none) so the SWIG emitter can see
@@ -1127,7 +1166,7 @@ def parse_file(text, verbose, nested_map=None, referenced=None, errors=None):
 
         if members or lc_members is not None or default_members or emit_py_fragment:
             result.append((struct_name, members, lc_members, default_members,
-                           emit_py_fragment, struct_alias))
+                           emit_py_fragment, struct_alias, name_prefix))
 
     return result
 
@@ -1144,13 +1183,13 @@ def _get_name(prefix, sname, mname):
     return GET_FMT.format(pre=f'{prefix}{sname}', mem=mname)
 
 
-def emit_hdr_setter_str(f, prefix, sname, mname, is_dyn_str):
+def emit_hdr_setter_str(f, prefix, sname, type_name, mname, is_dyn_str):
     """Emit a header declaration for a string setter."""
     fn = _set_name(prefix, sname, mname)
     f.write(
         f'/**\n'
         f'{kdoc_summary(fn, f"Set {mname}.", "Setter.")}\n'
-        f' * @p: The &struct {sname} instance to update.\n'
+        f' * @p: The &struct {type_name} instance to update.\n'
     )
     if is_dyn_str:
         f.write(
@@ -1163,41 +1202,41 @@ def emit_hdr_setter_str(f, prefix, sname, mname, is_dyn_str):
     f.write(' */\n')
 
     single = (f'void {_set_name(prefix, sname, mname)}'
-              f'(struct {sname} *p, const char *{mname});')
+              f'(struct {type_name} *p, const char *{mname});')
     if fits_80(single):
         f.write(single + '\n\n')
     else:
         f.write(
             f'void {_set_name(prefix, sname, mname)}(\n'
-            f'\t\tstruct {sname} *p,\n'
+            f'\t\tstruct {type_name} *p,\n'
             f'\t\tconst char *{mname});\n\n'
         )
 
 
-def emit_hdr_setter_str_array(f, prefix, sname, mname):
+def emit_hdr_setter_str_array(f, prefix, sname, type_name, mname):
     """Emit a header declaration for a string-array setter."""
     fn = _set_name(prefix, sname, mname)
     f.write(
         f'/**\n'
         f'{kdoc_summary(fn, f"Set {mname}.", "Setter.")}\n'
-        f' * @p: The &struct {sname} instance to update.\n'
+        f' * @p: The &struct {type_name} instance to update.\n'
         f' * @{mname}: New NULL-terminated string array; deep-copied.\n'
         f' */\n'
     )
 
     single = (f'void {_set_name(prefix, sname, mname)}'
-              f'(struct {sname} *p, const char *const *{mname});')
+              f'(struct {type_name} *p, const char *const *{mname});')
     if fits_80(single):
         f.write(single + '\n\n')
     else:
         f.write(
             f'void {_set_name(prefix, sname, mname)}(\n'
-            f'\t\tstruct {sname} *p,\n'
+            f'\t\tstruct {type_name} *p,\n'
             f'\t\tconst char *const *{mname});\n\n'
         )
 
 
-def emit_hdr_setter_val(f, prefix, sname, mname, mtype):
+def emit_hdr_setter_val(f, prefix, sname, type_name, mname, mtype):
     """Emit a header declaration for a value setter."""
     fn = _set_name(prefix, sname, mname)
     param = f' * @{mname}: Value to assign to the {mname} field.'
@@ -1206,24 +1245,24 @@ def emit_hdr_setter_val(f, prefix, sname, mname, mtype):
     f.write(
         f'/**\n'
         f'{kdoc_summary(fn, f"Set {mname}.", "Setter.")}\n'
-        f' * @p: The &struct {sname} instance to update.\n'
+        f' * @p: The &struct {type_name} instance to update.\n'
         f'{param}\n'
         f' */\n'
     )
 
     single = (f'void {_set_name(prefix, sname, mname)}'
-              f'(struct {sname} *p, {mtype} {mname});')
+              f'(struct {type_name} *p, {mtype} {mname});')
     if fits_80(single):
         f.write(single + '\n\n')
     else:
         f.write(
             f'void {_set_name(prefix, sname, mname)}(\n'
-            f'\t\tstruct {sname} *p,\n'
+            f'\t\tstruct {type_name} *p,\n'
             f'\t\t{mtype} {mname});\n\n'
         )
 
 
-def emit_hdr_getter(f, prefix, sname, mname, mtype, is_dyn_str):
+def emit_hdr_getter(f, prefix, sname, type_name, mname, mtype, is_dyn_str):
     """Emit a header declaration for a getter."""
     fn = _get_name(prefix, sname, mname)
     tail = ', or NULL if not set.' if is_dyn_str else '.'
@@ -1233,7 +1272,7 @@ def emit_hdr_getter(f, prefix, sname, mname, mtype, is_dyn_str):
     f.write(
         f'/**\n'
         f'{kdoc_summary(fn, f"Get {mname}.", "Getter.")}\n'
-        f' * @p: The &struct {sname} instance to query.\n'
+        f' * @p: The &struct {type_name} instance to query.\n'
         f' *\n'
         f'{ret}\n'
         f' */\n'
@@ -1241,72 +1280,74 @@ def emit_hdr_getter(f, prefix, sname, mname, mtype, is_dyn_str):
 
     sep    = type_sep(mtype)
     single = (f'{mtype}{sep}{_get_name(prefix, sname, mname)}'
-              f'(const struct {sname} *p);')
+              f'(const struct {type_name} *p);')
     if fits_80(single):
         f.write(single + '\n\n')
     else:
         f.write(
             f'{mtype}{sep}{_get_name(prefix, sname, mname)}(\n'
-            f'\t\tconst struct {sname} *p);\n\n'
+            f'\t\tconst struct {type_name} *p);\n\n'
         )
 
 
-def emit_hdr_setter_scalar_array(f, prefix, sname, mname, elem_type, array_size):
+def emit_hdr_setter_scalar_array(f, prefix, sname, type_name, mname, elem_type,
+                                 array_size):
     """Emit a header declaration for a fixed-size scalar-array setter."""
     fn = _set_name(prefix, sname, mname)
     f.write(
         f'/**\n'
         f'{kdoc_summary(fn, f"Set {mname}.", "Setter.")}\n'
-        f' * @p: The &struct {sname} instance to update.\n'
+        f' * @p: The &struct {type_name} instance to update.\n'
         f' * @{mname}: Array of {array_size} elements; copied into the struct.\n'
         f' */\n'
     )
     single = (f'void {_set_name(prefix, sname, mname)}'
-              f'(struct {sname} *p, const {elem_type} {mname}[{array_size}]);')
+              f'(struct {type_name} *p, const {elem_type} {mname}[{array_size}]);')
     if fits_80(single):
         f.write(single + '\n\n')
     else:
         f.write(
             f'void {_set_name(prefix, sname, mname)}(\n'
-            f'\t\tstruct {sname} *p,\n'
+            f'\t\tstruct {type_name} *p,\n'
             f'\t\tconst {elem_type} {mname}[{array_size}]);\n\n'
         )
 
 
-def emit_hdr_getter_scalar_array(f, prefix, sname, mname, elem_type, array_size):
+def emit_hdr_getter_scalar_array(f, prefix, sname, type_name, mname, elem_type,
+                                 array_size):
     """Emit a header declaration for a fixed-size scalar-array getter."""
     fn = _get_name(prefix, sname, mname)
     ret_type = f'const {elem_type} *'
     f.write(
         f'/**\n'
         f'{kdoc_summary(fn, f"Get {mname}.", "Getter.")}\n'
-        f' * @p: The &struct {sname} instance to query.\n'
+        f' * @p: The &struct {type_name} instance to query.\n'
         f' *\n'
         f' * Return: Pointer to the {mname} array'
         f' of {array_size} {elem_type} elements.\n'
         f' */\n'
     )
     single = (f'{ret_type}{_get_name(prefix, sname, mname)}'
-              f'(const struct {sname} *p);')
+              f'(const struct {type_name} *p);')
     if fits_80(single):
         f.write(single + '\n\n')
     else:
         f.write(
             f'{ret_type}{_get_name(prefix, sname, mname)}(\n'
-            f'\t\tconst struct {sname} *p);\n\n'
+            f'\t\tconst struct {type_name} *p);\n\n'
         )
 
 
-def generate_hdr(f, prefix, struct_name, members):
+def generate_hdr(f, prefix, sname, type_name, members):
     """Write header declarations for all members of one struct."""
     for member in members:
         if member.is_scalar_array:
             if member.write_mode == 'generated':
-                emit_hdr_setter_scalar_array(f, prefix, struct_name,
+                emit_hdr_setter_scalar_array(f, prefix, sname, type_name,
                                              member.name, member.type,
                                              member.array_size)
             if member.read_mode == 'generated':
-                emit_hdr_getter_scalar_array(f, prefix, struct_name,
+                emit_hdr_getter_scalar_array(f, prefix, sname, type_name,
                                              member.name, member.type,
                                              member.array_size)
             continue
@@ -1315,15 +1356,16 @@ def generate_hdr(f, prefix, struct_name, members):
                       member.type == 'const char *')
         if member.write_mode == 'generated':
             if member.is_char_ptr_array:
-                emit_hdr_setter_str_array(f, prefix, struct_name, member.name)
+                emit_hdr_setter_str_array(f, prefix, sname, type_name,
+                                          member.name)
             elif member.is_char_array or is_dyn_str:
-                emit_hdr_setter_str(f, prefix, struct_name,
+                emit_hdr_setter_str(f, prefix, sname, type_name,
                                     member.name, is_dyn_str)
             else:
-                emit_hdr_setter_val(f, prefix, struct_name,
+                emit_hdr_setter_val(f, prefix, sname, type_name,
                                     member.name, member.type)
         if member.read_mode == 'generated':
-            emit_hdr_getter(f, prefix, struct_name,
+            emit_hdr_getter(f, prefix, sname, type_name,
                             member.name, member.type, is_dyn_str)
 
 
@@ -1334,16 +1376,16 @@ def generate_hdr(f, prefix, struct_name, members):
 PUB = '__libnvme_public '
 
 
-def emit_src_setter_dynstr(f, prefix, sname, mname, field_path):
+def emit_src_setter_dynstr(f, prefix, sname, type_name, mname, field_path):
     """Emit a dynamic-string setter (free old + strdup new)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
-           f'(struct {sname} *p, const char *{mname})')
+           f'(struct {type_name} *p, const char *{mname})')
     if fits_80(sig):
         f.write(sig + '\n')
     else:
         f.write(
             f'{PUB}void {_set_name(prefix, sname, mname)}(\n'
-            f'\t\tstruct {sname} *p,\n'
+            f'\t\tstruct {type_name} *p,\n'
             f'\t\tconst char *{mname})\n'
         )
 
@@ -1356,16 +1398,17 @@ def emit_src_setter_dynstr(f, prefix, sname, mname, field_path):
     f.write('}\n\n')
 
 
-def emit_src_setter_chararray(f, prefix, sname, mname, array_size, field_path):
+def emit_src_setter_chararray(f, prefix, sname, type_name, mname, array_size,
+                              field_path):
     """Emit a fixed char-array setter (snprintf)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
-           f'(struct {sname} *p, const char *{mname})')
+           f'(struct {type_name} *p, const char *{mname})')
     if fits_80(sig):
         f.write(sig + '\n')
     else:
         f.write(
             f'{PUB}void {_set_name(prefix, sname, mname)}(\n'
-            f'\t\tstruct {sname} *p,\n'
+            f'\t\tstruct {type_name} *p,\n'
             f'\t\tconst char *{mname})\n'
         )
 
@@ -1374,16 +1417,16 @@ def emit_src_setter_chararray(f, prefix, sname, mname, array_size, field_path):
     )
 
 
-def emit_src_setter_str_array(f, prefix, sname, mname, field_path):
+def emit_src_setter_str_array(f, prefix, sname, type_name, mname, field_path):
     """Emit a NULL-terminated string-array setter (deep copy)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
-           f'(struct {sname} *p, const char *const *{mname})')
+           f'(struct {type_name} *p, const char *const *{mname})')
     if fits_80(sig):
         f.write(sig + '\n')
     else:
         f.write(
             f'{PUB}void {_set_name(prefix, sname, mname)}(\n'
-            f'\t\tstruct {sname} *p,\n'
+            f'\t\tstruct {type_name} *p,\n'
             f'\t\tconst char *const *{mname})\n'
         )
 
@@ -1417,10 +1460,10 @@ def emit_src_setter_str_array(f, prefix, sname, mname, field_path):
     )
 
 
-def emit_src_setter_val(f, prefix, sname, mname, mtype, field_path):
+def emit_src_setter_val(f, prefix, sname, type_name, mname, mtype, field_path):
     """Emit a value setter (direct assignment)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
-           f'(struct {sname} *p, {mtype} {mname})')
+           f'(struct {type_name} *p, {mtype} {mname})')
     if fits_80(sig):
         f.write(
             sig + '\n'
@@ -1429,13 +1472,13 @@ def emit_src_setter_val(f, prefix, sname, mname, mtype, field_path):
     else:
         f.write(
             f'{PUB}void {_set_name(prefix, sname, mname)}(\n'
-            f'\t\tstruct {sname} *p,\n'
+            f'\t\tstruct {type_name} *p,\n'
             f'\t\t{mtype} {mname})\n'
             f'{{\n\tp->{field_path} = {mname};\n}}\n\n'
         )
 
 
-def emit_src_getter(f, prefix, sname, mname, mtype, field_path,
+def emit_src_getter(f, prefix, sname, type_name, mname, mtype, field_path,
                     cast=None):
     """Emit a getter (return member value).
 
@@ -1446,7 +1489,7 @@ def emit_src_getter(f, prefix, sname, mname, mtype, field_path,
     """
     sep = type_sep(mtype)
     sig = (f'{PUB}{mtype}{sep}{_get_name(prefix, sname, mname)}'
-           f'(const struct {sname} *p)')
+           f'(const struct {type_name} *p)')
     ret = (f'\treturn {cast}p->{field_path};\n' if cast
            else f'\treturn p->{field_path};\n')
     if fits_80(sig):
@@ -1454,22 +1497,22 @@ def emit_src_getter(f, prefix, sname, mname, mtype, field_path,
     else:
         f.write(
             f'{PUB}{mtype}{sep}{_get_name(prefix, sname, mname)}(\n'
-            f'\t\tconst struct {sname} *p)\n'
+            f'\t\tconst struct {type_name} *p)\n'
             f'{{\n{ret}}}\n\n'
         )
 
 
-def emit_src_setter_scalar_array(f, prefix, sname, mname, elem_type,
+def emit_src_setter_scalar_array(f, prefix, sname, type_name, mname, elem_type,
                                  array_size, field_path):
     """Emit a fixed-size scalar-array setter (memcpy)."""
     sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
-           f'(struct {sname} *p, const {elem_type} {mname}[{array_size}])')
+           f'(struct {type_name} *p, const {elem_type} {mname}[{array_size}])')
     if fits_80(sig):
         f.write(sig + '\n')
     else:
         f.write(
             f'{PUB}void {_set_name(prefix, sname, mname)}(\n'
-            f'\t\tstruct {sname} *p,\n'
+            f'\t\tstruct {type_name} *p,\n'
             f'\t\tconst {elem_type} {mname}[{array_size}])\n'
         )
     f.write(
@@ -1478,33 +1521,33 @@ def emit_src_setter_scalar_array(f, prefix, sname, mname, elem_type,
     )
 
 
-def emit_src_getter_scalar_array(f, prefix, sname, mname, elem_type,
+def emit_src_getter_scalar_array(f, prefix, sname, type_name, mname, elem_type,
                                  field_path):
     """Emit a fixed-size scalar-array getter (return pointer to first element)."""
     ret_type = f'const {elem_type} *'
     sig = (f'{PUB}{ret_type}{_get_name(prefix, sname, mname)}'
-           f'(const struct {sname} *p)')
+           f'(const struct {type_name} *p)')
     if fits_80(sig):
         f.write(sig + '\n')
     else:
         f.write(
             f'{PUB}{ret_type}{_get_name(prefix, sname, mname)}(\n'
-            f'\t\tconst struct {sname} *p)\n'
+            f'\t\tconst struct {type_name} *p)\n'
         )
     f.write(f'{{\n\treturn p->{field_path};\n}}\n\n')
 
 
-def generate_src(f, prefix, struct_name, members):
+def generate_src(f, prefix, sname, type_name, members):
     """Write source implementations for all members of one struct."""
     for member in members:
         fp = member.field_path
         if member.is_scalar_array:
             if member.write_mode == 'generated':
-                emit_src_setter_scalar_array(f, prefix, struct_name,
+                emit_src_setter_scalar_array(f, prefix, sname, type_name,
                                              member.name, member.type,
                                              member.array_size, fp)
             if member.read_mode == 'generated':
-                emit_src_getter_scalar_array(f, prefix, struct_name,
+                emit_src_getter_scalar_array(f, prefix, sname, type_name,
                                              member.name, member.type, fp)
             continue
         is_dyn_str = (not member.is_char_array and
@@ -1512,21 +1555,21 @@ def generate_src(f, prefix, struct_name, members):
                       member.type == 'const char *')
         if member.write_mode == 'generated':
             if is_dyn_str:
-                emit_src_setter_dynstr(f, prefix, struct_name,
+                emit_src_setter_dynstr(f, prefix, sname, type_name,
                                        member.name, fp)
             elif member.is_char_ptr_array:
-                emit_src_setter_str_array(f, prefix, struct_name,
+                emit_src_setter_str_array(f, prefix, sname, type_name,
                                           member.name, fp)
             elif member.is_char_array:
-                emit_src_setter_chararray(f, prefix, struct_name,
+                emit_src_setter_chararray(f, prefix, sname, type_name,
                                           member.name, member.array_size, fp)
             else:
-                emit_src_setter_val(f, prefix, struct_name,
+                emit_src_setter_val(f, prefix, sname, type_name,
                                     member.name, member.type, fp)
         if member.read_mode == 'generated':
             cast = '(const char *const *)' if member.is_char_ptr_array else None
-            emit_src_getter(f, prefix, struct_name, member.name, member.type,
-                            fp, cast=cast)
+            emit_src_getter(f, prefix, sname, type_name, member.name,
+                            member.type, fp, cast=cast)
 
 
 # ---------------------------------------------------------------------------
@@ -1545,14 +1588,14 @@ def _init_defaults_name(prefix, sname):
     return f'{prefix}{sname}_init_defaults'
 
 
-def emit_hdr_defaults(f, prefix, sname, default_members):
+def emit_hdr_defaults(f, prefix, sname, type_name, default_members):
     """Emit header declaration for the init_defaults function."""
     fn = _init_defaults_name(prefix, sname)
     new_fn = _new_name(prefix, sname)
     f.write(
         f'/**\n'
-        f'{kdoc_summary(fn, f"Apply default values to a {sname} instance.", "Set fields to their defaults.", "Initialise to defaults.")}\n'
-        f' * @p: The &struct {sname} instance to initialise.\n'
+        f'{kdoc_summary(fn, f"Apply default values to a {type_name} instance.", "Set fields to their defaults.", "Initialise to defaults.")}\n'
+        f' * @p: The &struct {type_name} instance to initialise.\n'
         f' *\n'
         f' * Sets each field that carries a default annotation to its\n'
         f' * compile-time default value.  Called automatically by\n'
@@ -1560,21 +1603,21 @@ def emit_hdr_defaults(f, prefix, sname, default_members):
         f' * instance to its defaults without reallocating it.\n'
         f' */\n'
     )
-    single = f'void {fn}(struct {sname} *p);'
+    single = f'void {fn}(struct {type_name} *p);'
     if fits_80(single):
         f.write(single + '\n\n')
     else:
-        f.write(f'void {fn}(\n\t\tstruct {sname} *p);\n\n')
+        f.write(f'void {fn}(\n\t\tstruct {type_name} *p);\n\n')
 
 
-def emit_src_defaults(f, prefix, sname, default_members):
+def emit_src_defaults(f, prefix, sname, type_name, default_members):
     """Emit the init_defaults function implementation."""
     fn = _init_defaults_name(prefix, sname)
-    sig = f'{PUB}void {fn}(struct {sname} *p)'
+    sig = f'{PUB}void {fn}(struct {type_name} *p)'
     if fits_80(sig):
         f.write(sig + '\n')
     else:
-        f.write(f'{PUB}void {fn}(\n\t\tstruct {sname} *p)\n')
+        f.write(f'{PUB}void {fn}(\n\t\tstruct {type_name} *p)\n')
 
     f.write('{\n')
     f.write('\tif (!p)\n\t\treturn;\n')
@@ -1598,55 +1641,55 @@ def emit_src_defaults(f, prefix, sname, default_members):
     f.write('}\n\n')
 
 
-def emit_hdr_lifecycle(f, prefix, sname, lc_members):
+def emit_hdr_lifecycle(f, prefix, sname, type_name, lc_members):
     """Emit header declarations for the constructor and destructor."""
 
     # --- constructor -------------------------------------------------------
     new_fn = _new_name(prefix, sname)
     f.write(
         f'/**\n'
-        f'{kdoc_summary(new_fn, f"Allocate and initialise a {sname} object.", "Allocate and initialise a new instance.", "Constructor.")}\n'
+        f'{kdoc_summary(new_fn, f"Allocate and initialise a {type_name} object.", "Allocate and initialise a new instance.", "Constructor.")}\n'
         f' * @pp: On success, *pp is set to the newly allocated object.\n'
         f' *\n'
-        f' * Allocates a zeroed &struct {sname} on the heap.\n'
+        f' * Allocates a zeroed &struct {type_name} on the heap.\n'
         f' * The caller must release it with {_free_name(prefix, sname)}().\n'
         f' *\n'
         f' * Return: 0 on success, -EINVAL if @pp is NULL,\n'
         f' *         -ENOMEM if allocation fails.\n'
         f' */\n'
     )
-    single = f'int {new_fn}(struct {sname} **pp);'
+    single = f'int {new_fn}(struct {type_name} **pp);'
     if fits_80(single):
         f.write(single + '\n\n')
     else:
-        f.write(f'int {new_fn}(\n\t\tstruct {sname} **pp);\n\n')
+        f.write(f'int {new_fn}(\n\t\tstruct {type_name} **pp);\n\n')
 
     # --- destructor --------------------------------------------------------
     free_fn = _free_name(prefix, sname)
     f.write(
         f'/**\n'
-        f'{kdoc_summary(free_fn, f"Release a {sname} object.", "Release this instance.", "Destructor.")}\n'
+        f'{kdoc_summary(free_fn, f"Release a {type_name} object.", "Release this instance.", "Destructor.")}\n'
         f' * @p: Object previously returned by {new_fn}().\n'
         f' *     A NULL pointer is silently ignored.\n'
         f' */\n'
     )
-    single = f'void {free_fn}(struct {sname} *p);'
+    single = f'void {free_fn}(struct {type_name} *p);'
     if fits_80(single):
         f.write(single + '\n\n')
     else:
-        f.write(f'void {free_fn}(\n\t\tstruct {sname} *p);\n\n')
+        f.write(f'void {free_fn}(\n\t\tstruct {type_name} *p);\n\n')
 
 
-def emit_src_lifecycle(f, prefix, sname, lc_members, default_members):
+def emit_src_lifecycle(f, prefix, sname, type_name, lc_members, default_members):
     """Emit constructor and destructor implementations."""
 
     # --- constructor -------------------------------------------------------
     new_fn = _new_name(prefix, sname)
-    sig = f'{PUB}int {new_fn}(struct {sname} **pp)'
+    sig = f'{PUB}int {new_fn}(struct {type_name} **pp)'
     if fits_80(sig):
         f.write(sig + '\n')
     else:
-        f.write(f'{PUB}int {new_fn}(\n\t\tstruct {sname} **pp)\n')
+        f.write(f'{PUB}int {new_fn}(\n\t\tstruct {type_name} **pp)\n')
 
     if default_members:
         init_fn = _init_defaults_name(prefix, sname)
@@ -1654,7 +1697,7 @@ def emit_src_lifecycle(f, prefix, sname, lc_members, default_members):
             '{\n'
             '\tif (!pp)\n'
             '\t\treturn -EINVAL;\n'
-            f'\t*pp = calloc(1, sizeof(struct {sname}));\n'
+            f'\t*pp = calloc(1, sizeof(struct {type_name}));\n'
             '\tif (!*pp)\n'
             '\t\treturn -ENOMEM;\n'
             f'\t{init_fn}(*pp);\n'
@@ -1666,18 +1709,18 @@ def emit_src_lifecycle(f, prefix, sname, lc_members, default_members):
             '{\n'
             '\tif (!pp)\n'
             '\t\treturn -EINVAL;\n'
-            f'\t*pp = calloc(1, sizeof(struct {sname}));\n'
+            f'\t*pp = calloc(1, sizeof(struct {type_name}));\n'
             '\treturn *pp ? 0 : -ENOMEM;\n'
             '}\n\n'
         )
 
     # --- destructor --------------------------------------------------------
     free_fn = _free_name(prefix, sname)
-    sig = f'{PUB}void {free_fn}(struct {sname} *p)'
+    sig = f'{PUB}void {free_fn}(struct {type_name} *p)'
     if fits_80(sig):
         f.write(sig + '\n')
     else:
-        f.write(f'{PUB}void {free_fn}(\n\t\tstruct {sname} *p)\n')
+        f.write(f'{PUB}void {free_fn}(\n\t\tstruct {type_name} *p)\n')
 
     f.write('{\n')
 
@@ -1710,18 +1753,18 @@ def emit_src_lifecycle(f, prefix, sname, lc_members, default_members):
 # Linker script (*.ld) emitter
 # ---------------------------------------------------------------------------
 
-def generate_ld(f, prefix, struct_name, members, lc_members, default_members):
+def generate_ld(f, prefix, sname, members, lc_members, default_members):
     """Write linker version-script entries for all members of one struct."""
     if lc_members is not None:
-        f.write(f'\t\t{_new_name(prefix, struct_name)};\n')
-        f.write(f'\t\t{_free_name(prefix, struct_name)};\n')
+        f.write(f'\t\t{_new_name(prefix, sname)};\n')
+        f.write(f'\t\t{_free_name(prefix, sname)};\n')
     if default_members:
-        f.write(f'\t\t{_init_defaults_name(prefix, struct_name)};\n')
+        f.write(f'\t\t{_init_defaults_name(prefix, sname)};\n')
     for member in members:
         if member.read_mode == 'generated':
-            f.write(f'\t\t{_get_name(prefix, struct_name, member.name)};\n')
+            f.write(f'\t\t{_get_name(prefix, sname, member.name)};\n')
         if member.write_mode == 'generated':
-            f.write(f'\t\t{_set_name(prefix, struct_name, member.name)};\n')
+            f.write(f'\t\t{_set_name(prefix, sname, member.name)};\n')
 
 
 # ---------------------------------------------------------------------------
@@ -1752,9 +1795,14 @@ def generate_swig_prelude(f):
     )
 
 
-def generate_swig_fragment(f, prefix, struct_name, members, errors,
+def generate_swig_fragment(f, prefix, sname, struct_name, members, errors,
                            struct_alias=None):
     """Emit SWIG struct decl with per-axis read/write routing.
+
+    *sname* is the naming segment used to build ``%rename``/``#define``
+    bridge names for 'custom' axes (the struct-level ``prefix=`` override,
+    or *struct_name* itself when absent). *struct_name* is always the real
+    C struct tag, used for the struct declaration and comments.
 
     Access routing per member:
 
@@ -1791,7 +1839,7 @@ def generate_swig_fragment(f, prefix, struct_name, members, errors,
     is set.
     """
     py_class = struct_alias or struct_name
-    pre = f'{prefix}{struct_name}'
+    pre = f'{prefix}{sname}'
     f.write(f'/* struct {struct_name} */\n')
     if struct_alias:
         f.write(f'%rename({struct_alias}) {struct_name};\n')
@@ -2127,9 +2175,16 @@ def main():
 
         files_to_include.append(os.path.basename(in_hdr))
 
-        for struct_name, members, lc_members, default_members, emit_py, struct_alias in structs:
+        for (struct_name, members, lc_members, default_members, emit_py,
+             struct_alias, name_prefix) in structs:
             has_c_output = bool(members or lc_members is not None
                                 or default_members)
+
+            # accessor_sname feeds only the naming segment in generated
+            # function names (via a struct-level prefix= override);
+            # struct_name itself always stays the real C struct tag used
+            # for types and doc comments.
+            accessor_sname = name_prefix or struct_name
 
             if has_c_output:
                 forward_declares.append(struct_name)
@@ -2144,27 +2199,29 @@ def main():
                 hdr_buf = io.StringIO()
                 hdr_buf.write(section_banner)
                 if lc_members is not None:
-                    emit_hdr_lifecycle(hdr_buf, args.prefix, struct_name,
-                                       lc_members)
+                    emit_hdr_lifecycle(hdr_buf, args.prefix, accessor_sname,
+                                       struct_name, lc_members)
                 if default_members:
-                    emit_hdr_defaults(hdr_buf, args.prefix, struct_name,
-                                      default_members)
-                generate_hdr(hdr_buf, args.prefix, struct_name, members)
+                    emit_hdr_defaults(hdr_buf, args.prefix, accessor_sname,
+                                      struct_name, default_members)
+                generate_hdr(hdr_buf, args.prefix, accessor_sname,
+                            struct_name, members)
                 hdr_parts.append(hdr_buf.getvalue())
 
                 src_buf = io.StringIO()
                 src_buf.write(section_banner)
                 if lc_members is not None:
-                    emit_src_lifecycle(src_buf, args.prefix, struct_name,
-                                       lc_members, default_members)
+                    emit_src_lifecycle(src_buf, args.prefix, accessor_sname,
+                                       struct_name, lc_members, default_members)
                 if default_members:
-                    emit_src_defaults(src_buf, args.prefix, struct_name,
-                                      default_members)
-                generate_src(src_buf, args.prefix, struct_name, members)
+                    emit_src_defaults(src_buf, args.prefix, accessor_sname,
+                                      struct_name, default_members)
+                generate_src(src_buf, args.prefix, accessor_sname,
+                            struct_name, members)
                 src_parts.append(src_buf.getvalue())
 
                 ld_buf = io.StringIO()
-                generate_ld(ld_buf, args.prefix, struct_name, members,
+                generate_ld(ld_buf, args.prefix, accessor_sname, members,
                             lc_members, default_members)
                 ld_parts.append(ld_buf.getvalue())
 
@@ -2186,8 +2243,9 @@ def main():
                 if first_swig:
                     generate_swig_prelude(swig_buf)
                     first_swig = False
-                generate_swig_fragment(swig_buf, args.prefix, struct_name,
-                                       members, swig_errors, struct_alias)
+                generate_swig_fragment(swig_buf, args.prefix, accessor_sname,
+                                       struct_name, members, swig_errors,
+                                       struct_alias)
                 swig_parts.append(swig_buf.getvalue())
 
     # Warn about !nested-accessors structs that were never referenced.

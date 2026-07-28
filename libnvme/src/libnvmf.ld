@@ -72,6 +72,8 @@ LIBNVMF_3 {
 		libnvmf_generate_tls_key_identity_compat;
 		libnvmf_get_default_trsvcid;
 		libnvmf_get_discovery_log;
+		libnvmf_get_owner_from_fctx;
+		libnvmf_get_owner_from_tid;
 		libnvmf_host_get_ids;
 		libnvmf_import_tls_key;
 		libnvmf_import_tls_key_versioned;

@@ -565,7 +565,6 @@ int nvme_config_convert(const char *desc, int argc, char **argv)
 	char *output_file = NULL;
 	const char *target;
 	const char *json_path;
-	bool verbose = false;
 	bool force = false;
 	bool converted_json = false, converted_disc = false;
 	bool json_already_done = false, disc_already_done = false;
@@ -580,25 +579,16 @@ int nvme_config_convert(const char *desc, int argc, char **argv)
 			   "write result here (default: nvme-fabrics.conf)"),
 		OPT_FLAG("force", 0, &force,
 			 "overwrite an existing target"),
-		OPT_FLAG("verbose", 'v', &verbose, "increase output verbosity"),
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
-	nvme_show_init();
-
-	log_level = map_log_level(verbose ? 1 : 0, false);
-
 	ret = nvme_create_global_ctx(&ctx);
-	if (ret) {
-		nvme_show_error("Failed to create topology root: %s",
-				 libnvme_strerror(-ret));
+	if (ret)
 		return ret;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	emitter = libnvmf_config_emit_new(ctx);
 	if (!emitter)

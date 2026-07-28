@@ -42,6 +42,8 @@
 #include <sys/socket.h>
 #endif
 
+#include <ccan/str/str.h>
+
 #include <libnvme.h>
 
 #ifdef NVME_HAVE_LIBKMOD
@@ -65,7 +67,6 @@
 /* Name of file to output log pages in their raw format */
 static char *raw;
 static bool persistent;
-static bool quiet;
 
 static const char *nvmf_tport		= "transport type";
 static const char *nvmf_traddr		= "transport address";
@@ -215,7 +216,7 @@ static void hook_already_connected(struct libnvmf_context *fctx,
 {
 	struct hook_fabrics_data *hfd = user_data;
 
-	if (quiet)
+	if (nvme_args.quiet)
 		return;
 
 	if (hfd->idempotent) {
@@ -716,6 +717,43 @@ static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
 
 #define NBFT_SYSFS_PATH		"/sys/firmware/acpi/tables"
 
+/*
+ * A controller's ownership extends to everything done through it, so the
+ * caller's operation may not proceed unless the invoking owner matches
+ * (mirrors disconnect_all_match()'s registry check). No ownerless
+ * exemption -- a mismatched or missing --owner is skipped the same way;
+ * the escape hatch is passing the owner's own identity.
+ *
+ * --force skips the check entirely: it means the caller will never reuse
+ * an existing controller, so there is nothing to check ownership against.
+ *
+ * Returns 0 to proceed, 1 to skip, or a negative errno on a registry
+ * read failure.
+ */
+static int check_ctrl_owner(struct libnvme_global_ctx *ctx,
+			     struct libnvmf_context *fctx,
+			     const char *owner, bool force)
+{
+	__cleanup_free char *reg_owner = NULL;
+	int ret;
+
+	if (force)
+		return 0;
+
+	ret = libnvmf_get_owner_from_fctx(ctx, fctx, &reg_owner);
+	if (ret)
+		return ret;
+	if (!reg_owner)   /* no owner in registry */
+		return 0;
+
+	if (owner && streq(reg_owner, owner))
+		return 0;
+
+	nvme_show_error("owned by '%s'; skipping -- owner handles discovery",
+			 reg_owner);
+	return 1;
+}
+
 int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 {
 	__cleanup_free char *hnqn = NULL;
@@ -735,7 +773,6 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		  OPT_STRING("device",     'd', "DEV", &device,       "use existing discovery controller device"),
 		  OPT_FILE("raw",          'r', &raw,                 "save raw output to file"),
 		  OPT_FLAG("persistent",   'p', &persistent,          "persistent discovery connection"),
-		  OPT_FLAG("quiet",          0, &quiet,               "suppress already connected errors"),
 		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_FLAG("force",          0, &force,               "Force persistent discovery controller creation"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
@@ -745,7 +782,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 	nvmf_default_args(&fa);
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -760,15 +797,12 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
 
-	log_level = map_log_level(nvme_args.verbose, quiet);
-
-	ret = nvme_create_global_ctx(&ctx);
-	if (ret) {
-		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(-ret));
+	ret = nvme_create_global_ctx_hostnqn(&ctx,
+		fa.hostnqn, fa.hostid, &hnqn, &hid);
+	if (ret)
 		return ret;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
+	fa.hostnqn = hnqn;
+	fa.hostid = hid;
 
 	/*
 	 * --nbft defaults the owner to "nbft" so legacy boot scripts that
@@ -804,15 +838,6 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	if (ret)
 		return ret;
 
-	ret = libnvmf_host_get_ids(ctx, fa.hostnqn, fa.hostid, &hnqn, &hid);
-	if (ret) {
-		nvme_show_error("failed to determine hostnqn/hostid: %s",
-			libnvme_strerror(-ret));
-		return ret;
-	}
-	fa.hostnqn = hnqn;
-	fa.hostid = hid;
-
 	struct hook_fabrics_data dld = {
 		.flags = flags,
 		.raw = raw,
@@ -840,6 +865,17 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 			&dld, &fctx);
 		if (ret)
 			return ret;
+
+		ret = check_ctrl_owner(ctx, fctx,
+				owner ? owner : (nbft ? "nbft" : NULL), force);
+		if (ret < 0) {
+			nvme_show_error("failed to check owner: %s",
+					libnvme_strerror(-ret));
+			return ret;
+		}
+		if (ret)
+			return 0;
+
 		ret = libnvmf_discovery(ctx, fctx, connect, force);
 	}
 
@@ -927,7 +963,7 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 
 	nvmf_default_args(&fa);
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -972,15 +1008,12 @@ int fabrics_connect(const char *desc, int argc, char **argv)
 		return ret;
 
 do_connect:
-	log_level = map_log_level(nvme_args.verbose, quiet);
-
-	ret = nvme_create_global_ctx(&ctx);
-	if (ret) {
-		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(-ret));
+	ret = nvme_create_global_ctx_hostnqn(&ctx,
+		fa.hostnqn, fa.hostid, &hnqn, &hid);
+	if (ret)
 		return ret;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
+	fa.hostnqn = hnqn;
+	fa.hostid = hid;
 
 	if (owner) {
 		ret = libnvme_set_owner(ctx, owner);
@@ -1002,15 +1035,6 @@ do_connect:
 	if (config_file)
 		return fabrics_connect_config(ctx, config_file, fa.hostnqn,
 			fa.hostid, flags);
-
-	ret = libnvmf_host_get_ids(ctx, fa.hostnqn, fa.hostid, &hnqn, &hid);
-	if (ret) {
-		nvme_show_error("failed to determine hostnqn/hostid: %s",
-			libnvme_strerror(-ret));
-		return ret;
-	}
-	fa.hostnqn = hnqn;
-	fa.hostid = hid;
 
 	struct hook_fabrics_data hfd = {
 		.flags = flags,
@@ -1122,7 +1146,7 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 		OPT_STRING("device",     'd', "DEV",  &cfg.device,  device),
 		OPT_FLAG("exclude", 'x', &cfg.exclude, exclude_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -1137,15 +1161,9 @@ int fabrics_disconnect(const char *desc, int argc, char **argv)
 		return -EINVAL;
 	}
 
-	log_level = map_log_level(nvme_args.verbose, false);
-
 	ret = nvme_create_global_ctx(&ctx);
-	if (ret) {
-		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(-ret));
+	if (ret)
 		return ret;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	libnvme_skip_namespaces(ctx);
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
@@ -1261,7 +1279,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 		OPT_STRING("owner", 0, "NAME", &cfg.owner, owner_help),
 		OPT_FLAG("force", 0, &cfg.force, force_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -1293,15 +1311,9 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 		}
 	}
 
-	log_level = map_log_level(nvme_args.verbose, false);
-
 	ret = nvme_create_global_ctx(&ctx);
-	if (ret) {
-		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(-ret));
+	if (ret)
 		return ret;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	libnvme_skip_namespaces(ctx);
 	ret = libnvme_scan_topology(ctx, NULL, NULL);
@@ -1340,30 +1352,20 @@ int fabrics_config_validate(const char *desc, int argc, char **argv)
 {
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	char *config_file = PATH_NVMF_INI;
-	bool verbose = false;
 	int ret;
 
 	OPT_ARGS(opts) = {
 		OPT_STRING("config", 'J', "FILE", &config_file, nvmf_config_file_ro),
-		OPT_FLAG("verbose", 'v', &verbose, "increase output verbosity"),
 		OPT_END()
 	};
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
-	nvme_show_init();
-
-	log_level = map_log_level(verbose ? 1 : 0, false);
-
 	ret = nvme_create_global_ctx(&ctx);
-	if (ret) {
-		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(-ret));
+	if (ret)
 		return ret;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (access(config_file, F_OK)) {
 		nvme_show_error("%s: no such file", config_file);
@@ -1391,11 +1393,9 @@ int fabrics_config_show(const char *desc, int argc, char **argv)
 		OPT_STRING("config", 'J', "FILE", &config_file,
 			   nvmf_config_file_ro));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
-
-	nvme_show_init();
 
 	ret = validate_output_format(nvme_args.output_format, &flags);
 	if (ret < 0) {
@@ -1403,15 +1403,9 @@ int fabrics_config_show(const char *desc, int argc, char **argv)
 		return ret;
 	}
 
-	log_level = map_log_level(nvme_args.verbose, false);
-
 	ret = nvme_create_global_ctx(&ctx);
-	if (ret) {
-		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(-ret));
+	if (ret)
 		return ret;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	ret = libnvmf_config_read(ctx, config_file, &cfg);
 	if (ret) {
@@ -1470,7 +1464,7 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		OPT_STRING("device", 'd', "DEV",  &cfg.device, "Comma-separated list of DC nvme device handle."),
 		OPT_STRING("task",   't', "TASK", &cfg.tas,    "[register|deregister]"));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -1496,15 +1490,9 @@ int fabrics_dim(const char *desc, int argc, char **argv)
 		return -EINVAL;
 	}
 
-	log_level = map_log_level(nvme_args.verbose, false);
-
 	ret = nvme_create_global_ctx(&ctx);
-	if (ret) {
-		nvme_show_error("Failed to create topology root: %s",
-			libnvme_strerror(-ret));
+	if (ret)
 		return ret;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	libnvme_skip_namespaces(ctx);
 	ret = libnvme_scan_topology(ctx, NULL, NULL);

@@ -120,6 +120,10 @@ In every case, controllers the kernel manages directly (PCIe and other memory-ba
 
 By contrast, `nvme disconnect <device>` targets one named controller and always disconnects it — the caller's intent is unambiguous, so no guardrail applies.
 
+## `connect-all` / `discover --device` behavior
+
+The exclusion list governs connections that don't exist yet; the registry governs ones that already do. Enumerating a discovery controller's log page is an operation on a live controller, so `nvme connect-all --device <dev>` and `nvme discover --device <dev>` check that controller's registry owner before proceeding: an unregistered or matching-owner DC proceeds, but a DC owned by someone else is skipped with a log line, regardless of whether `--owner` was given — there is no ownerless exemption, since the DC's ownership extends to everything discovered through it.
+
 ## Inspecting the registry
 
 ```sh

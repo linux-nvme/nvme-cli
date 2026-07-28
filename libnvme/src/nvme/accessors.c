@@ -1005,7 +1005,57 @@ __libnvme_public bool libnvme_fabric_options_get_trsvcid(
  * Accessors for: struct libnvme_global_ctx
  ****************************************************************************/
 
-__libnvme_public void libnvme_global_ctx_set_hostnqn(
+__libnvme_public void libnvme_set_dry_run(
+		struct libnvme_global_ctx *p,
+		bool dry_run)
+{
+	p->dry_run = dry_run;
+}
+
+__libnvme_public bool libnvme_get_dry_run(const struct libnvme_global_ctx *p)
+{
+	return p->dry_run;
+}
+
+__libnvme_public void libnvme_set_force_4k(
+		struct libnvme_global_ctx *p,
+		bool force_4k)
+{
+	p->force_4k = force_4k;
+}
+
+__libnvme_public bool libnvme_get_force_4k(const struct libnvme_global_ctx *p)
+{
+	return p->force_4k;
+}
+
+__libnvme_public void libnvme_set_mi_probe_enabled(
+		struct libnvme_global_ctx *p,
+		bool mi_probe_enabled)
+{
+	p->mi_probe_enabled = mi_probe_enabled;
+}
+
+__libnvme_public bool libnvme_get_mi_probe_enabled(
+		const struct libnvme_global_ctx *p)
+{
+	return p->mi_probe_enabled;
+}
+
+__libnvme_public void libnvme_set_ioctl_probing(
+		struct libnvme_global_ctx *p,
+		bool ioctl_probing)
+{
+	p->ioctl_probing = ioctl_probing;
+}
+
+__libnvme_public bool libnvme_get_ioctl_probing(
+		const struct libnvme_global_ctx *p)
+{
+	return p->ioctl_probing;
+}
+
+__libnvme_public void libnvme_set_hostnqn(
 		struct libnvme_global_ctx *p,
 		const char *hostnqn)
 {
@@ -1013,7 +1063,7 @@ __libnvme_public void libnvme_global_ctx_set_hostnqn(
 	p->hostnqn = hostnqn ? strdup(hostnqn) : NULL;
 }
 
-__libnvme_public void libnvme_global_ctx_set_hostid(
+__libnvme_public void libnvme_set_hostid(
 		struct libnvme_global_ctx *p,
 		const char *hostid)
 {

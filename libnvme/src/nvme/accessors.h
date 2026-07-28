@@ -1326,21 +1326,81 @@ bool libnvme_fabric_options_get_trsvcid(const struct libnvme_fabric_options *p);
  ****************************************************************************/
 
 /**
- * libnvme_global_ctx_set_hostnqn() - Set hostnqn.
+ * libnvme_set_dry_run() - Set dry_run.
+ * @p: The &struct libnvme_global_ctx instance to update.
+ * @dry_run: Value to assign to the dry_run field.
+ */
+void libnvme_set_dry_run(struct libnvme_global_ctx *p, bool dry_run);
+
+/**
+ * libnvme_get_dry_run() - Get dry_run.
+ * @p: The &struct libnvme_global_ctx instance to query.
+ *
+ * Return: The value of the dry_run field.
+ */
+bool libnvme_get_dry_run(const struct libnvme_global_ctx *p);
+
+/**
+ * libnvme_set_force_4k() - Set force_4k.
+ * @p: The &struct libnvme_global_ctx instance to update.
+ * @force_4k: Value to assign to the force_4k field.
+ */
+void libnvme_set_force_4k(struct libnvme_global_ctx *p, bool force_4k);
+
+/**
+ * libnvme_get_force_4k() - Get force_4k.
+ * @p: The &struct libnvme_global_ctx instance to query.
+ *
+ * Return: The value of the force_4k field.
+ */
+bool libnvme_get_force_4k(const struct libnvme_global_ctx *p);
+
+/**
+ * libnvme_set_mi_probe_enabled() - Set mi_probe_enabled.
+ * @p: The &struct libnvme_global_ctx instance to update.
+ * @mi_probe_enabled: Value to assign to the mi_probe_enabled field.
+ */
+void libnvme_set_mi_probe_enabled(
+		struct libnvme_global_ctx *p,
+		bool mi_probe_enabled);
+
+/**
+ * libnvme_get_mi_probe_enabled() - Get mi_probe_enabled.
+ * @p: The &struct libnvme_global_ctx instance to query.
+ *
+ * Return: The value of the mi_probe_enabled field.
+ */
+bool libnvme_get_mi_probe_enabled(const struct libnvme_global_ctx *p);
+
+/**
+ * libnvme_set_ioctl_probing() - Set ioctl_probing.
+ * @p: The &struct libnvme_global_ctx instance to update.
+ * @ioctl_probing: Value to assign to the ioctl_probing field.
+ */
+void libnvme_set_ioctl_probing(
+		struct libnvme_global_ctx *p,
+		bool ioctl_probing);
+
+/**
+ * libnvme_get_ioctl_probing() - Get ioctl_probing.
+ * @p: The &struct libnvme_global_ctx instance to query.
+ *
+ * Return: The value of the ioctl_probing field.
+ */
+bool libnvme_get_ioctl_probing(const struct libnvme_global_ctx *p);
+
+/**
+ * libnvme_set_hostnqn() - Set hostnqn.
  * @p: The &struct libnvme_global_ctx instance to update.
  * @hostnqn: New string; a copy is stored. Pass NULL to clear.
  */
-void libnvme_global_ctx_set_hostnqn(
-		struct libnvme_global_ctx *p,
-		const char *hostnqn);
+void libnvme_set_hostnqn(struct libnvme_global_ctx *p, const char *hostnqn);
 
 /**
- * libnvme_global_ctx_set_hostid() - Set hostid.
+ * libnvme_set_hostid() - Set hostid.
  * @p: The &struct libnvme_global_ctx instance to update.
  * @hostid: New string; a copy is stored. Pass NULL to clear.
  */
-void libnvme_global_ctx_set_hostid(
-		struct libnvme_global_ctx *p,
-		const char *hostid);
+void libnvme_set_hostid(struct libnvme_global_ctx *p, const char *hostid);
 
 #endif /* _ACCESSORS_H_ */

@@ -106,24 +106,6 @@ __libnvme_public int libnvme_set_test_sysfs_dir(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public void libnvme_set_force_4k(struct libnvme_global_ctx *ctx,
-					   bool enable)
-{
-	if (!ctx)
-		return;
-
-	ctx->force_4k = enable;
-}
-
-__libnvme_public void libnvme_set_probe_enabled(struct libnvme_global_ctx *ctx,
-						bool enabled)
-{
-	if (!ctx)
-		return;
-
-	ctx->mi_probe_enabled = enabled;
-}
-
 __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
@@ -152,18 +134,6 @@ __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	free(ctx->test_base_dir);
 	free(ctx->test_sysfs_dir);
 	free(ctx);
-}
-
-__libnvme_public void libnvme_set_dry_run(
-		struct libnvme_global_ctx *ctx, bool enable)
-{
-	ctx->dry_run = enable;
-}
-
-__libnvme_public void libnvme_set_ioctl_probing(
-		struct libnvme_global_ctx *ctx, bool enable)
-{
-	ctx->ioctl_probing = enable;
 }
 
 __libnvme_public void libnvme_transport_handle_set_submit_entry(

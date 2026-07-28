@@ -34,12 +34,12 @@ static int set_options(struct libnvme_global_ctx *ctx,
 		return libnvme_set_test_sysfs_dir(ctx, value);
 
 	if (!strcmp(key, "hostnqn")) {
-		libnvme_global_ctx_set_hostnqn(ctx, value);
+		libnvme_set_hostnqn(ctx, value);
 		return 0;
 	}
 
 	if (!strcmp(key, "hostid")) {
-		libnvme_global_ctx_set_hostid(ctx, value);
+		libnvme_set_hostid(ctx, value);
 		return 0;
 	}
 
