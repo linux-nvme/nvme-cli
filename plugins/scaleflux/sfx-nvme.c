@@ -1154,6 +1154,10 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char *output)
 
 			code_level = (info->code & 0x100) >> 8;
 			code_type  = (info->code % 0x100);
+			if (code_level == sfx_evtlog_level_warning && code_type >= ARRAY_SIZE(sfx_evtlog_warning))
+				code_type = 0;
+			if (code_level == sfx_evtlog_level_error && code_type >= ARRAY_SIZE(sfx_evtlog_error))
+				code_type = 0;
 			if (code_level == sfx_evtlog_level_warning) {
 				snprintf(str_buffer + str_pos, 128,
 					 "  > error_str:          [WARNING][%s]\n\n",
