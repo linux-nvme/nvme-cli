@@ -98,19 +98,21 @@ char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx);
  *
  * The order is:
  *
- *  - Start with information from DMI or device-tree
- *  - Override hostnqn and hostid from /etc/nvme files
- *  - Override hostnqn or hostid with values from JSON
- *    configuration file. The first host entry in the file is
- *    considered the default host.
- *  - Override hostnqn or hostid with values from the command line
- *    (@hostnqn_arg, @hostid_arg).
+ *  - Start with hostnqn/hostid given on the command line
+ *    (@hostnqn_arg, @hostid_arg), if any
+ *  - Otherwise, use the first host already resolved in @ctx's host
+ *    list, if any
+ *  - Otherwise, use @ctx's own hostnqn/hostid default, or
+ *    /etc/nvme/hostnqn and /etc/nvme/hostid if @ctx has none
+ *  - Otherwise, if hostnqn is known but hostid is not, and hostnqn
+ *    has a "uuid:" component, derive hostid from it
+ *  - As a last resort, derive a still-missing hostid from DMI or
+ *    device-tree information (or generate a random one), then build
+ *    a hostnqn from that hostid if one is still missing
  *
- *  If the IDs are still NULL after the lookup algorithm, the function
- *  will generate random IDs.
- *
- *  The function also verifies that hostnqn and hostid matches. The Linux
- *  NVMe implementation expects a 1:1 matching between the IDs.
+ *  The function also checks that hostnqn and hostid match, logging a
+ *  debug warning if not. The Linux NVMe implementation expects a 1:1
+ *  matching between the IDs.
  *
  *  Return: 0 on success (@hostnqn and @hostid contain valid strings
  *  which the caller needs to free), or negative error code otherwise.

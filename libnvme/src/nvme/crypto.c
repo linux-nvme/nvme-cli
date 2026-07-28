@@ -1298,9 +1298,10 @@ int __libnvmf_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
 		kr_id = c->cfg.keyring_id;
 
 	/*
-	 * Fallback to the default keyring. Note this will also add the
-	 * keyring to connect command line and to the JSON config output.
-	 * That means we are explicitly selecting the keyring.
+	 * Fallback to the default keyring. This makes the keyring
+	 * explicit on the ctrl rather than left unset, which matters
+	 * to anything downstream that inspects this connection's
+	 * parameters.
 	 */
 	if (!kr_id) {
 		ret = libnvmf_lookup_keyring(h->ctx, ".nvme", &kr_id);
