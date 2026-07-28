@@ -3,24 +3,55 @@ nvme-keys-check-dhchap(1)
 
 NAME
 ----
-nvme-keys-check-dhchap - Check a generated host DH-HMAC-CHAP key
+nvme-keys-check-dhchap - Check a host DH-HMAC-CHAP key
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'keys check-dhchap' [--key=<key> | -k <key>]
+'nvme' [<global-options>] 'keys check-dhchap' [--keydata=<key> | -d <key>]
+			[--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			[--identity=<identity> | -i <identity>]
 
 DESCRIPTION
 -----------
 Checks if the key is a valid DH-HMAC-CHAP host key of the form:
 DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
-and prints it to stdout.
+and prints the resulting HMAC algorithm, key length, and CRC.
+
+If '--keydata' is not given the key is read from stdin, which also allows
+checking a key stored in a file, e.g. 'nvme keys check-dhchap < keyfile'.
+
+If '--identity' is given the specified keyring is also checked for a key
+already stored under that identity (as inserted by
+linknvme-keys-import[1]); the result (not loaded, loaded and
+matching, or loaded but different) is reported. This command never
+modifies the keyring.
+
+Looking up a key requires the 'dhchap' keyring key type, which is not yet
+provided by any released Linux kernel; see linknvme-keys-import[1]
+for details.
 
 OPTIONS
 -------
--k <key>::
---key=<key>::
-	Key to be checked.
+-d <key>::
+--keydata=<key>::
+	Key to be checked. If not given, the key is read from stdin.
+
+-k <name>::
+--keyring=<name>::
+	Name of the keyring to check for an already loaded key.
+	Default is '.nvme'.
+
+-t <type>::
+--keytype=<type>::
+	Type of the key to look up.
+	Default is 'dhchap'.
+
+-i <identity>::
+--identity=<identity>::
+	Identity to look up in the keyring to check if the key is already
+	loaded. If not given, only the key format is validated.
 
 include::global-options.txt[]
 

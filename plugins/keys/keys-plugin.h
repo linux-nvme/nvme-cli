@@ -17,10 +17,11 @@
 PLUGIN(NAME("keys", "Manage NVMeoF DH-HMAC-CHAP and TLS keys", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("gen-dhchap", "Generate NVMeoF DH-HMAC-CHAP host key", gen_dhchap)
-		ENTRY("check-dhchap", "Validate NVMeoF DH-HMAC-CHAP host key", check_dhchap)
+		ENTRY("check-dhchap", "Validate NVMeoF DH-HMAC-CHAP host key format or check if loaded", check_dhchap)
 		ENTRY("gen-tls", "Generate NVMeoF TLS PSK", gen_tls)
-		ENTRY("check-tls", "Validate NVMeoF TLS PSK", check_tls)
-		ENTRY("import", "Import NVMeoF TLS PSKs into a keyring", key_import)
+		ENTRY("check-tls", "Validate NVMeoF TLS PSK format or check if loaded", check_tls)
+		ENTRY("insert-tls", "Insert NVMeoF TLS PSK into a keyring", insert_tls)
+		ENTRY("import", "Import NVMeoF TLS PSKs and DH-HMAC-CHAP keys into a keyring", key_import)
 		ENTRY("export", "Export NVMeoF TLS PSKs from a keyring", key_export)
 		ENTRY("revoke", "Revoke an NVMeoF TLS PSK from a keyring", key_revoke)
 	)
