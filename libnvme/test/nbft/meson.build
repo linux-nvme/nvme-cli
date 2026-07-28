@@ -23,6 +23,7 @@ tables = [
     'NBFT-Dell.PowerEdge.R660-fw1.5.5-mpath+discovery',
     'NBFT-mpath+disc-ipv4+6_half',
     'NBFT-ipv6-noip+disc',
+    'NBFT-synthetic-security',
     'NBFT-empty'
 ]
 
