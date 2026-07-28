@@ -192,7 +192,7 @@ static unsigned char *read_rpmb_key(char *keystr, char *keyfile, unsigned int *k
 			if (err < 0)
 				return NULL;
 		}
-	} else if ((keybuf = (unsigned char *)malloc(strlen(keystr))) != NULL) {
+	} else if ((keybuf = (unsigned char *)malloc(strlen(keystr) + 1)) != NULL) {
 		*keysize = strlen(keystr);
 		memcpy(keybuf, keystr, *keysize);
 	}
