@@ -8008,7 +8008,7 @@ static void stringify_log_page_guid(__u8 *guid, char *buf)
 	char *ptr = buf;
 	int i;
 
-	memset(buf, 0, sizeof(char) * 19);
+	memset(buf, 0, sizeof(char) * (2 * 16 + 1));
 
 	ptr += sprintf(ptr, "0x");
 	for (i = 0; i < 16; i++)
