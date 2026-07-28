@@ -83,6 +83,7 @@ adoc_sources = [
     'nvme-keys-gen-dhchap',
     'nvme-keys-gen-tls',
     'nvme-keys-import',
+    'nvme-keys-insert-tls',
     'nvme-keys-revoke',
     'nvme-lba-status-log',
     'nvme-list',

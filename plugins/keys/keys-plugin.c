@@ -23,6 +23,23 @@
 #define CREATE_CMD
 #include "keys-plugin.h"
 
+static int read_key_value(const char *inline_value, char **out)
+{
+	char line[512];
+
+	if (inline_value) {
+		*out = strdup(inline_value);
+		return *out ? 0 : -ENOMEM;
+	}
+
+	if (!fgets(line, sizeof(line), stdin))
+		return -EINVAL;
+	line[strcspn(line, "\n")] = '\0';
+
+	*out = strdup(line);
+	return *out ? 0 : -ENOMEM;
+}
+
 static int gen_dhchap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
@@ -136,58 +153,34 @@ static int gen_dhchap(int argc, char **argv, struct command *acmd, struct plugin
 	return 0;
 }
 
-static int check_dhchap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+static int validate_dhchap_key(const char *key, int *hmac_out,
+		unsigned char *decoded_key, int *decoded_len_out, uint32_t *crc_out)
 {
-	const char *desc =
-	    "Check a DH-HMAC-CHAP host key for usability for NVMe In-Band Authentication.";
-	const char *key = "DH-HMAC-CHAP key (in hexadecimal characters) to be validated.";
-
-	unsigned char decoded_key[128];
-	unsigned int decoded_len;
 	uint32_t crc = shr_crc32(0L, NULL, 0);
 	uint32_t key_crc;
-	int err = 0, hmac;
-	struct config {
-		char	*key;
-	};
+	int decoded_len, hmac, err;
 
-	struct config cfg = {
-		.key	= NULL,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_STR("key", 'k', &cfg.key, key));
-
-	err = parse_args(argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	if (!cfg.key) {
-		nvme_show_error("Key not specified");
-		return -EINVAL;
-	}
-
-	if (sscanf(cfg.key, "DHHC-1:%02x:*s", &hmac) != 1) {
-		nvme_show_error("Invalid key header '%s'", cfg.key);
+	if (sscanf(key, "DHHC-1:%02x:%*s", &hmac) != 1) {
+		nvme_show_error("Invalid key header '%s'", key);
 		return -EINVAL;
 	}
 	switch (hmac) {
 	case 0:
 		break;
 	case 1:
-		if (strlen(cfg.key) != 59) {
+		if (strlen(key) != 59) {
 			nvme_show_error("Invalid key length for SHA(256)");
 			return -EINVAL;
 		}
 		break;
 	case 2:
-		if (strlen(cfg.key) != 83) {
+		if (strlen(key) != 83) {
 			nvme_show_error("Invalid key length for SHA(384)");
 			return -EINVAL;
 		}
 		break;
 	case 3:
-		if (strlen(cfg.key) != 103) {
+		if (strlen(key) != 103) {
 			nvme_show_error("Invalid key length for SHA(512)");
 			return -EINVAL;
 		}
@@ -197,15 +190,14 @@ static int check_dhchap(int argc, char **argv, struct command *acmd, struct plug
 		return -EINVAL;
 	}
 
-	err = shr_base64_decode(cfg.key + 10, strlen(cfg.key) - 11,
-				 decoded_key);
+	err = shr_base64_decode(key + 10, strlen(key) - 11, decoded_key);
 	if (err < 0) {
-		nvme_show_error("Base64 decoding failed, error %d");
+		nvme_show_error("Base64 decoding failed, error %d", err);
 		return err;
 	}
 	decoded_len = err;
 	if (decoded_len < 32) {
-		nvme_show_error("Base64 decoding failed (%s, size %u)", cfg.key + 10, decoded_len);
+		nvme_show_error("Base64 decoding failed (%s, size %u)", key + 10, decoded_len);
 		return -EINVAL;
 	}
 	decoded_len -= 4;
@@ -222,7 +214,108 @@ static int check_dhchap(int argc, char **argv, struct command *acmd, struct plug
 		nvme_show_error("CRC mismatch (key %08x, crc %08x)", key_crc, crc);
 		return -EINVAL;
 	}
+
+	*hmac_out = hmac;
+	*decoded_len_out = decoded_len;
+	*crc_out = crc;
+	return 0;
+}
+
+static int check_dhchap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	const char *desc =
+	    "Check a DH-HMAC-CHAP host key for usability for NVMe In-Band Authentication,\n"
+	    "and, if --identity is given, check whether it is already loaded into a keyring.";
+	const char *keydata = "DH-HMAC-CHAP key (in DHHC-1 interchange format) to be validated. Reads from stdin if not given.";
+	const char *keyring = "Keyring to check for an already loaded key.";
+	const char *keytype = "Key type of the key to look up.";
+	const char *identity = "Identity to look up in the keyring to check if the key is already loaded.";
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_free char *key = NULL;
+	__cleanup_free unsigned char *stored = NULL;
+	unsigned char decoded_key[128];
+	long keyring_id = 0, key_id = 0;
+	int decoded_len, hmac, err, stored_len;
+	uint32_t crc;
+	struct config {
+		char	*keydata;
+		char	*keyring;
+		char	*keytype;
+		char	*identity;
+	};
+
+	struct config cfg = {
+		.keydata	= NULL,
+		.keyring	= ".nvme",
+		.keytype	= "dhchap",
+		.identity	= NULL,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
+		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
+		  OPT_STR("identity",	'i', &cfg.identity,	identity));
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = read_key_value(cfg.keydata, &key);
+	if (err) {
+		nvme_show_error("No key data");
+		return err;
+	}
+
+	err = validate_dhchap_key(key, &hmac, decoded_key, &decoded_len, &crc);
+	if (err)
+		return err;
+
 	nvme_show_result("Key is valid (HMAC %d, length %d, CRC %08x)", hmac, decoded_len, crc);
+
+	if (!cfg.identity)
+		return 0;
+
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
+		nvme_show_error("Failed to create global context");
+		return err;
+	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
+
+	err = libnvmf_lookup_keyring(ctx, cfg.keyring, &keyring_id);
+	if (err) {
+		nvme_show_error("Failed to lookup keyring '%s', %s",
+				cfg.keyring, libnvme_strerror(-err));
+		return err;
+	}
+
+	err = libnvmf_set_keyring(ctx, keyring_id);
+	if (err) {
+		nvme_show_error("Failed to link keyring '%s', %s",
+				cfg.keyring, libnvme_strerror(-err));
+		return err;
+	}
+
+	err = libnvmf_lookup_key(ctx, cfg.keytype, cfg.identity, &key_id);
+	if (err) {
+		nvme_show_result("Key is not loaded for identity '%s'", cfg.identity);
+		return 0;
+	}
+
+	err = libnvmf_read_key(ctx, keyring_id, key_id, &stored_len, &stored);
+	if (err) {
+		nvme_show_error("Failed to read back loaded key, %s",
+				libnvme_strerror(-err));
+		return err;
+	}
+
+	if ((size_t)stored_len == strlen(key) && !memcmp(stored, key, stored_len))
+		nvme_show_result("Key is loaded (serial %08x) and matches", (unsigned int)key_id);
+	else
+		nvme_show_result("Key is loaded (serial %08x) but differs", (unsigned int)key_id);
+
 	return 0;
 }
 
@@ -295,6 +388,34 @@ out:
 	umask(old_umask);
 
 	return err;
+}
+
+static int do_insert_tls_key(struct libnvme_global_ctx *ctx, const char *keyring,
+		const char *keytype, const char *hostnqn, const char *subsysnqn,
+		int identity, int hmac, unsigned char *key_data, int key_len,
+		bool compat, const char *keyfile, long *tls_key)
+{
+	int err;
+
+	if (compat)
+		err = libnvmf_insert_tls_key_compat(ctx, keyring, keytype, hostnqn,
+			subsysnqn, identity, hmac, key_data, key_len, tls_key);
+	else
+		err = libnvmf_insert_tls_key_versioned(ctx, keyring, keytype, hostnqn,
+			subsysnqn, identity, hmac, key_data, key_len, tls_key);
+	if (err) {
+		nvme_show_error("Failed to insert key, %s", libnvme_strerror(-err));
+		return err;
+	}
+	nvme_show_result("Inserted TLS key %08x", (unsigned int)*tls_key);
+
+	if (keyfile) {
+		err = append_keyfile(ctx, keyring, *tls_key, keyfile);
+		if (err)
+			return err;
+	}
+
+	return 0;
 }
 
 static int gen_tls(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -402,29 +523,12 @@ static int gen_tls(int argc, char **argv, struct command *acmd, struct plugin *p
 			cfg.hostnqn = hnqn;
 		}
 
-		if (cfg.compat)
-			err = libnvmf_insert_tls_key_compat(ctx, cfg.keyring,
-				cfg.keytype, cfg.hostnqn,
-				cfg.subsysnqn, cfg.version,
-				cfg.hmac, raw_secret, key_len, &tls_key);
-		else
-			err = libnvmf_insert_tls_key_versioned(ctx, cfg.keyring,
-				cfg.keytype, cfg.hostnqn,
-				cfg.subsysnqn, cfg.version,
-				cfg.hmac, raw_secret, key_len, &tls_key);
-		if (err) {
-			nvme_show_error("Failed to insert key, error %d");
+		err = do_insert_tls_key(ctx, cfg.keyring, cfg.keytype,
+				cfg.hostnqn, cfg.subsysnqn, cfg.version,
+				cfg.hmac, raw_secret, key_len, cfg.compat,
+				cfg.keyfile, &tls_key);
+		if (err)
 			return err;
-		}
-
-		nvme_show_result("Inserted TLS key %08x", (unsigned int)tls_key);
-
-		if (cfg.keyfile) {
-			err = append_keyfile(ctx, cfg.keyring,
-				tls_key, cfg.keyfile);
-			if (err)
-				return err;
-		}
 	}
 
 	return 0;
@@ -432,18 +536,149 @@ static int gen_tls(int argc, char **argv, struct command *acmd, struct plugin *p
 
 static int check_tls(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Check a TLS key for NVMe PSK Interchange format.\n";
-	const char *keydata = "TLS key (in PSK Interchange format) to be validated.";
+	const char *desc =
+	    "Check a TLS key for NVMe PSK Interchange format, and, if a subsystem\n"
+	    "NQN is given, check whether the corresponding retained key is already\n"
+	    "loaded into a keyring.";
+	const char *keydata = "TLS key (in PSK Interchange format) to be validated. Reads from stdin if not given.";
+	const char *identity = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)";
+	const char *hostnqn = "Host NQN to use when checking whether the key is already loaded.";
+	const char *subsysnqn = "Subsystem NQN to use when checking whether the key is already loaded.";
+	const char *keyring = "Keyring to check for an already loaded key.";
+	const char *keytype = "Key type of the key to look up.";
+	const char *compat = "Use non-RFC 8446 compliant algorithm for checking TLS PSK for older implementations.";
+
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_free char *key_value = NULL;
+	__cleanup_free unsigned char *decoded_key = NULL;
+	__cleanup_free char *hnqn = NULL;
+	__cleanup_free char *tls_id = NULL;
+	int decoded_len, err = 0;
+	unsigned int hmac;
+	long keyring_id, key_id;
+	struct config {
+		char		*keyring;
+		char		*keytype;
+		char		*hostnqn;
+		char		*subsysnqn;
+		char		*keydata;
+		unsigned char	identity;
+		bool		compat;
+	};
+
+	struct config cfg = {
+		.keyring	= ".nvme",
+		.keytype	= "psk",
+		.hostnqn	= NULL,
+		.subsysnqn	= NULL,
+		.keydata	= NULL,
+		.identity	= 0,
+		.compat		= false,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
+		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
+		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
+		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
+		  OPT_BYTE("identity",	'I', &cfg.identity,	identity),
+		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (cfg.identity > 1) {
+		nvme_show_error("Invalid TLS identity version %u",
+				cfg.identity);
+		return -EINVAL;
+	}
+
+	err = read_key_value(cfg.keydata, &key_value);
+	if (err) {
+		nvme_show_error("No key data");
+		return err;
+	}
+
+	err = nvme_create_global_ctx(&ctx);
+	if (err) {
+		nvme_show_error("Failed to create global context");
+		return err;
+	}
+	libnvme_set_logging_level(ctx, log_level, false, false);
+
+	err = libnvmf_import_tls_key(ctx, key_value, &decoded_len,
+		&hmac, &decoded_key);
+	if (err) {
+		nvme_show_error("Key decoding failed, %s", libnvme_strerror(-err));
+		return err;
+	}
+	nvme_show_result("Key is valid (HMAC %u, length %d)", hmac, decoded_len);
+
+	if (!cfg.subsysnqn)
+		return 0;
+
+	if (!cfg.hostnqn) {
+		err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, NULL);
+		if (err)
+			return err;
+		cfg.hostnqn = hnqn;
+	}
+
+	if (cfg.compat)
+		err = libnvmf_generate_tls_key_identity_compat(ctx,
+			cfg.hostnqn, cfg.subsysnqn, cfg.identity,
+			hmac, decoded_key, decoded_len, &tls_id);
+	else
+		err = libnvmf_generate_tls_key_identity(ctx,
+			cfg.hostnqn, cfg.subsysnqn, cfg.identity,
+			hmac, decoded_key, decoded_len, &tls_id);
+	if (err) {
+		nvme_show_error("Failed to generate identity, %s",
+				libnvme_strerror(-err));
+		return err;
+	}
+	nvme_show_result("%s", tls_id);
+
+	err = libnvmf_lookup_keyring(ctx, cfg.keyring, &keyring_id);
+	if (err) {
+		nvme_show_error("Failed to lookup keyring '%s', %s",
+				cfg.keyring, libnvme_strerror(-err));
+		return err;
+	}
+
+	err = libnvmf_set_keyring(ctx, keyring_id);
+	if (err) {
+		nvme_show_error("Failed to link keyring '%s', %s",
+				cfg.keyring, libnvme_strerror(-err));
+		return err;
+	}
+
+	err = libnvmf_lookup_key(ctx, cfg.keytype, tls_id, &key_id);
+	if (err) {
+		nvme_show_result("Key is not loaded");
+		return 0;
+	}
+
+	nvme_show_result("Key is loaded (serial %08x)", (unsigned int)key_id);
+	return 0;
+}
+
+static int insert_tls(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	const char *desc = "Insert a TLS key (in NVMe PSK Interchange format) into a keyring.\n";
+	const char *keydata = "TLS key (in PSK Interchange format) to be inserted. Reads from stdin if not given.";
 	const char *identity = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)";
 	const char *hostnqn = "Host NQN for the retained key.";
 	const char *subsysnqn = "Subsystem NQN for the retained key.";
 	const char *keyring = "Keyring for the retained key.";
 	const char *keytype = "Key type of the retained key.";
-	const char *insert = "Insert retained key into the keyring.";
-	const char *keyfile = "Update key file with the derive TLS PSK.";
-	const char *compat = "Use non-RFC 8446 compliant algorithm for checking TLS PSK for older implementations.";
+	const char *keyfile = "Append the derived TLS PSK to keyfile.";
+	const char *compat = "Use non-RFC 8446 compliant algorithm for older implementations.";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_free char *key_value = NULL;
 	__cleanup_free unsigned char *decoded_key = NULL;
 	__cleanup_free char *hnqn = NULL;
 	int decoded_len, err = 0;
@@ -457,7 +692,6 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 		char		*keydata;
 		char		*keyfile;
 		unsigned char	identity;
-		bool		insert;
 		bool		compat;
 	};
 
@@ -469,7 +703,6 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 		.keydata	= NULL,
 		.keyfile	= NULL,
 		.identity	= 0,
-		.insert		= false,
 		.compat		= false,
 	};
 
@@ -481,21 +714,26 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
 		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
 		  OPT_BYTE("identity",	'I', &cfg.identity,	identity),
-		  OPT_FLAG("insert",	'i', &cfg.insert,	insert),
 		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	if (!cfg.keydata) {
-		nvme_show_error("No key data");
+	if (!cfg.subsysnqn) {
+		nvme_show_error("Need to specify a subsystem NQN");
 		return -EINVAL;
 	}
 	if (cfg.identity > 1) {
 		nvme_show_error("Invalid TLS identity version %u",
 				cfg.identity);
 		return -EINVAL;
+	}
+
+	err = read_key_value(cfg.keydata, &key_value);
+	if (err) {
+		nvme_show_error("No key data");
+		return err;
 	}
 
 	err = nvme_create_global_ctx(&ctx);
@@ -505,71 +743,23 @@ static int check_tls(int argc, char **argv, struct command *acmd, struct plugin 
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
-	err = libnvmf_import_tls_key(ctx, cfg.keydata, &decoded_len,
+	err = libnvmf_import_tls_key(ctx, key_value, &decoded_len,
 		&hmac, &decoded_key);
 	if (err) {
-		nvme_show_error("Key decoding failed, error %d\n");
+		nvme_show_error("Key decoding failed, %s", libnvme_strerror(-err));
 		return err;
 	}
 
-	if (cfg.subsysnqn) {
-		if (!cfg.hostnqn) {
-			err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, NULL);
-			if (err)
-				return err;
-			cfg.hostnqn = hnqn;
-		}
-	} else {
-		nvme_show_error("Need to specify a subsystem NQN");
-		return -EINVAL;
+	if (!cfg.hostnqn) {
+		err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, NULL);
+		if (err)
+			return err;
+		cfg.hostnqn = hnqn;
 	}
 
-	if (cfg.insert) {
-		if (cfg.compat)
-			err = libnvmf_insert_tls_key_compat(ctx, cfg.keyring,
-				cfg.keytype, cfg.hostnqn,
-				cfg.subsysnqn, cfg.identity,
-				hmac, decoded_key, decoded_len,
-				&tls_key);
-		else
-			err = libnvmf_insert_tls_key_versioned(ctx, cfg.keyring,
-				cfg.keytype, cfg.hostnqn,
-				cfg.subsysnqn, cfg.identity,
-				hmac, decoded_key, decoded_len,
-				&tls_key);
-		if (err) {
-			nvme_show_error("Failed to insert key, error %d");
-			return err;
-		}
-		nvme_show_result("Inserted TLS key %08x", (unsigned int)tls_key);
-
-		if (cfg.keyfile) {
-			err = append_keyfile(ctx, cfg.keyring,
-				tls_key, cfg.keyfile);
-			if (err)
-				return err;
-		}
-	} else {
-		__cleanup_free char *tls_id = NULL;
-
-		if (cfg.compat)
-			err = libnvmf_generate_tls_key_identity_compat(ctx,
-				cfg.hostnqn, cfg.subsysnqn, cfg.identity,
-				hmac, decoded_key, decoded_len,
-				&tls_id);
-		else
-			err = libnvmf_generate_tls_key_identity(ctx,
-				cfg.hostnqn, cfg.subsysnqn, cfg.identity,
-				hmac, decoded_key, decoded_len,
-				&tls_id);
-		if (err) {
-			nvme_show_error("Failed to generate identity, error %d",
-					err);
-			return err;
-		}
-		nvme_show_result("%s", tls_id);
-	}
-	return 0;
+	return do_insert_tls_key(ctx, cfg.keyring, cfg.keytype, cfg.hostnqn,
+			cfg.subsysnqn, cfg.identity, hmac, decoded_key, decoded_len,
+			cfg.compat, cfg.keyfile, &tls_key);
 }
 
 static void __scan_tls_key(struct libnvme_global_ctx *ctx, long keyring_id,
@@ -664,15 +854,47 @@ static int key_export(int argc, char **argv, struct command *acmd, struct plugin
 	return 0;
 }
 
+static bool is_dhchap_key(const char *key)
+{
+	return !strncmp(key, "DHHC-1:", 7);
+}
+
+static int import_one_key(struct libnvme_global_ctx *ctx, long keyring_id,
+		const char *identity, const char *key_str)
+{
+	__cleanup_free unsigned char *psk = NULL;
+	unsigned char decoded_key[128];
+	long key_serial;
+	int decoded_len, dhchap_hmac, err;
+	unsigned int tls_hmac;
+	uint32_t crc;
+
+	if (is_dhchap_key(key_str)) {
+		err = validate_dhchap_key(key_str, &dhchap_hmac, decoded_key,
+				&decoded_len, &crc);
+		if (err)
+			return err;
+
+		return libnvmf_update_key(ctx, keyring_id, "dhchap", identity,
+				(unsigned char *)key_str, strlen(key_str),
+				&key_serial);
+	}
+
+	err = libnvmf_import_tls_key(ctx, key_str, &decoded_len, &tls_hmac, &psk);
+	if (err)
+		return err;
+
+	return libnvmf_update_key(ctx, keyring_id, "psk", identity, psk,
+			decoded_len, &key_serial);
+}
+
 static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 		FILE *fd)
 {
-	long keyring_id, key;
-	char tls_str[512];
-	char *tls_key;
-	unsigned char *psk;
-	unsigned int hmac;
-	int linenum = -1, key_len;
+	long keyring_id;
+	char line[512];
+	char *key_str;
+	int linenum = -1;
 	int err;
 
 	err = libnvmf_lookup_keyring(ctx, keyring, &keyring_id);
@@ -681,28 +903,22 @@ static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 		return err;
 	}
 
-	while (fgets(tls_str, 512, fd)) {
+	while (fgets(line, sizeof(line), fd)) {
 		linenum++;
-		tls_key = strrchr(tls_str, ' ');
-		if (!tls_key) {
+		key_str = strrchr(line, ' ');
+		if (!key_str) {
 			nvme_show_error("Parse error in line %d",
 					linenum);
 			continue;
 		}
-		*tls_key = '\0';
-		tls_key++;
-		tls_key[strcspn(tls_key, "\n")] = 0;
-		err = libnvmf_import_tls_key(ctx, tls_key, &key_len, &hmac, &psk);
-		if (err) {
-			nvme_show_error("Failed to import key in line %d",
-					linenum);
-			continue;
-		}
-		err = libnvmf_update_key(ctx, keyring_id, "psk", tls_str,
-				psk, key_len, &key);
+		*key_str = '\0';
+		key_str++;
+		key_str[strcspn(key_str, "\n")] = 0;
+
+		err = import_one_key(ctx, keyring_id, line, key_str);
 		if (err)
-			continue;
-		free(psk);
+			nvme_show_error("Failed to import key in line %d, %s",
+					linenum, libnvme_strerror(-err));
 	}
 
 	return 0;
@@ -710,27 +926,37 @@ static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 
 static int key_import(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Import NVMeoF TLS PSKs into a keyring.\n";
+	const char *desc = "Import NVMeoF TLS PSKs and DH-HMAC-CHAP keys into a keyring.\n";
 	const char *keyring = "Keyring to import the keys into.";
 	const char *keyfile = "File to read the keys from (default: stdin).";
+	const char *keydata = "Key to insert directly under --identity. Reads from stdin if not given.";
+	const char *identity = "Identity to store a single key under. If given, --keydata (or stdin) is read as a single key instead of a bulk <identity> <key> list.";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_file FILE *fd = NULL;
+	__cleanup_free char *key = NULL;
+	long keyring_id;
 	int err = 0;
 
 	struct config {
 		char *keyring;
 		char *keyfile;
+		char *keydata;
+		char *identity;
 	};
 
 	struct config cfg = {
-		.keyring = ".nvme",
-		.keyfile = NULL,
+		.keyring	= ".nvme",
+		.keyfile	= NULL,
+		.keydata	= NULL,
+		.identity	= NULL,
 	};
 
 	NVME_ARGS(opts,
-		  OPT_STR("keyring", 'k', &cfg.keyring, keyring),
-		  OPT_STR("keyfile", 'f', &cfg.keyfile, keyfile));
+		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
+		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
+		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
+		  OPT_STR("identity",	'i', &cfg.identity,	identity));
 
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
@@ -743,26 +969,49 @@ static int key_import(int argc, char **argv, struct command *acmd, struct plugin
 	}
 	libnvme_set_logging_level(ctx, log_level, false, false);
 
-	if (cfg.keyfile) {
-		fd = fopen(cfg.keyfile, "r");
-		if (!fd) {
-			nvme_show_error("Cannot open keyfile %s, error %d",
-					cfg.keyfile, errno);
-			return -errno;
+	if (!cfg.identity) {
+		if (cfg.keyfile) {
+			fd = fopen(cfg.keyfile, "r");
+			if (!fd) {
+				nvme_show_error("Cannot open keyfile %s, error %d",
+						cfg.keyfile, errno);
+				return -errno;
+			}
+		} else {
+			fd = freopen(NULL, "r", stdin);
 		}
-	} else {
-		fd = freopen(NULL, "r", stdin);
+
+		err = import_key(ctx, cfg.keyring, fd);
+		if (err) {
+			nvme_show_error("Import of keys failed with '%s'",
+					libnvme_strerror(err));
+			return err;
+		}
+
+		nvme_show_verbose_info("importing from %s", cfg.keyfile);
+		return 0;
 	}
 
-	err = import_key(ctx, cfg.keyring, fd);
+	err = read_key_value(cfg.keydata, &key);
 	if (err) {
-		nvme_show_error("Import of TLS keys failed with '%s'",
-				libnvme_strerror(err));
+		nvme_show_error("No key data");
 		return err;
 	}
 
-	nvme_show_verbose_info("importing from %s", cfg.keyfile);
+	err = libnvmf_lookup_keyring(ctx, cfg.keyring, &keyring_id);
+	if (err) {
+		nvme_show_error("Failed to lookup keyring '%s', %s",
+				cfg.keyring, libnvme_strerror(-err));
+		return err;
+	}
 
+	err = import_one_key(ctx, keyring_id, cfg.identity, key);
+	if (err) {
+		nvme_show_error("Failed to insert key, %s", libnvme_strerror(-err));
+		return err;
+	}
+
+	nvme_show_result("Inserted key for identity '%s'", cfg.identity);
 	return 0;
 }
 
