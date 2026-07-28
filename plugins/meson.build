@@ -66,6 +66,10 @@ if want_fabrics and 'nbft' in selected_plugins
     plugin_sources += ['plugins/nbft/nbft-plugin.c']
 endif
 
+if want_fabrics and 'keys' in selected_plugins
+    plugin_sources += ['plugins/keys/keys-plugin.c']
+endif
+
 if want_fabrics and 'exclusion' in selected_plugins
     plugin_sources += ['plugins/exclusion/exclusion-nvme.c']
 endif

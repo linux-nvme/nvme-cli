@@ -1,28 +1,28 @@
-nvme-check-tls-key(1)
-========================
+nvme-keys-check-tls(1)
+======================
 
 NAME
 ----
-nvme-check-tls-key - Check a generated NVMe TLS PSK
+nvme-keys-check-tls - Check a generated NVMe TLS PSK
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'check-tls-key' [--keyring=<name> | -k <name>]
+'nvme' [<global-options>] 'keys check-tls' [--keyring=<name> | -k <name>]
 			[--keytype=<type> | -t <type>]
 			[--hostnqn=<nqn> | -n <nqn>]
 			[--subsysnqn=<nqn> | -c <nqn>]
 			[--keydata=<key> | -d <key>]
 			[--identity=<id-vers> | -I <id-vers>]
-			[--insert | -i ]
-			[--compat | -C ]
+			[--insert | -i]
+			[--compat | -C]
 			[--keyfile=<keyfile> | -f <keyfile>]
 
 DESCRIPTION
 -----------
 Checks if the key is a valid NVMe TLS PSK in the PSK interchange format
 'NVMeTLSkey-1:01:<base64-encoded data>:'. If '--insert' is specified the
-the derived 'retained' TLS key is stored in the keyring, otherwise the
+derived 'retained' TLS key is stored in the keyring, otherwise the
 TLS identity of the key is printed out.
 
 OPTIONS
@@ -45,7 +45,7 @@ OPTIONS
 -c <nqn>::
 --subsysnqn=<nqn>::
 	Subsystem NVMe Qualified Name (NQN) to be used to derive the
-	'retained' TLS key
+	'retained' TLS key. Required.
 
 -d <key>::
 --keydata=<key>::
@@ -57,19 +57,19 @@ OPTIONS
 	identity, and '1' for the TLS identity suffixed by the PSK hash
 	as specified in TP8018.
 
--i:
---insert:
+-i::
+--insert::
 	Insert the derived 'retained' key in the keyring.
 
--C:
---compat:
+-C::
+--compat::
 	Use the original non-RFC 8446 compliant algorithm when
-	checking TLS keys for compatibility with older implentations.
+	checking TLS keys for compatibility with older implementations.
 
--f <keyfile>
---keyfile=<keyfile>
-	Append the resulting TLS key to keyfile. This command line option is
-	depending on --insert.
+-f <keyfile>::
+--keyfile=<keyfile>::
+	Append the resulting TLS key to keyfile. This command line option
+	depends on --insert.
 
 include::global-options.txt[]
 

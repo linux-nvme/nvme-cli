@@ -1,0 +1,53 @@
+nvme-keys-revoke(1)
+===================
+
+NAME
+----
+nvme-keys-revoke - Revoke a NVMe TLS PSK from a keyring
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'keys revoke' [--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			--identity=<description> | -i <description>
+
+DESCRIPTION
+-----------
+Revoke an NVMe TLS pre-shared key (PSK) from the system keyring.
+
+OPTIONS
+-------
+-k <name>::
+--keyring=<name>::
+	Name of the keyring to revoke the key from. Default is '.nvme'.
+
+-t <type>::
+--keytype=<type>::
+	Type of the key to revoke. Default is 'psk'.
+
+-i <description>::
+--identity=<description>::
+	Identity (description) of the key to revoke.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+
+* Revoke a key using its description and verify with keyctl
++
+------------
+# nvme keys revoke --identity="NVMe0R01 hostnqn0 subsys0"
+
+# keyctl show
+Session Keyring
+ 573249525 --alswrv      0     0  keyring: _ses
+ 353599402 --alswrv      0 65534   \_ keyring: _uid.0
+ 475911922 ---lswrv      0     0   \_ keyring: .nvme
+649274894: key inaccessible (Key has been revoked)
+------------
+
+NVME
+----
+Part of the nvme-user suite

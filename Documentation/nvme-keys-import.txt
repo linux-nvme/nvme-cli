@@ -1,0 +1,55 @@
+nvme-keys-import(1)
+===================
+
+NAME
+----
+nvme-keys-import - Import NVMe TLS PSKs into a keyring
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'keys import' [--keyring=<name> | -k <name>]
+			[--keyfile=<file> | -f <file>]
+
+DESCRIPTION
+-----------
+Import NVMe TLS pre-shared keys (PSKs) into the system keyring. Key data
+is read in the form
+
+<description> <psk>
+
+where '<description>' is the key description and '<psk>' is the key
+data in PSK interchange format 'NVMeTLSkey-1:01:<base64 encoded data>:',
+one key per line, and imported into the kernel keyring.
+
+OPTIONS
+-------
+-k <name>::
+--keyring=<name>::
+	Name of the keyring to import the keys into. Default is '.nvme'.
+
+-f <file>::
+--keyfile=<file>::
+	File to read the keys from instead of stdin.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+
+* Import previously exported keys from a file and verify with keyctl
++
+------------
+# nvme keys import -f nvme-tls-keys.txt
+
+# keyctl show
+Session Keyring
+ 573249525 --alswrv      0     0  keyring: _ses
+ 353599402 --alswrv      0 65534   \_ keyring: _uid.0
+ 475911922 ---lswrv      0     0   \_ keyring: .nvme
+ 734343968 --als-rv      0     0       \_ psk: NVMe0R01 hostnqn0 subsys0
+------------
+
+NVME
+----
+Part of the nvme-user suite

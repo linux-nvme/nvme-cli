@@ -1,14 +1,14 @@
-nvme-check-dhchap-key(1)
-========================
+nvme-keys-check-dhchap(1)
+=========================
 
 NAME
 ----
-nvme-check-dhchap-key - Check a generated host DH-HMAC-CHAP key
+nvme-keys-check-dhchap - Check a generated host DH-HMAC-CHAP key
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'check-dhchap-key' [--key=<key>]
+'nvme' [<global-options>] 'keys check-dhchap' [--key=<key> | -k <key>]
 
 DESCRIPTION
 -----------

@@ -1,14 +1,14 @@
-nvme-gen-dhchap-key(1)
-======================
+nvme-keys-gen-dhchap(1)
+=======================
 
 NAME
 ----
-nvme-gen-dhchap-key - Generate a host DH-HMAC-CHAP key
+nvme-keys-gen-dhchap - Generate a host DH-HMAC-CHAP key
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'gen-dhchap-key' [--hmac=<hmac-id> | -h <hmac-id>]
+'nvme' [<global-options>] 'keys gen-dhchap' [--hmac=<hmac-id> | -m <hmac-id>]
 			[--secret=<secret> | -s <secret>]
 			[--key-length=<len> | -l <len>]
 			[--nqn=<host-nqn> | -n <host-nqn>]
@@ -21,7 +21,7 @@ and prints it to stdout.
 
 OPTIONS
 -------
--h <hmac-id>::
+-m <hmac-id>::
 --hmac=<hmac-id>::
 	Select a HMAC algorithm to use. Possible values are:
 	0 - No HMAC algorithm
