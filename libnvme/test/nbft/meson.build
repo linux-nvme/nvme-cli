@@ -24,6 +24,10 @@ tables = [
     'NBFT-mpath+disc-ipv4+6_half',
     'NBFT-ipv6-noip+disc',
     'NBFT-synthetic-security',
+    'NBFT-synthetic-2hfi-3ssns-disc-sec',
+    'NBFT-synthetic-dhcp-2hfi-3ssns-2sec',
+    'NBFT-synthetic-ipv6-3hfi-4ssns-2disc-2sec',
+    'NBFT-synthetic-mixed-nid-types',
     'NBFT-empty'
 ]
 
