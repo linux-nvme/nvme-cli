@@ -8,15 +8,14 @@
 
 #include <errno.h>
 #include <limits.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/str/str.h>
+#include <ini.h>
 #include <parse-util.h>
-#include <string-util.h>
 
 #include "config.h"
 #include "log.h"
@@ -64,7 +63,8 @@ static int parse_uint(const char *val, unsigned int *out)
 
 /* Apply one "key = value" line from [Global]; @lineno is for diagnostics. */
 static void apply_global_key(struct discoverd_config *cfg, const char *key,
-			     const char *val, const char *conf_path, int lineno)
+			     const char *val, const char *conf_path,
+			     unsigned int lineno)
 {
 	int r = 0;
 
@@ -75,21 +75,49 @@ static void apply_global_key(struct discoverd_config *cfg, const char *key,
 	else if (streq(key, "fc-kickstart-interval-minutes"))
 		r = parse_uint(val, &cfg->fc_kickstart_interval_minutes);
 	else
-		disc_warn("%s:%d: unknown key '%s', ignored", conf_path,
+		disc_warn("%s:%u: unknown key '%s', ignored", conf_path,
 			  lineno, key);
 
 	if (r < 0)
-		disc_warn("%s:%d: invalid value for '%s', ignored", conf_path,
+		disc_warn("%s:%u: invalid value for '%s', ignored", conf_path,
 			  lineno, key);
+}
+
+struct config_parse_ctx {
+	struct discoverd_config *cfg;
+	const char *conf_path;
+};
+
+static int config_event(enum shr_ini_event event, const char *section,
+			const char *key, const char *value,
+			unsigned int line, void *user_data)
+{
+	struct config_parse_ctx *pc = user_data;
+
+	switch (event) {
+	case SHR_INI_SECTION:
+		break;
+	case SHR_INI_KV:
+		if (section && streq(section, "Global"))
+			apply_global_key(pc->cfg, key, value, pc->conf_path,
+					 line);
+		else
+			disc_warn("%s:%u: key outside [Global], ignored",
+				  pc->conf_path, line);
+		break;
+	case SHR_INI_JUNK:
+		disc_warn("%s:%u: malformed line, ignored", pc->conf_path,
+			  line);
+		break;
+	}
+	return 0;
 }
 
 struct discoverd_config *config_load(const char *conf_path)
 {
 	struct discoverd_config *cfg;
-	FILE *f;
-	char line[256];
-	char section[64] = "";
-	int lineno = 0;
+	struct config_parse_ctx pc;
+	int ret;
 
 	cfg = calloc(1, sizeof(*cfg));
 	if (!cfg)
@@ -99,55 +127,15 @@ struct discoverd_config *config_load(const char *conf_path)
 	if (!conf_path)
 		conf_path = DISCOVERD_CONF_PATH;
 
-	f = fopen(conf_path, "r");
-	if (!f) {
-		/* A missing config file is not an error — defaults apply. */
-		if (errno != ENOENT)
-			disc_warn("%s: %s, using defaults", conf_path,
-				 strerror(errno));
-		return cfg;
-	}
+	pc.cfg = cfg;
+	pc.conf_path = conf_path;
 
-	while (fgets(line, sizeof(line), f)) {
-		char *s = shr_trim(line);
-		char *eq, *key, *val;
-		size_t len;
+	/* A missing config file is not an error — defaults apply. */
+	ret = shr_ini_parse_file(conf_path, config_event, &pc);
+	if (ret && ret != -ENOENT)
+		disc_warn("%s: %s, using defaults", conf_path,
+			 strerror(-ret));
 
-		lineno++;
-		if (*s == '\0' || *s == '#' || *s == ';')
-			continue;
-
-		len = strlen(s);
-		if (s[0] == '[' && s[len - 1] == ']') {
-			s[len - 1] = '\0';
-			snprintf(section, sizeof(section), "%s",
-				shr_trim(s + 1));
-			continue;
-		}
-
-		eq = strchr(s, '=');
-		if (!eq) {
-			disc_warn("%s:%d: malformed line, ignored", conf_path,
-				  lineno);
-			continue;
-		}
-		*eq = '\0';
-		key = shr_trim(s);
-		val = shr_trim(eq + 1);
-		if (*key == '\0' || *val == '\0') {
-			disc_warn("%s:%d: malformed line, ignored", conf_path,
-				  lineno);
-			continue;
-		}
-
-		if (streq(section, "Global"))
-			apply_global_key(cfg, key, val, conf_path, lineno);
-		else
-			disc_warn("%s:%d: key outside [Global], ignored",
-				  conf_path, lineno);
-	}
-
-	fclose(f);
 	return cfg;
 }
 
