@@ -42,6 +42,12 @@ option(
   description : 'nvme top support'
 )
 option(
+  'deprecated-cmds',
+  type : 'feature',
+  value: 'disabled',
+  description : 'Deprecated commands support'
+)
+option(
   'python',
   type : 'feature',
   value: 'auto',

@@ -282,6 +282,16 @@ adoc_sources = [
     'nvme-mangoboost-id-ctrl',
 ]
 
+if want_deprecated_cmds
+    adoc_sources += [
+        'nvme-check-dhchap-key',
+        'nvme-check-tls-key',
+        'nvme-gen-dhchap-key',
+        'nvme-gen-tls-key',
+        'nvme-tls-key',
+    ]
+endif
+
 # File-format references (man section 5), installed separately from the
 # man1 command pages above.
 adoc_sources_man5 = [

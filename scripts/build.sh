@@ -151,6 +151,7 @@ config_meson_libdbus() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
+		-Ddeprecated-cmds=enabled				\
         -Dlibdbus=enabled                       \
         --prefix="${BUILDDIR}/usr"              \
         "${BUILDDIR}"
@@ -191,6 +192,7 @@ config_meson_docs() {
     CC="${CC}" "${MESON}" setup                 \
         -Ddocs=all                              \
         -Ddocs-build=true                       \
+		-Ddeprecated-cmds=enabled				\
         --prefix=/tmp/usr                       \
         "${BUILDDIR}"
 }
@@ -199,6 +201,7 @@ config_meson_man_docs() {
     CC="${CC}" "${MESON}" setup                 \
         -Ddocs=man                              \
         -Ddocs-build=true                       \
+		-Ddeprecated-cmds=enabled				\
         --prefix=/tmp/usr                       \
         "${BUILDDIR}"
 }
@@ -207,6 +210,7 @@ config_meson_html_docs() {
     CC="${CC}" "${MESON}" setup                 \
         -Ddocs=html                             \
         -Ddocs-build=true                       \
+		-Ddeprecated-cmds=enabled				\
         --prefix=/tmp/usr                       \
         "${BUILDDIR}"
 }
@@ -215,6 +219,7 @@ config_meson_rst_docs() {
     CC="${CC}" "${MESON}" setup                 \
         -Ddocs=rst                              \
         -Ddocs-build=true                       \
+		-Ddeprecated-cmds=enabled				\
         --prefix=/tmp/usr                       \
         "${BUILDDIR}"
 }
