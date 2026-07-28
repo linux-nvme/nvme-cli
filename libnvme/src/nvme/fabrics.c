@@ -351,7 +351,7 @@ __libnvme_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 	if (hostnqn_arg)
 		hnqn = strdup(hostnqn_arg);
 
-	/* JSON config: assume the first entry is the default host */
+	/* first host already resolved in ctx->hosts, if any */
 	h = libnvme_first_host(ctx);
 	if (h) {
 		if (!hid)
@@ -1563,7 +1563,7 @@ __libnvme_public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 	if (libnvme_ctrl_get_name(c) && !c->cfg.duplicate_connect)
 		return -ENVME_CONNECT_ALREADY;
 
-	/* apply configuration from config file (JSON) */
+	/* carry over config from an existing ctrl on the same subsystem */
 	s = libnvme_lookup_subsystem(h, NULL, libnvme_ctrl_get_subsysnqn(c));
 	if (s) {
 		libnvme_ctrl_t fc;
