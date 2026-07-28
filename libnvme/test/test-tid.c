@@ -423,8 +423,8 @@ static bool test_tid_set_identity(void)
 	printf("\ntest_tid_set_identity:\n");
 
 	/* Sets the triplet. */
-	t = libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", NULL,
-				    NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", NULL,
+				NULL, NULL, NULL, NULL, &t);
 	p = t && libnvmf_tid_set_identity(t, "nqn.sub", "nqn.host",
 		"46ba5037-7ce5-41fa-9452-48477bf00080") == 0 &&
 	    streq(libnvmf_tid_get_subsysnqn(t), "nqn.sub") &&
@@ -443,8 +443,8 @@ static bool test_tid_set_identity(void)
 	libnvmf_tid_free(t);
 
 	/* hostid derived from a UUID-format hostnqn when none is given. */
-	t = libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", NULL,
-				    NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", NULL,
+				NULL, NULL, NULL, NULL, &t);
 	p = t && libnvmf_tid_set_identity(t, "nqn.sub",
 		"nqn.2014-08.org.nvmexpress:uuid:46ba5037-7ce5-41fa-9452-48477bf00080",
 		NULL) == 0 &&
@@ -455,8 +455,8 @@ static bool test_tid_set_identity(void)
 	libnvmf_tid_free(t);
 
 	/* A hostid without any hostnqn is rejected. */
-	t = libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", NULL,
-				    NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", NULL,
+				NULL, NULL, NULL, NULL, &t);
 	p = t && libnvmf_tid_set_identity(t, "nqn.sub", NULL,
 		"46ba5037-7ce5-41fa-9452-48477bf00080") == -EINVAL;
 	CHECK(p, "hostid without hostnqn rejected");
@@ -575,40 +575,40 @@ static bool test_tid_sanitize(void)
 	printf("  (error messages on stderr below are expected)\n");
 
 	/* An expanded IPv6 traddr is canonicalized to its compressed form. */
-	t = libnvmf_tid_from_fields("tcp", "2001:db8:0:0:0:0:0:1", "4420",
-				    "nqn.t", NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "2001:db8:0:0:0:0:0:1", "4420",
+				"nqn.t", NULL, NULL, NULL, NULL, &t);
 	p = t && streq(libnvmf_tid_get_traddr(t), "2001:db8::1");
 	CHECK(p, "expanded IPv6 traddr → compressed");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* A numeric host_traddr is canonicalized too. */
-	t = libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", "nqn.t",
-				    "2001:db8:0:0:0:0:0:2", NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "1.2.3.4", "4420", "nqn.t",
+				"2001:db8:0:0:0:0:0:2", NULL, NULL, NULL, &t);
 	p = t && streq(libnvmf_tid_get_host_traddr(t), "2001:db8::2");
 	CHECK(p, "host_traddr IPv6 canonicalized");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* An IPv6 scope suffix is kept verbatim after the canonical address. */
-	t = libnvmf_tid_from_fields("tcp", "fe80:0:0:0:0:0:0:1%eth0", "4420",
-				    "nqn.t", NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "fe80:0:0:0:0:0:0:1%eth0", "4420",
+				"nqn.t", NULL, NULL, NULL, NULL, &t);
 	p = t && streq(libnvmf_tid_get_traddr(t), "fe80::1%eth0");
 	CHECK(p, "IPv6 scope preserved: fe80::1%%eth0");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* A hostname traddr is rejected outright: construction fails. */
-	t = libnvmf_tid_from_fields("tcp", "dc.example.com", "8009", "nqn.t",
-				    NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "dc.example.com", "8009", "nqn.t",
+				NULL, NULL, NULL, NULL, &t);
 	p = (t == NULL);
 	CHECK(p, "hostname traddr rejected by from_fields()");
 	libnvmf_tid_free(t);
 	pass &= p;
 
 	/* A hostname host_traddr is rejected too. */
-	t = libnvmf_tid_from_fields("tcp", "1.2.3.4", "8009", "nqn.t",
-				    "dc.example.com", NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "1.2.3.4", "8009", "nqn.t",
+				"dc.example.com", NULL, NULL, NULL, &t);
 	p = (t == NULL);
 	CHECK(p, "hostname host_traddr rejected by from_fields()");
 	libnvmf_tid_free(t);
@@ -622,32 +622,32 @@ static bool test_tid_sanitize(void)
 	pass &= p;
 
 	/* A well-formed FC WWN pair passes through unchanged. */
-	t = libnvmf_tid_from_fields("fc", "nn-0x1:pn-0x2", NULL, "nqn.t",
-				    NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("fc", "nn-0x1:pn-0x2", NULL, "nqn.t",
+				NULL, NULL, NULL, NULL, &t);
 	p = t && streq(libnvmf_tid_get_traddr(t), "nn-0x1:pn-0x2");
 	CHECK(p, "fc traddr untouched");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* A malformed FC traddr is rejected, same as a bad tcp/rdma one. */
-	t = libnvmf_tid_from_fields("fc", "21:00:00:e0:8b:05:05:01", NULL,
-				    "nqn.t", NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("fc", "21:00:00:e0:8b:05:05:01", NULL,
+				"nqn.t", NULL, NULL, NULL, NULL, &t);
 	p = (t == NULL);
 	CHECK(p, "malformed fc traddr rejected");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* A malformed FC host_traddr is rejected too. */
-	t = libnvmf_tid_from_fields("fc", "nn-0x1:pn-0x2", NULL, "nqn.t",
-				    "not-a-wwn", NULL, NULL, NULL);
+	libnvmf_tid_from_fields("fc", "nn-0x1:pn-0x2", NULL, "nqn.t",
+				"not-a-wwn", NULL, NULL, NULL, &t);
 	p = (t == NULL);
 	CHECK(p, "malformed fc host_traddr rejected");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* loop has no addressing shape at all: truly untouched. */
-	t = libnvmf_tid_from_fields("loop", "anything goes", NULL, "nqn.t",
-				    NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("loop", "anything goes", NULL, "nqn.t",
+				NULL, NULL, NULL, NULL, &t);
 	p = t && streq(libnvmf_tid_get_traddr(t), "anything goes");
 	CHECK(p, "loop traddr untouched");
 	pass &= p;

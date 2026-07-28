@@ -6562,14 +6562,14 @@ static void stdout_print_conn(const struct libnvmf_config_conn *conn,
 	printf("# %s: %s\n", libnvmf_config_conn_get_source(conn),
 		is_dc ? "Discovery Controller" : "I/O Controller");
 
-	tid = libnvmf_tid_from_fields(
+	libnvmf_tid_from_fields(
 			libnvmf_config_conn_get_transport(conn),
 			libnvmf_config_conn_get_traddr(conn),
 			libnvmf_config_conn_get_trsvcid(conn),
 			libnvmf_config_conn_get_subsysnqn(conn),
 			libnvmf_config_conn_get_host_traddr(conn),
 			libnvmf_config_conn_get_host_iface(conn),
-			hostnqn, hostid);
+			hostnqn, hostid, &tid);
 
 	/*
 	 * A DC entry is consumed via libnvmf_discovery() (log in, fetch the

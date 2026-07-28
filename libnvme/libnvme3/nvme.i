@@ -940,11 +940,16 @@ PyObject *exclusion_match(struct libnvme_global_ctx *ctx,
 {
 	struct libnvmf_tid *tid;
 	bool matched;
+	int ret;
 
-	tid = libnvmf_tid_from_fields(transport, traddr, trsvcid, subsysnqn,
-				      host_traddr, host_iface, hostnqn, hostid);
-	if (!tid)
-		return PyErr_NoMemory();
+	ret = libnvmf_tid_from_fields(transport, traddr, trsvcid, subsysnqn,
+				      host_traddr, host_iface, hostnqn, hostid,
+				      &tid);
+	if (ret) {
+		PyErr_Format(PyExc_OSError, "exclusion_match failed: %s",
+			     strerror(-ret));
+		return NULL;
+	}
 	matched = libnvmf_exclusion_match(ctx, tid);
 	libnvmf_tid_free(tid);
 	return PyBool_FromLong(matched);
