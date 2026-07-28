@@ -279,8 +279,11 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 		memset(data, 0, 4096);
 		ret = nvme_get_nsid_log(hdl, NVME_NSID_ALL,true, 0x07,
 					data, 4096);
-		if (ret != 0)
+		if (ret != 0) {
+			if (fp != NULL)
+				fclose(fp);
 			return ret;
+		}
 
 		ipackcount = 1;
 		memcpy(&itotal, &data[4092], 4);
@@ -294,6 +297,8 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 
 	if (itotal == 0) {
 		printf("no cdump data\n");
+		if (fp != NULL)
+			fclose(fp);
 		return 0;
 	}
 
@@ -318,8 +323,10 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 				ret = nvme_get_nsid_log(hdl, NVME_NSID_ALL, true,
 							0x07, data, 4096);
 			}
-			if (ret != 0)
+			if (ret != 0) {
+				fclose(fp);
 				return ret;
+			}
 
 			fwrite(data, 1, 4096, fp);
 			printf("\rWait for dump data %d%%" XCLEAN_LINE,
@@ -347,8 +354,10 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 				ret = nvme_get_nsid_log(hdl, NVME_NSID_ALL, true,
 							0x07, data, 4096);
 			}
-			if (ret != 0)
+			if (ret != 0) {
+				fclose(fp);
 				return ret;
+			}
 
 			itotal = cdumpinfo.cdumppack[ipackindex].ilenth;
 			memset(fwvera, 0, sizeof(fwvera));
