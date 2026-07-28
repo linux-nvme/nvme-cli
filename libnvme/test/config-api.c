@@ -361,7 +361,9 @@ static bool args_match(const struct arg_list *list,
  */
 static struct libnvmf_tid *build_tid(const struct libnvmf_config_conn *conn)
 {
-	return libnvmf_tid_from_fields(
+	struct libnvmf_tid *tid;
+
+	libnvmf_tid_from_fields(
 			libnvmf_config_conn_get_transport(conn),
 			libnvmf_config_conn_get_traddr(conn),
 			libnvmf_config_conn_get_trsvcid(conn),
@@ -369,7 +371,8 @@ static struct libnvmf_tid *build_tid(const struct libnvmf_config_conn *conn)
 			libnvmf_config_conn_get_host_traddr(conn),
 			libnvmf_config_conn_get_host_iface(conn),
 			libnvmf_config_conn_get_hostnqn(conn),
-			libnvmf_config_conn_get_hostid(conn));
+			libnvmf_config_conn_get_hostid(conn), &tid);
+	return tid;
 }
 
 static bool test_emit(struct libnvme_global_ctx *ctx, const struct fixture *fx)
@@ -600,15 +603,14 @@ static bool test_hostnqn_precedence(struct libnvme_global_ctx *ctx,
 	hostid = libnvmf_config_conn_get_hostid(mv);
 	assert(!hostid);
 	hostid = default_hostid;
-	mv_tid = libnvmf_tid_from_fields(
+	assert(!libnvmf_tid_from_fields(
 			libnvmf_config_conn_get_transport(mv),
 			libnvmf_config_conn_get_traddr(mv),
 			libnvmf_config_conn_get_trsvcid(mv),
 			libnvmf_config_conn_get_subsysnqn(mv),
 			libnvmf_config_conn_get_host_traddr(mv),
 			libnvmf_config_conn_get_host_iface(mv),
-			hostnqn, hostid);
-	assert(mv_tid);
+			hostnqn, hostid, &mv_tid));
 
 	if (strcmp(libnvmf_tid_get_hostnqn(mv_tid), default_hostnqn) ||
 	    strcmp(libnvmf_tid_get_hostid(mv_tid), default_hostid)) {
@@ -622,15 +624,14 @@ static bool test_hostnqn_precedence(struct libnvme_global_ctx *ctx,
 	assert(hostnqn);
 	hostid = libnvmf_config_conn_get_hostid(pv);
 	assert(hostid);
-	pv_tid = libnvmf_tid_from_fields(
+	assert(!libnvmf_tid_from_fields(
 			libnvmf_config_conn_get_transport(pv),
 			libnvmf_config_conn_get_traddr(pv),
 			libnvmf_config_conn_get_trsvcid(pv),
 			libnvmf_config_conn_get_subsysnqn(pv),
 			libnvmf_config_conn_get_host_traddr(pv),
 			libnvmf_config_conn_get_host_iface(pv),
-			hostnqn, hostid);
-	assert(pv_tid);
+			hostnqn, hostid, &pv_tid));
 
 	if (strcmp(libnvmf_tid_get_hostnqn(pv_tid),
 		   "nqn.2014-08.org.nvmexpress:prod-host") ||
@@ -657,12 +658,11 @@ static bool test_set_connection_from_tid(struct libnvme_global_ctx *ctx)
 
 	printf("test_set_connection_from_tid:\n");
 
-	tid = libnvmf_tid_from_fields("tcp", "10.0.0.9", "4420",
+	assert(!libnvmf_tid_from_fields("tcp", "10.0.0.9", "4420",
 			"nqn.2014-08.org.nvmexpress:subsys",
 			"10.0.0.1", "eth0",
 			"nqn.2014-08.org.nvmexpress:host",
-			"2cd2c43b-a90a-45c1-a8cd-86b33ab273b5");
-	assert(tid);
+			"2cd2c43b-a90a-45c1-a8cd-86b33ab273b5", &tid));
 
 	assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
 

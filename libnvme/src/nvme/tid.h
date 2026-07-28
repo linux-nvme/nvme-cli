@@ -22,22 +22,21 @@ struct libnvme_global_ctx;
  * @host_iface:  Host interface name, or NULL.
  * @hostnqn:     Host NQN, or NULL.
  * @hostid:      Host Identifier, or NULL.
+ * @out:         The allocated TID on success; NULL on error.
  *
  * Convenience constructor.  NULL fields are stored as NULL.  For an IP
  * transport (tcp, rdma) a numeric traddr/host_traddr is canonicalized; a
  * hostname is rejected -- resolving it is the caller's job, not libnvme's.
  *
- * Return: Allocated TID, or NULL if traddr/host_traddr is not numeric on an
- * IP transport, or on allocation failure.
+ * Return: 0 on success (*@out is the allocated TID); -EINVAL if @out is
+ * NULL or traddr/host_traddr is not numeric on an IP transport; -ENOMEM on
+ * allocation failure.
  */
-struct libnvmf_tid *libnvmf_tid_from_fields(const char *transport,
-					    const char *traddr,
-					    const char *trsvcid,
-					    const char *subsysnqn,
-					    const char *host_traddr,
-					    const char *host_iface,
-					    const char *hostnqn,
-					    const char *hostid);
+int libnvmf_tid_from_fields(const char *transport, const char *traddr,
+			    const char *trsvcid, const char *subsysnqn,
+			    const char *host_traddr, const char *host_iface,
+			    const char *hostnqn, const char *hostid,
+			    struct libnvmf_tid **out);
 
 /**
  * libnvmf_tid_set_identity() - Set the subsystem and host identity together.

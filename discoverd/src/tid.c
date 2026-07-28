@@ -19,11 +19,14 @@ struct libnvmf_tid *tid_new(const char *transport, const char *traddr,
 			    const char *host_traddr, const char *host_iface,
 			    const char *hostnqn, bool is_dc)
 {
+	struct libnvmf_tid *t;
+
 	if (!trsvcid || trsvcid[0] == '\0')
 		trsvcid = libnvmf_get_default_trsvcid(transport, is_dc);
 
-	return libnvmf_tid_from_fields(transport, traddr, trsvcid, subsysnqn,
-				       host_traddr, host_iface, hostnqn, NULL);
+	libnvmf_tid_from_fields(transport, traddr, trsvcid, subsysnqn,
+				host_traddr, host_iface, hostnqn, NULL, &t);
+	return t;
 }
 
 /*

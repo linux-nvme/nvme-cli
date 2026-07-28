@@ -147,16 +147,22 @@ static int tid_sanitize_addr(struct libnvmf_tid *t)
 	return 0;
 }
 
-__libnvme_public struct libnvmf_tid *libnvmf_tid_from_fields(
+__libnvme_public int libnvmf_tid_from_fields(
 		const char *transport, const char *traddr,
 		const char *trsvcid, const char *subsysnqn,
 		const char *host_traddr, const char *host_iface,
-		const char *hostnqn, const char *hostid)
+		const char *hostnqn, const char *hostid,
+		struct libnvmf_tid **out)
 {
 	struct libnvmf_tid *t;
+	int rc;
+
+	if (!out)
+		return -EINVAL;
+	*out = NULL;
 
 	if (libnvmf_tid_new(&t) < 0)
-		return NULL;
+		return -ENOMEM;
 
 	t->transport   = shr_xstrdup(transport);
 	t->traddr      = shr_xstrdup(traddr);
@@ -167,12 +173,26 @@ __libnvme_public struct libnvmf_tid *libnvmf_tid_from_fields(
 	t->hostnqn     = shr_xstrdup(hostnqn);
 	t->hostid      = shr_xstrdup(hostid);
 
-	if (tid_sanitize_addr(t)) {
+	if ((transport && !t->transport) ||
+	    (traddr && !t->traddr) ||
+	    (trsvcid && !t->trsvcid) ||
+	    (subsysnqn && !t->subsysnqn) ||
+	    (host_traddr && !t->host_traddr) ||
+	    (host_iface && !t->host_iface) ||
+	    (hostnqn && !t->hostnqn) ||
+	    (hostid && !t->hostid)) {
 		libnvmf_tid_free(t);
-		return NULL;
+		return -ENOMEM;
 	}
 
-	return t;
+	rc = tid_sanitize_addr(t);
+	if (rc) {
+		libnvmf_tid_free(t);
+		return rc;
+	}
+
+	*out = t;
+	return 0;
 }
 
 /*
@@ -269,6 +289,18 @@ __libnvme_public struct libnvmf_tid *libnvmf_tid_dup(
 	t->host_iface  = shr_xstrdup(tid->host_iface);
 	t->hostnqn     = shr_xstrdup(tid->hostnqn);
 	t->hostid      = shr_xstrdup(tid->hostid);
+
+	if ((tid->transport && !t->transport) ||
+	    (tid->traddr && !t->traddr) ||
+	    (tid->trsvcid && !t->trsvcid) ||
+	    (tid->subsysnqn && !t->subsysnqn) ||
+	    (tid->host_traddr && !t->host_traddr) ||
+	    (tid->host_iface && !t->host_iface) ||
+	    (tid->hostnqn && !t->hostnqn) ||
+	    (tid->hostid && !t->hostid)) {
+		libnvmf_tid_free(t);
+		return NULL;
+	}
 
 	return t;
 }

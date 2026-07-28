@@ -339,8 +339,8 @@ static bool test_match(struct libnvme_global_ctx *ctx)
 	 * A TID matching all of the entry's fields -- plus an extra trsvcid the
 	 * entry does not constrain -- is excluded (subset match).
 	 */
-	tid = libnvmf_tid_from_fields("tcp", "9.9.9.9", "4420", "nqn.a",
-				      NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "9.9.9.9", "4420", "nqn.a",
+				NULL, NULL, NULL, NULL, &tid);
 	if (libnvmf_exclusion_match(ctx, tid)) {
 		printf(" - subset match → excluded [PASS]\n");
 	} else {
@@ -350,8 +350,8 @@ static bool test_match(struct libnvme_global_ctx *ctx)
 	libnvmf_tid_free(tid);
 
 	/* A difference in one constrained field (subsysnqn) → not excluded. */
-	tid = libnvmf_tid_from_fields("tcp", "9.9.9.9", "4420", "nqn.other",
-				      NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "9.9.9.9", "4420", "nqn.other",
+				NULL, NULL, NULL, NULL, &tid);
 	if (!libnvmf_exclusion_match(ctx, tid)) {
 		printf(" - different subsysnqn → not excluded [PASS]\n");
 	} else {
@@ -477,8 +477,8 @@ static bool test_default_list(struct libnvme_global_ctx *ctx)
 		printf(" - add(NULL) -> 1 entry in the default list [PASS]\n");
 	}
 
-	tid = libnvmf_tid_from_fields("tcp", "7.7.7.7", "4420", "nqn.x",
-				      NULL, NULL, NULL, NULL);
+	libnvmf_tid_from_fields("tcp", "7.7.7.7", "4420", "nqn.x",
+				NULL, NULL, NULL, NULL, &tid);
 	if (libnvmf_exclusion_match(ctx, tid)) {
 		printf(" - default-list entry matches [PASS]\n");
 	} else {

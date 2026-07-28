@@ -395,14 +395,12 @@ static int build_conn_tid(const struct libnvmf_config_conn *conn,
 	if (!hostid)
 		hostid = default_hostid;
 
-	*tid = libnvmf_tid_from_fields(transport, traddr,
+	return libnvmf_tid_from_fields(transport, traddr,
 			libnvmf_config_conn_get_trsvcid(conn),
 			libnvmf_config_conn_get_subsysnqn(conn),
 			libnvmf_config_conn_get_host_traddr(conn),
 			libnvmf_config_conn_get_host_iface(conn),
-			hostnqn, hostid);
-
-	return *tid ? 0 : -EINVAL;
+			hostnqn, hostid, tid);
 }
 
 /* libnvmf_config_conn_for_each() callback: settle addressing/identity,
@@ -1057,10 +1055,10 @@ do_connect:
 	if (nvme_args.verbose) {
 		struct libnvmf_tid *tid;
 
-		tid = libnvmf_tid_from_fields(fa.transport, fa.traddr,
-					      fa.trsvcid, fa.subsysnqn,
-					      fa.host_traddr, fa.host_iface,
-					      fa.hostnqn, fa.hostid);
+		libnvmf_tid_from_fields(fa.transport, fa.traddr,
+					fa.trsvcid, fa.subsysnqn,
+					fa.host_traddr, fa.host_iface,
+					fa.hostnqn, fa.hostid, &tid);
 		if (tid && libnvmf_exclusion_match(ctx, tid))
 			nvme_show_error(
 				"Note: %s is on the exclusion list; connecting anyway\n",
