@@ -559,11 +559,6 @@ static int create_common_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
-	err = libnvmf_context_set_crypto(fctx, fa->hostkey, fa->ctrlkey,
-		fa->keyring, fa->tls_key, fa->tls_key_identity);
-	if (err)
-		goto err;
-
 	libnvmf_context_set_persistent(fctx, persistent);
 
 	*fctxp = fctx;
