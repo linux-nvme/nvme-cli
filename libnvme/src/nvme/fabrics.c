@@ -1341,10 +1341,8 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 	    (!strcmp(transport, "tcp") &&
 	     add_bool_argument(ctx, argstr, tls, c->cfg.tls)) ||
 	    (!strcmp(transport, "tcp") &&
-	     add_bool_argument(ctx, argstr, concat, c->cfg.concat))) {
-		free(*argstr);
+	     add_bool_argument(ctx, argstr, concat, c->cfg.concat)))
 		return -1;
-	}
 
 	return 0;
 }
