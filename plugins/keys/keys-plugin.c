@@ -424,14 +424,14 @@ static int gen_tls(int argc, char **argv, struct command *acmd, struct plugin *p
 	const char *secret =
 	    "Optional secret (in hexadecimal characters) to be used for the TLS key.";
 	const char *hmac = "HMAC function to use for the retained key (1 = SHA-256, 2 = SHA-384).";
-	const char *version = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0";
+	const char *version = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)";
 	const char *hostnqn = "Host NQN for the retained key.";
 	const char *subsysnqn = "Subsystem NQN for the retained key.";
 	const char *keyring = "Keyring for the retained key.";
 	const char *keytype = "Key type of the retained key.";
 	const char *insert = "Insert retained key into the keyring.";
-	const char *keyfile = "Update key file with the derive TLS PSK.";
-	const char *compat = "Use non-RFC 8446 compliant algorithm for deriving TLS PSK for older implementations";
+	const char *keyfile = "Update key file with the derived TLS PSK.";
+	const char *compat = "Use non-RFC 8446 compliant algorithm for deriving TLS PSK for older implementations.";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free unsigned char *raw_secret = NULL;
