@@ -11277,14 +11277,15 @@ static int get_log_offset(struct libnvme_transport_handle *hdl,
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	args->lpo = *offset,
-	args->log = *log + *offset,
+	args->lpo = *offset;
 	args->len = len;
 	*offset += args->len;
 
 	*log = libnvme_realloc(*log, *offset);
 	if (!*log)
 		return -ENOMEM;
+
+	args->log = *log + args->lpo;
 
 	nvme_init_get_log(&cmd, args->nsid, args->lid,
 			  args->csi, args->log, args->len);
