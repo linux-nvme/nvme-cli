@@ -11,12 +11,14 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include <fs-util.h>
 #include <ini.h>
 
 #define MAX_EVENTS 32
@@ -212,13 +214,16 @@ static bool test_file(void)
 		{ SHR_INI_SECTION, "f", "f", NULL, 2 },
 		{ SHR_INI_KV, "f", "key", "val", 3 },
 	};
-	char path[] = "/tmp/nvme-ini-test-XXXXXX";
+	char path[PATH_MAX];
 	bool pass = true;
 	int fd, ret, i;
 
 	printf("test_file:\n");
 
-	fd = mkstemp(path);
+	assert(!shr_tmpnam(path, sizeof(path)));
+	strcat(path, "nvme-ini-test-XXXXXX");
+
+	fd = shr_mkstemp(path);
 	assert(fd >= 0);
 	assert(write(fd, "# file\n[f]\nkey = val\n", 21) == 21);
 	close(fd);

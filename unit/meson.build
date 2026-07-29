@@ -60,17 +60,6 @@ test_argconfig_parse = executable(
 
 test('nvme-cli - argconfig_parse', test_argconfig_parse)
 
-test_ini = executable(
-    'test-ini',
-    ['test-ini.c'],
-    dependencies: [
-        config_dep,
-        shared_dep,
-    ],
-)
-
-test('nvme-cli - ini', test_ini)
-
 test_global_config = executable(
     'test-global-config',
     ['test-global-config.c', '../global-config.c'],
