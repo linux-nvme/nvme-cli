@@ -39,12 +39,13 @@
 
 #include <base64.h>
 #include <crc32.h>
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"
-#include "compiler-attributes.h"
 
 
 #ifndef CONFIG_OPENSSL

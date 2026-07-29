@@ -26,12 +26,12 @@
 
 #include <ccan/list/list.h>
 
+#include <compiler-attributes.h>
 #include <fs-util.h>
 #include <nvme/config.h>
 #include <nvme/nvme-types-fabrics.h>
 
 #include "cleanup.h"
-#include "compiler-attributes.h"
 #include "config-ini.h"
 #include "lib.h"
 #include "private.h"

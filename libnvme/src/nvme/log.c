@@ -16,14 +16,14 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <libnvme.h>
-
+#include <compiler-attributes.h>
 #include <io-util.h>
+
+#include <libnvme.h>
 
 #include "cleanup.h"
 #define LOG_FUNCNAME 1
 #include "private.h"
-#include "compiler-attributes.h"
 
 #ifndef LOG_CLOCK
 #define LOG_CLOCK CLOCK_MONOTONIC

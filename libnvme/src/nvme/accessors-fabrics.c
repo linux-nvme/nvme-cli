@@ -20,10 +20,12 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <compiler-attributes.h>
+
 #include "accessors-fabrics.h"
 
 #include "private-fabrics.h"
-#include "compiler-attributes.h"
 
 /****************************************************************************
  * Accessors for: struct libnvmf_context

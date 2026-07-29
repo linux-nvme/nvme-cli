@@ -9,12 +9,13 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "private.h"
 #include "private-fabrics.h"
-#include "compiler-attributes.h"
 
 /**
  * _tcp_ctrl_match_host_traddr_no_src_addr() - Match host_traddr w/o src_addr

@@ -22,6 +22,8 @@
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
@@ -29,7 +31,6 @@
 #include "private.h"
 #include "private-tree.h"
 #include "util.h"
-#include "compiler-attributes.h"
 
 static void __libnvme_free_ctrl(libnvme_ctrl_t c);
 static int libnvme_subsystem_scan_namespace(struct libnvme_global_ctx *ctx,

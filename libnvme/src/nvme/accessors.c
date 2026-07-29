@@ -20,10 +20,12 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <compiler-attributes.h>
+
 #include "accessors.h"
 
 #include "private.h"
-#include "compiler-attributes.h"
 
 /****************************************************************************
  * Accessors for: struct libnvme_path

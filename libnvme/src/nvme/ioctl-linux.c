@@ -22,10 +22,11 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "private.h"
-#include "compiler-attributes.h"
 
 static int nvme_verify_chr(struct libnvme_transport_handle *hdl)
 {

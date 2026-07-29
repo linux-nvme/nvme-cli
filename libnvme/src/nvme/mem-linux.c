@@ -13,7 +13,8 @@
 
 #include <ccan/minmax/minmax.h>
 
-#include "compiler-attributes.h"
+#include <compiler-attributes.h>
+
 #include "mem.h"
 #include "private.h"
 

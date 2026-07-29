@@ -19,6 +19,8 @@
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
@@ -26,7 +28,6 @@
 #include "private-ctrl-map.h"
 #include "private-tree.h"
 #include "util.h"
-#include "compiler-attributes.h"
 
 
 int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,

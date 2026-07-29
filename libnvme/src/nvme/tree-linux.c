@@ -22,11 +22,12 @@
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup-linux.h"
 #include "cleanup.h"
-#include "compiler-attributes.h"
 #include "private-fabrics.h"
 #include "private-tree.h"
 #include "private.h"

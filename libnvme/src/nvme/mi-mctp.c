@@ -27,6 +27,12 @@
 
 #include <ccan/endian/endian.h>
 
+#include <compiler-attributes.h>
+
+#include <libnvme.h>
+#include <libnvme-mi.h>
+
+#include "private.h"
 #include "private-mi.h"
 
 #ifdef CONFIG_DBUS
@@ -36,13 +42,6 @@
 #define MCTP_DBUS_IFACE "au.com.codeconstruct.MCTP1"
 #define MCTP_DBUS_IFACE_ENDPOINT "xyz.openbmc_project.MCTP.Endpoint"
 #endif
-
-#include <libnvme.h>
-#include <libnvme-mi.h>
-
-#include "private.h"
-#include "compiler-attributes.h"
-
 
 #if !defined(AF_MCTP)
 #define AF_MCTP 45

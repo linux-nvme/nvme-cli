@@ -12,10 +12,11 @@
 
 #include <liburing.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "private.h"
-#include "compiler-attributes.h"
 
 /*
  * should not exceed CAP.MQES, 16 is rational for most ssd

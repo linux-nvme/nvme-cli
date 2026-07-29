@@ -14,10 +14,11 @@
 
 #include <ccan/endian/endian.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "private.h"
-#include "compiler-attributes.h"
 
 static __u8 csum(const __u8 *buffer, ssize_t length)
 {
