@@ -190,6 +190,11 @@ static int validate_kxchap_key(const char *key, int *hmac_out,
 		return -EINVAL;
 	}
 
+	if (key[strlen(key) - 1] != ':') {
+ 		nvme_show_error("Invalid key format (missing trailing ':')");
+ 		return -EINVAL;
+ 	}
+
 	err = shr_base64_decode(key + 10, strlen(key) - 11, decoded_key);
 	if (err < 0) {
 		nvme_show_error("Base64 decoding failed, error %d", err);
