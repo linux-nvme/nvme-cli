@@ -308,30 +308,36 @@ __libnvme_public struct libnvmf_tid *libnvmf_tid_dup(
 /*
  * Shared parser.  In strict mode a malformed token -- a non-empty bare token
  * (no '='), an empty value, or an unrecognized key -- fails the whole parse
- * (returns NULL); in lenient mode such tokens are logged and skipped.  Empty
+ * with -EINVAL; in lenient mode such tokens are logged and skipped.  Empty
  * tokens (from ";;" or a trailing ';') are always benign and skipped.
  */
-static struct libnvmf_tid *tid_parse(struct libnvme_global_ctx *ctx,
-				     const char *str, bool strict)
+static int tid_parse(struct libnvme_global_ctx *ctx, const char *str,
+		     bool strict, struct libnvmf_tid **out)
 {
 	struct libnvmf_tid *t;
 	char *buf, *tok, *save;
-	bool bad = false;
+	bool bad = false, oom = false;
+	int rc;
+
+	if (!out)
+		return -EINVAL;
+	*out = NULL;
 
 	if (!str)
-		return NULL;
+		return -EINVAL;
 
-	if (libnvmf_tid_new(&t) < 0)
-		return NULL;
+	rc = libnvmf_tid_new(&t);
+	if (rc)
+		return rc;
 
 	buf = strdup(str);
 	if (!buf) {
 		libnvmf_tid_free(t);
-		return NULL;
+		return -ENOMEM;
 	}
 
 	tok = strtok_r(buf, ";", &save);
-	while (tok && !bad) {
+	while (tok && !bad && !oom) {
 		char *eq = strchr(tok, '=');
 
 		if (!eq) {
@@ -356,27 +362,35 @@ static struct libnvmf_tid *tid_parse(struct libnvme_global_ctx *ctx,
 			} else if (!strcmp(key, "transport")) {
 				free(t->transport);
 				t->transport = strdup(val);
+				oom = !t->transport;
 			} else if (!strcmp(key, "traddr")) {
 				free(t->traddr);
 				t->traddr = strdup(val);
+				oom = !t->traddr;
 			} else if (!strcmp(key, "trsvcid")) {
 				free(t->trsvcid);
 				t->trsvcid = strdup(val);
+				oom = !t->trsvcid;
 			} else if (!strcmp(key, "nqn")) {
 				free(t->subsysnqn);
 				t->subsysnqn = strdup(val);
+				oom = !t->subsysnqn;
 			} else if (!strcmp(key, "host-traddr")) {
 				free(t->host_traddr);
 				t->host_traddr = strdup(val);
+				oom = !t->host_traddr;
 			} else if (!strcmp(key, "host-iface")) {
 				free(t->host_iface);
 				t->host_iface = strdup(val);
+				oom = !t->host_iface;
 			} else if (!strcmp(key, "hostnqn")) {
 				free(t->hostnqn);
 				t->hostnqn = strdup(val);
+				oom = !t->hostnqn;
 			} else if (!strcmp(key, "hostid")) {
 				free(t->hostid);
 				t->hostid = strdup(val);
+				oom = !t->hostid;
 			} else {
 				libnvme_msg(ctx, LIBNVME_LOG_WARN,
 					    "tid_parse: ignoring unknown key \"%s\"\n",
@@ -388,23 +402,38 @@ static struct libnvmf_tid *tid_parse(struct libnvme_global_ctx *ctx,
 	}
 
 	free(buf);
-	if (bad || tid_sanitize_addr(t)) {
+
+	if (oom) {
 		libnvmf_tid_free(t);
-		return NULL;
+		return -ENOMEM;
 	}
-	return t;
+	if (bad) {
+		libnvmf_tid_free(t);
+		return -EINVAL;
+	}
+
+	rc = tid_sanitize_addr(t);
+	if (rc) {
+		libnvmf_tid_free(t);
+		return rc;
+	}
+
+	*out = t;
+	return 0;
 }
 
-__libnvme_public struct libnvmf_tid *libnvmf_tid_parse(
-		struct libnvme_global_ctx *ctx, const char *str)
+__libnvme_public int libnvmf_tid_parse(struct libnvme_global_ctx *ctx,
+					const char *str,
+					struct libnvmf_tid **out)
 {
-	return tid_parse(ctx, str, false);
+	return tid_parse(ctx, str, false, out);
 }
 
-__libnvme_public struct libnvmf_tid *libnvmf_tid_parse_strict(
-		struct libnvme_global_ctx *ctx, const char *str)
+__libnvme_public int libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx,
+					       const char *str,
+					       struct libnvmf_tid **out)
 {
-	return tid_parse(ctx, str, true);
+	return tid_parse(ctx, str, true, out);
 }
 
 /*
