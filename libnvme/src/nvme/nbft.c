@@ -110,9 +110,14 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 		struct nbft_header *header, const char *filename,
 		const char *descriptorname, const char *fieldname,
 		struct nbft_heap_obj obj, bool is_string,
-		char **output)
+		char **output, __u16 *length)
 {
-	if (le16_to_cpu(obj.length) == 0)
+	__u16 obj_length = le16_to_cpu(obj.length);
+
+	*output = NULL;
+	if (length)
+		*length = 0;
+	if (obj_length == 0)
 		return -ENOENT;
 
 	if (!in_heap(header, obj)) {
@@ -126,15 +131,12 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 	*output = (char *)header + le32_to_cpu(obj.offset);
 
 	if (is_string) {
-		if (strnlen(*output, le16_to_cpu(obj.length) + 1) <
-				le16_to_cpu(obj.length)) {
+		if (strnlen(*output, obj_length + 1) < obj_length) {
 			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 				"file %s: string '%s' in descriptor '%s' is shorter (%zd) than specified length (%d)\n",
 				filename, fieldname, descriptorname,
-				strnlen(*output, le16_to_cpu(obj.length) + 1),
-					le16_to_cpu(obj.length));
-		} else if (strnlen(*output, le16_to_cpu(obj.length) + 1) >
-				le16_to_cpu(obj.length)) {
+				strnlen(*output, obj_length + 1), obj_length);
+		} else if (strnlen(*output, obj_length + 1) > obj_length) {
 			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
 				"file %s: string '%s' in descriptor '%s' is not zero terminated\n",
 				filename, fieldname, descriptorname);
@@ -142,6 +144,8 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 		}
 	}
 
+	if (length)
+		*length = obj_length;
 	return 0;
 }
 
@@ -149,35 +153,12 @@ static int __get_heap_obj(struct libnvme_global_ctx *ctx,
 	__get_heap_obj(ctx, header, nbft->filename,		\
 		       stringify(descriptor), stringify(obj),	\
 		       descriptor->obj, is_string,		\
-		       output)
+		       output, NULL)
 
-/* Point at a raw (non-string) heap object and return its length. */
-static int __get_heap_obj_raw(struct libnvme_global_ctx *ctx,
-		struct nbft_header *header, const char *filename,
-		const char *descriptorname, const char *fieldname,
-		struct nbft_heap_obj obj, unsigned char **output, __u16 *length)
-{
-	__u16 obj_length = le16_to_cpu(obj.length);
-
-	*output = NULL;
-	*length = 0;
-	if (obj_length == 0)
-		return 0;
-	if (!in_heap(header, obj)) {
-		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
-			"file %s: field '%s' in descriptor '%s' has invalid offset or length\n",
-			filename, fieldname, descriptorname);
-		return -EINVAL;
-	}
-	*output = (unsigned char *)header + le32_to_cpu(obj.offset);
-	*length = obj_length;
-	return 0;
-}
-
-#define get_heap_obj_raw(descriptor, obj, output, length)	\
-	__get_heap_obj_raw(ctx, header, nbft->filename,		\
-			   stringify(descriptor), stringify(obj),	\
-			   descriptor->obj, output, length)
+#define get_heap_obj_len(ctx, descriptor, obj, is_string, output, length) \
+	__get_heap_obj(ctx, header, nbft->filename,			\
+		       stringify(descriptor), stringify(obj),		\
+		       descriptor->obj, is_string, output, length)
 
 static struct libnbft_discovery *discovery_from_index(struct libnbft_info *nbft,
 		int i)
@@ -614,6 +595,7 @@ static int read_security(struct libnvme_global_ctx *ctx, struct libnbft_info *nb
 	struct nbft_header *header = (struct nbft_header *)nbft->raw_nbft;
 	struct libnbft_security *security;
 	__u16 flags = le16_to_cpu(raw_security->flags);
+	char *policy_list;
 	int ret;
 
 	if (!(flags & NBFT_SECURITY_VALID))
@@ -632,27 +614,47 @@ static int read_security(struct libnvme_global_ctx *ctx, struct libnbft_info *nb
 	/* Policy lists point into the raw NBFT heap when enabled. */
 	ret = 0;
 	if ((flags & NBFT_SECURITY_SEC_POLICY_LIST_MASK) !=
-	    NBFT_SECURITY_SEC_POLICY_LIST_NOT_SUPPORTED)
-		ret = get_heap_obj_raw(raw_security, sec_chan_alg_obj,
-				       &security->sec_chan_algs,
+	    NBFT_SECURITY_SEC_POLICY_LIST_NOT_SUPPORTED &&
+	    le16_to_cpu(raw_security->sec_chan_alg_obj.length)) {
+		ret = get_heap_obj_len(ctx, raw_security, sec_chan_alg_obj, 0,
+				       &policy_list,
 				       &security->sec_chan_algs_len);
+		if (!ret)
+			security->sec_chan_algs = (__u8 *)policy_list;
+	}
 	if (!ret && (flags & NBFT_SECURITY_AUTH_POLICY_LIST_MASK) !=
-	    NBFT_SECURITY_AUTH_POLICY_LIST_NOT_SUPPORTED)
-		ret = get_heap_obj_raw(raw_security, auth_proto_obj,
-				       &security->auth_protocols,
+	    NBFT_SECURITY_AUTH_POLICY_LIST_NOT_SUPPORTED &&
+	    le16_to_cpu(raw_security->auth_proto_obj.length)) {
+		ret = get_heap_obj_len(ctx, raw_security, auth_proto_obj, 0,
+				       &policy_list,
 				       &security->auth_protocols_len);
-	if (!ret && (flags & NBFT_SECURITY_CIPHER_RESTRICTED))
-		ret = get_heap_obj_raw(raw_security, cipher_suite_obj,
-				       &security->cipher_suites,
+		if (!ret)
+			security->auth_protocols = (__u8 *)policy_list;
+	}
+	if (!ret && (flags & NBFT_SECURITY_CIPHER_RESTRICTED) &&
+	    le16_to_cpu(raw_security->cipher_suite_obj.length)) {
+		ret = get_heap_obj_len(ctx, raw_security, cipher_suite_obj, 0,
+				       &policy_list,
 				       &security->cipher_suites_len);
-	if (!ret && (flags & NBFT_SECURITY_AUTH_DH_GROUPS_RESTRICTED))
-		ret = get_heap_obj_raw(raw_security, dh_grp_obj,
-				       &security->dh_groups,
+		if (!ret)
+			security->cipher_suites = (__u8 *)policy_list;
+	}
+	if (!ret && (flags & NBFT_SECURITY_AUTH_DH_GROUPS_RESTRICTED) &&
+	    le16_to_cpu(raw_security->dh_grp_obj.length)) {
+		ret = get_heap_obj_len(ctx, raw_security, dh_grp_obj, 0,
+				       &policy_list,
 				       &security->dh_groups_len);
-	if (!ret && (flags & NBFT_SECURITY_SEC_HASH_FUNC_POLICY_LIST))
-		ret = get_heap_obj_raw(raw_security, sec_hash_func_obj,
-				       &security->sec_hash_funcs,
+		if (!ret)
+			security->dh_groups = (__u8 *)policy_list;
+	}
+	if (!ret && (flags & NBFT_SECURITY_SEC_HASH_FUNC_POLICY_LIST) &&
+	    le16_to_cpu(raw_security->sec_hash_func_obj.length)) {
+		ret = get_heap_obj_len(ctx, raw_security, sec_hash_func_obj, 0,
+				       &policy_list,
 				       &security->sec_hash_funcs_len);
+		if (!ret)
+			security->sec_hash_funcs = (__u8 *)policy_list;
+	}
 	if (ret) {
 		free(security);
 		return ret;
