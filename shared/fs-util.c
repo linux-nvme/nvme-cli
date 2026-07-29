@@ -18,6 +18,10 @@
 
 #if defined(_WIN32)
 #include <direct.h>
+#include <fcntl.h>
+#include <io.h>
+#include <windows.h>
+
 #define mkdir(path, mode) ((void)(mode), _mkdir(path))
 #endif
 
@@ -77,7 +81,56 @@ int shr_tmpnam(char *path, size_t size)
 #if defined(_WIN32)
 int shr_mkstemp(char *template)
 {
-	return -ENOSYS;
+	HANDLE h;
+	char *slash;
+	char prefix[4] = "tmp";
+	char tmpname[MAX_PATH];
+	int fd;
+
+	/*
+	 * GetTempFileName() needs a directory and a short prefix. The caller
+	 * already provided the directory through the template, so extract it.
+	 */
+	slash = strrchr(template, '\\');
+	if (!slash)
+		slash = strrchr(template, '/');
+	if (!slash)
+		return -EINVAL;
+
+	*slash = '\0';
+
+	if (!GetTempFileNameA(template, prefix, 0, tmpname)) {
+		*slash = '\\';
+		return -EIO;
+	}
+
+	/*
+	 * Replace the caller's template with the generated name.
+	 */
+	*slash = '\\';
+	strncpy(template, tmpname, MAX_PATH - 1);
+	template[MAX_PATH - 1] = '\0';
+
+	h = CreateFileA(template,
+			GENERIC_READ | GENERIC_WRITE,
+			0,
+			NULL,
+			OPEN_EXISTING,
+			FILE_ATTRIBUTE_TEMPORARY,
+			NULL);
+	if (h == INVALID_HANDLE_VALUE) {
+		DeleteFileA(template);
+		return -EIO;
+	}
+
+	fd = _open_osfhandle((intptr_t)h, _O_RDWR);
+	if (fd < 0) {
+		CloseHandle(h);
+		DeleteFileA(template);
+		return -errno;
+	}
+
+	return fd;
 }
 #else
 int shr_mkstemp(char *template)
