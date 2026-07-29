@@ -67,25 +67,23 @@ char *hex_to_ascii(const char *hex)
 unsigned char *read_binary_file(char *data_dir_path, const char *bin_path,
 				long *buffer_size, int retry_count)
 {
-	char *file_path = NULL;
-	FILE *bin_file = NULL;
+	__cleanup_free char *file_path = NULL;
+	__cleanup_file FILE *bin_file = NULL;
 	size_t n_data = 0;
 	unsigned char *buffer = NULL;
 
 	/* set path */
 	if (data_dir_path == NULL) {
-		file_path = (char *)bin_path;
+		file_path = strdup(bin_path);
 	} else {
-		/* +2 for the / and null terminator */
-		file_path = (char *) calloc(1, strlen(data_dir_path) + strlen(bin_path) + 2);
-		if (!file_path)
-			return NULL;
-
 		if (strlen(bin_path) != 0)
-			sprintf(file_path, "%s/%s", data_dir_path, bin_path);
+			asprintf(&file_path, "%s/%s", data_dir_path, bin_path);
 		else
-			sprintf(file_path, "%s", data_dir_path);
+			asprintf(&file_path, "%s", data_dir_path);
 	}
+		
+	if (!file_path)
+		return NULL;
 
 	/* open file */
 	for (int i = 0; i < retry_count; i++) {
@@ -97,25 +95,22 @@ unsigned char *read_binary_file(char *data_dir_path, const char *bin_path,
 
 	if (!bin_file) {
 		nvme_show_error("\nFailed to open %s", file_path);
-		goto out;
+		return NULL;
 	}
 
 	/* get size */
 	fseek(bin_file, 0, SEEK_END);
 	*buffer_size = ftell(bin_file);
 	if (*buffer_size <= 0)
-		goto out_close;
+		return NULL;
 
 	fseek(bin_file, 0, SEEK_SET);
 
-	if (*buffer_size <= 0)
-		goto out;
-
 	/* allocate buffer */
-	buffer = (unsigned char *)malloc(*buffer_size);
+	buffer = malloc(*buffer_size);
 	if (!buffer) {
 		nvme_show_result("\nFailed to allocate %ld bytes!", *buffer_size);
-		goto out_close;
+		return NULL;
 	}
 
 	memset(buffer, 0, *buffer_size);
@@ -123,20 +118,19 @@ unsigned char *read_binary_file(char *data_dir_path, const char *bin_path,
 	/* Read data */
 	n_data = fread(buffer, 1, *buffer_size, bin_file);
 
+	/* Close file */
+	fclose(bin_file);
+	
 	/* Validate we read data */
 	if (n_data != (size_t)*buffer_size) {
 		nvme_show_result("\nFailed to read %ld bytes from %s", *buffer_size, file_path);
 		free(buffer);
-		buffer = NULL;
+		return NULL;
 	}
 
-out_close:
-	fclose(bin_file);
-out:
-	if (file_path != bin_path)
-		free(file_path);
 	return buffer;
 }
+
 void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t data_size, FILE *fp)
 {
 	char *description_str = NULL;
