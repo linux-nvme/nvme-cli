@@ -899,7 +899,7 @@ static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 	long keyring_id;
 	char line[512];
 	char *key_str;
-	int linenum = -1;
+	int linenum = 0;
 	int err;
 
 	err = libnvmf_lookup_keyring(ctx, keyring, &keyring_id);
