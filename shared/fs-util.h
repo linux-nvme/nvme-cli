@@ -17,6 +17,11 @@
 int shr_mkdir_p(const char *path, mode_t mode);
 
 /*
+ * Retrieve temp dir path
+ */
+int shr_tmpnam(char *path, size_t size);
+
+/*
  * mkstemp(), with O_CLOEXEC set atomically where possible.
  * Return: an open fd on success, -errno otherwise.
  */

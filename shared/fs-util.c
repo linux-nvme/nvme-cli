@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -44,6 +46,33 @@ int shr_mkdir_p(const char *path, mode_t mode)
 	}
 	return mkdir(buf, mode) == 0 || errno == EEXIST ? 0 : -errno;
 }
+
+#ifdef _WIN32
+int shr_tmpnam(char *path, size_t size)
+{
+	DWORD len;
+
+	len = GetTempPathA((DWORD)size, path);
+	if (len == 0 || len >= size)
+		return -EIO;
+
+	return 0;
+}
+#else
+int shr_tmpnam(char *path, size_t size)
+{
+	const char *tmp;
+
+	tmp = getenv("TMPDIR");
+	if (!tmp)
+		tmp = "/tmp";
+
+	if (snprintf(path, size, "%s/", tmp) >= (int)size)
+		return -ENAMETOOLONG;
+
+	return 0;
+}
+#endif
 
 #if defined(_WIN32)
 int shr_mkstemp(char *template)
