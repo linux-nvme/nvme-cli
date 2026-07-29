@@ -9971,7 +9971,16 @@ static int admin_passthru(int argc, char **argv, struct command *acmd, struct pl
 #ifdef CONFIG_FABRICS
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	char *hostnqn;
+	const char *desc = "Generate a hostnqn";
+
+	__cleanup_free char *hostnqn = NULL;
+	int err;
+
+	NVME_ARGS(opts);
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
 
 	hostnqn = libnvmf_generate_hostnqn();
 	if (!hostnqn) {
@@ -9979,15 +9988,25 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 				acmd->name);
 		return -ENOTSUP;
 	}
+
 	nvme_show_result("%s", hostnqn);
-	free(hostnqn);
+
 	return 0;
 }
 
 static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
+	const char *desc = "Show hostnqn";
+
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	char *hostnqn;
+	__cleanup_free char *hostnqn = NULL;
+	int err;
+
+	NVME_ARGS(opts);
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx)
@@ -10003,7 +10022,6 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 	}
 
 	nvme_show_result("%s", hostnqn);
-	free(hostnqn);
 
 	return 0;
 }
