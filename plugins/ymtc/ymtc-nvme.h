@@ -14,9 +14,9 @@
 #include <sys/stat.h>
 
 PLUGIN(NAME("ymtc", "YMTC vendor specific extensions", NVME_VERSION),
-    COMMAND_LIST(
-        ENTRY("smart-log-add", "Retrieve YMTC SMART Log, show it", get_additional_smart_log)
-    )
+	COMMAND_LIST(
+		ENTRY("smart-log-add", "Retrieve YMTC SMART Log, show it", get_additional_smart_log)
+	)
 );
 
 #endif
