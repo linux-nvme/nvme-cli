@@ -712,6 +712,7 @@ __libnvme_public int libnvmf_context_set_crypto(struct libnvmf_context *fctx,
 		return 0;
 	}
 
+	free(fctx->tls_key);
 	fctx->tls_key = strdup(tls_key);
 	return 0;
 }
