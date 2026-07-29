@@ -47,3 +47,71 @@ if host_system != 'windows'
 
     test('shared - ini', test_ini)
 endif
+
+test_parse_util = executable(
+    'test-parse-util',
+    ['test-parse-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - parse-util', test_parse_util)
+
+test_hash_util = executable(
+    'test-hash-util',
+    ['test-hash-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - hash-util', test_hash_util)
+
+test_string_util = executable(
+    'test-string-util',
+    ['test-string-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - string-util', test_string_util)
+
+test_io_util = executable(
+    'test-io-util',
+    ['test-io-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - io-util', test_io_util)
+
+test_fs_util = executable(
+    'test-fs-util',
+    ['test-fs-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - fs-util', test_fs_util)
+
+if host_system != 'windows'
+    test_net_util = executable(
+        'test-net-util',
+        ['test-net-util.c'],
+        dependencies: [
+            config_dep,
+            shared_dep,
+        ],
+    )
+
+    test('shared - net-util', test_net_util)
+endif
