@@ -34,13 +34,14 @@
 #include <ccan/list/list.h>
 #include <ccan/str/str.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"
 #include "private-fabrics.h"
-#include "compiler-attributes.h"
 
 const char *nvmf_dev = "/dev/nvme-fabrics";
 

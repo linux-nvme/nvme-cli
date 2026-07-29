@@ -10,11 +10,12 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "private.h"
-#include "compiler-attributes.h"
 
 static int submit_get_log_cmd(struct libnvme_transport_handle *hdl,
 	struct libnvme_passthru_cmd *cmd)

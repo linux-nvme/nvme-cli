@@ -13,6 +13,8 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include <string-util.h>
@@ -20,8 +22,6 @@
 #include "cleanup-linux.h"
 #include "private-fabrics.h"
 #include "util.h"
-
-#include "compiler-attributes.h"
 
 __libnvme_public struct nvmf_ext_attr *libnvmf_exat_ptr_next(
 		struct nvmf_ext_attr *p)

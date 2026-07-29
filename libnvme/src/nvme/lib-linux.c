@@ -12,11 +12,11 @@
 
 #include <libnvme.h>
 
+#include <compiler-attributes.h>
 #include <fs-util.h>
 
 #include "cleanup.h"
 #include "cleanup-linux.h"
-#include "compiler-attributes.h"
 #include "private.h"
 #include "private-mi.h"
 

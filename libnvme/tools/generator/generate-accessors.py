@@ -2305,13 +2305,13 @@ def main():
             f'{BANNER}\n'
             f'#include <errno.h>\n'
             f'#include <stdlib.h>\n'
-            f'#include <string.h>\n'
+            f'#include <string.h>\n\n'
+            f'#include <compiler-attributes.h>\n\n'
             f'#include "{os.path.basename(args.h_fname)}"\n'
             f'\n'
         )
         for fname in files_to_include:
             f.write(f'#include "{fname}"\n')
-        f.write('#include "compiler-attributes.h"\n')
         f.write('\n')
         f.write(''.join(src_parts))
 

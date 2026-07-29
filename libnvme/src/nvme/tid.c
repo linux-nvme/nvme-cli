@@ -12,9 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <compiler-attributes.h>
 #include <string-util.h>
 
-#include "compiler-attributes.h"
 #include "nvme/accessors-fabrics.h"
 #include "nvme/lib.h"
 #include "nvme/tid.h"

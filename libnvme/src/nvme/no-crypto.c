@@ -8,9 +8,9 @@
 
 #include <errno.h>
 
-#include <nvme/crypto.h>
+#include <compiler-attributes.h>
 
-#include "compiler-attributes.h"
+#include <nvme/crypto.h>
 
 __libnvme_public int libnvmf_export_tls_key_versioned(struct libnvme_global_ctx *ctx,
 				  unsigned char version, unsigned char hmac,

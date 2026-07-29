@@ -20,14 +20,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ccan/list/list.h>
+
+#include <compiler-attributes.h>
+#include <parse-util.h>
+
 #include <nvme/config.h>
 #include <nvme/fabrics.h>
 #include <nvme/tid.h>
 
-#include <ccan/list/list.h>
-#include <parse-util.h>
-
-#include "compiler-attributes.h"
 #include "config-ini.h"
 #include "private-fabrics.h"
 

@@ -14,11 +14,12 @@
 #include <ccan/hash/hash.h>
 #include <ccan/htable/htable_type.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "private.h"
 #include "private-ctrl-map.h"
-#include "compiler-attributes.h"
 #include "cleanup.h"
 
 #include <windows.h>

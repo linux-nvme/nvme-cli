@@ -8,9 +8,9 @@
 
 #include <errno.h>
 
-#include <libnvme.h>
+#include <compiler-attributes.h>
 
-#include "compiler-attributes.h"
+#include <libnvme.h>
 
 __libnvme_public const char *libnvme_mi_status_to_string(int status)
 {

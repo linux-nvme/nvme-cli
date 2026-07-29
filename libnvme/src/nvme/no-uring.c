@@ -9,10 +9,11 @@
 
 #include <errno.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "private.h"
-#include "compiler-attributes.h"
 
 int libnvme_open_uring(__libnvme_unused struct libnvme_transport_handle *hdl)
 {

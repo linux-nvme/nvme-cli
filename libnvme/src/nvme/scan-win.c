@@ -9,12 +9,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "private.h"
 #include "private-ctrl-map.h"
-#include "compiler-attributes.h"
 
 __libnvme_public int libnvme_scan_subsystems(
 		__libnvme_unused struct libnvme_global_ctx *ctx,

@@ -29,13 +29,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <compiler-attributes.h>
 #include <fs-util.h>
 #include <hash-util.h>
 #include <io-util.h>
 #include <string-util.h>
 
 #include "cleanup.h"
-#include "compiler-attributes.h"
 #include "exclusion.h"
 #include "lib.h"
 #include "nvme/accessors-fabrics.h"

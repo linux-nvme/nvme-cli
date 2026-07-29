@@ -11,10 +11,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "private.h"
-#include "compiler-attributes.h"
 
 static int filter_namespace(const struct dirent *d)
 {

@@ -22,6 +22,8 @@
 
 #include <ccan/minmax/minmax.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
@@ -30,7 +32,6 @@
 #include "private-ctrl-map.h"
 #include "types.h"
 
-#include "compiler-attributes.h"
 
 static int get_errno_from_error(DWORD error)
 {

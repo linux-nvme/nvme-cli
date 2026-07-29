@@ -9,8 +9,9 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#include <compiler-attributes.h>
+
 #include "private.h"
-#include "compiler-attributes.h"
 
 __libnvme_public char *libnvmf_generate_hostid(void)
 {

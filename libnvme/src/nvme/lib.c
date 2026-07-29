@@ -17,13 +17,14 @@
 #include <ifaddrs.h>
 #endif
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"
 #include "private-mi.h"
-#include "compiler-attributes.h"
 
 /*
  * A test base directory is accepted only when it is confined to /tmp and free
