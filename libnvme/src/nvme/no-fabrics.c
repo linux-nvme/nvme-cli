@@ -88,10 +88,10 @@ libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
 	c = p ? libnvme_subsystem_next_ctrl(s, p) :
 		libnvme_subsystem_first_ctrl(s);
 	for (; c; c = libnvme_subsystem_next_ctrl(s, c)) {
-		if (!streq0(c->transport, params->transport))
+		if (!shr_streq0(c->transport, params->transport))
 			continue;
 		if (params->traddr && c->traddr &&
-		    !streqcase0(c->traddr, params->traddr))
+		    !shr_streqcase0(c->traddr, params->traddr))
 			continue;
 		return c;
 	}

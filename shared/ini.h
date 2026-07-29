@@ -19,10 +19,10 @@
  * the caller's callback.
  */
 
-enum ini_event {
-	INI_SECTION,	/* a section header; @key is the section name */
-	INI_KV,		/* a "key = value" line; an empty value is "" */
-	INI_JUNK,	/* a malformed line; @key is the trimmed text */
+enum shr_ini_event {
+	SHR_INI_SECTION,	/* a section header; @key is the section name */
+	SHR_INI_KV,		/* a "key = value" line; an empty value is "" */
+	SHR_INI_JUNK,	/* a malformed line; @key is the trimmed text */
 };
 
 /*
@@ -37,9 +37,9 @@ enum ini_event {
  * @line contains the line number.
  *
  * A non-zero return value stops parsing and is returned by
- * ini_parse_buf()/ini_parse_file().
+ * shr_ini_parse_buf()/shr_ini_parse_file().
  */
-typedef int (*ini_parse_fn)(enum ini_event event, const char *section,
+typedef int (*shr_ini_parse_fn)(enum shr_ini_event event, const char *section,
 			     const char *key, const char *value,
 			     unsigned int line, void *user_data);
 
@@ -50,11 +50,13 @@ typedef int (*ini_parse_fn)(enum ini_event event, const char *section,
  * Returns 0 on success, a negative errno on failure, or @callback's
  * non-zero return value if it stopped parsing early.
  */
-int ini_parse_buf(const char *text, ini_parse_fn callback, void *user_data);
+int shr_ini_parse_buf(const char *text, shr_ini_parse_fn callback,
+		void *user_data);
 
 /*
- * Parse @path like ini_parse_buf(). A missing file is reported as
+ * Parse @path like shr_ini_parse_buf(). A missing file is reported as
  * -ENOENT so callers can treat an absent configuration as empty rather
  * than an error.
  */
-int ini_parse_file(const char *path, ini_parse_fn callback, void *user_data);
+int shr_ini_parse_file(const char *path, shr_ini_parse_fn callback,
+		void *user_data);

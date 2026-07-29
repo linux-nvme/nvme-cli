@@ -19,8 +19,7 @@
 #ifdef CONFIG_FABRICS
 #include <ifaddrs.h>
 
-#include <arpa/inet.h>
-#include <net/if.h>
+#include <net-util.h>
 #endif
 
 #include <sys/param.h>
@@ -35,6 +34,8 @@
 #include <ccan/endian/endian.h>
 
 #include <libnvme.h>
+
+#include <fs-util.h>
 
 #include "cleanup.h"
 #include "cleanup-linux.h"
@@ -57,29 +58,6 @@
 #ifndef ERESTART
 #define ERESTART  EAGAIN
 #endif
-
-/* write() may return a short count; loop until the whole buffer is written. */
-int write_all(int fd, const void *buf, size_t len)
-{
-	const char *p = buf;
-
-	while (len) {
-		ssize_t w = write(fd, p, len);
-
-		if (w < 0) {
-			if (errno == EINTR || errno == EAGAIN)
-				continue;
-			return -errno;
-		}
-		if (w == 0) {
-			errno = EIO;
-			return -EIO;
-		}
-		p += w;
-		len -= w;
-	}
-	return 0;
-}
 
 /* Source Code Control System, query version of binary with 'what' */
 const char sccsid[] = "@(#)libnvme " GIT_VERSION;
@@ -496,67 +474,6 @@ __libnvme_public const char *libnvme_strerror(int errnum)
 	return strerror(errnum);
 }
 
-char *startswith(const char *s, const char *prefix)
-{
-	size_t l;
-
-	l = strlen(prefix);
-	if (!strncmp(s, prefix, l))
-		return (char *)s + l;
-
-	return NULL;
-}
-
-char *kv_strip(char *kv)
-{
-	char *s;
-
-	kv[strcspn(kv, "\n\r")] = '\0';
-
-	/* Remove leading newline and spaces */
-	kv += strspn(kv, " \t\n\r");
-
-	/* Skip comments and empty lines */
-	if (*kv == '#' || *kv == '\0') {
-		*kv = '\0';
-		return kv;
-	}
-
-	/* Remove trailing newline chars */
-	kv[strcspn(kv, "\n\r")] = '\0';
-
-	/* Delete trailing comments (including spaces/tabs that precede the #)*/
-	s = &kv[strcspn(kv, "#")];
-	*s-- = '\0';
-	while ((s >= kv) && ((*s == ' ') || (*s == '\t'))) {
-		*s-- = '\0';
-	}
-
-	return kv;
-}
-
-char *kv_keymatch(const char *kv, const char *key)
-{
-	char *value;
-
-	value = startswith(kv, key);
-	if (value) {
-		/* Make sure key is a whole word.  I.e. it should be
-		 * followed by spaces, tabs, or a equal sign. Skip
-		 * leading spaces, tabs, and equal sign (=) */
-		switch (*value) {
-		case ' ':
-		case '\t':
-		case '=':
-			value += strspn(value, " \t=");
-			return value;
-		default: ;
-		}
-	}
-
-	return NULL;
-}
-
 __libnvme_public const char *libnvme_get_version(enum libnvme_version type)
 {
 	switch(type) {
@@ -660,109 +577,9 @@ __libnvme_public int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
 }
 
 #ifdef CONFIG_FABRICS
-/*
- * Parse @addr as a numeric IPv4 or IPv6 address into @ss.  An IPv6 address
- * may carry a "%<iface>" zone suffix (e.g. "fe80::1%eth0"); the interface
- * name is resolved to a scope id via if_nametoindex().  Never touches DNS --
- * inet_pton()/if_nametoindex() only.  Mirrors fabrics.c's
- * inet_pton_with_scope() family, but this one has no port/trsvcid concept
- * (a pure address parser for comparison), so it is kept separate rather
- * than merged with it.
- *
- * Return: 0 on success; -EINVAL if @addr is not numeric; -ENOMEM on
- * allocation failure.
- */
-static int nvme_parse_numeric_addr(const char *addr,
-		struct sockaddr_storage *ss)
-{
-	struct sockaddr_in *addr4 = (struct sockaddr_in *)ss;
-	struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)ss;
-	__cleanup_free char *tmp = NULL;
-	char *scope;
-
-	memset(ss, 0, sizeof(*ss));
-
-	if (inet_pton(AF_INET, addr, &addr4->sin_addr) == 1) {
-		addr4->sin_family = AF_INET;
-		return 0;
-	}
-
-	tmp = strdup(addr);
-	if (!tmp)
-		return -ENOMEM;
-
-	scope = strchr(tmp, '%');
-	if (scope)
-		*scope++ = '\0';
-
-	if (inet_pton(AF_INET6, tmp, &addr6->sin6_addr) != 1)
-		return -EINVAL;
-
-	addr6->sin6_family = AF_INET6;
-	if (scope && IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr))
-		addr6->sin6_scope_id = if_nametoindex(scope);
-
-	return 0;
-}
-
-static bool _nvme_ipaddrs_eq(struct sockaddr *addr1, struct sockaddr *addr2)
-{
-	struct sockaddr_in *sockaddr_v4;
-	struct sockaddr_in6 *sockaddr_v6;
-
-	if (addr1->sa_family == AF_INET && addr2->sa_family == AF_INET) {
-		struct sockaddr_in *sockaddr1 = (struct sockaddr_in *)addr1;
-		struct sockaddr_in *sockaddr2 = (struct sockaddr_in *)addr2;
-		return sockaddr1->sin_addr.s_addr == sockaddr2->sin_addr.s_addr;
-	}
-
-	if (addr1->sa_family == AF_INET6 && addr2->sa_family == AF_INET6) {
-		struct sockaddr_in6 *sockaddr1 = (struct sockaddr_in6 *)addr1;
-		struct sockaddr_in6 *sockaddr2 = (struct sockaddr_in6 *)addr2;
-		return !memcmp(&sockaddr1->sin6_addr, &sockaddr2->sin6_addr, sizeof(struct in6_addr));
-	}
-
-	switch (addr1->sa_family) {
-	case AF_INET:
-		sockaddr_v6 = (struct sockaddr_in6 *)addr2;
-		if (IN6_IS_ADDR_V4MAPPED(&sockaddr_v6->sin6_addr)) {
-			sockaddr_v4 = (struct sockaddr_in *)addr1;
-			return sockaddr_v4->sin_addr.s_addr == sockaddr_v6->sin6_addr.s6_addr32[3];
-		}
-		break;
-
-	case AF_INET6:
-		sockaddr_v6 = (struct sockaddr_in6 *)addr1;
-		if (IN6_IS_ADDR_V4MAPPED(&sockaddr_v6->sin6_addr)) {
-			sockaddr_v4 = (struct sockaddr_in *)addr2;
-			return sockaddr_v4->sin_addr.s_addr == sockaddr_v6->sin6_addr.s6_addr32[3];
-		}
-		break;
-
-	default: ;
-	}
-
-	return false;
-}
-
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 {
-	struct sockaddr_storage ss1, ss2;
-
-	if (addr1 == addr2)
-		return true;
-
-	if (!addr1 || !addr2)
-		return false;
-
-	if (nvme_parse_numeric_addr(addr1, &ss1))
-		return false;
-
-	if (nvme_parse_numeric_addr(addr2, &ss2))
-		return false;
-
-	return _nvme_ipaddrs_eq((struct sockaddr *)&ss1,
-			(struct sockaddr *)&ss2);
+	return shr_ipaddrs_eq(addr1, addr2);
 }
 #else /* CONFIG_FABRICS */
 bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
@@ -775,67 +592,15 @@ bool libnvme_ipaddrs_eq(const char *addr1, const char *addr2)
 const char *libnvme_iface_matching_addr(const struct ifaddrs *iface_list,
 		const char *addr)
 {
-	const struct ifaddrs *iface_it;
-	struct sockaddr_storage ss;
-	const char *iface_name = NULL;
-
-	if (!iface_list || !addr || nvme_parse_numeric_addr(addr, &ss))
-		return NULL;
-
-	/* Walk through the linked list */
-	for (iface_it = iface_list; iface_it != NULL; iface_it = iface_it->ifa_next) {
-		struct sockaddr *ifaddr = iface_it->ifa_addr;
-
-		if (ifaddr && (ifaddr->sa_family == AF_INET || ifaddr->sa_family == AF_INET6) &&
-		    _nvme_ipaddrs_eq((struct sockaddr *)&ss, ifaddr)) {
-			iface_name = iface_it->ifa_name;
-			break;
-		}
-	}
-
-	return iface_name;
+	return shr_iface_matching_addr(iface_list, addr);
 }
 
 bool libnvme_iface_primary_addr_matches(const struct ifaddrs *iface_list,
 		const char *iface, const char *addr)
 {
-	const struct ifaddrs *iface_it;
-	struct sockaddr_storage ss;
-	bool match_found = false;
-
-	if (!iface_list || !addr || nvme_parse_numeric_addr(addr, &ss))
-		return false;
-
-	/* Walk through the linked list */
-	for (iface_it = iface_list; iface_it != NULL; iface_it = iface_it->ifa_next) {
-		if (strcmp(iface, iface_it->ifa_name))
-			continue; /* Not the interface we're looking for*/
-
-		/* The interface list is ordered in a way that the primary
-		 * address is listed first. As soon as the parsed address
-		 * matches the family of the address we're looking for, we
-		 * have found the primary address for that family.
-		 */
-		if (iface_it->ifa_addr &&
-		    (iface_it->ifa_addr->sa_family == ss.ss_family)) {
-			match_found = _nvme_ipaddrs_eq((struct sockaddr *)&ss,
-					iface_it->ifa_addr);
-			break;
-		}
-	}
-
-	return match_found;
+	return shr_iface_primary_addr_matches(iface_list, iface, addr);
 }
 #endif /* CONFIG_FABRICS */
-
-/* This used instead of basename() due to behavioral differences between
- * the POSIX and the GNU version. This is the glibc implementation.
- * Original source: https://github.com/bminor/glibc/blob/master/string/basename.c */
-char *libnvme_basename(const char *path)
-{
-	char *p = (char *) strrchr(path, '/');
-	return p ? p + 1 : (char *) path;
-}
 
 /*
  * libnvme_fabrics_config currently contains only scalar fields, so a

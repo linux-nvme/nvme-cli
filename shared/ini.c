@@ -33,7 +33,7 @@
  *   4. anything else              ->  JUNK event, reported verbatim.
  */
 static int ini_line(char *s, char **section, unsigned int line,
-		     ini_parse_fn callback, void *user_data)
+		     shr_ini_parse_fn callback, void *user_data)
 {
 	char *end, *eq, *key, *value;
 
@@ -44,35 +44,36 @@ static int ini_line(char *s, char **section, unsigned int line,
 		end = strchr(s, ']');
 		if (!end) {
 			*section = NULL;
-			return callback(INI_JUNK, NULL, s, NULL, line,
+			return callback(SHR_INI_JUNK, NULL, s, NULL, line,
 					 user_data);
 		}
 
-		if (end == trim(s + 1) || *trim(end + 1)) {
+		if (end == shr_trim(s + 1) || *shr_trim(end + 1)) {
 			*section = NULL;
-			return callback(INI_JUNK, NULL, s, NULL, line,
+			return callback(SHR_INI_JUNK, NULL, s, NULL, line,
 					 user_data);
 		}
 
 		*end = '\0';
-		*section = trim(s + 1);
+		*section = shr_trim(s + 1);
 
-		return callback(INI_SECTION, *section, *section, NULL, line,
+		return callback(SHR_INI_SECTION, *section, *section, NULL, line,
 				 user_data);
 	}
 
 	eq = strchr(s, '=');
 	if (!eq || eq == s)
-		return callback(INI_JUNK, *section, s, NULL, line, user_data);
+		return callback(SHR_INI_JUNK, *section, s, NULL, line,
+				 user_data);
 
 	*eq = '\0';
-	key = trim(s);
-	value = trim(eq + 1);
+	key = shr_trim(s);
+	value = shr_trim(eq + 1);
 
-	return callback(INI_KV, *section, key, value, line, user_data);
+	return callback(SHR_INI_KV, *section, key, value, line, user_data);
 }
 
-static int parse_lines(char *buf, ini_parse_fn callback, void *user_data)
+static int parse_lines(char *buf, shr_ini_parse_fn callback, void *user_data)
 {
 	char *section = NULL;
 	unsigned int line = 0;
@@ -85,14 +86,16 @@ static int parse_lines(char *buf, ini_parse_fn callback, void *user_data)
 		if (nl)
 			*nl = '\0';
 		line++;
-		ret = ini_line(trim(p), &section, line, callback, user_data);
+		ret = ini_line(shr_trim(p), &section, line, callback,
+			       user_data);
 		p = nl ? nl + 1 : NULL;
 	}
 
 	return ret;
 }
 
-int ini_parse_buf(const char *text, ini_parse_fn callback, void *user_data)
+int shr_ini_parse_buf(const char *text, shr_ini_parse_fn callback,
+		void *user_data)
 {
 	char *copy;
 	int ret;
@@ -110,7 +113,8 @@ int ini_parse_buf(const char *text, ini_parse_fn callback, void *user_data)
 	return ret;
 }
 
-int ini_parse_file(const char *path, ini_parse_fn callback, void *user_data)
+int shr_ini_parse_file(const char *path, shr_ini_parse_fn callback,
+		void *user_data)
 {
 	FILE *f;
 	char *text;

@@ -45,6 +45,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <base64.h>
+#include <crc32.h>
 #include <libnvme.h>
 #include <libnvme-mi.h>
 
@@ -57,9 +59,7 @@
 #include "nvme.h"
 #include "plugin.h"
 #include "util/argconfig.h"
-#include "util/base64.h"
 #include "util/cleanup.h"
-#include "util/crc32.h"
 #include "util/sighdl.h"
 #include "util/suffix.h"
 
@@ -10020,7 +10020,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	__cleanup_free char *hnqn = NULL;
 	unsigned char key[68];
 	char encoded_key[128];
-	unsigned long crc = crc32(0L, NULL, 0);
+	unsigned long crc = shr_crc32(0L, NULL, 0);
 	int err = 0;
 
 	struct config {
@@ -10104,14 +10104,14 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	if (err)
 		return err;
 
-	crc = crc32(crc, key, cfg.key_len);
+	crc = shr_crc32(crc, key, cfg.key_len);
 	key[cfg.key_len++] = crc & 0xff;
 	key[cfg.key_len++] = (crc >> 8) & 0xff;
 	key[cfg.key_len++] = (crc >> 16) & 0xff;
 	key[cfg.key_len++] = (crc >> 24) & 0xff;
 
 	memset(encoded_key, 0, sizeof(encoded_key));
-	base64_encode(key, cfg.key_len, encoded_key);
+	shr_base64_encode(key, cfg.key_len, encoded_key);
 
 	nvme_show_result("DHHC-1:%02x:%s:", cfg.hmac, encoded_key);
 	return 0;
@@ -10125,7 +10125,7 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 
 	unsigned char decoded_key[128];
 	unsigned int decoded_len;
-	uint32_t crc = crc32(0L, NULL, 0);
+	uint32_t crc = shr_crc32(0L, NULL, 0);
 	uint32_t key_crc;
 	int err = 0, hmac;
 	struct config {
@@ -10178,7 +10178,8 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 		return -EINVAL;
 	}
 
-	err = base64_decode(cfg.key + 10, strlen(cfg.key) - 11, decoded_key);
+	err = shr_base64_decode(cfg.key + 10, strlen(cfg.key) - 11,
+				 decoded_key);
 	if (err < 0) {
 		nvme_show_error("Base64 decoding failed, error %d");
 		return err;
@@ -10193,7 +10194,7 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 		nvme_show_error("Invalid key length %d", decoded_len);
 		return -EINVAL;
 	}
-	crc = crc32(crc, decoded_key, decoded_len);
+	crc = shr_crc32(crc, decoded_key, decoded_len);
 	key_crc = ((uint32_t)decoded_key[decoded_len]) |
 		   ((uint32_t)decoded_key[decoded_len + 1] << 8) |
 		   ((uint32_t)decoded_key[decoded_len + 2] << 16) |

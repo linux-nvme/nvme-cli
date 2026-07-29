@@ -1593,6 +1593,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		if (!err)
 			err = ioctl(fd, BLKGETSIZE64, &capacity);
 		capacity_valid = (!err);
+		close(fd);
 	}
 
 	if (capacity_valid && sector_size == 512)

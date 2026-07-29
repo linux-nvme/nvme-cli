@@ -56,8 +56,8 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	FREE_CTRL_ATTR(c->phy_slot);
 
 	c->hdl = NULL;
-	c->name = xstrdup(name);
-	c->sysfs_dir = xstrdup(path);
+	c->name = shr_xstrdup(name);
+	c->sysfs_dir = shr_xstrdup(path);
 	if (!c->name || !c->sysfs_dir) {
 		FREE_CTRL_ATTR(c->name);
 		FREE_CTRL_ATTR(c->sysfs_dir);

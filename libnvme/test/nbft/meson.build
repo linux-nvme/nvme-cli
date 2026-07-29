@@ -23,12 +23,19 @@ tables = [
     'NBFT-Dell.PowerEdge.R660-fw1.5.5-mpath+discovery',
     'NBFT-mpath+disc-ipv4+6_half',
     'NBFT-ipv6-noip+disc',
+    'NBFT-synthetic-security',
     'NBFT-empty'
 ]
 
 tables_bad = [
     'NBFT-bad-oldspec',
     'NBFT-random-noise',
+]
+
+tables_rejected = [
+    'NBFT-bad-control',
+    'NBFT-bad-discovery-list-offset',
+    'NBFT-bad-security-list-offset',
 ]
 
 nbft_dump = executable(
@@ -104,4 +111,15 @@ foreach table: tables_bad
             should_fail: true,
         )
     endif
+endforeach
+
+foreach table: tables_rejected
+    test(
+        'libnvme - @0@'.format(table),
+        files('nbft-reject.sh'),
+        args: [
+            nbft_dump,
+            files(tables_bad_dir/table),
+        ],
+    )
 endforeach

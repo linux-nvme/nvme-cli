@@ -37,10 +37,10 @@
 
 #include <ccan/endian/endian.h>
 
+#include <base64.h>
+#include <crc32.h>
 #include <libnvme.h>
 
-#include "crc32.h"
-#include "base64.h"
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"
@@ -652,7 +652,7 @@ static int derive_psk_digest(struct libnvme_global_ctx *ctx,
 		return -EINVAL;
 
 	memset(digest, 0, digest_len);
-	len = base64_encode(psk_ctx, hmac_len, digest);
+	len = shr_base64_encode(psk_ctx, hmac_len, digest);
 	if (len < 0)
 		return len;
 
@@ -1475,7 +1475,7 @@ __libnvme_public int libnvmf_export_tls_key_versioned(
 		size_t key_len, char **encoded_keyp)
 {
 	unsigned int raw_len, encoded_len, len;
-	unsigned long crc = crc32(0L, NULL, 0);
+	unsigned long crc = shr_crc32(0L, NULL, 0);
 	unsigned char raw_secret[52];
 	char *encoded_key;
 
@@ -1498,7 +1498,7 @@ __libnvme_public int libnvmf_export_tls_key_versioned(
 	raw_len = key_len;
 
 	memcpy(raw_secret, key_data, raw_len);
-	crc = crc32(crc, raw_secret, raw_len);
+	crc = shr_crc32(crc, raw_secret, raw_len);
 	raw_secret[raw_len++] = crc & 0xff;
 	raw_secret[raw_len++] = (crc >> 8) & 0xff;
 	raw_secret[raw_len++] = (crc >> 16) & 0xff;
@@ -1511,7 +1511,7 @@ __libnvme_public int libnvmf_export_tls_key_versioned(
 
 	memset(encoded_key, 0, encoded_len);
 	len = sprintf(encoded_key, "NVMeTLSkey-%x:%02x:", version, hmac);
-	len += base64_encode(raw_secret, raw_len, encoded_key + len);
+	len += shr_base64_encode(raw_secret, raw_len, encoded_key + len);
 	encoded_key[len++] = ':';
 	encoded_key[len++] = '\0';
 
@@ -1539,7 +1539,7 @@ __libnvme_public int libnvmf_import_tls_key_versioned(
 		unsigned char **keyp)
 {
 	unsigned char decoded_key[128], *key_data;
-	unsigned int crc = crc32(0L, NULL, 0);
+	unsigned int crc = shr_crc32(0L, NULL, 0);
 	unsigned int key_crc;
 	int err, _version, _hmac, decoded_len;
 	size_t len;
@@ -1572,7 +1572,7 @@ __libnvme_public int libnvmf_import_tls_key_versioned(
 	}
 	*hmac = _hmac;
 
-	err = base64_decode(encoded_key + 16, len - 17, decoded_key);
+	err = shr_base64_decode(encoded_key + 16, len - 17, decoded_key);
 	if (err < 0)
 		return -ENOKEY;
 
@@ -1581,7 +1581,7 @@ __libnvme_public int libnvmf_import_tls_key_versioned(
 	if (decoded_len != 32 && decoded_len != 48)
 		return -ENOKEY;
 
-	crc = crc32(crc, decoded_key, decoded_len);
+	crc = shr_crc32(crc, decoded_key, decoded_len);
 	key_crc = ((uint32_t)decoded_key[decoded_len]) |
 		((uint32_t)decoded_key[decoded_len + 1] << 8) |
 		((uint32_t)decoded_key[decoded_len + 2] << 16) |

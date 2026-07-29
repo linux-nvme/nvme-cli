@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /*
  * This file is part of nvme-cli.
  * Copyright (c) 2026 Dell Technologies Inc. or its subsidiaries.
@@ -7,9 +7,12 @@
  */
 
 #include <errno.h>
-#include <stdio.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #if defined(_WIN32)
 #include <direct.h>
@@ -18,23 +21,84 @@
 
 #include "fs-util.h"
 
-int mkdir_p(const char *path, mode_t mode)
+int shr_mkdir_p(const char *path, mode_t mode)
 {
-	char buf[256];
+	char buf[PATH_MAX];
 	char *p;
 	size_t len;
 
-	snprintf(buf, sizeof(buf), "%s", path);
-	len = strlen(buf);
+	len = strlen(path);
+	if (len >= sizeof(buf))
+		return -ENAMETOOLONG;
+	memcpy(buf, path, len + 1);
 	if (len && buf[len - 1] == '/')
 		buf[len - 1] = '\0';
 
 	for (p = buf + 1; *p; p++) {
-		if (*p == '/') {
-			*p = '\0';
-			mkdir(buf, mode);
-			*p = '/';
-		}
+		if (*p != '/')
+			continue;
+		*p = '\0';
+		if (mkdir(buf, mode) < 0 && errno != EEXIST)
+			return -errno;
+		*p = '/';
 	}
 	return mkdir(buf, mode) == 0 || errno == EEXIST ? 0 : -errno;
+}
+
+#if defined(_WIN32)
+int shr_mkstemp(char *template)
+{
+	return -ENOSYS;
+}
+#else
+int shr_mkstemp(char *template)
+{
+	int fd;
+
+	/*
+	 * mkostemp() sets O_CLOEXEC atomically but its glibc declaration is
+	 * gated behind _GNU_SOURCE; fall back to mkstemp() + fcntl() where
+	 * _GNU_SOURCE is not defined (e.g. the musl-style CI build).
+	 */
+#ifdef _GNU_SOURCE
+	fd = mkostemp(template, O_CLOEXEC);
+	if (fd < 0)
+		return -errno;
+#else
+	fd = mkstemp(template);
+	if (fd < 0)
+		return -errno;
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+		int e = -errno;
+
+		close(fd);
+		unlink(template);
+		return e;
+	}
+#endif
+	return fd;
+}
+#endif
+
+#if defined(_WIN32)
+void shr_fsync_dir(const char *path)
+{
+}
+#else
+void shr_fsync_dir(const char *path)
+{
+	int fd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+
+	if (fd >= 0) {
+		fsync(fd);
+		close(fd);
+	}
+}
+#endif
+
+char *shr_basename(const char *path)
+{
+	char *p = (char *)strrchr(path, '/');
+
+	return p ? p + 1 : (char *)path;
 }

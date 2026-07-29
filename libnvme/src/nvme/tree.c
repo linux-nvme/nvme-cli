@@ -375,7 +375,7 @@ int libnvme_create_subsystem(struct libnvme_host *h,
 		return -ENOMEM;
 
 	s->h = h;
-	s->subsysnqn = xstrdup(subsysnqn);
+	s->subsysnqn = shr_xstrdup(subsysnqn);
 	if (!s->subsysnqn) {
 		free(s);
 		return -ENOMEM;
@@ -1613,7 +1613,7 @@ int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 	}
 
 	FREE_CTRL_ATTR(c->address);
-	c->address = xstrdup(addr);
+	c->address = shr_xstrdup(addr);
 	if (s->subsystype && !strcmp(s->subsystype, "discovery"))
 		c->discovery_ctrl = true;
 	ret = libnvme_reconfigure_ctrl(ctx, c, path, name);

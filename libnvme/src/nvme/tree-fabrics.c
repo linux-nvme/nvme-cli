@@ -77,7 +77,7 @@ static bool _tcp_ctrl_match_host_iface_no_src_addr(struct libnvme_ctrl *c,
 		struct candidate_args *candidate)
 {
 	if (c->host_iface)
-		return streq0(candidate->host_iface, c->host_iface);
+		return shr_streq0(candidate->host_iface, c->host_iface);
 
 	/* If c->cfg.host_traddr is not NULL we can infer the controller's (c)
 	 * interface from it and compare it to the candidate->host_iface.
@@ -88,7 +88,7 @@ static bool _tcp_ctrl_match_host_iface_no_src_addr(struct libnvme_ctrl *c,
 		c_host_iface =
 			libnvme_iface_matching_addr(candidate->iface_list,
 				c->host_traddr);
-		return streq0(candidate->host_iface, c_host_iface);
+		return shr_streq0(candidate->host_iface, c_host_iface);
 	}
 
 	/* If both c->cfg.host_traddr and c->cfg.host_iface are
@@ -195,7 +195,8 @@ static bool _tcp_opt_params_match(struct libnvme_ctrl *c,
 
 	/* Check host_iface only if candidate is interested */
 	c_iface = libnvme_iface_matching_addr(candidate->iface_list, src_addr);
-	if (candidate->host_iface && !streq0(candidate->host_iface, c_iface))
+	if (candidate->host_iface &&
+	    !shr_streq0(candidate->host_iface, c_iface))
 		return false;
 
 	return true;
@@ -222,10 +223,10 @@ static bool _tcp_opt_params_match(struct libnvme_ctrl *c,
 static bool _tcp_match_ctrl(struct libnvme_ctrl *c,
 		struct candidate_args *candidate)
 {
-	if (!streq0(c->transport, candidate->transport))
+	if (!shr_streq0(c->transport, candidate->transport))
 		return false;
 
-	if (!streq0(c->trsvcid, candidate->trsvcid))
+	if (!shr_streq0(c->trsvcid, candidate->trsvcid))
 		return false;
 
 	if (!candidate->addreq(c->traddr, candidate->traddr))
@@ -234,7 +235,8 @@ static bool _tcp_match_ctrl(struct libnvme_ctrl *c,
 	if (candidate->well_known_nqn && !libnvme_ctrl_get_discovery_ctrl(c))
 		return false;
 
-	if (candidate->subsysnqn && !streq0(c->subsysnqn, candidate->subsysnqn))
+	if (candidate->subsysnqn &&
+	    !shr_streq0(c->subsysnqn, candidate->subsysnqn))
 		return false;
 
 	/* Check host_traddr / host_iface only if candidate is interested */
@@ -259,7 +261,7 @@ static bool _tcp_match_ctrl(struct libnvme_ctrl *c,
 static bool _libnvmf_tree_ctrl_match(struct libnvme_ctrl *c,
 		struct candidate_args *candidate)
 {
-	if (!streq0(c->transport, candidate->transport))
+	if (!shr_streq0(c->transport, candidate->transport))
 		return false;
 
 	if (candidate->traddr && c->traddr &&
@@ -271,17 +273,18 @@ static bool _libnvmf_tree_ctrl_match(struct libnvme_ctrl *c,
 		return false;
 
 	if (candidate->host_iface && c->host_iface &&
-	    !streq0(c->host_iface, candidate->host_iface))
+	    !shr_streq0(c->host_iface, candidate->host_iface))
 		return false;
 
 	if (candidate->trsvcid && c->trsvcid &&
-	    !streq0(c->trsvcid, candidate->trsvcid))
+	    !shr_streq0(c->trsvcid, candidate->trsvcid))
 		return false;
 
 	if (candidate->well_known_nqn && !libnvme_ctrl_get_discovery_ctrl(c))
 		return false;
 
-	if (candidate->subsysnqn && !streq0(c->subsysnqn, candidate->subsysnqn))
+	if (candidate->subsysnqn &&
+	    !shr_streq0(c->subsysnqn, candidate->subsysnqn))
 		return false;
 
 	return true;
@@ -291,13 +294,13 @@ static ctrl_match_t libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 		struct candidate_args *candidate,
 		const struct libnvme_ctrl_params *params)
 {
-	if (streq0(params->transport, "tcp")) {
+	if (shr_streq0(params->transport, "tcp")) {
 		candidate->iface_list = libnvmf_getifaddrs(ctx);
 		candidate->addreq = libnvme_ipaddrs_eq;
 		return _tcp_match_ctrl;
 	}
 
-	if (streq0(params->transport, "rdma")) {
+	if (shr_streq0(params->transport, "rdma")) {
 		candidate->addreq = libnvme_ipaddrs_eq;
 		return _libnvmf_tree_ctrl_match;
 	}
@@ -412,13 +415,13 @@ static ctrl_match_t _libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 	candidate->transport = params->transport;
 	candidate->subsysnqn = params->subsysnqn;
 	candidate->host_iface =
-		streqcase0(params->host_iface, "none") ?
+		shr_streqcase0(params->host_iface, "none") ?
 		NULL : params->host_iface;
 	candidate->host_traddr =
-		streqcase0(params->host_traddr, "none") ?
+		shr_streqcase0(params->host_traddr, "none") ?
 		NULL : params->host_traddr;
 
-	if (streq0(params->subsysnqn, NVME_DISC_SUBSYS_NAME)) {
+	if (shr_streq0(params->subsysnqn, NVME_DISC_SUBSYS_NAME)) {
 		/* Since TP8013, the NQN of discovery controllers can be the
 		 * well-known NQN (i.e. nqn.2014-08.org.nvmexpress.discovery) or
 		 * a unique NQN. A DC created using the well-known NQN may later
@@ -435,7 +438,7 @@ static ctrl_match_t _libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 		return m;
 
 	/* All other transport types */
-	candidate->addreq = streqcase0;
+	candidate->addreq = shr_streqcase0;
 	return _libnvmf_tree_ctrl_match;
 }
 

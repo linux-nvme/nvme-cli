@@ -327,8 +327,8 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	closedir(d);
 
 	c->hdl = NULL;
-	c->name = xstrdup(name);
-	c->sysfs_dir = xstrdup(path);
+	c->name = shr_xstrdup(name);
+	c->sysfs_dir = shr_xstrdup(path);
 	c->firmware = libnvme_get_ctrl_attr(c, "firmware_rev");
 	c->model = libnvme_get_ctrl_attr(c, "model");
 	c->state = libnvme_get_ctrl_attr(c, "state");
@@ -414,9 +414,9 @@ __libnvme_public int libnvme_scan_ctrl(
 	hostnqn = libnvme_get_attr(path, "hostnqn");
 	hostid = libnvme_get_attr(path, "hostid");
 	if (!hostnqn)
-		hostnqn = xstrdup(ctx->hostnqn);
+		hostnqn = shr_xstrdup(ctx->hostnqn);
 	if (!hostid)
-		hostid = xstrdup(ctx->hostid);
+		hostid = shr_xstrdup(ctx->hostid);
 	ret = libnvme_get_host(ctx, hostnqn, hostid, &h);
 	if (ret)
 		return ret;

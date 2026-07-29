@@ -59,7 +59,7 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 			goto bad_value;
 		nvme_args.verbose = uval;
 	} else if (!strcmp(key, "quiet")) {
-		err = parse_bool(value, &bval);
+		err = shr_parse_bool(value, &bval);
 		if (err)
 			goto bad_value;
 		nvme_args.quiet = bval;
@@ -74,17 +74,17 @@ static int apply_kv(struct global_config_ctx *gc, const char *key,
 			goto bad_value;
 		nvme_args.timeout = uval;
 	} else if (!strcmp(key, "dry-run")) {
-		err = parse_bool(value, &bval);
+		err = shr_parse_bool(value, &bval);
 		if (err)
 			goto bad_value;
 		nvme_args.dry_run = bval;
 	} else if (!strcmp(key, "no-retries")) {
-		err = parse_bool(value, &bval);
+		err = shr_parse_bool(value, &bval);
 		if (err)
 			goto bad_value;
 		nvme_args.no_retries = bval;
 	} else if (!strcmp(key, "no-ioctl-probing")) {
-		err = parse_bool(value, &bval);
+		err = shr_parse_bool(value, &bval);
 		if (err)
 			goto bad_value;
 		nvme_args.no_ioctl_probing = bval;
@@ -115,23 +115,23 @@ bad_value:
 	return err;
 }
 
-static int global_config_event(enum ini_event event, const char *section,
+static int global_config_event(enum shr_ini_event event, const char *section,
 				const char *key, const char *value,
 				unsigned int line, void *user_data)
 {
 	struct global_config_ctx *gc = user_data;
 
 	switch (event) {
-	case INI_SECTION:
+	case SHR_INI_SECTION:
 		return 0;
-	case INI_KV:
+	case SHR_INI_KV:
 		if (section && !strcmp(section, "Global"))
 			return apply_kv(gc, key, value, line);
 		fprintf(stderr,
 			"%s:%u: \"%s\" outside the [Global] section, ignoring\n",
 			gc->path, line, key);
 		return 0;
-	case INI_JUNK:
+	case SHR_INI_JUNK:
 		fprintf(stderr, "%s:%u: malformed line \"%s\", ignoring\n",
 			gc->path, line, key);
 		return 0;
@@ -145,7 +145,7 @@ int nvme_load_global_config_from(const char *path)
 	struct global_config_ctx gc = { .path = path };
 	int err;
 
-	err = ini_parse_file(path, global_config_event, &gc);
+	err = shr_ini_parse_file(path, global_config_event, &gc);
 	if (err && err == -ENOENT)
 		err = 0;
 	return err;

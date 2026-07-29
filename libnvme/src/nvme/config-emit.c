@@ -26,6 +26,7 @@
 
 #include <ccan/list/list.h>
 
+#include <fs-util.h>
 #include <nvme/config.h>
 #include <nvme/nvme-types-fabrics.h>
 
@@ -116,8 +117,8 @@ static struct emit_persona *persona_for(struct libnvmf_config_emitter *emitter,
 	struct emit_persona *p;
 
 	list_for_each(&emitter->personas, p, entry) {
-		if (streq0(p->hostnqn, hostnqn) &&
-		    streq0(p->hostid, hostid))
+		if (shr_streq0(p->hostnqn, hostnqn) &&
+		    shr_streq0(p->hostid, hostid))
 			return p;
 	}
 
@@ -159,14 +160,14 @@ static int check_persona_identity(struct libnvmf_config_emitter *emitter,
 
 	list_for_each(&emitter->personas, p, entry) {
 		if (hostnqn && p->hostnqn && !strcmp(hostnqn, p->hostnqn) &&
-		    !streq0(hostid, p->hostid)) {
+		    !shr_streq0(hostid, p->hostid)) {
 			emit_err(emitter->ctx,
 				 "config emit: hostnqn %s used with two hostids",
 				 hostnqn);
 			return -EINVAL;
 		}
 		if (hostid && p->hostid && !strcmp(hostid, p->hostid) &&
-		    !streq0(hostnqn, p->hostnqn)) {
+		    !shr_streq0(hostnqn, p->hostnqn)) {
 			emit_err(emitter->ctx,
 				 "config emit: hostid %s shared by two hostnqns",
 				 hostid);
@@ -233,10 +234,10 @@ __libnvme_public int libnvmf_config_emit_add(
 	conn->is_dc = is_dc;
 	conn->transport = strdup(transport);
 	conn->traddr = strdup(traddr);
-	conn->trsvcid = xstrdup(trsvcid);
-	conn->subsysnqn = xstrdup(subsysnqn);
-	conn->host_traddr = xstrdup(host_traddr);
-	conn->host_iface = xstrdup(host_iface);
+	conn->trsvcid = shr_xstrdup(trsvcid);
+	conn->subsysnqn = shr_xstrdup(subsysnqn);
+	conn->host_traddr = shr_xstrdup(host_traddr);
+	conn->host_iface = shr_xstrdup(host_iface);
 	if (params)
 		conn->params = libnvmf_params_dup(params);
 	if (!conn->transport || !conn->traddr ||
@@ -339,7 +340,7 @@ static int emit_tmpfile(struct libnvme_global_ctx *ctx, const char *final,
 	if (asprintf(&tmp, "%s.XXXXXX", final) < 0)
 		return -ENOMEM;
 
-	fd = libnvmf_mkstemp(tmp);
+	fd = shr_mkstemp(tmp);
 	if (fd < 0) {
 		ret = fd;
 		goto err_free;

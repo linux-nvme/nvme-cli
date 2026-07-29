@@ -266,19 +266,6 @@ size_t libnvmf_get_entity_name(char *buffer, size_t bufsz);
  */
 size_t libnvmf_get_entity_version(char *buffer, size_t bufsz);
 
-/* File-access and misc helpers (util-fabrics.c). */
-int libnvmf_mkdir_p(const char *path, mode_t mode);
-int libnvmf_mkstemp(char *template);
-void libnvmf_fsync_dir(const char *path);
-bool libnvmf_valid_name(const char *s);
-uint64_t libnvmf_fnv1a_64(const void *buf, size_t len);
-
-/*
- * libnvmf_trim() - strip leading/trailing whitespace in place; returns a
- * pointer into @s.
- */
-char *libnvmf_trim(char *s);
-
 /**
  * libnvmf_registry_create_instance - Write a registry entry for a freshly
  * connected controller.  Called from the connect path once the kernel returns

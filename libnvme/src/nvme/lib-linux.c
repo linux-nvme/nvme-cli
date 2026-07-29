@@ -12,6 +12,8 @@
 
 #include <libnvme.h>
 
+#include <fs-util.h>
+
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "compiler-attributes.h"
@@ -26,7 +28,7 @@ static int __libnvme_transport_handle_open_direct(
 	int ret, id, ns;
 	bool c = true;
 
-	name = libnvme_basename(devname);
+	name = shr_basename(devname);
 
 	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 

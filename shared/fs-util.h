@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+/* SPDX-License-Identifier: LGPL-2.1-or-later */
 /*
  * This file is part of nvme-cli.
  * Copyright (c) 2026 Dell Technologies Inc. or its subsidiaries.
@@ -14,4 +14,20 @@
  * Return: 0 on success (including if path already exists as a directory),
  * -errno otherwise.
  */
-int mkdir_p(const char *path, mode_t mode);
+int shr_mkdir_p(const char *path, mode_t mode);
+
+/*
+ * mkstemp(), with O_CLOEXEC set atomically where possible.
+ * Return: an open fd on success, -errno otherwise.
+ */
+int shr_mkstemp(char *template);
+
+/* fsync() path, to make a preceding rename()/unlink() inside it durable. */
+void shr_fsync_dir(const char *path);
+
+/*
+ * The final path component (the part after the last '/'), or path itself
+ * if there's no '/'. Unlike POSIX basename(), never modifies path and
+ * never returns a pointer to static storage.
+ */
+char *shr_basename(const char *path);

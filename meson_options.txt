@@ -24,6 +24,18 @@ option(
   description : 'MI support'
 )
 option(
+  'nvme-discoverd',
+  type : 'feature',
+  value: 'disabled',
+  description : 'nvme-discoverd daemon (technology preview; requires fabrics and libsystemd >=253)'
+)
+option(
+  'nvmf-autoconnect',
+  type : 'feature',
+  value: 'enabled',
+  description : 'legacy udev/systemd NVMe-oF autoconnect (independent of nvme-discoverd; both may be installed side by side)'
+)
+option(
   'top',
   type : 'feature',
   value: 'enabled',
@@ -180,7 +192,7 @@ option(
             'intel', 'lm', 'mangoboost', 'memblaze', 'micron', 'nbft',
             'netapp', 'nvidia', 'ocp', 'registry', 'sandisk', 'scaleflux',
             'seagate', 'sed', 'shannon', 'solidigm', 'ssstc', 'toshiba',
-            'transcend', 'virtium', 'wdc', 'ymtc', 'zns'],
+            'transcend', 'utils', 'virtium', 'wdc', 'ymtc', 'zns'],
   description : 'comma-separated list of plugins to build (all plugins are included if unset, [] = no plugins)'
 )
 option(

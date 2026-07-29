@@ -62,7 +62,7 @@ static bool test_ipaddrs_eq() {
 		{"fe80::1%lo", "fe80::1%lo", true},
 		{"fe80::1%lo", "fe80::2%lo", false},
 		/*
-		 * the comparator (_nvme_ipaddrs_eq) matches on address bytes
+		 * the comparator (sockaddrs_eq) matches on address bytes
 		 * only, never sin6_scope_id -- a scoped and unscoped spelling
 		 * of the same address are still "equal" by its definition.
 		 */

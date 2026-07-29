@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /*
  * This file is part of nvme-cli.
  * Copyright (c) 2026 Dell Technologies Inc. or its subsidiaries.
@@ -11,7 +11,7 @@
 
 #include "array-util.h"
 
-int ptrarray_append(struct ptrarray *a, void *item)
+int shr_ptrarray_append(struct shr_ptrarray *a, void *item)
 {
 	if (a->len == a->cap) {
 		size_t newcap = a->cap ? a->cap * 2 : 8;
@@ -26,7 +26,7 @@ int ptrarray_append(struct ptrarray *a, void *item)
 	return 0;
 }
 
-void ptrarray_free(struct ptrarray *a)
+void shr_ptrarray_free(struct shr_ptrarray *a)
 {
 	free(a->items);
 	a->items = NULL;

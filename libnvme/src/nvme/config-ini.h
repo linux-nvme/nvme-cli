@@ -75,9 +75,6 @@ const struct libnvmf_key *libnvmf_key_lookup(const char *name);
  */
 int libnvmf_key_check_value(const struct libnvmf_key *key, const char *value);
 
-/* The boolean spellings the config format accepts (case-insensitive). */
-int libnvmf_parse_bool(const char *value, bool *out);
-
 /*
  * Raw configuration model for a single parsed file.
  *

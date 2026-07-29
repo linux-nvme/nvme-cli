@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /*
  * This file is part of nvme-cli.
  * Copyright (c) 2026 Dell Technologies Inc. or its subsidiaries.
@@ -14,7 +14,7 @@
 
 #include "parse-util.h"
 
-int parse_bool(const char *value, bool *out)
+int shr_parse_bool(const char *value, bool *out)
 {
 	static const char * const yes[] = {
 		"1", "yes", "y", "true", "t", "on"
