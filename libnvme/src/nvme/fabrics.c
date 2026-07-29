@@ -3235,6 +3235,14 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 					continue;
 				}
 
+				if ((*ss)->security) {
+					libnvme_msg(ctx, LIBNVME_LOG_ERR,
+						"SSNS %d has Security Profile Descriptor %d associated, security profile descriptors are currently unimplemented, skipping\n",
+						(*ss)->index,
+						(*ss)->security->index);
+					continue;
+				}
+
 				nfctx.ctrl_params.host_traddr = NULL;
 				if (!fctx->ctrl_params.host_traddr &&
 				    !strncmp((*ss)->transport, "tcp", 3))
@@ -3314,6 +3322,14 @@ __libnvme_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 				}
 			if (linked)
 				continue;
+
+			if ((*dd)->security) {
+				libnvme_msg(ctx, LIBNVME_LOG_ERR,
+					"Discovery Descriptor %d has Security Profile Descriptor %d associated, security profile descriptors are currently unimplemented, skipping\n",
+					(*dd)->index,
+					(*dd)->security->index);
+				continue;
+			}
 
 			hfi = (*dd)->hfi;
 			if (!hfi) {
