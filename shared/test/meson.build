@@ -34,3 +34,16 @@ test_crc32 = executable(
 )
 
 test('shared - crc32', test_crc32)
+
+if host_system != 'windows'
+    test_ini = executable(
+        'test-ini',
+        ['test-ini.c'],
+        dependencies: [
+            config_dep,
+            shared_dep,
+        ],
+    )
+
+    test('shared - ini', test_ini)
+endif
