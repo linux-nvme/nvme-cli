@@ -219,10 +219,10 @@ static bool tid_subset_match(const struct libnvmf_tid *e,
  */
 static bool entry_matches(const char *entry, const struct libnvmf_tid *tid)
 {
-	struct libnvmf_tid *e = libnvmf_tid_parse_strict(NULL, entry);
+	struct libnvmf_tid *e;
 	bool matches;
 
-	if (!e)
+	if (libnvmf_tid_parse_strict(NULL, entry, &e))
 		return false;
 	if (libnvmf_tid_is_empty(e)) {
 		libnvmf_tid_free(e);
@@ -241,8 +241,11 @@ static bool entry_matches(const char *entry, const struct libnvmf_tid *tid)
  */
 static bool entry_valid(struct libnvme_global_ctx *ctx, const char *entry)
 {
-	struct libnvmf_tid *e = libnvmf_tid_parse_strict(ctx, entry);
-	bool valid = e && !libnvmf_tid_is_empty(e);
+	struct libnvmf_tid *e;
+	bool valid;
+
+	valid = !libnvmf_tid_parse_strict(ctx, entry, &e) &&
+		!libnvmf_tid_is_empty(e);
 
 	libnvmf_tid_free(e);
 	return valid;

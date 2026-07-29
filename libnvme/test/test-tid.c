@@ -61,9 +61,8 @@ static bool test_tid_parse_null(void)
 	ctx = libnvme_create_global_ctx();
 
 	printf("\ntest_tid_parse_null:\n");
-	t = libnvmf_tid_parse(ctx, NULL);
-	pass = (t == NULL);
-	CHECK(pass, "NULL input → NULL return");
+	pass = (libnvmf_tid_parse(ctx, NULL, &t) == -EINVAL && t == NULL);
+	CHECK(pass, "NULL input → -EINVAL");
 
 	libnvme_free_global_ctx(ctx);
 
@@ -84,13 +83,13 @@ static bool test_tid_parse_valid(void)
 
 	printf("\ntest_tid_parse_valid:\n");
 
-	t = libnvmf_tid_parse(ctx,
+	p = libnvmf_tid_parse(ctx,
 			      "transport=tcp;traddr=192.168.1.1;trsvcid=4420;"
 			      "nqn=nqn.test;host-traddr=10.0.0.1;"
 			      "host-iface=eth0;hostnqn=nqn.host;"
-			      "hostid=12345678-1234-1234-1234-123456789abc");
-	p = (t != NULL);
-	CHECK(p, "non-NULL result");
+			      "hostid=12345678-1234-1234-1234-123456789abc",
+			      &t) == 0 && t != NULL;
+	CHECK(p, "parse succeeds");
 	pass &= p;
 	if (!t) {
 		libnvme_free_global_ctx(ctx);
@@ -154,11 +153,10 @@ static bool test_tid_parse_rejected_aliases(void)
 	printf("\ntest_tid_parse_rejected_aliases:\n");
 	printf("  (error messages on stderr below are expected)\n");
 
-	t = libnvmf_tid_parse(ctx, "transport=rdma;subsysnqn=nqn.alias;"
+	p = libnvmf_tid_parse(ctx, "transport=rdma;subsysnqn=nqn.alias;"
 			      "host_traddr=5.6.7.8;host_iface=ib0;"
-			      "host_nqn=nqn.hostalias");
-	p = (t != NULL);
-	CHECK(p, "non-NULL result");
+			      "host_nqn=nqn.hostalias", &t) == 0 && t != NULL;
+	CHECK(p, "parse succeeds");
 	pass &= p;
 	if (!t) {
 		libnvme_free_global_ctx(ctx);
@@ -204,51 +202,50 @@ static bool test_tid_parse_garbage(void)
 	printf("  (error messages on stderr below are expected)\n");
 
 	/* Bare key — no '=' at all */
-	t = libnvmf_tid_parse(ctx, "barekey;transport=tcp");
-	p = t && streq(libnvmf_tid_get_transport(t), "tcp") &&
+	p = libnvmf_tid_parse(ctx, "barekey;transport=tcp", &t) == 0 &&
+	    streq(libnvmf_tid_get_transport(t), "tcp") &&
 	    libnvmf_tid_get_traddr(t) == NULL;
 	CHECK(p, "bare key ignored; valid field still parsed");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* Empty value — key= with nothing after the '=' */
-	t = libnvmf_tid_parse(ctx, "transport=;traddr=10.0.0.1");
-	p = t && libnvmf_tid_get_transport(t) == NULL &&
+	p = libnvmf_tid_parse(ctx, "transport=;traddr=10.0.0.1", &t) == 0 &&
+	    libnvmf_tid_get_transport(t) == NULL &&
 	    streq(libnvmf_tid_get_traddr(t), "10.0.0.1");
 	CHECK(p, "empty value ignored; field stays NULL");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* Empty value after whitespace trimming — "key=   " */
-	t = libnvmf_tid_parse(ctx, "transport=   ;traddr=10.0.0.2");
-	p = t && libnvmf_tid_get_transport(t) == NULL &&
+	p = libnvmf_tid_parse(ctx, "transport=   ;traddr=10.0.0.2", &t) == 0 &&
+	    libnvmf_tid_get_transport(t) == NULL &&
 	    streq(libnvmf_tid_get_traddr(t), "10.0.0.2");
 	CHECK(p, "whitespace-only value ignored; field stays NULL");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* Unknown key */
-	t = libnvmf_tid_parse(ctx, "nosuchkey=foo;transport=tcp");
-	p = t && streq(libnvmf_tid_get_transport(t), "tcp");
+	p = libnvmf_tid_parse(ctx, "nosuchkey=foo;transport=tcp", &t) == 0 &&
+	    streq(libnvmf_tid_get_transport(t), "tcp");
 	CHECK(p, "unknown key ignored; valid field still parsed");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* Double separator ";;" — the empty token between is skipped */
-	t = libnvmf_tid_parse(ctx, "transport=tcp;;traddr=10.0.0.3");
-	p = t && streq(libnvmf_tid_get_transport(t), "tcp") &&
+	p = libnvmf_tid_parse(ctx, "transport=tcp;;traddr=10.0.0.3", &t) == 0 &&
+	    streq(libnvmf_tid_get_transport(t), "tcp") &&
 	    streq(libnvmf_tid_get_traddr(t), "10.0.0.3");
 	CHECK(p, "\";;\" empty token skipped; both fields parsed");
 	pass &= p;
 	libnvmf_tid_free(t);
 
-	/* All garbage — should return an empty (non-NULL) TID */
-	t = libnvmf_tid_parse(ctx, "garbage;=nokey;unknown=val");
-	p = t &&
+	/* All garbage — should still succeed with an empty TID */
+	p = libnvmf_tid_parse(ctx, "garbage;=nokey;unknown=val", &t) == 0 &&
 	    libnvmf_tid_get_transport(t) == NULL &&
 	    libnvmf_tid_get_traddr(t) == NULL &&
 	    libnvmf_tid_get_subsysnqn(t) == NULL;
-	CHECK(p, "all-garbage string → empty TID (non-NULL)");
+	CHECK(p, "all-garbage string → success, empty TID");
 	pass &= p;
 	libnvmf_tid_free(t);
 	libnvme_free_global_ctx(ctx);
@@ -270,8 +267,9 @@ static bool test_tid_parse_duplicate_key(void)
 
 	printf("\ntest_tid_parse_duplicate_key:\n");
 
-	t = libnvmf_tid_parse(ctx, "transport=tcp;transport=rdma");
-	pass = t && streq(libnvmf_tid_get_transport(t), "rdma");
+	pass = libnvmf_tid_parse(ctx, "transport=tcp;transport=rdma",
+				 &t) == 0 &&
+	       streq(libnvmf_tid_get_transport(t), "rdma");
 	CHECK(pass, "duplicate key → last value wins (\"rdma\")");
 	libnvmf_tid_free(t);
 	libnvme_free_global_ctx(ctx);
@@ -293,8 +291,9 @@ static bool test_tid_parse_whitespace(void)
 
 	printf("\ntest_tid_parse_whitespace:\n");
 
-	t = libnvmf_tid_parse(ctx, " transport = tcp ; traddr = 1.2.3.4 ");
-	p = t && streq(libnvmf_tid_get_transport(t), "tcp") &&
+	p = libnvmf_tid_parse(ctx, " transport = tcp ; traddr = 1.2.3.4 ",
+			      &t) == 0 &&
+	    streq(libnvmf_tid_get_transport(t), "tcp") &&
 	    streq(libnvmf_tid_get_traddr(t), "1.2.3.4");
 	CHECK(p, "whitespace around key and value is trimmed");
 	pass &= p;
@@ -322,8 +321,7 @@ static bool test_tid_dup(void)
 	CHECK(p, "dup(NULL) → NULL");
 	pass &= p;
 
-	t = libnvmf_tid_parse(ctx,
-			      "transport=tcp;traddr=1.2.3.4;nqn=nqn.test");
+	libnvmf_tid_parse(ctx, "transport=tcp;traddr=1.2.3.4;nqn=nqn.test", &t);
 	d = libnvmf_tid_dup(t);
 	p = d && d != t &&
 	    streq(libnvmf_tid_get_canonical(t), libnvmf_tid_get_canonical(d));
@@ -358,8 +356,7 @@ static bool test_tid_canonical(void)
 	/* Input order differs from canonical order;
 	 * unset fields are skipped.
 	 */
-	t = libnvmf_tid_parse(ctx,
-			      "traddr=1.2.3.4;transport=tcp;trsvcid=4420");
+	libnvmf_tid_parse(ctx, "traddr=1.2.3.4;transport=tcp;trsvcid=4420", &t);
 	c1 = libnvmf_tid_get_canonical(t);
 	p = streq(c1, "transport=tcp;traddr=1.2.3.4;trsvcid=4420");
 	CHECK(p, "canonical uses fixed field order, skips NULL fields");
@@ -391,7 +388,7 @@ static bool test_tid_setter_invalidates_cache(void)
 
 	printf("\ntest_tid_setter_invalidates_cache:\n");
 
-	t = libnvmf_tid_parse(ctx, "transport=tcp;traddr=1.2.3.4");
+	libnvmf_tid_parse(ctx, "transport=tcp;traddr=1.2.3.4", &t);
 
 	/* Prime the cache, mutate via set_identity, confirm it rebuilt. */
 	snprintf(before, sizeof(before), "%s", libnvmf_tid_get_canonical(t));
@@ -488,33 +485,35 @@ static bool test_tid_parse_strict(void)
 	printf("  (error messages on stderr below are expected)\n");
 
 	/* Well-formed input still parses. */
-	t = libnvmf_tid_parse_strict(ctx, "transport=tcp;traddr=1.2.3.4");
-	p = t && streq(libnvmf_tid_get_transport(t), "tcp");
-	CHECK(p, "valid input → non-NULL");
+	p = libnvmf_tid_parse_strict(ctx, "transport=tcp;traddr=1.2.3.4",
+				     &t) == 0 &&
+	    streq(libnvmf_tid_get_transport(t), "tcp");
+	CHECK(p, "valid input → success");
 	pass &= p;
 	libnvmf_tid_free(t);
 
 	/* An unknown key fails the whole parse. */
-	t = libnvmf_tid_parse_strict(ctx, "transport=tcp;bogus=x");
-	p = (t == NULL);
-	CHECK(p, "unknown key → NULL");
+	p = libnvmf_tid_parse_strict(ctx, "transport=tcp;bogus=x",
+				     &t) == -EINVAL && t == NULL;
+	CHECK(p, "unknown key → -EINVAL");
 	pass &= p;
 
-	/* The C-identifier spelling (subsysnqn) is not a valid key → NULL. */
-	t = libnvmf_tid_parse_strict(ctx, "subsysnqn=nqn.a");
-	p = (t == NULL);
-	CHECK(p, "non-option key 'subsysnqn' → NULL");
+	/* The C-identifier spelling (subsysnqn) is not a valid key. */
+	p = libnvmf_tid_parse_strict(ctx, "subsysnqn=nqn.a", &t) == -EINVAL &&
+	    t == NULL;
+	CHECK(p, "non-option key 'subsysnqn' → -EINVAL");
 	pass &= p;
 
 	/* A non-empty bare token fails. */
-	t = libnvmf_tid_parse_strict(ctx, "transport=tcp;garbage");
-	p = (t == NULL);
-	CHECK(p, "bare token → NULL");
+	p = libnvmf_tid_parse_strict(ctx, "transport=tcp;garbage",
+				     &t) == -EINVAL && t == NULL;
+	CHECK(p, "bare token → -EINVAL");
 	pass &= p;
 
 	/* Empty tokens (";;") remain benign even under strict parsing. */
-	t = libnvmf_tid_parse_strict(ctx, "transport=tcp;;traddr=1.2.3.4");
-	p = t && streq(libnvmf_tid_get_traddr(t), "1.2.3.4");
+	p = libnvmf_tid_parse_strict(ctx, "transport=tcp;;traddr=1.2.3.4",
+				     &t) == 0 &&
+	    streq(libnvmf_tid_get_traddr(t), "1.2.3.4");
 	CHECK(p, "\";;\" still benign under strict");
 	pass &= p;
 	libnvmf_tid_free(t);
@@ -542,13 +541,13 @@ static bool test_tid_is_empty(void)
 	CHECK(p, "is_empty(NULL) → true");
 	pass &= p;
 
-	t = libnvmf_tid_parse(ctx, "");
+	libnvmf_tid_parse(ctx, "", &t);
 	p = libnvmf_tid_is_empty(t);
 	CHECK(p, "TID with no fields → true");
 	pass &= p;
 	libnvmf_tid_free(t);
 
-	t = libnvmf_tid_parse(ctx, "transport=tcp");
+	libnvmf_tid_parse(ctx, "transport=tcp", &t);
 	p = !libnvmf_tid_is_empty(t);
 	CHECK(p, "TID with a field → false");
 	pass &= p;
@@ -615,8 +614,8 @@ static bool test_tid_sanitize(void)
 	pass &= p;
 
 	/* parse() rejects the same way. */
-	t = libnvmf_tid_parse(ctx, "transport=tcp;traddr=dc.example.com");
-	p = (t == NULL);
+	p = libnvmf_tid_parse(ctx, "transport=tcp;traddr=dc.example.com",
+			      &t) == -EINVAL && t == NULL;
 	CHECK(p, "parse() rejects a hostname traddr");
 	libnvmf_tid_free(t);
 	pass &= p;
