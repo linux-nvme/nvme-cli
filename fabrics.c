@@ -1098,7 +1098,25 @@ static libnvme_ctrl_t lookup_nvme_ctrl(struct libnvme_global_ctx *ctx,
 	return NULL;
 }
 
-static void nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
+static bool opt_matches(const char *want, const char *have)
+{
+	return !want || (have && !strcmp(want, have));
+}
+
+static bool nvmf_ctrl_matches_args(libnvme_host_t h, libnvme_ctrl_t c,
+				    const struct nvmf_args *fa)
+{
+	return opt_matches(fa->transport, libnvme_ctrl_get_transport(c)) &&
+	       opt_matches(fa->subsysnqn, libnvme_ctrl_get_subsysnqn(c)) &&
+	       opt_matches(fa->traddr, libnvme_ctrl_get_traddr(c)) &&
+	       opt_matches(fa->trsvcid, libnvme_ctrl_get_trsvcid(c)) &&
+	       opt_matches(fa->host_traddr, libnvme_ctrl_get_host_traddr(c)) &&
+	       opt_matches(fa->host_iface, libnvme_ctrl_get_host_iface(c)) &&
+	       opt_matches(fa->hostnqn, libnvme_host_get_hostnqn(h)) &&
+	       opt_matches(fa->hostid, libnvme_host_get_hostid(h));
+}
+
+static int nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
 {
 	int i = 0;
 	char *n = nqn;
@@ -1122,118 +1140,238 @@ static void nvmf_disconnect_nqn(struct libnvme_global_ctx *ctx, char *nqn)
 		}
 	}
 	nvme_show_verbose_result("NQN:%s disconnected %d controller(s)", nqn, i);
+
+	return 0;
+}
+
+static int disconnect_validate_args(bool has_device, bool has_subsysnqn,
+		bool match_args)
+{
+	if (has_device && (has_subsysnqn || match_args)) {
+		nvme_show_error(
+			"Device name [--device | -d] cannot be combined with other identifying options\n");
+		return -EINVAL;
+	}
+
+	if (!has_device && !has_subsysnqn && match_args) {
+		nvme_show_error(
+			"Fabrics identifying options require an NQN [--nqn | -n]\n");
+		return -EINVAL;
+	}
+
+	if (!has_device && !has_subsysnqn) {
+		 nvme_show_error(
+			"Neither device name [--device | -d] nor NQN [--nqn | -n] provided\n");
+		 return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int add_exclusion_ctrl(struct libnvme_global_ctx *ctx,
+		struct libnvme_ctrl *c)
+{
+	int err;
+
+	/*
+	 * Write exclusion entry before disconnecting so that
+	 * orchestrators see the exclusion in place before the
+	 * device removal event fires.
+	 */
+	err = libnvmf_exclusion_add_ctrl(ctx, NULL, c);
+	if (!err)
+		return 0;
+
+	nvme_show_error("Warning: failed to write exclusion entry: %s\n",
+		libnvme_strerror(-err));
+
+	return err;
+}
+
+static int add_exclusion_subsysnqn(struct libnvme_global_ctx *ctx,
+		const char *subsysnqn)
+{
+	int err;
+
+	/*
+	 * Write exclusion entry before disconnecting so that
+	 * orchestrators see the exclusion in place before the
+	 * device removal event fires.
+	 */
+	err = libnvmf_exclusion_add_subsysnqn(ctx, NULL, subsysnqn);
+	if (!err)
+		return 0;
+
+	nvme_show_error("Warning: failed to write exclusion entry: %s\n",
+		libnvme_strerror(-err));
+
+	return err;
+}
+
+static int disconnect_by_device(struct libnvme_global_ctx *ctx,
+		char *device,  bool exclude)
+{
+	libnvme_ctrl_t c;
+	char *p;
+	int err;
+
+	while ((p = strsep(&device, ",")) != NULL) {
+		if (!strncmp(p, "/dev/", 5))
+			p += 5;
+
+		c = lookup_nvme_ctrl(ctx, p);
+		if (!c) {
+			nvme_show_error("Did not find device %s\n", p);
+			return -ENODEV;
+		}
+
+		if (exclude)
+			add_exclusion_ctrl(ctx, c);
+
+		err = libnvmf_disconnect_ctrl(c);
+		if (err)
+			nvme_show_error("Failed to disconnect %s: %s\n",
+				p, libnvme_strerror(-err));
+	}
+
+	return 0;
+}
+
+static int disconnect_by_args(struct libnvme_global_ctx *ctx,
+		const struct nvmf_args *fa, bool exclude)
+{
+	libnvme_host_t h;
+	libnvme_subsystem_t s;
+	libnvme_ctrl_t c;
+	int err, i = 0;
+
+	libnvme_for_each_host(ctx, h) {
+		libnvme_for_each_subsystem(h, s) {
+			libnvme_subsystem_for_each_ctrl(s, c) {
+				if (!nvmf_ctrl_matches_args(h, c, fa))
+					continue;
+
+				if (exclude)
+					add_exclusion_ctrl(ctx, c);
+
+				err = libnvmf_disconnect_ctrl(c);
+				if (err)
+					nvme_show_error("Failed to disconnect %s: %s\n",
+						libnvme_ctrl_get_name(c),
+						libnvme_strerror(-err));
+				else
+					i++;
+			}
+		}
+	}
+
+	if (!i)
+		nvme_show_error("Did not find a matching controller\n");
+
+	nvme_show_verbose_result("disconnected %d controller(s)", i);
+
+	return 0;
+}
+
+static int disconnect_by_nqn(struct libnvme_global_ctx *ctx, const char *nqn,
+		bool exclude)
+{
+	__cleanup_free char *n = NULL;
+
+	n = strdup(nqn);
+	if (!n)
+		return -ENOMEM;
+
+	if (exclude) {
+		__cleanup_free char *excl = strdup(nqn);
+		char *t, *p;
+
+		if (!excl)
+			return -ENOMEM;
+
+		t = excl;
+		while ((p = strsep(&t, ",")) != NULL) {
+			if (!*p)
+				continue;
+
+			add_exclusion_subsysnqn(ctx, p);
+		}
+	}
+
+	return nvmf_disconnect_nqn(ctx, n);
 }
 
 int fabrics_disconnect(const char *desc, int argc, char **argv)
 {
 	const char *device = "nvme device handle";
 	const char *exclude_help = "write exclusion entry before disconnecting";
+
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	libnvme_ctrl_t c;
-	char *p;
-	int ret;
+	struct nvmf_args fa = { 0 };
+	bool match_args;
+	int err;
 
 	struct config {
-		char *nqn;
 		char *device;
 		bool  exclude;
 	};
 
 	struct config cfg = { 0 };
 
-	NVME_ARGS(opts,
-		OPT_STRING("nqn",        'n', "NAME", &cfg.nqn,     nvmf_nqn),
+	NVMF_ARGS(opts, fa,
 		OPT_STRING("device",     'd', "DEV",  &cfg.device,  device),
 		OPT_FLAG("exclude", 'x', &cfg.exclude, exclude_help));
 
-	ret = parse_args(argc, argv, desc, opts);
-	if (ret)
-		return ret;
+	nvmf_default_args(&fa);
 
-	if (cfg.nqn && cfg.device) {
-		nvme_show_error(
-			"Both device name [--device | -d] and NQN [--nqn | -n] are specified\n");
-		return -EINVAL;
-	}
-	if (!cfg.nqn && !cfg.device) {
-		nvme_show_error(
-			"Neither device name [--device | -d] nor NQN [--nqn | -n] provided\n");
-		return -EINVAL;
-	}
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
 
-	ret = nvme_create_global_ctx(&ctx);
-	if (ret)
-		return ret;
+	/*
+	 * Any of the "connect"-style options beyond bare --nqn narrow the
+	 * lookup to a specific controller instead of a whole subsystem.
+	 */
+	match_args = fa.transport || fa.traddr || fa.trsvcid ||
+		     fa.host_traddr || fa.host_iface || fa.hostnqn || fa.hostid;
+
+	err = disconnect_validate_args(!!cfg.device,
+		!!fa.subsysnqn, match_args);
+	if (err)
+		return err;
+
+	err = nvmf_resolve_addr(fa.transport, &fa.traddr);
+	if (err)
+		return err;
+
+	err = nvme_create_global_ctx_hostnqn(&ctx,
+		fa.hostnqn, fa.hostid, NULL, NULL);
+	if (err)
+		return err;
 
 	libnvme_skip_namespaces(ctx);
-	ret = libnvme_scan_topology(ctx, NULL, NULL);
-	if (ret < 0) {
+	err = libnvme_scan_topology(ctx, NULL, NULL);
+	if (err < 0) {
 		/*
 		 * Do not report an error when the modules are not
 		 * loaded, this allows the user to unconditionally call
 		 * disconnect.
 		 */
-		if (ret == -ENOENT)
+		if (err == -ENOENT)
 			return 0;
 
 		nvme_show_error("Failed to scan topology: %s",
-			libnvme_strerror(-ret));
-		return ret;
+			libnvme_strerror(-err));
+		return err;
 	}
 
-	if (cfg.nqn) {
-		/*
-		 * Disconnecting by NQN affects every controller of that
-		 * subsystem; with --exclude, write a matching subsysnqn=
-		 * exclusion to the main list first so orchestrators see it
-		 * before the removal events fire.
-		 */
-		if (cfg.exclude) {
-			ret = libnvmf_exclusion_add_subsysnqn(ctx, NULL,
-							      cfg.nqn);
-			if (ret)
-				nvme_show_error(
-					"Warning: failed to write exclusion entry: %s\n",
-					libnvme_strerror(-ret));
-		}
-		nvmf_disconnect_nqn(ctx, cfg.nqn);
-	}
+	if (cfg.device)
+		return disconnect_by_device(ctx, cfg.device, cfg.exclude);
 
-	if (cfg.device) {
-		char *d;
+	if (match_args)
+		return disconnect_by_args(ctx, &fa, cfg.exclude);
 
-		d = cfg.device;
-		while ((p = strsep(&d, ",")) != NULL) {
-			if (!strncmp(p, "/dev/", 5))
-				p += 5;
-			c = lookup_nvme_ctrl(ctx, p);
-			if (!c) {
-				nvme_show_error(
-					"Did not find device %s\n", p);
-				return -ENODEV;
-			}
-			/*
-			 * Write exclusion entry before disconnecting so that
-			 * orchestrators see the exclusion in place before the
-			 * device removal event fires.
-			 */
-			if (cfg.exclude) {
-				ret = libnvmf_exclusion_add_ctrl(ctx, NULL,
-								 c);
-				if (ret)
-					nvme_show_error(
-						"Warning: failed to write exclusion entry: %s\n",
-						libnvme_strerror(-ret));
-			}
-			ret = libnvmf_disconnect_ctrl(c);
-			if (ret)
-				nvme_show_error(
-					"Failed to disconnect %s: %s\n",
-					p, libnvme_strerror(-ret));
-		}
-	}
-
-	return 0;
+	return disconnect_by_nqn(ctx, fa.subsysnqn, cfg.exclude);
 }
 
 /* disconnect-all policy: should controller @c be torn down? */
