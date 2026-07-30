@@ -92,6 +92,7 @@ static int print_zns_list(struct libnvme_global_ctx *ctx, struct table *t)
 static int list(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
+	const char *desc = "Retrieve basic information for all ZNS namespaces.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int err;
 	struct table_column columns[] = {
@@ -104,7 +105,13 @@ static int list(int argc, char **argv, struct command *acmd,
 		{ "Format", LEFT, 16 },
 		{ "FW Rev", LEFT, 8 },
 	};
-	struct table *t = table_init_with_columns(columns, ARRAY_SIZE(columns));
+	struct table *t;
+
+	NVME_ARGS_OUTPUT_FORMATS(opts, NORMAL, "Output format: normal");
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
 
 	err = nvme_create_global_ctx(&ctx);
 	if (err)
@@ -114,6 +121,12 @@ static int list(int argc, char **argv, struct command *acmd,
 	if (err) {
 		nvme_show_error("Failed to scan nvme subsystems");
 		return err;
+	}
+
+	t = table_init_with_columns(columns, ARRAY_SIZE(columns));
+	if (!t) {
+		nvme_show_error("Failed to allocate table");
+		return -ENOMEM;
 	}
 
 	err = print_zns_list(ctx, t);
