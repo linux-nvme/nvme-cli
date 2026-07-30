@@ -793,6 +793,11 @@ static int extract_dump_get_log(struct libnvme_transport_handle *hdl, char *feat
 	int last_xfer_size = dumpsize % transfersize;
 	struct libnvme_passthru_cmd cmd;
 
+	if (!data) {
+		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
+		return -ENOMEM;
+	}
+
 	if (last_xfer_size)
 		total_loop_cnt++;
 	else
@@ -938,6 +943,11 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 
 		__cleanup_libnvme_free char *da1_stat = libnvme_alloc(da1_sz);
 
+		if (!da1_stat) {
+			nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
+			return -ENOMEM;
+		}
+
 		err = get_telemetry_data(hdl, nsid, tele_type, da1_sz, (void *)da1_stat, lsp, rae,
 					 da1_off);
 		if (err) {
@@ -986,6 +996,12 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 			}
 
 			__cleanup_libnvme_free char *da1_fifo = libnvme_alloc(da1_sz);
+
+			if (!da1_fifo) {
+				nvme_show_error("ERROR : OCP : libnvme_alloc : %s",
+						libnvme_strerror(errno));
+				return -ENOMEM;
+			}
 
 			printf("Get DA 1 FIFO addr: %p, offset 0x%"PRIx64"\n", da1_fifo,
 			       (uint64_t)da1_off);
@@ -1046,6 +1062,11 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 
 		__cleanup_libnvme_free char *da2_stat = libnvme_alloc(da1_sz);
 
+		if (!da2_stat) {
+			nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
+			return -ENOMEM;
+		}
+
 		err = get_telemetry_data(hdl, nsid, tele_type, da1_sz, (void *)da2_stat, lsp, rae,
 					 da1_off);
 		if (err) {
@@ -1094,6 +1115,12 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 			}
 
 			__cleanup_libnvme_free char *da1_fifo = libnvme_alloc(da1_sz);
+
+			if (!da1_fifo) {
+				nvme_show_error("ERROR : OCP : libnvme_alloc : %s",
+						libnvme_strerror(errno));
+				return -ENOMEM;
+			}
 
 			err = get_telemetry_data(hdl, nsid, tele_type,
 						 le64_to_cpu(da1->event_fifos[i].size) * 4,
@@ -2663,7 +2690,7 @@ static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 
 
 	entry = libnvme_alloc(data_len);
 	if (!entry) {
-		nvme_show_error("malloc: %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -ENOMEM;
 	}
 
@@ -2742,7 +2769,7 @@ static int error_injection_set(struct libnvme_transport_handle *hdl, struct erri
 	data_len = cfg->number * sizeof(struct erri_entry);
 	entry = libnvme_alloc(data_len);
 	if (!entry) {
-		nvme_show_error("malloc: %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -ENOMEM;
 	}
 
