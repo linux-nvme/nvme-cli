@@ -2694,7 +2694,7 @@ static int error_injection_get(struct libnvme_transport_handle *hdl, const __u8 
 		return -ENOMEM;
 	}
 
-	err = nvme_get_features(hdl, 0, fid, sel, 0, uidx, entry,
+	err = nvme_get_features(hdl, nsid, fid, sel, 0, uidx, entry,
 			data_len, &result);
 	if (!err) {
 		cq_entry.nume = result;

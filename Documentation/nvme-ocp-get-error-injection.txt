@@ -47,7 +47,8 @@ OPTIONS
 -a::
 --all-ns::
 	Send the command to all namespaces. This option is used to specify
-	whether to target all namespaces or no specific namespace.
+	whether to target all namespaces or no specific namespace. This option
+	is required for OCP 2.0 only devices, optional for OCP 2.5.
 
 include::global-options.txt[]
 
