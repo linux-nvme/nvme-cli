@@ -390,13 +390,6 @@ struct libnvme_host {  // !generate-accessors:read=generated,write=none !generat
 	char *hostid;
 	char *dhchap_host_key;		// !access:write=generated
 	char *hostsymname;		// !access:write=generated
-
-	/* pdc_enabled and pdc_enabled_valid work together. pdc_enabled_valid,
-	 * when true, indicates that pdc_enabled has been explicitly defined.
-	 * pdc_enabled_valid is internal meta-data for pdc_enabled.
-	 */
-	bool pdc_enabled;		// !access:read=none,write=custom
-	bool pdc_enabled_valid;		// !access:read=none
 };
 
 struct libnvme_fabric_options { // !generate-accessors

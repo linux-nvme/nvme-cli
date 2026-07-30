@@ -62,9 +62,7 @@ LIBNVME_3 {
 		libnvme_get_uuid_list;
 		libnvme_get_version;
 		libnvme_host_get_global_ctx;
-		libnvme_host_is_pdc_enabled;
 		libnvme_host_release_fds;
-		libnvme_host_set_pdc_enabled;
 		libnvme_init_ctrl;
 		libnvme_namespace_first_path;
 		libnvme_namespace_next_path;
