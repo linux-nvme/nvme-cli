@@ -489,12 +489,15 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 	char *argv[MAX_DISC_ARGS] = { "discovery.conf" };
 	char *ptr, *p = line;
 	int argc = 1;
-	bool line_persistent = false, line_force = false;
+	bool persistent = false, force = false;
+	bool no_persistent = false;
 
 	NVMF_ARGS(opts, fa,
-		  OPT_FLAG("persistent", 'p', &line_persistent,
+		  OPT_FLAG("persistent", 'p', &persistent,
 			   "persistent discovery connection"),
-		  OPT_FLAG("force",        0, &line_force,
+		  OPT_FLAG("no-persistent", 0, &no_persistent,
+			   "explicitly not a persistent discovery connection"),
+		  OPT_FLAG("force",        0, &force,
 			   "Force persistent discovery controller creation"));
 
 	if (line[0] == '#' || line[0] == '\n' || line[0] == '\0')
@@ -514,7 +517,9 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 	if (!fa.transport && !fa.traddr)
 		return 0;
 
-	return nvme_config_convert_discovery_args(emitter, &fa);
+	return nvme_config_convert_discovery_args(emitter, &fa,
+		persistent ? LIBNVMF_TRISTATE_TRUE :
+			no_persistent ? LIBNVMF_TRISTATE_FALSE : LIBNVMF_TRISTATE_UNSET);
 }
 
 static int setup_common_context(struct libnvmf_context *fctx,
@@ -560,7 +565,8 @@ static int create_common_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
-	libnvmf_context_set_persistent(fctx, persistent);
+	libnvmf_context_set_persistent(fctx, persistent ?
+			LIBNVMF_TRISTATE_TRUE : LIBNVMF_TRISTATE_UNSET);
 
 	*fctxp = fctx;
 

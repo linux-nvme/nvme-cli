@@ -10,6 +10,8 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'config create'
 			[--discovery]
+			[--persistent ]
+			[--no-persistent ]
 			[--host-symname=<name>]
 			[--output=<file>]
 			[<fabrics-options>]
@@ -38,6 +40,18 @@ OPTIONS
 --discovery::
 	Create a discovery controller entry instead of an I/O controller
 	entry. Without this, --nqn is required.
+
+--persistent::
+	Keep the discovery controller connected to receive Asynchronous
+	Event Notifications instead of disconnecting after the discovery
+	log page fetch. Requires --discovery. Mutually exclusive with
+	--no-persistent.
+
+--no-persistent::
+	Explicitly record that this discovery controller is not
+	persistent, overriding any default that would otherwise apply
+	(e.g. one derived from the discovery log page). Requires
+	--discovery. Mutually exclusive with --persistent.
 
 --host-symname=<name>::
 	Name this host persona. Puts it in its own configuration drop-in.

@@ -492,6 +492,7 @@ static bool test_apply_params(struct libnvme_global_ctx *ctx)
 	assert(!libnvmf_params_set(params, "keep-alive-tmo", "30"));
 	assert(!libnvmf_params_set(params, "tls", "true"));
 	assert(!libnvmf_params_set(params, "hdr-digest", "false"));
+	assert(!libnvmf_params_set(params, "persistent", "true"));
 	/* Explicit resets: must be skipped, not applied as "0". */
 	assert(!libnvmf_params_set(params, "tos", ""));
 	assert(!libnvmf_params_set(params, "ctrl-loss-tmo", ""));
@@ -521,7 +522,8 @@ static bool test_apply_params(struct libnvme_global_ctx *ctx)
 	}
 
 	if (!libnvmf_context_get_tls(fctx) ||
-	    libnvmf_context_get_hdr_digest(fctx)) {
+	    libnvmf_context_get_hdr_digest(fctx) ||
+	    !libnvmf_context_get_persistent(fctx)) {
 		printf(" - bool fields [FAIL]\n");
 		pass = false;
 	} else {
