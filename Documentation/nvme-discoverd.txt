@@ -54,8 +54,8 @@ OPTIONS
 -c <FILE>::
 --config=<FILE>::
 	Path to the daemon's own configuration file. Default:
-	@SYSCONFDIR@/nvme/discoverd.conf; see CONFIGURATION below. A
-	missing file is not an error -- every knob keeps its default.
+	@SYSCONFDIR@/nvme/nvme-discoverd.conf; see CONFIGURATION below.
+	A missing file is not an error -- every knob keeps its default.
 
 --nvme-path=<PATH>::
 	Absolute or relative path to the 'nvme' binary that transient
@@ -99,7 +99,7 @@ See nvme-fabrics.conf(5).
 SIGNALS
 -------
 SIGHUP;;
-	Reload both discoverd.conf and the shared fabrics configuration.
+	Reload both nvme-discoverd.conf and the shared fabrics configuration.
 	Newly desired connections are started; nothing already connected
 	is ever disconnected by a reload. If the fabrics configuration
 	fails to reload (e.g. a syntax error), the previous one is kept
@@ -110,7 +110,7 @@ SIGTERM, SIGINT;;
 
 FILES
 -----
-@SYSCONFDIR@/nvme/discoverd.conf::
+@SYSCONFDIR@/nvme/nvme-discoverd.conf::
 	The daemon's own configuration; see CONFIGURATION.
 
 @SYSCONFDIR@/nvme/nvme-fabrics.conf, @SYSCONFDIR@/nvme/nvme-fabrics.conf.d/*.conf::

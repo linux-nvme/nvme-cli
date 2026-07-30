@@ -10,9 +10,9 @@
 #include <stdbool.h>
 
 /*
- * discoverd.conf carries the daemon's own knobs only — the connections it
- * manages come from the shared fabrics config (libnvmf_config_read()), not
- * from here. Just a single [Global] section:
+ * nvme-discoverd's config file carries the daemon's own knobs only — the
+ * connections it manages come from the shared fabrics config
+ * (libnvmf_config_read()), not from here. Just a single [Global] section:
  *
  *   [Global]
  *   nbft = true
@@ -38,18 +38,18 @@ struct discoverd_config {
 };
 
 /*
- * Load discoverd's own configuration. @conf_path is discoverd.conf's path
+ * Load discoverd's own configuration. @conf_path is the config file's path
  * (DISCOVERD_CONF_PATH if NULL). A missing file is not an error — every
- * knob keeps its default; a malformed line is logged and skipped.
- * Returns a newly allocated config (never NULL except on allocation
- * failure). Caller frees with config_free().
+ * knob keeps its default; a malformed line is logged and skipped. Returns
+ * a newly allocated config (never NULL except on allocation failure).
+ * Caller frees with config_free().
  */
 struct discoverd_config *config_load(const char *conf_path);
 
 void config_free(struct discoverd_config *cfg);
 
 /*
- * Default discoverd.conf location, using the build-provided SYSCONFDIR
- * prefix. The --config command line option overrides it.
+ * Default nvme-discoverd's config file location, using the build-provided
+ * SYSCONFDIR prefix. The --config command line option overrides it.
  */
-#define DISCOVERD_CONF_PATH SYSCONFDIR "/nvme/discoverd.conf"
+#define DISCOVERD_CONF_PATH SYSCONFDIR "/nvme/nvme-discoverd.conf"

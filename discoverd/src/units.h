@@ -21,8 +21,8 @@
  * it: a healthy disconnect can take 30-40 s on large configs (~200 namespaces,
  * 8 paths, 80 CPUs) and longer still beyond that, so too low a bound would kill
  * a disconnect that is still making progress and leave the controller
- * half-torn-down.  Generous default; this should become a discoverd.conf knob
- * so large deployments can raise it further.
+ * half-torn-down.  Generous default; this should become an nvme-discoverd
+ * config knob so large deployments can raise it further.
  */
 #define DISCONNECT_TIMEOUT_SEC 300
 
