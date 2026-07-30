@@ -91,7 +91,7 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 		perror("failed to write log entry");
 }
 
-__libnvme_public void libnvme_set_logging_level(
+__shr_public void libnvme_set_logging_level(
 		struct libnvme_global_ctx *ctx, int log_level, bool log_pid,
 		bool log_tstamp)
 {
@@ -100,7 +100,7 @@ __libnvme_public void libnvme_set_logging_level(
 	ctx->log.timestamp = log_tstamp;
 }
 
-__libnvme_public int libnvme_get_logging_level(struct libnvme_global_ctx *ctx,
+__shr_public int libnvme_get_logging_level(struct libnvme_global_ctx *ctx,
 		bool *log_pid, bool *log_tstamp)
 {
 	if (log_pid)
@@ -110,7 +110,7 @@ __libnvme_public int libnvme_get_logging_level(struct libnvme_global_ctx *ctx,
 	return ctx->log.level;
 }
 
-__libnvme_public void libnvme_set_logging_file(struct libnvme_global_ctx *ctx,
+__shr_public void libnvme_set_logging_file(struct libnvme_global_ctx *ctx,
 		FILE *fp)
 {
 	ctx->log.fd = fp ? fileno(fp) : STDERR_FILENO;

@@ -147,7 +147,7 @@ static int tid_sanitize_addr(struct libnvmf_tid *t)
 	return 0;
 }
 
-__libnvme_public int libnvmf_tid_from_fields(
+__shr_public int libnvmf_tid_from_fields(
 		const char *transport, const char *traddr,
 		const char *trsvcid, const char *subsysnqn,
 		const char *host_traddr, const char *host_iface,
@@ -200,7 +200,7 @@ __libnvme_public int libnvmf_tid_from_fields(
  * leaves that field unchanged).  There are no per-field setters -- addressing
  * is construction-only -- so this is the sole post-construction mutator.
  */
-__libnvme_public int libnvmf_tid_set_identity(struct libnvmf_tid *tid,
+__shr_public int libnvmf_tid_set_identity(struct libnvmf_tid *tid,
 					      const char *subsysnqn,
 					      const char *hostnqn,
 					      const char *hostid)
@@ -266,7 +266,7 @@ __libnvme_public int libnvmf_tid_set_identity(struct libnvmf_tid *tid,
 	return 0;
 }
 
-__libnvme_public struct libnvmf_tid *libnvmf_tid_dup(
+__shr_public struct libnvmf_tid *libnvmf_tid_dup(
 		const struct libnvmf_tid *tid)
 {
 	struct libnvmf_tid *t;
@@ -422,14 +422,14 @@ static int tid_parse(struct libnvme_global_ctx *ctx, const char *str,
 	return 0;
 }
 
-__libnvme_public int libnvmf_tid_parse(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_tid_parse(struct libnvme_global_ctx *ctx,
 					const char *str,
 					struct libnvmf_tid **out)
 {
 	return tid_parse(ctx, str, false, out);
 }
 
-__libnvme_public int libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx,
 					       const char *str,
 					       struct libnvmf_tid **out)
 {
@@ -448,7 +448,7 @@ __libnvme_public int libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx,
  * Return: true if @traddr is a numeric address, false otherwise (including a
  * NULL @traddr or an allocation failure while checking).
  */
-__libnvme_public bool libnvmf_traddr_is_numeric(const char *traddr)
+__shr_public bool libnvmf_traddr_is_numeric(const char *traddr)
 {
 	char *canon;
 	int rc;
@@ -462,7 +462,7 @@ __libnvme_public bool libnvmf_traddr_is_numeric(const char *traddr)
 	return rc == 0;
 }
 
-__libnvme_public bool libnvmf_tid_is_empty(const struct libnvmf_tid *tid)
+__shr_public bool libnvmf_tid_is_empty(const struct libnvmf_tid *tid)
 {
 	if (!tid)
 		return true;
@@ -479,7 +479,7 @@ __libnvme_public bool libnvmf_tid_is_empty(const struct libnvmf_tid *tid)
  */
 #define CANONICAL_MAX 1024
 
-__libnvme_public const char *libnvmf_tid_get_canonical(
+__shr_public const char *libnvmf_tid_get_canonical(
 		const struct libnvmf_tid *tid)
 {
 	struct libnvmf_tid *p = (struct libnvmf_tid *)tid;
@@ -523,7 +523,7 @@ __libnvme_public const char *libnvmf_tid_get_canonical(
  * distinguishing field and would only add noise.  Cached like the other
  * derived values.
  */
-__libnvme_public const char *libnvmf_tid_str(const struct libnvmf_tid *tid)
+__shr_public const char *libnvmf_tid_str(const struct libnvmf_tid *tid)
 {
 	struct libnvmf_tid *p = (struct libnvmf_tid *)tid;
 	char buf[CANONICAL_MAX];

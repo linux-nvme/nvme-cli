@@ -30,7 +30,7 @@ static bool __is_controller_path(const char *device_path)
 	return strncasecmp(device_path, "\\\\?\\pci", 7) == 0;
 }
 
-static __libnvme_unused int __libnvme_transport_handle_open_direct(
+static __shr_unused int __libnvme_transport_handle_open_direct(
 	struct libnvme_transport_handle *hdl, const char *name)
 {
 	__cleanup_free char *device_path = NULL;
@@ -94,7 +94,7 @@ static __libnvme_unused int __libnvme_transport_handle_open_direct(
 	return 0;
 }
 
-__libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx,
+__shr_public int libnvme_open(struct libnvme_global_ctx *ctx,
 				  const char *name,
 				  struct libnvme_transport_handle **hdlp)
 {
@@ -185,7 +185,7 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public void libnvme_close(struct libnvme_transport_handle *hdl)
+__shr_public void libnvme_close(struct libnvme_transport_handle *hdl)
 {
 	bool is_test_fd;
 

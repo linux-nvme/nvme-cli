@@ -128,7 +128,7 @@ struct libnvmf_params {
 	struct list_head list;
 };
 
-__libnvme_public struct libnvmf_params *libnvmf_params_new(void)
+__shr_public struct libnvmf_params *libnvmf_params_new(void)
 {
 	struct libnvmf_params *p = calloc(1, sizeof(*p));
 
@@ -139,7 +139,7 @@ __libnvme_public struct libnvmf_params *libnvmf_params_new(void)
 	return p;
 }
 
-__libnvme_public void libnvmf_params_free(struct libnvmf_params *p)
+__shr_public void libnvmf_params_free(struct libnvmf_params *p)
 {
 	struct kv *e, *next;
 
@@ -183,7 +183,7 @@ static int kv_append(struct libnvmf_params *p, const char *key, char *value)
 	return 0;
 }
 
-__libnvme_public int libnvmf_params_set(struct libnvmf_params *p,
+__shr_public int libnvmf_params_set(struct libnvmf_params *p,
 		const char *key, const char *value)
 {
 	const struct libnvmf_key *k;
@@ -225,7 +225,7 @@ __libnvme_public int libnvmf_params_set(struct libnvmf_params *p,
 	return 0;
 }
 
-__libnvme_public const char *libnvmf_params_get(const struct libnvmf_params *p,
+__shr_public const char *libnvmf_params_get(const struct libnvmf_params *p,
 		const char *key)
 {
 	struct kv *e;
@@ -272,7 +272,7 @@ struct libnvmf_params *libnvmf_params_dup(const struct libnvmf_params *p)
 	return copy;
 }
 
-__libnvme_public void libnvmf_params_for_each(const struct libnvmf_params *p,
+__shr_public void libnvmf_params_for_each(const struct libnvmf_params *p,
 		void (*callback)(const char *key, const char *value,
 				 void *user_data),
 		void *user_data)

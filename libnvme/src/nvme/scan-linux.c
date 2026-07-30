@@ -78,7 +78,7 @@ static int filter_subsys(const struct dirent *d)
 	return 0;
 }
 
-__libnvme_public int libnvme_scan_subsystems(struct libnvme_global_ctx *ctx,
+__shr_public int libnvme_scan_subsystems(struct libnvme_global_ctx *ctx,
 		struct dirent ***subsys)
 {
 	const char *dir = libnvme_subsys_sysfs_dir(ctx);
@@ -91,7 +91,7 @@ __libnvme_public int libnvme_scan_subsystems(struct libnvme_global_ctx *ctx,
 	return ret;
 }
 
-__libnvme_public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
+__shr_public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
 		struct dirent ***ns)
 {
 	int ret;
@@ -104,7 +104,7 @@ __libnvme_public int libnvme_scan_subsystem_namespaces(libnvme_subsystem_t s,
 	return ret;
 }
 
-__libnvme_public int libnvme_scan_ctrls(struct libnvme_global_ctx *ctx,
+__shr_public int libnvme_scan_ctrls(struct libnvme_global_ctx *ctx,
 		struct dirent ***ctrls)
 {
 	const char *dir = libnvme_ctrl_sysfs_dir(ctx);
@@ -117,7 +117,7 @@ __libnvme_public int libnvme_scan_ctrls(struct libnvme_global_ctx *ctx,
 	return ret;
 }
 
-__libnvme_public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
+__shr_public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
 		struct dirent ***paths)
 {
 	int ret;
@@ -130,7 +130,7 @@ __libnvme_public int libnvme_scan_ctrl_namespace_paths(libnvme_ctrl_t c,
 	return ret;
 }
 
-__libnvme_public int libnvme_scan_ctrl_namespaces(
+__shr_public int libnvme_scan_ctrl_namespaces(
 		libnvme_ctrl_t c, struct dirent ***ns)
 {
 	int ret;
@@ -143,7 +143,7 @@ __libnvme_public int libnvme_scan_ctrl_namespaces(
 	return ret;
 }
 
-__libnvme_public int libnvme_scan_ns_head_paths(libnvme_ns_head_t head,
+__shr_public int libnvme_scan_ns_head_paths(libnvme_ns_head_t head,
 		struct dirent ***paths)
 {
 	int ret;
