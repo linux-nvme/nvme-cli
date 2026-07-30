@@ -251,11 +251,13 @@ class ConfigConvertCLITest(TestNVMeBase):
         content = self._read_output()
         self.assertIn('nqn = nqn.2024-01.com.example:data.vol5', content)
 
-    def test_source_file_renamed_to_converted_on_success(self):
+    def test_source_file_preserved_and_marked_converted_on_success(self):
         self._write_json({'hosts': []})
         self._convert()
-        self.assertFalse(os.path.exists(self.config_json))
-        self.assertTrue(os.path.exists(self.config_json + '.converted'))
+        self.assertTrue(os.path.exists(self.config_json))
+        converted_marker = self.config_json + '.converted'
+        self.assertTrue(os.path.islink(converted_marker))
+        self.assertTrue(os.path.samefile(converted_marker, self.config_json))
 
     def test_rerun_after_conversion_is_idempotent(self):
         # A second run with the same --config, after config.json was
