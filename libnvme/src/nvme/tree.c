@@ -193,21 +193,6 @@ __shr_public struct libnvme_global_ctx *libnvme_host_get_global_ctx(
 	return h->ctx;
 }
 
-__shr_public void libnvme_host_set_pdc_enabled(
-		libnvme_host_t h, bool enabled)
-{
-	h->pdc_enabled_valid = true;
-	h->pdc_enabled = enabled;
-}
-
-__shr_public bool libnvme_host_is_pdc_enabled(
-		libnvme_host_t h, bool fallback)
-{
-	if (h->pdc_enabled_valid)
-		return h->pdc_enabled;
-	return fallback;
-}
-
 __shr_public libnvme_subsystem_t libnvme_first_subsystem(libnvme_host_t h)
 {
 	return list_top(&h->subsystems, struct libnvme_subsystem, entry);

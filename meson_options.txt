@@ -108,12 +108,6 @@ option(
   description : 'build tests'
 )
 option(
-  'pdc-enabled',
-  type: 'boolean',
-  value : false,
-  description : 'set default Persistent Discovery Controllers behavior'
-)
-option(
   'rundir',
   type : 'string',
   value : '/run',

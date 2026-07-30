@@ -2717,14 +2717,6 @@ __shr_public const char *libnvmf_get_default_trsvcid(const char *transport,
 	return NULL;
 }
 
-static bool is_persistent_discovery_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
-{
-	if (libnvme_host_is_pdc_enabled(h, DEFAULT_PDC_ENABLED))
-		return libnvme_ctrl_get_unique_discovery_ctrl(c);
-
-	return false;
-}
-
 static int libnvme_add_ctrl(struct libnvmf_context *fctx,
 		struct libnvme_host *h, struct libnvme_ctrl *c)
 {
@@ -3496,7 +3488,7 @@ __shr_public int libnvmf_discovery(
 	}
 
 	ret = _nvmf_discovery(ctx, fctx, connect, c);
-	if (!(fctx->persistent || is_persistent_discovery_ctrl(h, c)))
+	if (!fctx->persistent)
 		libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);
 
