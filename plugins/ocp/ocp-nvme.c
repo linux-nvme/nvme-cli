@@ -1285,14 +1285,14 @@ exit_status:
 static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 		int print_data, int save_bin, const char *output_file,
 		struct telemetry_str_log_format **log_data_out,
-		__u8 **string_buffer_out, __le64 *total_log_page_sz)
+		__u8 **string_buffer_out, size_t *total_log_page_sz)
 {
 	int ret = 0;
-	__le64 stat_id_str_table_ofst = 0;
-	__le64 event_str_table_ofst = 0;
-	__le64 vu_event_str_table_ofst = 0;
-	__le64 ascii_table_ofst = 0;
-	__le64 log_page_sz = 0;
+	__u64 stat_id_str_table_ofst = 0;
+	__u64 event_str_table_ofst = 0;
+	__u64 vu_event_str_table_ofst = 0;
+	__u64 ascii_table_ofst = 0;
+	size_t log_page_sz = 0;
 	__cleanup_libnvme_free struct telemetry_str_log_format *log_data = NULL;
 	__cleanup_libnvme_free __u8 *string_buffer = NULL;
 
@@ -1322,23 +1322,23 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 
 	/* Calculating the offset for dynamic fields. */
 
-	stat_id_str_table_ofst = log_data->sits * 4;
-	event_str_table_ofst = log_data->ests * 4;
-	vu_event_str_table_ofst = log_data->vu_eve_sts * 4;
-	ascii_table_ofst = log_data->ascts * 4;
+	stat_id_str_table_ofst = le64_to_cpu(log_data->sits) * 4;
+	event_str_table_ofst = le64_to_cpu(log_data->ests) * 4;
+	vu_event_str_table_ofst = le64_to_cpu(log_data->vu_eve_sts) * 4;
+	ascii_table_ofst = le64_to_cpu(log_data->ascts) * 4;
 	log_page_sz = C9_TELEMETRY_STR_LOG_LEN +
-	    (log_data->sitsz * 4) + (log_data->estsz * 4) +
-	    (log_data->vu_eve_st_sz * 4) + (log_data->asctsz * 4);
+	    (le64_to_cpu(log_data->sitsz) * 4) + (le64_to_cpu(log_data->estsz) * 4) +
+	    (le64_to_cpu(log_data->vu_eve_st_sz) * 4) + (le64_to_cpu(log_data->asctsz) * 4);
 
 	if (print_data) {
 		printf("stat_id_str_table_ofst = %"PRIu64"\n",
-		       le64_to_cpu(stat_id_str_table_ofst));
+		       (uint64_t)stat_id_str_table_ofst);
 		printf("event_str_table_ofst = %"PRIu64"\n",
-		       le64_to_cpu(event_str_table_ofst));
+		       (uint64_t)event_str_table_ofst);
 		printf("vu_event_str_table_ofst = %"PRIu64"\n",
-		       le64_to_cpu(vu_event_str_table_ofst));
-		printf("ascii_table_ofst = %"PRIu64"\n", le64_to_cpu(ascii_table_ofst));
-		printf("total_log_page_sz = %"PRIu64"\n", le64_to_cpu(log_page_sz));
+		       (uint64_t)vu_event_str_table_ofst);
+		printf("ascii_table_ofst = %"PRIu64"\n", (uint64_t)ascii_table_ofst);
+		printf("total_log_page_sz = %zu\n", log_page_sz);
 	}
 
 	string_buffer = (__u8 *)libnvme_alloc(log_page_sz);
@@ -1359,8 +1359,8 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 			return fd;
 		}
 
-		ret = write(fd, (void *)string_buffer, log_page_sz);
-		if (ret != log_page_sz) {
+		ret = shr_write_all(fd, string_buffer, log_page_sz);
+		if (ret) {
 			nvme_show_error("Failed to flush all data to file! ret: %d", ret);
 			return ret;
 		}
@@ -2439,7 +2439,7 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 	nvme_print_flags_t fmt;
 	__cleanup_libnvme_free struct telemetry_str_log_format *log_data = NULL;
 	__cleanup_libnvme_free __u8 *string_buffer = NULL;
-	__le64 log_page_sz = 0;
+	size_t log_page_sz = 0;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
