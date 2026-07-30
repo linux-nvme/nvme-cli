@@ -69,19 +69,22 @@ unsigned char *read_binary_file(char *data_dir_path, const char *bin_path,
 {
 	__cleanup_free char *file_path = NULL;
 	__cleanup_file FILE *bin_file = NULL;
-	size_t n_data = 0;
 	unsigned char *buffer = NULL;
+	size_t n_data = 0;
 
 	/* set path */
-	if (data_dir_path == NULL) {
-		file_path = strdup(bin_path);
+	if (data_dir_path) {
+		if (strlen(bin_path) != 0) {
+			if (asprintf(&file_path, "%s/%s",
+					data_dir_path, bin_path) < 0)
+				return NULL;
+		} else {
+			file_path = strdup(data_dir_path);
+		}
 	} else {
-		if (strlen(bin_path) != 0)
-			asprintf(&file_path, "%s/%s", data_dir_path, bin_path);
-		else
-			asprintf(&file_path, "%s", data_dir_path);
+		file_path = strdup(bin_path);
 	}
-		
+
 	if (!file_path)
 		return NULL;
 
