@@ -7,6 +7,7 @@
  */
 #include "common.h"
 #include "config-convert.h"
+#include "config-create.h"
 #include "fabrics.h"
 #include "nvme.h"
 
@@ -35,4 +36,12 @@ static int config_convert_cmd(int argc, char **argv, struct command *cmd,
 	const char *desc = "Convert config.json/discovery.conf to INI";
 
 	return nvme_config_convert(desc, argc, argv);
+}
+
+static int config_create_cmd(int argc, char **argv, struct command *cmd,
+		struct plugin *plugin)
+{
+	const char *desc = "Create an NVMeoF connection entry in the INI configuration";
+
+	return nvme_config_create(desc, argc, argv);
 }

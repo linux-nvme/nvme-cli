@@ -608,6 +608,7 @@ if want_nvme
         sources += [
             'fabrics.c',
             'config-convert.c',
+            'config-create.c',
         ]
     endif
 

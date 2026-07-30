@@ -68,78 +68,79 @@
 static char *raw;
 static bool persistent;
 
-static const char *nvmf_tport		= "transport type";
-static const char *nvmf_traddr		= "transport address";
-static const char *nvmf_nqn		= "subsystem nqn";
-static const char *nvmf_trsvcid		= "transport service id (e.g. IP port)";
-static const char *nvmf_htraddr		= "host traddr (e.g. FC WWN's)";
-static const char *nvmf_hiface		= "host interface (for tcp transport)";
-static const char *nvmf_hostnqn		= "user-defined hostnqn";
-static const char *nvmf_hostid		= "user-defined hostid (if default not used)";
-static const char *nvmf_hostkey		= "user-defined kxchap key (if default not used)";
-static const char *nvmf_ctrlkey		= "user-defined kxchap controller key (for bi-directional authentication)";
-static const char *nvmf_nr_io_queues	= "number of io queues to use (default is core count)";
-static const char *nvmf_nr_write_queues	= "number of write queues to use (default 0)";
-static const char *nvmf_nr_poll_queues	= "number of poll queues to use (default 0)";
-static const char *nvmf_queue_size	= "number of io queue elements to use (default 128)";
-static const char *nvmf_keep_alive_tmo	= "keep alive timeout period in seconds";
-static const char *nvmf_reconnect_delay	= "reconnect timeout period in seconds";
-static const char *nvmf_ctrl_loss_tmo	= "controller loss timeout period in seconds";
-static const char *nvmf_fast_io_fail_tmo = "fast I/O fail timeout (default off)";
-static const char *nvmf_tos		= "type of service";
-static const char *nvmf_keyring		= "Keyring for TLS key lookup (key id or keyring name)";
-static const char *nvmf_tls_key		= "TLS key to use (key id or key in interchange format)";
-static const char *nvmf_tls_key_legacy	= "TLS key to use (key id)";
-static const char *nvmf_tls_key_identity = "TLS key identity";
-static const char *nvmf_dup_connect	= "allow duplicate connections between same transport host and subsystem port";
-static const char *nvmf_disable_sqflow	= "disable controller sq flow control (default false)";
-static const char *nvmf_hdr_digest	= "enable transport protocol header digest (TCP transport)";
-static const char *nvmf_data_digest	= "enable transport protocol data digest (TCP transport)";
-static const char *nvmf_tls		= "enable TLS";
-static const char *nvmf_concat		= "enable secure concatenation";
 static const char *nvmf_config_file	= "Use specified INI configuration file (auto-converts a legacy .json) or 'none' to disable";
 static const char *nvmf_config_file_ro	= "INI configuration file (default: " PATH_NVMF_INI ")";
 
-#define NVMF_ARGS(n, f, ...)                                                                  \
-	NVME_ARGS(n,                                                                              \
-		OPT_STRING("transport",       't', "STR", &f.transport,     nvmf_tport),         \
-		OPT_STRING("nqn",             'n', "STR", &f.subsysnqn,     nvmf_nqn),           \
-		OPT_STRING("traddr",          'a', "STR", &f.traddr,        nvmf_traddr),        \
-		OPT_STRING("trsvcid",         's', "STR", &f.trsvcid,       nvmf_trsvcid),       \
-		OPT_STRING("host-traddr",     'w', "STR", &f.host_traddr,   nvmf_htraddr),       \
-		OPT_STRING("host-iface",      'f', "STR", &f.host_iface,    nvmf_hiface),        \
-		OPT_STRING("hostnqn",         'q', "STR", &f.hostnqn,       nvmf_hostnqn),       \
-		OPT_STRING("hostid",          'I', "STR", &f.hostid,        nvmf_hostid),        \
-		OPT_STRING("kxchap-secret",   'S', "STR", &f.hostkey,       nvmf_hostkey),       \
-		OPT_STRING("kxchap-ctrl-secret", 'C', "STR", &f.ctrlkey,    nvmf_ctrlkey),       \
-		OPT_STRING("dhchap-secret",   'S', "STR", &f.hostkey,       nvmf_hostkey, NULL, true), \
-		OPT_STRING("dhchap-ctrl-secret", 'C', "STR", &f.ctrlkey,    nvmf_ctrlkey, NULL, true), \
-		OPT_STRING("keyring",          0,  "STR", &f.keyring,       nvmf_keyring),       \
-		OPT_STRING("tls-key",          0,  "STR", &f.tls_key,       nvmf_tls_key),       \
-		OPT_STRING("tls-key-identity", 0,  "STR", &f.tls_key_identity, nvmf_tls_key_identity), \
-		OPT_INT("nr-io-queues",       'i', &f.nr_io_queues,       nvmf_nr_io_queues),    \
-		OPT_INT("nr-write-queues",    'W', &f.nr_write_queues,    nvmf_nr_write_queues), \
-		OPT_INT("nr-poll-queues",     'P', &f.nr_poll_queues,     nvmf_nr_poll_queues),  \
-		OPT_INT("queue-size",         'Q', &f.queue_size,         nvmf_queue_size),      \
-		OPT_INT("keep-alive-tmo",     'k', &f.keep_alive_tmo,     nvmf_keep_alive_tmo),  \
-		OPT_INT("reconnect-delay",    'c', &f.reconnect_delay,    nvmf_reconnect_delay), \
-		OPT_INT("ctrl-loss-tmo",      'l', &f.ctrl_loss_tmo,      nvmf_ctrl_loss_tmo),   \
-		OPT_INT("fast_io_fail_tmo",   'F', &f.fast_io_fail_tmo,   nvmf_fast_io_fail_tmo),\
-		OPT_INT("tos",                'T', &f.tos,                nvmf_tos),             \
-		OPT_INT("tls_key",              0, &f.tls_key_id,         nvmf_tls_key_legacy),  \
-		OPT_FLAG("duplicate-connect", 'D', &f.duplicate_connect,  nvmf_dup_connect),     \
-		OPT_FLAG("disable-sqflow",      0, &f.disable_sqflow,     nvmf_disable_sqflow),  \
-		OPT_FLAG("hdr-digest",        'g', &f.hdr_digest,         nvmf_hdr_digest),      \
-		OPT_FLAG("data-digest",       'G', &f.data_digest,        nvmf_data_digest),     \
-		OPT_FLAG("tls",                 0, &f.tls,                nvmf_tls),             \
-		OPT_FLAG("concat",              0, &f.concat,             nvmf_concat),          \
-		##__VA_ARGS__                                                                    \
-	)
-
-static void nvmf_default_args(struct nvmf_args *fa)
+void nvmf_default_args(struct nvmf_args *fa)
 {
 	fa->tos = -1;
 	fa->ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
+}
+
+void nvmf_args_to_params(struct libnvmf_params *params,
+		const struct nvmf_args *fa)
+{
+	char buf[32];
+
+	if (fa->nr_io_queues) {
+		snprintf(buf, sizeof(buf), "%d", fa->nr_io_queues);
+		libnvmf_params_set(params, "nr-io-queues", buf);
+	}
+	if (fa->nr_write_queues) {
+		snprintf(buf, sizeof(buf), "%d", fa->nr_write_queues);
+		libnvmf_params_set(params, "nr-write-queues", buf);
+	}
+	if (fa->nr_poll_queues) {
+		snprintf(buf, sizeof(buf), "%d", fa->nr_poll_queues);
+		libnvmf_params_set(params, "nr-poll-queues", buf);
+	}
+	if (fa->queue_size) {
+		snprintf(buf, sizeof(buf), "%d", fa->queue_size);
+		libnvmf_params_set(params, "queue-size", buf);
+	}
+	if (fa->keep_alive_tmo) {
+		snprintf(buf, sizeof(buf), "%d", fa->keep_alive_tmo);
+		libnvmf_params_set(params, "keep-alive-tmo", buf);
+	}
+	if (fa->reconnect_delay) {
+		snprintf(buf, sizeof(buf), "%d", fa->reconnect_delay);
+		libnvmf_params_set(params, "reconnect-delay", buf);
+	}
+	if (fa->ctrl_loss_tmo != NVMF_DEF_CTRL_LOSS_TMO) {
+		snprintf(buf, sizeof(buf), "%d", fa->ctrl_loss_tmo);
+		libnvmf_params_set(params, "ctrl-loss-tmo", buf);
+	}
+	if (fa->fast_io_fail_tmo) {
+		snprintf(buf, sizeof(buf), "%d", fa->fast_io_fail_tmo);
+		libnvmf_params_set(params, "fast-io-fail-tmo", buf);
+	}
+	if (fa->tos != -1) {
+		snprintf(buf, sizeof(buf), "%d", fa->tos);
+		libnvmf_params_set(params, "tos", buf);
+	}
+	if (fa->duplicate_connect)
+		libnvmf_params_set(params, "duplicate-connect", "true");
+	if (fa->disable_sqflow)
+		libnvmf_params_set(params, "disable-sqflow", "true");
+	if (fa->hdr_digest)
+		libnvmf_params_set(params, "hdr-digest", "true");
+	if (fa->data_digest)
+		libnvmf_params_set(params, "data-digest", "true");
+	if (fa->tls)
+		libnvmf_params_set(params, "tls", "true");
+	if (fa->concat)
+		libnvmf_params_set(params, "concat", "true");
+	if (fa->hostkey)
+		libnvmf_params_set(params, "dhchap-secret", fa->hostkey);
+	if (fa->ctrlkey)
+		libnvmf_params_set(params, "dhchap-ctrl-secret", fa->ctrlkey);
+	if (fa->keyring)
+		libnvmf_params_set(params, "keyring", fa->keyring);
+	if (fa->tls_key)
+		libnvmf_params_set(params, "tls-key", fa->tls_key);
+	if (fa->tls_key_identity)
+		libnvmf_params_set(params, "tls-key-identity",
+				   fa->tls_key_identity);
 }
 
 static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
@@ -1408,7 +1409,7 @@ int fabrics_disconnect_all(const char *desc, int argc, char **argv)
 	struct config cfg = { 0 };
 
 	NVME_ARGS(opts,
-		OPT_STRING("transport", 't', "STR", &cfg.transport, nvmf_tport),
+		OPT_STRING("transport", 't', "STR", &cfg.transport, DESC_NVMF_TPORT),
 		OPT_STRING("owner", 0, "NAME", &cfg.owner, owner_help),
 		OPT_FLAG("force", 0, &cfg.force, force_help));
 

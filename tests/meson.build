@@ -101,6 +101,18 @@ if want_fabrics and json_c_dep.found()
     endif
 endif
 
+# Standalone CLI end-to-end test for "nvme config-create". Needs no device;
+# uses an explicit --output under /tmp instead.
+if want_fabrics
+    _py3 = find_program('python3', required: false)
+    if _py3.found()
+        test('nvme-cli - config-create-cli',
+             _py3,
+             args: [files('nvme_config_create_test.py'), nvme_exe],
+             depends: nvme_exe)
+    endif
+endif
+
 if want_fabrics
     _py3 = find_program('python3', required: false)
     if _py3.found()
