@@ -20,6 +20,7 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_get_devid_file;
 		libnvmf_context_get_disable_sqflow;
 		libnvmf_context_get_duplicate_connect;
+		libnvmf_context_get_epcsd;
 		libnvmf_context_get_fast_io_fail_tmo;
 		libnvmf_context_get_hdr_digest;
 		libnvmf_context_get_hostid;
@@ -53,6 +54,7 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_set_data_digest;
 		libnvmf_context_set_disable_sqflow;
 		libnvmf_context_set_duplicate_connect;
+		libnvmf_context_set_epcsd;
 		libnvmf_context_set_fast_io_fail_tmo;
 		libnvmf_context_set_hdr_digest;
 		libnvmf_context_set_keep_alive_tmo;

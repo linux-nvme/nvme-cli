@@ -172,6 +172,14 @@ class ConfigCreateCLITest(TestNVMeBase):
         self.assertIn('[Discovery Controller]', content)
         self.assertIn('persistent = false', content)
 
+    def test_discovery_no_epcsd_flag_is_stored(self):
+        self._create('--transport', 'fc',
+                     '--traddr=nn-0x9:pn-0x9', '--discovery',
+                     '--no-epcsd')
+        content = self._read_output()
+        self.assertIn('[Discovery Controller]', content)
+        self.assertIn('epcsd = false', content)
+
     def test_no_persistent_updates_existing_true_entry(self):
         self._create('--transport', 'fc',
                      '--traddr=nn-0xa:pn-0xa', '--discovery',
@@ -234,10 +242,22 @@ class ConfigCreateCLITest(TestNVMeBase):
                      '--persistent', expect_fail=True)
         self.assertFalse(os.path.exists(self.output_ini))
 
+    def test_epcsd_without_discovery_errors(self):
+        self._create('--transport', 'tcp', '--traddr=192.168.1.42',
+                     '--nqn=nqn.2024-01.com.example:data.vol5',
+                     '--epcsd', expect_fail=True)
+        self.assertFalse(os.path.exists(self.output_ini))
+
     def test_no_persistent_without_discovery_errors(self):
         self._create('--transport', 'tcp', '--traddr=192.168.1.43',
                      '--nqn=nqn.2024-01.com.example:data.vol6',
                      '--no-persistent', expect_fail=True)
+        self.assertFalse(os.path.exists(self.output_ini))
+
+    def test_no_epcsd_without_discovery_errors(self):
+        self._create('--transport', 'tcp', '--traddr=192.168.1.44',
+                     '--nqn=nqn.2024-01.com.example:data.vol7',
+                     '--no-epcsd', expect_fail=True)
         self.assertFalse(os.path.exists(self.output_ini))
 
     def test_persistent_and_no_persistent_mutually_exclusive(self):
@@ -245,6 +265,13 @@ class ConfigCreateCLITest(TestNVMeBase):
                      '--discovery', '--persistent', '--no-persistent',
                      expect_fail=True)
         self.assertFalse(os.path.exists(self.output_ini))
+
+    def test_epcsd_and_no_epcsd_mutually_exclusive(self):
+        self._create('--transport', 'fc', '--traddr=nn-0xc:pn-0xc',
+                     '--discovery', '--epcsd', '--no-epcsd',
+                     expect_fail=True)
+        self.assertFalse(os.path.exists(self.output_ini))
+
 
 if __name__ == '__main__':
     # Remove the binary path from argv so unittest.main() doesn't see it.

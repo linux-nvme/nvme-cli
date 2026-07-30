@@ -315,7 +315,8 @@ int nvme_config_convert_json(struct libnvmf_config_emitter *emitter,
 #endif /* CONFIG_JSONC */
 
 int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
-		const struct nvmf_args *fa, enum libnvmf_tristate persistent)
+		const struct nvmf_args *fa, enum libnvmf_tristate persistent,
+		enum libnvmf_tristate epcsd)
 {
 	struct libnvmf_params *params;
 	int ret;
@@ -328,6 +329,9 @@ int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
 	if (persistent != LIBNVMF_TRISTATE_UNSET)
 		libnvmf_params_set(params, "persistent",
 			persistent == LIBNVMF_TRISTATE_TRUE ? "true" : "false");
+	if (epcsd != LIBNVMF_TRISTATE_UNSET)
+		libnvmf_params_set(params, "epcsd",
+			epcsd == LIBNVMF_TRISTATE_TRUE ? "true" : "false");
 
 	ret = libnvmf_config_emit_add(emitter, true, fa->transport, fa->traddr,
 			fa->trsvcid, fa->subsysnqn, fa->host_traddr,

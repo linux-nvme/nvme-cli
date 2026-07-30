@@ -179,6 +179,12 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 	const char *desc_no_persistent = "explicitly record that this "
 		"discovery controller is not persistent, overriding any "
 		"default that would otherwise apply; requires --discovery";
+	const char *desc_epcsd = "mark this discovery controller as "
+		"supporting Explicit Persistent Connection Support for "
+		"Discovery (EPCSD); requires --discovery";
+	const char *desc_no_epcsd = "explicitly record that this discovery "
+		"controller does not support EPCSD, overriding any default "
+		"that would otherwise apply; requires --discovery";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvmf_config_emitter *emitter = NULL;
@@ -189,6 +195,8 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 	bool discovery = false;
 	bool persistent = false;
 	bool no_persistent = false;
+	bool epcsd = false;
+	bool no_epcsd = false;
 	bool duplicate = false;
 	bool replaced = false;
 	const char *target;
@@ -198,6 +206,8 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 		OPT_FLAG("discovery", 0, &discovery, desc_discovery),
 		OPT_FLAG("persistent", 0, &persistent, desc_persistent),
 		OPT_FLAG("no-persistent", 0, &no_persistent, desc_no_persistent),
+		OPT_FLAG("epcsd", 0, &epcsd, desc_epcsd),
+		OPT_FLAG("no-epcsd", 0, &no_epcsd, desc_no_epcsd),
 		OPT_STRING("host-symname", 0, "STR", &hostsymname, desc_symname),
 		OPT_STRING("output", 0, "FILE", &output_file, desc_output));
 
@@ -212,8 +222,18 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 		return -EINVAL;
 	}
 
+	if (epcsd && no_epcsd) {
+		nvme_show_error("--epcsd and --no-epcsd are mutually exclusive");
+		return -EINVAL;
+	}
+
 	if ((persistent || no_persistent) && !discovery) {
 		nvme_show_error("--persistent/--no-persistent requires --discovery");
+		return -EINVAL;
+	}
+
+	if ((epcsd || no_epcsd) && !discovery) {
+		nvme_show_error("--epcsd/--no-epcsd requires --discovery");
 		return -EINVAL;
 	}
 
@@ -237,6 +257,10 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 		libnvmf_params_set(params, "persistent", "true");
 	else if (no_persistent)
 		libnvmf_params_set(params, "persistent", "false");
+	if (epcsd)
+		libnvmf_params_set(params, "epcsd", "true");
+	else if (no_epcsd)
+		libnvmf_params_set(params, "epcsd", "false");
 
 	err = reload_existing(emitter, ctx, target, discovery, &fa, params,
 			&duplicate, &replaced);

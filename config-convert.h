@@ -30,7 +30,8 @@ int nvme_config_convert_discovery(struct libnvmf_config_emitter *emitter,
  * entries are logged and skipped. Only -ENOMEM is treated as a fatal error.
  */
 int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
-		const struct nvmf_args *fa, enum libnvmf_tristate persistent);
+		const struct nvmf_args *fa, enum libnvmf_tristate persistent,
+		enum libnvmf_tristate epcsd);
 
 /*
  * Auto-convert on first use, called by connect-all/discover/connect

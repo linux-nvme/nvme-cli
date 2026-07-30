@@ -140,6 +140,7 @@ static bool test_key_table(void)
 		{ "ctrl-loss-tmo",	LIBNVMF_KEY_TUNABLE },
 		{ "hdr-digest",		LIBNVMF_KEY_TUNABLE },
 		{ "persistent",		LIBNVMF_KEY_DC_TUNABLE },
+		{ "epcsd",		LIBNVMF_KEY_DC_TUNABLE },
 		{ "tls-key",		LIBNVMF_KEY_SECURITY },
 		{ "dhchap-secret",	LIBNVMF_KEY_SECURITY },
 		{ "hostnqn",		LIBNVMF_KEY_IDENTITY },
@@ -284,6 +285,7 @@ static bool test_parse_model(struct libnvme_global_ctx *ctx)
 		"\n"
 		"[Discovery Controller]\n"
 		"persistent = true\n"
+		"epcsd = true\n"
 		"controller = transport=tcp;traddr=10.0.0.5;trsvcid=8009\n"
 		"\n"
 		"[Subsystem]\n"
@@ -347,6 +349,14 @@ static bool test_parse_model(struct libnvme_global_ctx *ctx)
 		pass = false;
 	} else {
 		printf(" - persistent recorded on the DC endpoint [PASS]\n");
+	}
+
+	if (!dc || !dc->params ||
+	    strcmp(libnvmf_params_get(dc->params, "epcsd"), "true")) {
+		printf(" - [Discovery Controller] epcsd [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - epcsd recorded on the DC endpoint [PASS]\n");
 	}
 
 	if (!ss || !ss->params ||
@@ -462,6 +472,13 @@ static bool test_parse_errors(struct libnvme_global_ctx *ctx)
 		{ "persistent as a [Subsystem] per-path override",
 		  "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:test\n"
 		  "controller = transport=tcp;traddr=1.2.3.4;persistent=true\n" },
+		{ "epcsd in [I/O Controller Defaults]",
+		  "[I/O Controller Defaults]\nepcsd = true\n" },
+		{ "epcsd in [Subsystem]",
+		  "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:test\nepcsd = true\n" },
+		{ "epcsd as a [Subsystem] per-path override",
+		  "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:test\n"
+		  "controller = transport=tcp;traddr=1.2.3.4;epcsd=true\n" },
 	};
 	bool pass = true;
 	size_t i;
