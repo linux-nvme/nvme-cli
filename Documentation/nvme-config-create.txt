@@ -12,6 +12,8 @@ SYNOPSIS
 			[--discovery]
 			[--persistent ]
 			[--no-persistent ]
+			[--epcsd ]
+			[--no-epcsd ]
 			[--host-symname=<name>]
 			[--output=<file>]
 			[<fabrics-options>]
@@ -52,6 +54,16 @@ OPTIONS
 	persistent, overriding any default that would otherwise apply
 	(e.g. one derived from the discovery log page). Requires
 	--discovery. Mutually exclusive with --persistent.
+
+--epcsd::
+	Mark this discovery controller as supporting Explicit Persistent
+	Connection Support for Discovery (EPCSD). Requires --discovery.
+	Mutually exclusive with --no-epcsd.
+
+--no-epcsd::
+	Explicitly record that this discovery controller does not support
+	EPCSD, overriding any default that would otherwise apply. Requires
+	--discovery. Mutually exclusive with --epcsd.
 
 --host-symname=<name>::
 	Name this host persona. Puts it in its own configuration drop-in.

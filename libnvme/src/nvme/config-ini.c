@@ -47,6 +47,7 @@ static const struct libnvmf_key keys[] = {
 
 	/* discovery controller  */
 	{ "persistent",			LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_DC_TUNABLE },
+	{ "epcsd",			LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_DC_TUNABLE },
 
 	/* security -- bound to (hostnqn, subsysnqn); never per-path */
 	{ "tls",			LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_SECURITY },

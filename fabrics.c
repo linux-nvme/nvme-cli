@@ -489,14 +489,18 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 	char *argv[MAX_DISC_ARGS] = { "discovery.conf" };
 	char *ptr, *p = line;
 	int argc = 1;
-	bool persistent = false, force = false;
-	bool no_persistent = false;
+	bool persistent = false, force = false, epcsd = false;
+	bool no_persistent = false, no_epcsd = false;
 
 	NVMF_ARGS(opts, fa,
 		  OPT_FLAG("persistent", 'p', &persistent,
 			   "persistent discovery connection"),
 		  OPT_FLAG("no-persistent", 0, &no_persistent,
 			   "explicitly not a persistent discovery connection"),
+		  OPT_FLAG("epcsd",        0, &epcsd,
+			   "Explicit Persistent Connection Support for Discovery"),
+		  OPT_FLAG("no-epcsd",     0, &no_epcsd,
+			   "explicitly does not support Explicit Persistent Connection Support for Discovery"),
 		  OPT_FLAG("force",        0, &force,
 			   "Force persistent discovery controller creation"));
 
@@ -519,7 +523,9 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 
 	return nvme_config_convert_discovery_args(emitter, &fa,
 		persistent ? LIBNVMF_TRISTATE_TRUE :
-			no_persistent ? LIBNVMF_TRISTATE_FALSE : LIBNVMF_TRISTATE_UNSET);
+			no_persistent ? LIBNVMF_TRISTATE_FALSE : LIBNVMF_TRISTATE_UNSET,
+		epcsd ? LIBNVMF_TRISTATE_TRUE :
+			no_epcsd ? LIBNVMF_TRISTATE_FALSE : LIBNVMF_TRISTATE_UNSET);
 }
 
 static int setup_common_context(struct libnvmf_context *fctx,

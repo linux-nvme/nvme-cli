@@ -493,6 +493,7 @@ static bool test_apply_params(struct libnvme_global_ctx *ctx)
 	assert(!libnvmf_params_set(params, "tls", "true"));
 	assert(!libnvmf_params_set(params, "hdr-digest", "false"));
 	assert(!libnvmf_params_set(params, "persistent", "true"));
+	assert(!libnvmf_params_set(params, "epcsd", "true"));
 	/* Explicit resets: must be skipped, not applied as "0". */
 	assert(!libnvmf_params_set(params, "tos", ""));
 	assert(!libnvmf_params_set(params, "ctrl-loss-tmo", ""));
@@ -523,7 +524,8 @@ static bool test_apply_params(struct libnvme_global_ctx *ctx)
 
 	if (!libnvmf_context_get_tls(fctx) ||
 	    libnvmf_context_get_hdr_digest(fctx) ||
-	    !libnvmf_context_get_persistent(fctx)) {
+	    libnvmf_context_get_persistent(fctx) != LIBNVMF_TRISTATE_TRUE ||
+	    libnvmf_context_get_epcsd(fctx) != LIBNVMF_TRISTATE_TRUE) {
 		printf(" - bool fields [FAIL]\n");
 		pass = false;
 	} else {
@@ -561,6 +563,48 @@ out:
 		pass = false;
 	} else {
 		printf(" - NULL rejected [PASS]\n");
+	}
+
+	libnvmf_context_free(fctx);
+	libnvmf_params_free(params);
+	return pass;
+}
+
+/*
+ * persistent/epcsd must distinguish "not configured" (UNSET, the library
+ * default derived elsewhere, e.g. from the discovery log page) from an
+ * explicit "false" -- a plain bool cannot represent that third state.
+ */
+static bool test_persistent_epcsd_tristate(struct libnvme_global_ctx *ctx)
+{
+	struct libnvmf_context *fctx;
+	struct libnvmf_params *params;
+	bool pass = true;
+
+	printf("test_persistent_epcsd_tristate:\n");
+
+	assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
+
+	if (libnvmf_context_get_persistent(fctx) != LIBNVMF_TRISTATE_UNSET ||
+	    libnvmf_context_get_epcsd(fctx) != LIBNVMF_TRISTATE_UNSET) {
+		printf(" - fresh context defaults to unset [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - fresh context defaults to unset [PASS]\n");
+	}
+
+	params = libnvmf_params_new();
+	assert(params);
+	assert(!libnvmf_params_set(params, "persistent", "false"));
+	assert(!libnvmf_params_set(params, "epcsd", "false"));
+	assert(!libnvmf_context_apply_params(fctx, params));
+
+	if (libnvmf_context_get_persistent(fctx) != LIBNVMF_TRISTATE_FALSE ||
+	    libnvmf_context_get_epcsd(fctx) != LIBNVMF_TRISTATE_FALSE) {
+		printf(" - explicit \"false\" recorded distinctly from unset [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - explicit \"false\" recorded distinctly from unset [PASS]\n");
 	}
 
 	libnvmf_context_free(fctx);
@@ -790,6 +834,7 @@ int main(void)
 	pass &= test_emit(ctx, &fx);
 	pass &= test_hostnqn_precedence(ctx, &fx);
 	pass &= test_apply_params(ctx);
+	pass &= test_persistent_epcsd_tristate(ctx);
 	pass &= test_set_connection_from_tid(ctx);
 	pass &= test_edge_cases(ctx, &fx);
 
