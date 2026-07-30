@@ -1,5 +1,5 @@
 # nvme-discoverd configuration
-# @SYSCONFDIR@/nvme/discoverd.conf
+# @SYSCONFDIR@/nvme/nvme-discoverd.conf
 #
 # The daemon's own knobs. The connections it manages come from the shared
 # NVMe-oF fabrics configuration (nvme-fabrics.conf(5)), not from here.

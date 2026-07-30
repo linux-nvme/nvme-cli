@@ -24,7 +24,7 @@ enum disc_log_level {
 
 #define DISC_DEFAULT_LOGLEVEL DISC_LOG_INFO
 
-/* Set the current threshold (e.g. from discoverd.conf's debug-level knob). */
+/* Set the current threshold (e.g. from nvme-discoverd's config debug-level). */
 void log_set_level(int level);
 
 /*

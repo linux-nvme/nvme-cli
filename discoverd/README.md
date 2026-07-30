@@ -28,7 +28,7 @@ The host's alternative today is a udev-rule-triggered swarm of systemd units (`7
 | `events.c` | udev monitoring: device add/remove/change, sysfs TID parsing |
 | `dlp.c` | Discovery Log Page fetch and parsing |
 | `fc.c` | FC kickstart |
-| `config.c` | The daemon's own three knobs (`discoverd.conf`) — not the connections it manages, see below |
+| `config.c` | The daemon's own three knobs (`nvme-discoverd.conf`) — not the connections it manages, see below |
 | `state.c` | Runtime state under `$RUNDIR/nvme/discoverd/`, linking a kernel device to the unit that owns it |
 | `log.c` | Journal logging wrapper |
 
@@ -36,7 +36,7 @@ The host's alternative today is a udev-rule-triggered swarm of systemd units (`7
 
 nvme-discoverd reads two independent files:
 
-- **`discoverd.conf`** — the daemon's own knobs (`nbft`, `debug-level`, `fc-kickstart-interval-minutes`). Entirely optional; a missing file or key just keeps its default.
+- **`nvme-discoverd.conf`** — the daemon's own knobs (`nbft`, `debug-level`, `fc-kickstart-interval-minutes`). Entirely optional; a missing file or key just keeps its default.
 - **The shared NVMe-oF fabrics configuration** (`nvme-fabrics.conf(5)`) — which Discovery Controllers and subsystems to connect, host identity, per-connection parameters. This is the same file `nvme connect-all`, `nvme discover`, and `nvme-stas` read. nvme-discoverd has no private connection format of its own.
 
 Both are reloaded on `SIGHUP`. Nothing already connected is ever disconnected by a reload.

@@ -28,8 +28,8 @@ struct events_ctx;
  */
 struct discoverd_ctx {
 	struct libnvme_global_ctx *nvme_ctx;     // libnvme logging/scanning
-	const char                *conf_path;    // discoverd.conf path in use
-	struct discoverd_config   *cfg;          // parsed discoverd.conf
+	const char                *conf_path;    // nvme-discoverd's conf path
+	struct discoverd_config   *cfg;          // parsed @conf_path
 	struct libnvmf_config     *fabrics_cfg;  // resolved fabrics config
 	struct inventory          *inventory;    // NBFT + config + DLP cache
 	sd_event                  *event;        // sd_event main loop
