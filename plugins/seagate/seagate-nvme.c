@@ -1849,9 +1849,18 @@ out:
 /*SEAGATE-PLUGIN Version */
 static int seagate_plugin_version(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	printf("Seagate-Plugin version : %d.%d\n",
-		   SEAGATE_PLUGIN_VERSION_MAJOR,
-		   SEAGATE_PLUGIN_VERSION_MINOR);
+	const char *desc = "Prints the Seagate plugin version.";
+	int err;
+
+	NVME_ARGS(opts);
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	nvme_show_result("Seagate-Plugin version : %d.%d",
+			 SEAGATE_PLUGIN_VERSION_MAJOR,
+			 SEAGATE_PLUGIN_VERSION_MINOR);
 	return 0;
 }
 /*EOF SEAGATE-PLUGIN Version */
@@ -1859,9 +1868,18 @@ static int seagate_plugin_version(int argc, char **argv, struct command *acmd, s
 /*OCP SEAGATE-PLUGIN Version */
 static int stx_ocp_plugin_version(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	printf("Seagate-OCP-Plugin version : %d.%d\n",
-		SEAGATE_OCP_PLUGIN_VERSION_MAJOR,
-		SEAGATE_OCP_PLUGIN_VERSION_MINOR);
+	const char *desc = "Prints the Seagate OCP plugin version.";
+	int err;
+
+	NVME_ARGS(opts);
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	nvme_show_result("Seagate-OCP-Plugin version : %d.%d",
+			 SEAGATE_OCP_PLUGIN_VERSION_MAJOR,
+			 SEAGATE_OCP_PLUGIN_VERSION_MINOR);
 	return 0;
 }
 /*EOF OCP SEAGATE-PLUGIN Version */
