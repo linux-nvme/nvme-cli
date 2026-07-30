@@ -1,0 +1,83 @@
+nvme-config-create(1)
+======================
+
+NAME
+----
+nvme-config-create - Add an NVMe-oF connection entry to the INI configuration
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'config create'
+			[--discovery]
+			[--host-symname=<name>]
+			[--output=<file>]
+			[<fabrics-options>]
+
+DESCRIPTION
+-----------
+Build one NVMe-oF connection entry from command-line options and add it to
+the INI configuration used by 'nvme connect', 'nvme discover', and
+'nvme connect-all'. The format is documented at
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
+
+If the target file exists, its connections are kept and the new entry is
+merged in alongside them. Running the same command again is a no-op.
+Unlike 'nvme config convert', this is not a one-shot migration; it is the
+ongoing way to build an INI configuration from the command line.
+
+The entry is an I/O controller (subsystem) entry by default, and --nqn is
+required. Use --discovery for a discovery controller entry instead; --nqn
+is then optional.
+
+A connection with an explicit --hostnqn or --hostid is written to a
+drop-in under '<file>.d/'. One without either goes into the main file.
+
+OPTIONS
+-------
+--discovery::
+	Create a discovery controller entry instead of an I/O controller
+	entry. Without this, --nqn is required.
+
+--host-symname=<name>::
+	Name this host persona. Puts it in its own configuration drop-in.
+
+--output=<file>::
+	Write to this file instead of the default
+	@SYSCONFDIR@/nvme/nvme-fabrics.conf.
+
+include::fabrics-options.txt[]
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Add a discovery controller entry for an FC discovery controller:
++
+------------
+# nvme config create --transport fc \
+    --traddr=nn-0x58ccf090c92006da:pn-0x58ccf091492806da \
+    --host-traddr=nn-0x20000024ff7fa448:pn-0x21000024ff7fa448 \
+    --hostnqn=nqn.2014-08.org.nvmexpress:uuid:62a4ab74-1e18-11f1-8bb7-6c1ff71ba506 \
+    --discovery
+------------
+
+* Add an I/O controller entry to a test configuration file:
++
+------------
+# nvme config create --transport tcp --traddr=192.168.1.20 --trsvcid=4420 \
+    --nqn=nqn.2024-01.com.example:data.vol1 \
+    --output=/tmp/nvme-fabrics.conf
+------------
+
+SEE ALSO
+--------
+nvme-config-convert(1)
+nvme-config-validate(1)
+nvme-config-show(1)
+nvme-connect-all(1)
+nvme-discover(1)
+
+NVME
+----
+Part of the nvme-user suite

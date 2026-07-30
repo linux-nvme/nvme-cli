@@ -172,6 +172,9 @@ linknvme:nvme-disconnect-all[1]::
 linknvme:nvme-config-convert[1]::
 	Convert a legacy NVMe-oF configuration to the INI format
 
+linknvme:nvme-config-create[1]::
+	Create an NVMe-oF connection entry in the INI configuration
+
 linknvme:nvme-config-validate[1]::
 	Validate an NVMe-oF INI connection configuration file
 

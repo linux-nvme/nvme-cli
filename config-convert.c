@@ -302,72 +302,6 @@ int nvme_config_convert_json(struct libnvmf_config_emitter *emitter,
 
 #endif /* CONFIG_JSONC */
 
-static void add_tunable_params(struct libnvmf_params *params,
-		const struct nvmf_args *fa)
-{
-	char buf[32];
-
-	if (fa->nr_io_queues) {
-		snprintf(buf, sizeof(buf), "%d", fa->nr_io_queues);
-		libnvmf_params_set(params, "nr-io-queues", buf);
-	}
-	if (fa->nr_write_queues) {
-		snprintf(buf, sizeof(buf), "%d", fa->nr_write_queues);
-		libnvmf_params_set(params, "nr-write-queues", buf);
-	}
-	if (fa->nr_poll_queues) {
-		snprintf(buf, sizeof(buf), "%d", fa->nr_poll_queues);
-		libnvmf_params_set(params, "nr-poll-queues", buf);
-	}
-	if (fa->queue_size) {
-		snprintf(buf, sizeof(buf), "%d", fa->queue_size);
-		libnvmf_params_set(params, "queue-size", buf);
-	}
-	if (fa->keep_alive_tmo) {
-		snprintf(buf, sizeof(buf), "%d", fa->keep_alive_tmo);
-		libnvmf_params_set(params, "keep-alive-tmo", buf);
-	}
-	if (fa->reconnect_delay) {
-		snprintf(buf, sizeof(buf), "%d", fa->reconnect_delay);
-		libnvmf_params_set(params, "reconnect-delay", buf);
-	}
-	if (fa->ctrl_loss_tmo != NVMF_DEF_CTRL_LOSS_TMO) {
-		snprintf(buf, sizeof(buf), "%d", fa->ctrl_loss_tmo);
-		libnvmf_params_set(params, "ctrl-loss-tmo", buf);
-	}
-	if (fa->fast_io_fail_tmo) {
-		snprintf(buf, sizeof(buf), "%d", fa->fast_io_fail_tmo);
-		libnvmf_params_set(params, "fast-io-fail-tmo", buf);
-	}
-	if (fa->tos != -1) {
-		snprintf(buf, sizeof(buf), "%d", fa->tos);
-		libnvmf_params_set(params, "tos", buf);
-	}
-	if (fa->duplicate_connect)
-		libnvmf_params_set(params, "duplicate-connect", "true");
-	if (fa->disable_sqflow)
-		libnvmf_params_set(params, "disable-sqflow", "true");
-	if (fa->hdr_digest)
-		libnvmf_params_set(params, "hdr-digest", "true");
-	if (fa->data_digest)
-		libnvmf_params_set(params, "data-digest", "true");
-	if (fa->tls)
-		libnvmf_params_set(params, "tls", "true");
-	if (fa->concat)
-		libnvmf_params_set(params, "concat", "true");
-	if (fa->hostkey)
-		libnvmf_params_set(params, "dhchap-secret", fa->hostkey);
-	if (fa->ctrlkey)
-		libnvmf_params_set(params, "dhchap-ctrl-secret", fa->ctrlkey);
-	if (fa->keyring)
-		libnvmf_params_set(params, "keyring", fa->keyring);
-	if (fa->tls_key)
-		libnvmf_params_set(params, "tls-key", fa->tls_key);
-	if (fa->tls_key_identity)
-		libnvmf_params_set(params, "tls-key-identity",
-				   fa->tls_key_identity);
-}
-
 int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
 		const struct nvmf_args *fa)
 {
@@ -378,7 +312,7 @@ int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
 	if (!params)
 		return -ENOMEM;
 
-	add_tunable_params(params, fa);
+	nvmf_args_to_params(params, fa);
 
 	ret = libnvmf_config_emit_add(emitter, true, fa->transport, fa->traddr,
 			fa->trsvcid, fa->subsysnqn, fa->host_traddr,
