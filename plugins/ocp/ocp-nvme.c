@@ -588,13 +588,8 @@ static int eol_plp_failure_mode(int argc, char **argv, struct command *acmd,
 ///////////////////////////////////////////////////////////////////////////////
 /// Telemetry Log
 //global buffers
-static __le64 total_log_page_sz;
-static __u8 *header_data;
-static struct telemetry_str_log_format *log_data;
-
 __u8 *ptelemetry_buffer;
 __u8 *pstring_buffer;
-__u8 *pC9_string_buffer;
 
 static void get_serial_number(struct nvme_id_ctrl *ctrl, char *sn)
 {
@@ -1288,91 +1283,106 @@ exit_status:
 }
 
 static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
-		int print_data,
-		int save_bin,
-		const char *output_file)
+		int print_data, int save_bin, const char *output_file,
+		struct telemetry_str_log_format **log_data_out,
+		__u8 **string_buffer_out, __le64 *total_log_page_sz)
 {
 	int ret = 0;
 	__le64 stat_id_str_table_ofst = 0;
 	__le64 event_str_table_ofst = 0;
 	__le64 vu_event_str_table_ofst = 0;
 	__le64 ascii_table_ofst = 0;
+	__le64 log_page_sz = 0;
+	__cleanup_libnvme_free struct telemetry_str_log_format *log_data = NULL;
+	__cleanup_libnvme_free __u8 *string_buffer = NULL;
 
 	__cleanup_fd int fd = STDIN_FILENO;
 
-	header_data = (__u8 *)libnvme_alloc(C9_TELEMETRY_STR_LOG_LEN);
-	if (!header_data) {
+	log_data = (struct telemetry_str_log_format *)libnvme_alloc(C9_TELEMETRY_STR_LOG_LEN);
+	if (!log_data) {
 		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
 
-	ret = ocp_get_log_simple(hdl, OCP_LID_TELSLG, C9_TELEMETRY_STR_LOG_LEN, header_data);
-
-	if (!ret) {
-		log_data = (struct telemetry_str_log_format *)header_data;
-		if (print_data) {
-			printf("Statistics Identifier String Table Size = %"PRIu64"\n",
-			       le64_to_cpu(log_data->sitsz));
-			printf("Event String Table Size = %"PRIu64"\n",
-			       le64_to_cpu(log_data->estsz));
-			printf("VU Event String Table Size = %"PRIu64"\n",
-			       le64_to_cpu(log_data->vu_eve_st_sz));
-			printf("ASCII Table Size = %"PRIu64"\n", le64_to_cpu(log_data->asctsz));
-		}
-
-		/* Calculating the offset for dynamic fields. */
-
-		stat_id_str_table_ofst = log_data->sits * 4;
-		event_str_table_ofst = log_data->ests * 4;
-		vu_event_str_table_ofst = log_data->vu_eve_sts * 4;
-		ascii_table_ofst = log_data->ascts * 4;
-		total_log_page_sz = C9_TELEMETRY_STR_LOG_LEN +
-		    (log_data->sitsz * 4) + (log_data->estsz * 4) +
-		    (log_data->vu_eve_st_sz * 4) + (log_data->asctsz * 4);
-
-		if (print_data) {
-			printf("stat_id_str_table_ofst = %"PRIu64"\n",
-			       le64_to_cpu(stat_id_str_table_ofst));
-			printf("event_str_table_ofst = %"PRIu64"\n",
-			       le64_to_cpu(event_str_table_ofst));
-			printf("vu_event_str_table_ofst = %"PRIu64"\n",
-			       le64_to_cpu(vu_event_str_table_ofst));
-			printf("ascii_table_ofst = %"PRIu64"\n", le64_to_cpu(ascii_table_ofst));
-			printf("total_log_page_sz = %"PRIu64"\n", le64_to_cpu(total_log_page_sz));
-		}
-
-		pC9_string_buffer = (__u8 *)libnvme_alloc(total_log_page_sz);
-		if (!pC9_string_buffer) {
-			nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
-			return -1;
-		}
-
-		ret = ocp_get_log_simple(hdl, OCP_LID_TELSLG, total_log_page_sz, pC9_string_buffer);
-	} else {
+	ret = ocp_get_log_simple(hdl, OCP_LID_TELSLG, C9_TELEMETRY_STR_LOG_LEN, log_data);
+	if (ret) {
 		nvme_show_error("ERROR : OCP : Unable to read C9 data, ret: %d.", ret);
 		return ret;
 	}
+
+	if (print_data) {
+		printf("Statistics Identifier String Table Size = %"PRIu64"\n",
+		       le64_to_cpu(log_data->sitsz));
+		printf("Event String Table Size = %"PRIu64"\n",
+		       le64_to_cpu(log_data->estsz));
+		printf("VU Event String Table Size = %"PRIu64"\n",
+		       le64_to_cpu(log_data->vu_eve_st_sz));
+		printf("ASCII Table Size = %"PRIu64"\n", le64_to_cpu(log_data->asctsz));
+	}
+
+	/* Calculating the offset for dynamic fields. */
+
+	stat_id_str_table_ofst = log_data->sits * 4;
+	event_str_table_ofst = log_data->ests * 4;
+	vu_event_str_table_ofst = log_data->vu_eve_sts * 4;
+	ascii_table_ofst = log_data->ascts * 4;
+	log_page_sz = C9_TELEMETRY_STR_LOG_LEN +
+	    (log_data->sitsz * 4) + (log_data->estsz * 4) +
+	    (log_data->vu_eve_st_sz * 4) + (log_data->asctsz * 4);
+
+	if (print_data) {
+		printf("stat_id_str_table_ofst = %"PRIu64"\n",
+		       le64_to_cpu(stat_id_str_table_ofst));
+		printf("event_str_table_ofst = %"PRIu64"\n",
+		       le64_to_cpu(event_str_table_ofst));
+		printf("vu_event_str_table_ofst = %"PRIu64"\n",
+		       le64_to_cpu(vu_event_str_table_ofst));
+		printf("ascii_table_ofst = %"PRIu64"\n", le64_to_cpu(ascii_table_ofst));
+		printf("total_log_page_sz = %"PRIu64"\n", le64_to_cpu(log_page_sz));
+	}
+
+	string_buffer = (__u8 *)libnvme_alloc(log_page_sz);
+	if (!string_buffer) {
+		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
+		return -1;
+	}
+
+	ret = ocp_get_log_simple(hdl, OCP_LID_TELSLG, log_page_sz, string_buffer);
+	if (ret)
+		return ret;
 
 	if (save_bin) {
 		fd = nvme_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd < 0) {
 			nvme_show_error("Failed to open output file %s: %s!", output_file,
 				libnvme_strerror(errno));
-			ret = fd;
-			goto free;
+			return fd;
 		}
 
-		ret = write(fd, (void *)pC9_string_buffer, total_log_page_sz);
-		if (ret != total_log_page_sz)
+		ret = write(fd, (void *)string_buffer, log_page_sz);
+		if (ret != log_page_sz) {
 			nvme_show_error("Failed to flush all data to file! ret: %d", ret);
-		else
-			/* all data written, set ret = SUCCESS */
-			ret = 0;
+			return ret;
+		}
 	}
 
-free:
-	libnvme_free(pC9_string_buffer);
-	return ret;
+	/*
+	 * Hand off the buffers the caller asked for and NULL the locals so
+	 * the cleanup attributes don't free them. Anything the caller didn't
+	 * request is freed on return.
+	 */
+	if (log_data_out) {
+		*log_data_out = log_data;
+		log_data = NULL;
+	}
+	if (string_buffer_out) {
+		*string_buffer_out = string_buffer;
+		string_buffer = NULL;
+	}
+	if (total_log_page_sz)
+		*total_log_page_sz = log_page_sz;
+
+	return 0;
 }
 
 int parse_ocp_telemetry_log(struct ocp_telemetry_parse_options *options)
@@ -1566,9 +1576,10 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	if (!opt.string_log) {
 		nvme_show_result("Missing string-log. Fetching from drive...\n");
 
-		/* Pull String log  */
+		/* Pull String log */
 		sprintf(file_path_string, "%s-%s", opt.output_file, string_suffix);
-		err = get_c9_log_page_data(hdl, 0, 1, (const char *)file_path_string);
+		err = get_c9_log_page_data(hdl, 0, 1, (const char *)file_path_string,
+					   NULL, NULL, NULL);
 		if (err) {
 			nvme_show_error("Failed to fetch string-log from the drive.");
 			goto out;
@@ -2426,6 +2437,9 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 {
 	int ret = 0;
 	nvme_print_flags_t fmt;
+	__cleanup_libnvme_free struct telemetry_str_log_format *log_data = NULL;
+	__cleanup_libnvme_free __u8 *string_buffer = NULL;
+	__le64 log_page_sz = 0;
 
 	ret = validate_output_format(format, &fmt);
 	if (ret < 0) {
@@ -2433,14 +2447,14 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 		return ret;
 	}
 
-	ret = get_c9_log_page_data(hdl, 0, 1, output_file);
+	ret = get_c9_log_page_data(hdl, 0, 1, output_file,
+				   &log_data, &string_buffer, &log_page_sz);
 
 	if ((!ret) && (fmt != BINARY))
-		ocp_c9_log(log_data, pC9_string_buffer, total_log_page_sz, fmt);
+		ocp_c9_log(log_data, string_buffer, log_page_sz, fmt);
 	else if (ret)
 		nvme_show_error("ERROR : OCP : Unable to read C9 data from buffer");
 
-	libnvme_free(header_data);
 	return ret;
 }
 
