@@ -133,7 +133,7 @@ static void free_conns(struct list_head *conns)
 		free_conn(c);
 }
 
-__libnvme_public void libnvmf_config_free(struct libnvmf_config *conf)
+__shr_public void libnvmf_config_free(struct libnvmf_config *conf)
 {
 	if (!conf)
 		return;

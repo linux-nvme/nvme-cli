@@ -23,7 +23,7 @@
 #include "private-fabrics.h"
 #include "util.h"
 
-__libnvme_public struct nvmf_ext_attr *libnvmf_exat_ptr_next(
+__shr_public struct nvmf_ext_attr *libnvmf_exat_ptr_next(
 		struct nvmf_ext_attr *p)
 {
 	__u16 size = libnvmf_exat_size(le16_to_cpu(p->exatlen));

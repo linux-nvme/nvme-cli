@@ -15,11 +15,11 @@
 
 #include "private.h"
 
-int libnvme_open_uring(__libnvme_unused struct libnvme_transport_handle *hdl)
+int libnvme_open_uring(__shr_unused struct libnvme_transport_handle *hdl)
 {
 	return -ENOTSUP;
 }
-void libnvme_close_uring(__libnvme_unused struct libnvme_transport_handle *hdl)
+void libnvme_close_uring(__shr_unused struct libnvme_transport_handle *hdl)
 {
 }
 
@@ -30,10 +30,10 @@ int __libnvme_transport_handle_open_uring(struct libnvme_transport_handle *hdl)
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvme_submit_admin_passthru(
-		__libnvme_unused struct libnvme_transport_handle *hdl,
-		__libnvme_unused struct libnvme_passthru_cmd *cmd,
-		__libnvme_unused void *cookie)
+__shr_public int libnvme_submit_admin_passthru(
+		__shr_unused struct libnvme_transport_handle *hdl,
+		__shr_unused struct libnvme_passthru_cmd *cmd,
+		__shr_unused void *cookie)
 {
 	if (!hdl)
 		return -ENODEV;
@@ -44,10 +44,10 @@ __libnvme_public int libnvme_submit_admin_passthru(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvme_submit_io_passthru(
-		__libnvme_unused struct libnvme_transport_handle *hdl,
-		__libnvme_unused struct libnvme_passthru_cmd *cmd,
-		__libnvme_unused void *cookie)
+__shr_public int libnvme_submit_io_passthru(
+		__shr_unused struct libnvme_transport_handle *hdl,
+		__shr_unused struct libnvme_passthru_cmd *cmd,
+		__shr_unused void *cookie)
 {
 	if (!hdl)
 		return -ENODEV;
@@ -58,15 +58,15 @@ __libnvme_public int libnvme_submit_io_passthru(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvme_reap_passthru(
-		__libnvme_unused struct libnvme_transport_handle *hdl,
-		__libnvme_unused struct libnvme_passthru_completion *completion)
+__shr_public int libnvme_reap_passthru(
+		__shr_unused struct libnvme_transport_handle *hdl,
+		__shr_unused struct libnvme_passthru_completion *completion)
 {
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvme_wait_passthru(
-		__libnvme_unused struct libnvme_transport_handle *hdl)
+__shr_public int libnvme_wait_passthru(
+		__shr_unused struct libnvme_transport_handle *hdl)
 {
 	return -ENOTSUP;
 }

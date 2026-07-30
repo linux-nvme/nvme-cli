@@ -443,7 +443,7 @@ static ctrl_match_t _libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 	return _libnvmf_tree_ctrl_match;
 }
 
-__libnvme_public char *libnvme_ctrl_owner(libnvme_ctrl_t c)
+__shr_public char *libnvme_ctrl_owner(libnvme_ctrl_t c)
 {
 	char *owner = NULL;
 

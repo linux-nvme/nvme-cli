@@ -66,7 +66,7 @@ struct libnvmf_config_emitter {
 	struct list_head personas;	/* struct emit_persona, first-appearance order */
 };
 
-__libnvme_public struct libnvmf_config_emitter *libnvmf_config_emit_new(
+__shr_public struct libnvmf_config_emitter *libnvmf_config_emit_new(
 		struct libnvme_global_ctx *ctx)
 {
 	struct libnvmf_config_emitter *emitter;
@@ -83,7 +83,7 @@ __libnvme_public struct libnvmf_config_emitter *libnvmf_config_emit_new(
 	return emitter;
 }
 
-__libnvme_public void libnvmf_config_emit_free(
+__shr_public void libnvmf_config_emit_free(
 		struct libnvmf_config_emitter *emitter)
 {
 	struct emit_persona *p, *pnext;
@@ -178,7 +178,7 @@ static int check_persona_identity(struct libnvmf_config_emitter *emitter,
 	return 0;
 }
 
-__libnvme_public int libnvmf_config_emit_add(
+__shr_public int libnvmf_config_emit_add(
 		struct libnvmf_config_emitter *emitter, bool is_dc,
 		const char *transport, const char *traddr,
 		const char *trsvcid, const char *subsysnqn,
@@ -468,7 +468,7 @@ static void outfiles_free(struct outfile *out, size_t n, bool rollback)
 	free(out);
 }
 
-__libnvme_public int libnvmf_config_emit_install(
+__shr_public int libnvmf_config_emit_install(
 		struct libnvmf_config_emitter *emitter, const char *file,
 		bool force)
 {

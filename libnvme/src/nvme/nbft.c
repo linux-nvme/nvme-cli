@@ -881,7 +881,7 @@ static int parse_raw_nbft(struct libnvme_global_ctx *ctx, struct libnbft_info *n
 	return 0;
 }
 
-__libnvme_public void libnvmf_free_nbft(
+__shr_public void libnvmf_free_nbft(
 		struct libnvme_global_ctx *ctx, struct libnbft_info *nbft)
 {
 	struct libnbft_hfi **hfi;
@@ -908,7 +908,7 @@ __libnvme_public void libnvmf_free_nbft(
 	free(nbft);
 }
 
-__libnvme_public int libnvmf_read_nbft(
+__shr_public int libnvmf_read_nbft(
 		struct libnvme_global_ctx *ctx, struct libnbft_info **nbft,
 		const char *filename)
 {

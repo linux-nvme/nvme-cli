@@ -54,7 +54,7 @@ static unsigned char default_hmac(size_t key_len)
 	return LIBNVMF_HMAC_ALG_NONE;
 }
 
-__libnvme_public int libnvmf_gen_kxchap_key(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_gen_kxchap_key(struct libnvme_global_ctx *ctx,
 		char *hostnqn, enum libnvmf_hmac_alg hmac,
 		unsigned int key_len, unsigned char *secret,
 		unsigned char *key)
@@ -69,7 +69,7 @@ __libnvme_public int libnvmf_gen_kxchap_key(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 		const char *secret, size_t key_len, unsigned char **raw_secret)
 {
 	libnvme_msg(ctx, LIBNVME_LOG_ERR, "NVMe TLS 2.0 is not supported; "
@@ -507,7 +507,7 @@ static DEFINE_CLEANUP_FUNC(cleanup_evp_mac_ctx, EVP_MAC_CTX *, EVP_MAC_CTX_free)
 static DEFINE_CLEANUP_FUNC(cleanup_evp_mac, EVP_MAC *, EVP_MAC_free)
 #define __cleanup_evp_mac __cleanup(cleanup_evp_mac)
 
-__libnvme_public int libnvmf_gen_kxchap_key(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_gen_kxchap_key(struct libnvme_global_ctx *ctx,
 		char *hostnqn, enum libnvmf_hmac_alg hmac,
 		unsigned int key_len, unsigned char *secret,
 		unsigned char *key)
@@ -720,7 +720,7 @@ err:
 	return -EIO;
 }
 
-__libnvme_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 		const char *secret, size_t key_len, unsigned char **raw_secret)
 {
 	__cleanup_free unsigned char *buf = NULL;
@@ -878,7 +878,7 @@ static ssize_t nvme_identity_len(int hmac, int version, const char *hostnqn,
 	return len;
 }
 
-__libnvme_public int libnvmf_generate_tls_key_identity(
+__shr_public int libnvmf_generate_tls_key_identity(
 		struct libnvme_global_ctx *ctx, const char *hostnqn,
 		const char *subsysnqn, int version, int hmac,
 		unsigned char *configured_key, int key_len, char **ident)
@@ -915,7 +915,7 @@ __libnvme_public int libnvmf_generate_tls_key_identity(
 	return 0;
 }
 
-__libnvme_public int libnvmf_generate_tls_key_identity_compat(
+__shr_public int libnvmf_generate_tls_key_identity_compat(
 		struct libnvme_global_ctx *ctx, const char *hostnqn,
 		const char *subsysnqn, int version, int hmac,
 		unsigned char *configured_key, int key_len, char **ident)
@@ -953,7 +953,7 @@ __libnvme_public int libnvmf_generate_tls_key_identity_compat(
 }
 
 #ifdef CONFIG_KEYUTILS
-__libnvme_public int libnvmf_lookup_keyring(
+__shr_public int libnvmf_lookup_keyring(
 		struct libnvme_global_ctx *ctx, const char *keyring, long *key)
 {
 	key_serial_t keyring_id;
@@ -968,7 +968,7 @@ __libnvme_public int libnvmf_lookup_keyring(
 	return 0;
 }
 
-__libnvme_public char *libnvmf_describe_key_serial(
+__shr_public char *libnvmf_describe_key_serial(
 		struct libnvme_global_ctx *ctx, long key_id)
 {
 	__cleanup_free char *str = NULL;
@@ -988,7 +988,7 @@ __libnvme_public char *libnvmf_describe_key_serial(
 	return strdup(last);
 }
 
-__libnvme_public int libnvmf_lookup_key(
+__shr_public int libnvmf_lookup_key(
 		struct libnvme_global_ctx *ctx, const char *type,
 		const char *identity, long *keyp)
 {
@@ -1002,7 +1002,7 @@ __libnvme_public int libnvmf_lookup_key(
 	return 0;
 }
 
-__libnvme_public int libnvmf_set_keyring(
+__shr_public int libnvmf_set_keyring(
 		struct libnvme_global_ctx *ctx, long key_id)
 {
 	long err;
@@ -1018,7 +1018,7 @@ __libnvme_public int libnvmf_set_keyring(
 	return 0;
 }
 
-__libnvme_public int libnvmf_read_key(
+__shr_public int libnvmf_read_key(
 		struct libnvme_global_ctx *ctx, long keyring_id, long key_id,
 		int *len, unsigned char **key)
 {
@@ -1038,7 +1038,7 @@ __libnvme_public int libnvmf_read_key(
 	return 0;
 }
 
-__libnvme_public int libnvmf_update_key(
+__shr_public int libnvmf_update_key(
 		struct libnvme_global_ctx *ctx, long keyring_id,
 		const char *key_type, const char *identity,
 		unsigned char *key_data, int key_len, long *keyp)
@@ -1099,7 +1099,7 @@ int __scan_keys_cb(key_serial_t parent, key_serial_t key, char *desc,
 	return 1;
 }
 
-__libnvme_public int libnvmf_scan_tls_keys(
+__shr_public int libnvmf_scan_tls_keys(
 		struct libnvme_global_ctx *ctx, const char *keyring,
 		libnvmf_scan_tls_keys_cb_t cb, void *data)
 {
@@ -1168,7 +1168,7 @@ static int __nvme_insert_tls_key(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public int libnvmf_insert_tls_key_versioned(
+__shr_public int libnvmf_insert_tls_key_versioned(
 		struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
@@ -1192,7 +1192,7 @@ __libnvme_public int libnvmf_insert_tls_key_versioned(
 		configured_key, key_len, false, key);
 }
 
-__libnvme_public int libnvmf_insert_tls_key_compat(
+__shr_public int libnvmf_insert_tls_key_compat(
 		struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
@@ -1216,7 +1216,7 @@ __libnvme_public int libnvmf_insert_tls_key_compat(
 		configured_key, key_len, true, key);
 }
 
-__libnvme_public int libnvmf_revoke_tls_key(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_revoke_tls_key(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *identity)
 {
@@ -1343,7 +1343,7 @@ out:
 	return 0;
 }
 #else
-__libnvme_public int libnvmf_lookup_keyring(
+__shr_public int libnvmf_lookup_keyring(
 		struct libnvme_global_ctx *ctx, const char *keyring, long *key)
 {
 	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
@@ -1351,7 +1351,7 @@ __libnvme_public int libnvmf_lookup_keyring(
 	return -ENOTSUP;
 }
 
-__libnvme_public char *libnvmf_describe_key_serial(
+__shr_public char *libnvmf_describe_key_serial(
 		struct libnvme_global_ctx *ctx, long key_id)
 {
 	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
@@ -1359,7 +1359,7 @@ __libnvme_public char *libnvmf_describe_key_serial(
 	return NULL;
 }
 
-__libnvme_public int libnvmf_lookup_key(
+__shr_public int libnvmf_lookup_key(
 		struct libnvme_global_ctx *ctx, const char *type,
 		const char *identity, long *key)
 {
@@ -1368,7 +1368,7 @@ __libnvme_public int libnvmf_lookup_key(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvmf_set_keyring(
+__shr_public int libnvmf_set_keyring(
 		struct libnvme_global_ctx *ctx, long key_id)
 {
 	libnvme_msg(ctx, LIBNVME_LOG_ERR, "key operations not supported; "
@@ -1376,7 +1376,7 @@ __libnvme_public int libnvmf_set_keyring(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvmf_read_key(
+__shr_public int libnvmf_read_key(
 		struct libnvme_global_ctx *ctx, long keyring_id, long key_id,
 		int *len, unsigned char **key)
 {
@@ -1385,7 +1385,7 @@ __libnvme_public int libnvmf_read_key(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvmf_update_key(
+__shr_public int libnvmf_update_key(
 		struct libnvme_global_ctx *ctx, long keyring_id,
 		const char *key_type, const char *identity,
 		unsigned char *key_data, int key_len, long *key)
@@ -1395,7 +1395,7 @@ __libnvme_public int libnvmf_update_key(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvmf_scan_tls_keys(
+__shr_public int libnvmf_scan_tls_keys(
 		struct libnvme_global_ctx *ctx, const char *keyring,
 		libnvmf_scan_tls_keys_cb_t cb, void *data)
 {
@@ -1404,7 +1404,7 @@ __libnvme_public int libnvmf_scan_tls_keys(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvmf_insert_tls_key_versioned(
+__shr_public int libnvmf_insert_tls_key_versioned(
 		struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
@@ -1417,7 +1417,7 @@ __libnvme_public int libnvmf_insert_tls_key_versioned(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvmf_insert_tls_key_compat(
+__shr_public int libnvmf_insert_tls_key_compat(
 		struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn,
@@ -1430,7 +1430,7 @@ __libnvme_public int libnvmf_insert_tls_key_compat(
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvmf_revoke_tls_key(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_revoke_tls_key(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *identity)
 {
@@ -1449,7 +1449,7 @@ int __libnvmf_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
 }
 #endif
 
-__libnvme_public int libnvmf_insert_tls_key(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_insert_tls_key(struct libnvme_global_ctx *ctx,
 		const char *keyring, const char *key_type,
 		const char *hostnqn, const char *subsysnqn, int hmac,
 		unsigned char *configured_key, int key_len, long *key)
@@ -1471,7 +1471,7 @@ __libnvme_public int libnvmf_insert_tls_key(struct libnvme_global_ctx *ctx,
  * s:  32 or 48 bytes binary followed by a CRC-32 of the configured PSK
  *     (4 bytes) encoded as base64
  */
-__libnvme_public int libnvmf_export_tls_key_versioned(
+__shr_public int libnvmf_export_tls_key_versioned(
 		struct libnvme_global_ctx *ctx, unsigned char version,
 		unsigned char hmac, const unsigned char *key_data,
 		size_t key_len, char **encoded_keyp)
@@ -1521,7 +1521,7 @@ __libnvme_public int libnvmf_export_tls_key_versioned(
 	return 0;
 }
 
-__libnvme_public int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
 		const unsigned char *key_data, int key_len, char **key)
 {
 	unsigned char hmac;
@@ -1535,7 +1535,7 @@ __libnvme_public int libnvmf_export_tls_key(struct libnvme_global_ctx *ctx,
 		key_len, key);
 }
 
-__libnvme_public int libnvmf_import_tls_key_versioned(
+__shr_public int libnvmf_import_tls_key_versioned(
 		struct libnvme_global_ctx *ctx, const char *encoded_key,
 		unsigned char *version, unsigned char *hmac, size_t *key_len,
 		unsigned char **keyp)
@@ -1604,7 +1604,7 @@ __libnvme_public int libnvmf_import_tls_key_versioned(
 	return 0;
 }
 
-__libnvme_public int libnvmf_import_tls_key(
+__shr_public int libnvmf_import_tls_key(
 		struct libnvme_global_ctx *ctx, const char *encoded_key,
 		int *key_len, unsigned int *hmac, unsigned char **keyp)
 {

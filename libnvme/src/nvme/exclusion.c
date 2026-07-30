@@ -251,7 +251,7 @@ static bool entry_valid(struct libnvme_global_ctx *ctx, const char *entry)
 	return valid;
 }
 
-__libnvme_public bool libnvmf_exclusion_entry_valid(struct libnvme_global_ctx *ctx,
+__shr_public bool libnvmf_exclusion_entry_valid(struct libnvme_global_ctx *ctx,
 						    const char *entry)
 {
 	if (!ctx)
@@ -346,7 +346,7 @@ static bool match_entry(const char *entry, void *ctx)
 	return entry_matches(entry, ctx);
 }
 
-__libnvme_public bool libnvmf_exclusion_match(struct libnvme_global_ctx *ctx,
+__shr_public bool libnvmf_exclusion_match(struct libnvme_global_ctx *ctx,
 					      const struct libnvmf_tid *tid)
 {
 	const char *dir, *mainp;
@@ -404,7 +404,7 @@ static bool iter_entry(const char *entry, void *ctx)
 	return false; /* never stop early */
 }
 
-__libnvme_public int libnvmf_exclusion_list_for_each(
+__shr_public int libnvmf_exclusion_list_for_each(
 	struct libnvme_global_ctx *ctx,
 	void (*callback)(const char *name, void *user_data),
 	void *user_data)
@@ -448,7 +448,7 @@ __libnvme_public int libnvmf_exclusion_list_for_each(
 	return 0;
 }
 
-__libnvme_public int libnvmf_exclusion_entry_for_each(
+__shr_public int libnvmf_exclusion_entry_for_each(
 	struct libnvme_global_ctx *ctx,
 	const char *name,
 	void (*callback)(const char *entry, void *user_data),
@@ -472,7 +472,7 @@ __libnvme_public int libnvmf_exclusion_entry_for_each(
 	return 0;
 }
 
-__libnvme_public int libnvmf_exclusion_create(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_exclusion_create(struct libnvme_global_ctx *ctx,
 					      const char *name)
 {
 	const char *path;
@@ -512,7 +512,7 @@ __libnvme_public int libnvmf_exclusion_create(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public int libnvmf_exclusion_delete(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_exclusion_delete(struct libnvme_global_ctx *ctx,
 					      const char *name)
 {
 	const char *path;
@@ -530,7 +530,7 @@ __libnvme_public int libnvmf_exclusion_delete(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public int libnvmf_exclusion_add(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_exclusion_add(struct libnvme_global_ctx *ctx,
 					   const char *name, const char *entry)
 {
 	char pathbuf[PATH_MAX], tmp[PATH_MAX], line[EXCL_LINE_MAX];
@@ -662,7 +662,7 @@ static int excl_entry_from_ctrl(libnvme_ctrl_t c, char *buf, size_t len)
 	return (n > 0 && (size_t)n < len) ? 0 : -ENAMETOOLONG;
 }
 
-__libnvme_public int libnvmf_exclusion_add_ctrl(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_exclusion_add_ctrl(struct libnvme_global_ctx *ctx,
 						const char *name,
 						struct libnvme_ctrl *c)
 {
@@ -679,7 +679,7 @@ __libnvme_public int libnvmf_exclusion_add_ctrl(struct libnvme_global_ctx *ctx,
 	return libnvmf_exclusion_add(ctx, name, entry);
 }
 
-__libnvme_public int libnvmf_exclusion_add_subsysnqn(
+__shr_public int libnvmf_exclusion_add_subsysnqn(
 		struct libnvme_global_ctx *ctx, const char *name,
 		const char *subsysnqn)
 {
@@ -696,7 +696,7 @@ __libnvme_public int libnvmf_exclusion_add_subsysnqn(
 	return libnvmf_exclusion_add(ctx, name, entry);
 }
 
-__libnvme_public int libnvmf_exclusion_remove(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_exclusion_remove(struct libnvme_global_ctx *ctx,
 					      const char *name, const char *entry)
 {
 	char pathbuf[PATH_MAX], tmp[PATH_MAX], line[EXCL_LINE_MAX];
@@ -919,7 +919,7 @@ static int validate_conf_buf(struct libnvme_global_ctx *ctx, const char *text)
 	return ret;
 }
 
-__libnvme_public int libnvmf_exclusion_read(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_exclusion_read(struct libnvme_global_ctx *ctx,
 					    const char *name, char **text,
 					    uint64_t *version)
 {
@@ -952,7 +952,7 @@ __libnvme_public int libnvmf_exclusion_read(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public int libnvmf_exclusion_write(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_exclusion_write(struct libnvme_global_ctx *ctx,
 					     const char *name, const char *text,
 					     uint64_t version)
 {
