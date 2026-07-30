@@ -302,10 +302,14 @@ static int read_ssns(struct libnvme_global_ctx *ctx,
 	if (raw_ssns->security_desc_index) {
 		ssns->security = security_from_index(nbft,
 			raw_ssns->security_desc_index);
-		if (!ssns->security)
-			libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
-				 "file %s: namespace %d security controller not found\n",
-				 nbft->filename, ssns->index);
+		if (!ssns->security) {
+			libnvme_msg(ctx, LIBNVME_LOG_WARN,
+				 "file %s: namespace %d security descriptor %d not found, skipping entry\n",
+				 nbft->filename, ssns->index,
+				 raw_ssns->security_desc_index);
+			ret = -EINVAL;
+			goto fail;
+		}
 	}
 
 	/* HFI descriptors */
@@ -575,12 +579,17 @@ static int read_discovery(struct libnvme_global_ctx *ctx,
 		goto error;
 	}
 
-	discovery->security =
-		security_from_index(nbft, raw_discovery->sec_index);
-	if (raw_discovery->sec_index && !discovery->security)
-		libnvme_msg(ctx, LIBNVME_LOG_DEBUG,
-			 "file %s: discovery %d security descriptor not found\n",
-			 nbft->filename, discovery->index);
+	if (raw_discovery->sec_index) {
+		discovery->security =
+			security_from_index(nbft, raw_discovery->sec_index);
+		if (!discovery->security) {
+			libnvme_msg(ctx, LIBNVME_LOG_WARN,
+				 "file %s: discovery %d security descriptor %d not found, skipping entry\n",
+				 nbft->filename, discovery->index,
+				 raw_discovery->sec_index);
+			goto error;
+		}
+	}
 
 	*d = discovery;
 	r = 0;
