@@ -213,12 +213,11 @@ static int get_c3_log_page(struct libnvme_transport_handle *hdl, char *format)
 		return ret;
 	}
 
-	data = malloc(sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
+	data = libnvme_alloc(C3_LATENCY_MON_LOG_BUF_LEN);
 	if (!data) {
-		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
-	memset(data, 0, sizeof(__u8) * C3_LATENCY_MON_LOG_BUF_LEN);
 
 	ret = ocp_get_log_simple(hdl, OCP_LID_LMLOG, C3_LATENCY_MON_LOG_BUF_LEN, data);
 
@@ -256,7 +255,7 @@ static int get_c3_log_page(struct libnvme_transport_handle *hdl, char *format)
 	}
 
 out:
-	free(data);
+	libnvme_free(data);
 	return ret;
 }
 
@@ -792,7 +791,7 @@ static int extract_dump_get_log(struct libnvme_transport_handle *hdl, char *feat
 {
 	int i = 0, err = 0;
 
-	char *data = calloc(transfersize, sizeof(char));
+	char *data = libnvme_alloc(transfersize);
 	char filepath[FILE_NAME_SIZE] = {0,};
 	int output = 0;
 	int total_loop_cnt = dumpsize / transfersize;
@@ -850,7 +849,7 @@ close_output:
 	close(output);
 
 end:
-	free(data);
+	libnvme_free(data);
 	return err;
 }
 
@@ -942,7 +941,7 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 			}
 		}
 
-		char *da1_stat = calloc(da1_sz, sizeof(char));
+		__cleanup_libnvme_free char *da1_stat = libnvme_alloc(da1_sz);
 
 		err = get_telemetry_data(hdl, nsid, tele_type, da1_sz, (void *)da1_stat, lsp, rae,
 					 da1_off);
@@ -991,7 +990,7 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 				}
 			}
 
-			char *da1_fifo = calloc(da1_sz, sizeof(char));
+			__cleanup_libnvme_free char *da1_fifo = libnvme_alloc(da1_sz);
 
 			printf("Get DA 1 FIFO addr: %p, offset 0x%"PRIx64"\n", da1_fifo,
 			       (uint64_t)da1_off);
@@ -1050,7 +1049,7 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 			}
 		}
 
-		char *da2_stat = calloc(da1_sz, sizeof(char));
+		__cleanup_libnvme_free char *da2_stat = libnvme_alloc(da1_sz);
 
 		err = get_telemetry_data(hdl, nsid, tele_type, da1_sz, (void *)da2_stat, lsp, rae,
 					 da1_off);
@@ -1099,7 +1098,7 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 				}
 			}
 
-			char *da1_fifo = calloc(da1_sz, sizeof(char));
+			__cleanup_libnvme_free char *da1_fifo = libnvme_alloc(da1_sz);
 
 			err = get_telemetry_data(hdl, nsid, tele_type,
 						 le64_to_cpu(da1->event_fifos[i].size) * 4,
@@ -1301,12 +1300,11 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 
 	__cleanup_fd int fd = STDIN_FILENO;
 
-	header_data = (__u8 *)malloc(sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
+	header_data = (__u8 *)libnvme_alloc(C9_TELEMETRY_STR_LOG_LEN);
 	if (!header_data) {
-		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
-	memset(header_data, 0, sizeof(__u8) * C9_TELEMETRY_STR_LOG_LEN);
 
 	ret = ocp_get_log_simple(hdl, OCP_LID_TELSLG, C9_TELEMETRY_STR_LOG_LEN, header_data);
 
@@ -1343,12 +1341,11 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 			printf("total_log_page_sz = %"PRIu64"\n", le64_to_cpu(total_log_page_sz));
 		}
 
-		pC9_string_buffer = (__u8 *)malloc(sizeof(__u8) * total_log_page_sz);
+		pC9_string_buffer = (__u8 *)libnvme_alloc(total_log_page_sz);
 		if (!pC9_string_buffer) {
-			nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
+			nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 			return -1;
 		}
-		memset(pC9_string_buffer, 0, sizeof(__u8) * total_log_page_sz);
 
 		ret = ocp_get_log_simple(hdl, OCP_LID_TELSLG, total_log_page_sz, pC9_string_buffer);
 	} else {
@@ -1374,7 +1371,7 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 	}
 
 free:
-	free(pC9_string_buffer);
+	libnvme_free(pC9_string_buffer);
 	return ret;
 }
 
@@ -1657,12 +1654,11 @@ static int get_c5_log_page(struct libnvme_transport_handle *hdl, char *format)
 		return ret;
 	}
 
-	data = (__u8 *)malloc(sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
+	data = (__u8 *)libnvme_alloc(C5_UNSUPPORTED_REQS_LEN);
 	if (!data) {
-		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
-	memset(data, 0, sizeof(__u8) * C5_UNSUPPORTED_REQS_LEN);
 
 	ret = ocp_get_log_simple(hdl, OCP_LID_URLP, C5_UNSUPPORTED_REQS_LEN, data);
 	if (!ret) {
@@ -1693,7 +1689,7 @@ static int get_c5_log_page(struct libnvme_transport_handle *hdl, char *format)
 	}
 
 out:
-	free(data);
+	libnvme_free(data);
 	return ret;
 }
 
@@ -1758,12 +1754,11 @@ static int get_c1_log_page(struct libnvme_transport_handle *hdl, char *format)
 		return ret;
 	}
 
-	data = (__u8 *)malloc(sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
+	data = (__u8 *)libnvme_alloc(C1_ERROR_RECOVERY_LOG_BUF_LEN);
 	if (!data) {
-		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
-	memset(data, 0, sizeof(__u8) * C1_ERROR_RECOVERY_LOG_BUF_LEN);
 
 	ret = ocp_get_log_simple(hdl, OCP_LID_EREC, C1_ERROR_RECOVERY_LOG_BUF_LEN, data);
 
@@ -1795,7 +1790,7 @@ static int get_c1_log_page(struct libnvme_transport_handle *hdl, char *format)
 	}
 
 out:
-	free(data);
+	libnvme_free(data);
 	return ret;
 }
 
@@ -1858,12 +1853,11 @@ static int get_c4_log_page(struct libnvme_transport_handle *hdl, char *format)
 		return ret;
 	}
 
-	data = (__u8 *)malloc(sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
+	data = (__u8 *)libnvme_alloc(C4_DEV_CAP_REQ_LEN);
 	if (!data) {
-		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
-	memset(data, 0, sizeof(__u8) * C4_DEV_CAP_REQ_LEN);
 
 	ret = ocp_get_log_simple(hdl, OCP_LID_DCLP, C4_DEV_CAP_REQ_LEN, data);
 
@@ -1895,7 +1889,7 @@ static int get_c4_log_page(struct libnvme_transport_handle *hdl, char *format)
 	}
 
 out:
-	free(data);
+	libnvme_free(data);
 	return ret;
 }
 
@@ -2446,7 +2440,7 @@ static int get_c9_log_page(struct libnvme_transport_handle *hdl,
 	else if (ret)
 		nvme_show_error("ERROR : OCP : Unable to read C9 data from buffer");
 
-	free(header_data);
+	libnvme_free(header_data);
 	return ret;
 }
 
@@ -2527,12 +2521,11 @@ static int get_c7_log_page(struct libnvme_transport_handle *hdl, char *format)
 		return ret;
 	}
 
-	data = (__u8 *)malloc(sizeof(__u8) * C7_TCG_CONFIGURATION_LEN);
+	data = (__u8 *)libnvme_alloc(C7_TCG_CONFIGURATION_LEN);
 	if (!data) {
-		nvme_show_error("ERROR : OCP : malloc : %s", libnvme_strerror(errno));
+		nvme_show_error("ERROR : OCP : libnvme_alloc : %s", libnvme_strerror(errno));
 		return -1;
 	}
-	memset(data, 0, sizeof(__u8) * C7_TCG_CONFIGURATION_LEN);
 
 	ret = ocp_get_log_simple(hdl, OCP_LID_TCGL, C7_TCG_CONFIGURATION_LEN, data);
 	if (!ret) {
@@ -2563,7 +2556,7 @@ static int get_c7_log_page(struct libnvme_transport_handle *hdl, char *format)
 	}
 
 out:
-	free(data);
+	libnvme_free(data);
 	return ret;
 }
 
