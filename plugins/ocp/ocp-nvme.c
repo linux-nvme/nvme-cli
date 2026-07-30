@@ -17,6 +17,7 @@
 #include <time.h>
 
 #include <libnvme.h>
+#include <io-util.h>
 
 #include "common.h"
 #include "logging.h"
@@ -1159,28 +1160,23 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		int tele_area,
 		const char *output_file)
 {
-	void *telemetry_log;
+	void *telemetry_log = NULL;
 	const size_t bs = 512;
 	struct nvme_telemetry_log *hdr;
 	struct libnvme_passthru_cmd cmd;
-	size_t full_size = 0, offset = bs;
+	size_t full_size = 0, offset = bs, chunk_size;
 	int err, fd;
 
 	if ((tele_type == TELEMETRY_TYPE_HOST_0) || (tele_type == TELEMETRY_TYPE_HOST_1))
 		tele_type = TELEMETRY_TYPE_HOST;
 
-	int log_id = (tele_type == TELEMETRY_TYPE_HOST ? NVME_LOG_LID_TELEMETRY_HOST :
-			NVME_LOG_LID_TELEMETRY_CTRL);
-
-	hdr = malloc(bs);
-	telemetry_log = malloc(bs);
-	if (!hdr || !telemetry_log) {
+	hdr = libnvme_alloc(bs);
+	if (!hdr) {
 		nvme_show_error("Failed to allocate %zu bytes for log: %s",
 			bs, libnvme_strerror(errno));
 		err = -ENOMEM;
 		goto exit_status;
 	}
-	memset(hdr, 0, bs);
 
 	fd = nvme_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (fd < 0) {
@@ -1190,21 +1186,22 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		goto exit_status;
 	}
 
-	nvme_init_get_log(&cmd, NVME_NSID_ALL, log_id, NVME_CSI_NVM, hdr, bs);
-	cmd.cdw10 |= NVME_FIELD_ENCODE(NVME_LOG_TELEM_HOST_LSP_CREATE,
-			NVME_LOG_CDW10_LSP_SHIFT,
-			NVME_LOG_CDW10_LSP_MASK);
+	if (tele_type == TELEMETRY_TYPE_HOST)
+		nvme_init_get_log_create_telemetry_host(&cmd, hdr);
+	else
+		nvme_init_get_log_telemetry_ctrl(&cmd, 0, hdr, bs);
 	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
-	if (err < 0)
-		nvme_show_error("Failed to fetch the log from drive.");
-	else if (err > 0) {
+	if (err < 0) {
+		nvme_show_err(err, "Failed to fetch telemetry-header.");
+		goto close_fd;
+	} else if (err > 0) {
 		nvme_show_status(err);
 		nvme_show_error("Failed to fetch telemetry-header. Error:%d.", err);
 		goto close_fd;
 	}
 
-	err = write(fd, (void *)hdr, bs);
-	if (err != bs) {
+	err = shr_write_all(fd, hdr, bs);
+	if (err) {
 		nvme_show_error("Failed to write data to file.");
 		goto close_fd;
 	}
@@ -1227,11 +1224,44 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		break;
 	}
 
+	if (full_size <= offset) {
+		err = 0;
+		goto close_fd;
+	}
+
+	/*
+	 * Try to read the whole data area with a single call, but fall back
+	 * to smaller reads if necessary due to log size or memory constraints.
+	 */
+	chunk_size = full_size - offset;
+	if (chunk_size > UINT32_MAX)
+		chunk_size = (size_t)UINT32_MAX & ~(bs - 1);
+	while (!(telemetry_log = libnvme_alloc(chunk_size)) && chunk_size > bs) {
+		chunk_size = (chunk_size / 2) & ~(bs - 1);
+		if (chunk_size < bs)
+			chunk_size = bs;
+	}
+	if (!telemetry_log) {
+		nvme_show_error("Failed to allocate memory for log: %s",
+				libnvme_strerror(errno));
+		err = -ENOMEM;
+		goto close_fd;
+	}
+
 	while (offset < full_size) {
-		nvme_init_get_log(&cmd, NVME_NSID_ALL, log_id, NVME_CSI_NVM,
-				  telemetry_log, bs);
-		nvme_init_get_log_lpo(&cmd, offset);
-		err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
+		size_t remaining = full_size - offset;
+		__u32 len = remaining < chunk_size ? remaining : chunk_size;
+
+		/*
+		 * nvme_get_log_telemetry methods read the log in the largest
+		 * successful chunks, filling the entire specified length.
+		 */
+		if (tele_type == TELEMETRY_TYPE_HOST)
+			err = nvme_get_log_telemetry_host(hdl, offset,
+							  telemetry_log, len);
+		else
+			err = nvme_get_log_telemetry_ctrl(hdl, false, offset,
+							  telemetry_log, len);
 		if (err < 0) {
 			nvme_show_error("Failed to fetch the log from drive.");
 			break;
@@ -1241,20 +1271,19 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 			break;
 		}
 
-		err = write(fd, (void *)telemetry_log, bs);
-		if (err != bs) {
+		err = shr_write_all(fd, telemetry_log, len);
+		if (err) {
 			nvme_show_error("Failed to write data to file.");
-			break;
+			goto close_fd;
 		}
-		err = 0;
-		offset += bs;
+		offset += len;
 	}
 
 close_fd:
 	close(fd);
 exit_status:
-	free(hdr);
-	free(telemetry_log);
+	libnvme_free(hdr);
+	libnvme_free(telemetry_log);
 
 	return err;
 }
