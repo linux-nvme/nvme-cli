@@ -327,12 +327,12 @@ __shr_public const char *libnvmf_context_get_device(
 
 __shr_public void libnvmf_context_set_persistent(
 		struct libnvmf_context *p,
-		bool persistent)
+		enum libnvmf_tristate persistent)
 {
 	p->persistent = persistent;
 }
 
-__shr_public bool libnvmf_context_get_persistent(
+__shr_public enum libnvmf_tristate libnvmf_context_get_persistent(
 		const struct libnvmf_context *p)
 {
 	return p->persistent;

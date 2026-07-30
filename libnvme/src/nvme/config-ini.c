@@ -45,6 +45,9 @@ static const struct libnvmf_key keys[] = {
 	{ "hdr-digest",			LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_TUNABLE },
 	{ "data-digest",		LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_TUNABLE },
 
+	/* discovery controller  */
+	{ "persistent",			LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_DC_TUNABLE },
+
 	/* security -- bound to (hostnqn, subsysnqn); never per-path */
 	{ "tls",			LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_SECURITY },
 	{ "concat",			LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_SECURITY },
@@ -201,7 +204,8 @@ __shr_public int libnvmf_params_set(struct libnvmf_params *p,
 	 */
 	k = libnvmf_key_lookup(key);
 	if (!k || (k->class != LIBNVMF_KEY_TUNABLE &&
-		   k->class != LIBNVMF_KEY_SECURITY))
+		   k->class != LIBNVMF_KEY_SECURITY &&
+		   k->class != LIBNVMF_KEY_DC_TUNABLE))
 		return -EINVAL;
 	if (libnvmf_key_check_value(k, value))
 		return -EINVAL;
@@ -521,6 +525,14 @@ static int add_path(struct conf_parse *pc, char *value, unsigned int line)
 			goto fail;
 		}
 		switch (k->class) {
+		case LIBNVMF_KEY_DC_TUNABLE:
+			if (pc->sect != SECT_DC) {
+				conf_err(pc, line,
+					 "%s is only valid for a discovery controller",
+					 key);
+				goto fail;
+			}
+			fallthrough;
 		case LIBNVMF_KEY_TUNABLE:
 			if (libnvmf_key_check_value(k, val)) {
 				conf_err(pc, line, "invalid %s value \"%s\"",
@@ -711,6 +723,17 @@ static int conf_kv(struct conf_parse *pc, const char *key, char *value,
 			return set_identity(pc, &pc->f->hostid, value);
 		}
 		return set_identity(pc, &pc->f->hostsymname, value);
+	case LIBNVMF_KEY_DC_TUNABLE:
+		if (pc->sect != SECT_DC && pc->sect != SECT_DC_DEFAULTS)
+			break;
+		if (libnvmf_key_check_value(k, value)) {
+			conf_err(pc, line, "invalid %s value \"%s\"", key,
+				 value);
+			return -EINVAL;
+		}
+		dest = (pc->sect == SECT_DC_DEFAULTS) ? pc->f->dc_defaults :
+							 pc->ep->params;
+		return libnvmf_params_set(dest, key, value);
 	case LIBNVMF_KEY_TUNABLE:
 	case LIBNVMF_KEY_SECURITY:
 		if (libnvmf_key_check_value(k, value)) {

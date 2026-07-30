@@ -427,7 +427,9 @@ const char *libnvmf_context_get_device(const struct libnvmf_context *p);
  * @p: The &struct libnvmf_context instance to update.
  * @persistent: Value to assign to the persistent field.
  */
-void libnvmf_context_set_persistent(struct libnvmf_context *p, bool persistent);
+void libnvmf_context_set_persistent(
+		struct libnvmf_context *p,
+		enum libnvmf_tristate persistent);
 
 /**
  * libnvmf_context_get_persistent() - Get persistent.
@@ -435,7 +437,8 @@ void libnvmf_context_set_persistent(struct libnvmf_context *p, bool persistent);
  *
  * Return: The value of the persistent field.
  */
-bool libnvmf_context_get_persistent(const struct libnvmf_context *p);
+enum libnvmf_tristate libnvmf_context_get_persistent(
+		const struct libnvmf_context *p);
 
 /**
  * libnvmf_context_get_devid_file() - Get devid_file.

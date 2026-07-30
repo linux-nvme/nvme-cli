@@ -172,6 +172,13 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 		"own configuration drop-in";
 	const char *desc_output = "add the entry to this INI configuration "
 		"file (default: " PATH_NVMF_INI ")";
+	const char *desc_persistent = "keep the discovery controller "
+		"connected to receive Asynchronous Event Notifications "
+		"instead of disconnecting after the discovery log page "
+		"fetch; requires --discovery";
+	const char *desc_no_persistent = "explicitly record that this "
+		"discovery controller is not persistent, overriding any "
+		"default that would otherwise apply; requires --discovery";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvmf_config_emitter *emitter = NULL;
@@ -180,6 +187,8 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 	char *output_file = NULL;
 	char *hostsymname = NULL;
 	bool discovery = false;
+	bool persistent = false;
+	bool no_persistent = false;
 	bool duplicate = false;
 	bool replaced = false;
 	const char *target;
@@ -187,6 +196,8 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 
 	NVMF_ARGS(opts, fa,
 		OPT_FLAG("discovery", 0, &discovery, desc_discovery),
+		OPT_FLAG("persistent", 0, &persistent, desc_persistent),
+		OPT_FLAG("no-persistent", 0, &no_persistent, desc_no_persistent),
 		OPT_STRING("host-symname", 0, "STR", &hostsymname, desc_symname),
 		OPT_STRING("output", 0, "FILE", &output_file, desc_output));
 
@@ -195,6 +206,16 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 	err = parse_args(argc, argv, desc, opts);
 	if (err)
 		return err;
+
+	if (persistent && no_persistent) {
+		nvme_show_error("--persistent and --no-persistent are mutually exclusive");
+		return -EINVAL;
+	}
+
+	if ((persistent || no_persistent) && !discovery) {
+		nvme_show_error("--persistent/--no-persistent requires --discovery");
+		return -EINVAL;
+	}
 
 	err = nvme_create_global_ctx(&ctx);
 	if (err)
@@ -212,6 +233,10 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 		goto out;
 	}
 	nvmf_args_to_params(params, &fa);
+	if (persistent)
+		libnvmf_params_set(params, "persistent", "true");
+	else if (no_persistent)
+		libnvmf_params_set(params, "persistent", "false");
 
 	err = reload_existing(emitter, ctx, target, discovery, &fa, params,
 			&duplicate, &replaced);

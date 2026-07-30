@@ -58,6 +58,7 @@ enum libnvmf_key_class {
 	LIBNVMF_KEY_IDENTITY,	/* [Host] only: hostnqn, hostid, hostsymname */
 	LIBNVMF_KEY_NQN,	/* endpoint sections only: nqn */
 	LIBNVMF_KEY_CONTROLLER,	/* endpoint sections only: ctrl (repeatable) */
+	LIBNVMF_KEY_DC_TUNABLE,	/* discovery controller sections/paths only */
 };
 
 struct libnvmf_key {

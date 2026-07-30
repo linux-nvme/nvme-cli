@@ -203,6 +203,83 @@ class ConfigConvertCLITest(TestNVMeBase):
         self.assertIn('dhchap-secret = DHHC-1:00:port-specific-key:', content)
         self.assertNotIn('DHHC-1:00:host-default-key:', content)
 
+    def test_discovery_persistent_true_is_mapped(self):
+        self._write_json({
+            'hosts': [{
+                'subsystems': [{
+                    'nqn': 'nqn.2014-08.org.nvmexpress.discovery',
+                    'ports': [{
+                        'transport': 'tcp',
+                        'traddr': '10.0.0.11',
+                        'discovery': True,
+                        'persistent': True,
+                    }],
+                }],
+            }],
+        })
+        self._convert()
+        content = self._read_output()
+        self.assertIn('[Discovery Controller]', content)
+        self.assertIn('persistent = true', content)
+
+    def test_discovery_persistent_false_is_mapped_distinctly(self):
+        self._write_json({
+            'hosts': [{
+                'subsystems': [{
+                    'nqn': 'nqn.2014-08.org.nvmexpress.discovery',
+                    'ports': [{
+                        'transport': 'tcp',
+                        'traddr': '10.0.0.12',
+                        'discovery': True,
+                        'persistent': False,
+                    }],
+                }],
+            }],
+        })
+        self._convert()
+        content = self._read_output()
+        self.assertIn('[Discovery Controller]', content)
+        self.assertIn('persistent = false', content)
+
+    def test_discovery_without_persistent_key_omits_it(self):
+        self._write_json({
+            'hosts': [{
+                'subsystems': [{
+                    'nqn': 'nqn.2014-08.org.nvmexpress.discovery',
+                    'ports': [{
+                        'transport': 'tcp',
+                        'traddr': '10.0.0.13',
+                        'discovery': True,
+                    }],
+                }],
+            }],
+        })
+        self._convert()
+        content = self._read_output()
+        self.assertIn('[Discovery Controller]', content)
+        self.assertNotIn('persistent', content)
+
+    def test_io_controller_persistent_key_is_ignored(self):
+        # "persistent" is only meaningful (and only valid ini syntax) on a
+        # discovery connection; on an I/O controller port it must not be
+        # forwarded, or the emitted ini would fail to parse back.
+        self._write_json({
+            'hosts': [{
+                'subsystems': [{
+                    'nqn': 'nqn.2024-01.com.example:data.vol9',
+                    'ports': [{
+                        'transport': 'tcp',
+                        'traddr': '10.0.0.14',
+                        'persistent': True,
+                    }],
+                }],
+            }],
+        })
+        self._convert()
+        content = self._read_output()
+        self.assertIn('[Subsystem]', content)
+        self.assertNotIn('persistent', content)
+
     # ------------------------------------------------------------------ #
     # errors                                                              #
     # ------------------------------------------------------------------ #

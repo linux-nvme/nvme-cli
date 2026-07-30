@@ -197,7 +197,8 @@ static int set_fctx_host_params(struct libnvme_global_ctx *ctx,
 
 	val = PyDict_GetItemString(dict, "persistent");
 	if (val)
-		fctx->persistent = (bool)PyObject_IsTrue(val);
+		fctx->persistent = PyObject_IsTrue(val) ?
+			LIBNVMF_TRISTATE_TRUE : LIBNVMF_TRISTATE_FALSE;
 
 	for (p = tbl; p->key; p++)
 		*p->val = dict_get_str(dict, p->key);

@@ -137,6 +137,16 @@ static void apply_dhchap_default(struct libnvmf_params *params,
 	}
 }
 
+static void apply_dc_persistent(struct libnvmf_params *params,
+		struct json_object *port_obj)
+{
+	struct json_object *val = json_object_object_get(port_obj, "persistent");
+
+	if (val)
+		libnvmf_params_set(params, "persistent",
+				    json_object_get_boolean(val) ? "true" : "false");
+}
+
 static int convert_port(struct libnvmf_config_emitter *emitter,
 		const char *hostnqn, const char *hostid,
 		const char *hostsymname, const char *host_dhchap_key,
@@ -152,6 +162,8 @@ static int convert_port(struct libnvmf_config_emitter *emitter,
 
 	apply_port_params(params, port_obj);
 	apply_dhchap_default(params, port_obj, host_dhchap_key);
+	if (is_dc)
+		apply_dc_persistent(params, port_obj);
 
 	ret = libnvmf_config_emit_add(emitter, is_dc,
 			json_get_string(port_obj, "transport"),
@@ -303,7 +315,7 @@ int nvme_config_convert_json(struct libnvmf_config_emitter *emitter,
 #endif /* CONFIG_JSONC */
 
 int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
-		const struct nvmf_args *fa)
+		const struct nvmf_args *fa, enum libnvmf_tristate persistent)
 {
 	struct libnvmf_params *params;
 	int ret;
@@ -313,6 +325,9 @@ int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
 		return -ENOMEM;
 
 	nvmf_args_to_params(params, fa);
+	if (persistent != LIBNVMF_TRISTATE_UNSET)
+		libnvmf_params_set(params, "persistent",
+			persistent == LIBNVMF_TRISTATE_TRUE ? "true" : "false");
 
 	ret = libnvmf_config_emit_add(emitter, true, fa->transport, fa->traddr,
 			fa->trsvcid, fa->subsysnqn, fa->host_traddr,

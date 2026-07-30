@@ -116,6 +116,78 @@ class ConfigCreateCLITest(TestNVMeBase):
         content = self._read_output()
         self.assertIn('hostsymname = lab-host-01', content)
 
+    def test_discovery_persistent_flag_is_stored(self):
+        self._create('--transport', 'fc',
+                     '--traddr=nn-0x2:pn-0x2', '--discovery',
+                     '--persistent')
+        content = self._read_output()
+        self.assertIn('[Discovery Controller]', content)
+        self.assertIn('persistent = true', content)
+
+    def test_persistent_flag_updates_existing_entry(self):
+        self._create('--transport', 'fc',
+                     '--traddr=nn-0x3:pn-0x3',
+                     '--host-traddr=nn-0x4:pn-0x4', '--discovery')
+        content = self._read_output()
+        self.assertNotIn('persistent', content)
+
+        self._create('--transport', 'fc',
+                     '--traddr=nn-0x3:pn-0x3',
+                     '--host-traddr=nn-0x4:pn-0x4', '--discovery',
+                     '--persistent')
+        content = self._read_output()
+        self.assertEqual(content.count('[Discovery Controller]'), 1,
+                         f'expected exactly one entry, got content:\n{content}')
+        self.assertIn('persistent = true', content)
+
+    def test_discovery_no_persistent_flag_is_stored(self):
+        self._create('--transport', 'fc',
+                     '--traddr=nn-0x8:pn-0x8', '--discovery',
+                     '--no-persistent')
+        content = self._read_output()
+        self.assertIn('[Discovery Controller]', content)
+        self.assertIn('persistent = false', content)
+
+    def test_no_persistent_updates_existing_true_entry(self):
+        self._create('--transport', 'fc',
+                     '--traddr=nn-0xa:pn-0xa', '--discovery',
+                     '--persistent')
+        content = self._read_output()
+        self.assertIn('persistent = true', content)
+
+        self._create('--transport', 'fc',
+                     '--traddr=nn-0xa:pn-0xa', '--discovery',
+                     '--no-persistent')
+        content = self._read_output()
+        self.assertEqual(content.count('[Discovery Controller]'), 1,
+                         f'expected exactly one entry, got content:\n{content}')
+        self.assertIn('persistent = false', content)
+        self.assertNotIn('persistent = true', content)
+
+    def test_discovery_no_persistent_flag_is_stored(self):
+        self._create('--transport', 'fc',
+                     '--traddr=nn-0x8:pn-0x8', '--discovery',
+                     '--no-persistent')
+        content = self._read_output()
+        self.assertIn('[Discovery Controller]', content)
+        self.assertIn('persistent = false', content)
+
+    def test_no_persistent_updates_existing_true_entry(self):
+        self._create('--transport', 'fc',
+                     '--traddr=nn-0xa:pn-0xa', '--discovery',
+                     '--persistent')
+        content = self._read_output()
+        self.assertIn('persistent = true', content)
+
+        self._create('--transport', 'fc',
+                     '--traddr=nn-0xa:pn-0xa', '--discovery',
+                     '--no-persistent')
+        content = self._read_output()
+        self.assertEqual(content.count('[Discovery Controller]'), 1,
+                         f'expected exactly one entry, got content:\n{content}')
+        self.assertIn('persistent = false', content)
+        self.assertNotIn('persistent = true', content)
+
     def test_second_create_preserves_first_entry(self):
         self._create('--transport', 'fc',
                      '--traddr=nn-0x1:pn-0x1', '--discovery')
@@ -156,6 +228,23 @@ class ConfigCreateCLITest(TestNVMeBase):
                               expect_fail=True)
         self.assertFalse(os.path.exists(self.output_ini))
 
+    def test_persistent_without_discovery_errors(self):
+        self._create('--transport', 'tcp', '--traddr=192.168.1.41',
+                     '--nqn=nqn.2024-01.com.example:data.vol4',
+                     '--persistent', expect_fail=True)
+        self.assertFalse(os.path.exists(self.output_ini))
+
+    def test_no_persistent_without_discovery_errors(self):
+        self._create('--transport', 'tcp', '--traddr=192.168.1.43',
+                     '--nqn=nqn.2024-01.com.example:data.vol6',
+                     '--no-persistent', expect_fail=True)
+        self.assertFalse(os.path.exists(self.output_ini))
+
+    def test_persistent_and_no_persistent_mutually_exclusive(self):
+        self._create('--transport', 'fc', '--traddr=nn-0xb:pn-0xb',
+                     '--discovery', '--persistent', '--no-persistent',
+                     expect_fail=True)
+        self.assertFalse(os.path.exists(self.output_ini))
 
 if __name__ == '__main__':
     # Remove the binary path from argv so unittest.main() doesn't see it.

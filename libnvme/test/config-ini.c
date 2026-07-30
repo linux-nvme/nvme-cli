@@ -139,6 +139,7 @@ static bool test_key_table(void)
 	} expect[] = {
 		{ "ctrl-loss-tmo",	LIBNVMF_KEY_TUNABLE },
 		{ "hdr-digest",		LIBNVMF_KEY_TUNABLE },
+		{ "persistent",		LIBNVMF_KEY_DC_TUNABLE },
 		{ "tls-key",		LIBNVMF_KEY_SECURITY },
 		{ "dhchap-secret",	LIBNVMF_KEY_SECURITY },
 		{ "hostnqn",		LIBNVMF_KEY_IDENTITY },
@@ -282,6 +283,7 @@ static bool test_parse_model(struct libnvme_global_ctx *ctx)
 		"dhchap-secret = DHHC-1:00:abc\n"
 		"\n"
 		"[Discovery Controller]\n"
+		"persistent = true\n"
 		"controller = transport=tcp;traddr=10.0.0.5;trsvcid=8009\n"
 		"\n"
 		"[Subsystem]\n"
@@ -337,6 +339,14 @@ static bool test_parse_model(struct libnvme_global_ctx *ctx)
 		pass = false;
 	} else {
 		printf(" - one DC (default NQN) + one [Subsystem] [PASS]\n");
+	}
+
+	if (!dc || !dc->params ||
+	    strcmp(libnvmf_params_get(dc->params, "persistent"), "true")) {
+		printf(" - [Discovery Controller] persistent [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - persistent recorded on the DC endpoint [PASS]\n");
 	}
 
 	if (!ss || !ss->params ||
@@ -445,6 +455,13 @@ static bool test_parse_errors(struct libnvme_global_ctx *ctx)
 		{ "malformed hostid",
 		  "[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:h\n"
 		  "hostid = not-a-uuid\n" },
+		{ "persistent in [I/O Controller Defaults]",
+		  "[I/O Controller Defaults]\npersistent = true\n" },
+		{ "persistent in [Subsystem]",
+		  "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:test\npersistent = true\n" },
+		{ "persistent as a [Subsystem] per-path override",
+		  "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:test\n"
+		  "controller = transport=tcp;traddr=1.2.3.4;persistent=true\n" },
 	};
 	bool pass = true;
 	size_t i;
