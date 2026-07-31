@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """
-generate-accessors.py — Generate setter/getter accessor functions for C structs.
+generate_accessors.py — Generate setter/getter accessor functions for C structs.
 
 This file is part of libnvme.
 Copyright (c) 2025, Dell Technologies Inc. or its subsidiaries.
@@ -113,8 +113,8 @@ strdup()s the new one. const char* members are assigned directly (no
 strdup) since they are assumed to point to externally owned storage.
 
 Example usage:
-  ./generate-accessors.py private.h
-  ./generate-accessors.py --prefix nvme_ private.h
+  ./generate_accessors.py private.h
+  ./generate_accessors.py --prefix nvme_ private.h
 """
 
 import argparse

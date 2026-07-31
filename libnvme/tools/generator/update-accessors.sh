@@ -27,7 +27,7 @@
 #
 # Arguments (supplied by the Meson run_target):
 #   $1             path to the python3 interpreter
-#   $2             path to generate-accessors.py
+#   $2             path to generate_accessors.py
 #   $3             full path of the output .h file
 #   $4             full path of the output .c file
 #   $5             full path of the output .ld file
