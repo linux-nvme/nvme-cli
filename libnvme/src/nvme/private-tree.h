@@ -35,6 +35,18 @@ static inline void cleanup_dirents(struct dirents *ents)
 #define NVME_DEFAULT_HOSTID "00000000-0000-0000-0000-000000000000"
 
 char *libnvme_hostid_from_hostnqn(const char *hostnqn);
+/**
+ * libnvme_parse_src_addr - Extract the source address from an address string
+ * @ctx:		libnvme global context
+ * @address:		Address string to parse (may be NULL)
+ * @src_addr:		Buffer to store the extracted source address
+ * @src_addr_len:	Size of @src_addr
+ *
+ * Return: @src_addr on success, or NULL if @address has no src_addr field
+ *	   or @src_addr is too small.
+ */
+char *libnvme_parse_src_addr(struct libnvme_global_ctx *ctx,
+		const char *address, char *src_addr, size_t src_addr_len);
 
 int libnvme_ctrl_alloc(struct libnvme_global_ctx *ctx, libnvme_subsystem_t s,
 		const char *path, const char *name, libnvme_ctrl_t *cp);
