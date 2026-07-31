@@ -71,6 +71,51 @@ static bool test_basename(void)
 	return pass;
 }
 
+static bool test_dirname(void)
+{
+	struct {
+		const char *input;
+		const char *expected;
+	} cases[] = {
+		{ "/usr/lib", "/usr" },
+		{ "/usr/", "/" },
+		{ "/usr", "/" },
+		{ "usr", "." },
+		{ "/", "/" },
+		{ ".", "." },
+		{ "..", "." },
+		{ "", "." },
+		{ "///", "/" },
+		{ "/usr///lib", "/usr" },
+		{ "/usr/lib/", "/usr" },
+		{ NULL, "." },
+	};
+	bool pass = true;
+	unsigned int i;
+
+	printf("test_dirname:\n");
+
+	for (i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+		char buf[256];
+		char *input = NULL;
+		char *res;
+
+		if (cases[i].input) {
+			strncpy(buf, cases[i].input, sizeof(buf) - 1);
+			buf[sizeof(buf) - 1] = '\0';
+			input = buf;
+		}
+
+		res = shr_dirname(input);
+
+		char desc[512];
+		snprintf(desc, sizeof(desc), "shr_dirname(\"%s\")", cases[i].input ? cases[i].input : "NULL");
+		pass &= check_str(desc, res, cases[i].expected);
+	}
+
+	return pass;
+}
+
 /* Prove the directory tree really exists by writing a file inside it. */
 static bool dir_is_writable(const char *dir)
 {
@@ -157,6 +202,49 @@ static bool test_mkstemp(void)
 }
 #endif
 
+static bool test_mkdir_from_fname(void)
+{
+	static const char *base = "shr-test-mkdir-fname-dir";
+	char fname[256];
+	bool pass = true;
+	int ret;
+
+	printf("test_mkdir_from_fname:\n");
+
+	snprintf(fname, sizeof(fname), "%s/level1/level2/file.txt", base);
+
+	ret = shr_mkdir_from_fname(fname, 0755);
+	pass &= check_ret("creates parent directories from filename", ret, 0);
+	pass &= check_bool("the deepest parent directory is real and writable",
+			    dir_is_writable("shr-test-mkdir-fname-dir/level1/level2"));
+
+	ret = shr_mkdir_from_fname(fname, 0755);
+	pass &= check_ret("re-running on an existing tree is a no-op success",
+			   ret, 0);
+
+	ret = shr_mkdir_from_fname("bare_filename.txt", 0755);
+	pass &= check_ret("bare filename without directories is a no-op success",
+			   ret, 0);
+
+	{
+		char toolong[PATH_MAX + 10];
+
+		memset(toolong, 'a', sizeof(toolong) - 1);
+		toolong[sizeof(toolong) - 1] = '\0';
+		toolong[PATH_MAX + 2] = '/';
+		ret = shr_mkdir_from_fname(toolong, 0755);
+		pass &= check_ret("a parent path longer than PATH_MAX is rejected",
+				  ret, -ENAMETOOLONG);
+	}
+
+	/* Clean up what we created, deepest first. */
+	rmdir("shr-test-mkdir-fname-dir/level1/level2");
+	rmdir("shr-test-mkdir-fname-dir/level1");
+	rmdir("shr-test-mkdir-fname-dir");
+
+	return pass;
+}
+
 static bool test_fsync_dir(void)
 {
 	printf("test_fsync_dir:\n");
@@ -175,7 +263,9 @@ int main(void)
 	bool pass = true;
 
 	pass &= test_basename();
+	pass &= test_dirname();
 	pass &= test_mkdir_p();
+	pass &= test_mkdir_from_fname();
 #if !defined(_WIN32)
 	pass &= test_mkstemp();
 #endif

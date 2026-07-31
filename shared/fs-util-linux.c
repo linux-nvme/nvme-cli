@@ -8,6 +8,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,4 +53,9 @@ void shr_fsync_dir(const char *path)
 		fsync(fd);
 		close(fd);
 	}
+}
+
+char *shr_dirname(char *path)
+{
+	return dirname(path);
 }
