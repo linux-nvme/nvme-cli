@@ -1243,6 +1243,38 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+<a href="nvme-config-convert.html">nvme-config-convert(1)</a>
+</dt>
+<dd>
+<p>
+        Convert a legacy NVMe-oF configuration to the INI format
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-config-create.html">nvme-config-create(1)</a>
+</dt>
+<dd>
+<p>
+        Create an NVMe-oF connection entry in the INI configuration
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-config-validate.html">nvme-config-validate(1)</a>
+</dt>
+<dd>
+<p>
+        Validate an NVMe-oF INI connection configuration file
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-config-show.html">nvme-config-show(1)</a>
+</dt>
+<dd>
+<p>
+        Show the resolved NVMe-oF INI connection configuration
+</p>
+</dd>
+<dt class="hdlist1">
 <a href="nvme-get-property.html">nvme-get-property(1)</a>
 </dt>
 <dd>
@@ -1287,7 +1319,7 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Generate NVMeoF DH-HMAC-CHAP host key
+        Check a host DH-HMAC-CHAP key (deprecated, see nvme-keys-check-kxchap)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1295,7 +1327,7 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Validate NVMeoF TLS PSK
+        Check a NVMe TLS PSK (deprecated, see nvme-keys-check-tls)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1327,7 +1359,7 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Generate NVMeoF DH-HMAC-CHAP host key
+        Generate a host DH-HMAC-CHAP key (deprecated, see nvme-keys-gen-kxchap)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1343,7 +1375,7 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Generate NVMeoF TLS PSK
+        Generate a NVMe TLS PSK (deprecated, see nvme-keys-gen-tls)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1504,6 +1536,14 @@ available, run "nvme help".</p></div>
 <dd>
 <p>
         Retrieve the Supported Log pages details
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-tls-key.html">nvme-tls-key(1)</a>
+</dt>
+<dd>
+<p>
+        Manage NVMe TLS PSKs (deprecated, see nvme-keys-import/export/revoke)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2487,6 +2527,62 @@ available, run "nvme help".</p></div>
         MangoBoost - NVMe Identify Controller
 </p>
 </dd>
+<dt class="hdlist1">
+<a href="nvme-keys-gen-kxchap.html">nvme-keys-gen-kxchap(1)</a>
+</dt>
+<dd>
+<p>
+        Generate NVMeoF KX-HMAC-CHAP host key
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-check-kxchap.html">nvme-keys-check-kxchap(1)</a>
+</dt>
+<dd>
+<p>
+        Validate NVMeoF KX-HMAC-CHAP host key
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-gen-tls.html">nvme-keys-gen-tls(1)</a>
+</dt>
+<dd>
+<p>
+        Generate NVMeoF TLS PSK
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-check-tls.html">nvme-keys-check-tls(1)</a>
+</dt>
+<dd>
+<p>
+        Validate NVMeoF TLS PSK
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-import.html">nvme-keys-import(1)</a>
+</dt>
+<dd>
+<p>
+        Import NVMeoF TLS PSKs into a keyring
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-export.html">nvme-keys-export(1)</a>
+</dt>
+<dd>
+<p>
+        Export NVMeoF TLS PSKs from a keyring
+</p>
+</dd>
+<dt class="hdlist1">
+<a href="nvme-keys-revoke.html">nvme-keys-revoke(1)</a>
+</dt>
+<dd>
+<p>
+        Revoke an NVMeoF TLS PSK from a keyring
+</p>
+</dd>
 </dl></div>
 </div>
 </div>
@@ -2565,6 +2661,8 @@ and are available to this subcommand:</p></div>
 </p>
 </dd>
 </dl></div>
+<div class="paragraph"><p>These options can also be set as machine-wide defaults in
+nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -2606,7 +2704,7 @@ NVM-Express Site</a>.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-07-08 15:06:29 CEST
+ 2026-07-31 16:39:45 CEST
 </div>
 </div>
 </body>

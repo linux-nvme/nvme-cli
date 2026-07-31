@@ -1,0 +1,17 @@
+.TH "libnvmf_context_set_connection_from_tid" 9 "libnvmf_context_set_connection_from_tid" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_set_connection_from_tid \- Set connection and identity from a TID
+.SH SYNOPSIS
+.B "int" libnvmf_context_set_connection_from_tid
+.BI "(struct libnvmf_context *fctx "  ","
+.BI "const struct libnvmf_tid *tid "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context
+.IP "tid" 12
+Transport ID to copy from
+.SH "DESCRIPTION"
+Equivalent to \fBlibnvmf_context_set_connection\fP followed by
+\fBlibnvmf_context_set_hostnqn\fP, reading every field from \fItid\fP.
+.SH "RETURN"
+0 on success, -EINVAL if \fIfctx\fP or \fItid\fP is NULL.

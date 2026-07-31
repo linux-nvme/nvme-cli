@@ -42,7 +42,11 @@ struct nbft_hfi_info_tcp {
 .br
 .BI "    struct nbft_heap_obj host_name_obj;"
 .br
-.BI "    __u8 reserved2[18];"
+.BI "    struct nbft_heap_obj hfi_ext_info_obj;"
+.br
+.BI "    __u8 pcie_seg_num;"
+.br
+.BI "    __u8 reserved2[11];"
 .br
 .BI "
 };
@@ -58,8 +62,8 @@ Version: This field shall be set to 1h.
 HFI Transport Type, see \fIenum nbft_trtype\fP: This field
 shall be set to 03h (i.e., NVMe/TCP; #NBFT_TRTYPE_TCP).
 .IP "trinfo_version" 12
-Transport Info Version: Implementations compliant to this
-specification shall set this field to 1h.
+Transport Info Version: This field shall be set to 2h,
+supported values include 1h (Boot Spec rev. 1.0).
 .IP "hfi_index" 12
 HFI Descriptor Index: The value of the HFI Descriptor Index
 field of the HFI Descriptor (see \fIstruct nbft_hfi\fP.index)
@@ -133,5 +137,17 @@ cleared to 0h, then this field is reserved.
 Host Name Heap Object Reference: If this field is set
 to a non-zero value, then this field indicates the location
 and size of a heap object containing a Host Name string.
+.IP "hfi_ext_info_obj" 12
+HFI Transport Info Extended Information Descriptor Object
+Reference (since rev. 1.1): If this field is set to a
+non-zero value, then this field indicates the location and
+size of a heap object containing a HFI Transport Info
+Extended Information Descriptor (see \fIstruct nbft_hfi_info_ext\fP).
+.IP "pcie_seg_num" 12
+PCIe Segment Number (since rev. 1.1): The Segment
+Number for the specified Controller when the PCI Express Link
+is in Flit mode. If the PCI Express interface is not in Flit
+mode, or if the pre-OS driver does not support Flit mode,
+then this field should be cleared to 0h.
 .IP "reserved2" 12
 Reserved.

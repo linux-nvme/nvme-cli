@@ -3,12 +3,11 @@
 libnvmf_read_hostid \- Reads the host identifier from the config default location
 .SH SYNOPSIS
 .B "char *" libnvmf_read_hostid
-.BI "(void "  ");"
+.BI "(struct libnvme_global_ctx *ctx "  ");"
 .SH ARGUMENTS
-.IP "void" 12
-no arguments
+.IP "ctx" 12
+struct libnvme_global_ctx object
 .SH "DESCRIPTION"
-
 Retrieve the host idenditifer from the config file located in
 $SYSCONFDIR/nvme/. $SYSCONFDIR is usually /etc.
 .SH "RETURN"

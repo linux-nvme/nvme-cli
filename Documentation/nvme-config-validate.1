@@ -1,0 +1,105 @@
+'\" t
+.\"     Title: nvme-config-validate
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/31/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-CONFIG\-VALIDA" "1" "07/31/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-config-validate \- Validate an NVMe\-oF INI connection configuration file
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR \fIconfig validate\fR
+                        [\-\-config=<file> | \-J <file>]
+                        [\-\-verbose | \-v]
+.fi
+.SH "DESCRIPTION"
+.sp
+Parses and validates the NVMe\-oF INI connection configuration file used by \fInvme connect\-all\fR and \fInvme discover\fR\&. The INI format is documented at \m[blue]\fBhttps://github\&.com/linux\-nvme/nvme\-cli/blob/master/libnvme/design/CONFIG\&.md\fR\m[]
+.sp
+By default, the file at /usr/local/etc/nvme/nvme\-fabrics\&.conf is validated\&. Use \-\-config to validate a file at a different path instead, for example before installing it as the system configuration\&.
+.sp
+On success, \fI<file>: OK\fR is printed and the command exits with status 0\&. If the file is malformed, \fI<file>: invalid configuration\fR is printed along with diagnostic details, and the command exits with a non\-zero status\&. A missing file is also reported as an error, not treated as an empty, valid configuration\&.
+.SH "OPTIONS"
+.PP
+\-J <file>, \-\-config=<file>
+.RS 4
+Validate this INI file instead of the default /usr/local/etc/nvme/nvme\-fabrics\&.conf\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Validate the system\(cqs configuration:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme config validate
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Validate a configuration file before installing it as the system configuration:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ nvme config validate \-\-config /tmp/nvme\-fabrics\&.conf
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "SEE ALSO"
+.sp
+nvme\-config\-show(1) nvme\-config\-convert(1) nvme\-connect\-all(1) nvme\-discover(1) \m[blue]\fBhttps://github\&.com/linux\-nvme/nvme\-cli/blob/master/libnvme/design/CONFIG\&.md\fR\m[]
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

@@ -1,0 +1,42 @@
+.TH "libnvme" 9 "enum nbft_ssns_ext_info_cipeec" "July 2026" "API Manual" LINUX
+.SH NAME
+enum nbft_ssns_ext_info_cipeec \- Connect Invalid Parameters Extended Error Codes (since rev. 1.1)
+.SH SYNOPSIS
+enum nbft_ssns_ext_info_cipeec {
+.br
+.BI "    NBFT_SSNS_EXT_INFO_CIPEEC_NO_ERROR"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_CIPEEC_GENERAL"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_CIPEEC_INV_ATTR"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_CIPEEC_DH_MISMATCH"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_CIPEEC_INV_CTRLID"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_CIPEEC_IO_CTRL_DIS"
+
+};
+.SH Constants
+.IP "NBFT_SSNS_EXT_INFO_CIPEEC_NO_ERROR" 12
+No Extended Error Known.
+.IP "NBFT_SSNS_EXT_INFO_CIPEEC_GENERAL" 12
+General Parameters Failure.
+.IP "NBFT_SSNS_EXT_INFO_CIPEEC_INV_ATTR" 12
+Invalid Attributes in Connect Response.
+.IP "NBFT_SSNS_EXT_INFO_CIPEEC_DH_MISMATCH" 12
+Diffie-Hellman Mismatch.
+.IP "NBFT_SSNS_EXT_INFO_CIPEEC_INV_CTRLID" 12
+Invalid Controller ID.
+.IP "NBFT_SSNS_EXT_INFO_CIPEEC_IO_CTRL_DIS" 12
+I/O Controller Disabled.

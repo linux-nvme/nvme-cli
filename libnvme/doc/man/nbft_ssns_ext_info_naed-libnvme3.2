@@ -1,0 +1,102 @@
+.TH "libnvme" 9 "enum nbft_ssns_ext_info_naed" "July 2026" "API Manual" LINUX
+.SH NAME
+enum nbft_ssns_ext_info_naed \- SSNS Extended Info Namespace Availability Enhanced Diagnostic values (since rev. 1.1)
+.SH SYNOPSIS
+enum nbft_ssns_ext_info_naed {
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_NO_INFO"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_NETWORK_ERR"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_CONN_FAILURE"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_CONN_INV_PARAMS"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_CONN_INV_HOST"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_CONN_TIMEOUT"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_DLP_TIMEOUT"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_NS_MISSING"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_NS_NOT_READY"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_REDFISH_FAILURE"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_SEC_CHAN_NEG"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_AUTH_FAILURE"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_AUTH_REQUIRED"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_DHCP_FAILURE"
+, 
+.br
+.br
+.BI "    NBFT_SSNS_EXT_INFO_NAED_DHCP_ROOT_PATH"
+
+};
+.SH Constants
+.IP "NBFT_SSNS_EXT_INFO_NAED_NO_INFO" 12
+No additional information.
+.IP "NBFT_SSNS_EXT_INFO_NAED_NETWORK_ERR" 12
+Network Error: The network HFI or
+SSNS destination was invalid.
+.IP "NBFT_SSNS_EXT_INFO_NAED_CONN_FAILURE" 12
+Connection Failure: The connection
+to the controller was invalid.
+.IP "NBFT_SSNS_EXT_INFO_NAED_CONN_INV_PARAMS" 12
+Connect Invalid Parameters.
+.IP "NBFT_SSNS_EXT_INFO_NAED_CONN_INV_HOST" 12
+Connect Invalid Host.
+.IP "NBFT_SSNS_EXT_INFO_NAED_CONN_TIMEOUT" 12
+Connection Timeout.
+.IP "NBFT_SSNS_EXT_INFO_NAED_DLP_TIMEOUT" 12
+Discovery Log Page Traversal Timeout.
+.IP "NBFT_SSNS_EXT_INFO_NAED_NS_MISSING" 12
+Namespace Missing: The referenced
+NID or NSID is missing.
+.IP "NBFT_SSNS_EXT_INFO_NAED_NS_NOT_READY" 12
+Namespace Not Ready.
+.IP "NBFT_SSNS_EXT_INFO_NAED_REDFISH_FAILURE" 12
+Redfish Secret Keypath Object: The
+pre-OS driver encountered a failure
+interacting with the Redfish Secret
+Keypath Object.
+.IP "NBFT_SSNS_EXT_INFO_NAED_SEC_CHAN_NEG" 12
+Secure Channel Negotiation error.
+.IP "NBFT_SSNS_EXT_INFO_NAED_AUTH_FAILURE" 12
+Authentication Failure.
+.IP "NBFT_SSNS_EXT_INFO_NAED_AUTH_REQUIRED" 12
+Authentication Required.
+.IP "NBFT_SSNS_EXT_INFO_NAED_DHCP_FAILURE" 12
+DHCP Failure.
+.IP "NBFT_SSNS_EXT_INFO_NAED_DHCP_ROOT_PATH" 12
+SSNS DHCP Root-Path.

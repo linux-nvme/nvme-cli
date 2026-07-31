@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/08/2026
+.\"      Date: 07/31/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "07/08/2026" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "07/31/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -338,6 +338,26 @@ Disconnect from an NVMe\-over\-Fabrics subsystem
 Disconnect from all NVMe\-over\-Fabrics subsystems
 .RE
 .PP
+\fBnvme-config-convert\fR(1)
+.RS 4
+Convert a legacy NVMe\-oF configuration to the INI format
+.RE
+.PP
+\fBnvme-config-create\fR(1)
+.RS 4
+Create an NVMe\-oF connection entry in the INI configuration
+.RE
+.PP
+\fBnvme-config-validate\fR(1)
+.RS 4
+Validate an NVMe\-oF INI connection configuration file
+.RE
+.PP
+\fBnvme-config-show\fR(1)
+.RS 4
+Show the resolved NVMe\-oF INI connection configuration
+.RE
+.PP
 \fBnvme-get-property\fR(1)
 .RS 4
 Reads and shows NVMe\-over\-Fabrics controller property
@@ -365,12 +385,12 @@ Capacity Management Command
 .PP
 \fBnvme-check-dhchap-key\fR(1)
 .RS 4
-Generate NVMeoF DH\-HMAC\-CHAP host key
+Check a host DH\-HMAC\-CHAP key (deprecated, see nvme\-keys\-check\-kxchap)
 .RE
 .PP
 \fBnvme-check-tls-key\fR(1)
 .RS 4
-Validate NVMeoF TLS PSK
+Check a NVMe TLS PSK (deprecated, see nvme\-keys\-check\-tls)
 .RE
 .PP
 \fBnvme-cmdset-ind-id-ns\fR(1)
@@ -390,7 +410,7 @@ Retrieve FID Support and Effects log
 .PP
 \fBnvme-gen-dhchap-key\fR(1)
 .RS 4
-Generate NVMeoF DH\-HMAC\-CHAP host key
+Generate a host DH\-HMAC\-CHAP key (deprecated, see nvme\-keys\-gen\-kxchap)
 .RE
 .PP
 \fBnvme-gen-hostnqn\fR(1)
@@ -400,7 +420,7 @@ Generate NVMeoF host NQN
 .PP
 \fBnvme-gen-tls-key\fR(1)
 .RS 4
-Generate NVMeoF TLS PSK
+Generate a NVMe TLS PSK (deprecated, see nvme\-keys\-gen\-tls)
 .RE
 .PP
 \fBnvme-get-lba-status\fR(1)
@@ -501,6 +521,11 @@ Resets the subsystem
 \fBnvme-supported-log-pages\fR(1)
 .RS 4
 Retrieve the Supported Log pages details
+.RE
+.PP
+\fBnvme-tls-key\fR(1)
+.RS 4
+Manage NVMe TLS PSKs (deprecated, see nvme\-keys\-import/export/revoke)
 .RE
 .PP
 \fBnvme-verify\fR(1)
@@ -1113,6 +1138,41 @@ Change the SED Opal Device password
 .RS 4
 MangoBoost \- NVMe Identify Controller
 .RE
+.PP
+\fBnvme-keys-gen-kxchap\fR(1)
+.RS 4
+Generate NVMeoF KX\-HMAC\-CHAP host key
+.RE
+.PP
+\fBnvme-keys-check-kxchap\fR(1)
+.RS 4
+Validate NVMeoF KX\-HMAC\-CHAP host key
+.RE
+.PP
+\fBnvme-keys-gen-tls\fR(1)
+.RS 4
+Generate NVMeoF TLS PSK
+.RE
+.PP
+\fBnvme-keys-check-tls\fR(1)
+.RS 4
+Validate NVMeoF TLS PSK
+.RE
+.PP
+\fBnvme-keys-import\fR(1)
+.RS 4
+Import NVMeoF TLS PSKs into a keyring
+.RE
+.PP
+\fBnvme-keys-export\fR(1)
+.RS 4
+Export NVMeoF TLS PSKs from a keyring
+.RE
+.PP
+\fBnvme-keys-revoke\fR(1)
+.RS 4
+Revoke an NVMeoF TLS PSK from a keyring
+.RE
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:
@@ -1158,6 +1218,8 @@ Set the timeout for the command in milliseconds\&.
 .RS 4
 Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
 .SH "RETURNS"
 .sp
 All commands will behave the same, they will return 0 on success and 1 on failure\&.

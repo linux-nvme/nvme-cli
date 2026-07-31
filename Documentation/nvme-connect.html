@@ -750,6 +750,8 @@ nvme-connect(1) Manual Page
 <div class="sectionbody">
 <div class="verseblock">
 <pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>connect</em> [--config=&lt;filename&gt;]
+                        [--devid-file=&lt;filename&gt;]
+                        [--idempotent]
                         [--owner=&lt;NAME&gt;]
                         [&lt;fabrics-options&gt;]</pre>
 <div class="attribution">
@@ -774,6 +776,40 @@ specified by the --nqn option.</p></div>
 <dd>
 <p>
         Use the specified JSON configuration file instead of the default.
+</p>
+</dd>
+<dt class="hdlist1">
+--devid-file=&lt;filename&gt;
+</dt>
+<dd>
+<p>
+        Write the kernel-assigned device name (for example, nvme0) to
+        &lt;filename&gt;. If the controller is already connected, the existing
+        device name is written. Otherwise, the device name is written
+        after the controller is connected.
+</p>
+<div class="literalblock">
+<div class="content">
+<pre><code>When used with --idempotent, the existing device name is written
+before the command exits successfully. This allows a supervising
+process, such as a systemd service, to identify the device for a
+later disconnect operation.</code></pre>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><code>The output file is created before attempting the connection. If
+the file cannot be created, for example because the parent
+directory does not exist, the command fails without attempting
+the connection.</code></pre>
+</div></div>
+</dd>
+<dt class="hdlist1">
+--idempotent
+</dt>
+<dd>
+<p>
+        Exit with status 0 if the requested controller is already
+        connected instead of reporting an error.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -831,12 +867,37 @@ specified by the --nqn option.</p></div>
 -C &lt;secret&gt;
 </dt>
 <dt class="hdlist1">
+--kxchap-ctrl-secret=&lt;secret&gt;
+</dt>
+<dd>
+<p>
+        Controller authentication secret for bi-directional authentication.
+        If not specified, bi-directional authentication is not attempted.
+</p>
+</dd>
+<dt class="hdlist1">
+-S &lt;secret&gt;
+</dt>
+<dt class="hdlist1">
+--kxchap-secret=&lt;secret&gt;
+</dt>
+<dd>
+<p>
+        Host authentication secret (KX-HMAC-CHAP). Must be provided in ASCII
+        format as defined in the NVMe specification.
+</p>
+</dd>
+<dt class="hdlist1">
+-C &lt;secret&gt;
+</dt>
+<dt class="hdlist1">
 --dhchap-ctrl-secret=&lt;secret&gt;
 </dt>
 <dd>
 <p>
         Controller authentication secret for bi-directional authentication.
         If not specified, bi-directional authentication is not attempted.
+        (deprecated, see --kxchap-ctrl-secret)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -849,6 +910,7 @@ specified by the --nqn option.</p></div>
 <p>
         Host authentication secret (DH-HMAC-CHAP). Must be provided in ASCII
         format as defined in the NVMe specification.
+        (deprecated, see --kxchap-secret)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1192,6 +1254,8 @@ and are available to this subcommand:</p></div>
 </p>
 </dd>
 </dl></div>
+<div class="paragraph"><p>These options can also be set as machine-wide defaults in
+nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1237,7 +1301,7 @@ and <a href="mailto:hch@lst.de">Christoph Hellwig</a></p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-07-08 15:06:29 CEST
+ 2026-07-31 16:39:45 CEST
 </div>
 </div>
 </body>

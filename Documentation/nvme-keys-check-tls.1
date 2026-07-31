@@ -1,0 +1,146 @@
+'\" t
+.\"     Title: nvme-keys-check-tls
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/31/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-KEYS\-CHECK\-T" "1" "07/31/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-keys-check-tls \- Check a NVMe TLS PSK
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR [<global\-options>] \fIkeys check\-tls\fR [\-\-keyring=<name> | \-k <name>]
+                        [\-\-keytype=<type> | \-t <type>]
+                        [\-\-hostnqn=<nqn> | \-n <nqn>]
+                        [\-\-subsysnqn=<nqn> | \-c <nqn>]
+                        [\-\-keydata=<key> | \-d <key>]
+                        [\-\-identity=<id\-vers> | \-I <id\-vers>]
+                        [\-\-compat | \-C]
+.fi
+.SH "DESCRIPTION"
+.sp
+Checks if the key is a valid NVMe TLS PSK in the PSK interchange format \fINVMeTLSkey\-1:01:<base64\-encoded data>:\fR and prints the resulting HMAC algorithm and key length\&.
+.sp
+If \fI\-\-keydata\fR is not given the key is read from stdin, which also allows checking a key stored in a file, e\&.g\&. \fInvme keys check\-tls < keyfile\fR\&.
+.sp
+If \fI\-\-subsysnqn\fR is given the TLS identity of the key is also printed, and the specified keyring is checked for a \fIretained\fR key already stored under that identity; the result (loaded or not, with its serial number if loaded) is reported\&. This command never modifies the keyring; to insert a \fIretained\fR key use linknvme\-keys\-insert\-tls[1]\&.
+.SH "OPTIONS"
+.PP
+\-k <name>, \-\-keyring=<name>
+.RS 4
+Name of the keyring to check for an already loaded
+\fIretained\fR
+TLS key\&. Default is
+\fI\&.nvme\fR\&.
+.RE
+.PP
+\-t <type>, \-\-keytype=<type>
+.RS 4
+Type of the key to look up\&. Default is
+\fIpsk\fR\&.
+.RE
+.PP
+\-n <nqn>, \-\-hostnqn=<nqn>
+.RS 4
+Host NVMe Qualified Name (NQN) to be used when checking whether the key is already loaded\&. Only used together with \-\-subsysnqn\&.
+.RE
+.PP
+\-c <nqn>, \-\-subsysnqn=<nqn>
+.RS 4
+Subsystem NVMe Qualified Name (NQN) to be used when checking whether the key is already loaded\&. If not given, only the key format is validated\&.
+.RE
+.PP
+\-d <key>, \-\-keydata=<key>
+.RS 4
+Key to be checked\&. If not given, the key is read from stdin\&.
+.RE
+.PP
+\-I <id\-vers>, \-\-identity=<id\-vers>
+.RS 4
+NVMe TLS key identity version to be used;
+\fI0\fR
+for the default identity, and
+\fI1\fR
+for the TLS identity suffixed by the PSK hash as specified in TP8018\&.
+.RE
+.PP
+\-C, \-\-compat
+.RS 4
+Use the original non\-RFC 8446 compliant algorithm when checking TLS keys for compatibility with older implementations\&.
+.RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
+.RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
+.SH "EXAMPLES"
+.sp
+No Examples
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

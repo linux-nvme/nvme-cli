@@ -1,0 +1,24 @@
+.TH "libnvmf_get_owner_from_fctx" 9 "libnvmf_get_owner_from_fctx" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_get_owner_from_fctx \- Get the registry owner of a fabrics context
+.SH SYNOPSIS
+.B "int" libnvmf_get_owner_from_fctx
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnvmf_context *fctx "  ","
+.BI "char **owner "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+Global context
+.IP "fctx" 12
+Fabrics context describing the connection to check
+.IP "owner" 12
+Returned owner, NULL if no matching controller exists or it is
+unowned
+.SH "DESCRIPTION"
+Convenience wrapper around \fBlibnvmf_get_owner_from_tid\fP for callers that
+already have a libnvmf_context rather than a bare TID. If \fIfctx\fP names an
+explicit device, its registry entry is checked directly. Otherwise, a
+controller is resolved from \fIfctx\fP's connection parameters. The \fIowner\fP
+contract is identical to \fBlibnvmf_get_owner_from_tid\fP.
+.SH "RETURN"
+0 on success (check \fIowner\fP), negative errno on failure.

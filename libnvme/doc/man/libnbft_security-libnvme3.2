@@ -6,11 +6,84 @@ struct libnbft_security {
 .br
 .BI "    int index;"
 .br
+.BI "    __u16 flags;"
+.br
+.BI "    __u8 secret_type;"
+.br
+.BI "    __u8 *sec_chan_algs;"
+.br
+.BI "    __u16 sec_chan_algs_len;"
+.br
+.BI "    __u8 *auth_protocols;"
+.br
+.BI "    __u16 auth_protocols_len;"
+.br
+.BI "    __u8 *cipher_suites;"
+.br
+.BI "    __u16 cipher_suites_len;"
+.br
+.BI "    __u8 *dh_groups;"
+.br
+.BI "    __u16 dh_groups_len;"
+.br
+.BI "    __u8 *sec_hash_funcs;"
+.br
+.BI "    __u16 sec_hash_funcs_len;"
+.br
+.BI "    char *secret_keypath;"
+.br
 .BI "
 };
 .br
 
 .SH Members
 .IP "index" 12
-The number of this Security Profile Descriptor in the Security
-Profile Descriptor List.
+The number of this Security Profile Descriptor in the
+Security Profile Descriptor List.
+.IP "flags" 12
+Security Profile Descriptor Flags bitmask,
+see \fIenum nbft_security_flags\fP.
+.IP "secret_type" 12
+Secret Type, see \fIenum nbft_security_secret_type\fP.
+.IP "sec_chan_algs" 12
+Secure Channel Algorithm list: an array of bytes
+whose values are the Security Type (SECTYPE) field,
+see \fIenum nvmf_tcp_sectype\fP. NULL if not present
+in the NBFT heap.
+.IP "sec_chan_algs_len" 12
+Length in bytes of \fIsec_chan_algs\fP.
+.IP "auth_protocols" 12
+Authentication Protocol identifier list. Values
+are Authentication Protocol Identifiers as defined
+in the NVM Express Base Specification. NULL if not
+present in the NBFT heap.
+.IP "auth_protocols_len" 12
+Length in bytes of \fIauth_protocols\fP.
+.IP "cipher_suites" 12
+Cipher Suite identifier list: raw byte data containing
+cipher suite identifiers as defined in the IANA TLS
+Parameters Registry. Each entry is a 16-bit value;
+the number of entries is \fIcipher_suites_len\fP / 2.
+NULL if not present in the NBFT heap.
+.IP "cipher_suites_len" 12
+Length in bytes of \fIcipher_suites\fP.
+.IP "dh_groups" 12
+DH-HMAC-CHAP Diffie-Hellman group identifier list.
+Values are DH Group Identifiers as defined in the
+NVM Express Base Specification. NULL if not present
+in the NBFT heap.
+.IP "dh_groups_len" 12
+Length in bytes of \fIdh_groups\fP.
+.IP "sec_hash_funcs" 12
+DH-HMAC-CHAP hash function identifier list,
+see \fIenum libnvmf_hmac_alg\fP. NULL if not present
+in the NBFT heap.
+.IP "sec_hash_funcs_len" 12
+Length in bytes of \fIsec_hash_funcs\fP.
+.IP "secret_keypath" 12
+URI string for the secret key path. The type of
+the URI is specified by \fIsecret_type\fP.
+NULL if not present.
+.SH "Description"
+All pointer fields refer to storage owned by the parent
+\fIstruct libnbft_info\fP. They must not be freed separately.

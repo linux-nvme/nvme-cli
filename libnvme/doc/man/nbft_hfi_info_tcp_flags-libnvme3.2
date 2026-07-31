@@ -13,6 +13,10 @@ enum nbft_hfi_info_tcp_flags {
 .br
 .br
 .BI "    NBFT_HFI_INFO_TCP_DHCP_OVERRIDE"
+, 
+.br
+.br
+.BI "    NBFT_HFI_INFO_TCP_IPADDR_AUTOCONF"
 
 };
 .SH Constants
@@ -33,3 +37,13 @@ interface. If cleared to 0h, then the HFI
 information was set administratively by
 a configuration interface to the driver and
 pre-OS envrionment.
+.IP "NBFT_HFI_INFO_TCP_IPADDR_AUTOCONF" 12
+Interface Address Autoconfigured (since rev.
+1.1): if set to 1h, then the IP Address,
+Subnet Mask Prefix, and IP Gateway fields are
+populated by an advanced stateless mechanism
+(e.g., IPv6-SLAAC or IPv6-ND); in addition,
+the DHCP Override bit shall be cleared to 0h,
+and the IP Origin field shall be cleared to 0h.
+If cleared to 0h, then the HFI information
+was not set by such a mechanism.

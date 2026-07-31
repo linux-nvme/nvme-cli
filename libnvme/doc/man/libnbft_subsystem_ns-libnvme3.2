@@ -30,9 +30,7 @@ struct libnbft_subsystem_ns {
 .br
 .BI "    char *subsys_nqn;"
 .br
-.BI "    bool pdu_header_digest_required;"
-.br
-.BI "    bool data_digest_required;"
+.BI "    __u16 trflags;"
 .br
 .BI "    int controller_id;"
 .br
@@ -40,9 +38,15 @@ struct libnbft_subsystem_ns {
 .br
 .BI "    char *dhcp_root_path_string;"
 .br
-.BI "    bool discovered;"
+.BI "    __u8 naed;"
 .br
-.BI "    bool unavailable;"
+.BI "    __u8 cipeec;"
+.br
+.BI "    __u16 cto;"
+.br
+.BI "    __u8 nceec;"
+.br
+.BI "    __u16 flags;"
 .br
 .BI "
 };
@@ -80,12 +84,9 @@ Namespace Identifier Type, see \fIenum libnbft_nid_type\fP.
 The Namespace Identifier value.
 .IP "subsys_nqn" 12
 Subsystem and Namespace NQN.
-.IP "pdu_header_digest_required" 12
-PDU Header Digest (HDGST) Flag: the use of NVM Header
-Digest Enabled is required.
-.IP "data_digest_required" 12
-Data Digest (DDGST) Flag: the use of NVM Data Digest
-Enabled is required.
+.IP "trflags" 12
+Transport Specific Flags bitmask,
+see \fIenum nbft_ssns_trflags\fP.
 .IP "controller_id" 12
 Controller ID (SSNS Extended Information Descriptor):
 The controller ID associated with the Admin Queue
@@ -96,9 +97,37 @@ Descriptor) or 0 if not supported.
 .IP "dhcp_root_path_string" 12
 DHCP Root Path Override string (SSNS Extended
 Information Descriptor).
-.IP "discovered" 12
-Indicates that this namespace was acquired
-through discovery.
-.IP "unavailable" 12
-Namespace is unavailable as indicated by
-the pre-OS driver.
+.IP "naed" 12
+Namespace Availability Enhanced Diagnostic
+(SSNS Extended Information Descriptor). Provides
+additional status codes from the pre-OS driver when
+the namespace is unavailable.
+See \fIenum nbft_ssns_ext_info_naed\fP for values.
+Zero indicates no additional information.
+Only present in NBFT rev. 1.1+, zero otherwise.
+.IP "cipeec" 12
+Connect Invalid Parameters Extended Error Code
+(SSNS Extended Information Descriptor). Provides
+additional error detail when the pre-OS driver
+received a Connect Invalid Parameters status.
+See \fIenum nbft_ssns_ext_info_cipeec\fP for values.
+Zero indicates no extended error.
+Only present in NBFT rev. 1.1+, zero otherwise.
+.IP "cto" 12
+Connection Timeout in seconds (SSNS Extended
+Information Descriptor). The timeout value used
+by the pre-OS driver for connecting to the object
+specified with this SSNS descriptor. A value of
+0xFFFF indicates that no timeout was specified.
+Zero indicates either a timeout of zero seconds
+or that the field is not present (NBFT rev. 1.0).
+.IP "nceec" 12
+Network and Connection Extended Error Code
+(SSNS Extended Information Descriptor). Provides
+error codes specific to network and connection
+errors encountered by the pre-OS driver.
+See \fIenum nbft_ssns_ext_info_nceec\fP for values.
+Zero indicates no extended error.
+Only present in NBFT rev. 1.1+, zero otherwise.
+.IP "flags" 12
+SSNS Flags bitmask, see \fIenum nbft_ssns_flags\fP.

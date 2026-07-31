@@ -1,0 +1,45 @@
+.TH "libnvmf_host_get_ids" 9 "libnvmf_host_get_ids" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_host_get_ids \- Retrieve host ids from various sources
+.SH SYNOPSIS
+.B "int" libnvmf_host_get_ids
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *hostnqn_arg "  ","
+.BI "const char *hostid_arg "  ","
+.BI "char **hostnqn "  ","
+.BI "char **hostid "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+struct libnvme_global_ctx object
+.IP "hostnqn_arg" 12
+Input hostnqn (command line) argument
+.IP "hostid_arg" 12
+Input hostid (command line) argument
+.IP "hostnqn" 12
+Output hostnqn; may be NULL if the caller does not need it
+.IP "hostid" 12
+Output hostid; may be NULL if the caller does not need it
+.SH "DESCRIPTION"
+libnvmf_host_get_ids figures out which hostnqn/hostid is to be used.
+There are several sources where this information can be retrieved.
+
+The order is:
+
+- Start with hostnqn/hostid given on the command line
+(\fIhostnqn_arg\fP, \fIhostid_arg\fP), if any
+- Otherwise, use the first host already resolved in \fIctx\fP's host
+list, if any
+- Otherwise, use \fIctx\fP's own hostnqn/hostid default, or
+/etc/nvme/hostnqn and /etc/nvme/hostid if \fIctx\fP has none
+- Otherwise, if hostnqn is known but hostid is not, and hostnqn
+has a "uuid:" component, derive hostid from it
+- As a last resort, derive a still-missing hostid from DMI or
+device-tree information (or generate a random one), then build
+a hostnqn from that hostid if one is still missing
+
+The function also checks that hostnqn and hostid match, logging a
+debug warning if not. The Linux NVMe implementation expects a 1:1
+matching between the IDs.
+.SH "RETURN"
+0 on success (\fIhostnqn\fP and \fIhostid\fP contain valid strings
+which the caller needs to free), or negative error code otherwise.

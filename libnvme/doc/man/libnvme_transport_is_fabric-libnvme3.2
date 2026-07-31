@@ -1,0 +1,16 @@
+.TH "libnvme_transport_is_fabric" 9 "libnvme_transport_is_fabric" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_transport_is_fabric \- True for a fabrics transport string
+.SH SYNOPSIS
+.B "bool" libnvme_transport_is_fabric
+.BI "(const char *transport "  ");"
+.SH ARGUMENTS
+.IP "transport" 12
+Transport name, e.g. "tcp", "pcie"
+.SH "DESCRIPTION"
+A transport is either local (pcie, apple-nvme) or NVMe-over-Fabrics
+(tcp, rdma, fc, loop). Use this when only the transport string is
+available, e.g. before a controller exists to ask
+\fBlibnvme_ctrl_is_transport_fabric\fP instead.
+.SH "RETURN"
+true if \fItransport\fP is a fabrics transport, false if local.

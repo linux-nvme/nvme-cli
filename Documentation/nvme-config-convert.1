@@ -1,0 +1,122 @@
+'\" t
+.\"     Title: nvme-config-convert
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/31/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-CONFIG\-CONVER" "1" "07/31/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-config-convert \- Convert a legacy NVMe\-oF configuration to the INI format
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR [<global\-options>] \fIconfig convert\fR
+                        [\-\-config=<file> | \-J <file>]
+                        [\-\-output=<file> | \-o <file>]
+                        [\-\-force]
+                        [\-\-verbose | \-v]
+.fi
+.SH "DESCRIPTION"
+.sp
+Converts a pre\-3\&.0 NVMe\-oF configuration from the legacy \fIconfig\&.json\fR JSON store and/or the \fIdiscovery\&.conf\fR argv\-style file to the INI configuration format used by \fInvme connect\-all\fR and \fInvme discover\fR\&. The INI format is documented at \m[blue]\fBhttps://github\&.com/linux\-nvme/nvme\-cli/blob/master/libnvme/design/CONFIG\&.md\fR\m[]
+.sp
+By default, the command looks for the legacy files /usr/local/etc/nvme/config\&.json and /usr/local/etc/nvme/discovery\&.conf and converts any that exist into a single configuration, matching the behavior of \fInvme connect\-all\fR\&. Use \-\-config to convert a config\&.json at a non\-default path instead; as with \fInvme connect\-all\fR, discovery\&.conf conversion is not gated by \-\-config \(em /usr/local/etc/nvme/discovery\&.conf is always converted when it exists, whether or not \-\-config is given\&.
+.sp
+The converted configuration is written to the file specified by \-\-output\&. If \-\-output is not specified, the default location, /usr/local/etc/nvme/nvme\-fabrics\&.conf, is used\&. Unless \-\-force is specified, the command refuses to overwrite an existing configuration\&. On success, the converted legacy file(s) are renamed to \fI<name>\&.converted\fR to prevent conversion on subsequent runs\&. Running the command again is safe: a source file that is missing only because a prior run already converted and renamed it is treated as already done, not as an error\&.
+.sp
+Malformed entries (for example, invalid addressing or an unreadable port) are skipped with a log message\&. Conversion continues unless a memory allocation failure occurs\&.
+.SH "OPTIONS"
+.PP
+\-J <file>, \-\-config=<file>
+.RS 4
+Convert this JSON file instead of the default /usr/local/etc/nvme/config\&.json\&.
+.RE
+.PP
+\-o <file>, \-\-output=<file>
+.RS 4
+Write the converted configuration here instead of the default /usr/local/etc/nvme/nvme\-fabrics\&.conf\&.
+.RE
+.PP
+\-\-force
+.RS 4
+Overwrite an existing configuration at the target\&. Any manual changes are lost\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Convert the system\(cqs legacy configuration in place:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme config convert
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Convert one specific configuration file for testing, without touching the system configuration:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme config convert \-\-config /tmp/config\&.json \-\-output /tmp/nvme\-fabrics\&.conf
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Note: unlike config\&.json, discovery\&.conf has no \-\-config\-style override \(em its path is always /usr/local/etc/nvme/discovery\&.conf\&. If that file exists on the system, this command still converts it and renames it to
+\fIdiscovery\&.conf\&.converted\fR, even though \-\-config points elsewhere\&.
+.RE
+.SH "SEE ALSO"
+.sp
+nvme\-config\-validate(1) nvme\-config\-show(1) nvme\-connect\-all(1) nvme\-discover(1) \m[blue]\fBhttps://github\&.com/linux\-nvme/nvme\-cli/blob/master/libnvme/design/CONFIG\&.md\fR\m[]
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

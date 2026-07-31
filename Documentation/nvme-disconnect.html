@@ -749,9 +749,9 @@ nvme-disconnect(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>disconnect</em> [--nqn=&lt;subnqn&gt; | -n &lt;subnqn&gt;]
-                        [--device=&lt;device&gt; | -d &lt;device&gt;]
-                        [--exclude | -x]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>disconnect</em> [--device=&lt;device&gt; | -d &lt;device&gt;]
+                        [--exclude | -x]
+                        [&lt;fabrics-options&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -760,9 +760,15 @@ nvme-disconnect(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Disconnects and removes one or more existing NVMe over Fabrics controllers.
-If the --nqn option is specified all controllers connecting to the Subsystem
-identified by subnqn will be removed. If the --device option is specified
-the controller specified by the --device option will be removed.</p></div>
+If the --device option is specified, the controller with that name will be
+removed. If --nqn is given by itself, every controller connected to the
+subsystem identified by subnqn will be removed. If --nqn is combined with
+any of the other fabrics options below (the same ones <em>nvme connect</em>
+accepts, such as --transport, --traddr, --trsvcid, --host-traddr,
+--host-iface, --hostnqn or --hostid), only the controller(s) matching all of
+the specified options are removed&#8201;&#8212;&#8201;useful for disambiguating between
+multiple controllers connected to the same subsystem. --device cannot be
+combined with --nqn or any of the other fabrics options.</p></div>
 <div class="paragraph"><p>With --exclude, a matching entry is written to the system-wide NVMe-oF
 exclusion list before the controller (or subsystem) is torn down, so that a
 cooperating orchestrator sees the exclusion in place before the removal event
@@ -775,18 +781,6 @@ exclusion list overview for details.</p></div>
 <div class="sectionbody">
 <div class="dlist"><dl>
 <dt class="hdlist1">
--n &lt;subnqn&gt;
-</dt>
-<dt class="hdlist1">
---nqn &lt;subnqn&gt;
-</dt>
-<dd>
-<p>
-        Indicates that all controllers for the NVMe subsystems specified
-        should be removed.
-</p>
-</dd>
-<dt class="hdlist1">
 -d &lt;device&gt;
 </dt>
 <dt class="hdlist1">
@@ -795,7 +789,8 @@ exclusion list overview for details.</p></div>
 <dd>
 <p>
         Indicates that the controller with the specified name should be
-        removed.
+        removed. Cannot be combined with --nqn or any of the fabrics
+        options below.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -809,7 +804,362 @@ exclusion list overview for details.</p></div>
         Write a matching entry to the <em>user</em> exclusion list before
         disconnecting, so orchestrators do not auto-reconnect the
         controller. The entry is built from the controller&#8217;s transport
-        parameters (or, with --nqn, from the subsystem NQN).
+        parameters (or, with a bare --nqn, from the subsystem NQN).
+</p>
+</dd>
+</dl></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_fabrics_options">FABRICS OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>The following options are common to NVMe over Fabrics commands such as
+<code>nvme connect</code>:</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+-a &lt;traddr&gt;
+</dt>
+<dt class="hdlist1">
+--traddr=&lt;traddr&gt;
+</dt>
+<dd>
+<p>
+        Specify the network address of the controller. For transports
+        using IP addressing (e.g. rdma, tcp), this should be an IP address.
+</p>
+</dd>
+<dt class="hdlist1">
+--concat
+</dt>
+<dd>
+<p>
+        Enable secure concatenation (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-c &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--reconnect-delay=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Set the delay in seconds before reconnect is attempted after a
+        connection loss.
+</p>
+</dd>
+<dt class="hdlist1">
+-C &lt;secret&gt;
+</dt>
+<dt class="hdlist1">
+--kxchap-ctrl-secret=&lt;secret&gt;
+</dt>
+<dd>
+<p>
+        Controller authentication secret for bi-directional authentication.
+        If not specified, bi-directional authentication is not attempted.
+</p>
+</dd>
+<dt class="hdlist1">
+-S &lt;secret&gt;
+</dt>
+<dt class="hdlist1">
+--kxchap-secret=&lt;secret&gt;
+</dt>
+<dd>
+<p>
+        Host authentication secret (KX-HMAC-CHAP). Must be provided in ASCII
+        format as defined in the NVMe specification.
+</p>
+</dd>
+<dt class="hdlist1">
+-C &lt;secret&gt;
+</dt>
+<dt class="hdlist1">
+--dhchap-ctrl-secret=&lt;secret&gt;
+</dt>
+<dd>
+<p>
+        Controller authentication secret for bi-directional authentication.
+        If not specified, bi-directional authentication is not attempted.
+        (deprecated, see --kxchap-ctrl-secret)
+</p>
+</dd>
+<dt class="hdlist1">
+-S &lt;secret&gt;
+</dt>
+<dt class="hdlist1">
+--dhchap-secret=&lt;secret&gt;
+</dt>
+<dd>
+<p>
+        Host authentication secret (DH-HMAC-CHAP). Must be provided in ASCII
+        format as defined in the NVMe specification.
+        (deprecated, see --kxchap-secret)
+</p>
+</dd>
+<dt class="hdlist1">
+--disable-sqflow
+</dt>
+<dd>
+<p>
+        Disable submission queue flow control.
+</p>
+</dd>
+<dt class="hdlist1">
+-G
+</dt>
+<dt class="hdlist1">
+--data-digest
+</dt>
+<dd>
+<p>
+        Enable data digest generation/verification (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-D
+</dt>
+<dt class="hdlist1">
+--duplicate-connect
+</dt>
+<dd>
+<p>
+        Allow duplicate connections to the same subsystem.
+</p>
+</dd>
+<dt class="hdlist1">
+-g
+</dt>
+<dt class="hdlist1">
+--hdr-digest
+</dt>
+<dd>
+<p>
+        Enable header digest generation/verification (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-f &lt;iface&gt;
+</dt>
+<dt class="hdlist1">
+--host-iface=&lt;iface&gt;
+</dt>
+<dd>
+<p>
+        Specify the network interface to use for the connection.
+</p>
+</dd>
+<dt class="hdlist1">
+-I &lt;hostid&gt;
+</dt>
+<dt class="hdlist1">
+--hostid=&lt;hostid&gt;
+</dt>
+<dd>
+<p>
+        Specify the host UUID.
+</p>
+</dd>
+<dt class="hdlist1">
+-q &lt;hostnqn&gt;
+</dt>
+<dt class="hdlist1">
+--hostnqn=&lt;hostnqn&gt;
+</dt>
+<dd>
+<p>
+        Override the default host NQN.
+</p>
+</dd>
+<dt class="hdlist1">
+-w &lt;traddr&gt;
+</dt>
+<dt class="hdlist1">
+--host-traddr=&lt;traddr&gt;
+</dt>
+<dd>
+<p>
+        Specify the source address on the host side of the connection.
+</p>
+</dd>
+<dt class="hdlist1">
+-k &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--keep-alive-tmo=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Set the keep-alive timeout in seconds.
+</p>
+</dd>
+<dt class="hdlist1">
+--keyring=&lt;keyring&gt;
+</dt>
+<dd>
+<p>
+        Keyring to use for TLS key lookup.
+</p>
+</dd>
+<dt class="hdlist1">
+-n &lt;subnqn&gt;
+</dt>
+<dt class="hdlist1">
+--nqn=&lt;subnqn&gt;
+</dt>
+<dd>
+<p>
+        Specify the NVMe subsystem NQN to connect to.
+</p>
+</dd>
+<dt class="hdlist1">
+-i &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-io-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Number of I/O queues to create.
+</p>
+</dd>
+<dt class="hdlist1">
+-P &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-poll-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Number of polling queues to create.
+</p>
+</dd>
+<dt class="hdlist1">
+-W &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--nr-write-queues=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Number of write queues to create.
+</p>
+</dd>
+<dt class="hdlist1">
+-Q &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--queue-size=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Queue depth for I/O queues.
+</p>
+</dd>
+<dt class="hdlist1">
+-l &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--ctrl-loss-tmo=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Maximum time in seconds to retry reconnect attempts after
+        controller loss.
+</p>
+</dd>
+<dt class="hdlist1">
+-s &lt;trsvcid&gt;
+</dt>
+<dt class="hdlist1">
+--trsvcid=&lt;trsvcid&gt;
+</dt>
+<dd>
+<p>
+        Transport service identifier (e.g. TCP/rdma port). Default is 4420
+        for RDMA.
+</p>
+</dd>
+<dt class="hdlist1">
+-T &lt;#&gt;
+</dt>
+<dt class="hdlist1">
+--tos=&lt;#&gt;
+</dt>
+<dd>
+<p>
+        Type of service value for the connection (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+-t &lt;trtype&gt;
+</dt>
+<dt class="hdlist1">
+--transport=&lt;trtype&gt;
+</dt>
+<dd>
+<p>
+        Specify the transport type. Supported values include:
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>+</p></div>
+<div class="tableblock">
+<table rules="all"
+width="100%"
+frame="border"
+cellspacing="0" cellpadding="4">
+<col width="50%" />
+<col width="50%" />
+<tbody>
+<tr>
+<td align="left" valign="top"><p class="table">Value</p></td>
+<td align="left" valign="top"><p class="table">Description</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">rdma</p></td>
+<td align="left" valign="top"><p class="table">RDMA (RoCE, iWARP, InfiniBand)</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">tcp</p></td>
+<td align="left" valign="top"><p class="table">TCP/IP</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">fc</p></td>
+<td align="left" valign="top"><p class="table">Fibre Channel (<strong>experimental</strong>)</p></td>
+</tr>
+<tr>
+<td align="left" valign="top"><p class="table">loop</p></td>
+<td align="left" valign="top"><p class="table">Local loopback transport</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+--tls
+</dt>
+<dd>
+<p>
+        Enable TLS encryption (TCP).
+</p>
+</dd>
+<dt class="hdlist1">
+--tls-key=&lt;tls-key&gt;
+</dt>
+<dd>
+<p>
+        TLS key for the connection. It is recommended to preload keys
+        into the system keyring instead of passing them via the command line.
+</p>
+</dd>
+<dt class="hdlist1">
+--tls-key-identity=&lt;identity&gt;
+</dt>
+<dd>
+<p>
+        Identity associated with the TLS key.
 </p>
 </dd>
 </dl></div>
@@ -889,6 +1239,8 @@ and are available to this subcommand:</p></div>
 </p>
 </dd>
 </dl></div>
+<div class="paragraph"><p>These options can also be set as machine-wide defaults in
+nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -912,6 +1264,18 @@ Disconnect the controller nvme4
 <div class="listingblock">
 <div class="content">
 <pre><code># nvme disconnect --device=nvme4</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Disconnect only the tcp controller for a subsystem at a given traddr,
+leaving other controllers of the same subsystem (e.g. over a different
+transport address) connected:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme disconnect --nqn=nqn.2014-08.com.example:nvme:nvm-subsystem-sn-d78432 \
+                   --transport=tcp --traddr=192.168.1.100</code></pre>
 </div></div>
 </li>
 <li>
@@ -944,7 +1308,7 @@ nvme-exclusion-add(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-07-08 15:06:29 CEST
+ 2026-07-31 16:39:45 CEST
 </div>
 </div>
 </body>

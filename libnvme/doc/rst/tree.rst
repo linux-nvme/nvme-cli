@@ -80,44 +80,6 @@ Next :c:type:`libnvme_host_t` object in an iterator
 :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object from **h**
 
 
-.. c:function:: void libnvme_host_set_pdc_enabled (libnvme_host_t h, bool enabled)
-
-   Set Persistent Discovery Controller flag
-
-**Parameters**
-
-``libnvme_host_t h``
-  Host for which the falg should be set
-
-``bool enabled``
-  The bool to set the enabled flag
-
-**Description**
-
-When libnvme_host_set_pdc_enabled() is not used to set the PDC flag,
-libnvme_host_is_pdc_enabled() will return the default value which was
-passed into the function and not the undefined flag value.
-
-
-.. c:function:: bool libnvme_host_is_pdc_enabled (libnvme_host_t h, bool fallback)
-
-   Is Persistenct Discovery Controller enabled
-
-**Parameters**
-
-``libnvme_host_t h``
-  Host which to check if PDC is enabled
-
-``bool fallback``
-  The fallback default value of the flag when
-  **libnvme_host_set_pdc_enabled** has not be used
-  to set the flag.
-
-**Return**
-
-true if PDC is enabled for **h**, else false
-
-
 .. c:function:: int libnvme_get_host (struct libnvme_global_ctx *ctx, const char *hostnqn, const char *hostid, libnvme_host_t *h)
 
    Returns a host object
@@ -1319,6 +1281,27 @@ src_addr.
 String indicating the running state of **c**
 
 
+.. c:function:: bool libnvme_transport_is_fabric (const char *transport)
+
+   True for a fabrics transport string
+
+**Parameters**
+
+``const char *transport``
+  Transport name, e.g. "tcp", "pcie"
+
+**Description**
+
+A transport is either local (pcie, apple-nvme) or NVMe-over-Fabrics
+(tcp, rdma, fc, loop). Use this when only the transport string is
+available, e.g. before a controller exists to ask
+libnvme_ctrl_is_transport_fabric() instead.
+
+**Return**
+
+true if **transport** is a fabrics transport, false if local.
+
+
 .. c:function:: bool libnvme_ctrl_is_transport_fabric (libnvme_ctrl_t c)
 
    True for a fabrics transport
@@ -1734,28 +1717,6 @@ clear all cached fds under this host.
   libnvme_host_t object
 
 
-.. c:function:: int libnvme_read_config (struct libnvme_global_ctx *ctx, const char *config_file)
-
-   Read NVMe JSON configuration file
-
-**Parameters**
-
-``struct libnvme_global_ctx *ctx``
-  :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object
-
-``const char *config_file``
-  JSON configuration file
-
-**Description**
-
-Read in the contents of **config_file** and merge them with
-the elements in **r**.
-
-**Return**
-
-0 on success, negative error code otherwise.
-
-
 .. c:function:: int libnvme_refresh_topology (struct libnvme_global_ctx *ctx)
 
    Refresh libnvme_root_t object contents
@@ -1768,47 +1729,6 @@ the elements in **r**.
 **Description**
 
 Removes all elements in **r** and rescans the existing topology.
-
-**Return**
-
-0 on success, negative error code otherwise.
-
-
-.. c:function:: int libnvme_dump_config (struct libnvme_global_ctx *ctx, int fd)
-
-   Print the JSON configuration
-
-**Parameters**
-
-``struct libnvme_global_ctx *ctx``
-  :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object
-
-``int fd``
-  File descriptor to write the JSON configuration.
-
-**Description**
-
-Writes the current contents of the JSON configuration
-to the file descriptor fd.
-
-**Return**
-
-0 on success, negative error code otherwise.
-
-
-.. c:function:: int libnvme_dump_tree (struct libnvme_global_ctx *ctx)
-
-   Dump internal object tree
-
-**Parameters**
-
-``struct libnvme_global_ctx *ctx``
-  :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object
-
-**Description**
-
-Prints the internal object tree in JSON format
-to stdout.
 
 **Return**
 

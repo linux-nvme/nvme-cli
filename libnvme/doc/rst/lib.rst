@@ -83,7 +83,25 @@ Passing NULL clears a previously set override.
 **Return**
 
 0 on success, -EINVAL if **ctx** is NULL or **path** is not a valid
-        sandbox path, -ENOMEM on allocation failure.
+sandbox path, -ENOMEM on allocation failure.
+
+
+.. c:function:: int libnvme_set_test_sysfs_dir (struct libnvme_global_ctx *ctx, const char *path)
+
+   Set libnvme's lookup sysfs path for testing
+
+**Parameters**
+
+``struct libnvme_global_ctx *ctx``
+  :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object
+
+``const char *path``
+  Directory with sysfs or NULL to restore defaults
+
+**Return**
+
+0 on success, -EINVAL if **ctx** is NULL, -ENOMEM on allocation
+failure.
 
 
 .. c:function:: void libnvme_set_logging_level (struct libnvme_global_ctx *ctx, int log_level, bool log_pid, bool log_tstamp)
@@ -407,62 +425,5 @@ None.
 Sets a default timeout that is applied to every passthrough command
 submitted through **hdl** when the command's own timeout_ms field is 0.
 Commands that set a non-zero timeout_ms override this default.
-
-
-.. c:function:: void libnvme_set_probe_enabled (struct libnvme_global_ctx *ctx, bool enabled)
-
-   enable/disable the probe for new MI endpoints
-
-**Parameters**
-
-``struct libnvme_global_ctx *ctx``
-  :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` object
-
-``bool enabled``
-  whether to probe new endpoints
-
-**Description**
-
-Controls whether newly-created endpoints are probed for quirks on creation.
-Defaults to enabled, which results in some initial messaging with the
-endpoint to determine model-specific details.
-
-
-.. c:function:: void libnvme_set_dry_run (struct libnvme_global_ctx *ctx, bool enable)
-
-   Set global dry run state
-
-**Parameters**
-
-``struct libnvme_global_ctx *ctx``
-  struct libnvme_global_ctx object
-
-``bool enable``
-  Enable/disable dry run state
-
-**Description**
-
-When dry_run is enabled, any IOCTL commands send via the passthru
-interface won't be executed.
-
-
-.. c:function:: void libnvme_set_ioctl_probing (struct libnvme_global_ctx *ctx, bool enable)
-
-   Enable/disable 64-bit IOCTL probing
-
-**Parameters**
-
-``struct libnvme_global_ctx *ctx``
-  struct libnvme_global_ctx object
-
-``bool enable``
-  Enable/disable 64-bit IOCTL probing
-
-**Description**
-
-When IOCTL probing is enabled, a 64-bit IOCTL command is issued to
-figure out if the passthru interface supports it.
-
-IOCTL probing is enabled per default.
 
 

@@ -1,0 +1,11 @@
+.TH "libnvmf_context_get_devid_file" 9 "libnvmf_context_get_devid_file" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_get_devid_file \- Get devid_file.
+.SH SYNOPSIS
+.B "const char *" libnvmf_context_get_devid_file
+.BI "(const struct libnvmf_context *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_context\fP instance to query.
+.SH "RETURN"
+The value of the devid_file field, or NULL if not set.

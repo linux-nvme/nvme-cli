@@ -1,0 +1,15 @@
+.TH "libnvme_set_test_sysfs_dir" 9 "libnvme_set_test_sysfs_dir" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_set_test_sysfs_dir \- Set libnvme's lookup sysfs path for testing
+.SH SYNOPSIS
+.B "int" libnvme_set_test_sysfs_dir
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "const char *path "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+\fIstruct libnvme_global_ctx\fP object
+.IP "path" 12
+Directory with sysfs or NULL to restore defaults
+.SH "RETURN"
+0 on success, -EINVAL if \fIctx\fP is NULL, -ENOMEM on allocation
+failure.

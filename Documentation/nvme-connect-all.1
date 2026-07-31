@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect-all
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/08/2026
+.\"      Date: 07/31/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT\-ALL" "1" "07/08/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT\-ALL" "1" "07/31/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,7 +38,6 @@ nvme-connect-all \- Discover and Connect to Fabrics controllers\&.
                         [\-\-config=<filename> | \-J <cfg>]
                         [\-\-persistent | \-p]
                         [\-\-quiet]
-                        [\-\-dump\-config | \-O]
                         [\-\-nbft]
                         [\-\-no\-nbft]
                         [\-\-nbft\-path=<STR>]
@@ -89,11 +88,6 @@ Don\(cqt remove the discovery controller after retrieving the discovery log page
 Suppress error messages\&.
 .RE
 .PP
-\-O, \-\-dump\-config
-.RS 4
-Print out resulting JSON configuration file to stdout\&.
-.RE
-.PP
 \-\-nbft
 .RS 4
 Only look at NBFT tables
@@ -133,14 +127,24 @@ Enable secure concatenation (TCP)\&.
 Set the delay in seconds before reconnect is attempted after a connection loss\&.
 .RE
 .PP
-\-C <secret>, \-\-dhchap\-ctrl\-secret=<secret>
+\-C <secret>, \-\-kxchap\-ctrl\-secret=<secret>
 .RS 4
 Controller authentication secret for bi\-directional authentication\&. If not specified, bi\-directional authentication is not attempted\&.
 .RE
 .PP
+\-S <secret>, \-\-kxchap\-secret=<secret>
+.RS 4
+Host authentication secret (KX\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&.
+.RE
+.PP
+\-C <secret>, \-\-dhchap\-ctrl\-secret=<secret>
+.RS 4
+Controller authentication secret for bi\-directional authentication\&. If not specified, bi\-directional authentication is not attempted\&. (deprecated, see \-\-kxchap\-ctrl\-secret)
+.RE
+.PP
 \-S <secret>, \-\-dhchap\-secret=<secret>
 .RS 4
-Host authentication secret (DH\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&.
+Host authentication secret (DH\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&. (deprecated, see \-\-kxchap\-secret)
 .RE
 .PP
 \-\-disable\-sqflow
@@ -343,6 +347,8 @@ Set the timeout for the command in milliseconds\&.
 .RS 4
 Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
 .SH "EXAMPLES"
 .sp
 .RS 4

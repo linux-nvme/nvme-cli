@@ -1,0 +1,28 @@
+.TH "libnvmf_context_set_devid_file" 9 "libnvmf_context_set_devid_file" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_set_devid_file \- Set devid file for context
+.SH SYNOPSIS
+.B "int" libnvmf_context_set_devid_file
+.BI "(struct libnvmf_context *fctx "  ","
+.BI "const char *devid_file "  ");"
+.SH ARGUMENTS
+.IP "fctx" 12
+Fabrics context
+.IP "devid_file" 12
+Path to the output file
+.SH "DESCRIPTION"
+Configure a file that \fBlibnvmf_connect\fP uses to record the
+kernel-assigned device name (for example, "nvme0").
+
+If the controller is already connected, the existing device name is
+written. Otherwise, the device name is written after the controller is
+connected.
+
+The output file is created before attempting the connection. If the
+file cannot be created, for example because the parent directory does
+not exist, \fBlibnvmf_connect\fP fails without attempting the connection.
+
+This is intended for applications that need to identify the device
+associated with a connection, for example to disconnect it later.
+.SH "RETURN"
+0 on success, negative error code otherwise.

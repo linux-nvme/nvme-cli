@@ -2,12 +2,12 @@
 .\"     Title: nvme-disconnect
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/08/2026
+.\"      Date: 07/31/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCONNECT" "1" "07/08/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCONNECT" "1" "07/31/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,32 +32,221 @@ nvme-disconnect \- Disconnect one or more Fabrics controller(s)\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIdisconnect\fR [\-\-nqn=<subnqn> | \-n <subnqn>]
-                        [\-\-device=<device> | \-d <device>]
+\fInvme\fR [<global\-options>] \fIdisconnect\fR [\-\-device=<device> | \-d <device>]
                         [\-\-exclude | \-x]
+                        [<fabrics\-options>]
 .fi
 .SH "DESCRIPTION"
 .sp
-Disconnects and removes one or more existing NVMe over Fabrics controllers\&. If the \-\-nqn option is specified all controllers connecting to the Subsystem identified by subnqn will be removed\&. If the \-\-device option is specified the controller specified by the \-\-device option will be removed\&.
+Disconnects and removes one or more existing NVMe over Fabrics controllers\&. If the \-\-device option is specified, the controller with that name will be removed\&. If \-\-nqn is given by itself, every controller connected to the subsystem identified by subnqn will be removed\&. If \-\-nqn is combined with any of the other fabrics options below (the same ones \fInvme connect\fR accepts, such as \-\-transport, \-\-traddr, \-\-trsvcid, \-\-host\-traddr, \-\-host\-iface, \-\-hostnqn or \-\-hostid), only the controller(s) matching all of the specified options are removed \(em useful for disambiguating between multiple controllers connected to the same subsystem\&. \-\-device cannot be combined with \-\-nqn or any of the other fabrics options\&.
 .sp
 With \-\-exclude, a matching entry is written to the system\-wide NVMe\-oF exclusion list before the controller (or subsystem) is torn down, so that a cooperating orchestrator sees the exclusion in place before the removal event fires and does not immediately reconnect\&. See nvme\-exclusion\-add(1) and the exclusion list overview for details\&.
 .SH "OPTIONS"
 .PP
-\-n <subnqn>, \-\-nqn <subnqn>
-.RS 4
-Indicates that all controllers for the NVMe subsystems specified should be removed\&.
-.RE
-.PP
 \-d <device>, \-\-device <device>
 .RS 4
-Indicates that the controller with the specified name should be removed\&.
+Indicates that the controller with the specified name should be removed\&. Cannot be combined with \-\-nqn or any of the fabrics options below\&.
 .RE
 .PP
 \-x, \-\-exclude
 .RS 4
 Write a matching entry to the
 \fIuser\fR
-exclusion list before disconnecting, so orchestrators do not auto\-reconnect the controller\&. The entry is built from the controller\(cqs transport parameters (or, with \-\-nqn, from the subsystem NQN)\&.
+exclusion list before disconnecting, so orchestrators do not auto\-reconnect the controller\&. The entry is built from the controller\(cqs transport parameters (or, with a bare \-\-nqn, from the subsystem NQN)\&.
+.RE
+.SH "FABRICS OPTIONS"
+.sp
+The following options are common to NVMe over Fabrics commands such as nvme connect:
+.PP
+\-a <traddr>, \-\-traddr=<traddr>
+.RS 4
+Specify the network address of the controller\&. For transports using IP addressing (e\&.g\&. rdma, tcp), this should be an IP address\&.
+.RE
+.PP
+\-\-concat
+.RS 4
+Enable secure concatenation (TCP)\&.
+.RE
+.PP
+\-c <#>, \-\-reconnect\-delay=<#>
+.RS 4
+Set the delay in seconds before reconnect is attempted after a connection loss\&.
+.RE
+.PP
+\-C <secret>, \-\-kxchap\-ctrl\-secret=<secret>
+.RS 4
+Controller authentication secret for bi\-directional authentication\&. If not specified, bi\-directional authentication is not attempted\&.
+.RE
+.PP
+\-S <secret>, \-\-kxchap\-secret=<secret>
+.RS 4
+Host authentication secret (KX\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&.
+.RE
+.PP
+\-C <secret>, \-\-dhchap\-ctrl\-secret=<secret>
+.RS 4
+Controller authentication secret for bi\-directional authentication\&. If not specified, bi\-directional authentication is not attempted\&. (deprecated, see \-\-kxchap\-ctrl\-secret)
+.RE
+.PP
+\-S <secret>, \-\-dhchap\-secret=<secret>
+.RS 4
+Host authentication secret (DH\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&. (deprecated, see \-\-kxchap\-secret)
+.RE
+.PP
+\-\-disable\-sqflow
+.RS 4
+Disable submission queue flow control\&.
+.RE
+.PP
+\-G, \-\-data\-digest
+.RS 4
+Enable data digest generation/verification (TCP)\&.
+.RE
+.PP
+\-D, \-\-duplicate\-connect
+.RS 4
+Allow duplicate connections to the same subsystem\&.
+.RE
+.PP
+\-g, \-\-hdr\-digest
+.RS 4
+Enable header digest generation/verification (TCP)\&.
+.RE
+.PP
+\-f <iface>, \-\-host\-iface=<iface>
+.RS 4
+Specify the network interface to use for the connection\&.
+.RE
+.PP
+\-I <hostid>, \-\-hostid=<hostid>
+.RS 4
+Specify the host UUID\&.
+.RE
+.PP
+\-q <hostnqn>, \-\-hostnqn=<hostnqn>
+.RS 4
+Override the default host NQN\&.
+.RE
+.PP
+\-w <traddr>, \-\-host\-traddr=<traddr>
+.RS 4
+Specify the source address on the host side of the connection\&.
+.RE
+.PP
+\-k <#>, \-\-keep\-alive\-tmo=<#>
+.RS 4
+Set the keep\-alive timeout in seconds\&.
+.RE
+.PP
+\-\-keyring=<keyring>
+.RS 4
+Keyring to use for TLS key lookup\&.
+.RE
+.PP
+\-n <subnqn>, \-\-nqn=<subnqn>
+.RS 4
+Specify the NVMe subsystem NQN to connect to\&.
+.RE
+.PP
+\-i <#>, \-\-nr\-io\-queues=<#>
+.RS 4
+Number of I/O queues to create\&.
+.RE
+.PP
+\-P <#>, \-\-nr\-poll\-queues=<#>
+.RS 4
+Number of polling queues to create\&.
+.RE
+.PP
+\-W <#>, \-\-nr\-write\-queues=<#>
+.RS 4
+Number of write queues to create\&.
+.RE
+.PP
+\-Q <#>, \-\-queue\-size=<#>
+.RS 4
+Queue depth for I/O queues\&.
+.RE
+.PP
+\-l <#>, \-\-ctrl\-loss\-tmo=<#>
+.RS 4
+Maximum time in seconds to retry reconnect attempts after controller loss\&.
+.RE
+.PP
+\-s <trsvcid>, \-\-trsvcid=<trsvcid>
+.RS 4
+Transport service identifier (e\&.g\&. TCP/rdma port)\&. Default is 4420 for RDMA\&.
+.RE
+.PP
+\-T <#>, \-\-tos=<#>
+.RS 4
+Type of service value for the connection (TCP)\&.
+.RE
+.PP
+\-t <trtype>, \-\-transport=<trtype>
+.RS 4
+Specify the transport type\&. Supported values include:
+.RE
+.sp
++
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+.sp
+Value
+T}:T{
+.sp
+Description
+T}
+T{
+.sp
+rdma
+T}:T{
+.sp
+RDMA (RoCE, iWARP, InfiniBand)
+T}
+T{
+.sp
+tcp
+T}:T{
+.sp
+TCP/IP
+T}
+T{
+.sp
+fc
+T}:T{
+.sp
+Fibre Channel (\fBexperimental\fR)
+T}
+T{
+.sp
+loop
+T}:T{
+.sp
+Local loopback transport
+T}
+.TE
+.sp 1
+.PP
+\-\-tls
+.RS 4
+Enable TLS encryption (TCP)\&.
+.RE
+.PP
+\-\-tls\-key=<tls\-key>
+.RS 4
+TLS key for the connection\&. It is recommended to preload keys into the system keyring instead of passing them via the command line\&.
+.RE
+.PP
+\-\-tls\-key\-identity=<identity>
+.RS 4
+Identity associated with the TLS key\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp
@@ -104,6 +293,8 @@ Set the timeout for the command in milliseconds\&.
 .RS 4
 Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
 .SH "EXAMPLES"
 .sp
 .RS 4
@@ -142,6 +333,28 @@ Disconnect the controller nvme4
 .\}
 .nf
 # nvme disconnect \-\-device=nvme4
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Disconnect only the tcp controller for a subsystem at a given traddr, leaving other controllers of the same subsystem (e\&.g\&. over a different transport address) connected:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme disconnect \-\-nqn=nqn\&.2014\-08\&.com\&.example:nvme:nvm\-subsystem\-sn\-d78432 \e
+                   \-\-transport=tcp \-\-traddr=192\&.168\&.1\&.100
 .fi
 .if n \{\
 .RE

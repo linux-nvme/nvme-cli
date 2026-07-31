@@ -1,0 +1,385 @@
+'\" t
+.\"     Title: nvme-config-create
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 07/31/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-CONFIG\-CREATE" "1" "07/31/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-config-create \- Add an NVMe\-oF connection entry to the INI configuration
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR [<global\-options>] \fIconfig create\fR
+                        [\-\-discovery]
+                        [\-\-persistent ]
+                        [\-\-no\-persistent ]
+                        [\-\-epcsd ]
+                        [\-\-no\-epcsd ]
+                        [\-\-host\-symname=<name>]
+                        [\-\-output=<file>]
+                        [<fabrics\-options>]
+.fi
+.SH "DESCRIPTION"
+.sp
+Build one NVMe\-oF connection entry from command\-line options and add it to the INI configuration used by \fInvme connect\fR, \fInvme discover\fR, and \fInvme connect\-all\fR\&. The format is documented at \m[blue]\fBhttps://github\&.com/linux\-nvme/nvme\-cli/blob/master/libnvme/design/CONFIG\&.md\fR\m[]
+.sp
+If the target file exists, its connections are kept and the new entry is merged in alongside them\&. Running the same command again is a no\-op\&. Unlike \fInvme config convert\fR, this is not a one\-shot migration; it is the ongoing way to build an INI configuration from the command line\&.
+.sp
+The entry is an I/O controller (subsystem) entry by default, and \-\-nqn is required\&. Use \-\-discovery for a discovery controller entry instead; \-\-nqn is then optional\&.
+.sp
+A connection with an explicit \-\-hostnqn or \-\-hostid is written to a drop\-in under \fI<file>\&.d/\fR\&. One without either goes into the main file\&.
+.SH "OPTIONS"
+.PP
+\-\-discovery
+.RS 4
+Create a discovery controller entry instead of an I/O controller entry\&. Without this, \-\-nqn is required\&.
+.RE
+.PP
+\-\-persistent
+.RS 4
+Keep the discovery controller connected to receive Asynchronous Event Notifications instead of disconnecting after the discovery log page fetch\&. Requires \-\-discovery\&. Mutually exclusive with \-\-no\-persistent\&.
+.RE
+.PP
+\-\-no\-persistent
+.RS 4
+Explicitly record that this discovery controller is not persistent, overriding any default that would otherwise apply (e\&.g\&. one derived from the discovery log page)\&. Requires \-\-discovery\&. Mutually exclusive with \-\-persistent\&.
+.RE
+.PP
+\-\-epcsd
+.RS 4
+Mark this discovery controller as supporting Explicit Persistent Connection Support for Discovery (EPCSD)\&. Requires \-\-discovery\&. Mutually exclusive with \-\-no\-epcsd\&.
+.RE
+.PP
+\-\-no\-epcsd
+.RS 4
+Explicitly record that this discovery controller does not support EPCSD, overriding any default that would otherwise apply\&. Requires \-\-discovery\&. Mutually exclusive with \-\-epcsd\&.
+.RE
+.PP
+\-\-host\-symname=<name>
+.RS 4
+Name this host persona\&. Puts it in its own configuration drop\-in\&.
+.RE
+.PP
+\-\-output=<file>
+.RS 4
+Write to this file instead of the default /usr/local/etc/nvme/nvme\-fabrics\&.conf\&.
+.RE
+.SH "FABRICS OPTIONS"
+.sp
+The following options are common to NVMe over Fabrics commands such as nvme connect:
+.PP
+\-a <traddr>, \-\-traddr=<traddr>
+.RS 4
+Specify the network address of the controller\&. For transports using IP addressing (e\&.g\&. rdma, tcp), this should be an IP address\&.
+.RE
+.PP
+\-\-concat
+.RS 4
+Enable secure concatenation (TCP)\&.
+.RE
+.PP
+\-c <#>, \-\-reconnect\-delay=<#>
+.RS 4
+Set the delay in seconds before reconnect is attempted after a connection loss\&.
+.RE
+.PP
+\-C <secret>, \-\-kxchap\-ctrl\-secret=<secret>
+.RS 4
+Controller authentication secret for bi\-directional authentication\&. If not specified, bi\-directional authentication is not attempted\&.
+.RE
+.PP
+\-S <secret>, \-\-kxchap\-secret=<secret>
+.RS 4
+Host authentication secret (KX\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&.
+.RE
+.PP
+\-C <secret>, \-\-dhchap\-ctrl\-secret=<secret>
+.RS 4
+Controller authentication secret for bi\-directional authentication\&. If not specified, bi\-directional authentication is not attempted\&. (deprecated, see \-\-kxchap\-ctrl\-secret)
+.RE
+.PP
+\-S <secret>, \-\-dhchap\-secret=<secret>
+.RS 4
+Host authentication secret (DH\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&. (deprecated, see \-\-kxchap\-secret)
+.RE
+.PP
+\-\-disable\-sqflow
+.RS 4
+Disable submission queue flow control\&.
+.RE
+.PP
+\-G, \-\-data\-digest
+.RS 4
+Enable data digest generation/verification (TCP)\&.
+.RE
+.PP
+\-D, \-\-duplicate\-connect
+.RS 4
+Allow duplicate connections to the same subsystem\&.
+.RE
+.PP
+\-g, \-\-hdr\-digest
+.RS 4
+Enable header digest generation/verification (TCP)\&.
+.RE
+.PP
+\-f <iface>, \-\-host\-iface=<iface>
+.RS 4
+Specify the network interface to use for the connection\&.
+.RE
+.PP
+\-I <hostid>, \-\-hostid=<hostid>
+.RS 4
+Specify the host UUID\&.
+.RE
+.PP
+\-q <hostnqn>, \-\-hostnqn=<hostnqn>
+.RS 4
+Override the default host NQN\&.
+.RE
+.PP
+\-w <traddr>, \-\-host\-traddr=<traddr>
+.RS 4
+Specify the source address on the host side of the connection\&.
+.RE
+.PP
+\-k <#>, \-\-keep\-alive\-tmo=<#>
+.RS 4
+Set the keep\-alive timeout in seconds\&.
+.RE
+.PP
+\-\-keyring=<keyring>
+.RS 4
+Keyring to use for TLS key lookup\&.
+.RE
+.PP
+\-n <subnqn>, \-\-nqn=<subnqn>
+.RS 4
+Specify the NVMe subsystem NQN to connect to\&.
+.RE
+.PP
+\-i <#>, \-\-nr\-io\-queues=<#>
+.RS 4
+Number of I/O queues to create\&.
+.RE
+.PP
+\-P <#>, \-\-nr\-poll\-queues=<#>
+.RS 4
+Number of polling queues to create\&.
+.RE
+.PP
+\-W <#>, \-\-nr\-write\-queues=<#>
+.RS 4
+Number of write queues to create\&.
+.RE
+.PP
+\-Q <#>, \-\-queue\-size=<#>
+.RS 4
+Queue depth for I/O queues\&.
+.RE
+.PP
+\-l <#>, \-\-ctrl\-loss\-tmo=<#>
+.RS 4
+Maximum time in seconds to retry reconnect attempts after controller loss\&.
+.RE
+.PP
+\-s <trsvcid>, \-\-trsvcid=<trsvcid>
+.RS 4
+Transport service identifier (e\&.g\&. TCP/rdma port)\&. Default is 4420 for RDMA\&.
+.RE
+.PP
+\-T <#>, \-\-tos=<#>
+.RS 4
+Type of service value for the connection (TCP)\&.
+.RE
+.PP
+\-t <trtype>, \-\-transport=<trtype>
+.RS 4
+Specify the transport type\&. Supported values include:
+.RE
+.sp
++
+.TS
+allbox tab(:);
+lt lt
+lt lt
+lt lt
+lt lt
+lt lt.
+T{
+.sp
+Value
+T}:T{
+.sp
+Description
+T}
+T{
+.sp
+rdma
+T}:T{
+.sp
+RDMA (RoCE, iWARP, InfiniBand)
+T}
+T{
+.sp
+tcp
+T}:T{
+.sp
+TCP/IP
+T}
+T{
+.sp
+fc
+T}:T{
+.sp
+Fibre Channel (\fBexperimental\fR)
+T}
+T{
+.sp
+loop
+T}:T{
+.sp
+Local loopback transport
+T}
+.TE
+.sp 1
+.PP
+\-\-tls
+.RS 4
+Enable TLS encryption (TCP)\&.
+.RE
+.PP
+\-\-tls\-key=<tls\-key>
+.RS 4
+TLS key for the connection\&. It is recommended to preload keys into the system keyring instead of passing them via the command line\&.
+.RE
+.PP
+\-\-tls\-key\-identity=<identity>
+.RS 4
+Identity associated with the TLS key\&.
+.RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
+.RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Add a discovery controller entry for an FC discovery controller:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme config create \-\-transport fc \e
+    \-\-traddr=nn\-0x58ccf090c92006da:pn\-0x58ccf091492806da \e
+    \-\-host\-traddr=nn\-0x20000024ff7fa448:pn\-0x21000024ff7fa448 \e
+    \-\-hostnqn=nqn\&.2014\-08\&.org\&.nvmexpress:uuid:62a4ab74\-1e18\-11f1\-8bb7\-6c1ff71ba506 \e
+    \-\-discovery
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Add an I/O controller entry to a test configuration file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme config create \-\-transport tcp \-\-traddr=192\&.168\&.1\&.20 \-\-trsvcid=4420 \e
+    \-\-nqn=nqn\&.2024\-01\&.com\&.example:data\&.vol1 \e
+    \-\-output=/tmp/nvme\-fabrics\&.conf
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "SEE ALSO"
+.sp
+nvme\-config\-convert(1) nvme\-config\-validate(1) nvme\-config\-show(1) nvme\-connect\-all(1) nvme\-discover(1)
+.SH "NVME"
+.sp
+Part of the nvme\-user suite

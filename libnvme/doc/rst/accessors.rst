@@ -2089,3 +2089,137 @@ The value of the transport field.
 The value of the trsvcid field.
 
 
+.. c:function:: void libnvme_set_dry_run (struct libnvme_global_ctx *p, bool dry_run)
+
+   Set dry_run.
+
+**Parameters**
+
+``struct libnvme_global_ctx *p``
+  The :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` instance to update.
+
+``bool dry_run``
+  Value to assign to the dry_run field.
+
+
+.. c:function:: bool libnvme_get_dry_run (const struct libnvme_global_ctx *p)
+
+   Get dry_run.
+
+**Parameters**
+
+``const struct libnvme_global_ctx *p``
+  The :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` instance to query.
+
+**Return**
+
+The value of the dry_run field.
+
+
+.. c:function:: void libnvme_set_force_4k (struct libnvme_global_ctx *p, bool force_4k)
+
+   Set force_4k.
+
+**Parameters**
+
+``struct libnvme_global_ctx *p``
+  The :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` instance to update.
+
+``bool force_4k``
+  Value to assign to the force_4k field.
+
+
+.. c:function:: bool libnvme_get_force_4k (const struct libnvme_global_ctx *p)
+
+   Get force_4k.
+
+**Parameters**
+
+``const struct libnvme_global_ctx *p``
+  The :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` instance to query.
+
+**Return**
+
+The value of the force_4k field.
+
+
+.. c:function:: void libnvme_set_mi_probe_enabled (struct libnvme_global_ctx *p, bool mi_probe_enabled)
+
+   Set mi_probe_enabled.
+
+**Parameters**
+
+``struct libnvme_global_ctx *p``
+  The :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` instance to update.
+
+``bool mi_probe_enabled``
+  Value to assign to the mi_probe_enabled field.
+
+
+.. c:function:: bool libnvme_get_mi_probe_enabled (const struct libnvme_global_ctx *p)
+
+   Get mi_probe_enabled.
+
+**Parameters**
+
+``const struct libnvme_global_ctx *p``
+  The :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` instance to query.
+
+**Return**
+
+The value of the mi_probe_enabled field.
+
+
+.. c:function:: void libnvme_set_ioctl_probing (struct libnvme_global_ctx *p, bool ioctl_probing)
+
+   Set ioctl_probing.
+
+**Parameters**
+
+``struct libnvme_global_ctx *p``
+  The :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` instance to update.
+
+``bool ioctl_probing``
+  Value to assign to the ioctl_probing field.
+
+
+.. c:function:: bool libnvme_get_ioctl_probing (const struct libnvme_global_ctx *p)
+
+   Get ioctl_probing.
+
+**Parameters**
+
+``const struct libnvme_global_ctx *p``
+  The :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` instance to query.
+
+**Return**
+
+The value of the ioctl_probing field.
+
+
+.. c:function:: void libnvme_set_hostnqn (struct libnvme_global_ctx *p, const char *hostnqn)
+
+   Set hostnqn.
+
+**Parameters**
+
+``struct libnvme_global_ctx *p``
+  The :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` instance to update.
+
+``const char *hostnqn``
+  New string; a copy is stored. Pass NULL to clear.
+
+
+.. c:function:: void libnvme_set_hostid (struct libnvme_global_ctx *p, const char *hostid)
+
+   Set hostid.
+
+**Parameters**
+
+``struct libnvme_global_ctx *p``
+  The :c:type:`struct libnvme_global_ctx <libnvme_global_ctx>` instance to update.
+
+``const char *hostid``
+  New string; a copy is stored. Pass NULL to clear.
+
+

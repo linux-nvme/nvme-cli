@@ -18,6 +18,14 @@ struct nbft_ssns_ext_info {
 .br
 .BI "    struct nbft_heap_obj dhcp_root_path_str_obj;"
 .br
+.BI "    __u8 naed;"
+.br
+.BI "    __u8 cipeec;"
+.br
+.BI "    __le16 cto;"
+.br
+.BI "    __u8 nceec;"
+.br
 .BI "
 };
 .br
@@ -53,3 +61,26 @@ the offset in bytes of a heap object containing
 an DHCP Root Path String used by the driver. If the
 SNSS DHCP Root Path Override flag bit is cleared to 0h,
 then this field is reserved.
+.IP "naed" 12
+Namespace Availability Enhanced Diagnostic (since
+rev. 1.1): If the Unavailable Namespace Flag bit
+is set to 1h (i.e., Unavailable) in the Subsystem
+Namespace Descriptor, this field may provide additional
+status codes provided by the pre-OS driver,
+see \fIenum nbft_ssns_ext_info_naed\fP.
+.IP "cipeec" 12
+Connect Invalid Parameters Extended Error Codes (since
+rev, 1.1): Connect Invalid Parameters may be returned
+with additional status details,
+see \fIenum nbft_ssns_ext_info_cipeec\fP.
+.IP "cto" 12
+Connection Timeout (since rev. 1.1): Specifies
+in seconds the timeout value used by the pre-OS driver
+for connecting to the object specified with this SSNS
+descriptor. If cleared to 0h, this indicates a timeout
+of 0 seconds. If set to FFFFh, this indicates that no
+timeout was specified.
+.IP "nceec" 12
+Network and Connection Extended Error Codes (since
+rev, 1.1): Error codes specific to network and connectio
+errors, see \fIenum nbft_ssns_ext_info_nceec\fP.

@@ -1,0 +1,12 @@
+.TH "libnvme_set_hostid" 9 "libnvme_set_hostid" "July 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvme_set_hostid \- Set hostid.
+.SH SYNOPSIS
+.B "void" libnvme_set_hostid
+.BI "(struct libnvme_global_ctx *p "  ","
+.BI "const char *hostid "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvme_global_ctx\fP instance to update.
+.IP "hostid" 12
+New string; a copy is stored. Pass NULL to clear.

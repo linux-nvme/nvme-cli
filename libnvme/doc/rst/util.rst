@@ -313,17 +313,3 @@ The array position where given UUID is present, or negative
 error code otherwise.
 
 
-.. c:function:: char * libnvme_basename (const char *path)
-
-   Return the final path component (the one after the last '/')
-
-**Parameters**
-
-``const char *path``
-  A string containing a filesystem path
-
-**Return**
-
-A pointer into the original null-terminated path string.
-
-

@@ -2,12 +2,12 @@
 .\"     Title: nvme-connect
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/08/2026
+.\"      Date: 07/31/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONNECT" "1" "07/08/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONNECT" "1" "07/31/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,6 +33,8 @@ nvme-connect \- Connect to a Fabrics controller\&.
 .sp
 .nf
 \fInvme\fR [<global\-options>] \fIconnect\fR [\-\-config=<filename>]
+                        [\-\-devid\-file=<filename>]
+                        [\-\-idempotent]
                         [\-\-owner=<NAME>]
                         [<fabrics\-options>]
 .fi
@@ -44,6 +46,42 @@ Create a transport connection to a remote system (specified by \-\-traddr and \-
 \-\-config=<filename>
 .RS 4
 Use the specified JSON configuration file instead of the default\&.
+.RE
+.PP
+\-\-devid\-file=<filename>
+.RS 4
+Write the kernel\-assigned device name (for example, nvme0) to <filename>\&. If the controller is already connected, the existing device name is written\&. Otherwise, the device name is written after the controller is connected\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+When used with \-\-idempotent, the existing device name is written
+before the command exits successfully\&. This allows a supervising
+process, such as a systemd service, to identify the device for a
+later disconnect operation\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The output file is created before attempting the connection\&. If
+the file cannot be created, for example because the parent
+directory does not exist, the command fails without attempting
+the connection\&.
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\-\-idempotent
+.RS 4
+Exit with status 0 if the requested controller is already connected instead of reporting an error\&.
 .RE
 .PP
 \-\-owner=<NAME>
@@ -69,14 +107,24 @@ Enable secure concatenation (TCP)\&.
 Set the delay in seconds before reconnect is attempted after a connection loss\&.
 .RE
 .PP
-\-C <secret>, \-\-dhchap\-ctrl\-secret=<secret>
+\-C <secret>, \-\-kxchap\-ctrl\-secret=<secret>
 .RS 4
 Controller authentication secret for bi\-directional authentication\&. If not specified, bi\-directional authentication is not attempted\&.
 .RE
 .PP
+\-S <secret>, \-\-kxchap\-secret=<secret>
+.RS 4
+Host authentication secret (KX\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&.
+.RE
+.PP
+\-C <secret>, \-\-dhchap\-ctrl\-secret=<secret>
+.RS 4
+Controller authentication secret for bi\-directional authentication\&. If not specified, bi\-directional authentication is not attempted\&. (deprecated, see \-\-kxchap\-ctrl\-secret)
+.RE
+.PP
 \-S <secret>, \-\-dhchap\-secret=<secret>
 .RS 4
-Host authentication secret (DH\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&.
+Host authentication secret (DH\-HMAC\-CHAP)\&. Must be provided in ASCII format as defined in the NVMe specification\&. (deprecated, see \-\-kxchap\-secret)
 .RE
 .PP
 \-\-disable\-sqflow
@@ -279,6 +327,8 @@ Set the timeout for the command in milliseconds\&.
 .RS 4
 Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
 .RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
 .SH "EXAMPLES"
 .sp
 .RS 4

@@ -636,7 +636,7 @@ The value of the default_keep_alive_timeout field.
 The value of the device field, or NULL if not set.
 
 
-.. c:function:: void libnvmf_context_set_persistent (struct libnvmf_context *p, bool persistent)
+.. c:function:: void libnvmf_context_set_persistent (struct libnvmf_context *p, enum libnvmf_tristate persistent)
 
    Set persistent.
 
@@ -645,11 +645,11 @@ The value of the device field, or NULL if not set.
 ``struct libnvmf_context *p``
   The :c:type:`struct libnvmf_context <libnvmf_context>` instance to update.
 
-``bool persistent``
+``enum libnvmf_tristate persistent``
   Value to assign to the persistent field.
 
 
-.. c:function:: bool libnvmf_context_get_persistent (const struct libnvmf_context *p)
+.. c:function:: enum libnvmf_tristate libnvmf_context_get_persistent (const struct libnvmf_context *p)
 
    Get persistent.
 
@@ -661,6 +661,47 @@ The value of the device field, or NULL if not set.
 **Return**
 
 The value of the persistent field.
+
+
+.. c:function:: void libnvmf_context_set_epcsd (struct libnvmf_context *p, enum libnvmf_tristate epcsd)
+
+   Set epcsd.
+
+**Parameters**
+
+``struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to update.
+
+``enum libnvmf_tristate epcsd``
+  Value to assign to the epcsd field.
+
+
+.. c:function:: enum libnvmf_tristate libnvmf_context_get_epcsd (const struct libnvmf_context *p)
+
+   Get epcsd.
+
+**Parameters**
+
+``const struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to query.
+
+**Return**
+
+The value of the epcsd field.
+
+
+.. c:function:: const char * libnvmf_context_get_devid_file (const struct libnvmf_context *p)
+
+   Get devid_file.
+
+**Parameters**
+
+``const struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to query.
+
+**Return**
+
+The value of the devid_file field, or NULL if not set.
 
 
 .. c:function:: const char * libnvmf_context_get_hostnqn (const struct libnvmf_context *p)
