@@ -40,7 +40,7 @@ _tgt_common = run_target(
     command: [
         'update-accessors.sh',
         _py3,
-        files('generate-accessors.py'),
+        files('generate_accessors.py'),
         libnvme_src_nvme / 'accessors.h',
         libnvme_src_nvme / 'accessors.c',
         libnvme_src / 'accessors.ld',
@@ -57,7 +57,7 @@ _tgt_fabrics = run_target(
     command: [
         'update-accessors.sh',
         _py3,
-        files('generate-accessors.py'),
+        files('generate_accessors.py'),
         libnvme_src_nvme / 'accessors-fabrics.h',
         libnvme_src_nvme / 'accessors-fabrics.c',
         libnvme_src / 'accessors-fabrics.ld',

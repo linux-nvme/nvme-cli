@@ -25,7 +25,7 @@ The SWIG-generated glue code, however, is not subject to this restriction — it
 ## Usage
 
 ```
-python3 generate-accessors.py [options] <header-files>
+python3 generate_accessors.py [options] <header-files>
 ```
 
 **Options:**
@@ -406,7 +406,7 @@ What each member demonstrates:
 ### Command
 
 ```
-python3 generate-accessors.py \
+python3 generate_accessors.py \
     --h-out  src/nvme/accessors-fabrics.h \
     --c-out  src/nvme/accessors-fabrics.c \
     --ld-out src/accessors-fabrics.ld \
