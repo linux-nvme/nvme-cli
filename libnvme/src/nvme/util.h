@@ -260,11 +260,3 @@ int libnvme_random_uuid(unsigned char uuid[NVME_UUID_LEN]);
 int libnvme_find_uuid(struct nvme_id_uuid_list *uuid_list,
 		const unsigned char uuid[NVME_UUID_LEN]);
 
-/**
- * libnvme_basename - Return the final path component (the one
- * after the last '/')
- * @path: A string containing a filesystem path
- *
- * Return: A pointer into the original null-terminated path string.
- */
-char *libnvme_basename(const char *path);

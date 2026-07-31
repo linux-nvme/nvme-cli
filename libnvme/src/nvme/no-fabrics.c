@@ -9,35 +9,36 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#include <compiler-attributes.h>
+
 #include "private.h"
-#include "compiler-attributes.h"
 
-__libnvme_public char *libnvmf_generate_hostid(void)
+__shr_public char *libnvmf_generate_hostid(void)
 {
 	return NULL;
 }
 
-__libnvme_public char *libnvmf_generate_hostnqn_from_hostid(char *hostid)
+__shr_public char *libnvmf_generate_hostnqn_from_hostid(char *hostid)
 {
 	return NULL;
 }
 
-__libnvme_public char *libnvmf_generate_hostnqn(void)
+__shr_public char *libnvmf_generate_hostnqn(void)
 {
 	return NULL;
 }
 
-__libnvme_public char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx)
+__shr_public char *libnvmf_read_hostnqn(struct libnvme_global_ctx *ctx)
 {
 	return NULL;
 }
 
-__libnvme_public char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx)
+__shr_public char *libnvmf_read_hostid(struct libnvme_global_ctx *ctx)
 {
 	return NULL;
 }
 
-__libnvme_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 		      const char *hostnqn_arg, const char *hostid_arg,
 		      char **hostnqn, char **hostid)
 {
@@ -88,10 +89,10 @@ libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
 	c = p ? libnvme_subsystem_next_ctrl(s, p) :
 		libnvme_subsystem_first_ctrl(s);
 	for (; c; c = libnvme_subsystem_next_ctrl(s, c)) {
-		if (!streq0(c->transport, params->transport))
+		if (!shr_streq0(c->transport, params->transport))
 			continue;
 		if (params->traddr && c->traddr &&
-		    !streqcase0(c->traddr, params->traddr))
+		    !shr_streqcase0(c->traddr, params->traddr))
 			continue;
 		return c;
 	}
@@ -99,7 +100,7 @@ libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
 	return NULL;
 }
 
-__libnvme_public char *libnvme_ctrl_owner(libnvme_ctrl_t c)
+__shr_public char *libnvme_ctrl_owner(libnvme_ctrl_t c)
 {
 	return NULL;
 }

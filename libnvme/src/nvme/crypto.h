@@ -34,18 +34,18 @@ enum libnvmf_hmac_alg {
 };
 
 /**
- * libnvmf_gen_dhchap_key() - DH-HMAC-CHAP key generation
+ * libnvmf_gen_kxchap_key() - KX-HMAC-CHAP key generation
  * @ctx:	struct libnvme_global_ctx object
  * @hostnqn:	Host NVMe Qualified Name
  * @hmac:	HMAC algorithm
  * @key_len:	Output key length
  * @secret:	Secret to used for digest
- * @key:	Generated DH-HMAC-CHAP key
+ * @key:	Generated KX-HMAC-CHAP key
  *
  * Return: If key generation was successful the function returns 0 or
  * a negative error code otherwise.
  */
-int libnvmf_gen_dhchap_key(struct libnvme_global_ctx *ctx,
+int libnvmf_gen_kxchap_key(struct libnvme_global_ctx *ctx,
 		char *hostnqn, enum libnvmf_hmac_alg hmac,
 		unsigned int key_len, unsigned char *secret,
 		unsigned char *key);

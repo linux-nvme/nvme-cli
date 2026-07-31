@@ -1,0 +1,80 @@
+nvme-keys-check-tls(1)
+======================
+
+NAME
+----
+nvme-keys-check-tls - Check a NVMe TLS PSK
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'keys check-tls' [--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			[--hostnqn=<nqn> | -n <nqn>]
+			[--subsysnqn=<nqn> | -c <nqn>]
+			[--keydata=<key> | -d <key>]
+			[--identity=<id-vers> | -I <id-vers>]
+			[--compat | -C]
+
+DESCRIPTION
+-----------
+Checks if the key is a valid NVMe TLS PSK in the PSK interchange format
+'NVMeTLSkey-1:01:<base64-encoded data>:' and prints the resulting HMAC
+algorithm and key length.
+
+If '--keydata' is not given the key is read from stdin, which also allows
+checking a key stored in a file, e.g. 'nvme keys check-tls < keyfile'.
+
+If '--subsysnqn' is given the TLS identity of the key is also printed, and
+the specified keyring is checked for a 'retained' key already stored under
+that identity; the result (loaded or not, with its serial number if loaded)
+is reported. This command never modifies the keyring; to insert a
+'retained' key use linknvme-keys-insert-tls[1].
+
+OPTIONS
+-------
+-k <name>::
+--keyring=<name>::
+	Name of the keyring to check for an already loaded 'retained' TLS
+	key. Default is '.nvme'.
+
+-t <type>::
+--keytype=<type>::
+	Type of the key to look up.
+	Default is 'psk'.
+
+-n <nqn>::
+--hostnqn=<nqn>::
+	Host NVMe Qualified Name (NQN) to be used when checking whether
+	the key is already loaded. Only used together with --subsysnqn.
+
+-c <nqn>::
+--subsysnqn=<nqn>::
+	Subsystem NVMe Qualified Name (NQN) to be used when checking
+	whether the key is already loaded. If not given, only the key
+	format is validated.
+
+-d <key>::
+--keydata=<key>::
+	Key to be checked. If not given, the key is read from stdin.
+
+-I <id-vers>::
+--identity=<id-vers>::
+	NVMe TLS key identity version to be used; '0' for the default
+	identity, and '1' for the TLS identity suffixed by the PSK hash
+	as specified in TP8018.
+
+-C::
+--compat::
+	Use the original non-RFC 8446 compliant algorithm when
+	checking TLS keys for compatibility with older implementations.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite

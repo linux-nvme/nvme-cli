@@ -916,15 +916,13 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)
 		return ret;
-	libnvme_set_logging_file(ctx, stdout);
-
 
 	fmt = netapp_output_format(nvme_args.output_format);
 	if (fmt != NNORMAL && fmt != NCOLUMN && fmt != NJSON) {
@@ -1018,15 +1016,13 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 
 	NVME_ARGS(opts);
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret < 0)
 		return ret;
 
 	ret = nvme_create_global_ctx(&ctx);
 	if (ret)
 		return ret;
-	libnvme_set_logging_file(ctx, stdout);
-
 
 	fmt = netapp_output_format(nvme_args.output_format);
 	if (fmt != NNORMAL && fmt != NCOLUMN && fmt != NJSON) {

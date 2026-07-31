@@ -9,30 +9,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "private.h"
 #include "private-ctrl-map.h"
-#include "compiler-attributes.h"
 
-__libnvme_public int libnvme_scan_subsystems(
-		__libnvme_unused struct libnvme_global_ctx *ctx,
-		__libnvme_unused struct dirent ***subsys)
+__shr_public int libnvme_scan_subsystems(
+		__shr_unused struct libnvme_global_ctx *ctx,
+		__shr_unused struct dirent ***subsys)
 {
 	return 0;
 }
 
-__libnvme_public int libnvme_scan_subsystem_namespaces(
-		__libnvme_unused libnvme_subsystem_t s,
-		__libnvme_unused struct dirent ***ns)
+__shr_public int libnvme_scan_subsystem_namespaces(
+		__shr_unused libnvme_subsystem_t s,
+		__shr_unused struct dirent ***ns)
 {
 	return 0;
 }
 
-__libnvme_public int libnvme_scan_ctrls(
+__shr_public int libnvme_scan_ctrls(
 		struct libnvme_global_ctx *ctx,
-		__libnvme_unused struct dirent ***ctrls)
+		__shr_unused struct dirent ***ctrls)
 {
 	struct dirent **entries;
 	__cleanup_free const char **names = NULL;
@@ -79,16 +80,16 @@ enomem:
 	return -ENOMEM;
 }
 
-__libnvme_public int libnvme_scan_ctrl_namespace_paths(
-		__libnvme_unused libnvme_ctrl_t c,
-		__libnvme_unused struct dirent ***paths)
+__shr_public int libnvme_scan_ctrl_namespace_paths(
+		__shr_unused libnvme_ctrl_t c,
+		__shr_unused struct dirent ***paths)
 {
 	return 0;
 }
 
-__libnvme_public int libnvme_scan_ctrl_namespaces(
-		__libnvme_unused libnvme_ctrl_t c,
-		__libnvme_unused struct dirent ***ns)
+__shr_public int libnvme_scan_ctrl_namespaces(
+		__shr_unused libnvme_ctrl_t c,
+		__shr_unused struct dirent ***ns)
 {
 	struct dirent **entries = NULL;
 	const struct ctrl_map_entry *ctrl_entry;
@@ -143,9 +144,9 @@ enomem:
 	return -ENOMEM;
 }
 
-__libnvme_public int libnvme_scan_ns_head_paths(
-		__libnvme_unused libnvme_ns_head_t head,
-		__libnvme_unused struct dirent ***paths)
+__shr_public int libnvme_scan_ns_head_paths(
+		__shr_unused libnvme_ns_head_t head,
+		__shr_unused struct dirent ***paths)
 {
 	return 0;
 }

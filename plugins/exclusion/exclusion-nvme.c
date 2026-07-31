@@ -55,7 +55,7 @@ static int excl_create(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts,
 		OPT_STRING("name", 'N', "NAME", &cfg.name, name_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -89,7 +89,7 @@ static int excl_delete(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts,
 		OPT_STRING("name", 'N', "NAME", &cfg.name, name_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -133,7 +133,7 @@ static int excl_list(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts,
 		OPT_STRING("name", 'N', "NAME", &cfg.name, name_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -175,7 +175,7 @@ static int excl_add(int argc, char **argv, struct command *acmd,
 		OPT_STRING("name",  'N', "NAME",  &cfg.name,  name_help),
 		OPT_STRING("entry", 'e', "ENTRY", &cfg.entry, entry_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -250,7 +250,7 @@ static int excl_remove(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts,
 		OPT_STRING("name", 'N', "NAME", &cfg.name, name_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 
@@ -506,7 +506,7 @@ static int excl_edit(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts,
 		OPT_STRING("name", 'N', "NAME", &cfg.name, name_help));
 
-	ret = argconfig_parse(argc, argv, desc, opts);
+	ret = parse_args(argc, argv, desc, opts);
 	if (ret)
 		return ret;
 

@@ -803,11 +803,6 @@ __u64 sndk_get_enc_drive_capabilities(struct libnvme_global_ctx *ctx,
 			SNDK_NVME_GET_DEVICE_INFO_LOG_ID, 0))
 			capabilities |= SNDK_DRIVE_CAP_CA_LOG_PAGE;
 
-		/* verify the 0xD0 log page is supported */
-		if (run_wdc_nvme_check_supported_log_page(ctx, hdl,
-			SNDK_NVME_GET_VU_SMART_LOG_ID, 0))
-			capabilities |= SNDK_DRIVE_CAP_D0_LOG_PAGE;
-
 		if ((cust_id == SNDK_CUSTOMER_ID_0x1004) ||
 			(cust_id == SNDK_CUSTOMER_ID_0x1008) ||
 			(cust_id == SNDK_CUSTOMER_ID_0x1005) ||

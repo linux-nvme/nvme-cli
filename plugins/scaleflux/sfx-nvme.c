@@ -1154,6 +1154,10 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char *output)
 
 			code_level = (info->code & 0x100) >> 8;
 			code_type  = (info->code % 0x100);
+			if (code_level == sfx_evtlog_level_warning && code_type >= ARRAY_SIZE(sfx_evtlog_warning))
+				code_type = 0;
+			if (code_level == sfx_evtlog_level_error && code_type >= ARRAY_SIZE(sfx_evtlog_error))
+				code_type = 0;
 			if (code_level == sfx_evtlog_level_warning) {
 				snprintf(str_buffer + str_pos, 128,
 					 "  > error_str:          [WARNING][%s]\n\n",
@@ -1389,7 +1393,7 @@ static int sfx_dump_evtlog(int argc, char **argv, struct command *acmd, struct p
 
 	err = nvme_dump_evtlog(hdl, cfg.namespace_id, cfg.storage_medium, cfg.file, cfg.parse, cfg.output);
 
-	return 0;
+	return err;
 }
 
 static int filter_namespace(const struct dirent *d)
@@ -1593,6 +1597,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		if (!err)
 			err = ioctl(fd, BLKGETSIZE64, &capacity);
 		capacity_valid = (!err);
+		close(fd);
 	}
 
 	if (capacity_valid && sector_size == 512)

@@ -3,45 +3,26 @@ nvme-gen-dhchap-key(1)
 
 NAME
 ----
-nvme-gen-dhchap-key - Generate a host DH-HMAC-CHAP key
+nvme-gen-dhchap-key - Generate a host DH-HMAC-CHAP key (deprecated)
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'gen-dhchap-key' [--hmac=<hmac-id> | -h <hmac-id>]
+'nvme' [<global-options>] 'gen-dhchap-key' [--hmac=<hmac-id> | -m <hmac-id>]
 			[--secret=<secret> | -s <secret>]
 			[--key-length=<len> | -l <len>]
 			[--nqn=<host-nqn> | -n <host-nqn>]
 
 DESCRIPTION
 -----------
-Generate a base64-encoded DH-HMAC-CHAP host key in the form:
-DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
-and prints it to stdout.
+Deprecated alias for linknvme-keys-gen-kxchap[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-OPTIONS
--------
--h <hmac-id>::
---hmac=<hmac-id>::
-	Select a HMAC algorithm to use. Possible values are:
-	0 - No HMAC algorithm
-	1 - SHA-256
-	2 - SHA-384
-	3 - SHA-512
+New scripts should use 'nvme keys gen-kxchap' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
--s <secret>::
---secret=<secret>::
-	Secret value (in hexadecimal) to be used for the key. If none are
-	provided a random value is used.
-
--l <len>::
---key-length=<len>::
-	Length of the resulting key. Possible values are 32, 48, or 64.
-
--n <hostnqn>::
---nqn=<hostnqn>::
-	Host-NQN to be used for the transformation. This parameter is only
-	valid if a non-zero HMAC function has been specified.
+See linknvme-keys-gen-kxchap[1] for the full option reference.
 
 include::global-options.txt[]
 
@@ -52,3 +33,7 @@ No Examples
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-keys-gen-kxchap[1]

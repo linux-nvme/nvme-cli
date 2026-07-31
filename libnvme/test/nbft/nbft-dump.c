@@ -64,6 +64,38 @@ static void print_nbft(struct libnbft_info *table)
 
 	for (sec = table->security_list, i = 0; sec && *sec; sec++, i++) {
 		printf("security_list[%u]->index=%d\n", i, (*sec)->index);
+		printf("security_list[%u]->flags=%"PRIu16"\n",
+		       i, (*sec)->flags);
+		printf("security_list[%u]->secret_type=%u\n",
+		       i, (*sec)->secret_type);
+		printf("security_list[%u]->sec_chan_algs=", i);
+		print_hex((*sec)->sec_chan_algs, (*sec)->sec_chan_algs_len);
+		printf("\n");
+		printf("security_list[%u]->sec_chan_algs_len=%"PRIu16"\n",
+		       i, (*sec)->sec_chan_algs_len);
+		printf("security_list[%u]->auth_protocols=", i);
+		print_hex((*sec)->auth_protocols, (*sec)->auth_protocols_len);
+		printf("\n");
+		printf("security_list[%u]->auth_protocols_len=%"PRIu16"\n",
+		       i, (*sec)->auth_protocols_len);
+		printf("security_list[%u]->cipher_suites=", i);
+		print_hex((*sec)->cipher_suites, (*sec)->cipher_suites_len);
+		printf("\n");
+		printf("security_list[%u]->cipher_suites_len=%"PRIu16"\n",
+		       i, (*sec)->cipher_suites_len);
+		printf("security_list[%u]->dh_groups=", i);
+		print_hex((*sec)->dh_groups, (*sec)->dh_groups_len);
+		printf("\n");
+		printf("security_list[%u]->dh_groups_len=%"PRIu16"\n",
+		       i, (*sec)->dh_groups_len);
+		printf("security_list[%u]->sec_hash_funcs=", i);
+		print_hex((*sec)->sec_hash_funcs, (*sec)->sec_hash_funcs_len);
+		printf("\n");
+		printf("security_list[%u]->sec_hash_funcs_len=%"PRIu16"\n",
+		       i, (*sec)->sec_hash_funcs_len);
+		printf("security_list[%u]->secret_keypath=%s\n", i,
+		       (*sec)->secret_keypath ?
+		       (*sec)->secret_keypath : "(null)");
 	}
 
 	for (disc = table->discovery_list, i = 0; disc && *disc; disc++, i++) {

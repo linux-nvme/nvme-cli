@@ -1,0 +1,96 @@
+nvme-keys-insert-tls(1)
+========================
+
+NAME
+----
+nvme-keys-insert-tls - Insert a NVMe TLS PSK into a keyring
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'keys insert-tls' [--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			[--hostnqn=<nqn> | -n <nqn>]
+			[--subsysnqn=<nqn> | -c <nqn>]
+			[--keydata=<key> | -d <key>]
+			[--identity=<id-vers> | -I <id-vers>]
+			[--compat | -C]
+			[--keyfile=<keyfile> | -f <keyfile>]
+
+DESCRIPTION
+-----------
+Takes a NVMe TLS PSK in the PSK interchange format
+'NVMeTLSkey-1:01:<base64-encoded data>:', *derives* a 'retained' key
+identity from it and the given host/subsystem NQNs using the
+HKDF-Expand-Label algorithm from RFC 8446, and stores the result into the
+specified keyring. The 'retained' key is stored with the identity
+'NVMe0R0<hmac> <host NQN> <subsystem NQN>' (for identity version '0') or
+'NVMe1R0<hmac> <host NQN> <subsystem NQN> <PSK hash>' (for identity version
+'1'). Once the 'retained' key is stored in the keyring the original key
+material cannot be retrieved.
+
+This command is for deriving a *new* retained-key identity from raw PSK
+material; it always needs a subsystem NQN (and, if not given, will look up
+the host NQN) to compute that identity. If the identity under which a key
+should be stored is already known -- for example a key previously exported
+by linknvme-keys-export[1], or a KX-HMAC-CHAP key -- use
+linknvme-keys-import[1] instead, which inserts a key under an explicit
+identity without deriving one.
+
+If '--keydata' is not given the key is read from stdin, which also allows
+inserting a key stored in a file, e.g. 'nvme keys insert-tls -c <subsysnqn>
+< keyfile'.
+
+To check whether a key is already loaded without inserting it, use
+linknvme-keys-check-tls[1].
+
+OPTIONS
+-------
+-k <name>::
+--keyring=<name>::
+	Name of the keyring into which the 'retained' TLS key should be
+	stored. Default is '.nvme'.
+
+-t <type>::
+--keytype=<type>::
+	Type of the key for resulting TLS key.
+	Default is 'psk'.
+
+-n <nqn>::
+--hostnqn=<nqn>::
+	Host NVMe Qualified Name (NQN) to be used to derive the
+	'retained' TLS key.
+
+-c <nqn>::
+--subsysnqn=<nqn>::
+	Subsystem NVMe Qualified Name (NQN) to be used to derive the
+	'retained' TLS key. Required.
+
+-d <key>::
+--keydata=<key>::
+	Key to be inserted. If not given, the key is read from stdin.
+
+-I <id-vers>::
+--identity=<id-vers>::
+	NVMe TLS key identity version to be used; '0' for the default
+	identity, and '1' for the TLS identity suffixed by the PSK hash
+	as specified in TP8018.
+
+-C::
+--compat::
+	Use the original non-RFC 8446 compliant algorithm when
+	deriving the TLS key for compatibility with older implementations.
+
+-f <keyfile>::
+--keyfile=<keyfile>::
+	Append the resulting TLS key to keyfile.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite

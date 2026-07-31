@@ -1,0 +1,10 @@
+/* SPDX-License-Identifier: LicenseRef-Gary-S-Brown-CRC32 */
+/*
+ * This file is part of nvme-cli.
+ */
+#pragma once
+
+#include <stddef.h>
+#include <stdint.h>
+
+uint32_t shr_crc32(uint32_t crc, const void *buf, size_t len);

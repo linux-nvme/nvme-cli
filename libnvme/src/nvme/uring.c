@@ -12,10 +12,11 @@
 
 #include <liburing.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "private.h"
-#include "compiler-attributes.h"
 
 /*
  * should not exceed CAP.MQES, 16 is rational for most ssd
@@ -212,7 +213,7 @@ static int libnvme_submit_passthru(
 	return 0;
 }
 
-__libnvme_public int libnvme_submit_admin_passthru(
+__shr_public int libnvme_submit_admin_passthru(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, void *cookie)
 {
@@ -220,7 +221,7 @@ __libnvme_public int libnvme_submit_admin_passthru(
 		cmd, cookie);
 }
 
-__libnvme_public int libnvme_submit_io_passthru(
+__shr_public int libnvme_submit_io_passthru(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd, void *cookie)
 {
@@ -228,7 +229,7 @@ __libnvme_public int libnvme_submit_io_passthru(
 		cmd, cookie);
 }
 
-__libnvme_public int libnvme_reap_passthru(
+__shr_public int libnvme_reap_passthru(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_completion *completion)
 {
@@ -285,7 +286,7 @@ complete:
 	return 0;
 }
 
-__libnvme_public int libnvme_wait_passthru(
+__shr_public int libnvme_wait_passthru(
 		struct libnvme_transport_handle *hdl)
 {
 	struct libnvme_passthru_completion completion;

@@ -22,6 +22,7 @@ all_plugins = {
   'ssstc': ['plugins/ssstc/ssstc-nvme.c'],
   'toshiba': ['plugins/toshiba/toshiba-nvme.c'],
   'transcend': ['plugins/transcend/transcend-nvme.c'],
+  'utils': ['plugins/utils/utils.c', 'plugins/utils/command-metadata.c'],
   'virtium': ['plugins/virtium/virtium-nvme.c'],
   'ymtc': ['plugins/ymtc/ymtc-nvme.c'],
 }
@@ -63,6 +64,10 @@ endforeach
 
 if want_fabrics and 'nbft' in selected_plugins
     plugin_sources += ['plugins/nbft/nbft-plugin.c']
+endif
+
+if want_fabrics and 'keys' in selected_plugins
+    plugin_sources += ['plugins/keys/keys-plugin.c']
 endif
 
 if want_fabrics and 'exclusion' in selected_plugins

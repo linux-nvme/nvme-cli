@@ -50,7 +50,7 @@ The drop-in directory name is derived mechanically from whatever file you point 
 - An **empty or absent main file** with a populated `.conf.d/` is fully valid: read the main file *if it exists*, then read `<file>.d/*.conf` *if that directory exists*. This is the layout for a host that wants only explicit, non-default personalities and no default config.
 - If **neither exists**, the configuration is empty (no connections) — a gentle no-op, not an error.
 
-> A consumer daemon may keep its *own* configuration file for daemon-specific behavior — for example nvme-discoverd's `discoverd.conf` carries its discovery-source toggles (`nbft`, `zeroconf`, …) and log level. Those keys are specific to that consumer and documented by it; they are **not** part of the shared connectivity format described here.
+> A consumer daemon may keep its *own* configuration file for daemon-specific behavior — for example nvme-discoverd's `nvme-discoverd.conf` carries its discovery-source toggles (`nbft`, `zeroconf`, …) and log level. Those keys are specific to that consumer and documented by it; they are **not** part of the shared connectivity format described here.
 
 ### Pointing at a configuration — `--config` and the `.d/` rule
 

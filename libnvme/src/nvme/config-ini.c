@@ -19,9 +19,12 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
 
-#include "compiler-attributes.h"
+#include <compiler-attributes.h>
+#include <ini.h>
+#include <parse-util.h>
+#include <string-util.h>
+
 #include "config-ini.h"
-#include "ini.h"
 #include "lib.h"
 #include "private-fabrics.h"
 #include "util.h"
@@ -75,35 +78,6 @@ const struct libnvmf_key *libnvmf_key_lookup(const char *name)
 	return NULL;
 }
 
-int libnvmf_parse_bool(const char *value, bool *out)
-{
-	static const char * const yes[] = {
-		"1", "yes", "y", "true", "t", "on"
-	};
-	static const char * const no[] = {
-		"0", "no", "n", "false", "f", "off"
-	};
-	size_t i;
-
-	if (!value || !out)
-		return -EINVAL;
-
-	for (i = 0; i < ARRAY_SIZE(yes); i++) {
-		if (!strcasecmp(value, yes[i])) {
-			*out = true;
-			return 0;
-		}
-	}
-	for (i = 0; i < ARRAY_SIZE(no); i++) {
-		if (!strcasecmp(value, no[i])) {
-			*out = false;
-			return 0;
-		}
-	}
-
-	return -EINVAL;
-}
-
 static int check_int(const char *value)
 {
 	char *end;
@@ -136,7 +110,7 @@ int libnvmf_key_check_value(const struct libnvmf_key *key, const char *value)
 	case LIBNVMF_KEY_INT:
 		return check_int(value);
 	case LIBNVMF_KEY_BOOL:
-		return libnvmf_parse_bool(value, &b);
+		return shr_parse_bool(value, &b);
 	case LIBNVMF_KEY_STRING:
 		return 0;
 	}
@@ -154,7 +128,7 @@ struct libnvmf_params {
 	struct list_head list;
 };
 
-__libnvme_public struct libnvmf_params *libnvmf_params_new(void)
+__shr_public struct libnvmf_params *libnvmf_params_new(void)
 {
 	struct libnvmf_params *p = calloc(1, sizeof(*p));
 
@@ -165,7 +139,7 @@ __libnvme_public struct libnvmf_params *libnvmf_params_new(void)
 	return p;
 }
 
-__libnvme_public void libnvmf_params_free(struct libnvmf_params *p)
+__shr_public void libnvmf_params_free(struct libnvmf_params *p)
 {
 	struct kv *e, *next;
 
@@ -209,7 +183,7 @@ static int kv_append(struct libnvmf_params *p, const char *key, char *value)
 	return 0;
 }
 
-__libnvme_public int libnvmf_params_set(struct libnvmf_params *p,
+__shr_public int libnvmf_params_set(struct libnvmf_params *p,
 		const char *key, const char *value)
 {
 	const struct libnvmf_key *k;
@@ -251,7 +225,7 @@ __libnvme_public int libnvmf_params_set(struct libnvmf_params *p,
 	return 0;
 }
 
-__libnvme_public const char *libnvmf_params_get(const struct libnvmf_params *p,
+__shr_public const char *libnvmf_params_get(const struct libnvmf_params *p,
 		const char *key)
 {
 	struct kv *e;
@@ -298,7 +272,7 @@ struct libnvmf_params *libnvmf_params_dup(const struct libnvmf_params *p)
 	return copy;
 }
 
-__libnvme_public void libnvmf_params_for_each(const struct libnvmf_params *p,
+__shr_public void libnvmf_params_for_each(const struct libnvmf_params *p,
 		void (*callback)(const char *key, const char *value,
 				 void *user_data),
 		void *user_data)
@@ -513,7 +487,7 @@ static int add_path(struct conf_parse *pc, char *value, unsigned int line)
 		const char **slot;
 		char *eq, *key, *val;
 
-		key = libnvmf_trim(tok);
+		key = shr_trim(tok);
 		if (!*key)
 			continue; /* ";;" and a trailing ';' are benign */
 		eq = strchr(key, '=');
@@ -522,8 +496,8 @@ static int add_path(struct conf_parse *pc, char *value, unsigned int line)
 			goto fail;
 		}
 		*eq = '\0';
-		key = libnvmf_trim(key);
-		val = libnvmf_trim(eq + 1);
+		key = shr_trim(key);
+		val = shr_trim(eq + 1);
 
 		slot = addr_slot(&addr, key);
 		if (slot) {
@@ -581,11 +555,11 @@ static int add_path(struct conf_parse *pc, char *value, unsigned int line)
 		ret = -ENOMEM;
 		goto fail;
 	}
-	path->transport = xstrdup(addr.transport);
-	path->traddr = xstrdup(addr.traddr);
-	path->trsvcid = xstrdup(addr.trsvcid);
-	path->host_traddr = xstrdup(addr.host_traddr);
-	path->host_iface = xstrdup(addr.host_iface);
+	path->transport = shr_xstrdup(addr.transport);
+	path->traddr = shr_xstrdup(addr.traddr);
+	path->trsvcid = shr_xstrdup(addr.trsvcid);
+	path->host_traddr = shr_xstrdup(addr.host_traddr);
+	path->host_iface = shr_xstrdup(addr.host_iface);
 	if (!path->transport || !path->traddr ||
 	    (addr.trsvcid && !path->trsvcid) ||
 	    (addr.host_traddr && !path->host_traddr) ||
@@ -673,7 +647,7 @@ static bool hostid_valid(const char *hostid)
 static int set_identity(struct conf_parse *pc, char **field, const char *value)
 {
 	free(*field);
-	*field = xstrdup(value);
+	*field = shr_xstrdup(value);
 
 	return *field ? 0 : -ENOMEM;
 }
@@ -769,18 +743,18 @@ static int conf_kv(struct conf_parse *pc, const char *key, char *value,
 	return -EINVAL;
 }
 
-static int conf_event(enum libnvmf_ini_event event, const char *section,
+static int conf_event(enum shr_ini_event event, const char *section,
 		      const char *key, const char *value, unsigned int line,
 		      void *user_data)
 {
 	struct conf_parse *pc = user_data;
 
 	switch (event) {
-	case LIBNVMF_INI_SECTION:
+	case SHR_INI_SECTION:
 		return enter_section(pc, key, line);
-	case LIBNVMF_INI_KV:
+	case SHR_INI_KV:
 		return conf_kv(pc, key, (char *)value, line);
-	case LIBNVMF_INI_JUNK:
+	case SHR_INI_JUNK:
 		conf_err(pc, line, "malformed line \"%s\"", key);
 		return -EINVAL;
 	}
@@ -806,11 +780,11 @@ int libnvmf_conf_file_parse(struct libnvme_global_ctx *ctx, const char *path,
 	if (!pc.f)
 		goto nomem;
 	list_head_init(&pc.f->endpoints);
-	pc.f->path = xstrdup(path);
+	pc.f->path = shr_xstrdup(path);
 	if (!pc.f->path)
 		goto nomem;
 
-	ret = libnvmf_ini_parse_file(ctx, path, conf_event, &pc);
+	ret = shr_ini_parse_file(path, conf_event, &pc);
 	if (ret) {
 		if (pc.err)
 			ret = pc.err;

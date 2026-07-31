@@ -1,9 +1,9 @@
 nvme-check-tls-key(1)
-========================
+=====================
 
 NAME
 ----
-nvme-check-tls-key - Check a generated NVMe TLS PSK
+nvme-check-tls-key - Check a NVMe TLS PSK (deprecated)
 
 SYNOPSIS
 --------
@@ -14,62 +14,24 @@ SYNOPSIS
 			[--subsysnqn=<nqn> | -c <nqn>]
 			[--keydata=<key> | -d <key>]
 			[--identity=<id-vers> | -I <id-vers>]
-			[--insert | -i ]
-			[--compat | -C ]
-			[--keyfile=<keyfile> | -f <keyfile>]
+			[--compat | -C]
 
 DESCRIPTION
 -----------
-Checks if the key is a valid NVMe TLS PSK in the PSK interchange format
-'NVMeTLSkey-1:01:<base64-encoded data>:'. If '--insert' is specified the
-the derived 'retained' TLS key is stored in the keyring, otherwise the
-TLS identity of the key is printed out.
+Deprecated alias for linknvme-keys-check-tls[1], kept for scripts written
+against nvme-cli versions older than 3.0.
 
-OPTIONS
--------
--k <name>::
---keyring=<name>::
-	Name of the keyring into which the 'retained' TLS key should be
-	stored. Default is '.nvme'.
+One difference: the old 'check-tls-key' also accepted '--insert'/'-i' to
+derive and store a 'retained' key directly, but the new 'check-tls' never
+modifies the keyring -- that functionality moved to
+linknvme-keys-insert-tls[1]. Scripts relying on '--insert' here will get an
+"unrecognized option" error and must switch to 'nvme keys insert-tls'
+directly; all other options continue to work unchanged through this alias.
 
--t <type>::
---keytype=<type>::
-	Type of the key for resulting TLS key.
-	Default is 'psk'.
+New scripts should use 'nvme keys check-tls' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
--n <nqn>::
---hostnqn=<nqn>::
-	Host NVMe Qualified Name (NQN) to be used to derive the
-	'retained' TLS key
-
--c <nqn>::
---subsysnqn=<nqn>::
-	Subsystem NVMe Qualified Name (NQN) to be used to derive the
-	'retained' TLS key
-
--d <key>::
---keydata=<key>::
-	Key to be checked.
-
--I <id-vers>::
---identity=<id-vers>::
-	NVMe TLS key identity version to be used; '0' for the default
-	identity, and '1' for the TLS identity suffixed by the PSK hash
-	as specified in TP8018.
-
--i:
---insert:
-	Insert the derived 'retained' key in the keyring.
-
--C:
---compat:
-	Use the original non-RFC 8446 compliant algorithm when
-	checking TLS keys for compatibility with older implentations.
-
--f <keyfile>
---keyfile=<keyfile>
-	Append the resulting TLS key to keyfile. This command line option is
-	depending on --insert.
+See linknvme-keys-check-tls[1] for the full option reference.
 
 include::global-options.txt[]
 
@@ -80,3 +42,7 @@ No Examples
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-keys-check-tls[1], linknvme-keys-insert-tls[1]

@@ -1,0 +1,64 @@
+nvme-keys-check-kxchap(1)
+=========================
+
+NAME
+----
+nvme-keys-check-kxchap - Check a host KX-HMAC-CHAP key
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'keys check-kxchap' [--keydata=<key> | -d <key>]
+			[--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			[--identity=<identity> | -i <identity>]
+
+DESCRIPTION
+-----------
+Checks if the key is a valid KX-HMAC-CHAP host key of the form:
+DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
+and prints the resulting HMAC algorithm, key length, and CRC.
+
+If '--keydata' is not given the key is read from stdin, which also allows
+checking a key stored in a file, e.g. 'nvme keys check-kxchap < keyfile'.
+
+If '--identity' is given the specified keyring is also checked for a key
+already stored under that identity (as inserted by
+linknvme-keys-import[1]); the result (not loaded, loaded and
+matching, or loaded but different) is reported. This command never
+modifies the keyring.
+
+Looking up a key requires the 'kxchap' keyring key type, which is not yet
+provided by any released Linux kernel; see linknvme-keys-import[1]
+for details.
+
+OPTIONS
+-------
+-d <key>::
+--keydata=<key>::
+	Key to be checked. If not given, the key is read from stdin.
+
+-k <name>::
+--keyring=<name>::
+	Name of the keyring to check for an already loaded key.
+	Default is '.nvme'.
+
+-t <type>::
+--keytype=<type>::
+	Type of the key to look up.
+	Default is 'kxchap'.
+
+-i <identity>::
+--identity=<identity>::
+	Identity to look up in the keyring to check if the key is already
+	loaded. If not given, only the key format is validated.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No Examples
+
+NVME
+----
+Part of the nvme-user suite

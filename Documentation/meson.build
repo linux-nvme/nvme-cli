@@ -11,6 +11,7 @@ adoc_sources = [
     'nvme-cmdset-ind-id-ns',
     'nvme-compare',
     'nvme-config-convert',
+    'nvme-config-create',
     'nvme-config-show',
     'nvme-config-validate',
     'nvme-connect',
@@ -77,6 +78,14 @@ adoc_sources = [
     'nvme-io-mgmt-recv',
     'nvme-io-mgmt-send',
     'nvme-io-passthru',
+    'nvme-keys-check-kxchap',
+    'nvme-keys-check-tls',
+    'nvme-keys-export',
+    'nvme-keys-gen-kxchap',
+    'nvme-keys-gen-tls',
+    'nvme-keys-import',
+    'nvme-keys-insert-tls',
+    'nvme-keys-revoke',
     'nvme-lba-status-log',
     'nvme-list',
     'nvme-list-ctrl',
@@ -206,7 +215,6 @@ adoc_sources = [
     'nvme-subsystem-reset',
     'nvme-supported-log-pages',
     'nvme-telemetry-log',
-    'nvme-tls-key',
     'nvme-toshiba-clear-pcie-correctable-errors',
     'nvme-toshiba-vs-internal-log',
     'nvme-toshiba-vs-smart-add-log',
@@ -275,10 +283,26 @@ adoc_sources = [
     'nvme-mangoboost-id-ctrl',
 ]
 
+if want_deprecated_cmds
+    adoc_sources += [
+        'nvme-check-dhchap-key',
+        'nvme-check-tls-key',
+        'nvme-gen-dhchap-key',
+        'nvme-gen-tls-key',
+        'nvme-tls-key',
+    ]
+endif
+
 # File-format references (man section 5), installed separately from the
 # man1 command pages above.
 adoc_sources_man5 = [
+    'nvme-cli.conf',
     'nvme-fabrics.conf',
+]
+
+# Daemon references (man section 8), installed separately from man1/man5.
+adoc_sources_man8 = [
+    'nvme-discoverd',
 ]
 
 adoc_includes = [
@@ -291,6 +315,7 @@ adoc_includes = [
 if want_docs != 'false'
     mandir = join_paths(prefixdir, get_option('mandir'), 'man1')
     man5dir = join_paths(prefixdir, get_option('mandir'), 'man5')
+    man8dir = join_paths(prefixdir, get_option('mandir'), 'man8')
     htmldir = join_paths(prefixdir, get_option('htmldir'), 'nvme')
 
     asciidoctor = find_program('asciidoc', required: want_docs_build)
@@ -307,6 +332,7 @@ if want_docs != 'false'
                 man_sets = [
                     {'sources': adoc_sources, 'section': '1', 'dir': mandir},
                     {'sources': adoc_sources_man5, 'section': '5', 'dir': man5dir},
+                    {'sources': adoc_sources_man8, 'section': '8', 'dir': man8dir},
                 ]
                 foreach man_set : man_sets
                     section = man_set['section']
@@ -352,7 +378,7 @@ if want_docs != 'false'
 
         # html
         if want_docs == 'all' or want_docs == 'html'
-            foreach adoc : adoc_sources + adoc_sources_man5
+            foreach adoc : adoc_sources + adoc_sources_man5 + adoc_sources_man8
                 input = adoc + '.txt'
                 subst = configure_file(
                     input: adoc + '.txt',
@@ -380,6 +406,7 @@ if want_docs != 'false'
         man_sets = [
             {'sources': adoc_sources, 'section': '1', 'dir': mandir},
             {'sources': adoc_sources_man5, 'section': '5', 'dir': man5dir},
+            {'sources': adoc_sources_man8, 'section': '8', 'dir': man8dir},
         ]
         foreach man_set : man_sets
             section = man_set['section']

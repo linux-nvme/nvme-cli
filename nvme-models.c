@@ -296,9 +296,12 @@ static char *__nvme_product_name(__u32 *vid, __u32 *did,
 						device,
 						sub_device,
 						sub_vendor);
+			clearerr(file);
 		}
-		if (is_class_info(readbuf))
+		if (is_class_info(readbuf)) {
 			pull_class_info(readbuf, file, class);
+			clearerr(file);
+		}
 	}
 	fclose(file);
 

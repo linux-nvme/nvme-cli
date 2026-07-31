@@ -46,18 +46,18 @@
 #include <sys/types.h>
 
 #include <libnvme.h>
+#include <libnvme-mi.h>
 
 #include "common.h"
 #include "fabrics.h"
+#include "global-config.h"
 #include "logging.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
 #include "util/argconfig.h"
-#include "util/base64.h"
 #include "util/cleanup.h"
-#include "util/crc32.h"
 #include "util/sighdl.h"
 #include "util/suffix.h"
 
@@ -241,13 +241,6 @@ static const char *pmrmscl = "PMRMSCL=0xe14 register offset";
 static const char *pmrmscu = "PMRMSCU=0xe18 register offset";
 static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
 
-struct nvme_args nvme_args = {
-	.output_format = "normal",
-	.output_format_ver = 2,
-	.timeout = NVME_DEFAULT_IOCTL_TIMEOUT,
-	.supported_output_formats = DEFAULT_OUTPUT_FORMATS,
-};
-
 static void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable);
 static int munmap_registers(void *addr);
 
@@ -355,8 +348,8 @@ void put_transport_handle(struct libnvme_transport_handle *hdl)
 	libnvme_close(hdl);
 }
 
-static int parse_args(int argc, char *argv[], const char *desc,
-		      struct argconfig_commandline_options *opts)
+int parse_args(int argc, char *argv[], const char *desc,
+	       struct argconfig_commandline_options *opts)
 {
 	int ret;
 
@@ -364,7 +357,6 @@ static int parse_args(int argc, char *argv[], const char *desc,
 	if (ret)
 		return ret;
 
-	log_level = map_log_level(nvme_args.verbose, false);
 	nvme_show_init();
 
 	return 0;
@@ -443,17 +435,22 @@ static int nvme_apply_option(struct libnvme_global_ctx *ctx, const char *kv)
 	return ret;
 }
 
-int nvme_create_global_ctx(struct libnvme_global_ctx **pctx)
+static int __nvme_create_global_ctx(struct libnvme_global_ctx **pctx)
 {
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free char *buf = NULL;
 	const char *opt;
+	int log_level;
 	char *p;
 	int err;
 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx)
 		return -ENOMEM;
+
+	log_level = map_log_level(nvme_args.verbose, nvme_args.quiet);
+	libnvme_set_logging_file(ctx, stdout);
+	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (!nvme_args.set_options)
 		goto out;
@@ -478,6 +475,51 @@ out:
 	return 0;
 }
 
+int nvme_create_global_ctx_hostnqn(struct libnvme_global_ctx **pctx,
+				       const char *hostnqn_arg,
+				       const char *hostid_arg,
+				       char **hostnqn, char **hostid)
+{
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_free char *hnqn = NULL;
+	__cleanup_free char *hid = NULL;
+	int err;
+
+	err = __nvme_create_global_ctx(&ctx);
+	if (err)
+		return err;
+
+	libnvme_set_ioctl_probing(ctx, !nvme_args.no_ioctl_probing);
+
+#ifdef CONFIG_FABRICS
+	err = libnvmf_host_get_ids(ctx, hostnqn_arg, hostid_arg, &hnqn, &hid);
+	if (err)
+		return err;
+
+	libnvme_set_hostnqn(ctx, hnqn);
+	libnvme_set_hostid(ctx, hid);
+#endif
+
+	if (hostnqn) {
+		*hostnqn = hnqn;
+		hnqn = NULL;
+	}
+	if (hostid) {
+		*hostid = hid;
+		hid = NULL;
+	}
+
+	*pctx = ctx;
+	ctx = NULL;
+
+	return 0;
+}
+
+int nvme_create_global_ctx(struct libnvme_global_ctx **pctx)
+{
+	return nvme_create_global_ctx_hostnqn(pctx, NULL, NULL, NULL, NULL);
+}
+
 int parse_and_open(struct libnvme_global_ctx **ctx,
 		   struct libnvme_transport_handle **hdl, int argc, char **argv,
 		   const char *desc, struct argconfig_commandline_options *opts)
@@ -493,11 +535,6 @@ int parse_and_open(struct libnvme_global_ctx **ctx,
 	ret = nvme_create_global_ctx(&ctx_new);
 	if (ret)
 		return ret;
-	libnvme_set_logging_file(ctx_new, stdout);
-	libnvme_set_logging_level(ctx_new, log_level, false, false);
-
-	libnvme_set_ioctl_probing(ctx_new,
-		!nvme_args.no_ioctl_probing);
 
 	ret = get_transport_handle(ctx_new, argc, argv, O_RDONLY, &hdl_new);
 	if (ret) {
@@ -530,11 +567,6 @@ int open_exclusive(struct libnvme_global_ctx **ctx,
 	ret = nvme_create_global_ctx(&ctx_new);
 	if (ret)
 		return ret;
-	libnvme_set_logging_file(ctx_new, stdout);
-	libnvme_set_logging_level(ctx_new, log_level, false, false);
-
-	libnvme_set_ioctl_probing(ctx_new,
-		!nvme_args.no_ioctl_probing);
 
 	ret = get_transport_handle(ctx_new, argc, argv, flags, &hdl_new);
 	if (ret) {
@@ -2460,7 +2492,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 		.raw_binary	= false,
 		.csi		= NVME_CSI_NVM,
 		.ot		= false,
-		.xfer_len	= 4096,
+		.xfer_len	= NVME_LOG_PAGE_PDU_SIZE,
 	};
 
 	OPT_VALS(log_name) = {
@@ -2601,7 +2633,7 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 			NVME_LOG_CDW14_OT_SHIFT,
 			NVME_LOG_CDW14_OT_MASK);
 
-	err = libnvme_get_log(hdl, &cmd, cfg.rae, NVME_LOG_PAGE_PDU_SIZE);
+	err = libnvme_get_log(hdl, &cmd, cfg.rae, cfg.xfer_len);
 	if (err) {
 		nvme_show_err(err, "log page");
 		return err;
@@ -3648,8 +3680,6 @@ static int list_subsys(int argc, char **argv, struct command *acmd,
 			nvme_show_error("Failed to scan nvme subsystem");
 		return err;
 	}
-	libnvme_set_logging_file(ctx, stdout);
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (devname) {
 		int subsys_num;
@@ -3741,12 +3771,8 @@ static int list(int argc, char **argv, struct command *acmd, struct plugin *plug
 		flags |= VERBOSE;
 
 	err = nvme_create_global_ctx(&ctx);
-	if (err) {
-		nvme_show_error("Failed to create global context");
+	if (err)
 		return err;
-	}
-	libnvme_set_logging_file(ctx, stdout);
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err < 0)
@@ -5780,7 +5806,7 @@ static int wait_sanitize(struct libnvme_transport_handle *hdl)
 	return 0;
 }
 
-static bool is_sanitized(struct libnvme_transport_handle *hdl)
+static int check_sanitize(struct libnvme_transport_handle *hdl, bool *sanitized)
 {
 	__cleanup_libnvme_free struct nvme_sanitize_log_page *log = NULL;
 	int err;
@@ -5799,7 +5825,8 @@ static bool is_sanitized(struct libnvme_transport_handle *hdl)
 	case NVME_SANITIZE_SSTAT_STATUS_NEVER_SANITIZED:
 		break;
 	case NVME_SANITIZE_SSTAT_STATUS_COMPLETE_SUCCESS:
-		return true;
+		*sanitized = true;
+		break;
 	case NVME_SANITIZE_SSTAT_STATUS_IN_PROGRESS:
 	case NVME_SANITIZE_SSTAT_STATUS_COMPLETED_FAILED:
 	case NVME_SANITIZE_SSTAT_STATUS_ND_COMPLETE_SUCCESS:
@@ -5807,7 +5834,7 @@ static bool is_sanitized(struct libnvme_transport_handle *hdl)
 		break;
 	}
 
-	return false;
+	return 0;
 }
 
 struct nvme_id_ctrl *identify_ctrl(struct libnvme_transport_handle *hdl)
@@ -5850,6 +5877,7 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;
+	bool sanitized;
 
 	struct config {
 		bool	ish;
@@ -5984,7 +6012,11 @@ static int sanitize_cmd(int argc, char **argv, struct command *acmd, struct plug
 
 		if (cfg.wait)
 			err = wait_sanitize(hdl);
-	} while (--cfg.repeat && !err && is_sanitized(hdl));
+
+		sanitized = false;
+		if (!err && --cfg.repeat)
+			err = check_sanitize(hdl, &sanitized);
+	} while (!err && sanitized);
 
 	return err;
 }
@@ -6904,15 +6936,12 @@ static int set_property(int argc, char **argv, struct command *acmd, struct plug
 
 static void show_relatives(const char *name, nvme_print_flags_t flags)
 {
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int err;
 
 	err = nvme_create_global_ctx(&ctx);
-	if (err) {
-		nvme_show_error("Failed to create global context");
+	if (err)
 		return;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	err = libnvme_scan_topology(ctx, NULL, NULL);
 	if (err < 0) {
@@ -9942,7 +9971,16 @@ static int admin_passthru(int argc, char **argv, struct command *acmd, struct pl
 #ifdef CONFIG_FABRICS
 static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	char *hostnqn;
+	const char *desc = "Generate a hostnqn";
+
+	__cleanup_free char *hostnqn = NULL;
+	int err;
+
+	NVME_ARGS(opts);
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
 
 	hostnqn = libnvmf_generate_hostnqn();
 	if (!hostnqn) {
@@ -9950,15 +9988,25 @@ static int gen_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct p
 				acmd->name);
 		return -ENOTSUP;
 	}
+
 	nvme_show_result("%s", hostnqn);
-	free(hostnqn);
+
 	return 0;
 }
 
 static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
+	const char *desc = "Show hostnqn";
+
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	char *hostnqn;
+	__cleanup_free char *hostnqn = NULL;
+	int err;
+
+	NVME_ARGS(opts);
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
 
 	ctx = libnvme_create_global_ctx();
 	if (!ctx)
@@ -9974,757 +10022,10 @@ static int show_hostnqn_cmd(int argc, char **argv, struct command *acmd, struct 
 	}
 
 	nvme_show_result("%s", hostnqn);
-	free(hostnqn);
 
 	return 0;
 }
 
-static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	const char *desc =
-	    "Generate a DH-HMAC-CHAP host key usable for NVMe In-Band Authentication.";
-	const char *secret =
-	    "Optional secret (in hexadecimal characters) to be used to initialize the host key.";
-	const char *key_len = "Length of the resulting key (32, 48, or 64 bytes).";
-	const char *hmac =
-	    "HMAC function to use for key transformation (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).";
-	const char *nqn = "Host NQN to use for key transformation.";
-
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_free unsigned char *raw_secret = NULL;
-	__cleanup_free char *hnqn = NULL;
-	unsigned char key[68];
-	char encoded_key[128];
-	unsigned long crc = crc32(0L, NULL, 0);
-	int err = 0;
-
-	struct config {
-		char		*secret;
-		unsigned int	key_len;
-		char		*nqn;
-		unsigned int	hmac;
-	};
-
-	struct config cfg = {
-		.secret		= NULL,
-		.key_len	= 0,
-		.nqn		= NULL,
-		.hmac		= 0,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_STR("secret",		's', &cfg.secret,	secret),
-		  OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
-		  OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
-		  OPT_UINT("hmac",		'm', &cfg.hmac,		hmac));
-
-	err = parse_args(argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	err = nvme_create_global_ctx(&ctx);
-	if (err) {
-		nvme_show_error("Failed to create global context");
-		return err;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
-
-	if (cfg.hmac > 3) {
-		nvme_show_error("Invalid HMAC identifier %u", cfg.hmac);
-		return -EINVAL;
-	}
-	if (cfg.hmac > 0) {
-		switch (cfg.hmac) {
-		case 1:
-			if (!cfg.key_len) {
-				cfg.key_len = 32;
-			} else if (cfg.key_len != 32) {
-				nvme_show_error("Invalid key length %d for SHA(256)", cfg.key_len);
-				return -EINVAL;
-			}
-			break;
-		case 2:
-			if (!cfg.key_len) {
-				cfg.key_len = 48;
-			} else if (cfg.key_len != 48) {
-				nvme_show_error("Invalid key length %d for SHA(384)", cfg.key_len);
-				return -EINVAL;
-			}
-			break;
-		case 3:
-			if (!cfg.key_len) {
-				cfg.key_len = 64;
-			} else if (cfg.key_len != 64) {
-				nvme_show_error("Invalid key length %d for SHA(512)", cfg.key_len);
-				return -EINVAL;
-			}
-			break;
-		default:
-			break;
-		}
-	} else if (!cfg.key_len) {
-		cfg.key_len = 32;
-	}
-
-	err = libnvmf_create_raw_secret(ctx, cfg.secret, cfg.key_len, &raw_secret);
-	if (err)
-		return err;
-
-	if (!cfg.nqn) {
-		err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, NULL);
-		if (err)
-			return err;
-		cfg.nqn = hnqn;
-	}
-
-	err = libnvmf_gen_dhchap_key(ctx, cfg.nqn, cfg.hmac,
-		cfg.key_len, raw_secret, key);
-	if (err)
-		return err;
-
-	crc = crc32(crc, key, cfg.key_len);
-	key[cfg.key_len++] = crc & 0xff;
-	key[cfg.key_len++] = (crc >> 8) & 0xff;
-	key[cfg.key_len++] = (crc >> 16) & 0xff;
-	key[cfg.key_len++] = (crc >> 24) & 0xff;
-
-	memset(encoded_key, 0, sizeof(encoded_key));
-	base64_encode(key, cfg.key_len, encoded_key);
-
-	nvme_show_result("DHHC-1:%02x:%s:", cfg.hmac, encoded_key);
-	return 0;
-}
-
-static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	const char *desc =
-	    "Check a DH-HMAC-CHAP host key for usability for NVMe In-Band Authentication.";
-	const char *key = "DH-HMAC-CHAP key (in hexadecimal characters) to be validated.";
-
-	unsigned char decoded_key[128];
-	unsigned int decoded_len;
-	uint32_t crc = crc32(0L, NULL, 0);
-	uint32_t key_crc;
-	int err = 0, hmac;
-	struct config {
-		char	*key;
-	};
-
-	struct config cfg = {
-		.key	= NULL,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_STR("key", 'k', &cfg.key, key));
-
-	err = parse_args(argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	if (!cfg.key) {
-		nvme_show_error("Key not specified");
-		return -EINVAL;
-	}
-
-	if (sscanf(cfg.key, "DHHC-1:%02x:*s", &hmac) != 1) {
-		nvme_show_error("Invalid key header '%s'", cfg.key);
-		return -EINVAL;
-	}
-	switch (hmac) {
-	case 0:
-		break;
-	case 1:
-		if (strlen(cfg.key) != 59) {
-			nvme_show_error("Invalid key length for SHA(256)");
-			return -EINVAL;
-		}
-		break;
-	case 2:
-		if (strlen(cfg.key) != 83) {
-			nvme_show_error("Invalid key length for SHA(384)");
-			return -EINVAL;
-		}
-		break;
-	case 3:
-		if (strlen(cfg.key) != 103) {
-			nvme_show_error("Invalid key length for SHA(512)");
-			return -EINVAL;
-		}
-		break;
-	default:
-		nvme_show_error("Invalid HMAC identifier %d", hmac);
-		return -EINVAL;
-	}
-
-	err = base64_decode(cfg.key + 10, strlen(cfg.key) - 11, decoded_key);
-	if (err < 0) {
-		nvme_show_error("Base64 decoding failed, error %d");
-		return err;
-	}
-	decoded_len = err;
-	if (decoded_len < 32) {
-		nvme_show_error("Base64 decoding failed (%s, size %u)", cfg.key + 10, decoded_len);
-		return -EINVAL;
-	}
-	decoded_len -= 4;
-	if (decoded_len != 32 && decoded_len != 48 && decoded_len != 64) {
-		nvme_show_error("Invalid key length %d", decoded_len);
-		return -EINVAL;
-	}
-	crc = crc32(crc, decoded_key, decoded_len);
-	key_crc = ((uint32_t)decoded_key[decoded_len]) |
-		   ((uint32_t)decoded_key[decoded_len + 1] << 8) |
-		   ((uint32_t)decoded_key[decoded_len + 2] << 16) |
-		   ((uint32_t)decoded_key[decoded_len + 3] << 24);
-	if (key_crc != crc) {
-		nvme_show_error("CRC mismatch (key %08x, crc %08x)", key_crc, crc);
-		return -EINVAL;
-	}
-	nvme_show_result("Key is valid (HMAC %d, length %d, CRC %08x)", hmac, decoded_len, crc);
-	return 0;
-}
-
-static int append_keyfile(struct libnvme_global_ctx *ctx, const char *keyring,
-		long id, const char *keyfile)
-{
-	__cleanup_free unsigned char *key_data = NULL;
-	__cleanup_free char *exported_key = NULL;
-	__cleanup_free char *identity = NULL;
-	__cleanup_file FILE *fd = NULL;
-	int err, ver, hmac, key_len;
-	mode_t old_umask;
-	long kr_id;
-	char type;
-
-	err = libnvmf_lookup_keyring(ctx, keyring, &kr_id);
-	if (err) {
-		nvme_show_error("Failed to lookup keyring '%s', %s",
-				keyring, libnvme_strerror(-err));
-		return err;
-	}
-
-	identity = libnvmf_describe_key_serial(ctx, id);
-	if (!identity) {
-		nvme_show_error("Failed to get identity info");
-		return -EINVAL;
-	}
-
-	if (sscanf(identity, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3) {
-		nvme_show_error("Failed to parse identity\n");
-		return -EINVAL;
-	}
-
-	err = libnvmf_read_key(ctx, kr_id, id, &key_len, &key_data);
-	if (err) {
-		nvme_show_error("Failed to read back derive TLS PSK, %s",
-			libnvme_strerror(-err));
-		return err;
-	}
-
-	err = libnvmf_export_tls_key_versioned(ctx, ver, hmac, key_data,
-					    key_len, &exported_key);
-	if (err) {
-		nvme_show_error("Failed to export key, %s",
-			libnvme_strerror(-err));
-		return err;
-	}
-
-	old_umask = umask(0);
-
-	fd = fopen(keyfile, "a");
-	if (!fd) {
-		nvme_show_error("Failed to open '%s', %s",
-				keyfile, libnvme_strerror(errno));
-		err = -errno;
-		goto out;
-	}
-
-	err = fprintf(fd, "%s %s\n", identity, exported_key);
-	if (err < 0) {
-		nvme_show_error("Failed to append key to '%s', %s",
-				keyfile, libnvme_strerror(errno));
-		err = -errno;
-	} else {
-		err = 0;
-	}
-
-out:
-	chmod(keyfile, 0600);
-	umask(old_umask);
-
-	return err;
-}
-
-static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	const char *desc = "Generate a TLS key in NVMe PSK Interchange format.";
-	const char *secret =
-	    "Optional secret (in hexadecimal characters) to be used for the TLS key.";
-	const char *hmac = "HMAC function to use for the retained key (1 = SHA-256, 2 = SHA-384).";
-	const char *version = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0";
-	const char *hostnqn = "Host NQN for the retained key.";
-	const char *subsysnqn = "Subsystem NQN for the retained key.";
-	const char *keyring = "Keyring for the retained key.";
-	const char *keytype = "Key type of the retained key.";
-	const char *insert = "Insert retained key into the keyring.";
-	const char *keyfile = "Update key file with the derive TLS PSK.";
-	const char *compat = "Use non-RFC 8446 compliant algorithm for deriving TLS PSK for older implementations";
-
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_free unsigned char *raw_secret = NULL;
-	__cleanup_free char *encoded_key = NULL;
-	__cleanup_free char *hnqn = NULL;
-	int key_len = 32;
-	int err;
-	long tls_key;
-
-	struct config {
-		char		*keyring;
-		char		*keytype;
-		char		*hostnqn;
-		char		*subsysnqn;
-		char		*secret;
-		char		*keyfile;
-		unsigned char	hmac;
-		unsigned char	version;
-		bool		insert;
-		bool		compat;
-	};
-
-	struct config cfg = {
-		.keyring	= ".nvme",
-		.keytype	= "psk",
-		.hostnqn	= NULL,
-		.subsysnqn	= NULL,
-		.secret		= NULL,
-		.keyfile	= NULL,
-		.hmac		= 1,
-		.version	= 0,
-		.insert		= false,
-		.compat		= false,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
-		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
-		  OPT_STR("secret",	's', &cfg.secret,	secret),
-		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
-		  OPT_BYTE("hmac",	'm', &cfg.hmac,		hmac),
-		  OPT_BYTE("identity",	'I', &cfg.version,	version),
-		  OPT_FLAG("insert",	'i', &cfg.insert,	insert),
-		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
-
-	err = parse_args(argc, argv, desc, opts);
-	if (err)
-		return err;
-	if (cfg.hmac < 1 || cfg.hmac > 2) {
-		nvme_show_error("Invalid HMAC identifier %u", cfg.hmac);
-		return -EINVAL;
-	}
-	if (cfg.version > 1) {
-		nvme_show_error("Invalid TLS identity version %u",
-				cfg.version);
-		return -EINVAL;
-	}
-	if (cfg.insert) {
-		if (!cfg.subsysnqn) {
-			nvme_show_error("No subsystem NQN specified");
-			return -EINVAL;
-		}
-	}
-	if (cfg.hmac == 2)
-		key_len = 48;
-
-	err = nvme_create_global_ctx(&ctx);
-	if (err) {
-		nvme_show_error("Failed to create global context");
-		return err;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
-
-	err = libnvmf_create_raw_secret(ctx, cfg.secret, key_len, &raw_secret);
-	if (err)
-		return err;
-
-	err = libnvmf_export_tls_key(ctx, raw_secret, key_len, &encoded_key);
-	if (err) {
-		nvme_show_error("Failed to export key, %s", libnvme_strerror(-err));
-		return err;
-	}
-	nvme_show_result("%s", encoded_key);
-
-	if (cfg.insert) {
-		if (!cfg.hostnqn) {
-			err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, NULL);
-			if (err)
-				return err;
-			cfg.hostnqn = hnqn;
-		}
-
-		if (cfg.compat)
-			err = libnvmf_insert_tls_key_compat(ctx, cfg.keyring,
-				cfg.keytype, cfg.hostnqn,
-				cfg.subsysnqn, cfg.version,
-				cfg.hmac, raw_secret, key_len, &tls_key);
-		else
-			err = libnvmf_insert_tls_key_versioned(ctx, cfg.keyring,
-				cfg.keytype, cfg.hostnqn,
-				cfg.subsysnqn, cfg.version,
-				cfg.hmac, raw_secret, key_len, &tls_key);
-		if (err) {
-			nvme_show_error("Failed to insert key, error %d");
-			return err;
-		}
-
-		nvme_show_result("Inserted TLS key %08x", (unsigned int)tls_key);
-
-		if (cfg.keyfile) {
-			err = append_keyfile(ctx, cfg.keyring,
-				tls_key, cfg.keyfile);
-			if (err)
-				return err;
-		}
-	}
-
-	return 0;
-}
-
-static int check_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	const char *desc = "Check a TLS key for NVMe PSK Interchange format.\n";
-	const char *keydata = "TLS key (in PSK Interchange format) to be validated.";
-	const char *identity = "TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)";
-	const char *hostnqn = "Host NQN for the retained key.";
-	const char *subsysnqn = "Subsystem NQN for the retained key.";
-	const char *keyring = "Keyring for the retained key.";
-	const char *keytype = "Key type of the retained key.";
-	const char *insert = "Insert retained key into the keyring.";
-	const char *keyfile = "Update key file with the derive TLS PSK.";
-	const char *compat = "Use non-RFC 8446 compliant algorithm for checking TLS PSK for older implementations.";
-
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_free unsigned char *decoded_key = NULL;
-	__cleanup_free char *hnqn = NULL;
-	int decoded_len, err = 0;
-	unsigned int hmac;
-	long tls_key;
-	struct config {
-		char		*keyring;
-		char		*keytype;
-		char		*hostnqn;
-		char		*subsysnqn;
-		char		*keydata;
-		char		*keyfile;
-		unsigned char	identity;
-		bool		insert;
-		bool		compat;
-	};
-
-	struct config cfg = {
-		.keyring	= ".nvme",
-		.keytype	= "psk",
-		.hostnqn	= NULL,
-		.subsysnqn	= NULL,
-		.keydata	= NULL,
-		.keyfile	= NULL,
-		.identity	= 0,
-		.insert		= false,
-		.compat		= false,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("hostnqn",	'n', &cfg.hostnqn,	hostnqn),
-		  OPT_STR("subsysnqn",	'c', &cfg.subsysnqn,	subsysnqn),
-		  OPT_STR("keydata",	'd', &cfg.keydata,	keydata),
-		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
-		  OPT_BYTE("identity",	'I', &cfg.identity,	identity),
-		  OPT_FLAG("insert",	'i', &cfg.insert,	insert),
-		  OPT_FLAG("compat",	'C', &cfg.compat,	compat));
-
-	err = parse_args(argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	if (!cfg.keydata) {
-		nvme_show_error("No key data");
-		return -EINVAL;
-	}
-	if (cfg.identity > 1) {
-		nvme_show_error("Invalid TLS identity version %u",
-				cfg.identity);
-		return -EINVAL;
-	}
-
-	err = nvme_create_global_ctx(&ctx);
-	if (err) {
-		nvme_show_error("Failed to create global context");
-		return err;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
-
-	err = libnvmf_import_tls_key(ctx, cfg.keydata, &decoded_len,
-		&hmac, &decoded_key);
-	if (err) {
-		nvme_show_error("Key decoding failed, error %d\n");
-		return err;
-	}
-
-	if (cfg.subsysnqn) {
-		if (!cfg.hostnqn) {
-			err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, NULL);
-			if (err)
-				return err;
-			cfg.hostnqn = hnqn;
-		}
-	} else {
-		nvme_show_error("Need to specify a subsystem NQN");
-		return -EINVAL;
-	}
-
-	if (cfg.insert) {
-		if (cfg.compat)
-			err = libnvmf_insert_tls_key_compat(ctx, cfg.keyring,
-				cfg.keytype, cfg.hostnqn,
-				cfg.subsysnqn, cfg.identity,
-				hmac, decoded_key, decoded_len,
-				&tls_key);
-		else
-			err = libnvmf_insert_tls_key_versioned(ctx, cfg.keyring,
-				cfg.keytype, cfg.hostnqn,
-				cfg.subsysnqn, cfg.identity,
-				hmac, decoded_key, decoded_len,
-				&tls_key);
-		if (err) {
-			nvme_show_error("Failed to insert key, error %d");
-			return err;
-		}
-		nvme_show_result("Inserted TLS key %08x", (unsigned int)tls_key);
-
-		if (cfg.keyfile) {
-			err = append_keyfile(ctx, cfg.keyring,
-				tls_key, cfg.keyfile);
-			if (err)
-				return err;
-		}
-	} else {
-		__cleanup_free char *tls_id = NULL;
-
-		if (cfg.compat)
-			err = libnvmf_generate_tls_key_identity_compat(ctx,
-				cfg.hostnqn, cfg.subsysnqn, cfg.identity,
-				hmac, decoded_key, decoded_len,
-				&tls_id);
-		else
-			err = libnvmf_generate_tls_key_identity(ctx,
-				cfg.hostnqn, cfg.subsysnqn, cfg.identity,
-				hmac, decoded_key, decoded_len,
-				&tls_id);
-		if (err) {
-			nvme_show_error("Failed to generate identity, error %d",
-					err);
-			return err;
-		}
-		nvme_show_result("%s", tls_id);
-	}
-	return 0;
-}
-
-static void __scan_tls_key(struct libnvme_global_ctx *ctx, long keyring_id,
-		long key_id, char *desc, int desc_len, void *data)
-{
-	FILE *fd = data;
-	__cleanup_free unsigned char *key_data = NULL;
-	__cleanup_free char *encoded_key = NULL;
-	int key_len;
-	int ver, hmac;
-	char type;
-	int err;
-
-	err = libnvmf_read_key(ctx, keyring_id, key_id, &key_len, &key_data);
-	if (err)
-		return;
-
-	if (sscanf(desc, "NVMe%01d%c%02d %*s", &ver, &type, &hmac) != 3)
-		return;
-
-	err = libnvmf_export_tls_key_versioned(ctx, ver, hmac, key_data, key_len,
-		&encoded_key);
-	if (err)
-		return;
-	fprintf(fd, "%s %s\n", desc, encoded_key);
-}
-
-static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
-		FILE *fd)
-{
-	long keyring_id, key;
-	char tls_str[512];
-	char *tls_key;
-	unsigned char *psk;
-	unsigned int hmac;
-	int linenum = -1, key_len;
-	int err;
-
-	err = libnvmf_lookup_keyring(ctx, keyring, &keyring_id);
-	if (err) {
-		nvme_show_error("Invalid keyring '%s'", keyring);
-		return err;
-	}
-
-	while (fgets(tls_str, 512, fd)) {
-		linenum++;
-		tls_key = strrchr(tls_str, ' ');
-		if (!tls_key) {
-			nvme_show_error("Parse error in line %d",
-					linenum);
-			continue;
-		}
-		*tls_key = '\0';
-		tls_key++;
-		tls_key[strcspn(tls_key, "\n")] = 0;
-		err = libnvmf_import_tls_key(ctx, tls_key, &key_len, &hmac, &psk);
-		if (err) {
-			nvme_show_error("Failed to import key in line %d",
-					linenum);
-			continue;
-		}
-		err = libnvmf_update_key(ctx, keyring_id, "psk", tls_str,
-				psk, key_len, &key);
-		if (err)
-			continue;
-		free(psk);
-	}
-
-	return 0;
-}
-
-
-static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	const char *desc = "Manipulation of TLS keys.\n";
-	const char *keyring = "Keyring for the retained key.";
-	const char *keytype = "Key type of the retained key.";
-	const char *keyfile = "File for list of keys.";
-	const char *import = "Import all keys into the keyring.";
-	const char *export = "Export all keys from the keyring.";
-	const char *revoke = "Revoke key from the keyring.";
-
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_file FILE *fd = NULL;
-	mode_t old_umask = 0;
-	int cnt, err = 0;
-
-	struct config {
-		char		*keyring;
-		char		*keytype;
-		char		*keyfile;
-		bool		import;
-		bool		export;
-		char		*revoke;
-	};
-
-	struct config cfg = {
-		.keyring	= ".nvme",
-		.keytype	= "psk",
-		.keyfile	= NULL,
-		.import		= false,
-		.export		= false,
-		.revoke		= NULL,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_STR("keyring",	'k', &cfg.keyring,	keyring),
-		  OPT_STR("keytype",	't', &cfg.keytype,	keytype),
-		  OPT_STR("keyfile",	'f', &cfg.keyfile,	keyfile),
-		  OPT_FLAG("import",	'i', &cfg.import,	import),
-		  OPT_FLAG("export",	'e', &cfg.export,	export),
-		  OPT_STR("revoke",	'r', &cfg.revoke,	revoke));
-
-	err = parse_args(argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	err = nvme_create_global_ctx(&ctx);
-	if (err) {
-		nvme_show_error("Failed to create global context");
-		return err;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
-
-	if (cfg.keyfile) {
-		const char *mode;
-
-		if (cfg.import)
-			mode = "r";
-		else
-			mode = "w";
-
-		old_umask = umask(0);
-
-		fd = fopen(cfg.keyfile, mode);
-		if (!fd) {
-			nvme_show_error("Cannot open keyfile %s, error %d",
-					cfg.keyfile, errno);
-			return -errno;
-		}
-	} else {
-		if (cfg.import)
-			fd = freopen(NULL, "r", stdin);
-		else
-			fd = freopen(NULL, "w", stdout);
-	}
-
-	cnt = 0;
-	if (cfg.export) cnt++;
-	if (cfg.import) cnt++;
-	if (cfg.revoke) cnt++;
-
-	if (cnt != 1) {
-		nvme_show_error("Must specify either --import, --export or --revoke");
-		return -EINVAL;
-	} else if (cfg.export) {
-		err = libnvmf_scan_tls_keys(ctx, cfg.keyring, __scan_tls_key, fd);
-		if (err < 0) {
-			nvme_show_error("Export of TLS keys failed with '%s'",
-				libnvme_strerror(-err));
-			return err;
-		}
-
-		nvme_show_verbose_info("exporting to %s", cfg.keyfile);
-
-		return 0;
-	} else if (cfg.import) {
-		err = import_key(ctx, cfg.keyring, fd);
-		if (err) {
-			nvme_show_error("Import of TLS keys failed with '%s'",
-					libnvme_strerror(err));
-			return err;
-		}
-
-		nvme_show_verbose_info("importing from %s", cfg.keyfile);
-	} else {
-		err = libnvmf_revoke_tls_key(ctx, cfg.keyring, cfg.keytype,
-			cfg.revoke);
-		if (err) {
-			nvme_show_error("Failed to revoke key '%s'",
-					libnvme_strerror(err));
-			return err;
-		}
-
-		nvme_show_verbose_info("revoking key");
-	}
-
-	if (old_umask != 0 && fd) {
-		umask(old_umask);
-		chmod(cfg.keyfile, 0600);
-	}
-
-	return err;
-}
 #endif /* CONFIG_FABRICS */
 
 static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -10782,11 +10083,8 @@ static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct
 	}
 
 	err = nvme_create_global_ctx(&ctx);
-	if (err) {
-		nvme_show_error("Failed to create global context");
+	if (err)
 		return err;
-	}
-	libnvme_set_logging_level(ctx, log_level, false, false);
 
 	if (optind < argc)
 		devname = basename(argv[optind++]);
@@ -10858,7 +10156,177 @@ static int dim_cmd(int argc, char **argv, struct command *acmd, struct plugin *p
 
 	return fabrics_dim(desc, argc, argv);
 }
-#endif
+
+#ifdef CONFIG_DEPRECATED_CMDS
+static struct plugin *find_keys_plugin(void)
+{
+	struct plugin *keys = nvme.extensions->next;
+
+	while (keys && (!keys->name || strcmp(keys->name, "keys")))
+		keys = keys->next;
+
+	return keys;
+}
+
+static int forward_to_keys_plugin(const char *old_name, const char *subcmd,
+		int argc, char **argv)
+{
+	struct plugin *keys = find_keys_plugin();
+	__cleanup_free char **sub_argv = NULL;
+
+	if (!keys) {
+		fprintf(stderr, "ERROR: '%s' is deprecated and requires the 'keys' plugin, which is not available in this build; use 'nvme keys %s'\n",
+			old_name, subcmd);
+		return -ENOTTY;
+	}
+
+	fprintf(stderr, "WARNING: '%s' is deprecated, use 'nvme keys %s' instead\n",
+		old_name, subcmd);
+
+	/*
+	 * handle_plugin() expects argv[0] to be a throwaway name (its own
+	 * global-option parsing skips it like a program name) and argv[1]
+	 * to be the subcommand it dispatches on, so forwarding into the
+	 * 'keys' plugin needs both slots, not just a renamed argv[0].
+	 */
+	sub_argv = calloc(argc + 1, sizeof(*sub_argv));
+	if (!sub_argv)
+		return -ENOMEM;
+
+	sub_argv[0] = (char *)keys->name;
+	sub_argv[1] = (char *)subcmd;
+	memcpy(&sub_argv[2], &argv[1], (argc - 1) * sizeof(*argv));
+
+	return handle_plugin(argc + 1, sub_argv, keys);
+}
+
+static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	return forward_to_keys_plugin("gen-dhchap-key", "gen-kxchap", argc, argv);
+}
+
+static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	return forward_to_keys_plugin("check-dhchap-key", "check-kxchap", argc, argv);
+}
+
+static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	return forward_to_keys_plugin("gen-tls-key", "gen-tls", argc, argv);
+}
+
+static int check_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	return forward_to_keys_plugin("check-tls-key", "check-tls", argc, argv);
+}
+
+/*
+ * The old 'tls-key' command bundled import/export/revoke behind
+ * -i/-e/-r mode flags sharing -k/-t/-f; the 'keys' plugin split these
+ * into separate subcommands with their own option sets, so unlike the
+ * other legacy aliases this one has to translate argv instead of just
+ * renaming argv[0].
+ */
+static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	static const struct option opts[] = {
+		{ "keyring",	required_argument,	NULL, 'k' },
+		{ "keytype",	required_argument,	NULL, 't' },
+		{ "keyfile",	required_argument,	NULL, 'f' },
+		{ "import",	no_argument,		NULL, 'i' },
+		{ "export",	no_argument,		NULL, 'e' },
+		{ "revoke",	required_argument,	NULL, 'r' },
+		{ NULL, 0, NULL, 0 },
+	};
+	__cleanup_free char *keyring_opt = NULL;
+	__cleanup_free char *keytype_opt = NULL;
+	__cleanup_free char *keyfile_opt = NULL;
+	__cleanup_free char *identity_opt = NULL;
+	__cleanup_free char **sub_argv = NULL;
+	const char *keyring = NULL, *keytype = NULL, *keyfile = NULL, *revoke = NULL;
+	const char *subcmd = NULL;
+	struct plugin *keys;
+	int nsub = 0, c;
+
+	optind = 1;
+	while ((c = getopt_long(argc, argv, "k:t:f:ier:", opts, NULL)) != -1) {
+		switch (c) {
+		case 'k':
+			keyring = optarg;
+			break;
+		case 't':
+			keytype = optarg;
+			break;
+		case 'f':
+			keyfile = optarg;
+			break;
+		case 'i':
+		case 'e':
+			if (subcmd) {
+				fprintf(stderr, "ERROR: only one of --import, --export, or --revoke may be given\n");
+				return -EINVAL;
+			}
+			subcmd = c == 'i' ? "import" : "export";
+			break;
+		case 'r':
+			if (subcmd) {
+				fprintf(stderr, "ERROR: only one of --import, --export, or --revoke may be given\n");
+				return -EINVAL;
+			}
+			subcmd = "revoke";
+			revoke = optarg;
+			break;
+		default:
+			return -EINVAL;
+		}
+	}
+
+	if (!subcmd) {
+		fprintf(stderr, "ERROR: 'tls-key' requires one of --import, --export, or --revoke\n");
+		return -EINVAL;
+	}
+
+	keys = find_keys_plugin();
+	if (!keys) {
+		fprintf(stderr, "ERROR: 'tls-key' is deprecated and requires the 'keys' plugin, which is not available in this build; use 'nvme keys %s'\n",
+			subcmd);
+		return -ENOTTY;
+	}
+
+	sub_argv = calloc(6, sizeof(*sub_argv));
+	if (!sub_argv)
+		return -ENOMEM;
+
+	sub_argv[nsub++] = (char *)keys->name;
+	sub_argv[nsub++] = (char *)subcmd;
+
+	if (keyring) {
+		if (asprintf(&keyring_opt, "--keyring=%s", keyring) < 0)
+			return -ENOMEM;
+		sub_argv[nsub++] = keyring_opt;
+	}
+
+	if (!strcmp(subcmd, "revoke")) {
+		if (keytype) {
+			if (asprintf(&keytype_opt, "--keytype=%s", keytype) < 0)
+				return -ENOMEM;
+			sub_argv[nsub++] = keytype_opt;
+		}
+		if (asprintf(&identity_opt, "--identity=%s", revoke) < 0)
+			return -ENOMEM;
+		sub_argv[nsub++] = identity_opt;
+	} else if (keyfile) {
+		if (asprintf(&keyfile_opt, "--keyfile=%s", keyfile) < 0)
+			return -ENOMEM;
+		sub_argv[nsub++] = keyfile_opt;
+	}
+
+	fprintf(stderr, "WARNING: 'tls-key' is deprecated, use 'nvme keys %s' instead\n", subcmd);
+
+	return handle_plugin(nsub, sub_argv, keys);
+}
+#endif /* CONFIG_DEPRECATED_CMDS */
+#endif /* CONFIG_FABRICS */
 
 #ifdef CONFIG_MI
 static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
@@ -11254,14 +10722,15 @@ static int get_log_offset(struct libnvme_transport_handle *hdl,
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	args->lpo = *offset,
-	args->log = *log + *offset,
+	args->lpo = *offset;
 	args->len = len;
 	*offset += args->len;
 
 	*log = libnvme_realloc(*log, *offset);
 	if (!*log)
 		return -ENOMEM;
+
+	args->log = *log + args->lpo;
 
 	nvme_init_get_log(&cmd, args->nsid, args->lid,
 			  args->csi, args->log, args->len);
@@ -11764,6 +11233,10 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	setlocale(LC_ALL, "");
+
+	err = nvme_load_global_config();
+	if (err)
+		return err;
 
 	err = nvme_install_sigint_handler();
 	if (err)

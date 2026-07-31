@@ -105,7 +105,7 @@ COMMAND_LIST(
 	ENTRY("get-reg", "Get a register and show the resulting value", get_register)
 #ifdef CONFIG_TOP
 	ENTRY("top", "nvme top", top)
-#endif
+#endif /* CONFIG_TOP */
 #ifdef CONFIG_FABRICS
 	ENTRY("discover", "Discover NVMeoF subsystems", discover_cmd)
 	ENTRY("connect-all", "Discover and Connect to NVMeoF subsystems", connect_all_cmd)
@@ -115,12 +115,14 @@ COMMAND_LIST(
 	ENTRY("dim", "Send Discovery Information Management command to a Discovery Controller", dim_cmd)
 	ENTRY("gen-hostnqn", "Generate NVMeoF host NQN", gen_hostnqn_cmd)
 	ENTRY("show-hostnqn", "Show NVMeoF host NQN", show_hostnqn_cmd)
-	ENTRY("gen-dhchap-key", "Generate NVMeoF DH-HMAC-CHAP host key", gen_dhchap_key)
-	ENTRY("check-dhchap-key", "Validate NVMeoF DH-HMAC-CHAP host key", check_dhchap_key)
-	ENTRY("gen-tls-key", "Generate NVMeoF TLS PSK", gen_tls_key)
-	ENTRY("check-tls-key", "Validate NVMeoF TLS PSK", check_tls_key)
-	ENTRY("tls-key", "Manipulate NVMeoF TLS PSK", tls_key)
-#endif
+#ifdef CONFIG_DEPRECATED_CMDS
+	ENTRY("gen-dhchap-key", "Generate NVMeoF DH-HMAC-CHAP host key (deprecated, use 'nvme keys gen-kxchap')", gen_dhchap_key)
+	ENTRY("check-dhchap-key", "Validate NVMeoF DH-HMAC-CHAP host key (deprecated, use 'nvme keys check-kxchap')", check_dhchap_key)
+	ENTRY("gen-tls-key", "Generate NVMeoF TLS PSK (deprecated, use 'nvme keys gen-tls')", gen_tls_key)
+	ENTRY("check-tls-key", "Validate NVMeoF TLS PSK (deprecated, use 'nvme keys check-tls')", check_tls_key)
+	ENTRY("tls-key", "Manage NVMeoF TLS PSKs (deprecated, use 'nvme keys import/export/revoke')", tls_key)
+#endif /* CONFIG_DEPRECATED_CMDS */
+#endif /* CONFIG_FABRICS */
 	ENTRY("dir-receive", "Submit a Directive Receive command, return results", dir_receive)
 	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
 	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller", virtual_mgmt)
@@ -132,7 +134,7 @@ COMMAND_LIST(
 #ifdef CONFIG_MI
 	ENTRY("nvme-mi-recv", "Submit a NVMe-MI Receive command, return results", nmi_recv)
 	ENTRY("nvme-mi-send", "Submit a NVMe-MI Send command, return results", nmi_send)
-#endif
+#endif /* CONFIG_MI */
 );
 
 #endif

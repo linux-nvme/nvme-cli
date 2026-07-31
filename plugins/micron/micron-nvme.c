@@ -117,8 +117,13 @@ static void WriteData(__u8 *data, __u32 len, const char *dir, const char *file, 
 {
 	__cleanup_free char *tempFolder = NULL;
 	FILE *fpOutFile = NULL;
+	int ret;
 
-	if (asprintf(&tempFolder, "%s/%s", dir, file) < 0) {
+	if (dir)
+		ret = asprintf(&tempFolder, "%s/%s", dir, file);
+	else
+		ret = asprintf(&tempFolder, "%s", file);
+	if (ret < 0) {
 		nvme_show_error("Failed to allocate memory for temp folder path");
 		return;
 	}
@@ -382,7 +387,7 @@ static int ZipAndRemoveDir(char *strDirName, char *strFileName)
 		is_tgz = true;
 		nRet = micron_run_spawn(argv, NULL, false);
 	} else {
-		char *argv[] = {"zip", "-r", strFileName, "--", strDirName, NULL};
+		char *argv[] = {"zip", "-q", "-r", strFileName, "--", strDirName, NULL};
 
 		nRet = micron_run_spawn(argv, NULL, false);
 	}
@@ -2264,81 +2269,101 @@ static void GetOSConfig(const char *strOSDirName)
 }
 
 static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type, __u8 **data,
-				int *logSize, int da)
+				uint32_t *logSize, int da)
 {
-	int err, bs = 512, offset = bs;
-	unsigned short data_area[5] = { 0 };
-	unsigned char  ctrl_init = (type == 0x8);
+	int err;
+	int bs = NVME_LOG_TELEM_BLOCK_SIZE;
+	uint32_t dalb = 0;
+	bool ctrl_init = (type == NVME_LOG_LID_TELEMETRY_CTRL);
+	struct nvme_telemetry_log *log = libnvme_alloc(bs);
 
-	__u8 *buffer = (unsigned char *)libnvme_alloc(bs);
+	if (!log) {
+		nvme_show_error("Failed to allocate memory for %s telemetry log header",
+			ctrl_init ? "controller" : "host");
+		return -ENOMEM;
+	}
 
-	if (!buffer)
-		return -1;
 	if (ctrl_init)
-		err = nvme_get_log_telemetry_ctrl(hdl, true, 0, buffer, bs);
+		err = nvme_get_log_telemetry_ctrl(hdl, true, 0, log, bs);
 	else
-		err = nvme_get_log_telemetry_host(hdl, 0, buffer, bs);
+		err = nvme_get_log_telemetry_host(hdl, 0, log, bs);
+
 	if (err) {
-		nvme_show_error("Failed to get telemetry log header for 0x%X", type);
-		libnvme_free(buffer);
+		nvme_show_error("Failed to get telemetry log header for %s",
+			ctrl_init ? "controller" : "host");
+		libnvme_free(log);
 		return err;
 	}
 
-	/* compute size of the log */
-	data_area[1] = buffer[9]  << 8 | buffer[8];
-	data_area[2] = buffer[11] << 8 | buffer[10];
-	data_area[3] = buffer[13] << 8 | buffer[12];
-	data_area[4] = buffer[15] << 8 | buffer[14];
-	data_area[0] = data_area[1] > data_area[2] ? data_area[1] : data_area[2];
-	data_area[0] = data_area[3] > data_area[0] ? data_area[3] : data_area[0];
-	data_area[0] = data_area[4] > data_area[0] ? data_area[4] : data_area[0];
+	switch (da) {
+	case 1:
+		dalb = le16_to_cpu(log->dalb1);
+		break;
+	case 2:
+		dalb = le16_to_cpu(log->dalb2);
+		break;
+	case 3:
+		dalb = le16_to_cpu(log->dalb3);
+		break;
+	case 4:
+		dalb = le32_to_cpu(log->dalb4);
+		break;
+	default:
+		nvme_show_error("Invalid data area: %d", da);
+		libnvme_free(log);
+		return -EINVAL;
+	}
 
-	if (!data_area[da]) {
-		nvme_show_error("Requested telemetry data for 0x%X is empty", type);
-		libnvme_free(buffer);
-		buffer = NULL;
+	if (!dalb) {
+		nvme_show_error("Requested telemetry data for %s data area %d is empty",
+			ctrl_init ? "controller" : "host", da);
+		libnvme_free(log);
 		return -1;
 	}
 
-	*logSize = data_area[da] * bs;
-	offset = bs;
+	*logSize = (dalb + 1) * bs;
 	err = 0;
-	buffer = (unsigned char *)libnvme_realloc(buffer, (size_t)(*logSize));
-	if (buffer) {
-		while (!err && offset != *logSize) {
-			if (ctrl_init)
-				err = nvme_get_log_telemetry_ctrl(hdl, true, offset, buffer + offset, bs);
-			else
-				err = nvme_get_log_telemetry_host(hdl, offset, buffer + offset, bs);
-			offset += bs;
-		}
+	log = libnvme_realloc(log, (size_t)(*logSize));
+	if (!log) {
+		nvme_show_error("Failed to allocate memory for %s telemetry data (%u bytes)",
+			ctrl_init ? "controller" : "host", *logSize);
+		return -ENOMEM;
 	}
 
-	if (!err && buffer) {
-		*data = buffer;
+	if (ctrl_init)
+		err = nvme_get_log_telemetry_ctrl(hdl, true, 0, log, *logSize);
+	else
+		err = nvme_get_log_telemetry_host(hdl, 0, log, *logSize);
+
+	if (!err) {
+		*data = (__u8 *)log;
 	} else {
-		nvme_show_err(err, "Failed to get telemetry data for 0x%x\n", type);
-		libnvme_free(buffer);
+		nvme_show_err(err, "Failed to get telemetry data for %s\n",
+			ctrl_init ? "controller" : "host");
+		libnvme_free(log);
 	}
 
 	return err;
 }
 
-static int GetTelemetryData(struct libnvme_transport_handle *hdl, const char *dir)
+static int GetTelemetryData(struct libnvme_transport_handle *hdl,
+				const char *dir, bool da4_support)
 {
 	unsigned char *buffer = NULL;
-	int i, err, logSize = 0;
+	int i, err;
+	uint32_t logSize = 0;
 	char msg[256] = { 0 };
 	struct {
 		__u8 log;
 		char *file;
 	} tmap[] = {
-		{0x07, "nvmetelemetrylog.bin"},
-		{0x08, "nvmetelemetrylog.bin"},
+		{NVME_LOG_LID_TELEMETRY_HOST, "nvme_host_telemetry_log.bin"},
+		{NVME_LOG_LID_TELEMETRY_CTRL, "nvme_controller_telemetry_log.bin"},
 	};
 
 	for (i = 0; i < (int)(ARRAY_SIZE(tmap)); i++) {
-		err = micron_telemetry_log(hdl, tmap[i].log, &buffer, &logSize, 0);
+		err = micron_telemetry_log(hdl, tmap[i].log, &buffer, &logSize,
+			da4_support ? 4 : 3);
 		if (!err && logSize > 0 && buffer) {
 			snprintf(msg, sizeof(msg), "telemetry log: 0x%X", tmap[i].log);
 			WriteData(buffer, logSize, dir, tmap[i].file, msg);
@@ -2578,16 +2603,34 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 static int micron_cloud_ssd_plugin_version(int argc, char **argv,
 					   struct command *command, struct plugin *plugin)
 {
-	printf("nvme-cli Micron cloud SSD plugin version: %s.%s\n",
-		   __version_major, __version_minor);
+	const char *desc = "Prints the Micron cloud SSD plugin version.";
+	int err;
+
+	NVME_ARGS(opts);
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	nvme_show_result("nvme-cli Micron cloud SSD plugin version: %s.%s",
+			 __version_major, __version_minor);
 	return 0;
 }
 
 static int micron_plugin_version(int argc, char **argv, struct command *acmd,
 				 struct plugin *plugin)
 {
-	printf("nvme-cli Micron plugin version: %s.%s.%s\n",
-		   __version_major, __version_minor, __version_patch);
+	const char *desc = "Prints the Micron plugin version.";
+	int err;
+
+	NVME_ARGS(opts);
+
+	err = parse_args(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	nvme_show_result("nvme-cli Micron plugin version: %s.%s.%s",
+			 __version_major, __version_minor, __version_patch);
 	return 0;
 }
 
@@ -3415,122 +3458,24 @@ static int get_common_log(struct libnvme_transport_handle *hdl, uint8_t id, uint
 	return ret;
 }
 
-static int GetOcpEnhancedTelemetryLog(struct libnvme_transport_handle *hdl, const char *dir, int nLogID)
+static int GetOcpEnhancedTelemetryLogs(struct libnvme_transport_handle *hdl, const char *dir)
 {
 	int err = 0;
-	__cleanup_libnvme_free unsigned char *pTelemetryDataHeader = NULL;
-	unsigned int nallocSize = 0;
-	unsigned int nOffset = 0;
-	unsigned char *pTelemetryBuffer = NULL;
-	unsigned int usAreaLastBlock[4] = {0};
-	bool bTeleheaderWrite = true;
-	/* Enable ETDAS */
 	unsigned int uiBufferSize = 512;
 	unsigned char pBuffer[512] = { 0 };
 	__u64 result = 0;
 
 	pBuffer[1] = 1;
 
+	/* Enable ETDAS so Data Area 4 is included in the telemetry logs */
 	err = nvme_set_features(hdl, NVME_NSID_ALL,
 			MICRON_FEATURE_OCP_ENHANCED_TELEMETRY, 1, 0, 0, 0,
 			0, 0, pBuffer, uiBufferSize, &result);
 
-	if (err != 0)
-		nvme_show_error("Failed to set ETDAS, Data Area 4 won't be avialable");
+	if (err)
+		nvme_show_error("Failed to set ETDAS, Data Area 4 won't be available");
 
-	/* Read Telemetry header information */
-	pTelemetryDataHeader = (unsigned char *)libnvme_alloc(512);
-
-	if (!pTelemetryDataHeader) {
-		nvme_show_error("Unable to allocate buffer of size 0x%X bytes for telemetry header", 512);
-		return -1;
-	}
-	err = NVMEGetLogPage(hdl, nLogID, pTelemetryDataHeader, 512, 0);
-
-	if (err != 0)
-		return err;
-
-	nOffset += 512;
-	int n = 8;
-	/* Get size of log page */
-	for (int i = 0; i < 3; i++) {
-		usAreaLastBlock[i] = (pTelemetryDataHeader[n + 1] << 8) | pTelemetryDataHeader[n];
-		n += 2;
-	}
-	n += 2;
-	usAreaLastBlock[3] = (pTelemetryDataHeader[n + 3] << 24) |
-						(pTelemetryDataHeader[n + 2] << 16) |
-						(pTelemetryDataHeader[n + 1] << 8) |
-						pTelemetryDataHeader[n];
-
-	for (int nArea = 0; nArea <= 3; nArea++) {
-		if (nArea != 0)
-			nallocSize = (usAreaLastBlock[nArea] - usAreaLastBlock[nArea - 1]) * 512;
-		else
-			nallocSize = usAreaLastBlock[nArea] * 512;
-
-		if (nallocSize == 0) {
-			printf(
-				"Enhanced Telemetry log Data Area %d Size is zero, continuing with next available Data Area\n"
-				, (nArea + 1));
-			continue;
-		}
-
-		pTelemetryBuffer = (unsigned char *)libnvme_alloc(nallocSize);
-		if (!pTelemetryBuffer) {
-			printf(
-				"Unable to allocate buffer of size 0x%X bytes for Data Area %d"
-				, nallocSize, (nArea + 1)
-			);
-			nOffset += nallocSize;
-			continue;
-		}
-		/* Fetch the Data */
-		err = NVMEGetLogPage(hdl, nLogID, pTelemetryBuffer, nallocSize, nOffset);
-
-		if (err != 0) {
-			printf(
-				"Failed to fetch telemetry data of size : %u from offset : %u!\n"
-				, nallocSize, nOffset
-			);
-			libnvme_free(pTelemetryBuffer);
-			pTelemetryBuffer = NULL;
-			nOffset += nallocSize;
-			continue;
-		}
-
-		/* Increment the Offset value */
-		nOffset += nallocSize;
-
-		if ((nArea + 1) <= 4) {
-			char strBuffer[256] = { 0 };
-
-			if (nLogID == NVME_LOG_LID_TELEMETRY_HOST) {
-				snprintf(strBuffer, sizeof(strBuffer), "%s", "nvme_host_telemetry_log.bin");
-				if (bTeleheaderWrite) {
-					WriteData(pTelemetryDataHeader, 512, dir,
-						"nvme_host_telemetry_log.bin", strBuffer);
-					bTeleheaderWrite = false;
-				}
-				WriteData(pTelemetryBuffer, nallocSize, dir,
-					"nvme_host_telemetry_log.bin", strBuffer);
-			} else if (nLogID == NVME_LOG_LID_TELEMETRY_CTRL) {
-				snprintf(strBuffer, sizeof(strBuffer), "%s", "nvme_controller_telemetry_log.bin");
-				if (bTeleheaderWrite) {
-					WriteData(pTelemetryDataHeader, 512, dir,
-						"nvme_controller_telemetry_log.bin", strBuffer);
-					bTeleheaderWrite = false;
-				}
-				WriteData(pTelemetryBuffer, nallocSize, dir,
-					"nvme_controller_telemetry_log.bin", strBuffer);
-			}
-		}
-
-		libnvme_free(pTelemetryBuffer);
-		pTelemetryBuffer = NULL;
-	}
-
-	return err;
+	return GetTelemetryData(hdl, dir, !err);
 }
 
 
@@ -3651,7 +3596,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 			goto out;
 		}
 		telemetry_option = 1;
-	} else if (cfg.data_area > 0) {
+	} else if (cfg.data_area >= 0) {
 		nvme_show_error(
 			"data area option is valid only for telemetry option (i.e --type=host|controller)");
 		goto out;
@@ -3693,13 +3638,13 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 			nvme_show_error("telemetry option is not supported for specified drive");
 			goto out;
 		}
-		int logSize = 0; __u8 *buffer = NULL; const char *dir = ".";
+		uint32_t logSize = 0; __u8 *buffer = NULL;
 
 		err = micron_telemetry_log(hdl, cfg.log,  &buffer, &logSize,
 				   cfg.data_area);
 		if (!err && logSize > 0 && buffer) {
 			snprintf(msg, sizeof(msg), "telemetry log: 0x%X", cfg.log);
-			WriteData(buffer, logSize, dir, cfg.package, msg);
+			WriteData(buffer, logSize, NULL, cfg.package, msg);
 			libnvme_free(buffer);
 		}
 		goto out;
@@ -3731,19 +3676,10 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	GetGenericLogs(hdl, strCtrlDirName);
 	/* pull if telemetry log data is supported */
 	if ((ctrl.lpa & 0x8) == 0x8) {
-		if (eModel == M51BY) {
-			err = GetOcpEnhancedTelemetryLog(hdl, strCtrlDirName,
-								NVME_LOG_LID_TELEMETRY_HOST);
-			if (err != 0)
-				nvme_show_error("Failed to fetch the host telemetry log");
-
-			err = GetOcpEnhancedTelemetryLog(hdl, strCtrlDirName,
-								NVME_LOG_LID_TELEMETRY_CTRL);
-			if (err != 0)
-				nvme_show_error("Failed to fetch the controller telemetry log");
-		} else {
-			GetTelemetryData(hdl, strCtrlDirName);
-		}
+		if (eModel == M51BY)
+			GetOcpEnhancedTelemetryLogs(hdl, strCtrlDirName);
+		else
+			GetTelemetryData(hdl, strCtrlDirName, ctrl.lpa & 0x40);
 	}
 	GetFeatureSettings(hdl, strCtrlDirName);
 

@@ -10,8 +10,9 @@
 #include <stdio.h>
 #include <strings.h>
 
-#include "cleanup.h"
-#include "compiler-attributes.h"
+#include <compiler-attributes.h>
+#include <fs-util.h>
+
 #include "cleanup.h"
 #include "ioctl.h"
 #include "lib.h"
@@ -29,7 +30,7 @@ static bool __is_controller_path(const char *device_path)
 	return strncasecmp(device_path, "\\\\?\\pci", 7) == 0;
 }
 
-static __libnvme_unused int __libnvme_transport_handle_open_direct(
+static __shr_unused int __libnvme_transport_handle_open_direct(
 	struct libnvme_transport_handle *hdl, const char *name)
 {
 	__cleanup_free char *device_path = NULL;
@@ -93,7 +94,7 @@ static __libnvme_unused int __libnvme_transport_handle_open_direct(
 	return 0;
 }
 
-__libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx,
+__shr_public int libnvme_open(struct libnvme_global_ctx *ctx,
 				  const char *name,
 				  struct libnvme_transport_handle **hdlp)
 {
@@ -103,7 +104,7 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx,
 	const struct ctrl_map_entry *ctrl_entry;
 
 	if (strstr(name, "/dev/"))
-		name = libnvme_basename(name);
+		name = shr_basename(name);
 
 	ctrl_entry = libnvme_ctrl_map_lookup(ctx, name);
 	if (ctrl_entry) {
@@ -184,7 +185,7 @@ __libnvme_public int libnvme_open(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public void libnvme_close(struct libnvme_transport_handle *hdl)
+__shr_public void libnvme_close(struct libnvme_transport_handle *hdl)
 {
 	bool is_test_fd;
 

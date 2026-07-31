@@ -31,3 +31,6 @@ and are available to this subcommand:
 --verbose::
 	Increase the level of detail in the output. May be specified
 	multiple times to further increase verbosity.
+
+These options can also be set as machine-wide defaults in
+nvme-cli.conf(5). A command-line flag always overrides the file.

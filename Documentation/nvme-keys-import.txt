@@ -1,0 +1,90 @@
+nvme-keys-import(1)
+===================
+
+NAME
+----
+nvme-keys-import - Import NVMeoF TLS PSKs or KX-HMAC-CHAP keys into a keyring
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'keys import' [--keyring=<name> | -k <name>]
+			[--keyfile=<file> | -f <file>]
+			[--keydata=<key> | -d <key>]
+			[--identity=<identity> | -i <identity>]
+
+DESCRIPTION
+-----------
+Imports one or more already-identified keys into a keyring. The key type
+(NVMe TLS PSK or KX-HMAC-CHAP host key) is auto-detected from the key's
+prefix ('NVMeTLSkey-1:' or 'DHHC-1:').
+
+Without '--identity', keys are read in bulk. Key data is read in the form
+
+<description> <key>
+
+where '<description>' is the key description and '<key>' is either a TLS PSK
+in interchange format 'NVMeTLSkey-1:01:<base64 encoded data>:' or a
+KX-HMAC-CHAP key in the form 'DHHC-1:00:<base64 encoded data>:', one key per
+line, and imported into the kernel keyring. This is the format produced by
+linknvme-keys-export[1].
+
+With '--identity', a single key is imported instead: the key is read from
+'--keydata' (or, if not given, from stdin) and stored under the given
+identity. This is the way to insert a single KX-HMAC-CHAP key, or a
+previously derived TLS retained key, directly by identity, without needing
+a keyfile.
+
+Note that this command does not derive a retained TLS key identity from raw
+PSK material and a host/subsystem NQN pair; use linknvme-keys-insert-tls[1]
+for that.
+
+OPTIONS
+-------
+-k <name>::
+--keyring=<name>::
+	Name of the keyring to import the keys into. Default is '.nvme'.
+
+-f <file>::
+--keyfile=<file>::
+	File to read the keys from instead of stdin. Only used in bulk mode
+	(i.e. when '--identity' is not given).
+
+-d <key>::
+--keydata=<key>::
+	Key to be inserted when '--identity' is given. If not given, the key
+	is read from stdin.
+
+-i <identity>::
+--identity=<identity>::
+	Identity to store a single key under. If given, '--keydata' (or
+	stdin) is read as a single key instead of a bulk <description> <key>
+	list.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+
+* Import previously exported keys from a file and verify with keyctl
++
+------------
+# nvme keys import -f nvme-tls-keys.txt
+
+# keyctl show
+Session Keyring
+ 573249525 --alswrv      0     0  keyring: _ses
+ 353599402 --alswrv      0 65534   \_ keyring: _uid.0
+ 475911922 ---lswrv      0     0   \_ keyring: .nvme
+ 734343968 --als-rv      0     0       \_ psk: NVMe0R01 hostnqn0 subsys0
+------------
+
+* Import a single KX-HMAC-CHAP key under an explicit identity
++
+------------
+# nvme keys import -i host2 -d DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
+------------
+
+NVME
+----
+Part of the nvme-user suite

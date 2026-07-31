@@ -990,8 +990,8 @@ static int vt_save_smart_to_vtview_log(int argc, char **argv,
 	if (ret)
 		return ret;
 
-	total_time = cfg.run_time_hrs * (float)HOUR_IN_SECONDS;
-	freq_time = cfg.log_record_frequency_hrs * (float)HOUR_IN_SECONDS;
+	total_time = cfg.run_time_hrs * HOUR_IN_SECONDS;
+	freq_time = cfg.log_record_frequency_hrs * HOUR_IN_SECONDS;
 
 	if (!freq_time)
 		freq_time = 1;

@@ -17,13 +17,14 @@
 #include <ifaddrs.h>
 #endif
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "cleanup-linux.h"
 #include "private.h"
 #include "private-mi.h"
-#include "compiler-attributes.h"
 
 /*
  * A test base directory is accepted only when it is confined to /tmp and free
@@ -35,7 +36,7 @@ static bool is_valid_test_base_dir(const char *path)
 	return path && !strncmp(path, "/tmp/", 5) && !strstr(path, "..");
 }
 
-__libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(void)
+__shr_public struct libnvme_global_ctx *libnvme_create_global_ctx(void)
 {
 	struct libnvme_global_ctx *ctx;
 
@@ -55,7 +56,7 @@ __libnvme_public struct libnvme_global_ctx *libnvme_create_global_ctx(void)
 	return ctx;
 }
 
-__libnvme_public int libnvme_set_owner(struct libnvme_global_ctx *ctx,
+__shr_public int libnvme_set_owner(struct libnvme_global_ctx *ctx,
 				       const char *owner)
 {
 	char *dup;
@@ -70,7 +71,7 @@ __libnvme_public int libnvme_set_owner(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public int libnvme_set_test_base_dir(struct libnvme_global_ctx *ctx,
+__shr_public int libnvme_set_test_base_dir(struct libnvme_global_ctx *ctx,
 					       const char *path)
 {
 	char *dup = NULL;
@@ -89,7 +90,7 @@ __libnvme_public int libnvme_set_test_base_dir(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public int libnvme_set_test_sysfs_dir(struct libnvme_global_ctx *ctx,
+__shr_public int libnvme_set_test_sysfs_dir(struct libnvme_global_ctx *ctx,
 					       const char *path)
 {
 	char *dup = NULL;
@@ -106,7 +107,7 @@ __libnvme_public int libnvme_set_test_sysfs_dir(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
+__shr_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 {
 	struct libnvme_host *h, *_h;
 #ifdef CONFIG_MI
@@ -136,7 +137,7 @@ __libnvme_public void libnvme_free_global_ctx(struct libnvme_global_ctx *ctx)
 	free(ctx);
 }
 
-__libnvme_public void libnvme_transport_handle_set_submit_entry(
+__shr_public void libnvme_transport_handle_set_submit_entry(
 		struct libnvme_transport_handle *hdl,
 		void *(*submit_entry)(struct libnvme_transport_handle *hdl,
 				struct libnvme_passthru_cmd *cmd))
@@ -146,7 +147,7 @@ __libnvme_public void libnvme_transport_handle_set_submit_entry(
 		hdl->submit_exit = __libnvme_submit_exit;
 }
 
-__libnvme_public void libnvme_transport_handle_set_submit_exit(
+__shr_public void libnvme_transport_handle_set_submit_exit(
 		struct libnvme_transport_handle *hdl,
 		void (*submit_exit)(struct libnvme_transport_handle *hdl,
 				struct libnvme_passthru_cmd *cmd,
@@ -157,7 +158,7 @@ __libnvme_public void libnvme_transport_handle_set_submit_exit(
 		hdl->submit_exit = __libnvme_submit_exit;
 }
 
-__libnvme_public void libnvme_transport_handle_set_decide_retry(
+__shr_public void libnvme_transport_handle_set_decide_retry(
 		struct libnvme_transport_handle *hdl,
 		bool (*decide_retry)(struct libnvme_transport_handle *hdl,
 				struct libnvme_passthru_cmd *cmd, int err))
@@ -167,7 +168,7 @@ __libnvme_public void libnvme_transport_handle_set_decide_retry(
 		hdl->decide_retry = __libnvme_decide_retry;
 }
 
-__libnvme_public void libnvme_transport_handle_set_timeout(
+__shr_public void libnvme_transport_handle_set_timeout(
 		struct libnvme_transport_handle *hdl, __u32 timeout_ms)
 {
 	hdl->timeout = timeout_ms;
@@ -190,37 +191,37 @@ struct libnvme_transport_handle *__libnvme_create_transport_handle(
 	return hdl;
 }
 
-__libnvme_public libnvme_fd_t libnvme_transport_handle_get_fd(
+__shr_public libnvme_fd_t libnvme_transport_handle_get_fd(
 		struct libnvme_transport_handle *hdl)
 {
 	return hdl->fd;
 }
 
-__libnvme_public const char *libnvme_transport_handle_get_name(
+__shr_public const char *libnvme_transport_handle_get_name(
 		struct libnvme_transport_handle *hdl)
 {
 	return basename(hdl->name);
 }
 
-__libnvme_public bool libnvme_transport_handle_is_ctrl(
+__shr_public bool libnvme_transport_handle_is_ctrl(
 		struct libnvme_transport_handle *hdl)
 {
 	return S_ISCHR(hdl->stat.st_mode);
 }
 
-__libnvme_public bool libnvme_transport_handle_is_ns(
+__shr_public bool libnvme_transport_handle_is_ns(
 		struct libnvme_transport_handle *hdl)
 {
 	return S_ISBLK(hdl->stat.st_mode);
 }
 
-__libnvme_public bool libnvme_transport_handle_is_direct(
+__shr_public bool libnvme_transport_handle_is_direct(
 		struct libnvme_transport_handle *hdl)
 {
 	return hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 }
 
-__libnvme_public bool libnvme_transport_handle_is_mi(
+__shr_public bool libnvme_transport_handle_is_mi(
 		struct libnvme_transport_handle *hdl)
 {
 	return hdl->type == LIBNVME_TRANSPORT_HANDLE_TYPE_MI;

@@ -16,12 +16,14 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <compiler-attributes.h>
+#include <io-util.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
 #define LOG_FUNCNAME 1
 #include "private.h"
-#include "compiler-attributes.h"
 
 #ifndef LOG_CLOCK
 #define LOG_CLOCK CLOCK_MONOTONIC
@@ -85,11 +87,11 @@ __libnvme_msg(struct libnvme_global_ctx *ctx, int level,
 			message ? message : "<error>") == -1)
 		return;
 
-	if (write_all(l->fd, log, strlen(log)) < 0)
+	if (shr_write_all(l->fd, log, strlen(log)) < 0)
 		perror("failed to write log entry");
 }
 
-__libnvme_public void libnvme_set_logging_level(
+__shr_public void libnvme_set_logging_level(
 		struct libnvme_global_ctx *ctx, int log_level, bool log_pid,
 		bool log_tstamp)
 {
@@ -98,7 +100,7 @@ __libnvme_public void libnvme_set_logging_level(
 	ctx->log.timestamp = log_tstamp;
 }
 
-__libnvme_public int libnvme_get_logging_level(struct libnvme_global_ctx *ctx,
+__shr_public int libnvme_get_logging_level(struct libnvme_global_ctx *ctx,
 		bool *log_pid, bool *log_tstamp)
 {
 	if (log_pid)
@@ -108,7 +110,7 @@ __libnvme_public int libnvme_get_logging_level(struct libnvme_global_ctx *ctx,
 	return ctx->log.level;
 }
 
-__libnvme_public void libnvme_set_logging_file(struct libnvme_global_ctx *ctx,
+__shr_public void libnvme_set_logging_file(struct libnvme_global_ctx *ctx,
 		FILE *fp)
 {
 	ctx->log.fd = fp ? fileno(fp) : STDERR_FILENO;

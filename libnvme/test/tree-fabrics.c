@@ -1410,7 +1410,7 @@ static bool test_ctrl_config_match(void)
 /**
  * test_ctrl_match_pcie - Test that PCIe controllers can be looked up.
  *
- * PCIe transport uses _tree_ctrl_match() with streqcase0 for address
+ * PCIe transport uses _tree_ctrl_match() with shr_streqcase0 for address
  * comparison (case-insensitive), since _candidate_init_fabrics() returns
  * NULL for "pcie" and the else branch is taken in _candidate_init().
  *
@@ -1434,7 +1434,7 @@ static bool test_ctrl_match_pcie(void)
 			NULL, NULL, NULL, NULL);
 	pass &= ctrl_match("PCIe", 1, 0, &reference, &candidate, true);
 
-	/* Case-insensitive traddr match (streqcase0) */
+	/* Case-insensitive traddr match (shr_streqcase0) */
 	set_ctrl_args(&candidate, "pcie", "0000:0A:00.0", NULL,
 			NULL, NULL, NULL, NULL);
 	pass &= ctrl_match("PCIe", 1, 1, &reference, &candidate, true);
@@ -1459,7 +1459,7 @@ static bool test_ctrl_match_pcie(void)
 /**
  * test_ctrl_match_loop - Test that loop controllers can be looked up.
  *
- * Loop transport uses _tree_ctrl_match() with streqcase0 and does not
+ * Loop transport uses _tree_ctrl_match() with shr_streqcase0 and does not
  * require a traddr, so controllers are effectively matched by transport
  * alone within a subsystem.
  *
@@ -1663,7 +1663,7 @@ static bool test_ctrl_config_match_rdma(void)
 /**
  * test_ctrl_config_match_fc - Test libnvmf_ctrl_match_config() for FC.
  *
- * FC uses _tree_ctrl_match() with streqcase0 for address comparison
+ * FC uses _tree_ctrl_match() with shr_streqcase0 for address comparison
  * (case-insensitive WWN matching), since _candidate_init_fabrics() returns
  * NULL for "fc" and the generic else branch is taken.
  *
@@ -1690,7 +1690,7 @@ static bool test_ctrl_config_match_fc(void)
 		      NULL, NULL, NULL, NULL);
 	pass &= ctrl_config_match("FC", 1, 1, &reference, &candidate, true);
 
-	/* Case-insensitive WWN traddr match (streqcase0) */
+	/* Case-insensitive WWN traddr match (shr_streqcase0) */
 	set_ctrl_args(&candidate, "fc", "21:00:00:E0:8B:05:05:01", "4420",
 		      NULL, NULL, NULL, NULL);
 	pass &= ctrl_config_match("FC", 1, 2, &reference, &candidate, true);

@@ -7,8 +7,6 @@
 #
 sources = [
     'nvme/accessors.c',
-    'nvme/base64.c',
-    'nvme/crc32.c',
     'nvme/ioctl.c',
     'nvme/lib.c',
     'nvme/log.c',
@@ -69,7 +67,6 @@ if want_fabrics
         'nvme/config-resolve.c',
         'nvme/exclusion.c',
         'nvme/fabrics.c',
-        'nvme/ini.c',
         'nvme/nbft.c',
         'nvme/registry.c',
         'nvme/tid.c',
@@ -122,6 +119,7 @@ deps = [
     libdbus_dep,
     liburing_dep,
     openssl_dep,
+    shared_dep,
 ]
 if host_system == 'windows'
     deps += [
@@ -192,6 +190,7 @@ pkg.generate(libnvme,
 libnvme_dep = declare_dependency(
     link_with: libnvme,
     include_directories: '.',
+    dependencies: [shared_dep],
 )
 
 # test library with all symbols visible, to use for MI unit tests. Should
@@ -206,6 +205,7 @@ libnvme_test = library(
 libnvme_test_dep = declare_dependency(
     link_with: libnvme_test,
     include_directories: '.',
+    dependencies: [shared_dep],
 )
 
 mode = 'rw-r--r--'

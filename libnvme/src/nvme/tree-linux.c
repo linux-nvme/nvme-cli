@@ -22,11 +22,12 @@
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup-linux.h"
 #include "cleanup.h"
-#include "compiler-attributes.h"
 #include "private-fabrics.h"
 #include "private-tree.h"
 #include "private.h"
@@ -169,7 +170,7 @@ static char *__nvme_get_attr(const char *path)
 	return strlen(value) ? strdup(value) : NULL;
 }
 
-__libnvme_public char *libnvme_get_attr(const char *dir, const char *attr)
+__shr_public char *libnvme_get_attr(const char *dir, const char *attr)
 {
 	__cleanup_free char *path = NULL;
 	int ret;
@@ -181,28 +182,28 @@ __libnvme_public char *libnvme_get_attr(const char *dir, const char *attr)
 	return __nvme_get_attr(path);
 }
 
-__libnvme_public char *libnvme_get_subsys_attr(
+__shr_public char *libnvme_get_subsys_attr(
 		libnvme_subsystem_t s, const char *attr)
 {
 	return libnvme_get_attr(libnvme_subsystem_get_sysfs_dir(s), attr);
 }
 
-__libnvme_public char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr)
+__shr_public char *libnvme_get_ctrl_attr(libnvme_ctrl_t c, const char *attr)
 {
 	return libnvme_get_attr(libnvme_ctrl_get_sysfs_dir(c), attr);
 }
 
-__libnvme_public char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr)
+__shr_public char *libnvme_get_ns_attr(libnvme_ns_t n, const char *attr)
 {
 	return libnvme_get_attr(libnvme_ns_get_sysfs_dir(n), attr);
 }
 
-__libnvme_public char *libnvme_get_path_attr(libnvme_path_t p, const char *attr)
+__shr_public char *libnvme_get_path_attr(libnvme_path_t p, const char *attr)
 {
 	return libnvme_get_attr(libnvme_path_get_sysfs_dir(p), attr);
 }
 
-__libnvme_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
+__shr_public const char *libnvme_ctrl_get_state(libnvme_ctrl_t c)
 {
 	char *state = c->state;
 
@@ -327,8 +328,8 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	closedir(d);
 
 	c->hdl = NULL;
-	c->name = xstrdup(name);
-	c->sysfs_dir = xstrdup(path);
+	c->name = shr_xstrdup(name);
+	c->sysfs_dir = shr_xstrdup(path);
 	c->firmware = libnvme_get_ctrl_attr(c, "firmware_rev");
 	c->model = libnvme_get_ctrl_attr(c, "model");
 	c->state = libnvme_get_ctrl_attr(c, "state");
@@ -345,7 +346,7 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-__libnvme_public int libnvme_init_ctrl(
+__shr_public int libnvme_init_ctrl(
 		libnvme_host_t h, libnvme_ctrl_t c, int instance)
 {
 	__cleanup_free char *subsys_name = NULL, *name = NULL, *path = NULL;
@@ -393,7 +394,7 @@ __libnvme_public int libnvme_init_ctrl(
 	return ret;
 }
 
-__libnvme_public int libnvme_scan_ctrl(
+__shr_public int libnvme_scan_ctrl(
 		struct libnvme_global_ctx *ctx, const char *name,
 		libnvme_ctrl_t *cp)
 {
@@ -414,9 +415,9 @@ __libnvme_public int libnvme_scan_ctrl(
 	hostnqn = libnvme_get_attr(path, "hostnqn");
 	hostid = libnvme_get_attr(path, "hostid");
 	if (!hostnqn)
-		hostnqn = xstrdup(ctx->hostnqn);
+		hostnqn = shr_xstrdup(ctx->hostnqn);
 	if (!hostid)
-		hostid = xstrdup(ctx->hostid);
+		hostid = shr_xstrdup(ctx->hostid);
 	ret = libnvme_get_host(ctx, hostnqn, hostid, &h);
 	if (ret)
 		return ret;
@@ -769,7 +770,7 @@ int __libnvme_scan_namespace(struct libnvme_global_ctx *ctx,
 	return 0;
 }
 
-int libnvme_get_ctrl_transport(__libnvme_unused struct libnvme_global_ctx *ctx,
+int libnvme_get_ctrl_transport(__shr_unused struct libnvme_global_ctx *ctx,
 		const char *path, const char *name,
 		char **transport, char **traddr, char **addr, char **trsvcid,
 		char **host_traddr, char **host_iface)

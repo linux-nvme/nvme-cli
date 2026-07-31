@@ -1,28 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
-#include <stdlib.h>
 #include <unistd.h>
 
+#include <shared/cleanup.h>
 #include <libnvme.h>
-
-#define __cleanup(fn) __attribute__((cleanup(fn)))
-
-#define DECLARE_CLEANUP_FUNC(name, type) \
-	void name(type *__p)
-
-#define DEFINE_CLEANUP_FUNC(name, type, free_fn)\
-DECLARE_CLEANUP_FUNC(name, type)		\
-{						\
-	if (*__p)				\
-		free_fn(*__p);			\
-}
-
-static inline void freep(void *p)
-{
-	free(*(void **)p);
-}
-#define __cleanup_free __cleanup(freep)
 
 static inline void libnvme_freep(void *p)
 {

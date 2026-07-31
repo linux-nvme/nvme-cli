@@ -13,13 +13,14 @@
 
 #include <ccan/minmax/minmax.h>
 
-#include "compiler-attributes.h"
+#include <compiler-attributes.h>
+
 #include "mem.h"
 #include "private.h"
 
 #define HUGE_MIN 0x80000
 
-__libnvme_public void *libnvme_alloc(size_t len)
+__shr_public void *libnvme_alloc(size_t len)
 {
 	size_t _len = round_up(len, 0x1000);
 	void *p;
@@ -31,7 +32,7 @@ __libnvme_public void *libnvme_alloc(size_t len)
 	return p;
 }
 
-__libnvme_public void *libnvme_realloc(void *p, size_t len)
+__shr_public void *libnvme_realloc(void *p, size_t len)
 {
 	size_t old_len = malloc_usable_size(p);
 
@@ -45,12 +46,12 @@ __libnvme_public void *libnvme_realloc(void *p, size_t len)
 	return result;
 }
 
-__libnvme_public void libnvme_free(void *p)
+__shr_public void libnvme_free(void *p)
 {
 	free(p);
 }
 
-__libnvme_public void *libnvme_alloc_huge(size_t len,
+__shr_public void *libnvme_alloc_huge(size_t len,
 		struct libnvme_mem_huge *mh)
 {
 	memset(mh, 0, sizeof(*mh));
@@ -106,7 +107,7 @@ __libnvme_public void *libnvme_alloc_huge(size_t len,
 	return mh->p;
 }
 
-__libnvme_public void libnvme_free_huge(struct libnvme_mem_huge *mh)
+__shr_public void libnvme_free_huge(struct libnvme_mem_huge *mh)
 
 {
 	if (!mh || mh->len == 0)

@@ -22,10 +22,11 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "private.h"
-#include "compiler-attributes.h"
 
 static int nvme_verify_chr(struct libnvme_transport_handle *hdl)
 {
@@ -40,7 +41,7 @@ static int nvme_verify_chr(struct libnvme_transport_handle *hdl)
 	return 0;
 }
 
-__libnvme_public int libnvme_reset_subsystem(
+__shr_public int libnvme_reset_subsystem(
 		struct libnvme_transport_handle *hdl)
 {
 	int ret;
@@ -55,7 +56,7 @@ __libnvme_public int libnvme_reset_subsystem(
 	return ret;
 }
 
-__libnvme_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
+__shr_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
@@ -69,7 +70,7 @@ __libnvme_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 	return ret;
 }
 
-__libnvme_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
+__shr_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 {
 	int ret;
 
@@ -83,7 +84,7 @@ __libnvme_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 	return ret;
 }
 
-__libnvme_public int libnvme_get_nsid(
+__shr_public int libnvme_get_nsid(
 		struct libnvme_transport_handle *hdl, __u32 *nsid)
 {
 	__u32 tmp;
@@ -97,7 +98,7 @@ __libnvme_public int libnvme_get_nsid(
 	return 0;
 }
 
-__libnvme_public int libnvme_update_block_size(
+__shr_public int libnvme_update_block_size(
 		struct libnvme_transport_handle *hdl, int block_size)
 {
 	int ret;
@@ -228,7 +229,7 @@ do_ioctl32:
 	return ioctl_passthru32(hdl, LIBNVME_IOCTL_ADMIN_CMD, cmd);
 }
 
-__libnvme_public int libnvme_exec_admin_passthru(
+__shr_public int libnvme_exec_admin_passthru(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
@@ -274,7 +275,7 @@ no_uring:
 	return -ENOTSUP;
 }
 
-__libnvme_public int libnvme_exec_io_passthru(
+__shr_public int libnvme_exec_io_passthru(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {

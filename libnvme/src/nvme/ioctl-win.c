@@ -22,6 +22,8 @@
 
 #include <ccan/minmax/minmax.h>
 
+#include <compiler-attributes.h>
+
 #include <libnvme.h>
 
 #include "cleanup.h"
@@ -30,7 +32,6 @@
 #include "private-ctrl-map.h"
 #include "types.h"
 
-#include "compiler-attributes.h"
 
 static int get_errno_from_error(DWORD error)
 {
@@ -129,7 +130,7 @@ static struct libnvme_transport_handle *get_ns_handle_from_ctrl(
 	return ns_hdl;
 }
 
-__libnvme_public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
+__shr_public int libnvme_reset_subsystem(struct libnvme_transport_handle *hdl)
 {
 	(void)hdl;
 	errno = ENOTSUP;
@@ -177,7 +178,7 @@ static int reset_ctrl_device(HDEVINFO hdev, SP_DEVINFO_DATA *devinfo)
 	return 0;
 }
 
-__libnvme_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
+__shr_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 {
 	const struct ctrl_map_entry *entry;
 	SP_DEVINFO_DATA dev_info_data = { 0 };
@@ -202,7 +203,7 @@ __libnvme_public int libnvme_reset_ctrl(struct libnvme_transport_handle *hdl)
 	return ret;
 }
 
-__libnvme_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
+__shr_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 {
 	/*
 	 * Windows doesn't have a direct equivalent to rescan namespaces,
@@ -217,7 +218,7 @@ __libnvme_public int libnvme_rescan_ns(struct libnvme_transport_handle *hdl)
 	return 0;
 }
 
-__libnvme_public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
+__shr_public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u32 *nsid)
 {
 	/* Get the SCSI LUN, which corresponds to NSID - 1. */
 	SCSI_ADDRESS addr = {0};
@@ -239,7 +240,7 @@ __libnvme_public int libnvme_get_nsid(struct libnvme_transport_handle *hdl, __u3
 	return 0;
 }
 
-__libnvme_public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
+__shr_public int libnvme_update_block_size(struct libnvme_transport_handle *hdl,
 		int block_size)
 {
 	/* Invalidate cached partition table and re-enumerate the device. */
@@ -1910,7 +1911,7 @@ out:
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-__libnvme_public int libnvme_exec_io_passthru(
+__shr_public int libnvme_exec_io_passthru(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
@@ -1949,7 +1950,7 @@ __libnvme_public int libnvme_exec_io_passthru(
  * For supported commands and a mapping to the required IOCTLs, see:
  * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/stornvme-command-set-support
  */
-__libnvme_public int libnvme_exec_admin_passthru(
+__shr_public int libnvme_exec_admin_passthru(
 		struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {

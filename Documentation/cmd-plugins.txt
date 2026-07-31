@@ -357,3 +357,24 @@ linknvme:nvme-sed-password[1]::
 
 linknvme:nvme-mangoboost-id-ctrl[1]::
 	MangoBoost - NVMe Identify Controller
+
+linknvme:nvme-keys-gen-kxchap[1]::
+	Generate NVMeoF KX-HMAC-CHAP host key
+
+linknvme:nvme-keys-check-kxchap[1]::
+	Validate NVMeoF KX-HMAC-CHAP host key
+
+linknvme:nvme-keys-gen-tls[1]::
+	Generate NVMeoF TLS PSK
+
+linknvme:nvme-keys-check-tls[1]::
+	Validate NVMeoF TLS PSK
+
+linknvme:nvme-keys-import[1]::
+	Import NVMeoF TLS PSKs into a keyring
+
+linknvme:nvme-keys-export[1]::
+	Export NVMeoF TLS PSKs from a keyring
+
+linknvme:nvme-keys-revoke[1]::
+	Revoke an NVMeoF TLS PSK from a keyring

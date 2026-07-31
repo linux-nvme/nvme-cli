@@ -3,24 +3,26 @@ nvme-check-dhchap-key(1)
 
 NAME
 ----
-nvme-check-dhchap-key - Check a generated host DH-HMAC-CHAP key
+nvme-check-dhchap-key - Check a host DH-HMAC-CHAP key (deprecated)
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'check-dhchap-key' [--key=<key>]
+'nvme' [<global-options>] 'check-dhchap-key' [--keydata=<key> | -d <key>]
+			[--keyring=<name> | -k <name>]
+			[--keytype=<type> | -t <type>]
+			[--identity=<identity> | -i <identity>]
 
 DESCRIPTION
 -----------
-Checks if the key is a valid DH-HMAC-CHAP host key of the form:
-DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
-and prints it to stdout.
+Deprecated alias for linknvme-keys-check-kxchap[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-OPTIONS
--------
--k <key>::
---key=<key>::
-	Key to be checked.
+New scripts should use 'nvme keys check-kxchap' instead. This alias prints
+a deprecation warning on stderr and may be removed in a future release.
+
+See linknvme-keys-check-kxchap[1] for the full option reference.
 
 include::global-options.txt[]
 
@@ -31,3 +33,7 @@ No Examples
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-keys-check-kxchap[1]

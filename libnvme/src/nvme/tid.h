@@ -22,22 +22,21 @@ struct libnvme_global_ctx;
  * @host_iface:  Host interface name, or NULL.
  * @hostnqn:     Host NQN, or NULL.
  * @hostid:      Host Identifier, or NULL.
+ * @out:         The allocated TID on success; NULL on error.
  *
  * Convenience constructor.  NULL fields are stored as NULL.  For an IP
  * transport (tcp, rdma) a numeric traddr/host_traddr is canonicalized; a
  * hostname is rejected -- resolving it is the caller's job, not libnvme's.
  *
- * Return: Allocated TID, or NULL if traddr/host_traddr is not numeric on an
- * IP transport, or on allocation failure.
+ * Return: 0 on success (*@out is the allocated TID); -EINVAL if @out is
+ * NULL or traddr/host_traddr is not numeric on an IP transport; -ENOMEM on
+ * allocation failure.
  */
-struct libnvmf_tid *libnvmf_tid_from_fields(const char *transport,
-					    const char *traddr,
-					    const char *trsvcid,
-					    const char *subsysnqn,
-					    const char *host_traddr,
-					    const char *host_iface,
-					    const char *hostnqn,
-					    const char *hostid);
+int libnvmf_tid_from_fields(const char *transport, const char *traddr,
+			    const char *trsvcid, const char *subsysnqn,
+			    const char *host_traddr, const char *host_iface,
+			    const char *hostnqn, const char *hostid,
+			    struct libnvmf_tid **out);
 
 /**
  * libnvmf_tid_set_identity() - Set the subsystem and host identity together.
@@ -77,6 +76,7 @@ struct libnvmf_tid *libnvmf_tid_dup(const struct libnvmf_tid *tid);
  * @ctx: Global context used only for logging the diagnostics below; may be NULL
  *       to parse silently.
  * @str: Input string, e.g. "transport=tcp;traddr=1.2.3.4;trsvcid=8009".
+ * @out: The allocated TID on success; NULL on error.
  *
  * Recognized keys are the "nvme connect" option names: transport, traddr,
  * trsvcid, nqn, host-traddr, host-iface, hostnqn, hostid.  (The "nqn",
@@ -84,21 +84,23 @@ struct libnvmf_tid *libnvmf_tid_dup(const struct libnvmf_tid *tid);
  * subsysnqn, host_traddr, and host_iface fields, whose names follow the
  * C-identifier convention.)  Unknown keys, bare keys (no '='), and empty
  * values are logged at WARN level (when @ctx is non-NULL) and skipped.
- * Whitespace around keys and values is trimmed.  NULL input returns NULL.
+ * Whitespace around keys and values is trimmed.
  * Like libnvmf_tid_from_fields(), a traddr/host-traddr that is not numeric on
  * an IP transport fails the whole parse.
  *
- * Return: Allocated TID, or NULL on a non-numeric address or allocation
- * failure.
+ * Return: 0 on success (*@out is the allocated TID); -EINVAL if @out or @str
+ * is NULL, or a traddr/host-traddr is not numeric on an IP transport;
+ * -ENOMEM on allocation failure.
  */
-struct libnvmf_tid *libnvmf_tid_parse(struct libnvme_global_ctx *ctx,
-				      const char *str);
+int libnvmf_tid_parse(struct libnvme_global_ctx *ctx, const char *str,
+		      struct libnvmf_tid **out);
 
 /**
  * libnvmf_tid_parse_strict() - Like libnvmf_tid_parse(), but reject malformed
  * input.
  * @ctx: Global context for logging; may be NULL to parse silently.
  * @str: Input string.
+ * @out: The allocated TID on success; NULL on error.
  *
  * Same as libnvmf_tid_parse() except that a malformed token -- a non-empty bare
  * token (no '='), an empty value, or an unrecognized key -- fails the whole
@@ -106,10 +108,11 @@ struct libnvmf_tid *libnvmf_tid_parse(struct libnvme_global_ctx *ctx,
  * are still benign.  Useful when an unrecognized key should be treated as an
  * error (e.g. a typo in a hand-edited config) rather than silently ignored.
  *
- * Return: Allocated TID, or NULL on a malformed token or allocation failure.
+ * Return: 0 on success (*@out is the allocated TID); -EINVAL if @out or @str
+ * is NULL, or on a malformed token; -ENOMEM on allocation failure.
  */
-struct libnvmf_tid *libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx,
-					     const char *str);
+int libnvmf_tid_parse_strict(struct libnvme_global_ctx *ctx, const char *str,
+			     struct libnvmf_tid **out);
 
 /**
  * libnvmf_traddr_is_numeric() - Would this address survive TID construction?

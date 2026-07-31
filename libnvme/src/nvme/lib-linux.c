@@ -12,9 +12,11 @@
 
 #include <libnvme.h>
 
+#include <compiler-attributes.h>
+#include <fs-util.h>
+
 #include "cleanup.h"
 #include "cleanup-linux.h"
-#include "compiler-attributes.h"
 #include "private.h"
 #include "private-mi.h"
 
@@ -26,7 +28,7 @@ static int __libnvme_transport_handle_open_direct(
 	int ret, id, ns;
 	bool c = true;
 
-	name = libnvme_basename(devname);
+	name = shr_basename(devname);
 
 	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
 
@@ -71,7 +73,7 @@ void __libnvme_transport_handle_close_direct(
 	free(hdl);
 }
 
-__libnvme_public int libnvme_open(
+__shr_public int libnvme_open(
 		struct libnvme_global_ctx *ctx, const char *name,
 		struct libnvme_transport_handle **hdlp)
 {
@@ -114,7 +116,7 @@ __libnvme_public int libnvme_open(
 	return 0;
 }
 
-__libnvme_public void libnvme_close(struct libnvme_transport_handle *hdl)
+__shr_public void libnvme_close(struct libnvme_transport_handle *hdl)
 {
 	if (!hdl)
 		return;
