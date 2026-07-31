@@ -66,7 +66,6 @@
 
 /* Name of file to output log pages in their raw format */
 static char *raw;
-static bool persistent;
 
 static const char *nvmf_config_file	= "Use specified INI configuration file (auto-converts a legacy .json) or 'none' to disable";
 static const char *nvmf_config_file_ro	= "INI configuration file (default: " PATH_NVMF_INI ")";
@@ -555,8 +554,7 @@ static int setup_common_context(struct libnvmf_context *fctx,
 	return set_fabrics_options(fctx, fa);
 }
 
-static int create_common_context(struct libnvme_global_ctx *ctx,
-		bool persistent, struct nvmf_args *fa,
+static int create_common_context(struct libnvme_global_ctx *ctx, struct nvmf_args *fa,
 		void *user_data, struct libnvmf_context **fctxp)
 {
 	struct libnvmf_context *fctx;
@@ -571,9 +569,6 @@ static int create_common_context(struct libnvme_global_ctx *ctx,
 	if (err)
 		goto err;
 
-	libnvmf_context_set_persistent(fctx, persistent ?
-			LIBNVMF_TRISTATE_TRUE : LIBNVMF_TRISTATE_UNSET);
-
 	*fctxp = fctx;
 
 	return 0;
@@ -584,15 +579,13 @@ err:
 }
 
 static int create_discovery_context(struct libnvme_global_ctx *ctx,
-		bool persistent, const char *device,
-		struct nvmf_args *fa,
+		const char *device, struct nvmf_args *fa,
 		void *user_data, struct libnvmf_context **fctxp)
 {
 	struct libnvmf_context *fctx;
 	int err;
 
-	err = create_common_context(ctx, persistent, fa, user_data,
-		&fctx);
+	err = create_common_context(ctx, fa, user_data, &fctx);
 	if (err)
 		return err;
 
@@ -769,10 +762,12 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	char *config_file = PATH_NVMF_INI;
 	nvme_print_flags_t flags;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
 	int ret;
 	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
 	char *device = NULL;
-	bool force = false;
+	bool persistent = false, force = false, epcsd = false;
+	bool no_persistent = false, no_epcsd = false;
 	bool nbft = false, nonbft = false;
 	char *nbft_path = NBFT_SYSFS_PATH;
 	char *owner = NULL;
@@ -780,7 +775,14 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	NVMF_ARGS(opts, fa,
 		  OPT_STRING("device",     'd', "DEV", &device,       "use existing discovery controller device"),
 		  OPT_FILE("raw",          'r', &raw,                 "save raw output to file"),
-		  OPT_FLAG("persistent",   'p', &persistent,          "persistent discovery connection"),
+		  OPT_FLAG("persistent",   'p', &persistent,
+			   "persistent discovery connection"),
+		  OPT_FLAG("no-persistent",  0, &no_persistent,
+			   "explicitly not a persistent discovery connection"),
+		  OPT_FLAG("epcsd",          0, &epcsd,
+			   "Explicit Persistent Connection Support for Discovery"),
+		  OPT_FLAG("no-epcsd",       0, &no_epcsd,
+			   "explicitly does not support Explicit Persistent Connection Support for Discovery"),
 		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_FLAG("force",          0, &force,               "Force persistent discovery controller creation"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
@@ -800,6 +802,16 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 	if (ret < 0) {
 		nvme_show_error("Invalid output format");
 		return ret;
+	}
+
+	if (epcsd && no_epcsd) {
+		fprintf(stderr, "--epcsd and --no-epcsd options are mutually exclusive\n");
+		return -EINVAL;
+	}
+
+	if (persistent && no_persistent) {
+		fprintf(stderr, "--persistent and --no-persistent options are mutually exclusive\n");
+		return -EINVAL;
 	}
 
 	if (!strcmp(config_file, "none"))
@@ -851,15 +863,25 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		.raw = raw,
 	};
 
+	ret = create_discovery_context(ctx, device, &fa, &dld, &fctx);
+	if (ret)
+		return ret;
+
+	if (epcsd)
+		libnvmf_context_set_epcsd(fctx, LIBNVMF_TRISTATE_TRUE);
+
+	if (no_epcsd)
+		libnvmf_context_set_epcsd(fctx, LIBNVMF_TRISTATE_FALSE);
+
+
+	if (persistent)
+		libnvmf_context_set_persistent(fctx, LIBNVMF_TRISTATE_TRUE);
+
+	if (no_persistent)
+		libnvmf_context_set_persistent(fctx, LIBNVMF_TRISTATE_FALSE);
+
 	if (!device && !fa.transport && !fa.traddr) {
 		if (!nonbft) {
-			__cleanup_nvmf_context
-				struct libnvmf_context *fctx = NULL;
-
-			ret = create_discovery_context(ctx, persistent, NULL,
-				&fa, &dld, &fctx);
-			if (ret)
-				return ret;
 			ret = libnvmf_discovery_nbft(ctx, fctx, connect,
 				nbft_path);
 		}
@@ -867,13 +889,6 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 			ret = fabrics_discovery_config(ctx, config_file,
 				fa.hostnqn, fa.hostid, connect, force, flags);
 	} else {
-		__cleanup_nvmf_context struct libnvmf_context *fctx = NULL;
-
-		ret = create_discovery_context(ctx, persistent, device, &fa,
-			&dld, &fctx);
-		if (ret)
-			return ret;
-
 		ret = check_ctrl_owner(ctx, fctx,
 				owner ? owner : (nbft ? "nbft" : NULL), force);
 		if (ret < 0) {
@@ -1049,7 +1064,7 @@ do_connect:
 		.raw = raw,
 		.idempotent = idempotent,
 	};
-	ret = create_common_context(ctx, persistent, &fa, &hfd, &fctx);
+	ret = create_common_context(ctx, &fa, &hfd, &fctx);
 	if (ret)
 		return ret;
 
