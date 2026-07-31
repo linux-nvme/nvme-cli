@@ -2609,6 +2609,20 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 	}
 
 	numrec = le64_to_cpu(log->numrec);
+
+	for (int i = 0; i < numrec; i++) {
+		struct nvmf_disc_log_entry *e = &log->entries[i];
+		uint16_t eflags = le16_to_cpu(e->eflags);
+
+		if ((e->subtype == NVME_NQN_DISC ||
+		    e->subtype == NVME_NQN_CURR) &&
+		    (eflags & NVMF_DISC_EFLAGS_EPCSD) &&
+		    (fctx->epcsd == LIBNVMF_TRISTATE_TRUE)) {
+			libnvmf_context_set_persistent(fctx, true);
+			break;
+		}
+	}
+
 	if (fctx->hooks.discovery_log)
 		fctx->hooks.discovery_log(fctx, connect, log, numrec,
 			fctx->hooks.user_data);
@@ -2660,13 +2674,14 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 
 			if (strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME)) {
 				/*
-				 * Does this discovery controller doesn't
+				 * Does this discovery controller
 				 * support explicit persistent connection?
+				 * If epcsd is disabled disconnect anyway.
 				 */
 				if (!(eflags & NVMF_DISC_EFLAGS_EPCSD))
 					disconnect = true;
 				else
-					disconnect = false;
+					disconnect = fctx->epcsd == LIBNVMF_TRISTATE_FALSE;
 			}
 
 			set_discovery_kato(&nfctx);
