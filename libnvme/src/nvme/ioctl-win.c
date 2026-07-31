@@ -1284,23 +1284,32 @@ static int submit_admin_fw_commit(struct libnvme_transport_handle *hdl,
 		NVME_FW_COMMIT_CDW10_CA_SHIFT,
 		NVME_FW_COMMIT_CDW10_CA_MASK);
 
+	/*
+	 * Testing shows Windows only supports two commit behaviors:
+	 * Activate, and Replace and Activate.
+	 * Map all replace actions to Replace and Activate.
+	 */
 	switch (commit_action) {
-	case 0: /* Replace, no activate */
-		firmware_activate->Flags |=
-			STORAGE_HW_FIRMWARE_REQUEST_FLAG_REPLACE_EXISTING_IMAGE;
-		break;
-	case 1: /* Replace and activate at next reset */
+	case 0: /* Replace, no activate. */
+	case 1: /* Replace and activate at next reset. */
+	case 3: /* Replace and activate immediately. */
 		firmware_activate->Flags |=
 			STORAGE_HW_FIRMWARE_REQUEST_FLAG_REPLACE_AND_SWITCH_UPON_RESET;
 		break;
 	case 2: /* Activate the current firmware at next reset */
-		firmware_activate->Flags |=
-			STORAGE_HW_FIRMWARE_REQUEST_FLAG_SWITCH_TO_EXISTING_FIRMWARE;
+		/*
+		 * STORAGE_HW_FIRMWARE_REQUEST_FLAG_SWITCH_TO_EXISTING_FIRMWARE
+		 * results in no discernable action. The default behavior with
+		 * no flag set activates the current firmware in the specified
+		 * slot, so use that instead.
+		 */
 		break;
-	case 3: /* Activate the current firmware immediately without reset */
-		firmware_activate->Flags |=
-			STORAGE_HW_FIRMWARE_REQUEST_FLAG_SWITCH_TO_FIRMWARE_WITHOUT_RESET;
-		break;
+	default:
+		err = -ENOTSUP;
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG,
+			"%s: unsupported commit action %u\n",
+			__func__, commit_action);
+		goto out_free_buffer;
 	}
 
 	do {
@@ -1318,8 +1327,12 @@ static int submit_admin_fw_commit(struct libnvme_transport_handle *hdl,
 		err = get_firmware_command_status(GetLastError());
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG,
+			"%s: failed, GetLastError=0x%lx, err=%d\n",
+			__func__, GetLastError(), err);
 		goto out_free_buffer;
+	}
 
 	/* FW Commit doesn't return result data */
 	cmd->result = 0;
