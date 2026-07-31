@@ -45,57 +45,6 @@ int shr_mkdir_p(const char *path, mode_t mode)
 	return mkdir(buf, mode) == 0 || errno == EEXIST ? 0 : -errno;
 }
 
-#if defined(_WIN32)
-int shr_mkstemp(char *template)
-{
-	return -ENOSYS;
-}
-#else
-int shr_mkstemp(char *template)
-{
-	int fd;
-
-	/*
-	 * mkostemp() sets O_CLOEXEC atomically but its glibc declaration is
-	 * gated behind _GNU_SOURCE; fall back to mkstemp() + fcntl() where
-	 * _GNU_SOURCE is not defined (e.g. the musl-style CI build).
-	 */
-#ifdef _GNU_SOURCE
-	fd = mkostemp(template, O_CLOEXEC);
-	if (fd < 0)
-		return -errno;
-#else
-	fd = mkstemp(template);
-	if (fd < 0)
-		return -errno;
-	if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
-		int e = -errno;
-
-		close(fd);
-		unlink(template);
-		return e;
-	}
-#endif
-	return fd;
-}
-#endif
-
-#if defined(_WIN32)
-void shr_fsync_dir(const char *path)
-{
-}
-#else
-void shr_fsync_dir(const char *path)
-{
-	int fd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-
-	if (fd >= 0) {
-		fsync(fd);
-		close(fd);
-	}
-}
-#endif
-
 char *shr_basename(const char *path)
 {
 	char *p = (char *)strrchr(path, '/');
