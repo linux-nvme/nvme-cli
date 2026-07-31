@@ -19,13 +19,14 @@ sources = [
     'parse-util.c',
 ]
 
-# net-util.c wraps POSIX socket/interface APIs (ifaddrs.h, net/if.h) that
-# MinGW does not provide. Only NVMe-oF code calls into it, and fabrics
-# support is unavailable on Windows already (see want_fabrics), so it is
-# excluded rather than stubbed.
-if host_system != 'windows'
+if host_system == 'windows'
     sources += [
-        'net-util.c',
+        'fs-util-win.c',
+    ]
+else
+    sources += [
+        'fs-util-linux.c',
+        'net-util-linux.c',
     ]
 endif
 
