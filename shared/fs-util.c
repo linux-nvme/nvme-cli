@@ -19,6 +19,7 @@
 #define mkdir(path, mode) ((void)(mode), _mkdir(path))
 #endif
 
+#include "cleanup.h"
 #include "fs-util.h"
 
 int shr_mkdir_p(const char *path, mode_t mode)
@@ -43,6 +44,19 @@ int shr_mkdir_p(const char *path, mode_t mode)
 		*p = '/';
 	}
 	return mkdir(buf, mode) == 0 || errno == EEXIST ? 0 : -errno;
+}
+
+int shr_mkdir_from_fname(const char *file, mode_t mode)
+{
+	__cleanup_free char *file_copy = NULL;
+	char *parent;
+
+	file_copy = strdup(file);
+	if (!file_copy)
+		return -ENOMEM;
+
+	parent = shr_dirname(file_copy);
+	return shr_mkdir_p(parent, mode);
 }
 
 char *shr_basename(const char *path)
