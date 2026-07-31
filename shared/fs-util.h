@@ -10,6 +10,12 @@
 #include <sys/types.h>
 
 /*
+ * Create a single directory.
+ * Return: 0 on success, -errno otherwise.
+ */
+int shr_mkdir(const char *path, mode_t mode);
+
+/*
  * Create path and every missing parent directory, like "mkdir -p".
  * Return: 0 on success (including if path already exists as a directory),
  * -errno otherwise.

@@ -15,7 +15,10 @@
 
 #if defined(_WIN32)
 #include <direct.h>
+#include <io.h>
 #define rmdir _rmdir
+#define close _close
+#define unlink _unlink
 #else
 #include <fcntl.h>
 #include <unistd.h>
@@ -132,6 +135,30 @@ static bool dir_is_writable(const char *dir)
 	return true;
 }
 
+static bool test_mkdir(void)
+{
+	static const char *dir = "shr-test-mkdir-dir";
+	bool pass = true;
+	int ret;
+
+	printf("test_mkdir:\n");
+
+	/* Clean up if it was left over from a previous crashed run */
+	rmdir(dir);
+
+	ret = shr_mkdir(dir, 0755);
+	pass &= check_ret("creates directory", ret, 0);
+	pass &= check_bool("the directory is real and writable",
+			    dir_is_writable(dir));
+
+	ret = shr_mkdir(dir, 0755);
+	pass &= check_ret("re-running on an existing directory returns -EEXIST", ret, -EEXIST);
+
+	rmdir(dir);
+
+	return pass;
+}
+
 static bool test_mkdir_p(void)
 {
 	static const char *base = "shr-test-mkdir-p-dir";
@@ -174,12 +201,11 @@ static bool test_mkdir_p(void)
 	return pass;
 }
 
-#if !defined(_WIN32)
 static bool test_mkstemp(void)
 {
 	char template[] = "shr-test-mkstemp-XXXXXX";
 	bool pass = true;
-	int fd, flags;
+	int fd;
 
 	printf("test_mkstemp:\n");
 
@@ -191,16 +217,17 @@ static bool test_mkstemp(void)
 	pass &= check_bool("template's X's got replaced",
 			    strcmp(template, "shr-test-mkstemp-XXXXXX") != 0);
 
-	flags = fcntl(fd, F_GETFD);
+#if !defined(_WIN32)
+	int flags = fcntl(fd, F_GETFD);
 	pass &= check_bool("O_CLOEXEC is set on the returned fd",
 			    flags >= 0 && (flags & FD_CLOEXEC));
+#endif
 
 	close(fd);
 	unlink(template);
 
 	return pass;
 }
-#endif
 
 static bool test_mkdir_from_fname(void)
 {
@@ -264,11 +291,10 @@ int main(void)
 
 	pass &= test_basename();
 	pass &= test_dirname();
+	pass &= test_mkdir();
 	pass &= test_mkdir_p();
 	pass &= test_mkdir_from_fname();
-#if !defined(_WIN32)
 	pass &= test_mkstemp();
-#endif
 	pass &= test_fsync_dir();
 
 	fflush(stdout);

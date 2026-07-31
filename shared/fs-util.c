@@ -7,17 +7,11 @@
  */
 
 #include <errno.h>
-#include <fcntl.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#if defined(_WIN32)
-#include <direct.h>
-#define mkdir(path, mode) ((void)(mode), _mkdir(path))
-#endif
 
 #include "cleanup.h"
 #include "fs-util.h"
@@ -27,6 +21,7 @@ int shr_mkdir_p(const char *path, mode_t mode)
 	char buf[PATH_MAX];
 	char *p;
 	size_t len;
+	int ret;
 
 	len = strlen(path);
 	if (len >= sizeof(buf))
@@ -39,11 +34,13 @@ int shr_mkdir_p(const char *path, mode_t mode)
 		if (*p != '/')
 			continue;
 		*p = '\0';
-		if (mkdir(buf, mode) < 0 && errno != EEXIST)
-			return -errno;
+		ret = shr_mkdir(buf, mode);
+		if (ret < 0 && ret != -EEXIST)
+			return ret;
 		*p = '/';
 	}
-	return mkdir(buf, mode) == 0 || errno == EEXIST ? 0 : -errno;
+	ret = shr_mkdir(buf, mode);
+	return (ret == 0 || ret == -EEXIST) ? 0 : ret;
 }
 
 int shr_mkdir_from_fname(const char *file, mode_t mode)

@@ -17,6 +17,13 @@
 
 #include "fs-util.h"
 
+int shr_mkdir(const char *path, mode_t mode)
+{
+	if (mkdir(path, mode) < 0)
+		return -errno;
+	return 0;
+}
+
 int shr_mkstemp(char *template)
 {
 	int fd;
