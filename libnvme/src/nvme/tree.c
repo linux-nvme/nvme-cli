@@ -1229,23 +1229,23 @@ __shr_public libnvme_subsystem_t libnvme_ctrl_get_subsystem(
 }
 
 
-__shr_public char *libnvme_ctrl_get_src_addr(
-		libnvme_ctrl_t c, char *src_addr, size_t src_addr_len)
+char *libnvme_parse_src_addr(struct libnvme_global_ctx *ctx,
+		const char *address, char *src_addr, size_t src_addr_len)
 {
 	size_t l;
-	char *p;
+	const char *p;
 
-	if (!c->address)
+	if (!address)
 		return NULL;
 
-	p = strstr(c->address, "src_addr=");
+	p = strstr(address, "src_addr=");
 	if (!p)
 		return NULL;
 
 	p += strlen("src_addr=");
 	l = strcspn(p, ",%"); /* % to eliminate IPv6 scope (if present) */
 	if (l >= src_addr_len) {
-		libnvme_msg(c->ctx, LIBNVME_LOG_ERR,
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"Buffer for src_addr is too small (%zu must be > %zu)\n",
 			src_addr_len, l);
 		return NULL;
@@ -1254,6 +1254,13 @@ __shr_public char *libnvme_ctrl_get_src_addr(
 	strncpy(src_addr, p, l);
 	src_addr[l] = '\0';
 	return src_addr;
+}
+
+__shr_public char *libnvme_ctrl_get_src_addr(
+		libnvme_ctrl_t c, char *src_addr, size_t src_addr_len)
+{
+	return libnvme_parse_src_addr(c->ctx, c->address, src_addr,
+				      src_addr_len);
 }
 
 __shr_public long libnvme_ctrl_get_command_error_count(libnvme_ctrl_t c)
