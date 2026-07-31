@@ -510,6 +510,15 @@ __shr_public int libnvmf_config_emit_install(
 	if (!out)
 		return -ENOMEM;
 
+	ret = shr_mkdir_from_fname(file, 0755);
+	if (ret) {
+		emit_err(emitter->ctx,
+			"%s: cannot create directory: %s",
+			file, strerror(-ret));
+		free(out);
+		return ret;
+	}
+
 	list_for_each(&emitter->personas, persona, entry) {
 		if (!persona->hostnqn && !persona->hostid) {
 			def = persona;

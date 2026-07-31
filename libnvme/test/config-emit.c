@@ -258,6 +258,54 @@ static bool test_hostname_traddr_verbatim(struct libnvme_global_ctx *ctx,
 	return pass;
 }
 
+/*
+ * A from-source build (or any system where @SYSCONFDIR@/nvme was never
+ * created) shouldn't hand back a bare ENOENT from deep inside mkstemp():
+ * missing parent directories are created up front.
+ */
+static bool test_creates_missing_directory(struct libnvme_global_ctx *ctx,
+					   struct fixture *fx)
+{
+	char nested_dir[320];
+	char nested_main[352];
+	struct libnvmf_config_emitter *e;
+	bool pass = true;
+
+	printf("test_creates_missing_directory:\n");
+
+	snprintf(nested_dir, sizeof(nested_dir), "%s/a/b/c", fx->dir);
+	snprintf(nested_main, sizeof(nested_main), "%s/nvme-fabrics.conf",
+		 nested_dir);
+
+	e = libnvmf_config_emit_new(ctx);
+	assert(e);
+	assert(add(e, true, "10.0.0.5", NULL, NULL, NULL, NULL,
+		   NULL, NULL) == 0);
+
+	if (libnvmf_config_emit_install(e, nested_main, false)) {
+		printf(" - install into missing directory failed [FAIL]\n");
+		libnvmf_config_emit_free(e);
+		return false;
+	}
+	libnvmf_config_emit_free(e);
+
+	if (access(nested_main, F_OK)) {
+		printf(" - main file missing after install [FAIL]\n");
+		pass = false;
+	} else {
+		printf(" - missing parent directories created [PASS]\n");
+	}
+
+	unlink(nested_main);
+	rmdir(nested_dir);
+	snprintf(nested_dir, sizeof(nested_dir), "%s/a/b", fx->dir);
+	rmdir(nested_dir);
+	snprintf(nested_dir, sizeof(nested_dir), "%s/a", fx->dir);
+	rmdir(nested_dir);
+
+	return pass;
+}
+
 static bool test_refuse_existing(struct libnvme_global_ctx *ctx,
 				 struct fixture *fx)
 {
@@ -539,6 +587,8 @@ int main(void)
 	pass &= test_roundtrip(ctx, &fx);
 	fixture_wipe(&fx);
 	pass &= test_hostname_traddr_verbatim(ctx, &fx);
+	fixture_wipe(&fx);
+	pass &= test_creates_missing_directory(ctx, &fx);
 	fixture_wipe(&fx);
 	pass &= test_refuse_existing(ctx, &fx);
 	fixture_wipe(&fx);
