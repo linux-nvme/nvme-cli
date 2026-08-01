@@ -158,56 +158,49 @@ static int validate_kxchap_key(const char *key, int *hmac_out,
 {
 	uint32_t crc = shr_crc32(0L, NULL, 0);
 	uint32_t key_crc;
+	size_t len = strlen(key);
 	int decoded_len, hmac, err;
 
 	if (sscanf(key, "DHHC-1:%02x:%*s", &hmac) != 1) {
 		nvme_show_error("Invalid key header '%s'", key);
 		return -EINVAL;
 	}
-	switch (hmac) {
-	case 0:
-		break;
-	case 1:
-		if (strlen(key) != 59) {
-			nvme_show_error("Invalid key length for SHA(256)");
-			return -EINVAL;
-		}
-		break;
-	case 2:
-		if (strlen(key) != 83) {
-			nvme_show_error("Invalid key length for SHA(384)");
-			return -EINVAL;
-		}
-		break;
-	case 3:
-		if (strlen(key) != 103) {
-			nvme_show_error("Invalid key length for SHA(512)");
-			return -EINVAL;
-		}
-		break;
-	default:
+	if (hmac > 3) {
 		nvme_show_error("Invalid HMAC identifier %d", hmac);
 		return -EINVAL;
 	}
 
-	if (key[strlen(key) - 1] != ':') {
- 		nvme_show_error("Invalid key format (missing trailing ':')");
- 		return -EINVAL;
- 	}
+	/*
+	 * The hash identifier selects the function used to transform the
+	 * secret into a key; it does not constrain the length of the secret
+	 * itself, so apply the same length check whichever one is selected.
+	 * A 32, 48 or 64 byte secret plus a 4 byte CRC encodes to 48, 72 or
+	 * 92 base64 characters, giving a total of 59, 83 or 103.
+	 *
+	 * This does not pin the length of the secret - the same number of
+	 * base64 characters can carry three different byte counts - so the
+	 * decoded length is still checked below. What it does do is bound
+	 * the decode before it runs.
+	 */
+	if (len != 59 && len != 83 && len != 103) {
+		nvme_show_error("Invalid DHHC-1 string length %zu", len);
+		return -EINVAL;
+	}
 
-	err = shr_base64_decode(key + 10, strlen(key) - 11, decoded_key);
+	if (key[len - 1] != ':') {
+		nvme_show_error("Invalid key format (missing trailing ':')");
+		return -EINVAL;
+	}
+
+	err = shr_base64_decode(key + 10, len - 11, decoded_key);
 	if (err < 0) {
 		nvme_show_error("Base64 decoding failed, error %d", err);
 		return err;
 	}
 	decoded_len = err;
-	if (decoded_len < 32) {
-		nvme_show_error("Base64 decoding failed (%s, size %u)", key + 10, decoded_len);
-		return -EINVAL;
-	}
 	decoded_len -= 4;
 	if (decoded_len != 32 && decoded_len != 48 && decoded_len != 64) {
-		nvme_show_error("Invalid key length %d", decoded_len);
+		nvme_show_error("Invalid secret length %d", decoded_len);
 		return -EINVAL;
 	}
 	crc = shr_crc32(crc, decoded_key, decoded_len);
