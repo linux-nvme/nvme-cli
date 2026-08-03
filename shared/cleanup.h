@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <dirent.h>
 #include <stdlib.h>
 
 #define __cleanup(fn) __attribute__((cleanup(fn)))
@@ -26,3 +27,17 @@ static inline void shr_freep(void *p)
 	free(*(void **)p);
 }
 #define __cleanup_free __cleanup(shr_freep)
+
+struct dirents {
+	struct dirent **ents;
+	int num;
+};
+
+static inline void cleanup_dirents(struct dirents *ents)
+{
+	while (ents->num > 0)
+		free(ents->ents[--ents->num]);
+	free(ents->ents);
+}
+
+#define __cleanup_dirents __cleanup(cleanup_dirents)
