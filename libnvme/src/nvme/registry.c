@@ -553,12 +553,13 @@ __shr_public int libnvmf_registry_delete(struct libnvme_global_ctx *ctx,
 
 __shr_public int libnvmf_registry_device_for_each(
 		struct libnvme_global_ctx *ctx,
-		void (*callback)(const char *device, void *user_data),
+		int (*callback)(const char *device, void *user_data),
 		void *user_data)
 {
 	char dev_path[NAME_MAX + 6]; /* "/dev/" + name + NUL */
 	struct dirent *de;
 	DIR *d;
+	int ret = 0;
 
 	if (!ctx)
 		return -EINVAL;
@@ -600,10 +601,12 @@ __shr_public int libnvmf_registry_device_for_each(
 		if (access(dev_path, F_OK) != 0)
 			continue;
 
-		callback(de->d_name, user_data);
+		ret = callback(de->d_name, user_data);
+		if (ret)
+			break;
 	}
 	closedir(d);
-	return 0;
+	return ret;
 }
 
 __shr_public int libnvmf_registry_attr_for_each(

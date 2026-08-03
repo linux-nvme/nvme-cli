@@ -883,7 +883,7 @@ PyObject *registry_retrieve(struct libnvme_global_ctx *ctx,
 	return str;
 }
 
-static void _registry_collect_device(const char *device, void *user_data)
+static int _registry_collect_device(const char *device, void *user_data)
 {
 	PyObject *str = PyUnicode_FromString(device);
 
@@ -891,6 +891,7 @@ static void _registry_collect_device(const char *device, void *user_data)
 		PyList_Append((PyObject *)user_data, str);
 		Py_DECREF(str);
 	}
+	return 0;
 }
 
 PyObject *registry_devices(struct libnvme_global_ctx *ctx)

@@ -105,7 +105,7 @@ int libnvmf_registry_delete(struct libnvme_global_ctx *ctx, const char *device);
  */
 int libnvmf_registry_device_for_each(
 		struct libnvme_global_ctx *ctx,
-		void (*callback)(const char *device, void *user_data),
+		int (*callback)(const char *device, void *user_data),
 		void *user_data);
 
 /**

@@ -73,11 +73,11 @@ static void print_attr(const char *attr, const char *value, void *user_data)
 	printf("  %-12s %s\n", attr, value);
 }
 
-static void print_device(const char *device, void *user_data)
+static int print_device(const char *device, void *user_data)
 {
 	struct libnvme_global_ctx *ctx = user_data;
 	printf("%s\n", device);
-	libnvmf_registry_attr_for_each(ctx, device, print_attr, NULL);
+	return libnvmf_registry_attr_for_each(ctx, device, print_attr, NULL);
 }
 
 static int registry_list(int argc, char **argv, struct command *acmd,
