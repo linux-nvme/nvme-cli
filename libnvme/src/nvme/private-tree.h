@@ -10,20 +10,6 @@
 #include "cleanup.h"
 #include <nvme/tree.h>
 
-struct dirents {
-	struct dirent **ents;
-	int num;
-};
-
-static inline void cleanup_dirents(struct dirents *ents)
-{
-	while (ents->num > 0)
-		free(ents->ents[--ents->num]);
-	free(ents->ents);
-}
-
-#define __cleanup_dirents __cleanup(cleanup_dirents)
-
 #define FREE_CTRL_ATTR(a) \
 	do { free(a); (a) = NULL; } while (0)
 
