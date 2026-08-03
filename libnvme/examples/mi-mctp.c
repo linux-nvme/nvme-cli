@@ -538,9 +538,9 @@ int do_security_info(libnvme_mi_ep_t ep, int argc, char **argv)
 	unsigned long tmp;
 	uint16_t ctrl_id;
 	struct {
-		uint8_t		rsvd[6];
-		uint16_t	len;
-		uint8_t		protocols[256];
+		__u8		rsvd[6];
+		__be16		len;
+		__u8		protocols[256];
 	} proto_info;
 	/* protocol 0x00, spsp 0x0000: retrieve supported protocols */
 	void *data = &proto_info;
@@ -573,7 +573,7 @@ int do_security_info(libnvme_mi_ep_t ep, int argc, char **argv)
 	}
 
 	n_proto = be16_to_cpu(proto_info.len);
-	if (data_len < 6 + n_proto) {
+	if (data_len < offsetof(typeof(proto_info), protocols) + n_proto) {
 		warnx("Short response in security receive command (%d bytes), "
 		      "for %d protocols", data_len, n_proto);
 		return -1;
