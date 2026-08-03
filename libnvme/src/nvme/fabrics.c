@@ -587,7 +587,6 @@ __shr_public void libnvmf_context_free(struct libnvmf_context *fctx)
 __shr_public int libnvmf_context_set_discovery_hooks(
 		struct libnvmf_context *fctx,
 		void (*discovery_log)(struct libnvmf_context *fctx,
-			bool connect,
 			struct nvmf_discovery_log *log,
 			uint64_t numrec, void *user_data))
 {
@@ -2590,7 +2589,6 @@ static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
 	}
 }
 
-
 static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect,
 		struct libnvme_ctrl *c)
@@ -2629,7 +2627,7 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 	}
 
 	if (fctx->hooks.discovery_log)
-		fctx->hooks.discovery_log(fctx, connect, log, numrec,
+		fctx->hooks.discovery_log(fctx, log, numrec,
 			fctx->hooks.user_data);
 
 	if (!connect)
