@@ -357,6 +357,44 @@ __shr_public const char *libnvmf_context_get_devid_file(
 	return p->devid_file;
 }
 
+__shr_public void libnvmf_context_set_connect(
+		struct libnvmf_context *p,
+		bool connect)
+{
+	p->connect = connect;
+}
+
+__shr_public bool libnvmf_context_get_connect(const struct libnvmf_context *p)
+{
+	return p->connect;
+}
+
+__shr_public void libnvmf_context_set_force(
+		struct libnvmf_context *p,
+		bool force)
+{
+	p->force = force;
+}
+
+__shr_public bool libnvmf_context_get_force(const struct libnvmf_context *p)
+{
+	return p->force;
+}
+
+__shr_public void libnvmf_context_set_nbft_path(
+		struct libnvmf_context *p,
+		const char *nbft_path)
+{
+	free(p->nbft_path);
+	p->nbft_path = nbft_path ? strdup(nbft_path) : NULL;
+}
+
+__shr_public const char *libnvmf_context_get_nbft_path(
+		const struct libnvmf_context *p)
+{
+	return p->nbft_path;
+}
+
 __shr_public const char *libnvmf_context_get_hostnqn(
 		const struct libnvmf_context *p)
 {

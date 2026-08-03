@@ -582,29 +582,25 @@ int libnvmf_get_owner_from_fctx(struct libnvme_global_ctx *ctx,
  * libnvmf_discover() - Discover fabrics subsystems
  * @ctx: Global context
  * @fctx: Fabrics context
- * @connect: Whether to connect discovered subsystems
- * @force: Force discovery even if already connected
  *
  * Performs discovery for fabrics subsystems and optionally connects.
  *
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_discover(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect, bool force);
+		struct libnvmf_context *fctx);
 
 /**
  * libnvmf_discover_nbft() - Discover fabrics subsystems using NBFT
  * @ctx: Global context
  * @fctx: Fabrics context
- * @connect: Whether to connect discovered subsystems
- * @nbft_path: Path to NBFT file
  *
- * Performs discovery using the specified NBFT file.
+ * Performs discovery using the NBFT tables found at @fctx's nbft_path.
  *
  * Return: 0 on success, negative error code otherwise.
  */
 int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect, char *nbft_path);
+		struct libnvmf_context *fctx);
 
 /**
  * libnvmf_create_ctrl() - Allocate an unconnected NVMe controller

@@ -467,6 +467,53 @@ enum libnvmf_tristate libnvmf_context_get_epcsd(
 const char *libnvmf_context_get_devid_file(const struct libnvmf_context *p);
 
 /**
+ * libnvmf_context_set_connect() - Set connect.
+ * @p: The &struct libnvmf_context instance to update.
+ * @connect: Value to assign to the connect field.
+ */
+void libnvmf_context_set_connect(struct libnvmf_context *p, bool connect);
+
+/**
+ * libnvmf_context_get_connect() - Get connect.
+ * @p: The &struct libnvmf_context instance to query.
+ *
+ * Return: The value of the connect field.
+ */
+bool libnvmf_context_get_connect(const struct libnvmf_context *p);
+
+/**
+ * libnvmf_context_set_force() - Set force.
+ * @p: The &struct libnvmf_context instance to update.
+ * @force: Value to assign to the force field.
+ */
+void libnvmf_context_set_force(struct libnvmf_context *p, bool force);
+
+/**
+ * libnvmf_context_get_force() - Get force.
+ * @p: The &struct libnvmf_context instance to query.
+ *
+ * Return: The value of the force field.
+ */
+bool libnvmf_context_get_force(const struct libnvmf_context *p);
+
+/**
+ * libnvmf_context_set_nbft_path() - Set nbft_path.
+ * @p: The &struct libnvmf_context instance to update.
+ * @nbft_path: New string; a copy is stored. Pass NULL to clear.
+ */
+void libnvmf_context_set_nbft_path(
+		struct libnvmf_context *p,
+		const char *nbft_path);
+
+/**
+ * libnvmf_context_get_nbft_path() - Get nbft_path.
+ * @p: The &struct libnvmf_context instance to query.
+ *
+ * Return: The value of the nbft_path field, or NULL if not set.
+ */
+const char *libnvmf_context_get_nbft_path(const struct libnvmf_context *p);
+
+/**
  * libnvmf_context_get_hostnqn() - Get hostnqn.
  * @p: The &struct libnvmf_context instance to query.
  *
