@@ -11,6 +11,7 @@
 LIBNVMF_ACCESSORS_3 {
 	global:
 		libnvmf_context_get_concat;
+		libnvmf_context_get_connect;
 		libnvmf_context_get_ctrl_loss_tmo;
 		libnvmf_context_get_ctrlkey;
 		libnvmf_context_get_data_digest;
@@ -22,6 +23,7 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_get_duplicate_connect;
 		libnvmf_context_get_epcsd;
 		libnvmf_context_get_fast_io_fail_tmo;
+		libnvmf_context_get_force;
 		libnvmf_context_get_hdr_digest;
 		libnvmf_context_get_host_iface;
 		libnvmf_context_get_host_traddr;
@@ -31,6 +33,7 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_get_keep_alive_tmo;
 		libnvmf_context_get_keyring;
 		libnvmf_context_get_keyring_id;
+		libnvmf_context_get_nbft_path;
 		libnvmf_context_get_nr_io_queues;
 		libnvmf_context_get_nr_poll_queues;
 		libnvmf_context_get_nr_write_queues;
@@ -48,6 +51,7 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_get_transport;
 		libnvmf_context_get_trsvcid;
 		libnvmf_context_set_concat;
+		libnvmf_context_set_connect;
 		libnvmf_context_set_ctrl_loss_tmo;
 		libnvmf_context_set_data_digest;
 		libnvmf_context_set_default_keep_alive_timeout;
@@ -56,9 +60,11 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_set_duplicate_connect;
 		libnvmf_context_set_epcsd;
 		libnvmf_context_set_fast_io_fail_tmo;
+		libnvmf_context_set_force;
 		libnvmf_context_set_hdr_digest;
 		libnvmf_context_set_keep_alive_tmo;
 		libnvmf_context_set_keyring_id;
+		libnvmf_context_set_nbft_path;
 		libnvmf_context_set_nr_io_queues;
 		libnvmf_context_set_nr_poll_queues;
 		libnvmf_context_set_nr_write_queues;

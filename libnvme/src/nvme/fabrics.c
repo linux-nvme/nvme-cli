@@ -577,6 +577,7 @@ __shr_public void libnvmf_context_free(struct libnvmf_context *fctx)
 	if (!fctx)
 		return;
 
+	free(fctx->nbft_path);
 	free(fctx->hostnqn);
 	free(fctx->hostid);
 	free(fctx->tls_key);
@@ -3158,7 +3159,7 @@ static char *nbft_find_hfi_iface(struct libnbft_hfi *hfi)
 }
 
 __shr_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect, char *nbft_path)
+		struct libnvmf_context *fctx)
 {
 	const char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
 	char uuid[NVME_UUID_LEN_STRING];
@@ -3177,11 +3178,11 @@ __shr_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
 	if (ret)
 		return ret;
 
-	if (!connect)
+	if (!fctx->connect)
 		/* TODO: print discovery-type info from NBFT tables */
 		return 0;
 
-	ret = libnvmf_nbft_read_files(ctx, nbft_path, &entry);
+	ret = libnvmf_nbft_read_files(ctx, (char *)fctx->nbft_path, &entry);
 	if (ret) {
 		if (ret != -ENOENT)
 			libnvme_msg(ctx, LIBNVME_LOG_ERR,
@@ -3414,8 +3415,7 @@ out_free:
 }
 
 __shr_public int libnvmf_discovery(
-		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
-		bool connect, bool force)
+		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx)
 {
 	struct libnvme_ctrl *c = NULL;
 	struct libnvme_host *h;
@@ -3429,7 +3429,7 @@ __shr_public int libnvmf_discovery(
 	if (ret)
 		return ret;
 
-	if (fctx->device && !force) {
+	if (fctx->device && !fctx->force) {
 		ret = libnvme_scan_ctrl(ctx, fctx->device, &c);
 		if (!ret) {
 			/* Check if device matches command-line options */
@@ -3485,7 +3485,7 @@ __shr_public int libnvmf_discovery(
 		}
 	}
 
-	if (!c && !force) {
+	if (!c && !fctx->force) {
 		c = lookup_ctrl(h, fctx);
 		if (c) {
 			fctx->persistent = LIBNVMF_TRISTATE_TRUE;
@@ -3511,7 +3511,7 @@ __shr_public int libnvmf_discovery(
 		}
 	}
 
-	ret = _nvmf_discovery(ctx, fctx, connect, c);
+	ret = _nvmf_discovery(ctx, fctx, fctx->connect, c);
 	if (fctx->persistent != LIBNVMF_TRISTATE_TRUE)
 		libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);

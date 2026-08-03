@@ -456,7 +456,9 @@ static void consume_conn(const struct libnvmf_config_conn *conn,
 				MAX_DISC_RETRIES);
 		libnvmf_context_set_default_keep_alive_timeout(fctx,
 				NVMF_DEF_DISC_TMO);
-		err = libnvmf_discovery(st->ctx, fctx, st->connect, st->force);
+		libnvmf_context_set_connect(fctx, st->connect);
+		libnvmf_context_set_force(fctx, st->force);
+		err = libnvmf_discovery(st->ctx, fctx);
 	} else {
 		err = libnvmf_connect(st->ctx, fctx);
 	}
@@ -860,8 +862,9 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 				&fa, &dld, &fctx);
 			if (ret)
 				return ret;
-			ret = libnvmf_discovery_nbft(ctx, fctx, connect,
-				nbft_path);
+			libnvmf_context_set_connect(fctx, connect);
+			libnvmf_context_set_nbft_path(fctx, nbft_path);
+			ret = libnvmf_discovery_nbft(ctx, fctx);
 		}
 		if (!nbft && config_file)
 			ret = fabrics_discovery_config(ctx, config_file,
@@ -884,7 +887,9 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		if (ret)
 			return 0;
 
-		ret = libnvmf_discovery(ctx, fctx, connect, force);
+		libnvmf_context_set_connect(fctx, connect);
+		libnvmf_context_set_force(fctx, force);
+		ret = libnvmf_discovery(ctx, fctx);
 	}
 
 	return ret;
