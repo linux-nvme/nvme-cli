@@ -386,7 +386,7 @@ void libnvmf_context_free(struct libnvmf_context *fctx);
  */
 int libnvmf_context_set_discovery_hooks(struct libnvmf_context *fctx,
 		void (*discovery_log)(struct libnvmf_context *fctx,
-			bool connect, struct nvmf_discovery_log *log,
+			struct nvmf_discovery_log *log,
 			uint64_t numrec, void *user_data));
 
 /**
