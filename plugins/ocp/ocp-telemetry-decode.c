@@ -1377,7 +1377,16 @@ int parse_event_fifos(struct json_object *root, struct nvme_ocp_telemetry_offset
 				(event_fifo[fifo_no].event_fifo_start  * SIZE_OF_DWORD);
 			__u64 fifo_size =
 				(event_fifo[fifo_no].event_fifo_size  * SIZE_OF_DWORD);
+			__u64 da_size = (poffsets->data_area == 1) ?
+				poffsets->da1_size : poffsets->da2_size;
 			__u8 *pfifo_start = NULL;
+
+			if (!fifo_size || fifo_offset + fifo_size > da_size) {
+				nvme_show_error(
+					"Invalid FIFO bounds for FIFO %d",
+					fifo_no);
+				return -1;
+			}
 
 			if (event_fifo[fifo_no].event_fifo_da == 1)
 				pfifo_start = pda1_header_offset + fifo_offset;
