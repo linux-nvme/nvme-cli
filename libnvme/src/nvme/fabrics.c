@@ -2621,8 +2621,6 @@ static bool dc_should_connect(struct libnvmf_context *fctx,
 			     fctx->epcsd == LIBNVMF_TRISTATE_FALSE;
 	}
 
-	set_discovery_kato(fctx);
-
 	*pdisconnect = disconnect;
 	return true;
 }
@@ -2661,7 +2659,6 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		bool discover = false;
 		bool disconnect;
 		libnvme_ctrl_t child = { 0 };
-		int tmo = fctx->ctrl_params.cfg.keep_alive_tmo;
 		struct libnvmf_context nfctx = *fctx;
 
 		sanitize_discovery_log_entry(c->ctx, e);
@@ -2686,11 +2683,11 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 
 		err = nvmf_connect_disc_entry(h, e, &nfctx, &discover, &child);
 
-		nfctx.ctrl_params.cfg.keep_alive_tmo = tmo;
-
 		if (child) {
-			if (discover)
+			if (discover) {
+				set_discovery_kato(&nfctx);
 				_nvmf_discover(ctx, &nfctx, child);
+			}
 
 			if (disconnect) {
 				libnvmf_disconnect_ctrl(child);
