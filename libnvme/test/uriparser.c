@@ -4,7 +4,7 @@
  * Copyright (c) 2024 Tomas Bzatek <tbzatek@redhat.com>
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -160,50 +160,50 @@ static void test_uriparser(void)
 		int j;
 
 		printf(" '%s'...", d->uri);
-		assert(!libnvmf_uri_parse(d->uri, &parsed_data));
+		shr_assert(!libnvmf_uri_parse(d->uri, &parsed_data));
 
-		assert(strcmp(d->scheme,
+		shr_assert(strcmp(d->scheme,
 		      libnvmf_uri_get_scheme(parsed_data)) == 0);
 
 		str = libnvmf_uri_get_protocol(parsed_data);
 		if (d->proto) {
-			assert(str != NULL);
-			assert(strcmp(d->proto, str) == 0);
+			shr_assert(str != NULL);
+			shr_assert(strcmp(d->proto, str) == 0);
 		} else {
-			assert(d->proto == str);
+			shr_assert(d->proto == str);
 		}
 
-		assert(strcmp(d->host,
+		shr_assert(strcmp(d->host,
 		      libnvmf_uri_get_host(parsed_data)) == 0);
 
-		assert(d->port == libnvmf_uri_get_port(parsed_data));
+		shr_assert(d->port == libnvmf_uri_get_port(parsed_data));
 
 		segments = libnvmf_uri_get_path_segments(parsed_data);
 		if (!segments) {
-			assert(d->path[0] == NULL);
+			shr_assert(d->path[0] == NULL);
 		} else {
 			for (j = 0; segments && segments[j]; j++) {
-				assert(d->path[j] != NULL);
-				assert(strcmp(d->path[j], segments[j]) == 0);
+				shr_assert(d->path[j] != NULL);
+				shr_assert(strcmp(d->path[j], segments[j]) == 0);
 			}
 			/* trailing NULL element */
-			assert(d->path[j] == segments[j]);
+			shr_assert(d->path[j] == segments[j]);
 		}
 
 		str = libnvmf_uri_get_query(parsed_data);
 		if (d->query) {
-			assert(str != NULL);
-			assert(strcmp(d->query, str) == 0);
+			shr_assert(str != NULL);
+			shr_assert(strcmp(d->query, str) == 0);
 		} else {
-			assert(d->query == str);
+			shr_assert(d->query == str);
 			}
 
 		str = libnvmf_uri_get_fragment(parsed_data);
 		if (d->frag) {
-			assert(str != NULL);
-			assert(strcmp(d->frag, str) == 0);
+			shr_assert(str != NULL);
+			shr_assert(strcmp(d->frag, str) == 0);
 		} else {
-			assert(d->frag == str);
+			shr_assert(d->frag == str);
 		}
 
 		libnvmf_uri_free(parsed_data);
@@ -218,8 +218,8 @@ static void test_uriparser_bad(void)
 		struct libnvmf_uri *parsed_data = NULL;
 
 		printf(" '%s'...", test_data_bad[i]);
-		assert(libnvmf_uri_parse(test_data_bad[i], &parsed_data));
-		assert(parsed_data == NULL);
+		shr_assert(libnvmf_uri_parse(test_data_bad[i], &parsed_data));
+		shr_assert(parsed_data == NULL);
 		printf("   OK\n");
 	}
 }

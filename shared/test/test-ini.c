@@ -9,7 +9,7 @@
  * reporting, exact line numbers, and the parse-abort contract.
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -40,7 +40,7 @@ static int record(enum shr_ini_event event, const char *section,
 {
 	struct ev *e = &got[ngot++];
 
-	assert(ngot <= MAX_EVENTS);
+	shr_assert(ngot <= MAX_EVENTS);
 	e->event = event;
 	e->section_null = !section;
 	if (section)
@@ -219,8 +219,8 @@ static bool test_file(void)
 	printf("test_file:\n");
 
 	fd = mkstemp(path);
-	assert(fd >= 0);
-	assert(write(fd, "# file\n[f]\nkey = val\n", 21) == 21);
+	shr_assert(fd >= 0);
+	shr_assert(write(fd, "# file\n[f]\nkey = val\n", 21) == 21);
 	close(fd);
 
 	ngot = 0;

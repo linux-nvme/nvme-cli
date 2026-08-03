@@ -4,7 +4,7 @@
  * Copyright (c) 2023 Daniel Wagner, SUSE LLC
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -132,27 +132,27 @@ static struct libnvme_global_ctx *create_tree(void)
 	libnvme_host_t h;
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_DEBUG, false, false);
 	libnvme_set_hostnqn(ctx, DEFAULT_HOSTNQN);
 	libnvme_set_hostid(ctx, DEFAULT_HOSTID);
 
-	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
-	assert(h);
+	shr_assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
+	shr_assert(h);
 
 	printf("  ctrls created:\n");
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++) {
 		struct test_data *d = &test_data[i];
 
-		assert(!libnvme_get_subsystem(ctx, h, d->subsysname,
+		shr_assert(!libnvme_get_subsystem(ctx, h, d->subsysname,
 			d->f.ctrl_params.subsysnqn, &d->s));
-		assert(d->s);
+		shr_assert(d->s);
 
-		assert(!libnvme_subsystem_create_ctrl(d->s,
+		shr_assert(!libnvme_subsystem_create_ctrl(d->s,
 			&d->f.ctrl_params, &d->c));
-		assert(d->c);
+		shr_assert(d->c);
 		d->ctrl_id = i;
 
 		printf("    ");
@@ -189,7 +189,7 @@ static bool tcp_ctrl_lookup(libnvme_subsystem_t s, struct test_data *d)
 	f.ctrl_params.host_traddr = NULL;
 	f.ctrl_params.host_iface = NULL;
 	c = libnvme_lookup_ctrl(s, &f.ctrl_params, NULL);
-	assert(c);
+	shr_assert(c);
 	printf("%10s %12s %10s -> ", f.ctrl_params.trsvcid, "", "");
 	show_ctrl(c);
 	pass &= match_ctrl(d, c);
@@ -254,9 +254,9 @@ static bool ctrl_lookups(struct libnvme_global_ctx *ctx)
 	bool pass = true;
 
 	h = libnvme_first_host(ctx);
-	assert(!libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
+	shr_assert(!libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
 			      DEFAULT_SUBSYSNQN, &s));
-	assert(s);
+	shr_assert(s);
 
 	printf("  lookup controller:\n");
 	for (int i = 0; i < ARRAY_SIZE(test_data); i++) {
@@ -312,20 +312,20 @@ static bool test_src_addr(void)
 	printf("\ntest_src_addr:\n");
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_DEBUG, false, false);
 
-	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
-	assert(h);
+	shr_assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
+	shr_assert(h);
 
-	assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
+	shr_assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
 			      DEFAULT_SUBSYSNQN, &s));
-	assert(s);
+	shr_assert(s);
 
-	assert(!libnvme_subsystem_create_ctrl(s, &fctx.ctrl_params, &c));
-	assert(c);
+	shr_assert(!libnvme_subsystem_create_ctrl(s, &fctx.ctrl_params, &c));
+	shr_assert(c);
 
 	c->address = NULL;
 	printf(" - Test c->address = NULL                                                       : src_addr = NULL             ");
@@ -491,21 +491,21 @@ static bool ctrl_match(const char *tag,
 	const struct libnvme_ctrl_params *rp = &reference->f.ctrl_params;
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_INFO, false, false);
 
-	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
-	assert(h);
+	shr_assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
+	shr_assert(h);
 
-	assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
+	shr_assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
 		rp->subsysnqn ? rp->subsysnqn : DEFAULT_SUBSYSNQN, &s));
-	assert(s);
+	shr_assert(s);
 
-	assert(!libnvme_subsystem_create_ctrl(s, &reference->f.ctrl_params,
+	shr_assert(!libnvme_subsystem_create_ctrl(s, &reference->f.ctrl_params,
 		&reference_ctrl));
-	assert(reference_ctrl);
+	shr_assert(reference_ctrl);
 	reference_ctrl->name = "nvme1";  /* fake the device name */
 	if (reference->address)
 		reference_ctrl->address = (char *)reference->address;
@@ -1308,21 +1308,21 @@ static bool ctrl_config_match(const char *tag,
 	libnvme_subsystem_t s;
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_INFO, false, false);
 
-	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
-	assert(h);
+	shr_assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
+	shr_assert(h);
 
-	assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
+	shr_assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
 		 rp->subsysnqn ? rp->subsysnqn : DEFAULT_SUBSYSNQN, &s));
-	assert(s);
+	shr_assert(s);
 
-	assert(!libnvme_subsystem_create_ctrl(s,
+	shr_assert(!libnvme_subsystem_create_ctrl(s,
 		&reference->f.ctrl_params, &reference_ctrl));
-	assert(reference_ctrl);
+	shr_assert(reference_ctrl);
 	reference_ctrl->name = "nvme1";  /* fake the device name */
 	if (reference->address)
 		reference_ctrl->address = (char *)reference->address;
@@ -1523,20 +1523,20 @@ static bool test_well_known_nqn(void)
 	printf("\ntest_well_known_nqn:\n");
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_INFO, false, false);
 
-	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
-	assert(h);
+	shr_assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
+	shr_assert(h);
 
 	/* Subsystem 1: discovery subsystem with a discovery ctrl */
-	assert(!libnvme_create_subsystem(h, "disc",
+	shr_assert(!libnvme_create_subsystem(h, "disc",
 		NVME_DISC_SUBSYS_NAME, &s_disc));
-	assert(!libnvme_subsystem_create_ctrl(s_disc, &fctx.ctrl_params,
+	shr_assert(!libnvme_subsystem_create_ctrl(s_disc, &fctx.ctrl_params,
 		&disc_ctrl));
-	assert(disc_ctrl);
+	shr_assert(disc_ctrl);
 	disc_ctrl->name = "nvme1";
 	libnvme_ctrl_set_discovery_ctrl(disc_ctrl, true);
 
@@ -1549,11 +1549,11 @@ static bool test_well_known_nqn(void)
 	}
 
 	/* Subsystem 2: regular subsystem; discovery_ctrl defaults to false */
-	assert(!libnvme_create_subsystem(h, "regular", DEFAULT_SUBSYSNQN,
+	shr_assert(!libnvme_create_subsystem(h, "regular", DEFAULT_SUBSYSNQN,
 		&s_regular));
-	assert(!libnvme_subsystem_create_ctrl(s_regular, &fctx.ctrl_params,
+	shr_assert(!libnvme_subsystem_create_ctrl(s_regular, &fctx.ctrl_params,
 		&regular_ctrl));
-	assert(regular_ctrl);
+	shr_assert(regular_ctrl);
 	regular_ctrl->name = "nvme2";
 
 	found = libnvmf_ctrl_find(s_regular, &fctx_wknqn);
@@ -1752,22 +1752,22 @@ static bool test_lookup_ctrl_pagination(void)
 	printf("\ntest_lookup_ctrl_pagination:\n");
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_INFO, false, false);
 
-	assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
-	assert(h);
-	assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
+	shr_assert(!libnvme_create_host(ctx, DEFAULT_HOSTNQN, DEFAULT_HOSTID, &h));
+	shr_assert(h);
+	shr_assert(!libnvme_create_subsystem(h, DEFAULT_SUBSYSNAME,
 		DEFAULT_SUBSYSNQN, &s));
-	assert(s);
+	shr_assert(s);
 
 	/* Build list: [ctrl_a, ctrl_b] */
-	assert(!libnvme_subsystem_create_ctrl(s, &fctx_a.ctrl_params, &ctrl_a));
-	assert(ctrl_a);
-	assert(!libnvme_subsystem_create_ctrl(s, &fctx_b.ctrl_params, &ctrl_b));
-	assert(ctrl_b);
+	shr_assert(!libnvme_subsystem_create_ctrl(s, &fctx_a.ctrl_params, &ctrl_a));
+	shr_assert(ctrl_a);
+	shr_assert(!libnvme_subsystem_create_ctrl(s, &fctx_b.ctrl_params, &ctrl_b));
+	shr_assert(ctrl_b);
 
 	/* p=NULL: search starts from head, finds ctrl_a */
 	found = libnvmf_ctrl_find(s, &fctx_a);

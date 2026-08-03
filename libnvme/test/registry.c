@@ -9,7 +9,7 @@
  * access from multiple processes.
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -37,9 +37,9 @@ static void setup_tmpdir(struct libnvme_global_ctx *ctx)
 	 * test directory must live there (not under an arbitrary $TMPDIR).
 	 */
 	snprintf(tmpdir, sizeof(tmpdir), "/tmp/nvme-registry-test-XXXXXX");
-	assert(mkdtemp(tmpdir) != NULL);
+	shr_assert(mkdtemp(tmpdir) != NULL);
 	snprintf(regdir, sizeof(regdir), "%s/registry", tmpdir);
-	assert(libnvme_set_test_base_dir(ctx, tmpdir) == 0);
+	shr_assert(libnvme_set_test_base_dir(ctx, tmpdir) == 0);
 }
 
 static void cleanup_tmpdir(struct libnvme_global_ctx *ctx)
@@ -485,7 +485,7 @@ static bool test_parallel_writes(struct libnvme_global_ctx *ctx)
 
 	for (i = 0; i < NPROCS; i++) {
 		pids[i] = fork();
-		assert(pids[i] >= 0);
+		shr_assert(pids[i] >= 0);
 		if (pids[i] == 0) {
 			snprintf(owner, sizeof(owner), "child%d", i);
 			for (int j = 0; j < 200; j++)
