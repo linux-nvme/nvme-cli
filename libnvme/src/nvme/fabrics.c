@@ -2589,6 +2589,51 @@ static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
 	}
 }
 
+static bool dc_should_connect(struct libnvmf_context *fctx,
+		struct nvmf_disc_log_entry *e, bool *pdisconnet)
+{
+	bool disconnect = false;
+
+	if (e->subtype == NVME_NQN_DISC || e->subtype == NVME_NQN_CURR) {
+		__u16 eflags = le16_to_cpu(e->eflags);
+		/*
+		 * Does this discovery controller return the
+		 * same information?
+		 */
+		if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
+			return false;
+
+		/*
+		 * Are we supposed to keep the discovery
+		 * controller around?
+		 */
+		disconnect = fctx->persistent != LIBNVMF_TRISTATE_TRUE;
+
+		if (strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME)) {
+			/*
+			 * Does this discovery controller
+			 * support explicit persistent connection?
+			 * If epcsd is disabled disconnect anyway.
+			 */
+			if (!(eflags & NVMF_DISC_EFLAGS_EPCSD))
+				disconnect = true;
+			else
+				disconnect = fctx->epcsd == LIBNVMF_TRISTATE_FALSE;
+		}
+
+		set_discovery_kato(fctx);
+	} else {
+		/* NVME_NQN_NVME */
+
+		if (!fctx->connect)
+			return false;
+		disconnect = false;
+	}
+
+	*pdisconnet = disconnect;
+	return true;
+}
+
 static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, struct libnvme_ctrl *c)
 {
@@ -2605,7 +2650,8 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 
 	err = nvme_discovery_log(c, &args, &log);
 	if (err) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to get discovery log: %s\n",
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			"failed to get discovery log: %s\n",
 			libnvme_strerror(err));
 		return err;
 	}
@@ -2655,42 +2701,8 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 			   nfctx.ctrl_params.transport))
 			continue;
 
-		if (e->subtype == NVME_NQN_DISC ||
-		    e->subtype == NVME_NQN_CURR) {
-			__u16 eflags = le16_to_cpu(e->eflags);
-			/*
-			 * Does this discovery controller return the
-			 * same information?
-			 */
-			if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
-				continue;
-
-			/*
-			 * Are we supposed to keep the discovery
-			 * controller around?
-			 */
-			disconnect = nfctx.persistent != LIBNVMF_TRISTATE_TRUE;
-
-			if (strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME)) {
-				/*
-				 * Does this discovery controller
-				 * support explicit persistent connection?
-				 * If epcsd is disabled disconnect anyway.
-				 */
-				if (!(eflags & NVMF_DISC_EFLAGS_EPCSD))
-					disconnect = true;
-				else
-					disconnect = fctx->epcsd == LIBNVMF_TRISTATE_FALSE;
-			}
-
-			set_discovery_kato(&nfctx);
-		} else {
-			/* NVME_NQN_NVME */
-
-			if (!fctx->connect)
-				continue;
-			disconnect = false;
-		}
+		if (!dc_should_connect(&nfctx, e, &disconnect))
+			continue;
 
 		err = nvmf_connect_disc_entry(h, e, &nfctx, &discover, &child);
 
