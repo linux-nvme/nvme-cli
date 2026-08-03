@@ -455,7 +455,9 @@ static void consume_conn(const struct libnvmf_config_conn *conn,
 				MAX_DISC_RETRIES);
 		libnvmf_context_set_default_keep_alive_timeout(fctx,
 				NVMF_DEF_DISC_TMO);
-		err = libnvmf_discover(st->ctx, fctx, st->connect, st->force);
+		libnvmf_context_set_connect(fctx, st->connect);
+		libnvmf_context_set_force(fctx, st->force);
+		err = libnvmf_discover(st->ctx, fctx);
 	} else {
 		err = libnvmf_connect(st->ctx, fctx);
 	}
@@ -867,12 +869,14 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	if (ret)
 		return ret;
 
+	libnvmf_context_set_connect(fctx, connect);
+	libnvmf_context_set_force(fctx, force);
+
 	if (epcsd)
 		libnvmf_context_set_epcsd(fctx, LIBNVMF_TRISTATE_TRUE);
 
 	if (no_epcsd)
 		libnvmf_context_set_epcsd(fctx, LIBNVMF_TRISTATE_FALSE);
-
 
 	if (persistent)
 		libnvmf_context_set_persistent(fctx, LIBNVMF_TRISTATE_TRUE);
@@ -882,8 +886,12 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 
 	if (!device && !fa.transport && !fa.traddr) {
 		if (!nonbft) {
-			ret = libnvmf_discover_nbft(ctx, fctx, connect,
-				nbft_path);
+			if (!nbft_path) {
+				nvme_show_error("no nbft_path set");
+				return -EINVAL;
+			}
+			libnvmf_context_set_nbft_path(fctx, nbft_path);
+			ret = libnvmf_discover_nbft(ctx, fctx);
 		}
 		if (!nbft && config_file)
 			ret = fabrics_discovery_config(ctx, config_file,
@@ -899,7 +907,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		if (ret)
 			return 0;
 
-		ret = libnvmf_discover(ctx, fctx, connect, force);
+		ret = libnvmf_discover(ctx, fctx);
 	}
 
 	return ret;

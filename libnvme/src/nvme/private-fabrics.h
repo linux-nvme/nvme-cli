@@ -53,6 +53,11 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
 	enum libnvmf_tristate epcsd;
 	const char *devid_file;		// !access:write=custom
 
+	/* discovery invocation options */
+	bool connect;			// !access
+	bool force;			// !access
+	char *nbft_path;		// !access
+
 	/* host configuration */
 	char *hostnqn;			// !access:write=custom
 	char *hostid;			// !access:write=custom
