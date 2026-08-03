@@ -2527,8 +2527,9 @@ static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 
 	obj_add_uint(r, "n", n);
 
-	for (int i = 0; i < n + 1; i++) {
+	for (int i = 0; i < n; i++) {
 		struct nvme_fdp_config_desc *config = p;
+		uint16_t nruh = le16_to_cpu(config->nruh);
 
 		struct json_object *obj_config = json_create_object();
 		struct json_object *obj_ruhs = json_create_array();
@@ -2536,12 +2537,12 @@ static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 		obj_add_uint(obj_config, "fdpa", config->fdpa);
 		obj_add_uint(obj_config, "vss", config->vss);
 		obj_add_uint(obj_config, "nrg", le32_to_cpu(config->nrg));
-		obj_add_uint(obj_config, "nruh", le16_to_cpu(config->nruh));
+		obj_add_uint(obj_config, "nruh", nruh);
 		obj_add_uint(obj_config, "nnss", le32_to_cpu(config->nnss));
 		obj_add_uint64(obj_config, "runs", le64_to_cpu(config->runs));
 		obj_add_uint(obj_config, "erutl", le32_to_cpu(config->erutl));
 
-		for (int j = 0; j < le16_to_cpu(config->nruh); j++) {
+		for (int j = 0; j < nruh; j++) {
 			struct nvme_fdp_ruh_desc *ruh = &config->ruhs[j];
 
 			struct json_object *obj_ruh = json_create_object();
