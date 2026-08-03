@@ -32,3 +32,14 @@
  * by design (e.g. no-op stubs that must match a specific signature).
  */
 #define __shr_unused __attribute__((__unused__))
+
+/**
+ * __shr_likely - Hint that an expression is usually true.
+ * __shr_unlikely - Hint that an expression is usually false.
+ *
+ * Wrap a branch condition to help the compiler order the generated code
+ * for the common case, e.g. a lazy-cache guard that is false on every
+ * call after the first.
+ */
+#define __shr_likely(x)   __builtin_expect(!!(x), 1)
+#define __shr_unlikely(x) __builtin_expect(!!(x), 0)
