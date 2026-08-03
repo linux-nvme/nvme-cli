@@ -291,13 +291,14 @@ struct for_each_result {
 	int count;
 };
 
-static void collect_device(const char *device, void *user_data)
+static int collect_device(const char *device, void *user_data)
 {
 	struct for_each_result *r = user_data;
 
 	if (r->count < 8)
 		snprintf(r->devices[r->count++], sizeof(r->devices[0]),
 			 "%s", device);
+	return 0;
 }
 
 static bool test_device_for_each(struct libnvme_global_ctx *ctx)
