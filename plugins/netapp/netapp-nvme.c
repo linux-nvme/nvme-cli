@@ -906,7 +906,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 {
 	const char *desc = "Display information about E-Series volumes.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	struct dirent **devices;
+	struct dirent **devices = NULL;
 	int num, i, ret, fmt;
 	struct smdevice_info *smdevices;
 	char path[264];
