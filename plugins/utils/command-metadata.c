@@ -703,6 +703,8 @@ int dump_command_metadata(struct program *prog)
 
 	json_program(model);
 
+	free(model->plugins);
+	free(model);
 	return 0;
 }
 
