@@ -1160,6 +1160,7 @@ static void json_c7_log(struct libnvme_transport_handle *hdl, struct tcg_configu
 				  le32_to_cpu(log_data->pro_rlc));
 	json_object_add_value_int(root, "TCG Error Count", le32_to_cpu(log_data->tcg_ec));
 
+	res = res_arr;
 	memset((__u8 *)res, 0, 458);
 	if (log_page_version == 1) {
 		res += sprintf(res, "%d%d", *(__u8 *)&log_data->no_of_ns_prov_locking_obj_ext,
