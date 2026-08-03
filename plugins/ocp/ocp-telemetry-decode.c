@@ -1098,7 +1098,8 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 
 	if (status != 0) {
 		nvme_show_error("Failed to get C9 String. status: %d", status);
-		return -1;
+		ret = -1;
+		goto free_desc;
 	}
 
 	char event_fifo_name[100] = {0};
