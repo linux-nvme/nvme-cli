@@ -10,7 +10,7 @@
  * emitter symbols are exported.
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -37,7 +37,7 @@ struct fixture {
 static void fixture_create(struct fixture *fx)
 {
 	snprintf(fx->dir, sizeof(fx->dir), "/tmp/nvme-config-emit-XXXXXX");
-	assert(mkdtemp(fx->dir));
+	shr_assert(mkdtemp(fx->dir));
 	snprintf(fx->main_path, sizeof(fx->main_path), "%s/nvme-fabrics.conf",
 		 fx->dir);
 	snprintf(fx->dropin_dir, sizeof(fx->dropin_dir),
@@ -81,7 +81,7 @@ static void collect(const struct libnvmf_config_conn *conn, void *user_data)
 {
 	struct conn_list *list = user_data;
 
-	assert(list->n < 8);
+	shr_assert(list->n < 8);
 	list->conn[list->n++] = conn;
 }
 
@@ -96,8 +96,8 @@ static int add(struct libnvmf_config_emitter *e, bool is_dc,
 
 	if (pkey) {
 		params = libnvmf_params_new();
-		assert(params);
-		assert(libnvmf_params_set(params, pkey, pval) == 0);
+		shr_assert(params);
+		shr_assert(libnvmf_params_set(params, pkey, pval) == 0);
 	}
 	ret = libnvmf_config_emit_add(e, is_dc, "tcp", traddr, "4420", nqn,
 				      NULL, NULL, hostnqn, hostid, params,
@@ -119,16 +119,16 @@ static bool test_roundtrip(struct libnvme_global_ctx *ctx, struct fixture *fx)
 	printf("test_roundtrip:\n");
 
 	e = libnvmf_config_emit_new(ctx);
-	assert(e);
+	shr_assert(e);
 
 	/* Default persona: a DC and an I/O controller in the main file. */
-	assert(add(e, true, "10.0.0.5", NULL, NULL, NULL, NULL,
+	shr_assert(add(e, true, "10.0.0.5", NULL, NULL, NULL, NULL,
 		   NULL, NULL) == 0);
-	assert(add(e, false, "10.0.0.9",
+	shr_assert(add(e, false, "10.0.0.9",
 		   "nqn.2014-08.org.nvmexpress:main-vol", NULL, NULL, NULL,
 		   "ctrl-loss-tmo", "600") == 0);
 	/* A named persona: goes to its own drop-in. */
-	assert(add(e, false, "10.0.0.7",
+	shr_assert(add(e, false, "10.0.0.7",
 		   "nqn.2014-08.org.nvmexpress:prod-vol",
 		   "nqn.2014-08.org.nvmexpress:prod-host",
 		   g_hostid, "prod", "tls", "true") == 0);
@@ -225,7 +225,7 @@ static bool test_hostname_traddr_verbatim(struct libnvme_global_ctx *ctx,
 	printf("test_hostname_traddr_verbatim:\n");
 
 	e = libnvmf_config_emit_new(ctx);
-	assert(e);
+	shr_assert(e);
 
 	if (libnvmf_config_emit_add(e, false, "tcp", "nas.example.com", "4420",
 				    "nqn.2014-08.org.nvmexpress:main-vol",
@@ -243,7 +243,7 @@ static bool test_hostname_traddr_verbatim(struct libnvme_global_ctx *ctx,
 	libnvmf_config_emit_free(e);
 	printf(" - hostname traddr accepted and installed [PASS]\n");
 
-	assert(libnvmf_config_read(ctx, fx->main_path, &config) == 0);
+	shr_assert(libnvmf_config_read(ctx, fx->main_path, &config) == 0);
 	libnvmf_config_conn_for_each(config, collect, &list);
 	if (list.n != 1 ||
 	    strcmp(libnvmf_config_conn_get_traddr(list.conn[0]),
@@ -278,8 +278,8 @@ static bool test_creates_missing_directory(struct libnvme_global_ctx *ctx,
 		 nested_dir);
 
 	e = libnvmf_config_emit_new(ctx);
-	assert(e);
-	assert(add(e, true, "10.0.0.5", NULL, NULL, NULL, NULL,
+	shr_assert(e);
+	shr_assert(add(e, true, "10.0.0.5", NULL, NULL, NULL, NULL,
 		   NULL, NULL) == 0);
 
 	if (libnvmf_config_emit_install(e, nested_main, false)) {
@@ -318,12 +318,12 @@ static bool test_refuse_existing(struct libnvme_global_ctx *ctx,
 
 	/* An empty main file alone is enough to occupy the target. */
 	f = fopen(fx->main_path, "w");
-	assert(f);
-	assert(fclose(f) == 0);
+	shr_assert(f);
+	shr_assert(fclose(f) == 0);
 
 	e = libnvmf_config_emit_new(ctx);
-	assert(e);
-	assert(add(e, false, "10.0.0.9", "nqn.vol", NULL, NULL, NULL,
+	shr_assert(e);
+	shr_assert(add(e, false, "10.0.0.9", "nqn.vol", NULL, NULL, NULL,
 		   NULL, NULL) == 0);
 	ret = libnvmf_config_emit_install(e, fx->main_path, false);
 	libnvmf_config_emit_free(e);
@@ -337,15 +337,15 @@ static bool test_refuse_existing(struct libnvme_global_ctx *ctx,
 	fixture_wipe(fx);
 
 	/* A lone .conf drop-in also counts as an existing configuration. */
-	assert(mkdir(fx->dropin_dir, 0755) == 0);
+	shr_assert(mkdir(fx->dropin_dir, 0755) == 0);
 	snprintf(path, sizeof(path), "%s/10-x.conf", fx->dropin_dir);
 	f = fopen(path, "w");
-	assert(f);
-	assert(fclose(f) == 0);
+	shr_assert(f);
+	shr_assert(fclose(f) == 0);
 
 	e = libnvmf_config_emit_new(ctx);
-	assert(e);
-	assert(add(e, false, "10.0.0.9", "nqn.vol", NULL, NULL, NULL,
+	shr_assert(e);
+	shr_assert(add(e, false, "10.0.0.9", "nqn.vol", NULL, NULL, NULL,
 		   NULL, NULL) == 0);
 	ret = libnvmf_config_emit_install(e, fx->main_path, false);
 	libnvmf_config_emit_free(e);
@@ -373,12 +373,12 @@ static bool test_force_overwrite(struct libnvme_global_ctx *ctx,
 
 	/* A stale configuration occupies the target. */
 	f = fopen(fx->main_path, "w");
-	assert(f);
-	assert(fclose(f) == 0);
+	shr_assert(f);
+	shr_assert(fclose(f) == 0);
 
 	e = libnvmf_config_emit_new(ctx);
-	assert(e);
-	assert(add(e, false, "10.0.0.9",
+	shr_assert(e);
+	shr_assert(add(e, false, "10.0.0.9",
 		   "nqn.2014-08.org.nvmexpress:force-vol", NULL, NULL, NULL,
 		   NULL, NULL) == 0);
 
@@ -427,11 +427,11 @@ static bool test_all_dropins(struct libnvme_global_ctx *ctx, struct fixture *fx)
 
 	/* No default persona: every connection is a named persona. */
 	e = libnvmf_config_emit_new(ctx);
-	assert(e);
-	assert(add(e, false, "10.0.0.9", "nqn.2014-08.org.nvmexpress:a",
+	shr_assert(e);
+	shr_assert(add(e, false, "10.0.0.9", "nqn.2014-08.org.nvmexpress:a",
 		   "nqn.2014-08.org.nvmexpress:host-a", NULL, "a",
 		   NULL, NULL) == 0);
-	assert(add(e, false, "10.0.0.10", "nqn.2014-08.org.nvmexpress:b",
+	shr_assert(add(e, false, "10.0.0.10", "nqn.2014-08.org.nvmexpress:b",
 		   "nqn.2014-08.org.nvmexpress:host-b", NULL, "b",
 		   NULL, NULL) == 0);
 
@@ -449,7 +449,7 @@ static bool test_all_dropins(struct libnvme_global_ctx *ctx, struct fixture *fx)
 	}
 	printf(" - empty anchor main file written [PASS]\n");
 
-	assert(libnvmf_config_read(ctx, fx->main_path, &config) == 0);
+	shr_assert(libnvmf_config_read(ctx, fx->main_path, &config) == 0);
 	libnvmf_config_conn_for_each(config, collect, &list);
 	if (list.n != 2) {
 		printf(" - expected 2 connections, got %zu [FAIL]\n", list.n);
@@ -470,7 +470,7 @@ static bool test_add_validation(struct libnvme_global_ctx *ctx)
 	printf("test_add_validation:\n");
 
 	e = libnvmf_config_emit_new(ctx);
-	assert(e);
+	shr_assert(e);
 
 	/* An I/O controller with no subsysnqn is rejected. */
 	if (libnvmf_config_emit_add(e, false, "tcp", "10.0.0.9", "4420",
@@ -493,7 +493,7 @@ static bool test_add_validation(struct libnvme_global_ctx *ctx)
 	}
 
 	/* Conflicting hostsymname for the same persona is rejected. */
-	assert(add(e, false, "10.0.0.9", "nqn.a", "nqn.host", g_hostid, "one",
+	shr_assert(add(e, false, "10.0.0.9", "nqn.a", "nqn.host", g_hostid, "one",
 		   NULL, NULL) == 0);
 	if (add(e, false, "10.0.0.10", "nqn.b", "nqn.host", g_hostid, "two",
 		NULL, NULL) != -EINVAL) {
@@ -506,7 +506,7 @@ static bool test_add_validation(struct libnvme_global_ctx *ctx)
 
 	/* A hostid without a hostnqn cannot become a valid drop-in. */
 	e = libnvmf_config_emit_new(ctx);
-	assert(e);
+	shr_assert(e);
 	if (add(e, false, "10.0.0.9", "nqn.v", NULL, g_hostid, NULL,
 		NULL, NULL) != -EINVAL) {
 		printf(" - hostid without hostnqn accepted [FAIL]\n");
@@ -518,8 +518,8 @@ static bool test_add_validation(struct libnvme_global_ctx *ctx)
 
 	/* One hostnqn must not appear with two different hostids. */
 	e = libnvmf_config_emit_new(ctx);
-	assert(e);
-	assert(add(e, false, "10.0.0.9", "nqn.a", "nqn.host", g_hostid, NULL,
+	shr_assert(e);
+	shr_assert(add(e, false, "10.0.0.9", "nqn.a", "nqn.host", g_hostid, NULL,
 		   NULL, NULL) == 0);
 	if (add(e, false, "10.0.0.10", "nqn.b", "nqn.host",
 		"00000000-0000-0000-0000-000000000002", NULL, NULL, NULL)
@@ -540,7 +540,7 @@ static bool test_params_set_validation(void)
 	bool pass = true;
 
 	printf("test_params_set_validation:\n");
-	assert(p);
+	shr_assert(p);
 
 	if (libnvmf_params_set(p, "ctrl-loss-tmo", "600") ||
 	    libnvmf_params_set(p, "tls", "true") ||
@@ -581,7 +581,7 @@ int main(void)
 	bool pass = true;
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 	fixture_create(&fx);
 
 	pass &= test_roundtrip(ctx, &fx);

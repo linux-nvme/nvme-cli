@@ -9,7 +9,7 @@
  * optimistic-concurrency (version token / -ESTALE) save protocol.
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -29,8 +29,8 @@ static void setup_tmpdir(struct libnvme_global_ctx *ctx)
 {
 	/* libnvme confines the test base dir to /tmp, so it lives there. */
 	snprintf(tmpdir, sizeof(tmpdir), "/tmp/nvme-exclusion-test-XXXXXX");
-	assert(mkdtemp(tmpdir) != NULL);
-	assert(libnvme_set_test_base_dir(ctx, tmpdir) == 0);
+	shr_assert(mkdtemp(tmpdir) != NULL);
+	shr_assert(libnvme_set_test_base_dir(ctx, tmpdir) == 0);
 }
 
 static void cleanup_tmpdir(struct libnvme_global_ctx *ctx)
@@ -153,7 +153,7 @@ static bool test_stale_rejected(struct libnvme_global_ctx *ctx)
 	printf("test_stale_rejected:\n");
 
 	ret = libnvmf_exclusion_read(ctx, "list", &text, &ver);
-	assert(ret == 0);
+	shr_assert(ret == 0);
 
 	/* First write changes the file; @ver is now stale. */
 	ret = libnvmf_exclusion_write(ctx, "list",
@@ -189,7 +189,7 @@ static bool test_invalid_entry_rejected(struct libnvme_global_ctx *ctx)
 	printf("test_invalid_entry_rejected:\n");
 
 	ret = libnvmf_exclusion_read(ctx, "list", &text, &ver);
-	assert(ret == 0);
+	shr_assert(ret == 0);
 
 	ret = libnvmf_exclusion_write(ctx, "list",
 				      "[exclusions]\nexclusion = boguskey=x\n", ver);
@@ -416,7 +416,7 @@ static bool test_section_semantics(struct libnvme_global_ctx *ctx)
 	/* A hand-made file without the header: entries are ignored... */
 	snprintf(path, sizeof(path), "%s/exclusions.conf.d/hand.conf", tmpdir);
 	f = fopen(path, "w");
-	assert(f);
+	shr_assert(f);
 	fputs("exclusion = transport=fc\n", f);
 	fclose(f);
 	if (entry_count(ctx, "hand") != 0) {

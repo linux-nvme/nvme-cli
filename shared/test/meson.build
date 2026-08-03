@@ -115,3 +115,16 @@ if host_system != 'windows'
 
     test('shared - net-util', test_net_util)
 endif
+
+if host_system != 'windows'
+    test_shr_assert = executable(
+        'test-shr-assert',
+        ['test-shr-assert.c'],
+        dependencies: [
+            config_dep,
+            shared_dep,
+        ],
+    )
+
+    test('shared - shr-assert', test_shr_assert)
+endif

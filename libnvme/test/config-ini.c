@@ -9,7 +9,7 @@
  * validators.
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -32,7 +32,7 @@ static bool test_params_tristate(void)
 	bool pass = true;
 
 	printf("test_params_tristate:\n");
-	assert(p);
+	shr_assert(p);
 
 	/* Absent key -> unset (NULL). */
 	if (libnvmf_params_get(p, "ctrl-loss-tmo")) {
@@ -43,9 +43,9 @@ static bool test_params_tristate(void)
 	}
 
 	/* Set, overwrite, reset. */
-	assert(libnvmf_params_set(p, "ctrl-loss-tmo", "600") == 0);
-	assert(libnvmf_params_set(p, "keep-alive-tmo", "30") == 0);
-	assert(libnvmf_params_set(p, "ctrl-loss-tmo", "1800") == 0);
+	shr_assert(libnvmf_params_set(p, "ctrl-loss-tmo", "600") == 0);
+	shr_assert(libnvmf_params_set(p, "keep-alive-tmo", "30") == 0);
+	shr_assert(libnvmf_params_set(p, "ctrl-loss-tmo", "1800") == 0);
 	if (strcmp(libnvmf_params_get(p, "ctrl-loss-tmo"), "1800")) {
 		printf(" - set + overwrite [FAIL]\n");
 		pass = false;
@@ -53,7 +53,7 @@ static bool test_params_tristate(void)
 		printf(" - set + overwrite (last wins) [PASS]\n");
 	}
 
-	assert(libnvmf_params_set(p, "keep-alive-tmo", "") == 0);
+	shr_assert(libnvmf_params_set(p, "keep-alive-tmo", "") == 0);
 	if (strcmp(libnvmf_params_get(p, "keep-alive-tmo"), "")) {
 		printf(" - reset reads as \"\" [FAIL]\n");
 		pass = false;
@@ -86,15 +86,15 @@ static bool test_params_merge(void)
 	bool pass = true;
 
 	printf("test_params_merge:\n");
-	assert(base && over);
+	shr_assert(base && over);
 
 	/* base: the outer cascade level; over: the more-specific one. */
-	assert(libnvmf_params_set(base, "ctrl-loss-tmo", "600") == 0);
-	assert(libnvmf_params_set(base, "tls", "true") == 0);
-	assert(libnvmf_params_set(over, "ctrl-loss-tmo", "1800") == 0);
-	assert(libnvmf_params_set(over, "keep-alive-tmo", "") == 0);
+	shr_assert(libnvmf_params_set(base, "ctrl-loss-tmo", "600") == 0);
+	shr_assert(libnvmf_params_set(base, "tls", "true") == 0);
+	shr_assert(libnvmf_params_set(over, "ctrl-loss-tmo", "1800") == 0);
+	shr_assert(libnvmf_params_set(over, "keep-alive-tmo", "") == 0);
 
-	assert(libnvmf_params_merge(base, over) == 0);
+	shr_assert(libnvmf_params_merge(base, over) == 0);
 	if (strcmp(libnvmf_params_get(base, "ctrl-loss-tmo"), "1800") ||
 	    strcmp(libnvmf_params_get(base, "tls"), "true") ||
 	    strcmp(libnvmf_params_get(base, "keep-alive-tmo"), "")) {
@@ -115,8 +115,8 @@ static bool test_params_merge(void)
 
 	/* dup produces an equal, independent bag. */
 	copy = libnvmf_params_dup(base);
-	assert(copy);
-	assert(libnvmf_params_set(copy, "tls", "false") == 0);
+	shr_assert(copy);
+	shr_assert(libnvmf_params_set(copy, "tls", "false") == 0);
 	if (strcmp(libnvmf_params_get(base, "tls"), "true") ||
 	    strcmp(libnvmf_params_get(copy, "tls"), "false")) {
 		printf(" - dup independence [FAIL]\n");
@@ -196,7 +196,7 @@ static bool test_value_check(void)
 	size_t n;
 
 	printf("test_value_check:\n");
-	assert(i && b && s);
+	shr_assert(i && b && s);
 
 	/* Integers: decimals including -1; garbage rejected. */
 	if (libnvmf_key_check_value(i, "600") || libnvmf_key_check_value(i, "-1") ||
@@ -257,8 +257,8 @@ static struct libnvmf_conf_file *parse_text(struct libnvme_global_ctx *ctx,
 	int fd;
 
 	fd = mkstemp(path);
-	assert(fd >= 0);
-	assert(write(fd, text, len) == (ssize_t)len);
+	shr_assert(fd >= 0);
+	shr_assert(write(fd, text, len) == (ssize_t)len);
 	close(fd);
 	*err = libnvmf_conf_file_parse(ctx, path, &f);
 	unlink(path);
@@ -560,8 +560,8 @@ static void write_file(const char *dir, const char *name, const char *text)
 
 	snprintf(path, sizeof(path), "%s/%s", dir, name);
 	fp = fopen(path, "w");
-	assert(fp);
-	assert(fputs(text, fp) >= 0);
+	shr_assert(fp);
+	shr_assert(fputs(text, fp) >= 0);
 	fclose(fp);
 }
 
@@ -570,7 +570,7 @@ static void rm_tree(const char *dir)
 	char cmd[600];
 
 	snprintf(cmd, sizeof(cmd), "rm -rf %s", dir);
-	assert(system(cmd) == 0);
+	shr_assert(system(cmd) == 0);
 }
 
 static bool test_resolve_empty(struct libnvme_global_ctx *ctx)
@@ -582,7 +582,7 @@ static bool test_resolve_empty(struct libnvme_global_ctx *ctx)
 	int err;
 
 	printf("test_resolve_empty:\n");
-	assert(mkdtemp(dir));
+	shr_assert(mkdtemp(dir));
 	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
 
 	/* Nothing on disk: an empty configuration, not an error. */
@@ -614,7 +614,7 @@ static bool test_resolve_hostname(struct libnvme_global_ctx *ctx)
 	int err;
 
 	printf("test_resolve_hostname:\n");
-	assert(mkdtemp(dir));
+	shr_assert(mkdtemp(dir));
 	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
 	write_file(dir, "nvme-fabrics.conf",
 		   "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:vol1\n"
@@ -680,11 +680,11 @@ static bool test_resolve_cascade(struct libnvme_global_ctx *ctx)
 	int err;
 
 	printf("test_resolve_cascade:\n");
-	assert(mkdtemp(dir));
+	shr_assert(mkdtemp(dir));
 	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
 	snprintf(dropin_dir, sizeof(dropin_dir), "%s/nvme-fabrics.conf.d",
 		 dir);
-	assert(mkdir(dropin_dir, 0755) == 0);
+	shr_assert(mkdir(dropin_dir, 0755) == 0);
 	write_file(dir, "nvme-fabrics.conf", main_text);
 	write_file(dropin_dir, "10-prod.conf", prod_text);
 
@@ -796,11 +796,11 @@ static bool resolve_expect_fail(struct libnvme_global_ctx *ctx,
 	struct libnvmf_config *conf;
 	int err = 0;
 
-	assert(mkdtemp(dir));
+	shr_assert(mkdtemp(dir));
 	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
 	snprintf(dropin_dir, sizeof(dropin_dir), "%s/nvme-fabrics.conf.d",
 		 dir);
-	assert(mkdir(dropin_dir, 0755) == 0);
+	shr_assert(mkdir(dropin_dir, 0755) == 0);
 	write_file(dropin_dir, "10-a.conf", dropin1);
 	if (dropin2)
 		write_file(dropin_dir, "20-b.conf", dropin2);
@@ -843,11 +843,11 @@ static bool test_resolve_personas(struct libnvme_global_ctx *ctx)
 		printf(" - relational Tier 1 rules rejected [PASS]\n");
 
 	/* A hostnqn reused between the top-level file and a drop-in. */
-	assert(mkdtemp(dir));
+	shr_assert(mkdtemp(dir));
 	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
 	snprintf(dropin_dir, sizeof(dropin_dir), "%s/nvme-fabrics.conf.d",
 		 dir);
-	assert(mkdir(dropin_dir, 0755) == 0);
+	shr_assert(mkdir(dropin_dir, 0755) == 0);
 	write_file(dir, "nvme-fabrics.conf", "[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:a\n");
 	write_file(dropin_dir, "10-a.conf", "[Host]\nhostnqn = nqn.2014-08.org.nvmexpress:a\n");
 	err = libnvmf_config_load(ctx, main_path, &conf);
@@ -863,11 +863,11 @@ static bool test_resolve_personas(struct libnvme_global_ctx *ctx)
 
 	/* A drop-in with no [Host] is the default persona: legal. */
 	strcpy(dir, "/tmp/nvme-conf-XXXXXX");
-	assert(mkdtemp(dir));
+	shr_assert(mkdtemp(dir));
 	snprintf(main_path, sizeof(main_path), "%s/nvme-fabrics.conf", dir);
 	snprintf(dropin_dir, sizeof(dropin_dir), "%s/nvme-fabrics.conf.d",
 		 dir);
-	assert(mkdir(dropin_dir, 0755) == 0);
+	shr_assert(mkdir(dropin_dir, 0755) == 0);
 	write_file(dropin_dir, "10-a.conf",
 		   "[Subsystem]\nnqn = nqn.2014-08.org.nvmexpress:x\n"
 		   "controller = transport=tcp;traddr=192.0.2.9\n");
@@ -894,7 +894,7 @@ int main(void)
 	bool pass = true;
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	pass &= test_params_tristate();
 	pass &= test_params_merge();

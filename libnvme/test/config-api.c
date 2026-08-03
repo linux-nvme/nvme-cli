@@ -9,7 +9,7 @@
  * exported by the version script.
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -34,8 +34,8 @@ static void write_file(const char *dir, const char *name, const char *text)
 
 	snprintf(path, sizeof(path), "%s/%s", dir, name);
 	fp = fopen(path, "w");
-	assert(fp);
-	assert(fputs(text, fp) >= 0);
+	shr_assert(fp);
+	shr_assert(fputs(text, fp) >= 0);
 	fclose(fp);
 }
 
@@ -85,12 +85,12 @@ struct fixture {
 static void fixture_create(struct fixture *fx)
 {
 	snprintf(fx->dir, sizeof(fx->dir), "/tmp/nvme-config-api-XXXXXX");
-	assert(mkdtemp(fx->dir));
+	shr_assert(mkdtemp(fx->dir));
 	snprintf(fx->main_path, sizeof(fx->main_path), "%s/nvme-fabrics.conf",
 		 fx->dir);
 	snprintf(fx->dropin_dir, sizeof(fx->dropin_dir),
 		 "%s/nvme-fabrics.conf.d", fx->dir);
-	assert(mkdir(fx->dropin_dir, 0755) == 0);
+	shr_assert(mkdir(fx->dropin_dir, 0755) == 0);
 	write_file(fx->dir, "nvme-fabrics.conf", main_text);
 	write_file(fx->dropin_dir, "10-prod.conf", prod_text);
 }
@@ -112,7 +112,7 @@ static void collect(const struct libnvmf_config_conn *conn, void *user_data)
 {
 	struct conn_list *list = user_data;
 
-	assert(list->n < 8);
+	shr_assert(list->n < 8);
 	list->conn[list->n++] = conn;
 }
 
@@ -232,9 +232,9 @@ static bool test_resolve_discovered(struct libnvme_global_ctx *ctx,
 
 	printf("test_resolve_discovered:\n");
 
-	assert(!libnvmf_config_read(ctx, fx->main_path, &config));
+	shr_assert(!libnvmf_config_read(ctx, fx->main_path, &config));
 	libnvmf_config_conn_for_each(config, collect, &list);
-	assert(list.n == 3 && libnvmf_config_conn_is_dc(list.conn[0]));
+	shr_assert(list.n == 3 && libnvmf_config_conn_is_dc(list.conn[0]));
 
 	/* A DLP IOC discovered via the configured DC: that DC's file scope. */
 	params = libnvmf_config_resolve_discovered(config, list.conn[0], false);
@@ -335,7 +335,7 @@ static void collect_arg(const char *arg, void *user_data)
 {
 	struct arg_list *list = user_data;
 
-	assert(list->n < 16);
+	shr_assert(list->n < 16);
 	snprintf(list->args[list->n++], sizeof(list->args[0]), "%s", arg);
 }
 
@@ -405,15 +405,15 @@ static bool test_emit(struct libnvme_global_ctx *ctx, const struct fixture *fx)
 
 	printf("test_emit:\n");
 
-	assert(!libnvmf_config_read(ctx, fx->main_path, &config));
+	shr_assert(!libnvmf_config_read(ctx, fx->main_path, &config));
 	libnvmf_config_conn_for_each(config, collect, &conns);
-	assert(conns.n == 3);
+	shr_assert(conns.n == 3);
 	mv = conns.conn[1];
 	pv = conns.conn[2];
 
 	mv_tid = build_tid(mv);
 	pv_tid = build_tid(pv);
-	assert(mv_tid && pv_tid);
+	shr_assert(mv_tid && pv_tid);
 
 	/* TID fields in fixed order, then params; true bool = bare flag. */
 	if (libnvmf_connect_args_emit(mv_tid,
@@ -486,27 +486,27 @@ static bool test_apply_params(struct libnvme_global_ctx *ctx)
 	printf("test_apply_params:\n");
 
 	params = libnvmf_params_new();
-	assert(params);
+	shr_assert(params);
 	/* Hex, matching check_int()'s own base-0 parsing (config-ini.c). */
-	assert(!libnvmf_params_set(params, "nr-io-queues", "0x10"));
-	assert(!libnvmf_params_set(params, "keep-alive-tmo", "30"));
-	assert(!libnvmf_params_set(params, "tls", "true"));
-	assert(!libnvmf_params_set(params, "hdr-digest", "false"));
-	assert(!libnvmf_params_set(params, "persistent", "true"));
-	assert(!libnvmf_params_set(params, "epcsd", "true"));
+	shr_assert(!libnvmf_params_set(params, "nr-io-queues", "0x10"));
+	shr_assert(!libnvmf_params_set(params, "keep-alive-tmo", "30"));
+	shr_assert(!libnvmf_params_set(params, "tls", "true"));
+	shr_assert(!libnvmf_params_set(params, "hdr-digest", "false"));
+	shr_assert(!libnvmf_params_set(params, "persistent", "true"));
+	shr_assert(!libnvmf_params_set(params, "epcsd", "true"));
 	/* Explicit resets: must be skipped, not applied as "0". */
-	assert(!libnvmf_params_set(params, "tos", ""));
-	assert(!libnvmf_params_set(params, "ctrl-loss-tmo", ""));
+	shr_assert(!libnvmf_params_set(params, "tos", ""));
+	shr_assert(!libnvmf_params_set(params, "ctrl-loss-tmo", ""));
 	/* The five crypto keys: one shared setter, must not clobber. */
-	assert(!libnvmf_params_set(params, "keyring", "my-keyring"));
-	assert(!libnvmf_params_set(params, "tls-key", "deadbeef"));
-	assert(!libnvmf_params_set(params, "tls-key-identity",
+	shr_assert(!libnvmf_params_set(params, "keyring", "my-keyring"));
+	shr_assert(!libnvmf_params_set(params, "tls-key", "deadbeef"));
+	shr_assert(!libnvmf_params_set(params, "tls-key-identity",
 				    "NVMe1R02 my-id"));
-	assert(!libnvmf_params_set(params, "dhchap-secret", "DHHC-1:00:host:"));
-	assert(!libnvmf_params_set(params, "dhchap-ctrl-secret",
+	shr_assert(!libnvmf_params_set(params, "dhchap-secret", "DHHC-1:00:host:"));
+	shr_assert(!libnvmf_params_set(params, "dhchap-ctrl-secret",
 				    "DHHC-1:00:ctrl:"));
 
-	assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
+	shr_assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
 
 	if (libnvmf_context_apply_params(fctx, params)) {
 		printf(" - apply failed [FAIL]\n");
@@ -583,7 +583,7 @@ static bool test_persistent_epcsd_tristate(struct libnvme_global_ctx *ctx)
 
 	printf("test_persistent_epcsd_tristate:\n");
 
-	assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
+	shr_assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
 
 	if (libnvmf_context_get_persistent(fctx) != LIBNVMF_TRISTATE_UNSET ||
 	    libnvmf_context_get_epcsd(fctx) != LIBNVMF_TRISTATE_UNSET) {
@@ -594,10 +594,10 @@ static bool test_persistent_epcsd_tristate(struct libnvme_global_ctx *ctx)
 	}
 
 	params = libnvmf_params_new();
-	assert(params);
-	assert(!libnvmf_params_set(params, "persistent", "false"));
-	assert(!libnvmf_params_set(params, "epcsd", "false"));
-	assert(!libnvmf_context_apply_params(fctx, params));
+	shr_assert(params);
+	shr_assert(!libnvmf_params_set(params, "persistent", "false"));
+	shr_assert(!libnvmf_params_set(params, "epcsd", "false"));
+	shr_assert(!libnvmf_context_apply_params(fctx, params));
 
 	if (libnvmf_context_get_persistent(fctx) != LIBNVMF_TRISTATE_FALSE ||
 	    libnvmf_context_get_epcsd(fctx) != LIBNVMF_TRISTATE_FALSE) {
@@ -637,19 +637,19 @@ static bool test_hostnqn_precedence(struct libnvme_global_ctx *ctx,
 
 	printf("test_hostnqn_precedence:\n");
 
-	assert(!libnvmf_config_read(ctx, fx->main_path, &config));
+	shr_assert(!libnvmf_config_read(ctx, fx->main_path, &config));
 	libnvmf_config_conn_for_each(config, collect, &conns);
-	assert(conns.n == 3);
+	shr_assert(conns.n == 3);
 	mv = conns.conn[1];
 	pv = conns.conn[2];
 
 	hostnqn = libnvmf_config_conn_get_hostnqn(mv);
-	assert(!hostnqn);
+	shr_assert(!hostnqn);
 	hostnqn = default_hostnqn;
 	hostid = libnvmf_config_conn_get_hostid(mv);
-	assert(!hostid);
+	shr_assert(!hostid);
 	hostid = default_hostid;
-	assert(!libnvmf_tid_from_fields(
+	shr_assert(!libnvmf_tid_from_fields(
 			libnvmf_config_conn_get_transport(mv),
 			libnvmf_config_conn_get_traddr(mv),
 			libnvmf_config_conn_get_trsvcid(mv),
@@ -667,10 +667,10 @@ static bool test_hostnqn_precedence(struct libnvme_global_ctx *ctx,
 	}
 
 	hostnqn = libnvmf_config_conn_get_hostnqn(pv);
-	assert(hostnqn);
+	shr_assert(hostnqn);
 	hostid = libnvmf_config_conn_get_hostid(pv);
-	assert(hostid);
-	assert(!libnvmf_tid_from_fields(
+	shr_assert(hostid);
+	shr_assert(!libnvmf_tid_from_fields(
 			libnvmf_config_conn_get_transport(pv),
 			libnvmf_config_conn_get_traddr(pv),
 			libnvmf_config_conn_get_trsvcid(pv),
@@ -704,13 +704,13 @@ static bool test_set_connection_from_tid(struct libnvme_global_ctx *ctx)
 
 	printf("test_set_connection_from_tid:\n");
 
-	assert(!libnvmf_tid_from_fields("tcp", "10.0.0.9", "4420",
+	shr_assert(!libnvmf_tid_from_fields("tcp", "10.0.0.9", "4420",
 			"nqn.2014-08.org.nvmexpress:subsys",
 			"10.0.0.1", "eth0",
 			"nqn.2014-08.org.nvmexpress:host",
 			"2cd2c43b-a90a-45c1-a8cd-86b33ab273b5", &tid));
 
-	assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
+	shr_assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
 
 	if (libnvmf_context_set_connection_from_tid(fctx, tid)) {
 		printf(" - set failed [FAIL]\n");
@@ -825,7 +825,7 @@ int main(void)
 	bool pass = true;
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 	fixture_create(&fx);
 
 	pass &= test_read(ctx, &fx);

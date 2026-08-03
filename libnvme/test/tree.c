@@ -8,7 +8,7 @@
  * host/subsystem creation, deduplication, iteration, and attribute getters.
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,16 +42,16 @@ static bool test_host_dedup(void)
 	printf("test_host_dedup:\n");
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h1));
-	assert(h1);
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h1));
+	shr_assert(h1);
 
-	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h2));
-	assert(h2);
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h2));
+	shr_assert(h2);
 
 	if (h1 != h2) {
 		printf(" - same hostnqn+hostid must return same pointer [FAIL]\n");
@@ -60,8 +60,8 @@ static bool test_host_dedup(void)
 		printf(" - same hostnqn+hostid returns same pointer [PASS]\n");
 	}
 
-	assert(!libnvme_get_host(ctx, HOSTNQN_2, HOSTID_2, &h3));
-	assert(h3);
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_2, HOSTID_2, &h3));
+	shr_assert(h3);
 
 	if (h1 == h3) {
 		printf(" - different hostnqn+hostid must return different pointer [FAIL]\n");
@@ -88,13 +88,13 @@ static bool test_hostid_from_hostnqn(void)
 	printf("test_hostid_from_hostnqn:\n");
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
 	libnvme_create_host(ctx, HOSTNQN_1, NULL, &h);
-	assert(h);
+	shr_assert(h);
 
 	hostid = libnvme_host_get_hostid(h);
 	if (!hostid || strcmp(hostid, HOSTID_1)) {
@@ -122,13 +122,13 @@ static bool test_host_attrs(void)
 	printf("test_host_attrs:\n");
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
-	assert(h);
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
 
 	if (!libnvme_host_get_hostnqn(h) ||
 	    strcmp(libnvme_host_get_hostnqn(h), HOSTNQN_1)) {
@@ -164,17 +164,17 @@ static bool test_host_iteration(void)
 	printf("test_host_iteration:\n");
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
-	assert(h);
-	assert(!libnvme_get_host(ctx, HOSTNQN_2, HOSTID_2, &h));
-	assert(h);
-	assert(!libnvme_get_host(ctx, HOSTNQN_3, HOSTID_3, &h));
-	assert(h);
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_2, HOSTID_2, &h));
+	shr_assert(h);
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_3, HOSTID_3, &h));
+	shr_assert(h);
 
 	libnvme_for_each_host(ctx, h)
 		count++;
@@ -205,19 +205,19 @@ static bool test_subsystem_dedup(void)
 	printf("test_subsystem_dedup:\n");
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
-	assert(h);
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
 
-	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s1));
-	assert(s1);
+	shr_assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s1));
+	shr_assert(s1);
 
-	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s2));
-	assert(s2);
+	shr_assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s2));
+	shr_assert(s2);
 
 	if (s1 != s2) {
 		printf(" - same name+subsysnqn must return same pointer [FAIL]\n");
@@ -226,8 +226,8 @@ static bool test_subsystem_dedup(void)
 		printf(" - same name+subsysnqn returns same pointer [PASS]\n");
 	}
 
-	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_2, SUBSYSNQN_2, &s3));
-	assert(s3);
+	shr_assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_2, SUBSYSNQN_2, &s3));
+	shr_assert(s3);
 
 	if (s1 == s3) {
 		printf(" - different name+subsysnqn must return different pointer [FAIL]\n");
@@ -254,16 +254,16 @@ static bool test_subsystem_attrs(void)
 	printf("test_subsystem_attrs:\n");
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
-	assert(h);
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
 
-	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s));
-	assert(s);
+	shr_assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s));
+	shr_assert(s);
 
 	if (!libnvme_subsystem_get_name(s) ||
 	    strcmp(libnvme_subsystem_get_name(s), SUBSYSNAME_1)) {
@@ -300,16 +300,16 @@ static bool test_subsystem_iteration(void)
 	printf("test_subsystem_iteration:\n");
 
 	ctx = libnvme_create_global_ctx();
-	assert(ctx);
+	shr_assert(ctx);
 
 	libnvme_set_logging_file(ctx, stdout);
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
-	assert(h);
+	shr_assert(!libnvme_get_host(ctx, HOSTNQN_1, HOSTID_1, &h));
+	shr_assert(h);
 
-	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s));
-	assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_2, SUBSYSNQN_2, &s));
+	shr_assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_1, SUBSYSNQN_1, &s));
+	shr_assert(!libnvme_get_subsystem(ctx, h, SUBSYSNAME_2, SUBSYSNQN_2, &s));
 
 	libnvme_for_each_subsystem(h, s)
 		count++;

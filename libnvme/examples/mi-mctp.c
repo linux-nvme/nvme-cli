@@ -10,7 +10,7 @@
  * mi-mctp: open a MI connection over MCTP, and query controller info
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <ctype.h>
 #include <err.h>
 #include <stddef.h>
@@ -168,7 +168,7 @@ static int do_controllers(libnvme_mi_ep_t ep)
 static const char *__copy_id_str(const void *field, size_t size,
 				 char *buf, size_t buf_size)
 {
-	assert(size < buf_size);
+	shr_assert(size < buf_size);
 	strncpy(buf, field, size);
 	buf[size] = '\0';
 	return buf;

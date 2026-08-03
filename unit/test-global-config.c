@@ -12,7 +12,7 @@
  * unknown keys, malformed values, and a missing file.
  */
 
-#include <assert.h>
+#include <shr-assert.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -35,10 +35,10 @@ static char *write_temp(const char *content)
 	char *path = strdup("/tmp/nvme-cli-conf-test-XXXXXX");
 	int fd;
 
-	assert(path);
+	shr_assert(path);
 	fd = mkstemp(path);
-	assert(fd >= 0);
-	assert(write(fd, content, strlen(content)) == (ssize_t)strlen(content));
+	shr_assert(fd >= 0);
+	shr_assert(write(fd, content, strlen(content)) == (ssize_t)strlen(content));
 	close(fd);
 
 	return path;

@@ -17,6 +17,7 @@ sources = [
     'fs-util.c',
     'ini.c',
     'parse-util.c',
+    'shr-assert.c',
 ]
 
 if host_system == 'windows'
