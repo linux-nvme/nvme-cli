@@ -219,7 +219,7 @@ static char *xstrdup(const char *s)
 static int copy_opt_val(const struct argconfig_opt_val *src, const struct argconfig_opt_val **out)
 {
 	struct argconfig_opt_val *dst;
-	size_t n = 0, i;
+	int n = 0, i;
 
 	*out = NULL;
 	if (!src)
@@ -236,8 +236,12 @@ static int copy_opt_val(const struct argconfig_opt_val *src, const struct argcon
 		dst[i] = src[i];
 		/* src[i].str is non-NULL for i < n, so NULL here means OOM. */
 		dst[i].str = strdup(src[i].str);
-		if (!dst[i].str)
+		if (!dst[i].str) {
+			while (--i >= 0)
+				free((char *)dst[i].str);
+			free(dst);
 			return -ENOMEM;
+		}
 	}
 	dst[n].str = NULL;
 
