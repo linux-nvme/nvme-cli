@@ -86,8 +86,8 @@ static bool telemetry_log_get_value(const struct telemetry_log *tl,
 	if (size_bit < 64)
 		val &= (1ULL << size_bit) - 1;
 	if (is_signed) {
-		if (val >> (size_bit - 1))
-			val |= (0ULL - 1) << size_bit;
+		if (size_bit < 64 && val >> (size_bit - 1))
+			val |= ~((1ULL << size_bit) - 1);
 		*val_obj = json_object_new_int64(val);
 	} else {
 		*val_obj = json_object_new_uint64(val);
