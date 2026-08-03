@@ -587,7 +587,6 @@ __shr_public void libnvmf_context_free(struct libnvmf_context *fctx)
 __shr_public int libnvmf_context_set_discovery_hooks(
 		struct libnvmf_context *fctx,
 		void (*discovery_log)(struct libnvmf_context *fctx,
-			bool connect,
 			struct nvmf_discovery_log *log,
 			uint64_t numrec, void *user_data))
 {
@@ -2588,7 +2587,7 @@ static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
 
 static bool dc_should_connect(struct libnvme_global_ctx *ctx,
 	struct libnvmf_context *fctx, struct nvmf_disc_log_entry *e,
-	bool connect, bool *pdisconnet)
+	bool *pdisconnet)
 {
 	bool disconnect;
 
@@ -2624,12 +2623,11 @@ static bool dc_should_connect(struct libnvme_global_ctx *ctx,
 	}
 
 	*pdisconnet = disconnect;
-	return connect;
+	return fctx->connect;
 }
 
 static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect,
-		struct libnvme_ctrl *c)
+		struct libnvmf_context *fctx, struct libnvme_ctrl *c)
 {
 	__cleanup_free struct nvmf_discovery_log *log = NULL;
 	libnvme_subsystem_t s = libnvme_ctrl_get_subsystem(c);
@@ -2651,7 +2649,7 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 
 	numrec = le64_to_cpu(log->numrec);
 	if (fctx->hooks.discovery_log)
-		fctx->hooks.discovery_log(fctx, connect, log, numrec,
+		fctx->hooks.discovery_log(fctx, log, numrec,
 			fctx->hooks.user_data);
 
 	for (int i = 0; i < numrec; i++) {
@@ -2679,7 +2677,7 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 			   nfctx.ctrl_params.transport))
 			continue;
 
-		if (!dc_should_connect(ctx, &nfctx, e, connect, &disconnect))
+		if (!dc_should_connect(ctx, &nfctx, e, &disconnect))
 			continue;
 
 		err = nvmf_connect_disc_entry(h, e, &nfctx, &discover, &child);
@@ -2687,7 +2685,7 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 		if (child) {
 			if (discover) {
 				set_discovery_kato(&nfctx);
-				_nvmf_discovery(ctx, &nfctx, true, child);
+				_nvmf_discovery(ctx, &nfctx, child);
 			}
 
 			if (disconnect) {
@@ -3511,7 +3509,7 @@ __shr_public int libnvmf_discovery(
 		}
 	}
 
-	ret = _nvmf_discovery(ctx, fctx, fctx->connect, c);
+	ret = _nvmf_discovery(ctx, fctx, c);
 	if (fctx->persistent != LIBNVMF_TRISTATE_TRUE)
 		libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);

@@ -236,14 +236,14 @@ static void hook_already_connected(struct libnvmf_context *fctx,
 }
 
 static void hook_discovery_log(struct libnvmf_context *fctx,
-		bool connect, struct nvmf_discovery_log *log,
+		struct nvmf_discovery_log *log,
 		uint64_t numrec, void *user_data)
 {
 	struct hook_fabrics_data *hfd = user_data;
 
 	if (hfd->raw)
 		save_discovery_log(hfd->raw, log);
-	else if (!connect)
+	else if (!libnvmf_context_get_connect(fctx))
 		nvme_show_discovery_log(log, numrec, hfd->flags);
 }
 
