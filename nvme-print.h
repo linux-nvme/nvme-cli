@@ -120,8 +120,8 @@ struct print_ops {
 	void (*reachability_groups_log)(struct nvme_reachability_groups_log *log, __u64 len);
 	void (*reachability_associations_log)(struct nvme_reachability_associations_log *log,
 					      __u64 len);
-	void (*host_discovery_log)(struct nvme_host_discover_log *log);
-	void (*ave_discovery_log)(struct nvme_ave_discover_log *log);
+	void (*host_discovery_log)(struct nvme_host_discovery_log *log);
+	void (*ave_discovery_log)(struct nvme_ave_discovery_log *log);
 	void (*pull_model_ddc_req_log)(struct nvme_pull_model_ddc_req_log *log);
 	void (*log)(const char *devname, struct nvme_get_log_args *args);
 
@@ -417,8 +417,10 @@ void nvme_show_reachability_groups_log(struct nvme_reachability_groups_log *log,
 				       __u64 len, nvme_print_flags_t flags);
 void nvme_show_reachability_associations_log(struct nvme_reachability_associations_log *log,
 					     __u64 len, nvme_print_flags_t flags);
-void nvme_show_host_discovery_log(struct nvme_host_discover_log *log, nvme_print_flags_t flags);
-void nvme_show_ave_discovery_log(struct nvme_ave_discover_log *log, nvme_print_flags_t flags);
+void nvme_show_host_discovery_log(struct nvme_host_discovery_log *log,
+				  nvme_print_flags_t flags);
+void nvme_show_ave_discovery_log(struct nvme_ave_discovery_log *log,
+				 nvme_print_flags_t flags);
 void nvme_show_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 				      nvme_print_flags_t flags);
 void nvme_show_log(const char *devname, struct nvme_get_log_args *args, nvme_print_flags_t flags);

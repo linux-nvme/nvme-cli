@@ -530,7 +530,7 @@ struct nvmf_connect_data {
 };
 
 /**
- * struct nvme_host_ext_discover_log - Host Extended Discovery Log
+ * struct nvme_host_ext_discovery_log - Host Extended Discovery Log
  * @trtype:	Transport Type
  * @adrfam:	Address Family
  * @rsvd2:	Reserved
@@ -544,7 +544,7 @@ struct nvmf_connect_data {
  * @rsvd1030:	Reserved
  * @exat:	Extended Attributes List
  */
-struct nvme_host_ext_discover_log {
+struct nvme_host_ext_discovery_log {
 	__u8			trtype;
 	__u8			adrfam;
 	__u8			rsvd2[8];
@@ -560,7 +560,7 @@ struct nvme_host_ext_discover_log {
 };
 
 /**
- * struct nvme_host_discover_log - Host Discovery Log
+ * struct nvme_host_discovery_log - Host Discovery Log
  * @genctr:	Generation Counter
  * @numrec:	Number of Records
  * @recfmt:	Record Format
@@ -570,7 +570,7 @@ struct nvme_host_ext_discover_log {
  * @rsvd24:	Reserved
  * @hedlpe:	Host Extended Discovery Log Page Entry List
  */
-struct nvme_host_discover_log {
+struct nvme_host_discovery_log {
 	__le64					genctr;
 	__le64					numrec;
 	__le16					recfmt;
@@ -578,7 +578,7 @@ struct nvme_host_discover_log {
 	__u8					rsvd19;
 	__le32					thdlpl;
 	__u8					rsvd24[1000];
-	struct nvme_host_ext_discover_log	hedlpe[];
+	struct nvme_host_ext_discovery_log	hedlpe[];
 };
 
 /**
@@ -596,14 +596,14 @@ struct nvme_ave_tr_record {
 };
 
 /**
- * struct nvme_ave_discover_log_entry - AVE Discovery Log Entry
+ * struct nvme_ave_discovery_log_entry - AVE Discovery Log Entry
  * @tel:	Total Entry Length
  * @avenqn:	AVE NQN
  * @numatr:	Number of AVE Transport Records
  * @rsvd229:	Reserved
  * @atr:	AVE Transport Record List
  */
-struct nvme_ave_discover_log_entry {
+struct nvme_ave_discovery_log_entry {
 	__le32				tel;
 	char				avenqn[224];
 	__u8				numatr;
@@ -612,7 +612,7 @@ struct nvme_ave_discover_log_entry {
 };
 
 /**
- * struct nvme_ave_discover_log - AVE Discovery Log
+ * struct nvme_ave_discovery_log - AVE Discovery Log
  * @genctr:	Generation Counter
  * @numrec:	Number of Records
  * @recfmt:	Record Format
@@ -621,13 +621,13 @@ struct nvme_ave_discover_log_entry {
  * @rsvd24:	Reserved
  * @adlpe:	AVE Discovery Log Page Entry List
  */
-struct nvme_ave_discover_log {
+struct nvme_ave_discovery_log {
 	__le64					genctr;
 	__le64					numrec;
 	__le16					recfmt;
 	__u8					rsvd18[2];
 	__le32					tadlpl;
 	__u8					rsvd24[1000];
-	struct nvme_ave_discover_log_entry	adlpe[];
+	struct nvme_ave_discovery_log_entry	adlpe[];
 };
 

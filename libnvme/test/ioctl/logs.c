@@ -870,9 +870,9 @@ static void test_get_log_discovery(void)
 	cmp(&log, &expected_log, sizeof(log), "incorrect log data");
 }
 
-static void test_get_log_host_discover(void)
+static void test_get_log_host_discovery(void)
 {
-	struct nvme_host_discover_log expected_log, log = {};
+	struct nvme_host_discovery_log expected_log, log = {};
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_log_page,
 		.nsid = NVME_NSID_ALL,
@@ -896,9 +896,9 @@ static void test_get_log_host_discover(void)
 	cmp(&log, &expected_log, sizeof(log), "incorrect log data");
 }
 
-static void test_get_log_ave_discover(void)
+static void test_get_log_ave_discovery(void)
 {
-	struct nvme_ave_discover_log expected_log, log = {};
+	struct nvme_ave_discovery_log expected_log, log = {};
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_log_page,
 		.nsid = NVME_NSID_ALL,
@@ -1142,8 +1142,8 @@ int main(void)
 	RUN_TEST(get_log_reachability_associations);
 	RUN_TEST(get_log_changed_alloc_ns);
 	RUN_TEST(get_log_discovery);
-	RUN_TEST(get_log_host_discover);
-	RUN_TEST(get_log_ave_discover);
+	RUN_TEST(get_log_host_discovery);
+	RUN_TEST(get_log_ave_discovery);
 	RUN_TEST(get_log_pull_model_ddc_req);
 	RUN_TEST(get_log_media_unit_stat);
 	RUN_TEST(get_log_support_cap_config_list);

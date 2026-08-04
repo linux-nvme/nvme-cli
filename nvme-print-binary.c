@@ -332,12 +332,12 @@ static void binary_reachability_associations_log(struct nvme_reachability_associ
 	d_raw((unsigned char *)log, len);
 }
 
-static void binary_host_discovery_log(struct nvme_host_discover_log *log)
+static void binary_host_discovery_log(struct nvme_host_discovery_log *log)
 {
 	d_raw((unsigned char *)log, le32_to_cpu(log->thdlpl));
 }
 
-static void binary_ave_discovery_log(struct nvme_ave_discover_log *log)
+static void binary_ave_discovery_log(struct nvme_ave_discovery_log *log)
 {
 	d_raw((unsigned char *)log, le32_to_cpu(log->tadlpl));
 }
