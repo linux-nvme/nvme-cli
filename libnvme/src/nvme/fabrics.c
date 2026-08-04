@@ -2590,7 +2590,7 @@ static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
 }
 
 
-static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
+static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect,
 		struct libnvme_ctrl *c)
 {
@@ -2700,7 +2700,7 @@ static int _nvmf_discovery(struct libnvme_global_ctx *ctx,
 
 		if (child) {
 			if (discover)
-				_nvmf_discovery(ctx, &nfctx, true, child);
+				_nvmf_discover(ctx, &nfctx, true, child);
 
 			if (disconnect) {
 				libnvmf_disconnect_ctrl(child);
@@ -3170,7 +3170,7 @@ static char *nbft_find_hfi_iface(struct libnbft_hfi *hfi)
 	return result;
 }
 
-__shr_public int libnvmf_discovery_nbft(struct libnvme_global_ctx *ctx,
+__shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, bool connect, char *nbft_path)
 {
 	const char *hostnqn = NULL, *hostid = NULL, *host_traddr = NULL;
@@ -3426,7 +3426,7 @@ out_free:
 	return ret;
 }
 
-__shr_public int libnvmf_discovery(
+__shr_public int libnvmf_discover(
 		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
 		bool connect, bool force)
 {
@@ -3524,7 +3524,7 @@ __shr_public int libnvmf_discovery(
 		}
 	}
 
-	ret = _nvmf_discovery(ctx, fctx, connect, c);
+	ret = _nvmf_discover(ctx, fctx, connect, c);
 	if (fctx->persistent != LIBNVMF_TRISTATE_TRUE)
 		libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);

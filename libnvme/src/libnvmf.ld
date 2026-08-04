@@ -45,8 +45,8 @@ LIBNVMF_3 {
 		libnvmf_create_raw_secret;
 		libnvmf_describe_key_serial;
 		libnvmf_disconnect_ctrl;
-		libnvmf_discovery;
-		libnvmf_discovery_nbft;
+		libnvmf_discover;
+		libnvmf_discover_nbft;
 		libnvmf_eflags_str;
 		libnvmf_exat_ptr_next;
 		libnvmf_exclusion_add;

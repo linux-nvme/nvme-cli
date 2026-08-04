@@ -6660,7 +6660,7 @@ static void stdout_print_conn(const struct libnvmf_config_conn *conn,
 			hostnqn, hostid, &tid);
 
 	/*
-	 * A DC entry is consumed via libnvmf_discovery() (log in, fetch the
+	 * A DC entry is consumed via libnvmf_discover() (log in, fetch the
 	 * discovery log, connect everything returned) -- "nvme connect-all"
 	 * is its real equivalent, not a bare "nvme connect" (which would
 	 * only open the admin queue, matching just the niche "connect -J"

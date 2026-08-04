@@ -10117,14 +10117,14 @@ static int discover_cmd(int argc, char **argv, struct command *acmd, struct plug
 {
 	const char *desc = "Send Get Log Page request to Discovery Controller.";
 
-	return fabrics_discovery(desc, argc, argv, false);
+	return fabrics_discover(desc, argc, argv, false);
 }
 
 static int connect_all_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Discover NVMeoF subsystems and connect to them";
 
-	return fabrics_discovery(desc, argc, argv, true);
+	return fabrics_discover(desc, argc, argv, true);
 }
 
 static int connect_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
