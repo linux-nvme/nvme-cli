@@ -164,6 +164,13 @@ LD_BANNER = (
     " * Copyright (c) 2025, Dell Technologies Inc. or its subsidiaries.\n"
     " * Authors: Martin Belanger <Martin.Belanger@dell.com>\n"
     " *\n"
+    " * This symbol list is maintained by hand, not auto-generated. When\n"
+    " * you run the update below, it does not rewrite this file -- it\n"
+    " * prints which symbols should be added or removed. Add or remove\n"
+    " * those symbols yourself, in the correct ABI version section.\n"
+    " *\n"
+    " * To check: meson compile -C [BUILD-DIR] update-accessors\n"
+    " * Or:       make update-accessors\n"
     " */"
 )
 
@@ -343,15 +350,30 @@ class Member:
     py_visible: False when annotated with ``// !python:none``.
     py_alias: alternate Python attribute name from ``// !python:alias=NAME``,
               or None to use the C member name.
+
+    is_sysfs_lazy: True when this member's getter/setter use the
+                   sentinel-cache shape instead of the plain generated
+                   shape. Set directly by dict-driven generators (e.g.
+                   generate_sysfs_accessors.py) — this generator's own
+                   header-annotation parser never sets it.
+    sysfs_attr: sysfs attribute name to read on cache miss, or None.
+    sysfs_loader: loader function name that fills this member (and
+                  possibly others in its group) on cache miss, or None.
+                  Mutually meaningful only when sysfs_attr is None.
+    is_volatile: True when the member is always re-read from sysfs on
+                 every call, never cached.
     """
 
     __slots__ = ('name', 'type', 'read_mode', 'write_mode',
                  'is_char_array', 'is_char_ptr_array', 'is_scalar_array',
-                 'array_size', 'py_visible', 'py_alias', 'field_path')
+                 'array_size', 'py_visible', 'py_alias', 'field_path',
+                 'is_sysfs_lazy', 'sysfs_attr', 'sysfs_loader', 'is_volatile')
 
     def __init__(self, name, type_str, read_mode, write_mode,
                  is_char_array, is_char_ptr_array, is_scalar_array, array_size,
-                 py_visible=True, py_alias=None, field_path=None):
+                 py_visible=True, py_alias=None, field_path=None,
+                 is_sysfs_lazy=False, sysfs_attr=None, sysfs_loader=None,
+                 is_volatile=False):
         self.name = name
         self.type = type_str          # e.g. "const char *", "int", "__u32"
         self.read_mode = read_mode    # 'generated' | 'custom' | 'none'
@@ -363,6 +385,10 @@ class Member:
         self.py_visible = py_visible  # False → excluded from SWIG fragment
         self.py_alias = py_alias      # str → rename Python attribute; None → use C name
         self.field_path = field_path if field_path is not None else name
+        self.is_sysfs_lazy = is_sysfs_lazy
+        self.sysfs_attr = sysfs_attr
+        self.sysfs_loader = sysfs_loader
+        self.is_volatile = is_volatile
 
     @property
     def has_accessor(self):
@@ -1537,6 +1563,153 @@ def emit_src_getter_scalar_array(f, prefix, sname, type_name, mname, elem_type,
     f.write(f'{{\n\treturn p->{field_path};\n}}\n\n')
 
 
+def emit_src_setter_lazy_dynstr(f, prefix, sname, type_name, mname, field_path):
+    """Emit a dynamic-string setter for a lazy sysfs member.
+
+    Frees the old value with SYSFS_FREE() instead of free(): the cached
+    value may be the NO_SYSFS_ATTR sentinel, and free()ing that address
+    would crash. An explicit NULL argument stores the sentinel, not NULL
+    -- otherwise setting NULL (e.g. clearing a key) would look identical
+    to "never read," and the next getter call would silently re-fetch
+    from sysfs and undo the clear.
+    """
+    sig = (f'{PUB}void {_set_name(prefix, sname, mname)}'
+           f'(struct {type_name} *p, const char *{mname})')
+    if fits_80(sig):
+        f.write(sig + '\n')
+    else:
+        f.write(
+            f'{PUB}void {_set_name(prefix, sname, mname)}(\n'
+            f'\t\tstruct {type_name} *p,\n'
+            f'\t\tconst char *{mname})\n'
+        )
+
+    f.write(f'{{\n\tSYSFS_FREE(p->{field_path});\n')
+    body = f'\tp->{field_path} = {mname} ? strdup({mname}) : NO_SYSFS_ATTR;'
+    if fits_80_ntabs(1, body):
+        f.write(body + '\n')
+    else:
+        f.write(
+            f'\tp->{field_path} =\n'
+            f'\t\t{mname} ? strdup({mname}) : NO_SYSFS_ATTR;\n'
+        )
+    f.write('}\n\n')
+
+
+def emit_src_getter_lazy_attr(f, prefix, sname, type_name, mname, field_path,
+                              sysfs_attr):
+    """Emit a lazy pointer getter that caches one plain sysfs attribute.
+
+    First call reads the attribute and caches the result: a real pointer
+    if the attribute exists, or the NO_SYSFS_ATTR sentinel if it does not
+    (a raw NULL there would look "not yet read" and re-fire every call).
+    Every later call returns the cached value without touching sysfs
+    again. SYSFS_GET() translates the sentinel back to NULL on return so
+    callers never see it.
+    """
+    sig = (f'{PUB}const char *{_get_name(prefix, sname, mname)}'
+           f'(const struct {type_name} *p)')
+    if fits_80(sig):
+        f.write(sig + '\n')
+    else:
+        f.write(
+            f'{PUB}const char *{_get_name(prefix, sname, mname)}(\n'
+            f'\t\tconst struct {type_name} *p)\n'
+        )
+    f.write(
+        '{\n'
+        f'\tstruct {type_name} *c = (struct {type_name} *)p;\n\n'
+        f'\tif (__shr_unlikely(!SYSFS_IS_LOADED(c->{field_path}))) {{\n'
+    )
+    load = f'\t\tc->{field_path} = libnvme_get_ctrl_attr(c, "{sysfs_attr}");'
+    if fits_80_ntabs(2, load.lstrip()):
+        f.write(load + '\n')
+    else:
+        f.write(
+            f'\t\tc->{field_path} =\n'
+            f'\t\t\tlibnvme_get_ctrl_attr(c, "{sysfs_attr}");\n'
+        )
+    f.write(
+        f'\t\tif (!c->{field_path})\n'
+        f'\t\t\tc->{field_path} = NO_SYSFS_ATTR;\n'
+        '\t}\n\n'
+    )
+    ret = f'\treturn SYSFS_GET(c->{field_path});'
+    if fits_80_ntabs(1, ret.lstrip()):
+        f.write(ret + '\n')
+    else:
+        f.write(f'\treturn SYSFS_GET(\n\t\t\tc->{field_path});\n')
+    f.write('}\n\n')
+
+
+def emit_src_getter_lazy_loader(f, prefix, sname, type_name, mname,
+                                field_path, sysfs_loader):
+    """Emit a lazy pointer getter backed by a loader-function call.
+
+    The loader may populate several members of the same group in one call
+    (e.g. dhchap_host_key/dhchap_ctrl_key/keyring from one sysfs read
+    pass), writing NULL to any it leaves absent. After it returns, a
+    member still at NULL means no value exists for it -- stamp the
+    NO_SYSFS_ATTR sentinel so the guard doesn't re-fire the loader on
+    every subsequent call. SYSFS_GET() translates the sentinel back to
+    NULL on return so callers never see it.
+    """
+    sig = (f'{PUB}const char *{_get_name(prefix, sname, mname)}'
+           f'(const struct {type_name} *p)')
+    if fits_80(sig):
+        f.write(sig + '\n')
+    else:
+        f.write(
+            f'{PUB}const char *{_get_name(prefix, sname, mname)}(\n'
+            f'\t\tconst struct {type_name} *p)\n'
+        )
+    f.write(
+        '{\n'
+        f'\tstruct {type_name} *c = (struct {type_name} *)p;\n\n'
+        f'\tif (__shr_unlikely(!SYSFS_IS_LOADED(c->{field_path}))) {{\n'
+        f'\t\t{sysfs_loader}(c);\n'
+        f'\t\tif (!c->{field_path})\n'
+        f'\t\t\tc->{field_path} = NO_SYSFS_ATTR;\n'
+        '\t}\n\n'
+    )
+    ret = f'\treturn SYSFS_GET(c->{field_path});'
+    if fits_80_ntabs(1, ret.lstrip()):
+        f.write(ret + '\n')
+    else:
+        f.write(f'\treturn SYSFS_GET(\n\t\t\tc->{field_path});\n')
+    f.write('}\n\n')
+
+
+def emit_src_getter_volatile_num(f, prefix, sname, type_name, mname, mtype,
+                                 field_path, sysfs_attr):
+    """Emit an always-live numeric getter for a volatile lazy member.
+
+    No sentinel, no cache: every call re-reads the sysfs attribute and
+    parses it into the member, preserving stale-on-failure semantics (a
+    transient read error leaves the last known value in place).
+    """
+    sig = (f'{PUB}{mtype} {_get_name(prefix, sname, mname)}'
+           f'(const struct {type_name} *p)')
+    if fits_80(sig):
+        f.write(sig + '\n')
+    else:
+        f.write(
+            f'{PUB}{mtype} {_get_name(prefix, sname, mname)}(\n'
+            f'\t\tconst struct {type_name} *p)\n'
+        )
+    f.write(
+        '{\n'
+        f'\tstruct {type_name} *c = (struct {type_name} *)p;\n'
+        '\tchar *val;\n\n'
+        f'\tval = libnvme_get_ctrl_attr(c, "{sysfs_attr}");\n'
+        '\tif (val)\n'
+        f'\t\tsscanf(val, "%ld", &c->{field_path});\n'
+        '\tfree(val);\n\n'
+        f'\treturn c->{field_path};\n'
+        '}\n\n'
+    )
+
+
 def generate_src(f, prefix, sname, type_name, members):
     """Write source implementations for all members of one struct."""
     for member in members:
@@ -1550,6 +1723,26 @@ def generate_src(f, prefix, sname, type_name, members):
                 emit_src_getter_scalar_array(f, prefix, sname, type_name,
                                              member.name, member.type, fp)
             continue
+
+        if member.is_sysfs_lazy:
+            if member.write_mode == 'generated':
+                emit_src_setter_lazy_dynstr(f, prefix, sname, type_name,
+                                            member.name, fp)
+            if member.read_mode == 'generated':
+                if member.is_volatile:
+                    emit_src_getter_volatile_num(f, prefix, sname, type_name,
+                                                 member.name, member.type,
+                                                 fp, member.sysfs_attr)
+                elif member.sysfs_loader:
+                    emit_src_getter_lazy_loader(f, prefix, sname, type_name,
+                                                member.name, fp,
+                                                member.sysfs_loader)
+                else:
+                    emit_src_getter_lazy_attr(f, prefix, sname, type_name,
+                                              member.name, fp,
+                                              member.sysfs_attr)
+            continue
+
         is_dyn_str = (not member.is_char_array and
                       not member.is_char_ptr_array and
                       member.type == 'const char *')

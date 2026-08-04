@@ -244,57 +244,6 @@ static int libnvme_ctrl_lookup_subsystem_name(struct libnvme_global_ctx *ctx,
 	return -ENOENT;
 }
 
-static int libnvme_ctrl_lookup_phy_slot(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c)
-{
-	const char *slots_sysfs_dir = libnvme_slots_sysfs_dir(ctx);
-	__cleanup_free char *target_addr = NULL;
-	__cleanup_dir DIR *slots_dir = NULL;
-	struct dirent *entry;
-	char *slot;
-	int ret;
-
-	if (!c->address)
-		return -EINVAL;
-
-	slots_dir = opendir(slots_sysfs_dir);
-	if (!slots_dir) {
-		libnvme_msg(ctx, LIBNVME_LOG_WARN, "failed to open slots dir %s\n",
-		slots_sysfs_dir);
-		return -errno;
-	}
-
-	target_addr = strndup(c->address, 10);
-	while ((entry = readdir(slots_dir))) {
-		if (entry->d_type == DT_DIR &&
-		    strncmp(entry->d_name, ".", 1) != 0 &&
-		    strncmp(entry->d_name, "..", 2) != 0) {
-			__cleanup_free char *path = NULL;
-			__cleanup_free char *addr = NULL;
-
-			ret = asprintf(&path, "%s/%s",
-				       slots_sysfs_dir, entry->d_name);
-			if (ret < 0)
-				return -ENOMEM;
-			addr = libnvme_get_attr(path, "address");
-
-			/* some directories don't have an address entry */
-			if (!addr)
-				continue;
-			if (strcmp(addr, target_addr))
-				continue;
-
-			slot = strdup(entry->d_name);
-			if (!slot)
-				return -ENOMEM;
-
-			c->phy_slot = slot;
-			return 0;
-		}
-	}
-	return -ENOENT;
-}
-
 int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c, const char *path, const char *name)
 {
@@ -307,17 +256,8 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	libnvme_ctrl_release_transport_handle(c);
 	FREE_CTRL_ATTR(c->name);
 	FREE_CTRL_ATTR(c->sysfs_dir);
-	FREE_CTRL_ATTR(c->firmware);
-	FREE_CTRL_ATTR(c->model);
 	FREE_CTRL_ATTR(c->state);
-	FREE_CTRL_ATTR(c->numa_node);
-	FREE_CTRL_ATTR(c->queue_count);
-	FREE_CTRL_ATTR(c->serial);
-	FREE_CTRL_ATTR(c->sqsize);
-	FREE_CTRL_ATTR(c->cntrltype);
-	FREE_CTRL_ATTR(c->cntlid);
-	FREE_CTRL_ATTR(c->dctype);
-	FREE_CTRL_ATTR(c->phy_slot);
+	libnvme_ctrl_sysfs_reset(c->sysfs);
 
 	d = opendir(path);
 	if (!d) {
@@ -330,17 +270,7 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	c->hdl = NULL;
 	c->name = shr_xstrdup(name);
 	c->sysfs_dir = shr_xstrdup(path);
-	c->firmware = libnvme_get_ctrl_attr(c, "firmware_rev");
-	c->model = libnvme_get_ctrl_attr(c, "model");
 	c->state = libnvme_get_ctrl_attr(c, "state");
-	c->numa_node = libnvme_get_ctrl_attr(c, "numa_node");
-	c->queue_count = libnvme_get_ctrl_attr(c, "queue_count");
-	c->serial = libnvme_get_ctrl_attr(c, "serial");
-	c->sqsize = libnvme_get_ctrl_attr(c, "sqsize");
-	c->cntrltype = libnvme_get_ctrl_attr(c, "cntrltype");
-	c->cntlid = libnvme_get_ctrl_attr(c, "cntlid");
-	c->dctype = libnvme_get_ctrl_attr(c, "dctype");
-	libnvme_ctrl_lookup_phy_slot(ctx, c);
 	libnvmf_read_sysfs_fabrics_attrs(ctx, c);
 
 	return 0;

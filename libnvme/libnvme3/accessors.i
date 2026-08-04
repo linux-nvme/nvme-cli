@@ -82,14 +82,8 @@ Namespace.__setattr__ = _nvme_guarded_setattr
 /* struct libnvme_ctrl */
 %rename(Ctrl) libnvme_ctrl;
 %rename(libnvme_ctrl_state_get) libnvme_ctrl_get_state;
-%rename(libnvme_ctrl_command_error_count_get) libnvme_ctrl_get_command_error_count;
-%rename(libnvme_ctrl_reset_count_get) libnvme_ctrl_get_reset_count;
-%rename(libnvme_ctrl_reconnect_count_get) libnvme_ctrl_get_reconnect_count;
 %{
 	#define libnvme_ctrl_state_get libnvme_ctrl_get_state
-	#define libnvme_ctrl_command_error_count_get libnvme_ctrl_get_command_error_count
-	#define libnvme_ctrl_reset_count_get libnvme_ctrl_get_reset_count
-	#define libnvme_ctrl_reconnect_count_get libnvme_ctrl_get_reconnect_count
 %}
 struct libnvme_ctrl {
 	%immutable name;
@@ -98,18 +92,6 @@ struct libnvme_ctrl {
 	const char * sysfs_dir;
 	%immutable address;
 	const char * address;
-	%immutable firmware;
-	const char * firmware;
-	%immutable model;
-	const char * model;
-	%immutable numa_node;
-	const char * numa_node;
-	%immutable queue_count;
-	const char * queue_count;
-	%immutable serial;
-	const char * serial;
-	%immutable sqsize;
-	const char * sqsize;
 	%immutable transport;
 	const char * transport;
 	%immutable subsysnqn;
@@ -118,19 +100,8 @@ struct libnvme_ctrl {
 	const char * traddr;
 	%immutable trsvcid;
 	const char * trsvcid;
-	const char * dhchap_host_key;
-	const char * dhchap_ctrl_key;
-	const char * keyring;
 	const char * tls_key_identity;
 	const char * tls_key;
-	%immutable cntrltype;
-	const char * cntrltype;
-	%immutable cntlid;
-	const char * cntlid;
-	%immutable dctype;
-	const char * dctype;
-	%immutable phy_slot;
-	const char * phy_slot;
 	%immutable host_traddr;
 	const char * host_traddr;
 	%immutable host_iface;
@@ -142,12 +113,6 @@ struct libnvme_ctrl {
 	%extend {
 		%immutable state;
 		const char * state;
-		%immutable command_error_count;
-		long command_error_count;
-		%immutable reset_count;
-		long reset_count;
-		%immutable reconnect_count;
-		long reconnect_count;
 	}
 };
 

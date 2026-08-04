@@ -264,54 +264,6 @@ const char *libnvme_ctrl_get_sysfs_dir(const struct libnvme_ctrl *p);
 const char *libnvme_ctrl_get_address(const struct libnvme_ctrl *p);
 
 /**
- * libnvme_ctrl_get_firmware() - Get firmware.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the firmware field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_firmware(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_get_model() - Get model.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the model field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_model(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_get_numa_node() - Get numa_node.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the numa_node field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_numa_node(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_get_queue_count() - Get queue_count.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the queue_count field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_queue_count(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_get_serial() - Get serial.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the serial field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_serial(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_get_sqsize() - Get sqsize.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the sqsize field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_sqsize(const struct libnvme_ctrl *p);
-
-/**
  * libnvme_ctrl_get_transport() - Get transport.
  * @p: The &struct libnvme_ctrl instance to query.
  *
@@ -344,55 +296,6 @@ const char *libnvme_ctrl_get_traddr(const struct libnvme_ctrl *p);
 const char *libnvme_ctrl_get_trsvcid(const struct libnvme_ctrl *p);
 
 /**
- * libnvme_ctrl_set_dhchap_host_key() - Set dhchap_host_key.
- * @p: The &struct libnvme_ctrl instance to update.
- * @dhchap_host_key: New string; a copy is stored. Pass NULL to clear.
- */
-void libnvme_ctrl_set_dhchap_host_key(
-		struct libnvme_ctrl *p,
-		const char *dhchap_host_key);
-
-/**
- * libnvme_ctrl_get_dhchap_host_key() - Get dhchap_host_key.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the dhchap_host_key field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_dhchap_host_key(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_set_dhchap_ctrl_key() - Set dhchap_ctrl_key.
- * @p: The &struct libnvme_ctrl instance to update.
- * @dhchap_ctrl_key: New string; a copy is stored. Pass NULL to clear.
- */
-void libnvme_ctrl_set_dhchap_ctrl_key(
-		struct libnvme_ctrl *p,
-		const char *dhchap_ctrl_key);
-
-/**
- * libnvme_ctrl_get_dhchap_ctrl_key() - Get dhchap_ctrl_key.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the dhchap_ctrl_key field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_dhchap_ctrl_key(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_set_keyring() - Set keyring.
- * @p: The &struct libnvme_ctrl instance to update.
- * @keyring: New string; a copy is stored. Pass NULL to clear.
- */
-void libnvme_ctrl_set_keyring(struct libnvme_ctrl *p, const char *keyring);
-
-/**
- * libnvme_ctrl_get_keyring() - Get keyring.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the keyring field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_keyring(const struct libnvme_ctrl *p);
-
-/**
  * libnvme_ctrl_set_tls_key_identity() - Set tls_key_identity.
  * @p: The &struct libnvme_ctrl instance to update.
  * @tls_key_identity: New string; a copy is stored. Pass NULL to clear.
@@ -423,38 +326,6 @@ void libnvme_ctrl_set_tls_key(struct libnvme_ctrl *p, const char *tls_key);
  * Return: The value of the tls_key field, or NULL if not set.
  */
 const char *libnvme_ctrl_get_tls_key(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_get_cntrltype() - Get cntrltype.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the cntrltype field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_cntrltype(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_get_cntlid() - Get cntlid.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the cntlid field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_cntlid(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_get_dctype() - Get dctype.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the dctype field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_dctype(const struct libnvme_ctrl *p);
-
-/**
- * libnvme_ctrl_get_phy_slot() - Get phy_slot.
- * @p: The &struct libnvme_ctrl instance to query.
- *
- * Return: The value of the phy_slot field, or NULL if not set.
- */
-const char *libnvme_ctrl_get_phy_slot(const struct libnvme_ctrl *p);
 
 /**
  * libnvme_ctrl_get_host_traddr() - Get host_traddr.

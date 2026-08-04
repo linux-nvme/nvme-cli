@@ -30,13 +30,9 @@
 #include "util.h"
 
 
-int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
+int libnvme_reconfigure_ctrl(__shr_unused struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c, const char *path, const char *name)
 {
-	struct nvme_id_ctrl id_ctrl;
-	struct ctrl_map_entry *ctrl_entry;
-	int ret;
-
 	/*
 	 * It's necessary to release any resources first because a ctrl
 	 * can be reused.
@@ -44,17 +40,7 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	libnvme_ctrl_release_transport_handle(c);
 	FREE_CTRL_ATTR(c->name);
 	FREE_CTRL_ATTR(c->sysfs_dir);
-	FREE_CTRL_ATTR(c->firmware);
-	FREE_CTRL_ATTR(c->model);
-	FREE_CTRL_ATTR(c->state);
-	FREE_CTRL_ATTR(c->numa_node);
-	FREE_CTRL_ATTR(c->queue_count);
-	FREE_CTRL_ATTR(c->serial);
-	FREE_CTRL_ATTR(c->sqsize);
-	FREE_CTRL_ATTR(c->cntrltype);
-	FREE_CTRL_ATTR(c->cntlid);
-	FREE_CTRL_ATTR(c->dctype);
-	FREE_CTRL_ATTR(c->phy_slot);
+	libnvme_ctrl_sysfs_reset(c->sysfs);
 
 	c->hdl = NULL;
 	c->name = shr_xstrdup(name);
@@ -67,51 +53,6 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 
 	if (!libnvme_ctrl_get_transport_handle(c))
 		return -ENODEV;
-
-	ret = libnvme_ctrl_identify(c, &id_ctrl);
-	if (ret != 0) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR,
-			"Failed to identify ctrl %s, error %d\n",
-			c->name, ret);
-		return -ENODEV;
-	}
-
-	ctrl_entry = libnvme_ctrl_map_lookup(ctx, c->name);
-	if (!ctrl_entry) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR,
-			"Failed to find ctrl map entry for ctrl %s\n",
-			c->name);
-		return -ENODEV;
-	}
-
-	ret = libnvme_ctrl_map_entry_set_id_ctrl(ctrl_entry, &id_ctrl);
-	if (ret != 0) {
-		libnvme_msg(ctx, LIBNVME_LOG_ERR,
-			"Failed to update ctrl map for ctrl %s, error %d\n",
-			c->name, ret);
-		return -ENODEV;
-	}
-
-	c->firmware = libnvme_ctrl_map_entry_get_firmware(ctrl_entry);
-	if (!c->firmware)
-		return -ENOMEM;
-
-	c->model = libnvme_ctrl_map_entry_get_model(ctrl_entry);
-	if (!c->model)
-		return -ENOMEM;
-
-	c->serial = libnvme_ctrl_map_entry_get_serial(ctrl_entry);
-	if (!c->serial)
-		return -ENOMEM;
-
-	if (asprintf(&c->cntrltype, "%u", id_ctrl.cntrltype) < 0)
-		return -errno;
-
-	if (asprintf(&c->cntlid, "%u", le16_to_cpu(id_ctrl.cntlid)) < 0)
-		return -errno;
-
-	if (asprintf(&c->dctype, "%u", id_ctrl.dctype) < 0)
-		return -errno;
 
 	return 0;
 }

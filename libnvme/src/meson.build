@@ -17,6 +17,7 @@ sources = [
 if host_system == 'windows'
     sources += [
         'nvme/ctrl-map.c',
+        'nvme/ctrl-sysfs-custom-win.c',
         'nvme/ioctl-win.c',
         'nvme/lib-win.c',
         'nvme/mem-win.c',
@@ -25,6 +26,7 @@ if host_system == 'windows'
     ]
 else
     sources += [
+        'nvme/ctrl-sysfs-custom-linux.c',
         'nvme/ioctl-linux.c',
         'nvme/lib-linux.c',
         'nvme/mem-linux.c',
@@ -34,6 +36,7 @@ else
 endif
 headers = [
     'nvme/accessors.h',
+    'nvme/ctrl-sysfs.h',
     'nvme/endian.h',
     'nvme/ioctl.h',
     'nvme/lib-types.h',
@@ -135,10 +138,12 @@ nvmf_ld = meson.current_source_dir() / 'libnvmf.ld'
 mi_ld = meson.current_source_dir() / 'libnvme-mi.ld'
 accessors_ld = meson.current_source_dir() / 'accessors.ld'
 nvmf_accessors_ld = meson.current_source_dir() / 'accessors-fabrics.ld'
+ctrl_sysfs_ld = meson.current_source_dir() / 'ctrl-sysfs.ld'
 
 link_args = [
     '-Wl,--version-script=@0@'.format(nvme_ld),
     '-Wl,--version-script=@0@'.format(accessors_ld),
+    '-Wl,--version-script=@0@'.format(ctrl_sysfs_ld),
 ]
 
 libconf = configuration_data()

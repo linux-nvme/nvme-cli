@@ -68,5 +68,18 @@ _tgt_fabrics = run_target(
     ],
 )
 
+_tgt_ctrl_sysfs = run_target(
+    'update-ctrl-sysfs',
+    command: [
+        'update-ctrl-sysfs.sh',
+        _py3,
+        files('generate_sysfs_accessors.py'),
+        libnvme_src_nvme / 'sysfs_accessors_specs.py',
+        libnvme_src_nvme,
+        libnvme_src,
+        libnvme_swig_dir,
+    ] + _check_flag,
+)
+
 # This alias allows generating/checking all accessors in one shot.
-alias_target('update-accessors', _tgt_common, _tgt_fabrics)
+alias_target('update-accessors', _tgt_common, _tgt_fabrics, _tgt_ctrl_sysfs)
