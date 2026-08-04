@@ -6800,11 +6800,11 @@ static void stdout_reachability_associations_log(struct nvme_reachability_associ
 }
 
 #ifdef CONFIG_FABRICS
-static void stdout_host_discovery_log(struct nvme_host_discover_log *log)
+static void stdout_host_discovery_log(struct nvme_host_discovery_log *log)
 {
 	__u32 i;
 	__u16 j;
-	struct nvme_host_ext_discover_log *hedlpe;
+	struct nvme_host_ext_discovery_log *hedlpe;
 	struct nvmf_ext_attr *exat;
 	__u32 thdlpl = le32_to_cpu(log->thdlpl);
 	__u32 tel;
@@ -6881,11 +6881,11 @@ static void print_traddr(char *field, __u8 adrfam, __u8 *traddr)
 		printf("%s: %s\n", field, dst);
 }
 
-static void stdout_ave_discovery_log(struct nvme_ave_discover_log *log)
+static void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log)
 {
 	__u32 i;
 	__u8 j;
-	struct nvme_ave_discover_log_entry *adlpe;
+	struct nvme_ave_discovery_log_entry *adlpe;
 	struct nvme_ave_tr_record *atr;
 	__u32 tadlpl = le32_to_cpu(log->tadlpl);
 	__u32 tel;
@@ -6917,8 +6917,8 @@ static void stdout_ave_discovery_log(struct nvme_ave_discover_log *log)
 	}
 }
 #else
-static void stdout_host_discovery_log(struct nvme_host_discover_log *log) {}
-static void stdout_ave_discovery_log(struct nvme_ave_discover_log *log) {}
+static void stdout_host_discovery_log(struct nvme_host_discovery_log *log) {}
+static void stdout_ave_discovery_log(struct nvme_ave_discovery_log *log) {}
 #endif
 
 static void stdout_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log)
@@ -7188,10 +7188,12 @@ static void stdout_log(const char *devname, struct nvme_get_log_args *args)
 		stdout_discovery_log(discovery_log, le64_to_cpu(discovery_log->numrec));
 		break;
 	case NVME_LOG_LID_HOST_DISCOVERY:
-		stdout_host_discovery_log((struct nvme_host_discover_log *)args->log);
+		stdout_host_discovery_log(
+			(struct nvme_host_discovery_log *)args->log);
 		break;
 	case NVME_LOG_LID_AVE_DISCOVERY:
-		stdout_ave_discovery_log((struct nvme_ave_discover_log *)args->log);
+		stdout_ave_discovery_log(
+			(struct nvme_ave_discovery_log *)args->log);
 		break;
 	case NVME_LOG_LID_PULL_MODEL_DDC_REQ:
 		stdout_pull_model_ddc_req_log((struct nvme_pull_model_ddc_req_log *)args->log);

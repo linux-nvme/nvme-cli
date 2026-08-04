@@ -5571,12 +5571,12 @@ static void json_reachability_associations_log(struct nvme_reachability_associat
 }
 
 #ifdef CONFIG_FABRICS
-static void json_host_discovery_log(struct nvme_host_discover_log *log)
+static void json_host_discovery_log(struct nvme_host_discovery_log *log)
 {
 	struct json_object *r = json_r;
 	__u32 i;
 	__u16 j;
-	struct nvme_host_ext_discover_log *hedlpe;
+	struct nvme_host_ext_discovery_log *hedlpe;
 	struct nvmf_ext_attr *exat;
 	__u32 thdlpl = le32_to_cpu(log->thdlpl);
 	__u32 tel;
@@ -5661,12 +5661,12 @@ static void obj_add_traddr(struct json_object *o, const char *k, __u8 adrfam, __
 		obj_add_str(o, k, dst);
 }
 
-static void json_ave_discovery_log(struct nvme_ave_discover_log *log)
+static void json_ave_discovery_log(struct nvme_ave_discovery_log *log)
 {
 	struct json_object *r = json_r;
 	__u32 i;
 	__u8 j;
-	struct nvme_ave_discover_log_entry *adlpe;
+	struct nvme_ave_discovery_log_entry *adlpe;
 	struct nvme_ave_tr_record *atr;
 	__u32 tadlpl = le32_to_cpu(log->tadlpl);
 	__u32 tel;
@@ -5705,8 +5705,8 @@ static void json_ave_discovery_log(struct nvme_ave_discover_log *log)
 	}
 }
 #else
-static void json_host_discovery_log(struct nvme_host_discover_log *log) {}
-static void json_ave_discovery_log(struct nvme_ave_discover_log *log) {}
+static void json_host_discovery_log(struct nvme_host_discovery_log *log) {}
+static void json_ave_discovery_log(struct nvme_ave_discovery_log *log) {}
 #endif
 
 static void json_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log)

@@ -53,7 +53,7 @@ nvme_init_get_log_discovery(struct libnvme_passthru_cmd *cmd,
  */
 static inline void
 nvme_init_get_log_host_discovery(struct libnvme_passthru_cmd *cmd,
-		bool allhoste, struct nvme_host_discover_log *log, __u32 len)
+		bool allhoste, struct nvme_host_discovery_log *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
 		NVME_LOG_LID_HOST_DISCOVERY, NVME_CSI_NVM,
@@ -75,7 +75,7 @@ nvme_init_get_log_host_discovery(struct libnvme_passthru_cmd *cmd,
  */
 static inline void
 nvme_init_get_log_ave_discovery(struct libnvme_passthru_cmd *cmd,
-		struct nvme_ave_discover_log *log, __u32 len)
+		struct nvme_ave_discovery_log *log, __u32 len)
 {
 	nvme_init_get_log(cmd, NVME_NSID_ALL,
 		NVME_LOG_LID_AVE_DISCOVERY, NVME_CSI_NVM,

@@ -1283,7 +1283,7 @@ nvme_get_log_discovery(struct libnvme_transport_handle *hdl,
  * @hdl:	Transport handle for the controller.
  * @rae:	Retain asynchronous events
  * @allhoste:	All Host Entries. Set to true to report all host entries.
- * @log:	Pointer to the buffer (@struct nvme_host_discover_log)
+ * @log:	Pointer to the buffer (@struct nvme_host_discovery_log)
  *		where the log page data will be stored.
  * @len:	Length of the buffer provided in @log.
  *
@@ -1299,7 +1299,7 @@ nvme_get_log_discovery(struct libnvme_transport_handle *hdl,
 static inline int
 nvme_get_log_host_discovery(struct libnvme_transport_handle *hdl,
 			   bool rae, bool allhoste,
-			   struct nvme_host_discover_log *log, __u32 len)
+			   struct nvme_host_discovery_log *log, __u32 len)
 {
 	struct libnvme_passthru_cmd cmd;
 
@@ -1313,7 +1313,7 @@ nvme_get_log_host_discovery(struct libnvme_transport_handle *hdl,
  * Group (AVE) Discovery Log Page
  * @hdl:	Transport handle for the controller.
  * @rae:	Retain asynchronous events
- * @log:	Pointer to the buffer (@struct nvme_ave_discover_log) where
+ * @log:	Pointer to the buffer (@struct nvme_ave_discovery_log) where
  *		the log page data will be stored.
  * @len:	Length of the buffer provided in @log.
  *
@@ -1325,7 +1325,7 @@ nvme_get_log_host_discovery(struct libnvme_transport_handle *hdl,
  */
 static inline int
 nvme_get_log_ave_discovery(struct libnvme_transport_handle *hdl,
-		bool rae, struct nvme_ave_discover_log *log, __u32 len)
+		bool rae, struct nvme_ave_discovery_log *log, __u32 len)
 {
 	struct libnvme_passthru_cmd cmd;
 
