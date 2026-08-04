@@ -103,6 +103,9 @@ static struct lid_dir *get_solidigm_lids(struct nvme_supported_log_pages *suppor
 	solidigm_dir.lid[0xC3].str = "OCP Latency Monitor";
 	solidigm_dir.lid[0xC4].str = "Endurance Manager Statistics";
 	solidigm_dir.lid[0xC5].str = "Temperature Statistics";
+	solidigm_dir.lid[0xC6].str = "OCP Hardware Component";
+	solidigm_dir.lid[0xC7].str = "OCP TCG Configuration";
+	solidigm_dir.lid[0xC9].str = "OCP Telemetry String Log";
 	solidigm_dir.lid[0xCA].str = "SMART Attributes";
 	solidigm_dir.lid[0xCB].str = "VU NVMe IO Queue Metrics Log Page";
 	solidigm_dir.lid[0xD5].str = solidigm_dir.lid[0xC5].str;
