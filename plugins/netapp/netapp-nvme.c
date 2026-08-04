@@ -637,6 +637,8 @@ static void netapp_ontapdevices_print_regular(struct ontapdevice_info *devices,
 			"---------");
 		formatstr = columnstr;
 	}
+	else
+		return;
 
 	for (i = 0; i < count; i++) {
 		if (devname && !strcmp(devname, basename(devices[i].dev))) {
