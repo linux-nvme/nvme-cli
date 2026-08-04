@@ -91,9 +91,9 @@ OPTIONS
 	Suppress already connected errors.
 
 --force::
-	Disable the built-in persistent discover connection rules.
-	Combined with --persistent flag, always create new
-	persistent discovery connection.
+	Disable the built-in persistent discovery controller connection
+	rules. Combined with --persistent flag, always create new
+	persistent discovery controller connection.
 
 --nbft::
 	Only look at NBFT tables
