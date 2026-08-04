@@ -7,7 +7,7 @@
 """Tests for the micron vs-pcie-stats command.
 
 The vs-pcie-stats command retrieves PCIe error statistics and prints them in
-either JSON (the default) or plain-text format.  The statistics are gathered
+either plain-text (the default) or JSON format.  The statistics are gathered
 in a model-dependent way: some drives report per-field error counters, while
 others expose the AER error-status bits read from the PCIe registers.  On
 Windows, drives that rely on register reads are unsupported, so the command
@@ -73,7 +73,7 @@ class TestMicronVsPcieStats(TestMicron):
         """
         if not self.is_windows():
             return True
-        result = self._run_pcie_stats()
+        result = self._run_pcie_stats(args="--output-format=normal")
         return not (
             result.returncode != 0 and _WINDOWS_AER_UNSUPPORTED_MSG in result.stderr
         )
@@ -120,7 +120,7 @@ class TestMicronVsPcieStats(TestMicron):
     def test_bad_device_returns_error(self):
         """vs-pcie-stats fails with a message when the device does not exist."""
         device = "/dev/nvme-nonexistent-test-device"
-        result = self._run_pcie_stats(device=device)
+        result = self._run_pcie_stats(device=device, args="--output-format=normal")
 
         self.assertNotEqual(
             result.returncode, 0,
@@ -144,43 +144,24 @@ class TestMicronVsPcieStats(TestMicron):
             f"Expected 'Invalid output format' in stderr, got: {result.stderr!r}",
         )
 
-    def test_default_output_is_json(self):
-        """vs-pcie-stats produces JSON output by default."""
+    def test_default_output_is_normal(self):
+        """vs-pcie-stats produces text output by default (no format flag)."""
         self._skip_if_pcie_stats_unavailable()
         result = self.run_plugin_cmd_check("vs-pcie-stats")
 
-        try:
-            data = json.loads(result.stdout)
-        except json.JSONDecodeError as exc:
-            self.fail(
-                f"Default output is not valid JSON: {exc}\n"
-                f"stdout={result.stdout!r}"
-            )
-
-        self.assertIn(
-            "PCIE Stats", data,
-            f"Expected 'PCIE Stats' key in default JSON output, "
-            f"got keys: {list(data.keys())}",
+        self.assertTrue(
+            result.stdout.strip(),
+            "Expected non-empty default stdout, got empty output",
         )
 
-    def test_explicit_format_json_produces_valid_json(self):
-        """vs-pcie-stats produces valid JSON when --format=json is passed."""
-        self._skip_if_pcie_stats_unavailable()
-        result = self.run_plugin_cmd_check("vs-pcie-stats", args="--format=json")
-
         try:
-            data = json.loads(result.stdout)
-        except json.JSONDecodeError as exc:
+            json.loads(result.stdout)
             self.fail(
-                f"stdout is not valid JSON (--format=json): {exc}\n"
+                f"Default output parsed as JSON unexpectedly; "
                 f"stdout={result.stdout!r}"
             )
-
-        self.assertIn(
-            "PCIE Stats", data,
-            f"Expected 'PCIE Stats' key with --format=json, "
-            f"got keys: {list(data.keys())}",
-        )
+        except (json.JSONDecodeError, ValueError):
+            pass  # expected: default output is text, not JSON
 
     def test_output_format_json_produces_valid_json(self):
         """vs-pcie-stats produces valid JSON when --output-format=json is passed."""
@@ -274,28 +255,6 @@ class TestMicronVsPcieStats(TestMicron):
             f"Missing keys in JSON stats object: {missing}",
         )
 
-    def test_format_json_and_output_format_json_produce_identical_fields(self):
-        """--format=json and --output-format=json yield the same set of field keys."""
-        stats_fmt = self._pcie_stats_object(args="--format=json")
-        stats_ofmt = self._pcie_stats_object(args="--output-format=json")
-
-        self.assertEqual(
-            set(stats_fmt.keys()), set(stats_ofmt.keys()),
-            f"--format=json and --output-format=json produced different field sets:\n"
-            f"  --format=json:        {sorted(stats_fmt.keys())}\n"
-            f"  --output-format=json: {sorted(stats_ofmt.keys())}",
-        )
-
-    def test_format_normal_flag_succeeds(self):
-        """vs-pcie-stats produces non-empty output with --format=normal."""
-        self._skip_if_pcie_stats_unavailable()
-        result = self.run_plugin_cmd_check("vs-pcie-stats", args="--format=normal")
-
-        self.assertTrue(
-            result.stdout.strip(),
-            "Expected non-empty stdout with --format=normal, got empty output",
-        )
-
     def test_output_format_normal_flag_succeeds(self):
         """vs-pcie-stats produces non-empty output with --output-format=normal."""
         self._skip_if_pcie_stats_unavailable()
@@ -309,25 +268,19 @@ class TestMicronVsPcieStats(TestMicron):
         )
 
     def test_normal_output_is_not_json(self):
-        """vs-pcie-stats text output is not valid JSON for the normal format.
-
-        Checked for both the plugin's --format flag and the global nvme-cli
-        --output-format flag.
-        """
+        """vs-pcie-stats text output is not valid JSON for the normal format."""
         self._skip_if_pcie_stats_unavailable()
 
-        for flag in ("--format=normal", "--output-format=normal"):
-            with self.subTest(flag=flag):
-                result = self.run_plugin_cmd_check("vs-pcie-stats", args=flag)
+        result = self.run_plugin_cmd_check("vs-pcie-stats", args="--output-format=normal")
 
-                try:
-                    json.loads(result.stdout)
-                    self.fail(
-                        f"{flag} output parsed as JSON unexpectedly; "
-                        f"stdout={result.stdout!r}"
-                    )
-                except (json.JSONDecodeError, ValueError):
-                    pass  # expected: text output is not JSON
+        try:
+            json.loads(result.stdout)
+            self.fail(
+                f"--output-format=normal output parsed as JSON unexpectedly; "
+                f"stdout={result.stdout!r}"
+            )
+        except (json.JSONDecodeError, ValueError):
+            pass  # expected: text output is not JSON
 
     def test_normal_format_text_content(self):
         """vs-pcie-stats text output contains the expected fields for this hardware.
@@ -335,54 +288,51 @@ class TestMicronVsPcieStats(TestMicron):
         The text layout depends on the drive model: some drives print 16
         named-field lines ("Field : value"), while others print a "PCIE Stats:"
         header followed by hex correctable/uncorrectable error counts.  The test
-        detects which layout was produced and asserts the matching content, for
-        both the plugin's --format flag and the global --output-format flag.
+        detects which layout was produced and asserts the matching content.
         """
         self._skip_if_pcie_stats_unavailable()
 
-        for flag in ("--format=normal", "--output-format=normal"):
-            with self.subTest(flag=flag):
-                result = self.run_plugin_cmd_check("vs-pcie-stats", args=flag)
-                stdout = result.stdout
+        result = self.run_plugin_cmd_check("vs-pcie-stats", args="--output-format=normal")
+        stdout = result.stdout
 
-                if "PCIE Stats:" in stdout:
-                    # Header-plus-hex-counts layout.
-                    self.assertIn(
-                        "Device correctable errors detected:", stdout,
-                        f"Expected correctable error line in 'PCIE Stats:' branch, "
-                        f"got: {stdout!r}",
-                    )
-                    self.assertIn(
-                        "Device uncorrectable errors detected:", stdout,
-                        f"Expected uncorrectable error line in 'PCIE Stats:' branch, "
-                        f"got: {stdout!r}",
-                    )
-                    # The hex values must match 0x<digits>.
-                    self.assertRegex(
-                        stdout,
-                        r"Device correctable errors detected:\s+0x[0-9a-fA-F]+",
-                        f"Expected hex value after correctable error label, got: {stdout!r}",
-                    )
-                    self.assertRegex(
-                        stdout,
-                        r"Device uncorrectable errors detected:\s+0x[0-9a-fA-F]+",
-                        f"Expected hex value after uncorrectable error label, got: {stdout!r}",
-                    )
-                else:
-                    # Named-field layout.
-                    for field in ALL_FIELDS:
-                        self.assertIn(
-                            field, stdout,
-                            f"Expected named field '{field}' in text output, "
-                            f"got: {stdout!r}",
-                        )
-                    # Each line must match "Field : integer".
-                    for field in ALL_FIELDS:
-                        self.assertRegex(
-                            stdout,
-                            re.escape(field) + r"\s*:\s*\d+",
-                            f"Expected '{field} : <integer>' in text output, got: {stdout!r}",
-                        )
+        if "PCIE Stats:" in stdout:
+            # Header-plus-hex-counts layout.
+            self.assertIn(
+                "Device correctable errors detected:", stdout,
+                f"Expected correctable error line in 'PCIE Stats:' branch, "
+                f"got: {stdout!r}",
+            )
+            self.assertIn(
+                "Device uncorrectable errors detected:", stdout,
+                f"Expected uncorrectable error line in 'PCIE Stats:' branch, "
+                f"got: {stdout!r}",
+            )
+            # The hex values must match 0x<digits>.
+            self.assertRegex(
+                stdout,
+                r"Device correctable errors detected:\s+0x[0-9a-fA-F]+",
+                f"Expected hex value after correctable error label, got: {stdout!r}",
+            )
+            self.assertRegex(
+                stdout,
+                r"Device uncorrectable errors detected:\s+0x[0-9a-fA-F]+",
+                f"Expected hex value after uncorrectable error label, got: {stdout!r}",
+            )
+        else:
+            # Named-field layout.
+            for field in ALL_FIELDS:
+                self.assertIn(
+                    field, stdout,
+                    f"Expected named field '{field}' in text output, "
+                    f"got: {stdout!r}",
+                )
+            # Each line must match "Field : integer".
+            for field in ALL_FIELDS:
+                self.assertRegex(
+                    stdout,
+                    re.escape(field) + r"\s*:\s*\d+",
+                    f"Expected '{field} : <integer>' in text output, got: {stdout!r}",
+                )
 
     def test_json_and_normal_report_same_error_count_parity(self):
         """JSON and text output agree on whether any errors are non-zero.
@@ -395,7 +345,7 @@ class TestMicronVsPcieStats(TestMicron):
         stats = self._pcie_stats_object()
         json_any_nonzero = any(stats[f] != 0 for f in ALL_FIELDS)
 
-        result = self.run_plugin_cmd_check("vs-pcie-stats", args="--format=normal")
+        result = self.run_plugin_cmd_check("vs-pcie-stats", args="--output-format=normal")
         stdout = result.stdout
 
         if "PCIE Stats:" in stdout:
@@ -429,15 +379,18 @@ class TestMicronVsPcieStats(TestMicron):
         """
         # Probe availability using the namespace path specifically.
         if self.is_windows():
-            ns_probe = self.run_plugin_cmd("vs-pcie-stats", device=self.ns1)
+            ns_probe = self.run_plugin_cmd("vs-pcie-stats", device=self.ns1,
+                                           args="--output-format=normal")
             if ns_probe.returncode != 0 and _WINDOWS_AER_UNSUPPORTED_MSG in ns_probe.stderr:
                 self.skipTest(
                     "vs-pcie-stats is not supported on this platform "
                     f"(stderr: {_WINDOWS_AER_UNSUPPORTED_MSG!r})"
                 )
 
-        result_ctrl = self.run_plugin_cmd_check("vs-pcie-stats", device=self.ctrl)
-        result_ns = self.run_plugin_cmd_check("vs-pcie-stats", device=self.ns1)
+        result_ctrl = self.run_plugin_cmd_check(
+            "vs-pcie-stats", device=self.ctrl, args="--output-format=json")
+        result_ns = self.run_plugin_cmd_check(
+            "vs-pcie-stats", device=self.ns1, args="--output-format=json")
 
         try:
             data_ctrl = json.loads(result_ctrl.stdout)

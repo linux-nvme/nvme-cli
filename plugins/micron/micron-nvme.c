@@ -67,8 +67,8 @@
 #define SensorCount 8
 
 /* Plugin version major_number.minor_number.patch */
-static const char *__version_major = "2";
-static const char *__version_minor = "1";
+static const char *__version_major = "3";
+static const char *__version_minor = "0";
 static const char *__version_patch = "0";
 
 /*
@@ -653,22 +653,6 @@ exit_status:
 	return err;
 }
 
-static int micron_get_output_format(struct argconfig_commandline_options *opts,
-	const char *global_format, const char *local_format,
-	nvme_print_flags_t default_format, nvme_print_flags_t *format)
-{
-	if (!format)
-		return -EINVAL;
-
-	if (global_format && argconfig_parse_seen(opts, "output-format"))
-		return validate_output_format(global_format, format);
-	else if (local_format && argconfig_parse_seen(opts, "format"))
-		return validate_output_format(local_format, format);
-
-	*format = default_format;
-	return 0;
-}
-
 /*
  * Plugin Commands
  */
@@ -910,28 +894,21 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 	unsigned int tempSensors[SensorCount] = { 0 };
 	const char *desc = "Retrieve Micron temperature info for the given device ";
 	const char *fmt = "Output format: normal|json";
-	nvme_print_flags_t format = NORMAL;
-	struct format {
-		char *fmt;
-	};
-	struct format cfg = {
-		.fmt = "normal",
-	};
+	nvme_print_flags_t format;
 	bool is_json = false;
 	struct json_object *root;
 	struct json_object *logPages;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
 		return err;
 
-	err = micron_get_output_format(opts, nvme_args.output_format, cfg.fmt,
-		NORMAL, &format);
-	if (err < 0) {
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
 		nvme_show_error("Invalid output format");
 		return err;
 	}
@@ -1047,33 +1024,25 @@ static int micron_pcie_stats(int argc, char **argv,
 	int  i, err = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	nvme_print_flags_t format = JSON;
+	nvme_print_flags_t format = NORMAL;
 	struct libnvme_passthru_cmd admin_cmd = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
-	bool is_json = true;
+	bool is_json = false;
 	bool counters = false;
-	struct format {
-		char *fmt;
-	};
 	const char *desc = "Retrieve PCIe event counters";
-	const char *fmt = "Output format: json|normal";
-	struct format cfg = {
-		.fmt = "json",
-	};
+	const char *fmt = "Output format: normal|json";
 
 	__u32 correctable_errors = 0;
 	__u32 uncorrectable_errors = 0;
 
-	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
 		return err;
 
-	err = micron_get_output_format(opts, nvme_args.output_format, cfg.fmt,
-		JSON, &format);
-	if (err < 0) {
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
 		nvme_show_error("Invalid output format");
 		return err;
 	}
@@ -1807,25 +1776,23 @@ static int micron_nand_stats(int argc, char **argv,
 	__u8 nsze;
 	bool has_d0_log = true;
 	bool has_fb_log = false;
-	bool is_json = true;
+	bool is_json = false;
 	nsze_from_oacs = false;
-	struct format {
-		char *fmt;
-	};
-	const char *fmt = "output format json|normal";
-	struct format cfg = {
-		.fmt = "json",
-	};
+	const char *fmt = "Output format: normal|json";
+	nvme_print_flags_t format;
 
-	NVME_ARGS(opts,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
 		return err;
 
-	if (!strcmp(cfg.fmt, "normal"))
-		is_json = false;
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+	is_json = format == JSON;
 
 	/* pull log details based on the model name */
 	if (eModel == UNKNOWN_MODEL) {
@@ -1938,22 +1905,22 @@ static int micron_smart_ext_log(int argc, char **argv,
 	__u8 log_id;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	bool is_json = true;
-	struct format {
-		char *fmt;
-	};
-	const char *fmt = "output format json|normal";
-	struct format cfg = {
-		.fmt = "json",
-	};
-	NVME_ARGS(opts,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	bool is_json = false;
+	const char *fmt = "Output format: normal|json";
+	nvme_print_flags_t format;
+
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
 		return err;
-	if (!strcmp(cfg.fmt, "normal"))
-		is_json = false;
+
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+	is_json = format == JSON;
 
 	if (eModel == M51CX || eModel == M51BY || eModel == M51CY || eModel == M6003 ||
 								eModel == M6004) {
@@ -1984,22 +1951,22 @@ static int micron_work_load_log(int argc, char **argv, struct command *acmd, str
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 	int err = 0;
-	bool is_json = true;
-	struct format {
-		char *fmt;
-	};
-	const char *fmt = "output format json|normal";
-	struct format cfg = {
-		.fmt = "json",
-	};
-	NVME_ARGS(opts,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	bool is_json = false;
+	const char *fmt = "Output format: normal|json";
+	nvme_print_flags_t format;
+
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
 		return err;
-	if (strcmp(cfg.fmt, "normal") == 0)
-		is_json = false;
+
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+	is_json = format == JSON;
 
 	if (eModel == M6001 || eModel == M6004 || eModel == M6003) {
 		err =  nvme_get_log_simple(hdl, 0xC5,
@@ -2025,25 +1992,25 @@ static int micron_vendor_telemetry_log(int argc, char **argv,
 	unsigned int vendorTelemetryLog[C6_log_size/sizeof(int)] = { 0 };
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	int err = 0;
-	bool is_json = true;
+	bool is_json = false;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
-	struct format {
-		char *fmt;
-	};
-	const char *fmt = "output format json|normal";
-	struct format cfg = {
-		.fmt = "json",
-	};
-	NVME_ARGS(opts,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	const char *fmt = "Output format: normal|json";
+	nvme_print_flags_t format;
+
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
 		return err;
-	if (strcmp(cfg.fmt, "normal") == 0)
-		is_json = false;
+
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+	is_json = format == JSON;
 
 	if (eModel == M6001 || eModel == M6004 || eModel == M6003) {
 		err =  nvme_get_log_simple(hdl, 0xC6, vendorTelemetryLog, C6_log_size);
@@ -2427,18 +2394,12 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 	struct json_object *driveInfo;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	struct format {
-		char *fmt;
-	};
 	int err = 0;
 
-	const char *fmt = "output format normal|json";
-	struct format cfg = {
-		.fmt = "normal",
-	};
+	const char *fmt = "Output format: normal|json";
+	nvme_print_flags_t format;
 
-	NVME_ARGS(opts,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
 	if (err)
@@ -2449,13 +2410,12 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 		return -1;
 	}
 
-	if (strcmp(cfg.fmt, "normal") && strcmp(cfg.fmt, "json")) {
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
 		nvme_show_error("Invalid output format");
-		return -1;
+		return err;
 	}
-
-	if (!strcmp(cfg.fmt, "json"))
-		is_json = true;
+	is_json = format == JSON;
 
 	if (model == M5407) {
 		admin_cmd.opcode = 0xDA;
@@ -2773,25 +2733,22 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 	bool is_json = false;
 	struct json_object *root, *fw_act, *element;
 	struct json_object *entry;
-	struct format {
-		char *fmt;
-	};
 
-	const char *fmt = "output format normal|json";
-	struct format cfg = {
-		.fmt = "normal",
-	};
+	const char *fmt = "Output format: normal|json";
+	nvme_print_flags_t format;
 
-	NVME_ARGS(opts,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
 		return err;
 
-
-	if (!strcmp(cfg.fmt, "json"))
-		is_json = true;
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+	is_json = format == JSON;
 
 	/* check if product supports fw_history log */
 	err = -EINVAL;
@@ -3146,26 +3103,24 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *a
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	bool is_json = true;
+	bool is_json = false;
 	nsze_from_oacs = false;
-	struct format {
-		char *fmt;
-	};
-	const char *fmt = "output format normal|json";
-	struct format cfg = {
-		.fmt = "json",
-	};
+	const char *fmt = "Output format: normal|json";
+	nvme_print_flags_t format;
 	int err = 0;
 
-	NVME_ARGS(opts,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
 		return err;
 
-	if (!strcmp(cfg.fmt, "normal"))
-		is_json = false;
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+	is_json = format == JSON;
 
 	/* For M5410 and M5407, this option prints 0xFB log page */
 	if (eModel == M5410 || eModel == M5407) {
@@ -3897,16 +3852,8 @@ static int micron_cloud_boot_SSD_version(int argc, char **argv,
 	int err = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	struct format {
-	char *fmt;
-	};
-	const char *fmt = "output format normal";
-	struct format cfg = {
-		.fmt = "normal",
-	};
 
-	NVME_ARGS(opts,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -3955,18 +3902,7 @@ static int micron_device_waf(int argc, char **argv, struct command *acmd,
 	long double tlc_units_written, slc_units_written;
 	long double data_units_written, write_amplification_factor;
 
-	struct format {
-		char *fmt;
-	};
-
-	const char *fmt = "output format normal";
-
-	struct format cfg = {
-			.fmt = "normal",
-	};
-
-	NVME_ARGS(opts,
-			OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -4015,24 +3951,22 @@ static int micron_cloud_log(int argc, char **argv, struct command *acmd,
 	int err = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	bool is_json = true;
-	struct format {
-		char *fmt;
-	};
-	const char *fmt = "output format normal|json";
-	struct format cfg = {
-		.fmt = "json",
-	};
+	bool is_json = false;
+	const char *fmt = "Output format: normal|json";
+	nvme_print_flags_t format;
 
-	NVME_ARGS(opts,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
 		return err;
 
-	if (strcmp(cfg.fmt, "normal") == 0)
-		is_json = false;
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+	is_json = format == JSON;
 
 	/* check for models that support 0xC0 log */
 	if (eModel != M51CX) {
@@ -4248,20 +4182,14 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	const char *desc = "Retrieve SMART/Health log for Micron drives";
-	const char *fmt = "output format normal|json";
+	const char *fmt = "Output format: normal|json";
 	enum eDriveModel eModel = UNKNOWN_MODEL;
 	struct nvme_smart_log smart_log = { 0 };
 	bool is_json = false;
+	nvme_print_flags_t format;
 	int err = 0;
-	struct format {
-		char *fmt;
-	};
-	struct format cfg = {
-		.fmt = "normal",
-	};
 
-	NVME_ARGS(opts,
-		OPT_FMT("format", 'f', &cfg.fmt, fmt));
+	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
 	if (err)
@@ -4270,8 +4198,12 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 	if (eModel == UNKNOWN_MODEL)
 		nvme_show_error("WARNING: Unknown drive model");
 
-	if (!strcmp(cfg.fmt, "json"))
-		is_json = true;
+	err = validate_output_format(nvme_args.output_format, &format);
+	if (err) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+	is_json = format == JSON;
 
 	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
 	if (err) {
@@ -4359,7 +4291,7 @@ static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
 	}
 
 	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
+	if (err) {
 		nvme_show_error("Invalid output format");
 		return err;
 	}
