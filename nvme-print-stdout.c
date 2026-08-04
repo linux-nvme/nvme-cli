@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -109,6 +110,93 @@ static void htable_ns_add_unique(struct htable_ns *ht, libnvme_ns_t n)
 			return;
 	}
 	htable_ns_add(ht, n);
+}
+
+/*
+ * Device names share a common textual prefix (e.g. "nvme", "nvme0n")
+ * followed by an integer index, so a plain byte-wise comparison would
+ * order "nvme10" before "nvme2". Walk both strings together and,
+ * whenever a run of digits begins in both, compare the runs by
+ * numeric value; otherwise fall back to byte comparison.
+ */
+static int name_natcmp(const char *sa, const char *sb)
+{
+	while (*sa && *sb) {
+		if (isdigit((unsigned char)*sa) && isdigit((unsigned char)*sb)) {
+			char *enda, *endb;
+			unsigned long va = strtoul(sa, &enda, 10);
+			unsigned long vb = strtoul(sb, &endb, 10);
+
+			if (va != vb)
+				return va < vb ? -1 : 1;
+
+			sa = enda;
+			sb = endb;
+			continue;
+		}
+
+		if (*sa != *sb)
+			return (unsigned char)*sa - (unsigned char)*sb;
+
+		sa++;
+		sb++;
+	}
+
+	return (unsigned char)*sa - (unsigned char)*sb;
+}
+
+static int name_natcmp_qsort(const void *a, const void *b)
+{
+	return name_natcmp(*(const char * const *)a, *(const char * const *)b);
+}
+
+struct name_collector {
+	const char **names;
+	size_t count;
+	size_t capacity;
+};
+
+static bool name_collect(const char *name, void *arg)
+{
+	struct name_collector *nc = arg;
+
+	if (nc->count == nc->capacity) {
+		nc->capacity = nc->capacity ? nc->capacity * 2 : 16;
+		nc->names = realloc(nc->names, nc->capacity * sizeof(*nc->names));
+	}
+
+	nc->names[nc->count++] = name;
+
+	return true;
+}
+
+/*
+ * Like strset_iterate(), but visits members in natural (numeric-aware)
+ * order instead of the strset's underlying byte-lexicographic trie
+ * order, so e.g. "nvme2" sorts before "nvme10".
+ */
+#define strset_iterate_sorted(set, handle, arg)			\
+	strset_iterate_sorted_((set), typesafe_cb_preargs(bool, void *, \
+						   (handle), (arg),	\
+						   const char *),	\
+			(arg))
+
+static void strset_iterate_sorted_(const struct strset *set,
+				    bool (*handle)(const char *, void *),
+				    const void *data)
+{
+	struct name_collector nc = { 0 };
+	size_t i;
+
+	strset_iterate_(set, name_collect, &nc);
+	qsort(nc.names, nc.count, sizeof(*nc.names), name_natcmp_qsort);
+
+	for (i = 0; i < nc.count; i++) {
+		if (!handle(nc.names[i], (void *)data))
+			break;
+	}
+
+	free(nc.names);
 }
 
 struct nvme_resources {
@@ -5763,7 +5851,7 @@ static void stdout_simple_list(struct libnvme_global_ctx *ctx)
 
 	nvme_resources_init(ctx, &res);
 
-	strset_iterate(&res.namespaces, stdout_simple_ns, &res_t);
+	strset_iterate_sorted(&res.namespaces, stdout_simple_ns, &res_t);
 
 	table_print(t);
 
@@ -5838,7 +5926,7 @@ static bool stdout_detailed_subsys(const char *name, void *arg)
 	}
 
 	first = true;
-	strset_iterate(&ctrls, stdout_detailed_name, &first);
+	strset_iterate_sorted(&ctrls, stdout_detailed_name, &first);
 	strset_clear(&ctrls);
 	printf("\n");
 
@@ -5893,7 +5981,7 @@ static bool stdout_detailed_ctrl(const char *name, void *arg)
 	}
 
 	first = true;
-	strset_iterate(&namespaces, stdout_detailed_name, &first);
+	strset_iterate_sorted(&namespaces, stdout_detailed_name, &first);
 	strset_clear(&namespaces);
 
 	printf("\n");
@@ -5933,7 +6021,7 @@ static bool stdout_detailed_ns(const char *name, void *arg)
 	}
 
 	first = true;
-	strset_iterate(&ctrls, stdout_detailed_name, &first);
+	strset_iterate_sorted(&ctrls, stdout_detailed_name, &first);
 	strset_clear(&ctrls);
 
 	printf("\n");
@@ -5948,7 +6036,7 @@ static void stdout_detailed_list(struct libnvme_global_ctx *ctx)
 
 	printf("%-16s %-96s %-.16s\n", "Subsystem", "Subsystem-NQN", "Controllers");
 	printf("%-.16s %-.96s %-.16s\n", dash, dash, dash);
-	strset_iterate(&res.subsystems, stdout_detailed_subsys, &res);
+	strset_iterate_sorted(&res.subsystems, stdout_detailed_subsys, &res);
 	printf("\n");
 
 	printf("%-16s %-12s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s %-16s\n",
@@ -5956,14 +6044,14 @@ static void stdout_detailed_list(struct libnvme_global_ctx *ctx)
 		"Address", "Slot", "Subsystem", "Namespaces");
 	printf("%-.16s %-.12s %-.6s %-.20s %-.40s %-.8s %-.6s %-.14s %-.6s %-.12s %-.16s\n",
 		dash, dash, dash, dash, dash, dash, dash, dash, dash, dash, dash);
-	strset_iterate(&res.ctrls, stdout_detailed_ctrl, &res);
+	strset_iterate_sorted(&res.ctrls, stdout_detailed_ctrl, &res);
 	printf("\n");
 
 	printf("%-17s %-20s %-10s %-49s %-16s %-16s\n", "Device", "Generic",
 		"NSID", "Usage", "Format", "Controllers");
 	printf("%-.17s %-.20s %-.10s %-.49s %-.16s %-.16s\n", dash, dash, dash,
 		dash, dash, dash);
-	strset_iterate(&res.namespaces, stdout_detailed_ns, &res);
+	strset_iterate_sorted(&res.namespaces, stdout_detailed_ns, &res);
 
 	nvme_resources_free(&res);
 }
