@@ -393,7 +393,9 @@ static bool test_tid_setter_invalidates_cache(void)
 	/* Prime the cache, mutate via set_identity, confirm it rebuilt. */
 	snprintf(before, sizeof(before), "%s", libnvmf_tid_get_canonical(t));
 
-	libnvmf_tid_set_identity(t, "nqn.sub", NULL, NULL);
+	p = libnvmf_tid_set_identity(t, "nqn.sub", NULL, NULL) == 0;
+	CHECK(p, "set_identity succeeds");
+	pass &= p;
 
 	after = libnvmf_tid_get_canonical(t);
 	p = after && !streq(before, after) && strstr(after, "nqn=nqn.sub");
