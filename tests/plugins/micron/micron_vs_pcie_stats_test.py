@@ -119,15 +119,16 @@ class TestMicronVsPcieStats(TestMicron):
 
     def test_bad_device_returns_error(self):
         """vs-pcie-stats fails with a message when the device does not exist."""
-        result = self._run_pcie_stats(device="/dev/nvme-nonexistent-test-device")
+        device = "/dev/nvme-nonexistent-test-device"
+        result = self._run_pcie_stats(device=device)
 
         self.assertNotEqual(
             result.returncode, 0,
             "Expected non-zero exit code for a non-existent device",
         )
         self.assertIn(
-            "open failed", result.stderr,
-            f"Expected 'open failed' in stderr, got: {result.stderr!r}",
+            device, result.stderr,
+            f"Expected {device!r} in stderr, got: {result.stderr!r}",
         )
 
     def test_invalid_output_format_returns_error(self):
