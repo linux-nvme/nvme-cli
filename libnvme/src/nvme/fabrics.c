@@ -2590,8 +2590,7 @@ static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
 }
 
 static int _nvmf_discover(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, bool connect,
-		struct libnvme_ctrl *c)
+		struct libnvmf_context *fctx, struct libnvme_ctrl *c)
 {
 	__cleanup_free struct nvmf_discovery_log *log = NULL;
 	libnvme_subsystem_t s = libnvme_ctrl_get_subsystem(c);
@@ -2629,9 +2628,6 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 	if (fctx->hooks.discovery_log)
 		fctx->hooks.discovery_log(fctx, log, numrec,
 			fctx->hooks.user_data);
-
-	if (!connect)
-		return 0;
 
 	for (int i = 0; i < numrec; i++) {
 		struct nvmf_disc_log_entry *e = &log->entries[i];
@@ -2690,6 +2686,9 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 			set_discovery_kato(&nfctx);
 		} else {
 			/* NVME_NQN_NVME */
+
+			if (!fctx->connect)
+				continue;
 			disconnect = false;
 		}
 
@@ -2699,7 +2698,7 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 
 		if (child) {
 			if (discover)
-				_nvmf_discover(ctx, &nfctx, true, child);
+				_nvmf_discover(ctx, &nfctx, child);
 
 			if (disconnect) {
 				libnvmf_disconnect_ctrl(child);
@@ -3525,7 +3524,7 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 		}
 	}
 
-	ret = _nvmf_discover(ctx, fctx, fctx->connect, c);
+	ret = _nvmf_discover(ctx, fctx, c);
 	if (fctx->persistent != LIBNVMF_TRISTATE_TRUE)
 		libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);
