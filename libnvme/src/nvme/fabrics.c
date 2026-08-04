@@ -2590,47 +2590,40 @@ static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
 }
 
 static bool dc_should_connect(struct libnvmf_context *fctx,
-		struct nvmf_disc_log_entry *e, bool *pdisconnet)
+		struct nvmf_disc_log_entry *e, bool *pdisconnect)
 {
-	bool disconnect = false;
+	bool disconnect;
+	__u16 eflags;
 
-	if (e->subtype == NVME_NQN_DISC || e->subtype == NVME_NQN_CURR) {
-		__u16 eflags = le16_to_cpu(e->eflags);
-		/*
-		 * Does this discovery controller return the
-		 * same information?
-		 */
-		if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
-			return false;
-
-		/*
-		 * Are we supposed to keep the discovery
-		 * controller around?
-		 */
-		disconnect = fctx->persistent != LIBNVMF_TRISTATE_TRUE;
-
-		if (strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME)) {
-			/*
-			 * Does this discovery controller
-			 * support explicit persistent connection?
-			 * If epcsd is disabled disconnect anyway.
-			 */
-			if (!(eflags & NVMF_DISC_EFLAGS_EPCSD))
-				disconnect = true;
-			else
-				disconnect = fctx->epcsd == LIBNVMF_TRISTATE_FALSE;
-		}
-
-		set_discovery_kato(fctx);
-	} else {
-		/* NVME_NQN_NVME */
-
-		if (!fctx->connect)
-			return false;
-		disconnect = false;
+	if (e->subtype == NVME_NQN_NVME) {
+		*pdisconnect = false;
+		return fctx->connect;
 	}
 
-	*pdisconnet = disconnect;
+	eflags = le16_to_cpu(e->eflags);
+
+	/* Discovery controller returns duplicate information. */
+	if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
+		return false;
+
+	if (!strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME)) {
+		/*
+		 * Implicit persistent discovery controller.
+		 * Keep it only if persistence is enabled.
+		 */
+		disconnect = fctx->persistent != LIBNVMF_TRISTATE_TRUE;
+	} else {
+		/*
+		 * Explicit persistent discovery controller.
+		 * Keep it only if EPCSD is supported and enabled.
+		 */
+		disconnect = !(eflags & NVMF_DISC_EFLAGS_EPCSD) ||
+			     fctx->epcsd == LIBNVMF_TRISTATE_FALSE;
+	}
+
+	set_discovery_kato(fctx);
+
+	*pdisconnect = disconnect;
 	return true;
 }
 
@@ -2657,19 +2650,6 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 	}
 
 	numrec = le64_to_cpu(log->numrec);
-
-	for (int i = 0; i < numrec; i++) {
-		struct nvmf_disc_log_entry *e = &log->entries[i];
-		uint16_t eflags = le16_to_cpu(e->eflags);
-
-		if ((e->subtype == NVME_NQN_DISC ||
-		    e->subtype == NVME_NQN_CURR) &&
-		    (eflags & NVMF_DISC_EFLAGS_EPCSD) &&
-		    (fctx->epcsd == LIBNVMF_TRISTATE_TRUE)) {
-			libnvmf_context_set_persistent(fctx, true);
-			break;
-		}
-	}
 
 	if (fctx->hooks.discovery_log)
 		fctx->hooks.discovery_log(fctx, log, numrec,
