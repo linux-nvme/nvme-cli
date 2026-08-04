@@ -1761,7 +1761,7 @@ void nvme_show_verbose_message(const char *msg, ...)
 
 	va_start(ap, msg);
 
-	show_message(true, msg, ap);
+	show_message(false, msg, ap);
 
 	va_end(ap);
 }
