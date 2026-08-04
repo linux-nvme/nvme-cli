@@ -3514,8 +3514,6 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 	}
 
 	ret = _nvmf_discover(ctx, fctx, c);
-	if (fctx->persistent != LIBNVMF_TRISTATE_TRUE)
-		libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);
 
 	return ret;
