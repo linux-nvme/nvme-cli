@@ -455,7 +455,7 @@ static void consume_conn(const struct libnvmf_config_conn *conn,
 				MAX_DISC_RETRIES);
 		libnvmf_context_set_default_keep_alive_timeout(fctx,
 				NVMF_DEF_DISC_TMO);
-		err = libnvmf_discovery(st->ctx, fctx, st->connect, st->force);
+		err = libnvmf_discover(st->ctx, fctx, st->connect, st->force);
 	} else {
 		err = libnvmf_connect(st->ctx, fctx);
 	}
@@ -755,7 +755,7 @@ static int check_ctrl_owner(struct libnvme_global_ctx *ctx,
 	return 1;
 }
 
-int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
+int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 {
 	__cleanup_free char *hnqn = NULL;
 	__cleanup_free char *hid = NULL;
@@ -882,7 +882,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 
 	if (!device && !fa.transport && !fa.traddr) {
 		if (!nonbft) {
-			ret = libnvmf_discovery_nbft(ctx, fctx, connect,
+			ret = libnvmf_discover_nbft(ctx, fctx, connect,
 				nbft_path);
 		}
 		if (!nbft && config_file)
@@ -899,7 +899,7 @@ int fabrics_discovery(const char *desc, int argc, char **argv, bool connect)
 		if (ret)
 			return 0;
 
-		ret = libnvmf_discovery(ctx, fctx, connect, force);
+		ret = libnvmf_discover(ctx, fctx, connect, force);
 	}
 
 	return ret;
