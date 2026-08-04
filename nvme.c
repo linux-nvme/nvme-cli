@@ -6098,7 +6098,7 @@ static int get_register_properties(struct libnvme_transport_handle *hdl, void **
 		if (nvme_status_equals(err, NVME_STATUS_TYPE_NVME, NVME_SC_INVALID_FIELD)) {
 			value = -1;
 		} else if (err) {
-			nvme_show_error("get-property: %s", libnvme_strerror(err));
+			nvme_show_error("get-property: %s", libnvme_strerror(-err));
 			free(bar);
 			return err;
 		} else {
