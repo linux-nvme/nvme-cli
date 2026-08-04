@@ -356,6 +356,8 @@ static void netapp_smdevices_print_verbose(struct smdevice_info *devices,
 			"---------", "---------");
 		formatstr = columnstr;
 	}
+	else
+		return;
 
 	for (i = 0; i < count; i++) {
 		if (devname && !strcmp(devname, basename(devices[i].dev))) {
