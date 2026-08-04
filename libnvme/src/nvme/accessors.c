@@ -194,38 +194,6 @@ __shr_public const char *libnvme_ctrl_get_address(const struct libnvme_ctrl *p)
 	return p->address;
 }
 
-__shr_public const char *libnvme_ctrl_get_firmware(const struct libnvme_ctrl *p)
-{
-	return p->firmware;
-}
-
-__shr_public const char *libnvme_ctrl_get_model(const struct libnvme_ctrl *p)
-{
-	return p->model;
-}
-
-__shr_public const char *libnvme_ctrl_get_numa_node(
-		const struct libnvme_ctrl *p)
-{
-	return p->numa_node;
-}
-
-__shr_public const char *libnvme_ctrl_get_queue_count(
-		const struct libnvme_ctrl *p)
-{
-	return p->queue_count;
-}
-
-__shr_public const char *libnvme_ctrl_get_serial(const struct libnvme_ctrl *p)
-{
-	return p->serial;
-}
-
-__shr_public const char *libnvme_ctrl_get_sqsize(const struct libnvme_ctrl *p)
-{
-	return p->sqsize;
-}
-
 __shr_public const char *libnvme_ctrl_get_transport(
 		const struct libnvme_ctrl *p)
 {
@@ -246,47 +214,6 @@ __shr_public const char *libnvme_ctrl_get_traddr(const struct libnvme_ctrl *p)
 __shr_public const char *libnvme_ctrl_get_trsvcid(const struct libnvme_ctrl *p)
 {
 	return p->trsvcid;
-}
-
-__shr_public void libnvme_ctrl_set_dhchap_host_key(
-		struct libnvme_ctrl *p,
-		const char *dhchap_host_key)
-{
-	free(p->dhchap_host_key);
-	p->dhchap_host_key = dhchap_host_key ? strdup(dhchap_host_key) : NULL;
-}
-
-__shr_public const char *libnvme_ctrl_get_dhchap_host_key(
-		const struct libnvme_ctrl *p)
-{
-	return p->dhchap_host_key;
-}
-
-__shr_public void libnvme_ctrl_set_dhchap_ctrl_key(
-		struct libnvme_ctrl *p,
-		const char *dhchap_ctrl_key)
-{
-	free(p->dhchap_ctrl_key);
-	p->dhchap_ctrl_key = dhchap_ctrl_key ? strdup(dhchap_ctrl_key) : NULL;
-}
-
-__shr_public const char *libnvme_ctrl_get_dhchap_ctrl_key(
-		const struct libnvme_ctrl *p)
-{
-	return p->dhchap_ctrl_key;
-}
-
-__shr_public void libnvme_ctrl_set_keyring(
-		struct libnvme_ctrl *p,
-		const char *keyring)
-{
-	free(p->keyring);
-	p->keyring = keyring ? strdup(keyring) : NULL;
-}
-
-__shr_public const char *libnvme_ctrl_get_keyring(const struct libnvme_ctrl *p)
-{
-	return p->keyring;
 }
 
 __shr_public void libnvme_ctrl_set_tls_key_identity(
@@ -315,27 +242,6 @@ __shr_public void libnvme_ctrl_set_tls_key(
 __shr_public const char *libnvme_ctrl_get_tls_key(const struct libnvme_ctrl *p)
 {
 	return p->tls_key;
-}
-
-__shr_public const char *libnvme_ctrl_get_cntrltype(
-		const struct libnvme_ctrl *p)
-{
-	return p->cntrltype;
-}
-
-__shr_public const char *libnvme_ctrl_get_cntlid(const struct libnvme_ctrl *p)
-{
-	return p->cntlid;
-}
-
-__shr_public const char *libnvme_ctrl_get_dctype(const struct libnvme_ctrl *p)
-{
-	return p->dctype;
-}
-
-__shr_public const char *libnvme_ctrl_get_phy_slot(const struct libnvme_ctrl *p)
-{
-	return p->phy_slot;
 }
 
 __shr_public const char *libnvme_ctrl_get_host_traddr(

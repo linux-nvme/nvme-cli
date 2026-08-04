@@ -42,6 +42,8 @@ static int libnvme_ctrl_scan_namespace(struct libnvme_global_ctx *ctx,
 static int libnvme_ctrl_scan_path(struct libnvme_global_ctx *ctx,
 		struct libnvme_ctrl *c, char *name);
 
+char NO_SYSFS_ATTR[] = "";
+
 char *libnvme_hostid_from_hostnqn(const char *hostnqn)
 {
 	const char *uuid;
@@ -1263,39 +1265,6 @@ __shr_public char *libnvme_ctrl_get_src_addr(
 				      src_addr_len);
 }
 
-__shr_public long libnvme_ctrl_get_command_error_count(libnvme_ctrl_t c)
-{
-	__cleanup_free char *error_count = NULL;
-
-	error_count = libnvme_get_ctrl_attr(c, "diag/command_error_count");
-	if (error_count)
-		sscanf(error_count, "%ld", &c->command_error_count);
-
-	return c->command_error_count;
-}
-
-__shr_public long libnvme_ctrl_get_reset_count(libnvme_ctrl_t c)
-{
-	__cleanup_free char *reset_count = NULL;
-
-	reset_count = libnvme_get_ctrl_attr(c, "diag/reset_count");
-	if (reset_count)
-		sscanf(reset_count, "%ld", &c->reset_count);
-
-	return c->reset_count;
-}
-
-__shr_public long libnvme_ctrl_get_reconnect_count(libnvme_ctrl_t c)
-{
-	__cleanup_free char *reconnect_count = NULL;
-
-	reconnect_count = libnvme_get_ctrl_attr(c, "diag/reconnect_count");
-	if (reconnect_count)
-		sscanf(reconnect_count, "%ld", &c->reconnect_count);
-
-	return c->reconnect_count;
-}
-
 __shr_public int libnvme_ctrl_identify(
 		libnvme_ctrl_t c, struct nvme_id_ctrl *id)
 {
@@ -1334,23 +1303,11 @@ void nvme_deconfigure_ctrl(libnvme_ctrl_t c)
 	libnvme_ctrl_release_transport_handle(c);
 	FREE_CTRL_ATTR(c->name);
 	FREE_CTRL_ATTR(c->sysfs_dir);
-	FREE_CTRL_ATTR(c->firmware);
-	FREE_CTRL_ATTR(c->model);
 	FREE_CTRL_ATTR(c->state);
-	FREE_CTRL_ATTR(c->numa_node);
-	FREE_CTRL_ATTR(c->queue_count);
-	FREE_CTRL_ATTR(c->serial);
-	FREE_CTRL_ATTR(c->sqsize);
-	FREE_CTRL_ATTR(c->dhchap_host_key);
-	FREE_CTRL_ATTR(c->dhchap_ctrl_key);
-	FREE_CTRL_ATTR(c->keyring);
 	FREE_CTRL_ATTR(c->tls_key_identity);
 	FREE_CTRL_ATTR(c->tls_key);
 	FREE_CTRL_ATTR(c->address);
-	FREE_CTRL_ATTR(c->dctype);
-	FREE_CTRL_ATTR(c->cntrltype);
-	FREE_CTRL_ATTR(c->cntlid);
-	FREE_CTRL_ATTR(c->phy_slot);
+	libnvme_ctrl_sysfs_reset(c->sysfs);
 }
 
 __shr_public void libnvme_unlink_ctrl(libnvme_ctrl_t c)
@@ -1380,6 +1337,7 @@ static void __libnvme_free_ctrl(libnvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->host_traddr);
 	FREE_CTRL_ATTR(c->host_iface);
 	FREE_CTRL_ATTR(c->trsvcid);
+	libnvme_ctrl_sysfs_free(c->sysfs);
 	free(c);
 }
 
@@ -1414,6 +1372,12 @@ int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 	c = calloc(1, sizeof(*c));
 	if (!c)
 		return -ENOMEM;
+
+	c->sysfs = libnvme_ctrl_sysfs_alloc();
+	if (!c->sysfs) {
+		free(c);
+		return -ENOMEM;
+	}
 
 	c->ctx = ctx;
 	c->hdl = NULL;
@@ -1688,17 +1652,17 @@ const char *libnvme_ns_head_get_sysfs_dir(libnvme_ns_head_t head)
 
 __shr_public const char *libnvme_ns_get_model(libnvme_ns_t n)
 {
-	return n->c ? n->c->model : n->s->model;
+	return n->c ? libnvme_ctrl_get_model(n->c) : n->s->model;
 }
 
 __shr_public const char *libnvme_ns_get_serial(libnvme_ns_t n)
 {
-	return n->c ? n->c->serial : n->s->serial;
+	return n->c ? libnvme_ctrl_get_serial(n->c) : n->s->serial;
 }
 
 __shr_public const char *libnvme_ns_get_firmware(libnvme_ns_t n)
 {
-	return n->c ? n->c->firmware : n->s->firmware;
+	return n->c ? libnvme_ctrl_get_firmware(n->c) : n->s->firmware;
 }
 
 __shr_public void libnvme_ns_copy_uuid(libnvme_ns_t n,

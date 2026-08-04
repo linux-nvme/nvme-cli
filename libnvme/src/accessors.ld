@@ -6,44 +6,38 @@
  * Copyright (c) 2025, Dell Technologies Inc. or its subsidiaries.
  * Authors: Martin Belanger <Martin.Belanger@dell.com>
  *
+ * This symbol list is maintained by hand, not auto-generated. When
+ * you run the update below, it does not rewrite this file -- it
+ * prints which symbols should be added or removed. Add or remove
+ * those symbols yourself, in the correct ABI version section.
+ *
+ * To check: meson compile -C [BUILD-DIR] update-accessors
+ * Or:       make update-accessors
  */
 
 LIBNVME_ACCESSORS_3 {
 	global:
 		libnvme_ctrl_get_address;
-		libnvme_ctrl_get_cntlid;
-		libnvme_ctrl_get_cntrltype;
 		libnvme_ctrl_get_concat;
 		libnvme_ctrl_get_ctrl_loss_tmo;
 		libnvme_ctrl_get_data_digest;
-		libnvme_ctrl_get_dctype;
-		libnvme_ctrl_get_dhchap_ctrl_key;
-		libnvme_ctrl_get_dhchap_host_key;
 		libnvme_ctrl_get_disable_sqflow;
 		libnvme_ctrl_get_discovered;
 		libnvme_ctrl_get_discovery_ctrl;
 		libnvme_ctrl_get_duplicate_connect;
 		libnvme_ctrl_get_fast_io_fail_tmo;
-		libnvme_ctrl_get_firmware;
 		libnvme_ctrl_get_hdr_digest;
 		libnvme_ctrl_get_host_iface;
 		libnvme_ctrl_get_host_traddr;
 		libnvme_ctrl_get_keep_alive_tmo;
-		libnvme_ctrl_get_keyring;
 		libnvme_ctrl_get_keyring_id;
-		libnvme_ctrl_get_model;
 		libnvme_ctrl_get_name;
 		libnvme_ctrl_get_nr_io_queues;
 		libnvme_ctrl_get_nr_poll_queues;
 		libnvme_ctrl_get_nr_write_queues;
-		libnvme_ctrl_get_numa_node;
 		libnvme_ctrl_get_persistent;
-		libnvme_ctrl_get_phy_slot;
-		libnvme_ctrl_get_queue_count;
 		libnvme_ctrl_get_queue_size;
 		libnvme_ctrl_get_reconnect_delay;
-		libnvme_ctrl_get_serial;
-		libnvme_ctrl_get_sqsize;
 		libnvme_ctrl_get_subsysnqn;
 		libnvme_ctrl_get_sysfs_dir;
 		libnvme_ctrl_get_tls;
@@ -56,11 +50,8 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_ctrl_get_transport;
 		libnvme_ctrl_get_trsvcid;
 		libnvme_ctrl_get_unique_discovery_ctrl;
-		libnvme_ctrl_set_dhchap_ctrl_key;
-		libnvme_ctrl_set_dhchap_host_key;
 		libnvme_ctrl_set_discovered;
 		libnvme_ctrl_set_discovery_ctrl;
-		libnvme_ctrl_set_keyring;
 		libnvme_ctrl_set_persistent;
 		libnvme_ctrl_set_tls_key;
 		libnvme_ctrl_set_tls_key_identity;

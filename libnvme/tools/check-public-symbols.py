@@ -40,6 +40,7 @@ LD_FILES = [
     ROOT / 'src' / 'libnvme-mi.ld',
     ROOT / 'src' / 'accessors.ld',
     ROOT / 'src' / 'accessors-fabrics.ld',
+    ROOT / 'src' / 'ctrl-sysfs.ld',
 ]
 
 # ---------------------------------------------------------------------------

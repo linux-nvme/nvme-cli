@@ -27,6 +27,11 @@
 struct libnvme_passthru_completion;
 struct libnvme_async_req;
 
+/* Opaque: defined only in the generated ctrl-sysfs.c -- see
+ * generate_sysfs_accessors.py. No other file may see its layout.
+ */
+struct libnvme_ctrl_sysfs;
+
 const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_ns_sysfs_dir(struct libnvme_global_ctx *ctx);
@@ -333,36 +338,23 @@ struct libnvme_ctrl {  // !generate-accessors:read=generated,write=none !generat
 	char *name;
 	char *sysfs_dir;
 	char *address;
-	char *firmware;
-	char *model;
 	char *state;			// !access:read=custom
-	char *numa_node;
-	char *queue_count;
-	char *serial;
-	char *sqsize;
 	char *transport;
 	char *subsysnqn;
 	char *traddr;
 	char *trsvcid;
-	char *dhchap_host_key;		// !access:write=generated
-	char *dhchap_ctrl_key;		// !access:write=generated
-	char *keyring;			// !access:write=generated
 	char *tls_key_identity;		// !access:write=generated
 	char *tls_key;			// !access:write=generated
-	char *cntrltype;
-	char *cntlid;
-	char *dctype;
-	char *phy_slot;
 	char *host_traddr;
 	char *host_iface;
 	bool discovery_ctrl;		// !access:write=generated
 	bool unique_discovery_ctrl;	// !access:write=generated
 	bool discovered;		// !access:write=generated
 	bool persistent;		// !access:write=generated
-	long command_error_count;	// !access:read=custom
-	long reset_count;		// !access:read=custom
-	long reconnect_count;		// !access:read=custom
 	struct libnvme_fabrics_config cfg; // !access:nested:write=none
+
+	/* Opaque: field list is CTRL_SYSFS in sysfs_accessors_specs.py. */
+	struct libnvme_ctrl_sysfs *sysfs;	// !access:read=none
 };
 
 struct libnvme_subsystem {  // !generate-accessors:read=generated,write=none !generate-python:alias=Subsystem

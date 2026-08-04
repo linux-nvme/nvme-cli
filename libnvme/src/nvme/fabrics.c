@@ -2257,29 +2257,33 @@ static int nvme_fetch_cntrltype_dctype_from_id(libnvme_ctrl_t c)
 	if (ret)
 		return ret;
 
-	if (!c->cntrltype) {
+	if (!libnvme_ctrl_get_cntrltype(c)) {
 		if (id->cntrltype > NVME_CTRL_CNTRLTYPE_ADMIN || !cntrltype_str[id->cntrltype])
-			c->cntrltype = strdup("reserved");
+			libnvme_ctrl_set_cntrltype(c, "reserved");
 		else
-			c->cntrltype = strdup(cntrltype_str[id->cntrltype]);
+			libnvme_ctrl_set_cntrltype(c,
+					cntrltype_str[id->cntrltype]);
 	}
 
-	if (!c->dctype) {
+	if (!libnvme_ctrl_get_dctype(c)) {
 		if (id->dctype > NVME_CTRL_DCTYPE_CDC || !dctype_str[id->dctype])
-			c->dctype = strdup("reserved");
+			libnvme_ctrl_set_dctype(c, "reserved");
 		else
-			c->dctype = strdup(dctype_str[id->dctype]);
+			libnvme_ctrl_set_dctype(c, dctype_str[id->dctype]);
 	}
 	return 0;
 }
 
 __shr_public bool libnvmf_is_registration_supported(libnvme_ctrl_t c)
 {
-	if (!c->cntrltype || !c->dctype)
+	const char *dctype;
+
+	if (!libnvme_ctrl_get_cntrltype(c) || !libnvme_ctrl_get_dctype(c))
 		if (nvme_fetch_cntrltype_dctype_from_id(c))
 			return false;
 
-	return !strcmp(c->dctype, "ddc") || !strcmp(c->dctype, "cdc");
+	dctype = libnvme_ctrl_get_dctype(c);
+	return !strcmp(dctype, "ddc") || !strcmp(dctype, "cdc");
 }
 
 __shr_public int libnvmf_register_ctrl(

@@ -309,48 +309,26 @@ static ctrl_match_t libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 	return NULL;
 }
 
-static void libnvmf_read_sysfs_dhchap(struct libnvme_global_ctx *ctx,
-		libnvme_ctrl_t c)
-{
-	char *host_key, *ctrl_key;
-
-	host_key = libnvme_get_ctrl_attr(c, "dhchap_secret");
-	if (host_key && !strcmp(host_key, "none")) {
-		free(host_key);
-		host_key = NULL;
-	}
-	if (host_key) {
-		libnvme_ctrl_set_dhchap_host_key(c, NULL);
-		c->dhchap_host_key = host_key;
-	}
-
-	ctrl_key = libnvme_get_ctrl_attr(c, "dhchap_ctrl_secret");
-	if (ctrl_key && !strcmp(ctrl_key, "none")) {
-		free(ctrl_key);
-		ctrl_key = NULL;
-	}
-	if (ctrl_key) {
-		libnvme_ctrl_set_dhchap_ctrl_key(c, NULL);
-		c->dhchap_ctrl_key = ctrl_key;
-	}
-}
-
+/*
+ * dhchap_host_key/dhchap_ctrl_key/keyring moved to the lazy
+ * libnvmf_ctrl_load_fabrics_attrs() (ctrl-sysfs-custom-fabrics.c) --
+ * this function keeps only the cfg.* fields, which stay eager since cfg
+ * is out of the lazy-sysfs struct entirely. tls_key's presence is
+ * checked again by the lazy loader for keyring -- see the comment
+ * there.
+ */
 static void libnvmf_read_sysfs_tls(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c)
 {
 	char *endptr;
 	long key_id;
-	char *key, *keyring;
+	char *key;
 
 	key = libnvme_get_ctrl_attr(c, "tls_key");
 	if (!key) {
 		/* tls_key is only present if --tls or --concat has been used */
 		return;
 	}
-
-	keyring = libnvme_get_ctrl_attr(c, "tls_keyring");
-	libnvme_ctrl_set_keyring(c, keyring);
-	free(keyring);
 
 	/* the sysfs entry is not prefixing the id but it's in hex */
 	key_id = strtol(key, &endptr, 16);
@@ -389,7 +367,6 @@ static void libnvmf_read_sysfs_tls_mode(struct libnvme_global_ctx *ctx,
 void libnvmf_read_sysfs_fabrics_attrs(struct libnvme_global_ctx *ctx,
 		libnvme_ctrl_t c)
 {
-	libnvmf_read_sysfs_dhchap(ctx, c);
 	libnvmf_read_sysfs_tls(ctx, c);
 	libnvmf_read_sysfs_tls_mode(ctx, c);
 }
