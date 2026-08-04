@@ -83,15 +83,16 @@ class TestMicronClearPcieCorrectableErrors(TestMicron):
 
         Exercises the parse_and_open failure branch.
         """
-        result = self._run_clear(device="/dev/nvme-nonexistent-test-device")
+        device = "/dev/nvme-nonexistent-test-device"
+        result = self._run_clear(device=device)
 
         self.assertNotEqual(
             result.returncode, 0,
             "Expected non-zero exit code for a non-existent device",
         )
         self.assertTrue(
-            "open failed" in result.stderr,
-            f"Expected 'open failed' in stderr, "
+            device in result.stderr,
+            f"Expected {device!r} in stderr, "
             f"got: {result.stderr!r}",
         )
 

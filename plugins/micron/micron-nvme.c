@@ -680,10 +680,8 @@ static int micron_parse_options(struct libnvme_global_ctx **ctx,
 {
 	int err = parse_and_open(ctx, hdl, argc, argv, desc, opts);
 
-	if (err) {
-		nvme_show_err(err, "open failed");
-		return -1;
-	}
+	if (err)
+		return err;
 
 	if (modelp)
 		*modelp = GetDriveModel(*ctx, *hdl);
@@ -861,7 +859,7 @@ static int micron_smbus_option(int argc, char **argv,
 		OPT_UINT("save", 's', &opt.save, save));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
-	if (err < 0)
+	if (err)
 		return err;
 
 	if (model != M5407 && model != M5411 && model != M6003 && model != M6004) {
@@ -928,10 +926,8 @@ static int micron_temp_stats(int argc, char **argv, struct command *acmd,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	if (err)
+		return err;
 
 	err = micron_get_output_format(opts, nvme_args.output_format, cfg.fmt,
 		NORMAL, &format);
@@ -1072,7 +1068,7 @@ static int micron_pcie_stats(int argc, char **argv,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
+	if (err)
 		return err;
 
 	err = micron_get_output_format(opts, nvme_args.output_format, cfg.fmt,
@@ -1177,7 +1173,7 @@ static int micron_clear_pcie_correctable_errors(int argc, char **argv,
 	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
-	if (err < 0)
+	if (err)
 		return err;
 
 	/* For M51CX models, PCIe errors are cleared using 0xC3 feature
@@ -1825,7 +1821,7 @@ static int micron_nand_stats(int argc, char **argv,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
+	if (err)
 		return err;
 
 	if (!strcmp(cfg.fmt, "normal"))
@@ -1954,7 +1950,7 @@ static int micron_smart_ext_log(int argc, char **argv,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
+	if (err)
 		return err;
 	if (!strcmp(cfg.fmt, "normal"))
 		is_json = false;
@@ -2000,7 +1996,7 @@ static int micron_work_load_log(int argc, char **argv, struct command *acmd, str
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
+	if (err)
 		return err;
 	if (strcmp(cfg.fmt, "normal") == 0)
 		is_json = false;
@@ -2044,7 +2040,7 @@ static int micron_vendor_telemetry_log(int argc, char **argv,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
+	if (err)
 		return err;
 	if (strcmp(cfg.fmt, "normal") == 0)
 		is_json = false;
@@ -2445,7 +2441,7 @@ static int micron_drive_info(int argc, char **argv, struct command *acmd,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
-	if (err < 0)
+	if (err)
 		return err;
 
 	if (model == UNKNOWN_MODEL) {
@@ -2790,8 +2786,8 @@ static int micron_fw_activation_history(int argc, char **argv, struct command *a
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
-		return -1;
+	if (err)
+		return err;
 
 
 	if (!strcmp(cfg.fmt, "json"))
@@ -2900,8 +2896,8 @@ static int micron_latency_stats_track(int argc, char **argv, struct command *acm
 
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
-	if (err < 0)
-		return -1;
+	if (err)
+		return err;
 
 	if (!strcmp(opt.option, "enable")) {
 		enable = 1;
@@ -3096,7 +3092,7 @@ static int micron_latency_stats_info(int argc, char **argv, struct command *acmd
 		OPT_STRING("command", 'c', "command", &opt.command, cmdstr));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
-	if (err < 0)
+	if (err)
 		return err;
 	if (!strcmp(opt.command, "read")) {
 		cmd_stats = &log.read_cmds[0];
@@ -3165,8 +3161,8 @@ static int micron_ocp_smart_health_logs(int argc, char **argv, struct command *a
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
-		return -1;
+	if (err)
+		return err;
 
 	if (!strcmp(cfg.fmt, "normal"))
 		is_json = false;
@@ -3222,7 +3218,7 @@ static int micron_clr_fw_activation_history(int argc, char **argv,
 	int err = 0;
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
-	if (err < 0)
+	if (err)
 		return err;
 
 	if ((model != M51CX) && (model != M51BY) && (model != M51CY)
@@ -3270,8 +3266,8 @@ static int micron_telemetry_cntrl_option(int argc, char **argv,
 		OPT_UINT("select", 's', &opt.select, select));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
-	if (err < 0)
-		return -1;
+	if (err)
+		return err;
 
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if ((ctrl.lpa & 0x8) != 0x8) {
@@ -3563,7 +3559,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		OPT_UINT("data_area", 'd', &cfg.data_area, data_area));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
+	if (err)
 		return err;
 
 	err = -EINVAL;
@@ -3840,7 +3836,7 @@ static int micron_logpage_dir(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &model);
-	if (err < 0)
+	if (err)
 		return err;
 
 	struct nvme_supported_logs {
@@ -3913,8 +3909,8 @@ static int micron_cloud_boot_SSD_version(int argc, char **argv,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
-		return -1;
+	if (err)
+		return err;
 
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err == 0) {
@@ -3973,8 +3969,8 @@ static int micron_device_waf(int argc, char **argv, struct command *acmd,
 			OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
-		return -1;
+	if (err)
+		return err;
 
 	err = nvme_identify_ctrl(hdl, &ctrl);
 	if (err == 0) {
@@ -4032,8 +4028,8 @@ static int micron_cloud_log(int argc, char **argv, struct command *acmd,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
-		return -1;
+	if (err)
+		return err;
 
 	if (strcmp(cfg.fmt, "normal") == 0)
 		is_json = false;
@@ -4268,7 +4264,7 @@ static int micron_health_info(int argc, char **argv, struct command *acmd,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
+	if (err)
 		return err;
 
 	if (eModel == UNKNOWN_MODEL)
@@ -4354,7 +4350,7 @@ static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
 	NVME_ARGS(opts);
 
 	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
-	if (err < 0)
+	if (err)
 		return err;
 
 	if (eModel == UNKNOWN_MODEL) {

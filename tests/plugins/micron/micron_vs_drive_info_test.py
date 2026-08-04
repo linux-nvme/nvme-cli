@@ -118,21 +118,22 @@ class TestMicronVsDriveInfo(TestMicron):
         return present
 
     def test_bad_device_returns_error(self):
-        """vs-drive-info fails with 'open failed' when the device does not exist.
+        """vs-drive-info fails when the device does not exist.
 
-        Exercises the parse_and_open failure branch.  Only the constant
-        "open failed" prefix is asserted because the OS strerror text appended
-        to it differs between Windows and Linux.
+        Exercises the parse_and_open failure branch.  Only the device name
+        prefix is asserted because the OS strerror text appended to it differs
+        between Windows and Linux.
         """
-        result = self._run_drive_info(device="/dev/nvme-nonexistent-test-device")
+        device = "/dev/nvme-nonexistent-test-device"
+        result = self._run_drive_info(device=device)
 
         self.assertNotEqual(
             result.returncode, 0,
             "Expected non-zero exit code for a non-existent device",
         )
         self.assertIn(
-            "open failed", result.stderr,
-            f"Expected 'open failed' in stderr, got: {result.stderr!r}",
+            device, result.stderr,
+            f"Expected {device!r} in stderr, got: {result.stderr!r}",
         )
 
     def test_invalid_format_returns_error(self):
