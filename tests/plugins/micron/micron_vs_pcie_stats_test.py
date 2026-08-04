@@ -126,8 +126,8 @@ class TestMicronVsPcieStats(TestMicron):
             "Expected non-zero exit code for a non-existent device",
         )
         self.assertIn(
-            "Device not found", result.stderr,
-            f"Expected 'Device not found' in stderr, got: {result.stderr!r}",
+            "open failed", result.stderr,
+            f"Expected 'open failed' in stderr, got: {result.stderr!r}",
         )
 
     def test_invalid_output_format_returns_error(self):

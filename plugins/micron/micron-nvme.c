@@ -1071,11 +1071,9 @@ static int micron_pcie_stats(int argc, char **argv,
 	NVME_ARGS_OUTPUT_FORMATS(opts, (JSON | NORMAL), fmt,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
+	if (err < 0)
+		return err;
 
 	err = micron_get_output_format(opts, nvme_args.output_format, cfg.fmt,
 		JSON, &format);
@@ -1086,7 +1084,6 @@ static int micron_pcie_stats(int argc, char **argv,
 	is_json = format == JSON;
 
 	/* pull log details based on the model name */
-	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
 		nvme_show_error("Unsupported drive model for vs-pcie-stats command");
 		err = -ENOTSUP;
@@ -1827,17 +1824,14 @@ static int micron_nand_stats(int argc, char **argv,
 	NVME_ARGS(opts,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
+	if (err < 0)
+		return err;
 
 	if (!strcmp(cfg.fmt, "normal"))
 		is_json = false;
 
 	/* pull log details based on the model name */
-	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
 		nvme_show_error("Unsupported drive model for vs-nand-stats command");
 		return -1;
@@ -1959,15 +1953,12 @@ static int micron_smart_ext_log(int argc, char **argv,
 	NVME_ARGS(opts,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
+	if (err < 0)
+		return err;
 	if (!strcmp(cfg.fmt, "normal"))
 		is_json = false;
 
-	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == M51CX || eModel == M51BY || eModel == M51CY || eModel == M6003 ||
 								eModel == M6004) {
 		log_id = 0xE1;
@@ -2008,15 +1999,12 @@ static int micron_work_load_log(int argc, char **argv, struct command *acmd, str
 	NVME_ARGS(opts,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
+	if (err < 0)
+		return err;
 	if (strcmp(cfg.fmt, "normal") == 0)
 		is_json = false;
 
-	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == M6001 || eModel == M6004 || eModel == M6003) {
 		err =  nvme_get_log_simple(hdl, 0xC5,
 		micronWorkLoadLog, C5_MicronWorkLoad_log_size);
@@ -2055,15 +2043,12 @@ static int micron_vendor_telemetry_log(int argc, char **argv,
 	NVME_ARGS(opts,
 		OPT_FMT("format", 'f', &cfg.fmt, fmt));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err) {
-		nvme_show_error("Device not found");
-		return -1;
-	}
+	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
+	if (err < 0)
+		return err;
 	if (strcmp(cfg.fmt, "normal") == 0)
 		is_json = false;
 
-	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == M6001 || eModel == M6004 || eModel == M6003) {
 		err =  nvme_get_log_simple(hdl, 0xC6, vendorTelemetryLog, C6_log_size);
 		if (!err)
@@ -3547,7 +3532,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		{ 0xEA, "nvmelog_EA.bin", 0, 0 }
 	};
 
-	enum eDriveModel eModel;
+	enum eDriveModel eModel = UNKNOWN_MODEL;
 
 	const char *desc = "This retrieves the micron debug log package";
 	const char *package = "Log output data file name (required)";
@@ -3577,8 +3562,8 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 		OPT_STRING("package", 'p', "FILE", &cfg.package, package),
 		OPT_UINT("data_area", 'd', &cfg.data_area, data_area));
 
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err)
+	err = micron_parse_options(&ctx, &hdl, argc, argv, desc, opts, &eModel);
+	if (err < 0)
 		return err;
 
 	err = -EINVAL;
@@ -3618,7 +3603,6 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 	}
 
 	/* pull log details based on the model name */
-	eModel = GetDriveModel(ctx, hdl);
 	if (eModel == UNKNOWN_MODEL) {
 		nvme_show_error("Unsupported drive model for vs-internal-log collection");
 		err = -ENOTSUP;
