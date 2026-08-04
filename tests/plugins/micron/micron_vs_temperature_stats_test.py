@@ -15,9 +15,9 @@ Temperature sensors are reported sparsely: only sensors with a non-zero
 reading appear, so gaps between sensor indices are possible.
 
 Tests in this module verify:
-  * Text output (default and explicit normal format flags).
-  * JSON output for both the --format=json and --output-format=json flags,
-    including that temperatures are formatted with a Celsius suffix.
+  * Text output (default and explicit --output-format=normal).
+  * JSON output for the --output-format=json flag, including that temperatures
+    are formatted with a Celsius suffix.
   * One sensor entry per active sensor and none for inactive sensors, in
     both text and JSON output.
   * Error detection for a non-existent device and an invalid output format.
@@ -88,19 +88,6 @@ class TestMicronVsTemperatureStats(TestMicron):
             f"Expected composite temperature label in stdout, got: {result.stdout!r}",
         )
 
-    def test_explicit_normal_format_flag(self):
-        """vs-temperature-stats produces text output when --format=normal is passed."""
-        result = self.run_plugin_cmd_check("vs-temperature-stats", args="--format=normal")
-
-        self.assertIn(
-            "Micron temperature information", result.stdout,
-            f"Expected header line in stdout, got: {result.stdout!r}",
-        )
-        self.assertIn(
-            "Current Composite Temperature", result.stdout,
-            f"Expected composite temperature label in stdout, got: {result.stdout!r}",
-        )
-
     def test_output_format_normal_flag(self):
         """vs-temperature-stats produces text output when --output-format=normal is passed."""
         result = self.run_plugin_cmd_check(
@@ -114,33 +101,6 @@ class TestMicronVsTemperatureStats(TestMicron):
         self.assertIn(
             "Current Composite Temperature", result.stdout,
             f"Expected composite temperature label in stdout, got: {result.stdout!r}",
-        )
-
-    def test_json_format_flag_produces_valid_json(self):
-        """vs-temperature-stats produces valid JSON when --format=json is passed."""
-        result = self.run_plugin_cmd_check("vs-temperature-stats", args="--format=json")
-
-        try:
-            data = json.loads(result.stdout)
-        except json.JSONDecodeError as exc:
-            self.fail(
-                f"stdout is not valid JSON (--format=json): {exc}\n"
-                f"stdout={result.stdout!r}"
-            )
-
-        self.assertIn(
-            "Micron temperature information", data,
-            f"Expected top-level key 'Micron temperature information' in JSON, "
-            f"got keys: {list(data.keys())}",
-        )
-        log_pages = data["Micron temperature information"]
-        self.assertIsInstance(log_pages, list, "Expected 'Micron temperature information' to be a list")
-        self.assertGreater(len(log_pages), 0, "Expected at least one stats object in the JSON array")
-
-        stats = log_pages[0]
-        self.assertIn(
-            "Current Composite Temperature", stats,
-            f"Expected 'Current Composite Temperature' in stats object, got keys: {list(stats.keys())}",
         )
 
     def test_output_format_json_flag_produces_valid_json(self):
@@ -174,7 +134,7 @@ class TestMicronVsTemperatureStats(TestMicron):
 
     def test_json_temperature_value_has_celsius_suffix(self):
         """vs-temperature-stats JSON output formats temperatures as '<N> C'."""
-        result = self.run_plugin_cmd_check("vs-temperature-stats", args="--format=json")
+        result = self.run_plugin_cmd_check("vs-temperature-stats", args="--output-format=json")
         data = json.loads(result.stdout)
         temp_str = data["Micron temperature information"][0]["Current Composite Temperature"]
 
@@ -202,7 +162,7 @@ class TestMicronVsTemperatureStats(TestMicron):
         """
         active = self._active_sensor_indices()
 
-        result = self.run_plugin_cmd_check("vs-temperature-stats", args="--format=json")
+        result = self.run_plugin_cmd_check("vs-temperature-stats", args="--output-format=json")
         data = json.loads(result.stdout)
         stats = data["Micron temperature information"][0]
 

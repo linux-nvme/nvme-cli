@@ -11,12 +11,12 @@ version, FTL unit size, boot-spec version, and drive-ownership status.
 Which fields appear and how they are formatted depends on the drive model
 and its customer ID, so several fields are optional and present only on
 certain drives.  Output is human-readable text by default or JSON when
---format=json is passed.
+--output-format=json is passed.
 
 Tests in this module verify:
-  * Error handling for a non-existent device and an invalid --format value.
-  * Text output by default and with --format=normal, and that --format=json
-    switches the output to JSON.
+  * Error handling for a non-existent device and an invalid --output-format value.
+  * Text output by default and with --output-format=normal, and that
+    --output-format=json switches the output to JSON.
   * Valid JSON shape: a one-element "Micron Drive HW Information" array
     holding a single info object.
   * The always-present "Drive Hardware Version" field, and the format of the
@@ -79,7 +79,7 @@ class TestMicronVsDriveInfo(TestMicron):
                 f"(stderr: {_UNSUPPORTED_MSG!r})"
             )
 
-    def _drive_info_json(self, args="--format=json"):
+    def _drive_info_json(self, args="--output-format=json"):
         """Run vs-drive-info in JSON mode and return the parsed top-level dict.
 
         Skips the test if the drive is unsupported on this platform.
@@ -91,7 +91,7 @@ class TestMicronVsDriveInfo(TestMicron):
         except json.JSONDecodeError as exc:
             self.fail(f"stdout is not valid JSON: {exc}\nstdout={result.stdout!r}")
 
-    def _drive_info_object(self, args="--format=json"):
+    def _drive_info_object(self, args="--output-format=json"):
         """Return the single info object from the JSON array."""
         data = self._drive_info_json(args=args)
         self.assertIn(
@@ -136,17 +136,16 @@ class TestMicronVsDriveInfo(TestMicron):
             f"Expected {device!r} in stderr, got: {result.stderr!r}",
         )
 
-    def test_invalid_format_returns_error(self):
-        """vs-drive-info fails for an unrecognised -f/--format value.
+    def test_invalid_output_format_returns_error(self):
+        """vs-drive-info fails for an unrecognised --output-format value.
 
-        Uses the command-local --format flag, which only accepts "normal" or
-        "json".
+        The global --output-format flag accepts "normal" or "json".
         """
-        result = self._run_drive_info(args="--format=notaformat")
+        result = self._run_drive_info(args="--output-format=notaformat")
 
         self.assertNotEqual(
             result.returncode, 0,
-            "Expected non-zero exit code for an invalid --format value",
+            "Expected non-zero exit code for an invalid --output-format value",
         )
         self.assertIn(
             "Invalid output format", result.stderr,
@@ -172,24 +171,24 @@ class TestMicronVsDriveInfo(TestMicron):
             json.loads(result.stdout)
 
     def test_explicit_normal_format_is_text(self):
-        """vs-drive-info produces text output when --format=normal is passed."""
+        """vs-drive-info produces text output when --output-format=normal is passed."""
         self._skip_if_unavailable()
-        result = self.run_plugin_cmd_check("vs-drive-info", args="--format=normal")
+        result = self.run_plugin_cmd_check("vs-drive-info", args="--output-format=normal")
 
         self.assertRegex(
             result.stdout, r"Drive Hardware Version\s*:\s*\d+\.\d+",
-            f"Expected 'Drive Hardware Version: <N.M>' with --format=normal, "
+            f"Expected 'Drive Hardware Version: <N.M>' with --output-format=normal, "
             f"got: {result.stdout!r}",
         )
 
-    def test_format_json_produces_valid_json(self):
-        """vs-drive-info produces valid JSON when --format=json is passed."""
-        obj = self._drive_info_object(args="--format=json")
+    def test_output_format_json_produces_valid_json(self):
+        """vs-drive-info produces valid JSON when --output-format=json is passed."""
+        obj = self._drive_info_object(args="--output-format=json")
         self.assertIsInstance(obj, dict)
 
-    def test_short_f_json_produces_valid_json(self):
-        """vs-drive-info produces valid JSON when the short -f json flag is passed."""
-        obj = self._drive_info_object(args="-f json")
+    def test_short_o_json_produces_valid_json(self):
+        """vs-drive-info produces valid JSON when the short -o json flag is passed."""
+        obj = self._drive_info_object(args="-o json")
         self.assertIsInstance(obj, dict)
 
     def test_json_top_level_is_single_element_array(self):
@@ -351,10 +350,10 @@ class TestMicronVsDriveInfo(TestMicron):
             )
 
         result_ctrl = self.run_plugin_cmd_check(
-            "vs-drive-info", device=self.ctrl, args="--format=json"
+            "vs-drive-info", device=self.ctrl, args="--output-format=json"
         )
         result_ns = self.run_plugin_cmd_check(
-            "vs-drive-info", device=self.ns1, args="--format=json"
+            "vs-drive-info", device=self.ns1, args="--output-format=json"
         )
 
         try:
