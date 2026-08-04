@@ -1095,8 +1095,13 @@ do_connect:
 	if (idempotent && (ret == -EALREADY || ret == -ENVME_CONNECT_ALREADY))
 		ret = 0;
 	if (ret) {
-		nvme_show_error("failed to connect: %s",
-			libnvme_strerror(-ret));
+		/*
+		 * hook_already_connected() already reported the specific
+		 * reason; the generic message here would just overwrite it.
+		 */
+		if (ret != -EALREADY && ret != -ENVME_CONNECT_ALREADY)
+			nvme_show_error("failed to connect: %s",
+				libnvme_strerror(-ret));
 		return ret;
 	}
 
