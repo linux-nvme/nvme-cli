@@ -27,11 +27,13 @@
 struct libnvme_passthru_completion;
 struct libnvme_async_req;
 
-/* Opaque: defined only in the generated ctrl-sysfs.c / path-sysfs.c -- see
- * generate_sysfs_accessors.py. No other file may see their layout.
+/* Opaque: defined only in the generated ctrl-sysfs.c / path-sysfs.c /
+ * ns-sysfs.c -- see generate_sysfs_accessors.py. No other file may see
+ * their layout.
  */
 struct libnvme_ctrl_sysfs;
 struct libnvme_path_sysfs;
+struct libnvme_ns_sysfs;
 
 const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx);
@@ -253,7 +255,7 @@ struct libnvme_stat {
 	double ts_ms;			/* timestamp when the stat is updated */
 };
 
-struct libnvme_path {		// !generate-accessors:read=generated,write=none
+struct libnvme_path {		// !generate-accessors:read=generated,write=none !generate-python:alias=Path
 	struct list_node entry;
 	struct list_node nentry;
 
@@ -307,21 +309,12 @@ struct libnvme_ns {  // !generate-accessors:read=generated,write=none !generate-
 	char *generic_name;
 	char *sysfs_dir;		     // !access:write=generated
 
-	int lba_shift;			     // !access:write=generated
-	int lba_size;			     // !access:write=generated
-	int meta_size;			     // !access:write=generated
-	uint64_t lba_count;		     // !access:write=generated
-	uint64_t lba_util;		     // !access:write=generated
-
 	uint8_t eui64[8];
 	uint8_t nguid[16];
 	unsigned char uuid[NVME_UUID_LEN];   // !access:read=none
-	enum nvme_csi csi;
 
-	long command_retry_count;	     // !access:read=custom
-	long command_error_count;	     // !access:read=custom
-	long io_requeue_no_usable_path_count;// !access:read=custom
-	long io_fail_no_available_path_count;// !access:read=custom
+	/* Opaque: field list is NS_SYSFS in sysfs_accessors_specs.py. */
+	struct libnvme_ns_sysfs *sysfs;	// !access:read=none
 };
 
 struct libnvme_ctrl {  // !generate-accessors:read=generated,write=none !generate-python:alias=Ctrl

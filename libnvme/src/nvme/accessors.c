@@ -95,60 +95,6 @@ __shr_public const char *libnvme_ns_get_sysfs_dir(const struct libnvme_ns *p)
 	return p->sysfs_dir;
 }
 
-__shr_public void libnvme_ns_set_lba_shift(struct libnvme_ns *p, int lba_shift)
-{
-	p->lba_shift = lba_shift;
-}
-
-__shr_public int libnvme_ns_get_lba_shift(const struct libnvme_ns *p)
-{
-	return p->lba_shift;
-}
-
-__shr_public void libnvme_ns_set_lba_size(struct libnvme_ns *p, int lba_size)
-{
-	p->lba_size = lba_size;
-}
-
-__shr_public int libnvme_ns_get_lba_size(const struct libnvme_ns *p)
-{
-	return p->lba_size;
-}
-
-__shr_public void libnvme_ns_set_meta_size(struct libnvme_ns *p, int meta_size)
-{
-	p->meta_size = meta_size;
-}
-
-__shr_public int libnvme_ns_get_meta_size(const struct libnvme_ns *p)
-{
-	return p->meta_size;
-}
-
-__shr_public void libnvme_ns_set_lba_count(
-		struct libnvme_ns *p,
-		uint64_t lba_count)
-{
-	p->lba_count = lba_count;
-}
-
-__shr_public uint64_t libnvme_ns_get_lba_count(const struct libnvme_ns *p)
-{
-	return p->lba_count;
-}
-
-__shr_public void libnvme_ns_set_lba_util(
-		struct libnvme_ns *p,
-		uint64_t lba_util)
-{
-	p->lba_util = lba_util;
-}
-
-__shr_public uint64_t libnvme_ns_get_lba_util(const struct libnvme_ns *p)
-{
-	return p->lba_util;
-}
-
 __shr_public const uint8_t *libnvme_ns_get_eui64(const struct libnvme_ns *p)
 {
 	return p->eui64;
@@ -157,11 +103,6 @@ __shr_public const uint8_t *libnvme_ns_get_eui64(const struct libnvme_ns *p)
 __shr_public const uint8_t *libnvme_ns_get_nguid(const struct libnvme_ns *p)
 {
 	return p->nguid;
-}
-
-__shr_public enum nvme_csi libnvme_ns_get_csi(const struct libnvme_ns *p)
-{
-	return p->csi;
 }
 
 /****************************************************************************

@@ -4582,16 +4582,20 @@ static void json_print_detail_list_multipath(libnvme_subsystem_t s,
 	libnvme_subsystem_for_each_ns(s, n) {
 		struct json_object *jns = json_create_object();
 		struct json_object *jpaths = json_create_array();
+		int lba;
+		uint64_t lba_count, nsze, nuse;
 
-		int lba = libnvme_ns_get_lba_size(n);
-		uint64_t nsze = libnvme_ns_get_lba_count(n) * lba;
-		uint64_t nuse = libnvme_ns_get_lba_util(n) * lba;
+		libnvme_ns_get_lba_size(n, &lba, 0);
+		libnvme_ns_get_lba_count(n, &lba_count, 0);
+		nsze = lba_count * lba;
+		libnvme_ns_get_lba_util(n, &nuse, 0);
+		nuse *= lba;
 
 		obj_add_str(jns, "NameSpace", libnvme_ns_get_name(n));
 		obj_add_str(jns, "Generic", libnvme_ns_get_generic_name(n));
 		obj_add_int(jns, "NSID", libnvme_ns_get_nsid(n));
 		obj_add_uint64(jns, "UsedBytes", nuse);
-		obj_add_uint64(jns, "MaximumLBA", libnvme_ns_get_lba_count(n));
+		obj_add_uint64(jns, "MaximumLBA", lba_count);
 		obj_add_uint64(jns, "PhysicalSize", nsze);
 		obj_add_int(jns, "SectorSize", lba);
 
@@ -4672,15 +4676,20 @@ static void json_print_detail_list(libnvme_subsystem_t s, struct json_object *js
 
 		libnvme_ctrl_for_each_ns(c, n) {
 			struct json_object *jns = json_create_object();
-			int lba = libnvme_ns_get_lba_size(n);
-			uint64_t nsze = libnvme_ns_get_lba_count(n) * lba;
-			uint64_t nuse = libnvme_ns_get_lba_util(n) * lba;
+			int lba;
+			uint64_t lba_count, nsze, nuse;
+
+			libnvme_ns_get_lba_size(n, &lba, 0);
+			libnvme_ns_get_lba_count(n, &lba_count, 0);
+			nsze = lba_count * lba;
+			libnvme_ns_get_lba_util(n, &nuse, 0);
+			nuse *= lba;
 
 			obj_add_str(jns, "NameSpace", libnvme_ns_get_name(n));
 			obj_add_str(jns, "Generic", libnvme_ns_get_generic_name(n));
 			obj_add_int(jns, "NSID", libnvme_ns_get_nsid(n));
 			obj_add_uint64(jns, "UsedBytes", nuse);
-			obj_add_uint64(jns, "MaximumLBA", libnvme_ns_get_lba_count(n));
+			obj_add_uint64(jns, "MaximumLBA", lba_count);
 			obj_add_uint64(jns, "PhysicalSize", nsze);
 			obj_add_int(jns, "SectorSize", lba);
 
@@ -4790,15 +4799,22 @@ static void json_detail_list(struct libnvme_global_ctx *ctx)
 
 				libnvme_ctrl_for_each_ns(c, n) {
 					struct json_object *jns = json_create_object();
-					int lba = libnvme_ns_get_lba_size(n);
-					uint64_t nsze = libnvme_ns_get_lba_count(n) * lba;
-					uint64_t nuse = libnvme_ns_get_lba_util(n) * lba;
+					int lba;
+					uint64_t lba_count, nsze, nuse;
+
+					libnvme_ns_get_lba_size(n, &lba, 0);
+					libnvme_ns_get_lba_count(n,
+							&lba_count, 0);
+					nsze = lba_count * lba;
+					libnvme_ns_get_lba_util(n, &nuse, 0);
+					nuse *= lba;
 
 					obj_add_str(jns, "NameSpace", libnvme_ns_get_name(n));
 					obj_add_str(jns, "Generic", libnvme_ns_get_generic_name(n));
 					obj_add_int(jns, "NSID", libnvme_ns_get_nsid(n));
 					obj_add_uint64(jns, "UsedBytes", nuse);
-					obj_add_uint64(jns, "MaximumLBA", libnvme_ns_get_lba_count(n));
+					obj_add_uint64(jns, "MaximumLBA",
+							lba_count);
 					obj_add_uint64(jns, "PhysicalSize", nsze);
 					obj_add_int(jns, "SectorSize", lba);
 
@@ -4826,16 +4842,20 @@ static void json_detail_list(struct libnvme_global_ctx *ctx)
 
 			libnvme_subsystem_for_each_ns(s, n) {
 				struct json_object *jns = json_create_object();
+				int lba;
+				uint64_t lba_count, nsze, nuse;
 
-				int lba = libnvme_ns_get_lba_size(n);
-				uint64_t nsze = libnvme_ns_get_lba_count(n) * lba;
-				uint64_t nuse = libnvme_ns_get_lba_util(n) * lba;
+				libnvme_ns_get_lba_size(n, &lba, 0);
+				libnvme_ns_get_lba_count(n, &lba_count, 0);
+				nsze = lba_count * lba;
+				libnvme_ns_get_lba_util(n, &nuse, 0);
+				nuse *= lba;
 
 				obj_add_str(jns, "NameSpace", libnvme_ns_get_name(n));
 				obj_add_str(jns, "Generic", libnvme_ns_get_generic_name(n));
 				obj_add_int(jns, "NSID", libnvme_ns_get_nsid(n));
 				obj_add_uint64(jns, "UsedBytes", nuse);
-				obj_add_uint64(jns, "MaximumLBA", libnvme_ns_get_lba_count(n));
+				obj_add_uint64(jns, "MaximumLBA", lba_count);
 				obj_add_uint64(jns, "PhysicalSize", nsze);
 				obj_add_int(jns, "SectorSize", lba);
 
@@ -4858,9 +4878,14 @@ static struct json_object *json_list_item_obj(libnvme_ns_t n)
 	struct json_object *r = json_create_object();
 	char devname[NAME_LEN] = { 0 };
 	char genname[NAME_LEN] = { 0 };
-	int lba = libnvme_ns_get_lba_size(n);
-	uint64_t nsze = libnvme_ns_get_lba_count(n) * lba;
-	uint64_t nuse = libnvme_ns_get_lba_util(n) * lba;
+	int lba;
+	uint64_t lba_count, nsze, nuse;
+
+	libnvme_ns_get_lba_size(n, &lba, 0);
+	libnvme_ns_get_lba_count(n, &lba_count, 0);
+	nsze = lba_count * lba;
+	libnvme_ns_get_lba_util(n, &nuse, 0);
+	nuse *= lba;
 
 	nvme_dev_full_path(n, devname, sizeof(devname));
 	nvme_generic_full_path(n, genname, sizeof(genname));
@@ -4872,7 +4897,7 @@ static struct json_object *json_list_item_obj(libnvme_ns_t n)
 	obj_add_str(r, "ModelNumber", libnvme_ns_get_model(n));
 	obj_add_str(r, "SerialNumber", libnvme_ns_get_serial(n));
 	obj_add_uint64(r, "UsedBytes", nuse);
-	obj_add_uint64(r, "MaximumLBA", libnvme_ns_get_lba_count(n));
+	obj_add_uint64(r, "MaximumLBA", lba_count);
 	obj_add_uint64(r, "PhysicalSize", nsze);
 	obj_add_int(r, "SectorSize", lba);
 

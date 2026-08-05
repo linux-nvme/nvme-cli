@@ -396,26 +396,6 @@ __shr_public int libnvme_scan_ctrl(
 	return 0;
 }
 
-static int libnvme_strtou64(const char *str, void *res)
-{
-	char *endptr;
-	__u64 v;
-
-	errno = 0;
-	v = strtoull(str, &endptr, 0);
-
-	if (errno != 0)
-		return -errno;
-
-	if (endptr == str) {
-		/* no digits found */
-		return -EINVAL;
-	}
-
-	*(__u64 *)res = v;
-	return 0;
-}
-
 static int libnvme_strtou32(const char *str, void *res)
 {
 	char *endptr;
@@ -433,26 +413,6 @@ static int libnvme_strtou32(const char *str, void *res)
 	}
 
 	*(__u32 *)res = v;
-	return 0;
-}
-
-static int libnvme_strtoi(const char *str, void *res)
-{
-	char *endptr;
-	int v;
-
-	errno = 0;
-	v = strtol(str, &endptr, 0);
-
-	if (errno != 0)
-		return -errno;
-
-	if (endptr == str) {
-		/* no digits found */
-		return -EINVAL;
-	}
-
-	*(int *)res = v;
 	return 0;
 }
 
@@ -480,7 +440,6 @@ struct sysfs_attr_table {
 	const char *name;
 };
 
-#define GETSHIFT(x) (__builtin_ffsll(x) - 1)
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 static int parse_attrs(const char *path, struct sysfs_attr_table *tbl, int size)
@@ -508,15 +467,10 @@ static int parse_attrs(const char *path, struct sysfs_attr_table *tbl, int size)
 
 int libnvme_ns_init(const char *path, struct libnvme_ns *ns)
 {
-	__cleanup_free char *attr = NULL;
-	struct stat sb;
-	uint64_t size;
 	int ret;
 
 	struct sysfs_attr_table base[] = {
 		{ &ns->nsid,      libnvme_strtou32,  true, "nsid" },
-		{ &size,          libnvme_strtou64,  true, "size" },
-		{ &ns->lba_size,  libnvme_strtou32,  true, "queue/logical_block_size" },
 		{ ns->eui64,      libnvme_strtoeuid, false, "eui" },
 		{ ns->nguid,      libnvme_strtouuid, false, "nguid" },
 		{ ns->uuid,       libnvme_strtouuid, false, "uuid" }
@@ -526,46 +480,9 @@ int libnvme_ns_init(const char *path, struct libnvme_ns *ns)
 	if (ret)
 		return ret;
 
-	ns->lba_shift = GETSHIFT(ns->lba_size);
-	/*
-	 * size is in 512 bytes units and lba_count is in lba_size which are not
-	 * necessarily the same.
-	 */
-	ns->lba_count = size >> (ns->lba_shift -  SECTOR_SHIFT);
-
-	if (asprintf(&attr, "%s/csi", path) < 0)
+	ns->sysfs = libnvme_ns_sysfs_alloc();
+	if (!ns->sysfs)
 		return -ENOMEM;
-
-	ret = stat(attr, &sb);
-	if (ret == 0) {
-		/* only available on kernels >= 6.8 */
-		struct sysfs_attr_table ext[] = {
-			{ &ns->csi,       libnvme_strtoi,	true, "csi" },
-			{ &ns->lba_util,  libnvme_strtou64,	true, "nuse" },
-			{ &ns->meta_size, libnvme_strtoi,	true, "metadata_bytes"},
-
-		};
-
-		ret = parse_attrs(path, ext, ARRAY_SIZE(ext));
-		if (ret)
-			return ret;
-	} else {
-		__cleanup_libnvme_free struct nvme_id_ns *id = NULL;
-		uint8_t flbas;
-
-		id = libnvme_alloc(sizeof(*id));
-		if (!id)
-			return -ENOMEM;
-
-		ret = libnvme_ns_identify(ns, id);
-		if (ret)
-			return ret;
-
-		nvme_id_ns_flbas_to_lbaf_inuse(id->flbas, &flbas);
-		ns->lba_count = le64_to_cpu(id->nsze);
-		ns->lba_util = le64_to_cpu(id->nuse);
-		ns->meta_size = le16_to_cpu(id->lbaf[flbas].ms);
-	}
 
 	return 0;
 }

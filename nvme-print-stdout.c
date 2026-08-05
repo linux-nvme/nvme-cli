@@ -5745,21 +5745,31 @@ static void list_item(libnvme_ns_t n, struct table *t)
 {
 	char usage[128] = { 0 }, format[128] = { 0 };
 	char devname[128] = { 0 }; char genname[128] = { 0 };
-
-	long long lba = libnvme_ns_get_lba_size(n);
-	double nsze = libnvme_ns_get_lba_count(n) * lba;
-	double nuse = libnvme_ns_get_lba_util(n) * lba;
-
-	const char *s_suffix = suffix_si_get(&nsze);
-	const char *u_suffix = suffix_si_get(&nuse);
-	const char *l_suffix = suffix_binary_get(&lba);
+	int lba_size, meta_size;
+	uint64_t lba_count, lba_util;
+	long long lba;
+	double nsze, nuse;
+	const char *s_suffix, *u_suffix, *l_suffix;
 	char ns[STR_LEN];
 	int row;
+
+	libnvme_ns_get_lba_size(n, &lba_size, 0);
+	libnvme_ns_get_lba_count(n, &lba_count, 0);
+	libnvme_ns_get_lba_util(n, &lba_util, 0);
+	libnvme_ns_get_meta_size(n, &meta_size, 0);
+
+	lba = lba_size;
+	nsze = lba_count * lba;
+	nuse = lba_util * lba;
+
+	s_suffix = suffix_si_get(&nsze);
+	u_suffix = suffix_si_get(&nuse);
+	l_suffix = suffix_binary_get(&lba);
 
 	snprintf(usage, sizeof(usage), "%6.2f %2sB / %6.2f %2sB", nuse,
 		u_suffix, nsze, s_suffix);
 	snprintf(format, sizeof(format), "%3.0f %2sB + %2d B", (double)lba,
-		l_suffix, libnvme_ns_get_meta_size(n));
+		l_suffix, meta_size);
 
 	stdout_dev_full_path(n, devname, sizeof(devname));
 	stdout_generic_full_path(n, genname, sizeof(genname));
@@ -5865,21 +5875,31 @@ static void stdout_ns_details(libnvme_ns_t n)
 {
 	char usage[128] = { 0 }, format[128] = { 0 }, usage_binary[128] = { 0 };
 	char devname[128] = { 0 }, genname[128] = { 0 };
-
-	long long lba = libnvme_ns_get_lba_size(n);
-	double nsze = libnvme_ns_get_lba_count(n) * lba;
-	double nuse = libnvme_ns_get_lba_util(n) * lba;
-	double nsze_binary = nsze, nuse_binary = nuse;
-
-	const char *s_suffix = suffix_si_get(&nsze);
-	const char *u_suffix = suffix_si_get(&nuse);
-	const char *l_suffix = suffix_binary_get(&lba);
-
+	int lba_size, meta_size;
+	uint64_t lba_count, lba_util;
+	long long lba;
+	double nsze, nuse;
+	double nsze_binary, nuse_binary;
+	const char *s_suffix, *u_suffix, *l_suffix;
 	const char *s_suffix_binary, *u_suffix_binary;
 
+	libnvme_ns_get_lba_size(n, &lba_size, 0);
+	libnvme_ns_get_lba_count(n, &lba_count, 0);
+	libnvme_ns_get_lba_util(n, &lba_util, 0);
+	libnvme_ns_get_meta_size(n, &meta_size, 0);
+
+	lba = lba_size;
+	nsze = lba_count * lba;
+	nuse = lba_util * lba;
+	nsze_binary = nsze;
+	nuse_binary = nuse;
+
+	s_suffix = suffix_si_get(&nsze);
+	u_suffix = suffix_si_get(&nuse);
+	l_suffix = suffix_binary_get(&lba);
+
 	sprintf(usage, "%6.2f %1sB / %6.2f %1sB", nuse, u_suffix, nsze, s_suffix);
-	sprintf(format, "%3.0f %2sB + %2d B", (double)lba, l_suffix,
-		libnvme_ns_get_meta_size(n));
+	sprintf(format, "%3.0f %2sB + %2d B", (double)lba, l_suffix, meta_size);
 
 	s_suffix_binary = suffix_dbinary_get(&nsze_binary);
 	u_suffix_binary = suffix_dbinary_get(&nuse_binary);

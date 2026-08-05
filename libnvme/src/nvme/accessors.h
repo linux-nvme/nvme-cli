@@ -122,81 +122,6 @@ void libnvme_ns_set_sysfs_dir(struct libnvme_ns *p, const char *sysfs_dir);
 const char *libnvme_ns_get_sysfs_dir(const struct libnvme_ns *p);
 
 /**
- * libnvme_ns_set_lba_shift() - Set lba_shift.
- * @p: The &struct libnvme_ns instance to update.
- * @lba_shift: Value to assign to the lba_shift field.
- */
-void libnvme_ns_set_lba_shift(struct libnvme_ns *p, int lba_shift);
-
-/**
- * libnvme_ns_get_lba_shift() - Get lba_shift.
- * @p: The &struct libnvme_ns instance to query.
- *
- * Return: The value of the lba_shift field.
- */
-int libnvme_ns_get_lba_shift(const struct libnvme_ns *p);
-
-/**
- * libnvme_ns_set_lba_size() - Set lba_size.
- * @p: The &struct libnvme_ns instance to update.
- * @lba_size: Value to assign to the lba_size field.
- */
-void libnvme_ns_set_lba_size(struct libnvme_ns *p, int lba_size);
-
-/**
- * libnvme_ns_get_lba_size() - Get lba_size.
- * @p: The &struct libnvme_ns instance to query.
- *
- * Return: The value of the lba_size field.
- */
-int libnvme_ns_get_lba_size(const struct libnvme_ns *p);
-
-/**
- * libnvme_ns_set_meta_size() - Set meta_size.
- * @p: The &struct libnvme_ns instance to update.
- * @meta_size: Value to assign to the meta_size field.
- */
-void libnvme_ns_set_meta_size(struct libnvme_ns *p, int meta_size);
-
-/**
- * libnvme_ns_get_meta_size() - Get meta_size.
- * @p: The &struct libnvme_ns instance to query.
- *
- * Return: The value of the meta_size field.
- */
-int libnvme_ns_get_meta_size(const struct libnvme_ns *p);
-
-/**
- * libnvme_ns_set_lba_count() - Set lba_count.
- * @p: The &struct libnvme_ns instance to update.
- * @lba_count: Value to assign to the lba_count field.
- */
-void libnvme_ns_set_lba_count(struct libnvme_ns *p, uint64_t lba_count);
-
-/**
- * libnvme_ns_get_lba_count() - Get lba_count.
- * @p: The &struct libnvme_ns instance to query.
- *
- * Return: The value of the lba_count field.
- */
-uint64_t libnvme_ns_get_lba_count(const struct libnvme_ns *p);
-
-/**
- * libnvme_ns_set_lba_util() - Set lba_util.
- * @p: The &struct libnvme_ns instance to update.
- * @lba_util: Value to assign to the lba_util field.
- */
-void libnvme_ns_set_lba_util(struct libnvme_ns *p, uint64_t lba_util);
-
-/**
- * libnvme_ns_get_lba_util() - Get lba_util.
- * @p: The &struct libnvme_ns instance to query.
- *
- * Return: The value of the lba_util field.
- */
-uint64_t libnvme_ns_get_lba_util(const struct libnvme_ns *p);
-
-/**
  * libnvme_ns_get_eui64() - Get eui64.
  * @p: The &struct libnvme_ns instance to query.
  *
@@ -211,14 +136,6 @@ const uint8_t *libnvme_ns_get_eui64(const struct libnvme_ns *p);
  * Return: Pointer to the nguid array of 16 uint8_t elements.
  */
 const uint8_t *libnvme_ns_get_nguid(const struct libnvme_ns *p);
-
-/**
- * libnvme_ns_get_csi() - Get csi.
- * @p: The &struct libnvme_ns instance to query.
- *
- * Return: The value of the csi field.
- */
-enum nvme_csi libnvme_ns_get_csi(const struct libnvme_ns *p);
 
 /****************************************************************************
  * Accessors for: struct libnvme_ctrl

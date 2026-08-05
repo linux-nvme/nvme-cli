@@ -43,11 +43,15 @@ int main()
 			       libnvme_subsystem_get_subsysnqn(s));
 
 			libnvme_subsystem_for_each_ns_safe(s, n, _n) {
+				int lba_size;
+				uint64_t lba_count;
+
+				libnvme_ns_get_lba_size(n, &lba_size, 0);
+				libnvme_ns_get_lba_count(n, &lba_count, 0);
 				printf("%c   |-- %s lba size:%d lba max:%" PRIu64 "\n",
 				       _s ? '|' : ' ',
 				       libnvme_ns_get_name(n),
-				       libnvme_ns_get_lba_size(n),
-				       libnvme_ns_get_lba_count(n));
+				       lba_size, lba_count);
 			}
 
 			libnvme_subsystem_for_each_ctrl_safe(s, c, _c) {
@@ -58,13 +62,20 @@ int main()
 				       libnvme_ctrl_get_traddr(c),
 				       libnvme_ctrl_get_state(c));
 
-				libnvme_ctrl_for_each_ns_safe(c, n, _n)
+				libnvme_ctrl_for_each_ns_safe(c, n, _n) {
+					int lba_size;
+					uint64_t lba_count;
+
+					libnvme_ns_get_lba_size(n,
+							&lba_size, 0);
+					libnvme_ns_get_lba_count(n,
+							&lba_count, 0);
 					printf("%c   %c   %c-- %s lba size:%d lba max:%" PRIu64 "\n",
 					       _s ? '|' : ' ', _c ? '|' : ' ',
 					       _n ? '|' : '`',
 					       libnvme_ns_get_name(n),
-					       libnvme_ns_get_lba_size(n),
-					       libnvme_ns_get_lba_count(n));
+					       lba_size, lba_count);
+				}
 
 				libnvme_ctrl_for_each_path_safe(c, p, _p) {
 					const char *ana_state;

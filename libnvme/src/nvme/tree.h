@@ -392,40 +392,6 @@ libnvme_ns_t libnvme_subsystem_next_ns(libnvme_subsystem_t s, libnvme_ns_t n);
 void libnvme_ns_copy_uuid(libnvme_ns_t n, unsigned char out[NVME_UUID_LEN]);
 
 /**
- * libnvme_ns_get_command_retry_count() - Get command retry count
- * @n: &libnvme_ns_t object
- *
- * Return: Number of times any command issued to namespace @n has to be retried
- */
-long libnvme_ns_get_command_retry_count(libnvme_ns_t n);
-
-/**
- * libnvme_ns_get_command_error_count() - Get command error count
- * @n: &libnvme_ns_t object
- *
- * Return: Number of times command issued to namespace @n returns non-zero
- * status or error
- */
-long libnvme_ns_get_command_error_count(libnvme_ns_t n);
-
-/**
- * libnvme_ns_get_io_requeue_no_usable_path_count() - Get I/Os requeue count
- * @n: &libnvme_ns_t object
- *
- * Return: Number of I/Os which are re-queued due to the unavalibility of
- * any usable path (maybe path is currently experiencing transinet link failure)
- */
-long libnvme_ns_get_io_requeue_no_usable_path_count(libnvme_ns_t n);
-
-/**
- * libnvme_ns_get_io_fail_no_available_path_count() - Get I/Os failed count
- * @n: &libnvme_ns_t object
- *
- * Return: Number of I/Os which are forced to fail due to no path available
- */
-long libnvme_ns_get_io_fail_no_available_path_count(libnvme_ns_t n);
-
-/**
  * libnvme_ns_get_firmware() - Firmware string of a namespace
  * @n:	Namespace instance
  *

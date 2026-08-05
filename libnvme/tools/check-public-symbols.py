@@ -42,6 +42,7 @@ LD_FILES = [
     ROOT / 'src' / 'accessors-fabrics.ld',
     ROOT / 'src' / 'ctrl-sysfs.ld',
     ROOT / 'src' / 'path-sysfs.ld',
+    ROOT / 'src' / 'ns-sysfs.ld',
 ]
 
 # ---------------------------------------------------------------------------

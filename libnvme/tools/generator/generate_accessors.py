@@ -1448,6 +1448,13 @@ def generate_hdr(f, prefix, sname, type_name, members):
             else:
                 emit_hdr_getter(f, prefix, sname, type_name,
                                 member.name, member.type, is_dyn_str)
+        elif member.read_mode == 'custom' and member.is_sysfs_lazy:
+            # The struct is opaque, so even a hand-written getter's
+            # prototype must come from this generator -- no other file
+            # may declare a function that reaches inside the struct. The
+            # body itself lives in a hand-written *-custom-<os>.c file.
+            emit_hdr_getter_lazy(f, prefix, sname, type_name,
+                                 member.name, member.type)
 
 
 # ---------------------------------------------------------------------------
@@ -2157,7 +2164,8 @@ def generate_ld(f, prefix, sname, members, lc_members, default_members):
     if default_members:
         f.write(f'\t\t{_init_defaults_name(prefix, sname)};\n')
     for member in members:
-        if member.read_mode == 'generated':
+        custom_lazy = member.read_mode == 'custom' and member.is_sysfs_lazy
+        if member.read_mode == 'generated' or custom_lazy:
             f.write(f'\t\t{_get_name(prefix, sname, member.name)};\n')
         if member.write_mode == 'generated':
             f.write(f'\t\t{_set_name(prefix, sname, member.name)};\n')
