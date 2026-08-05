@@ -46,6 +46,8 @@
 
 #include <libnvme.h>
 
+#include <io-util.h>
+
 #ifdef NVME_HAVE_LIBKMOD
 #include <libkmod.h>
 #endif
@@ -144,25 +146,45 @@ void nvmf_args_to_params(struct libnvmf_params *params,
 
 static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
 {
-	uint64_t numrec = le64_to_cpu(log->numrec);
+	__cleanup_free char *path = NULL;
+	static unsigned int save_count;
 	int fd, len, ret;
+	uint64_t numrec;
 
-	fd = open(raw, O_CREAT | O_RDWR | O_TRUNC, 0600);
+	if (save_count) {
+		if (asprintf(&path, "%s.%u", raw, save_count) < 0) {
+			nvme_show_error("failed to allocate path for %s", raw);
+			return;
+		}
+	} else {
+		path = strdup(raw);
+		if (!path) {
+			nvme_show_error("failed to allocate path for %s", raw);
+			return;
+		}
+	}
+
+	fd = open(path, O_CREAT | O_RDWR | O_TRUNC, 0600);
 	if (fd < 0) {
-		nvme_show_error("failed to open %s: %s", raw, libnvme_strerror(errno));
+		nvme_show_error("failed to open %s: %s",
+			path, libnvme_strerror(errno));
 		return;
 	}
 
-	len = sizeof(struct nvmf_discovery_log) + numrec * sizeof(struct nvmf_disc_log_entry);
+	numrec = le64_to_cpu(log->numrec);
+	len = sizeof(struct nvmf_discovery_log) +
+		numrec * sizeof(struct nvmf_disc_log_entry);
 
-	ret = write(fd, log, len);
+	ret = shr_write_all(fd, log, len);
 	if (ret < 0)
 		nvme_show_error("failed to write to %s: %s",
-			raw, libnvme_strerror(errno));
+			path, libnvme_strerror(-ret));
 	else
-		nvme_show_verbose_info("Discovery log is saved to %s", raw);
+		nvme_show_verbose_info("Discovery log is saved to %s", path);
 
 	close(fd);
+
+	save_count++;
 }
 
 static int setup_common_context(struct libnvmf_context *fctx,
