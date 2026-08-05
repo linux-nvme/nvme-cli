@@ -138,19 +138,27 @@ requires = ''
 
 version_tag = get_option('version-tag')
 if version_tag != ''
-    conf.set('GIT_VERSION', '"@0@"'.format(version_tag))
+    git_version = version_tag
 else
-    # Find the path to bash and use it so we don't pick up the WSL bash in Windows.
-    bash_prog = find_program('bash', required: true)
-    r = run_command(
-        bash_prog,
-        files('scripts/meson-vcs-tag.sh'),
-        meson.current_source_dir(),
-        meson.project_version(),
-        check: true,
-    )
-    conf.set('GIT_VERSION', '"@0@"'.format(r.stdout().strip()))
+    git_version = meson.project_version()
+
+    git = find_program('git', required: false)
+    if git.found() and fs.exists(meson.current_source_dir() / '.git')
+        r = run_command(
+            git,
+            '-C', meson.current_source_dir(),
+            'describe',
+            '--abbrev=7',
+            '--dirty=+',
+            check: false,
+        )
+
+        if r.returncode() == 0
+            git_version = r.stdout().strip().replace('^v', '')
+        endif
+    endif
 endif
+conf.set('GIT_VERSION', '"@0@"'.format(git_version))
 
 conf.set('SYSCONFDIR', '"@0@"'.format(sysconfdir))
 conf.set('RUNDIR', '"@0@"'.format(rundir))
