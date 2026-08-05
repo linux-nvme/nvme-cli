@@ -647,83 +647,6 @@ __shr_public libnvme_ns_t libnvme_path_get_ns(libnvme_path_t p)
 	return p->n;
 }
 
-__shr_public int libnvme_path_get_queue_depth(libnvme_path_t p)
-{
-	__cleanup_free char *queue_depth = NULL;
-
-	queue_depth = libnvme_get_path_attr(p, "queue_depth");
-	if (queue_depth) {
-		sscanf(queue_depth, "%d", &p->queue_depth);
-	}
-
-	return p->queue_depth;
-}
-
-__shr_public char *libnvme_path_get_ana_state(libnvme_path_t p)
-{
-	__cleanup_free char *ana_state = NULL;
-
-	ana_state = libnvme_get_path_attr(p, "ana_state");
-	if (ana_state) {
-		if (!p->ana_state || strcmp(ana_state, p->ana_state)) {
-			free(p->ana_state);
-			p->ana_state = strdup(ana_state);
-		}
-	}
-
-	return p->ana_state;
-}
-
-__shr_public char *libnvme_path_get_numa_nodes(libnvme_path_t p)
-{
-	__cleanup_free char *numa_nodes = NULL;
-
-	numa_nodes = libnvme_get_path_attr(p, "numa_nodes");
-	if (numa_nodes) {
-		if (!p->numa_nodes || strcmp(numa_nodes, p->numa_nodes)) {
-			free(p->numa_nodes);
-			p->numa_nodes = strdup(numa_nodes);
-		}
-	}
-
-	return p->numa_nodes;
-}
-
-__shr_public long libnvme_path_get_multipath_failover_count(
-		libnvme_path_t p)
-{
-	__cleanup_free char *failover_count = NULL;
-
-	failover_count = libnvme_get_path_attr(p,
-				"diag/multipath_failover_count");
-	if (failover_count)
-		sscanf(failover_count, "%ld", &p->multipath_failover_count);
-
-	return p->multipath_failover_count;
-}
-
-__shr_public long libnvme_path_get_command_retry_count(libnvme_path_t p)
-{
-	__cleanup_free char *retry_count = NULL;
-
-	retry_count = libnvme_get_path_attr(p, "diag/command_retry_count");
-	if (retry_count)
-		sscanf(retry_count, "%ld", &p->command_retry_count);
-
-	return p->command_retry_count;
-}
-
-__shr_public long libnvme_path_get_command_error_count(libnvme_path_t p)
-{
-	__cleanup_free char *error_count = NULL;
-
-	error_count = libnvme_get_path_attr(p, "diag/command_error_count");
-	if (error_count)
-		sscanf(error_count, "%ld", &p->command_error_count);
-
-	return p->command_error_count;
-}
-
 static libnvme_stat_t libnvme_path_get_stat(libnvme_path_t p, unsigned int idx)
 {
 	if (idx > 1)
@@ -1147,8 +1070,7 @@ void nvme_free_path(struct libnvme_path *p)
 	list_del_init(&p->nentry);
 	free(p->name);
 	free(p->sysfs_dir);
-	free(p->ana_state);
-	free(p->numa_nodes);
+	libnvme_path_sysfs_free(p->sysfs);
 	free(p);
 }
 
@@ -1156,7 +1078,7 @@ static int libnvme_ctrl_scan_path(struct libnvme_global_ctx *ctx,
 		struct libnvme_ctrl *c, char *name)
 {
 	struct libnvme_path *p;
-	__cleanup_free char *path = NULL, *grpid = NULL, *queue_depth = NULL;
+	__cleanup_free char *path = NULL;
 	int ret;
 
 	libnvme_msg(ctx, LIBNVME_LOG_DEBUG, "scan controller %s path %s\n",
@@ -1172,27 +1094,16 @@ static int libnvme_ctrl_scan_path(struct libnvme_global_ctx *ctx,
 	if (!p)
 		return -ENOMEM;
 
+	p->sysfs = libnvme_path_sysfs_alloc();
+	if (!p->sysfs) {
+		free(p);
+		return -ENOMEM;
+	}
+
 	p->c = c;
 	p->name = strdup(name);
 	p->sysfs_dir = path;
 	path = NULL;
-	p->ana_state = libnvme_get_path_attr(p, "ana_state");
-	if (!p->ana_state)
-		p->ana_state = strdup("optimized");
-
-	p->numa_nodes = libnvme_get_path_attr(p, "numa_nodes");
-	if (!p->numa_nodes)
-		p->numa_nodes = strdup("-1");
-
-	grpid = libnvme_get_path_attr(p, "ana_grpid");
-	if (grpid) {
-		sscanf(grpid, "%d", &p->grpid);
-	}
-
-	queue_depth = libnvme_get_path_attr(p, "queue_depth");
-	if (queue_depth) {
-		sscanf(queue_depth, "%d", &p->queue_depth);
-	}
 
 	list_node_init(&p->nentry);
 	list_node_init(&p->entry);

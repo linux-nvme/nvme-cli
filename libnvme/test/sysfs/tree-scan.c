@@ -108,11 +108,18 @@ static unsigned int print_subsys_multipath(libnvme_subsystem_t s)
 		       libnvme_ns_get_name(n));
 
 		libnvme_namespace_for_each_path(n, p) {
+			const char *ana_state;
+			const char *numa_nodes;
+			int queue_depth;
+
+			libnvme_path_get_ana_state(p, &ana_state, "-");
+			libnvme_path_get_numa_nodes(p, &numa_nodes, "-");
+			libnvme_path_get_queue_depth(p, &queue_depth, 0);
 			printf("      path %s ana=%s numa=%s qdepth=%d\n",
 			       libnvme_path_get_name(p),
-			       libnvme_path_get_ana_state(p),
-			       libnvme_path_get_numa_nodes(p),
-			       libnvme_path_get_queue_depth(p));
+			       ana_state,
+			       numa_nodes,
+			       queue_depth);
 			print_ctrl(libnvme_path_get_ctrl(p), "        ");
 		}
 		i++;

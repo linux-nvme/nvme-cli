@@ -93,16 +93,10 @@ LIBNVME_3 {
 		libnvme_ns_write_uncorrectable;
 		libnvme_ns_write_zeros;
 		libnvme_open;
-		libnvme_path_get_ana_state;
-		libnvme_path_get_command_error_count;
-		libnvme_path_get_command_retry_count;
 		libnvme_path_get_ctrl;
 		libnvme_path_get_inflights;
 		libnvme_path_get_io_ticks;
-		libnvme_path_get_multipath_failover_count;
 		libnvme_path_get_ns;
-		libnvme_path_get_numa_nodes;
-		libnvme_path_get_queue_depth;
 		libnvme_path_get_read_ios;
 		libnvme_path_get_read_sectors;
 		libnvme_path_get_read_ticks;

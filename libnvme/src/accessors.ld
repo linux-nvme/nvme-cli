@@ -145,10 +145,8 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_ns_set_meta_size;
 		libnvme_ns_set_nsid;
 		libnvme_ns_set_sysfs_dir;
-		libnvme_path_get_grpid;
 		libnvme_path_get_name;
 		libnvme_path_get_sysfs_dir;
-		libnvme_path_set_grpid;
 		libnvme_path_set_name;
 		libnvme_path_set_sysfs_dir;
 		libnvme_set_dry_run;

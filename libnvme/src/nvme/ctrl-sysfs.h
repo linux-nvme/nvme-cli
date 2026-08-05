@@ -36,10 +36,10 @@ void libnvme_ctrl_sysfs_free(
 		struct libnvme_ctrl_sysfs *sysfs);
 
 /* Internal: loader callbacks, one per group above. Each
- * fills every member of its group in a single call, returning
- * 0 on success or a negative errno. Defined in whichever
- * hand-written ctrl-sysfs-custom-*.c matches the build (see
- * that file's own #ifdef/#include selection).
+ * fills every member of its group in a single call,
+ * returning 0 on success or a negative errno. Defined in
+ * whichever hand-written *-custom-*.c matches the build
+ * (see that file's own #ifdef/#include selection).
  */
 int libnvme_ctrl_load_identity(struct libnvme_ctrl *c);
 int libnvme_ctrl_load_phy_slot(struct libnvme_ctrl *c);

@@ -16,15 +16,18 @@
 /*
  * NO_SYSFS_ATTR marks a lazy sysfs member as read, but the attribute
  * does not exist -- different from NULL, which means the attribute has
- * not been read yet.
+ * not been read yet. Used both directly (char * members) and boxed
+ * (a heap-allocated TYPE * for a cached non-string member, e.g. int *) --
+ * the (void *) casts below let the same sentinel serve any pointer type
+ * without an incompatible-pointer-types diagnostic.
  */
 extern char NO_SYSFS_ATTR[];
 
 #define SYSFS_IS_LOADED(p) ((p) != NULL)
-#define SYSFS_IS_ABSENT(p) ((p) == NO_SYSFS_ATTR)
+#define SYSFS_IS_ABSENT(p) ((void *)(p) == (void *)NO_SYSFS_ATTR)
 #define SYSFS_FREE(p) \
 	do { \
-		if ((p) != NULL && (p) != NO_SYSFS_ATTR) \
+		if ((p) != NULL && !SYSFS_IS_ABSENT(p)) \
 			free(p); \
 		(p) = NULL; \
 	} while (0)

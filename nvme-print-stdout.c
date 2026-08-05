@@ -1277,7 +1277,9 @@ static unsigned int stdout_subsystem_multipath(libnvme_subsystem_t s)
 
 	libnvme_namespace_for_each_path(n, p) {
 		libnvme_ctrl_t c = libnvme_path_get_ctrl(p);
-		const char *ana_state = ana_state = libnvme_path_get_ana_state(p);
+		const char *ana_state;
+
+		libnvme_path_get_ana_state(p, &ana_state, "");
 
 		printf(" +- %s %s %s %s %s\n",
 			libnvme_ctrl_get_name(c),
@@ -6145,7 +6147,12 @@ static void stdout_tabular_subsystem_topology_multipath(libnvme_subsystem_t s)
 	libnvme_subsystem_for_each_ns(s, n) {
 		first = true;
 		libnvme_namespace_for_each_path(n, p) {
+			const char *ana_state;
+			int queue_depth;
+			const char *numa_nodes;
+
 			c = libnvme_path_get_ctrl(p);
+			libnvme_path_get_ana_state(p, &ana_state, "");
 
 			/*
 			 * For the first row we print actual NSHead name,
@@ -6163,19 +6170,23 @@ static void stdout_tabular_subsystem_topology_multipath(libnvme_subsystem_t s)
 
 			snprintf(nsid, sizeof(nsid), "%u", libnvme_ns_get_nsid(n));
 
-			if (!strcmp(iopolicy, "numa"))
+			if (!strcmp(iopolicy, "numa")) {
+				libnvme_path_get_numa_nodes(p, &numa_nodes, "");
 				snprintf(iopolicy_info, sizeof(iopolicy_info),
-					"%s", libnvme_path_get_numa_nodes(p));
-			else if (!strcmp(iopolicy, "queue-depth"))
+					"%s", numa_nodes);
+			} else if (!strcmp(iopolicy, "queue-depth")) {
+				libnvme_path_get_queue_depth(p, &queue_depth,
+							      0);
 				snprintf(iopolicy_info, sizeof(iopolicy_info),
-					"%d", libnvme_path_get_queue_depth(p));
+					"%d", queue_depth);
+			}
 
 			ret = subsystem_topology_multipath_add_row(t,
 						    iopolicy,
 						    nshead,
 						    nsid,
 						    libnvme_path_get_name(p),
-						    libnvme_path_get_ana_state(p),
+						    ana_state,
 						    iopolicy_info,
 						    libnvme_ctrl_get_name(c),
 						    libnvme_ctrl_get_transport(c),
@@ -6234,14 +6245,17 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 			printf(" \\\n");
 
 			libnvme_namespace_for_each_path(n, p) {
+				const char *ana_state;
+
 				c = libnvme_path_get_ctrl(p);
+				libnvme_path_get_ana_state(p, &ana_state, "");
 
 				printf("  +- %s %s %s %s %s\n",
 				       libnvme_ctrl_get_name(c),
 				       libnvme_ctrl_get_transport(c),
 				       libnvme_ctrl_get_address(c),
 				       libnvme_ctrl_get_state(c),
-				       libnvme_path_get_ana_state(p));
+				       ana_state);
 			}
 		}
 	} else if (ranking == NVME_CLI_TOPO_CTRL) {
@@ -6255,13 +6269,17 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 
 			libnvme_subsystem_for_each_ns(s, n) {
 				libnvme_namespace_for_each_path(n, p) {
+					const char *ana_state;
+
 					if (libnvme_path_get_ctrl(p) != c)
 						continue;
 
+					libnvme_path_get_ana_state(p,
+							&ana_state, "");
 					printf("  +- ns %d %s %s\n",
 					       libnvme_ns_get_nsid(n),
 					       libnvme_ctrl_get_state(c),
-					       libnvme_path_get_ana_state(p));
+					       ana_state);
 				}
 			}
 		}
@@ -6273,31 +6291,42 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 					libnvme_ns_get_nsid(n));
 			printf(" \\\n");
 			libnvme_namespace_for_each_path(n, p) {
+				const char *ana_state;
+
 				c = libnvme_path_get_ctrl(p);
+				libnvme_path_get_ana_state(p, &ana_state, "");
 
 				if (!strcmp(iopolicy, "numa")) {
+					const char *numa_nodes;
+
 					/*
 					 * For iopolicy numa, exclude printing
 					 * qdepth.
 					 */
+					libnvme_path_get_numa_nodes(p,
+							&numa_nodes, "");
 					printf("  +- %s %s %s %s %s %s %s\n",
 						libnvme_path_get_name(p),
-						libnvme_path_get_ana_state(p),
-						libnvme_path_get_numa_nodes(p),
+						ana_state,
+						numa_nodes,
 						libnvme_ctrl_get_name(c),
 						libnvme_ctrl_get_transport(c),
 						libnvme_ctrl_get_address(c),
 						libnvme_ctrl_get_state(c));
 
 				} else if (!strcmp(iopolicy, "queue-depth")) {
+					int queue_depth;
+
 					/*
 					 * For iopolicy queue-depth, exclude
 					 * printing numa nodes.
 					 */
+					libnvme_path_get_queue_depth(p,
+							&queue_depth, 0);
 					printf("  +- %s %s %d %s %s %s %s\n",
 						libnvme_path_get_name(p),
-						libnvme_path_get_ana_state(p),
-						libnvme_path_get_queue_depth(p),
+						ana_state,
+						queue_depth,
 						libnvme_ctrl_get_name(c),
 						libnvme_ctrl_get_transport(c),
 						libnvme_ctrl_get_address(c),
@@ -6310,7 +6339,7 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 					 */
 					printf("  +- %s %s %s %s %s %s\n",
 						libnvme_path_get_name(p),
-						libnvme_path_get_ana_state(p),
+						ana_state,
 						libnvme_ctrl_get_name(c),
 						libnvme_ctrl_get_transport(c),
 						libnvme_ctrl_get_address(c),

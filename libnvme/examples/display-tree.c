@@ -66,12 +66,17 @@ int main()
 					       libnvme_ns_get_lba_size(n),
 					       libnvme_ns_get_lba_count(n));
 
-				libnvme_ctrl_for_each_path_safe(c, p, _p)
+				libnvme_ctrl_for_each_path_safe(c, p, _p) {
+					const char *ana_state;
+
+					libnvme_path_get_ana_state(p,
+							&ana_state, "");
 					printf("%c   %c   %c-- %s %s\n",
 					       _s ? '|' : ' ', _c ? '|' : ' ',
 					       _p ? '|' : '`',
 					       libnvme_path_get_name(p),
-					       libnvme_path_get_ana_state(p));
+					       ana_state);
+				}
 			}
 		}
 	}

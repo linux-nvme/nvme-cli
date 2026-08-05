@@ -58,16 +58,6 @@ __shr_public const char *libnvme_path_get_sysfs_dir(
 	return p->sysfs_dir;
 }
 
-__shr_public void libnvme_path_set_grpid(struct libnvme_path *p, int grpid)
-{
-	p->grpid = grpid;
-}
-
-__shr_public int libnvme_path_get_grpid(const struct libnvme_path *p)
-{
-	return p->grpid;
-}
-
 /****************************************************************************
  * Accessors for: struct libnvme_ns
  ****************************************************************************/

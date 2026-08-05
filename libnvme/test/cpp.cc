@@ -53,10 +53,13 @@ int main()
 						  << "\n";
 				}
 				libnvme_ctrl_for_each_path(c, p) {
+					const char *ana_state;
+
+					libnvme_path_get_ana_state(p, &ana_state, "");
 					std::cout << "   `- "
 						  << libnvme_path_get_name(p)
 						  << " "
-						  << libnvme_path_get_ana_state(p)
+						  << ana_state
 						  << "\n";
 				}
 			}
