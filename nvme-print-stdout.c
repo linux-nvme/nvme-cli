@@ -3672,8 +3672,8 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 static void stdout_id_ctrl_nvm_kpiocap(__u8 kpiocap)
 {
 	__u8 rsvd2 = (kpiocap & 0xfc) >> 2;
-	__u8 kpiosc = (kpiocap & 0x2) >> 1;
-	__u8 kpios = kpiocap & 0x1;
+	__u8 kpiosc = NVME_CTRL_KPIOC_KPIOSC(kpiocap);
+	__u8 kpios = NVME_CTRL_KPIOC_KPIOS(kpiocap);
 
 	if (rsvd2)
 		printf("  [7:2] : %#x\tReserved\n", rsvd2);
