@@ -1961,22 +1961,22 @@ static void stdout_id_ctrl_cmic(__u8 cmic)
 static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 {
 	__u32 oaes = le32_to_cpu(ctrl_oaes);
-	__u32 dlpcn = (oaes & NVME_CTRL_OAES_DL) >> 31;
+	__u32 dlpcn = NVME_CTRL_OAES_DLPCN(oaes);
 	__u32 rsvd28 = (oaes & 0x70000000) >> 28;
-	__u32 zdcn = (oaes & NVME_CTRL_OAES_ZD) >> 27;
+	__u32 zdcn = NVME_CTRL_OAES_ZDCN(oaes);
 	__u32 rsvd20 = (oaes & 0x7fe0000) >> 20;
-	__u32 ansan = (oaes & NVME_CTRL_OAES_ANSAN) >> 19;
+	__u32 ansan = NVME_CTRL_OAES_ANSAN(oaes);
 	__u32 rsvd18 = (oaes >> 18) & 0x1;
-	__u32 rgcns = (oaes & NVME_CTRL_OAES_RGCNS) >> 17;
-	__u32 tthr = (oaes & NVME_CTRL_OAES_TTH) >> 16;
-	__u32 normal_shn = (oaes & NVME_CTRL_OAES_NS) >> 15;
-	__u32 egealpcn = (oaes & NVME_CTRL_OAES_EGE) >> 14;
-	__u32 lbasin = (oaes & NVME_CTRL_OAES_LBAS) >> 13;
-	__u32 plealcn = (oaes & NVME_CTRL_OAES_PLEA) >> 12;
-	__u32 anacn = (oaes & NVME_CTRL_OAES_ANA) >> 11;
+	__u32 rgcns = NVME_CTRL_OAES_RGCNS(oaes);
+	__u32 tthr = NVME_CTRL_OAES_TTHR(oaes);
+	__u32 normal_shn = NVME_CTRL_OAES_NNVMSS(oaes);
+	__u32 egealpcn = NVME_CTRL_OAES_EGEALPCN(oaes);
+	__u32 lbasin = NVME_CTRL_OAES_LBASIAN(oaes);
+	__u32 plealcn = NVME_CTRL_OAES_PLEALCN(oaes);
+	__u32 anacn = NVME_CTRL_OAES_ANACN(oaes);
 	__u32 rsvd10 = (oaes >> 10) & 0x1;
-	__u32 fan = (oaes & NVME_CTRL_OAES_FA) >> 9;
-	__u32 nace = (oaes & NVME_CTRL_OAES_NA) >> 8;
+	__u32 fan = NVME_CTRL_OAES_FAN(oaes);
+	__u32 nace = NVME_CTRL_OAES_NAN(oaes);
 	__u32 rsvd0 = oaes & 0xFF;
 
 	printf("  [31:31] : %#x\tDiscovery Log Change Notice %sSupported\n",
