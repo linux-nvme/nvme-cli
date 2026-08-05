@@ -6,7 +6,8 @@
 # Authors: Daniel Wagner <dwagner@suse.de>
 
 diff = find_program('diff', required : false)
-if diff.found()
+bash_prog = find_program('bash', required : false)
+if diff.found() and bash_prog.found()
     tree_scan = executable(
         'test-tree-scan',
         ['tree-scan.c'],
@@ -18,13 +19,14 @@ if diff.found()
         'tree-apple-nvme',
     ]
 
-    tree_diff = find_program('tree-diff.sh')
+    tree_diff = files('tree-diff.sh')
 
     foreach t_file : tree_data
         test(
             'libnvme - @0@'.format(t_file),
-            tree_diff,
+            bash_prog,
             args : [
+                tree_diff,
                 meson.current_build_dir(),
                 tree_scan.full_path(),
                 files('data'/t_file + '.tar.xz'),
@@ -44,8 +46,9 @@ if diff.found()
         foreach t_file : tree_data
             test(
                 'libnvme - @0@-hostnqn'.format(t_file),
-                tree_diff,
+                bash_prog,
                 args : [
+                    tree_diff,
                     meson.current_build_dir(),
                     tree_scan_hostnqn.full_path(),
                     files('data'/t_file + '.tar.xz'),

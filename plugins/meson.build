@@ -36,9 +36,7 @@ if host_system != 'windows'
       ],
     'netapp': ['plugins/netapp/netapp-nvme.c'],
     'sandisk': ['plugins/sandisk/sandisk-nvme.c', 'plugins/sandisk/sandisk-utils.c'],
-    'scaleflux': ['plugins/scaleflux/sfx-nvme.c'],
     'wdc': ['plugins/wdc/wdc-nvme.c', 'plugins/wdc/wdc-utils.c'],
-    'zns': ['plugins/zns/zns.c'],
   }
 else
   all_plugins += {
@@ -47,6 +45,13 @@ else
       'plugins/micron/micron-utils.c',
       'plugins/micron/micron-utils-win.c'
       ],
+  }
+endif
+
+if host_system == 'linux'
+  all_plugins += {
+    'scaleflux': ['plugins/scaleflux/sfx-nvme.c'],
+    'zns': ['plugins/zns/zns.c'],
   }
 endif
 
@@ -86,7 +91,7 @@ if 'feat' in selected_plugins
   subdir('feat')
 endif
 
-if 'lm' in selected_plugins and host_system != 'windows'
+if 'lm' in selected_plugins and host_system == 'linux'
   subdir('lm')
 endif
 
