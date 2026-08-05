@@ -37,3 +37,9 @@ int libnvme_mi_admin_admin_passthru(struct libnvme_transport_handle *hdl,
 {
 	return -ENOTSUP;
 }
+
+__shr_public struct libnvme_mi_ep *libnvme_transport_handle_get_mi_ep(
+		struct libnvme_transport_handle *hdl)
+{
+	return NULL;
+}
