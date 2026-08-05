@@ -287,6 +287,7 @@ static void __nvme_free_ns(struct libnvme_ns *n)
 	free(n->generic_name);
 	free(n->name);
 	free(n->sysfs_dir);
+	libnvme_ns_sysfs_free(n->sysfs);
 	libnvme_namespace_for_each_path_safe(n, p, _p) {
 		list_del_init(&p->nentry);
 		p->n = NULL;
@@ -1505,14 +1506,21 @@ __shr_public void libnvme_rescan_ctrl(struct libnvme_ctrl *c)
 static int libnvme_bytes_to_lba(libnvme_ns_t n, off_t offset, size_t count,
 		__u64 *lba, __u16 *nlb)
 {
-	int bs;
+	int bs, lba_shift;
+	int ret;
 
-	bs = libnvme_ns_get_lba_size(n);
+	ret = libnvme_ns_get_lba_size(n, &bs, 0);
+	if (ret)
+		return ret;
 	if (!count || offset & (bs - 1) || count & (bs - 1))
 		return -EINVAL;
 
-	*lba = offset >> n->lba_shift;
-	*nlb = (count >> n->lba_shift) - 1;
+	ret = libnvme_ns_get_lba_shift(n, &lba_shift, 0);
+	if (ret)
+		return ret;
+
+	*lba = offset >> lba_shift;
+	*nlb = (count >> lba_shift) - 1;
 
 	return 0;
 }
@@ -1598,55 +1606,6 @@ __shr_public void libnvme_ns_copy_uuid(libnvme_ns_t n,
 		unsigned char out[NVME_UUID_LEN])
 {
 	memcpy(out, n->uuid, NVME_UUID_LEN);
-}
-
-__shr_public long libnvme_ns_get_command_retry_count(libnvme_ns_t n)
-{
-	__cleanup_free char *retry_count = NULL;
-
-	retry_count = libnvme_get_ns_attr(n, "diag/command_retry_count");
-	if (retry_count)
-		sscanf(retry_count, "%ld", &n->command_retry_count);
-
-	return n->command_retry_count;
-}
-
-__shr_public long libnvme_ns_get_command_error_count(libnvme_ns_t n)
-{
-	__cleanup_free char *error_count = NULL;
-
-	error_count = libnvme_get_ns_attr(n, "diag/command_error_count");
-	if (error_count)
-		sscanf(error_count, "%ld", &n->command_error_count);
-
-	return n->command_error_count;
-}
-
-__shr_public long libnvme_ns_get_io_requeue_no_usable_path_count(
-		libnvme_ns_t n)
-{
-	__cleanup_free char *requeue_count = NULL;
-
-	requeue_count = libnvme_get_ns_attr(n,
-			"diag/io_requeue_no_usable_path_count");
-	if (requeue_count)
-		sscanf(requeue_count, "%ld",
-			&n->io_requeue_no_usable_path_count);
-
-	return n->io_requeue_no_usable_path_count;
-}
-
-__shr_public long libnvme_ns_get_io_fail_no_available_path_count(
-		libnvme_ns_t n)
-{
-	__cleanup_free char *fail_count = NULL;
-
-	fail_count = libnvme_get_ns_attr(n,
-			"diag/io_fail_no_available_path_count");
-	if (fail_count)
-		sscanf(fail_count, "%ld", &n->io_fail_no_available_path_count);
-
-	return n->io_fail_no_available_path_count;
 }
 
 __shr_public int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns)

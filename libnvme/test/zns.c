@@ -96,12 +96,19 @@ int main()
 		libnvme_for_each_subsystem(h, s) {
 			libnvme_subsystem_for_each_ctrl(s, c) {
 				libnvme_ctrl_for_each_ns(c, n) {
-					if (libnvme_ns_get_csi(n) == NVME_CSI_ZNS)
+					enum nvme_csi csi;
+
+					libnvme_ns_get_csi(n, &csi,
+							NVME_CSI_NVM);
+					if (csi == NVME_CSI_ZNS)
 						show_zns_properties(n);
 				}
 			}
 			libnvme_subsystem_for_each_ns(s, n) {
-				if (libnvme_ns_get_csi(n) == NVME_CSI_ZNS)
+				enum nvme_csi csi;
+
+				libnvme_ns_get_csi(n, &csi, NVME_CSI_NVM);
+				if (csi == NVME_CSI_ZNS)
 					show_zns_properties(n);
 			}
 		}

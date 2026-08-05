@@ -44,12 +44,17 @@ int main()
 					  << " " << libnvme_ctrl_get_state(c)
 					  << "\n";
 				libnvme_ctrl_for_each_ns(c, n) {
+					int lba_size;
+					uint64_t lba_count;
+
+					libnvme_ns_get_lba_size(n, &lba_size, 0);
+					libnvme_ns_get_lba_count(n, &lba_count, 0);
 					std::cout << "   `- "
 						  << libnvme_ns_get_name(n)
 						  << "lba size:"
-						  << libnvme_ns_get_lba_size(n)
+						  << lba_size
 						  << " lba max:"
-						  << libnvme_ns_get_lba_count(n)
+						  << lba_count
 						  << "\n";
 				}
 				libnvme_ctrl_for_each_path(c, p) {
@@ -64,11 +69,16 @@ int main()
 				}
 			}
 			libnvme_subsystem_for_each_ns(s, n) {
+				int lba_size;
+				uint64_t lba_count;
+
+				libnvme_ns_get_lba_size(n, &lba_size, 0);
+				libnvme_ns_get_lba_count(n, &lba_count, 0);
 				std::cout << "   `- " << libnvme_ns_get_name(n)
 					  << "lba size:"
-					  << libnvme_ns_get_lba_size(n)
+					  << lba_size
 					  << " lba max:"
-					  << libnvme_ns_get_lba_count(n) << "\n";
+					  << lba_count << "\n";
 			}
 		}
 	}

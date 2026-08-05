@@ -245,25 +245,11 @@ const char *libnvme_ns_sysfs_dir(
 	return NULL;
 }
 
-int libnvme_ns_init(const char *path, struct libnvme_ns *ns)
+int libnvme_ns_init(__shr_unused const char *path, struct libnvme_ns *ns)
 {
-	__cleanup_libnvme_free struct nvme_id_ns *id = NULL;
-	uint8_t flbas;
-	int ret;
-
-	id = libnvme_alloc(sizeof(*id));
-	if (!id)
+	ns->sysfs = libnvme_ns_sysfs_alloc();
+	if (!ns->sysfs)
 		return -ENOMEM;
-
-	ret = libnvme_ns_identify(ns, id);
-	if (ret)
-		return ret;
-
-	nvme_id_ns_flbas_to_lbaf_inuse(id->flbas, &flbas);
-	ns->lba_size = 1 << id->lbaf[flbas].ds;
-	ns->lba_count = le64_to_cpu(id->nsze);
-	ns->lba_util = le64_to_cpu(id->nuse);
-	ns->meta_size = le16_to_cpu(id->lbaf[flbas].ms);
 
 	return 0;
 }

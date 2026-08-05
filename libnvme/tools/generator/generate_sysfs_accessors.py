@@ -93,10 +93,11 @@ def _make_member(spec, resolved, is_absent=False):
     pub_type = 'const char *' if resolved['type'] == 'char *' else resolved['type']
     field_path = f"{owner_field}->{name}"
     write_mode = 'generated' if resolved.get('writable') else 'none'
+    read_mode = 'custom' if resolved.get('custom') else 'generated'
     return Member(
         name=name,
         type_str=pub_type,
-        read_mode='generated',
+        read_mode=read_mode,
         write_mode=write_mode,
         is_char_array=False,
         is_char_ptr_array=False,
@@ -415,6 +416,8 @@ def generate_source_os(spec, os_members):
 _PY_FROM = {
     'long': 'PyLong_FromLong',
     'int': 'PyLong_FromLong',
+    'uint64_t': 'PyLong_FromUnsignedLongLong',
+    'enum nvme_csi': 'PyLong_FromLong',
 }
 
 

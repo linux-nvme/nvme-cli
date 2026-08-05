@@ -104,23 +104,35 @@ int main()
 	libnvme_for_each_host(ctx, h) {
 		libnvme_for_each_subsystem(h, s) {
 			libnvme_subsystem_for_each_ctrl(s, c) {
-				libnvme_ctrl_for_each_ns(c, n)
+				libnvme_ctrl_for_each_ns(c, n) {
+					uint64_t lba_count;
+					int lba_size;
+
+					libnvme_ns_get_lba_count(n,
+							&lba_count, 0);
+					libnvme_ns_get_lba_size(n,
+							&lba_size, 0);
 					printf("%-12s %-8d %-16" PRIu64 " %-8d %s\n",
 					       libnvme_ns_get_name(n),
 					       libnvme_ns_get_nsid(n),
-					       libnvme_ns_get_lba_count(n),
-					       libnvme_ns_get_lba_size(n),
+					       lba_count,
+					       lba_size,
 					       libnvme_ctrl_get_name(c));
+				}
 			}
 
 			libnvme_subsystem_for_each_ns(s, n) {
 				bool first = true;
+				uint64_t lba_count;
+				int lba_size;
 
+				libnvme_ns_get_lba_count(n, &lba_count, 0);
+				libnvme_ns_get_lba_size(n, &lba_size, 0);
 				printf("%-12s %-8d %-16" PRIu64 " %-8d ",
 				       libnvme_ns_get_name(n),
 				       libnvme_ns_get_nsid(n),
-				       libnvme_ns_get_lba_count(n),
-				       libnvme_ns_get_lba_size(n));
+				       lba_count,
+				       lba_size);
 				libnvme_subsystem_for_each_ctrl(s, c) {
 					printf("%s%s", first ? "" : ", ",
 					       libnvme_ctrl_get_name(c));

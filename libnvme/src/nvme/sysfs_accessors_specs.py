@@ -202,8 +202,104 @@ PATH_SYSFS = {
     'groups': [],
 }
 
+NS_SYSFS = {
+    'struct_name': 'libnvme_ns_sysfs',
+    'owner_type': 'libnvme_ns',
+    'owner_field': 'sysfs',
+    'attr_reader': 'libnvme_get_ns_attr',
+    'source': 'ns-sysfs.c',
+    'header': 'ns-sysfs.h',
+    'ld': 'ns-sysfs.ld',
+    'swig': 'ns-sysfs.i',
+    # See CTRL_SYSFS's ld_section comment above: NEXT, not a real
+    # version number.
+    'ld_section': 'LIBNVME_NS_SYSFS_NEXT',
+    # No reconfigure_reset on any member: like libnvme_path, an ns is
+    # never updated in place on rescan -- libnvme_ctrl_scan_namespace()
+    # always finds-or-frees the old one and installs a fresh one -- so
+    # there is no in-place-invalidate event these fields would ever
+    # need to respond to.
+    'members': [
+        # lba_size/lba_shift/lba_count/lba_util/meta_size/csi are all
+        # 'custom': True -- the struct field (boxed, same NULL/
+        # NO_SYSFS_ATTR/real-value tri-state every other cached numeric
+        # member uses) and the header prototype are generated as usual,
+        # but the getter body is hand-written in ns-sysfs-custom-<os>.c,
+        # not generated. Needed because none of the three axes this
+        # generator understands (plain attr, volatile attr, loader
+        # group) can express what these six actually require: lba_shift
+        # is derived from lba_size, not read from anywhere; the other
+        # five each pick between two genuinely different sysfs-vs-
+        # Identify sources at runtime, keyed by whether the "csi"
+        # attribute exists (a runtime fact, not a build-time OS fact
+        # the per-OS 'linux'/'win' override mechanism models).
+        {
+            'name': 'lba_size',
+            'type': 'int',
+            'custom': True,
+        },
+        {
+            'name': 'lba_shift',
+            'type': 'int',
+            'custom': True,
+        },
+        {
+            'name': 'lba_count',
+            'type': 'uint64_t',
+            'custom': True,
+        },
+        {
+            'name': 'lba_util',
+            'type': 'uint64_t',
+            'custom': True,
+        },
+        {
+            'name': 'meta_size',
+            'type': 'int',
+            'custom': True,
+        },
+        {
+            'name': 'csi',
+            'type': 'enum nvme_csi',
+            'custom': True,
+        },
+        # The four diag/* counters need no per-OS override: like most
+        # CTRL_SYSFS members, Windows absence falls out of the existing
+        # libnvme_get_ns_attr() stub (unconditionally NULL) for free --
+        # unlike PATH_SYSFS, libnvme_ns as a whole is not Windows-absent
+        # (the six custom members above have real Windows sources), so
+        # there is no reason to mark these explicitly absent either.
+        {
+            'name': 'command_retry_count',
+            'attr': 'diag/command_retry_count',
+            'type': 'long',
+            'volatile': True,
+        },
+        {
+            'name': 'command_error_count',
+            'attr': 'diag/command_error_count',
+            'type': 'long',
+            'volatile': True,
+        },
+        {
+            'name': 'io_requeue_no_usable_path_count',
+            'attr': 'diag/io_requeue_no_usable_path_count',
+            'type': 'long',
+            'volatile': True,
+        },
+        {
+            'name': 'io_fail_no_available_path_count',
+            'attr': 'diag/io_fail_no_available_path_count',
+            'type': 'long',
+            'volatile': True,
+        },
+    ],
+    'groups': [],
+}
+
 # generate_sysfs_accessors.py generates every entry here in one run.
 SYSFS_SPECS = [
     CTRL_SYSFS,
     PATH_SYSFS,
+    NS_SYSFS,
 ]
