@@ -64,12 +64,19 @@ int main()
 		libnvme_for_each_subsystem(h, s) {
 			libnvme_subsystem_for_each_ctrl(s, c) {
 				bool first = true;
+				const char *serial;
+				const char *model;
+				const char *firmware;
+
+				libnvme_ctrl_get_serial(c, &serial, "");
+				libnvme_ctrl_get_model(c, &model, "");
+				libnvme_ctrl_get_firmware(c, &firmware, "");
 
 				printf("%-8s %-20s %-40s %-8s %-6s %-14s %-12s ",
 				       libnvme_ctrl_get_name(c),
-				       libnvme_ctrl_get_serial(c),
-				       libnvme_ctrl_get_model(c),
-				       libnvme_ctrl_get_firmware(c),
+				       serial,
+				       model,
+				       firmware,
 				       libnvme_ctrl_get_transport(c),
 				       libnvme_ctrl_get_traddr(c),
 				       libnvme_subsystem_get_name(s));

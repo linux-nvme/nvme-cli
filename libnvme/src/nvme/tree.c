@@ -1652,17 +1652,35 @@ const char *libnvme_ns_head_get_sysfs_dir(libnvme_ns_head_t head)
 
 __shr_public const char *libnvme_ns_get_model(libnvme_ns_t n)
 {
-	return n->c ? libnvme_ctrl_get_model(n->c) : n->s->model;
+	const char *val;
+
+	if (!n->c)
+		return n->s->model;
+
+	libnvme_ctrl_get_model(n->c, &val, NULL);
+	return val;
 }
 
 __shr_public const char *libnvme_ns_get_serial(libnvme_ns_t n)
 {
-	return n->c ? libnvme_ctrl_get_serial(n->c) : n->s->serial;
+	const char *val;
+
+	if (!n->c)
+		return n->s->serial;
+
+	libnvme_ctrl_get_serial(n->c, &val, NULL);
+	return val;
 }
 
 __shr_public const char *libnvme_ns_get_firmware(libnvme_ns_t n)
 {
-	return n->c ? libnvme_ctrl_get_firmware(n->c) : n->s->firmware;
+	const char *val;
+
+	if (!n->c)
+		return n->s->firmware;
+
+	libnvme_ctrl_get_firmware(n->c, &val, NULL);
+	return val;
 }
 
 __shr_public void libnvme_ns_copy_uuid(libnvme_ns_t n,

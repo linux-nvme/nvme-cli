@@ -4597,6 +4597,10 @@ static void json_print_detail_list_multipath(libnvme_subsystem_t s,
 			libnvme_ctrl_t c;
 			struct json_object *jpath = json_create_object();
 			const char *slot;
+			const char *cntlid;
+			const char *serial;
+			const char *model;
+			const char *firmware;
 
 			obj_add_str(jpath, "Path", libnvme_path_get_name(p));
 			obj_add_str(jpath, "ANAState", libnvme_path_get_ana_state(p));
@@ -4607,12 +4611,16 @@ static void json_print_detail_list_multipath(libnvme_subsystem_t s,
 			 * controller  attributes.
 			 */
 			c = libnvme_path_get_ctrl(p);
-			slot = libnvme_ctrl_get_phy_slot(c);
+			libnvme_ctrl_get_phy_slot(c, &slot, NULL);
+			libnvme_ctrl_get_cntlid(c, &cntlid, NULL);
+			libnvme_ctrl_get_serial(c, &serial, NULL);
+			libnvme_ctrl_get_model(c, &model, NULL);
+			libnvme_ctrl_get_firmware(c, &firmware, NULL);
 			obj_add_str(jpath, "Controller", libnvme_ctrl_get_name(c));
-			obj_add_str(jpath, "Cntlid", libnvme_ctrl_get_cntlid(c));
-			obj_add_str(jpath, "SerialNumber", libnvme_ctrl_get_serial(c));
-			obj_add_str(jpath, "ModelNumber", libnvme_ctrl_get_model(c));
-			obj_add_str(jpath, "Firmware", libnvme_ctrl_get_firmware(c));
+			obj_add_str(jpath, "Cntlid", cntlid);
+			obj_add_str(jpath, "SerialNumber", serial);
+			obj_add_str(jpath, "ModelNumber", model);
+			obj_add_str(jpath, "Firmware", firmware);
 			obj_add_str(jpath, "Transport", libnvme_ctrl_get_transport(c));
 			obj_add_str(jpath, "Address", libnvme_ctrl_get_address(c));
 			obj_add_ctrl_address_details(jpath, "AddressDetails", c);
@@ -4636,13 +4644,23 @@ static void json_print_detail_list(libnvme_subsystem_t s, struct json_object *js
 	libnvme_subsystem_for_each_ctrl(s, c) {
 		struct json_object *jctrl = json_create_object();
 		struct json_object *jnss = json_create_array();
-		const char *slot = libnvme_ctrl_get_phy_slot(c);
+		const char *slot;
+		const char *cntlid;
+		const char *serial;
+		const char *model;
+		const char *firmware;
+
+		libnvme_ctrl_get_phy_slot(c, &slot, NULL);
+		libnvme_ctrl_get_cntlid(c, &cntlid, NULL);
+		libnvme_ctrl_get_serial(c, &serial, NULL);
+		libnvme_ctrl_get_model(c, &model, NULL);
+		libnvme_ctrl_get_firmware(c, &firmware, NULL);
 
 		obj_add_str(jctrl, "Controller", libnvme_ctrl_get_name(c));
-		obj_add_str(jctrl, "Cntlid", libnvme_ctrl_get_cntlid(c));
-		obj_add_str(jctrl, "SerialNumber", libnvme_ctrl_get_serial(c));
-		obj_add_str(jctrl, "ModelNumber", libnvme_ctrl_get_model(c));
-		obj_add_str(jctrl, "Firmware", libnvme_ctrl_get_firmware(c));
+		obj_add_str(jctrl, "Cntlid", cntlid);
+		obj_add_str(jctrl, "SerialNumber", serial);
+		obj_add_str(jctrl, "ModelNumber", model);
+		obj_add_str(jctrl, "Firmware", firmware);
 		obj_add_str(jctrl, "Transport", libnvme_ctrl_get_transport(c));
 		obj_add_str(jctrl, "Address", libnvme_ctrl_get_address(c));
 		obj_add_ctrl_address_details(jctrl, "AddressDetails", c);
@@ -4744,16 +4762,27 @@ static void json_detail_list(struct libnvme_global_ctx *ctx)
 				struct json_object *jctrl = json_create_object();
 				struct json_object *jnss = json_create_array();
 				struct json_object *jpaths = json_create_array();
+				const char *cntlid;
+				const char *serial;
+				const char *model;
+				const char *firmware;
+				const char *slot;
+
+				libnvme_ctrl_get_cntlid(c, &cntlid, NULL);
+				libnvme_ctrl_get_serial(c, &serial, NULL);
+				libnvme_ctrl_get_model(c, &model, NULL);
+				libnvme_ctrl_get_firmware(c, &firmware, NULL);
+				libnvme_ctrl_get_phy_slot(c, &slot, NULL);
 
 				obj_add_str(jctrl, "Controller", libnvme_ctrl_get_name(c));
-				obj_add_str(jctrl, "Cntlid", libnvme_ctrl_get_cntlid(c));
-				obj_add_str(jctrl, "SerialNumber", libnvme_ctrl_get_serial(c));
-				obj_add_str(jctrl, "ModelNumber", libnvme_ctrl_get_model(c));
-				obj_add_str(jctrl, "Firmware", libnvme_ctrl_get_firmware(c));
+				obj_add_str(jctrl, "Cntlid", cntlid);
+				obj_add_str(jctrl, "SerialNumber", serial);
+				obj_add_str(jctrl, "ModelNumber", model);
+				obj_add_str(jctrl, "Firmware", firmware);
 				obj_add_str(jctrl, "Transport", libnvme_ctrl_get_transport(c));
 				obj_add_str(jctrl, "Address", libnvme_ctrl_get_address(c));
 				obj_add_ctrl_address_details(jctrl, "AddressDetails", c);
-				obj_add_str(jctrl, "Slot", libnvme_ctrl_get_phy_slot(c));
+				obj_add_str(jctrl, "Slot", slot);
 
 				libnvme_ctrl_for_each_ns(c, n) {
 					struct json_object *jns = json_create_object();

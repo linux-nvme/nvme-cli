@@ -21,7 +21,7 @@
 extern char NO_SYSFS_ATTR[];
 
 #define SYSFS_IS_LOADED(p) ((p) != NULL)
-#define SYSFS_GET(p) (((p) == NO_SYSFS_ATTR) ? NULL : (p))
+#define SYSFS_IS_ABSENT(p) ((p) == NO_SYSFS_ATTR)
 #define SYSFS_FREE(p) \
 	do { \
 		if ((p) != NULL && (p) != NO_SYSFS_ATTR) \
