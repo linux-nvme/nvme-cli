@@ -71,22 +71,22 @@ void nvme_print_registers(void *regs)
 	__u64 pmrmsc	= nvme_mmio_read32(regs + NVME_REG_PMRMSCL) |
 		   (__u64)nvme_mmio_read64(regs + NVME_REG_PMRMSCU) << 32;
 
-	printf("%-10s : %llx\n", "CAP", cap);
-	printf("  %-8s : %llx\n", "MQES", NVME_CAP_MQES(cap));
-	printf("  %-8s : %llx\n", "CQRS", NVME_CAP_CQR(cap));
-	printf("  %-8s : %llx\n", "AMS", NVME_CAP_AMS(cap));
-	printf("  %-8s : %llx\n", "TO", NVME_CAP_TO(cap));
-	printf("  %-8s : %llx\n", "DSTRD", NVME_CAP_DSTRD(cap));
-	printf("  %-8s : %llx\n", "NSSRC", NVME_CAP_NSSRC(cap));
-	printf("  %-8s : %llx\n", "CSS", NVME_CAP_CSS(cap));
-	printf("  %-8s : %llx\n", "BPS", NVME_CAP_BPS(cap));
-	printf("  %-8s : %llx\n", "CPS", NVME_CAP_CPS(cap));
-	printf("  %-8s : %llx\n", "MPSMIN", NVME_CAP_MPSMIN(cap));
-	printf("  %-8s : %llx\n", "MPSMAX", NVME_CAP_MPSMAX(cap));
-	printf("  %-8s : %llx\n", "PMRS", NVME_CAP_PMRS(cap));
-	printf("  %-8s : %llx\n", "CMBS", NVME_CAP_CMBS(cap));
-	printf("  %-8s : %llx\n", "NSSS", NVME_CAP_NSSS(cap));
-	printf("  %-8s : %llx\n", "CRMS", NVME_CAP_CRMS(cap));
+	printf("%-10s : %" PRIx64 "\n", "CAP", (uint64_t)cap);
+	printf("  %-8s : %" PRIx64 "\n", "MQES", (uint64_t)NVME_CAP_MQES(cap));
+	printf("  %-8s : %" PRIx64 "\n", "CQRS", (uint64_t)NVME_CAP_CQR(cap));
+	printf("  %-8s : %" PRIx64 "\n", "AMS", (uint64_t)NVME_CAP_AMS(cap));
+	printf("  %-8s : %" PRIx64 "\n", "TO", (uint64_t)NVME_CAP_TO(cap));
+	printf("  %-8s : %" PRIx64 "\n", "DSTRD", (uint64_t)NVME_CAP_DSTRD(cap));
+	printf("  %-8s : %" PRIx64 "\n", "NSSRC", (uint64_t)NVME_CAP_NSSRC(cap));
+	printf("  %-8s : %" PRIx64 "\n", "CSS", (uint64_t)NVME_CAP_CSS(cap));
+	printf("  %-8s : %" PRIx64 "\n", "BPS", (uint64_t)NVME_CAP_BPS(cap));
+	printf("  %-8s : %" PRIx64 "\n", "CPS", (uint64_t)NVME_CAP_CPS(cap));
+	printf("  %-8s : %" PRIx64 "\n", "MPSMIN", (uint64_t)NVME_CAP_MPSMIN(cap));
+	printf("  %-8s : %" PRIx64 "\n", "MPSMAX", (uint64_t)NVME_CAP_MPSMAX(cap));
+	printf("  %-8s : %" PRIx64 "\n", "PMRS", (uint64_t)NVME_CAP_PMRS(cap));
+	printf("  %-8s : %" PRIx64 "\n", "CMBS", (uint64_t)NVME_CAP_CMBS(cap));
+	printf("  %-8s : %" PRIx64 "\n", "NSSS", (uint64_t)NVME_CAP_NSSS(cap));
+	printf("  %-8s : %" PRIx64 "\n", "CRMS", (uint64_t)NVME_CAP_CRMS(cap));
 
 	printf("%-10s : %x\n", "VS", vs);
 	printf("  %-8s : %x\n", "MJR", NVME_VS_TER(vs));
@@ -119,8 +119,8 @@ void nvme_print_registers(void *regs)
 	printf("  %-8s : %x\n", "ASQS", NVME_AQA_ASQS(aqa));
 	printf("  %-8s : %x\n", "ACQS", NVME_AQA_ACQS(aqa));
 
-	printf("%-10s : %llx\n", "ASQ", asq);
-	printf("%-10s : %llx\n", "ACQ", acq);
+	printf("%-10s : %" PRIx64 "\n", "ASQ", (uint64_t)asq);
+	printf("%-10s : %" PRIx64 "\n", "ACQ", (uint64_t)acq);
 
 	printf("%-10s : %x\n",   "CMBLOC",  cmbloc);
 	printf("  %-8s : %x\n", "BIR", NVME_CMBLOC_BIR(cmbloc));
@@ -140,7 +140,7 @@ void nvme_print_registers(void *regs)
 	printf("  %-8s : %x\n", "WDS", NVME_CMBSZ_WDS(cmbsz));
 	printf("  %-8s : %x\n", "SZU", NVME_CMBSZ_SZU(cmbsz));
 	printf("  %-8s : %x\n", "SZ", NVME_CMBSZ_SZ(cmbsz));
-	printf("  %-8s : %llx\n", "bytes", nvme_cmb_size(cmbsz));
+	printf("  %-8s : %" PRIx64 "\n", "bytes", (uint64_t)nvme_cmb_size(cmbsz));
 
 	printf("%-10s : %x\n", "BPINFO", bpinfo);
 	printf("  %-8s : %x\n", "BPSZ", NVME_BPINFO_BPSZ(bpinfo));
@@ -152,12 +152,12 @@ void nvme_print_registers(void *regs)
 	printf("  %-8s : %x\n", "BPROF", NVME_BPRSEL_BPROF(bprsel));
 	printf("  %-8s : %x\n", "BPID", NVME_BPRSEL_BPID(bprsel));
 
-	printf("%-10s : %llx\n", "BPMBL", bpmbl);
+	printf("%-10s : %" PRIx64 "\n", "BPMBL", (uint64_t)bpmbl);
 
-	printf("%-10s : %llx\n", "CMBMSC", cmbmsc);
-	printf("  %-8s : %llx\n", "CRE", NVME_CMBMSC_CRE(cmbmsc));
-	printf("  %-8s : %llx\n", "CMSE", NVME_CMBMSC_CMSE(cmbmsc));
-	printf("  %-8s : %llx\n", "CBA", NVME_CMBMSC_CBA(cmbmsc));
+	printf("%-10s : %" PRIx64 "\n", "CMBMSC", (uint64_t)cmbmsc);
+	printf("  %-8s : %" PRIx64 "\n", "CRE", (uint64_t)NVME_CMBMSC_CRE(cmbmsc));
+	printf("  %-8s : %" PRIx64 "\n", "CMSE", (uint64_t)NVME_CMBMSC_CMSE(cmbmsc));
+	printf("  %-8s : %" PRIx64 "\n", "CBA", (uint64_t)NVME_CMBMSC_CBA(cmbmsc));
 
 	printf("%-10s : %x\n", "CMBSTS", cmbsts);
 	printf("  %-8s : %x\n", "CBAI", NVME_CMBSTS_CBAI(cmbsts));
@@ -184,16 +184,16 @@ void nvme_print_registers(void *regs)
 	printf("  %-8s : %x\n", "PMRSZU", NVME_PMREBS_PMRSZU(pmrebs));
 	printf("  %-8s : %x\n", "RBB", NVME_PMREBS_RBB(pmrebs));
 	printf("  %-8s : %x\n", "PMRWBZ", NVME_PMREBS_PMRWBZ(pmrebs));
-	printf("  %-8s : %llx\n", "bytes", nvme_pmr_size(pmrebs));
+	printf("  %-8s : %" PRIx64 "\n", "bytes", (uint64_t)nvme_pmr_size(pmrebs));
 
 	printf("%-10s : %x\n", "PMRSWTP", pmrswtp);
 	printf("  %-8s : %x\n", "PMRSWTU", NVME_PMRSWTP_PMRSWTU(pmrswtp));
 	printf("  %-8s : %x\n", "PMRSWTV", NVME_PMRSWTP_PMRSWTV(pmrswtp));
-	printf("  %-8s : %llx\n", "tput", nvme_pmr_throughput(pmrswtp));
+	printf("  %-8s : %" PRIx64 "\n", "tput", (uint64_t)nvme_pmr_throughput(pmrswtp));
 
-	printf("%-10s : %llx\n", "PMRMSC", pmrmsc);
-	printf("  %-8s : %llx\n", "CMSE", NVME_PMRMSC_CMSE(pmrmsc));
-	printf("  %-8s : %llx\n", "CBA", NVME_PMRMSC_CBA(pmrmsc));
+	printf("%-10s : %" PRIx64 "\n", "PMRMSC", (uint64_t)pmrmsc);
+	printf("  %-8s : %" PRIx64 "\n", "CMSE", (uint64_t)NVME_PMRMSC_CMSE(pmrmsc));
+	printf("  %-8s : %" PRIx64 "\n", "CBA", (uint64_t)NVME_PMRMSC_CBA(pmrmsc));
 }
 
 int main(int argc, char **argv)
