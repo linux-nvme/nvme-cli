@@ -42,7 +42,6 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	struct nvme_telemetry_log *log;
 	size_t full_size = 0;
 	int err = 0, output;
-	__u32 host_gen = 1;
 	int ctrl_init = 0;
 	__u8 *data_ptr = NULL;
 	int data_written = 0, data_remaining = 0;
@@ -82,7 +81,6 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	}
 
 	if (type == SNDK_TELEMETRY_TYPE_HOST) {
-		host_gen = 1;
 		ctrl_init = 0;
 	} else if (type == SNDK_TELEMETRY_TYPE_CONTROLLER) {
 		if (capabilities & SNDK_DRIVE_CAP_INTERNAL_LOG) {
@@ -90,7 +88,6 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 			if (err)
 				return err;
 		}
-		host_gen = 0;
 		ctrl_init = 1;
 	} else if (type == SNDK_TELEMETRY_TYPE_BOTH) {
 		nvme_show_error(
@@ -117,12 +114,9 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	if (ctrl_init)
 		err = libnvme_get_ctrl_telemetry(hdl, true, &log,
 					  data_area, &full_size);
-	else if (host_gen)
+	else
 		err = libnvme_get_new_host_telemetry(hdl, &log,
 						  data_area, &full_size);
-	else
-		err = libnvme_get_host_telemetry(hdl, &log, data_area,
-					  &full_size);
 
 	if (err < 0) {
 		nvme_show_err(err, "get-telemetry-log");
