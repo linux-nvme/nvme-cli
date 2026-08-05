@@ -2498,8 +2498,8 @@ static void stdout_id_ctrl_anacap(__u8 anacap)
 static void stdout_id_ctrl_kpioc(__u8 ctrl_kpioc)
 {
 	__u8 rsvd2 = (ctrl_kpioc >> 2);
-	__u8 kpiosc = NVME_GET(ctrl_kpioc, CTRL_KPIOC_KPIOSC);
-	__u8 kpios = NVME_GET(ctrl_kpioc, CTRL_KPIOC_KPIOS);
+	__u8 kpiosc = NVME_CTRL_KPIOC_KPIOSC(ctrl_kpioc);
+	__u8 kpios = NVME_CTRL_KPIOC_KPIOS(ctrl_kpioc);
 
 	if (rsvd2)
 		printf(" [7:2] : %#x\tReserved\n", rsvd2);
