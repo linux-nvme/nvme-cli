@@ -3416,107 +3416,162 @@ out_free:
 	return ret;
 }
 
+static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
+		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx)
+{
+	struct libnvme_ctrl *c;
+	int err;
+
+	err = libnvme_scan_ctrl(ctx, fctx->device, &c);
+	if (err) {
+		/*
+		 * No controller found, fall back to create one.
+		 * But that controller cannot be persistent.
+		 */
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			"ctrl device %s not found%s\n", fctx->device,
+			fctx->persistent == LIBNVMF_TRISTATE_TRUE ?
+				", ignoring --persistent" : "");
+
+		fctx->persistent = LIBNVMF_TRISTATE_FALSE;
+
+		return NULL;
+	}
+
+	/* Check if device matches command-line options */
+	if (!libnvmf_ctrl_match_config(c, fctx)) {
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			"ctrl device %s found, ignoring non matching command-line options\n",
+			fctx->device);
+	}
+
+	if (!libnvme_ctrl_get_discovery_ctrl(c)) {
+		libnvme_msg(ctx, LIBNVME_LOG_ERR,
+			"ctrl device %s found, ignoring non discovery controller\n",
+			fctx->device);
+
+		fctx->persistent = LIBNVMF_TRISTATE_FALSE;
+
+		libnvme_free_ctrl(c);
+		return NULL;
+	}
+
+	/*
+	 * If the controller device is found it must be persistent, and
+	 * shouldn't be disconnected on exit.
+	 */
+	fctx->persistent = LIBNVMF_TRISTATE_TRUE;
+
+	/*
+	 * When --host-traddr/--host-iface are not specified on the
+	 * command line, use the discovery controller's (c) host-
+	 * traddr/host-iface for the connections to controllers
+	 * returned in the Discovery Log Pages. This is essential
+	 * when invoking "connect-all" with --device to reuse an
+	 * existing persistent discovery controller (as is done
+	 * for the udev rules). This ensures that host-traddr/
+	 * host-iface are consistent with the discovery controller (c).
+	 */
+	if (!fctx->ctrl_params.host_traddr)
+		fctx->ctrl_params.host_traddr =
+			(char *)libnvme_ctrl_get_host_traddr(c);
+	if (!fctx->ctrl_params.host_iface)
+		fctx->ctrl_params.host_iface =
+			(char *)libnvme_ctrl_get_host_iface(c);
+
+	return c;
+}
+
+static int discover_lookup_ctrl(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx, struct libnvme_host *h,
+		struct libnvme_ctrl **ctrl)
+{
+	struct libnvme_ctrl *c = NULL;
+	int err;
+
+	if (fctx->device)
+		c = discover_lookup_ctrl_by_device(ctx, fctx);
+
+	if (!c) {
+		c = lookup_ctrl(h, fctx);
+		if (c) {
+			/*
+			 * Do not disconnect after use, because it was not
+			 * created by us.
+			 */
+			fctx->persistent = LIBNVMF_TRISTATE_TRUE;
+		}
+	}
+
+	if (!c)
+		return 0;
+
+	if (!libnvme_ctrl_get_transport_handle(c)) {
+		/*
+		 * When we found an existing controller it might not have a
+		 * device handle yet
+		 */
+		err = libnvme_open(ctx, c->name, &c->hdl);
+		if (err) {
+			libnvme_msg(ctx, LIBNVME_LOG_ERR,
+				"failed to open %s\n", c->name);
+
+			return err;
+		}
+	}
+
+	*ctrl = c;
+	return 0;
+}
+
 __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx)
 {
 	struct libnvme_ctrl *c = NULL;
 	struct libnvme_host *h;
-	int ret;
+	int err;
 
-	ret = libnvme_get_host(ctx, fctx->hostnqn, fctx->hostid, &h);
-	if (ret)
-		return ret;
+	err = libnvme_get_host(ctx, fctx->hostnqn, fctx->hostid, &h);
+	if (err)
+		return err;
 
-	ret = setup_connection(fctx, h, true);
-	if (ret)
-		return ret;
+	err = setup_connection(fctx, h, true);
+	if (err)
+		return err;
 
-	if (fctx->device && !fctx->force) {
-		ret = libnvme_scan_ctrl(ctx, fctx->device, &c);
-		if (!ret) {
-			/* Check if device matches command-line options */
-			if (!libnvmf_ctrl_match_config(c, fctx)) {
-				libnvme_msg(ctx, LIBNVME_LOG_ERR,
-				    "ctrl device %s found, ignoring non matching command-line options\n",
-				    fctx->device);
-			}
-
-			if (!libnvme_ctrl_get_discovery_ctrl(c)) {
-				libnvme_msg(
-					ctx, LIBNVME_LOG_ERR,
-					"ctrl device %s found, ignoring non discovery controller\n",
-					fctx->device);
-
-				libnvme_free_ctrl(c);
-				c = NULL;
-				fctx->persistent = LIBNVMF_TRISTATE_FALSE;
-			} else {
-				/*
-				 * If the controller device is found it must
-				 * be persistent, and shouldn't be disconnected
-				 * on exit.
-				 */
-				fctx->persistent = LIBNVMF_TRISTATE_TRUE;
-				/*
-				 * When --host-traddr/--host-iface are not specified on the
-				 * command line, use the discovery controller's (c) host-
-				 * traddr/host-iface for the connections to controllers
-				 * returned in the Discovery Log Pages. This is essential
-				 * when invoking "connect-all" with --device to reuse an
-				 * existing persistent discovery controller (as is done
-				 * for the udev rules). This ensures that host-traddr/
-				 * host-iface are consistent with the discovery controller (c).
-				 */
-				if (!fctx->ctrl_params.host_traddr)
-					fctx->ctrl_params.host_traddr = (char *)
-						libnvme_ctrl_get_host_traddr(c);
-				if (!fctx->ctrl_params.host_iface)
-					fctx->ctrl_params.host_iface = (char *)
-						libnvme_ctrl_get_host_iface(c);
-			}
-		} else {
-			/*
-			 * No controller found, fall back to create one.
-			 * But that controller cannot be persistent.
-			 */
+	if (!fctx->force) {
+		/*
+		 * When --force is used, always create a controller, otherwise
+		 * try to lookup an already existing controller first.
+		 */
+		err = discover_lookup_ctrl(ctx, fctx, h, &c);
+		if (err) {
 			libnvme_msg(ctx, LIBNVME_LOG_ERR,
-				"ctrl device %s not found%s\n", fctx->device,
-				fctx->persistent == LIBNVMF_TRISTATE_TRUE ?
-					", ignoring --persistent" : "");
-			fctx->persistent = LIBNVMF_TRISTATE_FALSE;
+				 "failed to lookup controller, error %s\n",
+				 libnvme_strerror(-err));
+			return err;
 		}
 	}
 
-	if (!c && !fctx->force) {
-		c = lookup_ctrl(h, fctx);
-		if (c) {
-			fctx->persistent = LIBNVMF_TRISTATE_TRUE;
-			if (!libnvme_ctrl_get_transport_handle(c)) {
-				ret = libnvme_open(ctx, c->name, &c->hdl);
-				if (ret) {
-					libnvme_msg(ctx, LIBNVME_LOG_ERR,
-						"failed to open %s\n", c->name);
-					return ret;
-				}
-			}
-		}
-	}
 	if (!c) {
-		/* No device or non-matching device, create a new controller */
-		ret = nvmf_create_discovery_ctrl(ctx, fctx, h, &c);
-		if (ret) {
-			if (ret != -ENVME_CONNECT_IGNORED)
+		/*
+		 * No existing controller or --force has been used, thus create
+		 * a new controller.
+		 */
+		err = nvmf_create_discovery_ctrl(ctx, fctx, h, &c);
+		if (err) {
+			if (err != -ENVME_CONNECT_IGNORED)
 				libnvme_msg(ctx, LIBNVME_LOG_ERR,
 					 "failed to add controller, error %s\n",
-					 libnvme_strerror(-ret));
-			return ret;
+					 libnvme_strerror(-err));
+			return err;
 		}
 	}
 
-	ret = _nvmf_discover(ctx, fctx, c);
+	err = _nvmf_discover(ctx, fctx, c);
 	libnvme_free_ctrl(c);
 
-	return ret;
+	return err;
 }
 
 __shr_public int libnvmf_connect(
