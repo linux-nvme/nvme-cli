@@ -1290,8 +1290,7 @@ int __libnvmf_import_keys_from_config(libnvme_host_t h, libnvme_ctrl_t c,
 	if (!key)
 		goto out;
 
-	keyring = libnvme_ctrl_get_keyring(c);
-	if (keyring) {
+	if (libnvme_ctrl_get_keyring(c, &keyring, NULL) == 0) {
 		ret = libnvmf_lookup_keyring(h->ctx, keyring, &kr_id);
 		if (ret)
 			return ret;

@@ -18,6 +18,7 @@
  * Or:            make update-accessors
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -82,10 +83,14 @@ void libnvme_ctrl_sysfs_free(
 	free(sysfs);
 }
 
-__shr_public const char *libnvme_ctrl_get_numa_node(
-		const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_numa_node(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->numa_node))) {
 		c->sysfs->numa_node = libnvme_get_ctrl_attr(c, "numa_node");
@@ -93,13 +98,21 @@ __shr_public const char *libnvme_ctrl_get_numa_node(
 			c->sysfs->numa_node = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->numa_node);
+	if (SYSFS_IS_ABSENT(c->sysfs->numa_node))
+		return -ENOENT;
+
+	*val = c->sysfs->numa_node;
+	return 0;
 }
 
-__shr_public const char *libnvme_ctrl_get_queue_count(
-		const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_queue_count(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->queue_count))) {
 		c->sysfs->queue_count = libnvme_get_ctrl_attr(c, "queue_count");
@@ -107,12 +120,21 @@ __shr_public const char *libnvme_ctrl_get_queue_count(
 			c->sysfs->queue_count = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->queue_count);
+	if (SYSFS_IS_ABSENT(c->sysfs->queue_count))
+		return -ENOENT;
+
+	*val = c->sysfs->queue_count;
+	return 0;
 }
 
-__shr_public const char *libnvme_ctrl_get_sqsize(const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_sqsize(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->sqsize))) {
 		c->sysfs->sqsize = libnvme_get_ctrl_attr(c, "sqsize");
@@ -120,47 +142,74 @@ __shr_public const char *libnvme_ctrl_get_sqsize(const struct libnvme_ctrl *p)
 			c->sysfs->sqsize = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->sqsize);
+	if (SYSFS_IS_ABSENT(c->sysfs->sqsize))
+		return -ENOENT;
+
+	*val = c->sysfs->sqsize;
+	return 0;
 }
 
-__shr_public long libnvme_ctrl_get_command_error_count(
-		const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_command_error_count(
+		const struct libnvme_ctrl *p,
+		long *val,
+		long dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
-	char *val;
+	__cleanup_free char *str = NULL;
 
-	val = libnvme_get_ctrl_attr(c, "diag/command_error_count");
-	if (val)
-		sscanf(val, "%ld", &c->sysfs->command_error_count);
-	free(val);
+	*val = dflt;
 
-	return c->sysfs->command_error_count;
+	str = libnvme_get_ctrl_attr(c, "diag/command_error_count");
+	if (!str)
+		return -ENOENT;
+
+	if (sscanf(str, "%ld", &c->sysfs->command_error_count) != 1)
+		return -EINVAL;
+
+	*val = c->sysfs->command_error_count;
+	return 0;
 }
 
-__shr_public long libnvme_ctrl_get_reset_count(const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_reset_count(
+		const struct libnvme_ctrl *p,
+		long *val,
+		long dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
-	char *val;
+	__cleanup_free char *str = NULL;
 
-	val = libnvme_get_ctrl_attr(c, "diag/reset_count");
-	if (val)
-		sscanf(val, "%ld", &c->sysfs->reset_count);
-	free(val);
+	*val = dflt;
 
-	return c->sysfs->reset_count;
+	str = libnvme_get_ctrl_attr(c, "diag/reset_count");
+	if (!str)
+		return -ENOENT;
+
+	if (sscanf(str, "%ld", &c->sysfs->reset_count) != 1)
+		return -EINVAL;
+
+	*val = c->sysfs->reset_count;
+	return 0;
 }
 
-__shr_public long libnvme_ctrl_get_reconnect_count(const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_reconnect_count(
+		const struct libnvme_ctrl *p,
+		long *val,
+		long dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
-	char *val;
+	__cleanup_free char *str = NULL;
 
-	val = libnvme_get_ctrl_attr(c, "diag/reconnect_count");
-	if (val)
-		sscanf(val, "%ld", &c->sysfs->reconnect_count);
-	free(val);
+	*val = dflt;
 
-	return c->sysfs->reconnect_count;
+	str = libnvme_get_ctrl_attr(c, "diag/reconnect_count");
+	if (!str)
+		return -ENOENT;
+
+	if (sscanf(str, "%ld", &c->sysfs->reconnect_count) != 1)
+		return -EINVAL;
+
+	*val = c->sysfs->reconnect_count;
+	return 0;
 }
 
 __shr_public void libnvme_ctrl_set_firmware(
@@ -171,17 +220,29 @@ __shr_public void libnvme_ctrl_set_firmware(
 	p->sysfs->firmware = firmware ? strdup(firmware) : NO_SYSFS_ATTR;
 }
 
-__shr_public const char *libnvme_ctrl_get_firmware(const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_firmware(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+	int ret;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->firmware))) {
-		libnvme_ctrl_load_identity(c);
+		ret = libnvme_ctrl_load_identity(c);
+		if (ret)
+			return ret;
 		if (!c->sysfs->firmware)
 			c->sysfs->firmware = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->firmware);
+	if (SYSFS_IS_ABSENT(c->sysfs->firmware))
+		return -ENOENT;
+
+	*val = c->sysfs->firmware;
+	return 0;
 }
 
 __shr_public void libnvme_ctrl_set_model(
@@ -192,17 +253,29 @@ __shr_public void libnvme_ctrl_set_model(
 	p->sysfs->model = model ? strdup(model) : NO_SYSFS_ATTR;
 }
 
-__shr_public const char *libnvme_ctrl_get_model(const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_model(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+	int ret;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->model))) {
-		libnvme_ctrl_load_identity(c);
+		ret = libnvme_ctrl_load_identity(c);
+		if (ret)
+			return ret;
 		if (!c->sysfs->model)
 			c->sysfs->model = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->model);
+	if (SYSFS_IS_ABSENT(c->sysfs->model))
+		return -ENOENT;
+
+	*val = c->sysfs->model;
+	return 0;
 }
 
 __shr_public void libnvme_ctrl_set_serial(
@@ -213,17 +286,29 @@ __shr_public void libnvme_ctrl_set_serial(
 	p->sysfs->serial = serial ? strdup(serial) : NO_SYSFS_ATTR;
 }
 
-__shr_public const char *libnvme_ctrl_get_serial(const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_serial(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+	int ret;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->serial))) {
-		libnvme_ctrl_load_identity(c);
+		ret = libnvme_ctrl_load_identity(c);
+		if (ret)
+			return ret;
 		if (!c->sysfs->serial)
 			c->sysfs->serial = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->serial);
+	if (SYSFS_IS_ABSENT(c->sysfs->serial))
+		return -ENOENT;
+
+	*val = c->sysfs->serial;
+	return 0;
 }
 
 __shr_public void libnvme_ctrl_set_cntrltype(
@@ -234,18 +319,29 @@ __shr_public void libnvme_ctrl_set_cntrltype(
 	p->sysfs->cntrltype = cntrltype ? strdup(cntrltype) : NO_SYSFS_ATTR;
 }
 
-__shr_public const char *libnvme_ctrl_get_cntrltype(
-		const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_cntrltype(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+	int ret;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->cntrltype))) {
-		libnvme_ctrl_load_identity(c);
+		ret = libnvme_ctrl_load_identity(c);
+		if (ret)
+			return ret;
 		if (!c->sysfs->cntrltype)
 			c->sysfs->cntrltype = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->cntrltype);
+	if (SYSFS_IS_ABSENT(c->sysfs->cntrltype))
+		return -ENOENT;
+
+	*val = c->sysfs->cntrltype;
+	return 0;
 }
 
 __shr_public void libnvme_ctrl_set_cntlid(
@@ -256,17 +352,29 @@ __shr_public void libnvme_ctrl_set_cntlid(
 	p->sysfs->cntlid = cntlid ? strdup(cntlid) : NO_SYSFS_ATTR;
 }
 
-__shr_public const char *libnvme_ctrl_get_cntlid(const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_cntlid(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+	int ret;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->cntlid))) {
-		libnvme_ctrl_load_identity(c);
+		ret = libnvme_ctrl_load_identity(c);
+		if (ret)
+			return ret;
 		if (!c->sysfs->cntlid)
 			c->sysfs->cntlid = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->cntlid);
+	if (SYSFS_IS_ABSENT(c->sysfs->cntlid))
+		return -ENOENT;
+
+	*val = c->sysfs->cntlid;
+	return 0;
 }
 
 __shr_public void libnvme_ctrl_set_dctype(
@@ -277,30 +385,54 @@ __shr_public void libnvme_ctrl_set_dctype(
 	p->sysfs->dctype = dctype ? strdup(dctype) : NO_SYSFS_ATTR;
 }
 
-__shr_public const char *libnvme_ctrl_get_dctype(const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_dctype(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+	int ret;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->dctype))) {
-		libnvme_ctrl_load_identity(c);
+		ret = libnvme_ctrl_load_identity(c);
+		if (ret)
+			return ret;
 		if (!c->sysfs->dctype)
 			c->sysfs->dctype = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->dctype);
+	if (SYSFS_IS_ABSENT(c->sysfs->dctype))
+		return -ENOENT;
+
+	*val = c->sysfs->dctype;
+	return 0;
 }
 
-__shr_public const char *libnvme_ctrl_get_phy_slot(const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_phy_slot(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+	int ret;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->phy_slot))) {
-		libnvme_ctrl_load_phy_slot(c);
+		ret = libnvme_ctrl_load_phy_slot(c);
+		if (ret)
+			return ret;
 		if (!c->sysfs->phy_slot)
 			c->sysfs->phy_slot = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->phy_slot);
+	if (SYSFS_IS_ABSENT(c->sysfs->phy_slot))
+		return -ENOENT;
+
+	*val = c->sysfs->phy_slot;
+	return 0;
 }
 
 __shr_public void libnvme_ctrl_set_dhchap_host_key(
@@ -312,18 +444,29 @@ __shr_public void libnvme_ctrl_set_dhchap_host_key(
 		dhchap_host_key ? strdup(dhchap_host_key) : NO_SYSFS_ATTR;
 }
 
-__shr_public const char *libnvme_ctrl_get_dhchap_host_key(
-		const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_dhchap_host_key(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+	int ret;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->dhchap_host_key))) {
-		libnvmf_ctrl_load_fabrics_attrs(c);
+		ret = libnvmf_ctrl_load_fabrics_attrs(c);
+		if (ret)
+			return ret;
 		if (!c->sysfs->dhchap_host_key)
 			c->sysfs->dhchap_host_key = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->dhchap_host_key);
+	if (SYSFS_IS_ABSENT(c->sysfs->dhchap_host_key))
+		return -ENOENT;
+
+	*val = c->sysfs->dhchap_host_key;
+	return 0;
 }
 
 __shr_public void libnvme_ctrl_set_dhchap_ctrl_key(
@@ -335,18 +478,29 @@ __shr_public void libnvme_ctrl_set_dhchap_ctrl_key(
 		dhchap_ctrl_key ? strdup(dhchap_ctrl_key) : NO_SYSFS_ATTR;
 }
 
-__shr_public const char *libnvme_ctrl_get_dhchap_ctrl_key(
-		const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_dhchap_ctrl_key(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+	int ret;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->dhchap_ctrl_key))) {
-		libnvmf_ctrl_load_fabrics_attrs(c);
+		ret = libnvmf_ctrl_load_fabrics_attrs(c);
+		if (ret)
+			return ret;
 		if (!c->sysfs->dhchap_ctrl_key)
 			c->sysfs->dhchap_ctrl_key = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->dhchap_ctrl_key);
+	if (SYSFS_IS_ABSENT(c->sysfs->dhchap_ctrl_key))
+		return -ENOENT;
+
+	*val = c->sysfs->dhchap_ctrl_key;
+	return 0;
 }
 
 __shr_public void libnvme_ctrl_set_keyring(
@@ -357,16 +511,28 @@ __shr_public void libnvme_ctrl_set_keyring(
 	p->sysfs->keyring = keyring ? strdup(keyring) : NO_SYSFS_ATTR;
 }
 
-__shr_public const char *libnvme_ctrl_get_keyring(const struct libnvme_ctrl *p)
+__shr_public int libnvme_ctrl_get_keyring(
+		const struct libnvme_ctrl *p,
+		const char **val,
+		const char *dflt)
 {
 	struct libnvme_ctrl *c = (struct libnvme_ctrl *)p;
+	int ret;
+
+	*val = dflt;
 
 	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->keyring))) {
-		libnvmf_ctrl_load_fabrics_attrs(c);
+		ret = libnvmf_ctrl_load_fabrics_attrs(c);
+		if (ret)
+			return ret;
 		if (!c->sysfs->keyring)
 			c->sysfs->keyring = NO_SYSFS_ATTR;
 	}
 
-	return SYSFS_GET(c->sysfs->keyring);
+	if (SYSFS_IS_ABSENT(c->sysfs->keyring))
+		return -ENOENT;
+
+	*val = c->sysfs->keyring;
+	return 0;
 }
 

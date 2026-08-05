@@ -262,6 +262,7 @@ def generate_source(spec, members):
     buf = io.StringIO()
     buf.write(
         f'{SPDX_C}\n\n{BANNER}\n\n'
+        '#include <errno.h>\n'
         '#include <stdio.h>\n'
         '#include <stdlib.h>\n'
         '#include <string.h>\n\n'
@@ -283,6 +284,66 @@ def generate_source(spec, members):
 # ---------------------------------------------------------------------------
 
 
+# Python conversion for each non-string lazy getter type this generator
+# has ever needed. Deliberately not a general type->conversion mapper --
+# add an entry only when a real member needs it (see generate_accessors.py's
+# own restraint on generalizing emit_src_getter_volatile_num's "%ld").
+_PY_FROM = {
+    'long': 'PyLong_FromLong',
+}
+
+
+def emit_swig_getter_wrapper(owner_type, m):
+    """Return the C source of one SWIG getter-property wrapper.
+
+    SWIG's %extend member-variable convention expects a getter shaped
+    like ``TYPE owner_member_get(const struct owner *)`` -- the real
+    lazy getter's shape (int return, out-param) cannot be wrapped that
+    way directly, so this interposes a small function with the name
+    SWIG expects, resolving the three states a lazy read can produce:
+    a value (return it), -ENOENT (Python None), any other error (raise
+    NvmeError). raise_nvme()/NvmeError come from nvme.i's own preamble;
+    the %exception block emitted alongside this wrapper is what turns
+    the pending Python exception into an actual failure -- see the
+    comment above the existing libnvme_ctrl::connect/disconnect/discover
+    %exception blocks in nvme.i for why that check cannot live in the
+    wrapper body itself.
+    """
+    fn = f'{owner_type}_get_{m.name}'
+    getter = f'{owner_type}_{m.name}_get'
+
+    if m.type == 'const char *':
+        return (
+            f'\tstatic const char *{getter}(const struct {owner_type} *p)\n'
+            '\t{\n'
+            '\t\tconst char *val;\n'
+            f'\t\tint ret = {fn}(p, &val, NULL);\n\n'
+            '\t\tif (ret == 0)\n'
+            '\t\t\treturn val;\n'
+            '\t\tif (ret == -ENOENT)\n'
+            '\t\t\treturn NULL;\n\n'
+            '\t\traise_nvme(NvmeError, ret);\n'
+            '\t\treturn NULL;\n'
+            '\t}\n'
+        )
+
+    py_from = _PY_FROM[m.type]
+    return (
+        f'\tstatic PyObject *{getter}(const struct {owner_type} *p)\n'
+        '\t{\n'
+        f'\t\t{m.type} val;\n'
+        f'\t\tint ret = {fn}(p, &val, 0);\n\n'
+        '\t\tif (ret == -ENOENT)\n'
+        '\t\t\tPy_RETURN_NONE;\n'
+        '\t\tif (ret) {\n'
+        '\t\t\traise_nvme(NvmeError, ret);\n'
+        '\t\t\treturn NULL;\n'
+        '\t\t}\n\n'
+        f'\t\treturn {py_from}(val);\n'
+        '\t}\n'
+    )
+
+
 def generate_swig(spec, members):
     """SWIG fragment: extend the already-wrapped struct libnvme_ctrl
     (declared in accessors.i) with these sysfs-backed properties.
@@ -297,38 +358,59 @@ def generate_swig(spec, members):
     it parsed from a header); here there is no new struct, only more
     properties on one SWIG has already wrapped, so its "Pass 2: plain
     field vs. %extend" struct-declaration logic does not apply.
+
+    Readable members get a hand-written getter wrapper (emit_swig_getter_
+    wrapper()) rather than the %rename+#define alias used everywhere
+    else in this file -- the real getter's int-return/out-param shape
+    does not match SWIG's member-variable property convention, so a
+    plain alias cannot work here. Writable members are unaffected: a
+    setter's shape has not changed, so it keeps the alias.
     """
     owner_type = spec['owner_type']
+    readable = [m for m in members if m.read_mode != 'none']
+    writable = [m for m in members if m.write_mode != 'none']
+
     buf = io.StringIO()
     buf.write(f'/* struct {owner_type} -- sysfs-backed properties */\n')
 
-    for m in members:
-        if m.read_mode != 'none':
-            buf.write(
-                f'%rename({owner_type}_{m.name}_get) ' f'{owner_type}_get_{m.name};\n'
-            )
-        if m.write_mode != 'none':
-            buf.write(
-                f'%rename({owner_type}_{m.name}_set) ' f'{owner_type}_set_{m.name};\n'
-            )
+    for m in writable:
+        buf.write(
+            f'%rename({owner_type}_{m.name}_set) ' f'{owner_type}_set_{m.name};\n'
+        )
 
     buf.write('%{\n')
-    for m in members:
-        if m.read_mode != 'none':
-            buf.write(
-                f'\t#define {owner_type}_{m.name}_get ' f'{owner_type}_get_{m.name}\n'
-            )
-        if m.write_mode != 'none':
-            buf.write(
-                f'\t#define {owner_type}_{m.name}_set ' f'{owner_type}_set_{m.name}\n'
-            )
+    for m in writable:
+        buf.write(
+            f'\t#define {owner_type}_{m.name}_set ' f'{owner_type}_set_{m.name}\n'
+        )
+    for m in readable:
+        buf.write(emit_swig_getter_wrapper(owner_type, m))
     buf.write('%}\n\n')
+
+    for m in readable:
+        buf.write(
+            f'%exception {owner_type}::{m.name} {{\n'
+            '\t$action\n'
+            '\tif (PyErr_Occurred()) SWIG_fail;\n'
+            '}\n'
+        )
+    if readable:
+        buf.write('\n')
 
     buf.write(f'%extend struct {owner_type} {{\n')
     for m in members:
         if m.write_mode == 'none':
             buf.write(f'\t%immutable {m.name};\n')
-        buf.write(f'\t{m.type} {m.name};\n')
+        # SWIG's member-variable wrapper picks its typemap from the type
+        # declared here, not from the getter wrapper's own C return type
+        # -- for a non-string readable member that wrapper always returns
+        # PyObject* (see emit_swig_getter_wrapper()), so the member must
+        # be declared PyObject* too, or SWIG force-casts the pointer to
+        # the real type (e.g. `(long)a_PyObject_pointer`), corrupting it.
+        decl_type = m.type
+        if m.read_mode != 'none' and m.type != 'const char *':
+            decl_type = 'PyObject *'
+        buf.write(f'\t{decl_type} {m.name};\n')
     buf.write('}\n')
 
     return buf.getvalue()

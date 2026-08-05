@@ -1258,10 +1258,10 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 	hostid = libnvme_host_get_hostid(h);
 	hostkey = libnvme_host_get_dhchap_host_key(h);
 	if (!hostkey)
-		hostkey = libnvme_ctrl_get_dhchap_host_key(c);
+		libnvme_ctrl_get_dhchap_host_key(c, &hostkey, NULL);
 
 	if (hostkey)
-		ctrlkey = libnvme_ctrl_get_dhchap_ctrl_key(c);
+		libnvme_ctrl_get_dhchap_ctrl_key(c, &ctrlkey, NULL);
 
 	if (c->cfg.tls && c->cfg.concat) {
 		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "cannot specify --tls and --concat together\n");
@@ -1586,14 +1586,13 @@ __shr_public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 			 * in @cfg, so ensure to update @c with the correct
 			 * controller key.
 			 */
-			key = libnvme_ctrl_get_dhchap_host_key(fc);
-			if (key)
+			if (libnvme_ctrl_get_dhchap_host_key(fc, &key,
+							      NULL) == 0)
 				libnvme_ctrl_set_dhchap_host_key(c, key);
-			key = libnvme_ctrl_get_dhchap_ctrl_key(fc);
-			if (key)
+			if (libnvme_ctrl_get_dhchap_ctrl_key(fc, &key,
+							      NULL) == 0)
 				libnvme_ctrl_set_dhchap_ctrl_key(c, key);
-			key = libnvme_ctrl_get_keyring(fc);
-			if (key)
+			if (libnvme_ctrl_get_keyring(fc, &key, NULL) == 0)
 				libnvme_ctrl_set_keyring(c, key);
 			key = libnvme_ctrl_get_tls_key_identity(fc);
 			if (key)
@@ -2247,6 +2246,7 @@ static const char *dctype_str[] = {
 static int nvme_fetch_cntrltype_dctype_from_id(libnvme_ctrl_t c)
 {
 	__cleanup_libnvme_free struct nvme_id_ctrl *id = NULL;
+	const char *val;
 	int ret;
 
 	id = libnvme_alloc(sizeof(*id));
@@ -2257,7 +2257,7 @@ static int nvme_fetch_cntrltype_dctype_from_id(libnvme_ctrl_t c)
 	if (ret)
 		return ret;
 
-	if (!libnvme_ctrl_get_cntrltype(c)) {
+	if (libnvme_ctrl_get_cntrltype(c, &val, NULL)) {
 		if (id->cntrltype > NVME_CTRL_CNTRLTYPE_ADMIN || !cntrltype_str[id->cntrltype])
 			libnvme_ctrl_set_cntrltype(c, "reserved");
 		else
@@ -2265,7 +2265,7 @@ static int nvme_fetch_cntrltype_dctype_from_id(libnvme_ctrl_t c)
 					cntrltype_str[id->cntrltype]);
 	}
 
-	if (!libnvme_ctrl_get_dctype(c)) {
+	if (libnvme_ctrl_get_dctype(c, &val, NULL)) {
 		if (id->dctype > NVME_CTRL_DCTYPE_CDC || !dctype_str[id->dctype])
 			libnvme_ctrl_set_dctype(c, "reserved");
 		else
@@ -2276,13 +2276,14 @@ static int nvme_fetch_cntrltype_dctype_from_id(libnvme_ctrl_t c)
 
 __shr_public bool libnvmf_is_registration_supported(libnvme_ctrl_t c)
 {
-	const char *dctype;
+	const char *cntrltype, *dctype;
 
-	if (!libnvme_ctrl_get_cntrltype(c) || !libnvme_ctrl_get_dctype(c))
+	if (libnvme_ctrl_get_cntrltype(c, &cntrltype, NULL) ||
+	    libnvme_ctrl_get_dctype(c, &dctype, NULL))
 		if (nvme_fetch_cntrltype_dctype_from_id(c))
 			return false;
 
-	dctype = libnvme_ctrl_get_dctype(c);
+	libnvme_ctrl_get_dctype(c, &dctype, NULL);
 	return !strcmp(dctype, "ddc") || !strcmp(dctype, "cdc");
 }
 

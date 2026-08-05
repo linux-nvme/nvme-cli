@@ -5948,8 +5948,18 @@ static bool stdout_detailed_ctrl(const char *name, void *arg)
 	{
 		const char *tr = libnvme_ctrl_get_transport(c);
 		__cleanup_free char *reg_owner = libnvme_ctrl_owner(c);
-		const char *slot = libnvme_ctrl_get_phy_slot(c);
+		const char *slot;
+		const char *cntlid;
+		const char *serial;
+		const char *model;
+		const char *firmware;
 		const char *owner_str;
+
+		libnvme_ctrl_get_phy_slot(c, &slot, NULL);
+		libnvme_ctrl_get_cntlid(c, &cntlid, "");
+		libnvme_ctrl_get_serial(c, &serial, "");
+		libnvme_ctrl_get_model(c, &model, "");
+		libnvme_ctrl_get_firmware(c, &firmware, "");
 
 		if (!libnvme_ctrl_is_transport_fabric(c))
 			owner_str = "kernel";
@@ -5959,10 +5969,10 @@ static bool stdout_detailed_ctrl(const char *name, void *arg)
 		printf("%-16s %-12s %-6s %-20s %-40s %-8s %-6s %-14s %-6s %-12s ",
 		       libnvme_ctrl_get_name(c),
 		       owner_str,
-		       libnvme_ctrl_get_cntlid(c),
-		       libnvme_ctrl_get_serial(c),
-		       libnvme_ctrl_get_model(c),
-		       libnvme_ctrl_get_firmware(c),
+		       cntlid,
+		       serial,
+		       model,
+		       firmware,
 		       tr,
 		       libnvme_ctrl_get_address(c),
 		       slot ? slot : "",

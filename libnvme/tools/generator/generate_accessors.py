@@ -1316,6 +1316,48 @@ def emit_hdr_getter(f, prefix, sname, type_name, mname, mtype, is_dyn_str):
         )
 
 
+def emit_hdr_getter_lazy(f, prefix, sname, type_name, mname, mtype):
+    """Emit a header declaration for a lazy sysfs getter.
+
+    Unlike a plain getter, a sysfs read (or the loader behind it) can
+    fail, and a bare return value has no room to say so -- lazy getters
+    return int and deliver the value through an out-param instead. A
+    third argument, dflt, is what gets stored in that out-param when the
+    call fails, so a caller who only wants a display fallback (not the
+    fine-grained reason) never has to pre-initialize its own local or
+    check the return code: pass NULL (or 0 for a numeric member) to opt
+    out and get nothing back on failure but a return code to check.
+    """
+    fn = _get_name(prefix, sname, mname)
+    is_str = mtype == 'const char *'
+    out_type = 'const char **' if is_str else f'{mtype} *'
+    dflt_type = 'const char *' if is_str else mtype
+    dflt_sep = type_sep(dflt_type)
+    f.write(
+        f'/**\n'
+        f'{kdoc_summary(fn, f"Get {mname}.", "Getter.")}\n'
+        f' * @p: The &struct {type_name} instance to query.\n'
+        f' * @{mname}: Where to store the value on success.\n'
+        f' * @dflt: Value to store in @{mname} on failure.\n'
+        f' *\n'
+        f' * Return: 0 on success, -ENOENT if the attribute does not\n'
+        f' *	   exist, or a negative errno on failure.\n'
+        f' */\n'
+    )
+
+    single = (f'int {fn}(const struct {type_name} *p, {out_type}{mname}, '
+              f'{dflt_type}{dflt_sep}dflt);')
+    if fits_80(single):
+        f.write(single + '\n\n')
+    else:
+        f.write(
+            f'int {fn}(\n'
+            f'\t\tconst struct {type_name} *p,\n'
+            f'\t\t{out_type}{mname},\n'
+            f'\t\t{dflt_type}{dflt_sep}dflt);\n\n'
+        )
+
+
 def emit_hdr_setter_scalar_array(f, prefix, sname, type_name, mname, elem_type,
                                  array_size):
     """Emit a header declaration for a fixed-size scalar-array setter."""
@@ -1391,8 +1433,12 @@ def generate_hdr(f, prefix, sname, type_name, members):
                 emit_hdr_setter_val(f, prefix, sname, type_name,
                                     member.name, member.type)
         if member.read_mode == 'generated':
-            emit_hdr_getter(f, prefix, sname, type_name,
-                            member.name, member.type, is_dyn_str)
+            if member.is_sysfs_lazy:
+                emit_hdr_getter_lazy(f, prefix, sname, type_name,
+                                     member.name, member.type)
+            else:
+                emit_hdr_getter(f, prefix, sname, type_name,
+                                member.name, member.type, is_dyn_str)
 
 
 # ---------------------------------------------------------------------------
@@ -1598,27 +1644,28 @@ def emit_src_setter_lazy_dynstr(f, prefix, sname, type_name, mname, field_path):
 
 def emit_src_getter_lazy_attr(f, prefix, sname, type_name, mname, field_path,
                               sysfs_attr):
-    """Emit a lazy pointer getter that caches one plain sysfs attribute.
+    """Emit a lazy getter that caches one plain sysfs attribute.
 
     First call reads the attribute and caches the result: a real pointer
     if the attribute exists, or the NO_SYSFS_ATTR sentinel if it does not
     (a raw NULL there would look "not yet read" and re-fire every call).
     Every later call returns the cached value without touching sysfs
-    again. SYSFS_GET() translates the sentinel back to NULL on return so
-    callers never see it.
+    again. Returns -ENOENT when the attribute does not exist, so the
+    caller can tell "absent" from "not yet checked". *val is set to dflt
+    unconditionally before anything else, so a failure path never leaves
+    it unset -- a caller who does not want the fine-grained distinction
+    can skip checking the return code and get a safe value regardless.
     """
-    sig = (f'{PUB}const char *{_get_name(prefix, sname, mname)}'
-           f'(const struct {type_name} *p)')
-    if fits_80(sig):
-        f.write(sig + '\n')
-    else:
-        f.write(
-            f'{PUB}const char *{_get_name(prefix, sname, mname)}(\n'
-            f'\t\tconst struct {type_name} *p)\n'
-        )
+    f.write(
+        f'{PUB}int {_get_name(prefix, sname, mname)}(\n'
+        f'\t\tconst struct {type_name} *p,\n'
+        f'\t\tconst char **val,\n'
+        f'\t\tconst char *dflt)\n'
+    )
     f.write(
         '{\n'
         f'\tstruct {type_name} *c = (struct {type_name} *)p;\n\n'
+        '\t*val = dflt;\n\n'
         f'\tif (__shr_unlikely(!SYSFS_IS_LOADED(c->{field_path}))) {{\n'
     )
     load = f'\t\tc->{field_path} = libnvme_get_ctrl_attr(c, "{sysfs_attr}");'
@@ -1634,50 +1681,55 @@ def emit_src_getter_lazy_attr(f, prefix, sname, type_name, mname, field_path,
         f'\t\t\tc->{field_path} = NO_SYSFS_ATTR;\n'
         '\t}\n\n'
     )
-    ret = f'\treturn SYSFS_GET(c->{field_path});'
-    if fits_80_ntabs(1, ret.lstrip()):
-        f.write(ret + '\n')
-    else:
-        f.write(f'\treturn SYSFS_GET(\n\t\t\tc->{field_path});\n')
-    f.write('}\n\n')
+    f.write(
+        f'\tif (SYSFS_IS_ABSENT(c->{field_path}))\n'
+        f'\t\treturn -ENOENT;\n\n'
+        f'\t*val = c->{field_path};\n'
+        f'\treturn 0;\n'
+        '}\n\n'
+    )
 
 
 def emit_src_getter_lazy_loader(f, prefix, sname, type_name, mname,
                                 field_path, sysfs_loader):
-    """Emit a lazy pointer getter backed by a loader-function call.
+    """Emit a lazy getter backed by a loader-function call.
 
     The loader may populate several members of the same group in one call
     (e.g. dhchap_host_key/dhchap_ctrl_key/keyring from one sysfs read
     pass), writing NULL to any it leaves absent. After it returns, a
     member still at NULL means no value exists for it -- stamp the
     NO_SYSFS_ATTR sentinel so the guard doesn't re-fire the loader on
-    every subsequent call. SYSFS_GET() translates the sentinel back to
-    NULL on return so callers never see it.
+    every subsequent call. A negative loader return means the load
+    itself failed (not just "attribute absent") and is propagated to
+    the caller unchanged. *val is set to dflt unconditionally before
+    anything else -- see emit_src_getter_lazy_attr()'s docstring.
     """
-    sig = (f'{PUB}const char *{_get_name(prefix, sname, mname)}'
-           f'(const struct {type_name} *p)')
-    if fits_80(sig):
-        f.write(sig + '\n')
-    else:
-        f.write(
-            f'{PUB}const char *{_get_name(prefix, sname, mname)}(\n'
-            f'\t\tconst struct {type_name} *p)\n'
-        )
+    f.write(
+        f'{PUB}int {_get_name(prefix, sname, mname)}(\n'
+        f'\t\tconst struct {type_name} *p,\n'
+        f'\t\tconst char **val,\n'
+        f'\t\tconst char *dflt)\n'
+    )
     f.write(
         '{\n'
-        f'\tstruct {type_name} *c = (struct {type_name} *)p;\n\n'
+        f'\tstruct {type_name} *c = (struct {type_name} *)p;\n'
+        '\tint ret;\n\n'
+        '\t*val = dflt;\n\n'
         f'\tif (__shr_unlikely(!SYSFS_IS_LOADED(c->{field_path}))) {{\n'
-        f'\t\t{sysfs_loader}(c);\n'
+        f'\t\tret = {sysfs_loader}(c);\n'
+        '\t\tif (ret)\n'
+        '\t\t\treturn ret;\n'
         f'\t\tif (!c->{field_path})\n'
         f'\t\t\tc->{field_path} = NO_SYSFS_ATTR;\n'
         '\t}\n\n'
     )
-    ret = f'\treturn SYSFS_GET(c->{field_path});'
-    if fits_80_ntabs(1, ret.lstrip()):
-        f.write(ret + '\n')
-    else:
-        f.write(f'\treturn SYSFS_GET(\n\t\t\tc->{field_path});\n')
-    f.write('}\n\n')
+    f.write(
+        f'\tif (SYSFS_IS_ABSENT(c->{field_path}))\n'
+        f'\t\treturn -ENOENT;\n\n'
+        f'\t*val = c->{field_path};\n'
+        f'\treturn 0;\n'
+        '}\n\n'
+    )
 
 
 def emit_src_getter_volatile_num(f, prefix, sname, type_name, mname, mtype,
@@ -1685,27 +1737,31 @@ def emit_src_getter_volatile_num(f, prefix, sname, type_name, mname, mtype,
     """Emit an always-live numeric getter for a volatile lazy member.
 
     No sentinel, no cache: every call re-reads the sysfs attribute and
-    parses it into the member, preserving stale-on-failure semantics (a
-    transient read error leaves the last known value in place).
+    parses it into the member. Returns -ENOENT when the attribute cannot
+    be read and -EINVAL when it can be read but not parsed, rather than
+    the previous value -- the caller can tell a real absence, or bad
+    content, from a transient read error the same way every other lazy
+    getter does. *val is set to dflt unconditionally before anything
+    else -- see emit_src_getter_lazy_attr()'s docstring.
     """
-    sig = (f'{PUB}{mtype} {_get_name(prefix, sname, mname)}'
-           f'(const struct {type_name} *p)')
-    if fits_80(sig):
-        f.write(sig + '\n')
-    else:
-        f.write(
-            f'{PUB}{mtype} {_get_name(prefix, sname, mname)}(\n'
-            f'\t\tconst struct {type_name} *p)\n'
-        )
+    f.write(
+        f'{PUB}int {_get_name(prefix, sname, mname)}(\n'
+        f'\t\tconst struct {type_name} *p,\n'
+        f'\t\t{mtype} *val,\n'
+        f'\t\t{mtype} dflt)\n'
+    )
     f.write(
         '{\n'
         f'\tstruct {type_name} *c = (struct {type_name} *)p;\n'
-        '\tchar *val;\n\n'
-        f'\tval = libnvme_get_ctrl_attr(c, "{sysfs_attr}");\n'
-        '\tif (val)\n'
-        f'\t\tsscanf(val, "%ld", &c->{field_path});\n'
-        '\tfree(val);\n\n'
-        f'\treturn c->{field_path};\n'
+        '\t__cleanup_free char *str = NULL;\n\n'
+        '\t*val = dflt;\n\n'
+        f'\tstr = libnvme_get_ctrl_attr(c, "{sysfs_attr}");\n'
+        '\tif (!str)\n'
+        '\t\treturn -ENOENT;\n\n'
+        f'\tif (sscanf(str, "%ld", &c->{field_path}) != 1)\n'
+        '\t\treturn -EINVAL;\n\n'
+        f'\t*val = c->{field_path};\n'
+        '\treturn 0;\n'
         '}\n\n'
     )
 

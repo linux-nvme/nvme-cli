@@ -474,6 +474,7 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
 	const char *node;
+	long reset_count, reconnect_count, command_error_count;
 	struct table *t;
 	bool is_fabric = false;
 	struct table_column columns[] = {
@@ -557,7 +558,7 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 		nvme_format_lat(max_rlat, r_clat_str, sizeof(r_clat_str));
 		nvme_format_lat(max_wlat, w_clat_str, sizeof(w_clat_str));
 
-		node = libnvme_ctrl_get_numa_node(c);
+		libnvme_ctrl_get_numa_node(c, &node, "-1");
 		if (!strcmp(node, "-1"))
 			node = "NUMA_NO_NODE";
 
@@ -575,14 +576,20 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 				libnvme_ctrl_get_traddr(c), LEFT);
 		table_set_value_str(t, ++col, row,
 				libnvme_ctrl_get_state(c), LEFT);
-		table_set_value_long(t, ++col, row,
-				libnvme_ctrl_get_reset_count(c), LEFT);
-		if (is_fabric)
-			table_set_value_long(t, ++col, row,
-				libnvme_ctrl_get_reconnect_count(c), LEFT);
 
-		table_set_value_long(t, ++col, row,
-				libnvme_ctrl_get_command_error_count(c), LEFT);
+		libnvme_ctrl_get_reset_count(c, &reset_count, 0);
+		table_set_value_long(t, ++col, row, reset_count, LEFT);
+
+		if (is_fabric) {
+			libnvme_ctrl_get_reconnect_count(c, &reconnect_count,
+							  0);
+			table_set_value_long(t, ++col, row,
+					reconnect_count, LEFT);
+		}
+
+		libnvme_ctrl_get_command_error_count(c, &command_error_count,
+						      0);
+		table_set_value_long(t, ++col, row, command_error_count, LEFT);
 		table_set_value_str(t, ++col, row, r_iops_str, LEFT);
 		table_set_value_str(t, ++col, row, w_iops_str, LEFT);
 		table_set_value_str(t, ++col, row, r_clat_str, LEFT);
