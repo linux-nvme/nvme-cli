@@ -2939,8 +2939,8 @@ static void stdout_id_ns_dpc(__u8 dpc)
 static void stdout_id_ns_dps(__u8 dps)
 {
 	__u8 rsvd = (dps & 0xF0) >> 4;
-	__u8 pif8 = (dps & 0x8) >> 3;
-	__u8 pit = dps & 0x7;
+	__u8 pif8 = NVME_NS_DPS_PI_FIRST(dps);
+	__u8 pit = NVME_NS_DPS_PI(dps);
 
 	if (rsvd)
 		printf("  [7:4] : %#x\tReserved\n", rsvd);
