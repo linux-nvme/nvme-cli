@@ -2391,8 +2391,8 @@ void stdout_id_ctrl_rpmbs(__le32 ctrl_rpmbs)
 static void stdout_id_ctrl_dsto(__u8 dsto)
 {
 	__u8 rsvd2 = (dsto & 0xfc) >> 2;
-	__u8 hirs = (dsto & 0x2) >> 1;
-	__u8 sdso = dsto & 0x1;
+	__u8 hirs = NVME_CTRL_DSTO_HIRS(dsto);
+	__u8 sdso = NVME_CTRL_DSTO_SDSO(dsto);
 
 	if (rsvd2)
 		printf("  [7:2] : %#x\tReserved\n", rsvd2);
