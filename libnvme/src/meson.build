@@ -14,7 +14,16 @@ sources = [
     'nvme/tree.c',
     'nvme/util.c',
 ]
-if host_system == 'windows'
+if host_system == 'linux'
+    sources += [
+        'nvme/ctrl-sysfs-custom-linux.c',
+        'nvme/ioctl-linux.c',
+        'nvme/lib-linux.c',
+        'nvme/mem-linux.c',
+        'nvme/scan-linux.c',
+        'nvme/tree-linux.c',
+    ]
+elif host_system == 'windows'
     sources += [
         'nvme/ctrl-map.c',
         'nvme/ctrl-sysfs-custom-win.c',
@@ -23,15 +32,6 @@ if host_system == 'windows'
         'nvme/mem-win.c',
         'nvme/scan-win.c',
         'nvme/tree-win.c',
-    ]
-else
-    sources += [
-        'nvme/ctrl-sysfs-custom-linux.c',
-        'nvme/ioctl-linux.c',
-        'nvme/lib-linux.c',
-        'nvme/mem-linux.c',
-        'nvme/scan-linux.c',
-        'nvme/tree-linux.c',
     ]
 endif
 headers = [

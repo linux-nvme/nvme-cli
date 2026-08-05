@@ -51,16 +51,16 @@ host_system = host_machine.system()
 # dependencies are present. Also, -Dpython=enabled forces -Dlibnvme=enabled.
 want_nvme = get_option('nvme').disabled() == false
 want_libnvme = get_option('libnvme').disabled() == false
-want_fabrics = get_option('fabrics').disabled() == false and host_system != 'windows'
-want_mi = get_option('mi').disabled() == false and host_system != 'windows'
-want_top = get_option('top').disabled() == false and host_system != 'windows'
-want_discoverd = get_option('nvme-discoverd').disabled() == false and want_fabrics and host_system != 'windows'
+want_fabrics = get_option('fabrics').disabled() == false and host_system == 'linux'
+want_mi = get_option('mi').disabled() == false and host_system == 'linux'
+want_top = get_option('top').disabled() == false and host_system == 'linux'
+want_discoverd = get_option('nvme-discoverd').disabled() == false and want_fabrics and host_system == 'linux'
 want_nvmf_autoconnect = get_option('nvmf-autoconnect').disabled() == false
 want_deprecated_cmds = get_option('deprecated-cmds').disabled() == false
 want_json_c = get_option('json-c').disabled() == false
-want_libkmod = get_option('libkmod').disabled() == false and host_system != 'windows'
+want_libkmod = get_option('libkmod').disabled() == false and host_system == 'linux'
 want_tests = get_option('tests')
-want_examples = get_option('examples') and host_system != 'windows'
+want_examples = get_option('examples') and host_system == 'linux'
 want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
 
@@ -614,13 +614,13 @@ if want_nvme
         'nvme.c',
         'plugin.c',
     ]
-    if host_system == 'windows'
-        sources += [
-            'nvme-pci-ids-win.c',
-        ]
-    else
+    if host_system == 'linux'
         sources += [
             'nvme-pci-ids-linux.c',
+        ]
+    elif host_system == 'windows'
+        sources += [
+            'nvme-pci-ids-win.c',
         ]
     endif
 
@@ -696,7 +696,7 @@ if want_nvme
         )
     endif
 
-    if host_system != 'windows'
+    if host_system == 'linux'
         subdir('unit')
     endif
     subdir('unit-py')
@@ -810,7 +810,7 @@ if want_nvme
     subdir('Documentation')
 endif
 
-if host_system != 'windows'
+if host_system == 'linux'
     valgrind_cmd = [
         'valgrind',
         '--leak-check=full',
