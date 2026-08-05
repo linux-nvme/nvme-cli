@@ -3021,7 +3021,7 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 	if (ret) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"Discovery Descriptor %d: failed to get discovery log: %s\n",
-			dd->index, libnvme_strerror(ret));
+			dd->index, libnvme_strerror(-ret));
 		return ret;
 	}
 
