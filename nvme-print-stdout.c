@@ -4685,17 +4685,17 @@ static void stdout_smart_log(struct nvme_smart_log *smart, unsigned int nsid, co
 
 	if (human) {
 		printf("      Available Spare[0]             : %d\n",
-		       smart->critical_warning & 0x01);
+		       NVME_SMART_CW_ASCBT(smart->critical_warning));
 		printf("      Temp. Threshold[1]             : %d\n",
-		       (smart->critical_warning & 0x02) >> 1);
+		       NVME_SMART_CW_TTC(smart->critical_warning));
 		printf("      NVM subsystem Reliability[2]   : %d\n",
-		       (smart->critical_warning & 0x04) >> 2);
+		       NVME_SMART_CW_NDR(smart->critical_warning));
 		printf("      Read-only[3]                   : %d\n",
-		       (smart->critical_warning & 0x08) >> 3);
+		       NVME_SMART_CW_AMRO(smart->critical_warning));
 		printf("      Volatile mem. backup failed[4] : %d\n",
-		       (smart->critical_warning & 0x10) >> 4);
+		       NVME_SMART_CW_VMBF(smart->critical_warning));
 		printf("      Persistent Mem. RO[5]          : %d\n",
-		       (smart->critical_warning & 0x20) >> 5);
+		       NVME_SMART_CW_PMRRO(smart->critical_warning));
 	}
 
 	printf("temperature				: %s (%u K, %s)\n",
