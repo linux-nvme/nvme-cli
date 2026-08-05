@@ -522,10 +522,12 @@ int argconfig_parse_comma_sep_array ## name(char *string,		\
 		if (ret >= max_length)					\
 			return -1;					\
 									\
+		errno = 0;						\
 		v = strtoumax(tmp, &p, 0);				\
 		if (*p != 0)						\
 			return -1;					\
-		if (v > ret_max) {					\
+		if (errno == ERANGE ||					\
+			v > ret_max) {					\
 			fprintf(stderr, "%s out of range\n", tmp);	\
 			return -1;					\
 		}							\
