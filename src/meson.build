@@ -37,6 +37,10 @@ elif host_system == 'windows'
     sources += [
         'src/nvme-pci-ids-win.c',
     ]
+elif host_system == 'freebsd'
+    sources += [
+        'src/nvme-pci-ids-freebsd.c',
+    ]
 endif
 
 if json_c_dep.found()
