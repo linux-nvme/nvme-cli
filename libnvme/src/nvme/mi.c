@@ -1152,7 +1152,7 @@ __shr_public int libnvme_mi_mi_subsystem_health_status_poll(
 
 	libnvme_mi_mi_init_req(ep, &req, &req_hdr, 0,
 		nvme_mi_mi_opcode_subsys_health_status_poll);
-	req_hdr.cdw1 = (clear ? 1 : 0) << 31;
+	req_hdr.cdw1 = cpu_to_le32((clear ? 1U : 0U) << 31);
 
 	memset(&resp, 0, sizeof(resp));
 	resp.hdr = &resp_hdr.hdr;
