@@ -75,11 +75,31 @@ else
         want_libnvme = true
     endif
 
-    python3 = import('python').find_installation('python3')
-    py3_dep = python3.dependency(required: feature_python.enabled())
-    swig = find_program('swig', required: feature_python.enabled())
-    header_found = cc.has_header('Python.h', dependencies: py3_dep, required: feature_python.enabled())
-    want_python = want_libnvme and py3_dep.found() and swig.found() and header_found
+    python3 = import('python').find_installation(
+        'python3',
+        required: feature_python.enabled()
+    )
+
+    if python3.found()
+        py3_dep = python3.dependency(required: feature_python.enabled())
+        swig = find_program('swig', required: feature_python.enabled())
+        header_found = cc.has_header(
+            'Python.h',
+            dependencies: py3_dep,
+            required: feature_python.enabled()
+        )
+    else
+        py3_dep = dependency('', required: false)
+        swig = disabler()
+        header_found = false
+    endif
+
+    want_python = (
+        want_libnvme and
+        py3_dep.found() and
+        swig.found() and
+        header_found
+    )
 endif
 
 # Bump this only when making an ABI-incompatible change.
