@@ -371,6 +371,7 @@ def generate_swig(spec, members):
     writable = [m for m in members if m.write_mode != 'none']
 
     buf = io.StringIO()
+    buf.write(f'{SPDX_C}\n\n{BANNER}\n\n')
     buf.write(f'/* struct {owner_type} -- sysfs-backed properties */\n')
 
     for m in writable:
