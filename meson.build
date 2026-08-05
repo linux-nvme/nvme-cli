@@ -622,6 +622,10 @@ if want_nvme
         sources += [
             'nvme-pci-ids-win.c',
         ]
+    elif host_system == 'freebsd'
+        sources += [
+            'nvme-pci-ids-freebsd.c',
+        ]
     endif
 
     if json_c_dep.found()
