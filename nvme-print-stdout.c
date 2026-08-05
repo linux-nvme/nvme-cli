@@ -2779,9 +2779,9 @@ static void stdout_id_ctrl_sgls(__le32 ctrl_sgls)
 static void stdout_id_ctrl_trattr(__u8 ctrl_trattr)
 {
 	__u8 rsvd3 = (ctrl_trattr >> 3);
-	__u8 mrtll = NVME_GET(ctrl_trattr, CTRL_TRATTR_MRTLL);
-	__u8 tudcs = NVME_GET(ctrl_trattr, CTRL_TRATTR_TUDCS);
-	__u8 thmcs = NVME_GET(ctrl_trattr, CTRL_TRATTR_THMCS);
+	__u8 mrtll = NVME_CTRL_TRATTR_MRTLL(ctrl_trattr);
+	__u8 tudcs = NVME_CTRL_TRATTR_TUDCS(ctrl_trattr);
+	__u8 thmcs = NVME_CTRL_TRATTR_THMCS(ctrl_trattr);
 
 	if (rsvd3)
 		printf(" [7:3] : %#x\tReserved\n", rsvd3);
