@@ -88,53 +88,6 @@ enum nvme_mi_ror {
 };
 
 /**
- * enum nvme_mi_resp_status - values for the response status field
- * @NVME_MI_RESP_SUCCESS: success
- * @NVME_MI_RESP_MPR: More Processing Required
- * @NVME_MI_RESP_INTERNAL_ERR: Internal Error
- * @NVME_MI_RESP_INVALID_OPCODE: Invalid command opcode
- * @NVME_MI_RESP_INVALID_PARAM: Invalid command parameter
- * @NVME_MI_RESP_INVALID_CMD_SIZE: Invalid command size
- * @NVME_MI_RESP_INVALID_INPUT_SIZE: Invalid command input data size
- * @NVME_MI_RESP_ACCESS_DENIED: Access Denied
- * @NVME_MI_RESP_VPD_UPDATES_EXCEEDED: More VPD updates than allowed
- * @NVME_MI_RESP_PCIE_INACCESSIBLE: PCIe functionality currently unavailable
- * @NVME_MI_RESP_MEB_SANITIZED: MEB has been cleared due to sanitize
- * @NVME_MI_RESP_ENC_SERV_FAILURE: Enclosure services process failed
- * @NVME_MI_RESP_ENC_SERV_XFER_FAILURE: Transfer with enclosure services failed
- * @NVME_MI_RESP_ENC_FAILURE: Unreoverable enclosure failure
- * @NVME_MI_RESP_ENC_XFER_REFUSED: Enclosure services transfer refused
- * @NVME_MI_RESP_ENC_FUNC_UNSUP: Unsupported enclosure services function
- * @NVME_MI_RESP_ENC_SERV_UNAVAIL: Enclosure services unavailable
- * @NVME_MI_RESP_ENC_DEGRADED: Noncritical failure detected by enc. services
- * @NVME_MI_RESP_SANITIZE_IN_PROGRESS: Command prohibited during sanitize
- */
-enum nvme_mi_resp_status {
-	NVME_MI_RESP_SUCCESS = 0x00,
-	NVME_MI_RESP_MPR = 0x01,
-	NVME_MI_RESP_INTERNAL_ERR = 0x02,
-	NVME_MI_RESP_INVALID_OPCODE = 0x03,
-	NVME_MI_RESP_INVALID_PARAM = 0x04,
-	NVME_MI_RESP_INVALID_CMD_SIZE = 0x05,
-	NVME_MI_RESP_INVALID_INPUT_SIZE = 0x06,
-	NVME_MI_RESP_ACCESS_DENIED = 0x07,
-	/* 0x08 - 0x1f: reserved */
-	NVME_MI_RESP_VPD_UPDATES_EXCEEDED = 0x20,
-	NVME_MI_RESP_PCIE_INACCESSIBLE = 0x21,
-	NVME_MI_RESP_MEB_SANITIZED = 0x22,
-	NVME_MI_RESP_ENC_SERV_FAILURE = 0x23,
-	NVME_MI_RESP_ENC_SERV_XFER_FAILURE = 0x24,
-	NVME_MI_RESP_ENC_FAILURE = 0x25,
-	NVME_MI_RESP_ENC_XFER_REFUSED = 0x26,
-	NVME_MI_RESP_ENC_FUNC_UNSUP = 0x27,
-	NVME_MI_RESP_ENC_SERV_UNAVAIL = 0x28,
-	NVME_MI_RESP_ENC_DEGRADED = 0x29,
-	NVME_MI_RESP_SANITIZE_IN_PROGRESS = 0x2a,
-	/* 0x2b - 0xdf: reserved */
-	/* 0xe0 - 0xff: vendor specific */
-};
-
-/**
  * struct nvme_mi_msg_hdr - General MI message header.
  * @type: MCTP message type, will always be NVME_MI_MSGTYPE_NVME
  * @nmp: NVMe-MI message parameters (including MI message type)

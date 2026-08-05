@@ -32,7 +32,6 @@ LIBNVME_MI_3 {
 		libnvme_mi_scan_ep;
 		libnvme_mi_scan_mctp;
 		libnvme_mi_set_csi;
-		libnvme_mi_status_to_string;
 	local:
 		*;
 };
