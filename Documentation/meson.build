@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is part of nvme-cli.
+# Copyright (c) 2026 SUSE Software Solutions
+#
+# Authors: Daniel Wagner <dwagner@suse.de>
 
-adoc_sources = [
+adoc_sources_man1 = [
     'nvme',
     'nvme-admin-passthru',
     'nvme-ana-log',
@@ -284,7 +289,7 @@ adoc_sources = [
 ]
 
 if want_deprecated_cmds
-    adoc_sources += [
+    adoc_sources_man1 += [
         'nvme-check-dhchap-key',
         'nvme-check-tls-key',
         'nvme-gen-dhchap-key',
@@ -293,17 +298,19 @@ if want_deprecated_cmds
     ]
 endif
 
-# File-format references (man section 5), installed separately from the
-# man1 command pages above.
 adoc_sources_man5 = [
     'nvme-cli.conf',
     'nvme-fabrics.conf',
 ]
 
-# Daemon references (man section 8), installed separately from man1/man5.
 adoc_sources_man8 = [
-    'nvme-discoverd',
 ]
+
+if want_discoverd
+    adoc_sources_man8 += [
+        'nvme-discoverd',
+    ]
+endif
 
 adoc_includes = [
     'cmd-plugins.txt',
@@ -313,10 +320,22 @@ adoc_includes = [
 ]
 
 if want_docs != 'false'
-    mandir = join_paths(prefixdir, get_option('mandir'), 'man1')
+    man1dir = join_paths(prefixdir, get_option('mandir'), 'man1')
     man5dir = join_paths(prefixdir, get_option('mandir'), 'man5')
     man8dir = join_paths(prefixdir, get_option('mandir'), 'man8')
     htmldir = join_paths(prefixdir, get_option('htmldir'), 'nvme')
+
+    man_sets = [
+        {'sources': adoc_sources_man1,
+         'section': '1',
+         'dir': man1dir},
+        {'sources': adoc_sources_man5,
+         'section': '5',
+         'dir': man5dir},
+        {'sources': adoc_sources_man8,
+         'section': '8',
+         'dir': man8dir},
+    ]
 
     asciidoctor = find_program('asciidoc', required: want_docs_build)
     if want_docs_build and asciidoctor.found()
@@ -329,11 +348,6 @@ if want_docs != 'false'
         if want_docs == 'all' or want_docs == 'man'
             xmlto = find_program('xmlto', required: false)
             if xmlto.found()
-                man_sets = [
-                    {'sources': adoc_sources, 'section': '1', 'dir': mandir},
-                    {'sources': adoc_sources_man5, 'section': '5', 'dir': man5dir},
-                    {'sources': adoc_sources_man8, 'section': '8', 'dir': man8dir},
-                ]
                 foreach man_set : man_sets
                     section = man_set['section']
                     foreach adoc : man_set['sources']
@@ -378,7 +392,9 @@ if want_docs != 'false'
 
         # html
         if want_docs == 'all' or want_docs == 'html'
-            foreach adoc : adoc_sources + adoc_sources_man5 + adoc_sources_man8
+          foreach adoc : ( adoc_sources_man1 +
+                           adoc_sources_man5 +
+                           adoc_sources_man8 )
                 input = adoc + '.txt'
                 subst = configure_file(
                     input: adoc + '.txt',
@@ -403,11 +419,6 @@ if want_docs != 'false'
         endif
     else
         # asciidoctor not found, install pre compiled documetationx
-        man_sets = [
-            {'sources': adoc_sources, 'section': '1', 'dir': mandir},
-            {'sources': adoc_sources_man5, 'section': '5', 'dir': man5dir},
-            {'sources': adoc_sources_man8, 'section': '8', 'dir': man8dir},
-        ]
         foreach man_set : man_sets
             section = man_set['section']
             foreach adoc : man_set['sources']
