@@ -12,11 +12,6 @@
 
 #include <libnvme.h>
 
-__shr_public const char *libnvme_mi_status_to_string(int status)
-{
-	return "MI support disabled";
-}
-
 int __libnvme_transport_handle_open_mi(struct libnvme_transport_handle *hdl,
 		const char *devname)
 {
