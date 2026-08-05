@@ -256,8 +256,9 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 			offset = parent_offset_bit + prev_index_offset_bit;
 
 			json_object_array_add(dimension_output, sub_array);
-			sldm_telemetry_structure_parse(tl, struct_def,
-						       offset, sub_array, NULL);
+			if (sldm_telemetry_structure_parse(tl, struct_def,
+						       offset, sub_array, NULL))
+				break;
 			prev_index_offset_bit += linear_pos_per_index * size_bit;
 		}
 
@@ -320,8 +321,9 @@ int sldm_telemetry_structure_parse(const struct telemetry_log *tl,
 				uint64_t offset;
 
 				offset = parent_offset_bit + offset_bit + linear_array_pos_bit;
-				sldm_telemetry_structure_parse(tl, member, offset,
-								  sub_sub_output, NULL);
+				if (sldm_telemetry_structure_parse(tl, member, offset,
+								  sub_sub_output, NULL))
+					break;
 			}
 		}
 		linear_array_pos_bit += size_bit;
