@@ -13,6 +13,7 @@ CTRL_SYSFS = {
     'struct_name': 'libnvme_ctrl_sysfs',
     'owner_type': 'libnvme_ctrl',
     'owner_field': 'sysfs',
+    'attr_reader': 'libnvme_get_ctrl_attr',
     'source': 'ctrl-sysfs.c',
     'header': 'ctrl-sysfs.h',
     'ld': 'ctrl-sysfs.ld',
@@ -25,7 +26,16 @@ CTRL_SYSFS = {
     # regeneration of either). Matches the existing precedent of
     # accessors-fabrics.ld/libnvmf.ld/libnvme-mi.ld each having their
     # own independent tag rather than chaining.
-    'ld_section': 'LIBNVME_CTRL_SYSFS_3',
+    #
+    # NEXT, not a real version number: the committed .ld is hand-written
+    # and never auto-overwritten (see update-sysfs-accessors.sh), so
+    # this string only ever appears in this file's own generated scratch
+    # copy -- it is not diffed, not enforced, and never echoed back to
+    # the maintainer. Which version tag a symbol actually lands under is
+    # entirely the maintainer's call at commit time (see
+    # accessor-workflow.md); a real-looking version number here would
+    # just go stale the first time that tag chains past _3.
+    'ld_section': 'LIBNVME_CTRL_SYSFS_NEXT',
     'members': [
         {
             'name': 'numa_node',
@@ -114,7 +124,86 @@ CTRL_SYSFS = {
     ],
 }
 
+PATH_SYSFS = {
+    'struct_name': 'libnvme_path_sysfs',
+    'owner_type': 'libnvme_path',
+    'owner_field': 'sysfs',
+    'attr_reader': 'libnvme_get_path_attr',
+    'source': 'path-sysfs.c',
+    'source_linux': 'path-sysfs-linux.c',
+    'source_win': 'path-sysfs-win.c',
+    'header': 'path-sysfs.h',
+    'ld': 'path-sysfs.ld',
+    'swig': 'path-sysfs.i',
+    # See CTRL_SYSFS's ld_section comment above: NEXT, not a real
+    # version number -- this string is never diffed or enforced, only
+    # read by a human deciding the actual tag by hand.
+    'ld_section': 'LIBNVME_PATH_SYSFS_NEXT',
+    # No reconfigure_reset on any member: a path is never updated in
+    # place on rescan -- libnvme_ctrl_scan_path() always calloc()s a new
+    # one -- so there is no in-place-invalidate event these fields would
+    # ever need to respond to. They live for the object's whole lifetime
+    # and are freed only when the path itself is destroyed.
+    #
+    # Every member is 'win': {'absent': True} -- multipath, and so
+    # struct libnvme_path itself, is a Linux-only concept. Windows still
+    # needs every getter to exist and link (an app must not need
+    # #ifdef _WIN32 to call them), so this is the simplest possible use
+    # of a per-OS override: nothing to resolve, just no source.
+    'members': [
+        {
+            'name': 'ana_state',
+            'attr': 'ana_state',
+            'type': 'char *',
+            'volatile': True,
+            'win': {'absent': True},
+        },
+        {
+            'name': 'numa_nodes',
+            'attr': 'numa_nodes',
+            'type': 'char *',
+            'win': {'absent': True},
+        },
+        {
+            'name': 'grpid',
+            'attr': 'ana_grpid',
+            'type': 'int',
+            'win': {'absent': True},
+        },
+        {
+            'name': 'queue_depth',
+            'attr': 'queue_depth',
+            'type': 'int',
+            'volatile': True,
+            'win': {'absent': True},
+        },
+        {
+            'name': 'multipath_failover_count',
+            'attr': 'diag/multipath_failover_count',
+            'type': 'long',
+            'volatile': True,
+            'win': {'absent': True},
+        },
+        {
+            'name': 'command_retry_count',
+            'attr': 'diag/command_retry_count',
+            'type': 'long',
+            'volatile': True,
+            'win': {'absent': True},
+        },
+        {
+            'name': 'command_error_count',
+            'attr': 'diag/command_error_count',
+            'type': 'long',
+            'volatile': True,
+            'win': {'absent': True},
+        },
+    ],
+    'groups': [],
+}
+
 # generate_sysfs_accessors.py generates every entry here in one run.
 SYSFS_SPECS = [
     CTRL_SYSFS,
+    PATH_SYSFS,
 ]

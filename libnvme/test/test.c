@@ -459,10 +459,15 @@ int main(int argc, char **argv)
 					       libnvme_ns_get_csi(n));
 				}
 
-				libnvme_ctrl_for_each_path(c, p)
+				libnvme_ctrl_for_each_path(c, p) {
+					const char *ana_state;
+
+					libnvme_path_get_ana_state(p,
+							&ana_state, "");
 					printf("   `- %s %s\n",
 					       libnvme_path_get_name(p),
-					       libnvme_path_get_ana_state(p));
+					       ana_state);
+				}
 			}
 
 			libnvme_subsystem_for_each_ns(s, n) {

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-# update-ctrl-sysfs.sh - Regenerate ctrl-sysfs.{h,c,i} only when they change;
-# report ctrl-sysfs.ld symbol drift instead of rewriting it.
+# update-sysfs-accessors.sh - Regenerate every spec in
+# sysfs_accessors_specs.py's SYSFS_SPECS list (.h/.c/.i per spec, one, two,
+# or three .c files depending on whether it has per-OS-divergent members)
+# only when they change; report .ld symbol drift instead of rewriting it.
 #
 # This file is part of libnvme.
 # Copyright (c) 2026, Dell Technologies Inc. or its subsidiaries.
@@ -16,19 +18,21 @@
 #
 # It is NOT run during a normal build.
 #
-# Which version section a new symbol belongs to is a maintainer decision,
-# so ctrl-sysfs.ld is handled the same way as accessors.ld/
-# accessors-fabrics.ld: it is never rewritten automatically.
-# The generator runs into a scratch directory; .h/.c/.i are copied into the
-# tree when they differ, and .ld is only diffed, symbol by symbol.
+# This script does not know any spec's name or output filenames -- it
+# just diffs whatever generate_sysfs_accessors.py actually wrote into a
+# scratch directory against the same-named file in the source tree, by
+# extension: .h/.c auto-update, .i auto-updates, .ld is diffed and
+# reported but never rewritten (which version section a symbol belongs
+# to is a maintainer decision, same as accessors.ld/accessors-fabrics.ld).
+# Adding a spec to SYSFS_SPECS therefore needs no change here.
 #
 # Arguments (supplied by the Meson run_target):
 #   $1   path to the python3 interpreter
 #   $2   path to generate_sysfs_accessors.py
-#   $3   path to sysfs_accessors_specs.py (CTRL_SYSFS input)
-#   $4   output directory for ctrl-sysfs.h/.c
-#   $5   output directory for ctrl-sysfs.ld
-#   $6   output directory for ctrl-sysfs.i
+#   $3   path to sysfs_accessors_specs.py (SYSFS_SPECS input)
+#   $4   output directory for every spec's .h/.c files
+#   $5   output directory for every spec's .ld file
+#   $6   output directory for every spec's .i file
 #   [--check]   optional: CI mode; read-only, exit non-zero on drift
 
 set -euo pipefail
@@ -46,11 +50,6 @@ if [ "${1-}" = "--check" ]; then
     CHECK_MODE=1
     shift
 fi
-
-H_OUT="$OUT_DIR/ctrl-sysfs.h"
-C_OUT="$OUT_DIR/ctrl-sysfs.c"
-LD_OUT="$LD_OUT_DIR/ctrl-sysfs.ld"
-I_OUT="$SWIG_OUT_DIR/ctrl-sysfs.i"
 
 TMPDIR_WORK=$(mktemp -d)
 trap 'rm -rf "$TMPDIR_WORK"' EXIT
@@ -103,10 +102,14 @@ check_ld_drift() {
     local new_ld="$1"
     local old_ld="$2"
     local ld_name
-    ld_name=$(basename "$old_ld")
+    ld_name=$(basename "$new_ld")
 
     extract_syms "$new_ld" > "$TMPDIR_WORK/syms_new.txt"
-    extract_syms "$old_ld" > "$TMPDIR_WORK/syms_old.txt"
+    if [ -f "$old_ld" ]; then
+        extract_syms "$old_ld" > "$TMPDIR_WORK/syms_old.txt"
+    else
+        : > "$TMPDIR_WORK/syms_old.txt"
+    fi
 
     local added removed
     added=$(comm  -23 "$TMPDIR_WORK/syms_new.txt" "$TMPDIR_WORK/syms_old.txt")
@@ -117,13 +120,22 @@ check_ld_drift() {
         return 0
     fi
 
+    if [ ! -f "$old_ld" ]; then
+        echo "WARNING: $ld_name does not exist yet."
+        echo ""
+        echo "  This is a new spec's first .ld file -- create it by hand"
+        echo "  with a top-level version-script tag matching the spec's"
+        echo "  ld_section, listing every symbol below:"
+        printf '%s\n' "$added" | sed 's/^/\t\t/' | sed 's/$/;/'
+        return 1
+    fi
+
     echo "WARNING: $(realpath --relative-to=.. "$old_ld") needs manual" \
          "attention."
     echo ""
     if [ -n "$added" ]; then
-        echo "  Symbols to ADD to LIBNVME_CTRL_SYSFS_3 (pre-3.0: existing"
-        echo "  section; after a stable release: new chained section, e.g."
-        echo "  LIBNVME_CTRL_SYSFS_3_1):"
+        echo "  Symbols to ADD (existing version section pre-3.0; a new"
+        echo "  chained section after a stable release):"
         printf '%s\n' "$added" | sed 's/^/\t\t/' | sed 's/$/;/'
     fi
     if [ -n "$removed" ]; then
@@ -135,19 +147,15 @@ check_ld_drift() {
 }
 
 # ---------------------------------------------------------------------------
-# Run generator into the scratch directory
+# Run generator into the scratch directory -- one run generates every spec
+# in SYSFS_SPECS.
 # ---------------------------------------------------------------------------
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "--- ctrl-sysfs: begin generation ---"
+echo "--- sysfs-accessors: begin generation ---"
 echo ""
 
 "$PYTHON" "$GENERATOR" --specs "$SPECS" --out-dir "$TMPDIR_WORK" \
 	--ld-out-dir "$TMPDIR_WORK" --swig-out-dir "$TMPDIR_WORK" >/dev/null
-
-TMP_H="$TMPDIR_WORK/ctrl-sysfs.h"
-TMP_C="$TMPDIR_WORK/ctrl-sysfs.c"
-TMP_LD="$TMPDIR_WORK/ctrl-sysfs.ld"
-TMP_I="$TMPDIR_WORK/ctrl-sysfs.i"
 
 if [ "$CHECK_MODE" -eq 1 ]; then
     # ------------------------------------------------------------------
@@ -155,11 +163,20 @@ if [ "$CHECK_MODE" -eq 1 ]; then
     # anything is out of sync.
     # ------------------------------------------------------------------
     DRIFT=0
-    check_if_current "$TMP_H" "$H_OUT"
-    check_if_current "$TMP_C" "$C_OUT"
-    check_if_current "$TMP_I" "$I_OUT"
+    for f in "$TMPDIR_WORK"/*.h "$TMPDIR_WORK"/*.c; do
+        [ -e "$f" ] || continue
+        check_if_current "$f" "$OUT_DIR/$(basename "$f")"
+    done
+    for f in "$TMPDIR_WORK"/*.i; do
+        [ -e "$f" ] || continue
+        check_if_current "$f" "$SWIG_OUT_DIR/$(basename "$f")"
+    done
     echo ""
-    check_ld_drift "$TMP_LD" "$LD_OUT" || DRIFT=$((DRIFT + 1))
+    for f in "$TMPDIR_WORK"/*.ld; do
+        [ -e "$f" ] || continue
+        check_ld_drift "$f" "$LD_OUT_DIR/$(basename "$f")" \
+            || DRIFT=$((DRIFT + 1))
+    done
     echo ""
     if [ "$DRIFT" -gt 0 ]; then
         echo "ERROR: generated files are out of sync with the source."
@@ -167,7 +184,7 @@ if [ "$CHECK_MODE" -eq 1 ]; then
         echo "(.ld symbol changes require manual version-script edits;" \
              "see WARNING above.)"
         echo ""
-        echo "--- ctrl-sysfs: check FAILED ---"
+        echo "--- sysfs-accessors: check FAILED ---"
         echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
         echo ""
         exit 1
@@ -178,21 +195,29 @@ else
     # Update mode: auto-update .h/.c/.i; report .ld drift as advisory.
     # ------------------------------------------------------------------
     CHANGED=0
-    update_if_changed "$TMP_H" "$H_OUT"
-    update_if_changed "$TMP_C" "$C_OUT"
-    update_if_changed "$TMP_I" "$I_OUT"
+    for f in "$TMPDIR_WORK"/*.h "$TMPDIR_WORK"/*.c; do
+        [ -e "$f" ] || continue
+        update_if_changed "$f" "$OUT_DIR/$(basename "$f")"
+    done
+    for f in "$TMPDIR_WORK"/*.i; do
+        [ -e "$f" ] || continue
+        update_if_changed "$f" "$SWIG_OUT_DIR/$(basename "$f")"
+    done
     echo ""
     if [ "$CHANGED" -gt 0 ]; then
         printf "%d file(s) updated in %s\n" "$CHANGED" "$OUT_DIR"
         echo "Don't forget to commit the updated files."
     else
-        echo "All ctrl-sysfs source files are up to date."
+        echo "All sysfs-accessor source files are up to date."
     fi
     echo ""
-    check_ld_drift "$TMP_LD" "$LD_OUT" || true
+    for f in "$TMPDIR_WORK"/*.ld; do
+        [ -e "$f" ] || continue
+        check_ld_drift "$f" "$LD_OUT_DIR/$(basename "$f")" || true
+    done
 fi
 
 echo ""
-echo "--- ctrl-sysfs: generation complete ---"
+echo "--- sysfs-accessors: generation complete ---"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo ""

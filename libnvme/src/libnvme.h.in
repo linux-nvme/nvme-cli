@@ -14,6 +14,7 @@ extern "C" {
 
 #include <nvme/accessors.h>
 #include <nvme/ctrl-sysfs.h>
+#include <nvme/path-sysfs.h>
 #include <nvme/ioctl.h>
 #include <nvme/lib-types.h>
 #include <nvme/lib.h>

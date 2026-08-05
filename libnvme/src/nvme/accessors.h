@@ -71,21 +71,6 @@ void libnvme_path_set_sysfs_dir(struct libnvme_path *p, const char *sysfs_dir);
  */
 const char *libnvme_path_get_sysfs_dir(const struct libnvme_path *p);
 
-/**
- * libnvme_path_set_grpid() - Set grpid.
- * @p: The &struct libnvme_path instance to update.
- * @grpid: Value to assign to the grpid field.
- */
-void libnvme_path_set_grpid(struct libnvme_path *p, int grpid);
-
-/**
- * libnvme_path_get_grpid() - Get grpid.
- * @p: The &struct libnvme_path instance to query.
- *
- * Return: The value of the grpid field.
- */
-int libnvme_path_get_grpid(const struct libnvme_path *p);
-
 /****************************************************************************
  * Accessors for: struct libnvme_ns
  ****************************************************************************/

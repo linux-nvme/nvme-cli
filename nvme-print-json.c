@@ -2675,14 +2675,16 @@ static unsigned int json_print_nvme_subsystem_multipath(libnvme_subsystem_t s, j
 	libnvme_namespace_for_each_path(n, p) {
 		struct json_object *path_attrs;
 		libnvme_ctrl_t c = libnvme_path_get_ctrl(p);
+		const char *ana_state;
 
+		libnvme_path_get_ana_state(p, &ana_state, NULL);
 		path_attrs = json_create_object();
 		obj_add_str(path_attrs, "Name", libnvme_ctrl_get_name(c));
 		obj_add_str(path_attrs, "Transport", libnvme_ctrl_get_transport(c));
 		obj_add_str(path_attrs, "Address", libnvme_ctrl_get_address(c));
 		obj_add_ctrl_address_details(path_attrs, "AddressDetails", c);
 		obj_add_str(path_attrs, "State", libnvme_ctrl_get_state(c));
-		obj_add_str(path_attrs, "ANAState", libnvme_path_get_ana_state(p));
+		obj_add_str(path_attrs, "ANAState", ana_state);
 		array_add_obj(paths, path_attrs);
 		i++;
 	}
@@ -4601,9 +4603,11 @@ static void json_print_detail_list_multipath(libnvme_subsystem_t s,
 			const char *serial;
 			const char *model;
 			const char *firmware;
+			const char *ana_state;
 
+			libnvme_path_get_ana_state(p, &ana_state, NULL);
 			obj_add_str(jpath, "Path", libnvme_path_get_name(p));
-			obj_add_str(jpath, "ANAState", libnvme_path_get_ana_state(p));
+			obj_add_str(jpath, "ANAState", ana_state);
 
 			/*
 			 * For multipath, each path maps to one controller.
@@ -4804,9 +4808,13 @@ static void json_detail_list(struct libnvme_global_ctx *ctx)
 
 				libnvme_ctrl_for_each_path(c, p) {
 					struct json_object *jpath = json_create_object();
+					const char *ana_state;
 
+					libnvme_path_get_ana_state(p,
+							&ana_state, NULL);
 					obj_add_str(jpath, "Path", libnvme_path_get_name(p));
-					obj_add_str(jpath, "ANAState", libnvme_path_get_ana_state(p));
+					obj_add_str(jpath, "ANAState",
+							ana_state);
 
 					array_add_obj(jpaths, jpath);
 				}
@@ -4935,22 +4943,32 @@ static unsigned int json_subsystem_topology_multipath(libnvme_subsystem_t s,
 			struct json_object *path_attrs;
 			struct json_object *ctrls, *ctrl_attrs;
 			libnvme_ctrl_t c;
+			const char *ana_state;
 
+			libnvme_path_get_ana_state(p, &ana_state, NULL);
 			path_attrs = json_create_object();
 			obj_add_str(path_attrs, "Path", libnvme_path_get_name(p));
-			obj_add_str(path_attrs, "ANAState", libnvme_path_get_ana_state(p));
+			obj_add_str(path_attrs, "ANAState", ana_state);
 
 			/*
 			 * For iopolicy numa exclude "Qdepth", for iopolicy
 			 * queue-depth exclude "NUMANodes" and for iopolicy
 			 * round-robin exclude both "Qdepth" and "NUMANodes".
 			 */
-			if (!strcmp(iopolicy, "numa"))
+			if (!strcmp(iopolicy, "numa")) {
+				const char *numa_nodes;
+
+				libnvme_path_get_numa_nodes(p, &numa_nodes,
+							     NULL);
 				obj_add_str(path_attrs, "NUMANodes",
-						libnvme_path_get_numa_nodes(p));
-			else if (!strcmp(iopolicy, "queue-depth"))
-				obj_add_int(path_attrs, "Qdepth",
-						libnvme_path_get_queue_depth(p));
+						numa_nodes);
+			} else if (!strcmp(iopolicy, "queue-depth")) {
+				int queue_depth;
+
+				libnvme_path_get_queue_depth(p, &queue_depth,
+							      0);
+				obj_add_int(path_attrs, "Qdepth", queue_depth);
+			}
 
 			c = libnvme_path_get_ctrl(p);
 			ctrls = json_create_array();
