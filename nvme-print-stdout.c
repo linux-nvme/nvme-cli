@@ -2437,12 +2437,12 @@ static void stdout_id_ctrl_sanicap(__le32 ctrl_sanicap)
 {
 	__u32 sanicap = le32_to_cpu(ctrl_sanicap);
 	__u32 rsvd4 = (sanicap & 0x1FFFFFF0) >> 4;
-	__u32 vers = (sanicap & 0x8) >> 3;
-	__u32 ows = (sanicap & 0x4) >> 2;
-	__u32 bes = (sanicap & 0x2) >> 1;
-	__u32 ces = sanicap & 0x1;
-	__u32 ndi = (sanicap & 0x20000000) >> 29;
-	__u32 nodmmas = (sanicap & 0xC0000000) >> 30;
+	__u32 vers = NVME_CTRL_SANICAP_NVERS(sanicap);
+	__u32 ows = NVME_CTRL_SANICAP_OWS(sanicap);
+	__u32 bes = NVME_CTRL_SANICAP_BES(sanicap);
+	__u32 ces = NVME_CTRL_SANICAP_CES(sanicap);
+	__u32 ndi = NVME_CTRL_SANICAP_NDI(sanicap);
+	__u32 nodmmas = NVME_CTRL_SANICAP_NODMMAS(sanicap);
 
 	static const char * const modifies_media[] = {
 		"Additional media modification after sanitize operation completes successfully is not defined",
