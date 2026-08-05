@@ -2542,8 +2542,8 @@ static void stdout_id_ctrl_cdpa(__le16 ctrl_cdpa)
 static void stdout_id_ctrl_ipmsr(__le16 ctrl_ipmsr)
 {
 	__u16 ipmsr = le16_to_cpu(ctrl_ipmsr);
-	__u16 srs = NVME_GET(ipmsr, CTRL_IPMSR_SRS);
-	__u16 srv = NVME_GET(ipmsr, CTRL_IPMSR_SRV);
+	__u16 srs = NVME_CTRL_IPMSR_SRS(ipmsr);
+	__u16 srv = NVME_CTRL_IPMSR_SRV(ipmsr);
 
 	printf("  [15:8] : %#x\tSample Rate Scale (%s)\n", srs,
 		nvme_ipmsr_srs_to_string(srs));
