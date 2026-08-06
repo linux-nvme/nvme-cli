@@ -2527,7 +2527,7 @@ static void json_nvme_fdp_configs(struct nvme_fdp_config_log *log, size_t len)
 
 	obj_add_uint(r, "n", n);
 
-	for (int i = 0; i < n; i++) {
+	for (int i = 0; i < n + 1; i++) {
 		struct nvme_fdp_config_desc *config = p;
 		uint16_t nruh = le16_to_cpu(config->nruh);
 
