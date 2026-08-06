@@ -307,7 +307,7 @@ static void json_nvme_id_ns(struct nvme_id_ns *ns, unsigned int nsid,
 	struct json_object *lbafs = json_create_array();
 	struct json_object *vs = json_create_array();
 	int i;
-	nvme_uint128_t nvmcap = le128_to_cpu(ns->nvmcap);
+	shr_uint128_t nvmcap = le128_to_cpu(ns->nvmcap);
 
 	if (!cap_only) {
 		obj_add_uint64(r, "nsze", le64_to_cpu(ns->nsze));
@@ -391,10 +391,10 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 {
 	struct json_object *r = json_r;
 	struct json_object *psds = json_create_array();
-	nvme_uint128_t tnvmcap = le128_to_cpu(ctrl->tnvmcap);
-	nvme_uint128_t unvmcap = le128_to_cpu(ctrl->unvmcap);
-	nvme_uint128_t megcap = le128_to_cpu(ctrl->megcap);
-	nvme_uint128_t maxdna = le128_to_cpu(ctrl->maxdna);
+	shr_uint128_t tnvmcap = le128_to_cpu(ctrl->tnvmcap);
+	shr_uint128_t unvmcap = le128_to_cpu(ctrl->unvmcap);
+	shr_uint128_t megcap = le128_to_cpu(ctrl->megcap);
+	shr_uint128_t maxdna = le128_to_cpu(ctrl->maxdna);
 	char sn[sizeof(ctrl->sn) + 1], mn[sizeof(ctrl->mn) + 1],
 		fr[sizeof(ctrl->fr) + 1], subnqn[sizeof(ctrl->subnqn) + 1];
 	__u32 ieee = ctrl->ieee[2] << 16 | ctrl->ieee[1] << 8 | ctrl->ieee[0];
@@ -724,18 +724,18 @@ static void json_endurance_log(struct nvme_endurance_group_log *endurance_group,
 			       const char *devname)
 {
 	struct json_object *r = json_r;
-	nvme_uint128_t endurance_estimate = le128_to_cpu(endurance_group->endurance_estimate);
-	nvme_uint128_t data_units_read = le128_to_cpu(endurance_group->data_units_read);
-	nvme_uint128_t data_units_written = le128_to_cpu(endurance_group->data_units_written);
-	nvme_uint128_t media_units_written = le128_to_cpu(endurance_group->media_units_written);
-	nvme_uint128_t host_read_cmds = le128_to_cpu(endurance_group->host_read_cmds);
-	nvme_uint128_t host_write_cmds = le128_to_cpu(endurance_group->host_write_cmds);
-	nvme_uint128_t media_data_integrity_err =
+	shr_uint128_t endurance_estimate = le128_to_cpu(endurance_group->endurance_estimate);
+	shr_uint128_t data_units_read = le128_to_cpu(endurance_group->data_units_read);
+	shr_uint128_t data_units_written = le128_to_cpu(endurance_group->data_units_written);
+	shr_uint128_t media_units_written = le128_to_cpu(endurance_group->media_units_written);
+	shr_uint128_t host_read_cmds = le128_to_cpu(endurance_group->host_read_cmds);
+	shr_uint128_t host_write_cmds = le128_to_cpu(endurance_group->host_write_cmds);
+	shr_uint128_t media_data_integrity_err =
 	    le128_to_cpu(endurance_group->media_data_integrity_err);
-	nvme_uint128_t num_err_info_log_entries =
+	shr_uint128_t num_err_info_log_entries =
 	    le128_to_cpu(endurance_group->num_err_info_log_entries);
-	nvme_uint128_t total_end_grp_cap = le128_to_cpu(endurance_group->total_end_grp_cap);
-	nvme_uint128_t unalloc_end_grp_cap = le128_to_cpu(endurance_group->unalloc_end_grp_cap);
+	shr_uint128_t total_end_grp_cap = le128_to_cpu(endurance_group->total_end_grp_cap);
+	shr_uint128_t unalloc_end_grp_cap = le128_to_cpu(endurance_group->unalloc_end_grp_cap);
 
 	obj_add_int(r, "critical_warning", endurance_group->critical_warning);
 	obj_add_int(r, "endurance_group_features", endurance_group->endurance_group_features);
@@ -763,16 +763,16 @@ static void json_smart_log(struct nvme_smart_log *smart, unsigned int nsid,
 	char key[21];
 	unsigned int temperature = ((smart->temperature[1] << 8) |
 		smart->temperature[0]);
-	nvme_uint128_t data_units_read = le128_to_cpu(smart->data_units_read);
-	nvme_uint128_t data_units_written = le128_to_cpu(smart->data_units_written);
-	nvme_uint128_t host_read_commands = le128_to_cpu(smart->host_reads);
-	nvme_uint128_t host_write_commands = le128_to_cpu(smart->host_writes);
-	nvme_uint128_t controller_busy_time = le128_to_cpu(smart->ctrl_busy_time);
-	nvme_uint128_t power_cycles = le128_to_cpu(smart->power_cycles);
-	nvme_uint128_t power_on_hours = le128_to_cpu(smart->power_on_hours);
-	nvme_uint128_t unsafe_shutdowns = le128_to_cpu(smart->unsafe_shutdowns);
-	nvme_uint128_t media_errors = le128_to_cpu(smart->media_errors);
-	nvme_uint128_t num_err_log_entries = le128_to_cpu(smart->num_err_log_entries);
+	shr_uint128_t data_units_read = le128_to_cpu(smart->data_units_read);
+	shr_uint128_t data_units_written = le128_to_cpu(smart->data_units_written);
+	shr_uint128_t host_read_commands = le128_to_cpu(smart->host_reads);
+	shr_uint128_t host_write_commands = le128_to_cpu(smart->host_writes);
+	shr_uint128_t controller_busy_time = le128_to_cpu(smart->ctrl_busy_time);
+	shr_uint128_t power_cycles = le128_to_cpu(smart->power_cycles);
+	shr_uint128_t power_on_hours = le128_to_cpu(smart->power_on_hours);
+	shr_uint128_t unsafe_shutdowns = le128_to_cpu(smart->unsafe_shutdowns);
+	shr_uint128_t media_errors = le128_to_cpu(smart->media_errors);
+	shr_uint128_t num_err_log_entries = le128_to_cpu(smart->num_err_log_entries);
 
 	if (verbose_mode()) {
 		struct json_object *crt = json_create_object();
@@ -1641,16 +1641,16 @@ void nvme_json_pel_smart_health(void *pevent_log_info, __u32 offset,
 	char key[128];
 	struct nvme_smart_log *smart_event = pevent_log_info + offset;
 	unsigned int temperature = (smart_event->temperature[1] << 8) | smart_event->temperature[0];
-	nvme_uint128_t data_units_read = le128_to_cpu(smart_event->data_units_read);
-	nvme_uint128_t data_units_written = le128_to_cpu(smart_event->data_units_written);
-	nvme_uint128_t host_read_commands = le128_to_cpu(smart_event->host_reads);
-	nvme_uint128_t host_write_commands = le128_to_cpu(smart_event->host_writes);
-	nvme_uint128_t controller_busy_time = le128_to_cpu(smart_event->ctrl_busy_time);
-	nvme_uint128_t power_cycles = le128_to_cpu(smart_event->power_cycles);
-	nvme_uint128_t power_on_hours = le128_to_cpu(smart_event->power_on_hours);
-	nvme_uint128_t unsafe_shutdowns = le128_to_cpu(smart_event->unsafe_shutdowns);
-	nvme_uint128_t media_errors = le128_to_cpu(smart_event->media_errors);
-	nvme_uint128_t num_err_log_entries = le128_to_cpu(smart_event->num_err_log_entries);
+	shr_uint128_t data_units_read = le128_to_cpu(smart_event->data_units_read);
+	shr_uint128_t data_units_written = le128_to_cpu(smart_event->data_units_written);
+	shr_uint128_t host_read_commands = le128_to_cpu(smart_event->host_reads);
+	shr_uint128_t host_write_commands = le128_to_cpu(smart_event->host_writes);
+	shr_uint128_t controller_busy_time = le128_to_cpu(smart_event->ctrl_busy_time);
+	shr_uint128_t power_cycles = le128_to_cpu(smart_event->power_cycles);
+	shr_uint128_t power_on_hours = le128_to_cpu(smart_event->power_on_hours);
+	shr_uint128_t unsafe_shutdowns = le128_to_cpu(smart_event->unsafe_shutdowns);
+	shr_uint128_t media_errors = le128_to_cpu(smart_event->media_errors);
+	shr_uint128_t num_err_log_entries = le128_to_cpu(smart_event->num_err_log_entries);
 	int c;
 	__s32 temp;
 
@@ -4510,7 +4510,7 @@ static void json_id_domain_list(struct nvme_id_domain_list *id_dom)
 	struct json_object *entries = json_create_array();
 	struct json_object *entry;
 	int i;
-	nvme_uint128_t dom_cap, unalloc_dom_cap, max_egrp_dom_cap;
+	shr_uint128_t dom_cap, unalloc_dom_cap, max_egrp_dom_cap;
 
 	obj_add_uint(r, "num_dom_entries", id_dom->num);
 

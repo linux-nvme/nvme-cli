@@ -48,7 +48,7 @@ static int util_json_object_string_to_number(struct json_object *jso,
 	return 0;
 }
 
-struct json_object *util_json_object_new_uint128(nvme_uint128_t  val)
+struct json_object *util_json_object_new_uint128(shr_uint128_t  val)
 {
 	struct json_object *obj;
 

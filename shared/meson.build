@@ -23,6 +23,7 @@ sources = [
     'suffix-util.c',
     'table.c',
     'time-util.c',
+    'uint128-util.c',
     'wrap-util.c',
 ]
 

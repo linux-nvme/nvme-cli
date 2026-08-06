@@ -39,7 +39,7 @@
 #include "nvme.h"
 #include "plugin.h"
 #include "util/cleanup.h"
-#include "util/types.h"
+#include "uint128-util.h"
 #include "time-util.h"
 #include "parse-util.h"
 #include "nvme-pci-ids.h"

@@ -5,7 +5,7 @@
 #include "common.h"
 #include "nvme-print.h"
 #include "lm-print.h"
-#include "util/types.h"
+#include "uint128-util.h"
 
 static struct lm_print_ops stdout_print_ops;
 

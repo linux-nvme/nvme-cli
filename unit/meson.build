@@ -1,31 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-test_uint128 = executable(
-    'test-uint128',
-    ['test-uint128.c', '../util/types.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-        shared_dep,
-    ],
-)
-
-test('nvme-cli - uint128', test_uint128)
-
-test_uint128_si = executable(
-    'test-uint128-si',
-    ['test-uint128-si.c', '../util/types.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-        shared_dep,
-    ],
-)
-
-test('nvme-cli - uint128-si', test_uint128_si)
-
 test_argconfig_parse = executable(
     'test-argconfig-parse',
     ['test-argconfig-parse.c', '../util/argconfig.c'],

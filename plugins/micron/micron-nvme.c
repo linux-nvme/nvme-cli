@@ -34,7 +34,7 @@
 #include "nvme-print.h"
 #include "nvme.h"
 #include "util/cleanup.h"
-#include "util/types.h"
+#include "uint128-util.h"
 #include "util/utils.h"
 
 #define CREATE_CMD

@@ -8,6 +8,8 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include "nvme.h"
 #include "util/json.h"
 
 #if !defined __cplusplus

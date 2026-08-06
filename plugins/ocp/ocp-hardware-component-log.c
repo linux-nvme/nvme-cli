@@ -6,7 +6,7 @@
 #include <errno.h>
 
 #include "common.h"
-#include "util/types.h"
+#include "uint128-util.h"
 #include "logging.h"
 #include "nvme-print.h"
 #include "ocp-hardware-component-log.h"
@@ -171,7 +171,7 @@ static int get_hwcomp_log_data(struct libnvme_transport_handle *hdl, struct hwco
 {
 	size_t desc_offset = offsetof(struct hwcomp_log, desc);
 	struct libnvme_passthru_cmd cmd;
-	nvme_uint128_t log_size;
+	shr_uint128_t log_size;
 	long double log_bytes;
 	__u32 len;
 	__u8 uidx;
