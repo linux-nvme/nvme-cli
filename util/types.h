@@ -9,9 +9,6 @@
 
 #define STR_LEN 100
 
-uint64_t int48_to_long(const __u8 *data);
-uint64_t int56_to_long(const __u8 *data);
-
 const char *util_uuid_to_string(unsigned char uuid[NVME_UUID_LEN]);
 const char *util_fw_to_string(char *c);
 

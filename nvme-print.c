@@ -15,6 +15,7 @@
 #include "nvme-print.h"
 #include "nvme-models.h"
 #include "util/types.h"
+#include "int-util.h"
 #include "temp-util.h"
 #include "common.h"
 #include "logging.h"
