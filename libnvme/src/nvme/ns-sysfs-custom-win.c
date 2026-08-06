@@ -7,12 +7,11 @@
  */
 
 #include <ccan/endian/endian.h>
+#include <ccan/ilog/ilog.h>
 
 #include "mem.h"
 
 #include "ns-sysfs.c"
-
-#define GETSHIFT(x) (__builtin_ffsll(x) - 1)
 
 /*
  * Windows has no sysfs: lba_size/lba_count/lba_util/meta_size all come
@@ -115,7 +114,11 @@ __shr_public int libnvme_ns_get_lba_shift(
 	if (ret)
 		return ret;
 
-	*val = GETSHIFT(lba_size);
+	/* lba_size is a power of two (NVMe LBADS is defined as an
+	 * exponent, 2^n), so it has exactly one bit set -- ilog32()
+	 * reports the position of that bit, i.e. the shift.
+	 */
+	*val = ilog32(lba_size) - 1;
 	return 0;
 }
 
