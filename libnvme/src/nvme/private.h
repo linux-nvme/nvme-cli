@@ -309,10 +309,6 @@ struct libnvme_ns {  // !generate-accessors:read=generated,write=none !generate-
 	char *generic_name;
 	char *sysfs_dir;		     // !access:write=generated
 
-	uint8_t eui64[8];
-	uint8_t nguid[16];
-	unsigned char uuid[NVME_UUID_LEN];   // !access:read=none
-
 	/* Opaque: field list is NS_SYSFS in sysfs_accessors_specs.py. */
 	struct libnvme_ns_sysfs *sysfs;	// !access:read=none
 };

@@ -121,22 +121,6 @@ void libnvme_ns_set_sysfs_dir(struct libnvme_ns *p, const char *sysfs_dir);
  */
 const char *libnvme_ns_get_sysfs_dir(const struct libnvme_ns *p);
 
-/**
- * libnvme_ns_get_eui64() - Get eui64.
- * @p: The &struct libnvme_ns instance to query.
- *
- * Return: Pointer to the eui64 array of 8 uint8_t elements.
- */
-const uint8_t *libnvme_ns_get_eui64(const struct libnvme_ns *p);
-
-/**
- * libnvme_ns_get_nguid() - Get nguid.
- * @p: The &struct libnvme_ns instance to query.
- *
- * Return: Pointer to the nguid array of 16 uint8_t elements.
- */
-const uint8_t *libnvme_ns_get_nguid(const struct libnvme_ns *p);
-
 /****************************************************************************
  * Accessors for: struct libnvme_ctrl
  ****************************************************************************/

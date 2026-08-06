@@ -1602,12 +1602,6 @@ __shr_public const char *libnvme_ns_get_firmware(libnvme_ns_t n)
 	return val;
 }
 
-__shr_public void libnvme_ns_copy_uuid(libnvme_ns_t n,
-		unsigned char out[NVME_UUID_LEN])
-{
-	memcpy(out, n->uuid, NVME_UUID_LEN);
-}
-
 __shr_public int libnvme_ns_identify(libnvme_ns_t n, struct nvme_id_ns *ns)
 {
 	struct libnvme_transport_handle *hdl;

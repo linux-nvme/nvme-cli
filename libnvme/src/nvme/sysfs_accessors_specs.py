@@ -263,6 +263,34 @@ NS_SYSFS = {
             'type': 'enum nvme_csi',
             'custom': True,
         },
+        # eui64/nguid/uuid are also 'custom': True, and their raw type
+        # is itself a pointer ("uint8_t *"/"unsigned char *") instead of
+        # a plain scalar -- a cached fixed-size byte buffer, following
+        # exactly the same storage-vs-public-type split a "char *"
+        # string member gets: the struct field stays a plain mutable
+        # pointer (see emit_struct_def()'s "already a pointer" branch),
+        # while the public getter hands back a pointer-to-const view of
+        # it (see _pub_type()) -- int fn(p, const TYPE **val, const
+        # TYPE *dflt), same shape as any other lazy getter, no new axis
+        # needed. Bodies are hand-written in ns-sysfs-custom-linux.c
+        # (real sysfs reads) and ns-sysfs-custom-win.c (always -ENOENT,
+        # Windows never had a source for these either -- same as csi's
+        # Windows getter).
+        {
+            'name': 'eui64',
+            'type': 'uint8_t *',
+            'custom': True,
+        },
+        {
+            'name': 'nguid',
+            'type': 'uint8_t *',
+            'custom': True,
+        },
+        {
+            'name': 'uuid',
+            'type': 'unsigned char *',
+            'custom': True,
+        },
         # The four diag/* counters need no per-OS override: like most
         # CTRL_SYSFS members, Windows absence falls out of the existing
         # libnvme_get_ns_attr() stub (unconditionally NULL) for free --

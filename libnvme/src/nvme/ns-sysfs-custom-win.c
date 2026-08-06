@@ -212,3 +212,37 @@ __shr_public int libnvme_ns_get_csi(
 
 	return -ENOENT;
 }
+
+/*
+ * Windows never had a source for eui64/nguid/uuid either -- same call
+ * as csi above.
+ */
+__shr_public int libnvme_ns_get_eui64(
+		__shr_unused const struct libnvme_ns *p,
+		const uint8_t **val,
+		const uint8_t *dflt)
+{
+	*val = dflt;
+
+	return -ENOENT;
+}
+
+__shr_public int libnvme_ns_get_nguid(
+		__shr_unused const struct libnvme_ns *p,
+		const uint8_t **val,
+		const uint8_t *dflt)
+{
+	*val = dflt;
+
+	return -ENOENT;
+}
+
+__shr_public int libnvme_ns_get_uuid(
+		__shr_unused const struct libnvme_ns *p,
+		const unsigned char **val,
+		const unsigned char *dflt)
+{
+	*val = dflt;
+
+	return -ENOENT;
+}

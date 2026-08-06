@@ -64,10 +64,8 @@ LIBNVME_3 {
 		libnvme_next_host;
 		libnvme_next_subsystem;
 		libnvme_ns_compare;
-		libnvme_ns_copy_uuid;
 		libnvme_ns_flush;
 		libnvme_ns_get_ctrl;
-		libnvme_ns_get_eui64;
 		libnvme_ns_get_firmware;
 		libnvme_ns_get_inflights;
 		libnvme_ns_get_io_ticks;

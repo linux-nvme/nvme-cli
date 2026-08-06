@@ -10,6 +10,7 @@
 #include <ccan/ilog/ilog.h>
 
 #include "mem.h"
+#include "util.h"
 
 #include "ns-sysfs.c"
 
@@ -359,5 +360,111 @@ __shr_public int libnvme_ns_get_csi(
 		return -ENOENT;
 
 	*val = *n->sysfs->csi;
+	return 0;
+}
+
+/*
+ * eui64/nguid/uuid each live in their own optional sysfs attribute,
+ * read lazily and independently on first use, and cached for the
+ * lifetime of the namespace object -- the returned pointer stays valid
+ * until the namespace is freed, same lifetime guarantee every other
+ * pointer-returning lazy getter (e.g. libnvme_ctrl_get_model()) already
+ * gives its caller. "eui" is raw text copied byte-for-byte;
+ * "nguid"/"uuid" are hyphenated hex strings decoded with
+ * libnvme_uuid_from_string(), the same helper used everywhere else a
+ * UUID-shaped attribute is parsed.
+ */
+__shr_public int libnvme_ns_get_eui64(
+		const struct libnvme_ns *p,
+		const uint8_t **val,
+		const uint8_t *dflt)
+{
+	struct libnvme_ns *n = (struct libnvme_ns *)p;
+	__cleanup_free char *str = NULL;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!SYSFS_IS_LOADED(n->sysfs->eui64))) {
+		str = libnvme_get_ns_attr(n, "eui");
+		if (!str) {
+			n->sysfs->eui64 = (uint8_t *)NO_SYSFS_ATTR;
+		} else {
+			n->sysfs->eui64 = malloc(8);
+			if (!n->sysfs->eui64)
+				return -ENOMEM;
+			memcpy(n->sysfs->eui64, str, 8);
+		}
+	}
+
+	if (SYSFS_IS_ABSENT(n->sysfs->eui64))
+		return -ENOENT;
+
+	*val = n->sysfs->eui64;
+	return 0;
+}
+
+__shr_public int libnvme_ns_get_nguid(
+		const struct libnvme_ns *p,
+		const uint8_t **val,
+		const uint8_t *dflt)
+{
+	struct libnvme_ns *n = (struct libnvme_ns *)p;
+	__cleanup_free char *str = NULL;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!SYSFS_IS_LOADED(n->sysfs->nguid))) {
+		str = libnvme_get_ns_attr(n, "nguid");
+		if (!str) {
+			n->sysfs->nguid = (uint8_t *)NO_SYSFS_ATTR;
+		} else {
+			n->sysfs->nguid = malloc(16);
+			if (!n->sysfs->nguid)
+				return -ENOMEM;
+			if (libnvme_uuid_from_string(str, n->sysfs->nguid)) {
+				free(n->sysfs->nguid);
+				n->sysfs->nguid = NULL;
+				return -EINVAL;
+			}
+		}
+	}
+
+	if (SYSFS_IS_ABSENT(n->sysfs->nguid))
+		return -ENOENT;
+
+	*val = n->sysfs->nguid;
+	return 0;
+}
+
+__shr_public int libnvme_ns_get_uuid(
+		const struct libnvme_ns *p,
+		const unsigned char **val,
+		const unsigned char *dflt)
+{
+	struct libnvme_ns *n = (struct libnvme_ns *)p;
+	__cleanup_free char *str = NULL;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!SYSFS_IS_LOADED(n->sysfs->uuid))) {
+		str = libnvme_get_ns_attr(n, "uuid");
+		if (!str) {
+			n->sysfs->uuid = (unsigned char *)NO_SYSFS_ATTR;
+		} else {
+			n->sysfs->uuid = malloc(NVME_UUID_LEN);
+			if (!n->sysfs->uuid)
+				return -ENOMEM;
+			if (libnvme_uuid_from_string(str, n->sysfs->uuid)) {
+				free(n->sysfs->uuid);
+				n->sysfs->uuid = NULL;
+				return -EINVAL;
+			}
+		}
+	}
+
+	if (SYSFS_IS_ABSENT(n->sysfs->uuid))
+		return -ENOENT;
+
+	*val = n->sysfs->uuid;
 	return 0;
 }

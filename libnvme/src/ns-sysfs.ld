@@ -23,6 +23,9 @@ LIBNVME_NS_SYSFS_3 {
 		libnvme_ns_get_lba_util;
 		libnvme_ns_get_meta_size;
 		libnvme_ns_get_csi;
+		libnvme_ns_get_eui64;
+		libnvme_ns_get_nguid;
+		libnvme_ns_get_uuid;
 		libnvme_ns_get_command_retry_count;
 		libnvme_ns_get_command_error_count;
 		libnvme_ns_get_io_requeue_no_usable_path_count;
