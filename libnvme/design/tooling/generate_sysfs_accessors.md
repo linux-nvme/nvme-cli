@@ -1,6 +1,6 @@
 # Generate Sysfs Accessors Tool
 
-This tool generates an **opaque, sysfs-backed C struct** and its accessor functions from a **Python dict**, rather than from an annotated header the way `generate_accessors.py` does. It drives `struct libnvme_ctrl_sysfs` and `struct libnvme_path_sysfs` today; `NS_SYSFS`/`SUBSYS_SYSFS` are the anticipated follow-on.
+This tool generates an **opaque, sysfs-backed C struct** and its accessor functions from a **Python dict**, rather than from an annotated header the way `generate_accessors.py` does. It drives `struct libnvme_ctrl_sysfs`, `struct libnvme_path_sysfs`, `struct libnvme_ns_sysfs`, and `struct libnvme_subsystem_sysfs`.
 
 ------
 
@@ -145,7 +145,7 @@ Use a group instead of a plain member when one sysfs read naturally produces **s
 2. `loader` is a C function name. The generated getter calls it as `loader(w)`, passing the owning struct pointer, and propagates a nonzero return to its own caller unchanged (the load itself failed, not just "attribute absent"). Declare it once in the generated header (automatic — `generate_header()` emits a prototype for every group's `loader`, but only when the spec has at least one group) and define it in whichever hand-written `*-custom-*.c` file(s) actually need to fill this group — see "Generated file layout" below.
 3. The first access to *any* member of the group triggers the loader; every other member's cache-miss guard then finds its value already loaded and never calls the loader again. Loaders must leave every member they don't fill at `NULL` (not garbage) so the generated accessor can stamp the "read, absent" sentinel correctly.
 4. If the loader body genuinely needs to differ by `CONFIG_FABRICS` (or any axis other than OS), that's a fact about the hand-written `.c` files, not about this dict — there's no key to set. A one-line comment above the group entry noting "loader body varies by CONFIG_FABRICS" (or similar) is enough; see the existing `identity` and `fabrics` groups for the pattern. If the loader (or the *grouping itself*) needs to differ by **OS**, see "Per-OS resolution" below instead — that is a real, first-class axis this generator understands, unlike fabrics-or-other build flags.
-5. Groups themselves are not yet OS-resolved (a spec's `['groups']` list is a single, OS-invariant list) — no current spec needs a group whose loader or membership differs per OS. `NS_SYSFS`'s geometry group will be the first one that does; extend `build_members()` the same way member resolution works, when it lands.
+5. Groups themselves are not yet OS-resolved (a spec's `['groups']` list is a single, OS-invariant list) — no current spec needs a group whose loader or membership differs per OS. Extend `build_members()` the same way member resolution works, if one ever does.
 
 ------
 
@@ -154,15 +154,11 @@ Use a group instead of a plain member when one sysfs read naturally produces **s
 A member only needs a `'linux'`/`'win'` override when its **value source** — which function gets called, or how members are grouped — genuinely differs per platform:
 
 ```python
-{'name': 'lba_util', 'type': 'uint64_t',
- 'linux': {'group': 'capacity'},
- 'win':   {'group': 'identify'}},
-
 {'name': 'ana_state', 'type': 'char *', 'attr': 'ana_state', 'volatile': True,
  'win': {'absent': True}},
 ```
 
-**Most members do not need this.** `libnvme_get_{ctrl,ns,path,subsys}_attr()` already has a Windows implementation that unconditionally returns `NULL` — so for a plain `'attr'` member, Windows absence falls out of the existing attr-reader stub for free; the generated getter body is identical C on both platforms, it just behaves differently at runtime because the function it calls does. Only add an override when a *different function* needs to be called, or the *grouping* itself changes (`NS_SYSFS`'s `lba_*` members: Linux calls two small loaders, Windows calls one big Identify loader — that is not expressible by changing what one function returns).
+**Most members do not need this.** `libnvme_get_{ctrl,ns,path,subsys}_attr()` already has a Windows implementation that unconditionally returns `NULL` — so for a plain `'attr'` member, Windows absence falls out of the existing attr-reader stub for free; the generated getter body is identical C on both platforms, it just behaves differently at runtime because the function it calls does. Only add an override when a *different function* needs to be called, or the *grouping* itself changes — no current spec needs that case; `'absent': True` (every `PATH_SYSFS` member on Windows) is the only override in use today. A member whose OS difference can't be expressed by changing what one function returns (e.g. `NS_SYSFS`'s `lba_*` members: Linux calls two small loaders, Windows calls one big Identify command) uses `'custom': True` instead — a hand-written getter body in `*-custom-<os>.c`, with only the prototype and the struct field generated (see `sysfs_accessors_specs.py`'s `NS_SYSFS` entry for worked examples).
 
 `'absent': True` means the platform has no source for the member at all: the generated getter writes `dflt` to the out-param and always returns `-ENOENT`, no attribute read or loader call ever happens, and (for `PATH_SYSFS`, where every member is absent on Windows) the owning-struct parameter is `__shr_unused` since the body never touches it.
 
@@ -177,7 +173,7 @@ The generator resolves each member's effective Linux and Windows definition and 
 
 The struct definition, `_alloc()`/`_reset()`/`_free()`, and every OS-common getter always live in the shared file — **the struct never splits**, even when some of its members' getters do, because every cached member (string or boxed numeric) has the same storage shape regardless of which loader fills it.
 
-For `PATH_SYSFS`, every member differs (absent on Windows), so the shared file holds only the struct definition and lifecycle functions, and both `path-sysfs-linux.c` and `path-sysfs-win.c` exist. For `CTRL_SYSFS` today, no member differs at all, so only the shared `ctrl-sysfs.c` exists — exactly the file this generator has always produced. `NS_SYSFS`'s geometry members will be the first case where a spec's shared file is non-trivial *and* both per-OS files exist alongside it.
+For `PATH_SYSFS`, every member differs (absent on Windows), so the shared file holds only the struct definition and lifecycle functions, and both `path-sysfs-linux.c` and `path-sysfs-win.c` exist. For `CTRL_SYSFS`, no member differs at all, so only the shared `ctrl-sysfs.c` exists — exactly the file this generator has always produced. `NS_SYSFS` is the case where a spec's shared file is non-trivial *and* both per-OS files exist alongside it (its `lba_*`/`csi`/`eui64`/`nguid`/`uuid` members are `'custom': True`, hand-written in `ns-sysfs-custom-linux.c`/`ns-sysfs-custom-win.c`, while its `diag/*` counters are OS-common and live in the shared `ns-sysfs.c`).
 
 The per-OS `.c` files carry no `#include`s of their own — they rely on being `#include`d *after* the shared file in the hand-written `*-custom-<os>.c`, which brings the struct definition and everything else into scope first:
 
