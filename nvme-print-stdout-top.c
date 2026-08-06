@@ -850,7 +850,7 @@ static int stdout_top_print_path_perf(FILE *stream, libnvme_subsystem_t s)
 	char r_bw_str[16], w_bw_str[16];
 	bool first;
 	struct shr_table *t;
-	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
+	const char *iopolicy;
 	struct shr_table_column columns[] = {
 		{"NSHead",    LEFT, AUTO_WIDTH},
 		{"NSID",      LEFT, AUTO_WIDTH},
@@ -880,6 +880,8 @@ static int stdout_top_print_path_perf(FILE *stream, libnvme_subsystem_t s)
 		ret = 1;
 		goto free_tbl;
 	}
+
+	libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
 
 	fprintf(stream, "\n---------- Path Performance ----------\n\n");
 	libnvme_subsystem_for_each_ns(s, n) {
@@ -978,20 +980,25 @@ static void  stdout_top_print_subsys_topology_config(FILE *stream,
 		libnvme_subsystem_t s)
 {
 	int len = strlen(libnvme_subsystem_get_name(s));
+	const char *iopolicy;
+	const char *model;
+	const char *serial;
+	const char *firmware;
+
+	libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
+	libnvme_subsystem_get_model(s, &model, "undefined");
+	libnvme_subsystem_get_serial(s, &serial, "");
+	libnvme_subsystem_get_firmware(s, &firmware, "");
 
 	fprintf(stream, "%s - NQN=%s\n", libnvme_subsystem_get_name(s),
 		libnvme_subsystem_get_subsysnqn(s));
 	fprintf(stream, "%*s   hostnqn=%s\n", len, " ",
 		libnvme_host_get_hostnqn(libnvme_subsystem_get_host(s)));
-	fprintf(stream, "%*s   iopolicy=%s\n", len, " ",
-		libnvme_subsystem_get_iopolicy(s));
+	fprintf(stream, "%*s   iopolicy=%s\n", len, " ", iopolicy);
 
-	fprintf(stream, "%*s   model=%s\n", len, " ",
-		libnvme_subsystem_get_model(s));
-	fprintf(stream, "%*s   serial=%s\n", len, " ",
-		libnvme_subsystem_get_serial(s));
-	fprintf(stream, "%*s   firmware=%s\n", len, " ",
-		libnvme_subsystem_get_firmware(s));
+	fprintf(stream, "%*s   model=%s\n", len, " ", model);
+	fprintf(stream, "%*s   serial=%s\n", len, " ", serial);
+	fprintf(stream, "%*s   firmware=%s\n", len, " ", firmware);
 	fprintf(stream, "%*s   type=%s\n", len, " ",
 		libnvme_subsystem_get_subsystype(s));
 
@@ -1357,7 +1364,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 	char r_bw_str[16], w_bw_str[16];
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
-	char *iopolicy;
+	const char *iopolicy;
 	struct shr_table *t;
 	struct shr_table_column columns[] = {
 		{"Subsystem",  LEFT, AUTO_WIDTH},
@@ -1408,7 +1415,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 		r_bw = w_bw = 0;
 		max_rlat = max_wlat = 0;
 		max_util = 0;
-		iopolicy = libnvme_subsystem_get_iopolicy(s);
+		libnvme_subsystem_get_iopolicy(s, &iopolicy, "NA");
 
 		libnvme_subsystem_for_each_ctrl(s, c)
 			num_ctrl++;
@@ -1467,8 +1474,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 		shr_table_set_value_int(t, ++col, row, num_ns, LEFT);
 		shr_table_set_value_int(t, ++col, row, num_path, LEFT);
 		shr_table_set_value_int(t, ++col, row, num_ctrl, LEFT);
-		shr_table_set_value_str(t, ++col, row,
-				iopolicy ? iopolicy : "NA", LEFT);
+		shr_table_set_value_str(t, ++col, row, iopolicy, LEFT);
 		shr_table_set_value_str(t, ++col, row, r_iops_str, LEFT);
 		shr_table_set_value_str(t, ++col, row, w_iops_str, LEFT);
 		shr_table_set_value_str(t, ++col, row, r_clat_str, LEFT);

@@ -2742,14 +2742,24 @@ static void json_print_nvme_subsystem_list(struct libnvme_global_ctx *ctx,
 			obj_add_str(subsystem_attrs, "NQN", libnvme_subsystem_get_subsysnqn(s));
 
 			if (verbose_mode()) {
-				obj_add_str(subsystem_attrs, "Model",
-						libnvme_subsystem_get_model(s));
-				obj_add_str(subsystem_attrs, "Serial",
-						libnvme_subsystem_get_serial(s));
+				const char *model;
+				const char *serial;
+				const char *firmware;
+				const char *iopolicy;
+
+				libnvme_subsystem_get_model(s, &model, NULL);
+				libnvme_subsystem_get_serial(s, &serial, NULL);
+				libnvme_subsystem_get_firmware(s, &firmware,
+								NULL);
+				libnvme_subsystem_get_iopolicy(s, &iopolicy,
+								NULL);
+
+				obj_add_str(subsystem_attrs, "Model", model);
+				obj_add_str(subsystem_attrs, "Serial", serial);
 				obj_add_str(subsystem_attrs, "Firmware",
-						libnvme_subsystem_get_firmware(s));
+						firmware);
 				obj_add_str(subsystem_attrs, "IOPolicy",
-						libnvme_subsystem_get_iopolicy(s));
+						iopolicy);
 				obj_add_str(subsystem_attrs, "Type",
 						libnvme_subsystem_get_subsystype(s));
 			}
@@ -4953,7 +4963,9 @@ static unsigned int json_subsystem_topology_multipath(libnvme_subsystem_t s,
 	libnvme_ns_t n;
 	libnvme_path_t p;
 	unsigned int i = 0;
-	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
+	const char *iopolicy;
+
+	libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
 
 	libnvme_subsystem_for_each_ns(s, n) {
 		struct json_object *ns_attrs;
@@ -5069,19 +5081,28 @@ static void json_simple_topology(struct libnvme_global_ctx *ctx)
 			obj_add_str(host_attrs, "HostID", hostid);
 		subsystems = json_create_array();
 		libnvme_for_each_subsystem(h, s) {
+			const char *iopolicy;
+
 			subsystem_attrs = json_create_object();
 			obj_add_str(subsystem_attrs, "Name", libnvme_subsystem_get_name(s));
 			obj_add_str(subsystem_attrs, "NQN", libnvme_subsystem_get_subsysnqn(s));
-			obj_add_str(subsystem_attrs, "IOPolicy",
-					libnvme_subsystem_get_iopolicy(s));
+			libnvme_subsystem_get_iopolicy(s, &iopolicy, NULL);
+			obj_add_str(subsystem_attrs, "IOPolicy", iopolicy);
 
 			if (verbose_mode()) {
-				obj_add_str(subsystem_attrs, "Model",
-						libnvme_subsystem_get_model(s));
-				obj_add_str(subsystem_attrs, "Serial",
-						libnvme_subsystem_get_serial(s));
+				const char *model;
+				const char *serial;
+				const char *firmware;
+
+				libnvme_subsystem_get_model(s, &model, NULL);
+				libnvme_subsystem_get_serial(s, &serial, NULL);
+				libnvme_subsystem_get_firmware(s, &firmware,
+								NULL);
+
+				obj_add_str(subsystem_attrs, "Model", model);
+				obj_add_str(subsystem_attrs, "Serial", serial);
 				obj_add_str(subsystem_attrs, "Firmware",
-						libnvme_subsystem_get_firmware(s));
+						firmware);
 				obj_add_str(subsystem_attrs, "Type",
 						libnvme_subsystem_get_subsystype(s));
 			}

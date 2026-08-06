@@ -340,24 +340,6 @@ __shr_public const char *libnvme_subsystem_get_subsysnqn(
 	return p->subsysnqn;
 }
 
-__shr_public const char *libnvme_subsystem_get_model(
-		const struct libnvme_subsystem *p)
-{
-	return p->model;
-}
-
-__shr_public const char *libnvme_subsystem_get_serial(
-		const struct libnvme_subsystem *p)
-{
-	return p->serial;
-}
-
-__shr_public const char *libnvme_subsystem_get_firmware(
-		const struct libnvme_subsystem *p)
-{
-	return p->firmware;
-}
-
 __shr_public const char *libnvme_subsystem_get_subsystype(
 		const struct libnvme_subsystem *p)
 {

@@ -142,10 +142,7 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_set_hostnqn;
 		libnvme_set_ioctl_probing;
 		libnvme_set_mi_probe_enabled;
-		libnvme_subsystem_get_firmware;
-		libnvme_subsystem_get_model;
 		libnvme_subsystem_get_name;
-		libnvme_subsystem_get_serial;
 		libnvme_subsystem_get_subsysnqn;
 		libnvme_subsystem_get_subsystype;
 		libnvme_subsystem_get_sysfs_dir;

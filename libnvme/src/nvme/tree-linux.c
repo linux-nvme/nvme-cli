@@ -673,11 +673,6 @@ int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name)
 			libnvme_subsys_sysfs_dir(s->h->ctx), name) < 0)
 		return -ENOMEM;
 
-	s->model = libnvme_get_attr(path, "model");
-	if (!s->model)
-		s->model = strdup("undefined");
-	s->serial = libnvme_get_attr(path, "serial");
-	s->firmware = libnvme_get_attr(path, "firmware_rev");
 	s->subsystype = libnvme_get_attr(path, "subsystype");
 	if (!s->subsystype) {
 		if (!strcmp(s->subsysnqn, NVME_DISC_SUBSYS_NAME))
@@ -687,7 +682,6 @@ int libnvme_init_subsystem(libnvme_subsystem_t s, const char *name)
 	}
 	s->name = strdup(name);
 	s->sysfs_dir = (char *)path;
-	s->iopolicy = libnvme_get_attr(path, "iopolicy");
 
 	return 0;
 }

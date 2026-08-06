@@ -27,13 +27,13 @@
 struct libnvme_passthru_completion;
 struct libnvme_async_req;
 
-/* Opaque: defined only in the generated ctrl-sysfs.c / path-sysfs.c /
- * ns-sysfs.c -- see generate_sysfs_accessors.py. No other file may see
- * their layout.
+/* Opaque: each is defined only in its own generated .c file -- see
+ * generate_sysfs_accessors.py. No other file may see their layout.
  */
 struct libnvme_ctrl_sysfs;
 struct libnvme_path_sysfs;
 struct libnvme_ns_sysfs;
+struct libnvme_subsystem_sysfs;
 
 const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx);
@@ -352,11 +352,8 @@ struct libnvme_subsystem {  // !generate-accessors:read=generated,write=none !ge
 	char *name;
 	char *sysfs_dir;
 	char *subsysnqn;
-	char *model;
-	char *serial;
-	char *firmware;
 	char *subsystype;
-	char *iopolicy;			// !access:read=custom
+	struct libnvme_subsystem_sysfs *sysfs;	// !access:read=none
 };
 
 struct libnvme_host {  // !generate-accessors:read=generated,write=none !generate-python:alias=Host

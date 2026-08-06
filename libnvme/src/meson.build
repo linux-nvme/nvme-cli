@@ -11,6 +11,7 @@ sources = [
     'nvme/lib.c',
     'nvme/log.c',
     'nvme/nvme-cmds.c',
+    'nvme/subsys-sysfs.c',
     'nvme/tree.c',
     'nvme/util.c',
 ]
@@ -61,6 +62,7 @@ headers = [
     'nvme/nvme-types-zns.h',
     'nvme/nvme-types.h',
     'nvme/scan.h',
+    'nvme/subsys-sysfs.h',
     'nvme/tree.h',
     'nvme/types.h',
     'nvme/util.h',
@@ -148,6 +150,7 @@ nvmf_accessors_ld = meson.current_source_dir() / 'accessors-fabrics.ld'
 ctrl_sysfs_ld = meson.current_source_dir() / 'ctrl-sysfs.ld'
 path_sysfs_ld = meson.current_source_dir() / 'path-sysfs.ld'
 ns_sysfs_ld = meson.current_source_dir() / 'ns-sysfs.ld'
+subsys_sysfs_ld = meson.current_source_dir() / 'subsys-sysfs.ld'
 
 # Version scripts filter the exported symbols. GNU ld honours --version-script
 # for PE/COFF too, but LLVM's lld does not accept the option at all, so the
@@ -157,7 +160,7 @@ ns_sysfs_ld = meson.current_source_dir() / 'ns-sysfs.ld'
 # (visibility("default")), which clang honours on PE. So -fvisibility=hidden
 # below still keeps libnvme's own internals unexported. What is lost is the
 # filtering of symbols pulled in from static libraries, which PE auto-export
-# then adds to the export table. 
+# then adds to the export table.
 want_version_scripts = cc.has_link_argument(
     '-Wl,--version-script=@0@'.format(nvme_ld)
 )
@@ -170,6 +173,7 @@ if want_version_scripts
         '-Wl,--version-script=@0@'.format(ctrl_sysfs_ld),
         '-Wl,--version-script=@0@'.format(path_sysfs_ld),
         '-Wl,--version-script=@0@'.format(ns_sysfs_ld),
+        '-Wl,--version-script=@0@'.format(subsys_sysfs_ld),
     ]
 endif
 
