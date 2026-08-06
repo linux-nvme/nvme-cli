@@ -59,7 +59,7 @@
 #include "fabrics.h"
 #include "util/cleanup.h"
 #include "logging.h"
-#include "util/sighdl.h"
+#include "sig-util.h"
 
 #define MAX_DISC_ARGS		32
 #define MAX_DISC_RETRIES	10
@@ -199,7 +199,7 @@ struct hook_fabrics_data {
 static bool hook_decide_retry(struct libnvmf_context *fctx, int err,
 		void *user_data)
 {
-	if (err == -EAGAIN || (err == -EINTR && !nvme_sigint_received)) {
+	if (err == -EAGAIN || (err == -EINTR && !shr_sigint_received)) {
 		print_debug("libnvmf_add_ctrl returned '%s'\n", libnvme_strerror(-err));
 		return true;
 	}

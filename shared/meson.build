@@ -26,12 +26,14 @@ if host_system == 'windows'
     sources += [
         'fs-util-win.c',
         'crypto-util-win.c',
+        'sig-util-win.c',
     ]
 else
     sources += [
         'fs-util-linux.c',
         'net-util-linux.c',
         'crypto-util-linux.c',
+        'sig-util-linux.c',
     ]
 endif
 
