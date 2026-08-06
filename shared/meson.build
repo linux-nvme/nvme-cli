@@ -17,6 +17,7 @@ sources = [
     'fs-util.c',
     'hex-util.c',
     'ini.c',
+    'int-util.c',
     'parse-util.c',
     'progress-util.c',
     'shr-assert.c',

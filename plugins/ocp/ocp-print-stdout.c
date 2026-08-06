@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "util/types.h"
 #include "uint128-util.h"
+#include "int-util.h"
 #include "time-util.h"
 #include "common.h"
 #include "nvme-print.h"

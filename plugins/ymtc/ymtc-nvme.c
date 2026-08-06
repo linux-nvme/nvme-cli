@@ -27,7 +27,7 @@
 #include "nvme.h"
 #include "plugin.h"
 #include "util/cleanup.h"
-#include "util/types.h"
+#include "int-util.h"
 
 
 #define CREATE_CMD

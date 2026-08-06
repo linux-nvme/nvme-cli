@@ -161,6 +161,17 @@ test_uint128_util = executable(
 
 test('shared - uint128-util', test_uint128_util)
 
+test_int_util = executable(
+    'test-int-util',
+    ['test-int-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - int-util', test_int_util)
+
 test_hash_util = executable(
     'test-hash-util',
     ['test-hash-util.c'],
