@@ -325,9 +325,69 @@ NS_SYSFS = {
     'groups': [],
 }
 
+SUBSYS_SYSFS = {
+    'struct_name': 'libnvme_subsystem_sysfs',
+    'owner_type': 'libnvme_subsystem',
+    'owner_field': 'sysfs',
+    'attr_reader': 'libnvme_get_subsys_attr',
+    'source': 'subsys-sysfs.c',
+    'header': 'subsys-sysfs.h',
+    'ld': 'subsys-sysfs.ld',
+    'swig': 'subsys-sysfs.i',
+    # See CTRL_SYSFS's ld_section comment above: NEXT, not a real
+    # version number.
+    'ld_section': 'LIBNVME_SUBSYS_SYSFS_NEXT',
+    # No reconfigure_reset on any member: a subsystem is never updated
+    # in place -- libnvme_get_subsystem() always looks up an existing
+    # one by name/subsysnqn or creates a fresh one, there is no
+    # deconfigure/rescan hook that touches an existing subsystem's
+    # cached fields -- same rationale as PATH_SYSFS.
+    'members': [
+        # No group/loader needed, unlike CTRL_SYSFS's identity group:
+        # Windows already has model/serial/firmware for free from the
+        # ctrl map by the time a subsystem is scanned (no extra
+        # Identify round trip to batch), so each is just a plain
+        # attr member with writable=True and pushed in directly --
+        # the exact "platform with no sysfs at all" backfill case
+        # generate_sysfs_accessors.md's writable section already
+        # names by example.
+        {
+            'name': 'model',
+            'attr': 'model',
+            'type': 'char *',
+            'writable': True,
+        },
+        {
+            'name': 'serial',
+            'attr': 'serial',
+            'type': 'char *',
+            'writable': True,
+        },
+        {
+            'name': 'firmware',
+            'attr': 'firmware_rev',
+            'type': 'char *',
+            'writable': True,
+        },
+        # iopolicy can change at runtime (a user can rewrite the
+        # sysfs attribute directly), so it is never cached -- matches
+        # its pre-lazy hand-written getter, which always re-read
+        # sysfs and only replaced the cached copy when the value
+        # actually changed.
+        {
+            'name': 'iopolicy',
+            'attr': 'iopolicy',
+            'type': 'char *',
+            'volatile': True,
+        },
+    ],
+    'groups': [],
+}
+
 # generate_sysfs_accessors.py generates every entry here in one run.
 SYSFS_SPECS = [
     CTRL_SYSFS,
     PATH_SYSFS,
     NS_SYSFS,
+    SUBSYS_SYSFS,
 ]

@@ -52,7 +52,9 @@ static inline bool nvme_is_multipath(libnvme_subsystem_t s)
 static inline bool subsystem_iopolicy_filter(const char *name, void *arg)
 {
 	libnvme_subsystem_t s = arg;
-	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
+	const char *iopolicy;
+
+	libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
 
 	if (!strcmp(iopolicy, "queue-depth")) {
 		/* exclude "Nodes" for iopolicy queue-depth */

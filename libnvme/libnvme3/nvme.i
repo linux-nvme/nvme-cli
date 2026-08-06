@@ -1303,6 +1303,7 @@ def exclusion_match(ctx, transport=None, traddr=None, trsvcid=None,
 %include "ctrl-sysfs.i"
 %include "path-sysfs.i"
 %include "ns-sysfs.i"
+%include "subsys-sysfs.i"
 %include "accessors-fabrics.i"
 
 /* Propagate any Python exception set inside the helper function.

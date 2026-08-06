@@ -43,6 +43,7 @@ LD_FILES = [
     ROOT / 'src' / 'ctrl-sysfs.ld',
     ROOT / 'src' / 'path-sysfs.ld',
     ROOT / 'src' / 'ns-sysfs.ld',
+    ROOT / 'src' / 'subsys-sysfs.ld',
 ]
 
 # ---------------------------------------------------------------------------

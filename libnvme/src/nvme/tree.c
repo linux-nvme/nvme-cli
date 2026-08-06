@@ -241,21 +241,6 @@ __shr_public libnvme_host_t libnvme_subsystem_get_host(
 	return s->h;
 }
 
-__shr_public char *libnvme_subsystem_get_iopolicy(libnvme_subsystem_t s)
-{
-	__cleanup_free char *iopolicy = NULL;
-
-	iopolicy = libnvme_get_subsys_attr(s, "iopolicy");
-	if (iopolicy) {
-		if (!s->iopolicy || strcmp(iopolicy, s->iopolicy)) {
-			free(s->iopolicy);
-			s->iopolicy = strdup(iopolicy);
-		}
-	}
-
-	return s->iopolicy;
-}
-
 __shr_public libnvme_ns_t libnvme_subsystem_first_ns(libnvme_subsystem_t s)
 {
 	return list_top(&s->namespaces, struct libnvme_ns, entry);
@@ -322,11 +307,8 @@ static void __nvme_free_subsystem(struct libnvme_subsystem *s)
 	free(s->name);
 	free(s->sysfs_dir);
 	free(s->subsysnqn);
-	free(s->model);
-	free(s->serial);
-	free(s->firmware);
 	free(s->subsystype);
-	free(s->iopolicy);
+	libnvme_subsystem_sysfs_free(s->sysfs);
 	free(s);
 }
 
@@ -366,6 +348,13 @@ int libnvme_create_subsystem(struct libnvme_host *h,
 	s->h = h;
 	s->subsysnqn = shr_xstrdup(subsysnqn);
 	if (!s->subsysnqn) {
+		free(s);
+		return -ENOMEM;
+	}
+
+	s->sysfs = libnvme_subsystem_sysfs_alloc();
+	if (!s->sysfs) {
+		free(s->subsysnqn);
 		free(s);
 		return -ENOMEM;
 	}
@@ -1574,9 +1563,10 @@ __shr_public const char *libnvme_ns_get_model(libnvme_ns_t n)
 	const char *val;
 
 	if (!n->c)
-		return n->s->model;
+		libnvme_subsystem_get_model(n->s, &val, NULL);
+	else
+		libnvme_ctrl_get_model(n->c, &val, NULL);
 
-	libnvme_ctrl_get_model(n->c, &val, NULL);
 	return val;
 }
 
@@ -1585,9 +1575,10 @@ __shr_public const char *libnvme_ns_get_serial(libnvme_ns_t n)
 	const char *val;
 
 	if (!n->c)
-		return n->s->serial;
+		libnvme_subsystem_get_serial(n->s, &val, NULL);
+	else
+		libnvme_ctrl_get_serial(n->c, &val, NULL);
 
-	libnvme_ctrl_get_serial(n->c, &val, NULL);
 	return val;
 }
 
@@ -1596,9 +1587,10 @@ __shr_public const char *libnvme_ns_get_firmware(libnvme_ns_t n)
 	const char *val;
 
 	if (!n->c)
-		return n->s->firmware;
+		libnvme_subsystem_get_firmware(n->s, &val, NULL);
+	else
+		libnvme_ctrl_get_firmware(n->c, &val, NULL);
 
-	libnvme_ctrl_get_firmware(n->c, &val, NULL);
 	return val;
 }
 

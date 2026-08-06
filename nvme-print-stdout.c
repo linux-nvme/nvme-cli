@@ -1316,17 +1316,25 @@ static void stdout_subsys_config(libnvme_subsystem_t s, bool show_iopolicy)
 	       libnvme_subsystem_get_subsysnqn(s));
 	printf("%*s   hostnqn=%s\n", len, " ",
 	       libnvme_host_get_hostnqn(libnvme_subsystem_get_host(s)));
-	if (show_iopolicy)
-		printf("%*s   iopolicy=%s\n", len, " ",
-				libnvme_subsystem_get_iopolicy(s));
+	if (show_iopolicy) {
+		const char *iopolicy;
+
+		libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
+		printf("%*s   iopolicy=%s\n", len, " ", iopolicy);
+	}
 
 	if (stdout_print_ops.flags & VERBOSE) {
-		printf("%*s   model=%s\n", len, " ",
-			libnvme_subsystem_get_model(s));
-		printf("%*s   serial=%s\n", len, " ",
-			libnvme_subsystem_get_serial(s));
-		printf("%*s   firmware=%s\n", len, " ",
-			libnvme_subsystem_get_firmware(s));
+		const char *model;
+		const char *serial;
+		const char *firmware;
+
+		libnvme_subsystem_get_model(s, &model, "undefined");
+		libnvme_subsystem_get_serial(s, &serial, "");
+		libnvme_subsystem_get_firmware(s, &firmware, "");
+
+		printf("%*s   model=%s\n", len, " ", model);
+		printf("%*s   serial=%s\n", len, " ", serial);
+		printf("%*s   firmware=%s\n", len, " ", firmware);
 		printf("%*s   type=%s\n", len, " ",
 			libnvme_subsystem_get_subsystype(s));
 	}
@@ -6140,7 +6148,7 @@ static void stdout_tabular_subsystem_topology_multipath(libnvme_subsystem_t s)
 	char iopolicy_info[256];
 	int ret, num_path;
 	struct shr_table *t;
-	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
+	const char *iopolicy;
 	struct shr_table_column columns[] = {
 		{"NSHead",     LEFT, AUTO_WIDTH},
 		{"NSID",       LEFT, AUTO_WIDTH},
@@ -6165,6 +6173,8 @@ static void stdout_tabular_subsystem_topology_multipath(libnvme_subsystem_t s)
 		nvme_show_error("Failed to add subsys topology multipath columns");
 		goto free_tbl;
 	}
+
+	libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
 
 	libnvme_subsystem_for_each_ns(s, n) {
 		first = true;
@@ -6256,7 +6266,9 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 	libnvme_ns_t n;
 	libnvme_path_t p;
 	libnvme_ctrl_t c;
-	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
+	const char *iopolicy;
+
+	libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
 
 	if (ranking == NVME_CLI_TOPO_NAMESPACE) {
 		libnvme_subsystem_for_each_ns(s, n) {

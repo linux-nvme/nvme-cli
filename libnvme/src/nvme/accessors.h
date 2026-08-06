@@ -466,30 +466,6 @@ const char *libnvme_subsystem_get_sysfs_dir(const struct libnvme_subsystem *p);
 const char *libnvme_subsystem_get_subsysnqn(const struct libnvme_subsystem *p);
 
 /**
- * libnvme_subsystem_get_model() - Get model.
- * @p: The &struct libnvme_subsystem instance to query.
- *
- * Return: The value of the model field, or NULL if not set.
- */
-const char *libnvme_subsystem_get_model(const struct libnvme_subsystem *p);
-
-/**
- * libnvme_subsystem_get_serial() - Get serial.
- * @p: The &struct libnvme_subsystem instance to query.
- *
- * Return: The value of the serial field, or NULL if not set.
- */
-const char *libnvme_subsystem_get_serial(const struct libnvme_subsystem *p);
-
-/**
- * libnvme_subsystem_get_firmware() - Get firmware.
- * @p: The &struct libnvme_subsystem instance to query.
- *
- * Return: The value of the firmware field, or NULL if not set.
- */
-const char *libnvme_subsystem_get_firmware(const struct libnvme_subsystem *p);
-
-/**
  * libnvme_subsystem_get_subsystype() - Get subsystype.
  * @p: The &struct libnvme_subsystem instance to query.
  *

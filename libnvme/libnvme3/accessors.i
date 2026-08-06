@@ -102,10 +102,6 @@ Ctrl.__setattr__ = _nvme_guarded_setattr
 
 /* struct libnvme_subsystem */
 %rename(Subsystem) libnvme_subsystem;
-%rename(libnvme_subsystem_iopolicy_get) libnvme_subsystem_get_iopolicy;
-%{
-	#define libnvme_subsystem_iopolicy_get libnvme_subsystem_get_iopolicy
-%}
 struct libnvme_subsystem {
 	%immutable name;
 	const char * name;
@@ -113,18 +109,8 @@ struct libnvme_subsystem {
 	const char * sysfs_dir;
 	%immutable subsysnqn;
 	const char * subsysnqn;
-	%immutable model;
-	const char * model;
-	%immutable serial;
-	const char * serial;
-	%immutable firmware;
-	const char * firmware;
 	%immutable subsystype;
 	const char * subsystype;
-	%extend {
-		%immutable iopolicy;
-		const char * iopolicy;
-	}
 };
 
 %pythoncode %{

@@ -141,13 +141,31 @@ static libnvme_subsystem_t libnvme_get_subsystem_windows(libnvme_host_t h,
 	if (ret)
 		return NULL;
 
-	/* Populate subsystem info from first controller */
-	if (!s->serial)
-		s->serial = libnvme_ctrl_map_entry_get_serial(ctrl_entry);
-	if (!s->model)
-		s->model = libnvme_ctrl_map_entry_get_model(ctrl_entry);
-	if (!s->firmware)
-		s->firmware = libnvme_ctrl_map_entry_get_firmware(ctrl_entry);
+	/*
+	 * Populate subsystem info from first controller. Windows has no
+	 * sysfs to lazily read these from, so push them in from the ctrl
+	 * map instead -- but only the first time this subsystem is seen,
+	 * matching the sysfs-backed getters' own "cache once" semantics.
+	 */
+	{
+		const char *cur;
+
+		if (libnvme_subsystem_get_serial(s, &cur, NULL)) {
+			__cleanup_free char *serial =
+				libnvme_ctrl_map_entry_get_serial(ctrl_entry);
+			libnvme_subsystem_set_serial(s, serial);
+		}
+		if (libnvme_subsystem_get_model(s, &cur, NULL)) {
+			__cleanup_free char *model =
+				libnvme_ctrl_map_entry_get_model(ctrl_entry);
+			libnvme_subsystem_set_model(s, model);
+		}
+		if (libnvme_subsystem_get_firmware(s, &cur, NULL)) {
+			__cleanup_free char *firmware =
+				libnvme_ctrl_map_entry_get_firmware(ctrl_entry);
+			libnvme_subsystem_set_firmware(s, firmware);
+		}
+	}
 
 	return s;
 }
