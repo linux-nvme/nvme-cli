@@ -58,9 +58,8 @@ static int get_errno_from_storage_protocol_status(DWORD status)
 {
 	switch (status) {
 	case STORAGE_PROTOCOL_STATUS_SUCCESS:
-		return 0;
 	case STORAGE_PROTOCOL_STATUS_PENDING:
-		return EAGAIN;
+		return 0;
 	case STORAGE_PROTOCOL_STATUS_ERROR:
 		return EIO;
 	case STORAGE_PROTOCOL_STATUS_INVALID_REQUEST:
@@ -74,7 +73,7 @@ static int get_errno_from_storage_protocol_status(DWORD status)
 	case STORAGE_PROTOCOL_STATUS_INSUFFICIENT_RESOURCES:
 		return ENOMEM;
 	case STORAGE_PROTOCOL_STATUS_THROTTLED_REQUEST:
-		return EIO;
+		return EAGAIN;
 	case STORAGE_PROTOCOL_STATUS_NOT_SUPPORTED:
 		return ENOTSUP;
 	default:
@@ -267,6 +266,7 @@ static int submit_storage_protocol_command(
 	PUCHAR buffer = NULL;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 	bool is_read = false;
 	bool is_write = false;
 
@@ -320,7 +320,6 @@ static int submit_storage_protocol_command(
 	protocol_command->ProtocolType = ProtocolTypeNvme;
 	protocol_command->Flags = STORAGE_PROTOCOL_COMMAND_FLAG_ADAPTER_REQUEST;
 	protocol_command->CommandLength = STORAGE_PROTOCOL_COMMAND_LENGTH_NVME;
-	protocol_command->ErrorInfoLength = 0;
 	protocol_command->TimeOutValue = (cmd->timeout_ms > 0) ?
 		((cmd->timeout_ms + 999) / 1000) : 10; /* Round up to seconds */
 
@@ -357,17 +356,26 @@ static int submit_storage_protocol_command(
 				   protocol_command->ReturnStatus == STORAGE_PROTOCOL_STATUS_PENDING))
 			break;
 
-		if (protocol_command->ReturnStatus != STORAGE_PROTOCOL_STATUS_SUCCESS)
-			err = -get_errno_from_storage_protocol_status(
-				protocol_command->ReturnStatus);
-		else
-			err = -get_errno_from_error(GetLastError());
+		last_error = result ? 0 : GetLastError();
+
+		if (result) {
+			if (protocol_command->ErrorCode)
+				/* raw CQE status -> protocol error code */
+				err = (protocol_command->ErrorCode >> 1) & 0x7fff;
+			else
+				err = -get_errno_from_storage_protocol_status(
+					protocol_command->ReturnStatus);
+		} else {
+			err = -get_errno_from_error(last_error);
+		}
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
-			"GetLastError=%lu, status=%lu, err=%d\n", __func__,
-			GetLastError(), protocol_command->ReturnStatus, err);
+			"GetLastError=%lu, status=%lu, ErrorCode=0x%04lx, err=%d (0x%x)\n",
+			__func__, last_error, protocol_command->ReturnStatus,
+			protocol_command->ErrorCode, err, err);
+
 		goto out_free_buffer;
 	}
 
@@ -398,16 +406,68 @@ out:
 #define SCSIOP_READ16 0x88
 #define SCSIOP_WRITE16 0x8A
 
+/*
+ * Sense buffer size for SCSI pass-through commands. Covers a fixed-format
+ * 18-byte sense buffer plus slack.
+ */
+#define SCSI_SENSE_BUFFER_LEN 32
+
+/*
+ * Log the failure of a SCSI pass-through command. Includes ScsiStatus and,
+ * when a sense buffer was returned, the sense key/ASC/ASCQ that explains the
+ * failure.
+ */
+static void log_scsi_pass_through_error(struct libnvme_transport_handle *hdl,
+		const char *func, PSCSI_PASS_THROUGH pass_through,
+		PUCHAR buffer, DWORD last_error, int err, BOOL result)
+{
+	__u8 key, asc, ascq, code;
+	PUCHAR sense;
+
+	libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
+		"GetLastError=%lu, ScsiStatus=0x%02x, err=%d\n",
+		func, last_error, pass_through->ScsiStatus, err);
+
+	if (!result || pass_through->SenseInfoLength < 14)
+		return;
+
+	sense = buffer + pass_through->SenseInfoOffset;
+	code = sense[0] & 0x7f;
+
+	/* Decode based on format. */
+	if (code == 0x70 || code == 0x71) {
+		/* fixed-format */
+		key = sense[2] & 0x0f;
+		asc = sense[12];
+		ascq = sense[13];
+	} else if (code == 0x72 || code == 0x73) {
+		/* descriptor-format */
+		key = sense[1] & 0x0f;
+		asc = sense[2];
+		ascq = sense[3];
+	} else {
+		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG,
+			"%s: SCSI sense response code 0x%02x\n", func, code);
+		return;
+	}
+
+	libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: SCSI sense "
+		"key=0x%01x, ASC=0x%02x, ASCQ=0x%02x\n",
+		func, key, asc, ascq);
+}
+
 static int submit_io_flush(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
 {
 	PSCSI_PASS_THROUGH pass_through = NULL;
 	ULONG buffer_len = 0;
 	ULONG returned_len = 0;
+	ULONG sense_offset = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
 	if (hdl->ctx->dry_run)
@@ -418,7 +478,9 @@ static int submit_io_flush(struct libnvme_transport_handle *hdl,
 		goto out;
 	}
 
-	buffer_len = sizeof(SCSI_PASS_THROUGH);
+	/* Allocate buffer for SCSI_PASS_THROUGH + sense data */
+	sense_offset = sizeof(SCSI_PASS_THROUGH);
+	buffer_len = sense_offset + SCSI_SENSE_BUFFER_LEN;
 	buffer = (PUCHAR)malloc(buffer_len);
 	if (!buffer) {
 		err = -ENOMEM;
@@ -431,6 +493,8 @@ static int submit_io_flush(struct libnvme_transport_handle *hdl,
 	pass_through->Length = sizeof(SCSI_PASS_THROUGH);
 	pass_through->CdbLength = 10;
 	pass_through->DataIn = SCSI_IOCTL_DATA_UNSPECIFIED;
+	pass_through->SenseInfoLength = SCSI_SENSE_BUFFER_LEN;
+	pass_through->SenseInfoOffset = sense_offset;
 	pass_through->TimeOutValue = (cmd->timeout_ms > 0) ?
 		((cmd->timeout_ms + 999) / 1000) : 30;
 
@@ -449,16 +513,16 @@ static int submit_io_flush(struct libnvme_transport_handle *hdl,
 		if (result && !pass_through->ScsiStatus)
 			break;
 
+		last_error = result ? 0 : GetLastError();
 		if (!result)
-			err = -get_errno_from_error(GetLastError());
+			err = -get_errno_from_error(last_error);
 		else
 			err = -EIO;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
-			"GetLastError=%lu, err=%d\n",
-			__func__, GetLastError(), err);
+		log_scsi_pass_through_error(hdl, __func__, pass_through,
+			buffer, last_error, err, result);
 		goto out_free_buffer;
 	}
 
@@ -544,10 +608,13 @@ static int submit_io_write(struct libnvme_transport_handle *hdl,
 	PSCSI_PASS_THROUGH pass_through = NULL;
 	ULONG buffer_len = 0;
 	ULONG returned_len = 0;
+	ULONG sense_offset = 0;
+	ULONG data_offset = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
 	if (hdl->ctx->dry_run)
@@ -563,8 +630,10 @@ static int submit_io_write(struct libnvme_transport_handle *hdl,
 		goto out;
 	}
 
-	/* Allocate buffer for SCSI_PASS_THROUGH + write payload */
-	buffer_len = sizeof(SCSI_PASS_THROUGH) + cmd->data_len;
+	/* Allocate buffer for SCSI_PASS_THROUGH + sense data + write payload */
+	sense_offset = sizeof(SCSI_PASS_THROUGH);
+	data_offset = sense_offset + SCSI_SENSE_BUFFER_LEN;
+	buffer_len = data_offset + cmd->data_len;
 	buffer = (PUCHAR)malloc(buffer_len);
 	if (!buffer) {
 		err = -ENOMEM;
@@ -578,9 +647,11 @@ static int submit_io_write(struct libnvme_transport_handle *hdl,
 	pass_through->CdbLength = 16;
 	pass_through->DataIn = SCSI_IOCTL_DATA_OUT;
 	pass_through->DataTransferLength = cmd->data_len;
+	pass_through->SenseInfoLength = SCSI_SENSE_BUFFER_LEN;
+	pass_through->SenseInfoOffset = sense_offset;
 	pass_through->TimeOutValue = (cmd->timeout_ms > 0) ?
 		((cmd->timeout_ms + 999) / 1000) : 30;
-	pass_through->DataBufferOffset = sizeof(SCSI_PASS_THROUGH);
+	pass_through->DataBufferOffset = data_offset;
 
 	fill_scsi_rw16_cdb(cmd, pass_through->Cdb);
 
@@ -602,16 +673,16 @@ static int submit_io_write(struct libnvme_transport_handle *hdl,
 		if (result && !pass_through->ScsiStatus)
 			break;
 
+		last_error = result ? 0 : GetLastError();
 		if (!result)
-			err = -get_errno_from_error(GetLastError());
+			err = -get_errno_from_error(last_error);
 		else
 			err = -EIO;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
-			"GetLastError=%lu, err=%d\n",
-			__func__, GetLastError(), err);
+		log_scsi_pass_through_error(hdl, __func__, pass_through,
+			buffer, last_error, err, result);
 		goto out_free_buffer;
 	}
 
@@ -630,10 +701,13 @@ static int submit_io_read(struct libnvme_transport_handle *hdl,
 	PSCSI_PASS_THROUGH pass_through = NULL;
 	ULONG buffer_len = 0;
 	ULONG returned_len = 0;
+	ULONG sense_offset = 0;
+	ULONG data_offset = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
 	if (hdl->ctx->dry_run)
@@ -649,8 +723,10 @@ static int submit_io_read(struct libnvme_transport_handle *hdl,
 		goto out;
 	}
 
-	/* Allocate buffer for SCSI_PASS_THROUGH + read payload */
-	buffer_len = sizeof(SCSI_PASS_THROUGH) + cmd->data_len;
+	/* Allocate buffer for SCSI_PASS_THROUGH + sense data + read payload */
+	sense_offset = sizeof(SCSI_PASS_THROUGH);
+	data_offset = sense_offset + SCSI_SENSE_BUFFER_LEN;
+	buffer_len = data_offset + cmd->data_len;
 	buffer = (PUCHAR)malloc(buffer_len);
 	if (!buffer) {
 		err = -ENOMEM;
@@ -664,9 +740,11 @@ static int submit_io_read(struct libnvme_transport_handle *hdl,
 	pass_through->CdbLength = 16;
 	pass_through->DataIn = SCSI_IOCTL_DATA_IN;
 	pass_through->DataTransferLength = cmd->data_len;
+	pass_through->SenseInfoLength = SCSI_SENSE_BUFFER_LEN;
+	pass_through->SenseInfoOffset = sense_offset;
 	pass_through->TimeOutValue = (cmd->timeout_ms > 0) ?
 		((cmd->timeout_ms + 999) / 1000) : 30;
-	pass_through->DataBufferOffset = sizeof(SCSI_PASS_THROUGH);
+	pass_through->DataBufferOffset = data_offset;
 
 	fill_scsi_rw16_cdb(cmd, pass_through->Cdb);
 
@@ -683,16 +761,16 @@ static int submit_io_read(struct libnvme_transport_handle *hdl,
 		if (result && !pass_through->ScsiStatus)
 			break;
 
+		last_error = result ? 0 : GetLastError();
 		if (!result)
-			err = -get_errno_from_error(GetLastError());
+			err = -get_errno_from_error(last_error);
 		else
 			err = -EIO;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
-			"GetLastError=%lu, err=%d\n",
-			__func__, GetLastError(), err);
+		log_scsi_pass_through_error(hdl, __func__, pass_through,
+			buffer, last_error, err, result);
 		goto out_free_buffer;
 	}
 
@@ -740,6 +818,7 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 	PUCHAR buffer = NULL;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 	__u32 csi;
 
 	user_data = hdl->submit_entry(hdl, cmd);
@@ -820,13 +899,15 @@ static int submit_admin_get_log_page(struct libnvme_transport_handle *hdl,
 					NULL);
 		if (result)
 			break;
-		err = get_log_page_status(GetLastError());
+
+		last_error = GetLastError();
+		err = get_log_page_status(last_error);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
-			__func__, GetLastError(), err);
+			__func__, last_error, err);
 		goto out_free_buffer;
 	}
 
@@ -858,6 +939,7 @@ static int submit_admin_identify(struct libnvme_transport_handle *hdl,
 	PUCHAR buffer = NULL;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 	__u32 cns;
 	__u32 csi;
 
@@ -924,13 +1006,15 @@ static int submit_admin_identify(struct libnvme_transport_handle *hdl,
 					NULL);
 		if (result)
 			break;
-		err = -get_errno_from_error(GetLastError());
+
+		last_error = GetLastError();
+		err = -get_errno_from_error(last_error);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
-			__func__, GetLastError(), err);
+			__func__, last_error, err);
 		goto out_free_buffer;
 	}
 
@@ -962,6 +1046,7 @@ static int submit_admin_set_features(struct libnvme_transport_handle *hdl,
 	PUCHAR buffer = NULL;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
 	if (hdl->ctx->dry_run)
@@ -1027,13 +1112,15 @@ static int submit_admin_set_features(struct libnvme_transport_handle *hdl,
 					NULL);
 		if (result)
 			break;
-		err = -get_errno_from_error(GetLastError());
+
+		last_error = GetLastError();
+		err = -get_errno_from_error(last_error);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
-			__func__, GetLastError(), err);
+			__func__, last_error, err);
 		goto out_free_buffer;
 	}
 
@@ -1080,6 +1167,7 @@ static int submit_admin_get_features(struct libnvme_transport_handle *hdl,
 	PUCHAR buffer = NULL;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 	ULONG query_data_len;
 
 	user_data = hdl->submit_entry(hdl, cmd);
@@ -1144,13 +1232,15 @@ static int submit_admin_get_features(struct libnvme_transport_handle *hdl,
 					NULL);
 		if (result)
 			break;
-		err = get_features_status(GetLastError());
+
+		last_error = GetLastError();
+		err = get_features_status(last_error);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
-			__func__, GetLastError(), err);
+			__func__, last_error, err);
 		goto out_free_buffer;
 	}
 
@@ -1249,6 +1339,7 @@ static int submit_admin_fw_commit(struct libnvme_transport_handle *hdl,
 	BOOL result = FALSE;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 	__u8 commit_action;
 
 	user_data = hdl->submit_entry(hdl, cmd);
@@ -1324,13 +1415,15 @@ static int submit_admin_fw_commit(struct libnvme_transport_handle *hdl,
 					NULL);
 		if (result)
 			break;
-		err = get_firmware_command_status(GetLastError());
+
+		last_error = GetLastError();
+		err = get_firmware_command_status(last_error);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG,
 			"%s: failed, GetLastError=0x%lx, err=%d\n",
-			__func__, GetLastError(), err);
+			__func__, last_error, err);
 		goto out_free_buffer;
 	}
 
@@ -1463,6 +1556,7 @@ static int submit_admin_sanitize_reinit_media(
 	BOOL lock_succeeded = FALSE;
 	BOOL result = FALSE;
 	int err = 0;
+	DWORD last_error = 0;
 	__u8 sanact;
 	__u8 ause;
 
@@ -1545,13 +1639,14 @@ static int submit_admin_sanitize_reinit_media(
 		if (result)
 			break;
 
-		err = -get_errno_from_error(GetLastError());
+		last_error = GetLastError();
+		err = -get_errno_from_error(last_error);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 			"GetLastError=%lu, err=%d\n",
-			__func__, GetLastError(), err);
+			__func__, last_error, err);
 		goto out;
 	}
 
@@ -1612,10 +1707,12 @@ static int submit_admin_format_nvm_user_data_erase(
 	PSCSI_PASS_THROUGH pass_through = NULL;
 	ULONG buffer_len = 0;
 	ULONG returned_len = 0;
+	ULONG sense_offset = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 
 	user_data = hdl->submit_entry(hdl, cmd);
 	if (hdl->ctx->dry_run)
@@ -1626,8 +1723,9 @@ static int submit_admin_format_nvm_user_data_erase(
 		goto out;
 	}
 
-	/* Allocate buffer for SCSI_PASS_THROUGH */
-	buffer_len = sizeof(SCSI_PASS_THROUGH);
+	/* Allocate buffer for SCSI_PASS_THROUGH + sense data */
+	sense_offset = sizeof(SCSI_PASS_THROUGH);
+	buffer_len = sense_offset + SCSI_SENSE_BUFFER_LEN;
 	buffer = (PUCHAR)malloc(buffer_len);
 	if (!buffer) {
 		err = -ENOMEM;
@@ -1641,6 +1739,8 @@ static int submit_admin_format_nvm_user_data_erase(
 	pass_through->CdbLength = 6;
 	pass_through->DataIn = SCSI_IOCTL_DATA_UNSPECIFIED;
 	pass_through->DataTransferLength = 0;
+	pass_through->SenseInfoLength = SCSI_SENSE_BUFFER_LEN;
+	pass_through->SenseInfoOffset = sense_offset;
 	pass_through->TimeOutValue = (cmd->timeout_ms > 0) ?
 		((cmd->timeout_ms + 999) / 1000) : 300;
 	pass_through->DataBufferOffset = 0;
@@ -1678,19 +1778,19 @@ static int submit_admin_format_nvm_user_data_erase(
 				buffer_len,
 				&returned_len,
 				NULL);
-		if (result)
+		if (result && !pass_through->ScsiStatus)
 			break;
 
+		last_error = result ? 0 : GetLastError();
 		if (!result)
-			err = -get_errno_from_error(GetLastError());
+			err = -get_errno_from_error(last_error);
 		else
 			err = -EIO;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
-		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
-			"GetLastError=%lu, err=%d\n",
-			__func__, GetLastError(), err);
+		log_scsi_pass_through_error(hdl, __func__, pass_through,
+			buffer, last_error, err, result);
 		goto out_free_buffer;
 	}
 
@@ -1802,10 +1902,13 @@ static int submit_admin_security_send_receive(
 	PSCSI_PASS_THROUGH pass_through = NULL;
 	ULONG buffer_len = 0;
 	ULONG returned_len = 0;
+	ULONG sense_offset = 0;
+	ULONG data_offset = 0;
 	BOOL result = FALSE;
 	PUCHAR buffer = NULL;
 	void *user_data = NULL;
 	int err = 0;
+	DWORD last_error = 0;
 	bool is_send = (cmd->opcode == nvme_admin_security_send);
 
 	user_data = hdl->submit_entry(hdl, cmd);
@@ -1817,8 +1920,10 @@ static int submit_admin_security_send_receive(
 		goto out;
 	}
 
-	/* Allocate buffer for SCSI_PASS_THROUGH + data */
-	buffer_len = sizeof(SCSI_PASS_THROUGH) + cmd->data_len;
+	/* Allocate buffer for SCSI_PASS_THROUGH + sense data + data */
+	sense_offset = sizeof(SCSI_PASS_THROUGH);
+	data_offset = sense_offset + SCSI_SENSE_BUFFER_LEN;
+	buffer_len = data_offset + cmd->data_len;
 	buffer = (PUCHAR)malloc(buffer_len);
 	if (!buffer) {
 		err = -ENOMEM;
@@ -1832,9 +1937,11 @@ static int submit_admin_security_send_receive(
 	pass_through->CdbLength = 12;
 	pass_through->DataIn = is_send ? SCSI_IOCTL_DATA_OUT : SCSI_IOCTL_DATA_IN;
 	pass_through->DataTransferLength = cmd->data_len;
+	pass_through->SenseInfoLength = SCSI_SENSE_BUFFER_LEN;
+	pass_through->SenseInfoOffset = sense_offset;
 	pass_through->TimeOutValue = (cmd->timeout_ms > 0) ?
 		((cmd->timeout_ms + 999) / 1000) : 30;
-	pass_through->DataBufferOffset = sizeof(SCSI_PASS_THROUGH);
+	pass_through->DataBufferOffset = data_offset;
 
 	if (is_send && cmd->data_len > 0) {
 		memcpy(buffer + pass_through->DataBufferOffset,
@@ -1888,21 +1995,28 @@ static int submit_admin_security_send_receive(
 		if (result && !pass_through->ScsiStatus)
 			break;
 
+		last_error = result ? 0 : GetLastError();
 		if (!result)
-			err = -get_errno_from_error(GetLastError());
+			err = -get_errno_from_error(last_error);
 		else
 			err = -EIO;
 	} while (hdl->decide_retry(hdl, cmd, err));
 
-	if (err)
+	if (err) {
+		log_scsi_pass_through_error(hdl, __func__, pass_through,
+			buffer, last_error, err, result);
 		goto out_free_buffer;
+	}
 
 	/* Copy returned data to user buffer if this was a receive */
 	if (!is_send && cmd->addr && cmd->data_len > 0) {
+		ULONG copy_len = min(pass_through->DataTransferLength,
+				(ULONG)cmd->data_len);
+
 		memcpy((void *)(uintptr_t)cmd->addr,
 			buffer + pass_through->DataBufferOffset,
-			pass_through->DataTransferLength);
-		cmd->data_len = pass_through->DataTransferLength;
+			copy_len);
+		cmd->data_len = copy_len;
 	}
 
 	/* No result data returned by command. */
