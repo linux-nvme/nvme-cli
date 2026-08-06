@@ -10,7 +10,7 @@
 #include <ccan/endian/endian.h>
 
 #include "types.h"
-#include "util/suffix.h"
+#include "suffix-util.h"
 
 nvme_uint128_t le128_to_cpu(__u8 *data)
 {
@@ -135,7 +135,7 @@ char *uint128_t_to_si_string(nvme_uint128_t val, __u32 bytes_per_unit)
 {
 	long double bytes = uint128_t_to_double(val) * bytes_per_unit;
 	static char str[40];
-	const char *suffix = suffix_si_get_ld(&bytes);
+	const char *suffix = shr_suffix_si_get_ld(&bytes);
 	int n = snprintf(str, sizeof(str), "%.2Lf %sB", bytes, suffix);
 
 	if (n <= 0)

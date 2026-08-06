@@ -17,7 +17,6 @@
 #include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "util/suffix.h"
 
 #define CREATE_CMD
 #include "inspur-nvme.h"

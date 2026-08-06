@@ -42,7 +42,7 @@
 
 #include "argconfig.h"
 #include "cleanup.h"
-#include "suffix.h"
+#include "suffix-util.h"
 
 const char *libnvme_strerror(int errnum);
 
@@ -215,7 +215,7 @@ static int argconfig_parse_type(struct argconfig_commandline_options *s)
 			ret = argconfig_error("long integer", s->option, optarg);
 		break;
 	case CFG_LONG_SUFFIX:
-		ret = suffix_binary_parse(optarg, &endptr, (uint64_t *)value);
+		ret = shr_suffix_binary_parse(optarg, &endptr, (uint64_t *)value);
 		if (ret)
 			argconfig_error("long suffixed integer", s->option, optarg);
 		break;

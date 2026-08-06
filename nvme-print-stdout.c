@@ -25,7 +25,7 @@
 #include "nvme.h"
 #include "nvme-print.h"
 #include "nvme-models.h"
-#include "util/suffix.h"
+#include "suffix-util.h"
 #include "util/types.h"
 #include "util/table.h"
 #include "util/cleanup.h"
@@ -5762,9 +5762,9 @@ static void list_item(libnvme_ns_t n, struct table *t)
 	nsze = lba_count * lba;
 	nuse = lba_util * lba;
 
-	s_suffix = suffix_si_get(&nsze);
-	u_suffix = suffix_si_get(&nuse);
-	l_suffix = suffix_binary_get(&lba);
+	s_suffix = shr_suffix_si_get(&nsze);
+	u_suffix = shr_suffix_si_get(&nuse);
+	l_suffix = shr_suffix_binary_get(&lba);
 
 	snprintf(usage, sizeof(usage), "%6.2f %2sB / %6.2f %2sB", nuse,
 		u_suffix, nsze, s_suffix);
@@ -5894,15 +5894,15 @@ static void stdout_ns_details(libnvme_ns_t n)
 	nsze_binary = nsze;
 	nuse_binary = nuse;
 
-	s_suffix = suffix_si_get(&nsze);
-	u_suffix = suffix_si_get(&nuse);
-	l_suffix = suffix_binary_get(&lba);
+	s_suffix = shr_suffix_si_get(&nsze);
+	u_suffix = shr_suffix_si_get(&nuse);
+	l_suffix = shr_suffix_binary_get(&lba);
 
 	sprintf(usage, "%6.2f %1sB / %6.2f %1sB", nuse, u_suffix, nsze, s_suffix);
 	sprintf(format, "%3.0f %2sB + %2d B", (double)lba, l_suffix, meta_size);
 
-	s_suffix_binary = suffix_dbinary_get(&nsze_binary);
-	u_suffix_binary = suffix_dbinary_get(&nuse_binary);
+	s_suffix_binary = shr_suffix_dbinary_get(&nsze_binary);
+	u_suffix_binary = shr_suffix_dbinary_get(&nuse_binary);
 	sprintf(usage_binary, "(%7.2f %2sB / %7.2f %2sB)", nuse_binary, u_suffix_binary,
 		nsze_binary, s_suffix_binary);
 

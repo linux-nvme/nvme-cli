@@ -2,7 +2,6 @@
 
 util_sources = [
     'util/argconfig.c',
-    'util/suffix.c',
     'util/types.c',
     'util/utils.c',
     'util/table.c',

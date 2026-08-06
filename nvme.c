@@ -59,7 +59,7 @@
 #include "util/argconfig.h"
 #include "util/cleanup.h"
 #include "util/sighdl.h"
-#include "util/suffix.h"
+#include "suffix-util.h"
 
 #define CREATE_CMD
 #include "nvme-builtin.h"
@@ -3305,7 +3305,7 @@ static int parse_lba_num_si(struct libnvme_transport_handle *hdl, const char *op
 	nvme_id_ns_flbas_to_lbaf_inuse(flbas, &lbaf);
 	lbas = (1 << ns->lbaf[lbaf].ds) + le16_to_cpu(ns->lbaf[lbaf].ms);
 
-	err = suffix_si_parse(val, &endptr, (uint64_t *)num);
+	err = shr_suffix_si_parse(val, &endptr, (uint64_t *)num);
 	if (err) {
 		nvme_show_error("Expected long suffixed integer argument for '%s-si' but got '%s'!",
 				opt, val);
