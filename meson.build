@@ -599,52 +599,9 @@ subdir('libnvme')   # declares: libnvme_dep
 
 if want_nvme
     subdir('plugins')   # declares: plugin_sources
-    subdir('util')      # declares: util_sources
-
-    sources = [
-        'args.c',
-        'global-config.c',
-        'logging.c',
-        'nvme-cmds.c',
-        'nvme-models.c',
-        'nvme-pci-ids.c',
-        'nvme-print-binary.c',
-        'nvme-print-stdout.c',
-        'nvme-print.c',
-        'nvme-rpmb.c',
-        'nvme.c',
-        'plugin.c',
-    ]
-    if host_system == 'linux'
-        sources += [
-            'nvme-pci-ids-linux.c',
-        ]
-    elif host_system == 'windows'
-        sources += [
-            'nvme-pci-ids-win.c',
-        ]
-    endif
-
-    if json_c_dep.found()
-        sources += [
-            'nvme-print-json.c',
-        ]
-    endif
-
-    if want_fabrics
-        sources += [
-            'fabrics.c',
-            'config-convert.c',
-            'config-create.c',
-        ]
-    endif
-
-    if want_top
-        sources += 'nvme-print-stdout-top.c'
-    endif
+    subdir('src')       # declares: sources
 
     sources += plugin_sources
-    sources += util_sources
 
     link_args_list = []
     link_deps = [
@@ -680,6 +637,7 @@ if want_nvme
     nvme_exe = executable(
         'nvme',
         sources,
+        include_directories: 'src',
         dependencies: link_deps,
         link_args: link_args_list,
         install: true,

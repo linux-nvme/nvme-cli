@@ -14,7 +14,7 @@
 
 #include "nvme-pci-ids.h"
 #include "nvme-print.h"
-#include "util/cleanup.h"
+#include "cleanup.h"
 
 int nvme_get_pci_ids(struct libnvme_global_ctx *ctx,
 		struct libnvme_transport_handle *hdl,

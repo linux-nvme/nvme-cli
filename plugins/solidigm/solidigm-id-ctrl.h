@@ -6,5 +6,5 @@
  */
 
 #include <inttypes.h>
-#include "util/json.h"
+#include "nvme-json.h"
 void sldgm_id_ctrl(uint8_t *vs, struct json_object *root);

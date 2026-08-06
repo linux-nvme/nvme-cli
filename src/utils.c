@@ -8,7 +8,7 @@
  */
 
 #include "utils.h"
-#include "json.h"
+#include "nvme-json.h"
 #include "cleanup.h"
 #include "hex-util.h"
 #include "time-util.h"

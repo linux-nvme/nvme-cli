@@ -6,7 +6,7 @@
  */
 #include "common.h"
 #include "telemetry-log.h"
-#include "util/json.h"
+#include "nvme-json.h"
 #include "config.h"
 #include "data-area.h"
 #include "skht.h"

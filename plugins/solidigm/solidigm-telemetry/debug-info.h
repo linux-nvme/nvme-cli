@@ -7,7 +7,7 @@
 #pragma once
 
 #include "telemetry-log.h"
-#include "util/json.h"
+#include "nvme-json.h"
 
 /**
  * Parse debug info data from telemetry log

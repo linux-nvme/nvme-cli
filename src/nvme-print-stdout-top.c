@@ -33,7 +33,7 @@
 #include "nvme-print.h"
 #include "common.h"
 #include "logging.h"
-#include "util/dashboard.h"
+#include "dashboard.h"
 #include "table.h"
 
 static double nvme_calc_util_percent(unsigned int ticks, double interval_ms)

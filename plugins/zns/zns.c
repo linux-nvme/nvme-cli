@@ -17,7 +17,7 @@
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
-#include "util/cleanup.h"
+#include "src/cleanup.h"
 
 #define CREATE_CMD
 #include "zns.h"

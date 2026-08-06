@@ -8,8 +8,8 @@
 
 #include "nvme.h"
 #include "plugin.h"
-#include "util/argconfig.h"
-#include "util/cleanup.h"
+#include "argconfig.h"
+#include "cleanup.h"
 #include "wrap-util.h"
 
 static int version_cmd(struct plugin *plugin)

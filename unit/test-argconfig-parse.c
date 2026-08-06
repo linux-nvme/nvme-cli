@@ -7,8 +7,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "../util/argconfig.h"
-#include "../util/cleanup.h"
+#include "../src/argconfig.h"
+#include "../src/cleanup.h"
 #include "parse-util.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))

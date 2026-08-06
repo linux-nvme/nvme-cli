@@ -11,7 +11,7 @@
 #include <stddef.h>
 
 #include "plugin.h"
-#include "util/argconfig.h"
+#include "argconfig.h"
 
 /*
  * A single command-line option, copied from struct argconfig_commandline_options.

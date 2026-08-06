@@ -14,7 +14,7 @@
 #include "skht.h"
 #include "tracker.h"
 #include "uart-log.h"
-#include "util/json.h"
+#include "nvme-json.h"
 
 #define DEBUG_INFO_SIGNATURE 0x54321234 /* "ST21" */
 #define MAX_DEBUG_INFO_CORES 255

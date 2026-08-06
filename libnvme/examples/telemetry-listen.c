@@ -26,7 +26,7 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include "../../src/common.h"
 #include "nvme/tree.h"
 
 struct events {

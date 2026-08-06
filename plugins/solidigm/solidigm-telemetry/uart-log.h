@@ -7,7 +7,7 @@
 #pragma once
 
 #include "telemetry-log.h"
-#include "util/json.h"
+#include "nvme-json.h"
 
 int sldm_parse_cd_uart_log(struct telemetry_log *tl, uint32_t offset, uint32_t size,
 			    struct json_object *output);

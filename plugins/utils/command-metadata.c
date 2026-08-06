@@ -33,7 +33,7 @@
 #include "command-metadata.h"
 #include "common.h"
 #include "nvme.h"
-#include "util/json.h"
+#include "nvme-json.h"
 
 /*
  * The whole command is JSON-only, so it is compiled out entirely without

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "util/json.h"
+#include "nvme-json.h"
 #include "uuid-util.h"
 #include "uint128-util.h"
 #include "int-util.h"

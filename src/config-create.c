@@ -16,8 +16,8 @@
 #include "config-create.h"
 #include "fabrics.h"
 #include "nvme-print.h"
-#include "util/argconfig.h"
-#include "util/cleanup.h"
+#include "argconfig.h"
+#include "cleanup.h"
 
 struct reload_ctx {
 	struct libnvmf_config_emitter *emitter;

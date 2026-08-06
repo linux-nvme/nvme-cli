@@ -17,7 +17,7 @@
 
 #include "nvme-print.h"
 
-#include "util/json.h"
+#include "nvme-json.h"
 #include "logging.h"
 #include "nvme.h"
 #include "common.h"

@@ -10,7 +10,7 @@
 #include "config.h"
 #include "tracker.h"
 #include "skht.h"
-#include "util/json.h"
+#include "nvme-json.h"
 #include "data-area.h"
 #include "debug-info.h"
 

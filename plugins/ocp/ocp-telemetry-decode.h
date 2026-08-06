@@ -7,7 +7,7 @@
 
 #include "nvme.h"
 #include "nvme-print.h"
-#include "util/utils.h"
+#include "utils.h"
 #include "common.h"
 #include "ocp-nvme.h"
 

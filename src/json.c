@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <stdarg.h>
 
-#include "json.h"
+#include "nvme-json.h"
 #include "cleanup.h"
 
 #define STR_LEN 100

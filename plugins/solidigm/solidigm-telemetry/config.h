@@ -5,7 +5,7 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 #include <stdbool.h>
-#include "util/json.h"
+#include "nvme-json.h"
 
 #define STR_HEX32_SIZE sizeof("0x00000000")
 #define UNKNOWN_ENUM_VALUE "UNKNOWN_ENUM_VALUE"
