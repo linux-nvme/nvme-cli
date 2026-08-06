@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "util/types.h"
+#include "uuid-util.h"
 #include "uint128-util.h"
 #include "int-util.h"
 #include "time-util.h"
@@ -222,7 +222,7 @@ static void stdout_smart_extended_log(struct ocp_smart_extended_log *log, unsign
 			printf("%c", log->dssd_firmware_revision[i]);
 		printf("\n");
 		printf("  Dssd firmware build UUID			%s\n",
-			util_uuid_to_string(log->dssd_firmware_build_uuid));
+			shr_uuid_to_string(log->dssd_firmware_build_uuid));
 		printf("  Dssd firmware build label			");
 		for (i = 0; i < sizeof(log->dssd_firmware_build_label); i++)
 			printf("%c", log->dssd_firmware_build_label[i]);

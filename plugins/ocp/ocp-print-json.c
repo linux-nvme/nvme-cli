@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "util/json.h"
-#include "util/types.h"
+#include "uuid-util.h"
 #include "uint128-util.h"
 #include "int-util.h"
 #include "time-util.h"
@@ -343,7 +343,7 @@ static void json_smart_extended_log_v1(struct ocp_smart_extended_log *log)
 			ascii += sprintf(ascii, "%c", log->dssd_firmware_revision[i]);
 		json_object_add_value_string(root, "Dssd firmware revision", ascii_arr);
 		json_object_add_value_string(root, "Dssd firmware build UUID",
-						util_uuid_to_string(log->dssd_firmware_build_uuid));
+						shr_uuid_to_string(log->dssd_firmware_build_uuid));
 		ascii = ascii_arr;
 		memset((void *)ascii, 0, 65);
 		for (i = 0; i < 64; i++)
@@ -507,7 +507,7 @@ static void json_smart_extended_log_v2(struct ocp_smart_extended_log *log)
 			ascii += sprintf(ascii, "%c", log->dssd_firmware_revision[i]);
 		json_object_add_value_string(root, "dssd_firmware_revision", ascii_arr);
 		json_object_add_value_string(root, "dssd_firmware_build_uuid",
-						util_uuid_to_string(log->dssd_firmware_build_uuid));
+						shr_uuid_to_string(log->dssd_firmware_build_uuid));
 		ascii = ascii_arr;
 		memset((void *)ascii, 0, 65);
 		for (i = 0; i < 64; i++)

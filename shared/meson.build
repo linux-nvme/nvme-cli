@@ -25,6 +25,7 @@ sources = [
     'table.c',
     'time-util.c',
     'uint128-util.c',
+    'uuid-util.c',
     'wrap-util.c',
 ]
 

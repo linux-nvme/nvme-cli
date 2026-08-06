@@ -172,6 +172,17 @@ test_int_util = executable(
 
 test('shared - int-util', test_int_util)
 
+test_uuid_util = executable(
+    'test-uuid-util',
+    ['test-uuid-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - uuid-util', test_uuid_util)
+
 test_hash_util = executable(
     'test-hash-util',
     ['test-hash-util.c'],

@@ -10,6 +10,7 @@
 #include "table.h"
 #include "uint128-util.h"
 #include "int-util.h"
+#include "uuid-util.h"
 
 typedef struct nvme_effects_log_node {
 	struct nvme_cmd_effects_log effects; /* needs to be first member because of alignment requirement. */
