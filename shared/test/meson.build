@@ -140,6 +140,19 @@ if host_system != 'windows'
 endif
 
 if host_system != 'windows'
+    test_crypto_util = executable(
+        'test-crypto-util',
+        ['test-crypto-util.c'],
+        dependencies: [
+            config_dep,
+            shared_dep,
+        ],
+    )
+
+    test('shared - crypto-util', test_crypto_util)
+endif
+
+if host_system != 'windows'
     test_shr_assert = executable(
         'test-shr-assert',
         ['test-shr-assert.c'],

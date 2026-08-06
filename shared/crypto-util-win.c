@@ -1,10 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: LGPL-2.1-or-later
+/*
+ * This file is part of nvme-cli.
+ */
 #include <stdlib.h>
 
 #include <windows.h>
 #include <bcrypt.h>
 
-#include "hash.h"
+#include "crypto-util.h"
 
 #define HMAC_SHA256_ALGO_NAME		BCRYPT_SHA256_ALGORITHM
 #define MD5_HASH_ALGO_NAME		BCRYPT_MD5_ALGORITHM
@@ -63,7 +66,7 @@ out:
 /* Function that computes hmac-sha256 hash of given data and key pair. Returns
  * byte stream (non-null terminated) upon success, NULL otherwise.
  */
-unsigned char *create_hmac_sha256(unsigned char *data, int datalen,
+unsigned char *shr_hmac_sha256(unsigned char *data, int datalen,
 		unsigned char *key, int keylen)
 {
 	return create_hash(HMAC_SHA256_ALGO_NAME,
@@ -77,7 +80,7 @@ unsigned char *create_hmac_sha256(unsigned char *data, int datalen,
 /* Function that computes md5 of given buffer.
  * Returns byte stream (non-null terminated) upon success, NULL otherwise.
  */
-unsigned char *create_md5(unsigned char *data, int datalen)
+unsigned char *shr_md5(unsigned char *data, int datalen)
 {
 	return create_hash(MD5_HASH_ALGO_NAME,
 			   MD5_HASH_HASH_SIZE,

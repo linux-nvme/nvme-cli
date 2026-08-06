@@ -25,19 +25,26 @@ sources = [
 if host_system == 'windows'
     sources += [
         'fs-util-win.c',
+        'crypto-util-win.c',
     ]
 else
     sources += [
         'fs-util-linux.c',
         'net-util-linux.c',
+        'crypto-util-linux.c',
     ]
+endif
+
+shared_deps = [ccan_dep]
+if host_system != 'windows'
+    shared_deps += [openssl_dep]
 endif
 
 libshared = static_library(
     'shared',
     sources,
     install: false,
-    dependencies: [ccan_dep],
+    dependencies: shared_deps,
 )
 
 shared_dep = declare_dependency(

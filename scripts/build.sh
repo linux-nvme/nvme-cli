@@ -277,6 +277,7 @@ config_meson_minimal_static() {
         -Dfabrics=disabled                      \
         -Dmi=disabled                           \
         -Djson-c=disabled                       \
+        -Dopenssl=disabled                      \
         -Dtests=false                           \
         -Dexamples=false                        \
         "${BUILDDIR}"

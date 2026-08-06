@@ -359,7 +359,7 @@ else
 endif
 conf.set('NVME_HAVE_LIBKMOD', libkmod_dep.found(), description: 'Is libkmod available?')
 
-if not want_fabrics or get_option('openssl').disabled()
+if host_system != 'linux' or get_option('openssl').disabled()
     openssl_dep = dependency('', required: false)
 else
     openssl_dep = dependency(

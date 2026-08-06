@@ -11,12 +11,10 @@ if host_system == 'linux'
     util_sources += [
         'util/sighdl-linux.c',
         'util/dashboard.c',
-        'util/hash-linux.c',
     ]
 elif host_system == 'windows'
     util_sources += [
         'util/sighdl-win.c',
-        'util/hash-win.c',
     ]
 endif
 
