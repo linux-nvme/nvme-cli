@@ -149,6 +149,18 @@ test_suffix_util = executable(
 
 test('shared - suffix-util', test_suffix_util)
 
+test_uint128_util = executable(
+    'test-uint128-util',
+    ['test-uint128-util.c'],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - uint128-util', test_uint128_util)
+
 test_hash_util = executable(
     'test-hash-util',
     ['test-hash-util.c'],

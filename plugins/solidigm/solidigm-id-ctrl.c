@@ -6,6 +6,8 @@
  */
 
 #include <inttypes.h>
+#include <stdio.h>
+#include <libnvme.h>
 #include "common.h"
 #include "solidigm-id-ctrl.h"
 

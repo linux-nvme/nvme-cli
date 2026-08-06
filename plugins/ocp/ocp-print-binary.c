@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "util/types.h"
+#include "uint128-util.h"
 #include "nvme-print.h"
 #include "ocp-print.h"
 #include "ocp-hardware-component-log.h"

@@ -17,7 +17,7 @@
 #include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "util/types.h"
+#include "uint128-util.h"
 
 #define CREATE_CMD
 #include "virtium-nvme.h"

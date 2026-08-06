@@ -27,6 +27,7 @@
 #include "nvme-models.h"
 #include "suffix-util.h"
 #include "util/types.h"
+#include "uint128-util.h"
 #include "table.h"
 #include "util/cleanup.h"
 #include "logging.h"
