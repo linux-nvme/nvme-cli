@@ -29,26 +29,6 @@ enum field_size {
 };
 
 /**
- * @brief converts a single hexadecimal character to its integer value.
- *
- * @param hex_char, input hex char
- * @param ts_buf, output time string
- *
- * @return integer value of hexadecimal
- */
-int hex_to_int(char c);
-
-/**
- * @brief convert time_t format time to a human readable string
- *
- * @param hex_string, input hex string pointer
- * @param ascii_buffer, output ascii buffer pointer
- *
- * @return nothing
- */
-char *hex_to_ascii(const char *hex);
-
-/**
  * @brief convert time_t format time to a human readable string
  *
  * @param data_dir_path, input data directory path pointer
