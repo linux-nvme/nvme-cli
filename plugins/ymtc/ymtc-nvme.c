@@ -59,7 +59,7 @@ static int ReadSysFile(const char *file, unsigned short *id)
 		return fd;
 	}
 
-	ret = read(fd, idstr, sizeof(idstr));
+	ret = read(fd, idstr, sizeof(idstr) - 1);
 	close(fd);
 	if (ret < 0)
 		perror("read");
