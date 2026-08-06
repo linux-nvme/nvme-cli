@@ -1,8 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
-#include <unistd.h>
-
 #include <shared/cleanup.h>
 #include <libnvme.h>
 
@@ -13,13 +11,6 @@ static inline void libnvme_freep(void *p)
 #define __cleanup_libnvme_free __cleanup(libnvme_freep)
 
 #define __cleanup_huge __cleanup(libnvme_free_huge)
-
-static inline void cleanup_fd(int *fd)
-{
-	if (*fd > STDERR_FILENO)
-		close(*fd);
-}
-#define __cleanup_fd __cleanup(cleanup_fd)
 
 static inline void cleanup_nvme_global_ctx(struct libnvme_global_ctx **ctx)
 {
@@ -52,6 +43,3 @@ static inline void cleanup_nvmf_tid(struct libnvmf_tid **tid)
 }
 #define __cleanup_nvmf_tid __cleanup(cleanup_nvmf_tid)
 #endif
-
-static inline DEFINE_CLEANUP_FUNC(cleanup_file, FILE *, fclose)
-#define __cleanup_file __cleanup(cleanup_file)
