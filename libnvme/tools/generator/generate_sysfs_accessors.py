@@ -250,9 +250,15 @@ def emit_struct_def(f, spec):
             f.write(f"\tchar *{m['name']};\n")
         elif m.get('volatile'):
             # Never cached, so never boxed either: a plain value
-            # re-read on every call.
-            sep = generate_accessors.type_sep(m['type'])
-            f.write(f"\tvolatile {m['type']}{sep}{m['name']};\n")
+            # re-read on every call. Not C `volatile`-qualified: every
+            # access is a write (via sscanf(), address taken) followed
+            # immediately by a read in the same function, so the
+            # compiler can never prove the two don't alias and the
+            # keyword's reordering-barrier semantics were never load-
+            # bearing here. The 'volatile' spec flag means "no caching"
+            # at the generator level only, same as the string-member
+            # case above.
+            f.write(f"\t{m['type']} {m['name']};\n")
         else:
             # Cached numeric: boxed as TYPE * so the field can carry the
             # same NULL/NO_SYSFS_ATTR/real-value tri-state a string

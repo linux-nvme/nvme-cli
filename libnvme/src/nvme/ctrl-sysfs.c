@@ -33,9 +33,9 @@ struct libnvme_ctrl_sysfs {
 	char *numa_node;
 	char *queue_count;
 	char *sqsize;
-	volatile long command_error_count;
-	volatile long reset_count;
-	volatile long reconnect_count;
+	long command_error_count;
+	long reset_count;
+	long reconnect_count;
 	char *firmware;
 	char *model;
 	char *serial;
