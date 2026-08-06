@@ -18,9 +18,11 @@ sources = [
     'hex-util.c',
     'ini.c',
     'parse-util.c',
+    'progress-util.c',
     'shr-assert.c',
     'suffix-util.c',
     'table.c',
+    'time-util.c',
 ]
 
 if host_system == 'windows'

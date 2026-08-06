@@ -12,6 +12,7 @@
 #include "json.h"
 #include "cleanup.h"
 #include "hex-util.h"
+#include "time-util.h"
 
 void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t data_size, FILE *fp)
 {
@@ -83,7 +84,7 @@ char *process_field_size_8(int offset, char *sfield, __u8 *buf)
 
 		lval_lo = *((__u64 *)(&buf[offset]));
 
-		convert_ts(le64_to_cpu(lval_lo), ts_buf);
+		shr_format_ts(le64_to_cpu(lval_lo), ts_buf);
 		datastr = strdup(ts_buf);
 	} else {
 		lval_lo = *((__u64 *)(&buf[offset]));

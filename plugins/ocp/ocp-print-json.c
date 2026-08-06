@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "util/json.h"
 #include "util/types.h"
+#include "time-util.h"
 #include "common.h"
 #include "nvme-print.h"
 #include "ocp-print.h"
@@ -614,7 +615,7 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 			if (le64_to_cpu(log_data->active_latency_timestamp[3-i][j]) == -1) {
 				json_object_add_value_string(bucket, operation[j], "NA");
 			} else {
-				convert_ts(le64_to_cpu(log_data->active_latency_timestamp[3-i][j]),
+				shr_format_ts(le64_to_cpu(log_data->active_latency_timestamp[3-i][j]),
 					   ts_buf);
 				json_object_add_value_string(bucket, operation[j], ts_buf);
 			}
@@ -658,7 +659,7 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 			if (le64_to_cpu(log_data->static_latency_timestamp[3-i][j]) == -1) {
 				json_object_add_value_string(bucket, operation[j], "NA");
 			} else {
-				convert_ts(le64_to_cpu(log_data->static_latency_timestamp[3-i][j]),
+				shr_format_ts(le64_to_cpu(log_data->static_latency_timestamp[3-i][j]),
 					   ts_buf);
 				json_object_add_value_string(bucket, operation[j], ts_buf);
 			}
@@ -702,7 +703,7 @@ static void json_c3_log(struct libnvme_transport_handle *hdl, struct ssd_latency
 	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1) {
 		json_object_add_value_string(root, "Debug Log Latency Time Stamp", "NA");
 	} else {
-		convert_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
+		shr_format_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
 		json_object_add_value_string(root, "Debug Log Latency Time Stamp", ts_buf);
 	}
 	json_object_add_value_uint(root, "Debug Log Pointer",

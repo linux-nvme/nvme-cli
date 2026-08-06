@@ -70,6 +70,39 @@ test_hex_util = executable(
 
 test('shared - hex-util', test_hex_util)
 
+test_temp_util = executable(
+    'test-temp-util',
+    ['test-temp-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - temp-util', test_temp_util)
+
+test_time_util = executable(
+    'test-time-util',
+    ['test-time-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - time-util', test_time_util)
+
+test_progress_util = executable(
+    'test-progress-util',
+    ['test-progress-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - progress-util', test_progress_util)
+
 test_table = executable(
     'test-table',
     ['test-table.c'],

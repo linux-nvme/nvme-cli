@@ -40,6 +40,7 @@
 #include "plugin.h"
 #include "util/cleanup.h"
 #include "util/types.h"
+#include "time-util.h"
 #include "nvme-pci-ids.h"
 
 #define CREATE_CMD
@@ -5123,7 +5124,7 @@ static int wdc_print_latency_monitor_log_normal(struct libnvme_transport_handle 
 			if (le64_to_cpu(log_data->active_latency_timestamp[i][j]) == -1) {
 				printf("                    N/A         ");
 			} else {
-				convert_ts(le64_to_cpu(log_data->active_latency_timestamp[i][j]), ts_buf);
+				shr_format_ts(le64_to_cpu(log_data->active_latency_timestamp[i][j]), ts_buf);
 				printf("%s     ", ts_buf);
 			}
 		}
@@ -5148,7 +5149,7 @@ static int wdc_print_latency_monitor_log_normal(struct libnvme_transport_handle 
 			if (le64_to_cpu(log_data->static_latency_timestamp[i][j]) == -1) {
 				printf("                    N/A         ");
 			} else {
-				convert_ts(le64_to_cpu(log_data->static_latency_timestamp[i][j]), ts_buf);
+				shr_format_ts(le64_to_cpu(log_data->static_latency_timestamp[i][j]), ts_buf);
 				printf("%s     ", ts_buf);
 			}
 		}
