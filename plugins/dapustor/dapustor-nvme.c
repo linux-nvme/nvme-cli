@@ -19,7 +19,6 @@
 #include "nvme.h"
 #include "plugin.h"
 
-#include "util/suffix.h"
 
 #define CREATE_CMD
 #include "dapustor-nvme.h"

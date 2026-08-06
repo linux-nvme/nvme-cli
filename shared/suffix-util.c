@@ -1,33 +1,11 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /*
+ * This file is part of nvme-cli.
+ * Copyright (c) 2026 Tokunori Ikegami
+ * Copyright (c) 2026 SUSE Software Solutions
  *
- * Copyright 2014 PMC-Sierra, Inc.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- *
- */
-
-/*
- *
- *   Author: Logan Gunthorpe
- *
- *   Date:   Oct 23 2014
- *
- *   Description:
- *     Functions for dealing with number suffixes
- *
+ * Authors: Daniel Wagner <dwagner@suse.de>
+ *          Tokunori Ikegami <ikegami.t@gmail.com>
  */
 
 #include <ctype.h>
@@ -36,11 +14,14 @@
 #include <limits.h>
 #include <locale.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "suffix.h"
-#include "common.h"
+#include <ccan/array_size/array_size.h>
+
+#include "suffix-util.h"
 
 static struct si_suffix {
 	long double magnitude;
@@ -59,10 +40,10 @@ static struct si_suffix {
 	{1e3, 3, "k"},
 };
 
-const char *suffix_si_get(double *value)
+const char *shr_suffix_si_get(double *value)
 {
 	long double value_ld = *value;
-	const char *suffix = suffix_si_get_ld(&value_ld);
+	const char *suffix = shr_suffix_si_get_ld(&value_ld);
 
 	*value = value_ld;
 
@@ -84,7 +65,7 @@ static bool suffix_si_check(const char val)
 	return false;
 }
 
-int suffix_si_parse(const char *str, char **endptr, uint64_t *val)
+int shr_suffix_si_parse(const char *str, char **endptr, uint64_t *val)
 {
 	unsigned long long num, frac = 0;
 	char *sep, *tmp;
@@ -166,7 +147,7 @@ int suffix_si_parse(const char *str, char **endptr, uint64_t *val)
 	return 0;
 }
 
-const char *suffix_si_get_ld(long double *value)
+const char *shr_suffix_si_get_ld(long double *value)
 {
 	int i;
 
@@ -193,7 +174,7 @@ static struct binary_suffix {
 	{10, "Ki"},
 };
 
-const char *suffix_binary_get(long long *value)
+const char *shr_suffix_binary_get(long long *value)
 {
 	int i;
 
@@ -210,7 +191,7 @@ const char *suffix_binary_get(long long *value)
 	return "";
 }
 
-const char *suffix_dbinary_get(double *value)
+const char *shr_suffix_dbinary_get(double *value)
 {
 	int i;
 
@@ -226,7 +207,7 @@ const char *suffix_dbinary_get(double *value)
 	return "";
 }
 
-int suffix_binary_parse(const char *str, char **endptr, uint64_t *val)
+int shr_suffix_binary_parse(const char *str, char **endptr, uint64_t *val)
 {
 	uint64_t ret;
 	int i;

@@ -70,6 +70,18 @@ test_hex_util = executable(
 
 test('shared - hex-util', test_hex_util)
 
+test_suffix_util = executable(
+    'test-suffix-util',
+    ['test-suffix-util.c'],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - suffix-util', test_suffix_util)
+
 test_hash_util = executable(
     'test-hash-util',
     ['test-hash-util.c'],

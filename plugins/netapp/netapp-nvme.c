@@ -30,7 +30,7 @@
 #include "nvme-cmds.h"
 #include "nvme.h"
 #include "nvme-print.h"
-#include "util/suffix.h"
+#include "suffix-util.h"
 
 #define CREATE_CMD
 #include "netapp-nvme.h"
@@ -116,7 +116,7 @@ static void netapp_get_ns_size(char *size, unsigned long long *lba,
 	nvme_id_ns_flbas_to_lbaf_inuse(ns->flbas, &lba_index);
 	*lba = 1ULL << ns->lbaf[lba_index].ds;
 	double nsze = le64_to_cpu(ns->nsze) * (*lba);
-	const char *s_suffix = suffix_si_get(&nsze);
+	const char *s_suffix = shr_suffix_si_get(&nsze);
 
 	sprintf(size, "%.2f%sB", nsze, s_suffix);
 }
@@ -132,19 +132,19 @@ static void netapp_get_ns_attrs(char *size, char *used, char *blk_size,
 
 	/* get the namespace size */
 	double nsze = le64_to_cpu(ns->nsze) * (*lba);
-	const char *s_suffix = suffix_si_get(&nsze);
+	const char *s_suffix = shr_suffix_si_get(&nsze);
 
 	sprintf(size, "%.2f%sB", nsze, s_suffix);
 
 	/* get the namespace utilization */
 	double nuse = le64_to_cpu(ns->nuse) * (*lba);
-	const char *u_suffix = suffix_si_get(&nuse);
+	const char *u_suffix = shr_suffix_si_get(&nuse);
 
 	sprintf(used, "%.2f%sB", nuse, u_suffix);
 
 	/* get the namespace block size */
 	long long addr = 1LL << ns->lbaf[lba_index].ds;
-	const char *l_suffix = suffix_binary_get(&addr);
+	const char *l_suffix = shr_suffix_binary_get(&addr);
 
 	sprintf(blk_size, "%u%sB", (unsigned int)addr, l_suffix);
 

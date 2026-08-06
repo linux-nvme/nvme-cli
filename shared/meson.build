@@ -19,6 +19,7 @@ sources = [
     'ini.c',
     'parse-util.c',
     'shr-assert.c',
+    'suffix-util.c',
 ]
 
 if host_system == 'windows'
