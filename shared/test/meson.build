@@ -71,6 +71,17 @@ test_hex_util = executable(
 
 test('shared - hex-util', test_hex_util)
 
+test_cleanup = executable(
+    'test-cleanup',
+    ['test-cleanup.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - cleanup', test_cleanup)
+
 test_wrap_util = executable(
     'test-wrap-util',
     ['test-wrap-util.c'],

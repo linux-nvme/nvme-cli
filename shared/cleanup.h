@@ -8,7 +8,9 @@
 #pragma once
 
 #include <dirent.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define __cleanup(fn) __attribute__((cleanup(fn)))
 
@@ -41,3 +43,13 @@ static inline void cleanup_dirents(struct dirents *ents)
 }
 
 #define __cleanup_dirents __cleanup(cleanup_dirents)
+
+static inline void shr_cleanup_fd(int *fd)
+{
+	if (*fd > STDERR_FILENO)
+		close(*fd);
+}
+#define __cleanup_fd __cleanup(shr_cleanup_fd)
+
+static inline DEFINE_CLEANUP_FUNC(shr_cleanup_file, FILE *, fclose)
+#define __cleanup_file __cleanup(shr_cleanup_file)
