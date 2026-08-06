@@ -1984,6 +1984,8 @@ __shr_public int libnvme_exec_admin_passthru(
 		return submit_admin_get_features(hdl, cmd);
 	case nvme_admin_ns_mgmt:
 	case nvme_admin_ns_attach:
+	case nvme_admin_nvme_mi_send:
+	case nvme_admin_nvme_mi_recv:
 		/* Only supported on WinPE */
 		if (get_is_win_pe())
 			return submit_storage_protocol_command(hdl, cmd);
