@@ -8,7 +8,6 @@
 #include "common.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "util/types.h"
 #include "nvme-print.h"
 
 #include "ocp-telemetry-decode.h"

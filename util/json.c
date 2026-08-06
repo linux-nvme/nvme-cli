@@ -4,8 +4,9 @@
 #include <stdarg.h>
 
 #include "json.h"
-#include "types.h"
 #include "cleanup.h"
+
+#define STR_LEN 100
 
 struct json_object *util_json_object_new_double(long double d)
 {

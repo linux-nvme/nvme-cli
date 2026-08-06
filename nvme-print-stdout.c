@@ -26,7 +26,6 @@
 #include "nvme-print.h"
 #include "nvme-models.h"
 #include "suffix-util.h"
-#include "util/types.h"
 #include "uint128-util.h"
 #include "uuid-util.h"
 #include "int-util.h"

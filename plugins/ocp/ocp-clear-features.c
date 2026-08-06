@@ -10,7 +10,6 @@
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "util/types.h"
 
 #include "ocp-nvme.h"
 #include "ocp-utils.h"

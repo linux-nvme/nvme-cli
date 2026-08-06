@@ -12,6 +12,8 @@
 #include "int-util.h"
 #include "uuid-util.h"
 
+#define STR_LEN 100
+
 typedef struct nvme_effects_log_node {
 	struct nvme_cmd_effects_log effects; /* needs to be first member because of alignment requirement. */
 	enum nvme_csi csi;
