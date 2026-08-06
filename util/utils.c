@@ -121,9 +121,6 @@ unsigned char *read_binary_file(char *data_dir_path, const char *bin_path,
 	/* Read data */
 	n_data = fread(buffer, 1, *buffer_size, bin_file);
 
-	/* Close file */
-	fclose(bin_file);
-	
 	/* Validate we read data */
 	if (n_data != (size_t)*buffer_size) {
 		nvme_show_result("\nFailed to read %ld bytes from %s", *buffer_size, file_path);
