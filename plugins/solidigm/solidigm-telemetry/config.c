@@ -134,7 +134,8 @@ struct json_object *solidigm_config_get_nlog_formats(const struct json_object *c
 {
 	struct json_object *nlog_formats = NULL;
 
-	json_object_object_get_ex(config, "NLOG_FORMATS", &nlog_formats);
+	if (!json_object_object_get_ex(config, "NLOG_FORMATS", &nlog_formats))
+		return NULL;
 	return nlog_formats;
 }
 
