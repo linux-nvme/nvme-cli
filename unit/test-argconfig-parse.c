@@ -9,6 +9,7 @@
 
 #include "../util/argconfig.h"
 #include "../util/cleanup.h"
+#include "parse-util.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
@@ -192,7 +193,7 @@ void comma_sep_array_test(const struct comma_sep_array_test *test)
 {
 	__cleanup_free char *input = strdup(test->input);
 	__u32 values[COMMA_SEP_ARRAY_MAX_VALUES] = {};
-	int ret = argconfig_parse_comma_sep_array_u32(
+	int ret = shr_parse_csv_u32(
 		input, values, COMMA_SEP_ARRAY_MAX_VALUES);
 	int i;
 

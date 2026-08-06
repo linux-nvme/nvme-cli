@@ -23,6 +23,7 @@ sources = [
     'suffix-util.c',
     'table.c',
     'time-util.c',
+    'wrap-util.c',
 ]
 
 if host_system == 'windows'

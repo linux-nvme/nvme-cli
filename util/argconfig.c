@@ -31,8 +31,6 @@
 
 #include <errno.h>
 #include <getopt.h>
-#include <inttypes.h>
-#include <limits.h>
 #include <locale.h>
 #include <stdbool.h>
 #include <stdarg.h>
@@ -43,6 +41,7 @@
 #include "argconfig.h"
 #include "cleanup.h"
 #include "suffix-util.h"
+#include "wrap-util.h"
 
 const char *libnvme_strerror(int errnum);
 
@@ -56,42 +55,6 @@ static const char *append_usage_str = "";
 void argconfig_append_usage(const char *str)
 {
 	append_usage_str = str;
-}
-
-void print_word_wrapped(const char *s, int indent, int start, FILE *stream)
-{
-	const int width = 76;
-	const char *c, *t;
-	int next_space = -1;
-	int last_line = indent;
-
-	while (start < indent) {
-		putc(' ', stream);
-		start++;
-	}
-
-	for (c = s; *c != 0; c++) {
-		if (*c == '\n')
-			goto new_line;
-
-		if (*c == ' ' || next_space < 0) {
-			next_space = 0;
-			for (t = c + 1; *t != 0 && *t != ' '; t++)
-				next_space++;
-
-			if (((int)(c - s) + start + next_space) > (last_line - indent + width)) {
-				int i;
-new_line:
-				last_line = (int) (c-s) + start;
-				putc('\n', stream);
-				for (i = 0; i < indent; i++)
-					putc(' ', stream);
-				start = indent;
-				continue;
-			}
-		}
-		putc(*c, stream);
-	}
 }
 
 static void show_option(const struct argconfig_commandline_options *option)
@@ -120,8 +83,8 @@ static void show_option(const struct argconfig_commandline_options *option)
 
 	fprintf(stderr, "%s", buffer);
 	if (option->help) {
-		print_word_wrapped("--- ", 40, b - buffer, stderr);
-		print_word_wrapped(option->help, 44, 44, stderr);
+		shr_print_word_wrapped("--- ", 40, b - buffer, stderr);
+		shr_print_word_wrapped(option->help, 44, 44, stderr);
 	}
 	fprintf(stderr, "\n");
 }
@@ -135,7 +98,7 @@ void argconfig_print_help(const char *program_desc,
 	fprintf(stderr, "\033[1mUsage: %s\033[0m\n\n",
 		append_usage_str);
 
-	print_word_wrapped(program_desc, 0, 0, stderr);
+	shr_print_word_wrapped(program_desc, 0, 0, stderr);
 	fprintf(stderr, "\n");
 
 	if (!s || !s->option)
@@ -502,55 +465,6 @@ int argconfig_parse_global(int argc, char *argv[],
 
 	return ret;
 }
-
-#define DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_FUNC(name, ret_t, ret_max) \
-int argconfig_parse_comma_sep_array ## name(char *string,		\
-					    ret_t *val,			\
-					    unsigned int max_length)	\
-{									\
-	int ret = 0;							\
-	uintmax_t v;							\
-	char *tmp;							\
-	char *p;							\
-									\
-	if (is_null_or_empty(string))					\
-		return 0;						\
-									\
-	tmp = strtok(string, ",");					\
-									\
-	while (tmp) {							\
-		if (ret >= max_length)					\
-			return -1;					\
-									\
-		errno = 0;						\
-		v = strtoumax(tmp, &p, 0);				\
-		if (*p != 0)						\
-			return -1;					\
-		if (errno == ERANGE ||					\
-			v > ret_max) {					\
-			fprintf(stderr, "%s out of range\n", tmp);	\
-			return -1;					\
-		}							\
-		val[ret] = v;						\
-		ret++;							\
-									\
-		tmp = strtok(NULL, ",");				\
-	}								\
-									\
-	return ret;							\
-}
-
-DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_FUNC(, int, UINT_MAX)
-DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_FUNC(_short, unsigned short, UINT16_MAX)
-DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_FUNC(_long, unsigned long long, ULLONG_MAX)
-
-#define DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(size) \
-	DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_FUNC(_u ## size, __u ## size, \
-						    UINT ## size ## _MAX)
-
-DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(16);
-DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(32);
-DEFINE_ARGCONFIG_PARSE_COMMA_SEP_ARRAY_UINT_FUNC(64);
 
 bool argconfig_parse_seen(struct argconfig_commandline_options *s,
 			  const char *option)

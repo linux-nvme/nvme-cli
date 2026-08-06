@@ -10,6 +10,7 @@
 #include "plugin.h"
 #include "util/argconfig.h"
 #include "util/cleanup.h"
+#include "wrap-util.h"
 
 static int version_cmd(struct plugin *plugin)
 {
@@ -85,12 +86,12 @@ void general_help(struct plugin *plugin, char *str)
 	usage_cmd(plugin);
 
 	printf("\n");
-	print_word_wrapped(prog->desc, 0, 0, stdout);
+	shr_print_word_wrapped(prog->desc, 0, 0, stdout);
 	printf("\n");
 
 	if (plugin->desc) {
 		printf("\n");
-		print_word_wrapped(plugin->desc, 0, 0, stdout);
+		shr_print_word_wrapped(plugin->desc, 0, 0, stdout);
 		printf("\n");
 	}
 

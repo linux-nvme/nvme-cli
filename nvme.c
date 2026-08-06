@@ -60,6 +60,7 @@
 #include "util/cleanup.h"
 #include "sig-util.h"
 #include "suffix-util.h"
+#include "parse-util.h"
 
 #define CREATE_CMD
 #include "nvme-builtin.h"
@@ -3181,8 +3182,7 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 		return -EINVAL;
 	}
 
-	num = argconfig_parse_comma_sep_array_u16(cfg.cntlist,
-						  list, ARRAY_SIZE(list));
+	num = shr_parse_csv_u16(cfg.cntlist, list, ARRAY_SIZE(list));
 	if (num == -1) {
 		nvme_show_error("%s: controller id list is malformed", acmd->name);
 		return -EINVAL;
@@ -3568,7 +3568,7 @@ parse_lba:
 	data->zns.rnumzrwa = cpu_to_le32(cfg.rnumzrwa);
 	data->nphndls = cpu_to_le16(cfg.nphndls);
 
-	num_phandle = argconfig_parse_comma_sep_array_short(cfg.phndls, phndl, ARRAY_SIZE(phndl));
+	num_phandle = shr_parse_csv_ushort(cfg.phndls, phndl, ARRAY_SIZE(phndl));
 	if (cfg.nphndls != num_phandle) {
 		nvme_show_error("Invalid Placement handle list");
 		return -EINVAL;
@@ -8110,9 +8110,9 @@ static int dsm(int argc, char **argv, struct command *acmd, struct plugin *plugi
 		return err;
 	}
 
-	nc = argconfig_parse_comma_sep_array_u32(cfg.ctx_attrs, ctx_attrs, ARRAY_SIZE(ctx_attrs));
-	nb = argconfig_parse_comma_sep_array_u32(cfg.blocks, nlbs, ARRAY_SIZE(nlbs));
-	ns = argconfig_parse_comma_sep_array_u64(cfg.slbas, slbas, ARRAY_SIZE(slbas));
+	nc = shr_parse_csv_u32(cfg.ctx_attrs, ctx_attrs, ARRAY_SIZE(ctx_attrs));
+	nb = shr_parse_csv_u32(cfg.blocks, nlbs, ARRAY_SIZE(nlbs));
+	ns = shr_parse_csv_u64(cfg.slbas, slbas, ARRAY_SIZE(slbas));
 	if ((nb != ns) ||
 	    (argconfig_parse_seen(opts, "ctx-attrs") && nb != nc)) {
 		nvme_show_error("No valid range definition provided");
@@ -8278,34 +8278,30 @@ static int copy_cmd(int argc, char **argv, struct command *acmd, struct plugin *
 	if (err)
 		return err;
 
-	nb = argconfig_parse_comma_sep_array_u16(cfg.nlbs, nlbs,
-						 ARRAY_SIZE(nlbs));
-	ns = argconfig_parse_comma_sep_array_u64(cfg.slbas, slbas,
-						 ARRAY_SIZE(slbas));
-	nids = argconfig_parse_comma_sep_array_u32(cfg.snsids, snsids,
-						 ARRAY_SIZE(snsids));
-	argconfig_parse_comma_sep_array_u16(cfg.sopts, sopts,
-						 ARRAY_SIZE(sopts));
+	nb = shr_parse_csv_u16(cfg.nlbs, nlbs, ARRAY_SIZE(nlbs));
+	ns = shr_parse_csv_u64(cfg.slbas, slbas, ARRAY_SIZE(slbas));
+	nids = shr_parse_csv_u32(cfg.snsids, snsids, ARRAY_SIZE(snsids));
+	shr_parse_csv_u16(cfg.sopts, sopts, ARRAY_SIZE(sopts));
 
 	switch (cfg.format) {
 	case 0:
 	case 2:
-		nrts = argconfig_parse_comma_sep_array_u32(cfg.eilbrts,
-				eilbrts.short_pi, ARRAY_SIZE(eilbrts.short_pi));
+		nrts = shr_parse_csv_u32(cfg.eilbrts,
+			eilbrts.short_pi, ARRAY_SIZE(eilbrts.short_pi));
 		break;
 	case 1:
 	case 3:
-		nrts = argconfig_parse_comma_sep_array_u64(cfg.eilbrts,
-				eilbrts.long_pi, ARRAY_SIZE(eilbrts.long_pi));
+		nrts = shr_parse_csv_u64(cfg.eilbrts,
+			eilbrts.long_pi, ARRAY_SIZE(eilbrts.long_pi));
 		break;
 	default:
 		nvme_show_error("invalid format");
 		return -EINVAL;
 	}
 
-	natms = argconfig_parse_comma_sep_array_u16(cfg.elbatms, elbatms,
+	natms = shr_parse_csv_u16(cfg.elbatms, elbatms,
 						    ARRAY_SIZE(elbatms));
-	nats = argconfig_parse_comma_sep_array_u16(cfg.elbats, elbats,
+	nats = shr_parse_csv_u16(cfg.elbats, elbats,
 						   ARRAY_SIZE(elbats));
 
 	nr = max(nb, max(ns, max(nrts, max(natms, nats))));

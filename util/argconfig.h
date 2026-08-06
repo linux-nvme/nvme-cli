@@ -39,8 +39,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <nvme/types.h>
-
 enum argconfig_types {
 	CFG_FLAG,
 	CFG_STRING,
@@ -186,18 +184,5 @@ typedef int (*argconfig_parse_hook_fn)(int argc, char *argv[],
 				       struct argconfig_commandline_options *options);
 void argconfig_set_parse_hook(argconfig_parse_hook_fn hook);
 
-int argconfig_parse_comma_sep_array(char *string, int *ret, unsigned int max_length);
-int argconfig_parse_comma_sep_array_short(char *string, unsigned short *ret,
-					  unsigned int max_length);
-int argconfig_parse_comma_sep_array_long(char *string, unsigned long long *ret,
-					 unsigned int max_length);
-int argconfig_parse_comma_sep_array_u16(char *string, __u16 *val,
-					unsigned int max_length);
-int argconfig_parse_comma_sep_array_u32(char *string, __u32 *val,
-					unsigned int max_length);
-int argconfig_parse_comma_sep_array_u64(char *string, __u64 *val,
-					unsigned int max_length);
-
-void print_word_wrapped(const char *s, int indent, int start, FILE *stream);
 bool argconfig_parse_seen(struct argconfig_commandline_options *options,
 			  const char *option);

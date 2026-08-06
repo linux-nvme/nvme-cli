@@ -53,6 +53,7 @@ test_parse_util = executable(
     ['test-parse-util.c'],
     dependencies: [
         config_dep,
+        ccan_dep,
         shared_dep,
     ],
 )
@@ -69,6 +70,17 @@ test_hex_util = executable(
 )
 
 test('shared - hex-util', test_hex_util)
+
+test_wrap_util = executable(
+    'test-wrap-util',
+    ['test-wrap-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - wrap-util', test_wrap_util)
 
 test_temp_util = executable(
     'test-temp-util',

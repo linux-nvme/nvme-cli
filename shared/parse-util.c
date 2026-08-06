@@ -7,6 +7,10 @@
  */
 
 #include <errno.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
@@ -39,3 +43,44 @@ int shr_parse_bool(const char *value, bool *out)
 
 	return -EINVAL;
 }
+
+#define DEFINE_SHR_PARSE_CSV_FUNC(name, ret_t, ret_max)		\
+int shr_parse_csv_ ## name(char *string, ret_t *val,			\
+			   unsigned int max_length)			\
+{									\
+	int ret = 0;							\
+	uintmax_t v;							\
+	char *tmp;							\
+	char *p;							\
+									\
+	if (!string || !*string)					\
+		return 0;						\
+									\
+	tmp = strtok(string, ",");					\
+									\
+	while (tmp) {							\
+		if (ret >= max_length)					\
+			return -1;					\
+									\
+		errno = 0;						\
+		v = strtoumax(tmp, &p, 0);				\
+		if (*p != 0)						\
+			return -1;					\
+		if (errno == ERANGE ||					\
+			v > ret_max) {					\
+			fprintf(stderr, "%s out of range\n", tmp);	\
+			return -1;					\
+		}							\
+		val[ret] = v;						\
+		ret++;							\
+									\
+		tmp = strtok(NULL, ",");				\
+	}								\
+									\
+	return ret;							\
+}
+
+DEFINE_SHR_PARSE_CSV_FUNC(int, int, INT_MAX)
+DEFINE_SHR_PARSE_CSV_FUNC(ushort, unsigned short, UINT16_MAX)
+DEFINE_SHR_PARSE_CSV_FUNC(uint, unsigned int, UINT32_MAX)
+DEFINE_SHR_PARSE_CSV_FUNC(ulonglong, unsigned long long, ULLONG_MAX)

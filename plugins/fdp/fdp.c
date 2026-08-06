@@ -14,6 +14,7 @@
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
+#include "parse-util.h"
 
 #define CREATE_CMD
 #include "fdp.h"
@@ -375,7 +376,7 @@ static int fdp_update(int argc, char **argv, struct command *acmd, struct plugin
 	if (err)
 		return err;
 
-	npids = argconfig_parse_comma_sep_array_short(cfg.pids, pids, ARRAY_SIZE(pids));
+	npids = shr_parse_csv_ushort(cfg.pids, pids, ARRAY_SIZE(pids));
 	if (npids < 0) {
 		nvme_show_error("could not parse pids");
 		return -EINVAL;
@@ -447,7 +448,7 @@ static int fdp_set_events(int argc, char **argv, struct command *acmd, struct pl
 	if (err)
 		return err;
 
-	nev = argconfig_parse_comma_sep_array_short(cfg.event_types, evts, ARRAY_SIZE(evts));
+	nev = shr_parse_csv_ushort(cfg.event_types, evts, ARRAY_SIZE(evts));
 	if (nev < 0) {
 		nvme_show_error("could not parse event types");
 		return -EINVAL;

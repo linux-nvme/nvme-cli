@@ -13,6 +13,7 @@
 #include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
+#include "parse-util.h"
 
 #define CREATE_CMD
 #include "intel-nvme.h"
@@ -1661,7 +1662,7 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 	if (media_version[0] == 1000) {
 		int thresholds[OPTANE_V1000_BUCKET_LEN] = {0};
 
-		num = argconfig_parse_comma_sep_array(cfg.bucket_thresholds,
+		num = shr_parse_csv_int(cfg.bucket_thresholds,
 						      thresholds,
 						      sizeof(thresholds));
 		if (num == -1) {
