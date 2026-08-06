@@ -43,7 +43,7 @@ static int detect_zns(libnvme_ns_t ns, int *out_supported)
 	return err;
 }
 
-static int print_zns_list_ns(libnvme_ns_t ns, struct table *t)
+static int print_zns_list_ns(libnvme_ns_t ns, struct shr_table *t)
 {
 	int supported;
 	int err = 0;
@@ -60,7 +60,7 @@ static int print_zns_list_ns(libnvme_ns_t ns, struct table *t)
 	return err;
 }
 
-static int print_zns_list(struct libnvme_global_ctx *ctx, struct table *t)
+static int print_zns_list(struct libnvme_global_ctx *ctx, struct shr_table *t)
 {
 	int err = 0;
 	libnvme_host_t h;
@@ -95,7 +95,7 @@ static int list(int argc, char **argv, struct command *acmd,
 	const char *desc = "Retrieve basic information for all ZNS namespaces.";
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	int err;
-	struct table_column columns[] = {
+	struct shr_table_column columns[] = {
 		{ "Node", LEFT, 21 },
 		{ "Generic", LEFT, 21 },
 		{ "SN", LEFT, 20 },
@@ -105,7 +105,7 @@ static int list(int argc, char **argv, struct command *acmd,
 		{ "Format", LEFT, 16 },
 		{ "FW Rev", LEFT, 8 },
 	};
-	struct table *t;
+	struct shr_table *t;
 
 	NVME_ARGS_OUTPUT_FORMATS(opts, NORMAL, "Output format: normal");
 
@@ -123,7 +123,7 @@ static int list(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	t = table_init_with_columns(columns, ARRAY_SIZE(columns));
+	t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
 	if (!t) {
 		nvme_show_error("Failed to allocate table");
 		return -ENOMEM;
@@ -131,9 +131,9 @@ static int list(int argc, char **argv, struct command *acmd,
 
 	err = print_zns_list(ctx, t);
 
-	table_print(t);
+	shr_table_print(t);
 
-	table_free(t);
+	shr_table_free(t);
 
 	return err;
 }

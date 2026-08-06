@@ -34,7 +34,7 @@
 #include "common.h"
 #include "logging.h"
 #include "util/dashboard.h"
-#include "util/table.h"
+#include "table.h"
 
 static double nvme_calc_util_percent(unsigned int ticks, double interval_ms)
 {
@@ -406,8 +406,8 @@ static int stdout_top_print_path_health(FILE *stream, libnvme_subsystem_t s)
 	int col, row;
 	libnvme_ns_t n;
 	libnvme_path_t p;
-	struct table *t;
-	struct table_column columns[] = {
+	struct shr_table *t;
+	struct shr_table_column columns[] = {
 		{"NSPath",    LEFT, AUTO_WIDTH},
 		{"ANAState",  LEFT, AUTO_WIDTH},
 		{"Retries",   LEFT, AUTO_WIDTH},
@@ -415,13 +415,13 @@ static int stdout_top_print_path_health(FILE *stream, libnvme_subsystem_t s)
 		{"Errors",    LEFT, AUTO_WIDTH}
 	};
 
-	t = table_create();
+	t = shr_table_create();
 	if (!t) {
 		nvme_show_error("Failed to init path health table\n");
 		return 1;
 	}
 
-	if (table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
+	if (shr_table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
 		nvme_show_error("Failed to add columns to path health table\n");
 		ret = 1;
 		goto free_tbl;
@@ -435,7 +435,7 @@ static int stdout_top_print_path_health(FILE *stream, libnvme_subsystem_t s)
 			long multipath_failover_count;
 			long command_error_count;
 
-			row = table_get_row_id(t);
+			row = shr_table_get_row_id(t);
 			if (row < 0) {
 				nvme_show_error("Failed to add row to path health table\n");
 				goto free_tbl;
@@ -451,24 +451,24 @@ static int stdout_top_print_path_health(FILE *stream, libnvme_subsystem_t s)
 
 			col = -1;
 
-			table_set_value_str(t, ++col, row,
+			shr_table_set_value_str(t, ++col, row,
 			    libnvme_path_get_name(p), LEFT);
-			table_set_value_str(t, ++col, row,
+			shr_table_set_value_str(t, ++col, row,
 			    ana_state, LEFT);
-			table_set_value_long(t, ++col, row,
+			shr_table_set_value_long(t, ++col, row,
 			    command_retry_count, LEFT);
-			table_set_value_long(t, ++col, row,
+			shr_table_set_value_long(t, ++col, row,
 			    multipath_failover_count, LEFT);
-			table_set_value_int(t, ++col, row,
+			shr_table_set_value_int(t, ++col, row,
 			    command_error_count, LEFT);
 
-			table_add_row(t, row);
+			shr_table_add_row(t, row);
 		}
 	}
 
-	table_print_stream(stream, t);
+	shr_table_print_stream(stream, t);
 free_tbl:
-	table_free(t);
+	shr_table_free(t);
 	return ret;
 }
 
@@ -487,9 +487,9 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 	char r_clat_str[16], w_clat_str[16];
 	const char *node;
 	long reset_count, reconnect_count, command_error_count;
-	struct table *t;
+	struct shr_table *t;
 	bool is_fabric = false;
-	struct table_column columns[] = {
+	struct shr_table_column columns[] = {
 		{"Ctrl",       LEFT, AUTO_WIDTH},
 		{"Paths",      LEFT, AUTO_WIDTH},
 		{"Node",       LEFT, AUTO_WIDTH},
@@ -508,13 +508,13 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 		{"Util%",      LEFT, 6},
 	};
 
-	t = table_create();
+	t = shr_table_create();
 	if (!t) {
 		nvme_show_error("Failed to init ctrl summary table");
 		return 1;
 	}
 
-	if (table_add_columns_filter(t, columns, ARRAY_SIZE(columns),
+	if (shr_table_add_columns_filter(t, columns, ARRAY_SIZE(columns),
 		stdout_top_print_ctrl_summary_tbl_filter, (void *)s) < 0) {
 		nvme_show_error("Failed to add columns to ctrl summary table");
 		ret = 1;
@@ -532,7 +532,7 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 		r_bw = w_bw = 0;
 		max_util = max_rlat = max_wlat = 0;
 
-		row = table_get_row_id(t);
+		row = shr_table_get_row_id(t);
 		if (row < 0) {
 			nvme_show_error("Failed to add row to ctrl summary table");
 			ret = 1;
@@ -576,46 +576,46 @@ static int stdout_top_print_ctrl_summary(FILE *stream,
 
 		col = -1;
 
-		table_set_value_str(t, ++col, row,
+		shr_table_set_value_str(t, ++col, row,
 				libnvme_ctrl_get_name(c), LEFT);
 		if (multipath)
-			table_set_value_int(t, ++col, row, npaths, LEFT);
+			shr_table_set_value_int(t, ++col, row, npaths, LEFT);
 
-		table_set_value_str(t, ++col, row, node, LEFT);
-		table_set_value_str(t, ++col, row,
+		shr_table_set_value_str(t, ++col, row, node, LEFT);
+		shr_table_set_value_str(t, ++col, row,
 				libnvme_ctrl_get_transport(c), LEFT);
-		table_set_value_str(t, ++col, row,
+		shr_table_set_value_str(t, ++col, row,
 				libnvme_ctrl_get_traddr(c), LEFT);
-		table_set_value_str(t, ++col, row,
+		shr_table_set_value_str(t, ++col, row,
 				libnvme_ctrl_get_state(c), LEFT);
 
 		libnvme_ctrl_get_reset_count(c, &reset_count, 0);
-		table_set_value_long(t, ++col, row, reset_count, LEFT);
+		shr_table_set_value_long(t, ++col, row, reset_count, LEFT);
 
 		if (is_fabric) {
 			libnvme_ctrl_get_reconnect_count(c, &reconnect_count,
 							  0);
-			table_set_value_long(t, ++col, row,
+			shr_table_set_value_long(t, ++col, row,
 					reconnect_count, LEFT);
 		}
 
 		libnvme_ctrl_get_command_error_count(c, &command_error_count,
 						      0);
-		table_set_value_long(t, ++col, row, command_error_count, LEFT);
-		table_set_value_str(t, ++col, row, r_iops_str, LEFT);
-		table_set_value_str(t, ++col, row, w_iops_str, LEFT);
-		table_set_value_str(t, ++col, row, r_clat_str, LEFT);
-		table_set_value_str(t, ++col, row, w_clat_str, LEFT);
-		table_set_value_str(t, ++col, row, r_bw_str, LEFT);
-		table_set_value_str(t, ++col, row, w_bw_str, LEFT);
-		table_set_value_double(t, ++col, row, max_util, LEFT);
+		shr_table_set_value_long(t, ++col, row, command_error_count, LEFT);
+		shr_table_set_value_str(t, ++col, row, r_iops_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, w_iops_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, r_clat_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, w_clat_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, r_bw_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, w_bw_str, LEFT);
+		shr_table_set_value_double(t, ++col, row, max_util, LEFT);
 
-		table_add_row(t, row);
+		shr_table_add_row(t, row);
 	}
 
-	table_print_stream(stream, t);
+	shr_table_print_stream(stream, t);
 free_tbl:
-	table_free(t);
+	shr_table_free(t);
 	return ret;
 }
 
@@ -630,8 +630,8 @@ static int stdout_top_print_ns_stat(FILE *stream, libnvme_subsystem_t s)
 	char r_bw_str[16], w_bw_str[16];
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
-	struct table *t;
-	struct table_column columns[] = {
+	struct shr_table *t;
+	struct shr_table_column columns[] = {
 		{"Namespace", LEFT, AUTO_WIDTH},
 		{"NSID",      LEFT, AUTO_WIDTH},
 		{"Ctrl",      LEFT, AUTO_WIDTH},
@@ -647,13 +647,13 @@ static int stdout_top_print_ns_stat(FILE *stream, libnvme_subsystem_t s)
 		{"Util%",     LEFT, 6},
 	};
 
-	t = table_create();
+	t = shr_table_create();
 	if (!t) {
 		nvme_show_error("Failed to init ns stat table\n");
 		return 1;
 	}
 
-	if (table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
+	if (shr_table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
 		nvme_show_error("Failed to add columns to ns stat table\n");
 		ret = 1;
 		goto free_tbl;
@@ -685,7 +685,7 @@ static int stdout_top_print_ns_stat(FILE *stream, libnvme_subsystem_t s)
 			nvme_format_lat(r_lat, r_clat_str, sizeof(r_clat_str));
 			nvme_format_lat(w_lat, w_clat_str, sizeof(w_clat_str));
 
-			row = table_get_row_id(t);
+			row = shr_table_get_row_id(t);
 			if (row < 0) {
 				nvme_show_error("Failed to add row to ns stat table\n");
 				ret = 1;
@@ -694,37 +694,37 @@ static int stdout_top_print_ns_stat(FILE *stream, libnvme_subsystem_t s)
 
 			col = -1;
 
-			table_set_value_str(t, ++col, row,
+			shr_table_set_value_str(t, ++col, row,
 					libnvme_ns_get_name(n), LEFT);
-			table_set_value_int(t, ++col, row,
+			shr_table_set_value_int(t, ++col, row,
 					libnvme_ns_get_nsid(n), LEFT);
-			table_set_value_str(t, ++col, row,
+			shr_table_set_value_str(t, ++col, row,
 					libnvme_ctrl_get_name(c), LEFT);
 			libnvme_ns_get_command_retry_count(n,
 					&command_retry_count, 0);
 			libnvme_ns_get_command_error_count(n,
 					&command_error_count, 0);
-			table_set_value_long(t, ++col, row,
+			shr_table_set_value_long(t, ++col, row,
 				command_retry_count, LEFT);
-			table_set_value_long(t, ++col, row,
+			shr_table_set_value_long(t, ++col, row,
 				command_error_count, LEFT);
-			table_set_value_str(t, ++col, row, r_iops_str, LEFT);
-			table_set_value_str(t, ++col, row, w_iops_str, LEFT);
-			table_set_value_str(t, ++col, row, r_clat_str, LEFT);
-			table_set_value_str(t, ++col, row, w_clat_str, LEFT);
-			table_set_value_str(t, ++col, row, r_bw_str, LEFT);
-			table_set_value_str(t, ++col, row, w_bw_str, LEFT);
-			table_set_value_unsigned(t, ++col, row, inflights,
+			shr_table_set_value_str(t, ++col, row, r_iops_str, LEFT);
+			shr_table_set_value_str(t, ++col, row, w_iops_str, LEFT);
+			shr_table_set_value_str(t, ++col, row, r_clat_str, LEFT);
+			shr_table_set_value_str(t, ++col, row, w_clat_str, LEFT);
+			shr_table_set_value_str(t, ++col, row, r_bw_str, LEFT);
+			shr_table_set_value_str(t, ++col, row, w_bw_str, LEFT);
+			shr_table_set_value_unsigned(t, ++col, row, inflights,
 					LEFT);
-			table_set_value_double(t, ++col, row, util, LEFT);
+			shr_table_set_value_double(t, ++col, row, util, LEFT);
 
-			table_add_row(t, row);
+			shr_table_add_row(t, row);
 		}
 	}
 
-	table_print_stream(stream, t);
+	shr_table_print_stream(stream, t);
 free_tbl:
-	table_free(t);
+	shr_table_free(t);
 	return ret;
 }
 
@@ -739,8 +739,8 @@ static int stdout_top_print_nshead_stat(FILE *stream, libnvme_subsystem_t s)
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
 	char r_bw_str[16], w_bw_str[16];
-	struct table *t;
-	struct table_column columns[] = {
+	struct shr_table *t;
+	struct shr_table_column columns[] = {
 			{"NSHead",     LEFT, AUTO_WIDTH},
 			{"NSID",       LEFT, AUTO_WIDTH},
 			{"Paths",      LEFT, AUTO_WIDTH},
@@ -756,13 +756,13 @@ static int stdout_top_print_nshead_stat(FILE *stream, libnvme_subsystem_t s)
 			{"Util%",      LEFT, 6},
 	};
 
-	t = table_create();
+	t = shr_table_create();
 	if (!t) {
 		nvme_show_error("Failed to init nshead stat table\n");
 		return 1;
 	}
 
-	if (table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
+	if (shr_table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
 		nvme_show_error("Failed to add columns to nshead stat table\n");
 		ret = 1;
 		goto free_tbl;
@@ -796,7 +796,7 @@ static int stdout_top_print_nshead_stat(FILE *stream, libnvme_subsystem_t s)
 		libnvme_namespace_for_each_path(n, p)
 			npaths++;
 
-		row = table_get_row_id(t);
+		row = shr_table_get_row_id(t);
 		if (row < 0) {
 			nvme_show_error("Failed to add row to nshead stat table\n");
 			ret = 1;
@@ -805,34 +805,34 @@ static int stdout_top_print_nshead_stat(FILE *stream, libnvme_subsystem_t s)
 
 		col = -1;
 
-		table_set_value_str(t, ++col, row, libnvme_ns_get_name(n),
+		shr_table_set_value_str(t, ++col, row, libnvme_ns_get_name(n),
 				LEFT);
-		table_set_value_int(t, ++col, row, libnvme_ns_get_nsid(n),
+		shr_table_set_value_int(t, ++col, row, libnvme_ns_get_nsid(n),
 				LEFT);
-		table_set_value_int(t, ++col, row, npaths, LEFT);
+		shr_table_set_value_int(t, ++col, row, npaths, LEFT);
 		libnvme_ns_get_io_requeue_no_usable_path_count(n,
 				&io_requeue_no_usable_path_count, 0);
 		libnvme_ns_get_io_fail_no_available_path_count(n,
 				&io_fail_no_available_path_count, 0);
-		table_set_value_long(t, ++col, row,
+		shr_table_set_value_long(t, ++col, row,
 		    io_requeue_no_usable_path_count, LEFT);
-		table_set_value_long(t, ++col, row,
+		shr_table_set_value_long(t, ++col, row,
 		    io_fail_no_available_path_count, LEFT);
-		table_set_value_str(t, ++col, row, r_iops_str, LEFT);
-		table_set_value_str(t, ++col, row, w_iops_str, LEFT);
-		table_set_value_str(t, ++col, row, r_clat_str, LEFT);
-		table_set_value_str(t, ++col, row, w_clat_str, LEFT);
-		table_set_value_str(t, ++col, row, r_bw_str, LEFT);
-		table_set_value_str(t, ++col, row, w_bw_str, LEFT);
-		table_set_value_unsigned(t, ++col, row, inflights, LEFT);
-		table_set_value_double(t, ++col, row, util, LEFT);
+		shr_table_set_value_str(t, ++col, row, r_iops_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, w_iops_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, r_clat_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, w_clat_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, r_bw_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, w_bw_str, LEFT);
+		shr_table_set_value_unsigned(t, ++col, row, inflights, LEFT);
+		shr_table_set_value_double(t, ++col, row, util, LEFT);
 
-		table_add_row(t, row);
+		shr_table_add_row(t, row);
 	}
 
-	table_print_stream(stream, t);
+	shr_table_print_stream(stream, t);
 free_tbl:
-	table_free(t);
+	shr_table_free(t);
 	return ret;
 }
 
@@ -849,9 +849,9 @@ static int stdout_top_print_path_perf(FILE *stream, libnvme_subsystem_t s)
 	char r_clat_str[16], w_clat_str[16];
 	char r_bw_str[16], w_bw_str[16];
 	bool first;
-	struct table *t;
+	struct shr_table *t;
 	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
-	struct table_column columns[] = {
+	struct shr_table_column columns[] = {
 		{"NSHead",    LEFT, AUTO_WIDTH},
 		{"NSID",      LEFT, AUTO_WIDTH},
 		{"NSPath",    LEFT, AUTO_WIDTH},
@@ -868,13 +868,13 @@ static int stdout_top_print_path_perf(FILE *stream, libnvme_subsystem_t s)
 		{"Util%",     LEFT, 6},
 	};
 
-	t = table_create();
+	t = shr_table_create();
 	if (!t) {
 		nvme_show_error("Failed to init path perf table");
 		return 1;
 	}
 
-	if (table_add_columns_filter(t, columns, ARRAY_SIZE(columns),
+	if (shr_table_add_columns_filter(t, columns, ARRAY_SIZE(columns),
 			subsystem_iopolicy_filter, (void *)s) < 0) {
 		nvme_show_error("Failed to add columns to path perf table");
 		ret = 1;
@@ -909,7 +909,7 @@ static int stdout_top_print_path_perf(FILE *stream, libnvme_subsystem_t s)
 			/* get controller associated with the path */
 			c = libnvme_path_get_ctrl(p);
 
-			row = table_get_row_id(t);
+			row = shr_table_get_row_id(t);
 			if (row < 0) {
 				nvme_show_error("Failed to add row to path perf table");
 				ret = 1;
@@ -926,51 +926,51 @@ static int stdout_top_print_path_perf(FILE *stream, libnvme_subsystem_t s)
 			col = -1;
 
 			if (first) {
-				table_set_value_str(t, ++col, row,
+				shr_table_set_value_str(t, ++col, row,
 						libnvme_ns_get_name(n), LEFT);
 				first = false;
 			} else
-				table_set_value_str(t, ++col, row,
+				shr_table_set_value_str(t, ++col, row,
 						"-->", CENTERED);
 
-			table_set_value_int(t, ++col, row,
+			shr_table_set_value_int(t, ++col, row,
 					libnvme_ns_get_nsid(n), CENTERED);
-			table_set_value_str(t, ++col, row,
+			shr_table_set_value_str(t, ++col, row,
 					libnvme_path_get_name(p), LEFT);
 
 			if (!strcmp(iopolicy, "numa")) {
 				const char *numa_nodes;
 
 				libnvme_path_get_numa_nodes(p, &numa_nodes, "");
-				table_set_value_str(t, ++col, row,
+				shr_table_set_value_str(t, ++col, row,
 				    numa_nodes, CENTERED);
 			} else if (!strcmp(iopolicy, "queue-depth")) {
 				int queue_depth;
 
 				libnvme_path_get_queue_depth(p, &queue_depth,
 							      0);
-				table_set_value_int(t, ++col, row,
+				shr_table_set_value_int(t, ++col, row,
 				    queue_depth, CENTERED);
 			}
 
-			table_set_value_str(t, ++col, row,
+			shr_table_set_value_str(t, ++col, row,
 					libnvme_ctrl_get_name(c), LEFT);
-			table_set_value_str(t, ++col, row, r_iops_str, LEFT);
-			table_set_value_str(t, ++col, row, w_iops_str, LEFT);
-			table_set_value_str(t, ++col, row, r_clat_str, LEFT);
-			table_set_value_str(t, ++col, row, w_clat_str, LEFT);
-			table_set_value_str(t, ++col, row, r_bw_str, LEFT);
-			table_set_value_str(t, ++col, row, w_bw_str, LEFT);
-			table_set_value_unsigned(t, ++col, row,
+			shr_table_set_value_str(t, ++col, row, r_iops_str, LEFT);
+			shr_table_set_value_str(t, ++col, row, w_iops_str, LEFT);
+			shr_table_set_value_str(t, ++col, row, r_clat_str, LEFT);
+			shr_table_set_value_str(t, ++col, row, w_clat_str, LEFT);
+			shr_table_set_value_str(t, ++col, row, r_bw_str, LEFT);
+			shr_table_set_value_str(t, ++col, row, w_bw_str, LEFT);
+			shr_table_set_value_unsigned(t, ++col, row,
 					inflights, LEFT);
-			table_set_value_double(t, ++col, row, util, LEFT);
+			shr_table_set_value_double(t, ++col, row, util, LEFT);
 
-			table_add_row(t, row);
+			shr_table_add_row(t, row);
 		}
 	}
-	table_print_stream(stream, t);
+	shr_table_print_stream(stream, t);
 free_tbl:
-	table_free(t);
+	shr_table_free(t);
 	return ret;
 }
 
@@ -1358,8 +1358,8 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 	char r_iops_str[16], w_iops_str[16];
 	char r_clat_str[16], w_clat_str[16];
 	char *iopolicy;
-	struct table *t;
-	struct table_column columns[] = {
+	struct shr_table *t;
+	struct shr_table_column columns[] = {
 		{"Subsystem",  LEFT, AUTO_WIDTH},
 		{"Namespaces", LEFT, AUTO_WIDTH},
 		{"Paths",      LEFT, AUTO_WIDTH},
@@ -1378,13 +1378,13 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 			dashboard_get_interval(db_ctx));
 	fprintf(stream, "\n--------- Subsystem Summary ----------\n\n");
 
-	t = table_create();
+	t = shr_table_create();
 	if (!t) {
 		nvme_show_error("Failed to init subsys screen table\n");
 		return -1;
 	}
 
-	if (table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
+	if (shr_table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
 		nvme_show_error("Failed to add columns to subsys screen table\n");
 		ret = -1;
 		goto free_tbl;
@@ -1393,8 +1393,8 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 	 * Header row count is calculated manually. The first row displays the
 	 * refresh interval, followed by an empty row. The third row displays
 	 * the heading followed by another empty row. The fifth row is for
-	 * displaying table columns and then another row for dashes underneath
-	 * the table columns.
+	 * displaying shr_table columns and then another row for dashes underneath
+	 * the shr_table columns.
 	 */
 	dashboard_set_header_rows(db_ctx, 6);
 
@@ -1453,7 +1453,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 		nvme_format_lat(max_rlat, r_clat_str, sizeof(r_clat_str));
 		nvme_format_lat(max_wlat, w_clat_str, sizeof(w_clat_str));
 
-		row = table_get_row_id(t);
+		row = shr_table_get_row_id(t);
 		if (row < 0) {
 			nvme_show_error("Failed to add row to subsys screen table\n");
 			ret = -1;
@@ -1462,25 +1462,25 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 
 		col = -1;
 
-		table_set_value_str(t, ++col, row,
+		shr_table_set_value_str(t, ++col, row,
 				libnvme_subsystem_get_name(s), LEFT);
-		table_set_value_int(t, ++col, row, num_ns, LEFT);
-		table_set_value_int(t, ++col, row, num_path, LEFT);
-		table_set_value_int(t, ++col, row, num_ctrl, LEFT);
-		table_set_value_str(t, ++col, row,
+		shr_table_set_value_int(t, ++col, row, num_ns, LEFT);
+		shr_table_set_value_int(t, ++col, row, num_path, LEFT);
+		shr_table_set_value_int(t, ++col, row, num_ctrl, LEFT);
+		shr_table_set_value_str(t, ++col, row,
 				iopolicy ? iopolicy : "NA", LEFT);
-		table_set_value_str(t, ++col, row, r_iops_str, LEFT);
-		table_set_value_str(t, ++col, row, w_iops_str, LEFT);
-		table_set_value_str(t, ++col, row, r_clat_str, LEFT);
-		table_set_value_str(t, ++col, row, w_clat_str, LEFT);
-		table_set_value_str(t, ++col, row, r_bw_str, LEFT);
-		table_set_value_str(t, ++col, row, w_bw_str, LEFT);
-		table_set_value_double(t, ++col, row, max_util, LEFT);
+		shr_table_set_value_str(t, ++col, row, r_iops_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, w_iops_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, r_clat_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, w_clat_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, r_bw_str, LEFT);
+		shr_table_set_value_str(t, ++col, row, w_bw_str, LEFT);
+		shr_table_set_value_double(t, ++col, row, max_util, LEFT);
 
-		table_add_row(t, row);
+		shr_table_add_row(t, row);
 	}
 
-	table_print_stream(stream, t);
+	shr_table_print_stream(stream, t);
 
 	fprintf(stream, "\n--------------------------------------\n");
 	fprintf(stream, "[up/down keys to navigate, Enter to view, q to quit]\n");
@@ -1496,7 +1496,7 @@ static int stdout_top_draw_subsys_screen(struct dashboard_ctx *db_ctx,
 	dashboard_set_footer_row_reverse(db_ctx, 2);
 
 free_tbl:
-	table_free(t);
+	shr_table_free(t);
 	return ret;
 }
 

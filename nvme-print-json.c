@@ -4929,7 +4929,7 @@ static void json_simple_list(struct libnvme_global_ctx *ctx)
 	obj_add_array(r, "Devices", jdevices);
 }
 
-static void json_list_item(libnvme_ns_t n, struct table *t)
+static void json_list_item(libnvme_ns_t n, struct shr_table *t)
 {
 	struct json_object *r = json_list_item_obj(n);
 

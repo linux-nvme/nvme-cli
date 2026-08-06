@@ -20,6 +20,7 @@ sources = [
     'parse-util.c',
     'shr-assert.c',
     'suffix-util.c',
+    'table.c',
 ]
 
 if host_system == 'windows'
