@@ -36,10 +36,10 @@ struct libnvme_ns_sysfs {
 	uint64_t *lba_util;
 	int *meta_size;
 	enum nvme_csi *csi;
-	volatile long command_retry_count;
-	volatile long command_error_count;
-	volatile long io_requeue_no_usable_path_count;
-	volatile long io_fail_no_available_path_count;
+	long command_retry_count;
+	long command_error_count;
+	long io_requeue_no_usable_path_count;
+	long io_fail_no_available_path_count;
 };
 
 struct libnvme_ns_sysfs *libnvme_ns_sysfs_alloc(void)

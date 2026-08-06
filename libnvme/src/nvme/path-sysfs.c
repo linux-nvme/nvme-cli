@@ -33,10 +33,10 @@ struct libnvme_path_sysfs {
 	char *ana_state;
 	char *numa_nodes;
 	int *grpid;
-	volatile int queue_depth;
-	volatile long multipath_failover_count;
-	volatile long command_retry_count;
-	volatile long command_error_count;
+	int queue_depth;
+	long multipath_failover_count;
+	long command_retry_count;
+	long command_error_count;
 };
 
 struct libnvme_path_sysfs *libnvme_path_sysfs_alloc(void)
