@@ -1339,7 +1339,11 @@ def emit_hdr_getter_lazy(f, prefix, sname, type_name, mname, mtype):
     """
     fn = _get_name(prefix, sname, mname)
     is_str = mtype == 'const char *'
-    out_type = 'const char **' if is_str else f'{mtype} *'
+    # mtype itself may already end in '*' (e.g. a cached-buffer pointer
+    # member) -- type_sep() decides whether boxing it as an out-param
+    # needs a space before the extra '*' or not, same as dflt_sep below,
+    # so two adjacent '*'s never end up with a stray space between them.
+    out_type = 'const char **' if is_str else f'{mtype}{type_sep(mtype)}*'
     dflt_type = 'const char *' if is_str else mtype
     dflt_sep = type_sep(dflt_type)
     f.write(

@@ -82,15 +82,31 @@ def _os_variants_equal(m):
     return _resolve_os(m, 'linux') == _resolve_os(m, 'win')
 
 
+def _pub_type(raw_type):
+    """Public API type for a raw storage type.
+
+    A raw pointer storage type is a mutable field the cache fills in
+    once (see emit_struct_def()'s matching "already a pointer, don't
+    box it again" branch); the public getter hands back a read-only
+    view into that cache, so it is exposed as pointer-to-const. "char
+    *" -> "const char *" is the original, single-type version of this
+    rule (see generate_accessors.parse_members's identical translation
+    for annotated headers); generalized here so any raw pointer type
+    (e.g. "uint8_t *" for a cached fixed-size byte buffer) gets the
+    same treatment, not just strings.
+    """
+    if raw_type.endswith('*') and not raw_type.startswith('const '):
+        return f'const {raw_type}'
+    return raw_type
+
+
 def _make_member(spec, resolved, is_absent=False):
     owner_field = spec['owner_field']
     name = resolved['name']
-    # Member.type is the *public* API type, not the storage type: a
-    # "char *" field is exposed as "const char *" (see
-    # generate_accessors.parse_members's identical translation for
-    # annotated headers) -- generate_hdr()'s generic getter/setter
-    # emitters use member.type verbatim for the public signature.
-    pub_type = 'const char *' if resolved['type'] == 'char *' else resolved['type']
+    # Member.type is the *public* API type, not the storage type --
+    # generate_hdr()'s generic getter/setter emitters use member.type
+    # verbatim for the public signature. See _pub_type()'s docstring.
+    pub_type = _pub_type(resolved['type'])
     field_path = f"{owner_field}->{name}"
     write_mode = 'generated' if resolved.get('writable') else 'none'
     read_mode = 'custom' if resolved.get('custom') else 'generated'
@@ -241,13 +257,16 @@ def loader_names(spec):
 def emit_struct_def(f, spec):
     f.write(f"struct {spec['struct_name']} {{\n")
     for m in spec['members']:
-        if m['type'] == 'char *':
-            # Never volatile-qualified even for a volatile *string*
-            # member: "volatile char *" qualifies the pointed-to chars,
-            # not the pointer -- not what a re-strdup'd cache wants. The
-            # 'volatile' spec flag means "no caching" at the generator
-            # level; it does not always map to the C keyword.
-            f.write(f"\tchar *{m['name']};\n")
+        if m['type'].endswith('*'):
+            # Already a pointer (a string, or a cached fixed-size
+            # buffer like eui64/nguid/uuid) -- stored directly, one
+            # level, not boxed again. Never volatile-qualified even for
+            # a volatile *string* member: "volatile char *" qualifies
+            # the pointed-to chars, not the pointer -- not what a
+            # re-strdup'd cache wants. The 'volatile' spec flag means
+            # "no caching" at the generator level; it does not always
+            # map to the C keyword.
+            f.write(f"\t{m['type']}{m['name']};\n")
         elif m.get('volatile'):
             # Never cached, so never boxed either: a plain value
             # re-read on every call. Not C `volatile`-qualified: every
@@ -499,8 +518,22 @@ def generate_swig(spec, members):
     does not match SWIG's member-variable property convention, so a
     plain alias cannot work here. Writable members are unaffected: a
     setter's shape has not changed, so it keeps the alias.
+
+    Readable members whose type emit_swig_getter_wrapper() has no
+    conversion for (not 'const char *', not in _PY_FROM -- e.g. a
+    pointer-to-cached-buffer member like eui64/nguid/uuid) are dropped
+    entirely, not just left out of 'readable': declaring a property
+    with no matching getter wrapper would reference an undefined SWIG
+    symbol. Left unexposed to Python -- no prior pointer-to-buffer
+    accessor in this codebase was ever SWIG-wrapped either.
     """
     owner_type = spec['owner_type']
+
+    def _py_representable(m):
+        return m.type == 'const char *' or m.type in _PY_FROM
+
+    members = [m for m in members
+               if m.read_mode == 'none' or _py_representable(m)]
     readable = [m for m in members if m.read_mode != 'none']
     writable = [m for m in members if m.write_mode != 'none']
 
