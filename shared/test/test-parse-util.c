@@ -8,6 +8,7 @@
 
 #include <errno.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -82,6 +83,186 @@ static bool test_rejected(void)
 	return pass;
 }
 
+static bool check_int_ret(const char *name, int got, int want)
+{
+	if (got == want) {
+		printf(" - %s [PASS]\n", name);
+		return true;
+	}
+
+	printf(" - %s: got %d, want %d [FAIL]\n", name, got, want);
+	return false;
+}
+
+static bool test_csv_int(void)
+{
+	char buf[] = "1,2,3";
+	int val[8] = { 0 };
+	bool pass = true;
+	int ret;
+
+	printf("test_csv_int:\n");
+
+	ret = shr_parse_csv_int(buf, val, 8);
+	pass &= check_int_ret("parses three entries", ret, 3);
+	pass &= check_int_ret("val[0]", val[0], 1);
+	pass &= check_int_ret("val[1]", val[1], 2);
+	pass &= check_int_ret("val[2]", val[2], 3);
+
+	{
+		char empty[] = "";
+
+		ret = shr_parse_csv_int(empty, val, 8);
+		pass &= check_int_ret("empty string is a no-op success", ret, 0);
+	}
+
+	{
+		char overflow[] = "1,2,3";
+
+		ret = shr_parse_csv_int(overflow, val, 2);
+		pass &= check_int_ret("more entries than max_length fails", ret, -1);
+	}
+
+	{
+		char bad[] = "1,notanumber";
+
+		ret = shr_parse_csv_int(bad, val, 8);
+		pass &= check_int_ret("a non-numeric entry fails", ret, -1);
+	}
+
+	return pass;
+}
+
+static bool test_csv_ushort(void)
+{
+	char buf[] = "10,20";
+	unsigned short val[8] = { 0 };
+	bool pass = true;
+	int ret;
+
+	printf("test_csv_ushort:\n");
+
+	ret = shr_parse_csv_ushort(buf, val, 8);
+	pass &= check_int_ret("parses two entries", ret, 2);
+	pass &= check_int_ret("val[0]", val[0], 10);
+	pass &= check_int_ret("val[1]", val[1], 20);
+
+	{
+		char overflow[] = "70000";
+
+		ret = shr_parse_csv_ushort(overflow, val, 8);
+		pass &= check_int_ret("value beyond UINT16_MAX fails", ret, -1);
+	}
+
+	return pass;
+}
+
+static bool test_csv_uint(void)
+{
+	char buf[] = "1,2,3";
+	unsigned int val[8] = { 0 };
+	bool pass = true;
+	int ret;
+
+	printf("test_csv_uint:\n");
+
+	ret = shr_parse_csv_uint(buf, val, 8);
+	pass &= check_int_ret("parses three entries", ret, 3);
+	pass &= check_int_ret("val[0]", val[0], 1);
+	pass &= check_int_ret("val[1]", val[1], 2);
+	pass &= check_int_ret("val[2]", val[2], 3);
+
+	{
+		char overflow[] = "4294967296";
+
+		ret = shr_parse_csv_uint(overflow, val, 8);
+		pass &= check_int_ret("value beyond UINT32_MAX fails", ret, -1);
+	}
+
+	return pass;
+}
+
+static bool test_csv_ulonglong(void)
+{
+	char buf[] = "42";
+	unsigned long long val[8] = { 0 };
+	bool pass = true;
+	int ret;
+
+	printf("test_csv_ulonglong:\n");
+
+	ret = shr_parse_csv_ulonglong(buf, val, 8);
+	pass &= check_int_ret("parses one entry", ret, 1);
+	pass &= check_int_ret("val[0]", (int)val[0], 42);
+
+	return pass;
+}
+
+static bool test_csv_u16(void)
+{
+	char buf[] = "10,20";
+	uint16_t val[8] = { 0 };
+	bool pass = true;
+	int ret;
+
+	printf("test_csv_u16:\n");
+
+	ret = shr_parse_csv_u16(buf, val, 8);
+	pass &= check_int_ret("parses two entries", ret, 2);
+	pass &= check_int_ret("val[0]", val[0], 10);
+	pass &= check_int_ret("val[1]", val[1], 20);
+
+	{
+		char overflow[] = "70000";
+
+		ret = shr_parse_csv_u16(overflow, val, 8);
+		pass &= check_int_ret("value beyond UINT16_MAX fails", ret, -1);
+	}
+
+	return pass;
+}
+
+static bool test_csv_u32(void)
+{
+	char buf[] = "1,2,3";
+	uint32_t val[8] = { 0 };
+	bool pass = true;
+	int ret;
+
+	printf("test_csv_u32:\n");
+
+	ret = shr_parse_csv_u32(buf, val, 8);
+	pass &= check_int_ret("parses three entries", ret, 3);
+	pass &= check_int_ret("val[0]", val[0], 1);
+	pass &= check_int_ret("val[1]", val[1], 2);
+	pass &= check_int_ret("val[2]", val[2], 3);
+
+	{
+		char overflow[] = "4294967296";
+
+		ret = shr_parse_csv_u32(overflow, val, 8);
+		pass &= check_int_ret("value beyond UINT32_MAX fails", ret, -1);
+	}
+
+	return pass;
+}
+
+static bool test_csv_u64(void)
+{
+	char buf[] = "42";
+	uint64_t val[8] = { 0 };
+	bool pass = true;
+	int ret;
+
+	printf("test_csv_u64:\n");
+
+	ret = shr_parse_csv_u64(buf, val, 8);
+	pass &= check_int_ret("parses one entry", ret, 1);
+	pass &= check_int_ret("val[0]", (int)val[0], 42);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -89,6 +270,13 @@ int main(void)
 	pass &= test_accepted_spellings();
 	pass &= test_case_insensitive();
 	pass &= test_rejected();
+	pass &= test_csv_int();
+	pass &= test_csv_ushort();
+	pass &= test_csv_uint();
+	pass &= test_csv_ulonglong();
+	pass &= test_csv_u16();
+	pass &= test_csv_u32();
+	pass &= test_csv_u64();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

@@ -41,6 +41,7 @@
 #include "util/cleanup.h"
 #include "util/types.h"
 #include "time-util.h"
+#include "parse-util.h"
 #include "nvme-pci-ids.h"
 
 #define CREATE_CMD
@@ -8325,7 +8326,7 @@ static int wdc_vs_smart_add_log(int argc, char **argv, struct command *acmd,
 		goto out;
 	}
 
-	num = argconfig_parse_comma_sep_array(cfg.log_page_mask, log_page_list, 16);
+	num = shr_parse_csv_int(cfg.log_page_mask, log_page_list, 16);
 
 	if (num == -1) {
 		nvme_show_error("ERROR: WDC: log page list is malformed");
