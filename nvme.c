@@ -58,7 +58,7 @@
 #include "plugin.h"
 #include "util/argconfig.h"
 #include "util/cleanup.h"
-#include "util/sighdl.h"
+#include "sig-util.h"
 #include "suffix-util.h"
 
 #define CREATE_CMD
@@ -3736,7 +3736,7 @@ static int top(int argc, char **argv, struct command *acmd,
 		return -EINVAL;
 	}
 
-	err = nvme_install_sigwinch_handler();
+	err = shr_install_sigwinch_handler();
 	if (err) {
 		nvme_show_error("failed to install sig handler for SIGWINCH");
 		return err;
@@ -4724,11 +4724,11 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *acmd, stru
 
 static int nvme_sleep(unsigned int seconds)
 {
-	nvme_sigint_received = false;
+	shr_sigint_received = false;
 
 	sleep(seconds);
 
-	if (nvme_sigint_received) {
+	if (shr_sigint_received) {
 		nvme_show_error("Interrupted device self-test operation by SIGINT");
 		return -SIGINT;
 	}
@@ -7156,9 +7156,9 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 			"WARNING: Format may irrevocably delete this device's data.\n"
 			"You have 10 seconds to press Ctrl-C to cancel this operation.\n\n"
 			"Use the force [--force] option to suppress this warning.");
-		nvme_sigint_received = false;
+		shr_sigint_received = false;
 		sleep(10);
-		if (nvme_sigint_received)
+		if (shr_sigint_received)
 			return -EINTR;
 		nvme_show_verbose_info("Sending format operation ...");
 	}
@@ -11239,7 +11239,7 @@ int main(int argc, char **argv)
 	if (err)
 		return err;
 
-	err = nvme_install_sigint_handler();
+	err = shr_install_sigint_handler();
 	if (err)
 		return err;
 

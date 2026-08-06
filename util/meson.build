@@ -9,12 +9,7 @@ util_sources = [
 
 if host_system == 'linux'
     util_sources += [
-        'util/sighdl-linux.c',
         'util/dashboard.c',
-    ]
-elif host_system == 'windows'
-    util_sources += [
-        'util/sighdl-win.c',
     ]
 endif
 

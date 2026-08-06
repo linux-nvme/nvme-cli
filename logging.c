@@ -14,7 +14,7 @@
 #include <libnvme-mi.h>
 
 #include "logging.h"
-#include "util/sighdl.h"
+#include "sig-util.h"
 #include "nvme-print.h"
 
 struct submit_data {
@@ -138,7 +138,7 @@ bool nvme_decide_retry(struct libnvme_transport_handle *hdl,
 		return false;
 
 	if (err != -EAGAIN ||
-	    !(err == -EINTR && !nvme_sigint_received))
+	    !(err == -EINTR && !shr_sigint_received))
 		return false;
 
 	nvme_log_retry(errno);

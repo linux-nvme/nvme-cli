@@ -31,7 +31,7 @@
 #include <sys/socket.h>
 #include <asm/types.h>
 
-#include "sighdl.h"
+#include "sig-util.h"
 #include "common.h"
 #include "nvme-print.h"
 #include "dashboard.h"
@@ -411,10 +411,10 @@ again:
 		if (ret < 0) {
 			if (errno == EINTR) {
 				/* Interrupted, signal is received ? */
-				if (nvme_sigint_received)
+				if (shr_sigint_received)
 					return EVENT_TYPE_KEY_QUIT;
 
-				if (nvme_sigwinch_received) {
+				if (shr_sigwinch_received) {
 					struct winsize ws;
 
 					if (ioctl(db_ctx->term_fd, TIOCGWINSZ,
@@ -422,7 +422,7 @@ again:
 						return -1;
 
 					db_ctx->frame.rows = ws.ws_row;
-					nvme_sigwinch_received = false;
+					shr_sigwinch_received = false;
 
 					/*
 					 * Returning 0 would force screen redraw

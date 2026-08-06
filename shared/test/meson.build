@@ -153,6 +153,19 @@ if host_system != 'windows'
 endif
 
 if host_system != 'windows'
+    test_sig_util = executable(
+        'test-sig-util',
+        ['test-sig-util.c'],
+        dependencies: [
+            config_dep,
+            shared_dep,
+        ],
+    )
+
+    test('shared - sig-util', test_sig_util)
+endif
+
+if host_system != 'windows'
     test_shr_assert = executable(
         'test-shr-assert',
         ['test-shr-assert.c'],
