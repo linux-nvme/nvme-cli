@@ -255,6 +255,7 @@ static bool ctrl_lookups(struct libnvme_global_ctx *ctx)
 	bool pass = true;
 
 	h = libnvme_first_host(ctx);
+	shr_assert(h);
 	shr_assert(!libnvme_get_subsystem(ctx, h, DEFAULT_SUBSYSNAME,
 			      DEFAULT_SUBSYSNQN, &s));
 	shr_assert(s);
