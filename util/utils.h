@@ -29,19 +29,6 @@ enum field_size {
 };
 
 /**
- * @brief convert time_t format time to a human readable string
- *
- * @param data_dir_path, input data directory path pointer
- * @param bin_path, input binary file path pointer
- * @param buffer_size, input buffer size pointer
- * @param retry_count, input retry count
- *
- * @return pointer to binary data buffer
- */
-unsigned char *read_binary_file(char *data_dir_path, const char *bin_path, long *buffer_size,
-				int retry_count);
-
-/**
  * @brief prints generic structure parser
  *
  * @param buf, input raw log data
