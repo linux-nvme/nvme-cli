@@ -32,7 +32,7 @@
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
-#include "util/hash.h"
+#include "crypto-util.h"
 
 #define CREATE_CMD
 
@@ -176,7 +176,7 @@ static int recv_rpmb_rsp(struct libnvme_transport_handle *hdl, int tgt, int size
 static void rpmb_nonce_init(struct rpmb_data_frame_t *req)
 {
 	int num = rand();
-	unsigned char *hash = create_md5((unsigned char *)&num, sizeof(num));
+	unsigned char *hash = shr_md5((unsigned char *)&num, sizeof(num));
 	if (hash) memcpy(req->nonce, hash, sizeof(req->nonce));
 }
 
@@ -538,7 +538,7 @@ static int auth_data_write_chunk(struct libnvme_transport_handle *hdl,
 	req->write_counter = write_cntr;
 
 	/* compute HMAC hash */
-	mac = create_hmac_sha256(((unsigned char *)req + 223), req_size - 223,
+	mac = shr_hmac_sha256(((unsigned char *)req + 223), req_size - 223,
 				 keybuf, keysize);
 	if (mac == NULL) {
 		nvme_show_error("failed to compute HMAC-SHA256");
@@ -646,7 +646,7 @@ static int rpmb_write_config_block(struct libnvme_transport_handle *hdl,
 
 	free(cfg_buf_read);
 	req->write_counter = write_cntr;
-	mac = create_hmac_sha256(((unsigned char *)req + 223), req_size - 223,
+	mac = shr_hmac_sha256(((unsigned char *)req + 223), req_size - 223,
 				 keybuf, keysize);
 	if (mac == NULL) {
 		nvme_show_error("failed to compute hmac-sha256 hash");
