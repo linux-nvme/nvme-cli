@@ -8,6 +8,7 @@
 
 #include <errno.h>
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -61,4 +62,69 @@ char *shr_basename(const char *path)
 	char *p = (char *)strrchr(path, '/');
 
 	return p ? p + 1 : (char *)path;
+}
+
+static char *join_path(const char *dir, const char *path)
+{
+	char *out;
+	size_t len;
+
+	if (!dir)
+		return strdup(path);
+	if (!path || !*path)
+		return strdup(dir);
+
+	len = strlen(dir) + 1 + strlen(path) + 1;
+	out = malloc(len);
+	if (!out)
+		return NULL;
+	snprintf(out, len, "%s/%s", dir, path);
+
+	return out;
+}
+
+unsigned char *shr_read_file(const char *dir, const char *path, long *size, int retries)
+{
+	__cleanup_free char *file_path = NULL;
+	unsigned char *buf = NULL;
+	FILE *file = NULL;
+	size_t n;
+	int i;
+
+	file_path = join_path(dir, path);
+	if (!file_path)
+		return NULL;
+
+	for (i = 0; i < retries; i++) {
+		file = fopen(file_path, "rb");
+		if (file)
+			break;
+		sleep((unsigned int)(retries > 1));
+	}
+	if (!file)
+		return NULL;
+
+	fseek(file, 0, SEEK_END);
+	*size = ftell(file);
+	if (*size <= 0) {
+		fclose(file);
+		return NULL;
+	}
+	fseek(file, 0, SEEK_SET);
+
+	buf = malloc(*size);
+	if (!buf) {
+		fclose(file);
+		return NULL;
+	}
+
+	n = fread(buf, 1, *size, file);
+	fclose(file);
+
+	if (n != (size_t)*size) {
+		free(buf);
+		return NULL;
+	}
+
+	return buf;
 }

@@ -272,6 +272,56 @@ static bool test_mkdir_from_fname(void)
 	return pass;
 }
 
+static bool test_read_file(void)
+{
+	static const char *dir = "shr-test-read-file-dir";
+	static const char *name = "data.bin";
+	static const char *content = "some file content\n";
+	char path[256];
+	bool pass = true;
+	long size = 0;
+	unsigned char *buf;
+	FILE *f;
+
+	printf("test_read_file:\n");
+
+	shr_mkdir(dir, 0755);
+	snprintf(path, sizeof(path), "%s/%s", dir, name);
+	f = fopen(path, "wb");
+	pass &= check_bool("test file created", f != NULL);
+	if (f) {
+		fwrite(content, 1, strlen(content), f);
+		fclose(f);
+	}
+
+	buf = shr_read_file(NULL, path, &size, 1);
+	pass &= check_bool("reads a file given as a plain path", buf != NULL);
+	if (buf) {
+		pass &= check_bool("size matches file content",
+				    (size_t)size == strlen(content));
+		pass &= check_bool("content matches what was written",
+				    !memcmp(buf, content, strlen(content)));
+		free(buf);
+	}
+
+	buf = shr_read_file(dir, name, &size, 1);
+	pass &= check_bool("reads a file given as dir + name", buf != NULL);
+	if (buf) {
+		pass &= check_bool("content matches when joining dir and name",
+				    (size_t)size == strlen(content) &&
+				    !memcmp(buf, content, strlen(content)));
+		free(buf);
+	}
+
+	buf = shr_read_file(NULL, "shr-test-read-file-does-not-exist", &size, 1);
+	pass &= check_bool("a missing file returns NULL", buf == NULL);
+
+	unlink(path);
+	rmdir(dir);
+
+	return pass;
+}
+
 static bool test_fsync_dir(void)
 {
 	printf("test_fsync_dir:\n");
@@ -295,6 +345,7 @@ int main(void)
 	pass &= test_mkdir_p();
 	pass &= test_mkdir_from_fname();
 	pass &= test_mkstemp();
+	pass &= test_read_file();
 	pass &= test_fsync_dir();
 
 	fflush(stdout);
