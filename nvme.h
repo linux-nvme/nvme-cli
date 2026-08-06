@@ -28,7 +28,6 @@
 #include "util/json.h"
 #include "util/argconfig.h"
 #include "util/cleanup.h"
-#include "util/types.h"
 
 enum nvme_cli_topo_ranking {
 	NVME_CLI_TOPO_NAMESPACE,

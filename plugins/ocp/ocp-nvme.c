@@ -26,7 +26,6 @@
 #include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "util/types.h"
 
 #include "ocp-smart-extended-log.h"
 #include "ocp-clear-features.h"

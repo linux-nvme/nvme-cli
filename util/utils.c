@@ -8,7 +8,6 @@
  */
 
 #include "utils.h"
-#include "types.h"
 #include "json.h"
 #include "cleanup.h"
 #include "hex-util.h"
