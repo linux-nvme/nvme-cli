@@ -1,18 +1,9 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /*
  * table.c : Common APIs for printing tabular format output.
  *
+ * This file is part of nvme-cli.
  * Copyright (c) 2025 Nilay Shroff, IBM
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
  */
 
 #include <stdio.h>
@@ -20,7 +11,6 @@
 #include <errno.h>
 #include <string.h>
 
-#include "nvme-print.h"
 #include "table.h"
 
 #if !NVME_HAVE_REALLOCARRAY
@@ -37,7 +27,7 @@ static void *reallocarray(void *ptr, size_t nmemb, size_t size)
 }
 #endif
 
-static int table_get_value_width(struct value *v)
+static int table_get_value_width(struct shr_table_value *v)
 {
 	char buf[64];
 	int len = -1;
@@ -65,13 +55,13 @@ static int table_get_value_width(struct value *v)
 		len = snprintf(buf, sizeof(buf), "%.2f", v->d);
 		break;
 	default:
-		nvme_show_error("Invalid print format!\n");
+		fprintf(stderr, "Invalid print format!\n");
 		break;
 	}
 	return len;
 }
 
-static void table_print_centered(FILE *stream, struct value *val, int width)
+static void table_print_centered(FILE *stream, struct shr_table_value *val, int width)
 {
 	int i, len, left_pad, right_pad;
 
@@ -110,7 +100,7 @@ static void table_print_centered(FILE *stream, struct value *val, int width)
 		fprintf(stream, "%.2f", val->d);
 		break;
 	default:
-		nvme_show_error("Invalid print format!\n");
+		fprintf(stderr, "Invalid print format!\n");
 		break;
 	}
 
@@ -119,11 +109,11 @@ static void table_print_centered(FILE *stream, struct value *val, int width)
 		fputc(' ', stream);
 }
 
-static void table_print_columns(FILE *stream, const struct table *t)
+static void table_print_columns(FILE *stream, const struct shr_table *t)
 {
 	int col, j, width;
-	struct table_column *c;
-	struct value v;
+	struct shr_table_column *c;
+	struct shr_table_value v;
 
 	for (col = 0; col < t->num_columns; col++) {
 		c = &t->columns[col];
@@ -158,13 +148,13 @@ static void table_print_columns(FILE *stream, const struct table *t)
 	fprintf(stream, "\n");
 }
 
-static void table_print_rows(FILE *stream, const struct table *t)
+static void table_print_rows(FILE *stream, const struct shr_table *t)
 {
 	int row, col;
-	struct table_column *c;
-	struct table_row *r;
+	struct shr_table_column *c;
+	struct shr_table_row *r;
 	int width;
-	struct value *v;
+	struct shr_table_value *v;
 
 	for (row = 0; row < t->num_rows; row++) {
 		r = &t->rows[row];
@@ -204,7 +194,7 @@ static void table_print_rows(FILE *stream, const struct table *t)
 					fprintf(stream, "%*.2f", width, v->d);
 					break;
 				default:
-					nvme_show_error("Invalid format!\n");
+					fprintf(stderr, "Invalid format!\n");
 					break;
 				}
 				break;
@@ -217,7 +207,7 @@ static void table_print_rows(FILE *stream, const struct table *t)
 	}
 }
 
-void table_print_stream(FILE *stream, struct table *t)
+void shr_table_print_stream(FILE *stream, struct shr_table *t)
 {
 	/* first print columns */
 	table_print_columns(stream, t);
@@ -226,22 +216,22 @@ void table_print_stream(FILE *stream, struct table *t)
 	table_print_rows(stream, t);
 }
 
-void table_print(struct table *t)
+void shr_table_print(struct shr_table *t)
 {
-	table_print_stream(stdout, t);
+	shr_table_print_stream(stdout, t);
 }
 
-int table_get_row_id(struct table *t)
+int shr_table_get_row_id(struct shr_table *t)
 {
-	struct table_row *new_rows;
+	struct shr_table_row *new_rows;
 	int row = t->num_rows;
 
-	new_rows = reallocarray(t->rows, (row + 1), sizeof(struct table_row));
+	new_rows = reallocarray(t->rows, (row + 1), sizeof(struct shr_table_row));
 	if (!new_rows)
 		return -ENOMEM;
 
 	t->rows = new_rows;
-	t->rows[row].val = calloc(t->num_columns, sizeof(struct value));
+	t->rows[row].val = calloc(t->num_columns, sizeof(struct shr_table_value));
 	if (!t->rows->val)
 		return -ENOMEM;
 
@@ -249,10 +239,10 @@ int table_get_row_id(struct table *t)
 	return row;
 }
 
-void table_add_row(struct table *t, int row_id)
+void shr_table_add_row(struct shr_table *t, int row_id)
 {
 	int col, max_width, width;
-	struct table_row *row = &t->rows[row_id];
+	struct shr_table_row *row = &t->rows[row_id];
 
 	/* Adjust the column width based on the row value. */
 	for (col = 0; col < t->num_columns; col++) {
@@ -266,33 +256,33 @@ void table_add_row(struct table *t, int row_id)
 	}
 }
 
-struct table *table_create(void)
+struct shr_table *shr_table_create(void)
 {
-	return calloc(1, sizeof(struct table));
+	return calloc(1, sizeof(struct shr_table));
 }
 
-struct table *table_init_with_columns(struct table_column *c, int num_columns)
+struct shr_table *shr_table_init_with_columns(struct shr_table_column *c, int num_columns)
 {
-	struct table *t = table_create();
+	struct shr_table *t = shr_table_create();
 
 	if (!t)
 		return NULL;
 
-	if (table_add_columns(t, c, num_columns)) {
-		table_free(t);
+	if (shr_table_add_columns(t, c, num_columns)) {
+		shr_table_free(t);
 		return NULL;
 	}
 
 	return t;
 }
 
-static int table_add_column(struct table *t, struct table_column *c)
+static int table_add_column(struct shr_table *t, struct shr_table_column *c)
 {
-	struct table_column *new_columns;
+	struct shr_table_column *new_columns;
 	int col = t->num_columns;
 
 	new_columns = reallocarray(t->columns, t->num_columns + 1,
-			sizeof(struct table_column));
+			sizeof(struct shr_table_column));
 	if (!new_columns)
 		return -ENOMEM;
 
@@ -317,7 +307,7 @@ static int table_add_column(struct table *t, struct table_column *c)
 	return 0;
 }
 
-int table_add_columns_filter(struct table *t, struct table_column *c,
+int shr_table_add_columns_filter(struct shr_table *t, struct shr_table_column *c,
 			int num_columns,
 			bool (*filter)(const char *name, void *arg),
 			void *arg)
@@ -325,7 +315,7 @@ int table_add_columns_filter(struct table *t, struct table_column *c,
 	int ret = 0, col;
 
 	if (!filter)
-		return table_add_columns(t, c, num_columns);
+		return shr_table_add_columns(t, c, num_columns);
 
 	for (col = 0; col < num_columns; col++) {
 		if (!filter(c[col].name, arg))
@@ -346,11 +336,11 @@ free_col:
 	return ret;
 }
 
-int table_add_columns(struct table *t, struct table_column *c, int num_columns)
+int shr_table_add_columns(struct shr_table *t, struct shr_table_column *c, int num_columns)
 {
 	int ret = 0, col;
 
-	t->columns = calloc(num_columns, sizeof(struct table_column));
+	t->columns = calloc(num_columns, sizeof(struct shr_table_column));
 	if (!t->columns)
 		return -ENOMEM;
 
@@ -388,11 +378,11 @@ free_col:
 	return ret;
 }
 
-void table_free(struct table *t)
+void shr_table_free(struct shr_table *t)
 {
 	int row, col;
-	struct table_row *r;
-	struct value *v;
+	struct shr_table_row *r;
+	struct shr_table_value *v;
 
 	/* free rows */
 	for (row = 0; row < t->num_rows; row++) {

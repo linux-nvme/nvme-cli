@@ -1697,7 +1697,7 @@ void nvme_generic_full_path(libnvme_ns_t n, char *path, size_t len)
 	snprintf(path, len, "%s", libnvme_ns_get_generic_name(n));
 }
 
-void nvme_show_list_item(libnvme_ns_t n, struct table *t)
+void nvme_show_list_item(libnvme_ns_t n, struct shr_table *t)
 {
 	nvme_print(list_item, NORMAL, n, t);
 }

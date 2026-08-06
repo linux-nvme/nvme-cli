@@ -7,7 +7,7 @@
 
 #include "nvme.h"
 #include "types.h"
-#include "util/table.h"
+#include "table.h"
 
 typedef struct nvme_effects_log_node {
 	struct nvme_cmd_effects_log effects; /* needs to be first member because of alignment requirement. */
@@ -126,7 +126,7 @@ struct print_ops {
 	void (*log)(const char *devname, struct nvme_get_log_args *args);
 
 	/* libnvme tree print functions */
-	void (*list_item)(libnvme_ns_t n, struct table *t);
+	void (*list_item)(libnvme_ns_t n, struct shr_table *t);
 	void (*list_items)(struct libnvme_global_ctx *ctx);
 	void (*print_nvme_subsystem_list)(struct libnvme_global_ctx *ctx, bool show_ana);
 	void (*topology_ctrl)(struct libnvme_global_ctx *ctx);
@@ -325,7 +325,7 @@ void nvme_show_zns_report_zones(void *report, __u32 descs,
 				nvme_print_flags_t flags);
 void json_nvme_finish_zone_list(__u64 nr_zones, 
 	struct json_object *zone_list);
-void nvme_show_list_item(libnvme_ns_t n, struct table *t);
+void nvme_show_list_item(libnvme_ns_t n, struct shr_table *t);
 
 void nvme_show_fdp_configs(struct nvme_fdp_config_log *configs, size_t len,
 		nvme_print_flags_t flags);

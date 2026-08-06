@@ -27,7 +27,7 @@
 #include "nvme-models.h"
 #include "suffix-util.h"
 #include "util/types.h"
-#include "util/table.h"
+#include "table.h"
 #include "util/cleanup.h"
 #include "logging.h"
 #include "common.h"
@@ -212,7 +212,7 @@ struct nvme_resources {
 
 struct nvme_resources_table {
 	struct nvme_resources *res;
-	struct table *t;
+	struct shr_table *t;
 };
 
 static int nvme_resources_init(struct libnvme_global_ctx *ctx, struct nvme_resources *res)
@@ -5741,7 +5741,7 @@ static void stdout_generic_full_path(libnvme_ns_t n, char *path, size_t len)
 	snprintf(path, len, "%s", libnvme_ns_get_generic_name(n));
 }
 
-static void list_item(libnvme_ns_t n, struct table *t)
+static void list_item(libnvme_ns_t n, struct shr_table *t)
 {
 	char usage[128] = { 0 }, format[128] = { 0 };
 	char devname[128] = { 0 }; char genname[128] = { 0 };
@@ -5774,24 +5774,24 @@ static void list_item(libnvme_ns_t n, struct table *t)
 	stdout_dev_full_path(n, devname, sizeof(devname));
 	stdout_generic_full_path(n, genname, sizeof(genname));
 
-	row = table_get_row_id(t);
+	row = shr_table_get_row_id(t);
 	if (row < 0) {
 		printf("Failed to add row\n");
 		return;
 	}
-	if (table_set_value_str(t, SIMPLE_LIST_COL_NODE, row, devname, LEFT)) {
+	if (shr_table_set_value_str(t, SIMPLE_LIST_COL_NODE, row, devname, LEFT)) {
 		printf("Failed to set node value\n");
 		return;
 	}
-	if (table_set_value_str(t, SIMPLE_LIST_COL_GENERIC, row, genname, LEFT)) {
+	if (shr_table_set_value_str(t, SIMPLE_LIST_COL_GENERIC, row, genname, LEFT)) {
 		printf("Failed to set generic value\n");
 		return;
 	}
-	if (table_set_value_str(t, SIMPLE_LIST_COL_SN, row, libnvme_ns_get_serial(n), LEFT)) {
+	if (shr_table_set_value_str(t, SIMPLE_LIST_COL_SN, row, libnvme_ns_get_serial(n), LEFT)) {
 		printf("Failed to set sn value\n");
 		return;
 	}
-	if (table_set_value_str(t, SIMPLE_LIST_COL_MODEL, row, libnvme_ns_get_model(n), LEFT)) {
+	if (shr_table_set_value_str(t, SIMPLE_LIST_COL_MODEL, row, libnvme_ns_get_model(n), LEFT)) {
 		printf("Failed to set model value\n");
 		return;
 	}
@@ -5799,31 +5799,31 @@ static void list_item(libnvme_ns_t n, struct table *t)
 		printf("Failed to output ns string\n");
 		return;
 	}
-	if (table_set_value_str(t, SIMPLE_LIST_COL_NS, row, ns, LEFT)) {
+	if (shr_table_set_value_str(t, SIMPLE_LIST_COL_NS, row, ns, LEFT)) {
 		printf("Failed to set ns value\n");
 		return;
 	}
-	if (table_set_value_str(t, SIMPLE_LIST_COL_USAGE, row, usage, LEFT)) {
+	if (shr_table_set_value_str(t, SIMPLE_LIST_COL_USAGE, row, usage, LEFT)) {
 		printf("Failed to set usage value\n");
 		return;
 	}
-	if (table_set_value_str(t, SIMPLE_LIST_COL_FORMAT, row, format, LEFT)) {
+	if (shr_table_set_value_str(t, SIMPLE_LIST_COL_FORMAT, row, format, LEFT)) {
 		printf("Failed to set format value\n");
 		return;
 	}
-	if (table_set_value_str(t, SIMPLE_LIST_COL_FW_REV, row, libnvme_ns_get_firmware(n), LEFT)) {
+	if (shr_table_set_value_str(t, SIMPLE_LIST_COL_FW_REV, row, libnvme_ns_get_firmware(n), LEFT)) {
 		printf("Failed to set fw rev value\n");
 		return;
 	}
-	table_add_row(t, row);
+	shr_table_add_row(t, row);
 }
 
-static void stdout_list_item(libnvme_ns_t n, struct table *t)
+static void stdout_list_item(libnvme_ns_t n, struct shr_table *t)
 {
 	list_item(n, t);
 }
 
-static void stdout_list_item_table(libnvme_ns_t n, struct table *t)
+static void stdout_list_item_table(libnvme_ns_t n, struct shr_table *t)
 {
 	list_item(n, t);
 }
@@ -5843,7 +5843,7 @@ static bool stdout_simple_ns(const char *name, void *arg)
 static void stdout_simple_list(struct libnvme_global_ctx *ctx)
 {
 	struct nvme_resources res;
-	struct table_column columns[] = {
+	struct shr_table_column columns[] = {
 		{ "Node", LEFT, 21 },
 		{ "Generic", LEFT, 21 },
 		{ "SN", LEFT, 20 },
@@ -5853,7 +5853,7 @@ static void stdout_simple_list(struct libnvme_global_ctx *ctx)
 		{ "Format", LEFT, 16 },
 		{ "FW Rev", LEFT, 8 },
 	};
-	struct table *t = table_init_with_columns(columns, ARRAY_SIZE(columns));
+	struct shr_table *t = shr_table_init_with_columns(columns, ARRAY_SIZE(columns));
 	struct nvme_resources_table res_t = { &res, t };
 
 	if (!t) {
@@ -5865,10 +5865,10 @@ static void stdout_simple_list(struct libnvme_global_ctx *ctx)
 
 	strset_iterate_sorted(&res.namespaces, stdout_simple_ns, &res_t);
 
-	table_print(t);
+	shr_table_print(t);
 
 	nvme_resources_free(&res);
-	table_free(t);
+	shr_table_free(t);
 }
 
 static void stdout_ns_details(libnvme_ns_t n)
@@ -6096,7 +6096,7 @@ static void stdout_list_items(struct libnvme_global_ctx *ctx)
 		stdout_simple_list(ctx);
 }
 
-static int subsystem_topology_multipath_add_row(struct table *t,
+static int subsystem_topology_multipath_add_row(struct shr_table *t,
 		const char *iopolicy, const char *nshead,
 		const char *nsid, const char *nspath,
 		const char *anastate, const char *iopolicy_info,
@@ -6106,24 +6106,24 @@ static int subsystem_topology_multipath_add_row(struct table *t,
 	int row;
 	int col = -1;
 
-	row = table_get_row_id(t);
+	row = shr_table_get_row_id(t);
 	if (row < 0) {
 		nvme_show_error("Failed to add subsys topology multipath row");
 		return row;
 	}
 
-	table_set_value_str(t, ++col, row, nshead, CENTERED);
-	table_set_value_str(t, ++col, row, nsid, CENTERED);
-	table_set_value_str(t, ++col, row, nspath, CENTERED);
-	table_set_value_str(t, ++col, row, anastate, CENTERED);
+	shr_table_set_value_str(t, ++col, row, nshead, CENTERED);
+	shr_table_set_value_str(t, ++col, row, nsid, CENTERED);
+	shr_table_set_value_str(t, ++col, row, nspath, CENTERED);
+	shr_table_set_value_str(t, ++col, row, anastate, CENTERED);
 	if (!strcmp(iopolicy, "numa") || !strcmp(iopolicy, "queue-depth"))
-		table_set_value_str(t, ++col, row, iopolicy_info, CENTERED);
-	table_set_value_str(t, ++col, row, ctrl, CENTERED);
-	table_set_value_str(t, ++col, row, trtype, CENTERED);
-	table_set_value_str(t, ++col, row, address, CENTERED);
-	table_set_value_str(t, ++col, row, state, CENTERED);
+		shr_table_set_value_str(t, ++col, row, iopolicy_info, CENTERED);
+	shr_table_set_value_str(t, ++col, row, ctrl, CENTERED);
+	shr_table_set_value_str(t, ++col, row, trtype, CENTERED);
+	shr_table_set_value_str(t, ++col, row, address, CENTERED);
+	shr_table_set_value_str(t, ++col, row, state, CENTERED);
 
-	table_add_row(t, row);
+	shr_table_add_row(t, row);
 
 	return 0;
 }
@@ -6137,9 +6137,9 @@ static void stdout_tabular_subsystem_topology_multipath(libnvme_subsystem_t s)
 	char nshead[32], nsid[32];
 	char iopolicy_info[256];
 	int ret, num_path;
-	struct table *t;
+	struct shr_table *t;
 	const char *iopolicy = libnvme_subsystem_get_iopolicy(s);
-	struct table_column columns[] = {
+	struct shr_table_column columns[] = {
 		{"NSHead",     LEFT, AUTO_WIDTH},
 		{"NSID",       LEFT, AUTO_WIDTH},
 		{"NSPath",     LEFT, AUTO_WIDTH},
@@ -6152,13 +6152,13 @@ static void stdout_tabular_subsystem_topology_multipath(libnvme_subsystem_t s)
 		{"State",      LEFT, AUTO_WIDTH},
 	};
 
-	t = table_create();
+	t = shr_table_create();
 	if (!t) {
 		nvme_show_error("Failed to init subsys topology multipath table");
 		return;
 	}
 
-	if (table_add_columns_filter(t, columns, ARRAY_SIZE(columns),
+	if (shr_table_add_columns_filter(t, columns, ARRAY_SIZE(columns),
 			subsystem_iopolicy_filter, (void *)s) < 0) {
 		nvme_show_error("Failed to add subsys topology multipath columns");
 		goto free_tbl;
@@ -6243,9 +6243,9 @@ static void stdout_tabular_subsystem_topology_multipath(libnvme_subsystem_t s)
 		}
 	}
 
-	table_print(t);
+	shr_table_print(t);
 free_tbl:
-	table_free(t);
+	shr_table_free(t);
 }
 
 static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
@@ -6370,24 +6370,24 @@ static void stdout_subsystem_topology_multipath(libnvme_subsystem_t s,
 	}
 }
 
-static int subsystem_topology_add_row(struct table *t,
+static int subsystem_topology_add_row(struct shr_table *t,
 		const char *ns, const char *nsid, const char *ctrl,
 		const char *trtype, const char *address, const char *state)
 {
-	int row = table_get_row_id(t);
+	int row = shr_table_get_row_id(t);
 	if (row < 0) {
 		nvme_show_error("Failed to add subsys topology row");
 		return row;
 	}
 
-	table_set_value_str(t, 0, row, ns, CENTERED);
-	table_set_value_str(t, 1, row, nsid, CENTERED);
-	table_set_value_str(t, 2, row, ctrl, CENTERED);
-	table_set_value_str(t, 3, row, trtype, CENTERED);
-	table_set_value_str(t, 4, row, address, CENTERED);
-	table_set_value_str(t, 5, row, state, CENTERED);
+	shr_table_set_value_str(t, 0, row, ns, CENTERED);
+	shr_table_set_value_str(t, 1, row, nsid, CENTERED);
+	shr_table_set_value_str(t, 2, row, ctrl, CENTERED);
+	shr_table_set_value_str(t, 3, row, trtype, CENTERED);
+	shr_table_set_value_str(t, 4, row, address, CENTERED);
+	shr_table_set_value_str(t, 5, row, state, CENTERED);
 
-	table_add_row(t, row);
+	shr_table_add_row(t, row);
 
 	return 0;
 }
@@ -6397,8 +6397,8 @@ static void stdout_tabular_subsystem_topology(libnvme_subsystem_t s)
 	libnvme_ctrl_t c;
 	libnvme_ns_t n;
 	int ret, num_ns;
-	struct table *t;
-	struct table_column columns[] = {
+	struct shr_table *t;
+	struct shr_table_column columns[] = {
 		{"Namespace",  LEFT, AUTO_WIDTH},
 		{"NSID",       LEFT, AUTO_WIDTH},
 		{"Controller", LEFT, AUTO_WIDTH},
@@ -6407,13 +6407,13 @@ static void stdout_tabular_subsystem_topology(libnvme_subsystem_t s)
 		{"State",      LEFT, AUTO_WIDTH},
 	};
 
-	t = table_create();
+	t = shr_table_create();
 	if (!t) {
 		nvme_show_error("Failed to init subsys topology table");
 		return;
 	}
 
-	if (table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
+	if (shr_table_add_columns(t, columns, ARRAY_SIZE(columns)) < 0) {
 		nvme_show_error("Failed to add subsys topology columns");
 		goto free_tbl;
 	}
@@ -6453,9 +6453,9 @@ static void stdout_tabular_subsystem_topology(libnvme_subsystem_t s)
 			}
 		}
 	}
-	table_print(t);
+	shr_table_print(t);
 free_tbl:
-	table_free(t);
+	shr_table_free(t);
 }
 
 static void stdout_subsystem_topology(libnvme_subsystem_t s,

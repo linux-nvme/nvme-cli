@@ -70,6 +70,17 @@ test_hex_util = executable(
 
 test('shared - hex-util', test_hex_util)
 
+test_table = executable(
+    'test-table',
+    ['test-table.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - table', test_table)
+
 test_suffix_util = executable(
     'test-suffix-util',
     ['test-suffix-util.c'],
