@@ -22,4 +22,16 @@ if python3.found()
             timeout: 120,
         )
     endif
+
+    # Argument handling of the completion generator; needs no nvme binary or
+    # json-c (it feeds a minimal model on stdin), so it lives outside the guard.
+    test(
+        'nvme-cli - generate-completions-args',
+        python3,
+        args: [
+            files('test_generate_completions_args.py'),
+            meson.project_source_root() / 'completions' / 'generate-completions.py',
+        ],
+        timeout: 60,
+    )
 endif
