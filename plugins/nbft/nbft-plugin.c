@@ -360,7 +360,7 @@ static struct json_object *nbft_to_json(struct libnbft_info *nbft, bool show_sub
 	     && json_object_add_value_string(host_json, "nqn", nbft->host.nqn))
 	    || (nbft->host.id
 		&& json_object_add_value_string(host_json, "id",
-						util_uuid_to_string(nbft->host.id))))
+						shr_uuid_to_string(nbft->host.id))))
 		goto fail;
 	json_object_add_value_int(host_json, "host_id_configured",
 				  !!(nbft->host.flags & NBFT_HOST_HOSTID_CONFIGURED));

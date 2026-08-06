@@ -428,7 +428,7 @@ void json_nvme_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	obj_add_uint(r, "nssl", le32_to_cpu(ctrl->nssl));
 	obj_add_int(r, "plsi", ctrl->plsi);
 	obj_add_int(r, "cntrltype", ctrl->cntrltype);
-	obj_add_str(r, "fguid", util_uuid_to_string(ctrl->fguid));
+	obj_add_str(r, "fguid", shr_uuid_to_string(ctrl->fguid));
 	obj_add_int(r, "crdt1", le16_to_cpu(ctrl->crdt1));
 	obj_add_int(r, "crdt2", le16_to_cpu(ctrl->crdt2));
 	obj_add_int(r, "crdt3", le16_to_cpu(ctrl->crdt3));
@@ -681,7 +681,7 @@ void json_fw_log(struct nvme_firmware_slot *fw_log, const char *devname)
 			frs = (__le64 *)&fw_log->frs[i];
 			snprintf(str, sizeof(str), "%"PRIu64" (%s)",
 				le64_to_cpu(*frs),
-			util_fw_to_string(fw_log->frs[i]));
+			shr_fw_to_string(fw_log->frs[i]));
 			obj_add_str(fwsi, fmt, str);
 		}
 	}
@@ -1700,10 +1700,10 @@ void nvme_json_pel_fw_commit(void *pevent_log_info, __u32 offset,
 	struct nvme_fw_commit_event *fw_commit_event = pevent_log_info + offset;
 
 	snprintf(fw_str, sizeof(fw_str), "%"PRIu64" (%s)", le64_to_cpu(fw_commit_event->old_fw_rev),
-		 util_fw_to_string((char *)&fw_commit_event->old_fw_rev));
+		 shr_fw_to_string((char *)&fw_commit_event->old_fw_rev));
 	obj_add_str(valid_attrs, "old_fw_rev", fw_str);
 	snprintf(fw_str, sizeof(fw_str), "%"PRIu64" (%s)", le64_to_cpu(fw_commit_event->new_fw_rev),
-		 util_fw_to_string((char *)&fw_commit_event->new_fw_rev));
+		 shr_fw_to_string((char *)&fw_commit_event->new_fw_rev));
 	obj_add_str(valid_attrs, "new_fw_rev", fw_str);
 	obj_add_uint(valid_attrs, "fw_commit_action", fw_commit_event->fw_commit_action);
 	obj_add_uint(valid_attrs, "fw_slot", fw_commit_event->fw_slot);
@@ -1736,7 +1736,7 @@ void nvme_json_pel_power_on_reset(void *pevent_log_info, __u32 offset,
 
 	fw_rev = pevent_log_info + offset;
 	snprintf(fw_str, sizeof(fw_str), "%"PRIu64" (%s)", le64_to_cpu(*fw_rev),
-		 util_fw_to_string((char *)fw_rev));
+		 shr_fw_to_string((char *)fw_rev));
 	obj_add_str(valid_attrs, "fw_rev", fw_str);
 
 	for (i = 0; i < por_info_list; i++) {
@@ -3909,13 +3909,13 @@ static void json_feat_perfc_id_list(struct json_object *r, struct nvme_perf_attr
 		attri_vs = i + NVME_FEAT_PERFC_ATTRI_VS_MIN;
 		sprintf(json_str, "performance attribute %02xh identifier (PA%02XHI)", attri_vs,
 			attri_vs);
-		obj_add_str(paide, json_str, util_uuid_to_string(data->id_list[i].id));
+		obj_add_str(paide, json_str, shr_uuid_to_string(data->id_list[i].id));
 	}
 }
 
 static void json_feat_perfc_vs(struct json_object *r, struct nvme_vs_perf_attr *data)
 {
-	obj_add_str(r, "performance attribute identifier (PAID)", util_uuid_to_string(data->paid));
+	obj_add_str(r, "performance attribute identifier (PAID)", shr_uuid_to_string(data->paid));
 	obj_add_uint(r, "attribute length (ATTRL)", data->attrl);
 	obj_d(r, "vendor specific (VS)", (unsigned char *)data->vs, data->attrl, 16, 1);
 }
@@ -4497,7 +4497,7 @@ static void json_nvme_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 		obj_add_int(entry, "association",
 			uuid_list->entry[i].header & 0x3);
 		obj_add_str(entry, "uuid",
-			util_uuid_to_string(uuid));
+			shr_uuid_to_string(uuid));
 		array_add_obj(entries, entry);
 	}
 

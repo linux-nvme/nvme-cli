@@ -28,6 +28,7 @@
 #include "suffix-util.h"
 #include "util/types.h"
 #include "uint128-util.h"
+#include "uuid-util.h"
 #include "int-util.h"
 #include "table.h"
 #include "util/cleanup.h"
@@ -447,9 +448,9 @@ void nvme_show_pel_fw_commit_event(void *pevent_log_info, __u32 offset)
 
 	printf("FW Commit Event Entry:\n");
 	printf("Old Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(fw_commit_event->old_fw_rev),
-	       util_fw_to_string((char *)&fw_commit_event->old_fw_rev));
+	       shr_fw_to_string((char *)&fw_commit_event->old_fw_rev));
 	printf("New Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(fw_commit_event->new_fw_rev),
-	       util_fw_to_string((char *)&fw_commit_event->new_fw_rev));
+	       shr_fw_to_string((char *)&fw_commit_event->new_fw_rev));
 	printf("FW Commit Action: %u\n", fw_commit_event->fw_commit_action);
 	printf("FW Slot: %u\n", fw_commit_event->fw_slot);
 	printf("Status Code Type for Firmware Commit Command: %u\n", fw_commit_event->sct_fw);
@@ -480,7 +481,7 @@ void nvme_show_pel_power_on_reset_event(void *pevent_log_info, __u32 offset,
 	printf("Power On Reset Event Entry:\n");
 	fw_rev = pevent_log_info + offset;
 	printf("Firmware Revision: %"PRIu64" (%s)\n", le64_to_cpu(*fw_rev),
-	       util_fw_to_string((char *)fw_rev));
+	       shr_fw_to_string((char *)fw_rev));
 	printf("Reset Information List:\n");
 
 	for (int i = 0; i < por_info_list; i++) {
@@ -3486,7 +3487,7 @@ static void stdout_id_ctrl(struct nvme_id_ctrl *ctrl, const char *product_name,
 	printf("cntrltype : %d\n", ctrl->cntrltype);
 	if (human)
 		stdout_id_ctrl_cntrltype(ctrl->cntrltype);
-	printf("fguid     : %s\n", util_uuid_to_string(ctrl->fguid));
+	printf("fguid     : %s\n", shr_uuid_to_string(ctrl->fguid));
 	printf("crdt1     : %u\n", le16_to_cpu(ctrl->crdt1));
 	printf("crdt2     : %u\n", le16_to_cpu(ctrl->crdt2));
 	printf("crdt3     : %u\n", le16_to_cpu(ctrl->crdt3));
@@ -4248,7 +4249,7 @@ static void stdout_id_uuid_list(const struct nvme_id_uuid_list *uuid_list)
 		printf(" Entry[%3d]\n", i+1);
 		printf(".................\n");
 		printf("association  : %#x %s\n", identifier_association, association);
-		printf("UUID         : %s", util_uuid_to_string(uuid));
+		printf("UUID         : %s", shr_uuid_to_string(uuid));
 		if (memcmp(uuid_list->entry[i].uuid, invalid_uuid,
 			   sizeof(zero_uuid)) == 0)
 			printf(" (Invalid UUID)");
@@ -4444,7 +4445,7 @@ static void stdout_fw_log(struct nvme_firmware_slot *fw_log,
 			frs = (__le64 *)&fw_log->frs[i];
 			printf("frs%d : %#016"PRIx64" (%s)\n", i + 1,
 				le64_to_cpu(*frs),
-				util_fw_to_string(fw_log->frs[i]));
+				shr_fw_to_string(fw_log->frs[i]));
 		}
 	}
 }
@@ -5268,13 +5269,13 @@ static void stdout_feat_perfc_id_list(struct nvme_perf_attr_id_list *data)
 	for (i = 0; i < ARRAY_SIZE(data->id_list); i++) {
 		attri_vs = i + NVME_FEAT_PERFC_ATTRI_VS_MIN;
 		printf("performance attribute %02xh identifier (PA%02XHI): %s\n", attri_vs,
-		       attri_vs, util_uuid_to_string(data->id_list[i].id));
+		       attri_vs, shr_uuid_to_string(data->id_list[i].id));
 	}
 }
 
 static void stdout_feat_perfc_vs(struct nvme_vs_perf_attr *data)
 {
-	printf("performance attribute identifier (PAID): %s\n", util_uuid_to_string(data->paid));
+	printf("performance attribute identifier (PAID): %s\n", shr_uuid_to_string(data->paid));
 	printf("attribute length (ATTRL): %u\n", data->attrl);
 	printf("vendor specific (VS):\n");
 	d((unsigned char *)data->vs, data->attrl, 16, 1);
