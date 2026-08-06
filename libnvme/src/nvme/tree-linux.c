@@ -416,23 +416,6 @@ static int libnvme_strtou32(const char *str, void *res)
 	return 0;
 }
 
-static int libnvme_strtoeuid(const char *str, void *res)
-{
-	memcpy(res, str, 8);
-	return 0;
-}
-
-static int libnvme_strtouuid(const char *str, void *res)
-{
-	unsigned char uuid[NVME_UUID_LEN];
-
-	if (libnvme_uuid_from_string(str, uuid))
-		return -EINVAL;
-
-	memcpy(res, uuid, NVME_UUID_LEN);
-	return 0;
-}
-
 struct sysfs_attr_table {
 	void *var;
 	int (*parse)(const char *str, void *res);
@@ -471,9 +454,6 @@ int libnvme_ns_init(const char *path, struct libnvme_ns *ns)
 
 	struct sysfs_attr_table base[] = {
 		{ &ns->nsid,      libnvme_strtou32,  true, "nsid" },
-		{ ns->eui64,      libnvme_strtoeuid, false, "eui" },
-		{ ns->nguid,      libnvme_strtouuid, false, "nguid" },
-		{ ns->uuid,       libnvme_strtouuid, false, "uuid" }
 	};
 
 	ret = parse_attrs(path, base, ARRAY_SIZE(base));

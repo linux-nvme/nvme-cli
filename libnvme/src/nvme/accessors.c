@@ -95,16 +95,6 @@ __shr_public const char *libnvme_ns_get_sysfs_dir(const struct libnvme_ns *p)
 	return p->sysfs_dir;
 }
 
-__shr_public const uint8_t *libnvme_ns_get_eui64(const struct libnvme_ns *p)
-{
-	return p->eui64;
-}
-
-__shr_public const uint8_t *libnvme_ns_get_nguid(const struct libnvme_ns *p)
-{
-	return p->nguid;
-}
-
 /****************************************************************************
  * Accessors for: struct libnvme_ctrl
  ****************************************************************************/

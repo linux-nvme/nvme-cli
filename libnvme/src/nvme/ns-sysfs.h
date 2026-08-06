@@ -120,6 +120,48 @@ int libnvme_ns_get_csi(
 		enum nvme_csi dflt);
 
 /**
+ * libnvme_ns_get_eui64() - Get eui64.
+ * @p: The &struct libnvme_ns instance to query.
+ * @eui64: Where to store the value on success.
+ * @dflt: Value to store in @eui64 on failure.
+ *
+ * Return: 0 on success, -ENOENT if the attribute does not
+ *	   exist, or a negative errno on failure.
+ */
+int libnvme_ns_get_eui64(
+		const struct libnvme_ns *p,
+		const uint8_t **eui64,
+		const uint8_t *dflt);
+
+/**
+ * libnvme_ns_get_nguid() - Get nguid.
+ * @p: The &struct libnvme_ns instance to query.
+ * @nguid: Where to store the value on success.
+ * @dflt: Value to store in @nguid on failure.
+ *
+ * Return: 0 on success, -ENOENT if the attribute does not
+ *	   exist, or a negative errno on failure.
+ */
+int libnvme_ns_get_nguid(
+		const struct libnvme_ns *p,
+		const uint8_t **nguid,
+		const uint8_t *dflt);
+
+/**
+ * libnvme_ns_get_uuid() - Get uuid.
+ * @p: The &struct libnvme_ns instance to query.
+ * @uuid: Where to store the value on success.
+ * @dflt: Value to store in @uuid on failure.
+ *
+ * Return: 0 on success, -ENOENT if the attribute does not
+ *	   exist, or a negative errno on failure.
+ */
+int libnvme_ns_get_uuid(
+		const struct libnvme_ns *p,
+		const unsigned char **uuid,
+		const unsigned char *dflt);
+
+/**
  * libnvme_ns_get_command_retry_count() - Get command_retry_count.
  * @p: The &struct libnvme_ns instance to query.
  * @command_retry_count: Where to store the value on success.

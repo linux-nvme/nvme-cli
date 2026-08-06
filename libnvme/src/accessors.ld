@@ -126,10 +126,8 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_host_get_hostsymname;
 		libnvme_host_set_dhchap_host_key;
 		libnvme_host_set_hostsymname;
-		libnvme_ns_get_eui64;
 		libnvme_ns_get_generic_name;
 		libnvme_ns_get_name;
-		libnvme_ns_get_nguid;
 		libnvme_ns_get_nsid;
 		libnvme_ns_get_sysfs_dir;
 		libnvme_ns_set_nsid;

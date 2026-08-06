@@ -53,10 +53,6 @@ struct libnvme_ns {
 	%immutable generic_name;
 	const char * generic_name;
 	const char * sysfs_dir;
-	%immutable eui64;
-	uint8_t eui64[8];
-	%immutable nguid;
-	uint8_t nguid[16];
 };
 
 %pythoncode %{

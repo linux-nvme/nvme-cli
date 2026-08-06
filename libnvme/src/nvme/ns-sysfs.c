@@ -36,6 +36,9 @@ struct libnvme_ns_sysfs {
 	uint64_t *lba_util;
 	int *meta_size;
 	enum nvme_csi *csi;
+	uint8_t *eui64;
+	uint8_t *nguid;
+	unsigned char *uuid;
 	long command_retry_count;
 	long command_error_count;
 	long io_requeue_no_usable_path_count;
@@ -67,6 +70,9 @@ void libnvme_ns_sysfs_free(
 	SYSFS_FREE(sysfs->lba_util);
 	SYSFS_FREE(sysfs->meta_size);
 	SYSFS_FREE(sysfs->csi);
+	SYSFS_FREE(sysfs->eui64);
+	SYSFS_FREE(sysfs->nguid);
+	SYSFS_FREE(sysfs->uuid);
 	free(sysfs);
 }
 
