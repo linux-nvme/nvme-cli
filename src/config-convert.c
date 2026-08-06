@@ -17,11 +17,11 @@
 #include "fabrics.h"
 #include "logging.h"
 #include "nvme-print.h"
-#include "util/argconfig.h"
-#include "util/cleanup.h"
+#include "argconfig.h"
+#include "cleanup.h"
 
 #ifdef CONFIG_JSONC
-#include <json.h>
+#include "nvme-json.h"
 
 struct legacy_key {
 	const char *json_key;

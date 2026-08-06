@@ -30,7 +30,7 @@
 #include "uuid-util.h"
 #include "int-util.h"
 #include "table.h"
-#include "util/cleanup.h"
+#include "cleanup.h"
 #include "logging.h"
 #include "common.h"
 

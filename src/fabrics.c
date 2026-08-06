@@ -57,7 +57,7 @@
 #include "nvme.h"
 #include "nvme-print.h"
 #include "fabrics.h"
-#include "util/cleanup.h"
+#include "cleanup.h"
 #include "logging.h"
 #include "sig-util.h"
 

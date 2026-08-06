@@ -14,7 +14,7 @@
 #include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "util/argconfig.h"
+#include "argconfig.h"
 
 enum {
 	LID_SMART_LOG_ADD = 0xca,

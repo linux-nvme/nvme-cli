@@ -13,7 +13,7 @@
 #include "nvme.h"
 #include "nvme-print.h"
 #include "typedef.h"
-#include "util/cleanup.h"
+#include "src/cleanup.h"
 
 #define CREATE_CMD
 #include "innogrit-nvme.h"

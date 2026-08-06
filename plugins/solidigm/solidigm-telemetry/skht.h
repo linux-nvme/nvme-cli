@@ -7,7 +7,7 @@
 #pragma once
 
 #include "telemetry-log.h"
-#include "util/json.h"
+#include "nvme-json.h"
 
 #define SKT_VER_MAJOR 47837
 #define SKT_VER_MINOR 49374

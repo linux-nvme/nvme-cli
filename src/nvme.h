@@ -25,9 +25,9 @@
 
 #include "args.h"
 #include "plugin.h"
-#include "util/json.h"
-#include "util/argconfig.h"
-#include "util/cleanup.h"
+#include "nvme-json.h"
+#include "argconfig.h"
+#include "cleanup.h"
 
 enum nvme_cli_topo_ranking {
 	NVME_CLI_TOPO_NAMESPACE,

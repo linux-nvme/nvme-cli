@@ -33,9 +33,9 @@
 #include "nvme-pci-ids.h"
 #include "nvme-print.h"
 #include "nvme.h"
-#include "util/cleanup.h"
+#include "src/cleanup.h"
 #include "uint128-util.h"
-#include "util/utils.h"
+#include "utils.h"
 
 #define CREATE_CMD
 #include "micron-nvme.h"

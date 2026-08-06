@@ -20,7 +20,7 @@
 #include "common.h"
 #include "nvme-print.h"
 #include "micron-utils.h"
-#include "util/cleanup.h"
+#include "src/cleanup.h"
 
 extern char **environ;
 

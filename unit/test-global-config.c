@@ -20,8 +20,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "../global-config.h"
-#include "../args.h"
+#include "../src/global-config.h"
+#include "../src/args.h"
 
 struct nvme_args nvme_args = {
 	.output_format = "normal",

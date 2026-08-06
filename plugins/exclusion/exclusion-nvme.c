@@ -21,7 +21,7 @@
 #include "common.h"
 #include "nvme.h"
 #include "nvme-print.h"
-#include "util/cleanup.h"
+#include "src/cleanup.h"
 
 #define CREATE_CMD
 #include "exclusion-nvme.h"

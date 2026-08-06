@@ -2,7 +2,7 @@
 
 test_argconfig_parse = executable(
     'test-argconfig-parse',
-    ['test-argconfig-parse.c', '../util/argconfig.c'],
+    ['test-argconfig-parse.c', '../src/argconfig.c'],
     dependencies: [
         config_dep,
         ccan_dep,
@@ -15,7 +15,7 @@ test('nvme-cli - argconfig_parse', test_argconfig_parse)
 
 test_global_config = executable(
     'test-global-config',
-    ['test-global-config.c', '../global-config.c'],
+    ['test-global-config.c', '../src/global-config.c'],
     dependencies: [
         config_dep,
         ccan_dep,

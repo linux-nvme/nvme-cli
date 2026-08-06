@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "nvme.h"
-#include "util/json.h"
+#include "nvme-json.h"
 
 #if !defined __cplusplus
 #define static_assert _Static_assert
