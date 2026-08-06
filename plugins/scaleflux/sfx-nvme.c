@@ -24,6 +24,9 @@
 #include "plugin.h"
 #include "util/cleanup.h"
 #include "util/types.h"
+#include "temp-util.h"
+#include "time-util.h"
+#include "progress-util.h"
 
 #define CREATE_CMD
 #include "sfx-nvme.h"
@@ -1141,7 +1144,7 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char *output)
 			str_pos = strlen(str_buffer);
 
 			fw_time = ((__u64)info->time_stamp[2] << 32) + ((__u64)info->time_stamp[1] << 16) + (__u64)info->time_stamp[0];
-			convert_ts(fw_time, str_buffer + str_pos);
+			shr_format_ts(fw_time, str_buffer + str_pos);
 			str_pos = strlen(str_buffer);
 
 			strcpy(str_buffer + str_pos, "]    event-log:\n");
@@ -1184,7 +1187,7 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char *output)
 		length--;
 
 		if (!(offset % (log_len / 100)) || (offset == log_len))
-			util_spinner("Parse", (float) (offset) / (float) (log_len));
+			shr_spinner("Parse", (float) (offset) / (float) (log_len), stdout);
 	}
 
 	nvme_show_verbose_result("Parse-evtlog: Success");
@@ -1305,7 +1308,7 @@ static int nvme_dump_evtlog(struct libnvme_transport_handle *hdl, __u32 namespac
 
 		offset  += len;
 		length  -= len;
-		util_spinner("Parse", (float) (offset) / (float) (log_len));
+		shr_spinner("Parse", (float) (offset) / (float) (log_len), stdout);
 	}
 
 	nvme_show_verbose_result("Dump-evtlog: Success");
@@ -1830,7 +1833,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		return err;
 	}
 
-	snprintf(temperature, 10, "%li", kelvin_to_celsius(smart_log.temperature[1]<<8 | smart_log.temperature[0]));
+	snprintf(temperature, 10, "%li", shr_kelvin_to_celsius(smart_log.temperature[1]<<8 | smart_log.temperature[0]));
 
 	//Populate SFX Extended Health log (0xC2) or if PCIe DID ==0x20 (Quince) use 0xD2
 	if (strncmp("0x0020", pci_did, 6) == 0)

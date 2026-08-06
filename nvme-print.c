@@ -15,6 +15,7 @@
 #include "nvme-print.h"
 #include "nvme-models.h"
 #include "util/types.h"
+#include "temp-util.h"
 #include "common.h"
 #include "logging.h"
 
@@ -901,7 +902,7 @@ void nvme_show_endurance_log(struct nvme_endurance_group_log *endurance_log,
 const char *nvme_degrees_string(long t)
 {
 	static char str[STR_LEN];
-	long val = kelvin_to_celsius(t);
+	long val = shr_kelvin_to_celsius(t);
 
 	if (nvme_is_output_format_json())
 		snprintf(str, sizeof(str), "%ld %s", val, "Celsius");
@@ -914,7 +915,7 @@ const char *nvme_degrees_string(long t)
 const char *nvme_degrees_fahrenheit_string(long t)
 {
 	static char str[STR_LEN];
-	long val = kelvin_to_fahrenheit(t);
+	long val = shr_kelvin_to_fahrenheit(t);
 
 	if (nvme_is_output_format_json())
 		sprintf(str, "%ld %s", val, "Fahrenheit");

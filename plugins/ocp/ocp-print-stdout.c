@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "util/types.h"
+#include "time-util.h"
 #include "common.h"
 #include "nvme-print.h"
 #include "ocp-print.h"
@@ -315,7 +316,7 @@ static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_laten
 	if (le64_to_cpu(log_data->debug_log_latency_stamp) == -1) {
 		printf("  Debug Log Latency Time Stamp       N/A\n");
 	} else {
-		convert_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
+		shr_format_ts(le64_to_cpu(log_data->debug_log_latency_stamp), ts_buf);
 		printf("  Debug Log Latency Time Stamp       %s\n", ts_buf);
 	}
 	printf("  Debug Log Pointer                  %d\n",
@@ -350,7 +351,7 @@ static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_laten
 			if (le64_to_cpu(log_data->active_latency_timestamp[3-i][j]) == -1) {
 				printf("                    N/A         ");
 			} else {
-				convert_ts(le64_to_cpu(log_data->active_latency_timestamp[3-i][j]),
+				shr_format_ts(le64_to_cpu(log_data->active_latency_timestamp[3-i][j]),
 					   ts_buf);
 				printf("%s     ", ts_buf);
 			}
@@ -381,7 +382,7 @@ static void stdout_c3_log(struct libnvme_transport_handle *hdl, struct ssd_laten
 			if (le64_to_cpu(log_data->static_latency_timestamp[3-i][j]) == -1) {
 				printf("                    N/A         ");
 			} else {
-				convert_ts(le64_to_cpu(log_data->static_latency_timestamp[3-i][j]),
+				shr_format_ts(le64_to_cpu(log_data->static_latency_timestamp[3-i][j]),
 					   ts_buf);
 				printf("%s     ", ts_buf);
 			}
