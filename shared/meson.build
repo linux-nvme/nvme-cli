@@ -15,6 +15,7 @@ sources = [
     'base64.c',
     'crc32.c',
     'fs-util.c',
+    'hex-util.c',
     'ini.c',
     'parse-util.c',
     'shr-assert.c',

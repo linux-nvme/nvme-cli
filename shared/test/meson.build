@@ -59,6 +59,17 @@ test_parse_util = executable(
 
 test('shared - parse-util', test_parse_util)
 
+test_hex_util = executable(
+    'test-hex-util',
+    ['test-hex-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - hex-util', test_hex_util)
+
 test_hash_util = executable(
     'test-hash-util',
     ['test-hash-util.c'],

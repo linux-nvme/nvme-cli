@@ -11,58 +11,7 @@
 #include "types.h"
 #include "json.h"
 #include "cleanup.h"
-
-int hex_to_int(char c)
-{
-	if (c >= '0' && c <= '9')
-		return c - '0';
-	else if (c >= 'A' && c <= 'F')
-		return 10 + (c - 'A');
-	else if (c >= 'a' && c <= 'f')
-		return 10 + (c - 'a');
-	else
-		return -1; // Invalid character
-}
-
-char *hex_to_ascii(const char *hex)
-{
-	int hex_length = strlen(hex);
-
-	char *text = NULL;
-
-	if (hex_length > 0) {
-		int symbol_count;
-		int odd_hex_count = hex_length % 2 == 1;
-
-		if (odd_hex_count)
-			symbol_count = (hex_length / 2) + 1;
-		else
-			symbol_count = hex_length / 2;
-
-		text = (char *)malloc(symbol_count + 1); // Allocate memory for the result
-
-		int last_index = hex_length - 1;
-
-		for (int i = last_index; i >= 0; --i) {
-			if ((last_index - i) % 2 != 0) {
-				int dec = 16 * hex_to_int(hex[i]) + hex_to_int(hex[i + 1]);
-
-				if (odd_hex_count)
-					text[i / 2 + 1] = dec;
-				else
-					text[i / 2] = dec;
-			} else if (i == 0) {
-				int dec = hex_to_int(hex[0]);
-
-				text[0] = dec;
-			}
-		}
-
-		text[symbol_count] = '\0'; // Terminate the string
-	}
-
-	return text;
-}
+#include "hex-util.h"
 
 unsigned char *read_binary_file(char *data_dir_path, const char *bin_path,
 				long *buffer_size, int retry_count)
@@ -195,7 +144,7 @@ char *process_field_size_8(int offset, char *sfield, __u8 *buf)
 		lval_lo = *((__u64 *)(&buf[offset]));
 
 		sprintf(buffer, "%"PRIx64, __builtin_bswap64(lval_lo));
-		datastr = hex_to_ascii(buffer);
+		datastr = shr_hex_to_ascii(buffer);
 	} else if (strstr(sfield, "Timestamp")) {
 		char ts_buf[128];
 
