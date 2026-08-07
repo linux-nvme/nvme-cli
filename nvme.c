@@ -4754,7 +4754,7 @@ static int wait_self_test(struct libnvme_transport_handle *hdl)
 
 	err = nvme_identify_ctrl(hdl, ctrl);
 	if (err) {
-		nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
+		nvme_show_err(err, "identify-ctrl");
 		return err;
 	}
 
