@@ -175,9 +175,11 @@ static int get_hwcomp_log_data(struct libnvme_transport_handle *hdl, struct hwco
 	long double log_bytes;
 	__u32 len;
 	__u8 uidx;
-	int ret = 0;
+	int ret;
 
-	ocp_get_uuid_index(hdl, &uidx);
+	ret = ocp_get_uuid_index(hdl, &uidx);
+	if (ret < 0)
+		return ret;
 
 #ifdef HWCOMP_DUMMY
 	memcpy(log, hwcomp_dummy, desc_offset);
