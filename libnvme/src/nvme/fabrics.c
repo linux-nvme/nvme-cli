@@ -2935,8 +2935,8 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 	bool saved_log_pid;
 	int ret;
 
-	saved_log_level = libnvme_get_logging_level(ctx, &saved_log_tstamp,
-		&saved_log_pid);
+	saved_log_level = libnvme_get_logging_level(ctx, &saved_log_pid,
+		&saved_log_tstamp);
 
 	c = lookup_ctrl(h, fctx);
 	if (c && libnvme_ctrl_get_name(c))
