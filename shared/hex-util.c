@@ -45,14 +45,25 @@ char *shr_hex_to_ascii(const char *hex)
 
 		for (int i = last_index; i >= 0; --i) {
 			if ((last_index - i) % 2 != 0) {
-				int dec = 16 * shr_hex_to_int(hex[i]) + shr_hex_to_int(hex[i + 1]);
+				int hi = shr_hex_to_int(hex[i]);
+				int lo = shr_hex_to_int(hex[i + 1]);
+
+				if (hi < 0 || lo < 0) {
+					free(text);
+					return NULL;
+				}
 
 				if (odd_hex_count)
-					text[i / 2 + 1] = dec;
+					text[i / 2 + 1] = 16 * hi + lo;
 				else
-					text[i / 2] = dec;
+					text[i / 2] = 16 * hi + lo;
 			} else if (i == 0) {
 				int dec = shr_hex_to_int(hex[0]);
+
+				if (dec < 0) {
+					free(text);
+					return NULL;
+				}
 
 				text[0] = dec;
 			}
