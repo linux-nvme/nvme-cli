@@ -173,7 +173,7 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 
 	err = nvme_get_log_simple(hdl, 0xc5, &logPageMap, sizeof(logPageMap));
 	if (!err) {
-		if (flags & NORMAL) {
+		if (!(flags & JSON)) {
 			printf("Seagate Supported Log-pages count :%d\n",
 				le32_to_cpu(logPageMap.NumLogPages));
 			printf("%-15s %-30s\n", "LogPage-Id", "LogPage-Name");
@@ -185,7 +185,7 @@ static int log_pages_supp(int argc, char **argv, struct command *acmd,
 			json_log_pages_supp(&logPageMap);
 
 		for (i = 0; i < le32_to_cpu(logPageMap.NumLogPages); i++) {
-			if (flags & NORMAL) {
+			if (!(flags & JSON)) {
 				printf("0x%-15X",
 					   le32_to_cpu(logPageMap.LogPageEntry[i].LogPageID));
 				printf("%-30s\n",
@@ -937,7 +937,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	if (!stx_is_jag_pan(modelNo)) {
 		err = nvme_get_log_simple(hdl, 0xC4, &ExtdSMARTInfo, sizeof(ExtdSMARTInfo));
 		if (!err) {
-			if (flags & NORMAL) {
+			if (!(flags & JSON)) {
 				printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
 				for (index = 0; index < 80; index++)
 					printf("-");
@@ -959,7 +959,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 
 			err = nvme_get_log_simple(hdl, 0xCF, &logPageCF, sizeof(logPageCF));
 			if (!err) {
-				if (flags & NORMAL) {
+				if (!(flags & JSON)) {
 					print_smart_log_CF(&logPageCF);
 				} else if (flags & JSON) {
 					lbafs_DramSmart = json_create_object();
@@ -979,7 +979,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 		err = nvme_get_log_simple(hdl, 0xC0, &ehExtSmart, sizeof(ehExtSmart));
 
 		if (!err) {
-			if (flags & NORMAL) {
+			if (!(flags & JSON)) {
 				print_stx_smart_log_C0(&ehExtSmart);
 			} else if (flags & JSON){
 				lbafs_ExtSmart = json_create_object();
@@ -1001,7 +1001,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	err = nvme_get_log_simple(hdl, 0xC4,
 				  &ExtdSMARTInfo, sizeof(ExtdSMARTInfo));
 	if (!err) {
-		if (flags & NORMAL) {
+		if (!(flags & JSON)) {
 			printf("%-39s %-15s %-19s\n", "Description", "Ext-Smart-Id", "Ext-Smart-Value");
 			for (index = 0; index < 80; index++)
 				printf("-");
@@ -1024,7 +1024,7 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 		err = nvme_get_log_simple(hdl, 0xCF,
 					  &logPageCF, sizeof(logPageCF));
 		if (!err) {
-			if (flags & NORMAL) {
+			if (!(flags & JSON)) {
 				print_smart_log_CF(&logPageCF);
 			} else if (flags & JSON) {
 				lbafs_DramSmart = json_create_object();
@@ -1095,7 +1095,7 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 		return err;
 	}
 
-	if (flags & NORMAL)
+	if (!(flags & JSON))
 		printf("Seagate Temperature Stats Information :\n");
 	/*STEP-1 : Get Current Temperature from SMART */
 	err = nvme_get_log_smart(hdl, NVME_NSID_ALL, &smart_log);
@@ -1106,7 +1106,7 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 		PcbTemp = PcbTemp ? PcbTemp - 273 : 0;
 		SocTemp = le16_to_cpu(smart_log.temp_sensor[1]);
 		SocTemp = SocTemp ? SocTemp - 273 : 0;
-		if (flags & NORMAL) {
+		if (!(flags & JSON)) {
 			printf("%-20s : %u C\n", "Current Temperature", temperature);
 			printf("%-20s : %u C\n", "Current PCB Temperature", PcbTemp);
 			printf("%-20s : %u C\n", "Current SOC Temperature", SocTemp);
@@ -1121,14 +1121,14 @@ static int temp_stats(int argc, char **argv, struct command *acmd, struct plugin
 			if (ExtdSMARTInfo.vendorData[index].AttributeNumber == VS_ATTR_ID_MAX_LIFE_TEMPERATURE) {
 				maxTemperature = smart_attribute_vs(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index]);
 				maxTemperature = maxTemperature ? maxTemperature - 273 : 0;
-				if (flags & NORMAL)
+				if (!(flags & JSON))
 					printf("%-20s : %d C\n", "Highest Temperature", (unsigned int)maxTemperature);
 			}
 
 			if (ExtdSMARTInfo.vendorData[index].AttributeNumber == VS_ATTR_ID_MAX_SOC_LIFE_TEMPERATURE) {
 				MaxSocTemp = smart_attribute_vs(ExtdSMARTInfo.Version, ExtdSMARTInfo.vendorData[index]);
 				MaxSocTemp = MaxSocTemp ? MaxSocTemp - 273 : 0;
-				if (flags & NORMAL)
+				if (!(flags & JSON))
 					printf("%-20s : %d C\n", "Max SOC Temperature", (unsigned int)MaxSocTemp);
 			}
 		}
@@ -1258,13 +1258,13 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 		return err;
 	}
 
-	if (flags & NORMAL)
+	if (!(flags & JSON))
 		printf("Seagate PCIe error counters Information :\n");
 
 	err = nvme_get_log_simple(hdl, 0xCB,
 				  &pcieErrorLog, sizeof(pcieErrorLog));
 	if (!err) {
-		if (flags & NORMAL)
+		if (!(flags & JSON))
 			print_vs_pcie_error_log(pcieErrorLog);
 		else
 			json_vs_pcie_error_log(pcieErrorLog);
@@ -1394,12 +1394,12 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 		return err;
 	}
 
-	if (flags & NORMAL)
+	if (!(flags & JSON))
 		printf("Seagate FW Activation History Information :\n");
 
 	err = nvme_get_log_simple(hdl, 0xC2, &fwActivHis, sizeof(fwActivHis));
 	if (!err) {
-		if (flags & NORMAL)
+		if (!(flags & JSON))
 			print_stx_vs_fw_activate_history(fwActivHis);
 		else
 			json_stx_vs_fw_activate_history(fwActivHis);
