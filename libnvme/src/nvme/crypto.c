@@ -589,7 +589,7 @@ static int derive_psk_digest(struct libnvme_global_ctx *ctx,
 	size_t hmac_len;
 	char *progq = NULL;
 	char *dig = NULL;
-	size_t len;
+	int len;
 
 	lib_ctx = OSSL_LIB_CTX_new();
 	if (!lib_ctx)
