@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
+struct argconfig_commandline_options;
+
 /* Parsed "nvme connect"/"discover"/"connect-all" argv-style arguments. */
 struct nvmf_args {
 	const char *subsysnqn;
@@ -108,6 +110,15 @@ struct nvmf_args {
 		OPT_FLAG("concat",              0, &f.concat,             DESC_NVMF_CONCAT),          \
 		##__VA_ARGS__                                                                    \
 	)
+
+/*
+ * Resolve an OPT_STRING_OPTIONAL() "--persistent[=no|auto|force]" argument
+ * to the string libnvmf_context_set_persistent()/libnvmf_params_set()
+ * expect: NULL if not given at all, "auto" if given bare, or the value as
+ * typed otherwise.
+ */
+const char *nvmf_resolve_persistent_arg(
+		struct argconfig_commandline_options *opts, const char *arg);
 
 int fabrics_discover(const char *desc, int argc, char **argv, bool connect);
 int fabrics_connect(const char *desc, int argc, char **argv);

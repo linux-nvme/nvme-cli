@@ -21,6 +21,8 @@
 
 #include <ccan/array_size/array_size.h>
 
+#include <string-util.h>
+
 #include <nvme/lib.h>
 #include <nvme/config.h>
 #include <nvme/fabrics.h>
@@ -492,8 +494,7 @@ static bool test_apply_params(struct libnvme_global_ctx *ctx)
 	shr_assert(!libnvmf_params_set(params, "keep-alive-tmo", "30"));
 	shr_assert(!libnvmf_params_set(params, "tls", "true"));
 	shr_assert(!libnvmf_params_set(params, "hdr-digest", "false"));
-	shr_assert(!libnvmf_params_set(params, "persistent", "true"));
-	shr_assert(!libnvmf_params_set(params, "epcsd", "true"));
+	shr_assert(!libnvmf_params_set(params, "persistent", "force"));
 	/* Explicit resets: must be skipped, not applied as "0". */
 	shr_assert(!libnvmf_params_set(params, "tos", ""));
 	shr_assert(!libnvmf_params_set(params, "ctrl-loss-tmo", ""));
@@ -522,14 +523,17 @@ static bool test_apply_params(struct libnvme_global_ctx *ctx)
 		printf(" - int fields applied (hex + decimal) [PASS]\n");
 	}
 
-	if (!libnvmf_context_get_tls(fctx) ||
-	    libnvmf_context_get_hdr_digest(fctx) ||
-	    libnvmf_context_get_persistent(fctx) != LIBNVMF_TRISTATE_TRUE ||
-	    libnvmf_context_get_epcsd(fctx) != LIBNVMF_TRISTATE_TRUE) {
-		printf(" - bool fields [FAIL]\n");
-		pass = false;
-	} else {
-		printf(" - bool fields applied [PASS]\n");
+	{
+		const char *p = libnvmf_context_get_persistent(fctx);
+
+		if (!libnvmf_context_get_tls(fctx) ||
+		    libnvmf_context_get_hdr_digest(fctx) ||
+		    !shr_streq0(p, "force")) {
+			printf(" - bool fields [FAIL]\n");
+			pass = false;
+		} else {
+			printf(" - bool fields applied [PASS]\n");
+		}
 	}
 
 	/* A fresh context starts at tos=-1, ctrl-loss-tmo=600 (see
@@ -571,22 +575,21 @@ out:
 }
 
 /*
- * persistent/epcsd must distinguish "not configured" (UNSET, the library
- * default derived elsewhere, e.g. from the discovery log page) from an
- * explicit "false" -- a plain bool cannot represent that third state.
+ * persistent must distinguish "not configured" (UNSET, the library default
+ * derived elsewhere, e.g. from the discovery log page) from an explicit
+ * "no" -- a plain bool cannot represent that third state.
  */
-static bool test_persistent_epcsd_tristate(struct libnvme_global_ctx *ctx)
+static bool test_persistent_tristate(struct libnvme_global_ctx *ctx)
 {
 	struct libnvmf_context *fctx;
 	struct libnvmf_params *params;
 	bool pass = true;
 
-	printf("test_persistent_epcsd_tristate:\n");
+	printf("test_persistent_tristate:\n");
 
 	shr_assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));
 
-	if (libnvmf_context_get_persistent(fctx) != LIBNVMF_TRISTATE_UNSET ||
-	    libnvmf_context_get_epcsd(fctx) != LIBNVMF_TRISTATE_UNSET) {
+	if (libnvmf_context_get_persistent(fctx) != NULL) {
 		printf(" - fresh context defaults to unset [FAIL]\n");
 		pass = false;
 	} else {
@@ -595,16 +598,18 @@ static bool test_persistent_epcsd_tristate(struct libnvme_global_ctx *ctx)
 
 	params = libnvmf_params_new();
 	shr_assert(params);
-	shr_assert(!libnvmf_params_set(params, "persistent", "false"));
-	shr_assert(!libnvmf_params_set(params, "epcsd", "false"));
+	shr_assert(!libnvmf_params_set(params, "persistent", "no"));
 	shr_assert(!libnvmf_context_apply_params(fctx, params));
 
-	if (libnvmf_context_get_persistent(fctx) != LIBNVMF_TRISTATE_FALSE ||
-	    libnvmf_context_get_epcsd(fctx) != LIBNVMF_TRISTATE_FALSE) {
-		printf(" - explicit \"false\" recorded distinctly from unset [FAIL]\n");
-		pass = false;
-	} else {
-		printf(" - explicit \"false\" recorded distinctly from unset [PASS]\n");
+	{
+		const char *p = libnvmf_context_get_persistent(fctx);
+
+		if (!shr_streq0(p, "no")) {
+			printf(" - explicit \"no\" != unset [FAIL]\n");
+			pass = false;
+		} else {
+			printf(" - explicit \"no\" != unset [PASS]\n");
+		}
 	}
 
 	libnvmf_context_free(fctx);
@@ -834,7 +839,7 @@ int main(void)
 	pass &= test_emit(ctx, &fx);
 	pass &= test_hostnqn_precedence(ctx, &fx);
 	pass &= test_apply_params(ctx);
-	pass &= test_persistent_epcsd_tristate(ctx);
+	pass &= test_persistent_tristate(ctx);
 	pass &= test_set_connection_from_tid(ctx);
 	pass &= test_edge_cases(ctx, &fx);
 
