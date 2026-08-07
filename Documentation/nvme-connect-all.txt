@@ -12,7 +12,7 @@ SYNOPSIS
 			[--raw=<filename> | -r <filename>]
 			[--device=<device> | -d <device>]
 			[--config=<filename> | -J <cfg>]
-			[--persistent | -p]
+			[--persistent[=<no|auto|force>] | -p]
 			[--quiet]
 			[--nbft]
 			[--no-nbft]
@@ -62,9 +62,26 @@ OPTIONS
 	https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/doc/config-schema.json
 
 -p::
---persistent::
-	Don't remove the discovery controller after retrieving the discovery
-	log page.
+--persistent[=<no|auto|force>]::
+	Keep the discovery controller connected after retrieving the
+	discovery log page, instead of disconnecting once it's done.
+	Because the value is optional, it must be attached directly to
+	the option: --persistent=force for the long form, -pforce for
+	the short form. A value given as a separate argument (--persistent
+	force, -p force) is silently NOT applied -- it's dropped, and
+	--persistent/-p is treated as if given bare (mode "auto"), with
+	no error.
++
+--
+* 'no' (the default when the option is omitted entirely): never persist.
+* 'auto' (the default when --persistent is given with no value): persist
+  a Discovery Log Page entry's connection only where that entry's own
+  EPCSD (Explicit Persistent Connection Support for Discovery) flag
+  reports support for it; degrade to non-persistent, with a log message,
+  for entries that don't.
+* 'force': persist regardless of what EPCSD reports, for a target whose
+  self-reported EPCSD cannot be trusted.
+--
 
 --quiet::
 	Suppress error messages.
