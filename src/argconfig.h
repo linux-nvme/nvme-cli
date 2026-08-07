@@ -91,6 +91,16 @@ enum argconfig_types {
 #define OPT_STRING(l, s, m, v, d, ...) \
 	{l, s, m, CFG_STRING, v, required_argument, d, false, __VA_ARGS__}
 
+/*
+ * Like OPT_STRING(), but the value is optional. getopt_long() only
+ * recognizes an attached value ("--long=value" or "-svalue"), never a
+ * separate argv token -- initialize *v to a sentinel distinct from NULL
+ * before parsing to tell "not given" (still the sentinel) apart from
+ * "given with no value" (optarg is NULL).
+ */
+#define OPT_STRING_OPTIONAL(l, s, m, v, d, ...) \
+	{l, s, m, CFG_STRING, v, optional_argument, d, false, __VA_ARGS__}
+
 #define OPT_FMT(l, s, v, d, ...)  OPT_STRING(l, s, "FMT", v, d, __VA_ARGS__)
 #define OPT_FILE(l, s, v, d, ...) OPT_STRING(l, s, "FILE", v, d, __VA_ARGS__)
 #define OPT_LIST(l, s, v, d, ...) OPT_STRING(l, s, "LIST", v, d, __VA_ARGS__)
