@@ -194,20 +194,6 @@ Frees **s** and all related objects.
 :c:type:`libnvme_host_t` object from **s**
 
 
-.. c:function:: char * libnvme_subsystem_get_iopolicy (libnvme_subsystem_t s)
-
-   Get subsystem iopolicy name
-
-**Parameters**
-
-``libnvme_subsystem_t s``
-  subsystem
-
-**Return**
-
-The iopolicy configured in subsystem **s**
-
-
 .. c:function:: libnvme_ns_t libnvme_ctrl_first_ns (libnvme_ctrl_t c)
 
    Start namespace iterator
@@ -594,81 +580,6 @@ Next :c:type:`libnvme_ns_t` object of an **s** iterator
   :c:type:`libnvme_path_t` object
 
 
-.. c:function:: void libnvme_ns_copy_uuid (libnvme_ns_t n, unsigned char out[NVME_UUID_LEN])
-
-   Copy UUID of a namespace into a caller buffer
-
-**Parameters**
-
-``libnvme_ns_t n``
-  Namespace instance
-
-``unsigned char out[NVME_UUID_LEN]``
-  buffer for the UUID
-
-**Description**
-
-Copies the namespace's uuid into **out**
-
-
-.. c:function:: long libnvme_ns_get_command_retry_count (libnvme_ns_t n)
-
-   Get command retry count
-
-**Parameters**
-
-``libnvme_ns_t n``
-  :c:type:`libnvme_ns_t` object
-
-**Return**
-
-Number of times any command issued to namespace **n** has to be retried
-
-
-.. c:function:: long libnvme_ns_get_command_error_count (libnvme_ns_t n)
-
-   Get command error count
-
-**Parameters**
-
-``libnvme_ns_t n``
-  :c:type:`libnvme_ns_t` object
-
-**Return**
-
-Number of times command issued to namespace **n** returns non-zero
-status or error
-
-
-.. c:function:: long libnvme_ns_get_io_requeue_no_usable_path_count (libnvme_ns_t n)
-
-   Get I/Os requeue count
-
-**Parameters**
-
-``libnvme_ns_t n``
-  :c:type:`libnvme_ns_t` object
-
-**Return**
-
-Number of I/Os which are re-queued due to the unavalibility of
-any usable path (maybe path is currently experiencing transinet link failure)
-
-
-.. c:function:: long libnvme_ns_get_io_fail_no_available_path_count (libnvme_ns_t n)
-
-   Get I/Os failed count
-
-**Parameters**
-
-``libnvme_ns_t n``
-  :c:type:`libnvme_ns_t` object
-
-**Return**
-
-Number of I/Os which are forced to fail due to no path available
-
-
 .. c:function:: const char * libnvme_ns_get_firmware (libnvme_ns_t n)
 
    Firmware string of a namespace
@@ -938,93 +849,6 @@ into **descs**.
 **Return**
 
 0 on success, negative error code otherwise.
-
-
-.. c:function:: int libnvme_path_get_queue_depth (libnvme_path_t p)
-
-   Queue depth of an libnvme_path_t object
-
-**Parameters**
-
-``libnvme_path_t p``
-  :c:type:`libnvme_path_t` object
-
-**Return**
-
-Queue depth of **p**
-
-
-.. c:function:: char * libnvme_path_get_ana_state (libnvme_path_t p)
-
-   ANA state of an nvme_path_t object
-
-**Parameters**
-
-``libnvme_path_t p``
-  :c:type:`libnvme_path_t` object
-
-**Return**
-
-ANA state of **p**
-
-
-.. c:function:: char * libnvme_path_get_numa_nodes (libnvme_path_t p)
-
-   Numa nodes of an nvme_path_t object
-
-**Parameters**
-
-``libnvme_path_t p``
-  :c:type:`libnvme_path_t` object
-
-**Return**
-
-Numa nodes of **p**
-
-
-.. c:function:: long libnvme_path_get_multipath_failover_count (libnvme_path_t p)
-
-   Get multipath failover count
-
-**Parameters**
-
-``libnvme_path_t p``
-  :c:type:`libnvme_path_t` object
-
-**Return**
-
-Number of times I/Os have to be failed over to another active path
-from path **p** maybe due to any transient error observed on path **p**
-
-
-.. c:function:: long libnvme_path_get_command_retry_count (libnvme_path_t p)
-
-   Get command retry count
-
-**Parameters**
-
-``libnvme_path_t p``
-  :c:type:`libnvme_path_t` object
-
-**Return**
-
-Number of times any command issued to the namespace represented by
-path **p** has to be retried
-
-
-.. c:function:: long libnvme_path_get_command_error_count (libnvme_path_t p)
-
-   Get command error count
-
-**Parameters**
-
-``libnvme_path_t p``
-  :c:type:`libnvme_path_t` object
-
-**Return**
-
-Number of times command issued to the namespace represented by path
-**p** returns non-zero status or error
 
 
 .. c:function:: libnvme_ctrl_t libnvme_path_get_ctrl (libnvme_path_t p)
@@ -1525,49 +1349,6 @@ Num of sectors read from the device between two stat samples
 **Return**
 
 Num of sectors written to the device between two stat samples
-
-
-.. c:function:: long libnvme_ctrl_get_command_error_count (libnvme_ctrl_t c)
-
-   Get admin command error count
-
-**Parameters**
-
-``libnvme_ctrl_t c``
-  Controller instance
-
-**Return**
-
-Number of times admin command issued to controller **c** failed or
-returned error status
-
-
-.. c:function:: long libnvme_ctrl_get_reset_count (libnvme_ctrl_t c)
-
-   Get controller reset count
-
-**Parameters**
-
-``libnvme_ctrl_t c``
-  Controller instance
-
-**Return**
-
-Number of timer controller **c** is reset
-
-
-.. c:function:: long libnvme_ctrl_get_reconnect_count (libnvme_ctrl_t c)
-
-   Get controller reconnect count
-
-**Parameters**
-
-``libnvme_ctrl_t c``
-  Controller instance
-
-**Return**
-
-Number of times controller has to reconnect to the target
 
 
 .. c:function:: int libnvme_ctrl_identify (libnvme_ctrl_t c, struct nvme_id_ctrl *id)

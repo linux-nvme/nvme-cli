@@ -1,0 +1,11 @@
+.TH "libnvmf_context_get_nbft_path" 9 "libnvmf_context_get_nbft_path" "August 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_get_nbft_path \- Get nbft_path.
+.SH SYNOPSIS
+.B "const char *" libnvmf_context_get_nbft_path
+.BI "(const struct libnvmf_context *p "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_context\fP instance to query.
+.SH "RETURN"
+The value of the nbft_path field, or NULL if not set.

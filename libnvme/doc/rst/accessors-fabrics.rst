@@ -704,6 +704,87 @@ The value of the epcsd field.
 The value of the devid_file field, or NULL if not set.
 
 
+.. c:function:: void libnvmf_context_set_connect (struct libnvmf_context *p, bool connect)
+
+   Set connect.
+
+**Parameters**
+
+``struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to update.
+
+``bool connect``
+  Value to assign to the connect field.
+
+
+.. c:function:: bool libnvmf_context_get_connect (const struct libnvmf_context *p)
+
+   Get connect.
+
+**Parameters**
+
+``const struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to query.
+
+**Return**
+
+The value of the connect field.
+
+
+.. c:function:: void libnvmf_context_set_force (struct libnvmf_context *p, bool force)
+
+   Set force.
+
+**Parameters**
+
+``struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to update.
+
+``bool force``
+  Value to assign to the force field.
+
+
+.. c:function:: bool libnvmf_context_get_force (const struct libnvmf_context *p)
+
+   Get force.
+
+**Parameters**
+
+``const struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to query.
+
+**Return**
+
+The value of the force field.
+
+
+.. c:function:: void libnvmf_context_set_nbft_path (struct libnvmf_context *p, const char *nbft_path)
+
+   Set nbft_path.
+
+**Parameters**
+
+``struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to update.
+
+``const char *nbft_path``
+  New string; a copy is stored. Pass NULL to clear.
+
+
+.. c:function:: const char * libnvmf_context_get_nbft_path (const struct libnvmf_context *p)
+
+   Get nbft_path.
+
+**Parameters**
+
+``const struct libnvmf_context *p``
+  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to query.
+
+**Return**
+
+The value of the nbft_path field, or NULL if not set.
+
+
 .. c:function:: const char * libnvmf_context_get_hostnqn (const struct libnvmf_context *p)
 
    Get hostnqn.

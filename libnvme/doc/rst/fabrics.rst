@@ -544,7 +544,7 @@ been previously created with libnvmf_context_create().
 After this call, **fctx** must not be used.
 
 
-.. c:function:: int libnvmf_context_set_discovery_hooks (struct libnvmf_context *fctx, void (*discovery_log)(struct libnvmf_context *fctx, bool connect, struct nvmf_discovery_log *log, uint64_t numrec, void *user_data))
+.. c:function:: int libnvmf_context_set_discovery_hooks (struct libnvmf_context *fctx, void (*discovery_log)(struct libnvmf_context *fctx, struct nvmf_discovery_log *log, uint64_t numrec, void *user_data))
 
    Set discovery hooks for context
 
@@ -553,7 +553,7 @@ After this call, **fctx** must not be used.
 ``struct libnvmf_context *fctx``
   Fabrics context
 
-``void (*discovery_log)(struct libnvmf_context *fctx, bool connect, struct nvmf_discovery_log *log, uint64_t numrec, void *user_data)``
+``void (*discovery_log)(struct libnvmf_context *fctx, struct nvmf_discovery_log *log, uint64_t numrec, void *user_data)``
   Hook for discovery log events
 
 **Description**
@@ -873,9 +873,9 @@ contract is identical to libnvmf_get_owner_from_tid().
 0 on success (check **owner**), negative errno on failure.
 
 
-.. c:function:: int libnvmf_discovery (struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx, bool connect, bool force)
+.. c:function:: int libnvmf_discover (struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx)
 
-   Perform fabrics discovery
+   Discover fabrics subsystems
 
 **Parameters**
 
@@ -884,12 +884,6 @@ contract is identical to libnvmf_get_owner_from_tid().
 
 ``struct libnvmf_context *fctx``
   Fabrics context
-
-``bool connect``
-  Whether to connect discovered subsystems
-
-``bool force``
-  Force discovery even if already connected
 
 **Description**
 
@@ -900,9 +894,9 @@ Performs discovery for fabrics subsystems and optionally connects.
 0 on success, negative error code otherwise.
 
 
-.. c:function:: int libnvmf_discovery_nbft (struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx, bool connect, char *nbft_path)
+.. c:function:: int libnvmf_discover_nbft (struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx)
 
-   Perform discovery using NBFT
+   Discover fabrics subsystems using NBFT
 
 **Parameters**
 
@@ -912,15 +906,9 @@ Performs discovery for fabrics subsystems and optionally connects.
 ``struct libnvmf_context *fctx``
   Fabrics context
 
-``bool connect``
-  Whether to connect discovered subsystems
-
-``char *nbft_path``
-  Path to NBFT file
-
 **Description**
 
-Performs discovery using the specified NBFT file.
+Performs discovery using the NBFT tables found at **fctx**'s nbft_path.
 
 **Return**
 

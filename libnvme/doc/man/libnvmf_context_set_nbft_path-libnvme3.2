@@ -1,0 +1,12 @@
+.TH "libnvmf_context_set_nbft_path" 9 "libnvmf_context_set_nbft_path" "August 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_context_set_nbft_path \- Set nbft_path.
+.SH SYNOPSIS
+.B "void" libnvmf_context_set_nbft_path
+.BI "(struct libnvmf_context *p "  ","
+.BI "const char *nbft_path "  ");"
+.SH ARGUMENTS
+.IP "p" 12
+The \fIstruct libnvmf_context\fP instance to update.
+.IP "nbft_path" 12
+New string; a copy is stored. Pass NULL to clear.

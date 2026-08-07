@@ -1,0 +1,16 @@
+.TH "libnvmf_discover_nbft" 9 "libnvmf_discover_nbft" "August 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_discover_nbft \- Discover fabrics subsystems using NBFT
+.SH SYNOPSIS
+.B "int" libnvmf_discover_nbft
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnvmf_context *fctx "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+Global context
+.IP "fctx" 12
+Fabrics context
+.SH "DESCRIPTION"
+Performs discovery using the NBFT tables found at \fIfctx\fP's nbft_path.
+.SH "RETURN"
+0 on success, negative error code otherwise.

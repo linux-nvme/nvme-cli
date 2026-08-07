@@ -1,0 +1,16 @@
+.TH "libnvmf_discover" 9 "libnvmf_discover" "August 2026" "libnvme API manual" LINUX
+.SH NAME
+libnvmf_discover \- Discover fabrics subsystems
+.SH SYNOPSIS
+.B "int" libnvmf_discover
+.BI "(struct libnvme_global_ctx *ctx "  ","
+.BI "struct libnvmf_context *fctx "  ");"
+.SH ARGUMENTS
+.IP "ctx" 12
+Global context
+.IP "fctx" 12
+Fabrics context
+.SH "DESCRIPTION"
+Performs discovery for fabrics subsystems and optionally connects.
+.SH "RETURN"
+0 on success, negative error code otherwise.
