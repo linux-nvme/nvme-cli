@@ -533,7 +533,13 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 	fa.tos = -1;
 	fa.ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
 
-	while ((ptr = strsep(&p, " =\n")) != NULL && argc < MAX_DISC_ARGS - 1)
+	/*
+	 * Split on whitespace only, not '=' -- a glued "--opt=value" token
+	 * (e.g. "--persistent=force") must reach argconfig_parse() intact.
+	 * getopt_long() parses '=' within a single token natively for
+	 * every option shape, so splitting it out here is never required.
+	 */
+	while ((ptr = strsep(&p, "\n ")) != NULL && argc < MAX_DISC_ARGS - 1)
 		argv[argc++] = ptr;
 	argv[argc] = NULL;
 
