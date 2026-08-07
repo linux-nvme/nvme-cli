@@ -448,9 +448,8 @@ static void parse_tracker_chunk_json(const struct telemetry_log *tl, uint32_t ch
 		for (uint32_t i = 0; i < arg_count && i < MAX_ARGS
 		     && i < (uint32_t)array_len; i++) {
 			char arg_key[16] = {0};
-			const char *arg_desc = entry_info ?
-				get_arg_description(entry_info, i)
-				: NULL;
+			const char *arg_desc =
+				get_arg_description(entry_info, i);
 			struct json_object *arg_val =
 				json_object_array_get_idx(args_array, i);
 
