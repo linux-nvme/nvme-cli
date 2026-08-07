@@ -59,6 +59,7 @@ LIBNVME_3 {
 		libnvme_host_get_global_ctx;
 		libnvme_host_release_fds;
 		libnvme_init_ctrl;
+		libnvme_mi_status_to_string;
 		libnvme_namespace_first_path;
 		libnvme_namespace_next_path;
 		libnvme_next_host;

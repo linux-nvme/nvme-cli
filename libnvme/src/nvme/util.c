@@ -435,7 +435,6 @@ __shr_public const char *libnvme_status_to_string(int status, bool fabrics)
 	return s;
 }
 
-
 static const char * const libnvme_status[] = {
 	[ENVME_CONNECT_RESOLVE] = "failed to resolve host",
 	[ENVME_CONNECT_ADDRFAM] = "unrecognized address family",
@@ -472,6 +471,38 @@ __shr_public const char *libnvme_strerror(int errnum)
 	if (errnum >= ENVME_CONNECT_RESOLVE)
 		return libnvme_errno_to_string(errnum);
 	return strerror(errnum);
+}
+
+static const char *const mi_status[] = {
+	[NVME_MI_RESP_SUCCESS]               = "Success",
+	[NVME_MI_RESP_MPR]                   = "More Processing Required: The command message is in progress and requires more time to complete processing",
+	[NVME_MI_RESP_INTERNAL_ERR]          = "Internal Error: The request message could not be processed due to a vendor-specific error",
+	[NVME_MI_RESP_INVALID_OPCODE]        = "Invalid Command Opcode",
+	[NVME_MI_RESP_INVALID_PARAM]         = "Invalid Parameter",
+	[NVME_MI_RESP_INVALID_CMD_SIZE]      = "Invalid Command Size: The size of the message body of the request was different than expected",
+	[NVME_MI_RESP_INVALID_INPUT_SIZE]    = "Invalid Command Input Data Size: The command requires data and contains too much or too little data",
+	[NVME_MI_RESP_ACCESS_DENIED]         = "Access Denied. Processing prohibited due to a vendor-specific mechanism of the Command and Feature lockdown function",
+	[NVME_MI_RESP_VPD_UPDATES_EXCEEDED]  = "VPD Updates Exceeded",
+	[NVME_MI_RESP_PCIE_INACCESSIBLE]     = "PCIe Inaccessible. The PCIe functionality is not available at this time",
+	[NVME_MI_RESP_MEB_SANITIZED]         = "Management Endpoint Buffer Cleared Due to Sanitize",
+	[NVME_MI_RESP_ENC_SERV_FAILURE]      = "Enclosure Services Failure",
+	[NVME_MI_RESP_ENC_SERV_XFER_FAILURE] = "Enclosure Services Transfer Failure: Communication with the Enclosure Services Process has failed",
+	[NVME_MI_RESP_ENC_FAILURE]           = "An unrecoverable enclosure failure has been detected by the Enclosure Services Process",
+	[NVME_MI_RESP_ENC_XFER_REFUSED]      = "Enclosure Services Transfer Refused: The NVM Subsystem or Enclosure Services Process indicated an error or an invalid format in communication",
+	[NVME_MI_RESP_ENC_FUNC_UNSUP]        = "Unsupported Enclosure Function: An SES Send command has been attempted to a simple Subenclosure",
+	[NVME_MI_RESP_ENC_SERV_UNAVAIL]      = "Enclosure Services Unavailable: The NVM Subsystem or Enclosure Services Process has encountered an error but may become available again",
+	[NVME_MI_RESP_ENC_DEGRADED]          = "Enclosure Degraded: A noncritical failure has been detected by the Enclosure Services Process",
+	[NVME_MI_RESP_SANITIZE_IN_PROGRESS]  = "Sanitize In Progress: The requested command is prohibited while a sanitize operation is in progress",
+};
+
+__shr_public const char *libnvme_mi_status_to_string(int status)
+{
+	const char *s = "Unknown status";
+
+	if (status < ARRAY_SIZE(mi_status) && mi_status[status])
+		s = mi_status[status];
+
+	return s;
 }
 
 __shr_public const char *libnvme_get_version(enum libnvme_version type)
