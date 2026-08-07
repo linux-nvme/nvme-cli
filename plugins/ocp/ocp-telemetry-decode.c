@@ -634,7 +634,8 @@ int get_statistic_id_ascii_string(int identifier, char *description)
 				SIZE_OF_DWORD));
 
 			memcpy(description, pdescription,
-			       peach_statistic_entry->ascii_id_length + 1);
+			       peach_statistic_entry->ascii_id_length);
+			description[peach_statistic_entry->ascii_id_length] = '\0';
 
 			return 0;
 		}
@@ -678,7 +679,8 @@ int get_event_id_ascii_string(int identifier, int debug_event_class, char *descr
 				(peach_event_entry->ascii_id_offset * SIZE_OF_DWORD));
 
 			memcpy(description, pdescription,
-			       peach_event_entry->ascii_id_length + 1);
+			       peach_event_entry->ascii_id_length);
+			description[peach_event_entry->ascii_id_length] = '\0';
 			return 0;
 		}
 	}
@@ -716,7 +718,8 @@ int get_vu_event_id_ascii_string(int identifier, int debug_event_class, char *de
 				(peach_vu_event_entry->ascii_id_offset * SIZE_OF_DWORD));
 
 			memcpy(description, pdescription,
-			       peach_vu_event_entry->ascii_id_length + 1);
+			       peach_vu_event_entry->ascii_id_length);
+			description[peach_vu_event_entry->ascii_id_length] = '\0';
 			return 0;
 		}
 	}
