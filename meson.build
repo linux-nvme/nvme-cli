@@ -174,6 +174,7 @@ if host_system == 'windows'
     bcrypt_dep = cc.find_library('bcrypt', required: true)
     setupapi_dep = cc.find_library('setupapi', required: true)
     cfgmgr32_dep = cc.find_library('cfgmgr32', required: true)
+    winpthread_dep = cc.find_library('winpthread', required: true)
 endif
 
 conf.set10(
@@ -669,6 +670,8 @@ if want_nvme
                 link_args_list += ['-ljson-c']
             endif
             link_args_list += ['-lwinpthread', '-Wl,-Bdynamic']
+        else
+            link_deps += [winpthread_dep]
         endif
     else
         link_args_list = ['-ldl']
