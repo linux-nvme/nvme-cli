@@ -20,20 +20,20 @@
 
 #pragma once
 
-/* Opaque: defined only in the generated path-sysfs.c. No
+/* Opaque: defined only in the generated path-attrs.c. No
  * other file may see its layout -- every field is reachable
  * only through the accessors below.
  */
-struct libnvme_path_sysfs;
+struct libnvme_path_attrs;
 
 /* Internal: allocate/reset/free the opaque struct. Not part
  * of the public API, not listed in any .ld.
  */
-struct libnvme_path_sysfs *libnvme_path_sysfs_alloc(void);
-void libnvme_path_sysfs_reset(
-		struct libnvme_path_sysfs *sysfs);
-void libnvme_path_sysfs_free(
-		struct libnvme_path_sysfs *sysfs);
+struct libnvme_path_attrs *libnvme_path_attrs_alloc(void);
+void libnvme_path_attrs_reset(
+		struct libnvme_path_attrs *attrs);
+void libnvme_path_attrs_free(
+		struct libnvme_path_attrs *attrs);
 
 /**
  * libnvme_path_get_ana_state() - Get ana_state.

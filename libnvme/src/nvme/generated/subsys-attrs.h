@@ -20,20 +20,20 @@
 
 #pragma once
 
-/* Opaque: defined only in the generated subsys-sysfs.c. No
+/* Opaque: defined only in the generated subsys-attrs.c. No
  * other file may see its layout -- every field is reachable
  * only through the accessors below.
  */
-struct libnvme_subsystem_sysfs;
+struct libnvme_subsystem_attrs;
 
 /* Internal: allocate/reset/free the opaque struct. Not part
  * of the public API, not listed in any .ld.
  */
-struct libnvme_subsystem_sysfs *libnvme_subsystem_sysfs_alloc(void);
-void libnvme_subsystem_sysfs_reset(
-		struct libnvme_subsystem_sysfs *sysfs);
-void libnvme_subsystem_sysfs_free(
-		struct libnvme_subsystem_sysfs *sysfs);
+struct libnvme_subsystem_attrs *libnvme_subsystem_attrs_alloc(void);
+void libnvme_subsystem_attrs_reset(
+		struct libnvme_subsystem_attrs *attrs);
+void libnvme_subsystem_attrs_free(
+		struct libnvme_subsystem_attrs *attrs);
 
 /**
  * libnvme_subsystem_set_model() - Set model.

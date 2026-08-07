@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
-# update-sysfs-accessors.sh - Regenerate every spec in
-# sysfs_accessors_specs.py's SYSFS_SPECS list (.h/.c/.i per spec, one, two,
+# update-attr-accessors.sh - Regenerate every spec in
+# attr_accessors_specs.py's ATTR_SPECS list (.h/.c/.i per spec, one, two,
 # or three .c files depending on whether it has per-OS-divergent members)
 # only when they change; report .ld symbol drift instead of rewriting it.
 #
@@ -19,18 +19,19 @@
 # It is NOT run during a normal build.
 #
 # This script does not know any spec's name or output filenames -- it
-# just diffs whatever generate_sysfs_accessors.py actually wrote into a
+# just diffs whatever generate_attr_accessors.py actually wrote into a
 # scratch directory against the same-named file in the source tree, by
 # extension: .h/.c auto-update, .i auto-updates, .ld is diffed and
 # reported but never rewritten (which version section a symbol belongs
 # to is a maintainer decision, same as accessors.ld/accessors-fabrics.ld).
-# Adding a spec to SYSFS_SPECS therefore needs no change here.
+# Adding a spec to ATTR_SPECS therefore needs no change here.
 #
 # Arguments (supplied by the Meson run_target):
 #   $1   path to the python3 interpreter
-#   $2   path to generate_sysfs_accessors.py
-#   $3   path to sysfs_accessors_specs.py (SYSFS_SPECS input)
-#   $4   output directory for every spec's .h/.c files
+#   $2   path to generate_attr_accessors.py
+#   $3   path to attr_accessors_specs.py (ATTR_SPECS input)
+#   $4   output directory whose 'generated' subdirectory holds every
+#        spec's .h/.c files
 #   $5   output directory for every spec's .ld file
 #   $6   output directory for every spec's .i file
 #   [--check]   optional: CI mode; read-only, exit non-zero on drift
@@ -39,7 +40,7 @@ set -euo pipefail
 
 PYTHON="${1:?missing python3 interpreter}"
 GENERATOR="${2:?missing generator script}"
-SPECS="${3:?missing sysfs_accessors_specs.py path}"
+SPECS="${3:?missing attr_accessors_specs.py path}"
 OUT_DIR="${4:?missing output directory}"
 LD_OUT_DIR="${5:?missing ld output directory}"
 SWIG_OUT_DIR="${6:?missing swig output directory}"
@@ -54,16 +55,20 @@ fi
 TMPDIR_WORK=$(mktemp -d)
 trap 'rm -rf "$TMPDIR_WORK"' EXIT
 
+GENERATED_OUT_DIR="$OUT_DIR/generated"
+GENERATED_TMP_DIR="$TMPDIR_WORK/generated"
+
 # ---------------------------------------------------------------------------
 # Helper: update a source file atomically when content changes.
 # ---------------------------------------------------------------------------
 update_if_changed() {
-    local src="$1"   # generated file in TMPDIR_WORK
+    local src="$1"   # generated file in the scratch tree
     local dest="$2"  # target path in the source tree
 
     if [ -f "$dest" ] && cmp -s "$src" "$dest"; then
         printf "  unchanged: %s\n" "$(basename "$dest")"
     else
+        mkdir -p "$(dirname "$dest")"
         local tmp_dest
         tmp_dest=$(mktemp "$(dirname "$dest")/.$(basename "$dest").XXXXXX")
         cp "$src" "$tmp_dest"
@@ -148,10 +153,10 @@ check_ld_drift() {
 
 # ---------------------------------------------------------------------------
 # Run generator into the scratch directory -- one run generates every spec
-# in SYSFS_SPECS.
+# in ATTR_SPECS.
 # ---------------------------------------------------------------------------
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "--- sysfs-accessors: begin generation ---"
+echo "--- attr-accessors: begin generation ---"
 echo ""
 
 "$PYTHON" "$GENERATOR" --specs "$SPECS" --out-dir "$TMPDIR_WORK" \
@@ -163,9 +168,9 @@ if [ "$CHECK_MODE" -eq 1 ]; then
     # anything is out of sync.
     # ------------------------------------------------------------------
     DRIFT=0
-    for f in "$TMPDIR_WORK"/*.h "$TMPDIR_WORK"/*.c; do
+    for f in "$GENERATED_TMP_DIR"/*.h "$GENERATED_TMP_DIR"/*.c; do
         [ -e "$f" ] || continue
-        check_if_current "$f" "$OUT_DIR/$(basename "$f")"
+        check_if_current "$f" "$GENERATED_OUT_DIR/$(basename "$f")"
     done
     for f in "$TMPDIR_WORK"/*.i; do
         [ -e "$f" ] || continue
@@ -184,7 +189,7 @@ if [ "$CHECK_MODE" -eq 1 ]; then
         echo "(.ld symbol changes require manual version-script edits;" \
              "see WARNING above.)"
         echo ""
-        echo "--- sysfs-accessors: check FAILED ---"
+        echo "--- attr-accessors: check FAILED ---"
         echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
         echo ""
         exit 1
@@ -195,9 +200,9 @@ else
     # Update mode: auto-update .h/.c/.i; report .ld drift as advisory.
     # ------------------------------------------------------------------
     CHANGED=0
-    for f in "$TMPDIR_WORK"/*.h "$TMPDIR_WORK"/*.c; do
+    for f in "$GENERATED_TMP_DIR"/*.h "$GENERATED_TMP_DIR"/*.c; do
         [ -e "$f" ] || continue
-        update_if_changed "$f" "$OUT_DIR/$(basename "$f")"
+        update_if_changed "$f" "$GENERATED_OUT_DIR/$(basename "$f")"
     done
     for f in "$TMPDIR_WORK"/*.i; do
         [ -e "$f" ] || continue
@@ -205,10 +210,10 @@ else
     done
     echo ""
     if [ "$CHANGED" -gt 0 ]; then
-        printf "%d file(s) updated in %s\n" "$CHANGED" "$OUT_DIR"
+        printf "%d file(s) updated in %s\n" "$CHANGED" "$GENERATED_OUT_DIR"
         echo "Don't forget to commit the updated files."
     else
-        echo "All sysfs-accessor source files are up to date."
+        echo "All attr-accessor source files are up to date."
     fi
     echo ""
     for f in "$TMPDIR_WORK"/*.ld; do
@@ -218,6 +223,6 @@ else
 fi
 
 echo ""
-echo "--- sysfs-accessors: generation complete ---"
+echo "--- attr-accessors: generation complete ---"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo ""

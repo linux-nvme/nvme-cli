@@ -18,7 +18,7 @@
  * Or:            make update-accessors
  */
 
-/* struct libnvme_ctrl -- sysfs-backed properties */
+/* struct libnvme_ctrl -- lazily-loaded properties */
 %rename(libnvme_ctrl_firmware_set) libnvme_ctrl_set_firmware;
 %rename(libnvme_ctrl_model_set) libnvme_ctrl_set_model;
 %rename(libnvme_ctrl_serial_set) libnvme_ctrl_set_serial;

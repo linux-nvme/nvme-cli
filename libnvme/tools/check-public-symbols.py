@@ -40,10 +40,10 @@ LD_FILES = [
     ROOT / 'src' / 'libnvme-mi.ld',
     ROOT / 'src' / 'accessors.ld',
     ROOT / 'src' / 'accessors-fabrics.ld',
-    ROOT / 'src' / 'ctrl-sysfs.ld',
-    ROOT / 'src' / 'path-sysfs.ld',
-    ROOT / 'src' / 'ns-sysfs.ld',
-    ROOT / 'src' / 'subsys-sysfs.ld',
+    ROOT / 'src' / 'ctrl-attrs.ld',
+    ROOT / 'src' / 'path-attrs.ld',
+    ROOT / 'src' / 'ns-attrs.ld',
+    ROOT / 'src' / 'subsys-attrs.ld',
 ]
 
 # ---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ PUB_RE = re.compile(r'^__shr_public\b.*\b([a-z_]\w+)\s*\(', re.MULTILINE)
 
 pub_syms = {}  # symbol -> Path of the .c file that defines it
 
-for c_path in sorted(SRC_DIR.glob('*.c')):
+for c_path in sorted(SRC_DIR.rglob('*.c')):
     for m in PUB_RE.finditer(c_path.read_text(encoding='utf-8')):
         sym = m.group(1)
         pub_syms[sym] = c_path

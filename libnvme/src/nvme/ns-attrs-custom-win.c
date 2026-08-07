@@ -11,13 +11,13 @@
 
 #include "mem.h"
 
-#include "ns-sysfs.c"
+#include "generated/ns-attrs.c"
 
 /*
  * Windows has no sysfs: lba_size/lba_count/lba_util/meta_size all come
  * from one Identify Namespace command, matching what libnvme_ns_init()
  * used to do eagerly before this conversion. Each field's own
- * SYSFS_IS_LOADED() check keeps a caller that only reads one of these
+ * ATTR_IS_LOADED() check keeps a caller that only reads one of these
  * four from paying for more than one Identify command in the common
  * case, but a prior call can leave some fields loaded and others not
  * (e.g. -ENOMEM after lba_count's malloc but before lba_util's) --
@@ -40,32 +40,32 @@ static int ns_win_load_geometry(struct libnvme_ns *n)
 
 	nvme_id_ns_flbas_to_lbaf_inuse(id->flbas, &flbas);
 
-	if (!SYSFS_IS_LOADED(n->sysfs->lba_size)) {
-		n->sysfs->lba_size = malloc(sizeof(int));
-		if (!n->sysfs->lba_size)
+	if (!ATTR_IS_LOADED(n->attrs->lba_size)) {
+		n->attrs->lba_size = malloc(sizeof(int));
+		if (!n->attrs->lba_size)
 			return -ENOMEM;
-		*n->sysfs->lba_size = 1 << id->lbaf[flbas].ds;
+		*n->attrs->lba_size = 1 << id->lbaf[flbas].ds;
 	}
 
-	if (!SYSFS_IS_LOADED(n->sysfs->lba_count)) {
-		n->sysfs->lba_count = malloc(sizeof(uint64_t));
-		if (!n->sysfs->lba_count)
+	if (!ATTR_IS_LOADED(n->attrs->lba_count)) {
+		n->attrs->lba_count = malloc(sizeof(uint64_t));
+		if (!n->attrs->lba_count)
 			return -ENOMEM;
-		*n->sysfs->lba_count = le64_to_cpu(id->nsze);
+		*n->attrs->lba_count = le64_to_cpu(id->nsze);
 	}
 
-	if (!SYSFS_IS_LOADED(n->sysfs->lba_util)) {
-		n->sysfs->lba_util = malloc(sizeof(uint64_t));
-		if (!n->sysfs->lba_util)
+	if (!ATTR_IS_LOADED(n->attrs->lba_util)) {
+		n->attrs->lba_util = malloc(sizeof(uint64_t));
+		if (!n->attrs->lba_util)
 			return -ENOMEM;
-		*n->sysfs->lba_util = le64_to_cpu(id->nuse);
+		*n->attrs->lba_util = le64_to_cpu(id->nuse);
 	}
 
-	if (!SYSFS_IS_LOADED(n->sysfs->meta_size)) {
-		n->sysfs->meta_size = malloc(sizeof(int));
-		if (!n->sysfs->meta_size)
+	if (!ATTR_IS_LOADED(n->attrs->meta_size)) {
+		n->attrs->meta_size = malloc(sizeof(int));
+		if (!n->attrs->meta_size)
 			return -ENOMEM;
-		*n->sysfs->meta_size = le16_to_cpu(id->lbaf[flbas].ms);
+		*n->attrs->meta_size = le16_to_cpu(id->lbaf[flbas].ms);
 	}
 
 	return 0;
@@ -81,18 +81,18 @@ __shr_public int libnvme_ns_get_lba_size(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!SYSFS_IS_LOADED(n->sysfs->lba_size))) {
+	if (__shr_unlikely(!ATTR_IS_LOADED(n->attrs->lba_size))) {
 		ret = ns_win_load_geometry(n);
 		if (ret)
 			return ret;
-		if (!n->sysfs->lba_size)
-			n->sysfs->lba_size = (int *)NO_SYSFS_ATTR;
+		if (!n->attrs->lba_size)
+			n->attrs->lba_size = (int *)NO_ATTR;
 	}
 
-	if (SYSFS_IS_ABSENT(n->sysfs->lba_size))
+	if (ATTR_IS_ABSENT(n->attrs->lba_size))
 		return -ENOENT;
 
-	*val = *n->sysfs->lba_size;
+	*val = *n->attrs->lba_size;
 	return 0;
 }
 
@@ -132,18 +132,18 @@ __shr_public int libnvme_ns_get_lba_count(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!SYSFS_IS_LOADED(n->sysfs->lba_count))) {
+	if (__shr_unlikely(!ATTR_IS_LOADED(n->attrs->lba_count))) {
 		ret = ns_win_load_geometry(n);
 		if (ret)
 			return ret;
-		if (!n->sysfs->lba_count)
-			n->sysfs->lba_count = (uint64_t *)NO_SYSFS_ATTR;
+		if (!n->attrs->lba_count)
+			n->attrs->lba_count = (uint64_t *)NO_ATTR;
 	}
 
-	if (SYSFS_IS_ABSENT(n->sysfs->lba_count))
+	if (ATTR_IS_ABSENT(n->attrs->lba_count))
 		return -ENOENT;
 
-	*val = *n->sysfs->lba_count;
+	*val = *n->attrs->lba_count;
 	return 0;
 }
 
@@ -157,18 +157,18 @@ __shr_public int libnvme_ns_get_lba_util(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!SYSFS_IS_LOADED(n->sysfs->lba_util))) {
+	if (__shr_unlikely(!ATTR_IS_LOADED(n->attrs->lba_util))) {
 		ret = ns_win_load_geometry(n);
 		if (ret)
 			return ret;
-		if (!n->sysfs->lba_util)
-			n->sysfs->lba_util = (uint64_t *)NO_SYSFS_ATTR;
+		if (!n->attrs->lba_util)
+			n->attrs->lba_util = (uint64_t *)NO_ATTR;
 	}
 
-	if (SYSFS_IS_ABSENT(n->sysfs->lba_util))
+	if (ATTR_IS_ABSENT(n->attrs->lba_util))
 		return -ENOENT;
 
-	*val = *n->sysfs->lba_util;
+	*val = *n->attrs->lba_util;
 	return 0;
 }
 
@@ -182,18 +182,18 @@ __shr_public int libnvme_ns_get_meta_size(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!SYSFS_IS_LOADED(n->sysfs->meta_size))) {
+	if (__shr_unlikely(!ATTR_IS_LOADED(n->attrs->meta_size))) {
 		ret = ns_win_load_geometry(n);
 		if (ret)
 			return ret;
-		if (!n->sysfs->meta_size)
-			n->sysfs->meta_size = (int *)NO_SYSFS_ATTR;
+		if (!n->attrs->meta_size)
+			n->attrs->meta_size = (int *)NO_ATTR;
 	}
 
-	if (SYSFS_IS_ABSENT(n->sysfs->meta_size))
+	if (ATTR_IS_ABSENT(n->attrs->meta_size))
 		return -ENOENT;
 
-	*val = *n->sysfs->meta_size;
+	*val = *n->attrs->meta_size;
 	return 0;
 }
 

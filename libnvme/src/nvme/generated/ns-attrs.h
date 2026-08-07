@@ -20,20 +20,20 @@
 
 #pragma once
 
-/* Opaque: defined only in the generated ns-sysfs.c. No
+/* Opaque: defined only in the generated ns-attrs.c. No
  * other file may see its layout -- every field is reachable
  * only through the accessors below.
  */
-struct libnvme_ns_sysfs;
+struct libnvme_ns_attrs;
 
 /* Internal: allocate/reset/free the opaque struct. Not part
  * of the public API, not listed in any .ld.
  */
-struct libnvme_ns_sysfs *libnvme_ns_sysfs_alloc(void);
-void libnvme_ns_sysfs_reset(
-		struct libnvme_ns_sysfs *sysfs);
-void libnvme_ns_sysfs_free(
-		struct libnvme_ns_sysfs *sysfs);
+struct libnvme_ns_attrs *libnvme_ns_attrs_alloc(void);
+void libnvme_ns_attrs_reset(
+		struct libnvme_ns_attrs *attrs);
+void libnvme_ns_attrs_free(
+		struct libnvme_ns_attrs *attrs);
 
 /**
  * libnvme_ns_get_lba_size() - Get lba_size.

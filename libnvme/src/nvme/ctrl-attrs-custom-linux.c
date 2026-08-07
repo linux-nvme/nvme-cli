@@ -12,22 +12,22 @@
 #include "cleanup-linux.h"
 #include "lib.h"
 
-#include "ctrl-sysfs.c"
+#include "generated/ctrl-attrs.c"
 
 #ifdef CONFIG_FABRICS
-#	include "ctrl-sysfs-custom-fabrics.c"
+#	include "ctrl-attrs-custom-fabrics.c"
 #else
-#	include "ctrl-sysfs-custom-no-fabrics.c"
+#	include "ctrl-attrs-custom-no-fabrics.c"
 #endif
 
 int libnvme_ctrl_load_identity(struct libnvme_ctrl *c)
 {
-	c->sysfs->firmware = libnvme_get_ctrl_attr(c, "firmware_rev");
-	c->sysfs->model = libnvme_get_ctrl_attr(c, "model");
-	c->sysfs->serial = libnvme_get_ctrl_attr(c, "serial");
-	c->sysfs->cntrltype = libnvme_get_ctrl_attr(c, "cntrltype");
-	c->sysfs->cntlid = libnvme_get_ctrl_attr(c, "cntlid");
-	c->sysfs->dctype = libnvme_get_ctrl_attr(c, "dctype");
+	c->attrs->firmware = libnvme_get_ctrl_attr(c, "firmware_rev");
+	c->attrs->model = libnvme_get_ctrl_attr(c, "model");
+	c->attrs->serial = libnvme_get_ctrl_attr(c, "serial");
+	c->attrs->cntrltype = libnvme_get_ctrl_attr(c, "cntrltype");
+	c->attrs->cntlid = libnvme_get_ctrl_attr(c, "cntlid");
+	c->attrs->dctype = libnvme_get_ctrl_attr(c, "dctype");
 
 	return 0;
 }
@@ -72,7 +72,7 @@ int libnvme_ctrl_load_phy_slot(struct libnvme_ctrl *c)
 		if (strcmp(addr, target_addr))
 			continue;
 
-		c->sysfs->phy_slot = strdup(entry->d_name);
+		c->attrs->phy_slot = strdup(entry->d_name);
 		return 0;
 	}
 

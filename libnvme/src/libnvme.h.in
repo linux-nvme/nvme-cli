@@ -13,10 +13,10 @@ extern "C" {
 #endif
 
 #include <nvme/accessors.h>
-#include <nvme/ctrl-sysfs.h>
-#include <nvme/path-sysfs.h>
-#include <nvme/ns-sysfs.h>
-#include <nvme/subsys-sysfs.h>
+#include <nvme/generated/ctrl-attrs.h>
+#include <nvme/generated/path-attrs.h>
+#include <nvme/generated/ns-attrs.h>
+#include <nvme/generated/subsys-attrs.h>
 #include <nvme/ioctl.h>
 #include <nvme/lib-types.h>
 #include <nvme/lib.h>

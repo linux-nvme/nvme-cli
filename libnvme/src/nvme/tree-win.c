@@ -40,7 +40,7 @@ int libnvme_reconfigure_ctrl(__shr_unused struct libnvme_global_ctx *ctx,
 	libnvme_ctrl_release_transport_handle(c);
 	FREE_CTRL_ATTR(c->name);
 	FREE_CTRL_ATTR(c->sysfs_dir);
-	libnvme_ctrl_sysfs_reset(c->sysfs);
+	libnvme_ctrl_attrs_reset(c->attrs);
 
 	c->hdl = NULL;
 	c->name = shr_xstrdup(name);
@@ -265,8 +265,8 @@ const char *libnvme_ns_sysfs_dir(
 
 int libnvme_ns_init(__shr_unused const char *path, struct libnvme_ns *ns)
 {
-	ns->sysfs = libnvme_ns_sysfs_alloc();
-	if (!ns->sysfs)
+	ns->attrs = libnvme_ns_attrs_alloc();
+	if (!ns->attrs)
 		return -ENOMEM;
 
 	return 0;
