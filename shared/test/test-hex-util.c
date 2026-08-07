@@ -74,6 +74,14 @@ static bool test_hex_to_ascii(void)
 	pass &= check_int("empty input returns NULL", res == NULL, 1);
 	free(res);
 
+	res = shr_hex_to_ascii("68656c6c6g");
+	pass &= check_int("invalid hex digit returns NULL", res == NULL, 1);
+	free(res);
+
+	res = shr_hex_to_ascii("z");
+	pass &= check_int("invalid odd-length hex digit returns NULL", res == NULL, 1);
+	free(res);
+
 	return pass;
 }
 
