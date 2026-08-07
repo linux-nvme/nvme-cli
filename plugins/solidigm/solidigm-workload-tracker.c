@@ -285,6 +285,7 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 	union WorkloadLogEnable workloadEnable;
 	static __u64 last_timestamp_us;
 	struct libnvme_passthru_cmd cmd;
+	__u64 sample_period_ms;
 	__u64 timestamp_us = 0;
 	__u64 timestamp = 0;
 	__u8 content_group;
@@ -316,10 +317,11 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 		return 0;
 	}
 
+	sample_period_ms = log->samplePeriodInMilliseconds;
 	timestamp_us = (le64_to_cpu(log->timestamp_lastEntry) / WLT2US) -
-		       (log->samplePeriodInMilliseconds * 1000 * (cnt - 1));
+		       (sample_period_ms * 1000 * (cnt - 1));
 	timestamp = le64_to_cpu(log->timestamp_lastEntry) -
-		    (log->samplePeriodInMilliseconds * WLT2MS * (cnt - 1));
+		    (sample_period_ms * WLT2MS * (cnt - 1));
 
 	if (wlt->poll_count++ == 0) {
 		__u64 tle = log->timestamp_lastEntry;
@@ -374,8 +376,8 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 			      (log->samplePeriodInMilliseconds * 100);
 
 		if (is_old) {
-			timestamp_us += (log->samplePeriodInMilliseconds * 1000);
-			timestamp += log->samplePeriodInMilliseconds * WLT2MS;
+			timestamp_us += sample_period_ms * 1000;
+			timestamp += sample_period_ms * WLT2MS;
 			continue;
 		}
 		printf("%-16" PRIu64, (uint64_t)timestamp);
@@ -422,8 +424,8 @@ static int wltracker_show_newer_entries(struct wltracker *wlt)
 
 			printf("%-*u ", (int)strlen(f.name), val);
 		}
-		timestamp_us += (log->samplePeriodInMilliseconds * 1000);
-		timestamp += log->samplePeriodInMilliseconds * WLT2MS;
+		timestamp_us += sample_period_ms * 1000;
+		timestamp += sample_period_ms * WLT2MS;
 	}
 	last_timestamp_us = log->timestamp_lastEntry / WLT2US;
 	return 0;
@@ -632,7 +634,7 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 	}
 
 	wlt.start_time_us = micros();
-	stop_time_us = cfg.run_time_s * 1000000;
+	stop_time_us = (__u64)cfg.run_time_s * 1000000;
 	while (wlt.run_time_us < stop_time_us) {
 		__u64 interval;
 		__u64 elapsed;
