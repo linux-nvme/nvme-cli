@@ -1187,7 +1187,7 @@ static int nvme_parse_evtlog(void *pevent_log_info, __u32 log_len, char *output)
 		offset++;
 		length--;
 
-		if (!(offset % (log_len / 100)) || (offset == log_len))
+		if ((log_len >= 100 && !(offset % (log_len / 100))) || (offset == log_len))
 			shr_spinner("Parse", (float) (offset) / (float) (log_len), stdout);
 	}
 
