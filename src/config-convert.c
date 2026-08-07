@@ -137,6 +137,12 @@ static void apply_dhchap_default(struct libnvmf_params *params,
 	}
 }
 
+/*
+ * The legacy config.json format predates EPCSD; its boolean "persistent"
+ * meant unconditional persistence. Map true to "force", not the new
+ * best-effort "auto" default, so migrating an existing config.json doesn't
+ * silently change behavior for a connection that was persistent before.
+ */
 static void apply_dc_persistent(struct libnvmf_params *params,
 		struct json_object *port_obj)
 {
@@ -144,7 +150,7 @@ static void apply_dc_persistent(struct libnvmf_params *params,
 
 	if (val)
 		libnvmf_params_set(params, "persistent",
-				    json_object_get_boolean(val) ? "true" : "false");
+			json_object_get_boolean(val) ? "force" : "no");
 }
 
 static int convert_port(struct libnvmf_config_emitter *emitter,
@@ -315,8 +321,7 @@ int nvme_config_convert_json(struct libnvmf_config_emitter *emitter,
 #endif /* CONFIG_JSONC */
 
 int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
-		const struct nvmf_args *fa, enum libnvmf_tristate persistent,
-		enum libnvmf_tristate epcsd)
+		const struct nvmf_args *fa, const char *persistent)
 {
 	struct libnvmf_params *params;
 	int ret;
@@ -326,12 +331,14 @@ int nvme_config_convert_discovery_args(struct libnvmf_config_emitter *emitter,
 		return -ENOMEM;
 
 	nvmf_args_to_params(params, fa);
-	if (persistent != LIBNVMF_TRISTATE_UNSET)
-		libnvmf_params_set(params, "persistent",
-			persistent == LIBNVMF_TRISTATE_TRUE ? "true" : "false");
-	if (epcsd != LIBNVMF_TRISTATE_UNSET)
-		libnvmf_params_set(params, "epcsd",
-			epcsd == LIBNVMF_TRISTATE_TRUE ? "true" : "false");
+	if (persistent &&
+	    libnvmf_params_set(params, "persistent", persistent)) {
+		nvme_show_error(
+			"discovery.conf: skipping a line with an invalid persistent value '%s'",
+			persistent);
+		libnvmf_params_free(params);
+		return 0;
+	}
 
 	ret = libnvmf_config_emit_add(emitter, true, fa->transport, fa->traddr,
 			fa->trsvcid, fa->subsysnqn, fa->host_traddr,

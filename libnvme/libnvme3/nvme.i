@@ -181,6 +181,7 @@ static int set_fctx_host_params(struct libnvme_global_ctx *ctx,
 	const char *hostnqn = NULL, *hostid = NULL;
 	const char *hostkey = NULL, *ctrlkey = NULL;
 	const char *keyring = NULL, *tls_key = NULL, *tls_key_identity = NULL;
+	const char *persistent = NULL;
 	int err;
 	str_fields_t tbl[] = {
 		{"hostnqn",          &hostnqn},
@@ -190,18 +191,20 @@ static int set_fctx_host_params(struct libnvme_global_ctx *ctx,
 		{"keyring",          &keyring},
 		{"tls_key",          &tls_key},
 		{"tls_key_identity", &tls_key_identity},
+		{"persistent",       &persistent},
 		{NULL, NULL}, /* sentinel */
 	};
 	str_fields_t *p;
-	PyObject *val;
-
-	val = PyDict_GetItemString(dict, "persistent");
-	if (val)
-		fctx->persistent = PyObject_IsTrue(val) ?
-			LIBNVMF_TRISTATE_TRUE : LIBNVMF_TRISTATE_FALSE;
 
 	for (p = tbl; p->key; p++)
 		*p->val = dict_get_str(dict, p->key);
+
+	if (persistent && libnvmf_context_set_persistent(fctx, persistent)) {
+		PyErr_Format(PyExc_ValueError,
+			"invalid 'persistent' value '%s' (expected 'no', 'auto', or 'force')",
+			persistent);
+		return -1;
+	}
 
 	/* Fall back to the ctx default only when the dict supplies neither
 	 * field. Never splice a dict-given hostnqn with a ctx-default
@@ -1687,7 +1690,10 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		"      tls_key_identity (str)  -- TLS key identity string\n"
 		"\n"
 		"    Persistence (optional):\n"
-		"      persistent (bool)  -- Keep connection alive after process exit\n"
+		"      persistent (str)  -- 'no', 'auto', or 'force': keep the\n"
+		"                           connection alive after process exit;\n"
+		"                           'auto' does so only where the target's\n"
+		"                           own EPCSD flag supports it\n"
 		"\n"
 		"  Examples::\n"
 		"\n"

@@ -106,27 +106,6 @@ enum nvmf_disc_eflags {
 };
 
 /**
- * enum libnvmf_tristate - Optional boolean discovery controller override.
- * @LIBNVMF_TRISTATE_UNSET:  Not explicitly configured by the user. The
- *			     effective value should be derived from another
- *			     source, e.g. the discovery log page entry flags
- *			     (see &enum nvmf_disc_eflags).
- * @LIBNVMF_TRISTATE_TRUE:   Explicitly enabled by the user.
- * @LIBNVMF_TRISTATE_FALSE:  Explicitly disabled by the user, overriding any
- *			     value that would otherwise be derived elsewhere.
- *
- * This is a libnvme-defined helper type, not an NVMe-oF wire type. It is
- * used by discovery-controller-level configuration knobs (e.g. persistent,
- * epcsd) that must distinguish "the user did not say" from an explicit
- * false, so a default derived at runtime is not silently overridden.
- */
-enum libnvmf_tristate {
-	LIBNVMF_TRISTATE_UNSET	= 0,
-	LIBNVMF_TRISTATE_TRUE	= 1,
-	LIBNVMF_TRISTATE_FALSE	= 2,
-};
-
-/**
  * union nvmf_tsas - Transport Specific Address Subtype
  * @common:  Common transport specific attributes
  * @rdma:    RDMA transport specific attribute settings

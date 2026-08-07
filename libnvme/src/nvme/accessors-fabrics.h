@@ -423,42 +423,6 @@ int libnvmf_context_get_default_keep_alive_timeout(
 const char *libnvmf_context_get_device(const struct libnvmf_context *p);
 
 /**
- * libnvmf_context_set_persistent() - Set persistent.
- * @p: The &struct libnvmf_context instance to update.
- * @persistent: Value to assign to the persistent field.
- */
-void libnvmf_context_set_persistent(
-		struct libnvmf_context *p,
-		enum libnvmf_tristate persistent);
-
-/**
- * libnvmf_context_get_persistent() - Get persistent.
- * @p: The &struct libnvmf_context instance to query.
- *
- * Return: The value of the persistent field.
- */
-enum libnvmf_tristate libnvmf_context_get_persistent(
-		const struct libnvmf_context *p);
-
-/**
- * libnvmf_context_set_epcsd() - Set epcsd.
- * @p: The &struct libnvmf_context instance to update.
- * @epcsd: Value to assign to the epcsd field.
- */
-void libnvmf_context_set_epcsd(
-		struct libnvmf_context *p,
-		enum libnvmf_tristate epcsd);
-
-/**
- * libnvmf_context_get_epcsd() - Get epcsd.
- * @p: The &struct libnvmf_context instance to query.
- *
- * Return: The value of the epcsd field.
- */
-enum libnvmf_tristate libnvmf_context_get_epcsd(
-		const struct libnvmf_context *p);
-
-/**
  * libnvmf_context_get_devid_file() - Get devid_file.
  * @p: The &struct libnvmf_context instance to query.
  *

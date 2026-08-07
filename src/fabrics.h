@@ -109,6 +109,22 @@ struct nvmf_args {
 		##__VA_ARGS__                                                                    \
 	)
 
+/*
+ * Sentinel for an OPT_STRING_OPTIONAL() "--persistent[=no|auto|force]"
+ * argument, initialized before parsing so "not given at all" (the pointer
+ * still equals this) can be told apart from "given with no value" (optarg
+ * is NULL, meaning "auto") and "given=value".
+ */
+extern char nvmf_persistent_not_given;
+#define NVMF_PERSISTENT_NOT_GIVEN (&nvmf_persistent_not_given)
+
+/*
+ * Resolve a --persistent argument to the string
+ * libnvmf_context_set_persistent()/libnvmf_params_set() expect: NULL if
+ * not given at all, "auto" if given bare, or the value as typed otherwise.
+ */
+const char *nvmf_resolve_persistent_arg(const char *arg);
+
 int fabrics_discover(const char *desc, int argc, char **argv, bool connect);
 int fabrics_connect(const char *desc, int argc, char **argv);
 int fabrics_disconnect(const char *desc, int argc, char **argv);

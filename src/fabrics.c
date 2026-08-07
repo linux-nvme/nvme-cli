@@ -495,6 +495,16 @@ record_err:
 	}
 }
 
+char nvmf_persistent_not_given;
+
+const char *nvmf_resolve_persistent_arg(const char *arg)
+{
+	if (arg == NVMF_PERSISTENT_NOT_GIVEN)
+		return NULL;
+
+	return arg ? arg : "auto";
+}
+
 /*
  * Parse one discovery.conf line -- the same argv-style syntax 'nvme
  * discover'/'connect-all' accept, reusing NVMF_ARGS so every short and long
@@ -512,18 +522,13 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 	char *argv[MAX_DISC_ARGS] = { "discovery.conf" };
 	char *ptr, *p = line;
 	int argc = 1;
-	bool persistent = false, force = false, epcsd = false;
-	bool no_persistent = false, no_epcsd = false;
+	bool force = false;
+	char *persistent_arg = NVMF_PERSISTENT_NOT_GIVEN;
 
 	NVMF_ARGS(opts, fa,
-		  OPT_FLAG("persistent", 'p', &persistent,
-			   "persistent discovery connection"),
-		  OPT_FLAG("no-persistent", 0, &no_persistent,
-			   "explicitly not a persistent discovery connection"),
-		  OPT_FLAG("epcsd",        0, &epcsd,
-			   "Explicit Persistent Connection Support for Discovery"),
-		  OPT_FLAG("no-epcsd",     0, &no_epcsd,
-			   "explicitly does not support Explicit Persistent Connection Support for Discovery"),
+		  OPT_STRING_OPTIONAL("persistent", 'p', "no|auto|force",
+			   &persistent_arg,
+			   "persistent discovery connection mode"),
 		  OPT_FLAG("force",        0, &force,
 			   "Force persistent discovery controller creation"));
 
@@ -551,10 +556,7 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 		return 0;
 
 	return nvme_config_convert_discovery_args(emitter, &fa,
-		persistent ? LIBNVMF_TRISTATE_TRUE :
-			no_persistent ? LIBNVMF_TRISTATE_FALSE : LIBNVMF_TRISTATE_UNSET,
-		epcsd ? LIBNVMF_TRISTATE_TRUE :
-			no_epcsd ? LIBNVMF_TRISTATE_FALSE : LIBNVMF_TRISTATE_UNSET);
+		nvmf_resolve_persistent_arg(persistent_arg));
 }
 
 static int setup_common_context(struct libnvmf_context *fctx,
@@ -796,8 +798,9 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	int ret;
 	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
 	char *device = NULL;
-	bool persistent = false, force = false, epcsd = false;
-	bool no_persistent = false, no_epcsd = false;
+	bool force = false;
+	char *persistent_arg = NVMF_PERSISTENT_NOT_GIVEN;
+	const char *persistent;
 	bool nbft = false, nonbft = false;
 	char *nbft_path = NBFT_SYSFS_PATH;
 	char *owner = NULL;
@@ -805,14 +808,9 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	NVMF_ARGS(opts, fa,
 		  OPT_STRING("device",     'd', "DEV", &device,       "use existing discovery controller device"),
 		  OPT_FILE("raw",          'r', &raw,                 "save raw output to file"),
-		  OPT_FLAG("persistent",   'p', &persistent,
-			   "persistent discovery connection"),
-		  OPT_FLAG("no-persistent",  0, &no_persistent,
-			   "explicitly not a persistent discovery connection"),
-		  OPT_FLAG("epcsd",          0, &epcsd,
-			   "Explicit Persistent Connection Support for Discovery"),
-		  OPT_FLAG("no-epcsd",       0, &no_epcsd,
-			   "explicitly does not support Explicit Persistent Connection Support for Discovery"),
+		  OPT_STRING_OPTIONAL("persistent", 'p', "no|auto|force",
+			   &persistent_arg,
+			   "persistent discovery connection mode"),
 		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
 		  OPT_FLAG("force",          0, &force,               "Force persistent discovery controller creation"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
@@ -834,15 +832,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		return ret;
 	}
 
-	if (epcsd && no_epcsd) {
-		fprintf(stderr, "--epcsd and --no-epcsd options are mutually exclusive\n");
-		return -EINVAL;
-	}
-
-	if (persistent && no_persistent) {
-		fprintf(stderr, "--persistent and --no-persistent options are mutually exclusive\n");
-		return -EINVAL;
-	}
+	persistent = nvmf_resolve_persistent_arg(persistent_arg);
 
 	if (!strcmp(config_file, "none"))
 		config_file = NULL;
@@ -900,17 +890,12 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	libnvmf_context_set_connect(fctx, connect);
 	libnvmf_context_set_force(fctx, force);
 
-	if (epcsd)
-		libnvmf_context_set_epcsd(fctx, LIBNVMF_TRISTATE_TRUE);
-
-	if (no_epcsd)
-		libnvmf_context_set_epcsd(fctx, LIBNVMF_TRISTATE_FALSE);
-
-	if (persistent)
-		libnvmf_context_set_persistent(fctx, LIBNVMF_TRISTATE_TRUE);
-
-	if (no_persistent)
-		libnvmf_context_set_persistent(fctx, LIBNVMF_TRISTATE_FALSE);
+	if (persistent && libnvmf_context_set_persistent(fctx, persistent)) {
+		nvme_show_error(
+			"invalid --persistent value '%s' (expected no, auto, or force)",
+			persistent);
+		return -EINVAL;
+	}
 
 	if (!device && !fa.transport && !fa.traddr) {
 		if (!nonbft) {

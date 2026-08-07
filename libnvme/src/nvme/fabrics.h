@@ -422,6 +422,34 @@ int libnvmf_context_set_hostnqn(struct libnvmf_context *fctx,
 		const char *hostnqn, const char *hostid);
 
 /**
+ * libnvmf_context_set_persistent() - Set the discovery controller
+ * persistence mode
+ * @fctx: Fabrics context
+ * @persistent: One of "no", "auto", "force" (case-insensitive)
+ *
+ * "auto" persists a Discovery Log Page entry's connection only where that
+ * entry's own EPCSD flag (see &enum nvmf_disc_eflags) reports support for
+ * it; "force" persists regardless of what EPCSD reports; "no" never
+ * persists.
+ *
+ * Return: 0 on success, -EINVAL if @fctx is NULL or @persistent matches
+ * none of the accepted values.
+ */
+int libnvmf_context_set_persistent(struct libnvmf_context *fctx,
+		const char *persistent);
+
+/**
+ * libnvmf_context_get_persistent() - Get the discovery controller
+ * persistence mode
+ * @fctx: Fabrics context
+ *
+ * Return: "no", "auto", or "force" if explicitly configured; NULL if not
+ * (behaves the same as "no" when applied to a live connection, or if
+ * @fctx is NULL).
+ */
+const char *libnvmf_context_get_persistent(const struct libnvmf_context *fctx);
+
+/**
  * libnvmf_context_set_connection_from_tid() - Set connection and identity
  * from a TID
  * @fctx: Fabrics context
