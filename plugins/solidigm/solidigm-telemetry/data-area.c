@@ -520,9 +520,10 @@ static void telemetry_log_data_area_toc_parse(const struct telemetry_log *tl,
 		}
 		object_file_offset = ((uint64_t)da_offset) + obj_offset + header_offset;
 		if (has_struct) {
-			sldm_telemetry_structure_parse(tl, structure_definition,
-						NUM_BITS_IN_BYTE * object_file_offset,
-						parsed_struct, toc_item);
+			if (sldm_telemetry_structure_parse(tl, structure_definition,
+							NUM_BITS_IN_BYTE * object_file_offset,
+							parsed_struct, toc_item))
+				continue;
 		}
 		// NLOGs have different parser from other Telemetry objects
 		if (nlog_name) {
