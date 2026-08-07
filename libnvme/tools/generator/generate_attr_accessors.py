@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """
-generate_sysfs_accessors.py — Generate an opaque, sysfs-backed struct and its
-accessors from a Python dict, instead of parsing an annotated header.
+generate_attr_accessors.py — Generate an opaque, lazily-loaded struct and
+its accessors from a Python dict, instead of parsing an annotated header.
 
-Generates every struct spec dict in the SYSFS_SPECS list of the module
-passed via --specs (e.g. sysfs_accessors_specs.py), in one run -- no
+Generates every struct spec dict in the ATTR_SPECS list of the module
+passed via --specs (e.g. attr_accessors_specs.py), in one run -- no
 per-struct invocation, no per-struct command-line selection.
 
-See ../../design/tooling/generate_sysfs_accessors.md for the full design
+See ../../design/tooling/generate_attr_accessors.md for the full design
 rationale (why this is a separate generator from generate_accessors.py,
-the CTRL_SYSFS schema, and how to add a new member).
+the CTRL_ATTRS schema, and how to add a new member).
+
+Generated .c/.h files are written to a 'generated' subdirectory of
+--out-dir, keeping them visually separate from the hand-written
+*-attrs-custom-*.c files that #include them -- see that same design doc.
 
 Example usage:
-  ./generate_sysfs_accessors.py --out-dir ../../src/nvme \
-          --specs ../../src/nvme/sysfs_accessors_specs.py
+  ./generate_attr_accessors.py --out-dir ../../src/nvme \
+          --specs ../../src/nvme/attr_accessors_specs.py
 """
 
 import argparse
@@ -40,12 +44,12 @@ LD_BANNER = generate_accessors.LD_BANNER
 
 
 def load_specs(path):
-    """Import the module at path and return its SYSFS_SPECS list."""
-    spec = importlib.util.spec_from_file_location('sysfs_accessors_specs',
+    """Import the module at path and return its ATTR_SPECS list."""
+    spec = importlib.util.spec_from_file_location('attr_accessors_specs',
                                                     path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.SYSFS_SPECS
+    return module.ATTR_SPECS
 
 
 # ---------------------------------------------------------------------------
@@ -120,8 +124,8 @@ def _make_member(spec, resolved, is_absent=False):
         is_scalar_array=False,
         array_size=None,
         field_path=field_path,
-        is_sysfs_lazy=True,
-        sysfs_attr=resolved.get('attr'),
+        is_attr_lazy=True,
+        attr_name=resolved.get('attr'),
         is_volatile=resolved.get('volatile', False),
         attr_reader=spec['attr_reader'],
         is_absent=is_absent,
@@ -145,7 +149,7 @@ def build_members(spec):
                   resolution differs, for the spec's Linux-only .c file.
       'win'    -- likewise, for the Windows-only .c file.
 
-    field_path uses '->' throughout (e.g. 'sysfs->model'): the owner
+    field_path uses '->' throughout (e.g. 'attrs->model'): the owner
     struct holds a pointer to this struct, not an embedded value.
 
     Groups are not yet OS-resolved (spec['groups'] is a single,
@@ -186,8 +190,8 @@ def build_members(spec):
                 is_scalar_array=False,
                 array_size=None,
                 field_path=field_path,
-                is_sysfs_lazy=True,
-                sysfs_loader=g['loader'],
+                is_attr_lazy=True,
+                attr_loader=g['loader'],
             )
             all_members.append(member)
             shared_members.append(member)
@@ -280,9 +284,9 @@ def emit_struct_def(f, spec):
             f.write(f"\t{m['type']} {m['name']};\n")
         else:
             # Cached numeric: boxed as TYPE * so the field can carry the
-            # same NULL/NO_SYSFS_ATTR/real-value tri-state a string
-            # member already uses -- the type itself has no spare value
-            # to mean "not loaded" (0 is a legitimate reading).
+            # same NULL/NO_ATTR/real-value tri-state a string member
+            # already uses -- the type itself has no spare value to
+            # mean "not loaded" (0 is a legitimate reading).
             f.write(f"\t{m['type']} *{m['name']};\n")
     for g in spec['groups']:
         for name in g['members']:
@@ -311,7 +315,7 @@ def emit_alloc_free(f, spec):
     )
     for path in reconfigure_reset_field_paths(spec):
         name = path.split('->', 1)[1]
-        f.write(f'\tSYSFS_FREE({owner_field}->{name});\n')
+        f.write(f'\tATTR_FREE({owner_field}->{name});\n')
     f.write('}\n\n')
 
     f.write(
@@ -323,7 +327,7 @@ def emit_alloc_free(f, spec):
     )
     for path in final_free_field_paths(spec):
         name = path.split('->', 1)[1]
-        f.write(f'\tSYSFS_FREE({owner_field}->{name});\n')
+        f.write(f'\tATTR_FREE({owner_field}->{name});\n')
     f.write(f'\tfree({owner_field});\n')
     f.write('}\n\n')
 
@@ -365,8 +369,8 @@ def generate_header(spec, members):
             '/* Internal: loader callbacks, one per group above. Each\n'
             ' * fills every member of its group in a single call,\n'
             ' * returning 0 on success or a negative errno. Defined in\n'
-            ' * whichever hand-written *-custom-*.c matches the build\n'
-            ' * (see that file\'s own #ifdef/#include selection).\n'
+            ' * whichever hand-written *-attrs-custom-*.c matches the\n'
+            ' * build (see that file\'s own #ifdef/#include selection).\n'
             ' */\n'
         )
         for fn in loaders:
@@ -397,8 +401,8 @@ def generate_source_shared(spec, shared_members):
         '#include <stdlib.h>\n'
         '#include <string.h>\n\n'
         '#include <compiler-attributes.h>\n\n'
-        '#include "private.h"\n'
-        '#include "private-tree.h"\n'
+        '#include "../private.h"\n'
+        '#include "../private-tree.h"\n'
         f'#include "{spec["header"]}"\n\n'
     )
 
@@ -416,9 +420,9 @@ def generate_source_os(spec, os_members):
 
     No includes, no struct definition, no alloc/reset/free -- this file
     is never compiled on its own. It relies on being #include'd *after*
-    the shared .c in the hand-written ctrl-sysfs-custom-<os>.c (or
+    the shared .c in the hand-written ctrl-attrs-custom-<os>.c (or
     equivalent), which brings the struct definition and everything else
-    into scope first -- see generate_sysfs_accessors.md's "generated
+    into scope first -- see generate_attr_accessors.md's "generated
     file layout" section for the full #include chain.
     """
     owner_type = spec['owner_type']
@@ -499,10 +503,10 @@ def emit_swig_getter_wrapper(owner_type, m):
 
 def generate_swig(spec, members):
     """SWIG fragment: extend the already-wrapped struct libnvme_ctrl
-    (declared in accessors.i) with these sysfs-backed properties.
+    (declared in accessors.i) with these lazily-loaded properties.
 
     Every member here goes through %extend, unconditionally -- SWIG's
-    generated glue can no more reach a field behind the opaque sysfs
+    generated glue can no more reach a field behind the opaque attrs
     pointer than any other C caller can, the same reason a hand-written
     'custom' accessor in generate_accessors.py's own SWIG emitter needs
     %extend instead of a plain struct field. This is a bespoke, minimal
@@ -539,7 +543,7 @@ def generate_swig(spec, members):
 
     buf = io.StringIO()
     buf.write(f'{SPDX_C}\n\n{BANNER}\n\n')
-    buf.write(f'/* struct {owner_type} -- sysfs-backed properties */\n')
+    buf.write(f'/* struct {owner_type} -- lazily-loaded properties */\n')
 
     for m in writable:
         buf.write(
@@ -609,13 +613,14 @@ def main():
     parser.add_argument(
         '--specs',
         required=True,
-        help='Path to the Python module providing SYSFS_SPECS, a list of '
-        'struct spec dicts (e.g. sysfs_accessors_specs.py)',
+        help='Path to the Python module providing ATTR_SPECS, a list of '
+        'struct spec dicts (e.g. attr_accessors_specs.py)',
     )
     parser.add_argument(
         '--out-dir',
         required=True,
-        help='Directory to write generated .c/.h files into',
+        help="Directory whose 'generated' subdirectory receives the "
+        'generated .c/.h files',
     )
     parser.add_argument(
         '--ld-out-dir',
@@ -633,6 +638,11 @@ def main():
         help='Read-only: exit non-zero if output is stale',
     )
     args = parser.parse_args()
+    # .c/.h are the only fully generator-owned outputs (never hand-
+    # touched, unlike the hand-maintained .ld or the *-custom-*.c files
+    # that #include them) -- kept in their own subdirectory so they
+    # don't clutter src/nvme/ alongside hand-written files.
+    generated_dir = os.path.join(args.out_dir, 'generated')
     ld_out_dir = args.ld_out_dir or args.out_dir
     swig_out_dir = args.swig_out_dir or args.out_dir
 
@@ -640,19 +650,22 @@ def main():
     for spec in load_specs(args.specs):
         resolved = build_members(spec)
         outputs[spec['source']] = (
-            args.out_dir, generate_source_shared(spec, resolved['shared']))
+            generated_dir, generate_source_shared(spec, resolved['shared']))
         if resolved['linux']:
             outputs[spec['source_linux']] = (
-                args.out_dir, generate_source_os(spec, resolved['linux']))
+                generated_dir, generate_source_os(spec, resolved['linux']))
         if resolved['win']:
             outputs[spec['source_win']] = (
-                args.out_dir, generate_source_os(spec, resolved['win']))
+                generated_dir, generate_source_os(spec, resolved['win']))
         outputs[spec['header']] = (
-            args.out_dir, generate_header(spec, resolved['all']))
+            generated_dir, generate_header(spec, resolved['all']))
         outputs[spec['ld']] = (
             ld_out_dir, generate_ld(spec, resolved['all']))
         outputs[spec['swig']] = (
             swig_out_dir, generate_swig(spec, resolved['all']))
+
+    if not args.check:
+        os.makedirs(generated_dir, exist_ok=True)
 
     stale = []
     for name, (out_dir, content) in outputs.items():
@@ -672,13 +685,13 @@ def main():
         if stale:
             print('stale: ' + ', '.join(stale), file=sys.stderr)
             return 1
-        print('all sysfs-accessor generated files up to date.')
+        print('all attr-accessor generated files up to date.')
         return 0
 
     if stale:
         print('updated: ' + ', '.join(stale))
     else:
-        print('all sysfs-accessor generated files unchanged.')
+        print('all attr-accessor generated files unchanged.')
     return 0
 
 

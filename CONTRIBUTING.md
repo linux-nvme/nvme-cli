@@ -175,8 +175,8 @@ The script atomically updates the `.h` and `.c` files when their content
 changes. Commit the updated files afterward:
 
 ```shell
-$ git add libnvme/src/nvme/accessors.h libnvme/src/nvme/accessors.c
-$ git add libnvme/src/nvme/accessors-fabrics.h libnvme/src/nvme/accessors-fabrics.c
+$ git add libnvme/src/nvme/generated/accessors.h libnvme/src/nvme/generated/accessors.c
+$ git add libnvme/src/nvme/generated/accessors-fabrics.h libnvme/src/nvme/generated/accessors-fabrics.c
 $ git commit -m "libnvme: regenerate accessors following <struct> changes"
 ```
 

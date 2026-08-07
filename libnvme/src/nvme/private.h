@@ -28,12 +28,12 @@ struct libnvme_passthru_completion;
 struct libnvme_async_req;
 
 /* Opaque: each is defined only in its own generated .c file -- see
- * generate_sysfs_accessors.py. No other file may see their layout.
+ * generate_attr_accessors.py. No other file may see their layout.
  */
-struct libnvme_ctrl_sysfs;
-struct libnvme_path_sysfs;
-struct libnvme_ns_sysfs;
-struct libnvme_subsystem_sysfs;
+struct libnvme_ctrl_attrs;
+struct libnvme_path_attrs;
+struct libnvme_ns_attrs;
+struct libnvme_subsystem_attrs;
 
 const char *libnvme_subsys_sysfs_dir(struct libnvme_global_ctx *ctx);
 const char *libnvme_ctrl_sysfs_dir(struct libnvme_global_ctx *ctx);
@@ -274,8 +274,8 @@ struct libnvme_path {		// !generate-accessors:read=generated,write=none !generat
 	char *name;		       // !access:write=generated
 	char *sysfs_dir;	       // !access:write=generated
 
-	/* Opaque: field list is PATH_SYSFS in sysfs_accessors_specs.py. */
-	struct libnvme_path_sysfs *sysfs;	// !access:read=none
+	/* Opaque: field list is PATH_ATTRS in attr_accessors_specs.py. */
+	struct libnvme_path_attrs *attrs;	// !access:read=none
 };
 
 struct libnvme_ns_head {
@@ -309,8 +309,8 @@ struct libnvme_ns {  // !generate-accessors:read=generated,write=none !generate-
 	char *generic_name;
 	char *sysfs_dir;		     // !access:write=generated
 
-	/* Opaque: field list is NS_SYSFS in sysfs_accessors_specs.py. */
-	struct libnvme_ns_sysfs *sysfs;	// !access:read=none
+	/* Opaque: field list is NS_ATTRS in attr_accessors_specs.py. */
+	struct libnvme_ns_attrs *attrs;	// !access:read=none
 };
 
 struct libnvme_ctrl {  // !generate-accessors:read=generated,write=none !generate-python:alias=Ctrl
@@ -339,8 +339,8 @@ struct libnvme_ctrl {  // !generate-accessors:read=generated,write=none !generat
 	bool persistent;		// !access:write=generated
 	struct libnvme_fabrics_config cfg; // !access:nested:write=none
 
-	/* Opaque: field list is CTRL_SYSFS in sysfs_accessors_specs.py. */
-	struct libnvme_ctrl_sysfs *sysfs;	// !access:read=none
+	/* Opaque: field list is CTRL_ATTRS in attr_accessors_specs.py. */
+	struct libnvme_ctrl_attrs *attrs;	// !access:read=none
 };
 
 struct libnvme_subsystem {  // !generate-accessors:read=generated,write=none !generate-python:alias=Subsystem
@@ -353,7 +353,9 @@ struct libnvme_subsystem {  // !generate-accessors:read=generated,write=none !ge
 	char *sysfs_dir;
 	char *subsysnqn;
 	char *subsystype;
-	struct libnvme_subsystem_sysfs *sysfs;	// !access:read=none
+
+	/* Opaque: field list is SUBSYS_ATTRS in attr_accessors_specs.py. */
+	struct libnvme_subsystem_attrs *attrs;	// !access:read=none
 };
 
 struct libnvme_host {  // !generate-accessors:read=generated,write=none !generate-python:alias=Host

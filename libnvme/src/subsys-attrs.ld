@@ -3,7 +3,7 @@
 /*
  * This file is part of libnvme.
  *
- * Copyright (c) 2025, Dell Technologies Inc. or its subsidiaries.
+ * Copyright (c) 2026, Dell Technologies Inc. or its subsidiaries.
  * Authors: Martin Belanger <Martin.Belanger@dell.com>
  *
  * This symbol list is maintained by hand, not auto-generated. When
@@ -15,19 +15,13 @@
  * Or:       make update-accessors
  */
 
-LIBNVME_NS_SYSFS_3 {
+LIBNVME_SUBSYS_ATTRS_3 {
 	global:
-		libnvme_ns_get_lba_size;
-		libnvme_ns_get_lba_shift;
-		libnvme_ns_get_lba_count;
-		libnvme_ns_get_lba_util;
-		libnvme_ns_get_meta_size;
-		libnvme_ns_get_csi;
-		libnvme_ns_get_eui64;
-		libnvme_ns_get_nguid;
-		libnvme_ns_get_uuid;
-		libnvme_ns_get_command_retry_count;
-		libnvme_ns_get_command_error_count;
-		libnvme_ns_get_io_requeue_no_usable_path_count;
-		libnvme_ns_get_io_fail_no_available_path_count;
+		libnvme_subsystem_get_model;
+		libnvme_subsystem_set_model;
+		libnvme_subsystem_get_serial;
+		libnvme_subsystem_set_serial;
+		libnvme_subsystem_get_firmware;
+		libnvme_subsystem_set_firmware;
+		libnvme_subsystem_get_iopolicy;
 };

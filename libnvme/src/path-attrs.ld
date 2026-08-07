@@ -3,7 +3,7 @@
 /*
  * This file is part of libnvme.
  *
- * Copyright (c) 2026, Dell Technologies Inc. or its subsidiaries.
+ * Copyright (c) 2025, Dell Technologies Inc. or its subsidiaries.
  * Authors: Martin Belanger <Martin.Belanger@dell.com>
  *
  * This symbol list is maintained by hand, not auto-generated. When
@@ -15,13 +15,13 @@
  * Or:       make update-accessors
  */
 
-LIBNVME_SUBSYS_SYSFS_3 {
+LIBNVME_PATH_ATTRS_3 {
 	global:
-		libnvme_subsystem_get_model;
-		libnvme_subsystem_set_model;
-		libnvme_subsystem_get_serial;
-		libnvme_subsystem_set_serial;
-		libnvme_subsystem_get_firmware;
-		libnvme_subsystem_set_firmware;
-		libnvme_subsystem_get_iopolicy;
+		libnvme_path_get_ana_state;
+		libnvme_path_get_numa_nodes;
+		libnvme_path_get_grpid;
+		libnvme_path_get_queue_depth;
+		libnvme_path_get_multipath_failover_count;
+		libnvme_path_get_command_retry_count;
+		libnvme_path_get_command_error_count;
 };

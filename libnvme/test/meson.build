@@ -15,12 +15,12 @@ if python3_prog.found()
             meson.project_source_root() / 'libnvme',
         ],
     )
-    _ld_args = ['--ld', nvme_ld, '--ld', accessors_ld, '--ld', ctrl_sysfs_ld]
+    _ld_args = ['--ld', nvme_ld, '--ld', accessors_ld, '--ld', ctrl_attrs_ld]
     if want_fabrics
         _ld_args += ['--ld', nvmf_ld, '--ld', nvmf_accessors_ld]
     endif
     _hdr_args = []
-    foreach hdr : headers
+    foreach hdr : headers + generated_headers
         _hdr_args += ['--header', meson.project_source_root() / 'libnvme' / 'src' / hdr]
     endforeach
     test(

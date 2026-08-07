@@ -25,7 +25,7 @@
 
 #include "accessors-fabrics.h"
 
-#include "private-fabrics.h"
+#include "../private-fabrics.h"
 
 /****************************************************************************
  * Accessors for: struct libnvmf_context

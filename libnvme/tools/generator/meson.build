@@ -20,7 +20,8 @@
 # Usage: meson compile -C <build-dir> update-accessors
 # ---------------------------------------------------------------------------
 
-# Generated source files go to src/nvme/ (alongside the library sources).
+# Generated source files go to src/nvme/generated/ (kept separate from the
+# hand-written library sources alongside it in src/nvme/).
 # The generated version script goes to src/ (alongside the other .ld files).
 # The generated SWIG includes and Python-only headers go to libnvme/ alongside
 # nvme.i.
@@ -41,8 +42,8 @@ _tgt_common = run_target(
         'update-accessors.sh',
         _py3,
         files('generate_accessors.py'),
-        libnvme_src_nvme / 'accessors.h',
-        libnvme_src_nvme / 'accessors.c',
+        libnvme_src_nvme / 'generated' / 'accessors.h',
+        libnvme_src_nvme / 'generated' / 'accessors.c',
         libnvme_src / 'accessors.ld',
     ] + _check_flag + [
         '--swig-out', libnvme_swig_dir / 'accessors.i',
@@ -58,8 +59,8 @@ _tgt_fabrics = run_target(
         'update-accessors.sh',
         _py3,
         files('generate_accessors.py'),
-        libnvme_src_nvme / 'accessors-fabrics.h',
-        libnvme_src_nvme / 'accessors-fabrics.c',
+        libnvme_src_nvme / 'generated' / 'accessors-fabrics.h',
+        libnvme_src_nvme / 'generated' / 'accessors-fabrics.c',
         libnvme_src / 'accessors-fabrics.ld',
     ] + _check_flag + [
         '--swig-out', libnvme_swig_dir / 'accessors-fabrics.i',
@@ -68,13 +69,13 @@ _tgt_fabrics = run_target(
     ],
 )
 
-_tgt_sysfs = run_target(
-    'update-sysfs-accessors',
+_tgt_attrs = run_target(
+    'update-attr-accessors',
     command: [
-        'update-sysfs-accessors.sh',
+        'update-attr-accessors.sh',
         _py3,
-        files('generate_sysfs_accessors.py'),
-        libnvme_src_nvme / 'sysfs_accessors_specs.py',
+        files('generate_attr_accessors.py'),
+        libnvme_src_nvme / 'attr_accessors_specs.py',
         libnvme_src_nvme,
         libnvme_src,
         libnvme_swig_dir,
@@ -82,4 +83,4 @@ _tgt_sysfs = run_target(
 )
 
 # This alias allows generating/checking all accessors in one shot.
-alias_target('update-accessors', _tgt_common, _tgt_fabrics, _tgt_sysfs)
+alias_target('update-accessors', _tgt_common, _tgt_fabrics, _tgt_attrs)

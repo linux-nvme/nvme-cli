@@ -8,7 +8,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include <nvme/accessors-fabrics.h>
+#include <nvme/generated/accessors-fabrics.h>
 
 struct libnvme_global_ctx;
 

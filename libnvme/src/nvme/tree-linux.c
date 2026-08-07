@@ -257,7 +257,7 @@ int libnvme_reconfigure_ctrl(struct libnvme_global_ctx *ctx,
 	FREE_CTRL_ATTR(c->name);
 	FREE_CTRL_ATTR(c->sysfs_dir);
 	FREE_CTRL_ATTR(c->state);
-	libnvme_ctrl_sysfs_reset(c->sysfs);
+	libnvme_ctrl_attrs_reset(c->attrs);
 
 	d = opendir(path);
 	if (!d) {
@@ -460,8 +460,8 @@ int libnvme_ns_init(const char *path, struct libnvme_ns *ns)
 	if (ret)
 		return ret;
 
-	ns->sysfs = libnvme_ns_sysfs_alloc();
-	if (!ns->sysfs)
+	ns->attrs = libnvme_ns_attrs_alloc();
+	if (!ns->attrs)
 		return -ENOMEM;
 
 	return 0;

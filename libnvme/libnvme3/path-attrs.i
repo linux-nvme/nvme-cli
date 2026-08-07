@@ -18,7 +18,7 @@
  * Or:            make update-accessors
  */
 
-/* struct libnvme_path -- sysfs-backed properties */
+/* struct libnvme_path -- lazily-loaded properties */
 %{
 	static const char *libnvme_path_ana_state_get(const struct libnvme_path *p)
 	{

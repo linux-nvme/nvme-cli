@@ -25,7 +25,7 @@
 
 #include "accessors.h"
 
-#include "private.h"
+#include "../private.h"
 
 /****************************************************************************
  * Accessors for: struct libnvme_path

@@ -25,11 +25,11 @@
 
 #include <compiler-attributes.h>
 
-#include "private.h"
-#include "private-tree.h"
-#include "path-sysfs.h"
+#include "../private.h"
+#include "../private-tree.h"
+#include "path-attrs.h"
 
-struct libnvme_path_sysfs {
+struct libnvme_path_attrs {
 	char *ana_state;
 	char *numa_nodes;
 	int *grpid;
@@ -39,28 +39,28 @@ struct libnvme_path_sysfs {
 	long command_error_count;
 };
 
-struct libnvme_path_sysfs *libnvme_path_sysfs_alloc(void)
+struct libnvme_path_attrs *libnvme_path_attrs_alloc(void)
 {
-	return calloc(1, sizeof(struct libnvme_path_sysfs));
+	return calloc(1, sizeof(struct libnvme_path_attrs));
 }
 
-void libnvme_path_sysfs_reset(
-		struct libnvme_path_sysfs *sysfs)
+void libnvme_path_attrs_reset(
+		struct libnvme_path_attrs *attrs)
 {
-	if (!sysfs)
+	if (!attrs)
 		return;
 
 }
 
-void libnvme_path_sysfs_free(
-		struct libnvme_path_sysfs *sysfs)
+void libnvme_path_attrs_free(
+		struct libnvme_path_attrs *attrs)
 {
-	if (!sysfs)
+	if (!attrs)
 		return;
 
-	SYSFS_FREE(sysfs->ana_state);
-	SYSFS_FREE(sysfs->numa_nodes);
-	SYSFS_FREE(sysfs->grpid);
-	free(sysfs);
+	ATTR_FREE(attrs->ana_state);
+	ATTR_FREE(attrs->numa_nodes);
+	ATTR_FREE(attrs->grpid);
+	free(attrs);
 }
 

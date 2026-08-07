@@ -6,5 +6,5 @@
  * Authors: Martin Belanger <Martin.Belanger@dell.com>
  */
 
-#include "path-sysfs.c"
-#include "path-sysfs-win.c"
+#include "generated/path-attrs.c"
+#include "generated/path-attrs-linux.c"

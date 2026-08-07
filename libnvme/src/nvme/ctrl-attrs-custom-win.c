@@ -12,12 +12,12 @@
 #include "lib.h"
 #include "private-ctrl-map.h"
 
-#include "ctrl-sysfs.c"
+#include "generated/ctrl-attrs.c"
 
 #ifdef CONFIG_FABRICS
-#	include "ctrl-sysfs-custom-fabrics.c"
+#	include "ctrl-attrs-custom-fabrics.c"
 #else
-#	include "ctrl-sysfs-custom-no-fabrics.c"
+#	include "ctrl-attrs-custom-no-fabrics.c"
 #endif
 
 int libnvme_ctrl_load_identity(struct libnvme_ctrl *c)
@@ -50,25 +50,25 @@ int libnvme_ctrl_load_identity(struct libnvme_ctrl *c)
 		return ret;
 	}
 
-	c->sysfs->firmware = libnvme_ctrl_map_entry_get_firmware(ctrl_entry);
-	if (!c->sysfs->firmware)
+	c->attrs->firmware = libnvme_ctrl_map_entry_get_firmware(ctrl_entry);
+	if (!c->attrs->firmware)
 		return -ENOMEM;
 
-	c->sysfs->model = libnvme_ctrl_map_entry_get_model(ctrl_entry);
-	if (!c->sysfs->model)
+	c->attrs->model = libnvme_ctrl_map_entry_get_model(ctrl_entry);
+	if (!c->attrs->model)
 		return -ENOMEM;
 
-	c->sysfs->serial = libnvme_ctrl_map_entry_get_serial(ctrl_entry);
-	if (!c->sysfs->serial)
+	c->attrs->serial = libnvme_ctrl_map_entry_get_serial(ctrl_entry);
+	if (!c->attrs->serial)
 		return -ENOMEM;
 
-	if (asprintf(&c->sysfs->cntrltype, "%u", id_ctrl.cntrltype) < 0)
+	if (asprintf(&c->attrs->cntrltype, "%u", id_ctrl.cntrltype) < 0)
 		return -ENOMEM;
 
-	if (asprintf(&c->sysfs->cntlid, "%u", le16_to_cpu(id_ctrl.cntlid)) < 0)
+	if (asprintf(&c->attrs->cntlid, "%u", le16_to_cpu(id_ctrl.cntlid)) < 0)
 		return -ENOMEM;
 
-	if (asprintf(&c->sysfs->dctype, "%u", id_ctrl.dctype) < 0)
+	if (asprintf(&c->attrs->dctype, "%u", id_ctrl.dctype) < 0)
 		return -ENOMEM;
 
 	return 0;

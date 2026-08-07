@@ -15,7 +15,7 @@
  * Or:       make update-accessors
  */
 
-LIBNVME_CTRL_SYSFS_3 {
+LIBNVME_CTRL_ATTRS_3 {
 	global:
 		libnvme_ctrl_get_numa_node;
 		libnvme_ctrl_get_queue_count;
