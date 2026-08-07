@@ -10,10 +10,7 @@ SYNOPSIS
 [verse]
 'nvme' [<global-options>] 'config create'
 			[--discovery]
-			[--persistent ]
-			[--no-persistent ]
-			[--epcsd ]
-			[--no-epcsd ]
+			[--persistent[=<no|auto|force>] ]
 			[--host-symname=<name>]
 			[--output=<file>]
 			[<fabrics-options>]
@@ -43,27 +40,23 @@ OPTIONS
 	Create a discovery controller entry instead of an I/O controller
 	entry. Without this, --nqn is required.
 
---persistent::
-	Keep the discovery controller connected to receive Asynchronous
-	Event Notifications instead of disconnecting after the discovery
-	log page fetch. Requires --discovery. Mutually exclusive with
-	--no-persistent.
-
---no-persistent::
-	Explicitly record that this discovery controller is not
-	persistent, overriding any default that would otherwise apply
-	(e.g. one derived from the discovery log page). Requires
-	--discovery. Mutually exclusive with --persistent.
-
---epcsd::
-	Mark this discovery controller as supporting Explicit Persistent
-	Connection Support for Discovery (EPCSD). Requires --discovery.
-	Mutually exclusive with --no-epcsd.
-
---no-epcsd::
-	Explicitly record that this discovery controller does not support
-	EPCSD, overriding any default that would otherwise apply. Requires
-	--discovery. Mutually exclusive with --epcsd.
+--persistent[=<no|auto|force>]::
+	Record this discovery controller's persistence mode. Requires
+	--discovery. Because the value is optional, it must be attached
+	directly to the option (--persistent=force). A value given as a
+	separate argument (--persistent force) is silently NOT applied
+	-- it's dropped, and --persistent is treated as if given bare
+	(mode "auto"), with no error.
++
+--
+* 'auto' (the default when --persistent is given with no value): persist
+  the connection only where the target's own EPCSD (Explicit Persistent
+  Connection Support for Discovery) flag reports support for it.
+* 'force': persist regardless of what EPCSD reports, for a target whose
+  self-reported EPCSD cannot be trusted.
+* 'no': explicitly record that this discovery controller is not
+  persistent, overriding any default that would otherwise apply.
+--
 
 --host-symname=<name>::
 	Name this host persona. Puts it in its own configuration drop-in.
