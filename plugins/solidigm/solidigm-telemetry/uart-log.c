@@ -108,7 +108,7 @@ int sldm_parse_cd_uart_log(struct telemetry_log *tl, uint32_t offset, uint32_t s
 
 	/* Parse entries using dynamic structure parsing */
 	for (i = 0; i < num_entries; i++) {
-		entry_offset_bit = (offset + (i * 192)) * 8;  /* Convert to bit offset */
+		entry_offset_bit = ((uint64_t)offset + (uint64_t)i * 192) * 8;  /* Convert to bit offset */
 		parse_uart_entry(tl, entry_offset_bit, uart_array);
 	}
 
