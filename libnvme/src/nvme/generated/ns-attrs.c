@@ -27,9 +27,9 @@
 
 #include "private.h"
 #include "private-tree.h"
-#include "ns-sysfs.h"
+#include "ns-attrs.h"
 
-struct libnvme_ns_sysfs {
+struct libnvme_ns_attrs {
 	int *lba_size;
 	int *lba_shift;
 	uint64_t *lba_count;
@@ -45,35 +45,35 @@ struct libnvme_ns_sysfs {
 	long io_fail_no_available_path_count;
 };
 
-struct libnvme_ns_sysfs *libnvme_ns_sysfs_alloc(void)
+struct libnvme_ns_attrs *libnvme_ns_attrs_alloc(void)
 {
-	return calloc(1, sizeof(struct libnvme_ns_sysfs));
+	return calloc(1, sizeof(struct libnvme_ns_attrs));
 }
 
-void libnvme_ns_sysfs_reset(
-		struct libnvme_ns_sysfs *sysfs)
+void libnvme_ns_attrs_reset(
+		struct libnvme_ns_attrs *attrs)
 {
-	if (!sysfs)
+	if (!attrs)
 		return;
 
 }
 
-void libnvme_ns_sysfs_free(
-		struct libnvme_ns_sysfs *sysfs)
+void libnvme_ns_attrs_free(
+		struct libnvme_ns_attrs *attrs)
 {
-	if (!sysfs)
+	if (!attrs)
 		return;
 
-	SYSFS_FREE(sysfs->lba_size);
-	SYSFS_FREE(sysfs->lba_shift);
-	SYSFS_FREE(sysfs->lba_count);
-	SYSFS_FREE(sysfs->lba_util);
-	SYSFS_FREE(sysfs->meta_size);
-	SYSFS_FREE(sysfs->csi);
-	SYSFS_FREE(sysfs->eui64);
-	SYSFS_FREE(sysfs->nguid);
-	SYSFS_FREE(sysfs->uuid);
-	free(sysfs);
+	ATTR_FREE(attrs->lba_size);
+	ATTR_FREE(attrs->lba_shift);
+	ATTR_FREE(attrs->lba_count);
+	ATTR_FREE(attrs->lba_util);
+	ATTR_FREE(attrs->meta_size);
+	ATTR_FREE(attrs->csi);
+	ATTR_FREE(attrs->eui64);
+	ATTR_FREE(attrs->nguid);
+	ATTR_FREE(attrs->uuid);
+	free(attrs);
 }
 
 __shr_public int libnvme_ns_get_command_retry_count(
@@ -90,10 +90,10 @@ __shr_public int libnvme_ns_get_command_retry_count(
 	if (!str)
 		return -ENOENT;
 
-	if (sscanf(str, "%ld", &c->sysfs->command_retry_count) != 1)
+	if (sscanf(str, "%ld", &c->attrs->command_retry_count) != 1)
 		return -EINVAL;
 
-	*val = c->sysfs->command_retry_count;
+	*val = c->attrs->command_retry_count;
 	return 0;
 }
 
@@ -111,10 +111,10 @@ __shr_public int libnvme_ns_get_command_error_count(
 	if (!str)
 		return -ENOENT;
 
-	if (sscanf(str, "%ld", &c->sysfs->command_error_count) != 1)
+	if (sscanf(str, "%ld", &c->attrs->command_error_count) != 1)
 		return -EINVAL;
 
-	*val = c->sysfs->command_error_count;
+	*val = c->attrs->command_error_count;
 	return 0;
 }
 
@@ -132,10 +132,10 @@ __shr_public int libnvme_ns_get_io_requeue_no_usable_path_count(
 	if (!str)
 		return -ENOENT;
 
-	if (sscanf(str, "%ld", &c->sysfs->io_requeue_no_usable_path_count) != 1)
+	if (sscanf(str, "%ld", &c->attrs->io_requeue_no_usable_path_count) != 1)
 		return -EINVAL;
 
-	*val = c->sysfs->io_requeue_no_usable_path_count;
+	*val = c->attrs->io_requeue_no_usable_path_count;
 	return 0;
 }
 
@@ -153,10 +153,10 @@ __shr_public int libnvme_ns_get_io_fail_no_available_path_count(
 	if (!str)
 		return -ENOENT;
 
-	if (sscanf(str, "%ld", &c->sysfs->io_fail_no_available_path_count) != 1)
+	if (sscanf(str, "%ld", &c->attrs->io_fail_no_available_path_count) != 1)
 		return -EINVAL;
 
-	*val = c->sysfs->io_fail_no_available_path_count;
+	*val = c->attrs->io_fail_no_available_path_count;
 	return 0;
 }
 

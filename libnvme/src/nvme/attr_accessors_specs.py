@@ -1,26 +1,26 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 """
-sysfs_accessors_specs.py — Input dicts for generate_sysfs_accessors.py.
+attr_accessors_specs.py — Input dicts for generate_attr_accessors.py.
 
-One dict per opaque, sysfs-backed struct. Every dict must be added to
-SYSFS_SPECS at the bottom of this file -- that is the only thing
-generate_sysfs_accessors.py actually imports; it generates every entry in
-one run. See ../../design/tooling/generate_sysfs_accessors.md for the
+One dict per opaque, lazily-loaded struct. Every dict must be added to
+ATTR_SPECS at the bottom of this file -- that is the only thing
+generate_attr_accessors.py actually imports; it generates every entry in
+one run. See ../../design/tooling/generate_attr_accessors.md for the
 schema each dict follows and how to add a new member.
 """
 
-CTRL_SYSFS = {
-    'struct_name': 'libnvme_ctrl_sysfs',
+CTRL_ATTRS = {
+    'struct_name': 'libnvme_ctrl_attrs',
     'owner_type': 'libnvme_ctrl',
-    'owner_field': 'sysfs',
+    'owner_field': 'attrs',
     'attr_reader': 'libnvme_get_ctrl_attr',
-    'source': 'ctrl-sysfs.c',
-    'header': 'ctrl-sysfs.h',
-    'ld': 'ctrl-sysfs.ld',
-    'swig': 'ctrl-sysfs.i',
+    'source': 'ctrl-attrs.c',
+    'header': 'ctrl-attrs.h',
+    'ld': 'ctrl-attrs.ld',
+    'swig': 'ctrl-attrs.i',
     # A distinct top-level tag, not LIBNVME_ACCESSORS_3: ld rejects two
     # --version-script files both defining the same tag (confirmed the
-    # hard way -- "duplicate version tag" -- ctrl-sysfs.ld and
+    # hard way -- "duplicate version tag" -- ctrl-attrs.ld and
     # accessors.ld are separate generator outputs, so a shared tag isn't
     # achievable without hand-merging one into the other on every
     # regeneration of either). Matches the existing precedent of
@@ -28,14 +28,14 @@ CTRL_SYSFS = {
     # own independent tag rather than chaining.
     #
     # NEXT, not a real version number: the committed .ld is hand-written
-    # and never auto-overwritten (see update-sysfs-accessors.sh), so
+    # and never auto-overwritten (see update-attr-accessors.sh), so
     # this string only ever appears in this file's own generated scratch
     # copy -- it is not diffed, not enforced, and never echoed back to
     # the maintainer. Which version tag a symbol actually lands under is
     # entirely the maintainer's call at commit time (see
     # accessor-workflow.md); a real-looking version number here would
     # just go stale the first time that tag chains past _3.
-    'ld_section': 'LIBNVME_CTRL_SYSFS_NEXT',
+    'ld_section': 'LIBNVME_CTRL_ATTRS_NEXT',
     'members': [
         {
             'name': 'numa_node',
@@ -87,7 +87,7 @@ CTRL_SYSFS = {
             # get a setter they don't strictly need as a result -- a
             # deliberate tradeoff over splitting the group and risking
             # a second Identify call. Loader body varies by OS -- see
-            # ctrl-sysfs-custom-linux.c / ctrl-sysfs-custom-win.c.
+            # ctrl-attrs-custom-linux.c / ctrl-attrs-custom-win.c.
             'loader': 'libnvme_ctrl_load_identity',
             'reconfigure_reset': True,
             'writable': True,
@@ -101,8 +101,8 @@ CTRL_SYSFS = {
             ],
         },
         {
-            # Loader body varies by OS -- see ctrl-sysfs-custom-linux.c /
-            # ctrl-sysfs-custom-win.c.
+            # Loader body varies by OS -- see ctrl-attrs-custom-linux.c /
+            # ctrl-attrs-custom-win.c.
             'loader': 'libnvme_ctrl_load_phy_slot',
             'reconfigure_reset': True,
             'members': [
@@ -111,7 +111,7 @@ CTRL_SYSFS = {
         },
         {
             # Loader body varies by CONFIG_FABRICS -- see
-            # ctrl-sysfs-custom-fabrics.c / ctrl-sysfs-custom-no-fabrics.c.
+            # ctrl-attrs-custom-fabrics.c / ctrl-attrs-custom-no-fabrics.c.
             'loader': 'libnvmf_ctrl_load_fabrics_attrs',
             'reconfigure_reset': True,
             'writable': True,
@@ -124,21 +124,21 @@ CTRL_SYSFS = {
     ],
 }
 
-PATH_SYSFS = {
-    'struct_name': 'libnvme_path_sysfs',
+PATH_ATTRS = {
+    'struct_name': 'libnvme_path_attrs',
     'owner_type': 'libnvme_path',
-    'owner_field': 'sysfs',
+    'owner_field': 'attrs',
     'attr_reader': 'libnvme_get_path_attr',
-    'source': 'path-sysfs.c',
-    'source_linux': 'path-sysfs-linux.c',
-    'source_win': 'path-sysfs-win.c',
-    'header': 'path-sysfs.h',
-    'ld': 'path-sysfs.ld',
-    'swig': 'path-sysfs.i',
-    # See CTRL_SYSFS's ld_section comment above: NEXT, not a real
+    'source': 'path-attrs.c',
+    'source_linux': 'path-attrs-linux.c',
+    'source_win': 'path-attrs-win.c',
+    'header': 'path-attrs.h',
+    'ld': 'path-attrs.ld',
+    'swig': 'path-attrs.i',
+    # See CTRL_ATTRS's ld_section comment above: NEXT, not a real
     # version number -- this string is never diffed or enforced, only
     # read by a human deciding the actual tag by hand.
-    'ld_section': 'LIBNVME_PATH_SYSFS_NEXT',
+    'ld_section': 'LIBNVME_PATH_ATTRS_NEXT',
     # No reconfigure_reset on any member: a path is never updated in
     # place on rescan -- libnvme_ctrl_scan_path() always calloc()s a new
     # one -- so there is no in-place-invalidate event these fields would
@@ -202,18 +202,18 @@ PATH_SYSFS = {
     'groups': [],
 }
 
-NS_SYSFS = {
-    'struct_name': 'libnvme_ns_sysfs',
+NS_ATTRS = {
+    'struct_name': 'libnvme_ns_attrs',
     'owner_type': 'libnvme_ns',
-    'owner_field': 'sysfs',
+    'owner_field': 'attrs',
     'attr_reader': 'libnvme_get_ns_attr',
-    'source': 'ns-sysfs.c',
-    'header': 'ns-sysfs.h',
-    'ld': 'ns-sysfs.ld',
-    'swig': 'ns-sysfs.i',
-    # See CTRL_SYSFS's ld_section comment above: NEXT, not a real
+    'source': 'ns-attrs.c',
+    'header': 'ns-attrs.h',
+    'ld': 'ns-attrs.ld',
+    'swig': 'ns-attrs.i',
+    # See CTRL_ATTRS's ld_section comment above: NEXT, not a real
     # version number.
-    'ld_section': 'LIBNVME_NS_SYSFS_NEXT',
+    'ld_section': 'LIBNVME_NS_ATTRS_NEXT',
     # No reconfigure_reset on any member: like libnvme_path, an ns is
     # never updated in place on rescan -- libnvme_ctrl_scan_namespace()
     # always finds-or-frees the old one and installs a fresh one -- so
@@ -222,9 +222,9 @@ NS_SYSFS = {
     'members': [
         # lba_size/lba_shift/lba_count/lba_util/meta_size/csi are all
         # 'custom': True -- the struct field (boxed, same NULL/
-        # NO_SYSFS_ATTR/real-value tri-state every other cached numeric
+        # NO_ATTR/real-value tri-state every other cached numeric
         # member uses) and the header prototype are generated as usual,
-        # but the getter body is hand-written in ns-sysfs-custom-<os>.c,
+        # but the getter body is hand-written in ns-attrs-custom-<os>.c,
         # not generated. Needed because none of the three axes this
         # generator understands (plain attr, volatile attr, loader
         # group) can express what these six actually require: lba_shift
@@ -272,8 +272,8 @@ NS_SYSFS = {
         # while the public getter hands back a pointer-to-const view of
         # it (see _pub_type()) -- int fn(p, const TYPE **val, const
         # TYPE *dflt), same shape as any other lazy getter, no new axis
-        # needed. Bodies are hand-written in ns-sysfs-custom-linux.c
-        # (real sysfs reads) and ns-sysfs-custom-win.c (always -ENOENT,
+        # needed. Bodies are hand-written in ns-attrs-custom-linux.c
+        # (real sysfs reads) and ns-attrs-custom-win.c (always -ENOENT,
         # Windows never had a source for these either -- same as csi's
         # Windows getter).
         {
@@ -292,9 +292,9 @@ NS_SYSFS = {
             'custom': True,
         },
         # The four diag/* counters need no per-OS override: like most
-        # CTRL_SYSFS members, Windows absence falls out of the existing
+        # CTRL_ATTRS members, Windows absence falls out of the existing
         # libnvme_get_ns_attr() stub (unconditionally NULL) for free --
-        # unlike PATH_SYSFS, libnvme_ns as a whole is not Windows-absent
+        # unlike PATH_ATTRS, libnvme_ns as a whole is not Windows-absent
         # (the six custom members above have real Windows sources), so
         # there is no reason to mark these explicitly absent either.
         {
@@ -325,31 +325,31 @@ NS_SYSFS = {
     'groups': [],
 }
 
-SUBSYS_SYSFS = {
-    'struct_name': 'libnvme_subsystem_sysfs',
+SUBSYS_ATTRS = {
+    'struct_name': 'libnvme_subsystem_attrs',
     'owner_type': 'libnvme_subsystem',
-    'owner_field': 'sysfs',
+    'owner_field': 'attrs',
     'attr_reader': 'libnvme_get_subsys_attr',
-    'source': 'subsys-sysfs.c',
-    'header': 'subsys-sysfs.h',
-    'ld': 'subsys-sysfs.ld',
-    'swig': 'subsys-sysfs.i',
-    # See CTRL_SYSFS's ld_section comment above: NEXT, not a real
+    'source': 'subsys-attrs.c',
+    'header': 'subsys-attrs.h',
+    'ld': 'subsys-attrs.ld',
+    'swig': 'subsys-attrs.i',
+    # See CTRL_ATTRS's ld_section comment above: NEXT, not a real
     # version number.
-    'ld_section': 'LIBNVME_SUBSYS_SYSFS_NEXT',
+    'ld_section': 'LIBNVME_SUBSYS_ATTRS_NEXT',
     # No reconfigure_reset on any member: a subsystem is never updated
     # in place -- libnvme_get_subsystem() always looks up an existing
     # one by name/subsysnqn or creates a fresh one, there is no
     # deconfigure/rescan hook that touches an existing subsystem's
-    # cached fields -- same rationale as PATH_SYSFS.
+    # cached fields -- same rationale as PATH_ATTRS.
     'members': [
-        # No group/loader needed, unlike CTRL_SYSFS's identity group:
+        # No group/loader needed, unlike CTRL_ATTRS's identity group:
         # Windows already has model/serial/firmware for free from the
         # ctrl map by the time a subsystem is scanned (no extra
         # Identify round trip to batch), so each is just a plain
         # attr member with writable=True and pushed in directly --
         # the exact "platform with no sysfs at all" backfill case
-        # generate_sysfs_accessors.md's writable section already
+        # generate_attr_accessors.md's writable section already
         # names by example.
         {
             'name': 'model',
@@ -384,10 +384,10 @@ SUBSYS_SYSFS = {
     'groups': [],
 }
 
-# generate_sysfs_accessors.py generates every entry here in one run.
-SYSFS_SPECS = [
-    CTRL_SYSFS,
-    PATH_SYSFS,
-    NS_SYSFS,
-    SUBSYS_SYSFS,
+# generate_attr_accessors.py generates every entry here in one run.
+ATTR_SPECS = [
+    CTRL_ATTRS,
+    PATH_ATTRS,
+    NS_ATTRS,
+    SUBSYS_ATTRS,
 ]

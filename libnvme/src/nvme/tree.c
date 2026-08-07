@@ -42,7 +42,7 @@ static int libnvme_ctrl_scan_namespace(struct libnvme_global_ctx *ctx,
 static int libnvme_ctrl_scan_path(struct libnvme_global_ctx *ctx,
 		struct libnvme_ctrl *c, char *name);
 
-char NO_SYSFS_ATTR[] = "";
+char NO_ATTR[] = "";
 
 char *libnvme_hostid_from_hostnqn(const char *hostnqn)
 {
@@ -272,7 +272,7 @@ static void __nvme_free_ns(struct libnvme_ns *n)
 	free(n->generic_name);
 	free(n->name);
 	free(n->sysfs_dir);
-	libnvme_ns_sysfs_free(n->sysfs);
+	libnvme_ns_attrs_free(n->attrs);
 	libnvme_namespace_for_each_path_safe(n, p, _p) {
 		list_del_init(&p->nentry);
 		p->n = NULL;
@@ -308,7 +308,7 @@ static void __nvme_free_subsystem(struct libnvme_subsystem *s)
 	free(s->sysfs_dir);
 	free(s->subsysnqn);
 	free(s->subsystype);
-	libnvme_subsystem_sysfs_free(s->sysfs);
+	libnvme_subsystem_attrs_free(s->attrs);
 	free(s);
 }
 
@@ -352,8 +352,8 @@ int libnvme_create_subsystem(struct libnvme_host *h,
 		return -ENOMEM;
 	}
 
-	s->sysfs = libnvme_subsystem_sysfs_alloc();
-	if (!s->sysfs) {
+	s->attrs = libnvme_subsystem_attrs_alloc();
+	if (!s->attrs) {
 		free(s->subsysnqn);
 		free(s);
 		return -ENOMEM;
@@ -1060,7 +1060,7 @@ void nvme_free_path(struct libnvme_path *p)
 	list_del_init(&p->nentry);
 	free(p->name);
 	free(p->sysfs_dir);
-	libnvme_path_sysfs_free(p->sysfs);
+	libnvme_path_attrs_free(p->attrs);
 	free(p);
 }
 
@@ -1084,8 +1084,8 @@ static int libnvme_ctrl_scan_path(struct libnvme_global_ctx *ctx,
 	if (!p)
 		return -ENOMEM;
 
-	p->sysfs = libnvme_path_sysfs_alloc();
-	if (!p->sysfs) {
+	p->attrs = libnvme_path_attrs_alloc();
+	if (!p->attrs) {
 		free(p);
 		return -ENOMEM;
 	}
@@ -1208,7 +1208,7 @@ void nvme_deconfigure_ctrl(libnvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->tls_key_identity);
 	FREE_CTRL_ATTR(c->tls_key);
 	FREE_CTRL_ATTR(c->address);
-	libnvme_ctrl_sysfs_reset(c->sysfs);
+	libnvme_ctrl_attrs_reset(c->attrs);
 }
 
 __shr_public void libnvme_unlink_ctrl(libnvme_ctrl_t c)
@@ -1238,7 +1238,7 @@ static void __libnvme_free_ctrl(libnvme_ctrl_t c)
 	FREE_CTRL_ATTR(c->host_traddr);
 	FREE_CTRL_ATTR(c->host_iface);
 	FREE_CTRL_ATTR(c->trsvcid);
-	libnvme_ctrl_sysfs_free(c->sysfs);
+	libnvme_ctrl_attrs_free(c->attrs);
 	free(c);
 }
 
@@ -1274,8 +1274,8 @@ int libnvme_create_ctrl(struct libnvme_global_ctx *ctx,
 	if (!c)
 		return -ENOMEM;
 
-	c->sysfs = libnvme_ctrl_sysfs_alloc();
-	if (!c->sysfs) {
+	c->attrs = libnvme_ctrl_attrs_alloc();
+	if (!c->attrs) {
 		free(c);
 		return -ENOMEM;
 	}

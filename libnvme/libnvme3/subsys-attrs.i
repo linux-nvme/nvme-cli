@@ -18,7 +18,7 @@
  * Or:            make update-accessors
  */
 
-/* struct libnvme_subsystem -- sysfs-backed properties */
+/* struct libnvme_subsystem -- lazily-loaded properties */
 %rename(libnvme_subsystem_model_set) libnvme_subsystem_set_model;
 %rename(libnvme_subsystem_serial_set) libnvme_subsystem_set_serial;
 %rename(libnvme_subsystem_firmware_set) libnvme_subsystem_set_firmware;

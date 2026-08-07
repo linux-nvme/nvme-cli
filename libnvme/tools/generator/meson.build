@@ -68,13 +68,13 @@ _tgt_fabrics = run_target(
     ],
 )
 
-_tgt_sysfs = run_target(
-    'update-sysfs-accessors',
+_tgt_attrs = run_target(
+    'update-attr-accessors',
     command: [
-        'update-sysfs-accessors.sh',
+        'update-attr-accessors.sh',
         _py3,
-        files('generate_sysfs_accessors.py'),
-        libnvme_src_nvme / 'sysfs_accessors_specs.py',
+        files('generate_attr_accessors.py'),
+        libnvme_src_nvme / 'attr_accessors_specs.py',
         libnvme_src_nvme,
         libnvme_src,
         libnvme_swig_dir,
@@ -82,4 +82,4 @@ _tgt_sysfs = run_target(
 )
 
 # This alias allows generating/checking all accessors in one shot.
-alias_target('update-accessors', _tgt_common, _tgt_fabrics, _tgt_sysfs)
+alias_target('update-accessors', _tgt_common, _tgt_fabrics, _tgt_attrs)

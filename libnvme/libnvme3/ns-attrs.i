@@ -18,7 +18,7 @@
  * Or:            make update-accessors
  */
 
-/* struct libnvme_ns -- sysfs-backed properties */
+/* struct libnvme_ns -- lazily-loaded properties */
 %{
 	static PyObject *libnvme_ns_lba_size_get(const struct libnvme_ns *p)
 	{

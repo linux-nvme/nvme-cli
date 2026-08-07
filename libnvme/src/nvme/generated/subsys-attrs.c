@@ -27,47 +27,47 @@
 
 #include "private.h"
 #include "private-tree.h"
-#include "subsys-sysfs.h"
+#include "subsys-attrs.h"
 
-struct libnvme_subsystem_sysfs {
+struct libnvme_subsystem_attrs {
 	char *model;
 	char *serial;
 	char *firmware;
 	char *iopolicy;
 };
 
-struct libnvme_subsystem_sysfs *libnvme_subsystem_sysfs_alloc(void)
+struct libnvme_subsystem_attrs *libnvme_subsystem_attrs_alloc(void)
 {
-	return calloc(1, sizeof(struct libnvme_subsystem_sysfs));
+	return calloc(1, sizeof(struct libnvme_subsystem_attrs));
 }
 
-void libnvme_subsystem_sysfs_reset(
-		struct libnvme_subsystem_sysfs *sysfs)
+void libnvme_subsystem_attrs_reset(
+		struct libnvme_subsystem_attrs *attrs)
 {
-	if (!sysfs)
+	if (!attrs)
 		return;
 
 }
 
-void libnvme_subsystem_sysfs_free(
-		struct libnvme_subsystem_sysfs *sysfs)
+void libnvme_subsystem_attrs_free(
+		struct libnvme_subsystem_attrs *attrs)
 {
-	if (!sysfs)
+	if (!attrs)
 		return;
 
-	SYSFS_FREE(sysfs->model);
-	SYSFS_FREE(sysfs->serial);
-	SYSFS_FREE(sysfs->firmware);
-	SYSFS_FREE(sysfs->iopolicy);
-	free(sysfs);
+	ATTR_FREE(attrs->model);
+	ATTR_FREE(attrs->serial);
+	ATTR_FREE(attrs->firmware);
+	ATTR_FREE(attrs->iopolicy);
+	free(attrs);
 }
 
 __shr_public void libnvme_subsystem_set_model(
 		struct libnvme_subsystem *p,
 		const char *model)
 {
-	SYSFS_FREE(p->sysfs->model);
-	p->sysfs->model = model ? strdup(model) : NO_SYSFS_ATTR;
+	ATTR_FREE(p->attrs->model);
+	p->attrs->model = model ? strdup(model) : NO_ATTR;
 }
 
 __shr_public int libnvme_subsystem_get_model(
@@ -79,16 +79,16 @@ __shr_public int libnvme_subsystem_get_model(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->model))) {
-		c->sysfs->model = libnvme_get_subsys_attr(c, "model");
-		if (!c->sysfs->model)
-			c->sysfs->model = NO_SYSFS_ATTR;
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->model))) {
+		c->attrs->model = libnvme_get_subsys_attr(c, "model");
+		if (!c->attrs->model)
+			c->attrs->model = NO_ATTR;
 	}
 
-	if (SYSFS_IS_ABSENT(c->sysfs->model))
+	if (ATTR_IS_ABSENT(c->attrs->model))
 		return -ENOENT;
 
-	*val = c->sysfs->model;
+	*val = c->attrs->model;
 	return 0;
 }
 
@@ -96,8 +96,8 @@ __shr_public void libnvme_subsystem_set_serial(
 		struct libnvme_subsystem *p,
 		const char *serial)
 {
-	SYSFS_FREE(p->sysfs->serial);
-	p->sysfs->serial = serial ? strdup(serial) : NO_SYSFS_ATTR;
+	ATTR_FREE(p->attrs->serial);
+	p->attrs->serial = serial ? strdup(serial) : NO_ATTR;
 }
 
 __shr_public int libnvme_subsystem_get_serial(
@@ -109,16 +109,16 @@ __shr_public int libnvme_subsystem_get_serial(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->serial))) {
-		c->sysfs->serial = libnvme_get_subsys_attr(c, "serial");
-		if (!c->sysfs->serial)
-			c->sysfs->serial = NO_SYSFS_ATTR;
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->serial))) {
+		c->attrs->serial = libnvme_get_subsys_attr(c, "serial");
+		if (!c->attrs->serial)
+			c->attrs->serial = NO_ATTR;
 	}
 
-	if (SYSFS_IS_ABSENT(c->sysfs->serial))
+	if (ATTR_IS_ABSENT(c->attrs->serial))
 		return -ENOENT;
 
-	*val = c->sysfs->serial;
+	*val = c->attrs->serial;
 	return 0;
 }
 
@@ -126,8 +126,8 @@ __shr_public void libnvme_subsystem_set_firmware(
 		struct libnvme_subsystem *p,
 		const char *firmware)
 {
-	SYSFS_FREE(p->sysfs->firmware);
-	p->sysfs->firmware = firmware ? strdup(firmware) : NO_SYSFS_ATTR;
+	ATTR_FREE(p->attrs->firmware);
+	p->attrs->firmware = firmware ? strdup(firmware) : NO_ATTR;
 }
 
 __shr_public int libnvme_subsystem_get_firmware(
@@ -139,16 +139,16 @@ __shr_public int libnvme_subsystem_get_firmware(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->firmware))) {
-		c->sysfs->firmware = libnvme_get_subsys_attr(c, "firmware_rev");
-		if (!c->sysfs->firmware)
-			c->sysfs->firmware = NO_SYSFS_ATTR;
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->firmware))) {
+		c->attrs->firmware = libnvme_get_subsys_attr(c, "firmware_rev");
+		if (!c->attrs->firmware)
+			c->attrs->firmware = NO_ATTR;
 	}
 
-	if (SYSFS_IS_ABSENT(c->sysfs->firmware))
+	if (ATTR_IS_ABSENT(c->attrs->firmware))
 		return -ENOENT;
 
-	*val = c->sysfs->firmware;
+	*val = c->attrs->firmware;
 	return 0;
 }
 
@@ -166,14 +166,14 @@ __shr_public int libnvme_subsystem_get_iopolicy(
 	if (!str)
 		return -ENOENT;
 
-	if (!c->sysfs->iopolicy || strcmp(str, c->sysfs->iopolicy)) {
-		free(c->sysfs->iopolicy);
-		c->sysfs->iopolicy = strdup(str);
-		if (!c->sysfs->iopolicy)
+	if (!c->attrs->iopolicy || strcmp(str, c->attrs->iopolicy)) {
+		free(c->attrs->iopolicy);
+		c->attrs->iopolicy = strdup(str);
+		if (!c->attrs->iopolicy)
 			return -ENOMEM;
 	}
 
-	*val = c->sysfs->iopolicy;
+	*val = c->attrs->iopolicy;
 	return 0;
 }
 

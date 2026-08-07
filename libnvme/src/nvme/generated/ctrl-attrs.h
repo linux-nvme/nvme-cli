@@ -20,26 +20,26 @@
 
 #pragma once
 
-/* Opaque: defined only in the generated ctrl-sysfs.c. No
+/* Opaque: defined only in the generated ctrl-attrs.c. No
  * other file may see its layout -- every field is reachable
  * only through the accessors below.
  */
-struct libnvme_ctrl_sysfs;
+struct libnvme_ctrl_attrs;
 
 /* Internal: allocate/reset/free the opaque struct. Not part
  * of the public API, not listed in any .ld.
  */
-struct libnvme_ctrl_sysfs *libnvme_ctrl_sysfs_alloc(void);
-void libnvme_ctrl_sysfs_reset(
-		struct libnvme_ctrl_sysfs *sysfs);
-void libnvme_ctrl_sysfs_free(
-		struct libnvme_ctrl_sysfs *sysfs);
+struct libnvme_ctrl_attrs *libnvme_ctrl_attrs_alloc(void);
+void libnvme_ctrl_attrs_reset(
+		struct libnvme_ctrl_attrs *attrs);
+void libnvme_ctrl_attrs_free(
+		struct libnvme_ctrl_attrs *attrs);
 
 /* Internal: loader callbacks, one per group above. Each
  * fills every member of its group in a single call,
  * returning 0 on success or a negative errno. Defined in
- * whichever hand-written *-custom-*.c matches the build
- * (see that file's own #ifdef/#include selection).
+ * whichever hand-written *-attrs-custom-*.c matches the
+ * build (see that file's own #ifdef/#include selection).
  */
 int libnvme_ctrl_load_identity(struct libnvme_ctrl *c);
 int libnvme_ctrl_load_phy_slot(struct libnvme_ctrl *c);

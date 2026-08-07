@@ -32,14 +32,14 @@ __shr_public int libnvme_path_get_ana_state(
 	if (!str)
 		return -ENOENT;
 
-	if (!c->sysfs->ana_state || strcmp(str, c->sysfs->ana_state)) {
-		free(c->sysfs->ana_state);
-		c->sysfs->ana_state = strdup(str);
-		if (!c->sysfs->ana_state)
+	if (!c->attrs->ana_state || strcmp(str, c->attrs->ana_state)) {
+		free(c->attrs->ana_state);
+		c->attrs->ana_state = strdup(str);
+		if (!c->attrs->ana_state)
 			return -ENOMEM;
 	}
 
-	*val = c->sysfs->ana_state;
+	*val = c->attrs->ana_state;
 	return 0;
 }
 
@@ -52,16 +52,16 @@ __shr_public int libnvme_path_get_numa_nodes(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->numa_nodes))) {
-		c->sysfs->numa_nodes = libnvme_get_path_attr(c, "numa_nodes");
-		if (!c->sysfs->numa_nodes)
-			c->sysfs->numa_nodes = NO_SYSFS_ATTR;
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->numa_nodes))) {
+		c->attrs->numa_nodes = libnvme_get_path_attr(c, "numa_nodes");
+		if (!c->attrs->numa_nodes)
+			c->attrs->numa_nodes = NO_ATTR;
 	}
 
-	if (SYSFS_IS_ABSENT(c->sysfs->numa_nodes))
+	if (ATTR_IS_ABSENT(c->attrs->numa_nodes))
 		return -ENOENT;
 
-	*val = c->sysfs->numa_nodes;
+	*val = c->attrs->numa_nodes;
 	return 0;
 }
 
@@ -74,28 +74,28 @@ __shr_public int libnvme_path_get_grpid(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!SYSFS_IS_LOADED(c->sysfs->grpid))) {
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->grpid))) {
 		__cleanup_free char *str = NULL;
 
 		str = libnvme_get_path_attr(c, "ana_grpid");
 		if (!str)
-			c->sysfs->grpid = (int *)NO_SYSFS_ATTR;
+			c->attrs->grpid = (int *)NO_ATTR;
 		else {
-			c->sysfs->grpid = malloc(sizeof(int));
-			if (!c->sysfs->grpid)
+			c->attrs->grpid = malloc(sizeof(int));
+			if (!c->attrs->grpid)
 				return -ENOMEM;
-			if (sscanf(str, "%d", c->sysfs->grpid) != 1) {
-				free(c->sysfs->grpid);
-				c->sysfs->grpid = NULL;
+			if (sscanf(str, "%d", c->attrs->grpid) != 1) {
+				free(c->attrs->grpid);
+				c->attrs->grpid = NULL;
 				return -EINVAL;
 			}
 		}
 	}
 
-	if (SYSFS_IS_ABSENT(c->sysfs->grpid))
+	if (ATTR_IS_ABSENT(c->attrs->grpid))
 		return -ENOENT;
 
-	*val = *c->sysfs->grpid;
+	*val = *c->attrs->grpid;
 	return 0;
 }
 
@@ -113,10 +113,10 @@ __shr_public int libnvme_path_get_queue_depth(
 	if (!str)
 		return -ENOENT;
 
-	if (sscanf(str, "%d", &c->sysfs->queue_depth) != 1)
+	if (sscanf(str, "%d", &c->attrs->queue_depth) != 1)
 		return -EINVAL;
 
-	*val = c->sysfs->queue_depth;
+	*val = c->attrs->queue_depth;
 	return 0;
 }
 
@@ -134,10 +134,10 @@ __shr_public int libnvme_path_get_multipath_failover_count(
 	if (!str)
 		return -ENOENT;
 
-	if (sscanf(str, "%ld", &c->sysfs->multipath_failover_count) != 1)
+	if (sscanf(str, "%ld", &c->attrs->multipath_failover_count) != 1)
 		return -EINVAL;
 
-	*val = c->sysfs->multipath_failover_count;
+	*val = c->attrs->multipath_failover_count;
 	return 0;
 }
 
@@ -155,10 +155,10 @@ __shr_public int libnvme_path_get_command_retry_count(
 	if (!str)
 		return -ENOENT;
 
-	if (sscanf(str, "%ld", &c->sysfs->command_retry_count) != 1)
+	if (sscanf(str, "%ld", &c->attrs->command_retry_count) != 1)
 		return -EINVAL;
 
-	*val = c->sysfs->command_retry_count;
+	*val = c->attrs->command_retry_count;
 	return 0;
 }
 
@@ -176,10 +176,10 @@ __shr_public int libnvme_path_get_command_error_count(
 	if (!str)
 		return -ENOENT;
 
-	if (sscanf(str, "%ld", &c->sysfs->command_error_count) != 1)
+	if (sscanf(str, "%ld", &c->attrs->command_error_count) != 1)
 		return -EINVAL;
 
-	*val = c->sysfs->command_error_count;
+	*val = c->attrs->command_error_count;
 	return 0;
 }
 
