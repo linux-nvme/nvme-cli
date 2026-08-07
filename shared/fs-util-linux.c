@@ -62,6 +62,13 @@ void shr_fsync_dir(const char *path)
 	}
 }
 
+int shr_unlink(const char *path)
+{
+	if (unlink(path) < 0)
+		return -errno;
+	return 0;
+}
+
 char *shr_dirname(char *path)
 {
 	return dirname(path);

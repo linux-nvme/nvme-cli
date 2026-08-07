@@ -38,6 +38,12 @@ int shr_mkstemp(char *template);
 void shr_fsync_dir(const char *path);
 
 /*
+ * Remove a file.
+ * Return: 0 on success, -errno otherwise.
+ */
+int shr_unlink(const char *path);
+
+/*
  * The final path component (the part after the last '/'), or path itself
  * if there's no '/'. Unlike POSIX basename(), never modifies path and
  * never returns a pointer to static storage.
