@@ -25,8 +25,8 @@
 
 #include <compiler-attributes.h>
 
-#include "private.h"
-#include "private-tree.h"
+#include "../private.h"
+#include "../private-tree.h"
 #include "path-attrs.h"
 
 struct libnvme_path_attrs {

@@ -24,7 +24,7 @@
 #include <nvme/lib.h>
 #include <nvme/config.h>
 #include <nvme/nvme-types-fabrics.h>
-#include <nvme/accessors-fabrics.h>
+#include <nvme/generated/accessors-fabrics.h>
 
 static const char *g_hostid = "46ba5037-7ce5-41fa-9452-48477bf00080";
 

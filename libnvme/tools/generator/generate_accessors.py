@@ -2528,7 +2528,16 @@ def main():
     # -----------------------------------------------------------------------
     # Pass 2 — parse all header files, accumulate generated fragments.
     # -----------------------------------------------------------------------
-    files_to_include = []   # basenames of headers that contributed structs
+    files_to_include = []   # '../' + basename of headers that contributed
+                             # structs -- '../' because the generated .c
+                             # always lands one directory below the header
+                             # it was parsed from (src/nvme/generated/ vs.
+                             # src/nvme/). Not computed via os.path.relpath
+                             # against args.c_fname: the update script stages
+                             # output in a throwaway mktemp -d before copying
+                             # it to its real destination, so args.c_fname's
+                             # own directory does not reflect where the file
+                             # actually ends up.
     forward_declares = []   # struct names needing forward declarations
     hdr_parts = []          # fragments for accessors.h
     src_parts = []          # fragments for accessors.c
@@ -2581,7 +2590,7 @@ def main():
                 print(f"No annotated structs found in {in_hdr}.")
             continue
 
-        files_to_include.append(os.path.basename(in_hdr))
+        files_to_include.append('../' + os.path.basename(in_hdr))
 
         for (struct_name, members, lc_members, default_members, emit_py,
              struct_alias, name_prefix) in structs:
