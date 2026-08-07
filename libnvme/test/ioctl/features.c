@@ -1419,7 +1419,7 @@ static void test_set_write_protect(void)
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_set_features,
 		.nsid = TEST_NSID,
-		.cdw10 = NVME_FEAT_FID_WRITE_PROTECT | (!!save << 31),
+		.cdw10 = NVME_FEAT_FID_WRITE_PROTECT | ((uint32_t)!!save << 31),
 		.cdw11 = STATE,
 		.result = TEST_RESULT,
 	};
@@ -1562,7 +1562,7 @@ static void test_lm_set_features_ctrl_data_queue(void)
 		.opcode = nvme_admin_set_features,
 		.nsid = NVME_NSID_NONE,
 		.cdw10 = NVME_FEAT_FID_CTRL_DATA_QUEUE,
-		.cdw11 = TEST_CDQID | etpt << 31,
+		.cdw11 = TEST_CDQID | (uint32_t)etpt << 31,
 		.cdw12 = hp,
 		.cdw13 = tpt,
 		.result = TEST_RESULT,

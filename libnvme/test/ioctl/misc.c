@@ -260,7 +260,7 @@ static void test_fw_commit(void)
 	bool bpid = true;
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_fw_commit,
-		.cdw10 = (bpid << 31) | (action << 3) | slot,
+		.cdw10 = ((uint32_t)bpid << 31) | (action << 3) | slot,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -285,7 +285,7 @@ static void test_security_send(void)
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_security_send,
 		.nsid = TEST_NSID,
-		.cdw10 = nssf | (spsp << 8) | (secp << 24),
+		.cdw10 = nssf | (spsp << 8) | ((uint32_t)secp << 24),
 		.cdw11 = tl,
 		.data_len = data_len,
 		.in_data = &expected_data,
@@ -316,7 +316,7 @@ static void test_security_receive(void)
 	struct mock_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_security_recv,
 		.nsid = TEST_NSID,
-		.cdw10 = nssf | (spsp << 8) | (secp << 24),
+		.cdw10 = nssf | (spsp << 8) | ((uint32_t)secp << 24),
 		.cdw11 = al,
 		.data_len = sizeof(expected_data),
 		.out_data = &expected_data,
@@ -388,7 +388,7 @@ static void test_directive_send(void)
 		.opcode = nvme_admin_directive_send,
 		.nsid = TEST_NSID,
 		.cdw10 = data_len ? (data_len >> 2) - 1 : 0,
-		.cdw11 = doper | (dtype << 8) | (dspec << 16),
+		.cdw11 = doper | (dtype << 8) | ((uint32_t)dspec << 16),
 		.data_len = data_len,
 		.in_data = &data,
 	};
@@ -484,7 +484,7 @@ static void test_directive_recv(void)
 		.opcode = nvme_admin_directive_recv,
 		.nsid = TEST_NSID,
 		.cdw10 = data_len ? (data_len >> 2) - 1 : 0,
-		.cdw11 = doper | (dtype << 8) | (dspec << 16),
+		.cdw11 = doper | (dtype << 8) | ((uint32_t)dspec << 16),
 		.data_len = sizeof(expected_data),
 		.out_data = &expected_data,
 	};
@@ -766,9 +766,9 @@ static void test_read(void)
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
 		.cdw11 = slba >> 32,
-		.cdw12 = nlb | (control << 16),
+		.cdw12 = nlb | ((uint32_t)control << 16),
 		.cdw13 = dsm,
-		.cdw15 = apptag | (appmask << 16),
+		.cdw15 = apptag | ((uint32_t)appmask << 16),
 		.data_len = sizeof(expected_data),
 		.out_data = &expected_data,
 	};
@@ -801,9 +801,9 @@ static void test_write(void)
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
 		.cdw11 = slba >> 32,
-		.cdw12 = nlb | (control << 16),
-		.cdw13 = dsm | (dspec << 16),
-		.cdw15 = apptag | (appmask << 16),
+		.cdw12 = nlb | ((uint32_t)control << 16),
+		.cdw13 = dsm | ((uint32_t)dspec << 16),
+		.cdw15 = apptag | ((uint32_t)appmask << 16),
 		.data_len = sizeof(expected_data),
 		.in_data = &expected_data,
 	};
@@ -835,8 +835,8 @@ static void test_compare(void)
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
 		.cdw11 = slba >> 32,
-		.cdw12 = nlb | (control << 16),
-		.cdw15 = apptag | (appmask << 16),
+		.cdw12 = nlb | ((uint32_t)control << 16),
+		.cdw15 = apptag | ((uint32_t)appmask << 16),
 		.data_len = sizeof(expected_data),
 		.in_data = &expected_data,
 	};
@@ -870,9 +870,9 @@ static void test_write_zeros(void)
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
 		.cdw11 = slba >> 32,
-		.cdw12 = nlb | (control << 16),
-		.cdw13 = dsm | (dspec << 16),
-		.cdw15 = apptag | (appmask << 16),
+		.cdw12 = nlb | ((uint32_t)control << 16),
+		.cdw13 = dsm | ((uint32_t)dspec << 16),
+		.cdw15 = apptag | ((uint32_t)appmask << 16),
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -901,9 +901,9 @@ static void test_write_uncorrectable(void)
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
 		.cdw11 = slba >> 32,
-		.cdw12 = nlb | (control << 16),
-		.cdw13 = dsm | (dspec << 16),
-		.cdw15 = apptag | (appmask << 16),
+		.cdw12 = nlb | ((uint32_t)control << 16),
+		.cdw13 = dsm | ((uint32_t)dspec << 16),
+		.cdw15 = apptag | ((uint32_t)appmask << 16),
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -931,9 +931,9 @@ static void test_verify(void)
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
 		.cdw11 = slba >> 32,
-		.cdw12 = nlb | (control << 16),
+		.cdw12 = nlb | ((uint32_t)control << 16),
 		.cdw13 = cev,
-		.cdw15 = apptag | (appmask << 16),
+		.cdw15 = apptag | ((uint32_t)appmask << 16),
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
