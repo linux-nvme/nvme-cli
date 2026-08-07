@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 
 #include <arpa/inet.h>
@@ -408,6 +409,69 @@ __shr_public int libnvmf_host_get_ids(struct libnvme_global_ctx *ctx,
 	}
 
 	return 0;
+}
+
+int _libnvmf_persistent_from_str(const char *str, enum libnvmf_persistent *val)
+{
+	if (!str || !val)
+		return -EINVAL;
+
+	if (!strcasecmp(str, "no"))
+		*val = LIBNVMF_PERSISTENT_NO;
+	else if (!strcasecmp(str, "auto"))
+		*val = LIBNVMF_PERSISTENT_AUTO;
+	else if (!strcasecmp(str, "force"))
+		*val = LIBNVMF_PERSISTENT_FORCE;
+	else
+		return -EINVAL;
+
+	return 0;
+}
+
+/**
+ * libnvmf_context_set_persistent() - Set the discovery controller
+ * persistence mode.
+ * @fctx: The &struct libnvmf_context instance to update.
+ * @persistent: One of "no", "auto", "force" (case-insensitive).
+ *
+ * Return: 0 on success, -EINVAL if @persistent matches none of the
+ * accepted values.
+ */
+__shr_public int libnvmf_context_set_persistent(struct libnvmf_context *fctx,
+		const char *persistent)
+{
+	if (!fctx)
+		return -EINVAL;
+
+	return _libnvmf_persistent_from_str(persistent, &fctx->persistent);
+}
+
+/**
+ * libnvmf_context_get_persistent() - Get the discovery controller
+ * persistence mode.
+ * @fctx: The &struct libnvmf_context instance to query.
+ *
+ * Return: "no", "auto", or "force" if explicitly configured; NULL if not
+ * (behaves the same as "no" when applied to a live connection, or if
+ * @fctx is NULL).
+ */
+__shr_public const char *libnvmf_context_get_persistent(
+		const struct libnvmf_context *fctx)
+{
+	if (!fctx)
+		return NULL;
+
+	switch (fctx->persistent) {
+	case LIBNVMF_PERSISTENT_NO:
+		return "no";
+	case LIBNVMF_PERSISTENT_AUTO:
+		return "auto";
+	case LIBNVMF_PERSISTENT_FORCE:
+		return "force";
+	case LIBNVMF_PERSISTENT_UNSET:
+	default:
+		return NULL;
+	}
 }
 
 const char * const trtypes[] = {
@@ -2548,15 +2612,20 @@ static int setup_connection(struct libnvmf_context *fctx, struct libnvme_host *h
 static int set_discovery_kato(struct libnvmf_context *fctx)
 {
 	int tmo = fctx->ctrl_params.cfg.keep_alive_tmo;
+	/*
+	 * EPCSD isn't known until after the Discovery Log Page comes back, so
+	 * auto mode optimistically requests a KATO here; dc_should_connect()
+	 * disconnects per entry afterward if EPCSD turns out to be unset.
+	 */
+	bool wants_kato = fctx->persistent == LIBNVMF_PERSISTENT_AUTO ||
+		fctx->persistent == LIBNVMF_PERSISTENT_FORCE;
 
 	/* Set kato to NVMF_DEF_DISC_TMO for persistent controllers */
-	if (fctx->persistent == LIBNVMF_TRISTATE_TRUE &&
-	    !fctx->ctrl_params.cfg.keep_alive_tmo)
+	if (wants_kato && !fctx->ctrl_params.cfg.keep_alive_tmo)
 		fctx->ctrl_params.cfg.keep_alive_tmo =
 			fctx->default_keep_alive_timeout;
 	/* Set kato to zero for non-persistent controllers */
-	else if (fctx->persistent != LIBNVMF_TRISTATE_TRUE &&
-		 (fctx->ctrl_params.cfg.keep_alive_tmo > 0))
+	else if (!wants_kato && fctx->ctrl_params.cfg.keep_alive_tmo > 0)
 		fctx->ctrl_params.cfg.keep_alive_tmo = 0;
 
 	return tmo;
@@ -2607,19 +2676,23 @@ static bool dc_should_connect(struct libnvmf_context *fctx,
 	if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
 		return false;
 
-	if (!strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME)) {
-		/*
-		 * Implicit persistent discovery controller.
-		 * Keep it only if persistence is enabled.
-		 */
-		disconnect = fctx->persistent != LIBNVMF_TRISTATE_TRUE;
-	} else {
-		/*
-		 * Explicit persistent discovery controller.
-		 * Keep it only if EPCSD is supported and enabled.
-		 */
-		disconnect = !(eflags & NVMF_DISC_EFLAGS_EPCSD) ||
-			     fctx->epcsd == LIBNVMF_TRISTATE_FALSE;
+	switch (fctx->persistent) {
+	case LIBNVMF_PERSISTENT_FORCE:
+		/* Persist regardless of what EPCSD reports. */
+		disconnect = false;
+		break;
+	case LIBNVMF_PERSISTENT_AUTO:
+		/* Persist only where the entry's own EPCSD flag says so. */
+		disconnect = !(eflags & NVMF_DISC_EFLAGS_EPCSD);
+		if (disconnect)
+			libnvme_msg(fctx->ctx, LIBNVME_LOG_WARN,
+				"%s: not persisting, EPCSD=0\n", e->subnqn);
+		break;
+	case LIBNVMF_PERSISTENT_NO:
+	case LIBNVMF_PERSISTENT_UNSET:
+	default:
+		disconnect = true;
+		break;
 	}
 
 	*pdisconnect = disconnect;
@@ -3431,10 +3504,11 @@ static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
 		 */
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"ctrl device %s not found%s\n", fctx->device,
-			fctx->persistent == LIBNVMF_TRISTATE_TRUE ?
+			fctx->persistent == LIBNVMF_PERSISTENT_AUTO ||
+			fctx->persistent == LIBNVMF_PERSISTENT_FORCE ?
 				", ignoring --persistent" : "");
 
-		fctx->persistent = LIBNVMF_TRISTATE_FALSE;
+		fctx->persistent = LIBNVMF_PERSISTENT_NO;
 
 		return NULL;
 	}
@@ -3451,7 +3525,7 @@ static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
 			"ctrl device %s found, ignoring non discovery controller\n",
 			fctx->device);
 
-		fctx->persistent = LIBNVMF_TRISTATE_FALSE;
+		fctx->persistent = LIBNVMF_PERSISTENT_NO;
 
 		libnvme_free_ctrl(c);
 		return NULL;
@@ -3459,9 +3533,11 @@ static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
 
 	/*
 	 * If the controller device is found it must be persistent, and
-	 * shouldn't be disconnected on exit.
+	 * shouldn't be disconnected on exit. This is an established fact
+	 * about an already-existing connection, not a fresh EPCSD-driven
+	 * decision, so force it regardless of what --persistent said.
 	 */
-	fctx->persistent = LIBNVMF_TRISTATE_TRUE;
+	fctx->persistent = LIBNVMF_PERSISTENT_FORCE;
 
 	/*
 	 * When --host-traddr/--host-iface are not specified on the
@@ -3500,7 +3576,7 @@ static int discover_lookup_ctrl(struct libnvme_global_ctx *ctx,
 			 * Do not disconnect after use, because it was not
 			 * created by us.
 			 */
-			fctx->persistent = LIBNVMF_TRISTATE_TRUE;
+			fctx->persistent = LIBNVMF_PERSISTENT_FORCE;
 		}
 	}
 
@@ -3633,7 +3709,7 @@ __shr_public int libnvmf_connect(
 	 * this as a persistent connection and specify a KATO.
 	 */
 	if (!strcmp(fctx->ctrl_params.subsysnqn, NVME_DISC_SUBSYS_NAME)) {
-		fctx->persistent = LIBNVMF_TRISTATE_TRUE;
+		fctx->persistent = LIBNVMF_PERSISTENT_FORCE;
 
 		set_discovery_kato(fctx);
 	}

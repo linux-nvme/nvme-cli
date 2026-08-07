@@ -325,32 +325,6 @@ __shr_public const char *libnvmf_context_get_device(
 	return p->device;
 }
 
-__shr_public void libnvmf_context_set_persistent(
-		struct libnvmf_context *p,
-		enum libnvmf_tristate persistent)
-{
-	p->persistent = persistent;
-}
-
-__shr_public enum libnvmf_tristate libnvmf_context_get_persistent(
-		const struct libnvmf_context *p)
-{
-	return p->persistent;
-}
-
-__shr_public void libnvmf_context_set_epcsd(
-		struct libnvmf_context *p,
-		enum libnvmf_tristate epcsd)
-{
-	p->epcsd = epcsd;
-}
-
-__shr_public enum libnvmf_tristate libnvmf_context_get_epcsd(
-		const struct libnvmf_context *p)
-{
-	return p->epcsd;
-}
-
 __shr_public const char *libnvmf_context_get_devid_file(
 		const struct libnvmf_context *p)
 {

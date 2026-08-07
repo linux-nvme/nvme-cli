@@ -172,19 +172,13 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 		"own configuration drop-in";
 	const char *desc_output = "add the entry to this INI configuration "
 		"file (default: " PATH_NVMF_INI ")";
-	const char *desc_persistent = "keep the discovery controller "
-		"connected to receive Asynchronous Event Notifications "
-		"instead of disconnecting after the discovery log page "
-		"fetch; requires --discovery";
-	const char *desc_no_persistent = "explicitly record that this "
-		"discovery controller is not persistent, overriding any "
-		"default that would otherwise apply; requires --discovery";
-	const char *desc_epcsd = "mark this discovery controller as "
-		"supporting Explicit Persistent Connection Support for "
-		"Discovery (EPCSD); requires --discovery";
-	const char *desc_no_epcsd = "explicitly record that this discovery "
-		"controller does not support EPCSD, overriding any default "
-		"that would otherwise apply; requires --discovery";
+	const char *desc_persistent = "keep the discovery controller connected "
+		"to receive Asynchronous Event Notifications instead of "
+		"disconnecting after the discovery log page fetch; \"auto\" "
+		"(the default when given bare) persists only where the "
+		"target's own EPCSD flag supports it, \"force\" persists "
+		"regardless, \"no\" explicitly records non-persistence; "
+		"requires --discovery";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	struct libnvmf_config_emitter *emitter = NULL;
@@ -193,10 +187,8 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 	char *output_file = NULL;
 	char *hostsymname = NULL;
 	bool discovery = false;
-	bool persistent = false;
-	bool no_persistent = false;
-	bool epcsd = false;
-	bool no_epcsd = false;
+	char *persistent_arg = NVMF_PERSISTENT_NOT_GIVEN;
+	const char *persistent;
 	bool duplicate = false;
 	bool replaced = false;
 	const char *target;
@@ -204,10 +196,8 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 
 	NVMF_ARGS(opts, fa,
 		OPT_FLAG("discovery", 0, &discovery, desc_discovery),
-		OPT_FLAG("persistent", 0, &persistent, desc_persistent),
-		OPT_FLAG("no-persistent", 0, &no_persistent, desc_no_persistent),
-		OPT_FLAG("epcsd", 0, &epcsd, desc_epcsd),
-		OPT_FLAG("no-epcsd", 0, &no_epcsd, desc_no_epcsd),
+		OPT_STRING_OPTIONAL("persistent", 0, "no|auto|force",
+			&persistent_arg, desc_persistent),
 		OPT_STRING("host-symname", 0, "STR", &hostsymname, desc_symname),
 		OPT_STRING("output", 0, "FILE", &output_file, desc_output));
 
@@ -217,23 +207,10 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 	if (err)
 		return err;
 
-	if (persistent && no_persistent) {
-		nvme_show_error("--persistent and --no-persistent are mutually exclusive");
-		return -EINVAL;
-	}
+	persistent = nvmf_resolve_persistent_arg(persistent_arg);
 
-	if (epcsd && no_epcsd) {
-		nvme_show_error("--epcsd and --no-epcsd are mutually exclusive");
-		return -EINVAL;
-	}
-
-	if ((persistent || no_persistent) && !discovery) {
-		nvme_show_error("--persistent/--no-persistent requires --discovery");
-		return -EINVAL;
-	}
-
-	if ((epcsd || no_epcsd) && !discovery) {
-		nvme_show_error("--epcsd/--no-epcsd requires --discovery");
+	if (persistent && !discovery) {
+		nvme_show_error("--persistent requires --discovery");
 		return -EINVAL;
 	}
 
@@ -253,14 +230,14 @@ int nvme_config_create(const char *desc, int argc, char **argv)
 		goto out;
 	}
 	nvmf_args_to_params(params, &fa);
-	if (persistent)
-		libnvmf_params_set(params, "persistent", "true");
-	else if (no_persistent)
-		libnvmf_params_set(params, "persistent", "false");
-	if (epcsd)
-		libnvmf_params_set(params, "epcsd", "true");
-	else if (no_epcsd)
-		libnvmf_params_set(params, "epcsd", "false");
+	if (persistent &&
+	    libnvmf_params_set(params, "persistent", persistent)) {
+		nvme_show_error(
+			"invalid --persistent value '%s' (expected no, auto, or force)",
+			persistent);
+		err = -EINVAL;
+		goto out;
+	}
 
 	err = reload_existing(emitter, ctx, target, discovery, &fa, params,
 			&duplicate, &replaced);

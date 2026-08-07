@@ -48,7 +48,11 @@ int libnvmf_params_merge(struct libnvmf_params *dst,
 enum libnvmf_key_type {
 	LIBNVMF_KEY_STRING,
 	LIBNVMF_KEY_INT,
-	LIBNVMF_KEY_BOOL
+	LIBNVMF_KEY_BOOL,
+	LIBNVMF_KEY_STRENUM,	/* string decoding to one of a fixed set of
+				 * values, e.g. "persistent" -> no/auto/force;
+				 * see struct libnvmf_key.validate
+				 */
 };
 
 /* See the keys[] table in config-ini.c for each key's class. */
@@ -65,6 +69,15 @@ struct libnvmf_key {
 	const char *name;
 	enum libnvmf_key_type type;
 	enum libnvmf_key_class class;
+	/*
+	 * Required for LIBNVMF_KEY_STRENUM, unused otherwise. Returns 0 if
+	 * @value is one of this key's accepted values, -EINVAL otherwise.
+	 * Add a new STRENUM key by writing a small check_<name>() function
+	 * (see check_persistent() in config-ini.c for the pattern) and
+	 * pointing this field at it -- the switch in
+	 * libnvmf_key_check_value() does not change.
+	 */
+	int (*strenum_validate)(const char *value);
 };
 
 /* Return the table entry for @name, or NULL for an unknown key. */

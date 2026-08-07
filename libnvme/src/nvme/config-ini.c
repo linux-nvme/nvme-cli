@@ -29,6 +29,8 @@
 #include "private-fabrics.h"
 #include "util.h"
 
+static int check_persistent(const char *value);
+
 static const struct libnvmf_key keys[] = {
 	/* connection tunables; only class overridable per controller= line */
 	{ "nr-io-queues",		LIBNVMF_KEY_INT,	LIBNVMF_KEY_TUNABLE },
@@ -46,8 +48,8 @@ static const struct libnvmf_key keys[] = {
 	{ "data-digest",		LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_TUNABLE },
 
 	/* discovery controller  */
-	{ "persistent",			LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_DC_TUNABLE },
-	{ "epcsd",			LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_DC_TUNABLE },
+	{ "persistent", LIBNVMF_KEY_STRENUM, LIBNVMF_KEY_DC_TUNABLE,
+	  check_persistent },
 
 	/* security -- bound to (hostnqn, subsysnqn); never per-path */
 	{ "tls",			LIBNVMF_KEY_BOOL,	LIBNVMF_KEY_SECURITY },
@@ -95,6 +97,13 @@ static int check_int(const char *value)
 	return 0;
 }
 
+static int check_persistent(const char *value)
+{
+	enum libnvmf_persistent p;
+
+	return _libnvmf_persistent_from_str(value, &p);
+}
+
 int libnvmf_key_check_value(const struct libnvmf_key *key, const char *value)
 {
 	bool b;
@@ -115,6 +124,8 @@ int libnvmf_key_check_value(const struct libnvmf_key *key, const char *value)
 		return check_int(value);
 	case LIBNVMF_KEY_BOOL:
 		return shr_parse_bool(value, &b);
+	case LIBNVMF_KEY_STRENUM:
+		return key->strenum_validate(value);
 	case LIBNVMF_KEY_STRING:
 		return 0;
 	}

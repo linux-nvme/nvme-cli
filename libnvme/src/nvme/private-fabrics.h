@@ -16,6 +16,28 @@
 
 #include "nvme/private.h"
 
+/*
+ * Discovery controller persistence mode. Internal only -- both the
+ * getter and setter are hand-written and speak strings ("no", "auto",
+ * "force") at the public boundary, so this enum never appears in a
+ * public header.
+ *
+ * UNSET means not explicitly configured; behaves the same as NO when
+ * applied to a live connection.
+ *
+ * AUTO persists a DC connection only when that DC's DLP entry's own EPCSD
+ * reports support for it, degrading to non-persistent otherwise.
+ *
+ * FORCE persists regardless of what EPCSD reports, for a target whose
+ * self-reported EPCSD cannot be trusted.
+ */
+enum libnvmf_persistent {
+	LIBNVMF_PERSISTENT_UNSET	= 0,
+	LIBNVMF_PERSISTENT_NO		= 1,
+	LIBNVMF_PERSISTENT_AUTO		= 2,
+	LIBNVMF_PERSISTENT_FORCE	= 3,
+};
+
 struct libnvmf_hooks {
 	/* common hooks */
 	bool (*decide_retry)(struct libnvmf_context *fctx, int err,
@@ -48,8 +70,7 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
 
 	/* common fabrics configuration */
 	const char *device;
-	enum libnvmf_tristate persistent;
-	enum libnvmf_tristate epcsd;
+	enum libnvmf_persistent persistent; // !access:read=custom,write=custom
 	const char *devid_file;		// !access:write=custom
 
 	/* discovery invocation options */
@@ -68,6 +89,11 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
 	char *tls_key;			// !access:write=custom
 	const char *tls_key_identity;	// !access:write=custom
 };
+
+/*
+ * Parse a "persistent" mode string ("no", "auto", "force", case-insensitive).
+ */
+int _libnvmf_persistent_from_str(const char *str, enum libnvmf_persistent *val);
 
 /**
  * NVMe-oF private struct definitions.
