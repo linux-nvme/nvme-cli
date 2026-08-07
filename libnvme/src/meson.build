@@ -37,6 +37,15 @@ elif host_system == 'windows'
         'nvme/scan-win.c',
         'nvme/tree-win.c',
     ]
+elif host_system == 'freebsd'
+    sources += [
+        'nvme/ctrl-sysfs-custom-freebsd.c',
+        'nvme/ioctl-freebsd.c',
+        'nvme/lib-freebsd.c',
+        'nvme/mem-freebsd.c',
+        'nvme/scan-freebsd.c',
+        'nvme/tree-freebsd.c',
+    ]
 endif
 headers = [
     'nvme/accessors.h',

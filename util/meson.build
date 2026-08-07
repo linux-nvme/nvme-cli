@@ -14,6 +14,11 @@ if host_system == 'linux'
         'util/dashboard.c',
         'util/hash-linux.c',
     ]
+elif host_system == 'freebsd'
+    util_sources += [
+        'util/sighdl-freebsd.c',
+        'util/hash-freebsd.c',
+    ]
 elif host_system == 'windows'
     util_sources += [
         'util/sighdl-win.c',
