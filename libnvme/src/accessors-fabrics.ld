@@ -28,7 +28,6 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_get_devid_file;
 		libnvmf_context_get_disable_sqflow;
 		libnvmf_context_get_duplicate_connect;
-		libnvmf_context_get_epcsd;
 		libnvmf_context_get_fast_io_fail_tmo;
 		libnvmf_context_get_force;
 		libnvmf_context_get_hdr_digest;
@@ -44,7 +43,6 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_get_nr_io_queues;
 		libnvmf_context_get_nr_poll_queues;
 		libnvmf_context_get_nr_write_queues;
-		libnvmf_context_get_persistent;
 		libnvmf_context_get_queue_size;
 		libnvmf_context_get_reconnect_delay;
 		libnvmf_context_get_subsysnqn;
@@ -65,7 +63,6 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_set_default_max_discovery_retries;
 		libnvmf_context_set_disable_sqflow;
 		libnvmf_context_set_duplicate_connect;
-		libnvmf_context_set_epcsd;
 		libnvmf_context_set_fast_io_fail_tmo;
 		libnvmf_context_set_force;
 		libnvmf_context_set_hdr_digest;
@@ -75,7 +72,6 @@ LIBNVMF_ACCESSORS_3 {
 		libnvmf_context_set_nr_io_queues;
 		libnvmf_context_set_nr_poll_queues;
 		libnvmf_context_set_nr_write_queues;
-		libnvmf_context_set_persistent;
 		libnvmf_context_set_queue_size;
 		libnvmf_context_set_reconnect_delay;
 		libnvmf_context_set_tls;

@@ -203,7 +203,12 @@ class ConfigConvertCLITest(TestNVMeBase):
         self.assertIn('dhchap-secret = DHHC-1:00:port-specific-key:', content)
         self.assertNotIn('DHHC-1:00:host-default-key:', content)
 
-    def test_discovery_persistent_true_is_mapped(self):
+    def test_discovery_persistent_true_is_mapped_to_force(self):
+        # The legacy format predates EPCSD; its boolean "true" meant
+        # unconditional persistence, so it maps to "force", not the new
+        # best-effort "auto" default -- migrating an existing config.json
+        # must not silently change behavior for a connection that was
+        # persistent before.
         self._write_json({
             'hosts': [{
                 'subsystems': [{
@@ -220,7 +225,7 @@ class ConfigConvertCLITest(TestNVMeBase):
         self._convert()
         content = self._read_output()
         self.assertIn('[Discovery Controller]', content)
-        self.assertIn('persistent = true', content)
+        self.assertIn('persistent = force', content)
 
     def test_discovery_persistent_false_is_mapped_distinctly(self):
         self._write_json({
@@ -239,7 +244,7 @@ class ConfigConvertCLITest(TestNVMeBase):
         self._convert()
         content = self._read_output()
         self.assertIn('[Discovery Controller]', content)
-        self.assertIn('persistent = false', content)
+        self.assertIn('persistent = no', content)
 
     def test_discovery_without_persistent_key_omits_it(self):
         self._write_json({

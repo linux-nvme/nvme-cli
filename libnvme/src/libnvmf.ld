@@ -32,6 +32,7 @@ LIBNVMF_3 {
 		libnvmf_context_apply_params;
 		libnvmf_context_create;
 		libnvmf_context_free;
+		libnvmf_context_get_persistent;
 		libnvmf_context_set_connection;
 		libnvmf_context_set_connection_from_tid;
 		libnvmf_context_set_crypto;
@@ -40,6 +41,7 @@ LIBNVMF_3 {
 		libnvmf_context_set_discovery_hooks;
 		libnvmf_context_set_hostnqn;
 		libnvmf_context_set_io_queues;
+		libnvmf_context_set_persistent;
 		libnvmf_context_set_reconnect_policy;
 		libnvmf_create_ctrl;
 		libnvmf_create_raw_secret;

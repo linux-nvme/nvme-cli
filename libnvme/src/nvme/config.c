@@ -311,13 +311,7 @@ static void apply_param(const char *key, const char *value, void *user_data)
 		if (!shr_parse_bool(value, &bval))
 			cfg->concat = bval;
 	} else if (!strcmp(key, "persistent")) {
-		if (!shr_parse_bool(value, &bval))
-			fctx->persistent = bval ? LIBNVMF_TRISTATE_TRUE :
-						  LIBNVMF_TRISTATE_FALSE;
-	} else if (!strcmp(key, "epcsd")) {
-		if (!shr_parse_bool(value, &bval))
-			fctx->epcsd = bval ? LIBNVMF_TRISTATE_TRUE :
-					     LIBNVMF_TRISTATE_FALSE;
+		libnvmf_context_set_persistent(fctx, value);
 	}
 	/* Identity/addressing and crypto keys never reach here -- only
 	 * tunable keys are handled in this loop. Crypto keys are read
