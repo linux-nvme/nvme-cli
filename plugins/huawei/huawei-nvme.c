@@ -316,9 +316,10 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 	char path[264];
 	struct dirent **devices;
 	struct huawei_list_item *list_items;
-	unsigned int i, n, ret;
+	unsigned int i, n;
 	unsigned int huawei_num = 0;
 	nvme_print_flags_t fmt;
+	int ret;
 
 	NVME_ARGS(opts);
 
