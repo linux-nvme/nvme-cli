@@ -401,8 +401,8 @@ def generate_source_shared(spec, shared_members):
         '#include <stdlib.h>\n'
         '#include <string.h>\n\n'
         '#include <compiler-attributes.h>\n\n'
-        '#include "private.h"\n'
-        '#include "private-tree.h"\n'
+        '#include "../private.h"\n'
+        '#include "../private-tree.h"\n'
         f'#include "{spec["header"]}"\n\n'
     )
 

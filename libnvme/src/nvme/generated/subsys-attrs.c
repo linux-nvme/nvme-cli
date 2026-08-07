@@ -25,8 +25,8 @@
 
 #include <compiler-attributes.h>
 
-#include "private.h"
-#include "private-tree.h"
+#include "../private.h"
+#include "../private-tree.h"
 #include "subsys-attrs.h"
 
 struct libnvme_subsystem_attrs {

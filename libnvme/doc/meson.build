@@ -9,8 +9,8 @@
 #
 
 api_files = [
-    'accessors-fabrics.h',
-    'accessors.h',
+    'generated/accessors-fabrics.h',
+    'generated/accessors.h',
     'fabrics.h',
     'ioctl.h',
     'lib-types.h',

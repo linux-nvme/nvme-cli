@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#include <nvme/accessors.h>
+#include <nvme/generated/accessors.h>
 #include <nvme/generated/ctrl-attrs.h>
 #include <nvme/generated/path-attrs.h>
 #include <nvme/generated/ns-attrs.h>

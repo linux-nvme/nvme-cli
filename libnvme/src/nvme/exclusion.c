@@ -38,7 +38,7 @@
 #include "cleanup.h"
 #include "exclusion.h"
 #include "lib.h"
-#include "nvme/accessors-fabrics.h"
+#include "nvme/generated/accessors-fabrics.h"
 #include "nvme/tid.h"
 #include "private.h"
 #include "private-fabrics.h"

@@ -407,8 +407,8 @@ What each member demonstrates:
 
 ```
 python3 generate_accessors.py \
-    --h-out  src/nvme/accessors-fabrics.h \
-    --c-out  src/nvme/accessors-fabrics.c \
+    --h-out  src/nvme/generated/accessors-fabrics.h \
+    --c-out  src/nvme/generated/accessors-fabrics.c \
     --ld-out src/accessors-fabrics.ld \
     src/nvme/private-fabrics.h
 ```

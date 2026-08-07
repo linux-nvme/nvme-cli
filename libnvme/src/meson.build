@@ -6,7 +6,7 @@
 # Authors: Martin Belanger <Martin.Belanger@dell.com>
 #
 sources = [
-    'nvme/accessors.c',
+    'nvme/generated/accessors.c',
     'nvme/generated/subsys-attrs.c',
     'nvme/ioctl.c',
     'nvme/lib.c',
@@ -40,7 +40,6 @@ elif host_system == 'windows'
     ]
 endif
 headers = [
-    'nvme/accessors.h',
     'nvme/endian.h',
     'nvme/ioctl.h',
     'nvme/lib-types.h',
@@ -68,6 +67,7 @@ headers = [
 # headers above) -- kept in their own subdirectory and installed under
 # nvme/generated/ so libnvme.h.in can #include them by that same path.
 generated_headers = [
+    'nvme/generated/accessors.h',
     'nvme/generated/ctrl-attrs.h',
     'nvme/generated/path-attrs.h',
     'nvme/generated/ns-attrs.h',
@@ -76,7 +76,7 @@ generated_headers = [
 
 if want_fabrics
     sources += [
-        'nvme/accessors-fabrics.c',
+        'nvme/generated/accessors-fabrics.c',
         'nvme/crypto.c',
         'nvme/config.c',
         'nvme/config-emit.c',
@@ -90,8 +90,10 @@ if want_fabrics
         'nvme/tree-fabrics.c',
         'nvme/util-fabrics.c',
     ]
+    generated_headers += [
+        'nvme/generated/accessors-fabrics.h',
+    ]
     headers += [
-        'nvme/accessors-fabrics.h',
         'nvme/config.h',
         'nvme/crypto.h',
         'nvme/exclusion.h',
@@ -211,18 +213,11 @@ libnvme_header = configure_file(
     install_dir: prefixdir / get_option('includedir') / libnvme_api_name
 )
 
-# Needed so a quoted #include (e.g. "private.h") from nvme/generated/*.c
-# still resolves against nvme/ -- the compiler's own current-file-directory
-# rule only reaches siblings, not a parent, and generated/*.c sits one
-# level deeper than the hand-written files it's #include'd from.
-nvme_incdir = include_directories('nvme')
-
 libnvme = library(
     libnvme_link_name, # produces libnvme<major>.so
     sources,
     version: libnvme_so_version,
     c_args: ['-fvisibility=hidden'],
-    include_directories: nvme_incdir,
     link_args: link_args,
     dependencies: deps,
     install: true,
@@ -249,7 +244,6 @@ libnvme_dep = declare_dependency(
 libnvme_test = library(
     libnvme_link_name + '-test',
     sources,
-    include_directories: nvme_incdir,
     dependencies: deps,
     install: false,
 )
