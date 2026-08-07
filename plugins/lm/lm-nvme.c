@@ -471,7 +471,7 @@ static int lm_migration_recv(int argc, char **argv, struct command *acmd, struct
 
 	if (cfg.output && strlen(cfg.output)) {
 		fd = fopen(cfg.output, "w");
-		if (fd < 0) {
+		if (!fd) {
 			nvme_show_perror(cfg.output);
 			return -errno;
 		}
