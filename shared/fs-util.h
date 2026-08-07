@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <stdbool.h>
 #include <sys/types.h>
 
 /*
@@ -36,6 +37,9 @@ int shr_mkstemp(char *template);
 
 /* fsync() path, to make a preceding rename()/unlink() inside it durable. */
 void shr_fsync_dir(const char *path);
+
+/* Return true if fd is still an open file descriptor, false once closed. */
+bool shr_fd_is_open(int fd);
 
 /*
  * Remove a file.
