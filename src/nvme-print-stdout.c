@@ -5401,7 +5401,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			stdout_lba_range((struct nvme_lba_range_type *)buf, field);
 		break;
 	case NVME_FEAT_FID_TEMP_THRESH:
-		field = (result & 0x1c00000) >> 22;
+		field = NVME_FEAT_TT_TMPTHH(result);
 		printf("\tTemperature Threshold Hysteresis(TMPTHH): %s (%u K, %s)\n",
 		       nvme_degrees_string(field), field, nvme_degrees_fahrenheit_string(field));
 		field = NVME_FEAT_TT_THSEL(result);
