@@ -5603,9 +5603,9 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		break;
 	case NVME_FEAT_FID_FDP:
 		printf("\tFlexible Direct Placement Enable (FDPE)       : %s\n",
-		       (result & 0x1) ? "Yes" : "No");
+		       NVME_FEAT_FDPE(result) ? "Yes" : "No");
 		printf("\tFlexible Direct Placement Configuration Index : %u\n",
-		       (result >> 8) & 0xf);
+		       NVME_FEAT_FDPCIDX(result));
 		break;
 	case NVME_FEAT_FID_FDP_EVENTS:
 		for (unsigned int i = 0; i < result; i++) {

@@ -9178,6 +9178,9 @@ nvme_feature_decode_perf_characteristics(__u32 value, __u8 *attri, bool *rvspa)
 	*rvspa = NVME_FEAT_PERFC_RVSPA(value);
 }
 
+#define NVME_FEAT_FDPE(v) NVME_GET(v, FEAT_FDP_ENABLED)
+#define NVME_FEAT_FDPCIDX(v) NVME_GET(v, FEAT_FDP_INDEX)
+
 #define NVME_FEAT_HOST_ID_EXHID(v) NVME_GET(v, FEAT_HOST_ID_EXHID)
 
 static inline void
