@@ -5018,16 +5018,19 @@ static void stdout_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 
 	for (i = 0; i <= nr_ranges; i++) {
 		printf("\ttype       : %#x - %s\n", lbrt->entry[i].type,
-			nvme_feature_lba_type_to_string(lbrt->entry[i].type));
-		printf("\tattributes : %#x - %s, %s\n", lbrt->entry[i].attributes,
-			(lbrt->entry[i].attributes & 0x0001) ?
-				"LBA range may be overwritten" :
-				"LBA range should not be overwritten",
-			((lbrt->entry[i].attributes & 0x0002) >> 1) ?
-				"LBA range should be hidden from the OS/EFI/BIOS" :
-				"LBA range should be visible from the OS/EFI/BIOS");
-		printf("\tslba       : %#"PRIx64"\n", le64_to_cpu(lbrt->entry[i].slba));
-		printf("\tnlb        : %#"PRIx64"\n", le64_to_cpu(lbrt->entry[i].nlb));
+		       nvme_feature_lba_type_to_string(lbrt->entry[i].type));
+		printf("\tattributes : %#x - %s, %s\n",
+		       lbrt->entry[i].attributes,
+		       NVME_LBART_ATTRB_LBARO(lbrt->entry[i].attributes) ?
+		       "LBA range may be overwritten" :
+		       "LBA range should not be overwritten",
+		       NVME_LBART_ATTRB_HLBAR(lbrt->entry[i].attributes) ?
+		       "LBA range should be hidden from the OS/EFI/BIOS" :
+		       "LBA range should be visible from the OS/EFI/BIOS");
+		printf("\tslba       : %#"PRIx64"\n",
+		       le64_to_cpu(lbrt->entry[i].slba));
+		printf("\tnlb        : %#"PRIx64"\n",
+		       le64_to_cpu(lbrt->entry[i].nlb));
 		printf("\tguid       : ");
 		for (j = 0; j < ARRAY_SIZE(lbrt->entry[i].guid); j++)
 			printf("%02x", lbrt->entry[i].guid[j]);
@@ -5401,7 +5404,7 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 			stdout_lba_range((struct nvme_lba_range_type *)buf, field);
 		break;
 	case NVME_FEAT_FID_TEMP_THRESH:
-		field = (result & 0x1c00000) >> 22;
+		field = NVME_FEAT_TT_TMPTHH(result);
 		printf("\tTemperature Threshold Hysteresis(TMPTHH): %s (%u K, %s)\n",
 		       nvme_degrees_string(field), field, nvme_degrees_fahrenheit_string(field));
 		field = NVME_FEAT_TT_THSEL(result);
@@ -5603,9 +5606,9 @@ static void stdout_feature_show_fields(enum nvme_features_id fid,
 		break;
 	case NVME_FEAT_FID_FDP:
 		printf("\tFlexible Direct Placement Enable (FDPE)       : %s\n",
-		       (result & 0x1) ? "Yes" : "No");
+		       NVME_FEAT_FDPE(result) ? "Yes" : "No");
 		printf("\tFlexible Direct Placement Configuration Index : %u\n",
-		       (result >> 8) & 0xf);
+		       NVME_FEAT_FDPCIDX(result));
 		break;
 	case NVME_FEAT_FID_FDP_EVENTS:
 		for (unsigned int i = 0; i < result; i++) {
