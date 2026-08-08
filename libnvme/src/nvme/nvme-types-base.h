@@ -2288,12 +2288,30 @@ enum nvme_id_ctrl_hctm {
 
 /**
  * enum nvme_id_ctrl_sanicap - Indicates attributes for sanitize operations.
+ * @NVME_CTRL_SANICAP_CES_SHIFT: Crypto erase support shift
+ * @NVME_CTRL_SANICAP_BES_SHIFT: Block erase support shift
+ * @NVME_CTRL_SANICAP_OWS_SHIFT: Overwrite support shift
+ * @NVME_CTRL_SANICAP_VERS_SHIFT: Verification support shift
+ * @NVME_CTRL_SANICAP_NVERS_SHIFT: Namespace verification support shift
+ * @NVME_CTRL_SANICAP_NDI_SHIFT: No-deallocate inhibited shift
+ * @NVME_CTRL_SANICAP_NODMMAS_SHIFT: No-deallocate modifies media after sanitize
+ *				     shift
+ * @NVME_CTRL_SANICAP_CES_MASK: Crypto erase support mask
+ * @NVME_CTRL_SANICAP_BES_MASK: Block erase support mask
+ * @NVME_CTRL_SANICAP_OWS_MASK: Overwrite support mask
+ * @NVME_CTRL_SANICAP_VERS_MASK: Verification support mask
+ * @NVME_CTRL_SANICAP_NVERS_MASK: Namespace verification support mask
+ * @NVME_CTRL_SANICAP_NDI_MASK: No-deallocate inhibited mask
+ * @NVME_CTRL_SANICAP_NODMMAS_MASK: No-deallocate modifies media after sanitize
+ *				    mask
  * @NVME_CTRL_SANICAP_CES:     Crypto Erase Support. If set, then the
  *			       controller supports the Crypto Erase sanitize operation.
  * @NVME_CTRL_SANICAP_BES:     Block Erase Support. If set, then the controller
  *			       supports the Block Erase sanitize operation.
  * @NVME_CTRL_SANICAP_OWS:     Overwrite Support. If set, then the controller
  *			       supports the Overwrite sanitize operation.
+ * @NVME_CTRL_SANICAP_VERS: Verification support
+ * @NVME_CTRL_SANICAP_NVERS: Namespace verification support
  * @NVME_CTRL_SANICAP_NDI:     No-Deallocate Inhibited. If set and the No-
  *			       Deallocate Response Mode bit is set, then the
  *			       controller deallocates after the sanitize
@@ -2711,6 +2729,7 @@ struct nvme_lbaf {
  * @NVME_LBAF_RP_BETTER:   Better performance
  * @NVME_LBAF_RP_GOOD:	   Good performance
  * @NVME_LBAF_RP_DEGRADED: Degraded performance
+ * @NVME_LBAF_RP_SHIFT: Relative performance shift
  * @NVME_LBAF_RP_MASK:	   Mask to get the relative performance value from the
  *			   field
  */
@@ -2982,10 +3001,13 @@ enum nvme_id_ns_dpc {
  * @NVME_NS_DPS_PI_TYPE1: Protection information is enabled, Type 1
  * @NVME_NS_DPS_PI_TYPE2: Protection information is enabled, Type 2
  * @NVME_NS_DPS_PI_TYPE3: Protection information is enabled, Type 3
+ * @NVME_NS_DPS_PI_SHIFT: Protection information type shift
  * @NVME_NS_DPS_PI_MASK:  Mask to get the value of the PI type
  * @NVME_NS_DPS_PI_FIRST: If set, indicates that the protection information, if
  *			  enabled, is transferred as the first eight bytes of
  *			  metadata.
+ * @NVME_NS_DPS_PI_FIRST_SHIFT: Protection information in first bytes shift
+ * @NVME_NS_DPS_PI_FIRST_MASK: Protection information in first bytes mask
  */
 enum nvme_id_ns_dps {
 	NVME_NS_DPS_PI_NONE		= 0,
@@ -2994,9 +3016,9 @@ enum nvme_id_ns_dps {
 	NVME_NS_DPS_PI_TYPE3		= 3,
 	NVME_NS_DPS_PI_SHIFT		= 0,
 	NVME_NS_DPS_PI_MASK		= 0x7,
-	NVME_NS_DPS_PI_FIRST		= 1 << 3,
 	NVME_NS_DPS_PI_FIRST_SHIFT	= 3,
 	NVME_NS_DPS_PI_FIRST_MASK	= 0x1,
+	NVME_NS_DPS_PI_FIRST		= NVME_VAL(NS_DPS_PI_FIRST),
 };
 
 #define NVME_NS_DPS_PI(dps)		NVME_GET(dps, NS_DPS_PI)
@@ -3256,6 +3278,7 @@ struct nvme_id_uuid_list_entry {
 
 /**
  * enum nvme_id_uuid - Identifier Association
+ * @NVME_ID_UUID_HDR_ASSOCIATION_SHIFT:
  * @NVME_ID_UUID_HDR_ASSOCIATION_MASK:
  * @NVME_ID_UUID_ASSOCIATION_NONE:
  * @NVME_ID_UUID_ASSOCIATION_VENDOR:
@@ -3565,8 +3588,10 @@ struct nvme_error_log_page {
 };
 
 /**
- * enum nvme_err_pel - Persistent Error Log Entry masks
+ * enum nvme_err_pel - Parameter error location field
+ * @NVME_ERR_PEL_BYTE_SHIFT: Byte location shift
  * @NVME_ERR_PEL_BYTE_MASK:	Byte mask for error location
+ * @NVME_ERR_PEL_BIT_SHIFT: Bit location shift
  * @NVME_ERR_PEL_BIT_MASK:	Bit mask for error location
  */
 enum nvme_err_pel {
@@ -3931,7 +3956,10 @@ struct nvme_cmd_effects_log {
  * @NVME_CMD_EFFECTS_NCC:	Namespace Capability Change
  * @NVME_CMD_EFFECTS_NIC:	Namespace Inventory Change
  * @NVME_CMD_EFFECTS_CCC:	Controller Capability Change
+ * @NVME_CMD_EFFECTS_CSER_SHIFT: Command submission and execution relaxations
+ *				 shift
  * @NVME_CMD_EFFECTS_CSER_MASK:	Command Submission and Execution Relaxations
+ * @NVME_CMD_EFFECTS_CSE_SHIFT: Command submission and execution shift
  * @NVME_CMD_EFFECTS_CSE_MASK:	Command Submission and Execution
  * @NVME_CMD_EFFECTS_UUID_SEL:	UUID Selection Supported
  */
@@ -4024,6 +4052,7 @@ struct nvme_st_result {
  * @NVME_ST_RESULT_ABORTED_UNKNOWN:  Operation was aborted for unknown reason.
  * @NVME_ST_RESULT_ABORTED_SANITIZE: Operation was aborted due to a sanitize operation.
  * @NVME_ST_RESULT_NOT_USED:	     Entry not used (does not contain a test result).
+ * @NVME_ST_RESULT_SHIFT: Device self-test result shift
  * @NVME_ST_RESULT_MASK:	     Mask to get the status result value from
  *				     the &struct nvme_st_result.dsts field.
  */
@@ -4055,6 +4084,7 @@ enum nvme_status_result {
  * @NVME_ST_CODE_ABORT:	   Abort device self-test operation.
  * @NVME_ST_CODE_SHIFT:	   Shift amount to get the code value from the
  *			   &struct nvme_st_result.dsts field.
+ * @NVME_ST_CODE_MASK: Self-test code mask
  */
 enum nvme_st_code {
 	NVME_ST_CODE_RESERVED		= 0x0,
@@ -4076,8 +4106,10 @@ enum nvme_st_code {
  * @NVME_ST_CURR_OP_EXTENDED:	 Extended device self-test operation in progress.
  * @NVME_ST_CURR_OP_VS:		 Vendor specific.
  * @NVME_ST_CURR_OP_RESERVED:	 Reserved.
+ * @NVME_ST_CURR_OP_SHIFT: Device self-test operation status shift
  * @NVME_ST_CURR_OP_MASK:	 Mask to get the current operation value from the
  *				 &struct nvme_self_test_log.current_operation field.
+ * @NVME_ST_CURR_OP_CMPL_SHIFT: Current device self-test completion shift
  * @NVME_ST_CURR_OP_CMPL_MASK:	 Mask to get the current operation completion value
  *				 from the &struct nvme_self_test_log.completion field.
  */
@@ -8819,6 +8851,7 @@ struct nvme_lm_nvme_controller_state_data_header {
  * @hdr: Header
  * @sqs: I/O Submission Queue list
  * @cqs: I/O Completion Queue list
+ * @queue_data_buf: Queue data buffer
  */
 struct nvme_lm_nvme_controller_state_data {
 	struct nvme_lm_nvme_controller_state_data_header hdr;
