@@ -5018,16 +5018,19 @@ static void stdout_lba_range(struct nvme_lba_range_type *lbrt, int nr_ranges)
 
 	for (i = 0; i <= nr_ranges; i++) {
 		printf("\ttype       : %#x - %s\n", lbrt->entry[i].type,
-			nvme_feature_lba_type_to_string(lbrt->entry[i].type));
-		printf("\tattributes : %#x - %s, %s\n", lbrt->entry[i].attributes,
-			(lbrt->entry[i].attributes & 0x0001) ?
-				"LBA range may be overwritten" :
-				"LBA range should not be overwritten",
-			((lbrt->entry[i].attributes & 0x0002) >> 1) ?
-				"LBA range should be hidden from the OS/EFI/BIOS" :
-				"LBA range should be visible from the OS/EFI/BIOS");
-		printf("\tslba       : %#"PRIx64"\n", le64_to_cpu(lbrt->entry[i].slba));
-		printf("\tnlb        : %#"PRIx64"\n", le64_to_cpu(lbrt->entry[i].nlb));
+		       nvme_feature_lba_type_to_string(lbrt->entry[i].type));
+		printf("\tattributes : %#x - %s, %s\n",
+		       lbrt->entry[i].attributes,
+		       NVME_LBART_ATTRB_LBARO(lbrt->entry[i].attributes) ?
+		       "LBA range may be overwritten" :
+		       "LBA range should not be overwritten",
+		       NVME_LBART_ATTRB_HLBAR(lbrt->entry[i].attributes) ?
+		       "LBA range should be hidden from the OS/EFI/BIOS" :
+		       "LBA range should be visible from the OS/EFI/BIOS");
+		printf("\tslba       : %#"PRIx64"\n",
+		       le64_to_cpu(lbrt->entry[i].slba));
+		printf("\tnlb        : %#"PRIx64"\n",
+		       le64_to_cpu(lbrt->entry[i].nlb));
 		printf("\tguid       : ");
 		for (j = 0; j < ARRAY_SIZE(lbrt->entry[i].guid); j++)
 			printf("%02x", lbrt->entry[i].guid[j]);
