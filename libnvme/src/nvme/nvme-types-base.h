@@ -7153,6 +7153,7 @@ static inline __u32 nvme_status_equals(int status, enum nvme_status_type type,
  * @nvme_admin_manage_export_nvms:	Manage Exported NVM Subsystem
  * @nvme_admin_manage_export_ns:	Manage Exported Namespace
  * @nvme_admin_manage_export_port:	Manage Exported Port
+ * @nvme_admin_cross_ctrl_reset:	Cross-Controller Reset
  * @nvme_admin_send_disc_log_page:	Send Discovery Log Page
  * @nvme_admin_track_send:		Track Send
  * @nvme_admin_track_receive:		Track Receive
@@ -7205,6 +7206,7 @@ enum nvme_admin_opcode {
 	nvme_admin_manage_export_nvms	= 0x2d,
 	nvme_admin_manage_export_ns	= 0x31,
 	nvme_admin_manage_export_port	= 0x35,
+	nvme_admin_cross_ctrl_reset	= 0x38,
 	nvme_admin_send_disc_log_page	= 0x39,
 	nvme_admin_track_send		= 0x3d,
 	nvme_admin_track_receive	= 0x3e,
