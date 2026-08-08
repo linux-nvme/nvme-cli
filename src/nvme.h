@@ -89,6 +89,7 @@ static inline DEFINE_CLEANUP_FUNC(cleanup_nvme_transport_handle,
 	struct libnvme_transport_handle *, put_transport_handle)
 #define __cleanup_nvme_transport_handle __cleanup(cleanup_nvme_transport_handle)
 
+extern const char *latency;
 extern const char *uuid_index;
 extern const char *namespace_id_desired;
 
@@ -121,6 +122,11 @@ const char *libnvme_strerror(int errnum);
 
 unsigned long long elapsed_utime(struct timeval start_time,
 					struct timeval end_time);
+
+int open_exclusive(struct libnvme_global_ctx **ctx,
+		   struct libnvme_transport_handle **hdl, int argc, char **argv,
+		   int ignore_exclusive,
+		   struct argconfig_commandline_options *opts);
 
 /* nvme-print.c */
 const char *nvme_select_to_string(int sel);
