@@ -873,7 +873,10 @@ const char *nvme_log_to_string(__u8 lid)
 	case NVME_LOG_LID_FDP_RUH_USAGE:		return "Reclaim Unit Handle Usage";
 	case NVME_LOG_LID_FDP_STATS:			return "FDP Statistics";
 	case NVME_LOG_LID_FDP_EVENTS:			return "FDP Events";
+	case NVME_LOG_LID_MFG_DEFAULT_CONFIG:		return "Manufacturer Default Configuration";
 	case NVME_LOG_LID_POWER_MEASUREMENT:		return "Power Measurement";
+	case NVME_LOG_LID_VOLTAGE_MEASUREMENT:		return "Voltage Measurement";
+	case NVME_LOG_LID_RATE_LIMITING:		return "Rate Limiting";
 	case NVME_LOG_LID_DISCOVERY:			return "Discovery";
 	case NVME_LOG_LID_HOST_DISCOVERY:		return "Host Discovery";
 	case NVME_LOG_LID_AVE_DISCOVERY:		return "AVE Discovery";
