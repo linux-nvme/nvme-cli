@@ -3100,7 +3100,7 @@ plugin_keys_opts () {
 	local wantfiles=0
 	_nvme_detect_value_completion
 	case "$1" in
-		"gen-kxchap")
+		"gen-kxchap-secret")
 			opts+=" --secret= -s --key-length= -l --hmac= -m --verbose -v --quiet --output-format= -o --timeout= --dry-run --no-retries --no-ioctl-probing --output-format-version= --set-options="
 			valopts+=" --secret -s --key-length -l --hmac -m --output-format -o --timeout --output-format-version --set-options"
 
@@ -3108,7 +3108,7 @@ plugin_keys_opts () {
 			               "--output-format-version" "1 2"
 			;;
 
-		"check-kxchap")
+		"check-kxchap-secret")
 			opts+=" --keydata= -d --keyring= -k --keytype= -t --identity= -i --verbose -v --quiet --output-format= -o --timeout= --dry-run --no-retries --no-ioctl-probing --output-format-version= --set-options="
 			valopts+=" --keydata -d --keyring -k --keytype -t --identity -i --output-format -o --timeout --output-format-version --set-options"
 
@@ -4031,7 +4031,7 @@ _nvme_subcmds () {
 		[ymtc]="smart-log-add"
 		[zns]="list id-ctrl id-ns report-zones reset-zone close-zone finish-zone open-zone offline-zone set-zone-desc zrwa-flush-zone changed-zone-list zone-mgmt-recv zone-mgmt-send zone-append"
 		[nbft]="show"
-		[keys]="gen-kxchap check-kxchap gen-tls check-tls insert-tls import export revoke"
+		[keys]="gen-kxchap-secret check-kxchap-secret gen-tls check-tls insert-tls import export revoke"
 		[exclusion]="create delete edit list add remove"
 		[registry]="list retrieve update delete"
 		[config]="validate show convert create"

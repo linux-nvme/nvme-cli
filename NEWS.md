@@ -14,14 +14,14 @@
 
 * Key management has moved into a new `nvme keys` plugin.
   `gen-dhchap-key`, `check-dhchap-key`, `gen-tls-key`,
-  `check-tls-key`, and `tls-key` are now `nvme keys gen-kxchap`,
-  `check-kxchap`, `gen-tls`, `check-tls`, `insert-tls`, `import`,
+  `check-tls-key`, and `tls-key` are now `nvme keys gen-kxchap-secret`,
+  `check-kxchap-secret`, `gen-tls`, `check-tls`, `insert-tls`, `import`,
   `export`, and `revoke`. The old commands still work as deprecated
   aliases, except `check-tls-key --insert`, which has no equivalent
   there. Use `nvme keys insert-tls` instead. The `DH-HMAC-CHAP`
   naming is also renamed to `KX-HMAC-CHAP` throughout, matching
-  TP4201. See `nvme-keys-gen-kxchap(1)` and
-  `nvme-keys-check-kxchap(1)`.
+  TP4201. See `nvme-keys-gen-kxchap-secret(1)` and
+  `nvme-keys-check-kxchap-secret(1)`.
 
 * `nvme gen-dhchap-key` emits the secret it was given rather than the
   key transformed from it, so its output differs whenever `--hmac` is

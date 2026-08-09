@@ -124,8 +124,8 @@ COMMAND_LIST(
 	ENTRY("gen-hostnqn", "Generate NVMeoF host NQN", gen_hostnqn_cmd)
 	ENTRY("show-hostnqn", "Show NVMeoF host NQN", show_hostnqn_cmd)
 #ifdef CONFIG_DEPRECATED_CMDS
-	ENTRY_DEPRECATED("gen-dhchap-key", "Generate NVMeoF DH-HMAC-CHAP host secret (deprecated, use 'nvme keys gen-kxchap')", gen_dhchap_key)
-	ENTRY_DEPRECATED("check-dhchap-key", "Validate NVMeoF DH-HMAC-CHAP host secret (deprecated, use 'nvme keys check-kxchap')", check_dhchap_key)
+	ENTRY_DEPRECATED("gen-dhchap-key", "Generate NVMeoF DH-HMAC-CHAP host secret (deprecated, use 'nvme keys gen-kxchap-secret')", gen_dhchap_key)
+	ENTRY_DEPRECATED("check-dhchap-key", "Validate NVMeoF DH-HMAC-CHAP host secret (deprecated, use 'nvme keys check-kxchap-secret')", check_dhchap_key)
 	ENTRY_DEPRECATED("gen-tls-key", "Generate NVMeoF TLS PSK (deprecated, use 'nvme keys gen-tls')", gen_tls_key)
 	ENTRY_DEPRECATED("check-tls-key", "Validate NVMeoF TLS PSK (deprecated, use 'nvme keys check-tls')", check_tls_key)
 	ENTRY_DEPRECATED("tls-key", "Manage NVMeoF TLS PSKs (deprecated, use 'nvme keys import/export/revoke')", tls_key)
