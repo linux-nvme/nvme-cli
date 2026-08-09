@@ -24,12 +24,12 @@ and '<psk>' is the TLS PSK itself in PSK interchange format
 single line.
 
 The PSK interchange format otherwise carries a configured PSK: it is
-what linknvme-keys-gen-tls[1] prints and what
-linknvme-keys-insert-tls[1] and linknvme-keys-check-tls[1] read. The
-keys exported here are TLS PSKs instead. This output is meant for
-linknvme-keys-import[1], which stores each key back under its identity
-unchanged; it is not intended to be passed to
-linknvme-keys-insert-tls[1] or linknvme-keys-check-tls[1].
+what linknvme-keys-gen-tls-psk[1] prints and what
+linknvme-keys-insert-tls-psk[1] and linknvme-keys-check-tls-psk[1]
+read. The keys exported here are TLS PSKs instead. This output is
+meant for linknvme-keys-import[1], which stores each key back under
+its identity unchanged; it is not intended to be passed to
+linknvme-keys-insert-tls-psk[1] or linknvme-keys-check-tls-psk[1].
 
 OPTIONS
 -------

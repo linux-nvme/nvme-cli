@@ -1,14 +1,14 @@
-nvme-keys-check-tls(1)
-======================
+nvme-keys-check-tls-psk(1)
+==========================
 
 NAME
 ----
-nvme-keys-check-tls - Check a NVMe TLS PSK
+nvme-keys-check-tls-psk - Check a NVMe TLS PSK
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'keys check-tls' [--keyring=<name> | -k <name>]
+'nvme' [<global-options>] 'keys check-tls-psk' [--keyring=<name> | -k <name>]
 			[--keytype=<type> | -t <type>]
 			[--hostnqn=<nqn> | -n <nqn>]
 			[--subsysnqn=<nqn> | -c <nqn>]
@@ -24,13 +24,13 @@ prints the hash function it records and the length of the PSK.
 
 If '--keydata' is not given the configured PSK is read from stdin, which
 also allows reading it from a file, e.g.
-'nvme keys check-tls < keyfile'.
+'nvme keys check-tls-psk < keyfile'.
 
 If '--subsysnqn' is given the TLS PSK identity of the key is also printed,
 and the specified keyring is checked for a TLS PSK already stored under
 that identity; the result (loaded or not, with its serial number if loaded)
 is reported. This command never modifies the keyring; to insert a TLS PSK
-use linknvme-keys-insert-tls[1].
+use linknvme-keys-insert-tls-psk[1].
 
 OPTIONS
 -------

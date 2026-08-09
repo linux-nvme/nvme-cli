@@ -1,14 +1,14 @@
-nvme-keys-insert-tls(1)
-========================
+nvme-keys-insert-tls-psk(1)
+===========================
 
 NAME
 ----
-nvme-keys-insert-tls - Insert a NVMe TLS PSK into a keyring
+nvme-keys-insert-tls-psk - Insert a NVMe TLS PSK into a keyring
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'keys insert-tls' [--keyring=<name> | -k <name>]
+'nvme' [<global-options>] 'keys insert-tls-psk' [--keyring=<name> | -k <name>]
 			[--keytype=<type> | -t <type>]
 			[--hostnqn=<nqn> | -n <nqn>]
 			[--subsysnqn=<nqn> | -c <nqn>]
@@ -46,10 +46,10 @@ explicit identity, deriving neither.
 
 If '--keydata' is not given the configured PSK is read from stdin, which
 also allows reading it from a file, e.g.
-'nvme keys insert-tls -c <subsysnqn> < keyfile'.
+'nvme keys insert-tls-psk -c <subsysnqn> < keyfile'.
 
 To check whether a key is already loaded without inserting it, use
-linknvme-keys-check-tls[1].
+linknvme-keys-check-tls-psk[1].
 
 OPTIONS
 -------
