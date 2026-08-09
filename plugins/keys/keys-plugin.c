@@ -42,6 +42,11 @@ static int read_key_value(const char *inline_value, char **out)
 	return *out ? 0 : -ENOMEM;
 }
 
+static bool valid_kxchap_secret_len(unsigned int len)
+{
+	return len == 32 || len == 48 || len == 64;
+}
+
 static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
@@ -89,37 +94,30 @@ static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin
 		nvme_show_error("Invalid HMAC identifier %u", cfg.hmac);
 		return -EINVAL;
 	}
-	if (cfg.hmac > 0) {
+	/*
+	 * The hash identifier records the transform the consumer applies; it
+	 * does not constrain the secret's own length, so accept all three
+	 * with any identifier.
+	 */
+	if (!cfg.key_len) {
 		switch (cfg.hmac) {
 		case 1:
-			if (!cfg.key_len) {
-				cfg.key_len = 32;
-			} else if (cfg.key_len != 32) {
-				nvme_show_error("Invalid key length %d for SHA(256)", cfg.key_len);
-				return -EINVAL;
-			}
+			cfg.key_len = 32;
 			break;
 		case 2:
-			if (!cfg.key_len) {
-				cfg.key_len = 48;
-			} else if (cfg.key_len != 48) {
-				nvme_show_error("Invalid key length %d for SHA(384)", cfg.key_len);
-				return -EINVAL;
-			}
+			cfg.key_len = 48;
 			break;
 		case 3:
-			if (!cfg.key_len) {
-				cfg.key_len = 64;
-			} else if (cfg.key_len != 64) {
-				nvme_show_error("Invalid key length %d for SHA(512)", cfg.key_len);
-				return -EINVAL;
-			}
+			cfg.key_len = 64;
 			break;
 		default:
+			cfg.key_len = 32;
 			break;
 		}
-	} else if (!cfg.key_len) {
-		cfg.key_len = 32;
+	}
+	if (!valid_kxchap_secret_len(cfg.key_len)) {
+		nvme_show_error("Invalid secret length %u", cfg.key_len);
+		return -EINVAL;
 	}
 
 	err = libnvmf_create_raw_secret(ctx, cfg.secret, cfg.key_len, &raw_secret);
@@ -187,7 +185,7 @@ static int validate_kxchap_key(const char *key, int *hmac_out,
 	}
 	decoded_len = err;
 	decoded_len -= 4;
-	if (decoded_len != 32 && decoded_len != 48 && decoded_len != 64) {
+	if (!valid_kxchap_secret_len(decoded_len)) {
 		nvme_show_error("Invalid secret length %d", decoded_len);
 		return -EINVAL;
 	}
