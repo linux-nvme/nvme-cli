@@ -19,8 +19,8 @@ if python3.found()
     endif
 
     # Standalone CLI test for the "keys" plugin. Needs no device. Restricted
-    # to gen-dhchap/gen-tls/check-dhchap/check-tls (no keyring access), so it
-    # only needs OpenSSL, not a working kernel keyring.
+    # to the commands that need no keyring access (the test's docstring
+    # lists them), so it only needs OpenSSL, not a working kernel keyring.
     if want_fabrics and 'keys' in selected_plugins and openssl_dep.found()
         test('nvme-cli - keys-cli',
              python3,

@@ -1087,21 +1087,21 @@ static struct command check_kxchap_cmd = {
 };
 
 static struct command gen_tls_cmd = {
-	.name = "gen-tls",
+	.name = "gen-tls-psk",
 	.help = "Generate NVMeoF TLS PSK",
 	.fn = gen_tls,
 	.no_device = true,
 };
 
 static struct command check_tls_cmd = {
-	.name = "check-tls",
+	.name = "check-tls-psk",
 	.help = "Validate NVMeoF TLS PSK format or check if loaded",
 	.fn = check_tls,
 	.no_device = true,
 };
 
 static struct command insert_tls_cmd = {
-	.name = "insert-tls",
+	.name = "insert-tls-psk",
 	.help = "Insert NVMeoF TLS PSK into a keyring",
 	.fn = insert_tls,
 	.no_device = true,

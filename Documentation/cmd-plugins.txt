@@ -364,13 +364,13 @@ linknvme:nvme-keys-gen-kxchap-secret[1]::
 linknvme:nvme-keys-check-kxchap-secret[1]::
 	Validate NVMeoF KX-HMAC-CHAP host secret
 
-linknvme:nvme-keys-gen-tls[1]::
+linknvme:nvme-keys-gen-tls-psk[1]::
 	Generate NVMeoF TLS PSK
 
-linknvme:nvme-keys-check-tls[1]::
+linknvme:nvme-keys-check-tls-psk[1]::
 	Validate NVMeoF TLS PSK
 
-linknvme:nvme-keys-insert-tls[1]::
+linknvme:nvme-keys-insert-tls-psk[1]::
 	Insert an NVMeoF TLS PSK into a keyring
 
 linknvme:nvme-keys-import[1]::

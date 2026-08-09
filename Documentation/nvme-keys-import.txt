@@ -38,7 +38,7 @@ a keyfile.
 
 Note that this command does not derive a TLS PSK from a configured PSK,
 nor compute the identity to store it under from a host/subsystem NQN pair;
-use linknvme-keys-insert-tls[1] for that.
+use linknvme-keys-insert-tls-psk[1] for that.
 
 OPTIONS
 -------
