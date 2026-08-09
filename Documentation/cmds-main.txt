@@ -203,7 +203,7 @@ linknvme:nvme-check-dhchap-key[1]::
 	Check a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-check-kxchap-secret)
 
 linknvme:nvme-check-tls-key[1]::
-	Check a NVMe TLS PSK (deprecated, see nvme-keys-check-tls)
+	Check a NVMe TLS PSK (deprecated, see nvme-keys-check-tls-psk)
 
 linknvme:nvme-cmdset-ind-id-ns[1]::
 	I/O Command Set Independent Identify Namespace
@@ -221,7 +221,7 @@ linknvme:nvme-gen-hostnqn[1]::
 	Generate NVMeoF host NQN
 
 linknvme:nvme-gen-tls-key[1]::
-	Generate a NVMe TLS PSK (deprecated, see nvme-keys-gen-tls)
+	Generate a NVMe TLS PSK (deprecated, see nvme-keys-gen-tls-psk)
 
 linknvme:nvme-get-lba-status[1]::
 	Get LBA Status command

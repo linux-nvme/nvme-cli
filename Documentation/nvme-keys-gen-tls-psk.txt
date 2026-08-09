@@ -1,14 +1,14 @@
-nvme-keys-gen-tls(1)
-====================
+nvme-keys-gen-tls-psk(1)
+========================
 
 NAME
 ----
-nvme-keys-gen-tls - Generate a NVMe TLS PSK
+nvme-keys-gen-tls-psk - Generate a NVMe TLS PSK
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'keys gen-tls' [--keyring=<name> | -k <name>]
+'nvme' [<global-options>] 'keys gen-tls-psk' [--keyring=<name> | -k <name>]
 			[--keytype=<type> | -t <type>]
 			[--hostnqn=<nqn> | -n <nqn>]
 			[--subsysnqn=<nqn> | -c <nqn>]

@@ -15,12 +15,12 @@
 * Key management has moved into a new `nvme keys` plugin.
   `gen-dhchap-key`, `check-dhchap-key`, `gen-tls-key`,
   `check-tls-key`, and `tls-key` are now `nvme keys gen-kxchap-secret`,
-  `check-kxchap-secret`, `gen-tls`, `check-tls`, `insert-tls`, `import`,
-  `export`, and `revoke`. The old commands still work as deprecated
-  aliases, except `check-tls-key --insert`, which has no equivalent
-  there. Use `nvme keys insert-tls` instead. The `DH-HMAC-CHAP`
-  naming is also renamed to `KX-HMAC-CHAP` throughout, matching
-  TP4201. See `nvme-keys-gen-kxchap-secret(1)` and
+  `check-kxchap-secret`, `gen-tls-psk`, `check-tls-psk`,
+  `insert-tls-psk`, `import`, `export`, and `revoke`. The old commands
+  still work as deprecated aliases, except `check-tls-key --insert`,
+  which has no equivalent there. Use `nvme keys insert-tls-psk`
+  instead. The `DH-HMAC-CHAP` naming is also renamed to `KX-HMAC-CHAP`
+  throughout, matching TP4201. See `nvme-keys-gen-kxchap-secret(1)` and
   `nvme-keys-check-kxchap-secret(1)`.
 
 * NVMe Base Specification 2.4 (ECN122) renames the Reservation
@@ -85,7 +85,7 @@
   length <len>)` first, the identity second, and whether that identity
   is already in the keyring third, so a script reading the identity
   with `head -1` gets the wrong line. Its `--insert`/`--keyfile` are
-  gone; use `nvme keys insert-tls`. See `nvme-check-tls-key(1)`.
+  gone; use `nvme keys insert-tls-psk`. See `nvme-check-tls-key(1)`.
 
 * `nvme check-dhchap-key` reports on the secret rather than on the key:
   `Key is valid`, `Key is loaded` and `Key is not loaded` are now

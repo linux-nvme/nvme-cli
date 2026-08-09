@@ -203,12 +203,12 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 
 static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	return forward_to_keys_plugin("gen-tls-key", "gen-tls", argc, argv);
+	return forward_to_keys_plugin("gen-tls-key", "gen-tls-psk", argc, argv);
 }
 
 static int check_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	return forward_to_keys_plugin("check-tls-key", "check-tls", argc, argv);
+	return forward_to_keys_plugin("check-tls-key", "check-tls-psk", argc, argv);
 }
 
 /*
@@ -1499,7 +1499,7 @@ static struct command check_dhchap_key_cmd = {
 
 static struct command gen_tls_key_cmd = {
 	.name = "gen-tls-key",
-	.help = "Generate NVMeoF TLS PSK (deprecated, use 'nvme keys gen-tls')",
+	.help = "Generate NVMeoF TLS PSK (deprecated, use 'nvme keys gen-tls-psk')",
 	.fn = gen_tls_key,
 	.deprecated = true,
 	.no_device = true,
@@ -1507,7 +1507,7 @@ static struct command gen_tls_key_cmd = {
 
 static struct command check_tls_key_cmd = {
 	.name = "check-tls-key",
-	.help = "Validate NVMeoF TLS PSK (deprecated, use 'nvme keys check-tls')",
+	.help = "Validate NVMeoF TLS PSK (deprecated, use 'nvme keys check-tls-psk')",
 	.fn = check_tls_key,
 	.deprecated = true,
 	.no_device = true,
