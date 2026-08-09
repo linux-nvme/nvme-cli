@@ -358,10 +358,10 @@ linknvme:nvme-sed-password[1]::
 linknvme:nvme-mangoboost-id-ctrl[1]::
 	MangoBoost - NVMe Identify Controller
 
-linknvme:nvme-keys-gen-kxchap[1]::
+linknvme:nvme-keys-gen-kxchap-secret[1]::
 	Generate NVMeoF KX-HMAC-CHAP host secret
 
-linknvme:nvme-keys-check-kxchap[1]::
+linknvme:nvme-keys-check-kxchap-secret[1]::
 	Validate NVMeoF KX-HMAC-CHAP host secret
 
 linknvme:nvme-keys-gen-tls[1]::

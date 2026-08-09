@@ -8153,15 +8153,15 @@ static int forward_to_keys_plugin(const char *old_name, const char *subcmd,
 }
 
 /*
- * gen-kxchap dropped --nqn with the transform that used it. Take it here
- * anyway, warn, and drop it, so a 2.x command line still works.
+ * gen-kxchap-secret dropped --nqn with the transform that used it. Take
+ * it here anyway, warn, and drop it, so a 2.x command line still works.
  */
 static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
 	    "Generate a KX-HMAC-CHAP secret in the DHHC-1 representation, usable for\n"
 	    "NVMe In-Band Authentication.\n"
-	    "Deprecated; use 'nvme keys gen-kxchap' instead.";
+	    "Deprecated; use 'nvme keys gen-kxchap-secret' instead.";
 	const char *secret =
 	    "Optional secret (in hexadecimal characters) to be placed in the representation.";
 	const char *key_len = "Length of the secret (32, 48, or 64 bytes).";
@@ -8217,7 +8217,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 		args[nargs++] = hmac_buf;
 	}
 
-	return forward_to_keys_plugin("gen-dhchap-key", "gen-kxchap", nargs, args);
+	return forward_to_keys_plugin("gen-dhchap-key", "gen-kxchap-secret", nargs, args);
 }
 
 /*
@@ -8228,7 +8228,7 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 {
 	const char *desc =
 	    "Check a KX-HMAC-CHAP host secret for usability for NVMe In-Band Authentication.\n"
-	    "Deprecated; use 'nvme keys check-kxchap' instead.";
+	    "Deprecated; use 'nvme keys check-kxchap-secret' instead.";
 	const char *key =
 	    "KX-HMAC-CHAP secret (in DHHC-1 interchange format) to be validated. Reads from stdin if not given.";
 
@@ -8255,7 +8255,7 @@ static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct 
 		args[nargs++] = cfg.key;
 	}
 
-	return forward_to_keys_plugin("check-dhchap-key", "check-kxchap", nargs, args);
+	return forward_to_keys_plugin("check-dhchap-key", "check-kxchap-secret", nargs, args);
 }
 
 static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)

@@ -12,21 +12,21 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Deprecated alias for linknvme-keys-check-kxchap[1], kept for scripts written
-against nvme-cli versions older than 3.0. It takes the one option nvme-cli
-2.x took, '--key'/'-k', and passes the secret to that command. Exit codes
-match 2.x, but 'Key is valid', 'Key is loaded' and 'Key is not loaded' are
-now 'Secret is ...', and the validation errors say secret where they said
-key, so a script matching the old wording needs updating.
+Deprecated alias for linknvme-keys-check-kxchap-secret[1], kept for scripts
+written against nvme-cli versions older than 3.0. It takes the one option
+nvme-cli 2.x took, '--key'/'-k', and passes the secret to that command.
+Exit codes match 2.x, but 'Key is valid', 'Key is loaded' and 'Key is not
+loaded' are now 'Secret is ...', and the validation errors say secret where
+they said key, so a script matching the old wording needs updating.
 
 '--keydata', '--keyring', '--keytype' and '--identity' are reachable only
-under 'nvme keys check-kxchap'. With no '--key' the secret is read from
-stdin, where 2.x reported 'Key not specified'.
+under 'nvme keys check-kxchap-secret'. With no '--key' the secret is read
+from stdin, where 2.x reported 'Key not specified'.
 
-New scripts should use 'nvme keys check-kxchap' instead. This alias prints
-a deprecation warning on stderr and may be removed in a future release.
+New scripts should use 'nvme keys check-kxchap-secret' instead. This alias
+prints a deprecation warning on stderr and may be removed in a future release.
 
-See linknvme-keys-check-kxchap[1] for the full option reference.
+See linknvme-keys-check-kxchap-secret[1] for the full option reference.
 
 include::global-options.txt[]
 
@@ -40,4 +40,4 @@ Part of the nvme-user suite
 
 SEE ALSO
 --------
-linknvme-keys-check-kxchap[1]
+linknvme-keys-check-kxchap-secret[1]

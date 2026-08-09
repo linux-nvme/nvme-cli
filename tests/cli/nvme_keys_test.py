@@ -10,8 +10,8 @@
 Tests invoke the nvme binary directly and need no real NVMe hardware.
 
 They are deliberately restricted to the commands (and option combinations)
-that only generate or validate key material: 'gen-kxchap', 'gen-tls',
-'check-kxchap' and 'check-tls' without '--identity'/'--subsysnqn'. Those
+that only generate or validate key material: 'gen-kxchap-secret', 'gen-tls',
+'check-kxchap-secret' and 'check-tls' without '--identity'/'--subsysnqn'. Those
 never touch a kernel keyring. The remaining commands ('insert-tls',
 'import', 'export', 'revoke', and check-*/--identity or --subsysnqn) look
 up or modify a real '.nvme' keyring via keyctl, whose presence and contents
@@ -91,16 +91,16 @@ class KeysCLITest(unittest.TestCase):
         return self._exec([_NVME_BIN] + list(args), stdin_data, expect_fail)
 
     # ------------------------------------------------------------------ #
-    # gen-kxchap                                                          #
+    # gen-kxchap-secret                                                   #
     # ------------------------------------------------------------------ #
 
     def test_gen_kxchap_default_is_hmac_none(self):
-        result = self._run('gen-kxchap', '--secret=pin:1234')
+        result = self._run('gen-kxchap-secret', '--secret=pin:1234')
         self.assertEqual(result.stdout.strip(), _PIN_KXCHAP_KEY)
 
     def test_gen_kxchap_same_pin_is_deterministic(self):
-        first = self._run('gen-kxchap', '--secret=pin:1234')
-        second = self._run('gen-kxchap', '--secret=pin:1234')
+        first = self._run('gen-kxchap-secret', '--secret=pin:1234')
+        second = self._run('gen-kxchap-secret', '--secret=pin:1234')
         self.assertEqual(first.stdout, second.stdout)
 
     def test_gen_kxchap_hmac_selects_default_secret_length(self):
@@ -110,7 +110,7 @@ class KeysCLITest(unittest.TestCase):
         # base64 characters.
         for hmac, secret_len in ((1, 32), (2, 48), (3, 64)):
             with self.subTest(hmac=hmac):
-                result = self._run('gen-kxchap', f'--hmac={hmac}')
+                result = self._run('gen-kxchap-secret', f'--hmac={hmac}')
                 key = result.stdout.strip()
                 self.assertTrue(key.startswith(f'DHHC-1:0{hmac}:'))
                 self.assertEqual(len(key.split(':')[2]),
@@ -122,7 +122,7 @@ class KeysCLITest(unittest.TestCase):
         for hmac in (0, 1, 2, 3):
             for secret_len in (32, 48, 64):
                 with self.subTest(hmac=hmac, secret_len=secret_len):
-                    result = self._run('gen-kxchap', f'--hmac={hmac}',
+                    result = self._run('gen-kxchap-secret', f'--hmac={hmac}',
                                        f'--key-length={secret_len}')
                     self.assertEqual(len(result.stdout.strip().split(':')[2]),
                                      4 * -(-(secret_len + 4) // 3))
@@ -134,8 +134,8 @@ class KeysCLITest(unittest.TestCase):
         for secret_len in (32, 48, 64):
             with self.subTest(secret_len=secret_len):
                 secret = 'ab' * secret_len
-                implied = self._run('gen-kxchap', f'--secret={secret}')
-                explicit = self._run('gen-kxchap', f'--secret={secret}',
+                implied = self._run('gen-kxchap-secret', f'--secret={secret}')
+                explicit = self._run('gen-kxchap-secret', f'--secret={secret}',
                                      f'--key-length={secret_len}')
                 self.assertEqual(implied.stdout, explicit.stdout)
                 self.assertEqual(
@@ -145,25 +145,26 @@ class KeysCLITest(unittest.TestCase):
     def test_gen_kxchap_invalid_implied_secret_length_fails(self):
         # A hex secret of a length the format does not allow is rejected on
         # the implied path too, not passed on to be truncated or padded.
-        self._run('gen-kxchap', f'--secret={"ab" * 33}', expect_fail=True)
+        self._run('gen-kxchap-secret', f'--secret={"ab" * 33}',
+                  expect_fail=True)
 
     def test_gen_kxchap_odd_hex_secret_fails(self):
         # An odd number of hexadecimal characters is not a whole number of
         # bytes. nvme-cli 2.x padded the trailing nibble with a zero and
         # emitted a secret the caller never gave.
-        self._run('gen-kxchap', f'--secret={"ab" * 31 + "a"}',
+        self._run('gen-kxchap-secret', f'--secret={"ab" * 31 + "a"}',
                   expect_fail=True)
 
     def test_gen_kxchap_secret_length_must_match_the_secret(self):
         # The secret is the payload, so a length that contradicts it is an
         # error rather than a licence to truncate.
-        self._run('gen-kxchap', f'--secret={"ab" * 64}',
+        self._run('gen-kxchap-secret', f'--secret={"ab" * 64}',
                   '--key-length=32', expect_fail=True)
 
     def test_gen_kxchap_nqn_is_rejected(self):
         # The payload is the secret, which no NQN takes part in deriving,
         # so '--nqn' is gone rather than accepted and ignored.
-        self._run('gen-kxchap', '--secret=pin:1234', '--hmac=1',
+        self._run('gen-kxchap-secret', '--secret=pin:1234', '--hmac=1',
                   '--nqn=nqn.2014-08.org.nvmexpress:uuid:abc',
                   expect_fail=True)
 
@@ -234,14 +235,15 @@ class KeysCLITest(unittest.TestCase):
         # transformation the consumer is to apply, so the same secret must
         # encode to the same base64 string whichever one is selected.
         payload = _PIN_KXCHAP_KEY.split(':')[2]
-        result = self._run('gen-kxchap', '--secret=pin:1234', '--hmac=1')
+        result = self._run('gen-kxchap-secret', '--secret=pin:1234',
+                           '--hmac=1')
         self.assertEqual(result.stdout.strip(), f'DHHC-1:01:{payload}:')
 
     def test_gen_kxchap_invalid_hmac_fails(self):
-        self._run('gen-kxchap', '--hmac=9', expect_fail=True)
+        self._run('gen-kxchap-secret', '--hmac=9', expect_fail=True)
 
     def test_gen_kxchap_invalid_secret_length_fails(self):
-        self._run('gen-kxchap', '--key-length=33', expect_fail=True)
+        self._run('gen-kxchap-secret', '--key-length=33', expect_fail=True)
 
     # ------------------------------------------------------------------ #
     # gen-tls                                                             #
@@ -270,11 +272,12 @@ class KeysCLITest(unittest.TestCase):
                   expect_fail=True)
 
     # ------------------------------------------------------------------ #
-    # check-kxchap                                                        #
+    # check-kxchap-secret                                                 #
     # ------------------------------------------------------------------ #
 
     def test_check_kxchap_accepts_generated_key(self):
-        result = self._run('check-kxchap', f'--keydata={_PIN_KXCHAP_KEY}')
+        result = self._run('check-kxchap-secret',
+                           f'--keydata={_PIN_KXCHAP_KEY}')
         self.assertIn('Secret is valid', result.stdout)
         self.assertIn('HMAC 0', result.stdout)
         self.assertIn('length 32', result.stdout)
@@ -287,19 +290,21 @@ class KeysCLITest(unittest.TestCase):
         for hmac in (0, 1, 2, 3):
             for secret_len in (32, 48, 64):
                 with self.subTest(hmac=hmac, secret_len=secret_len):
-                    gen = self._run('gen-kxchap', f'--hmac={hmac}',
+                    gen = self._run('gen-kxchap-secret', f'--hmac={hmac}',
                                     f'--key-length={secret_len}')
                     key = gen.stdout.strip()
-                    result = self._run('check-kxchap', f'--keydata={key}')
+                    result = self._run('check-kxchap-secret',
+                                       f'--keydata={key}')
                     self.assertIn(f'HMAC {hmac}', result.stdout)
                     self.assertIn(f'length {secret_len}', result.stdout)
 
     def test_check_kxchap_reads_from_stdin(self):
-        result = self._run('check-kxchap', stdin_data=_PIN_KXCHAP_KEY + '\n')
+        result = self._run('check-kxchap-secret',
+                           stdin_data=_PIN_KXCHAP_KEY + '\n')
         self.assertIn('Secret is valid', result.stdout)
 
     def test_check_kxchap_rejects_malformed_key(self):
-        result = self._run('check-kxchap', '--keydata=not-a-key',
+        result = self._run('check-kxchap-secret', '--keydata=not-a-key',
                            expect_fail=True)
         self.assertIn('Invalid secret header', result.stdout + result.stderr)
 
@@ -307,7 +312,7 @@ class KeysCLITest(unittest.TestCase):
         # Flip the last character before the CRC to corrupt it while
         # keeping the string a valid-looking base64 header/length.
         tampered = _PIN_KXCHAP_KEY.replace('gajh:', 'gajj:')
-        result = self._run('check-kxchap', f'--keydata={tampered}',
+        result = self._run('check-kxchap-secret', f'--keydata={tampered}',
                            expect_fail=True)
         self.assertIn('CRC mismatch', result.stdout + result.stderr)
 

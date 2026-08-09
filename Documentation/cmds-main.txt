@@ -197,7 +197,7 @@ linknvme:nvme-capacity-mgmt[1]::
 	Capacity Management Command
 
 linknvme:nvme-check-dhchap-key[1]::
-	Check a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-check-kxchap)
+	Check a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-check-kxchap-secret)
 
 linknvme:nvme-check-tls-key[1]::
 	Check a NVMe TLS PSK (deprecated, see nvme-keys-check-tls)
@@ -212,7 +212,7 @@ linknvme:nvme-fid-support-effects-log[1]::
 	Retrieve FID Support and Effects log
 
 linknvme:nvme-gen-dhchap-key[1]::
-	Generate a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-gen-kxchap)
+	Generate a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-gen-kxchap-secret)
 
 linknvme:nvme-gen-hostnqn[1]::
 	Generate NVMeoF host NQN
