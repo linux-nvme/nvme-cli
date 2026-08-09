@@ -103,13 +103,29 @@ class KeysCLITest(unittest.TestCase):
         second = self._run('gen-kxchap', '--secret=pin:1234')
         self.assertEqual(first.stdout, second.stdout)
 
-    def test_gen_kxchap_hmac_selects_key_length(self):
-        # HMAC 1/2/3 map to SHA-256/384/512 and thus 32/48/64-byte keys,
-        # encoded as DHHC-1:<hmac>:<base64 of key+crc>:
-        for hmac, key_len in ((1, 32), (2, 48), (3, 64)):
+    def test_gen_kxchap_hmac_selects_default_secret_length(self):
+        # HMAC 1/2/3 map to SHA-256/384/512, so an unspecified secret
+        # length defaults to the matching 32/48/64 bytes. A secret of len
+        # bytes plus a 4 byte CRC encodes to 4 * ceil((len + 4) / 3)
+        # base64 characters.
+        for hmac, secret_len in ((1, 32), (2, 48), (3, 64)):
             with self.subTest(hmac=hmac):
                 result = self._run('gen-kxchap', f'--hmac={hmac}')
-                self.assertTrue(result.stdout.startswith(f'DHHC-1:0{hmac}:'))
+                key = result.stdout.strip()
+                self.assertTrue(key.startswith(f'DHHC-1:0{hmac}:'))
+                self.assertEqual(len(key.split(':')[2]),
+                                 4 * -(-(secret_len + 4) // 3))
+
+    def test_gen_kxchap_secret_length_is_independent_of_hmac(self):
+        # The hash identifier does not constrain the length of the secret,
+        # so every length is valid with every hash identifier.
+        for hmac in (0, 1, 2, 3):
+            for secret_len in (32, 48, 64):
+                with self.subTest(hmac=hmac, secret_len=secret_len):
+                    result = self._run('gen-kxchap', f'--hmac={hmac}',
+                                       f'--key-length={secret_len}')
+                    self.assertEqual(len(result.stdout.strip().split(':')[2]),
+                                     4 * -(-(secret_len + 4) // 3))
 
     def test_gen_kxchap_nqn_is_rejected(self):
         # The payload is the secret, which no NQN takes part in deriving,
@@ -178,9 +194,8 @@ class KeysCLITest(unittest.TestCase):
     def test_gen_kxchap_invalid_hmac_fails(self):
         self._run('gen-kxchap', '--hmac=9', expect_fail=True)
 
-    def test_gen_kxchap_mismatched_key_length_for_hmac_fails(self):
-        self._run('gen-kxchap', '--hmac=1', '--key-length=48',
-                  expect_fail=True)
+    def test_gen_kxchap_invalid_secret_length_fails(self):
+        self._run('gen-kxchap', '--key-length=33', expect_fail=True)
 
     # ------------------------------------------------------------------ #
     # gen-tls                                                             #
@@ -217,6 +232,21 @@ class KeysCLITest(unittest.TestCase):
         self.assertIn('Key is valid', result.stdout)
         self.assertIn('HMAC 0', result.stdout)
         self.assertIn('length 32', result.stdout)
+
+    def test_check_kxchap_accepts_every_generated_length(self):
+        # gen and check apply the same length rule, so every pair gen
+        # produces must survive the round trip, not just the 32 byte
+        # default. The reported length is the secret's, not the digest
+        # size the hash identifier names.
+        for hmac in (0, 1, 2, 3):
+            for secret_len in (32, 48, 64):
+                with self.subTest(hmac=hmac, secret_len=secret_len):
+                    gen = self._run('gen-kxchap', f'--hmac={hmac}',
+                                    f'--key-length={secret_len}')
+                    key = gen.stdout.strip()
+                    result = self._run('check-kxchap', f'--keydata={key}')
+                    self.assertIn(f'HMAC {hmac}', result.stdout)
+                    self.assertIn(f'length {secret_len}', result.stdout)
 
     def test_check_kxchap_reads_from_stdin(self):
         result = self._run('check-kxchap', stdin_data=_PIN_KXCHAP_KEY + '\n')
