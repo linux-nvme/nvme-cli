@@ -3101,8 +3101,8 @@ plugin_keys_opts () {
 	_nvme_detect_value_completion
 	case "$1" in
 		"gen-kxchap")
-			opts+=" --secret= -s --key-length= -l --nqn= -n --hmac= -m --verbose -v --quiet --output-format= -o --timeout= --dry-run --no-retries --no-ioctl-probing --output-format-version= --set-options="
-			valopts+=" --secret -s --key-length -l --nqn -n --hmac -m --output-format -o --timeout --output-format-version --set-options"
+			opts+=" --secret= -s --key-length= -l --hmac= -m --verbose -v --quiet --output-format= -o --timeout= --dry-run --no-retries --no-ioctl-probing --output-format-version= --set-options="
+			valopts+=" --secret -s --key-length -l --hmac -m --output-format -o --timeout --output-format-version --set-options"
 
 			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
 			               "--output-format-version" "1 2"

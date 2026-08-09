@@ -3,7 +3,7 @@ nvme-gen-dhchap-key(1)
 
 NAME
 ----
-nvme-gen-dhchap-key - Generate a host DH-HMAC-CHAP key (deprecated)
+nvme-gen-dhchap-key - Generate a host DH-HMAC-CHAP secret (deprecated)
 
 SYNOPSIS
 --------
@@ -16,8 +16,13 @@ SYNOPSIS
 DESCRIPTION
 -----------
 Deprecated alias for linknvme-keys-gen-kxchap[1], kept for scripts written
-against nvme-cli versions older than 3.0. Options and behavior are
-identical; only the top-level command name is retained.
+against nvme-cli versions older than 3.0. It forwards to that command, with
+two differences from nvme-cli 2.x:
+
+* '--nqn'/'-n' is accepted and ignored, with a warning.
+* '--secret'/'-s' goes into the DHHC-1 string as it stands, where 2.x put the
+  key transformed from it, so the output differs whenever '--hmac' is
+  non-zero.
 
 New scripts should use 'nvme keys gen-kxchap' instead. This alias prints a
 deprecation warning on stderr and may be removed in a future release.

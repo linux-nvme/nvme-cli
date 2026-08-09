@@ -23,6 +23,11 @@
   TP4201. See `nvme-keys-gen-kxchap(1)` and
   `nvme-keys-check-kxchap(1)`.
 
+* `nvme gen-dhchap-key` emits the secret it was given rather than the
+  key transformed from it, so its output differs whenever `--hmac` is
+  non-zero. `--nqn`/`-n` fed only that transform and is now accepted
+  with a warning and ignored. See `nvme-gen-dhchap-key(1)`.
+
 * All `nvme *-log` commands (`smart-log`, `ana-log`, `error-log`,
   `fw-log`, `telemetry-log`, `self-test-log`, `sanitize-log`, and the
   rest of the get-log-page family, `get-log` excepted) have moved

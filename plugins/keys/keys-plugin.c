@@ -45,17 +45,16 @@ static int read_key_value(const char *inline_value, char **out)
 static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
-	    "Generate a KX-HMAC-CHAP host key usable for NVMe In-Band Authentication.";
+	    "Generate a KX-HMAC-CHAP secret in the DHHC-1 representation, usable for\n"
+	    "NVMe In-Band Authentication.";
 	const char *secret =
-	    "Optional secret (in hexadecimal characters) to be used to initialize the host key.";
-	const char *key_len = "Length of the resulting key (32, 48, or 64 bytes).";
+	    "Optional secret (in hexadecimal characters) to be placed in the representation.";
+	const char *key_len = "Length of the secret (32, 48, or 64 bytes).";
 	const char *hmac =
-	    "HMAC function to use for key transformation (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).";
-	const char *nqn = "Host NQN to use for key transformation.";
+	    "Hash function the consumer is to apply to the secret (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free unsigned char *raw_secret = NULL;
-	__cleanup_free char *hnqn = NULL;
 	unsigned char key[68];
 	char encoded_key[128];
 	unsigned long crc = shr_crc32(0L, NULL, 0);
@@ -64,21 +63,18 @@ static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin
 	struct config {
 		char		*secret;
 		unsigned int	key_len;
-		char		*nqn;
 		unsigned int	hmac;
 	};
 
 	struct config cfg = {
 		.secret		= NULL,
 		.key_len	= 0,
-		.nqn		= NULL,
 		.hmac		= 0,
 	};
 
 	NVME_ARGS(opts,
 		  OPT_STR("secret",		's', &cfg.secret,	secret),
 		  OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
-		  OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
 		  OPT_UINT("hmac",		'm', &cfg.hmac,		hmac));
 
 	err = parse_args(argc, argv, desc, opts);
@@ -130,17 +126,7 @@ static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin
 	if (err)
 		return err;
 
-	if (!cfg.nqn) {
-		err = libnvmf_host_get_ids(ctx, NULL, NULL, &hnqn, NULL);
-		if (err)
-			return err;
-		cfg.nqn = hnqn;
-	}
-
-	err = libnvmf_gen_kxchap_key(ctx, cfg.nqn, cfg.hmac,
-		cfg.key_len, raw_secret, key);
-	if (err)
-		return err;
+	memcpy(key, raw_secret, cfg.key_len);
 
 	crc = shr_crc32(crc, key, cfg.key_len);
 	key[cfg.key_len++] = crc & 0xff;
