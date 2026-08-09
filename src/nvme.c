@@ -8152,9 +8152,72 @@ static int forward_to_keys_plugin(const char *old_name, const char *subcmd,
 	return handle_plugin(argc + 1, sub_argv, keys);
 }
 
+/*
+ * gen-kxchap dropped --nqn with the transform that used it. Take it here
+ * anyway, warn, and drop it, so a 2.x command line still works.
+ */
 static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	return forward_to_keys_plugin("gen-dhchap-key", "gen-kxchap", argc, argv);
+	const char *desc =
+	    "Generate a KX-HMAC-CHAP secret in the DHHC-1 representation, usable for\n"
+	    "NVMe In-Band Authentication.\n"
+	    "Deprecated; use 'nvme keys gen-kxchap' instead.";
+	const char *secret =
+	    "Optional secret (in hexadecimal characters) to be placed in the representation.";
+	const char *key_len = "Length of the secret (32, 48, or 64 bytes).";
+	const char *hmac =
+	    "Hash function the consumer is to apply to the secret (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).";
+	const char *nqn =
+	    "Accepted and ignored; nvme-cli 2.x keyed the transform with it.";
+
+	char key_len_buf[16], hmac_buf[16];
+	char *args[8] = { argv[0] };
+	int nargs = 1, err;
+
+	struct config {
+		char		*secret;
+		unsigned int	key_len;
+		char		*nqn;
+		unsigned int	hmac;
+	};
+
+	struct config cfg = {
+		.secret		= NULL,
+		.key_len	= 0,
+		.nqn		= NULL,
+		.hmac		= 0,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STR("secret",		's', &cfg.secret,	secret),
+		  OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
+		  OPT_STR("nqn",		'n', &cfg.nqn,		nqn),
+		  OPT_UINT("hmac",		'm', &cfg.hmac,		hmac));
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "nqn"))
+		fprintf(stderr,
+			"WARNING: '--nqn' is ignored, the DHHC-1 string carries the secret itself, which no NQN takes part in deriving\n");
+
+	if (argconfig_parse_seen(opts, "secret")) {
+		args[nargs++] = "--secret";
+		args[nargs++] = cfg.secret;
+	}
+	if (argconfig_parse_seen(opts, "key-length")) {
+		snprintf(key_len_buf, sizeof(key_len_buf), "%u", cfg.key_len);
+		args[nargs++] = "--key-length";
+		args[nargs++] = key_len_buf;
+	}
+	if (argconfig_parse_seen(opts, "hmac")) {
+		snprintf(hmac_buf, sizeof(hmac_buf), "%u", cfg.hmac);
+		args[nargs++] = "--hmac";
+		args[nargs++] = hmac_buf;
+	}
+
+	return forward_to_keys_plugin("gen-dhchap-key", "gen-kxchap", nargs, args);
 }
 
 static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)

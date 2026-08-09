@@ -22,6 +22,12 @@ behavior. Their argument-validation errors that are checked *before* any
 keyring access (e.g. "insert-tls" without "--subsysnqn") are still safe to
 test and are included below.
 
+The deprecated top-level aliases ('nvme gen-dhchap-key' and friends) are
+out of scope with one exception: where an alias does something of its own
+rather than forwarding argv unchanged, that behavior is covered here. They
+are compiled in only with '-Ddeprecated-cmds=enabled', so those tests skip
+themselves when the binary under test has no such command.
+
 A '--secret=pin:<value>' input deterministically derives the same raw
 secret on every run (unlike the default, which is random), which is what
 makes exact-output assertions below possible.
@@ -37,15 +43,32 @@ _NVME_BIN = sys.argv[1] \
     if len(sys.argv) > 1 and not sys.argv[1].startswith('-') \
     else 'nvme'
 
+
+def _has_deprecated_cmds():
+    """The deprecated aliases need -Ddeprecated-cmds=enabled to exist."""
+    import subprocess
+    result = subprocess.run([_NVME_BIN, 'help'],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            encoding='utf-8')
+    return 'gen-dhchap-key' in result.stdout + result.stderr
+
+
+_DEPRECATED_CMDS = _has_deprecated_cmds()
+
 _PIN_KXCHAP_KEY = 'DHHC-1:00:9wCYVQqDvADjGIZo6q/v2SfmXZqqkNa9TcvYu97Ly3Q/gajh:'
 _PIN_TLS_KEY = 'NVMeTLSkey-1:01:9wCYVQqDvADjGIZo6q/v2SfmXZqqkNa9TcvYu97Ly3Q/gajh:'
+_HOST_NQN = 'nqn.2014-08.org.nvmexpress:uuid:abc'
+# The alias prints this when it drops '--nqn'. Matching the option
+# name alone would also hit the getopt error listing it as a
+# candidate, and the help text naming it.
+_NQN_IGNORED = "'--nqn' is ignored"
 
 
 class KeysCLITest(unittest.TestCase):
 
-    def _run(self, *args, stdin_data=None, expect_fail=False):
+    def _exec(self, cmd, stdin_data=None, expect_fail=False):
         import subprocess
-        cmd = [_NVME_BIN, 'keys'] + list(args)
         result = subprocess.run(cmd, input=stdin_data,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
@@ -58,6 +81,14 @@ class KeysCLITest(unittest.TestCase):
             self.assertEqual(result.returncode, 0,
                              f'Command {cmd} failed:\n{result.stderr}')
         return result
+
+    def _run(self, *args, stdin_data=None, expect_fail=False):
+        return self._exec([_NVME_BIN, 'keys'] + list(args),
+                          stdin_data, expect_fail)
+
+    def _run_alias(self, *args, stdin_data=None, expect_fail=False):
+        """Run a deprecated top-level command, not the 'keys' plugin."""
+        return self._exec([_NVME_BIN] + list(args), stdin_data, expect_fail)
 
     # ------------------------------------------------------------------ #
     # gen-kxchap                                                          #
@@ -80,12 +111,69 @@ class KeysCLITest(unittest.TestCase):
                 result = self._run('gen-kxchap', f'--hmac={hmac}')
                 self.assertTrue(result.stdout.startswith(f'DHHC-1:0{hmac}:'))
 
-    def test_gen_kxchap_nqn_changes_transformed_key(self):
-        one = self._run('gen-kxchap', '--secret=pin:1234', '--hmac=1',
-                        '--nqn=nqn.2014-08.org.nvmexpress:uuid:abc')
-        two = self._run('gen-kxchap', '--secret=pin:1234', '--hmac=1',
-                        '--nqn=nqn.2014-08.org.nvmexpress:uuid:xyz')
-        self.assertNotEqual(one.stdout, two.stdout)
+    def test_gen_kxchap_nqn_is_rejected(self):
+        # The payload is the secret, which no NQN takes part in deriving,
+        # so '--nqn' is gone rather than accepted and ignored.
+        self._run('gen-kxchap', '--secret=pin:1234', '--hmac=1',
+                  '--nqn=nqn.2014-08.org.nvmexpress:uuid:abc',
+                  expect_fail=True)
+
+    @unittest.skipUnless(_DEPRECATED_CMDS, 'built without deprecated commands')
+    def test_gen_dhchap_key_alias_drops_nqn(self):
+        # Every spelling nvme-cli 2.x accepted for the host NQN: one or two
+        # dashes before a prefix of 'nqn' that stayed unambiguous against
+        # the global --no-retries, with the value as the next argument,
+        # attached by '=', or attached bare to the short option. The
+        # trailing '--hmac=1' must survive, so a consumed value cannot
+        # have swallowed the option after it.
+        forms = [(s, _HOST_NQN)
+                 for s in ('-n', '-nq', '-nqn', '--nq', '--nqn')]
+        forms += [(f'{s}={_HOST_NQN}',)
+                  for s in ('-nq', '-nqn', '--nq', '--nqn')]
+        forms += [(f'-n{_HOST_NQN}',)]      # short option, value attached
+
+        expected = self._run_alias('gen-dhchap-key', '--secret=pin:1234',
+                                   '--hmac=1')
+        for form in forms:
+            with self.subTest(form=form):
+                result = self._run_alias('gen-dhchap-key',
+                                         '--secret=pin:1234', *form,
+                                         '--hmac=1')
+                self.assertEqual(result.stdout, expected.stdout)
+                self.assertIn(_NQN_IGNORED, result.stderr)
+
+    @unittest.skipUnless(_DEPRECATED_CMDS, 'built without deprecated commands')
+    def test_gen_dhchap_key_alias_keeps_2x_rejections(self):
+        # '--n' was ambiguous with --no-retries even in 2.x, and so were
+        # '-n=<nqn>' and '--n=<nqn>'. Keep rejecting them rather than
+        # accepting more than the command ever did.
+        for form in (('--n', _HOST_NQN), (f'-n={_HOST_NQN}',),
+                     (f'--n={_HOST_NQN}',)):
+            with self.subTest(form=form):
+                result = self._run_alias('gen-dhchap-key',
+                                         '--secret=pin:1234', *form,
+                                         expect_fail=True)
+                self.assertNotIn(_NQN_IGNORED, result.stderr)
+
+    @unittest.skipUnless(_DEPRECATED_CMDS, 'built without deprecated commands')
+    def test_gen_dhchap_key_alias_keeps_other_options(self):
+        # Dropping '--nqn' must not swallow the global options that also
+        # start with an 'n', which getopt_long_only() accepts with a
+        # single dash.
+        for opt in ('-no-retries', '--no-retries', '--no-ioctl-probing'):
+            with self.subTest(opt=opt):
+                result = self._run_alias('gen-dhchap-key',
+                                         '--secret=pin:1234', opt)
+                self.assertEqual(result.stdout.strip(), _PIN_KXCHAP_KEY)
+                self.assertNotIn(_NQN_IGNORED, result.stderr)
+
+    def test_gen_kxchap_hmac_does_not_change_payload(self):
+        # The payload is the secret; the hash identifier only records which
+        # transformation the consumer is to apply, so the same secret must
+        # encode to the same base64 string whichever one is selected.
+        payload = _PIN_KXCHAP_KEY.split(':')[2]
+        result = self._run('gen-kxchap', '--secret=pin:1234', '--hmac=1')
+        self.assertEqual(result.stdout.strip(), f'DHHC-1:01:{payload}:')
 
     def test_gen_kxchap_invalid_hmac_fails(self):
         self._run('gen-kxchap', '--hmac=9', expect_fail=True)

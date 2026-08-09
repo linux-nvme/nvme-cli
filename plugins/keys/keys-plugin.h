@@ -16,7 +16,7 @@
 
 PLUGIN(NAME_CORE("keys", "Manage NVMeoF KX-HMAC-CHAP and TLS keys", NVME_VERSION),
 	COMMAND_LIST(
-		ENTRY("gen-kxchap", "Generate NVMeoF KX-HMAC-CHAP host key", gen_kxchap)
+		ENTRY("gen-kxchap", "Generate NVMeoF KX-HMAC-CHAP host secret", gen_kxchap)
 		ENTRY("check-kxchap", "Validate NVMeoF KX-HMAC-CHAP host key format or check if loaded", check_kxchap)
 		ENTRY("gen-tls", "Generate NVMeoF TLS PSK", gen_tls)
 		ENTRY("check-tls", "Validate NVMeoF TLS PSK format or check if loaded", check_tls)

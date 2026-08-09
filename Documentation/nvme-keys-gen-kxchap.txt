@@ -3,7 +3,7 @@ nvme-keys-gen-kxchap(1)
 
 NAME
 ----
-nvme-keys-gen-kxchap - Generate a host KX-HMAC-CHAP key
+nvme-keys-gen-kxchap - Generate a host KX-HMAC-CHAP secret
 
 SYNOPSIS
 --------
@@ -11,11 +11,11 @@ SYNOPSIS
 'nvme' [<global-options>] 'keys gen-kxchap' [--hmac=<hmac-id> | -m <hmac-id>]
 			[--secret=<secret> | -s <secret>]
 			[--key-length=<len> | -l <len>]
-			[--nqn=<host-nqn> | -n <host-nqn>]
 
 DESCRIPTION
 -----------
-Generate a base64-encoded KX-HMAC-CHAP host key in the form:
+Generate a KX-HMAC-CHAP secret in the DHHC-1 secret representation defined by
+the NVM Express Base Specification 2.4, section 8.3.4.5.8, in the form:
 DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
 and prints it to stdout.
 
@@ -23,25 +23,21 @@ OPTIONS
 -------
 -m <hmac-id>::
 --hmac=<hmac-id>::
-	Select a HMAC algorithm to use. Possible values are:
-	0 - No HMAC algorithm
+	Select the hash function the consumer is to apply to the secret.
+	Possible values are:
+	0 - No transformation (the secret is used as the key)
 	1 - SHA-256
 	2 - SHA-384
 	3 - SHA-512
 
 -s <secret>::
 --secret=<secret>::
-	Secret value (in hexadecimal) to be used for the key. If none are
-	provided a random value is used.
+	Secret value (in hexadecimal) to be placed in the representation. If
+	none are provided a random value is used.
 
 -l <len>::
 --key-length=<len>::
-	Length of the resulting key. Possible values are 32, 48, or 64.
-
--n <hostnqn>::
---nqn=<hostnqn>::
-	Host-NQN to be used for the transformation. This parameter is only
-	valid if a non-zero HMAC function has been specified.
+	Length of the secret. Possible values are 32, 48, or 64.
 
 include::global-options.txt[]
 

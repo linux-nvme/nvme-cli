@@ -212,7 +212,7 @@ linknvme:nvme-fid-support-effects-log[1]::
 	Retrieve FID Support and Effects log
 
 linknvme:nvme-gen-dhchap-key[1]::
-	Generate a host DH-HMAC-CHAP key (deprecated, see nvme-keys-gen-kxchap)
+	Generate a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-gen-kxchap)
 
 linknvme:nvme-gen-hostnqn[1]::
 	Generate NVMeoF host NQN
