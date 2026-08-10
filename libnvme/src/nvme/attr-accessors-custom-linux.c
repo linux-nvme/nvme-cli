@@ -8,11 +8,120 @@
 
 #include <ccan/endian/endian.h>
 #include <ccan/ilog/ilog.h>
+#include <dirent.h>
+#include <errno.h>
 
+#include "cleanup-linux.h"
+#include "lib.h"
 #include "mem.h"
 #include "util.h"
 
-#include "generated/ns-attrs.c"
+#include "generated/attr-accessors.c"
+#include "generated/attr-accessors-linux.c"
+
+#ifdef CONFIG_FABRICS
+int libnvmf_ctrl_load_fabrics_attrs(struct libnvme_ctrl *c)
+{
+	__cleanup_free char *tls_key = NULL;
+	char *host_key, *ctrl_key;
+
+	host_key = libnvme_get_ctrl_attr(c, "dhchap_secret");
+	if (host_key && !strcmp(host_key, "none")) {
+		free(host_key);
+		host_key = NULL;
+	}
+	if (host_key) {
+		ATTR_FREE(c->attrs->dhchap_host_key);
+		c->attrs->dhchap_host_key = host_key;
+	}
+
+	ctrl_key = libnvme_get_ctrl_attr(c, "dhchap_ctrl_secret");
+	if (ctrl_key && !strcmp(ctrl_key, "none")) {
+		free(ctrl_key);
+		ctrl_key = NULL;
+	}
+	if (ctrl_key) {
+		ATTR_FREE(c->attrs->dhchap_ctrl_key);
+		c->attrs->dhchap_ctrl_key = ctrl_key;
+	}
+
+	/*
+	 * tls_key's presence gates keyring the same way it gates cfg's
+	 * tls_key_id in tree-fabrics.c's libnvmf_read_sysfs_tls() -- read
+	 * again here rather than threading state between the two, since
+	 * cfg stays eager while this group is lazy.
+	 */
+	tls_key = libnvme_get_ctrl_attr(c, "tls_key");
+	if (tls_key)
+		c->attrs->keyring = libnvme_get_ctrl_attr(c, "tls_keyring");
+
+	return 0;
+}
+#else
+int libnvmf_ctrl_load_fabrics_attrs(__shr_unused struct libnvme_ctrl *c)
+{
+	return 0;
+}
+#endif
+
+int libnvme_ctrl_load_identity(struct libnvme_ctrl *c)
+{
+	c->attrs->firmware = libnvme_get_ctrl_attr(c, "firmware_rev");
+	c->attrs->model = libnvme_get_ctrl_attr(c, "model");
+	c->attrs->serial = libnvme_get_ctrl_attr(c, "serial");
+	c->attrs->cntrltype = libnvme_get_ctrl_attr(c, "cntrltype");
+	c->attrs->cntlid = libnvme_get_ctrl_attr(c, "cntlid");
+	c->attrs->dctype = libnvme_get_ctrl_attr(c, "dctype");
+
+	return 0;
+}
+
+int libnvme_ctrl_load_phy_slot(struct libnvme_ctrl *c)
+{
+	const char *slots_sysfs_dir = libnvme_slots_sysfs_dir(c->ctx);
+	__cleanup_free char *target_addr = NULL;
+	__cleanup_dir DIR *slots_dir = NULL;
+	struct dirent *entry;
+	int ret;
+
+	if (!c->address)
+		return 0;
+
+	slots_dir = opendir(slots_sysfs_dir);
+	if (!slots_dir) {
+		ret = -errno;
+		libnvme_msg(c->ctx, LIBNVME_LOG_WARN,
+			"failed to open slots dir %s\n", slots_sysfs_dir);
+		return ret;
+	}
+
+	target_addr = strndup(c->address, 10);
+	while ((entry = readdir(slots_dir))) {
+		__cleanup_free char *path = NULL;
+		__cleanup_free char *addr = NULL;
+
+		if (entry->d_type != DT_DIR ||
+		    !strncmp(entry->d_name, ".", 1) ||
+		    !strncmp(entry->d_name, "..", 2))
+			continue;
+
+		ret = asprintf(&path, "%s/%s", slots_sysfs_dir, entry->d_name);
+		if (ret < 0)
+			return -ENOMEM;
+
+		/* some directories don't have an address entry */
+		addr = libnvme_get_attr(path, "address");
+		if (!addr)
+			continue;
+		if (strcmp(addr, target_addr))
+			continue;
+
+		c->attrs->phy_slot = strdup(entry->d_name);
+		return 0;
+	}
+
+	return 0;
+}
 
 /*
  * No "csi" attribute: lba_count/lba_util/meta_size come from one

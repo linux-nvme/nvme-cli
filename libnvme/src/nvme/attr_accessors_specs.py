@@ -7,35 +7,36 @@ ATTR_SPECS at the bottom of this file -- that is the only thing
 generate_attr_accessors.py actually imports; it generates every entry in
 one run. See ../../design/tooling/generate_attr_accessors.md for the
 schema each dict follows and how to add a new member.
+
+Every entry's 'source'/'header'/'ld'/'swig'/'ld_section' keys must be
+identical across the whole list -- generate_attr_accessors.py merges
+every struct into one shared attr-accessors.{c,h,ld,i} set (plus
+attr-accessors-{linux,win}.c for whichever structs have OS-divergent
+members) rather than one file set per struct, so there is nothing to
+choose per entry. 'ld_section' is 'LIBNVME_ATTR_ACCESSORS_NEXT', not a
+real version number: the committed .ld is hand-written and never
+auto-overwritten (see update-attr-accessors.sh), so this string only
+ever appears in the generator's own scratch copy -- it is not diffed,
+not enforced, and never echoed back to the maintainer. Which version
+tag a symbol actually lands under is entirely the maintainer's call at
+commit time (see accessor-workflow.md); a real-looking version number
+here would just go stale the first time that tag chains past _3.
 """
 
+_SHARED = {
+    'source': 'attr-accessors.c',
+    'header': 'attr-accessors.h',
+    'ld': 'attr-accessors.ld',
+    'swig': 'attr-accessors.i',
+    'ld_section': 'LIBNVME_ATTR_ACCESSORS_NEXT',
+}
+
 CTRL_ATTRS = {
+    **_SHARED,
     'struct_name': 'libnvme_ctrl_attrs',
     'owner_type': 'libnvme_ctrl',
     'owner_field': 'attrs',
     'attr_reader': 'libnvme_get_ctrl_attr',
-    'source': 'ctrl-attrs.c',
-    'header': 'ctrl-attrs.h',
-    'ld': 'ctrl-attrs.ld',
-    'swig': 'ctrl-attrs.i',
-    # A distinct top-level tag, not LIBNVME_ACCESSORS_3: ld rejects two
-    # --version-script files both defining the same tag (confirmed the
-    # hard way -- "duplicate version tag" -- ctrl-attrs.ld and
-    # accessors.ld are separate generator outputs, so a shared tag isn't
-    # achievable without hand-merging one into the other on every
-    # regeneration of either). Matches the existing precedent of
-    # accessors-fabrics.ld/libnvmf.ld/libnvme-mi.ld each having their
-    # own independent tag rather than chaining.
-    #
-    # NEXT, not a real version number: the committed .ld is hand-written
-    # and never auto-overwritten (see update-attr-accessors.sh), so
-    # this string only ever appears in this file's own generated scratch
-    # copy -- it is not diffed, not enforced, and never echoed back to
-    # the maintainer. Which version tag a symbol actually lands under is
-    # entirely the maintainer's call at commit time (see
-    # accessor-workflow.md); a real-looking version number here would
-    # just go stale the first time that tag chains past _3.
-    'ld_section': 'LIBNVME_CTRL_ATTRS_NEXT',
     'members': [
         {
             'name': 'numa_node',
@@ -87,7 +88,7 @@ CTRL_ATTRS = {
             # get a setter they don't strictly need as a result -- a
             # deliberate tradeoff over splitting the group and risking
             # a second Identify call. Loader body varies by OS -- see
-            # ctrl-attrs-custom-linux.c / ctrl-attrs-custom-win.c.
+            # attr-accessors-custom-linux.c / attr-accessors-custom-win.c.
             'loader': 'libnvme_ctrl_load_identity',
             'reconfigure_reset': True,
             'writable': True,
@@ -101,8 +102,8 @@ CTRL_ATTRS = {
             ],
         },
         {
-            # Loader body varies by OS -- see ctrl-attrs-custom-linux.c /
-            # ctrl-attrs-custom-win.c.
+            # Loader body varies by OS -- see attr-accessors-custom-linux.c /
+            # attr-accessors-custom-win.c.
             'loader': 'libnvme_ctrl_load_phy_slot',
             'reconfigure_reset': True,
             'members': [
@@ -110,8 +111,9 @@ CTRL_ATTRS = {
             ],
         },
         {
-            # Loader body varies by CONFIG_FABRICS -- see
-            # ctrl-attrs-custom-fabrics.c / ctrl-attrs-custom-no-fabrics.c.
+            # Loader body varies by CONFIG_FABRICS (Linux only -- always
+            # a no-op on Windows) -- see attr-accessors-custom-linux.c /
+            # attr-accessors-custom-win.c.
             'loader': 'libnvmf_ctrl_load_fabrics_attrs',
             'reconfigure_reset': True,
             'writable': True,
@@ -125,20 +127,13 @@ CTRL_ATTRS = {
 }
 
 PATH_ATTRS = {
+    **_SHARED,
     'struct_name': 'libnvme_path_attrs',
     'owner_type': 'libnvme_path',
     'owner_field': 'attrs',
     'attr_reader': 'libnvme_get_path_attr',
-    'source': 'path-attrs.c',
-    'source_linux': 'path-attrs-linux.c',
-    'source_win': 'path-attrs-win.c',
-    'header': 'path-attrs.h',
-    'ld': 'path-attrs.ld',
-    'swig': 'path-attrs.i',
-    # See CTRL_ATTRS's ld_section comment above: NEXT, not a real
-    # version number -- this string is never diffed or enforced, only
-    # read by a human deciding the actual tag by hand.
-    'ld_section': 'LIBNVME_PATH_ATTRS_NEXT',
+    'source_linux': 'attr-accessors-linux.c',
+    'source_win': 'attr-accessors-win.c',
     # No reconfigure_reset on any member: a path is never updated in
     # place on rescan -- libnvme_ctrl_scan_path() always calloc()s a new
     # one -- so there is no in-place-invalidate event these fields would
@@ -203,17 +198,11 @@ PATH_ATTRS = {
 }
 
 NS_ATTRS = {
+    **_SHARED,
     'struct_name': 'libnvme_ns_attrs',
     'owner_type': 'libnvme_ns',
     'owner_field': 'attrs',
     'attr_reader': 'libnvme_get_ns_attr',
-    'source': 'ns-attrs.c',
-    'header': 'ns-attrs.h',
-    'ld': 'ns-attrs.ld',
-    'swig': 'ns-attrs.i',
-    # See CTRL_ATTRS's ld_section comment above: NEXT, not a real
-    # version number.
-    'ld_section': 'LIBNVME_NS_ATTRS_NEXT',
     # No reconfigure_reset on any member: like libnvme_path, an ns is
     # never updated in place on rescan -- libnvme_ctrl_scan_namespace()
     # always finds-or-frees the old one and installs a fresh one -- so
@@ -224,10 +213,11 @@ NS_ATTRS = {
         # 'custom': True -- the struct field (boxed, same NULL/
         # NO_ATTR/real-value tri-state every other cached numeric
         # member uses) and the header prototype are generated as usual,
-        # but the getter body is hand-written in ns-attrs-custom-<os>.c,
-        # not generated. Needed because none of the three axes this
-        # generator understands (plain attr, volatile attr, loader
-        # group) can express what these six actually require: lba_shift
+        # but the getter body is hand-written in
+        # attr-accessors-custom-<os>.c, not generated. Needed because
+        # none of the three axes this generator understands (plain
+        # attr, volatile attr, loader group) can express what these six
+        # actually require: lba_shift
         # is derived from lba_size, not read from anywhere; the other
         # five each pick between two genuinely different sysfs-vs-
         # Identify sources at runtime, keyed by whether the "csi"
@@ -272,10 +262,10 @@ NS_ATTRS = {
         # while the public getter hands back a pointer-to-const view of
         # it (see _pub_type()) -- int fn(p, const TYPE **val, const
         # TYPE *dflt), same shape as any other lazy getter, no new axis
-        # needed. Bodies are hand-written in ns-attrs-custom-linux.c
-        # (real sysfs reads) and ns-attrs-custom-win.c (always -ENOENT,
-        # Windows never had a source for these either -- same as csi's
-        # Windows getter).
+        # needed. Bodies are hand-written in
+        # attr-accessors-custom-linux.c (real sysfs reads) and
+        # attr-accessors-custom-win.c (always -ENOENT, Windows never had
+        # a source for these either -- same as csi's Windows getter).
         {
             'name': 'eui64',
             'type': 'uint8_t *',
@@ -326,17 +316,11 @@ NS_ATTRS = {
 }
 
 SUBSYS_ATTRS = {
+    **_SHARED,
     'struct_name': 'libnvme_subsystem_attrs',
     'owner_type': 'libnvme_subsystem',
     'owner_field': 'attrs',
     'attr_reader': 'libnvme_get_subsys_attr',
-    'source': 'subsys-attrs.c',
-    'header': 'subsys-attrs.h',
-    'ld': 'subsys-attrs.ld',
-    'swig': 'subsys-attrs.i',
-    # See CTRL_ATTRS's ld_section comment above: NEXT, not a real
-    # version number.
-    'ld_section': 'LIBNVME_SUBSYS_ATTRS_NEXT',
     # No reconfigure_reset on any member: a subsystem is never updated
     # in place -- libnvme_get_subsystem() always looks up an existing
     # one by name/subsysnqn or creates a fresh one, there is no

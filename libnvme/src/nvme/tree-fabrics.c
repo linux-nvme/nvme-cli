@@ -311,7 +311,7 @@ static ctrl_match_t libnvmf_candidate_init(struct libnvme_global_ctx *ctx,
 
 /*
  * dhchap_host_key/dhchap_ctrl_key/keyring moved to the lazy
- * libnvmf_ctrl_load_fabrics_attrs() (ctrl-attrs-custom-fabrics.c) --
+ * libnvmf_ctrl_load_fabrics_attrs() (attr-accessors-custom-fabrics.c) --
  * this function keeps only the cfg.* fields, which stay eager since cfg
  * is out of the lazy attrs struct entirely. tls_key's presence is
  * checked again by the lazy loader for keyring -- see the comment

@@ -27,7 +27,7 @@
 
 #include "../private.h"
 #include "../private-tree.h"
-#include "ctrl-attrs.h"
+#include "attr-accessors.h"
 
 struct libnvme_ctrl_attrs {
 	char *numa_node;
@@ -533,6 +533,320 @@ __shr_public int libnvme_ctrl_get_keyring(
 		return -ENOENT;
 
 	*val = c->attrs->keyring;
+	return 0;
+}
+
+struct libnvme_path_attrs {
+	char *ana_state;
+	char *numa_nodes;
+	int *grpid;
+	int queue_depth;
+	long multipath_failover_count;
+	long command_retry_count;
+	long command_error_count;
+};
+
+struct libnvme_path_attrs *libnvme_path_attrs_alloc(void)
+{
+	return calloc(1, sizeof(struct libnvme_path_attrs));
+}
+
+void libnvme_path_attrs_reset(
+		struct libnvme_path_attrs *attrs)
+{
+	if (!attrs)
+		return;
+
+}
+
+void libnvme_path_attrs_free(
+		struct libnvme_path_attrs *attrs)
+{
+	if (!attrs)
+		return;
+
+	ATTR_FREE(attrs->ana_state);
+	ATTR_FREE(attrs->numa_nodes);
+	ATTR_FREE(attrs->grpid);
+	free(attrs);
+}
+
+struct libnvme_ns_attrs {
+	int *lba_size;
+	int *lba_shift;
+	uint64_t *lba_count;
+	uint64_t *lba_util;
+	int *meta_size;
+	enum nvme_csi *csi;
+	uint8_t *eui64;
+	uint8_t *nguid;
+	unsigned char *uuid;
+	long command_retry_count;
+	long command_error_count;
+	long io_requeue_no_usable_path_count;
+	long io_fail_no_available_path_count;
+};
+
+struct libnvme_ns_attrs *libnvme_ns_attrs_alloc(void)
+{
+	return calloc(1, sizeof(struct libnvme_ns_attrs));
+}
+
+void libnvme_ns_attrs_reset(
+		struct libnvme_ns_attrs *attrs)
+{
+	if (!attrs)
+		return;
+
+}
+
+void libnvme_ns_attrs_free(
+		struct libnvme_ns_attrs *attrs)
+{
+	if (!attrs)
+		return;
+
+	ATTR_FREE(attrs->lba_size);
+	ATTR_FREE(attrs->lba_shift);
+	ATTR_FREE(attrs->lba_count);
+	ATTR_FREE(attrs->lba_util);
+	ATTR_FREE(attrs->meta_size);
+	ATTR_FREE(attrs->csi);
+	ATTR_FREE(attrs->eui64);
+	ATTR_FREE(attrs->nguid);
+	ATTR_FREE(attrs->uuid);
+	free(attrs);
+}
+
+__shr_public int libnvme_ns_get_command_retry_count(
+		const struct libnvme_ns *p,
+		long *val,
+		long dflt)
+{
+	struct libnvme_ns *c = (struct libnvme_ns *)p;
+	__cleanup_free char *str = NULL;
+
+	*val = dflt;
+
+	str = libnvme_get_ns_attr(c, "diag/command_retry_count");
+	if (!str)
+		return -ENOENT;
+
+	if (sscanf(str, "%ld", &c->attrs->command_retry_count) != 1)
+		return -EINVAL;
+
+	*val = c->attrs->command_retry_count;
+	return 0;
+}
+
+__shr_public int libnvme_ns_get_command_error_count(
+		const struct libnvme_ns *p,
+		long *val,
+		long dflt)
+{
+	struct libnvme_ns *c = (struct libnvme_ns *)p;
+	__cleanup_free char *str = NULL;
+
+	*val = dflt;
+
+	str = libnvme_get_ns_attr(c, "diag/command_error_count");
+	if (!str)
+		return -ENOENT;
+
+	if (sscanf(str, "%ld", &c->attrs->command_error_count) != 1)
+		return -EINVAL;
+
+	*val = c->attrs->command_error_count;
+	return 0;
+}
+
+__shr_public int libnvme_ns_get_io_requeue_no_usable_path_count(
+		const struct libnvme_ns *p,
+		long *val,
+		long dflt)
+{
+	struct libnvme_ns *c = (struct libnvme_ns *)p;
+	__cleanup_free char *str = NULL;
+
+	*val = dflt;
+
+	str = libnvme_get_ns_attr(c, "diag/io_requeue_no_usable_path_count");
+	if (!str)
+		return -ENOENT;
+
+	if (sscanf(str, "%ld", &c->attrs->io_requeue_no_usable_path_count) != 1)
+		return -EINVAL;
+
+	*val = c->attrs->io_requeue_no_usable_path_count;
+	return 0;
+}
+
+__shr_public int libnvme_ns_get_io_fail_no_available_path_count(
+		const struct libnvme_ns *p,
+		long *val,
+		long dflt)
+{
+	struct libnvme_ns *c = (struct libnvme_ns *)p;
+	__cleanup_free char *str = NULL;
+
+	*val = dflt;
+
+	str = libnvme_get_ns_attr(c, "diag/io_fail_no_available_path_count");
+	if (!str)
+		return -ENOENT;
+
+	if (sscanf(str, "%ld", &c->attrs->io_fail_no_available_path_count) != 1)
+		return -EINVAL;
+
+	*val = c->attrs->io_fail_no_available_path_count;
+	return 0;
+}
+
+struct libnvme_subsystem_attrs {
+	char *model;
+	char *serial;
+	char *firmware;
+	char *iopolicy;
+};
+
+struct libnvme_subsystem_attrs *libnvme_subsystem_attrs_alloc(void)
+{
+	return calloc(1, sizeof(struct libnvme_subsystem_attrs));
+}
+
+void libnvme_subsystem_attrs_reset(
+		struct libnvme_subsystem_attrs *attrs)
+{
+	if (!attrs)
+		return;
+
+}
+
+void libnvme_subsystem_attrs_free(
+		struct libnvme_subsystem_attrs *attrs)
+{
+	if (!attrs)
+		return;
+
+	ATTR_FREE(attrs->model);
+	ATTR_FREE(attrs->serial);
+	ATTR_FREE(attrs->firmware);
+	ATTR_FREE(attrs->iopolicy);
+	free(attrs);
+}
+
+__shr_public void libnvme_subsystem_set_model(
+		struct libnvme_subsystem *p,
+		const char *model)
+{
+	ATTR_FREE(p->attrs->model);
+	p->attrs->model = model ? strdup(model) : NO_ATTR;
+}
+
+__shr_public int libnvme_subsystem_get_model(
+		const struct libnvme_subsystem *p,
+		const char **val,
+		const char *dflt)
+{
+	struct libnvme_subsystem *c = (struct libnvme_subsystem *)p;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->model))) {
+		c->attrs->model = libnvme_get_subsys_attr(c, "model");
+		if (!c->attrs->model)
+			c->attrs->model = NO_ATTR;
+	}
+
+	if (ATTR_IS_ABSENT(c->attrs->model))
+		return -ENOENT;
+
+	*val = c->attrs->model;
+	return 0;
+}
+
+__shr_public void libnvme_subsystem_set_serial(
+		struct libnvme_subsystem *p,
+		const char *serial)
+{
+	ATTR_FREE(p->attrs->serial);
+	p->attrs->serial = serial ? strdup(serial) : NO_ATTR;
+}
+
+__shr_public int libnvme_subsystem_get_serial(
+		const struct libnvme_subsystem *p,
+		const char **val,
+		const char *dflt)
+{
+	struct libnvme_subsystem *c = (struct libnvme_subsystem *)p;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->serial))) {
+		c->attrs->serial = libnvme_get_subsys_attr(c, "serial");
+		if (!c->attrs->serial)
+			c->attrs->serial = NO_ATTR;
+	}
+
+	if (ATTR_IS_ABSENT(c->attrs->serial))
+		return -ENOENT;
+
+	*val = c->attrs->serial;
+	return 0;
+}
+
+__shr_public void libnvme_subsystem_set_firmware(
+		struct libnvme_subsystem *p,
+		const char *firmware)
+{
+	ATTR_FREE(p->attrs->firmware);
+	p->attrs->firmware = firmware ? strdup(firmware) : NO_ATTR;
+}
+
+__shr_public int libnvme_subsystem_get_firmware(
+		const struct libnvme_subsystem *p,
+		const char **val,
+		const char *dflt)
+{
+	struct libnvme_subsystem *c = (struct libnvme_subsystem *)p;
+
+	*val = dflt;
+
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->firmware))) {
+		c->attrs->firmware = libnvme_get_subsys_attr(c, "firmware_rev");
+		if (!c->attrs->firmware)
+			c->attrs->firmware = NO_ATTR;
+	}
+
+	if (ATTR_IS_ABSENT(c->attrs->firmware))
+		return -ENOENT;
+
+	*val = c->attrs->firmware;
+	return 0;
+}
+
+__shr_public int libnvme_subsystem_get_iopolicy(
+		const struct libnvme_subsystem *p,
+		const char **val,
+		const char *dflt)
+{
+	struct libnvme_subsystem *c = (struct libnvme_subsystem *)p;
+	__cleanup_free char *str = NULL;
+
+	*val = dflt;
+
+	str = libnvme_get_subsys_attr(c, "iopolicy");
+	if (!str)
+		return -ENOENT;
+
+	if (!c->attrs->iopolicy || strcmp(str, c->attrs->iopolicy)) {
+		free(c->attrs->iopolicy);
+		c->attrs->iopolicy = strdup(str);
+		if (!c->attrs->iopolicy)
+			return -ENOMEM;
+	}
+
+	*val = c->attrs->iopolicy;
 	return 0;
 }
 

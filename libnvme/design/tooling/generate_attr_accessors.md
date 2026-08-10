@@ -1,6 +1,6 @@
 # Generate Attribute Accessors Tool
 
-This tool generates an **opaque, lazily-loaded C struct** and its accessor functions from a **Python dict**, rather than from an annotated header the way `generate_accessors.py` does. It drives `struct libnvme_ctrl_attrs`, `struct libnvme_path_attrs`, `struct libnvme_ns_attrs`, and `struct libnvme_subsystem_attrs`.
+This tool generates an **opaque, lazily-loaded C struct** and its accessor functions from a **Python dict**, rather than from an annotated header the way `generate_accessors.py` does. It drives `struct libnvme_ctrl_attrs`, `struct libnvme_path_attrs`, `struct libnvme_ns_attrs`, and `struct libnvme_subsystem_attrs`, merging all four into one shared `attr-accessors.{c,h,ld,i}` output set rather than one file set per struct — see "Generated file layout" below.
 
 ------
 
@@ -48,9 +48,9 @@ Setters keep their original shape (`void`) — a `writable` member's value is al
 meson compile -C <build-dir> update-accessors
 ```
 
-regenerates every spec's `.h`/`.c`/`.i` alongside the other accessor families (aliased target, same as `update-common-accessors` and `update-fabrics-accessors`). Configuring with `-Dcheck-accessors=true` runs the same target read-only, for CI drift detection.
+regenerates the shared `attr-accessors.h`/`.c`/`-{linux,win}.c`/`.i` (every `ATTR_SPECS` entry merged into one output set, not one per struct — see "Generated file layout") alongside the other accessor families (aliased target, same as `update-common-accessors` and `update-fabrics-accessors`). Configuring with `-Dcheck-accessors=true` runs the same target read-only, for CI drift detection.
 
-Every spec's `.ld` is **not** part of that auto-update — same as `accessors.ld`/`accessors-fabrics.ld`, which version section a symbol belongs to is a maintainer decision, so `update-attr-accessors.sh` only diffs it and prints a `Symbols to ADD`/`Symbols to REMOVE` report; you edit the file by hand. Pre-3.0, "add" means adding the line to the spec's existing top-level section, and "remove" means deleting the line, since ABI breaks are intentional and permitted before the 3.0 release. After a stable release, a symbol that genuinely needs to disappear is an ABI break no `.ld` edit can express by itself — it needs a SONAME bump (`libnvme_so_version` in the top-level `meson.build`), not just a version-script change. A brand-new spec's `.ld` does not exist yet the first time it is generated; the script reports every symbol as "to add" and tells you to create the file by hand with a fresh top-level tag.
+`attr-accessors.ld` is **not** part of that auto-update — same as `accessors.ld`/`accessors-fabrics.ld`, which version section a symbol belongs to is a maintainer decision, so `update-attr-accessors.sh` only diffs it and prints a `Symbols to ADD`/`Symbols to REMOVE` report; you edit the file by hand. Pre-3.0, "add" means adding the line to `attr-accessors.ld`'s existing top-level section, and "remove" means deleting the line, since ABI breaks are intentional and permitted before the 3.0 release. After a stable release, a symbol that genuinely needs to disappear is an ABI break no `.ld` edit can express by itself — it needs a SONAME bump (`libnvme_so_version` in the top-level `meson.build`), not just a version-script change.
 
 To run this generator on its own, without the other two:
 
@@ -142,7 +142,7 @@ Use a group instead of a plain member when one sysfs read naturally produces **s
        'members': ['field_a', 'field_b'],
    },
    ```
-2. `loader` is a C function name. The generated getter calls it as `loader(w)`, passing the owning struct pointer, and propagates a nonzero return to its own caller unchanged (the load itself failed, not just "attribute absent"). Declare it once in the generated header (automatic — `generate_header()` emits a prototype for every group's `loader`, but only when the spec has at least one group) and define it in whichever hand-written `*-attrs-custom-*.c` file(s) actually need to fill this group — see "Generated file layout" below.
+2. `loader` is a C function name. The generated getter calls it as `loader(w)`, passing the owning struct pointer, and propagates a nonzero return to its own caller unchanged (the load itself failed, not just "attribute absent"). Declare it once in the generated header (automatic — `generate_header()` emits a prototype for every group's `loader`, but only when the spec has at least one group) and define it in whichever hand-written `attr-accessors-custom-*.c` file(s) actually need to fill this group — see "Generated file layout" below.
 3. The first access to *any* member of the group triggers the loader; every other member's cache-miss guard then finds its value already loaded and never calls the loader again. Loaders must leave every member they don't fill at `NULL` (not garbage) so the generated accessor can stamp the "read, absent" sentinel correctly.
 4. If the loader body genuinely needs to differ by `CONFIG_FABRICS` (or any axis other than OS), that's a fact about the hand-written `.c` files, not about this dict — there's no key to set. A one-line comment above the group entry noting "loader body varies by CONFIG_FABRICS" (or similar) is enough; see the existing `identity` and `fabrics` groups for the pattern. If the loader (or the *grouping itself*) needs to differ by **OS**, see "Per-OS resolution" below instead — that is a real, first-class axis this generator understands, unlike fabrics-or-other build flags.
 5. Groups themselves are not yet OS-resolved (a spec's `['groups']` list is a single, OS-invariant list) — no current spec needs a group whose loader or membership differs per OS. Extend `build_members()` the same way member resolution works, if one ever does.
@@ -158,7 +158,7 @@ A member only needs a `'linux'`/`'win'` override when its **value source** — w
  'win': {'absent': True}},
 ```
 
-**Most members do not need this.** `libnvme_get_{ctrl,ns,path,subsys}_attr()` already has a Windows implementation that unconditionally returns `NULL` — so for a plain `'attr'` member, Windows absence falls out of the existing attr-reader stub for free; the generated getter body is identical C on both platforms, it just behaves differently at runtime because the function it calls does. Only add an override when a *different function* needs to be called, or the *grouping* itself changes — no current spec needs that case; `'absent': True` (every `PATH_ATTRS` member on Windows) is the only override in use today. A member whose OS difference can't be expressed by changing what one function returns (e.g. `NS_ATTRS`'s `lba_*` members: Linux calls two small loaders, Windows calls one big Identify command) uses `'custom': True` instead — a hand-written getter body in `*-attrs-custom-<os>.c`, with only the prototype and the struct field generated (see `attr_accessors_specs.py`'s `NS_ATTRS` entry for worked examples).
+**Most members do not need this.** `libnvme_get_{ctrl,ns,path,subsys}_attr()` already has a Windows implementation that unconditionally returns `NULL` — so for a plain `'attr'` member, Windows absence falls out of the existing attr-reader stub for free; the generated getter body is identical C on both platforms, it just behaves differently at runtime because the function it calls does. Only add an override when a *different function* needs to be called, or the *grouping* itself changes — no current spec needs that case; `'absent': True` (every `PATH_ATTRS` member on Windows) is the only override in use today. A member whose OS difference can't be expressed by changing what one function returns (e.g. `NS_ATTRS`'s `lba_*` members: Linux calls two small loaders, Windows calls one big Identify command) uses `'custom': True` instead — a hand-written getter body in `attr-accessors-custom-<os>.c`, with only the prototype and the struct field generated (see `attr_accessors_specs.py`'s `NS_ATTRS` entry for worked examples).
 
 `'absent': True` means the platform has no source for the member at all: the generated getter writes `dflt` to the out-param and always returns `-ENOENT`, no attribute read or loader call ever happens, and (for `PATH_ATTRS`, where every member is absent on Windows) the owning-struct parameter is `__shr_unused` since the body never touches it.
 
@@ -166,28 +166,37 @@ A member only needs a `'linux'`/`'win'` override when its **value source** — w
 
 ### Generated file layout
 
-The generated `.h`/`.c` files live in `src/nvme/generated/`, a dedicated subdirectory kept separate from the hand-written `*-attrs-custom-*.c` files that `#include` them — that separation exists so a reader browsing `src/nvme/` can tell generator-owned files (never hand-edited, `generated/`) apart from hand-written ones (everything else) at a glance. The `.ld` files stay in `src/`, alongside every other version script; the `.i` fragments stay in `libnvme3/`, alongside the other SWIG input.
+Every entry in `ATTR_SPECS` merges into **one shared output set**, not one file set per struct — `CTRL_ATTRS`/`PATH_ATTRS`/`NS_ATTRS`/`SUBSYS_ATTRS` all name the same `source`/`header`/`ld`/`swig` filenames (enforced: `main()` asserts every spec agrees before generating anything, and `attr_accessors_specs.py` sets them all from one shared `_SHARED` dict so there is nothing to keep in sync by hand). Struct bodies concatenate into that one file, each self-contained and name-prefixed by `owner_type` (`libnvme_ctrl`/`_path`/`_ns`/`_subsystem` never collide), mirroring how `generate_accessors.py` itself already merges many annotated structs from one header into one `accessors.c`/`accessors.h`.
 
-The generator resolves each member's effective Linux and Windows definition and decides where its getter body goes:
+The generated `.h`/`.c` files live in `src/nvme/generated/`, a dedicated subdirectory kept separate from the hand-written `attr-accessors-custom-*.c` files that `#include` them — that separation exists so a reader browsing `src/nvme/` can tell generator-owned files (never hand-edited, `generated/`) apart from hand-written ones (everything else) at a glance. `attr-accessors.ld` stays in `src/`, alongside every other version script; `attr-accessors.i` stays in `libnvme3/`, alongside the other SWIG input.
 
-- **identical on both** → the spec's shared `.c` file (`source` key)
-- **differ** → each OS's own file (`source_linux`, `source_win` keys) — only emitted if at least one member actually differs
+For each spec, the generator resolves every member's effective Linux and Windows definition and decides which merged file its getter body joins:
 
-The struct definition, `_alloc()`/`_reset()`/`_free()`, and every OS-common getter always live in the shared file — **the struct never splits**, even when some of its members' getters do, because every cached member (string or boxed numeric) has the same storage shape regardless of which loader fills it.
+- **identical on both** → `attr-accessors.c` (the shared file, `source` key)
+- **differ** → `attr-accessors-linux.c` / `attr-accessors-win.c` (`source_linux`/`source_win` keys) — a spec only contributes to these if at least one of its members actually differs per OS; today only `PATH_ATTRS` does.
 
-For `PATH_ATTRS`, every member differs (absent on Windows), so the shared file holds only the struct definition and lifecycle functions, and both `path-attrs-linux.c` and `path-attrs-win.c` exist. For `CTRL_ATTRS`, no member differs at all, so only the shared `ctrl-attrs.c` exists — exactly the file this generator has always produced. `NS_ATTRS` is the case where a spec's shared file is non-trivial *and* both per-OS files exist alongside it (its `lba_*`/`csi`/`eui64`/`nguid`/`uuid` members are `'custom': True`, hand-written in `ns-attrs-custom-linux.c`/`ns-attrs-custom-win.c`, while its `diag/*` counters are OS-common and live in the shared `ns-attrs.c`).
+The struct definition, `_alloc()`/`_reset()`/`_free()`, and every OS-common getter for *every* spec always live in `attr-accessors.c` — **a struct never splits across the shared/per-OS boundary**, even when some of its members' getters do, because every cached member (string or boxed numeric) has the same storage shape regardless of which loader fills it. `CTRL_ATTRS` and `SUBSYS_ATTRS` have no OS-divergent members at all, so their entire contribution lives in `attr-accessors.c`; `NS_ATTRS`'s `lba_*`/`csi`/`eui64`/`nguid`/`uuid` members are `'custom': True` (hand-written per OS, not generated at all — see below) while its `diag/*` counters are OS-common and generated into `attr-accessors.c`; `PATH_ATTRS` is the only spec with real generated per-OS bodies, since every member is `'win': {'absent': True}`.
 
-The per-OS `.c` files carry no `#include`s of their own — they rely on being `#include`d *after* the shared file in the hand-written `*-attrs-custom-<os>.c`, which brings the struct definition and everything else into scope first:
+`attr-accessors-linux.c` and `attr-accessors-win.c` carry no `#include`s of their own — they rely on being `#include`d *after* `attr-accessors.c` in the hand-written `attr-accessors-custom-<os>.c`, which brings every spec's struct definition and shared getters into scope first:
 
 ```c
-// path-attrs-custom-linux.c (hand-written, lives in src/nvme/)
-#include "generated/path-attrs.c"          // struct def + OS-common getters
-#include "generated/path-attrs-linux.c"    // Linux-only getters, generated
+// attr-accessors-custom-linux.c (hand-written, lives in src/nvme/)
+#include "generated/attr-accessors.c"        // every spec's struct def + OS-common getters
+#include "generated/attr-accessors-linux.c"  // PATH_ATTRS's Linux-only getters, generated
+
+#ifdef CONFIG_FABRICS
+int libnvmf_ctrl_load_fabrics_attrs(struct libnvme_ctrl *c) { ... }
+#else
+int libnvmf_ctrl_load_fabrics_attrs(__shr_unused struct libnvme_ctrl *c) { return 0; }
+#endif
+
+/* CTRL_ATTRS's identity/phy_slot loaders, NS_ATTRS's lba_*/csi/eui64/
+ * nguid/uuid custom bodies, all hand-written below. */
 ```
 
-Exactly one of `*-attrs-custom-linux.c` / `*-attrs-custom-win.c` is ever listed in `meson.build`'s `sources` (the OS axis, same mechanism as `ctrl-attrs-custom-linux.c`/`-win.c`). If a spec also needs a `CONFIG_FABRICS` split (as `CTRL_ATTRS` does for its fabrics group), that nesting happens inside whichever `*-attrs-custom-<os>.c` is compiled, exactly as today — fabrics is a build flag, not an OS, and stays entirely a hand-written-file concern.
+Exactly one of `attr-accessors-custom-linux.c` / `attr-accessors-custom-win.c` is ever listed in `meson.build`'s `sources` (the OS axis). If a spec also needs a `CONFIG_FABRICS` split (`CTRL_ATTRS` does, for its fabrics group), that branching is inlined directly in whichever `attr-accessors-custom-<os>.c` is compiled — fabrics is a build flag, not an OS, and stays entirely a hand-written-file concern. There is no separate `attr-accessors-custom-fabrics.c`/`-no-fabrics.c` pair: `CONFIG_FABRICS` is never defined on Windows at all (`want_fabrics` in the top-level `meson.build` is gated `and host_system == 'linux'`), so `attr-accessors-custom-win.c` hand-writes the no-op body directly with no `#ifdef`, and Linux's `#ifdef CONFIG_FABRICS`/`#else` in `attr-accessors-custom-linux.c` inlines both bodies rather than reaching for a file each single function doesn't need.
 
-One trade-off worth knowing: a spec's shared `.c` (and any per-OS `.c`) is never listed in `meson.build`'s `sources` directly (only reached via the `#include` chain above) — but since it contains real accessor functions, adding it to `sources` by mistake would produce duplicate-symbol *link* errors.
+One trade-off worth knowing, the direct consequence of merging: `generated/attr-accessors.c` is **never** listed in `meson.build`'s `sources` directly (only reached via the `#include` chain above, from whichever `attr-accessors-custom-<os>.c` the build selects) — adding it to `sources` by mistake would produce duplicate-symbol *link* errors, since it would then be compiled once standalone and once again inside the custom file's translation unit. This is why `SUBSYS_ATTRS`, which has no custom loader logic of its own, still rides along inside `attr-accessors-custom-<os>.c`'s `#include` rather than being its own standalone compiled unit the way the old per-struct `subsys-attrs.c` used to be — once every spec shares one generated `.c`, there is no way to compile part of it independently of the rest.
 
 ------
 
@@ -213,15 +222,15 @@ These identify the generated artifact itself and are set once, not per-member:
 | `owner_type` | The struct this one nests inside (`libnvme_ctrl`, `libnvme_path`, ...). |
 | `owner_field` | The pointer field name on `owner_type` (`attrs`, so generated field paths read `attrs->model`). |
 | `attr_reader` | The C function name for reading one plain sysfs attribute — see above. |
-| `source` | Filename of the generated shared `.c` (struct definition + every OS-common accessor), written under `generated/`. |
-| `source_linux` | Filename of the Linux-only `.c`, written under `generated/`. Only required if some member's resolution actually differs per OS; omit otherwise. |
+| `source` | Filename of the merged shared `.c` (every spec's struct definition + OS-common accessors), written under `generated/`. Must be identical across every `ATTR_SPECS` entry. |
+| `source_linux` | Filename of the merged Linux-only `.c`, written under `generated/`. Must be identical across every entry that sets it; a spec only needs to set it if at least one of its members' resolution actually differs per OS (today only `PATH_ATTRS`). |
 | `source_win` | Likewise, for Windows. |
-| `header` | Filename of the generated common header, written under `generated/`. |
-| `ld` | Filename of the generated linker version-script, written alongside the other `.ld` files (not under `generated/` — hand-maintained, see "Usage" above). |
-| `swig` | Filename of the generated SWIG fragment. |
-| `ld_section` | Version-script section name the symbols nest inside — needs its own top-level tag distinct from every other spec's (`ld` rejects two `--version-script` files defining the same tag). A placeholder like `LIBNVME_CTRL_ATTRS_NEXT`, not a real version number: the committed `.ld` is hand-written and never auto-overwritten (see "Usage" above), so this string only feeds the generator's own scratch copy — never diffed, never enforced, never echoed back to the maintainer. The real tag is a maintainer decision made by hand at commit time. |
+| `header` | Filename of the merged common header, written under `generated/`. Must be identical across every entry. |
+| `ld` | Filename of the merged linker version-script, written alongside the other `.ld` files (not under `generated/` — hand-maintained, see "Usage" above). Must be identical across every entry. |
+| `swig` | Filename of the merged SWIG fragment. Must be identical across every entry. |
+| `ld_section` | Version-script section name every spec's symbols nest inside — one shared tag, distinct from every *other* generator's tag (`accessors.ld`'s `LIBNVME_ACCESSORS_3`, etc. — `ld` rejects two `--version-script` files defining the same tag). Must be identical across every entry. A placeholder like `LIBNVME_ATTR_ACCESSORS_NEXT`, not a real version number: the committed `.ld` is hand-written and never auto-overwritten (see "Usage" above), so this string only feeds the generator's own scratch copy — never diffed, never enforced, never echoed back to the maintainer. The real tag is a maintainer decision made by hand at commit time. |
 
-Add a new spec dict to `attr_accessors_specs.py` with its own set of these keys and append it to `ATTR_SPECS`.
+`attr_accessors_specs.py` defines a `_SHARED` dict holding `source`/`source_linux`/`source_win`/`header`/`ld`/`swig`/`ld_section` once, and every spec dict starts with `**_SHARED` so these six keys can never drift apart by a typo. Add a new spec dict the same way: `{**_SHARED, 'struct_name': ..., 'owner_type': ..., ...}`, appended to `ATTR_SPECS`. `main()` also asserts every entry agrees on these keys before generating anything, so a spec dict that skips `**_SHARED` and hand-sets a mismatched filename fails loudly instead of silently splitting its own file off from the rest.
 
 ------
 
@@ -241,4 +250,4 @@ Adding a Python conversion for a new numeric type means adding one entry to `_PY
 
 ## What you never need to hand-edit
 
-The struct definition, all getters/setters, the alloc/reset/free functions, the header, the `.ld` file, and the SWIG fragment are all generated — never hand-edit a spec's `.h`, `.c` (shared or per-OS, all under `generated/`), `.ld`, or `.i`. The only hand-written files are the `*-attrs-custom-<os>.c` loader bodies — see "Generated file layout" above for how they pull in the generated struct definition.
+The struct definitions, all getters/setters, the alloc/reset/free functions, the header, the `.ld` file, and the SWIG fragment are all generated — never hand-edit `attr-accessors.h`, `attr-accessors.c`, `attr-accessors-{linux,win}.c` (all under `generated/`), `attr-accessors.ld`, or `attr-accessors.i`. The only hand-written files are `attr-accessors-custom-{linux,win}.c` — see "Generated file layout" above for how they pull in the generated struct definitions.

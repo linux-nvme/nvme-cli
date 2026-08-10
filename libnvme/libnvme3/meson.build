@@ -26,8 +26,7 @@ if want_python
         depend_files: [
             'accessors.i',
             'accessors-fabrics.i',
-            'ctrl-attrs.i',
-            'subsys-attrs.i',
+            'attr-accessors.i',
             'nvme-manual-bridges.i',
             'fctx_field_tables.h',
         ],
