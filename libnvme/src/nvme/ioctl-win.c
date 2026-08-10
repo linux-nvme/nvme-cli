@@ -398,19 +398,136 @@ out:
 }
 
 /*
- * Windows-specific IO command implementations.
+ * SCSI helpers
  */
-
-/* SCSI operation code definitions */
-#define SCSIOP_SYNCHRONIZE_CACHE 0x35
-#define SCSIOP_READ16 0x88
-#define SCSIOP_WRITE16 0x8A
 
 /*
  * Sense buffer size for SCSI pass-through commands. Covers a fixed-format
  * 18-byte sense buffer plus slack.
  */
 #define SCSI_SENSE_BUFFER_LEN 32
+
+/*
+ * Parse the sense key/ASC/ASCQ from a SCSI pass-through sense buffer. Handles
+ * both fixed- and descriptor-format sense data. Returns true if the sense data
+ * was in a recognized format and key/asc/ascq were populated.
+ */
+static bool parse_scsi_sense(PSCSI_PASS_THROUGH pass_through, PUCHAR buffer,
+		__u8 *key, __u8 *asc, __u8 *ascq)
+{
+	__u8 code;
+	PUCHAR sense;
+
+	if (pass_through->SenseInfoLength < 14)
+		return false;
+
+	sense = buffer + pass_through->SenseInfoOffset;
+	code = sense[0] & 0x7f;
+
+	/* Decode based on format. */
+	if (code == 0x70 || code == 0x71) {
+		/* fixed-format */
+		*key = sense[2] & 0x0f;
+		*asc = sense[12];
+		*ascq = sense[13];
+	} else if (code == 0x72 || code == 0x73) {
+		/* descriptor-format */
+		*key = sense[1] & 0x0f;
+		*asc = sense[2];
+		*ascq = sense[3];
+	} else {
+		return false;
+	}
+
+	return true;
+}
+
+/* Convert SCSI sense key/ASC/ASCQ to an NVMe status code or negated errno. */
+static int get_status_from_scsi_sense(__u8 key, __u8 asc, __u8 ascq)
+{
+	switch (key) {
+	case 0x02:	/* NOT READY */
+		/* ASC 0x04 = LOGICAL UNIT NOT READY - refine via ASCQ. */
+		/* ASCQ 0x04 = FORMAT IN PROGRESS */
+		if (asc == 0x04 && ascq == 0x04)
+			return create_nvme_status_code(
+					NVME_SC_FORMAT_IN_PROGRESS,
+					NVME_SCT_GENERIC, true);
+		/* ASCQ 0x1b = SANITIZE IN PROGRESS */
+		if (asc == 0x04 && ascq == 0x1b)
+			return create_nvme_status_code(
+					NVME_SC_SANITIZE_IN_PROGRESS,
+					NVME_SCT_GENERIC, true);
+		/* ASCQ 0x01 = BECOMING READY - transient, worth retrying */
+		if (asc == 0x04 && ascq == 0x01)
+			return create_nvme_status_code(NVME_SC_NS_NOT_READY,
+						NVME_SCT_GENERIC, true);
+		/*
+		 * Other not-ready states (e.g. ASCQ 0x02 = INITIALIZING
+		 * COMMAND REQUIRED) will not clear on their own, so mark DNR
+		 * to avoid spinning on a retry that cannot succeed.
+		 */
+		return create_nvme_status_code(NVME_SC_NS_NOT_READY,
+					NVME_SCT_GENERIC, false);
+	case 0x03:	/* MEDIUM ERROR */
+		return create_nvme_status_code(NVME_SC_UNRECOVERED_ERROR,
+					NVME_SCT_GENERIC, false);
+	case 0x05:	/* ILLEGAL REQUEST - refine via ASC */
+		switch (asc) {
+		case 0x21:	/* LOGICAL BLOCK ADDRESS OUT OF RANGE */
+			return create_nvme_status_code(NVME_SC_LBA_RANGE,
+						NVME_SCT_GENERIC, false);
+		case 0x20:	/* INVALID COMMAND OPERATION CODE */
+			return create_nvme_status_code(NVME_SC_INVALID_OPCODE,
+						NVME_SCT_GENERIC, false);
+		default:	/* INVALID FIELD IN CDB/PARAMETER LIST, etc. */
+			return create_nvme_status_code(NVME_SC_INVALID_FIELD,
+						NVME_SCT_GENERIC, false);
+		}
+	case 0x07:	/* DATA PROTECT */
+		return create_nvme_status_code(NVME_SC_NS_WRITE_PROTECTED,
+					NVME_SCT_GENERIC, false);
+	case 0x0b:	/* ABORTED COMMAND */
+		return create_nvme_status_code(NVME_SC_ABORT_REQ,
+					NVME_SCT_GENERIC, false);
+	case 0x06:	/* UNIT ATTENTION - no clean NVMe equivalent */
+		return -EAGAIN;
+	default:
+		return -EIO;
+	}
+}
+
+/*
+ * Convert a SCSI status byte to an NVMe status code or negated errno. For
+ * CHECK CONDITION, refine using the sense key when a recognized sense buffer
+ * was returned.
+ */
+static int get_status_from_scsi_status(PSCSI_PASS_THROUGH pass_through,
+		PUCHAR buffer)
+{
+	__u8 key, asc, ascq;
+
+	switch (pass_through->ScsiStatus) {
+	case 0x00:	/* GOOD */
+	case 0x04:	/* CONDITION MET */
+		return 0;
+	case 0x08:	/* BUSY */
+	case 0x28:	/* TASK SET FULL - transport-level, keep errno */
+		return -EBUSY;
+	case 0x18:	/* RESERVATION CONFLICT */
+		return create_nvme_status_code(NVME_SC_RESERVATION_CONFLICT,
+					NVME_SCT_GENERIC, false);
+	case 0x40:	/* TASK ABORTED */
+		return create_nvme_status_code(NVME_SC_ABORT_REQ,
+					NVME_SCT_GENERIC, false);
+	case 0x02:	/* CHECK CONDITION - refine via sense key */
+		if (parse_scsi_sense(pass_through, buffer, &key, &asc, &ascq))
+			return get_status_from_scsi_sense(key, asc, ascq);
+		return -EIO;
+	default:
+		return -EIO;
+	}
+}
 
 /*
  * Log the failure of a SCSI pass-through command. Includes ScsiStatus and,
@@ -421,33 +538,18 @@ static void log_scsi_pass_through_error(struct libnvme_transport_handle *hdl,
 		const char *func, PSCSI_PASS_THROUGH pass_through,
 		PUCHAR buffer, DWORD last_error, int err, BOOL result)
 {
-	__u8 key, asc, ascq, code;
-	PUCHAR sense;
+	__u8 key, asc, ascq;
 
 	libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG, "%s: failed, "
 		"GetLastError=%lu, ScsiStatus=0x%02x, err=%d\n",
 		func, last_error, pass_through->ScsiStatus, err);
 
-	if (!result || pass_through->SenseInfoLength < 14)
+	if (!result)
 		return;
 
-	sense = buffer + pass_through->SenseInfoOffset;
-	code = sense[0] & 0x7f;
-
-	/* Decode based on format. */
-	if (code == 0x70 || code == 0x71) {
-		/* fixed-format */
-		key = sense[2] & 0x0f;
-		asc = sense[12];
-		ascq = sense[13];
-	} else if (code == 0x72 || code == 0x73) {
-		/* descriptor-format */
-		key = sense[1] & 0x0f;
-		asc = sense[2];
-		ascq = sense[3];
-	} else {
+	if (!parse_scsi_sense(pass_through, buffer, &key, &asc, &ascq)) {
 		libnvme_msg(hdl->ctx, LIBNVME_LOG_DEBUG,
-			"%s: SCSI sense response code 0x%02x\n", func, code);
+			"%s: unrecognized SCSI sense data\n", func);
 		return;
 	}
 
@@ -455,6 +557,15 @@ static void log_scsi_pass_through_error(struct libnvme_transport_handle *hdl,
 		"key=0x%01x, ASC=0x%02x, ASCQ=0x%02x\n",
 		func, key, asc, ascq);
 }
+
+/*
+ * Windows-specific IO command implementations.
+ */
+
+/* SCSI operation code definitions */
+#define SCSIOP_SYNCHRONIZE_CACHE 0x35
+#define SCSIOP_READ16 0x88
+#define SCSIOP_WRITE16 0x8A
 
 static int submit_io_flush(struct libnvme_transport_handle *hdl,
 		struct libnvme_passthru_cmd *cmd)
@@ -517,7 +628,7 @@ static int submit_io_flush(struct libnvme_transport_handle *hdl,
 		if (!result)
 			err = -get_errno_from_error(last_error);
 		else
-			err = -EIO;
+			err = get_status_from_scsi_status(pass_through, buffer);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
@@ -677,7 +788,7 @@ static int submit_io_write(struct libnvme_transport_handle *hdl,
 		if (!result)
 			err = -get_errno_from_error(last_error);
 		else
-			err = -EIO;
+			err = get_status_from_scsi_status(pass_through, buffer);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
@@ -765,7 +876,7 @@ static int submit_io_read(struct libnvme_transport_handle *hdl,
 		if (!result)
 			err = -get_errno_from_error(last_error);
 		else
-			err = -EIO;
+			err = get_status_from_scsi_status(pass_through, buffer);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
@@ -1783,7 +1894,7 @@ static int submit_admin_format_nvm_user_data_erase(
 		if (!result)
 			err = -get_errno_from_error(last_error);
 		else
-			err = -EIO;
+			err = get_status_from_scsi_status(pass_through, buffer);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
@@ -1996,7 +2107,7 @@ static int submit_admin_security_send_receive(
 		if (!result)
 			err = -get_errno_from_error(last_error);
 		else
-			err = -EIO;
+			err = get_status_from_scsi_status(pass_through, buffer);
 	} while (hdl->decide_retry(hdl, cmd, err));
 
 	if (err) {
