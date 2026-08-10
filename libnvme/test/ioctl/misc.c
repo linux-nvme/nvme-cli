@@ -870,7 +870,7 @@ static void test_write_zeros(void)
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
 		.cdw11 = slba >> 32,
-		.cdw12 = nlb | (control << 16),
+		.cdw12 = nlb | ((__u32)control << 16),
 		.cdw13 = dsm | (dspec << 16),
 		.cdw15 = apptag | (appmask << 16),
 	};
