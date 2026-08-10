@@ -8208,7 +8208,7 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	}
 	if (argconfig_parse_seen(opts, "key-length")) {
 		snprintf(key_len_buf, sizeof(key_len_buf), "%u", cfg.key_len);
-		args[nargs++] = "--key-length";
+		args[nargs++] = "--secret-length";
 		args[nargs++] = key_len_buf;
 	}
 	if (argconfig_parse_seen(opts, "hmac")) {

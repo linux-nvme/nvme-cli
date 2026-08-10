@@ -54,7 +54,7 @@ static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin
 	    "NVMe In-Band Authentication.";
 	const char *secret =
 	    "Optional secret (in hexadecimal characters) to be placed in the representation.";
-	const char *key_len = "Length of the secret (32, 48, or 64 bytes).";
+	const char *secret_len = "Length of the secret (32, 48, or 64 bytes).";
 	const char *hmac =
 	    "Hash function the consumer is to apply to the secret (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).";
 
@@ -67,19 +67,19 @@ static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin
 
 	struct config {
 		char		*secret;
-		unsigned int	key_len;
+		unsigned int	secret_len;
 		unsigned int	hmac;
 	};
 
 	struct config cfg = {
 		.secret		= NULL,
-		.key_len	= 0,
+		.secret_len	= 0,
 		.hmac		= 0,
 	};
 
 	NVME_ARGS(opts,
 		  OPT_STR("secret",		's', &cfg.secret,	secret),
-		  OPT_UINT("key-length",	'l', &cfg.key_len,	key_len),
+		  OPT_UINT("secret-length",	'l', &cfg.secret_len,	secret_len),
 		  OPT_UINT("hmac",		'm', &cfg.hmac,		hmac));
 
 	err = parse_args(argc, argv, desc, opts);
@@ -110,47 +110,47 @@ static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin
 					len);
 			return -EINVAL;
 		}
-		if (cfg.key_len && cfg.key_len != len / 2) {
+		if (cfg.secret_len && cfg.secret_len != len / 2) {
 			nvme_show_error("Secret length %u does not match the secret given (%zu bytes)",
-					cfg.key_len, len / 2);
+					cfg.secret_len, len / 2);
 			return -EINVAL;
 		}
-		cfg.key_len = len / 2;
-	} else if (!cfg.key_len) {
+		cfg.secret_len = len / 2;
+	} else if (!cfg.secret_len) {
 		switch (cfg.hmac) {
 		case 1:
-			cfg.key_len = 32;
+			cfg.secret_len = 32;
 			break;
 		case 2:
-			cfg.key_len = 48;
+			cfg.secret_len = 48;
 			break;
 		case 3:
-			cfg.key_len = 64;
+			cfg.secret_len = 64;
 			break;
 		default:
-			cfg.key_len = 32;
+			cfg.secret_len = 32;
 			break;
 		}
 	}
-	if (!valid_kxchap_secret_len(cfg.key_len)) {
-		nvme_show_error("Invalid secret length %u", cfg.key_len);
+	if (!valid_kxchap_secret_len(cfg.secret_len)) {
+		nvme_show_error("Invalid secret length %u", cfg.secret_len);
 		return -EINVAL;
 	}
 
-	err = libnvmf_create_raw_secret(ctx, cfg.secret, cfg.key_len, &raw_secret);
+	err = libnvmf_create_raw_secret(ctx, cfg.secret, cfg.secret_len, &raw_secret);
 	if (err)
 		return err;
 
-	memcpy(key, raw_secret, cfg.key_len);
+	memcpy(key, raw_secret, cfg.secret_len);
 
-	crc = shr_crc32(crc, key, cfg.key_len);
-	key[cfg.key_len++] = crc & 0xff;
-	key[cfg.key_len++] = (crc >> 8) & 0xff;
-	key[cfg.key_len++] = (crc >> 16) & 0xff;
-	key[cfg.key_len++] = (crc >> 24) & 0xff;
+	crc = shr_crc32(crc, key, cfg.secret_len);
+	key[cfg.secret_len++] = crc & 0xff;
+	key[cfg.secret_len++] = (crc >> 8) & 0xff;
+	key[cfg.secret_len++] = (crc >> 16) & 0xff;
+	key[cfg.secret_len++] = (crc >> 24) & 0xff;
 
 	memset(encoded_key, 0, sizeof(encoded_key));
-	shr_base64_encode(key, cfg.key_len, encoded_key);
+	shr_base64_encode(key, cfg.secret_len, encoded_key);
 
 	nvme_show_result("DHHC-1:%02x:%s:", cfg.hmac, encoded_key);
 	return 0;
