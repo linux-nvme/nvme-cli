@@ -41,8 +41,9 @@ if python3.found()
     endif
 
     # Standalone CLI test for "nvme config-create". Needs no device; uses an
-    # explicit --output under /tmp instead.
-    if want_fabrics
+    # explicit --output under /tmp instead. "config create" lives in the
+    # "config" plugin, so it needs that plugin selected too.
+    if want_fabrics and 'config' in selected_plugins
         test('nvme-cli - config-create-cli',
              python3,
              args: [files('nvme_config_create_test.py'), nvme_exe],
