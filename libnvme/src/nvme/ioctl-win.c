@@ -1736,7 +1736,7 @@ static int submit_admin_format_nvm_user_data_erase(
 
 	pass_through = (PSCSI_PASS_THROUGH)buffer;
 	pass_through->Length = sizeof(SCSI_PASS_THROUGH);
-	pass_through->CdbLength = 6;
+	pass_through->CdbLength = 10;
 	pass_through->DataIn = SCSI_IOCTL_DATA_UNSPECIFIED;
 	pass_through->DataTransferLength = 0;
 	pass_through->SenseInfoLength = SCSI_SENSE_BUFFER_LEN;
@@ -1746,27 +1746,25 @@ static int submit_admin_format_nvm_user_data_erase(
 	pass_through->DataBufferOffset = 0;
 
 	/*
-	 * Build the Sanitize CDB (6 bytes)
+	 * Build the Sanitize CDB (10 bytes, per SBC-3)
 	 * Byte 0: Operation code (0x48)
-	 * Byte 1: Service Action + Immediate bit
-	 *   Bits 7-5: Reserved
-	 *   Bits 4-3: Service action
-	 *     00 = Block Erase
-	 *     01 = Crypto Scramble
-	 *     10 = Overwrite
-	 *   Bit 2: Ancillary (reserved)
-	 *   Bit 1: IMMED (Immediate)
-	 *   Bit 0: Reserved
+	 * Byte 1:
+	 *   Bit 7: IMMED (Immediate)
+	 *   Bit 6: ZNR (Zone No Reset)
+	 *   Bit 5: AUSE (Allow Unrestricted Sanitize Exit)
+	 *   Bits 4-0: Service action
+	 *     0x01 = Overwrite
+	 *     0x02 = Block Erase
+	 *     0x03 = Crypto Erase
+	 *     0x1F = Exit Failure Mode
 	 * Bytes 2-5: Reserved
+	 * Bytes 6-8: Parameter list length (only used by Overwrite)
+	 * Byte 9: Control
 	 *
-	 * For NVMe User Data Erase, use Block Erase (service action 00)
+	 * For NVMe User Data Erase, use Block Erase (service action 0x02).
 	 */
 	pass_through->Cdb[0] = SCSIOP_SANITIZE;
-	pass_through->Cdb[1] = 0x00; /* Block Erase, non-immediate */
-	pass_through->Cdb[2] = 0;    /* Reserved */
-	pass_through->Cdb[3] = 0;    /* Reserved */
-	pass_through->Cdb[4] = 0;    /* Reserved */
-	pass_through->Cdb[5] = 0;    /* Reserved */
+	pass_through->Cdb[1] = 0x02; /* Block Erase, non-immediate */
 
 	do {
 		err = 0;
@@ -1949,8 +1947,7 @@ static int submit_admin_security_send_receive(
 	}
 
 	/*
-	 * Build the Security Protocol CDB (12 bytes)
-	 * Per SPC-4: Security Protocol In/Out CDB is 12 bytes:
+	 * Build the Security Protocol CDB (12 bytes, per SPC-4)
 	 * Byte 0: Operation code (0xA2/0xB5)
 	 * Byte 1: Security Protocol (SECP)
 	 * Byte 2-3: Security Protocol Specific (SPSP)
