@@ -6,10 +6,11 @@
 # python3 is found once, in ../../meson.build.
 
 if python3.found()
-    # dump-command-metadata is compiled out without json-c, so its test only
-    # makes sense when json-c is available.  Tests added here that don't
-    # depend on json-c belong outside this inner guard.
-    if want_json_c
+    # dump-command-metadata lives in the "utils" plugin and is compiled out
+    # without json-c, so its test only makes sense when both are present.
+    # Tests added here that don't depend on json-c/utils belong outside this
+    # inner guard.
+    if want_json_c and 'utils' in selected_plugins
         test(
             'nvme-cli - command-metadata-schema',
             python3,
