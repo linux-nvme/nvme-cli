@@ -33,6 +33,12 @@
   zero and emitted a secret that was never given: 63 characters ending
   `...bababa` produced `...ababab0a`.
 
+* `nvme check-dhchap-key` reports on the secret rather than on the key:
+  `Key is valid`, `Key is loaded` and `Key is not loaded` are now
+  `Secret is ...`, and the validation errors say secret where they said
+  key. Exit codes are unchanged, but a script matching the old wording
+  needs updating. See `nvme-check-dhchap-key(1)`.
+
 * All `nvme *-log` commands (`smart-log`, `ana-log`, `error-log`,
   `fw-log`, `telemetry-log`, `self-test-log`, `sanitize-log`, and the
   rest of the get-log-page family, `get-log` excepted) have moved

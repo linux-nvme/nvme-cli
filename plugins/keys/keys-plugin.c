@@ -165,7 +165,7 @@ static int validate_kxchap_key(const char *key, int *hmac_out,
 	int decoded_len, hmac, err;
 
 	if (sscanf(key, "DHHC-1:%02x:%*s", &hmac) != 1) {
-		nvme_show_error("Invalid key header '%s'", key);
+		nvme_show_error("Invalid secret header '%s'", key);
 		return -EINVAL;
 	}
 	if (hmac > 3) {
@@ -191,7 +191,7 @@ static int validate_kxchap_key(const char *key, int *hmac_out,
 	}
 
 	if (key[len - 1] != ':') {
-		nvme_show_error("Invalid key format (missing trailing ':')");
+		nvme_show_error("Invalid secret format (missing trailing ':')");
 		return -EINVAL;
 	}
 
@@ -212,7 +212,7 @@ static int validate_kxchap_key(const char *key, int *hmac_out,
 		   ((uint32_t)decoded_key[decoded_len + 2] << 16) |
 		   ((uint32_t)decoded_key[decoded_len + 3] << 24);
 	if (key_crc != crc) {
-		nvme_show_error("CRC mismatch (key %08x, crc %08x)", key_crc, crc);
+		nvme_show_error("CRC mismatch (secret %08x, crc %08x)", key_crc, crc);
 		return -EINVAL;
 	}
 
@@ -265,7 +265,7 @@ static int check_kxchap(int argc, char **argv, struct command *acmd, struct plug
 
 	err = read_key_value(cfg.keydata, &key);
 	if (err) {
-		nvme_show_error("No key data");
+		nvme_show_error("No secret data");
 		return err;
 	}
 
@@ -273,7 +273,7 @@ static int check_kxchap(int argc, char **argv, struct command *acmd, struct plug
 	if (err)
 		return err;
 
-	nvme_show_result("Key is valid (HMAC %d, length %d, CRC %08x)", hmac, decoded_len, crc);
+	nvme_show_result("Secret is valid (HMAC %d, length %d, CRC %08x)", hmac, decoded_len, crc);
 
 	if (!cfg.identity)
 		return 0;
@@ -301,7 +301,7 @@ static int check_kxchap(int argc, char **argv, struct command *acmd, struct plug
 
 	err = libnvmf_lookup_key(ctx, cfg.keytype, cfg.identity, &key_id);
 	if (err) {
-		nvme_show_result("Key is not loaded for identity '%s'", cfg.identity);
+		nvme_show_result("Secret is not loaded for identity '%s'", cfg.identity);
 		return 0;
 	}
 
@@ -313,9 +313,9 @@ static int check_kxchap(int argc, char **argv, struct command *acmd, struct plug
 	}
 
 	if ((size_t)stored_len == strlen(key) && !memcmp(stored, key, stored_len))
-		nvme_show_result("Key is loaded (serial %08x) and matches", (unsigned int)key_id);
+		nvme_show_result("Secret is loaded (serial %08x) and matches", (unsigned int)key_id);
 	else
-		nvme_show_result("Key is loaded (serial %08x) but differs", (unsigned int)key_id);
+		nvme_show_result("Secret is loaded (serial %08x) but differs", (unsigned int)key_id);
 
 	return 0;
 }

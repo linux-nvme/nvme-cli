@@ -16,8 +16,10 @@ SYNOPSIS
 DESCRIPTION
 -----------
 Deprecated alias for linknvme-keys-check-kxchap[1], kept for scripts written
-against nvme-cli versions older than 3.0. Options and behavior are
-identical; only the top-level command name is retained.
+against nvme-cli versions older than 3.0. Exit codes match nvme-cli 2.x, but
+'Key is valid', 'Key is loaded' and 'Key is not loaded' are now 'Secret is
+...', and the validation errors say secret where they said key, so a script
+matching the old wording needs updating.
 
 New scripts should use 'nvme keys check-kxchap' instead. This alias prints
 a deprecation warning on stderr and may be removed in a future release.
