@@ -29,6 +29,8 @@ int shr_parse_csv_int(char *string, int *val, unsigned int max_length);
 int shr_parse_csv_ushort(char *string, unsigned short *val, unsigned int max_length);
 int shr_parse_csv_uint(char *string, unsigned int *val, unsigned int max_length);
 int shr_parse_csv_ulonglong(char *string, unsigned long long *val, unsigned int max_length);
+int shr_parse_csv_uchar(char *string, unsigned char *val,
+			unsigned int max_length);
 
 /*
  * Fixed-width aliases for the parsers above, for callers whose buffer is
@@ -58,4 +60,10 @@ int shr_parse_csv_ulonglong(char *string, unsigned long long *val, unsigned int 
 	shr_parse_csv_ulonglong(string,				\
 		(unsigned long long *)(val) + BUILD_ASSERT_OR_ZERO(	\
 			sizeof(*(val)) == sizeof(unsigned long long)),	\
+		max_length)
+
+#define shr_parse_csv_u8(string, val, max_length)			\
+	shr_parse_csv_uchar(string,					\
+		(unsigned char *)(val) + BUILD_ASSERT_OR_ZERO(		\
+			sizeof(*(val)) == sizeof(unsigned char)),	\
 		max_length)

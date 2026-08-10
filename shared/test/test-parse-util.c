@@ -263,6 +263,31 @@ static bool test_csv_u64(void)
 	return pass;
 }
 
+static bool test_csv_u8(void)
+{
+	char buf[] = "42,0,255";
+	uint8_t val[8] = { 0 };
+	bool pass = true;
+	int ret;
+
+	printf("test_csv_u8:\n");
+
+	ret = shr_parse_csv_u8(buf, val, 8);
+	pass &= check_int_ret("parses one entry", ret, 3);
+	pass &= check_int_ret("val[0]", val[0], 42);
+	pass &= check_int_ret("val[1]", val[1], 0);
+	pass &= check_int_ret("val[2]", val[2], 255);
+
+	{
+		char overflow[] = "256";
+
+		ret = shr_parse_csv_u8(overflow, val, 8);
+		pass &= check_int_ret("value beyond UINT8_MAX fails", ret, -1);
+	}
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -277,6 +302,7 @@ int main(void)
 	pass &= test_csv_u16();
 	pass &= test_csv_u32();
 	pass &= test_csv_u64();
+	pass &= test_csv_u8();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
