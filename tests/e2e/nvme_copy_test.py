@@ -22,7 +22,7 @@ NVMe Copy Testcase:-
 
 """
 
-from tests.nvme_test import TestNVMe, to_decimal
+from ..nvme_test import TestNVMe, to_decimal
 
 
 class TestNVMeCopy(TestNVMe):

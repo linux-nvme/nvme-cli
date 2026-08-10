@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+[build-system]
+build-backend = 'setuptools.build_meta'
+requires = ['setuptools>=61']
+
+[project]
+name = "nvme-cli-e2e"
+version = "0.1.0"
+description = "Hardware-verification e2e test suite for nvme-cli, runnable standalone against any nvme-cli install"
+requires-python = ">=3.10"
+license = { text = "GPL-2.0-or-later" }
+
+authors = [
+    { name = "Daniel Wagner", email = "dwagner@suse.de" },
+]
+
+keywords = ["nvme", "storage", "testing", "hardware-verification"]
+
+classifiers = [
+    "Intended Audience :: Developers",
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Testing",
+]
+
+# Pure stdlib: every test shells out to the 'nvme' binary via subprocess
+# rather than linking against nvme-cli's sources or Python bindings.
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://github.com/linux-nvme/nvme-cli"
+"Source" = "https://github.com/linux-nvme/nvme-cli"
+"Bug Tracker" = "https://github.com/linux-nvme/nvme-cli/issues"
+
+[project.scripts]
+nvme-cli-e2e = "nvme_e2e.e2e.runner:main"
+
+[tool.setuptools]
+packages = [
+    "nvme_e2e",
+    "nvme_e2e.e2e",
+    "nvme_e2e.e2e.plugins",
+    "nvme_e2e.e2e.plugins.micron",
+    "nvme_e2e.e2e.plugins.ocp",
+]
+
+[tool.setuptools.package-dir]
+nvme_e2e = "."
+"nvme_e2e.e2e" = "e2e"
+"nvme_e2e.e2e.plugins" = "e2e/plugins"
+"nvme_e2e.e2e.plugins.micron" = "e2e/plugins/micron"
+"nvme_e2e.e2e.plugins.ocp" = "e2e/plugins/ocp"

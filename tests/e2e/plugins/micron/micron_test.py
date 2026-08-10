@@ -6,7 +6,7 @@
 #
 """Base class for Micron plugin tests."""
 
-from tests.e2e.plugins.plugin_test import TestPlugin
+from ..plugin_test import TestPlugin
 
 
 class TestMicron(TestPlugin):

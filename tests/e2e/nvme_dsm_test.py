@@ -13,7 +13,7 @@ NVMe DSM Testcase:-
 
 """
 
-from tests.nvme_test import TestNVMe
+from ..nvme_test import TestNVMe
 
 
 class TestNVMeDsm(TestNVMe):

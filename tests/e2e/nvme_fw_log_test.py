@@ -26,7 +26,7 @@ NVMe Firmware Log Testcase :-
     1. Execute fw-log on a device.
 """
 
-from tests.nvme_test import TestNVMe
+from ..nvme_test import TestNVMe
 
 
 class TestNVMeFwLogCmd(TestNVMe):

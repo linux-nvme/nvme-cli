@@ -82,3 +82,33 @@ Running testcases with framework
     checkout it belongs to :-
        $ .build/nvme-cli-e2e --source-root . \
              --controller /dev/nvme0 --ns1 /dev/nvme0n1
+
+    4. --json-report <path> additionally writes a structured per-test JSON
+       summary (name, class, outcome, duration, message, plus the resolved
+       controller/ns1/nvme_bin) alongside the normal TAP output on stdout --
+       useful for feeding results into a database rather than parsing TAP.
+
+Running the suite standalone (no nvme-cli checkout required)
+--------------------------------------------------------------
+    tests/ (nvme_test.py, nvme_test_logger.py and everything under e2e/) is
+    also a self-contained, independently installable package -- it only
+    ever shells out to the 'nvme' binary via subprocess, so it has no
+    dependency on nvme-cli's sources or Python bindings. This is meant for
+    hardware verification on a machine that only has nvme-cli installed,
+    not a full source checkout.
+
+    Build and install it with a normal Python toolchain, from tests/ :-
+       $ cd tests && python3 -m build
+       $ pip install dist/nvme_cli_e2e-*.whl
+
+    This installs the same source tree under the 'nvme_e2e' package name
+    (rather than 'tests', which would collide with other projects' test
+    packages) and provides an 'nvme-cli-e2e' console script :-
+       $ nvme-cli-e2e --controller /dev/nvme0 --ns1 /dev/nvme0n1 \
+             --json-report results.json nvme_id_ctrl_test
+       $ nvme-cli-e2e --controller /dev/nvme0 --ns1 /dev/nvme0n1
+
+    A bare module name (e.g. 'nvme_id_ctrl_test') is resolved against
+    whichever package this copy was loaded as; a fully dotted name (e.g.
+    'tests.e2e.nvme_id_ctrl_test' or 'nvme_e2e.e2e.nvme_id_ctrl_test') also
+    works.

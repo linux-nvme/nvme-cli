@@ -39,7 +39,7 @@ Tests in this module verify:
 
 import re
 
-from tests.e2e.plugins.micron.micron_test import TestMicron
+from .micron_test import TestMicron
 
 _WINDOWS_AER_UNSUPPORTED_MSG = "register writes not supported on the current platform"
 _AER_STDOUT_MARKER = "Device correctable errors detected:"

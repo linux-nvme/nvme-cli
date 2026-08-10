@@ -40,7 +40,7 @@ Namespace Format testcase :-
 import logging
 import math
 
-from tests.nvme_test import TestNVMe
+from ..nvme_test import TestNVMe
 
 logger = logging.getLogger(__name__)
 

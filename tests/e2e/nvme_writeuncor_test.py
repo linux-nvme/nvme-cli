@@ -30,8 +30,8 @@ NVMe Write Compare Testcae:-
 
 """
 
-from tests.nvme_test import to_decimal
-from tests.e2e.nvme_test_io import TestNVMeIO
+from ..nvme_test import to_decimal
+from .nvme_test_io import TestNVMeIO
 
 
 class TestNVMeUncor(TestNVMeIO):
