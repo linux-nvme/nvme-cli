@@ -235,6 +235,7 @@ option(
 option(
   'plugin-tests',
   type : 'array',
+  # keep in sync with known_plugin_tests in tests/e2e/plugins/meson.build
   choices : ['micron', 'ocp'],
   value : [],
   description : 'comma-separated list of plugin test suites to run against real hardware ([] = none)'
