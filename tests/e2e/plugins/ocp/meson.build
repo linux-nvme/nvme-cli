@@ -6,13 +6,8 @@ ocp_tests = [
     'ocp_smart_add_log_test.py',
 ]
 
-python_module = import('python')
-python3 = python_module.find_installation('python3')
-
 test_env = environment()
 test_env.prepend('PATH', meson.project_build_root())
-
-tap_runner = meson.project_source_root() / 'tests' / 'tap_runner.py'
 
 foreach t : ocp_tests
     t_name = t.split('.')[0]
@@ -20,8 +15,9 @@ foreach t : ocp_tests
         'ocp - @0@'.format(t_name),
         python3,
         args: [
-            tap_runner,
-            '--start-dir', meson.project_source_root(),
+            e2e_runner,
+            '--source-root', meson.project_source_root(),
+            '--config', e2e_config_file,
             'tests.e2e.plugins.ocp.@0@'.format(t_name),
         ],
         env: test_env,

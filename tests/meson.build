@@ -13,6 +13,11 @@
 #
 # unit/ and cli/ are gated by the general 'tests' option (on by default);
 # e2e/ is gated by the hardware-only 'e2e-tests' option.
+#
+python3 = find_program('python3', required: false)
+if not python3.found()
+    message('python3 not found. Python-based tests disabled')
+endif
 
 if get_option('tests')
     subdir('unit')
@@ -31,13 +36,12 @@ flake8 = find_program(
     'flake8',
     required : false,
 )
-lint_python3 = find_program('python3', required: false)
 linter_script = files('run_py_linters.py')
 
-if lint_python3.found() and mypy.found() and flake8.found()
+if python3.found() and mypy.found() and flake8.found()
     run_target(
         'lint-python',
-        command : [lint_python3, linter_script, 'lint'],
+        command : [python3, linter_script, 'lint'],
     )
 else
     message('Mypy or Flake8 not found. Python linting disabled')
@@ -52,10 +56,10 @@ isort = find_program(
     required : false,
 )
 
-if lint_python3.found() and autopep8.found() and isort.found()
+if python3.found() and autopep8.found() and isort.found()
     run_target(
         'format-python',
-        command : [lint_python3, linter_script, 'format'],
+        command : [python3, linter_script, 'format'],
     )
 else
     message('autopep8 or isort not found. Python formatting disabled')

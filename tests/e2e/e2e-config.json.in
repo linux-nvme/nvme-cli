@@ -1,0 +1,8 @@
+{
+    "controller": "@CONTROLLER@",
+    "ns1": "@NS1@",
+    "log_dir": "@LOG_DIR@",
+    "log_level": "@LOG_LEVEL@",
+    "nvme_bin": "@NVME_BIN@",
+    "do_validate_pci_device": @VALIDATE_PCI_DEVICE@
+}

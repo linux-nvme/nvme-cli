@@ -49,15 +49,20 @@ are met:
 
 ## Configuration
 
-Plugin tests reuse the same `tests/config.json` as the core tests. Ensure it
-points to the correct controller and namespace for your hardware:
+Plugin tests reuse the same e2e configuration as the core tests: the
+`-De2e-controller=`/`-De2e-ns1=` (and `-De2e-log-dir=`, `-De2e-log-level=`,
+`-De2e-nvme-bin=`, `-De2e-validate-pci-device=`) meson options, written to a
+config file at `meson setup` time and passed to every test via
+`tests/nvme-cli-e2e --config`. Ensure they point to the correct controller
+and namespace for your hardware:
 
 ## Building and Running
 
 ### Configure with plugin tests enabled (comma separated list)
 
 ```bash
-meson setup .build -De2e-tests=true -Dplugin-tests=ocp,micron
+meson setup .build -De2e-tests=true -Dplugin-tests=ocp,micron \
+    -De2e-controller=/dev/nvme0 -De2e-ns1=/dev/nvme0n1
 ```
 
 ### Run all enabled test suites

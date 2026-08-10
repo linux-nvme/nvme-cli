@@ -103,9 +103,10 @@ class TestNVMe(TestNVMeBase):
             - ctrl : NVMe Controller.
             - ns1 : default namespace.
             - default_nsid : default namespace id.
-            - config_file : configuration file.
             - clear_log_dir : default log directory.
     """
+
+    CONFIG_ENV_VAR = 'NVME_E2E_CONFIG'
 
     def is_windows(self):
         return platform.system() == 'Windows'
@@ -123,7 +124,6 @@ class TestNVMe(TestNVMeBase):
         self.ns_dps = 0
         self.ns_meta_ext = False
         self.pif = 0
-        self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
 
         self.load_config()
         if self.do_validate_pci_device:
@@ -196,27 +196,33 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - None
         """
-        with open(self.config_file) as data_file:
-            config = json.load(data_file)
-            self.ctrl = config['controller']
-            self.ns1 = config['ns1']
-            self.log_dir = config['log_dir']
-            self.nvme_bin = config.get('nvme_bin', self.nvme_bin)
-            self.do_validate_pci_device = config.get(
-                'do_validate_pci_device', self.do_validate_pci_device)
-            self.clear_log_dir = False
+        raw_config = os.environ.get(self.CONFIG_ENV_VAR)
+        if not raw_config:
+            raise RuntimeError(
+                f"{self.CONFIG_ENV_VAR} is not set. e2e tests read and "
+                "write real data to an NVMe device and refuse to guess "
+                "one -- run them via 'tests/nvme-cli-e2e --controller=... "
+                "--ns1=...' or 'meson test' after configuring with "
+                "-De2e-controller=... -De2e-ns1=...")
+        config = json.loads(raw_config)
+        self.ctrl = config['controller']
+        self.ns1 = config['ns1']
+        self.log_dir = config.get('log_dir', 'nvmetests')
+        self.nvme_bin = config.get('nvme_bin', self.nvme_bin)
+        self.do_validate_pci_device = config.get(
+            'do_validate_pci_device', self.do_validate_pci_device)
+        self.clear_log_dir = False
 
-            log_level_str = config.get('log_level',
-                                       'DEBUG' if config.get('debug', False) else 'WARNING')
-            log_level = getattr(logging, log_level_str.upper(), logging.WARNING)
-            logging.getLogger().setLevel(log_level)
-            logger.debug("Using nvme binary '%s'", self.nvme_bin)
+        log_level_str = config.get('log_level', 'WARNING')
+        log_level = getattr(logging, log_level_str.upper(), logging.WARNING)
+        logging.getLogger().setLevel(log_level)
+        logger.debug("Using nvme binary '%s'", self.nvme_bin)
 
-            if self.clear_log_dir is True:
-                shutil.rmtree(self.log_dir, ignore_errors=True)
+        if self.clear_log_dir is True:
+            shutil.rmtree(self.log_dir, ignore_errors=True)
 
-            if not os.path.exists(self.log_dir):
-                os.makedirs(self.log_dir)
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir)
 
     def setup_log_dir(self, test_name):
         """ Set up the log directory for a testcase

@@ -118,18 +118,14 @@ jobs:
             cd /nvme-cli
             git checkout ${{ github.sha }}
             CONTROLLER=$(echo "${BDEV0}" | sed 's/n[0-9]*$//')
-            cat > tests/config.json << EOJ
-            {
-              "controller" : "${CONTROLLER}",
-              "ns1": "${BDEV0}",
-              "log_dir": "/nvme-cli/tests/nvmetests",
-              "log_level": "DEBUG",
-              "nvme_bin": "/nvme-cli/.build-ci/nvme"
-            }
-            EOJ
-            cat tests/config.json
 
-            scripts/build.sh -b release -c gcc -p tests
+            scripts/build.sh -b release -c gcc -p \
+                --e2e-controller "${CONTROLLER}" \
+                --e2e-ns1 "${BDEV0}" \
+                --e2e-log-dir "/nvme-cli/tests/nvmetests" \
+                --e2e-log-level "DEBUG" \
+                --e2e-nvme-bin "/nvme-cli/.build-ci/nvme" \
+                tests
 
             cp coverage.xml tests/nvmetests/coverage-nvmetests.xml
 
