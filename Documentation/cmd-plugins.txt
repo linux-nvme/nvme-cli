@@ -362,7 +362,7 @@ linknvme:nvme-keys-gen-kxchap[1]::
 	Generate NVMeoF KX-HMAC-CHAP host secret
 
 linknvme:nvme-keys-check-kxchap[1]::
-	Validate NVMeoF KX-HMAC-CHAP host key
+	Validate NVMeoF KX-HMAC-CHAP host secret
 
 linknvme:nvme-keys-gen-tls[1]::
 	Generate NVMeoF TLS PSK

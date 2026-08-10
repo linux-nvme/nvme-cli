@@ -3,12 +3,12 @@ nvme-check-dhchap-key(1)
 
 NAME
 ----
-nvme-check-dhchap-key - Check a host DH-HMAC-CHAP key (deprecated)
+nvme-check-dhchap-key - Check a host DH-HMAC-CHAP secret (deprecated)
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'check-dhchap-key' [--keydata=<key> | -d <key>]
+'nvme' [<global-options>] 'check-dhchap-key' [--keydata=<secret> | -d <secret>]
 			[--keyring=<name> | -k <name>]
 			[--keytype=<type> | -t <type>]
 			[--identity=<identity> | -i <identity>]

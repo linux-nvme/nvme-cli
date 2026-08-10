@@ -225,12 +225,12 @@ static int validate_kxchap_key(const char *key, int *hmac_out,
 static int check_kxchap(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc =
-	    "Check a KX-HMAC-CHAP host key for usability for NVMe In-Band Authentication,\n"
+	    "Check a KX-HMAC-CHAP host secret for usability for NVMe In-Band Authentication,\n"
 	    "and, if --identity is given, check whether it is already loaded into a keyring.";
-	const char *keydata = "KX-HMAC-CHAP key (in DHHC-1 interchange format) to be validated. Reads from stdin if not given.";
-	const char *keyring = "Keyring to check for an already loaded key.";
-	const char *keytype = "Key type of the key to look up.";
-	const char *identity = "Identity to look up in the keyring to check if the key is already loaded.";
+	const char *keydata = "KX-HMAC-CHAP secret (in DHHC-1 interchange format) to be validated. Reads from stdin if not given.";
+	const char *keyring = "Keyring to check for an already loaded secret.";
+	const char *keytype = "Key type of the secret to look up.";
+	const char *identity = "Identity to look up in the keyring to check if the secret is already loaded.";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free char *key = NULL;
@@ -927,7 +927,7 @@ static int import_key(struct libnvme_global_ctx *ctx, const char *keyring,
 
 static int key_import(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	const char *desc = "Import NVMeoF TLS PSKs and KX-HMAC-CHAP keys into a keyring.\n";
+	const char *desc = "Import NVMeoF TLS PSKs and KX-HMAC-CHAP secrets into a keyring.\n";
 	const char *keyring = "Keyring to import the keys into.";
 	const char *keyfile = "File to read the keys from (default: stdin).";
 	const char *keydata = "Key to insert directly under --identity. Reads from stdin if not given.";
