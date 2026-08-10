@@ -197,7 +197,7 @@ linknvme:nvme-capacity-mgmt[1]::
 	Capacity Management Command
 
 linknvme:nvme-check-dhchap-key[1]::
-	Check a host DH-HMAC-CHAP key (deprecated, see nvme-keys-check-kxchap)
+	Check a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-check-kxchap)
 
 linknvme:nvme-check-tls-key[1]::
 	Check a NVMe TLS PSK (deprecated, see nvme-keys-check-tls)

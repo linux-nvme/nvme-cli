@@ -3,55 +3,55 @@ nvme-keys-check-kxchap(1)
 
 NAME
 ----
-nvme-keys-check-kxchap - Check a host KX-HMAC-CHAP key
+nvme-keys-check-kxchap - Check a host KX-HMAC-CHAP secret
 
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'keys check-kxchap' [--keydata=<key> | -d <key>]
+'nvme' [<global-options>] 'keys check-kxchap' [--keydata=<secret> | -d <secret>]
 			[--keyring=<name> | -k <name>]
 			[--keytype=<type> | -t <type>]
 			[--identity=<identity> | -i <identity>]
 
 DESCRIPTION
 -----------
-Checks if the key is a valid KX-HMAC-CHAP host key of the form:
+Checks if the given string is a valid KX-HMAC-CHAP host secret of the form:
 DHHC-1:00:ia6zGodOr4SEG0Zzaw398rpY0wqipUWj4jWjUh4HWUz6aQ2n:
-and prints the resulting HMAC algorithm, key length, and CRC.
+and prints the hash algorithm it records, the secret length, and the CRC.
 
-If '--keydata' is not given the key is read from stdin, which also allows
-checking a key stored in a file, e.g. 'nvme keys check-kxchap < keyfile'.
+If '--keydata' is not given the secret is read from stdin, which also allows
+checking a secret stored in a file, e.g. 'nvme keys check-kxchap < keyfile'.
 
-If '--identity' is given the specified keyring is also checked for a key
+If '--identity' is given the specified keyring is also checked for a secret
 already stored under that identity (as inserted by
 linknvme-keys-import[1]); the result (not loaded, loaded and
 matching, or loaded but different) is reported. This command never
 modifies the keyring.
 
-Looking up a key requires the 'kxchap' keyring key type, which is not yet
+Looking up a secret requires the 'kxchap' keyring key type, which is not yet
 provided by any released Linux kernel; see linknvme-keys-import[1]
 for details.
 
 OPTIONS
 -------
--d <key>::
---keydata=<key>::
-	Key to be checked. If not given, the key is read from stdin.
+-d <secret>::
+--keydata=<secret>::
+	Secret to be checked. If not given, the secret is read from stdin.
 
 -k <name>::
 --keyring=<name>::
-	Name of the keyring to check for an already loaded key.
+	Name of the keyring to check for an already loaded secret.
 	Default is '.nvme'.
 
 -t <type>::
 --keytype=<type>::
-	Type of the key to look up.
+	Key type of the secret to look up.
 	Default is 'kxchap'.
 
 -i <identity>::
 --identity=<identity>::
-	Identity to look up in the keyring to check if the key is already
-	loaded. If not given, only the key format is validated.
+	Identity to look up in the keyring to check if the secret is already
+	loaded. If not given, only the secret format is validated.
 
 include::global-options.txt[]
 
