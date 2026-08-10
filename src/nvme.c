@@ -441,7 +441,6 @@ static int __nvme_create_global_ctx(struct libnvme_global_ctx **pctx)
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_free char *buf = NULL;
 	const char *opt;
-	int log_level;
 	char *p;
 	int err;
 
