@@ -123,20 +123,20 @@ class KeysCLITest(unittest.TestCase):
             for secret_len in (32, 48, 64):
                 with self.subTest(hmac=hmac, secret_len=secret_len):
                     result = self._run('gen-kxchap-secret', f'--hmac={hmac}',
-                                       f'--key-length={secret_len}')
+                                       f'--secret-length={secret_len}')
                     self.assertEqual(len(result.stdout.strip().split(':')[2]),
                                      4 * -(-(secret_len + 4) // 3))
 
     def test_gen_kxchap_secret_sets_the_length(self):
         # A secret given as hex is the payload, so it fixes the length:
-        # without '--key-length' it must encode whole, not be truncated
+        # without '--secret-length' it must encode whole, not be truncated
         # to the digest-size default the generated case falls back to.
         for secret_len in (32, 48, 64):
             with self.subTest(secret_len=secret_len):
                 secret = 'ab' * secret_len
                 implied = self._run('gen-kxchap-secret', f'--secret={secret}')
                 explicit = self._run('gen-kxchap-secret', f'--secret={secret}',
-                                     f'--key-length={secret_len}')
+                                     f'--secret-length={secret_len}')
                 self.assertEqual(implied.stdout, explicit.stdout)
                 self.assertEqual(
                     len(implied.stdout.strip().split(':')[2]),
@@ -159,7 +159,7 @@ class KeysCLITest(unittest.TestCase):
         # The secret is the payload, so a length that contradicts it is an
         # error rather than a licence to truncate.
         self._run('gen-kxchap-secret', f'--secret={"ab" * 64}',
-                  '--key-length=32', expect_fail=True)
+                  '--secret-length=32', expect_fail=True)
 
     def test_gen_kxchap_nqn_is_rejected(self):
         # The payload is the secret, which no NQN takes part in deriving,
@@ -230,6 +230,19 @@ class KeysCLITest(unittest.TestCase):
                 self.assertEqual(result.stdout.strip(), _PIN_KXCHAP_KEY)
                 self.assertNotIn(_NQN_IGNORED, result.stderr)
 
+    @unittest.skipUnless(_DEPRECATED_CMDS, 'built without deprecated commands')
+    def test_gen_dhchap_key_alias_translates_key_length(self):
+        # 2.x spelled the length '--key-length', which the command now
+        # spells '--secret-length', so the alias has to rebuild it. Assert
+        # on the payload rather than the exit status: an option silently
+        # dropped in translation would still exit 0, at the default length.
+        for key_len in (32, 48, 64):
+            with self.subTest(key_len=key_len):
+                result = self._run_alias('gen-dhchap-key',
+                                         f'--key-length={key_len}')
+                self.assertEqual(len(result.stdout.strip().split(':')[2]),
+                                 4 * -(-(key_len + 4) // 3))
+
     def test_gen_kxchap_hmac_does_not_change_payload(self):
         # The payload is the secret; the hash identifier only records which
         # transformation the consumer is to apply, so the same secret must
@@ -243,7 +256,7 @@ class KeysCLITest(unittest.TestCase):
         self._run('gen-kxchap-secret', '--hmac=9', expect_fail=True)
 
     def test_gen_kxchap_invalid_secret_length_fails(self):
-        self._run('gen-kxchap-secret', '--key-length=33', expect_fail=True)
+        self._run('gen-kxchap-secret', '--secret-length=33', expect_fail=True)
 
     # ------------------------------------------------------------------ #
     # gen-tls                                                             #
@@ -291,7 +304,7 @@ class KeysCLITest(unittest.TestCase):
             for secret_len in (32, 48, 64):
                 with self.subTest(hmac=hmac, secret_len=secret_len):
                     gen = self._run('gen-kxchap-secret', f'--hmac={hmac}',
-                                    f'--key-length={secret_len}')
+                                    f'--secret-length={secret_len}')
                     key = gen.stdout.strip()
                     result = self._run('check-kxchap-secret',
                                        f'--keydata={key}')
