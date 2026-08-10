@@ -262,7 +262,7 @@ class KeysCLITest(unittest.TestCase):
 
     def test_check_kxchap_accepts_generated_key(self):
         result = self._run('check-kxchap', f'--keydata={_PIN_KXCHAP_KEY}')
-        self.assertIn('Key is valid', result.stdout)
+        self.assertIn('Secret is valid', result.stdout)
         self.assertIn('HMAC 0', result.stdout)
         self.assertIn('length 32', result.stdout)
 
@@ -283,12 +283,12 @@ class KeysCLITest(unittest.TestCase):
 
     def test_check_kxchap_reads_from_stdin(self):
         result = self._run('check-kxchap', stdin_data=_PIN_KXCHAP_KEY + '\n')
-        self.assertIn('Key is valid', result.stdout)
+        self.assertIn('Secret is valid', result.stdout)
 
     def test_check_kxchap_rejects_malformed_key(self):
         result = self._run('check-kxchap', '--keydata=not-a-key',
                            expect_fail=True)
-        self.assertIn('Invalid key header', result.stdout + result.stderr)
+        self.assertIn('Invalid secret header', result.stdout + result.stderr)
 
     def test_check_kxchap_rejects_tampered_key(self):
         # Flip the last character before the CRC to corrupt it while
