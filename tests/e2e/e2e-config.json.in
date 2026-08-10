@@ -4,5 +4,6 @@
     "log_dir": "@LOG_DIR@",
     "log_level": "@LOG_LEVEL@",
     "nvme_bin": "@NVME_BIN@",
-    "do_validate_pci_device": @VALIDATE_PCI_DEVICE@
+    "do_validate_pci_device": @VALIDATE_PCI_DEVICE@,
+    "collect_device_data": @COLLECT_DEVICE_DATA@
 }

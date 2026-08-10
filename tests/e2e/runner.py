@@ -257,6 +257,8 @@ def build_config(args: argparse.Namespace) -> dict:
             config[key] = value
     if args.validate_pci_device is not None:
         config['do_validate_pci_device'] = args.validate_pci_device
+    if args.collect_device_data is not None:
+        config['collect_device_data'] = args.collect_device_data
 
     missing = [key for key in ('controller', 'ns1') if not config.get(key)]
     if missing:
@@ -375,6 +377,18 @@ def main() -> None:
         '--no-validate-pci-device', dest='validate_pci_device',
         action='store_false',
         help='Skip the PCI-subsystem check, e.g. for emulated devices')
+    collect_group = parser.add_mutually_exclusive_group()
+    collect_group.add_argument(
+        '--collect-device-data', dest='collect_device_data',
+        action='store_true', default=None,
+        help='Opt in to recording every nvme command a test runs together '
+             'with its JSON output, plus id-ctrl-derived device metadata, '
+             'as device_data.json in each test\'s log directory (off by '
+             'default -- intended for feeding a device-feature database)')
+    collect_group.add_argument(
+        '--no-collect-device-data', dest='collect_device_data',
+        action='store_false',
+        help='Do not record per-test device data (default)')
     args = parser.parse_args()
 
     plugins_arg = args.plugins.strip().lower()
