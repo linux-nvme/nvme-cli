@@ -15,7 +15,7 @@ if python3_prog.found()
             meson.project_source_root() / 'libnvme',
         ],
     )
-    _ld_args = ['--ld', nvme_ld, '--ld', accessors_ld, '--ld', ctrl_attrs_ld]
+    _ld_args = ['--ld', nvme_ld, '--ld', accessors_ld, '--ld', attr_accessors_ld]
     if want_fabrics
         _ld_args += ['--ld', nvmf_ld, '--ld', nvmf_accessors_ld]
     endif

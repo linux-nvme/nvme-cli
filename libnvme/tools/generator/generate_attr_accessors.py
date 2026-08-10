@@ -337,13 +337,16 @@ def emit_alloc_free(f, spec):
 # ---------------------------------------------------------------------------
 
 
-def generate_header(spec, members):
+def generate_header(buf, spec, members):
+    """Append one spec's opaque struct decl and prototypes to buf.
+
+    No SPDX/banner/#pragma once here -- every spec shares one merged
+    header file, so main() writes that preamble once, not per spec.
+    """
     struct_name = spec['struct_name']
     owner_type = spec['owner_type']
     owner_field = spec['owner_field']
 
-    buf = io.StringIO()
-    buf.write(f'{SPDX_H}\n\n{BANNER}\n\n#pragma once\n\n')
     buf.write(
         f'/* Opaque: defined only in the generated {spec["source"]}. No\n'
         ' * other file may see its layout -- every field is reachable\n'
@@ -369,8 +372,8 @@ def generate_header(spec, members):
             '/* Internal: loader callbacks, one per group above. Each\n'
             ' * fills every member of its group in a single call,\n'
             ' * returning 0 on success or a negative errno. Defined in\n'
-            ' * whichever hand-written *-attrs-custom-*.c matches the\n'
-            ' * build (see that file\'s own #ifdef/#include selection).\n'
+            ' * whichever hand-written attr-accessors-custom-*.c matches\n'
+            ' * the build (see that file\'s own #ifdef/#include selection).\n'
             ' */\n'
         )
         for fn in loaders:
@@ -378,7 +381,7 @@ def generate_header(spec, members):
         buf.write('\n')
 
     generate_accessors.generate_hdr(buf, '', owner_type, owner_type, members)
-    return buf.getvalue()
+    buf.write('\n')
 
 
 # ---------------------------------------------------------------------------
@@ -386,51 +389,36 @@ def generate_header(spec, members):
 # ---------------------------------------------------------------------------
 
 
-def generate_source_shared(spec, shared_members):
-    """The spec's shared .c: struct def, alloc/reset/free, and every
-    OS-common member's getter/setter. For a spec with no OS-divergent
-    members (every spec today except where noted), this is the only
-    output .c file, identical to what this generator has always produced.
+def generate_source_shared(buf, spec, shared_members):
+    """Append one spec's struct def, alloc/reset/free, and every
+    OS-common member's getter/setter to buf.
+
+    No SPDX/banner/includes here -- every spec shares one merged .c
+    file, so main() writes that preamble once, not per spec.
     """
     owner_type = spec['owner_type']
-    buf = io.StringIO()
-    buf.write(
-        f'{SPDX_C}\n\n{BANNER}\n\n'
-        '#include <errno.h>\n'
-        '#include <stdio.h>\n'
-        '#include <stdlib.h>\n'
-        '#include <string.h>\n\n'
-        '#include <compiler-attributes.h>\n\n'
-        '#include "../private.h"\n'
-        '#include "../private-tree.h"\n'
-        f'#include "{spec["header"]}"\n\n'
-    )
-
     emit_struct_def(buf, spec)
     emit_alloc_free(buf, spec)
     generate_accessors.generate_src(buf, '', owner_type, owner_type,
                                     shared_members)
 
-    return buf.getvalue()
 
+def generate_source_os(buf, spec, os_members):
+    """Append one spec's OS-divergent getters/setters (members whose
+    Linux and Windows resolution differ) to buf.
 
-def generate_source_os(spec, os_members):
-    """One of the spec's per-OS .c files: just the getters/setters for
-    members whose Linux and Windows resolution differ.
-
-    No includes, no struct definition, no alloc/reset/free -- this file
-    is never compiled on its own. It relies on being #include'd *after*
-    the shared .c in the hand-written ctrl-attrs-custom-<os>.c (or
-    equivalent), which brings the struct definition and everything else
-    into scope first -- see generate_attr_accessors.md's "generated
-    file layout" section for the full #include chain.
+    No SPDX/banner here -- every spec sharing this OS's file shares one
+    preamble, written once by main(). No struct definition or
+    alloc/reset/free either way -- this file is never compiled on its
+    own. It relies on being #include'd *after* the shared .c in the
+    hand-written attr-accessors-custom-<os>.c, which brings the struct
+    definition and everything else into scope first -- see
+    generate_attr_accessors.md's "generated file layout" section for
+    the full #include chain.
     """
     owner_type = spec['owner_type']
-    buf = io.StringIO()
-    buf.write(f'{SPDX_C}\n\n{BANNER}\n\n')
     generate_accessors.generate_src(buf, '', owner_type, owner_type,
                                     os_members)
-    return buf.getvalue()
 
 
 # ---------------------------------------------------------------------------
@@ -501,9 +489,13 @@ def emit_swig_getter_wrapper(owner_type, m):
     )
 
 
-def generate_swig(spec, members):
-    """SWIG fragment: extend the already-wrapped struct libnvme_ctrl
-    (declared in accessors.i) with these lazily-loaded properties.
+def generate_swig(buf, spec, members):
+    """Append one spec's SWIG fragment to buf: extend the already-
+    wrapped struct libnvme_ctrl (declared in accessors.i) with these
+    lazily-loaded properties.
+
+    No SPDX/banner here -- every spec shares one merged .i file, so
+    main() writes that preamble once, not per spec.
 
     Every member here goes through %extend, unconditionally -- SWIG's
     generated glue can no more reach a field behind the opaque attrs
@@ -541,8 +533,6 @@ def generate_swig(spec, members):
     readable = [m for m in members if m.read_mode != 'none']
     writable = [m for m in members if m.write_mode != 'none']
 
-    buf = io.StringIO()
-    buf.write(f'{SPDX_C}\n\n{BANNER}\n\n')
     buf.write(f'/* struct {owner_type} -- lazily-loaded properties */\n')
 
     for m in writable:
@@ -583,9 +573,7 @@ def generate_swig(spec, members):
         if m.read_mode != 'none' and m.type != 'const char *':
             decl_type = 'PyObject *'
         buf.write(f'\t{decl_type} {m.name};\n')
-    buf.write('}\n')
-
-    return buf.getvalue()
+    buf.write('}\n\n')
 
 
 # ---------------------------------------------------------------------------
@@ -593,14 +581,13 @@ def generate_swig(spec, members):
 # ---------------------------------------------------------------------------
 
 
-def generate_ld(spec, members):
-    buf = io.StringIO()
-    buf.write(
-        f'{SPDX_LD}\n\n{LD_BANNER}\n\n' f"{spec['ld_section']} {{\n" '\tglobal:\n'
-    )
+def generate_ld(buf, spec, members):
+    """Append one spec's exported symbols to buf.
+
+    No SPDX/banner/version-script tag here -- every spec shares one
+    merged .ld file under one tag, written once by main().
+    """
     generate_accessors.generate_ld(buf, '', spec['owner_type'], members, None, None)
-    buf.write('};\n')
-    return buf.getvalue()
 
 
 # ---------------------------------------------------------------------------
@@ -646,23 +633,77 @@ def main():
     ld_out_dir = args.ld_out_dir or args.out_dir
     swig_out_dir = args.swig_out_dir or args.out_dir
 
-    outputs = {}
-    for spec in load_specs(args.specs):
+    specs = load_specs(args.specs)
+
+    # Every spec shares one merged .c/.h/.ld/.i file -- enforced here so
+    # a future spec with a typo'd filename fails loudly instead of
+    # silently splitting off its own file.
+    for key in ('source', 'header', 'ld', 'swig', 'ld_section'):
+        values = {spec[key] for spec in specs}
+        assert len(values) == 1, (
+            f"every ATTR_SPECS entry must share the same {key!r} "
+            f"(got {sorted(values)})")
+
+    src_name = specs[0]['source']
+    hdr_name = specs[0]['header']
+    ld_name = specs[0]['ld']
+    ld_section = specs[0]['ld_section']
+    swig_name = specs[0]['swig']
+
+    c_buf = io.StringIO()
+    c_buf.write(
+        f'{SPDX_C}\n\n{BANNER}\n\n'
+        '#include <errno.h>\n'
+        '#include <stdio.h>\n'
+        '#include <stdlib.h>\n'
+        '#include <string.h>\n\n'
+        '#include <compiler-attributes.h>\n\n'
+        '#include "../private.h"\n'
+        '#include "../private-tree.h"\n'
+        f'#include "{hdr_name}"\n\n'
+    )
+
+    h_buf = io.StringIO()
+    h_buf.write(f'{SPDX_H}\n\n{BANNER}\n\n#pragma once\n\n')
+
+    ld_buf = io.StringIO()
+    ld_buf.write(f'{SPDX_LD}\n\n{LD_BANNER}\n\n{ld_section} {{\n\tglobal:\n')
+
+    swig_buf = io.StringIO()
+    swig_buf.write(f'{SPDX_C}\n\n{BANNER}\n\n')
+
+    # Per-OS bodies, keyed by output filename (only specs with real
+    # OS-divergent members contribute -- today just PATH_ATTRS).
+    os_bufs = {}
+
+    for spec in specs:
         resolved = build_members(spec)
-        outputs[spec['source']] = (
-            generated_dir, generate_source_shared(spec, resolved['shared']))
+        generate_source_shared(c_buf, spec, resolved['shared'])
         if resolved['linux']:
-            outputs[spec['source_linux']] = (
-                generated_dir, generate_source_os(spec, resolved['linux']))
+            name = spec['source_linux']
+            generate_source_os(
+                os_bufs.setdefault(name, io.StringIO()),
+                spec, resolved['linux'])
         if resolved['win']:
-            outputs[spec['source_win']] = (
-                generated_dir, generate_source_os(spec, resolved['win']))
-        outputs[spec['header']] = (
-            generated_dir, generate_header(spec, resolved['all']))
-        outputs[spec['ld']] = (
-            ld_out_dir, generate_ld(spec, resolved['all']))
-        outputs[spec['swig']] = (
-            swig_out_dir, generate_swig(spec, resolved['all']))
+            name = spec['source_win']
+            generate_source_os(
+                os_bufs.setdefault(name, io.StringIO()),
+                spec, resolved['win'])
+        generate_header(h_buf, spec, resolved['all'])
+        generate_ld(ld_buf, spec, resolved['all'])
+        generate_swig(swig_buf, spec, resolved['all'])
+
+    ld_buf.write('};\n')
+
+    outputs = {
+        src_name: (generated_dir, c_buf.getvalue()),
+        hdr_name: (generated_dir, h_buf.getvalue()),
+        ld_name: (ld_out_dir, ld_buf.getvalue()),
+        swig_name: (swig_out_dir, swig_buf.getvalue()),
+    }
+    for name, buf in os_bufs.items():
+        outputs[name] = (
+            generated_dir, f'{SPDX_C}\n\n{BANNER}\n\n' + buf.getvalue())
 
     if not args.check:
         os.makedirs(generated_dir, exist_ok=True)

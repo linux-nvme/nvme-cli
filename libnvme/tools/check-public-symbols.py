@@ -40,10 +40,7 @@ LD_FILES = [
     ROOT / 'src' / 'libnvme-mi.ld',
     ROOT / 'src' / 'accessors.ld',
     ROOT / 'src' / 'accessors-fabrics.ld',
-    ROOT / 'src' / 'ctrl-attrs.ld',
-    ROOT / 'src' / 'path-attrs.ld',
-    ROOT / 'src' / 'ns-attrs.ld',
-    ROOT / 'src' / 'subsys-attrs.ld',
+    ROOT / 'src' / 'attr-accessors.ld',
 ]
 
 # ---------------------------------------------------------------------------

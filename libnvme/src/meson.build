@@ -7,7 +7,6 @@
 #
 sources = [
     'nvme/generated/accessors.c',
-    'nvme/generated/subsys-attrs.c',
     'nvme/ioctl.c',
     'nvme/lib.c',
     'nvme/log.c',
@@ -17,9 +16,7 @@ sources = [
 ]
 if host_system == 'linux'
     sources += [
-        'nvme/ctrl-attrs-custom-linux.c',
-        'nvme/path-attrs-custom-linux.c',
-        'nvme/ns-attrs-custom-linux.c',
+        'nvme/attr-accessors-custom-linux.c',
         'nvme/ioctl-linux.c',
         'nvme/lib-linux.c',
         'nvme/mem-linux.c',
@@ -29,9 +26,7 @@ if host_system == 'linux'
 elif host_system == 'windows'
     sources += [
         'nvme/ctrl-map.c',
-        'nvme/ctrl-attrs-custom-win.c',
-        'nvme/path-attrs-custom-win.c',
-        'nvme/ns-attrs-custom-win.c',
+        'nvme/attr-accessors-custom-win.c',
         'nvme/ioctl-win.c',
         'nvme/lib-win.c',
         'nvme/mem-win.c',
@@ -68,10 +63,7 @@ headers = [
 # nvme/generated/ so libnvme.h.in can #include them by that same path.
 generated_headers = [
     'nvme/generated/accessors.h',
-    'nvme/generated/ctrl-attrs.h',
-    'nvme/generated/path-attrs.h',
-    'nvme/generated/ns-attrs.h',
-    'nvme/generated/subsys-attrs.h',
+    'nvme/generated/attr-accessors.h',
 ]
 
 if want_fabrics
@@ -155,10 +147,7 @@ nvmf_ld = meson.current_source_dir() / 'libnvmf.ld'
 mi_ld = meson.current_source_dir() / 'libnvme-mi.ld'
 accessors_ld = meson.current_source_dir() / 'accessors.ld'
 nvmf_accessors_ld = meson.current_source_dir() / 'accessors-fabrics.ld'
-ctrl_attrs_ld = meson.current_source_dir() / 'ctrl-attrs.ld'
-path_attrs_ld = meson.current_source_dir() / 'path-attrs.ld'
-ns_attrs_ld = meson.current_source_dir() / 'ns-attrs.ld'
-subsys_attrs_ld = meson.current_source_dir() / 'subsys-attrs.ld'
+attr_accessors_ld = meson.current_source_dir() / 'attr-accessors.ld'
 
 # Version scripts filter the exported symbols. GNU ld honours --version-script
 # for PE/COFF too, but LLVM's lld does not accept the option at all, so the
@@ -178,10 +167,7 @@ if want_version_scripts
     link_args += [
         '-Wl,--version-script=@0@'.format(nvme_ld),
         '-Wl,--version-script=@0@'.format(accessors_ld),
-        '-Wl,--version-script=@0@'.format(ctrl_attrs_ld),
-        '-Wl,--version-script=@0@'.format(path_attrs_ld),
-        '-Wl,--version-script=@0@'.format(ns_attrs_ld),
-        '-Wl,--version-script=@0@'.format(subsys_attrs_ld),
+        '-Wl,--version-script=@0@'.format(attr_accessors_ld),
     ]
 endif
 

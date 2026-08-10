@@ -1300,10 +1300,7 @@ def exclusion_match(ctx, transport=None, traddr=None, trsvcid=None,
  */
 %include "nvme-manual-bridges.i"
 %include "accessors.i"
-%include "ctrl-attrs.i"
-%include "path-attrs.i"
-%include "ns-attrs.i"
-%include "subsys-attrs.i"
+%include "attr-accessors.i"
 %include "accessors-fabrics.i"
 
 /* Propagate any Python exception set inside the helper function.
