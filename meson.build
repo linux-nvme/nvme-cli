@@ -657,6 +657,21 @@ if want_nvme
         )
     endif
 
+    if get_option('e2e-tests')
+        # A standalone copy of the e2e runner, placed next to the 'nvme'
+        # binary in the build root so it can be invoked directly -- e.g.
+        # './.build/nvme-cli-e2e --controller=... ...' -- entirely
+        # independent of 'meson test'.
+        cp = find_program('cp')
+        custom_target('nvme-cli-e2e',
+            input: files('tests/nvme-cli-e2e'),
+            output: 'nvme-cli-e2e',
+            command: [cp, '@INPUT@', '@OUTPUT@'],
+            build_by_default: true,
+            install: false,
+        )
+    endif
+
     subdir('tests')
 
     if want_discoverd

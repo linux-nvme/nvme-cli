@@ -102,6 +102,43 @@ option(
   description: 'Run tests against real hardware'
 )
 option(
+  'e2e-controller',
+  type : 'string',
+  value : '',
+  description : 'controller device for e2e tests, e.g. /dev/nvme0 (required when e2e-tests=true; no default since these tests read/write real data)'
+)
+option(
+  'e2e-ns1',
+  type : 'string',
+  value : '',
+  description : 'namespace device for e2e tests, e.g. /dev/nvme0n1 (required when e2e-tests=true; no default since these tests read/write real data)'
+)
+option(
+  'e2e-log-dir',
+  type : 'string',
+  value : 'nvmetests',
+  description : 'log directory for e2e tests'
+)
+option(
+  'e2e-log-level',
+  type : 'combo',
+  choices : ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+  value : 'WARNING',
+  description : 'log verbosity for e2e tests'
+)
+option(
+  'e2e-nvme-bin',
+  type : 'string',
+  value : 'nvme',
+  description : 'nvme binary to exercise in e2e tests'
+)
+option(
+  'e2e-validate-pci-device',
+  type : 'boolean',
+  value : true,
+  description : 'require the e2e controller to be a PCI NVMe device'
+)
+option(
   'tests',
   type : 'boolean',
   value : true,

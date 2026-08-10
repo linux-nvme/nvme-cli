@@ -12,6 +12,12 @@ usage() {
     echo "Usage: build.sh [-b [release|debug]] "
     echo "                [-c [gcc|clang]]"
     echo "                [-m [meson|muon]"
+    echo "                [--e2e-controller /dev/nvme0]"
+    echo "                [--e2e-ns1 /dev/nvme0n1]"
+    echo "                [--e2e-log-dir dir]"
+    echo "                [--e2e-log-level level]"
+    echo "                [--e2e-nvme-bin path]"
+    echo "                [--plugin-tests plugin1,plugin2]"
     echo "                [config]"
     echo ""
     echo "CI build script."
@@ -24,6 +30,17 @@ usage() {
     echo " -s                   run tests with ASan+UBSan (asanubsan setup)"
     echo " -t [arm]|ppc64le|s390x  cross compile target"
     echo " -x                   run tests with valgrind (valgrind setup)"
+    echo ""
+    echo "options for the 'tests' config (mirror the e2e-* meson options):"
+    echo " --e2e-controller dev    controller device for e2e tests, e.g. /dev/nvme0"
+    echo "                         (required when running the 'tests' config)"
+    echo " --e2e-ns1 dev           namespace device for e2e tests, e.g. /dev/nvme0n1"
+    echo "                         (required when running the 'tests' config)"
+    echo " --e2e-log-dir dir       log directory for e2e tests"
+    echo " --e2e-log-level level   log verbosity for e2e tests"
+    echo " --e2e-nvme-bin path     nvme binary to exercise in e2e tests"
+    echo " --plugin-tests list     comma-separated list of plugin test suites to"
+    echo "                         run against real hardware, e.g. micron,ocp"
     echo ""
     echo "configs with meson:"
     echo "  [default]           default settings"
@@ -59,9 +76,17 @@ use_valgrind=0
 use_asan=0
 use_analyzer=0
 
-while getopts "ab:c:m:pst:x" o; do
-    case "${o}" in
-        a)
+E2E_CONTROLLER=""
+E2E_NS1=""
+E2E_LOG_DIR=""
+E2E_LOG_LEVEL=""
+E2E_NVME_BIN=""
+PLUGIN_TESTS=""
+
+ARGS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -a)
             if ! command -v clang > /dev/null 2>&1; then
                 echo "Error: clang is not found; please install clang."
                 exit 1
@@ -75,37 +100,85 @@ while getopts "ab:c:m:pst:x" o; do
             use_analyzer=1
             CC=clang
             SCAN_BUILD=scan-build
+            shift
             ;;
-        b)
-            BUILDTYPE="${OPTARG}"
+        -b)
+            BUILDTYPE="$2"
+            shift 2
             ;;
-        c)
-            CC="${OPTARG}"
+        -c)
+            CC="$2"
+            shift 2
             ;;
-        m)
-            BUILDTOOL="${OPTARG}"
+        -m)
+            BUILDTOOL="$2"
+            shift 2
             ;;
-        p)
+        -p)
             use_coverage=1
+            shift
             ;;
-        s)
+        -s)
             use_asan=1
+            shift
             ;;
-        t)
-            CROSS_TARGET="${OPTARG}"
+        -t)
+            CROSS_TARGET="$2"
+            shift 2
             ;;
-        x)
+        -x)
             use_valgrind=1
+            shift
             ;;
-        *)
+        --e2e-controller)
+            E2E_CONTROLLER="$2"
+            shift 2
+            ;;
+        --e2e-ns1)
+            E2E_NS1="$2"
+            shift 2
+            ;;
+        --e2e-log-dir)
+            E2E_LOG_DIR="$2"
+            shift 2
+            ;;
+        --e2e-log-level)
+            E2E_LOG_LEVEL="$2"
+            shift 2
+            ;;
+        --e2e-nvme-bin)
+            E2E_NVME_BIN="$2"
+            shift 2
+            ;;
+        --plugin-tests)
+            PLUGIN_TESTS="$2"
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -*)
             usage
             exit 1
             ;;
+        *)
+            ARGS+=("$1")
+            shift
+            ;;
     esac
 done
-shift $((OPTIND-1))
+set -- "${ARGS[@]}"
 
 CONFIG=${1:-"default"}
+
+if [[ "${CONFIG}" != "tests" ]]; then
+    if [[ -n "${E2E_CONTROLLER}" || -n "${E2E_NS1}" || -n "${E2E_LOG_DIR}" || \
+          -n "${E2E_LOG_LEVEL}" || -n "${E2E_NVME_BIN}" || -n "${PLUGIN_TESTS}" ]]; then
+        echo "error: --e2e-* and --plugin-tests are only valid with the 'tests' config" >&2
+        exit 1
+    fi
+fi
 
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
@@ -298,10 +371,24 @@ config_meson_nofabrics() {
 }
 
 config_meson_tests() {
+    # e2e tests are destructive and refuse to guess a target device, so
+    # --e2e-controller/--e2e-ns1 must be passed on the command line (meson
+    # setup errors out on its own if they're left unset). The remaining
+    # options are optional and mirror the other e2e-*/plugin-tests meson
+    # options.
+    local extra_args=()
+    [ -n "${E2E_CONTROLLER}" ] && extra_args+=(-De2e-controller="${E2E_CONTROLLER}")
+    [ -n "${E2E_NS1}" ] && extra_args+=(-De2e-ns1="${E2E_NS1}")
+    [ -n "${E2E_LOG_DIR}" ] && extra_args+=(-De2e-log-dir="${E2E_LOG_DIR}")
+    [ -n "${E2E_LOG_LEVEL}" ] && extra_args+=(-De2e-log-level="${E2E_LOG_LEVEL}")
+    [ -n "${E2E_NVME_BIN}" ] && extra_args+=(-De2e-nvme-bin="${E2E_NVME_BIN}")
+    [ -n "${PLUGIN_TESTS}" ] && extra_args+=(-Dplugin-tests="${PLUGIN_TESTS}")
+
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
         -De2e-tests=true                        \
+        "${extra_args[@]}"                      \
         "${BUILDDIR}"
 }
 

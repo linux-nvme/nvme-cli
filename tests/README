@@ -16,7 +16,7 @@ nvme-cli tests
                 scenarios against an actual controller/namespace.
 
                 Note these tests expect to run against real hardware and
-                will read and write data to /dev/nvme0!
+                will read and write data to whatever device is configured!
 
                 DO NOT RUN THEM IF YOU DO NOT KNOW WHAT YOU ARE DOING!
 
@@ -26,13 +26,17 @@ nvme-cli tests
     unit/ and cli/ build by default (controlled by the 'tests' meson
     option). e2e/ only builds when explicitly requested with
     -De2e-tests=true, since it is the only suite that touches real
-    hardware.
+    hardware. Because these tests are destructive, the target device is
+    never assumed -- pass it explicitly with -De2e-controller=/dev/nvme0
+    -De2e-ns1=/dev/nvme0n1 (meson setup errors out otherwise). See
+    -De2e-log-dir=, -De2e-log-level=, -De2e-nvme-bin= and
+    -De2e-validate-pci-device= for the remaining options.
 
 Walk-Through Example for writing a new e2e testcase
 ----------------------------------------------------
     1. Copy tests/e2e/nvme_simple_template_test.py to tests/e2e/ with an
        appropriate name, replace "simple_template" with the testcase name
-       in the new file name. Update tests/config.json if necessary.
+       in the new file name.
     2. Write a testcase main function, make sure its name is starting with
        test_*.
     3. Based on the requirement one can inherit TestNVMe or TestNVMeIO
@@ -54,9 +58,27 @@ Walk-Through Example for writing a new e2e testcase
 
 Running testcases with framework
 ---------------------------------
-    1. Running a single e2e testcase :-
-       $ python3 tests/tap_runner.py --start-dir . tests.e2e.nvme_id_ctrl_test
+    1. Running a single e2e testcase, either standalone or via meson :-
+       $ tests/nvme-cli-e2e --controller /dev/nvme0 --ns1 /dev/nvme0n1 \
+             tests.e2e.nvme_id_ctrl_test
        $ meson test -C .build 'nvme-cli - nvme_id_ctrl_test'
 
-    2. Running all the testcases (in the build root directory) :-
+    2. Running every e2e testcase standalone (discovers all tests.e2e.*,
+       instead of relying on the fixed list in tests/e2e/meson.build) :-
+       $ tests/nvme-cli-e2e --controller /dev/nvme0 --ns1 /dev/nvme0n1
+
+    3. Running all the testcases (in the build root directory) :-
        $ meson test -C .build
+
+    tests/nvme-cli-e2e also accepts --config <path to a JSON file> instead
+    of (or layered under) the individual flags; 'meson test' uses this to
+    pass the fixed configuration written from -De2e-controller=/-De2e-ns1=
+    et al. at 'meson setup' time.
+
+    When -De2e-tests=true, 'meson setup' also drops a standalone copy of
+    tests/nvme-cli-e2e into the build root, next to the 'nvme' binary --
+    runnable directly and independent of 'meson test'. Because that copy
+    no longer sits next to tests/e2e, it needs --source-root to find the
+    checkout it belongs to :-
+       $ .build/nvme-cli-e2e --source-root . \
+             --controller /dev/nvme0 --ns1 /dev/nvme0n1
