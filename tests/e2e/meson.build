@@ -40,6 +40,8 @@ e2e_cdata.set('LOG_LEVEL', get_option('e2e-log-level'))
 e2e_cdata.set('NVME_BIN', get_option('e2e-nvme-bin'))
 e2e_cdata.set('VALIDATE_PCI_DEVICE',
               get_option('e2e-validate-pci-device') ? 'true' : 'false')
+e2e_cdata.set('COLLECT_DEVICE_DATA',
+              get_option('e2e-collect-device-data') ? 'true' : 'false')
 
 e2e_config_file = configure_file(
     input : 'e2e-config.json.in',

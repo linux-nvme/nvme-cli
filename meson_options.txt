@@ -139,6 +139,12 @@ option(
   description : 'require the e2e controller to be a PCI NVMe device'
 )
 option(
+  'e2e-collect-device-data',
+  type : 'boolean',
+  value : false,
+  description : 'opt in to recording every nvme command run during e2e tests and its JSON output, plus id-ctrl-derived device metadata, as device_data.json per test'
+)
+option(
   'tests',
   type : 'boolean',
   value : true,
