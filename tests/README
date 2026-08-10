@@ -105,7 +105,7 @@ Running testcases with framework
 
 Running the suite standalone (no nvme-cli checkout required)
 --------------------------------------------------------------
-    tests/ (nvme_test.py, nvme_test_logger.py and everything under e2e/) is
+    tests/ (nvme_test.py and everything under e2e/) is
     also a self-contained, independently installable package -- it only
     ever shells out to the 'nvme' binary via subprocess, so it has no
     dependency on nvme-cli's sources or Python bindings. This is meant for

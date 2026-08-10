@@ -35,8 +35,6 @@ import sys
 import unittest
 import time
 
-from .nvme_test_logger import TestNVMeLogger
-
 logger = logging.getLogger(__name__)
 
 
@@ -86,8 +84,18 @@ class TestNVMeBase(unittest.TestCase):
                                 input=stdin_data)
         if result.stdout:
             logger.debug(result.stdout)
+            sys.stdout.write(result.stdout)
+            sys.stdout.flush()
+            if getattr(self, 'stdout_log', None):
+                self.stdout_log.write(result.stdout)
+                self.stdout_log.flush()
         if result.stderr:
             logger.debug(result.stderr)
+            sys.stderr.write(result.stderr)
+            sys.stderr.flush()
+            if getattr(self, 'stderr_log', None):
+                self.stderr_log.write(result.stderr)
+                self.stderr_log.flush()
         return result
 
 
@@ -141,6 +149,10 @@ class TestNVMe(TestNVMeBase):
 
     def tearDown(self):
         """ Post Section for TestNVMe. """
+        if getattr(self, 'stdout_log', None):
+            self.stdout_log.close()
+        if getattr(self, 'stderr_log', None):
+            self.stderr_log.close()
         if self.clear_log_dir is True:
             shutil.rmtree(self.log_dir, ignore_errors=True)
         if self.ns_mgmt_supported:
@@ -234,8 +246,8 @@ class TestNVMe(TestNVMeBase):
         self.test_log_dir = self.log_dir + "/" + test_name
         if not os.path.exists(self.test_log_dir):
             os.makedirs(self.test_log_dir)
-        sys.stdout = TestNVMeLogger(self.test_log_dir + "/" + "stdout.log")
-        sys.stderr = TestNVMeLogger(self.test_log_dir + "/" + "stderr.log")
+        self.stdout_log = open(self.test_log_dir + "/" + "stdout.log", "w")
+        self.stderr_log = open(self.test_log_dir + "/" + "stderr.log", "w")
 
     def parse_json_output(self, output, context, expected_type=dict):
         """Parse JSON output and fail test clearly on malformed or wrong-typed data.
