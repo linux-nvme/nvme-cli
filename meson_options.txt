@@ -96,7 +96,7 @@ option(
   description: 'libkmod support'
 )
 option(
-  'nvme-tests',
+  'e2e-tests',
   type : 'boolean',
   value : false,
   description: 'Run tests against real hardware'

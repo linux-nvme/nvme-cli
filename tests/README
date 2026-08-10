@@ -1,32 +1,42 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-nvmetests
-=========
+nvme-cli tests
+==============
 
-    This contains a NVMe tests framework. The purpose of this framework
-    to use nvme cli and test various supported commands and scenarios for
-    NVMe device.
+    All nvme-cli test suites live under this directory, split by what they
+    need to run:
 
-    In current implementation this framework uses nvme-cli to
-    interact with underlying controller/namespace.
+        unit/   Fast C and Python unit tests. No built nvme binary and no
+                NVMe hardware needed.
 
-    Note these tests expect to run against real hardware and will
-    read and write data to /dev/nvme0!
+        cli/    Tests that exercise the built nvme binary but need no NVMe
+                hardware (e.g. registry, keys, config-convert/create).
 
-    DO NOT RUN THEM IF YOU DO NOT KNOW WHAT YOU ARE DOING!
+        e2e/    Tests that use nvme-cli to exercise real commands and
+                scenarios against an actual controller/namespace.
 
-    You have been warned.
-                 .
+                Note these tests expect to run against real hardware and
+                will read and write data to /dev/nvme0!
 
-Walk-Through Example for writing a new testcase
------------------------------------------------
-    1. Copy simple test template file from current directory
-       with appropriate name, replace "simple_template" with testcase name
-       in new file name. Update config.json if necessary.
+                DO NOT RUN THEM IF YOU DO NOT KNOW WHAT YOU ARE DOING!
+
+                You have been warned.
+                             .
+
+    unit/ and cli/ build by default (controlled by the 'tests' meson
+    option). e2e/ only builds when explicitly requested with
+    -De2e-tests=true, since it is the only suite that touches real
+    hardware.
+
+Walk-Through Example for writing a new e2e testcase
+----------------------------------------------------
+    1. Copy tests/e2e/nvme_simple_template_test.py to tests/e2e/ with an
+       appropriate name, replace "simple_template" with the testcase name
+       in the new file name. Update tests/config.json if necessary.
     2. Write a testcase main function, make sure its name is starting with
        test_*.
     3. Based on the requirement one can inherit TestNVMe or TestNVMeIO
-       class.
+       class (both from tests.nvme_test / tests.e2e.nvme_test_io).
     4. Write test precondition code into setUp. Make sure you are calling
        super class setUp.
     5. Write test post condition code into tearDown. Make sure you are calling
@@ -37,14 +47,15 @@ Walk-Through Example for writing a new testcase
            a. Run flake8, mypy, autopep8 and isort on the testcase and fix
 	      errors/warnings.
                - Example "$ ninja -C .build lint-python" will run flake8 and
-	         mypy on all the python files in current directory.
+	         mypy on all the python files under tests/.
 	       - Example "$ ninja -C .build format-python" will run autopep8 and
-	         isort on all the python files in the current directory.
+	         isort on all the python files under tests/.
+    8. Add the new test's file name to the `tests` list in tests/e2e/meson.build.
 
 Running testcases with framework
---------------------------------
-    1. Running single testcase :-
-       $ python3 tests/tap_runner.py --start-dir tests nvme_id_ctrl_test
+---------------------------------
+    1. Running a single e2e testcase :-
+       $ python3 tests/tap_runner.py --start-dir . tests.e2e.nvme_id_ctrl_test
        $ meson test -C .build 'nvme-cli - nvme_id_ctrl_test'
 
     2. Running all the testcases (in the build root directory) :-

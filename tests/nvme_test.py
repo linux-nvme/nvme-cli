@@ -35,7 +35,7 @@ import sys
 import unittest
 import time
 
-from nvme_test_logger import TestNVMeLogger
+from tests.nvme_test_logger import TestNVMeLogger
 
 logger = logging.getLogger(__name__)
 

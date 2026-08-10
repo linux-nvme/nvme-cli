@@ -1,0 +1,81 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Copyright (c) 2015-2016 Western Digital Corporation or its affiliates.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301, USA.
+#
+#   Author: Madhusudhana S.J <madhusudhana.sj@wdc.com>
+#   Author: Dong Ho <dong.ho@wdc.com>
+#
+"""
+NVme Identify Namespace Testcase:-
+
+    1. Execute id-ns on a namespace
+    2. Execute id-ns on all namespaces
+"""
+
+from tests.nvme_test import TestNVMe
+
+
+class TestNVMeIdentifyNamespace(TestNVMe):
+
+    """
+    Represents Identify Namesepace testcase
+    """
+
+    def setUp(self):
+        """ Pre Section for TestNVMeIdentifyNamespace. """
+        super().setUp()
+        self.setup_log_dir(self.__class__.__name__)
+        self.nsid_list = self.get_nsid_list()
+
+    def tearDown(self):
+        """
+        Post Section for TestNVMeIdentifyNamespace
+
+            - Call super class's destructor.
+        """
+        super().tearDown()
+
+    def get_id_ns(self, nsid):
+        """
+        Wrapper for executing nvme id-ns on a namespace.
+            - Args:
+                - nsid : namespace id to get info from.
+            - Returns:
+                - 0 on success, error code on failure.
+        """
+        id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+            f"--namespace-id={str(nsid)}"
+        return self.exec_cmd(id_ns_cmd)
+
+    def get_id_ns_all(self):
+        """
+        Wrapper for executing nvme id-ns on all namespaces.
+            - Args:
+                - None
+            - Returns:
+                - 0 on success, error code on failure.
+        """
+        err = 0
+        for namespace in self.nsid_list:
+            err = self.get_id_ns(str(namespace))
+        return err
+
+    def test_id_ns(self):
+        """ Testcase main """
+        self.assertEqual(self.get_id_ns(1), 0)
+        self.assertEqual(self.get_id_ns_all(), 0)

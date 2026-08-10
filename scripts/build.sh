@@ -301,7 +301,7 @@ config_meson_tests() {
     CC="${CC}" "${MESON}" setup                 \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
-        -Dnvme-tests=true                       \
+        -De2e-tests=true                        \
         "${BUILDDIR}"
 }
 

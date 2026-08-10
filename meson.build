@@ -657,17 +657,10 @@ if want_nvme
         )
     endif
 
-    if host_system == 'linux'
-        subdir('unit')
-    endif
-    subdir('unit-py')
+    subdir('tests')
 
     if want_discoverd
         subdir('discoverd')
-    endif
-
-    if get_option('nvme-tests')
-        subdir('tests')
     endif
 
     configure_file(
