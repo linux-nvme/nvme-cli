@@ -3746,6 +3746,7 @@ static int micron_internal_logs(int argc, char **argv, struct command *acmd,
 				(void)NVMEResetLog(hdl, aVendorLogs[i].ucLogPage,
 						   aVendorLogs[i].nLogSize, aVendorLogs[i].nMaxSize);
 
+			break;
 		default:
 			bSize = aVendorLogs[i].nLogSize;
 			dataBuffer = (unsigned char *)libnvme_alloc(bSize);
