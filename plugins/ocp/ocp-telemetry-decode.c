@@ -1131,6 +1131,9 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 			(struct nvme_ocp_telemetry_event_descriptor *)
 			(pfifo_start + offset_to_move);
 
+		if (pevent_descriptor == NULL)
+			break;
+
 		/* check if at the end of the list */
 		if (pevent_descriptor->debug_event_class_type == RESERVED_CLASS_TYPE)
 			break;
@@ -1140,9 +1143,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 		char description_str[256] = "";
 		unsigned int data_size = 0;
 
-		if (pevent_descriptor != NULL &&
-			pevent_descriptor->event_data_size >= 0 &&
-			pevent_descriptor->debug_event_class_type !=
+		if (pevent_descriptor->debug_event_class_type !=
 				STATISTIC_SNAPSHOT_CLASS_TYPE) {
 			event_des_size = sizeof(struct nvme_ocp_telemetry_event_descriptor);
 			/* Data is present in the form of DWORDS,
@@ -1151,7 +1152,7 @@ int parse_event_fifo(unsigned int fifo_num, unsigned char *pfifo_start,
 			data_size = pevent_descriptor->event_data_size *
 							SIZE_OF_DWORD;
 
-			if (pevent_descriptor != NULL && pevent_descriptor->event_data_size > 0)
+			if (pevent_descriptor->event_data_size > 0)
 				pevent_specific_data = (__u8 *)pevent_descriptor + event_des_size;
 
 			event_id = le16_to_cpu(pevent_descriptor->event_id);
