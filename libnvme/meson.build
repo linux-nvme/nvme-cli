@@ -10,7 +10,7 @@ if want_libnvme
         if openssl_dep.type_name() != 'internal'
             # Check for a bug in the EVP_PKEY_CTX_add1_hkdf_info implementation
             res = cc.run(
-                files('test/hkdf_add1.c'),
+                files('tests/hkdf_add1.c'),
                 dependencies: [openssl_dep],
                 name: 'check hkdf_add1'
             )
@@ -35,7 +35,7 @@ if want_libnvme
     subdir('src')              # declares: libnvme_dep
     subdir('libnvme3')
     if want_tests
-        subdir('test')
+        subdir('tests')
     endif
     if want_examples
         subdir('examples')
