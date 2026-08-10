@@ -2029,6 +2029,11 @@ static int submit_admin_security_send_receive(
 		goto out;
 	}
 
+	if (cmd->data_len > 0 && !cmd->addr) {
+		err = -EINVAL;
+		goto out;
+	}
+
 	/* Allocate buffer for SCSI_PASS_THROUGH + sense data + data */
 	sense_offset = sizeof(SCSI_PASS_THROUGH);
 	data_offset = sense_offset + SCSI_SENSE_BUFFER_LEN;
@@ -2052,7 +2057,7 @@ static int submit_admin_security_send_receive(
 		((cmd->timeout_ms + 999) / 1000) : 30;
 	pass_through->DataBufferOffset = data_offset;
 
-	if (is_send && cmd->data_len > 0) {
+	if (is_send && cmd->addr && cmd->data_len > 0) {
 		memcpy(buffer + pass_through->DataBufferOffset,
 			(void *)(uintptr_t)cmd->addr, cmd->data_len);
 	}
