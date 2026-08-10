@@ -88,6 +88,21 @@ Running testcases with framework
        controller/ns1/nvme_bin) alongside the normal TAP output on stdout --
        useful for feeding results into a database rather than parsing TAP.
 
+    5. --plugins <all|none|comma-list> controls which vendor plugin test
+       suites (micron, ocp, ...) are included when discovering every e2e
+       test (a specific test module always runs regardless of this flag).
+       Use this when running tests/nvme-cli-e2e directly against hardware
+       that doesn't have a given vendor's drive :-
+          $ tests/nvme-cli-e2e --controller /dev/nvme0 --ns1 /dev/nvme0n1 \
+                --plugins=none
+          $ tests/nvme-cli-e2e --controller /dev/nvme0 --ns1 /dev/nvme0n1 \
+                --plugins=micron
+       This is the standalone-runner equivalent of meson's -Dplugin-tests=
+       option, which selects plugin test suites at 'meson setup' time
+       instead (see tests/e2e/plugins/meson.build). Tests for a plugin the
+       nvme binary wasn't built with are skipped automatically at run time
+       either way.
+
 Running the suite standalone (no nvme-cli checkout required)
 --------------------------------------------------------------
     tests/ (nvme_test.py, nvme_test_logger.py and everything under e2e/) is

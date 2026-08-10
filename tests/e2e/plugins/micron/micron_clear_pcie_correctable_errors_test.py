@@ -42,6 +42,15 @@ import re
 from .micron_test import TestMicron
 
 _WINDOWS_AER_UNSUPPORTED_MSG = "register writes not supported on the current platform"
+_AER_CLEAR_FAILED_MSG = "Failed to clear error count"
+_AER_READBACK_FAILED_MSG = "Failed to retrieve error count"
+_PCI_ADDR_FAILED_MSG = "Failed to get PCI address"
+_UNSUPPORTED_MSGS = (
+    _WINDOWS_AER_UNSUPPORTED_MSG,
+    _AER_CLEAR_FAILED_MSG,
+    _AER_READBACK_FAILED_MSG,
+    _PCI_ADDR_FAILED_MSG,
+)
 _AER_STDOUT_MARKER = "Device correctable errors detected:"
 _VERBOSE_CLEARED_MSG = "Device correctable errors cleared!"
 
@@ -56,27 +65,28 @@ class TestMicronClearPcieCorrectableErrors(TestMicron):
         )
 
     def _is_clear_supported(self):
-        """Return True if clear-pcie-correctable-errors is supported on this platform.
+        """Return True if clear-pcie-correctable-errors can succeed on this
+        drive/platform.
 
-        On Windows, PCIE register writes are not supported, so drives without a
-        dedicated command to clear the errors will fail with -ENOTSUP and the
-        message "register writes not supported on the current platform".
-
-        On Linux the AER sysfs path is always supported, so no probe is needed.
+        On Windows, PCIe register writes are unsupported, so drives without a
+        dedicated clear command fail with the Windows-specific message below.
+        On Linux, drives without a dedicated command fall back to the AER
+        sysfs path, which can itself fail (e.g. no AER extended capability
+        exposed by this device/kernel) -- always probe rather than assuming
+        Linux support, since that fallback failure isn't platform-specific.
         """
-        if not self.is_windows():
-            return True
         result = self._run_clear()
         return not (
-            result.returncode != 0 and _WINDOWS_AER_UNSUPPORTED_MSG in result.stderr
+            result.returncode != 0
+            and any(msg in result.stderr for msg in _UNSUPPORTED_MSGS)
         )
 
     def _skip_if_clear_unavailable(self):
-        """Skip the calling test if the clear command cannot succeed on this platform."""
+        """Skip the calling test if the clear command cannot succeed on this
+        drive/platform."""
         if not self._is_clear_supported():
             self.skipTest(
-                "clear-pcie-correctable-errors is not supported on this platform "
-                f"(stderr: {_WINDOWS_AER_UNSUPPORTED_MSG!r})"
+                "clear-pcie-correctable-errors is not supported on this drive/platform"
             )
 
     def test_bad_device_returns_error(self):
@@ -207,29 +217,15 @@ class TestMicronClearPcieCorrectableErrors(TestMicron):
 
         micron_parse_options resolves the namespace device to its parent
         controller, so the clear operation should succeed regardless of whether
-        a controller or namespace path is passed.
+        a controller or namespace path is passed -- the same controller, so
+        the shared ctrl-based support probe applies here too.
         """
-        if self.is_windows():
-            ns_probe = self._run_clear(device=self.ns1)
-            if (
-                ns_probe.returncode != 0
-                and _WINDOWS_AER_UNSUPPORTED_MSG in ns_probe.stderr
-            ):
-                self.skipTest(
-                    "clear-pcie-correctable-errors is not supported on this platform "
-                    f"(stderr: {_WINDOWS_AER_UNSUPPORTED_MSG!r})"
-                )
-            self.assertEqual(
-                ns_probe.returncode, 0,
-                f"Expected exit code 0 for namespace device, "
-                f"got {ns_probe.returncode}; stderr={ns_probe.stderr!r}",
-            )
-        else:
-            result = self.run_plugin_cmd_check(
-                "clear-pcie-correctable-errors", device=self.ns1
-            )
-            self.assertEqual(
-                result.returncode, 0,
-                f"Expected exit code 0 for namespace device, "
-                f"got {result.returncode}; stderr={result.stderr!r}",
+        self._skip_if_clear_unavailable()
+        result = self.run_plugin_cmd_check(
+            "clear-pcie-correctable-errors", device=self.ns1
+        )
+        self.assertEqual(
+            result.returncode, 0,
+            f"Expected exit code 0 for namespace device, "
+            f"got {result.returncode}; stderr={result.stderr!r}",
             )

@@ -27,7 +27,14 @@ import re
 
 from .micron_test import TestMicron
 
+_UNSUPPORTED_MODEL_MSG = "Unsupported drive model for vs-pcie-stats command"
 _WINDOWS_AER_UNSUPPORTED_MSG = "register reads not supported on the current platform"
+_AER_READ_FAILED_MSG = "Failed to retrieve error count"
+_UNSUPPORTED_MSGS = (
+    _UNSUPPORTED_MODEL_MSG,
+    _WINDOWS_AER_UNSUPPORTED_MSG,
+    _AER_READ_FAILED_MSG,
+)
 
 # Expected PCIe error field names, in the order the command emits them.
 
@@ -63,28 +70,29 @@ class TestMicronVsPcieStats(TestMicron):
         """Run vs-pcie-stats and return the CompletedProcess result."""
         return self.run_plugin_cmd("vs-pcie-stats", device=device, args=args)
 
-    def _pcie_stats_available(self):
-        """Return True if vs-pcie-stats can produce statistics on this platform.
-
-        On Windows, drives that rely on PCIe register reads are unsupported and
-        the command fails with -ENOTSUP and a "register reads not supported"
-        message.  On other platforms the command is always supported, so no
-        probe is needed.
+    def _is_unsupported(self, result):
+        """True if a vs-pcie-stats CompletedProcess result reports a
+        condition this drive/platform can't produce statistics for: an
+        unrecognised model, the Windows register-read fallback being
+        unsupported, or the Linux AER/sysfs read-back failing (e.g. no AER
+        extended capability on this device).
         """
-        if not self.is_windows():
-            return True
-        result = self._run_pcie_stats(args="--output-format=normal")
-        return not (
-            result.returncode != 0 and _WINDOWS_AER_UNSUPPORTED_MSG in result.stderr
-        )
+        return result.returncode != 0 and any(
+            msg in result.stderr for msg in _UNSUPPORTED_MSGS)
+
+    def _pcie_stats_available(self):
+        """Return True if vs-pcie-stats can produce statistics on this
+        drive/platform. Always probes -- the AER/sysfs read-back path can
+        fail on Linux too, not just the Windows register-read fallback.
+        """
+        return not self._is_unsupported(
+            self._run_pcie_stats(args="--output-format=normal"))
 
     def _skip_if_pcie_stats_unavailable(self):
-        """Skip the calling test if vs-pcie-stats is unsupported on this platform."""
+        """Skip the calling test if vs-pcie-stats is unsupported on this
+        drive/platform."""
         if not self._pcie_stats_available():
-            self.skipTest(
-                "vs-pcie-stats is not supported on this platform "
-                f"(stderr: {_WINDOWS_AER_UNSUPPORTED_MSG!r})"
-            )
+            self.skipTest("vs-pcie-stats is not supported on this drive/platform")
 
     def _run_pcie_stats_json(self, args=""):
         """Run vs-pcie-stats in JSON mode and return the parsed top-level dict.
@@ -377,15 +385,7 @@ class TestMicronVsPcieStats(TestMicron):
         Both controller and namespace paths resolve to the same controller and
         therefore produce the same set of PCIe error field keys.
         """
-        # Probe availability using the namespace path specifically.
-        if self.is_windows():
-            ns_probe = self.run_plugin_cmd("vs-pcie-stats", device=self.ns1,
-                                           args="--output-format=normal")
-            if ns_probe.returncode != 0 and _WINDOWS_AER_UNSUPPORTED_MSG in ns_probe.stderr:
-                self.skipTest(
-                    "vs-pcie-stats is not supported on this platform "
-                    f"(stderr: {_WINDOWS_AER_UNSUPPORTED_MSG!r})"
-                )
+        self._skip_if_pcie_stats_unavailable()
 
         result_ctrl = self.run_plugin_cmd_check(
             "vs-pcie-stats", device=self.ctrl, args="--output-format=json")

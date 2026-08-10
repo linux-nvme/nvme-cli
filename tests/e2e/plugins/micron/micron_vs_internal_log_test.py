@@ -30,6 +30,9 @@ import os
 
 from .micron_test import TestMicron
 
+_UNSUPPORTED_MODEL_MSG = "Unsupported drive model for vs-internal-log collection"
+_TELEMETRY_UNSUPPORTED_MSG = "telemetry option is not supported for specified drive"
+
 
 class TestMicronVsInternalLog(TestMicron):
     """Test suite for the micron vs-internal-log plugin command."""
@@ -68,8 +71,25 @@ class TestMicronVsInternalLog(TestMicron):
         return {n for n in os.listdir(path) if os.path.isdir(os.path.join(path, n))}
 
     def _run_log(self, args=""):
-        """Run micron vs-internal-log against the default controller."""
-        return self.run_plugin_cmd("vs-internal-log", args=args)
+        """Run micron vs-internal-log against the default controller.
+
+        Skips the calling test if the plugin itself reports the drive model
+        (or, in telemetry mode, this specific drive) doesn't support
+        vs-internal-log collection, rather than failing -- argument
+        validation (missing/unsafe --package, telemetry argument misuse)
+        always happens before this check, so those negative-path tests are
+        unaffected.
+        """
+        result = self.run_plugin_cmd("vs-internal-log", args=args)
+        if result.returncode != 0 and (
+            _UNSUPPORTED_MODEL_MSG in result.stderr
+            or _TELEMETRY_UNSUPPORTED_MSG in result.stderr
+        ):
+            self.skipTest(
+                f"vs-internal-log not supported on this drive "
+                f"(stderr: {result.stderr!r})"
+            )
+        return result
 
     def _test_archive_format(self, extension):
         """Shared body for the archive-format tests.

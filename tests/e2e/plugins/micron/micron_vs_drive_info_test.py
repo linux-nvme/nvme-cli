@@ -139,9 +139,19 @@ class TestMicronVsDriveInfo(TestMicron):
     def test_invalid_output_format_returns_error(self):
         """vs-drive-info fails for an unrecognised --output-format value.
 
-        The global --output-format flag accepts "normal" or "json".
+        The global --output-format flag accepts "normal" or "json". On this
+        command the unsupported-drive-model check runs before --output-format
+        is validated, so an unsupported drive reports that instead -- skip
+        rather than fail in that case (unlike e.g. vs-internal-log, where
+        argument validation runs first; the check order isn't consistent
+        across plugin commands).
         """
         result = self._run_drive_info(args="--output-format=notaformat")
+        if result.returncode != 0 and _UNSUPPORTED_MSG in result.stderr:
+            self.skipTest(
+                f"vs-drive-info reports an unsupported drive on this platform "
+                f"(stderr: {_UNSUPPORTED_MSG!r})"
+            )
 
         self.assertNotEqual(
             result.returncode, 0,

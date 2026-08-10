@@ -125,6 +125,7 @@ jobs:
                 --e2e-log-dir "/nvme-cli/tests/nvmetests" \
                 --e2e-log-level "DEBUG" \
                 --e2e-nvme-bin "/nvme-cli/.build-ci/nvme" \
+                --plugin-tests ocp,micron \
                 tests
 
             cp coverage.xml tests/nvmetests/coverage-nvmetests.xml

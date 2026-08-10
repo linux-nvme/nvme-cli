@@ -48,6 +48,58 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _TOP_LEVEL_DIR = os.path.dirname(os.path.dirname(_HERE))
 
 
+def discover_plugin_names() -> list[str]:
+    """Vendor plugin test suites available under e2e/plugins/ (e.g. 'micron',
+    'ocp'), regardless of which nvme-cli plugins the target binary was built
+    with -- that's checked at test time, not here.
+    """
+    plugins_dir = os.path.join(_HERE, 'plugins')
+    if not os.path.isdir(plugins_dir):
+        return []
+    return sorted(
+        name for name in os.listdir(plugins_dir)
+        if os.path.isfile(os.path.join(plugins_dir, name, '__init__.py')))
+
+
+def _iter_test_cases(suite: unittest.TestSuite):
+    for item in suite:
+        if isinstance(item, unittest.TestSuite):
+            yield from _iter_test_cases(item)
+        else:
+            yield item
+
+
+def _plugin_name_of(test: unittest.TestCase) -> str | None:
+    """Vendor plugin name a test belongs to (e.g. 'micron'), or None for a
+    core (non-plugin) e2e test, based on its module path
+    ('...e2e.plugins.<name>.<module>').
+    """
+    parts = type(test).__module__.split('.')
+    if 'plugins' in parts:
+        idx = parts.index('plugins')
+        if idx + 1 < len(parts):
+            return parts[idx + 1]
+    return None
+
+
+def filter_plugins(suite: unittest.TestSuite,
+                   enabled_plugins: set | None) -> unittest.TestSuite:
+    """Drop vendor plugin tests not in enabled_plugins.
+
+    enabled_plugins is None (run everything discovered -- the default) or a
+    set of plugin names to keep (empty set disables every vendor plugin).
+    Core, non-plugin e2e tests are never filtered.
+    """
+    if enabled_plugins is None:
+        return suite
+    filtered = unittest.TestSuite()
+    for test in _iter_test_cases(suite):
+        name = _plugin_name_of(test)
+        if name is None or name in enabled_plugins:
+            filtered.addTest(test)
+    return filtered
+
+
 class TAPDiagnosticStream(io.TextIOBase):
     """Wrap a stream and prefix every line with '# ' for TAP diagnostics.
 
@@ -218,7 +270,12 @@ def build_config(args: argparse.Namespace) -> dict:
     return config
 
 
-def load_tests(test_module_name: str | None) -> unittest.TestSuite:
+def load_tests(test_module_name: str | None,
+               enabled_plugins: set | None = None) -> unittest.TestSuite:
+    """Load either a single named test module (always run as given,
+    regardless of enabled_plugins -- an explicit module name is an explicit
+    request) or discover every e2e test, filtered by enabled_plugins.
+    """
     loader = unittest.TestLoader()
     if test_module_name:
         if '.' not in test_module_name:
@@ -226,12 +283,14 @@ def load_tests(test_module_name: str | None) -> unittest.TestSuite:
         module = importlib.import_module(test_module_name)
         return loader.loadTestsFromModule(module)
 
-    return loader.discover(start_dir=_HERE, pattern='*_test.py',
-                           top_level_dir=_TOP_LEVEL_DIR)
+    suite = loader.discover(start_dir=_HERE, pattern='*_test.py',
+                            top_level_dir=_TOP_LEVEL_DIR)
+    return filter_plugins(suite, enabled_plugins)
 
 
-def run_tests(test_module_name: str | None, json_report: str | None) -> bool:
-    suite = load_tests(test_module_name)
+def run_tests(test_module_name: str | None, json_report: str | None,
+             enabled_plugins: set | None = None) -> bool:
+    suite = load_tests(test_module_name, enabled_plugins)
 
     real_stdout = sys.stdout
     real_stderr = sys.stderr
@@ -295,6 +354,18 @@ def main() -> None:
                         help='Additionally write a structured per-test JSON '
                              'summary to this path (e.g. for ingestion into '
                              'a results database). TAP still goes to stdout.')
+    plugin_names = discover_plugin_names()
+    parser.add_argument('--plugins', default='all',
+                        help="Vendor plugin test suites to include when "
+                             "discovering every e2e test (ignored if a "
+                             "specific test module is given). 'all' "
+                             "(default) runs every one found; 'none' skips "
+                             "all of them; or a comma-separated subset, "
+                             "e.g. --plugins=micron. Available: {}. Tests "
+                             "for a plugin the nvme binary wasn't built "
+                             "with are skipped automatically at run time "
+                             "regardless of this flag.".format(
+                                 ', '.join(plugin_names) or '(none found)'))
     validate_group = parser.add_mutually_exclusive_group()
     validate_group.add_argument(
         '--validate-pci-device', dest='validate_pci_device',
@@ -306,9 +377,22 @@ def main() -> None:
         help='Skip the PCI-subsystem check, e.g. for emulated devices')
     args = parser.parse_args()
 
+    plugins_arg = args.plugins.strip().lower()
+    if plugins_arg == 'all':
+        enabled_plugins = None
+    elif plugins_arg == 'none':
+        enabled_plugins = set()
+    else:
+        enabled_plugins = {p.strip() for p in args.plugins.split(',') if p.strip()}
+        unknown = enabled_plugins - set(plugin_names)
+        if unknown:
+            raise SystemExit(
+                "error: unknown --plugins entry: {}. Available: {}".format(
+                    ', '.join(sorted(unknown)), ', '.join(plugin_names) or '(none found)'))
+
     os.environ[CONFIG_ENV_VAR] = json.dumps(build_config(args))
 
-    run_tests(args.test_module, args.json_report)
+    run_tests(args.test_module, args.json_report, enabled_plugins)
     sys.exit(0)
 
 
