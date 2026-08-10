@@ -28,7 +28,7 @@ Tests in this module verify:
 import json
 import re
 
-from tests.e2e.plugins.micron.micron_test import TestMicron
+from .micron_test import TestMicron
 
 _MICRON_HW_INFORMATION_KEY = "Micron Drive HW Information"
 _UNSUPPORTED_MSG = "Unsupported drive for vs-drive-info cmd"

@@ -29,7 +29,7 @@ NVMe Namespace Management Testcase:-
     5. Delete all Namespaces.
 """
 
-from tests.nvme_test import TestNVMe
+from ..nvme_test import TestNVMe
 
 
 class TestNVMeCreateMaxNS(TestNVMe):

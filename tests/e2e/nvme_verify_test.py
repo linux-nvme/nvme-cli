@@ -13,7 +13,7 @@ NVMe Verify Testcase:-
 
 """
 
-from tests.nvme_test import TestNVMe, to_decimal
+from ..nvme_test import TestNVMe, to_decimal
 
 
 class TestNVMeVerify(TestNVMe):

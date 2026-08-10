@@ -28,7 +28,7 @@ NVMe Identify ctrl Testcase:-
 
 """
 
-from tests.nvme_test import TestNVMe
+from ..nvme_test import TestNVMe
 
 
 class TestNVMeIdctrlCmd(TestNVMe):

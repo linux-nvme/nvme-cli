@@ -6,166 +6,19 @@
 #
 # Authors: Daniel Wagner <dwagner@suse.de>
 """
-E2E test runner for nvme-cli.
+In-tree launcher for the nvme-cli e2e test suite.
 
-Runs the hardware-backed tests under tests/e2e (including plugin suites)
-against a real NVMe device, either as a single dotted test module or, if
-none is given, by discovering and running every e2e test. Emits TAP version
-13 so that 'meson test' can parse individual subtest results when
-protocol: 'tap' is set in meson.build.
-
-These tests are destructive -- they create/delete namespaces and overwrite
-data -- so the target device is never assumed. It must be supplied via
---controller/--ns1 (optionally layered on top of --config), or 'meson test'
-passes a fixed --config file written at 'meson setup' time from
--De2e-controller=/-De2e-ns1=.
+The actual runner logic (TAP output, --json-report, test discovery) lives in
+tests/e2e/runner.py as part of the tests.e2e package, since it needs to be
+loadable both here (as tests.e2e.runner) and from a standalone pip install
+(as nvme_e2e.e2e.runner -- see tests/README and tests/pyproject.toml). This
+script's only job is to find the nvme-cli checkout it belongs to and put it
+on sys.path before delegating, since nothing here is "installed".
 """
 
 import argparse
-import importlib
-import io
-import json
 import os
 import sys
-import traceback
-import unittest
-
-CONFIG_ENV_VAR = 'NVME_E2E_CONFIG'
-
-
-class TAPDiagnosticStream(io.TextIOBase):
-    """Wrap a stream and prefix every line with '# ' for TAP diagnostics.
-
-    This lets print()/sys.stdout.write() calls from setUp/tearDown/tests
-    appear on stdout as TAP-compliant diagnostic lines instead of being
-    mixed into stderr.
-    """
-
-    def __init__(self, stream: io.TextIOBase) -> None:
-        super().__init__()
-        self._stream = stream
-        self._pending = ''
-
-    def write(self, s: str) -> int:
-        self._pending += s
-        while '\n' in self._pending:
-            line, self._pending = self._pending.split('\n', 1)
-            self._stream.write('# {}\n'.format(line))
-        self._stream.flush()
-        return len(s)
-
-    def flush(self) -> None:
-        if self._pending:
-            self._stream.write('# {}\n'.format(self._pending))
-            self._pending = ''
-        self._stream.flush()
-
-
-class TAPTestResult(unittest.TestResult):
-    """Collect unittest results and render them as TAP version 13."""
-
-    def __init__(self, stdout_stream: io.TextIOBase,
-                 stderr_stream: io.TextIOBase) -> None:
-        super().__init__()
-        self._stdout_stream = stdout_stream
-        self._stderr_stream = stderr_stream
-        self._test_count = 0
-
-    def _description(self, test: unittest.TestCase) -> str:
-        return '{} ({})'.format(test._testMethodName, type(test).__name__)
-
-    def _output_traceback(self, err):
-        tb = ''.join(traceback.format_exception(*err))
-
-        self._stderr_stream.write('  ---\n')
-        self._stderr_stream.write('  traceback: |\n')
-
-        for line in tb.splitlines():
-            self._stderr_stream.write(f'    {line}\n')
-
-        self._stderr_stream.write('  ...\n')
-        self._stderr_stream.flush()
-
-    def addSuccess(self, test: unittest.TestCase) -> None:
-        super().addSuccess(test)
-        self._test_count += 1
-        self._stdout_stream.write('ok {} - {}\n'.format(
-            self._test_count, self._description(test)))
-        self._stdout_stream.flush()
-
-    def addError(self, test: unittest.TestCase, err: object) -> None:
-        super().addError(test, err)
-        self._test_count += 1
-        self._stdout_stream.write('not ok {} - {}\n'.format(
-            self._test_count, self._description(test)))
-        self._stdout_stream.flush()
-        self._output_traceback(err)
-
-    def addFailure(self, test: unittest.TestCase, err: object) -> None:
-        super().addFailure(test, err)
-        self._test_count += 1
-        self._stdout_stream.write('not ok {} - {}\n'.format(
-            self._test_count, self._description(test)))
-        self._stdout_stream.flush()
-        self._output_traceback(err)
-
-    def addSkip(self, test: unittest.TestCase, reason: str) -> None:
-        super().addSkip(test, reason)
-        self._test_count += 1
-        self._stdout_stream.write('ok {} - {} # SKIP {}\n'.format(
-            self._test_count, self._description(test), reason))
-        self._stdout_stream.flush()
-
-    def addExpectedFailure(self, test: unittest.TestCase, err: object) -> None:
-        super().addExpectedFailure(test, err)
-        self._test_count += 1
-        self._stdout_stream.write('ok {} - {} # TODO expected failure\n'.format(
-            self._test_count, self._description(test)))
-        self._stdout_stream.flush()
-
-    def addUnexpectedSuccess(self, test: unittest.TestCase) -> None:
-        super().addUnexpectedSuccess(test)
-        self._test_count += 1
-        self._stdout_stream.write('not ok {} - {} # TODO unexpected success\n'.format(
-            self._test_count, self._description(test)))
-        self._stdout_stream.flush()
-
-
-def build_config(args: argparse.Namespace) -> dict:
-    """Merge --config file contents with explicit CLI overrides.
-
-    CLI flags win over the config file so a fixed config (e.g. the one
-    'meson test' passes) can still be tweaked ad hoc for a manual run.
-    Refuses to guess a controller/namespace: these tests are destructive.
-    """
-    config = {}
-    if args.config:
-        with open(args.config) as f:
-            config = json.load(f)
-
-    overrides = {
-        'controller': args.controller,
-        'ns1': args.ns1,
-        'log_dir': args.log_dir,
-        'log_level': args.log_level,
-        'nvme_bin': args.nvme_bin,
-    }
-    for key, value in overrides.items():
-        if value is not None:
-            config[key] = value
-    if args.validate_pci_device is not None:
-        config['do_validate_pci_device'] = args.validate_pci_device
-
-    missing = [key for key in ('controller', 'ns1') if not config.get(key)]
-    if missing:
-        raise SystemExit(
-            "error: missing required e2e configuration: {}. These tests "
-            "read and write real data to an NVMe device, so nothing is "
-            "assumed. Pass --controller/--ns1 (optionally with --config), "
-            "or configure with -De2e-controller=... -De2e-ns1=...".format(
-                ', '.join(missing)))
-
-    return config
 
 
 def default_project_root() -> str | None:
@@ -182,78 +35,18 @@ def default_project_root() -> str | None:
     return None
 
 
-def load_tests(test_module_name: str | None, project_root: str) -> unittest.TestSuite:
-    loader = unittest.TestLoader()
-    if test_module_name:
-        module = importlib.import_module(test_module_name)
-        return loader.loadTestsFromModule(module)
-
-    e2e_dir = os.path.join(project_root, 'tests', 'e2e')
-    return loader.discover(start_dir=e2e_dir, pattern='*_test.py',
-                           top_level_dir=project_root)
-
-
-def run_tests(test_module_name: str | None, project_root: str) -> bool:
-    suite = load_tests(test_module_name, project_root)
-
-    real_stdout = sys.stdout
-    real_stderr = sys.stderr
-    # TAP version header and plan must appear before any test output.
-    real_stdout.write('TAP version 13\n')
-    real_stdout.write('1..{}\n'.format(suite.countTestCases()))
-    real_stdout.flush()
-
-    # Redirect sys.stdout to a TAP diagnostic stream so that
-    # print()/sys.stdout.write() calls from setUp/tearDown/tests appear on
-    # stdout as '# ...' diagnostic lines rather than being sent to stderr.
-    # Error tracebacks (genuine failures) still go to stderr via stderr_stream.
-    sys.stdout = TAPDiagnosticStream(real_stdout)  # type: ignore[assignment]
-    try:
-        result = TAPTestResult(real_stdout, real_stderr)
-        suite.run(result)
-    finally:
-        sys.stdout = real_stdout
-
-    return result.wasSuccessful()
-
-
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        prog='nvme-cli-e2e',
-        description='Run nvme-cli e2e tests against a real NVMe device')
-    parser.add_argument('test_module', nargs='?', default=None,
-                        help='Dotted test module to run, e.g. '
-                             'tests.e2e.nvme_id_ctrl_test. If omitted, '
-                             'discover and run every e2e test.')
-    parser.add_argument('--source-root', default=None,
-                        help='Path to the nvme-cli checkout (for locating '
-                             'and importing tests.e2e.*)')
-    parser.add_argument('--config',
-                        help='Path to a JSON e2e config file')
-    parser.add_argument('--controller',
-                        help='Controller device, e.g. /dev/nvme0')
-    parser.add_argument('--ns1',
-                        help='Namespace device, e.g. /dev/nvme0n1')
-    parser.add_argument('--log-dir',
-                        help='Directory for test logs (default: nvmetests)')
-    parser.add_argument('--log-level',
-                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
-                        help='Logging verbosity (default: WARNING)')
-    parser.add_argument('--nvme-bin',
-                        help='nvme binary to exercise (default: nvme)')
-    validate_group = parser.add_mutually_exclusive_group()
-    validate_group.add_argument(
-        '--validate-pci-device', dest='validate_pci_device',
-        action='store_true', default=None,
-        help='Require the target device to be a PCI NVMe device (default)')
-    validate_group.add_argument(
-        '--no-validate-pci-device', dest='validate_pci_device',
-        action='store_false',
-        help='Skip the PCI-subsystem check, e.g. for emulated devices')
-    args = parser.parse_args()
+    # Only --source-root is handled here; every other flag (--config,
+    # --controller, --json-report, the test module, --help, ...) is parsed
+    # by tests.e2e.runner.main() itself once this checkout is on sys.path.
+    pre_parser = argparse.ArgumentParser(add_help=False)
+    pre_parser.add_argument('--source-root', default=None,
+                            help='Path to the nvme-cli checkout (for locating '
+                                 'and importing tests.e2e.*)')
+    pre_args, remaining_argv = pre_parser.parse_known_args()
 
-    if args.source_root:
-        project_root = args.source_root
+    if pre_args.source_root:
+        project_root = pre_args.source_root
         if not os.path.isdir(os.path.join(project_root, 'tests', 'e2e')):
             raise SystemExit(
                 f"error: --source-root {project_root!r} does not look like "
@@ -269,10 +62,9 @@ def main() -> None:
 
     sys.path.insert(0, project_root)
 
-    os.environ[CONFIG_ENV_VAR] = json.dumps(build_config(args))
-
-    run_tests(args.test_module, project_root)
-    sys.exit(0)
+    from tests.e2e.runner import main as runner_main
+    sys.argv = [sys.argv[0]] + remaining_argv
+    runner_main()
 
 
 if __name__ == '__main__':

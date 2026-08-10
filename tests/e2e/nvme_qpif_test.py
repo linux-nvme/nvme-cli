@@ -24,7 +24,7 @@ NVMe QPIF (Qualified Protection Information Format) Testcase:-
 
 import filecmp
 
-from tests.e2e.nvme_test_io import TestNVMeIO
+from .nvme_test_io import TestNVMeIO
 
 
 class TestNVMeQPIFTest(TestNVMeIO):

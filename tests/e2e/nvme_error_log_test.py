@@ -26,7 +26,7 @@ NVMe Smart Log Verification Testcase:-
 
 """
 
-from tests.nvme_test import TestNVMe
+from ..nvme_test import TestNVMe
 
 
 class TestNVMeErrorLogCmd(TestNVMe):

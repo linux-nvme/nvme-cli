@@ -12,7 +12,7 @@ NVMe LBA Status Log Testcase :-
     1. Execute get-lba-status on a device.
 """
 
-from tests.nvme_test import TestNVMe
+from ..nvme_test import TestNVMe
 
 
 class TestNVMeGetLbaStatusCmd(TestNVMe):

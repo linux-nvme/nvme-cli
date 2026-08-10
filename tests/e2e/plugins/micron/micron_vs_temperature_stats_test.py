@@ -25,7 +25,7 @@ Tests in this module verify:
 
 import json
 
-from tests.e2e.plugins.micron.micron_test import TestMicron
+from .micron_test import TestMicron
 
 
 class TestMicronVsTemperatureStats(TestMicron):
