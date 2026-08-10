@@ -41,6 +41,6 @@ setup = [
     "-Dpython=enabled",
     "-Dpypi=true",
     "-Dtests=false",
-    "-Dnvme-tests=false",
+    "-De2e-tests=false",
     "-Dexamples=false",
 ]

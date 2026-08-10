@@ -16,8 +16,6 @@ compile_commands.json
 tests/**/__pycache__
 tests/nvmetests
 tests/**/*.pyc
-unit-py/**/__pycache__
-unit-py/**/*.pyc
 libnvme/src/nvme/__pycache__
 
 .build

@@ -10,7 +10,6 @@ ignore:
   - 'subprojects'
   - 'ccan'
   - 'tests'
-  - 'unit'
   - 'libnvme/test'
   - 'libnvme/libnvme/tests'
   - 'libnvme/examples'

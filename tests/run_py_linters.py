@@ -50,7 +50,7 @@ def run_mypy(path: Path) -> None:
             path,
         ),
         check=False,
-        env={'MYPYPATH': str(tests_dir.absolute()), **environ},
+        env={'MYPYPATH': str(source_root.absolute()), **environ},
     )
 
 
