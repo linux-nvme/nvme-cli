@@ -3208,7 +3208,6 @@ static int wdc_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	struct nvme_telemetry_log *log;
 	size_t full_size = 0;
 	int err = 0, output;
-	__u32 host_gen = 1;
 	int ctrl_init = 0;
 	__u64 result;
 	void *buf = NULL;
@@ -3238,7 +3237,6 @@ static int wdc_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	capabilities = wdc_get_drive_capabilities(ctx, hdl);
 
 	if (type == WDC_TELEMETRY_TYPE_HOST) {
-		host_gen = 1;
 		ctrl_init = 0;
 	} else if (type == WDC_TELEMETRY_TYPE_CONTROLLER) {
 		if ((capabilities & WDC_DRIVE_CAP_INTERNAL_LOG) == WDC_DRIVE_CAP_INTERNAL_LOG) {
@@ -3250,7 +3248,6 @@ static int wdc_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 			if (!err) {
 				if (!result) {
 					/* enabled */
-					host_gen = 0;
 					ctrl_init = 1;
 				} else {
 					nvme_show_error("%s: Controller initiated option telemetry log page disabled", __func__);
@@ -3262,7 +3259,6 @@ static int wdc_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 				return -EPERM;
 			}
 		} else {
-			host_gen = 0;
 			ctrl_init = 1;
 		}
 	} else {
@@ -3285,12 +3281,9 @@ static int wdc_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	if (ctrl_init)
 		err = libnvme_get_ctrl_telemetry(hdl, true, &log,
 					  data_area, &full_size);
-	else if (host_gen)
+	else
 		err = libnvme_get_new_host_telemetry(hdl, &log,
 						  data_area, &full_size);
-	else
-		err = libnvme_get_host_telemetry(hdl, &log, data_area,
-					  &full_size);
 
 	if (err < 0) {
 		nvme_show_err(err, "get-telemetry-log");
