@@ -504,10 +504,12 @@ static int ilog_dump_identify_page(struct libnvme_transport_handle *hdl,
 	__u8 data[NVME_IDENTIFY_DATA_SIZE];
 	__u8 *buff = cns->buffer ? cns->buffer : data;
 	__cleanup_free char *filename = NULL;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	err = nvme_identify(hdl, nsid, NVME_CSI_NVM, cns->id, buff,
-		sizeof(data));
+	nvme_init_identify(&cmd, nsid, NVME_CSI_NVM, cns->id, buff, sizeof(data));
+
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 

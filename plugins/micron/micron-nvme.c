@@ -2142,11 +2142,18 @@ static void GetErrorlogData(struct libnvme_transport_handle *hdl, int entries, c
 	int logSize = entries * sizeof(struct nvme_error_log_page);
 	__cleanup_libnvme_free struct nvme_error_log_page *error_log =
 				(struct nvme_error_log_page *)libnvme_alloc(logSize);
+	struct libnvme_passthru_cmd cmd;
+	size_t len;
 
 	if (!error_log)
 		return;
 
-	if (!nvme_get_log_error(hdl, NVME_NSID_ALL, entries, error_log))
+	len = sizeof(*error_log) * entries;
+
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_ERROR,
+		NVME_CSI_NVM, error_log, len);
+
+	if (!libnvme_get_log(hdl, &cmd, false, len))
 		WriteData((__u8 *)error_log, logSize, dir,
 			  "error_information_log.bin", "error log");
 }
@@ -2161,19 +2168,28 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 	void *pevent_log_info = NULL;
 	__u32 log_len = 0;
 	int err = 0;
+	struct libnvme_passthru_cmd cmd;
+	size_t len;
 
 	/* get self test log */
-	if (!nvme_get_log_device_self_test(hdl, &self_test_log))
+	len = sizeof(self_test_log);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_DEVICE_SELF_TEST,
+		NVME_CSI_NVM, &self_test_log, len);
+	if (!libnvme_get_log(hdl, &cmd, false, len))
 		WriteData((__u8 *)&self_test_log, sizeof(self_test_log), dir,
 			  "drive_self_test.bin", "self test log");
 
 	/* get fw slot info log */
-	if (!nvme_get_log_fw_slot(hdl, false, &fw_log))
+	nvme_init_get_log(&cmd, false, NVME_LOG_LID_FW_SLOT,
+		NVME_CSI_NVM, &fw_log, sizeof(fw_log));
+	if (!libnvme_get_log(hdl, &cmd, false, sizeof(fw_log)))
 		WriteData((__u8 *)&fw_log, sizeof(fw_log), dir,
 			  "firmware_slot_info_log.bin", "firmware log");
 
 	/* get effects log */
-	if (!nvme_get_log_cmd_effects(hdl, NVME_CSI_NVM, &effects))
+	len = sizeof(effects);
+	nvme_init_get_log_cmd_effects(&cmd, NVME_CSI_NVM, &effects);
+	if (!libnvme_get_log(hdl, &cmd, false, len))
 		WriteData((__u8 *)&effects, sizeof(effects), dir,
 			  "command_effects_log.bin", "effects log");
 
@@ -2225,6 +2241,7 @@ static void GetOSConfig(const char *strOSDirName)
 static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type, __u8 **data,
 				uint32_t *logSize, int da)
 {
+	struct libnvme_passthru_cmd cmd;
 	int err;
 	int bs = NVME_LOG_TELEM_BLOCK_SIZE;
 	uint32_t dalb = 0;
@@ -2237,10 +2254,13 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 		return -ENOMEM;
 	}
 
-	if (ctrl_init)
-		err = nvme_get_log_telemetry_ctrl(hdl, true, 0, log, bs);
-	else
-		err = nvme_get_log_telemetry_host(hdl, 0, log, bs);
+	if (ctrl_init) {
+		nvme_init_get_log_telemetry_ctrl(&cmd, 0, log, bs);
+		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, true, bs);
+	} else {
+		nvme_init_get_log_telemetry_host(&cmd, 0, log, bs);
+		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, bs);
+	}
 
 	if (err) {
 		nvme_show_error("Failed to get telemetry log header for %s",
@@ -2284,10 +2304,13 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 		return -ENOMEM;
 	}
 
-	if (ctrl_init)
-		err = nvme_get_log_telemetry_ctrl(hdl, true, 0, log, *logSize);
-	else
-		err = nvme_get_log_telemetry_host(hdl, 0, log, *logSize);
+	if (ctrl_init) {
+		nvme_init_get_log_telemetry_ctrl(&cmd, 0, log, *logSize);
+		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, true, *logSize);
+	} else {
+		nvme_init_get_log_telemetry_host(&cmd, 0, log, *logSize);
+		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, *logSize);
+	}
 
 	if (!err) {
 		*data = (__u8 *)log;

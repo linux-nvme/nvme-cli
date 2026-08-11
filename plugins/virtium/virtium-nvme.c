@@ -319,6 +319,7 @@ vt_update_vtview_log_header(struct libnvme_transport_handle *hdl, const char *pa
 			    const struct vtview_save_log_settings *cfg)
 {
 	struct vtview_log_header header;
+	struct libnvme_passthru_cmd cmd;
 	const char *filename;
 	int ret = 0;
 
@@ -355,7 +356,10 @@ vt_update_vtview_log_header(struct libnvme_transport_handle *hdl, const char *pa
 		return -1;
 	}
 
-	ret = nvme_get_log_fw_slot(hdl, false, &header.raw_fw);
+	nvme_init_get_log(&cmd, false, NVME_LOG_LID_FW_SLOT,
+		NVME_CSI_NVM, &header.raw_fw, sizeof(header.raw_fw));
+
+	ret = libnvme_get_log(hdl, &cmd, false, sizeof(header.raw_fw));
 	if (ret) {
 		nvme_show_error("Cannot read device firmware log");
 		return -1;

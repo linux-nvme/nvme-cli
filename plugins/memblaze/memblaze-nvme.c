@@ -1293,6 +1293,7 @@ static int mb_set_latency_feature(int argc, char **argv, struct command *acmd, s
 static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	__u64 res = 0;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	// Get the configuration
@@ -1308,9 +1309,12 @@ static int mb_get_latency_feature(int argc, char **argv, struct command *acmd, s
 
 	// Get feature
 
-	err = nvme_get_features_simple(hdl, FID_LATENCY_FEATURE,
-			NVME_GET_FEATURES_SEL_CURRENT, &res);
+	nvme_init_get_features(&cmd, FID_LATENCY_FEATURE, NVME_GET_FEATURES_SEL_CURRENT);
+
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
+	res = cmd.result;
 	if (!err) {
+
 		uint32_t result = res;
 		nvme_show_verbose_result("%s have done successfully. result = %#" PRIx32 ".", acmd->name, result);
 

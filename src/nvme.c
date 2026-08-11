@@ -853,13 +853,15 @@ static int get_log_telemetry_ctrl(struct libnvme_transport_handle *hdl, bool rae
 				  struct nvme_telemetry_log **buf)
 {
 	struct nvme_telemetry_log *log;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	log = libnvme_alloc(size);
 	if (!log)
 		return -ENOMEM;
 
-	err = nvme_get_log_telemetry_ctrl(hdl, rae, 0, log, size);
+	nvme_init_get_log_telemetry_ctrl(&cmd, 0, log, size);
+	err = libnvme_get_log_dynamic_chunk(hdl, &cmd, rae, size);
 	if (err) {
 		libnvme_free(log);
 		return err;
@@ -873,13 +875,15 @@ static int get_log_telemetry_host(struct libnvme_transport_handle *hdl, size_t s
 				  struct nvme_telemetry_log **buf)
 {
 	struct nvme_telemetry_log *log;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	log = libnvme_alloc(size);
 	if (!log)
 		return -ENOMEM;
 
-	err = nvme_get_log_telemetry_host(hdl, 0, log, size);
+	nvme_init_get_log_telemetry_host(&cmd, 0, log, size);
+	err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, size);
 	if (err) {
 		libnvme_free(log);
 		return err;
@@ -923,6 +927,7 @@ static int __get_telemetry_log_ctrl(struct libnvme_transport_handle *hdl,
 				    bool da4_support)
 {
 	struct nvme_telemetry_log *log;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	log = libnvme_alloc(NVME_LOG_TELEM_BLOCK_SIZE);
@@ -933,14 +938,16 @@ static int __get_telemetry_log_ctrl(struct libnvme_transport_handle *hdl,
 	 * set rae = true so it won't clear the current telemetry log in
 	 * controller
 	 */
-	err = nvme_get_log_telemetry_ctrl(hdl, true, 0, log,
-					  NVME_LOG_TELEM_BLOCK_SIZE);
+	nvme_init_get_log_telemetry_ctrl(&cmd, 0, log, NVME_LOG_TELEM_BLOCK_SIZE);
+	err = libnvme_get_log_dynamic_chunk(hdl, &cmd, true, NVME_LOG_TELEM_BLOCK_SIZE);
 	if (err)
 		goto free;
 
 	if (!log->ctrlavail) {
 		if (!rae) {
-			err = nvme_get_log_telemetry_ctrl(hdl, rae, 0, log,
+			nvme_init_get_log_telemetry_ctrl(&cmd, 0, log,
+				NVME_LOG_TELEM_BLOCK_SIZE);
+			err = libnvme_get_log_dynamic_chunk(hdl, &cmd, rae,
 				NVME_LOG_TELEM_BLOCK_SIZE);
 			goto free;
 		}
@@ -970,14 +977,15 @@ static int __get_telemetry_log_host(struct libnvme_transport_handle *hdl,
 				    bool da4_support)
 {
 	__cleanup_libnvme_free struct nvme_telemetry_log *log = NULL;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	log = libnvme_alloc(sizeof(*log));
 	if (!log)
 		return -ENOMEM;
 
-	err = nvme_get_log_telemetry_host(hdl, 0, log,
-					  NVME_LOG_TELEM_BLOCK_SIZE);
+	nvme_init_get_log_telemetry_host(&cmd, 0, log, NVME_LOG_TELEM_BLOCK_SIZE);
+	err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, NVME_LOG_TELEM_BLOCK_SIZE);
 	if (err)
 		return  err;
 
@@ -1211,6 +1219,8 @@ static int collect_effects_log(struct libnvme_transport_handle *hdl, enum nvme_c
 			       struct list_head *list, int flags)
 {
 	nvme_effects_log_node_t *node;
+	struct libnvme_passthru_cmd cmd;
+	size_t len;
 	int err;
 
 	node = libnvme_alloc(sizeof(*node));
@@ -1219,7 +1229,9 @@ static int collect_effects_log(struct libnvme_transport_handle *hdl, enum nvme_c
 
 	node->csi = csi;
 
-	err = nvme_get_log_cmd_effects(hdl, csi, &node->effects);
+	len = sizeof(node->effects);
+	nvme_init_get_log_cmd_effects(&cmd, csi, &node->effects);
+	err = libnvme_get_log(hdl, &cmd, false, len);
 	if (err) {
 		libnvme_free(node);
 		return err;
@@ -1385,6 +1397,8 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl ctrl = { 0 };
+	struct libnvme_passthru_cmd cmd;
+	size_t err_log_len;
 	nvme_print_flags_t flags;
 	int err = -1;
 
@@ -1440,7 +1454,11 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 	if (!err_log)
 		return -ENOMEM;
 
-	err = nvme_get_log_error(hdl, NVME_NSID_ALL, cfg.log_entries, err_log);
+	err_log_len = sizeof(*err_log) * cfg.log_entries;
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_ERROR,
+		NVME_CSI_NVM, err_log, err_log_len);
+
+	err = libnvme_get_log(hdl, &cmd, false, err_log_len);
 	if (err) {
 		nvme_show_err(err, "error log");
 		return err;
@@ -1461,6 +1479,7 @@ static int get_fw_log(int argc, char **argv, struct command *acmd, struct plugin
 	__cleanup_libnvme_free struct nvme_firmware_slot *fw_log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;
 
@@ -1492,7 +1511,10 @@ static int get_fw_log(int argc, char **argv, struct command *acmd, struct plugin
 	if (!fw_log)
 		return -ENOMEM;
 
-	err = nvme_get_log_fw_slot(hdl, false, fw_log);
+	nvme_init_get_log(&cmd, false, NVME_LOG_LID_FW_SLOT,
+		NVME_CSI_NVM, fw_log, sizeof(*fw_log));
+
+	err = libnvme_get_log(hdl, &cmd, false, sizeof(*fw_log));
 	if (err) {
 		nvme_show_err(err, "fw log");
 		return err;
@@ -2904,6 +2926,7 @@ static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *p
 	__cleanup_libnvme_free struct nvme_ns_list *ns_list = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	enum nvme_identify_cns cns;
 	nvme_print_flags_t flags;
 	int err;
@@ -2956,8 +2979,9 @@ static int list_ns(int argc, char **argv, struct command *acmd, struct plugin *p
 			NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST;
 	}
 
-	err = nvme_identify(hdl, cfg.namespace_id - 1, cfg.csi, cns, ns_list,
+	nvme_init_identify(&cmd, cfg.namespace_id - 1, cfg.csi, cns, ns_list,
 			    sizeof(*ns_list));
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "id namespace list");
 		return err;
@@ -4096,6 +4120,7 @@ static int ns_descs(int argc, char **argv, struct command *acmd, struct plugin *
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free void *nsdescs = NULL;
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;
 
@@ -4141,7 +4166,8 @@ static int ns_descs(int argc, char **argv, struct command *acmd, struct plugin *
 	if (!nsdescs)
 		return -ENOMEM;
 
-	err = nvme_identify_ns_descs_list(hdl, cfg.namespace_id, nsdescs);
+	nvme_init_identify_ns_descs_list(&cmd, cfg.namespace_id, nsdescs);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify namespace");
 		return err;
@@ -4410,6 +4436,7 @@ static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *p
 	__cleanup_libnvme_free struct nvme_id_uuid_list *uuid_list = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;
 
@@ -4444,7 +4471,8 @@ static int id_uuid(int argc, char **argv, struct command *acmd, struct plugin *p
 	if (!uuid_list)
 		return -ENOMEM;
 
-	err = nvme_identify_uuid_list(hdl, uuid_list);
+	nvme_init_identify_uuid_list(&cmd, uuid_list);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify UUID list");
 		return err;
@@ -4818,7 +4846,9 @@ static int wait_self_test(struct libnvme_transport_handle *hdl)
 		if (err)
 			return err;
 
-		err = nvme_get_log_device_self_test(hdl, log);
+		nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_DEVICE_SELF_TEST,
+			NVME_CSI_NVM, log, sizeof(*log));
+		err = libnvme_get_log(hdl, &cmd, false, sizeof(*log));
 		if (err) {
 			if (nvme_is_output_format_normal())
 				print_info("\n");
@@ -4934,7 +4964,9 @@ static int device_self_test(int argc, char **argv, struct command *acmd, struct 
 		if (!log)
 			return -ENOMEM;
 
-		err = nvme_get_log_device_self_test(hdl, log);
+		nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_DEVICE_SELF_TEST,
+			NVME_CSI_NVM, log, sizeof(*log));
+		err = libnvme_get_log(hdl, &cmd, false, sizeof(*log));
 		if (err) {
 			if (nvme_is_output_format_normal())
 				print_info("\n");
@@ -4995,6 +5027,7 @@ static int self_test_log(int argc, char **argv, struct command *acmd, struct plu
 	__cleanup_libnvme_free struct nvme_self_test_log *log = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;
 
@@ -5026,7 +5059,9 @@ static int self_test_log(int argc, char **argv, struct command *acmd, struct plu
 	if (!log)
 		return -ENOMEM;
 
-	err = nvme_get_log_device_self_test(hdl, log);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_DEVICE_SELF_TEST,
+		NVME_CSI_NVM, log, sizeof(*log));
+	err = libnvme_get_log(hdl, &cmd, false, sizeof(*log));
 	if (err) {
 		nvme_show_err(err, "self test log");
 		return err;
