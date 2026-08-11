@@ -2870,7 +2870,7 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 		return -ENOMEM;
 	}
 
-	ret = libnvme_open(ctx, c->name, &c->hdl);
+	ret = libnvme_open(ctx, c->name, O_RDONLY, &c->hdl);
 	if (ret) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "failed to open %s\n", c->name);
 		return ret;
@@ -3588,7 +3588,7 @@ static int discover_lookup_ctrl(struct libnvme_global_ctx *ctx,
 		 * When we found an existing controller it might not have a
 		 * device handle yet
 		 */
-		err = libnvme_open(ctx, c->name, &c->hdl);
+		err = libnvme_open(ctx, c->name, O_RDONLY, &c->hdl);
 		if (err) {
 			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				"failed to open %s\n", c->name);

@@ -21,7 +21,8 @@
 #include "private-mi.h"
 
 static int __libnvme_transport_handle_open_direct(
-		struct libnvme_transport_handle *hdl, const char *devname)
+		struct libnvme_transport_handle *hdl, const char *devname,
+		int flags)
 {
 	__cleanup_free char *path = NULL;
 	char *name;
@@ -42,7 +43,7 @@ static int __libnvme_transport_handle_open_direct(
 	if (ret < 0)
 		return -ENOMEM;
 
-	hdl->fd = open(path, O_RDONLY);
+	hdl->fd = open(path, flags);
 	if (hdl->fd < 0)
 		return -errno;
 
@@ -74,7 +75,7 @@ void __libnvme_transport_handle_close_direct(
 }
 
 __shr_public int libnvme_open(
-		struct libnvme_global_ctx *ctx, const char *name,
+		struct libnvme_global_ctx *ctx, const char *name, int flags,
 		struct libnvme_transport_handle **hdlp)
 {
 	struct libnvme_transport_handle *hdl;
@@ -104,7 +105,7 @@ __shr_public int libnvme_open(
 	if (!strncmp(name, "mctp:", strlen("mctp:")))
 		ret = __libnvme_transport_handle_open_mi(hdl, name);
 	else
-		ret = __libnvme_transport_handle_open_direct(hdl, name);
+		ret = __libnvme_transport_handle_open_direct(hdl, name, flags);
 
 	if (ret) {
 		libnvme_close(hdl);

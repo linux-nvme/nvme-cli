@@ -47,7 +47,7 @@ static int get_transport_handle(struct libnvme_global_ctx *ctx, int argc,
 
 	devname = argv[optind];
 
-	ret = libnvme_open(ctx, devname, hdl);
+	ret = libnvme_open(ctx, devname, flags, hdl);
 	if (ret)
 		nvme_show_err(ret, devname);
 
@@ -267,7 +267,7 @@ int open_exclusive(struct libnvme_global_ctx **ctx,
 	ret = get_transport_handle(ctx_new, argc, argv, flags, &hdl_new);
 	if (ret) {
 		libnvme_free_global_ctx(ctx_new);
-		return -ENXIO;
+		return ret;
 	}
 
 	setup_transport_handle(ctx_new, hdl_new, opts);

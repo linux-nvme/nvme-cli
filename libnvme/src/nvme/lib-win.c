@@ -7,6 +7,7 @@
  */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <strings.h>
 
@@ -31,9 +32,11 @@ static bool __is_controller_path(const char *device_path)
 }
 
 static __shr_unused int __libnvme_transport_handle_open_direct(
-	struct libnvme_transport_handle *hdl, const char *name)
+	struct libnvme_transport_handle *hdl, const char *name, int flags)
 {
 	__cleanup_free char *device_path = NULL;
+	DWORD share_mode = (flags & O_EXCL) ? 0 :
+		(FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE);
 
 	/* Parse and open direct device */
 	hdl->type = LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT;
@@ -61,7 +64,7 @@ static __shr_unused int __libnvme_transport_handle_open_direct(
 
 	hdl->fd = CreateFileA(device_path,
 		GENERIC_READ | GENERIC_WRITE,
-		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		share_mode,
 		NULL,
 		OPEN_EXISTING,
 		0,
@@ -76,6 +79,8 @@ static __shr_unused int __libnvme_transport_handle_open_direct(
 			return -ENOENT;
 		case ERROR_ACCESS_DENIED:
 			return -EACCES;
+		case ERROR_SHARING_VIOLATION:
+			return -EBUSY;
 		default:
 			return -EIO;
 		}
@@ -95,7 +100,7 @@ static __shr_unused int __libnvme_transport_handle_open_direct(
 }
 
 __shr_public int libnvme_open(struct libnvme_global_ctx *ctx,
-				  const char *name,
+				  const char *name, int flags,
 				  struct libnvme_transport_handle **hdlp)
 {
 	struct libnvme_transport_handle *hdl;
@@ -151,7 +156,7 @@ __shr_public int libnvme_open(struct libnvme_global_ctx *ctx,
 	}
 
 	ret = __libnvme_transport_handle_open_direct(hdl, mapped_name ?
-		mapped_name : name);
+		mapped_name : name, flags);
 
 	free(mapped_name);
 	mapped_name = NULL;

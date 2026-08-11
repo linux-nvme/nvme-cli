@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#include <fcntl.h>
 #include <inttypes.h>
 #include <string.h>
 
@@ -1464,7 +1465,7 @@ int main(void)
 	libnvme_set_logging_file(ctx, stdout);
 
 	set_mock_fd(LIBNVME_TEST_FD);
-	check(!libnvme_open(ctx, "NVME_TEST_FD64", &test_hdl),
+	check(!libnvme_open(ctx, "NVME_TEST_FD64", O_RDONLY, &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(format_nvm);

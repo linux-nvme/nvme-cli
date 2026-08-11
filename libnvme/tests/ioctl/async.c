@@ -5,6 +5,7 @@
  */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -102,7 +103,7 @@ int main(void)
 	libnvme_set_logging_file(ctx, stdout);
 
 	set_mock_fd(LIBNVME_TEST_FD);
-	check(!libnvme_open(ctx, "NVME_TEST_FD", &test_hdl),
+	check(!libnvme_open(ctx, "NVME_TEST_FD", O_RDONLY, &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(submit_admin_not_supported);

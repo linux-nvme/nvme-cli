@@ -354,7 +354,7 @@ static int huawei_list(int argc, char **argv, struct command *acmd,
 		__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 
 		snprintf(path, sizeof(path), "/dev/%s", devices[i]->d_name);
-		ret = libnvme_open(ctx, path, &hdl);
+		ret = libnvme_open(ctx, path, O_RDONLY, &hdl);
 		if (ret) {
 			nvme_show_error("Cannot open device %s: %s",
 				path, libnvme_strerror(-ret));

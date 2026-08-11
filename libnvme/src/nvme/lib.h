@@ -126,6 +126,8 @@ void libnvme_set_logging_file(struct libnvme_global_ctx *ctx, FILE *fp);
  * libnvme_open() - Open an nvme controller or namespace device
  * @ctx:	struct libnvme_global_ctx object
  * @name:	The basename of the device to open
+ * @flags:	Flags to pass to the underlying open(2) call, e.g. O_RDONLY
+ *		or O_RDONLY | O_EXCL
  * @hdl:	Transport handle to return
  *
  * This will look for the handle in /dev/ and validate the name and filetype
@@ -133,7 +135,7 @@ void libnvme_set_logging_file(struct libnvme_global_ctx *ctx, FILE *fp);
  *
  * Return: 0 on success, negative error code otherwise.
  */
-int libnvme_open(struct libnvme_global_ctx *ctx, const char *name,
+int libnvme_open(struct libnvme_global_ctx *ctx, const char *name, int flags,
 	      struct libnvme_transport_handle **hdl);
 
 /**
