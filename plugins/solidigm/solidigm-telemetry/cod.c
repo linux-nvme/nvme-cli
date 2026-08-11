@@ -154,12 +154,14 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 			return;
 		}
 		struct cod_item item = data->items[i];
+		uint64_t off = le64_to_cpu(item.DataFieldOffset);
+		uint32_t size = le32_to_cpu(item.DataFieldSizeInBytes);
 
-		if (item.DataFieldOffset + item.DataFieldOffset > tl->log_size)
+		if (off > tl->log_size || size > tl->log_size - off)
 			continue;
 		if (item.dataInvalid)
 			continue;
-		uint8_t *val = ((uint8_t *)tl->log) + item.DataFieldOffset;
+		uint8_t *val = ((uint8_t *)tl->log) + off;
 		const char *key =  getOemDataMapDescription(item.DataFieldMapUid);
 
 		switch (item.dataFieldType) {
@@ -176,7 +178,7 @@ void solidigm_telemetry_log_cod_parse(struct telemetry_log *tl)
 		case STRING: {
 			struct json_object *str_obj = NULL;
 
-			sldm_uint8_array_to_string(val, item.DataFieldSizeInBytes, &str_obj);
+			sldm_uint8_array_to_string(val, size, &str_obj);
 			json_object_object_add(cod, key, str_obj);
 			break;
 		}
