@@ -2768,7 +2768,7 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 	if (err) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"failed to get discovery log: %s\n",
-			libnvme_strerror(err));
+			libnvme_strerror(-err));
 		return err;
 	}
 
