@@ -5287,6 +5287,26 @@ static int fw_download_single(struct libnvme_transport_handle *hdl, void *fw_buf
 	return -1;
 }
 
+static int fw_read_full(int fd, void *buf, size_t len)
+{
+	size_t offset = 0;
+
+	while (offset < len) {
+		ssize_t ret = read(fd, (char *)buf + offset, len - offset);
+
+		if (ret < 0) {
+			if (errno == EINTR)
+				continue;
+			return -errno;
+		}
+		if (!ret)
+			return -EIO;
+		offset += ret;
+	}
+
+	return 0;
+}
+
 static int fw_download(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Copy all or part of a firmware image to "
@@ -5302,10 +5322,12 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 	const char *offset = "starting dword offset, default 0";
 	const char *progress = "display firmware transfer progress";
 	const char *ignore_ovr = "ignore overwrite errors";
+	const char *stream = "read firmware in transfer-sized chunks";
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_huge struct libnvme_mem_huge mh = { 0, };
+	__cleanup_libnvme_free void *stream_buf = NULL;
 	__cleanup_fd int fw_fd = -1;
 	unsigned int fw_size, pos;
 	int err;
@@ -5321,6 +5343,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		__u32	offset;
 		bool	progress;
 		bool	ignore_ovr;
+		bool	stream;
 	};
 
 	struct config cfg = {
@@ -5330,6 +5353,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		.offset     = 0,
 		.progress   = false,
 		.ignore_ovr = false,
+		.stream     = false,
 	};
 
 	NVME_ARGS(opts,
@@ -5338,7 +5362,8 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		  OPT_UINT("xfer",       'x', &cfg.xfer,       xfer),
 		  OPT_UINT("offset",     'O', &cfg.offset,     offset),
 		  OPT_FLAG("progress",   'p', &cfg.progress,   progress),
-		  OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr));
+		  OPT_FLAG("ignore-ovr", 'i', &cfg.ignore_ovr, ignore_ovr),
+		  OPT_FLAG("stream",       0, &cfg.stream,      stream));
 
 	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
 	if (err)
@@ -5386,16 +5411,24 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		nvme_show_error("WARNING: firmware file size %u not conform to FWUG alignment %lu",
 				fw_size, cfg.xfer);
 
-	fw_buf = libnvme_alloc_huge(fw_size, &mh);
+	if (cfg.stream) {
+		stream_buf = libnvme_alloc(cfg.xfer);
+		fw_buf = stream_buf;
+	} else {
+		fw_buf = libnvme_alloc_huge(fw_size, &mh);
+	}
 	if (!fw_buf) {
-		nvme_show_error("failed to allocate huge memory");
+		nvme_show_error("failed to allocate firmware buffer");
 		return -ENOMEM;
 	}
 
-	if (read(fw_fd, fw_buf, fw_size) != ((ssize_t)(fw_size))) {
-		err = -errno;
-		nvme_show_error("read :%s :%s", cfg.fw, libnvme_strerror(errno));
-		return err;
+	if (!cfg.stream) {
+		err = fw_read_full(fw_fd, fw_buf, fw_size);
+		if (err) {
+			nvme_show_error("read %s: %s", cfg.fw,
+					libnvme_strerror(err));
+			return err;
+		}
 	}
 
 	if (cfg.ish && !libnvme_transport_handle_is_mi(hdl)) {
@@ -5403,9 +5436,19 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 	}
 
 	for (pos = 0; pos < fw_size; pos += cfg.xfer) {
-		cfg.xfer = min(cfg.xfer, fw_size - pos);
+		void *xfer_buf = cfg.stream ? fw_buf : fw_buf + pos;
 
-		err = fw_download_single(hdl, fw_buf + pos, cfg.ish, fw_size,
+		cfg.xfer = min(cfg.xfer, fw_size - pos);
+		if (cfg.stream) {
+			err = fw_read_full(fw_fd, fw_buf, cfg.xfer);
+			if (err) {
+				nvme_show_error("read %s: %s", cfg.fw,
+						libnvme_strerror(err));
+				break;
+			}
+		}
+
+		err = fw_download_single(hdl, xfer_buf, cfg.ish, fw_size,
 					 cfg.offset + pos, cfg.xfer,
 					 cfg.progress, cfg.ignore_ovr);
 		if (err)
