@@ -1107,7 +1107,7 @@ __shr_public struct libnvme_transport_handle *libnvme_ctrl_get_transport_handle(
 	if (!c->hdl) {
 		int err;
 
-		err = libnvme_open(c->ctx, c->name, &c->hdl);
+		err = libnvme_open(c->ctx, c->name, O_RDONLY, &c->hdl);
 		if (err)
 			libnvme_msg(c->ctx, LIBNVME_LOG_ERR,
 				 "Failed to open ctrl %s, errno %d\n",
@@ -1522,7 +1522,7 @@ int libnvme_ns_get_transport_handle(libnvme_ns_t n,
 	if (n->hdl)
 		goto valid;
 
-	err = libnvme_open(n->ctx, n->name, &n->hdl);
+	err = libnvme_open(n->ctx, n->name, O_RDONLY, &n->hdl);
 	if (err) {
 		libnvme_msg(n->ctx, LIBNVME_LOG_ERR, "Failed to open ns %s, error %d\n",
 			n->name, err);

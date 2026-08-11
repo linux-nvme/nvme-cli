@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <winioctl.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <ntddscsi.h>
 #include <setupapi.h>
 #include <stdbool.h>
@@ -124,7 +125,7 @@ static struct libnvme_transport_handle *get_ns_handle_from_ctrl(
 
 	ctrl_name = libnvme_transport_handle_get_name(hdl);
 	if (asprintf(&ns_name, "%sn1", ctrl_name) >= 0)
-		libnvme_open(hdl->ctx, ns_name, &ns_hdl);
+		libnvme_open(hdl->ctx, ns_name, O_RDONLY, &ns_hdl);
 
 	return ns_hdl;
 }

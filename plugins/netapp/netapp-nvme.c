@@ -983,7 +983,7 @@ static int netapp_smdevices(int argc, char **argv, struct command *acmd,
 	for (i = 0; i < devs.num; i++) {
 		snprintf(path, sizeof(path), "%s%s", dev_path,
 			devs.ents[i]->d_name);
-		ret = libnvme_open(ctx, path, &hdl);
+		ret = libnvme_open(ctx, path, O_RDONLY, &hdl);
 		if (ret) {
 			nvme_show_error("Unable to open %s: %s", path,
 				libnvme_strerror(-ret));
@@ -1080,7 +1080,7 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 	for (i = 0; i < devs.num; i++) {
 		snprintf(path, sizeof(path), "%s%s", dev_path,
 				devs.ents[i]->d_name);
-		ret = libnvme_open(ctx, path, &hdl);
+		ret = libnvme_open(ctx, path, O_RDONLY, &hdl);
 		if (ret) {
 			nvme_show_error("Unable to open %s: %s", path,
 					libnvme_strerror(-ret));

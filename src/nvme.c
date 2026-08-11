@@ -333,7 +333,7 @@ static int open_fallback_chardev(struct libnvme_global_ctx *ctx,
 
 		libnvme_close(hdl);
 
-		err = libnvme_open(ctx, cdev, &hdl);
+		err = libnvme_open(ctx, cdev, O_RDONLY, &hdl);
 		if (err) {
 			*phdl = NULL;
 
