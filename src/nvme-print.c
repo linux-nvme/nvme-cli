@@ -1907,7 +1907,140 @@ void nvme_show_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 	nvme_print(pull_model_ddc_req_log, flags, log);
 }
 
-void nvme_show_log(const char *devname, struct nvme_get_log_args *args, nvme_print_flags_t flags)
+void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u16 lsi,
+		   __u8 lsp, void *log, __u32 len, nvme_print_flags_t flags)
 {
-	nvme_print(log, flags, devname, args);
+	switch (lid) {
+	case NVME_LOG_LID_SUPPORTED_LOG_PAGES:
+		break;
+	case NVME_LOG_LID_ERROR:
+		nvme_show_error_log(log, len / sizeof(struct nvme_error_log_page),
+				    devname, NULL, flags);
+		break;
+	case NVME_LOG_LID_SMART:
+		nvme_show_smart_log(log, nsid, devname, flags);
+		break;
+	case NVME_LOG_LID_FW_SLOT:
+		nvme_show_fw_log(log, devname, flags);
+		break;
+	case NVME_LOG_LID_CHANGED_NS:
+		nvme_show_changed_ns_list_log(log, devname, flags, false);
+		break;
+	case NVME_LOG_LID_CMD_EFFECTS:
+		break;
+	case NVME_LOG_LID_DEVICE_SELF_TEST:
+		nvme_show_self_test_log(log, len / sizeof(struct nvme_self_test_log), 0,
+					devname, flags);
+		break;
+	case NVME_LOG_LID_TELEMETRY_HOST:
+		break;
+	case NVME_LOG_LID_TELEMETRY_CTRL:
+		break;
+	case NVME_LOG_LID_ENDURANCE_GROUP:
+		nvme_show_endurance_log(log, lsi, devname, flags);
+		break;
+	case NVME_LOG_LID_PREDICTABLE_LAT_NVMSET:
+		nvme_show_predictable_latency_per_nvmset(log, lsi, devname, flags);
+		break;
+	case NVME_LOG_LID_PREDICTABLE_LAT_AGG:
+		nvme_show_predictable_latency_event_agg_log(log,
+			len > sizeof(__u64) ? (len - sizeof(__u64)) / sizeof(__le16) : 0,
+			len, devname, flags);
+		break;
+	case NVME_LOG_LID_ANA:
+		nvme_show_ana_log(log, devname, len, flags);
+		break;
+	case NVME_LOG_LID_PERSISTENT_EVENT:
+		nvme_show_persistent_event_log(log, lsp, len, devname, flags);
+		break;
+	case NVME_LOG_LID_LBA_STATUS:
+		nvme_show_lba_status_log(log, len, devname, flags);
+		break;
+	case NVME_LOG_LID_ENDURANCE_GRP_EVT: {
+		struct nvme_aggregate_endurance_group_event *end = log;
+
+		nvme_show_endurance_group_event_agg_log(end, end->num_entries, len, devname,
+							flags);
+		break;
+	}
+	case NVME_LOG_LID_MEDIA_UNIT_STATUS:
+		nvme_show_media_unit_stat_log(log, flags);
+		break;
+	case NVME_LOG_LID_SUPPORTED_CAP_CONFIG_LIST:
+		nvme_show_supported_cap_config_log(log, flags);
+		break;
+	case NVME_LOG_LID_FID_SUPPORTED_EFFECTS:
+		nvme_show_fid_support_effects_log(log, devname, flags);
+		break;
+	case NVME_LOG_LID_MI_CMD_SUPPORTED_EFFECTS:
+		nvme_show_mi_cmd_support_effects_log(log, devname, flags);
+		break;
+	case NVME_LOG_LID_CMD_AND_FEAT_LOCKDOWN:
+		break;
+	case NVME_LOG_LID_BOOT_PARTITION:
+		nvme_show_boot_part_log(log, devname, len, flags);
+		break;
+	case NVME_LOG_LID_ROTATIONAL_MEDIA_INFO:
+		nvme_show_rotational_media_info_log(log, flags);
+		break;
+	case NVME_LOG_LID_DISPERSED_NS_PARTICIPATING_NSS:
+		nvme_show_dispersed_ns_psub_log(log, flags);
+		break;
+	case NVME_LOG_LID_MGMT_ADDR_LIST:
+		nvme_show_mgmt_addr_list_log(log, flags);
+		break;
+	case NVME_LOG_LID_PHY_RX_EOM:
+		nvme_show_phy_rx_eom_log(log, lsi, flags);
+		break;
+	case NVME_LOG_LID_REACHABILITY_GROUPS:
+		nvme_show_reachability_groups_log(log, len, flags);
+		break;
+	case NVME_LOG_LID_REACHABILITY_ASSOCIATIONS:
+		nvme_show_reachability_associations_log(log, len, flags);
+		break;
+	case NVME_LOG_LID_CHANGED_ALLOC_NS:
+		nvme_show_changed_ns_list_log(log, devname, flags, true);
+		break;
+	case NVME_LOG_LID_FDP_CONFIGS:
+		nvme_show_fdp_configs(log, len, flags);
+		break;
+	case NVME_LOG_LID_FDP_RUH_USAGE:
+		nvme_show_fdp_usage(log, len, flags);
+		break;
+	case NVME_LOG_LID_FDP_STATS:
+		nvme_show_fdp_stats(log, flags);
+		break;
+	case NVME_LOG_LID_FDP_EVENTS:
+		nvme_show_fdp_events(log, flags);
+		break;
+	case NVME_LOG_LID_DISCOVERY: {
+		struct nvmf_discovery_log *discovery_log = log;
+
+		nvme_show_discovery_log(discovery_log, le64_to_cpu(discovery_log->numrec), flags);
+		break;
+	}
+	case NVME_LOG_LID_HOST_DISCOVERY:
+		nvme_show_host_discovery_log(log, flags);
+		break;
+	case NVME_LOG_LID_AVE_DISCOVERY:
+		nvme_show_ave_discovery_log(log, flags);
+		break;
+	case NVME_LOG_LID_PULL_MODEL_DDC_REQ:
+		nvme_show_pull_model_ddc_req_log(log, flags);
+		break;
+	case NVME_LOG_LID_POWER_MEASUREMENT:
+		nvme_show_power_meas_log(log, len, flags);
+		break;
+	case NVME_LOG_LID_RESERVATION:
+		nvme_show_resv_notif_log(log, devname, flags);
+		break;
+	case NVME_LOG_LID_SANITIZE:
+		nvme_show_sanitize_log(log, devname, flags);
+		break;
+	case NVME_LOG_LID_ZNS_CHANGED_ZONES:
+		nvme_show_zns_changed(log, flags);
+		break;
+	default:
+		break;
+	}
 }

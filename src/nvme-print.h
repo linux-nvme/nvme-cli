@@ -6,7 +6,6 @@
 #include <ccan/list/list.h>
 
 #include "nvme.h"
-#include "types.h"
 #include "table.h"
 #include "uint128-util.h"
 #include "int-util.h"
@@ -128,7 +127,6 @@ struct print_ops {
 	void (*host_discovery_log)(struct nvme_host_discovery_log *log);
 	void (*ave_discovery_log)(struct nvme_ave_discovery_log *log);
 	void (*pull_model_ddc_req_log)(struct nvme_pull_model_ddc_req_log *log);
-	void (*log)(const char *devname, struct nvme_get_log_args *args);
 
 	/* libnvme tree print functions */
 	void (*list_item)(libnvme_ns_t n, struct shr_table *t);
@@ -428,7 +426,8 @@ void nvme_show_ave_discovery_log(struct nvme_ave_discovery_log *log,
 				 nvme_print_flags_t flags);
 void nvme_show_pull_model_ddc_req_log(struct nvme_pull_model_ddc_req_log *log,
 				      nvme_print_flags_t flags);
-void nvme_show_log(const char *devname, struct nvme_get_log_args *args, nvme_print_flags_t flags);
+void nvme_show_log(const char *devname, enum nvme_cmd_get_log_lid lid, __u32 nsid, __u16 lsi,
+		   __u8 lsp, void *log, __u32 len, nvme_print_flags_t flags);
 void nvme_show_pel_header(struct nvme_persistent_event_log *pevent_log_head, int human);
 void nvme_show_pel_event_header(int i, struct nvme_persistent_event_entry *pevent_entry_head,
 				int human);
