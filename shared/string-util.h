@@ -12,6 +12,28 @@
 #include <string.h>
 #include <strings.h>
 
+#ifndef HAVE_STRSEP
+/* strsep() is missing on some platforms (e.g. mingw/MSVC runtimes). */
+static inline char *strsep(char **stringp, const char *delim)
+{
+	char *s, *end;
+
+	if (!stringp || !*stringp)
+		return NULL;
+
+	s = *stringp;
+	end = s + strcspn(s, delim);
+
+	if (*end)
+		*end++ = '\0';
+	else
+		end = NULL;
+
+	*stringp = end;
+	return s;
+}
+#endif
+
 /*
  * NULL-safe string equality: two NULLs are equal, one NULL and one
  * non-NULL are never equal, otherwise this is strcmp() == 0.

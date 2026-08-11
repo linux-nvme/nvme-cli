@@ -38,12 +38,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <libnvme.h>
+
 #include "argconfig.h"
 #include "cleanup.h"
 #include "suffix-util.h"
 #include "wrap-util.h"
-
-const char *libnvme_strerror(int errnum);
 
 static bool is_null_or_empty(const char *s)
 {
