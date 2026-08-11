@@ -2,8 +2,8 @@
 /*
  * Copyright (c) Micron, Inc 2024.
  *
- * @file: micron-utils.h
- * @brief: This module contains all the utilities needed for other modules.
+ * @file: field-parser.c
+ * @brief: This module parses generic log page structures field-by-field for printing/JSON output.
  * @author: Chaithanya Shoba <ashoba@micron.com>
  */
 
@@ -14,7 +14,7 @@
 #include <hex-util.h>
 #include <time-util.h>
 
-#include "utils.h"
+#include "field-parser.h"
 
 void print_formatted_var_size_str(const char *msg, const __u8 *pdata, size_t data_size, FILE *fp)
 {

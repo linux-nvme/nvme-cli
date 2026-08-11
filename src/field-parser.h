@@ -2,8 +2,8 @@
 /*
  * Copyright (c) Micron, Inc 2024.
  *
- * @file: utils.h
- * @brief: This module contains all the utilities needed for other modules.
+ * @file: field-parser.h
+ * @brief: This module parses generic log page structures field-by-field for printing/JSON output.
  * @author: Chaithanya Shoba <ashoba@micron.com>
  */
 

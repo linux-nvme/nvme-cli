@@ -14,7 +14,7 @@ sources = [
     'src/nvme-rpmb.c',
     'src/nvme.c',
     'src/plugin.c',
-    'src/utils.c',
+    'src/field-parser.c',
 ]
 
 if host_system == 'linux'
