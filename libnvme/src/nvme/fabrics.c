@@ -3671,7 +3671,7 @@ static struct libnvme_ctrl *dc_open_by_device(struct libnvme_global_ctx *ctx,
 /*
  * Resolve the primary discovery controller connection: reuse one via
  * --device if given, reuse one found by matching connection
- * parameters otherwise, or create a fresh one if --force was given
+ * parameters otherwise, or create a fresh one if --no-reuse was given
  * or neither lookup found anything. Never touches fctx->persistent;
  * ownership is reported separately so the caller knows what it may
  * disconnect later.
@@ -3687,7 +3687,7 @@ static int dc_open(struct libnvme_global_ctx *ctx,
 
 	*own = DC_OWNED;
 
-	if (!fctx->force) {
+	if (!fctx->no_reuse) {
 		if (fctx->device)
 			c = dc_open_by_device(ctx, fctx, own);
 

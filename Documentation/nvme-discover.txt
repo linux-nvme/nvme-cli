@@ -14,7 +14,7 @@ SYNOPSIS
 			[--config=<filename> | -J <filename>]
 			[--persistent[=<no|auto|force>] | -p]
 			[--quiet]
-			[--force]
+			[--no-reuse]
 			[--nbft]
 			[--no-nbft]
 			[--nbft-path=<STR>]
@@ -107,10 +107,13 @@ OPTIONS
 --quiet::
 	Suppress already connected errors.
 
+--no-reuse::
+	Always create a new discovery controller connection instead of
+	reusing an existing one that matches. Whether the new connection
+	persists afterward is still governed entirely by --persistent.
+
 --force::
-	Disable the built-in persistent discovery controller connection
-	rules. Combined with --persistent flag, always create new
-	persistent discovery controller connection.
+	Deprecated alias for --no-reuse.
 
 --nbft::
 	Only look at NBFT tables

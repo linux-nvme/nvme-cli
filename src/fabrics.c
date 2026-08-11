@@ -382,7 +382,7 @@ struct consume_state {
 	struct libnvme_global_ctx *ctx;
 	enum consume_mode mode;
 	bool connect;
-	bool force;
+	bool no_reuse;
 	nvme_print_flags_t flags;
 	char *raw;
 	const char *hostnqn;
@@ -478,7 +478,7 @@ static void consume_conn(const struct libnvmf_config_conn *conn,
 		libnvmf_context_set_default_keep_alive_timeout(fctx,
 				NVMF_DEF_DISC_TMO);
 		libnvmf_context_set_connect(fctx, st->connect);
-		libnvmf_context_set_force(fctx, st->force);
+		libnvmf_context_set_no_reuse(fctx, st->no_reuse);
 		err = libnvmf_discover(st->ctx, fctx);
 	} else {
 		err = libnvmf_connect(st->ctx, fctx);
@@ -521,7 +521,7 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 	char *argv[MAX_DISC_ARGS] = { "discovery.conf" };
 	char *ptr, *p = line;
 	int argc = 1;
-	bool force = false;
+	bool no_reuse = false;
 	char *persistent_arg = NULL;
 
 	NVMF_ARGS(opts, fa,
@@ -529,8 +529,11 @@ int nvmf_convert_discovery_line(struct libnvmf_config_emitter *emitter,
 			   &persistent_arg,
 			   "persistent discovery connection mode "
 			   "(default: no; auto if given bare)"),
-		  OPT_FLAG("force",        0, &force,
-			   "Force persistent discovery controller creation"));
+		  OPT_FLAG("no-reuse",     0, &no_reuse,
+			   "always create a new discovery controller "
+			   "connection instead of reusing an existing one"),
+		  OPT_FLAG("force",        0, &no_reuse,
+			   "deprecated alias for --no-reuse"));
 
 	if (line[0] == '#' || line[0] == '\n' || line[0] == '\0')
 		return 0;
@@ -692,7 +695,7 @@ unref:
  */
 static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
 		char *config_file, const char *hostnqn_arg,
-		const char *hostid_arg, bool connect, bool force,
+		const char *hostid_arg, bool connect, bool no_reuse,
 		nvme_print_flags_t flags)
 {
 	__cleanup_free char *ini_path = NULL;
@@ -736,7 +739,7 @@ static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
 		.ctx = ctx,
 		.mode = CONSUME_ROLE_BASED,
 		.connect = connect,
-		.force = force,
+		.no_reuse = no_reuse,
 		.flags = flags,
 		.raw = raw,
 		.hostnqn = hostnqn,
@@ -757,20 +760,21 @@ static int fabrics_discovery_config(struct libnvme_global_ctx *ctx,
  * exemption -- a mismatched or missing --owner is skipped the same way;
  * the escape hatch is passing the owner's own identity.
  *
- * --force skips the check entirely: it means the caller will never reuse
- * an existing controller, so there is nothing to check ownership against.
+ * --no-reuse skips the check entirely: it means the caller will never
+ * reuse an existing controller, so there is nothing to check ownership
+ * against.
  *
  * Returns 0 to proceed, 1 to skip, or a negative errno on a registry
  * read failure.
  */
 static int check_ctrl_owner(struct libnvme_global_ctx *ctx,
 			     struct libnvmf_context *fctx,
-			     const char *owner, bool force)
+			     const char *owner, bool no_reuse)
 {
 	__cleanup_free char *reg_owner = NULL;
 	int ret;
 
-	if (force)
+	if (no_reuse)
 		return 0;
 
 	ret = libnvmf_get_owner_from_fctx(ctx, fctx, &reg_owner);
@@ -798,7 +802,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 	int ret;
 	struct nvmf_args fa = { .subsysnqn = NVME_DISC_SUBSYS_NAME };
 	char *device = NULL;
-	bool force = false;
+	bool no_reuse = false;
 	char *persistent_arg = NULL;
 	const char *persistent;
 	bool nbft = false, nonbft = false;
@@ -813,7 +817,11 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 			   "persistent discovery connection mode "
 			   "(default: no; auto if given bare)"),
 		  OPT_STRING("config",     'J', "FILE", &config_file, nvmf_config_file),
-		  OPT_FLAG("force",          0, &force,               "Force persistent discovery controller creation"),
+		  OPT_FLAG("no-reuse",       0, &no_reuse,
+			   "always create a new discovery controller "
+			   "connection instead of reusing an existing one"),
+		  OPT_FLAG("force",          0, &no_reuse,
+			   "deprecated alias for --no-reuse"),
 		  OPT_FLAG("nbft",           0, &nbft,                "Only look at NBFT tables"),
 		  OPT_FLAG("no-nbft",        0, &nonbft,              "Do not look at NBFT tables"),
 		  OPT_STRING("owner",        0, "NAME", &owner,       "record this owner in the registry"),
@@ -889,7 +897,7 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		return ret;
 
 	libnvmf_context_set_connect(fctx, connect);
-	libnvmf_context_set_force(fctx, force);
+	libnvmf_context_set_no_reuse(fctx, no_reuse);
 
 	if (persistent && libnvmf_context_set_persistent(fctx, persistent)) {
 		nvme_show_error(
@@ -909,10 +917,12 @@ int fabrics_discover(const char *desc, int argc, char **argv, bool connect)
 		}
 		if (!nbft && config_file)
 			ret = fabrics_discovery_config(ctx, config_file,
-				fa.hostnqn, fa.hostid, connect, force, flags);
+				fa.hostnqn, fa.hostid, connect, no_reuse,
+				flags);
 	} else {
 		ret = check_ctrl_owner(ctx, fctx,
-				owner ? owner : (nbft ? "nbft" : NULL), force);
+				owner ? owner : (nbft ? "nbft" : NULL),
+				no_reuse);
 		if (ret < 0) {
 			nvme_show_error("failed to check owner: %s",
 					libnvme_strerror(-ret));

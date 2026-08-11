@@ -446,19 +446,19 @@ void libnvmf_context_set_connect(struct libnvmf_context *p, bool connect);
 bool libnvmf_context_get_connect(const struct libnvmf_context *p);
 
 /**
- * libnvmf_context_set_force() - Set force.
+ * libnvmf_context_set_no_reuse() - Set no_reuse.
  * @p: The &struct libnvmf_context instance to update.
- * @force: Value to assign to the force field.
+ * @no_reuse: Value to assign to the no_reuse field.
  */
-void libnvmf_context_set_force(struct libnvmf_context *p, bool force);
+void libnvmf_context_set_no_reuse(struct libnvmf_context *p, bool no_reuse);
 
 /**
- * libnvmf_context_get_force() - Get force.
+ * libnvmf_context_get_no_reuse() - Get no_reuse.
  * @p: The &struct libnvmf_context instance to query.
  *
- * Return: The value of the force field.
+ * Return: The value of the no_reuse field.
  */
-bool libnvmf_context_get_force(const struct libnvmf_context *p);
+bool libnvmf_context_get_no_reuse(const struct libnvmf_context *p);
 
 /**
  * libnvmf_context_set_nbft_path() - Set nbft_path.
