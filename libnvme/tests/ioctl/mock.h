@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 #pragma once
 
+#include <errno.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -31,6 +33,13 @@
  *       If `result` doesn't fit in a u32, the ioctl() must be the 64-bit one.
  * @err: If negative, ioctl() returns -1 and sets `errno` to `-err`.
  *       Otherwise, ioctl() returns `err`, representing a NVMe status code.
+ * @win_err: What libnvme returns for this command on Windows, when that
+ *           differs from `err`. 0 means Windows behaves the same.
+ *           Ignored on every other platform. See mock_err().
+ * @win_no_ioctl: Set alongside `win_err` when Windows rejects the command
+ *           before issuing any IOCTL, so no mock is consumed. The mock layer
+ *           accounts for this itself, so a test declares the mock normally and
+ *           end_mock_cmds() does not report it as unexecuted.
  */
 struct mock_cmd {
 	uint8_t opcode;
@@ -53,7 +62,63 @@ struct mock_cmd {
 	uint32_t out_data_len;
 	uint64_t result;
 	int err;
+	int win_err;
+	bool win_no_ioctl;
 };
+
+/*
+ * Declares a command that the Windows implementation refuses to issue because
+ * it names a Command Set other than NVM. No IOCTL is seen and no mock is
+ * consumed.
+ */
+#define WIN_CSI_UNSUPPORTED	.win_err = -ENOTSUP, .win_no_ioctl = true
+
+/**
+ * mock_err() - the error a mocked command is expected to produce
+ * @mock: the mock whose expectation is being read
+ *
+ * Returns @mock->err everywhere except Windows, where a non-zero
+ * @mock->win_err overrides it. Use this in place of a bare @err comparison so
+ * a test states one expectation per platform instead of branching.
+ */
+static inline int mock_err(const struct mock_cmd *mock)
+{
+#ifdef _WIN32
+	if (mock->win_err)
+		return mock->win_err;
+#endif
+	return mock->err;
+}
+
+/**
+ * mock_ok() - whether the command is expected to succeed on this platform
+ * @mock: the mock being considered
+ *
+ * Guard checks on returned data with this: a command that fails transfers
+ * nothing, so comparing the caller's buffer would assert against a value the
+ * command never produced.
+ */
+static inline bool mock_ok(const struct mock_cmd *mock)
+{
+	return mock_err(mock) == 0;
+}
+
+/**
+ * mock_result() - the CQE result a mocked command is expected to leave behind
+ * @mock: the mock whose expectation is being read
+ *
+ * On Windows, CQE data is not available for failing commands, so the result
+ * value will be 0. Everywhere else the mock's result is delivered even on
+ * failure.
+ */
+static inline uint64_t mock_result(const struct mock_cmd *mock)
+{
+#ifdef _WIN32
+	if (!mock_ok(mock))
+		return 0;
+#endif
+	return mock->result;
+}
 
 /**
  * set_mock_fd() - sets the expected file descriptor for NVMe passthru ioctls()

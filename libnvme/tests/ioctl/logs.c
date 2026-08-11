@@ -204,6 +204,7 @@ static void test_get_log_cmd_effects(void)
 			 (((sizeof(expected_log) >> 2) - 1) << 16),
 		.cdw14 = (TEST_CSI << 24),
 		.out_data = &expected_log,
+		WIN_CSI_UNSUPPORTED,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -213,8 +214,11 @@ static void test_get_log_cmd_effects(void)
 	nvme_init_get_log_cmd_effects(&cmd, TEST_CSI, &log);
 	err = libnvme_get_log(test_hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	end_mock_cmds();
-	check(err == 0, "get log returned error %d", err);
-	cmp(&log, &expected_log, sizeof(log), "incorrect log data");
+	check(err == mock_err(&mock_admin_cmd),
+	      "get log returned error %d, expected %d",
+	      err, mock_err(&mock_admin_cmd));
+	if (mock_ok(&mock_admin_cmd))
+		cmp(&log, &expected_log, sizeof(log), "incorrect log data");
 }
 
 static void test_get_log_device_self_test(void)
@@ -1032,6 +1036,7 @@ static void test_get_log_zns_changed_zones(void)
 			 (((sizeof(expected_log) >> 2) - 1) << 16),
 		.cdw14 = NVME_CSI_ZNS << 24,
 		.out_data = &expected_log,
+		WIN_CSI_UNSUPPORTED,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -1041,8 +1046,11 @@ static void test_get_log_zns_changed_zones(void)
 	nvme_init_get_log_zns_changed_zones(&cmd, TEST_NSID, &log);
 	err = libnvme_get_log(test_hdl, &cmd, TEST_RAE, NVME_LOG_PAGE_PDU_SIZE);
 	end_mock_cmds();
-	check(err == 0, "get log returned error %d", err);
-	cmp(&log, &expected_log, sizeof(log), "incorrect log data");
+	check(err == mock_err(&mock_admin_cmd),
+	      "get log returned error %d, expected %d",
+	      err, mock_err(&mock_admin_cmd));
+	if (mock_ok(&mock_admin_cmd))
+		cmp(&log, &expected_log, sizeof(log), "incorrect log data");
 }
 
 static void test_get_log_persistent_event(void)

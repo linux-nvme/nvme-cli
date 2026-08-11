@@ -148,6 +148,7 @@ static void test_ns_csi(void)
 		.cdw11 = TEST_CSI << 24,
 		.cdw14 = TEST_UUID,
 		.out_data = expected_id,
+		WIN_CSI_UNSUPPORTED,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -157,8 +158,11 @@ static void test_ns_csi(void)
 	nvme_init_identify_csi_ns(&cmd, TEST_NSID, TEST_CSI, TEST_UUID, id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "identify returned error %d", err);
-	cmp(id, expected_id, sizeof(id), "incorrect identify data");
+	check(err == mock_err(&mock_admin_cmd),
+	      "identify returned error %d, expected %d",
+	      err, mock_err(&mock_admin_cmd));
+	if (mock_ok(&mock_admin_cmd))
+		cmp(id, expected_id, sizeof(id), "incorrect identify data");
 }
 
 static void test_zns_identify_ns(void)
@@ -171,6 +175,7 @@ static void test_zns_identify_ns(void)
 		.cdw10 = NVME_IDENTIFY_CNS_CSI_NS,
 		.cdw11 = NVME_CSI_ZNS << 24,
 		.out_data = &expected_id,
+		WIN_CSI_UNSUPPORTED,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -180,8 +185,11 @@ static void test_zns_identify_ns(void)
 	nvme_init_zns_identify_ns(&cmd, TEST_NSID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "identify returned error %d", err);
-	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
+	check(err == mock_err(&mock_admin_cmd),
+	      "identify returned error %d, expected %d",
+	      err, mock_err(&mock_admin_cmd));
+	if (mock_ok(&mock_admin_cmd))
+		cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
 
 static void test_nvm_identify_ctrl(void)
@@ -215,6 +223,7 @@ static void test_zns_identify_ctrl(void)
 		.cdw10 = NVME_IDENTIFY_CNS_CSI_CTRL,
 		.cdw11 = NVME_CSI_ZNS << 24,
 		.out_data = &expected_id,
+		WIN_CSI_UNSUPPORTED,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -224,8 +233,11 @@ static void test_zns_identify_ctrl(void)
 	nvme_init_zns_identify_ctrl(&cmd, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "identify returned error %d", err);
-	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
+	check(err == mock_err(&mock_admin_cmd),
+	      "identify returned error %d, expected %d",
+	      err, mock_err(&mock_admin_cmd));
+	if (mock_ok(&mock_admin_cmd))
+		cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
 
 static void test_active_ns_list_csi(void)
@@ -238,6 +250,7 @@ static void test_active_ns_list_csi(void)
 		.cdw10 = NVME_IDENTIFY_CNS_CSI_NS_ACTIVE_LIST,
 		.cdw11 = TEST_CSI << 24,
 		.out_data = &expected_id,
+		WIN_CSI_UNSUPPORTED,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -247,8 +260,11 @@ static void test_active_ns_list_csi(void)
 	nvme_init_identify_csi_active_ns_list(&cmd, TEST_NSID, TEST_CSI, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "identify returned error %d", err);
-	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
+	check(err == mock_err(&mock_admin_cmd),
+	      "identify returned error %d, expected %d",
+	      err, mock_err(&mock_admin_cmd));
+	if (mock_ok(&mock_admin_cmd))
+		cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
 
 static void test_independent_identify_ns(void)
@@ -503,6 +519,7 @@ static void test_allocated_ns_list_csi(void)
 		.cdw10 = NVME_IDENTIFY_CNS_CSI_ALLOCATED_NS_LIST,
 		.cdw11 = TEST_CSI << 24,
 		.out_data = &expected_id,
+		WIN_CSI_UNSUPPORTED,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -512,8 +529,11 @@ static void test_allocated_ns_list_csi(void)
 	nvme_init_identify_csi_allocated_ns_list(&cmd, TEST_NSID, TEST_CSI, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "identify returned error %d", err);
-	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
+	check(err == mock_err(&mock_admin_cmd),
+	      "identify returned error %d, expected %d",
+	      err, mock_err(&mock_admin_cmd));
+	if (mock_ok(&mock_admin_cmd))
+		cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
 
 static void test_iocs(void)
@@ -552,6 +572,7 @@ static void test_status_code_error(void)
 		.cdw10 = NVME_IDENTIFY_CNS_NVMSET_LIST,
 		.cdw11 = TEST_NVMSETID,
 		.err = TEST_SC,
+		.win_err = -EIO,    /* Windows returns EIO */
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -560,7 +581,8 @@ static void test_status_code_error(void)
 	nvme_init_identify_nvmset_list(&cmd, NVME_NSID_NONE, TEST_NVMSETID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == TEST_SC, "got error %d, expected TEST_SC", err);
+	check(err == mock_err(&mock_admin_cmd), "got error %d, expected %d",
+	      err, mock_err(&mock_admin_cmd));
 }
 
 static void test_kernel_error(void)
@@ -621,6 +643,7 @@ static void test_identify_iocs_ns_csi_user_data_format(void)
 		.cdw11 = (TEST_FIDX << 0) | (TEST_CSI << 24),
 		.cdw14 = TEST_UUID,
 		.out_data = &expected_id,
+		WIN_CSI_UNSUPPORTED,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
@@ -631,9 +654,11 @@ static void test_identify_iocs_ns_csi_user_data_format(void)
 		TEST_FIDX, TEST_UUID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "identify returned error %d, errno %s",
-	      err, strerror(errno));
-	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
+	check(err == mock_err(&mock_admin_cmd),
+	      "identify returned error %d, expected %d",
+	      err, mock_err(&mock_admin_cmd));
+	if (mock_ok(&mock_admin_cmd))
+		cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
 
 static void run_test(const char *test_name, void (*test_fn)(void))
