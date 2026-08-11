@@ -2254,7 +2254,7 @@ static char *json_eom_printable_eye(struct nvme_eom_lane_desc *lane,
 	 * Allocate buffer for full printable string (with newlines)
 	 * +1 for null terminator
 	 */
-	printable = malloc(nrows * ncols + nrows + 1);
+	printable = malloc((size_t)nrows * ncols + nrows + 1);
 	printable_start = printable;
 
 	if (!printable)
