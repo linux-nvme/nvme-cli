@@ -325,8 +325,10 @@ if want_fabrics
     test('libnvme - util', test_util)
 endif
 
+# ioctl/meson.build picks the mock implementation for the host itself.
+subdir('ioctl')
+
 if host_system == 'linux'
-    subdir('ioctl')
     subdir('sysfs')
     if want_fabrics
         subdir('nbft')
