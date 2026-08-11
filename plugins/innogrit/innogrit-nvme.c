@@ -218,6 +218,7 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 	unsigned int itotal, icur, ivsctype;
 	unsigned int ipackcount, ipackindex;
 	unsigned char busevsc = false;
+	struct libnvme_passthru_cmd cmd;
 	struct cdumpinfo cdumpinfo;
 	struct tm *logtime;
 	FILE *fp = NULL;
@@ -276,8 +277,8 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 
 	if (busevsc == false) {
 		memset(data, 0, 4096);
-		ret = nvme_get_nsid_log(hdl, NVME_NSID_ALL,true, 0x07,
-					data, 4096);
+		nvme_init_get_log(&cmd, NVME_NSID_ALL, 0x07, NVME_CSI_NVM, data, 4096);
+		ret = libnvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 		if (ret != 0) {
 			if (fp != NULL)
 				fclose(fp);
@@ -319,8 +320,9 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 						0x82, 0x00,	0, 0, (char *)data, 4096);
 				}
 			} else {
-				ret = nvme_get_nsid_log(hdl, NVME_NSID_ALL, true,
-							0x07, data, 4096);
+				nvme_init_get_log(&cmd, NVME_NSID_ALL, 0x07,
+						  NVME_CSI_NVM, data, 4096);
+				ret = libnvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 			}
 			if (ret != 0) {
 				fclose(fp);
@@ -350,8 +352,9 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 						0x82, 0x00,	0, 0, (char *)data, 4096);
 				}
 			} else {
-				ret = nvme_get_nsid_log(hdl, NVME_NSID_ALL, true,
-							0x07, data, 4096);
+				nvme_init_get_log(&cmd, NVME_NSID_ALL, 0x07,
+						  NVME_CSI_NVM, data, 4096);
+				ret = libnvme_get_log(hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 			}
 			if (ret != 0) {
 				fclose(fp);

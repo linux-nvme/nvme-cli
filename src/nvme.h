@@ -130,15 +130,3 @@ void d_raw(unsigned char *buf, unsigned len);
 
 int get_reg_size(int offset);
 bool nvme_is_ctrl_reg(int offset);
-
-static inline int nvme_get_nsid_log(struct libnvme_transport_handle *hdl,
-				    __u32 nsid, bool rae,
-				    enum nvme_cmd_get_log_lid lid,
-				    void *log, __u32 len)
-{
-	struct libnvme_passthru_cmd cmd;
-
-	nvme_init_get_log(&cmd, nsid, lid, NVME_CSI_NVM, log, len);
-
-	return libnvme_get_log(hdl, &cmd, rae, NVME_LOG_PAGE_PDU_SIZE);
-}

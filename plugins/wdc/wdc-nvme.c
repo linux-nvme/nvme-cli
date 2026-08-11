@@ -10286,7 +10286,7 @@ static int wdc_do_drive_essentials(struct libnvme_global_ctx *ctx, struct libnvm
 
 	/* Get FW Slot log page */
 	memset(&fw_log, 0, sizeof(struct nvme_firmware_slot));
-	nvme_init_get_log(&cmd, false, NVME_LOG_LID_FW_SLOT,
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_FW_SLOT,
 		NVME_CSI_NVM, &fw_log, sizeof(fw_log));
 
 	ret = libnvme_get_log(hdl, &cmd, false, sizeof(fw_log));

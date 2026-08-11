@@ -362,6 +362,7 @@ static int nvme_get_vendor_log(struct libnvme_transport_handle *hdl,
 {
 	int err;
 	__cleanup_libnvme_free void *log = NULL;
+	struct libnvme_passthru_cmd cmd;
 	size_t log_len = 512;
 
 	log = libnvme_alloc(log_len);
@@ -373,8 +374,8 @@ static int nvme_get_vendor_log(struct libnvme_transport_handle *hdl,
 	if (err)
 		return err;
 
-	err = nvme_get_nsid_log(hdl, namespace_id, false, log_page,
-				log, log_len);
+	nvme_init_get_log(&cmd, namespace_id, log_page, NVME_CSI_NVM, log, log_len);
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err) {
 		nvme_show_error("%s: couldn't get log 0x%x", __func__,
 			log_page);

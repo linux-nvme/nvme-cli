@@ -360,7 +360,7 @@ vt_update_vtview_log_header(struct libnvme_transport_handle *hdl, const char *pa
 		return -1;
 	}
 
-	nvme_init_get_log(&cmd, false, NVME_LOG_LID_FW_SLOT,
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_FW_SLOT,
 		NVME_CSI_NVM, &header.raw_fw, sizeof(header.raw_fw));
 
 	ret = libnvme_get_log(hdl, &cmd, false, sizeof(header.raw_fw));

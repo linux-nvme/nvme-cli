@@ -405,6 +405,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_ymtc_smart_log smart_log = { 0 };
+	struct libnvme_passthru_cmd cmd;
 	enum ySSDModel model = UNKNOWN_SSD;
 	struct config {
 		__u32 namespace_id;
@@ -423,8 +424,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 	err = ymtc_parse_options(&ctx, &hdl, argc, argv, desc, opts,&model);
 	if (err)
 		return err;
-	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, 0xca,
-				&smart_log, sizeof(smart_log));
+	nvme_init_get_log(&cmd, cfg.namespace_id, 0xca, NVME_CSI_NVM,
+			  &smart_log, sizeof(smart_log));
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (!err) {
 		if (model == UNKNOWN_SSD){
 			printf("Not support for parsing current product log!\n");
