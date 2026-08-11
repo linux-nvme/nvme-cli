@@ -2159,6 +2159,8 @@ __shr_public int libnvme_exec_io_passthru(
 	if (!hdl || !cmd)
 		return -EINVAL;
 
+	cmd->result = 0;
+
 	switch (cmd->opcode) {
 	case nvme_cmd_flush:
 		return submit_io_flush(hdl, cmd);
@@ -2200,6 +2202,8 @@ __shr_public int libnvme_exec_admin_passthru(
 
 	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
 		return -ENOTSUP;
+
+	cmd->result = 0;
 
 	switch (cmd->opcode) {
 	case nvme_admin_get_log_page:
