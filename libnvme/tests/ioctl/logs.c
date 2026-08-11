@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include <libnvme.h>
 
@@ -43,7 +45,8 @@ static void test_get_log_sanitize(void)
 	nvme_init_get_log_sanitize(&cmd, &log);
 	err = libnvme_get_log(test_hdl, &cmd, true, NVME_LOG_PAGE_PDU_SIZE);
 	end_mock_cmds();
-	check(err == 0, "get log returned error %d, errno %m", err);
+	check(err == 0, "get log returned error %d, errno %s",
+	      err, strerror(errno));
 	cmp(&log, &expected_log, sizeof(log), "incorrect log data");
 }
 

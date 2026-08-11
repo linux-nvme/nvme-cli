@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include <libnvme.h>
 
@@ -1576,7 +1577,8 @@ static void test_lm_set_features_ctrl_data_queue(void)
 		hp, tpt, etpt);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "set features returned error %d, errno %m", err);
+	check(err == 0, "set features returned error %d, errno %s",
+	      err, strerror(errno));
 	check(cmd.result == TEST_RESULT,
 	      "got result %" PRIu64 ", expected %" PRIu32,
 	      (uint64_t)cmd.result, TEST_RESULT);
@@ -1603,7 +1605,8 @@ static void test_lm_get_features_ctrl_data_queue(void)
 		TEST_CDQID, &data);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "get features returned error %d, errno %m", err);
+	check(err == 0, "get features returned error %d, errno %s",
+	      err, strerror(errno));
 	check(cmd.result == TEST_RESULT,
 	      "got result %" PRIu64 ", expected %" PRIu32,
 	      (uint64_t)cmd.result, TEST_RESULT);
