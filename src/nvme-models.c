@@ -9,9 +9,10 @@
 
 #include <nvme/lib-types.h>
 
-#include "nvme.h"
 #include "nvme-models.h"
 #include "nvme-pci-ids.h"
+#include <libnvme.h>
+
 #include "nvme-print.h"
 
 #define LINE_BUF_SIZE 1024

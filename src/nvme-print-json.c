@@ -23,7 +23,7 @@
 #include "nvme-print.h"
 #include "nvme-json.h"
 #include "logging.h"
-#include "nvme.h"
+#include "cleanup.h"
 
 #define ERROR_MSG_LEN 100
 #define NAME_LEN 128

@@ -6,6 +6,10 @@
  *          leonardo.da.cunha@solidigm.com
  */
 
+#pragma once
+
+#include "plugin.h"
+
 int ocp_clear_fw_update_history(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 
 int ocp_clear_pcie_correctable_errors(int argc, char **argv, struct command *acmd,

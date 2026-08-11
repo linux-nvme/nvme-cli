@@ -3,7 +3,7 @@
  * Copyright (c) 2026 Micron Technology, Inc.
  */
 #include "command-metadata.h"
-#include "nvme.h"
+#include "plugin.h"
 
 #define CREATE_CMD
 #include "utils.h"

@@ -18,7 +18,7 @@
 #include <temp-util.h>
 #include <mmio-util.h>
 
-#include "nvme.h"
+#include "cleanup.h"
 #include "nvme-print.h"
 #include "nvme-models.h"
 #include "logging.h"

@@ -29,7 +29,6 @@
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "nvme.h"
 
 #include "wdc-utils.h"
 

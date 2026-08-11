@@ -6,7 +6,7 @@
 
 #include <libnvme.h>
 
-#include "nvme.h"
+#include "args.h"
 #include "plugin.h"
 #include "argconfig.h"
 #include "cleanup.h"

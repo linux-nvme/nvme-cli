@@ -4,6 +4,9 @@
  *
  *   Author: Jeff Lien <jeff.lien@wdc.com>,
  */
+#pragma once
+
+#include "plugin.h"
 
 int run_wdc_cloud_ssd_plugin_version(int argc, char **argv,
 		struct command *command,

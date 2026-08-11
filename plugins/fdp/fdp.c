@@ -15,7 +15,9 @@
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "nvme.h"
+#include "plugin.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "parse-util.h"
 
 #define CREATE_CMD

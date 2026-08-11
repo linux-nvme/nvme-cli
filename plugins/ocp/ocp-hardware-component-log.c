@@ -11,7 +11,12 @@
 #include <uint128-util.h>
 
 #include "logging.h"
+#include <libnvme.h>
+
 #include "nvme-print.h"
+#include "plugin.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "ocp-hardware-component-log.h"
 #include "ocp-print.h"
 #include "ocp-utils.h"

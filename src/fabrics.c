@@ -54,7 +54,7 @@
 #endif
 
 #include "config-convert.h"
-#include "nvme.h"
+#include "global-ctx.h"
 #include "nvme-print.h"
 #include "fabrics.h"
 #include "cleanup.h"

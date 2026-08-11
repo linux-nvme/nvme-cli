@@ -4,6 +4,8 @@
  */
 #pragma once
 
+#include "plugin.h"
+
 #include <compiler-attributes.h>
 
 #include "cmd.h"

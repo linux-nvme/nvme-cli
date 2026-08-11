@@ -8,7 +8,10 @@
 #include <uuid-util.h>
 
 #include "nvme-json.h"
+#include <libnvme.h>
+
 #include "nvme-print.h"
+#include "cleanup.h"
 
 #include "ocp-print.h"
 #include "ocp-hardware-component-log.h"

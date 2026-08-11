@@ -18,7 +18,9 @@
 #include "fabrics.h"
 #include "logging.h"
 #include "nvme-print.h"
-#include "nvme.h"
+#include "plugin.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 
 #define CREATE_CMD
 #include "keys-plugin.h"

@@ -20,6 +20,7 @@
 #include "nvme-print.h"
 #include "argconfig.h"
 #include "cleanup.h"
+#include "global-ctx.h"
 
 #ifdef CONFIG_JSONC
 #include "nvme-json.h"

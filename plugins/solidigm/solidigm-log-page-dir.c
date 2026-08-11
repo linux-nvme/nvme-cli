@@ -14,7 +14,12 @@
 #include <compiler-attributes.h>
 
 #include "nvme-cmds.h"
+#include <libnvme.h>
+
 #include "nvme-print.h"
+#include "plugin.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 
 #include "plugins/ocp/ocp-nvme.h"
 #include "plugins/ocp/ocp-utils.h"

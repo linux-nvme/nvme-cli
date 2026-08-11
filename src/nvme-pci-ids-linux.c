@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <nvme/types.h>
+#include <libnvme.h>
 
 #include "nvme-print.h"
 

@@ -10,7 +10,6 @@
 
 #include <ccan/endian/endian.h>
 
-#include "nvme.h"
 #include "plugin.h"
 
 #define CREATE_CMD

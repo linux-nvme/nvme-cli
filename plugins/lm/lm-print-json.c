@@ -2,6 +2,8 @@
 
 #include <ccan/endian/endian.h>
 
+#include <libnvme.h>
+
 #include "nvme-print.h"
 #include "lm-print.h"
 

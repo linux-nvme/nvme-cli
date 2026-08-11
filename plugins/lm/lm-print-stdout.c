@@ -6,6 +6,8 @@
 
 #include <uint128-util.h>
 
+#include <libnvme.h>
+
 #include "nvme-print.h"
 #include "lm-print.h"
 

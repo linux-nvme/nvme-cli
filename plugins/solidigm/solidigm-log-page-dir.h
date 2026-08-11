@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include "plugin.h"
+
 struct command;
 struct plugin;
 

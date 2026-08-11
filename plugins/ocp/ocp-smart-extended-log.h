@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include "plugin.h"
+
 #include <nvme/types.h>
 
 struct command;

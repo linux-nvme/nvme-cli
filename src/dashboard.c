@@ -35,6 +35,8 @@
 
 #include <sig-util.h>
 
+#include <libnvme.h>
+
 #include "nvme-print.h"
 #include "dashboard.h"
 

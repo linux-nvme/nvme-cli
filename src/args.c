@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include <libnvme.h>
+
 #include "args.h"
 #include "argconfig.h"
 #include "nvme-print.h"

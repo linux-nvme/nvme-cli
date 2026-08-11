@@ -5,7 +5,7 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include "nvme.h"
+#include "plugin.h"
 
 #define CREATE_CMD
 #include "solidigm-nvme.h"

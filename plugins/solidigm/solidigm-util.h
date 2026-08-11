@@ -5,7 +5,10 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include "nvme.h"
+#include <stdbool.h>
+#include <stddef.h>
+
+#include <libnvme.h>
 
 int sldgm_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index);
 int sldgm_get_uuid_index(struct libnvme_transport_handle *hdl, __u8 *index);

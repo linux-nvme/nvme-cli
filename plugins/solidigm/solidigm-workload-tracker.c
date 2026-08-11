@@ -7,13 +7,19 @@
 
 #include <errno.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <ccan/endian/endian.h>
 #include <ccan/array_size/array_size.h>
 #include <ccan/minmax/minmax.h>
 
 #include "nvme-cmds.h"
+#include <libnvme.h>
+
 #include "nvme-print.h"
+#include "plugin.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 
 #define LID 0xf9
 #define FID 0xf1

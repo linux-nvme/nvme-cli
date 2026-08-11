@@ -29,7 +29,9 @@
 #include <ccan/endian/endian.h>
 
 #include "nvme-cmds.h"
-#include "nvme.h"
+#include "plugin.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "nvme-print.h"
 #include "suffix-util.h"
 

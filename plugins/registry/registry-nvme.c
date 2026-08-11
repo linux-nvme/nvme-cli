@@ -14,7 +14,8 @@
 
 #include <libnvme.h>
 
-#include "nvme.h"
+#include "plugin.h"
+#include "global-ctx.h"
 #include "nvme-print.h"
 #include "src/cleanup.h"
 
