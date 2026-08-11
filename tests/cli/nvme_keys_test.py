@@ -205,6 +205,19 @@ class KeysCLITest(unittest.TestCase):
                 self.assertNotIn(_NQN_IGNORED, result.stderr)
 
     @unittest.skipUnless(_DEPRECATED_CMDS, 'built without deprecated commands')
+    def test_check_dhchap_key_alias_takes_the_2x_key_option(self):
+        # 2.x passed the secret in --key/-k and had no other option, while
+        # the command this forwards to spells that --keydata and gives -k
+        # to --keyring. Feed an empty stdin so a regression that loses the
+        # secret fails here instead of blocking on a read.
+        for form in (('-k', _PIN_KXCHAP_KEY), ('--key', _PIN_KXCHAP_KEY),
+                     (f'--key={_PIN_KXCHAP_KEY}',)):
+            with self.subTest(form=form):
+                result = self._run_alias('check-dhchap-key', *form,
+                                         stdin_data='')
+                self.assertIn('Secret is valid', result.stdout)
+
+    @unittest.skipUnless(_DEPRECATED_CMDS, 'built without deprecated commands')
     def test_gen_dhchap_key_alias_keeps_other_options(self):
         # Dropping '--nqn' must not swallow the global options that also
         # start with an 'n', which getopt_long_only() accepts with a
