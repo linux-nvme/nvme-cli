@@ -983,7 +983,7 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 	for (i = 0; i < log->nd; i++) {
 		struct nvme_eom_lane_desc *desc = p;
 		unsigned char *vsdata = NULL;
-		unsigned int vsdataoffset = 0;
+		size_t vsdataoffset;
 		uint16_t nrows, ncols, edlen;
 
 		nrows = le16_to_cpu(desc->nrows);
@@ -1009,8 +1009,9 @@ static void stdout_phy_rx_eom_descs(struct nvme_phy_rx_eom_log *log)
 		if (edlen == 0)
 			continue;
 
-		vsdataoffset = (nrows * ncols) + sizeof(struct nvme_eom_lane_desc);
-		vsdata = (unsigned char *)((unsigned char *)desc + vsdataoffset);
+		vsdataoffset = (size_t)nrows * ncols +
+			       sizeof(struct nvme_eom_lane_desc);
+		vsdata = (unsigned char *)desc + vsdataoffset;
 		printf("Eye Data:\n");
 		d(vsdata, edlen, 16, 1);
 		printf("\n");
