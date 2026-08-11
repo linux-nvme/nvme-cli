@@ -2830,6 +2830,13 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		}
 		d.connect = true;
 
+		/*
+		 * Only discovery controllers need their KATO set here.
+		 * NVM subsystems (I/O controllers) get theirs set elsewhere.
+		 */
+		if (e->subtype != NVME_NQN_NVME)
+			set_discovery_kato(&nfctx);
+
 		err = nvmf_connect_disc_entry(h, e, &nfctx, &discover, &d.c);
 		if (err && err != -ENVME_CONNECT_ALREADY)
 			dc_log_decision(fctx, e, &d, libnvme_strerror(-err));
@@ -2837,20 +2844,27 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 			dc_log_decision(fctx, e, &d, NULL);
 
 		if (d.c) {
-			if (discover) {
-				set_discovery_kato(&nfctx);
-				_nvmf_discover(ctx, &nfctx, d.c, false,
-					       false);
-			}
+			/*
+			 * fctx, not nfctx: nfctx is a per-entry clone that
+			 * dies with this iteration. Recursing with it would
+			 * hand every deeper level a stack alias of fctx's
+			 * owned pointers (hostnqn, hostid, tls_key,
+			 * nbft_path) instead of the real, single owner.
+			 */
+			if (discover)
+				_nvmf_discover(ctx, fctx, d.c, false, false);
 
 			if (d.disconnect) {
 				libnvmf_disconnect_ctrl(d.c);
 				libnvme_free_ctrl(d.c);
 			}
 		} else if (err == -ENVME_CONNECT_ALREADY) {
-			nfctx.hooks.already_connected(&nfctx, h, e->subnqn,
-				libnvmf_trtype_str(e->trtype), e->traddr,
-				e->trsvcid, nfctx.hooks.user_data);
+			if (fctx->hooks.already_connected)
+				fctx->hooks.already_connected(fctx, h,
+					e->subnqn,
+					libnvmf_trtype_str(e->trtype),
+					e->traddr, e->trsvcid,
+					fctx->hooks.user_data);
 		}
 	}
 
@@ -3109,8 +3123,8 @@ static bool validate_uri(struct libnvme_global_ctx *ctx,
 }
 
 static int nbft_connect(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, struct libnvme_host *h,
-		struct nvmf_disc_log_entry *e,
+		struct libnvmf_context *fctx, struct libnvmf_context *hook_fctx,
+		struct libnvme_host *h, struct nvmf_disc_log_entry *e,
 		struct libnbft_subsystem_ns *ss)
 {
 	libnvme_ctrl_t c;
@@ -3170,15 +3184,17 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 		return ret;
 	}
 
-	if (fctx->hooks.connected)
-		fctx->hooks.connected(fctx, c, fctx->hooks.user_data);
+	if (hook_fctx->hooks.connected)
+		hook_fctx->hooks.connected(hook_fctx, c,
+			hook_fctx->hooks.user_data);
 
 	return 0;
 }
 
 static int nbft_discovery(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, struct libnbft_discovery *dd,
-		struct libnvme_host *h, struct libnvme_ctrl *c)
+		struct libnvmf_context *fctx, struct libnvmf_context *hook_fctx,
+		struct libnbft_discovery *dd, struct libnvme_host *h,
+		struct libnvme_ctrl *c)
 {
 	struct nvmf_discovery_log *log = NULL;
 	int ret;
@@ -3201,7 +3217,6 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 		struct nvmf_disc_log_entry *e = &log->entries[i];
 		struct libnvmf_context nfctx = *fctx;
 		libnvme_ctrl_t cl;
-		int tmo = fctx->ctrl_params.cfg.keep_alive_tmo;
 
 		sanitize_discovery_log_entry(c->ctx, e);
 
@@ -3230,11 +3245,12 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 				NULL, &child);
 			if (ret)
 				continue;
-			nbft_discovery(ctx, &nfctx, dd, h, child);
+			/* fctx: subtree baseline. hook_fctx: for hooks */
+			nbft_discovery(ctx, fctx, hook_fctx, dd, h, child);
 			libnvmf_disconnect_ctrl(child);
 			libnvme_free_ctrl(child);
 		} else {
-			ret = nbft_connect(ctx, &nfctx, h, e, NULL);
+			ret = nbft_connect(ctx, &nfctx, hook_fctx, h, e, NULL);
 
 			/*
 			 * With TCP/DHCP, it can happen that the OS
@@ -3248,7 +3264,8 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 					nfctx.ctrl_params.host_traddr;
 
 				nfctx.ctrl_params.host_traddr = NULL;
-				ret = nbft_connect(ctx, &nfctx, h, e, NULL);
+				ret = nbft_connect(ctx, &nfctx, hook_fctx, h,
+						    e, NULL);
 
 				if (ret == 0)
 					libnvme_msg(ctx, LIBNVME_LOG_INFO,
@@ -3264,8 +3281,6 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 			if (ret == -ENOMEM)
 				break;
 		}
-
-		fctx->ctrl_params.cfg.keep_alive_tmo = tmo;
 	}
 
 	libnvme_free(log);
@@ -3446,7 +3461,8 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 						"SSNS %d: could not find host interface for HFI %d\n",
 						(*ss)->index, hfi->index);
 
-				rr = nbft_connect(ctx, &nfctx, h, NULL, *ss);
+				rr = nbft_connect(ctx, &nfctx, fctx, h, NULL,
+						   *ss);
 
 				/*
 				 * With TCP/DHCP, it can happen that the OS
@@ -3459,8 +3475,8 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
 					nfctx.ctrl_params.host_traddr = NULL;
 
-					rr = nbft_connect(ctx, &nfctx, h, NULL,
-						*ss);
+					rr = nbft_connect(ctx, &nfctx, fctx, h,
+						NULL, *ss);
 
 					if (rr == 0)
 						libnvme_msg(ctx, LIBNVME_LOG_INFO,
@@ -3586,7 +3602,7 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 				goto out_free;
 			}
 
-			rr = nbft_discovery(ctx, &nfctx, *dd, h, c);
+			rr = nbft_discovery(ctx, &nfctx, fctx, *dd, h, c);
 			if (!persistent)
 				libnvmf_disconnect_ctrl(c);
 			libnvme_free_ctrl(c);
