@@ -635,7 +635,7 @@ static int sndk_do_sn861_drive_resize(struct libnvme_transport_handle *hdl,
 	admin_cmd.data_len = SNDK_NVME_SN861_DRIVE_RESIZE_BUFFER_SIZE;
 
 	ret = libnvme_exec_admin_passthru(hdl, &admin_cmd);
-	if (result)
+	if (!ret && result)
 		*result = admin_cmd.result;
 	return ret;
 }
@@ -651,7 +651,7 @@ static int sndk_drive_resize(int argc, char **argv,
 	uint64_t capabilities = 0;
 	int ret;
 	uint32_t device_id = -1, vendor_id = -1;
-	__u64 result;
+	__u64 result = 0;
 
 	struct config {
 		uint64_t size;
