@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <libnvme.h>
 
@@ -39,7 +40,8 @@ static void test_ns(void)
 	nvme_init_identify_ns(&cmd, TEST_NSID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "identify returned error %d, errno %m", err);
+	check(err == 0, "identify returned error %d, errno %s",
+	      err, strerror(errno));
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
 
@@ -603,7 +605,8 @@ static void test_identify_ns_csi_user_data_format(void)
 		TEST_FIDX, TEST_UUID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "identify returned error %d, errno %m", err);
+	check(err == 0, "identify returned error %d, errno %s",
+	      err, strerror(errno));
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
 
@@ -628,7 +631,8 @@ static void test_identify_iocs_ns_csi_user_data_format(void)
 		TEST_FIDX, TEST_UUID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
 	end_mock_cmds();
-	check(err == 0, "identify returned error %d, errno %m", err);
+	check(err == 0, "identify returned error %d, errno %s",
+	      err, strerror(errno));
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
 
