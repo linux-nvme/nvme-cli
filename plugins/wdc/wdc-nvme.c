@@ -11097,10 +11097,15 @@ static int wdc_dump_telemetry_hdr(struct libnvme_transport_handle *hdl, int log_
 {
 	int ret = 0;
 
-	if (log_id == NVME_LOG_LID_TELEMETRY_HOST)
-		ret = nvme_get_log_create_telemetry_host(hdl, log_hdr);
-	else
+	if (log_id == NVME_LOG_LID_TELEMETRY_HOST) {
+		struct libnvme_passthru_cmd cmd;
+
+		nvme_init_get_log_create_telemetry_host(&cmd, log_hdr);
+
+		ret = libnvme_get_log(hdl, &cmd, false, sizeof(*log_hdr));
+	} else {
 		ret = nvme_get_log_telemetry_ctrl(hdl, false, 0, (void *)log_hdr, 512);
+	}
 
 	if (ret < 0) {
 		nvme_show_err(ret, "get-telemetry-log");

@@ -5,7 +5,6 @@ sources = [
     'src/argconfig.c',
     'src/global-config.c',
     'src/logging.c',
-    'src/nvme-cmds.c',
     'src/nvme-models.c',
     'src/nvme-pci-ids.c',
     'src/nvme-print-binary.c',
