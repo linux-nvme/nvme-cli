@@ -2659,10 +2659,36 @@ static void nvme_parse_tls_args(const char *keyring, const char *tls_key,
 	}
 }
 
+static bool dc_should_disconnect(struct libnvmf_context *fctx,
+		const char *subnqn, __u16 eflags)
+{
+	bool disconnect;
+
+	switch (fctx->persistent) {
+	case LIBNVMF_PERSISTENT_FORCE:
+		/* Persist regardless of what EPCSD reports. */
+		disconnect = false;
+		break;
+	case LIBNVMF_PERSISTENT_AUTO:
+		/* Persist only where the entry's own EPCSD flag says so. */
+		disconnect = !(eflags & NVMF_DISC_EFLAGS_EPCSD);
+		if (disconnect)
+			libnvme_msg(fctx->ctx, LIBNVME_LOG_WARN,
+				"%s: not persisting, EPCSD=0\n", subnqn);
+		break;
+	case LIBNVMF_PERSISTENT_NO:
+	case LIBNVMF_PERSISTENT_UNSET:
+	default:
+		disconnect = true;
+		break;
+	}
+
+	return disconnect;
+}
+
 static bool dc_should_connect(struct libnvmf_context *fctx,
 		struct nvmf_disc_log_entry *e, bool *pdisconnect)
 {
-	bool disconnect;
 	__u16 eflags;
 
 	if (e->subtype == NVME_NQN_NVME) {
@@ -2676,35 +2702,18 @@ static bool dc_should_connect(struct libnvmf_context *fctx,
 	if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
 		return false;
 
-	switch (fctx->persistent) {
-	case LIBNVMF_PERSISTENT_FORCE:
-		/* Persist regardless of what EPCSD reports. */
-		disconnect = false;
-		break;
-	case LIBNVMF_PERSISTENT_AUTO:
-		/* Persist only where the entry's own EPCSD flag says so. */
-		disconnect = !(eflags & NVMF_DISC_EFLAGS_EPCSD);
-		if (disconnect)
-			libnvme_msg(fctx->ctx, LIBNVME_LOG_WARN,
-				"%s: not persisting, EPCSD=0\n", e->subnqn);
-		break;
-	case LIBNVMF_PERSISTENT_NO:
-	case LIBNVMF_PERSISTENT_UNSET:
-	default:
-		disconnect = true;
-		break;
-	}
-
-	*pdisconnect = disconnect;
+	*pdisconnect = dc_should_disconnect(fctx, e->subnqn, eflags);
 	return true;
 }
 
 static int _nvmf_discover(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, struct libnvme_ctrl *c)
+		struct libnvmf_context *fctx, struct libnvme_ctrl *c,
+		bool primary, bool already_connected)
 {
 	__cleanup_free struct nvmf_discovery_log *log = NULL;
 	libnvme_subsystem_t s = libnvme_ctrl_get_subsystem(c);
 	libnvme_host_t h = libnvme_subsystem_get_host(s);
+	struct nvmf_disc_log_entry *self_entry = NULL;
 	uint64_t numrec;
 	int err;
 
@@ -2744,6 +2753,17 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 
 		/* Already connected ? */
 		cl = lookup_ctrl(h, &nfctx);
+		if (cl == c) {
+			/*
+			 * This entry describes c's own port (SUBTYPE 03h,
+			 * "current discovery subsystem"). It is the only
+			 * place c's own EPCSD is ever reported, so remember
+			 * it instead of silently discarding it below.
+			 */
+			if (!self_entry)
+				self_entry = e;
+			continue;
+		}
 		if (cl && libnvme_ctrl_get_name(cl))
 			continue;
 
@@ -2760,7 +2780,8 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		if (child) {
 			if (discover) {
 				set_discovery_kato(&nfctx);
-				_nvmf_discover(ctx, &nfctx, child);
+				_nvmf_discover(ctx, &nfctx, child, false,
+					       false);
 			}
 
 			if (disconnect) {
@@ -2774,6 +2795,20 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 				libnvmf_trtype_str(e->trtype), e->traddr,
 				e->trsvcid, nfctx.hooks.user_data);
 		}
+	}
+
+	/*
+	 * c has no parent to make this decision for it. Its own EPCSD is
+	 * only ever reported in its own self entry (SUBTYPE 03h); an
+	 * absent self entry means EPCSD is not reported, which the spec
+	 * defines identically to EPCSD=0.
+	 */
+	if (primary && !already_connected) {
+		__u16 eflags = self_entry ? le16_to_cpu(self_entry->eflags) : 0;
+
+		if (dc_should_disconnect(fctx,
+				libnvme_ctrl_get_subsysnqn(c), eflags))
+			libnvmf_disconnect_ctrl(c);
 	}
 
 	return 0;
@@ -3491,7 +3526,8 @@ out_free:
 }
 
 static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
-		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx)
+		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
+		bool *already_connected)
 {
 	struct libnvme_ctrl *c;
 	int err;
@@ -3532,12 +3568,12 @@ static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
 	}
 
 	/*
-	 * If the controller device is found it must be persistent, and
-	 * shouldn't be disconnected on exit. This is an established fact
-	 * about an already-existing connection, not a fresh EPCSD-driven
-	 * decision, so force it regardless of what --persistent said.
+	 * The controller device was found, so this is an already-existing
+	 * connection: it must not be disconnected on exit. Record that fact
+	 * locally instead of overriding fctx->persistent, which must keep
+	 * reflecting what the user actually asked for.
 	 */
-	fctx->persistent = LIBNVMF_PERSISTENT_FORCE;
+	*already_connected = true;
 
 	/*
 	 * When --host-traddr/--host-iface are not specified on the
@@ -3561,22 +3597,23 @@ static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
 
 static int discover_lookup_ctrl(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, struct libnvme_host *h,
-		struct libnvme_ctrl **ctrl)
+		struct libnvme_ctrl **ctrl, bool *already_connected)
 {
 	struct libnvme_ctrl *c = NULL;
 	int err;
 
 	if (fctx->device)
-		c = discover_lookup_ctrl_by_device(ctx, fctx);
+		c = discover_lookup_ctrl_by_device(ctx, fctx,
+						    already_connected);
 
 	if (!c) {
 		c = lookup_ctrl(h, fctx);
 		if (c) {
 			/*
-			 * Do not disconnect after use, because it was not
-			 * created by us.
+			 * It was not created by us: record that fact
+			 * locally, do not touch fctx->persistent.
 			 */
-			fctx->persistent = LIBNVMF_PERSISTENT_FORCE;
+			*already_connected = true;
 		}
 	}
 
@@ -3606,6 +3643,7 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 {
 	struct libnvme_ctrl *c = NULL;
 	struct libnvme_host *h;
+	bool already_connected = false;
 	int err;
 
 	err = libnvme_get_host(ctx, fctx->hostnqn, fctx->hostid, &h);
@@ -3621,7 +3659,8 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 		 * When --force is used, always create a controller, otherwise
 		 * try to lookup an already existing controller first.
 		 */
-		err = discover_lookup_ctrl(ctx, fctx, h, &c);
+		err = discover_lookup_ctrl(ctx, fctx, h, &c,
+					   &already_connected);
 		if (err) {
 			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				 "failed to lookup controller, error %s\n",
@@ -3645,7 +3684,7 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 		}
 	}
 
-	err = _nvmf_discover(ctx, fctx, c);
+	err = _nvmf_discover(ctx, fctx, c, true, already_connected);
 	libnvme_free_ctrl(c);
 
 	return err;
