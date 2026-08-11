@@ -31,7 +31,7 @@ endif
 if json_c_dep.found()
     sources += [
         'src/nvme-print-json.c',
-        'src/json.c',
+        'src/nvme-json.c',
     ]
 endif
 
