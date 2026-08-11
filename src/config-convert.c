@@ -12,7 +12,8 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/array_size/array_size.h>
+
 #include "config-convert.h"
 #include "fabrics.h"
 #include "logging.h"

@@ -11,12 +11,16 @@
 
 #include <libnvme.h>
 
+#include <ccan/endian/endian.h>
+#include <ccan/minmax/minmax.h>
+
+#include <int-util.h>
+#include <temp-util.h>
+#include <mmio-util.h>
+
 #include "nvme.h"
 #include "nvme-print.h"
 #include "nvme-models.h"
-#include "int-util.h"
-#include "temp-util.h"
-#include "common.h"
 #include "logging.h"
 
 #define nvme_print(name, flags, ...)				\
@@ -476,9 +480,9 @@ void nvme_show_ctrl_register(void *bar, bool fabrics, int offset, nvme_print_fla
 	}
 
 	if (nvme_is_64bit_reg(offset))
-		value = mmio_read64(bar + offset);
+		value = shr_mmio_read64(bar + offset);
 	else
-		value = mmio_read32(bar + offset);
+		value = shr_mmio_read32(bar + offset);
 
 	nvme_print(ctrl_register, flags, offset, value);
 }

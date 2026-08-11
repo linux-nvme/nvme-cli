@@ -10,17 +10,20 @@
 #include <arpa/inet.h>
 #endif
 
-#include <ccan/compiler/compiler.h>
-
 #include <libnvme.h>
 #include <libnvme-mi.h>
 
-#include "nvme-print.h"
+#include <ccan/endian/endian.h>
+#include <ccan/compiler/compiler.h>
+#include <ccan/array_size/array_size.h>
+#include <ccan/minmax/minmax.h>
 
+#include <mmio-util.h>
+
+#include "nvme-print.h"
 #include "nvme-json.h"
 #include "logging.h"
 #include "nvme.h"
-#include "common.h"
 
 #define ERROR_MSG_LEN 100
 #define NAME_LEN 128
@@ -2781,7 +2784,7 @@ static void json_print_nvme_subsystem_list(struct libnvme_global_ctx *ctx,
 
 static void json_ctrl_registers_cap(void *bar, struct json_object *r)
 {
-	uint64_t cap = mmio_read64(bar + NVME_REG_CAP);
+	uint64_t cap = shr_mmio_read64(bar + NVME_REG_CAP);
 
 	if (verbose_mode())
 		json_registers_cap((struct nvme_bar_cap *)&cap, obj_create_array_obj(r, "cap"));
@@ -2791,7 +2794,7 @@ static void json_ctrl_registers_cap(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_vs(void *bar, struct json_object *r)
 {
-	uint32_t vs = mmio_read32(bar + NVME_REG_VS);
+	uint32_t vs = shr_mmio_read32(bar + NVME_REG_VS);
 
 	if (verbose_mode())
 		json_registers_version(vs, obj_create_array_obj(r, "vs"));
@@ -2801,7 +2804,7 @@ static void json_ctrl_registers_vs(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_intms(void *bar, struct json_object *r)
 {
-	uint32_t intms = mmio_read32(bar + NVME_REG_INTMS);
+	uint32_t intms = shr_mmio_read32(bar + NVME_REG_INTMS);
 
 	if (verbose_mode())
 		json_registers_intms(intms, obj_create_array_obj(r, "intms"));
@@ -2811,7 +2814,7 @@ static void json_ctrl_registers_intms(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_intmc(void *bar, struct json_object *r)
 {
-	uint32_t intmc = mmio_read32(bar + NVME_REG_INTMC);
+	uint32_t intmc = shr_mmio_read32(bar + NVME_REG_INTMC);
 
 	if (verbose_mode())
 		json_registers_intmc(intmc, obj_create_array_obj(r, "intmc"));
@@ -2821,7 +2824,7 @@ static void json_ctrl_registers_intmc(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_cc(void *bar, struct json_object *r)
 {
-	uint32_t cc = mmio_read32(bar + NVME_REG_CC);
+	uint32_t cc = shr_mmio_read32(bar + NVME_REG_CC);
 
 	if (verbose_mode())
 		json_registers_cc(cc, obj_create_array_obj(r, "cc"));
@@ -2831,7 +2834,7 @@ static void json_ctrl_registers_cc(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_csts(void *bar, struct json_object *r)
 {
-	uint32_t csts = mmio_read32(bar + NVME_REG_CSTS);
+	uint32_t csts = shr_mmio_read32(bar + NVME_REG_CSTS);
 
 	if (verbose_mode())
 		json_registers_csts(csts, obj_create_array_obj(r, "csts"));
@@ -2841,7 +2844,7 @@ static void json_ctrl_registers_csts(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_nssr(void *bar, struct json_object *r)
 {
-	uint32_t nssr = mmio_read32(bar + NVME_REG_NSSR);
+	uint32_t nssr = shr_mmio_read32(bar + NVME_REG_NSSR);
 
 	if (verbose_mode())
 		json_registers_nssr(nssr, obj_create_array_obj(r, "nssr"));
@@ -2851,7 +2854,7 @@ static void json_ctrl_registers_nssr(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_nssd(void *bar, struct json_object *r)
 {
-	uint32_t nssd = mmio_read32(bar + NVME_REG_NSSD);
+	uint32_t nssd = shr_mmio_read32(bar + NVME_REG_NSSD);
 
 	if (verbose_mode())
 		json_registers_nssd(nssd, obj_create_array_obj(r, "nssd"));
@@ -2861,7 +2864,7 @@ static void json_ctrl_registers_nssd(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_crto(void *bar, struct json_object *r)
 {
-	uint32_t crto = mmio_read32(bar + NVME_REG_CRTO);
+	uint32_t crto = shr_mmio_read32(bar + NVME_REG_CRTO);
 
 	if (verbose_mode())
 		json_registers_crto(crto, obj_create_array_obj(r, "crto"));
@@ -2871,7 +2874,7 @@ static void json_ctrl_registers_crto(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_aqa(void *bar, struct json_object *r)
 {
-	uint32_t aqa = mmio_read32(bar + NVME_REG_AQA);
+	uint32_t aqa = shr_mmio_read32(bar + NVME_REG_AQA);
 
 	if (verbose_mode())
 		json_registers_aqa(aqa, obj_create_array_obj(r, "aqa"));
@@ -2881,7 +2884,7 @@ static void json_ctrl_registers_aqa(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_asq(void *bar, struct json_object *r)
 {
-	uint64_t asq = mmio_read64(bar + NVME_REG_ASQ);
+	uint64_t asq = shr_mmio_read64(bar + NVME_REG_ASQ);
 
 	if (verbose_mode())
 		json_registers_asq(asq, obj_create_array_obj(r, "asq"));
@@ -2891,7 +2894,7 @@ static void json_ctrl_registers_asq(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_acq(void *bar, struct json_object *r)
 {
-	uint64_t acq = mmio_read64(bar + NVME_REG_ACQ);
+	uint64_t acq = shr_mmio_read64(bar + NVME_REG_ACQ);
 
 	if (verbose_mode())
 		json_registers_acq(acq, obj_create_array_obj(r, "acq"));
@@ -2901,12 +2904,12 @@ static void json_ctrl_registers_acq(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_cmbloc(void *bar, struct json_object *r)
 {
-	uint32_t cmbloc = mmio_read32(bar + NVME_REG_CMBLOC);
+	uint32_t cmbloc = shr_mmio_read32(bar + NVME_REG_CMBLOC);
 	uint32_t cmbsz;
 	bool support;
 
 	if (verbose_mode()) {
-		cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
+		cmbsz = shr_mmio_read32(bar + NVME_REG_CMBSZ);
 		support = nvme_registers_cmbloc_support(cmbsz);
 		json_registers_cmbloc(cmbloc, support, obj_create_array_obj(r, "cmbloc"));
 	} else {
@@ -2916,7 +2919,7 @@ static void json_ctrl_registers_cmbloc(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_cmbsz(void *bar, struct json_object *r)
 {
-	uint32_t cmbsz = mmio_read32(bar + NVME_REG_CMBSZ);
+	uint32_t cmbsz = shr_mmio_read32(bar + NVME_REG_CMBSZ);
 
 	if (verbose_mode())
 		json_registers_cmbsz(cmbsz, obj_create_array_obj(r, "cmbsz"));
@@ -2926,7 +2929,7 @@ static void json_ctrl_registers_cmbsz(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_bpinfo(void *bar, struct json_object *r)
 {
-	uint32_t bpinfo = mmio_read32(bar + NVME_REG_BPINFO);
+	uint32_t bpinfo = shr_mmio_read32(bar + NVME_REG_BPINFO);
 
 	if (verbose_mode())
 		json_registers_bpinfo(bpinfo, obj_create_array_obj(r, "bpinfo"));
@@ -2936,7 +2939,7 @@ static void json_ctrl_registers_bpinfo(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_bprsel(void *bar, struct json_object *r)
 {
-	uint32_t bprsel = mmio_read32(bar + NVME_REG_BPRSEL);
+	uint32_t bprsel = shr_mmio_read32(bar + NVME_REG_BPRSEL);
 
 	if (verbose_mode())
 		json_registers_bprsel(bprsel, obj_create_array_obj(r, "bprsel"));
@@ -2946,7 +2949,7 @@ static void json_ctrl_registers_bprsel(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_bpmbl(void *bar, struct json_object *r)
 {
-	uint64_t bpmbl = mmio_read64(bar + NVME_REG_BPMBL);
+	uint64_t bpmbl = shr_mmio_read64(bar + NVME_REG_BPMBL);
 
 	if (verbose_mode())
 		json_registers_bpmbl(bpmbl, obj_create_array_obj(r, "bpmbl"));
@@ -2956,7 +2959,7 @@ static void json_ctrl_registers_bpmbl(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_cmbmsc(void *bar, struct json_object *r)
 {
-	uint64_t cmbmsc = mmio_read64(bar + NVME_REG_CMBMSC);
+	uint64_t cmbmsc = shr_mmio_read64(bar + NVME_REG_CMBMSC);
 
 	if (verbose_mode())
 		json_registers_cmbmsc(cmbmsc, obj_create_array_obj(r, "cmbmsc"));
@@ -2966,7 +2969,7 @@ static void json_ctrl_registers_cmbmsc(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_cmbsts(void *bar, struct json_object *r)
 {
-	uint32_t cmbsts = mmio_read32(bar + NVME_REG_CMBSTS);
+	uint32_t cmbsts = shr_mmio_read32(bar + NVME_REG_CMBSTS);
 
 	if (verbose_mode())
 		json_registers_cmbsts(cmbsts, obj_create_array_obj(r, "cmbsts"));
@@ -2976,7 +2979,7 @@ static void json_ctrl_registers_cmbsts(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_cmbebs(void *bar, struct json_object *r)
 {
-	uint32_t cmbebs = mmio_read32(bar + NVME_REG_CMBEBS);
+	uint32_t cmbebs = shr_mmio_read32(bar + NVME_REG_CMBEBS);
 
 	if (verbose_mode())
 		json_registers_cmbebs(cmbebs, obj_create_array_obj(r, "cmbebs"));
@@ -2986,7 +2989,7 @@ static void json_ctrl_registers_cmbebs(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_cmbswtp(void *bar, struct json_object *r)
 {
-	uint32_t cmbswtp = mmio_read32(bar + NVME_REG_CMBSWTP);
+	uint32_t cmbswtp = shr_mmio_read32(bar + NVME_REG_CMBSWTP);
 
 	if (verbose_mode())
 		json_registers_cmbswtp(cmbswtp, obj_create_array_obj(r, "cmbswtp"));
@@ -2996,7 +2999,7 @@ static void json_ctrl_registers_cmbswtp(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_pmrcap(void *bar, struct json_object *r)
 {
-	uint32_t pmrcap = mmio_read32(bar + NVME_REG_PMRCAP);
+	uint32_t pmrcap = shr_mmio_read32(bar + NVME_REG_PMRCAP);
 
 	if (verbose_mode())
 		json_registers_pmrcap(pmrcap, obj_create_array_obj(r, "pmrcap"));
@@ -3006,7 +3009,7 @@ static void json_ctrl_registers_pmrcap(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_pmrctl(void *bar, struct json_object *r)
 {
-	uint32_t pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
+	uint32_t pmrctl = shr_mmio_read32(bar + NVME_REG_PMRCTL);
 
 	if (verbose_mode())
 		json_registers_pmrctl(pmrctl, obj_create_array_obj(r, "pmrctl"));
@@ -3016,12 +3019,12 @@ static void json_ctrl_registers_pmrctl(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_pmrsts(void *bar, struct json_object *r)
 {
-	uint32_t pmrsts = mmio_read32(bar + NVME_REG_PMRSTS);
+	uint32_t pmrsts = shr_mmio_read32(bar + NVME_REG_PMRSTS);
 	uint32_t pmrctl;
 	bool ready;
 
 	if (verbose_mode()) {
-		pmrctl = mmio_read32(bar + NVME_REG_PMRCTL);
+		pmrctl = shr_mmio_read32(bar + NVME_REG_PMRCTL);
 		ready = nvme_registers_pmrctl_ready(pmrctl);
 		json_registers_pmrsts(pmrsts, ready, obj_create_array_obj(r, "pmrsts"));
 	} else {
@@ -3031,7 +3034,7 @@ static void json_ctrl_registers_pmrsts(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_pmrebs(void *bar, struct json_object *r)
 {
-	uint32_t pmrebs = mmio_read32(bar + NVME_REG_PMREBS);
+	uint32_t pmrebs = shr_mmio_read32(bar + NVME_REG_PMREBS);
 
 	if (verbose_mode())
 		json_registers_pmrebs(pmrebs, obj_create_array_obj(r, "pmrebs"));
@@ -3041,7 +3044,7 @@ static void json_ctrl_registers_pmrebs(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_pmrswtp(void *bar, struct json_object *r)
 {
-	uint32_t pmrswtp = mmio_read32(bar + NVME_REG_PMRSWTP);
+	uint32_t pmrswtp = shr_mmio_read32(bar + NVME_REG_PMRSWTP);
 
 	if (verbose_mode())
 		json_registers_pmrswtp(pmrswtp, obj_create_array_obj(r, "pmrswtp"));
@@ -3051,7 +3054,7 @@ static void json_ctrl_registers_pmrswtp(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_pmrmscl(void *bar, struct json_object *r)
 {
-	uint32_t pmrmscl = mmio_read32(bar + NVME_REG_PMRMSCL);
+	uint32_t pmrmscl = shr_mmio_read32(bar + NVME_REG_PMRMSCL);
 
 	if (verbose_mode())
 		json_registers_pmrmscl(pmrmscl, obj_create_array_obj(r, "pmrmscl"));
@@ -3061,7 +3064,7 @@ static void json_ctrl_registers_pmrmscl(void *bar, struct json_object *r)
 
 static void json_ctrl_registers_pmrmscu(void *bar, struct json_object *r)
 {
-	uint32_t pmrmscu = mmio_read32(bar + NVME_REG_PMRMSCU);
+	uint32_t pmrmscu = shr_mmio_read32(bar + NVME_REG_PMRMSCU);
 
 	if (verbose_mode())
 		json_registers_pmrmscu(pmrmscu, obj_create_array_obj(r, "pmrmscu"));

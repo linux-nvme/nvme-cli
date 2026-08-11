@@ -4,7 +4,9 @@
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
-#include "common.h"
+#include <ccan/endian/endian.h>
+#include <ccan/array_size/array_size.h>
+
 #include "cod.h"
 #include "header.h"
 

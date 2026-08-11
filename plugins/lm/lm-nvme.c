@@ -27,7 +27,8 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/array_size/array_size.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
@@ -46,7 +47,6 @@ static inline const char * arg_str(const char * const *strings, size_t array_siz
 	return "unrecognized";
 }
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define ARGSTR(s, i) arg_str(s, ARRAY_SIZE(s), i)
 
 static int lm_create_cdq(int argc, char **argv, struct command *acmd, struct plugin *plugin)

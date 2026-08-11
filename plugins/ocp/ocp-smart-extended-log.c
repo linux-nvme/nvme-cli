@@ -9,7 +9,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "common.h"
 #include "nvme-print.h"
 #include "ocp-nvme.h"
 #include "ocp-print.h"

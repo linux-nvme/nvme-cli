@@ -5,7 +5,8 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+
 #include "header.h"
 
 bool sldm_uint8_array_to_string(const uint8_t *data_ptr, uint32_t array_size,

@@ -7,8 +7,13 @@
 
 #include <inttypes.h>
 #include <stdio.h>
+
 #include <libnvme.h>
-#include "common.h"
+
+#include <ccan/endian/endian.h>
+
+#include <compiler-attributes.h>
+
 #include "solidigm-id-ctrl.h"
 
 struct __packed nvme_vu_id_ctrl_field { // CPC

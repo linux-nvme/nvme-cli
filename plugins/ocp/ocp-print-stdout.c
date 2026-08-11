@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "uuid-util.h"
-#include "uint128-util.h"
-#include "int-util.h"
-#include "time-util.h"
-#include "common.h"
+#include <ccan/endian/endian.h>
+#include <ccan/array_size/array_size.h>
+
+#include <int-util.h>
+#include <time-util.h>
+#include <uint128-util.h>
+#include <uuid-util.h>
+
 #include "nvme-print.h"
+
 #include "ocp-print.h"
 #include "ocp-hardware-component-log.h"
 #include "ocp-fw-activation-history.h"

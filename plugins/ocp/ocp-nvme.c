@@ -20,7 +20,9 @@
 #include <fs-util.h>
 #include <io-util.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+#include <compiler-attributes.h>
+
 #include "logging.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
@@ -824,7 +826,7 @@ static int extract_dump_get_log(struct libnvme_transport_handle *hdl, char *feat
 
 		if (i != total_loop_cnt - 1) {
 			if (!i) {
-				output = nvme_open_rawdata(filepath, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+				output = shr_open_rawdata(filepath, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 				if (output < 0) {
 					err = -13;
 					goto end;
@@ -1199,7 +1201,7 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		goto exit_status;
 	}
 
-	fd = nvme_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	fd = shr_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (fd < 0) {
 		nvme_show_error("Failed to open output file %s: %s!",
 				output_file, libnvme_strerror(errno));
@@ -1379,7 +1381,7 @@ static int get_c9_log_page_data(struct libnvme_transport_handle *hdl,
 		return ret;
 
 	if (save_bin) {
-		fd = nvme_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		fd = shr_open_rawdata(output_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd < 0) {
 			nvme_show_error("Failed to open output file %s: %s!", output_file,
 				libnvme_strerror(errno));

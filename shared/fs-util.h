@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <fcntl.h>
 #include <stdbool.h>
 #include <sys/types.h>
 
@@ -74,3 +75,26 @@ char *shr_dirname(char *path);
  * free), or NULL on error.
  */
 unsigned char *shr_read_file(const char *dir, const char *path, long *size, int retries);
+
+/* Path to the platform's null device, for e.g. open(). */
+const char *shr_dev_null(void);
+
+/*
+ * fsync() a regular file, to make preceding writes to it durable.
+ * Return: 0 on success, -errno otherwise.
+ */
+int shr_fsync(int fd);
+
+/* Return: the size in bytes of a virtual memory page. */
+int shr_getpagesize(void);
+
+/*
+ * open() for reading or writing raw data with no line-ending translation
+ * or other interpretation/decoding -- i.e. O_BINARY where the platform has
+ * one, a no-op everywhere else.
+ */
+#ifdef O_BINARY
+#define shr_open_rawdata(path, flags, ...) open((path), (flags) | O_BINARY, ##__VA_ARGS__)
+#else
+#define shr_open_rawdata(path, flags, ...) open((path), (flags), ##__VA_ARGS__)
+#endif

@@ -5,7 +5,9 @@
  */
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
+
 #include "nvme.h"
 #include "plugin.h"
 #include "nvme-print.h"

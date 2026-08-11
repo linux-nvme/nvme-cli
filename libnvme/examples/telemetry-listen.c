@@ -22,11 +22,12 @@
 #include <sys/select.h>
 #include <sys/stat.h>
 
-#include <ccan/endian/endian.h>
-
 #include <libnvme.h>
 
-#include "../../src/common.h"
+#include <ccan/endian/endian.h>
+
+#include <fs-util.h>
+
 #include "nvme/tree.h"
 
 struct events {
@@ -64,7 +65,7 @@ static void save_telemetry(libnvme_ctrl_t c)
 		return;
 	}
 
-	fd = nvme_open_rawdata(buf, O_CREAT|O_WRONLY, S_IRUSR|S_IRGRP);
+	fd = shr_open_rawdata(buf, O_CREAT|O_WRONLY, S_IRUSR|S_IRGRP);
 	if (fd < 0) {
 		free(log);
 		return;

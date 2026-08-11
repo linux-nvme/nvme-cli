@@ -12,7 +12,6 @@
 
 #include <compiler-attributes.h>
 
-#include "common.h"
 #include "config-create.h"
 #include "fabrics.h"
 #include "nvme-print.h"

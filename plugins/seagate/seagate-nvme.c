@@ -37,7 +37,10 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+
+#include <fs-util.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
@@ -1781,7 +1784,7 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 
 	dump_fd = STDOUT_FILENO;
 	if (strlen(cfg.file)) {
-		dump_fd = nvme_open_rawdata(cfg.file, flags, mode);
+		dump_fd = shr_open_rawdata(cfg.file, flags, mode);
 		if (dump_fd < 0) {
 			nvme_show_perror("%s", cfg.file);
 			return -EINVAL;

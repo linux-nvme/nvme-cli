@@ -48,7 +48,18 @@
 #include <libnvme.h>
 #include <libnvme-mi.h>
 
-#include "common.h"
+#include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
+#include <ccan/minmax/minmax.h>
+
+#include <cleanup.h>
+#include <fs-util.h>
+#include <mmio-util.h>
+#include <parse-util.h>
+#include <sig-util.h>
+#include <suffix-util.h>
+
+#include "argconfig.h"
 #include "fabrics.h"
 #include "global-config.h"
 #include "logging.h"
@@ -56,11 +67,6 @@
 #include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
-#include "argconfig.h"
-#include "cleanup.h"
-#include "sig-util.h"
-#include "suffix-util.h"
-#include "parse-util.h"
 
 #define CREATE_CMD
 #include "nvme-builtin.h"
@@ -1081,7 +1087,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-	output = nvme_open_rawdata(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = shr_open_rawdata(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!",
 				cfg.file_name, libnvme_strerror(errno));
@@ -1131,7 +1137,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-	if (fsync(output) < 0) {
+	if (shr_fsync(output) < 0) {
 		nvme_show_error("ERROR : %s: : fsync : %s", __func__, libnvme_strerror(errno));
 		return -1;
 	}
@@ -1275,7 +1281,7 @@ static int get_effects_log(int argc, char **argv, struct command *acmd, struct p
 		bar = mmap_registers(hdl, false);
 
 		if (bar) {
-			cap = mmio_read64(bar + NVME_REG_CAP);
+			cap = shr_mmio_read64(bar + NVME_REG_CAP);
 			munmap_registers(bar);
 		} else {
 			nvme_init_get_property(&cmd, NVME_REG_CAP);
@@ -2049,7 +2055,7 @@ static int get_boot_part_log(int argc, char **argv, struct command *acmd, struct
 		return -1;
 	}
 
-	output = nvme_open_rawdata(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = shr_open_rawdata(cfg.file_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!",
 				cfg.file_name, libnvme_strerror(errno));
@@ -2335,7 +2341,7 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 	}
 
 	if (cfg.file) {
-		dfd = nvme_open_rawdata(cfg.file, O_RDONLY);
+		dfd = shr_open_rawdata(cfg.file, O_RDONLY);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.file);
 			return -errno;
@@ -2422,7 +2428,7 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 				 cfg.mos, cfg.mo, cfg.nsid);
 
 	if (cfg.file) {
-		dfd = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		dfd = shr_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.file);
 			return -errno;
@@ -5350,7 +5356,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 		return err;
 	}
 
-	fw_fd = nvme_open_rawdata(cfg.fw, O_RDONLY);
+	fw_fd = shr_open_rawdata(cfg.fw, O_RDONLY);
 	cfg.offset <<= 2;
 	if (fw_fd < 0) {
 		nvme_show_error("Failed to open firmware file %s: %s", cfg.fw, libnvme_strerror(errno));
@@ -6147,7 +6153,7 @@ static int nvme_get_single_property(struct libnvme_transport_handle *hdl,
 static int nvme_get_properties(struct libnvme_transport_handle *hdl, void **pbar,
 			       struct get_reg_config *cfg)
 {
-	int err, size = getpagesize();
+	int err, size = shr_getpagesize();
 	bool is_64bit = false;
 	__u64 value;
 	void *bar;
@@ -6203,7 +6209,7 @@ static void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable)
 		return NULL;
 	}
 
-	membase = mmap(NULL, getpagesize(), prot, MAP_SHARED, fd, 0);
+	membase = mmap(NULL, shr_getpagesize(), prot, MAP_SHARED, fd, 0);
 	if (membase == MAP_FAILED) {
 		if (log_level >= LIBNVME_LOG_INFO) {
 			nvme_show_error("Failed to map registers to userspace.\n\n"
@@ -6223,7 +6229,7 @@ static void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable)
 static int munmap_registers(void *addr)
 {
 #ifdef NVME_HAVE_MMAP
-	return munmap(addr, getpagesize());
+	return munmap(addr, shr_getpagesize());
 #else
 	return 0;
 #endif
@@ -6595,9 +6601,9 @@ static int nvme_set_register(struct libnvme_transport_handle *hdl, void *bar, in
 		return set_register_property(hdl, offset, value);
 
 	if (nvme_is_64bit_reg(offset))
-		mmio_write64(bar + offset, value, mmio32);
+		shr_mmio_write64(bar + offset, value, mmio32);
 	else
-		mmio_write32(bar + offset, value);
+		shr_mmio_write32(bar + offset, value);
 
 	nvme_show_result("set-register: %#02x (%s), value: %#"PRIx64, offset,
 	                 nvme_register_to_string(offset), value);
@@ -7322,7 +7328,7 @@ static int set_feature(int argc, char **argv, struct command *acmd, struct plugi
 			memcpy(buf, &cfg.value, NVME_FEAT_TIMESTAMP_DATA_SIZE);
 		} else {
 			if (strlen(cfg.file))
-				ffd = nvme_open_rawdata(cfg.file, O_RDONLY);
+				ffd = shr_open_rawdata(cfg.file, O_RDONLY);
 
 			if (ffd < 0) {
 				nvme_show_error("Failed to open file %s: %s",
@@ -7434,7 +7440,7 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 		sec_fd = STDIN_FILENO;
 		sec_size = cfg.tl;
 	} else {
-		sec_fd = nvme_open_rawdata(cfg.file, O_RDONLY);
+		sec_fd = shr_open_rawdata(cfg.file, O_RDONLY);
 		if (sec_fd < 0) {
 			nvme_show_error("Failed to open %s: %s", cfg.file, libnvme_strerror(errno));
 			return -EINVAL;
@@ -7571,7 +7577,7 @@ static int dir_send(int argc, char **argv, struct command *acmd, struct plugin *
 
 	if (buf) {
 		if (strlen(cfg.file)) {
-			ffd = nvme_open_rawdata(cfg.file, O_RDONLY);
+			ffd = shr_open_rawdata(cfg.file, O_RDONLY);
 			if (ffd <= 0) {
 				nvme_show_error("Failed to open file %s: %s",
 						cfg.file, libnvme_strerror(errno));
@@ -8927,7 +8933,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	}
 
 	if (strlen(cfg.data)) {
-		dfd = nvme_open_rawdata(cfg.data, flags, mode);
+		dfd = shr_open_rawdata(cfg.data, flags, mode);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.data);
 			return -EINVAL;
@@ -8935,7 +8941,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	}
 
 	if (strlen(cfg.metadata)) {
-		mfd = nvme_open_rawdata(cfg.metadata, flags, mode);
+		mfd = shr_open_rawdata(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			nvme_show_perror(cfg.metadata);
 			return -EINVAL;
@@ -9821,7 +9827,7 @@ static int passthru(int argc, char **argv, bool admin,
 					cfg.opcode);
 			return -EINVAL;
 		}
-		dfd = nvme_open_rawdata(cfg.input_file, flags, mode);
+		dfd = shr_open_rawdata(cfg.input_file, flags, mode);
 		if (dfd < 0) {
 			nvme_show_perror(cfg.input_file);
 			return -EINVAL;
@@ -9835,7 +9841,7 @@ static int passthru(int argc, char **argv, bool admin,
 					cfg.opcode);
 			return -EINVAL;
 		}
-		mfd = nvme_open_rawdata(cfg.metadata, flags, mode);
+		mfd = shr_open_rawdata(cfg.metadata, flags, mode);
 		if (mfd < 0) {
 			nvme_show_perror(cfg.metadata);
 			return -EINVAL;
@@ -10392,7 +10398,7 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 	}
 
 	if (strlen(cfg.input_file)) {
-		fd = nvme_open_rawdata(cfg.input_file, flags, mode);
+		fd = shr_open_rawdata(cfg.input_file, flags, mode);
 		if (fd < 0) {
 			nvme_show_perror(cfg.input_file);
 			return -EINVAL;

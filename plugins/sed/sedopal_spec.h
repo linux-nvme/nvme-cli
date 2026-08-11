@@ -3,7 +3,7 @@
 #ifndef _SED_OPAL_SPEC_H
 #define _SED_OPAL_SPEC_H
 
-#include <common.h>
+#include <compiler-attributes.h>
 
 /*
  * TCP Storage Architecture Core Specification Version 2.01

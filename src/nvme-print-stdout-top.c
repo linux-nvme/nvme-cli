@@ -27,11 +27,14 @@
 
 #include <stdio.h>
 #include <stddef.h>
+
 #include <libnvme.h>
+
+#include <ccan/array_size/array_size.h>
+#include <ccan/minmax/minmax.h>
 
 #include "nvme.h"
 #include "nvme-print.h"
-#include "common.h"
 #include "logging.h"
 #include "dashboard.h"
 #include "table.h"

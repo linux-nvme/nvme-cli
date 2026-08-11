@@ -8,7 +8,7 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <compiler-attributes.h>
 
 struct command;
 struct plugin;

@@ -8,7 +8,6 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "common.h"
 #include "config.h"
 #include "data-area.h"
 #include "header.h"

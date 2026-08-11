@@ -8,7 +8,12 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+#include <ccan/minmax/minmax.h>
+
+#include <compiler-attributes.h>
+#include <fs-util.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
@@ -1411,7 +1416,7 @@ static int get_internal_log(int argc, char **argv, struct command *acmd,
 	cdlog.u.fields.selectCore = cfg.core < 0 ? 0 : cfg.core;
 	cdlog.u.fields.selectNlog = cfg.lnum < 0 ? 0 : cfg.lnum;
 
-	output = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = shr_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		err = output;
 		goto out_free;

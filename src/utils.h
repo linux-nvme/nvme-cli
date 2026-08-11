@@ -7,7 +7,8 @@
  * @author: Chaithanya Shoba <ashoba@micron.com>
  */
 
-#include "common.h"
+#include <compiler-attributes.h>
+
 #include "nvme-print.h"
 
 /*Request data format*/

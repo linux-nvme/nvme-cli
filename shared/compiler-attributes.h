@@ -43,3 +43,13 @@
  */
 #define __shr_likely(x)   __builtin_expect(!!(x), 1)
 #define __shr_unlikely(x) __builtin_expect(!!(x), 0)
+
+/*
+ * __packed - mark a struct/union as having no padding between members.
+ *
+ * Some platforms' system headers already define this bare (kernel-style)
+ * name; only supply it here if nothing else already has.
+ */
+#ifndef __packed
+#define __packed __attribute__((__packed__))
+#endif

@@ -30,8 +30,9 @@
 #include <windows.h>
 #endif
 
+#include <fs-util.h>
+
 #include "command-metadata.h"
-#include "common.h"
 #include "nvme.h"
 #include "nvme-json.h"
 
@@ -416,7 +417,7 @@ static struct command_metadata_program *build_model(struct program *prog)
 	 */
 	fflush(stdout);
 	fflush(stderr);
-	devnull = open(DEV_NULL, O_WRONLY);
+	devnull = open(shr_dev_null(), O_WRONLY);
 	if (devnull >= 0) {
 		saved_stdout = dup(STDOUT_FILENO);
 		saved_stderr = dup(STDERR_FILENO);

@@ -28,11 +28,14 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+
+#include <fs-util.h>
+#include <crypto-util.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
-#include "crypto-util.h"
 
 #define CREATE_CMD
 
@@ -47,7 +50,7 @@ static int read_file(const char *file, unsigned char **data, unsigned int *len)
 
 	if (file == NULL) return err;
 
-	if ((fd = nvme_open_rawdata(file, O_RDONLY)) < 0) {
+	if ((fd = shr_open_rawdata(file, O_RDONLY)) < 0) {
 		nvme_show_error("Failed to open %s: %s", file, libnvme_strerror(errno));
 		return fd;
 	}

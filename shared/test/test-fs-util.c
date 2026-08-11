@@ -15,10 +15,13 @@
 
 #if defined(_WIN32)
 #include <direct.h>
+#include <fcntl.h>
 #include <io.h>
 #define rmdir _rmdir
 #define close _close
 #define unlink _unlink
+#define read _read
+#define write _write
 #else
 #include <fcntl.h>
 #include <unistd.h>
@@ -335,6 +338,101 @@ static bool test_fsync_dir(void)
 	return true;
 }
 
+static bool test_dev_null(void)
+{
+	bool pass = true;
+	int fd;
+
+	printf("test_dev_null:\n");
+
+	pass &= check_bool("shr_dev_null() returns a non-empty path",
+			    shr_dev_null() != NULL && *shr_dev_null());
+
+	fd = open(shr_dev_null(), O_WRONLY);
+	pass &= check_bool("the returned path can be opened for writing", fd >= 0);
+	if (fd >= 0)
+		close(fd);
+
+	return pass;
+}
+
+static bool test_fsync(void)
+{
+	static const char *name = "shr-test-fsync-file";
+	bool pass = true;
+	int fd, ret;
+
+	printf("test_fsync:\n");
+
+	fd = open(name, O_RDWR | O_CREAT | O_TRUNC, 0644);
+	pass &= check_bool("test file created", fd >= 0);
+	if (fd < 0)
+		return pass;
+
+	ret = shr_fsync(fd);
+	pass &= check_ret("fsync of a real fd succeeds", ret, 0);
+
+	close(fd);
+	unlink(name);
+
+	ret = shr_fsync(fd);
+	pass &= check_bool("fsync of a closed fd fails", ret < 0);
+
+	return pass;
+}
+
+static bool test_getpagesize(void)
+{
+	int pagesize;
+	bool pass = true;
+
+	printf("test_getpagesize:\n");
+
+	pagesize = shr_getpagesize();
+	pass &= check_bool("returns a positive value", pagesize > 0);
+	pass &= check_bool("value is a power of 2",
+			    pagesize > 0 && (pagesize & (pagesize - 1)) == 0);
+
+	return pass;
+}
+
+static bool test_open_rawdata(void)
+{
+	static const char *name = "shr-test-open-rawdata-file";
+	static const char *content = "raw data\n";
+	bool pass = true;
+	int fd;
+	char buf[64];
+	ssize_t n;
+
+	printf("test_open_rawdata:\n");
+
+	fd = shr_open_rawdata(name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	pass &= check_bool("opens a new file for writing", fd >= 0);
+	if (fd >= 0) {
+		n = write(fd, content, strlen(content));
+		pass &= check_bool("writes the expected number of bytes",
+				    n == (ssize_t)strlen(content));
+		close(fd);
+	}
+
+	fd = shr_open_rawdata(name, O_RDONLY);
+	pass &= check_bool("reopens the file for reading", fd >= 0);
+	if (fd >= 0) {
+		n = read(fd, buf, sizeof(buf) - 1);
+		if (n >= 0)
+			buf[n] = '\0';
+		pass &= check_bool("content survives the round trip",
+				    n == (ssize_t)strlen(content) &&
+				    !memcmp(buf, content, strlen(content)));
+		close(fd);
+	}
+
+	unlink(name);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -347,6 +445,10 @@ int main(void)
 	pass &= test_mkstemp();
 	pass &= test_read_file();
 	pass &= test_fsync_dir();
+	pass &= test_dev_null();
+	pass &= test_fsync();
+	pass &= test_getpagesize();
+	pass &= test_open_rawdata();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);

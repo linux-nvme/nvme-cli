@@ -2,10 +2,12 @@
 
 #include <inttypes.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+
+#include <uint128-util.h>
+
 #include "nvme-print.h"
 #include "lm-print.h"
-#include "uint128-util.h"
 
 static struct lm_print_ops stdout_print_ops;
 

@@ -5,8 +5,11 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "common.h"
-#include "uint128-util.h"
+#include <ccan/endian/endian.h>
+#include <ccan/array_size/array_size.h>
+
+#include <uint128-util.h>
+
 #include "logging.h"
 #include "nvme-print.h"
 #include "ocp-hardware-component-log.h"

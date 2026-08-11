@@ -4,8 +4,9 @@
  */
 #pragma once
 
+#include <compiler-attributes.h>
+
 #include "cmd.h"
-#include "common.h"
 #include "ocp-nvme.h"
 
 #define HWCOMP_RSVD2_LEN 14

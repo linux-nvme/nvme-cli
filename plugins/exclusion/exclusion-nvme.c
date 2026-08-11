@@ -18,7 +18,6 @@
 
 #include <libnvme.h>
 
-#include "common.h"
 #include "nvme.h"
 #include "nvme-print.h"
 #include "src/cleanup.h"

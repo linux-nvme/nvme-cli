@@ -61,7 +61,7 @@ PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 
 #ifndef OCP_NVME_H
 #define OCP_NVME_H
-#include "common.h"
+#include <compiler-attributes.h>
 
 struct __packed ssd_latency_monitor_log {
 	__u8	feature_status;			/* 0x00 */

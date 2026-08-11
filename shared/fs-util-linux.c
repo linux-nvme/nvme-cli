@@ -18,6 +18,23 @@
 
 #include "fs-util.h"
 
+const char *shr_dev_null(void)
+{
+	return "/dev/null";
+}
+
+int shr_fsync(int fd)
+{
+	if (fsync(fd) < 0)
+		return -errno;
+	return 0;
+}
+
+int shr_getpagesize(void)
+{
+	return getpagesize();
+}
+
 int shr_mkdir(const char *path, mode_t mode)
 {
 	if (mkdir(path, mode) < 0)
