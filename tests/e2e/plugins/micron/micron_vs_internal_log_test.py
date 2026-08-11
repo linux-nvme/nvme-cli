@@ -27,8 +27,24 @@ Tests in this module verify:
 """
 
 import os
+import struct
 
 from .micron_test import TestMicron
+
+# Telemetry log block size (bytes).  The plugin computes the size of a data
+# area as (data_area_last_block + 1) * _TELEMETRY_BLOCK_SIZE.
+_TELEMETRY_BLOCK_SIZE = 512
+
+# Byte offset of each data area's "last block" field within the telemetry log
+# header (struct nvme_telemetry_log), together with its struct-module format:
+#   dalb1 @ 8  (__le16), dalb2 @ 10 (__le16), dalb3 @ 12 (__le16),
+#   dalb4 @ 16 (__le32).
+_DALB_HEADER = {
+    1: (8, "<H"),
+    2: (10, "<H"),
+    3: (12, "<H"),
+    4: (16, "<I"),
+}
 
 _UNSUPPORTED_MODEL_MSG = "Unsupported drive model for vs-internal-log collection"
 _TELEMETRY_UNSUPPORTED_MSG = "telemetry option is not supported for specified drive"
@@ -310,6 +326,57 @@ class TestMicronVsInternalLog(TestMicron):
         self.assertEqual(
             size % 512, 0,
             f"Telemetry log file size {size} is not a multiple of 512 bytes",
+        )
+
+    def test_telemetry_size_matches_header(self):
+        """Extracted telemetry file size matches the size claimed by its header.
+
+        The plugin sizes each data area as (dalbN + 1) * 512, where dalbN is
+        the "last block" field for the requested data area in the telemetry
+        log header (struct nvme_telemetry_log).  This reads that field back
+        out of the written .bin file and asserts the file is exactly that big,
+        catching truncated or over-sized extractions that the coarser
+        "non-empty, multiple of 512" check in test_telemetry_success misses.
+        """
+        # Test the largest supported data area.
+        # Data area 4 is only populated when the controller reports extended
+        # telemetry support (id-ctrl LPA bit 6, 0x40).
+        lpa = int(self.get_id_ctrl_field_value("lpa"))
+        data_area = 4 if (lpa & 0x40) else 3
+        print(f"Testing telemetry data area {data_area} (LPA=0x{lpa:02x})")
+        output_path = self._archive_path("telemetry_ctrl_size.bin")
+        result = self._run_log(
+            args=f"--type=controller --data_area={data_area} --package={output_path}"
+        )
+
+        self.assertEqual(
+            result.returncode, 0,
+            f"vs-internal-log --type=controller --data_area={data_area} failed: "
+            f"rc={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}",
+        )
+        self.assertTrue(
+            os.path.isfile(output_path),
+            f"Telemetry log file was not created: {output_path}",
+        )
+
+        actual_size = os.path.getsize(output_path)
+        self.assertGreaterEqual(
+            actual_size, _TELEMETRY_BLOCK_SIZE,
+            f"Telemetry log file is smaller than one block: {actual_size} bytes",
+        )
+
+        # Read the data-area block count straight out of the file's header.
+        offset, fmt = _DALB_HEADER[data_area]
+        with open(output_path, "rb") as f:
+            header = f.read(_TELEMETRY_BLOCK_SIZE)
+        (dalb,) = struct.unpack_from(fmt, header, offset)
+
+        expected_size = (dalb + 1) * _TELEMETRY_BLOCK_SIZE
+        self.assertEqual(
+            actual_size, expected_size,
+            f"Telemetry file size {actual_size} does not match size claimed by "
+            f"header: data area {data_area} last block = {dalb}, expected "
+            f"(dalb + 1) * {_TELEMETRY_BLOCK_SIZE} = {expected_size} bytes",
         )
 
     def test_data_area_without_type(self):

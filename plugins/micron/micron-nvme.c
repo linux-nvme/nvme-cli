@@ -2263,7 +2263,7 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 		nvme_init_get_log_telemetry_ctrl(&cmd, 0, log, bs);
 		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, true, bs);
 	} else {
-		nvme_init_get_log_telemetry_host(&cmd, 0, log, bs);
+		nvme_init_get_log_create_telemetry_host(&cmd, log);
 		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, bs);
 	}
 
@@ -2310,11 +2310,11 @@ static int micron_telemetry_log(struct libnvme_transport_handle *hdl, __u8 type,
 	}
 
 	if (ctrl_init) {
-		nvme_init_get_log_telemetry_ctrl(&cmd, 0, log, *logSize);
-		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, true, *logSize);
+		nvme_init_get_log_telemetry_ctrl(&cmd, bs, (__u8 *)log + bs, *logSize - bs);
+		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, true, *logSize - bs);
 	} else {
-		nvme_init_get_log_telemetry_host(&cmd, 0, log, *logSize);
-		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, *logSize);
+		nvme_init_get_log_telemetry_host(&cmd, bs, (__u8 *)log + bs, *logSize - bs);
+		err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, *logSize - bs);
 	}
 
 	if (!err) {
