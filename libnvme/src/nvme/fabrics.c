@@ -2706,6 +2706,48 @@ static bool dc_should_connect(struct libnvmf_context *fctx,
 	return true;
 }
 
+/*
+ * Bundles the controller and the decisions made about it while walking a
+ * Discovery Log Page, so the whole outcome for one entry (or, with @e
+ * NULL, for the primary's own self entry) can be logged in one place.
+ */
+struct dc_decision {
+	struct libnvme_ctrl *c;
+	bool primary;
+	bool already_connected;
+	bool connect;
+	bool disconnect;
+};
+
+static void dc_log_decision(struct libnvmf_context *fctx,
+		struct nvmf_disc_log_entry *e, const struct dc_decision *d,
+		const char *reason)
+{
+	const char *subnqn, *transport, *traddr, *trsvcid;
+	const char *ctrl_name = d->c ? libnvme_ctrl_get_name(d->c) : NULL;
+	__u16 eflags = 0;
+
+	if (e) {
+		subnqn = e->subnqn;
+		transport = libnvmf_trtype_str(e->trtype);
+		traddr = e->traddr;
+		trsvcid = e->trsvcid;
+		eflags = le16_to_cpu(e->eflags);
+	} else {
+		subnqn = libnvme_ctrl_get_subsysnqn(d->c);
+		transport = libnvme_ctrl_get_transport(d->c);
+		traddr = libnvme_ctrl_get_traddr(d->c);
+		trsvcid = libnvme_ctrl_get_trsvcid(d->c);
+	}
+
+	libnvme_msg(fctx->ctx, LIBNVME_LOG_DEBUG,
+		"discover: %s transport %s traddr %s trsvcid %s eflags 0x%04x primary=%d already_connected=%d connect=%d disconnect=%d ctrl=%s%s%s\n",
+		subnqn, transport, traddr, trsvcid, eflags, d->primary,
+		d->already_connected, d->connect, d->disconnect,
+		ctrl_name ? ctrl_name : "-", reason ? " reason=" : "",
+		reason ? reason : "");
+}
+
 static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, struct libnvme_ctrl *c,
 		bool primary, bool already_connected)
@@ -2738,10 +2780,9 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 
 	for (int i = 0; i < numrec; i++) {
 		struct nvmf_disc_log_entry *e = &log->entries[i];
+		struct dc_decision d = { 0 };
 		libnvme_ctrl_t cl;
 		bool discover = false;
-		bool disconnect;
-		libnvme_ctrl_t child = { 0 };
 		struct libnvmf_context nfctx = *fctx;
 
 		sanitize_discovery_log_entry(c->ctx, e);
@@ -2762,35 +2803,51 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 			 */
 			if (!self_entry)
 				self_entry = e;
+			d.c = c;
+			d.already_connected = true;
+			dc_log_decision(fctx, e, &d,
+				"self entry, decision deferred to primary");
 			continue;
 		}
-		if (cl && libnvme_ctrl_get_name(cl))
+		if (cl && libnvme_ctrl_get_name(cl)) {
+			d.c = cl;
+			d.already_connected = true;
+			dc_log_decision(fctx, e, &d, "already connected");
 			continue;
+		}
 
 		/* Skip connect if the transport types don't match */
 		if (strcmp(libnvme_ctrl_get_transport(c),
-			   nfctx.ctrl_params.transport))
+			   nfctx.ctrl_params.transport)) {
+			dc_log_decision(fctx, e, &d, "transport mismatch");
 			continue;
+		}
 
-		if (!dc_should_connect(&nfctx, e, &disconnect))
+		if (!dc_should_connect(&nfctx, e, &d.disconnect)) {
+			dc_log_decision(fctx, e, &d,
+				"not connecting (duplicate info, or connect not requested)");
 			continue;
+		}
+		d.connect = true;
 
-		err = nvmf_connect_disc_entry(h, e, &nfctx, &discover, &child);
+		err = nvmf_connect_disc_entry(h, e, &nfctx, &discover, &d.c);
+		if (err && err != -ENVME_CONNECT_ALREADY)
+			dc_log_decision(fctx, e, &d, libnvme_strerror(-err));
+		else
+			dc_log_decision(fctx, e, &d, NULL);
 
-		if (child) {
+		if (d.c) {
 			if (discover) {
 				set_discovery_kato(&nfctx);
-				_nvmf_discover(ctx, &nfctx, child, false,
+				_nvmf_discover(ctx, &nfctx, d.c, false,
 					       false);
 			}
 
-			if (disconnect) {
-				libnvmf_disconnect_ctrl(child);
-				libnvme_free_ctrl(child);
+			if (d.disconnect) {
+				libnvmf_disconnect_ctrl(d.c);
+				libnvme_free_ctrl(d.c);
 			}
 		} else if (err == -ENVME_CONNECT_ALREADY) {
-			struct nvmf_disc_log_entry *e = &log->entries[i];
-
 			nfctx.hooks.already_connected(&nfctx, h, e->subnqn,
 				libnvmf_trtype_str(e->trtype), e->traddr,
 				e->trsvcid, nfctx.hooks.user_data);
@@ -2803,12 +2860,31 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 	 * absent self entry means EPCSD is not reported, which the spec
 	 * defines identically to EPCSD=0.
 	 */
-	if (primary && !already_connected) {
-		__u16 eflags = self_entry ? le16_to_cpu(self_entry->eflags) : 0;
+	if (primary) {
+		struct dc_decision d = {
+			.c = c,
+			.primary = true,
+			.already_connected = already_connected,
+		};
 
-		if (dc_should_disconnect(fctx,
-				libnvme_ctrl_get_subsysnqn(c), eflags))
-			libnvmf_disconnect_ctrl(c);
+		if (already_connected) {
+			dc_log_decision(fctx, self_entry, &d,
+				"pre-existing, not ours to disconnect");
+		} else {
+			__u16 eflags = self_entry ?
+				le16_to_cpu(self_entry->eflags) : 0;
+
+			d.disconnect = dc_should_disconnect(fctx,
+					libnvme_ctrl_get_subsysnqn(c), eflags);
+			if (self_entry)
+				dc_log_decision(fctx, self_entry, &d, NULL);
+			else
+				dc_log_decision(fctx, NULL, &d,
+					"no self entry, EPCSD assumed 0");
+
+			if (d.disconnect)
+				libnvmf_disconnect_ctrl(c);
+		}
 	}
 
 	return 0;
