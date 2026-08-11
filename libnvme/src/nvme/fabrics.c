@@ -1858,12 +1858,12 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 		return ret;
 	}
 
+	/*
+	 * NVME_NQN_CURR (self entries) never reach here -- _nvmf_discover()
+	 * filters them out before calling this function, since they
+	 * describe c itself rather than something to connect to.
+	 */
 	switch (e->subtype) {
-	case NVME_NQN_CURR:
-		libnvme_ctrl_set_discovered(c, true);
-		libnvme_ctrl_set_unique_discovery_ctrl(c,
-				strcmp(e->subnqn, NVME_DISC_SUBSYS_NAME));
-		break;
 	case NVME_NQN_DISC:
 		if (discover)
 			*discover = true;
@@ -1879,11 +1879,6 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 		libnvme_ctrl_set_discovery_ctrl(c, false);
 		libnvme_ctrl_set_unique_discovery_ctrl(c, false);
 		break;
-	}
-
-	if (libnvme_ctrl_get_discovered(c)) {
-		libnvme_free_ctrl(c);
-		return -EAGAIN;
 	}
 
 	if (e->treq & NVMF_TREQ_DISABLE_SQFLOW &&
@@ -2686,6 +2681,12 @@ static bool dc_should_disconnect(struct libnvmf_context *fctx,
 	return disconnect;
 }
 
+/*
+ * DUPRETINFO isn't checked here: the spec defines it as always 0 for
+ * anything other than a SUBTYPE 03h (current discovery subsystem)
+ * entry, and self entries never reach this function -- the caller
+ * filters them out before calling dc_should_connect().
+ */
 static bool dc_should_connect(struct libnvmf_context *fctx,
 		struct nvmf_disc_log_entry *e, bool *pdisconnect)
 {
@@ -2697,11 +2698,6 @@ static bool dc_should_connect(struct libnvmf_context *fctx,
 	}
 
 	eflags = le16_to_cpu(e->eflags);
-
-	/* Discovery controller returns duplicate information. */
-	if (eflags & NVMF_DISC_EFLAGS_DUPRETINFO)
-		return false;
-
 	*pdisconnect = dc_should_disconnect(fctx, e->subnqn, eflags);
 	return true;
 }
@@ -2787,19 +2783,14 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 
 		sanitize_discovery_log_entry(c->ctx, e);
 
-		nfctx.ctrl_params.subsysnqn = e->subnqn;
-		nfctx.ctrl_params.transport = libnvmf_trtype_str(e->trtype);
-		nfctx.ctrl_params.traddr = e->traddr;
-		nfctx.ctrl_params.trsvcid = e->trsvcid;
-
-		/* Already connected ? */
-		cl = lookup_ctrl(h, &nfctx);
-		if (cl == c) {
+		if (e->subtype == NVME_NQN_CURR) {
 			/*
-			 * This entry describes c's own port (SUBTYPE 03h,
-			 * "current discovery subsystem"). It is the only
-			 * place c's own EPCSD is ever reported, so remember
-			 * it instead of silently discarding it below.
+			 * This entry describes c's own port. It is the
+			 * only place c's own EPCSD is ever reported, so
+			 * remember it instead of silently discarding it.
+			 * Take the first one seen; every copy describes
+			 * the same DC, regardless of which port it came
+			 * back on.
 			 */
 			if (!self_entry)
 				self_entry = e;
@@ -2809,6 +2800,14 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 				"self entry, decision deferred to primary");
 			continue;
 		}
+
+		nfctx.ctrl_params.subsysnqn = e->subnqn;
+		nfctx.ctrl_params.transport = libnvmf_trtype_str(e->trtype);
+		nfctx.ctrl_params.traddr = e->traddr;
+		nfctx.ctrl_params.trsvcid = e->trsvcid;
+
+		/* Already connected ? */
+		cl = lookup_ctrl(h, &nfctx);
 		if (cl && libnvme_ctrl_get_name(cl)) {
 			d.c = cl;
 			d.already_connected = true;
