@@ -891,6 +891,7 @@ static void json_print_stx_smart_log_C0(struct json_object *root, STX_EXT_SMART_
 static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	struct nvme_id_ctrl     ctrl;
+	struct libnvme_passthru_cmd cmd;
 	char                    modelNo[40];
 	STX_EXT_SMART_LOG_PAGE_C0   ehExtSmart;
 	EXTENDED_SMART_INFO_T   ExtdSMARTInfo;
@@ -929,7 +930,8 @@ static int vs_smart_log(int argc, char **argv, struct command *acmd, struct plug
 	 * to determine drive family.
 	 */
 
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err) {
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
 	} else {
@@ -1423,6 +1425,7 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 	char modelNo[40];
 	__u64 result;
 
@@ -1443,7 +1446,8 @@ static int clear_fw_activate_history(int argc, char **argv, struct command *acmd
 		return -1;
 	}
 
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err) {
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
 	} else {
@@ -1476,6 +1480,7 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 	const char *save = "specifies that the controller shall save the attribute";
 
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 	char modelNo[40];
 
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
@@ -1502,7 +1507,8 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 	}
 
 
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (!err) {
 		memcpy(modelNo, ctrl.mn, sizeof(modelNo));
 	} else {

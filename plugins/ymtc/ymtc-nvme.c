@@ -352,10 +352,12 @@ static int show_ymtc_smart_log(struct libnvme_transport_handle *hdl, __u32 nsid,
 		struct nvme_ymtc_smart_log *smart, enum ySSDModel model)
 {
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 	char fw_ver[10];
 	int err = 0;
 	const u8 *base = (const u8 *)smart;
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		return err;
 	}

@@ -294,6 +294,7 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 	struct feature_latency_monitor buf = { 0 };
 	__u32  nsid = NVME_NSID_ALL;
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 
 	const char *desc = "Set Latency Monitor feature.";
 	const char *active_bucket_timer_threshold = "This is the value that loads the Active Bucket Timer Threshold.";
@@ -357,7 +358,8 @@ int ocp_set_latency_monitor_feature(int argc, char **argv, struct command *acmd,
 		}
 	}
 
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 
@@ -1493,6 +1495,7 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 	__u32  nsid = NVME_NSID_ALL;
 	char sn[21] = {0,};
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 	bool is_support_telemetry_controller;
 	struct ocp_telemetry_parse_options opt = {0};
 	int tele_type = 0;
@@ -1522,7 +1525,8 @@ static int ocp_telemetry_log(int argc, char **argv, struct command *acmd, struct
 			return err;
 	}
 
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 

@@ -739,6 +739,7 @@ static int get_ana_log(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_libnvme_free struct nvme_id_ctrl *ctrl = NULL;
 	__cleanup_libnvme_free struct nvme_ana_log *ana_log = NULL;
+	struct libnvme_passthru_cmd cmd;
 	size_t max_ana_log_len;
 	__u32 ana_log_len;
 	nvme_print_flags_t flags;
@@ -770,7 +771,8 @@ static int get_ana_log(int argc, char **argv, struct command *acmd,
 	if (!ctrl)
 		return -ENOMEM;
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error("ERROR : nvme_identify_ctrl() failed: %s",
 			libnvme_strerror(err));
@@ -1012,6 +1014,7 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	__cleanup_fd int output = -1;
+	struct libnvme_passthru_cmd cmd;
 	int err = 0;
 	size_t total_size = 0;
 	__u8 *data_ptr = NULL;
@@ -1076,7 +1079,8 @@ static int get_telemetry_log(int argc, char **argv, struct command *acmd,
 		if (!id_ctrl)
 			return -ENOMEM;
 
-		err = nvme_identify_ctrl(hdl, id_ctrl);
+		nvme_init_identify_ctrl(&cmd, id_ctrl);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (err) {
 			nvme_show_error("identify-ctrl");
 			return err;
@@ -1443,7 +1447,8 @@ static int get_error_log(int argc, char **argv, struct command *acmd, struct plu
 		return -1;
 	}
 
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify controller");
 		return err;
@@ -1716,7 +1721,8 @@ static int get_pred_lat_event_agg_log(int argc, char **argv,
 	if (!ctrl)
 		return -ENOMEM;
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify controller");
 		return err;
@@ -1912,7 +1918,8 @@ static int get_endurance_event_agg_log(int argc, char **argv,
 	if (!ctrl)
 		return -ENOMEM;
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err < 0) {
 		nvme_show_error("identify controller: %s", libnvme_strerror(-err));
 		return err;
@@ -3105,13 +3112,15 @@ static int id_endurance_grp_list(int argc, char **argv, struct command *acmd,
 static bool is_ns_mgmt_support(struct libnvme_transport_handle *hdl)
 {
 	int err;
+	struct libnvme_passthru_cmd cmd;
 
 	__cleanup_libnvme_free struct nvme_id_ctrl *ctrl = libnvme_alloc(sizeof(*ctrl));
 
 	if (!ctrl)
 		return false;
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return false;
 
@@ -3262,7 +3271,8 @@ static int nvme_attach_ns(int argc, char **argv, int attach, const char *desc, s
 	} else {
 		struct nvme_id_ctrl ctrl = { 0 };
 
-		err = nvme_identify_ctrl(hdl, &ctrl);
+		nvme_init_identify_ctrl(&cmd, &ctrl);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (err) {
 			nvme_show_error("identify-ctrl %s", libnvme_strerror(-err));
 			return err;
@@ -3337,7 +3347,8 @@ static int parse_lba_num_si(struct libnvme_transport_handle *hdl, const char *op
 	if (!ctrl)
 		return -ENOMEM;
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify controller");
 		return err;
@@ -3363,7 +3374,8 @@ static int parse_lba_num_si(struct libnvme_transport_handle *hdl, const char *op
 	if (!ns)
 		return -ENOMEM;
 
-	err = nvme_identify_ns(hdl, nsid, ns);
+	nvme_init_identify_ns(&cmd, nsid, ns);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify namespace");
 		return err;
@@ -3530,7 +3542,8 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 		if (!ns)
 			return -ENOMEM;
 
-		err = nvme_identify_ns(hdl, NVME_NSID_ALL, ns);
+		nvme_init_identify_ns(&cmd, NVME_NSID_ALL, ns);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (err) {
 			if (err > 0)
 				nvme_show_error("identify failed");
@@ -3557,7 +3570,8 @@ static int create_ns(int argc, char **argv, struct command *acmd, struct plugin 
 	if (!id)
 		return -ENOMEM;
 
-	err = nvme_identify_ctrl(hdl, id);
+	nvme_init_identify_ctrl(&cmd, id);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		if (err > 0)
 			nvme_show_error("identify controller failed");
@@ -3864,6 +3878,7 @@ int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	__cleanup_libnvme_free struct nvme_id_ctrl *ctrl = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err;
 
@@ -3904,7 +3919,8 @@ int __id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	if (!ctrl)
 		return -ENOMEM;
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify controller");
 		return err;
@@ -3976,6 +3992,7 @@ static int nvm_id_ns(int argc, char **argv, struct command *acmd,
 	__cleanup_libnvme_free struct nvme_id_ns *ns = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err = -1;
 
@@ -4018,7 +4035,8 @@ static int nvm_id_ns(int argc, char **argv, struct command *acmd,
 	if (!ns)
 		return -ENOMEM;
 
-	err = nvme_identify_ns(hdl, cfg.namespace_id, ns);
+	nvme_init_identify_ns(&cmd, cfg.namespace_id, ns);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "nvm identify namespace");
 		return err;
@@ -4051,6 +4069,7 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *acmd, str
 	__cleanup_libnvme_free struct nvme_id_ns *ns = NULL;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	int err = -1;
 
@@ -4085,7 +4104,8 @@ static int nvm_id_ns_lba_format(int argc, char **argv, struct command *acmd, str
 	if (!ns)
 		return -ENOMEM;
 
-	err = nvme_identify_ns(hdl, NVME_NSID_ALL, ns);
+	nvme_init_identify_ns(&cmd, NVME_NSID_ALL, ns);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		ns->nlbaf = NVME_FEAT_LBA_RANGE_MAX - 1;
 		ns->nulbaf = 0;
@@ -4249,7 +4269,8 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 		nvme_init_identify_allocated_ns(&cmd, cfg.namespace_id, ns);
 		err = libnvme_exec_admin_passthru(hdl, &cmd);
 	} else {
-		err = nvme_identify_ns(hdl, cfg.namespace_id, ns);
+		nvme_init_identify_ns(&cmd, cfg.namespace_id, ns);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 	}
 
 	if (err) {
@@ -4817,6 +4838,7 @@ static int wait_self_test(struct libnvme_transport_handle *hdl)
 	static const char spin[] = {'-', '\\', '|', '/' };
 	__cleanup_libnvme_free struct nvme_self_test_log *log = NULL;
 	__cleanup_libnvme_free struct nvme_id_ctrl *ctrl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	int err, i = 0, p = 0, cnt = 0;
 	int wthr;
 
@@ -4828,7 +4850,8 @@ static int wait_self_test(struct libnvme_transport_handle *hdl)
 	if (!log)
 		return -ENOMEM;
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify-ctrl");
 		return err;
@@ -5396,6 +5419,7 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 	struct stat sb;
 	void *fw_buf;
 	struct nvme_id_ctrl ctrl = { 0 };
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 
 	struct config {
@@ -5454,7 +5478,8 @@ static int fw_download(int argc, char **argv, struct command *acmd, struct plugi
 	}
 
 	if (cfg.xfer == 0) {
-		err = nvme_identify_ctrl(hdl, &ctrl);
+		nvme_init_identify_ctrl(&cmd, &ctrl);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (err) {
 			nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
 			return err;
@@ -5523,13 +5548,15 @@ static char *nvme_fw_status_reset_type(__u16 status)
 static bool fw_commit_support_mud(struct libnvme_transport_handle *hdl)
 {
 	__cleanup_libnvme_free struct nvme_id_ctrl *ctrl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	ctrl = libnvme_alloc(sizeof(*ctrl));
 	if (!ctrl)
 		return false;
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 
 	if (err)
 		nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
@@ -5928,6 +5955,7 @@ static int check_sanitize(struct libnvme_transport_handle *hdl, bool *sanitized)
 struct nvme_id_ctrl *identify_ctrl(struct libnvme_transport_handle *hdl)
 {
 	struct nvme_id_ctrl *ctrl = libnvme_alloc(sizeof(*ctrl));
+	struct libnvme_passthru_cmd cmd;
 	int err = 0;
 
 	if (!ctrl) {
@@ -5935,7 +5963,8 @@ struct nvme_id_ctrl *identify_ctrl(struct libnvme_transport_handle *hdl)
 		return NULL;
 	}
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
 		libnvme_free(ctrl);
@@ -7147,7 +7176,8 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 	if (!ctrl)
 		return -ENOMEM;
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
 		return -errno;
@@ -7180,7 +7210,8 @@ static int format_cmd(int argc, char **argv, struct command *acmd, struct plugin
 		if (!ns)
 			return -ENOMEM;
 
-		err = nvme_identify_ns(hdl, cfg.namespace_id, ns);
+		nvme_init_identify_ns(&cmd, cfg.namespace_id, ns);
+		err = libnvme_exec_admin_passthru(hdl, &cmd);
 		if (err) {
 			if (err > 0)
 				nvme_show_error("identify failed");
@@ -7892,6 +7923,7 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 {
 	__cleanup_libnvme_free struct nvme_nvm_id_ns *nvm_ns = NULL;
 	__cleanup_libnvme_free struct nvme_id_ns *ns = NULL;
+	struct libnvme_passthru_cmd cmd;
 	__u8 sts = 0, pif = 0;
 	unsigned int lbs = 0;
 	__u8 lba_index;
@@ -7903,7 +7935,8 @@ static int get_pi_info(struct libnvme_transport_handle *hdl,
 	if (!ns)
 		return -ENOMEM;
 
-	err = nvme_identify_ns(hdl, nsid, ns);
+	nvme_init_identify_ns(&cmd, nsid, ns);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify namespace");
 		return err;
@@ -7959,6 +7992,7 @@ static int init_pi_tags(struct libnvme_transport_handle *hdl,
 {
 	__cleanup_libnvme_free struct nvme_nvm_id_ns *nvm_ns = NULL;
 	__cleanup_libnvme_free struct nvme_id_ns *ns = NULL;
+	struct libnvme_passthru_cmd id_cmd;
 	__u8 sts = 0, pif = 0;
 	int err = 0;
 
@@ -7966,7 +8000,8 @@ static int init_pi_tags(struct libnvme_transport_handle *hdl,
 	if (!ns)
 		return -ENOMEM;
 
-	err = nvme_identify_ns(hdl, nsid, ns);
+	nvme_init_identify_ns(&id_cmd, nsid, ns);
+	err = libnvme_exec_admin_passthru(hdl, &id_cmd);
 	if (err) {
 		nvme_show_err(err, "identify namespace");
 		return err;
@@ -8818,7 +8853,8 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 	if (!ctrl)
 		return -ENOMEM;
 
-	err = nvme_identify_ctrl(hdl, ctrl);
+	nvme_init_identify_ctrl(&cmd, ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error("identify-ctrl: %s", libnvme_strerror(err));
 		return -errno;

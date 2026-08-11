@@ -592,7 +592,8 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 	if (rc)
 		return rc;
 
-	if (nvme_identify_ctrl(hdl, &ctrl)) {
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	if (libnvme_exec_admin_passthru(hdl, &cmd)) {
 		nvme_show_error("Failed to get identify controller");
 		rc = -errno;
 		goto done;
@@ -603,7 +604,8 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 		if (libnvme_get_nsid(hdl, &nsid) < 0) {
 			struct nvme_id_ctrl test_ctrl;
 
-			if (nvme_identify_ctrl(hdl, &test_ctrl) == 0) {
+			nvme_init_identify_ctrl(&cmd, &test_ctrl);
+			if (libnvme_exec_admin_passthru(hdl, &cmd) == 0) {
 				nsid = NVME_NSID_ALL;
 			} else {
 				rc = -errno;

@@ -767,9 +767,11 @@ static int netapp_smdevices_get_info(struct libnvme_transport_handle *hdl,
 				     struct smdevice_info *item,
 				     const char *dev)
 {
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	err = nvme_identify_ctrl(hdl, &item->ctrl);
+	nvme_init_identify_ctrl(&cmd, &item->ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error(
 			"Identify Controller failed to %s (%s)\n", dev,
@@ -789,7 +791,8 @@ static int netapp_smdevices_get_info(struct libnvme_transport_handle *hdl,
 		return 0;
 	}
 
-	err = nvme_identify_ns(hdl, item->nsid, &item->ns);
+	nvme_init_identify_ns(&cmd, item->nsid, &item->ns);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error(
 			"Unable to identify namespace for %s (%s)\n",
@@ -810,7 +813,8 @@ static int netapp_ontapdevices_get_info(struct libnvme_transport_handle *hdl,
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	err = nvme_identify_ctrl(hdl, &item->ctrl);
+	nvme_init_identify_ctrl(&cmd, &item->ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error("Identify Controller failed to %s (%s)",
 			dev, err < 0 ? libnvme_strerror(-err) :
@@ -830,7 +834,8 @@ static int netapp_ontapdevices_get_info(struct libnvme_transport_handle *hdl,
 		return 0;
 	}
 
-	err = nvme_identify_ns(hdl, item->nsid, &item->ns);
+	nvme_init_identify_ns(&cmd, item->nsid, &item->ns);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error("Unable to identify namespace for %s (%s)",
 			dev, err < 0 ? libnvme_strerror(-err) :

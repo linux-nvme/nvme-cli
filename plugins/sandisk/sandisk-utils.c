@@ -116,10 +116,12 @@ int sndk_get_pci_ids(struct libnvme_global_ctx *ctx, struct libnvme_transport_ha
 int sndk_get_vendor_id(struct libnvme_transport_handle *hdl, uint32_t *vendor_id)
 {
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 	int ret;
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
-	ret = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (ret) {
 		nvme_show_error("ERROR: SNDK: nvme_identify_ctrl() failed 0x%x", ret);
 		return -1;
@@ -851,13 +853,15 @@ int sndk_get_serial_name(struct libnvme_transport_handle *hdl, char *file,
 	int res_len = 0;
 	char orig[PATH_MAX] = {0};
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 	int ctrl_sn_len = sizeof(ctrl.sn);
 
 	i = sizeof(ctrl.sn) - 1;
 	strncpy(orig, file, PATH_MAX - 1);
 	memset(file, 0, len);
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
-	ret = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	ret = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (ret) {
 		nvme_show_error("ERROR: SNDK: nvme_identify_ctrl() failed 0x%x", ret);
 		return -1;

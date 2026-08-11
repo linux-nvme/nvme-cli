@@ -187,6 +187,7 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 	nvme_print_flags_t flags;
 	struct nvme_zns_id_ns ns;
 	struct nvme_id_ns id_ns;
+	struct libnvme_passthru_cmd cmd;
 	int err = -1;
 
 	struct config {
@@ -222,7 +223,8 @@ static int id_ns(int argc, char **argv, struct command *acmd, struct plugin *plu
 		}
 	}
 
-	err = nvme_identify_ns(hdl, cfg.namespace_id, &id_ns);
+	nvme_init_identify_ns(&cmd, cfg.namespace_id, &id_ns);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_status(err);
 		return err;
@@ -300,10 +302,12 @@ static int get_zdes_bytes(struct libnvme_transport_handle *hdl, __u32 nsid)
 {
 	struct nvme_zns_id_ns ns;
 	struct nvme_id_ns id_ns;
+	struct libnvme_passthru_cmd cmd;
 	__u8 lbaf;
 	int err;
 
-	err = nvme_identify_ns(hdl, nsid, &id_ns);
+	nvme_init_identify_ns(&cmd, nsid, &id_ns);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_err(err, "identify namespace");
 		return -1;
@@ -798,7 +802,8 @@ static int report_zones(int argc, char **argv, struct command *acmd, struct plug
 			return zdes;
 	}
 
-	err = nvme_identify_ns(hdl, cfg.namespace_id, &id_ns);
+	nvme_init_identify_ns(&cmd, cfg.namespace_id, &id_ns);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_status(err);
 		return err;
@@ -961,7 +966,8 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 		}
 	}
 
-	err = nvme_identify_ns(hdl, cfg.namespace_id, &ns);
+	nvme_init_identify_ns(&cmd, cfg.namespace_id, &ns);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_status(err);
 		return err;
