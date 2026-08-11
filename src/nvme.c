@@ -58,10 +58,12 @@
 #include <parse-util.h>
 #include <sig-util.h>
 #include <suffix-util.h>
+#include <time-util.h>
 
 #include "argconfig.h"
 #include "fabrics.h"
 #include "global-config.h"
+#include "global-ctx.h"
 #include "logging.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
@@ -199,9 +201,6 @@ static struct program nvme = {
 	.extensions = &builtin,
 };
 
-const char *uuid_index = "UUID index";
-const char *namespace_id_desired = "identifier of desired namespace";
-
 static const char *app_tag = "app tag for end-to-end PI";
 static const char *app_tag_mask = "app tag mask for end-to-end PI";
 static const char *block_count = "number of blocks (zeroes based) on device to access";
@@ -314,295 +313,6 @@ static OPT_VALS(feature_name) = {
 	VAL_END()
 };
 
-#ifndef HAVE_STRSEP
-static char *strsep(char **stringp, const char *delim)
-{
-	char *s, *end;
-
-	if (!stringp || !*stringp)
-		return NULL;
-
-	s = *stringp;
-	end = s + strcspn(s, delim);
-
-	if (*end)
-		*end++ = '\0';
-	else
-		end = NULL;
-
-	*stringp = end;
-	return s;
-}
-#endif
-
-static int check_arg_dev(int argc, char **argv)
-{
-	if (optind >= argc) {
-		errno = EINVAL;
-		nvme_show_perror(argv[0]);
-		return -EINVAL;
-	}
-	return 0;
-}
-
-static int get_transport_handle(struct libnvme_global_ctx *ctx, int argc,
-					char **argv, int flags,
-					struct libnvme_transport_handle **hdl)
-{
-	char *devname;
-	int ret;
-
-	ret = check_arg_dev(argc, argv);
-	if (ret)
-		return ret;
-
-	devname = argv[optind];
-
-	ret = libnvme_open(ctx, devname, hdl);
-	if (ret)
-		nvme_show_err(ret, devname);
-
-	return ret;
-}
-
-void put_transport_handle(struct libnvme_transport_handle *hdl)
-{
-	libnvme_close(hdl);
-}
-
-int parse_args(int argc, char *argv[], const char *desc,
-	       struct argconfig_commandline_options *opts)
-{
-	int ret;
-
-	ret = argconfig_parse(argc, argv, desc, opts);
-	if (ret)
-		return ret;
-
-	nvme_show_init();
-
-	return 0;
-}
-
-static void setup_transport_handle(struct libnvme_global_ctx *ctx,
-		struct libnvme_transport_handle *hdl,
-		struct argconfig_commandline_options *opts)
-{
-	libnvme_transport_handle_set_submit_entry(hdl, nvme_submit_entry);
-	libnvme_transport_handle_set_submit_exit(hdl, nvme_submit_exit);
-	libnvme_transport_handle_set_decide_retry(hdl, nvme_decide_retry);
-
-#ifdef CONFIG_MI
-	if (libnvme_transport_handle_is_mi(hdl)) {
-		libnvme_mi_ep_t ep = libnvme_transport_handle_get_mi_ep(hdl);
-		if (ep) {
-			libnvme_mi_ep_set_submit_entry(ep, nvme_mi_submit_entry);
-			libnvme_mi_ep_set_submit_exit(ep, nvme_mi_submit_exit);
-		}
-	}
-#endif
-
-	libnvme_set_dry_run(ctx, nvme_args.dry_run);
-	if (nvme_args.timeout != NVME_DEFAULT_IOCTL_TIMEOUT)
-		libnvme_transport_handle_set_timeout(hdl, nvme_args.timeout);
-}
-
-static bool is_true(const char *val)
-{
-	return !strcmp(val, "1") ||
-		!strcasecmp(val, "true") ||
-		!strncasecmp(val, "enable", 6);
-}
-
-/*
- * nvme_apply_option() - apply a single "key=value" pair to @ctx.
- *
- * Returns 0 on success, -EINVAL for unknown keys or missing '='.
- */
-static int nvme_apply_option(struct libnvme_global_ctx *ctx, const char *kv)
-{
-	__cleanup_free char *str = NULL;
-	char *key, *val;
-	int ret = 0;
-
-	str = strdup(kv);
-	if (!str)
-		return -ENOMEM;
-
-	val = strchr(str, '=');
-	if (!val) {
-		nvme_show_error("--set-options: missing '=' in '%s'", kv);
-		return -EINVAL;
-	}
-	*val++ = '\0';
-	key = str;
-
-	if (!strcmp(key, "force-4k")) {
-		libnvme_set_force_4k(ctx, is_true(val));
-	} else if (!strcmp(key, "mi-probe-enabled")) {
-		libnvme_set_mi_probe_enabled(ctx, is_true(val));
-	} else if (!strcmp(key, "test-base-dir")) {
-		ret = libnvme_set_test_base_dir(ctx, val);
-	} else if (!strcmp(key, "test-sysfs-dir")) {
-		ret = libnvme_set_test_sysfs_dir(ctx, val);
-	} else {
-		nvme_show_error("--set-options: unknown key '%s'", key);
-		return -EINVAL;
-	}
-
-	if (ret)
- 		nvme_show_error("--set-options: failed to set '%s=%s': %s",
-			key, val, libnvme_strerror(-ret));
-
-	return ret;
-}
-
-static int __nvme_create_global_ctx(struct libnvme_global_ctx **pctx)
-{
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_free char *buf = NULL;
-	const char *opt;
-	char *p;
-	int err;
-
-	ctx = libnvme_create_global_ctx();
-	if (!ctx)
-		return -ENOMEM;
-
-	log_level = map_log_level(nvme_args.verbose, nvme_args.quiet);
-	libnvme_set_logging_file(ctx, stdout);
-	libnvme_set_logging_level(ctx, log_level, false, false);
-
-	if (!nvme_args.set_options)
-		goto out;
-
-	buf = strdup(nvme_args.set_options);
-	if (!buf)
-		return -ENOMEM;
-
-	p = buf;
-	while ((opt = strsep(&p, ",")) != NULL) {
-		if (!*opt)
-			continue;
-		err = nvme_apply_option(ctx, opt);
-		if (err)
-			return err;
-	}
-
-out:
-	*pctx = ctx;
-	ctx = NULL;
-
-	return 0;
-}
-
-int nvme_create_global_ctx_hostnqn(struct libnvme_global_ctx **pctx,
-				       const char *hostnqn_arg,
-				       const char *hostid_arg,
-				       char **hostnqn, char **hostid)
-{
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_free char *hnqn = NULL;
-	__cleanup_free char *hid = NULL;
-	int err;
-
-	err = __nvme_create_global_ctx(&ctx);
-	if (err)
-		return err;
-
-	libnvme_set_ioctl_probing(ctx, !nvme_args.no_ioctl_probing);
-
-#ifdef CONFIG_FABRICS
-	err = libnvmf_host_get_ids(ctx, hostnqn_arg, hostid_arg, &hnqn, &hid);
-	if (err)
-		return err;
-
-	libnvme_set_hostnqn(ctx, hnqn);
-	libnvme_set_hostid(ctx, hid);
-#endif
-
-	if (hostnqn) {
-		*hostnqn = hnqn;
-		hnqn = NULL;
-	}
-	if (hostid) {
-		*hostid = hid;
-		hid = NULL;
-	}
-
-	*pctx = ctx;
-	ctx = NULL;
-
-	return 0;
-}
-
-int nvme_create_global_ctx(struct libnvme_global_ctx **pctx)
-{
-	return nvme_create_global_ctx_hostnqn(pctx, NULL, NULL, NULL, NULL);
-}
-
-int parse_and_open(struct libnvme_global_ctx **ctx,
-		   struct libnvme_transport_handle **hdl, int argc, char **argv,
-		   const char *desc, struct argconfig_commandline_options *opts)
-{
-	struct libnvme_transport_handle *hdl_new;
-	struct libnvme_global_ctx *ctx_new;
-	int ret;
-
-	ret = parse_args(argc, argv, desc, opts);
-	if (ret)
-		return ret;
-
-	ret = nvme_create_global_ctx(&ctx_new);
-	if (ret)
-		return ret;
-
-	ret = get_transport_handle(ctx_new, argc, argv, O_RDONLY, &hdl_new);
-	if (ret) {
-		libnvme_free_global_ctx(ctx_new);
-		argconfig_print_help(desc, opts);
-		return -ENXIO;
-	}
-
-	setup_transport_handle(ctx_new, hdl_new, opts);
-
-	*ctx = ctx_new;
-	*hdl = hdl_new;
-
-	return 0;
-}
-
-int open_exclusive(struct libnvme_global_ctx **ctx,
-		   struct libnvme_transport_handle **hdl, int argc, char **argv,
-		   int ignore_exclusive,
-		   struct argconfig_commandline_options *opts)
-{
-	struct libnvme_transport_handle *hdl_new;
-	struct libnvme_global_ctx *ctx_new;
-	int flags = O_RDONLY;
-	int ret;
-
-	if (!ignore_exclusive)
-		flags |= O_EXCL;
-
-	ret = nvme_create_global_ctx(&ctx_new);
-	if (ret)
-		return ret;
-
-	ret = get_transport_handle(ctx_new, argc, argv, flags, &hdl_new);
-	if (ret) {
-		libnvme_free_global_ctx(ctx_new);
-		return -ENXIO;
-	}
-
-	setup_transport_handle(ctx_new, hdl_new, opts);
-
-	*ctx = ctx_new;
-	*hdl = hdl_new;
-
-	return 0;
-}
-
 static int open_fallback_chardev(struct libnvme_global_ctx *ctx,
 				 __u32 nsid,
 				 struct libnvme_transport_handle **phdl)
@@ -636,52 +346,6 @@ static int open_fallback_chardev(struct libnvme_global_ctx *ctx,
 	}
 
 	return 0;
-}
-
-int validate_output_format(const char *format, nvme_print_flags_t *flags)
-{
-	nvme_print_flags_t f;
-	nvme_print_flags_t supported_formats = nvme_args.supported_output_formats;
-
-	if (!format)
-		return -EINVAL;
-
-	if (!strcmp(format, "normal"))
-		f = NORMAL;
-#ifdef CONFIG_JSONC
-	else if (!strcmp(format, "json") && (supported_formats & JSON))
-		f = JSON;
-#endif /* CONFIG_JSONC */
-	else if (!strcmp(format, "binary") && (supported_formats & BINARY))
-		f = BINARY;
-	else if (!strcmp(format, "tabular") && (supported_formats & TABULAR))
-		f = TABULAR;
-	else
-		return -EINVAL;
-
-	*flags = f;
-
-	return 0;
-}
-
-bool nvme_is_output_format_normal(void)
-{
-	nvme_print_flags_t flags;
-
-	if (validate_output_format(nvme_args.output_format, &flags))
-		return false;
-
-	return flags == NORMAL;
-}
-
-bool nvme_is_output_format_json(void)
-{
-	nvme_print_flags_t flags;
-
-	if (validate_output_format(nvme_args.output_format, &flags))
-		return false;
-
-	return flags == JSON;
 }
 
 static int get_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
@@ -8895,14 +8559,6 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 	return err;
 }
 
-unsigned long long elapsed_utime(struct timeval start_time,
-					struct timeval end_time)
-{
-	unsigned long long err = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
-		(end_time.tv_usec - start_time.tv_usec);
-	return err;
-}
-
 static int submit_io(int opcode, char *command, const char *desc, int argc, char **argv)
 {
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
@@ -9204,7 +8860,7 @@ static int submit_io(int opcode, char *command, const char *desc, int argc, char
 	err = libnvme_exec_io_passthru(hdl, &cmd);
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
-		nvme_show_result(" latency: %s: %llu us", command, elapsed_utime(start_time, end_time));
+		nvme_show_result(" latency: %s: %llu us", command, shr_elapsed_utime(start_time, end_time));
 	if (err) {
 		nvme_show_err(err, "submit-io");
 		return err;
@@ -10077,7 +9733,7 @@ static int passthru(int argc, char **argv, bool admin,
 	if (cfg.latency)
 		nvme_show_result("%s Command %s latency: %llu us", admin ? "Admin" : "IO",
 		                 strcmp(cmd_name, "Unknown") ? cmd_name : "Vendor Specific",
-		                 elapsed_utime(start_time, end_time));
+		                 shr_elapsed_utime(start_time, end_time));
 
 	if (err) {
 		nvme_show_err(err, __func__);

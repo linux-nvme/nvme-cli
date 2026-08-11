@@ -17,6 +17,8 @@
 
 #include <ccan/array_size/array_size.h>
 
+#include <time-util.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
@@ -1058,7 +1060,7 @@ static int zone_append(int argc, char **argv, struct command *acmd, struct plugi
 	gettimeofday(&end_time, NULL);
 	if (cfg.latency)
 		nvme_show_result(" latency: zone append: %llu us",
-		       elapsed_utime(start_time, end_time));
+		       shr_elapsed_utime(start_time, end_time));
 
 	if (!err)
 		nvme_show_verbose_result("Success appended data to LBA %"PRIx64,

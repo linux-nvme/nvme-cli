@@ -23,3 +23,10 @@ int shr_format_ts(time_t time_ms, char *ts_buf)
 
 	return 0;
 }
+
+unsigned long long shr_elapsed_utime(struct timeval start_time,
+				      struct timeval end_time)
+{
+	return (end_time.tv_sec - start_time.tv_sec) * 1000000 +
+		(end_time.tv_usec - start_time.tv_usec);
+}

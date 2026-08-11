@@ -11,6 +11,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#include "argconfig.h"
+
 typedef uint32_t nvme_print_flags_t;
 
 struct nvme_args {
@@ -81,3 +83,12 @@ enum nvme_print_flags {
 		DEFAULT_OUTPUT_FORMATS,     \
 		DEFAULT_OUTPUT_FORMAT_DESC, \
 		##__VA_ARGS__)
+
+extern const char *uuid_index;
+extern const char *namespace_id_desired;
+
+int parse_args(int argc, char *argv[], const char *desc,
+	       struct argconfig_commandline_options *opts);
+int validate_output_format(const char *format, nvme_print_flags_t *flags);
+bool nvme_is_output_format_normal(void);
+bool nvme_is_output_format_json(void);

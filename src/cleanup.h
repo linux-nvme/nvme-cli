@@ -18,6 +18,12 @@ static inline void cleanup_nvme_global_ctx(struct libnvme_global_ctx **ctx)
 }
 #define __cleanup_nvme_global_ctx __cleanup(cleanup_nvme_global_ctx)
 
+static inline void cleanup_nvme_transport_handle(struct libnvme_transport_handle **hdl)
+{
+	libnvme_close(*hdl);
+}
+#define __cleanup_nvme_transport_handle __cleanup(cleanup_nvme_transport_handle)
+
 static inline void cleanup_nvme_ctrl(libnvme_ctrl_t *__p)
 {
 	libnvme_free_ctrl(*__p);

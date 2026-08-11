@@ -15,6 +15,8 @@
 #include <inttypes.h>
 #include <time.h>
 
+#include <sys/stat.h>
+
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>

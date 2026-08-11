@@ -2,6 +2,7 @@
 #pragma once
 
 #include <inttypes.h>
+#include <string.h>
 
 #include <ccan/list/list.h>
 
@@ -28,6 +29,51 @@ typedef struct nvme_effects_log_node {
 
 void d(unsigned char *buf, int len, int width, int group);
 void d_raw(unsigned char *buf, unsigned len);
+
+enum nvme_cli_topo_ranking {
+	NVME_CLI_TOPO_NAMESPACE,
+	NVME_CLI_TOPO_CTRL,
+	NVME_CLI_TOPO_MULTIPATH,
+};
+
+static inline bool nvme_is_multipath(libnvme_subsystem_t s)
+{
+	libnvme_ns_t n;
+	libnvme_path_t p;
+
+	libnvme_subsystem_for_each_ns(s, n)
+		libnvme_namespace_for_each_path(n, p)
+			return true;
+
+	return false;
+}
+
+static inline bool subsystem_iopolicy_filter(const char *name, void *arg)
+{
+	libnvme_subsystem_t s = arg;
+	const char *iopolicy;
+
+	libnvme_subsystem_get_iopolicy(s, &iopolicy, "");
+
+	if (!strcmp(iopolicy, "queue-depth")) {
+		/* exclude "Nodes" for iopolicy queue-depth */
+		if (!strcmp(name, "Nodes"))
+			return false;
+	} else if (!strcmp(iopolicy, "numa")) {
+		/* exclude "Qdepth" for iopolicy numa */
+		if (!strcmp(name, "Qdepth"))
+			return false;
+	} else { /* round-robin */
+		/* exclude "Nodes" and "Qdepth" for iopolicy round-robin */
+		if (!strcmp(name, "Nodes") || !strcmp(name, "Qdepth"))
+			return false;
+	}
+
+	return true;
+}
+
+int get_reg_size(int offset);
+bool nvme_is_ctrl_reg(int offset);
 
 struct nvme_error_log_filter {
 	bool valid;
