@@ -5,7 +5,6 @@
  *
  * Authors: Martin Belanger <martin.belanger@dell.com>
  */
-#include "common.h"
 #include "config-convert.h"
 #include "config-create.h"
 #include "fabrics.h"

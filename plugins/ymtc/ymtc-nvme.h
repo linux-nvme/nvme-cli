@@ -11,7 +11,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "cmd.h"
-#include "common.h"
 
 PLUGIN(NAME("ymtc", "YMTC vendor specific extensions", NVME_VERSION),
 	COMMAND_LIST(

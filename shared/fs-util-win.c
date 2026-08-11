@@ -93,6 +93,26 @@ bool shr_fd_is_open(int fd)
 	return _get_osfhandle(fd) != -1;
 }
 
+const char *shr_dev_null(void)
+{
+	return "NUL";
+}
+
+int shr_fsync(int fd)
+{
+	if (_commit(fd) < 0)
+		return -errno;
+	return 0;
+}
+
+int shr_getpagesize(void)
+{
+	SYSTEM_INFO si;
+
+	GetSystemInfo(&si);
+	return si.dwPageSize;
+}
+
 char *shr_dirname(char *path)
 {
 	char *end;

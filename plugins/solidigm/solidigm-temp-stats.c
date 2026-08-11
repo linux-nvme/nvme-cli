@@ -7,7 +7,8 @@
 
 #include <errno.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+
 #include "nvme-print.h"
 #include "solidigm-util.h"
 

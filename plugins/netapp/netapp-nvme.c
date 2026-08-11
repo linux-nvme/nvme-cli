@@ -26,7 +26,8 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+
 #include "nvme-cmds.h"
 #include "nvme.h"
 #include "nvme-print.h"

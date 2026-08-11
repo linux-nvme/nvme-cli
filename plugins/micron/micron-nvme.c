@@ -28,7 +28,13 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+#include <ccan/array_size/array_size.h>
+#include <ccan/minmax/minmax.h>
+
+#include <compiler-attributes.h>
+#include <fs-util.h>
+
 #include "nvme-cmds.h"
 #include "nvme-pci-ids.h"
 #include "nvme-print.h"
@@ -489,7 +495,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 	nIndex = strlen(strMainDirName);
 
 	j = 1;
-	while (mkdir(strMainDirName, 0700) < 0) {
+	while (shr_mkdir(strMainDirName, 0700) < 0) {
 		if (errno != EEXIST) {
 			err = -1;
 			goto exit_status;
@@ -501,7 +507,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 
 	if (strOSDirName) {
 		snprintf(strOSDirName, osDirSize, "%s/%s", strMainDirName, "OS");
-		if (mkdir(strOSDirName, 0700) < 0) {
+		if (shr_mkdir(strOSDirName, 0700) < 0) {
 			rmdir(strMainDirName);
 			err = -1;
 			goto exit_status;
@@ -509,7 +515,7 @@ static int SetupDebugDataDirectories(char *strSN, char *strFilePath,
 	}
 	if (strCtrlDirName) {
 		snprintf(strCtrlDirName, ctrlDirSize, "%s/%s", strMainDirName, "Controller");
-		if (mkdir(strCtrlDirName, 0700) < 0) {
+		if (shr_mkdir(strCtrlDirName, 0700) < 0) {
 			if (strOSDirName)
 				rmdir(strOSDirName);
 			rmdir(strMainDirName);

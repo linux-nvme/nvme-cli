@@ -8,7 +8,6 @@
 #pragma once
 
 #include <nvme/types.h>
-#include "common.h"
 
 struct command;
 struct plugin;

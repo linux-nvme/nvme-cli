@@ -13,7 +13,10 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+
+#include <compiler-attributes.h>
+
 #include "nvme.h"
 #include "plugin.h"
 #include "nvme-print.h"

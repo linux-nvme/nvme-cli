@@ -33,15 +33,21 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
+#include <ccan/minmax/minmax.h>
+
+#include <compiler-attributes.h>
+#include <fs-util.h>
+#include <uint128-util.h>
+#include <time-util.h>
+#include <parse-util.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
 #include "plugin.h"
 #include "src/cleanup.h"
-#include "uint128-util.h"
-#include "time-util.h"
-#include "parse-util.h"
 #include "nvme-pci-ids.h"
 
 #define CREATE_CMD
@@ -2209,7 +2215,7 @@ static int wdc_create_log_file(const char *file, const __u8 *drive_log_data,
 		return -1;
 	}
 
-	fd = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	fd = shr_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (fd < 0) {
 		nvme_show_error("ERROR: WDC: open: %s", libnvme_strerror(errno));
 		return -1;
@@ -2233,7 +2239,7 @@ static int wdc_create_log_file(const char *file, const __u8 *drive_log_data,
 		return -1;
 	}
 
-	if (fsync(fd) < 0) {
+	if (shr_fsync(fd) < 0) {
 		nvme_show_error("ERROR: WDC: fsync: %s", libnvme_strerror(errno));
 		close(fd);
 		return -1;
@@ -3269,7 +3275,7 @@ static int wdc_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 		return -EINVAL;
 	}
 
-	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = shr_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("%s: Failed to open output file %s: %s!",
 				__func__, file, libnvme_strerror(errno));
@@ -3320,7 +3326,7 @@ static int wdc_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 		}
 	}
 
-	if (fsync(output) < 0) {
+	if (shr_fsync(output) < 0) {
 		nvme_show_error("ERROR: %s: fsync: %s", __func__, libnvme_strerror(errno));
 		err = -1;
 	}
@@ -3447,7 +3453,7 @@ static int wdc_do_cap_dui_v1(struct libnvme_transport_handle *hdl, char *file, _
 	}
 	memset(dump_data, 0, sizeof(__u8) * xfer_size);
 
-	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = shr_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("%s: Failed to open output file %s: %s!", __func__, file,
 			libnvme_strerror(errno));
@@ -3581,7 +3587,7 @@ static int wdc_do_cap_dui_v2_v3(struct libnvme_transport_handle *hdl, char *file
 	}
 	memset(dump_data, 0, sizeof(__u8) * xfer_size_long);
 
-	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = shr_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("%s: Failed to open output file %s: %s!",
 				__func__, file, libnvme_strerror(errno));
@@ -3722,7 +3728,7 @@ static int wdc_do_cap_dui_v4(struct libnvme_transport_handle *hdl, char *file, _
 	}
 	memset(dump_data, 0, sizeof(__u8) * xfer_size_long);
 
-	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = shr_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("%s: Failed to open output file %s: %s!", __func__, file,
 			libnvme_strerror(errno));
@@ -4164,7 +4170,7 @@ static int dump_internal_logs(struct libnvme_transport_handle *hdl, const char *
 	memset(hdr, 0, bs);
 
 	sprintf(file_path, "%s/telemetry.bin", dir_name);
-	output = nvme_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = shr_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("Failed to open output file %s: %s!", file_path, libnvme_strerror(errno));
 		err = output;
@@ -4331,7 +4337,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 			int verify_file;
 
 			/* verify file name and path is valid before getting dump data */
-			verify_file = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+			verify_file = shr_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 			if (verify_file < 0) {
 				nvme_show_error("ERROR: WDC: open: %s", libnvme_strerror(errno));
 				goto out;
@@ -4445,7 +4451,7 @@ static int wdc_vs_internal_fw_log(int argc, char **argv, struct command *acmd,
 			if (nvme_args.verbose)
 				printf("Creating temp directory...\n");
 
-			ret = mkdir(fb, 0666);
+			ret = shr_mkdir(fb, 0666);
 			if (ret) {
 				nvme_show_error("Failed to create directory!");
 				goto out;
@@ -9680,7 +9686,7 @@ static int wdc_get_max_transfer_len(struct libnvme_transport_handle *hdl, __u32 
 		return -1;
 	}
 
-	maxTransferLenDevice = (1 << ctrl.mdts) * getpagesize();
+	maxTransferLenDevice = (1 << ctrl.mdts) * shr_getpagesize();
 	*maxTransferLen = maxTransferLenDevice;
 
 	return ret;
@@ -10593,7 +10599,7 @@ static int wdc_reason_identifier(int argc, char **argv,
 		int verify_file;
 
 		/* verify the passed in file name and path is valid before getting the dump data */
-		verify_file = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		verify_file = shr_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (verify_file < 0) {
 			nvme_show_error("ERROR: WDC: open: %s", libnvme_strerror(errno));
 			return -1;
@@ -11034,7 +11040,7 @@ static int wdc_save_reason_id(struct libnvme_transport_handle *hdl, __u8 *rsn_id
 
 	/* make the nvmecli dir in /usr/local if it doesn't already exist */
 	if (stat(reason_id_path, &st) == -1) {
-		if (mkdir(reason_id_path, 0700) < 0) {
+		if (shr_mkdir(reason_id_path, 0700) < 0) {
 			nvme_show_error("%s: ERROR: failed to mkdir %s: %s",
 				__func__, reason_id_path, libnvme_strerror(errno));
 			return -1;
@@ -11071,7 +11077,7 @@ static int wdc_clear_reason_id(struct libnvme_transport_handle *hdl)
 		return -ENOMEM;
 
 	/* verify the drive reason id file name and path is valid */
-	verify_file = nvme_open_rawdata(reason_id_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	verify_file = shr_open_rawdata(reason_id_file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (verify_file < 0) {
 		ret = -1;
 		goto free;

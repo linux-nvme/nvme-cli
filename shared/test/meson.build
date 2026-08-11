@@ -227,6 +227,18 @@ test_fs_util = executable(
 
 test('shared - fs-util', test_fs_util)
 
+test_mmio_util = executable(
+    'test-mmio-util',
+    ['test-mmio-util.c'],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        shared_dep,
+    ],
+)
+
+test('shared - mmio-util', test_mmio_util)
+
 if host_system != 'windows'
     test_net_util = executable(
         'test-net-util',

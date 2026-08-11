@@ -8,7 +8,10 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+
+#include <compiler-attributes.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"

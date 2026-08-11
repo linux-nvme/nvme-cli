@@ -10,7 +10,9 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"

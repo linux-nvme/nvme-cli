@@ -8,7 +8,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "common.h"
 #include "nvme-print.h"
 #include "ocp-fw-activation-history.h"
 #include "ocp-nvme.h"

@@ -6,8 +6,10 @@
  */
 
 #include <errno.h>
+
+#include <ccan/endian/endian.h>
+
 #include "nvme-print.h"
-#include "common.h"
 
 int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {

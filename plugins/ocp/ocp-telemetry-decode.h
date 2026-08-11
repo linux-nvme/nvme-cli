@@ -5,10 +5,13 @@
  */
 #pragma once
 
+#include <ccan/array_size/array_size.h>
+#include <compiler-attributes.h>
+
 #include "nvme.h"
 #include "nvme-print.h"
 #include "utils.h"
-#include "common.h"
+
 #include "ocp-nvme.h"
 
 extern __u8 *ptelemetry_buffer;
@@ -1181,7 +1184,6 @@ static inline const char *arg_str(const char * const *strings,
 	return "unrecognized";
 }
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define ARGSTR(s, i) arg_str(s, ARRAY_SIZE(s), i)
 
 static inline const char *telemetry_stat_id_to_string(int stat_id)

@@ -17,7 +17,8 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/array_size/array_size.h>
+
 #include "nvme-print.h"
 #include "micron-utils.h"
 #include "src/cleanup.h"

@@ -7,7 +7,6 @@
 
 #include <string.h>
 
-#include "common.h"
 #include "config.h"
 #include "data-area.h"
 #include "debug-info.h"

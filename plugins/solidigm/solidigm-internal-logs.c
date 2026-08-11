@@ -17,7 +17,12 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+#include <ccan/array_size/array_size.h>
+#include <ccan/minmax/minmax.h>
+
+#include <fs-util.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
@@ -256,7 +261,7 @@ static int ilog_dump_assert_logs(struct libnvme_transport_handle *hdl, struct il
 		 (int) (sizeof(file_path) - sizeof(file_name) - 1),
 		 ilog->cfg->out_dir, file_name) < 0)
 		return -errno;
-	output = nvme_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
+	output = shr_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
 	err = write_header((__u8 *)ad, output, ad->header.header_size * DWORD_SIZE);
@@ -311,7 +316,7 @@ static int ilog_dump_event_logs(struct libnvme_transport_handle *hdl, struct ilo
 		return err;
 	if (asprintf(&file_path, "%s/EventLog.bin", ilog->cfg->out_dir))
 		return -errno;
-	output = nvme_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
+	output = shr_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
 	err = write_header(head_buf, output, INTERNAL_LOG_MAX_BYTE_TRANSFER);
@@ -407,7 +412,7 @@ static int ilog_dump_nlogs(struct libnvme_transport_handle *hdl, struct ilog *il
 			core_num = core < 0 ? nlog_header->corecount : 0;
 			if (!header_size) {
 				if (asprintf(&file_path, "%s/NLog.bin", ilog->cfg->out_dir) >= 0) {
-					output = nvme_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC,
+					output = shr_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC,
 							LOG_FILE_PERMISSION);
 					if (output < 0)
 						return -errno;
@@ -446,7 +451,7 @@ int ensure_dir(const char *parent_dir_name, const char *name)
 		return -errno;
 
 	if (!(stat(file_path, &sb) == 0 && S_ISDIR(sb.st_mode))) {
-		if (mkdir(file_path, 777) != 0) {
+		if (shr_mkdir(file_path, 777) != 0) {
 			nvme_show_perror("%s", file_path);
 			return -errno;
 		}
@@ -474,7 +479,7 @@ static int log_save(struct log *log, const char *parent_dir_name, const char *su
 	if (asprintf(&file_path, "%s/%s/%s", parent_dir_name, subdir_name, file_name) < 0)
 		return -errno;
 
-	output = nvme_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
+	output = shr_open_rawdata(file_path, O_WRONLY | O_CREAT | O_TRUNC, LOG_FILE_PERMISSION);
 	if (output < 0)
 		return -errno;
 
@@ -901,7 +906,7 @@ int solidigm_get_internal_log(int argc, char **argv, struct command *acmd,
 	if (asprintf(&full_folder, "%s/%s", cfg.out_dir, unique_folder) < 0)
 		return -errno;
 
-	if (mkdir(full_folder, 0755) !=  0) {
+	if (shr_mkdir(full_folder, 0755) !=  0) {
 		nvme_show_perror("mkdir");
 		return -errno;
 	}

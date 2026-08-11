@@ -4,7 +4,6 @@
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
-#include "common.h"
 #include "telemetry-log.h"
 #include "nvme-json.h"
 #include "config.h"

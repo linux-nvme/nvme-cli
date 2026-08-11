@@ -14,25 +14,29 @@
 #include <arpa/inet.h>
 #endif
 
-#include <ccan/strset/strset.h>
-#include <ccan/htable/htable_type.h>
-#include <ccan/htable/htable.h>
+#include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
 #include <ccan/hash/hash.h>
+#include <ccan/htable/htable.h>
+#include <ccan/htable/htable_type.h>
+#include <ccan/minmax/minmax.h>
+#include <ccan/strset/strset.h>
 
 #include <libnvme.h>
 #include <libnvme-mi.h>
 
+#include <suffix-util.h>
+#include <uint128-util.h>
+#include <uuid-util.h>
+#include <int-util.h>
+#include <table.h>
+#include <mmio-util.h>
+#include <cleanup.h>
+
 #include "nvme.h"
 #include "nvme-print.h"
 #include "nvme-models.h"
-#include "suffix-util.h"
-#include "uint128-util.h"
-#include "uuid-util.h"
-#include "int-util.h"
-#include "table.h"
-#include "cleanup.h"
 #include "logging.h"
-#include "common.h"
 
 enum simple_list_col {
 	SIMPLE_LIST_COL_NODE,
@@ -1851,8 +1855,8 @@ static void stdout_ctrl_register(int offset, uint64_t value)
 static void stdout_ctrl_register_support(void *bar, bool fabrics, int offset, bool human,
 					 bool support)
 {
-	uint64_t value = nvme_is_64bit_reg(offset) ? mmio_read64(bar + offset) :
-	    mmio_read32(bar + offset);
+	uint64_t value = nvme_is_64bit_reg(offset) ? shr_mmio_read64(bar + offset) :
+	    shr_mmio_read32(bar + offset);
 
 	if (fabrics && value == -1)
 		return;
@@ -1877,11 +1881,11 @@ void stdout_ctrl_registers(void *bar, bool fabrics)
 			continue;
 		switch (offset) {
 		case NVME_REG_CMBLOC:
-			value = mmio_read32(bar + NVME_REG_CMBSZ);
+			value = shr_mmio_read32(bar + NVME_REG_CMBSZ);
 			support = nvme_registers_cmbloc_support(value);
 			break;
 		case NVME_REG_PMRSTS:
-			value = mmio_read32(bar + NVME_REG_PMRCTL);
+			value = shr_mmio_read32(bar + NVME_REG_PMRCTL);
 			support = nvme_registers_pmrctl_ready(value);
 			break;
 		default:

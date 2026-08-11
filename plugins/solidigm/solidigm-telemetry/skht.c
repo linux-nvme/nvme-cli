@@ -5,7 +5,6 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include "common.h"
 #include "telemetry-log.h"
 #include "config.h"
 #include "tracker.h"

@@ -42,9 +42,10 @@
 #include <sys/socket.h>
 #endif
 
-#include <ccan/str/str.h>
-
 #include <libnvme.h>
+
+#include <ccan/endian/endian.h>
+#include <ccan/str/str.h>
 
 #include <io-util.h>
 
@@ -52,7 +53,6 @@
 #include <libkmod.h>
 #endif
 
-#include "common.h"
 #include "config-convert.h"
 #include "nvme.h"
 #include "nvme-print.h"

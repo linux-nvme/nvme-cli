@@ -2,7 +2,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"

@@ -16,7 +16,10 @@
 
 #include <libnvme.h>
 
-#include "common.h"
+#include <ccan/endian/endian.h>
+
+#include <fs-util.h>
+
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme.h"
@@ -103,7 +106,7 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 		return -EINVAL;
 	}
 
-	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = shr_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("%s: Failed to open output file %s: %s!",
 				__func__, file, libnvme_strerror(errno));
@@ -152,7 +155,7 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 		}
 	}
 
-	if (fsync(output) < 0) {
+	if (shr_fsync(output) < 0) {
 		nvme_show_error("ERROR: %s: fsync: %s", __func__, libnvme_strerror(errno));
 		err = -1;
 	}
@@ -305,7 +308,7 @@ static int sndk_do_cap_udui(struct libnvme_transport_handle *hdl, char *file,
 
 	log = (struct nvme_telemetry_log *)realloc(log, chunk_size);
 
-	output = nvme_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	output = shr_open_rawdata(file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	if (output < 0) {
 		nvme_show_error("%s: Failed to open output file %s: %s!", __func__, file,
 			libnvme_strerror(errno));
@@ -454,7 +457,7 @@ static int sndk_vs_internal_fw_log(int argc, char **argv,
 		int verify_file;
 
 		/* verify file name and path is valid before getting dump data */
-		verify_file = nvme_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		verify_file = shr_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (verify_file < 0) {
 			nvme_show_error("ERROR: SNDK: open: %s", libnvme_strerror(errno));
 			goto out;

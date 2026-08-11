@@ -31,8 +31,10 @@
 #include <sys/socket.h>
 #include <asm/types.h>
 
-#include "sig-util.h"
-#include "common.h"
+#include <ccan/minmax/minmax.h>
+
+#include <sig-util.h>
+
 #include "nvme-print.h"
 #include "dashboard.h"
 
