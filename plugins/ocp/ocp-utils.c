@@ -14,7 +14,6 @@
 
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
-#include "types.h"
 
 const unsigned char ocp_uuid[NVME_UUID_LEN] = {
 	0xc1, 0x94, 0xd5, 0x5b, 0xe0, 0x94, 0x47, 0x94, 0xa2, 0x1d,

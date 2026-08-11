@@ -163,6 +163,21 @@ struct set_reg_config {
 	__u32 pmrmscu;
 };
 
+struct nvme_get_log_args {
+	__u32 nsid;
+	bool rae;
+	__u8 lsp;
+	enum nvme_cmd_get_log_lid lid;
+	__u16 lsi;
+	enum nvme_csi csi;
+	bool ot;
+	__u8 uidx;
+	__u64 lpo;
+	void *log;
+	__u32 len;
+	__u64 *result;
+};
+
 static const char nvme_version_string[] = NVME_VERSION;
 
 static struct plugin builtin = {
@@ -2708,8 +2723,9 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 		                 cfg.namespace_id);
 		d(log, cfg.log_len, 16, 1);
 		if (nvme_args.verbose)
-			nvme_show_log(libnvme_transport_handle_get_name(hdl),
-				      &args, VERBOSE);
+			nvme_show_log(libnvme_transport_handle_get_name(hdl), args.lid,
+				      args.nsid, args.lsi, args.lsp, args.log, args.len,
+				      VERBOSE);
 	} else {
 		d_raw((unsigned char *)log, cfg.log_len);
 	}
