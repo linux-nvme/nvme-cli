@@ -167,8 +167,13 @@ static bool name_collect(const char *name, void *arg)
 	struct name_collector *nc = arg;
 
 	if (nc->count == nc->capacity) {
+		const char **tmp;
+
 		nc->capacity = nc->capacity ? nc->capacity * 2 : 16;
-		nc->names = realloc(nc->names, nc->capacity * sizeof(*nc->names));
+		tmp = realloc(nc->names, nc->capacity * sizeof(*nc->names));
+		if (!tmp)
+			return false;
+		nc->names = tmp;
 	}
 
 	nc->names[nc->count++] = name;
