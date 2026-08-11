@@ -200,14 +200,17 @@ int solidigm_get_log_page_directory_log(int argc, char **argv, struct command *a
 	struct lid_dir *lid_dirs[SOLIDIGM_MAX_UUID + 1] = { 0 };
 	struct nvme_id_uuid_list uuid_list = { 0 };
 	struct nvme_supported_log_pages supported = { 0 };
+	struct libnvme_passthru_cmd cmd;
 
 	err = get_supported_log_pages_log(hdl, NO_UUID_INDEX, &supported);
 
 	if (!err) {
 		lid_dirs[NO_UUID_INDEX] = get_standard_lids(&supported);
 
+		nvme_init_identify_uuid_list(&cmd, &uuid_list);
+
 		// Assume VU logs are the Solidigm log pages if UUID not supported.
-		if (!nvme_identify_uuid_list(hdl, &uuid_list)) {
+		if (!libnvme_exec_admin_passthru(hdl, &cmd)) {
 			struct lid_dir *solidigm_lid_dir = get_solidigm_lids(&supported);
 
 			// Transfer supported Solidigm lids to lid directory at UUID index 0

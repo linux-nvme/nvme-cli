@@ -9564,6 +9564,7 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 	__u64 capabilities = 0;
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	__u64 result;
 	int ret = -1;
 
@@ -9621,10 +9622,11 @@ static int wdc_vs_telemetry_controller_option(int argc, char **argv, struct comm
 				WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID,
 				false, 0, &result);
 		} else if (cfg.status) {
-			ret = nvme_get_features_simple(hdl,
+			nvme_init_get_features(&cmd,
 				WDC_VU_DISABLE_CNTLR_TELEMETRY_OPTION_FEATURE_ID,
-				NVME_GET_FEATURES_SEL_CURRENT,
-				&result);
+				NVME_GET_FEATURES_SEL_CURRENT);
+			ret = libnvme_exec_admin_passthru(hdl, &cmd);
+			result = cmd.result;
 			if (!ret) {
 				if (result)
 					nvme_show_error("Controller Option Telemetry Log Page State: Disabled");
@@ -10151,6 +10153,7 @@ static int wdc_do_drive_essentials(struct libnvme_global_ctx *ctx, struct libnvm
 	struct nvme_smart_log smart_log;
 	struct nvme_firmware_slot fw_log;
 	struct WDC_NVME_DE_VU_LOGPAGES *vuLogInput = NULL;
+	struct libnvme_passthru_cmd cmd;
 
 	memset(bufferFolderPath, 0, sizeof(bufferFolderPath));
 	memset(bufferFolderName, 0, sizeof(bufferFolderName));
@@ -10237,7 +10240,10 @@ static int wdc_do_drive_essentials(struct libnvme_global_ctx *ctx, struct libnvm
 	dataBuffer = calloc(1, elogBufferSize);
 	elogBuffer = (struct nvme_error_log_page *)dataBuffer;
 
-	ret = nvme_get_log_error(hdl, NVME_NSID_ALL, elogNumEntries, elogBuffer);
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_ERROR,
+		NVME_CSI_NVM, elogBuffer, elogBufferSize);
+
+	ret = libnvme_get_log(hdl, &cmd, false, elogBufferSize);
 	if (ret) {
 		nvme_show_error("ERROR: WDC: nvme_error_log() failed, ret = %d", ret);
 	} else {
@@ -10262,7 +10268,10 @@ static int wdc_do_drive_essentials(struct libnvme_global_ctx *ctx, struct libnvm
 
 	/* Get FW Slot log page */
 	memset(&fw_log, 0, sizeof(struct nvme_firmware_slot));
-	ret = nvme_get_log_fw_slot(hdl, false, &fw_log);
+	nvme_init_get_log(&cmd, false, NVME_LOG_LID_FW_SLOT,
+		NVME_CSI_NVM, &fw_log, sizeof(fw_log));
+
+	ret = libnvme_get_log(hdl, &cmd, false, sizeof(fw_log));
 	if (ret) {
 		nvme_show_error("ERROR: WDC: nvme_fw_log() failed, ret = %d", ret);
 	} else {
@@ -11104,7 +11113,11 @@ static int wdc_dump_telemetry_hdr(struct libnvme_transport_handle *hdl, int log_
 
 		ret = libnvme_get_log(hdl, &cmd, false, sizeof(*log_hdr));
 	} else {
-		ret = nvme_get_log_telemetry_ctrl(hdl, false, 0, (void *)log_hdr, 512);
+		struct libnvme_passthru_cmd cmd;
+
+		nvme_init_get_log_telemetry_ctrl(&cmd, 0, (void *)log_hdr, 512);
+
+		ret = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, 512);
 	}
 
 	if (ret < 0) {
@@ -12055,8 +12068,9 @@ static int wdc_vs_temperature_stats(int argc, char **argv,
 	temperature = ((smart_log.temperature[1] << 8) | smart_log.temperature[0]) - 273;
 
 	/* retrieve HCTM Thermal Management Temperatures */
-	nvme_get_features_simple(hdl, 0x10,
-		NVME_GET_FEATURES_SEL_CURRENT, &hctm_tmt);
+	nvme_init_get_features(&cmd, 0x10, NVME_GET_FEATURES_SEL_CURRENT);
+	libnvme_exec_admin_passthru(hdl, &cmd);
+	hctm_tmt = cmd.result;
 	temp_tmt1 = ((hctm_tmt >> 16) & 0xffff) ? ((hctm_tmt >> 16) & 0xffff) - 273 : 0;
 	temp_tmt2 = (hctm_tmt & 0xffff) ? (hctm_tmt & 0xffff) - 273 : 0;
 

@@ -32,11 +32,14 @@ int sldgm_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index)
 int sldgm_get_uuid_index(struct libnvme_transport_handle *hdl, __u8 *index)
 {
 	struct nvme_id_uuid_list uuid_list;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	*index = 0;
 
-	err = nvme_identify_uuid_list(hdl, &uuid_list);
+	nvme_init_identify_uuid_list(&cmd, &uuid_list);
+
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 

@@ -1279,12 +1279,13 @@ static int get_telemetry_log_page_data(struct libnvme_transport_handle *hdl,
 		 * nvme_get_log_telemetry methods read the log in the largest
 		 * successful chunks, filling the entire specified length.
 		 */
-		if (tele_type == TELEMETRY_TYPE_HOST)
-			err = nvme_get_log_telemetry_host(hdl, offset,
-							  telemetry_log, len);
-		else
-			err = nvme_get_log_telemetry_ctrl(hdl, false, offset,
-							  telemetry_log, len);
+		if (tele_type == TELEMETRY_TYPE_HOST) {
+			nvme_init_get_log_telemetry_host(&cmd, offset, telemetry_log, len);
+			err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, len);
+		} else {
+			nvme_init_get_log_telemetry_ctrl(&cmd, offset, telemetry_log, len);
+			err = libnvme_get_log_dynamic_chunk(hdl, &cmd, false, len);
+		}
 		if (err < 0) {
 			nvme_show_error("Failed to fetch the log from drive.");
 			break;
