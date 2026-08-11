@@ -130,7 +130,8 @@ static bool dir_is_writable(const char *dir)
 	if (!f)
 		return false;
 	fclose(f);
-	remove(path);
+	if (remove(path))
+		return false;
 
 	return true;
 }
