@@ -173,18 +173,18 @@ bool wdc_CheckUuidListSupport(struct libnvme_transport_handle *hdl,
 			      struct nvme_id_uuid_list *uuid_list)
 {
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error("ERROR: WDC: nvme_identify_ctrl() failed 0x%x", err);
 		return false;
 	}
 
 	if ((ctrl.ctratt & NVME_CTRL_CTRATT_UUID_LIST) == NVME_CTRL_CTRATT_UUID_LIST) {
-		struct libnvme_passthru_cmd cmd;
-
 		nvme_init_identify_uuid_list(&cmd, uuid_list);
 
 		err = libnvme_exec_admin_passthru(hdl, &cmd);

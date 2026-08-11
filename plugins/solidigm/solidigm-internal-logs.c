@@ -224,9 +224,11 @@ static int read_header(struct libnvme_passthru_cmd *cmd, struct libnvme_transpor
 static int get_serial_number(char *str, struct libnvme_transport_handle *hdl)
 {
 	struct nvme_id_ctrl ctrl = {0};
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 

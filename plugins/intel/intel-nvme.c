@@ -1295,9 +1295,11 @@ static int read_header(struct libnvme_passthru_cmd *cmd, __u8 *buf,
 static int setup_file(char *f, char *file, struct libnvme_transport_handle *hdl, int type)
 {
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 	int err = 0, i = sizeof(ctrl.sn) - 1;
 
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err)
 		return err;
 

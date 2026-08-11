@@ -982,7 +982,10 @@ static int sfx_set_feature(int argc, char **argv, struct command *acmd, struct p
 
 	if (cfg.feature_id == SFX_FEAT_ATOMIC && cfg.value) {
 		if (cfg.namespace_id != NVME_NSID_ALL) {
-			err = nvme_identify_ns(hdl, cfg.namespace_id, &ns);
+			struct libnvme_passthru_cmd cmd;
+
+			nvme_init_identify_ns(&cmd, cfg.namespace_id, &ns);
+			err = libnvme_exec_admin_passthru(hdl, &cmd);
 			if (err) {
 				nvme_show_err(err, "identify-namespace");
 						return err;
@@ -1560,6 +1563,7 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
 	struct nvme_id_ctrl id_ctrl = { 0 };
+	struct libnvme_passthru_cmd cmd;
 	struct extended_health_info_myrtle sfx_smart = { 0 };
 	struct nvme_smart_log smart_log = { 0 };
 	struct nvme_additional_smart_log additional_smart_log = { 0 };
@@ -1819,7 +1823,8 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 		snprintf(pcie_status, 9, "%s", "Unknown");
 
 	//Populate id-ctrl
-	err = nvme_identify_ctrl(hdl, &id_ctrl);
+	nvme_init_identify_ctrl(&cmd, &id_ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error("Unable to read nvme_identify_ctrl() error code:%x", err);
 		return err;

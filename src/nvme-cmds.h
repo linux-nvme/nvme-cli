@@ -13,55 +13,6 @@
 #include <nvme/nvme-cmds.h>
 
 /**
- * nvme_identify_ctrl() - Submit an Identify Controller command
- * @hdl:	Transport handle for the controller.
- * @id:		Pointer to the buffer (&struct nvme_id_ctrl) where the
- *		controller identification data will be stored upon
- *		successful completion.
- *
- * Submits the Identify Controller command to retrieve the controller's
- * capabilities and configuration data.
- *
- * Return: 0 on success, the NVMe command status on error, or a negative
- * errno otherwise.
- */
-static inline int
-nvme_identify_ctrl(struct libnvme_transport_handle *hdl,
-		struct nvme_id_ctrl *id)
-{
-	struct libnvme_passthru_cmd cmd;
-
-	nvme_init_identify_ctrl(&cmd, id);
-
-	return libnvme_exec_admin_passthru(hdl, &cmd);
-}
-
-/**
- * nvme_identify_ns() - Submit an Identify Namespace command
- * @hdl:	Transport handle for the controller.
- * @nsid:	The Namespace ID to identify.
- * @ns:		Pointer to the buffer (&struct nvme_id_ns) where the namespace
- *		identification data will be stored.
- *
- * Submits the Identify command to retrieve the Namespace Identification
- * data structure for a specified namespace.
- *
- * Return: 0 on success, the NVMe command status on error, or a negative
- * errno otherwise.
- */
-
-static inline int
-nvme_identify_ns(struct libnvme_transport_handle *hdl,
-		__u32 nsid, struct nvme_id_ns *ns)
-{
-	struct libnvme_passthru_cmd cmd;
-
-	nvme_init_identify_ns(&cmd, nsid, ns);
-
-	return libnvme_exec_admin_passthru(hdl, &cmd);
-}
-
-/**
  * nvme_get_log_simple() - Retrieve a log page using default parameters
  * @hdl:	Transport handle for the controller.
  * @lid:	Log Identifier, specifying the log page to retrieve

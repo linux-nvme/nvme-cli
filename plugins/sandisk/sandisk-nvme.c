@@ -48,11 +48,13 @@ static int sndk_do_cap_telemetry_log(struct libnvme_global_ctx *ctx,
 	__u8 *data_ptr = NULL;
 	int data_written = 0, data_remaining = 0;
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 	__u64 capabilities = 0;
 	bool host_behavior_changed = false;
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error("ERROR: WDC: nvme_identify_ctrl() failed 0x%x", err);
 		return err;
@@ -357,10 +359,12 @@ static int sndk_get_default_telemetry_da(struct libnvme_transport_handle *hdl,
 					 int *data_area)
 {
 	struct nvme_id_ctrl ctrl;
+	struct libnvme_passthru_cmd cmd;
 	int err;
 
 	memset(&ctrl, 0, sizeof(struct nvme_id_ctrl));
-	err = nvme_identify_ctrl(hdl, &ctrl);
+	nvme_init_identify_ctrl(&cmd, &ctrl);
+	err = libnvme_exec_admin_passthru(hdl, &cmd);
 	if (err) {
 		nvme_show_error("ERROR: SNDK: nvme_identify_ctrl() failed 0x%x", err);
 		return err;
