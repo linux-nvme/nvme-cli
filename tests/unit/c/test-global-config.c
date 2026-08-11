@@ -20,6 +20,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "fs-util.h"
+
 #include "../src/global-config.h"
 #include "../src/args.h"
 
@@ -30,13 +32,19 @@ struct nvme_args nvme_args = {
 	.supported_output_formats = NORMAL,
 };
 
+/*
+ * The throwaway .conf files land in the current directory, which meson
+ * sets to the build directory. A relative template keeps this off "/tmp",
+ * which isn't a usable temp directory on Windows.
+ */
 static char *write_temp(const char *content)
 {
-	char *path = strdup("/tmp/nvme-cli-conf-test-XXXXXX");
+	char *path = strdup("nvme-cli-conf-test-XXXXXX");
 	int fd;
 
 	shr_assert(path);
-	fd = mkstemp(path);
+
+	fd = shr_mkstemp(path);
 	shr_assert(fd >= 0);
 	shr_assert(write(fd, content, strlen(content)) == (ssize_t)strlen(content));
 	close(fd);
