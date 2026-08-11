@@ -33,7 +33,6 @@
 #include <mmio-util.h>
 #include <cleanup.h>
 
-#include "nvme.h"
 #include "nvme-print.h"
 #include "nvme-models.h"
 #include "logging.h"

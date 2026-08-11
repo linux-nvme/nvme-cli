@@ -6,7 +6,8 @@
  */
 
 #include <stdio.h>
-#include "nvme.h"
+#include "args.h"
+#include "plugin.h"
 
 int sldgm_ocp_version(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {

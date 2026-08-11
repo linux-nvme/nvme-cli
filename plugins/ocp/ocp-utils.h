@@ -4,7 +4,9 @@
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
-#include "nvme.h"
+#include <stdbool.h>
+
+#include <libnvme.h>
 
 /*
  * UUID assigned for OCP.

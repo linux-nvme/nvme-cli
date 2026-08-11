@@ -17,6 +17,7 @@
 #include "nvme-print.h"
 #include "argconfig.h"
 #include "cleanup.h"
+#include "global-ctx.h"
 
 struct reload_ctx {
 	struct libnvmf_config_emitter *emitter;

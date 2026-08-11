@@ -18,7 +18,6 @@
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "nvme.h"
 
 #include "sandisk-utils.h"
 #include "plugins/wdc/wdc-nvme-cmds.h"

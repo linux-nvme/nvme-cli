@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include "plugin.h"
+
 #include <libnvme.h>
 
 #include <compiler-attributes.h>

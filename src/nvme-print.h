@@ -6,7 +6,8 @@
 
 #include <ccan/list/list.h>
 
-#include "nvme.h"
+#include "args.h"
+#include "nvme-json.h"
 #include "table.h"
 #include "uint128-util.h"
 #include "int-util.h"

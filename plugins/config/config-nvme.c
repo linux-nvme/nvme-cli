@@ -8,7 +8,7 @@
 #include "config-convert.h"
 #include "config-create.h"
 #include "fabrics.h"
-#include "nvme.h"
+#include "plugin.h"
 
 #define CREATE_CMD
 #include "config-nvme.h"

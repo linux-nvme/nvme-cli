@@ -6,8 +6,11 @@
 #include <ccan/endian/endian.h>
 
 #include "nvme-cmds.h"
+#include <libnvme.h>
+
 #include "nvme-print.h"
-#include "nvme.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "plugin.h"
 
 #define CREATE_CMD

@@ -13,7 +13,8 @@
 
 #include <libnvme.h>
 
-#include "nvme.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "plugin.h"
 #include "nvme-print.h"
 #include "solidigm-telemetry.h"

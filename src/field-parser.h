@@ -9,6 +9,8 @@
 
 #include <compiler-attributes.h>
 
+#include <libnvme.h>
+
 #include "nvme-print.h"
 
 /*Request data format*/

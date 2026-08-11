@@ -33,7 +33,8 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/minmax/minmax.h>
 
-#include "nvme.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "nvme-print.h"
 #include "logging.h"
 #include "dashboard.h"

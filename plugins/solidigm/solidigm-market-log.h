@@ -5,4 +5,8 @@
  * Author: hardeep.dhillon@solidigm.com
  */
 
+#pragma once
+
+#include "plugin.h"
+
 int sldgm_get_market_log(int argc, char **argv, struct command *acmd, struct plugin *plugin);

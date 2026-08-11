@@ -24,7 +24,7 @@
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "nvme.h"
+#include "global-ctx.h"
 #include "plugin.h"
 #include "src/cleanup.h"
 #include "int-util.h"

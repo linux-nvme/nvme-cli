@@ -8,7 +8,9 @@
 #include <libnvme.h>
 
 #include "nvme-print.h"
-#include "nvme.h"
+#include "plugin.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "fabrics.h"
 #include "logging.h"
 

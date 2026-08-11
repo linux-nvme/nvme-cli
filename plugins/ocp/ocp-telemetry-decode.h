@@ -8,7 +8,8 @@
 #include <ccan/array_size/array_size.h>
 #include <compiler-attributes.h>
 
-#include "nvme.h"
+#include <libnvme.h>
+
 #include "nvme-print.h"
 #include "field-parser.h"
 

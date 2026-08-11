@@ -5,4 +5,8 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
+#pragma once
+
+#include "plugin.h"
+
 int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plugin *plugin);

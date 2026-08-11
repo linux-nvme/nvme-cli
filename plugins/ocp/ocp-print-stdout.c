@@ -7,6 +7,8 @@
 #include <uint128-util.h>
 #include <uuid-util.h>
 
+#include <libnvme.h>
+
 #include "nvme-print.h"
 
 #include "ocp-print.h"

@@ -9,7 +9,12 @@
 #include <errno.h>
 #include <stdio.h>
 
+#include <libnvme.h>
+
 #include "nvme-print.h"
+#include "plugin.h"
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "ocp-nvme.h"
 #include "ocp-print.h"
 #include "ocp-smart-extended-log.h"
