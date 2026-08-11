@@ -3379,17 +3379,20 @@ static int get_common_log(struct libnvme_transport_handle *hdl, uint8_t id, uint
 		}
 		memcpy(buffer, (uint8_t *)&hdr, sizeof(hdr));
 	} else if (hdr.log_size < hdr.max_size) {
-		buffer = (uint8_t *)libnvme_alloc(sizeof(hdr) + hdr.log_size);
+		/* log_size includes the header, so the payload is the remainder */
+		uint32_t payload = hdr.log_size - sizeof(hdr);
+
+		buffer = (uint8_t *)libnvme_alloc(hdr.log_size);
 		if (!buffer) {
-			nvme_show_error("malloc of %zu bytes failed for log: 0x%X",
-				hdr.log_size + sizeof(hdr), id);
+			nvme_show_error("malloc of %u bytes failed for log: 0x%X",
+				hdr.log_size, id);
 			return -ENOMEM;
 		}
 		memcpy(buffer, &hdr, sizeof(hdr));
-		ret = nvme_get_log_lpo(hdl, id, sizeof(hdr), chunk, hdr.log_size,
+		ret = nvme_get_log_lpo(hdl, id, sizeof(hdr), chunk, payload,
 					   buffer + sizeof(hdr));
 		if (!ret)
-			log_size += hdr.log_size;
+			log_size += payload;
 	} else if (hdr.log_size >= hdr.max_size) {
 		/*
 		 * reached maximum, to maintain, sequence we need to depend on write
