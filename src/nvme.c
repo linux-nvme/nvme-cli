@@ -8220,9 +8220,42 @@ static int gen_dhchap_key(int argc, char **argv, struct command *acmd, struct pl
 	return forward_to_keys_plugin("gen-dhchap-key", "gen-kxchap", nargs, args);
 }
 
+/*
+ * 2.x took the secret in --key/-k, which the command this forwards to
+ * gives to --keyring. Take the 2.x option here and pass it as --keydata.
+ */
 static int check_dhchap_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
-	return forward_to_keys_plugin("check-dhchap-key", "check-kxchap", argc, argv);
+	const char *desc =
+	    "Check a KX-HMAC-CHAP host secret for usability for NVMe In-Band Authentication.\n"
+	    "Deprecated; use 'nvme keys check-kxchap' instead.";
+	const char *key =
+	    "KX-HMAC-CHAP secret (in DHHC-1 interchange format) to be validated. Reads from stdin if not given.";
+
+	char *args[4] = { argv[0] };
+	int nargs = 1, err;
+
+	struct config {
+		char	*key;
+	};
+
+	struct config cfg = {
+		.key	= NULL,
+	};
+
+	NVME_ARGS(opts,
+		  OPT_STR("key", 'k', &cfg.key, key));
+
+	err = argconfig_parse(argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	if (argconfig_parse_seen(opts, "key")) {
+		args[nargs++] = "--keydata";
+		args[nargs++] = cfg.key;
+	}
+
+	return forward_to_keys_plugin("check-dhchap-key", "check-kxchap", nargs, args);
 }
 
 static int gen_tls_key(int argc, char **argv, struct command *acmd, struct plugin *plugin)
