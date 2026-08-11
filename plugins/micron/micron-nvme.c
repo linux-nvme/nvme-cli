@@ -1840,7 +1840,7 @@ static int micron_nand_stats(int argc, char **argv,
 		nsze = ((ctrl.oacs >> 3) & 0x1);
 
 	if (has_fb_log) {
-		__u8 spec = (eModel == M5410) ? 0 : 1;	/* FB spec version */
+		__u8 spec = 1; /* FB spec version */
 
 		print_nand_stats_fb((__u8 *)logFB, (__u8 *)extSmartLog, nsze, is_json, spec);
 		err = 0;
