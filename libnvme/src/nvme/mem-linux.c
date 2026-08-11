@@ -99,10 +99,12 @@ __shr_public void *libnvme_alloc_huge(size_t len,
 
 	memset(mh->p, 0, mh->len);
 
-	if (madvise(mh->p, mh->len, MADV_HUGEPAGE) < 0) {
-		libnvme_free_huge(mh);
-		return NULL;
-	}
+	/*
+	 * MADV_HUGEPAGE is advisory. Keep the aligned allocation when
+	 * transparent huge pages are unavailable. Let the I/O path try to map
+	 * the buffer.
+	 */
+	madvise(mh->p, mh->len, MADV_HUGEPAGE);
 
 	return mh->p;
 }

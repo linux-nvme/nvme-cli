@@ -130,6 +130,20 @@ uuid = executable(
 
 test('libnvme - uuid', uuid)
 
+if host_system == 'linux' and (not meson.is_cross_build())
+    mem = executable(
+        'test-mem',
+        ['mem.c'],
+        dependencies: [
+            config_dep,
+            ccan_dep,
+            libnvme_dep,
+        ],
+    )
+
+    test('libnvme - mem', mem)
+endif
+
 tree = executable(
     'test-tree',
     ['tree.c'],
