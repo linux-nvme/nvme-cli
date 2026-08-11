@@ -347,6 +347,7 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 #endif /* CONFIG_JSONC */
 	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
 	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
 	nvme_print_flags_t flags;
 	struct config {
 		__u32 namespace_id;
@@ -374,8 +375,9 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 		return err;
 	}
 
-	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, 0xca,
-				(void *)&smart_log, sizeof(smart_log));
+	nvme_init_get_log(&cmd, cfg.namespace_id, 0xca, NVME_CSI_NVM,
+			  (void *)&smart_log, sizeof(smart_log));
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (!err) {
 		if (flags & JSON || cfg.json)
 			show_sfx_smart_log_jsn(&smart_log, cfg.namespace_id,
@@ -1876,8 +1878,9 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	}
 
 	//Populate Additional SMART log (0xCA)
-	err = nvme_get_nsid_log(hdl, NVME_NSID_ALL, false, 0xca, (void *)&additional_smart_log,
-							sizeof(struct nvme_additional_smart_log));
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, 0xca, NVME_CSI_NVM, (void *)&additional_smart_log,
+			  sizeof(struct nvme_additional_smart_log));
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err) {
 		nvme_show_err(err, "Could not read ScaleFlux SMART log");
 		return err;

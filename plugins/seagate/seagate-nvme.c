@@ -1575,8 +1575,9 @@ static int get_host_tele(int argc, char **argv, struct command *acmd, struct plu
 
 	dump_fd = STDOUT_FILENO;
 	cfg.log_id = (cfg.log_id << 8) | 0x07;
-	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, cfg.log_id,
-				(void *)(&tele_log), sizeof(tele_log));
+	nvme_init_get_log(&cmd, cfg.namespace_id, cfg.log_id, NVME_CSI_NVM,
+			  (void *)(&tele_log), sizeof(tele_log));
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
@@ -1679,8 +1680,9 @@ static int get_ctrl_tele(int argc, char **argv, struct command *acmd, struct plu
 	dump_fd = STDOUT_FILENO;
 
 	log_id = 0x08;
-	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, log_id,
-				(void *)(&tele_log), sizeof(tele_log));
+	nvme_init_get_log(&cmd, cfg.namespace_id, log_id, NVME_CSI_NVM,
+			  (void *)(&tele_log), sizeof(tele_log));
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;
@@ -1798,8 +1800,9 @@ static int vs_internal_log(int argc, char **argv, struct command *acmd, struct p
 	}
 
 	log_id = 0x08;
-	err = nvme_get_nsid_log(hdl, cfg.namespace_id, false, log_id,
-				(void *)(&tele_log), sizeof(tele_log));
+	nvme_init_get_log(&cmd, cfg.namespace_id, log_id, NVME_CSI_NVM,
+			  (void *)(&tele_log), sizeof(tele_log));
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (!err) {
 		maxBlk = tele_log.tele_data_area3;
 		offset += 512;

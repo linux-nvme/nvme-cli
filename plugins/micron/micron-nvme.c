@@ -2182,7 +2182,7 @@ static void GetGenericLogs(struct libnvme_transport_handle *hdl, const char *dir
 			  "drive_self_test.bin", "self test log");
 
 	/* get fw slot info log */
-	nvme_init_get_log(&cmd, false, NVME_LOG_LID_FW_SLOT,
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_FW_SLOT,
 		NVME_CSI_NVM, &fw_log, sizeof(fw_log));
 	if (!libnvme_get_log(hdl, &cmd, false, sizeof(fw_log)))
 		WriteData((__u8 *)&fw_log, sizeof(fw_log), dir,

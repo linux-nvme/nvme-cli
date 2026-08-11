@@ -695,6 +695,7 @@ static int ilog_dump_log_page(struct libnvme_transport_handle *hdl, struct ilog 
 {
 	__u8 *buff = lp->buffer;
 	__cleanup_free char *filename = NULL;
+	struct libnvme_passthru_cmd cmd;
 
 	int err;
 	if (!lp->buffer_size)
@@ -704,7 +705,8 @@ static int ilog_dump_log_page(struct libnvme_transport_handle *hdl, struct ilog 
 		if (!buff)
 			return -ENOMEM;
 	}
-	err = nvme_get_nsid_log(hdl, 0, 0, lp->id, buff, lp->buffer_size);
+	nvme_init_get_log(&cmd, 0, lp->id, NVME_CSI_NVM, buff, lp->buffer_size);
+	err = libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 	if (err)
 		return err;
 
