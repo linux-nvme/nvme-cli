@@ -62,3 +62,17 @@ int nvme_config_convert_auto(struct libnvme_global_ctx *ctx,
  * existing target unless --force is used.
  */
 int nvme_config_convert(const char *desc, int argc, char **argv);
+
+/*
+ * Implement the "nvme config-status" command.
+ *
+ * Report, for each of the default legacy config.json and discovery.conf
+ * locations that has something to report, whether the file has never
+ * been converted, was converted (a "*.converted" marker next to it
+ * resolves, see mark_converted() in config-convert.c), or is gone but
+ * left behind a dangling marker. A location with neither the file nor a
+ * marker present is silently skipped; if that is true of both
+ * locations, a single summary line is printed instead. Purely
+ * informational: never modifies or converts anything.
+ */
+int nvme_config_status(const char *desc, int argc, char **argv);

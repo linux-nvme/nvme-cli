@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <libnvme.h>
@@ -630,4 +631,79 @@ out:
 	libnvmf_config_emit_free(emitter);
 
 	return ret;
+}
+
+/*
+ * Report @path's legacy-conversion state in one line, if there is
+ * anything to report. Returns false, printing nothing, when neither
+ * @path nor its marker exists.
+ *
+ * The "*.converted" marker (see mark_converted()) is a symlink whose
+ * target is @path itself, so whether it resolves is not independent
+ * information from whether @path exists -- it is the same fact observed
+ * two ways. That leaves four real states: no file and no marker; a file
+ * not yet converted; a converted file (marker resolves, @path exists by
+ * construction); and a dangling marker left over after @path was removed
+ * post-conversion (@path absent by construction).
+ */
+static bool report_legacy_status(const char *path)
+{
+	__cleanup_free char *marker = NULL;
+	struct stat sb;
+	bool file_exists;
+	bool marker_present;
+
+	if (asprintf(&marker, "%s.converted", path) < 0)
+		return false;
+
+	file_exists = !access(path, F_OK);
+	marker_present = !lstat(marker, &sb);
+
+	if (!marker_present) {
+		if (!file_exists)
+			return false;
+
+		nvme_show_result("%s: present, not yet converted", path);
+		return true;
+	}
+
+	if (!file_exists) {
+		nvme_show_result(
+			"%s: not present (a stale %s marker exists -- safe to delete)",
+			path, marker);
+		return true;
+	}
+
+	nvme_show_result(
+		"%s: present, already converted (%s exists) -- delete both once rollback is no longer a concern",
+		path, marker);
+	nvme_show_result(
+		"note: if %s was replaced after conversion (for example, a package rollback followed by reinstall), this marker may be stale; verify its contents against the INI configuration before deleting either file",
+		path);
+
+	return true;
+}
+
+int nvme_config_status(const char *desc, int argc, char **argv)
+{
+	OPT_ARGS(opts) = {
+		OPT_END()
+	};
+	bool json_found, disc_found;
+	int ret;
+
+	ret = parse_args(argc, argv, desc, opts);
+	if (ret)
+		return ret;
+
+	json_found = report_legacy_status(PATH_NVMF_CONFIG);
+	disc_found = report_legacy_status(PATH_NVMF_DISC);
+
+	if (!json_found && !disc_found) {
+		nvme_show_result(
+			"no legacy configuration found; nothing to convert");
+		return 0;
+	}
+
+	return 1;
 }

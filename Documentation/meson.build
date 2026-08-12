@@ -18,6 +18,7 @@ adoc_sources_man1 = [
     'nvme-config-convert',
     'nvme-config-create',
     'nvme-config-show',
+    'nvme-config-status',
     'nvme-config-validate',
     'nvme-connect',
     'nvme-connect-all',

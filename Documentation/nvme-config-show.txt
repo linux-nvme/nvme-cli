@@ -71,6 +71,7 @@ SEE ALSO
 --------
 nvme-config-validate(1)
 nvme-config-convert(1)
+nvme-config-status(1)
 nvme-connect-all(1)
 nvme-discover(1)
 https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
