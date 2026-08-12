@@ -272,6 +272,20 @@ if want_fabrics
     )
 
     test('libnvme - psk', psk)
+
+    if openssl_dep.found()
+        raw_secret = executable(
+            'test-raw-secret',
+            ['raw-secret.c'],
+            dependencies: [
+                config_dep,
+                ccan_dep,
+                libnvme_dep,
+            ],
+        )
+
+        test('libnvme - raw-secret', raw_secret)
+    endif
 endif
 
 if want_fabrics

@@ -39,6 +39,7 @@
 
 #include <base64.h>
 #include <crc32.h>
+#include <hex-util.h>
 #include <compiler-attributes.h>
 
 #include <libnvme.h>
@@ -725,7 +726,6 @@ __shr_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 {
 	__cleanup_free unsigned char *buf = NULL;
 	int secret_len = 0, i, err;
-	unsigned int c;
 
 	if (key_len != 32 && key_len != 48 && key_len != 64) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR, "Invalid key length %ld", key_len);
@@ -758,7 +758,10 @@ __shr_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 	}
 
 	for (i = 0; i < strlen(secret); i += 2) {
-		if (sscanf(&secret[i], "%02x", &c) != 1) {
+		int hi = shr_hex_to_int(secret[i]);
+		int lo = shr_hex_to_int(secret[i + 1]);
+
+		if (hi < 0 || lo < 0) {
 			libnvme_msg(ctx, LIBNVME_LOG_ERR,
 				"Invalid secret '%s'", secret);
 			return -EINVAL;
@@ -768,7 +771,7 @@ __shr_public int libnvmf_create_raw_secret(struct libnvme_global_ctx *ctx,
 				"Skipping excess secret bytes\n");
 			break;
 		}
-		buf[secret_len++] = (unsigned char)c;
+		buf[secret_len++] = (unsigned char)(hi << 4 | lo);
 	}
 	if (secret_len != key_len) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
