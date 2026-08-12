@@ -80,8 +80,10 @@ COMMAND_LIST(
 	ENTRY("set-property", "Set a property and show the resulting value", set_property)
 	ENTRY("get-property", "Get a property and show the resulting value", get_property)
 	ENTRY("format", "Format namespace with new block format", format_cmd)
-	ENTRY("fw-commit", "Verify and commit firmware to a specific slot (fw-activate in old version < 1.2)", fw_commit, "fw-activate")
-	ENTRY("fw-download", "Download new firmware", fw_download)
+#ifdef CONFIG_DEPRECATED_CMDS
+	ENTRY_DEPRECATED("fw-commit", "Verify and commit firmware to a specific slot (fw-activate in old version < 1.2) (deprecated, use 'nvme fw commit')", fw_commit, "fw-activate")
+	ENTRY_DEPRECATED("fw-download", "Download new firmware (deprecated, use 'nvme fw download')", fw_download)
+#endif /* CONFIG_DEPRECATED_CMDS */
 	ENTRY("admin-passthru", "Submit an arbitrary admin command, return results", admin_passthru)
 	ENTRY("io-passthru", "Submit an arbitrary IO command, return results", io_passthru)
 #ifdef CONFIG_DEPRECATED_CMDS
