@@ -135,8 +135,10 @@ COMMAND_LIST(
 	ENTRY_DEPRECATED("tls-key", "Manage NVMeoF TLS PSKs (deprecated, use 'nvme keys import/export/revoke')", tls_key)
 #endif /* CONFIG_DEPRECATED_CMDS */
 #endif /* CONFIG_FABRICS */
-	ENTRY("dir-receive", "Submit a Directive Receive command, return results", dir_receive)
-	ENTRY("dir-send", "Submit a Directive Send command, return results", dir_send)
+#ifdef CONFIG_DEPRECATED_CMDS
+	ENTRY_DEPRECATED("dir-receive", "Submit a Directive Receive command, return results (deprecated, use 'nvme dir receive')", dir_receive)
+	ENTRY_DEPRECATED("dir-send", "Submit a Directive Send command, return results (deprecated, use 'nvme dir send')", dir_send)
+#endif /* CONFIG_DEPRECATED_CMDS */
 	ENTRY("virt-mgmt", "Manage Flexible Resources between Primary and Secondary Controller", virtual_mgmt)
 	ENTRY("rpmb", "Replay Protection Memory Block commands", rpmb_cmd)
 	ENTRY("lockdown", "Submit a Lockdown command,return result", lockdown_cmd)

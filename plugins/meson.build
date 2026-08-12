@@ -6,6 +6,7 @@ all_plugins = {
   'dapustor': ['plugins/dapustor/dapustor-nvme.c'],
   'dell': ['plugins/dell/dell-nvme.c'],
   'dera': ['plugins/dera/dera-nvme.c'],
+  'dir': ['plugins/dir/dir-plugin.c'],
   'fdp': ['plugins/fdp/fdp.c'],
   'ibm': ['plugins/ibm/ibm-nvme.c'],
   'id': ['plugins/id/id-plugin.c'],
