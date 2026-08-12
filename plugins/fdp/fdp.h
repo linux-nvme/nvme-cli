@@ -7,7 +7,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("fdp", "Manage Flexible Data Placement enabled devices", NVME_VERSION),
+PLUGIN(NAME_CORE("fdp", "Manage Flexible Data Placement enabled devices", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("configs", "List configurations", fdp_configs)
 		ENTRY("usage", "Show reclaim unit handle usage", fdp_usage)

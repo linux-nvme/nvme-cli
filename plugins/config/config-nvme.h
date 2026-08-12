@@ -13,7 +13,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("config", "NVMeoF connection configuration", NVME_VERSION),
+PLUGIN(NAME_CORE("config", "NVMeoF connection configuration", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("validate", "Validate an NVMeoF connection configuration", config_validate_cmd)
 		ENTRY("show",     "Show the resolved NVMeoF connection configuration", config_show_cmd)

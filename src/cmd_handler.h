@@ -8,6 +8,9 @@
 #undef NAME
 #define NAME(n, d, v)
 
+#undef NAME_CORE
+#define NAME_CORE(n, d, v)
+
 #undef ENTRY
 #define ENTRY(n, h, f, ...) \
 static int f(int argc, char **argv, struct command *acmd, struct plugin *plugin);
@@ -32,6 +35,9 @@ static int f(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 
 #undef NAME
 #define NAME(n, d, v)
+
+#undef NAME_CORE
+#define NAME_CORE(n, d, v)
 
 #undef ENTRY_W_ALIAS
 #define ENTRY_W_ALIAS(n, h, f, a)	\
@@ -91,6 +97,9 @@ static struct command f ## _cmd = {	\
 #undef NAME
 #define NAME(n, d, v)
 
+#undef NAME_CORE
+#define NAME_CORE(n, d, v)
+
 #undef ENTRY
 #define ENTRY(n, h, f, ...) &f ## _cmd,
 
@@ -117,6 +126,9 @@ static struct command *commands[] = {	\
 
 #undef NAME
 #define NAME(n, d, v) .name = n, .desc = d, .version = v,
+
+#undef NAME_CORE
+#define NAME_CORE(n, d, v) .name = n, .desc = d, .version = v, .core = true,
 
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...)

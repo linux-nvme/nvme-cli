@@ -13,7 +13,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("registry", "NVMeoF controller ownership registry", NVME_VERSION),
+PLUGIN(NAME_CORE("registry", "NVMeoF controller ownership registry", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("list",     "List live registry entries",                       registry_list)
 		ENTRY("retrieve", "Read an attribute from a controller's entry",      registry_retrieve)

@@ -35,6 +35,12 @@ import unittest
 HELP_LONG_OPT = re.compile(r"\[\s*--([A-Za-z0-9][A-Za-z0-9_-]*)")
 # Plugin as printed by `nvme help`, e.g. "  ocp             ...description".
 HELP_PLUGIN = re.compile(r"^\s{2}(\S+)\s{2,}", re.MULTILINE)
+# `nvme help` splits plugins into a "core" and a "vendor specific" section;
+# either heading marks the start of the plugin listing.
+HELP_PLUGIN_SECTION_START = re.compile(
+    r"^The following are (?:core NVMe/NVMeoF|vendor specific) plugins:$",
+    re.MULTILINE)
+HELP_PLUGIN_SECTION_END = "The following sub-commands are deprecated"
 
 try:
     import jsonschema
@@ -113,14 +119,15 @@ def help_plugin_names():
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         universal_newlines=True)
     text = proc.stdout + proc.stderr
-    marker = "installed plugin extensions"
-    if marker not in text:
-        # No plugin-extension section (e.g. built with zero external
-        # plugins); scraping the whole help text would mis-read builtin
-        # commands as plugins.
+    match = HELP_PLUGIN_SECTION_START.search(text)
+    if not match:
+        # No plugin section (e.g. built with zero external plugins);
+        # scraping the whole help text would mis-read builtin commands
+        # as plugins.
         return set()
-    after = text.split(marker, 1)[-1]
-    return set(HELP_PLUGIN.findall(after))
+    region = text[match.start():]
+    region = region.split(HELP_PLUGIN_SECTION_END, 1)[0]
+    return set(HELP_PLUGIN.findall(region))
 
 
 class TestCommandMetadataSchema(unittest.TestCase):

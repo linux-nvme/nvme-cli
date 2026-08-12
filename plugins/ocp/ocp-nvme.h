@@ -14,7 +14,7 @@
 #define OCP_PLUGIN_VERSION   "3.0.0"
 #include "cmd.h"
 
-PLUGIN(NAME("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
+PLUGIN(NAME_CORE("ocp", "OCP cloud SSD extensions", OCP_PLUGIN_VERSION),
 	COMMAND_LIST(
 		ENTRY("smart-add-log", "Retrieve Extended SMART Information", smart_add_log)
 		ENTRY("latency-monitor-log", "Retrieve Latency Monitor Log Page", ocp_latency_monitor_log)

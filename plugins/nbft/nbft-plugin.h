@@ -7,7 +7,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("nbft", "ACPI NBFT table extensions", NVME_VERSION),
+PLUGIN(NAME_CORE("nbft", "ACPI NBFT table extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("show", "Show contents of ACPI NBFT tables", show_nbft)
 	)

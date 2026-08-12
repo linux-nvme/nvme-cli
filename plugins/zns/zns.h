@@ -7,7 +7,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("zns", "Zoned Namespace Command Set", NVME_VERSION),
+PLUGIN(NAME_CORE("zns", "Zoned Namespace Command Set", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("list", "List all NVMe devices with Zoned Namespace Command Set support", list)
 		ENTRY("id-ctrl", "Send NVMe Identify Zoned Namespace Controller, display structure", id_ctrl)

@@ -6,7 +6,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("sed", "SED Opal Command Set", NVME_VERSION),
+PLUGIN(NAME_CORE("sed", "SED Opal Command Set", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("discover", "Discover SED Opal Locking Features", sed_opal_discover, "1")
 		ENTRY("initialize", "Initialize a SED Opal Device for locking", sed_opal_initialize)

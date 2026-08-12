@@ -14,7 +14,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("keys", "Manage NVMeoF KX-HMAC-CHAP and TLS keys", NVME_VERSION),
+PLUGIN(NAME_CORE("keys", "Manage NVMeoF KX-HMAC-CHAP and TLS keys", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("gen-kxchap", "Generate NVMeoF KX-HMAC-CHAP host key", gen_kxchap)
 		ENTRY("check-kxchap", "Validate NVMeoF KX-HMAC-CHAP host key format or check if loaded", check_kxchap)

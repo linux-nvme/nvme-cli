@@ -134,6 +134,53 @@ void general_help(struct plugin *plugin, char *str)
 		printf("See '%s help <command>' for more information on a specific command\n",
 			prog->name);
 
+	/*
+	 * The first plugin is the built-in. If we're not showing help for the
+	 * built-in, don't show the program's other extensions
+	 */
+	if (!plugin->name) {
+		bool have_core = false, have_vendor = false;
+
+		extension = prog->extensions->next;
+		while (extension) {
+			if (extension->core)
+				have_core = true;
+			else
+				have_vendor = true;
+			extension = extension->next;
+		}
+
+		if (have_core) {
+			printf("\nThe following are core NVMe/NVMeoF plugins:\n");
+			if (str)
+				printf("Note: Only extensions including %s\n", str);
+
+			extension = prog->extensions->next;
+			while (extension) {
+				if (extension->core && (!str || strstr(extension->name, str)))
+					printf("  %-*s %s\n", 15, extension->name, extension->desc);
+				extension = extension->next;
+			}
+		}
+
+		if (have_vendor) {
+			printf("\nThe following are vendor specific plugins:\n");
+			if (str)
+				printf("Note: Only extensions including %s\n", str);
+
+			extension = prog->extensions->next;
+			while (extension) {
+				if (!extension->core && (!str || strstr(extension->name, str)))
+					printf("  %-*s %s\n", 15, extension->name, extension->desc);
+				extension = extension->next;
+			}
+		}
+
+		if (have_core || have_vendor)
+			printf("\nSee '%s <plugin> help' for more information on a plugin\n",
+					prog->name);
+	}
+
 	if (have_deprecated) {
 		printf("\nThe following sub-commands are deprecated and will be removed in the next major version:\n");
 		if (str)
@@ -148,29 +195,6 @@ void general_help(struct plugin *plugin, char *str)
 				       plugin->commands[i]->help);
 		}
 	}
-
-	/*
-	 * The first plugin is the built-in. If we're not showing help for the
-	 * built-in, don't show the program's other extensions
-	 */
-	if (plugin->name)
-		return;
-
-	extension = prog->extensions->next;
-	if (!extension)
-		return;
-
-	printf("\nThe following are all installed plugin extensions:\n");
-	if (str)
-		printf("Note: Only extensions including %s\n", str);
-
-	while (extension) {
-		if (!str || strstr(extension->name, str))
-			printf("  %-*s %s\n", 15, extension->name, extension->desc);
-		extension = extension->next;
-	}
-	printf("\nSee '%s <plugin> help' for more information on a plugin\n",
-			prog->name);
 }
 
 int handle_plugin(int argc, char **argv, struct plugin *plugin)
