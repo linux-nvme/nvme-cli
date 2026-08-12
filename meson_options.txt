@@ -44,7 +44,7 @@ option(
 option(
   'deprecated-cmds',
   type : 'feature',
-  value: 'disabled',
+  value: 'enabled',
   description : 'Deprecated commands support'
 )
 option(

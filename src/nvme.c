@@ -8132,7 +8132,7 @@ static int forward_to_keys_plugin(const char *old_name, const char *subcmd,
 		return -ENOTTY;
 	}
 
-	fprintf(stderr, "WARNING: '%s' is deprecated, use 'nvme keys %s' instead\n",
+	fprintf(stderr, "WARNING: '%s' is deprecated and will be removed in the next major version, use 'nvme keys %s' instead\n",
 		old_name, subcmd);
 
 	/*
@@ -8273,7 +8273,8 @@ static int tls_key(int argc, char **argv, struct command *acmd, struct plugin *p
 		sub_argv[nsub++] = keyfile_opt;
 	}
 
-	fprintf(stderr, "WARNING: 'tls-key' is deprecated, use 'nvme keys %s' instead\n", subcmd);
+	fprintf(stderr, "WARNING: 'tls-key' is deprecated and will be removed in the next major version, use 'nvme keys %s' instead\n",
+		subcmd);
 
 	return handle_plugin(nsub, sub_argv, keys);
 }
@@ -8303,7 +8304,7 @@ static int forward_to_log_plugin(const char *old_name, const char *subcmd,
 		return -ENOTTY;
 	}
 
-	fprintf(stderr, "WARNING: '%s' is deprecated, use 'nvme log %s' instead\n",
+	fprintf(stderr, "WARNING: '%s' is deprecated and will be removed in the next major version, use 'nvme log %s' instead\n",
 		old_name, subcmd);
 
 	sub_argv = calloc(argc + 1, sizeof(*sub_argv));

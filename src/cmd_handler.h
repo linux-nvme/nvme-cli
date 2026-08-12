@@ -12,6 +12,10 @@
 #define ENTRY(n, h, f, ...) \
 static int f(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 
+#undef ENTRY_DEPRECATED
+#define ENTRY_DEPRECATED(n, h, f, ...) \
+static int f(int argc, char **argv, struct command *acmd, struct plugin *plugin);
+
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...) args
 
@@ -49,6 +53,27 @@ static struct command f ## _cmd = {	\
 #define ENTRY(...) 		\
 	ENTRY_SEL(__VA_ARGS__, ENTRY_W_ALIAS, ENTRY_WO_ALIAS)(__VA_ARGS__)
 
+#undef ENTRY_DEPRECATED_W_ALIAS
+#define ENTRY_DEPRECATED_W_ALIAS(n, h, f, a)	\
+static struct command f ## _cmd = {	\
+	.name = n, 			\
+	.help = h, 			\
+	.fn = f, 			\
+	.alias = a, 			\
+	.deprecated = true,		\
+};
+
+#undef ENTRY_DEPRECATED_WO_ALIAS
+#define ENTRY_DEPRECATED_WO_ALIAS(n, h, f)		\
+	ENTRY_DEPRECATED_W_ALIAS(n, h, f, NULL)
+
+#undef ENTRY_DEPRECATED_SEL
+#define ENTRY_DEPRECATED_SEL(n, h, f, a, CMD, ...) CMD
+
+#undef ENTRY_DEPRECATED
+#define ENTRY_DEPRECATED(...) 		\
+	ENTRY_DEPRECATED_SEL(__VA_ARGS__, ENTRY_DEPRECATED_W_ALIAS, ENTRY_DEPRECATED_WO_ALIAS)(__VA_ARGS__)
+
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...) args
 
@@ -68,6 +93,9 @@ static struct command f ## _cmd = {	\
 
 #undef ENTRY
 #define ENTRY(n, h, f, ...) &f ## _cmd,
+
+#undef ENTRY_DEPRECATED
+#define ENTRY_DEPRECATED(n, h, f, ...) &f ## _cmd,
 
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...)	\

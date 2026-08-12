@@ -17,8 +17,7 @@
   `check-tls-key`, and `tls-key` are now `nvme keys gen-kxchap`,
   `check-kxchap`, `gen-tls`, `check-tls`, `insert-tls`, `import`,
   `export`, and `revoke`. The old commands still work as deprecated
-  aliases (needs to be enabled at build time), except
-  `check-tls-key --insert`, which has no equivalent
+  aliases, except `check-tls-key --insert`, which has no equivalent
   there. Use `nvme keys insert-tls` instead. The `DH-HMAC-CHAP`
   naming is also renamed to `KX-HMAC-CHAP` throughout, matching
   TP4201. See `nvme-keys-gen-kxchap(1)` and
@@ -29,8 +28,14 @@
   rest of the get-log-page family, `get-log` excepted) have moved
   into a new `nvme log` plugin, dropping the redundant `-log` suffix,
   e.g. `nvme smart-log` is now `nvme log smart`. The old top-level
-  commands still work as deprecated aliases (needs to be enabled at
-  build time).
+  commands still work as deprecated aliases.
+
+* Deprecated commands (currently the old `nvme keys` and `nvme log`
+  aliases above) are enabled by default; they can be turned off at
+  build time with `-Ddeprecated-cmds=disabled`. `nvme help` now
+  lists them in a separate "deprecated" section instead of alongside
+  current commands, and running one prints a warning that it will be
+  removed in the next major version.
 
 * `nvme disconnect-all` with no options no longer disconnects every
   fabric controller. It now only disconnects controllers with no
