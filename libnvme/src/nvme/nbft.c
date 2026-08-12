@@ -567,8 +567,14 @@ static int read_discovery(struct libnvme_global_ctx *ctx,
 			1, &discovery->uri))
 		goto error;
 
-	if (get_heap_obj(ctx, raw_discovery, discovery_ctrl_nqn_obj,
-			1, &discovery->nqn))
+	/*
+	 * DCNQNHOR is optional: "if cleared to 0h ... the OS shall use the
+	 * well known discovery NQN" (NVMe Boot Specification). -ENOENT here
+	 * just means it's absent, not that the descriptor is malformed.
+	 */
+	r = get_heap_obj(ctx, raw_discovery, discovery_ctrl_nqn_obj,
+			1, &discovery->nqn);
+	if (r && r != -ENOENT)
 		goto error;
 
 	discovery->hfi = hfi_from_index(nbft, raw_discovery->hfi_index);
