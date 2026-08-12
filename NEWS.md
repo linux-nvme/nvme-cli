@@ -28,6 +28,11 @@
   non-zero. `--nqn`/`-n` fed only that transform and is now accepted
   with a warning and ignored. See `nvme-gen-dhchap-key(1)`.
 
+* `nvme gen-dhchap-key` rejects a `--secret` with an odd number of
+  hexadecimal characters. nvme-cli 2.x padded the trailing one with a
+  zero and emitted a secret that was never given: 63 characters ending
+  `...bababa` produced `...ababab0a`.
+
 * All `nvme *-log` commands (`smart-log`, `ana-log`, `error-log`,
   `fw-log`, `telemetry-log`, `self-test-log`, `sanitize-log`, and the
   rest of the get-log-page family, `get-log` excepted) have moved
