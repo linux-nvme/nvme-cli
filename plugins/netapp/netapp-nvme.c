@@ -186,9 +186,12 @@ static void ontap_get_subsysname(char *subnqn, char *subsysname,
 		nvme_show_error("Unable to fetch ONTAP subsystem name");
 }
 
-static void ontap_labels_to_str(char *dst, char *src, int count)
+static void ontap_labels_to_str(char *dst, const char *src, size_t count)
 {
-	int i;
+	size_t i, max = ONTAP_LABEL_LEN - 1;
+
+	if (count > max)
+		count = max;
 
 	memset(dst, 0, ONTAP_LABEL_LEN);
 	for (i = 0; i < count; i++) {
@@ -203,13 +206,14 @@ static void ontap_labels_to_str(char *dst, char *src, int count)
 static void netapp_get_ontap_labels(char *vsname, char *nspath,
 		unsigned char *log_data)
 {
-	int lsp, tlv, label_len;
+	int lsp, tlv;
+	size_t label_len, i, j;
+	const size_t log_len = ONTAP_C2_LOG_SIZE;
 	char *vserver_name, *volume_name, *namespace_name, *namespace_path;
 	char vol_name[ONTAP_LABEL_LEN], ns_name[ONTAP_LABEL_LEN];
 	char ns_path[ONTAP_LABEL_LEN];
 	bool nspath_tlv_available = false;
 	const char *ontap_vol = "/vol/";
-	int i, j;
 
 	/* get the lsp */
 	lsp = (*(__u8 *)&log_data[16]) & 0x0F;
@@ -220,7 +224,9 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 	/* get the vserver name tlv */
 	tlv = *(__u8 *)&log_data[32];
 	if (tlv == ONTAP_VSERVER_NAME_TLV) {
-		label_len = (*(__u16 *)&log_data[34]) * 4;
+		label_len = (size_t)(*(__u16 *)&log_data[34]) * 4;
+		if (36 + label_len > log_len)
+			return;
 		vserver_name = (char *)&log_data[36];
 		ontap_labels_to_str(vsname, vserver_name, label_len);
 	} else {
@@ -231,10 +237,14 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 
 	i = 36 + label_len;
 	j = i + 2;
+	if (j + 2 > log_len)
+		return;
 	/* get the volume name tlv */
 	tlv = *(__u8 *)&log_data[i];
 	if (tlv == ONTAP_VOLUME_NAME_TLV) {
-		label_len = (*(__u16 *)&log_data[j]) * 4;
+		label_len = (size_t)(*(__u16 *)&log_data[j]) * 4;
+		if (j + 2 + label_len > log_len)
+			return;
 		volume_name = (char *)&log_data[j + 2];
 		ontap_labels_to_str(vol_name, volume_name, label_len);
 	} else {
@@ -245,10 +255,14 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 
 	i += 4 + label_len;
 	j += 4 + label_len;
+	if (j + 2 > log_len)
+		return;
 	/* get the namespace name tlv */
 	tlv = *(__u8 *)&log_data[i];
 	if (tlv == ONTAP_NS_NAME_TLV) {
-		label_len = (*(__u16 *)&log_data[j]) * 4;
+		label_len = (size_t)(*(__u16 *)&log_data[j]) * 4;
+		if (j + 2 + label_len > log_len)
+			return;
 		namespace_name = (char *)&log_data[j + 2];
 		ontap_labels_to_str(ns_name, namespace_name, label_len);
 	} else {
@@ -259,11 +273,15 @@ static void netapp_get_ontap_labels(char *vsname, char *nspath,
 
 	i += 4 + label_len;
 	j += 4 + label_len;
+	if (j + 2 > log_len)
+		return;
 	/* get the namespace path tlv if available */
 	tlv = *(__u8 *)&log_data[i];
 	if (tlv == ONTAP_NS_PATH_TLV) {
 		nspath_tlv_available = true;
-		label_len = (*(__u16 *)&log_data[j]) * 4;
+		label_len = (size_t)(*(__u16 *)&log_data[j]) * 4;
+		if (j + 2 + label_len > log_len)
+			return;
 		namespace_path = (char *)&log_data[j + 2];
 		ontap_labels_to_str(ns_path, namespace_path, label_len);
 	}
