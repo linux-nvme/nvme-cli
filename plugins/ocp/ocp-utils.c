@@ -11,6 +11,7 @@
 #include <ccan/endian/endian.h>
 
 #include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
 
@@ -26,7 +27,7 @@ int ocp_find_uuid_index(struct nvme_id_uuid_list *uuid_list, __u8 *index)
 	if (i > 0)
 		*index = i;
 	else
-		return -errno;
+		return i;
 
 	return 0;
 }
@@ -53,8 +54,14 @@ int ocp_get_log_simple(struct libnvme_transport_handle *hdl,
 {
 	struct libnvme_passthru_cmd cmd;
 	__u8 uidx;
+	int err;
 
-	ocp_get_uuid_index(hdl, &uidx);
+	err = ocp_get_uuid_index(hdl, &uidx);
+	if (err) {
+		nvme_show_error("ERROR : OCP : Failed to get UUID index: %s",
+				libnvme_strerror(-err));
+		return err;
+	}
 	nvme_init_get_log(&cmd, NVME_NSID_ALL, (enum nvme_cmd_get_log_lid) lid,
 			   NVME_CSI_NVM, log, len);
 	cmd.cdw14 |= NVME_FIELD_ENCODE(uidx,
