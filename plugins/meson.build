@@ -18,6 +18,7 @@ all_plugins = {
     'plugins/memblaze/memblaze-nvme.c',
     'plugins/memblaze/memblaze-smart-log-add-x.c',
   ],
+  'ns': ['plugins/ns/ns-plugin.c'],
   'nvidia': ['plugins/nvidia/nvidia-nvme.c'],
   'seagate': ['plugins/seagate/seagate-nvme.c'],
   'shannon': ['plugins/shannon/shannon-nvme.c'],
