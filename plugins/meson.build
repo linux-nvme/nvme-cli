@@ -13,6 +13,7 @@ all_plugins = {
   'innogrit': ['plugins/innogrit/innogrit-nvme.c'],
   'inspur': ['plugins/inspur/inspur-nvme.c'],
   'intel': ['plugins/intel/intel-nvme.c'],
+  'io-mgmt': ['plugins/io-mgmt/io-mgmt-plugin.c'],
   'log': ['plugins/log/log-plugin.c'],
   'mangoboost': ['plugins/mangoboost/mangoboost-nvme.c'],
   'memblaze': [

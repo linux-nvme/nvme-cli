@@ -212,8 +212,6 @@ static const char *force_unit_access = "force device to commit data before comma
 static const char *latency = "output latency statistics";
 static const char *limited_retry = "limit media access attempts";
 static const char *lsp = "log specific field";
-static const char *mos = "management operation specific";
-static const char *mo = "management operation";
 static const char *namespace_desired = "desired namespace";
 static const char *nssf = "NVMe Security Specific Field";
 static const char *only_ctrl_dev = "Only controller device is allowed";
@@ -373,161 +371,6 @@ static int get_supported_log_pages(int argc, char **argv, struct command *acmd,
 
 	nvme_show_supported_log(supports, libnvme_transport_handle_get_name(hdl),
 				flags);
-
-	return err;
-}
-
-static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	const char *desc = "I/O Management Send";
-	const char *data = "optional file for data (default stdin)";
-
-	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_fd int dfd = STDIN_FILENO;
-	__cleanup_libnvme_free void *buf = NULL;
-	struct libnvme_passthru_cmd cmd;
-	int err = -1;
-
-	struct config {
-		__u32 nsid;
-		__u16 mos;
-		__u8  mo;
-		char  *file;
-		__u32 data_len;
-	};
-
-	struct config cfg = {
-		.mos = 0,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.nsid,		namespace_id_desired),
-		  OPT_SHRT("mos",           's', &cfg.mos,		mos),
-		  OPT_BYTE("mo",            'm', &cfg.mo,       mo),
-		  OPT_FILE("data",          'd', &cfg.file,     data),
-		  OPT_UINT("data-len",      'l', &cfg.data_len, buf_len));
-
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	if (!cfg.nsid) {
-		err = libnvme_get_nsid(hdl, &cfg.nsid);
-		if (err < 0) {
-			nvme_show_err(err, "get-namespace-id");
-			return err;
-		}
-	}
-
-	if (cfg.data_len) {
-		buf = libnvme_alloc(cfg.data_len);
-		if (!buf)
-			return -ENOMEM;
-	}
-
-	if (cfg.file) {
-		dfd = shr_open_rawdata(cfg.file, O_RDONLY);
-		if (dfd < 0) {
-			nvme_show_perror(cfg.file);
-			return -errno;
-		}
-	}
-
-	err = read(dfd, buf, cfg.data_len);
-	if (err < 0) {
-		nvme_show_perror("read");
-		return err;
-	}
-
-	nvme_init_io_mgmt_send(&cmd, cfg.nsid, cfg.mo, cfg.mos, buf, cfg.data_len);
-	err = libnvme_exec_io_passthru(hdl, &cmd);
-	if (err) {
-		nvme_show_err(err, "io-mgmt-send");
-		return err;
-	}
-
-	nvme_show_verbose_result("io-mgmt-send: Success, mos:%u mo:%u nsid:%d",
-				 cfg.mos, cfg.mo, cfg.nsid);
-
-	return err;
-}
-
-static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	const char *desc = "I/O Management Receive";
-	const char *data = "optional file for data (default stdout)";
-
-	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_libnvme_free void *buf = NULL;
-	struct libnvme_passthru_cmd cmd;
-	__cleanup_fd int dfd = -1;
-	int err = -1;
-
-	struct config {
-		__u16 mos;
-		__u8  mo;
-		__u32 nsid;
-		char  *file;
-		__u32 data_len;
-	};
-
-	struct config cfg = {
-		.mos = 0,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_UINT("namespace-id",  'n', &cfg.nsid,		namespace_id_desired),
-		  OPT_SHRT("mos",           's', &cfg.mos,      mos),
-		  OPT_BYTE("mo",            'm', &cfg.mo,       mo),
-		  OPT_FILE("data",          'd', &cfg.file,     data),
-		  OPT_UINT("data-len",      'l', &cfg.data_len, buf_len));
-
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	if (!cfg.nsid) {
-		err = libnvme_get_nsid(hdl, &cfg.nsid);
-		if (err < 0) {
-			nvme_show_err(err, "get-namespace-id");
-			return err;
-		}
-	}
-
-	if (cfg.data_len) {
-		buf = libnvme_alloc(cfg.data_len);
-		if (!buf)
-			return -ENOMEM;
-	}
-
-	nvme_init_io_mgmt_recv(&cmd, cfg.nsid, cfg.mo, cfg.mos, buf,
-		cfg.data_len);
-	err = libnvme_exec_io_passthru(hdl, &cmd);
-	if (err) {
-		nvme_show_err(err, "io-mgmt-recv");
-		return err;
-	}
-
-	nvme_show_verbose_result("io-mgmt-recv: Success, mos:%u mo:%u nsid:%d",
-				 cfg.mos, cfg.mo, cfg.nsid);
-
-	if (cfg.file) {
-		dfd = shr_open_rawdata(cfg.file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-		if (dfd < 0) {
-			nvme_show_perror(cfg.file);
-			return -errno;
-		}
-
-		err = write(dfd, buf, cfg.data_len);
-		if (err < 0) {
-			nvme_show_perror("write");
-			return -errno;
-		}
-	} else {
-		d((unsigned char *)buf, cfg.data_len, 16, 1);
-	}
 
 	return err;
 }
@@ -6654,6 +6497,55 @@ static int nmi_recv(int argc, char **argv, struct command *acmd, struct plugin *
 static int nmi_send(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	return forward_to_nvme_mi_plugin("nvme-mi-send", "send", argc, argv);
+}
+
+#endif /* CONFIG_DEPRECATED_CMDS */
+
+#ifdef CONFIG_DEPRECATED_CMDS
+static struct plugin *find_io_mgmt_plugin(void)
+{
+	struct plugin *io_mgmt = nvme.extensions->next;
+
+	while (io_mgmt && (!io_mgmt->name || strcmp(io_mgmt->name, "io-mgmt")))
+		io_mgmt = io_mgmt->next;
+
+	return io_mgmt;
+}
+
+static int forward_to_io_mgmt_plugin(const char *old_name, const char *subcmd,
+		int argc, char **argv)
+{
+	struct plugin *io_mgmt = find_io_mgmt_plugin();
+	__cleanup_free char **sub_argv = NULL;
+
+	if (!io_mgmt) {
+		fprintf(stderr, "ERROR: '%s' is deprecated and requires the 'io-mgmt' plugin, which is not available in this build; use 'nvme io-mgmt %s'\n",
+			old_name, subcmd);
+		return -ENOTTY;
+	}
+
+	fprintf(stderr, "WARNING: '%s' is deprecated and will be removed in the next major version, use 'nvme io-mgmt %s' instead\n",
+		old_name, subcmd);
+
+	sub_argv = calloc(argc + 1, sizeof(*sub_argv));
+	if (!sub_argv)
+		return -ENOMEM;
+
+	sub_argv[0] = (char *)io_mgmt->name;
+	sub_argv[1] = (char *)subcmd;
+	memcpy(&sub_argv[2], &argv[1], (argc - 1) * sizeof(*argv));
+
+	return handle_plugin(argc + 1, sub_argv, io_mgmt);
+}
+
+static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	return forward_to_io_mgmt_plugin("io-mgmt-recv", "recv", argc, argv);
+}
+
+static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plugin *plugin)
+{
+	return forward_to_io_mgmt_plugin("io-mgmt-send", "send", argc, argv);
 }
 
 #endif /* CONFIG_DEPRECATED_CMDS */

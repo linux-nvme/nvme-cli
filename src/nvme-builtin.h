@@ -143,8 +143,10 @@ COMMAND_LIST(
 	ENTRY("rpmb", "Replay Protection Memory Block commands", rpmb_cmd)
 	ENTRY("lockdown", "Submit a Lockdown command,return result", lockdown_cmd)
 	ENTRY("show-topology", "Show the topology", show_topology_cmd)
-	ENTRY("io-mgmt-recv", "I/O Management Receive", io_mgmt_recv)
-	ENTRY("io-mgmt-send", "I/O Management Send", io_mgmt_send)
+#ifdef CONFIG_DEPRECATED_CMDS
+	ENTRY_DEPRECATED("io-mgmt-recv", "I/O Management Receive (deprecated, use 'nvme io-mgmt recv')", io_mgmt_recv)
+	ENTRY_DEPRECATED("io-mgmt-send", "I/O Management Send (deprecated, use 'nvme io-mgmt send')", io_mgmt_send)
+#endif /* CONFIG_DEPRECATED_CMDS */
 #ifdef CONFIG_DEPRECATED_CMDS
 	ENTRY_DEPRECATED("nvme-mi-recv", "Submit a NVMe-MI Receive command, return results (deprecated, use 'nvme nvme-mi recv')", nmi_recv)
 	ENTRY_DEPRECATED("nvme-mi-send", "Submit a NVMe-MI Send command, return results (deprecated, use 'nvme nvme-mi send')", nmi_send)
