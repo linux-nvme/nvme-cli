@@ -24,6 +24,14 @@
   TP4201. See `nvme-keys-gen-kxchap(1)` and
   `nvme-keys-check-kxchap(1)`.
 
+* All `nvme *-log` commands (`smart-log`, `ana-log`, `error-log`,
+  `fw-log`, `telemetry-log`, `self-test-log`, `sanitize-log`, and the
+  rest of the get-log-page family, `get-log` excepted) have moved
+  into a new `nvme log` plugin, dropping the redundant `-log` suffix,
+  e.g. `nvme smart-log` is now `nvme log smart`. The old top-level
+  commands still work as deprecated aliases (needs to be enabled at
+  build time).
+
 * `nvme disconnect-all` with no options no longer disconnects every
   fabric controller. It now only disconnects controllers with no
   recorded owner in the new ownership registry. A
