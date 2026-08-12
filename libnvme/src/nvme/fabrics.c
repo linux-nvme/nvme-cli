@@ -2987,12 +2987,16 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 				continue;
 			}
 
-			if (fctx->hooks.connect_leaf)
+			if (fctx->hooks.connect_leaf) {
 				cerr = fctx->hooks.connect_leaf(h, e, &nfctx,
 						fctx, &cd.c);
-			else
+			} else {
 				cerr = nvmf_connect_disc_entry(h, e, &nfctx,
 						NULL, &cd.c);
+				if (cd.c && fctx->hooks.connected)
+					fctx->hooks.connected(fctx, cd.c,
+						fctx->hooks.user_data);
+			}
 
 			if (cerr == -ENVME_CONNECT_ALREADY) {
 				dc_already_connected(fctx, h, e);
@@ -3042,6 +3046,9 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 						libnvme_strerror(-cerr));
 				continue;
 			}
+			if (fctx->hooks.connected)
+				fctx->hooks.connected(fctx, cd.c,
+					fctx->hooks.user_data);
 			child_own = DC_OWNED;
 		}
 		cd.connect = true;
