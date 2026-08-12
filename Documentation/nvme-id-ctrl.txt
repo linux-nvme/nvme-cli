@@ -8,7 +8,7 @@ nvme-id-ctrl - Send NVMe Identify Controller, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'id-ctrl' <device>
+'nvme' [<global-options>] 'id ctrl' <device>
 			[--vendor-specific | -V]
 			[--raw-binary | -b]
 
@@ -23,6 +23,10 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 On success, the structure may be returned in one of several ways depending
 on the option flags; the structure may be parsed by the program or the
 raw buffer may be printed to stdout.
+
+The bare 'nvme id-ctrl' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme id ctrl' instead.
 
 OPTIONS
 -------
@@ -45,7 +49,7 @@ EXAMPLES
 fields in a human readable format:
 +
 ------------
-# nvme id-ctrl /dev/nvme0
+# nvme id ctrl /dev/nvme0
 ------------
 +
 
@@ -53,8 +57,8 @@ fields in a human readable format:
 the vendor unique field:
 +
 ------------
-# nvme id-ctrl /dev/nvme0 --vendor-specific
-# nvme id-ctrl /dev/nvme0 -V
+# nvme id ctrl /dev/nvme0 --vendor-specific
+# nvme id ctrl /dev/nvme0 -V
 ------------
 +
 The above will dump the 'vs' buffer in hex since it doesn't know how to
@@ -63,8 +67,8 @@ interpret it.
 * Have the program return the raw structure in binary:
 +
 ------------
-# nvme id-ctrl /dev/nvme0 --raw-binary > id_ctrl.raw
-# nvme id-ctrl /dev/nvme0 -b > id_ctrl.raw
+# nvme id ctrl /dev/nvme0 --raw-binary > id_ctrl.raw
+# nvme id ctrl /dev/nvme0 -b > id_ctrl.raw
 ------------
 +
 It is probably a bad idea to not redirect stdout when using this mode.
@@ -73,7 +77,7 @@ It is probably a bad idea to not redirect stdout when using this mode.
 can parse the raw buffer.
 +
 ------------
-# nvme id-ctrl /dev/nvme0 --raw-binary | nvme_parse_id_ctrl
+# nvme id ctrl /dev/nvme0 --raw-binary | nvme_parse_id_ctrl
 ------------
 +
 The parse program in the above example can be a program that shows the

@@ -8,7 +8,7 @@ nvme-fw-download - Download all or a portion of an nvme firmware image.
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'fw-download' <device>
+'nvme' [<global-options>] 'fw download' <device>
 			[--fw=<firmware-file> | -f <firmware-file>]
 			[--xfer=<transfer-size> | -x <transfer-size>]
 			[--offset=<offset> | -O <offset>]
@@ -54,6 +54,10 @@ number of huge pages before initiating the firmware download:
 For more details, refer to:
 https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt
 
+The bare 'nvme fw-download' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme fw download' instead.
+
 OPTIONS
 -------
 -f <firmware-file>::
@@ -87,13 +91,13 @@ EXAMPLES
 * Transfer a firmware size 128KiB at a time:
 +
 ------------
-# nvme fw-download /dev/nvme0 --fw=/path/to/nvme.fw --xfer=0x20000
+# nvme fw download /dev/nvme0 --fw=/path/to/nvme.fw --xfer=0x20000
 ------------
 
 * Read and download a firmware image one transfer-sized portion at a time:
 +
 ------------
-# nvme fw-download /dev/nvme0 --fw=/path/to/nvme.fw --stream
+# nvme fw download /dev/nvme0 --fw=/path/to/nvme.fw --stream
 ------------
 
 NVME

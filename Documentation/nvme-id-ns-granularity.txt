@@ -9,7 +9,7 @@ the specified device
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'id-ns-granularity' <device>
+'nvme' [<global-options>] 'id ns-granularity' <device>
 
 DESCRIPTION
 -----------
@@ -21,6 +21,10 @@ device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
 
 On success it returns 0, error code otherwise.
 
+The bare 'nvme id-ns-granularity' form (without a space) still works as a
+deprecated alias and will be removed in a future major version. New
+scripts should use 'nvme id ns-granularity' instead.
+
 OPTIONS
 -------
 
@@ -31,7 +35,7 @@ EXAMPLES
 * Has the program issue a id-ns-granularity to display structure.
 +
 ------------
-# nvme id-ns-granularity /dev/nvme0
+# nvme id ns-granularity /dev/nvme0
 ------------
 
 NVME

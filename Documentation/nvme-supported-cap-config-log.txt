@@ -4,7 +4,7 @@ nvme-supported-cap-config-log(1)
 NAME
 ----
 nvme-supported-cap-config-log - Send NVMe Supported Capacity
-Configuration List Log pages request, returns result and log.
+Configuration List Log pages request, returns result and log. (deprecated)
 
 SYNOPSIS
 --------
@@ -15,32 +15,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves the list of Supported Capacity Configuration List
-log pages details from an NVMe device and provides
-the returned structure.
+Deprecated alias for linknvme-log-supported-cap-config[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and should be the NVMe character
-device (ex: /dev/nvme0).
+New scripts should use 'nvme log supported-cap-config' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success, the returned Supported Capacity Configuration List log
-pages log structure will be printed.
-
-OPTIONS
--------
--d::
---dom-id::
-	To get the domain ID.
-
--b::
---raw-binary::
-	To show raw binary data.
+See linknvme-log-supported-cap-config[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-No examples provided yet.
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-log-supported-cap-config[1]

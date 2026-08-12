@@ -1,0 +1,49 @@
+nvme-log-resv-notif(1)
+======================
+
+NAME
+----
+nvme-log-resv-notif - Send NVMe Reservation Notification log page request,
+return result and log
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log resv-notif' <device>
+
+DESCRIPTION
+-----------
+Retrieves NVMe Reservation Notification log page from an NVMe device and
+provides the returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned Reservation Notification log structure may be
+returned in one of several ways depending on the option flags; the structure
+may parsed by the program and printed in a readable format or the raw buffer
+may be printed to stdout for another program to parse.
+
+OPTIONS
+-------
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Get the Reservation Notification log and print it in a human readable format:
++
+------------
+# nvme log resv-notif /dev/nvme0
+------------
++
+
+* Print the output in json format:
++
+------------
+# nvme log resv-notif /dev/nvme0 -o json
+------------
+
+NVME
+----
+Part of the nvme-user suite

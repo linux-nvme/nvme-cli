@@ -1,0 +1,45 @@
+nvme-log-reachability-associations(1)
+=====================================
+
+NAME
+----
+nvme-log-reachability-associations - Retrieve Reachability Associations Log, show it
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log reachability-associations' <device>
+			[--associations-only | -a]
+			[--rae | -r]
+
+DESCRIPTION
+-----------
+Retrieve Reachability Associations Log, show it
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-a::
+--associations-only::
+	Return associations Only.
+
+-r::
+--rae::
+	Retain an Asynchronous Event.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a reachability-associations-log
++
+------------
+# nvme log reachability-associations /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

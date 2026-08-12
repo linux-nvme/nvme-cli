@@ -8,7 +8,7 @@ nvme-id-ns - Send NVMe Identify Namespace, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'id-ns' <device>
+'nvme' [<global-options>] 'id ns' <device>
 			[--vendor-specific | -V]
 			[--raw-binary | -b]
 			[--namespace-id=<nsid> | -n <nsid>]
@@ -29,6 +29,10 @@ with the same option.
 On success, the structure may be returned in one of several ways depending
 on the option flags; the structure may be parsed by the program or the
 raw buffer may be printed to stdout.
+
+The bare 'nvme id-ns' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme id ns' instead.
 
 OPTIONS
 -------
@@ -66,16 +70,16 @@ EXAMPLES
 fields in a human readable format:
 +
 ------------
-# nvme id-ns /dev/nvme0n1
+# nvme id ns /dev/nvme0n1
 ------------
 +
 
 * If using the character device or overriding namespace id:
 +
 ------------
-# nvme id-ns /dev/nvme0 -n 1
-# nvme id-ns /dev/nvme0n1 -n 1
-# nvme id-ns /dev/nvme0 --namespace-id=1
+# nvme id ns /dev/nvme0 -n 1
+# nvme id ns /dev/nvme0n1 -n 1
+# nvme id ns /dev/nvme0 --namespace-id=1
 ------------
 +
 
@@ -83,8 +87,8 @@ fields in a human readable format:
 the vendor unique field:
 +
 ------------
-# nvme id-ns /dev/nvme0n1 --vendor-specific
-# nvme id-ns /dev/nvme0n1 -V
+# nvme id ns /dev/nvme0n1 --vendor-specific
+# nvme id ns /dev/nvme0n1 -V
 ------------
 +
 The above will dump the \'vs' buffer in hex since it doesn't know how to
@@ -93,8 +97,8 @@ interpret it.
 * Have the program return the raw structure in binary:
 +
 ------------
-# nvme id-ns /dev/nvme0n1 --raw-binary > id_ns.raw
-# nvme id-ns /dev/nvme0n1 -b > id_ns.raw
+# nvme id ns /dev/nvme0n1 --raw-binary > id_ns.raw
+# nvme id ns /dev/nvme0n1 -b > id_ns.raw
 ------------
 +
 It is probably a bad idea to not redirect stdout when using this mode.
@@ -103,7 +107,7 @@ It is probably a bad idea to not redirect stdout when using this mode.
 can parse the raw buffer.
 +
 ------------
-# nvme id-ns /dev/nvme0n1 --raw-binary | nvme_parse_id_ns
+# nvme id ns /dev/nvme0n1 --raw-binary | nvme_parse_id_ns
 ------------
 +
 The parse program in the above example can be a program that shows the

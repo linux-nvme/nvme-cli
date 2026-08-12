@@ -4,7 +4,7 @@ nvme-nvm-id-ns-lba-format(1)
 NAME
 ----
 nvme-nvm-id-ns-lba-format - Send NVMe Identify NVM Command Set specific
-Namespace data structure for specified LBA format, display structure
+Namespace data structure for specified LBA format, display structure (deprecated)
 
 SYNOPSIS
 --------
@@ -15,45 +15,26 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Identify NVM Command Set specific Namespace data structure for the specified
-LBA format index for the NVM Command Set specified in the CSI field.
+Deprecated alias for linknvme-id-nvm-ns-lba-format[1], kept for scripts
+written against nvme-cli versions older than 3.0. Options and behavior
+are identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+New scripts should use 'nvme id nvm-ns-lba-format' instead. This alias
+prints a deprecation warning on stderr and may be removed in a future
+release.
 
-On success, the structure may be returned in one of several ways depending
-on the option flags; the structure may be parsed by the program or the
-raw buffer may be printed to stdout.
-
-OPTIONS
--------
--U <uuid-index>::
---uuid-index=<uuid-index>::
-	UUID Index of the feature
-
--i <lba_format_index>::
---lba-format-index=<lba_format_index>::
-	This field specifies the index into the LBA Format list identifying
-	the LBA Format capabilities that are to be returned
+See linknvme-id-nvm-ns-lba-format[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Has the program interpret the returned buffer and display the known
-fields in a human readable format:
-+
-------------
-# nvme nvm-id-ns-lba-format /dev/nvme0n1 -i 0
-------------
-+
-* Have the program return the raw structure in binary:
-+
-------------
-# nvme nvm-id-ns-lba-format /dev/nvme0 -i 0 -o binary > nvm_id_ns.raw
-# nvme nvm-id-ns-lba-format /dev/nvme0n1 -i 0 --output-format=binary > nvm_id_ns.raw
-------------
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-id-nvm-ns-lba-format[1]

@@ -1,0 +1,40 @@
+nvme-log-rotational-media-info(1)
+=================================
+
+NAME
+----
+nvme-log-rotational-media-info - Retrieve Rotational Media Information Log, show it
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log rotational-media-info' <device>
+			[--endg-id=<endgid> | -e <endgid>]
+
+DESCRIPTION
+-----------
+Retrieve Rotational Media Information Log, show it
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-e <endgid>::
+--endg-id=<endgid>::
+	This field specifies the identifier of the endurance group.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a rotational-media-info-log
++
+------------
+# nvme log rotational-media-info /dev/nvme0 --endg-id=1
+------------
+
+NVME
+----
+Part of the nvme-user suite.

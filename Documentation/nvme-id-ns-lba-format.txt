@@ -8,7 +8,7 @@ nvme-id-ns-lba-format - Send NVMe Identify Namespace for the specified LBA Forma
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'id-ns-lba-format' <device>
+'nvme' [<global-options>] 'id ns-lba-format' <device>
 			[--uuid-index=<uuid-index> | -U <uuid_index>]
 			[--lba-format-index=<lba_format_index> | -i <lba_format_index>]
 
@@ -24,6 +24,10 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
 On success, the structure may be returned in one of several ways depending
 on the option flags; the structure may be parsed by the program or the
 raw buffer may be printed to stdout.
+
+The bare 'nvme id-ns-lba-format' form (without a space) still works as a
+deprecated alias and will be removed in a future major version. New
+scripts should use 'nvme id ns-lba-format' instead.
 
 OPTIONS
 -------
@@ -44,14 +48,14 @@ EXAMPLES
 fields in a human readable format:
 +
 ------------
-# nvme id-ns-lba-format /dev/nvme0n1 -i 0
+# nvme id ns-lba-format /dev/nvme0n1 -i 0
 ------------
 +
 * Have the program return the raw structure in binary:
 +
 ------------
-# nvme id-ns-lba-format /dev/nvme0n1 -i 0 -o binary > id_ns.raw
-# nvme id-ns-lba-format /dev/nvme0n1 -i 0 --output-format=binary > id_ns.raw
+# nvme id ns-lba-format /dev/nvme0n1 -i 0 -o binary > id_ns.raw
+# nvme id ns-lba-format /dev/nvme0n1 -i 0 --output-format=binary > id_ns.raw
 ------------
 +
 It is probably a bad idea to not redirect stdout when using this mode.
@@ -60,7 +64,7 @@ It is probably a bad idea to not redirect stdout when using this mode.
 can parse the raw buffer.
 +
 ------------
-# nvme id-ns-lba-format /dev/nvme0n1 -i 0 --raw-binary | nvme_parse_id_ns
+# nvme id ns-lba-format /dev/nvme0n1 -i 0 --raw-binary | nvme_parse_id_ns
 ------------
 +
 The parse program in the above example can be a program that shows the

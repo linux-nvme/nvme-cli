@@ -4,7 +4,7 @@ nvme-phy-rx-eom-log(1)
 NAME
 ----
 nvme-phy-rx-eom-log - Retrieves a Physical Interface Receiver Eye Opening
-Measurement log page from an NVMe device
+Measurement log page from an NVMe device (deprecated)
 
 SYNOPSIS
 --------
@@ -14,42 +14,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves a Physical Interface Receiver Eye Opening Measurement log page from
-an NVMe device and provides the returned structure.
+Deprecated alias for linknvme-log-phy-rx-eom[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+New scripts should use 'nvme log phy-rx-eom' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success it returns 0, error code otherwise.
-
-OPTIONS
--------
--s <field>::
---lsp=<field>::
-	The log specified field configuring the controller's action to take
-	during processing of the command and the measurement quality.
-
--c <id>::
---controller=<id>::
-	Controller ID of the controller associated with the PCIe port to be
-	measured.
+See linknvme-log-phy-rx-eom[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Start a best quality measurement and retrieve the log page header 
-+
-------------
-# nvme phy-rx-eom-log /dev/nvme0 --lsp=10
-------------
-
-* Retrieve a finished best quality measurement on controller with ID 3
-+
-------------
-# nvme phy-rx-eom-log /dev/nvme0 --lsp=2 --controller=3
-------------
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-log-phy-rx-eom[1]

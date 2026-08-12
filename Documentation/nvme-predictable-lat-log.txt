@@ -4,7 +4,7 @@ nvme-predictable-lat-log(1)
 NAME
 ----
 nvme-predictable-lat-log - Send Predictable latency per NVM set log page request,
-returns result and log
+returns result and log (deprecated)
 
 SYNOPSIS
 --------
@@ -15,49 +15,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves the NVMe Predictable latency per NVM set log page from an NVMe device
-and provides the returned structure.
+Deprecated alias for linknvme-log-predictable-lat[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+New scripts should use 'nvme log predictable-lat' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success, the returned Predictable latency per NVM set log structure
-may be returned in one of several ways depending on the option flags; the
-structure may parsed by the program and printed in a readable format or
-the raw buffer may be printed to stdout for another program to parse.
-
-OPTIONS
--------
--i <nvmset_id>::
---nvmset-id=<nvmset_id>::
-	Retrieve the Predictable latency per NVM set log for the given nvmset id.
-	This argument is mandatory and its success may depend on the device's
-	statistics to provide this log For More details see NVM Express 1.4 Spec.
-	Section 5.14.1.10. The default nvmset id to use is 1 for the device.
-
--b::
---raw-binary::
-	Print the raw Predictable latency per NVM set log buffer to stdout.
+See linknvme-log-predictable-lat[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Print the Predictable latency per NVM set log page in a human readable format:
-+
-------------
-# nvme predictable-lat-log /dev/nvme0
-------------
-+
-
-* Print the raw Predictable latency per NVM set log to a file:
-+
-------------
-# nvme predictable-lat-log /dev/nvme0 --raw-binary > nvmset_log.raw
-------------
-+
-It is probably a bad idea to not redirect stdout when using this mode.
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-log-predictable-lat[1]

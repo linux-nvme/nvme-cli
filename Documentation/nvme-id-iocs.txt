@@ -8,7 +8,7 @@ nvme-id-iocs - Send NVMe Identify I/O Command Set, return result and structure
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'id-iocs' <device>
+'nvme' [<global-options>] 'id iocs' <device>
 			[--controller-id=<cntid> | -c <cntid>]
 
 DESCRIPTION
@@ -18,6 +18,10 @@ Command Set data structure.
 
 The <device> parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+The bare 'nvme id-iocs' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme id iocs' instead.
 
 OPTIONS
 -------
@@ -34,13 +38,13 @@ EXAMPLES
 fields in a human readable format:
 +
 ------------
-# nvme id-iocs /dev/nvme0
+# nvme id iocs /dev/nvme0
 ------------
 +
 * show the fields in human readable format
 +
 ------------
-# nvme id-iocs /dev/nvme0 -H
+# nvme id iocs /dev/nvme0 -H
 ------------
 NVME
 ----

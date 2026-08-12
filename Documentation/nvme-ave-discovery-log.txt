@@ -3,7 +3,7 @@ nvme-ave-discovery-log(1)
 
 NAME
 ----
-nvme-ave-discovery-log - Retrieve AVE Discovery Log, show it
+nvme-ave-discovery-log - Retrieve AVE Discovery Log, show it (deprecated)
 
 SYNOPSIS
 --------
@@ -12,28 +12,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieve AVE Discovery Log, show it
+Deprecated alias for linknvme-log-ave-discovery[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+New scripts should use 'nvme log ave-discovery' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success it returns 0, error code otherwise.
-
-OPTIONS
--------
--r::
---rae::
-	Retain an Asynchronous Event.
+See linknvme-log-ave-discovery[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Has the program issue a ave-discovery-log
-+
-------------
-# nvme ave-discovery-log /dev/nvme0
-------------
+No Examples
 
 NVME
 ----
-Part of the nvme-user suite.
+Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-log-ave-discovery[1]

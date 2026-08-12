@@ -4,7 +4,7 @@ nvme-effects-log(1)
 NAME
 ----
 nvme-effects-log - Send NVMe Command Effects log page request, returns result
-and log
+and log (deprecated)
 
 SYNOPSIS
 --------
@@ -13,40 +13,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves the NVMe Command Effects log page from an NVMe device and provides
-the returned structure.
+Deprecated alias for linknvme-log-effects[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and should be the NVMe character
-device (ex: /dev/nvme0).
+New scripts should use 'nvme log effects' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success, the returned command effects log structure will be printed
-for each command that is supported.
-
-OPTIONS
--------
--b::
---raw-binary::
-	This option will print the raw buffer to stdout. Structure is not
-	parsed by program. This overrides the verbose option.
+See linknvme-log-effects[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Print the effects log page in a human readable format:
-+
-------------
-# nvme effects-log /dev/nvme0
-------------
-+
-
-* Have the program return the raw structure in binary:
-+
-------------
-# nvme effects-log /dev/nvme0 --raw-binary > effects_log.raw
-# nvme effects-log /dev/nvme0 -b > effects_log.raw
-------------
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-log-effects[1]

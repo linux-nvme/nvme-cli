@@ -1,0 +1,39 @@
+nvme-log-ave-discovery(1)
+=========================
+
+NAME
+----
+nvme-log-ave-discovery - Retrieve AVE Discovery Log, show it
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log ave-discovery' <device> [--rae | -r]
+
+DESCRIPTION
+-----------
+Retrieve AVE Discovery Log, show it
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-r::
+--rae::
+	Retain an Asynchronous Event.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a ave-discovery-log
++
+------------
+# nvme log ave-discovery /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

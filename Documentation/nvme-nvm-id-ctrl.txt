@@ -3,7 +3,7 @@ nvme-nvm-id-ctrl(1)
 
 NAME
 ----
-nvme-nvm-id-ctrl - Send NVMe Identify Controller, return NVM command set structure
+nvme-nvm-id-ctrl - Send NVMe Identify Controller, return NVM command set structure (deprecated)
 
 SYNOPSIS
 --------
@@ -12,36 +12,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-For the NVMe device given, sends the NVM command set's identify controller
-command and provides the result and returned structure.
+Deprecated alias for linknvme-id-nvm-ctrl[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+New scripts should use 'nvme id nvm-ctrl' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success, the data structure returned by the device will be decoded and
-displayed in one of several ways.
-
-OPTIONS
--------
+See linknvme-id-nvm-ctrl[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Has the program interpret the returned buffer and display the known
-fields in a human readable format:
-+
-------------
-# nvme nvm-id-ctrl /dev/nvme0
-------------
-+
-
-* Show the output in json format
-+
-------------
-# nvme nvm-id-ctrl /dev/nvme0 -o json
-------------
+No Examples
 
 NVME
 ----
-Part of nvme-cli
+Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-id-nvm-ctrl[1]

@@ -1,0 +1,43 @@
+nvme-log-dispersed-ns-participating-nss(1)
+==========================================
+
+NAME
+----
+nvme-log-dispersed-ns-participating-nss - Retrieve Dispersed Namespace
+Participating NVM Subsystems Log, show it
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log dispersed-ns-participating-nss' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
+
+DESCRIPTION
+-----------
+Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	The namespace identifier to delete.
+	Retrieve the dispersed namespace participating NVM subsystems log for
+	the given nsid.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a dispersed-ns-participating-nss-log
++
+------------
+# nvme log dispersed-ns-participating-nss /dev/nvme0 --namespace-id=2
+------------
+
+NVME
+----
+Part of the nvme-user suite.

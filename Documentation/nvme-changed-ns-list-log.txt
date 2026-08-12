@@ -4,7 +4,7 @@ nvme-changed-ns-list-log(1)
 NAME
 ----
 nvme-changed-ns-list-log - Send NVMe Changed Namespace List log page
-request, returns result and log.
+request, returns result and log. (deprecated)
 
 SYNOPSIS
 --------
@@ -13,42 +13,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves the NVMe Changed Namespace List log page from an NVMe device and
-provides the returned structure.
+Deprecated alias for linknvme-log-changed-ns-list[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and must be a NVMe character device
-(ex: /dev/nvme0).
+New scripts should use 'nvme log changed-ns-list' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success, the returned Changed Namespace List log structure may be
-returned in one of several ways depending on the option flags; the
-structure may parsed by the program and printed in a readable format or
-the raw buffer may be printed to stdout for another program to parse.
-
-OPTIONS
--------
--b::
---raw-binary::
-	Print the raw Changed Namespace List log buffer to stdout.
+See linknvme-log-changed-ns-list[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Print the Changed Namespace List Log page in a human readable format:
-+
-------------
-# nvme changed-ns-list-log /dev/nvme0
-------------
-+
-
-* Print the raw Changed Namespace List log to a file:
-+
-------------
-# nvme changed-ns-list-log /dev/nvme0 --raw-binary > log.raw
-------------
-+
-It is probably a bad idea to not redirect stdout when using this mode.
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-log-changed-ns-list[1]

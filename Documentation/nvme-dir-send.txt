@@ -8,7 +8,7 @@ nvme-dir-send - Issue a directive send command, returns applicable results
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'dir-send' <device>
+'nvme' [<global-options>] 'dir send' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--data-len=<data-len> | -l <data-len>]
 			[--dir-type=<dtype> | -D <dtype>]
@@ -31,6 +31,10 @@ On success, the returned directive's parameter structure (if applicable) is
 returned in one of several ways depending on the option flags; the
 structure may parsed by the program and displayed in hex, or the raw buffer
 may be printed to stdout for another program to parse.
+
+The bare 'nvme dir-send' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme dir send' instead.
 
 OPTIONS
 -------
@@ -87,28 +91,28 @@ EXAMPLES
 * Enable streams directive :
 +
 ------------
-# nvme dir-send /dev/nvme0n1 --dir-type 0 --dir-oper 1 --target-dir 1 --endir 1
+# nvme dir send /dev/nvme0n1 --dir-type 0 --dir-oper 1 --target-dir 1 --endir 1
 ------------
 +
 
 * Disable streams directive :
 +
 ------------
-# nvme dir-send /dev/nvme0n1 --dir-type 0 --dir-oper 1 --target-dir 1 --endir 0
+# nvme dir send /dev/nvme0n1 --dir-type 0 --dir-oper 1 --target-dir 1 --endir 0
 ------------
 +
 
 * Release all allocated streams resource :
 +
 ------------
-# nvme dir-send /dev/nvme0n1 --dir-type 1 --dir-oper 2
+# nvme dir send /dev/nvme0n1 --dir-type 1 --dir-oper 2
 ------------
 +
 
 * Release stream ID 3 :
 +
 ------------
-# nvme dir-send /dev/nvme0 --dir-type 1 --dir-oper 1 --dir-spec 3
+# nvme dir send /dev/nvme0 --dir-type 1 --dir-oper 1 --dir-spec 3
 ------------
 +
 It is probably a bad idea to not redirect stdout when using this mode.

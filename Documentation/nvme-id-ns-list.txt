@@ -1,0 +1,63 @@
+nvme-id-ns-list(1)
+==================
+
+NAME
+----
+nvme-id-ns-list - Send NVMe Identify List Namespaces, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'id ns-list' <device> [--namespace-id=<nsid> | -n <nsid>]
+			[--csi=<command_set_identifier> | -y
+			<command_set_identifier>]
+			[--all | -a]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends an identify command for namespace list
+and provides the result and returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+If the starting namespace in the list always begins with 0 unless the
+`'--namespace-id'` option is given to override.
+
+On success, the namespace array is printed for each index and nsid for
+a valid nsid.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	Retrieve the identify list structure starting with the given nsid.
+
+-y <command_set_identifier>::
+--csi=<command_set_identifier>::
+	If this value is given, retrieve the identify list structure associated
+	with the specified I/O command set.
+
+-a::
+--all::
+	Retrieve the identify list structure for all namespaces in the
+	subsystem, whether attached or inactive.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Print the namespaces present for zoned command set in JSON format
++
+------------
+# nvme id ns-list /dev/nvme0 -y 2 -a -o json
+------------
+
+* Print the namespaces present for NVM Command Set in normal format
++
+------------
+# nvme id ns-list /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite

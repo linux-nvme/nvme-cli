@@ -8,7 +8,7 @@ nvme-security-send - Security Send command
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'security-send' <device> [--file=<file> | -f <file>]
+'nvme' [<global-options>] 'security send' <device> [--file=<file> | -f <file>]
 			[--secp=<security-protocol> | -p <security-protocol>]
 			[--spsp=<protocol-specific> | -s <protocol-specific>]
 			[--tl=<transfer-length> | -t <transfer-length>]
@@ -28,6 +28,10 @@ retrieved with the Security Receive command.
 
 The association between a Security Send command and subsequent Security
 Receive command is Security Protocol field dependent as defined in SPC-4.
+
+The bare 'nvme security-send' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme security send' instead.
 
 OPTIONS
 -------

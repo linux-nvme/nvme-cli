@@ -3,7 +3,7 @@ nvme-list-ctrl(1)
 
 NAME
 ----
-nvme-list-ctrl - Send NVMe Identify List Controllers, return result and structure
+nvme-list-ctrl - Send NVMe Identify List Controllers, return result and structure (deprecated)
 
 SYNOPSIS
 --------
@@ -13,37 +13,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-For the NVMe device given, sends an identify command for controller list
-and provides the result and returned structure. This uses either mode
-12h or 13h depending on the requested namespace identifier.
+Deprecated alias for linknvme-id-ctrl-list[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
-The starting controller in the list always begins with 0 unless the
-`'--cntid'` option is given to override.
+New scripts should use 'nvme id ctrl-list' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success, the controller array is printed for each index and controller
-identifier.
-
-OPTIONS
--------
--c <cntid>::
---cntid=<cntid>::
-	Retrieve the identify list structure starting with the given controller id.
-
--n <nsid>::
---namespace-id=<nsid>::
-	If provided, will request the controllers attached to the
-	specified namespace. If no namespace is given, or set to 0, the
-	command requests the controller list for the entire subsystem,
-	whether or not they are attached to namespace(s).
+See linknvme-id-ctrl-list[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-No examples yet.
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-id-ctrl-list[1]

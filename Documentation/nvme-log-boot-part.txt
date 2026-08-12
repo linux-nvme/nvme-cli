@@ -1,0 +1,47 @@
+nvme-log-boot-part(1)
+=====================
+
+NAME
+----
+nvme-log-boot-part - Retrieves a Boot Partition log page from an NVMe device
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log boot-part' <device> [--lsp=<field> | -s <field>]
+			[--output-file=<file> | -f <file>]
+
+DESCRIPTION
+-----------
+Retrieves an Boot Partition log page from an NVMe device and provides
+the returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success, the returned log structure will be in raw binary format _only_ with
+--output-file option which is mandatory.
+
+OPTIONS
+-------
+-s <field>::
+--lsp=<field>::
+	The log specified field of LID.
+
+-f <file>::
+--output-file=<file>::
+	File name to which raw binary data will be saved to.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Retrieve Boot Partition data to boot_part_log.bin
++
+------------
+# nvme log boot-part /dev/nvme0 --output-file=boot_part_log.bin
+------------
+
+NVME
+----
+Part of the nvme-user suite

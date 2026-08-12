@@ -3,7 +3,7 @@ nvme-lba-status-log(1)
 
 NAME
 ----
-nvme-lba-status-log - Send LBA Status Log Page request returns result and log
+nvme-lba-status-log - Send LBA Status Log Page request returns result and log (deprecated)
 
 SYNOPSIS
 --------
@@ -12,40 +12,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves the NVMe LBA Status Log Page from an NVMe device and provides
-the returned structure.
+Deprecated alias for linknvme-log-lba-status[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+New scripts should use 'nvme log lba-status' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success, the returned LBA Status Log Page structure may be returned
-in one of several ways depending on the option flags; the structure may
-parsed by the program and printed in a readable format or the raw buffer
-may be printed to stdout for another program to parse.
-
-OPTIONS
--------
--r::
---rae::
-	Retain an Asynchronous Event.
+See linknvme-log-lba-status[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Print the LBA Status Log page in a normal readable format:
-+
-------------
-# nvme lba-status-log /dev/nvme0
-------------
-+
-
-* Show the output in json format
-+
-------------
-# nvme lba-status-log /dev/nvme0 -o json
-+
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-log-lba-status[1]
