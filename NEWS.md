@@ -55,9 +55,46 @@
   `nvme id-ctrl` is now `nvme id ctrl`. The old top-level commands
   still work as deprecated aliases.
 
+* Namespace management commands (`create-ns`, `delete-ns`,
+  `attach-ns`, `detach-ns`, `get-ns-id`) have moved into a new
+  `nvme ns` plugin, e.g. `nvme create-ns` is now `nvme ns create`.
+  The old top-level commands still work as deprecated aliases.
+
+* Reservation commands (`resv-acquire`, `resv-register`,
+  `resv-release`, `resv-report`) have moved into a new `nvme resv`
+  plugin, e.g. `nvme resv-acquire` is now `nvme resv acquire`. The
+  old top-level commands still work as deprecated aliases.
+
+* NVMe-MI commands (`nvme-mi-recv`, `nvme-mi-send`) have moved into
+  a new `nvme nvme-mi` plugin, e.g. `nvme nvme-mi-recv` is now
+  `nvme nvme-mi recv`. The old top-level commands still work as
+  deprecated aliases.
+
+* I/O Management commands (`io-mgmt-recv`, `io-mgmt-send`) have
+  moved into a new `nvme io-mgmt` plugin, e.g. `nvme io-mgmt-recv`
+  is now `nvme io-mgmt recv`. The old top-level commands still work
+  as deprecated aliases.
+
+* Directive commands (`dir-receive`, `dir-send`) have moved into a
+  new `nvme dir` plugin, e.g. `nvme dir-receive` is now
+  `nvme dir receive`. The old top-level commands still work as
+  deprecated aliases.
+
+* Security Send/Receive commands (`security-send`, `security-recv`)
+  have moved into a new `nvme security` plugin, e.g.
+  `nvme security-send` is now `nvme security send`. The old
+  top-level commands still work as deprecated aliases.
+
+* Firmware commands (`fw-commit`, `fw-download`) have moved into a
+  new `nvme fw` plugin, e.g. `nvme fw-download` is now
+  `nvme fw download`. The old top-level commands still work as
+  deprecated aliases.
+
 * Deprecated commands (currently the old `nvme keys`, `nvme log`,
-  and `nvme id` aliases above) are enabled by default; they can be
-  turned off at build time with `-Ddeprecated-cmds=disabled`.
+  `nvme id`, `nvme ns`, `nvme resv`, `nvme nvme-mi`, `nvme io-mgmt`,
+  `nvme dir`, `nvme security`, and `nvme fw` aliases above) are
+  enabled by default; they can be turned off at build time with
+  `-Ddeprecated-cmds=disabled`.
   `nvme help` now lists them in a separate "deprecated" section
   instead of alongside current commands, and running one prints a
   warning that it will be removed in the next major version.
