@@ -21,6 +21,7 @@
 #include <libnvme-mi.h>
 
 #include <fs-util.h>
+#include <cleanup.h>
 
 #include "logging.h"
 #include "nvme-print.h"
@@ -30,19 +31,26 @@ void *mmap_registers(struct libnvme_transport_handle *hdl, bool writable)
 {
 	void *membase = NULL;
 #ifdef NVME_HAVE_MMAP
-	char path[512];
+	__cleanup_free char *path = NULL;
 	int fd;
 	int prot = PROT_READ;
+	int err;
 
 	if (writable)
 		prot |= PROT_WRITE;
 
-	sprintf(path, "/sys/class/nvme/%s/device/resource0", libnvme_transport_handle_get_name(hdl));
+	err = asprintf(&path, "/sys/class/nvme/%s/device/resource0",
+		libnvme_transport_handle_get_name(hdl));
+	if (err < 0)
+		return NULL;
+
 	fd = open(path, writable ? O_RDWR : O_RDONLY);
 	if (fd < 0) {
-		if (log_level >= LIBNVME_LOG_INFO)
+		if (log_level >= LIBNVME_LOG_INFO) {
 			nvme_show_error("%s did not find a pci resource, open failed %s",
-					libnvme_transport_handle_get_name(hdl), libnvme_strerror(errno));
+				libnvme_transport_handle_get_name(hdl),
+				libnvme_strerror(errno));
+		}
 		return NULL;
 	}
 
