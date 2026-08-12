@@ -884,7 +884,7 @@ static int get_fw_log(int argc, char **argv, struct command *acmd, struct plugin
 	if (!fw_log)
 		return -ENOMEM;
 
-	nvme_init_get_log(&cmd, false, NVME_LOG_LID_FW_SLOT,
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_FW_SLOT,
 		NVME_CSI_NVM, fw_log, sizeof(*fw_log));
 
 	err = libnvme_get_log(hdl, &cmd, false, sizeof(*fw_log));
@@ -2255,7 +2255,7 @@ static int get_reachability_groups(struct libnvme_transport_handle *hdl, bool rg
 	if (!log)
 		return -ENOMEM;
 
-	nvme_init_get_log_reachability_groups(&cmd, rae, log, log_len);
+	nvme_init_get_log_reachability_groups(&cmd, rgo, log, log_len);
 	err = libnvme_get_log(hdl, &cmd, false, log_len);
 	if (err)
 		goto err_free;
@@ -2368,8 +2368,8 @@ static int get_reachability_associations(struct libnvme_transport_handle *hdl, b
 	if (!log)
 		return -ENOMEM;
 
-	nvme_init_get_log_reachability_associations(&cmd, rae, log, log_len);
-	err = libnvme_get_log(hdl, &cmd, rao, log_len);
+	nvme_init_get_log_reachability_associations(&cmd, rao, log, log_len);
+	err = libnvme_get_log(hdl, &cmd, rae, log_len);
 	if (err)
 		goto err_free;
 
