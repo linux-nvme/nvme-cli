@@ -17,6 +17,7 @@ PLUGIN(NAME_CORE("config", "NVMeoF connection configuration", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("validate", "Validate an NVMeoF connection configuration", config_validate_cmd)
 		ENTRY("show",     "Show the resolved NVMeoF connection configuration", config_show_cmd)
+		ENTRY("status",   "Report config status", config_status_cmd)
 		ENTRY("convert",  "Convert config.json/discovery.conf to INI", config_convert_cmd)
 		ENTRY("create",   "Create an NVMeoF connection entry in the INI configuration", config_create_cmd)
 	)

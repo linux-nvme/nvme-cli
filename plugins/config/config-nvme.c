@@ -29,6 +29,14 @@ static int config_show_cmd(int argc, char **argv, struct command *cmd,
 	return fabrics_config_show(desc, argc, argv);
 }
 
+static int config_status_cmd(int argc, char **argv, struct command *cmd,
+		struct plugin *plugin)
+{
+	const char *desc = "Report legacy config.json/discovery.conf status";
+
+	return nvme_config_status(desc, argc, argv);
+}
+
 static int config_convert_cmd(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)
 {

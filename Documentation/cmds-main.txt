@@ -181,6 +181,9 @@ linknvme:nvme-config-validate[1]::
 linknvme:nvme-config-show[1]::
 	Show the resolved NVMe-oF INI connection configuration
 
+linknvme:nvme-config-status[1]::
+	Report legacy config.json/discovery.conf conversion status
+
 linknvme:nvme-get-property[1]::
 	Reads and shows NVMe-over-Fabrics controller property
 

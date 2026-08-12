@@ -1,0 +1,98 @@
+nvme-config-status(1)
+======================
+
+NAME
+----
+nvme-config-status - Report legacy NVMe-oF config.json/discovery.conf conversion status
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'config status'
+
+DESCRIPTION
+-----------
+Reports the on-disk state of the legacy pre-3.0 configuration files,
+@SYSCONFDIR@/nvme/config.json and @SYSCONFDIR@/nvme/discovery.conf, and of
+the '*.converted' marker 'nvme config convert' leaves next to each one it
+converts. This command never modifies or converts anything; it only
+reports state.
+
+One line is printed for each legacy file that has something to report:
+
+* 'present, not yet converted' -- the file exists and has never been
+  converted.
+* 'present, already converted' -- the file exists and a
+  '<file>.converted' marker (a symlink pointing back at the file itself,
+  left in place deliberately so a rollback to a pre-INI installation
+  still finds the original legacy file) confirms it was converted. Both
+  the file and the marker can be deleted once rollback is no longer a
+  concern.
+* 'not present (a stale marker exists)' -- the file is gone but its
+  '<file>.converted' marker is still there, dangling. This is left over
+  from an earlier conversion and is always safe to delete.
+
+A file with neither itself nor a marker present is silently skipped --
+there is nothing to say about it. If this is true of both config.json
+and discovery.conf, a single 'no legacy configuration found' line is
+printed instead of two silent files and no output at all.
+
+Because the marker is a symlink keyed on the file's *path*, not its
+content, a file that is deleted and later replaced by a different,
+never-converted file at the same path (for example, a package rollback
+followed by a reinstall) makes the marker resolve again even though the
+new file itself was never converted. This command does not try to detect
+that case -- when a file and a resolving marker are both present, it adds
+a note that the marker may be stale and the file's contents should be
+verified against the INI configuration, so a human can decide. Use
+'nvme config convert' if in doubt: converting an already-converted file
+is a safe no-op.
+
+OPTIONS
+-------
+include::global-options.txt[]
+
+EXIT STATUS
+-----------
+Returns 0 if neither legacy file has anything to report. Returns a
+non-zero status if config.json or discovery.conf, or a '.converted'
+marker for either, is present -- regardless of which of the states
+listed above applies. Use the printed output, not the exit status, to
+tell those states apart.
+
+EXAMPLES
+--------
+* Check the system's legacy configuration state, config.json already
+  converted and no discovery.conf ever present:
++
+------------
+# nvme config status
+------------
++
+------------
+/usr/local/etc/nvme/config.json: present, already converted (/usr/local/etc/nvme/config.json.converted exists) -- delete both once rollback is no longer a concern
+note: if /usr/local/etc/nvme/config.json was replaced after conversion (for example, a package rollback followed by reinstall), this marker may be stale; verify its contents against the INI configuration before deleting either file
+------------
+
+* Check a system that never had a legacy configuration:
++
+------------
+# nvme config status
+------------
++
+------------
+no legacy configuration found; nothing to convert
+------------
+
+SEE ALSO
+--------
+nvme-config-convert(1)
+nvme-config-show(1)
+nvme-config-validate(1)
+nvme-connect-all(1)
+nvme-discover(1)
+https://github.com/linux-nvme/nvme-cli/blob/master/libnvme/design/CONFIG.md
+
+NVME
+----
+Part of the nvme-user suite
