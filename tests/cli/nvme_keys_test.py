@@ -147,12 +147,18 @@ class KeysCLITest(unittest.TestCase):
         # the implied path too, not passed on to be truncated or padded.
         self._run('gen-kxchap', f'--secret={"ab" * 33}', expect_fail=True)
 
+    def test_gen_kxchap_odd_hex_secret_fails(self):
+        # An odd number of hexadecimal characters is not a whole number of
+        # bytes. nvme-cli 2.x padded the trailing nibble with a zero and
+        # emitted a secret the caller never gave.
+        self._run('gen-kxchap', f'--secret={"ab" * 31 + "a"}',
+                  expect_fail=True)
+
     def test_gen_kxchap_secret_length_must_match_the_secret(self):
         # The secret is the payload, so a length that contradicts it is an
         # error rather than a licence to truncate.
         self._run('gen-kxchap', f'--secret={"ab" * 64}',
                   '--key-length=32', expect_fail=True)
-
 
     def test_gen_kxchap_nqn_is_rejected(self):
         # The payload is the secret, which no NQN takes part in deriving,

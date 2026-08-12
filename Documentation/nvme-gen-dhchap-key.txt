@@ -17,12 +17,15 @@ DESCRIPTION
 -----------
 Deprecated alias for linknvme-keys-gen-kxchap[1], kept for scripts written
 against nvme-cli versions older than 3.0. It forwards to that command, with
-two differences from nvme-cli 2.x:
+three differences from nvme-cli 2.x:
 
 * '--nqn'/'-n' is accepted and ignored, with a warning.
 * '--secret'/'-s' goes into the DHHC-1 string as it stands, where 2.x put the
   key transformed from it, so the output differs whenever '--hmac' is
   non-zero.
+* '--secret'/'-s' with an odd number of hexadecimal characters is rejected,
+  where 2.x padded the trailing one with a zero and emitted a secret that was
+  never given.
 
 New scripts should use 'nvme keys gen-kxchap' instead. This alias prints a
 deprecation warning on stderr and may be removed in a future release.
