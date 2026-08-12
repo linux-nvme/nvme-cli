@@ -3126,7 +3126,8 @@ retry:
 	err = libnvmf_add_ctrl(h, c);
 	if (!err)
 		return 0;
-	if (fctx->hooks.decide_retry(fctx, err, fctx->hooks.user_data))
+	if (fctx->hooks.decide_retry &&
+	    fctx->hooks.decide_retry(fctx, err, fctx->hooks.user_data))
 		goto retry;
 
 	return err;
@@ -3947,11 +3948,13 @@ __shr_public int libnvmf_connect(
 		write_devid_file(fctx, devid_fd, c);
 		if (instance >= 0)
 			registry_update_on_connect(ctx, instance);
-		fctx->hooks.already_connected(fctx, h,
-			libnvme_ctrl_get_subsysnqn(c),
-			libnvme_ctrl_get_transport(c),
-			libnvme_ctrl_get_traddr(c),
-			libnvme_ctrl_get_trsvcid(c), fctx->hooks.user_data);
+		if (fctx->hooks.already_connected)
+			fctx->hooks.already_connected(fctx, h,
+				libnvme_ctrl_get_subsysnqn(c),
+				libnvme_ctrl_get_transport(c),
+				libnvme_ctrl_get_traddr(c),
+				libnvme_ctrl_get_trsvcid(c),
+				fctx->hooks.user_data);
 		return -EALREADY;
 	}
 
@@ -4003,7 +4006,8 @@ __shr_public int libnvmf_connect(
 	}
 
 	write_devid_file(fctx, devid_fd, c);
-	fctx->hooks.connected(fctx, c, fctx->hooks.user_data);
+	if (fctx->hooks.connected)
+		fctx->hooks.connected(fctx, c, fctx->hooks.user_data);
 
 	return 0;
 }
