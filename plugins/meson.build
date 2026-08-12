@@ -25,6 +25,7 @@ all_plugins = {
   'nvme-mi': ['plugins/nvme-mi/nvme-mi-plugin.c'],
   'resv': ['plugins/resv/resv-plugin.c'],
   'seagate': ['plugins/seagate/seagate-nvme.c'],
+  'security': ['plugins/security/security-plugin.c'],
   'shannon': ['plugins/shannon/shannon-nvme.c'],
   'ssstc': ['plugins/ssstc/ssstc-nvme.c'],
   'toshiba': ['plugins/toshiba/toshiba-nvme.c'],

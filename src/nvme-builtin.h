@@ -84,8 +84,10 @@ COMMAND_LIST(
 	ENTRY("fw-download", "Download new firmware", fw_download)
 	ENTRY("admin-passthru", "Submit an arbitrary admin command, return results", admin_passthru)
 	ENTRY("io-passthru", "Submit an arbitrary IO command, return results", io_passthru)
-	ENTRY("security-send", "Submit a Security Send command, return results", sec_send)
-	ENTRY("security-recv", "Submit a Security Receive command, return results", sec_recv)
+#ifdef CONFIG_DEPRECATED_CMDS
+	ENTRY_DEPRECATED("security-send", "Submit a Security Send command, return results (deprecated, use 'nvme security send')", sec_send)
+	ENTRY_DEPRECATED("security-recv", "Submit a Security Receive command, return results (deprecated, use 'nvme security recv')", sec_recv)
+#endif /* CONFIG_DEPRECATED_CMDS */
 	ENTRY("get-lba-status", "Submit a Get LBA Status command, return results", get_lba_status)
 	ENTRY("capacity-mgmt", "Submit Capacity Management Command, return results", capacity_mgmt)
 #ifdef CONFIG_DEPRECATED_CMDS
