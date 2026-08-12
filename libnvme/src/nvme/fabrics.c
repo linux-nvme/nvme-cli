@@ -35,6 +35,7 @@
 #include <ccan/list/list.h>
 #include <ccan/str/str.h>
 
+#include <array-util.h>
 #include <compiler-attributes.h>
 
 #include <libnvme.h>
@@ -2609,8 +2610,8 @@ static int set_discovery_kato(struct libnvmf_context *fctx)
 	int tmo = fctx->ctrl_params.cfg.keep_alive_tmo;
 	/*
 	 * EPCSD isn't known until after the Discovery Log Page comes back, so
-	 * auto mode optimistically requests a KATO here; dc_should_connect()
-	 * disconnects per entry afterward if EPCSD turns out to be unset.
+	 * auto mode optimistically requests a KATO here; dc_decide()
+	 * disconnects afterward if EPCSD turns out to be unset.
 	 */
 	bool wants_kato = fctx->persistent == LIBNVMF_PERSISTENT_AUTO ||
 		fctx->persistent == LIBNVMF_PERSISTENT_FORCE;
@@ -2681,31 +2682,77 @@ static bool dc_should_disconnect(struct libnvmf_context *fctx,
 	return disconnect;
 }
 
+enum dc_ownership {
+	DC_OWNED,	/* this call created it; we may disconnect it */
+	DC_BORROWED,	/* pre-existing; never ours to disconnect */
+};
+
 /*
- * DUPRETINFO isn't checked here: the spec defines it as always 0 for
- * anything other than a SUBTYPE 03h (current discovery subsystem)
- * entry, and self entries never reach this function -- the caller
- * filters them out before calling dc_should_connect().
+ * "Hosts or Discovery controllers are not required to process referral
+ * entries deeper than eight levels" (Base Spec, Discovery Log Page).
+ * The primary is level 0; a referral discovered at level N is level
+ * N+1. Refuse to descend past this depth.
  */
-static bool dc_should_connect(struct libnvmf_context *fctx,
-		struct nvmf_disc_log_entry *e, bool *pdisconnect)
+#define NVMF_MAX_REFERRAL_DEPTH	8
+
+/*
+ * TIDs of every DC visited so far in one top-level libnvmf_discover()
+ * call, so a referral graph with more than one path to the same DC
+ * (or an outright cycle) is walked once, not once per path. Distinct
+ * from "is it currently connected": a DC visited earlier in this same
+ * walk may already have been disconnected by the time a second path
+ * reaches it, and should still not be walked again.
+ */
+SHR_PTRARRAY_DEFINE(dc_visited, struct libnvmf_tid);
+
+static bool dc_visited_has(struct dc_visited *visited,
+		const struct libnvmf_tid *tid)
 {
-	__u16 eflags;
+	const char *canonical = libnvmf_tid_get_canonical(tid);
 
-	if (e->subtype == NVME_NQN_NVME) {
-		*pdisconnect = false;
-		return fctx->connect;
-	}
+	for (size_t i = 0; i < visited->len; i++)
+		if (!strcmp(libnvmf_tid_get_canonical(visited->items[i]),
+			    canonical))
+			return true;
 
-	eflags = le16_to_cpu(e->eflags);
-	*pdisconnect = dc_should_disconnect(fctx, e->subnqn, eflags);
-	return true;
+	return false;
 }
+
+/* Register c's own identity, so a referral elsewhere in this walk that
+ * loops back to c is recognized. Best-effort: a TID construction
+ * failure here just means this one DC isn't deduplicated, not a fatal
+ * error for the walk.
+ */
+static void dc_visited_register(struct dc_visited *visited,
+		struct libnvme_ctrl *c, struct libnvmf_context *fctx)
+{
+	struct libnvmf_tid *tid;
+	int err;
+
+	err = libnvmf_tid_from_fields(libnvme_ctrl_get_transport(c),
+			libnvme_ctrl_get_traddr(c), libnvme_ctrl_get_trsvcid(c),
+			libnvme_ctrl_get_subsysnqn(c),
+			libnvme_ctrl_get_host_traddr(c),
+			libnvme_ctrl_get_host_iface(c),
+			fctx->hostnqn, fctx->hostid, &tid);
+	if (err)
+		return;
+
+	if (dc_visited_append(visited, tid))
+		libnvmf_tid_free(tid);
+}
+
+static inline void libnvmf_tid_freep(struct libnvmf_tid **p)
+{
+	if (*p)
+		libnvmf_tid_free(*p);
+}
+#define __cleanup_libnvmf_tid __cleanup(libnvmf_tid_freep)
 
 /*
  * Bundles the controller and the decisions made about it while walking a
  * Discovery Log Page, so the whole outcome for one entry (or, with @e
- * NULL, for the primary's own self entry) can be logged in one place.
+ * NULL, for the DC's own self entry) can be logged in one place.
  */
 struct dc_decision {
 	struct libnvme_ctrl *c;
@@ -2714,6 +2761,35 @@ struct dc_decision {
 	bool connect;
 	bool disconnect;
 };
+
+/*
+ * Pure: no I/O, no side effects, so this is straightforward to unit
+ * test on its own. A DC we don't own is never ours to disconnect. One
+ * we own decides from its own self entry's EPCSD when it reported one;
+ * failing that, a referral falls back to its parent's cached view
+ * (@parent_eflags, the referral entry's own eflags, as seen before
+ * ever connecting to it); the primary DC has no parent and no fallback,
+ * so an absent self entry there means EPCSD=0 -- which is exactly what
+ * the spec defines an unreported EPCSD as meaning anyway.
+ */
+static bool dc_decide(struct libnvmf_context *fctx, const char *subnqn,
+		enum dc_ownership own, bool self_seen, __u16 self_eflags,
+		const __u16 *parent_eflags)
+{
+	__u16 eflags;
+
+	if (own == DC_BORROWED)
+		return false;
+
+	if (self_seen)
+		eflags = self_eflags;
+	else if (parent_eflags)
+		eflags = *parent_eflags;
+	else
+		eflags = 0;
+
+	return dc_should_disconnect(fctx, subnqn, eflags);
+}
 
 static void dc_log_decision(struct libnvmf_context *fctx,
 		struct nvmf_disc_log_entry *e, const struct dc_decision *d,
@@ -2744,14 +2820,43 @@ static void dc_log_decision(struct libnvmf_context *fctx,
 		reason ? reason : "");
 }
 
+static void dc_already_connected(struct libnvmf_context *fctx,
+		struct libnvme_host *h, struct nvmf_disc_log_entry *e)
+{
+	if (fctx->hooks.already_connected)
+		fctx->hooks.already_connected(fctx, h, e->subnqn,
+			libnvmf_trtype_str(e->trtype), e->traddr, e->trsvcid,
+			fctx->hooks.user_data);
+}
+
+/*
+ * Walk one DC's Discovery Log Page. @own says whether this call created
+ * c (may disconnect it) or found it already connected (never ours to
+ * disconnect). @parent_eflags is NULL for the primary DC (no parent to
+ * fall back to); for a referral, it points at that referral entry's
+ * own eflags, as its parent saw it before ever connecting. @depth
+ * counts referral hops from the primary (0); @visited is the whole
+ * walk's dedup set. On return, *@disconnected says whether this call
+ * disconnected c itself, so the caller knows whether it's still safe
+ * to look c up later in the same walk (persisting) or not (torn down)
+ * -- freeing c here is the caller's job either way, but freeing a
+ * still-persisting c would incorrectly drop it from the host's tree,
+ * breaking dedup for the rest of the walk. @disconnected may be NULL
+ * (the primary's caller doesn't need it: it frees c unconditionally
+ * once the whole walk is over, by which point nothing else in this
+ * walk can still need to find it).
+ */
 static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, struct libnvme_ctrl *c,
-		bool primary, bool already_connected)
+		enum dc_ownership own, const __u16 *parent_eflags,
+		unsigned int depth, struct dc_visited *visited,
+		bool *disconnected)
 {
 	__cleanup_free struct nvmf_discovery_log *log = NULL;
 	libnvme_subsystem_t s = libnvme_ctrl_get_subsystem(c);
 	libnvme_host_t h = libnvme_subsystem_get_host(s);
 	struct nvmf_disc_log_entry *self_entry = NULL;
+	struct dc_decision d;
 	uint64_t numrec;
 	int err;
 
@@ -2759,6 +2864,9 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		.max_retries = fctx->default_max_discovery_retries,
 		.lsp = NVMF_LOG_DISC_LSP_NONE,
 	};
+
+	if (disconnected)
+		*disconnected = false;
 
 	err = nvme_discovery_log(c, &args, &log);
 	if (err) {
@@ -2774,133 +2882,195 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		fctx->hooks.discovery_log(fctx, log, numrec,
 			fctx->hooks.user_data);
 
+	dc_visited_register(visited, c, fctx);
+
+	/* Pass 1: find our own self entry, if any -- the only place our
+	 * own EPCSD is ever reported. Also sanitizes every entry once,
+	 * up front, so pass 2 doesn't need to.
+	 */
 	for (int i = 0; i < numrec; i++) {
 		struct nvmf_disc_log_entry *e = &log->entries[i];
-		struct dc_decision d = { 0 };
-		libnvme_ctrl_t cl;
-		bool discover = false;
-		struct libnvmf_context nfctx = *fctx;
 
 		sanitize_discovery_log_entry(c->ctx, e);
+		if (e->subtype == NVME_NQN_CURR && !self_entry)
+			self_entry = e;
+	}
 
-		if (e->subtype == NVME_NQN_CURR) {
-			/*
-			 * This entry describes c's own port. It is the
-			 * only place c's own EPCSD is ever reported, so
-			 * remember it instead of silently discarding it.
-			 * Take the first one seen; every copy describes
-			 * the same DC, regardless of which port it came
-			 * back on.
-			 */
-			if (!self_entry)
-				self_entry = e;
-			d.c = c;
-			d.already_connected = true;
-			dc_log_decision(fctx, e, &d,
-				"self entry, decision deferred to primary");
+	/* Decide and act on our own fate before touching any referral:
+	 * nothing past this point needs c's own connection, only
+	 * independent connections to whatever c's log points at.
+	 */
+	d = (struct dc_decision){
+		.c = c,
+		.primary = !parent_eflags,
+		.already_connected = own == DC_BORROWED,
+	};
+	d.disconnect = dc_decide(fctx, libnvme_ctrl_get_subsysnqn(c), own,
+			self_entry != NULL,
+			self_entry ? le16_to_cpu(self_entry->eflags) : 0,
+			parent_eflags);
+
+	if (self_entry) {
+		dc_log_decision(fctx, self_entry, &d, NULL);
+	} else if (own == DC_BORROWED) {
+		dc_log_decision(fctx, NULL, &d,
+			"pre-existing, not ours to disconnect");
+	} else if (parent_eflags) {
+		dc_log_decision(fctx, NULL, &d,
+			"no self entry, using parent's view");
+	} else {
+		dc_log_decision(fctx, NULL, &d,
+			"no self entry, EPCSD assumed 0");
+	}
+
+	if (d.disconnect) {
+		/*
+		 * Safe to disconnect now, before walking c's own referrals:
+		 * this connection is only ever needed to fetch c's own DLP,
+		 * and dc_visited already recorded c, independent of whether
+		 * the connection stays open.
+		 */
+		libnvmf_disconnect_ctrl(c);
+		if (disconnected)
+			*disconnected = true;
+	}
+
+	/* Pass 2: everything else -- referrals to walk, NVM subsystem
+	 * entries to connect per --connect. Self entries are already
+	 * handled above.
+	 */
+	for (int i = 0; i < numrec; i++) {
+		__cleanup_libnvmf_tid struct libnvmf_tid *tid = NULL;
+		struct nvmf_disc_log_entry *e = &log->entries[i];
+		struct libnvmf_context nfctx = *fctx;
+		bool child_disconnected = false;
+		struct dc_decision cd = { 0 };
+		enum dc_ownership child_own;
+		bool discover = false;
+		libnvme_ctrl_t cl;
+		__u16 eflags;
+		int cerr;
+
+		if (e->subtype == NVME_NQN_CURR)
 			continue;
-		}
 
 		nfctx.ctrl_params.subsysnqn = e->subnqn;
 		nfctx.ctrl_params.transport = libnvmf_trtype_str(e->trtype);
-		nfctx.ctrl_params.traddr = e->traddr;
 		nfctx.ctrl_params.trsvcid = e->trsvcid;
-
-		/* Already connected ? */
-		cl = lookup_ctrl(h, &nfctx);
-		if (cl && libnvme_ctrl_get_name(cl)) {
-			d.c = cl;
-			d.already_connected = true;
-			dc_log_decision(fctx, e, &d, "already connected");
-			continue;
-		}
+		nfctx.ctrl_params.traddr = e->traddr;
+		eflags = le16_to_cpu(e->eflags);
 
 		/* Skip connect if the transport types don't match */
 		if (strcmp(libnvme_ctrl_get_transport(c),
 			   nfctx.ctrl_params.transport)) {
-			dc_log_decision(fctx, e, &d, "transport mismatch");
+			dc_log_decision(fctx, e, &cd, "transport mismatch");
 			continue;
 		}
 
-		if (!dc_should_connect(&nfctx, e, &d.disconnect)) {
-			dc_log_decision(fctx, e, &d,
-				"not connecting (duplicate info, or connect not requested)");
+		if (e->subtype == NVME_NQN_NVME) {
+			if (!fctx->connect) {
+				dc_log_decision(fctx, e, &cd,
+					"connect not requested");
+				continue;
+			}
+
+			cerr = nvmf_connect_disc_entry(h, e, &nfctx, NULL,
+					&cd.c);
+			if (cd.c) {
+				cd.connect = true;
+				dc_log_decision(fctx, e, &cd, NULL);
+			} else if (cerr == -ENVME_CONNECT_ALREADY) {
+				dc_already_connected(fctx, h, e);
+			} else {
+				dc_log_decision(fctx, e, &cd,
+					libnvme_strerror(-cerr));
+			}
 			continue;
 		}
-		d.connect = true;
+
+		/* NVME_NQN_DISC: a referral to another Discovery Service. */
+		if (depth >= NVMF_MAX_REFERRAL_DEPTH) {
+			dc_log_decision(fctx, e, &cd,
+				"referral depth limit reached, not descending");
+			continue;
+		}
+
+		if (!libnvmf_tid_from_fields(nfctx.ctrl_params.transport,
+				nfctx.ctrl_params.traddr,
+				nfctx.ctrl_params.trsvcid,
+				nfctx.ctrl_params.subsysnqn,
+				nfctx.ctrl_params.host_traddr,
+				nfctx.ctrl_params.host_iface,
+				fctx->hostnqn, fctx->hostid, &tid) &&
+		    dc_visited_has(visited, tid)) {
+			dc_log_decision(fctx, e, &cd,
+				"already visited this walk");
+			continue;
+		}
+
+		cl = lookup_ctrl(h, &nfctx);
+		if (cl && libnvme_ctrl_get_name(cl)) {
+			cd.c = cl;
+			child_own = DC_BORROWED;
+		} else {
+			set_discovery_kato(&nfctx);
+			cerr = nvmf_connect_disc_entry(h, e, &nfctx, &discover,
+					&cd.c);
+			if (!cd.c) {
+				if (cerr == -ENVME_CONNECT_ALREADY)
+					dc_already_connected(fctx, h, e);
+				else
+					dc_log_decision(fctx, e, &cd,
+						libnvme_strerror(-cerr));
+				continue;
+			}
+			child_own = DC_OWNED;
+		}
+		cd.connect = true;
+		dc_log_decision(fctx, e, &cd, NULL);
+
+		if (tid) {
+			if (!dc_visited_append(visited, tid))
+				tid = NULL; /* ownership transferred */
+		}
 
 		/*
-		 * Only discovery controllers need their KATO set here.
-		 * NVM subsystems (I/O controllers) get theirs set elsewhere.
+		 * fctx, not nfctx: nfctx is a per-entry clone that dies
+		 * with this iteration. Recursing with it would hand every
+		 * deeper level a stack alias of fctx's owned pointers
+		 * (hostnqn, hostid, tls_key, nbft_path) instead of the
+		 * real, single owner.
 		 */
-		if (e->subtype != NVME_NQN_NVME)
-			set_discovery_kato(&nfctx);
+		_nvmf_discover(ctx, fctx, cd.c, child_own, &eflags,
+				depth + 1, visited, &child_disconnected);
 
-		err = nvmf_connect_disc_entry(h, e, &nfctx, &discover, &d.c);
-		if (err && err != -ENVME_CONNECT_ALREADY)
-			dc_log_decision(fctx, e, &d, libnvme_strerror(-err));
-		else
-			dc_log_decision(fctx, e, &d, NULL);
-
-		if (d.c) {
-			/*
-			 * fctx, not nfctx: nfctx is a per-entry clone that
-			 * dies with this iteration. Recursing with it would
-			 * hand every deeper level a stack alias of fctx's
-			 * owned pointers (hostnqn, hostid, tls_key,
-			 * nbft_path) instead of the real, single owner.
-			 */
-			if (discover)
-				_nvmf_discover(ctx, fctx, d.c, false, false);
-
-			if (d.disconnect) {
-				libnvmf_disconnect_ctrl(d.c);
-				libnvme_free_ctrl(d.c);
-			}
-		} else if (err == -ENVME_CONNECT_ALREADY) {
-			if (fctx->hooks.already_connected)
-				fctx->hooks.already_connected(fctx, h,
-					e->subnqn,
-					libnvmf_trtype_str(e->trtype),
-					e->traddr, e->trsvcid,
-					fctx->hooks.user_data);
-		}
-	}
-
-	/*
-	 * c has no parent to make this decision for it. Its own EPCSD is
-	 * only ever reported in its own self entry (SUBTYPE 03h); an
-	 * absent self entry means EPCSD is not reported, which the spec
-	 * defines identically to EPCSD=0.
-	 */
-	if (primary) {
-		struct dc_decision d = {
-			.c = c,
-			.primary = true,
-			.already_connected = already_connected,
-		};
-
-		if (already_connected) {
-			dc_log_decision(fctx, self_entry, &d,
-				"pre-existing, not ours to disconnect");
-		} else {
-			__u16 eflags = self_entry ?
-				le16_to_cpu(self_entry->eflags) : 0;
-
-			d.disconnect = dc_should_disconnect(fctx,
-					libnvme_ctrl_get_subsysnqn(c), eflags);
-			if (self_entry)
-				dc_log_decision(fctx, self_entry, &d, NULL);
-			else
-				dc_log_decision(fctx, NULL, &d,
-					"no self entry, EPCSD assumed 0");
-
-			if (d.disconnect)
-				libnvmf_disconnect_ctrl(c);
-		}
+		if (child_disconnected)
+			libnvme_free_ctrl(cd.c);
 	}
 
 	return 0;
+}
+
+/*
+ * Owns the whole-walk dc_visited set: allocate it, run the recursive
+ * walk starting at c, then free it. Keeps _nvmf_discover()'s recursion
+ * ignorant of dc_visited's lifetime, and its caller ignorant of
+ * dc_visited existing at all.
+ */
+static int dc_walk(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx, struct libnvme_ctrl *c,
+		enum dc_ownership own)
+{
+	struct dc_visited visited = { 0 };
+	int err;
+
+	err = _nvmf_discover(ctx, fctx, c, own, NULL, 0, &visited, NULL);
+
+	for (size_t i = 0; i < visited.len; i++)
+		libnvmf_tid_free(visited.items[i]);
+	dc_visited_free(&visited);
+
+	return err;
 }
 
 __shr_public const char *libnvmf_get_default_trsvcid(const char *transport,
@@ -3616,11 +3786,6 @@ out_free:
 	return ret;
 }
 
-enum dc_ownership {
-	DC_OWNED,	/* this call created it; we may disconnect it */
-	DC_BORROWED,	/* pre-existing; never ours to disconnect */
-};
-
 /* Resolve fctx->device to a usable, already-connected discovery ctrl. */
 static struct libnvme_ctrl *dc_open_by_device(struct libnvme_global_ctx *ctx,
 		struct libnvmf_context *fctx, enum dc_ownership *own)
@@ -3740,7 +3905,7 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 		return err;
 	}
 
-	err = _nvmf_discover(ctx, fctx, c, true, own == DC_BORROWED);
+	err = dc_walk(ctx, fctx, c, own);
 	libnvme_free_ctrl(c);
 
 	return err;
