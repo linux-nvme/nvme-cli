@@ -88,10 +88,12 @@ COMMAND_LIST(
 	ENTRY("security-recv", "Submit a Security Receive command, return results", sec_recv)
 	ENTRY("get-lba-status", "Submit a Get LBA Status command, return results", get_lba_status)
 	ENTRY("capacity-mgmt", "Submit Capacity Management Command, return results", capacity_mgmt)
-	ENTRY("resv-acquire", "Submit a Reservation Acquire, return results", resv_acquire)
-	ENTRY("resv-register", "Submit a Reservation Register, return results", resv_register)
-	ENTRY("resv-release", "Submit a Reservation Release, return results", resv_release)
-	ENTRY("resv-report", "Submit a Reservation Report, return results", resv_report)
+#ifdef CONFIG_DEPRECATED_CMDS
+	ENTRY_DEPRECATED("resv-acquire", "Submit a Reservation Acquire, return results (deprecated, use 'nvme resv acquire')", resv_acquire)
+	ENTRY_DEPRECATED("resv-register", "Submit a Reservation Register, return results (deprecated, use 'nvme resv register')", resv_register)
+	ENTRY_DEPRECATED("resv-release", "Submit a Reservation Release, return results (deprecated, use 'nvme resv release')", resv_release)
+	ENTRY_DEPRECATED("resv-report", "Submit a Reservation Report, return results (deprecated, use 'nvme resv report')", resv_report)
+#endif /* CONFIG_DEPRECATED_CMDS */
 	ENTRY("dsm", "Submit a Data Set Management command, return results", dsm)
 	ENTRY("copy", "Submit a Simple Copy command, return results", copy_cmd)
 	ENTRY("flush", "Submit a Flush command, return results", flush_cmd)
