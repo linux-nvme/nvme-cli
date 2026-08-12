@@ -36,15 +36,15 @@ class TestMicronVsTemperatureStats(TestMicron):
         return self.run_plugin_cmd("vs-temperature-stats", device=device, args=args)
 
     def _active_sensor_indices(self):
-        """Return the 1-based indices of active temperature sensors from nvme smart-log.
+        """Return the 1-based indices of active temperature sensors from nvme log smart.
 
         Sensors are reported sparsely, so the returned indices may have gaps.
         """
         result = self.run_cmd(
-            f"{self.nvme_bin} smart-log {self.ctrl} --output-format=json"
+            f"{self.nvme_bin} log smart {self.ctrl} --output-format=json"
         )
         self.assertEqual(result.returncode, 0,
-                         f"nvme smart-log failed: {result.stderr}")
+                         f"nvme log smart failed: {result.stderr}")
         data = json.loads(result.stdout)
         return [i for i in range(1, 9) if f"temperature_sensor_{i}" in data]
 

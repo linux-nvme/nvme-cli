@@ -49,13 +49,13 @@ class TestNVMeFwLogCmd(TestNVMe):
         super().tearDown()
 
     def get_fw_log(self):
-        """ Wrapper for executing nvme fw-log.
+        """ Wrapper for executing nvme log fw.
             - Args:
                 - None
             - Returns:
                 - 0 on success, error code on failure.
         """
-        fw_log_cmd = f"{self.nvme_bin} fw-log {self.ctrl}"
+        fw_log_cmd = f"{self.nvme_bin} log fw {self.ctrl}"
         return self.exec_cmd(fw_log_cmd)
 
     def test_fw_log(self):

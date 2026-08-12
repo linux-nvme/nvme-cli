@@ -161,7 +161,7 @@ class TestCommandMetadataSchema(unittest.TestCase):
     def test_expected_commands_present(self):
         """A few well-known builtin commands are emitted."""
         names = {c["name"] for c in self.data["commands"]}
-        for expected in ("list", "id-ctrl", "id-ns", "smart-log"):
+        for expected in ("list", "id-ctrl", "id-ns", "get-log"):
             self.assertIn(expected, names)
 
     def test_plugins_match_help(self):
