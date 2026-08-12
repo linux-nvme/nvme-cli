@@ -3,7 +3,7 @@ nvme-boot-part-log(1)
 
 NAME
 ----
-nvme-boot-part-log - Retrieves a Boot Partition log page from an NVMe device
+nvme-boot-part-log - Retrieves a Boot Partition log page from an NVMe device (deprecated)
 
 SYNOPSIS
 --------
@@ -13,35 +13,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves an Boot Partition log page from an NVMe device and provides
-the returned structure.
+Deprecated alias for linknvme-log-boot-part[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+New scripts should use 'nvme log boot-part' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success, the returned log structure will be in raw binary format _only_ with
---output-file option which is mandatory.
-
-OPTIONS
--------
--s <field>::
---lsp=<field>::
-	The log specified field of LID.
-
--f <file>::
---output-file=<file>::
-	File name to which raw binary data will be saved to.
+See linknvme-log-boot-part[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Retrieve Boot Partition data to boot_part_log.bin
-+
-------------
-# nvme boot-part-log /dev/nvme0 --output-file=boot_part_log.bin
-------------
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-log-boot-part[1]

@@ -3,7 +3,7 @@ nvme-error-log(1)
 
 NAME
 ----
-nvme-error-log - Send NVME Error log page request, return result and log
+nvme-error-log - Send NVME Error log page request, return result and log (deprecated)
 
 SYNOPSIS
 --------
@@ -22,81 +22,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves NVMe Error log page from an NVMe device and provides the
-returned structure. All the returned structure fields including the
-ordering of the entries are described in the spec.
+Deprecated alias for linknvme-log-error[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+New scripts should use 'nvme log error' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
-On success, the returned error log structure may be returned in one of
-several ways depending on the option flags; the structure may parsed by
-the program and printed in a readable format or the raw buffer may be
-printed to stdout for another program to parse.
-
-OPTIONS
--------
--e <entries>::
---log-entries=<entries>::
-	Specifies how many log entries the program should request from
-	the device. This must be at least one, and shouldn't exceed the
-	device's capabilities. Defaults to 64 log entries.
-
--b::
---raw-binary::
-	Print the raw error log buffer to stdout.
-
--V::
---valid-entry::
-	Output valid entry only.
-
--S <sqid>::
---sqid=<sqid>::
-	Output specified SQID entry only.
-
--s <status>::
---status=<status>::
-	Output specified STATUS entry only.
-
--l <lba>::
---lba=<lba>::
-	Output specified LBA entry only.
-
--n <nsid>::
---namespace-id=<nsid>::
-	Output specified NSID entry only.
-
--t <trtype>::
---trtype=<trtype>::
-	Output specified TRTYPE entry only.
-
--c <csi>::
---csi=<csi>::
-	Output specified CSI entry only.
-
--O <opcode>::
---opcode=<opcode>::
-	Output specified OPC entry only.
+See linknvme-log-error[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Get the error log and print it in a human readable format:
-+
-------------
-# nvme error-log /dev/nvme0
-------------
-+
-
-* Print the raw output to a file:
-+
-------------
-# nvme error-log /dev/nvme0 --raw-binary > error_log.raw
-------------
-+
-It is probably a bad idea to not redirect stdout when using this mode.
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-log-error[1]

@@ -8,7 +8,7 @@ nvme-security-recv - Security Recv command
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'security-recv' <device> [--size=<size> | -x <size>]
+'nvme' [<global-options>] 'security recv' <device> [--size=<size> | -x <size>]
 			[--secp=<security-protocol> | -p <security-protocol>]
 			[--spsp=<protocol-specific> | -s <protocol-specific>]
 			[--nssf=<nvme-specific> | -N <nvme-specific>]
@@ -31,6 +31,10 @@ to a Security Send command as defined by the rules of the Security
 Protocol. The Security Receive command data may not be retained if there
 is a loss of communication between the controller and host, or if a
 controller reset occurs.
+
+The bare 'nvme security-recv' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme security recv' instead.
 
 OPTIONS
 -------

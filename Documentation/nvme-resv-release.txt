@@ -8,7 +8,7 @@ nvme-resv-release - Release an nvme reservation
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'resv-release' <device>
+'nvme' [<global-options>] 'resv release' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--crkey=<crkey> | -c <crkey>]
 			[--rtype=<rtype> | -t <rtype>]
@@ -19,6 +19,10 @@ DESCRIPTION
 -----------
 The Reservation Release command is used to release or clear a reservation
 held on a namespace.
+
+The bare 'nvme resv-release' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme resv release' instead.
 
 OPTIONS
 -------

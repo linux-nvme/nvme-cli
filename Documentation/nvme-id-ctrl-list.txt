@@ -1,0 +1,49 @@
+nvme-id-ctrl-list(1)
+====================
+
+NAME
+----
+nvme-id-ctrl-list - Send NVMe Identify List Controllers, return result and structure
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'id ctrl-list' <device> [--cntid=<cntid> | -c <cntid>]
+			[--namespace-id=<nsid> | -n <nsid>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends an identify command for controller list
+and provides the result and returned structure. This uses either mode
+12h or 13h depending on the requested namespace identifier.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+The starting controller in the list always begins with 0 unless the
+`'--cntid'` option is given to override.
+
+On success, the controller array is printed for each index and controller
+identifier.
+
+OPTIONS
+-------
+-c <cntid>::
+--cntid=<cntid>::
+	Retrieve the identify list structure starting with the given controller id.
+
+-n <nsid>::
+--namespace-id=<nsid>::
+	If provided, will request the controllers attached to the
+	specified namespace. If no namespace is given, or set to 0, the
+	command requests the controller list for the entire subsystem,
+	whether or not they are attached to namespace(s).
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

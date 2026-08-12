@@ -1,0 +1,36 @@
+nvme-log-mgmt-addr-list(1)
+==========================
+
+NAME
+----
+nvme-log-mgmt-addr-list - Retrieve Management Address List Log, show it
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log mgmt-addr-list' <device>
+
+DESCRIPTION
+-----------
+Retrieve Management Address List Log, show it
+
+The <device> parameter is mandatory NVMe character device (ex: /dev/nvme0).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a mgmt-addr-list-log
++
+------------
+# nvme log mgmt-addr-list /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

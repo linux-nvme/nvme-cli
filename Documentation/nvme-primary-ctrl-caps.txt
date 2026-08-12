@@ -3,7 +3,7 @@ nvme-primary-ctrl-caps(1)
 
 NAME
 ----
-nvme-primary-ctrl-caps - Send identify Primary Controller Caps, return result and structure
+nvme-primary-ctrl-caps - Send identify Primary Controller Caps, return result and structure (deprecated)
 
 SYNOPSIS
 --------
@@ -12,34 +12,26 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-For the NVMe device given, sends an identify primary Controller caps command and
-provides the result and returned structure.
+Deprecated alias for linknvme-id-primary-ctrl-caps[1], kept for scripts
+written against nvme-cli versions older than 3.0. Options and behavior
+are identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+New scripts should use 'nvme id primary-ctrl-caps' instead. This alias
+prints a deprecation warning on stderr and may be removed in a future
+release.
 
-On success, the structure may be returned in one of several ways depending
-on the option flags; the structure may be parsed by the program or the
-raw buffer may be printed to stdout.
+See linknvme-id-primary-ctrl-caps[1] for the full option reference.
 
-OPTIONS
--------
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Get Primary Ctrl Caps of the device in default format
-+
-------------
-# nvme primary-ctrl-caps /dev/nvme0
-------------
-* Has the program interpret the returned buffer and display the known
-fields in a human readable format:
-+
-------------
-# nvme primary-ctrl-caps /dev/nvme0 --verbose
-# nvme primary-ctrl-caps /dev/nvme0 -v
-------------
+No Examples
+
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-id-primary-ctrl-caps[1]

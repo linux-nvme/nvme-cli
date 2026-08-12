@@ -1,0 +1,46 @@
+nvme-log-host-discovery(1)
+==========================
+
+NAME
+----
+nvme-log-host-discovery - Retrieve Host Discovery Log, show it
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log host-discovery' <device>
+			[--all-host-entries | -a]
+			[--rae | -r]
+
+DESCRIPTION
+-----------
+Retrieve Host Discovery Log, show it
+
+The <device> parameter is mandatory NVMe MI device supported by the discovery
+controller (ex: mctp:<net>,<eid>[:ctrl-id]).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-a::
+--all-host-entries::
+	All Host Entries.
+
+-r::
+--rae::
+	Retain an Asynchronous Event.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a host-discovery-log
++
+------------
+# nvme log host-discovery mctp:<net>,<eid>[:ctrl-id]
+------------
+
+NVME
+----
+Part of the nvme-user suite.

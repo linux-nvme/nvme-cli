@@ -1,0 +1,47 @@
+nvme-id-secondary-ctrl-list(1)
+==============================
+
+NAME
+----
+nvme-id-secondary-ctrl-list - Show secondary controller list associated with the primary
+controller of the given device
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'id secondary-ctrl-list' <device>
+			[--cntid=<cntid> | -c <cntid>]
+			[--num-entries=<entries> | -e <entries>]
+
+DESCRIPTION
+-----------
+Show secondary controller list associated with the primary  of the given device
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+
+On success, the secondary controller list is printed.
+
+OPTIONS
+-------
+-c <cntid>::
+--cntid=<cntid>::
+	Lowest controller identifier to display.
+
+-e <entries>::
+--num-entries=<entries>::
+	Number of entries to retrieve.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Has the program issue a list-secondary to display list.
++
+------------
+# nvme id secondary-ctrl-list /dev/nvme0
+------------
+
+NVME
+----
+Part of the nvme-user suite.

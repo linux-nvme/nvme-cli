@@ -1,0 +1,37 @@
+nvme-ns-delete(1)
+=================
+
+NAME
+----
+nvme-ns-delete - Send NVMe Namespace Management delete namespace command, return result.
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'ns delete' <device>
+			[--namespace-id=<nsid> | -n <nsid>]
+
+DESCRIPTION
+-----------
+For the NVMe device given, sends an nvme namespace management command
+to delete the requested namespace and provides the result.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+The `'--namespace-id'` option is mandatory.
+
+OPTIONS
+-------
+-n <nsid>::
+--namespace-id=<nsid>::
+	The namespace identifier to delete.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+No examples yet.
+
+NVME
+----
+Part of the nvme-user suite

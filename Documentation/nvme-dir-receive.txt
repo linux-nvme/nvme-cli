@@ -8,7 +8,7 @@ nvme-dir-receive - Send a directive receive command, returns applicable results
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'dir-receive' <device>
+'nvme' [<global-options>] 'dir receive' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--data-len=<data-len> | -l <data-len>]
 			[--dir-type=<dtype> | -D <dtype>]
@@ -30,6 +30,10 @@ returned in one of several ways depending on the option flags; the
 structure may parsed by the program and printed in a readable format
 if it is a known structure, displayed in hex, or the raw buffer may be
 printed to stdout for another program to parse.
+
+The bare 'nvme dir-receive' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme dir receive' instead.
 
 OPTIONS
 -------
@@ -82,28 +86,28 @@ EXAMPLES
 * Identify directive type supported :
 +
 ------------
-# nvme dir-receive /dev/nvme0 --dir-type 0 --dir-oper 1 --verbose
+# nvme dir receive /dev/nvme0 --dir-type 0 --dir-oper 1 --verbose
 ------------
 +
 
 * Get stream directive parameters : 
 +
 ------------
-# nvme dir-receive /dev/nvme0 --dir-type 1 --dir-oper 1 --verbose
+# nvme dir receive /dev/nvme0 --dir-type 1 --dir-oper 1 --verbose
 ------------
 +
 
 * Allocate 3 streams for namespace 1
 +
 ------------
-# nvme dir-receive /dev/nvme0n1 --dir-type 1 --dir-oper 3 --req-resource 3 --verbose
+# nvme dir receive /dev/nvme0n1 --dir-type 1 --dir-oper 3 --req-resource 3 --verbose
 ------------
 +
 
 * Get streams directive status :
 +
 ------------
-# nvme dir-receive /dev/nvme0 --dir-type 1 --dir-oper 2 --verbose
+# nvme dir receive /dev/nvme0 --dir-type 1 --dir-oper 2 --verbose
 ------------
 +
 It is probably a bad idea to not redirect stdout when using this mode.

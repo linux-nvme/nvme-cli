@@ -8,7 +8,7 @@ nvme-resv-acquire - Acquire an nvme reservation
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'resv-acquire' <device>
+'nvme' [<global-options>] 'resv acquire' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--crkey=<crkey> | -c <crkey>]
 			[--prkey=<prkey> | -p <prkey>]
@@ -21,6 +21,10 @@ DESCRIPTION
 The Reservation Acquire command is used to acquire a reservation on
 a namespace, preempt a reservation held on a namespace, and abort a
 reservation held on a namespace.
+
+The bare 'nvme resv-acquire' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme resv acquire' instead.
 
 OPTIONS
 -------

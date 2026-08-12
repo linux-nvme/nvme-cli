@@ -8,7 +8,7 @@ nvme-resv-register - Register an nvme reservation
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'resv-register' <device>
+'nvme' [<global-options>] 'resv register' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
 			[--crkey=<crkey> | -c <crkey>]
 			[--nrkey=<nrkey> | -k <nrkey>]
@@ -20,6 +20,10 @@ DESCRIPTION
 -----------
 The Reservation Register command is used to register, unregister, or
 replace a reservation key.
+
+The bare 'nvme resv-register' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme resv register' instead.
 
 OPTIONS
 -------

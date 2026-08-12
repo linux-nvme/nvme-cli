@@ -4,7 +4,7 @@ nvme-list-secondary(1)
 NAME
 ----
 nvme-list-secondary - Show secondary controller list associated with the primary
-controller of the given device
+controller of the given device (deprecated)
 
 SYNOPSIS
 --------
@@ -15,33 +15,26 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Show secondary controller list associated with the primary  of the given device
+Deprecated alias for linknvme-id-secondary-ctrl-list[1], kept for scripts
+written against nvme-cli versions older than 3.0. Options and behavior
+are identical; only the top-level command name is retained.
 
-The <device> parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1).
+New scripts should use 'nvme id secondary-ctrl-list' instead. This alias
+prints a deprecation warning on stderr and may be removed in a future
+release.
 
-On success, the secondary controller list is printed.
-
-OPTIONS
--------
--c <cntid>::
---cntid=<cntid>::
-	Lowest controller identifier to display.
-
--e <entries>::
---num-entries=<entries>::
-	Number of entries to retrieve.
+See linknvme-id-secondary-ctrl-list[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Has the program issue a list-secondary to display list.
-+
-------------
-# nvme list-secondary /dev/nvme0
-------------
+No Examples
 
 NVME
 ----
-Part of the nvme-user suite.
+Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-id-secondary-ctrl-list[1]

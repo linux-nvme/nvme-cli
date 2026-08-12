@@ -3,38 +3,36 @@ nvme-detach-ns(1)
 
 NAME
 ----
-nvme-detach-ns - Send NVMe detach namespace, return result.
+nvme-detach-ns - Send NVMe detach namespace, return result. (deprecated)
 
 SYNOPSIS
 --------
 [verse]
 'nvme' [<global-options>] 'detach-ns' <device>
 			[--namespace-id=<nsid> | -n <nsid>]
-			[--controllers=<ctrl-list,> | -c <ctrl-list,>
+			[--controllers=<ctrl-list,> | -c <ctrl-list,>]
 
 DESCRIPTION
 -----------
-For the NVMe device given, sends the nvme namespace detach command for
-the provided namespace identifier, attaching to the provided list of
-controller identifiers.
+Deprecated alias for linknvme-ns-detach[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-OPTIONS
--------
--n <nsid>::
---namespace-id=<nsid>::
-	The namespace identifier to detach.
+New scripts should use 'nvme ns detach' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
 
--c <ctrl-list,>::
---controllers=<ctrl-list,>::
-	The comma separated list of controller identifiers to detach
-	the namespace from.
+See linknvme-ns-detach[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-No examples yet.
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-ns-detach[1]

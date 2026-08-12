@@ -3,7 +3,7 @@ nvme-get-ns-id(1)
 
 NAME
 ----
-nvme-get-ns-id - Retrieves the namespace ID for an NVMe block device
+nvme-get-ns-id - Retrieves the namespace ID for an NVMe block device (deprecated)
 
 SYNOPSIS
 --------
@@ -12,22 +12,25 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Retrieves the namespace ID for an NVMe block device. The <device> param
-is mandatory and must be an NVMe block device (ex: /dev/nvme0n1).
+Deprecated alias for linknvme-ns-get-id[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.
 
-OPTIONS
--------
+New scripts should use 'nvme ns get-id' instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.
+
+See linknvme-ns-get-id[1] for the full option reference.
 
 include::global-options.txt[]
 
 EXAMPLES
 --------
-* Shows the namespace id for the given block device:
-+
-------------
-# nvme get-ns-id /dev/nvme0n1
-------------
+No Examples
 
 NVME
 ----
 Part of the nvme-user suite
+
+SEE ALSO
+--------
+linknvme-ns-get-id[1]

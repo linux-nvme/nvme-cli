@@ -1,0 +1,33 @@
+nvme-ns-get-id(1)
+=================
+
+NAME
+----
+nvme-ns-get-id - Retrieves the namespace ID for an NVMe block device
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'ns get-id' <device>
+
+DESCRIPTION
+-----------
+Retrieves the namespace ID for an NVMe block device. The <device> param
+is mandatory and must be an NVMe block device (ex: /dev/nvme0n1).
+
+OPTIONS
+-------
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Shows the namespace id for the given block device:
++
+------------
+# nvme ns get-id /dev/nvme0n1
+------------
+
+NVME
+----
+Part of the nvme-user suite

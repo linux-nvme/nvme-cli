@@ -1,0 +1,55 @@
+nvme-log-phy-rx-eom(1)
+======================
+
+NAME
+----
+nvme-log-phy-rx-eom - Retrieves a Physical Interface Receiver Eye Opening
+Measurement log page from an NVMe device
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log phy-rx-eom' <device> [--lsp=<field> | -s <field>]
+			[--controller=<id> | -c <id>]
+
+DESCRIPTION
+-----------
+Retrieves a Physical Interface Receiver Eye Opening Measurement log page from
+an NVMe device and provides the returned structure.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+On success it returns 0, error code otherwise.
+
+OPTIONS
+-------
+-s <field>::
+--lsp=<field>::
+	The log specified field configuring the controller's action to take
+	during processing of the command and the measurement quality.
+
+-c <id>::
+--controller=<id>::
+	Controller ID of the controller associated with the PCIe port to be
+	measured.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Start a best quality measurement and retrieve the log page header
++
+------------
+# nvme log phy-rx-eom /dev/nvme0 --lsp=10
+------------
+
+* Retrieve a finished best quality measurement on controller with ID 3
++
+------------
+# nvme log phy-rx-eom /dev/nvme0 --lsp=2 --controller=3
+------------
+
+NVME
+----
+Part of the nvme-user suite

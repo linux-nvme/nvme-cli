@@ -8,7 +8,7 @@ nvme-io-mgmt-recv - I/O Management Receive command
 SYNOPSIS
 --------
 [verse]
-'nvme' [<global-options>] 'io-mgmt-recv' <device>
+'nvme' [<global-options>] 'io-mgmt recv' <device>
 			[--namespace-id=<NUM> | -n <NUM>]
 			[--mos=<NUM> | -s <NUM>]
 			[--mo=<NUM> | -m <NUM>]
@@ -24,6 +24,10 @@ operations are added that this program isn't aware of at the time of its
 development. As such, this is a generic command that does not do any additional
 decoding for specific types of data received. This will only report the data as
 a hex dump, or binary.
+
+The bare 'nvme io-mgmt-recv' form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use 'nvme io-mgmt recv' instead.
 
 OPTIONS
 -------

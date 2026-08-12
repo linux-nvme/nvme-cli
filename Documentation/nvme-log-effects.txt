@@ -1,0 +1,52 @@
+nvme-log-effects(1)
+===================
+
+NAME
+----
+nvme-log-effects - Send NVMe Command Effects log page request, returns result
+and log
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'log effects' <device> [--raw-binary | -b]
+
+DESCRIPTION
+-----------
+Retrieves the NVMe Command Effects log page from an NVMe device and provides
+the returned structure.
+
+The <device> parameter is mandatory and should be the NVMe character
+device (ex: /dev/nvme0).
+
+On success, the returned command effects log structure will be printed
+for each command that is supported.
+
+OPTIONS
+-------
+-b::
+--raw-binary::
+	This option will print the raw buffer to stdout. Structure is not
+	parsed by program. This overrides the verbose option.
+
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Print the effects log page in a human readable format:
++
+------------
+# nvme log effects /dev/nvme0
+------------
++
+
+* Have the program return the raw structure in binary:
++
+------------
+# nvme log effects /dev/nvme0 --raw-binary > effects_log.raw
+# nvme log effects /dev/nvme0 -b > effects_log.raw
+------------
+
+NVME
+----
+Part of the nvme-user suite
