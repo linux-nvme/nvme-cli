@@ -29,12 +29,12 @@ COMMAND_LIST(
 	ENTRY_DEPRECATED("id-iocs", "Send NVMe Identify I/O Command Set, display structure (deprecated, use 'nvme id iocs')", id_iocs)
 	ENTRY_DEPRECATED("id-domain", "Send NVMe Identify Domain List, display structure (deprecated, use 'nvme id domain')", id_domain)
 	ENTRY_DEPRECATED("list-endgrp", "Send NVMe Identify Endurance Group List, display structure (deprecated, use 'nvme id endgrp-list')", id_endurance_grp_list)
+	ENTRY_DEPRECATED("create-ns", "Creates a namespace with the provided parameters (deprecated, use 'nvme ns create')", create_ns)
+	ENTRY_DEPRECATED("delete-ns", "Deletes a namespace from the controller (deprecated, use 'nvme ns delete')", delete_ns)
+	ENTRY_DEPRECATED("attach-ns", "Attaches a namespace to requested controller(s) (deprecated, use 'nvme ns attach')", attach_ns)
+	ENTRY_DEPRECATED("detach-ns", "Detaches a namespace from requested controller(s) (deprecated, use 'nvme ns detach')", detach_ns)
+	ENTRY_DEPRECATED("get-ns-id", "Retrieve the namespace ID of opened block device (deprecated, use 'nvme ns get-id')", get_ns_id)
 #endif /* CONFIG_DEPRECATED_CMDS */
-	ENTRY("create-ns", "Creates a namespace with the provided parameters", create_ns)
-	ENTRY("delete-ns", "Deletes a namespace from the controller", delete_ns)
-	ENTRY("attach-ns", "Attaches a namespace to requested controller(s)", attach_ns)
-	ENTRY("detach-ns", "Detaches a namespace from requested controller(s)", detach_ns)
-	ENTRY("get-ns-id", "Retrieve the namespace ID of opened block device", get_ns_id)
 	ENTRY("get-log", "Generic NVMe get log, returns log in raw format", get_log)
 #ifdef CONFIG_DEPRECATED_CMDS
 	ENTRY_DEPRECATED("telemetry-log", "Retrieve FW Telemetry log write to file (deprecated, use 'nvme log telemetry')", get_telemetry_log)

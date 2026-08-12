@@ -47,9 +47,9 @@ class TestNVMeCopy(TestNVMe):
         self.ocfs = self.get_ocfs()
         self.original_cdfe = None
         self._refresh_ns_copy_limits()
-        get_ns_id_cmd = f"{self.nvme_bin} get-ns-id {self.ns1}"
+        get_ns_id_cmd = f"{self.nvme_bin} ns get-id {self.ns1}"
         result = self.run_cmd(get_ns_id_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : nvme get-ns-id failed")
+        self.assertEqual(result.returncode, 0, "ERROR : nvme ns get-id failed")
         self.ns1_nsid = int(result.stdout.strip().split(':')[-1])
         self.setup_log_dir(self.__class__.__name__)
 
@@ -179,7 +179,7 @@ class TestNVMeCopy(TestNVMe):
         # get_lba_format_size() in the parent class indexes the id ns lbafs[] array
         # using self.flbas, so set it to lbaf_index here for the size look-up.
         # This is intentional: lbaf_index is the direct array position, while flbas
-        # (computed above) is the encoded byte passed to create-ns --flbas.
+        # (computed above) is the encoded byte passed to ns create --flbas.
         self.flbas = lbaf_index
         (ds, ms) = self.get_lba_format_size()
         if ds == 0:

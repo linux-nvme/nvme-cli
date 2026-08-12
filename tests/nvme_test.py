@@ -380,21 +380,21 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - controller id.
         """
-        get_ctrl_id = f"{self.nvme_bin} list-ctrl {self.ctrl} " + \
+        get_ctrl_id = f"{self.nvme_bin} id ctrl-list {self.ctrl} " + \
             "--output-format=json"
         result = self.run_cmd(get_ctrl_id)
-        self.assertEqual(result.returncode, 0, "ERROR : nvme list-ctrl failed")
-        json_output = self.parse_json_output(result.stdout, "nvme list-ctrl")
-        ctrl_list = self.json_get(json_output, 'ctrl_list', context="nvme list-ctrl", required=True)
+        self.assertEqual(result.returncode, 0, "ERROR : nvme id ctrl-list failed")
+        json_output = self.parse_json_output(result.stdout, "nvme id ctrl-list")
+        ctrl_list = self.json_get(json_output, 'ctrl_list', context="nvme id ctrl-list", required=True)
         self.assertIsInstance(ctrl_list, list,
-                              "ERROR : nvme list-ctrl returned invalid ctrl_list type")
+                              "ERROR : nvme id ctrl-list returned invalid ctrl_list type")
         self.assertTrue(len(ctrl_list) > 0,
-                        "ERROR : nvme list-ctrl could not find ctrl")
+                        "ERROR : nvme id ctrl-list could not find ctrl")
         first_ctrl = ctrl_list[0]
         self.assertIsInstance(first_ctrl, dict,
-                              "ERROR : nvme list-ctrl returned invalid controller entry")
+                              "ERROR : nvme id ctrl-list returned invalid controller entry")
         self.assertIn('ctrl_id', first_ctrl,
-                      f"ERROR : nvme list-ctrl missing ctrl_id: {first_ctrl!r}")
+                      f"ERROR : nvme id ctrl-list missing ctrl_id: {first_ctrl!r}")
         return str(first_ctrl['ctrl_id'])
 
     def get_ns_mgmt_support(self):
@@ -432,20 +432,20 @@ class TestNVMe(TestNVMeBase):
                 - List of the namespaces.
         """
         ns_list = []
-        ns_list_cmd = f"{self.nvme_bin} list-ns {self.ctrl} " + \
+        ns_list_cmd = f"{self.nvme_bin} id ns-list {self.ctrl} " + \
             "--output-format=json"
         result = self.run_cmd(ns_list_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : nvme list namespace failed")
-        json_output = self.parse_json_output(result.stdout, "nvme list-ns")
+        json_output = self.parse_json_output(result.stdout, "nvme id ns-list")
 
-        nsid_list = self.json_get(json_output, 'nsid_list', context="nvme list-ns", required=True)
+        nsid_list = self.json_get(json_output, 'nsid_list', context="nvme id ns-list", required=True)
         self.assertIsInstance(nsid_list, list,
-                              "ERROR : nvme list-ns returned invalid nsid_list type")
+                              "ERROR : nvme id ns-list returned invalid nsid_list type")
         for ns in nsid_list:
             self.assertIsInstance(ns, dict,
-                                  f"ERROR : nvme list-ns returned invalid namespace entry: {ns!r}")
+                                  f"ERROR : nvme id ns-list returned invalid namespace entry: {ns!r}")
             self.assertIn('nsid', ns,
-                          f"ERROR : nvme list-ns entry missing nsid: {ns!r}")
+                          f"ERROR : nvme id ns-list entry missing nsid: {ns!r}")
             ns_list.append(ns['nsid'])
 
         return ns_list
@@ -634,17 +634,17 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - None
         """
-        delete_ns_cmd = f"{self.nvme_bin} delete-ns {self.ctrl} " + \
+        delete_ns_cmd = f"{self.nvme_bin} ns delete {self.ctrl} " + \
             "--namespace-id=0xFFFFFFFF"
         self.assertEqual(self.exec_cmd(delete_ns_cmd), 0)
-        list_ns_cmd = f"{self.nvme_bin} list-ns {self.ctrl} --all " + \
+        list_ns_cmd = f"{self.nvme_bin} id ns-list {self.ctrl} --all " + \
             "--output-format=json"
         result = self.run_cmd(list_ns_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : nvme list-ns failed")
-        json_output = self.parse_json_output(result.stdout, "nvme list-ns")
-        nsid_list = self.json_get(json_output, 'nsid_list', context="nvme list-ns", required=True)
+        self.assertEqual(result.returncode, 0, "ERROR : nvme id ns-list failed")
+        json_output = self.parse_json_output(result.stdout, "nvme id ns-list")
+        nsid_list = self.json_get(json_output, 'nsid_list', context="nvme id ns-list", required=True)
         self.assertIsInstance(nsid_list, list,
-                              "ERROR : nvme list-ns returned invalid nsid_list type")
+                              "ERROR : nvme id ns-list returned invalid nsid_list type")
         self.assertEqual(len(nsid_list), 0,
                          "ERROR : deleting all namespace failed")
 
@@ -656,9 +656,9 @@ class TestNVMe(TestNVMeBase):
                 - flbas : new namespace format.
                 - dps : new namespace data protection information.
             - Returns:
-                - Tuple of (returncode, stdout) from the nvme create-ns command.
+                - Tuple of (returncode, stdout) from the nvme ns create command.
         """
-        create_ns_cmd = f"{self.nvme_bin} create-ns {self.ctrl} " + \
+        create_ns_cmd = f"{self.nvme_bin} ns create {self.ctrl} " + \
             f"--nsze={str(nsze)} --ncap={str(ncap)} --flbas={str(flbas)} " + \
             f"--dps={str(dps)} --verbose --output-format=json"
         result = self.run_cmd(create_ns_cmd)
@@ -677,8 +677,8 @@ class TestNVMe(TestNVMeBase):
         """
         err, stdout = self.create_ns(nsze, ncap, flbas, dps)
         if err == 0:
-            json_output = self.parse_json_output(stdout, "nvme create-ns")
-            created_nsid = self.json_get(json_output, "nsid", "nvme create-ns", required=True)
+            json_output = self.parse_json_output(stdout, "nvme ns create")
+            created_nsid = self.json_get(json_output, "nsid", "nvme ns create", required=True)
             self.assertEqual(int(created_nsid), nsid,
                              "ERROR : create namespace failed")
             id_ns_cmd = f"{self.nvme_bin} id ns {self.ctrl} " + \
@@ -694,7 +694,7 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        attach_ns_cmd = f"{self.nvme_bin} attach-ns {self.ctrl} " + \
+        attach_ns_cmd = f"{self.nvme_bin} ns attach {self.ctrl} " + \
             f"--namespace-id={str(nsid)} --controllers={ctrl_id} --verbose"
         err = self.run_cmd(attach_ns_cmd).returncode
         if err != 0:
@@ -718,7 +718,7 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        detach_ns_cmd = f"{self.nvme_bin} detach-ns {self.ctrl} " + \
+        detach_ns_cmd = f"{self.nvme_bin} ns detach {self.ctrl} " + \
             f"--namespace-id={str(nsid)} --controllers={ctrl_id} --verbose"
         return self.run_cmd(detach_ns_cmd).returncode
 
@@ -730,7 +730,7 @@ class TestNVMe(TestNVMeBase):
                 - 0 on success, 1 on failure.
         """
         # delete the namespace
-        delete_ns_cmd = f"{self.nvme_bin} delete-ns {self.ctrl} " + \
+        delete_ns_cmd = f"{self.nvme_bin} ns delete {self.ctrl} " + \
             f"--namespace-id={str(nsid)} --verbose"
         err = self.run_cmd(delete_ns_cmd).returncode
         self.assertEqual(err, 0, "ERROR : delete namespace failed")

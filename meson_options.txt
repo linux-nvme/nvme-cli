@@ -233,7 +233,7 @@ option(
   choices: ['amzn', 'config', 'dapustor', 'dell', 'dera',
             'exclusion', 'fdp', 'feat', 'huawei', 'ibm', 'id', 'innogrit', 'inspur',
             'intel', 'keys', 'lm', 'log', 'mangoboost', 'memblaze', 'micron', 'nbft',
-            'netapp', 'nvidia', 'ocp', 'registry', 'sandisk', 'scaleflux',
+            'netapp', 'ns', 'nvidia', 'ocp', 'registry', 'sandisk', 'scaleflux',
             'seagate', 'sed', 'shannon', 'solidigm', 'ssstc', 'toshiba',
             'transcend', 'utils', 'virtium', 'wdc', 'ymtc', 'zns'],
   description : 'comma-separated list of plugins to build (all plugins are included if unset, [] = no plugins)'
