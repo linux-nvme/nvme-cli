@@ -179,6 +179,8 @@ class TestNVMe(TestNVMeBase):
 
     def tearDown(self):
         """ Post Section for TestNVMe. """
+        if self.ns_mgmt_supported:
+            self.create_and_attach_default_ns()
         self._write_device_data()
         if getattr(self, 'stdout_log', None):
             self.stdout_log.close()
@@ -186,8 +188,6 @@ class TestNVMe(TestNVMeBase):
             self.stderr_log.close()
         if self.clear_log_dir is True:
             shutil.rmtree(self.log_dir, ignore_errors=True)
-        if self.ns_mgmt_supported:
-            self.create_and_attach_default_ns()
 
     @classmethod
     def tearDownClass(cls):
