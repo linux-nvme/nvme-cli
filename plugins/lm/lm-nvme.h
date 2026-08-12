@@ -13,7 +13,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("lm", "Live Migration NVMe extensions", NVME_VERSION),
+PLUGIN(NAME_CORE("lm", "Live Migration NVMe extensions", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("create-cdq",	"Create Controller Data Queue", lm_create_cdq)
 		ENTRY("delete-cdq",	"Delete Controller Data Queue", lm_delete_cdq)

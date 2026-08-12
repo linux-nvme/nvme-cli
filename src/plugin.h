@@ -24,6 +24,7 @@ struct plugin {
 	struct program *parent;
 	struct plugin *next;
 	struct plugin *tail;
+	bool core;
 };
 
 struct command {

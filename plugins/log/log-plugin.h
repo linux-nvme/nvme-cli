@@ -17,7 +17,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("log", "Retrieve and show NVMe log pages", NVME_VERSION),
+PLUGIN(NAME_CORE("log", "Retrieve and show NVMe log pages", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("smart", "Retrieve SMART Log, show it", get_smart_log)
 		ENTRY("ana", "Retrieve ANA Log, show it", get_ana_log)

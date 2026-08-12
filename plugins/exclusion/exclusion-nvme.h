@@ -13,7 +13,7 @@
 
 #include "cmd.h"
 
-PLUGIN(NAME("exclusion", "NVMeoF system-wide exclusion list", NVME_VERSION),
+PLUGIN(NAME_CORE("exclusion", "NVMeoF system-wide exclusion list", NVME_VERSION),
 	COMMAND_LIST(
 		ENTRY("create", "Create an exclusion list",             excl_create)
 		ENTRY("delete", "Delete an exclusion list",             excl_delete)

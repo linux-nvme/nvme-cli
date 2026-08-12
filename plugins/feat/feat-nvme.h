@@ -28,7 +28,7 @@
 	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
 		  OPT_BYTE("sel", 'S', &cfg.sel, sel))
 
-PLUGIN(NAME("feat", "NVMe feature extensions", FEAT_PLUGIN_VERSION),
+PLUGIN(NAME_CORE("feat", "NVMe feature extensions", FEAT_PLUGIN_VERSION),
 	COMMAND_LIST(
 		ENTRY("arbitration", ARBITRATION_DESC, feat_arbitration)
 		ENTRY("power-mgmt", POWER_MGMT_DESC, feat_power_mgmt)
