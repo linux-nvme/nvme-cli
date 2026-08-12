@@ -127,6 +127,33 @@ class KeysCLITest(unittest.TestCase):
                     self.assertEqual(len(result.stdout.strip().split(':')[2]),
                                      4 * -(-(secret_len + 4) // 3))
 
+    def test_gen_kxchap_secret_sets_the_length(self):
+        # A secret given as hex is the payload, so it fixes the length:
+        # without '--key-length' it must encode whole, not be truncated
+        # to the digest-size default the generated case falls back to.
+        for secret_len in (32, 48, 64):
+            with self.subTest(secret_len=secret_len):
+                secret = 'ab' * secret_len
+                implied = self._run('gen-kxchap', f'--secret={secret}')
+                explicit = self._run('gen-kxchap', f'--secret={secret}',
+                                     f'--key-length={secret_len}')
+                self.assertEqual(implied.stdout, explicit.stdout)
+                self.assertEqual(
+                    len(implied.stdout.strip().split(':')[2]),
+                    4 * -(-(secret_len + 4) // 3))
+
+    def test_gen_kxchap_invalid_implied_secret_length_fails(self):
+        # A hex secret of a length the format does not allow is rejected on
+        # the implied path too, not passed on to be truncated or padded.
+        self._run('gen-kxchap', f'--secret={"ab" * 33}', expect_fail=True)
+
+    def test_gen_kxchap_secret_length_must_match_the_secret(self):
+        # The secret is the payload, so a length that contradicts it is an
+        # error rather than a licence to truncate.
+        self._run('gen-kxchap', f'--secret={"ab" * 64}',
+                  '--key-length=32', expect_fail=True)
+
+
     def test_gen_kxchap_nqn_is_rejected(self):
         # The payload is the secret, which no NQN takes part in deriving,
         # so '--nqn' is gone rather than accepted and ignored.

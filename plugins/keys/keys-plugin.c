@@ -97,9 +97,21 @@ static int gen_kxchap(int argc, char **argv, struct command *acmd, struct plugin
 	/*
 	 * The hash identifier records the transform the consumer applies; it
 	 * does not constrain the secret's own length, so accept all three
-	 * with any identifier.
+	 * with any identifier. A secret given as hex is the payload, so it
+	 * fixes the length; an explicit one may only confirm it. Only a
+	 * secret generated here (none given, or from a pin) falls back to
+	 * the digest size.
 	 */
-	if (!cfg.key_len) {
+	if (cfg.secret && strncmp(cfg.secret, "pin:", 4)) {
+		size_t len = strlen(cfg.secret);
+
+		if (cfg.key_len && cfg.key_len != len / 2) {
+			nvme_show_error("Secret length %u does not match the secret given (%zu bytes)",
+					cfg.key_len, len / 2);
+			return -EINVAL;
+		}
+		cfg.key_len = len / 2;
+	} else if (!cfg.key_len) {
 		switch (cfg.hmac) {
 		case 1:
 			cfg.key_len = 32;
