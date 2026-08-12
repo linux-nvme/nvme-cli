@@ -13,7 +13,6 @@ usage() {
     echo ""
     echo " -d:  no documentation update"
     echo " -f:  disable all sanity checks and just do the release"
-    echo " -l:  do not update library dependency"
     echo ""
     echo "Note: The version number needs to be exactly"
     echo "      '^v[\d]+.[\d]+(.[\d\]+(-rc[0-9]+)?$'"
@@ -24,19 +23,15 @@ usage() {
 }
 
 build_doc=true
-update_lib_dep=true
 force=false
 
-while getopts "dfl" o; do
+while getopts "df" o; do
     case "${o}" in
         d)
             build_doc=false
             ;;
         f)
             force=true
-            ;;
-        l)
-            update_lib_dep=false
             ;;
         *)
             usage
@@ -106,6 +101,37 @@ if [ "$build_doc" = true ]; then
     ./scripts/update-docs.sh
     git add Documentation libnvme/doc
     git commit -s -m "doc: Regenerate all docs for $VERSION"
+fi
+
+BUILDDIR="$(mktemp -d)"
+
+if ! meson setup -Dlibnvme=enabled -Djson-c=enabled "${BUILDDIR}" > "${BUILDDIR}/setup.log" 2>&1; then
+    echo "release.sh: failed to configure a build for completion generation:" >&2
+    cat "${BUILDDIR}/setup.log" >&2
+    rm -rf -- "${BUILDDIR}"
+    exit 1
+fi
+
+if ! meson compile -C "${BUILDDIR}" > "${BUILDDIR}/compile.log" 2>&1; then
+    echo "release.sh: failed to build nvme for completion generation:" >&2
+    cat "${BUILDDIR}/compile.log" >&2
+    rm -rf -- "${BUILDDIR}"
+    exit 1
+fi
+
+if ! "${BUILDDIR}/nvme" utils dump-command-metadata > "${BUILDDIR}/metadata.json" 2> "${BUILDDIR}/metadata.err"; then
+    echo "release.sh: 'nvme utils dump-command-metadata' failed; is nvme built with json-c support?" >&2
+    cat "${BUILDDIR}/metadata.err" >&2
+    rm -rf -- "${BUILDDIR}"
+    exit 1
+fi
+
+./completions/generate-completions.py --bash completions/bash-nvme-completion.sh < "${BUILDDIR}/metadata.json"
+rm -rf -- "${BUILDDIR}"
+
+if [[ -n $(git status -s -- completions/bash-nvme-completion.sh) ]]; then
+    git add completions/bash-nvme-completion.sh
+    git commit -s -m "completions: regenerate bash completion for $VERSION"
 fi
 
 # update meson.build
