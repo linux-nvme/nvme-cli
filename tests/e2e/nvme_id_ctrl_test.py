@@ -23,8 +23,8 @@
 """
 NVMe Identify ctrl Testcase:-
 
-  1. Execute id-ctrl on ctrl
-  2. Execute id-ctrl vendor specific on ctrl
+  1. Execute id ctrl on ctrl
+  2. Execute id ctrl vendor specific on ctrl
 
 """
 

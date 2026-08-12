@@ -8,6 +8,7 @@ all_plugins = {
   'dera': ['plugins/dera/dera-nvme.c'],
   'fdp': ['plugins/fdp/fdp.c'],
   'ibm': ['plugins/ibm/ibm-nvme.c'],
+  'id': ['plugins/id/id-plugin.c'],
   'innogrit': ['plugins/innogrit/innogrit-nvme.c'],
   'inspur': ['plugins/inspur/inspur-nvme.c'],
   'intel': ['plugins/intel/intel-nvme.c'],

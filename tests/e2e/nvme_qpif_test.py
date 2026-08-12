@@ -90,19 +90,19 @@ class TestNVMeQPIFTest(TestNVMeIO):
                 - None
             - Returns:
                 - lbaf index (int) of a qualifying format, or None if none
-                  exists or nvm-id-ns is not supported.
+                  exists or id nvm-ns is not supported.
         """
-        nvm_id_ns_cmd = f"{self.nvme_bin} nvm-id-ns {self.ns1} " + \
+        nvm_id_ns_cmd = f"{self.nvme_bin} id nvm-ns {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvm_id_ns_cmd)
         if result.returncode != 0:
             return None
-        json_output = self.parse_json_output(result.stdout, "nvme nvm-id-ns")
+        json_output = self.parse_json_output(result.stdout, "nvme id nvm-ns")
         if not (int(json_output.get('pic', 0)) & 0x8):
             return None
         elbafs = json_output.get('elbafs', [])
         self.assertIsInstance(elbafs, list,
-                              f"ERROR : nvm-id-ns returned invalid elbafs type: {type(elbafs).__name__}")
+                              f"ERROR : id nvm-ns returned invalid elbafs type: {type(elbafs).__name__}")
         for i, elbaf in enumerate(elbafs):
             self.assertIsInstance(elbaf, dict,
                                   f"ERROR : invalid elbaf entry: {elbaf!r}")
@@ -116,7 +116,7 @@ class TestNVMeQPIFTest(TestNVMeIO):
             applies when end-to-end protection is enabled.
 
             The supported PI types and placements are read from the Data
-            Protection Capabilities (DPC) field of id-ns:
+            Protection Capabilities (DPC) field of id ns:
               DPC bits 2:0 - PI Type 1/2/3 supported
               DPC bit 3    - PI in the first eight bytes of metadata supported
               DPC bit 4    - PI in the last eight bytes of metadata supported
@@ -178,7 +178,7 @@ class TestNVMeQPIFTest(TestNVMeIO):
         #   flbas[3:0] = lbaf_index[3:0], flbas[6:5] = lbaf_index[5:4]
         flbas = (lbaf_index & 0xF) | (((lbaf_index >> 4) & 0x3) << 5)
 
-        # get_lba_format_size() indexes the id-ns lbafs[] array by self.flbas.
+        # get_lba_format_size() indexes the id ns lbafs[] array by self.flbas.
         self.flbas = lbaf_index
         (ds, ms) = self.get_lba_format_size()
         if ds == 0:

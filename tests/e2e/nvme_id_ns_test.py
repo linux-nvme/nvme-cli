@@ -23,8 +23,8 @@
 """
 NVme Identify Namespace Testcase:-
 
-    1. Execute id-ns on a namespace
-    2. Execute id-ns on all namespaces
+    1. Execute id ns on a namespace
+    2. Execute id ns on all namespaces
 """
 
 from ..nvme_test import TestNVMe
@@ -52,19 +52,19 @@ class TestNVMeIdentifyNamespace(TestNVMe):
 
     def get_id_ns(self, nsid):
         """
-        Wrapper for executing nvme id-ns on a namespace.
+        Wrapper for executing nvme id ns on a namespace.
             - Args:
                 - nsid : namespace id to get info from.
             - Returns:
                 - 0 on success, error code on failure.
         """
-        id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+        id_ns_cmd = f"{self.nvme_bin} id ns {self.ctrl} " + \
             f"--namespace-id={str(nsid)}"
         return self.exec_cmd(id_ns_cmd)
 
     def get_id_ns_all(self):
         """
-        Wrapper for executing nvme id-ns on all namespaces.
+        Wrapper for executing nvme id ns on all namespaces.
             - Args:
                 - None
             - Returns:

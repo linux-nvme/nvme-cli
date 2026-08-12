@@ -231,7 +231,7 @@ option(
   'plugins',
   type : 'array',
   choices: ['amzn', 'config', 'dapustor', 'dell', 'dera',
-            'exclusion', 'fdp', 'feat', 'huawei', 'ibm', 'innogrit', 'inspur',
+            'exclusion', 'fdp', 'feat', 'huawei', 'ibm', 'id', 'innogrit', 'inspur',
             'intel', 'keys', 'lm', 'log', 'mangoboost', 'memblaze', 'micron', 'nbft',
             'netapp', 'nvidia', 'ocp', 'registry', 'sandisk', 'scaleflux',
             'seagate', 'sed', 'shannon', 'solidigm', 'ssstc', 'toshiba',

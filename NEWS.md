@@ -46,12 +46,21 @@
   e.g. `nvme smart-log` is now `nvme log smart`. The old top-level
   commands still work as deprecated aliases.
 
-* Deprecated commands (currently the old `nvme keys` and `nvme log`
-  aliases above) are enabled by default; they can be turned off at
-  build time with `-Ddeprecated-cmds=disabled`. `nvme help` now
-  lists them in a separate "deprecated" section instead of alongside
-  current commands, and running one prints a warning that it will be
-  removed in the next major version.
+* All `nvme id-*`/`nvm-id-*`/`list-*` Identify commands (`id-ctrl`,
+  `id-ns`, `id-ns-granularity`, `id-ns-lba-format`, `list-ns`,
+  `list-ctrl`, `nvm-id-ctrl`, `nvm-id-ns`, `nvm-id-ns-lba-format`,
+  `primary-ctrl-caps`, `list-secondary`, `cmdset-ind-id-ns`,
+  `ns-descs`, `id-nvmset`, `id-uuid`, `id-iocs`, `id-domain`, and
+  `list-endgrp`) have moved into a new `nvme id` plugin, e.g.
+  `nvme id-ctrl` is now `nvme id ctrl`. The old top-level commands
+  still work as deprecated aliases.
+
+* Deprecated commands (currently the old `nvme keys`, `nvme log`,
+  and `nvme id` aliases above) are enabled by default; they can be
+  turned off at build time with `-Ddeprecated-cmds=disabled`.
+  `nvme help` now lists them in a separate "deprecated" section
+  instead of alongside current commands, and running one prints a
+  warning that it will be removed in the next major version.
 
 * `nvme disconnect-all` with no options no longer disconnects every
   fabric controller. It now only disconnects controllers with no
