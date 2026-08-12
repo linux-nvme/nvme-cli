@@ -3,6 +3,10 @@
 
 kernel_doc=$(dirname $0)/kernel-doc
 
+# Use C only when LC_ALL isn't already set. This avoids overriding a valid
+# locale supplied by the environment.
+export LC_ALL="${LC_ALL:-C}"
+
 "$kernel_doc" -none "$@" 2>&1 |
   grep '\(warning\|error\)'
 
