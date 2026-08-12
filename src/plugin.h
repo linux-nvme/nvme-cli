@@ -31,6 +31,7 @@ struct command {
 	char *help;
 	int (*fn)(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 	char *alias;
+	bool deprecated;
 };
 
 void general_help(struct plugin *plugin, char *str);

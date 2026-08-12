@@ -80,6 +80,7 @@ void general_help(struct plugin *plugin, char *str)
 	unsigned int i = 0;
 	unsigned int padding = 15;
 	unsigned int curr_length = 0;
+	bool have_deprecated = false;
 
 	printf("%s-%s\n", prog->name, prog->version);
 
@@ -107,10 +108,14 @@ void general_help(struct plugin *plugin, char *str)
 		curr_length = 2 + strlen(plugin->commands[i]->name);
 		if (padding < curr_length)
 			padding = curr_length;
+		if (plugin->commands[i]->deprecated)
+			have_deprecated = true;
 	}
 
 	i = 0;
 	for (; plugin->commands[i]; i++) {
+		if (plugin->commands[i]->deprecated)
+			continue;
 		if (!str || strstr(plugin->commands[i]->name, str))
 			printf("  %-*s %s\n", padding, plugin->commands[i]->name,
 			       plugin->commands[i]->help);
@@ -128,6 +133,21 @@ void general_help(struct plugin *plugin, char *str)
 	else
 		printf("See '%s help <command>' for more information on a specific command\n",
 			prog->name);
+
+	if (have_deprecated) {
+		printf("\nThe following sub-commands are deprecated and will be removed in the next major version:\n");
+		if (str)
+			printf("Note: Only sub-commands including %s\n", str);
+
+		i = 0;
+		for (; plugin->commands[i]; i++) {
+			if (!plugin->commands[i]->deprecated)
+				continue;
+			if (!str || strstr(plugin->commands[i]->name, str))
+				printf("  %-*s %s\n", padding, plugin->commands[i]->name,
+				       plugin->commands[i]->help);
+		}
+	}
 
 	/*
 	 * The first plugin is the built-in. If we're not showing help for the
