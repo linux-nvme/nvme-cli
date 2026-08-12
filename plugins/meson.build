@@ -20,6 +20,7 @@ all_plugins = {
   ],
   'ns': ['plugins/ns/ns-plugin.c'],
   'nvidia': ['plugins/nvidia/nvidia-nvme.c'],
+  'resv': ['plugins/resv/resv-plugin.c'],
   'seagate': ['plugins/seagate/seagate-nvme.c'],
   'shannon': ['plugins/shannon/shannon-nvme.c'],
   'ssstc': ['plugins/ssstc/ssstc-nvme.c'],
