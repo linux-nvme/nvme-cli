@@ -37,7 +37,11 @@ OPTIONS
 
 -l <len>::
 --key-length=<len>::
-	Length of the secret. Possible values are 32, 48, or 64.
+	Length of the secret. Possible values are 32, 48, or 64. A secret
+	given with '--secret' as hexadecimal fixes the length, so a value
+	contradicting it is an error; a secret generated here takes this
+	length, defaulting to the digest size of the selected hash
+	function, or 32 if none is selected.
 
 include::global-options.txt[]
 
