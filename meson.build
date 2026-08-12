@@ -65,6 +65,7 @@ want_docs = get_option('docs')
 want_docs_build = get_option('docs-build')
 
 is_static = get_option('default_library') == 'static'
+is_cross = meson.is_cross_build()
 
 feature_python = get_option('python')
 if not want_fabrics or feature_python.disabled()
@@ -644,7 +645,7 @@ if want_nvme
         install_dir: sbindir,
     )
 
-    if host_system == 'windows' and want_libnvme and not is_static
+    if host_system == 'windows' and want_libnvme and (not is_static)
         # Copy libnvme DLL next to nvme.exe so it can be found at
         # runtime without modifying PATH.
         cp = find_program('cp')
