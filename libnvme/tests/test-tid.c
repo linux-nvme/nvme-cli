@@ -646,6 +646,35 @@ static bool test_tid_sanitize(void)
 	pass &= p;
 	libnvmf_tid_free(t);
 
+	/*
+	 * A comma-separated FC WWN pair, as some discovery controllers
+	 * report it, is normalized to the canonical colon form rather than
+	 * rejected.
+	 */
+	libnvmf_tid_from_fields("fc", "nn-0x1,pn-0x2", NULL, "nqn.t",
+				NULL, NULL, NULL, NULL, &t);
+	p = t && streq(libnvmf_tid_get_traddr(t), "nn-0x1:pn-0x2");
+	CHECK(p, "fc traddr comma normalized to colon");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	/* Same normalization applies to host_traddr. */
+	libnvmf_tid_from_fields("fc", "nn-0x1:pn-0x2", NULL, "nqn.t",
+				"nn-0x3,pn-0x4", NULL, NULL, NULL, &t);
+	p = t && streq(libnvmf_tid_get_host_traddr(t), "nn-0x3:pn-0x4");
+	CHECK(p, "fc host_traddr comma normalized to colon");
+	pass &= p;
+	libnvmf_tid_free(t);
+
+	/* parse() gets the same normalization, not just from_fields(). */
+	p = libnvmf_tid_parse(ctx,
+			      "transport=fc;traddr=nn-0x1,pn-0x2;subsysnqn=nqn.t",
+			      &t) == 0 &&
+	    streq(libnvmf_tid_get_traddr(t), "nn-0x1:pn-0x2");
+	CHECK(p, "parse() normalizes a comma-separated fc traddr too");
+	pass &= p;
+	libnvmf_tid_free(t);
+
 	/* loop has no addressing shape at all: truly untouched. */
 	libnvmf_tid_from_fields("loop", "anything goes", NULL, "nqn.t",
 				NULL, NULL, NULL, NULL, &t);
