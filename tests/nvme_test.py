@@ -283,23 +283,23 @@ class TestNVMe(TestNVMeBase):
         self.stderr_log = open(self.test_log_dir + "/" + "stderr.log", "w")
 
     def _capture_device_metadata(self):
-        """ Run 'nvme id-ctrl' once and cache the fields that identify this
+        """ Run 'nvme id ctrl' once and cache the fields that identify this
         device (vendor/serial/model/firmware/subnqn) as self.device_metadata.
 
         Issued explicitly, up front, rather than opportunistically picked
         out of whatever commands a test happens to run -- that way the
         device-data log always has metadata, even for tests that never
-        query id-ctrl themselves or that read it in non-JSON form.
+        query id ctrl themselves or that read it in non-JSON form.
             - Args:
                 - None
             - Returns:
                 - None
         """
-        id_ctrl_cmd = f"{self.nvme_bin} id-ctrl {self.ctrl} --output-format=json"
+        id_ctrl_cmd = f"{self.nvme_bin} id ctrl {self.ctrl} --output-format=json"
         result = self.run_cmd(id_ctrl_cmd)
         if result.returncode != 0 or not result.stdout:
             return
-        output = self.parse_json_output(result.stdout, "nvme id-ctrl")
+        output = self.parse_json_output(result.stdout, "nvme id ctrl")
         self.device_metadata = {
             key: (val.strip() if isinstance(val, str) else val)
             for key, val in output.items()
@@ -308,7 +308,7 @@ class TestNVMe(TestNVMeBase):
 
     def _write_device_data(self):
         """ Write this test's collected nvme command/JSON-output pairs plus
-        id-ctrl-derived device metadata to device_data.json in the per-test
+        id ctrl-derived device metadata to device_data.json in the per-test
         log directory, alongside stdout.log/stderr.log. Intended to be fed
         into a database that tracks per-device feature support.
             - Args:
@@ -457,12 +457,12 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - maximum number of namespaces supported.
         """
-        max_ns_cmd = f"{self.nvme_bin} id-ctrl {self.ctrl} " + \
+        max_ns_cmd = f"{self.nvme_bin} id ctrl {self.ctrl} " + \
             "--output-format=json"
         result = self.run_cmd(max_ns_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : reading maximum namespace count failed")
-        json_output = self.parse_json_output(result.stdout, "nvme id-ctrl")
-        nn = self.json_get(json_output, 'nn', context="nvme id-ctrl", required=True)
+        json_output = self.parse_json_output(result.stdout, "nvme id ctrl")
+        nn = self.json_get(json_output, 'nn', context="nvme id ctrl", required=True)
         self.assertIsNotNone(nn, "ERROR : reading maximum namespace count failed")
         return int(nn)
 
@@ -483,17 +483,17 @@ class TestNVMe(TestNVMeBase):
                 - lbaf index (int) of the format whose in_use flag is set,
                   or 0 if no in_use entry is found.
         """
-        nvme_id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+        nvme_id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvme_id_ns_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns")
-        json_output = self.parse_json_output(result.stdout, "nvme id-ns")
+        self.assertEqual(result.returncode, 0, "ERROR : reading id ns")
+        json_output = self.parse_json_output(result.stdout, "nvme id ns")
         for lbaf in json_output.get('lbafs', []):
             self.assertIsInstance(lbaf, dict,
-                                  f"ERROR : id-ns returned invalid lbaf entry: {lbaf!r}")
+                                  f"ERROR : id ns returned invalid lbaf entry: {lbaf!r}")
             if lbaf.get('in_use') == 1:
                 self.assertIn('lbaf', lbaf,
-                              f"ERROR : id-ns lbaf entry missing lbaf index: {lbaf!r}")
+                              f"ERROR : id ns lbaf entry missing lbaf index: {lbaf!r}")
                 return int(lbaf['lbaf'])
         return 0
 
@@ -506,11 +506,11 @@ class TestNVMe(TestNVMeBase):
                   end-to-end PI is enabled), bits 5:3 are the Protection
                   Information Format (PIF) on NVMe 2.0+ devices.
         """
-        nvme_id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+        nvme_id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvme_id_ns_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns")
-        json_output = self.parse_json_output(result.stdout, "nvme id-ns")
+        self.assertEqual(result.returncode, 0, "ERROR : reading id ns")
+        json_output = self.parse_json_output(result.stdout, "nvme id ns")
         return int(json_output.get('dps', 0))
 
     def _get_pif(self):
@@ -528,11 +528,11 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - pif value (int, 0-7).
         """
-        nvme_id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+        nvme_id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvme_id_ns_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns")
-        json_output = self.parse_json_output(result.stdout, "nvme id-ns")
+        self.assertEqual(result.returncode, 0, "ERROR : reading id ns")
+        json_output = self.parse_json_output(result.stdout, "nvme id ns")
         dps = int(json_output.get('dps', 0))
         return (dps >> 3) & 0x7
 
@@ -542,11 +542,11 @@ class TestNVMe(TestNVMeBase):
             the data buffer). Return False if bit 4 is clear, meaning metadata
             is transferred as a separate, contiguous buffer.
         """
-        nvme_id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+        nvme_id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvme_id_ns_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns")
-        json_output = self.parse_json_output(result.stdout, "nvme id-ns")
+        self.assertEqual(result.returncode, 0, "ERROR : reading id ns")
+        json_output = self.parse_json_output(result.stdout, "nvme id ns")
         flbas = int(json_output.get('flbas', 0))
         return bool(flbas & (1 << 4))
 
@@ -557,21 +557,21 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - lba format size as a tuple of (data_size, metadata_size) in bytes.
         """
-        nvme_id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+        nvme_id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvme_id_ns_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns")
-        json_output = self.parse_json_output(result.stdout, "nvme id-ns")
-        lbafs = self.json_get(json_output, 'lbafs', context="nvme id-ns", required=True)
+        self.assertEqual(result.returncode, 0, "ERROR : reading id ns")
+        json_output = self.parse_json_output(result.stdout, "nvme id ns")
+        lbafs = self.json_get(json_output, 'lbafs', context="nvme id ns", required=True)
         self.assertIsInstance(lbafs, list,
-                              f"ERROR : id-ns returned invalid lbafs type, expected list, got {type(lbafs).__name__}")
+                              f"ERROR : id ns returned invalid lbafs type, expected list, got {type(lbafs).__name__}")
         self.assertTrue(len(lbafs) > self.flbas,
                         "ERROR : could not match the given flbas to an existing lbaf")
         lbaf_json = lbafs[int(self.flbas)]
         self.assertIsInstance(lbaf_json, dict,
-                              f"ERROR : id-ns returned invalid lbaf entry, expected dict, got {type(lbaf_json).__name__}")
-        self.assertIn('ms', lbaf_json, "ERROR : id-ns lbaf missing 'ms'")
-        self.assertIn('ds', lbaf_json, "ERROR : id-ns lbaf missing 'ds'")
+                              f"ERROR : id ns returned invalid lbaf entry, expected dict, got {type(lbaf_json).__name__}")
+        self.assertIn('ms', lbaf_json, "ERROR : id ns lbaf missing 'ms'")
+        self.assertIn('ds', lbaf_json, "ERROR : id ns lbaf missing 'ds'")
         ms = int(lbaf_json['ms'])
         ds_expo = int(lbaf_json['ds'])
         ds = (1 << ds_expo) if ds_expo > 0 else 0
@@ -587,33 +587,33 @@ class TestNVMe(TestNVMeBase):
         return to_decimal(self.get_id_ctrl_field_value("tnvmcap"))
 
     def get_id_ctrl_field_value(self, field):
-        """ Wrapper for extracting id-ctrl field values
+        """ Wrapper for extracting id ctrl field values
             - Args:
                 - None
             - Returns:
                 - Filed value of the given field
         """
-        id_ctrl_cmd = f"{self.nvme_bin} id-ctrl {self.ctrl} " + \
+        id_ctrl_cmd = f"{self.nvme_bin} id ctrl {self.ctrl} " + \
             "--output-format=json"
         result = self.run_cmd(id_ctrl_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : reading id-ctrl failed")
-        json_output = self.parse_json_output(result.stdout, "nvme id-ctrl")
+        self.assertEqual(result.returncode, 0, "ERROR : reading id ctrl failed")
+        json_output = self.parse_json_output(result.stdout, "nvme id ctrl")
         self.assertTrue(field in json_output,
                         f"ERROR : reading field '{field}' failed")
         return str(json_output[field])
 
     def get_id_ns_field_value(self, field):
-        """ Wrapper for extracting id-ns field values
+        """ Wrapper for extracting id ns field values
             - Args:
                 - field : field name to extract
             - Returns:
                 - Field value of the given field as a string
         """
-        id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} " + \
+        id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(id_ns_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : reading id-ns failed")
-        json_output = self.parse_json_output(result.stdout, "nvme id-ns")
+        self.assertEqual(result.returncode, 0, "ERROR : reading id ns failed")
+        json_output = self.parse_json_output(result.stdout, "nvme id ns")
         self.assertTrue(field in json_output,
                         f"ERROR : reading field '{field}' failed")
         return str(json_output[field])
@@ -681,7 +681,7 @@ class TestNVMe(TestNVMeBase):
             created_nsid = self.json_get(json_output, "nsid", "nvme create-ns", required=True)
             self.assertEqual(int(created_nsid), nsid,
                              "ERROR : create namespace failed")
-            id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+            id_ns_cmd = f"{self.nvme_bin} id ns {self.ctrl} " + \
                 f"--namespace-id={str(nsid)}"
             err = self.run_cmd(id_ns_cmd).returncode
         return err
@@ -751,16 +751,16 @@ class TestNVMe(TestNVMeBase):
         return err
 
     def get_id_ctrl(self, vendor=False):
-        """ Wrapper for nvme id-ctrl command.
+        """ Wrapper for nvme id ctrl command.
             - Args:
               - None
             - Returns:
               - 0 on success, error code on failure.
         """
         if not vendor:
-            id_ctrl_cmd = f"{self.nvme_bin} id-ctrl {self.ctrl}"
+            id_ctrl_cmd = f"{self.nvme_bin} id ctrl {self.ctrl}"
         else:
-            id_ctrl_cmd = f"{self.nvme_bin} id-ctrl " +\
+            id_ctrl_cmd = f"{self.nvme_bin} id ctrl " +\
                 f"--vendor-specific {self.ctrl}"
         result = self.run_cmd(id_ctrl_cmd)
         err = result.returncode

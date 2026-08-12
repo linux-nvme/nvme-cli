@@ -106,16 +106,16 @@ class TestNVMeFormatCmd(TestNVMe):
                                                      self.dps), 0)
         self.assertEqual(self.attach_ns(self.ctrl_id, self.default_nsid), 0)
         # read lbaf information
-        id_ns_cmd = f"{self.nvme_bin} id-ns {self.ctrl} " + \
+        id_ns_cmd = f"{self.nvme_bin} id ns {self.ctrl} " + \
             f"--namespace-id={self.default_nsid} --output-format=json"
         result = self.run_cmd(id_ns_cmd)
-        self.assertEqual(result.returncode, 0, "ERROR : nvme id-ns failed")
-        json_output = self.parse_json_output(result.stdout, "nvme id-ns")
+        self.assertEqual(result.returncode, 0, "ERROR : nvme id ns failed")
+        json_output = self.parse_json_output(result.stdout, "nvme id ns")
         self.lba_format_list = json_output.get('lbafs', [])
         self.assertIsInstance(self.lba_format_list, list,
                               f"ERROR : lbafs must be a list, got {type(self.lba_format_list).__name__}")
         self.assertTrue(len(self.lba_format_list) > 0,
-                        "ERROR : nvme id-ns could not find any lba formats")
+                        "ERROR : nvme id ns could not find any lba formats")
         self.assertEqual(self.detach_ns(self.ctrl_id, self.default_nsid), 0)
         self.assertEqual(self.delete_and_validate_ns(self.default_nsid), 0)
         self.nvme_reset_ctrl()

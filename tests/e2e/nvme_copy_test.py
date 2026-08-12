@@ -33,7 +33,7 @@ class TestNVMeCopy(TestNVMe):
     Provides shared setUp/tearDown and helper methods used by all copy test
     subclasses.
         - Attributes:
-              - ocfs          : optional copy formats supported (from id-ctrl)
+              - ocfs          : optional copy formats supported (from id ctrl)
               - original_cdfe : saved cdfe value restored in tearDown, or None
               - mcl           : Maximum Copy Length (blocks)
               - mssrl         : Maximum Single Source Range Length (blocks)
@@ -89,28 +89,28 @@ class TestNVMeCopy(TestNVMe):
         Return the Protection Information Format (pif) of the currently active
         LBA format on self.ns1.
 
-        Reads the raw ``flbas`` byte from ``id-ns`` to determine the active
+        Reads the raw ``flbas`` byte from ``id ns`` to determine the active
         lbaf index (NVMe spec: bits[3:0] are lbaf_index[3:0], bits[6:5] are
-        lbaf_index[5:4]), then looks up that entry in the ``nvm-id-ns`` elbafs
+        lbaf_index[5:4]), then looks up that entry in the ``id nvm-ns`` elbafs
         array.  Returns 0 if either command fails or the pif field is absent
         (0 = 16-bit guard / no PI, the safe default for format 0/2 copy).
         """
-        id_ns_cmd = f"{self.nvme_bin} id-ns {self.ns1} --output-format=json"
+        id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} --output-format=json"
         result = self.run_cmd(id_ns_cmd)
         if result.returncode != 0:
             return 0
-        id_ns_data = self.parse_json_output(result.stdout, "nvme id-ns")
+        id_ns_data = self.parse_json_output(result.stdout, "nvme id ns")
         flbas = int(id_ns_data.get("flbas", 0))
         lbaf_idx = (flbas & 0xF) | (((flbas >> 5) & 0x3) << 4)
 
-        nvm_id_ns_cmd = f"{self.nvme_bin} nvm-id-ns {self.ns1} --output-format=json"
+        nvm_id_ns_cmd = f"{self.nvme_bin} id nvm-ns {self.ns1} --output-format=json"
         result = self.run_cmd(nvm_id_ns_cmd)
         if result.returncode != 0:
             return 0
-        nvm_id_ns_data = self.parse_json_output(result.stdout, "nvme nvm-id-ns")
+        nvm_id_ns_data = self.parse_json_output(result.stdout, "nvme id nvm-ns")
         elbafs = nvm_id_ns_data.get("elbafs", [])
         self.assertIsInstance(elbafs, list,
-                              f"ERROR : nvm-id-ns returned invalid elbafs type: {type(elbafs).__name__}")
+                              f"ERROR : id nvm-ns returned invalid elbafs type: {type(elbafs).__name__}")
         if lbaf_idx < len(elbafs):
             self.assertIsInstance(elbafs[lbaf_idx], dict,
                                   f"ERROR : invalid elbaf entry: {elbafs[lbaf_idx]!r}")
@@ -139,19 +139,19 @@ class TestNVMeCopy(TestNVMe):
 
     def _find_64b_guard_lbaf_index(self):
         """
-        Search the nvm-id-ns elbafs for a format with 64-bit guard PI (pif == 2).
+        Search the id nvm-ns elbafs for a format with 64-bit guard PI (pif == 2).
 
         Returns the lbaf index (0-based position in the lbafs[] array), or None
-        if no such format exists or the nvm-id-ns command is not supported.
+        if no such format exists or the id nvm-ns command is not supported.
         """
-        nvm_id_ns_cmd = f"{self.nvme_bin} nvm-id-ns {self.ns1} --output-format=json"
+        nvm_id_ns_cmd = f"{self.nvme_bin} id nvm-ns {self.ns1} --output-format=json"
         result = self.run_cmd(nvm_id_ns_cmd)
         if result.returncode != 0:
             return None
-        nvm_id_ns_data = self.parse_json_output(result.stdout, "nvme nvm-id-ns")
+        nvm_id_ns_data = self.parse_json_output(result.stdout, "nvme id nvm-ns")
         elbafs = nvm_id_ns_data.get("elbafs", [])
         self.assertIsInstance(elbafs, list,
-                              f"ERROR : nvm-id-ns returned invalid elbafs type: {type(elbafs).__name__}")
+                              f"ERROR : id nvm-ns returned invalid elbafs type: {type(elbafs).__name__}")
         for i, elbaf in enumerate(elbafs):
             self.assertIsInstance(elbaf, dict,
                                   f"ERROR : invalid elbaf entry: {elbaf!r}")
@@ -176,7 +176,7 @@ class TestNVMeCopy(TestNVMe):
         # encode lbaf_index into the 8-bit flbas field
         flbas = (lbaf_index & 0xF) | (((lbaf_index >> 4) & 0x3) << 5)
 
-        # get_lba_format_size() in the parent class indexes the id-ns lbafs[] array
+        # get_lba_format_size() in the parent class indexes the id ns lbafs[] array
         # using self.flbas, so set it to lbaf_index here for the size look-up.
         # This is intentional: lbaf_index is the direct array position, while flbas
         # (computed above) is the encoded byte passed to create-ns --flbas.

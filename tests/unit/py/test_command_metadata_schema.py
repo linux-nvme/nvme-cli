@@ -85,7 +85,7 @@ def dump_metadata():
 
 def iter_commands(data):
     """Yield (command_path, command) for every builtin and plugin command.
-    command_path is the argv words that name the command: ["id-ctrl"] for a
+    command_path is the argv words that name the command: ["list-subsys"] for a
     builtin, ["ocp", "smart-add-log"] for a plugin command."""
     for cmd in data["commands"]:
         yield [cmd["name"]], cmd
@@ -168,7 +168,7 @@ class TestCommandMetadataSchema(unittest.TestCase):
     def test_expected_commands_present(self):
         """A few well-known builtin commands are emitted."""
         names = {c["name"] for c in self.data["commands"]}
-        for expected in ("list", "id-ctrl", "id-ns", "get-log"):
+        for expected in ("list", "list-subsys", "get-ns-id", "get-log"):
             self.assertIn(expected, names)
 
     def test_plugins_match_help(self):
