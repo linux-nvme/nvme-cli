@@ -3621,27 +3621,22 @@ out_free:
 	return ret;
 }
 
-static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
-		struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
-		bool *already_connected)
+enum dc_ownership {
+	DC_OWNED,
+	DC_BORROWED,
+};
+
+static struct libnvme_ctrl *dc_open_by_device(struct libnvme_global_ctx *ctx,
+		struct libnvmf_context *fctx, enum dc_ownership *own)
 {
 	struct libnvme_ctrl *c;
 	int err;
 
 	err = libnvme_scan_ctrl(ctx, fctx->device, &c);
 	if (err) {
-		/*
-		 * No controller found, fall back to create one.
-		 * But that controller cannot be persistent.
-		 */
+		/* No controller found, fall back to creating one. */
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
-			"ctrl device %s not found%s\n", fctx->device,
-			fctx->persistent == LIBNVMF_PERSISTENT_AUTO ||
-			fctx->persistent == LIBNVMF_PERSISTENT_FORCE ?
-				", ignoring --persistent" : "");
-
-		fctx->persistent = LIBNVMF_PERSISTENT_NO;
-
+			"ctrl device %s not found\n", fctx->device);
 		return NULL;
 	}
 
@@ -3657,8 +3652,6 @@ static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
 			"ctrl device %s found, ignoring non discovery controller\n",
 			fctx->device);
 
-		fctx->persistent = LIBNVMF_PERSISTENT_NO;
-
 		libnvme_free_ctrl(c);
 		return NULL;
 	}
@@ -3669,7 +3662,7 @@ static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
 	 * locally instead of overriding fctx->persistent, which must keep
 	 * reflecting what the user actually asked for.
 	 */
-	*already_connected = true;
+	*own = DC_BORROWED;
 
 	/*
 	 * When --host-traddr/--host-iface are not specified on the
@@ -3691,41 +3684,58 @@ static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
 	return c;
 }
 
-static int discover_lookup_ctrl(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, struct libnvme_host *h,
-		struct libnvme_ctrl **ctrl, bool *already_connected)
+/*
+ * Resolve the primary discovery controller connection: reuse one via
+ * --device if given, reuse one found by matching connection parameters
+ * otherwise, or create a fresh one if --no-reuse was given or neither
+ * lookup found anything. Never touches fctx->persistent; ownership is
+ * reported separately so the caller knows what it may disconnect later.
+ */
+static int dc_open(struct libnvme_global_ctx *ctx, struct libnvmf_context *fctx,
+		struct libnvme_host *h, enum dc_ownership *own,
+		struct libnvme_ctrl **ctrl)
 {
 	struct libnvme_ctrl *c = NULL;
 	int err;
 
-	if (fctx->device)
-		c = discover_lookup_ctrl_by_device(ctx, fctx,
-						    already_connected);
+	*own = DC_OWNED;
 
-	if (!c) {
-		c = lookup_ctrl(h, &fctx->ctrl_params);
-		if (c) {
-			/*
-			 * It was not created by us: record that fact
-			 * locally, do not touch fctx->persistent.
-			 */
-			*already_connected = true;
+	if (!fctx->no_reuse) {
+		if (fctx->device)
+			c = dc_open_by_device(ctx, fctx, own);
+
+		if (!c) {
+			c = lookup_ctrl(h, &fctx->ctrl_params);
+			if (c)
+				*own = DC_BORROWED;
 		}
 	}
 
-	if (!c)
-		return 0;
-
-	if (!libnvme_ctrl_get_transport_handle(c)) {
+	if (c) {
+		if (!libnvme_ctrl_get_transport_handle(c)) {
+			/*
+			 * When we found an existing controller it might not
+			 * have a device handle yet
+			 */
+			err = libnvme_open(ctx, c->name, O_RDONLY, &c->hdl);
+			if (err) {
+				libnvme_msg(ctx, LIBNVME_LOG_ERR,
+					"failed to open %s\n", c->name);
+				return err;
+			}
+		}
+	} else {
 		/*
-		 * When we found an existing controller it might not have a
-		 * device handle yet
+		 * No existing controller, or --no-reuse was given: create a
+		 * new one.
 		 */
-		err = libnvme_open(ctx, c->name, O_RDONLY, &c->hdl);
+		err = nvmf_create_discovery_ctrl(ctx, fctx, &fctx->ctrl_params,
+				h, &c);
 		if (err) {
-			libnvme_msg(ctx, LIBNVME_LOG_ERR,
-				"failed to open %s\n", c->name);
-
+			if (err != -ENVME_CONNECT_IGNORED)
+				libnvme_msg(ctx, LIBNVME_LOG_ERR,
+					"failed to add controller, error %s\n",
+					libnvme_strerror(-err));
 			return err;
 		}
 	}
@@ -3739,7 +3749,7 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 {
 	struct libnvme_ctrl *c = NULL;
 	struct libnvme_host *h;
-	bool already_connected = false;
+	enum dc_ownership own;
 	int err;
 
 	err = libnvme_get_host(ctx, fctx->hostnqn, fctx->hostid, &h);
@@ -3750,39 +3760,12 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 	if (err)
 		return err;
 
-	if (!fctx->no_reuse) {
-		/*
-		 * When --no-reuse is used, always create a controller,
-		 * otherwise try to lookup an already existing controller
-		 * first.
-		 */
-		err = discover_lookup_ctrl(ctx, fctx, h, &c,
-					   &already_connected);
-		if (err) {
-			libnvme_msg(ctx, LIBNVME_LOG_ERR,
-				 "failed to lookup controller, error %s\n",
-				 libnvme_strerror(-err));
-			return err;
-		}
-	}
-
-	if (!c) {
-		/*
-		 * No existing controller or --no-reuse has been used, thus
-		 * create a new controller.
-		 */
-		err = nvmf_create_discovery_ctrl(ctx, fctx, &fctx->ctrl_params, h, &c);
-		if (err) {
-			if (err != -ENVME_CONNECT_IGNORED)
-				libnvme_msg(ctx, LIBNVME_LOG_ERR,
-					 "failed to add controller, error %s\n",
-					 libnvme_strerror(-err));
-			return err;
-		}
-	}
+	err = dc_open(ctx, fctx, h, &own, &c);
+	if (err)
+		return err;
 
 	err = _nvmf_discover(ctx, fctx, &fctx->ctrl_params, c, true,
-			      already_connected);
+			      own == DC_BORROWED);
 	libnvme_free_ctrl(c);
 
 	return err;
