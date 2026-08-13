@@ -3,11 +3,11 @@
  * Test the ordinary-memory fallback used when huge pages are unavailable.
  */
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <sys/mman.h>
-#include <sys/syscall.h>
 #include <unistd.h>
 
 #include <compiler-attributes.h>
@@ -17,15 +17,22 @@
 
 static bool madvise_called;
 
+typedef void *(*mmap_func_t)(void *, size_t, int, int, int, off_t);
+
 void *mmap(void *addr, size_t length, int prot, int flags, int fd,
 	   off_t offset)
 {
+	mmap_func_t real_mmap;
+
 	if (flags & MAP_HUGETLB) {
 		errno = EINVAL;
 		return MAP_FAILED;
 	}
 
-	return (void *)syscall(SYS_mmap, addr, length, prot, flags, fd, offset);
+	real_mmap = (mmap_func_t)dlsym(RTLD_NEXT, "mmap");
+	shr_assert(real_mmap);
+
+	return real_mmap(addr, length, prot, flags, fd, offset);
 }
 
 int madvise(__shr_unused void *addr, __shr_unused size_t length,
