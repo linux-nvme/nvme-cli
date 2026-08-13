@@ -451,13 +451,12 @@ libnvme_ctrl_t libnvme_ctrl_find(libnvme_subsystem_t s,
 }
 
 bool libnvmf_ctrl_match_config(struct libnvme_ctrl *c,
-		struct libnvmf_context *fctx)
+		const struct libnvme_ctrl_params *params)
 {
 	struct candidate_args candidate = {};
 	ctrl_match_t ctrl_match;
 
-	ctrl_match = _libnvmf_candidate_init(c->ctx, &candidate,
-					     &fctx->ctrl_params);
+	ctrl_match = _libnvmf_candidate_init(c->ctx, &candidate, params);
 
 	return ctrl_match(c, &candidate);
 }
