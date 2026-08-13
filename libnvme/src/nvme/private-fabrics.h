@@ -54,6 +54,17 @@ struct libnvmf_hooks {
 			struct nvmf_discovery_log *log,
 			uint64_t numrec, void *user_data);
 
+	/*
+	 * NBFT-only: internal seam between the shared discovery walker and
+	 * NBFT's leaf-connect quirks (DHCP retry, firing hooks.connected).
+	 * Set only by libnvmf_discover_nbft() itself; never exposed to a
+	 * public setter.
+	 */
+	int (*connect_leaf)(struct libnvme_global_ctx *ctx,
+			struct libnvmf_context *fctx, struct libnvme_host *h,
+			struct nvmf_disc_log_entry *e,
+			struct libnvme_ctrl_params *params, libnvme_ctrl_t *cp);
+
 	void *user_data;
 };
 
@@ -77,6 +88,7 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
 	bool connect;			// !access
 	bool no_reuse;			// !access
 	char *nbft_path;		// !access
+	const struct libnbft_hfi *nbft_hfi;  // !access:read=none,write=none
 
 	/* host configuration */
 	char *hostnqn;			// !access:write=custom
