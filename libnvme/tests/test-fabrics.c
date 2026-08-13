@@ -641,6 +641,79 @@ static bool test_unescape_uri(void)
 }
 
 /* -------------------------------------------------------------------------
+ * dc_decide — pure disconnect-decision logic for one discovery controller
+ * -------------------------------------------------------------------------
+ */
+static bool test_dc_decide(struct libnvme_global_ctx *ctx)
+{
+	struct libnvmf_context fctx = { .ctx = ctx };
+	__u16 epcsd_set = NVMF_DISC_EFLAGS_EPCSD;
+	__u16 epcsd_clear = 0;
+	bool pass = true, p, d;
+
+	printf("\ntest_dc_decide:\n");
+
+	/* DC_BORROWED: never ours to disconnect, regardless of mode/EPCSD. */
+	fctx.persistent = LIBNVMF_PERSISTENT_FORCE;
+	d = dc_decide(&fctx, "nqn", DC_BORROWED, true, epcsd_set, NULL);
+	p = !d;
+	CHECK(p, "DC_BORROWED, FORCE, self EPCSD=1: disconnect=%d", d);
+	pass &= p;
+
+	fctx.persistent = LIBNVMF_PERSISTENT_NO;
+	d = dc_decide(&fctx, "nqn", DC_BORROWED, false, 0, NULL);
+	p = !d;
+	CHECK(p, "DC_BORROWED, NO, no self entry: disconnect=%d", d);
+	pass &= p;
+
+	/* DC_OWNED, AUTO: self entry's own EPCSD decides. */
+	fctx.persistent = LIBNVMF_PERSISTENT_AUTO;
+	d = dc_decide(&fctx, "nqn", DC_OWNED, true, epcsd_set, NULL);
+	p = !d;
+	CHECK(p, "DC_OWNED, AUTO, self EPCSD=1: disconnect=%d", d);
+	pass &= p;
+
+	d = dc_decide(&fctx, "nqn", DC_OWNED, true, epcsd_clear, NULL);
+	p = d;
+	CHECK(p, "DC_OWNED, AUTO, self EPCSD=0: disconnect=%d", d);
+	pass &= p;
+
+	/* DC_OWNED, AUTO, no self entry: fall back to the parent's view. */
+	d = dc_decide(&fctx, "nqn", DC_OWNED, false, 0, &epcsd_set);
+	p = !d;
+	CHECK(p, "DC_OWNED, AUTO, no self entry, parent EPCSD=1: disconnect=%d",
+	      d);
+	pass &= p;
+
+	d = dc_decide(&fctx, "nqn", DC_OWNED, false, 0, &epcsd_clear);
+	p = d;
+	CHECK(p, "DC_OWNED, AUTO, no self entry, parent EPCSD=0: disconnect=%d",
+	      d);
+	pass &= p;
+
+	/* DC_OWNED, AUTO, no self entry and no parent (primary): assume 0. */
+	d = dc_decide(&fctx, "nqn", DC_OWNED, false, 0, NULL);
+	p = d;
+	CHECK(p, "DC_OWNED, AUTO, no self entry, no parent: disconnect=%d", d);
+	pass &= p;
+
+	/* FORCE/NO override EPCSD either way. */
+	fctx.persistent = LIBNVMF_PERSISTENT_FORCE;
+	d = dc_decide(&fctx, "nqn", DC_OWNED, true, epcsd_clear, NULL);
+	p = !d;
+	CHECK(p, "DC_OWNED, FORCE, self EPCSD=0: disconnect=%d", d);
+	pass &= p;
+
+	fctx.persistent = LIBNVMF_PERSISTENT_NO;
+	d = dc_decide(&fctx, "nqn", DC_OWNED, true, epcsd_set, NULL);
+	p = d;
+	CHECK(p, "DC_OWNED, NO, self EPCSD=1: disconnect=%d", d);
+	pass &= p;
+
+	return pass;
+}
+
+/* -------------------------------------------------------------------------
  * main
  * -------------------------------------------------------------------------
  */
@@ -674,6 +747,7 @@ int main(int argc, char *argv[])
 	test_traddr_is_hostname(ctx);
 	test_nvmf_sanitize_addrs(ctx);
 	test_unescape_uri();
+	test_dc_decide(ctx);
 
 	libnvme_free_global_ctx(ctx);
 
