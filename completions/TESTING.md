@@ -36,19 +36,20 @@ compdef _nvme nvme
 Expected completions are identical across shells unless the
 [per-shell notes](#per-shell-notes) say otherwise.
 
-- [ ] **Top-level commands** — `nvme <tab>` lists builtins (`id-ctrl`,
-      `smart-log`, …), plugin names (`feat`, `zns`, …), and `help`/`version`.
-- [ ] **Prefix filter** — `nvme id-<tab>` narrows to `id-ctrl`, `id-ns`, ….
-- [ ] **Command alias** — `nvme fw-a<tab>` offers `fw-activate` (alias of
-      `fw-commit`); `nvme fw-activate --<tab>` completes `fw-commit`'s options.
+- [ ] **Top-level commands** — `nvme <tab>` lists builtins (`list`,
+      `format`, …), plugin names (`feat`, `zns`, …), and `help`/`version`.
+- [ ] **Prefix filter** — `nvme write-<tab>` narrows to `write-zeroes`,
+      `write-uncor`, ….
+- [ ] **Command alias** — `nvme fw ac<tab>` offers `activate` (alias of
+      `commit`); `nvme fw activate --<tab>` completes `commit`'s options.
 - [ ] **Plugin sub-commands** — `nvme feat <tab>` lists the plugin's
       sub-commands; `nvme zns <tab>` does too (routing is not hard-coded to one
       plugin).
 - [ ] **Sub-command alias** — `nvme dera <tab>` offers both `smart-log-add` and
       its alias `stat`.
-- [ ] **Option names** — `nvme id-ctrl -<tab>` offers `--output-format`,
+- [ ] **Option names** — `nvme id ctrl -<tab>` offers `--output-format`,
       `--help`, …
-- [ ] **Option names at an empty prefix** — `nvme id-ctrl <tab>` (no leading
+- [ ] **Option names at an empty prefix** — `nvme id ctrl <tab>` (no leading
       `-`) still lists the plain options (`--help`, `--verbose`, …) alongside
       the device, not just the `=`-valued ones. (zsh: the option groups are
       tagged `nvme-noeq-options`/`nvme-eq-options` rather than the reserved
@@ -56,23 +57,23 @@ Expected completions are identical across shells unless the
       is also offered.)
 - [ ] **A command without global options** — `nvme intel lat-stats-tracking
       -<tab>` offers only `--enable`/`--disable`, *not* `--output-format`.
-- [ ] **Enumerated value** — `nvme id-ctrl --output-format <tab>` and
+- [ ] **Enumerated value** — `nvme id ctrl --output-format <tab>` and
       `--output-format=<tab>` both list `normal json binary tabular`;
       `-o <tab>` too.
 - [ ] **Value from a hint** — `nvme feat power-meas --sel <tab>` lists
       `0 1 2 3`.
-- [ ] **Command-local value** — `nvme fw-commit --action <tab>` lists `replace …
+- [ ] **Command-local value** — `nvme fw commit --action <tab>` lists `replace …
       set-active …`.
-- [ ] **File-valued option** — `nvme fw-download --fw <tab>` completes
+- [ ] **File-valued option** — `nvme fw download --fw <tab>` completes
       filenames.
-- [ ] **Device argument** — `nvme id-ctrl <tab>` offers `/dev/nvme*`.
-- [ ] **No device when one is present** — `nvme id-ctrl /dev/nvme0 <tab>` does
+- [ ] **Device argument** — `nvme id ctrl <tab>` offers `/dev/nvme*`.
+- [ ] **No device when one is present** — `nvme id ctrl /dev/nvme0 <tab>` does
       not offer a second device.
 - [ ] **No device for help/version** — `nvme help <tab>` offers no `/dev/nvme*`.
 - [ ] **help completes a command** — `nvme help <tab>` lists command names (the
       same set as top-level `nvme <tab>`), since `nvme help CMD` prints that
       command's help; it does *not* fall back to filenames.
-- [ ] **help takes one argument** — `nvme help id-ctrl <tab>` offers nothing
+- [ ] **help takes one argument** — `nvme help id ctrl <tab>` offers nothing
       (`help` takes a single command; no filename fall-back past it).
 - [ ] **version takes no argument** — `nvme version <tab>` offers nothing at all
       (no options, no commands, no filenames).
