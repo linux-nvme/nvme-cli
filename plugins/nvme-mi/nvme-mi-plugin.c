@@ -149,8 +149,11 @@ static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc
 		nvme_show_verbose_result("status: %s",
 					 libnvme_mi_status_to_string(result & 0xff));
 	if (!send && strlen(cfg.input_file)) {
-		if (write(fd, (void *)data, cfg.data_len) < 0)
-			perror("failed to write data buffer");
+ 		if (write(fd, (void *)data, cfg.data_len) < 0) {
+ 			err = -errno;
+ 			nvme_show_perror("write");
+ 			return err;
+ 		}
 	} else if (data && !send && !err) {
 		d((unsigned char *)data, cfg.data_len, 16, 1);
 	}
