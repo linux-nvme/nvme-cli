@@ -115,13 +115,19 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 		err = fstat(sec_fd, &sb);
 		if (err < 0) {
 			nvme_show_perror("fstat");
-			return err;
+			return -errno;
 		}
 
-		sec_size = cfg.tl > sb.st_size ? cfg.tl : sb.st_size;
+		if (sb.st_size < cfg.tl) {
+			nvme_show_error("Security payload file %s is smaller than --tl (%u bytes)",
+					cfg.file, cfg.tl);
+			return -EINVAL;
+		}
+
+		sec_size = cfg.tl;
 	}
 
-	sec_buf = libnvme_alloc(cfg.tl);
+	sec_buf = libnvme_alloc(sec_size);
 	if (!sec_buf)
 		return -ENOMEM;
 
@@ -130,6 +136,10 @@ static int sec_send(int argc, char **argv, struct command *acmd, struct plugin *
 		nvme_show_error("Failed to read data from security file %s with %s", cfg.file,
 				libnvme_strerror(errno));
 		return -errno;
+	}
+	if ((unsigned int)err != sec_size) {
+		nvme_show_error("Short read from %s (got %d bytes, expected %u)", cfg.file, err, sec_size);
+		return -EIO;
 	}
 
 	nvme_init_security_send(&cmd, cfg.namespace_id, cfg.nssf, cfg.spsp,
