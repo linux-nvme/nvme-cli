@@ -3569,7 +3569,8 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 					strdup(libnvmf_get_default_trsvcid(
 						uri->protocol, true));
 
-			params.subsysnqn = NVME_DISC_SUBSYS_NAME;
+			params.subsysnqn = (*dd)->nqn ?
+				(*dd)->nqn : NVME_DISC_SUBSYS_NAME;
 			params.transport =  uri->protocol;
 			params.traddr = uri->host;
 			params.trsvcid = trsvcid;

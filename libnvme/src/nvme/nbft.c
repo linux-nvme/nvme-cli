@@ -567,8 +567,16 @@ static int read_discovery(struct libnvme_global_ctx *ctx,
 			1, &discovery->uri))
 		goto error;
 
-	if (get_heap_obj(ctx, raw_discovery, discovery_ctrl_nqn_obj,
-			1, &discovery->nqn))
+	/*
+	 * A DCNQNHOR cleared to 0h is spec-legal: it means "no unique NQN,
+	 * use the well-known Discovery NQN" (Boot Specification rev 1.4).
+	 * get_heap_obj() reports that as -ENOENT, not a parse failure --
+	 * only a genuinely malformed reference (-EINVAL) should drop the
+	 * whole descriptor.
+	 */
+	r = get_heap_obj(ctx, raw_discovery, discovery_ctrl_nqn_obj,
+			1, &discovery->nqn);
+	if (r && r != -ENOENT)
 		goto error;
 
 	discovery->hfi = hfi_from_index(nbft, raw_discovery->hfi_index);
