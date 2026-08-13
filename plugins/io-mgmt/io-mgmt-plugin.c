@@ -51,7 +51,11 @@ static int io_mgmt_send(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	struct config cfg = {
-		.mos = 0,
+		.nsid = 	0,
+		.mos =		0,
+		.mo =		0,
+		.file =		NULL,
+		.data_len = 	0,
 	};
 
 	NVME_ARGS(opts,
@@ -127,7 +131,11 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 	};
 
 	struct config cfg = {
-		.mos = 0,
+		.nsid = 	0,
+		.mos =		0,
+		.mo =		0,
+		.file =		NULL,
+		.data_len = 	0,
 	};
 
 	NVME_ARGS(opts,
