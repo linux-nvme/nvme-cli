@@ -75,7 +75,7 @@ struct libnvmf_context { // !generate-accessors:read=generated,write=generated
 
 	/* discovery invocation options */
 	bool connect;			// !access
-	bool force;			// !access
+	bool no_reuse;			// !access
 	char *nbft_path;		// !access
 
 	/* host configuration */

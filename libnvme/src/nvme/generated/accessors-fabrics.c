@@ -343,16 +343,16 @@ __shr_public bool libnvmf_context_get_connect(const struct libnvmf_context *p)
 	return p->connect;
 }
 
-__shr_public void libnvmf_context_set_force(
+__shr_public void libnvmf_context_set_no_reuse(
 		struct libnvmf_context *p,
-		bool force)
+		bool no_reuse)
 {
-	p->force = force;
+	p->no_reuse = no_reuse;
 }
 
-__shr_public bool libnvmf_context_get_force(const struct libnvmf_context *p)
+__shr_public bool libnvmf_context_get_no_reuse(const struct libnvmf_context *p)
 {
-	return p->force;
+	return p->no_reuse;
 }
 
 __shr_public void libnvmf_context_set_nbft_path(

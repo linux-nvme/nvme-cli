@@ -3749,10 +3749,11 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 	if (err)
 		return err;
 
-	if (!fctx->force) {
+	if (!fctx->no_reuse) {
 		/*
-		 * When --force is used, always create a controller, otherwise
-		 * try to lookup an already existing controller first.
+		 * When --no-reuse is used, always create a controller,
+		 * otherwise try to lookup an already existing controller
+		 * first.
 		 */
 		err = discover_lookup_ctrl(ctx, fctx, h, &c,
 					   &already_connected);
@@ -3766,8 +3767,8 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 
 	if (!c) {
 		/*
-		 * No existing controller or --force has been used, thus create
-		 * a new controller.
+		 * No existing controller or --no-reuse has been used, thus
+		 * create a new controller.
 		 */
 		err = nvmf_create_discovery_ctrl(ctx, fctx, &fctx->ctrl_params, h, &c);
 		if (err) {
