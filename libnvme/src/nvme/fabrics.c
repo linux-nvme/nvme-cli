@@ -52,6 +52,30 @@ static inline void free_uri(struct libnvmf_uri **uri)
 }
 #define __cleanup_uri __cleanup(free_uri)
 
+static struct libnvme_ctrl_params ctrl_params_copy(
+		const struct libnvme_ctrl_params *src)
+{
+	struct libnvme_ctrl_params params = *src;
+
+	params.host_iface = NULL;
+	return params;
+}
+
+static struct libnvme_ctrl_params ctrl_params_dup(
+		const struct libnvme_ctrl_params *src)
+{
+	struct libnvme_ctrl_params params = *src;
+
+	params.host_iface = shr_xstrdup(src->host_iface);
+	return params;
+}
+
+static inline void cleanup_ctrl_params(struct libnvme_ctrl_params *params)
+{
+	free((char *)params->host_iface);
+}
+#define __cleanup_ctrl_params __cleanup(cleanup_ctrl_params)
+
 /**
  * strchomp() - Strip trailing spaces
  * @str: String to strip
@@ -1790,7 +1814,7 @@ static bool nvmf_excluded(struct libnvme_global_ctx *ctx,
 
 static int nvmf_connect_disc_entry(libnvme_host_t h,
 		struct nvmf_disc_log_entry *e,
-		struct libnvmf_context *fctx,
+		struct libnvme_ctrl_params *params,
 		bool *discover, libnvme_ctrl_t *cp)
 {
 	libnvme_ctrl_t c;
@@ -1802,8 +1826,8 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_IP4:
 		case NVMF_ADDR_FAMILY_IP6:
-			fctx->ctrl_params.traddr = e->traddr;
-			fctx->ctrl_params.trsvcid = e->trsvcid;
+			params->traddr = e->traddr;
+			params->trsvcid = e->trsvcid;
 			break;
 		default:
 			libnvme_msg(h->ctx, LIBNVME_LOG_ERR,
@@ -1815,7 +1839,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
         case NVMF_TRTYPE_FC:
 		switch (e->adrfam) {
 		case NVMF_ADDR_FAMILY_FC:
-			fctx->ctrl_params.traddr = e->traddr;
+			params->traddr = e->traddr;
 			break;
 		default:
 			libnvme_msg(h->ctx, LIBNVME_LOG_ERR,
@@ -1825,7 +1849,7 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 		}
 		break;
 	case NVMF_TRTYPE_LOOP:
-		fctx->ctrl_params.traddr = strlen(e->traddr) ? e->traddr : NULL;
+		params->traddr = strlen(e->traddr) ? e->traddr : NULL;
 		break;
 	default:
 		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "skipping unsupported transport %d\n",
@@ -1833,28 +1857,28 @@ static int nvmf_connect_disc_entry(libnvme_host_t h,
 		return -EINVAL;
 	}
 
-	fctx->ctrl_params.transport = libnvmf_trtype_str(e->trtype);
-	fctx->ctrl_params.subsysnqn = e->subnqn;
+	params->transport = libnvmf_trtype_str(e->trtype);
+	params->subsysnqn = e->subnqn;
 
 	libnvme_msg(h->ctx, LIBNVME_LOG_DEBUG,
 		 "lookup ctrl (transport: %s, traddr: %s, trsvcid %s)\n",
-		 fctx->ctrl_params.transport, fctx->ctrl_params.traddr,
-		 fctx->ctrl_params.trsvcid);
+		 params->transport, params->traddr,
+		 params->trsvcid);
 
-	if (nvmf_excluded(h->ctx, fctx->ctrl_params.transport,
-			  fctx->ctrl_params.traddr, fctx->ctrl_params.trsvcid,
-			  fctx->ctrl_params.subsysnqn,
-			  fctx->ctrl_params.host_traddr,
-			  fctx->ctrl_params.host_iface,
+	if (nvmf_excluded(h->ctx, params->transport,
+			  params->traddr, params->trsvcid,
+			  params->subsysnqn,
+			  params->host_traddr,
+			  params->host_iface,
 			  libnvme_host_get_hostnqn(h),
 			  libnvme_host_get_hostid(h)))
 		return -EPERM;
 
-	ret = libnvme_create_ctrl(h->ctx, &fctx->ctrl_params, &c);
+	ret = libnvme_create_ctrl(h->ctx, params, &c);
 	if (ret) {
 		libnvme_msg(h->ctx, LIBNVME_LOG_DEBUG, "skipping discovery entry, "
 			 "failed to allocate %s controller with traddr %s\n",
-			 fctx->ctrl_params.transport, fctx->ctrl_params.traddr);
+			 params->transport, params->traddr);
 		return ret;
 	}
 
@@ -2505,13 +2529,14 @@ __shr_public void libnvmf_uri_free(struct libnvmf_uri *uri)
 	free(uri);
 }
 
-static libnvme_ctrl_t lookup_ctrl(libnvme_host_t h, struct libnvmf_context *fctx)
+static libnvme_ctrl_t lookup_ctrl(libnvme_host_t h,
+		const struct libnvme_ctrl_params *params)
 {
 	libnvme_subsystem_t s;
 	libnvme_ctrl_t c;
 
 	libnvme_for_each_subsystem(h, s) {
-		c = libnvmf_ctrl_find(s, fctx);
+		c = libnvme_ctrl_find(s, params, NULL);
 		if (c)
 			return c;
 	}
@@ -2609,9 +2634,10 @@ static int setup_connection(struct libnvmf_context *fctx, struct libnvme_host *h
 }
 
 
-static int set_discovery_kato(struct libnvmf_context *fctx)
+static int set_discovery_kato(struct libnvmf_context *fctx,
+		struct libnvme_ctrl_params *params)
 {
-	int tmo = fctx->ctrl_params.cfg.keep_alive_tmo;
+	int tmo = params->cfg.keep_alive_tmo;
 	/*
 	 * EPCSD isn't known until after the Discovery Log Page comes back, so
 	 * auto mode optimistically requests a KATO here; dc_should_connect()
@@ -2621,12 +2647,11 @@ static int set_discovery_kato(struct libnvmf_context *fctx)
 		fctx->persistent == LIBNVMF_PERSISTENT_FORCE;
 
 	/* Set kato to NVMF_DEF_DISC_TMO for persistent controllers */
-	if (wants_kato && !fctx->ctrl_params.cfg.keep_alive_tmo)
-		fctx->ctrl_params.cfg.keep_alive_tmo =
-			fctx->default_keep_alive_timeout;
+	if (wants_kato && !params->cfg.keep_alive_tmo)
+		params->cfg.keep_alive_tmo = fctx->default_keep_alive_timeout;
 	/* Set kato to zero for non-persistent controllers */
-	else if (!wants_kato && fctx->ctrl_params.cfg.keep_alive_tmo > 0)
-		fctx->ctrl_params.cfg.keep_alive_tmo = 0;
+	else if (!wants_kato && params->cfg.keep_alive_tmo > 0)
+		params->cfg.keep_alive_tmo = 0;
 
 	return tmo;
 }
@@ -2749,8 +2774,9 @@ static void dc_log_decision(struct libnvmf_context *fctx,
 }
 
 static int _nvmf_discover(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, struct libnvme_ctrl *c,
-		bool primary, bool already_connected)
+		struct libnvmf_context *fctx,
+		const struct libnvme_ctrl_params *ctrl_params,
+		struct libnvme_ctrl *c, bool primary, bool already_connected)
 {
 	__cleanup_free struct nvmf_discovery_log *log = NULL;
 	libnvme_subsystem_t s = libnvme_ctrl_get_subsystem(c);
@@ -2783,17 +2809,18 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 		struct dc_decision d = { 0 };
 		libnvme_ctrl_t cl;
 		bool discover = false;
-		struct libnvmf_context nfctx = *fctx;
+		__cleanup_ctrl_params struct libnvme_ctrl_params params =
+			ctrl_params_dup(ctrl_params);
 
 		sanitize_discovery_log_entry(c->ctx, e);
 
-		nfctx.ctrl_params.subsysnqn = e->subnqn;
-		nfctx.ctrl_params.transport = libnvmf_trtype_str(e->trtype);
-		nfctx.ctrl_params.traddr = e->traddr;
-		nfctx.ctrl_params.trsvcid = e->trsvcid;
+		params.subsysnqn = e->subnqn;
+		params.transport = libnvmf_trtype_str(e->trtype);
+		params.traddr = e->traddr;
+		params.trsvcid = e->trsvcid;
 
 		/* Already connected ? */
-		cl = lookup_ctrl(h, &nfctx);
+		cl = lookup_ctrl(h, &params);
 		if (cl == c) {
 			/*
 			 * This entry describes c's own port (SUBTYPE 03h,
@@ -2818,19 +2845,19 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 
 		/* Skip connect if the transport types don't match */
 		if (strcmp(libnvme_ctrl_get_transport(c),
-			   nfctx.ctrl_params.transport)) {
+			   params.transport)) {
 			dc_log_decision(fctx, e, &d, "transport mismatch");
 			continue;
 		}
 
-		if (!dc_should_connect(&nfctx, e, &d.disconnect)) {
+		if (!dc_should_connect(fctx, e, &d.disconnect)) {
 			dc_log_decision(fctx, e, &d,
 				"not connecting (duplicate info, or connect not requested)");
 			continue;
 		}
 		d.connect = true;
 
-		err = nvmf_connect_disc_entry(h, e, &nfctx, &discover, &d.c);
+		err = nvmf_connect_disc_entry(h, e, &params, &discover, &d.c);
 		if (err && err != -ENVME_CONNECT_ALREADY)
 			dc_log_decision(fctx, e, &d, libnvme_strerror(-err));
 		else
@@ -2838,8 +2865,8 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 
 		if (d.c) {
 			if (discover) {
-				set_discovery_kato(&nfctx);
-				_nvmf_discover(ctx, &nfctx, d.c, false,
+				set_discovery_kato(fctx, &params);
+				_nvmf_discover(ctx, fctx, &params, d.c, false,
 					       false);
 			}
 
@@ -2848,9 +2875,9 @@ static int _nvmf_discover(struct libnvme_global_ctx *ctx,
 				libnvme_free_ctrl(d.c);
 			}
 		} else if (err == -ENVME_CONNECT_ALREADY) {
-			nfctx.hooks.already_connected(&nfctx, h, e->subnqn,
+			fctx->hooks.already_connected(fctx, h, e->subnqn,
 				libnvmf_trtype_str(e->trtype), e->traddr,
-				e->trsvcid, nfctx.hooks.user_data);
+				e->trsvcid, fctx->hooks.user_data);
 		}
 	}
 
@@ -2925,21 +2952,20 @@ retry:
 }
 
 static int __create_discovery_ctrl(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, libnvme_host_t h,
-		struct libnvme_ctrl **ctrl)
+		struct libnvmf_context *fctx, struct libnvme_ctrl_params *params,
+		libnvme_host_t h, struct libnvme_ctrl **ctrl)
 {
 	libnvme_ctrl_t c;
 	int tmo, ret;
 
-	ret = libnvme_create_ctrl(ctx, &fctx->ctrl_params, &c);
+	ret = libnvme_create_ctrl(ctx, params, &c);
 	if (ret)
 		return ret;
 
 	libnvme_ctrl_set_discovery_ctrl(c, true);
 	libnvme_ctrl_set_unique_discovery_ctrl(c,
-		strcmp(fctx->ctrl_params.subsysnqn,
-		       NVME_DISC_SUBSYS_NAME));
-	tmo = set_discovery_kato(fctx);
+		strcmp(params->subsysnqn, NVME_DISC_SUBSYS_NAME));
+	tmo = set_discovery_kato(fctx, params);
 
 	if (libnvme_ctrl_get_unique_discovery_ctrl(c) && fctx->hostkey) {
 		libnvme_ctrl_set_dhchap_host_key(c, fctx->hostkey);
@@ -2948,7 +2974,7 @@ static int __create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 	}
 
 	ret = libnvme_add_ctrl(fctx, h, c);
-	fctx->ctrl_params.cfg.keep_alive_tmo = tmo;
+	params->cfg.keep_alive_tmo = tmo;
 	if (ret) {
 		libnvme_free_ctrl(c);
 		return ret;
@@ -2959,14 +2985,14 @@ static int __create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 }
 
 static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, libnvme_host_t h,
-		struct libnvme_ctrl **ctrl)
+		struct libnvmf_context *fctx, struct libnvme_ctrl_params *params,
+		libnvme_host_t h, struct libnvme_ctrl **ctrl)
 {
 	__cleanup_libnvme_free struct nvme_id_ctrl *id = NULL;
 	struct libnvme_ctrl *c;
 	int ret;
 
-	ret = __create_discovery_ctrl(ctx, fctx, h, &c);
+	ret = __create_discovery_ctrl(ctx, fctx, params, h, &c);
 	if (ret)
 		return ret;
 
@@ -3010,8 +3036,8 @@ static int nvmf_create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 	libnvmf_disconnect_ctrl(c);
 	libnvme_free_ctrl(c);
 
-	fctx->ctrl_params.subsysnqn = id->subnqn;
-	ret = __create_discovery_ctrl(ctx, fctx, h, &c);
+	params->subsysnqn = id->subnqn;
+	ret = __create_discovery_ctrl(ctx, fctx, params, h, &c);
 	if (ret)
 		return ret;
 
@@ -3109,8 +3135,8 @@ static bool validate_uri(struct libnvme_global_ctx *ctx,
 }
 
 static int nbft_connect(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, struct libnvme_host *h,
-		struct nvmf_disc_log_entry *e,
+		struct libnvmf_context *fctx, struct libnvme_ctrl_params *params,
+		struct libnvme_host *h, struct nvmf_disc_log_entry *e,
 		struct libnbft_subsystem_ns *ss)
 {
 	libnvme_ctrl_t c;
@@ -3122,20 +3148,20 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 	saved_log_level = libnvme_get_logging_level(ctx, &saved_log_pid,
 		&saved_log_tstamp);
 
-	c = lookup_ctrl(h, fctx);
+	c = lookup_ctrl(h, params);
 	if (c && libnvme_ctrl_get_name(c))
 		return 0;
 
-	if (nvmf_excluded(ctx, fctx->ctrl_params.transport,
-			  fctx->ctrl_params.traddr, fctx->ctrl_params.trsvcid,
-			  fctx->ctrl_params.subsysnqn,
-			  fctx->ctrl_params.host_traddr,
-			  fctx->ctrl_params.host_iface,
+	if (nvmf_excluded(ctx, params->transport,
+			  params->traddr, params->trsvcid,
+			  params->subsysnqn,
+			  params->host_traddr,
+			  params->host_iface,
 			  libnvme_host_get_hostnqn(h),
 			  libnvme_host_get_hostid(h)))
 		return 0;
 
-	ret = libnvme_create_ctrl(ctx, &fctx->ctrl_params, &c);
+	ret = libnvme_create_ctrl(ctx, params, &c);
 	if (ret)
 		return ret;
 
@@ -3177,7 +3203,9 @@ static int nbft_connect(struct libnvme_global_ctx *ctx,
 }
 
 static int nbft_discovery(struct libnvme_global_ctx *ctx,
-		struct libnvmf_context *fctx, struct libnbft_discovery *dd,
+		struct libnvmf_context *fctx,
+		const struct libnvme_ctrl_params *ctrl_params,
+		struct libnbft_discovery *dd,
 		struct libnvme_host *h, struct libnvme_ctrl *c)
 {
 	struct nvmf_discovery_log *log = NULL;
@@ -3199,42 +3227,42 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 
 	for (i = 0; i < le64_to_cpu(log->numrec); i++) {
 		struct nvmf_disc_log_entry *e = &log->entries[i];
-		struct libnvmf_context nfctx = *fctx;
+		__cleanup_ctrl_params struct libnvme_ctrl_params params =
+			ctrl_params_dup(ctrl_params);
 		libnvme_ctrl_t cl;
-		int tmo = fctx->ctrl_params.cfg.keep_alive_tmo;
 
 		sanitize_discovery_log_entry(c->ctx, e);
 
-		nfctx.ctrl_params.subsysnqn = e->subnqn;
-		nfctx.ctrl_params.transport = libnvmf_trtype_str(e->trtype);
-		nfctx.ctrl_params.traddr = e->traddr;
-		nfctx.ctrl_params.trsvcid = e->trsvcid;
+		params.subsysnqn = e->subnqn;
+		params.transport = libnvmf_trtype_str(e->trtype);
+		params.traddr = e->traddr;
+		params.trsvcid = e->trsvcid;
 
 		if (e->subtype == NVME_NQN_CURR)
 			continue;
 
 		/* Already connected ? */
-		cl = lookup_ctrl(h, &nfctx);
+		cl = lookup_ctrl(h, &params);
 		if (cl && libnvme_ctrl_get_name(cl))
 			continue;
 
 		/* Skip connect if the transport types don't match */
 		if (strcmp(libnvme_ctrl_get_transport(c),
-			   nfctx.ctrl_params.transport))
+			   params.transport))
 			continue;
 
 		if (e->subtype == NVME_NQN_DISC) {
 			libnvme_ctrl_t child;
 
-			ret = nvmf_connect_disc_entry(h, e, &nfctx,
+			ret = nvmf_connect_disc_entry(h, e, &params,
 				NULL, &child);
 			if (ret)
 				continue;
-			nbft_discovery(ctx, &nfctx, dd, h, child);
+			nbft_discovery(ctx, fctx, &params, dd, h, child);
 			libnvmf_disconnect_ctrl(child);
 			libnvme_free_ctrl(child);
 		} else {
-			ret = nbft_connect(ctx, &nfctx, h, e, NULL);
+			ret = nbft_connect(ctx, fctx, &params, h, e, NULL);
 
 			/*
 			 * With TCP/DHCP, it can happen that the OS
@@ -3242,13 +3270,12 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 			 * firmware had. Retry without host_traddr.
 			 */
 			if (ret == -ENVME_CONNECT_ADDRNOTAVAIL &&
-			    !strcmp(nfctx.ctrl_params.transport, "tcp") &&
+			    !strcmp(params.transport, "tcp") &&
 			    strlen(dd->hfi->tcp_info.dhcp_server_ipaddr) > 0) {
-				const char *htradr =
-					nfctx.ctrl_params.host_traddr;
+				const char *htradr = params.host_traddr;
 
-				nfctx.ctrl_params.host_traddr = NULL;
-				ret = nbft_connect(ctx, &nfctx, h, e, NULL);
+				params.host_traddr = NULL;
+				ret = nbft_connect(ctx, fctx, &params, h, e, NULL);
 
 				if (ret == 0)
 					libnvme_msg(ctx, LIBNVME_LOG_INFO,
@@ -3264,8 +3291,6 @@ static int nbft_discovery(struct libnvme_global_ctx *ctx,
 			if (ret == -ENOMEM)
 				break;
 		}
-
-		fctx->ctrl_params.cfg.keep_alive_tmo = tmo;
 	}
 
 	libnvme_free(log);
@@ -3402,7 +3427,8 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 		/* Subsystem Namespace Descriptor List */
 		for (ss = entry->nbft->subsystem_ns_list; ss && *ss; ss++)
 			for (i = 0; i < (*ss)->num_hfis; i++) {
-				struct libnvmf_context nfctx = *fctx;
+				__cleanup_ctrl_params struct libnvme_ctrl_params params =
+					ctrl_params_copy(&fctx->ctrl_params);
 
 				hfi = (*ss)->hfis[i];
 				if (!hfi) {
@@ -3430,23 +3456,23 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 					continue;
 				}
 
-				nfctx.ctrl_params.host_traddr = NULL;
+				params.host_traddr = NULL;
 				if (!fctx->ctrl_params.host_traddr &&
 				    !strncmp((*ss)->transport, "tcp", 3))
-					nfctx.ctrl_params.host_traddr =
+					params.host_traddr =
 						hfi->tcp_info.ipaddr;
 
-				nfctx.ctrl_params.subsysnqn = (*ss)->subsys_nqn;
-				nfctx.ctrl_params.transport = (*ss)->transport;
-				nfctx.ctrl_params.traddr = (*ss)->traddr;
-				nfctx.ctrl_params.trsvcid = (*ss)->trsvcid;
-				nfctx.ctrl_params.host_iface = nbft_find_hfi_iface(hfi);
-				if (!nfctx.ctrl_params.host_iface)
+				params.subsysnqn = (*ss)->subsys_nqn;
+				params.transport = (*ss)->transport;
+				params.traddr = (*ss)->traddr;
+				params.trsvcid = (*ss)->trsvcid;
+				params.host_iface = nbft_find_hfi_iface(hfi);
+				if (!params.host_iface)
 					libnvme_msg(ctx, LIBNVME_LOG_INFO,
 						"SSNS %d: could not find host interface for HFI %d\n",
 						(*ss)->index, hfi->index);
 
-				rr = nbft_connect(ctx, &nfctx, h, NULL, *ss);
+				rr = nbft_connect(ctx, fctx, &params, h, NULL, *ss);
 
 				/*
 				 * With TCP/DHCP, it can happen that the OS
@@ -3454,13 +3480,13 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 				 * firmware had. Retry without host_traddr.
 				 */
 				if (rr == -ENVME_CONNECT_ADDRNOTAVAIL &&
-				    !strcmp(nfctx.ctrl_params.transport,
+				    !strcmp(params.transport,
 					    "tcp") &&
 				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
-					nfctx.ctrl_params.host_traddr = NULL;
+					params.host_traddr = NULL;
 
-					rr = nbft_connect(ctx, &nfctx, h, NULL,
-						*ss);
+					rr = nbft_connect(ctx, fctx, &params, h,
+						NULL, *ss);
 
 					if (rr == 0)
 						libnvme_msg(ctx, LIBNVME_LOG_INFO,
@@ -3468,9 +3494,6 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 							(*ss)->index,
 							host_traddr);
 				}
-
-				if (nfctx.ctrl_params.host_iface)
-					free((char *)nfctx.ctrl_params.host_iface);
 
 				if (rr) {
 					libnvme_msg(ctx, LIBNVME_LOG_ERR,
@@ -3488,7 +3511,8 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 		for (dd = entry->nbft->discovery_list; dd && *dd; dd++) {
 			__cleanup_uri struct libnvmf_uri *uri = NULL;
 			__cleanup_free char *trsvcid = NULL;
-			struct libnvmf_context nfctx = *fctx;
+			__cleanup_ctrl_params struct libnvme_ctrl_params params =
+				ctrl_params_copy(&fctx->ctrl_params);
 			bool persistent = false;
 			bool linked = false;
 			libnvme_ctrl_t c;
@@ -3546,38 +3570,34 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 					strdup(libnvmf_get_default_trsvcid(
 						uri->protocol, true));
 
-			nfctx.ctrl_params.subsysnqn = NVME_DISC_SUBSYS_NAME;
-			nfctx.ctrl_params.transport =  uri->protocol;
-			nfctx.ctrl_params.traddr = uri->host;
-			nfctx.ctrl_params.trsvcid = trsvcid;
-			nfctx.ctrl_params.host_traddr = host_traddr;
-			nfctx.ctrl_params.host_iface = nbft_find_hfi_iface(hfi);
-			if (!nfctx.ctrl_params.host_iface)
+			params.subsysnqn = NVME_DISC_SUBSYS_NAME;
+			params.transport =  uri->protocol;
+			params.traddr = uri->host;
+			params.trsvcid = trsvcid;
+			params.host_traddr = host_traddr;
+			params.host_iface = nbft_find_hfi_iface(hfi);
+			if (!params.host_iface)
 				libnvme_msg(ctx, LIBNVME_LOG_INFO,
 					"Discovery Descriptor %d: could not find host interface for HFI %d\n",
 					(*dd)->index, hfi->index);
 
 			/* Lookup existing discovery controller */
-			c = lookup_ctrl(h, &nfctx);
+			c = lookup_ctrl(h, &params);
 			if (c && libnvme_ctrl_get_name(c))
 				persistent = true;
 
 			if (!c) {
-				ret = nvmf_create_discovery_ctrl(ctx, &nfctx,
-					h, &c);
+				ret = nvmf_create_discovery_ctrl(ctx, fctx,
+					&params, h, &c);
 				if (ret == -ENVME_CONNECT_ADDRNOTAVAIL &&
-				    !strcmp(nfctx.ctrl_params.transport,
-					    "tcp") &&
+				    !strcmp(params.transport, "tcp") &&
 				    strlen(hfi->tcp_info.dhcp_server_ipaddr) > 0) {
-					nfctx.ctrl_params.traddr = NULL;
+					params.traddr = NULL;
 					ret = nvmf_create_discovery_ctrl(ctx,
-						&nfctx, h, &c);
+						fctx, &params, h, &c);
 				}
 			} else
 				ret = 0;
-
-			if (nfctx.ctrl_params.host_iface)
-				free((char *)nfctx.ctrl_params.host_iface);
 
 			if (ret) {
 				libnvme_msg(ctx, LIBNVME_LOG_ERR,
@@ -3586,7 +3606,7 @@ __shr_public int libnvmf_discover_nbft(struct libnvme_global_ctx *ctx,
 				goto out_free;
 			}
 
-			rr = nbft_discovery(ctx, &nfctx, *dd, h, c);
+			rr = nbft_discovery(ctx, fctx, &params, *dd, h, c);
 			if (!persistent)
 				libnvmf_disconnect_ctrl(c);
 			libnvme_free_ctrl(c);
@@ -3683,7 +3703,7 @@ static int discover_lookup_ctrl(struct libnvme_global_ctx *ctx,
 						    already_connected);
 
 	if (!c) {
-		c = lookup_ctrl(h, fctx);
+		c = lookup_ctrl(h, &fctx->ctrl_params);
 		if (c) {
 			/*
 			 * It was not created by us: record that fact
@@ -3750,7 +3770,7 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 		 * No existing controller or --force has been used, thus create
 		 * a new controller.
 		 */
-		err = nvmf_create_discovery_ctrl(ctx, fctx, h, &c);
+		err = nvmf_create_discovery_ctrl(ctx, fctx, &fctx->ctrl_params, h, &c);
 		if (err) {
 			if (err != -ENVME_CONNECT_IGNORED)
 				libnvme_msg(ctx, LIBNVME_LOG_ERR,
@@ -3760,7 +3780,8 @@ __shr_public int libnvmf_discover(struct libnvme_global_ctx *ctx,
 		}
 	}
 
-	err = _nvmf_discover(ctx, fctx, c, true, already_connected);
+	err = _nvmf_discover(ctx, fctx, &fctx->ctrl_params, c, true,
+			      already_connected);
 	libnvme_free_ctrl(c);
 
 	return err;
@@ -3789,7 +3810,7 @@ __shr_public int libnvmf_connect(
 	if (err)
 		return err;
 
-	c = lookup_ctrl(h, fctx);
+	c = lookup_ctrl(h, &fctx->ctrl_params);
 	if (c && libnvme_ctrl_get_name(c) &&
 	    !fctx->ctrl_params.cfg.duplicate_connect) {
 		int instance = ctrl_instance(c);
@@ -3826,7 +3847,7 @@ __shr_public int libnvmf_connect(
 	if (!strcmp(fctx->ctrl_params.subsysnqn, NVME_DISC_SUBSYS_NAME)) {
 		fctx->persistent = LIBNVMF_PERSISTENT_FORCE;
 
-		set_discovery_kato(fctx);
+		set_discovery_kato(fctx, &fctx->ctrl_params);
 	}
 
 	err = libnvme_add_ctrl(fctx, h, c);
@@ -3838,7 +3859,7 @@ __shr_public int libnvmf_connect(
 		 */
 		if (err == -ENVME_CONNECT_ALREADY &&
 		    libnvme_scan_topology(ctx, NULL, NULL) == 0) {
-			libnvme_ctrl_t winner = lookup_ctrl(h, fctx);
+			libnvme_ctrl_t winner = lookup_ctrl(h, &fctx->ctrl_params);
 			int instance = ctrl_instance(winner);
 
 			write_devid_file(fctx, devid_fd, winner);
