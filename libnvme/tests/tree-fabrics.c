@@ -1242,7 +1242,7 @@ static bool ctrl_config_match(const char *tag,
 	if (reference->address)
 		reference_ctrl->address = (char *)reference->address;
 
-	match = libnvmf_ctrl_match_config(reference_ctrl, &candidate->f);
+	match = libnvmf_ctrl_match_config(reference_ctrl, &candidate->f.ctrl_params);
 
 	if (should_match) {
 		if (!match) {

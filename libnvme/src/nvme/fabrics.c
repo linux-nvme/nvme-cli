@@ -3644,7 +3644,7 @@ static struct libnvme_ctrl *discover_lookup_ctrl_by_device(
 	}
 
 	/* Check if device matches command-line options */
-	if (!libnvmf_ctrl_match_config(c, fctx)) {
+	if (!libnvmf_ctrl_match_config(c, &fctx->ctrl_params)) {
 		libnvme_msg(ctx, LIBNVME_LOG_ERR,
 			"ctrl device %s found, ignoring non matching command-line options\n",
 			fctx->device);

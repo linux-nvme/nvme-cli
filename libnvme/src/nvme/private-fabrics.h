@@ -266,7 +266,7 @@ typedef bool (*ctrl_match_t)(struct libnvme_ctrl *c,
 		struct candidate_args *candidate);
 
 bool libnvmf_ctrl_match_config(struct libnvme_ctrl *c,
-		struct libnvmf_context *fctx);
+		const struct libnvme_ctrl_params *params);
 
 /**
  * libnvmf_get_entity_name - Get Entity Name (ENAME).
