@@ -425,8 +425,8 @@ static bool ctrl_match(const char *tag,
 	if (reference->address)
 		reference_ctrl->address = (char *)reference->address;
 
-	/* libnvmf_ctrl_find() MUST BE RUN BEFORE libnvme_lookup_ctrl() */
-	found_ctrl = libnvmf_ctrl_find(s, &candidate->f);
+	/* libnvme_ctrl_find() MUST BE RUN BEFORE libnvme_lookup_ctrl() */
+	found_ctrl = libnvme_ctrl_find(s, &candidate->f.ctrl_params, NULL);
 
 	candidate_ctrl = libnvme_lookup_ctrl(s,
 		&candidate->f.ctrl_params, NULL);
@@ -1455,7 +1455,7 @@ static bool test_well_known_nqn(void)
 	disc_ctrl->name = "nvme1";
 	libnvme_ctrl_set_discovery_ctrl(disc_ctrl, true);
 
-	found = libnvmf_ctrl_find(s_disc, &fctx_wknqn);
+	found = libnvme_ctrl_find(s_disc, &fctx_wknqn.ctrl_params, NULL);
 	if (found == disc_ctrl) {
 		printf(" - well-known NQN matches discovery ctrl [PASS]\n");
 	} else {
@@ -1471,7 +1471,7 @@ static bool test_well_known_nqn(void)
 	shr_assert(regular_ctrl);
 	regular_ctrl->name = "nvme2";
 
-	found = libnvmf_ctrl_find(s_regular, &fctx_wknqn);
+	found = libnvme_ctrl_find(s_regular, &fctx_wknqn.ctrl_params, NULL);
 	if (!found) {
 		printf(" - well-known NQN does not match non-discovery ctrl [PASS]\n");
 	} else {
@@ -1685,7 +1685,7 @@ static bool test_lookup_ctrl_pagination(void)
 	shr_assert(ctrl_b);
 
 	/* p=NULL: search starts from head, finds ctrl_a */
-	found = libnvmf_ctrl_find(s, &fctx_a);
+	found = libnvme_ctrl_find(s, &fctx_a.ctrl_params, NULL);
 	if (found == ctrl_a) {
 		printf(" - ctrl_find(p=NULL) finds ctrl_a [PASS]\n");
 	} else {

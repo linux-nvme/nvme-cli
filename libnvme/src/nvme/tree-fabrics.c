@@ -461,9 +461,3 @@ bool libnvmf_ctrl_match_config(struct libnvme_ctrl *c,
 
 	return ctrl_match(c, &candidate);
 }
-
-libnvme_ctrl_t libnvmf_ctrl_find(libnvme_subsystem_t s,
-		struct libnvmf_context *fctx)
-{
-	return libnvme_ctrl_find(s, &fctx->ctrl_params, NULL/*p*/);
-}

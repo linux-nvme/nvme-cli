@@ -1654,17 +1654,15 @@ __shr_public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 	s = libnvme_lookup_subsystem(h, NULL, libnvme_ctrl_get_subsysnqn(c));
 	if (s) {
 		libnvme_ctrl_t fc;
-		struct libnvmf_context fctx = {
-			.ctrl_params = {
-				.transport = libnvme_ctrl_get_transport(c),
-				.traddr = libnvme_ctrl_get_traddr(c),
-				.host_traddr = libnvme_ctrl_get_host_traddr(c),
-				.host_iface = libnvme_ctrl_get_host_iface(c),
-				.trsvcid = libnvme_ctrl_get_trsvcid(c),
-			},
+		struct libnvme_ctrl_params params = {
+			.transport = libnvme_ctrl_get_transport(c),
+			.traddr = libnvme_ctrl_get_traddr(c),
+			.host_traddr = libnvme_ctrl_get_host_traddr(c),
+			.host_iface = libnvme_ctrl_get_host_iface(c),
+			.trsvcid = libnvme_ctrl_get_trsvcid(c),
 		};
 
-		fc = libnvmf_ctrl_find(s, &fctx);
+		fc = libnvme_ctrl_find(s, &params, NULL);
 		if (fc) {
 			const char *key;
 
