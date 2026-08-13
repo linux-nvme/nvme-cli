@@ -683,6 +683,7 @@ static ssize_t getswordfish(struct libnvme_global_ctx *ctx,
 		const char *seed, void *buf, size_t buflen)
 {
 	unsigned char hash[EVP_MAX_MD_SIZE];
+	unsigned int counter = 0;
 	EVP_MD_CTX *md_ctx;
 	size_t copied = 0;
 
@@ -691,15 +692,17 @@ static ssize_t getswordfish(struct libnvme_global_ctx *ctx,
 		return -ENOMEM;
 
 	while (copied < buflen) {
-		unsigned int counter = 0;
+		beint32_t be_counter;
 		unsigned int hash_len;
 		size_t to_copy;
 
 		if (EVP_DigestInit_ex(md_ctx, EVP_sha256(), NULL) != 1)
 			goto err;
 
+		be_counter = cpu_to_be32(counter);
+
 		EVP_DigestUpdate(md_ctx, seed, strlen(seed));
-		EVP_DigestUpdate(md_ctx, &counter, sizeof(counter));
+		EVP_DigestUpdate(md_ctx, &be_counter, sizeof(be_counter));
 
 		if (EVP_DigestFinal_ex(md_ctx, hash, &hash_len) != 1)
 			goto err;
