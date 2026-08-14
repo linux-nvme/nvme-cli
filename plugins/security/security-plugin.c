@@ -19,7 +19,7 @@
 #include <libnvme.h>
 
 #include <cleanup.h>
-#include <fs-util.h>
+#include <shared/fs-util.h>
 
 #include "argconfig.h"
 #include "global-ctx.h"

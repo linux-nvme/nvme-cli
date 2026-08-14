@@ -26,8 +26,8 @@
 
 #include <ccan/list/list.h>
 
-#include <compiler-attributes.h>
-#include <fs-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/fs-util.h>
 #include <nvme/config.h>
 #include <nvme/nvme-types-fabrics.h>
 

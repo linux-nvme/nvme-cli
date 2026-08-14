@@ -15,7 +15,7 @@
 #include <string.h>
 #include <sys/socket.h>
 
-#include <net-util.h>
+#include <shared/net-util.h>
 
 static bool check_bool(const char *name, bool got, bool want)
 {

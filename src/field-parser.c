@@ -11,8 +11,8 @@
 
 #include <nvme-json.h>
 #include <cleanup.h>
-#include <hex-util.h>
-#include <time-util.h>
+#include <shared/hex-util.h>
+#include <shared/time-util.h>
 
 #include "field-parser.h"
 

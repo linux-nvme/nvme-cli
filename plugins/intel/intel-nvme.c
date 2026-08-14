@@ -11,15 +11,15 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
-#include <compiler-attributes.h>
-#include <fs-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/fs-util.h>
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "plugin.h"
-#include "parse-util.h"
+#include <shared/parse-util.h>
 
 #define CREATE_CMD
 #include "intel-nvme.h"

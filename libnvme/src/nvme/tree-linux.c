@@ -22,7 +22,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/list/list.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include <libnvme.h>
 

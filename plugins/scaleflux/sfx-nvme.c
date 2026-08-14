@@ -20,13 +20,13 @@
 #include <ccan/endian/endian.h>
 #include <ccan/array_size/array_size.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
-#include <int-util.h>
-#include <progress-util.h>
-#include <temp-util.h>
-#include <time-util.h>
-#include <uint128-util.h>
+#include <shared/int-util.h>
+#include <shared/progress-util.h>
+#include <shared/temp-util.h>
+#include <shared/time-util.h>
+#include <shared/uint128-util.h>
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"

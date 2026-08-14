@@ -27,7 +27,7 @@
 #include "global-ctx.h"
 #include "plugin.h"
 #include "src/cleanup.h"
-#include "int-util.h"
+#include <shared/int-util.h>
 
 
 #define CREATE_CMD

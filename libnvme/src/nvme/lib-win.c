@@ -11,8 +11,8 @@
 #include <stdio.h>
 #include <strings.h>
 
-#include <compiler-attributes.h>
-#include <fs-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/fs-util.h>
 
 #include "cleanup.h"
 #include "ioctl.h"

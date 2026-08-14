@@ -7,7 +7,7 @@
  * @author: Chaithanya Shoba <ashoba@micron.com>
  */
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include <libnvme.h>
 

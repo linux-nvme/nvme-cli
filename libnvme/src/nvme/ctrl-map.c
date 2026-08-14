@@ -14,7 +14,7 @@
 #include <ccan/hash/hash.h>
 #include <ccan/htable/htable_type.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include <libnvme.h>
 

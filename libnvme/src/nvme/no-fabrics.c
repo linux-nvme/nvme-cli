@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include "private.h"
 

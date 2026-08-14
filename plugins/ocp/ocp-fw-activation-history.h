@@ -10,7 +10,7 @@
 
 #include <libnvme.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 struct command;
 struct plugin;

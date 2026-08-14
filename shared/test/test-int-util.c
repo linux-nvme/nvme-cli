@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <int-util.h>
+#include <shared/int-util.h>
 
 static bool check_u64(const char *name, uint64_t got, uint64_t want)
 {

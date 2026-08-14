@@ -47,7 +47,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/str/str.h>
 
-#include <io-util.h>
+#include <shared/io-util.h>
 
 #ifdef NVME_HAVE_LIBKMOD
 #include <libkmod.h>
@@ -59,7 +59,7 @@
 #include "fabrics.h"
 #include "cleanup.h"
 #include "logging.h"
-#include "sig-util.h"
+#include <shared/sig-util.h>
 
 #define MAX_DISC_ARGS		32
 #define MAX_DISC_RETRIES	10

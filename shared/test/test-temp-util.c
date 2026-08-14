@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <temp-util.h>
+#include <shared/temp-util.h>
 
 static bool check_long(const char *name, long got, long want)
 {

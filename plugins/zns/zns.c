@@ -17,7 +17,7 @@
 
 #include <ccan/array_size/array_size.h>
 
-#include <time-util.h>
+#include <shared/time-util.h>
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"

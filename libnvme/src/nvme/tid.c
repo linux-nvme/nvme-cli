@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <compiler-attributes.h>
-#include <string-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/string-util.h>
 
 #include "nvme/generated/accessors-fabrics.h"
 #include "nvme/lib.h"

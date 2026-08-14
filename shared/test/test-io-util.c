@@ -14,7 +14,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <io-util.h>
+#include <shared/io-util.h>
 
 static bool check_ret(const char *name, int got, int want)
 {

@@ -2,10 +2,10 @@
 #include <ccan/endian/endian.h>
 #include <ccan/array_size/array_size.h>
 
-#include <int-util.h>
-#include <time-util.h>
-#include <uint128-util.h>
-#include <uuid-util.h>
+#include <shared/int-util.h>
+#include <shared/time-util.h>
+#include <shared/uint128-util.h>
+#include <shared/uuid-util.h>
 
 #include <libnvme.h>
 

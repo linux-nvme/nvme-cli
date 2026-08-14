@@ -12,7 +12,7 @@
 
 #include <ccan/endian/endian.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include "solidigm-id-ctrl.h"
 

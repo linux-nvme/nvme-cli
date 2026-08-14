@@ -5,7 +5,7 @@
 
 #ifdef CONFIG_JSONC
 #include <json.h>
-#include "uint128-util.h"
+#include <shared/uint128-util.h>
 
 /* Wrappers around json-c's API */
 

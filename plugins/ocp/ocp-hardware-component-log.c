@@ -8,7 +8,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/array_size/array_size.h>
 
-#include <uint128-util.h>
+#include <shared/uint128-util.h>
 
 #include "logging.h"
 #include <libnvme.h>

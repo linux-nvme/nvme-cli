@@ -4,7 +4,7 @@
 
 #include <ccan/endian/endian.h>
 
-#include <uint128-util.h>
+#include <shared/uint128-util.h>
 
 #include <libnvme.h>
 

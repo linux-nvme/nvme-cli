@@ -17,11 +17,11 @@
 #include <time.h>
 
 #include <libnvme.h>
-#include <fs-util.h>
-#include <io-util.h>
+#include <shared/fs-util.h>
+#include <shared/io-util.h>
 
 #include <ccan/endian/endian.h>
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include "logging.h"
 #include "nvme-cmds.h"

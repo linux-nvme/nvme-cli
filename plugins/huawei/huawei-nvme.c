@@ -36,7 +36,7 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
-#include "suffix-util.h"
+#include <shared/suffix-util.h>
 
 #define CREATE_CMD
 #include "huawei-nvme.h"

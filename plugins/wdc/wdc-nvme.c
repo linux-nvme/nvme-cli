@@ -37,11 +37,11 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
-#include <compiler-attributes.h>
-#include <fs-util.h>
-#include <uint128-util.h>
-#include <time-util.h>
-#include <parse-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/fs-util.h>
+#include <shared/uint128-util.h>
+#include <shared/time-util.h>
+#include <shared/parse-util.h>
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"

@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <string-util.h>
+#include <shared/string-util.h>
 
 static bool check_str(const char *name, const char *got, const char *want)
 {

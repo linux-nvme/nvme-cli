@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <array-util.h>
+#include <shared/array-util.h>
 
 static bool test_ptrarray_append(void)
 {

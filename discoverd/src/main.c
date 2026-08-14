@@ -22,7 +22,7 @@
 
 #include <ccan/list/list.h>
 
-#include <array-util.h>
+#include <shared/array-util.h>
 #include <nvme/config.h>
 #include <nvme/exclusion.h>
 #include <nvme/lib.h>

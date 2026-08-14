@@ -30,7 +30,7 @@
 #include <windows.h>
 #endif
 
-#include <fs-util.h>
+#include <shared/fs-util.h>
 
 #include "command-metadata.h"
 #include "args.h"

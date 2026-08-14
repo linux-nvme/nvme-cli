@@ -33,7 +33,7 @@
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
-#include "suffix-util.h"
+#include <shared/suffix-util.h>
 
 #define CREATE_CMD
 #include "netapp-nvme.h"

@@ -18,9 +18,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <compiler-attributes.h>
-#include <fs-util.h>
-#include <io-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/fs-util.h>
+#include <shared/io-util.h>
 
 #include "cleanup.h"
 #include "private.h"

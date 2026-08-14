@@ -6,7 +6,7 @@
 #pragma once
 
 #include <ccan/array_size/array_size.h>
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include <libnvme.h>
 

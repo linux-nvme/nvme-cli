@@ -33,7 +33,7 @@
 
 #include <ccan/minmax/minmax.h>
 
-#include <sig-util.h>
+#include <shared/sig-util.h>
 
 #include <libnvme.h>
 

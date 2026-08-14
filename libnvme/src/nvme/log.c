@@ -16,8 +16,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <compiler-attributes.h>
-#include <io-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/io-util.h>
 
 #include <libnvme.h>
 

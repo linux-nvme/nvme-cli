@@ -17,7 +17,7 @@
 #include <ifaddrs.h>
 #endif
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include <libnvme.h>
 

@@ -29,7 +29,7 @@
 
 #include <ccan/list/list.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include <nvme/nvme-types-fabrics.h>
 
