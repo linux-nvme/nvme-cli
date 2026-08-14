@@ -112,6 +112,46 @@ static bool test_startswith(void)
 	return pass;
 }
 
+static bool test_rtrim(void)
+{
+	char buf1[] = "hello world  ";
+	char buf2[] = "no-padding";
+	char buf3[] = "   ";
+	char buf4[] = "trailing only \t\n";
+	bool pass = true;
+
+	printf("test_rtrim:\n");
+
+	pass &= check_str("trailing whitespace stripped",
+			   shr_rtrim(buf1), "hello world");
+	pass &= check_str("no padding is a no-op",
+			   shr_rtrim(buf2), "no-padding");
+	pass &= check_str("all-whitespace trims to empty", shr_rtrim(buf3), "");
+	pass &= check_str("trailing only", shr_rtrim(buf4), "trailing only");
+
+	return pass;
+}
+
+static bool test_ltrim(void)
+{
+	char buf1[] = "  hello world";
+	char buf2[] = "no-padding";
+	char buf3[] = "   ";
+	char buf4[] = "\t\n leading only";
+	bool pass = true;
+
+	printf("test_ltrim:\n");
+
+	pass &= check_str("leading whitespace skipped",
+			   shr_ltrim(buf1), "hello world");
+	pass &= check_str("no padding is a no-op",
+			   shr_ltrim(buf2), "no-padding");
+	pass &= check_str("all-whitespace skips to empty", shr_ltrim(buf3), "");
+	pass &= check_str("leading only", shr_ltrim(buf4), "leading only");
+
+	return pass;
+}
+
 static bool test_trim(void)
 {
 	char buf1[] = "  hello world  ";
@@ -202,6 +242,8 @@ int main(void)
 	pass &= test_streqcase0();
 	pass &= test_xstrdup();
 	pass &= test_startswith();
+	pass &= test_rtrim();
+	pass &= test_ltrim();
 	pass &= test_trim();
 	pass &= test_valid_name();
 	pass &= test_kv_strip();
