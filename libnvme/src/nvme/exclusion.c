@@ -29,7 +29,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/hash-util.h>
 #include <shared/io-util.h>

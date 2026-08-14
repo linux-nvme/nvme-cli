@@ -37,10 +37,10 @@
 
 #include <ccan/endian/endian.h>
 
-#include <shared/base64.h>
-#include <shared/crc32.h>
+#include <shared/base64-util.h>
+#include <shared/crc32-util.h>
 #include <shared/hex-util.h>
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 
 #include <libnvme.h>
 

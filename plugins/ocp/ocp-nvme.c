@@ -21,7 +21,7 @@
 #include <shared/io-util.h>
 
 #include <ccan/endian/endian.h>
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 
 #include "logging.h"
 #include "nvme-cmds.h"

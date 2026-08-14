@@ -12,7 +12,7 @@
  * unknown keys, malformed values, and a missing file.
  */
 
-#include <shared/shr-assert.h>
+#include <shared/assert-util.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>

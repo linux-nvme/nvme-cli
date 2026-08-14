@@ -14,7 +14,7 @@
 
 #include <ccan/minmax/minmax.h>
 
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 
 #include "mem.h"
 #include "private.h"

@@ -8,7 +8,7 @@
 
 #include "args.h"
 #include "nvme-json.h"
-#include <shared/table.h>
+#include <shared/table-util.h>
 #include <shared/uint128-util.h>
 #include <shared/int-util.h>
 #include <shared/uuid-util.h>

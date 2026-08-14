@@ -22,7 +22,7 @@
 
 #include <ccan/list/list.h>
 
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 #include <shared/parse-util.h>
 
 #include <nvme/config.h>

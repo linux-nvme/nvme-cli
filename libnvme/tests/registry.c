@@ -9,7 +9,7 @@
  * access from multiple processes.
  */
 
-#include <shared/shr-assert.h>
+#include <shared/assert-util.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdbool.h>

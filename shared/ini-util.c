@@ -18,7 +18,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "ini.h"
+#include "ini-util.h"
 #include "string-util.h"
 
 #define INI_FILE_MAX (1 * 1024 * 1024) /* 1 MiB cap on one config file */

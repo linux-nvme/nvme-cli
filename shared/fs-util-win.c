@@ -16,8 +16,8 @@
 #include <sys/stat.h>
 #include <windows.h>
 
-#include "cleanup.h"
-#include "compiler-attributes.h"
+#include "cleanup-util.h"
+#include "compiler-attributes-util.h"
 #include "fs-util.h"
 
 #ifndef O_BINARY

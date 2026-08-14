@@ -2723,7 +2723,7 @@ def main():
             f'#include <errno.h>\n'
             f'#include <stdlib.h>\n'
             f'#include <string.h>\n\n'
-            f'#include <shared/compiler-attributes.h>\n\n'
+            f'#include <shared/compiler-attributes-util.h>\n\n'
             f'#include "{os.path.basename(args.h_fname)}"\n'
             f'\n'
         )

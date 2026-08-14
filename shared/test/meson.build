@@ -12,9 +12,9 @@ test_array_util = executable(
 
 test('shared - array-util', test_array_util)
 
-test_base64 = executable(
-    'test-base64',
-    ['test-base64.c'],
+test_base64_util = executable(
+    'test-base64-util',
+    ['test-base64-util.c'],
     dependencies: [
         config_dep,
         ccan_dep,
@@ -22,30 +22,30 @@ test_base64 = executable(
     ],
 )
 
-test('shared - base64', test_base64)
+test('shared - base64-util', test_base64_util)
 
-test_crc32 = executable(
-    'test-crc32',
-    ['test-crc32.c'],
+test_crc32_util = executable(
+    'test-crc32-util',
+    ['test-crc32-util.c'],
     dependencies: [
         config_dep,
         shared_dep,
     ],
 )
 
-test('shared - crc32', test_crc32)
+test('shared - crc32-util', test_crc32_util)
 
 if host_system != 'windows'
-    test_ini = executable(
-        'test-ini',
-        ['test-ini.c'],
+    test_ini_util = executable(
+        'test-ini-util',
+        ['test-ini-util.c'],
         dependencies: [
             config_dep,
             shared_dep,
         ],
     )
 
-    test('shared - ini', test_ini)
+    test('shared - ini-util', test_ini_util)
 endif
 
 test_parse_util = executable(
@@ -71,16 +71,16 @@ test_hex_util = executable(
 
 test('shared - hex-util', test_hex_util)
 
-test_cleanup = executable(
-    'test-cleanup',
-    ['test-cleanup.c'],
+test_cleanup_util = executable(
+    'test-cleanup-util',
+    ['test-cleanup-util.c'],
     dependencies: [
         config_dep,
         shared_dep,
     ],
 )
 
-test('shared - cleanup', test_cleanup)
+test('shared - cleanup-util', test_cleanup_util)
 
 test_wrap_util = executable(
     'test-wrap-util',
@@ -126,16 +126,16 @@ test_progress_util = executable(
 
 test('shared - progress-util', test_progress_util)
 
-test_table = executable(
-    'test-table',
-    ['test-table.c'],
+test_table_util = executable(
+    'test-table-util',
+    ['test-table-util.c'],
     dependencies: [
         config_dep,
         shared_dep,
     ],
 )
 
-test('shared - table', test_table)
+test('shared - table-util', test_table_util)
 
 test_suffix_util = executable(
     'test-suffix-util',
@@ -279,14 +279,14 @@ if host_system != 'windows'
 endif
 
 if host_system != 'windows'
-    test_shr_assert = executable(
-        'test-shr-assert',
-        ['test-shr-assert.c'],
+    test_assert_util = executable(
+        'test-assert-util',
+        ['test-assert-util.c'],
         dependencies: [
             config_dep,
             shared_dep,
         ],
     )
 
-    test('shared - shr-assert', test_shr_assert)
+    test('shared - assert-util', test_assert_util)
 endif

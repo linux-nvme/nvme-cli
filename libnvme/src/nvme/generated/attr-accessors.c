@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 
 #include "../private.h"
 #include "../private-tree.h"

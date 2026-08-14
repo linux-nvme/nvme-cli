@@ -6,7 +6,7 @@
 
 #include "plugin.h"
 
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 
 #include "cmd.h"
 #include "ocp-nvme.h"

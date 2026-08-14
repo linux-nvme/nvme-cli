@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <shared/ini.h>
+#include <shared/ini-util.h>
 #include <shared/parse-util.h>
 
 #include "global-config.h"
