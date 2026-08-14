@@ -125,6 +125,14 @@ int shr_ini_parse_file(const char *path, shr_ini_parse_fn callback,
 	if (!path || !callback)
 		return -EINVAL;
 
+	/*
+	 * Check for a directory before calling fopen(): on Windows, fopen()
+	 * on a directory fails outright with EACCES, so the fstat() check
+	 * below never gets a chance to identify it as a directory.
+	 */
+	if (stat(path, &st) == 0 && S_ISDIR(st.st_mode))
+		return -EISDIR;
+
 	f = fopen(path, "r");
 	if (!f)
 		return -errno;
