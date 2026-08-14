@@ -18,81 +18,81 @@ _nvme () {
 	_cmds=(
 		'list:List all NVMe devices and namespaces on machine'
 		'list-subsys:List nvme subsystems'
-		'id-ctrl:Send NVMe Identify Controller'
-		'id-ns:Send NVMe Identify Namespace, display structure'
-		'id-ns-granularity:Send NVMe Identify Namespace Granularity List, display structure'
-		'id-ns-lba-format:Send NVMe Identify Namespace for the specified LBA Format index, display structure'
-		'list-ns:Send NVMe Identify List, display structure'
-		'list-ctrl:Send NVMe Identify Controller List, display structure'
-		'nvm-id-ctrl:Send NVMe Identify Controller NVM Command Set, display structure'
-		'nvm-id-ns:Send NVMe Identify Namespace NVM Command Set, display structure'
-		'nvm-id-ns-lba-format:Send NVMe Identify Namespace NVM Command Set for the specified LBA Format index, display structure'
-		'primary-ctrl-caps:Send NVMe Identify Primary Controller Capabilities'
-		'list-secondary:List Secondary Controllers associated with a Primary Controller'
-		'cmdset-ind-id-ns:I/O Command Set Independent Identify Namespace'
-		'ns-descs:Send NVMe Namespace Descriptor List, display structure'
-		'id-nvmset:Send NVMe Identify NVM Set List, display structure'
-		'id-uuid:Send NVMe Identify UUID List, display structure'
-		'id-iocs:Send NVMe Identify I/O Command Set, display structure'
-		'id-domain:Send NVMe Identify Domain List, display structure'
-		'list-endgrp:Send NVMe Identify Endurance Group List, display structure'
-		'create-ns:Creates a namespace with the provided parameters'
-		'delete-ns:Deletes a namespace from the controller'
-		'attach-ns:Attaches a namespace to requested controller(s)'
-		'detach-ns:Detaches a namespace from requested controller(s)'
-		'get-ns-id:Retrieve the namespace ID of opened block device'
+		'id-ctrl:Send NVMe Identify Controller (deprecated, use '\''nvme id ctrl'\'')'
+		'id-ns:Send NVMe Identify Namespace, display structure (deprecated, use '\''nvme id ns'\'')'
+		'id-ns-granularity:Send NVMe Identify Namespace Granularity List, display structure (deprecated, use '\''nvme id ns-granularity'\'')'
+		'id-ns-lba-format:Send NVMe Identify Namespace for the specified LBA Format index, display structure (deprecated, use '\''nvme id ns-lba-format'\'')'
+		'list-ns:Send NVMe Identify List, display structure (deprecated, use '\''nvme id ns-list'\'')'
+		'list-ctrl:Send NVMe Identify Controller List, display structure (deprecated, use '\''nvme id ctrl-list'\'')'
+		'nvm-id-ctrl:Send NVMe Identify Controller NVM Command Set, display structure (deprecated, use '\''nvme id nvm-ctrl'\'')'
+		'nvm-id-ns:Send NVMe Identify Namespace NVM Command Set, display structure (deprecated, use '\''nvme id nvm-ns'\'')'
+		'nvm-id-ns-lba-format:Send NVMe Identify Namespace NVM Command Set for the specified LBA Format index, display structure (deprecated, use '\''nvme id nvm-ns-lba-format'\'')'
+		'primary-ctrl-caps:Send NVMe Identify Primary Controller Capabilities (deprecated, use '\''nvme id primary-ctrl-caps'\'')'
+		'list-secondary:List Secondary Controllers associated with a Primary Controller (deprecated, use '\''nvme id secondary-ctrl-list'\'')'
+		'cmdset-ind-id-ns:I/O Command Set Independent Identify Namespace (deprecated, use '\''nvme id ns-ind'\'')'
+		'ns-descs:Send NVMe Namespace Descriptor List, display structure (deprecated, use '\''nvme id ns-descs'\'')'
+		'id-nvmset:Send NVMe Identify NVM Set List, display structure (deprecated, use '\''nvme id nvmset'\'')'
+		'id-uuid:Send NVMe Identify UUID List, display structure (deprecated, use '\''nvme id uuid'\'')'
+		'id-iocs:Send NVMe Identify I/O Command Set, display structure (deprecated, use '\''nvme id iocs'\'')'
+		'id-domain:Send NVMe Identify Domain List, display structure (deprecated, use '\''nvme id domain'\'')'
+		'list-endgrp:Send NVMe Identify Endurance Group List, display structure (deprecated, use '\''nvme id endgrp-list'\'')'
+		'create-ns:Creates a namespace with the provided parameters (deprecated, use '\''nvme ns create'\'')'
+		'delete-ns:Deletes a namespace from the controller (deprecated, use '\''nvme ns delete'\'')'
+		'attach-ns:Attaches a namespace to requested controller(s) (deprecated, use '\''nvme ns attach'\'')'
+		'detach-ns:Detaches a namespace from requested controller(s) (deprecated, use '\''nvme ns detach'\'')'
+		'get-ns-id:Retrieve the namespace ID of opened block device (deprecated, use '\''nvme ns get-id'\'')'
 		'get-log:Generic NVMe get log, returns log in raw format'
-		'telemetry-log:Retrieve FW Telemetry log write to file'
-		'fw-log:Retrieve FW Log, show it'
-		'changed-ns-list-log:Retrieve Changed Attached Namespace List, show it'
-		'smart-log:Retrieve SMART Log, show it'
-		'ana-log:Retrieve ANA Log, show it'
-		'error-log:Retrieve Error Log, show it'
-		'effects-log:Retrieve Command Effects Log, show it'
-		'endurance-log:Retrieve Endurance Group Log, show it'
-		'predictable-lat-log:Retrieve Predictable Latency per Nvmset Log, show it'
-		'pred-lat-event-agg-log:Retrieve Predictable Latency Event Aggregate Log, show it'
-		'persistent-event-log:Retrieve Persistent Event Log, show it'
-		'endurance-event-agg-log:Retrieve Endurance Group Event Aggregate Log, show it'
-		'lba-status-log:Retrieve LBA Status Information Log, show it'
-		'resv-notif-log:Retrieve Reservation Notification Log, show it'
-		'boot-part-log:Retrieve Boot Partition Log, show it'
-		'phy-rx-eom-log:Retrieve Physical Interface Receiver Eye Opening Measurement, show it'
+		'telemetry-log:Retrieve FW Telemetry log write to file (deprecated, use '\''nvme log telemetry'\'')'
+		'fw-log:Retrieve FW Log, show it (deprecated, use '\''nvme log fw'\'')'
+		'changed-ns-list-log:Retrieve Changed Attached Namespace List, show it (deprecated, use '\''nvme log changed-ns-list'\'')'
+		'smart-log:Retrieve SMART Log, show it (deprecated, use '\''nvme log smart'\'')'
+		'ana-log:Retrieve ANA Log, show it (deprecated, use '\''nvme log ana'\'')'
+		'error-log:Retrieve Error Log, show it (deprecated, use '\''nvme log error'\'')'
+		'effects-log:Retrieve Command Effects Log, show it (deprecated, use '\''nvme log effects'\'')'
+		'endurance-log:Retrieve Endurance Group Log, show it (deprecated, use '\''nvme log endurance'\'')'
+		'predictable-lat-log:Retrieve Predictable Latency per Nvmset Log, show it (deprecated, use '\''nvme log predictable-lat'\'')'
+		'pred-lat-event-agg-log:Retrieve Predictable Latency Event Aggregate Log, show it (deprecated, use '\''nvme log pred-lat-event-agg'\'')'
+		'persistent-event-log:Retrieve Persistent Event Log, show it (deprecated, use '\''nvme log persistent-event'\'')'
+		'endurance-event-agg-log:Retrieve Endurance Group Event Aggregate Log, show it (deprecated, use '\''nvme log endurance-event-agg'\'')'
+		'lba-status-log:Retrieve LBA Status Information Log, show it (deprecated, use '\''nvme log lba-status'\'')'
+		'resv-notif-log:Retrieve Reservation Notification Log, show it (deprecated, use '\''nvme log resv-notif'\'')'
+		'boot-part-log:Retrieve Boot Partition Log, show it (deprecated, use '\''nvme log boot-part'\'')'
+		'phy-rx-eom-log:Retrieve Physical Interface Receiver Eye Opening Measurement, show it (deprecated, use '\''nvme log phy-rx-eom'\'')'
 		'get-feature:Get feature and show the resulting value'
 		'device-self-test:Perform the necessary tests to observe the performance'
-		'self-test-log:Retrieve the SELF-TEST Log, show it'
+		'self-test-log:Retrieve the SELF-TEST Log, show it (deprecated, use '\''nvme log self-test'\'')'
 		'supported-log-pages:Retrieve the Supported Log pages details, show it'
-		'fid-support-effects-log:Retrieve FID Support and Effects log and show it'
-		'mi-cmd-support-effects-log:Retrieve MI Command Support and Effects log and show it'
-		'media-unit-stat-log:Retrieve the configuration and wear of media units, show it'
-		'supported-cap-config-log:Retrieve the list of Supported Capacity Configuration Descriptors'
-		'mgmt-addr-list-log:Retrieve Management Address List Log, show it'
-		'rotational-media-info-log:Retrieve Rotational Media Information Log, show it'
-		'changed-alloc-ns-list-log:Retrieve Changed Allocated Namespace List, show it'
-		'dispersed-ns-participating-nss-log:Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it'
-		'reachability-groups-log:Retrieve Reachability Groups Log, show it'
-		'reachability-associations-log:Retrieve Reachability Associations Log, show it'
-		'host-discovery-log:Retrieve Host Discovery Log, show it'
-		'ave-discovery-log:Retrieve AVE Discovery Log, show it'
-		'pull-model-ddc-req-log:Retrieve Pull Model DDC Request Log, show it'
-		'power-measurement-log:Retrieve Power Measurement Log, show it'
+		'fid-support-effects-log:Retrieve FID Support and Effects log and show it (deprecated, use '\''nvme log fid-support-effects'\'')'
+		'mi-cmd-support-effects-log:Retrieve MI Command Support and Effects log and show it (deprecated, use '\''nvme log mi-cmd-support-effects'\'')'
+		'media-unit-stat-log:Retrieve the configuration and wear of media units, show it (deprecated, use '\''nvme log media-unit-stat'\'')'
+		'supported-cap-config-log:Retrieve the list of Supported Capacity Configuration Descriptors (deprecated, use '\''nvme log supported-cap-config'\'')'
+		'mgmt-addr-list-log:Retrieve Management Address List Log, show it (deprecated, use '\''nvme log mgmt-addr-list'\'')'
+		'rotational-media-info-log:Retrieve Rotational Media Information Log, show it (deprecated, use '\''nvme log rotational-media-info'\'')'
+		'changed-alloc-ns-list-log:Retrieve Changed Allocated Namespace List, show it (deprecated, use '\''nvme log changed-alloc-ns-list'\'')'
+		'dispersed-ns-participating-nss-log:Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it (deprecated, use '\''nvme log dispersed-ns-participating-nss'\'')'
+		'reachability-groups-log:Retrieve Reachability Groups Log, show it (deprecated, use '\''nvme log reachability-groups'\'')'
+		'reachability-associations-log:Retrieve Reachability Associations Log, show it (deprecated, use '\''nvme log reachability-associations'\'')'
+		'host-discovery-log:Retrieve Host Discovery Log, show it (deprecated, use '\''nvme log host-discovery'\'')'
+		'ave-discovery-log:Retrieve AVE Discovery Log, show it (deprecated, use '\''nvme log ave-discovery'\'')'
+		'pull-model-ddc-req-log:Retrieve Pull Model DDC Request Log, show it (deprecated, use '\''nvme log pull-model-ddc-req'\'')'
+		'power-measurement-log:Retrieve Power Measurement Log, show it (deprecated, use '\''nvme log power-measurement'\'')'
 		'set-feature:Set a feature and show the resulting value'
 		'set-property:Set a property and show the resulting value'
 		'get-property:Get a property and show the resulting value'
 		'format:Format namespace with new block format'
-		'fw-commit:Verify and commit firmware to a specific slot (fw-activate in old version < 1.2)'
-		'fw-activate:Verify and commit firmware to a specific slot (fw-activate in old version < 1.2)'
-		'fw-download:Download new firmware'
+		'fw-commit:Verify and commit firmware to a specific slot (fw-activate in old version < 1.2) (deprecated, use '\''nvme fw commit'\'')'
+		'fw-activate:Verify and commit firmware to a specific slot (fw-activate in old version < 1.2) (deprecated, use '\''nvme fw commit'\'')'
+		'fw-download:Download new firmware (deprecated, use '\''nvme fw download'\'')'
 		'admin-passthru:Submit an arbitrary admin command, return results'
 		'io-passthru:Submit an arbitrary IO command, return results'
-		'security-send:Submit a Security Send command, return results'
-		'security-recv:Submit a Security Receive command, return results'
+		'security-send:Submit a Security Send command, return results (deprecated, use '\''nvme security send'\'')'
+		'security-recv:Submit a Security Receive command, return results (deprecated, use '\''nvme security recv'\'')'
 		'get-lba-status:Submit a Get LBA Status command, return results'
 		'capacity-mgmt:Submit Capacity Management Command, return results'
-		'resv-acquire:Submit a Reservation Acquire, return results'
-		'resv-register:Submit a Reservation Register, return results'
-		'resv-release:Submit a Reservation Release, return results'
-		'resv-report:Submit a Reservation Report, return results'
+		'resv-acquire:Submit a Reservation Acquire, return results (deprecated, use '\''nvme resv acquire'\'')'
+		'resv-register:Submit a Reservation Register, return results (deprecated, use '\''nvme resv register'\'')'
+		'resv-release:Submit a Reservation Release, return results (deprecated, use '\''nvme resv release'\'')'
+		'resv-report:Submit a Reservation Report, return results (deprecated, use '\''nvme resv report'\'')'
 		'dsm:Submit a Data Set Management command, return results'
 		'copy:Submit a Simple Copy command, return results'
 		'flush:Submit a Flush command, return results'
@@ -103,7 +103,7 @@ _nvme () {
 		'write-uncor:Submit a write uncorrectable command, return results'
 		'verify:Submit a verify command, return results'
 		'sanitize:Submit a sanitize command'
-		'sanitize-log:Retrieve sanitize log, show it'
+		'sanitize-log:Retrieve sanitize log, show it (deprecated, use '\''nvme log sanitize'\'')'
 		'sanitize-ns:Submit a sanitize namespace command'
 		'reset:Resets the controller'
 		'subsystem-reset:Resets the subsystem'
@@ -120,34 +120,48 @@ _nvme () {
 		'dim:Send Discovery Information Management command to a Discovery Controller'
 		'gen-hostnqn:Generate NVMeoF host NQN'
 		'show-hostnqn:Show NVMeoF host NQN'
-		'dir-receive:Submit a Directive Receive command, return results'
-		'dir-send:Submit a Directive Send command, return results'
+		'gen-dhchap-key:Generate NVMeoF DH-HMAC-CHAP host secret (deprecated, use '\''nvme keys gen-kxchap-secret'\'')'
+		'check-dhchap-key:Validate NVMeoF DH-HMAC-CHAP host secret (deprecated, use '\''nvme keys check-kxchap-secret'\'')'
+		'gen-tls-key:Generate NVMeoF TLS PSK (deprecated, use '\''nvme keys gen-tls'\'')'
+		'check-tls-key:Validate NVMeoF TLS PSK (deprecated, use '\''nvme keys check-tls'\'')'
+		'tls-key:Manage NVMeoF TLS PSKs (deprecated, use '\''nvme keys import/export/revoke'\'')'
+		'dir-receive:Submit a Directive Receive command, return results (deprecated, use '\''nvme dir receive'\'')'
+		'dir-send:Submit a Directive Send command, return results (deprecated, use '\''nvme dir send'\'')'
 		'virt-mgmt:Manage Flexible Resources between Primary and Secondary Controller'
 		'rpmb:Replay Protection Memory Block commands'
 		'lockdown:Submit a Lockdown command,return result'
 		'show-topology:Show the topology'
-		'io-mgmt-recv:I/O Management Receive'
-		'io-mgmt-send:I/O Management Send'
-		'nvme-mi-recv:Submit a NVMe-MI Receive command, return results'
-		'nvme-mi-send:Submit a NVMe-MI Send command, return results'
+		'io-mgmt-recv:I/O Management Receive (deprecated, use '\''nvme io-mgmt recv'\'')'
+		'io-mgmt-send:I/O Management Send (deprecated, use '\''nvme io-mgmt send'\'')'
+		'nvme-mi-recv:Submit a NVMe-MI Receive command, return results (deprecated, use '\''nvme nvme-mi recv'\'')'
+		'nvme-mi-send:Submit a NVMe-MI Send command, return results (deprecated, use '\''nvme nvme-mi send'\'')'
 		'amzn:Amazon vendor specific extensions'
 		'dapustor:DapuStor vendor specific extensions'
 		'dell:DELL vendor specific extensions'
 		'dera:Dera vendor specific extensions'
+		'dir:Submit NVMe Directive commands'
 		'fdp:Manage Flexible Data Placement enabled devices'
+		'fw:Manage NVMe controller firmware'
 		'huawei:Huawei vendor specific extensions'
 		'ibm:IBM vendor specific extensions'
+		'id:Send NVMe Identify commands, show the results'
 		'innogrit:innogrit vendor specific extensions'
 		'inspur:Inspur vendor specific extensions'
 		'intel:Intel vendor specific extensions'
+		'io-mgmt:Submit NVMe I/O Management commands'
+		'log:Retrieve and show NVMe log pages'
 		'mangoboost:MangoBoost vendor specific extensions'
 		'memblaze:Memblaze vendor specific extensions'
 		'micron:Micron vendor specific extensions'
 		'netapp:NetApp vendor specific extensions'
+		'ns:Manage NVMe namespaces'
 		'nvidia:NVIDIA vendor specific extensions'
+		'nvme-mi:Submit NVMe-MI commands'
+		'resv:Submit NVMe Reservation commands'
 		'sndk:Sandisk vendor specific extensions'
 		'sfx:ScaleFlux vendor specific extensions'
 		'seagate:Seagate vendor specific extensions'
+		'security:Submit NVMe Security Send/Receive commands'
 		'shannon:Shannon vendor specific extensions'
 		'ssstc:SSSTC vendor specific extensions'
 		'toshiba:Toshiba NVME plugin'
@@ -470,6 +484,105 @@ _nvme () {
 			esac
 			;;
 
+		(dir)
+			if (( CURRENT == 2 )); then
+				local -a _sub
+				_sub=(
+					'receive:Submit a Directive Receive command, return results'
+					'send:Submit a Directive Send command, return results'
+				)
+				_describe -t commands "nvme dir commands" _sub
+				return
+			fi
+
+			case ${words[2]} in
+				(receive)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _dir_receive
+					_dir_receive=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--data-len=':buffer len (if) data is sent or received'
+						-l':alias for --data-len'
+						--raw-binary':show directive in binary format'
+						-b':alias for --raw-binary'
+						--dir-type=':directive type'
+						-D':alias for --dir-type'
+						--dir-spec=':directive specification associated with directive type'
+						-S':alias for --dir-spec'
+						--dir-oper=':directive operation'
+						-O':alias for --dir-oper'
+						--req-resource=':namespace stream requested'
+						-r':alias for --req-resource'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme dir receive options" _dir_receive
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(send)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					_nvme_opt_files "--input-file -i" && return
+					local _dir_send
+					_dir_send=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--data-len=':buffer len (if) data is sent or received'
+						-l':alias for --data-len'
+						--dir-type=':directive type'
+						-D':alias for --dir-type'
+						--target-dir=':target directive type to be enabled/disabled'
+						-T':alias for --target-dir'
+						--dir-spec=':directive specification associated with directive type'
+						-S':alias for --dir-spec'
+						--dir-oper=':directive operation'
+						-O':alias for --dir-oper'
+						--endir=':directive enable'
+						-e':alias for --endir'
+						--raw-binary':show directive in binary format'
+						-b':alias for --raw-binary'
+						--input-file=':write/send file (default stdin)'
+						-i':alias for --input-file'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme dir send options" _dir_send
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(*)
+					_files
+					;;
+			esac
+			;;
+
 		(fdp)
 			if (( CURRENT == 2 )); then
 				local -a _sub
@@ -730,6 +843,96 @@ _nvme () {
 			esac
 			;;
 
+		(fw)
+			if (( CURRENT == 2 )); then
+				local -a _sub
+				_sub=(
+					'download:Download new firmware'
+					'commit:Verify and commit firmware to a specific slot (fw-activate in old version < 1.2)'
+					'activate:Verify and commit firmware to a specific slot (fw-activate in old version < 1.2)'
+				)
+				_describe -t commands "nvme fw commands" _sub
+				return
+			fi
+
+			case ${words[2]} in
+				(download)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					_nvme_opt_files "--fw -f" && return
+					local _fw_download
+					_fw_download=(
+						--fw=':firmware file (required)'
+						-f':alias for --fw'
+						--ish':Ignore Shutdown (for NVMe-MI command)'
+						-I':alias for --ish'
+						--xfer=':transfer chunksize limit'
+						-x':alias for --xfer'
+						--offset=':starting dword offset, default 0'
+						-O':alias for --offset'
+						--progress':display firmware transfer progress'
+						-p':alias for --progress'
+						--ignore-ovr':ignore overwrite errors'
+						-i':alias for --ignore-ovr'
+						--stream':read firmware in transfer-sized chunks'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme fw download options" _fw_download
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(commit|activate)
+					_nvme_opt_vals "--action -a" "replace replace-and-activate set-active replace-and-activate-immediate replace-boot-partition activate-boot-partition" \
+					               "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _fw_commit
+					_fw_commit=(
+						--ish':Ignore Shutdown (for NVMe-MI command)'
+						-I':alias for --ish'
+						--slot=':[0-7]: firmware slot for commit action'
+						-s':alias for --slot'
+						--action=':[0-7]: commit action: 0 = replace, 1 = replace and activate, 2 = set active, 3 = replace and activate immediate, 6 = replace boot partition, 7 = activate boot partition'
+						-a':alias for --action'
+						--bpid=':[0,1]: boot partition identifier, if applicable (default: 0)'
+						-b':alias for --bpid'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme fw commit options" _fw_commit
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(*)
+					_files
+					;;
+			esac
+			;;
+
 		(huawei)
 			if (( CURRENT == 2 )); then
 				local -a _sub
@@ -892,6 +1095,529 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme ibm persist-event-log options" _ibm_persist_event_log
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(*)
+					_files
+					;;
+			esac
+			;;
+
+		(id)
+			if (( CURRENT == 2 )); then
+				local -a _sub
+				_sub=(
+					'ctrl:Send NVMe Identify Controller'
+					'ns:Send NVMe Identify Namespace, display structure'
+					'ns-granularity:Send NVMe Identify Namespace Granularity List, display structure'
+					'ns-lba-format:Send NVMe Identify Namespace for the specified LBA Format index, display structure'
+					'ns-list:Send NVMe Identify List, display structure'
+					'ctrl-list:Send NVMe Identify Controller List, display structure'
+					'nvm-ctrl:Send NVMe Identify Controller NVM Command Set, display structure'
+					'nvm-ns:Send NVMe Identify Namespace NVM Command Set, display structure'
+					'nvm-ns-lba-format:Send NVMe Identify Namespace NVM Command Set for the specified LBA Format index, display structure'
+					'primary-ctrl-caps:Send NVMe Identify Primary Controller Capabilities'
+					'secondary-ctrl-list:List Secondary Controllers associated with a Primary Controller'
+					'ns-ind:I/O Command Set Independent Identify Namespace'
+					'ns-descs:Send NVMe Namespace Descriptor List, display structure'
+					'nvmset:Send NVMe Identify NVM Set List, display structure'
+					'uuid:Send NVMe Identify UUID List, display structure'
+					'iocs:Send NVMe Identify I/O Command Set, display structure'
+					'domain:Send NVMe Identify Domain List, display structure'
+					'endgrp-list:Send NVMe Identify Endurance Group List, display structure'
+				)
+				_describe -t commands "nvme id commands" _sub
+				return
+			fi
+
+			case ${words[2]} in
+				(ctrl)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_ctrl
+					_id_ctrl=(
+						--vendor-specific':dump binary vendor field'
+						-V':alias for --vendor-specific'
+						--raw-binary':show identify in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id ctrl options" _id_ctrl
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(ns)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_ns
+					_id_ns=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--force':Return this namespace, even if not attached (1.2 devices only)'
+						--vendor-specific':dump binary vendor fields'
+						-V':alias for --vendor-specific'
+						--raw-binary':show identify in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id ns options" _id_ns
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(ns-granularity)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_ns_granularity
+					_id_ns_granularity=(
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id ns-granularity options" _id_ns_granularity
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(ns-lba-format)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_ns_lba_format
+					_id_ns_lba_format=(
+						--lba-format-index=':The index into the LBA Format list identifying the LBA Format capabilities that are to be returned'
+						-i':alias for --lba-format-index'
+						--uuid-index=':UUID index'
+						-U':alias for --uuid-index'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id ns-lba-format options" _id_ns_lba_format
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(ns-list)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_ns_list
+					_id_ns_list=(
+						--namespace-id=':first nsid returned list should start from'
+						-n':alias for --namespace-id'
+						--csi=':I/O command set identifier'
+						-y':alias for --csi'
+						--all':show all namespaces in the subsystem, whether attached or inactive'
+						-a':alias for --all'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id ns-list options" _id_ns_list
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(ctrl-list)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_ctrl_list
+					_id_ctrl_list=(
+						--cntid=':controller to display'
+						-c':alias for --cntid'
+						--namespace-id=':optional namespace attached to controller'
+						-n':alias for --namespace-id'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id ctrl-list options" _id_ctrl_list
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(nvm-ctrl)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_nvm_ctrl
+					_id_nvm_ctrl=(
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id nvm-ctrl options" _id_nvm_ctrl
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(nvm-ns)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_nvm_ns
+					_id_nvm_ns=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--uuid-index=':UUID index'
+						-U':alias for --uuid-index'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id nvm-ns options" _id_nvm_ns
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(nvm-ns-lba-format)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_nvm_ns_lba_format
+					_id_nvm_ns_lba_format=(
+						--lba-format-index=':The index into the LBA Format list identifying the LBA Format capabilities that are to be returned'
+						-i':alias for --lba-format-index'
+						--uuid-index=':UUID index'
+						-U':alias for --uuid-index'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id nvm-ns-lba-format options" _id_nvm_ns_lba_format
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(primary-ctrl-caps)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_primary_ctrl_caps
+					_id_primary_ctrl_caps=(
+						--cntlid=':Controller ID'
+						-c':alias for --cntlid'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id primary-ctrl-caps options" _id_primary_ctrl_caps
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(secondary-ctrl-list)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_secondary_ctrl_list
+					_id_secondary_ctrl_list=(
+						--cntid=':lowest controller identifier to display'
+						-c':alias for --cntid'
+						--num-entries=':number of entries to retrieve'
+						-e':alias for --num-entries'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id secondary-ctrl-list options" _id_secondary_ctrl_list
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(ns-ind)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_ns_ind
+					_id_ns_ind=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--raw-binary':show identify in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id ns-ind options" _id_ns_ind
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(ns-descs)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_ns_descs
+					_id_ns_descs=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--raw-binary':show descriptors in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id ns-descs options" _id_ns_descs
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(nvmset)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_nvmset
+					_id_nvmset=(
+						--nvmset_id=':NVM Set Identify value'
+						-i':alias for --nvmset_id'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id nvmset options" _id_nvmset
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(uuid)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_uuid
+					_id_uuid=(
+						--raw-binary':show uuid in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id uuid options" _id_uuid
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(iocs)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_iocs
+					_id_iocs=(
+						--controller-id=':identifier of desired controller'
+						-c':alias for --controller-id'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id iocs options" _id_iocs
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(domain)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_domain
+					_id_domain=(
+						--dom-id=':identifier of desired domain'
+						-d':alias for --dom-id'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id domain options" _id_domain
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(endgrp-list)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _id_endgrp_list
+					_id_endgrp_list=(
+						--endgrp-id=':Endurance Group ID'
+						-i':alias for --endgrp-id'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme id endgrp-list options" _id_endgrp_list
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
@@ -1243,6 +1969,1030 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme intel temp-stats options" _intel_temp_stats
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(*)
+					_files
+					;;
+			esac
+			;;
+
+		(io-mgmt)
+			if (( CURRENT == 2 )); then
+				local -a _sub
+				_sub=(
+					'recv:I/O Management Receive'
+					'send:I/O Management Send'
+				)
+				_describe -t commands "nvme io-mgmt commands" _sub
+				return
+			fi
+
+			case ${words[2]} in
+				(recv)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					_nvme_opt_files "--data -d" && return
+					local _io_mgmt_recv
+					_io_mgmt_recv=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--mos=':management operation specific'
+						-s':alias for --mos'
+						--mo=':management operation'
+						-m':alias for --mo'
+						--data=':optional file for data (default stdout)'
+						-d':alias for --data'
+						--data-len=':buffer len (if) data is sent or received'
+						-l':alias for --data-len'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme io-mgmt recv options" _io_mgmt_recv
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(send)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					_nvme_opt_files "--data -d" && return
+					local _io_mgmt_send
+					_io_mgmt_send=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--mos=':management operation specific'
+						-s':alias for --mos'
+						--mo=':management operation'
+						-m':alias for --mo'
+						--data=':optional file for data (default stdin)'
+						-d':alias for --data'
+						--data-len=':buffer len (if) data is sent or received'
+						-l':alias for --data-len'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme io-mgmt send options" _io_mgmt_send
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(*)
+					_files
+					;;
+			esac
+			;;
+
+		(log)
+			if (( CURRENT == 2 )); then
+				local -a _sub
+				_sub=(
+					'smart:Retrieve SMART Log, show it'
+					'ana:Retrieve ANA Log, show it'
+					'telemetry:Retrieve FW Telemetry log write to file'
+					'fw:Retrieve FW Log, show it'
+					'endurance:Retrieve Endurance Group Log, show it'
+					'effects:Retrieve Command Effects Log, show it'
+					'error:Retrieve Error Log, show it'
+					'changed-ns-list:Retrieve Changed Attached Namespace List, show it'
+					'changed-alloc-ns-list:Retrieve Changed Allocated Namespace List, show it'
+					'predictable-lat:Retrieve Predictable Latency per Nvmset Log, show it'
+					'pred-lat-event-agg:Retrieve Predictable Latency Event Aggregate Log, show it'
+					'persistent-event:Retrieve Persistent Event Log, show it'
+					'endurance-event-agg:Retrieve Endurance Group Event Aggregate Log, show it'
+					'lba-status:Retrieve LBA Status Information Log, show it'
+					'resv-notif:Retrieve Reservation Notification Log, show it'
+					'boot-part:Retrieve Boot Partition Log, show it'
+					'phy-rx-eom:Retrieve Physical Interface Receiver Eye Opening Measurement, show it'
+					'self-test:Retrieve the SELF-TEST Log, show it'
+					'fid-support-effects:Retrieve FID Support and Effects log and show it'
+					'mi-cmd-support-effects:Retrieve MI Command Support and Effects log and show it'
+					'media-unit-stat:Retrieve the configuration and wear of media units, show it'
+					'supported-cap-config:Retrieve the list of Supported Capacity Configuration Descriptors'
+					'mgmt-addr-list:Retrieve Management Address List Log, show it'
+					'rotational-media-info:Retrieve Rotational Media Information Log, show it'
+					'dispersed-ns-participating-nss:Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it'
+					'reachability-groups:Retrieve Reachability Groups Log, show it'
+					'reachability-associations:Retrieve Reachability Associations Log, show it'
+					'host-discovery:Retrieve Host Discovery Log, show it'
+					'ave-discovery:Retrieve AVE Discovery Log, show it'
+					'pull-model-ddc-req:Retrieve Pull Model DDC Request Log, show it'
+					'power-measurement:Retrieve Power Measurement Log, show it'
+					'sanitize:Retrieve sanitize log, show it'
+				)
+				_describe -t commands "nvme log commands" _sub
+				return
+			fi
+
+			case ${words[2]} in
+				(smart)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_smart
+					_log_smart=(
+						--namespace-id=':(optional) desired namespace'
+						-n':alias for --namespace-id'
+						--raw-binary':output in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log smart options" _log_smart
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(ana)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_ana
+					_log_ana=(
+						--groups':Return ANA groups only.'
+						-g':alias for --groups'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log ana options" _log_ana
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(telemetry)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					_nvme_opt_files "--output-file -O" && return
+					local _log_telemetry
+					_log_telemetry=(
+						--output-file=':File name to save raw binary, includes header'
+						-O':alias for --output-file'
+						--host-generate=':Have the host tell the controller to generate the report'
+						-g':alias for --host-generate'
+						--controller-init':Gather report generated by the controller.'
+						-c':alias for --controller-init'
+						--data-area=':Pick which telemetry data area to report. Default is 3 to fetch areas 1-3. Valid options are 1, 2, 3, 4.'
+						-d':alias for --data-area'
+						--rae':Retain an Asynchronous Event'
+						-r':alias for --rae'
+						--mcda=':Host-init Maximum Created Data Area. Valid options are 0 ~ 4 If given, This option will override dgen. 0 : controller determines data area'
+						-m':alias for --mcda'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log telemetry options" _log_telemetry
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(fw)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_fw
+					_log_fw=(
+						--raw-binary':use binary output'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log fw options" _log_fw
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(endurance)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_endurance
+					_log_endurance=(
+						--group-id=':The endurance group identifier'
+						-g':alias for --group-id'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log endurance options" _log_endurance
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(effects)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_effects
+					_log_effects=(
+						--raw-binary':show log in binary format'
+						-b':alias for --raw-binary'
+						--csi=':command set identifier'
+						-c':alias for --csi'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log effects options" _log_effects
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(error)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_error
+					_log_error=(
+						--log-entries=':number of entries to retrieve'
+						-e':alias for --log-entries'
+						--raw-binary':dump in binary format'
+						-b':alias for --raw-binary'
+						--valid-entry':output valid entry only'
+						-V':alias for --valid-entry'
+						--sqid=':output specified SQID entry only'
+						-S':alias for --sqid'
+						--status=':output specified STATUS entry only'
+						-s':alias for --status'
+						--lba=':output specified LBA entry only'
+						-l':alias for --lba'
+						--namespace-id=':output specified NSID entry only'
+						-n':alias for --namespace-id'
+						--trtype=':output specified TRTYPE entry only'
+						-t':alias for --trtype'
+						--csi=':output specified CSI entry only'
+						-c':alias for --csi'
+						--opcode=':output specified OPC entry only'
+						-O':alias for --opcode'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log error options" _log_error
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(changed-ns-list)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_changed_ns_list
+					_log_changed_ns_list=(
+						--raw-binary':output in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log changed-ns-list options" _log_changed_ns_list
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(changed-alloc-ns-list)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_changed_alloc_ns_list
+					_log_changed_alloc_ns_list=(
+						--raw-binary':output in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log changed-alloc-ns-list options" _log_changed_alloc_ns_list
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(predictable-lat)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_predictable_lat
+					_log_predictable_lat=(
+						--nvmset-id=':NVM Set Identifier'
+						-i':alias for --nvmset-id'
+						--raw-binary':use binary output'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log predictable-lat options" _log_predictable_lat
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(pred-lat-event-agg)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_pred_lat_event_agg
+					_log_pred_lat_event_agg=(
+						--log-entries=':Number of pending NVM Set log Entries list'
+						-e':alias for --log-entries'
+						--rae':Retain an Asynchronous Event'
+						-r':alias for --rae'
+						--raw-binary':use binary output'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log pred-lat-event-agg options" _log_pred_lat_event_agg
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(persistent-event)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_persistent_event
+					_log_persistent_event=(
+						--action=':action the controller shall take during processing this persistent log page command.'
+						-a':alias for --action'
+						--log_len=':number of bytes to retrieve'
+						-l':alias for --log_len'
+						--raw-binary':use binary output'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log persistent-event options" _log_persistent_event
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(endurance-event-agg)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_endurance_event_agg
+					_log_endurance_event_agg=(
+						--log-entries=':Number of pending Endurance Group Event log Entries list'
+						-e':alias for --log-entries'
+						--rae':Retain an Asynchronous Event'
+						-r':alias for --rae'
+						--raw-binary':use binary output'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log endurance-event-agg options" _log_endurance_event_agg
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(lba-status)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_lba_status
+					_log_lba_status=(
+						--rae':Retain an Asynchronous Event'
+						-r':alias for --rae'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log lba-status options" _log_lba_status
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(resv-notif)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_resv_notif
+					_log_resv_notif=(
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log resv-notif options" _log_resv_notif
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(boot-part)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					_nvme_opt_files "--output-file -f" && return
+					local _log_boot_part
+					_log_boot_part=(
+						--lsp=':log specific field'
+						-s':alias for --lsp'
+						--output-file=':boot partition data output file name'
+						-f':alias for --output-file'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log boot-part options" _log_boot_part
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(phy-rx-eom)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_phy_rx_eom
+					_log_phy_rx_eom=(
+						--lsp=':log specific field'
+						-s':alias for --lsp'
+						--controller=':Target Controller ID.'
+						-c':alias for --controller'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log phy-rx-eom options" _log_phy_rx_eom
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(self-test)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_self_test
+					_log_self_test=(
+						--dst-entries=':Indicate how many DST log entries to be retrieved, by default all the 20 entries will be retrieved'
+						-e':alias for --dst-entries'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log self-test options" _log_self_test
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(fid-support-effects)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_fid_support_effects
+					_log_fid_support_effects=(
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log fid-support-effects options" _log_fid_support_effects
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(mi-cmd-support-effects)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_mi_cmd_support_effects
+					_log_mi_cmd_support_effects=(
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log mi-cmd-support-effects options" _log_mi_cmd_support_effects
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(media-unit-stat)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_media_unit_stat
+					_log_media_unit_stat=(
+						--domain-id=':Domain Identifier'
+						-d':alias for --domain-id'
+						--raw-binary':use binary output'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log media-unit-stat options" _log_media_unit_stat
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(supported-cap-config)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_supported_cap_config
+					_log_supported_cap_config=(
+						--domain-id=':Domain Identifier'
+						-d':alias for --domain-id'
+						--raw-binary':use binary output'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log supported-cap-config options" _log_supported_cap_config
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(mgmt-addr-list)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_mgmt_addr_list
+					_log_mgmt_addr_list=(
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log mgmt-addr-list options" _log_mgmt_addr_list
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(rotational-media-info)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_rotational_media_info
+					_log_rotational_media_info=(
+						--endg-id=':Endurance Group Identifier (ENDGID)'
+						-e':alias for --endg-id'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log rotational-media-info options" _log_rotational_media_info
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(dispersed-ns-participating-nss)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_dispersed_ns_participating_nss
+					_log_dispersed_ns_participating_nss=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log dispersed-ns-participating-nss options" _log_dispersed_ns_participating_nss
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(reachability-groups)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_reachability_groups
+					_log_reachability_groups=(
+						--groups-only':Return Groups Only'
+						-g':alias for --groups-only'
+						--rae':Retain an Asynchronous Event'
+						-r':alias for --rae'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log reachability-groups options" _log_reachability_groups
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(reachability-associations)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_reachability_associations
+					_log_reachability_associations=(
+						--associations-only':Return Associations Only'
+						-a':alias for --associations-only'
+						--rae':Retain an Asynchronous Event'
+						-r':alias for --rae'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log reachability-associations options" _log_reachability_associations
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(host-discovery)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_host_discovery
+					_log_host_discovery=(
+						--all-host-entries':All Host Entries'
+						-a':alias for --all-host-entries'
+						--rae':Retain an Asynchronous Event'
+						-r':alias for --rae'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log host-discovery options" _log_host_discovery
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(ave-discovery)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_ave_discovery
+					_log_ave_discovery=(
+						--rae':Retain an Asynchronous Event'
+						-r':alias for --rae'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log ave-discovery options" _log_ave_discovery
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(pull-model-ddc-req)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_pull_model_ddc_req
+					_log_pull_model_ddc_req=(
+						--rae':Retain an Asynchronous Event'
+						-r':alias for --rae'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log pull-model-ddc-req options" _log_pull_model_ddc_req
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(power-measurement)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_power_measurement
+					_log_power_measurement=(
+						--raw-binary':output in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log power-measurement options" _log_power_measurement
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(sanitize)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _log_sanitize
+					_log_sanitize=(
+						--rae':Retain an Asynchronous Event'
+						-r':alias for --rae'
+						--raw-binary':show log in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme log sanitize options" _log_sanitize
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
@@ -2465,6 +4215,203 @@ _nvme () {
 			esac
 			;;
 
+		(ns)
+			if (( CURRENT == 2 )); then
+				local -a _sub
+				_sub=(
+					'create:Creates a namespace with the provided parameters'
+					'delete:Deletes a namespace from the controller'
+					'attach:Attaches a namespace to requested controller(s)'
+					'detach:Detaches a namespace from requested controller(s)'
+					'get-id:Retrieve the namespace ID of opened block device'
+				)
+				_describe -t commands "nvme ns commands" _sub
+				return
+			fi
+
+			case ${words[2]} in
+				(create)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _ns_create
+					_ns_create=(
+						--ish':Ignore Shutdown (for NVMe-MI command)'
+						-I':alias for --ish'
+						--nsze=':size of ns (NSZE)'
+						-s':alias for --nsze'
+						--ncap=':capacity of ns (NCAP)'
+						-c':alias for --ncap'
+						--flbas=':Formatted LBA size (FLBAS), if entering this value ignore '\''block-size'\'' field'
+						-f':alias for --flbas'
+						--dps=':data protection settings (DPS)'
+						-d':alias for --dps'
+						--nmic=':multipath and sharing capabilities (NMIC)'
+						-m':alias for --nmic'
+						--anagrp-id=':ANA Group Identifier (ANAGRPID)'
+						-a':alias for --anagrp-id'
+						--nvmset-id=':NVM Set Identifier (NVMSETID)'
+						-i':alias for --nvmset-id'
+						--endg-id=':Endurance Group Identifier (ENDGID)'
+						-e':alias for --endg-id'
+						--block-size=':target block size, specify only if '\''FLBAS'\'' value not entered'
+						-b':alias for --block-size'
+						--csi=':command set identifier (CSI)'
+						-y':alias for --csi'
+						--lbstm=':logical block storage tag mask (LBSTM)'
+						-l':alias for --lbstm'
+						--nphndls=':Number of Placement Handles (NPHNDLS)'
+						-n':alias for --nphndls'
+						--nsze-si=':size of ns (NSZE) in standard SI units'
+						-S':alias for --nsze-si'
+						--ncap-si=':capacity of ns (NCAP) in standard SI units'
+						-C':alias for --ncap-si'
+						--azr':Allocate ZRWA Resources (AZR) for Zoned Namespace Command Set'
+						-z':alias for --azr'
+						--rar=':Requested Active Resources (RAR) for Zoned Namespace Command Set'
+						-r':alias for --rar'
+						--ror=':Requested Open Resources (ROR) for Zoned Namespace Command Set'
+						-O':alias for --ror'
+						--rnumzrwa=':Requested Number of ZRWA Resources (RNUMZRWA) for Zoned Namespace Command Set'
+						-u':alias for --rnumzrwa'
+						--phndls=':Comma separated list of Placement Handle Associated RUH'
+						-p':alias for --phndls'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme ns create options" _ns_create
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(delete)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _ns_delete
+					_ns_delete=(
+						--ish':Ignore Shutdown (for NVMe-MI command)'
+						-I':alias for --ish'
+						--namespace-id=':namespace to delete'
+						-n':alias for --namespace-id'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme ns delete options" _ns_delete
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(attach)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _ns_attach
+					_ns_attach=(
+						--ish':Ignore Shutdown (for NVMe-MI command)'
+						-I':alias for --ish'
+						--namespace-id=':namespace to attach'
+						-n':alias for --namespace-id'
+						--controllers=':optional comma-sep controller id list'
+						-c':alias for --controllers'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme ns attach options" _ns_attach
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(detach)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _ns_detach
+					_ns_detach=(
+						--ish':Ignore Shutdown (for NVMe-MI command)'
+						-I':alias for --ish'
+						--namespace-id=':namespace to attach'
+						-n':alias for --namespace-id'
+						--controllers=':optional comma-sep controller id list'
+						-c':alias for --controllers'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme ns detach options" _ns_detach
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(get-id)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _ns_get_id
+					_ns_get_id=(
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme ns get-id options" _ns_get_id
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(*)
+					_files
+					;;
+			esac
+			;;
+
 		(nvidia)
 			if (( CURRENT == 2 )); then
 				local -a _sub
@@ -2501,6 +4448,260 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme nvidia id-ctrl options" _nvidia_id_ctrl
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(*)
+					_files
+					;;
+			esac
+			;;
+
+		(nvme-mi)
+			if (( CURRENT == 2 )); then
+				local -a _sub
+				_sub=(
+					'recv:Submit a NVMe-MI Receive command, return results'
+					'send:Submit a NVMe-MI Send command, return results'
+				)
+				_describe -t commands "nvme nvme-mi commands" _sub
+				return
+			fi
+
+			case ${words[2]} in
+				(recv)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					_nvme_opt_files "--input-file -i" && return
+					local _nvme_mi_recv
+					_nvme_mi_recv=(
+						--opcode=':opcode (required)'
+						-O':alias for --opcode'
+						--namespace-id=':desired namespace'
+						-n':alias for --namespace-id'
+						--data-len=':data I/O length (bytes)'
+						-l':alias for --data-len'
+						--nmimt=':nvme-mi message type'
+						-m':alias for --nmimt'
+						--nmd0=':nvme management dword 0 value'
+						-0':alias for --nmd0'
+						--nmd1=':nvme management dword 1 value'
+						-1':alias for --nmd1'
+						--input-file=':data input or output file'
+						-i':alias for --input-file'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme nvme-mi recv options" _nvme_mi_recv
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(send)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					_nvme_opt_files "--input-file -i" && return
+					local _nvme_mi_send
+					_nvme_mi_send=(
+						--opcode=':opcode (required)'
+						-O':alias for --opcode'
+						--namespace-id=':desired namespace'
+						-n':alias for --namespace-id'
+						--data-len=':data I/O length (bytes)'
+						-l':alias for --data-len'
+						--nmimt=':nvme-mi message type'
+						-m':alias for --nmimt'
+						--nmd0=':nvme management dword 0 value'
+						-0':alias for --nmd0'
+						--nmd1=':nvme management dword 1 value'
+						-1':alias for --nmd1'
+						--input-file=':data input or output file'
+						-i':alias for --input-file'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme nvme-mi send options" _nvme_mi_send
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(*)
+					_files
+					;;
+			esac
+			;;
+
+		(resv)
+			if (( CURRENT == 2 )); then
+				local -a _sub
+				_sub=(
+					'acquire:Submit a Reservation Acquire, return results'
+					'register:Submit a Reservation Register, return results'
+					'release:Submit a Reservation Release, return results'
+					'report:Submit a Reservation Report, return results'
+				)
+				_describe -t commands "nvme resv commands" _sub
+				return
+			fi
+
+			case ${words[2]} in
+				(acquire)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _resv_acquire
+					_resv_acquire=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--crkey=':current reservation key'
+						-c':alias for --crkey'
+						--prkey=':pre-empt reservation key'
+						-p':alias for --prkey'
+						--rtype=':reservation type'
+						-t':alias for --rtype'
+						--racqa=':reservation acquire action'
+						-a':alias for --racqa'
+						--iekey':ignore existing res. key'
+						-i':alias for --iekey'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme resv acquire options" _resv_acquire
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(register)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _resv_register
+					_resv_register=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--crkey=':current reservation key'
+						-c':alias for --crkey'
+						--nrkey=':new reservation key'
+						-k':alias for --nrkey'
+						--rrega=':reservation registration action'
+						-r':alias for --rrega'
+						--cptpl=':change persistence through power loss setting'
+						-p':alias for --cptpl'
+						--iekey':ignore existing res. key'
+						-i':alias for --iekey'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme resv register options" _resv_register
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(release)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _resv_release
+					_resv_release=(
+						--namespace-id=':desired namespace'
+						-n':alias for --namespace-id'
+						--crkey=':current reservation key'
+						-c':alias for --crkey'
+						--rtype=':reservation type'
+						-t':alias for --rtype'
+						--rrela=':reservation release action'
+						-a':alias for --rrela'
+						--iekey':ignore existing res. key'
+						-i':alias for --iekey'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme resv release options" _resv_release
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(report)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _resv_report
+					_resv_report=(
+						--namespace-id=':identifier of desired namespace'
+						-n':alias for --namespace-id'
+						--numd=':number of dwords to transfer'
+						-d':alias for --numd'
+						--eds':request extended data structure'
+						-e':alias for --eds'
+						--raw-binary':dump output in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme resv report options" _resv_report
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
@@ -3930,6 +6131,103 @@ _nvme () {
 					)
 					_arguments '*:: :->subcmds'
 					_nvme_describe "nvme seagate cloud-SSD-plugin-version options" _seagate_cloud_SSD_plugin_version
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(*)
+					_files
+					;;
+			esac
+			;;
+
+		(security)
+			if (( CURRENT == 2 )); then
+				local -a _sub
+				_sub=(
+					'send:Submit a Security Send command, return results'
+					'recv:Submit a Security Receive command, return results'
+				)
+				_describe -t commands "nvme security commands" _sub
+				return
+			fi
+
+			case ${words[2]} in
+				(send)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					_nvme_opt_files "--file -f" && return
+					local _security_send
+					_security_send=(
+						--ish':Ignore Shutdown (for NVMe-MI command)'
+						-I':alias for --ish'
+						--namespace-id=':desired namespace'
+						-n':alias for --namespace-id'
+						--file=':transfer payload'
+						-f':alias for --file'
+						--nssf=':NVMe Security Specific Field'
+						-N':alias for --nssf'
+						--secp=':security protocol (cf. SPC-4)'
+						-p':alias for --secp'
+						--spsp=':security-protocol-specific (cf. SPC-4)'
+						-s':alias for --spsp'
+						--tl=':transfer length (cf. SPC-4)'
+						-t':alias for --tl'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme security send options" _security_send
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
+				(recv)
+					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+					               "--output-format-version" "1 2" && return
+					local _security_recv
+					_security_recv=(
+						--ish':Ignore Shutdown (for NVMe-MI command)'
+						-I':alias for --ish'
+						--namespace-id=':desired namespace'
+						-n':alias for --namespace-id'
+						--size=':size of buffer (prints to stdout on success)'
+						-x':alias for --size'
+						--nssf=':NVMe Security Specific Field'
+						-N':alias for --nssf'
+						--secp=':security protocol (cf. SPC-4)'
+						-p':alias for --secp'
+						--spsp=':security-protocol-specific (cf. SPC-4)'
+						-s':alias for --spsp'
+						--al=':allocation length (cf. SPC-4)'
+						-t':alias for --al'
+						--raw-binary':dump output in binary format'
+						-b':alias for --raw-binary'
+						--verbose':Increase output verbosity'
+						-v':alias for --verbose'
+						--quiet':suppress output messages, overwrites verbose mode'
+						--output-format=':Output format: normal|json|binary'
+						-o':alias for --output-format'
+						--timeout=':timeout value, in milliseconds'
+						--dry-run':show command instead of executing'
+						--no-retries':disable retry logic on errors'
+						--no-ioctl-probing':disable 64-bit IOCTL support probing'
+						--output-format-version=':output format version: 1|2'
+						--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+						--help':show help'
+						-h':alias for --help'
+					)
+					_arguments '*:: :->subcmds'
+					_nvme_describe "nvme security recv options" _security_recv
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
@@ -6038,12 +8336,12 @@ _nvme () {
 			if (( CURRENT == 2 )); then
 				local -a _sub
 				_sub=(
-					'gen-kxchap:Generate NVMeoF KX-HMAC-CHAP host key'
-					'check-kxchap:Validate NVMeoF KX-HMAC-CHAP host key format or check if loaded'
+					'gen-kxchap-secret:Generate NVMeoF KX-HMAC-CHAP host secret'
+					'check-kxchap-secret:Validate NVMeoF KX-HMAC-CHAP host secret format or check if loaded'
 					'gen-tls:Generate NVMeoF TLS PSK'
 					'check-tls:Validate NVMeoF TLS PSK format or check if loaded'
 					'insert-tls:Insert NVMeoF TLS PSK into a keyring'
-					'import:Import NVMeoF TLS PSKs and KX-HMAC-CHAP keys into a keyring'
+					'import:Import NVMeoF TLS PSKs and KX-HMAC-CHAP secrets into a keyring'
 					'export:Export NVMeoF TLS PSKs from a keyring'
 					'revoke:Revoke an NVMeoF TLS PSK from a keyring'
 				)
@@ -6052,18 +8350,16 @@ _nvme () {
 			fi
 
 			case ${words[2]} in
-				(gen-kxchap)
+				(gen-kxchap-secret)
 					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
 					               "--output-format-version" "1 2" && return
-					local _keys_gen_kxchap
-					_keys_gen_kxchap=(
-						--secret=':Optional secret (in hexadecimal characters) to be used to initialize the host key.'
+					local _keys_gen_kxchap_secret
+					_keys_gen_kxchap_secret=(
+						--secret=':Optional secret (in hexadecimal characters) to be placed in the representation.'
 						-s':alias for --secret'
-						--key-length=':Length of the resulting key (32, 48, or 64 bytes).'
-						-l':alias for --key-length'
-						--nqn=':Host NQN to use for key transformation.'
-						-n':alias for --nqn'
-						--hmac=':HMAC function to use for key transformation (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).'
+						--secret-length=':Length of the secret (32, 48, or 64 bytes).'
+						-l':alias for --secret-length'
+						--hmac=':Hash function the consumer is to apply to the secret (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).'
 						-m':alias for --hmac'
 						--verbose':Increase output verbosity'
 						-v':alias for --verbose'
@@ -6080,22 +8376,22 @@ _nvme () {
 						-h':alias for --help'
 					)
 					_arguments '*:: :->subcmds'
-					_nvme_describe "nvme keys gen-kxchap options" _keys_gen_kxchap
+					_nvme_describe "nvme keys gen-kxchap-secret options" _keys_gen_kxchap_secret
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
-				(check-kxchap)
+				(check-kxchap-secret)
 					_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
 					               "--output-format-version" "1 2" && return
-					local _keys_check_kxchap
-					_keys_check_kxchap=(
-						--keydata=':KX-HMAC-CHAP key (in DHHC-1 interchange format) to be validated. Reads from stdin if not given.'
+					local _keys_check_kxchap_secret
+					_keys_check_kxchap_secret=(
+						--keydata=':KX-HMAC-CHAP secret (in DHHC-1 interchange format) to be validated. Reads from stdin if not given.'
 						-d':alias for --keydata'
-						--keyring=':Keyring to check for an already loaded key.'
+						--keyring=':Keyring to check for an already loaded secret.'
 						-k':alias for --keyring'
-						--keytype=':Key type of the key to look up.'
+						--keytype=':Key type of the secret to look up.'
 						-t':alias for --keytype'
-						--identity=':Identity to look up in the keyring to check if the key is already loaded.'
+						--identity=':Identity to look up in the keyring to check if the secret is already loaded.'
 						-i':alias for --identity'
 						--verbose':Increase output verbosity'
 						-v':alias for --verbose'
@@ -6112,7 +8408,7 @@ _nvme () {
 						-h':alias for --help'
 					)
 					_arguments '*:: :->subcmds'
-					_nvme_describe "nvme keys check-kxchap options" _keys_check_kxchap
+					_nvme_describe "nvme keys check-kxchap-secret options" _keys_check_kxchap_secret
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
@@ -6644,6 +8940,7 @@ _nvme () {
 				_sub=(
 					'validate:Validate an NVMeoF connection configuration'
 					'show:Show the resolved NVMeoF connection configuration'
+					'status:Report config status'
 					'convert:Convert config.json/discovery.conf to INI'
 					'create:Create an NVMeoF connection entry in the INI configuration'
 				)
@@ -6693,6 +8990,10 @@ _nvme () {
 					_nvme_has_device || compadd -- /dev/nvme*(N)
 					;;
 
+				(status)
+					_nvme_has_device || compadd -- /dev/nvme*(N)
+					;;
+
 				(convert)
 					_nvme_opt_files "--config -J" \
 					                "--output -o" && return
@@ -6733,9 +9034,9 @@ _nvme () {
 						-q':alias for --hostnqn'
 						--hostid=':user-defined hostid (if default not used)'
 						-I':alias for --hostid'
-						--kxchap-secret=':user-defined kxchap key (if default not used)'
+						--kxchap-secret=':user-defined kxchap secret (if default not used)'
 						-S':alias for --kxchap-secret'
-						--kxchap-ctrl-secret=':user-defined kxchap controller key (for bi-directional authentication)'
+						--kxchap-ctrl-secret=':user-defined kxchap controller secret (for bi-directional authentication)'
 						-C':alias for --kxchap-ctrl-secret'
 						--keyring=':Keyring for TLS key lookup (key id or keyring name)'
 						--tls-key=':TLS key to use (key id or key in interchange format)'
@@ -10959,6 +13260,7 @@ _nvme () {
 				-p':alias for --progress'
 				--ignore-ovr':ignore overwrite errors'
 				-i':alias for --ignore-ovr'
+				--stream':read firmware in transfer-sized chunks'
 				--verbose':Increase output verbosity'
 				-v':alias for --verbose'
 				--quiet':suppress output messages, overwrites verbose mode'
@@ -12228,9 +14530,9 @@ _nvme () {
 				-q':alias for --hostnqn'
 				--hostid=':user-defined hostid (if default not used)'
 				-I':alias for --hostid'
-				--kxchap-secret=':user-defined kxchap key (if default not used)'
+				--kxchap-secret=':user-defined kxchap secret (if default not used)'
 				-S':alias for --kxchap-secret'
-				--kxchap-ctrl-secret=':user-defined kxchap controller key (for bi-directional authentication)'
+				--kxchap-ctrl-secret=':user-defined kxchap controller secret (for bi-directional authentication)'
 				-C':alias for --kxchap-ctrl-secret'
 				--keyring=':Keyring for TLS key lookup (key id or keyring name)'
 				--tls-key=':TLS key to use (key id or key in interchange format)'
@@ -12271,7 +14573,8 @@ _nvme () {
 				-p':alias for --persistent'
 				--config=':Use specified INI configuration file (auto-converts a legacy .json) or '\''none'\'' to disable'
 				-J':alias for --config'
-				--force':Force persistent discovery controller creation'
+				--no-reuse':always create a new connection, never reuse an existing one'
+				--force':deprecated, see --no-reuse'
 				--nbft':Only look at NBFT tables'
 				--no-nbft':Do not look at NBFT tables'
 				--owner=':record this owner in the registry'
@@ -12318,9 +14621,9 @@ _nvme () {
 				-q':alias for --hostnqn'
 				--hostid=':user-defined hostid (if default not used)'
 				-I':alias for --hostid'
-				--kxchap-secret=':user-defined kxchap key (if default not used)'
+				--kxchap-secret=':user-defined kxchap secret (if default not used)'
 				-S':alias for --kxchap-secret'
-				--kxchap-ctrl-secret=':user-defined kxchap controller key (for bi-directional authentication)'
+				--kxchap-ctrl-secret=':user-defined kxchap controller secret (for bi-directional authentication)'
 				-C':alias for --kxchap-ctrl-secret'
 				--keyring=':Keyring for TLS key lookup (key id or keyring name)'
 				--tls-key=':TLS key to use (key id or key in interchange format)'
@@ -12361,7 +14664,8 @@ _nvme () {
 				-p':alias for --persistent'
 				--config=':Use specified INI configuration file (auto-converts a legacy .json) or '\''none'\'' to disable'
 				-J':alias for --config'
-				--force':Force persistent discovery controller creation'
+				--no-reuse':always create a new connection, never reuse an existing one'
+				--force':deprecated, see --no-reuse'
 				--nbft':Only look at NBFT tables'
 				--no-nbft':Do not look at NBFT tables'
 				--owner=':record this owner in the registry'
@@ -12408,9 +14712,9 @@ _nvme () {
 				-q':alias for --hostnqn'
 				--hostid=':user-defined hostid (if default not used)'
 				-I':alias for --hostid'
-				--kxchap-secret=':user-defined kxchap key (if default not used)'
+				--kxchap-secret=':user-defined kxchap secret (if default not used)'
 				-S':alias for --kxchap-secret'
-				--kxchap-ctrl-secret=':user-defined kxchap controller key (for bi-directional authentication)'
+				--kxchap-ctrl-secret=':user-defined kxchap controller secret (for bi-directional authentication)'
 				-C':alias for --kxchap-ctrl-secret'
 				--keyring=':Keyring for TLS key lookup (key id or keyring name)'
 				--tls-key=':TLS key to use (key id or key in interchange format)'
@@ -12488,9 +14792,9 @@ _nvme () {
 				-q':alias for --hostnqn'
 				--hostid=':user-defined hostid (if default not used)'
 				-I':alias for --hostid'
-				--kxchap-secret=':user-defined kxchap key (if default not used)'
+				--kxchap-secret=':user-defined kxchap secret (if default not used)'
 				-S':alias for --kxchap-secret'
-				--kxchap-ctrl-secret=':user-defined kxchap controller key (for bi-directional authentication)'
+				--kxchap-ctrl-secret=':user-defined kxchap controller secret (for bi-directional authentication)'
 				-C':alias for --kxchap-ctrl-secret'
 				--keyring=':Keyring for TLS key lookup (key id or keyring name)'
 				--tls-key=':TLS key to use (key id or key in interchange format)'
@@ -12649,6 +14953,150 @@ _nvme () {
 			)
 			_arguments '*:: :->subcmds'
 			_nvme_describe "nvme show-hostnqn options" _show_hostnqn
+			_nvme_has_device || compadd -- /dev/nvme*(N)
+			;;
+
+		(gen-dhchap-key)
+			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			               "--output-format-version" "1 2" && return
+			local _gen_dhchap_key
+			_gen_dhchap_key=(
+				--secret=':Optional secret (in hexadecimal characters) to be placed in the representation.'
+				-s':alias for --secret'
+				--key-length=':Length of the secret (32, 48, or 64 bytes).'
+				-l':alias for --key-length'
+				--nqn=':Accepted and ignored; nvme-cli 2.x keyed the transform with it.'
+				-n':alias for --nqn'
+				--hmac=':Hash function the consumer is to apply to the secret (0 = none, 1 = SHA-256, 2 = SHA-384, 3 = SHA-512).'
+				-m':alias for --hmac'
+				--verbose':Increase output verbosity'
+				-v':alias for --verbose'
+				--quiet':suppress output messages, overwrites verbose mode'
+				--output-format=':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				--timeout=':timeout value, in milliseconds'
+				--dry-run':show command instead of executing'
+				--no-retries':disable retry logic on errors'
+				--no-ioctl-probing':disable 64-bit IOCTL support probing'
+				--output-format-version=':output format version: 1|2'
+				--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+				--help':show help'
+				-h':alias for --help'
+			)
+			_arguments '*:: :->subcmds'
+			_nvme_describe "nvme gen-dhchap-key options" _gen_dhchap_key
+			_nvme_has_device || compadd -- /dev/nvme*(N)
+			;;
+
+		(check-dhchap-key)
+			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			               "--output-format-version" "1 2" && return
+			local _check_dhchap_key
+			_check_dhchap_key=(
+				--key=':KX-HMAC-CHAP secret (in DHHC-1 interchange format) to be validated. Reads from stdin if not given.'
+				-k':alias for --key'
+				--verbose':Increase output verbosity'
+				-v':alias for --verbose'
+				--quiet':suppress output messages, overwrites verbose mode'
+				--output-format=':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				--timeout=':timeout value, in milliseconds'
+				--dry-run':show command instead of executing'
+				--no-retries':disable retry logic on errors'
+				--no-ioctl-probing':disable 64-bit IOCTL support probing'
+				--output-format-version=':output format version: 1|2'
+				--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+				--help':show help'
+				-h':alias for --help'
+			)
+			_arguments '*:: :->subcmds'
+			_nvme_describe "nvme check-dhchap-key options" _check_dhchap_key
+			_nvme_has_device || compadd -- /dev/nvme*(N)
+			;;
+
+		(gen-tls-key)
+			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			               "--output-format-version" "1 2" && return
+			local _gen_tls_key
+			_gen_tls_key=(
+				--keyring=':Keyring for the retained key.'
+				-k':alias for --keyring'
+				--keytype=':Key type of the retained key.'
+				-t':alias for --keytype'
+				--hostnqn=':Host NQN for the retained key.'
+				-n':alias for --hostnqn'
+				--subsysnqn=':Subsystem NQN for the retained key.'
+				-c':alias for --subsysnqn'
+				--secret=':Optional secret (in hexadecimal characters) to be used for the TLS key.'
+				-s':alias for --secret'
+				--keyfile=':Update key file with the derived TLS PSK.'
+				-f':alias for --keyfile'
+				--hmac=':HMAC function to use for the retained key (1 = SHA-256, 2 = SHA-384).'
+				-m':alias for --hmac'
+				--identity=':TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)'
+				-I':alias for --identity'
+				--insert':Insert retained key into the keyring.'
+				-i':alias for --insert'
+				--compat':Use non-RFC 8446 compliant algorithm for deriving TLS PSK for older implementations.'
+				-C':alias for --compat'
+				--verbose':Increase output verbosity'
+				-v':alias for --verbose'
+				--quiet':suppress output messages, overwrites verbose mode'
+				--output-format=':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				--timeout=':timeout value, in milliseconds'
+				--dry-run':show command instead of executing'
+				--no-retries':disable retry logic on errors'
+				--no-ioctl-probing':disable 64-bit IOCTL support probing'
+				--output-format-version=':output format version: 1|2'
+				--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+				--help':show help'
+				-h':alias for --help'
+			)
+			_arguments '*:: :->subcmds'
+			_nvme_describe "nvme gen-tls-key options" _gen_tls_key
+			_nvme_has_device || compadd -- /dev/nvme*(N)
+			;;
+
+		(check-tls-key)
+			_nvme_opt_vals "--output-format -o" "normal json binary tabular" \
+			               "--output-format-version" "1 2" && return
+			local _check_tls_key
+			_check_tls_key=(
+				--keyring=':Keyring to check for an already loaded key.'
+				-k':alias for --keyring'
+				--keytype=':Key type of the key to look up.'
+				-t':alias for --keytype'
+				--hostnqn=':Host NQN to use when checking whether the key is already loaded.'
+				-n':alias for --hostnqn'
+				--subsysnqn=':Subsystem NQN to use when checking whether the key is already loaded.'
+				-c':alias for --subsysnqn'
+				--keydata=':TLS key (in PSK Interchange format) to be validated. Reads from stdin if not given.'
+				-d':alias for --keydata'
+				--identity=':TLS identity version to use (0 = NVMe TCP 1.0c, 1 = NVMe TCP 2.0)'
+				-I':alias for --identity'
+				--compat':Use non-RFC 8446 compliant algorithm for checking TLS PSK for older implementations.'
+				-C':alias for --compat'
+				--verbose':Increase output verbosity'
+				-v':alias for --verbose'
+				--quiet':suppress output messages, overwrites verbose mode'
+				--output-format=':Output format: normal|json|binary'
+				-o':alias for --output-format'
+				--timeout=':timeout value, in milliseconds'
+				--dry-run':show command instead of executing'
+				--no-retries':disable retry logic on errors'
+				--no-ioctl-probing':disable 64-bit IOCTL support probing'
+				--output-format-version=':output format version: 1|2'
+				--set-options=':set a libnvme library option (key=value[,key=value,...]);'
+				--help':show help'
+				-h':alias for --help'
+			)
+			_arguments '*:: :->subcmds'
+			_nvme_describe "nvme check-tls-key options" _check_tls_key
+			_nvme_has_device || compadd -- /dev/nvme*(N)
+			;;
+
+		(tls-key)
 			_nvme_has_device || compadd -- /dev/nvme*(N)
 			;;
 
