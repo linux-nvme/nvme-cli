@@ -93,6 +93,67 @@ static bool test_bad_fd(void)
 	return pass;
 }
 
+static bool test_read_all(void)
+{
+	static const char *path = "shr-test-io-util-read";
+	static const char *msg = "0123456789abcdef";
+	char buf[64];
+	bool pass = true;
+	int fd, ret;
+
+	printf("test_read_all:\n");
+
+	fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (!check_bool("temp file opened for writing", fd >= 0))
+		return false;
+	shr_write_all(fd, msg, strlen(msg));
+	close(fd);
+
+	/* Buffer large enough: whole content read back, NUL-terminated. */
+	fd = open(path, O_RDONLY);
+	if (check_bool("temp file reopened for reading", fd >= 0)) {
+		memset(buf, 'x', sizeof(buf));
+		ret = shr_read_all(fd, buf, sizeof(buf));
+		close(fd);
+		pass &= check_ret("read to EOF succeeds", ret, 0);
+		pass &= check_bool("content matches", !strcmp(buf, msg));
+	} else {
+		pass = false;
+	}
+
+	/* Buffer too small: keeps out_len-1 bytes, still drains to EOF. */
+	fd = open(path, O_RDONLY);
+	if (check_bool("temp file reopened for short read", fd >= 0)) {
+		ret = shr_read_all(fd, buf, 8);
+		close(fd);
+		pass &= check_ret("short buffer still succeeds (drains rest)",
+				  ret, 0);
+		pass &= check_bool("keeps exactly out_len-1 bytes",
+				   strlen(buf) == 7 && !strncmp(buf, msg, 7));
+	} else {
+		pass = false;
+	}
+
+	/* NULL out with a non-zero length is rejected. */
+	pass &= check_ret("NULL buffer with non-zero length is -EINVAL",
+			  shr_read_all(-1, NULL, 8), -EINVAL);
+
+	/* out_len == 0 keeps nothing but still drains the fd to EOF. */
+	fd = open(path, O_RDONLY);
+	if (check_bool("temp file reopened for zero-length read", fd >= 0)) {
+		ret = shr_read_all(fd, buf, 0);
+		close(fd);
+		pass &= check_ret("zero-length buffer drains and succeeds",
+				  ret, 0);
+	} else {
+		pass = false;
+	}
+
+	unlink(path);
+
+	return pass;
+}
+
 int main(void)
 {
 	bool pass = true;
@@ -100,6 +161,7 @@ int main(void)
 	pass &= test_round_trip();
 	pass &= test_zero_length();
 	pass &= test_bad_fd();
+	pass &= test_read_all();
 
 	fflush(stdout);
 	exit(pass ? EXIT_SUCCESS : EXIT_FAILURE);
