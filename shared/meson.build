@@ -33,6 +33,7 @@ if host_system == 'windows'
     sources += [
         'fs-util-win.c',
         'crypto-util-win.c',
+        'proc-util-win.c',
         'sig-util-win.c',
     ]
 else
@@ -40,6 +41,7 @@ else
         'fs-util-linux.c',
         'net-util-linux.c',
         'crypto-util-linux.c',
+        'proc-util-linux.c',
         'sig-util-linux.c',
     ]
 endif
