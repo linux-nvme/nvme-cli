@@ -64,6 +64,29 @@ static inline char *shr_xstrdup(const char *s)
 }
 
 /*
+ * Trim trailing whitespace from s in place: the byte after the last
+ * non-whitespace character is overwritten with '\0'. Returns s.
+ */
+static inline char *shr_rtrim(char *s)
+{
+	char *end = s + strlen(s);
+
+	while (end > s && isspace((unsigned char)end[-1]))
+		end--;
+	*end = '\0';
+	return s;
+}
+
+/*
+ * Return a pointer to the first non-whitespace character in s. s itself
+ * is not modified.
+ */
+static inline char *shr_ltrim(char *s)
+{
+	return s + strspn(s, " \t\n\r\v\f");
+}
+
+/*
  * Trim leading and trailing whitespace from s in place and return a
  * pointer to the first non-whitespace character. s itself is modified:
  * the byte after the last non-whitespace character is overwritten with
@@ -71,14 +94,7 @@ static inline char *shr_xstrdup(const char *s)
  */
 static inline char *shr_trim(char *s)
 {
-	char *end;
-
-	s += strspn(s, " \t\n\r\v\f");
-	end = s + strlen(s);
-	while (end > s && isspace((unsigned char)end[-1]))
-		end--;
-	*end = '\0';
-	return s;
+	return shr_ltrim(shr_rtrim(s));
 }
 
 /* True if s is non-empty and every character is alphanumeric, '_', or '-'. */
