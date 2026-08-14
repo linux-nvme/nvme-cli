@@ -23,7 +23,7 @@
 #define nvme_print(name, flags, ...)				\
 	do {							\
 		struct print_ops *ops = nvme_print_ops(flags);	\
-		if (ops && ops->name && !nvme_args.dry_run)	\
+		if (nvme_print_check(ops, ops->name))		\
 			ops->name(__VA_ARGS__);			\
 	} while (false)
 
@@ -44,6 +44,24 @@ static struct print_ops *nvme_print_ops(nvme_print_flags_t flags)
 		ops = nvme_get_stdout_print_ops(flags);
 
 	return ops;
+}
+
+static bool nvme_print_check(struct print_ops *ops, void *func)
+{
+	if (!ops || !func)
+		return false;
+
+	/*
+	 * Always run init and the finish hooks to properly initialize
+	 * the output plugin.
+	 */
+	if (func == ops->show_init || func == ops->show_finish)
+		return true;
+
+	if (nvme_args.dry_run)
+		return false;
+
+	return true;
 }
 
 const char *nvme_ana_state_to_string(enum nvme_ana_state state)
