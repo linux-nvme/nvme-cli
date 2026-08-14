@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.8" />
+<meta name="generator" content="AsciiDoc 10.2.0" />
 <title>nvme-nvm-id-ns(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -94,7 +95,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -223,7 +226,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -737,7 +740,7 @@ nvme-nvm-id-ns(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-nvm-id-ns -
-   Send NVMe Identify NVM Command Set specific Namespace data structure, display structure
+   Send NVMe Identify NVM Command Set specific Namespace data structure, display structure (deprecated)
 </p>
 </div>
 </div>
@@ -746,10 +749,9 @@ nvme-nvm-id-ns(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme nvm-id-ns</em> &lt;device&gt; [--uuid-index=&lt;uuid-index&gt; | -U &lt;uuid_index&gt;]
-                        [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]
-                        [-v | --verbose]
-                        [--output-format=&lt;fmt&gt; | -o &lt;fmt&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>nvm-id-ns</em> &lt;device&gt;
+                        [--uuid-index=&lt;uuid-index&gt; | -U &lt;uuid_index&gt;]
+                        [--namespace-id=&lt;NUM&gt; | -n &lt;NUM&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -757,41 +759,73 @@ nvme-nvm-id-ns(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Identify NVM Command Set specific Namespace data structure for the specified
-NSID for the NVM Command Set specified in the CSI field.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the structure may be returned in one of several ways depending
-on the option flags; the structure may be parsed by the program or the
-raw buffer may be printed to stdout.</p></div>
+<div class="paragraph"><p>Deprecated alias for linknvme-id-nvm-ns[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.</p></div>
+<div class="paragraph"><p>New scripts should use <em>nvme id nvm-ns</em> instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.</p></div>
+<div class="paragraph"><p>See linknvme-id-nvm-ns[1] for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_options">OPTIONS</h2>
+<h2 id="_global_options">GLOBAL OPTIONS</h2>
 <div class="sectionbody">
+<div class="paragraph"><p>The following options are defined at the top-level <code>nvme</code> command
+and are available to this subcommand:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
--n &lt;NUM&gt;
-</dt>
-<dt class="hdlist1">
---namespace-id=&lt;NUM&gt;
+--dry-run
 </dt>
 <dd>
 <p>
-        Use the provided namespace id for the command. If not provided, the
-        namespace id of the block device will be used. If the command is issued
-        to a non-block device, the parameter is required.
+        Print the command that would be executed, but do not actually
+        execute it.
 </p>
 </dd>
 <dt class="hdlist1">
--U &lt;uuid-index&gt;
-</dt>
-<dt class="hdlist1">
---uuid-index=&lt;uuid-index&gt;
+--no-ioctl-probing
 </dt>
 <dd>
 <p>
-        UUID Index of the feature
+        Disable probing for 64-bit IOCTL support.
+</p>
+</dd>
+<dt class="hdlist1">
+--no-retries
+</dt>
+<dd>
+<p>
+        Disable retry logic on transient errors.
+</p>
+</dd>
+<dt class="hdlist1">
+-o &lt;fmt&gt;
+</dt>
+<dt class="hdlist1">
+--output-format=&lt;fmt&gt;
+</dt>
+<dd>
+<p>
+        Set the reporting format to <em>normal</em>, <em>tabular, 'json</em>, or <em>binary</em>.
+        Only one output format may be used at a time.
+</p>
+</dd>
+<dt class="hdlist1">
+--output-format-version=&lt;version&gt;
+</dt>
+<dd>
+<p>
+        Select the output format version. Version <em>1</em> uses the original
+        field naming, while version <em>2</em> (default) provides more consistent
+        and script-friendly field names.
+</p>
+</dd>
+<dt class="hdlist1">
+--timeout=&lt;ms&gt;
+</dt>
+<dd>
+<p>
+        Set the timeout for the command in milliseconds.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -802,79 +836,39 @@ raw buffer may be printed to stdout.</p></div>
 </dt>
 <dd>
 <p>
-        Increase the information detail in the output.
-</p>
-</dd>
-<dt class="hdlist1">
--o &lt;format&gt;
-</dt>
-<dt class="hdlist1">
---output-format=&lt;format&gt;
-</dt>
-<dd>
-<p>
-              Set the reporting format to <em>normal</em>, <em>json</em>, or
-              <em>binary</em>. Only one output format can be used at a time.
+        Increase the level of detail in the output. May be specified
+        multiple times to further increase verbosity.
 </p>
 </dd>
 </dl></div>
+<div class="paragraph"><p>These options can also be set as machine-wide defaults in
+nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="ulist"><ul>
-<li>
-<p>
-Has the program interpret the returned buffer and display the known
-fields in a human readable format:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme nvm-id-ns /dev/nvme0n1</code></pre>
-</div></div>
-</li>
-<li>
-<p>
-If using the character device or overriding namespace id:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme nvm-id-ns /dev/nvme0 -n 1
-# nvme nvm-id-ns /dev/nvme0n1 -n 1
-# nvme nvm-id-ns /dev/nvme0 --namespace-id=1</code></pre>
-</div></div>
-</li>
-<li>
-<p>
-Have the program return the raw structure in binary:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme nvm-id-ns /dev/nvme0n1 -o binary &gt; id_ns.raw
-# nvme nvm-id-ns /dev/nvme0n1 --output-format=binary &gt; id_ns.raw</code></pre>
-</div></div>
-<div class="paragraph"><p>It is probably a bad idea to not redirect stdout when using this mode.</p></div>
-</li>
-<li>
-<p>
-Alternatively you may want to send the data to another program that
-can parse the raw buffer.
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code>NVME</code></pre>
-</div></div>
-</li>
-</ul></div>
+<div class="paragraph"><p>No Examples</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_nvme">NVME</h2>
+<div class="sectionbody">
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>linknvme-id-nvm-ns[1]</p></div>
 </div>
 </div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-01-07 14:55:44 KST
+Last updated
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

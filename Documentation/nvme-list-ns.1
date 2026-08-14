@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: nvme-id-ns
+.\"     Title: nvme-list-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-LIST\-NS" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-list-ns \- Send NVMe Identify List Namespaces, return result and structure
+nvme-list-ns \- Send NVMe Identify List Namespaces, return result and structure (deprecated)
 .SH "SYNOPSIS"
 .sp
 .nf
@@ -39,27 +39,11 @@ nvme-list-ns \- Send NVMe Identify List Namespaces, return result and structure
 .fi
 .SH "DESCRIPTION"
 .sp
-For the NVMe device given, sends an identify command for namespace list and provides the result and returned structure\&.
+Deprecated alias for linknvme\-id\-ns\-list[1], kept for scripts written against nvme\-cli versions older than 3\&.0\&. Options and behavior are identical; only the top\-level command name is retained\&.
 .sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If the starting namespace in the list always begins with 0 unless the \*(Aq\-\-namespace\-id\*(Aq option is given to override\&.
+New scripts should use \fInvme id ns\-list\fR instead\&. This alias prints a deprecation warning on stderr and may be removed in a future release\&.
 .sp
-On success, the namespace array is printed for each index and nsid for a valid nsid\&.
-.SH "OPTIONS"
-.PP
-\-n <nsid>, \-\-namespace\-id=<nsid>
-.RS 4
-Retrieve the identify list structure starting with the given nsid\&.
-.RE
-.PP
-\-y <command_set_identifier>, \-\-csi=<command_set_identifier>
-.RS 4
-If this value is given, retrieve the identify list structure associated with the specified I/O command set\&.
-.RE
-.PP
-\-a, \-\-all
-.RS 4
-Retrieve the identify list structure for all namespaces in the subsystem, whether attached or inactive\&.
-.RE
+See linknvme\-id\-ns\-list[1] for the full option reference\&.
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:
@@ -109,47 +93,10 @@ Increase the level of detail in the output\&. May be specified multiple times to
 These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
 .SH "EXAMPLES"
 .sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-Print the namespaces present for zoned command set in JSON format
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-# nvme list\-ns /dev/nvme0 \-y 2 \-a \-o json
-.fi
-.if n \{\
-.RE
-.\}
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-Print the namespaces present for NVM Command Set in normal format
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-# nvme list\-ns /dev/nvme0
-.fi
-.if n \{\
-.RE
-.\}
-.RE
+No Examples
 .SH "NVME"
 .sp
 Part of the nvme\-user suite
+.SH "SEE ALSO"
+.sp
+linknvme\-id\-ns\-list[1]

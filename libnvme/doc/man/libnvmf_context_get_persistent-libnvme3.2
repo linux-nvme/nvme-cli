@@ -1,11 +1,13 @@
 .TH "libnvmf_context_get_persistent" 9 "libnvmf_context_get_persistent" "August 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvmf_context_get_persistent \- Get persistent.
+libnvmf_context_get_persistent \- Get the discovery controller persistence mode
 .SH SYNOPSIS
-.B "enum libnvmf_tristate" libnvmf_context_get_persistent
-.BI "(const struct libnvmf_context *p "  ");"
+.B "const char *" libnvmf_context_get_persistent
+.BI "(const struct libnvmf_context *fctx "  ");"
 .SH ARGUMENTS
-.IP "p" 12
-The \fIstruct libnvmf_context\fP instance to query.
+.IP "fctx" 12
+Fabrics context
 .SH "RETURN"
-The value of the persistent field.
+"no", "auto", or "force" if explicitly configured; NULL if not
+(behaves the same as "no" when applied to a live connection, or if
+\fIfctx\fP is NULL).

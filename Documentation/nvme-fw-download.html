@@ -749,10 +749,11 @@ nvme-fw-download(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>fw-download</em> &lt;device&gt;
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>fw download</em> &lt;device&gt;
                         [--fw=&lt;firmware-file&gt; | -f &lt;firmware-file&gt;]
                         [--xfer=&lt;transfer-size&gt; | -x &lt;transfer-size&gt;]
-                        [--offset=&lt;offset&gt; | -O &lt;offset&gt;]</pre>
+                        [--offset=&lt;offset&gt; | -O &lt;offset&gt;]
+                        [--stream]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -780,8 +781,11 @@ the Firmware Commit command (nvme fw-commit &lt;args&gt;).</p></div>
 <div class="paragraph"><p>Note: nvme-cli must allocate a contiguous (linear) memory buffer and map
 the firmware binary into it. To do this, nvme-cli first attempts to
 allocate the buffer using huge TLB pages. If allocation using huge pages
-fails, it falls back to using posix_memalign() combined with madvise(),
-though this is also likely to fail.</p></div>
+fails, it falls back to using posix_memalign() combined with madvise(). If
+the kernel rejects the huge page advice, nvme-cli keeps the aligned buffer
+and lets the I/O path attempt to map it.</p></div>
+<div class="paragraph"><p>The optional <code>--stream</code> mode avoids allocating a buffer for the complete
+firmware image. It reads and downloads one transfer-sized portion at a time.</p></div>
 <div class="paragraph"><p>To increase the likelihood of success, you may want to pre-allocate a
 number of huge pages before initiating the firmware download:</p></div>
 <div class="literalblock">
@@ -790,6 +794,9 @@ number of huge pages before initiating the firmware download:</p></div>
 </div></div>
 <div class="paragraph"><p>For more details, refer to:
 <a href="https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt">https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt</a></p></div>
+<div class="paragraph"><p>The bare <em>nvme fw-download</em> form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use <em>nvme fw download</em> instead.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -834,6 +841,16 @@ number of huge pages before initiating the firmware download:</p></div>
         useful if your firmware is split in multiple files; otherwise
         the offset starts at zero and automatically adjusts based on the
         <em>xfer</em> size given.
+</p>
+</dd>
+<dt class="hdlist1">
+--stream
+</dt>
+<dd>
+<p>
+        Read and download one transfer-sized portion of the firmware image at
+        a time instead of mapping the complete image into memory. This avoids
+        the huge page requirement and limits memory use to the transfer size.
 </p>
 </dd>
 </dl></div>
@@ -927,7 +944,16 @@ Transfer a firmware size 128KiB at a time:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme fw-download /dev/nvme0 --fw=/path/to/nvme.fw --xfer=0x20000</code></pre>
+<pre><code># nvme fw download /dev/nvme0 --fw=/path/to/nvme.fw --xfer=0x20000</code></pre>
+</div></div>
+</li>
+<li>
+<p>
+Read and download a firmware image one transfer-sized portion at a time:
+</p>
+<div class="listingblock">
+<div class="content">
+<pre><code># nvme fw download /dev/nvme0 --fw=/path/to/nvme.fw --stream</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -944,7 +970,7 @@ Transfer a firmware size 128KiB at a time:
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

@@ -113,6 +113,28 @@ String representation of the nvme status if it is an nvme status field,
 or a standard errno string if status is < 0.
 
 
+.. c:function:: const char * libnvme_mi_status_to_string (int status)
+
+   return a string representation of the MI status.
+
+**Parameters**
+
+``int status``
+  MI response status
+
+**Description**
+
+Gives a string description of **status**, as per section 4.1.2 of the NVMe-MI
+spec. The status value should be of type NVME_STATUS_MI, and extracted
+from the return value using nvme_status_get_value().
+
+Returned string is const, and should not be free()ed.
+
+**Return**
+
+A string representing the status value
+
+
 .. c:function:: const char * libnvme_sanitize_ns_status_to_string (__u16 sc)
 
    Returns sanitize ns status string.

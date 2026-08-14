@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-iocs
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-IOCS" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-IOCS" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-id-iocs \- Send NVMe Identify I/O Command Set, return result and structure
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIid\-iocs\fR <device>
+\fInvme\fR [<global\-options>] \fIid iocs\fR <device>
                         [\-\-controller\-id=<cntid> | \-c <cntid>]
 .fi
 .SH "DESCRIPTION"
@@ -40,6 +40,8 @@ nvme-id-iocs \- Send NVMe Identify I/O Command Set, return result and structure
 For the NVMe device given, send an identify command and return the Identify I/O Command Set data structure\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+The bare \fInvme id\-iocs\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme id iocs\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-c <cntid>, \-\-controller\-id=<cntid>
@@ -109,7 +111,7 @@ Have the program interpret the returned buffer and display the known fields in a
 .RS 4
 .\}
 .nf
-# nvme id\-iocs /dev/nvme0
+# nvme id iocs /dev/nvme0
 .fi
 .if n \{\
 .RE
@@ -130,7 +132,7 @@ show the fields in human readable format
 .RS 4
 .\}
 .nf
-# nvme id\-iocs /dev/nvme0 \-H
+# nvme id iocs /dev/nvme0 \-H
 .fi
 .if n \{\
 .RE

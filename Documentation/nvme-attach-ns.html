@@ -740,7 +740,7 @@ nvme-attach-ns(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-attach-ns -
-   Send NVMe attach namespace, return result.
+   Send NVMe attach namespace, return result. (deprecated)
 </p>
 </div>
 </div>
@@ -759,42 +759,12 @@ nvme-attach-ns(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends the nvme namespace attach command for
-the provided namespace identifier, attaching to the provided list of
-controller identifiers.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory NVMe character device (ex: /dev/nvme0) but
-not a namespace block device (ex: /dev/nvme0n1).</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--n &lt;nsid&gt;
-</dt>
-<dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
-</dt>
-<dd>
-<p>
-        The namespace identifier to attach but not attached already.
-</p>
-</dd>
-<dt class="hdlist1">
--c &lt;ctrl-list,&gt;
-</dt>
-<dt class="hdlist1">
--controllers=&lt;ctrl-list,&gt;
-</dt>
-<dd>
-<p>
-        The comma separated list of controller identifiers to attach the
-        namespace too. If no list is provided, the namespace will be attached
-        to the &lt;device&gt; controller used for this command.
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>Deprecated alias for linknvme-ns-attach[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.</p></div>
+<div class="paragraph"><p>New scripts should use <em>nvme ns attach</em> instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.</p></div>
+<div class="paragraph"><p>See linknvme-ns-attach[1] for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -878,22 +848,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="literalblock">
-<div class="content">
-<pre><code>Attach namespace 2 to the controllers with id 0x21 and 0x22:</code></pre>
-</div></div>
-<div class="literalblock">
-<div class="content">
-<pre><code># nvme attach-ns /dev/nvme1 -n 0x2 -c 0x21,0x22</code></pre>
-</div></div>
-<div class="literalblock">
-<div class="content">
-<pre><code>Attach namespace 3 to nvme0:</code></pre>
-</div></div>
-<div class="literalblock">
-<div class="content">
-<pre><code># nvme attach-ns /dev/nvme0 -n 3</code></pre>
-</div></div>
+<div class="paragraph"><p>No Examples</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -902,12 +857,18 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>linknvme-ns-attach[1]</p></div>
+</div>
+</div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

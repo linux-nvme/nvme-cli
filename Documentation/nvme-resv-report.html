@@ -749,7 +749,7 @@ nvme-resv-report(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>resv-report</em> &lt;device&gt;
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>resv report</em> &lt;device&gt;
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                         [--numd=&lt;num-dwords&gt; | -d &lt;num-dwords&gt;]
                         [--eds | -e]
@@ -768,6 +768,9 @@ of a namespace.</p></div>
 number of controllers in the NVM Subsystem that are associated with
 hosts that are registrants of the namespace (i.e., there is a Registered
 Controller data structure for each such controller).</p></div>
+<div class="paragraph"><p>The bare <em>nvme resv-report</em> form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use <em>nvme resv report</em> instead.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -921,7 +924,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

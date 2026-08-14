@@ -740,7 +740,7 @@ nvme-smart-log(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-smart-log -
-   Send NVMe SMART log page request, returns result and log
+   Send NVMe SMART log page request, returns result and log (deprecated)
 </p>
 </div>
 </div>
@@ -759,46 +759,12 @@ nvme-smart-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Retrieves the NVMe SMART log page from an NVMe device and provides the returned structure.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the returned smart log structure may be returned in one of
-several ways depending on the option flags; the structure may parsed by
-the program and printed in a readable format or the raw buffer may be
-printed to stdout for another program to parse.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--n &lt;nsid&gt;
-</dt>
-<dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
-</dt>
-<dd>
-<p>
-        Retrieve the SMART log for the given nsid. This is optional
-        and its success may depend on the device&#8217;s capabilities to
-        provide this log on a per-namespace basis (see the NVMe Identify
-        Controller for this capability). The default nsid to use is
-        0xffffffff for the device global SMART log.
-</p>
-</dd>
-<dt class="hdlist1">
--b
-</dt>
-<dt class="hdlist1">
---raw-binary
-</dt>
-<dd>
-<p>
-        Print the raw SMART log buffer to stdout.
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>Deprecated alias for linknvme-log-smart[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.</p></div>
+<div class="paragraph"><p>New scripts should use <em>nvme log smart</em> instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.</p></div>
+<div class="paragraph"><p>See linknvme-log-smart[1] for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -882,27 +848,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="ulist"><ul>
-<li>
-<p>
-Print the SMART log page in a human readable format:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme smart-log /dev/nvme0</code></pre>
-</div></div>
-</li>
-<li>
-<p>
-Print the raw SMART log to a file:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme smart-log /dev/nvme0 --raw-binary &gt; smart_log.raw</code></pre>
-</div></div>
-<div class="paragraph"><p>It is probably a bad idea to not redirect stdout when using this mode.</p></div>
-</li>
-</ul></div>
+<div class="paragraph"><p>No Examples</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -911,12 +857,18 @@ Print the raw SMART log to a file:
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>linknvme-log-smart[1]</p></div>
+</div>
+</div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

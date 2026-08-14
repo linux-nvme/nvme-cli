@@ -740,7 +740,7 @@ nvme-list-ctrl(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-list-ctrl -
-   Send NVMe Identify List Controllers, return result and structure
+   Send NVMe Identify List Controllers, return result and structure (deprecated)
 </p>
 </div>
 </div>
@@ -758,47 +758,12 @@ nvme-list-ctrl(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends an identify command for controller list
-and provides the result and returned structure. This uses either mode
-12h or 13h depending on the requested namespace identifier.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
-The starting controller in the list always begins with 0 unless the
-<code>'--cntid'</code> option is given to override.</p></div>
-<div class="paragraph"><p>On success, the controller array is printed for each index and controller
-identifier.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--c &lt;cntid&gt;
-</dt>
-<dt class="hdlist1">
---cntid=&lt;cntid&gt;
-</dt>
-<dd>
-<p>
-        Retrieve the identify list structure starting with the given controller id.
-</p>
-</dd>
-<dt class="hdlist1">
--n &lt;nsid&gt;
-</dt>
-<dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
-</dt>
-<dd>
-<p>
-        If provided, will request the controllers attached to the
-        specified namespace. If no namespace is given, or set to 0, the
-        command requests the controller list for the entire subsystem,
-        whether or not they are attached to namespace(s).
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>Deprecated alias for linknvme-id-ctrl-list[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.</p></div>
+<div class="paragraph"><p>New scripts should use <em>nvme id ctrl-list</em> instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.</p></div>
+<div class="paragraph"><p>See linknvme-id-ctrl-list[1] for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -882,7 +847,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
+<div class="paragraph"><p>No Examples</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -891,12 +856,18 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>linknvme-id-ctrl-list[1]</p></div>
+</div>
+</div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

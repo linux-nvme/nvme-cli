@@ -740,7 +740,7 @@ nvme-create-ns(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-create-ns -
-   Send NVMe Namespace management command to create namespace, returns results.
+   Send NVMe Namespace management command to create namespace, returns results. (deprecated)
 </p>
 </div>
 </div>
@@ -776,249 +776,12 @@ nvme-create-ns(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends a namespace management command to create
-the namespace with the requested settings. On success, the namespace
-identifier assigned by the controller is returned.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--s
-</dt>
-<dt class="hdlist1">
---nsze
-</dt>
-<dd>
-<p>
-        The namespace size.
-</p>
-</dd>
-<dt class="hdlist1">
--c
-</dt>
-<dt class="hdlist1">
---ncap
-</dt>
-<dd>
-<p>
-        The namespace capacity.
-</p>
-</dd>
-<dt class="hdlist1">
--f
-</dt>
-<dt class="hdlist1">
---flbas
-</dt>
-<dd>
-<p>
-        The namespace formatted logical block size setting.
-        Conflicts with --block-size argument.
-</p>
-</dd>
-<dt class="hdlist1">
--d
-</dt>
-<dt class="hdlist1">
---dps
-</dt>
-<dd>
-<p>
-        The data protection settings.
-</p>
-</dd>
-<dt class="hdlist1">
--m
-</dt>
-<dt class="hdlist1">
---nmic
-</dt>
-<dd>
-<p>
-        Namespace multipath and sharing capabilities.
-</p>
-</dd>
-<dt class="hdlist1">
--a
-</dt>
-<dt class="hdlist1">
---anagrp-id
-</dt>
-<dd>
-<p>
-        ANA Group Identifier. If this value is 0h specifies
-        that the controller determines the value to use
-</p>
-</dd>
-<dt class="hdlist1">
--i &lt;nvmsetid&gt;
-</dt>
-<dt class="hdlist1">
---nvmset-id=&lt;nvmsetid&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the identifier of the NVM Set.
-</p>
-</dd>
-<dt class="hdlist1">
--e &lt;endgid&gt;
-</dt>
-<dt class="hdlist1">
---endg-id=&lt;endgid&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the identifier of the endurance group.
-</p>
-</dd>
-<dt class="hdlist1">
--y &lt;command_set_identifier&gt;
-</dt>
-<dt class="hdlist1">
---csi=&lt;command_set_identifier&gt;
-</dt>
-<dd>
-<p>
-        This field specifies the identifier of command set.
-        if not issued, NVM Command Set will be selected.
-</p>
-</dd>
-<dt class="hdlist1">
--l &lt;lbstm&gt;
-</dt>
-<dt class="hdlist1">
---lbstm=&lt;lbstm&gt;
-</dt>
-<dd>
-<p>
-        Logical Block Storage Tag Mask for end-to-end protection.
-</p>
-</dd>
-<dt class="hdlist1">
--n &lt;nphndls&gt;
-</dt>
-<dt class="hdlist1">
---nphndls=&lt;nphndls&gt;
-</dt>
-<dd>
-<p>
-        Number of Placement Handle included in the Placement Handle List.
-        If the Flexible Data Placement capability is not supported or not enabled
-        in specified Endurance Group, then the controller shall ignore this field.
-</p>
-</dd>
-<dt class="hdlist1">
--b
-</dt>
-<dt class="hdlist1">
---block-size
-</dt>
-<dd>
-<p>
-        Target block size the new namespace should be formatted as. Potential FLBAS
-        values will be values will be scanned and the lowest numbered will be
-        selected for the create-ns operation. Conflicts with --flbas argument.
-</p>
-</dd>
-<dt class="hdlist1">
--S
-</dt>
-<dt class="hdlist1">
---nsze-si
-</dt>
-<dd>
-<p>
-        The namespace size (NSZE) in standard SI units (aligned on 1Mib boundaries,
-        unless the controller recommends a different value, see namespace
-        granularity).
-        The value SI suffixed is divided by the namespace LBA size to set as NSZE.
-        If the value not suffixed it is set as same with the nsze option.
-</p>
-</dd>
-<dt class="hdlist1">
--C
-</dt>
-<dt class="hdlist1">
---ncap-si
-</dt>
-<dd>
-<p>
-        The namespace capacity (NCAP) in standard SI units (aligned on 1Mib boundaries,
-        unless the controller recommends a different value, see namespace
-        granularity).
-        The value SI suffixed is divided by the namespace LBA size to set as NCAP.
-        If the value not suffixed it is set as same with the ncap option.
-</p>
-</dd>
-<dt class="hdlist1">
--z
-</dt>
-<dt class="hdlist1">
---azr
-</dt>
-<dd>
-<p>
-        Allocate ZRWA Resources.
-        If set to 1, then the namespace is to be created with the number of ZRWA
-        resource specified in the RNUMZRWA field of this data structure. If cleared
-        to 0, then no ZRWA resources are allocated to the namespace to be created.
-</p>
-</dd>
-<dt class="hdlist1">
--r &lt;rar&gt;
-</dt>
-<dt class="hdlist1">
---rar=&lt;rar&gt;
-</dt>
-<dd>
-<p>
-        Requested Active Resources. This field specifies the number of active
-        resources to be allocated to the created namespace.
-</p>
-</dd>
-<dt class="hdlist1">
--O &lt;ror&gt;
-</dt>
-<dt class="hdlist1">
---ror=&lt;ror&gt;
-</dt>
-<dd>
-<p>
-        Requested Open Resources. This field specifies the number of open resources
-        to be allocated to the created namespace.
-</p>
-</dd>
-<dt class="hdlist1">
--u &lt;rnumzrwa&gt;
-</dt>
-<dt class="hdlist1">
---rnumzrwa=&lt;rnumzrwa&gt;
-</dt>
-<dd>
-<p>
-        Requested Number of ZRWA Resources. This field specifies the number of ZRWA
-        resources to be allocated to the created namespace.
-</p>
-</dd>
-<dt class="hdlist1">
--p &lt;placement-handle-list,&gt;
-</dt>
-<dt class="hdlist1">
---phndls=&lt;placement-handle-list,&gt;
-</dt>
-<dd>
-<p>
-        The comma separated list of Reclaim Unit Handle Identifier to be associated
-        with each Placement Handle.
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>Deprecated alias for linknvme-ns-create[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.</p></div>
+<div class="paragraph"><p>New scripts should use <em>nvme ns create</em> instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.</p></div>
+<div class="paragraph"><p>See linknvme-ns-create[1] for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1102,18 +865,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="ulist"><ul>
-<li>
-<p>
-Create a namespace:
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme create-ns /dev/nvme0 --nsze 11995709440 --ncap 1199570940 --flbas 0 --dps 0 --nmic 0
-# nvme create-ns /dev/nvme0 --nsze-si 6.14T --ncap 1199570940 --flbas 0 --dps 0 --nmic 0</code></pre>
-</div></div>
-</li>
-</ul></div>
+<div class="paragraph"><p>No Examples</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1122,12 +874,18 @@ Create a namespace:
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>linknvme-ns-create[1]</p></div>
+</div>
+</div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

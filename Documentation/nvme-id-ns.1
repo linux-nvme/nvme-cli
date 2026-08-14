@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ns
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-NS" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-NS" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-id-ns \- Send NVMe Identify Namespace, return result and structure
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIid\-ns\fR <device>
+\fInvme\fR [<global\-options>] \fIid ns\fR <device>
                         [\-\-vendor\-specific | \-V]
                         [\-\-raw\-binary | \-b]
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
@@ -45,6 +45,8 @@ For the NVMe device given, sends an identify namespace command and provides the 
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&. If the character device is given, the \*(Aq\-\-namespace\-id\*(Aq option is mandatory, otherwise it will use the ns\-id of the namespace for the block device you opened\&. For block devices, the ns\-id used can be overridden with the same option\&.
 .sp
 On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
+.sp
+The bare \fInvme id\-ns\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme id ns\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>
@@ -129,7 +131,7 @@ Has the program interpret the returned buffer and display the known fields in a 
 .RS 4
 .\}
 .nf
-# nvme id\-ns /dev/nvme0n1
+# nvme id ns /dev/nvme0n1
 .fi
 .if n \{\
 .RE
@@ -150,9 +152,9 @@ If using the character device or overriding namespace id:
 .RS 4
 .\}
 .nf
-# nvme id\-ns /dev/nvme0 \-n 1
-# nvme id\-ns /dev/nvme0n1 \-n 1
-# nvme id\-ns /dev/nvme0 \-\-namespace\-id=1
+# nvme id ns /dev/nvme0 \-n 1
+# nvme id ns /dev/nvme0n1 \-n 1
+# nvme id ns /dev/nvme0 \-\-namespace\-id=1
 .fi
 .if n \{\
 .RE
@@ -173,8 +175,8 @@ In addition to showing the known fields, have the program to display the vendor 
 .RS 4
 .\}
 .nf
-# nvme id\-ns /dev/nvme0n1 \-\-vendor\-specific
-# nvme id\-ns /dev/nvme0n1 \-V
+# nvme id ns /dev/nvme0n1 \-\-vendor\-specific
+# nvme id ns /dev/nvme0n1 \-V
 .fi
 .if n \{\
 .RE
@@ -197,8 +199,8 @@ Have the program return the raw structure in binary:
 .RS 4
 .\}
 .nf
-# nvme id\-ns /dev/nvme0n1 \-\-raw\-binary > id_ns\&.raw
-# nvme id\-ns /dev/nvme0n1 \-b > id_ns\&.raw
+# nvme id ns /dev/nvme0n1 \-\-raw\-binary > id_ns\&.raw
+# nvme id ns /dev/nvme0n1 \-b > id_ns\&.raw
 .fi
 .if n \{\
 .RE
@@ -221,7 +223,7 @@ Alternatively you may want to send the data to another program that can parse th
 .RS 4
 .\}
 .nf
-# nvme id\-ns /dev/nvme0n1 \-\-raw\-binary | nvme_parse_id_ns
+# nvme id ns /dev/nvme0n1 \-\-raw\-binary | nvme_parse_id_ns
 .fi
 .if n \{\
 .RE

@@ -73,28 +73,6 @@ are:
 with a couple of accommodations for older spec types, particularly NVMe-MI
 1.1, where possible.
 
-.. c:function:: const char * libnvme_mi_status_to_string (int status)
-
-   return a string representation of the MI status.
-
-**Parameters**
-
-``int status``
-  MI response status
-
-**Description**
-
-Gives a string description of **status**, as per section 4.1.2 of the NVMe-MI
-spec. The status value should be of type NVME_STATUS_MI, and extracted
-from the return value using nvme_status_get_value().
-
-Returned string is const, and should not be free()ed.
-
-**Return**
-
-A string representing the status value
-
-
 
 
 .. c:type:: libnvme_mi_ep_t

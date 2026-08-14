@@ -749,7 +749,7 @@ nvme-id-domain(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>id-domain</em> &lt;device&gt;
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>id domain</em> &lt;device&gt;
                         [--dom-id=&lt;domain_id&gt; | -d &lt;domain_id&gt;]</pre>
 <div class="attribution">
 </div></div>
@@ -762,6 +762,9 @@ nvme-id-domain(1) Manual Page
 data structure.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>The bare <em>nvme id-domain</em> form (without a space) still works as a
+deprecated alias and will be removed in a future major version. New
+scripts should use <em>nvme id domain</em> instead.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -878,7 +881,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

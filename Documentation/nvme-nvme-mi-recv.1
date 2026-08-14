@@ -2,12 +2,12 @@
 .\"     Title: nvme-nvme-mi-recv
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-NVME\-MI\-RECV" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-NVME\-MI\-RECV" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-nvme-mi-recv \- Send a NVMe\-MI Receive command to the specified device
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fInvme\-mi\-recv\fR <device>
+\fInvme\fR [<global\-options>] \fInvme\-mi recv\fR <device>
                         [\-\-opcode=<opcode> | \-O <opcode>]
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-data\-len=<data\-len> | \-l <data\-len>]
@@ -48,6 +48,8 @@ Send a NVMe\-MI Receive command to the specified device, return results\&.
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0) or block device (ex: /dev/nvme0n1)\&.
 .sp
 On success it returns 0, error code otherwise\&.
+.sp
+The bare \fInvme nvme\-mi\-recv\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme nvme\-mi recv\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-O <opcode>, \-\-opcode=<opcode>
@@ -147,7 +149,7 @@ Has the program issue a nvme\-mi\-recv to execute the VPD read\&.
 .RS 4
 .\}
 .nf
-# nvme nvme\-mi\-recv /dev/nvme0n1 \-O 5 \-m 1 \-0 0 \-1 0x100 \-l 256
+# nvme nvme\-mi recv /dev/nvme0n1 \-O 5 \-m 1 \-0 0 \-1 0x100 \-l 256
 .fi
 .if n \{\
 .RE

@@ -751,10 +751,7 @@ nvme-config-create(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>config create</em>
                         [--discovery]
-                        [--persistent ]
-                        [--no-persistent ]
-                        [--epcsd ]
-                        [--no-epcsd ]
+                        [--persistent[=&lt;no|auto|force&gt;] ]
                         [--host-symname=&lt;name&gt;]
                         [--output=&lt;file&gt;]
                         [&lt;fabrics-options&gt;]</pre>
@@ -794,46 +791,41 @@ drop-in under <em>&lt;file&gt;.d/</em>. One without either goes into the main fi
 </p>
 </dd>
 <dt class="hdlist1">
---persistent
+--persistent[=&lt;no|auto|force&gt;]
 </dt>
 <dd>
 <p>
-        Keep the discovery controller connected to receive Asynchronous
-        Event Notifications instead of disconnecting after the discovery
-        log page fetch. Requires --discovery. Mutually exclusive with
-        --no-persistent.
+        Record this discovery controller&#8217;s persistence mode. Requires
+        --discovery. Because the value is optional, it must be attached
+        directly to the option (--persistent=force). A value given as a
+        separate argument (--persistent force) is silently NOT applied
+       &#8201;&#8212;&#8201;it&#8217;s dropped, and --persistent is treated as if given bare
+        (mode "auto"), with no error.
 </p>
-</dd>
-<dt class="hdlist1">
---no-persistent
-</dt>
-<dd>
+<div class="openblock">
+<div class="content">
+<div class="ulist"><ul>
+<li>
 <p>
-        Explicitly record that this discovery controller is not
-        persistent, overriding any default that would otherwise apply
-        (e.g. one derived from the discovery log page). Requires
-        --discovery. Mutually exclusive with --persistent.
+<em>auto</em> (the default when --persistent is given with no value): persist
+  the connection only where the target&#8217;s own EPCSD (Explicit Persistent
+  Connection Support for Discovery) flag reports support for it.
 </p>
-</dd>
-<dt class="hdlist1">
---epcsd
-</dt>
-<dd>
+</li>
+<li>
 <p>
-        Mark this discovery controller as supporting Explicit Persistent
-        Connection Support for Discovery (EPCSD). Requires --discovery.
-        Mutually exclusive with --no-epcsd.
+<em>force</em>: persist regardless of what EPCSD reports, for a target whose
+  self-reported EPCSD cannot be trusted.
 </p>
-</dd>
-<dt class="hdlist1">
---no-epcsd
-</dt>
-<dd>
+</li>
+<li>
 <p>
-        Explicitly record that this discovery controller does not support
-        EPCSD, overriding any default that would otherwise apply. Requires
-        --discovery. Mutually exclusive with --epcsd.
+<em>no</em>: explicitly record that this discovery controller is not
+  persistent, overriding any default that would otherwise apply.
 </p>
+</li>
+</ul></div>
+</div></div>
 </dd>
 <dt class="hdlist1">
 --host-symname=&lt;name&gt;
@@ -1340,7 +1332,7 @@ nvme-discover(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

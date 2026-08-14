@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 10.2.0" />
-<title>nvme-id-ns(1)</title>
+<title>nvme-list-ns(1)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,12 +735,12 @@ asciidoc.install();
 <body class="manpage">
 <div id="header">
 <h1>
-nvme-id-ns(1) Manual Page
+nvme-list-ns(1) Manual Page
 </h1>
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-list-ns -
-   Send NVMe Identify List Namespaces, return result and structure
+   Send NVMe Identify List Namespaces, return result and structure (deprecated)
 </p>
 </div>
 </div>
@@ -760,56 +760,12 @@ nvme-id-ns(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends an identify command for namespace list
-and provides the result and returned structure.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
-If the starting namespace in the list always begins with 0 unless the
-<code>'--namespace-id'</code> option is given to override.</p></div>
-<div class="paragraph"><p>On success, the namespace array is printed for each index and nsid for
-a valid nsid.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--n &lt;nsid&gt;
-</dt>
-<dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
-</dt>
-<dd>
-<p>
-        Retrieve the identify list structure starting with the given nsid.
-</p>
-</dd>
-<dt class="hdlist1">
--y &lt;command_set_identifier&gt;
-</dt>
-<dt class="hdlist1">
---csi=&lt;command_set_identifier&gt;
-</dt>
-<dd>
-<p>
-        If this value is given, retrieve the identify list structure associated
-        with the specified I/O command set.
-</p>
-</dd>
-<dt class="hdlist1">
--a
-</dt>
-<dt class="hdlist1">
---all
-</dt>
-<dd>
-<p>
-        Retrieve the identify list structure for all namespaces in the
-        subsystem, whether attached or inactive.
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>Deprecated alias for linknvme-id-ns-list[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.</p></div>
+<div class="paragraph"><p>New scripts should use <em>nvme id ns-list</em> instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.</p></div>
+<div class="paragraph"><p>See linknvme-id-ns-list[1] for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -893,26 +849,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="ulist"><ul>
-<li>
-<p>
-Print the namespaces present for zoned command set in JSON format
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme list-ns /dev/nvme0 -y 2 -a -o json</code></pre>
-</div></div>
-</li>
-<li>
-<p>
-Print the namespaces present for NVM Command Set in normal format
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme list-ns /dev/nvme0</code></pre>
-</div></div>
-</li>
-</ul></div>
+<div class="paragraph"><p>No Examples</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -921,12 +858,18 @@ Print the namespaces present for NVM Command Set in normal format
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>linknvme-id-ns-list[1]</p></div>
+</div>
+</div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

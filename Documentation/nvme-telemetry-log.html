@@ -740,7 +740,7 @@ nvme-telemetry-log(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-telemetry-log -
-   Retrieves a Telemetry Host-Initiated log page from an NVMe device
+   Retrieves a Telemetry Host-Initiated log page from an NVMe device (deprecated)
 </p>
 </div>
 </div>
@@ -759,57 +759,12 @@ nvme-telemetry-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Retrieves an Telemetry Host-Initiated log page from an NVMe device and provides
-the returned structure.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the returned log structure will be in raw binary format <em>only</em> with
---output-file option which is mandatory.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--O &lt;file&gt;
-</dt>
-<dt class="hdlist1">
---output-file=&lt;file&gt;
-</dt>
-<dd>
-<p>
-        File name to which raw binary data will be saved to.
-</p>
-</dd>
-<dt class="hdlist1">
--g &lt;gen&gt;
-</dt>
-<dt class="hdlist1">
---host-generate=&lt;gen&gt;
-</dt>
-<dd>
-<p>
-        If set to 1, controller shall capture the Telemetry Host-Initiated data
-        representing the internal state of the controller at the time the
-        associated Get Log Page command is processed.
-        If cleated to 0, controller shall <em>not</em> update this data.
-</p>
-</dd>
-<dt class="hdlist1">
--d &lt;da&gt;
-</dt>
-<dt class="hdlist1">
---data-area=&lt;da&gt;
-</dt>
-<dd>
-<p>
-        Retrieves the specific data area requested. Valid inputs are 1,2,3,4. If
-        this option is not specified, the default value is 3, since data area
-        4 may not be supported.
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>Deprecated alias for linknvme-log-telemetry[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.</p></div>
+<div class="paragraph"><p>New scripts should use <em>nvme log telemetry</em> instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.</p></div>
+<div class="paragraph"><p>See linknvme-log-telemetry[1] for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -893,17 +848,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="ulist"><ul>
-<li>
-<p>
-Retrieve Telemetry Host-Initiated data to telemetry_log.bin
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme telemetry-log /dev/nvme0 --output-file=telemetry_log.bin</code></pre>
-</div></div>
-</li>
-</ul></div>
+<div class="paragraph"><p>No Examples</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -912,12 +857,18 @@ Retrieve Telemetry Host-Initiated data to telemetry_log.bin
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>linknvme-log-telemetry[1]</p></div>
+</div>
+</div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

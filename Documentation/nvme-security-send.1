@@ -2,12 +2,12 @@
 .\"     Title: nvme-security-send
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-SECURITY\-SEND" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-SECURITY\-SEND" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-security-send \- Security Send command
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIsecurity\-send\fR <device> [\-\-file=<file> | \-f <file>]
+\fInvme\fR [<global\-options>] \fIsecurity send\fR <device> [\-\-file=<file> | \-f <file>]
                         [\-\-secp=<security\-protocol> | \-p <security\-protocol>]
                         [\-\-spsp=<protocol\-specific> | \-s <protocol\-specific>]
                         [\-\-tl=<transfer\-length> | \-t <transfer\-length>]
@@ -44,6 +44,8 @@ nvme-security-send \- Security Send command
 The Security Send command is used to transfer security protocol data to the controller\&. The data structure transferred to the controller as part of this command contains security protocol specific commands to be performed by the controller\&. The data structure transferred may also contain data or parameters associated with the security protocol commands\&. Status and data that is to be returned to the host for the security protocol commands submitted by a Security Send command are retrieved with the Security Receive command\&.
 .sp
 The association between a Security Send command and subsequent Security Receive command is Security Protocol field dependent as defined in SPC\-4\&.
+.sp
+The bare \fInvme security\-send\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme security send\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>

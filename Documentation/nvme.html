@@ -1275,6 +1275,14 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
+<a href="nvme-config-status.html">nvme-config-status(1)</a>
+</dt>
+<dd>
+<p>
+        Report legacy config.json/discovery.conf conversion status
+</p>
+</dd>
+<dt class="hdlist1">
 <a href="nvme-get-property.html">nvme-get-property(1)</a>
 </dt>
 <dd>
@@ -1319,7 +1327,7 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Check a host DH-HMAC-CHAP key (deprecated, see nvme-keys-check-kxchap)
+        Check a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-check-kxchap-secret)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1359,7 +1367,7 @@ available, run "nvme help".</p></div>
 </dt>
 <dd>
 <p>
-        Generate a host DH-HMAC-CHAP key (deprecated, see nvme-keys-gen-kxchap)
+        Generate a host DH-HMAC-CHAP secret (deprecated, see nvme-keys-gen-kxchap-secret)
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2528,19 +2536,19 @@ available, run "nvme help".</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-gen-kxchap.html">nvme-keys-gen-kxchap(1)</a>
+<a href="nvme-keys-gen-kxchap-secret.html">nvme-keys-gen-kxchap-secret(1)</a>
 </dt>
 <dd>
 <p>
-        Generate NVMeoF KX-HMAC-CHAP host key
+        Generate NVMeoF KX-HMAC-CHAP host secret
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="nvme-keys-check-kxchap.html">nvme-keys-check-kxchap(1)</a>
+<a href="nvme-keys-check-kxchap-secret.html">nvme-keys-check-kxchap-secret(1)</a>
 </dt>
 <dd>
 <p>
-        Validate NVMeoF KX-HMAC-CHAP host key
+        Validate NVMeoF KX-HMAC-CHAP host secret
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2704,7 +2712,7 @@ NVM-Express Site</a>.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

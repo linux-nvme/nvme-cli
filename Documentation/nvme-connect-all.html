@@ -753,8 +753,9 @@ nvme-connect-all(1) Manual Page
                         [--raw=&lt;filename&gt; | -r &lt;filename&gt;]
                         [--device=&lt;device&gt; | -d &lt;device&gt;]
                         [--config=&lt;filename&gt; | -J &lt;cfg&gt;]
-                        [--persistent | -p]
+                        [--persistent[=&lt;no|auto|force&gt;] | -p]
                         [--quiet]
+                        [--no-reuse]
                         [--nbft]
                         [--no-nbft]
                         [--nbft-path=&lt;STR&gt;]
@@ -831,13 +832,44 @@ background.</p></div>
 -p
 </dt>
 <dt class="hdlist1">
---persistent
+--persistent[=&lt;no|auto|force&gt;]
 </dt>
 <dd>
 <p>
-        Don&#8217;t remove the discovery controller after retrieving the discovery
-        log page.
+        Keep the discovery controller connected after retrieving the
+        discovery log page, instead of disconnecting once it&#8217;s done.
+        Because the value is optional, it must be attached directly to
+        the option: --persistent=force for the long form, -pforce for
+        the short form. A value given as a separate argument (--persistent
+        force, -p force) is silently NOT applied&#8201;&#8212;&#8201;it&#8217;s dropped, and
+        --persistent/-p is treated as if given bare (mode "auto"), with
+        no error.
 </p>
+<div class="openblock">
+<div class="content">
+<div class="ulist"><ul>
+<li>
+<p>
+<em>no</em> (the default when the option is omitted entirely): never persist.
+</p>
+</li>
+<li>
+<p>
+<em>auto</em> (the default when --persistent is given with no value): persist
+  a Discovery Log Page entry&#8217;s connection only where that entry&#8217;s own
+  EPCSD (Explicit Persistent Connection Support for Discovery) flag
+  reports support for it; degrade to non-persistent, with a log message,
+  for entries that don&#8217;t.
+</p>
+</li>
+<li>
+<p>
+<em>force</em>: persist regardless of what EPCSD reports, for a target whose
+  self-reported EPCSD cannot be trusted.
+</p>
+</li>
+</ul></div>
+</div></div>
 </dd>
 <dt class="hdlist1">
 --quiet
@@ -845,6 +877,14 @@ background.</p></div>
 <dd>
 <p>
         Suppress error messages.
+</p>
+</dd>
+<dt class="hdlist1">
+--no-reuse
+</dt>
+<dd>
+<p>
+        Always create a new connection, never reuse an existing one.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1390,7 +1430,7 @@ nvme-connect(1)</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

@@ -740,7 +740,7 @@ nvme-keys-import(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-keys-import -
-   Import NVMeoF TLS PSKs or KX-HMAC-CHAP keys into a keyring
+   Import NVMeoF TLS PSKs or KX-HMAC-CHAP secrets into a keyring
 </p>
 </div>
 </div>
@@ -761,18 +761,18 @@ nvme-keys-import(1) Manual Page
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Imports one or more already-identified keys into a keyring. The key type
-(NVMe TLS PSK or KX-HMAC-CHAP host key) is auto-detected from the key&#8217;s
+(NVMe TLS PSK or KX-HMAC-CHAP host secret) is auto-detected from the key&#8217;s
 prefix (<em>NVMeTLSkey-1:</em> or <em>DHHC-1:</em>).</p></div>
 <div class="paragraph"><p>Without <em>--identity</em>, keys are read in bulk. Key data is read in the form</p></div>
 <div class="paragraph"><p>&lt;description&gt; &lt;key&gt;</p></div>
 <div class="paragraph"><p>where <em>&lt;description&gt;</em> is the key description and <em>&lt;key&gt;</em> is either a TLS PSK
 in interchange format <em>NVMeTLSkey-1:01:&lt;base64 encoded data&gt;:</em> or a
-KX-HMAC-CHAP key in the form <em>DHHC-1:00:&lt;base64 encoded data&gt;:</em>, one key per
+KX-HMAC-CHAP secret in the form <em>DHHC-1:00:&lt;base64 encoded data&gt;:</em>, one key per
 line, and imported into the kernel keyring. This is the format produced by
 linknvme-keys-export[1].</p></div>
 <div class="paragraph"><p>With <em>--identity</em>, a single key is imported instead: the key is read from
 <em>--keydata</em> (or, if not given, from stdin) and stored under the given
-identity. This is the way to insert a single KX-HMAC-CHAP key, or a
+identity. This is the way to insert a single KX-HMAC-CHAP secret, or a
 previously derived TLS retained key, directly by identity, without needing
 a keyfile.</p></div>
 <div class="paragraph"><p>Note that this command does not derive a retained TLS key identity from raw
@@ -935,7 +935,7 @@ Session Keyring
 </li>
 <li>
 <p>
-Import a single KX-HMAC-CHAP key under an explicit identity
+Import a single KX-HMAC-CHAP secret under an explicit identity
 </p>
 <div class="listingblock">
 <div class="content">
@@ -956,7 +956,7 @@ Import a single KX-HMAC-CHAP key under an explicit identity
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

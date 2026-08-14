@@ -2,12 +2,12 @@
 .\"     Title: nvme-effects-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-EFFECTS\-LOG" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-EFFECTS\-LOG" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-effects-log \- Send NVMe Command Effects log page request, returns result and log
+nvme-effects-log \- Send NVMe Command Effects log page request, returns result and log (deprecated)
 .SH "SYNOPSIS"
 .sp
 .nf
@@ -36,17 +36,11 @@ nvme-effects-log \- Send NVMe Command Effects log page request, returns result a
 .fi
 .SH "DESCRIPTION"
 .sp
-Retrieves the NVMe Command Effects log page from an NVMe device and provides the returned structure\&.
+Deprecated alias for linknvme\-log\-effects[1], kept for scripts written against nvme\-cli versions older than 3\&.0\&. Options and behavior are identical; only the top\-level command name is retained\&.
 .sp
-The <device> parameter is mandatory and should be the NVMe character device (ex: /dev/nvme0)\&.
+New scripts should use \fInvme log effects\fR instead\&. This alias prints a deprecation warning on stderr and may be removed in a future release\&.
 .sp
-On success, the returned command effects log structure will be printed for each command that is supported\&.
-.SH "OPTIONS"
-.PP
-\-b, \-\-raw\-binary
-.RS 4
-This option will print the raw buffer to stdout\&. Structure is not parsed by program\&. This overrides the verbose option\&.
-.RE
+See linknvme\-log\-effects[1] for the full option reference\&.
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:
@@ -96,48 +90,10 @@ Increase the level of detail in the output\&. May be specified multiple times to
 These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
 .SH "EXAMPLES"
 .sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-Print the effects log page in a human readable format:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-# nvme effects\-log /dev/nvme0
-.fi
-.if n \{\
-.RE
-.\}
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-Have the program return the raw structure in binary:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-# nvme effects\-log /dev/nvme0 \-\-raw\-binary > effects_log\&.raw
-# nvme effects\-log /dev/nvme0 \-b > effects_log\&.raw
-.fi
-.if n \{\
-.RE
-.\}
-.RE
+No Examples
 .SH "NVME"
 .sp
 Part of the nvme\-user suite
+.SH "SEE ALSO"
+.sp
+linknvme\-log\-effects[1]

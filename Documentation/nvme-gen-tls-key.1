@@ -1,0 +1,108 @@
+'\" t
+.\"     Title: nvme-gen-tls-key
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 08/14/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-GEN\-TLS\-KEY" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-gen-tls-key \- Generate a NVMe TLS PSK (deprecated)
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR [<global\-options>] \fIgen\-tls\-key\fR [\-\-keyring=<name> | \-k <name>]
+                        [\-\-keytype=<type> | \-t <type>]
+                        [\-\-hostnqn=<nqn> | \-n <nqn>]
+                        [\-\-subsysnqn=<nqn> | \-c <nqn>]
+                        [\-\-hmac=<hmac\-id>]
+                        [\-\-identity=<id\-vers> | \-I <id\-vers>]
+                        [\-\-secret=<secret> | \-s <secret>]
+                        [\-\-insert | \-i]
+                        [\-\-compat | \-C]
+                        [\-\-keyfile=<keyfile> | \-f <keyfile>]
+.fi
+.SH "DESCRIPTION"
+.sp
+Deprecated alias for linknvme\-keys\-gen\-tls[1], kept for scripts written against nvme\-cli versions older than 3\&.0\&. Options and behavior are identical, with one exception: the short form of \fI\-\-hmac\fR changed from \fI\-h\fR to \fI\-m\fR when key generation moved into the \fIkeys\fR plugin, because \fI\-h\fR now collides with the global \fI\-\-help\fR flag\&. Scripts using the short \fI\-h <hmac\-id>\fR form must switch to \fI\-m <hmac\-id>\fR or \fI\-\-hmac=<hmac\-id>\fR; all other options, including the long form \fI\-\-hmac=\fR, continue to work unchanged through this alias\&.
+.sp
+New scripts should use \fInvme keys gen\-tls\fR instead\&. This alias prints a deprecation warning on stderr and may be removed in a future release\&.
+.sp
+See linknvme\-keys\-gen\-tls[1] for the full option reference\&.
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
+.RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
+.SH "EXAMPLES"
+.sp
+No Examples
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
+.SH "SEE ALSO"
+.sp
+linknvme\-keys\-gen\-tls[1]

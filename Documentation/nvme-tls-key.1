@@ -1,0 +1,187 @@
+'\" t
+.\"     Title: nvme-tls-key
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 08/14/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-TLS\-KEY" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-tls-key \- Manage NVMe TLS PSKs (deprecated)
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR [<global\-options>] \fItls\-key\fR [\-\-keyring=<name> | \-k <name>]
+                        [\-\-keytype=<type> | \-t <type>]
+                        [\-\-keyfile=<file> | \-f <file>]
+                        [\-\-import | \-i] [\-\-export | \-e]
+                        [\-\-revoke=<description> | \-r <description>]
+.fi
+.SH "DESCRIPTION"
+.sp
+Deprecated command kept for scripts written against nvme\-cli versions older than 3\&.0\&. Exactly one of \fI\-\-import\fR, \fI\-\-export\fR, or \fI\-\-revoke\fR must be given; based on which mode is selected, this alias translates the command into the equivalent new \fIkeys\fR plugin subcommand and forwards to it:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI\-\-import\fR
+translates to linknvme\-keys\-import[1], forwarding
+\fI\-\-keyring\fR
+and
+\fI\-\-keyfile\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI\-\-export\fR
+translates to linknvme\-keys\-export[1], forwarding
+\fI\-\-keyring\fR
+and
+\fI\-\-keyfile\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI\-\-revoke=<description>\fR
+translates to linknvme\-keys\-revoke[1], forwarding
+\fI\-\-keyring\fR
+and
+\fI\-\-keytype\fR, with
+\fI<description>\fR
+passed as
+\fI\-\-identity\fR\&.
+.RE
+.sp
+Only the options relevant to the selected mode are meaningful; e\&.g\&. \fI\-\-keytype\fR has no effect with \fI\-\-import\fR or \fI\-\-export\fR since the new \fIimport\fR/\fIexport\fR subcommands no longer take a key type\&. This command does not derive or insert a \fIretained\fR TLS key from raw secret material \(em use linknvme\-keys\-gen\-tls[1] or linknvme\-keys\-insert\-tls[1] for that\&.
+.sp
+New scripts should call \fInvme keys import\fR, \fInvme keys export\fR, or \fInvme keys revoke\fR directly instead\&. This alias prints a deprecation warning on stderr and may be removed in a future release\&.
+.SH "OPTIONS"
+.PP
+\-k <name>, \-\-keyring=<name>
+.RS 4
+Name of the keyring to import into, export from, or revoke from\&. Default is
+\fI\&.nvme\fR\&.
+.RE
+.PP
+\-t <type>, \-\-keytype=<type>
+.RS 4
+Type of the key to revoke\&. Only used with
+\fI\-\-revoke\fR\&. Default is
+\fIpsk\fR\&.
+.RE
+.PP
+\-f <file>, \-\-keyfile=<file>
+.RS 4
+File to read the keys from (\fI\-\-import\fR) or write the keys to (\fI\-\-export\fR) instead of stdin/stdout\&.
+.RE
+.PP
+\-i, \-\-import
+.RS 4
+Import keys in bulk; see linknvme\-keys\-import[1]\&.
+.RE
+.PP
+\-e, \-\-export
+.RS 4
+Export all keys from the keyring; see linknvme\-keys\-export[1]\&.
+.RE
+.PP
+\-r <description>, \-\-revoke=<description>
+.RS 4
+Revoke the key stored under
+\fI<description>\fR
+from the keyring; see linknvme\-keys\-revoke[1]\&.
+.RE
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
+.RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
+.SH "EXAMPLES"
+.sp
+No Examples
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
+.SH "SEE ALSO"
+.sp
+linknvme\-keys\-import[1], linknvme\-keys\-export[1], linknvme\-keys\-revoke[1]

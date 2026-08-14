@@ -5,12 +5,16 @@ libnvme_open \- Open an nvme controller or namespace device
 .B "int" libnvme_open
 .BI "(struct libnvme_global_ctx *ctx "  ","
 .BI "const char *name "  ","
+.BI "int flags "  ","
 .BI "struct libnvme_transport_handle **hdl "  ");"
 .SH ARGUMENTS
 .IP "ctx" 12
 struct libnvme_global_ctx object
 .IP "name" 12
 The basename of the device to open
+.IP "flags" 12
+Flags to pass to the underlying open(2) call, e.g. O_RDONLY
+or O_RDONLY | O_EXCL
 .IP "hdl" 12
 Transport handle to return
 .SH "DESCRIPTION"

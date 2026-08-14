@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-ctrl
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-CTRL" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-CTRL" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-id-ctrl \- Send NVMe Identify Controller, return result and structure
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIid\-ctrl\fR <device>
+\fInvme\fR [<global\-options>] \fIid ctrl\fR <device>
                         [\-\-vendor\-specific | \-V]
                         [\-\-raw\-binary | \-b]
 .fi
@@ -43,6 +43,8 @@ For the NVMe device given, sends an identify controller command and provides the
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
 On success, the structure may be returned in one of several ways depending on the option flags; the structure may be parsed by the program or the raw buffer may be printed to stdout\&.
+.sp
+The bare \fInvme id\-ctrl\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme id ctrl\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-b, \-\-raw\-binary
@@ -117,7 +119,7 @@ Has the program interpret the returned buffer and display the known fields in a 
 .RS 4
 .\}
 .nf
-# nvme id\-ctrl /dev/nvme0
+# nvme id ctrl /dev/nvme0
 .fi
 .if n \{\
 .RE
@@ -138,8 +140,8 @@ In addition to showing the known fields, has the program to display the vendor u
 .RS 4
 .\}
 .nf
-# nvme id\-ctrl /dev/nvme0 \-\-vendor\-specific
-# nvme id\-ctrl /dev/nvme0 \-V
+# nvme id ctrl /dev/nvme0 \-\-vendor\-specific
+# nvme id ctrl /dev/nvme0 \-V
 .fi
 .if n \{\
 .RE
@@ -164,8 +166,8 @@ Have the program return the raw structure in binary:
 .RS 4
 .\}
 .nf
-# nvme id\-ctrl /dev/nvme0 \-\-raw\-binary > id_ctrl\&.raw
-# nvme id\-ctrl /dev/nvme0 \-b > id_ctrl\&.raw
+# nvme id ctrl /dev/nvme0 \-\-raw\-binary > id_ctrl\&.raw
+# nvme id ctrl /dev/nvme0 \-b > id_ctrl\&.raw
 .fi
 .if n \{\
 .RE
@@ -188,7 +190,7 @@ Alternatively you may want to send the data to another program that can parse th
 .RS 4
 .\}
 .nf
-# nvme id\-ctrl /dev/nvme0 \-\-raw\-binary | nvme_parse_id_ctrl
+# nvme id ctrl /dev/nvme0 \-\-raw\-binary | nvme_parse_id_ctrl
 .fi
 .if n \{\
 .RE

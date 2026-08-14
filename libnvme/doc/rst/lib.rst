@@ -171,7 +171,7 @@ Sets the file descriptor used for log output.  Passing NULL reverts to the
 default (stderr).
 
 
-.. c:function:: int libnvme_open (struct libnvme_global_ctx *ctx, const char *name, struct libnvme_transport_handle **hdl)
+.. c:function:: int libnvme_open (struct libnvme_global_ctx *ctx, const char *name, int flags, struct libnvme_transport_handle **hdl)
 
    Open an nvme controller or namespace device
 
@@ -182,6 +182,10 @@ default (stderr).
 
 ``const char *name``
   The basename of the device to open
+
+``int flags``
+  Flags to pass to the underlying open(2) call, e.g. O_RDONLY
+  or O_RDONLY | O_EXCL
 
 ``struct libnvme_transport_handle **hdl``
   Transport handle to return

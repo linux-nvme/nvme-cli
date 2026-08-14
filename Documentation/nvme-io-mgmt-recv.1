@@ -2,12 +2,12 @@
 .\"     Title: nvme-io-mgmt-recv
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-IO\-MGMT\-RECV" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-IO\-MGMT\-RECV" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-io-mgmt-recv \- I/O Management Receive command
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIio\-mgmt\-recv\fR <device>
+\fInvme\fR [<global\-options>] \fIio\-mgmt recv\fR <device>
                         [\-\-namespace\-id=<NUM> | \-n <NUM>]
                         [\-\-mos=<NUM> | \-s <NUM>]
                         [\-\-mo=<NUM> | \-m <NUM>]
@@ -42,6 +42,8 @@ nvme-io-mgmt-recv \- I/O Management Receive command
 .SH "DESCRIPTION"
 .sp
 For the NVMe device given, issues the I/O Management Receive command with the requested management operation (mo) and management operation specific parameter (mos)\&. This is the generic interface provided for forward compatibility as new operations are added that this program isn\(cqt aware of at the time of its development\&. As such, this is a generic command that does not do any additional decoding for specific types of data received\&. This will only report the data as a hex dump, or binary\&.
+.sp
+The bare \fInvme io\-mgmt\-recv\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme io\-mgmt recv\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-n <NUM>, \-\-namespace\-id=<NUM>

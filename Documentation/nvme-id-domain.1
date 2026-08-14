@@ -2,12 +2,12 @@
 .\"     Title: nvme-id-domain
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ID\-DOMAIN" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-ID\-DOMAIN" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-id-domain \- Send NVMe Identify Domain List, return result and structure
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIid\-domain\fR <device>
+\fInvme\fR [<global\-options>] \fIid domain\fR <device>
                         [\-\-dom\-id=<domain_id> | \-d <domain_id>]
 .fi
 .SH "DESCRIPTION"
@@ -40,6 +40,8 @@ nvme-id-domain \- Send NVMe Identify Domain List, return result and structure
 For the NVMe device given, send an identify command and return the domain list data structure\&.
 .sp
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+.sp
+The bare \fInvme id\-domain\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme id domain\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-d <domain_id>, \-\-dom\-id=<domain_id>

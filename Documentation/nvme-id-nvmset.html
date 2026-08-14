@@ -749,7 +749,7 @@ nvme-id-nvmset(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>id-nvmset</em> &lt;device&gt; [--nvmset_id=&lt;id&gt; | -i &lt;id&gt;]</pre>
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>id nvmset</em> &lt;device&gt; [--nvmset_id=&lt;id&gt; | -i &lt;id&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -764,6 +764,9 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 <div class="paragraph"><p>On success, the structure may be returned in one of several ways depending
 on the option flags; the structure may be parsed by the program or the
 raw buffer may be printed to stdout.</p></div>
+<div class="paragraph"><p>The bare <em>nvme id-nvmset</em> form (without a space) still works as a
+deprecated alias and will be removed in a future major version. New
+scripts should use <em>nvme id nvmset</em> instead.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -875,7 +878,7 @@ fields in a human readable format:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme id-nvmset /dev/nvme0</code></pre>
+<pre><code># nvme id nvmset /dev/nvme0</code></pre>
 </div></div>
 </li>
 <li>
@@ -884,8 +887,8 @@ Have the program return the raw structure in binary:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme id-nvmset /dev/nvme0 --output-format=binary &gt; id_nvmset.raw
-# nvme id-nvmset /dev/nvme0 -o binary &gt; id_nvmset.raw</code></pre>
+<pre><code># nvme id nvmset /dev/nvme0 --output-format=binary &gt; id_nvmset.raw
+# nvme id nvmset /dev/nvme0 -o binary &gt; id_nvmset.raw</code></pre>
 </div></div>
 <div class="paragraph"><p>It is probably a bad idea to not redirect stdout when using this mode.</p></div>
 </li>
@@ -896,7 +899,7 @@ can parse the raw buffer.
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme id-nvmset /dev/nvme0 -o binary | nvme_parse_id_nvmset</code></pre>
+<pre><code># nvme id nvmset /dev/nvme0 -o binary | nvme_parse_id_nvmset</code></pre>
 </div></div>
 <div class="paragraph"><p>The parse program in the above example can be a program that shows the
 structure in a way you like. The following program is such an example
@@ -916,7 +919,7 @@ as shown in the above example, or you can <code>'cat'</code> a saved output buff
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

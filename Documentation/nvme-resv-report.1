@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-report
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-REPORT" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-REPORT" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-resv-report \- Send NVMe Reservation Report, parse the result
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIresv\-report\fR <device>
+\fInvme\fR [<global\-options>] \fIresv report\fR <device>
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-numd=<num\-dwords> | \-d <num\-dwords>]
                         [\-\-eds | \-e]
@@ -43,6 +43,8 @@ nvme-resv-report \- Send NVMe Reservation Report, parse the result
 The Reservation Report command returns a Reservation Status data structure to host memory that describes the registration and reservation status of a namespace\&.
 .sp
 The size of the Reservation Status data structure is a function of the number of controllers in the NVM Subsystem that are associated with hosts that are registrants of the namespace (i\&.e\&., there is a Registered Controller data structure for each such controller)\&.
+.sp
+The bare \fInvme resv\-report\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme resv report\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>

@@ -2,12 +2,12 @@
 .\"     Title: nvme-error-log
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-ERROR\-LOG" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-ERROR\-LOG" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-error-log \- Send NVME Error log page request, return result and log
+nvme-error-log \- Send NVME Error log page request, return result and log (deprecated)
 .SH "SYNOPSIS"
 .sp
 .nf
@@ -46,62 +46,11 @@ nvme-error-log \- Send NVME Error log page request, return result and log
 .fi
 .SH "DESCRIPTION"
 .sp
-Retrieves NVMe Error log page from an NVMe device and provides the returned structure\&. All the returned structure fields including the ordering of the entries are described in the spec\&.
+Deprecated alias for linknvme\-log\-error[1], kept for scripts written against nvme\-cli versions older than 3\&.0\&. Options and behavior are identical; only the top\-level command name is retained\&.
 .sp
-The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
+New scripts should use \fInvme log error\fR instead\&. This alias prints a deprecation warning on stderr and may be removed in a future release\&.
 .sp
-On success, the returned error log structure may be returned in one of several ways depending on the option flags; the structure may parsed by the program and printed in a readable format or the raw buffer may be printed to stdout for another program to parse\&.
-.SH "OPTIONS"
-.PP
-\-e <entries>, \-\-log\-entries=<entries>
-.RS 4
-Specifies how many log entries the program should request from the device\&. This must be at least one, and shouldn\(cqt exceed the device\(cqs capabilities\&. Defaults to 64 log entries\&.
-.RE
-.PP
-\-b, \-\-raw\-binary
-.RS 4
-Print the raw error log buffer to stdout\&.
-.RE
-.PP
-\-V, \-\-valid\-entry
-.RS 4
-Output valid entry only\&.
-.RE
-.PP
-\-S <sqid>, \-\-sqid=<sqid>
-.RS 4
-Output specified SQID entry only\&.
-.RE
-.PP
-\-s <status>, \-\-status=<status>
-.RS 4
-Output specified STATUS entry only\&.
-.RE
-.PP
-\-l <lba>, \-\-lba=<lba>
-.RS 4
-Output specified LBA entry only\&.
-.RE
-.PP
-\-n <nsid>, \-\-namespace\-id=<nsid>
-.RS 4
-Output specified NSID entry only\&.
-.RE
-.PP
-\-t <trtype>, \-\-trtype=<trtype>
-.RS 4
-Output specified TRTYPE entry only\&.
-.RE
-.PP
-\-c <csi>, \-\-csi=<csi>
-.RS 4
-Output specified CSI entry only\&.
-.RE
-.PP
-\-O <opcode>, \-\-opcode=<opcode>
-.RS 4
-Output specified OPC entry only\&.
-.RE
+See linknvme\-log\-error[1] for the full option reference\&.
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:
@@ -151,49 +100,10 @@ Increase the level of detail in the output\&. May be specified multiple times to
 These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
 .SH "EXAMPLES"
 .sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-Get the error log and print it in a human readable format:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-# nvme error\-log /dev/nvme0
-.fi
-.if n \{\
-.RE
-.\}
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-Print the raw output to a file:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-# nvme error\-log /dev/nvme0 \-\-raw\-binary > error_log\&.raw
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-It is probably a bad idea to not redirect stdout when using this mode\&.
-.RE
+No Examples
 .SH "NVME"
 .sp
 Part of the nvme\-user suite
+.SH "SEE ALSO"
+.sp
+linknvme\-log\-error[1]

@@ -749,7 +749,7 @@ nvme-resv-register(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>resv-register</em> &lt;device&gt;
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>resv register</em> &lt;device&gt;
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                         [--crkey=&lt;crkey&gt; | -c &lt;crkey&gt;]
                         [--nrkey=&lt;nrkey&gt; | -k &lt;nrkey&gt;]
@@ -765,6 +765,9 @@ nvme-resv-register(1) Manual Page
 <div class="sectionbody">
 <div class="paragraph"><p>The Reservation Register command is used to register, unregister, or
 replace a reservation key.</p></div>
+<div class="paragraph"><p>The bare <em>nvme resv-register</em> form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use <em>nvme resv register</em> instead.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -1016,7 +1019,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

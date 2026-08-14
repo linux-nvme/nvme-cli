@@ -625,6 +625,47 @@ Sets the host NQN and host ID for the context.
 0 on success, negative error code otherwise.
 
 
+.. c:function:: int libnvmf_context_set_persistent (struct libnvmf_context *fctx, const char *persistent)
+
+   Set the discovery controller persistence mode
+
+**Parameters**
+
+``struct libnvmf_context *fctx``
+  Fabrics context
+
+``const char *persistent``
+  One of "no", "auto", "force" (case-insensitive)
+
+**Description**
+
+"auto" persists a Discovery Log Page entry's connection only where that
+entry's own EPCSD flag (see :c:type:`enum nvmf_disc_eflags <nvmf_disc_eflags>`) reports support for
+it; "force" persists regardless of what EPCSD reports; "no" never
+persists.
+
+**Return**
+
+0 on success, -EINVAL if **fctx** is NULL or **persistent** matches
+none of the accepted values.
+
+
+.. c:function:: const char * libnvmf_context_get_persistent (const struct libnvmf_context *fctx)
+
+   Get the discovery controller persistence mode
+
+**Parameters**
+
+``const struct libnvmf_context *fctx``
+  Fabrics context
+
+**Return**
+
+"no", "auto", or "force" if explicitly configured; NULL if not
+(behaves the same as "no" when applied to a live connection, or if
+**fctx** is NULL).
+
+
 .. c:function:: int libnvmf_context_set_connection_from_tid (struct libnvmf_context *fctx, const struct libnvmf_tid *tid)
 
    Set connection and identity from a TID

@@ -2,12 +2,12 @@
 .\"     Title: nvme-fw-download
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-FW\-DOWNLOAD" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-FW\-DOWNLOAD" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,10 +32,11 @@ nvme-fw-download \- Download all or a portion of an nvme firmware image\&.
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIfw\-download\fR <device>
+\fInvme\fR [<global\-options>] \fIfw download\fR <device>
                         [\-\-fw=<firmware\-file> | \-f <firmware\-file>]
                         [\-\-xfer=<transfer\-size> | \-x <transfer\-size>]
                         [\-\-offset=<offset> | \-O <offset>]
+                        [\-\-stream]
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -45,7 +46,9 @@ The firmware image may be constructed of multiple pieces that are individually d
 .sp
 The new firmware image is not applied as part of the Firmware Image Download command\&. It is applied following a reset, where the image to apply and the firmware slot it should be committed to is specified with the Firmware Commit command (nvme fw\-commit <args>)\&.
 .sp
-Note: nvme\-cli must allocate a contiguous (linear) memory buffer and map the firmware binary into it\&. To do this, nvme\-cli first attempts to allocate the buffer using huge TLB pages\&. If allocation using huge pages fails, it falls back to using posix_memalign() combined with madvise(), though this is also likely to fail\&.
+Note: nvme\-cli must allocate a contiguous (linear) memory buffer and map the firmware binary into it\&. To do this, nvme\-cli first attempts to allocate the buffer using huge TLB pages\&. If allocation using huge pages fails, it falls back to using posix_memalign() combined with madvise()\&. If the kernel rejects the huge page advice, nvme\-cli keeps the aligned buffer and lets the I/O path attempt to map it\&.
+.sp
+The optional \-\-stream mode avoids allocating a buffer for the complete firmware image\&. It reads and downloads one transfer\-sized portion at a time\&.
 .sp
 To increase the likelihood of success, you may want to pre\-allocate a number of huge pages before initiating the firmware download:
 .sp
@@ -60,6 +63,8 @@ echo 20 > /proc/sys/vm/nr_hugepages
 .\}
 .sp
 For more details, refer to: \m[blue]\fBhttps://www\&.kernel\&.org/doc/Documentation/vm/hugetlbpage\&.txt\fR\m[]
+.sp
+The bare \fInvme fw\-download\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme fw download\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-f <firmware\-file>, \-\-fw=<firmware\-file>
@@ -77,6 +82,11 @@ This specifies the size to split each transfer\&. This is useful if the device h
 This specifies the starting offset in dwords\&. This is really only useful if your firmware is split in multiple files; otherwise the offset starts at zero and automatically adjusts based on the
 \fIxfer\fR
 size given\&.
+.RE
+.PP
+\-\-stream
+.RS 4
+Read and download one transfer\-sized portion of the firmware image at a time instead of mapping the complete image into memory\&. This avoids the huge page requirement and limits memory use to the transfer size\&.
 .RE
 .SH "GLOBAL OPTIONS"
 .sp
@@ -141,7 +151,28 @@ Transfer a firmware size 128KiB at a time:
 .RS 4
 .\}
 .nf
-# nvme fw\-download /dev/nvme0 \-\-fw=/path/to/nvme\&.fw \-\-xfer=0x20000
+# nvme fw download /dev/nvme0 \-\-fw=/path/to/nvme\&.fw \-\-xfer=0x20000
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Read and download a firmware image one transfer\-sized portion at a time:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# nvme fw download /dev/nvme0 \-\-fw=/path/to/nvme\&.fw \-\-stream
 .fi
 .if n \{\
 .RE

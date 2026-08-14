@@ -636,60 +636,6 @@ The value of the default_keep_alive_timeout field.
 The value of the device field, or NULL if not set.
 
 
-.. c:function:: void libnvmf_context_set_persistent (struct libnvmf_context *p, enum libnvmf_tristate persistent)
-
-   Set persistent.
-
-**Parameters**
-
-``struct libnvmf_context *p``
-  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to update.
-
-``enum libnvmf_tristate persistent``
-  Value to assign to the persistent field.
-
-
-.. c:function:: enum libnvmf_tristate libnvmf_context_get_persistent (const struct libnvmf_context *p)
-
-   Get persistent.
-
-**Parameters**
-
-``const struct libnvmf_context *p``
-  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to query.
-
-**Return**
-
-The value of the persistent field.
-
-
-.. c:function:: void libnvmf_context_set_epcsd (struct libnvmf_context *p, enum libnvmf_tristate epcsd)
-
-   Set epcsd.
-
-**Parameters**
-
-``struct libnvmf_context *p``
-  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to update.
-
-``enum libnvmf_tristate epcsd``
-  Value to assign to the epcsd field.
-
-
-.. c:function:: enum libnvmf_tristate libnvmf_context_get_epcsd (const struct libnvmf_context *p)
-
-   Get epcsd.
-
-**Parameters**
-
-``const struct libnvmf_context *p``
-  The :c:type:`struct libnvmf_context <libnvmf_context>` instance to query.
-
-**Return**
-
-The value of the epcsd field.
-
-
 .. c:function:: const char * libnvmf_context_get_devid_file (const struct libnvmf_context *p)
 
    Get devid_file.
@@ -731,22 +677,22 @@ The value of the devid_file field, or NULL if not set.
 The value of the connect field.
 
 
-.. c:function:: void libnvmf_context_set_force (struct libnvmf_context *p, bool force)
+.. c:function:: void libnvmf_context_set_no_reuse (struct libnvmf_context *p, bool no_reuse)
 
-   Set force.
+   Set no_reuse.
 
 **Parameters**
 
 ``struct libnvmf_context *p``
   The :c:type:`struct libnvmf_context <libnvmf_context>` instance to update.
 
-``bool force``
-  Value to assign to the force field.
+``bool no_reuse``
+  Value to assign to the no_reuse field.
 
 
-.. c:function:: bool libnvmf_context_get_force (const struct libnvmf_context *p)
+.. c:function:: bool libnvmf_context_get_no_reuse (const struct libnvmf_context *p)
 
-   Get force.
+   Get no_reuse.
 
 **Parameters**
 
@@ -755,7 +701,7 @@ The value of the connect field.
 
 **Return**
 
-The value of the force field.
+The value of the no_reuse field.
 
 
 .. c:function:: void libnvmf_context_set_nbft_path (struct libnvmf_context *p, const char *nbft_path)

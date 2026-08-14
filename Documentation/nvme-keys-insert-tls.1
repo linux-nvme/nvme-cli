@@ -2,12 +2,12 @@
 .\"     Title: nvme-keys-insert-tls
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-KEYS\-INSERT\-" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-KEYS\-INSERT\-" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -45,7 +45,7 @@ nvme-keys-insert-tls \- Insert a NVMe TLS PSK into a keyring
 .sp
 Takes a NVMe TLS PSK in the PSK interchange format \fINVMeTLSkey\-1:01:<base64\-encoded data>:\fR, \fBderives\fR a \fIretained\fR key identity from it and the given host/subsystem NQNs using the HKDF\-Expand\-Label algorithm from RFC 8446, and stores the result into the specified keyring\&. The \fIretained\fR key is stored with the identity \fINVMe0R0<hmac> <host NQN> <subsystem NQN>\fR (for identity version \fI0\fR) or \fINVMe1R0<hmac> <host NQN> <subsystem NQN> <PSK hash>\fR (for identity version \fI1\fR)\&. Once the \fIretained\fR key is stored in the keyring the original key material cannot be retrieved\&.
 .sp
-This command is for deriving a \fBnew\fR retained\-key identity from raw PSK material; it always needs a subsystem NQN (and, if not given, will look up the host NQN) to compute that identity\&. If the identity under which a key should be stored is already known \(em for example a key previously exported by linknvme\-keys\-export[1], or a KX\-HMAC\-CHAP key \(em use linknvme\-keys\-import[1] instead, which inserts a key under an explicit identity without deriving one\&.
+This command is for deriving a \fBnew\fR retained\-key identity from raw PSK material; it always needs a subsystem NQN (and, if not given, will look up the host NQN) to compute that identity\&. If the identity under which a key should be stored is already known \(em for example a key previously exported by linknvme\-keys\-export[1], or a KX\-HMAC\-CHAP secret \(em use linknvme\-keys\-import[1] instead, which inserts a key under an explicit identity without deriving one\&.
 .sp
 If \fI\-\-keydata\fR is not given the key is read from stdin, which also allows inserting a key stored in a file, e\&.g\&. \fInvme keys insert\-tls \-c <subsysnqn> < keyfile\fR\&.
 .sp

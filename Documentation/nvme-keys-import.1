@@ -2,12 +2,12 @@
 .\"     Title: nvme-keys-import
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-KEYS\-IMPORT" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-KEYS\-IMPORT" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-keys-import \- Import NVMeoF TLS PSKs or KX\-HMAC\-CHAP keys into a keyring
+nvme-keys-import \- Import NVMeoF TLS PSKs or KX\-HMAC\-CHAP secrets into a keyring
 .SH "SYNOPSIS"
 .sp
 .nf
@@ -39,15 +39,15 @@ nvme-keys-import \- Import NVMeoF TLS PSKs or KX\-HMAC\-CHAP keys into a keyring
 .fi
 .SH "DESCRIPTION"
 .sp
-Imports one or more already\-identified keys into a keyring\&. The key type (NVMe TLS PSK or KX\-HMAC\-CHAP host key) is auto\-detected from the key\(cqs prefix (\fINVMeTLSkey\-1:\fR or \fIDHHC\-1:\fR)\&.
+Imports one or more already\-identified keys into a keyring\&. The key type (NVMe TLS PSK or KX\-HMAC\-CHAP host secret) is auto\-detected from the key\(cqs prefix (\fINVMeTLSkey\-1:\fR or \fIDHHC\-1:\fR)\&.
 .sp
 Without \fI\-\-identity\fR, keys are read in bulk\&. Key data is read in the form
 .sp
 <description> <key>
 .sp
-where \fI<description>\fR is the key description and \fI<key>\fR is either a TLS PSK in interchange format \fINVMeTLSkey\-1:01:<base64 encoded data>:\fR or a KX\-HMAC\-CHAP key in the form \fIDHHC\-1:00:<base64 encoded data>:\fR, one key per line, and imported into the kernel keyring\&. This is the format produced by linknvme\-keys\-export[1]\&.
+where \fI<description>\fR is the key description and \fI<key>\fR is either a TLS PSK in interchange format \fINVMeTLSkey\-1:01:<base64 encoded data>:\fR or a KX\-HMAC\-CHAP secret in the form \fIDHHC\-1:00:<base64 encoded data>:\fR, one key per line, and imported into the kernel keyring\&. This is the format produced by linknvme\-keys\-export[1]\&.
 .sp
-With \fI\-\-identity\fR, a single key is imported instead: the key is read from \fI\-\-keydata\fR (or, if not given, from stdin) and stored under the given identity\&. This is the way to insert a single KX\-HMAC\-CHAP key, or a previously derived TLS retained key, directly by identity, without needing a keyfile\&.
+With \fI\-\-identity\fR, a single key is imported instead: the key is read from \fI\-\-keydata\fR (or, if not given, from stdin) and stored under the given identity\&. This is the way to insert a single KX\-HMAC\-CHAP secret, or a previously derived TLS retained key, directly by identity, without needing a keyfile\&.
 .sp
 Note that this command does not derive a retained TLS key identity from raw PSK material and a host/subsystem NQN pair; use linknvme\-keys\-insert\-tls[1] for that\&.
 .SH "OPTIONS"
@@ -163,7 +163,7 @@ Session Keyring
 .sp -1
 .IP \(bu 2.3
 .\}
-Import a single KX\-HMAC\-CHAP key under an explicit identity
+Import a single KX\-HMAC\-CHAP secret under an explicit identity
 .sp
 .if n \{\
 .RS 4

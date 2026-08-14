@@ -2,12 +2,12 @@
 .\"     Title: nvme-dir-send
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DIR\-SEND" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-DIR\-SEND" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-dir-send \- Issue a directive send command, returns applicable results
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIdir\-send\fR <device>
+\fInvme\fR [<global\-options>] \fIdir send\fR <device>
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-data\-len=<data\-len> | \-l <data\-len>]
                         [\-\-dir\-type=<dtype> | \-D <dtype>]
@@ -48,6 +48,8 @@ Submits an NVMe Directive Send admin command and returns the applicable results\
 The <device> parameter is mandatory and may be either the NVMe character device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1)\&.
 .sp
 On success, the returned directive\(cqs parameter structure (if applicable) is returned in one of several ways depending on the option flags; the structure may parsed by the program and displayed in hex, or the raw buffer may be printed to stdout for another program to parse\&.
+.sp
+The bare \fInvme dir\-send\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme dir send\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>
@@ -192,7 +194,7 @@ Enable streams directive :
 .RS 4
 .\}
 .nf
-# nvme dir\-send /dev/nvme0n1 \-\-dir\-type 0 \-\-dir\-oper 1 \-\-target\-dir 1 \-\-endir 1
+# nvme dir send /dev/nvme0n1 \-\-dir\-type 0 \-\-dir\-oper 1 \-\-target\-dir 1 \-\-endir 1
 .fi
 .if n \{\
 .RE
@@ -213,7 +215,7 @@ Disable streams directive :
 .RS 4
 .\}
 .nf
-# nvme dir\-send /dev/nvme0n1 \-\-dir\-type 0 \-\-dir\-oper 1 \-\-target\-dir 1 \-\-endir 0
+# nvme dir send /dev/nvme0n1 \-\-dir\-type 0 \-\-dir\-oper 1 \-\-target\-dir 1 \-\-endir 0
 .fi
 .if n \{\
 .RE
@@ -234,7 +236,7 @@ Release all allocated streams resource :
 .RS 4
 .\}
 .nf
-# nvme dir\-send /dev/nvme0n1 \-\-dir\-type 1 \-\-dir\-oper 2
+# nvme dir send /dev/nvme0n1 \-\-dir\-type 1 \-\-dir\-oper 2
 .fi
 .if n \{\
 .RE
@@ -255,7 +257,7 @@ Release stream ID 3 :
 .RS 4
 .\}
 .nf
-# nvme dir\-send /dev/nvme0 \-\-dir\-type 1 \-\-dir\-oper 1 \-\-dir\-spec 3
+# nvme dir send /dev/nvme0 \-\-dir\-type 1 \-\-dir\-oper 1 \-\-dir\-spec 3
 .fi
 .if n \{\
 .RE

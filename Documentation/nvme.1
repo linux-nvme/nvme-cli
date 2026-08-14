@@ -2,12 +2,12 @@
 .\"     Title: nvme
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -358,6 +358,11 @@ Validate an NVMe\-oF INI connection configuration file
 Show the resolved NVMe\-oF INI connection configuration
 .RE
 .PP
+\fBnvme-config-status\fR(1)
+.RS 4
+Report legacy config\&.json/discovery\&.conf conversion status
+.RE
+.PP
 \fBnvme-get-property\fR(1)
 .RS 4
 Reads and shows NVMe\-over\-Fabrics controller property
@@ -385,7 +390,7 @@ Capacity Management Command
 .PP
 \fBnvme-check-dhchap-key\fR(1)
 .RS 4
-Check a host DH\-HMAC\-CHAP key (deprecated, see nvme\-keys\-check\-kxchap)
+Check a host DH\-HMAC\-CHAP secret (deprecated, see nvme\-keys\-check\-kxchap\-secret)
 .RE
 .PP
 \fBnvme-check-tls-key\fR(1)
@@ -410,7 +415,7 @@ Retrieve FID Support and Effects log
 .PP
 \fBnvme-gen-dhchap-key\fR(1)
 .RS 4
-Generate a host DH\-HMAC\-CHAP key (deprecated, see nvme\-keys\-gen\-kxchap)
+Generate a host DH\-HMAC\-CHAP secret (deprecated, see nvme\-keys\-gen\-kxchap\-secret)
 .RE
 .PP
 \fBnvme-gen-hostnqn\fR(1)
@@ -1139,14 +1144,14 @@ Change the SED Opal Device password
 MangoBoost \- NVMe Identify Controller
 .RE
 .PP
-\fBnvme-keys-gen-kxchap\fR(1)
+\fBnvme-keys-gen-kxchap-secret\fR(1)
 .RS 4
-Generate NVMeoF KX\-HMAC\-CHAP host key
+Generate NVMeoF KX\-HMAC\-CHAP host secret
 .RE
 .PP
-\fBnvme-keys-check-kxchap\fR(1)
+\fBnvme-keys-check-kxchap-secret\fR(1)
 .RS 4
-Validate NVMeoF KX\-HMAC\-CHAP host key
+Validate NVMeoF KX\-HMAC\-CHAP host secret
 .RE
 .PP
 \fBnvme-keys-gen-tls\fR(1)

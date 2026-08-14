@@ -1,12 +1,20 @@
 .TH "libnvmf_context_set_persistent" 9 "libnvmf_context_set_persistent" "August 2026" "libnvme API manual" LINUX
 .SH NAME
-libnvmf_context_set_persistent \- Set persistent.
+libnvmf_context_set_persistent \- Set the discovery controller persistence mode
 .SH SYNOPSIS
-.B "void" libnvmf_context_set_persistent
-.BI "(struct libnvmf_context *p "  ","
-.BI "enum libnvmf_tristate persistent "  ");"
+.B "int" libnvmf_context_set_persistent
+.BI "(struct libnvmf_context *fctx "  ","
+.BI "const char *persistent "  ");"
 .SH ARGUMENTS
-.IP "p" 12
-The \fIstruct libnvmf_context\fP instance to update.
+.IP "fctx" 12
+Fabrics context
 .IP "persistent" 12
-Value to assign to the persistent field.
+One of "no", "auto", "force" (case-insensitive)
+.SH "DESCRIPTION"
+"auto" persists a Discovery Log Page entry's connection only where that
+entry's own EPCSD flag (see \fIenum nvmf_disc_eflags\fP) reports support for
+it; "force" persists regardless of what EPCSD reports; "no" never
+persists.
+.SH "RETURN"
+0 on success, -EINVAL if \fIfctx\fP is NULL or \fIpersistent\fP matches
+none of the accepted values.

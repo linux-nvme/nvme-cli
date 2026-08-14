@@ -2,12 +2,12 @@
 .\"     Title: nvme-get-ns-id
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-GET\-NS\-ID" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-GET\-NS\-ID" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nvme-get-ns-id \- Retrieves the namespace ID for an NVMe block device
+nvme-get-ns-id \- Retrieves the namespace ID for an NVMe block device (deprecated)
 .SH "SYNOPSIS"
 .sp
 .nf
@@ -36,8 +36,11 @@ nvme-get-ns-id \- Retrieves the namespace ID for an NVMe block device
 .fi
 .SH "DESCRIPTION"
 .sp
-Retrieves the namespace ID for an NVMe block device\&. The <device> param is mandatory and must be an NVMe block device (ex: /dev/nvme0n1)\&.
-.SH "OPTIONS"
+Deprecated alias for linknvme\-ns\-get\-id[1], kept for scripts written against nvme\-cli versions older than 3\&.0\&. Options and behavior are identical; only the top\-level command name is retained\&.
+.sp
+New scripts should use \fInvme ns get\-id\fR instead\&. This alias prints a deprecation warning on stderr and may be removed in a future release\&.
+.sp
+See linknvme\-ns\-get\-id[1] for the full option reference\&.
 .SH "GLOBAL OPTIONS"
 .sp
 The following options are defined at the top\-level nvme command and are available to this subcommand:
@@ -87,26 +90,10 @@ Increase the level of detail in the output\&. May be specified multiple times to
 These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
 .SH "EXAMPLES"
 .sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-Shows the namespace id for the given block device:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-# nvme get\-ns\-id /dev/nvme0n1
-.fi
-.if n \{\
-.RE
-.\}
-.RE
+No Examples
 .SH "NVME"
 .sp
 Part of the nvme\-user suite
+.SH "SEE ALSO"
+.sp
+linknvme\-ns\-get\-id[1]

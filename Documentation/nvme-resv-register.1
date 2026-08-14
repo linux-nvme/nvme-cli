@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-register
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-REGISTER" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-REGISTER" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-resv-register \- Register an nvme reservation
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIresv\-register\fR <device>
+\fInvme\fR [<global\-options>] \fIresv register\fR <device>
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-crkey=<crkey> | \-c <crkey>]
                         [\-\-nrkey=<nrkey> | \-k <nrkey>]
@@ -43,6 +43,8 @@ nvme-resv-register \- Register an nvme reservation
 .SH "DESCRIPTION"
 .sp
 The Reservation Register command is used to register, unregister, or replace a reservation key\&.
+.sp
+The bare \fInvme resv\-register\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme resv register\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>

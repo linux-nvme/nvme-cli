@@ -740,7 +740,7 @@ nvme-boot-part-log(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-boot-part-log -
-   Retrieves a Boot Partition log page from an NVMe device
+   Retrieves a Boot Partition log page from an NVMe device (deprecated)
 </p>
 </div>
 </div>
@@ -758,41 +758,12 @@ nvme-boot-part-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Retrieves an Boot Partition log page from an NVMe device and provides
-the returned structure.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
-device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
-<div class="paragraph"><p>On success, the returned log structure will be in raw binary format <em>only</em> with
---output-file option which is mandatory.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--s &lt;field&gt;
-</dt>
-<dt class="hdlist1">
---lsp=&lt;field&gt;
-</dt>
-<dd>
-<p>
-        The log specified field of LID.
-</p>
-</dd>
-<dt class="hdlist1">
--f &lt;file&gt;
-</dt>
-<dt class="hdlist1">
---output-file=&lt;file&gt;
-</dt>
-<dd>
-<p>
-        File name to which raw binary data will be saved to.
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>Deprecated alias for linknvme-log-boot-part[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.</p></div>
+<div class="paragraph"><p>New scripts should use <em>nvme log boot-part</em> instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.</p></div>
+<div class="paragraph"><p>See linknvme-log-boot-part[1] for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -876,17 +847,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="ulist"><ul>
-<li>
-<p>
-Retrieve Boot Partition data to boot_part_log.bin
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme boot-part-log /dev/nvme0 --output-file=boot_part_log.bin</code></pre>
-</div></div>
-</li>
-</ul></div>
+<div class="paragraph"><p>No Examples</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -895,12 +856,18 @@ Retrieve Boot Partition data to boot_part_log.bin
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>linknvme-log-boot-part[1]</p></div>
+</div>
+</div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

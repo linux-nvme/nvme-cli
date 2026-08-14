@@ -740,7 +740,7 @@ nvme-detach-ns(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-detach-ns -
-   Send NVMe detach namespace, return result.
+   Send NVMe detach namespace, return result. (deprecated)
 </p>
 </div>
 </div>
@@ -751,7 +751,7 @@ nvme-detach-ns(1) Manual Page
 <div class="verseblock">
 <pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>detach-ns</em> &lt;device&gt;
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
-                        [--controllers=&lt;ctrl-list,&gt; | -c &lt;ctrl-list,&gt;</pre>
+                        [--controllers=&lt;ctrl-list,&gt; | -c &lt;ctrl-list,&gt;]</pre>
 <div class="attribution">
 </div></div>
 </div>
@@ -759,39 +759,12 @@ nvme-detach-ns(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>For the NVMe device given, sends the nvme namespace detach command for
-the provided namespace identifier, attaching to the provided list of
-controller identifiers.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--n &lt;nsid&gt;
-</dt>
-<dt class="hdlist1">
---namespace-id=&lt;nsid&gt;
-</dt>
-<dd>
-<p>
-        The namespace identifier to detach.
-</p>
-</dd>
-<dt class="hdlist1">
--c &lt;ctrl-list,&gt;
-</dt>
-<dt class="hdlist1">
---controllers=&lt;ctrl-list,&gt;
-</dt>
-<dd>
-<p>
-        The comma separated list of controller identifiers to detach
-        the namespace from.
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>Deprecated alias for linknvme-ns-detach[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.</p></div>
+<div class="paragraph"><p>New scripts should use <em>nvme ns detach</em> instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.</p></div>
+<div class="paragraph"><p>See linknvme-ns-detach[1] for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -875,7 +848,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>No examples yet.</p></div>
+<div class="paragraph"><p>No Examples</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -884,12 +857,18 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="paragraph"><p>Part of the nvme-user suite</p></div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>linknvme-ns-detach[1]</p></div>
+</div>
+</div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

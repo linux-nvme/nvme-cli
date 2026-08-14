@@ -740,7 +740,7 @@ nvme-sanitize-log(1) Manual Page
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nvme-sanitize-log -
-   Send NVMe sanitize-log Command, return result
+   Send NVMe sanitize-log Command, return result (deprecated)
 </p>
 </div>
 </div>
@@ -758,86 +758,12 @@ nvme-sanitize-log(1) Manual Page
 <div class="sect1">
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Retrieves the NVMe Sanitize log page from an NVMe device and provides the
-status of sanitize command.</p></div>
-<div class="paragraph"><p>The &lt;device&gt; parameter is mandatory NVMe character device (ex: /dev/nvme0).</p></div>
-<div class="paragraph"><p>Expected status and description :-</p></div>
-<div class="tableblock">
-<table rules="all"
-width="100%"
-frame="border"
-cellspacing="0" cellpadding="4">
-<col width="50%" />
-<col width="50%" />
-<thead>
-<tr>
-<th align="left" valign="top">Status Code </th>
-<th align="left" valign="top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="left" valign="top"><p class="table">0x0000</p></td>
-<td align="left" valign="top"><p class="table">NVM subsystem has never been sanitized.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">0x0001</p></td>
-<td align="left" valign="top"><p class="table">The most recent sanitize operation completed successfully.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">0x0002</p></td>
-<td align="left" valign="top"><p class="table">A sanitize operation is currently in progress.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">0x0003</p></td>
-<td align="left" valign="top"><p class="table">The most recent sanitize operation failed.</p></td>
-</tr>
-<tr>
-<td align="left" valign="top"><p class="table">0x0100</p></td>
-<td align="left" valign="top"><p class="table">Global Data Erased bit
-If set to 1 then non-volatile storage in the NVM subsystem has
-not been written to:
- a) since being manufactured and the NVM subsystem has never been sanitized; or
- b) since the most recent successful sanitize operation.
-If cleared to 0, then non-volatile storage in the NVM subsystem has been written to:
- a) since being manufactured and the NVM subsystem has never been sanitized; or
- b) since the most recent successful sanitize operation of the NVM subsystem.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="paragraph"><p>Sanitize Progress - percentage complete</p></div>
-<div class="paragraph"><p>On success it returns 0, error code otherwise.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
-<div class="dlist"><dl>
-<dt class="hdlist1">
--r
-</dt>
-<dt class="hdlist1">
---rae
-</dt>
-<dd>
-<p>
-        Retain an Asynchronous Event.
-</p>
-</dd>
-<dt class="hdlist1">
--b
-</dt>
-<dt class="hdlist1">
---raw-binary
-</dt>
-<dd>
-<p>
-        Print the raw buffer to stdout. Structure is not parsed by
-        program. This overrides the vendor specific and human readable options.
-</p>
-</dd>
-</dl></div>
+<div class="paragraph"><p>Deprecated alias for linknvme-log-sanitize[1], kept for scripts written
+against nvme-cli versions older than 3.0. Options and behavior are
+identical; only the top-level command name is retained.</p></div>
+<div class="paragraph"><p>New scripts should use <em>nvme log sanitize</em> instead. This alias prints a
+deprecation warning on stderr and may be removed in a future release.</p></div>
+<div class="paragraph"><p>See linknvme-log-sanitize[1] for the full option reference.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -921,23 +847,19 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div class="sect1">
 <h2 id="_examples">EXAMPLES</h2>
 <div class="sectionbody">
-<div class="ulist"><ul>
-<li>
-<p>
-Has the program issue Sanitize-log Command :
-</p>
-<div class="listingblock">
-<div class="content">
-<pre><code># nvme sanitize-log /dev/nvme0</code></pre>
-</div></div>
-</li>
-</ul></div>
+<div class="paragraph"><p>No Examples</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_nvme">NVME</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Part of the nvme-user suite.</p></div>
+<div class="paragraph"><p>Part of the nvme-user suite</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>linknvme-log-sanitize[1]</p></div>
 </div>
 </div>
 </div>
@@ -945,7 +867,7 @@ Has the program issue Sanitize-log Command :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

@@ -749,7 +749,7 @@ nvme-dir-send(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>dir-send</em> &lt;device&gt;
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>dir send</em> &lt;device&gt;
                         [--namespace-id=&lt;nsid&gt; | -n &lt;nsid&gt;]
                         [--data-len=&lt;data-len&gt; | -l &lt;data-len&gt;]
                         [--dir-type=&lt;dtype&gt; | -D &lt;dtype&gt;]
@@ -774,6 +774,9 @@ device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></di
 returned in one of several ways depending on the option flags; the
 structure may parsed by the program and displayed in hex, or the raw buffer
 may be printed to stdout for another program to parse.</p></div>
+<div class="paragraph"><p>The bare <em>nvme dir-send</em> form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use <em>nvme dir send</em> instead.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -998,7 +1001,7 @@ Enable streams directive :
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme dir-send /dev/nvme0n1 --dir-type 0 --dir-oper 1 --target-dir 1 --endir 1</code></pre>
+<pre><code># nvme dir send /dev/nvme0n1 --dir-type 0 --dir-oper 1 --target-dir 1 --endir 1</code></pre>
 </div></div>
 </li>
 <li>
@@ -1007,7 +1010,7 @@ Disable streams directive :
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme dir-send /dev/nvme0n1 --dir-type 0 --dir-oper 1 --target-dir 1 --endir 0</code></pre>
+<pre><code># nvme dir send /dev/nvme0n1 --dir-type 0 --dir-oper 1 --target-dir 1 --endir 0</code></pre>
 </div></div>
 </li>
 <li>
@@ -1016,7 +1019,7 @@ Release all allocated streams resource :
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme dir-send /dev/nvme0n1 --dir-type 1 --dir-oper 2</code></pre>
+<pre><code># nvme dir send /dev/nvme0n1 --dir-type 1 --dir-oper 2</code></pre>
 </div></div>
 </li>
 <li>
@@ -1025,7 +1028,7 @@ Release stream ID 3 :
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme dir-send /dev/nvme0 --dir-type 1 --dir-oper 1 --dir-spec 3</code></pre>
+<pre><code># nvme dir send /dev/nvme0 --dir-type 1 --dir-oper 1 --dir-spec 3</code></pre>
 </div></div>
 <div class="paragraph"><p>It is probably a bad idea to not redirect stdout when using this mode.</p></div>
 </li>
@@ -1043,7 +1046,7 @@ Release stream ID 3 :
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

@@ -749,7 +749,7 @@ nvme-id-iocs(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>id-iocs</em> &lt;device&gt;
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>id iocs</em> &lt;device&gt;
                         [--controller-id=&lt;cntid&gt; | -c &lt;cntid&gt;]</pre>
 <div class="attribution">
 </div></div>
@@ -762,6 +762,9 @@ nvme-id-iocs(1) Manual Page
 Command Set data structure.</p></div>
 <div class="paragraph"><p>The &lt;device&gt; parameter is mandatory and may be either the NVMe character
 device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).</p></div>
+<div class="paragraph"><p>The bare <em>nvme id-iocs</em> form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use <em>nvme id iocs</em> instead.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -872,7 +875,7 @@ fields in a human readable format:
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme id-iocs /dev/nvme0</code></pre>
+<pre><code># nvme id iocs /dev/nvme0</code></pre>
 </div></div>
 </li>
 <li>
@@ -881,7 +884,7 @@ show the fields in human readable format
 </p>
 <div class="listingblock">
 <div class="content">
-<pre><code># nvme id-iocs /dev/nvme0 -H</code></pre>
+<pre><code># nvme id iocs /dev/nvme0 -H</code></pre>
 </div></div>
 </li>
 </ul></div>
@@ -898,7 +901,7 @@ show the fields in human readable format
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

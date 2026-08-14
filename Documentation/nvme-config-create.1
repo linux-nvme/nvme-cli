@@ -2,12 +2,12 @@
 .\"     Title: nvme-config-create
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-CONFIG\-CREATE" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-CONFIG\-CREATE" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,10 +34,7 @@ nvme-config-create \- Add an NVMe\-oF connection entry to the INI configuration
 .nf
 \fInvme\fR [<global\-options>] \fIconfig create\fR
                         [\-\-discovery]
-                        [\-\-persistent ]
-                        [\-\-no\-persistent ]
-                        [\-\-epcsd ]
-                        [\-\-no\-epcsd ]
+                        [\-\-persistent[=<no|auto|force>] ]
                         [\-\-host\-symname=<name>]
                         [\-\-output=<file>]
                         [<fabrics\-options>]
@@ -58,24 +55,43 @@ A connection with an explicit \-\-hostnqn or \-\-hostid is written to a drop\-in
 Create a discovery controller entry instead of an I/O controller entry\&. Without this, \-\-nqn is required\&.
 .RE
 .PP
-\-\-persistent
+\-\-persistent[=<no|auto|force>]
 .RS 4
-Keep the discovery controller connected to receive Asynchronous Event Notifications instead of disconnecting after the discovery log page fetch\&. Requires \-\-discovery\&. Mutually exclusive with \-\-no\-persistent\&.
+Record this discovery controller\(cqs persistence mode\&. Requires \-\-discovery\&. Because the value is optional, it must be attached directly to the option (\-\-persistent=force)\&. A value given as a separate argument (\-\-persistent force) is silently NOT applied  \(em it\(cqs dropped, and \-\-persistent is treated as if given bare (mode "auto"), with no error\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIauto\fR
+(the default when \-\-persistent is given with no value): persist the connection only where the target\(cqs own EPCSD (Explicit Persistent Connection Support for Discovery) flag reports support for it\&.
 .RE
-.PP
-\-\-no\-persistent
+.sp
 .RS 4
-Explicitly record that this discovery controller is not persistent, overriding any default that would otherwise apply (e\&.g\&. one derived from the discovery log page)\&. Requires \-\-discovery\&. Mutually exclusive with \-\-persistent\&.
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIforce\fR: persist regardless of what EPCSD reports, for a target whose self\-reported EPCSD cannot be trusted\&.
 .RE
-.PP
-\-\-epcsd
+.sp
 .RS 4
-Mark this discovery controller as supporting Explicit Persistent Connection Support for Discovery (EPCSD)\&. Requires \-\-discovery\&. Mutually exclusive with \-\-no\-epcsd\&.
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIno\fR: explicitly record that this discovery controller is not persistent, overriding any default that would otherwise apply\&.
 .RE
-.PP
-\-\-no\-epcsd
-.RS 4
-Explicitly record that this discovery controller does not support EPCSD, overriding any default that would otherwise apply\&. Requires \-\-discovery\&. Mutually exclusive with \-\-epcsd\&.
 .RE
 .PP
 \-\-host\-symname=<name>

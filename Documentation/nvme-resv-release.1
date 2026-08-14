@@ -2,12 +2,12 @@
 .\"     Title: nvme-resv-release
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-RESV\-RELEASE" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-RESV\-RELEASE" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ nvme-resv-release \- Release an nvme reservation
 .SH "SYNOPSIS"
 .sp
 .nf
-\fInvme\fR [<global\-options>] \fIresv\-release\fR <device>
+\fInvme\fR [<global\-options>] \fIresv release\fR <device>
                         [\-\-namespace\-id=<nsid> | \-n <nsid>]
                         [\-\-crkey=<crkey> | \-c <crkey>]
                         [\-\-rtype=<rtype> | \-t <rtype>]
@@ -42,6 +42,8 @@ nvme-resv-release \- Release an nvme reservation
 .SH "DESCRIPTION"
 .sp
 The Reservation Release command is used to release or clear a reservation held on a namespace\&.
+.sp
+The bare \fInvme resv\-release\fR form (without a space) still works as a deprecated alias and will be removed in a future major version\&. New scripts should use \fInvme resv release\fR instead\&.
 .SH "OPTIONS"
 .PP
 \-n <nsid>, \-\-namespace\-id=<nsid>

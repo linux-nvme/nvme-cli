@@ -1,0 +1,140 @@
+'\" t
+.\"     Title: nvme-gen-dhchap-key
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 08/14/2026
+.\"    Manual: NVMe Manual
+.\"    Source: NVMe
+.\"  Language: English
+.\"
+.TH "NVME\-GEN\-DHCHAP\-K" "1" "08/14/2026" "NVMe" "NVMe Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nvme-gen-dhchap-key \- Generate a host DH\-HMAC\-CHAP secret (deprecated)
+.SH "SYNOPSIS"
+.sp
+.nf
+\fInvme\fR [<global\-options>] \fIgen\-dhchap\-key\fR [\-\-hmac=<hmac\-id> | \-m <hmac\-id>]
+                        [\-\-secret=<secret> | \-s <secret>]
+                        [\-\-key\-length=<len> | \-l <len>]
+                        [\-\-nqn=<host\-nqn> | \-n <host\-nqn>]
+.fi
+.SH "DESCRIPTION"
+.sp
+Deprecated alias for linknvme\-keys\-gen\-kxchap\-secret[1], kept for scripts written against nvme\-cli versions older than 3\&.0\&. It forwards to that command, with three differences from nvme\-cli 2\&.x:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI\-\-nqn\fR/\fI\-n\fR
+is accepted and ignored, with a warning\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI\-\-secret\fR/\fI\-s\fR
+goes into the DHHC\-1 string as it stands, where 2\&.x put the key transformed from it, so the output differs whenever
+\fI\-\-hmac\fR
+is non\-zero\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fI\-\-secret\fR/\fI\-s\fR
+with an odd number of hexadecimal characters is rejected, where 2\&.x padded the trailing one with a zero and emitted a secret that was never given\&.
+.RE
+.sp
+New scripts should use \fInvme keys gen\-kxchap\-secret\fR instead\&. This alias prints a deprecation warning on stderr and may be removed in a future release\&.
+.sp
+See linknvme\-keys\-gen\-kxchap\-secret[1] for the full option reference\&.
+.SH "GLOBAL OPTIONS"
+.sp
+The following options are defined at the top\-level nvme command and are available to this subcommand:
+.PP
+\-\-dry\-run
+.RS 4
+Print the command that would be executed, but do not actually execute it\&.
+.RE
+.PP
+\-\-no\-ioctl\-probing
+.RS 4
+Disable probing for 64\-bit IOCTL support\&.
+.RE
+.PP
+\-\-no\-retries
+.RS 4
+Disable retry logic on transient errors\&.
+.RE
+.PP
+\-o <fmt>, \-\-output\-format=<fmt>
+.RS 4
+Set the reporting format to
+\fInormal\fR,
+\fItabular, \*(Aqjson\fR, or
+\fIbinary\fR\&. Only one output format may be used at a time\&.
+.RE
+.PP
+\-\-output\-format\-version=<version>
+.RS 4
+Select the output format version\&. Version
+\fI1\fR
+uses the original field naming, while version
+\fI2\fR
+(default) provides more consistent and script\-friendly field names\&.
+.RE
+.PP
+\-\-timeout=<ms>
+.RS 4
+Set the timeout for the command in milliseconds\&.
+.RE
+.PP
+\-v, \-\-verbose
+.RS 4
+Increase the level of detail in the output\&. May be specified multiple times to further increase verbosity\&.
+.RE
+.sp
+These options can also be set as machine\-wide defaults in nvme\-cli\&.conf(5)\&. A command\-line flag always overrides the file\&.
+.SH "EXAMPLES"
+.sp
+No Examples
+.SH "NVME"
+.sp
+Part of the nvme\-user suite
+.SH "SEE ALSO"
+.sp
+linknvme\-keys\-gen\-kxchap\-secret[1]

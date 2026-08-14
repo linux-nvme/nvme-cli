@@ -749,7 +749,7 @@ nvme-security-recv(1) Manual Page
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="verseblock">
-<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>security-recv</em> &lt;device&gt; [--size=&lt;size&gt; | -x &lt;size&gt;]
+<pre class="content"><em>nvme</em> [&lt;global-options&gt;] <em>security recv</em> &lt;device&gt; [--size=&lt;size&gt; | -x &lt;size&gt;]
                         [--secp=&lt;security-protocol&gt; | -p &lt;security-protocol&gt;]
                         [--spsp=&lt;protocol-specific&gt; | -s &lt;protocol-specific&gt;]
                         [--nssf=&lt;nvme-specific&gt; | -N &lt;nvme-specific&gt;]
@@ -774,6 +774,9 @@ to a Security Send command as defined by the rules of the Security
 Protocol. The Security Receive command data may not be retained if there
 is a loss of communication between the controller and host, or if a
 controller reset occurs.</p></div>
+<div class="paragraph"><p>The bare <em>nvme security-recv</em> form (without a space) still works as a deprecated
+alias and will be removed in a future major version. New scripts should
+use <em>nvme security recv</em> instead.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -963,7 +966,7 @@ nvme-cli.conf(5). A command-line flag always overrides the file.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-08-07 17:02:06 CEST
+ 2026-08-14 19:01:21 CEST
 </div>
 </div>
 </body>

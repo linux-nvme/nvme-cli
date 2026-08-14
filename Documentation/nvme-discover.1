@@ -2,12 +2,12 @@
 .\"     Title: nvme-discover
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/07/2026
+.\"      Date: 08/14/2026
 .\"    Manual: NVMe Manual
 .\"    Source: NVMe
 .\"  Language: English
 .\"
-.TH "NVME\-DISCOVER" "1" "08/07/2026" "NVMe" "NVMe Manual"
+.TH "NVME\-DISCOVER" "1" "08/14/2026" "NVMe" "NVMe Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,8 +36,9 @@ nvme-discover \- Send Get Log Page request to Discovery Controller\&.
                         [\-\-raw=<filename> | \-r <filename>]
                         [\-\-device=<device> | \-d <device>]
                         [\-\-config=<filename> | \-J <filename>]
-                        [\-\-persistent | \-p]
+                        [\-\-persistent[=<no|auto|force>] | \-p]
                         [\-\-quiet]
+                        [\-\-no\-reuse]
                         [\-\-force]
                         [\-\-nbft]
                         [\-\-no\-nbft]
@@ -83,9 +84,44 @@ to not read in an existing configuration file\&. The JSON configuration file for
 \m[blue]\fBhttps://github\&.com/linux\-nvme/nvme\-cli/blob/master/libnvme/doc/config\-schema\&.json\fR\m[]
 .RE
 .PP
-\-p, \-\-persistent
+\-p, \-\-persistent[=<no|auto|force>]
 .RS 4
-Don\(cqt remove the discovery controller after retrieving the discovery log page\&.
+Keep the discovery controller connected after retrieving the discovery log page, instead of disconnecting once it\(cqs done\&. Because the value is optional, it must be attached directly to the option: \-\-persistent=force for the long form, \-pforce for the short form\&. A value given as a separate argument (\-\-persistent force, \-p force) is silently NOT applied \(em it\(cqs dropped, and \-\-persistent/\-p is treated as if given bare (mode "auto"), with no error\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIno\fR
+(the default when the option is omitted entirely): never persist\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIauto\fR
+(the default when \-\-persistent is given with no value): persist a Discovery Log Page entry\(cqs connection only where that entry\(cqs own EPCSD (Explicit Persistent Connection Support for Discovery) flag reports support for it; degrade to non\-persistent, with a log message, for entries that don\(cqt\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIforce\fR: persist regardless of what EPCSD reports, for a target whose self\-reported EPCSD cannot be trusted\&.
+.RE
 .RE
 .PP
 \-\-quiet
@@ -93,9 +129,14 @@ Don\(cqt remove the discovery controller after retrieving the discovery log page
 Suppress already connected errors\&.
 .RE
 .PP
+\-\-no\-reuse
+.RS 4
+Always create a new connection, never reuse an existing one\&.
+.RE
+.PP
 \-\-force
 .RS 4
-Disable the built\-in persistent discovery controller connection rules\&. Combined with \-\-persistent flag, always create new persistent discovery controller connection\&.
+(deprecated, see \-\-no\-reuse)
 .RE
 .PP
 \-\-nbft
