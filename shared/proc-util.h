@@ -42,6 +42,20 @@ int shr_spawn(const char *const argv[], int out_fd, int err_fd,
 	      shr_proc_t *proc);
 
 /*
+ * Like shr_spawn(), but resolve argv[0] through PATH when it contains no path
+ * separator, mirroring execvp()/_spawnvp(). An argv[0] that already contains a
+ * path separator is used as-is (no PATH search). Because PATH search widens the
+ * set of binaries that may run, prefer shr_spawn() with an absolute path when
+ * the executable location is known.
+ *
+ * The out_fd/err_fd redirection, pipe-drain-before-wait, and *proc semantics
+ * are identical to shr_spawn().
+ * Return: 0 on success, -errno if the child could not be spawned.
+ */
+int shr_spawnp(const char *const argv[], int out_fd, int err_fd,
+	       shr_proc_t *proc);
+
+/*
  * Wait for a child from shr_spawn() and report how it ended. On success *exited
  * is set true if the child terminated normally and *code to its exit status;
  * *exited is false if it crashed or was killed by a signal.

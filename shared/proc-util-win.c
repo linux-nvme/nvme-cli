@@ -44,8 +44,8 @@ int shr_pipe(int fds[2])
 	return _pipe(fds, 1 << 16, _O_BINARY | _O_NOINHERIT) ? -errno : 0;
 }
 
-int shr_spawn(const char *const argv[], int out_fd, int err_fd,
-	      shr_proc_t *proc)
+static int _spawn(const char *const argv[], int out_fd, int err_fd,
+		  shr_proc_t *proc, bool search)
 {
 	int saved_out = -1, saved_err = -1;
 	intptr_t rc = -1;
@@ -83,7 +83,8 @@ int shr_spawn(const char *const argv[], int out_fd, int err_fd,
 	 * _P_NOWAIT so the child runs concurrently: the caller must drain a
 	 * pipe target before shr_wait_proc(); waiting here would deadlock.
 	 */
-	rc = _spawnv(_P_NOWAIT, argv[0], argv);
+	rc = search ? _spawnvp(_P_NOWAIT, argv[0], argv) :
+		      _spawnv(_P_NOWAIT, argv[0], argv);
 	if (rc == -1)
 		err = errno;
 
@@ -106,6 +107,18 @@ restore:
 	*proc = rc;
 
 	return 0;
+}
+
+int shr_spawn(const char *const argv[], int out_fd, int err_fd,
+	      shr_proc_t *proc)
+{
+	return _spawn(argv, out_fd, err_fd, proc, false);
+}
+
+int shr_spawnp(const char *const argv[], int out_fd, int err_fd,
+	       shr_proc_t *proc)
+{
+	return _spawn(argv, out_fd, err_fd, proc, true);
 }
 
 int shr_wait_proc(shr_proc_t proc, bool *exited, int *code)
