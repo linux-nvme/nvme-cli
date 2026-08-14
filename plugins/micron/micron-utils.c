@@ -12,8 +12,8 @@
 
 #include <libnvme.h>
 
-#include <fs-util.h>
-#include <proc-util.h>
+#include <shared/fs-util.h>
+#include <shared/proc-util.h>
 
 #include "micron-utils.h"
 
