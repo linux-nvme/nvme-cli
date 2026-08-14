@@ -134,8 +134,17 @@ int shr_ini_parse_file(const char *path, shr_ini_parse_fn callback,
 		return -EISDIR;
 
 	f = fopen(path, "r");
-	if (!f)
-		return -errno;
+	if (!f) {
+		/*
+		 * fopen() refuses a directory with different errno values on
+		 * different platforms. Re-classify based on stat() so -EISDIR
+		 * is reported for all platforms.
+		 */
+		ret = -errno;
+		if (stat(path, &st) == 0 && S_ISDIR(st.st_mode))
+			ret = -EISDIR;
+		return ret;
+	}
 
 	if (fstat(fileno(f), &st) < 0) {
 		ret = -errno;
