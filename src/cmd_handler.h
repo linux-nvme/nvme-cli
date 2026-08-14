@@ -19,6 +19,10 @@ static int f(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 #define ENTRY_DEPRECATED(n, h, f, ...) \
 static int f(int argc, char **argv, struct command *acmd, struct plugin *plugin);
 
+#undef GL_ENT
+#define GL_ENT(n, h, f, ...) \
+int f(int argc, char **argv, struct command *acmd, struct plugin *plugin);
+
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...) args
 
@@ -80,6 +84,9 @@ static struct command f ## _cmd = {	\
 #define ENTRY_DEPRECATED(...) 		\
 	ENTRY_DEPRECATED_SEL(__VA_ARGS__, ENTRY_DEPRECATED_W_ALIAS, ENTRY_DEPRECATED_WO_ALIAS)(__VA_ARGS__)
 
+#undef GL_ENT
+#define GL_ENT ENTRY
+
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...) args
 
@@ -105,6 +112,9 @@ static struct command f ## _cmd = {	\
 
 #undef ENTRY_DEPRECATED
 #define ENTRY_DEPRECATED(n, h, f, ...) &f ## _cmd,
+
+#undef GL_ENT
+#define GL_ENT ENTRY
 
 #undef COMMAND_LIST
 #define COMMAND_LIST(args...)	\
