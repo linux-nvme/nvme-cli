@@ -87,9 +87,23 @@ int shr_unlink(const char *path)
 	return 0;
 }
 
+int shr_rmdir(const char *path)
+{
+	if (rmdir(path) < 0)
+		return -errno;
+	return 0;
+}
+
 bool shr_fd_is_open(int fd)
 {
 	return fcntl(fd, F_GETFD) != -1;
+}
+
+int shr_close(int fd)
+{
+	if (close(fd) < 0)
+		return -errno;
+	return 0;
 }
 
 char *shr_dirname(char *path)
