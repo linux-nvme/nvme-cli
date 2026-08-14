@@ -30,7 +30,6 @@
 #include "security-plugin.h"
 
 static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
-static const char *namespace_desired = "desired namespace";
 static const char *nssf = "NVMe Security Specific Field";
 static const char *raw_dump = "dump output in binary format";
 static const char *secp = "security protocol (cf. SPC-4)";

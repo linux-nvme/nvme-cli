@@ -98,15 +98,19 @@ COMMAND_LIST(
 	ENTRY_DEPRECATED("resv-release", "Submit a Reservation Release, return results (deprecated, use 'nvme resv release')", resv_release)
 	ENTRY_DEPRECATED("resv-report", "Submit a Reservation Report, return results (deprecated, use 'nvme resv report')", resv_report)
 #endif /* CONFIG_DEPRECATED_CMDS */
-	ENTRY("dsm", "Submit a Data Set Management command, return results", dsm)
-	ENTRY("copy", "Submit a Simple Copy command, return results", copy_cmd)
-	ENTRY("flush", "Submit a Flush command, return results", flush_cmd)
-	ENTRY("compare", "Submit a Compare command, return results", compare)
-	ENTRY("read", "Submit a read command, return results", read_cmd)
-	ENTRY("write", "Submit a write command, return results", write_cmd)
-	ENTRY("write-zeroes", "Submit a write zeroes command, return results", write_zeroes)
-	ENTRY("write-uncor", "Submit a write uncorrectable command, return results", write_uncor)
-	ENTRY("verify", "Submit a verify command, return results", verify_cmd)
+	GL_ENT("dsm", "Submit a Data Set Management command, return results",
+	       dsm)
+	GL_ENT("copy", "Submit a Simple Copy command, return results", copy_cmd)
+	GL_ENT("flush", "Submit a Flush command, return results", flush_cmd)
+	GL_ENT("compare", "Submit a Compare command, return results", compare)
+	GL_ENT("read", "Submit a read command, return results", read_cmd)
+	GL_ENT("write", "Submit a write command, return results", write_cmd)
+	GL_ENT("write-zeroes", "Submit a write zeroes command, return results",
+	       write_zeroes)
+	GL_ENT("write-uncor",
+	       "Submit a write uncorrectable command, return results",
+	       write_uncor)
+	GL_ENT("verify", "Submit a verify command, return results", verify_cmd)
 	ENTRY("sanitize", "Submit a sanitize command", sanitize_cmd)
 #ifdef CONFIG_DEPRECATED_CMDS
 	ENTRY_DEPRECATED("sanitize-log", "Retrieve sanitize log, show it (deprecated, use 'nvme log sanitize')", sanitize_log)

@@ -26,7 +26,6 @@
 
 static const char *crkey = "current reservation key";
 static const char *iekey = "ignore existing res. key";
-static const char *namespace_desired = "desired namespace";
 static const char *raw_dump = "dump output in binary format";
 static const char *rtype = "reservation type";
 

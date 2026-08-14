@@ -29,8 +29,6 @@
 #define CREATE_CMD
 #include "nvme-mi-plugin.h"
 
-static const char *namespace_desired = "desired namespace";
-
 static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
 {
 	const char *opcode = "opcode (required)";

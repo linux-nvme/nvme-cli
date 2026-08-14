@@ -23,8 +23,9 @@ struct nvme_args nvme_args = {
 };
 
 const char *latency = "output latency statistics";
-const char *uuid_index = "UUID index";
+const char *namespace_desired = "desired namespace";
 const char *namespace_id_desired = "identifier of desired namespace";
+const char *uuid_index = "UUID index";
 
 int parse_args(int argc, char *argv[], const char *desc,
 	       struct argconfig_commandline_options *opts)

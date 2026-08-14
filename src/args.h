@@ -85,8 +85,9 @@ enum nvme_print_flags {
 		##__VA_ARGS__)
 
 extern const char *latency;
-extern const char *uuid_index;
+extern const char *namespace_desired;
 extern const char *namespace_id_desired;
+extern const char *uuid_index;
 
 int parse_args(int argc, char *argv[], const char *desc,
 	       struct argconfig_commandline_options *opts);
