@@ -20,7 +20,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 
 /* Device Config */
 #define SNDK_NVME_WDC_VID                   0x1b96

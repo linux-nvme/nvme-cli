@@ -29,7 +29,7 @@
 #include <shared/uint128-util.h>
 #include <shared/uuid-util.h>
 #include <shared/int-util.h>
-#include <shared/table.h>
+#include <shared/table-util.h>
 #include <shared/mmio-util.h>
 #include <cleanup.h>
 

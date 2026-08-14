@@ -20,7 +20,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/array_size/array_size.h>
 
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 
 #include <shared/int-util.h>
 #include <shared/progress-util.h>

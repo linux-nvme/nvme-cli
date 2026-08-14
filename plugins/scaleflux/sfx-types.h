@@ -2,7 +2,7 @@
 
 #include <inttypes.h>
 
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 
 #define FMT_RED     "\x1b[31m"
 #define FMT_GREEN   "\x1b[32m"

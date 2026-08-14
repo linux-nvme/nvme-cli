@@ -19,8 +19,8 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
 
-#include <shared/compiler-attributes.h>
-#include <shared/ini.h>
+#include <shared/compiler-attributes-util.h>
+#include <shared/ini-util.h>
 #include <shared/parse-util.h>
 #include <shared/string-util.h>
 

@@ -10,7 +10,7 @@
  * mi-mctp: open a MI connection over MCTP, and query controller info
  */
 
-#include <shared/shr-assert.h>
+#include <shared/assert-util.h>
 #include <ctype.h>
 #include <err.h>
 #include <stddef.h>

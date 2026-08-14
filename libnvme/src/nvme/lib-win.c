@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <strings.h>
 
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 
 #include "cleanup.h"

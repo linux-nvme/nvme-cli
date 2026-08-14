@@ -37,7 +37,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/uint128-util.h>
 #include <shared/time-util.h>

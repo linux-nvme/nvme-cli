@@ -8,7 +8,7 @@
  * host/subsystem creation, deduplication, iteration, and attribute getters.
  */
 
-#include <shared/shr-assert.h>
+#include <shared/assert-util.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>

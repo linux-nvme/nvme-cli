@@ -9,7 +9,7 @@
  * reporting, exact line numbers, and the parse-abort contract.
  */
 
-#include <shared/shr-assert.h>
+#include <shared/assert-util.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -17,7 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <shared/ini.h>
+#include <shared/ini-util.h>
 
 #define MAX_EVENTS 32
 

@@ -4,7 +4,7 @@
  * Copyright (c) 2023 Daniel Wagner, SUSE LLC
  */
 
-#include <shared/shr-assert.h>
+#include <shared/assert-util.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>

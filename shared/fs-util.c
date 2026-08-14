@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "cleanup.h"
+#include "cleanup-util.h"
 #include "fs-util.h"
 
 int shr_mkdir_p(const char *path, mode_t mode)

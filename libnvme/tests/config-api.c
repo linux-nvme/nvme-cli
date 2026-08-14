@@ -9,7 +9,7 @@
  * exported by the version script.
  */
 
-#include <shared/shr-assert.h>
+#include <shared/assert-util.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>

@@ -36,7 +36,7 @@
 #include <ccan/str/str.h>
 
 #include <shared/array-util.h>
-#include <shared/compiler-attributes.h>
+#include <shared/compiler-attributes-util.h>
 
 #include <libnvme.h>
 

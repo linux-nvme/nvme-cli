@@ -45,7 +45,7 @@
 
 /* https://web.mit.edu/freebsd/head/sys/libkern/crc32.c */
 
-#include "crc32.h"
+#include "crc32-util.h"
 
 static const uint32_t crc32_tab[] = {
 	0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,

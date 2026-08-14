@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "shr-assert.h"
+#include "assert-util.h"
 
 void shr_assert_fail(const char *file, int line, const char *cond)
 {

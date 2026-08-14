@@ -5,7 +5,7 @@
  */
 
 #undef NDEBUG
-#include <shared/shr-assert.h>
+#include <shared/assert-util.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>

@@ -10,8 +10,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include <shared/compiler-attributes.h>
-#include <shared/shr-assert.h>
+#include <shared/compiler-attributes-util.h>
+#include <shared/assert-util.h>
 
 #include <libnvme.h>
 

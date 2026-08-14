@@ -13,7 +13,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <shared/shr-assert.h>
+#include <shared/assert-util.h>
 
 static bool check_bool(const char *name, bool got, bool want)
 {
@@ -100,7 +100,7 @@ static bool test_fail_flushes_and_reports(void)
 	pass &= check_bool("buffered output before failure survived",
 			   strstr(buf, "marker-before-failure") != NULL, true);
 	pass &= check_bool("diagnostic names this file",
-			   strstr(buf, "test-shr-assert.c") != NULL, true);
+			   strstr(buf, "test-assert-util.c") != NULL, true);
 	pass &= check_bool("diagnostic names failing condition",
 			   strstr(buf, "1 == 2") != NULL, true);
 

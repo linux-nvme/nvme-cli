@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "table.h"
+#include "table-util.h"
 
 #if !NVME_HAVE_REALLOCARRAY
 #include <stdint.h>

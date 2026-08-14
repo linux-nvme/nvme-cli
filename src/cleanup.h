@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #pragma once
 
-#include <shared/cleanup.h>
+#include <shared/cleanup-util.h>
 #include <libnvme.h>
 
 static inline void libnvme_freep(void *p)

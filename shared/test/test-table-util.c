@@ -11,8 +11,8 @@
 #include <string.h>
 
 #include <shared/fs-util.h>
-#include <shared/shr-assert.h>
-#include <shared/table.h>
+#include <shared/assert-util.h>
+#include <shared/table-util.h>
 
 static bool check_bool(const char *name, bool got)
 {
