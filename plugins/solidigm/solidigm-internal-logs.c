@@ -272,7 +272,7 @@ static int ilog_dump_assert_logs(struct libnvme_transport_handle *hdl, struct il
 	err = write_header((__u8 *)ad, output, ad->header.header_size * DWORD_SIZE);
 	if (err) {
 		nvme_show_perror("write failure");
-		close(output);
+		shr_close(output);
 		return err;
 	}
 	cmd.addr = (__u64)(uintptr_t)buf;
@@ -291,11 +291,11 @@ static int ilog_dump_assert_logs(struct libnvme_transport_handle *hdl, struct il
 		err = cmd_dump_repeat(&cmd, ad->core[i].assertsize, output,
 				      hdl, false);
 		if (err) {
-			close(output);
+			shr_close(output);
 			return err;
 		}
 	}
-	close(output);
+	shr_close(output);
 	nvme_show_verbose_result("Successfully wrote Assert to %s", file_path);
 	return err;
 }
@@ -329,7 +329,7 @@ static int ilog_dump_event_logs(struct libnvme_transport_handle *hdl, struct ilo
 	core_num = ehdr->header.numcores;
 
 	if (err) {
-		close(output);
+		shr_close(output);
 		return err;
 	}
 	cmd.addr = (__u64)(uintptr_t)buf;
@@ -349,11 +349,11 @@ static int ilog_dump_event_logs(struct libnvme_transport_handle *hdl, struct ilo
 		err = cmd_dump_repeat(&cmd, ehdr->edumps[j].coresize,
 				output, hdl, false);
 		if (err) {
-			close(output);
+			shr_close(output);
 			return err;
 		}
 	}
-	close(output);
+	shr_close(output);
 	nvme_show_verbose_result("Successfully wrote Events to %s", file_path);
 	return err;
 }
@@ -410,7 +410,7 @@ static int ilog_dump_nlogs(struct libnvme_transport_handle *hdl, struct ilog *il
 			err = read_header(&cmd, hdl);
 			if (err) {
 				if (is_open)
-					close(output);
+					shr_close(output);
 				return err;
 			}
 			count = nlog_header->totalnlogs;
@@ -441,7 +441,7 @@ static int ilog_dump_nlogs(struct libnvme_transport_handle *hdl, struct ilog *il
 			break;
 	} while (++log_select.selectCore < core_num);
 	if (is_open) {
-		close(output);
+		shr_close(output);
 		nvme_show_verbose_result("Successfully wrote Nlog to %s", file_path);
 	}
 	return err;

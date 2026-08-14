@@ -466,14 +466,14 @@ static struct command_metadata_program *build_model(struct program *prog)
 	fflush(stderr);
 	if (saved_stdout >= 0) {
 		dup2(saved_stdout, STDOUT_FILENO);
-		close(saved_stdout);
+		shr_close(saved_stdout);
 	}
 	if (saved_stderr >= 0) {
 		dup2(saved_stderr, STDERR_FILENO);
-		close(saved_stderr);
+		shr_close(saved_stderr);
 	}
 	if (devnull >= 0)
-		close(devnull);
+		shr_close(devnull);
 
 	/*
 	 * An allocation failure while capturing would leave an incomplete model

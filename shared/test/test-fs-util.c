@@ -14,12 +14,8 @@
 #include <string.h>
 
 #if defined(_WIN32)
-#include <direct.h>
 #include <fcntl.h>
 #include <io.h>
-#define rmdir _rmdir
-#define close _close
-#define unlink _unlink
 #define read _read
 #define write _write
 #else
@@ -147,7 +143,7 @@ static bool test_mkdir(void)
 	printf("test_mkdir:\n");
 
 	/* Clean up if it was left over from a previous crashed run */
-	rmdir(dir);
+	shr_rmdir(dir);
 
 	ret = shr_mkdir(dir, 0755);
 	pass &= check_ret("creates directory", ret, 0);
@@ -157,7 +153,7 @@ static bool test_mkdir(void)
 	ret = shr_mkdir(dir, 0755);
 	pass &= check_ret("re-running on an existing directory returns -EEXIST", ret, -EEXIST);
 
-	rmdir(dir);
+	shr_rmdir(dir);
 
 	return pass;
 }
@@ -197,9 +193,34 @@ static bool test_mkdir_p(void)
 	}
 
 	/* Clean up what we created, deepest first. */
-	rmdir("shr-test-mkdir-p-dir/level1/level2");
-	rmdir("shr-test-mkdir-p-dir/level1");
-	rmdir("shr-test-mkdir-p-dir");
+	shr_rmdir("shr-test-mkdir-p-dir/level1/level2");
+	shr_rmdir("shr-test-mkdir-p-dir/level1");
+	shr_rmdir("shr-test-mkdir-p-dir");
+
+	return pass;
+}
+
+static bool test_rmdir(void)
+{
+	static const char *dir = "shr-test-rmdir-dir";
+	bool pass = true;
+	int ret;
+
+	printf("test_rmdir:\n");
+
+	/* Clean up if it was left over from a previous crashed run */
+	shr_rmdir(dir);
+
+	shr_mkdir(dir, 0755);
+
+	ret = shr_rmdir(dir);
+	pass &= check_ret("removes an empty directory", ret, 0);
+	pass &= check_bool("the directory is really gone",
+			    !dir_is_writable(dir));
+
+	ret = shr_rmdir(dir);
+	pass &= check_ret("removing a missing directory returns -ENOENT",
+			   ret, -ENOENT);
 
 	return pass;
 }
@@ -226,8 +247,8 @@ static bool test_mkstemp(void)
 			    flags >= 0 && (flags & FD_CLOEXEC));
 #endif
 
-	close(fd);
-	unlink(template);
+	shr_close(fd);
+	shr_unlink(template);
 
 	return pass;
 }
@@ -268,9 +289,9 @@ static bool test_mkdir_from_fname(void)
 	}
 
 	/* Clean up what we created, deepest first. */
-	rmdir("shr-test-mkdir-fname-dir/level1/level2");
-	rmdir("shr-test-mkdir-fname-dir/level1");
-	rmdir("shr-test-mkdir-fname-dir");
+	shr_rmdir("shr-test-mkdir-fname-dir/level1/level2");
+	shr_rmdir("shr-test-mkdir-fname-dir/level1");
+	shr_rmdir("shr-test-mkdir-fname-dir");
 
 	return pass;
 }
@@ -319,8 +340,8 @@ static bool test_read_file(void)
 	buf = shr_read_file(NULL, "shr-test-read-file-does-not-exist", &size, 1);
 	pass &= check_bool("a missing file returns NULL", buf == NULL);
 
-	unlink(path);
-	rmdir(dir);
+	shr_unlink(path);
+	shr_rmdir(dir);
 
 	return pass;
 }
@@ -351,7 +372,34 @@ static bool test_dev_null(void)
 	fd = open(shr_dev_null(), O_WRONLY);
 	pass &= check_bool("the returned path can be opened for writing", fd >= 0);
 	if (fd >= 0)
-		close(fd);
+		shr_close(fd);
+
+	return pass;
+}
+
+static bool test_close(void)
+{
+	static const char *name = "shr-test-close-file";
+	bool pass = true;
+	int fd, ret;
+
+	printf("test_close:\n");
+
+	fd = open(name, O_RDWR | O_CREAT | O_TRUNC, 0644);
+	pass &= check_bool("test file created", fd >= 0);
+	if (fd < 0)
+		return pass;
+
+	pass &= check_bool("fd is open before closing", shr_fd_is_open(fd));
+
+	ret = shr_close(fd);
+	pass &= check_ret("closes a valid fd", ret, 0);
+	pass &= check_bool("fd is no longer open", !shr_fd_is_open(fd));
+
+	ret = shr_close(fd);
+	pass &= check_bool("closing an already-closed fd fails", ret < 0);
+
+	shr_unlink(name);
 
 	return pass;
 }
@@ -372,8 +420,8 @@ static bool test_fsync(void)
 	ret = shr_fsync(fd);
 	pass &= check_ret("fsync of a real fd succeeds", ret, 0);
 
-	close(fd);
-	unlink(name);
+	shr_close(fd);
+	shr_unlink(name);
 
 	ret = shr_fsync(fd);
 	pass &= check_bool("fsync of a closed fd fails", ret < 0);
@@ -413,7 +461,7 @@ static bool test_open_rawdata(void)
 		n = write(fd, content, strlen(content));
 		pass &= check_bool("writes the expected number of bytes",
 				    n == (ssize_t)strlen(content));
-		close(fd);
+		shr_close(fd);
 	}
 
 	fd = shr_open_rawdata(name, O_RDONLY);
@@ -425,10 +473,10 @@ static bool test_open_rawdata(void)
 		pass &= check_bool("content survives the round trip",
 				    n == (ssize_t)strlen(content) &&
 				    !memcmp(buf, content, strlen(content)));
-		close(fd);
+		shr_close(fd);
 	}
 
-	unlink(name);
+	shr_unlink(name);
 
 	return pass;
 }
@@ -441,11 +489,13 @@ int main(void)
 	pass &= test_dirname();
 	pass &= test_mkdir();
 	pass &= test_mkdir_p();
+	pass &= test_rmdir();
 	pass &= test_mkdir_from_fname();
 	pass &= test_mkstemp();
 	pass &= test_read_file();
 	pass &= test_fsync_dir();
 	pass &= test_dev_null();
+	pass &= test_close();
 	pass &= test_fsync();
 	pass &= test_getpagesize();
 	pass &= test_open_rawdata();

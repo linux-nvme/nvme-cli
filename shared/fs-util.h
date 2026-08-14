@@ -31,6 +31,12 @@ int shr_mkdir_p(const char *path, mode_t mode);
 int shr_mkdir_from_fname(const char *file, mode_t mode);
 
 /*
+ * Remove an empty directory.
+ * Return: 0 on success, -errno otherwise.
+ */
+int shr_rmdir(const char *path);
+
+/*
  * mkstemp(), with O_CLOEXEC set atomically where possible.
  * Return: an open fd on success, -errno otherwise.
  */
@@ -41,6 +47,12 @@ void shr_fsync_dir(const char *path);
 
 /* Return true if fd is still an open file descriptor, false once closed. */
 bool shr_fd_is_open(int fd);
+
+/*
+ * Close a file descriptor.
+ * Return: 0 on success, -errno otherwise.
+ */
+int shr_close(int fd);
 
 /*
  * Remove a file.

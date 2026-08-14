@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "fs-util.h"
+
 #define __cleanup(fn) __attribute__((cleanup(fn)))
 
 #define DECLARE_CLEANUP_FUNC(name, type) \
@@ -47,7 +49,7 @@ static inline void cleanup_dirents(struct dirents *ents)
 static inline void shr_cleanup_fd(int *fd)
 {
 	if (*fd > STDERR_FILENO)
-		close(*fd);
+		shr_close(*fd);
 }
 #define __cleanup_fd __cleanup(shr_cleanup_fd)
 
