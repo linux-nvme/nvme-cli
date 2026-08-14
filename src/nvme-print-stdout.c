@@ -6639,7 +6639,8 @@ static void stdout_key_value(const char *key, const char *val, va_list ap)
 }
 
 #ifdef CONFIG_FABRICS
-static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
+static void stdout_discovery_log(const struct nvmf_discovery_log *log,
+				  int numrec)
 {
 	int i;
 
@@ -6647,19 +6648,24 @@ static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 	       numrec, le64_to_cpu(log->genctr));
 
 	for (i = 0; i < numrec; i++) {
-		struct nvmf_disc_log_entry *e = &log->entries[i];
+		const struct nvmf_disc_log_entry *e = &log->entries[i];
 
+		/*
+		 * e->trsvcid/subnqn/traddr are fixed-width fields off the
+		 * wire, not guaranteed NUL-terminated by a non-compliant DC.
+		 * %-.*s bounds the read to the field's own size regardless.
+		 */
 		printf("=====Discovery Log Entry %d======\n", i);
 		printf("trtype:  %s\n", libnvmf_trtype_str(e->trtype));
 		printf("adrfam:  %s\n",
-			strlen(e->traddr) ?
+			e->traddr[0] ?
 			libnvmf_adrfam_str(e->adrfam) : "");
 		printf("subtype: %s\n", libnvmf_subtype_str(e->subtype));
 		printf("treq:    %s\n", libnvmf_treq_str(e->treq));
 		printf("portid:  %d\n", le16_to_cpu(e->portid));
-		printf("trsvcid: %s\n", e->trsvcid);
-		printf("subnqn:  %s\n", e->subnqn);
-		printf("traddr:  %s\n", e->traddr);
+		printf("trsvcid: %-.*s\n", (int)sizeof(e->trsvcid), e->trsvcid);
+		printf("subnqn:  %-.*s\n", (int)sizeof(e->subnqn), e->subnqn);
+		printf("traddr:  %-.*s\n", (int)sizeof(e->traddr), e->traddr);
 		printf("eflags:  %s\n",
 		       libnvmf_eflags_str(le16_to_cpu(e->eflags)));
 
@@ -6682,7 +6688,10 @@ static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec)
 	}
 }
 #else
-static void stdout_discovery_log(struct nvmf_discovery_log *log, int numrec) {}
+static void stdout_discovery_log(const struct nvmf_discovery_log *log,
+				  int numrec)
+{
+}
 #endif
 
 #ifdef CONFIG_FABRICS

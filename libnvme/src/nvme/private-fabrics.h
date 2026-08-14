@@ -51,7 +51,7 @@ struct libnvmf_hooks {
 
 	/* discovery hooks */
 	void (*discovery_log)(struct libnvmf_context *fctx,
-			struct nvmf_discovery_log *log,
+			const struct nvmf_discovery_log *log,
 			uint64_t numrec, void *user_data);
 
 	/*

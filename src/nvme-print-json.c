@@ -19,6 +19,7 @@
 #include <ccan/minmax/minmax.h>
 
 #include <shared/mmio-util.h>
+#include <shared/string-util.h>
 
 #include "nvme-print.h"
 #include "nvme-json.h"
@@ -5247,7 +5248,23 @@ static void json_directive_show(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __
 }
 
 #ifdef CONFIG_FABRICS
-static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
+/*
+ * Copy a fixed-size, not-necessarily-NUL-terminated wire field @s of
+ * size @sz into a newly allocated, NUL-terminated, right-trimmed C
+ * string. "%.*s" bounds the read to @sz regardless of whether s
+ * contains a NUL. Returns NULL on allocation failure.
+ */
+static char *buf2str(const char s[], size_t sz)
+{
+	char *p;
+
+	if (asprintf(&p, "%.*s", (int)sz, s) < 0)
+		return NULL;
+
+	return shr_rtrim(p);
+}
+
+static void json_discovery_log(const struct nvmf_discovery_log *log, int numrec)
 {
 	struct json_object *r = json_r;
 	struct json_object *entries = json_create_array();
@@ -5257,17 +5274,31 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 	obj_add_array(r, "records", entries);
 
 	for (i = 0; i < numrec; i++) {
-		struct nvmf_disc_log_entry *e = &log->entries[i];
+		const struct nvmf_disc_log_entry *e = &log->entries[i];
 		struct json_object *entry = json_create_object();
+		/*
+		 * e->trsvcid/subnqn/traddr are fixed-width fields off the wire,
+		 * not guaranteed NUL-terminated. json_object_new_string()
+		 * needs a NUL-terminated C string, so make NUL-terminated
+		 * copies and trim trailing spaces (if any). Members of e
+		 * cannot be modified directly (we do not own that data).
+		 */
+		__cleanup_free char *trsvcid = NULL;
+		__cleanup_free char *traddr = NULL;
+		__cleanup_free char *subnqn = NULL;
+
+		trsvcid = buf2str(e->trsvcid, sizeof(e->trsvcid));
+		traddr = buf2str(e->traddr, sizeof(e->traddr));
+		subnqn = buf2str(e->subnqn, sizeof(e->subnqn));
 
 		obj_add_str(entry, "trtype", libnvmf_trtype_str(e->trtype));
 		obj_add_str(entry, "adrfam", libnvmf_adrfam_str(e->adrfam));
 		obj_add_str(entry, "subtype", libnvmf_subtype_str(e->subtype));
 		obj_add_str(entry, "treq", libnvmf_treq_str(e->treq));
 		obj_add_uint(entry, "portid", le16_to_cpu(e->portid));
-		obj_add_str(entry, "trsvcid", e->trsvcid);
-		obj_add_str(entry, "subnqn", e->subnqn);
-		obj_add_str(entry, "traddr", e->traddr);
+		obj_add_str(entry, "trsvcid", trsvcid);
+		obj_add_str(entry, "subnqn", subnqn);
+		obj_add_str(entry, "traddr", traddr);
 		obj_add_str(entry, "eflags", libnvmf_eflags_str(le16_to_cpu(e->eflags)));
 
 		switch (e->trtype) {
@@ -5287,7 +5318,10 @@ static void json_discovery_log(struct nvmf_discovery_log *log, int numrec)
 	}
 }
 #else
-static void json_discovery_log(struct nvmf_discovery_log *log, int numrec) {}
+static void json_discovery_log(const struct nvmf_discovery_log *log,
+				int numrec)
+{
+}
 #endif
 
 #ifdef CONFIG_FABRICS

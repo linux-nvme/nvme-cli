@@ -1827,8 +1827,8 @@ void nvme_show_verbose_key_value(const char *key, const char *val, ...)
 	va_end(ap);
 }
 
-void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
-			     nvme_print_flags_t flags)
+void nvme_show_discovery_log(const struct nvmf_discovery_log *log,
+			     uint64_t numrec, nvme_print_flags_t flags)
 {
 	nvme_print(discovery_log, flags, log, numrec);
 }
