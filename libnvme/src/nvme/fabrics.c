@@ -77,20 +77,6 @@ static inline void cleanup_ctrl_params(struct libnvme_ctrl_params *params)
 }
 #define __cleanup_ctrl_params __cleanup(cleanup_ctrl_params)
 
-/**
- * strchomp() - Strip trailing spaces
- * @str: String to strip
- * @max: Maximum length of string
- */
-static void strchomp(char *str, int max)
-{
-	int i;
-
-	for (i = max - 1; i >= 0 && str[i] == ' '; i--) {
-		str[i] = '\0';
-	}
-}
-
 const char *arg_str(const char * const *strings,
 		size_t array_size, size_t idx)
 {
@@ -2043,8 +2029,21 @@ out_free_log:
 static void sanitize_discovery_log_entry(struct libnvme_global_ctx *ctx,
 		struct nvmf_disc_log_entry *e)
 {
-	strchomp(e->trsvcid, sizeof(e->trsvcid));
-	strchomp(e->traddr, sizeof(e->traddr));
+	/*
+	 * Force a NUL terminator into the last byte. Every buffer here is
+	 * far larger than any value a compliant peer can send, so this only
+	 * ever truncates a non-compliant one. The purpose is to keep the
+	 * field from being read as an unbounded char *. This must run
+	 * before shr_rtrim() below, which relies on the field already being
+	 * terminated.
+	 */
+	e->trsvcid[sizeof(e->trsvcid) - 1] = '\0';
+	e->subnqn[sizeof(e->subnqn) - 1] = '\0';
+	e->traddr[sizeof(e->traddr) - 1] = '\0';
+
+	shr_rtrim(e->trsvcid);
+	shr_rtrim(e->traddr);
+	shr_rtrim(e->subnqn);
 
 	/*
 	 * Report traddr always in 'nn-0x:pn-0x' format, but some discovery logs
@@ -2999,6 +2998,12 @@ static void dc_walk_referral(struct libnvme_global_ctx *ctx,
  * this DC's own self entry (SUBTYPE 03h) -- the only place this DC's own
  * EPCSD is ever reported. Returns whether c should be disconnected once
  * its own Discovery Log Page has been fully walked.
+ *
+ * Sanitizing here, not right after the fetch, is deliberate: fctx->hooks
+ * .discovery_log fires before this runs, and it must see the log page
+ * exactly as the DC returned it (e.g. for --raw). Only Pass 2's connect
+ * logic, which runs after this pass completes, needs the guaranteed-
+ * terminated strings this pass produces.
  */
 static bool dc_survey_self_entry(struct libnvmf_context *fctx,
 		struct libnvme_ctrl *c, enum dc_ownership own, bool primary,

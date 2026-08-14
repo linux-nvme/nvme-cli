@@ -23,7 +23,8 @@ static void arbitrary_ascii_string(size_t max_len, char *str, char *log_str)
 	size_t len;
 	size_t i;
 
-	len = arbitrary_range(max_len + 1);
+	/* Cap below max_len so at least one padding/terminator byte remains. */
+	len = arbitrary_range(max_len);
 	for (i = 0; i < len; i++) {
 		/*
 		 * ASCII strings shall contain only code values 20h through 7Eh.
@@ -54,6 +55,26 @@ static int fetch_discovery_log(libnvme_ctrl_t c,
 	return err;
 }
 
+/*
+ * Unlike trsvcid/traddr, subnqn is a null-terminated string (NVMe Base
+ * Spec 2.4, section 4.7): unused trailing bytes are padded with '\0' on
+ * the wire, not ' '. Generate it accordingly so it always carries a
+ * terminator, matching what a compliant discovery controller sends.
+ */
+static void arbitrary_nul_padded_ascii_string(size_t max_len, char *str,
+					       char *log_str)
+{
+	size_t len;
+	size_t i;
+
+	/* Cap below max_len so at least one terminator byte remains. */
+	len = arbitrary_range(max_len);
+	for (i = 0; i < len; i++)
+		str[i] = log_str[i] = arbitrary_range(0x7E - 0x20) + 0x20 + 1;
+	for (i = len; i < max_len; i++)
+		str[i] = log_str[i] = '\0';
+}
+
 static void arbitrary_entry(struct nvmf_disc_log_entry *entry,
                             struct nvmf_disc_log_entry *log_entry)
 {
@@ -63,6 +84,8 @@ static void arbitrary_entry(struct nvmf_disc_log_entry *entry,
 		sizeof(entry->trsvcid), entry->trsvcid, log_entry->trsvcid);
 	arbitrary_ascii_string(
 		sizeof(entry->traddr), entry->traddr, log_entry->traddr);
+	arbitrary_nul_padded_ascii_string(
+		sizeof(entry->subnqn), entry->subnqn, log_entry->subnqn);
 }
 
 static void arbitrary_entries(size_t len,
@@ -73,6 +96,38 @@ static void arbitrary_entries(size_t len,
 
 	for (i = 0; i < len; i++)
 		arbitrary_entry(&entries[i], &log_entries[i]);
+}
+
+/*
+ * sanitize_discovery_log_entry() only guarantees trsvcid/traddr end up as
+ * valid, correctly terminated strings -- shr_rtrim() does not clear the
+ * buffer bytes after the new terminator the way the old strchomp() did.
+ * Compare those two fields as strings. subnqn is also rtrim'd, but the
+ * generator above never puts trailing whitespace in it, so it still
+ * matches byte-for-byte along with the rest of the entry.
+ */
+static void cmp_entries(const struct nvmf_disc_log_entry *actual,
+			 const struct nvmf_disc_log_entry *expected,
+			 size_t count, const char *msg)
+{
+	size_t i;
+
+	for (i = 0; i < count; i++) {
+		struct nvmf_disc_log_entry a = actual[i];
+		struct nvmf_disc_log_entry e = expected[i];
+
+		check(!strcmp(a.trsvcid, e.trsvcid),
+		      "%s: trsvcid mismatch", msg);
+		check(!strcmp(a.traddr, e.traddr),
+		      "%s: traddr mismatch", msg);
+
+		memset(a.trsvcid, 0, sizeof(a.trsvcid));
+		memset(e.trsvcid, 0, sizeof(e.trsvcid));
+		memset(a.traddr, 0, sizeof(a.traddr));
+		memset(e.traddr, 0, sizeof(e.traddr));
+
+		cmp(&a, &e, sizeof(a), msg);
+	}
 }
 
 static void test_no_entries(libnvme_ctrl_t c)
@@ -197,7 +252,7 @@ static void test_five_entries(libnvme_ctrl_t c)
 	check(fetch_discovery_log(c, &log, 1) == 0, "discovery failed");
 	end_mock_cmds();
 	cmp(log, &header, sizeof(header), "incorrect header");
-	cmp(log->entries, entries, sizeof(entries), "incorrect entries");
+	cmp_entries(log->entries, entries, num_entries, "incorrect entries");
 	free(log);
 }
 
@@ -265,7 +320,7 @@ static void test_genctr_change(libnvme_ctrl_t c)
 	check(fetch_discovery_log(c, &log, 2) == 0, "discovery failed");
 	end_mock_cmds();
 	cmp(log, &header2, sizeof(header2), "incorrect header");
-	cmp(log->entries, entries2, sizeof(entries2), "incorrect entries");
+	cmp_entries(log->entries, entries2, num_entries2, "incorrect entries");
 	free(log);
 }
 

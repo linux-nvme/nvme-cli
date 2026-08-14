@@ -40,35 +40,36 @@ static int test_rc;
 	} while (0)
 
 /* -------------------------------------------------------------------------
- * strchomp — strip trailing spaces
+ * sanitize_discovery_log_entry — guarantee NUL-terminated string fields
  * -------------------------------------------------------------------------
  */
-static bool test_strchomp(void)
+static bool test_sanitize_discovery_log_entry(struct libnvme_global_ctx *ctx)
 {
 	bool pass = true;
-	char s[32];
+	struct nvmf_disc_log_entry e;
 
-	printf("\ntest_strchomp:\n");
+	printf("\ntest_sanitize_discovery_log_entry:\n");
 
-	strncpy(s, "hello   ", sizeof(s));
-	strchomp(s, 8);
-	pass = !strcmp(s, "hello");
-	CHECK(pass, "trailing spaces removed: \"%s\"", s);
+	/* Normal, space-padded wire data still ends up trimmed + terminated. */
+	memset(&e, 0, sizeof(e));
+	e.trtype = NVMF_TRTYPE_TCP;
+	memset(e.trsvcid, ' ', sizeof(e.trsvcid));
+	memcpy(e.trsvcid, "4420", 4);
+	memset(e.traddr, ' ', sizeof(e.traddr));
+	memcpy(e.traddr, "10.0.0.1", 8);
+	sanitize_discovery_log_entry(ctx, &e);
+	pass = !strcmp(e.trsvcid, "4420") && !strcmp(e.traddr, "10.0.0.1");
+	CHECK(pass, "space-padded fields trimmed and terminated: \"%s\" \"%s\"",
+	      e.trsvcid, e.traddr);
 
-	strncpy(s, "hello", sizeof(s));
-	strchomp(s, 5);
-	pass = !strcmp(s, "hello");
-	CHECK(pass, "no trailing spaces (unchanged): \"%s\"", s);
-
-	strncpy(s, "   ", sizeof(s));
-	strchomp(s, 3);
-	pass = (s[0] == '\0');
-	CHECK(pass, "all spaces → empty string");
-
-	strncpy(s, "x", sizeof(s));
-	strchomp(s, 0);
-	pass = (s[0] == 'x');
-	CHECK(pass, "max=0 → no change");
+	/* Fully packed, no space or NUL anywhere: the pathological case. */
+	memset(&e, 'a', sizeof(e));
+	e.trtype = NVMF_TRTYPE_TCP;
+	sanitize_discovery_log_entry(ctx, &e);
+	pass = (e.trsvcid[sizeof(e.trsvcid) - 1] == '\0') &&
+	       (e.subnqn[sizeof(e.subnqn) - 1] == '\0') &&
+	       (e.traddr[sizeof(e.traddr) - 1] == '\0');
+	CHECK(pass, "fully packed fields: last byte forced to NUL");
 
 	return pass;
 }
@@ -735,7 +736,7 @@ int main(int argc, char *argv[])
 	}
 	libnvme_set_logging_level(ctx, LIBNVME_LOG_ERR, false, false);
 
-	test_strchomp();
+	test_sanitize_discovery_log_entry(ctx);
 	test_hostid_from_hostnqn();
 	test_add_bool_argument();
 	test_add_hex_argument();
