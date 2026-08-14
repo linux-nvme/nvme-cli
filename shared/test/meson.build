@@ -35,18 +35,16 @@ test_crc32_util = executable(
 
 test('shared - crc32-util', test_crc32_util)
 
-if host_system != 'windows'
-    test_ini_util = executable(
-        'test-ini-util',
-        ['test-ini-util.c'],
-        dependencies: [
-            config_dep,
-            shared_dep,
-        ],
-    )
+test_ini_util = executable(
+    'test-ini-util',
+    ['test-ini-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
 
-    test('shared - ini-util', test_ini_util)
-endif
+test('shared - ini-util', test_ini_util)
 
 test_parse_util = executable(
     'test-parse-util',
