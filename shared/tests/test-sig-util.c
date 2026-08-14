@@ -5,6 +5,7 @@
  *
  * Authors: Daniel Wagner <dwagner@suse.de>
  */
+#include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -39,12 +40,17 @@ static bool test_sigint(void)
 
 static bool test_sigwinch(void)
 {
-	bool pass = true;
 	int ret;
 
 	printf("test_sigwinch:\n");
 
 	ret = shr_install_sigwinch_handler();
+#if defined(_WIN32)
+	/* No SIGWINCH on Windows; the handler is a documented no-op. */
+	return check_bool("handler reports unsupported", ret == -ENOTSUP);
+#else
+	bool pass = true;
+
 	pass &= check_bool("handler installs successfully", ret == 0);
 	pass &= check_bool("flag starts clear", !shr_sigwinch_received);
 
@@ -54,6 +60,7 @@ static bool test_sigwinch(void)
 	signal(SIGWINCH, SIG_DFL);
 
 	return pass;
+#endif
 }
 
 int main(void)
