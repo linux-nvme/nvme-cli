@@ -341,46 +341,6 @@ int micron_clear_pcie_aer_correctable_errors(
 	return 0;
 }
 
-int micron_run_spawn(char *const argv[], const char *outfile, bool append)
-{
-	posix_spawn_file_actions_t actions;
-	posix_spawn_file_actions_t *actionsp = NULL;
-	pid_t pid;
-	int ret;
-	int oflags = O_WRONLY | O_CREAT | (append ? O_APPEND : O_TRUNC);
-
-	if (outfile) {
-		ret = posix_spawn_file_actions_init(&actions);
-		if (ret)
-			return -ret;
-		actionsp = &actions;
-
-		ret = posix_spawn_file_actions_addopen(&actions, STDOUT_FILENO,
-						       outfile, oflags, 0644);
-		if (ret)
-			goto out_destroy;
-
-		ret = posix_spawn_file_actions_adddup2(&actions, STDOUT_FILENO,
-						       STDERR_FILENO);
-		if (ret)
-			goto out_destroy;
-	}
-
-	ret = posix_spawnp(&pid, argv[0], actionsp, NULL, argv, environ);
-
-	if (actionsp)
-		posix_spawn_file_actions_destroy(actionsp);
-
-	if (ret)
-		return -ret;
-
-	return wait_for_child(pid);
-
-out_destroy:
-	posix_spawn_file_actions_destroy(actionsp);
-	return -ret;
-}
-
 void micron_write_os_config_to_file(const char *file_name)
 {
 	FILE *fpOSConfig = NULL;
