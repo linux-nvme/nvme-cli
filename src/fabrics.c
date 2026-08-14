@@ -144,7 +144,7 @@ void nvmf_args_to_params(struct libnvmf_params *params,
 				   fa->tls_key_identity);
 }
 
-static void save_discovery_log(char *raw, struct nvmf_discovery_log *log)
+static void save_discovery_log(char *raw, const struct nvmf_discovery_log *log)
 {
 	__cleanup_free char *path = NULL;
 	static unsigned int save_count;
@@ -257,7 +257,7 @@ static void hook_already_connected(struct libnvmf_context *fctx,
 }
 
 static void hook_discovery_log(struct libnvmf_context *fctx,
-		struct nvmf_discovery_log *log,
+		const struct nvmf_discovery_log *log,
 		uint64_t numrec, void *user_data)
 {
 	struct hook_fabrics_data *hfd = user_data;

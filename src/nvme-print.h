@@ -101,7 +101,7 @@ struct print_ops {
 	void (*ctrl_registers)(void *bar, bool fabrics);
 	void (*ctrl_register)(int offset, uint64_t value);
 	void (*directive)(__u8 type, __u8 oper, __u16 spec, __u32 nsid, __u64 result, void *buf, __u32 len);
-	void (*discovery_log)(struct nvmf_discovery_log *log, int numrec);
+	void (*discovery_log)(const struct nvmf_discovery_log *log, int numrec);
 	void (*effects_log_list)(struct list_head *list);
 	void (*endurance_group_event_agg_log)(struct nvme_aggregate_endurance_group_event *endurance_log, __u64 log_entries, __u32 size, const char *devname);
 	void (*endurance_group_list)(struct nvme_id_endurance_group_list *endgrp_list);
@@ -388,8 +388,8 @@ void nvme_show_fdp_usage(struct nvme_fdp_ruhu_log *log, size_t len,
 void nvme_show_fdp_ruh_status(struct nvme_fdp_ruh_status *status, size_t len,
 		nvme_print_flags_t flags);
 
-void nvme_show_discovery_log(struct nvmf_discovery_log *log, uint64_t numrec,
-			     nvme_print_flags_t flags);
+void nvme_show_discovery_log(const struct nvmf_discovery_log *log,
+			     uint64_t numrec, nvme_print_flags_t flags);
 void nvme_show_connect_msg(libnvme_ctrl_t c, nvme_print_flags_t flags);
 void nvme_show_config_conn_list(struct libnvmf_config *config,
 				 nvme_print_flags_t flags);

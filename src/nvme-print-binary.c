@@ -292,7 +292,8 @@ static void binary_lba_status(struct nvme_lba_status *list, unsigned long len)
 	d_raw((unsigned char *)list, len);
 }
 
-static void binary_discovery_log(struct nvmf_discovery_log *log, int numrec)
+static void binary_discovery_log(const struct nvmf_discovery_log *log,
+				  int numrec)
 {
 	d_raw((unsigned char *)log,
 	      sizeof(struct nvmf_discovery_log) +
