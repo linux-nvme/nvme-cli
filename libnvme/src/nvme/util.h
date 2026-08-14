@@ -38,7 +38,7 @@
  * @ENVME_CONNECT_CONNREFUSED:	connection refused
  * @ENVME_CONNECT_ADDRNOTAVAIL:	cannot assign requested address
  * @ENVME_CONNECT_IGNORED:	connect attempt is ignored due to configuration
- * @ENVME_CONNECT_NOKEY:	the TLS key is missing
+ * @ENVME_CONNECT_NOKEY:	TLS PSK or KX-HMAC-CHAP secret not available
  */
 enum libnvme_connect_err {
 	ENVME_CONNECT_RESOLVE	= 1000,
