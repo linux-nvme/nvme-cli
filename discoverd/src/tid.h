@@ -12,7 +12,7 @@
 #include <nvme/generated/accessors-fabrics.h>
 #include <nvme/tid.h>
 
-#include <string-util.h>
+#include <shared/string-util.h>
 
 /*
  * tid_new() - allocate a TID from individual field strings.

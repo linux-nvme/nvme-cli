@@ -8,7 +8,7 @@
 
 #include <errno.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include <nvme/crypto.h>
 

@@ -10,7 +10,7 @@
 
 #include <libnvme.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include "config-create.h"
 #include "fabrics.h"

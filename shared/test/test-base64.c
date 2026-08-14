@@ -13,7 +13,7 @@
 
 #include <ccan/array_size/array_size.h>
 
-#include <base64.h>
+#include <shared/base64.h>
 
 struct vector {
 	const char *raw;

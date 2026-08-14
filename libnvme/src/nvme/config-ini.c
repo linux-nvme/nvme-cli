@@ -19,10 +19,10 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/list/list.h>
 
-#include <compiler-attributes.h>
-#include <ini.h>
-#include <parse-util.h>
-#include <string-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/ini.h>
+#include <shared/parse-util.h>
+#include <shared/string-util.h>
 
 #include "config-ini.h"
 #include "lib.h"

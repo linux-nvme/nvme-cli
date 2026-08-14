@@ -14,8 +14,8 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/str/str.h>
-#include <ini.h>
-#include <parse-util.h>
+#include <shared/ini.h>
+#include <shared/parse-util.h>
 
 #include "config.h"
 #include "log.h"

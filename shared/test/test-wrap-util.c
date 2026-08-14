@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <wrap-util.h>
+#include <shared/wrap-util.h>
 
 static bool check_bool(const char *name, bool got)
 {

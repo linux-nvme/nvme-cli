@@ -14,9 +14,9 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
-#include <int-util.h>
-#include <temp-util.h>
-#include <mmio-util.h>
+#include <shared/int-util.h>
+#include <shared/temp-util.h>
+#include <shared/mmio-util.h>
 
 #include "cleanup.h"
 #include "nvme-print.h"

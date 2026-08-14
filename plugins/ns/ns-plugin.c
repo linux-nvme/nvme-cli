@@ -17,8 +17,8 @@
 #include <ccan/endian/endian.h>
 
 #include <cleanup.h>
-#include <parse-util.h>
-#include <suffix-util.h>
+#include <shared/parse-util.h>
+#include <shared/suffix-util.h>
 
 #include "argconfig.h"
 #include "global-ctx.h"

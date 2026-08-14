@@ -42,8 +42,8 @@
 
 #include "argconfig.h"
 #include "cleanup.h"
-#include "suffix-util.h"
-#include "wrap-util.h"
+#include <shared/suffix-util.h>
+#include <shared/wrap-util.h>
 
 static bool is_null_or_empty(const char *s)
 {

@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <mmio-util.h>
+#include <shared/mmio-util.h>
 
 static bool check_ret(const char *name, unsigned long long got, unsigned long long want)
 {

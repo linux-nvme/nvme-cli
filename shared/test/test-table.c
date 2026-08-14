@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <fs-util.h>
-#include <shr-assert.h>
-#include <table.h>
+#include <shared/fs-util.h>
+#include <shared/shr-assert.h>
+#include <shared/table.h>
 
 static bool check_bool(const char *name, bool got)
 {

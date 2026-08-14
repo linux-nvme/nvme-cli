@@ -4,7 +4,7 @@
  * Copyright (c) 2024 Tomas Bzatek <tbzatek@redhat.com>
  */
 
-#include <shr-assert.h>
+#include <shared/shr-assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>

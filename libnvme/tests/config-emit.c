@@ -10,7 +10,7 @@
  * emitter symbols are exported.
  */
 
-#include <shr-assert.h>
+#include <shared/shr-assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdbool.h>

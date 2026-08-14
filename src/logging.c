@@ -14,7 +14,7 @@
 #include <libnvme-mi.h>
 
 #include "logging.h"
-#include "sig-util.h"
+#include <shared/sig-util.h>
 #include "nvme-print.h"
 
 struct submit_data {

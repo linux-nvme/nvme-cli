@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdnoreturn.h>
 
-#include <cleanup.h>
+#include <shared/cleanup.h>
 
 noreturn void fail(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 

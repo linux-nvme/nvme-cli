@@ -22,7 +22,7 @@
 #include "cleanup.h"
 #include "logging.h"
 #include "nvme-print.h"
-#include "string-util.h"
+#include <shared/string-util.h>
 
 static int check_arg_dev(int argc, char **argv)
 {

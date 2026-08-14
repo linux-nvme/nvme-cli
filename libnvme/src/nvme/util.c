@@ -19,7 +19,7 @@
 #ifdef CONFIG_FABRICS
 #include <ifaddrs.h>
 
-#include <net-util.h>
+#include <shared/net-util.h>
 #endif
 
 #include <sys/param.h>
@@ -33,8 +33,8 @@
 
 #include <ccan/endian/endian.h>
 
-#include <compiler-attributes.h>
-#include <fs-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/fs-util.h>
 
 #include <libnvme.h>
 

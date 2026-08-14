@@ -26,7 +26,7 @@
 
 #include <ccan/endian/endian.h>
 
-#include <fs-util.h>
+#include <shared/fs-util.h>
 
 #include "nvme/tree.h"
 

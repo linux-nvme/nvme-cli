@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <hex-util.h>
+#include <shared/hex-util.h>
 
 static bool check_int(const char *name, int got, int want)
 {

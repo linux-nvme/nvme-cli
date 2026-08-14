@@ -17,7 +17,7 @@
 
 #include <ccan/list/list.h>
 
-#include <string-util.h>
+#include <shared/string-util.h>
 
 #include "nvme/nvme-types.h"
 #include "nvme/lib-types.h"

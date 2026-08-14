@@ -15,8 +15,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <array-util.h>
-#include <fs-util.h>
+#include <shared/array-util.h>
+#include <shared/fs-util.h>
 
 #include "state.h"
 

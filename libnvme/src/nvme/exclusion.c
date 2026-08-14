@@ -29,11 +29,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <compiler-attributes.h>
-#include <fs-util.h>
-#include <hash-util.h>
-#include <io-util.h>
-#include <string-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/fs-util.h>
+#include <shared/hash-util.h>
+#include <shared/io-util.h>
+#include <shared/string-util.h>
 
 #include "cleanup.h"
 #include "exclusion.h"

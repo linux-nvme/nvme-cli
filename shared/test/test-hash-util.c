@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <hash-util.h>
+#include <shared/hash-util.h>
 
 static bool check(const char *name, uint64_t got, uint64_t want)
 {

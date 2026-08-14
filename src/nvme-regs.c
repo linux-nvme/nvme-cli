@@ -20,7 +20,7 @@
 #include <libnvme.h>
 #include <libnvme-mi.h>
 
-#include <fs-util.h>
+#include <shared/fs-util.h>
 #include <cleanup.h>
 
 #include "logging.h"

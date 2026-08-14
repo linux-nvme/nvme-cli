@@ -657,7 +657,7 @@ def main():
         '#include <stdio.h>\n'
         '#include <stdlib.h>\n'
         '#include <string.h>\n\n'
-        '#include <compiler-attributes.h>\n\n'
+        '#include <shared/compiler-attributes.h>\n\n'
         '#include "../private.h"\n'
         '#include "../private-tree.h"\n'
         f'#include "{hdr_name}"\n\n'

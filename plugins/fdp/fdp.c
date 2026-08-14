@@ -18,7 +18,7 @@
 #include "plugin.h"
 #include "cleanup.h"
 #include "global-ctx.h"
-#include "parse-util.h"
+#include <shared/parse-util.h>
 
 #define CREATE_CMD
 #include "fdp.h"

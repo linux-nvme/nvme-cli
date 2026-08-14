@@ -12,7 +12,7 @@
  * unknown keys, malformed values, and a missing file.
  */
 
-#include <shr-assert.h>
+#include <shared/shr-assert.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -20,7 +20,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "fs-util.h"
+#include <shared/fs-util.h>
 
 #include "../src/global-config.h"
 #include "../src/args.h"

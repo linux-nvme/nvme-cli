@@ -12,7 +12,7 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include "memblaze-smart-log-add-x.h"
 #include "nvme-cmds.h"

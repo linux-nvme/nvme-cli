@@ -22,8 +22,8 @@
 
 #include <ccan/list/list.h>
 
-#include <compiler-attributes.h>
-#include <parse-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/parse-util.h>
 
 #include <nvme/config.h>
 #include <nvme/fabrics.h>

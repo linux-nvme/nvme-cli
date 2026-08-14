@@ -25,12 +25,12 @@
 #include <libnvme.h>
 #include <libnvme-mi.h>
 
-#include <suffix-util.h>
-#include <uint128-util.h>
-#include <uuid-util.h>
-#include <int-util.h>
-#include <table.h>
-#include <mmio-util.h>
+#include <shared/suffix-util.h>
+#include <shared/uint128-util.h>
+#include <shared/uuid-util.h>
+#include <shared/int-util.h>
+#include <shared/table.h>
+#include <shared/mmio-util.h>
 #include <cleanup.h>
 
 #include "nvme-print.h"

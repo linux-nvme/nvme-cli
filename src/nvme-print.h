@@ -8,10 +8,10 @@
 
 #include "args.h"
 #include "nvme-json.h"
-#include "table.h"
-#include "uint128-util.h"
-#include "int-util.h"
-#include "uuid-util.h"
+#include <shared/table.h>
+#include <shared/uint128-util.h>
+#include <shared/int-util.h>
+#include <shared/uuid-util.h>
 
 #define STR_LEN 100
 

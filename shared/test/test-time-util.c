@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <time-util.h>
+#include <shared/time-util.h>
 
 static bool check_str(const char *name, const char *got, const char *want)
 {

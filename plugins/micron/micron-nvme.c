@@ -32,8 +32,8 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/minmax/minmax.h>
 
-#include <compiler-attributes.h>
-#include <fs-util.h>
+#include <shared/compiler-attributes.h>
+#include <shared/fs-util.h>
 
 #include "nvme-cmds.h"
 #include "nvme-pci-ids.h"
@@ -41,7 +41,7 @@
 #include "plugin.h"
 #include "global-ctx.h"
 #include "src/cleanup.h"
-#include "uint128-util.h"
+#include <shared/uint128-util.h>
 #include "field-parser.h"
 
 #define CREATE_CMD

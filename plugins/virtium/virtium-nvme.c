@@ -19,7 +19,7 @@
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "plugin.h"
-#include "uint128-util.h"
+#include <shared/uint128-util.h>
 
 #define CREATE_CMD
 #include "virtium-nvme.h"

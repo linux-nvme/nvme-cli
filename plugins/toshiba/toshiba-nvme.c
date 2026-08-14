@@ -10,7 +10,7 @@
 
 #include <libnvme.h>
 
-#include <fs-util.h>
+#include <shared/fs-util.h>
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"

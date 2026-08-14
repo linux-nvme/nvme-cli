@@ -9,8 +9,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <cleanup.h>
-#include <fs-util.h>
+#include <shared/cleanup.h>
+#include <shared/fs-util.h>
 
 static bool check_bool(const char *name, bool got)
 {

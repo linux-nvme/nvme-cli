@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <sig-util.h>
+#include <shared/sig-util.h>
 
 static bool check_bool(const char *name, bool got)
 {

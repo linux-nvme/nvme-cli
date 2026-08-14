@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <crypto-util.h>
+#include <shared/crypto-util.h>
 
 static bool check_hex(const char *name, const unsigned char *got, size_t got_len,
 		       const char *want_hex)

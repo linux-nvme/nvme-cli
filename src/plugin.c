@@ -10,7 +10,7 @@
 #include "plugin.h"
 #include "argconfig.h"
 #include "cleanup.h"
-#include "wrap-util.h"
+#include <shared/wrap-util.h>
 
 static int version_cmd(struct plugin *plugin)
 {

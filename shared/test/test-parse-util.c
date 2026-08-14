@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <parse-util.h>
+#include <shared/parse-util.h>
 
 static bool check_bool(const char *value, int want_ret, bool want_out)
 {

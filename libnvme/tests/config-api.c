@@ -9,7 +9,7 @@
  * exported by the version script.
  */
 
-#include <shr-assert.h>
+#include <shared/shr-assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -21,7 +21,7 @@
 
 #include <ccan/array_size/array_size.h>
 
-#include <string-util.h>
+#include <shared/string-util.h>
 
 #include <nvme/lib.h>
 #include <nvme/config.h>

@@ -23,7 +23,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/minmax/minmax.h>
 
-#include <fs-util.h>
+#include <shared/fs-util.h>
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"

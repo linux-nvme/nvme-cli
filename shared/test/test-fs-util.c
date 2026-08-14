@@ -27,7 +27,7 @@
 #include <unistd.h>
 #endif
 
-#include <fs-util.h>
+#include <shared/fs-util.h>
 
 static bool check_str(const char *name, const char *got, const char *want)
 {

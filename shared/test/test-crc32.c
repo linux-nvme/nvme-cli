@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <crc32.h>
+#include <shared/crc32.h>
 
 static bool check(const char *name, uint32_t got, uint32_t want)
 {

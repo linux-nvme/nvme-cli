@@ -13,7 +13,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <shr-assert.h>
+#include <shared/shr-assert.h>
 
 static bool check_bool(const char *name, bool got, bool want)
 {

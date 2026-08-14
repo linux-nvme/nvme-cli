@@ -53,12 +53,12 @@
 #include <ccan/minmax/minmax.h>
 
 #include <cleanup.h>
-#include <fs-util.h>
-#include <mmio-util.h>
-#include <parse-util.h>
-#include <sig-util.h>
-#include <suffix-util.h>
-#include <time-util.h>
+#include <shared/fs-util.h>
+#include <shared/mmio-util.h>
+#include <shared/parse-util.h>
+#include <shared/sig-util.h>
+#include <shared/suffix-util.h>
+#include <shared/time-util.h>
 
 #include "argconfig.h"
 #include "fabrics.h"

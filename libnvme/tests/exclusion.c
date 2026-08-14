@@ -9,7 +9,7 @@
  * optimistic-concurrency (version token / -ESTALE) save protocol.
  */
 
-#include <shr-assert.h>
+#include <shared/shr-assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>

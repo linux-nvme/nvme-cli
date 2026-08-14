@@ -18,7 +18,7 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/minmax/minmax.h>
 
-#include <mmio-util.h>
+#include <shared/mmio-util.h>
 
 #include "nvme-print.h"
 #include "nvme-json.h"

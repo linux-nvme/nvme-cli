@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <uint128-util.h>
+#include <shared/uint128-util.h>
 
 #define U128(w0, w1, w2, w3) { .words = { w0, w1, w2, w3 } }
 

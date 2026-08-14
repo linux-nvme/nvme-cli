@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <uuid-util.h>
+#include <shared/uuid-util.h>
 
 static bool check_str(const char *name, const char *got, const char *want)
 {

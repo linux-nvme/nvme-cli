@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 
-#include <compiler-attributes.h>
+#include <shared/compiler-attributes.h>
 
 #include <libnvme.h>
 

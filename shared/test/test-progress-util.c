@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <progress-util.h>
+#include <shared/progress-util.h>
 
 static bool check_bool(const char *name, bool got)
 {
