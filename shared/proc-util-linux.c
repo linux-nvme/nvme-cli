@@ -41,8 +41,8 @@ int shr_pipe(int fds[2])
 	return 0;
 }
 
-int shr_spawn(const char *const argv[], int out_fd, int err_fd,
-	      shr_proc_t *proc)
+static int _spawn(const char *const argv[], int out_fd, int err_fd,
+		  shr_proc_t *proc, bool search)
 {
 	pid_t pid;
 
@@ -61,13 +61,28 @@ int shr_spawn(const char *const argv[], int out_fd, int err_fd,
 		if (err_fd >= 0 && dup2(err_fd, STDERR_FILENO) < 0)
 			_exit(127);
 
-		execv(argv[0], (char *const *)argv);
+		if (search)
+			execvp(argv[0], (char *const *)argv);
+		else
+			execv(argv[0], (char *const *)argv);
 		_exit(127); /* exec failed */
 	}
 
 	*proc = (shr_proc_t)pid;
 
 	return 0;
+}
+
+int shr_spawn(const char *const argv[], int out_fd, int err_fd,
+	      shr_proc_t *proc)
+{
+	return _spawn(argv, out_fd, err_fd, proc, false);
+}
+
+int shr_spawnp(const char *const argv[], int out_fd, int err_fd,
+	       shr_proc_t *proc)
+{
+	return _spawn(argv, out_fd, err_fd, proc, true);
 }
 
 int shr_wait_proc(shr_proc_t proc, bool *exited, int *code)
