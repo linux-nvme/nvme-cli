@@ -277,15 +277,13 @@ test_sig_util = executable(
 
 test('shared - sig-util', test_sig_util)
 
-if host_system != 'windows'
-    test_assert_util = executable(
-        'test-assert-util',
-        ['test-assert-util.c'],
-        dependencies: [
-            config_dep,
-            shared_dep,
-        ],
-    )
+test_assert_util = executable(
+    'test-assert-util',
+    ['test-assert-util.c'],
+    dependencies: [
+        config_dep,
+        shared_dep,
+    ],
+)
 
-    test('shared - assert-util', test_assert_util)
-endif
+test('shared - assert-util', test_assert_util)
