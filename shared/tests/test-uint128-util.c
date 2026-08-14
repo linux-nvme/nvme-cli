@@ -152,6 +152,30 @@ static bool test_uint128_to_string(void)
 	return pass;
 }
 
+static bool test_uint128_to_l10n_string_smoke(void)
+{
+	shr_uint128_t val = U128(0, 0, 0, 12345);
+	bool pass = true;
+	char *str;
+
+	printf("test_uint128_to_l10n_string_smoke:\n");
+
+	/*
+	 * Exercise uint128_t_to_l10n_string() directly rather than relying on
+	 * a locale with a non-empty thousands_sep being installed: this
+	 * sandbox (and likely CI) only ships the C/C.utf8/POSIX locales, so
+	 * the locale-driven cases in test_uint128_to_string() above skip
+	 * themselves via setlocale() failing.
+	 */
+	setlocale(LC_NUMERIC, "C");
+	str = uint128_t_to_l10n_string(val);
+	pass &= check_bool("returns a non-NULL string", str != NULL, true);
+	pass &= check_str("digits are correct with no thousands separator applied",
+			   str, "12345");
+
+	return pass;
+}
+
 struct si_test {
 	shr_uint128_t val;
 	uint32_t bytes_per_unit;
@@ -195,6 +219,7 @@ int main(void)
 	pass &= test_int128_to_double();
 	pass &= test_uint128_to_double();
 	pass &= test_uint128_to_string();
+	pass &= test_uint128_to_l10n_string_smoke();
 	pass &= test_uint128_to_si_string();
 
 	fflush(stdout);

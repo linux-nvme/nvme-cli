@@ -70,6 +70,12 @@ static bool test_ipaddrs_eq(void)
 	pass &= check_bool("IPv4-mapped IPv6 matches its plain IPv4 form",
 			    shr_ipaddrs_eq("::ffff:192.168.1.1", "192.168.1.1"),
 			    true);
+	pass &= check_bool("plain IPv4 matches its IPv4-mapped IPv6 form (reversed order)",
+			    shr_ipaddrs_eq("192.168.1.1", "::ffff:192.168.1.1"),
+			    true);
+	pass &= check_bool("link-local IPv6 with a %scope suffix parses and matches",
+			    shr_ipaddrs_eq("fe80::1%lo", "fe80::1%lo"),
+			    true);
 	pass &= check_bool("a hostname is never treated as equal to anything",
 			    shr_ipaddrs_eq(hostname1, hostname2), false);
 

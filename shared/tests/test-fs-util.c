@@ -23,6 +23,7 @@
 #include <unistd.h>
 #endif
 
+#include <shared/assert-util.h>
 #include <shared/fs-util.h>
 
 static bool check_str(const char *name, const char *got, const char *want)
@@ -233,6 +234,9 @@ static bool test_mkstemp(void)
 
 	printf("test_mkstemp:\n");
 
+	char bad_template[] = "shr-test-mkstemp-no-placeholder";
+	int bad_fd;
+
 	fd = shr_mkstemp(template);
 	pass &= check_bool("returns a valid fd", fd >= 0);
 	if (fd < 0)
@@ -249,6 +253,17 @@ static bool test_mkstemp(void)
 
 	shr_close(fd);
 	shr_unlink(template);
+
+	pass &= check_ret("unlinking an already-removed file returns -ENOENT",
+			   shr_unlink(template), -ENOENT);
+
+	bad_fd = shr_mkstemp(bad_template);
+	pass &= check_bool("a template without a trailing XXXXXX is rejected",
+			    bad_fd < 0);
+	if (bad_fd >= 0) {
+		shr_close(bad_fd);
+		shr_unlink(bad_template);
+	}
 
 	return pass;
 }
@@ -340,8 +355,36 @@ static bool test_read_file(void)
 	buf = shr_read_file(NULL, "shr-test-read-file-does-not-exist", &size, 1);
 	pass &= check_bool("a missing file returns NULL", buf == NULL);
 
+	/* A NULL/empty @path means "the whole path is in @dir". */
+	buf = shr_read_file(path, NULL, &size, 1);
+	pass &= check_bool("reads a file given as dir with a NULL name", buf != NULL);
+	if (buf) {
+		pass &= check_bool("content matches when name is NULL",
+				    (size_t)size == strlen(content) &&
+				    !memcmp(buf, content, strlen(content)));
+		free(buf);
+	}
+
+	buf = shr_read_file(path, "", &size, 1);
+	pass &= check_bool("reads a file given as dir with an empty name", buf != NULL);
+	if (buf)
+		free(buf);
+
 	shr_unlink(path);
 	shr_rmdir(dir);
+
+	{
+		char template[] = "shr-test-read-file-empty-XXXXXX";
+		int fd = shr_mkstemp(template);
+
+		shr_assert(fd >= 0);
+		shr_close(fd);
+
+		buf = shr_read_file(NULL, template, &size, 1);
+		pass &= check_bool("an empty file returns NULL", buf == NULL);
+
+		shr_unlink(template);
+	}
 
 	return pass;
 }

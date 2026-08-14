@@ -261,6 +261,61 @@ static bool test_file(void)
 	return pass;
 }
 
+static bool test_oversized_file(void)
+{
+	/* Mirrors ini-util.c's private INI_FILE_MAX (1 MiB); the file is
+	 * sparse, so this doesn't actually write a megabyte to disk.
+	 */
+	static const long too_big = 1 * 1024 * 1024 + 1;
+	char path[] = "nvme-ini-test-big-XXXXXX";
+	bool pass = true;
+	int fd, ret;
+
+	printf("test_oversized_file:\n");
+
+	fd = shr_mkstemp(path);
+	shr_assert(fd >= 0);
+	shr_assert(ftruncate(fd, too_big) == 0);
+	close(fd);
+
+	ret = shr_ini_parse_file(path, record, NULL);
+	unlink(path);
+	if (ret != -EFBIG) {
+		printf(" - file over the size cap ret=%d (want -EFBIG) [FAIL]\n", ret);
+		pass = false;
+	} else {
+		printf(" - file over the size cap -> -EFBIG [PASS]\n");
+	}
+
+	return pass;
+}
+
+static bool test_embedded_nul(void)
+{
+	static const char content[] = "[a]\nk\0ey = v\n";
+	char path[] = "nvme-ini-test-nul-XXXXXX";
+	bool pass = true;
+	int fd, ret;
+
+	printf("test_embedded_nul:\n");
+
+	fd = shr_mkstemp(path);
+	shr_assert(fd >= 0);
+	shr_assert(write(fd, content, sizeof(content) - 1) == sizeof(content) - 1);
+	close(fd);
+
+	ret = shr_ini_parse_file(path, record, NULL);
+	unlink(path);
+	if (ret != -EINVAL) {
+		printf(" - embedded NUL byte ret=%d (want -EINVAL) [FAIL]\n", ret);
+		pass = false;
+	} else {
+		printf(" - embedded NUL byte -> -EINVAL [PASS]\n");
+	}
+
+	return pass;
+}
+
 static bool test_null_args(void)
 {
 	bool pass = true;
@@ -288,6 +343,8 @@ int main(void)
 	pass &= test_crlf();
 	pass &= test_abort();
 	pass &= test_file();
+	pass &= test_oversized_file();
+	pass &= test_embedded_nul();
 	pass &= test_null_args();
 
 	fflush(stdout);
