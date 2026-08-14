@@ -5,6 +5,7 @@ sources = [
     'src/argconfig.c',
     'src/global-config.c',
     'src/global-ctx.c',
+    'src/io-cmds.c',
     'src/logging.c',
     'src/nvme-models.c',
     'src/nvme-pci-ids.c',

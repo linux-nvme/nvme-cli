@@ -84,6 +84,7 @@ enum nvme_print_flags {
 		DEFAULT_OUTPUT_FORMAT_DESC, \
 		##__VA_ARGS__)
 
+extern const char *latency;
 extern const char *uuid_index;
 extern const char *namespace_id_desired;
 

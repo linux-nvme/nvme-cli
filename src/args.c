@@ -22,6 +22,7 @@ struct nvme_args nvme_args = {
 	.supported_output_formats = DEFAULT_OUTPUT_FORMATS,
 };
 
+const char *latency = "output latency statistics";
 const char *uuid_index = "UUID index";
 const char *namespace_id_desired = "identifier of desired namespace";
 
