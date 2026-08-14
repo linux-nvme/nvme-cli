@@ -65,10 +65,8 @@ unregister_cleanup() {
 
 trap cleanup EXIT
 
-register_cleanup
-
 # expected version regex
-re='^v([0-9]+\.[0-9]+(\.[0-9]+)?)(-(rc|a|b)\.[0-9]+)?$'
+re='^v([0-9]+\.[0-9]+(\.[0-9]+)?)(-(rc|a|b)\.?[0-9]+)?$'
 
 # use the version string provided from the command line
 if [[ "$VERSION" =~ ${re} ]]; then
@@ -80,6 +78,8 @@ else
     echo "invalid version string $VERSION"
     exit 1
 fi
+
+register_cleanup
 
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
