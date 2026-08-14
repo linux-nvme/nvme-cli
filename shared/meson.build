@@ -62,5 +62,5 @@ shared_dep = declare_dependency(
 )
 
 if want_tests
-    subdir('test')
+    subdir('tests')
 endif
