@@ -9,21 +9,20 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <spawn.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 #include <libnvme.h>
 
 #include <ccan/array_size/array_size.h>
 
+#include <shared/io-util.h>
+#include <shared/proc-util.h>
+
 #include "micron-utils.h"
 #include "nvme-print.h"
 #include "src/cleanup.h"
-
-extern char **environ;
 
 /*
  * Validates that a string is a canonical PCI address in the
@@ -141,78 +140,6 @@ static int get_pcie_bdf(struct libnvme_transport_handle *hdl,
 }
 
 /*
- * Waits for a spawned child, retrying across signal interruptions, and maps its
- * termination to a return code.
- *
- * @pid: PID of the child to wait for.
- *
- * Return: 0 if the child exited with status 0, negative errno on a wait
- * failure, or -EIO if the child did not exit cleanly with status 0.
- */
-static int wait_for_child(pid_t pid)
-{
-	int status;
-
-	while (waitpid(pid, &status, 0) == -1) {
-		if (errno != EINTR)
-			return -errno;
-	}
-	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-		return -EIO;
-
-	return 0;
-}
-
-/*
- * Reads all data from @fd into @out (NUL-terminated), keeping at most
- * @out_len - 1 bytes and discarding any excess. Always reads to EOF so the
- * writer never blocks on a full pipe, which would otherwise hang.
- *
- * @fd:      File descriptor to read from.
- * @out:     Buffer to receive up to @out_len - 1 bytes (NUL-terminated).
- * @out_len: Size of @out; must be at least 1.
- *
- * Return: 0 on success, negative errno on a read failure.
- */
-static int read_to_eof(int fd, char *out, size_t out_len)
-{
-	size_t total = 0;
-	ssize_t n = 1; /* non-zero to ensure drain loop runs */
-	char discard[512];
-
-	out[0] = '\0';
-
-	/* Fill the output buffer with up to out_len - 1 bytes. */
-	while (total < out_len - 1) {
-		n = read(fd, out + total, out_len - 1 - total);
-
-		if (n == -1) {
-			if (errno == EINTR)
-				continue;
-			return -errno;
-		}
-		if (n == 0)
-			break;
-		total += (size_t)n;
-	}
-	out[total] = '\0';
-
-	/* Drain any remaining output so the writer never blocks on a full pipe. */
-	while (n > 0) {
-		n = read(fd, discard, sizeof(discard));
-		if (n == -1) {
-			if (errno == EINTR)
-				continue;
-			return -errno;
-		}
-		if (n == 0)
-			break;
-	}
-
-	return 0;
-}
-
-/*
  * Runs a command (given as an argv vector) without a shell and captures its
  * standard output into @out.
  *
@@ -224,54 +151,42 @@ static int read_to_eof(int fd, char *out, size_t out_len)
  */
 static int spawn_and_capture(char *const argv[], char *out, size_t out_len)
 {
-	posix_spawn_file_actions_t actions;
-	int pipefd[2];
-	pid_t pid;
+	shr_proc_t proc;
+	int fds[2];
+	bool exited;
+	int code;
 	int ret;
-	int err = 0;
+	int err;
 
 	if (!out || out_len == 0)
 		return -EINVAL;
 
 	out[0] = '\0';
 
-	if (pipe(pipefd) == -1)
-		return -errno;
+	ret = shr_pipe(fds);
+	if (ret)
+		return ret;
 
-	err = posix_spawn_file_actions_init(&actions);
-	if (err) {
-		close(pipefd[0]);
-		close(pipefd[1]);
-		return -err;
-	}
-
-	/* Child: redirect stdout to the pipe write end, close both raw fds. */
-	err = posix_spawn_file_actions_adddup2(&actions, pipefd[1], STDOUT_FILENO);
-	if (!err)
-		err = posix_spawn_file_actions_addclose(&actions, pipefd[0]);
-	if (!err)
-		err = posix_spawn_file_actions_addclose(&actions, pipefd[1]);
-	if (err) {
-		posix_spawn_file_actions_destroy(&actions);
-		close(pipefd[0]);
-		close(pipefd[1]);
-		return -err;
-	}
-
-	err = posix_spawnp(&pid, argv[0], &actions, NULL, argv, environ);
-	posix_spawn_file_actions_destroy(&actions);
-	close(pipefd[1]);
-	if (err) {
-		close(pipefd[0]);
-		return -err;
+	/* Child: stdout to the pipe write end; stderr inherited. */
+	ret = shr_spawnp((const char *const *)argv, fds[1], -1, &proc);
+	close(fds[1]); /* only the child holds a writer now */
+	if (ret) {
+		close(fds[0]);
+		return ret;
 	}
 
 	/* Parent: read the child's output, always draining to EOF. */
-	err = read_to_eof(pipefd[0], out, out_len);
-	close(pipefd[0]);
+	err = shr_read_all(fds[0], out, out_len);
+	close(fds[0]);
 
-	ret = wait_for_child(pid);
-	return err ? err : ret;
+	ret = shr_wait_proc(proc, &exited, &code);
+	if (ret)
+		return err ? err : ret;
+
+	if (err)
+		return err;
+
+	return (exited && code == 0) ? 0 : -EIO;
 }
 
 int micron_get_pcie_aer_errors(struct libnvme_transport_handle *hdl,
