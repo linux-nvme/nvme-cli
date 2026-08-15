@@ -2192,8 +2192,8 @@ static void stdout_id_ctrl_cntrltype(__u8 cntrltype)
 static void stdout_id_ctrl_nvmsr(__u8 nvmsr)
 {
 	__u8 rsvd = (nvmsr >> 2) & 0xfc;
-	__u8 nvmee = (nvmsr >> 1) & 0x1;
-	__u8 nvmesd = nvmsr & 0x1;
+	__u8 nvmee = NVME_CTRL_NVMSR_NVMEE(nvmsr);
+	__u8 nvmesd = NVME_CTRL_NVMSR_NVMESD(nvmsr);
 
 	if (rsvd)
 		printf(" [7:2] : %#x\tReserved\n", rsvd);

@@ -2126,6 +2126,10 @@ enum nvme_id_ctrl_dctype {
 /**
  * enum nvme_id_ctrl_nvmsr - This field reports information associated with the
  *			     NVM Subsystem, see &struct nvme_id_ctrl.nvmsr.
+ * @NVME_CTRL_NVMSR_NVMESD_SHIFT: NVMESD shift
+ * @NVME_CTRL_NVMSR_NVMEE_SHIFT: NVMEE shift
+ * @NVME_CTRL_NVMSR_NVMESD_MASK: NVMESD mask
+ * @NVME_CTRL_NVMSR_NVMEE_MASK: NVMEE mask
  * @NVME_CTRL_NVMSR_NVMESD: If set, then the NVM Subsystem is part of an NVMe
  *			    Storage Device; if cleared, then the NVM Subsystem
  *			    is not part of an NVMe Storage Device.
@@ -2134,9 +2138,16 @@ enum nvme_id_ctrl_dctype {
  *			    not part of an NVMe Enclosure.
  */
 enum nvme_id_ctrl_nvmsr {
-	NVME_CTRL_NVMSR_NVMESD			= 1 << 0,
-	NVME_CTRL_NVMSR_NVMEE			= 1 << 1,
+	NVME_CTRL_NVMSR_NVMESD_SHIFT	= 0,
+	NVME_CTRL_NVMSR_NVMEE_SHIFT	= 1,
+	NVME_CTRL_NVMSR_NVMESD_MASK	= 0x1,
+	NVME_CTRL_NVMSR_NVMEE_MASK	= 0x1,
+	NVME_CTRL_NVMSR_NVMESD		= NVME_VAL(CTRL_NVMSR_NVMESD),
+	NVME_CTRL_NVMSR_NVMEE		= NVME_VAL(CTRL_NVMSR_NVMEE),
 };
+
+#define NVME_CTRL_NVMSR_NVMESD(nvmsr)	NVME_GET(nvmsr, CTRL_NVMSR_NVMESD)
+#define NVME_CTRL_NVMSR_NVMEE(nvmsr)	NVME_GET(nvmsr, CTRL_NVMSR_NVMEE)
 
 /**
  * enum nvme_id_ctrl_vwci - This field indicates information about remaining
