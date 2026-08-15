@@ -11,12 +11,25 @@
 
 static void binary_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 {
+	size_t desc_offset = offsetof(struct hwcomp_log, desc);
 	long double log_bytes = uint128_t_to_double(le128_to_cpu(log->size));
+	unsigned header_bytes, desc_bytes;
 
 	if (log->ver == 1)
 		log_bytes *= sizeof(__le32);
 
-	d_raw((unsigned char *)log, log_bytes);
+	if (log_bytes <= 0)
+		return;
+
+	header_bytes = (log_bytes < desc_offset) ? (unsigned)log_bytes :
+		(unsigned)desc_offset;
+	d_raw((unsigned char *)log, header_bytes);
+
+	if (log_bytes <= desc_offset || !log->desc)
+		return;
+
+	desc_bytes = (unsigned)(log_bytes - desc_offset);
+	d_raw((unsigned char *)log->desc, desc_bytes);
 }
 
 static void binary_persistent_event_log(void *pevent_log_info,
