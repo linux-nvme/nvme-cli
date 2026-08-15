@@ -209,6 +209,10 @@ static const char *pel_event_to_string(int type)
 		return "Thermal Excursion Event";
 	case NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT:
 		return "Sanitize Media Verification Event";
+	case NVME_PEL_CONF_DEV_PERSONALITY_CHG_EVENT:
+		return "Configurable Device Personality Change Event";
+	case NVME_PEL_EXPORT_NVMS_CHG_EVENT:
+		return "Exported NVM Subsystem Change Event";
 	case NVME_PEL_VENDOR_SPECIFIC_EVENT:
 		return "Vendor Specific Event";
 	case NVME_PEL_TCG_DEFINED_EVENT:

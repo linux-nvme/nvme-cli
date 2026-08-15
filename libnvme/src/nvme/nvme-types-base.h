@@ -4589,6 +4589,9 @@ struct nvme_persistent_event_entry {
  * @NVME_PEL_TELEMETRY_CRT:		Telemetry Log Create Event
  * @NVME_PEL_THERMAL_EXCURSION_EVENT:	Thermal Excursion Event
  * @NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT:Sanitize Media Verification Event
+ * @NVME_PEL_CONF_DEV_PERSONALITY_CHG_EVENT: Configurable Device Personality
+ *					Change Event
+ * @NVME_PEL_EXPORT_NVMS_CHG_EVENT:	Exported NVM Subsystem Change Event
  * @NVME_PEL_VENDOR_SPECIFIC_EVENT:	Vendor Specific Event
  * @NVME_PEL_TCG_DEFINED_EVENT:		TCG Defined Event
  */
@@ -4607,6 +4610,8 @@ enum nvme_persistent_event_types {
 	NVME_PEL_TELEMETRY_CRT			= 0x0c,
 	NVME_PEL_THERMAL_EXCURSION_EVENT	= 0x0d,
 	NVME_PEL_SANITIZE_MEDIA_VERIF_EVENT	= 0x0e,
+	NVME_PEL_CONF_DEV_PERSONALITY_CHG_EVENT	= 0x0f,
+	NVME_PEL_EXPORT_NVMS_CHG_EVENT		= 0x10,
 	NVME_PEL_VENDOR_SPECIFIC_EVENT		= 0xde,
 	NVME_PEL_TCG_DEFINED_EVENT		= 0xdf,
 };
