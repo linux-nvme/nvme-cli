@@ -2035,32 +2035,42 @@ static void stdout_id_ctrl_oaes(__le32 ctrl_oaes)
 static void stdout_id_ctrl_ctratt(__le32 ctrl_ctratt)
 {
 	__u32 ctratt = le32_to_cpu(ctrl_ctratt);
-	__u32 rsvd22 = (ctratt >> 22);
-	__u32 pms = (ctratt & NVME_CTRL_CTRATT_PMS) >> 21;
-	__u32 pls = (ctratt & NVME_CTRL_CTRATT_PLS) >> 20;
-	__u32 fdps = (ctratt & NVME_CTRL_CTRATT_FDPS) >> 19;
-	__u32 rhii = (ctratt & NVME_CTRL_CTRATT_RHII) >> 18;
-	__u32 hmbr = (ctratt & NVME_CTRL_CTRATT_HMBR) >> 17;
-	__u32 mem = (ctratt & NVME_CTRL_CTRATT_MEM) >> 16;
-	__u32 elbas = (ctratt & NVME_CTRL_CTRATT_ELBAS) >> 15;
-	__u32 dnvms = (ctratt & NVME_CTRL_CTRATT_DEL_NVM_SETS) >> 14;
-	__u32 deg = (ctratt & NVME_CTRL_CTRATT_DEL_ENDURANCE_GROUPS) >> 13;
-	__u32 vcm = (ctratt & NVME_CTRL_CTRATT_VARIABLE_CAP) >> 12;
-	__u32 fcm = (ctratt & NVME_CTRL_CTRATT_FIXED_CAP) >> 11;
-	__u32 mds = (ctratt & NVME_CTRL_CTRATT_MDS) >> 10;
-	__u32 ulist = (ctratt & NVME_CTRL_CTRATT_UUID_LIST) >> 9;
-	__u32 sqa = (ctratt & NVME_CTRL_CTRATT_SQ_ASSOCIATIONS) >> 8;
-	__u32 ng = (ctratt & NVME_CTRL_CTRATT_NAMESPACE_GRANULARITY) >> 7;
-	__u32 tbkas = (ctratt & NVME_CTRL_CTRATT_TBKAS) >> 6;
-	__u32 plm = (ctratt & NVME_CTRL_CTRATT_PREDICTABLE_LAT) >> 5;
-	__u32 egs = (ctratt & NVME_CTRL_CTRATT_ENDURANCE_GROUPS) >> 4;
-	__u32 rrlvls = (ctratt & NVME_CTRL_CTRATT_READ_RECV_LVLS) >> 3;
-	__u32 nsets = (ctratt & NVME_CTRL_CTRATT_NVM_SETS) >> 2;
-	__u32 nopspm = (ctratt & NVME_CTRL_CTRATT_NON_OP_PSP) >> 1;
-	__u32 hids = (ctratt & NVME_CTRL_CTRATT_128_ID) >> 0;
+	__u32 rsvd25 = (ctratt >> 25);
+	__u32 iiellss = NVME_CTRL_CTRATT_IIELLSS(ctratt);
+	__u32 vms = NVME_CTRL_CTRATT_VMS(ctratt);
+	__u32 pms = NVME_CTRL_CTRATT_PMS(ctratt);
+	__u32 pls = NVME_CTRL_CTRATT_PLS(ctratt);
+	__u32 fdps = NVME_CTRL_CTRATT_FDPS(ctratt);
+	__u32 rhii = NVME_CTRL_CTRATT_RHII(ctratt);
+	__u32 hmbr = NVME_CTRL_CTRATT_HMBR(ctratt);
+	__u32 mem = NVME_CTRL_CTRATT_MEM(ctratt);
+	__u32 elbas = NVME_CTRL_CTRATT_ELBAS(ctratt);
+	__u32 dnvms = NVME_CTRL_CTRATT_DNVMS(ctratt);
+	__u32 deg = NVME_CTRL_CTRATT_DEG(ctratt);
+	__u32 vcm = NVME_CTRL_CTRATT_VCM(ctratt);
+	__u32 fcm = NVME_CTRL_CTRATT_FCM(ctratt);
+	__u32 mds = NVME_CTRL_CTRATT_MDS(ctratt);
+	__u32 ulist = NVME_CTRL_CTRATT_ULIST(ctratt);
+	__u32 sqa = NVME_CTRL_CTRATT_SQA(ctratt);
+	__u32 ng = NVME_CTRL_CTRATT_NG(ctratt);
+	__u32 tbkas = NVME_CTRL_CTRATT_TBKAS(ctratt);
+	__u32 plm = NVME_CTRL_CTRATT_PLM(ctratt);
+	__u32 egs = NVME_CTRL_CTRATT_EGS(ctratt);
+	__u32 rrlvls = NVME_CTRL_CTRATT_RRLVLS(ctratt);
+	__u32 nsets = NVME_CTRL_CTRATT_NSETS(ctratt);
+	__u32 nopspm = NVME_CTRL_CTRATT_NOPSPM(ctratt);
+	__u32 hids = NVME_CTRL_CTRATT_HIDS(ctratt);
 
-	if (rsvd22)
-		printf("  [31:22] : %#x\tReserved\n", rsvd22);
+	if (rsvd25)
+		printf("  [31:25] : %#x\tReserved\n", rsvd25);
+	printf("  [24:23] : %#x\tIdle I/O Exit Latency Limit %s\n", iiellss,
+	       !iiellss ? "Not Supported" :
+	       iiellss == NVME_CTRL_CTRATT_IIELLSS_POWER_STATE ?
+	       "Supported (Power state)" :
+	       iiellss == NVME_CTRL_CTRATT_IIELLSS_GLOBAL ?
+	       "Supported (Global)" : "Reserved");
+	printf("  [22:22] : %#x\tVoltage Measurement %sSupported\n", vms,
+	       vms ? "" : "Not ");
 	printf("  [21:21] : %#x\tPower Measurement %sSupported\n",
 		pms, pms ? "" : "Not ");
 	printf("  [20:20] : %#x\tPower Limit %sSupported\n",
