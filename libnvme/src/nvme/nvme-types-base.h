@@ -2154,6 +2154,10 @@ enum nvme_id_ctrl_nvmsr {
  *			    number of times that VPD contents are able to be
  *			    updated using the VPD Write command, see &struct
  *			    nvme_id_ctrl.vwci.
+ * @NVME_CTRL_VWCI_VWCR_SHIFT: VWCR shift
+ * @NVME_CTRL_VWCI_VWCRV_SHIFT: VWCRV shift
+ * @NVME_CTRL_VWCI_VWCR_MASK: VWCR mask
+ * @NVME_CTRL_VWCI_VWCRV_MASK: VWCRV mask
  * @NVME_CTRL_VWCI_VWCR:  Mask to get value of VPD Write Cycles Remaining. If
  *			  the VPD Write Cycle Remaining Valid bit is set, then
  *			  this field contains a value indicating the remaining
@@ -2168,9 +2172,16 @@ enum nvme_id_ctrl_nvmsr {
  *			  Remaining field is invalid and cleared to 0h.
  */
 enum nvme_id_ctrl_vwci {
-	NVME_CTRL_VWCI_VWCR			= 0x7f << 0,
-	NVME_CTRL_VWCI_VWCRV			= 1 << 7,
+	NVME_CTRL_VWCI_VWCR_SHIFT	= 0,
+	NVME_CTRL_VWCI_VWCRV_SHIFT	= 7,
+	NVME_CTRL_VWCI_VWCR_MASK	= 0x7f,
+	NVME_CTRL_VWCI_VWCRV_MASK	= 0x1,
+	NVME_CTRL_VWCI_VWCR		= NVME_VAL(CTRL_VWCI_VWCR),
+	NVME_CTRL_VWCI_VWCRV		= NVME_VAL(CTRL_VWCI_VWCRV),
 };
+
+#define NVME_CTRL_VWCI_VWCR(vwci)	NVME_GET(vwci, CTRL_VWCI_VWCR)
+#define NVME_CTRL_VWCI_VWCRV(vwci)	NVME_GET(vwci, CTRL_VWCI_VWCRV)
 
 /**
  * enum nvme_id_ctrl_mec - Flags indicating the capabilities of the Management
