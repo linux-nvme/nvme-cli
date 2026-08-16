@@ -2204,8 +2204,8 @@ static void stdout_id_ctrl_nvmsr(__u8 nvmsr)
 
 static void stdout_id_ctrl_vwci(__u8 vwci)
 {
-	__u8 vwcrv = (vwci >> 7) & 0x1;
-	__u8 vwcr = vwci & 0xfe;
+	__u8 vwcrv = NVME_CTRL_VWCI_VWCRV(vwci);
+	__u8 vwcr = NVME_CTRL_VWCI_VWCR(vwci);
 
 	printf("  [7:7] : %#x\tVPD Write Cycles Remaining field is %svalid.\n",
 		vwcrv, vwcrv ? "" : "Not ");
