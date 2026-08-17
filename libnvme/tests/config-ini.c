@@ -141,7 +141,7 @@ static bool test_key_table(void)
 		{ "hdr-digest",		LIBNVMF_KEY_TUNABLE },
 		{ "persistent",		LIBNVMF_KEY_DC_TUNABLE },
 		{ "tls-key",		LIBNVMF_KEY_SECURITY },
-		{ "dhchap-secret",	LIBNVMF_KEY_SECURITY },
+		{ "kxchap-secret",	LIBNVMF_KEY_SECURITY },
 		{ "hostnqn",		LIBNVMF_KEY_IDENTITY },
 		{ "hostsymname",	LIBNVMF_KEY_IDENTITY },
 		{ "nqn",		LIBNVMF_KEY_NQN },
@@ -280,7 +280,7 @@ static bool test_parse_model(struct libnvme_global_ctx *ctx)
 		"[Host]\n"
 		"hostnqn = nqn.2014-08.org.nvmexpress:host\n"
 		"hostid = 46ba5037-7ce5-41fa-9452-48477bf00080\n"
-		"dhchap-secret = DHHC-1:00:abc\n"
+		"kxchap-secret = DHHC-1:00:abc\n"
 		"\n"
 		"[Discovery Controller]\n"
 		"persistent = auto\n"
@@ -322,7 +322,7 @@ static bool test_parse_model(struct libnvme_global_ctx *ctx)
 
 	if (!f->has_host || strcmp(f->hostnqn, "nqn.2014-08.org.nvmexpress:host") ||
 	    strcmp(f->hostid, "46ba5037-7ce5-41fa-9452-48477bf00080") ||
-	    strcmp(libnvmf_params_get(f->host_params, "dhchap-secret"),
+	    strcmp(libnvmf_params_get(f->host_params, "kxchap-secret"),
 		   "DHHC-1:00:abc")) {
 		printf(" - [Host] identity + params [FAIL]\n");
 		pass = false;
@@ -650,7 +650,7 @@ static bool test_resolve_cascade(struct libnvme_global_ctx *ctx)
 		"[Host]\n"
 		"hostnqn = nqn.2014-08.org.nvmexpress:prod-host\n"
 		"hostid = 46ba5037-7ce5-41fa-9452-48477bf00080\n"
-		"dhchap-secret = DHHC-1:00:abc\n"
+		"kxchap-secret = DHHC-1:00:abc\n"
 		"[Discovery Controller]\n"
 		"controller = transport=tcp;traddr=10.0.0.5;trsvcid=8009\n"
 		"[Subsystem]\n"
@@ -717,7 +717,7 @@ static bool test_resolve_cascade(struct libnvme_global_ctx *ctx)
 		   "46ba5037-7ce5-41fa-9452-48477bf00080") ||
 	    strcmp(libnvmf_params_get(dc->params, "keep-alive-tmo"), "30") ||
 	    strcmp(libnvmf_params_get(dc->params, "tos"), "7") ||
-	    strcmp(libnvmf_params_get(dc->params, "dhchap-secret"),
+	    strcmp(libnvmf_params_get(dc->params, "kxchap-secret"),
 		   "DHHC-1:00:abc")) {
 		printf(" - drop-in DC [FAIL]\n");
 		pass = false;

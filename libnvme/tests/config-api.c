@@ -503,8 +503,8 @@ static bool test_apply_params(struct libnvme_global_ctx *ctx)
 	shr_assert(!libnvmf_params_set(params, "tls-key", "deadbeef"));
 	shr_assert(!libnvmf_params_set(params, "tls-key-identity",
 				    "NVMe1R02 my-id"));
-	shr_assert(!libnvmf_params_set(params, "dhchap-secret", "DHHC-1:00:host:"));
-	shr_assert(!libnvmf_params_set(params, "dhchap-ctrl-secret",
+	shr_assert(!libnvmf_params_set(params, "kxchap-secret", "DHHC-1:00:host:"));
+	shr_assert(!libnvmf_params_set(params, "kxchap-ctrl-secret",
 				    "DHHC-1:00:ctrl:"));
 
 	shr_assert(!libnvmf_context_create(ctx, NULL, NULL, NULL, NULL, &fctx));

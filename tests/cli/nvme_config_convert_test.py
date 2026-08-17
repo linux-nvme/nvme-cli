@@ -181,7 +181,7 @@ class ConfigConvertCLITest(TestNVMeBase):
         })
         self._convert()
         content = self._read_output()
-        self.assertIn('dhchap-secret = DHHC-1:00:host-default-key:', content)
+        self.assertIn('kxchap-secret = DHHC-1:00:host-default-key:', content)
 
     def test_dhchap_port_value_overrides_default(self):
         self._write_json({
@@ -200,7 +200,7 @@ class ConfigConvertCLITest(TestNVMeBase):
         })
         self._convert()
         content = self._read_output()
-        self.assertIn('dhchap-secret = DHHC-1:00:port-specific-key:', content)
+        self.assertIn('kxchap-secret = DHHC-1:00:port-specific-key:', content)
         self.assertNotIn('DHHC-1:00:host-default-key:', content)
 
     def test_discovery_persistent_true_is_mapped_to_force(self):

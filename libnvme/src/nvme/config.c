@@ -342,8 +342,8 @@ __shr_public int libnvmf_context_apply_params(struct libnvmf_context *fctx,
 
 	libnvmf_params_for_each(params, apply_param, &state);
 
-	hostkey = get_param_nonempty(params, "dhchap-secret");
-	ctrlkey = get_param_nonempty(params, "dhchap-ctrl-secret");
+	hostkey = get_param_nonempty(params, "kxchap-secret");
+	ctrlkey = get_param_nonempty(params, "kxchap-ctrl-secret");
 	keyring = get_param_nonempty(params, "keyring");
 	tls_key = get_param_nonempty(params, "tls-key");
 	tls_key_identity = get_param_nonempty(params, "tls-key-identity");

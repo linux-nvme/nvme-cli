@@ -22,7 +22,7 @@ The format is parsed by **libnvme**, so every cooperating consumer reads one for
 
 **Multiple host personalities.** A single host can deliberately present *different* identities — different `(Host NQN, Host Identifier)` pairs — to different fabrics, as though it were several independent hosts. Each such identity is a *personality*. Each one gets its own file under `nvme-fabrics.conf.d/`, opening with its own `[Host]` block; keeping one persona per file is what stops them from getting tangled.
 
-This distinction matters once authentication or Transport Layer Security (TLS) enter the picture. Authentication credentials, such as a TLS Pre-Shared Key (PSK) or a DH-CHAP (Diffie-Hellman HMAC-CHAP) secret, are associated with a host identity and an NVMe subsystem, not with the machine itself.
+This distinction matters once authentication or Transport Layer Security (TLS) enter the picture. Authentication credentials, such as a TLS Pre-Shared Key (PSK) or a KX-HMAC-CHAP (key-exchange HMAC-CHAP) secret, are associated with a host identity and an NVMe subsystem, not with the machine itself.
 
 Separate host identities let different credential sets be configured for different NVMe-oF deployments: a credential configured for one host identity cannot be used by another, and credentials for a single deployment can be updated or revoked by editing only that identity's configuration.
 
@@ -158,11 +158,11 @@ controller    = transport=tcp;traddr=10.0.0.9;trsvcid=4420
 
 A connection is described by an optional `[Host]` block plus one or more **endpoint sections**. By convention `[Host]` is written first, but its placement carries no meaning — a file's `[Host]` applies to every endpoint section in that file (see [Singleton vs repeatable sections](#singleton-vs-repeatable-sections)).
 
-- **`[Host]`** — the host identity (`hostnqn`, `hostid`, `hostsymname`, `dhchap-secret`, …) used for every connection in that file. **A file with no `[Host]` connects as the system default identity** (`/etc/nvme/hostnqn` / `hostid`) — see [Host identity and multiple personalities](#host-identity-and-multiple-personalities).
+- **`[Host]`** — the host identity (`hostnqn`, `hostid`, `hostsymname`, `kxchap-secret`, …) used for every connection in that file. **A file with no `[Host]` connects as the system default identity** (`/etc/nvme/hostnqn` / `hostid`) — see [Host identity and multiple personalities](#host-identity-and-multiple-personalities).
 - **`[Discovery Controller]`** — a Discovery Controller to connect to. Its NQN is the section's `nqn =`; if omitted it defaults to the well-known discovery NQN (`nqn.2014-08.org.nvmexpress.discovery`).
 - **`[Subsystem]`** — an I/O subsystem to connect to, named by its `nqn =`.
 
-The **role is the section name** — there is no `type =` key. **Both `[Discovery Controller]` and `[Subsystem]` may be repeated** — list one section per controller or subsystem you want to connect. Within an endpoint section, each **`controller =` line is one path** to that endpoint; repeating it expresses multipath. Per-endpoint keys (`tls`, `tls-key`, `dhchap-*`, `ctrl-loss-tmo`, …) override the type defaults for that endpoint and all its paths.
+The **role is the section name** — there is no `type =` key. **Both `[Discovery Controller]` and `[Subsystem]` may be repeated** — list one section per controller or subsystem you want to connect. Within an endpoint section, each **`controller =` line is one path** to that endpoint; repeating it expresses multipath. Per-endpoint keys (`tls`, `tls-key`, `kxchap-*`, `ctrl-loss-tmo`, …) override the type defaults for that endpoint and all its paths.
 
 ### `controller =` address syntax
 
@@ -194,30 +194,30 @@ The one non-obvious rung is `[Host]` sitting **above** the type defaults: a `kee
 
 The type-default rungs are computed per file this way, so the result never depends on the order drop-ins are read in.
 
-**Exception — per-link security stays at the section level.** The TLS and DH-CHAP parameters (see [Security parameters](#security-parameters)) are *not* overridable on a `controller =` line: the PSK and authentication secrets are bound to the `(hostnqn, subsysnqn)` pair, so they are constant across all paths to an endpoint and belong on `[Host]` or an endpoint section. Everything else — `ctrl-loss-tmo`, `keep-alive-tmo`, digests, queue counts, `reconnect-delay`, … — can be overridden per path on the `controller =` line.
+**Exception — per-link security stays at the section level.** The TLS and KX-HMAC-CHAP parameters (see [Security parameters](#security-parameters)) are *not* overridable on a `controller =` line: the PSK and authentication secrets are bound to the `(hostnqn, subsysnqn)` pair, so they are constant across all paths to an endpoint and belong on `[Host]` or an endpoint section. Everything else — `ctrl-loss-tmo`, `keep-alive-tmo`, digests, queue counts, `reconnect-delay`, … — can be overridden per path on the `controller =` line.
 
 ### Security parameters
 
-A connection's security settings fall into two families — **authentication** (DH-CHAP, which proves the host and controller identities in-band) and **encryption** (TLS, which protects the data on the wire) — plus one parameter that bridges them. Because they are bound to the host+subsystem relationship, they live on **`[Host]` or an endpoint section**, never on a `controller =` path (the exception above): set on `[Host]` when a persona uses the same credential for everything, on `[Discovery Controller]`/`[Subsystem]` when one endpoint needs its own.
+A connection's security settings fall into two families — **authentication** (KX-HMAC-CHAP, which proves the host and controller identities in-band) and **encryption** (TLS, which protects the data on the wire) — plus one parameter that bridges them. Because they are bound to the host+subsystem relationship, they live on **`[Host]` or an endpoint section**, never on a `controller =` path (the exception above): set on `[Host]` when a persona uses the same credential for everything, on `[Discovery Controller]`/`[Subsystem]` when one endpoint needs its own.
 
-**Authentication — DH-CHAP**
+**Authentication — KX-HMAC-CHAP**
 
 | Key | Meaning |
 |---|---|
-| `dhchap-secret` | the host's secret — authenticates the host to the controller |
-| `dhchap-ctrl-secret` | the controller's secret — adds bidirectional (mutual) authentication |
+| `kxchap-secret` | the host's secret — authenticates the host to the controller |
+| `kxchap-ctrl-secret` | the controller's secret — adds bidirectional (mutual) authentication |
 
 Bidirectional auth for one specific subsystem, rather than the whole persona:
 
 ```ini
 [Subsystem]
 nqn                = nqn.2024-01.com.example:secure.vol1
-dhchap-secret      = DHHC-1:00:…    # this host, proving itself to the controller
-dhchap-ctrl-secret = DHHC-1:00:…    # this controller, proving itself back
+kxchap-secret      = DHHC-1:00:…    # this host, proving itself to the controller
+kxchap-ctrl-secret = DHHC-1:00:…    # this controller, proving itself back
 controller         = transport=tcp;traddr=10.0.0.9;trsvcid=4420
 ```
 
-> **`dhchap-secret`/`dhchap-ctrl-secret` are always literal in this file.** Unlike `tls-key` below, DH-CHAP has no keyring-reference form, so the secret sits in the clear in whatever reads `nvme-fabrics.conf` — typically world-readable, like the rest of `/etc/nvme/`. Fine for testing, not for production; a real secret-at-rest story for DH-CHAP is still an open item.
+> **`kxchap-secret`/`kxchap-ctrl-secret` are always literal in this file.** Unlike `tls-key` below, KX-HMAC-CHAP has no keyring-reference form, so the secret sits in the clear in whatever reads `nvme-fabrics.conf` — typically world-readable, like the rest of `/etc/nvme/`. Fine for testing, not for production; a real secret-at-rest story for KX-HMAC-CHAP is still an open item.
 
 **Encryption — TLS**
 
@@ -232,7 +232,7 @@ controller         = transport=tcp;traddr=10.0.0.9;trsvcid=4420
 
 | Key | Meaning |
 |---|---|
-| `concat` | *secure concatenation* — derive the TLS PSK from a successful DH-CHAP authentication rather than a pre-provisioned key, chaining the two steps (so it requires the DH-CHAP secrets to be set) |
+| `concat` | *secure concatenation* — derive the TLS PSK from a successful KX-HMAC-CHAP authentication rather than a pre-provisioned key, chaining the two steps (so it requires the KX-HMAC-CHAP secrets to be set) |
 
 The key *material* lives in the kernel keyring, not in this file: `tls-key` names a key, it does not store one (except in the interchange-format spelling). libnvme provisions and looks those keys up — `nvme gen-tls-key` / `nvme tls-key`, default keyring `.nvme` — and the kernel's TLS handshake daemon (`tlshd`, from ktls-utils) reads the PSK from the keyring when the connection is made. This file only says *which* key and keyring to use and whether TLS and authentication are on.
 
@@ -301,7 +301,7 @@ The shared parser validates a configuration when it is read and reports problems
 
 The parser follows systemd conventions. Boolean values accept `1`/`yes`/`y`/`true`/`t`/`on` and `0`/`no`/`n`/`false`/`f`/`off` (all case-insensitive), matching systemd's `parse_boolean()`. Lines beginning with `#` are comments; blank lines are ignored. An empty value (`key =`) is meaningful — it resets a cascade-able tunable to the kernel default (above) — so the parser distinguishes a key that is absent from one present with an empty value. Every key has **exactly one spelling**: no hidden aliases, no underscore variants, and the subsystem NQN is written `nqn` (not `subsysnqn`). This is greenfield work — there are no legacy INI files to stay compatible with, so there is nothing ambiguous to parse or document.
 
-Connection-parameter keys are the **same names as the `nvme connect` command-line options** — `keep-alive-tmo`, `ctrl-loss-tmo`, `reconnect-delay`, `host-iface`, `dhchap-secret`, and so on (hyphenated, not the underscored spellings the legacy `config.json` used). What you write here is exactly what you would pass on the command line, which is the rule to reach for when in doubt about a key's name. The one key with no connect option is `hostsymname`: the host's symbolic name, sent to a Discovery Controller by the Discovery Information Management (DIM) command (`nvme dim`, TP8010). It is carried here for nvme-stas (which reads this format through the Python bindings) and for eventual TP8010 support in nvme-discoverd.
+Connection-parameter keys are the **same names as the `nvme connect` command-line options** — `keep-alive-tmo`, `ctrl-loss-tmo`, `reconnect-delay`, `host-iface`, `kxchap-secret`, and so on (hyphenated, not the underscored spellings the legacy `config.json` used). What you write here is exactly what you would pass on the command line, which is the rule to reach for when in doubt about a key's name. The one key with no connect option is `hostsymname`: the host's symbolic name, sent to a Discovery Controller by the Discovery Information Management (DIM) command (`nvme dim`, TP8010). It is carried here for nvme-stas (which reads this format through the Python bindings) and for eventual TP8010 support in nvme-discoverd.
 
 ## Relationship to the registry and exclusion list
 
@@ -321,12 +321,12 @@ All three rest on the same transport-ID identity (`src/nvme/tid.h`) and the same
 |---|---|
 | AEN | Asynchronous Event Notification — a controller-initiated event, e.g. a Discovery Controller signalling that its log page changed. |
 | DC | Discovery Controller — a controller whose Discovery Log Page lists the controllers a host may connect; it exposes no namespaces. |
-| DH-CHAP | Diffie-Hellman HMAC-CHAP — the NVMe in-band authentication protocol; its secret is bound to a (host, subsystem) pair. |
 | DLP | Discovery Log Page — the list of connectable controllers a host retrieves from a Discovery Controller. |
 | FC | Fibre Channel — an NVMe-oF transport. |
 | HostID | Host Identifier — a 128-bit value identifying a host for reservations and registrations; the same HostID implies the same host. |
 | IOC | I/O Controller — a controller that exposes namespaces (storage), as opposed to a Discovery Controller. |
 | `kato` | Keep Alive Time-Out — the spec/kernel term for the `keep-alive-tmo` connection parameter (named `--keep-alive-tmo` on the CLI and `keep-alive-tmo` here). |
+| KX-HMAC-CHAP | Key-exchange HMAC-CHAP — the NVMe in-band authentication protocol; its secret is bound to a (host, subsystem) pair. Named DH-HMAC-CHAP before TP4201 added post-quantum key-exchange groups alongside classic Diffie-Hellman; the secret string format (`DHHC-1:…`) is unchanged by the rename. |
 | mDNS | multicast DNS — zero-configuration discovery used to find Discovery Controllers (a future feature). |
 | NQN | NVMe Qualified Name — the name identifying a host (Host NQN) or a subsystem (Subsystem NQN) on a fabric. |
 | NVMe | Non-Volatile Memory Express. |
@@ -346,6 +346,7 @@ Specification documents this design cites (section numbers refer to the revision
 - **TP4126** — NVMe-oF Boot HostNQN and HostID (Ratified 2023-01-25)
 - **TP8010** — NVMe-oF Centralized Discovery Controller (Ratified 2022-01-12) — the Discovery Information Management (DIM) command that carries `hostsymname`
 - **TP8009** — Automated Discovery of NVMe-oF Discovery Controllers in IP Networks (Ratified 2022-01-11) and **TP8024** — mDNS Discovery update (Ratified 2024-06-11) — the mDNS discovery behind auto-discovered DCs
+- **TP4201** — Enhancements for Post-Quantum Crypto Algorithms (Ratified) — renamed DH-HMAC-CHAP to KX-HMAC-CHAP; the secret string format is unchanged
 
 ## Further reading
 

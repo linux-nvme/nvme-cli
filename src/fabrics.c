@@ -129,9 +129,9 @@ void nvmf_args_to_params(struct libnvmf_params *params,
 	if (fa->concat)
 		libnvmf_params_set(params, "concat", "true");
 	if (fa->hostkey)
-		libnvmf_params_set(params, "dhchap-secret", fa->hostkey);
+		libnvmf_params_set(params, "kxchap-secret", fa->hostkey);
 	if (fa->ctrlkey)
-		libnvmf_params_set(params, "dhchap-ctrl-secret", fa->ctrlkey);
+		libnvmf_params_set(params, "kxchap-ctrl-secret", fa->ctrlkey);
 	if (fa->keyring)
 		libnvmf_params_set(params, "keyring", fa->keyring);
 	if (fa->tls_key)

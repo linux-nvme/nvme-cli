@@ -56,8 +56,8 @@ static const struct legacy_key string_keys[] = {
 	{ "tls_key",          "tls-key" },
 	{ "tls_key_identity", "tls-key-identity" },
 	{ "keyring",          "keyring" },
-	{ "dhchap_key",       "dhchap-secret" },
-	{ "dhchap_ctrl_key",  "dhchap-ctrl-secret" },
+	{ "dhchap_key",       "kxchap-secret" },
+	{ "dhchap_ctrl_key",  "kxchap-ctrl-secret" },
 };
 
 static const char *map_key(const struct legacy_key *table, size_t n,
@@ -118,8 +118,8 @@ static void apply_port_params(struct libnvmf_params *params,
 }
 
 /*
- * The DH-HMAC-CHAP secret is defined per (hostnqn, subsysnqn), not per path
- * (NVMe Base Specification 2.3, section 8.3.5.5.7). If a port does not
+ * The KX-HMAC-CHAP secret is defined per (hostnqn, subsysnqn), not per path
+ * (NVMe Base Specification 2.4, section 8.3.4.5.7). If a port does not
  * specify a secret, inherit the host-level default. If both are present but
  * differ, keep the port-specific value and log the mismatch.
  */
@@ -132,7 +132,7 @@ static void apply_dhchap_default(struct libnvmf_params *params,
 		return;
 
 	if (!port_value) {
-		libnvmf_params_set(params, "dhchap-secret", host_default);
+		libnvmf_params_set(params, "kxchap-secret", host_default);
 	} else if (strcmp(port_value, host_default)) {
 		nvme_show_verbose_info(
 			"config convert: dhchap_key differs between host default and one connection; keeping the connection's own value");
