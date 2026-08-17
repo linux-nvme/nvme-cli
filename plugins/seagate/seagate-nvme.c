@@ -1521,8 +1521,6 @@ static int vs_clr_pcie_correctable_errs(int argc, char **argv, struct command *a
 			nvme_show_error("%s: couldn't clear PCIe correctable errors", __func__);
 	}
 
-	err = nvme_set_features_simple(hdl, 0, 0xE1, cfg.save, 0xCB, &result);
-
 	if (err < 0) {
 		nvme_show_err(err, "set-feature");
 		return errno;
