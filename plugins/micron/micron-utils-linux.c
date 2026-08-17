@@ -418,7 +418,6 @@ void micron_write_os_config_to_file(const char *file_name)
 				"\n\n\n\n%s\n-----------------------------------------------\n",
 				cmds[i].header);
 			fclose(fpOSConfig);
-			fpOSConfig = NULL;
 		}
 		ret = micron_run_spawn(cmds[i].argv, file_name, true);
 		if (ret) {
