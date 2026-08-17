@@ -25,6 +25,7 @@ static void config_set_defaults(struct discoverd_config *cfg)
 	cfg->nbft = true;
 	cfg->debug_level = DISC_LOG_INFO;
 	cfg->fc_kickstart_interval_minutes = 0;
+	cfg->epcsd_poll_interval_minutes = 15;
 }
 
 static int parse_debug_level(const char *val, int *out)
@@ -61,6 +62,15 @@ static int parse_uint(const char *val, unsigned int *out)
 	return 0;
 }
 
+static int parse_epcsd_poll_interval(const char *val, unsigned int *out)
+{
+	int r = parse_uint(val, out);
+
+	if (r < 0)
+		return r;
+	return *out > 0 ? 0 : -EINVAL; // 0 would mean "never wait"
+}
+
 /* Apply one "key = value" line from [Global]; @lineno is for diagnostics. */
 static void apply_global_key(struct discoverd_config *cfg, const char *key,
 			     const char *val, const char *conf_path,
@@ -74,6 +84,9 @@ static void apply_global_key(struct discoverd_config *cfg, const char *key,
 		r = parse_debug_level(val, &cfg->debug_level);
 	else if (streq(key, "fc-kickstart-interval-minutes"))
 		r = parse_uint(val, &cfg->fc_kickstart_interval_minutes);
+	else if (streq(key, "epcsd-poll-interval-minutes"))
+		r = parse_epcsd_poll_interval(
+			val, &cfg->epcsd_poll_interval_minutes);
 	else
 		disc_warn("%s:%u: unknown key '%s', ignored", conf_path,
 			  lineno, key);

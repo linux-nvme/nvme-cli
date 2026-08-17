@@ -69,6 +69,8 @@ struct active_ctrl {
 	 */
 	bool parent_epcsd_known;
 	bool parent_epcsd; // meaningful only if parent_epcsd_known
+
+	sd_event_source *epcsd_poll_timer; // NULL when not EPCSD-parked
 };
 
 static LIST_HEAD(g_ctrls);
@@ -101,6 +103,7 @@ static void ctrl_free(struct active_ctrl *e)
 	if (!e)
 		return;
 	sd_event_source_unref(e->retry_timer);
+	sd_event_source_unref(e->epcsd_poll_timer);
 	tid_free(e->tid);
 	free(e->unit_name);
 	free(e->devname);
@@ -353,6 +356,8 @@ static bool dc_effective_epcsd(const struct dlp_fetch_ctx *fctx,
 	return false;
 }
 
+static void epcsd_park(struct active_ctrl *e);
+
 static void fetch_and_process_dlp(const char *devname,
 				  const struct libnvmf_tid *dc_tid)
 {
@@ -360,13 +365,18 @@ static void fetch_and_process_dlp(const char *devname,
 		.via_dc = inventory_config_conn_for(ctx.inventory, dc_tid),
 	};
 	struct active_ctrl *e = ctrl_find_by_devname(devname);
+	bool epcsd;
 
 	dlp_fetch(&ctx, devname, dc_tid, dlp_ioc_callback, dlp_dc_callback,
 		  dlp_self_callback, &fctx);
 
+	epcsd = dc_effective_epcsd(&fctx, e);
 	disc_dbg("%s: self entry %s, effective EPCSD=%d",
 		 libnvmf_tid_str(dc_tid), fctx.self_seen ? "seen" : "absent",
-		 dc_effective_epcsd(&fctx, e));
+		 epcsd);
+
+	if (e && e->is_dc && !epcsd)
+		epcsd_park(e);
 
 	if (fctx.iocs.len) {
 		if (ioc_list_append(&fctx.iocs, NULL) == 0) {
@@ -497,6 +507,66 @@ static int retry_timeout(sd_event_source *src,
 	return 0;
 }
 
+static int epcsd_poll_timeout(sd_event_source *src,
+			      uint64_t usec __attribute__((unused)),
+			      void *user_data)
+{
+	struct active_ctrl *e = user_data;
+	int r;
+
+	sd_event_source_unref(src);
+	e->epcsd_poll_timer = NULL;
+
+	if (!inventory_is_desired(ctx.inventory, e->tid)) {
+		disc_info("%s - no longer desired, dropping",
+			  libnvmf_tid_str(e->tid));
+		ctrl_remove(e);
+		return 0;
+	}
+
+	disc_dbg("%s - EPCSD poll: reconnecting to re-check",
+		 libnvmf_tid_str(e->tid));
+	r = restart_or_start(e);
+	if (r < 0) {
+		disc_err("%s - EPCSD poll reconnect failed: %s",
+			 libnvmf_tid_str(e->tid), strerror(-r));
+		schedule_retry(e);
+	}
+	return 0;
+}
+
+/*
+ * Disconnect a DC whose effective EPCSD is 0 and arm a long poll timer to
+ * reconnect and re-check it later. Never retried with the failure
+ * backoff/give-up path — EPCSD=0 is an expected, stable outcome, not a
+ * connect failure.
+ */
+static void epcsd_park(struct active_ctrl *e)
+{
+	uint64_t now, interval;
+
+	if (e->epcsd_poll_timer)
+		return; // already parked
+
+	unit_stop(ctx.umgr, e->unit_name);
+
+	if (sd_event_now(ctx.event, CLOCK_BOOTTIME, &now) < 0)
+		return;
+
+	interval = (uint64_t)ctx.cfg->epcsd_poll_interval_minutes *
+		   60 * UINT64_C(1000000);
+
+	if (sd_event_add_time(ctx.event, &e->epcsd_poll_timer, CLOCK_BOOTTIME,
+			      now + interval, 0, epcsd_poll_timeout, e) < 0) {
+		disc_warn("%s - failed to arm EPCSD poll timer",
+			  libnvmf_tid_str(e->tid));
+		return;
+	}
+
+	disc_info("%s - EPCSD=0, disconnecting; re-checking in %u min",
+		 libnvmf_tid_str(e->tid), ctx.cfg->epcsd_poll_interval_minutes);
+}
+
 // Periodic FC kickstart (opt-in via fc-kickstart-interval-minutes).
 static int fc_kickstart_timeout(sd_event_source *src,
 				uint64_t usec __attribute__((unused)),
@@ -622,6 +692,12 @@ static void on_nvme_remove(const char *devname,
 		disc_info("%s | %s - removed, not desired, dropping",
 			  libnvmf_tid_str(e->tid), devname);
 		ctrl_remove(e);
+		return;
+	}
+
+	if (e->epcsd_poll_timer) {
+		// Intentionally disconnected (EPCSD=0); the poll timer
+		// reconnects it, not this removal handler.
 		return;
 	}
 
