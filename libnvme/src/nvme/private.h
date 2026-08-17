@@ -26,6 +26,7 @@
 
 struct libnvme_passthru_completion;
 struct libnvme_async_req;
+struct libnvme_loopback_cmd;
 
 /* Opaque: each is defined only in its own generated .c file -- see
  * generate_attr_accessors.py. No other file may see their layout.
@@ -178,6 +179,7 @@ enum libnvme_transport_handle_type {
 	LIBNVME_TRANSPORT_HANDLE_TYPE_UNKNOWN = 0,
 	LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT,
 	LIBNVME_TRANSPORT_HANDLE_TYPE_MI,
+	LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK,
 };
 
 enum ioctl_state {
@@ -226,6 +228,14 @@ struct libnvme_transport_handle {
 	struct libnvme_mi_ep *ep;
 	__u16 id;
 	struct list_node ep_entry;
+#endif
+
+#ifdef CONFIG_LOOPBACK
+	/* loopback: borrowed pointers into caller-owned command sequences */
+	const struct libnvme_loopback_cmd *loopback_admin_cmds;
+	size_t loopback_admin_remaining;
+	const struct libnvme_loopback_cmd *loopback_io_cmds;
+	size_t loopback_io_remaining;
 #endif
 
 	struct libnvme_log *log;

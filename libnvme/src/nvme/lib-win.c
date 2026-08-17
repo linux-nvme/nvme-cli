@@ -214,6 +214,7 @@ __shr_public void libnvme_close(struct libnvme_transport_handle *hdl)
 		/* MI not supported on Windows */
 		free(hdl);
 		break;
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK:
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_UNKNOWN:
 		free(hdl);
 		break;

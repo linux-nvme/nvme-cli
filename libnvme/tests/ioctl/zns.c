@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#include <fcntl.h>
 #include <inttypes.h>
 
 #include <libnvme.h>
 
-#include "mock.h"
+#include "nvme/loopback.h"
 #include "util.h"
 
 #define TEST_NSID 0x12345678
@@ -29,7 +28,7 @@ static void test_zns_append(void)
 	__u8 pif = NVME_NVM_PIF_32B_GUARD;
 	__u64 storage_tag = 0x12;
 	__u64 reftag = 0x1234;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_zns_cmd_append,
 		.nsid = TEST_NSID,
 		.cdw3 = storage_tag,
@@ -45,14 +44,14 @@ static void test_zns_append(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_zns_append(&cmd, TEST_NSID, zslba, nlb, control, cev, dspec,
 		data, sizeof(data), NULL, 0);
 	if (elbas)
 		nvme_init_var_size_tags(&cmd, pif, sts, reftag, storage_tag);
 	nvme_init_app_tag(&cmd, lbat, lbatm);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "wrong result");
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -65,7 +64,7 @@ static void test_zns_report_zones(void)
 	bool extended = true;
 	bool partial = true;
 	__u64 result = 0;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_zns_cmd_mgmt_recv,
 		.nsid = TEST_NSID,
 		.cdw10 = TEST_SLBA & 0xffffffff,
@@ -79,11 +78,11 @@ static void test_zns_report_zones(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_zns_report_zones(&cmd, TEST_NSID, TEST_SLBA, opts,
 		extended, partial, &data, sizeof(data));
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %"PRIu64, (uint64_t)result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -97,7 +96,7 @@ static void test_zns_mgmt_send(void)
 	bool select_all = true;
 	__u8 zsaso = 0x1;
 	__u64 result = 0;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_zns_cmd_mgmt_send,
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
@@ -111,11 +110,11 @@ static void test_zns_mgmt_send(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_zns_mgmt_send(&cmd, TEST_NSID, slba, zsa, select_all, zsaso,
 		false, data, sizeof(data));
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %"PRIu64, (uint64_t)result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -128,7 +127,7 @@ static void test_zns_mgmt_recv(void)
 	__u16 zrasf = (__u16)NVME_ZNS_ZRAS_REPORT_ALL;
 	bool zras_feat = false;
 	__u64 result = 0;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_zns_cmd_mgmt_recv,
 		.nsid = TEST_NSID,
 		.cdw12 = (sizeof(expected_data) >> 2) - 1,
@@ -140,11 +139,11 @@ static void test_zns_mgmt_recv(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_zns_mgmt_recv(&cmd, TEST_NSID, 0, zra, zrasf, zras_feat,
 		data, sizeof(data));
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(result == 0, "returned result %"PRIu64, (uint64_t)result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -165,8 +164,7 @@ int main(void)
 	struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
 	libnvme_set_logging_file(ctx, stdout);
 
-	set_mock_fd(LIBNVME_TEST_FD);
-	check(!libnvme_open(ctx, "NVME_TEST_FD", O_RDONLY, &test_hdl),
+	check(!libnvme_open_loopback(ctx, &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(zns_append);

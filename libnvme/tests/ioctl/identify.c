@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #include <errno.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <libnvme.h>
 
-#include "mock.h"
+#include "nvme/loopback.h"
 #include "util.h"
 
 #define TEST_NSID 0x12345678
@@ -25,7 +24,7 @@ static struct libnvme_transport_handle *test_hdl;
 static void test_ns(void)
 {
 	struct nvme_id_ns expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -36,10 +35,10 @@ static void test_ns(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_ns(&cmd, TEST_NSID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d, errno %s",
 	      err, strerror(errno));
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -48,7 +47,7 @@ static void test_ns(void)
 static void test_ctrl(void)
 {
 	struct nvme_id_ctrl expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = NVME_IDENTIFY_CNS_CTRL,
@@ -58,10 +57,10 @@ static void test_ctrl(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_ctrl(&cmd, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -69,7 +68,7 @@ static void test_ctrl(void)
 static void test_active_ns_list(void)
 {
 	struct nvme_ns_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -80,10 +79,10 @@ static void test_active_ns_list(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_active_ns_list(&cmd, TEST_NSID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -92,7 +91,7 @@ static void test_ns_descs(void)
 {
 	uint8_t expected_id[NVME_IDENTIFY_DATA_SIZE];
 	struct nvme_ns_id_desc *id;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -105,10 +104,10 @@ static void test_ns_descs(void)
 	arbitrary(expected_id, sizeof(expected_id));
 	id = calloc(1, NVME_IDENTIFY_DATA_SIZE);
 	check(id, "memory allocation failed");
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_ns_descs_list(&cmd, TEST_NSID, id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(id, expected_id, sizeof(expected_id), "incorrect identify data");
 	free(id);
@@ -117,7 +116,7 @@ static void test_ns_descs(void)
 static void test_nvmset_list(void)
 {
 	struct nvme_id_nvmset_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = NVME_IDENTIFY_CNS_NVMSET_LIST,
@@ -128,10 +127,10 @@ static void test_nvmset_list(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_nvmset_list(&cmd, NVME_NSID_NONE, TEST_NVMSETID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -140,7 +139,7 @@ static void test_ns_csi(void)
 {
 	uint8_t expected_id[NVME_IDENTIFY_DATA_SIZE];
 	uint8_t id[NVME_IDENTIFY_DATA_SIZE] = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -153,10 +152,10 @@ static void test_ns_csi(void)
 	int err;
 
 	arbitrary(expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_csi_ns(&cmd, TEST_NSID, TEST_CSI, TEST_UUID, id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(id, expected_id, sizeof(id), "incorrect identify data");
 }
@@ -164,7 +163,7 @@ static void test_ns_csi(void)
 static void test_zns_identify_ns(void)
 {
 	struct nvme_zns_id_ns expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -176,10 +175,10 @@ static void test_zns_identify_ns(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_zns_identify_ns(&cmd, TEST_NSID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -187,7 +186,7 @@ static void test_zns_identify_ns(void)
 static void test_nvm_identify_ctrl(void)
 {
 	struct nvme_id_ctrl_nvm expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = NVME_IDENTIFY_CNS_CSI_CTRL,
@@ -198,10 +197,10 @@ static void test_nvm_identify_ctrl(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_csi_ctrl(&cmd, NVME_CSI_NVM, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -209,7 +208,7 @@ static void test_nvm_identify_ctrl(void)
 static void test_zns_identify_ctrl(void)
 {
 	struct nvme_zns_id_ctrl expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = NVME_IDENTIFY_CNS_CSI_CTRL,
@@ -220,10 +219,10 @@ static void test_zns_identify_ctrl(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_zns_identify_ctrl(&cmd, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -231,7 +230,7 @@ static void test_zns_identify_ctrl(void)
 static void test_active_ns_list_csi(void)
 {
 	struct nvme_ns_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -243,10 +242,10 @@ static void test_active_ns_list_csi(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_csi_active_ns_list(&cmd, TEST_NSID, TEST_CSI, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -254,7 +253,7 @@ static void test_active_ns_list_csi(void)
 static void test_independent_identify_ns(void)
 {
 	struct nvme_id_independent_id_ns expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -265,11 +264,11 @@ static void test_independent_identify_ns(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	/* That's a mouthful! */
 	nvme_init_identify_csi_independent_identify_id_ns(&cmd, TEST_NSID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -277,7 +276,7 @@ static void test_independent_identify_ns(void)
 static void test_allocated_ns_list(void)
 {
 	struct nvme_ns_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -288,10 +287,10 @@ static void test_allocated_ns_list(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_allocated_ns_list(&cmd, TEST_NSID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -299,7 +298,7 @@ static void test_allocated_ns_list(void)
 static void test_allocated_ns(void)
 {
 	struct nvme_id_ns expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -310,10 +309,10 @@ static void test_allocated_ns(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_allocated_ns(&cmd, TEST_NSID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -321,7 +320,7 @@ static void test_allocated_ns(void)
 static void test_nsid_ctrl_list(void)
 {
 	struct nvme_ctrl_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -333,10 +332,10 @@ static void test_nsid_ctrl_list(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_ns_ctrl_list(&cmd, TEST_NSID, TEST_CNTID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -344,7 +343,7 @@ static void test_nsid_ctrl_list(void)
 static void test_ctrl_list(void)
 {
 	struct nvme_ctrl_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = TEST_CNTID << 16
@@ -355,10 +354,10 @@ static void test_ctrl_list(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_ctrl_list(&cmd, TEST_CNTID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -366,7 +365,7 @@ static void test_ctrl_list(void)
 static void test_primary_ctrl(void)
 {
 	struct nvme_primary_ctrl_cap expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = TEST_CNTID << 16
@@ -377,10 +376,10 @@ static void test_primary_ctrl(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_primary_ctrl_cap(&cmd, TEST_CNTID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -388,7 +387,7 @@ static void test_primary_ctrl(void)
 static void test_secondary_ctrl_list(void)
 {
 	struct nvme_secondary_ctrl_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = TEST_CNTID << 16
@@ -399,10 +398,10 @@ static void test_secondary_ctrl_list(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_secondary_ctrl_list(&cmd, TEST_CNTID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -410,7 +409,7 @@ static void test_secondary_ctrl_list(void)
 static void test_ns_granularity(void)
 {
 	struct nvme_id_ns_granularity_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = NVME_IDENTIFY_CNS_NS_GRANULARITY,
@@ -420,10 +419,10 @@ static void test_ns_granularity(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_ns_granularity(&cmd, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -431,7 +430,7 @@ static void test_ns_granularity(void)
 static void test_uuid(void)
 {
 	struct nvme_id_uuid_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = NVME_IDENTIFY_CNS_UUID_LIST,
@@ -441,10 +440,10 @@ static void test_uuid(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_uuid_list(&cmd, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -452,7 +451,7 @@ static void test_uuid(void)
 static void test_domain_list(void)
 {
 	struct nvme_id_domain_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = NVME_IDENTIFY_CNS_DOMAIN_LIST,
@@ -463,10 +462,10 @@ static void test_domain_list(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_domain_list(&cmd, TEST_DOMID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -474,7 +473,7 @@ static void test_domain_list(void)
 static void test_endurance_group_list(void)
 {
 	struct nvme_id_endurance_group_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = NVME_IDENTIFY_CNS_ENDURANCE_GROUP_ID,
@@ -485,10 +484,10 @@ static void test_endurance_group_list(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_endurance_group_id(&cmd, TEST_ENDGID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -496,7 +495,7 @@ static void test_endurance_group_list(void)
 static void test_allocated_ns_list_csi(void)
 {
 	struct nvme_ns_list expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(expected_id),
@@ -508,10 +507,10 @@ static void test_allocated_ns_list_csi(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_csi_allocated_ns_list(&cmd, TEST_NSID, TEST_CSI, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -519,7 +518,7 @@ static void test_allocated_ns_list_csi(void)
 static void test_iocs(void)
 {
 	struct nvme_id_iocs expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = TEST_CNTID << 16
@@ -530,10 +529,10 @@ static void test_iocs(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_command_set_structure(&cmd, TEST_CNTID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -546,7 +545,7 @@ static void test_iocs(void)
 static void test_status_code_error(void)
 {
 	struct nvme_id_nvmset_list id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(id),
 		.cdw10 = NVME_IDENTIFY_CNS_NVMSET_LIST,
@@ -556,17 +555,17 @@ static void test_status_code_error(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_nvmset_list(&cmd, NVME_NSID_NONE, TEST_NVMSETID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == TEST_SC, "got error %d, expected TEST_SC", err);
 }
 
 static void test_kernel_error(void)
 {
 	struct nvme_id_ns id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = TEST_NSID,
 		.data_len = sizeof(id),
@@ -576,17 +575,17 @@ static void test_kernel_error(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_ns(&cmd, TEST_NSID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == -EIO, "got error %d, expected -EIO", err);
 }
 
 static void test_identify_ns_csi_user_data_format(void)
 {
 	struct nvme_id_ns expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = NVME_NSID_NONE,
 		.data_len = sizeof(expected_id),
@@ -600,11 +599,11 @@ static void test_identify_ns_csi_user_data_format(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_ns_user_data_format(&cmd, NVME_CSI_NVM,
 		TEST_FIDX, TEST_UUID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d, errno %s",
 	      err, strerror(errno));
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -613,7 +612,7 @@ static void test_identify_ns_csi_user_data_format(void)
 static void test_identify_iocs_ns_csi_user_data_format(void)
 {
 	struct nvme_id_ns expected_id, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.nsid = NVME_NSID_NONE,
 		.data_len = sizeof(expected_id),
@@ -626,11 +625,11 @@ static void test_identify_iocs_ns_csi_user_data_format(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_csi_ns_user_data_format(&cmd, TEST_CSI,
 		TEST_FIDX, TEST_UUID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "identify returned error %d, errno %s",
 	      err, strerror(errno));
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
@@ -651,8 +650,7 @@ int main(void)
 	struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
 	libnvme_set_logging_file(ctx, stdout);
 
-	set_mock_fd(LIBNVME_TEST_FD);
-	check(!libnvme_open(ctx, "NVME_TEST_FD", O_RDONLY, &test_hdl),
+	check(!libnvme_open_loopback(ctx, &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(ns);

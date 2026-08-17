@@ -151,6 +151,12 @@ option(
   description : 'build tests'
 )
 option(
+  'ioctl-tests',
+  type : 'boolean',
+  value : false,
+  description : 'build the ioctl serialization tests and their in-library loopback transport.'
+)
+option(
   'rundir',
   type : 'string',
   value : '/run',

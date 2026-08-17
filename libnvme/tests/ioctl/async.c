@@ -5,13 +5,12 @@
  */
 
 #include <errno.h>
-#include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
 
 #include <libnvme.h>
 
-#include "mock.h"
+#include "nvme/loopback.h"
 #include "util.h"
 
 static struct libnvme_transport_handle *test_hdl;
@@ -53,7 +52,7 @@ static void test_reap_not_supported(void)
 static void test_exec_admin(void)
 {
 	struct nvme_id_ctrl expected_id = {}, id = {};
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_identify,
 		.data_len = sizeof(expected_id),
 		.cdw10 = NVME_IDENTIFY_CNS_CTRL,
@@ -63,10 +62,10 @@ static void test_exec_admin(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_identify_ctrl(&cmd, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "sync fallback returned %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect identify data");
 }
@@ -74,16 +73,16 @@ static void test_exec_admin(void)
 static void test_exec_io(void)
 {
 	struct libnvme_passthru_cmd cmd = {};
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_read,
 		.data_len = 0,
 	};
 	int err;
 
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	cmd.opcode = nvme_cmd_read;
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "IO sync fallback returned %d", err);
 }
 
@@ -102,8 +101,7 @@ int main(void)
 	struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
 	libnvme_set_logging_file(ctx, stdout);
 
-	set_mock_fd(LIBNVME_TEST_FD);
-	check(!libnvme_open(ctx, "NVME_TEST_FD", O_RDONLY, &test_hdl),
+	check(!libnvme_open_loopback(ctx, &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(submit_admin_not_supported);

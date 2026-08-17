@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #include <errno.h>
-#include <fcntl.h>
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +10,7 @@
 
 #include <libnvme.h>
 
-#include "mock.h"
+#include "nvme/loopback.h"
 #include "util.h"
 
 #define PDU_SIZE NVME_LOG_PAGE_PDU_SIZE
@@ -44,7 +43,7 @@ static void test_no_groups(void)
 {
 	struct nvme_ana_log header;
 	/* The header reports no ANA groups. No additional commands needed. */
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_log_page,
 		.data_len = sizeof(header),
 		.cdw10 = (sizeof(header) / 4 - 1) << 16 /* NUMDL */
@@ -57,10 +56,10 @@ static void test_no_groups(void)
 	arbitrary(&log, sizeof(log));
 	arbitrary(&header, sizeof(header));
 	header.ngrps = cpu_to_le16(0);
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	check(!libnvme_get_ana_log_atomic(test_hdl, false, false, &log, &len, 1),
 	      "get log page failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(&log, &header, sizeof(header), "incorrect header");
 	check(len == sizeof(header),
 	      "got len %" PRIu32 ", expected %zu", len, sizeof(header));
@@ -77,7 +76,7 @@ static void test_one_group_rgo(void)
 	 * Header and group fetched in a single Get Log Page command.
 	 * Since only one command was issued, chgcnt doesn't need to be checked.
 	 */
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_log_page,
 		.data_len = len_dwords * 4,
 		.cdw10 = (len_dwords - 1) << 16 /* NUMDL */
@@ -95,10 +94,10 @@ static void test_one_group_rgo(void)
 	group.nnsids = cpu_to_le32(0);
 	memcpy(log_page, &header, sizeof(header));
 	memcpy(log_page + sizeof(header), &group, sizeof(group));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	check(!libnvme_get_ana_log_atomic(test_hdl, false, true, log, &len, 1),
 	      "get log page failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
 	check(len == sizeof(log_page),
 	      "got len %" PRIu32 ", expected %zu", len, sizeof(log_page));
@@ -117,7 +116,7 @@ static void test_one_group_nsids(void)
 	 * Header, group, and NSIDs fetched in a single Get Log Page command.
 	 * Since only one command was issued, chgcnt doesn't need to be checked.
 	 */
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_log_page,
 		.data_len = len_dwords * 4,
 		.cdw10 = (len_dwords - 1) << 16 /* NUMDL */
@@ -136,10 +135,10 @@ static void test_one_group_nsids(void)
 	memcpy(log_page, &header, sizeof(header));
 	memcpy(log_page + sizeof(header), &group, sizeof(group));
 	memcpy(log_page + sizeof(header) + sizeof(group), nsids, sizeof(nsids));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	check(!libnvme_get_ana_log_atomic(test_hdl, false, false, log, &len, 1),
 	      "get log page failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
 	check(len == sizeof(log_page),
 	      "got len %" PRIu32 ", expected %zu", len, sizeof(log_page));
@@ -157,7 +156,7 @@ static void test_multiple_groups_rgo(void)
 	 * Header and groups fetched in a single Get Log Page command.
 	 * Since only one command was issued, chgcnt doesn't need to be checked.
 	 */
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_log_page,
 		.data_len = len_dwords * 4,
 		.cdw10 = (len_dwords - 1) << 16 /* NUMDL */
@@ -177,10 +176,10 @@ static void test_multiple_groups_rgo(void)
 		groups[i].nnsids = cpu_to_le32(0);
 	memcpy(log_page, &header, sizeof(header));
 	memcpy(log_page + sizeof(header), groups, sizeof(groups));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	check(!libnvme_get_ana_log_atomic(test_hdl, true, true, log, &len, 1),
 	      "get log page failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
 	check(len == sizeof(log_page),
 	      "got len %" PRIu32 ", expected %zu", len, sizeof(log_page));
@@ -206,7 +205,7 @@ static void test_multiple_groups_nsids(void)
 	 * Header, group, and NSIDs fetched in a single Get Log Page command.
 	 * Since only one command was issued, chgcnt doesn't need to be checked.
 	 */
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_log_page,
 		.data_len = len_dwords * 4,
 		.cdw10 = (len_dwords - 1) << 16 /* NUMDL */
@@ -243,10 +242,10 @@ static void test_multiple_groups_nsids(void)
 	memcpy(log_page + sizeof(header) + sizeof(group1) + sizeof(nsids1) +
 			  sizeof(group2) + sizeof(nsids2) + sizeof(group3),
 	       nsids3, sizeof(nsids3));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	check(!libnvme_get_ana_log_atomic(test_hdl, false, false, log, &len, 1),
 	      "get log page failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
 	check(len == sizeof(log_page),
 	      "got len %" PRIu32 ", expected %zu", len, sizeof(log_page));
@@ -267,7 +266,7 @@ static void test_long_log(void)
 	 * Another Get Log page command is issued for the last NSIDs.
 	 * Header is fetched again to verify chgcnt hasn't changed.
 	 */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = PDU_SIZE,
@@ -315,10 +314,10 @@ static void test_long_log(void)
 	memcpy(log_page, &header, sizeof(header));
 	memcpy(log_page + sizeof(header), &group, sizeof(group));
 	memcpy(log_page + sizeof(header) + sizeof(group), nsids, sizeof(nsids));
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(!libnvme_get_ana_log_atomic(test_hdl, true, false, log, &len, 1),
 	      "get log page failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, log_page, sizeof(log_page), "incorrect log page");
 	check(len == sizeof(log_page),
 	      "got len %" PRIu32 ", expected %zu", len, sizeof(log_page));
@@ -343,7 +342,7 @@ static void test_chgcnt_change(void)
 	 * chgcnt has changed, but there is only 1 group now,
 	 * which was already fetched with the header.
 	 */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = PDU_SIZE,
@@ -391,10 +390,10 @@ static void test_chgcnt_change(void)
 	group2.nnsids = cpu_to_le32(0);
 	memcpy(log_page2, &header2, sizeof(header2));
 	memcpy(log_page2 + sizeof(header2), &group2, sizeof(group2));
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(!libnvme_get_ana_log_atomic(test_hdl, true, true, log, &len, 2),
 	      "get log page failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, log_page2, sizeof(log_page2), "incorrect log page");
 	check(len == sizeof(log_page2),
 	      "got len %" PRIu32 ", expected %zu", len, sizeof(log_page2));
@@ -423,7 +422,7 @@ static void test_buffer_too_short_chgcnt_change(void)
 	 * The first 4 KB is fetched again, returning a header with a new chgcnt
 	 * and a group with one NSID.
 	 */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = PDU_SIZE,
@@ -473,10 +472,10 @@ static void test_buffer_too_short_chgcnt_change(void)
 	memcpy(log_page2 + sizeof(header2), &group2, sizeof(group2));
 	memcpy(log_page2 + sizeof(header2) + sizeof(group2),
 	       &nsid2, sizeof(nsid2));
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(!libnvme_get_ana_log_atomic(test_hdl, false, false, log, &len, 2),
 	      "get log page failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, log_page2, sizeof(log_page2), "incorrect log page");
 	check(len == sizeof(log_page2),
 	      "got len %" PRIu32 ", expected %zu", len, sizeof(log_page2));
@@ -502,7 +501,7 @@ static void test_chgcnt_max_retries(void)
 	 * chgcnt has changed again.
 	 * This exceeds max_retries = 2 so nvme_get_ana_log() exits with EAGAIN.
 	 */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = PDU_SIZE,
@@ -569,10 +568,10 @@ static void test_chgcnt_max_retries(void)
 	memcpy(log_page2 + sizeof(header2), &group, sizeof(group));
 	memcpy(log_page2 + sizeof(header2) + sizeof(group),
 	       nsids, sizeof(nsids));
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(libnvme_get_ana_log_atomic(test_hdl, true, false, log, &len, 2) == -EAGAIN,
 	      "get log page succeeded");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	free(log);
 }
 
@@ -590,7 +589,7 @@ static void test_buffer_too_short(void)
 	 * Only one command was issued, so the log page couldn't have changed.
 	 * nvme_get_ana_log() returns ENOSPC because the buffer is too small.
 	 */
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_log_page,
 		.data_len = len_dwords * 4,
 		.cdw10 = (len_dwords - 1) << 16 /* NUMDL */
@@ -609,10 +608,10 @@ static void test_buffer_too_short(void)
 	memcpy(log_page, &header, sizeof(header));
 	memcpy(log_page + sizeof(header), &group, sizeof(group));
 	memcpy(log_page + sizeof(header) + sizeof(group), nsids, sizeof(nsids));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	check(libnvme_get_ana_log_atomic(test_hdl, true, false, log, &len, 2) == -ENOSPC,
 	      "log page succeeded");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	free(log);
 }
 
@@ -631,8 +630,7 @@ int main(void)
 	struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
 	libnvme_set_logging_file(ctx, stdout);
 
-	set_mock_fd(LIBNVME_TEST_FD);
-	check(!libnvme_open(ctx, "NVME_TEST_FD", O_RDONLY, &test_hdl),
+	check(!libnvme_open_loopback(ctx, &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(no_retries);
