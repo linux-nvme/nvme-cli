@@ -1439,7 +1439,8 @@ static int nvme_expand_cap(struct libnvme_transport_handle *hdl, __u32 namespace
 	if (libnvme_transport_handle_is_ctrl(hdl))
 		snprintf(dev_name, 32, "%sn%u", libnvme_transport_handle_get_name(hdl), namespace_id);
 	else
-		strcpy(dev_name, libnvme_transport_handle_get_name(hdl));
+		snprintf(dev_name, sizeof(dev_name), "%s",
+			 libnvme_transport_handle_get_name(hdl));
 
 	num = scandir("/dev", &devices, filter_namespace, alphasort);
 	if (num <= 0) {
