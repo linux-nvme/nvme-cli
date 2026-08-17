@@ -1344,7 +1344,7 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 	}
 
 	if (c->cfg.concat && !hostkey) {
-		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "required argument [--dhchap-secret | -S] not specified with --concat\n");
+		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "required argument [--kxchap-secret | -S] not specified with --concat\n");
 		return -ENVME_CONNECT_INVAL;
 	}
 
