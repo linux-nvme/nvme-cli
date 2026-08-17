@@ -37,6 +37,11 @@ union val {
 	__u8 val;
 };
 
+/* Distinct from NULL so we can tell "not parsed at all" apart from
+ * "parsed as --optstr with no attached value" (which sets it to NULL).
+ */
+static char optstr_unset[] = "unset";
+
 struct toval_test {
 	char *arg;
 	void *val;
@@ -81,6 +86,7 @@ struct cfg {
 	char *list;
 	char *str;
 	__u8 val;
+	char *optstr;
 };
 
 static struct cfg cfg;
@@ -124,6 +130,30 @@ static struct toval_test toval_tests[] = {
 	VAL_TEST("--val=threed", val, 0, true, -EINVAL),
 	VAL_TEST("--val=123", val, 123, true, 0),
 	VAL_TEST("--val=1234", val, 0, true, -EINVAL),
+
+	/* Short-option forms: the CLI accepts these interchangeably with
+	 * the long forms exercised above.
+	 */
+	VAL_TEST("-f", flag, true, true, 0),
+	VAL_TEST("-s1234", suffix, 1234, true, 0),
+	VAL_TEST("-u42", uint, 42, true, 0),
+	VAL_TEST("-b7", byte, 7, true, 0),
+	VAL_TEST("-tstr", string, "str", false, 0),
+
+	/* Help requests short-circuit parsing and report failure so the
+	 * caller doesn't proceed as if real options were parsed.
+	 */
+	{ "--help", &cfg.flag, { .flag = false }, 0, -EINVAL },
+	{ "-h", &cfg.flag, { .flag = false }, 0, -EINVAL },
+	{ "-?", &cfg.flag, { .flag = false }, 0, -EINVAL },
+
+	/* required_argument option with no value attached and no further
+	 * argv token to supply one.
+	 */
+	{ "--suffix", &cfg.suffix, { .suffix = 0 }, 0, -EINVAL },
+
+	/* Unrecognized long option. */
+	{ "--bogus", &cfg.flag, { .flag = false }, 0, -EINVAL },
 };
 
 void toval_test(struct toval_test *test)
@@ -168,6 +198,103 @@ void toval_test(struct toval_test *test)
 		return;
 
 	check_val(test->arg, &test->exp, test->val, test->size);
+}
+
+/*
+ * OPT_STRING_OPTIONAL is the one type where the CLI must distinguish three
+ * outcomes: the flag never appeared, appeared with "--optstr=value", or
+ * appeared bare as "--optstr" (optarg is NULL, per getopt_long_only rules).
+ */
+static void optional_string_test(void)
+{
+	const char *desc = "Test optional string argument";
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_STRING_OPTIONAL("optstr", 'O', "STR", &cfg.optstr, "optional string"),
+		OPT_END()
+	};
+
+	{
+		char *argv[] = { "test-argconfig" };
+
+		cfg.optstr = optstr_unset;
+		ret = argconfig_parse(1, argv, desc, opts);
+		if (ret || cfg.optstr != optstr_unset) {
+			printf("ERROR: optional string: omitted flag was touched\n");
+			test_rc = 1;
+		}
+	}
+
+	{
+		char *argv[] = { "test-argconfig", "--optstr=given" };
+
+		cfg.optstr = optstr_unset;
+		ret = argconfig_parse(2, argv, desc, opts);
+		if (ret || !cfg.optstr || strcmp(cfg.optstr, "given")) {
+			printf("ERROR: optional string: '--optstr=given' not applied\n");
+			test_rc = 1;
+		}
+	}
+
+	{
+		char *argv[] = { "test-argconfig", "--optstr" };
+
+		cfg.optstr = optstr_unset;
+		ret = argconfig_parse(2, argv, desc, opts);
+		if (ret || cfg.optstr) {
+			printf("ERROR: optional string: bare '--optstr' should set NULL\n");
+			test_rc = 1;
+		}
+	}
+}
+
+/*
+ * Real command lines pass several options together; the per-option tests
+ * above each parse exactly one token, so exercise a realistic multi-flag
+ * invocation here, mixed with an OPT_GROUP() separator (as real commands
+ * do) and a check of argconfig_parse_seen(), the public "was this option
+ * given" query used throughout the plugins.
+ */
+static void combined_opts_test(void)
+{
+	const char *desc = "Test combined options";
+	char *argv[] = { "test-argconfig", "--flag", "--suffix=42", "--uint=7" };
+	int ret;
+
+	cfg.flag = false;
+	cfg.suffix = 0;
+	cfg.uint = 0;
+	cfg.int_val = -1;
+
+	OPT_ARGS(opts) = {
+		OPT_GROUP("Options"),
+		OPT_FLAG("flag", 'f', &cfg.flag, "flag"),
+		OPT_SUFFIX("suffix", 's', &cfg.suffix, "suffix"),
+		OPT_UINT("uint", 'u', &cfg.uint, "uint"),
+		OPT_INT("int", 'i', &cfg.int_val, "int"),
+		OPT_END()
+	};
+
+	ret = argconfig_parse(ARRAY_SIZE(argv), argv, desc, opts);
+	if (ret) {
+		printf("ERROR: combined options: parse failed: %d\n", ret);
+		test_rc = 1;
+		return;
+	}
+
+	if (!cfg.flag || cfg.suffix != 42 || cfg.uint != 7 || cfg.int_val != -1) {
+		printf("ERROR: combined options: values not all applied correctly\n");
+		test_rc = 1;
+	}
+
+	if (!argconfig_parse_seen(opts, "flag") ||
+	    !argconfig_parse_seen(opts, "suffix") ||
+	    !argconfig_parse_seen(opts, "uint") ||
+	    argconfig_parse_seen(opts, "int")) {
+		printf("ERROR: combined options: argconfig_parse_seen() mismatch\n");
+		test_rc = 1;
+	}
 }
 
 #define COMMA_SEP_ARRAY_MAX_VALUES 4
@@ -260,6 +387,11 @@ static const struct global_parse_test global_parse_tests[] = {
 		"two -v flags before subcommand",
 		{"prog", "-v", "-v", "list"},
 		4, 3, 0, 2, false,
+	},
+	{
+		"bundled -vv (single token) before subcommand",
+		{"prog", "-vv", "list"},
+		3, 2, 0, 2, false,
 	},
 	{
 		"--dry-run before subcommand",
@@ -416,6 +548,31 @@ static void do_global_parse_test(const struct global_parse_test *test)
 	}
 }
 
+/*
+ * A global option that takes a required argument but is given none (no
+ * "=value" and nothing left in argv to supply it) must fail the same way
+ * an unknown option does, rather than silently leaving the default in
+ * place.
+ */
+static void global_parse_missing_arg_test(void)
+{
+	char *argv[] = { "prog", "--count" };
+	unsigned int count = 0;
+	int ret;
+
+	OPT_ARGS(opts) = {
+		OPT_UINT("count", 'c', &count, "count"),
+		OPT_END()
+	};
+
+	ret = argconfig_parse_global(ARRAY_SIZE(argv), argv, opts);
+	if (ret != -EINVAL) {
+		printf("ERROR: global_parse: '--count' with no value: ret=%d expected=%d\n",
+		       ret, -EINVAL);
+		test_rc = 1;
+	}
+}
+
 int main(void)
 {
 	unsigned int i;
@@ -432,11 +589,16 @@ int main(void)
 	for (i = 0; i < ARRAY_SIZE(toval_tests); i++)
 		toval_test(&toval_tests[i]);
 
+	optional_string_test();
+	combined_opts_test();
+
 	for (i = 0; i < ARRAY_SIZE(comma_sep_array_tests); i++)
 		comma_sep_array_test(&comma_sep_array_tests[i]);
 
 	for (i = 0; i < ARRAY_SIZE(global_parse_tests); i++)
 		do_global_parse_test(&global_parse_tests[i]);
+
+	global_parse_missing_arg_test();
 
 	if (f)
 		fclose(f);
