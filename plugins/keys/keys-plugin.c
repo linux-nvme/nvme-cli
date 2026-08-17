@@ -1134,6 +1134,7 @@ static struct plugin plugin = {
 	.desc = "Manage NVMeoF KX-HMAC-CHAP and TLS keys",
 	.version = NVME_VERSION,
 	.core = true,
+	.group = "Fabrics",
 };
 
 static void __shr_constructor register_plugin(void)

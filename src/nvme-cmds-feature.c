@@ -488,5 +488,5 @@ static struct command *commands[] = {
 
 static void __shr_constructor register_group(void)
 {
-	plugin_add_group(&builtin, "Features & Properties", commands);
+	plugin_add_group(&builtin, "Features", commands);
 }

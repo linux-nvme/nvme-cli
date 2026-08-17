@@ -165,6 +165,28 @@ void general_help(struct plugin *plugin, char *str)
 				}
 				printf("  %-*s %s\n", padding, command->name, command->help);
 			}
+
+			/*
+			 * Core plugins tagged with .group are shown next to the
+			 * built-in group they relate to instead of the flat
+			 * "core NVMe/NVMeoF plugins" list further down.
+			 */
+			if (!plugin->name && group->title) {
+				for (extension = prog->extensions->next; extension;
+				     extension = extension->next) {
+					if (!extension->group ||
+					    strcmp(extension->group, group->title))
+						continue;
+					if (str && !strstr(extension->name, str))
+						continue;
+					if (!header_printed) {
+						printf("\n\033[1m%s:\033[0m\n", group->title);
+						header_printed = true;
+					}
+					printf("  %-*s %s\n", padding, extension->name,
+					       extension->desc);
+				}
+			}
 		}
 	} else {
 		/* Not yet migrated to plugin_add_group(): flat listing. */
@@ -177,6 +199,7 @@ void general_help(struct plugin *plugin, char *str)
 		}
 	}
 
+	printf("\n");
 	if (!str || strstr("version", str))
 		printf("  %-*s %s\n", padding, "version", "Shows the program version");
 	if (!str || strstr("help", str))
@@ -199,9 +222,9 @@ void general_help(struct plugin *plugin, char *str)
 
 		extension = prog->extensions->next;
 		while (extension) {
-			if (extension->core)
+			if (extension->core && !extension->group)
 				have_core = true;
-			else
+			else if (!extension->core)
 				have_vendor = true;
 			extension = extension->next;
 		}
@@ -213,7 +236,8 @@ void general_help(struct plugin *plugin, char *str)
 
 			extension = prog->extensions->next;
 			while (extension) {
-				if (extension->core && (!str || strstr(extension->name, str)))
+				if (extension->core && !extension->group &&
+				    (!str || strstr(extension->name, str)))
 					printf("  %-*s %s\n", 15, extension->name, extension->desc);
 				extension = extension->next;
 			}

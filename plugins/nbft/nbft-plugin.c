@@ -715,6 +715,7 @@ static struct plugin plugin = {
 	.desc = "ACPI NBFT table extensions",
 	.version = NVME_VERSION,
 	.core = true,
+	.group = "Fabrics",
 };
 
 static void __shr_constructor register_plugin(void)

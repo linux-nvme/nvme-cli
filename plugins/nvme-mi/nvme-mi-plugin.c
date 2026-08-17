@@ -197,6 +197,7 @@ static struct plugin plugin = {
 	.desc = "Submit NVMe-MI commands",
 	.version = NVME_VERSION,
 	.core = true,
+	.group = "Passthrough",
 };
 
 static void __shr_constructor register_plugin(void)

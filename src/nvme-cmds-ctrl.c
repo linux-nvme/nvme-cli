@@ -10,40 +10,17 @@
 /**
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
-#include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <getopt.h>
 #include <inttypes.h>
-#include <libgen.h>
-#include <locale.h>
-#include <math.h>
-#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#ifdef NVME_HAVE_MMAP
-#include <sys/mman.h>
-#endif
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include <libnvme-mi.h>
 #include <libnvme.h>
 
-#include <ccan/array_size/array_size.h>
-#include <ccan/endian/endian.h>
-#include <ccan/minmax/minmax.h>
 #include <shared/compiler-attributes-util.h>
-#include <shared/fs-util.h>
-#include <shared/mmio-util.h>
-#include <shared/parse-util.h>
-#include <shared/sig-util.h>
-#include <shared/suffix-util.h>
-#include <shared/time-util.h>
 
 #include "argconfig.h"
 #include "cleanup.h"
@@ -214,181 +191,6 @@ static int ns_rescan(int argc, char **argv, struct command *acmd, struct plugin 
 	return err;
 }
 
-/* rpmb_cmd_option is defined in nvme-rpmb.c */
-extern int rpmb_cmd_option(int, char **, struct command *, struct plugin *);
-static int rpmb_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	return rpmb_cmd_option(argc, argv, acmd, plugin);
-}
-
-static int lockdown_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	const char *desc = "The Lockdown command is used to control the\n"
-		"Command and Feature Lockdown capability which configures the\n"
-		"prohibition or allowance of execution of the specified command\n"
-		"or Set Features command targeting a specific Feature Identifier.";
-	const char *ofi_desc = "Opcode or Feature Identifier (OFI)\n"
-		"specifies the command opcode or Set Features Feature Identifier\n"
-		"identified by the Scope field.";
-	const char *ifc_desc =
-	    "[0-3] Interface (INF) field identifies the interfaces affected by this command.";
-	const char *prhbt_desc = "[0-1]Prohibit(PRHBT) bit specifies whether\n"
-		"to prohibit or allow the command opcode or Set Features Feature\n"
-		"Identifier specified by this command.";
-	const char *scp_desc =
-	    "[0-15]Scope(SCP) field specifies the contents of the Opcode or Feature Identifier field.";
-	const char *uuid_desc = "UUID Index - If this field is set to a non-zero\n"
-		"value, then the value of this field is the index of a UUID in the UUID\n"
-		"List that is used by the command.If this field is cleared to 0h,\n"
-		"then no UUID index is specified";
-
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
-	struct libnvme_passthru_cmd cmd;
-	int err = -1;
-
-	struct config {
-		__u8	ofi;
-		__u8	ifc;
-		__u8	prhbt;
-		__u8	scp;
-		__u8	uuid;
-	};
-
-	struct config cfg = {
-		.ofi	= 0,
-		.ifc	= 0,
-		.prhbt	= 0,
-		.scp	= 0,
-		.uuid	= 0,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_BYTE("ofi",	'O', &cfg.ofi,      ofi_desc),
-		  OPT_BYTE("ifc",	'f', &cfg.ifc,      ifc_desc),
-		  OPT_BYTE("prhbt",	'p', &cfg.prhbt,    prhbt_desc),
-		  OPT_BYTE("scp",	's', &cfg.scp,      scp_desc),
-		  OPT_BYTE("uuid",	'U', &cfg.uuid,     uuid_desc));
-
-	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	/* check for input argument limit */
-	if (cfg.ifc > 3) {
-		nvme_show_error("invalid interface settings:%d", cfg.ifc);
-		return -1;
-	}
-	if (cfg.prhbt > 1) {
-		nvme_show_error("invalid prohibit settings:%d", cfg.prhbt);
-		return -1;
-	}
-	if (cfg.scp > 15) {
-		nvme_show_error("invalid scope settings:%d", cfg.scp);
-		return -1;
-	}
-	if (cfg.uuid > 127) {
-		nvme_show_error("invalid UUID index settings:%d", cfg.uuid);
-		return -1;
-	}
-
-	nvme_init_lockdown(&cmd, cfg.scp, cfg.prhbt, cfg.ifc, cfg.ofi,
-			   cfg.uuid);
-	err = libnvme_exec_admin_passthru(hdl, &cmd);
-	if (err) {
-		nvme_show_err(err, "lockdown");
-		return err;
-	}
-
-	nvme_show_verbose_result("Lockdown Command is Successful");
-
-	return err;
-}
-
-static int show_topology_cmd(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	const char *desc = "Show the topology\n";
-	const char *ranking = "Ranking order: namespace|ctrl|multipath";
-	nvme_print_flags_t flags;
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	char *devname = NULL;
-	libnvme_scan_filter_t filter = NULL;
-	enum nvme_cli_topo_ranking rank;
-	int err;
-
-#ifdef CONFIG_JSONC
-	nvme_print_flags_t supported_formats = (NORMAL | JSON | TABULAR);
-	const char *supported_formats_desc = "Output format: normal|json|tabular";
-#else /* CONFIG_JSONC */
-	nvme_print_flags_t supported_formats = (NORMAL | TABULAR);
-	const char *supported_formats_desc = "Output format: normal|tabular";
-#endif /* CONFIG_JSONC */
-
-	struct config {
-		char	*ranking;
-	};
-
-	struct config cfg = {
-		.ranking	= "namespace",
-	};
-
-	NVME_ARGS_OUTPUT_FORMATS(opts, supported_formats, supported_formats_desc,
-		  OPT_FMT("ranking",       'r', &cfg.ranking,       ranking));
-
-	err = parse_args(argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0) {
-		nvme_show_error("Invalid output format");
-		return err;
-	}
-
-	if (nvme_args.verbose)
-		flags |= VERBOSE;
-
-	if (!strcmp(cfg.ranking, "namespace")) {
-		rank = NVME_CLI_TOPO_NAMESPACE;
-	} else if (!strcmp(cfg.ranking, "ctrl")) {
-		rank = NVME_CLI_TOPO_CTRL;
-	} else if (!strcmp(cfg.ranking, "multipath")) {
-		rank = NVME_CLI_TOPO_MULTIPATH;
-	} else {
-		nvme_show_error("Invalid ranking argument: %s", cfg.ranking);
-		return -EINVAL;
-	}
-
-	err = nvme_create_global_ctx(&ctx);
-	if (err)
-		return err;
-
-	if (optind < argc)
-		devname = basename(argv[optind++]);
-
-	if (devname) {
-		int subsys_id, nsid;
-
-		if (sscanf(devname, "nvme%dn%d", &subsys_id, &nsid) < 1 &&
-		    sscanf(devname, "ng%dn%d", &subsys_id, &nsid) != 2) {
-			nvme_show_error("Invalid device name %s\n", devname);
-			return -EINVAL;
-		}
-		filter = nvme_match_device_filter;
-	}
-
-	err = libnvme_scan_topology(ctx, filter, (void *)devname);
-	if (err < 0)
-		return handle_scan_topology_error(err);
-
-	if (flags & TABULAR)
-		nvme_show_topology_tabular(ctx, flags);
-	else
-		nvme_show_topology(ctx, rank, flags);
-
-	return err;
-}
-
 static struct command reset_cmd = {
 	.name = "reset",
 	.help = "Resets the controller",
@@ -413,32 +215,11 @@ static struct command virtual_mgmt_cmd = {
 	.fn = virtual_mgmt,
 };
 
-static struct command rpmb_cmd_cmd = {
-	.name = "rpmb",
-	.help = "Replay Protection Memory Block commands",
-	.fn = rpmb_cmd,
-};
-
-static struct command lockdown_cmd_cmd = {
-	.name = "lockdown",
-	.help = "Submit a Lockdown command,return result",
-	.fn = lockdown_cmd,
-};
-
-static struct command show_topology_cmd_cmd = {
-	.name = "show-topology",
-	.help = "Show the topology",
-	.fn = show_topology_cmd,
-};
-
 static struct command *commands[] = {
 	&reset_cmd,
 	&subsystem_reset_cmd,
 	&ns_rescan_cmd,
 	&virtual_mgmt_cmd,
-	&rpmb_cmd_cmd,
-	&lockdown_cmd_cmd,
-	&show_topology_cmd_cmd,
 	NULL,
 };
 

@@ -32,6 +32,13 @@ struct plugin {
 	struct plugin *next;
 	struct plugin *tail;
 	bool core;
+	/*
+	 * Optional built-in group title (see plugin_add_group()) this core
+	 * plugin is thematically related to. When set, general_help() lists
+	 * the plugin right after that group's commands instead of in the
+	 * flat "core NVMe/NVMeoF plugins" list.
+	 */
+	const char *group;
 };
 
 struct command {
