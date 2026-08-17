@@ -58,6 +58,17 @@ struct active_ctrl {
 	unsigned int attempts;   // consecutive failed (re)connect attempts
 	uint64_t giveup_at_usec; // 0 = no deadline armed (ctrl_arm_giveup)
 	sd_event_source *retry_timer; // NULL when no retry pending
+
+	/*
+	 * EPCSD this DC's own referral entry carried in its parent's
+	 * Discovery Log Page, if this DC was reached via referral. Fallback
+	 * for when this DC's own self entry (SUBTYPE 03h) turns out to be
+	 * absent from its own Discovery Log Page. Unset for primary DCs
+	 * (statically configured, mDNS-discovered, or NBFT) — they have no
+	 * parent.
+	 */
+	bool parent_epcsd_known;
+	bool parent_epcsd; // meaningful only if parent_epcsd_known
 };
 
 static LIST_HEAD(g_ctrls);
@@ -285,13 +296,38 @@ static void dlp_ioc_callback(const struct libnvmf_tid *t, void *user_data)
 		start_ctrl(t, false, is_nbft, fctx->via_dc);
 }
 
-static void dlp_dc_callback(const struct libnvmf_tid *t, void *user_data)
+/*
+ * Record the EPCSD bit @t's own referral entry carried in its parent's
+ * Discovery Log Page, as a fallback for when @t is later connected to and
+ * its own self entry turns out to be absent. A no-op if @t is not tracked
+ * yet (should_connect() rejected it, or start_ctrl() failed).
+ */
+static void record_parent_epcsd(const struct libnvmf_tid *t, bool epcsd)
+{
+	char *unit_name = tid_unit_name(t);
+	struct active_ctrl *e;
+
+	if (!unit_name)
+		return;
+
+	e = ctrl_find_by_unit(unit_name);
+	if (e) {
+		e->parent_epcsd_known = true;
+		e->parent_epcsd = epcsd;
+	}
+	free(unit_name);
+}
+
+static void dlp_dc_callback(const struct libnvmf_tid *t, bool epcsd,
+			    void *user_data)
 {
 	struct dlp_fetch_ctx *fctx = user_data;
 	bool is_nbft = inventory_is_nbft(ctx.inventory, t);
 
-	if (should_connect(t, NULL))
+	if (should_connect(t, NULL)) {
 		start_ctrl(t, true, is_nbft, fctx->via_dc);
+		record_parent_epcsd(t, epcsd);
+	}
 }
 
 static void dlp_self_callback(bool epcsd, void *user_data)
@@ -302,19 +338,35 @@ static void dlp_self_callback(bool epcsd, void *user_data)
 	fctx->epcsd = epcsd;
 }
 
+/*
+ * Self entry seen: its own EPCSD. Else the parent's referral-entry view
+ * of this DC, if any. Else assume EPCSD=0, matching core libnvme's
+ * dc_decide().
+ */
+static bool dc_effective_epcsd(const struct dlp_fetch_ctx *fctx,
+			       const struct active_ctrl *e)
+{
+	if (fctx->self_seen)
+		return fctx->epcsd;
+	if (e && e->parent_epcsd_known)
+		return e->parent_epcsd;
+	return false;
+}
+
 static void fetch_and_process_dlp(const char *devname,
 				  const struct libnvmf_tid *dc_tid)
 {
 	struct dlp_fetch_ctx fctx = {
 		.via_dc = inventory_config_conn_for(ctx.inventory, dc_tid),
 	};
+	struct active_ctrl *e = ctrl_find_by_devname(devname);
 
 	dlp_fetch(&ctx, devname, dc_tid, dlp_ioc_callback, dlp_dc_callback,
 		  dlp_self_callback, &fctx);
 
-	disc_dbg("%s: self entry %s, EPCSD=%d", libnvmf_tid_str(dc_tid),
-		 fctx.self_seen ? "seen" : "absent",
-		 fctx.self_seen && fctx.epcsd);
+	disc_dbg("%s: self entry %s, effective EPCSD=%d",
+		 libnvmf_tid_str(dc_tid), fctx.self_seen ? "seen" : "absent",
+		 dc_effective_epcsd(&fctx, e));
 
 	if (fctx.iocs.len) {
 		if (ioc_list_append(&fctx.iocs, NULL) == 0) {

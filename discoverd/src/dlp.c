@@ -47,7 +47,7 @@ int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
 	      const struct libnvmf_tid *dc_tid,
 	      void (*ioc_callback)(const struct libnvmf_tid *t,
 				   void *user_data),
-	      void (*dc_callback)(const struct libnvmf_tid *t,
+	      void (*dc_callback)(const struct libnvmf_tid *t, bool epcsd,
 				 void *user_data),
 	      void (*self_callback)(bool epcsd, void *user_data),
 	      void *user_data)
@@ -93,7 +93,8 @@ int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
 			break;
 		case NVME_NQN_DISC:
 			if (dc_callback)
-				dc_callback(t, user_data);
+				dc_callback(t, eflags & NVMF_DISC_EFLAGS_EPCSD,
+					    user_data);
 			break;
 		case NVME_NQN_CURR:
 			if (self_callback)
