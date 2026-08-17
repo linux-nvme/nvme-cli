@@ -264,6 +264,8 @@ SHR_PTRARRAY_DEFINE(ioc_list, struct libnvmf_tid);
 struct dlp_fetch_ctx {
 	const struct libnvmf_config_conn *via_dc; // dc_tid's own conn, if any
 	struct ioc_list iocs;
+	bool self_seen;
+	bool epcsd; // meaningful only if self_seen
 };
 
 static void dlp_ioc_callback(const struct libnvmf_tid *t, void *user_data)
@@ -292,6 +294,14 @@ static void dlp_dc_callback(const struct libnvmf_tid *t, void *user_data)
 		start_ctrl(t, true, is_nbft, fctx->via_dc);
 }
 
+static void dlp_self_callback(bool epcsd, void *user_data)
+{
+	struct dlp_fetch_ctx *fctx = user_data;
+
+	fctx->self_seen = true;
+	fctx->epcsd = epcsd;
+}
+
 static void fetch_and_process_dlp(const char *devname,
 				  const struct libnvmf_tid *dc_tid)
 {
@@ -300,7 +310,11 @@ static void fetch_and_process_dlp(const char *devname,
 	};
 
 	dlp_fetch(&ctx, devname, dc_tid, dlp_ioc_callback, dlp_dc_callback,
-		  &fctx);
+		  dlp_self_callback, &fctx);
+
+	disc_dbg("%s: self entry %s, EPCSD=%d", libnvmf_tid_str(dc_tid),
+		 fctx.self_seen ? "seen" : "absent",
+		 fctx.self_seen && fctx.epcsd);
 
 	if (fctx.iocs.len) {
 		if (ioc_list_append(&fctx.iocs, NULL) == 0) {

@@ -49,6 +49,7 @@ int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
 				   void *user_data),
 	      void (*dc_callback)(const struct libnvmf_tid *t,
 				 void *user_data),
+	      void (*self_callback)(bool epcsd, void *user_data),
 	      void *user_data)
 {
 	libnvme_ctrl_t ctrl = NULL;
@@ -93,6 +94,11 @@ int dlp_fetch(struct discoverd_ctx *ctx, const char *devname,
 		case NVME_NQN_DISC:
 			if (dc_callback)
 				dc_callback(t, user_data);
+			break;
+		case NVME_NQN_CURR:
+			if (self_callback)
+				self_callback(eflags & NVMF_DISC_EFLAGS_EPCSD,
+					      user_data);
 			break;
 		default:
 			break;
