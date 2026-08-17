@@ -755,6 +755,48 @@ class FabricsMockCLITest(unittest.TestCase):
                          "dc_a's Discovery Log Page was re-fetched via the "
                          "cycle; the visited-set should have short-circuited it")
 
+    def test_connect_all_referral_ring_visited_once(self):
+        """A fully bidirectional 3-DC referral ring (dc_a <-> dc_b <-> dc_c
+        <-> dc_a, every node referring to both its ring-neighbors) must not
+        re-walk any of them: each DC's Discovery Log Page is fetched exactly
+        once despite every node having a path back to every other node."""
+        dc_a = "nqn.2014-08.org.nvmexpress:uuid:dc-ring-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:uuid:dc-ring-B"
+        dc_c = "nqn.2014-08.org.nvmexpress:uuid:dc-ring-C"
+
+        self.server.discovery_map = {
+            dc_a: [
+                {'transport': 'tcp', 'traddr': '192.168.160.2', 'trsvcid': '4420',
+                 'subsysnqn': dc_b},
+                {'transport': 'tcp', 'traddr': '192.168.160.3', 'trsvcid': '4420',
+                 'subsysnqn': dc_c},
+            ],
+            dc_b: [
+                # Back-reference to the primary's own connection params.
+                {'transport': 'tcp', 'traddr': '192.168.160.1', 'trsvcid': DISCOVERY_PORT,
+                 'subsysnqn': dc_a},
+                {'transport': 'tcp', 'traddr': '192.168.160.3', 'trsvcid': '4420',
+                 'subsysnqn': dc_c},
+            ],
+            dc_c: [
+                {'transport': 'tcp', 'traddr': '192.168.160.2', 'trsvcid': '4420',
+                 'subsysnqn': dc_b},
+                # Back-reference to the primary's own connection params.
+                {'transport': 'tcp', 'traddr': '192.168.160.1', 'trsvcid': DISCOVERY_PORT,
+                 'subsysnqn': dc_a},
+            ],
+        }
+
+        self._run('connect-all', '-t', 'tcp', '-a', '192.168.160.1', '-n', dc_a)
+
+        self.assertEqual(self._subsysnqn(1), dc_b)
+        self.assertEqual(self._subsysnqn(2), dc_c)
+        for nqn in (dc_a, dc_b, dc_c):
+            self.assertEqual(self.server.log_page_fetch_count.get(nqn, 0), 1,
+                             f"{nqn}'s Discovery Log Page was re-fetched via "
+                             "the ring; the visited-set should have "
+                             "short-circuited every back-reference")
+
 
 if __name__ == '__main__':
     # If called standalone, strip the arguments parsed by FabricsMockCLITest
