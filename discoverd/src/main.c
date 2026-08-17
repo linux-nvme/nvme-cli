@@ -41,13 +41,13 @@
 
 // Exponential backoff for failed (re)connect attempts: 1s, 2s, 4s, ... capped
 // at 5 min. A dynamically-discovered DC (not NBFT- or config-sourced — a
-// referral or FC-kickstart find) additionally gives up after 72h of
-// unbroken failure and is dropped from tracking, since nothing but its own
-// retries vouches for it any more. Static and NBFT-sourced DCs represent
-// deliberate admin/firmware intent and always retry forever.
+// referral or FC-kickstart find) additionally gives up after
+// dc-giveup-hours (default 72h) of unbroken failure and is dropped from
+// tracking, since nothing but its own retries vouches for it any more.
+// Static and NBFT-sourced DCs represent deliberate admin/firmware intent
+// and always retry forever.
 #define RETRY_INITIAL_DELAY_SEC 1
 #define RETRY_MAX_DELAY_SEC     300
-#define DC_GIVEUP_USEC          (UINT64_C(72) * 3600 * UINT64_C(1000000))
 
 struct active_ctrl {
 	struct list_node entry;
@@ -395,19 +395,25 @@ static void fetch_and_process_dlp(const char *devname,
 /*
  * Arm a dynamically-discovered DC's give-up deadline the first time it is
  * seen failing to (re)connect. Static/NBFT-sourced DCs and IOCs never get
- * one and retry forever.
+ * one and retry forever, and so does a dynamic DC when dc-giveup-hours is
+ * configured to 0.
  */
 static void ctrl_arm_giveup(struct active_ctrl *e)
 {
-	uint64_t now;
+	uint64_t now, giveup_usec;
 
 	if (e->giveup_at_usec || !e->is_dc)
 		return;
 	if (inventory_is_nbft(ctx.inventory, e->tid) ||
 	    inventory_config_conn_for(ctx.inventory, e->tid))
 		return;
+	if (!ctx.cfg->dc_giveup_hours)
+		return;
+
+	giveup_usec = (uint64_t)ctx.cfg->dc_giveup_hours *
+		      3600 * UINT64_C(1000000);
 	if (sd_event_now(ctx.event, CLOCK_BOOTTIME, &now) >= 0)
-		e->giveup_at_usec = now + DC_GIVEUP_USEC;
+		e->giveup_at_usec = now + giveup_usec;
 }
 
 static uint64_t backoff_delay_usec(unsigned int attempts)

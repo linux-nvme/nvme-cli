@@ -19,6 +19,7 @@
  *   debug-level = info
  *   fc-kickstart-interval-minutes = 0
  *   epcsd-poll-interval-minutes = 15
+ *   dc-giveup-hours = 72
  */
 struct discoverd_config {
 	bool nbft; // adopt/connect NBFT-listed controllers; default true
@@ -45,6 +46,14 @@ struct discoverd_config {
 	 * this poll is not optional).
 	 */
 	unsigned int epcsd_poll_interval_minutes;
+
+	/*
+	 * Hours a dynamically-discovered DC (found only via referral or FC
+	 * kickstart, not NBFT or the fabrics config) keeps retrying a failed
+	 * (re)connect before it's dropped from tracking. Default 72. 0 =
+	 * never give up, same as a static/NBFT-sourced DC.
+	 */
+	unsigned int dc_giveup_hours;
 };
 
 /*

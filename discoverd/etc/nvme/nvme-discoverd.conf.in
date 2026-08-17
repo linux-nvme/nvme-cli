@@ -23,3 +23,9 @@
 # N (N >= 1) = additionally re-issue kickstart every N minutes, e.g. to
 # detect FC equipment replacement sooner.
 #fc-kickstart-interval-minutes = 0
+
+# Hours a dynamically-discovered DC (found only via referral or FC
+# kickstart, not NBFT or the fabrics config) keeps retrying a failed
+# (re)connect before it's dropped from tracking. 0 = never give up, same
+# as a static/NBFT-sourced DC.
+#dc-giveup-hours = 72

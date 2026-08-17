@@ -26,6 +26,7 @@ static void config_set_defaults(struct discoverd_config *cfg)
 	cfg->debug_level = DISC_LOG_INFO;
 	cfg->fc_kickstart_interval_minutes = 0;
 	cfg->epcsd_poll_interval_minutes = 15;
+	cfg->dc_giveup_hours = 72;
 }
 
 static int parse_debug_level(const char *val, int *out)
@@ -87,6 +88,8 @@ static void apply_global_key(struct discoverd_config *cfg, const char *key,
 	else if (streq(key, "epcsd-poll-interval-minutes"))
 		r = parse_epcsd_poll_interval(
 			val, &cfg->epcsd_poll_interval_minutes);
+	else if (streq(key, "dc-giveup-hours"))
+		r = parse_uint(val, &cfg->dc_giveup_hours);
 	else
 		disc_warn("%s:%u: unknown key '%s', ignored", conf_path,
 			  lineno, key);

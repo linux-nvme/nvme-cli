@@ -31,8 +31,9 @@ controller's transport identity.
 Failed connections retry with exponential backoff. Discovery
 Controllers from NBFT or the fabrics config represent explicit intent,
 so they always retry forever. A Discovery Controller found only
-through a referral or FC kickstart is different: it gives up after 72
-hours of unbroken failure and is dropped from tracking.
+through a referral or FC kickstart is different: it gives up after
+'dc-giveup-hours' (default 72) hours of unbroken failure and is
+dropped from tracking.
 
 Before connecting or reconnecting anything, nvme-discoverd checks the
 system-wide exclusion list. It also registers ownership of every
@@ -81,6 +82,7 @@ nvme-discoverd.conf holds only the daemon's own knobs, in a single
 	nbft = true
 	debug-level = info
 	fc-kickstart-interval-minutes = 0
+	dc-giveup-hours = 72
 
 'nbft' (boolean, default true) controls whether NBFT-listed controllers
 are adopted and reconnected. 'debug-level' (err, warn, info, or debug;
@@ -89,7 +91,9 @@ overrides it. 'fc-kickstart-interval-minutes' (default 0, disabled)
 re-probes the FC fabric on a timer. This is independent of the
 kickstart nvme-discoverd already issues at startup and on every FC
 controller drop -- use it to detect FC equipment replacement sooner
-than the next connection event.
+than the next connection event. 'dc-giveup-hours' (default 72) is the
+give-up horizon described above; 0 makes a dynamically-discovered DC
+retry forever, same as a static/NBFT-sourced one.
 
 The connections nvme-discoverd manages come entirely from the shared
 fabrics configuration, not from this file: which Discovery Controllers
