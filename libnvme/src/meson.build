@@ -123,6 +123,12 @@ else
     sources += 'nvme/no-uring.c'
 endif
 
+if want_ioctl_tests
+    sources += 'nvme/ioctl-loopback.c'
+else
+    sources += 'nvme/no-loopback.c'
+endif
+
 deps = [
     ccan_dep,
     config_dep,

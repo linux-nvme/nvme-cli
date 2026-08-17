@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#include <fcntl.h>
 #include <inttypes.h>
 #include <string.h>
 
 #include <libnvme.h>
 
-#include "mock.h"
+#include "nvme/loopback.h"
 #include "util.h"
 
 #define TEST_NSID 0x12345678
@@ -23,7 +22,7 @@ static void test_format_nvm(void)
 	enum nvme_cmd_format_ses ses = NVME_FORMAT_SES_USER_DATA_ERASE;
 	__u32 nsid = TEST_NSID;
 	__u8 lbaf = 0x1F;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_format_nvm,
 		.nsid = nsid,
 		.cdw10 = lbaf | (mset << 4) | (pi << 5) |
@@ -33,10 +32,10 @@ static void test_format_nvm(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_format_nvm(&cmd, nsid, lbaf, mset, pi, pil, ses);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -47,7 +46,7 @@ static void test_ns_mgmt(void)
 	enum nvme_ns_mgmt_sel sel = NVME_NS_MGMT_SEL_CREATE;
 	__u32 nsid = TEST_NSID;
 	__u8 csi = TEST_CSI;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_mgmt,
 		.nsid = nsid,
 		.cdw10 = sel,
@@ -60,10 +59,10 @@ static void test_ns_mgmt(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_ns_mgmt(&cmd, nsid, sel, csi, &data);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -75,7 +74,7 @@ static void test_ns_mgmt_create(void)
 	enum nvme_ns_mgmt_sel sel = NVME_NS_MGMT_SEL_CREATE;
 	__u32 nsid = NVME_NSID_NONE;
 	__u8 csi = NVME_CSI_ZNS;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_mgmt,
 		.nsid = nsid,
 		.cdw10 = sel,
@@ -88,10 +87,10 @@ static void test_ns_mgmt_create(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_ns_mgmt_create(&cmd, NVME_CSI_ZNS, &data);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == TEST_NSID,
 		"returned result %" PRIu64, (uint64_t)cmd.result);
@@ -100,7 +99,7 @@ static void test_ns_mgmt_create(void)
 
 static void test_ns_mgmt_delete(void)
 {
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_mgmt,
 		.nsid = TEST_NSID,
 		.cdw10 = NVME_NS_MGMT_SEL_DELETE,
@@ -108,10 +107,10 @@ static void test_ns_mgmt_delete(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_ns_mgmt_delete(&cmd, TEST_NSID);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 }
 
@@ -119,7 +118,7 @@ static void test_get_property(void)
 {
 	__u64 expected_result;
 	arbitrary(&expected_result, sizeof(expected_result));
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_fabrics,
 		.nsid = nvme_fabrics_type_property_get,
 		.cdw10 = true,
@@ -129,10 +128,10 @@ static void test_get_property(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_get_property(&cmd, NVME_REG_ACQ);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == expected_result, "returned wrong result");
 }
@@ -140,7 +139,7 @@ static void test_get_property(void)
 static void test_set_property(void)
 {
 	__u64 value = 0xffffffff;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_fabrics,
 		.nsid = nvme_fabrics_type_property_set,
 		.cdw10 = true,
@@ -151,10 +150,10 @@ static void test_set_property(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_set_property(&cmd, NVME_REG_BPMBL, value);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -164,7 +163,7 @@ static void test_ns_attach(void)
 	struct nvme_ctrl_list expected_ctrlist, ctrlist;
 	enum nvme_ns_attach_sel sel = NVME_NS_ATTACH_SEL_CTRL_ATTACH;
 	__u32 nsid = TEST_NSID;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_attach,
 		.nsid = nsid,
 		.cdw10 = sel,
@@ -175,10 +174,10 @@ static void test_ns_attach(void)
 	int err;
 
 	arbitrary(&expected_ctrlist, sizeof(expected_ctrlist));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_ns_attach(&cmd, nsid, sel, &ctrlist);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 	cmp(&expected_ctrlist, &ctrlist, sizeof(expected_ctrlist),
@@ -188,7 +187,7 @@ static void test_ns_attach(void)
 static void test_ns_attach_ctrls(void)
 {
 	struct nvme_ctrl_list ctrlist;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_attach,
 		.nsid = TEST_NSID,
 		.cdw10 = NVME_NS_ATTACH_SEL_CTRL_ATTACH,
@@ -199,17 +198,17 @@ static void test_ns_attach_ctrls(void)
 	int err;
 
 	arbitrary(&ctrlist, sizeof(ctrlist));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_ns_attach_ctrls(&cmd, TEST_NSID, &ctrlist);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 }
 
 static void test_ns_detach_ctrls(void)
 {
 	struct nvme_ctrl_list ctrlist;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ns_attach,
 		.nsid = TEST_NSID,
 		.cdw10 = NVME_NS_ATTACH_SEL_CTRL_DEATTACH,
@@ -220,10 +219,10 @@ static void test_ns_detach_ctrls(void)
 	int err;
 
 	arbitrary(&ctrlist, sizeof(ctrlist));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_ns_detach_ctrls(&cmd, TEST_NSID, &ctrlist);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 }
 
@@ -232,7 +231,7 @@ static void test_fw_download(void)
 	__u8 expected_data[8], data[8];
 	__u32 data_len = sizeof(expected_data);
 	__u32 offset = 120;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_fw_download,
 		.cdw10 = (data_len >> 2) - 1,
 		.cdw11 = offset >> 2,
@@ -244,11 +243,11 @@ static void test_fw_download(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	err = nvme_init_fw_download(&cmd, data, data_len, offset);
 	check(err == 0, "download initializing error %d", err);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -259,17 +258,17 @@ static void test_fw_commit(void)
 		NVME_FW_COMMIT_CA_REPLACE_AND_ACTIVATE_IMMEDIATE;
 	__u8 slot = 0xf;
 	bool bpid = true;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_fw_commit,
 		.cdw10 = ((uint32_t)bpid << 31) | (action << 3) | slot,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_fw_commit(&cmd, slot, action, bpid);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -283,7 +282,7 @@ static void test_security_send(void)
 	__u8 nssf = 0x1;
 	__u16 spsp = 0x0101;
 	__u8 secp = 0xE9;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_security_send,
 		.nsid = TEST_NSID,
 		.cdw10 = nssf | (spsp << 8) | ((uint32_t)secp << 24),
@@ -296,11 +295,11 @@ static void test_security_send(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_security_send(&cmd, nsid, nssf, spsp, secp, tl,
 		data, data_len);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -314,7 +313,7 @@ static void test_security_receive(void)
 	__u8 secp = 0xE9;
 	__u8 nssf = 0x1;
 	int err;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_security_recv,
 		.nsid = TEST_NSID,
 		.cdw10 = nssf | (spsp << 8) | ((uint32_t)secp << 24),
@@ -325,11 +324,11 @@ static void test_security_receive(void)
 	struct libnvme_passthru_cmd cmd;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_security_receive(&cmd, TEST_NSID, nssf, spsp, secp, al,
 		data, sizeof(data));
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -354,7 +353,7 @@ static void test_get_lba_status(void)
 	expected_lbas = malloc(lba_status_size);
 	check(expected_lbas, "expected_lbas: ENOMEM");
 
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_get_lba_status,
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
@@ -367,11 +366,11 @@ static void test_get_lba_status(void)
 	struct libnvme_passthru_cmd cmd;
 
 	arbitrary(expected_lbas, lba_status_size);
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_get_lba_status(&cmd, TEST_NSID, slba, mndw, atype,
 		rl, lbas);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned wrong result");
 	cmp(lbas, expected_lbas, lba_status_size, "incorrect lbas");
@@ -385,7 +384,7 @@ static void test_directive_send(void)
 	__u8 expected_data[8], data[8];
 	__u32 data_len = sizeof(expected_data);
 	__u16 dspec = 0x0;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_send,
 		.nsid = TEST_NSID,
 		.cdw10 = data_len ? (data_len >> 2) - 1 : 0,
@@ -398,11 +397,11 @@ static void test_directive_send(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_directive_send(&cmd, TEST_NSID, doper, dtype, dspec,
 		expected_data, data_len);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned wrong result");
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -411,7 +410,7 @@ static void test_directive_send(void)
 static void test_directive_send_id_endir(void)
 {
 	struct nvme_id_directives expected_id, id;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_send,
 		.nsid = TEST_NSID,
 		.cdw10 = (sizeof(expected_id) >> 2) - 1,
@@ -426,11 +425,11 @@ static void test_directive_send_id_endir(void)
 
 	arbitrary(&expected_id, sizeof(expected_id));
 	memcpy(&id, &expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_directive_send_id_endir(&cmd, TEST_NSID, true,
 		NVME_DIRECTIVE_DTYPE_STREAMS, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect id");
 }
@@ -438,7 +437,7 @@ static void test_directive_send_id_endir(void)
 static void test_directive_send_stream_release_identifier(void)
 {
 	__u16 stream_id = 0x1234;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_send,
 		.nsid = TEST_NSID,
 		.cdw11 = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_IDENTIFIER |
@@ -448,17 +447,17 @@ static void test_directive_send_stream_release_identifier(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_directive_send_stream_release_identifier(&cmd, TEST_NSID,
 		stream_id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 }
 
 static void test_directive_send_stream_release_resource(void)
 {
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_send,
 		.nsid = TEST_NSID,
 		.cdw11 = NVME_DIRECTIVE_SEND_STREAMS_DOPER_RELEASE_RESOURCE |
@@ -467,10 +466,10 @@ static void test_directive_send_stream_release_resource(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_directive_send_stream_release_resource(&cmd, TEST_NSID);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 }
 
@@ -481,7 +480,7 @@ static void test_directive_recv(void)
  	__u8 expected_data[8], data[8];
 	__u32 data_len = sizeof(data);
 	__u16 dspec = 0x0;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_recv,
 		.nsid = TEST_NSID,
 		.cdw10 = data_len ? (data_len >> 2) - 1 : 0,
@@ -493,11 +492,11 @@ static void test_directive_recv(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_directive_recv(&cmd, TEST_NSID, doper, dtype, dspec,
 		data, data_len);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned wrong result");
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -506,7 +505,7 @@ static void test_directive_recv(void)
 static void test_directive_recv_identify_parameters(void)
 {
 	struct nvme_id_directives expected_id, id;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_recv,
 		.nsid = TEST_NSID,
 		.cdw10 = (sizeof(expected_id) >> 2) - 1,
@@ -519,10 +518,10 @@ static void test_directive_recv_identify_parameters(void)
 	int err;
 
 	arbitrary(&expected_id, sizeof(expected_id));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_directive_recv_identify_parameters(&cmd, TEST_NSID, &id);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	cmp(&id, &expected_id, sizeof(id), "incorrect id");
 }
@@ -530,7 +529,7 @@ static void test_directive_recv_identify_parameters(void)
 static void test_directive_recv_stream_parameters(void)
 {
 	struct nvme_streams_directive_params expected_params, params;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_recv,
 		.nsid = TEST_NSID,
 		.cdw10 = (sizeof(expected_params) >> 2) - 1,
@@ -543,10 +542,10 @@ static void test_directive_recv_stream_parameters(void)
 	int err;
 
 	arbitrary(&expected_params, sizeof(expected_params));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_directive_recv_stream_parameters(&cmd, TEST_NSID, &params);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	cmp(&params, &expected_params, sizeof(params), "incorrect params");
 }
@@ -567,7 +566,7 @@ static void test_directive_recv_stream_status(void)
 	expected_status = malloc(stream_status_size);
 	check(expected_status, "expected_status: ENOMEM");
 
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_recv,
 		.nsid = TEST_NSID,
 		.cdw10 = (stream_status_size >> 2) - 1,
@@ -580,11 +579,11 @@ static void test_directive_recv_stream_status(void)
 	int err;
 
 	arbitrary(expected_status, stream_status_size);
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_directive_recv_stream_status(&cmd, TEST_NSID, nr_entries,
 		status);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	cmp(status, expected_status, stream_status_size, "incorrect status");
 }
@@ -593,7 +592,7 @@ static void test_directive_recv_stream_allocate(void)
 {
 	__u64 expected_result = 0x45;
 	__u16 nsr = 0x67;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_directive_recv,
 		.nsid = TEST_NSID,
 		.cdw11 = NVME_DIRECTIVE_RECEIVE_STREAMS_DOPER_RESOURCE |
@@ -604,10 +603,10 @@ static void test_directive_recv_stream_allocate(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_directive_recv_stream_allocate(&cmd, TEST_NSID, nsr);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == expected_result, "wrong result");
 }
@@ -618,7 +617,7 @@ void test_capacity_mgmt(void)
 	__u16 elid = 0x12;
 	__u64 cap = 0x0000567800001234;
 	__u8 op = 0x3;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_capacity_mgmt,
 		.nsid = NVME_NSID_NONE,
 		.cdw10 = op | elid << 16,
@@ -629,10 +628,10 @@ void test_capacity_mgmt(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_capacity_mgmt(&cmd, op, elid, cap);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == expected_result, "wrong result");
 }
@@ -645,7 +644,7 @@ static void test_lockdown(void)
 	__u8 ofi = 0x12;
 	__u8 scp = 0x2;
 	__u8 ifc = 0x1;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_lockdown,
 		.cdw10 = ofi << 8 | (ifc & 0x3) << 5 |
 			 (prhbt & 0x1) << 4 | (scp & 0xF),
@@ -655,10 +654,10 @@ static void test_lockdown(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_lockdown(&cmd, scp, prhbt, ifc, ofi, uuidx);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == expected_result, "wrong result");
 }
@@ -674,7 +673,7 @@ static void test_sanitize_nvm(void)
 	bool ndas = true;
 	bool emvs = false;
 	bool ause = true;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_sanitize_nvm,
 		.cdw10 = sanact | (ause << 3) | (owpass << 4) |
 			 (oipbp << 8) | (ndas << 9),
@@ -684,11 +683,11 @@ static void test_sanitize_nvm(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_sanitize_nvm(&cmd, sanact, ause, owpass, oipbp, ndas,
 		emvs, ovrpat);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == expected_result, "wrong result");
 }
@@ -696,7 +695,7 @@ static void test_sanitize_nvm(void)
 static void test_dev_self_test(void)
 {
 	__u64 expected_result = 0x45;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_dev_self_test,
 		.nsid = TEST_NSID,
 		.cdw10 = NVME_DST_STC_ABORT,
@@ -705,10 +704,10 @@ static void test_dev_self_test(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_dev_self_test(&cmd, TEST_NSID, NVME_DST_STC_ABORT);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == expected_result, "wrong result");
 }
@@ -720,7 +719,7 @@ static void test_virtual_mgmt(void)
 	__u64 expected_result = 0x45;
 	__u16 cntlid = 0x0;
 	__u16 nr = 0xff;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_virtual_mgmt,
 		.cdw10 = act | (rt << 8) | (cntlid << 16),
 		.cdw11 = nr,
@@ -729,27 +728,27 @@ static void test_virtual_mgmt(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_virtual_mgmt(&cmd, act, rt, cntlid, nr);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == expected_result, "wrong result");
 }
 
 static void test_flush(void)
 {
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_flush,
 		.nsid = TEST_NSID,
 	};
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_flush(&cmd, TEST_NSID);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 }
 
@@ -762,7 +761,7 @@ static void test_read(void)
 	__u8 dsm = NVME_IO_DSM_LATENCY_LOW;
 	__u16 apptag = 0x12;
 	__u16 appmask = 0x34;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_read,
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
@@ -777,12 +776,12 @@ static void test_read(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_read(&cmd, TEST_NSID, slba, nlb, control, dsm, 0,
 		data, sizeof(data), NULL, 0);
 	nvme_init_app_tag(&cmd, apptag, appmask);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -797,7 +796,7 @@ static void test_write(void)
 	__u16 dspec = 0xa;
 	__u16 apptag = 0x59;
 	__u16 appmask = 0x94;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_write,
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
@@ -812,12 +811,12 @@ static void test_write(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_write(&cmd, TEST_NSID, slba, nlb, control, dspec, dsm, 0,
 		expected_data, sizeof(expected_data), NULL, 0);
 	nvme_init_app_tag(&cmd, apptag, appmask);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -831,7 +830,7 @@ static void test_compare(void)
 	__u16 cev = 0;
 	__u16 apptag = 0x59;
 	__u16 appmask = 0x94;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_compare,
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
@@ -846,12 +845,12 @@ static void test_compare(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_compare(&cmd, TEST_NSID, slba, nlb, control, cev, data,
 		sizeof(data), NULL, 0);
 	nvme_init_app_tag(&cmd, apptag, appmask);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -866,7 +865,7 @@ static void test_write_zeros(void)
 	__u16 dspec = 0xbb;
 	__u16 apptag = 0xfa;
 	__u16 appmask = 0x72;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_write_zeroes,
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
@@ -878,12 +877,12 @@ static void test_write_zeros(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_write_zeros(&cmd, TEST_NSID, slba, nlb, control,
 		dspec, dsm, cev);
 	nvme_init_app_tag(&cmd, apptag, appmask);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -897,7 +896,7 @@ static void test_write_uncorrectable(void)
 	__u16 dspec = 0x0;
 	__u16 apptag = 0x0;
 	__u16 appmask = 0x0;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_write_uncor,
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
@@ -909,12 +908,12 @@ static void test_write_uncorrectable(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_write_uncorrectable(&cmd, TEST_NSID, slba, nlb,
 		control, dspec);
 	nvme_init_app_tag(&cmd, apptag, appmask);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -927,7 +926,7 @@ static void test_verify(void)
 	__u16 cev = 0;
 	__u16 apptag = 0xffff;
 	__u16 appmask = 0xffff;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_verify,
 		.nsid = TEST_NSID,
 		.cdw10 = slba & 0xffffffff,
@@ -939,12 +938,12 @@ static void test_verify(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_verify(&cmd, TEST_NSID, slba, nlb, control, cev,
 		NULL, 0, NULL, 0);
 	nvme_init_app_tag(&cmd, apptag, appmask);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -960,7 +959,7 @@ static void test_dsm(void)
 	dsm = malloc(dsm_size);
 	check(dsm, "dsm: ENOMEM");
 
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_dsm,
 		.nsid = TEST_NSID,
 		.cdw10 = nr_ranges - 1,
@@ -972,10 +971,10 @@ static void test_dsm(void)
 	int err;
 
 	arbitrary(dsm, dsm_size);
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_dsm(&cmd, TEST_NSID, nr_ranges, 0, 0, 1, dsm, dsm_size);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -1007,7 +1006,7 @@ static void test_copy(void)
 	copy = calloc(1, copy_size);
 	check(copy, "copy: ENOMEM");
 
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_copy,
 		.nsid = TEST_NSID,
 		.cdw10 = sdlba & 0xffffffff,
@@ -1022,14 +1021,14 @@ static void test_copy(void)
 	};
 	struct libnvme_passthru_cmd cmd;
 
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_copy_range_f0(copy, nlbs, slbas, short_pi, elbatms, elbats,
 				nr);
 	nvme_init_copy(&cmd, TEST_NSID, sdlba, nr, desfmt,
 		prinfor, prinfow, cetype, dtype, stcw, stcr,
 		fua, lr, cev, dspec, (void *)copy);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -1063,7 +1062,7 @@ static void test_copy_range_f1(void)
 	copy = calloc(1, copy_size);
 	check(copy, "copy: ENOMEM");
 
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_copy,
 		.nsid = TEST_NSID,
 		.cdw10 = sdlba & 0xffffffff,
@@ -1078,14 +1077,14 @@ static void test_copy_range_f1(void)
 	};
 	struct libnvme_passthru_cmd cmd;
 
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_copy_range_f1(copy, nlbs, slbas, long_pi, elbatms, elbats,
 				nr);
 	nvme_init_copy(&cmd, TEST_NSID, sdlba, nr, desfmt,
 		prinfor, prinfow, cetype, dtype, stcw, stcr,
 		fua, lr, cev, dspec, (void *)copy);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64,
 	      (uint64_t)cmd.result);
@@ -1098,7 +1097,7 @@ static void test_resv_acquire(void)
 	__le64 expected_payload[2] = { htole64(1), htole64(2) };
 	__le64 payload[2];
 	bool iekey = true;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_resv_acquire,
 		.nsid = TEST_NSID,
 		.cdw10 = (racqa & 0x7) | (iekey ? 1 << 3 : 0) |
@@ -1109,11 +1108,11 @@ static void test_resv_acquire(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_resv_acquire(&cmd, TEST_NSID, racqa, iekey, false, rtype,
 		1, 2, payload);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -1125,7 +1124,7 @@ static void test_resv_register(void)
 	__le64 expected_payload[2] = { 0xffffffffffffffff, 0 };
 	__le64 payload[2];
 	bool iekey = true;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_resv_register,
 		.nsid = TEST_NSID,
 		.cdw10 = (rrega & 0x7) | (iekey ? 1 << 3 : 0) |
@@ -1136,11 +1135,11 @@ static void test_resv_register(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_resv_register(&cmd, TEST_NSID, rrega, iekey, false, cptpl,
 		0xffffffffffffffff, 0, payload);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -1152,7 +1151,7 @@ static void test_resv_release(void)
 	__le64 expected_payload[1] = { 0xffffffffffffffff };
 	__le64 payload[1];
 	bool iekey = true;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_resv_release,
 		.nsid = TEST_NSID,
 		.cdw10 = (rrela & 0x7) | (iekey ? 1 << 3 : 0) |
@@ -1163,11 +1162,11 @@ static void test_resv_release(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_resv_release(&cmd, TEST_NSID, rrela, iekey, false, rtype,
 		0xffffffffffffffff, payload);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -1178,7 +1177,7 @@ static void test_resv_report(void)
 	__u32 len = sizeof(status);
 	bool eds = false;
 	bool disnsrs = true;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_resv_report,
 		.nsid = TEST_NSID,
 		.cdw10 = (len >> 2) - 1,
@@ -1190,10 +1189,10 @@ static void test_resv_report(void)
 	int err;
 
 	arbitrary(&expected_status, sizeof(expected_status));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_resv_report(&cmd, TEST_NSID, eds, disnsrs, &status, len);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 	cmp(&status, &expected_status, sizeof(status), "incorrect status");
@@ -1205,7 +1204,7 @@ static void test_io_mgmt_recv(void)
 	__u32 data_len = sizeof(data);
 	__u16 mos = 0x1;
 	__u8 mo = 0x2;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_io_mgmt_recv,
 		.nsid = TEST_NSID,
 		.cdw10 = mo | (mos << 16),
@@ -1217,10 +1216,10 @@ static void test_io_mgmt_recv(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_io_mgmt_recv(&cmd, TEST_NSID, mo, mos, data, data_len);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -1231,7 +1230,7 @@ static void test_io_mgmt_send(void)
 	__u32 data_len = sizeof(data);
 	__u16 mos = 0x1;
 	__u8 mo = 0x2;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_io_mgmt_send,
 		.nsid = TEST_NSID,
 		.cdw10 = mo | (mos << 16),
@@ -1243,10 +1242,10 @@ static void test_io_mgmt_send(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_io_mgmt_send(&cmd, TEST_NSID, mo, mos, data, data_len);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -1255,7 +1254,7 @@ static void test_fdp_reclaim_unit_handle_status(void)
 {
 	__u8 expected_data[8], data[8] = {};
 	__u32 data_len = sizeof(data);
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_io_mgmt_recv,
 		.nsid = TEST_NSID,
 		.cdw10 = NVME_IO_MGMT_RECV_RUH_STATUS,
@@ -1267,11 +1266,11 @@ static void test_fdp_reclaim_unit_handle_status(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_fdp_reclaim_unit_handle_status(&cmd, TEST_NSID,
 		&data, data_len);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
 }
@@ -1280,7 +1279,7 @@ static void test_fdp_reclaim_unit_handle_update(void)
 {
 	__u16 pids;
 	unsigned int npids = 1;
-	struct mock_cmd mock_io_cmd = {
+	struct libnvme_loopback_cmd mock_io_cmd = {
 		.opcode = nvme_cmd_io_mgmt_send,
 		.nsid = TEST_NSID,
 		.cdw10 = NVME_IO_MGMT_SEND_RUH_UPDATE | ((npids - 1) << 16),
@@ -1291,10 +1290,10 @@ static void test_fdp_reclaim_unit_handle_update(void)
 	int err;
 
 	arbitrary(&pids, sizeof(pids));
-	set_mock_io_cmds(&mock_io_cmd, 1);
+	libnvme_loopback_set_io_cmds(test_hdl, &mock_io_cmd, 1);
 	nvme_init_fdp_reclaim_unit_handle_update(&cmd, TEST_NSID, &pids, npids);
 	err = libnvme_exec_io_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 }
 
@@ -1303,7 +1302,7 @@ static void test_dim_send(void)
 	__u8 expected_data[8], data[8] = {};
 	__u32 data_len = sizeof(data);
 	__u8 tas = 0xf;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_discovery_info_mgmt,
 		.cdw10 = tas,
 		.data_len =data_len,
@@ -1314,10 +1313,10 @@ static void test_dim_send(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_dim_send(&cmd, tas, data, data_len);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -1330,7 +1329,7 @@ static void test_lm_cdq_delete(void)
 	__u16 cdqid = 0x3;
 	__u8 sel = NVME_LM_SEL_DELETE_CDQ;
 	__u32 sz = 0;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_ctrl_data_queue,
 		.cdw10 = sel | (mos << 16),
 		.cdw11 = cdqid,
@@ -1343,10 +1342,10 @@ static void test_lm_cdq_delete(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_lm_cdq_delete(&cmd, mos, cdqid);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -1357,7 +1356,7 @@ static void test_lm_track_send(void)
 	__u8 sel = NVME_LM_SEL_DELETE_CDQ;
 	__u16 cdqid = 0x3;
 	__u16 mos = 0x1;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_track_send,
 		.cdw10 = sel | (mos << 16),
 		.cdw11 = cdqid,
@@ -1365,10 +1364,10 @@ static void test_lm_track_send(void)
 	struct libnvme_passthru_cmd cmd;
 	int err;
 
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_lm_track_send(&cmd, sel, mos, cdqid);
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 }
@@ -1386,7 +1385,7 @@ static void test_lm_migration_send(void)
 	__u8 csvi = 0x2;
 	__u16 csuuidi = 0x13;
 	bool dudmq = false;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_migration_send,
 		.cdw10 = sel | (mos << 16),
 		.cdw11 = cntlid,
@@ -1402,11 +1401,11 @@ static void test_lm_migration_send(void)
 
 	arbitrary(&expected_data, sizeof(expected_data));
 	memcpy(&data, &expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_lm_migration_send(&cmd, sel, mos, cntlid, stype, dudmq,
 		csvi, csuuidi, offset, uidx, &data, sizeof(data));
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -1423,7 +1422,7 @@ static void test_lm_migration_recv(void)
 	__u8 csuidxp = 0x5;
 	__u16 mos = 0x1;
 	__u8 uidx = 0x4;
-	struct mock_cmd mock_admin_cmd = {
+	struct libnvme_loopback_cmd mock_admin_cmd = {
 		.opcode = nvme_admin_migration_receive,
 		.cdw10 = sel | (mos << 16),
 		.cdw11 = cntlid | (csuuidi << 16) |
@@ -1439,11 +1438,11 @@ static void test_lm_migration_recv(void)
 	int err;
 
 	arbitrary(&expected_data, sizeof(expected_data));
-	set_mock_admin_cmds(&mock_admin_cmd, 1);
+	libnvme_loopback_set_admin_cmds(test_hdl, &mock_admin_cmd, 1);
 	nvme_init_lm_migration_recv(&cmd, offset, mos, cntlid, csuuidi, sel,
 		uidx, csuidxp, data, sizeof(data));
 	err = libnvme_exec_admin_passthru(test_hdl, &cmd);
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(err == 0, "returned error %d", err);
 	check(cmd.result == 0, "returned result %" PRIu64, (uint64_t)cmd.result);
 	cmp(&data, &expected_data, sizeof(data), "incorrect data");
@@ -1464,8 +1463,7 @@ int main(void)
 	struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
 	libnvme_set_logging_file(ctx, stdout);
 
-	set_mock_fd(LIBNVME_TEST_FD);
-	check(!libnvme_open(ctx, "NVME_TEST_FD64", O_RDONLY, &test_hdl),
+	check(!libnvme_open_loopback(ctx, &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(format_nvm);

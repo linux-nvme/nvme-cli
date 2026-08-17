@@ -5,135 +5,92 @@
 #
 # Authors: Daniel Wagner <dwagner@suse.de>
 
-mock_conf = configuration_data()
-
-mock_conf.set(
-    'NVME_HAVE_GLIBC_IOCTL',
-    cc.compiles(
-        '''#include <sys/ioctl.h>
-        int ioctl(int fd, unsigned long request, ...);
-        ''',
-        name: 'ioctl has glibc-style prototype'
-    ),
-    description: 'Is ioctl the glibc interface (rather than POSIX)'
-)
-
-mock_ioctl = library(
-    'mock-ioctl',
-    ['mock.c', 'util.c'],
-    dependencies: [
-        config_dep,
-        ccan_dep,
-        libnvme_dep,
-        dl_dep,
-    ],
-    c_args: ['-DNVME_HAVE_GLIBC_IOCTL=' + (mock_conf.get('NVME_HAVE_GLIBC_IOCTL') ? '1' : '0')],
-)
-
-# Add mock-ioctl to the LD_PRELOAD path so it overrides libc.
-# Append to LD_PRELOAD so existing libraries, e.g. libasan, are kept.
-# If libasan isn't specified in the LD_PRELOAD path, ASAN warns about mock-ioctl
-# being loaded first because its memory allocations might not get intercepted.
-# But it appears this isn't a problem; ASAN errors in mock-ioctl are reported.
-# This is likely because the executable still links with libasan before libc.
-mock_ioctl_env = environment()
-mock_ioctl_env.append('LD_PRELOAD', mock_ioctl.full_path())
-mock_ioctl_env.set('ASAN_OPTIONS', 'verify_asan_link_order=0')
-
 ana = executable(
     'test-ana',
-    'ana.c',
+    ['ana.c', 'util.c'],
     dependencies: [
         config_dep,
         ccan_dep,
-        libnvme_dep,
+        libnvme_test_dep,
     ],
-    link_with: mock_ioctl,
 )
-test('libnvme - ana', ana, env: mock_ioctl_env)
+test('libnvme - ana', ana)
 
 async = executable(
     'test-async',
-    'async.c',
+    ['async.c', 'util.c'],
     dependencies: [
         config_dep,
         ccan_dep,
-        libnvme_dep,
+        libnvme_test_dep,
     ],
-    link_with: mock_ioctl,
 )
-test('libnvme - async', async, env: mock_ioctl_env)
+test('libnvme - async', async)
 
 if want_fabrics
     discovery = executable(
         'test-discovery',
-        'discovery.c',
+        ['discovery.c', 'util.c'],
         dependencies: [
             config_dep,
             ccan_dep,
-            libnvme_dep,
+            libnvme_test_dep,
         ],
-        link_with: mock_ioctl,
     )
-    test('libnvme - discovery', discovery, env: mock_ioctl_env)
+    test('libnvme - discovery', discovery)
 endif
 
 features = executable(
     'test-features',
-    'features.c',
+    ['features.c', 'util.c'],
     dependencies: [
         config_dep,
         ccan_dep,
-        libnvme_dep,
+        libnvme_test_dep,
     ],
-    link_with: mock_ioctl,
 )
-test('libnvme - features', features, env: mock_ioctl_env)
+test('libnvme - features', features)
 
 identify = executable(
     'test-identify',
-    'identify.c',
+    ['identify.c', 'util.c'],
     dependencies: [
         config_dep,
         ccan_dep,
-        libnvme_dep,
+        libnvme_test_dep,
     ],
-    link_with: mock_ioctl,
 )
-test('libnvme - identify', identify, env: mock_ioctl_env)
+test('libnvme - identify', identify)
 
 logs = executable(
     'test-logs',
-    'logs.c',
+    ['logs.c', 'util.c'],
     dependencies: [
         config_dep,
         ccan_dep,
-        libnvme_dep,
+        libnvme_test_dep,
     ],
-    link_with: mock_ioctl,
 )
-test('libnvme - logs', logs, env: mock_ioctl_env)
+test('libnvme - logs', logs)
 
 zns = executable(
     'test-zns',
-    'zns.c',
+    ['zns.c', 'util.c'],
     dependencies: [
         config_dep,
         ccan_dep,
-        libnvme_dep,
+        libnvme_test_dep,
     ],
-    link_with: mock_ioctl,
 )
-test('libnvme - zns', zns, env: mock_ioctl_env)
+test('libnvme - zns', zns)
 
 misc = executable(
     'test-misc',
-    'misc.c',
+    ['misc.c', 'util.c'],
     dependencies: [
         config_dep,
         ccan_dep,
-        libnvme_dep,
+        libnvme_test_dep,
     ],
-    link_with: mock_ioctl,
 )
-test('libnvme - misc', misc, env: mock_ioctl_env)
+test('libnvme - misc', misc)

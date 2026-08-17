@@ -196,6 +196,7 @@ config_meson_default() {
     CC="${CC}" ${SCAN_BUILD} "${MESON}" setup \
         --werror                                \
         --buildtype="${BUILDTYPE}"              \
+		-Dioctl-tests=true						\
         "${extra_args[@]}"                      \
         "${BUILDDIR}"
 }

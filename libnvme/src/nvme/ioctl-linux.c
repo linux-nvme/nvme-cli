@@ -27,6 +27,7 @@
 #include <libnvme.h>
 
 #include "private.h"
+#include "loopback.h"
 
 static int nvme_verify_chr(struct libnvme_transport_handle *hdl)
 {
@@ -268,6 +269,8 @@ no_uring:
 		return ioctl_admin_passthru(hdl, cmd);
 	case LIBNVME_TRANSPORT_HANDLE_TYPE_MI:
 		return libnvme_mi_admin_admin_passthru(hdl, cmd);
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK:
+		return __libnvme_loopback_admin_passthru(hdl, cmd);
 	default:
 		break;
 	}
@@ -288,6 +291,9 @@ __shr_public int libnvme_exec_io_passthru(
 	if (!cmd->timeout_ms && hdl->timeout)
 		cmd->timeout_ms = hdl->timeout;
 
+	if (hdl->type != LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT)
+		goto no_uring;
+
 	if (hdl->uring_state == LIBNVME_IO_URING_STATE_NOT_AVAILABLE)
 		goto no_uring;
 
@@ -306,5 +312,14 @@ __shr_public int libnvme_exec_io_passthru(
 	return completion.status;
 
 no_uring:
-	return ioctl_io_passthru(hdl, cmd);
+	switch (hdl->type) {
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_DIRECT:
+		return ioctl_io_passthru(hdl, cmd);
+	case LIBNVME_TRANSPORT_HANDLE_TYPE_LOOPBACK:
+		return __libnvme_loopback_io_passthru(hdl, cmd);
+	default:
+		break;
+	}
+
+	return -ENOTSUP;
 }

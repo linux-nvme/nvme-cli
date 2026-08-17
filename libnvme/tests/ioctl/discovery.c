@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #include <errno.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -11,7 +10,7 @@
 #include <libnvme.h>
 #include <nvme/private.h>
 
-#include "mock.h"
+#include "nvme/loopback.h"
 #include "util.h"
 
 #define HEADER_LEN 20
@@ -134,7 +133,7 @@ static void test_no_entries(libnvme_ctrl_t c)
 {
 	struct nvmf_discovery_log header = {};
 	/* No entries to fetch after fetching the header */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
@@ -145,9 +144,9 @@ static void test_no_entries(libnvme_ctrl_t c)
 	};
 	struct nvmf_discovery_log *log = NULL;
 
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(fetch_discovery_log(c, &log, 1) == 0, "discovery failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, &header, HEADER_LEN, "incorrect header");
 	free(log);
 }
@@ -162,7 +161,7 @@ static void test_four_entries(libnvme_ctrl_t c)
 	 * All 4 entries should be fetched at once
 	 * followed by the header again (to ensure genctr hasn't changed)
 	 */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
@@ -189,9 +188,9 @@ static void test_four_entries(libnvme_ctrl_t c)
 	struct nvmf_discovery_log *log = NULL;
 
 	arbitrary_entries(num_entries, entries, log_entries);
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(fetch_discovery_log(c, &log, 1) == 0, "discovery failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, &header, HEADER_LEN, "incorrect header");
 	cmp(log->entries, entries, 0x16 /* sizeof(entries)*/, "incorrect entries");
 	free(log);
@@ -212,7 +211,7 @@ static void test_five_entries(libnvme_ctrl_t c)
 	 * followed by last entry separately.
 	 * Finally, the header is fetched again to check genctr.
 	 */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
@@ -248,9 +247,9 @@ static void test_five_entries(libnvme_ctrl_t c)
 	struct nvmf_discovery_log *log = NULL;
 
 	arbitrary_entries(num_entries, entries, log_entries);
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(fetch_discovery_log(c, &log, 1) == 0, "discovery failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, &header, sizeof(header), "incorrect header");
 	cmp_entries(log->entries, entries, num_entries, "incorrect entries");
 	free(log);
@@ -273,7 +272,7 @@ static void test_genctr_change(libnvme_ctrl_t c)
 	 * genctr changes after the entries are fetched the first time,
 	 * so the log page entries are refetched
 	 */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
@@ -316,9 +315,9 @@ static void test_genctr_change(libnvme_ctrl_t c)
 
 	arbitrary(entries1, sizeof(entries1));
 	arbitrary_entries(num_entries2, entries2, log_entries2);
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(fetch_discovery_log(c, &log, 2) == 0, "discovery failed");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	cmp(log, &header2, sizeof(header2), "incorrect header");
 	cmp_entries(log->entries, entries2, num_entries2, "incorrect entries");
 	free(log);
@@ -337,7 +336,7 @@ static void test_max_retries(libnvme_ctrl_t c)
 		.numrec = cpu_to_le64(1),
 	};
 	/* genctr changes in both attempts, hitting the max retries (2) */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
@@ -379,17 +378,17 @@ static void test_max_retries(libnvme_ctrl_t c)
 	struct nvmf_discovery_log *log = NULL;
 
 	arbitrary(&entry, sizeof(entry));
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(fetch_discovery_log(c, &log, 2) == -EAGAIN,
 	      "discovery succeeded");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(!log, "unexpected log page returned");
 }
 
 static void test_header_error(libnvme_ctrl_t c)
 {
 	/* Stop after an error in fetching the header the first time */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
@@ -400,10 +399,10 @@ static void test_header_error(libnvme_ctrl_t c)
 	};
 	struct nvmf_discovery_log *log = NULL;
 
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(fetch_discovery_log(c, &log, 1) == -EAGAIN,
 	      "discovery succeeded");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(!log, "unexpected log page returned");
 }
 
@@ -412,7 +411,7 @@ static void test_entries_error(libnvme_ctrl_t c)
 	struct nvmf_discovery_log header = {.numrec = cpu_to_le64(1)};
 	size_t entry_size = sizeof(struct nvmf_disc_log_entry);
 	/* Stop after an error in fetching the entries */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
@@ -431,9 +430,9 @@ static void test_entries_error(libnvme_ctrl_t c)
 	};
 	struct nvmf_discovery_log *log = NULL;
 
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(fetch_discovery_log(c, &log, 1) == -EIO, "discovery succeeded");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(!log, "unexpected log page returned");
 }
 
@@ -442,7 +441,7 @@ static void test_genctr_error(libnvme_ctrl_t c)
 	struct nvmf_disc_log_entry entry;
 	struct nvmf_discovery_log header = {.numrec = cpu_to_le64(1)};
 	/* Stop after an error in refetching the header */
-	struct mock_cmd mock_admin_cmds[] = {
+	struct libnvme_loopback_cmd mock_admin_cmds[] = {
 		{
 			.opcode = nvme_admin_get_log_page,
 			.data_len = HEADER_LEN,
@@ -469,10 +468,10 @@ static void test_genctr_error(libnvme_ctrl_t c)
 	struct nvmf_discovery_log *log = NULL;
 
 	arbitrary(&entry, sizeof(entry));
-	set_mock_admin_cmds(mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
+	libnvme_loopback_set_admin_cmds(test_hdl, mock_admin_cmds, ARRAY_SIZE(mock_admin_cmds));
 	check(fetch_discovery_log(c, &log, 1) == NVME_SC_INTERNAL,
 	      "discovery succeeded");
-	end_mock_cmds();
+	libnvme_loopback_end(test_hdl);
 	check(!log, "unexpected log page returned");
 }
 
@@ -496,8 +495,7 @@ int main(void)
 	struct libnvme_global_ctx *ctx = libnvme_create_global_ctx();
 	libnvme_set_logging_file(ctx, stdout);
 
-	set_mock_fd(LIBNVME_TEST_FD);
-	check(!libnvme_open(ctx, "NVME_TEST_FD", O_RDONLY, &test_hdl),
+	check(!libnvme_open_loopback(ctx, &test_hdl),
 	      "opening test link failed");
 
 	RUN_TEST(no_entries);
