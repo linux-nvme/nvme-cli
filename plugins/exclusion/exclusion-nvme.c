@@ -533,7 +533,8 @@ static int excl_edit(int argc, char **argv, struct command *acmd,
 	/*
 	 * Edit a private scratch copy under $TMPDIR -- NOT in the exclusion dir.
 	 * The editor needs a real path, but the result is installed by name via
-	 * libnvmf_exclusion_write().  mkstemp() creates the copy 0600.
+	 * libnvmf_exclusion_write().  mkstemp() creates the copy 0600, and we
+	 * set the umask to 0177 first to guarantee no group/other bits leak in.
 	 */
 	tmpdir = getenv("TMPDIR");
 	if (!tmpdir || !*tmpdir)
@@ -541,7 +542,12 @@ static int excl_edit(int argc, char **argv, struct command *acmd,
 	snprintf(tmp_path, sizeof(tmp_path), "%s/nvme-excl-%s.XXXXXX",
 		 tmpdir, cfg.name);
 
-	fd = mkstemp(tmp_path);
+	{
+		mode_t old_umask = umask(0177);
+
+		fd = mkstemp(tmp_path);
+		umask(old_umask);
+	}
 	if (fd < 0) {
 		ret = -errno;
 		nvme_show_error("cannot create temp file: %s",
