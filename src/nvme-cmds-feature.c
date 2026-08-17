@@ -39,6 +39,7 @@
 #include <ccan/minmax/minmax.h>
 
 #include <cleanup.h>
+#include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
 #include <shared/parse-util.h>
@@ -489,7 +490,7 @@ static struct command *commands[] = {
 	NULL,
 };
 
-static void __attribute__((constructor)) register_group(void)
+static void __shr_constructor register_group(void)
 {
 	plugin_add_group(&builtin, "Features & Properties", commands);
 }

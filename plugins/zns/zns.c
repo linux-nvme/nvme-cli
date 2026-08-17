@@ -17,6 +17,7 @@
 
 #include <ccan/array_size/array_size.h>
 
+#include <shared/compiler-attributes-util.h>
 #include <shared/time-util.h>
 
 #include "nvme-cmds.h"
@@ -1242,7 +1243,7 @@ static struct plugin plugin = {
 	.core = true,
 };
 
-static void __attribute__((constructor)) register_plugin(void)
+static void __shr_constructor register_plugin(void)
 {
 	plugin_add_group(&plugin, NULL, commands);
 	register_extension(&plugin);

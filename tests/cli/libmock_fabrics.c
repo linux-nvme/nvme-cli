@@ -42,6 +42,8 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <shared/compiler-attributes-util.h>
+
 /*
  * Mirrors struct linux_passthru_cmd32/64 in libnvme/src/nvme/private.h --
  * the layout libnvme's own ioctl() callers use -- so casting the ioctl()
@@ -154,8 +156,7 @@ static int num_mock_ctrls;
 			fprintf(stderr, "[MOCK_DEBUG] " fmt, ##__VA_ARGS__); \
 	} while (0)
 
-__attribute__((constructor))
-static void mock_init(void)
+static void __shr_constructor mock_init(void)
 {
 	mock_debug = !!getenv("MOCK_DEBUG");
 	mock_dbg("libmock_fabrics loaded, sizeof(ipc_request)=%zu, sizeof(ipc_response)=%zu\n",
