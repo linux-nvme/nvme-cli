@@ -10313,7 +10313,6 @@ static int wdc_do_drive_essentials(struct libnvme_global_ctx *ctx, struct libnvm
 		}
 
 		free(dataBuffer);
-		dataBuffer = NULL;
 	}
 
 	free(vuLogInput);
