@@ -133,7 +133,7 @@ Place the annotation on a member's declaration line to override the struct-level
 ```c
 struct libnvme_ctrl { // !generate-accessors:read=generated,write=none
     char *name;                  /* effective: read=generated, write=none (inherited) */
-    char *dhchap_host_key;       // !access:write=generated
+    char *kxchap_host_key;       // !access:write=generated
     /* effective: read=generated (inherited), write=generated */
     long command_error_count;    // !access:read=custom
     /* effective: read=custom, write=none (inherited) — hand-written getter */

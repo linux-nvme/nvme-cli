@@ -494,21 +494,21 @@ const char *libnvme_host_get_hostnqn(const struct libnvme_host *p);
 const char *libnvme_host_get_hostid(const struct libnvme_host *p);
 
 /**
- * libnvme_host_set_dhchap_host_key() - Set dhchap_host_key.
+ * libnvme_host_set_kxchap_host_key() - Set kxchap_host_key.
  * @p: The &struct libnvme_host instance to update.
- * @dhchap_host_key: New string; a copy is stored. Pass NULL to clear.
+ * @kxchap_host_key: New string; a copy is stored. Pass NULL to clear.
  */
-void libnvme_host_set_dhchap_host_key(
+void libnvme_host_set_kxchap_host_key(
 		struct libnvme_host *p,
-		const char *dhchap_host_key);
+		const char *kxchap_host_key);
 
 /**
- * libnvme_host_get_dhchap_host_key() - Get dhchap_host_key.
+ * libnvme_host_get_kxchap_host_key() - Get kxchap_host_key.
  * @p: The &struct libnvme_host instance to query.
  *
- * Return: The value of the dhchap_host_key field, or NULL if not set.
+ * Return: The value of the kxchap_host_key field, or NULL if not set.
  */
-const char *libnvme_host_get_dhchap_host_key(const struct libnvme_host *p);
+const char *libnvme_host_get_kxchap_host_key(const struct libnvme_host *p);
 
 /**
  * libnvme_host_set_hostsymname() - Set hostsymname.

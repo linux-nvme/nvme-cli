@@ -36,10 +36,10 @@ LIBNVME_ATTR_ACCESSORS_3 {
 		libnvme_ctrl_get_dctype;
 		libnvme_ctrl_set_dctype;
 		libnvme_ctrl_get_phy_slot;
-		libnvme_ctrl_get_dhchap_host_key;
-		libnvme_ctrl_set_dhchap_host_key;
-		libnvme_ctrl_get_dhchap_ctrl_key;
-		libnvme_ctrl_set_dhchap_ctrl_key;
+		libnvme_ctrl_get_kxchap_host_key;
+		libnvme_ctrl_set_kxchap_host_key;
+		libnvme_ctrl_get_kxchap_ctrl_key;
+		libnvme_ctrl_set_kxchap_ctrl_key;
 		libnvme_ctrl_get_keyring;
 		libnvme_ctrl_set_keyring;
 		libnvme_path_get_ana_state;

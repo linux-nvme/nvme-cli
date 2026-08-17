@@ -360,18 +360,18 @@ __shr_public const char *libnvme_host_get_hostid(const struct libnvme_host *p)
 	return p->hostid;
 }
 
-__shr_public void libnvme_host_set_dhchap_host_key(
+__shr_public void libnvme_host_set_kxchap_host_key(
 		struct libnvme_host *p,
-		const char *dhchap_host_key)
+		const char *kxchap_host_key)
 {
-	free(p->dhchap_host_key);
-	p->dhchap_host_key = dhchap_host_key ? strdup(dhchap_host_key) : NULL;
+	free(p->kxchap_host_key);
+	p->kxchap_host_key = kxchap_host_key ? strdup(kxchap_host_key) : NULL;
 }
 
-__shr_public const char *libnvme_host_get_dhchap_host_key(
+__shr_public const char *libnvme_host_get_kxchap_host_key(
 		const struct libnvme_host *p)
 {
-	return p->dhchap_host_key;
+	return p->kxchap_host_key;
 }
 
 __shr_public void libnvme_host_set_hostsymname(

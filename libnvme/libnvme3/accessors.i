@@ -124,7 +124,7 @@ struct libnvme_host {
 	const char * hostnqn;
 	%immutable hostid;
 	const char * hostid;
-	const char * dhchap_host_key;
+	const char * kxchap_host_key;
 	const char * hostsymname;
 };
 

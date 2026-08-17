@@ -96,10 +96,10 @@ class TestHost(unittest.TestCase):
         host.hostsymname = 'updated-symname'
         self.assertEqual(host.hostsymname, 'updated-symname')
 
-    def test_dhchap_host_key_is_none_by_default(self):
-        hostnqn = 'nqn.2014-08.com.example:test-host-dhchap'
+    def test_kxchap_host_key_is_none_by_default(self):
+        hostnqn = 'nqn.2014-08.com.example:test-host-kxchap'
         host = nvme.Host(self.ctx, hostnqn=hostnqn)
-        self.assertIsNone(host.dhchap_host_key)
+        self.assertIsNone(host.kxchap_host_key)
 
     def test_subsystems_iterator_returns_list(self):
         host = nvme.Host(self.ctx)
@@ -118,7 +118,7 @@ class TestHost(unittest.TestCase):
         hostnqn = 'nqn.2014-08.com.example:test-host-ctx-mgr'
         with nvme.Host(self.ctx, hostnqn=hostnqn) as h:
             self.assertEqual(h.hostnqn, hostnqn)
-            self.assertIsNone(h.dhchap_host_key)
+            self.assertIsNone(h.kxchap_host_key)
 
 
 class TestCtrl(unittest.TestCase):

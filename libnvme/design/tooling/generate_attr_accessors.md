@@ -123,7 +123,7 @@ Both cached and volatile getters return `-ENOENT` if the attribute cannot be rea
 
 `writable: True` does **not** mean the sysfs attribute itself is writable — every member in this dict is sysfs-observed and read-only from the kernel's side. It means libnvme needs a way to inject a value into the cache from somewhere other than the normal lazy read. There are two situations where that comes up:
 
-- **Dual-direction fields**: the value is set from connect-time config on one code path and observed from sysfs on another (e.g. `dhchap_host_key`, `keyring`).
+- **Dual-direction fields**: the value is set from connect-time config on one code path and observed from sysfs on another (e.g. `kxchap_host_key`, `keyring`).
 - **Backfill fallback**: a caller needs to supply a value sysfs doesn't provide on older kernels (e.g. `cntrltype`/`dctype`'s legacy-kernel Identify-based fallback in `fabrics.c`, used when those two sysfs attributes don't exist), or on a platform with no sysfs at all (e.g. subsystem `model`/`serial`/`firmware`, pushed from Windows's ctrl map).
 
 If either applies, add `'writable': True` to the member (or to a group, to make every member of that group writable — see below). This generates a public `libnvme_ctrl_set_<name>()` alongside the getter.
