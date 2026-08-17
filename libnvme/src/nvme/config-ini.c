@@ -57,8 +57,8 @@ static const struct libnvmf_key keys[] = {
 	{ "tls-key",			LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
 	{ "tls-key-identity",		LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
 	{ "keyring",			LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
-	{ "dhchap-secret",		LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
-	{ "dhchap-ctrl-secret",		LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
+	{ "kxchap-secret",		LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
+	{ "kxchap-ctrl-secret",		LIBNVMF_KEY_STRING,	LIBNVMF_KEY_SECURITY },
 
 	/* host identity -- [Host] only */
 	{ "hostnqn",			LIBNVMF_KEY_STRING,	LIBNVMF_KEY_IDENTITY },

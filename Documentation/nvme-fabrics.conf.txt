@@ -83,8 +83,8 @@ TUNABLE (type default, '[Host]', endpoint section, or 'controller =' line):
 
 SECURITY ('[Host]' or endpoint section only, never a 'controller =' line):
 
-	tls, tls-key, tls-key-identity, keyring, concat, dhchap-secret,
-	dhchap-ctrl-secret
+	tls, tls-key, tls-key-identity, keyring, concat, kxchap-secret,
+	kxchap-ctrl-secret
 
 IDENTITY ('[Host]' only):
 

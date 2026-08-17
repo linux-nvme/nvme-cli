@@ -562,7 +562,7 @@ static bool test_params_set_validation(void)
 	}
 
 	/* A value with an embedded newline can't survive an INI round trip. */
-	if (libnvmf_params_set(p, "dhchap-secret", "abc\ndef") != -EINVAL) {
+	if (libnvmf_params_set(p, "kxchap-secret", "abc\ndef") != -EINVAL) {
 		printf(" - value with newline accepted [FAIL]\n");
 		pass = false;
 	} else {
