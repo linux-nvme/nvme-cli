@@ -15,11 +15,11 @@
 
 #include <libnvme.h>
 
-#include <cleanup.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 
 #include "argconfig.h"
+#include "cleanup.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
 #include "plugin.h"

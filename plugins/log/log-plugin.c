@@ -37,7 +37,6 @@
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
 
-#include <cleanup.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
@@ -47,6 +46,7 @@
 #include <shared/time-util.h>
 
 #include "argconfig.h"
+#include "cleanup.h"
 #include "fabrics.h"
 #include "global-config.h"
 #include "global-ctx.h"

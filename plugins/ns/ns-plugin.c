@@ -16,12 +16,12 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 
-#include <cleanup.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/parse-util.h>
 #include <shared/suffix-util.h>
 
 #include "argconfig.h"
+#include "cleanup.h"
 #include "global-ctx.h"
 #include "logging.h"
 #include "nvme-cmds.h"
