@@ -980,11 +980,11 @@ enum nbft_ssns_ext_info_flags {
  *		       in the IANA TLS Parameters Registry. If the Cipher Suites
  *		       Restricted by Policy bit is cleared to 0h, then this field
  *		       is reserved.
- * @dh_grp_obj:	       DH Groups Heap Object Reference: If the Authentication DH Groups
+ * @kx_grp_obj:	       KX Groups Heap Object Reference: If the Authentication KX Groups
  *		       Restricted by Policy List bit is set to 1h, then this field
  *		       indicates the location and size of a heap object containing
- *		       a list of DH-HMAC-CHAP Diffie-Hellman (DH) group identifiers.
- *		       If the Authentication DH Groups Restricted by Policy List
+ *		       a list of KX-HMAC-CHAP key exchange (KX) group identifiers.
+ *		       If the Authentication KX Groups Restricted by Policy List
  *		       bit is cleared to 0h, then this field is reserved.
  * @sec_hash_func_obj: Secure Hash Functions Offset Heap Object Reference: If the
  *		       Secure Hash Functions Policy List bit is set to 1h, then
@@ -1010,7 +1010,7 @@ struct nbft_security {
 	struct nbft_heap_obj sec_chan_alg_obj;
 	struct nbft_heap_obj auth_proto_obj;
 	struct nbft_heap_obj cipher_suite_obj;
-	struct nbft_heap_obj dh_grp_obj;
+	struct nbft_heap_obj kx_grp_obj;
 	struct nbft_heap_obj sec_hash_func_obj;
 	struct nbft_heap_obj sec_keypath_obj;
 	__u8 reserved2[22];
@@ -1077,13 +1077,13 @@ struct nbft_security {
  *						  If cleared to 0h, then the Cipher Suite Offset
  *						  field and the Cipher Suite Length field
  *						  are reserved.
- * @NBFT_SECURITY_AUTH_DH_GROUPS_RESTRICTED:	  Authentication DH Groups Restricted
+ * @NBFT_SECURITY_AUTH_KX_GROUPS_RESTRICTED:	  Authentication KX Groups Restricted
  *						  by Policy List: If set to 1h, then connections
- *						  shall use one of the authentication DH groups
- *						  in the Authentication DH Groups List is required.
- *						  If cleared to 0h, then no Authentication DH Groups
+ *						  shall use one of the authentication KX groups
+ *						  in the Authentication KX Groups List is required.
+ *						  If cleared to 0h, then no Authentication KX Groups
  *						  List is indicated and use of an authentication
- *						  DH Group is not required.
+ *						  KX Group is not required.
  * @NBFT_SECURITY_SEC_HASH_FUNC_POLICY_LIST:	  Secure Hash Functions Policy List: If set to 1h,
  *						  then connections shall use one of the secure
  *						  hash functions in the Secure Hash Functions
@@ -1111,7 +1111,7 @@ enum nbft_security_flags {
 	NBFT_SECURITY_SEC_POLICY_LIST_DRIVER		= 0x0080,
 	NBFT_SECURITY_SEC_POLICY_LIST_ADMIN		= 0x0100,
 	NBFT_SECURITY_CIPHER_RESTRICTED			= 1 << 9,
-	NBFT_SECURITY_AUTH_DH_GROUPS_RESTRICTED		= 1 << 10,
+	NBFT_SECURITY_AUTH_KX_GROUPS_RESTRICTED		= 1 << 10,
 	NBFT_SECURITY_SEC_HASH_FUNC_POLICY_LIST		= 1 << 11,
 };
 

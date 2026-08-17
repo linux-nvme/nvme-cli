@@ -83,11 +83,11 @@ static void print_nbft(struct libnbft_info *table)
 		printf("\n");
 		printf("security_list[%u]->cipher_suites_len=%"PRIu16"\n",
 		       i, (*sec)->cipher_suites_len);
-		printf("security_list[%u]->dh_groups=", i);
-		print_hex((*sec)->dh_groups, (*sec)->dh_groups_len);
+		printf("security_list[%u]->kx_groups=", i);
+		print_hex((*sec)->kx_groups, (*sec)->kx_groups_len);
 		printf("\n");
-		printf("security_list[%u]->dh_groups_len=%"PRIu16"\n",
-		       i, (*sec)->dh_groups_len);
+		printf("security_list[%u]->kx_groups_len=%"PRIu16"\n",
+		       i, (*sec)->kx_groups_len);
 		printf("security_list[%u]->sec_hash_funcs=", i);
 		print_hex((*sec)->sec_hash_funcs, (*sec)->sec_hash_funcs_len);
 		printf("\n");

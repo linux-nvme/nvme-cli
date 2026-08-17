@@ -156,12 +156,12 @@ struct libnbft_discovery {
  *                      the number of entries is @cipher_suites_len / 2.
  *                      NULL if not present in the NBFT heap.
  * @cipher_suites_len:  Length in bytes of @cipher_suites.
- * @dh_groups:          DH-HMAC-CHAP Diffie-Hellman group identifier list.
- *                      Values are DH Group Identifiers as defined in the
- *                      NVM Express Base Specification. NULL if not present
- *                      in the NBFT heap.
- * @dh_groups_len:      Length in bytes of @dh_groups.
- * @sec_hash_funcs:     DH-HMAC-CHAP hash function identifier list,
+ * @kx_groups:          KX-HMAC-CHAP key exchange group identifier list.
+ *                      Values are Key Exchange Group Identifiers as defined
+ *                      in the NVM Express Base Specification. NULL if not
+ *                      present in the NBFT heap.
+ * @kx_groups_len:      Length in bytes of @kx_groups.
+ * @sec_hash_funcs:     KX-HMAC-CHAP hash function identifier list,
  *                      see &enum libnvmf_hmac_alg. NULL if not present
  *                      in the NBFT heap.
  * @sec_hash_funcs_len: Length in bytes of @sec_hash_funcs.
@@ -182,8 +182,8 @@ struct libnbft_security {
 	__u16 auth_protocols_len;
 	__u8 *cipher_suites;
 	__u16 cipher_suites_len;
-	__u8 *dh_groups;
-	__u16 dh_groups_len;
+	__u8 *kx_groups;
+	__u16 kx_groups_len;
 	__u8 *sec_hash_funcs;
 	__u16 sec_hash_funcs_len;
 	char *secret_keypath;
