@@ -65,6 +65,64 @@ static int help(int argc, char **argv, struct plugin *plugin)
 	return 0;
 }
 
+enum ext_filter {
+	EXT_GROUP,	/* extension->group matches the given title */
+	EXT_CORE_ONLY,	/* core, not shown next to a built-in group */
+	EXT_VENDOR,	/* vendor (non-core) */
+};
+
+static bool extension_matches(struct plugin *extension, enum ext_filter filter,
+			      const char *group_title)
+{
+	switch (filter) {
+	case EXT_GROUP:
+		return extension->group && !strcmp(extension->group, group_title);
+	case EXT_CORE_ONLY:
+		return extension->core && !extension->group;
+	case EXT_VENDOR:
+		return !extension->core;
+	}
+	return false;
+}
+
+static int plugin_name_cmp(const void *a, const void *b)
+{
+	struct plugin *const *pa = a;
+	struct plugin *const *pb = b;
+
+	return strcmp((*pa)->name, (*pb)->name);
+}
+
+/*
+ * Collect extensions matching filter into a name-sorted, NULL-terminated
+ * array so the plugin listings in general_help() print alphabetically
+ * regardless of registration order. Caller must free() the result.
+ */
+static struct plugin **sorted_extensions(struct plugin *extensions, enum ext_filter filter,
+					 const char *group_title)
+{
+	struct plugin *extension;
+	struct plugin **list;
+	size_t count = 0, i = 0;
+
+	for (extension = extensions; extension; extension = extension->next)
+		if (extension_matches(extension, filter, group_title))
+			count++;
+
+	list = malloc((count + 1) * sizeof(*list));
+	if (!list)
+		return NULL;
+
+	for (extension = extensions; extension; extension = extension->next)
+		if (extension_matches(extension, filter, group_title))
+			list[i++] = extension;
+	list[i] = NULL;
+
+	qsort(list, count, sizeof(*list), plugin_name_cmp);
+
+	return list;
+}
+
 static void usage_cmd(struct plugin *plugin)
 {
 	struct program *prog = plugin->parent;
@@ -172,11 +230,14 @@ void general_help(struct plugin *plugin, char *str)
 			 * "core NVMe/NVMeoF plugins" list further down.
 			 */
 			if (!plugin->name && group->title) {
-				for (extension = prog->extensions->next; extension;
-				     extension = extension->next) {
-					if (!extension->group ||
-					    strcmp(extension->group, group->title))
-						continue;
+				__cleanup_free struct plugin **sorted =
+					sorted_extensions(prog->extensions->next, EXT_GROUP,
+							  group->title);
+				size_t j;
+
+				for (j = 0; sorted && sorted[j]; j++) {
+					extension = sorted[j];
+
 					if (str && !strstr(extension->name, str))
 						continue;
 					if (!header_printed) {
@@ -230,29 +291,32 @@ void general_help(struct plugin *plugin, char *str)
 		}
 
 		if (have_core) {
+			__cleanup_free struct plugin **sorted =
+				sorted_extensions(prog->extensions->next, EXT_CORE_ONLY, NULL);
+			size_t j;
+
 			printf("\nThe following are core NVMe/NVMeoF plugins:\n");
 			if (str)
 				printf("Note: Only extensions including %s\n", str);
 
-			extension = prog->extensions->next;
-			while (extension) {
-				if (extension->core && !extension->group &&
-				    (!str || strstr(extension->name, str)))
-					printf("  %-*s %s\n", 15, extension->name, extension->desc);
-				extension = extension->next;
+			for (j = 0; sorted && sorted[j]; j++) {
+				if (!str || strstr(sorted[j]->name, str))
+					printf("  %-*s %s\n", 15, sorted[j]->name, sorted[j]->desc);
 			}
 		}
 
 		if (have_vendor) {
+			__cleanup_free struct plugin **sorted =
+				sorted_extensions(prog->extensions->next, EXT_VENDOR, NULL);
+			size_t j;
+
 			printf("\nThe following are vendor specific plugins:\n");
 			if (str)
 				printf("Note: Only extensions including %s\n", str);
 
-			extension = prog->extensions->next;
-			while (extension) {
-				if (!extension->core && (!str || strstr(extension->name, str)))
-					printf("  %-*s %s\n", 15, extension->name, extension->desc);
-				extension = extension->next;
+			for (j = 0; sorted && sorted[j]; j++) {
+				if (!str || strstr(sorted[j]->name, str))
+					printf("  %-*s %s\n", 15, sorted[j]->name, sorted[j]->desc);
 			}
 		}
 
