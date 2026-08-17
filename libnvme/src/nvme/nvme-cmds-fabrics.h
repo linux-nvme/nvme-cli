@@ -146,3 +146,78 @@ nvme_init_get_property(struct libnvme_passthru_cmd *cmd, __u32 offset)
 	cmd->cdw11 = (__u32)offset;
 }
 
+/**
+ * nvme_init_auth_send() - Initialize passthru command for Authentication Send
+ * @cmd:	Passthru command to use
+ * @spsp:	Security Protocol Specific field
+ * @secp:	Security Protocol
+ * @tl:		Protocol specific transfer length
+ * @data:	Authentication message payload buffer to send
+ * @len:	Data length of the payload in bytes
+ *
+ * Initializes the passthru command buffer for the Fabrics Authentication
+ * Send command, used to send a KX-HMAC-CHAP authentication message (e.g.
+ * &struct nvmf_auth_kxchap_reply) to a controller. This is an
+ * NVMe-over-Fabrics specific command that reuses the SECP/SPSP0/SPSP1/TL
+ * field encoding of the Security Send command.
+ */
+static inline void
+nvme_init_auth_send(struct libnvme_passthru_cmd *cmd, __u16 spsp, __u8 secp,
+		__u32 tl, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_fabrics;
+	cmd->nsid = nvme_fabrics_type_auth_send;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(secp,
+			NVME_SECURITY_SECP_SHIFT,
+			NVME_SECURITY_SECP_MASK) |
+		      NVME_FIELD_ENCODE(spsp,
+			NVME_SECURITY_SPSP0_SHIFT,
+			NVME_SECURITY_SPSP0_MASK) |
+		      NVME_FIELD_ENCODE(spsp >> 8,
+			NVME_SECURITY_SPSP1_SHIFT,
+			NVME_SECURITY_SPSP1_MASK);
+	cmd->cdw11 = tl;
+}
+
+/**
+ * nvme_init_auth_receive() - Initialize passthru command for
+ * Authentication Receive
+ * @cmd:	Passthru command to use
+ * @spsp:	Security Protocol Specific field
+ * @secp:	Security Protocol
+ * @al:		Protocol specific allocation length
+ * @data:	Authentication message payload buffer to receive data into
+ * @len:	Data length of the payload in bytes (must match @al)
+ *
+ * Initializes the passthru command buffer for the Fabrics Authentication
+ * Receive command, used to receive a KX-HMAC-CHAP authentication message
+ * (e.g. &struct nvmf_auth_kxchap_challenge) from a controller. This is an
+ * NVMe-over-Fabrics specific command that reuses the SECP/SPSP0/SPSP1/AL
+ * field encoding of the Security Receive command.
+ */
+static inline void
+nvme_init_auth_receive(struct libnvme_passthru_cmd *cmd, __u16 spsp,
+		__u8 secp, __u32 al, void *data, __u32 len)
+{
+	memset(cmd, 0, sizeof(*cmd));
+
+	cmd->opcode = nvme_admin_fabrics;
+	cmd->nsid = nvme_fabrics_type_auth_receive;
+	cmd->data_len = len;
+	cmd->addr = (__u64)(uintptr_t)data;
+	cmd->cdw10 = NVME_FIELD_ENCODE(secp,
+			NVME_SECURITY_SECP_SHIFT,
+			NVME_SECURITY_SECP_MASK) |
+		     NVME_FIELD_ENCODE(spsp,
+			NVME_SECURITY_SPSP0_SHIFT,
+			NVME_SECURITY_SPSP0_MASK) |
+		     NVME_FIELD_ENCODE(spsp >> 8,
+			NVME_SECURITY_SPSP1_SHIFT,
+			NVME_SECURITY_SPSP1_MASK);
+	cmd->cdw11 = al;
+}
+
