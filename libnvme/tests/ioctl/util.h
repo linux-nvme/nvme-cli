@@ -6,7 +6,13 @@
 
 #include <shared/cleanup-util.h>
 
-noreturn void fail(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+#if (defined(__MINGW32__) || defined(__MINGW64__)) && defined(__GNUC__)
+#define __fail_format(f, a) __attribute__((format(gnu_printf, f, a)))
+#else
+#define __fail_format(f, a) __attribute__((format(printf, f, a)))
+#endif
+
+noreturn void fail(const char *fmt, ...) __fail_format(1, 2);
 
 #define check(condition, fmt...) ((condition) || (fail(fmt), 0))
 
