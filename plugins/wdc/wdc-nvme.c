@@ -13227,7 +13227,7 @@ static struct plugin plugin = {
 	.version = WDC_PLUGIN_VERSION,
 };
 
-static void __attribute__((constructor)) register_plugin(void)
+static void __shr_constructor register_plugin(void)
 {
 	plugin_add_group(&plugin, NULL, commands);
 	register_extension(&plugin);

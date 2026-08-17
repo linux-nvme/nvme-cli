@@ -69,6 +69,7 @@ if python3.found()
         mock_fabrics_lib = shared_library(
             'mock_fabrics',
             'libmock_fabrics.c',
+            include_directories: '../..',
             dependencies: dl_dep,
             install: false
         )

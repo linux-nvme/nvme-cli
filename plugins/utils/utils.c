@@ -2,6 +2,8 @@
 /*
  * Copyright (c) 2026 Micron Technology, Inc.
  */
+#include <shared/compiler-attributes-util.h>
+
 #include "command-metadata.h"
 #include "plugin.h"
 
@@ -37,7 +39,7 @@ static struct plugin plugin = {
 	.core = true,
 };
 
-static void __attribute__((constructor)) register_plugin(void)
+static void __shr_constructor register_plugin(void)
 {
 	plugin_add_group(&plugin, NULL, commands);
 	register_extension(&plugin);

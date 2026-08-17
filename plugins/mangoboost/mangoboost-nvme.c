@@ -16,6 +16,8 @@
 
 #include <ccan/endian/endian.h>
 
+#include <shared/compiler-attributes-util.h>
+
 #include "plugin.h"
 
 struct nvme_vu_id_ctrl_field {
@@ -73,7 +75,7 @@ static struct plugin plugin = {
 	.version = NVME_VERSION,
 };
 
-static void __attribute__((constructor)) register_plugin(void)
+static void __shr_constructor register_plugin(void)
 {
 	plugin_add_group(&plugin, NULL, commands);
 	register_extension(&plugin);

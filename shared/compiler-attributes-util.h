@@ -44,6 +44,14 @@
 #define __shr_likely(x)   __builtin_expect(!!(x), 1)
 #define __shr_unlikely(x) __builtin_expect(!!(x), 0)
 
+/**
+ * __shr_constructor - run a function automatically before main().
+ *
+ * Commonly used to self-register a plugin or command group at load time,
+ * without requiring an explicit call from an init sequence.
+ */
+#define __shr_constructor __attribute__((constructor))
+
 /*
  * __packed - mark a struct/union as having no padding between members.
  *
