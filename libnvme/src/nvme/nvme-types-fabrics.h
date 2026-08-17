@@ -36,6 +36,7 @@
  * - TCP-Specific: TCP security types
  * - Discovery Information Model (DIM): Extended discovery attributes
  * - Connection: Connect command data structures
+ * - Authentication: KX-HMAC-CHAP in-band authentication protocol
  */
 
 #define NVME_DISC_SUBSYS_NAME	"nqn.2014-08.org.nvmexpress.discovery"
@@ -608,5 +609,429 @@ struct nvme_ave_discovery_log {
 	__le32					tadlpl;
 	__u8					rsvd24[1000];
 	struct nvme_ave_discovery_log_entry	adlpe[];
+};
+
+/**
+ * enum nvme_ave_pdu_type - KX-HMAC-CHAP AVE Access Protocol PDU Types
+ * @NVME_AVE_PDU_TYPE_ACCESS_REQUEST:	KX-HMAC-CHAP_Access-Request
+ * @NVME_AVE_PDU_TYPE_ACCESS_RESULT:	KX-HMAC-CHAP_Access-Result
+ */
+enum nvme_ave_pdu_type {
+	NVME_AVE_PDU_TYPE_ACCESS_REQUEST	= 0xae,
+	NVME_AVE_PDU_TYPE_ACCESS_RESULT		= 0xaf,
+};
+
+/**
+ * struct nvme_ave_access_request - KX-HMAC-CHAP_Access-Request PDU, sent by
+ *	an NVMe entity (host or controller) to an AVE over the AVE's TLS
+ *	connection
+ * @pdu_type:	PDU Type, see &enum nvme_ave_pdu_type
+ * @flags:	Reserved
+ * @hlen:	Header Length: fixed length of 8 bytes (08h)
+ * @pdo:	PDU Data Offset, reserved
+ * @plen:	PDU Length: total length of the PDU in bytes
+ * @id:		Identifier used to match this PDU with the corresponding
+ *		&struct nvme_ave_access_result PDU
+ * @hl:		Hash Length: length in bytes of the selected hash function
+ * @hashid:	Hash Identifier, see &enum libnvmf_hmac_alg
+ * @t_id:	Transaction Identifier
+ * @sc_c:	Secure Channel Concatenation, see &enum nvmf_auth_sc_c
+ * @respr:	Responder's Role: 'H' (48h) if host, 'C' (43h) if controller
+ * @nqnrlen:	NQN Responder Length: length in bytes of @acv_respv_nqnr's
+ *		NQNR component
+ * @rsvd23:	Reserved
+ * @seqnum:	Sequence Number (S)
+ * @acv_respv_nqnr: Augmented Challenge Value (Ca, @hl bytes), followed by
+ *		the Response Value (R, @hl bytes), followed by the NQN of the
+ *		Responder (NQNR, @nqnrlen bytes)
+ */
+struct nvme_ave_access_request {
+	__u8	pdu_type;
+	__u8	flags;
+	__u8	hlen;
+	__u8	pdo;
+	__le32	plen;
+	__le64	id;
+	__u8	hl;
+	__u8	hashid;
+	__le16	t_id;
+	__u8	sc_c;
+	__u8	respr;
+	__u8	nqnrlen;
+	__u8	rsvd23;
+	__le32	seqnum;
+	__u8	acv_respv_nqnr[];
+};
+
+/**
+ * enum nvme_ave_authres - KX-HMAC-CHAP AVE Authentication Verification
+ *	Result (AuthRes)
+ * @NVME_AVE_AUTHRES_SUCCESS:	Authentication Verification Successful
+ * @NVME_AVE_AUTHRES_FAILED:	Authentication Verification Failed
+ */
+enum nvme_ave_authres {
+	NVME_AVE_AUTHRES_SUCCESS	= 0x01,
+	NVME_AVE_AUTHRES_FAILED		= 0x02,
+};
+
+/**
+ * enum nvme_ave_rcode - KX-HMAC-CHAP AVE Access-Result Reason Code (RCODE)
+ * @NVME_AVE_RCODE_NONE:		No additional explanation
+ * @NVME_AVE_RCODE_AUTH_FAILURE:	Authentication failure
+ * @NVME_AVE_RCODE_HASH_UNUSABLE:	Selected hash function unusable
+ */
+enum nvme_ave_rcode {
+	NVME_AVE_RCODE_NONE		= 0x00,
+	NVME_AVE_RCODE_AUTH_FAILURE	= 0x01,
+	NVME_AVE_RCODE_HASH_UNUSABLE	= 0x02,
+};
+
+/**
+ * struct nvme_ave_access_result - KX-HMAC-CHAP_Access-Result PDU, sent by
+ *	an AVE in response to a &struct nvme_ave_access_request PDU
+ * @pdu_type:	PDU Type, see &enum nvme_ave_pdu_type
+ * @flags:	Reserved
+ * @hlen:	Header Length: fixed length of 8 bytes (08h)
+ * @pdo:	PDU Data Offset, reserved
+ * @plen:	PDU Length: fixed length of 20 bytes (14h)
+ * @id:		Identifier matching the corresponding
+ *		&struct nvme_ave_access_request PDU
+ * @authres:	Authentication Verification Result, see &enum nvme_ave_authres
+ * @rcode:	Reason Code, see &enum nvme_ave_rcode
+ * @rsvd18:	Reserved
+ */
+struct nvme_ave_access_result {
+	__u8	pdu_type;
+	__u8	flags;
+	__u8	hlen;
+	__u8	pdo;
+	__le32	plen;
+	__le64	id;
+	__u8	authres;
+	__u8	rcode;
+	__u16	rsvd18;
+};
+
+/**
+ * enum nvmf_auth_protocol_id - Authentication Protocol Identifiers
+ * @NVMF_AUTH_PROTOCOL_COMMON:	Common messages
+ * @NVMF_AUTH_PROTOCOL_KXCHAP:	KX-HMAC-CHAP
+ */
+enum nvmf_auth_protocol_id {
+	NVMF_AUTH_PROTOCOL_COMMON	= 0x00,
+	NVMF_AUTH_PROTOCOL_KXCHAP	= 0x01,
+};
+
+/**
+ * enum nvmf_auth_id - Common Authentication Identifiers (AUTH_ID)
+ * @NVMF_AUTH_ID_NEGOTIATE:	AUTH_Negotiate
+ * @NVMF_AUTH_ID_FAILURE2:	AUTH_Failure2
+ * @NVMF_AUTH_ID_FAILURE1:	AUTH_Failure1
+ */
+enum nvmf_auth_id {
+	NVMF_AUTH_ID_NEGOTIATE	= 0x00,
+	NVMF_AUTH_ID_FAILURE2	= 0xf0,
+	NVMF_AUTH_ID_FAILURE1	= 0xf1,
+};
+
+/**
+ * enum nvmf_auth_sc_c - Secure Channel Concatenation values (SC_C)
+ * @NVMF_AUTH_SCC_NOSC:		No secure channel concatenation. Allowed on
+ *				any Admin or I/O Queue; does not generate a
+ *				PSK.
+ * @NVMF_AUTH_SCC_NEWTLSPSK:	Generate a PSK and associated PSK identity on
+ *				an Admin Queue over a TCP channel without TLS,
+ *				for use setting up TLS secure channels for
+ *				subsequent Admin and I/O queues. 0x01 is
+ *				obsolete (refer to NVM Express Base
+ *				Specification 2.0).
+ * @NVMF_AUTH_SCC_REPLACETLSPSK: Generate a PSK and associated PSK identity
+ *				on an Admin Queue over a TLS secure channel,
+ *				replacing the PSK used to set up that secure
+ *				channel.
+ */
+enum nvmf_auth_sc_c {
+	NVMF_AUTH_SCC_NOSC		= 0x00,
+	NVMF_AUTH_SCC_NEWTLSPSK		= 0x02,
+	NVMF_AUTH_SCC_REPLACETLSPSK	= 0x03,
+};
+
+/**
+ * struct nvmf_auth_negotiate - AUTH_Negotiate message, host to controller
+ * @auth_type:	Authentication Type, see &enum nvmf_auth_protocol_id.
+ *		Cleared to 0h (i.e., common messages).
+ * @auth_id:	Authentication Identifier, see &enum nvmf_auth_id.
+ *		Cleared to 0h (i.e., AUTH_Negotiate).
+ * @rsvd2:	Reserved
+ * @t_id:	Transaction Identifier
+ * @sc_c:	Secure Channel Concatenation, see &enum nvmf_auth_sc_c
+ * @napd:	Number of Authentication Protocol Descriptors
+ * @apd:	Authentication Protocol Descriptor list, @napd entries of 64
+ *		bytes each. Currently always a
+ *		&struct nvmf_auth_kxchap_protocol_descriptor, the only
+ *		authentication protocol defined.
+ */
+struct nvmf_auth_negotiate {
+	__u8	auth_type;
+	__u8	auth_id;
+	__u16	rsvd2;
+	__le16	t_id;
+	__u8	sc_c;
+	__u8	napd;
+	__u8	apd[];
+};
+
+/**
+ * enum nvmf_auth_rcode - AUTH_Failure Reason Codes (RCODE)
+ * @NVMF_AUTH_RCODE_FAILURE:	Authentication failure: the authentication
+ *				transaction failed
+ */
+enum nvmf_auth_rcode {
+	NVMF_AUTH_RCODE_FAILURE	= 0x01,
+};
+
+/**
+ * enum nvmf_auth_rcodeex - AUTH_Failure Reason Code Explanations (RCODEEX)
+ * @NVMF_AUTH_RCODEEX_FAILED:			Authentication failed:
+ *		authentication of the involved host or NVM subsystem failed
+ * @NVMF_AUTH_RCODEEX_PROTOCOL_NOT_USABLE:	Authentication protocol not
+ *		usable: the protocol descriptors proposed by the host do not
+ *		satisfy the security requirements of the controller
+ * @NVMF_AUTH_RCODEEX_SCC_MISMATCH:		Secure channel concatenation
+ *		mismatch: the SC_C value specified by the host does not
+ *		satisfy the security requirements of the controller
+ * @NVMF_AUTH_RCODEEX_HASH_NOT_USABLE:		Hash function not usable: the
+ *		HashIDList proposed by the host does not satisfy the security
+ *		requirements of the controller
+ * @NVMF_AUTH_RCODEEX_KXGROUP_NOT_USABLE:	Key exchange group not usable:
+ *		the KXgIDList proposed by the host does not satisfy the
+ *		security requirements of the controller
+ * @NVMF_AUTH_RCODEEX_INCORRECT_PAYLOAD:	Incorrect payload: the payload
+ *		of the received message is not correct
+ * @NVMF_AUTH_RCODEEX_INCORRECT_MESSAGE:	Incorrect protocol message: the
+ *		received message is not the expected next message in the
+ *		authentication protocol sequence
+ */
+enum nvmf_auth_rcodeex {
+	NVMF_AUTH_RCODEEX_FAILED		= 0x01,
+	NVMF_AUTH_RCODEEX_PROTOCOL_NOT_USABLE	= 0x02,
+	NVMF_AUTH_RCODEEX_SCC_MISMATCH		= 0x03,
+	NVMF_AUTH_RCODEEX_HASH_NOT_USABLE	= 0x04,
+	NVMF_AUTH_RCODEEX_KXGROUP_NOT_USABLE	= 0x05,
+	NVMF_AUTH_RCODEEX_INCORRECT_PAYLOAD	= 0x06,
+	NVMF_AUTH_RCODEEX_INCORRECT_MESSAGE	= 0x07,
+};
+
+/**
+ * struct nvmf_auth_failure - AUTH_Failure1 message, controller to host, or
+ *	AUTH_Failure2 message, host to controller
+ * @auth_type:	Authentication Type, see &enum nvmf_auth_protocol_id.
+ *		Cleared to 0h (i.e., common messages).
+ * @auth_id:	Authentication Identifier, see &enum nvmf_auth_id.
+ *		NVMF_AUTH_ID_FAILURE1 for AUTH_Failure1, NVMF_AUTH_ID_FAILURE2
+ *		for AUTH_Failure2.
+ * @rsvd2:	Reserved
+ * @t_id:	Transaction Identifier
+ * @rcode:	Reason Code, see &enum nvmf_auth_rcode
+ * @rcodeex:	Reason Code Explanation, see &enum nvmf_auth_rcodeex
+ */
+struct nvmf_auth_failure {
+	__u8	auth_type;
+	__u8	auth_id;
+	__u16	rsvd2;
+	__le16	t_id;
+	__u8	rcode;
+	__u8	rcodeex;
+};
+
+/**
+ * enum nvmf_auth_kxchap_id - KX-HMAC-CHAP Authentication Identifiers (AUTH_ID)
+ * @NVMF_AUTH_KXCHAP_ID_CHALLENGE:	KX-HMAC-CHAP_Challenge
+ * @NVMF_AUTH_KXCHAP_ID_REPLY:		KX-HMAC-CHAP_Reply
+ * @NVMF_AUTH_KXCHAP_ID_SUCCESS1:	KX-HMAC-CHAP_Success1
+ * @NVMF_AUTH_KXCHAP_ID_SUCCESS2:	KX-HMAC-CHAP_Success2
+ */
+enum nvmf_auth_kxchap_id {
+	NVMF_AUTH_KXCHAP_ID_CHALLENGE	= 0x01,
+	NVMF_AUTH_KXCHAP_ID_REPLY	= 0x02,
+	NVMF_AUTH_KXCHAP_ID_SUCCESS1	= 0x03,
+	NVMF_AUTH_KXCHAP_ID_SUCCESS2	= 0x04,
+};
+
+/**
+ * enum nvmf_auth_kxgid - KX-HMAC-CHAP Key Exchange Group Identifiers
+ * @NVMF_AUTH_KXGID_NULL:		No key exchange performed
+ * @NVMF_AUTH_KXGID_FFDHE2048:		Finite Field Diffie-Hellman Ephemeral,
+ *					2048-bit group (refer to RFC 7919)
+ * @NVMF_AUTH_KXGID_FFDHE3072:		Finite Field Diffie-Hellman Ephemeral,
+ *					3072-bit group (refer to RFC 7919)
+ * @NVMF_AUTH_KXGID_FFDHE4096:		Finite Field Diffie-Hellman Ephemeral,
+ *					4096-bit group (refer to RFC 7919)
+ * @NVMF_AUTH_KXGID_FFDHE6144:		Finite Field Diffie-Hellman Ephemeral,
+ *					6144-bit group (refer to RFC 7919)
+ * @NVMF_AUTH_KXGID_FFDHE8192:		Finite Field Diffie-Hellman Ephemeral,
+ *					8192-bit group (refer to RFC 7919)
+ * @NVMF_AUTH_KXGID_SECP256R1:		Elliptic Curve Diffie-Hellman Ephemeral,
+ *					curve secp256r1 (refer to RFC 8422,
+ *					NIST SP 800-186)
+ * @NVMF_AUTH_KXGID_SECP384R1:		Elliptic Curve Diffie-Hellman Ephemeral,
+ *					curve secp384r1 (refer to RFC 8422,
+ *					NIST SP 800-186)
+ * @NVMF_AUTH_KXGID_MLKEM768:		Module-Lattice Key-Encapsulation Mechanism,
+ *					security category 3 (refer to NIST FIPS 203)
+ * @NVMF_AUTH_KXGID_MLKEM1024:		Module-Lattice Key-Encapsulation Mechanism,
+ *					security category 5 (refer to NIST FIPS 203)
+ * @NVMF_AUTH_KXGID_SECP256R1MLKEM768:	Hybrid key exchange using secp256r1 and
+ *					ML-KEM-768 (refer to draft-ietf-tls-ecdhe-mlkem)
+ * @NVMF_AUTH_KXGID_SECP384R1MLKEM1024: Hybrid key exchange using secp384r1 and
+ *					ML-KEM-1024 (refer to draft-ietf-tls-ecdhe-mlkem)
+ */
+enum nvmf_auth_kxgid {
+	NVMF_AUTH_KXGID_NULL			= 0x00,
+	NVMF_AUTH_KXGID_FFDHE2048		= 0x01,
+	NVMF_AUTH_KXGID_FFDHE3072		= 0x02,
+	NVMF_AUTH_KXGID_FFDHE4096		= 0x03,
+	NVMF_AUTH_KXGID_FFDHE6144		= 0x04,
+	NVMF_AUTH_KXGID_FFDHE8192		= 0x05,
+	NVMF_AUTH_KXGID_SECP256R1		= 0x10,
+	NVMF_AUTH_KXGID_SECP384R1		= 0x11,
+	NVMF_AUTH_KXGID_MLKEM768		= 0x20,
+	NVMF_AUTH_KXGID_MLKEM1024		= 0x21,
+	NVMF_AUTH_KXGID_SECP256R1MLKEM768	= 0x30,
+	NVMF_AUTH_KXGID_SECP384R1MLKEM1024	= 0x31,
+};
+
+/**
+ * struct nvmf_auth_kxchap_protocol_descriptor - KX-HMAC-CHAP Authentication
+ *	Protocol Descriptor
+ * @authid:	Authentication Protocol Identifier, see
+ *		&enum nvmf_auth_protocol_id
+ * @rsvd1:	Reserved
+ * @halen:	HashIDList Length: number of hash function identifiers (1 to 30)
+ * @kxlen:	KXgIDList Length: number of key exchange group identifiers (1 to 30)
+ * @hashidlist:	Hash Function Identifier List, one byte per identifier,
+ *		see &enum libnvmf_hmac_alg. Unused trailing bytes are padding
+ *		cleared to 0h.
+ * @kxgidlist:	Key Exchange Group Identifier List, one byte per identifier,
+ *		see &enum nvmf_auth_kxgid. Unused trailing bytes are padding
+ *		cleared to 0h.
+ */
+struct nvmf_auth_kxchap_protocol_descriptor {
+	__u8	authid;
+	__u8	rsvd1;
+	__u8	halen;
+	__u8	kxlen;
+	__u8	hashidlist[30];
+	__u8	kxgidlist[30];
+};
+
+/**
+ * struct nvmf_auth_kxchap_challenge - KX-HMAC-CHAP_Challenge message,
+ *	controller to host
+ * @auth_type:	Authentication Type, see &enum nvmf_auth_protocol_id
+ * @auth_id:	Authentication Identifier, see &enum nvmf_auth_kxchap_id
+ * @rsvd2:	Reserved
+ * @t_id:	Transaction Identifier
+ * @hl:		Hash Length: length in bytes of the selected hash function
+ * @rsvd7:	Reserved
+ * @hashid:	Hash Identifier, see &enum libnvmf_hmac_alg
+ * @kxgid:	Key Exchange Group Identifier, see &enum nvmf_auth_kxgid.
+ *		Cleared to 0h if no key exchange is performed.
+ * @kxvlen:	KX Value Length: length in bytes of the KX Value carried in
+ *		@cval_kxv, cleared to 0h if @kxgid is cleared to 0h.
+ * @seqnum:	Sequence Number (S1)
+ * @cval_kxv:	Challenge Value (C1, @hl bytes) followed by the KX Value
+ *		(KXc, @kxvlen bytes). The KX Value is absent if @kxvlen is
+ *		cleared to 0h.
+ */
+struct nvmf_auth_kxchap_challenge {
+	__u8	auth_type;
+	__u8	auth_id;
+	__u16	rsvd2;
+	__le16	t_id;
+	__u8	hl;
+	__u8	rsvd7;
+	__u8	hashid;
+	__u8	kxgid;
+	__le16	kxvlen;
+	__le32	seqnum;
+	__u8	cval_kxv[];
+};
+
+/**
+ * struct nvmf_auth_kxchap_reply - KX-HMAC-CHAP_Reply message,
+ *	host to controller
+ * @auth_type:	Authentication Type, see &enum nvmf_auth_protocol_id
+ * @auth_id:	Authentication Identifier, see &enum nvmf_auth_kxchap_id
+ * @rsvd2:	Reserved
+ * @t_id:	Transaction Identifier
+ * @hl:		Hash Length: length in bytes of the selected hash function
+ * @rsvd7:	Reserved
+ * @cvalid:	Challenge Valid: 01h if the Challenge Value in @rval_cval_kxv
+ *		is valid (bidirectional authentication requested), 00h otherwise.
+ * @rsvd9:	Reserved
+ * @kxvlen:	KX Value Length: length in bytes of the KX Value carried in
+ *		@rval_cval_kxv, cleared to 0h if no key exchange is performed.
+ * @seqnum:	Sequence Number (S2)
+ * @rval_cval_kxv: Response Value (R1, @hl bytes), followed by the Challenge
+ *		Value (C2, @hl bytes, cleared to 0h if @cvalid is 00h),
+ *		followed by the KX Value (KXh, @kxvlen bytes). The KX Value
+ *		is absent if @kxvlen is cleared to 0h.
+ */
+struct nvmf_auth_kxchap_reply {
+	__u8	auth_type;
+	__u8	auth_id;
+	__u16	rsvd2;
+	__le16	t_id;
+	__u8	hl;
+	__u8	rsvd7;
+	__u8	cvalid;
+	__u8	rsvd9;
+	__le16	kxvlen;
+	__le32	seqnum;
+	__u8	rval_cval_kxv[];
+};
+
+/**
+ * struct nvmf_auth_kxchap_success1 - KX-HMAC-CHAP_Success1 message,
+ *	controller to host
+ * @auth_type:	Authentication Type, see &enum nvmf_auth_protocol_id
+ * @auth_id:	Authentication Identifier, see &enum nvmf_auth_kxchap_id
+ * @rsvd2:	Reserved
+ * @t_id:	Transaction Identifier
+ * @hl:		Hash Length: length in bytes of the selected hash function
+ * @rsvd7:	Reserved
+ * @rvalid:	Response Valid: 01h if @rval carries a valid Response Value
+ *		(bidirectional authentication was requested), 00h otherwise.
+ * @rsvd9:	Reserved
+ * @rval:	Response Value (R2, @hl bytes), cleared to 0h if @rvalid is 00h.
+ */
+struct nvmf_auth_kxchap_success1 {
+	__u8	auth_type;
+	__u8	auth_id;
+	__u16	rsvd2;
+	__le16	t_id;
+	__u8	hl;
+	__u8	rsvd7;
+	__u8	rvalid;
+	__u8	rsvd9[7];
+	__u8	rval[];
+};
+
+/**
+ * struct nvmf_auth_kxchap_success2 - KX-HMAC-CHAP_Success2 message,
+ *	host to controller
+ * @auth_type:	Authentication Type, see &enum nvmf_auth_protocol_id
+ * @auth_id:	Authentication Identifier, see &enum nvmf_auth_kxchap_id
+ * @rsvd2:	Reserved
+ * @t_id:	Transaction Identifier
+ * @rsvd6:	Reserved
+ */
+struct nvmf_auth_kxchap_success2 {
+	__u8	auth_type;
+	__u8	auth_id;
+	__u16	rsvd2;
+	__le16	t_id;
+	__u8	rsvd6[10];
 };
 
