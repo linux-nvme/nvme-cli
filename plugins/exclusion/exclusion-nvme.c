@@ -18,6 +18,7 @@
 
 #include <libnvme.h>
 
+#include <shared/array-util.h>
 #include <shared/compiler-attributes-util.h>
 
 #include "global-ctx.h"
@@ -203,27 +204,15 @@ static int excl_add(int argc, char **argv, struct command *acmd,
 	return ret;
 }
 
-struct entry_collection {
-	char **entries;
-	size_t count, cap;
-};
+SHR_PTRARRAY_DEFINE(entry_collection, char);
 
 static void collect_entry(const char *entry, void *user_data)
 {
 	struct entry_collection *ec = user_data;
+	char *dup = strdup(entry);
 
-	if (ec->count == ec->cap) {
-		size_t newcap = ec->cap ? ec->cap * 2 : 16;
-		char **newarr = realloc(ec->entries, newcap * sizeof(*newarr));
-
-		if (!newarr)
-			return;
-		ec->entries = newarr;
-		ec->cap = newcap;
-	}
-	ec->entries[ec->count] = strdup(entry);
-	if (ec->entries[ec->count])
-		ec->count++;
+	if (!dup || entry_collection_append(ec, dup) < 0)
+		free(dup);
 }
 
 static int cmp_entry(const void *a, const void *b)
@@ -269,37 +258,37 @@ static int excl_remove(int argc, char **argv, struct command *acmd,
 		return ret;
 	}
 
-	if (ec.count == 0) {
+	if (ec.len == 0) {
 		printf("exclusion list '%s' has no entries\n", cfg.name);
-		free(ec.entries);
+		entry_collection_free(&ec);
 		return 0;
 	}
 
-	qsort(ec.entries, ec.count, sizeof(*ec.entries), cmp_entry);
+	qsort(ec.items, ec.len, sizeof(*ec.items), cmp_entry);
 
-	for (i = 0; i < ec.count; i++)
-		printf("%3zu. %s\n", i + 1, ec.entries[i]);
+	for (i = 0; i < ec.len; i++)
+		printf("%3zu. %s\n", i + 1, ec.items[i]);
 
 	printf("Which entry do you want to delete? [1-%zu, or empty to cancel] ",
-	       ec.count);
+	       ec.len);
 	fflush(stdout);
 
 	if (!fgets(answer, sizeof(answer), stdin) ||
 	    sscanf(answer, "%zu", &choice) != 1 ||
-	    choice < 1 || choice > ec.count) {
+	    choice < 1 || choice > ec.len) {
 		printf("cancelled\n");
 		ret = 0;
 		goto out;
 	}
 
-	ret = libnvmf_exclusion_remove(ctx, cfg.name, ec.entries[choice - 1]);
+	ret = libnvmf_exclusion_remove(ctx, cfg.name, ec.items[choice - 1]);
 	if (ret)
 		nvme_show_error("remove failed: %s", libnvme_strerror(-ret));
 
 out:
-	for (i = 0; i < ec.count; i++)
-		free(ec.entries[i]);
-	free(ec.entries);
+	for (i = 0; i < ec.len; i++)
+		free(ec.items[i]);
+	entry_collection_free(&ec);
 	return ret;
 }
 
