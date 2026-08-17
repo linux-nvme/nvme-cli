@@ -18,6 +18,7 @@
  *   nbft = true
  *   debug-level = info
  *   fc-kickstart-interval-minutes = 0
+ *   epcsd-poll-interval-minutes = 15
  */
 struct discoverd_config {
 	bool nbft; // adopt/connect NBFT-listed controllers; default true
@@ -35,6 +36,15 @@ struct discoverd_config {
 	 * additionally re-issue every N minutes.
 	 */
 	unsigned int fc_kickstart_interval_minutes;
+
+	/*
+	 * How often, in minutes, to reconnect and re-check a DC whose
+	 * effective EPCSD is 0. Such a DC is disconnected between checks —
+	 * it does not support persistent connections, so there is nothing
+	 * to hold open. Default 15; never 0 (unlike fc_kickstart_interval,
+	 * this poll is not optional).
+	 */
+	unsigned int epcsd_poll_interval_minutes;
 };
 
 /*
