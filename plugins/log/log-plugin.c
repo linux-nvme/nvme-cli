@@ -55,9 +55,6 @@
 #include "nvme-regs.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "log-plugin.h"
-
 struct nvme_get_log_args {
 	__u32 nsid;
 	bool rae;
@@ -2669,4 +2666,245 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acm
 	nvme_show_pull_model_ddc_req_log(log, flags);
 
 	return err;
+}
+
+static struct command smart_cmd = {
+	.name = "smart",
+	.help = "Retrieve SMART Log, show it",
+	.fn = get_smart_log,
+};
+
+static struct command ana_cmd = {
+	.name = "ana",
+	.help = "Retrieve ANA Log, show it",
+	.fn = get_ana_log,
+};
+
+static struct command telemetry_cmd = {
+	.name = "telemetry",
+	.help = "Retrieve FW Telemetry log write to file",
+	.fn = get_telemetry_log,
+};
+
+static struct command fw_cmd = {
+	.name = "fw",
+	.help = "Retrieve FW Log, show it",
+	.fn = get_fw_log,
+};
+
+static struct command endurance_cmd = {
+	.name = "endurance",
+	.help = "Retrieve Endurance Group Log, show it",
+	.fn = get_endurance_log,
+};
+
+static struct command effects_cmd = {
+	.name = "effects",
+	.help = "Retrieve Command Effects Log, show it",
+	.fn = get_effects_log,
+};
+
+static struct command error_cmd = {
+	.name = "error",
+	.help = "Retrieve Error Log, show it",
+	.fn = get_error_log,
+};
+
+static struct command changed_ns_list_cmd = {
+	.name = "changed-ns-list",
+	.help = "Retrieve Changed Attached Namespace List, show it",
+	.fn = get_changed_attach_ns_list_log,
+};
+
+static struct command changed_alloc_ns_list_cmd = {
+	.name = "changed-alloc-ns-list",
+	.help = "Retrieve Changed Allocated Namespace List, show it",
+	.fn = get_changed_alloc_ns_list_log,
+};
+
+static struct command predictable_lat_cmd = {
+	.name = "predictable-lat",
+	.help = "Retrieve Predictable Latency per Nvmset Log, show it",
+	.fn = get_pred_lat_per_nvmset_log,
+};
+
+static struct command pred_lat_event_agg_cmd = {
+	.name = "pred-lat-event-agg",
+	.help = "Retrieve Predictable Latency Event Aggregate Log, show it",
+	.fn = get_pred_lat_event_agg_log,
+};
+
+static struct command persistent_event_cmd = {
+	.name = "persistent-event",
+	.help = "Retrieve Persistent Event Log, show it",
+	.fn = get_persistent_event_log,
+};
+
+static struct command endurance_event_agg_cmd = {
+	.name = "endurance-event-agg",
+	.help = "Retrieve Endurance Group Event Aggregate Log, show it",
+	.fn = get_endurance_event_agg_log,
+};
+
+static struct command lba_status_cmd = {
+	.name = "lba-status",
+	.help = "Retrieve LBA Status Information Log, show it",
+	.fn = get_lba_status_log,
+};
+
+static struct command resv_notif_cmd = {
+	.name = "resv-notif",
+	.help = "Retrieve Reservation Notification Log, show it",
+	.fn = get_resv_notif_log,
+};
+
+static struct command boot_part_cmd = {
+	.name = "boot-part",
+	.help = "Retrieve Boot Partition Log, show it",
+	.fn = get_boot_part_log,
+};
+
+static struct command phy_rx_eom_cmd = {
+	.name = "phy-rx-eom",
+	.help = "Retrieve Physical Interface Receiver Eye Opening Measurement, show it",
+	.fn = get_phy_rx_eom_log,
+};
+
+static struct command self_test_cmd = {
+	.name = "self-test",
+	.help = "Retrieve the SELF-TEST Log, show it",
+	.fn = self_test_log,
+};
+
+static struct command fid_support_effects_cmd = {
+	.name = "fid-support-effects",
+	.help = "Retrieve FID Support and Effects log and show it",
+	.fn = get_fid_support_effects_log,
+};
+
+static struct command mi_cmd_support_effects_cmd = {
+	.name = "mi-cmd-support-effects",
+	.help = "Retrieve MI Command Support and Effects log and show it",
+	.fn = get_mi_cmd_support_effects_log,
+};
+
+static struct command media_unit_stat_cmd = {
+	.name = "media-unit-stat",
+	.help = "Retrieve the configuration and wear of media units, show it",
+	.fn = get_media_unit_stat_log,
+};
+
+static struct command supported_cap_config_cmd = {
+	.name = "supported-cap-config",
+	.help = "Retrieve the list of Supported Capacity Configuration Descriptors",
+	.fn = get_supp_cap_config_log,
+};
+
+static struct command mgmt_addr_list_cmd = {
+	.name = "mgmt-addr-list",
+	.help = "Retrieve Management Address List Log, show it",
+	.fn = get_mgmt_addr_list_log,
+};
+
+static struct command rotational_media_info_cmd = {
+	.name = "rotational-media-info",
+	.help = "Retrieve Rotational Media Information Log, show it",
+	.fn = get_rotational_media_info_log,
+};
+
+static struct command dispersed_ns_participating_nss_cmd = {
+	.name = "dispersed-ns-participating-nss",
+	.help = "Retrieve Dispersed Namespace Participating NVM Subsystems Log, show it",
+	.fn = get_dispersed_ns_participating_nss_log,
+};
+
+static struct command reachability_groups_cmd = {
+	.name = "reachability-groups",
+	.help = "Retrieve Reachability Groups Log, show it",
+	.fn = get_reachability_groups_log,
+};
+
+static struct command reachability_associations_cmd = {
+	.name = "reachability-associations",
+	.help = "Retrieve Reachability Associations Log, show it",
+	.fn = get_reachability_associations_log,
+};
+
+static struct command host_discovery_cmd = {
+	.name = "host-discovery",
+	.help = "Retrieve Host Discovery Log, show it",
+	.fn = get_host_discovery_log,
+};
+
+static struct command ave_discovery_cmd = {
+	.name = "ave-discovery",
+	.help = "Retrieve AVE Discovery Log, show it",
+	.fn = get_ave_discovery_log,
+};
+
+static struct command pull_model_ddc_req_cmd = {
+	.name = "pull-model-ddc-req",
+	.help = "Retrieve Pull Model DDC Request Log, show it",
+	.fn = get_pull_model_ddc_req_log,
+};
+
+static struct command power_measurement_cmd = {
+	.name = "power-measurement",
+	.help = "Retrieve Power Measurement Log, show it",
+	.fn = get_power_measurement_log,
+};
+
+static struct command sanitize_cmd = {
+	.name = "sanitize",
+	.help = "Retrieve sanitize log, show it",
+	.fn = sanitize_log,
+};
+
+static struct command *commands[] = {
+	&smart_cmd,
+	&ana_cmd,
+	&telemetry_cmd,
+	&fw_cmd,
+	&endurance_cmd,
+	&effects_cmd,
+	&error_cmd,
+	&changed_ns_list_cmd,
+	&changed_alloc_ns_list_cmd,
+	&predictable_lat_cmd,
+	&pred_lat_event_agg_cmd,
+	&persistent_event_cmd,
+	&endurance_event_agg_cmd,
+	&lba_status_cmd,
+	&resv_notif_cmd,
+	&boot_part_cmd,
+	&phy_rx_eom_cmd,
+	&self_test_cmd,
+	&fid_support_effects_cmd,
+	&mi_cmd_support_effects_cmd,
+	&media_unit_stat_cmd,
+	&supported_cap_config_cmd,
+	&mgmt_addr_list_cmd,
+	&rotational_media_info_cmd,
+	&dispersed_ns_participating_nss_cmd,
+	&reachability_groups_cmd,
+	&reachability_associations_cmd,
+	&host_discovery_cmd,
+	&ave_discovery_cmd,
+	&pull_model_ddc_req_cmd,
+	&power_measurement_cmd,
+	&sanitize_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "log",
+	.desc = "Retrieve and show NVMe log pages",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

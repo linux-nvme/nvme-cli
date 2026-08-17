@@ -22,10 +22,6 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-
-#define CREATE_CMD
-#include "dapustor-nvme.h"
-
 struct __packed nvme_additional_smart_log_item {
 	__u8			key;
 	__u8			_kp[2];
@@ -566,4 +562,27 @@ static int dapustor_additional_smart_log(int argc, char **argv, struct command *
 		}
 	}
 	return err;
+}
+
+static struct command dapustor_additional_smart_log_cmd = {
+	.name = "smart-log-add",
+	.help = "Retrieve DapuStor SMART Log, show it",
+	.fn = dapustor_additional_smart_log,
+};
+
+static struct command *commands[] = {
+	&dapustor_additional_smart_log_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "dapustor",
+	.desc = "DapuStor vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

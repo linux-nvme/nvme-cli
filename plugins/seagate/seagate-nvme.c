@@ -47,9 +47,6 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-
-#include "seagate-nvme.h"
 #include "seagate-diag.h"
 
 
@@ -1896,3 +1893,103 @@ static int stx_ocp_plugin_version(int argc, char **argv, struct command *acmd, s
 	return 0;
 }
 /*EOF OCP SEAGATE-PLUGIN Version */
+
+static struct command temp_stats_cmd = {
+	.name = "vs-temperature-stats",
+	.help = "Retrieve Seagate temperature statistics ",
+	.fn = temp_stats,
+};
+
+static struct command log_pages_supp_cmd = {
+	.name = "vs-log-page-sup",
+	.help = "Retrieve Seagate Supported Log-pages Information ",
+	.fn = log_pages_supp,
+};
+
+static struct command vs_smart_log_cmd = {
+	.name = "vs-smart-add-log",
+	.help = "Retrieve Seagate extended-SMART Information ",
+	.fn = vs_smart_log,
+};
+
+static struct command vs_pcie_error_log_cmd = {
+	.name = "vs-pcie-stats",
+	.help = "Retrieve Seagate PCIe error statistics ",
+	.fn = vs_pcie_error_log,
+};
+
+static struct command vs_clr_pcie_correctable_errs_cmd = {
+	.name = "clear-pcie-correctable-errors",
+	.help = "Clear Seagate PCIe error statistics  ",
+	.fn = vs_clr_pcie_correctable_errs,
+};
+
+static struct command get_host_tele_cmd = {
+	.name = "get-host-tele",
+	.help = "Retrieve Seagate Host-Initiated Telemetry ",
+	.fn = get_host_tele,
+};
+
+static struct command get_ctrl_tele_cmd = {
+	.name = "get-ctrl-tele",
+	.help = "Retrieve Seagate Controller-Initiated Telemetry ",
+	.fn = get_ctrl_tele,
+};
+
+static struct command vs_internal_log_cmd = {
+	.name = "vs-internal-log",
+	.help = "Retrieve Seagate Controller-Initiated Telemetry in binary format",
+	.fn = vs_internal_log,
+};
+
+static struct command stx_vs_fw_activate_history_cmd = {
+	.name = "vs-fw-activate-history",
+	.help = "Retrieve the Firmware Activation History",
+	.fn = stx_vs_fw_activate_history,
+};
+
+static struct command clear_fw_activate_history_cmd = {
+	.name = "clear-fw-activate-history",
+	.help = "Clear Firmware Activation History",
+	.fn = clear_fw_activate_history,
+};
+
+static struct command seagate_plugin_version_cmd = {
+	.name = "plugin-version",
+	.help = "Shows Seagate plugin's version information ",
+	.fn = seagate_plugin_version,
+};
+
+static struct command stx_ocp_plugin_version_cmd = {
+	.name = "cloud-SSD-plugin-version",
+	.help = "Shows OCP Seagate plugin's version information ",
+	.fn = stx_ocp_plugin_version,
+};
+
+static struct command *commands[] = {
+	&temp_stats_cmd,
+	&log_pages_supp_cmd,
+	&vs_smart_log_cmd,
+	&vs_pcie_error_log_cmd,
+	&vs_clr_pcie_correctable_errs_cmd,
+	&get_host_tele_cmd,
+	&get_ctrl_tele_cmd,
+	&vs_internal_log_cmd,
+	&stx_vs_fw_activate_history_cmd,
+	&clear_fw_activate_history_cmd,
+	&seagate_plugin_version_cmd,
+	&stx_ocp_plugin_version_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "seagate",
+	.desc = "Seagate vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
+}

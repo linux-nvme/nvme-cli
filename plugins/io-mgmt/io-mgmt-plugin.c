@@ -23,9 +23,6 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "io-mgmt-plugin.h"
-
 static const char *buf_len = "buffer len (if) data is sent or received";
 static const char *mo = "management operation";
 static const char *mos = "management operation specific";
@@ -191,4 +188,35 @@ static int io_mgmt_recv(int argc, char **argv, struct command *acmd, struct plug
 	}
 
 	return err;
+}
+
+static struct command io_mgmt_recv_cmd = {
+	.name = "recv",
+	.help = "I/O Management Receive",
+	.fn = io_mgmt_recv,
+};
+
+static struct command io_mgmt_send_cmd = {
+	.name = "send",
+	.help = "I/O Management Send",
+	.fn = io_mgmt_send,
+};
+
+static struct command *commands[] = {
+	&io_mgmt_recv_cmd,
+	&io_mgmt_send_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "io-mgmt",
+	.desc = "Submit NVMe I/O Management commands",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

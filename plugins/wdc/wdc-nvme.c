@@ -50,8 +50,8 @@
 #include "src/cleanup.h"
 #include "nvme-pci-ids.h"
 
-#define CREATE_CMD
-#include "wdc-nvme.h"
+#define WDC_PLUGIN_VERSION   "2.15.1"
+
 #include "wdc-utils.h"
 #include "wdc-nvme-cmds.h"
 
@@ -12956,4 +12956,279 @@ __u64 run_wdc_get_drive_capabilities(struct libnvme_global_ctx *ctx,
 		struct libnvme_transport_handle *hdl)
 {
 	return wdc_get_drive_capabilities(ctx, hdl);
+}
+
+static struct command wdc_cap_diag_cmd = {
+	.name = "cap-diag",
+	.help = "WDC Capture-Diagnostics",
+	.fn = wdc_cap_diag,
+};
+
+static struct command wdc_drive_log_cmd = {
+	.name = "drive-log",
+	.help = "WDC Drive Log",
+	.fn = wdc_drive_log,
+};
+
+static struct command wdc_get_crash_dump_cmd = {
+	.name = "get-crash-dump",
+	.help = "WDC Crash Dump",
+	.fn = wdc_get_crash_dump,
+};
+
+static struct command wdc_get_pfail_dump_cmd = {
+	.name = "get-pfail-dump",
+	.help = "WDC Pfail Dump",
+	.fn = wdc_get_pfail_dump,
+};
+
+static struct command wdc_id_ctrl_cmd = {
+	.name = "id-ctrl",
+	.help = "WDC identify controller",
+	.fn = wdc_id_ctrl,
+};
+
+static struct command wdc_purge_cmd = {
+	.name = "purge",
+	.help = "WDC Purge",
+	.fn = wdc_purge,
+};
+
+static struct command wdc_purge_monitor_cmd = {
+	.name = "purge-monitor",
+	.help = "WDC Purge Monitor",
+	.fn = wdc_purge_monitor,
+};
+
+static struct command wdc_vs_internal_fw_log_cmd = {
+	.name = "vs-internal-log",
+	.help = "WDC Internal Firmware Log",
+	.fn = wdc_vs_internal_fw_log,
+};
+
+static struct command wdc_vs_nand_stats_cmd = {
+	.name = "vs-nand-stats",
+	.help = "WDC NAND Statistics",
+	.fn = wdc_vs_nand_stats,
+};
+
+static struct command wdc_vs_smart_add_log_cmd = {
+	.name = "vs-smart-add-log",
+	.help = "WDC Additional Smart Log",
+	.fn = wdc_vs_smart_add_log,
+};
+
+static struct command wdc_clear_pcie_correctable_errors_cmd = {
+	.name = "clear-pcie-correctable-errors",
+	.help = "WDC Clear PCIe Correctable Error Count",
+	.fn = wdc_clear_pcie_correctable_errors,
+};
+
+static struct command wdc_drive_essentials_cmd = {
+	.name = "drive-essentials",
+	.help = "WDC Drive Essentials",
+	.fn = wdc_drive_essentials,
+};
+
+static struct command wdc_drive_status_cmd = {
+	.name = "get-drive-status",
+	.help = "WDC Get Drive Status",
+	.fn = wdc_drive_status,
+};
+
+static struct command wdc_clear_assert_dump_cmd = {
+	.name = "clear-assert-dump",
+	.help = "WDC Clear Assert Dump",
+	.fn = wdc_clear_assert_dump,
+};
+
+static struct command wdc_drive_resize_cmd = {
+	.name = "drive-resize",
+	.help = "WDC Drive Resize",
+	.fn = wdc_drive_resize,
+};
+
+static struct command wdc_vs_fw_activate_history_cmd = {
+	.name = "vs-fw-activate-history",
+	.help = "WDC Get FW Activate History",
+	.fn = wdc_vs_fw_activate_history,
+};
+
+static struct command wdc_clear_fw_activate_history_cmd = {
+	.name = "clear-fw-activate-history",
+	.help = "WDC Clear FW Activate History",
+	.fn = wdc_clear_fw_activate_history,
+};
+
+static struct command wdc_enc_get_log_cmd = {
+	.name = "enc-get-log",
+	.help = "WDC Get Enclosure Log",
+	.fn = wdc_enc_get_log,
+};
+
+static struct command wdc_vs_telemetry_controller_option_cmd = {
+	.name = "vs-telemetry-controller-option",
+	.help = "WDC Enable/Disable Controller Initiated Telemetry Log",
+	.fn = wdc_vs_telemetry_controller_option,
+};
+
+static struct command wdc_reason_identifier_cmd = {
+	.name = "vs-error-reason-identifier",
+	.help = "WDC Telemetry Reason Identifier",
+	.fn = wdc_reason_identifier,
+};
+
+static struct command wdc_log_page_directory_cmd = {
+	.name = "log-page-directory",
+	.help = "WDC Get Log Page Directory",
+	.fn = wdc_log_page_directory,
+};
+
+static struct command wdc_namespace_resize_cmd = {
+	.name = "namespace-resize",
+	.help = "WDC NamespaceDrive Resize",
+	.fn = wdc_namespace_resize,
+};
+
+static struct command wdc_vs_drive_info_cmd = {
+	.name = "vs-drive-info",
+	.help = "WDC Get Drive Info",
+	.fn = wdc_vs_drive_info,
+};
+
+static struct command wdc_vs_temperature_stats_cmd = {
+	.name = "vs-temperature-stats",
+	.help = "WDC Get Temperature Stats",
+	.fn = wdc_vs_temperature_stats,
+};
+
+static struct command wdc_capabilities_cmd = {
+	.name = "capabilities",
+	.help = "WDC Device Capabilities",
+	.fn = wdc_capabilities,
+};
+
+static struct command wdc_cloud_ssd_plugin_version_cmd = {
+	.name = "cloud-SSD-plugin-version",
+	.help = "WDC Cloud SSD Plugin Version",
+	.fn = wdc_cloud_ssd_plugin_version,
+};
+
+static struct command wdc_vs_pcie_stats_cmd = {
+	.name = "vs-pcie-stats",
+	.help = "WDC VS PCIE Statistics",
+	.fn = wdc_vs_pcie_stats,
+};
+
+static struct command wdc_get_latency_monitor_log_cmd = {
+	.name = "get-latency-monitor-log",
+	.help = "WDC Get Latency Monitor Log Page",
+	.fn = wdc_get_latency_monitor_log,
+};
+
+static struct command wdc_get_error_recovery_log_cmd = {
+	.name = "get-error-recovery-log",
+	.help = "WDC Get Error Recovery Log Page",
+	.fn = wdc_get_error_recovery_log,
+};
+
+static struct command wdc_get_dev_capabilities_log_cmd = {
+	.name = "get-dev-capabilities-log",
+	.help = "WDC Get Device Capabilities Log Page",
+	.fn = wdc_get_dev_capabilities_log,
+};
+
+static struct command wdc_get_unsupported_reqs_log_cmd = {
+	.name = "get-unsupported-reqs-log",
+	.help = "WDC Get Unsupported Requirements Log Page",
+	.fn = wdc_get_unsupported_reqs_log,
+};
+
+static struct command wdc_cloud_boot_SSD_version_cmd = {
+	.name = "cloud-boot-SSD-version",
+	.help = "WDC Get the Cloud Boot SSD Version",
+	.fn = wdc_cloud_boot_SSD_version,
+};
+
+static struct command wdc_vs_cloud_log_cmd = {
+	.name = "vs-cloud-log",
+	.help = "WDC Get the Cloud Log Page",
+	.fn = wdc_vs_cloud_log,
+};
+
+static struct command wdc_vs_hw_rev_log_cmd = {
+	.name = "vs-hw-rev-log",
+	.help = "WDC Get the Hardware Revision Log Page",
+	.fn = wdc_vs_hw_rev_log,
+};
+
+static struct command wdc_vs_device_waf_cmd = {
+	.name = "vs-device-waf",
+	.help = "WDC Calculate Device Write Amplication Factor",
+	.fn = wdc_vs_device_waf,
+};
+
+static struct command wdc_set_latency_monitor_feature_cmd = {
+	.name = "set-latency-monitor-feature",
+	.help = "WDC set Latency Monitor feature",
+	.fn = wdc_set_latency_monitor_feature,
+};
+
+static struct command wdc_cu_smart_log_cmd = {
+	.name = "cu-smart-log",
+	.help = "WDC Get Customer Unique Smart Log",
+	.fn = wdc_cu_smart_log,
+};
+
+static struct command *commands[] = {
+	&wdc_cap_diag_cmd,
+	&wdc_drive_log_cmd,
+	&wdc_get_crash_dump_cmd,
+	&wdc_get_pfail_dump_cmd,
+	&wdc_id_ctrl_cmd,
+	&wdc_purge_cmd,
+	&wdc_purge_monitor_cmd,
+	&wdc_vs_internal_fw_log_cmd,
+	&wdc_vs_nand_stats_cmd,
+	&wdc_vs_smart_add_log_cmd,
+	&wdc_clear_pcie_correctable_errors_cmd,
+	&wdc_drive_essentials_cmd,
+	&wdc_drive_status_cmd,
+	&wdc_clear_assert_dump_cmd,
+	&wdc_drive_resize_cmd,
+	&wdc_vs_fw_activate_history_cmd,
+	&wdc_clear_fw_activate_history_cmd,
+	&wdc_enc_get_log_cmd,
+	&wdc_vs_telemetry_controller_option_cmd,
+	&wdc_reason_identifier_cmd,
+	&wdc_log_page_directory_cmd,
+	&wdc_namespace_resize_cmd,
+	&wdc_vs_drive_info_cmd,
+	&wdc_vs_temperature_stats_cmd,
+	&wdc_capabilities_cmd,
+	&wdc_cloud_ssd_plugin_version_cmd,
+	&wdc_vs_pcie_stats_cmd,
+	&wdc_get_latency_monitor_log_cmd,
+	&wdc_get_error_recovery_log_cmd,
+	&wdc_get_dev_capabilities_log_cmd,
+	&wdc_get_unsupported_reqs_log_cmd,
+	&wdc_cloud_boot_SSD_version_cmd,
+	&wdc_vs_cloud_log_cmd,
+	&wdc_vs_hw_rev_log_cmd,
+	&wdc_vs_device_waf_cmd,
+	&wdc_set_latency_monitor_feature_cmd,
+	&wdc_cu_smart_log_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "wdc",
+	.desc = "Western Digital vendor specific extensions",
+	.version = WDC_PLUGIN_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

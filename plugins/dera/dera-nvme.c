@@ -18,9 +18,6 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "dera-nvme.h"
-
 static int char4_to_int(__u8 *data)
 {
 	int i;
@@ -191,5 +188,29 @@ exit:
 		nvme_show_status(err);
 
 	return err;
+}
+
+static struct command get_status_cmd = {
+	.name = "smart-log-add",
+	.help = "Retrieve Dera SMART Log, show it",
+	.fn = get_status,
+	.alias = "stat",
+};
+
+static struct command *commands[] = {
+	&get_status_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "dera",
+	.desc = "Dera vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }
 

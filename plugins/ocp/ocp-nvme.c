@@ -30,6 +30,8 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
+#define OCP_PLUGIN_VERSION   "3.0.0"
+
 #include "ocp-smart-extended-log.h"
 #include "ocp-clear-features.h"
 #include "ocp-fw-activation-history.h"
@@ -38,7 +40,6 @@
 #include "ocp-print.h"
 #include "ocp-types.h"
 
-#define CREATE_CMD
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
 
@@ -3161,4 +3162,231 @@ static int ocp_get_idle_wakeup_time_config_feature(int argc, char **argv,
 	}
 
 	return err;
+}
+
+static struct command smart_add_log_cmd = {
+	.name = "smart-add-log",
+	.help = "Retrieve Extended SMART Information",
+	.fn = smart_add_log,
+};
+
+static struct command ocp_latency_monitor_log_cmd = {
+	.name = "latency-monitor-log",
+	.help = "Retrieve Latency Monitor Log Page",
+	.fn = ocp_latency_monitor_log,
+};
+
+static struct command ocp_set_latency_monitor_feature_cmd = {
+	.name = "set-latency-monitor-feature",
+	.help = "Set Latency Monitor Feature",
+	.fn = ocp_set_latency_monitor_feature,
+};
+
+static struct command ocp_telemetry_log_cmd = {
+	.name = "internal-log",
+	.help = "Retrieve and Save Internal Device Telemetry Log",
+	.fn = ocp_telemetry_log,
+};
+
+static struct command clear_fw_update_history_cmd = {
+	.name = "clear-fw-activate-history",
+	.help = "Clear Firmware Update History",
+	.fn = clear_fw_update_history,
+};
+
+static struct command eol_plp_failure_mode_cmd = {
+	.name = "eol-plp-failure-mode",
+	.help = "Define EOL or PLP Circuitry Failure Mode",
+	.fn = eol_plp_failure_mode,
+};
+
+static struct command clear_pcie_correctable_error_counters_cmd = {
+	.name = "clear-pcie-correctable-errors",
+	.help = "Clear PCIe Correctable Error Counters",
+	.fn = clear_pcie_correctable_error_counters,
+};
+
+static struct command fw_activation_history_log_cmd = {
+	.name = "fw-activate-history",
+	.help = "Retrieve Firmware Activation History Log Page",
+	.fn = fw_activation_history_log,
+};
+
+static struct command ocp_unsupported_requirements_log_cmd = {
+	.name = "unsupported-reqs-log",
+	.help = "Retrieve Unsupported Requirements Log Page",
+	.fn = ocp_unsupported_requirements_log,
+};
+
+static struct command ocp_error_recovery_log_cmd = {
+	.name = "error-recovery-log",
+	.help = "Retrieve Error Recovery Log Page",
+	.fn = ocp_error_recovery_log,
+};
+
+static struct command ocp_device_capabilities_log_cmd = {
+	.name = "device-capability-log",
+	.help = "Retrieve Device Capabilities Log Page",
+	.fn = ocp_device_capabilities_log,
+};
+
+static struct command set_dssd_power_state_feature_cmd = {
+	.name = "set-dssd-power-state-feature",
+	.help = "Set DSSD Power State Feature",
+	.fn = set_dssd_power_state_feature,
+};
+
+static struct command get_dssd_power_state_feature_cmd = {
+	.name = "get-dssd-power-state-feature",
+	.help = "Get DSSD Power State Feature",
+	.fn = get_dssd_power_state_feature,
+};
+
+static struct command set_plp_health_check_interval_cmd = {
+	.name = "set-plp-health-check-interval",
+	.help = "Set PLP Health Check Interval",
+	.fn = set_plp_health_check_interval,
+};
+
+static struct command get_plp_health_check_interval_cmd = {
+	.name = "get-plp-health-check-interval",
+	.help = "Get PLP Health Check Interval",
+	.fn = get_plp_health_check_interval,
+};
+
+static struct command ocp_telemetry_str_log_format_cmd = {
+	.name = "telemetry-string-log",
+	.help = "Retrieve Telemetry String Log Page",
+	.fn = ocp_telemetry_str_log_format,
+};
+
+static struct command ocp_set_telemetry_profile_feature_cmd = {
+	.name = "set-telemetry-profile",
+	.help = "Set Telemetry Profile Feature",
+	.fn = ocp_set_telemetry_profile_feature,
+};
+
+static struct command set_dssd_async_event_config_cmd = {
+	.name = "set-dssd-async-event-config",
+	.help = "Set DSSD Asynchronous Event Configuration",
+	.fn = set_dssd_async_event_config,
+};
+
+static struct command get_dssd_async_event_config_cmd = {
+	.name = "get-dssd-async-event-config",
+	.help = "Get DSSD Asynchronous Event Configuration",
+	.fn = get_dssd_async_event_config,
+};
+
+static struct command ocp_tcg_configuration_log_cmd = {
+	.name = "tcg-configuration-log",
+	.help = "Retrieve TCG Configuration Log Page",
+	.fn = ocp_tcg_configuration_log,
+};
+
+static struct command get_error_injection_cmd = {
+	.name = "get-error-injection",
+	.help = "Get Error Injection Feature",
+	.fn = get_error_injection,
+};
+
+static struct command set_error_injection_cmd = {
+	.name = "set-error-injection",
+	.help = "Set Error Injection Feature",
+	.fn = set_error_injection,
+};
+
+static struct command get_enable_ieee1667_silo_cmd = {
+	.name = "get-enable-ieee1667-silo",
+	.help = "Get Enable IEEE1667 Silo Feature",
+	.fn = get_enable_ieee1667_silo,
+};
+
+static struct command set_enable_ieee1667_silo_cmd = {
+	.name = "set-enable-ieee1667-silo",
+	.help = "Set Enable IEEE1667 Silo Feature",
+	.fn = set_enable_ieee1667_silo,
+};
+
+static struct command hwcomp_log_cmd = {
+	.name = "hardware-component-log",
+	.help = "Retrieve Hardware Component Log Page",
+	.fn = hwcomp_log,
+};
+
+static struct command ocp_get_latency_monitor_feature_cmd = {
+	.name = "get-latency-monitor",
+	.help = "Get Latency Monitor Feature",
+	.fn = ocp_get_latency_monitor_feature,
+};
+
+static struct command get_clear_pcie_correctable_error_counters_cmd = {
+	.name = "get-clear-pcie-correctable-errors",
+	.help = "Get Clear PCIe Correctable Error Counters Feature",
+	.fn = get_clear_pcie_correctable_error_counters,
+};
+
+static struct command ocp_get_telemetry_profile_feature_cmd = {
+	.name = "get-telemetry-profile",
+	.help = "Get Telemetry Profile Feature",
+	.fn = ocp_get_telemetry_profile_feature,
+};
+
+static struct command ocp_get_persistent_event_log_cmd = {
+	.name = "persistent-event-log",
+	.help = "Retrieve Persistent Event Log with OCP Events",
+	.fn = ocp_get_persistent_event_log,
+};
+
+static struct command ocp_get_idle_wakeup_time_config_feature_cmd = {
+	.name = "get-idle-wakeup-time",
+	.help = "Get Idle Wake Up Time Configuration",
+	.fn = ocp_get_idle_wakeup_time_config_feature,
+};
+
+static struct command *commands[] = {
+	&smart_add_log_cmd,
+	&ocp_latency_monitor_log_cmd,
+	&ocp_set_latency_monitor_feature_cmd,
+	&ocp_telemetry_log_cmd,
+	&clear_fw_update_history_cmd,
+	&eol_plp_failure_mode_cmd,
+	&clear_pcie_correctable_error_counters_cmd,
+	&fw_activation_history_log_cmd,
+	&ocp_unsupported_requirements_log_cmd,
+	&ocp_error_recovery_log_cmd,
+	&ocp_device_capabilities_log_cmd,
+	&set_dssd_power_state_feature_cmd,
+	&get_dssd_power_state_feature_cmd,
+	&set_plp_health_check_interval_cmd,
+	&get_plp_health_check_interval_cmd,
+	&ocp_telemetry_str_log_format_cmd,
+	&ocp_set_telemetry_profile_feature_cmd,
+	&set_dssd_async_event_config_cmd,
+	&get_dssd_async_event_config_cmd,
+	&ocp_tcg_configuration_log_cmd,
+	&get_error_injection_cmd,
+	&set_error_injection_cmd,
+	&get_enable_ieee1667_silo_cmd,
+	&set_enable_ieee1667_silo_cmd,
+	&hwcomp_log_cmd,
+	&ocp_get_latency_monitor_feature_cmd,
+	&get_clear_pcie_correctable_error_counters_cmd,
+	&ocp_get_telemetry_profile_feature_cmd,
+	&ocp_get_persistent_event_log_cmd,
+	&ocp_get_idle_wakeup_time_config_feature_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "ocp",
+	.desc = "OCP cloud SSD extensions",
+	.version = OCP_PLUGIN_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

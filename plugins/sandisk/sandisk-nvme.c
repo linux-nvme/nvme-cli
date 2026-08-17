@@ -26,10 +26,10 @@
 #include "plugin.h"
 #include "src/cleanup.h"
 
-#define CREATE_CMD
-#include "sandisk-nvme.h"
 #include "sandisk-utils.h"
 #include "plugins/wdc/wdc-nvme-cmds.h"
+
+#define SANDISK_PLUGIN_VERSION   "3.1.4"
 
 static __u8 ocp_C2_guid[SNDK_GUID_LENGTH] = {
 	0x6D, 0x79, 0x9A, 0x76, 0xB4, 0xDA, 0xF6, 0xA3,
@@ -1301,4 +1301,216 @@ static int sndk_cu_smart_log(int argc, char **argv,
 		struct plugin *plugin)
 {
 	return run_wdc_cu_smart_log(argc, argv, command, plugin);
+}
+
+static struct command sndk_vs_internal_fw_log_cmd = {
+	.name = "vs-internal-log",
+	.help = "Sandisk Internal Firmware Log",
+	.fn = sndk_vs_internal_fw_log,
+};
+
+static struct command sndk_vs_nand_stats_cmd = {
+	.name = "vs-nand-stats",
+	.help = "Sandisk NAND Statistics",
+	.fn = sndk_vs_nand_stats,
+};
+
+static struct command sndk_vs_smart_add_log_cmd = {
+	.name = "vs-smart-add-log",
+	.help = "Sandisk Additional Smart Log",
+	.fn = sndk_vs_smart_add_log,
+};
+
+static struct command sndk_clear_pcie_correctable_errors_cmd = {
+	.name = "clear-pcie-correctable-errors",
+	.help = "Sandisk Clear PCIe Correctable Error Count",
+	.fn = sndk_clear_pcie_correctable_errors,
+};
+
+static struct command sndk_drive_status_cmd = {
+	.name = "get-drive-status",
+	.help = "Sandisk Get Drive Status",
+	.fn = sndk_drive_status,
+};
+
+static struct command sndk_clear_assert_dump_cmd = {
+	.name = "clear-assert-dump",
+	.help = "Sandisk Clear Assert Dump",
+	.fn = sndk_clear_assert_dump,
+};
+
+static struct command sndk_drive_resize_cmd = {
+	.name = "drive-resize",
+	.help = "Sandisk Drive Resize",
+	.fn = sndk_drive_resize,
+};
+
+static struct command sndk_vs_fw_activate_history_cmd = {
+	.name = "vs-fw-activate-history",
+	.help = "Sandisk Get FW Activate History",
+	.fn = sndk_vs_fw_activate_history,
+};
+
+static struct command sndk_clear_fw_activate_history_cmd = {
+	.name = "clear-fw-activate-history",
+	.help = "Sandisk Clear FW Activate History",
+	.fn = sndk_clear_fw_activate_history,
+};
+
+static struct command sndk_vs_telemetry_controller_option_cmd = {
+	.name = "vs-telemetry-controller-option",
+	.help = "Sandisk Enable/Disable Controller Initiated Telemetry Log",
+	.fn = sndk_vs_telemetry_controller_option,
+};
+
+static struct command sndk_reason_identifier_cmd = {
+	.name = "vs-error-reason-identifier",
+	.help = "Sandisk Telemetry Reason Identifier",
+	.fn = sndk_reason_identifier,
+};
+
+static struct command sndk_log_page_directory_cmd = {
+	.name = "log-page-directory",
+	.help = "Sandisk Get Log Page Directory",
+	.fn = sndk_log_page_directory,
+};
+
+static struct command sndk_namespace_resize_cmd = {
+	.name = "namespace-resize",
+	.help = "Sandisk NamespaceDrive Resize",
+	.fn = sndk_namespace_resize,
+};
+
+static struct command sndk_vs_drive_info_cmd = {
+	.name = "vs-drive-info",
+	.help = "Sandisk Get Drive Info",
+	.fn = sndk_vs_drive_info,
+};
+
+static struct command sndk_vs_temperature_stats_cmd = {
+	.name = "vs-temperature-stats",
+	.help = "Sandisk Get Temperature Stats",
+	.fn = sndk_vs_temperature_stats,
+};
+
+static struct command sndk_capabilities_cmd = {
+	.name = "capabilities",
+	.help = "Sandisk Device Capabilities",
+	.fn = sndk_capabilities,
+};
+
+static struct command sndk_cloud_ssd_plugin_version_cmd = {
+	.name = "cloud-SSD-plugin-version",
+	.help = "Sandisk Cloud SSD Plugin Version",
+	.fn = sndk_cloud_ssd_plugin_version,
+};
+
+static struct command sndk_vs_pcie_stats_cmd = {
+	.name = "vs-pcie-stats",
+	.help = "Sandisk VS PCIE Statistics",
+	.fn = sndk_vs_pcie_stats,
+};
+
+static struct command sndk_get_latency_monitor_log_cmd = {
+	.name = "get-latency-monitor-log",
+	.help = "Sandisk Get Latency Monitor Log Page",
+	.fn = sndk_get_latency_monitor_log,
+};
+
+static struct command sndk_get_error_recovery_log_cmd = {
+	.name = "get-error-recovery-log",
+	.help = "Sandisk Get Error Recovery Log Page",
+	.fn = sndk_get_error_recovery_log,
+};
+
+static struct command sndk_get_dev_capabilities_log_cmd = {
+	.name = "get-dev-capabilities-log",
+	.help = "Sandisk Get Device Capabilities Log Page",
+	.fn = sndk_get_dev_capabilities_log,
+};
+
+static struct command sndk_get_unsupported_reqs_log_cmd = {
+	.name = "get-unsupported-reqs-log",
+	.help = "Sandisk Get Unsupported Requirements Log Page",
+	.fn = sndk_get_unsupported_reqs_log,
+};
+
+static struct command sndk_cloud_boot_SSD_version_cmd = {
+	.name = "cloud-boot-SSD-version",
+	.help = "Sandisk Get the Cloud Boot SSD Version",
+	.fn = sndk_cloud_boot_SSD_version,
+};
+
+static struct command sndk_vs_cloud_log_cmd = {
+	.name = "vs-cloud-log",
+	.help = "Sandisk Get the Cloud Log Page",
+	.fn = sndk_vs_cloud_log,
+};
+
+static struct command sndk_vs_hw_rev_log_cmd = {
+	.name = "vs-hw-rev-log",
+	.help = "Sandisk Get the Hardware Revision Log Page",
+	.fn = sndk_vs_hw_rev_log,
+};
+
+static struct command sndk_vs_device_waf_cmd = {
+	.name = "vs-device-waf",
+	.help = "Sandisk Calculate Device Write Amplication Factor",
+	.fn = sndk_vs_device_waf,
+};
+
+static struct command sndk_set_latency_monitor_feature_cmd = {
+	.name = "set-latency-monitor-feature",
+	.help = "Sandisk set Latency Monitor feature",
+	.fn = sndk_set_latency_monitor_feature,
+};
+
+static struct command sndk_cu_smart_log_cmd = {
+	.name = "cu-smart-log",
+	.help = "Sandisk Get Customer Unique Smart Log",
+	.fn = sndk_cu_smart_log,
+};
+
+static struct command *commands[] = {
+	&sndk_vs_internal_fw_log_cmd,
+	&sndk_vs_nand_stats_cmd,
+	&sndk_vs_smart_add_log_cmd,
+	&sndk_clear_pcie_correctable_errors_cmd,
+	&sndk_drive_status_cmd,
+	&sndk_clear_assert_dump_cmd,
+	&sndk_drive_resize_cmd,
+	&sndk_vs_fw_activate_history_cmd,
+	&sndk_clear_fw_activate_history_cmd,
+	&sndk_vs_telemetry_controller_option_cmd,
+	&sndk_reason_identifier_cmd,
+	&sndk_log_page_directory_cmd,
+	&sndk_namespace_resize_cmd,
+	&sndk_vs_drive_info_cmd,
+	&sndk_vs_temperature_stats_cmd,
+	&sndk_capabilities_cmd,
+	&sndk_cloud_ssd_plugin_version_cmd,
+	&sndk_vs_pcie_stats_cmd,
+	&sndk_get_latency_monitor_log_cmd,
+	&sndk_get_error_recovery_log_cmd,
+	&sndk_get_dev_capabilities_log_cmd,
+	&sndk_get_unsupported_reqs_log_cmd,
+	&sndk_cloud_boot_SSD_version_cmd,
+	&sndk_vs_cloud_log_cmd,
+	&sndk_vs_hw_rev_log_cmd,
+	&sndk_vs_device_waf_cmd,
+	&sndk_set_latency_monitor_feature_cmd,
+	&sndk_cu_smart_log_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "sndk",
+	.desc = "Sandisk vendor specific extensions",
+	.version = SANDISK_PLUGIN_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

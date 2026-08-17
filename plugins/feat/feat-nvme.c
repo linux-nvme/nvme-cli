@@ -12,8 +12,25 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "feat-nvme.h"
+#define FEAT_PLUGIN_VERSION "1.0"
+
+#define POWER_MGMT_DESC "Get and set power management feature"
+#define PERFC_DESC "Get and set perf characteristics feature"
+#define HCTM_DESC "Get and set host controlled thermal management feature"
+#define TIMESTAMP_DESC "Get and set timestamp feature"
+#define TEMP_THRESH_DESC "Get and set temperature threshold feature"
+#define ARBITRATION_DESC "Get and set arbitration feature"
+#define VOLATILE_WC_DESC "Get and set volatile write cache feature"
+#define POWER_LIMIT_DESC "Get and set power limit feature"
+#define POWER_THRESH_DESC "Get and set power threshold feature"
+#define POWER_MEAS_DESC "Get and set power measurement feature"
+#define ERR_RECOVERY_DESC "Get and set error recovery feature"
+#define NUM_QUEUES_DESC "Get and set number of queues feature"
+#define HOST_BEHAVIOR_DESC "Get and set host behavior support feature"
+
+#define FEAT_ARGS(n, ...)                                              \
+	NVME_ARGS(n, ##__VA_ARGS__, OPT_FLAG("save", 's', NULL, save), \
+		  OPT_BYTE("sel", 'S', &cfg.sel, sel))
 
 #define STR(x) #x
 #define TMT(n) "thermal management temperature " STR(n)
@@ -1030,4 +1047,112 @@ static int feat_host_behavior_support(int argc, char **argv, struct command *acm
 		err = feat_get(hdl, fid, 0, cfg.sel, 0, host_behavior_feat);
 
 	return err;
+}
+
+static struct command feat_arbitration_cmd = {
+	.name = "arbitration",
+	.help = ARBITRATION_DESC,
+	.fn = feat_arbitration,
+};
+
+static struct command feat_power_mgmt_cmd = {
+	.name = "power-mgmt",
+	.help = POWER_MGMT_DESC,
+	.fn = feat_power_mgmt,
+};
+
+static struct command feat_temp_thresh_cmd = {
+	.name = "temp-thresh",
+	.help = TEMP_THRESH_DESC,
+	.fn = feat_temp_thresh,
+};
+
+static struct command feat_volatile_wc_cmd = {
+	.name = "volatile-wc",
+	.help = VOLATILE_WC_DESC,
+	.fn = feat_volatile_wc,
+};
+
+static struct command feat_num_queues_cmd = {
+	.name = "num-queues",
+	.help = NUM_QUEUES_DESC,
+	.fn = feat_num_queues,
+};
+
+static struct command feat_timestamp_cmd = {
+	.name = "timestamp",
+	.help = TIMESTAMP_DESC,
+	.fn = feat_timestamp,
+};
+
+static struct command feat_hctm_cmd = {
+	.name = "hctm",
+	.help = HCTM_DESC,
+	.fn = feat_hctm,
+};
+
+static struct command feat_host_behavior_support_cmd = {
+	.name = "host-behavior-support",
+	.help = HOST_BEHAVIOR_DESC,
+	.fn = feat_host_behavior_support,
+};
+
+static struct command feat_perfc_cmd = {
+	.name = "perf-characteristics",
+	.help = PERFC_DESC,
+	.fn = feat_perfc,
+};
+
+static struct command feat_power_limit_cmd = {
+	.name = "power-limit",
+	.help = POWER_LIMIT_DESC,
+	.fn = feat_power_limit,
+};
+
+static struct command feat_power_thresh_cmd = {
+	.name = "power-thresh",
+	.help = POWER_THRESH_DESC,
+	.fn = feat_power_thresh,
+};
+
+static struct command feat_power_meas_cmd = {
+	.name = "power-meas",
+	.help = POWER_MEAS_DESC,
+	.fn = feat_power_meas,
+};
+
+static struct command feat_err_recovery_cmd = {
+	.name = "err-recovery",
+	.help = ERR_RECOVERY_DESC,
+	.fn = feat_err_recovery,
+};
+
+static struct command *commands[] = {
+	&feat_arbitration_cmd,
+	&feat_power_mgmt_cmd,
+	&feat_temp_thresh_cmd,
+	&feat_volatile_wc_cmd,
+	&feat_num_queues_cmd,
+	&feat_timestamp_cmd,
+	&feat_hctm_cmd,
+	&feat_host_behavior_support_cmd,
+	&feat_perfc_cmd,
+	&feat_power_limit_cmd,
+	&feat_power_thresh_cmd,
+	&feat_power_meas_cmd,
+	&feat_err_recovery_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "feat",
+	.desc = "NVMe feature extensions",
+	.version = FEAT_PLUGIN_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

@@ -20,9 +20,6 @@
 #include "nvme-print.h"
 #include "sedopal_cmd.h"
 
-#define CREATE_CMD
-#include "sed.h"
-
 OPT_ARGS(no_opts) = {
 	OPT_END()
 };
@@ -200,4 +197,64 @@ static int sed_opal_password(int argc, char **argv, struct command *acmd,
 				sedopal_error_to_text(err));
 
 	return err;
+}
+
+static struct command sed_opal_discover_cmd = {
+	.name = "discover",
+	.help = "Discover SED Opal Locking Features",
+	.fn = sed_opal_discover,
+	.alias = "1",
+};
+
+static struct command sed_opal_initialize_cmd = {
+	.name = "initialize",
+	.help = "Initialize a SED Opal Device for locking",
+	.fn = sed_opal_initialize,
+};
+
+static struct command sed_opal_revert_cmd = {
+	.name = "revert",
+	.help = "Revert a SED Opal Device from locking",
+	.fn = sed_opal_revert,
+};
+
+static struct command sed_opal_lock_cmd = {
+	.name = "lock",
+	.help = "Lock a SED Opal Device",
+	.fn = sed_opal_lock,
+};
+
+static struct command sed_opal_unlock_cmd = {
+	.name = "unlock",
+	.help = "Unlock a SED Opal Device",
+	.fn = sed_opal_unlock,
+};
+
+static struct command sed_opal_password_cmd = {
+	.name = "password",
+	.help = "Change the SED Opal Device password",
+	.fn = sed_opal_password,
+};
+
+static struct command *commands[] = {
+	&sed_opal_discover_cmd,
+	&sed_opal_initialize_cmd,
+	&sed_opal_revert_cmd,
+	&sed_opal_lock_cmd,
+	&sed_opal_unlock_cmd,
+	&sed_opal_password_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "sed",
+	.desc = "SED Opal Command Set",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

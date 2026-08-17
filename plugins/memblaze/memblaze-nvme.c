@@ -21,8 +21,6 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "memblaze-nvme.h"
 #include "memblaze-utils.h"
 
 enum {
@@ -1849,4 +1847,125 @@ static int mb_get_performance_stats(int argc, char **argv, struct command *acmd,
 	}
 
 	return err;
+}
+
+static struct command smart_log_add_cmd = {
+	.name = "smart-log-add",
+	.help = "Retrieve Memblaze SMART Log, show it",
+	.fn = mb_get_additional_smart_log,
+};
+
+static struct command get_pm_status_cmd = {
+	.name = "get-pm-status",
+	.help = "Get Memblaze Power Manager Status",
+	.fn = mb_get_powermanager_status,
+};
+
+static struct command set_pm_status_cmd = {
+	.name = "set-pm-status",
+	.help = "Set Memblaze Power Manager Status",
+	.fn = mb_set_powermanager_status,
+};
+
+static struct command select_download_cmd = {
+	.name = "select-download",
+	.help = "Selective Firmware Download",
+	.fn = mb_selective_download,
+};
+
+static struct command lat_stats_cmd = {
+	.name = "lat-stats",
+	.help = "Enable and disable Latency Statistics logging",
+	.fn = mb_set_lat_stats,
+};
+
+static struct command lat_stats_print_cmd = {
+	.name = "lat-stats-print",
+	.help = "Retrieve IO Latency Statistics log, show it",
+	.fn = mb_lat_stats_log_print,
+};
+
+static struct command lat_log_cmd = {
+	.name = "lat-log",
+	.help = "Set Memblaze High Latency Log",
+	.fn = mb_set_high_latency_log,
+};
+
+static struct command lat_log_print_cmd = {
+	.name = "lat-log-print",
+	.help = "Output Memblaze High Latency Log",
+	.fn = mb_high_latency_log_print,
+};
+
+static struct command clear_error_log_cmd = {
+	.name = "clear-error-log",
+	.help = "Clear error log",
+	.fn = memblaze_clear_error_log,
+};
+
+static struct command smart_log_add_x_cmd = {
+	.name = "smart-log-add-x",
+	.help = "Retrieve Memblaze SMART Log, show it",
+	.fn = mb_get_smart_log_add,
+};
+
+static struct command lat_set_feature_x_cmd = {
+	.name = "lat-set-feature-x",
+	.help = "Set Enable/Disable for Latency Monitor feature",
+	.fn = mb_set_latency_feature,
+};
+
+static struct command lat_get_feature_x_cmd = {
+	.name = "lat-get-feature-x",
+	.help = "Get Enabled/Disabled of Latency Monitor feature",
+	.fn = mb_get_latency_feature,
+};
+
+static struct command lat_stats_print_x_cmd = {
+	.name = "lat-stats-print-x",
+	.help = "Get Latency Statistics log and show it.",
+	.fn = mb_get_latency_stats,
+};
+
+static struct command lat_log_print_x_cmd = {
+	.name = "lat-log-print-x",
+	.help = "Get High Latency log and show it.",
+	.fn = mb_get_high_latency_log,
+};
+
+static struct command perf_stats_print_x_cmd = {
+	.name = "perf-stats-print-x",
+	.help = "Get Performance Stat log and show it.",
+	.fn = mb_get_performance_stats,
+};
+
+static struct command *commands[] = {
+	&smart_log_add_cmd,
+	&get_pm_status_cmd,
+	&set_pm_status_cmd,
+	&select_download_cmd,
+	&lat_stats_cmd,
+	&lat_stats_print_cmd,
+	&lat_log_cmd,
+	&lat_log_print_cmd,
+	&clear_error_log_cmd,
+	&smart_log_add_x_cmd,
+	&lat_set_feature_x_cmd,
+	&lat_get_feature_x_cmd,
+	&lat_stats_print_x_cmd,
+	&lat_log_print_x_cmd,
+	&perf_stats_print_x_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "memblaze",
+	.desc = "Memblaze vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

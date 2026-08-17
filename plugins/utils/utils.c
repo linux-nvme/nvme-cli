@@ -5,9 +5,6 @@
 #include "command-metadata.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "utils.h"
-
 #ifdef CONFIG_JSONC
 static int dump_command_metadata_cmd(int argc, char **argv, struct command *acmd,
 				     struct plugin *plugin)
@@ -18,4 +15,30 @@ static int dump_command_metadata_cmd(int argc, char **argv, struct command *acmd
 
 	return dump_command_metadata(plugin->parent);
 }
+
+static struct command dump_command_metadata_cmd_cmd = {
+	.name = "dump-command-metadata",
+	.help = "Dump all commands and their options as JSON",
+	.fn = dump_command_metadata_cmd,
+};
 #endif /* CONFIG_JSONC */
+
+static struct command *commands[] = {
+#ifdef CONFIG_JSONC
+	&dump_command_metadata_cmd_cmd,
+#endif
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "utils",
+	.desc = "General purpose utilities",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
+}

@@ -26,9 +26,6 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "security-plugin.h"
-
 static const char *ish = "Ignore Shutdown (for NVMe-MI command)";
 static const char *namespace_desired = "desired namespace";
 static const char *nssf = "NVMe Security Specific Field";
@@ -249,4 +246,35 @@ static int sec_recv(int argc, char **argv, struct command *acmd, struct plugin *
 		d_raw((unsigned char *)sec_buf, cfg.size);
 
 	return err;
+}
+
+static struct command sec_send_cmd = {
+	.name = "send",
+	.help = "Submit a Security Send command, return results",
+	.fn = sec_send,
+};
+
+static struct command sec_recv_cmd = {
+	.name = "recv",
+	.help = "Submit a Security Receive command, return results",
+	.fn = sec_recv,
+};
+
+static struct command *commands[] = {
+	&sec_send_cmd,
+	&sec_recv_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "security",
+	.desc = "Submit NVMe Security Send/Receive commands",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

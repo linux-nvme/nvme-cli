@@ -14,9 +14,6 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "transcend-nvme.h"
-
 static const __u32 OP_BAD_BLOCK = 0xc2;
 static const __u32 DW10_BAD_BLOCK = 0x400;
 static const __u32 DW12_BAD_BLOCK = 0x5a;
@@ -86,4 +83,34 @@ static int getBadblock(int argc, char **argv, struct command *acmd, struct plugi
 	}
 
 	return result;
+}
+
+static struct command getHealthValue_cmd = {
+	.name = "healthvalue",
+	.help = "NVME health percentage",
+	.fn = getHealthValue,
+};
+
+static struct command getBadblock_cmd = {
+	.name = "badblock",
+	.help = "Get NVME bad block number",
+	.fn = getBadblock,
+};
+
+static struct command *commands[] = {
+	&getHealthValue_cmd,
+	&getBadblock_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "transcend",
+	.desc = "Transcend vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

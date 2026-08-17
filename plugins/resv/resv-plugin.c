@@ -21,9 +21,6 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "resv-plugin.h"
-
 static const char *crkey = "current reservation key";
 static const char *iekey = "ignore existing res. key";
 static const char *namespace_desired = "desired namespace";
@@ -360,4 +357,49 @@ static int resv_report(int argc, char **argv, struct command *acmd, struct plugi
 	nvme_show_resv_report(status, size, cfg.eds, flags);
 
 	return err;
+}
+
+static struct command resv_acquire_cmd = {
+	.name = "acquire",
+	.help = "Submit a Reservation Acquire, return results",
+	.fn = resv_acquire,
+};
+
+static struct command resv_register_cmd = {
+	.name = "register",
+	.help = "Submit a Reservation Register, return results",
+	.fn = resv_register,
+};
+
+static struct command resv_release_cmd = {
+	.name = "release",
+	.help = "Submit a Reservation Release, return results",
+	.fn = resv_release,
+};
+
+static struct command resv_report_cmd = {
+	.name = "report",
+	.help = "Submit a Reservation Report, return results",
+	.fn = resv_report,
+};
+
+static struct command *commands[] = {
+	&resv_acquire_cmd,
+	&resv_register_cmd,
+	&resv_release_cmd,
+	&resv_report_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "resv",
+	.desc = "Submit NVMe Reservation commands",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

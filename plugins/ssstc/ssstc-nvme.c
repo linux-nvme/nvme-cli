@@ -18,9 +18,6 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "ssstc-nvme.h"
-
 struct  __packed nvme_additional_smart_log_item
 {
 	__u8 key;
@@ -433,4 +430,27 @@ int ssstc_get_add_smart_log(int argc, char **argv, struct command *acmd, struct 
 	}
 	return err;
 
+}
+
+static struct command ssstc_get_add_smart_log_cmd = {
+	.name = "smart-log-add",
+	.help = "Retrieve ssstc SMART Log, show it",
+	.fn = ssstc_get_add_smart_log,
+};
+
+static struct command *commands[] = {
+	&ssstc_get_add_smart_log_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "ssstc",
+	.desc = "SSSTC vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

@@ -23,9 +23,6 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "id-plugin.h"
-
 static const char *lba_format_index = "The index into the LBA Format list\n"
 	"identifying the LBA Format capabilities that are to be returned";
 static const char *namespace_id_optional = "optional namespace attached to controller";
@@ -1068,4 +1065,149 @@ static int list_secondary_ctrl(int argc, char **argv, struct command *acmd, stru
 	nvme_show_list_secondary_ctrl(sc_list, cfg.num_entries, flags);
 
 	return err;
+}
+
+static struct command id_ctrl_cmd = {
+	.name = "ctrl",
+	.help = "Send NVMe Identify Controller",
+	.fn = id_ctrl,
+};
+
+static struct command id_ns_cmd = {
+	.name = "ns",
+	.help = "Send NVMe Identify Namespace, display structure",
+	.fn = id_ns,
+};
+
+static struct command id_ns_granularity_cmd = {
+	.name = "ns-granularity",
+	.help = "Send NVMe Identify Namespace Granularity List, display structure",
+	.fn = id_ns_granularity,
+};
+
+static struct command id_ns_lba_format_cmd = {
+	.name = "ns-lba-format",
+	.help = "Send NVMe Identify Namespace for the specified LBA Format index, "
+		"display structure",
+	.fn = id_ns_lba_format,
+};
+
+static struct command list_ns_cmd = {
+	.name = "ns-list",
+	.help = "Send NVMe Identify List, display structure",
+	.fn = list_ns,
+};
+
+static struct command list_ctrl_cmd = {
+	.name = "ctrl-list",
+	.help = "Send NVMe Identify Controller List, display structure",
+	.fn = list_ctrl,
+};
+
+static struct command nvm_id_ctrl_cmd = {
+	.name = "nvm-ctrl",
+	.help = "Send NVMe Identify Controller NVM Command Set, display structure",
+	.fn = nvm_id_ctrl,
+};
+
+static struct command nvm_id_ns_cmd = {
+	.name = "nvm-ns",
+	.help = "Send NVMe Identify Namespace NVM Command Set, display structure",
+	.fn = nvm_id_ns,
+};
+
+static struct command nvm_id_ns_lba_format_cmd = {
+	.name = "nvm-ns-lba-format",
+	.help = "Send NVMe Identify Namespace NVM Command Set for the specified LBA "
+		"Format index, display structure",
+	.fn = nvm_id_ns_lba_format,
+};
+
+static struct command primary_ctrl_caps_cmd = {
+	.name = "primary-ctrl-caps",
+	.help = "Send NVMe Identify Primary Controller Capabilities",
+	.fn = primary_ctrl_caps,
+};
+
+static struct command list_secondary_ctrl_cmd = {
+	.name = "secondary-ctrl-list",
+	.help = "List Secondary Controllers associated with a Primary Controller",
+	.fn = list_secondary_ctrl,
+};
+
+static struct command cmd_set_independent_id_ns_cmd = {
+	.name = "ns-ind",
+	.help = "I/O Command Set Independent Identify Namespace",
+	.fn = cmd_set_independent_id_ns,
+};
+
+static struct command ns_descs_cmd = {
+	.name = "ns-descs",
+	.help = "Send NVMe Namespace Descriptor List, display structure",
+	.fn = ns_descs,
+};
+
+static struct command id_nvmset_cmd = {
+	.name = "nvmset",
+	.help = "Send NVMe Identify NVM Set List, display structure",
+	.fn = id_nvmset,
+};
+
+static struct command id_uuid_cmd = {
+	.name = "uuid",
+	.help = "Send NVMe Identify UUID List, display structure",
+	.fn = id_uuid,
+};
+
+static struct command id_iocs_cmd = {
+	.name = "iocs",
+	.help = "Send NVMe Identify I/O Command Set, display structure",
+	.fn = id_iocs,
+};
+
+static struct command id_domain_cmd = {
+	.name = "domain",
+	.help = "Send NVMe Identify Domain List, display structure",
+	.fn = id_domain,
+};
+
+static struct command id_endurance_grp_list_cmd = {
+	.name = "endgrp-list",
+	.help = "Send NVMe Identify Endurance Group List, display structure",
+	.fn = id_endurance_grp_list,
+};
+
+static struct command *commands[] = {
+	&id_ctrl_cmd,
+	&id_ns_cmd,
+	&id_ns_granularity_cmd,
+	&id_ns_lba_format_cmd,
+	&list_ns_cmd,
+	&list_ctrl_cmd,
+	&nvm_id_ctrl_cmd,
+	&nvm_id_ns_cmd,
+	&nvm_id_ns_lba_format_cmd,
+	&primary_ctrl_caps_cmd,
+	&list_secondary_ctrl_cmd,
+	&cmd_set_independent_id_ns_cmd,
+	&ns_descs_cmd,
+	&id_nvmset_cmd,
+	&id_uuid_cmd,
+	&id_iocs_cmd,
+	&id_domain_cmd,
+	&id_endurance_grp_list_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "id",
+	.desc = "Send NVMe Identify commands, show the results",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

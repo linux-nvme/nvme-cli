@@ -35,9 +35,6 @@
 #include "plugin.h"
 #include "src/cleanup.h"
 
-#define CREATE_CMD
-#include "lm-nvme.h"
-
 #include "lm-print.h"
 
 static inline const char * arg_str(const char * const *strings, size_t array_size, size_t idx)
@@ -607,4 +604,70 @@ static int lm_get_cdq(int argc, char **argv, struct command *acmd, struct plugin
 		lm_show_controller_data_queue(&data, flags);
 
 	return err;
+}
+
+static struct command lm_create_cdq_cmd = {
+	.name = "create-cdq",
+	.help = "Create Controller Data Queue",
+	.fn = lm_create_cdq,
+};
+
+static struct command lm_delete_cdq_cmd = {
+	.name = "delete-cdq",
+	.help = "Delete Controller Data Queue",
+	.fn = lm_delete_cdq,
+};
+
+static struct command lm_track_send_cmd = {
+	.name = "track-send",
+	.help = "Track Send Command",
+	.fn = lm_track_send,
+};
+
+static struct command lm_migration_send_cmd = {
+	.name = "migration-send",
+	.help = "Migration Send",
+	.fn = lm_migration_send,
+};
+
+static struct command lm_migration_recv_cmd = {
+	.name = "migration-recv",
+	.help = "Migration Receive",
+	.fn = lm_migration_recv,
+};
+
+static struct command lm_set_cdq_cmd = {
+	.name = "set-cdq",
+	.help = "Set Feature - Controller Data Queue (FID 21h)",
+	.fn = lm_set_cdq,
+};
+
+static struct command lm_get_cdq_cmd = {
+	.name = "get-cdq",
+	.help = "Get Feature - Controller Data Queue (FID 21h)",
+	.fn = lm_get_cdq,
+};
+
+static struct command *commands[] = {
+	&lm_create_cdq_cmd,
+	&lm_delete_cdq_cmd,
+	&lm_track_send_cmd,
+	&lm_migration_send_cmd,
+	&lm_migration_recv_cmd,
+	&lm_set_cdq_cmd,
+	&lm_get_cdq_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "lm",
+	.desc = "Live Migration NVMe extensions",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

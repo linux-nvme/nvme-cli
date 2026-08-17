@@ -84,8 +84,17 @@ static struct command cmd_old = { "old-cmd", "deprecated command", old_fn, NULL,
 static struct command cmd_list_a = { "list-a", "list-a command", list_a_fn, NULL, false };
 static struct command cmd_list_b = { "list-b", "list-b command", list_b_fn, NULL, false };
 
-static struct command *builtin_commands[] = {
-	&cmd_foo, &cmd_bar, &cmd_status, &cmd_old, &cmd_list_a, &cmd_list_b, NULL
+/*
+ * Split across two groups (rather than one flat array) to exercise
+ * plugin_add_group()'s merging: dispatch and help-listing must both see
+ * commands from every group a plugin has registered, and general_help()
+ * must print each group's title as its own heading.
+ */
+static struct command *core_commands[] = {
+	&cmd_foo, &cmd_bar, &cmd_status, &cmd_old, NULL
+};
+static struct command *list_commands[] = {
+	&cmd_list_a, &cmd_list_b, NULL
 };
 
 static struct command cmd_sub = { "sub", "sub command", sub_fn, NULL, false };
@@ -95,7 +104,6 @@ static struct plugin ext_plugin = {
 	.name = "ext",
 	.desc = "test extension",
 	.version = "1.0",
-	.commands = ext_commands,
 	.core = true,
 };
 
@@ -103,7 +111,6 @@ static struct plugin builtin_plugin = {
 	.name = NULL,
 	.desc = "test built-in",
 	.version = "1.0",
-	.commands = builtin_commands,
 	.next = &ext_plugin,
 };
 
@@ -112,7 +119,6 @@ static struct program prog = {
 	.version = "9.9",
 	.usage = "<args>",
 	.desc = "test program description",
-	.commands = builtin_commands,
 	.extensions = &builtin_plugin,
 };
 
@@ -249,7 +255,7 @@ static void test_no_args(void)
 {
 	char *argv[] = { "test-prog" };
 	struct captured_output cap;
-	char *banner, *old_cmd;
+	char *banner, *old_cmd, *core_heading, *list_heading, *bar_pos, *list_a_pos;
 	int ret;
 
 	reset_last_call();
@@ -269,6 +275,41 @@ static void test_no_args(void)
 	      "no_args: old-cmd listed only after the deprecated banner, not in the main listing");
 
 	check(strstr(cap.out, "ext") != NULL, "no_args: lists 'ext' extension");
+
+	/*
+	 * builtin_plugin was assembled from two plugin_add_group() calls
+	 * ("Core Commands" holding foo/bar/status/old-cmd, "List Commands"
+	 * holding list-a/list-b). Each group's title must appear as its own
+	 * heading, in order, with that group's commands listed under it --
+	 * not merged into one flat, unheaded list.
+	 */
+	core_heading = strstr(cap.out, "Core Commands:");
+	list_heading = strstr(cap.out, "List Commands:");
+	bar_pos = strstr(cap.out, "bar");
+	list_a_pos = strstr(cap.out, "list-a");
+	check(core_heading != NULL, "no_args: 'Core Commands' heading printed");
+	check(list_heading != NULL, "no_args: 'List Commands' heading printed");
+	check(core_heading && list_heading && core_heading < list_heading,
+	      "no_args: group headings appear in registration order");
+	check(bar_pos && core_heading && bar_pos > core_heading,
+	      "no_args: 'bar' listed under the 'Core Commands' heading");
+	check(list_a_pos && list_heading && list_a_pos > list_heading,
+	      "no_args: 'list-a' listed under the 'List Commands' heading");
+}
+
+static void test_dispatch_second_group(void)
+{
+	char *argv[] = { "test-prog", "list-a" };
+	struct captured_output cap;
+	int ret;
+
+	reset_last_call();
+	ret = run_handle_plugin(argv, ARRAY_SIZE(argv), &builtin_plugin, &cap);
+
+	check(ret == 55, "dispatch_second_group: return code");
+	check(last_call.cmd_name && !strcmp(last_call.cmd_name, "list-a"),
+	      "dispatch_second_group: exact match on a second-group command "
+	      "dispatches despite prefix ambiguity with a sibling in the same group");
 }
 
 static void test_help_bare(void)
@@ -413,10 +454,15 @@ int main(void)
 	builtin_plugin.parent = &prog;
 	ext_plugin.parent = &prog;
 
+	plugin_add_group(&builtin_plugin, "Core Commands", core_commands);
+	plugin_add_group(&builtin_plugin, "List Commands", list_commands);
+	plugin_add_group(&ext_plugin, NULL, ext_commands);
+
 	test_dispatch_exact();
 	test_dispatch_alias();
 	test_dispatch_prefix_unique();
 	test_dispatch_prefix_ambiguous();
+	test_dispatch_second_group();
 	test_no_args();
 	test_help_bare();
 	test_help_filtered_unknown();

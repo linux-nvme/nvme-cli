@@ -13,9 +13,6 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "ibm-nvme.h"
-
 #pragma pack(push, 1)
 struct nvme_ibm_log_f0_item {
 	__le16 attr;
@@ -600,4 +597,41 @@ static int get_ibm_persistent_event_log(int argc, char **argv,
 	}
 
 	return err;
+}
+
+static struct command get_ibm_addi_smart_log_cmd = {
+	.name = "crit-log",
+	.help = "Display IBM Smart Log Information",
+	.fn = get_ibm_addi_smart_log,
+};
+
+static struct command get_ibm_vpd_log_cmd = {
+	.name = "vpd",
+	.help = "Display IBM VPD Information",
+	.fn = get_ibm_vpd_log,
+};
+
+static struct command get_ibm_persistent_event_log_cmd = {
+	.name = "persist-event-log",
+	.help = "IBM specific Persistent Event Log",
+	.fn = get_ibm_persistent_event_log,
+};
+
+static struct command *commands[] = {
+	&get_ibm_addi_smart_log_cmd,
+	&get_ibm_vpd_log_cmd,
+	&get_ibm_persistent_event_log_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "ibm",
+	.desc = "IBM vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

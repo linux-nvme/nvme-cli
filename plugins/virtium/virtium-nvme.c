@@ -21,9 +21,6 @@
 #include "plugin.h"
 #include <shared/uint128-util.h>
 
-#define CREATE_CMD
-#include "virtium-nvme.h"
-
 #define MIN2(a, b) (((a) < (b)) ? (a) : (b))
 
 #define HOUR_IN_SECONDS     3600
@@ -1062,4 +1059,38 @@ static int vt_show_identify(int argc, char **argv, struct command *acmd, struct 
 	vt_parse_detail_identify(&ctrl);
 
 	return err;
+}
+
+static struct command vt_save_smart_to_vtview_log_cmd = {
+	.name = "save-smart-to-vtview-log",
+	.help = "Periodically save smart attributes into a log file.\n"
+		"                             The data in this log file can be "
+		"analyzed using excel or using Virtium’s vtView.\n"
+		"                             Visit vtView.virtium.com to see full "
+		"potential uses of the data",
+	.fn = vt_save_smart_to_vtview_log,
+};
+
+static struct command vt_show_identify_cmd = {
+	.name = "show-identify",
+	.help = "Shows detail features and current settings",
+	.fn = vt_show_identify,
+};
+
+static struct command *commands[] = {
+	&vt_save_smart_to_vtview_log_cmd,
+	&vt_show_identify_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "virtium",
+	.desc = "Virtium vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

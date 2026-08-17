@@ -34,8 +34,6 @@
 #include "plugin.h"
 #include "src/cleanup.h"
 
-#define CREATE_CMD
-#include "sfx-nvme.h"
 #include "sfx-types.h"
 
 #define SFX_PAGE_SHIFT						12
@@ -2063,4 +2061,90 @@ static int sfx_status(int argc, char **argv, struct command *acmd, struct plugin
 	}
 
 	return 0;
+}
+
+static struct command get_additional_smart_log_cmd = {
+	.name = "smart-log-add",
+	.help = "Retrieve ScaleFlux SMART Log, show it",
+	.fn = get_additional_smart_log,
+};
+
+static struct command get_lat_stats_log_cmd = {
+	.name = "lat-stats",
+	.help = "Retrieve ScaleFlux IO Latency Statistics log, show it",
+	.fn = get_lat_stats_log,
+};
+
+static struct command sfx_get_bad_block_cmd = {
+	.name = "get-bad-block",
+	.help = "Retrieve bad block table of block device, show it",
+	.fn = sfx_get_bad_block,
+};
+
+static struct command query_cap_info_cmd = {
+	.name = "query-cap",
+	.help = "Query current capacity info",
+	.fn = query_cap_info,
+};
+
+static struct command change_cap_cmd = {
+	.name = "change-cap",
+	.help = "Dynamic change capacity",
+	.fn = change_cap,
+};
+
+static struct command sfx_set_feature_cmd = {
+	.name = "set-feature",
+	.help = "Set a feature",
+	.fn = sfx_set_feature,
+};
+
+static struct command sfx_get_feature_cmd = {
+	.name = "get-feature",
+	.help = "Get a feature",
+	.fn = sfx_get_feature,
+};
+
+static struct command sfx_dump_evtlog_cmd = {
+	.name = "dump-evtlog",
+	.help = "dump evtlog into file and parse warning & error log",
+	.fn = sfx_dump_evtlog,
+};
+
+static struct command sfx_expand_cap_cmd = {
+	.name = "expand-cap",
+	.help = "expand the last namespace capacity lossless",
+	.fn = sfx_expand_cap,
+};
+
+static struct command sfx_status_cmd = {
+	.name = "status",
+	.help = "Retrieve the ScaleFlux status output, show it",
+	.fn = sfx_status,
+};
+
+static struct command *commands[] = {
+	&get_additional_smart_log_cmd,
+	&get_lat_stats_log_cmd,
+	&sfx_get_bad_block_cmd,
+	&query_cap_info_cmd,
+	&change_cap_cmd,
+	&sfx_set_feature_cmd,
+	&sfx_get_feature_cmd,
+	&sfx_dump_evtlog_cmd,
+	&sfx_expand_cap_cmd,
+	&sfx_status_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "sfx",
+	.desc = "ScaleFlux vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

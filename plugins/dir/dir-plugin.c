@@ -25,9 +25,6 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "dir-plugin.h"
-
 static const char *buf_len = "buffer len (if) data is sent or received";
 static const char *doper = "directive operation";
 static const char *dspec_w_dtype = "directive specification associated with directive type";
@@ -271,4 +268,35 @@ static int dir_receive(int argc, char **argv, struct command *acmd, struct plugi
 			    cmd.result, buf, cfg.data_len, flags);
 
 	return err;
+}
+
+static struct command dir_receive_cmd = {
+	.name = "receive",
+	.help = "Submit a Directive Receive command, return results",
+	.fn = dir_receive,
+};
+
+static struct command dir_send_cmd = {
+	.name = "send",
+	.help = "Submit a Directive Send command, return results",
+	.fn = dir_send,
+};
+
+static struct command *commands[] = {
+	&dir_receive_cmd,
+	&dir_send_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "dir",
+	.desc = "Submit NVMe Directive commands",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

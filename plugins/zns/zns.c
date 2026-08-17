@@ -25,9 +25,6 @@
 #include "global-ctx.h"
 #include "src/cleanup.h"
 
-#define CREATE_CMD
-#include "zns.h"
-
 static const char *namespace_id = "Namespace identifier to use";
 
 static int detect_zns(libnvme_ns_t ns, int *out_supported)
@@ -1127,4 +1124,126 @@ static int changed_zone_list(int argc, char **argv, struct command *acmd, struct
 		nvme_show_err(err, "zns changed-zone-list");
 
 	return err;
+}
+
+static struct command list_cmd = {
+	.name = "list",
+	.help = "List all NVMe devices with Zoned Namespace Command Set support",
+	.fn = list,
+};
+
+static struct command id_ctrl_cmd = {
+	.name = "id-ctrl",
+	.help = "Send NVMe Identify Zoned Namespace Controller, display structure",
+	.fn = id_ctrl,
+};
+
+static struct command id_ns_cmd = {
+	.name = "id-ns",
+	.help = "Send NVMe Identify Zoned Namespace Namespace, display structure",
+	.fn = id_ns,
+};
+
+static struct command report_zones_cmd = {
+	.name = "report-zones",
+	.help = "Report zones associated to a Zoned Namespace",
+	.fn = report_zones,
+};
+
+static struct command reset_zone_cmd = {
+	.name = "reset-zone",
+	.help = "Reset one or more zones",
+	.fn = reset_zone,
+};
+
+static struct command close_zone_cmd = {
+	.name = "close-zone",
+	.help = "Close one or more zones",
+	.fn = close_zone,
+};
+
+static struct command finish_zone_cmd = {
+	.name = "finish-zone",
+	.help = "Finish one or more zones",
+	.fn = finish_zone,
+};
+
+static struct command open_zone_cmd = {
+	.name = "open-zone",
+	.help = "Open one or more zones",
+	.fn = open_zone,
+};
+
+static struct command offline_zone_cmd = {
+	.name = "offline-zone",
+	.help = "Offline one or more zones",
+	.fn = offline_zone,
+};
+
+static struct command set_zone_desc_cmd = {
+	.name = "set-zone-desc",
+	.help = "Attach zone descriptor extension data to a zone",
+	.fn = set_zone_desc,
+};
+
+static struct command zrwa_flush_zone_cmd = {
+	.name = "zrwa-flush-zone",
+	.help = "Flush LBAs associated with a ZRWA to a zone.",
+	.fn = zrwa_flush_zone,
+};
+
+static struct command changed_zone_list_cmd = {
+	.name = "changed-zone-list",
+	.help = "Retrieve the changed zone list log",
+	.fn = changed_zone_list,
+};
+
+static struct command zone_mgmt_recv_cmd = {
+	.name = "zone-mgmt-recv",
+	.help = "Send the zone management receive command",
+	.fn = zone_mgmt_recv,
+};
+
+static struct command zone_mgmt_send_cmd = {
+	.name = "zone-mgmt-send",
+	.help = "Send the zone management send command",
+	.fn = zone_mgmt_send,
+};
+
+static struct command zone_append_cmd = {
+	.name = "zone-append",
+	.help = "Append data and metadata (if applicable) to a zone",
+	.fn = zone_append,
+};
+
+static struct command *commands[] = {
+	&list_cmd,
+	&id_ctrl_cmd,
+	&id_ns_cmd,
+	&report_zones_cmd,
+	&reset_zone_cmd,
+	&close_zone_cmd,
+	&finish_zone_cmd,
+	&open_zone_cmd,
+	&offline_zone_cmd,
+	&set_zone_desc_cmd,
+	&zrwa_flush_zone_cmd,
+	&changed_zone_list_cmd,
+	&zone_mgmt_recv_cmd,
+	&zone_mgmt_send_cmd,
+	&zone_append_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "zns",
+	.desc = "Zoned Namespace Command Set",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

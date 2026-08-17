@@ -35,9 +35,6 @@
 #include "nvme-print.h"
 #include <shared/suffix-util.h>
 
-#define CREATE_CMD
-#include "netapp-nvme.h"
-
 #define ONTAP_C2_LOG_ID		0xC2
 #define ONTAP_C2_LOG_SIZE	4096
 #define ONTAP_LABEL_LEN		260
@@ -1128,4 +1125,34 @@ static int netapp_ontapdevices(int argc, char **argv, struct command *acmd,
 
 	free(ontapdevices);
 	return 0;
+}
+
+static struct command netapp_smdevices_cmd = {
+	.name = "smdevices",
+	.help = "NetApp SMdevices",
+	.fn = netapp_smdevices,
+};
+
+static struct command netapp_ontapdevices_cmd = {
+	.name = "ontapdevices",
+	.help = "NetApp ONTAPdevices",
+	.fn = netapp_ontapdevices,
+};
+
+static struct command *commands[] = {
+	&netapp_smdevices_cmd,
+	&netapp_ontapdevices_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "netapp",
+	.desc = "NetApp vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

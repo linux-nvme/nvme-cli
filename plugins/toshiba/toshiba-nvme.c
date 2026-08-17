@@ -18,9 +18,6 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "toshiba-nvme.h"
-
 static const __u32 OP_SCT_STATUS = 0xE0;
 static const __u32 OP_SCT_COMMAND_TRANSFER = 0xE0;
 static const __u32 OP_SCT_DATA_TRANSFER = 0xE1;
@@ -539,4 +536,41 @@ end:
 		nvme_show_status(err);
 
 	return err;
+}
+
+static struct command vendor_log_cmd = {
+	.name = "vs-smart-add-log",
+	.help = "Extended SMART information",
+	.fn = vendor_log,
+};
+
+static struct command internal_log_cmd = {
+	.name = "vs-internal-log",
+	.help = "Get Internal Log",
+	.fn = internal_log,
+};
+
+static struct command clear_correctable_errors_cmd = {
+	.name = "clear-pcie-correctable-errors",
+	.help = "Clear PCIe correctable error count",
+	.fn = clear_correctable_errors,
+};
+
+static struct command *commands[] = {
+	&vendor_log_cmd,
+	&internal_log_cmd,
+	&clear_correctable_errors_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "toshiba",
+	.desc = "Toshiba NVME plugin",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }
