@@ -960,7 +960,7 @@ static int get_telemetry_dump(struct libnvme_transport_handle *hdl, char *filena
 		}
 
 		print_telemetry_da_stat((void *)(da1_stat + (temp_ofst - da1_off)), tele_type,
-					le64_to_cpu(da1->da1_stat_size) * 4, 1);
+					temp_sz, 1);
 	}
 
 	/* Print the Data Area 1 Event FIFO's */
