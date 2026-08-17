@@ -17,7 +17,6 @@
 #include <shared/temp-util.h>
 
 #include "cleanup.h"
-#include "logging.h"
 #include "nvme-models.h"
 #include "nvme-print.h"
 

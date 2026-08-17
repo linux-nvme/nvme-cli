@@ -25,7 +25,6 @@
 
 #include "cleanup.h"
 #include "global-ctx.h"
-#include "logging.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "plugin.h"

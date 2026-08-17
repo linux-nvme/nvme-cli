@@ -27,7 +27,6 @@
 
 #include <libnvme.h>
 
-#include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "wdc-utils.h"
 

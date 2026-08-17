@@ -21,7 +21,6 @@
 #include <shared/string-util.h>
 
 #include "cleanup.h"
-#include "logging.h"
 #include "nvme-json.h"
 #include "nvme-print.h"
 

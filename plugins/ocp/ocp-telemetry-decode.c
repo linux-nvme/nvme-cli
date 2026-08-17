@@ -10,7 +10,6 @@
 
 #include "nvme-print.h"
 #include "ocp-telemetry-decode.h"
-#include "plugin.h"
 
 
 void print_vu_event_data(__u32 size, __u8 *data)

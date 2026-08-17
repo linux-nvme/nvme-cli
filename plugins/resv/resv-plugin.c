@@ -18,7 +18,6 @@
 #include "argconfig.h"
 #include "cleanup.h"
 #include "global-ctx.h"
-#include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "plugin.h"
 

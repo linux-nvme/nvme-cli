@@ -10,7 +10,6 @@
 
 #include "config.h"
 #include "data-area.h"
-#include "header.h"
 #include "side-trace.h"
 #include "telemetry-log.h"
 

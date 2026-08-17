@@ -37,7 +37,6 @@
 #include "cleanup.h"
 #include "dashboard.h"
 #include "global-ctx.h"
-#include "logging.h"
 #include "nvme-print.h"
 
 static double nvme_calc_util_percent(unsigned int ticks, double interval_ms)
