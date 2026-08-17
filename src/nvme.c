@@ -32,13 +32,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <libnvme.h>
 #include <libnvme-mi.h>
+#include <libnvme.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>
 #include <shared/parse-util.h>
@@ -52,12 +51,11 @@
 #include "global-config.h"
 #include "global-ctx.h"
 #include "logging.h"
+#include "malloc.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme-regs.h"
 #include "plugin.h"
-
-#include "malloc.h"
 
 static const char nvme_version_string[] = NVME_VERSION;
 

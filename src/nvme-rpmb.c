@@ -22,22 +22,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-
-#include <shared/fs-util.h>
 #include <shared/crypto-util.h>
+#include <shared/fs-util.h>
 
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "plugin.h"
-#include "cleanup.h"
-#include "global-ctx.h"
 
 /* Read data from given file into buffer and return its length */
 static int read_file(const char *file, unsigned char **data, unsigned int *len)

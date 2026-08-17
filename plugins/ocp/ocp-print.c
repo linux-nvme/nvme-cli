@@ -2,8 +2,8 @@
 #include <libnvme.h>
 
 #include "nvme-print.h"
-#include "ocp-print.h"
 #include "ocp-hardware-component-log.h"
+#include "ocp-print.h"
 
 #define ocp_print(name, flags, ...) \
 	do { \

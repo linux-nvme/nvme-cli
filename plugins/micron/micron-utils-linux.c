@@ -19,8 +19,8 @@
 
 #include <ccan/array_size/array_size.h>
 
-#include "nvme-print.h"
 #include "micron-utils.h"
+#include "nvme-print.h"
 #include "src/cleanup.h"
 
 extern char **environ;

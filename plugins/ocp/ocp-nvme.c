@@ -6,41 +6,40 @@
  *          Wei Zhang <wzhang@meta.com>,
  *          Venkat Ramesh <venkatraghavan@meta.com>
  */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <inttypes.h>
 #include <errno.h>
-#include <limits.h>
 #include <fcntl.h>
-#include <unistd.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <libnvme.h>
-#include <shared/fs-util.h>
-#include <shared/io-util.h>
 
 #include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
+#include <shared/fs-util.h>
+#include <shared/io-util.h>
 
+#include "cleanup.h"
+#include "global-ctx.h"
 #include "logging.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "cleanup.h"
-#include "global-ctx.h"
 #include "plugin.h"
 
 #define OCP_PLUGIN_VERSION   "3.0.0"
 
-#include "ocp-smart-extended-log.h"
 #include "ocp-clear-features.h"
 #include "ocp-fw-activation-history.h"
-#include "ocp-telemetry-decode.h"
 #include "ocp-hardware-component-log.h"
-#include "ocp-print.h"
-#include "ocp-types.h"
-
 #include "ocp-nvme.h"
+#include "ocp-print.h"
+#include "ocp-smart-extended-log.h"
+#include "ocp-telemetry-decode.h"
+#include "ocp-types.h"
 #include "ocp-utils.h"
 
 ///////////////////////////////////////////////////////////////////////////////

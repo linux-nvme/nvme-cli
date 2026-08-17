@@ -2,14 +2,13 @@
 
 #include <inttypes.h>
 
-#include <ccan/endian/endian.h>
-
-#include <shared/uint128-util.h>
-
 #include <libnvme.h>
 
-#include "nvme-print.h"
+#include <ccan/endian/endian.h>
+#include <shared/uint128-util.h>
+
 #include "lm-print.h"
+#include "nvme-print.h"
 
 static struct lm_print_ops stdout_print_ops;
 

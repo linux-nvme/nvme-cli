@@ -5,8 +5,8 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -15,14 +15,14 @@
 
 #include "cleanup.h"
 #include "global-ctx.h"
-#include "plugin.h"
 #include "nvme-print.h"
+#include "plugin.h"
 #include "solidigm-telemetry.h"
-#include "solidigm-telemetry/telemetry-log.h"
 #include "solidigm-telemetry/cod.h"
-#include "solidigm-telemetry/header.h"
 #include "solidigm-telemetry/config.h"
 #include "solidigm-telemetry/data-area.h"
+#include "solidigm-telemetry/header.h"
+#include "solidigm-telemetry/telemetry-log.h"
 #include "solidigm-util.h"
 
 static int read_file2buffer(char *file_name, char **buffer, size_t *length)

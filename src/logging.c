@@ -5,16 +5,15 @@
 #include <signal.h>
 #include <stdint.h>
 #include <string.h>
-
 #include <sys/time.h>
 
-#include <ccan/endian/endian.h>
-
-#include <libnvme.h>
 #include <libnvme-mi.h>
+#include <libnvme.h>
+
+#include <ccan/endian/endian.h>
+#include <shared/sig-util.h>
 
 #include "logging.h"
-#include <shared/sig-util.h>
 #include "nvme-print.h"
 
 struct submit_data {

@@ -9,8 +9,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
@@ -18,9 +18,8 @@
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-
-#include "sandisk-utils.h"
 #include "plugins/wdc/wdc-nvme-cmds.h"
+#include "sandisk-utils.h"
 
 /*  WDC UUID value */
 static const __u8 WDC_UUID[NVME_UUID_LEN] = {

@@ -11,8 +11,8 @@
 
 #include <libnvme.h>
 
-#include "args.h"
 #include "argconfig.h"
+#include "args.h"
 #include "nvme-print.h"
 
 struct nvme_args nvme_args = {

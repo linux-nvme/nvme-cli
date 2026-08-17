@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <ccan/endian/endian.h>
-
 #include <libnvme.h>
 
-#include "nvme-print.h"
+#include <ccan/endian/endian.h>
+
 #include "lm-print.h"
+#include "nvme-print.h"
 
 static void json_controller_state_data(struct nvme_lm_controller_state_data *data, size_t len,
 				      __u32 offset)

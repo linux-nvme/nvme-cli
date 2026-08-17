@@ -7,14 +7,14 @@
 
 #include <errno.h>
 
-#include <ccan/endian/endian.h>
-
 #include <libnvme.h>
 
-#include "nvme-print.h"
-#include "plugin.h"
+#include <ccan/endian/endian.h>
+
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-print.h"
+#include "plugin.h"
 
 int sldgm_get_drive_info(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {

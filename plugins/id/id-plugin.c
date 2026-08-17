@@ -14,7 +14,6 @@
 #include <libnvme.h>
 
 #include <ccan/array_size/array_size.h>
-
 #include <shared/compiler-attributes-util.h>
 
 #include "argconfig.h"

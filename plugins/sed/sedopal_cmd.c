@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <ctype.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <unistd.h>
 #include <errno.h>
-#include <sys/types.h>
+#include <linux/sed-opal.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mount.h>
-#include <linux/sed-opal.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
-#include "sedopal_spec.h"
-#include "sedopal_cmd.h"
 #include "nvme-print.h"
+#include "sedopal_cmd.h"
+#include "sedopal_spec.h"
 
 /*
  * ask user for key rather than obtaining it from kernel keyring

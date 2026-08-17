@@ -15,30 +15,28 @@
  *   Author:  Zou Ming<zouming.zouming@huawei.com>,
  *				Yang Feng <philip.yang@huawei.com>
  */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <inttypes.h>
-#include <errno.h>
-#include <limits.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-
 #include <shared/compiler-attributes-util.h>
+#include <shared/suffix-util.h>
 
-#include "nvme-cmds.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "plugin.h"
-
-#include <shared/suffix-util.h>
 
 #define HW_SSD_PCI_VENDOR_ID 0x19E5
 #define ARRAY_NAME_LEN 80

@@ -32,10 +32,10 @@
 
 #include <shared/fs-util.h>
 
-#include "command-metadata.h"
 #include "args.h"
-#include "plugin.h"
+#include "command-metadata.h"
 #include "nvme-json.h"
+#include "plugin.h"
 
 /*
  * The whole command is JSON-only, so it is compiled out entirely without

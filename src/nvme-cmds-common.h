@@ -7,6 +7,12 @@
  */
 #pragma once
 
+#include <string.h>
+
+#include <libnvme.h>
+
+#include "nvme-print.h"
+
 struct feat_cfg {
 	__u8 feature_id;   /* enum nvme_features_id */
 	__u8 sel;          /* enum nvme_get_features_sel */

@@ -14,28 +14,27 @@
  *
  */
 
-#include <stdio.h>
 #include <dirent.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <errno.h>
-#include <string.h>
+#include <fcntl.h>
 #include <libgen.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-
 #include <shared/compiler-attributes-util.h>
+#include <shared/suffix-util.h>
 
-#include "nvme-cmds.h"
-#include "plugin.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-cmds.h"
 #include "nvme-print.h"
-#include <shared/suffix-util.h>
+#include "plugin.h"
 
 #define ONTAP_C2_LOG_ID		0xC2
 #define ONTAP_C2_LOG_SIZE	4096

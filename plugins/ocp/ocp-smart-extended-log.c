@@ -11,14 +11,14 @@
 
 #include <libnvme.h>
 
-#include "nvme-print.h"
-#include "plugin.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-print.h"
 #include "ocp-nvme.h"
 #include "ocp-print.h"
 #include "ocp-smart-extended-log.h"
 #include "ocp-utils.h"
+#include "plugin.h"
 
 /* C0 SCAO Log Page */
 

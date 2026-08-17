@@ -13,14 +13,12 @@
 #include <fcntl.h>
 #include <inttypes.h>
 #include <stdint.h>
-#include <unistd.h>
-
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
 #include <ccan/minmax/minmax.h>
-
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 

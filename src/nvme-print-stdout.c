@@ -5,14 +5,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 
 #ifdef CONFIG_FABRICS
-#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #endif
+
+#include <libnvme-mi.h>
+#include <libnvme.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
@@ -21,21 +24,17 @@
 #include <ccan/htable/htable_type.h>
 #include <ccan/minmax/minmax.h>
 #include <ccan/strset/strset.h>
-
-#include <libnvme.h>
-#include <libnvme-mi.h>
-
+#include <shared/int-util.h>
+#include <shared/mmio-util.h>
 #include <shared/suffix-util.h>
+#include <shared/table-util.h>
 #include <shared/uint128-util.h>
 #include <shared/uuid-util.h>
-#include <shared/int-util.h>
-#include <shared/table-util.h>
-#include <shared/mmio-util.h>
 
 #include "cleanup.h"
-#include "nvme-print.h"
-#include "nvme-models.h"
 #include "logging.h"
+#include "nvme-models.h"
+#include "nvme-print.h"
 
 enum simple_list_col {
 	SIMPLE_LIST_COL_NODE,

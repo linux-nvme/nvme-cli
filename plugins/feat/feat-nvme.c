@@ -2,16 +2,15 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <ccan/endian/endian.h>
-
-#include "nvme-cmds.h"
 #include <libnvme.h>
 
+#include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
 
-#include "nvme-print.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "plugin.h"
 
 #define FEAT_PLUGIN_VERSION "1.0"

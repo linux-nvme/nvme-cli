@@ -1,18 +1,17 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 #include <errno.h>
 #include <fcntl.h>
+#include <nvme/lib-types.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <nvme/lib-types.h>
+#include <libnvme.h>
 
 #include "nvme-models.h"
 #include "nvme-pci-ids.h"
-#include <libnvme.h>
-
 #include "nvme-print.h"
 
 #define LINE_BUF_SIZE 1024

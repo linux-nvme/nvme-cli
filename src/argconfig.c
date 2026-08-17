@@ -32,18 +32,19 @@
 #include <errno.h>
 #include <getopt.h>
 #include <locale.h>
-#include <stdbool.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <libnvme.h>
 
-#include "argconfig.h"
-#include "cleanup.h"
 #include <shared/suffix-util.h>
 #include <shared/wrap-util.h>
+
+#include "argconfig.h"
+#include "cleanup.h"
 
 static bool is_null_or_empty(const char *s)
 {

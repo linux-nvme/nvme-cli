@@ -17,12 +17,12 @@
 #include <shared/compiler-attributes-util.h>
 #include <shared/crc32-util.h>
 
+#include "cleanup.h"
 #include "fabrics.h"
+#include "global-ctx.h"
 #include "logging.h"
 #include "nvme-print.h"
 #include "plugin.h"
-#include "cleanup.h"
-#include "global-ctx.h"
 
 static int read_key_value(const char *inline_value, char **out)
 {

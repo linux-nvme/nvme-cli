@@ -21,8 +21,8 @@
 #include <shared/ini-util.h>
 #include <shared/parse-util.h>
 
-#include "global-config.h"
 #include "args.h"
+#include "global-config.h"
 
 struct global_config_ctx {
 	const char *path;

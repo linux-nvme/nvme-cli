@@ -7,30 +7,27 @@
  * haro.panosyan@solidigm.com
  */
 
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <inttypes.h>
-#include <time.h>
-
 #include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
-#include <ccan/endian/endian.h>
 #include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-
 #include <shared/fs-util.h>
 
-#include "nvme-cmds.h"
-#include "nvme-print.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "plugin.h"
-
 #include "solidigm-util.h"
 
 #define DWORD_SIZE 4

@@ -15,8 +15,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <libnvme.h>
 #include <libnvme-mi.h>
+#include <libnvme.h>
 
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>

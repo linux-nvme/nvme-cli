@@ -9,21 +9,18 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <ccan/endian/endian.h>
-
-#include <shared/compiler-attributes-util.h>
-
-#include "nvme-cmds.h"
 #include <libnvme.h>
 
-#include "nvme-print.h"
-#include "plugin.h"
+#include <ccan/endian/endian.h>
+#include <shared/compiler-attributes-util.h>
+
 #include "cleanup.h"
 #include "global-ctx.h"
-
+#include "nvme-cmds.h"
+#include "nvme-print.h"
+#include "plugin.h"
 #include "plugins/ocp/ocp-nvme.h"
 #include "plugins/ocp/ocp-utils.h"
-
 #include "solidigm-log-page-dir.h"
 #include "solidigm-util.h"
 

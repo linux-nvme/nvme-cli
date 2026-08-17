@@ -30,13 +30,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <libnvme.h>
 #include <libnvme-mi.h>
+#include <libnvme.h>
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 #include <shared/mmio-util.h>

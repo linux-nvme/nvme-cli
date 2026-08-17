@@ -5,13 +5,13 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include "telemetry-log.h"
 #include "config.h"
-#include "tracker.h"
-#include "skht.h"
-#include "nvme-json.h"
 #include "data-area.h"
 #include "debug-info.h"
+#include "nvme-json.h"
+#include "skht.h"
+#include "telemetry-log.h"
+#include "tracker.h"
 
 static char *json_byte_array_to_string(struct json_object *array)
 {

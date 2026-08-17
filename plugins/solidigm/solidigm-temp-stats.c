@@ -7,14 +7,14 @@
 
 #include <errno.h>
 
-#include <ccan/endian/endian.h>
-
 #include <libnvme.h>
 
-#include "nvme-print.h"
-#include "plugin.h"
+#include <ccan/endian/endian.h>
+
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-print.h"
+#include "plugin.h"
 #include "solidigm-util.h"
 
 #define SLDGM_LEGACY_TEMP_STATS_LID 0xC5

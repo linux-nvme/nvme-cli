@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include <ccan/endian/endian.h>
-#include <ccan/array_size/array_size.h>
+#include <libnvme.h>
 
+#include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
 #include <shared/int-util.h>
 #include <shared/time-util.h>
 #include <shared/uint128-util.h>
 #include <shared/uuid-util.h>
 
-#include "nvme-json.h"
-#include <libnvme.h>
-
-#include "nvme-print.h"
 #include "cleanup.h"
-
-#include "ocp-print.h"
-#include "ocp-hardware-component-log.h"
+#include "nvme-json.h"
+#include "nvme-print.h"
 #include "ocp-fw-activation-history.h"
+#include "ocp-hardware-component-log.h"
+#include "ocp-nvme.h"
+#include "ocp-print.h"
 #include "ocp-smart-extended-log.h"
 #include "ocp-telemetry-decode.h"
-#include "ocp-nvme.h"
 #include "ocp-utils.h"
 
 #define array_add_obj json_array_add_value_object

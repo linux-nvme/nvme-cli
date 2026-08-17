@@ -2,24 +2,22 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <linux/fs.h>
+#include <linux/sed-opal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-
-#include <linux/fs.h>
-#include <linux/sed-opal.h>
-
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
 #include <shared/compiler-attributes-util.h>
 
-#include "plugin.h"
 #include "cleanup.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
+#include "plugin.h"
 #include "sedopal_cmd.h"
 
 OPT_ARGS(no_opts) = {

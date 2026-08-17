@@ -9,12 +9,13 @@
 #include <libnvme.h>
 
 #include "ccan/endian/endian.h"
+
+#include "argconfig.h"
+#include "global-ctx.h"
 #include "memblaze-smart-log-add-x.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "global-ctx.h"
 #include "plugin.h"
-#include "argconfig.h"
 
 enum {
 	LID_SMART_LOG_ADD = 0xca,

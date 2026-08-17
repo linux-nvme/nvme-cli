@@ -3,16 +3,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <ccan/endian/endian.h>
-
-#include "nvme-cmds.h"
 #include <libnvme.h>
 
+#include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
 
-#include "nvme-print.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "plugin.h"
 
 #pragma pack(push, 1)

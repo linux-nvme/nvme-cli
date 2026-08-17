@@ -8,12 +8,11 @@
 #include <unistd.h>
 
 #include <ccan/array_size/array_size.h>
-
 #include <shared/fs-util.h>
+#include <shared/parse-util.h>
 
 #include "../src/argconfig.h"
 #include "../src/cleanup.h"
-#include <shared/parse-util.h>
 
 const char *libnvme_strerror(int errnum);
 
