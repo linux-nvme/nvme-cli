@@ -31,8 +31,8 @@
 #include <shared/int-util.h>
 #include <shared/table-util.h>
 #include <shared/mmio-util.h>
-#include <cleanup.h>
 
+#include "cleanup.h"
 #include "nvme-print.h"
 #include "nvme-models.h"
 #include "logging.h"
