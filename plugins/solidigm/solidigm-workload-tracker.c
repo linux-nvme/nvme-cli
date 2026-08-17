@@ -466,12 +466,12 @@ static int find_option(char const *list[], int size, const char *val)
 	return -EINVAL;
 }
 
-static void join_options(char *dest, char const *list[], size_t list_size)
+static void join_options(char *dest, size_t dest_size, char const *list[], size_t list_size)
 {
-	strcat(dest, list[0]);
+	strncat(dest, list[0], dest_size - strlen(dest) - 1);
 	for (int i = 1; i < list_size; i++) {
-		strcat(dest, "|");
-		strcat(dest, list[i]);
+		strncat(dest, "|", dest_size - strlen(dest) - 1);
+		strncat(dest, list[i], dest_size - strlen(dest) - 1);
 	}
 }
 
@@ -535,8 +535,8 @@ int sldgm_get_workload_tracker(int argc, char **argv, struct command *acmd, stru
 		.trigger_field = "",
 	};
 
-	join_options(type_options, trk_types, ARRAY_SIZE(trk_types));
-	join_options(sample_options, samplet, ARRAY_SIZE(samplet));
+	join_options(type_options, sizeof(type_options), trk_types, ARRAY_SIZE(trk_types));
+	join_options(sample_options, sizeof(sample_options), samplet, ARRAY_SIZE(samplet));
 
 	NVME_ARGS(opts,
 		OPT_BYTE("uuid-index",   'U', &wlt.uuid_index, "specify uuid index"),
