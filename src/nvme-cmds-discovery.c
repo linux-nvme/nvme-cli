@@ -10,40 +10,15 @@
 /**
  * This program uses NVMe IOCTLs to run native nvme commands to a device.
  */
-#include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <getopt.h>
-#include <inttypes.h>
-#include <libgen.h>
-#include <locale.h>
-#include <math.h>
-#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
-#ifdef NVME_HAVE_MMAP
-#include <sys/mman.h>
-#endif
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include <libnvme-mi.h>
 #include <libnvme.h>
 
-#include <ccan/array_size/array_size.h>
-#include <ccan/endian/endian.h>
-#include <ccan/minmax/minmax.h>
 #include <shared/compiler-attributes-util.h>
-#include <shared/fs-util.h>
-#include <shared/mmio-util.h>
-#include <shared/parse-util.h>
-#include <shared/sig-util.h>
-#include <shared/suffix-util.h>
-#include <shared/time-util.h>
 
 #include "argconfig.h"
 #include "cleanup.h"
@@ -319,159 +294,6 @@ static int get_log(int argc, char **argv, struct command *acmd, struct plugin *p
 	return err;
 }
 
-static int list_subsys(int argc, char **argv, struct command *acmd,
-		struct plugin *plugin)
-{
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	nvme_print_flags_t flags;
-	const char *desc = "Retrieve information for subsystems";
-	libnvme_scan_filter_t filter = NULL;
-	char *devname;
-	int err;
-	int nsid = NVME_NSID_ALL;
-
-	NVME_ARGS(opts);
-
-	err = parse_args(argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	devname = NULL;
-	if (optind < argc)
-		devname = basename(argv[optind++]);
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0 || (flags != JSON && flags != NORMAL)) {
-		nvme_show_error("Invalid output format");
-		return -EINVAL;
-	}
-
-	if (nvme_args.verbose)
-		flags |= VERBOSE;
-
-	err = nvme_create_global_ctx(&ctx);
-	if (err) {
-		if (devname)
-			nvme_show_error("Failed to scan nvme subsystem for %s", devname);
-		else
-			nvme_show_error("Failed to scan nvme subsystem");
-		return err;
-	}
-
-	if (devname) {
-		int subsys_num;
-
-		if (sscanf(devname, "nvme%dn%d", &subsys_num, &nsid) < 1 &&
-		    sscanf(devname, "ng%dn%d", &subsys_num, &nsid) != 2) {
-			nvme_show_error("Invalid device name %s", devname);
-			return -EINVAL;
-		}
-		filter = nvme_match_device_filter;
-	}
-
-	err = libnvme_scan_topology(ctx, filter, (void *)devname);
-	if (err)
-		return handle_scan_topology_error(err);
-
-	nvme_show_subsystem_list(ctx, nsid != NVME_NSID_ALL, flags);
-
-	return 0;
-}
-
-#ifdef CONFIG_TOP
-static int top(int argc, char **argv, struct command *acmd,
-		struct plugin *plugin)
-{
-	int err;
-	nvme_print_flags_t flags = 0;
-	const char *desc = "show nvme top output";
-	const char *delay = "refresh interval in seconds";
-
-	struct config {
-		int delay;
-	};
-
-	struct config cfg = {
-		.delay = 1,
-	};
-
-	NVME_ARGS(opts,
-		  OPT_INT("delay", 'd', &cfg.delay, delay));
-
-	err = parse_args(argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0 || flags != NORMAL) {
-		nvme_show_error("Invalid output format");
-		return -EINVAL;
-	}
-
-	if (cfg.delay < 1) {
-		nvme_show_error("delay must be greater than or equal to 1");
-		return -EINVAL;
-	}
-
-	err = shr_install_sigwinch_handler();
-	if (err) {
-		nvme_show_error("failed to install sig handler for SIGWINCH");
-		return err;
-	}
-
-	nvme_show_top(flags, cfg.delay);
-
-	return err;
-}
-#endif
-
-static int list(int argc, char **argv, struct command *acmd, struct plugin *plugin)
-{
-	const char *desc = "Retrieve basic information for all NVMe namespaces";
-	nvme_print_flags_t flags;
-	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
-	int err = 0;
-
-	NVME_ARGS(opts);
-
-	err = parse_args(argc, argv, desc, opts);
-	if (err)
-		return err;
-
-	err = validate_output_format(nvme_args.output_format, &flags);
-	if (err < 0 || (flags != JSON && flags != NORMAL)) {
-		nvme_show_error("Invalid output format");
-		return -EINVAL;
-	}
-
-	if (nvme_args.verbose)
-		flags |= VERBOSE;
-
-	err = nvme_create_global_ctx(&ctx);
-	if (err)
-		return err;
-
-	err = libnvme_scan_topology(ctx, NULL, NULL);
-	if (err < 0)
-		return handle_scan_topology_error(err);
-
-	nvme_show_list_items(ctx, flags);
-
-	return err;
-}
-
-static struct command list_cmd = {
-	.name = "list",
-	.help = "List all NVMe devices and namespaces on machine",
-	.fn = list,
-};
-
-static struct command list_subsys_cmd = {
-	.name = "list-subsys",
-	.help = "List nvme subsystems",
-	.fn = list_subsys,
-};
-
 static struct command get_log_cmd = {
 	.name = "get-log",
 	.help = "Generic NVMe get log, returns log in raw format",
@@ -484,24 +306,9 @@ static struct command get_supported_log_pages_cmd = {
 	.fn = get_supported_log_pages,
 };
 
-#ifdef CONFIG_TOP
-
-static struct command top_cmd = {
-	.name = "top",
-	.help = "nvme top",
-	.fn = top,
-};
-
-#endif /* CONFIG_TOP */
-
 static struct command *commands[] = {
-	&list_cmd,
-	&list_subsys_cmd,
 	&get_log_cmd,
 	&get_supported_log_pages_cmd,
-#ifdef CONFIG_TOP
-	&top_cmd,
-#endif /* CONFIG_TOP */
 	NULL,
 };
 

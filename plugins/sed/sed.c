@@ -251,6 +251,7 @@ static struct plugin plugin = {
 	.desc = "SED Opal Command Set",
 	.version = NVME_VERSION,
 	.core = true,
+	.group = "Security & Access Control",
 };
 
 static void __shr_constructor register_plugin(void)

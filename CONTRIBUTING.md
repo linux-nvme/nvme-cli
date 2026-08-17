@@ -148,6 +148,13 @@ Then append `plugins/foo/foo-nvme.c` to the `all_plugins` dict in
 it only affects which heading a plugin's listed under on `nvme help`. Both
 kinds work identically otherwise.
 
+A core plugin can also set `.group` to the title of a built-in group (see
+above) it's thematically related to, e.g. `.group = "Features"` for the
+`feat` plugin. When set, `nvme help` lists the plugin right after that
+group's commands instead of in the flat "core NVMe/NVMeoF plugins" list.
+This only affects display -- the plugin is still invoked as `nvme foo bar`,
+not merged into the flat top-level command namespace.
+
 #### Multi-file plugins
 
 A plugin can span multiple `.c` files (see `plugins/ocp` or

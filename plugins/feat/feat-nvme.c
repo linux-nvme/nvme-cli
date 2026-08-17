@@ -1150,6 +1150,7 @@ static struct plugin plugin = {
 	.desc = "NVMe feature extensions",
 	.version = FEAT_PLUGIN_VERSION,
 	.core = true,
+	.group = "Features",
 };
 
 static void __shr_constructor register_plugin(void)

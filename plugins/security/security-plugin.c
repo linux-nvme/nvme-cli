@@ -271,6 +271,7 @@ static struct plugin plugin = {
 	.desc = "Submit NVMe Security Send/Receive commands",
 	.version = NVME_VERSION,
 	.core = true,
+	.group = "Security & Access Control",
 };
 
 static void __shr_constructor register_plugin(void)

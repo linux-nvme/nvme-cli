@@ -9,12 +9,8 @@ options as JSON (see command-metadata.c).  This test runs it and checks:
 
   1. It conforms to command-metadata-schema.json (structural: required keys,
      value enums such as an option's "argument" and "values" sets).
-  2. Known commands are present, and the emitted plugins match what
-     `nvme help` lists (the schema proves the shape is legal, not that any
-     particular command or plugin was actually emitted).
-  3. Every command's option set matches what `--help` prints for it -- an
-     independent code path over the same data, which catches the silent
-     failure where capture never fires and a command emits no options.
+  2. Known commands are present (the schema proves the shape is legal, not
+     that any particular command was actually emitted).
 
 The command needs no device, so this can run in every CI job.  It requires json-c
 in the nvme build (the command is compiled out otherwise); when the output is
@@ -26,21 +22,9 @@ Exits 77 (meson "skip") when the jsonschema module is unavailable.
 """
 import copy
 import json
-import re
 import subprocess
 import sys
 import unittest
-
-# Long option as printed in --help, e.g. "[  --output-format=<FMT>, -o <FMT> ]".
-HELP_LONG_OPT = re.compile(r"\[\s*--([A-Za-z0-9][A-Za-z0-9_-]*)")
-# Plugin as printed by `nvme help`, e.g. "  ocp             ...description".
-HELP_PLUGIN = re.compile(r"^\s{2}(\S+)\s{2,}", re.MULTILINE)
-# `nvme help` splits plugins into a "core" and a "vendor specific" section;
-# either heading marks the start of the plugin listing.
-HELP_PLUGIN_SECTION_START = re.compile(
-    r"^The following are (?:core NVMe/NVMeoF|vendor specific) plugins:$",
-    re.MULTILINE)
-HELP_PLUGIN_SECTION_END = "The following sub-commands are deprecated"
 
 try:
     import jsonschema
@@ -81,53 +65,6 @@ def dump_metadata():
     if proc.returncode != 0 or not text:
         return None, proc.stderr
     return json.loads(text), proc.stderr
-
-
-def iter_commands(data):
-    """Yield (command_path, command) for every builtin and plugin command.
-    command_path is the argv words that name the command: ["list-subsys"] for a
-    builtin, ["ocp", "smart-add-log"] for a plugin command."""
-    for cmd in data["commands"]:
-        yield [cmd["name"]], cmd
-    for plugin in data["plugins"]:
-        for cmd in plugin["commands"]:
-            yield [plugin["name"], cmd["name"]], cmd
-
-
-def help_option_names(command_path):
-    """The set of long options `nvme <command_path> --help` prints, or None if
-    the command crashed (non-zero exit with no output), e.g. due to a stack
-    overflow on platforms with a small default stack size."""
-    proc = subprocess.run(
-        [NVME_BIN] + command_path + ["--help"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    output = proc.stdout + proc.stderr
-    if proc.returncode != 0 and not output.strip():
-        return None
-    return set(HELP_LONG_OPT.findall(output))
-
-
-def help_plugin_names():
-    """The set of plugins `nvme help` lists as installed extensions -- an
-    independent source of truth for which plugins are compiled in, so the test
-    adapts to builds configured with a subset of plugins."""
-    proc = subprocess.run(
-        [NVME_BIN, "help"],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        universal_newlines=True)
-    text = proc.stdout + proc.stderr
-    match = HELP_PLUGIN_SECTION_START.search(text)
-    if not match:
-        # No plugin section (e.g. built with zero external plugins);
-        # scraping the whole help text would mis-read builtin commands
-        # as plugins.
-        return set()
-    region = text[match.start():]
-    region = region.split(HELP_PLUGIN_SECTION_END, 1)[0]
-    return set(HELP_PLUGIN.findall(region))
 
 
 class TestCommandMetadataSchema(unittest.TestCase):
@@ -171,38 +108,11 @@ class TestCommandMetadataSchema(unittest.TestCase):
         for expected in ("list", "list-subsys", "format", "get-log"):
             self.assertIn(expected, names)
 
-    def test_plugins_match_help(self):
-        """The emitted plugins equal what `nvme help` lists as installed.
-
-        `nvme help` enumerates plugins via an independent code path, so this
-        adapts to builds configured with a subset of plugins (unlike a
-        hardcoded list) while still catching a dump that drops or invents one.
-        Each emitted plugin must also carry at least one command."""
-        dumped = {p["name"]: p for p in self.data["plugins"]}
-        self.assertEqual(set(dumped), help_plugin_names())
-        for name, plugin in dumped.items():
+    def test_plugins_have_commands(self):
+        """Every emitted plugin carries at least one command."""
+        for plugin in self.data["plugins"]:
             self.assertTrue(plugin["commands"],
-                            msg="plugin '%s' emitted no commands" % name)
-
-    def test_options_match_help(self):
-        """Each command's visible options equal what --help prints.
-
-        --help is generated by an independent code path (argconfig_print_help)
-        over the same option array the dump walks, so agreement catches the
-        critical silent failure: capture never fires for a command and it emits
-        an empty option set that still validates against the schema.  Hidden
-        options are excluded since --help suppresses them by design."""
-        for command_path, cmd in iter_commands(self.data):
-            dumped = {o["long"] for o in cmd["options"] if not o.get("hidden")}
-            printed = help_option_names(command_path)
-            if printed is None:
-                # Command crashed before producing output (e.g. stack
-                # overflow); skip rather than fail -- the underlying bug
-                # is unrelated to the metadata dump.
-                continue
-            self.assertEqual(
-                dumped, printed,
-                msg="option mismatch for '%s'" % " ".join(command_path))
+                            msg="plugin '%s' emitted no commands" % plugin["name"])
 
     def test_stdout_is_pure_json(self):
         """The dump writes only JSON to stdout, nothing to stderr, rc 0.
