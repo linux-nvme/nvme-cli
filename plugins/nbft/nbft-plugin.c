@@ -14,9 +14,6 @@
 #include "fabrics.h"
 #include "logging.h"
 
-#define CREATE_CMD
-#include "nbft-plugin.h"
-
 static const char dash[100] = {[0 ... 98] = '-', [99] = '\0'};
 
 #define PCI_SEGMENT(sbdf) ((sbdf & 0xffff0000) >> 16)
@@ -700,4 +697,28 @@ int show_nbft(int argc, char **argv, struct command *acmd, struct plugin *plugin
 	}
 	libnvmf_nbft_free(ctx, head);
 	return ret;
+}
+
+static struct command show_nbft_cmd = {
+	.name = "show",
+	.help = "Show contents of ACPI NBFT tables",
+	.fn = show_nbft,
+};
+
+static struct command *commands[] = {
+	&show_nbft_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "nbft",
+	.desc = "ACPI NBFT table extensions",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

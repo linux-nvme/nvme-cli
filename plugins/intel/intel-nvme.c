@@ -21,9 +21,6 @@
 #include "plugin.h"
 #include <shared/parse-util.h>
 
-#define CREATE_CMD
-#include "intel-nvme.h"
-
 struct __packed nvme_additional_smart_log_item {
 	__u8			key;
 	__u8			_kp[2];
@@ -1690,5 +1687,77 @@ static int set_lat_stats_thresholds(int argc, char **argv,
 
 close_dev:
 	return err;
+}
+
+static struct command id_ctrl_cmd = {
+	.name = "id-ctrl",
+	.help = "Send NVMe Identify Controller",
+	.fn = id_ctrl,
+};
+
+static struct command get_internal_log_cmd = {
+	.name = "internal-log",
+	.help = "Retrieve Intel internal firmware log, save it",
+	.fn = get_internal_log,
+};
+
+static struct command get_lat_stats_log_cmd = {
+	.name = "lat-stats",
+	.help = "Retrieve Intel IO Latency Statistics log, show it",
+	.fn = get_lat_stats_log,
+};
+
+static struct command set_lat_stats_thresholds_cmd = {
+	.name = "set-bucket-thresholds",
+	.help = "Set Latency Stats Bucket Values, save it",
+	.fn = set_lat_stats_thresholds,
+};
+
+static struct command enable_lat_stats_tracking_cmd = {
+	.name = "lat-stats-tracking",
+	.help = "Enable and disable Latency Statistics logging.",
+	.fn = enable_lat_stats_tracking,
+};
+
+static struct command get_market_log_cmd = {
+	.name = "market-name",
+	.help = "Retrieve Intel Marketing Name log, show it",
+	.fn = get_market_log,
+};
+
+static struct command get_additional_smart_log_cmd = {
+	.name = "smart-log-add",
+	.help = "Retrieve Intel SMART Log, show it",
+	.fn = get_additional_smart_log,
+};
+
+static struct command get_temp_stats_log_cmd = {
+	.name = "temp-stats",
+	.help = "Retrieve Intel Temperature Statistics log, show it",
+	.fn = get_temp_stats_log,
+};
+
+static struct command *commands[] = {
+	&id_ctrl_cmd,
+	&get_internal_log_cmd,
+	&get_lat_stats_log_cmd,
+	&set_lat_stats_thresholds_cmd,
+	&enable_lat_stats_tracking_cmd,
+	&get_market_log_cmd,
+	&get_additional_smart_log_cmd,
+	&get_temp_stats_log_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "intel",
+	.desc = "Intel vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }
 

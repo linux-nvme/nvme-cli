@@ -13,9 +13,6 @@
 
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "dell-nvme.h"
-
 #define ARRAY_NAME_LEN 80
 
 struct nvme_vu_id_ctrl_field {
@@ -52,4 +49,27 @@ static int id_ctrl(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	return __id_ctrl(argc, argv, acmd, plugin, dell_id_ctrl);
+}
+
+static struct command id_ctrl_cmd = {
+	.name = "id-ctrl",
+	.help = "Send NVMe Identify Controller",
+	.fn = id_ctrl,
+};
+
+static struct command *commands[] = {
+	&id_ctrl_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "dell",
+	.desc = "DELL vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

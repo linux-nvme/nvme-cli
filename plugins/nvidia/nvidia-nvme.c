@@ -12,9 +12,6 @@
 
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "nvidia-nvme.h"
-
 struct nvme_vu_id_ctrl_field {
 	__u16		json_rpc_2_0_mjr;
 	__u16		json_rpc_2_0_mnr;
@@ -51,4 +48,27 @@ static int id_ctrl(int argc, char **argv, struct command *acmd,
 		struct plugin *plugin)
 {
 	return __id_ctrl(argc, argv, acmd, plugin, nvidia_id_ctrl);
+}
+
+static struct command id_ctrl_cmd = {
+	.name = "id-ctrl",
+	.help = "Send NVMe Identify Controller",
+	.fn = id_ctrl,
+};
+
+static struct command *commands[] = {
+	&id_ctrl_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "nvidia",
+	.desc = "NVIDIA vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

@@ -17,9 +17,6 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "amzn-nvme.h"
-
 #define AMZN_NVME_STATS_LOGPAGE_ID 0xD0
 #define AMZN_NVME_STATS_DETAIL_IO_VERSION 1
 #define AMZN_NVME_EBS_STATS_MAGIC 0x3C23B510
@@ -692,4 +689,34 @@ static int get_stats(int argc, char **argv, struct command *acmd,
 
 done:
 	return rc;
+}
+
+static struct command id_ctrl_cmd = {
+	.name = "id-ctrl",
+	.help = "Send NVMe Identify Controller",
+	.fn = id_ctrl,
+};
+
+static struct command get_stats_cmd = {
+	.name = "stats",
+	.help = "Get EBS volume stats",
+	.fn = get_stats,
+};
+
+static struct command *commands[] = {
+	&id_ctrl_cmd,
+	&get_stats_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "amzn",
+	.desc = "Amazon vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

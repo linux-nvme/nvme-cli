@@ -7,8 +7,7 @@
 
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "solidigm-nvme.h"
+#define SOLIDIGM_PLUGIN_VERSION "1.23"
 
 #include "solidigm-id-ctrl.h"
 #include "solidigm-smart.h"
@@ -113,4 +112,132 @@ static int get_workload_tracker(int argc, char **argv, struct command *acmd,
 				      struct plugin *plugin)
 {
 	return sldgm_get_workload_tracker(argc, argv, acmd, plugin);
+}
+
+static struct command id_ctrl_cmd = {
+	.name = "id-ctrl",
+	.help = "Send NVMe Identify Controller",
+	.fn = id_ctrl,
+};
+
+static struct command get_additional_smart_log_cmd = {
+	.name = "smart-log-add",
+	.help = "Retrieve Solidigm SMART Log",
+	.fn = get_additional_smart_log,
+};
+
+static struct command smart_cloud_cmd = {
+	.name = "vs-smart-add-log",
+	.help = "Get SMART / health extended log (redirects to ocp plug-in)",
+	.fn = smart_cloud,
+};
+
+static struct command get_internal_log_cmd = {
+	.name = "vs-internal-log",
+	.help = "Retrieve Debug log binaries",
+	.fn = get_internal_log,
+};
+
+static struct command get_garbage_collection_log_cmd = {
+	.name = "garbage-collect-log",
+	.help = "Retrieve Garbage Collection Log",
+	.fn = get_garbage_collection_log,
+};
+
+static struct command get_market_log_cmd = {
+	.name = "market-log",
+	.help = "Retrieve Market Log",
+	.fn = get_market_log,
+};
+
+static struct command get_latency_tracking_log_cmd = {
+	.name = "latency-tracking-log",
+	.help = "Enable/Retrieve Latency tracking Log",
+	.fn = get_latency_tracking_log,
+};
+
+static struct command get_telemetry_log_cmd = {
+	.name = "parse-telemetry-log",
+	.help = "Parse Telemetry Log binary",
+	.fn = get_telemetry_log,
+};
+
+static struct command clear_pcie_correctable_error_counters_cmd = {
+	.name = "clear-pcie-correctable-errors",
+	.help = "Clear PCIe Correctable Error Counters (redirects to ocp plug-in)",
+	.fn = clear_pcie_correctable_error_counters,
+};
+
+static struct command clear_fw_update_history_cmd = {
+	.name = "clear-fw-activate-history",
+	.help = "Clear firmware update history log (redirects to ocp plug-in)",
+	.fn = clear_fw_update_history,
+};
+
+static struct command fw_activation_history_cmd = {
+	.name = "vs-fw-activate-history",
+	.help = "Get firmware activation history log (redirects to ocp plug-in)",
+	.fn = fw_activation_history,
+};
+
+static struct command get_log_page_directory_log_cmd = {
+	.name = "log-page-directory",
+	.help = "Retrieve log page directory",
+	.fn = get_log_page_directory_log,
+};
+
+static struct command get_temp_stats_log_cmd = {
+	.name = "temp-stats",
+	.help = "Retrieve Temperature Statistics log",
+	.fn = get_temp_stats_log,
+};
+
+static struct command get_drive_info_cmd = {
+	.name = "vs-drive-info",
+	.help = "Retrieve drive information",
+	.fn = get_drive_info,
+};
+
+static struct command get_cloud_SSDplugin_version_cmd = {
+	.name = "cloud-SSDplugin-version",
+	.help = "Prints plug-in OCP version",
+	.fn = get_cloud_SSDplugin_version,
+};
+
+static struct command get_workload_tracker_cmd = {
+	.name = "workload-tracker",
+	.help = "Real Time capture Workload Tracker samples",
+	.fn = get_workload_tracker,
+};
+
+static struct command *commands[] = {
+	&id_ctrl_cmd,
+	&get_additional_smart_log_cmd,
+	&smart_cloud_cmd,
+	&get_internal_log_cmd,
+	&get_garbage_collection_log_cmd,
+	&get_market_log_cmd,
+	&get_latency_tracking_log_cmd,
+	&get_telemetry_log_cmd,
+	&clear_pcie_correctable_error_counters_cmd,
+	&clear_fw_update_history_cmd,
+	&fw_activation_history_cmd,
+	&get_log_page_directory_log_cmd,
+	&get_temp_stats_log_cmd,
+	&get_drive_info_cmd,
+	&get_cloud_SSDplugin_version_cmd,
+	&get_workload_tracker_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "solidigm",
+	.desc = "Solidigm vendor specific extensions",
+	.version = SOLIDIGM_PLUGIN_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

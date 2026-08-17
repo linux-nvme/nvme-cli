@@ -26,9 +26,6 @@
 #include "nvme-print.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "nvme-mi-plugin.h"
-
 static const char *namespace_desired = "desired namespace";
 
 static int libnvme_mi(int argc, char **argv, __u8 admin_opcode, const char *desc)
@@ -174,4 +171,35 @@ static int nmi_send(int argc, char **argv, struct command *acmd, struct plugin *
 	const char *desc = "Send a NVMe-MI Send command to the specified device, return results.";
 
 	return libnvme_mi(argc, argv, nvme_admin_nvme_mi_send, desc);
+}
+
+static struct command nmi_recv_cmd = {
+	.name = "recv",
+	.help = "Submit a NVMe-MI Receive command, return results",
+	.fn = nmi_recv,
+};
+
+static struct command nmi_send_cmd = {
+	.name = "send",
+	.help = "Submit a NVMe-MI Send command, return results",
+	.fn = nmi_send,
+};
+
+static struct command *commands[] = {
+	&nmi_recv_cmd,
+	&nmi_send_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "nvme-mi",
+	.desc = "Submit NVMe-MI commands",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

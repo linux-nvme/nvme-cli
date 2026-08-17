@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <libnvme.h>
@@ -73,6 +74,38 @@ static void usage_cmd(struct plugin *plugin)
 		printf("usage: %s %s\n", prog->name, prog->usage);
 }
 
+void plugin_add_group(struct plugin *plugin, const char *title,
+		      struct command **commands)
+{
+	struct command_group *group, **tail;
+	struct command **merged;
+	size_t old_count = 0, new_count = 0;
+
+	group = malloc(sizeof(*group));
+	if (!group)
+		return;
+	group->title = title;
+	group->commands = commands;
+	group->next = NULL;
+
+	for (tail = &plugin->groups; *tail; tail = &(*tail)->next)
+		;
+	*tail = group;
+
+	if (plugin->commands)
+		while (plugin->commands[old_count])
+			old_count++;
+	while (commands[new_count])
+		new_count++;
+
+	merged = realloc(plugin->commands, (old_count + new_count + 1) * sizeof(*merged));
+	if (!merged)
+		return;
+
+	memcpy(&merged[old_count], commands, (new_count + 1) * sizeof(*merged));
+	plugin->commands = merged;
+}
+
 void general_help(struct plugin *plugin, char *str)
 {
 	struct program *prog = plugin->parent;
@@ -112,13 +145,35 @@ void general_help(struct plugin *plugin, char *str)
 			have_deprecated = true;
 	}
 
-	i = 0;
-	for (; plugin->commands[i]; i++) {
-		if (plugin->commands[i]->deprecated)
-			continue;
-		if (!str || strstr(plugin->commands[i]->name, str))
-			printf("  %-*s %s\n", padding, plugin->commands[i]->name,
-			       plugin->commands[i]->help);
+	if (plugin->groups) {
+		struct command_group *group;
+
+		for (group = plugin->groups; group; group = group->next) {
+			bool header_printed = false;
+
+			for (i = 0; group->commands[i]; i++) {
+				struct command *command = group->commands[i];
+
+				if (command->deprecated)
+					continue;
+				if (str && !strstr(command->name, str))
+					continue;
+				if (!header_printed && group->title) {
+					printf("\n\033[1m%s:\033[0m\n", group->title);
+					header_printed = true;
+				}
+				printf("  %-*s %s\n", padding, command->name, command->help);
+			}
+		}
+	} else {
+		/* Not yet migrated to plugin_add_group(): flat listing. */
+		for (i = 0; plugin->commands[i]; i++) {
+			if (plugin->commands[i]->deprecated)
+				continue;
+			if (!str || strstr(plugin->commands[i]->name, str))
+				printf("  %-*s %s\n", padding, plugin->commands[i]->name,
+				       plugin->commands[i]->help);
+		}
 	}
 
 	if (!str || strstr("version", str))

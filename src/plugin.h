@@ -16,11 +16,18 @@ struct program {
 	struct plugin *extensions;
 };
 
+struct command_group {
+	const char *title;		/* NULL => no heading in --help output */
+	struct command **commands;	/* NULL-terminated, same shape as plugin->commands */
+	struct command_group *next;
+};
+
 struct plugin {
 	const char *name;
 	const char *desc;
 	const char *version;
 	struct command **commands;
+	struct command_group *groups;
 	struct program *parent;
 	struct plugin *next;
 	struct plugin *tail;
@@ -35,10 +42,28 @@ struct command {
 	bool deprecated;
 };
 
+/*
+ * The flat, no-namespace top-level plugin ("nvme <command>", as opposed to
+ * "nvme <plugin> <command>"), defined in nvme.c. Built-in command group
+ * files attach to it directly with plugin_add_group() rather than going
+ * through register_extension(), since it's already the root of the
+ * extensions list.
+ */
+extern struct plugin builtin;
+
 void general_help(struct plugin *plugin, char *str);
 int handle_plugin(int argc, char **argv, struct plugin *plugin);
 
 void register_extension(struct plugin *plugin);
+
+/*
+ * Attach one file's worth of commands to a plugin (built-in or named).
+ * commands must be a NULL-terminated array with static storage duration
+ * (it is not copied). title is shown as a heading in --help output when
+ * non-NULL; pass NULL for plugins that don't want sub-grouping.
+ */
+void plugin_add_group(struct plugin *plugin, const char *title,
+		      struct command **commands);
 
 int __id_ctrl(int argc, char **argv, struct command *acmd,
 	struct plugin *plugin, void (*vs)(uint8_t *vs, struct json_object *root));

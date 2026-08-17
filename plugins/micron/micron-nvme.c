@@ -44,8 +44,6 @@
 #include <shared/uint128-util.h>
 #include "field-parser.h"
 
-#define CREATE_CMD
-#include "micron-nvme.h"
 #include "micron-utils.h"
 
 /* Supported Vendor specific feature ids */
@@ -4360,4 +4358,202 @@ static int micron_id_ctrl(int argc, char **argv, struct command *acmd,
 	nvme_show_id_ctrl(ctx, hdl, &ctrl, flags, micron_id_ctrl_vs);
 
 	return 0;
+}
+
+static struct command select_download_cmd = {
+	.name = "select-download",
+	.help = "Selective Firmware Download",
+	.fn = micron_selective_download,
+};
+
+static struct command vs_temperature_stats_cmd = {
+	.name = "vs-temperature-stats",
+	.help = "Retrieve Micron temperature statistics ",
+	.fn = micron_temp_stats,
+};
+
+static struct command vs_pcie_stats_cmd = {
+	.name = "vs-pcie-stats",
+	.help = "Retrieve Micron PCIe error stats",
+	.fn = micron_pcie_stats,
+};
+
+static struct command clear_pcie_correctable_errors_cmd = {
+	.name = "clear-pcie-correctable-errors",
+	.help = "Clear correctable PCIe errors",
+	.fn = micron_clear_pcie_correctable_errors,
+};
+
+static struct command vs_internal_log_cmd = {
+	.name = "vs-internal-log",
+	.help = "Retrieve Micron logs",
+	.fn = micron_internal_logs,
+};
+
+static struct command vs_telemetry_controller_option_cmd = {
+	.name = "vs-telemetry-controller-option",
+	.help = "Enable/Disable controller telemetry log generation",
+	.fn = micron_telemetry_cntrl_option,
+};
+
+static struct command vs_nand_stats_cmd = {
+	.name = "vs-nand-stats",
+	.help = "Retrieve NAND Stats",
+	.fn = micron_nand_stats,
+};
+
+static struct command vs_smart_ext_log_cmd = {
+	.name = "vs-smart-ext-log",
+	.help = "Retrieve extended SMART logs",
+	.fn = micron_smart_ext_log,
+};
+
+static struct command vs_drive_info_cmd = {
+	.name = "vs-drive-info",
+	.help = "Retrieve Drive information",
+	.fn = micron_drive_info,
+};
+
+static struct command plugin_version_cmd = {
+	.name = "plugin-version",
+	.help = "Display plugin version info",
+	.fn = micron_plugin_version,
+};
+
+static struct command cloud_ssd_plugin_version_cmd = {
+	.name = "cloud-SSD-plugin-version",
+	.help = "Display plugin version info",
+	.fn = micron_cloud_ssd_plugin_version,
+};
+
+static struct command log_page_directory_cmd = {
+	.name = "log-page-directory",
+	.help = "Retrieve log page directory",
+	.fn = micron_logpage_dir,
+};
+
+static struct command vs_fw_activate_history_cmd = {
+	.name = "vs-fw-activate-history",
+	.help = "Display FW activation history",
+	.fn = micron_fw_activation_history,
+};
+
+static struct command latency_tracking_cmd = {
+	.name = "latency-tracking",
+	.help = "Latency monitoring feature control",
+	.fn = micron_latency_stats_track,
+};
+
+static struct command latency_stats_cmd = {
+	.name = "latency-stats",
+	.help = "Latency information for tracked commands",
+	.fn = micron_latency_stats_info,
+};
+
+static struct command latency_logs_cmd = {
+	.name = "latency-logs",
+	.help = "Latency log details tracked by drive",
+	.fn = micron_latency_stats_logs,
+};
+
+static struct command vs_smart_add_log_cmd = {
+	.name = "vs-smart-add-log",
+	.help = "Retrieve extended SMART data",
+	.fn = micron_ocp_smart_health_logs,
+};
+
+static struct command clear_fw_activate_history_cmd = {
+	.name = "clear-fw-activate-history",
+	.help = "Clear FW activation history",
+	.fn = micron_clr_fw_activation_history,
+};
+
+static struct command vs_smbus_option_cmd = {
+	.name = "vs-smbus-option",
+	.help = "Enable/Disable SMBUS on the drive",
+	.fn = micron_smbus_option,
+};
+
+static struct command cloud_boot_ssd_version_cmd = {
+	.name = "cloud-boot-SSD-version",
+	.help = "Prints HyperScale Boot Version",
+	.fn = micron_cloud_boot_SSD_version,
+};
+
+static struct command vs_device_waf_cmd = {
+	.name = "vs-device-waf",
+	.help = "Reports SLC and TLC WAF ratio",
+	.fn = micron_device_waf,
+};
+
+static struct command vs_cloud_log_cmd = {
+	.name = "vs-cloud-log",
+	.help = "Retrieve Extended Health Information of Hyperscale NVMe Boot SSD",
+	.fn = micron_cloud_log,
+};
+
+static struct command vs_work_load_log_cmd = {
+	.name = "vs-work-load-log",
+	.help = "Retrieve Workload logs",
+	.fn = micron_work_load_log,
+};
+
+static struct command vs_vendor_telemetry_log_cmd = {
+	.name = "vs-vendor-telemetry-log",
+	.help = "Retrieve Vendor Telemetry logs",
+	.fn = micron_vendor_telemetry_log,
+};
+
+static struct command smart_log_cmd = {
+	.name = "smart-log",
+	.help = "Retrieve SMART/Health Log",
+	.fn = micron_health_info,
+};
+
+static struct command id_ctrl_cmd = {
+	.name = "id-ctrl",
+	.help = "Identify Controller",
+	.fn = micron_id_ctrl,
+};
+
+static struct command *commands[] = {
+	&select_download_cmd,
+	&vs_temperature_stats_cmd,
+	&vs_pcie_stats_cmd,
+	&clear_pcie_correctable_errors_cmd,
+	&vs_internal_log_cmd,
+	&vs_telemetry_controller_option_cmd,
+	&vs_nand_stats_cmd,
+	&vs_smart_ext_log_cmd,
+	&vs_drive_info_cmd,
+	&plugin_version_cmd,
+	&cloud_ssd_plugin_version_cmd,
+	&log_page_directory_cmd,
+	&vs_fw_activate_history_cmd,
+	&latency_tracking_cmd,
+	&latency_stats_cmd,
+	&latency_logs_cmd,
+	&vs_smart_add_log_cmd,
+	&clear_fw_activate_history_cmd,
+	&vs_smbus_option_cmd,
+	&cloud_boot_ssd_version_cmd,
+	&vs_device_waf_cmd,
+	&vs_cloud_log_cmd,
+	&vs_work_load_log_cmd,
+	&vs_vendor_telemetry_log_cmd,
+	&smart_log_cmd,
+	&id_ctrl_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "micron",
+	.desc = "Micron vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

@@ -23,9 +23,6 @@
 #include "nvme-print.h"
 #include "src/cleanup.h"
 
-#define CREATE_CMD
-#include "exclusion-nvme.h"
-
 /*
  * Mutating exclusion commands write the root-owned exclusion lists under
  * /etc/nvme.  Fail early with a clear message rather than letting the write
@@ -613,4 +610,63 @@ re_edit:
 
 	unlink(tmp_path);
 	return 0;
+}
+
+static struct command excl_create_cmd = {
+	.name = "create",
+	.help = "Create an exclusion list",
+	.fn = excl_create,
+};
+
+static struct command excl_delete_cmd = {
+	.name = "delete",
+	.help = "Delete an exclusion list",
+	.fn = excl_delete,
+};
+
+static struct command excl_edit_cmd = {
+	.name = "edit",
+	.help = "Edit an exclusion list interactively",
+	.fn = excl_edit,
+};
+
+static struct command excl_list_cmd = {
+	.name = "list",
+	.help = "List exclusion lists or entries",
+	.fn = excl_list,
+};
+
+static struct command excl_add_cmd = {
+	.name = "add",
+	.help = "Add an entry to an exclusion list",
+	.fn = excl_add,
+};
+
+static struct command excl_remove_cmd = {
+	.name = "remove",
+	.help = "Remove an entry from an exclusion list",
+	.fn = excl_remove,
+};
+
+static struct command *commands[] = {
+	&excl_create_cmd,
+	&excl_delete_cmd,
+	&excl_edit_cmd,
+	&excl_list_cmd,
+	&excl_add_cmd,
+	&excl_remove_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "exclusion",
+	.desc = "NVMeoF system-wide exclusion list",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

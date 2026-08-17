@@ -10,9 +10,6 @@
 #include "fabrics.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "config-nvme.h"
-
 static int config_validate_cmd(int argc, char **argv, struct command *cmd,
 		struct plugin *plugin)
 {
@@ -51,4 +48,56 @@ static int config_create_cmd(int argc, char **argv, struct command *cmd,
 	const char *desc = "Create an NVMeoF connection entry in the INI configuration";
 
 	return nvme_config_create(desc, argc, argv);
+}
+
+static struct command config_validate_cmd_cmd = {
+	.name = "validate",
+	.help = "Validate an NVMeoF connection configuration",
+	.fn = config_validate_cmd,
+};
+
+static struct command config_show_cmd_cmd = {
+	.name = "show",
+	.help = "Show the resolved NVMeoF connection configuration",
+	.fn = config_show_cmd,
+};
+
+static struct command config_status_cmd_cmd = {
+	.name = "status",
+	.help = "Report config status",
+	.fn = config_status_cmd,
+};
+
+static struct command config_convert_cmd_cmd = {
+	.name = "convert",
+	.help = "Convert config.json/discovery.conf to INI",
+	.fn = config_convert_cmd,
+};
+
+static struct command config_create_cmd_cmd = {
+	.name = "create",
+	.help = "Create an NVMeoF connection entry in the INI configuration",
+	.fn = config_create_cmd,
+};
+
+static struct command *commands[] = {
+	&config_validate_cmd_cmd,
+	&config_show_cmd_cmd,
+	&config_status_cmd_cmd,
+	&config_convert_cmd_cmd,
+	&config_create_cmd_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "config",
+	.desc = "NVMeoF connection configuration",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

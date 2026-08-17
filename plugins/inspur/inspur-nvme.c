@@ -20,8 +20,6 @@
 #include "global-ctx.h"
 #include "plugin.h"
 
-#define CREATE_CMD
-#include "inspur-nvme.h"
 #include "inspur-utils.h"
 
 void show_r1_vendor_log(r1_cli_vendor_log_t *vendorlog)
@@ -232,4 +230,27 @@ static int nvme_get_vendor_log(int argc, char **argv, struct command *acmd, stru
 	}
 
 	return err;
+}
+
+static struct command nvme_get_vendor_log_cmd = {
+	.name = "nvme-vendor-log",
+	.help = "Retrieve Inspur Vendor Log, show it",
+	.fn = nvme_get_vendor_log,
+};
+
+static struct command *commands[] = {
+	&nvme_get_vendor_log_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "inspur",
+	.desc = "Inspur vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

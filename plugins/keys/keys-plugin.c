@@ -22,9 +22,6 @@
 #include "cleanup.h"
 #include "global-ctx.h"
 
-#define CREATE_CMD
-#include "keys-plugin.h"
-
 static int read_key_value(const char *inline_value, char **out)
 {
 	char line[512];
@@ -1069,4 +1066,77 @@ static int key_revoke(int argc, char **argv, struct command *acmd, struct plugin
 	nvme_show_verbose_info("revoking key");
 
 	return 0;
+}
+
+static struct command gen_kxchap_cmd = {
+	.name = "gen-kxchap-secret",
+	.help = "Generate NVMeoF KX-HMAC-CHAP host secret",
+	.fn = gen_kxchap,
+};
+
+static struct command check_kxchap_cmd = {
+	.name = "check-kxchap-secret",
+	.help = "Validate NVMeoF KX-HMAC-CHAP host secret format or check if loaded",
+	.fn = check_kxchap,
+};
+
+static struct command gen_tls_cmd = {
+	.name = "gen-tls",
+	.help = "Generate NVMeoF TLS PSK",
+	.fn = gen_tls,
+};
+
+static struct command check_tls_cmd = {
+	.name = "check-tls",
+	.help = "Validate NVMeoF TLS PSK format or check if loaded",
+	.fn = check_tls,
+};
+
+static struct command insert_tls_cmd = {
+	.name = "insert-tls",
+	.help = "Insert NVMeoF TLS PSK into a keyring",
+	.fn = insert_tls,
+};
+
+static struct command key_import_cmd = {
+	.name = "import",
+	.help = "Import NVMeoF TLS PSKs and KX-HMAC-CHAP secrets into a keyring",
+	.fn = key_import,
+};
+
+static struct command key_export_cmd = {
+	.name = "export",
+	.help = "Export NVMeoF TLS PSKs from a keyring",
+	.fn = key_export,
+};
+
+static struct command key_revoke_cmd = {
+	.name = "revoke",
+	.help = "Revoke an NVMeoF TLS PSK from a keyring",
+	.fn = key_revoke,
+};
+
+static struct command *commands[] = {
+	&gen_kxchap_cmd,
+	&check_kxchap_cmd,
+	&gen_tls_cmd,
+	&check_tls_cmd,
+	&insert_tls_cmd,
+	&key_import_cmd,
+	&key_export_cmd,
+	&key_revoke_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "keys",
+	.desc = "Manage NVMeoF KX-HMAC-CHAP and TLS keys",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

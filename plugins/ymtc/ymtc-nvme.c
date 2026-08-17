@@ -30,8 +30,6 @@
 #include <shared/int-util.h>
 
 
-#define CREATE_CMD
-#include "ymtc-nvme.h"
 #include "ymtc-utils.h"
 
  /* sysfs paths for vendor ID and device ID */
@@ -443,4 +441,27 @@ static int get_additional_smart_log(int argc, char **argv, struct command *acmd,
 		nvme_show_status(err);
 
 	return err;
+}
+
+static struct command get_additional_smart_log_cmd = {
+	.name = "smart-log-add",
+	.help = "Retrieve YMTC SMART Log, show it",
+	.fn = get_additional_smart_log,
+};
+
+static struct command *commands[] = {
+	&get_additional_smart_log_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "ymtc",
+	.desc = "YMTC vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

@@ -19,9 +19,6 @@
 #include "nvme-print.h"
 #include "src/cleanup.h"
 
-#define CREATE_CMD
-#include "registry-nvme.h"
-
 static void strip_dev_prefix(char **device)
 {
 	if (!strncmp(*device, "/dev/", 5))
@@ -251,4 +248,49 @@ static int registry_delete(int argc, char **argv, struct command *acmd,
 	if (ret)
 		nvme_show_error("%s: %s", device, libnvme_strerror(-ret));
 	return ret;
+}
+
+static struct command registry_list_cmd = {
+	.name = "list",
+	.help = "List live registry entries",
+	.fn = registry_list,
+};
+
+static struct command registry_retrieve_cmd = {
+	.name = "retrieve",
+	.help = "Read an attribute from a controller's entry",
+	.fn = registry_retrieve,
+};
+
+static struct command registry_update_cmd = {
+	.name = "update",
+	.help = "Write an attribute to a controller's entry",
+	.fn = registry_update,
+};
+
+static struct command registry_delete_cmd = {
+	.name = "delete",
+	.help = "Remove a controller's registry entry",
+	.fn = registry_delete,
+};
+
+static struct command *commands[] = {
+	&registry_list_cmd,
+	&registry_retrieve_cmd,
+	&registry_update_cmd,
+	&registry_delete_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "registry",
+	.desc = "NVMeoF controller ownership registry",
+	.version = NVME_VERSION,
+	.core = true,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

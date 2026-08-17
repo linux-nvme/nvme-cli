@@ -39,8 +39,6 @@
 #include "cleanup.h"
 #include "global-ctx.h"
 
-#define CREATE_CMD
-
 /* Read data from given file into buffer and return its length */
 static int read_file(const char *file, unsigned char **data, unsigned int *len)
 {

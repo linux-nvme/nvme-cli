@@ -15,9 +15,6 @@
 #include "typedef.h"
 #include "src/cleanup.h"
 
-#define CREATE_CMD
-#include "innogrit-nvme.h"
-
 static int nvme_vucmd(struct libnvme_transport_handle *hdl, unsigned char opcode,
 		      unsigned int cdw12, unsigned int cdw13,
 		      unsigned int cdw14, unsigned int cdw15, char *data,
@@ -379,4 +376,34 @@ static int innogrit_vsc_getcdump(int argc, char **argv, struct command *acmd,
 	if (fp != NULL)
 		fclose(fp);
 	return ret;
+}
+
+static struct command innogrit_geteventlog_cmd = {
+	.name = "get-eventlog",
+	.help = "get event log",
+	.fn = innogrit_geteventlog,
+};
+
+static struct command innogrit_vsc_getcdump_cmd = {
+	.name = "get-cdump",
+	.help = "get cdump data",
+	.fn = innogrit_vsc_getcdump,
+};
+
+static struct command *commands[] = {
+	&innogrit_geteventlog_cmd,
+	&innogrit_vsc_getcdump_cmd,
+	NULL,
+};
+
+static struct plugin plugin = {
+	.name = "innogrit",
+	.desc = "innogrit vendor specific extensions",
+	.version = NVME_VERSION,
+};
+
+static void __attribute__((constructor)) register_plugin(void)
+{
+	plugin_add_group(&plugin, NULL, commands);
+	register_extension(&plugin);
 }

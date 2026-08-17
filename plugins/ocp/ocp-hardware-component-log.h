@@ -8,7 +8,6 @@
 
 #include <shared/compiler-attributes-util.h>
 
-#include "cmd.h"
 #include "ocp-nvme.h"
 
 #define HWCOMP_RSVD2_LEN 14
