@@ -1283,47 +1283,47 @@ static int vs_pcie_error_log(int argc, char **argv, struct command *acmd, struct
 /***************************************
  * FW Activation History log
  ***************************************/
-static void print_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActivHis)
+static void print_stx_vs_fw_activate_history(const stx_fw_activ_history_log_page *fwActivHis)
 {
 	__u32 i;
 	char prev_fw[9] = {0};
 	char new_fw[9] = {0};
 	char buf[80];
 
-	if (fwActivHis.numValidFwActHisEnt > 0) {
+	if (fwActivHis->numValidFwActHisEnt > 0) {
 		printf("\n\nSeagate FW Activation History :\n");
 		printf("%-9s %-21s %-7s %-13s %-9s %-5s %-15s %-9s\n", "Counter ", "      Timestamp ", " PCC ", "Previous FW ", "New FW ", "Slot", "Commit Action", "Result");
 
-		for (i = 0; i < fwActivHis.numValidFwActHisEnt; i++) {
+		for (i = 0; i < fwActivHis->numValidFwActHisEnt; i++) {
 
-			printf("   %-4d   ", fwActivHis.fwActHisEnt[i].fwActivCnt);
+			printf("   %-4d   ", fwActivHis->fwActHisEnt[i].fwActivCnt);
 
-			time_t t = fwActivHis.fwActHisEnt[i].timeStamp / 1000;
+			time_t t = fwActivHis->fwActHisEnt[i].timeStamp / 1000;
 			struct tm  ts = *localtime(&t);
 
 			strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
 			printf(" %-20s   ", buf);
 			printf("%-5" PRId64 "   ",
-			       (uint64_t)fwActivHis.fwActHisEnt[i].powCycleCnt);
+			       (uint64_t)fwActivHis->fwActHisEnt[i].powCycleCnt);
 
 			memset(prev_fw, 0, sizeof(prev_fw));
-			memcpy(prev_fw, fwActivHis.fwActHisEnt[i].previousFW, sizeof(fwActivHis.fwActHisEnt[i].previousFW));
+			memcpy(prev_fw, fwActivHis->fwActHisEnt[i].previousFW, sizeof(fwActivHis->fwActHisEnt[i].previousFW));
 			printf("%-8s   ", prev_fw);
 
 			memset(new_fw, 0, sizeof(new_fw));
-			memcpy(new_fw, fwActivHis.fwActHisEnt[i].newFW, sizeof(fwActivHis.fwActHisEnt[i].newFW));
+			memcpy(new_fw, fwActivHis->fwActHisEnt[i].newFW, sizeof(fwActivHis->fwActHisEnt[i].newFW));
 			printf("%-8s  ", new_fw);
 
-			printf("  %-2d  ", fwActivHis.fwActHisEnt[i].slotNum);
-			printf("      0x%02x      ", fwActivHis.fwActHisEnt[i].commitActionType);
-			printf("  0x%02x\n", fwActivHis.fwActHisEnt[i].result);
+			printf("  %-2d  ", fwActivHis->fwActHisEnt[i].slotNum);
+			printf("      0x%02x      ", fwActivHis->fwActHisEnt[i].commitActionType);
+			printf("  0x%02x\n", fwActivHis->fwActHisEnt[i].result);
 		}
 	} else {
 		printf("%s\n", "Do not have valid FW Activation History");
 	}
 }
 
-static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActivHis)
+static void json_stx_vs_fw_activate_history(const stx_fw_activ_history_log_page *fwActivHis)
 {
 	struct json_object *root = json_create_object();
 	__u32 i;
@@ -1334,31 +1334,31 @@ static void json_stx_vs_fw_activate_history(stx_fw_activ_history_log_page fwActi
 
 	json_object_add_value_array(root, "Seagate FW Activation History", historyLogPage);
 
-	if (fwActivHis.numValidFwActHisEnt > 0) {
-		for (i = 0; i < fwActivHis.numValidFwActHisEnt; i++) {
+	if (fwActivHis->numValidFwActHisEnt > 0) {
+		for (i = 0; i < fwActivHis->numValidFwActHisEnt; i++) {
 			struct json_object *lbaf = json_create_object();
 			char prev_fw[8] = { 0 };
 			char new_fw[8] = { 0 };
 
-			json_object_add_value_int(lbaf, "Counter", fwActivHis.fwActHisEnt[i].fwActivCnt);
+			json_object_add_value_int(lbaf, "Counter", fwActivHis->fwActHisEnt[i].fwActivCnt);
 
-			time_t t = fwActivHis.fwActHisEnt[i].timeStamp / 1000;
+			time_t t = fwActivHis->fwActHisEnt[i].timeStamp / 1000;
 			struct tm  ts = *localtime(&t);
 
 			strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
 			printf(" %-20s   ", buf);
 			json_object_add_value_string(lbaf, "Timestamp", buf);
 
-			json_object_add_value_int(lbaf, "PCC", fwActivHis.fwActHisEnt[i].powCycleCnt);
-			sprintf(prev_fw, "%s", fwActivHis.fwActHisEnt[i].previousFW);
+			json_object_add_value_int(lbaf, "PCC", fwActivHis->fwActHisEnt[i].powCycleCnt);
+			sprintf(prev_fw, "%s", fwActivHis->fwActHisEnt[i].previousFW);
 			json_object_add_value_string(lbaf, "Previous_FW", prev_fw);
 
-			sprintf(new_fw, "%s", fwActivHis.fwActHisEnt[i].newFW);
+			sprintf(new_fw, "%s", fwActivHis->fwActHisEnt[i].newFW);
 			json_object_add_value_string(lbaf, "New_FW", new_fw);
 
-			json_object_add_value_int(lbaf, "Slot", fwActivHis.fwActHisEnt[i].slotNum);
-			json_object_add_value_int(lbaf, "Commit_Action", fwActivHis.fwActHisEnt[i].commitActionType);
-			json_object_add_value_int(lbaf, "Result", fwActivHis.fwActHisEnt[i].result);
+			json_object_add_value_int(lbaf, "Slot", fwActivHis->fwActHisEnt[i].slotNum);
+			json_object_add_value_int(lbaf, "Commit_Action", fwActivHis->fwActHisEnt[i].commitActionType);
+			json_object_add_value_int(lbaf, "Result", fwActivHis->fwActHisEnt[i].result);
 
 			json_array_add_value_object(historyLogPage, lbaf);
 		}
@@ -1401,9 +1401,9 @@ static int stx_vs_fw_activate_history(int argc, char **argv, struct command *acm
 	err = nvme_get_log_simple(hdl, 0xC2, &fwActivHis, sizeof(fwActivHis));
 	if (!err) {
 		if (!(flags & JSON))
-			print_stx_vs_fw_activate_history(fwActivHis);
+			print_stx_vs_fw_activate_history(&fwActivHis);
 		else
-			json_stx_vs_fw_activate_history(fwActivHis);
+			json_stx_vs_fw_activate_history(&fwActivHis);
 	} else if (err > 0) {
 		nvme_show_status(err);
 	}
