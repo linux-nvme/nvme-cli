@@ -270,49 +270,49 @@ int libnvme_ctrl_get_phy_slot(
 		const char *dflt);
 
 /**
- * libnvme_ctrl_set_dhchap_host_key() - Set dhchap_host_key.
+ * libnvme_ctrl_set_kxchap_host_key() - Set kxchap_host_key.
  * @p: The &struct libnvme_ctrl instance to update.
- * @dhchap_host_key: New string; a copy is stored. Pass NULL to clear.
+ * @kxchap_host_key: New string; a copy is stored. Pass NULL to clear.
  */
-void libnvme_ctrl_set_dhchap_host_key(
+void libnvme_ctrl_set_kxchap_host_key(
 		struct libnvme_ctrl *p,
-		const char *dhchap_host_key);
+		const char *kxchap_host_key);
 
 /**
- * libnvme_ctrl_get_dhchap_host_key() - Get dhchap_host_key.
+ * libnvme_ctrl_get_kxchap_host_key() - Get kxchap_host_key.
  * @p: The &struct libnvme_ctrl instance to query.
- * @dhchap_host_key: Where to store the value on success.
- * @dflt: Value to store in @dhchap_host_key on failure.
+ * @kxchap_host_key: Where to store the value on success.
+ * @dflt: Value to store in @kxchap_host_key on failure.
  *
  * Return: 0 on success, -ENOENT if the attribute does not
  *	   exist, or a negative errno on failure.
  */
-int libnvme_ctrl_get_dhchap_host_key(
+int libnvme_ctrl_get_kxchap_host_key(
 		const struct libnvme_ctrl *p,
-		const char **dhchap_host_key,
+		const char **kxchap_host_key,
 		const char *dflt);
 
 /**
- * libnvme_ctrl_set_dhchap_ctrl_key() - Set dhchap_ctrl_key.
+ * libnvme_ctrl_set_kxchap_ctrl_key() - Set kxchap_ctrl_key.
  * @p: The &struct libnvme_ctrl instance to update.
- * @dhchap_ctrl_key: New string; a copy is stored. Pass NULL to clear.
+ * @kxchap_ctrl_key: New string; a copy is stored. Pass NULL to clear.
  */
-void libnvme_ctrl_set_dhchap_ctrl_key(
+void libnvme_ctrl_set_kxchap_ctrl_key(
 		struct libnvme_ctrl *p,
-		const char *dhchap_ctrl_key);
+		const char *kxchap_ctrl_key);
 
 /**
- * libnvme_ctrl_get_dhchap_ctrl_key() - Get dhchap_ctrl_key.
+ * libnvme_ctrl_get_kxchap_ctrl_key() - Get kxchap_ctrl_key.
  * @p: The &struct libnvme_ctrl instance to query.
- * @dhchap_ctrl_key: Where to store the value on success.
- * @dflt: Value to store in @dhchap_ctrl_key on failure.
+ * @kxchap_ctrl_key: Where to store the value on success.
+ * @dflt: Value to store in @kxchap_ctrl_key on failure.
  *
  * Return: 0 on success, -ENOENT if the attribute does not
  *	   exist, or a negative errno on failure.
  */
-int libnvme_ctrl_get_dhchap_ctrl_key(
+int libnvme_ctrl_get_kxchap_ctrl_key(
 		const struct libnvme_ctrl *p,
-		const char **dhchap_ctrl_key,
+		const char **kxchap_ctrl_key,
 		const char *dflt);
 
 /**

@@ -31,8 +31,8 @@ int libnvmf_ctrl_load_fabrics_attrs(struct libnvme_ctrl *c)
 		host_key = NULL;
 	}
 	if (host_key) {
-		ATTR_FREE(c->attrs->dhchap_host_key);
-		c->attrs->dhchap_host_key = host_key;
+		ATTR_FREE(c->attrs->kxchap_host_key);
+		c->attrs->kxchap_host_key = host_key;
 	}
 
 	ctrl_key = libnvme_get_ctrl_attr(c, "dhchap_ctrl_secret");
@@ -41,8 +41,8 @@ int libnvmf_ctrl_load_fabrics_attrs(struct libnvme_ctrl *c)
 		ctrl_key = NULL;
 	}
 	if (ctrl_key) {
-		ATTR_FREE(c->attrs->dhchap_ctrl_key);
-		c->attrs->dhchap_ctrl_key = ctrl_key;
+		ATTR_FREE(c->attrs->kxchap_ctrl_key);
+		c->attrs->kxchap_ctrl_key = ctrl_key;
 	}
 
 	/*

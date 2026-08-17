@@ -25,8 +25,8 @@
 %rename(libnvme_ctrl_cntrltype_set) libnvme_ctrl_set_cntrltype;
 %rename(libnvme_ctrl_cntlid_set) libnvme_ctrl_set_cntlid;
 %rename(libnvme_ctrl_dctype_set) libnvme_ctrl_set_dctype;
-%rename(libnvme_ctrl_dhchap_host_key_set) libnvme_ctrl_set_dhchap_host_key;
-%rename(libnvme_ctrl_dhchap_ctrl_key_set) libnvme_ctrl_set_dhchap_ctrl_key;
+%rename(libnvme_ctrl_kxchap_host_key_set) libnvme_ctrl_set_kxchap_host_key;
+%rename(libnvme_ctrl_kxchap_ctrl_key_set) libnvme_ctrl_set_kxchap_ctrl_key;
 %rename(libnvme_ctrl_keyring_set) libnvme_ctrl_set_keyring;
 %{
 	#define libnvme_ctrl_firmware_set libnvme_ctrl_set_firmware
@@ -35,8 +35,8 @@
 	#define libnvme_ctrl_cntrltype_set libnvme_ctrl_set_cntrltype
 	#define libnvme_ctrl_cntlid_set libnvme_ctrl_set_cntlid
 	#define libnvme_ctrl_dctype_set libnvme_ctrl_set_dctype
-	#define libnvme_ctrl_dhchap_host_key_set libnvme_ctrl_set_dhchap_host_key
-	#define libnvme_ctrl_dhchap_ctrl_key_set libnvme_ctrl_set_dhchap_ctrl_key
+	#define libnvme_ctrl_kxchap_host_key_set libnvme_ctrl_set_kxchap_host_key
+	#define libnvme_ctrl_kxchap_ctrl_key_set libnvme_ctrl_set_kxchap_ctrl_key
 	#define libnvme_ctrl_keyring_set libnvme_ctrl_set_keyring
 	static const char *libnvme_ctrl_numa_node_get(const struct libnvme_ctrl *p)
 	{
@@ -210,10 +210,10 @@
 		raise_nvme(NvmeError, ret);
 		return NULL;
 	}
-	static const char *libnvme_ctrl_dhchap_host_key_get(const struct libnvme_ctrl *p)
+	static const char *libnvme_ctrl_kxchap_host_key_get(const struct libnvme_ctrl *p)
 	{
 		const char *val;
-		int ret = libnvme_ctrl_get_dhchap_host_key(p, &val, NULL);
+		int ret = libnvme_ctrl_get_kxchap_host_key(p, &val, NULL);
 
 		if (ret == 0)
 			return val;
@@ -223,10 +223,10 @@
 		raise_nvme(NvmeError, ret);
 		return NULL;
 	}
-	static const char *libnvme_ctrl_dhchap_ctrl_key_get(const struct libnvme_ctrl *p)
+	static const char *libnvme_ctrl_kxchap_ctrl_key_get(const struct libnvme_ctrl *p)
 	{
 		const char *val;
-		int ret = libnvme_ctrl_get_dhchap_ctrl_key(p, &val, NULL);
+		int ret = libnvme_ctrl_get_kxchap_ctrl_key(p, &val, NULL);
 
 		if (ret == 0)
 			return val;
@@ -303,11 +303,11 @@
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
 }
-%exception libnvme_ctrl::dhchap_host_key {
+%exception libnvme_ctrl::kxchap_host_key {
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
 }
-%exception libnvme_ctrl::dhchap_ctrl_key {
+%exception libnvme_ctrl::kxchap_ctrl_key {
 	$action
 	if (PyErr_Occurred()) SWIG_fail;
 }
@@ -337,8 +337,8 @@
 	const char * dctype;
 	%immutable phy_slot;
 	const char * phy_slot;
-	const char * dhchap_host_key;
-	const char * dhchap_ctrl_key;
+	const char * kxchap_host_key;
+	const char * kxchap_ctrl_key;
 	const char * keyring;
 }
 

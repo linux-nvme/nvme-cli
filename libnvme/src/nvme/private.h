@@ -375,7 +375,7 @@ struct libnvme_host {  // !generate-accessors:read=generated,write=none !generat
 
 	char *hostnqn;
 	char *hostid;
-	char *dhchap_host_key;		// !access:write=generated
+	char *kxchap_host_key;		// !access:write=generated
 	char *hostsymname;		// !access:write=generated
 };
 

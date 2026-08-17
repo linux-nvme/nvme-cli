@@ -27,7 +27,7 @@ class TestCtrlSetattr(unittest.TestCase):
     def test_typo_raises(self):
         """A typo in a property name must raise AttributeError immediately."""
         with self.assertRaises(AttributeError):
-            self.ctrl.dhchap_key = 'somekey'   # correct name is dhchap_ctrl_key
+            self.ctrl.kxchap_key = 'somekey'   # correct name is kxchap_ctrl_key
 
     def test_readonly_raises(self):
         """Writing a read-only (%immutable) property must raise AttributeError."""

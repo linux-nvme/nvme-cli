@@ -118,8 +118,8 @@ CTRL_ATTRS = {
             'reconfigure_reset': True,
             'writable': True,
             'members': [
-                'dhchap_host_key',
-                'dhchap_ctrl_key',
+                'kxchap_host_key',
+                'kxchap_ctrl_key',
                 'keyring',
             ],
         },

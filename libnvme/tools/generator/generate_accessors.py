@@ -1774,7 +1774,7 @@ def emit_src_getter_lazy_loader(f, prefix, sname, type_name, mname,
     """Emit a lazy getter backed by a loader-function call.
 
     The loader may populate several members of the same group in one call
-    (e.g. dhchap_host_key/dhchap_ctrl_key/keyring from one sysfs read
+    (e.g. kxchap_host_key/kxchap_ctrl_key/keyring from one sysfs read
     pass), writing NULL to any it leaves absent. After it returns, a
     member still at NULL means no value exists for it -- stamp the
     NO_ATTR sentinel so the guard doesn't re-fire the loader on

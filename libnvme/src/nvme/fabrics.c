@@ -1331,12 +1331,12 @@ static int build_options(libnvme_host_t h, libnvme_ctrl_t c, char **argstr)
 
 	hostnqn = libnvme_host_get_hostnqn(h);
 	hostid = libnvme_host_get_hostid(h);
-	hostkey = libnvme_host_get_dhchap_host_key(h);
+	hostkey = libnvme_host_get_kxchap_host_key(h);
 	if (!hostkey)
-		libnvme_ctrl_get_dhchap_host_key(c, &hostkey, NULL);
+		libnvme_ctrl_get_kxchap_host_key(c, &hostkey, NULL);
 
 	if (hostkey)
-		libnvme_ctrl_get_dhchap_ctrl_key(c, &ctrlkey, NULL);
+		libnvme_ctrl_get_kxchap_ctrl_key(c, &ctrlkey, NULL);
 
 	if (c->cfg.tls && c->cfg.concat) {
 		libnvme_msg(h->ctx, LIBNVME_LOG_ERR, "cannot specify --tls and --concat together\n");
@@ -1659,12 +1659,12 @@ __shr_public int libnvmf_add_ctrl(libnvme_host_t h, libnvme_ctrl_t c)
 			 * in @cfg, so ensure to update @c with the correct
 			 * controller key.
 			 */
-			if (libnvme_ctrl_get_dhchap_host_key(fc, &key,
+			if (libnvme_ctrl_get_kxchap_host_key(fc, &key,
 							      NULL) == 0)
-				libnvme_ctrl_set_dhchap_host_key(c, key);
-			if (libnvme_ctrl_get_dhchap_ctrl_key(fc, &key,
+				libnvme_ctrl_set_kxchap_host_key(c, key);
+			if (libnvme_ctrl_get_kxchap_ctrl_key(fc, &key,
 							      NULL) == 0)
-				libnvme_ctrl_set_dhchap_ctrl_key(c, key);
+				libnvme_ctrl_set_kxchap_ctrl_key(c, key);
 			if (libnvme_ctrl_get_keyring(fc, &key, NULL) == 0)
 				libnvme_ctrl_set_keyring(c, key);
 			key = libnvme_ctrl_get_tls_key_identity(fc);
@@ -2627,7 +2627,7 @@ static int setup_connection(struct libnvmf_context *fctx, struct libnvme_host *h
 		bool discovery)
 {
 	if (fctx->hostkey)
-		libnvme_host_set_dhchap_host_key(h, fctx->hostkey);
+		libnvme_host_set_kxchap_host_key(h, fctx->hostkey);
 
 	if (!fctx->ctrl_params.trsvcid)
 		fctx->ctrl_params.trsvcid =
@@ -3222,9 +3222,9 @@ static int __create_discovery_ctrl(struct libnvme_global_ctx *ctx,
 	tmo = set_discovery_kato(fctx, params);
 
 	if (libnvme_ctrl_get_unique_discovery_ctrl(c) && fctx->hostkey) {
-		libnvme_ctrl_set_dhchap_host_key(c, fctx->hostkey);
+		libnvme_ctrl_set_kxchap_host_key(c, fctx->hostkey);
 		if (fctx->ctrlkey)
-			libnvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
+			libnvme_ctrl_set_kxchap_ctrl_key(c, fctx->ctrlkey);
 	}
 
 	ret = libnvme_add_ctrl(fctx, h, c);
@@ -4046,9 +4046,9 @@ __shr_public int libnvmf_connect(
 		return err;
 
 	if (fctx->hostkey) {
-		libnvme_ctrl_set_dhchap_host_key(c, fctx->hostkey);
+		libnvme_ctrl_set_kxchap_host_key(c, fctx->hostkey);
 		if (fctx->ctrlkey)
-			libnvme_ctrl_set_dhchap_ctrl_key(c, fctx->ctrlkey);
+			libnvme_ctrl_set_kxchap_ctrl_key(c, fctx->ctrlkey);
 	}
 
 	nvme_parse_tls_args(fctx->keyring, fctx->tls_key,

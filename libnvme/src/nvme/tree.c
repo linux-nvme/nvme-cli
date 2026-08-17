@@ -419,7 +419,7 @@ void __libnvme_free_host(struct libnvme_host *h)
 		__nvme_free_subsystem(s);
 	free(h->hostnqn);
 	free(h->hostid);
-	free(h->dhchap_host_key);
+	free(h->kxchap_host_key);
 	libnvme_host_set_hostsymname(h, NULL);
 	free(h);
 }

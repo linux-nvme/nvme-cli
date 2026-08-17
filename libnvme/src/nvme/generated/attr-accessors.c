@@ -43,8 +43,8 @@ struct libnvme_ctrl_attrs {
 	char *cntlid;
 	char *dctype;
 	char *phy_slot;
-	char *dhchap_host_key;
-	char *dhchap_ctrl_key;
+	char *kxchap_host_key;
+	char *kxchap_ctrl_key;
 	char *keyring;
 };
 
@@ -69,8 +69,8 @@ void libnvme_ctrl_attrs_reset(
 	ATTR_FREE(attrs->cntlid);
 	ATTR_FREE(attrs->dctype);
 	ATTR_FREE(attrs->phy_slot);
-	ATTR_FREE(attrs->dhchap_host_key);
-	ATTR_FREE(attrs->dhchap_ctrl_key);
+	ATTR_FREE(attrs->kxchap_host_key);
+	ATTR_FREE(attrs->kxchap_ctrl_key);
 	ATTR_FREE(attrs->keyring);
 }
 
@@ -435,16 +435,16 @@ __shr_public int libnvme_ctrl_get_phy_slot(
 	return 0;
 }
 
-__shr_public void libnvme_ctrl_set_dhchap_host_key(
+__shr_public void libnvme_ctrl_set_kxchap_host_key(
 		struct libnvme_ctrl *p,
-		const char *dhchap_host_key)
+		const char *kxchap_host_key)
 {
-	ATTR_FREE(p->attrs->dhchap_host_key);
-	p->attrs->dhchap_host_key =
-		dhchap_host_key ? strdup(dhchap_host_key) : NO_ATTR;
+	ATTR_FREE(p->attrs->kxchap_host_key);
+	p->attrs->kxchap_host_key =
+		kxchap_host_key ? strdup(kxchap_host_key) : NO_ATTR;
 }
 
-__shr_public int libnvme_ctrl_get_dhchap_host_key(
+__shr_public int libnvme_ctrl_get_kxchap_host_key(
 		const struct libnvme_ctrl *p,
 		const char **val,
 		const char *dflt)
@@ -454,31 +454,31 @@ __shr_public int libnvme_ctrl_get_dhchap_host_key(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->dhchap_host_key))) {
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->kxchap_host_key))) {
 		ret = libnvmf_ctrl_load_fabrics_attrs(c);
 		if (ret)
 			return ret;
-		if (!c->attrs->dhchap_host_key)
-			c->attrs->dhchap_host_key = NO_ATTR;
+		if (!c->attrs->kxchap_host_key)
+			c->attrs->kxchap_host_key = NO_ATTR;
 	}
 
-	if (ATTR_IS_ABSENT(c->attrs->dhchap_host_key))
+	if (ATTR_IS_ABSENT(c->attrs->kxchap_host_key))
 		return -ENOENT;
 
-	*val = c->attrs->dhchap_host_key;
+	*val = c->attrs->kxchap_host_key;
 	return 0;
 }
 
-__shr_public void libnvme_ctrl_set_dhchap_ctrl_key(
+__shr_public void libnvme_ctrl_set_kxchap_ctrl_key(
 		struct libnvme_ctrl *p,
-		const char *dhchap_ctrl_key)
+		const char *kxchap_ctrl_key)
 {
-	ATTR_FREE(p->attrs->dhchap_ctrl_key);
-	p->attrs->dhchap_ctrl_key =
-		dhchap_ctrl_key ? strdup(dhchap_ctrl_key) : NO_ATTR;
+	ATTR_FREE(p->attrs->kxchap_ctrl_key);
+	p->attrs->kxchap_ctrl_key =
+		kxchap_ctrl_key ? strdup(kxchap_ctrl_key) : NO_ATTR;
 }
 
-__shr_public int libnvme_ctrl_get_dhchap_ctrl_key(
+__shr_public int libnvme_ctrl_get_kxchap_ctrl_key(
 		const struct libnvme_ctrl *p,
 		const char **val,
 		const char *dflt)
@@ -488,18 +488,18 @@ __shr_public int libnvme_ctrl_get_dhchap_ctrl_key(
 
 	*val = dflt;
 
-	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->dhchap_ctrl_key))) {
+	if (__shr_unlikely(!ATTR_IS_LOADED(c->attrs->kxchap_ctrl_key))) {
 		ret = libnvmf_ctrl_load_fabrics_attrs(c);
 		if (ret)
 			return ret;
-		if (!c->attrs->dhchap_ctrl_key)
-			c->attrs->dhchap_ctrl_key = NO_ATTR;
+		if (!c->attrs->kxchap_ctrl_key)
+			c->attrs->kxchap_ctrl_key = NO_ATTR;
 	}
 
-	if (ATTR_IS_ABSENT(c->attrs->dhchap_ctrl_key))
+	if (ATTR_IS_ABSENT(c->attrs->kxchap_ctrl_key))
 		return -ENOENT;
 
-	*val = c->attrs->dhchap_ctrl_key;
+	*val = c->attrs->kxchap_ctrl_key;
 	return 0;
 }
 

@@ -120,12 +120,12 @@ LIBNVME_ACCESSORS_3 {
 		libnvme_get_force_4k;
 		libnvme_get_ioctl_probing;
 		libnvme_get_mi_probe_enabled;
-		libnvme_host_get_dhchap_host_key;
 		libnvme_host_get_hostid;
 		libnvme_host_get_hostnqn;
 		libnvme_host_get_hostsymname;
-		libnvme_host_set_dhchap_host_key;
+		libnvme_host_get_kxchap_host_key;
 		libnvme_host_set_hostsymname;
+		libnvme_host_set_kxchap_host_key;
 		libnvme_ns_get_generic_name;
 		libnvme_ns_get_name;
 		libnvme_ns_get_nsid;

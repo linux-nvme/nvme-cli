@@ -354,8 +354,8 @@ __shr_public int libnvme_scan_ctrl(
 
 	host_key = libnvme_get_attr(path, "dhchap_secret");
 	if (host_key && strcmp(host_key, "none")) {
-		free(h->dhchap_host_key);
-		h->dhchap_host_key = host_key;
+		free(h->kxchap_host_key);
+		h->kxchap_host_key = host_key;
 		host_key = NULL;
 	}
 	free(host_key);

@@ -1523,7 +1523,7 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		"    ctx:         Global context.\n"
 		"    hostnqn:     Host NQN. Defaults to the system-wide value.\n"
 		"    hostid:      Host UUID. Defaults to the system-wide value.\n"
-		"    hostkey:     DH-HMAC-CHAP host key.\n"
+		"    hostkey:     KX-HMAC-CHAP host key.\n"
 		"    hostsymname: Symbolic host name.") libnvme_host;
 	libnvme_host(struct libnvme_global_ctx *ctx,
 		     const char *hostnqn = NULL,
@@ -1545,7 +1545,7 @@ struct libnvme_ns *libnvme_ctrl_next_ns(struct libnvme_ctrl *c, struct libnvme_n
 		if (hostsymname)
 			libnvme_host_set_hostsymname(h, hostsymname);
 		if (hostkey)
-			libnvme_host_set_dhchap_host_key(h, hostkey);
+			libnvme_host_set_kxchap_host_key(h, hostkey);
 
 		return h;
 	}
