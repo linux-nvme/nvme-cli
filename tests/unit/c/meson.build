@@ -24,3 +24,17 @@ test_global_config = executable(
 )
 
 test('nvme-cli - global-config', test_global_config)
+
+test_plugin = executable(
+    'test-plugin',
+    ['test-plugin.c', '../../../src/plugin.c', '../../../src/argconfig.c'],
+    dependencies: [
+        config_dep,
+        ccan_dep,
+        libnvme_dep,
+        shared_dep,
+        json_c_dep,
+    ],
+)
+
+test('nvme-cli - plugin dispatch', test_plugin)
