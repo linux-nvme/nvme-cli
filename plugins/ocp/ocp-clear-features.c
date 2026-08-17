@@ -8,16 +8,15 @@
 
 #include <unistd.h>
 
-#include "nvme-cmds.h"
 #include <libnvme.h>
 
-#include "nvme-print.h"
-#include "plugin.h"
 #include "cleanup.h"
 #include "global-ctx.h"
-
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
+#include "plugin.h"
 
 static int ocp_clear_feature(int argc, char **argv, const char *desc, const __u8 fid)
 {

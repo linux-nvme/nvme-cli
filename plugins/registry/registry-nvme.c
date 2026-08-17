@@ -16,9 +16,9 @@
 
 #include <shared/compiler-attributes-util.h>
 
-#include "plugin.h"
 #include "global-ctx.h"
 #include "nvme-print.h"
+#include "plugin.h"
 #include "src/cleanup.h"
 
 static void strip_dev_prefix(char **device)

@@ -6,6 +6,7 @@
  */
 
 #include <stdio.h>
+
 #include "args.h"
 #include "plugin.h"
 

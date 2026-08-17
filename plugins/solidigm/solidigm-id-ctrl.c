@@ -11,7 +11,6 @@
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-
 #include <shared/compiler-attributes-util.h>
 
 #include "solidigm-id-ctrl.h"

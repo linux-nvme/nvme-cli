@@ -15,7 +15,6 @@
 
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
-
 #include <shared/compiler-attributes-util.h>
 #include <shared/parse-util.h>
 #include <shared/suffix-util.h>

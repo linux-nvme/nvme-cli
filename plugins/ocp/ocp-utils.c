@@ -11,7 +11,6 @@
 #include <ccan/endian/endian.h>
 
 #include "nvme-cmds.h"
-
 #include "ocp-nvme.h"
 #include "ocp-utils.h"
 

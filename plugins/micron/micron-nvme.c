@@ -10,6 +10,7 @@
  */
 
 #include <ctype.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -19,32 +20,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <dirent.h>
-
 #include <libnvme.h>
 
-#include <ccan/endian/endian.h>
 #include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
+#include <shared/uint128-util.h>
 
+#include "field-parser.h"
+#include "global-ctx.h"
+#include "micron-utils.h"
 #include "nvme-cmds.h"
 #include "nvme-pci-ids.h"
 #include "nvme-print.h"
 #include "plugin.h"
-#include "global-ctx.h"
 #include "src/cleanup.h"
-#include <shared/uint128-util.h>
-#include "field-parser.h"
-
-#include "micron-utils.h"
 
 /* Supported Vendor specific feature ids */
 #define MICRON_FEATURE_CLEAR_PCI_CORRECTABLE_ERRORS    0xC3

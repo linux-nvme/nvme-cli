@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include <stdio.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <stdio.h>
 
-#include "nvme-json.h"
 #include "cleanup.h"
+#include "nvme-json.h"
 
 #define STR_LEN 100
 

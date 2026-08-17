@@ -13,16 +13,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <libnvme.h>
 #include <libnvme-mi.h>
+#include <libnvme.h>
 
-#include "global-ctx.h"
-#include "args.h"
+#include <shared/string-util.h>
+
 #include "argconfig.h"
+#include "args.h"
 #include "cleanup.h"
+#include "global-ctx.h"
 #include "logging.h"
 #include "nvme-print.h"
-#include <shared/string-util.h>
 
 static int check_arg_dev(int argc, char **argv)
 {

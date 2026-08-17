@@ -12,7 +12,6 @@
  * unknown keys, malformed values, and a missing file.
  */
 
-#include <shared/assert-util.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -20,10 +19,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <shared/assert-util.h>
 #include <shared/fs-util.h>
 
-#include "../src/global-config.h"
 #include "../src/args.h"
+#include "../src/global-config.h"
 
 struct nvme_args nvme_args = {
 	.output_format = "normal",

@@ -5,39 +5,35 @@
  * Authors: Nate Thornton <n.thornton@samsung.com>
  */
 
+#include <asm/byteorder.h>
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <linux/fs.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
-
-#include <asm/byteorder.h>
-#include <linux/fs.h>
-
 #include <sys/mman.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
 #include <ccan/array_size/array_size.h>
-
 #include <shared/compiler-attributes-util.h>
 
+#include "global-ctx.h"
+#include "lm-print.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "global-ctx.h"
 #include "plugin.h"
 #include "src/cleanup.h"
-
-#include "lm-print.h"
 
 static inline const char * arg_str(const char * const *strings, size_t array_size, size_t idx)
 {

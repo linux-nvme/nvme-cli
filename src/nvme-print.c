@@ -5,23 +5,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-
 #include <sys/stat.h>
+#include <time.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-
 #include <shared/int-util.h>
-#include <shared/temp-util.h>
 #include <shared/mmio-util.h>
+#include <shared/temp-util.h>
 
 #include "cleanup.h"
-#include "nvme-print.h"
-#include "nvme-models.h"
 #include "logging.h"
+#include "nvme-models.h"
+#include "nvme-print.h"
 
 #define nvme_print(name, flags, ...)				\
 	do {							\

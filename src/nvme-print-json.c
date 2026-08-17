@@ -2,29 +2,28 @@
 
 #include <assert.h>
 #include <errno.h>
-#include <time.h>
 #include <sys/types.h>
+#include <time.h>
 
 #ifdef CONFIG_FABRICS
-#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #endif
 
-#include <libnvme.h>
 #include <libnvme-mi.h>
+#include <libnvme.h>
 
-#include <ccan/endian/endian.h>
-#include <ccan/compiler/compiler.h>
 #include <ccan/array_size/array_size.h>
+#include <ccan/compiler/compiler.h>
+#include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-
 #include <shared/mmio-util.h>
 #include <shared/string-util.h>
 
-#include "nvme-print.h"
-#include "nvme-json.h"
-#include "logging.h"
 #include "cleanup.h"
+#include "logging.h"
+#include "nvme-json.h"
+#include "nvme-print.h"
 
 #define ERROR_MSG_LEN 100
 #define NAME_LEN 128

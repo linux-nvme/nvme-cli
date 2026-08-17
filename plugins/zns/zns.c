@@ -1,29 +1,25 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include <fcntl.h>
+#include <asm-generic/errno-base.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <linux/fs.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <inttypes.h>
-
-#include <linux/fs.h>
 #include <sys/stat.h>
-
-#include <asm-generic/errno-base.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
-#include <ccan/endian/endian.h>
-
 #include <ccan/array_size/array_size.h>
-
+#include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
 #include <shared/time-util.h>
 
+#include "global-ctx.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "plugin.h"
-#include "global-ctx.h"
 #include "src/cleanup.h"
 
 static const char *namespace_id = "Namespace identifier to use";

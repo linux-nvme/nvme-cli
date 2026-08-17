@@ -10,9 +10,9 @@
 
 #include "config.h"
 #include "data-area.h"
+#include "nvme-json.h"
 #include "skht.h"
 #include "uart-log.h"
-#include "nvme-json.h"
 
 static bool parse_uart_entry(struct telemetry_log *tl, uint64_t entry_offset_bit,
 			      struct json_object *uart_array)

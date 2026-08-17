@@ -30,24 +30,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-
-#include <sys/stat.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 
-#include "nvme-cmds.h"
-#include "nvme-print.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "plugin.h"
-
 #include "seagate-diag.h"
 
 

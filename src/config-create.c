@@ -12,12 +12,12 @@
 
 #include <shared/compiler-attributes-util.h>
 
-#include "config-create.h"
-#include "fabrics.h"
-#include "nvme-print.h"
 #include "argconfig.h"
 #include "cleanup.h"
+#include "config-create.h"
+#include "fabrics.h"
 #include "global-ctx.h"
+#include "nvme-print.h"
 
 struct reload_ctx {
 	struct libnvmf_config_emitter *emitter;

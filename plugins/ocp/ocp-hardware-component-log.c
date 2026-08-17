@@ -2,24 +2,23 @@
 /*
  * Copyright (c) 2024
  */
-#include <stdio.h>
 #include <errno.h>
+#include <stdio.h>
 
-#include <ccan/endian/endian.h>
-#include <ccan/array_size/array_size.h>
-
-#include <shared/uint128-util.h>
-
-#include "logging.h"
 #include <libnvme.h>
 
-#include "nvme-print.h"
-#include "plugin.h"
+#include <ccan/array_size/array_size.h>
+#include <ccan/endian/endian.h>
+#include <shared/uint128-util.h>
+
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "logging.h"
+#include "nvme-print.h"
 #include "ocp-hardware-component-log.h"
 #include "ocp-print.h"
 #include "ocp-utils.h"
+#include "plugin.h"
 
 //#define HWCOMP_DUMMY
 

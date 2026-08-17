@@ -11,8 +11,8 @@
 
 #include <libnvme.h>
 
-#include "nvme-print.h"
 #include "micron-utils.h"
+#include "nvme-print.h"
 #include "src/cleanup.h"
 
 int micron_run_spawn(char *const argv[], const char *outfile, bool append)

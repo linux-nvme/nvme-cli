@@ -1,27 +1,26 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <locale.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <stddef.h>
-#include <inttypes.h>
-#include <stdbool.h>
 #include <time.h>
-#include <locale.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-
 #include <shared/compiler-attributes-util.h>
+#include <shared/uint128-util.h>
 
-#include "nvme-cmds.h"
-#include "nvme-print.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "plugin.h"
-#include <shared/uint128-util.h>
 
 #define MIN2(a, b) (((a) < (b)) ? (a) : (b))
 

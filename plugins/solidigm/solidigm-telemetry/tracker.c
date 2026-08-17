@@ -4,11 +4,11 @@
  *
  * Author: leonardo.da.cunha@solidigm.com
  */
-#include "telemetry-log.h"
-#include "nvme-json.h"
 #include "config.h"
 #include "data-area.h"
+#include "nvme-json.h"
 #include "skht.h"
+#include "telemetry-log.h"
 
 #define TRACKER_CHUNK_SIZE 4096
 #define MAX_ARGS 31

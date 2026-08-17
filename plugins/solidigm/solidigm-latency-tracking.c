@@ -6,21 +6,20 @@
  */
 
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <inttypes.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
 
-#include "nvme-cmds.h"
-#include "nvme-print.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "plugin.h"
-
 #include "solidigm-util.h"
 
 #define BUCKET_LIST_SIZE_4_0 152

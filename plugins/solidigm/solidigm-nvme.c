@@ -11,22 +11,21 @@
 
 #define SOLIDIGM_PLUGIN_VERSION "1.23"
 
-#include "solidigm-id-ctrl.h"
-#include "solidigm-smart.h"
-#include "solidigm-internal-logs.h"
+#include "plugins/ocp/ocp-clear-features.h"
+#include "plugins/ocp/ocp-fw-activation-history.h"
+#include "plugins/ocp/ocp-smart-extended-log.h"
 #include "solidigm-garbage-collection.h"
+#include "solidigm-get-drive-info.h"
+#include "solidigm-id-ctrl.h"
+#include "solidigm-internal-logs.h"
 #include "solidigm-latency-tracking.h"
-#include "solidigm-telemetry.h"
 #include "solidigm-log-page-dir.h"
 #include "solidigm-market-log.h"
-#include "solidigm-temp-stats.h"
-#include "solidigm-get-drive-info.h"
 #include "solidigm-ocp-version.h"
+#include "solidigm-smart.h"
+#include "solidigm-telemetry.h"
+#include "solidigm-temp-stats.h"
 #include "solidigm-workload-tracker.h"
-
-#include "plugins/ocp/ocp-clear-features.h"
-#include "plugins/ocp/ocp-smart-extended-log.h"
-#include "plugins/ocp/ocp-fw-activation-history.h"
 
 static int id_ctrl(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {

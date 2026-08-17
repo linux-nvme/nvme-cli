@@ -6,11 +6,11 @@
  */
 
 #include <errno.h>
+#include <nvme/types.h>
 #include <stdio.h>
 #include <string.h>
 
 #include <libnvme.h>
-#include <nvme/types.h>
 
 #include "nvme-print.h"
 

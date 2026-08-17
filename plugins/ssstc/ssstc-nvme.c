@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <inttypes.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-
 #include <shared/compiler-attributes-util.h>
 
-#include "nvme-cmds.h"
-#include "nvme-print.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
 #include "plugin.h"
 
 struct  __packed nvme_additional_smart_log_item

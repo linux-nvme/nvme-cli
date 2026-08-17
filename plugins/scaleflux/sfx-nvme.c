@@ -1,40 +1,37 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include <fcntl.h>
+#include <asm/byteorder.h>
+#include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <linux/fs.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <linux/fs.h>
-#include <inttypes.h>
-#include <asm/byteorder.h>
-#include <sys/sysinfo.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <sys/ioctl.h>
-#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/sysinfo.h>
+#include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
-#include <ccan/endian/endian.h>
 #include <ccan/array_size/array_size.h>
-
+#include <ccan/endian/endian.h>
 #include <shared/compiler-attributes-util.h>
-
 #include <shared/int-util.h>
 #include <shared/progress-util.h>
 #include <shared/temp-util.h>
 #include <shared/time-util.h>
 #include <shared/uint128-util.h>
 
+#include "global-ctx.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "global-ctx.h"
 #include "plugin.h"
-#include "src/cleanup.h"
-
 #include "sfx-types.h"
+#include "src/cleanup.h"
 
 #define SFX_PAGE_SHIFT						12
 #define SECTOR_SHIFT						9

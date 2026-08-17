@@ -5,30 +5,28 @@
  *   Author: Jeff Lien <jeff.lien@sandisk.com>
  *           Brandon Paupore <brandon.paupore@sandisk.com>
  */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <inttypes.h>
 #include <errno.h>
-#include <limits.h>
 #include <fcntl.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
 
+#include "global-ctx.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-#include "global-ctx.h"
 #include "plugin.h"
-#include "src/cleanup.h"
-
-#include "sandisk-utils.h"
 #include "plugins/wdc/wdc-nvme-cmds.h"
+#include "sandisk-utils.h"
+#include "src/cleanup.h"
 
 #define SANDISK_PLUGIN_VERSION   "3.1.4"
 

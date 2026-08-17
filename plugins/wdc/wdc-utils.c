@@ -22,14 +22,13 @@
 
 #include <errno.h>
 #include <string.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
 #include "nvme-cmds.h"
 #include "nvme-print.h"
-
 #include "wdc-utils.h"
 
 int wdc_UtilsSnprintf(char *buffer, unsigned int sizeOfBuffer, const char *format, ...)

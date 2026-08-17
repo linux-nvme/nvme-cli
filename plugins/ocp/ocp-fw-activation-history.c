@@ -10,14 +10,14 @@
 
 #include <libnvme.h>
 
-#include "nvme-print.h"
-#include "plugin.h"
 #include "cleanup.h"
 #include "global-ctx.h"
+#include "nvme-print.h"
 #include "ocp-fw-activation-history.h"
 #include "ocp-nvme.h"
 #include "ocp-print.h"
 #include "ocp-utils.h"
+#include "plugin.h"
 
 static const unsigned char ocp_fw_activation_history_guid[GUID_LEN] = {
 	0x6D, 0x79, 0x9a, 0x76,

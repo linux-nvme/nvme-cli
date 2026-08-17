@@ -5,23 +5,22 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <inttypes.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-
 #include <shared/compiler-attributes-util.h>
 
 #include "cleanup.h"
 #include "global-ctx.h"
-#include "plugin.h"
 #include "nvme-print.h"
+#include "plugin.h"
 #include "solidigm-garbage-collection.h"
 #include "solidigm-util.h"
 

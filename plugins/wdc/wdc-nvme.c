@@ -22,13 +22,13 @@
  *           Jeff Lien <jeff.lien@wdc.com>
  *           Brandon Paupore <brandon.paupore@wdc.com>
  */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <inttypes.h>
 #include <errno.h>
-#include <limits.h>
 #include <fcntl.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <libnvme.h>
@@ -36,24 +36,23 @@
 #include <ccan/array_size/array_size.h>
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-
 #include <shared/compiler-attributes-util.h>
 #include <shared/fs-util.h>
-#include <shared/uint128-util.h>
-#include <shared/time-util.h>
 #include <shared/parse-util.h>
+#include <shared/time-util.h>
+#include <shared/uint128-util.h>
 
-#include "nvme-cmds.h"
-#include "nvme-print.h"
 #include "global-ctx.h"
+#include "nvme-cmds.h"
+#include "nvme-pci-ids.h"
+#include "nvme-print.h"
 #include "plugin.h"
 #include "src/cleanup.h"
-#include "nvme-pci-ids.h"
 
 #define WDC_PLUGIN_VERSION   "2.15.1"
 
-#include "wdc-utils.h"
 #include "wdc-nvme-cmds.h"
+#include "wdc-utils.h"
 
 #define WRITE_SIZE	(sizeof(__u8) * 4096)
 

@@ -17,8 +17,8 @@
 #include <sys/mman.h>
 #endif
 
-#include <libnvme.h>
 #include <libnvme-mi.h>
+#include <libnvme.h>
 
 #include <shared/fs-util.h>
 

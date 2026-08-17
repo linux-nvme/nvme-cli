@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <errno.h>
+#include <fnmatch.h>
 #include <inttypes.h>
 #include <stdio.h>
-#include <fnmatch.h>
 
 #include <libnvme.h>
 
 #include <shared/compiler-attributes-util.h>
 
+#include "cleanup.h"
+#include "fabrics.h"
+#include "global-ctx.h"
+#include "logging.h"
 #include "nvme-print.h"
 #include "plugin.h"
-#include "cleanup.h"
-#include "global-ctx.h"
-#include "fabrics.h"
-#include "logging.h"
 
 static const char dash[100] = {[0 ... 98] = '-', [99] = '\0'};
 

@@ -5,8 +5,8 @@
  * Author: leonardo.da.cunha@solidigm.com
  */
 
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,14 +14,12 @@
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
-
 #include <shared/compiler-attributes-util.h>
 
 #include "cleanup.h"
 #include "global-ctx.h"
-#include "plugin.h"
 #include "nvme-print.h"
-
+#include "plugin.h"
 #include "solidigm-smart.h"
 #include "solidigm-util.h"
 

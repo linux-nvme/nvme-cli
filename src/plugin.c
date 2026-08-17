@@ -7,11 +7,12 @@
 
 #include <libnvme.h>
 
-#include "args.h"
-#include "plugin.h"
-#include "argconfig.h"
-#include "cleanup.h"
 #include <shared/wrap-util.h>
+
+#include "argconfig.h"
+#include "args.h"
+#include "cleanup.h"
+#include "plugin.h"
 
 static int version_cmd(struct plugin *plugin)
 {

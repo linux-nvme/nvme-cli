@@ -2,8 +2,8 @@
 
 #include <libnvme.h>
 
-#include "nvme-print.h"
 #include "lm-print.h"
+#include "nvme-print.h"
 
 #define lm_print(name, flags, ...) \
 	do { \

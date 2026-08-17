@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <ccan/endian/endian.h>
-
-#include <shared/uint128-util.h>
-
 #include <libnvme.h>
 
+#include <ccan/endian/endian.h>
+#include <shared/uint128-util.h>
+
 #include "nvme-print.h"
-#include "ocp-print.h"
 #include "ocp-hardware-component-log.h"
+#include "ocp-print.h"
 
 static void binary_hwcomp_log(struct hwcomp_log *log, __u32 id, bool list)
 {

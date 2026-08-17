@@ -6,19 +6,19 @@
  * Hardeep.Dhillon@solidigm.com
  */
 
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <inttypes.h>
 
 #include <libnvme.h>
 
 #include "cleanup.h"
 #include "global-ctx.h"
-#include "plugin.h"
 #include "nvme-print.h"
+#include "plugin.h"
 #include "solidigm-util.h"
 
 #define MARKET_LOG_LID 0xDD

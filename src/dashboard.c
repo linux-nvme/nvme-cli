@@ -15,30 +15,29 @@
  * GNU General Public License for more details.
  */
 
-#include <stdio.h>
-#include <signal.h>
-#include <sys/select.h>
-#include <sys/ioctl.h>
-#include <termios.h>
-#include <unistd.h>
-#include <string.h>
+#include <asm/types.h>
 #include <errno.h>
-#include <stdbool.h>
-#include <time.h>
-#include <stdlib.h>
 #include <fcntl.h>
 #include <linux/netlink.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
 #include <sys/socket.h>
-#include <asm/types.h>
-
-#include <ccan/minmax/minmax.h>
-
-#include <shared/sig-util.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
-#include "nvme-print.h"
+#include <ccan/minmax/minmax.h>
+#include <shared/sig-util.h>
+
 #include "dashboard.h"
+#include "nvme-print.h"
 
 #define NSEC_PER_SEC	1000000000L
 

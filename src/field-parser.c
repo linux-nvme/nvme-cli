@@ -8,7 +8,6 @@
  */
 
 #include <ccan/endian/endian.h>
-
 #include <shared/hex-util.h>
 #include <shared/time-util.h>
 

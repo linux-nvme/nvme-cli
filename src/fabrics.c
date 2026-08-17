@@ -29,37 +29,34 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #ifdef NVME_HAVE_NETDB
-#include <netdb.h>
-
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <sys/socket.h>
+#endif
+
+#ifdef NVME_HAVE_LIBKMOD
+#include <libkmod.h>
 #endif
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
 #include <ccan/str/str.h>
-
 #include <shared/io-util.h>
-
-#ifdef NVME_HAVE_LIBKMOD
-#include <libkmod.h>
-#endif
-
-#include "config-convert.h"
-#include "global-ctx.h"
-#include "nvme-print.h"
-#include "fabrics.h"
-#include "cleanup.h"
-#include "logging.h"
 #include <shared/sig-util.h>
+
+#include "cleanup.h"
+#include "config-convert.h"
+#include "fabrics.h"
+#include "global-ctx.h"
+#include "logging.h"
+#include "nvme-print.h"
 
 #define MAX_DISC_ARGS		32
 #define MAX_DISC_RETRIES	10

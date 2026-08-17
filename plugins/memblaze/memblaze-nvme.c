@@ -1,27 +1,25 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <libnvme.h>
 
 #include <ccan/endian/endian.h>
 #include <ccan/minmax/minmax.h>
-
 #include <shared/compiler-attributes-util.h>
 
-#include "memblaze-smart-log-add-x.h"
-#include "nvme-cmds.h"
-#include "nvme-print.h"
 #include "cleanup.h"
 #include "global-ctx.h"
-#include "plugin.h"
-
+#include "memblaze-smart-log-add-x.h"
 #include "memblaze-utils.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
+#include "plugin.h"
 
 enum {
 	/* feature id */

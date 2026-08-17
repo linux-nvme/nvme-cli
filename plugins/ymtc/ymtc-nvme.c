@@ -14,8 +14,8 @@
  *
  *   Author:  Bin Zhang<robin_zhang3@ymtc.com>
  */
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -23,15 +23,13 @@
 #include <libnvme.h>
 
 #include <shared/compiler-attributes-util.h>
-
-#include "nvme-cmds.h"
-#include "nvme-print.h"
-#include "global-ctx.h"
-#include "plugin.h"
-#include "src/cleanup.h"
 #include <shared/int-util.h>
 
-
+#include "global-ctx.h"
+#include "nvme-cmds.h"
+#include "nvme-print.h"
+#include "plugin.h"
+#include "src/cleanup.h"
 #include "ymtc-utils.h"
 
  /* sysfs paths for vendor ID and device ID */
