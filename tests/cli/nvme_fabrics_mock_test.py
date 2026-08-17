@@ -123,6 +123,7 @@ class MockIPCServer(threading.Thread):
         self.next_instance = 0
         self.sysfs_dir = None
         self.controllers = {}        # maps instance (int) -> dict of connect options
+        self.log_page_fetch_count = {}  # maps subsysnqn (str) -> completed-fetch count
 
     def run(self):
         while self.running:
@@ -222,6 +223,15 @@ class MockIPCServer(threading.Thread):
             log_entries = b"".join(_pack_disc_log_entry(i + 1, e) for i, e in enumerate(entries))
             log_header = struct.pack("<QQH", 1, len(entries), 0) + b"\x00" * 1006
             full_log = log_header + log_entries
+
+            # libnvmf_get_discovery_log() reads the header twice (lpo=0: once
+            # to size the entries, once after to re-check genctr) but the
+            # entries themselves (lpo != 0) exactly once per completed
+            # fetch -- count that one, not the header reads, so a caller can
+            # tell "was this DC's DLP walked" from "was it walked twice".
+            if lpo != 0:
+                self.log_page_fetch_count[ctrl_nqn] = \
+                    self.log_page_fetch_count.get(ctrl_nqn, 0) + 1
 
             if lpo < len(full_log):
                 resp_payload = full_log[lpo:lpo + req_len]
@@ -510,13 +520,13 @@ class FabricsMockCLITest(unittest.TestCase):
     _PROBE_INSTANCE = 0
     _DISCOVERY_INSTANCE = 1
 
-    def _self_entry(self, addr, eflags=0):
+    def _self_entry(self, addr, eflags=0, trsvcid=DISCOVERY_PORT, subsysnqn=DISCOVERY_NQN):
         return {
             'subtype': NVME_NQN_CURR,
             'transport': 'tcp',
             'traddr': addr,
-            'trsvcid': DISCOVERY_PORT,
-            'subsysnqn': DISCOVERY_NQN,
+            'trsvcid': trsvcid,
+            'subsysnqn': subsysnqn,
             'eflags': eflags,
         }
 
@@ -603,6 +613,147 @@ class FabricsMockCLITest(unittest.TestCase):
         self.assertEqual(self._subsysnqn(2), dc_c)
         self._assert_persisted(1, "dc-epcsd-B (EPCSD set) should have stayed connected")
         self._assert_disconnected(2, "dc-epcsd-C (EPCSD unset) should have been disconnected")
+
+    # ------------------------------------------------------------------ #
+    # Discovery-walk mechanics: depth cap, visited-set, referral-vs-self #
+    # entry precedence, and resuming an already-connected DC's own      #
+    # sub-tree. See dc_walk_referral()/dc_visited_*()/dc_decide() in     #
+    # libnvme/src/nvme/fabrics.c.                                        #
+    # ------------------------------------------------------------------ #
+
+    def test_connect_all_referral_self_entry_overrides_parent_view(self):
+        """A referred DC's own self entry (SUBTYPE=03h) decides its own
+        persistence -- not the EPCSD its parent's referral entry reported
+        for it."""
+        dc_a = "nqn.2014-08.org.nvmexpress:uuid:dc-self-override-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:uuid:dc-self-override-B"
+        dc_b_addr = '192.168.130.2'
+        dc_b_trsvcid = '4420'
+
+        self.server.discovery_map = {
+            # dc_a's own view of dc_b under-reports EPCSD (0): if this were
+            # used, dc_b would disconnect.
+            dc_a: [
+                {'transport': 'tcp', 'traddr': dc_b_addr, 'trsvcid': dc_b_trsvcid,
+                 'subsysnqn': dc_b, 'eflags': 0},
+            ],
+            # dc_b's own self entry says EPCSD=1 -- its own report must win
+            # once dc_b is connected to and its own DLP is fetched.
+            dc_b: [
+                self._self_entry(dc_b_addr, eflags=NVMF_DISC_EFLAGS_EPCSD,
+                                  trsvcid=dc_b_trsvcid, subsysnqn=dc_b),
+            ],
+        }
+
+        self._run('connect-all', '-t', 'tcp', '-a', '192.168.130.1', '-n', dc_a,
+                 '--persistent')
+
+        self.assertEqual(self._subsysnqn(1), dc_b)
+        self._assert_persisted(1, "dc_b's own self entry (EPCSD=1) should have "
+                                  "overridden its parent's referral view (EPCSD=0)")
+
+    def test_connect_all_already_connected_referral_walks_subtree(self):
+        """A referral DC that's already connected before connect-all runs
+        must still have its own Discovery Log Page walked, not just
+        skipped -- the bug that motivated the discovery-walk rewrite."""
+        dc_a = "nqn.2014-08.org.nvmexpress:uuid:dc-resume-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:uuid:dc-resume-B"
+        io_c = "nqn.2014-08.org.nvmexpress:uuid:io-resume-C"
+        dc_b_addr = '192.168.140.2'
+        dc_b_trsvcid = '4420'
+        # Each invocation of the nvme binary auto-generates its own random
+        # hostnqn/hostid unless one is pinned, landing in a different
+        # in-memory host object -- lookup_live_ctrl() only ever searches
+        # the *current* host's own subsystems, so without a shared identity
+        # the second process could never recognize dc_b as already
+        # connected, no matter what the fake sysfs tree says.
+        hostnqn = "nqn.2014-08.org.nvmexpress:uuid:11111111-1111-1111-1111-111111111111"
+
+        # Pre-connect dc_b directly, as if an earlier session already
+        # reached it. Becomes nvme0, tracked in the fake topology tree.
+        self._run('connect', '-t', 'tcp', '-a', dc_b_addr, '-s', dc_b_trsvcid,
+                 '-n', dc_b, '--hostnqn', hostnqn)
+        self.assertEqual(self._subsysnqn(0), dc_b)
+
+        self.server.discovery_map = {
+            dc_a: [
+                {'transport': 'tcp', 'traddr': dc_b_addr, 'trsvcid': dc_b_trsvcid,
+                 'subsysnqn': dc_b},
+            ],
+            # Only consulted if the walk resumes into the already-connected
+            # dc_b -- that resumption is the behavior under test.
+            dc_b: [
+                {'transport': 'tcp', 'traddr': '192.168.140.3', 'trsvcid': '4420',
+                 'subsysnqn': io_c},
+            ],
+        }
+
+        self._run('connect-all', '-t', 'tcp', '-a', '192.168.140.1', '-n', dc_a,
+                 '--hostnqn', hostnqn)
+
+        # instance 0 = dc_b (pre-existing), 1 = dc_a (primary, connected
+        # fresh), 2 = io_c (only reachable if dc_b's subtree was walked).
+        self.assertEqual(self._subsysnqn(1), dc_a)
+        self.assertTrue(self._ctrl_path(2).exists(),
+                        "io_c behind the already-connected dc_b was never "
+                        "discovered -- its sub-tree wasn't walked")
+        self.assertEqual(self._subsysnqn(2), io_c)
+        self._assert_persisted(0, "an already-connected (borrowed) DC must "
+                                  "never be disconnected by the walk")
+
+    def test_connect_all_referral_depth_cap(self):
+        """The walk stops after NVMF_MAX_REFERRAL_DEPTH (8) referral hops:
+        the primary is depth 0, dc_1..dc_8 (depths 1-8) connect, dc_9
+        (depth 9) does not."""
+        n = 10  # dc_0 (primary) .. dc_9
+        dcs = [f"nqn.2014-08.org.nvmexpress:uuid:dc-depth-{i}" for i in range(n)]
+        self.server.discovery_map = {
+            dcs[i]: [{'transport': 'tcp', 'traddr': f'192.168.120.{i + 2}',
+                     'trsvcid': '4420', 'subsysnqn': dcs[i + 1]}]
+            for i in range(n - 1)
+        }
+
+        self._run('connect-all', '-t', 'tcp', '-a', '192.168.120.1', '-n', dcs[0])
+
+        for i in range(9):  # dc_0..dc_8, depths 0-8, all connect
+            self.assertTrue(self._ctrl_path(i).exists(),
+                            f"dc_{i} (depth {i}) was not connected")
+            self.assertEqual(self._subsysnqn(i), dcs[i])
+
+        self.assertFalse(self._ctrl_path(9).exists(),
+                         "dc_9 (depth 9) should not have been connected: "
+                         "exceeds the referral depth cap")
+
+    def test_connect_all_referral_cycle_visited_once(self):
+        """A referral cycle (dc_a -> dc_b -> dc_a) must not be re-walked:
+        dc_a's Discovery Log Page is fetched exactly once despite the
+        cycle, and a sibling entry alongside the back-reference is still
+        discovered."""
+        dc_a = "nqn.2014-08.org.nvmexpress:uuid:dc-cycle-A"
+        dc_b = "nqn.2014-08.org.nvmexpress:uuid:dc-cycle-B"
+        io_c = "nqn.2014-08.org.nvmexpress:uuid:io-cycle-C"
+
+        self.server.discovery_map = {
+            dc_a: [
+                {'transport': 'tcp', 'traddr': '192.168.150.2', 'trsvcid': '4420',
+                 'subsysnqn': dc_b},
+            ],
+            dc_b: [
+                # Back-reference to the primary's own connection params.
+                {'transport': 'tcp', 'traddr': '192.168.150.1', 'trsvcid': DISCOVERY_PORT,
+                 'subsysnqn': dc_a},
+                {'transport': 'tcp', 'traddr': '192.168.150.3', 'trsvcid': '4420',
+                 'subsysnqn': io_c},
+            ],
+        }
+
+        self._run('connect-all', '-t', 'tcp', '-a', '192.168.150.1', '-n', dc_a)
+
+        self.assertEqual(self._subsysnqn(1), dc_b)
+        self.assertEqual(self._subsysnqn(2), io_c)
+        self.assertEqual(self.server.log_page_fetch_count.get(dc_a, 0), 1,
+                         "dc_a's Discovery Log Page was re-fetched via the "
+                         "cycle; the visited-set should have short-circuited it")
 
 
 if __name__ == '__main__':
