@@ -51,7 +51,6 @@
 
 #define WDC_PLUGIN_VERSION   "2.15.1"
 
-#include "wdc-nvme-cmds.h"
 #include "wdc-utils.h"
 
 #define WRITE_SIZE	(sizeof(__u8) * 4096)

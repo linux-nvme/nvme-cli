@@ -10,7 +10,6 @@
 #include <libnvme.h>
 
 #include "micron-utils.h"
-#include "src/cleanup.h"
 
 char *micron_get_ctrl_name(struct libnvme_transport_handle *hdl)
 {

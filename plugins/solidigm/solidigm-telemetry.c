@@ -18,10 +18,7 @@
 #include "nvme-print.h"
 #include "plugin.h"
 #include "solidigm-telemetry.h"
-#include "solidigm-telemetry/cod.h"
-#include "solidigm-telemetry/config.h"
 #include "solidigm-telemetry/data-area.h"
-#include "solidigm-telemetry/header.h"
 #include "solidigm-telemetry/telemetry-log.h"
 #include "solidigm-util.h"
 

@@ -10,9 +10,7 @@
 #include <shared/compiler-attributes-util.h>
 
 #include "cleanup.h"
-#include "fabrics.h"
 #include "global-ctx.h"
-#include "logging.h"
 #include "nvme-print.h"
 #include "plugin.h"
 

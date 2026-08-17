@@ -32,7 +32,6 @@
 
 #include <shared/fs-util.h>
 
-#include "args.h"
 #include "command-metadata.h"
 #include "nvme-json.h"
 #include "plugin.h"

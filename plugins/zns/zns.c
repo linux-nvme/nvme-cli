@@ -17,7 +17,6 @@
 #include <shared/time-util.h>
 
 #include "global-ctx.h"
-#include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "plugin.h"
 #include "src/cleanup.h"

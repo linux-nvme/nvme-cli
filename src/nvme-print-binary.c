@@ -4,7 +4,6 @@
 
 #include <ccan/endian/endian.h>
 
-#include "logging.h"
 #include "nvme-print.h"
 
 static struct print_ops binary_print_ops;

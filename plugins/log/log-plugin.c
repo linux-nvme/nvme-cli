@@ -46,10 +46,7 @@
 
 #include "argconfig.h"
 #include "cleanup.h"
-#include "fabrics.h"
-#include "global-config.h"
 #include "global-ctx.h"
-#include "logging.h"
 #include "nvme-cmds.h"
 #include "nvme-print.h"
 #include "nvme-regs.h"

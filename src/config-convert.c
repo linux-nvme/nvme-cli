@@ -20,7 +20,6 @@
 #include "config-convert.h"
 #include "fabrics.h"
 #include "global-ctx.h"
-#include "logging.h"
 #include "nvme-print.h"
 
 #ifdef CONFIG_JSONC
