@@ -659,13 +659,13 @@ static int read_security(struct libnvme_global_ctx *ctx, struct libnbft_info *nb
 		if (!ret)
 			security->cipher_suites = (__u8 *)policy_list;
 	}
-	if (!ret && (flags & NBFT_SECURITY_AUTH_DH_GROUPS_RESTRICTED) &&
-	    le16_to_cpu(raw_security->dh_grp_obj.length)) {
-		ret = get_heap_obj_len(ctx, raw_security, dh_grp_obj, 0,
+	if (!ret && (flags & NBFT_SECURITY_AUTH_KX_GROUPS_RESTRICTED) &&
+	    le16_to_cpu(raw_security->kx_grp_obj.length)) {
+		ret = get_heap_obj_len(ctx, raw_security, kx_grp_obj, 0,
 				       &policy_list,
-				       &security->dh_groups_len);
+				       &security->kx_groups_len);
 		if (!ret)
-			security->dh_groups = (__u8 *)policy_list;
+			security->kx_groups = (__u8 *)policy_list;
 	}
 	if (!ret && (flags & NBFT_SECURITY_SEC_HASH_FUNC_POLICY_LIST) &&
 	    le16_to_cpu(raw_security->sec_hash_func_obj.length)) {
