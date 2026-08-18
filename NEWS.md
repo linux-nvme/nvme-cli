@@ -56,6 +56,20 @@
   `nvme_admin_manage_export_nvms_send`. The opcode values (0x2a,
   0x2d) are unchanged.
 
+* NVMe Management Interface Specification 2.2 (TP6039) adds a
+  Controller Health Status Changed Flags field to the Controller
+  Health Data Structure, and renames the NVM Subsystem Health Data
+  Structure's Composite Controller Status field to Composite
+  Controller Status Flags, to distinguish per-bit change flags from
+  the status/state bits they report. In libnvme,
+  `struct nvme_mi_ctrl_health_status` gains a `chscf` field (and
+  `enum nvme_mi_chscf`) carved out of what was previously trailing
+  reserved space, so its size is unchanged; and
+  `struct nvme_mi_nvm_ss_health_status`'s `ccs` field/`enum
+  nvme_mi_ccs` are renamed to `ccsf`/`enum nvme_mi_ccsf` with bit
+  names getting an `F` suffix (e.g. `NVME_MI_CCS_RDY` is now
+  `NVME_MI_CCSF_RDYF`) and a new `TCIDAF` bit.
+
 * `nvme gen-dhchap-key` emits the secret it was given rather than the
   key transformed from it, so its output differs whenever `--hmac` is
   non-zero. `--nqn`/`-n` fed only that transform and is now accepted
