@@ -114,8 +114,8 @@ const char *nvme_cmd_to_string(int admin, __u8 opcode)
 		case nvme_admin_clear_export_nvm_res:
 						return "Clear Exported NVM Resource Configuration";
 		case nvme_admin_fabric_zoning_send:return "Fabric Zoning Send";
-		case nvme_admin_create_export_nvms:return "Create Exported NVM Subsystem";
-		case nvme_admin_manage_export_nvms:return "Manage Exported NVM Subsystem";
+		case nvme_admin_manage_export_nvms_receive:return "Manage Exported NVM Subsystem Receive";
+		case nvme_admin_manage_export_nvms_send:return "Manage Exported NVM Subsystem Send";
 		case nvme_admin_manage_export_ns:return "Manage Exported Namespace";
 		case nvme_admin_manage_export_port:return "Manage Exported Port";
 		case nvme_admin_send_disc_log_page:return "Send Discovery Log Page";

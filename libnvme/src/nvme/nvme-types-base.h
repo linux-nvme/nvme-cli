@@ -7348,8 +7348,8 @@ static inline __u32 nvme_status_equals(int status, enum nvme_status_type type,
  * @nvme_admin_fabric_zoning_lookup:	Fabric Zoning Lookup
  * @nvme_admin_clear_export_nvm_res:	Clear Exported NVM Resource Configuration
  * @nvme_admin_fabric_zoning_send:	Fabric Zoning Send
- * @nvme_admin_create_export_nvms:	Create Exported NVM Subsystem
- * @nvme_admin_manage_export_nvms:	Manage Exported NVM Subsystem
+ * @nvme_admin_manage_export_nvms_receive:	Manage Exported NVM Subsystem Receive
+ * @nvme_admin_manage_export_nvms_send:	Manage Exported NVM Subsystem Send
  * @nvme_admin_manage_export_ns:	Manage Exported Namespace
  * @nvme_admin_manage_export_port:	Manage Exported Port
  * @nvme_admin_cross_ctrl_reset:	Cross-Controller Reset
@@ -7401,8 +7401,8 @@ enum nvme_admin_opcode {
 	nvme_admin_fabric_zoning_lookup	= 0x25,
 	nvme_admin_clear_export_nvm_res	= 0x28,
 	nvme_admin_fabric_zoning_send	= 0x29,
-	nvme_admin_create_export_nvms	= 0x2a,
-	nvme_admin_manage_export_nvms	= 0x2d,
+	nvme_admin_manage_export_nvms_receive	= 0x2a,
+	nvme_admin_manage_export_nvms_send	= 0x2d,
 	nvme_admin_manage_export_ns	= 0x31,
 	nvme_admin_manage_export_port	= 0x35,
 	nvme_admin_cross_ctrl_reset	= 0x38,
