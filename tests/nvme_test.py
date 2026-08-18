@@ -37,6 +37,38 @@ import time
 
 logger = logging.getLogger(__name__)
 
+# Various grouped subcommands were introduced late in the v3.0 dev line;
+# older/stable nvme-cli releases only know the flat legacy names, which
+# the current CLI still accepts as deprecated aliases. Only entries the
+# test suite actually uses need to be listed here.
+_LEGACY_COMMANDS = {
+    "id ctrl": "id-ctrl",
+    "id ns": "id-ns",
+    "id ctrl-list": "list-ctrl",
+    "id ns-list": "list-ns",
+    "id nvm-ns": "nvm-id-ns",
+    "log smart": "smart-log",
+    "log error": "error-log",
+    "log fw": "fw-log",
+    "log lba-status": "lba-status-log",
+}
+_command_cache = {}
+
+
+def _probe_command(nvme_bin, command):
+    """ Return command if the installed nvme binary supports it, otherwise
+        the equivalent legacy form from _LEGACY_COMMANDS. Cached per
+        (nvme_bin, command) so each pair is probed at most once per
+        process, via a side-effect-free --help invocation.
+    """
+    key = (nvme_bin, command)
+    if key not in _command_cache:
+        probe = subprocess.run(f"{nvme_bin} {command} --help", shell=True,
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
+        _command_cache[key] = command if probe.returncode == 0 else _LEGACY_COMMANDS[command]
+    return _command_cache[key]
+
 
 def to_decimal(value):
     """ Wrapper for converting numbers to base 10 decimal
@@ -101,6 +133,13 @@ class TestNVMeBase(unittest.TestCase):
                 self.stderr_log.flush()
         self._record_device_data(cmd, result)
         return result
+
+    def command(self, command):
+        """ Resolve a canonical subcommand (e.g. "id ctrl", "log smart")
+            to whatever syntax this test's nvme_bin actually supports --
+            see _probe_command() for the detection/fallback logic.
+        """
+        return _probe_command(self.nvme_bin, command)
 
     def _record_device_data(self, cmd, result):
         """ Record a command's parsed JSON output for the device-data log.
@@ -295,7 +334,7 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - None
         """
-        id_ctrl_cmd = f"{self.nvme_bin} id ctrl {self.ctrl} --output-format=json"
+        id_ctrl_cmd = f"{self.nvme_bin} {self.command('id ctrl')} {self.ctrl} --output-format=json"
         result = self.run_cmd(id_ctrl_cmd)
         if result.returncode != 0 or not result.stdout:
             return
@@ -380,7 +419,7 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - controller id.
         """
-        get_ctrl_id = f"{self.nvme_bin} id ctrl-list {self.ctrl} " + \
+        get_ctrl_id = f"{self.nvme_bin} {self.command('id ctrl-list')} {self.ctrl} " + \
             "--output-format=json"
         result = self.run_cmd(get_ctrl_id)
         self.assertEqual(result.returncode, 0, "ERROR : nvme id ctrl-list failed")
@@ -432,7 +471,7 @@ class TestNVMe(TestNVMeBase):
                 - List of the namespaces.
         """
         ns_list = []
-        ns_list_cmd = f"{self.nvme_bin} id ns-list {self.ctrl} " + \
+        ns_list_cmd = f"{self.nvme_bin} {self.command('id ns-list')} {self.ctrl} " + \
             "--output-format=json"
         result = self.run_cmd(ns_list_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : nvme list namespace failed")
@@ -457,7 +496,7 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - maximum number of namespaces supported.
         """
-        max_ns_cmd = f"{self.nvme_bin} id ctrl {self.ctrl} " + \
+        max_ns_cmd = f"{self.nvme_bin} {self.command('id ctrl')} {self.ctrl} " + \
             "--output-format=json"
         result = self.run_cmd(max_ns_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : reading maximum namespace count failed")
@@ -483,7 +522,7 @@ class TestNVMe(TestNVMeBase):
                 - lbaf index (int) of the format whose in_use flag is set,
                   or 0 if no in_use entry is found.
         """
-        nvme_id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
+        nvme_id_ns_cmd = f"{self.nvme_bin} {self.command('id ns')} {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvme_id_ns_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : reading id ns")
@@ -506,7 +545,7 @@ class TestNVMe(TestNVMeBase):
                   end-to-end PI is enabled), bits 5:3 are the Protection
                   Information Format (PIF) on NVMe 2.0+ devices.
         """
-        nvme_id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
+        nvme_id_ns_cmd = f"{self.nvme_bin} {self.command('id ns')} {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvme_id_ns_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : reading id ns")
@@ -528,7 +567,7 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - pif value (int, 0-7).
         """
-        nvme_id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
+        nvme_id_ns_cmd = f"{self.nvme_bin} {self.command('id ns')} {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvme_id_ns_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : reading id ns")
@@ -542,7 +581,7 @@ class TestNVMe(TestNVMeBase):
             the data buffer). Return False if bit 4 is clear, meaning metadata
             is transferred as a separate, contiguous buffer.
         """
-        nvme_id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
+        nvme_id_ns_cmd = f"{self.nvme_bin} {self.command('id ns')} {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvme_id_ns_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : reading id ns")
@@ -557,7 +596,7 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - lba format size as a tuple of (data_size, metadata_size) in bytes.
         """
-        nvme_id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
+        nvme_id_ns_cmd = f"{self.nvme_bin} {self.command('id ns')} {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvme_id_ns_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : reading id ns")
@@ -593,7 +632,7 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - Filed value of the given field
         """
-        id_ctrl_cmd = f"{self.nvme_bin} id ctrl {self.ctrl} " + \
+        id_ctrl_cmd = f"{self.nvme_bin} {self.command('id ctrl')} {self.ctrl} " + \
             "--output-format=json"
         result = self.run_cmd(id_ctrl_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : reading id ctrl failed")
@@ -609,7 +648,7 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - Field value of the given field as a string
         """
-        id_ns_cmd = f"{self.nvme_bin} id ns {self.ns1} " + \
+        id_ns_cmd = f"{self.nvme_bin} {self.command('id ns')} {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(id_ns_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : reading id ns failed")
@@ -637,7 +676,7 @@ class TestNVMe(TestNVMeBase):
         delete_ns_cmd = f"{self.nvme_bin} ns delete {self.ctrl} " + \
             "--namespace-id=0xFFFFFFFF"
         self.assertEqual(self.exec_cmd(delete_ns_cmd), 0)
-        list_ns_cmd = f"{self.nvme_bin} id ns-list {self.ctrl} --all " + \
+        list_ns_cmd = f"{self.nvme_bin} {self.command('id ns-list')} {self.ctrl} --all " + \
             "--output-format=json"
         result = self.run_cmd(list_ns_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : nvme id ns-list failed")
@@ -681,7 +720,7 @@ class TestNVMe(TestNVMeBase):
             created_nsid = self.json_get(json_output, "nsid", "nvme ns create", required=True)
             self.assertEqual(int(created_nsid), nsid,
                              "ERROR : create namespace failed")
-            id_ns_cmd = f"{self.nvme_bin} id ns {self.ctrl} " + \
+            id_ns_cmd = f"{self.nvme_bin} {self.command('id ns')} {self.ctrl} " + \
                 f"--namespace-id={str(nsid)}"
             err = self.run_cmd(id_ns_cmd).returncode
         return err
@@ -743,7 +782,7 @@ class TestNVMe(TestNVMeBase):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        smart_log_cmd = f"{self.nvme_bin} log smart {self.ctrl} " + \
+        smart_log_cmd = f"{self.nvme_bin} {self.command('log smart')} {self.ctrl} " + \
             f"--namespace-id={str(nsid)}"
         result = self.run_cmd(smart_log_cmd)
         err = result.returncode
@@ -758,9 +797,9 @@ class TestNVMe(TestNVMeBase):
               - 0 on success, error code on failure.
         """
         if not vendor:
-            id_ctrl_cmd = f"{self.nvme_bin} id ctrl {self.ctrl}"
+            id_ctrl_cmd = f"{self.nvme_bin} {self.command('id ctrl')} {self.ctrl}"
         else:
-            id_ctrl_cmd = f"{self.nvme_bin} id ctrl " +\
+            id_ctrl_cmd = f"{self.nvme_bin} {self.command('id ctrl')} " +\
                 f"--vendor-specific {self.ctrl}"
         result = self.run_cmd(id_ctrl_cmd)
         err = result.returncode
@@ -775,7 +814,7 @@ class TestNVMe(TestNVMeBase):
                 - 0 on success, error code on failure.
         """
         pattern = re.compile(r"^ Entry\[[ ]*[0-9]+\]")
-        error_log_cmd = f"{self.nvme_bin} log error {self.ctrl}"
+        error_log_cmd = f"{self.nvme_bin} {self.command('log error')} {self.ctrl}"
         result = self.run_cmd(error_log_cmd)
         err = result.returncode
         self.assertEqual(err, 0, "ERROR : nvme error log failed")

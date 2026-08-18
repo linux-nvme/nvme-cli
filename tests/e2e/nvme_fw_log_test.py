@@ -55,7 +55,7 @@ class TestNVMeFwLogCmd(TestNVMe):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        fw_log_cmd = f"{self.nvme_bin} log fw {self.ctrl}"
+        fw_log_cmd = f"{self.nvme_bin} {self.command('log fw')} {self.ctrl}"
         return self.exec_cmd(fw_log_cmd)
 
     def test_fw_log(self):

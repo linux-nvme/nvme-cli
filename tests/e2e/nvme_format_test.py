@@ -106,7 +106,7 @@ class TestNVMeFormatCmd(TestNVMe):
                                                      self.dps), 0)
         self.assertEqual(self.attach_ns(self.ctrl_id, self.default_nsid), 0)
         # read lbaf information
-        id_ns_cmd = f"{self.nvme_bin} id ns {self.ctrl} " + \
+        id_ns_cmd = f"{self.nvme_bin} {self.command('id ns')} {self.ctrl} " + \
             f"--namespace-id={self.default_nsid} --output-format=json"
         result = self.run_cmd(id_ns_cmd)
         self.assertEqual(result.returncode, 0, "ERROR : nvme id ns failed")

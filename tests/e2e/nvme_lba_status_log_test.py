@@ -43,7 +43,7 @@ class TestNVMeLbaStatLogCmd(TestNVMe):
             - Returns:
                 - 0 on success, error code on failure.
         """
-        lba_stat_log_cmd = f"{self.nvme_bin} log lba-status {self.ctrl}"
+        lba_stat_log_cmd = f"{self.nvme_bin} {self.command('log lba-status')} {self.ctrl}"
         return self.exec_cmd(lba_stat_log_cmd)
 
     def test_lba_stat_log(self):

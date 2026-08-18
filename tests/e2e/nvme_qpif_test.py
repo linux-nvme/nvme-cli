@@ -92,7 +92,7 @@ class TestNVMeQPIFTest(TestNVMeIO):
                 - lbaf index (int) of a qualifying format, or None if none
                   exists or id nvm-ns is not supported.
         """
-        nvm_id_ns_cmd = f"{self.nvme_bin} id nvm-ns {self.ns1} " + \
+        nvm_id_ns_cmd = f"{self.nvme_bin} {self.command('id nvm-ns')} {self.ns1} " + \
             "--output-format=json"
         result = self.run_cmd(nvm_id_ns_cmd)
         if result.returncode != 0:
