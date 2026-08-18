@@ -2950,7 +2950,7 @@ static struct plugin plugin = {
 	.desc = "Retrieve and show NVMe log pages",
 	.version = NVME_VERSION,
 	.core = true,
-	.group = "Discovery & Logging",
+	.group = "Log Page & Identify",
 };
 
 static void __shr_constructor register_plugin(void)

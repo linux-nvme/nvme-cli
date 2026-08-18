@@ -1203,6 +1203,7 @@ static struct plugin plugin = {
 	.desc = "Send NVMe Identify commands, show the results",
 	.version = NVME_VERSION,
 	.core = true,
+	.group = "Log Page & Identify",
 };
 
 static void __shr_constructor register_plugin(void)
