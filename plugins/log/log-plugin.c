@@ -76,6 +76,51 @@ static const char *raw_log = "show log in binary format";
 static const char *raw_output = "output in binary format";
 static const char *raw_use = "use binary output";
 
+static int get_supported_log_pages(int argc, char **argv, struct command *acmd,
+	struct plugin *plugin)
+{
+	const char *desc = "Retrieve supported logs and print the table.";
+
+	__cleanup_libnvme_free struct nvme_supported_log_pages *supports = NULL;
+	__cleanup_nvme_global_ctx struct libnvme_global_ctx *ctx = NULL;
+	__cleanup_nvme_transport_handle struct libnvme_transport_handle *hdl = NULL;
+	struct libnvme_passthru_cmd cmd;
+	nvme_print_flags_t flags;
+	int err = -1;
+
+	NVME_ARGS(opts);
+
+	err = parse_and_open(&ctx, &hdl, argc, argv, desc, opts);
+	if (err)
+		return err;
+
+	err = validate_output_format(nvme_args.output_format, &flags);
+	if (err < 0) {
+		nvme_show_error("Invalid output format");
+		return err;
+	}
+
+	if (nvme_args.verbose)
+		flags |= VERBOSE;
+
+	supports = libnvme_alloc(sizeof(*supports));
+	if (!supports)
+		return -ENOMEM;
+
+	nvme_init_get_log(&cmd, NVME_NSID_ALL, NVME_LOG_LID_SUPPORTED_LOG_PAGES,
+		NVME_CSI_NVM, supports, sizeof(*supports));
+	err = libnvme_get_log(hdl, &cmd, false, sizeof(*supports));
+	if (err) {
+		nvme_show_err(err, "supported log pages");
+		return err;
+	}
+
+	nvme_show_supported_log(supports, libnvme_transport_handle_get_name(hdl),
+				flags);
+
+	return err;
+}
+
 static int get_smart_log(int argc, char **argv, struct command *acmd, struct plugin *plugin)
 {
 	const char *desc = "Retrieve SMART log for the given device "
@@ -2665,6 +2710,12 @@ static int get_pull_model_ddc_req_log(int argc, char **argv, struct command *acm
 	return err;
 }
 
+static struct command supported_pages_cmd = {
+	.name = "supported-pages",
+	.help = "Retrieve the Supported Log pages details, show it",
+	.fn = get_supported_log_pages,
+};
+
 static struct command smart_cmd = {
 	.name = "smart",
 	.help = "Retrieve SMART Log, show it",
@@ -2858,6 +2909,7 @@ static struct command sanitize_cmd = {
 };
 
 static struct command *commands[] = {
+	&supported_pages_cmd,
 	&smart_cmd,
 	&ana_cmd,
 	&telemetry_cmd,
