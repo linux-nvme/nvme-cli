@@ -610,11 +610,11 @@ void json_nvme_resv_report(struct nvme_resv_status *status,
 	struct json_object *r = json_r;
 	struct json_object *rcs = json_create_array();
 	int i, j, entries;
-	int regctl = status->regctl[0] | (status->regctl[1] << 8);
+	int regstrnt = status->regstrnt[0] | (status->regstrnt[1] << 8);
 
 	obj_add_uint(r, "gen", le32_to_cpu(status->gen));
 	obj_add_int(r, "rtype", status->rtype);
-	obj_add_int(r, "regctl", regctl);
+	obj_add_int(r, "regstrnt", regstrnt);
 	obj_add_int(r, "ptpls", status->ptpls);
 
 	/* check Extended Data Structure bit */
@@ -624,17 +624,17 @@ void json_nvme_resv_report(struct nvme_resv_status *status,
 		 * the buffer
 		 */
 		entries = (bytes - 24) / 24;
-		if (entries < regctl)
-			regctl = entries;
+		if (entries < regstrnt)
+			regstrnt = entries;
 
-		obj_add_array(r, "regctls", rcs);
-		for (i = 0; i < regctl; i++) {
+		obj_add_array(r, "registrants", rcs);
+		for (i = 0; i < regstrnt; i++) {
 			struct json_object *rc = json_create_object();
 
-			obj_add_int(rc, "cntlid", le16_to_cpu(status->regctl_ds[i].cntlid));
-			obj_add_int(rc, "rcsts", status->regctl_ds[i].rcsts);
-			obj_add_uint64(rc, "hostid", le64_to_cpu(status->regctl_ds[i].hostid));
-			obj_add_uint64(rc, "rkey", le64_to_cpu(status->regctl_ds[i].rkey));
+			obj_add_int(rc, "cntlid", le16_to_cpu(status->registrant_ds[i].cntlid));
+			obj_add_int(rc, "rcsts", status->registrant_ds[i].rcsts);
+			obj_add_uint64(rc, "hostid", le64_to_cpu(status->registrant_ds[i].hostid));
+			obj_add_uint64(rc, "rkey", le64_to_cpu(status->registrant_ds[i].rkey));
 
 			array_add_obj(rcs, rc);
 		}
@@ -644,20 +644,20 @@ void json_nvme_resv_report(struct nvme_resv_status *status,
 		/* if status buffer was too small, don't loop past the end of the buffer */
 		entries = (bytes - 64) / 64;
 
-		if (entries < regctl)
-			regctl = entries;
+		if (entries < regstrnt)
+			regstrnt = entries;
 
-		obj_add_array(r, "regctlext", rcs);
+		obj_add_array(r, "registrantext", rcs);
 
-		for (i = 0; i < regctl; i++) {
+		for (i = 0; i < regstrnt; i++) {
 			struct json_object *rc = json_create_object();
 
-			obj_add_int(rc, "cntlid", le16_to_cpu(status->regctl_eds[i].cntlid));
-			obj_add_int(rc, "rcsts", status->regctl_eds[i].rcsts);
-			obj_add_uint64(rc, "rkey", le64_to_cpu(status->regctl_eds[i].rkey));
+			obj_add_int(rc, "cntlid", le16_to_cpu(status->registrant_eds[i].cntlid));
+			obj_add_int(rc, "rcsts", status->registrant_eds[i].rcsts);
+			obj_add_uint64(rc, "rkey", le64_to_cpu(status->registrant_eds[i].rkey));
 
 			for (j = 0; j < 16; j++)
-				sprintf(hostid + j * 2, "%02x", status->regctl_eds[i].hostid[j]);
+				sprintf(hostid + j * 2, "%02x", status->registrant_eds[i].hostid[j]);
 
 			obj_add_str(rc, "hostid", hostid);
 			array_add_obj(rcs, rc);
