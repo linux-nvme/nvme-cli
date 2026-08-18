@@ -108,6 +108,12 @@ if 'ocp' in selected_plugins and json_c_dep.found()
   subdir('ocp')
 endif
 
+# The monitor plugin reuses OCP detection/fetch code, so it requires the ocp
+# plugin to also be selected and built.
+if 'monitor' in selected_plugins and 'ocp' in selected_plugins and json_c_dep.found()
+  subdir('monitor')
+endif
+
 if 'sed' in selected_plugins and conf.get('NVME_HAVE_SED_OPAL') != 0
   subdir('sed')
 endif

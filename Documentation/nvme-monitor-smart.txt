@@ -1,0 +1,66 @@
+nvme-monitor-smart(1)
+=====================
+
+NAME
+----
+nvme-monitor-smart - Retrieve combined standard + OCP SMART/health monitoring data
+
+SYNOPSIS
+--------
+[verse]
+'nvme' [<global-options>] 'monitor smart' <device>
+
+DESCRIPTION
+-----------
+Retrieves the standard NVMe SMART log page and, if the device supports it,
+the OCP SMART/health extended log page (LID 0xC0), and shows them together.
+Support for the OCP log page is auto-detected at runtime via the device's
+"Supported Log Pages" log; nothing needs to be known about the device ahead
+of time.
+
+The <device> parameter is mandatory and may be either the NVMe character
+device (ex: /dev/nvme0), or a namespace block device (ex: /dev/nvme0n1).
+
+This command exists for fleet-monitoring scripts that need one stable
+command to run across a mix of OCP and non-OCP devices. With '--output-format=json',
+the output is always a single JSON object with the same top-level keys
+regardless of the device:
+
+[verse]
+{
+  "device": <device name>,
+  "ocp_supported": <true|false>,
+  "smart_log": { ...standard SMART log fields... },
+  "ocp_smart_extended_log": { ...only present when ocp_supported is true... }
+}
+
+Scripts can check "ocp_supported" or simply test whether the
+"ocp_smart_extended_log" key is present, and always find the standard SMART
+fields under "smart_log". In "normal" or "binary" output format, the two log
+pages are printed one after the other instead of being merged, matching
+'nvme log smart' and 'nvme ocp smart-add-log' output.
+
+OPTIONS
+-------
+include::global-options.txt[]
+
+EXAMPLES
+--------
+* Print combined SMART/health data in a human readable format:
++
+------------
+# nvme monitor smart /dev/nvme0
+------------
++
+
+* Fetch a normalized JSON document for monitoring scripts, regardless of
+whether the device is an OCP device:
++
+------------
+# nvme monitor smart /dev/nvme0 -o json | jq .
+------------
++
+
+NVME
+----
+Part of the nvme-user suite

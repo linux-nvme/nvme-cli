@@ -227,10 +227,17 @@ struct nvme_bar_cap {
 #ifdef CONFIG_JSONC
 
 struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags);
+struct json_object *nvme_smart_log_to_json(struct nvme_smart_log *smart, unsigned int nsid);
 
 #else /* !CONFIG_JSONC */
 
 static inline struct print_ops *nvme_get_json_print_ops(nvme_print_flags_t flags) { return NULL; }
+
+static inline struct json_object *nvme_smart_log_to_json(struct nvme_smart_log *smart,
+							  unsigned int nsid)
+{
+	return NULL;
+}
 
 #endif /* !CONFIG_JSONC */
 

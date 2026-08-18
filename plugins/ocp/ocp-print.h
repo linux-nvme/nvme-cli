@@ -7,6 +7,8 @@
 #include "ocp-telemetry-decode.h"
 #include "ocp-nvme.h"
 
+struct json_object;
+
 struct ocp_print_ops {
 	void (*hwcomp_log)(struct hwcomp_log *log, __u32 id, bool list);
 	void (*fw_act_history)(const struct fw_activation_history *fw_history);
@@ -28,8 +30,16 @@ struct ocp_print_ops *ocp_get_binary_print_ops(nvme_print_flags_t flags);
 
 #ifdef CONFIG_JSONC
 struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags);
+struct json_object *ocp_smart_extended_log_to_json(struct ocp_smart_extended_log *log,
+						     unsigned int version);
 #else /* !CONFIG_JSONC */
 static inline struct ocp_print_ops *ocp_get_json_print_ops(nvme_print_flags_t flags)
+{
+	return NULL;
+}
+
+static inline struct json_object *ocp_smart_extended_log_to_json(
+		struct ocp_smart_extended_log *log, unsigned int version)
 {
 	return NULL;
 }

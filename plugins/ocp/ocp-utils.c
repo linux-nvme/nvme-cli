@@ -64,6 +64,20 @@ int ocp_get_log_simple(struct libnvme_transport_handle *hdl,
 	return libnvme_get_log(hdl, &cmd, false, NVME_LOG_PAGE_PDU_SIZE);
 }
 
+bool ocp_is_supported(struct libnvme_transport_handle *hdl)
+{
+	struct nvme_supported_log_pages supports;
+	struct libnvme_passthru_cmd cmd;
+	int err;
+
+	nvme_init_get_log_supported_log_pages(&cmd, NVME_CSI_NVM, &supports);
+	err = libnvme_get_log(hdl, &cmd, false, sizeof(supports));
+	if (err)
+		return false;
+
+	return le32_to_cpu(supports.lid_support[OCP_LID_SMART]) & 0x1;
+}
+
 bool ocp_is_tcg_activity_event(struct nvme_persistent_event_entry *pevent_entry_head,
 			       __u16 el, __u16 vsil)
 {

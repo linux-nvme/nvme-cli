@@ -130,6 +130,7 @@ adoc_sources_man1 = [
     'nvme-micron-smart-add-log',
     'nvme-micron-smart-log',
     'nvme-micron-temperature-stats',
+    'nvme-monitor-smart',
     'nvme-netapp-ontapdevices',
     'nvme-netapp-smdevices',
     'nvme-ns-attach',
