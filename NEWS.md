@@ -23,6 +23,39 @@
   TP4201. See `nvme-keys-gen-kxchap-secret(1)` and
   `nvme-keys-check-kxchap-secret(1)`.
 
+* NVMe Base Specification 2.4 (ECN122) renames the Reservation
+  Report data structures from "Registered Controller" to
+  "Registrant" throughout. `struct nvme_registered_ctrl` and
+  `struct nvme_registered_ctrl_ext` are now `struct nvme_registrant`
+  and `struct nvme_registrant_ext`; the `regctl`/`regctl_ds`/
+  `regctl_eds` fields of `struct nvme_resv_status` are now
+  `regstrnt`/`registrant_ds`/`registrant_eds`. `nvme resv-report`
+  output changes to match: the `regctl`/`regctls`/`regctlext` labels
+  and JSON keys are now `regstrnt`/`registrants`/`registrantext`.
+  Update any code or scripts that reference the old names.
+
+* NVMe Base Specification 2.4 (TP4150) renames the "Namespace
+  Attribute Changed" asynchronous event to "Attached Namespace
+  Attribute Changed", the "Changed Namespace List" log page to
+  "Changed Attached Namespace List", and the "Namespace Attribute
+  Notices" notice to "Attached Namespace Attribute Notices" (to
+  distinguish them from the new Allocated Namespace variants added
+  alongside them). `NVME_AER_NOTICE_NS_CHANGED` is now
+  `NVME_AER_NOTICE_ATTACHED_NS_CHANGED`, `NVME_LOG_LID_CHANGED_NS` is
+  now `NVME_LOG_LID_CHANGED_ATTACHED_NS`, and `NVME_CTRL_OAES_NA*` is
+  now `NVME_CTRL_OAES_NSAN*` (matching the spec's new OAES mnemonic).
+  `nvme discover --log-id=changed-ns` still works as a deprecated
+  alias for the new `changed-attached-ns`.
+
+* NVMe Base Specification 2.4 (TP4193) renames the "Create Exported
+  NVM Subsystem" and "Manage Exported NVM Subsystem" admin commands
+  to "Manage Exported NVM Subsystem Receive" and "...Send"
+  respectively. `nvme_admin_create_export_nvms` is now
+  `nvme_admin_manage_export_nvms_receive`, and
+  `nvme_admin_manage_export_nvms` is now
+  `nvme_admin_manage_export_nvms_send`. The opcode values (0x2a,
+  0x2d) are unchanged.
+
 * `nvme gen-dhchap-key` emits the secret it was given rather than the
   key transformed from it, so its output differs whenever `--hmac` is
   non-zero. `--nqn`/`-n` fed only that transform and is now accepted
