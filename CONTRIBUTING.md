@@ -81,7 +81,7 @@ static struct command *commands[] = {
 
 static void __attribute__((constructor)) register_group(void)
 {
-	plugin_add_group(&builtin, "Discovery & Logging", commands);
+	plugin_add_group(&builtin, "Log Page & Identify", commands);
 }
 ```
 
@@ -99,7 +99,7 @@ Use `.alias = "other-name"` for an alias, and `.deprecated = true` for a
 deprecated command (deprecated built-ins live in
 `src/nvme-cmds-deprecated.c`, gated by `#ifdef CONFIG_DEPRECATED_CMDS`).
 
-The `title` passed to `plugin_add_group()` (`"Discovery & Logging"` above)
+The `title` passed to `plugin_add_group()` (`"Log Page & Identify"` above)
 is the heading shown for that group's commands in `nvme help`; pass `NULL`
 for no heading (that's what plugins normally do, see below).
 

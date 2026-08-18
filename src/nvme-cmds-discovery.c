@@ -263,5 +263,5 @@ static struct command *commands[] = {
 
 static void __shr_constructor register_group(void)
 {
-	plugin_add_group(&builtin, "Discovery & Logging", commands);
+	plugin_add_group(&builtin, "Log Page & Identify", commands);
 }
